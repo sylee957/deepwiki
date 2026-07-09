@@ -23,20 +23,20 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldDomain α]
 /-- The tower derivation `towerDerivQFunNZG Dt (n/d) = (D n · d − n · D d)/(d·d)` on `QFunNZG α`, with
 `D = cmonomialDeriv Dt`; the fraction-field quotient rule, computable (no `CFieldSpec`). -/
 def towerDerivQFunNZG (Dt : CPoly α) (x : QFunNZG α) : QFunNZG α :=
-  ⟨(CPoly.csubG (CPoly.cmulG (CPoly.cmonomialDeriv Dt x.1.1) x.1.2)
-      (CPoly.cmulG x.1.1 (CPoly.cmonomialDeriv Dt x.1.2)),
-    CPoly.cmulG x.1.2 x.1.2),
+  ⟨(CPoly.csub (CPoly.cmul (CPoly.cmonomialDeriv Dt x.1.1) x.1.2)
+      (CPoly.cmul x.1.1 (CPoly.cmonomialDeriv Dt x.1.2)),
+    CPoly.cmul x.1.2 x.1.2),
     cmulG_ne_zero_of x.2 x.2⟩
 
 /-- The numerator of `towerDerivQFunNZG Dt x` is `D n · d − n · D d` (with `D = cmonomialDeriv Dt`). -/
 theorem towerDerivQFunNZG_num (Dt : CPoly α) (x : QFunNZG α) :
     (towerDerivQFunNZG Dt x).1.1
-      = CPoly.csubG (CPoly.cmulG (CPoly.cmonomialDeriv Dt x.1.1) x.1.2)
-          (CPoly.cmulG x.1.1 (CPoly.cmonomialDeriv Dt x.1.2)) := rfl
+      = CPoly.csub (CPoly.cmul (CPoly.cmonomialDeriv Dt x.1.1) x.1.2)
+          (CPoly.cmul x.1.1 (CPoly.cmonomialDeriv Dt x.1.2)) := rfl
 
 /-- The denominator of `towerDerivQFunNZG Dt x` is `d·d`. -/
 theorem towerDerivQFunNZG_den (Dt : CPoly α) (x : QFunNZG α) :
-    (towerDerivQFunNZG Dt x).1.2 = CPoly.cmulG x.1.2 x.1.2 := rfl
+    (towerDerivQFunNZG Dt x).1.2 = CPoly.cmul x.1.2 x.1.2 := rfl
 
 end QFunNZG
 
@@ -57,7 +57,7 @@ end
 /-- A level-2 scalar `c ∈ Lvl2 = QFunNZG (QFunNZG ℚ) = ℚ(x)(t₁)` from a numerator/denominator pair of
 `CPoly (QFunNZG ℚ)`s, with denominator a nonzero singleton `[d]`. -/
 def lvl2OfList (num : CPoly (QFunNZG ℚ)) (d : QFunNZG ℚ)
-    (h : CPoly.cisZeroG ([d] : CPoly (QFunNZG ℚ)) = false) : Lvl2 := ⟨(num, [d]), h⟩
+    (h : CPoly.cisZero ([d] : CPoly (QFunNZG ℚ)) = false) : Lvl2 := ⟨(num, [d]), h⟩
 
 /-- The level-2 scalar `t₁ ∈ ℚ(x)(t₁)` (numerator `[0, 1]` over ℚ(x): `t₁ = 0 + 1·t₁`, denominator
 `[1]`). -/
@@ -93,27 +93,27 @@ def lvl2T2sq : CPoly Lvl2 := [CField.zero, CField.zero, CField.one]
 def lvl2TwoT2 : CPoly Lvl2 := [CField.zero, CField.add CField.one CField.one]
 
 /-- `D(t₂²) = 2·t₂` over `ℚ(x)(t₁)[t₂]`: `cmonomialDeriv lvl2Dt2` computes the derivative of `t₂²` to
-`2·t₂` (checked via `cisZeroG` of the difference). -/
+`2·t₂` (checked via `cisZero` of the difference). -/
 theorem lvl2_monomialDeriv_t2sq_eq_two_t2 :
-    CPoly.cisZeroG (CPoly.csubG (CPoly.cmonomialDeriv lvl2Dt2 lvl2T2sq) lvl2TwoT2) = true := by
+    CPoly.cisZero (CPoly.csub (CPoly.cmonomialDeriv lvl2Dt2 lvl2T2sq) lvl2TwoT2) = true := by
   native_decide
 
 -- `D(t₂) = 1` over `ℚ(x)(t₁)[t₂]`: `cmonomialDeriv` of the monomial `t₂` is the constant `1`.
 example :
-    CPoly.cisZeroG (CPoly.csubG
+    CPoly.cisZero (CPoly.csub
       (CPoly.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), CField.one]) [CField.one]) = true := by
   native_decide
 
--- `D(t₁·t₂)` over `ℚ(x)(t₁)[t₂]` is nonzero (`cisZeroG = false`): `cmonomialDeriv`
+-- `D(t₁·t₂)` over `ℚ(x)(t₁)[t₂]` is nonzero (`cisZero = false`): `cmonomialDeriv`
 -- differentiates the `t₂`-coefficients too, not just the `d/dt₂` part.
 example :
-    CPoly.cisZeroG (CPoly.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), lvl2T1]) = false := by
+    CPoly.cisZero (CPoly.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), lvl2T1]) = false := by
   native_decide
 
--- `D(t₁·t₂) = t₁ + t₂` over `ℚ(x)(t₁)[t₂]` (checked via `cisZeroG` of the difference
+-- `D(t₁·t₂) = t₁ + t₂` over `ℚ(x)(t₁)[t₂]` (checked via `cisZero` of the difference
 -- against `[t₁, 1]`).
 example :
-    CPoly.cisZeroG (CPoly.csubG
+    CPoly.cisZero (CPoly.csub
       (CPoly.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), lvl2T1])
       [lvl2T1, (CField.one : Lvl2)]) = true := by native_decide
 
@@ -124,22 +124,22 @@ namespace QFunNZG
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α] [CFieldDomain α]
 variable [Algebra ℚ (CFieldSpec.K α)]
 
-/-- `toQFunNZG (towerDerivQFunNZG Dt x) = extendDeriv (implicitDeriv (toPolyG Dt)) (toQFunNZG x)` in
+/-- `toQFunNZG (towerDerivQFunNZG Dt x) = extendDeriv (implicitDeriv (toPoly Dt)) (toQFunNZG x)` in
 `RatFunc (CFieldSpec.K α)`: the computable tower derivation realizes Mathlib's `extendDeriv`. -/
 theorem toQFunNZG_towerDerivQFunNZG (Dt : CPoly α) (x : QFunNZG α) :
     toQFunNZG (towerDerivQFunNZG Dt x)
-      = extendDeriv (Differential.implicitDeriv (CPoly.toPolyG Dt)) (toQFunNZG x) := by
+      = extendDeriv (Differential.implicitDeriv (CPoly.toPoly Dt)) (toQFunNZG x) := by
   obtain ⟨⟨n, d⟩, hd⟩ := x
-  -- read `toQFunNZG x` as `RatFunc.mk (toPolyG n) (toPolyG d)`, apply the quotient rule `extendDeriv_mk`.
+  -- read `toQFunNZG x` as `RatFunc.mk (toPoly n) (toPoly d)`, apply the quotient rule `extendDeriv_mk`.
   have hxmk : toQFunNZG (⟨(n, d), hd⟩ : QFunNZG α)
-      = RatFunc.mk (CPoly.toPolyG n) (CPoly.toPolyG d) := by
+      = RatFunc.mk (CPoly.toPoly n) (CPoly.toPoly d) := by
     rw [toQFunNZG, RatFunc.mk_eq_div]
   rw [hxmk, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul, map_mul, map_pow]
-  -- the LHS numerator/denominator, read through `toPolyG`, with `toPolyG_cmonomialDeriv` identifying
-  -- the computable monomial derivation as `implicitDeriv (toPolyG Dt)`.
-  show amG α (CPoly.toPolyG (CPoly.csubG
-        (CPoly.cmulG (CPoly.cmonomialDeriv Dt n) d) (CPoly.cmulG n (CPoly.cmonomialDeriv Dt d))))
-      / amG α (CPoly.toPolyG (CPoly.cmulG d d)) = _
+  -- the LHS numerator/denominator, read through `toPoly`, with `toPolyG_cmonomialDeriv` identifying
+  -- the computable monomial derivation as `implicitDeriv (toPoly Dt)`.
+  show amG α (CPoly.toPoly (CPoly.csub
+        (CPoly.cmul (CPoly.cmonomialDeriv Dt n) d) (CPoly.cmul n (CPoly.cmonomialDeriv Dt d))))
+      / amG α (CPoly.toPoly (CPoly.cmul d d)) = _
   simp [CPoly.toPolyG_cmonomialDeriv, map_sub, map_mul, pow_two]
 
 end QFunNZG

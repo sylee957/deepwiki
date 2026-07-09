@@ -21,20 +21,20 @@ def bareissCauchyQ : List (List (QFunNZG ℚ)) :=
 `D = (x+1)(x+2)(x+3)(x+4)(x+5)`; each entry is a degree-`4` polynomial, so `bareissDet` runs over
 `ℚ[x]`. -/
 def bareissCauchyCleared : List (List (CPoly ℚ)) :=
-  let D : CPoly ℚ := cmulG (cmulG (cmulG (cmulG [1, 1] [2, 1]) [3, 1]) [4, 1]) [5, 1]
+  let D : CPoly ℚ := cmul (cmul (cmul (cmul [1, 1] [2, 1]) [3, 1]) [4, 1]) [5, 1]
   [[cdivWf D [1, 1], cdivWf D [2, 1], cdivWf D [3, 1]],
    [cdivWf D [2, 1], cdivWf D [3, 1], cdivWf D [4, 1]],
    [cdivWf D [3, 1], cdivWf D [4, 1], cdivWf D [5, 1]]]
 
-/-- The fraction-path total degree `cdegG num + cdegG den` of the unreduced `ℚ(x)` value
+/-- The fraction-path total degree `cdeg num + cdeg den` of the unreduced `ℚ(x)` value
 `fieldDet bareissCauchyQ` (numerator degree `6` plus denominator degree `15`, total `21`). -/
 def bareissCauchyFracTotalDeg : ℕ :=
   let z := fieldDet bareissCauchyQ
-  cdegG z.1.1 + cdegG z.1.2
+  cdeg z.1.1 + cdeg z.1.2
 
-/-- The fraction-free flat degree `cdegG (bareissDet bareissCauchyCleared)`, the degree of the single
+/-- The fraction-free flat degree `cdeg (bareissDet bareissCauchyCleared)`, the degree of the single
 `ℚ[x]` polynomial the Bareiss path produces for the cleared Cauchy matrix (degree `6`). -/
-def bareissCauchyFlatDeg : ℕ := cdegG (bareissDet bareissCauchyCleared)
+def bareissCauchyFlatDeg : ℕ := cdeg (bareissDet bareissCauchyCleared)
 
 /-- The measured swell win: `bareissCauchyFlatDeg < bareissCauchyFracTotalDeg` — the fraction-free
 Bareiss flat degree is strictly smaller than the fraction-path total degree on the `3×3` Cauchy matrix. -/

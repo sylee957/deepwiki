@@ -98,13 +98,13 @@ coefficient. This residual bundles leading-coefficient solvability plus that agr
 
 /-- The cancellation base-oracle agreement residual (primitive) `CancelOracleAgreementPrim Dt b`: for
 every degree-matched abstract solution `q'` (`IsNoCancelSolK Dt b c' q'`, `deg q' = deg c'`), the base RDE
-`Ds + (cleadG b)·s = cleadG c'` over `β` is solvable **and** any oracle solution agrees with `q'`'s leading
-coefficient (`crischDESolve (cleadG b) (cleadG c') = some s → toK s = lc q'`). -/
+`Ds + (clead b)·s = clead c'` over `β` is solvable **and** any oracle solution agrees with `q'`'s leading
+coefficient (`crischDESolve (clead b) (clead c') = some s → toK s = lc q'`). -/
 def CancelOracleAgreementPrim (Dt b : CPoly β) : Prop :=
   ∀ (c' : CPoly β) (q' : (CFieldSpec.K β)[X]),
-    IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' →
-      CFieldRDESolvable (cleadG b) (cleadG c') ∧
-      (∀ s : β, CRischField.crischDESolve (cleadG b) (cleadG c') = some s →
+    IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdeg c' →
+      CFieldRDESolvable (clead b) (clead c') ∧
+      (∀ s : β, CRischField.crischDESolve (clead b) (clead c') = some s →
         CFieldSpec.toK s = q'.leadingCoeff)
 
 /-- `CancelPrimOracleComplete` from the IH plus the agreement residual: the level-`β` completeness
@@ -115,19 +115,19 @@ theorem cancelPrimOracleComplete_of_complete (Dt b : CPoly β) (hβ : CRischFiel
     CancelPrimOracleComplete Dt b := by
   intro c' q' hsol hdeg
   obtain ⟨hsolv, hag⟩ := hagree c' q' hsol hdeg
-  obtain ⟨s, hs⟩ := Option.isSome_iff_exists.mp (hβ (cleadG b) (cleadG c') hsolv)
+  obtain ⟨s, hs⟩ := Option.isSome_iff_exists.mp (hβ (clead b) (clead c') hsolv)
   exact ⟨s, hs, hag s hs⟩
 
 /-- The cancellation base-oracle agreement residual (hyperexp) `CancelOracleAgreementExp Dt b`: the
 hyperexponential analogue of `CancelOracleAgreementPrim`, threading the shift coefficient
-`expCoeff Dt c' b = (cleadG b) + (deg c')·η`. For every degree-matched abstract solution `q'`, the base RDE
-`Ds + (expCoeff Dt c' b)·s = cleadG c'` over `β` is solvable and any oracle solution agrees with `q'`'s
+`expCoeff Dt c' b = (clead b) + (deg c')·η`. For every degree-matched abstract solution `q'`, the base RDE
+`Ds + (expCoeff Dt c' b)·s = clead c'` over `β` is solvable and any oracle solution agrees with `q'`'s
 leading coefficient. -/
 def CancelOracleAgreementExp (Dt b : CPoly β) : Prop :=
   ∀ (c' : CPoly β) (q' : (CFieldSpec.K β)[X]),
-    IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' →
-      CFieldRDESolvable (expCoeff Dt c' b) (cleadG c') ∧
-      (∀ s : β, CRischField.crischDESolve (expCoeff Dt c' b) (cleadG c') = some s →
+    IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdeg c' →
+      CFieldRDESolvable (expCoeff Dt c' b) (clead c') ∧
+      (∀ s : β, CRischField.crischDESolve (expCoeff Dt c' b) (clead c') = some s →
         CFieldSpec.toK s = q'.leadingCoeff)
 
 /-- `CancelExpOracleComplete` from the IH plus the hyperexp agreement residual
@@ -137,7 +137,7 @@ theorem cancelExpOracleComplete_of_complete (Dt b : CPoly β) (hβ : CRischField
     CancelExpOracleComplete Dt b := by
   intro c' q' hsol hdeg
   obtain ⟨hsolv, hag⟩ := hagree c' q' hsol hdeg
-  obtain ⟨s, hs⟩ := Option.isSome_iff_exists.mp (hβ (expCoeff Dt c' b) (cleadG c') hsolv)
+  obtain ⟨s, hs⟩ := Option.isSome_iff_exists.mp (hβ (expCoeff Dt c' b) (clead c') hsolv)
   exact ⟨s, hs, hag s hs⟩
 
 end Step
@@ -166,11 +166,11 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
-    CPoly.cisZeroG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2) = false
+    CPoly.cisZero (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     IsCanonNormalizedWf f
-      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2))
+      (qOfPolyNZG (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
@@ -188,9 +188,9 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
   hden : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g → ∀ ynum yden : CPoly β,
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
-    cRischDEG ([CField.one] : CPoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+    cRischDE ([CField.one] : CPoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
         = some (ynum, yden) →
-      CPoly.cisZeroG yden = false
+      CPoly.cisZero yden = false
   /-- The direct soundness certificate for each solvable next-level RDE. -/
   hsound : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     RischDESoundnessWf f g

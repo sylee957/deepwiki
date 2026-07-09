@@ -20,13 +20,13 @@ def gcuspCubicY : CPoly (QFunNZG ℚ) := afBasisElem 1
 def gcuspCubicYsq : CPoly (QFunNZG ℚ) := afBasisElem 2
 
 /-- A `ℚ(x)` value `xᵏ`, used as an ansatz scalar. -/
-def qxMon (k : ℕ) : QFunNZG ℚ := qxOfNum (cshiftG k [(1 : ℚ)])
+def qxMon (k : ℕ) : QFunNZG ℚ := qxOfNum (cshift k [(1 : ℚ)])
 
 /-- The ansatz monomials `xʲ * wᵢ` over an integral basis. -/
 def afRatMonomials (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ) :
     List (CPoly (QFunNZG ℚ)) :=
   basis.flatMap (fun wi =>
-    (List.range (degBound + 1)).map (fun j => cscaleG (qxMon j) wi))
+    (List.range (degBound + 1)).map (fun j => cscale (qxMon j) wi))
 
 /-- The integral basis of the cuspidal cubic `y³ = x²`. -/
 def gcuspCubicBasis : List (CPoly (QFunNZG ℚ)) := integralBasis gcuspCubicF

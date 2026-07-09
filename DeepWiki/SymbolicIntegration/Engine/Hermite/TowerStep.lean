@@ -18,27 +18,27 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The tower derivation on a polynomial image: `D_tower(amG p) = amG (D p)` for
-`D = implicitDeriv (toPolyG Dt)` (the `den = 1` case of the quotient rule). -/
+`D = implicitDeriv (toPoly Dt)` (the `den = 1` case of the quotient rule). -/
 theorem towerFractionFieldDerivG_amG (Dt : CPoly α) (p : (CFieldSpec.K α)[X]) :
     towerFractionFieldDerivG Dt (amG α p)
-      = amG α (Differential.implicitDeriv (toPolyG Dt) p) := by
+      = amG α (Differential.implicitDeriv (toPoly Dt) p) := by
   have h := towerFractionFieldDerivG_div Dt p 1
   simpa using h
 
 /-- The tower Hermite lowering step for `cHermiteReduceTowerInnerWf`. With
-`D = implicitDeriv (toPolyG Dt)`, `U, V ≠ 0`, and the Diophantine relation
+`D = implicitDeriv (toPoly Dt)`, `U, V ≠ 0`, and the Diophantine relation
 `B·(U·DV) + C·V = -A·C((j+1)⁻¹)`, one step drops the `V`-power by one and emits `B/V^(j+1)`:
 `amG A/(amG U · amG V^(j+2)) = D_tower(amG B/amG V^(j+1)) + amG(-(C(j+1))·C - U·DB)/(amG U·amG V^(j+1))`. -/
 theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt : CPoly α)
     (A B C U V : (CFieldSpec.K α)[X]) (hU : U ≠ 0) (hV : V ≠ 0) (j : ℕ)
-    (hrel : B * (U * Differential.implicitDeriv (toPolyG Dt) V) + C * V
+    (hrel : B * (U * Differential.implicitDeriv (toPoly Dt) V) + C * V
         = -A * Polynomial.C (((j : CFieldSpec.K α) + 1)⁻¹)) :
     amG α A / (amG α U * amG α V ^ (j + 2))
       = towerFractionFieldDerivG Dt (amG α B / amG α V ^ (j + 1))
         + amG α (-(Polynomial.C ((j : CFieldSpec.K α) + 1)) * C
-              - U * Differential.implicitDeriv (toPolyG Dt) B)
+              - U * Differential.implicitDeriv (toPoly Dt) B)
           / (amG α U * amG α V ^ (j + 1)) := by
-  set D := Differential.implicitDeriv (toPolyG Dt) with hDdef
+  set D := Differential.implicitDeriv (toPoly Dt) with hDdef
   set am := amG α with hamdef
   have hinj : Function.Injective am := RatFunc.algebraMap_injective (CFieldSpec.K α)
   have hu : am U ≠ 0 := (map_ne_zero_iff _ hinj).mpr hU
@@ -92,35 +92,35 @@ open QFunNZG in
 /-- The inner-loop accumulator update reads as a fraction sum:
 `⟦(g₁·Vpow + b·g₂) / (g₂·Vpow)⟧ = ⟦g₁/g₂⟧ + ⟦b/Vpow⟧`. -/
 theorem fieldFrac_step_add (g1 g2 b Vpow : CPoly α)
-    (hg2 : toPolyG g2 ≠ 0) (hVpow : toPolyG Vpow ≠ 0) :
-    amG α (toPolyG (caddG (cmulG g1 Vpow) (cmulG b g2))) / amG α (toPolyG (cmulG g2 Vpow))
-      = amG α (toPolyG g1) / amG α (toPolyG g2) + amG α (toPolyG b) / amG α (toPolyG Vpow) := by
+    (hg2 : toPoly g2 ≠ 0) (hVpow : toPoly Vpow ≠ 0) :
+    amG α (toPoly (cadd (cmul g1 Vpow) (cmul b g2))) / amG α (toPoly (cmul g2 Vpow))
+      = amG α (toPoly g1) / amG α (toPoly g2) + amG α (toPoly b) / amG α (toPoly Vpow) := by
   simp only [denote, map_add, map_mul]
   rw [div_add_div _ _ (amG_toPolyG_ne_zero hg2) (amG_toPolyG_ne_zero hVpow)]
   ring
 
 open QFunNZG in
 /-- The inner Hermite loop invariant with a general accumulator. For `u, v ≠ 0`, the tower
-derivation `D = implicitDeriv (toPolyG Dt)`, and every step's `cdiophantineG` cofactors satisfying
+derivation `D = implicitDeriv (toPoly Dt)`, and every step's `cdiophantine` cofactors satisfying
 the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` telescopes M1:
 `⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧) = D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧`. -/
 theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : CPoly α)
-    (hu : toPolyG u ≠ 0) (hv : toPolyG v ≠ 0)
+    (hu : toPoly u ≠ 0) (hv : toPoly v ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : CPoly α),
-      toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v
-            (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).1
-          * (toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG v))
-        + toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v
-            (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).2 * toPolyG v
-      = -toPolyG A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
-    ∀ (j : ℕ) (A : CPoly α) (g : CPoly α × CPoly α), toPolyG g.2 ≠ 0 →
-      amG α (toPolyG A) / (amG α (toPolyG u) * amG α (toPolyG v) ^ (j + 1))
-          + towerFractionFieldDerivG Dt (amG α (toPolyG g.1) / amG α (toPolyG g.2))
+      toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
+            (cscale (CField.neg (CField.inv (cnatCast (j' + 1)))) A')).1
+          * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
+        + toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
+            (cscale (CField.neg (CField.inv (cnatCast (j' + 1)))) A')).2 * toPoly v
+      = -toPoly A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
+    ∀ (j : ℕ) (A : CPoly α) (g : CPoly α × CPoly α), toPoly g.2 ≠ 0 →
+      amG α (toPoly A) / (amG α (toPoly u) * amG α (toPoly v) ^ (j + 1))
+          + towerFractionFieldDerivG Dt (amG α (toPoly g.1) / amG α (toPoly g.2))
         = towerFractionFieldDerivG Dt
-            (amG α (toPolyG (cHermiteReduceTowerInnerWf Dt v u j A g).1.1)
-              / amG α (toPolyG (cHermiteReduceTowerInnerWf Dt v u j A g).1.2))
-          + amG α (toPolyG (cHermiteReduceTowerInnerWf Dt v u j A g).2)
-            / (amG α (toPolyG u) * amG α (toPolyG v)) := by
+            (amG α (toPoly (cHermiteReduceTowerInnerWf Dt v u j A g).1.1)
+              / amG α (toPoly (cHermiteReduceTowerInnerWf Dt v u j A g).1.2))
+          + amG α (toPoly (cHermiteReduceTowerInnerWf Dt v u j A g).2)
+            / (amG α (toPoly u) * amG α (toPoly v)) := by
   intro j
   induction j with
   | zero =>
@@ -130,25 +130,25 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
   | succ j ih =>
     intro A g hg
     rw [cHermiteReduceTowerInnerWf]
-    set jval : α := cnatCastG (j + 1) with hjval
+    set jval : α := cnatCast (j + 1) with hjval
     set Dv := cmonomialDeriv Dt v with hDv
-    set p := cmulG u Dv with hp
-    set rhs := cscaleG (CField.neg (CField.inv jval)) A with hrhs
-    rcases hBC : cdiophantineG p v rhs with ⟨B, C⟩
+    set p := cmul u Dv with hp
+    set rhs := cscale (CField.neg (CField.inv jval)) A with hrhs
+    rcases hBC : cdiophantine p v rhs with ⟨B, C⟩
     simp only []
-    set Vpow := cpowG v (j + 1) with hVpow
-    set A' := csubG (cscaleG (CField.neg jval) C) (cmulG u (cmonomialDeriv Dt B)) with hA'
-    have hVpow0 : toPolyG Vpow ≠ 0 := by
+    set Vpow := cpow v (j + 1) with hVpow
+    set A' := csub (cscale (CField.neg jval) C) (cmul u (cmonomialDeriv Dt B)) with hA'
+    have hVpow0 : toPoly Vpow ≠ 0 := by
       rw [hVpow]
       simp only [denote]
       exact pow_ne_zero _ hv
-    have hgnew : toPolyG (cmulG g.2 Vpow) ≠ 0 := by
+    have hgnew : toPoly (cmul g.2 Vpow) ≠ 0 := by
       simp only [denote]
       exact mul_ne_zero hg hVpow0
     -- the accumulator update reads as `⟦g⟧ + ⟦B/Vpow⟧`.
     have hstepadd := fieldFrac_step_add g.1 g.2 B Vpow hg hVpow0
     -- `Vpow = v^(j+1)`, `B/Vpow = am B / (am v)^(j+1)`.
-    have hVpoweq : amG α (toPolyG Vpow) = amG α (toPolyG v) ^ (j + 1) := by
+    have hVpoweq : amG α (toPoly Vpow) = amG α (toPoly v) ^ (j + 1) := by
       rw [hVpow]
       simp only [denote, map_pow]
     -- the Bézout relation at `(j, A)`, matched to M1's `hrel`.
@@ -156,16 +156,16 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
     rw [← hjval, ← hrhs, hBC] at hb
     simp only [] at hb
     -- apply the single-step identity M1.
-    have hstep := towerFractionFieldDerivG_hermite_step (α := α) Dt (toPolyG A) (toPolyG B)
-      (toPolyG C) (toPolyG u) (toPolyG v) hu hv j hb
+    have hstep := towerFractionFieldDerivG_hermite_step (α := α) Dt (toPoly A) (toPoly B)
+      (toPoly C) (toPoly u) (toPoly v) hu hv j hb
     -- the recursion at counter `j` with the updated accumulator and numerator `A'`.
-    have hgnew' : toPolyG (cmulG g.2 Vpow) ≠ 0 := hgnew
-    have ihA := ih A' (caddG (cmulG g.1 Vpow) (cmulG B g.2), cmulG g.2 Vpow) hgnew'
+    have hgnew' : toPoly (cmul g.2 Vpow) ≠ 0 := hgnew
+    have ihA := ih A' (cadd (cmul g.1 Vpow) (cmul B g.2), cmul g.2 Vpow) hgnew'
     simp only [] at ihA
     -- rewrite `A'` numerator and the accumulator fraction in the recursion hypothesis.
-    have hA'eq : toPolyG A'
-        = -(Polynomial.C ((j : CFieldSpec.K α) + 1)) * toPolyG C
-          - toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG B) := by
+    have hA'eq : toPoly A'
+        = -(Polynomial.C ((j : CFieldSpec.K α) + 1)) * toPoly C
+          - toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly B) := by
       rw [hA']
       simp only [denote, CFieldSpec.toK_neg, hjval, CPoly.toK_cnatCastG, Nat.cast_add_one, map_neg]
     rw [hstepadd, hVpoweq] at ihA
@@ -176,7 +176,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
 
 /-! ### Whole-step field identity from exact division
 
-`cHermiteReduceTowerG Dt a d = ((gnum,gden),(hNum,Dstar))` computes the residual `hNum/Dstar` so
+`cHermiteReduceTower Dt a d = ((gnum,gden),(hNum,Dstar))` computes the residual `hNum/Dstar` so
 that it equals `a/d - D(g)` by construction: `resNum/resDen = (a·gden² - d·gp)/(d·gden²)` with
 `gp = D(gnum)·gden - gnum·D(gden)` the quotient numerator, and `hNum = (resNum·Dstar)/resDen`. So the
 step identity `D(⟦g⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧` is a clean algebraic assembly reducing to the single
@@ -188,27 +188,27 @@ and the exact-division relation `⟦hNum⟧·⟦d·gden²⟧ = ⟦resNum⟧·⟦
 `gp = D(gnum)·gden - gnum·D(gden)`), the reduced part telescopes:
 `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
 theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPoly α)
-    (hd : amG α (toPolyG d) ≠ 0) (hgden : amG α (toPolyG gden) ≠ 0)
-    (hDstar : amG α (toPolyG Dstar) ≠ 0)
-    (hexact : amG α (toPolyG hNum)
-          * amG α (toPolyG (cmulG d (cmulG gden gden)))
-        = amG α (toPolyG (csubG (cmulG a (cmulG gden gden))
-            (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
-              (cmulG gnum (cmonomialDeriv Dt gden))))))
-          * amG α (toPolyG Dstar)) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden))
-        + amG α (toPolyG hNum) / amG α (toPolyG Dstar)
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
+    (hd : amG α (toPoly d) ≠ 0) (hgden : amG α (toPoly gden) ≠ 0)
+    (hDstar : amG α (toPoly Dstar) ≠ 0)
+    (hexact : amG α (toPoly hNum)
+          * amG α (toPoly (cmul d (cmul gden gden)))
+        = amG α (toPoly (csub (cmul a (cmul gden gden))
+            (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
+              (cmul gnum (cmonomialDeriv Dt gden))))))
+          * amG α (toPoly Dstar)) :
+    towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden))
+        + amG α (toPoly hNum) / amG α (toPoly Dstar)
+      = amG α (toPoly a) / amG α (toPoly d) := by
   rw [towerFractionFieldDerivG_div]
   simp only [denote, map_sub, map_mul] at hexact ⊢
-  set Dg := Differential.implicitDeriv (toPolyG Dt)
+  set Dg := Differential.implicitDeriv (toPoly Dt)
   -- `⟦hNum/Dstar⟧ = ⟦resNum/resDen⟧` from the exact-division relation.
-  have hgden2 : amG α (toPolyG gden) ^ 2 ≠ 0 := pow_ne_zero _ hgden
-  have hkey : amG α (toPolyG hNum) / amG α (toPolyG Dstar)
-      = (amG α (toPolyG a) * (amG α (toPolyG gden) * amG α (toPolyG gden))
-          - amG α (toPolyG d) * (amG α (Dg (toPolyG gnum)) * amG α (toPolyG gden)
-              - amG α (toPolyG gnum) * amG α (Dg (toPolyG gden))))
-        / (amG α (toPolyG d) * (amG α (toPolyG gden) * amG α (toPolyG gden))) := by
+  have hgden2 : amG α (toPoly gden) ^ 2 ≠ 0 := pow_ne_zero _ hgden
+  have hkey : amG α (toPoly hNum) / amG α (toPoly Dstar)
+      = (amG α (toPoly a) * (amG α (toPoly gden) * amG α (toPoly gden))
+          - amG α (toPoly d) * (amG α (Dg (toPoly gnum)) * amG α (toPoly gden)
+              - amG α (toPoly gnum) * amG α (Dg (toPoly gden))))
+        / (amG α (toPoly d) * (amG α (toPoly gden) * amG α (toPoly gden))) := by
     rw [div_eq_div_iff hDstar (mul_ne_zero hd (mul_ne_zero hgden hgden))]
     linear_combination hexact
   rw [hkey]
@@ -228,38 +228,38 @@ open QFunNZG in
 `cdivWf (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
 reduced part telescopes: `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
 theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : CPoly α)
-    (hd : amG α (toPolyG d) ≠ 0) (hgden : amG α (toPolyG gden) ≠ 0)
-    (hDstar : amG α (toPolyG Dstar) ≠ 0)
-    (hresDen : cnormG (cmulG d (cmulG gden gden)) ≠ [])
-    (hSD : toPolyG d = toPolyG Dstar * toPolyG W)
-    (hWgd : toPolyG W * (toPolyG gden * toPolyG gden)
-        ∣ toPolyG (csubG (cmulG a (cmulG gden gden))
-            (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
-              (cmulG gnum (cmonomialDeriv Dt gden)))))) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden))
-        + amG α (toPolyG (cdivWf (cmulG (csubG (cmulG a (cmulG gden gden))
-            (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
-              (cmulG gnum (cmonomialDeriv Dt gden))))) Dstar) (cmulG d (cmulG gden gden))))
-          / amG α (toPolyG Dstar)
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
-  set resNum := csubG (cmulG a (cmulG gden gden))
-    (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
-      (cmulG gnum (cmonomialDeriv Dt gden)))) with hresNum
-  set resDen := cmulG d (cmulG gden gden) with hresDen'
+    (hd : amG α (toPoly d) ≠ 0) (hgden : amG α (toPoly gden) ≠ 0)
+    (hDstar : amG α (toPoly Dstar) ≠ 0)
+    (hresDen : cnorm (cmul d (cmul gden gden)) ≠ [])
+    (hSD : toPoly d = toPoly Dstar * toPoly W)
+    (hWgd : toPoly W * (toPoly gden * toPoly gden)
+        ∣ toPoly (csub (cmul a (cmul gden gden))
+            (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
+              (cmul gnum (cmonomialDeriv Dt gden)))))) :
+    towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden))
+        + amG α (toPoly (cdivWf (cmul (csub (cmul a (cmul gden gden))
+            (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
+              (cmul gnum (cmonomialDeriv Dt gden))))) Dstar) (cmul d (cmul gden gden))))
+          / amG α (toPoly Dstar)
+      = amG α (toPoly a) / amG α (toPoly d) := by
+  set resNum := csub (cmul a (cmul gden gden))
+    (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
+      (cmul gnum (cmonomialDeriv Dt gden)))) with hresNum
+  set resDen := cmul d (cmul gden gden) with hresDen'
   -- the divisibility `resDen ∣ resNum·Dstar` from the radical split.
-  have hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar) := by
+  have hdvd : toPoly resDen ∣ toPoly (cmul resNum Dstar) := by
     rw [hresDen']
     simp only [denote]
     exact DeepWiki.polynomial_dvd_cleared_identity_of_radical hSD hWgd
   -- the exact-division equation, mapped into the fraction field.
-  have hexactP : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
-      = toPolyG (cmulG resNum Dstar) := toPolyG_cdivWf_exact _ _ hresDen hdvd
-  have hexact : amG α (toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-        * amG α (toPolyG resDen)
-      = amG α (toPolyG resNum) * amG α (toPolyG Dstar) := by
+  have hexactP : toPoly (cdivWf (cmul resNum Dstar) resDen) * toPoly resDen
+      = toPoly (cmul resNum Dstar) := toPolyG_cdivWf_exact _ _ hresDen hdvd
+  have hexact : amG α (toPoly (cdivWf (cmul resNum Dstar) resDen))
+        * amG α (toPoly resDen)
+      = amG α (toPoly resNum) * amG α (toPoly Dstar) := by
     rw [← map_mul, hexactP]
     simp only [denote, map_mul]
   exact hermiteTowerStep_field_identity Dt gnum gden a d
-    (cdivWf (cmulG resNum Dstar) resDen) Dstar hd hgden hDstar hexact
+    (cdivWf (cmul resNum Dstar) resDen) Dstar hd hgden hDstar hexact
 
 end DeepWiki.SymbolicIntegration

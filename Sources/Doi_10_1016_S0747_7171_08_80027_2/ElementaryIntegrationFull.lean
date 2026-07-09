@@ -17,7 +17,7 @@ concrete `∫`, the principal case:
   (`gaussElimG`/`kernelVectorG`/`radLogArgSolveG`), the whole linear solve running over the tower field
   `β = ℚ(x)`; headline `∫ dx/√(eˣ+1) = log((y−1)/(y+1))` over ℚ(x)(eˣ).
 * `DeepWiki.SymbolicIntegration.Engine.ElementaryIntegrate` — the **unified integrator**
-  `cIntegrateElementaryG` assembling `v + Σ cᵢ log uᵢ` (output `AlgIntegralResultG`, differentiated by the
+  `cIntegrateElementary` assembling `v + Σ cᵢ log uᵢ` (output `AlgIntegralResultG`, differentiated by the
   ACTUAL-tower-derivation `algDerivG`); round-trip `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))`.
 * `DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalRationalTower` — the **rational half COMPUTED over a tower**
   (`radIntegrateCase3G` with the actual `θ' = θ` derivation), closing the last supplied gap so BOTH halves
@@ -72,36 +72,36 @@ part; `native_decide`): at `β = ℚ` (`α ≅ ℚ(x)`) the generic solver compu
 ℚ → generic-`CField` generalization is conservative (it specializes back to the base level). -/
 abbrev bie_logarg_arcsinh_base := @genArg_arcsinh_isLogIntegral
 
-/-! ## The unified integrator `cIntegrateElementaryG`: assembling `v + Σ cᵢ log uᵢ` over a tower -/
+/-! ## The unified integrator `cIntegrateElementary`: assembling `v + Σ cᵢ log uᵢ` over a tower -/
 
 /-- **The tower-generic full elementary integral `∫ = v + Σ cᵢ log uᵢ`** (Bronstein 1990, Integration of
 Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower):
 `AlgIntegralResultG α` bundles a rational part `v` (a `RadElem α`) plus log terms `[(c₁, u₁), …]` over an
 arbitrary base field `α` (the tower level `QFunNZG β`). The generic analogue of `AlgIntegralResult`; the
-OUTPUT of `cIntegrateElementaryG`, differentiated by `algDerivG`. -/
+OUTPUT of `cIntegrateElementary`, differentiated by `algDerivG`. -/
 abbrev bie_alg_integral_result := @AlgIntegralResultG
 
 /-- **The ACTUAL-derivation derivative of a tower-generic elementary integral** (Bronstein 1990, elementary
 integral `v + Σ log u` over a transcendental tower): `algDerivG ρ F = radDeriv v + Σ cᵢ · radLogDeriv uᵢ`
 in `α[y]/(y² − ρ)`, with the base derivation the **ACTUAL** tower derivation `CDiffField.cderiv` (NOT the
-formal `cderivG`). Over `α = ℚ(x)(eˣ)` with the exponential derivation it is the genuine exp-tower
-derivative (`θ' = θ`); the round-trip compares `algDerivG ρ (cIntegrateElementaryG …)` to the integrand. -/
+formal `cderiv`). Over `α = ℚ(x)(eˣ)` with the exponential derivation it is the genuine exp-tower
+derivative (`θ' = θ`); the round-trip compares `algDerivG ρ (cIntegrateElementary …)` to the integrand. -/
 abbrev bie_unified_deriv := @algDerivG
 
 /-- **★ The UNIFIED elementary integrator over a transcendental tower** (Bronstein 1990, Integration of
 Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower,
-principal case): `cIntegrateElementaryG` fuses the rational part and the log part over a tower base
+principal case): `cIntegrateElementary` fuses the rational part and the log part over a tower base
 `α = QFunNZG β`. Given the log-solve data, it **COMPUTES** the log argument on the residual via
 `radLogArgSolveG` (the ACTUAL tower derivation) and assembles `v + c·log(N/D)` as an `AlgIntegralResultG`,
 returning the rational-only partial `⟨v, []⟩` when the log solve is non-principal. The general
 `v + Σ cᵢ log uᵢ` assembler — ONE driver for the full elementary integral over a transcendental tower. -/
-abbrev bie_unified_integrate := @cIntegrateElementaryG
+abbrev bie_unified_integrate := @cIntegrateElementary
 
 /-- **★★ THE COMBINED ROUND-TRIP `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over ℚ(x)(eˣ)** (Bronstein 1990,
 Integration of Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental
 tower, principal case, fully computed; `native_decide`): starting from `F = ⟨2y, [(1, u)]⟩` over the tower,
 the ACTUAL exp-tower derivative `algDerivG F = y` (the integrand `√(eˣ+1)`); fed back to
-`cIntegrateElementaryG`, the engine COMPUTES the log half (`radLogArgSolveG → N = (θ+2)−2y`, `u = N/θ`),
+`cIntegrateElementary`, the engine COMPUTES the log half (`radLogArgSolveG → N = (θ+2)−2y`, `u = N/θ`),
 assembles `F' = ⟨2y, [(1, u)]⟩`, and `algDerivG F' = y` — BOTH halves, over the tower, through the real
 exponential derivation. The integrand `y` has a rational part `v = 2y` AND a log part `log u`. -/
 abbrev bie_unified_roundtrip := @rt_elementary_combined
@@ -141,10 +141,10 @@ integrand) over the tower through the real radical derivation. The unified eleme
 end-to-end over the transcendental tower. -/
 abbrev bie_both_halves_computed := @rtFull_both_halves_computed
 
-/-- **`radIntegrateCase3G cderivG` reduces to the ℚ-base fuel-free Case-3 driver** (Bronstein 1990,
+/-- **`radIntegrateCase3G cderiv` reduces to the ℚ-base fuel-free Case-3 driver** (Bronstein 1990,
 rational part; `native_decide`): at the ℚ base (`α ≅ ℚ(x)`, `θ' = 1`) the generic Case-3-G driver and
 `radIntegrateCase3Wf` produce the **identical** `(Crem, vNum)` on `∫ x⁴/√(x³+1)` — the ACTUAL-derivation
-generalization is conservative (`radCase3CofactorTower cderivG` specializes back to `radCase3Cofactor`). -/
+generalization is conservative (`radCase3CofactorTower cderiv` specializes back to `radCase3Cofactor`). -/
 abbrev bie_case3_tower_base_conservative := @stretch_case3G_eq_case3_base
 
 end DeepWiki.Bie

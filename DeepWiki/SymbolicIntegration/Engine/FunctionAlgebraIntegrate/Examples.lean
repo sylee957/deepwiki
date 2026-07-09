@@ -29,15 +29,15 @@ def cubeRootComponentIntegral : CPoly (QFunNZG ℚ) := [CField.zero, qxOfNum [0,
 def componentIntegrandY : CPoly (QFunNZG ℚ) := afBasisElem 1
 
 /-- Component 1 (`native_decide`): `∫y dx = (2/3)·x·y` on `y² − x = 0`, checked by
-`cisZeroG (afDerivWf (y²−x) F₁ − y)`. -/
+`cisZero (afDerivWf (y²−x) F₁ − y)`. -/
 theorem sqrtComponentIntegral_deriv :
-    cisZeroG (csubG (afDerivWf sqrtComponentCurve sqrtComponentIntegral) componentIntegrandY) = true := by
+    cisZero (csub (afDerivWf sqrtComponentCurve sqrtComponentIntegral) componentIntegrandY) = true := by
   native_decide
 
 /-- Component 2 (`native_decide`): `∫y dx = (3/4)·x·y` on `y³ − x = 0`, checked by
-`cisZeroG (afDerivWf (y³−x) F₂ − y)`. -/
+`cisZero (afDerivWf (y³−x) F₂ − y)`. -/
 theorem cubeRootComponentIntegral_deriv :
-    cisZeroG (csubG (afDerivWf cubeRootComponentCurve cubeRootComponentIntegral) componentIntegrandY)
+    cisZero (csub (afDerivWf cubeRootComponentCurve cubeRootComponentIntegral) componentIntegrandY)
       = true := by
   native_decide
 

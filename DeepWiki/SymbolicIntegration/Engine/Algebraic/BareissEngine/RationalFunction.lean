@@ -18,16 +18,16 @@ variable {α : Type*} [CField α]
 /-- The monic lcm of two `CPoly` polynomials over a field `qfLcm a b = a·b / gcd(a, b)` (gcd via
 `cgcdWf`); the `0` polynomial on either side returns the other. -/
 def qfLcm (a b : CPoly α) : CPoly α :=
-  if cisZeroG a then b
-  else if cisZeroG b then a
+  if cisZero a then b
+  else if cisZero b then a
   else
     let g := (cgcdWf a b).1
-    cmonicG (cdivWf (cmulG a b) g)
+    cmonic (cdivWf (cmul a b) g)
 
 /-- The common denominator of a `ℚ(x)`-row `qfRowDen row`, the monic lcm of the entry denominators;
 scaling the row by this `D ∈ ℚ[x]` lands every entry in `ℚ[x]`. -/
 def qfRowDen (row : List (QFunNZG ℚ)) : CPoly ℚ :=
-  row.foldl (fun acc z => qfLcm acc (cmonicG (z.1.2 : CPoly ℚ))) [CField.one]
+  row.foldl (fun acc z => qfLcm acc (cmonic (z.1.2 : CPoly ℚ))) [CField.one]
 
 /-- The common denominator of a whole `ℚ(x)`-matrix `qfMatDen M`, the lcm over all rows of `qfRowDen`;
 the single `D ∈ ℚ[x]` with `D·M ∈ ℚ[x]ⁿˣⁿ` and `det(D·M) = Dⁿ·det M`. -/
@@ -39,7 +39,7 @@ def qfMatDen (M : List (List (QFunNZG ℚ))) : CPoly ℚ :=
 /-- Clear a single `ℚ(x)` entry by a common denominator `D` `qfClearEntry D z = num(z)·(D/den(z))`, the
 `ℚ[x]` polynomial `D·z` (exact since `den(z) | D`). -/
 def qfClearEntry (D : CPoly ℚ) (z : QFunNZG ℚ) : CPoly ℚ :=
-  cmulG (z.1.1 : CPoly ℚ) (cdivWf D (z.1.2 : CPoly ℚ))
+  cmul (z.1.1 : CPoly ℚ) (cdivWf D (z.1.2 : CPoly ℚ))
 
 /-- Clear a single `ℚ(x)`-row to `ℚ[x]` `qfClearRow row = ([D·zᵢ], D)` where `D = qfRowDen row`;
 returns the cleared `ℚ[x]`-row paired with the clearing factor `D`. -/
@@ -61,7 +61,7 @@ def qfDet (M : List (List (QFunNZG ℚ))) : QFunNZG ℚ :=
   let n := M.length
   let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
-  let Dn := cpowG D n
+  let Dn := cpow D n
   CField.mul (qxOfNum detPoly) (CField.inv (qxOfNum Dn))
 
 /-- The fraction-free adjugate `(adj(D·M), D)` of a `ℚ(x)`-matrix `qfAdjugate M`: clear `M` to
@@ -78,7 +78,7 @@ def qfInv (M : List (List (QFunNZG ℚ))) : CPoly ℚ × List (List (CPoly ℚ))
   let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
   let adjPoly := bareissAdjugate M'
-  (detPoly, adjPoly.map (fun row => row.map (fun e => cmulG D e)))
+  (detPoly, adjPoly.map (fun row => row.map (fun e => cmul D e)))
 
 /-- A single `ℚ(x)` entry of the fraction-free inverse `qfInvEntry M i j = (D·adj(M'))[i][j] /
 det(M') : QFunNZG ℚ`, reading the `(i, j)` entry of `qfInv` back into `ℚ(x)`. -/

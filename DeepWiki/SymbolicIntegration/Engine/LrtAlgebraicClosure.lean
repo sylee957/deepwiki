@@ -18,9 +18,9 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 identity of `IsIntegralResultLrtG` at `E = AlgebraicClosure (CFieldSpec.K α)`. -/
 theorem isIntegralResultLrtG_algebraicClosure (Dt anum aden : CPoly α) (res : LrtResultG α)
     (h : IsIntegralResultLrtG Dt anum aden res) :
-    (towerDerivExt Dt (amGExt (toPolyG res.rational.1) / amGExt (toPolyG res.rational.2))
+    (towerDerivExt Dt (amGExt (toPoly res.rational.1) / amGExt (toPoly res.rational.2))
         + logResidueSumLrtG Dt res.logs : RatFunc (AlgebraicClosure (CFieldSpec.K α)))
-      = amGExt (toPolyG anum) / amGExt (toPolyG aden) :=
+      = amGExt (toPoly anum) / amGExt (toPoly aden) :=
   h (AlgebraicClosure (CFieldSpec.K α))
 
 end DeepWiki.SymbolicIntegration

@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 /-! # Generic RDE glue lemmas
 
 Carrier-agnostic algebraic glue lemmas consumed by the tower RDE correctness: pure `Derivation`
-algebra and generic-engine `toPolyG` divisibility/Diophantine facts. -/
+algebra and generic-engine `toPoly` divisibility/Diophantine facts. -/
 
 open Polynomial
 
@@ -88,17 +88,17 @@ namespace CPoly
 
 /-- Restatement: the fuel-free divisibility check reads as honest divisibility. -/
 example {α : Type*} [CField α] [CFieldSpec α] (q p : CPoly α)
-    (hq : cnormG q ≠ []) (hdvd : cdvdG q p = true) :
-    toPolyG q ∣ toPolyG p :=
+    (hq : cnorm q ≠ []) (hdvd : cdvd q p = true) :
+    toPoly q ∣ toPoly p :=
   dvd_of_cdvdG q p hq hdvd
 
 /-- Restatement: the fuel-free generic Diophantine solver satisfies the Bézout identity. -/
 example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : CPoly α)
-    (hq0 : cnormG q ≠ [])
-    (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
-    (hgne : toPolyG (cgcdWf p q).1 ≠ 0) :
-    toPolyG (cdiophantineG p q rhs).1 * toPolyG p
-        + toPolyG (cdiophantineG p q rhs).2 * toPolyG q = toPolyG rhs :=
+    (hq0 : cnorm q ≠ [])
+    (hgdeg : (toPoly (cgcdWf p q).1).natDegree = 0)
+    (hgne : toPoly (cgcdWf p q).1 ≠ 0) :
+    toPoly (cdiophantine p q rhs).1 * toPoly p
+        + toPoly (cdiophantine p q rhs).2 * toPoly q = toPoly rhs :=
   toPolyG_cdiophantineG p q rhs hq0 hgdeg hgne
 
 end CPoly

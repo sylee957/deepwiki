@@ -21,8 +21,8 @@ open scoped Differential in
 `η_K̄ ∉ range(D_K̄)`; it descends to `K` via `deriv_algebraMap` (the derivation intertwines base change): if
 `γ′ = η` in `K` then `(φγ)′ = φη` in `K̄`, contradicting the property at `β = φγ`. -/
 theorem eta_not_range_der [CharZero (CFieldSpec.K α)] (Dt : CPoly α)
-    (hgen : GenuinePrimitiveMonomialLrt Dt) (hDt0 : (toPolyG Dt).natDegree = 0) :
-    ∀ (γ : CFieldSpec.K α), γ′ ≠ (toPolyG Dt).coeff 0 := by
+    (hgen : GenuinePrimitiveMonomialLrt Dt) (hDt0 : (toPoly Dt).natDegree = 0) :
+    ∀ (γ : CFieldSpec.K α), γ′ ≠ (toPoly Dt).coeff 0 := by
   intro γ hγ
   refine hgen (AlgebraicClosure (CFieldSpec.K α))
     (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)) γ) ?_
@@ -31,25 +31,25 @@ theorem eta_not_range_der [CharZero (CFieldSpec.K α)] (Dt : CPoly α)
 
 open scoped Differential in
 /-- **`hm` from the genuine monomial property.** The monomial-derivative degree drop
-`cdegG (cmonomialDeriv Dt Dstar) = cdegG Dstar − 1` is `natDegree_implicitDeriv_eq_of_monic_of_not_range`
-(monic `Dstar` from Hermite; `η ∉ range D` from `eta_not_range_der`) through the `cdegG`/`cmonomialDeriv`
+`cdeg (cmonomialDeriv Dt Dstar) = cdeg Dstar − 1` is `natDegree_implicitDeriv_eq_of_monic_of_not_range`
+(monic `Dstar` from Hermite; `η ∉ range D` from `eta_not_range_der`) through the `cdeg`/`cmonomialDeriv`
 bridges. The degenerate `deg Dstar = 0` (`Dstar = 1`) case is handled separately (both sides `0`). -/
 theorem hm_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPolyG d ≠ 0) (hgen : GenuinePrimitiveMonomialLrt Dt)
-    (hDt0 : (toPolyG Dt).natDegree = 0) :
-    cdegG (cmonomialDeriv Dt (cHermiteReduceTowerG Dt a d).2.2)
-      = cdegG (cHermiteReduceTowerG Dt a d).2.2 - 1 := by
-  have hmonic : (toPolyG (cHermiteReduceTowerG Dt a d).2.2).Monic :=
+    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hgen : GenuinePrimitiveMonomialLrt Dt)
+    (hDt0 : (toPoly Dt).natDegree = 0) :
+    cdeg (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).2.2)
+      = cdeg (cHermiteReduceTower Dt a d).2.2 - 1 := by
+  have hmonic : (toPoly (cHermiteReduceTower Dt a d).2.2).Monic :=
     toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0
   rw [cdegG_eq_natDegree, cdegG_eq_natDegree]
   simp only [denote]
-  by_cases hdeg : 1 ≤ (toPolyG (cHermiteReduceTowerG Dt a d).2.2).natDegree
+  by_cases hdeg : 1 ≤ (toPoly (cHermiteReduceTower Dt a d).2.2).natDegree
   · exact natDegree_implicitDeriv_eq_of_monic_of_not_range _ _ hmonic hDt0 hdeg
       (eta_not_range_der Dt hgen hDt0)
-  · have h0 : (toPolyG (cHermiteReduceTowerG Dt a d).2.2).natDegree = 0 := by omega
-    have hC : toPolyG (cHermiteReduceTowerG Dt a d).2.2 = Polynomial.C 1 := by
+  · have h0 : (toPoly (cHermiteReduceTower Dt a d).2.2).natDegree = 0 := by omega
+    have hC : toPoly (cHermiteReduceTower Dt a d).2.2 = Polynomial.C 1 := by
       conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero h0]
-      rw [show (toPolyG (cHermiteReduceTowerG Dt a d).2.2).coeff 0 = 1 from by
+      rw [show (toPoly (cHermiteReduceTower Dt a d).2.2).coeff 0 = 1 from by
         rw [← h0]; exact hmonic.coeff_natDegree]
     rw [h0, hC, Differential.implicitDeriv_C]
     simp
@@ -60,13 +60,13 @@ open scoped Differential in
 (`D = implicitDeriv Dt`) for monic squarefree `v` over `K`. The proof base-changes to `K̄`, splits `v`, and
 reduces coprimality to rootwise genuine monomial normality. -/
 theorem isCoprime_implicitDeriv_of_genuineMonomial [CharZero (CFieldSpec.K α)] (Dt v : CPoly α)
-    (hgen : GenuinePrimitiveMonomialLrt Dt) (hmonic : (toPolyG v).Monic)
-    (hsf : Squarefree (toPolyG v)) :
-    IsCoprime (toPolyG v) (Differential.implicitDeriv (toPolyG Dt) (toPolyG v)) := by
+    (hgen : GenuinePrimitiveMonomialLrt Dt) (hmonic : (toPoly v).Monic)
+    (hsf : Squarefree (toPoly v)) :
+    IsCoprime (toPoly v) (Differential.implicitDeriv (toPoly Dt) (toPoly v)) := by
   rw [← Polynomial.isCoprime_map (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))),
     implicitDeriv_map]
   have hmonicE := hmonic.map (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)))
-  have hsepE : ((toPolyG v).map
+  have hsepE : ((toPoly v).map
       (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)))).Separable :=
     (Polynomial.separable_map _).mpr (PerfectField.separable_iff_squarefree.mpr hsf)
   rw [monic_separable_eq_nodal _ hmonicE hsepE, Lagrange.nodal]
@@ -74,14 +74,14 @@ theorem isCoprime_implicitDeriv_of_genuineMonomial [CharZero (CFieldSpec.K α)] 
     (fun β _ => hgen (AlgebraicClosure (CFieldSpec.K α)) β)
 
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
-/-- **The `cgcdWf`-unit bridge.** `IsCoprime (toPolyG a) (toPolyG b)` makes the fraction-free gcd a unit
+/-- **The `cgcdWf`-unit bridge.** `IsCoprime (toPoly a) (toPoly b)` makes the fraction-free gcd a unit
 (`IsCoprime.isUnit_of_dvd'` with `toPolyG_cgcdWf_dvd`), hence degree `0` and nonzero — the computable
 `hcopgcd`-shape conclusion from the abstract coprimality. -/
 theorem natDegree_cgcdWf_eq_zero_of_isCoprime (a b : CPoly α)
-    (h : IsCoprime (toPolyG a) (toPolyG b)) :
-    (toPolyG (cgcdWf a b).1).natDegree = 0 ∧ toPolyG (cgcdWf a b).1 ≠ 0 := by
+    (h : IsCoprime (toPoly a) (toPoly b)) :
+    (toPoly (cgcdWf a b).1).natDegree = 0 ∧ toPoly (cgcdWf a b).1 ≠ 0 := by
   obtain ⟨hda, hdb⟩ := toPolyG_cgcdWf_dvd a b
-  have hunit : IsUnit (toPolyG (cgcdWf a b).1) := h.isUnit_of_dvd' hda hdb
+  have hunit : IsUnit (toPoly (cgcdWf a b).1) := h.isUnit_of_dvd' hda hdb
   exact ⟨Polynomial.natDegree_eq_zero_of_isUnit hunit, hunit.ne_zero⟩
 
 omit [CDiffField α] [CDiffFieldSpec α] in
@@ -91,64 +91,64 @@ cofactor half of `hcopgcd`. Base-change to `K̄`, where `v` splits (monic square
 `rootMult β d = idx+1` (`rootMult_R_map_eq_idx_succ`) equals `rootMult β (v^(idx+1))` (`β` a simple root),
 forcing `rootMult β u = 0` — `β` is not a root of `u`. -/
 theorem isCoprime_cofactor_yunFactor [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (d : CPoly α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
-    (idx : ℕ) (hidx : idx < (cSqfreeYunFFG d).length) :
-    IsCoprime (toPolyG (cdivWf d (cpowG ((cSqfreeYunFFG d).get ⟨idx, hidx⟩) (idx + 1))))
-      (toPolyG ((cSqfreeYunFFG d).get ⟨idx, hidx⟩)) := by
+    (d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
+    (idx : ℕ) (hidx : idx < (cSqfreeYunFF d).length) :
+    IsCoprime (toPoly (cdivWf d (cpow ((cSqfreeYunFF d).get ⟨idx, hidx⟩) (idx + 1))))
+      (toPoly ((cSqfreeYunFF d).get ⟨idx, hidx⟩)) := by
   classical
-  set v := (cSqfreeYunFFG d).get ⟨idx, hidx⟩ with hvdef
-  set u := cdivWf d (cpowG v (idx + 1)) with hudef
+  set v := (cSqfreeYunFF d).get ⟨idx, hidx⟩ with hvdef
+  set u := cdivWf d (cpow v (idx + 1)) with hudef
   have hφinj : Function.Injective (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))) :=
     (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))).injective
-  have hv0 : toPolyG v ≠ 0 := cSqfreeYunFFG_get_ne_zero hgcd d hd0 hpp idx hidx
-  have hpow : toPolyG v ^ (idx + 1) ∣ toPolyG d := by
+  have hv0 : toPoly v ≠ 0 := cSqfreeYunFFG_get_ne_zero hgcd d hd0 hpp idx hidx
+  have hpow : toPoly v ^ (idx + 1) ∣ toPoly d := by
     have h := cSqfreeYunFFG_pow_dvd hgcd d hd0 hpp idx hidx
     rwa [Nat.add_comm 1 idx] at h
-  have hmul : toPolyG u * toPolyG v ^ (idx + 1) = toPolyG d :=
+  have hmul : toPoly u * toPoly v ^ (idx + 1) = toPoly d :=
     toPolyG_cdivWf_pow_mul d v (idx + 1) hv0 hpow
   -- base-change the goal `IsCoprime u v` to `K̄`
   rw [← Polynomial.isCoprime_map (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)))]
   refine IsCoprime.symm ?_
   -- `v` splits over `K̄` (monic squarefree ⟹ separable)
-  have hvmonicE : ((toPolyG v).map (algebraMap (CFieldSpec.K α)
+  have hvmonicE : ((toPoly v).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))).Monic :=
     (cSqfreeYunFFG_monic hgcd d hd0 v (List.getElem_mem hidx)).map _
-  have hvsfE : Squarefree ((toPolyG v).map (algebraMap (CFieldSpec.K α)
+  have hvsfE : Squarefree ((toPoly v).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))) := yun_factor_map_squarefree hgcd d ⟨hd0, hpp⟩ hidx
-  have hvsepE : ((toPolyG v).map (algebraMap (CFieldSpec.K α)
+  have hvsepE : ((toPoly v).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))).Separable :=
     PerfectField.separable_iff_squarefree.mpr hvsfE
-  have hvmap0 : (toPolyG v).map (algebraMap (CFieldSpec.K α)
+  have hvmap0 : (toPoly v).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α))) ≠ 0 := (Polynomial.map_ne_zero_iff hφinj).mpr hv0
-  have hdmap0 : (toPolyG d).map (algebraMap (CFieldSpec.K α)
+  have hdmap0 : (toPoly d).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α))) ≠ 0 := (Polynomial.map_ne_zero_iff hφinj).mpr hd0
-  have humap0 : (toPolyG u).map (algebraMap (CFieldSpec.K α)
+  have humap0 : (toPoly u).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α))) ≠ 0 := (Polynomial.map_ne_zero_iff hφinj).mpr (by
     intro h0; rw [h0, zero_mul] at hmul; exact hd0 hmul.symm)
   rw [monic_separable_eq_nodal _ hvmonicE hvsepE, Lagrange.nodal]
   refine IsCoprime.prod_left ?_
   intro β hβ
   simp only [id_eq]
-  have hβroot : β ∈ ((toPolyG v).map (algebraMap (CFieldSpec.K α)
+  have hβroot : β ∈ ((toPoly v).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))).roots := Multiset.mem_toFinset.mp hβ
   -- `IsCoprime (X - C β) u ⟺ β` is not a root of `u`
   rw [(Polynomial.irreducible_X_sub_C β).coprime_iff_not_dvd, Polynomial.dvd_iff_isRoot]
   intro hroot
-  have hmd : rootMultiplicity β ((toPolyG d).map (algebraMap (CFieldSpec.K α)
+  have hmd : rootMultiplicity β ((toPoly d).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))) = idx + 1 :=
     rootMult_R_map_eq_idx_succ hgcd d ⟨hd0, hpp⟩ idx hidx β hβroot
-  have hmapmul : (toPolyG d).map (algebraMap (CFieldSpec.K α)
+  have hmapmul : (toPoly d).map (algebraMap (CFieldSpec.K α)
         (AlgebraicClosure (CFieldSpec.K α)))
-      = ((toPolyG u).map (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))))
-        * ((toPolyG v).map (algebraMap (CFieldSpec.K α)
+      = ((toPoly u).map (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))))
+        * ((toPoly v).map (algebraMap (CFieldSpec.K α)
             (AlgebraicClosure (CFieldSpec.K α)))) ^ (idx + 1) := by
     rw [← Polynomial.map_pow, ← Polynomial.map_mul, hmul]
-  have hmv : rootMultiplicity β ((toPolyG v).map (algebraMap (CFieldSpec.K α)
+  have hmv : rootMultiplicity β ((toPoly v).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))) = 1 :=
     squarefree_rootMultiplicity_eq_one hvsfE β (Polynomial.isRoot_of_mem_roots hβroot)
   rw [hmapmul, Polynomial.rootMultiplicity_mul (mul_ne_zero humap0 (pow_ne_zero _ hvmap0)),
     rootMultiplicity_pow_eq _ _ _ hvmap0, hmv, mul_one] at hmd
-  have hpos : 0 < rootMultiplicity β ((toPolyG u).map (algebraMap (CFieldSpec.K α)
+  have hpos : 0 < rootMultiplicity β ((toPoly u).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))) :=
     (Polynomial.rootMultiplicity_pos humap0).mpr hroot
   omega
@@ -161,18 +161,18 @@ For each repeated Yun factor `v = x.1` (multiplicity `x.2 + 1 ≥ 2`) of `d`, th
 normality (`isCoprime_implicitDeriv_of_genuineMonomial`, from `hgen`), and `natDegree_cgcdWf_eq_zero_of_isCoprime`
 reads off the `hcopgcd` shape. -/
 theorem hcopgcd_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (Dt d : CPoly α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (Dt d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hgen : GenuinePrimitiveMonomialLrt Dt) :
-    ∀ x ∈ (cSqfreeYunFFG d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+    ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0 := by
   intro x hx
-  have hxzip : x ∈ (cSqfreeYunFFG d).zipIdx := List.mem_of_mem_filter hx
+  have hxzip : x ∈ (cSqfreeYunFF d).zipIdx := List.mem_of_mem_filter hx
   obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
     (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hxzip))
-  have hxmem : x.1 ∈ cSqfreeYunFFG d := by rw [← hget]; exact List.getElem_mem hidx
+  have hxmem : x.1 ∈ cSqfreeYunFF d := by rw [← hget]; exact List.getElem_mem hidx
   apply natDegree_cgcdWf_eq_zero_of_isCoprime
   simp only [denote]
   refine IsCoprime.mul_left ?_ ?_
@@ -192,37 +192,37 @@ open scoped Differential in
 `hv`/`hb` from Yun `get_ne_zero` + `cdiophantineG_fst_degree_lt`; `hDstar`/`hresDen` from the radical/denominator
 nonvanishing; and the residual divisibility `hdvd` from `hWgd_of_multiplicity` (the Yun coprimality `hcopgcd`
 *derived* from `hgen` via `hcopgcd_of_genuineMonomial`) via the `d = W·Dstar` cancellation, bridging the raw
-fold `g` to the `cnormG`-projections through `toPolyG`. -/
+fold `g` to the `cnorm`-projections through `toPoly`. -/
 theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α) (hd0 : toPolyG d ≠ 0)
-    (hpp : (toPolyG d).primPart ≠ 0) (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
-    (haProper : (toPolyG a).degree < (toPolyG d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt) :
-    (toPolyG (cHermiteReduceTowerG Dt a d).2.1).degree
-      < (toPolyG (cHermiteReduceTowerG Dt a d).2.2).degree := by
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0)
+    (hpp : (toPoly d).primPart ≠ 0) (hDtdeg : (toPoly Dt).natDegree ≤ 1)
+    (haProper : (toPoly a).degree < (toPoly d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt) :
+    (toPoly (cHermiteReduceTower Dt a d).2.1).degree
+      < (toPoly (cHermiteReduceTower Dt a d).2.2).degree := by
   have hcopgcd := hcopgcd_of_genuineMonomial hgcd Dt d hd0 hpp hgen
-  have hgd0 : toPolyG (cHermiteReduceTowerG Dt a d).1.2 ≠ 0 :=
+  have hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0 :=
     toPolyG_cHermiteReduceTowerG_den_ne_zero hgcd Dt a d hd0 hpp
-  set g := (cSqfreeYunFFG d).zipIdx.foldl
+  set g := (cSqfreeYunFF d).zipIdx.foldl
       (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
-            let Vi_pow := cpowG vi i
+            let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
-            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+            (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
       ([CField.zero], [CField.one]) with hg_def
-  -- raw-fold `g` ↔ `cnormG`-projection bridges (equal through `toPolyG`)
-  have hg1 : toPolyG (cHermiteReduceTowerG Dt a d).1.1 = toPolyG g.1 := by
-    rw [hg_def]; simp only [cHermiteReduceTowerG, denote]
-  have hg2 : toPolyG (cHermiteReduceTowerG Dt a d).1.2 = toPolyG g.2 := by
-    rw [hg_def]; simp only [cHermiteReduceTowerG, denote]
-  have hDsF : toPolyG (cHermiteReduceTowerG Dt a d).2.2
-      = toPolyG ((cSqfreeYunFFG d).foldl (fun acc vi => cmulG acc vi) [CField.one]) := by
-    simp only [cHermiteReduceTowerG, denote]
-  have hDstar0 : toPolyG ((cSqfreeYunFFG d).foldl (fun acc vi => cmulG acc vi) [CField.one]) ≠ 0 := by
+  -- raw-fold `g` ↔ `cnorm`-projection bridges (equal through `toPoly`)
+  have hg1 : toPoly (cHermiteReduceTower Dt a d).1.1 = toPoly g.1 := by
+    rw [hg_def]; simp only [cHermiteReduceTower, denote]
+  have hg2 : toPoly (cHermiteReduceTower Dt a d).1.2 = toPoly g.2 := by
+    rw [hg_def]; simp only [cHermiteReduceTower, denote]
+  have hDsF : toPoly (cHermiteReduceTower Dt a d).2.2
+      = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one]) := by
+    simp only [cHermiteReduceTower, denote]
+  have hDstar0 : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one]) ≠ 0 := by
     rw [← hDsF]; exact (toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0).ne_zero
-  have hg2ne : toPolyG g.2 ≠ 0 := by rw [← hg2]; exact hgd0
+  have hg2ne : toPoly g.2 ≠ 0 := by rw [← hg2]; exact hgd0
   refine cHermiteReduceTowerG_leftover_proper_of_degree_le_one Dt a d hDtdeg haProper
     ?_ g hg_def ?_ ?_ hDstar0
   · -- hfac : each repeated Yun factor is nonzero and has proper Diophantine cofactors
@@ -240,36 +240,36 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
       exact cSqfreeYunFFG_get_ne_zero hgcd d hd0 hpp p.2 hidx ((cnormG_eq_nil_iff _).mp h)
   · -- hdvd : `d·g.2² ∣ resNum·Dstar`, from `hWgd` (`W·g.2² ∣ resNum`) and `d = W·Dstar`
     have hWgd := hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd
-    have hHermDsNe : toPolyG (cHermiteReduceTowerG Dt a d).2.2 ≠ 0 :=
+    have hHermDsNe : toPoly (cHermiteReduceTower Dt a d).2.2 ≠ 0 :=
       (toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0).ne_zero
-    have hWD : toPolyG (cdivWf d (cHermiteReduceTowerG Dt a d).2.2)
-        * toPolyG ((cSqfreeYunFFG d).foldl (fun acc vi => cmulG acc vi) [CField.one]) = toPolyG d := by
+    have hWD : toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2)
+        * toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one]) = toPoly d := by
       rw [← hDsF]
-      exact toPolyG_cdivWf_exact d (cHermiteReduceTowerG Dt a d).2.2
+      exact toPolyG_cdivWf_exact d (cHermiteReduceTower Dt a d).2.2
         (fun h => hHermDsNe ((cnormG_eq_nil_iff _).mp h))
         (toPolyG_cHermiteReduceTowerG_Dstar_dvd hgcd Dt a d hd0)
-    -- push `hWgd` from the `cnormG`-projections to `g` (through `toPolyG`)
+    -- push `hWgd` from the `cnorm`-projections to `g` (through `toPoly`)
     rw [hg2] at hWgd
     have htransport :
-        toPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerG Dt a d).1.2
-              (cHermiteReduceTowerG Dt a d).1.2))
-            (cmulG d (csubG (cmulG (cmonomialDeriv Dt (cHermiteReduceTowerG Dt a d).1.1)
-                (cHermiteReduceTowerG Dt a d).1.2)
-              (cmulG (cHermiteReduceTowerG Dt a d).1.1
-                (cmonomialDeriv Dt (cHermiteReduceTowerG Dt a d).1.2)))))
-          = toPolyG (csubG (cmulG a (cmulG g.2 g.2))
-            (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2)
-              (cmulG g.1 (cmonomialDeriv Dt g.2))))) := by
+        toPoly (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
+              (cHermiteReduceTower Dt a d).1.2))
+            (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
+                (cHermiteReduceTower Dt a d).1.2)
+              (cmul (cHermiteReduceTower Dt a d).1.1
+                (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
+          = toPoly (csub (cmul a (cmul g.2 g.2))
+            (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2)
+              (cmul g.1 (cmonomialDeriv Dt g.2))))) := by
       simp only [denote, hg1, hg2]
     rw [htransport] at hWgd
     -- assemble `d·g.2² ∣ resNum·Dstar` from `W·g.2² ∣ resNum` and `d = W·Dstar`
     rw [toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
-    rw [show toPolyG d * (toPolyG g.2 * toPolyG g.2)
-          = toPolyG ((cSqfreeYunFFG d).foldl (fun acc vi => cmulG acc vi) [CField.one])
-            * (toPolyG (cdivWf d (cHermiteReduceTowerG Dt a d).2.2) * (toPolyG g.2 * toPolyG g.2))
+    rw [show toPoly d * (toPoly g.2 * toPoly g.2)
+          = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one])
+            * (toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2) * (toPoly g.2 * toPoly g.2))
         from by rw [← hWD]; ring,
-      mul_comm (toPolyG (csubG (cmulG a (cmulG g.2 g.2))
-        (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2))))))]
+      mul_comm (toPoly (csub (cmul a (cmul g.2 g.2))
+        (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2))))))]
     exact mul_dvd_mul_left _ hWgd
   · -- hresDen : `d·g.2² ≠ 0`
     intro h

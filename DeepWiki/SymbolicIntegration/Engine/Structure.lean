@@ -21,7 +21,7 @@ is a common multiple of `w`'s denominator), via `qnormPairG`-reducing `w` then `
 def cClearedNumCoeffs (d : CPoly ℚ) (w : QFunNZG ℚ) : CPoly ℚ :=
   let wn := qnormPairG w.1.1 w.1.2            -- `w` in lowest terms `(a, b)`
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
-  cmulG wn.1 (cdivWf d wn.2)
+  cmul wn.1 (cdivWf d wn.2)
 
 /-- `cLinearDepData ws w = (M, m)`: clear `w₁,…,wₘ,w` to a common denominator and assemble the
 coefficient matrix `M` (`w` last) whose nullspace vectors are the ℚ-relations `Σ rⱼ wⱼ + r·w = 0`;
@@ -33,10 +33,10 @@ def cLinearDepData (ws : List (QFunNZG ℚ)) (w : QFunNZG ℚ) :
   let dens := all.map (fun u => (qnormPairG u.1.1 u.1.2).2)
   let d := dens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
   let cols : List (CPoly ℚ) := all.map (fun u => cClearedNumCoeffs d u)
-  let nrows := (cols.map cdegG).foldl Nat.max 0 + 1
+  let nrows := (cols.map cdeg).foldl Nat.max 0 + 1
   let M : List (List ℚ) :=
     (List.range nrows).map (fun i =>
-      cols.map (fun c => (cnormG c).getD i 0))
+      cols.map (fun c => (cnorm c).getD i 0))
   (M, ws.length)
 
 /-- `cLogIsNewMonomial logDerivs w = true` iff `log(u)` with logarithmic derivative `w = Du/u` is a
@@ -80,7 +80,7 @@ Logarithmic derivatives as `QFunNZG ℚ` values: `log(x) ⟹ 1/x`, `log(x²) ⟹
 open CPoly
 
 /-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element (`den ≠ 0` discharged automatically). -/
-def qFracStructG (num den : List ℚ) (h : CPoly.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
+def qFracStructG (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 
 /-- `D(x)/x = 1/x`: the logarithmic derivative of `log(x)`. Numerator `[1]`, denominator `x = [0,1]`. -/

@@ -19,19 +19,19 @@ variable {α : Type*} [CField α]
 
 /-- **Count leading-zero coefficients** of a `CPoly` (initial `isZero` run length) — the order of
 vanishing at `t = 0`, i.e. the `t`-power dividing `p`. -/
-def cleadingZerosG (p : CPoly α) : ℕ := (p.takeWhile (fun a => CField.isZero a)).length
+def cleadingZeros (p : CPoly α) : ℕ := (p.takeWhile (fun a => CField.isZero a)).length
 
 /-- **Common `t`-power** `commonTPow ps` shared by every `CPoly` in `ps`: the `min` of their
 leading-zero counts (`0` for the empty list). The maximal `t^k` dividing all of `ps` simultaneously. -/
 def commonTPow (ps : List (CPoly α)) : ℕ :=
-  match ps.map cleadingZerosG with
+  match ps.map cleadingZeros with
   | [] => 0
   | n :: ns => ns.foldl Nat.min n
 
 /-- **Divide a `CPoly` by `t^k`** by dropping `k` low coefficients (`p.drop k`). Sound only when the
 first `k` coefficients are zero (the caller guarantees this via `commonTPow`); realizes division by the
 monomial `t^k`. -/
-def cdropTPowG (k : ℕ) (p : CPoly α) : CPoly α := (p : List α).drop k
+def cdropTPow (k : ℕ) (p : CPoly α) : CPoly α := (p : List α).drop k
 
 /-! ### The coordinate transform at infinity -/
 
@@ -41,15 +41,15 @@ for `f dx = (g₀ + g₁·y)/D dx` on `y² = ρ`. With `m = ⌈deg ρ/2⌉`, `N 
 with the common `t`-power cancelled so `∞` stays a simple pole. Generic over `[CField α]`. -/
 def radTransformAtInfinity (rho g0 g1 D : CPoly α) :
     CPoly α × CPoly α × CPoly α × CPoly α :=
-  let d := cdegG rho
+  let d := cdeg rho
   let m := (d + 1) / 2                                            -- ⌈d/2⌉
-  let N := max (max (cdegG g0) (cdegG g1)) (cdegG D)
-  let rhoT := creverseDegG (2 * m) rho                           -- t^{2m}·ρ(1/t)
-  let g0raw := cnegG (cshiftG m (creverseDegG N g0))             -- −t^m·rev_N g₀
-  let g1raw := cnegG (creverseDegG N g1)                         -- −rev_N g₁
-  let Draw := cshiftG (m + 2) (creverseDegG N D)                 -- t^{m+2}·rev_N D
+  let N := max (max (cdeg g0) (cdeg g1)) (cdeg D)
+  let rhoT := creverseDeg (2 * m) rho                           -- t^{2m}·ρ(1/t)
+  let g0raw := cneg (cshift m (creverseDeg N g0))             -- −t^m·rev_N g₀
+  let g1raw := cneg (creverseDeg N g1)                         -- −rev_N g₁
+  let Draw := cshift (m + 2) (creverseDeg N D)                 -- t^{m+2}·rev_N D
   let k := commonTPow [g0raw, g1raw, Draw]
-  (cnormG rhoT, cnormG (cdropTPowG k g0raw), cnormG (cdropTPowG k g1raw), cnormG (cdropTPowG k Draw))
+  (cnorm rhoT, cnorm (cdropTPow k g0raw), cnorm (cdropTPow k g1raw), cnorm (cdropTPow k Draw))
 
 /-! ### The residue-at-infinity resultant (full + isolated-place) -/
 
@@ -65,13 +65,13 @@ def cAlgResidueAtInfinity (rho g0 g1 D : CPoly α) : CPoly α :=
 Isolates the single place `t = 0`, staying correct (residue `0`) even when `∞` is not a pole. -/
 def cResidueAtInfinityPlace (fuel : ℕ) (rho g0 g1 D : CPoly α) : CPoly α :=
   let (rhoT, g0T, g1T, DT) := radTransformAtInfinity rho g0 g1 D
-  let Dp0 := cevalG (cderivG DT) CField.zero                     -- D̃'(0)
-  let a0 := cevalG g0T CField.zero                               -- g̃₀(0)
-  let b0 := cevalG g1T CField.zero                               -- g̃₁(0)
-  let r0 := cevalG rhoT CField.zero                              -- ρ̃(0)
+  let Dp0 := ceval (cderiv DT) CField.zero                     -- D̃'(0)
+  let a0 := ceval g0T CField.zero                               -- g̃₀(0)
+  let b0 := ceval g1T CField.zero                               -- g̃₁(0)
+  let r0 := ceval rhoT CField.zero                              -- ρ̃(0)
   let lin : CPoly α := [CField.neg a0, Dp0]                     -- D̃'(0)·Z − g̃₀(0)
   let _ := fuel
-  csubG (cmulG lin lin) [CField.mul (CField.mul b0 b0) r0]       -- (·)² − g̃₁(0)²·ρ̃(0)
+  csub (cmul lin lin) [CField.mul (CField.mul b0 b0) r0]       -- (·)² − g̃₁(0)²·ρ̃(0)
 
 end CPoly
 
@@ -99,7 +99,7 @@ def arccoshInf_D : CPoly ℚ := [-1, 0, 1]
 
 -- Sanity print: `(ρ̃, g̃₀, g̃₁, D̃) = (1+t², 0, −1, t(1+t²))`, then the `t=0` place residue `Z²−1`.
 #eval (radTransformAtInfinity arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D : CPoly ℚ × CPoly ℚ × CPoly ℚ × CPoly ℚ)
-#eval (cnormG (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) : List ℚ)
+#eval (cnorm (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) : List ℚ)
 
 /-- The `x = 1/t` transform of `(x² + 1, 0, 1, x² + 1)` is `(1 + t², 0, −1, t(1 + t²))`, the common `t²`
 cancelled so `D̃ = t(1 + t²)` keeps `∞` a simple pole. -/
@@ -110,13 +110,13 @@ theorem arcsinhInf_transform_eq :
 /-- Residue at infinity of `∫ dx/√(x² + 1)` is `±1`: the isolated `t = 0` place residue resultant is
 `Z² − 1`, the log term `log(x + √(x² + 1)) = arcsinh(x)`. -/
 theorem arcsinhInf_residue_eq :
-    cisZeroG (csubG (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+    cisZero (csub (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
       [-1, 0, 1]) = true := by native_decide
 
 /-- The full transformed resultant exposes the same `±1`: `R̃(Z) = 16·Z⁴·(Z² − 1)`; the factor `Z² − 1` is
 the `t = 0` place (residues `±1`), the `Z⁴` the zero-residue branch places `t = ±i`. -/
 theorem arcsinhInf_full_resultant_eq :
-    cisZeroG (csubG (cAlgResidueAtInfinity arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+    cisZero (csub (cAlgResidueAtInfinity arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
       [0, 0, 0, 0, -16, 0, 16]) = true := by native_decide
 
 /-- `±1` are residues at ∞; `2` is not: `cIsResidue` on the isolated place resultant `Z² − 1` accepts
@@ -133,7 +133,7 @@ theorem arcsinhInf_isResidue :
 /-- Residue at infinity of `∫ dx/√(x² − 1)` (arccosh) is `±1`: the isolated `t = 0` place residue resultant
 is `Z² − 1`, the log term `log(x + √(x² − 1)) = arccosh(x)`. -/
 theorem arccoshInf_residue_eq :
-    cisZeroG (csubG (cResidueAtInfinityPlace 30 arccoshInf_rho arcsinhInf_g0 arcsinhInf_g1 arccoshInf_D)
+    cisZero (csub (cResidueAtInfinityPlace 30 arccoshInf_rho arcsinhInf_g0 arcsinhInf_g1 arccoshInf_D)
       [-1, 0, 1]) = true := by native_decide
 
 /-! ### The residue theorem as cross-check
@@ -144,14 +144,14 @@ the residue at infinity is `±1`, summing to `0`. -/
 /-- All finite residues of `∫ dx/√(x² + 1)` vanish: the finite residue resultant `cAlgResidueResultant D ρ
 g₀ g₁ = 16·Z⁴`, a pure `Z`-power. -/
 theorem arcsinhInf_finite_residues_zero :
-    cisZeroG (csubG (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1)
+    cisZero (csub (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1)
       [0, 0, 0, 0, 16]) = true := by native_decide
 
 /-- The residue theorem for `∫ dx/√(x² + 1)`: finite residues all `0` and residues at ∞ are `±1`, summing
 to `0`. The ∞ side is certified by `cResiduesMatch` on `Z² − 1`. -/
 theorem arcsinhInf_residue_theorem :
     cResiduesMatch (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) [1, -1] = true
-    ∧ cisZeroG (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) = false
+    ∧ cisZero (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) = false
     ∧ cResiduesMatch (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) [0, 0, 0, 0] = true := by
   native_decide
 
@@ -170,29 +170,29 @@ def bothInf_g1 : CPoly ℚ := [1]
 def bothInf_D : CPoly ℚ := [0, -1, 1]
 
 -- Sanity: finite `(Z²−1)(Z²−2) = Z⁴−3Z²+2`, then the ∞ place `Z²−1`.
-#eval (cnormG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ)
-#eval (cnormG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) : List ℚ)
+#eval (cnorm (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ)
+#eval (cnorm (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) : List ℚ)
 
 /-- Finite residue resultant of `∫ √(x²+1)/(x²−x) dx` is `(Z²−1)(Z²−2) = Z⁴ − 3Z² + 2`, finite residues
 `±1` (pole `x = 0`) and `±√2` (pole `x = 1`). -/
 theorem bothInf_finite_resultant_eq :
-    cisZeroG (csubG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1)
+    cisZero (csub (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1)
       [2, 0, -3, 0, 1]) = true := by native_decide
 
 /-- Residue at infinity of `∫ √(x²+1)/(x²−x) dx` is `±1`: the isolated `t = 0` place resultant is `Z² − 1`,
 so this differential has nontrivial residues at both finite poles and infinity. -/
 theorem bothInf_infinity_residue_eq :
-    cisZeroG (csubG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D)
+    cisZero (csub (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D)
       [-1, 0, 1]) = true := by native_decide
 
 /-- The residue theorem for `∫ √(x²+1)/(x²−x) dx`: finite + ∞ residues sum to `0`. Via Vieta, each resultant
 has vanishing second-leading coefficient (checked: the `Z³` coefficient of the finite resultant and the
 `Z¹` coefficient of the ∞ resultant are both `0`), so each root-sum is `0`. -/
 theorem bothInf_residue_theorem :
-    ((cnormG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ).getD 3 0 = 0)
-    ∧ ((cnormG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) : List ℚ).getD 1 0 = 0)
-    ∧ cisZeroG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) = false
-    ∧ cisZeroG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) = false := by
+    ((cnorm (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ).getD 3 0 = 0)
+    ∧ ((cnorm (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) : List ℚ).getD 1 0 = 0)
+    ∧ cisZero (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) = false
+    ∧ cisZero (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) = false := by
   native_decide
 
 /-! ### The odd-`deg ρ` case — a branch place at infinity
@@ -208,7 +208,7 @@ def oddInf_D : CPoly ℚ := [0, 0, 0, 1]
 
 -- Probe: `ρ̃ = t` (deg 1, odd ⇒ ramified — `ỹ = √t` Puiseux), place computation degenerates to `−Z²`.
 #eval (radTransformAtInfinity oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D : CPoly ℚ × CPoly ℚ × CPoly ℚ × CPoly ℚ)
-#eval (cnormG (cResidueAtInfinityPlace 30 oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D) : List ℚ)
+#eval (cnorm (cResidueAtInfinityPlace 30 oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D) : List ℚ)
 
 /-- The odd-degree transform leaves a ramified radicand: `∫ dx/√(x³)` transforms to `ρ̃ = t = [0, 1]`
 (`ρ̃(0) = 0`), so `ỹ² = ρ̃` is ramified at `t = 0` — a Puiseux place beyond the simple-pole residue
@@ -221,7 +221,7 @@ theorem oddInf_radicand_ramified :
 
 /-- The engine computes the residue at infinity of `∫ dx/√(x² + 1)` — via `radTransformAtInfinity` plus the
 residue norm localized at `t = 0` — as `Z² − 1`, residues `±1`. -/
-example : cisZeroG (csubG
+example : cisZero (csub
     (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) [-1, 0, 1])
     = true := by native_decide
 

@@ -92,7 +92,7 @@ def qOfNumG (num : CPoly β) : QFunNZG β :=
 
 /-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. The generic analogue of
 `qxMonomial`. -/
-def qMonomialG (k : ℕ) : QFunNZG β := qOfNumG (cshiftG k [(CField.one : β)])
+def qMonomialG (k : ℕ) : QFunNZG β := qOfNumG (cshift k [(CField.one : β)])
 
 /-- The numerator coefficient list of a `β(x)` element: `qNumG z = z.1.1 ∈ CPoly β`. -/
 def qNumG (z : QFunNZG β) : CPoly β := z.1.1
@@ -103,7 +103,7 @@ def qDenG (z : QFunNZG β) : CPoly β := z.1.2
 /-- The cleared log-derivative residual over `α = QFunNZG β`:
 `radLogResidualG ρ integrand D N = radDeriv(N)·D − N·D' − radMul(N, integrand)·D`, where
 `D' = CDiffField.cderiv (qOfNumG D)` is the actual base-field derivation (essential over a tower where
-`θ' ≠ 1`, unlike the formal `cderivG`). `β`-linear in `N`; the generic analogue of `radLogResidual`. -/
+`θ' ≠ 1`, unlike the formal `cderiv`). `β`-linear in `N`; the generic analogue of `radLogResidual`. -/
 def radLogResidualG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPoly β)
     (N : RadElem (QFunNZG β)) : RadElem (QFunNZG β) :=
   let Dq : QFunNZG β := qOfNumG D
@@ -129,12 +129,12 @@ def radLogMatrixG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPol
   let resids : List (RadElem (QFunNZG β)) := basis.map (radLogResidualG ρ integrand D)
   let rowsForComp : ℕ → List (List β) := fun i =>
     let entryOf : ℕ → QFunNZG β := fun j => (resids[j]!).getD i CField.zero
-    let nums : List (CPoly β) := (List.range nCols).map (fun j => cnormG (qNumG (entryOf j)))
-    let dens : List (CPoly β) := (List.range nCols).map (fun j => cnormG (qDenG (entryOf j)))
+    let nums : List (CPoly β) := (List.range nCols).map (fun j => cnorm (qNumG (entryOf j)))
+    let dens : List (CPoly β) := (List.range nCols).map (fun j => cnorm (qDenG (entryOf j)))
     let cleared : List (CPoly β) := (List.range nCols).map (fun j =>
       let prod := (List.range nCols).foldl (fun acc k =>
-        if k = j then acc else cmulG acc (dens[k]!)) [(CField.one : β)]
-      cnormG (cmulG (nums[j]!) prod))
+        if k = j then acc else cmul acc (dens[k]!)) [(CField.one : β)]
+      cnorm (cmul (nums[j]!) prod))
     let width := (cleared.foldl (fun acc p => max acc p.length) 0)
     (List.range width).map (fun r =>
       (List.range nCols).map (fun j => (cleared[j]!).getD r CField.zero))

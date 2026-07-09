@@ -21,51 +21,51 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreW
 
 /-- The normal part `eₙ` of the `g`-denominator. -/
 def rdeNormEnWf (Dt : CPoly α) (gden : CPoly α) : CPoly α :=
-  (CPoly.cSplitFactorFastG Dt gden).1
+  (CPoly.cSplitFactorFast Dt gden).1
 
 /-- The normal part `dₙ` of the `f`-denominator. -/
 def rdeNormDnWf (Dt : CPoly α) (fden : CPoly α) : CPoly α :=
-  (CPoly.cSplitFactorFastG Dt fden).1
+  (CPoly.cSplitFactorFast Dt fden).1
 
 /-- The multiplicity factor `h = gcd(eₙ,eₙ')/gcd(p,p')`. -/
 def rdeNormHWf (Dt : CPoly α) (fden gden : CPoly α) : CPoly α :=
   CPoly.cdivWf
-    (CFracGcdCoreWf.cgcdFFCoreWf (rdeNormEnWf Dt gden) (CPoly.cderivG (rdeNormEnWf Dt gden)))
+    (CFracGcdCoreWf.cgcdFFCoreWf (rdeNormEnWf Dt gden) (CPoly.cderiv (rdeNormEnWf Dt gden)))
     (CFracGcdCoreWf.cgcdFFCoreWf
       (CFracGcdCoreWf.cgcdFFCoreWf (rdeNormDnWf Dt fden) (rdeNormEnWf Dt gden))
-      (CPoly.cderivG (CFracGcdCoreWf.cgcdFFCoreWf
+      (CPoly.cderiv (CFracGcdCoreWf.cgcdFFCoreWf
         (rdeNormDnWf Dt fden) (rdeNormEnWf Dt gden))))
 
 /-- The dividend `dₙ·h²`. -/
 def rdeNormDnh2Wf (Dt : CPoly α) (fden gden : CPoly α) : CPoly α :=
-  CPoly.cmulG (CPoly.cmulG (rdeNormDnWf Dt fden) (rdeNormHWf Dt fden gden))
+  CPoly.cmul (CPoly.cmul (rdeNormDnWf Dt fden) (rdeNormHWf Dt fden gden))
     (rdeNormHWf Dt fden gden)
 
 omit [CFieldSpec α] in
-/-- The normal-denominator step's `isSome` is exactly its `cdvdG` divisibility guard. -/
+/-- The normal-denominator step's `isSome` is exactly its `cdvd` divisibility guard. -/
 theorem cRdeNormalDenominatorG_isSome_iff (Dt : CPoly α) (fnum fden gnum gden : CPoly α) :
-    (CPoly.cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true ↔
-      CPoly.cdvdG (rdeNormEnWf Dt gden) (rdeNormDnh2Wf Dt fden gden) = true := by
-  rw [CPoly.cRdeNormalDenominatorG]
+    (CPoly.cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true ↔
+      CPoly.cdvd (rdeNormEnWf Dt gden) (rdeNormDnh2Wf Dt fden gden) = true := by
+  rw [CPoly.cRdeNormalDenominator]
   simp only [rdeNormDnh2Wf, rdeNormHWf, rdeNormDnWf, rdeNormEnWf]
   split <;> simp_all
 
 omit [CDiffField α] [CFracGcdCoreWf α] in
-/-- Mathematical divisibility `toPolyG q ∣ toPolyG p` forces `cdvdG q p = true`. -/
-theorem cdvdG_of_dvd (q p : CPoly α) (hq0 : CPoly.cnormG q ≠ [])
-    (hdvd : toPolyG q ∣ toPolyG p) :
-    CPoly.cdvdG q p = true := by
-  by_cases h : CPoly.cdvdG q p = true
+/-- Mathematical divisibility `toPoly q ∣ toPoly p` forces `cdvd q p = true`. -/
+theorem cdvdG_of_dvd (q p : CPoly α) (hq0 : CPoly.cnorm q ≠ [])
+    (hdvd : toPoly q ∣ toPoly p) :
+    CPoly.cdvd q p = true := by
+  by_cases h : CPoly.cdvd q p = true
   · exact h
-  · have hfalse : CPoly.cdvdG q p = false := Bool.eq_false_iff.mpr h
+  · have hfalse : CPoly.cdvd q p = false := Bool.eq_false_iff.mpr h
     exact False.elim ((CPoly.not_dvd_of_cdvdG_false q p hq0 hfalse) hdvd)
 
 /-- The normal-denominator step returns `some` from the mathematical divisibility `eₙ ∣ dₙh²`. -/
 theorem cRdeNormalDenominatorG_isSome_of_dvd (Dt : CPoly α)
     (fnum fden gnum gden : CPoly α)
-    (hen0 : CPoly.cnormG (rdeNormEnWf Dt gden) ≠ [])
-    (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden)) :
-    (CPoly.cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true :=
+    (hen0 : CPoly.cnorm (rdeNormEnWf Dt gden) ≠ [])
+    (hdvd : toPoly (rdeNormEnWf Dt gden) ∣ toPoly (rdeNormDnh2Wf Dt fden gden)) :
+    (CPoly.cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true :=
   (cRdeNormalDenominatorG_isSome_iff Dt fnum fden gnum gden).mpr
     (cdvdG_of_dvd _ _ hen0 hdvd)
 
@@ -83,16 +83,16 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 structure RdeNormalDivisibilityResidualWf (Dt fnum fden gnum gden : CPoly α) : Prop where
   /-- A polynomial solution forces `eₙ ∣ dₙh²`. -/
   hdvd : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden)
+    toPoly (rdeNormEnWf Dt gden) ∣ toPoly (rdeNormDnh2Wf Dt fden gden)
   /-- The normal part `eₙ` of `gden` is nonzero. -/
-  hen0 : CPoly.cnormG (rdeNormEnWf Dt gden) ≠ []
+  hen0 : CPoly.cnorm (rdeNormEnWf Dt gden) ≠ []
 
 omit [CRischField α] in
 /-- `hnorm` from the divisibility residual: the normal-denominator step preserves solvability. -/
 theorem hnormWf_of_divisibilityResidualWf (Dt fnum fden gnum gden : CPoly α)
     (hres : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden) :
     (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true := by
+      (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true := by
   intro hsol
   exact cRdeNormalDenominatorG_isSome_of_dvd Dt fnum fden gnum gden
     hres.hen0 (hres.hdvd hsol)
@@ -100,8 +100,8 @@ theorem hnormWf_of_divisibilityResidualWf (Dt fnum fden gnum gden : CPoly α)
 omit [CDiffFieldSpec α] [CRischField α] in
 /-- `eₙ ∣ dₙ` implies `eₙ ∣ dₙh²`. -/
 theorem dvd_dnh2Wf_of_en_dvd_dn (Dt : CPoly α) (fden gden : CPoly α)
-    (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnWf Dt fden)) :
-    toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden) := by
+    (hdvd : toPoly (rdeNormEnWf Dt gden) ∣ toPoly (rdeNormDnWf Dt fden)) :
+    toPoly (rdeNormEnWf Dt gden) ∣ toPoly (rdeNormDnh2Wf Dt fden gden) := by
   rw [rdeNormDnh2Wf]
   simp only [denote]
   exact (hdvd.mul_right _).mul_right _
@@ -109,9 +109,9 @@ theorem dvd_dnh2Wf_of_en_dvd_dn (Dt : CPoly α) (fden gden : CPoly α)
 omit [CRischField α] in
 /-- The `hdvd` clause holds unconditionally when `eₙ ∣ dₙ`. -/
 theorem hdvdWf_free_of_en_dvd_dn (Dt fnum fden gnum gden : CPoly α)
-    (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnWf Dt fden)) :
+    (hdvd : toPoly (rdeNormEnWf Dt gden) ∣ toPoly (rdeNormDnWf Dt fden)) :
     (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden) :=
+      toPoly (rdeNormEnWf Dt gden) ∣ toPoly (rdeNormDnh2Wf Dt fden gden) :=
   fun _ => dvd_dnh2Wf_of_en_dvd_dn Dt fden gden hdvd
 
 end DivisibilityResidualWf
@@ -124,10 +124,10 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreW
 
 /-- If `fden ∣ dₙ·h0`, then `fden` divides the `B`-numerator `dₙh·fnum - dₙ·Dh·fden`. -/
 theorem hdvdB_of_dvd_wf (Dt : CPoly β) (fnum fden h0 : CPoly β)
-    (hdvd : toPolyG fden ∣ toPolyG (CPoly.cmulG (CPoly.cSplitFactorFastG Dt fden).1 h0)) :
-    toPolyG fden ∣ toPolyG (CPoly.csubG
-        (CPoly.cmulG (CPoly.cmulG (CPoly.cSplitFactorFastG Dt fden).1 h0) fnum)
-        (CPoly.cmulG (CPoly.cmulG (CPoly.cSplitFactorFastG Dt fden).1
+    (hdvd : toPoly fden ∣ toPoly (CPoly.cmul (CPoly.cSplitFactorFast Dt fden).1 h0)) :
+    toPoly fden ∣ toPoly (CPoly.csub
+        (CPoly.cmul (CPoly.cmul (CPoly.cSplitFactorFast Dt fden).1 h0) fnum)
+        (CPoly.cmul (CPoly.cmul (CPoly.cSplitFactorFast Dt fden).1
           (CPoly.cmonomialDeriv Dt h0)) fden)) := by
   simp only [denote] at hdvd ⊢
   apply dvd_sub
@@ -136,17 +136,17 @@ theorem hdvdB_of_dvd_wf (Dt : CPoly β) (fnum fden h0 : CPoly β)
 
 /-- If `gden ∣ dₙ·h0·h0`, then `gden` divides the `C`-numerator `dₙh²·gnum`. -/
 theorem hdvdC_of_dvd_wf (Dt : CPoly β) (gnum fden gden h0 : CPoly β)
-    (hdvd : toPolyG gden ∣ toPolyG (CPoly.cmulG
-      (CPoly.cmulG (CPoly.cSplitFactorFastG Dt fden).1 h0) h0)) :
-    toPolyG gden ∣ toPolyG (CPoly.cmulG
-        (CPoly.cmulG (CPoly.cmulG (CPoly.cSplitFactorFastG Dt fden).1 h0) h0) gnum) := by
+    (hdvd : toPoly gden ∣ toPoly (CPoly.cmul
+      (CPoly.cmul (CPoly.cSplitFactorFast Dt fden).1 h0) h0)) :
+    toPoly gden ∣ toPoly (CPoly.cmul
+        (CPoly.cmul (CPoly.cmul (CPoly.cSplitFactorFast Dt fden).1 h0) h0) gnum) := by
   simp only [denote] at hdvd ⊢
   exact hdvd.mul_right _
 
 /-- `fden ∣ dₙh` when `fden` equals its own normal part. -/
 theorem dvd_dn_h_of_normal_wf (Dt : CPoly β) (fden h0 : CPoly β)
-    (hnormal : toPolyG (CPoly.cSplitFactorFastG Dt fden).1 = toPolyG fden) :
-    toPolyG fden ∣ toPolyG (CPoly.cmulG (CPoly.cSplitFactorFastG Dt fden).1 h0) := by
+    (hnormal : toPoly (CPoly.cSplitFactorFast Dt fden).1 = toPoly fden) :
+    toPoly fden ∣ toPoly (CPoly.cmul (CPoly.cSplitFactorFast Dt fden).1 h0) := by
   simp only [denote]
   rw [hnormal]
   exact Dvd.intro _ rfl
@@ -156,8 +156,8 @@ end ClearingDivisibility
 /-- `fden ∣ dₙh` for the shape `fden = [1]`. -/
 theorem dvd_dn_h_one_wf {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
     [CTowerGcdWitnessWf β] (h0 : CPoly β) :
-    toPolyG ([CField.one] : CPoly β)
-      ∣ toPolyG (CPoly.cmulG (CPoly.cSplitFactorFastG ([CField.one] : CPoly β) [CField.one]).1 h0) := by
+    toPoly ([CField.one] : CPoly β)
+      ∣ toPoly (CPoly.cmul (CPoly.cSplitFactorFast ([CField.one] : CPoly β) [CField.one]).1 h0) := by
   rw [cSplitFactorFastG_one_eq]
   simp only [denote, toPolyG_cone_eq_one_wf]
   exact one_dvd _
@@ -174,17 +174,17 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 theorem rischDEInnerCompletenessWf_of_norm_bound_solve (Dt fnum fden gnum gden : CPoly α)
     (hnormRes : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden)
     (hbound : ∀ a0 b0 c0 h0 : CPoly α,
-      cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      cRdeNormalDenominator Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
       ∀ q : CPoly α,
-        IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
-            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
-            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 q →
-        cdegG q ≤ cRdeBoundDegreeG Dt
-          (cRdeSpecialDenominatorG Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1)
+        IsReducedRdeSol Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
+            (cRdeSpecialDenominator Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1 q →
+        cdeg q ≤ cRdeBoundDegree Dt
+          (cRdeSpecialDenominator Dt a0 b0 c0).1
+          (cRdeSpecialDenominator Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1)
     (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRischDEG Dt fnum fden gnum gden).isSome = true) :
+      (cRischDE Dt fnum fden gnum gden).isSome = true) :
     RischDEInnerCompletenessWf Dt fnum fden gnum gden where
   hnorm := hnormWf_of_divisibilityResidualWf Dt fnum fden gnum gden hnormRes
   hbound := hbound
@@ -197,9 +197,9 @@ end AssembleWf
 -- The Wf engine bridge: mathematical divisibility forces the Wf normal-denominator step to succeed.
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreWf α]
     (Dt fnum fden gnum gden : CPoly α)
-    (hen0 : CPoly.cnormG (rdeNormEnWf Dt gden) ≠ [])
-    (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden)) :
-    (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true :=
+    (hen0 : CPoly.cnorm (rdeNormEnWf Dt gden) ≠ [])
+    (hdvd : toPoly (rdeNormEnWf Dt gden) ∣ toPoly (rdeNormDnh2Wf Dt fden gden)) :
+    (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true :=
   cRdeNormalDenominatorG_isSome_of_dvd Dt fnum fden gnum gden hen0 hdvd
 
 -- The Wf residual produces exactly the `RischDEInnerCompletenessWf.hnorm` field shape.
@@ -207,7 +207,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     [CRischField α] (Dt fnum fden gnum gden : CPoly α)
     (hres : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden) :
     (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true :=
+      (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true :=
   hnormWf_of_divisibilityResidualWf Dt fnum fden gnum gden hres
 
 /-! ### Axiom audit -/

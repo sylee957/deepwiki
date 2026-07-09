@@ -10,7 +10,7 @@ integral `∫ = v + Σ cᵢ log uᵢ` over a tower with **both** halves COMPUTED
 (`Sources.Doi_10_1016_S0747_7171_08_80027_2.ElementaryIntegrationFull`): the log argument computed by a
 `[CField β]`-generic Gaussian elimination over the tower field (`radLogArgSolveG`), the rational part
 computed by Case-3 degree-lowering under the actual tower derivation (`radIntegrateCase3G`), and the unified
-integrator `cIntegrateElementaryG` round-tripping `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over ℚ(x)(eˣ).
+integrator `cIntegrateElementary` round-tripping `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over ℚ(x)(eˣ).
 So the concrete full elementary integral over a tower (both halves, principal case) is done. What remains is
 the **general** decision procedure — the recursion over arbitrary deeper towers, the non-principal case,
 Hermite on general curves — the research-grade remainder below.

@@ -35,16 +35,16 @@ integrates `f = a/d ∈ K(x)(…)(t)` when `t` is primitive.
 
 Given `a/d`:
 
-1. **Canonical split** — `canonicalRepresentationFastG` (`OneShotAssembly`) writes `a/d` as
+1. **Canonical split** — `canonicalRepresentationFast` (`OneShotAssembly`) writes `a/d` as
    `polynomial part fₚ  +  special part b/ds  +  normal part cₙ/dₙ`.
 2. **Special / polynomial part** — the case hook `towerPrimitiveCaseLrt.integrateSpecial`
    (`RischSolverTowerLrt`). Under the computable guard `b = 0 ∧ Dt = 1`, it integrates the polynomial
    `fₚ` coefficient-by-coefficient:
    * `towerPolyIntegrateLrt` runs the degree-raising primitive-polynomial recursion
-     `cIntegratePrimPolyDegRaiseG` (`LimitedIntegrateSingle`);
+     `cIntegratePrimPolyDegRaise` (`LimitedIntegrateSingle`);
    * each coefficient is integrated by recursing into the level-below solver's **log-free** integrator
      `LawfulRischLevelLrt.integrateRationalLrt` — this is where the tower recursion happens.
-3. **Reduced / normal part** — `cIntegrateReducedLrtG` (`LrtIntegrate`): the **root-free**
+3. **Reduced / normal part** — `cIntegrateReducedLrt` (`LrtIntegrate`): the **root-free**
    Lazard–Rioboo–Trager reduced integrator. Hermite reduction gives the rational part; the LRT step
    emits **symbolic algebraic-residue logs** `Σ_{Rᵢ(c)=0} c · log Sᵢ(c,t)` — no root-finding, so residues
    that are algebraic over the constants are kept symbolic.
@@ -75,7 +75,7 @@ properly-built tower satisfies, not provable from the computable data alone:
 ## Decision procedure (`PrimitiveLrtDecision`)
 
 With the Liouville frontier, `primitiveLrtDecides` turns the integrator into a **decision procedure**:
-`IsElementaryIntegrableGenuineLrtG Dt a d ↔ cResidueConstantGuardG Dt a d = true` — a computable guard that
+`IsElementaryIntegrableGenuineLrtG Dt a d ↔ cResidueConstantGuard Dt a d = true` — a computable guard that
 certifies genuine algebraic-residue elementary integrability (and its negation is a non-integrability
 certificate, `not_isElementaryIntegrable_reduced`).
 

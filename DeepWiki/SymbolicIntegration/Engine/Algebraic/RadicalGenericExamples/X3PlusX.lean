@@ -19,9 +19,9 @@ A third radicand `√(x³ + x) = √(x(x²+1))`. Odd degree ⟹ the full carrier
 /-- The radicand `f₃ = x³ + x ∈ ℚ(x)` (numerator `[0,1,0,1] = x + x³`) for `√(x³+x)`. -/
 def radicandX3pX : QFunNZG ℚ := qxOfNum [0, 1, 0, 1]
 
-/-- **`toPolyG [0,1,0,1] = x + x³` has `natDegree 3`** in `ℚ[X]`. -/
-theorem natDeg_toPolyG_X3pX : (toPolyG ([0, 1, 0, 1] : CPoly ℚ)).natDegree = 3 := by
-  have h : toPolyG ([0, 1, 0, 1] : CPoly ℚ) = C 1 * X + X ^ 3 := by
+/-- **`toPoly [0,1,0,1] = x + x³` has `natDegree 3`** in `ℚ[X]`. -/
+theorem natDeg_toPolyG_X3pX : (toPoly ([0, 1, 0, 1] : CPoly ℚ)).natDegree = 3 := by
+  have h : toPoly ([0, 1, 0, 1] : CPoly ℚ) = C 1 * X + X ^ 3 := by
     simp only [denote]
     show C (0 : ℚ) + X * (C 1 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
@@ -72,7 +72,7 @@ def radX3pXDtExp : CPoly RadX3pX := [CField.zero, CField.one]
 
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed-tower `d/dt` computation over `√(x³+x)`. -/
 theorem radX3pX_monomialDeriv_t2sq :
-    cisZeroG (csubG (cmonomialDeriv radX3pXDtExp radX3pXT2sq) radX3pXTwoT2sq) = true := by native_decide
+    cisZero (csub (cmonomialDeriv radX3pXDtExp radX3pXT2sq) radX3pXTwoT2sq) = true := by native_decide
 
 /-- The `RadX3pX[t]`-polynomial `y·t = [0, y]` (`y = √(x³+x)`, `t = eˣ`). -/
 def radX3pXGenT : CPoly RadX3pX := [CField.zero, radX3pXGen]
@@ -84,7 +84,7 @@ def radX3pXGenTDeriv : CPoly RadX3pX :=
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed derivation over `√(x³+x)`
 (`ℓ = (3x²+1)/(2(x³+x))`). -/
 theorem radX3pX_monomialDeriv_genT :
-    cisZeroG (csubG (cmonomialDeriv radX3pXDtExp radX3pXGenT) radX3pXGenTDeriv) = true := by
+    cisZero (csub (cmonomialDeriv radX3pXDtExp radX3pXGenT) radX3pXGenTDeriv) = true := by
   native_decide
 
 end DeepWiki.SymbolicIntegration

@@ -23,7 +23,7 @@ variable {α : Type*} [CField α]
 /-! ### The square-part / squarefree-part split for `n = 2`
 
 `ρ = d²·s`: `d = ∏ᵢ Pᵢ^{⌊i/2⌋}` and `s = ∏_{i odd} Pᵢ` (squarefree), from the multiplicity-indexed
-squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFFG`). -/
+squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFF`). -/
 
 variable [CFracGcdCoreWf α]
 
@@ -31,14 +31,14 @@ variable [CFracGcdCoreWf α]
 (each squarefree part `Pᵢ` of multiplicity `i` contributes `Pᵢ^{⌊i/2⌋}`), so `d² ∣ ρ` and `ρ/d²` is
 squarefree. Monic. -/
 def radSquarePart (ρ : CPoly α) : CPoly α :=
-  (cSqfreeYunFFG ρ).zipIdx.foldl
-    (fun acc (Pi, i) => cmulG acc (cpowG Pi ((i + 1) / 2))) [CField.one]
+  (cSqfreeYunFF ρ).zipIdx.foldl
+    (fun acc (Pi, i) => cmul acc (cpow Pi ((i + 1) / 2))) [CField.one]
 
 /-- Squarefree part `radSquarefreePart ρ = s = ∏_{i odd} Pᵢ = ρ/d²`: one copy of each odd-multiplicity
 factor `Pᵢ`, so `ρ = d²·s` with `d = radSquarePart` and `s` squarefree by construction. Monic. -/
 def radSquarefreePart (ρ : CPoly α) : CPoly α :=
-  (cSqfreeYunFFG ρ).zipIdx.foldl
-    (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmulG acc Pi else acc) [CField.one]
+  (cSqfreeYunFF ρ).zipIdx.foldl
+    (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmul acc Pi else acc) [CField.one]
 
 /-! ### The integral basis `[1, y/d]`
 
@@ -61,32 +61,32 @@ because `s` is squarefree. -/
 
 /-- **The square-part split is exact** `radSplitExact ρ`: `d²·s = ρ` where `(d, s) = radIntegralBasis
 ρ` — so `s = ρ/d²` is a genuine `ℚ[x]` polynomial (no fractional residue), the precondition that `y/d`
-satisfies the monic `T² − s = 0` over `ℚ[x]`. Checked by `cisZeroG (d²·s − ρ)`, comparing monic-normalized
+satisfies the monic `T² − s = 0` over `ℚ[x]`. Checked by `cisZero (d²·s − ρ)`, comparing monic-normalized
 (the Yun factors are monic, so `d, s` are; `ρ` is taken monic). `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def radSplitExact (ρ : CPoly α) : Bool :=
   let d := radSquarePart ρ
   let s := radSquarefreePart ρ
-  cisZeroG (csubG (cmulG (cmulG d d) s) (cmonicG ρ))
+  cisZero (csub (cmul (cmul d d) s) (cmonic ρ))
 
 /-- **`y/d` is integral: `s` is squarefree** `radSquarefreePartIsSquarefree ρ`: `gcd(s, s') = 1`
 (constant) where `s = radSquarefreePart ρ`. Together with `radSplitExact` this is exactly "`y/d` is
 integral over `ℚ[x]`" — `(y/d)² = s` is a squarefree polynomial, so `y/d` is a root of the monic
-`T² − s ∈ ℚ[x][T]` and the integral closure contains it. Checked by `cdegG (gcd s s') = 0`. `[CField α]
+`T² − s ∈ ℚ[x][T]` and the integral closure contains it. Checked by `cdeg (gcd s s') = 0`. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
 def radSquarefreePartIsSquarefree (ρ : CPoly α) : Bool :=
   let s := radSquarefreePart ρ
-  cdegG (cgcdMonicWf s (cderivG s)) = 0
+  cdeg (cgcdMonicWf s (cderiv s)) = 0
 
 /-- `radNotIntegralFactor ρ P` checks that `P² ∤ s` for nonconstant `P`, where
 `s = radSquarefreePart ρ`. The basis-maximality witness — `y/(d·P)` would need minimal polynomial
 `T² − s/P²` over `ℚ[x]`, but `P² ∤ s` (since `s` is squarefree, no nonconstant square divides it), so
 `s/P²` is not a polynomial and `y/(d·P)` is not integral. Hence `y/d` is the maximal integral element of
 the form `y/q`. Returns `true` (= "not integral", `P² ∤ s`) for nonconstant `P`; `false` for constant `P`
-(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `cdvdG`. `[CField α]
+(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `cdvd`. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
 def radNotIntegralFactor (ρ P : CPoly α) : Bool :=
   let s := radSquarefreePart ρ
-  if cdegG P = 0 then false else !(cdvdG (cmulG P P) s)
+  if cdeg P = 0 then false else !(cdvd (cmul P P) s)
 
 /-! ### Discriminant and genus of the simple-radical basis
 
@@ -99,7 +99,7 @@ polynomial `T² − s` of the basis element `y/d` (`s = radSquarefreePart ρ`): 
 = 4s`. The polynomial discriminant `disc(T² + bT + c) = b² − 4c` at `b = 0, c = −s`. (Up to the unit `1`
 this is `s` itself; the `4` is the classical normalization.) `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def radBasisDiscriminant (ρ : CPoly α) : CPoly α :=
-  cscaleG (cnatCastG 4) (radSquarefreePart ρ)
+  cscale (cnatCast 4) (radSquarefreePart ρ)
 
 /-- **Genus** `radGenus ρ = ⌈deg s / 2⌉ − 1` — the genus of the hyperelliptic curve `y² = s`
 (`s = radSquarefreePart ρ` squarefree of degree `m`): `g = ⌈m/2⌉ − 1 = (m + 1)/2 − 1` (`ℕ`-division, so
@@ -107,7 +107,7 @@ def radBasisDiscriminant (ρ : CPoly α) : CPoly α :=
 (elliptic) for `deg s ∈ {3, 4}`, etc. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
 def radGenus (ρ : CPoly α) : ℕ :=
-  let m := cdegG (radSquarefreePart ρ)
+  let m := cdeg (radSquarefreePart ρ)
   (m + 1) / 2 - 1
 
 end CPoly
@@ -137,33 +137,33 @@ def basisRhoX5mX4 : CPoly ℚ := [0, 0, 0, 0, -1, 1]
 /-- **Squarefree `ρ = x³+1` ⇒ `d = 1`** (`native_decide`): the square part of a squarefree radicand is the
 unit `1`, so the basis is `[1, y]`. -/
 theorem radSquarePart_x3p1 :
-    cisZeroG (csubG (radSquarePart basisRhoX3p1) [CField.one]) = true := by native_decide
+    cisZero (csub (radSquarePart basisRhoX3p1) [CField.one]) = true := by native_decide
 
 /-- **Squarefree `ρ = x³+1` ⇒ `s = x³+1`** (`native_decide`): the squarefree part of a squarefree radicand
 is the radicand itself (monic). -/
 theorem radSquarefreePart_x3p1 :
-    cisZeroG (csubG (radSquarefreePart basisRhoX3p1) (cmonicG basisRhoX3p1)) = true := by
+    cisZero (csub (radSquarefreePart basisRhoX3p1) (cmonic basisRhoX3p1)) = true := by
   native_decide
 
 /-- **`ρ = x²(x+1) ⇒ d = x`** (`native_decide`): the square part of `x³ + x²` is `x` (one copy of the
 multiplicity-2 factor `x`). -/
 theorem radSquarePart_x3pX2 :
-    cisZeroG (csubG (radSquarePart basisRhoX3pX2) [0, 1]) = true := by native_decide
+    cisZero (csub (radSquarePart basisRhoX3pX2) [0, 1]) = true := by native_decide
 
 /-- **`ρ = x²(x+1) ⇒ s = x+1`** (`native_decide`): the squarefree part of `x³ + x²` is `x + 1` (the
 odd-multiplicity factor; the even factor `x²` goes entirely into `d²`). -/
 theorem radSquarefreePart_x3pX2 :
-    cisZeroG (csubG (radSquarefreePart basisRhoX3pX2) [1, 1]) = true := by native_decide
+    cisZero (csub (radSquarefreePart basisRhoX3pX2) [1, 1]) = true := by native_decide
 
 /-- **`ρ = x⁴(x−1) ⇒ d = x²`** (`native_decide`): the square part of `x⁵ − x⁴` is `x²` (two copies of the
 multiplicity-4 factor `x`). -/
 theorem radSquarePart_x5mX4 :
-    cisZeroG (csubG (radSquarePart basisRhoX5mX4) [0, 0, 1]) = true := by native_decide
+    cisZero (csub (radSquarePart basisRhoX5mX4) [0, 0, 1]) = true := by native_decide
 
 /-- **`ρ = x⁴(x−1) ⇒ s = x−1`** (`native_decide`): the squarefree part of `x⁵ − x⁴` is `x − 1` (the
 odd-multiplicity factor; `x⁴ = (x²)²` is entirely the square part). -/
 theorem radSquarefreePart_x5mX4 :
-    cisZeroG (csubG (radSquarefreePart basisRhoX5mX4) [-1, 1]) = true := by native_decide
+    cisZero (csub (radSquarefreePart basisRhoX5mX4) [-1, 1]) = true := by native_decide
 
 /-! ### The integral basis validates: `[1, y/d]` is the integral closure (`native_decide`)
 
@@ -241,12 +241,12 @@ def basisRhoX5p1 : CPoly ℚ := [1, 0, 0, 0, 0, 1]
 /-- **Discriminant `disc = 4(x+1)` for `x²(x+1)`** (`native_decide`): the basis `[1, y/x]` has minimal
 polynomial `T² − (x+1)`, discriminant `4(x+1) = 4x + 4` (`[4,4]`). -/
 theorem radBasisDiscriminant_x3pX2 :
-    cisZeroG (csubG (radBasisDiscriminant basisRhoX3pX2) [4, 4]) = true := by native_decide
+    cisZero (csub (radBasisDiscriminant basisRhoX3pX2) [4, 4]) = true := by native_decide
 
 /-- **Discriminant `disc = 4(x³+1)` for the squarefree `x³+1`** (`native_decide`): basis `[1, y]`,
 minimal polynomial `T² − (x³+1)`, discriminant `4(x³+1) = 4 + 4x³` (`[4,0,0,4]`). -/
 theorem radBasisDiscriminant_x3p1 :
-    cisZeroG (csubG (radBasisDiscriminant basisRhoX3p1) [4, 0, 0, 4]) = true := by native_decide
+    cisZero (csub (radBasisDiscriminant basisRhoX3p1) [4, 0, 0, 4]) = true := by native_decide
 
 /-- Genus `0` for `y² = x` (`native_decide`): `deg s = 1`, so `⌈1/2⌉ − 1 = 0`. -/
 theorem radGenus_x : radGenus basisRhoX = 0 := by native_decide

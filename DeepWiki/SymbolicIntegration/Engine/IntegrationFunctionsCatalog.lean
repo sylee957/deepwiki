@@ -38,23 +38,23 @@ open CPoly QFunNZG
 -- The primitive-base polynomial capstone: `hpoly` and `hA` discharged at `ℚ(x)(t)`.
 #check @cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
 
--- `cIntegratePolyG`: PARTIAL soundness — the constant case only.
+-- `cIntegratePoly`: PARTIAL soundness — the constant case only.
 #check @field_identity_cIntegratePolyG_const
 
--- `cIntegrateReducedG`: the conditional fuel-free reduced-case field identities.
+-- `cIntegrateReduced`: the conditional fuel-free reduced-case field identities.
 #check @field_identity_of_cIntegrateReducedG_primitive
 #check @field_identity_of_cIntegrateReducedG_hyperexp
 #check @field_identity_of_cIntegrateReducedG_of_checkIdentityG
 #check @field_identity_of_cIntegrateReducedG_hyperexp_overshoot
 
--- `cIntegrateHyperexpNormalG`: unconditional fuel-free normal-part soundness.
+-- `cIntegrateHyperexpNormal`: unconditional fuel-free normal-part soundness.
 #check @cIntegrateHyperexpNormalG_sound
 #check @cIntegrateHyperexpNormalG_sound_qfunNZG
 
--- `cIntegrateHyperexpFullG`: the fuel-free full hyperexponential driver soundness.
+-- `cIntegrateHyperexpFull`: the fuel-free full hyperexponential driver soundness.
 #check @cIntegrateHyperexpFullG_sound
 
--- `field_identity_of_checkIdentityG`: the carrier-agnostic `checkIdentityG` ⟹ field-identity bridge
+-- `field_identity_of_checkIdentityG`: the carrier-agnostic `checkIdentity` ⟹ field-identity bridge
 -- (`ComputableIntegrateTowerCorrectG`), consumed by the a-priori one-shots above.
 #check @field_identity_of_checkIdentityG
 

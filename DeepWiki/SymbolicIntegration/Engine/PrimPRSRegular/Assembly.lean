@@ -17,17 +17,17 @@ variable {β : Type*} [CField β] [CFieldSpec β]
 /-! ## The reduction theorem: regularity + correctness + bookkeeping ⟹ `CPrimPRSGenAssocReg` -/
 
 /-- **Per-step content-strip bookkeeping** `CPrimPRSGenFuelOk fuel P Q`: at each primitive-PRS node, every
-`t`-coefficient entering `gbprimitivePartCore` has `cnormG`-length at most `30`, mirroring the
+`t`-coefficient entering `gbprimitivePartCore` has `cnorm`-length at most `30`, mirroring the
 `cprimPRSgcdGenCore` recursion so it threads alongside `CPrimPRSGenRegular`. -/
 def CPrimPRSGenFuelOk (cgcdB : CPoly β → CPoly β → CPoly β) :
     ℕ → GBPolyCore β → GBPolyCore β → Prop
-  | 0, P, _ => ∀ a ∈ gbnormCore P, (CPoly.cnormG a : List β).length ≤ 30
+  | 0, P, _ => ∀ a ∈ gbnormCore P, (CPoly.cnorm a : List β).length ≤ 30
   | fuel + 1, P, Q =>
     if gbisZeroCore (gbnormCore Q) = true then
-      ∀ a ∈ gbnormCore (gbnormCore P), (CPoly.cnormG a : List β).length ≤ 30
+      ∀ a ∈ gbnormCore (gbnormCore P), (CPoly.cnorm a : List β).length ≤ 30
     else
       (∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
-          (CPoly.cnormG a : List β).length ≤ 30)
+          (CPoly.cnorm a : List β).length ≤ 30)
         ∧ CPrimPRSGenFuelOk cgcdB fuel (gbnormCore Q)
             (gbprimitivePartCore cgcdB (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))
 
@@ -90,9 +90,9 @@ example (p : GBPolyCore β) : gbdegCore p = (toGBCoeffPoly p).natDegree := gbdeg
 -- Clause (ii) with the β(s)-unit multiplier is unconditional given the non-terminal loop guard.
 example (fuel : ℕ) (p q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false) :
     ∃ (s : GBPolyCore β) (c : CPoly β),
-      Polynomial.C (QFunNZG.amG β (CPoly.toPolyG c)) * toGBPolyG p
+      Polynomial.C (QFunNZG.amG β (CPoly.toPoly c)) * toGBPolyG p
           = toGBPolyG s * toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)
-        ∧ QFunNZG.amG β (CPoly.toPolyG c) ≠ 0 :=
+        ∧ QFunNZG.amG β (CPoly.toPoly c) ≠ 0 :=
   toGBPolyG_gbpsremainderCore_ne_zero fuel p q hq
 
 -- The single pseudo-division step strictly drops the `t`-degree by leading-term cancellation.

@@ -43,8 +43,8 @@ input at each level *constructs* the `PrimitiveFrontierLrt` instances, hence (wi
 recursive LRT solver at that depth. This is the honest closure — the solver's soundness rests on genuine
 integrability conditions, nothing opaque. -/
 noncomputable example [Fact (GcdFFCorrect (α := QFunNZG ℚ))]
-    (hgenℚ : ∀ (Dt a d : CPoly ℚ), toPolyG d ≠ 0 → LrtReducedGenuineData Dt a d)
-    (hgenℚx : ∀ (Dt a d : CPoly (QFunNZG ℚ)), toPolyG d ≠ 0 → LrtReducedGenuineData Dt a d) :
+    (hgenℚ : ∀ (Dt a d : CPoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
+    (hgenℚx : ∀ (Dt a d : CPoly (QFunNZG ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
     LawfulRischLevelLrt (QFunNZG ℚ) :=
   letI : PrimitiveFrontierLrt ℚ := ⟨hreducedLrt_of_genuineAll gcdFFCorrect_Q hgenℚ⟩
   letI : PrimitiveFrontierLrt (QFunNZG ℚ) :=

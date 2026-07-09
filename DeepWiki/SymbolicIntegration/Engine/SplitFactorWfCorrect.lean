@@ -4,12 +4,12 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
-/-! # Abstract correctness of the fuel-free splitting factorization `cSplitFactorFastG`
+/-! # Abstract correctness of the fuel-free splitting factorization `cSplitFactorFast`
 
-The computable `cSplitFactorFastG` mirrors the abstract `splitFactor`
+The computable `cSplitFactorFast` mirrors the abstract `splitFactor`
 (`CanonicalRepresentation.splitFactor_isSplittingFactorizationGen`). This file reduces its correctness to
 the single fraction-free gcd frontier `GcdFFCorrect` — dischargeable at the `ℚ` base where the gcd is the
-plain Euclidean gcd. M1: the per-step bridge `toPolyG (cstepG Dt p) ~ splitFactorStep (toPolyG Dt) (toPolyG p)`.
+plain Euclidean gcd. M1: the per-step bridge `toPoly (cstep Dt p) ~ splitFactorStep (toPoly Dt) (toPoly p)`.
 -/
 
 open Polynomial Classical
@@ -21,59 +21,59 @@ open CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
-/-- The fraction-free gcd frontier: `cgcdFFCoreWf` is a genuine gcd through `toPolyG`. Holds
+/-- The fraction-free gcd frontier: `cgcdFFCoreWf` is a genuine gcd through `toPoly`. Holds
 unconditionally at `ℚ` (the Euclidean gcd); the tower case is the engine's PRS-regularity frontier. -/
 def GcdFFCorrect : Prop :=
   ∀ a b : CPoly α,
-    Associated (toPolyG (CFracGcdCoreWf.cgcdFFCoreWf a b)) (gcd (toPolyG a) (toPolyG b))
+    Associated (toPoly (CFracGcdCoreWf.cgcdFFCoreWf a b)) (gcd (toPoly a) (toPoly b))
 
 /-- **M1 — the per-step bridge.** Under the gcd frontier, the computable split step
-`cstepG Dt p = cdivWf (gcd_t(p, Dp)) (gcd_t(p, dp/dt))` denotes the abstract
-`splitFactorStep (toPolyG Dt) (toPolyG p) = gcd(P, D P)/gcd(P, dP)` up to associates. -/
+`cstep Dt p = cdivWf (gcd_t(p, Dp)) (gcd_t(p, dp/dt))` denotes the abstract
+`splitFactorStep (toPoly Dt) (toPoly p) = gcd(P, D P)/gcd(P, dP)` up to associates. -/
 theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt p : CPoly α) (hp : toPolyG p ≠ 0) :
-    Associated (toPolyG (cstepG Dt p)) (splitFactorStep (toPolyG Dt) (toPolyG p)) := by
+    (hgcd : GcdFFCorrect (α := α)) (Dt p : CPoly α) (hp : toPoly p ≠ 0) :
+    Associated (toPoly (cstep Dt p)) (splitFactorStep (toPoly Dt) (toPoly p)) := by
   set A := CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p) with hAdef
-  set B := CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p) with hBdef
-  have hA : Associated (toPolyG A)
-      (gcd (toPolyG p) (Differential.implicitDeriv (toPolyG Dt) (toPolyG p))) := by
+  set B := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p) with hBdef
+  have hA : Associated (toPoly A)
+      (gcd (toPoly p) (Differential.implicitDeriv (toPoly Dt) (toPoly p))) := by
     have := hgcd p (cmonomialDeriv Dt p)
     rwa [toPolyG_cmonomialDeriv] at this
-  have hB : Associated (toPolyG B) (gcd (toPolyG p) (derivative (toPolyG p))) := by
-    have := hgcd p (cderivG p)
+  have hB : Associated (toPoly B) (gcd (toPoly p) (derivative (toPoly p))) := by
+    have := hgcd p (cderiv p)
     rwa [toPolyG_cderivG] at this
-  have hgcdBne : gcd (toPolyG p) (derivative (toPolyG p)) ≠ 0 := by
+  have hgcdBne : gcd (toPoly p) (derivative (toPoly p)) ≠ 0 := by
     rw [Ne, gcd_eq_zero_iff]; exact fun h => hp h.1
-  have hB0 : toPolyG B ≠ 0 := fun h => hgcdBne (hB.eq_zero_iff.mp h)
-  have hBnorm : cnormG B ≠ [] := fun h => hB0 ((cisZeroG_iff B).mp (by simp [cisZeroG, h]))
-  have hBA : toPolyG B ∣ toPolyG A :=
-    hB.dvd.trans ((gcd_derivative_dvd_gcd_implicitDeriv (toPolyG Dt) hp).trans hA.symm.dvd)
-  have hexact : toPolyG (cdivWf A B) * toPolyG B = toPolyG A := toPolyG_cdivWf_exact A B hBnorm hBA
-  have hstepB : Associated (splitFactorStep (toPolyG Dt) (toPolyG p) * toPolyG B) (toPolyG A) := by
+  have hB0 : toPoly B ≠ 0 := fun h => hgcdBne (hB.eq_zero_iff.mp h)
+  have hBnorm : cnorm B ≠ [] := fun h => hB0 ((cisZeroG_iff B).mp (by simp [cisZero, h]))
+  have hBA : toPoly B ∣ toPoly A :=
+    hB.dvd.trans ((gcd_derivative_dvd_gcd_implicitDeriv (toPoly Dt) hp).trans hA.symm.dvd)
+  have hexact : toPoly (cdivWf A B) * toPoly B = toPoly A := toPolyG_cdivWf_exact A B hBnorm hBA
+  have hstepB : Associated (splitFactorStep (toPoly Dt) (toPoly p) * toPoly B) (toPoly A) := by
     refine (Associated.mul_left _ hB).trans ?_
     rw [splitFactorStep, mul_comm,
-      EuclideanDomain.mul_div_cancel' hgcdBne (gcd_derivative_dvd_gcd_implicitDeriv (toPolyG Dt) hp)]
+      EuclideanDomain.mul_div_cancel' hgcdBne (gcd_derivative_dvd_gcd_implicitDeriv (toPoly Dt) hp)]
     exact hA.symm
-  show Associated (toPolyG (cdivWf A B)) (splitFactorStep (toPolyG Dt) (toPolyG p))
-  have key : Associated (toPolyG (cdivWf A B) * toPolyG B)
-      (splitFactorStep (toPolyG Dt) (toPolyG p) * toPolyG B) := by
+  show Associated (toPoly (cdivWf A B)) (splitFactorStep (toPoly Dt) (toPoly p))
+  have key : Associated (toPoly (cdivWf A B) * toPoly B)
+      (splitFactorStep (toPoly Dt) (toPoly p) * toPoly B) := by
     rw [hexact]; exact hstepB.symm
   exact key.of_mul_right (Associated.refl _) hB0
 
-/-- **M2 — full abstract correctness of `cSplitFactorFastG`.** Under the gcd frontier `GcdFFCorrect`,
-`cSplitFactorFastG Dt p = (pₙ, pₛ)` denotes a general splitting factorization of `p` w.r.t. the monomial
-derivation `D = implicitDeriv (toPolyG Dt)`: `toPolyG p = toPolyG pₛ · toPolyG pₙ`, `pₛ` special, and every
+/-- **M2 — full abstract correctness of `cSplitFactorFast`.** Under the gcd frontier `GcdFFCorrect`,
+`cSplitFactorFast Dt p = (pₙ, pₛ)` denotes a general splitting factorization of `p` w.r.t. the monomial
+derivation `D = implicitDeriv (toPoly Dt)`: `toPoly p = toPoly pₛ · toPoly pₙ`, `pₛ` special, and every
 squarefree factor of `pₙ` normal. Well-founded induction mirroring the abstract `splitFactor`, with the
-per-step bridge (M1) transferring the `IsSpecial`/`IsNormalSqfree`/degree-drop facts through `toPolyG`. -/
+per-step bridge (M1) transferring the `IsSpecial`/`IsNormalSqfree`/degree-drop facts through `toPoly`. -/
 theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α)]
     (hgcd : GcdFFCorrect (α := α)) (Dt : CPoly α) :
-    ∀ (p : CPoly α), toPolyG p ≠ 0 →
-      @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩ (toPolyG p)
-        (toPolyG (cSplitFactorFastG Dt p).2) (toPolyG (cSplitFactorFastG Dt p).1) := by
-  letI : Differential (CFieldSpec.K α)[X] := ⟨Differential.implicitDeriv (toPolyG Dt)⟩
-  have hmain : ∀ (n : ℕ) (p : CPoly α), (cnormG p : List α).length ≤ n → toPolyG p ≠ 0 →
-      IsSplittingFactorizationGen (toPolyG p)
-        (toPolyG (cSplitFactorFastG Dt p).2) (toPolyG (cSplitFactorFastG Dt p).1) := by
+    ∀ (p : CPoly α), toPoly p ≠ 0 →
+      @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩ (toPoly p)
+        (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) := by
+  letI : Differential (CFieldSpec.K α)[X] := ⟨Differential.implicitDeriv (toPoly Dt)⟩
+  have hmain : ∀ (n : ℕ) (p : CPoly α), (cnorm p : List α).length ≤ n → toPoly p ≠ 0 →
+      IsSplittingFactorizationGen (toPoly p)
+        (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) := by
     intro n
     induction n with
     | zero =>
@@ -81,41 +81,41 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
       exact absurd ((cnormG_eq_nil_iff p).mp (List.length_eq_zero_iff.mp (Nat.le_zero.mp hn))) hp
     | succ n ih =>
       intro p hn hp
-      rw [cSplitFactorFastG]
-      set S := cstepG Dt p with hSdef
-      have hAstep : Associated (toPolyG S) (splitFactorStep (toPolyG Dt) (toPolyG p)) :=
+      rw [cSplitFactorFast]
+      set S := cstep Dt p with hSdef
+      have hAstep : Associated (toPoly S) (splitFactorStep (toPoly Dt) (toPoly p)) :=
         toPolyG_cstepG_associated hgcd Dt p hp
-      by_cases hSdeg : cdegG S = 0
+      by_cases hSdeg : cdeg S = 0
       · rw [if_pos hSdeg]
-        have hstepdeg : (splitFactorStep (toPolyG Dt) (toPolyG p)).natDegree = 0 := by
+        have hstepdeg : (splitFactorStep (toPoly Dt) (toPoly p)).natDegree = 0 := by
           rw [← natDegree_eq_of_associated hAstep, ← cdegG_eq_natDegree, hSdeg]
-        have hnorm := isNormalSqfree_of_splitFactorStep_natDegree_zero (toPolyG Dt) hp hstepdeg
-        have hone : toPolyG ([CField.one] : CPoly α) = 1 := by
+        have hnorm := isNormalSqfree_of_splitFactorStep_natDegree_zero (toPoly Dt) hp hstepdeg
+        have hone : toPoly ([CField.one] : CPoly α) = 1 := by
           simp only [denote]
           simp
-        show IsSplittingFactorizationGen (toPolyG p) (toPolyG ([CField.one] : CPoly α)) (toPolyG p)
+        show IsSplittingFactorizationGen (toPoly p) (toPoly ([CField.one] : CPoly α)) (toPoly p)
         rw [hone]
         exact ⟨(one_mul _).symm, isSpecial_one, hnorm⟩
       · rw [if_neg hSdeg]
-        have hSnorm : cnormG S ≠ [] := by
-          intro h; rw [cdegG, h, List.length_nil] at hSdeg; simp at hSdeg
-        have hSne : toPolyG S ≠ 0 := fun h => hSnorm ((cnormG_eq_nil_iff S).mpr h)
-        have hSpos : 0 < (toPolyG S).natDegree := by
+        have hSnorm : cnorm S ≠ [] := by
+          intro h; rw [cdeg, h, List.length_nil] at hSdeg; simp at hSdeg
+        have hSne : toPoly S ≠ 0 := fun h => hSnorm ((cnormG_eq_nil_iff S).mpr h)
+        have hSpos : 0 < (toPoly S).natDegree := by
           rw [← cdegG_eq_natDegree]; omega
-        have hSdvd : toPolyG S ∣ toPolyG p :=
-          hAstep.dvd.trans (splitFactorStep_dvd (toPolyG Dt) hp)
-        have hexact : toPolyG (cdivWf p S) * toPolyG S = toPolyG p :=
+        have hSdvd : toPoly S ∣ toPoly p :=
+          hAstep.dvd.trans (splitFactorStep_dvd (toPoly Dt) hp)
+        have hexact : toPoly (cdivWf p S) * toPoly S = toPoly p :=
           toPolyG_cdivWf_exact p S hSnorm hSdvd
-        have hpqne : toPolyG (cdivWf p S) ≠ 0 := by
+        have hpqne : toPoly (cdivWf p S) ≠ 0 := by
           intro h; rw [h, zero_mul] at hexact; exact hp hexact.symm
-        have hdegsum : (toPolyG (cdivWf p S)).natDegree + (toPolyG S).natDegree
-            = (toPolyG p).natDegree := by rw [← natDegree_mul hpqne hSne, hexact]
-        have hlendrop : (cnormG (cdivWf p S) : List α).length < (cnormG p : List α).length := by
+        have hdegsum : (toPoly (cdivWf p S)).natDegree + (toPoly S).natDegree
+            = (toPoly p).natDegree := by rw [← natDegree_mul hpqne hSne, hexact]
+        have hlendrop : (cnorm (cdivWf p S) : List α).length < (cnorm p : List α).length := by
           rw [length_cnormG_of_ne _ (fun h => hpqne ((cnormG_eq_nil_iff _).mp h)),
             length_cnormG_of_ne _ (fun h => hp ((cnormG_eq_nil_iff _).mp h))]
           omega
         rw [if_pos hlendrop]
-        rcases hres : cSplitFactorFastG Dt (cdivWf p S) with ⟨qn, qs⟩
+        rcases hres : cSplitFactorFast Dt (cdivWf p S) with ⟨qn, qs⟩
         have hih := ih (cdivWf p S) (by omega) hpqne
         rw [hres] at hih
         obtain ⟨heq, hqspec, hqnorm⟩ := hih
@@ -124,13 +124,13 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
           rw [mul_assoc, ← heq, ← hexact, mul_comm]
         · simp only [denote]
           exact (IsSpecial.of_associated hAstep.symm
-            (isSpecial_splitFactorStep (toPolyG Dt) hp)).mul hqspec
+            (isSpecial_splitFactorStep (toPoly Dt) hp)).mul hqspec
   intro p hp
-  exact hmain (cnormG p : List α).length p le_rfl hp
+  exact hmain (cnorm p : List α).length p le_rfl hp
 
 /-! ### M3 — discharging the gcd frontier at the `ℚ` base -/
 
-/-- **The gcd frontier is unconditional at `ℚ`.** There `cgcdFFCoreWf = cmonicG ∘ (cgcdWf ·).1 =
+/-- **The gcd frontier is unconditional at `ℚ`.** There `cgcdFFCoreWf = cmonic ∘ (cgcdWf ·).1 =
 cgcdMonicWf` (the plain monic Euclidean gcd), whose correctness is `associated_toPolyG_cgcdMonicWf`. -/
 theorem gcdFFCorrect_Q : GcdFFCorrect (α := ℚ) := fun a b => associated_toPolyG_cgcdMonicWf a b
 
@@ -141,11 +141,11 @@ instance instFactGcdFFCorrectQ : Fact (GcdFFCorrect (α := ℚ)) := ⟨gcdFFCorr
 /-- `CharZero (CFieldSpec.K ℚ) = CharZero ℚ`: local instance for the `ℚ`-base split correctness. -/
 instance : CharZero (CFieldSpec.K ℚ) := inferInstanceAs (CharZero ℚ)
 
-/-- **Unconditional abstract correctness of `cSplitFactorFastG` at the `ℚ` base.** For `p ≠ 0`,
-`cSplitFactorFastG Dt p` is a genuine general splitting factorization of `p` — no gcd hypothesis. -/
-theorem cSplitFactorFastG_isSplittingFactorizationGen_Q (Dt p : CPoly ℚ) (hp : toPolyG p ≠ 0) :
-    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩ (toPolyG p)
-      (toPolyG (cSplitFactorFastG Dt p).2) (toPolyG (cSplitFactorFastG Dt p).1) :=
+/-- **Unconditional abstract correctness of `cSplitFactorFast` at the `ℚ` base.** For `p ≠ 0`,
+`cSplitFactorFast Dt p` is a genuine general splitting factorization of `p` — no gcd hypothesis. -/
+theorem cSplitFactorFastG_isSplittingFactorizationGen_Q (Dt p : CPoly ℚ) (hp : toPoly p ≠ 0) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩ (toPoly p)
+      (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) :=
   cSplitFactorFastG_isSplittingFactorizationGen gcdFFCorrect_Q Dt p hp
 
 end DeepWiki.SymbolicIntegration

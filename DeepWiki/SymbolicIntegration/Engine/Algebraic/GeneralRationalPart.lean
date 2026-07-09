@@ -29,9 +29,9 @@ def gcuspRho : QFunNZG ℚ := qxOfNum [0, 0, 0, 1]
 /-- The cusp integral basis is `[1, y/x]`, integral and maximal: `(y/x)² = x` and `isMaximalOrder` holds,
 the maximal-order datum the algebraic Hermite reduction consumes. -/
 theorem gcusp_integralBasis_eq :
-    (cisZeroG (csubG ((integralBasis gcuspF).getD 1 []) [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZeroG (csubG ((integralBasis gcuspF).getD 0 []) [CField.one])
-      && cisZeroG (csubG (afMul gcuspF ((integralBasis gcuspF).getD 1 [])
+    (cisZero (csub ((integralBasis gcuspF).getD 1 []) [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((integralBasis gcuspF).getD 0 []) [CField.one])
+      && cisZero (csub (afMul gcuspF ((integralBasis gcuspF).getD 1 [])
             ((integralBasis gcuspF).getD 1 [])) [qxOfNum [0, 1]])
       && isMaximalOrder gcuspF (integralBasis gcuspF)) = true := by native_decide
 
@@ -54,24 +54,24 @@ theorem cusp_intY_radDeriv :
 /-! #### Target 1, derived from the integrand by the Case-3 `C/y` driver
 
 Since `y·y = ρ`, the integrand `y` equals `ρ/y = x³/y`, a `C/y` Case-3 form with `C = ρ = x³`. The
-driver `radIntegrateCase3Wf cderivG ρ g C` (`g = ½ρ' = (3/2)x²`) lowers `deg C`, returning `Crem = 0`
+driver `radIntegrateCase3Wf cderiv ρ g C` (`g = ½ρ' = (3/2)x²`) lowers `deg C`, returning `Crem = 0`
 (fully rational) and `vNum = (2/5)x⁴`, so `v = vNum/y = (2/5)x·y`. -/
 
 /-- The cusp radicand `ρ = x³` as a `ℚ[x]` polynomial, for the Case-3 driver. -/
 def gcuspRhoP : CPoly ℚ := [0, 0, 0, 1]
 
 /-- `g = ½ρ' = (3/2)x²` over `ℚ[x]`, the diagonal `(ρ/y)' = g/y`. -/
-def gcuspGP : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG gcuspRhoP)
+def gcuspGP : CPoly ℚ := cscale (1/2 : ℚ) (cderiv gcuspRhoP)
 
-/-- The Case-3 driver run on `∫ y dx = ∫ x³/y` (`C = ρ = x³`): `radIntegrateCase3Wf cderivG ρ g ρ =
+/-- The Case-3 driver run on `∫ y dx = ∫ x³/y` (`C = ρ = x³`): `radIntegrateCase3Wf cderiv ρ g ρ =
 (Crem, vNum)`, expected `(0, (2/5)x⁴)`. -/
-def gcuspYRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP gcuspRhoP
+def gcuspYRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3Wf cderiv gcuspRhoP gcuspGP gcuspRhoP
 
 /-- The driver derives `Crem = 0` and `vNum = (2/5)x⁴` for `∫ y dx`: the Case-3 `C/y` degree-lowering on
-`C = x³` returns a zero leftover residual and rational-part numerator `vNum = (2/5)x⁴`, via `cisZeroG` of
+`C = x³` returns a zero leftover residual and rational-part numerator `vNum = (2/5)x⁴`, via `cisZero` of
 `Crem` and of `vNum − (2/5)x⁴`. -/
 theorem cusp_intY_driver_eq :
-    (cisZeroG gcuspYRun.1 && cisZeroG (csubG gcuspYRun.2 [0, 0, 0, 0, 2/5])) = true := by native_decide
+    (cisZero gcuspYRun.1 && cisZero (csub gcuspYRun.2 [0, 0, 0, 0, 2/5])) = true := by native_decide
 
 /-- The driver-produced rational part `v = vNum/y` lifted to `RadElem (QFunNZG ℚ)` `[0, vNum/ρ]`; with
 `vNum = (2/5)x⁴`, `ρ = x³` this is `[0, (2/5)x]`. -/
@@ -81,7 +81,7 @@ def gcuspVYlift : RadElem (QFunNZG ℚ) :=
 /-- The integrand's rational part `(C − Crem)/y` lifted to `RadElem (QFunNZG ℚ)` `[0, (C − Crem)/ρ]`; with
 `C = x³`, `Crem = 0` this is `[0, 1] = y`. -/
 def gcuspYRatLift : RadElem (QFunNZG ℚ) :=
-  [CField.zero, CField.div (qxOfNum (csubG gcuspRhoP gcuspYRun.1)) gcuspRho]
+  [CField.zero, CField.div (qxOfNum (csub gcuspRhoP gcuspYRun.1)) gcuspRho]
 
 /-- The Case-3 driver integrates `∫ y dx` end-to-end: `radDeriv 2 (x³)` of the driver-produced rational
 part `v = (2/5)x·y` equals the integrand's rational part `(C − Crem)/y = y`, via `radIsZero` of the
@@ -90,8 +90,8 @@ theorem cusp_intY_driver_integrates :
     radIsZero (radSub (radDeriv 2 gcuspRho gcuspVYlift) gcuspYRatLift) = true := by native_decide
 
 /-- `∫ y dx` is fully rational: the Case-3 reduction leaves `Crem = 0`, so there is no simple-pole
-residual and no logarithmic part, via `cisZeroG gcuspYRun.1`. -/
-theorem cusp_intY_fully_rational : cisZeroG gcuspYRun.1 = true := by native_decide
+residual and no logarithmic part, via `cisZero gcuspYRun.1`. -/
+theorem cusp_intY_fully_rational : cisZero gcuspYRun.1 = true := by native_decide
 
 /-! ### A second genus-0 target: `∫ x·y dx = (2/7)·x²·y` on `y² = x³`
 
@@ -109,15 +109,15 @@ def gcuspXY : RadElem (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 1]]
 theorem cusp_intXY_radDeriv :
     radIsZero (radSub (radDeriv 2 gcuspRho gcuspVXY) gcuspXY) = true := by native_decide
 
-/-- The Case-3 driver run on `∫ x·y dx = ∫ x⁴/y` (`C = x⁴`): `radIntegrateCase3Wf cderivG ρ g (x⁴) =
+/-- The Case-3 driver run on `∫ x·y dx = ∫ x⁴/y` (`C = x⁴`): `radIntegrateCase3Wf cderiv ρ g (x⁴) =
 (Crem, vNum)`, expected `(0, (2/7)x⁵)`. -/
-def gcuspXYRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP [0, 0, 0, 0, 1]
+def gcuspXYRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3Wf cderiv gcuspRhoP gcuspGP [0, 0, 0, 0, 1]
 
 /-- The driver derives `Crem = 0` and `vNum = (2/7)x⁵` for `∫ x·y dx`: the Case-3 `C/y` degree-lowering on
-`C = x⁴` returns a zero leftover and rational-part numerator `vNum = (2/7)x⁵`, via `cisZeroG` of `Crem`
+`C = x⁴` returns a zero leftover and rational-part numerator `vNum = (2/7)x⁵`, via `cisZero` of `Crem`
 and of `vNum − (2/7)x⁵`. -/
 theorem cusp_intXY_driver_eq :
-    (cisZeroG gcuspXYRun.1 && cisZeroG (csubG gcuspXYRun.2 [0, 0, 0, 0, 0, 2/7])) = true := by
+    (cisZero gcuspXYRun.1 && cisZero (csub gcuspXYRun.2 [0, 0, 0, 0, 0, 2/7])) = true := by
   native_decide
 
 /-- The driver-produced rational part `v = vNum/y` for `∫ x·y dx`, lifted to `RadElem (QFunNZG ℚ)`:
@@ -128,7 +128,7 @@ def gcuspVXYlift : RadElem (QFunNZG ℚ) :=
 /-- The integrand's rational part `(x⁴ − Crem)/y` lifted to `RadElem (QFunNZG ℚ)` `[0, (x⁴ − Crem)/ρ]`;
 with `Crem = 0` this is `[0, x] = x·y`. -/
 def gcuspXYRatLift : RadElem (QFunNZG ℚ) :=
-  [CField.zero, CField.div (qxOfNum (csubG [0, 0, 0, 0, 1] gcuspXYRun.1)) gcuspRho]
+  [CField.zero, CField.div (qxOfNum (csub [0, 0, 0, 0, 1] gcuspXYRun.1)) gcuspRho]
 
 /-- The Case-3 driver integrates `∫ x·y dx` end-to-end: `radDeriv 2 (x³)` of the driver-produced
 `v = (2/7)x²·y` equals the integrand `x·y`, via `radIsZero` of the difference. -/

@@ -23,14 +23,14 @@ variable {α : Type*} [CField α]
 coset representative. -/
 def afReduce (f p : CPoly α) : CPoly α := cmodWf p f
 
-/-- Multiplication in `α[y]/(f)`: `cmulG` then reduce `mod f` (`afReduce`). -/
-def afMul (f a b : CPoly α) : CPoly α := afReduce f (cmulG a b)
+/-- Multiplication in `α[y]/(f)`: `cmul` then reduce `mod f` (`afReduce`). -/
+def afMul (f a b : CPoly α) : CPoly α := afReduce f (cmul a b)
 
-/-- The `i`-th power-basis element `yⁱ` of `α[y]/(f)` (`cshiftG i [1]`). -/
-def afBasisElem (i : ℕ) : CPoly α := cshiftG i [CField.one]
+/-- The `i`-th power-basis element `yⁱ` of `α[y]/(f)` (`cshift i [1]`). -/
+def afBasisElem (i : ℕ) : CPoly α := cshift i [CField.one]
 
-/-- `toPolyG (afBasisElem 1) = X`: the carrier generator `y` reads as the formal variable `X`. -/
-theorem toPolyG_afBasisElem_one [CFieldSpec α] : toPolyG (afBasisElem 1 : CPoly α) = X := by
+/-- `toPoly (afBasisElem 1) = X`: the carrier generator `y` reads as the formal variable `X`. -/
+theorem toPolyG_afBasisElem_one [CFieldSpec α] : toPoly (afBasisElem 1 : CPoly α) = X := by
   rw [afBasisElem]
   simp only [denote]
   rw [pow_one]
@@ -50,14 +50,14 @@ def afCoeff (p : CPoly α) (i : ℕ) : α := (p : List α).getD i CField.zero
 /-- The multiplication-by-`w` matrix `M_w` of `α[y]/(f)`, `n×n` over `α` (`n = deg f`): entry
 `(r, c)` is the coefficient of `yʳ` in `w·y^c mod f`. Represented as `List (List α)`. -/
 def multMatrix (f w : CPoly α) : List (List α) :=
-  let n := cdegG f
+  let n := cdeg f
   (List.range n).map (fun r =>
     (List.range n).map (fun c => afCoeff (afMul f w (afBasisElem c)) r))
 
 /-- The field trace `Tr_{K(x,y)/K(x)}(w) = Σᵢ (M_w)ᵢᵢ`, the diagonal sum of the
 multiplication-by-`w` matrix. -/
 def trace (f w : CPoly α) : α :=
-  let n := cdegG f
+  let n := cdeg f
   (List.range n).foldl (fun acc i =>
     CField.add acc (afCoeff (afMul f w (afBasisElem i)) i)) CField.zero
 
@@ -69,7 +69,7 @@ def traceMatrix (f : CPoly α) (basis : List (CPoly α)) : List (List α) :=
   basis.map (fun ωi => basis.map (fun ωj => trace f (afMul f ωi ωj)))
 
 /-- The power basis `[1, y, …, yⁿ⁻¹]` (`n = deg f`) of `α[y]/(f)`. -/
-def powerBasis (f : CPoly α) : List (CPoly α) := (List.range (cdegG f)).map afBasisElem
+def powerBasis (f : CPoly α) : List (CPoly α) := (List.range (cdeg f)).map afBasisElem
 
 /-- Drop column `j` from a row (the `α`-list with index `j` removed), the minor-extraction
 helper for `fieldDet`. -/
@@ -100,8 +100,8 @@ def discriminant (f : CPoly (QFunNZG ℚ)) : QFunNZG ℚ :=
   qfDet (traceMatrix f (powerBasis f))
 
 /-- `Resultant(f, f')` for the curve `f`: `cresultantWf` of `f` against its `y`-derivative
-`cderivG f`. Equal to `± discriminant f`. -/
-def discResultant (f : CPoly α) : α := cresultantWf f (cderivG f)
+`cderiv f`. Equal to `± discriminant f`. -/
+def discResultant (f : CPoly α) : α := cresultantWf f (cderiv f)
 
 end CPoly
 
@@ -191,19 +191,19 @@ theorem afRad_trace_y_eq_zero :
 
 /-- `afMul` agrees with the radical relation `y² = ρ`: `afMul f y y = ρ = x³ + 1` for `f = y² − ρ`. -/
 theorem afRad_y_sq_eq_radicand :
-    cisZeroG (csubG (afMul afRadF (afBasisElem 1) (afBasisElem 1)) [qxOfNum [1, 0, 0, 1]])
+    cisZero (csub (afMul afRadF (afBasisElem 1) (afBasisElem 1)) [qxOfNum [1, 0, 0, 1]])
       = true := by native_decide
 
 /-! ### Ring sanity on the general carrier -/
 
 /-- `y · 1 = y` on the non-radical curve: the multiplicative identity holds in `ℚ(x)[y]/(f)`. -/
 theorem afNonRad_mul_one :
-    cisZeroG (csubG (afMul afNonRadF afNonRadY [CField.one]) afNonRadY) = true := by native_decide
+    cisZero (csub (afMul afNonRadF afNonRadY [CField.one]) afNonRadY) = true := by native_decide
 
 /-- Multiplication is associative on the trigonal curve: `afMul f y (afMul f y y) = afMul f (afMul
 f y y) y` in `ℚ(x)[y]/(y³+xy+x)`. -/
 theorem afTrig_mul_assoc :
-    cisZeroG (csubG
+    cisZero (csub
         (afMul afTrigF (afBasisElem 1) (afMul afTrigF (afBasisElem 1) (afBasisElem 1)))
         (afMul afTrigF (afMul afTrigF (afBasisElem 1) (afBasisElem 1)) (afBasisElem 1)))
       = true := by native_decide

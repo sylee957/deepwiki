@@ -4,8 +4,8 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.GeneralWellFounded
 
 Rational-part soundness API for the general carrier `K(x)[y]/(f)` through `afDerivWf`: the generator
 identity `D(y) = y'`, the accumulator telescoping invariant, and the round-trip closure from the engine's
-`cisZeroG` certificate. Statements live in the quotient `K[X] ⧸ (toPolyG f) = afIdeal f`, read through
-`toPolyG` and `Ideal.Quotient.mk`. -/
+`cisZero` certificate. Statements live in the quotient `K[X] ⧸ (toPoly f) = afIdeal f`, read through
+`toPoly` and `Ideal.Quotient.mk`. -/
 
 open Polynomial
 
@@ -23,37 +23,37 @@ The rational-part predicate, generator identity, telescoping, and round-trip clo
 
 /-- General rational-integral soundness predicate: `D(v) = g` modulo the curve ideal `afIdeal f`. -/
 def IsGeneralRationalIntegralWf (f g v : CPoly α) : Prop :=
-  Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f v))
-    = Ideal.Quotient.mk (afIdeal f) (toPolyG g)
+  Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f v))
+    = Ideal.Quotient.mk (afIdeal f) (toPoly g)
 
 /-- The generator identity `D(y) = y'` in the quotient. -/
-theorem mk_toPolyG_afDerivWf_genGen (f : CPoly α) (hf : cnormG f ≠ []) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f (afBasisElem 1)))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afYprimeWf f)) := by
+theorem mk_toPolyG_afDerivWf_genGen (f : CPoly α) (hf : cnorm f ≠ []) :
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (afBasisElem 1)))
+      = Ideal.Quotient.mk (afIdeal f) (toPoly (afYprimeWf f)) := by
   rw [mk_toPolyG_afDerivWf f _ hf, toPolyG_afBasisElem_one, Differential.implicitDeriv_X]
 
 /-- The generator identity packaged as `IsGeneralRationalIntegralWf`. -/
-theorem isGeneralRationalIntegralWf_gen (f : CPoly α) (hf : cnormG f ≠ []) :
+theorem isGeneralRationalIntegralWf_gen (f : CPoly α) (hf : cnorm f ≠ []) :
     IsGeneralRationalIntegralWf f (afYprimeWf f) (afBasisElem 1) :=
   mk_toPolyG_afDerivWf_genGen f hf
 
 omit [CDiffFieldSpec α] in
 /-- `afDerivWf` kills the seed `[]` modulo the curve ideal. -/
-theorem mk_toPolyG_afDerivWf_nil (f : CPoly α) (hf : cnormG f ≠ []) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f ([] : CPoly α))) = 0 := by
+theorem mk_toPolyG_afDerivWf_nil (f : CPoly α) (hf : cnorm f ≠ []) :
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f ([] : CPoly α))) = 0 := by
   rw [show afDerivWf f ([] : CPoly α) = afReduce f ([] : CPoly α) from rfl,
     mk_toPolyG_afReduce f _ hf, toPolyG_nil, map_zero]
 
 /-- `afDerivWf` distributes over the accumulator fold in the quotient. -/
-theorem mk_toPolyG_afDerivWf_foldlCaddG (f : CPoly α) (hf : cnormG f ≠ [])
+theorem mk_toPolyG_afDerivWf_foldlCaddG (f : CPoly α) (hf : cnorm f ≠ [])
     (acc : CPoly α) (cs : List (CPoly α)) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f (cs.foldl caddG acc)))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f acc))
-        + (cs.map (fun c => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f c)))).sum := by
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (cs.foldl cadd acc)))
+      = Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f acc))
+        + (cs.map (fun c => Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f c)))).sum := by
   induction cs generalizing acc with
   | nil => simp
   | cons c cs ih =>
-    rw [List.foldl_cons, ih (caddG acc c), mk_toPolyG_afDerivWf_add f acc c hf, List.map_cons,
+    rw [List.foldl_cons, ih (cadd acc c), mk_toPolyG_afDerivWf_add f acc c hf, List.map_cons,
       List.sum_cons]
     ring
 
@@ -61,13 +61,13 @@ omit [CDiffFieldSpec α] in
 /-- The per-step contributions telescope in the quotient. -/
 theorem sum_mk_toPolyG_afDerivWf_telescope (f : CPoly α) :
     ∀ (L₀ : CPoly α) (rest : List (CPoly α)) (cs : List (CPoly α)),
-      List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f c))
-            = Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)
-              - Ideal.Quotient.mk (afIdeal f) (toPolyG p.2))
+      List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f c))
+            = Ideal.Quotient.mk (afIdeal f) (toPoly p.1)
+              - Ideal.Quotient.mk (afIdeal f) (toPoly p.2))
           cs ((L₀ :: rest).zip rest) →
-      (cs.map (fun c => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f c)))).sum
-        = Ideal.Quotient.mk (afIdeal f) (toPolyG L₀)
-          - Ideal.Quotient.mk (afIdeal f) (toPolyG (rest.getLastD L₀)) := by
+      (cs.map (fun c => Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f c)))).sum
+        = Ideal.Quotient.mk (afIdeal f) (toPoly L₀)
+          - Ideal.Quotient.mk (afIdeal f) (toPoly (rest.getLastD L₀)) := by
   intro L₀ rest
   induction rest generalizing L₀ with
   | nil =>
@@ -86,28 +86,28 @@ theorem sum_mk_toPolyG_afDerivWf_telescope (f : CPoly α) :
     ring
 
 /-- The master rational-part telescoping soundness. -/
-theorem generalReduceRationalTelescopeWf (f : CPoly α) (hf : cnormG f ≠ [])
+theorem generalReduceRationalTelescopeWf (f : CPoly α) (hf : cnorm f ≠ [])
     (L₀ : CPoly α) (rest cs : List (CPoly α))
-    (hstep : List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f c))
-          = Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)
-            - Ideal.Quotient.mk (afIdeal f) (toPolyG p.2))
+    (hstep : List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f c))
+          = Ideal.Quotient.mk (afIdeal f) (toPoly p.1)
+            - Ideal.Quotient.mk (afIdeal f) (toPoly p.2))
         cs ((L₀ :: rest).zip rest)) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f (cs.foldl caddG ([] : CPoly α))))
-        + Ideal.Quotient.mk (afIdeal f) (toPolyG (rest.getLastD L₀))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG L₀) := by
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (cs.foldl cadd ([] : CPoly α))))
+        + Ideal.Quotient.mk (afIdeal f) (toPoly (rest.getLastD L₀))
+      = Ideal.Quotient.mk (afIdeal f) (toPoly L₀) := by
   rw [mk_toPolyG_afDerivWf_foldlCaddG f hf, mk_toPolyG_afDerivWf_nil f hf, zero_add,
     sum_mk_toPolyG_afDerivWf_telescope f L₀ rest cs hstep]
   ring
 
 /-- The telescoping yields `IsGeneralRationalIntegralWf` when the final leftover vanishes. -/
-theorem isGeneralRationalIntegralWf_of_telescope (f : CPoly α) (hf : cnormG f ≠ [])
+theorem isGeneralRationalIntegralWf_of_telescope (f : CPoly α) (hf : cnorm f ≠ [])
     (L₀ : CPoly α) (rest cs : List (CPoly α))
-    (hstep : List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f c))
-          = Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)
-            - Ideal.Quotient.mk (afIdeal f) (toPolyG p.2))
+    (hstep : List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f c))
+          = Ideal.Quotient.mk (afIdeal f) (toPoly p.1)
+            - Ideal.Quotient.mk (afIdeal f) (toPoly p.2))
         cs ((L₀ :: rest).zip rest))
-    (hleft : Ideal.Quotient.mk (afIdeal f) (toPolyG (rest.getLastD L₀)) = 0) :
-    IsGeneralRationalIntegralWf f L₀ (cs.foldl caddG ([] : CPoly α)) := by
+    (hleft : Ideal.Quotient.mk (afIdeal f) (toPoly (rest.getLastD L₀)) = 0) :
+    IsGeneralRationalIntegralWf f L₀ (cs.foldl cadd ([] : CPoly α)) := by
   have hkey := generalReduceRationalTelescopeWf f hf L₀ rest cs hstep
   rw [hleft, add_zero] at hkey
   exact hkey
@@ -115,7 +115,7 @@ theorem isGeneralRationalIntegralWf_of_telescope (f : CPoly α) (hf : cnormG f �
 omit [CDiffFieldSpec α] in
 /-- The `afDerivWf` round-trip check discharges `IsGeneralRationalIntegralWf`. -/
 theorem isGeneralRationalIntegralWf_of_roundtrip (f v g : CPoly α)
-    (hcheck : cisZeroG (csubG (afDerivWf f v) g) = true) :
+    (hcheck : cisZero (csub (afDerivWf f v) g) = true) :
     IsGeneralRationalIntegralWf f g v :=
   congrArg (Ideal.Quotient.mk (afIdeal f)) (toPolyG_afDerivWf_eq_of_roundtrip f v g hcheck)
 
@@ -129,7 +129,7 @@ open CPoly
 
 /-- The named general run `∫ y dx = (3/5)x·y` on `y³ = x²` is sound through `afDerivWf`. -/
 theorem isGeneralRationalIntegralWf_cuspCubic_intY (v : CPoly (QFunNZG ℚ))
-    (hcheck : cisZeroG (csubG (afDerivWf gcuspCubicF v) gcuspCubicY) = true) :
+    (hcheck : cisZero (csub (afDerivWf gcuspCubicF v) gcuspCubicY) = true) :
     CPoly.IsGeneralRationalIntegralWf gcuspCubicF gcuspCubicY v :=
   CPoly.isGeneralRationalIntegralWf_of_roundtrip gcuspCubicF v gcuspCubicY hcheck
 

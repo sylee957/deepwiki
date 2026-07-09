@@ -23,7 +23,7 @@ unformalized — see those catalogs and the block below.
 
 ## NOT YET FORMALIZED (audit 2026-06-26)
 App. A §2.1 Case 1 (`C/(Vᵏy)`): the `k = 1` lower-coefficient solve (the residual `Crem/(Vy)`,
-  a Risch first-order ODE) is the deferred `cRischDEG` glue `[deferred]`.
+  a Risch first-order ODE) is the deferred `cRischDE` glue `[deferred]`.
 App. A §2.4 `θ = exp v`: the `C/y` sub-case (eq. 6) and the *lower* (non-leading,
   non-constant) coefficient ODE solves of the `θ = log v` / `θ = exp v` variants
   (Risch first-order ODE for each coefficient) `[deferred]`.
@@ -72,7 +72,7 @@ abbrev appA_radDeriv_decouples := @radDeriv_decouples
 /-! ## Case 1 — `C/(Vᵏy)`, `θ' = 1` (App. A §2.1) -/
 
 /-- **Case 1 cofactor** (Trager, Appendix A §2.1, p.75–76): `radCase1Cofactor` solves the
-Hermite congruence `(1−k)V'fB ≡ C (mod V)` via the fuel-free Bézout solver `cdiophantineG`, giving
+Hermite congruence `(1−k)V'fB ≡ C (mod V)` via the fuel-free Bézout solver `cdiophantine`, giving
 the numerator `B` of the lowered term `Bf/(V^{k−1}y)`. -/
 abbrev appA_case1_cofactor := @radCase1Cofactor
 
@@ -89,7 +89,7 @@ abbrev appA_case1_cleared_identity := @case1_cleared_identity
 
 /-- **Case 2 cofactor** (Trager, Appendix A §2.2, p.76–77, `n = 2`): `radCase2Cofactor` solves
 the `radDeriv`-validated congruence `B·(½−k)W'h ≡ C (mod W)` (`h = f/W`; the bracket `½−k =
-1−k−eⱼ/n` is Trager's at `eⱼ = 1, n = 2`) via `cdiophantineG`, clearing `f`-factors from
+1−k−eⱼ/n` is Trager's at `eⱼ = 1, n = 2`) via `cdiophantine`, clearing `f`-factors from
 denominators. -/
 abbrev appA_case2_cofactor := @radCase2Cofactor
 
@@ -158,19 +158,19 @@ wraps `radReduceCase1IterateWf`, decoupling the `R/y` integrand, running the ite
 and assembling the accumulated rational part `v` without runtime fuel. -/
 abbrev appA_radIntegrateCase1 := @CPoly.radIntegrateCase1Wf
 
-/-- The Case-1 driver run `radIntegrateCase1Wf cderivG V f g 3 C` on `∫ 1/((x−1)³√x)`. -/
+/-- The Case-1 driver run `radIntegrateCase1Wf cderiv V f g 3 C` on `∫ 1/((x−1)³√x)`. -/
 def appA_sqrtxRun : CPoly ℚ × CPoly ℚ :=
-  radIntegrateCase1Wf cderivG sqrtxV sqrtxF sqrtxG 3 sqrtxC
+  radIntegrateCase1Wf cderiv sqrtxV sqrtxF sqrtxG 3 sqrtxC
 
 /-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
 def appA_sqrtxVlift : RadElem (QFunNZG ℚ) :=
-  [CField.zero, CField.div (qxOfNum appA_sqrtxRun.2) (qxOfNum (cmulG sqrtxV2 sqrtxF))]
+  [CField.zero, CField.div (qxOfNum appA_sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
 
 /-- The rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
 def appA_sqrtxRatLift : RadElem (QFunNZG ℚ) :=
   [CField.zero,
-    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmulG sqrtxV3 sqrtxF)))
-      (CField.div (qxOfNum appA_sqrtxRun.1) (qxOfNum (cmulG sqrtxV sqrtxF)))]
+    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmul sqrtxV3 sqrtxF)))
+      (CField.div (qxOfNum appA_sqrtxRun.1) (qxOfNum (cmul sqrtxV sqrtxF)))]
 
 /-- **Appendix A §2** (the driver capstone, `native_decide`): for `y² = x`, `V = x−1`, `k₀ = 3`,
 `C₀ = 1` (the integrand `1/((x−1)³√x)`), the driver's accumulated rational part `v` satisfies
@@ -183,17 +183,17 @@ theorem appA_sqrtxDriver_integrates :
 
 /-- The Case-1 driver run on `∫ 1/((x−1)³√(x³+1))`. -/
 def appA_cubeRun : CPoly ℚ × CPoly ℚ :=
-  radIntegrateCase1Wf cderivG cubeV cubeF cubeG 3 cubeC
+  radIntegrateCase1Wf cderiv cubeV cubeF cube 3 cubeC
 
 /-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
 def appA_cubeVlift : RadElem (QFunNZG ℚ) :=
-  [CField.zero, CField.div (qxOfNum appA_cubeRun.2) (qxOfNum (cmulG (cpowG cubeV 2) cubeF))]
+  [CField.zero, CField.div (qxOfNum appA_cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
 
 /-- The rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
 def appA_cubeRatLift : RadElem (QFunNZG ℚ) :=
   [CField.zero,
-    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmulG (cpowG cubeV 3) cubeF)))
-      (CField.div (qxOfNum appA_cubeRun.1) (qxOfNum (cmulG cubeV cubeF)))]
+    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmul (cpow cubeV 3) cubeF)))
+      (CField.div (qxOfNum appA_cubeRun.1) (qxOfNum (cmul cubeV cubeF)))]
 
 /-- **Appendix A §2** (the driver capstone on a second curve, `native_decide`): for `y² = x³+1`,
 `V = x−1`, the driver's accumulated `v` satisfies the analogous `D(v) = rational-part` identity
@@ -235,19 +235,19 @@ def appA_mcW : CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ :=
 def appA_mcVlift : RadElem (QFunNZG ℚ) :=
   radAdd
     [CField.zero, CField.div (qxOfNum appA_mcV.2.2.2.1)
-      (qxOfNum (cmulG (cpowG appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
+      (qxOfNum (cmul (cpow appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
     [CField.zero, CField.div (qxOfNum appA_mcW.2.2.2.1)
-      (qxOfNum (cmulG (cpowG appA_mcW.1 appA_mcW.2.1) mcRho))]
+      (qxOfNum (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho))]
 
 /-- The integrand's total rational part after subtracting the two `k = 1` leftovers. -/
 def appA_mcRatLift : RadElem (QFunNZG ℚ) :=
   radAdd
     [CField.zero, CField.sub
-      (CField.div (qxOfNum appA_mcV.2.2.1) (qxOfNum (cmulG (cpowG appA_mcV.1 appA_mcV.2.1) mcRho)))
-      (CField.div (qxOfNum appA_mcV.2.2.2.2) (qxOfNum (cmulG appA_mcV.1 mcRho)))]
+      (CField.div (qxOfNum appA_mcV.2.2.1) (qxOfNum (cmul (cpow appA_mcV.1 appA_mcV.2.1) mcRho)))
+      (CField.div (qxOfNum appA_mcV.2.2.2.2) (qxOfNum (cmul appA_mcV.1 mcRho)))]
     [CField.zero, CField.sub
-      (CField.div (qxOfNum appA_mcW.2.2.1) (qxOfNum (cmulG (cpowG appA_mcW.1 appA_mcW.2.1) mcRho)))
-      (CField.div (qxOfNum appA_mcW.2.2.2.2) (qxOfNum (cmulG appA_mcW.1 mcRho)))]
+      (CField.div (qxOfNum appA_mcW.2.2.1) (qxOfNum (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho)))
+      (CField.div (qxOfNum appA_mcW.2.2.2.2) (qxOfNum (cmul appA_mcW.1 mcRho)))]
 
 /-- **Appendix A §2** (multi-case capstone, `native_decide`): on `∫ 1/((x−1)²x²√x)`, the dispatcher
 classifies the mixed denominator into one `V` factor and one `W` factor, assembles the rational part,

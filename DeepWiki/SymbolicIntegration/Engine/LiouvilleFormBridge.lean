@@ -29,10 +29,10 @@ directly in the abstract Liouville form (the shape `ratFunc_liouville`/`isLiouvi
 consume), the entry point for the completeness descent. -/
 theorem isIntegralResultG_iff_liouvilleForm (Dt anum aden : CPoly α) (res : IntegralResultG α) :
     IsIntegralResultG Dt anum aden res ↔
-      towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+      towerFractionFieldDerivG Dt (amG α (toPoly res.rational.1) / amG α (toPoly res.rational.2))
         + (res.logs.map (fun cv => amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
-        = amG α (toPolyG anum) / amG α (toPolyG aden) := by
+            * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
+        = amG α (toPoly anum) / amG α (toPoly aden) := by
   unfold IsIntegralResultG
   rw [logResidueSumG_eq_logDeriv_sum]
 

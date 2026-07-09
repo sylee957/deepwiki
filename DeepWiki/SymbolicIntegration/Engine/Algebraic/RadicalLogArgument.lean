@@ -43,7 +43,7 @@ def qxMonomial (k : ℕ) : QFunNZG ℚ := qMonomialG k
 /-- The cleared log-derivative residual `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' −
 radMul(N, integrand)·D` in `(QFunNZG ℚ)[y]/(y² − ρ)`, whose vanishing says `∫(integrand) dx = log(N/D)`;
 `ℚ`-linear in `N`. The `ℚ`-base specialization of `radLogResidualG` (which uses the actual base-field
-derivation `CDiffField.cderiv`, agreeing with the formal `cderivG` on the untowered base `ℚ(x)`). -/
+derivation `CDiffField.cderiv`, agreeing with the formal `cderiv` on the untowered base `ℚ(x)`). -/
 def radLogResidual (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPoly ℚ)
     (N : RadElem (QFunNZG ℚ)) : RadElem (QFunNZG ℚ) :=
   radLogResidualG ρ integrand D N

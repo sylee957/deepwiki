@@ -17,7 +17,7 @@ open CPoly
 /-! ### The reducer `qReduce`
 
 `qReduce ⟨(num, den), _⟩ = ⟨(num/g, den/g), _⟩` with `g = cgcdMonicWf num den`; the denominator-nonzero
-obligation is discharged from `(toPolyG (den/g))·(toPolyG g) = toPolyG den ≠ 0`. -/
+obligation is discharged from `(toPoly (den/g))·(toPoly g) = toPoly den ≠ 0`. -/
 
 namespace QFunNZG
 
@@ -29,16 +29,16 @@ def reduceGcd (a : QFunNZG α) : CPoly α :=
 
 /-! #### The denominator-nonzero discharge (`Prop`-erased) -/
 
-/-- `toPolyG (reduceGcd a)` divides both numerator and denominator through the bridge. -/
+/-- `toPoly (reduceGcd a)` divides both numerator and denominator through the bridge. -/
 theorem toPolyG_reduceGcd_dvd (a : QFunNZG α) :
-    toPolyG (reduceGcd a) ∣ toPolyG a.1.1 ∧ toPolyG (reduceGcd a) ∣ toPolyG a.1.2 :=
+    toPoly (reduceGcd a) ∣ toPoly a.1.1 ∧ toPoly (reduceGcd a) ∣ toPoly a.1.2 :=
   toPolyG_cgcdMonicWf_dvd a.1.1 a.1.2
 
 /-- `reduceGcd a` is nonzero when the denominator of `a` is nonzero. -/
-theorem reduceGcd_ne_nil (a : QFunNZG α) : cnormG (reduceGcd a) ≠ [] := by
-  have hden : toPolyG a.1.2 ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false a.2
+theorem reduceGcd_ne_nil (a : QFunNZG α) : cnorm (reduceGcd a) ≠ [] := by
+  have hden : toPoly a.1.2 ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false a.2
   intro hnil
-  have hg0 : toPolyG (reduceGcd a) = 0 := (cnormG_eq_nil_iff _).mp hnil
+  have hg0 : toPoly (reduceGcd a) = 0 := (cnormG_eq_nil_iff _).mp hnil
   exact hden (eq_zero_of_zero_dvd (hg0 ▸ (toPolyG_reduceGcd_dvd a).2))
 
 /-- The cancelled numerator `num/g`. -/
@@ -49,19 +49,19 @@ def reduceDen (a : QFunNZG α) : CPoly α := cdivWf a.1.2 (reduceGcd a)
 
 /-- Exact division of the numerator by `reduceGcd a`. -/
 theorem toPolyG_reduceNum_mul (a : QFunNZG α) :
-    toPolyG (reduceNum a) * toPolyG (reduceGcd a) = toPolyG a.1.1 :=
+    toPoly (reduceNum a) * toPoly (reduceGcd a) = toPoly a.1.1 :=
   CPoly.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).1
 
 /-- Exact division of the denominator by `reduceGcd a`. -/
 theorem toPolyG_reduceDen_mul (a : QFunNZG α) :
-    toPolyG (reduceDen a) * toPolyG (reduceGcd a) = toPolyG a.1.2 :=
+    toPoly (reduceDen a) * toPoly (reduceGcd a) = toPoly a.1.2 :=
   CPoly.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).2
 
-/-- The reduced denominator satisfies `cisZeroG (reduceDen a) = false`. -/
-theorem cisZeroG_reduceDen (a : QFunNZG α) : cisZeroG (reduceDen a) = false := by
+/-- The reduced denominator satisfies `cisZero (reduceDen a) = false`. -/
+theorem cisZeroG_reduceDen (a : QFunNZG α) : cisZero (reduceDen a) = false := by
   rw [Bool.eq_false_iff, Ne, cisZeroG_iff]
   intro hz
-  have hden : toPolyG a.1.2 ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false a.2
+  have hden : toPoly a.1.2 ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false a.2
   apply hden
   rw [← toPolyG_reduceDen_mul a, hz, zero_mul]
 
@@ -79,9 +79,9 @@ namespace QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-- `amG (toPolyG (reduceGcd a)) ≠ 0`. -/
+/-- `amG (toPoly (reduceGcd a)) ≠ 0`. -/
 theorem amG_toPolyG_reduceGcd_ne_zero (a : QFunNZG α) :
-    amG α (toPolyG (reduceGcd a)) ≠ 0 :=
+    amG α (toPoly (reduceGcd a)) ≠ 0 :=
   amG_toPolyG_ne_zero (fun h => reduceGcd_ne_nil a ((cnormG_eq_nil_iff _).mpr h))
 
 end QFunNZG
@@ -90,11 +90,11 @@ end QFunNZG
 theorem toQFunNZG_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : QFunNZG α) :
     QFunNZG.toQFunNZG (qReduce a) = QFunNZG.toQFunNZG a := by
   -- abbreviations in RatFunc (CFieldSpec.K α)
-  set G : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPolyG (QFunNZG.reduceGcd a)) with hG
-  set Nq : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPolyG (QFunNZG.reduceNum a)) with hNq
-  set Dq : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPolyG (QFunNZG.reduceDen a)) with hDq
-  set N : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPolyG a.1.1) with hN
-  set D : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPolyG a.1.2) with hD
+  set G : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPoly (QFunNZG.reduceGcd a)) with hG
+  set Nq : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPoly (QFunNZG.reduceNum a)) with hNq
+  set Dq : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPoly (QFunNZG.reduceDen a)) with hDq
+  set N : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPoly a.1.1) with hN
+  set D : RatFunc (CFieldSpec.K α) := QFunNZG.amG α (toPoly a.1.2) with hD
   -- exact-division specs, pushed through the ring hom amG
   have hnum : Nq * G = N := by
     rw [hNq, hG, hN, ← map_mul]; exact congrArg _ (QFunNZG.toPolyG_reduceNum_mul a)
@@ -139,18 +139,18 @@ def swellFrac : QFunNZG ℚ :=
   ⟨([(-1 : ℚ), 0, 1], [(-3 : ℚ), 2, 1]), by native_decide⟩
 
 -- `qReduce` cancels the gcd `x − 1` in `swellFrac`, dropping the numerator to degree 1.
-example : cdegG (qReduce swellFrac).1.1 = 1 := by native_decide
+example : cdeg (qReduce swellFrac).1.1 = 1 := by native_decide
 
 -- `qReduce` drops `swellFrac`'s denominator to degree 1, a scalar multiple of `x + 3`.
-example : cdegG (qReduce swellFrac).1.2 = 1 := by native_decide
+example : cdeg (qReduce swellFrac).1.2 = 1 := by native_decide
 
 -- `qReduce` is value-preserving on `swellFrac` in the engine's field equality test.
 example : qReduceEq (qReduce swellFrac) swellFrac = true := by native_decide
 
 -- The total degree drops from `2 + 2 = 4` to `1 + 1 = 2`.
 example :
-    cdegG (qReduce swellFrac).1.1 + cdegG (qReduce swellFrac).1.2
-      < cdegG swellFrac.1.1 + cdegG swellFrac.1.2 := by native_decide
+    cdeg (qReduce swellFrac).1.1 + cdeg (qReduce swellFrac).1.2
+      < cdeg swellFrac.1.1 + cdeg swellFrac.1.2 := by native_decide
 
 /-- A higher-degree reducible fraction over `ℚ(x)` for `qReduce` examples. -/
 def swellFrac2 : QFunNZG ℚ :=
@@ -161,7 +161,7 @@ example : qReduceEq (qReduce swellFrac2) swellFrac2 = true := by native_decide
 
 -- The bigger swell's total degree drops from `4 + 6 = 10` to `3 + 5 = 8`.
 example :
-    cdegG (qReduce swellFrac2).1.1 + cdegG (qReduce swellFrac2).1.2
-      < cdegG swellFrac2.1.1 + cdegG swellFrac2.1.2 := by native_decide
+    cdeg (qReduce swellFrac2).1.1 + cdeg (qReduce swellFrac2).1.2
+      < cdeg swellFrac2.1.1 + cdeg swellFrac2.1.2 := by native_decide
 
 end DeepWiki.SymbolicIntegration

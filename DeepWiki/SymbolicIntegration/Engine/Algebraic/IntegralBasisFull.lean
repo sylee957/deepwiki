@@ -28,13 +28,13 @@ the iteration applies after each enlargement. -/
 scaled so the denominator is monic (`g = gcd(num, den)`; a zero denominator falls back to the input). -/
 def qReduceNZG (z : QFunNZG ℚ) : QFunNZG ℚ :=
   let num1 := QFunNZG.reduceNum z
-  let den1 := cnormG (QFunNZG.reduceDen z)
-  if cisZeroG den1 then z
+  let den1 := cnorm (QFunNZG.reduceDen z)
+  if cisZero den1 then z
   else
-    let c := CField.inv (cleadG den1)
-    let num2 := cscaleG c num1
-    let den2 := cscaleG c den1
-    if h : cisZeroG den2 = false then ⟨(num2, den2), h⟩ else z
+    let c := CField.inv (clead den1)
+    let num2 := cscale c num1
+    let den2 := cscale c den1
+    if h : cisZero den2 = false then ⟨(num2, den2), h⟩ else z
 
 /-- Reduce every `ℚ(x)` entry of an order basis to lowest terms (`qReduceNZG` entrywise). -/
 def reduceOrder (O : List (CPoly (QFunNZG ℚ))) : List (CPoly (QFunNZG ℚ)) :=
@@ -57,13 +57,13 @@ def traceMatrixOrderAtRoot (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG �
 together with the `p·O` generators, Hermite-reduced to the nonzero rows. -/
 def ipOCoords (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ))) (p : CPoly ℚ) (a : ℚ) :
     PolyMatrix ℚ :=
-  let n := cdegG f
+  let n := cdeg f
   let kers : List (List ℚ) := kernelBasisG n (traceMatrixOrderAtRoot f O a)
   let kerRows : PolyMatrix ℚ := kers.map (fun v => (List.range n).map (fun i => [v.getD i 0]))
   let pRows : PolyMatrix ℚ := (List.range n).map (fun i =>
     (List.range n).map (fun j => if i = j then p else ([] : CPoly ℚ)))
   let reduced := hermiteRowReduce (kerRows ++ pRows)
-  reduced.filter (fun row => !row.all cisZeroG)
+  reduced.filter (fun row => !row.all cisZero)
 
 /-! ### The idealizer of an arbitrary order, in `O`-coordinates (`idealizerOCoords`)
 
@@ -84,13 +84,13 @@ def toOCoords (Binv : List (List (QFunNZG ℚ))) (n : ℕ) (z : CPoly (QFunNZG �
       CField.add acc (CField.mul ((Binv.getD r []).getD c CField.zero) (z.getD c CField.zero)))
       CField.zero)
 
-/-- The common denominator of a `K(x)`-matrix `commonDenomG M`: the product of the distinct reduced
+/-- The common denominator of a `K(x)`-matrix `commonDenom M`: the product of the distinct reduced
 entry denominators (each `qReduceNZG`-reduced, monic, skipping `1`). -/
-def commonDenomG (M : List (List (QFunNZG ℚ))) : CPoly ℚ :=
+def commonDenom (M : List (List (QFunNZG ℚ))) : CPoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
-      let den := cnormG (qReduceNZG z).1.2
-      if cisZeroG den || cisZeroG (csubG den [CField.one]) then a else cmulG a den)
+      let den := cnorm (qReduceNZG z).1.2
+      if cisZero den || cisZero (csub den [CField.one]) then a else cmul a den)
       acc) [CField.one]
 
 /-- Clear a `K(x)`-row to a `K[x]`-row at `δ` by exact division: `clearRowExact δ row = [(δ·numᵢ)/denᵢ]`
@@ -99,24 +99,24 @@ def clearRowExact (δ : CPoly ℚ) (row : List (QFunNZG ℚ)) : List (CPoly ℚ)
   row.map (fun z =>
     let zz := qReduceNZG z
     let num := zz.1.1
-    let den := cnormG zz.1.2
-    cdivWf (cmulG δ num) den)
+    let den := cnorm zz.1.2
+    cdivWf (cmul δ num) den)
 
 /-- The idealizer `Î = (I_p : I_p)` of an order `O`, as a new `K(x)` order basis: from `O` (power
 coordinates) and `ipO` (`I_p` in `O`-coordinates), build the multiply-by-`ιⱼ` matrices in the `I_p`
-basis, stack, clear to `K[x]` via `commonDenomG`/`clearRowExact`, Hermite-reduce, invert, and scale
+basis, stack, clear to `K[x]` via `commonDenom`/`clearRowExact`, Hermite-reduce, invert, and scale
 by `δ` to get the idealizer basis, mapped back to power coordinates. Returns `O` if any inverse is
 singular. -/
 def idealizerOCoords (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ))) (ipO : PolyMatrix ℚ) :
     List (CPoly (QFunNZG ℚ)) :=
-  let n := cdegG f
+  let n := cdeg f
   let B := orderToPowerMatrix n O
   match matInvG n B with
   | none => O
   | some Binv =>
     let ipElems : List (CPoly (QFunNZG ℚ)) := ipO.map (fun row =>
       (List.range n).foldl (fun acc i =>
-        caddG acc (cscaleG (qxOfNum (row.getD i [])) (O.getD i []))) ([] : CPoly (QFunNZG ℚ)))
+        cadd acc (cscale (qxOfNum (row.getD i [])) (O.getD i []))) ([] : CPoly (QFunNZG ℚ)))
     let Bip : List (List (QFunNZG ℚ)) := (List.range n).map (fun r =>
       (List.range n).map (fun k => (toOCoords Binv n (ipElems.getD k [])).getD r CField.zero))
     match matInvG n Bip with
@@ -129,9 +129,9 @@ def idealizerOCoords (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ))) 
             (List.range n).map (fun i =>
               (toOCoords Binv n (afMul f ιj (O.getD i []))).getD r CField.zero))
           (matMulG BipInv multO) ++ acc) []
-      let δ : CPoly ℚ := commonDenomG M
+      let δ : CPoly ℚ := commonDenom M
       let N : PolyMatrix ℚ := M.map (clearRowExact δ)
-      let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZeroG)
+      let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZero)
       let Nhat : List (List (QFunNZG ℚ)) := (List.range n).map (fun i =>
         (List.range n).map (fun j => qxOfNum ((nz.getD i []).getD j [])))
       match matInvG n Nhat with
@@ -142,7 +142,7 @@ def idealizerOCoords (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ))) 
           let uO : List (QFunNZG ℚ) := (List.range n).map (fun row =>
             CField.mul δq ((NhatInv.getD row []).getD col CField.zero))
           (List.range n).foldl (fun acc i =>
-            caddG acc (cscaleG (uO.getD i CField.zero) (O.getD i []))) ([] : CPoly (QFunNZG ℚ)))
+            cadd acc (cscale (uO.getD i CField.zero) (O.getD i []))) ([] : CPoly (QFunNZG ℚ)))
 
 end CPoly
 
@@ -161,26 +161,26 @@ namespace CPoly
 enlargement — the termination measure. -/
 def discNumOrder (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ))) : CPoly ℚ :=
   let z := fieldDet (traceMatrix f O)
-  cnormG (QFunNZG.reduceNum z)
+  cnorm (QFunNZG.reduceNum z)
 
 /-- The bad primes of an order `O`: the distinct monic squarefree factors `p` of the reduced
 discriminant numerator with `p² | d` — where `O` may still be non-maximal. -/
 def badPrimesOrder (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ))) :
     List (CPoly ℚ) :=
   let d := discNumOrder f O
-  let distinct := ((cSqfreeYunFFG d).map cmonicG).filter (fun p => 0 < cdegG p)
-  distinct.filter (fun p => cisZeroG (cmodWf d (cmulG p p)))
+  let distinct := ((cSqfreeYunFF d).map cmonic).filter (fun p => 0 < cdeg p)
+  distinct.filter (fun p => cisZero (cmodWf d (cmul p p)))
 
-/-- `true` iff two order bases agree: each `O1ᵢ` is `cisZeroG`-equal to `O2ᵢ` over the `n`
+/-- `true` iff two order bases agree: each `O1ᵢ` is `cisZero`-equal to `O2ᵢ` over the `n`
 coordinates. The iteration's fixed-point test. -/
 def orderEq (n : ℕ) (O1 O2 : List (CPoly (QFunNZG ℚ))) : Bool :=
-  (List.range n).all (fun i => cisZeroG (csubG (O1.getD i []) (O2.getD i [])))
+  (List.range n).all (fun i => cisZero (csub (O1.getD i []) (O2.getD i [])))
 
 /-- One Round-2 enlargement of an order `O` at a linear prime `p`: compute the p-trace-radical
 `ipOCoords` and its idealizer `idealizerOCoords`, reduced to canonical form. -/
 def round2StepOrderAt (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ))) (p : CPoly ℚ) :
     List (CPoly (QFunNZG ℚ)) :=
-  let pm := cmonicG p
+  let pm := cmonic p
   let a : ℚ := CField.neg (pm.getD 0 CField.zero)
   reduceOrder (idealizerOCoords f O (ipOCoords f O pm a))
 
@@ -188,7 +188,7 @@ def round2StepOrderAt (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ)))
 `round2StepOrderAt` over every bad prime, reporting whether the order grew (`grew = ¬ orderEq O O'`). -/
 def round2Pass (f : CPoly (QFunNZG ℚ)) (O : List (CPoly (QFunNZG ℚ))) :
     List (CPoly (QFunNZG ℚ)) × Bool :=
-  let n := cdegG f
+  let n := cdeg f
   let O' := (badPrimesOrder f O).foldl (fun acc p => round2StepOrderAt f acc p) O
   (O', !orderEq n O O')
 
@@ -207,7 +207,7 @@ def integralBasisLoop (fuel : ℕ) (f : CPoly (QFunNZG ℚ)) :
 order `[1, y, …, yⁿ⁻¹]` to the maximal order, whose `K[x]`-basis is the integral basis of
 `K(x, y) = K(x)[y]/(f)` (the functions with no finite poles). -/
 def integralBasis (f : CPoly (QFunNZG ℚ)) : List (CPoly (QFunNZG ℚ)) :=
-  let fuel := cdegG (discNum f) + 1
+  let fuel := cdeg (discNum f) + 1
   reduceOrder (integralBasisLoop fuel f (powerBasis f))
 
 /-- `true` iff `O` is the maximal order: a Round-2 pass over `O` does not grow it
@@ -229,9 +229,9 @@ def cuspIBGen : CPoly (QFunNZG ℚ) := (integralBasis cuspF).getD 1 []
 
 /-- The cusp integral basis is `[1, y/x]`, integral (`(y/x)² = x`) and maximal. -/
 theorem cusp_integralBasis_eq :
-    (cisZeroG (csubG cuspIBGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZeroG (csubG ((integralBasis cuspF).getD 0 []) [CField.one])
-      && cisZeroG (csubG (afMul cuspF cuspIBGen cuspIBGen) [qxOfNum [0, 1]])
+    (cisZero (csub cuspIBGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((integralBasis cuspF).getD 0 []) [CField.one])
+      && cisZero (csub (afMul cuspF cuspIBGen cuspIBGen) [qxOfNum [0, 1]])
       && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
 
 -- Sanity print: the node integral basis (expected `[1,0]`, `[0,1/x]`).
@@ -242,9 +242,9 @@ def nodeIBGen : CPoly (QFunNZG ℚ) := (integralBasis nodeF).getD 1 []
 
 /-- The node integral basis is `[1, y/x]`, integral (`(y/x)² = x + 1`) and maximal. -/
 theorem node_integralBasis_eq :
-    (cisZeroG (csubG nodeIBGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZeroG (csubG ((integralBasis nodeF).getD 0 []) [CField.one])
-      && cisZeroG (csubG (afMul nodeF nodeIBGen nodeIBGen) [qxOfNum [1, 1]])
+    (cisZero (csub nodeIBGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((integralBasis nodeF).getD 0 []) [CField.one])
+      && cisZero (csub (afMul nodeF nodeIBGen nodeIBGen) [qxOfNum [1, 1]])
       && isMaximalOrder nodeF (integralBasis nodeF)) = true := by native_decide
 
 /-! ### A multi-step curve: the worse cusp `y² − x⁵`, integral basis `[1, y/x²]` (`native_decide`)
@@ -273,18 +273,18 @@ def cusp5IBGen : CPoly (QFunNZG ℚ) := (integralBasis cusp5F).getD 1 []
 (`isMaximalOrder` is `false`). -/
 theorem cusp5_oneStep_not_maximal :
     (((round2Step cusp5F).2)
-      && cisZeroG (csubG ((round2Step cusp5F).1.getD 1 [])
+      && cisZero (csub ((round2Step cusp5F).1.getD 1 [])
             [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
       && !isMaximalOrder cusp5F (reduceOrder (round2Step cusp5F).1)) = true := by native_decide
 
 /-- The full iteration reaches `[1, y/x²]` for `y² − x⁵` (two Round-2 steps). -/
 theorem cusp5_integralBasis_eq :
-    (cisZeroG (csubG cusp5IBGen [CField.zero, qxOfFrac [1] [0, 0, 1] (by decide)])
-      && cisZeroG (csubG ((integralBasis cusp5F).getD 0 []) [CField.one])) = true := by native_decide
+    (cisZero (csub cusp5IBGen [CField.zero, qxOfFrac [1] [0, 0, 1] (by decide)])
+      && cisZero (csub ((integralBasis cusp5F).getD 0 []) [CField.one])) = true := by native_decide
 
 /-- The worse-cusp generator `y/x²` is integral (`(y/x²)² = x`) and `[1, y/x²]` is maximal. -/
 theorem cusp5_integralBasis_integral_maximal :
-    (cisZeroG (csubG (afMul cusp5F cusp5IBGen cusp5IBGen) [qxOfNum [0, 1]])
+    (cisZero (csub (afMul cusp5F cusp5IBGen cusp5IBGen) [qxOfNum [0, 1]])
       && isMaximalOrder cusp5F (integralBasis cusp5F)) = true := by native_decide
 
 /-! ### A multi-prime curve: `y² − x³(x−1)²`, bad at both `x` and `x − 1` (`native_decide`)
@@ -305,7 +305,7 @@ def biCuspIBGen : CPoly (QFunNZG ℚ) := (integralBasis biCuspF).getD 1 []
 #eval (discNum biCuspF : List ℚ)
 
 -- Sanity print: the bad primes (expected `[x−1, x] = [[-1,1], [0,1]]` in factoring order).
-#eval (badPrimes biCuspF).map (fun p => (cmonicG p : List ℚ))
+#eval (badPrimes biCuspF).map (fun p => (cmonic p : List ℚ))
 
 -- Sanity print: the FULL integralBasis (expected `[1, y/(x²−x)]`, i.e. second vector denom `[0,-1,1]`).
 #eval (integralBasis biCuspF).map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
@@ -315,7 +315,7 @@ def biCuspIBGen : CPoly (QFunNZG ℚ) := (integralBasis biCuspF).getD 1 []
 primes where `[1, y]` is non-maximal. The first genuinely multi-prime example (the cusp/node had a single bad
 prime `x`). -/
 theorem biCusp_badPrimes_eq :
-    (badPrimes biCuspF).map cmonicG = [([-1, 1] : CPoly ℚ), ([0, 1] : CPoly ℚ)] := by
+    (badPrimes biCuspF).map cmonic = [([-1, 1] : CPoly ℚ), ([0, 1] : CPoly ℚ)] := by
   native_decide
 
 /-- **★★ The multi-prime integral basis is `[1, y/(x(x−1))]`, integral (`(y/(x(x−1)))² = x`) and maximal**
@@ -324,9 +324,9 @@ the generator `[0, 1/(x² − x)] = y/(x(x − 1))` and the first vector `1`; th
 (`afMul biCuspF g g = x`, i.e. `(y/(x(x−1)))² = x³(x−1)²/(x²(x−1)²) = x`); and `isMaximalOrder` is `true`. The
 single combined denominator `x(x − 1)` carries the enlargement at both primes at once. -/
 theorem biCusp_integralBasis_eq :
-    (cisZeroG (csubG biCuspIBGen [CField.zero, qxOfFrac [1] [0, -1, 1] (by decide)])
-      && cisZeroG (csubG ((integralBasis biCuspF).getD 0 []) [CField.one])
-      && cisZeroG (csubG (afMul biCuspF biCuspIBGen biCuspIBGen) [qxOfNum [0, 1]])
+    (cisZero (csub biCuspIBGen [CField.zero, qxOfFrac [1] [0, -1, 1] (by decide)])
+      && cisZero (csub ((integralBasis biCuspF).getD 0 []) [CField.one])
+      && cisZero (csub (afMul biCuspF biCuspIBGen biCuspIBGen) [qxOfNum [0, 1]])
       && isMaximalOrder biCuspF (integralBasis biCuspF)) = true := by native_decide
 
 /-! ### The NEXT piece: higher-degree (non-linear) bad primes, and the genus

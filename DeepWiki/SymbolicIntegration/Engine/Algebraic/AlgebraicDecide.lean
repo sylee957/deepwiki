@@ -72,33 +72,33 @@ variable (integrand : RadElem (QFunNZG ℚ))
 
 /-- The soundness residual `AlgebraicDecideSoundnessResidual …`: bundles the three branch
 hypotheses (`hnolog`, `hprincipal`, `htorsion`) turning each `some F` branch of
-`cIntegrateAlgebraicDecide` into `toPolyG (algDeriv ρ F) = toPolyG integrand`. -/
+`cIntegrateAlgebraicDecide` into `toPoly (algDeriv ρ F) = toPoly integrand`. -/
 structure AlgebraicDecideSoundnessResidual : Prop where
   /-- No-log branch (rational-part exhaustiveness): `D(⟨v, []⟩) = integrand`. -/
   hnolog :
-    CPoly.toPolyG (algDeriv ρ
+    CPoly.toPoly (algDeriv ρ
         ⟨radAssembleRatPart ρ (CPoly.radIntegrateRationalWf (qxNum ρ) R B), []⟩)
-      = CPoly.toPolyG integrand
+      = CPoly.toPoly integrand
   /-- Principal branch (`cIntegrateAlgebraicWf_sound` discharge): `D(cIntegrateAlgebraicWf …) = integrand`. -/
   hprincipal :
-    CPoly.toPolyG (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
-      = CPoly.toPolyG integrand
+    CPoly.toPoly (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
+      = CPoly.toPoly integrand
   /-- Torsion branch (`radTorsionLogTerm`/`principalGenerator` correctness): for the constructed log term
   `term`, `D(⟨v, [term]⟩) = integrand`. -/
   htorsion : ∀ term,
     torsionLogTerm p ρ ρq gen Dm = some term →
-    CPoly.toPolyG (algDeriv ρ
+    CPoly.toPoly (algDeriv ρ
         ⟨radAssembleRatPart ρ (CPoly.radIntegrateRationalWf (qxNum ρ) R B), [term]⟩)
-      = CPoly.toPolyG integrand
+      = CPoly.toPoly integrand
 
 /-- Soundness of `cIntegrateAlgebraicDecide`: under the soundness residual, `… = some F` implies
-`toPolyG (algDeriv ρ F) = toPolyG integrand`. Checker-free (no round-trip hypothesis). -/
+`toPoly (algDeriv ρ F) = toPoly integrand`. Checker-free (no round-trip hypothesis). -/
 theorem cIntegrateAlgebraicDecide_sound
     (hres : AlgebraicDecideSoundnessResidual p ρ R B residual c D degBound ρq gen Dm integrand)
     (F : AlgIntegralResult)
     (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = some F) :
-    CPoly.toPolyG (algDeriv ρ F) = CPoly.toPolyG integrand := by
+    CPoly.toPoly (algDeriv ρ F) = CPoly.toPoly integrand := by
   unfold cIntegrateAlgebraicDecide at hsome
   -- split the `hasLogPart` discriminator, then the principal log solve, then the torsion decision
   by_cases hlp : hasLogPart = false
@@ -295,7 +295,7 @@ example (p : ℕ) [Fact p.Prime]
     (F : AlgIntegralResult)
     (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = some F) :
-    CPoly.toPolyG (algDeriv ρ F) = CPoly.toPolyG integrand :=
+    CPoly.toPoly (algDeriv ρ F) = CPoly.toPoly integrand :=
   cIntegrateAlgebraicDecide_sound p ρ R B residual c D degBound ρq gen Dm hasLogPart integrand
     hres F hsome
 

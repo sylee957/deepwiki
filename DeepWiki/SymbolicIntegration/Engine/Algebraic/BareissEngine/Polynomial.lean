@@ -30,7 +30,7 @@ def bareissStep (prevPiv : CPoly α) (k : ℕ) (M : List (List (CPoly α))) :
   (List.range M.length).map (fun i =>
     (List.range (M.getD i []).length).map (fun j =>
       if k < i ∧ k < j then
-        let num := csubG (cmulG mkk (getEntry M i j)) (cmulG (getEntry M i k) (getEntry M k j))
+        let num := csub (cmul mkk (getEntry M i j)) (cmul (getEntry M i k) (getEntry M k j))
         cdivWf num prevPiv
       else getEntry M i j))
 
@@ -64,7 +64,7 @@ def bareissAdjugate (M : List (List (CPoly α))) : List (List (CPoly α)) :=
   (List.range n).map (fun i =>
     (List.range n).map (fun j =>
       let c := bareissDet (minorMat M j i)
-      if (i + j) % 2 = 0 then c else cnegG c))
+      if (i + j) % 2 = 0 then c else cneg c))
 
 /-- Fraction-free linear solve `bareissSolve M b = (det M, det M · x)` where `x = M⁻¹·b`: by Cramer
 `det M · x = adj M · b`, the polynomial solution of `M·(det M·x) = det M·b` over `ℚ[x]`. -/
@@ -73,7 +73,7 @@ def bareissSolve (M : List (List (CPoly α))) (b : List (CPoly α)) : CPoly α �
   let adj := bareissAdjugate M
   let sol := (List.range n).map (fun i =>
     (List.range n).foldl (fun acc j =>
-      caddG acc (cmulG (getEntry adj i j) (b.getD j []))) [])
+      cadd acc (cmul (getEntry adj i j) (b.getD j []))) [])
   (bareissDet M, sol)
 
 end CPoly

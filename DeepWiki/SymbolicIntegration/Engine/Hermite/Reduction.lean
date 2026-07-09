@@ -19,11 +19,11 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- Interface law for a Hermite reduction output `(gnum, gden, hNum, Dstar)` of `a/d`. -/
 structure LawfulHermiteReduction (Dt a d gnum gden hNum Dstar : CPoly α) : Prop where
   /-- The cleared Hermite identity `D⟦gnum/gden⟧ + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
-  field_identity : towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden))
-      + amG α (toPolyG hNum) / amG α (toPolyG Dstar) = amG α (toPolyG a) / amG α (toPolyG d)
+  field_identity : towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden))
+      + amG α (toPoly hNum) / amG α (toPoly Dstar) = amG α (toPoly a) / amG α (toPoly d)
   /-- The leftover denominator is squarefree. -/
-  squarefree : Squarefree (toPolyG Dstar)
+  squarefree : Squarefree (toPoly Dstar)
   /-- The leftover fraction is proper. -/
-  proper : (toPolyG hNum).degree < (toPolyG Dstar).degree
+  proper : (toPoly hNum).degree < (toPoly Dstar).degree
 
 end DeepWiki.SymbolicIntegration

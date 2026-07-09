@@ -456,8 +456,8 @@ theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N
 
 /-! #### Concrete chain data from `subresPRS` -/
 
-/-- The concrete `subresPRS` chain element `chainG fuel P Q i := (goState fuel (P,Q,[-1],…) i).1`. -/
-noncomputable def chainG (fuel : ℕ) (P Q : BPoly) (i : ℕ) : BPoly :=
+/-- The concrete `subresPRS` chain element `chain fuel P Q i := (goState fuel (P,Q,[-1],…) i).1`. -/
+noncomputable def chain (fuel : ℕ) (P Q : BPoly) (i : ℕ) : BPoly :=
   (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1
 
 /-- The concrete `subresPRS` β-divisor `chainBt fuel P Q l := goBeta …` at the `l`-th state. -/
@@ -466,113 +466,113 @@ noncomputable def chainBt (fuel : ℕ) (P Q : BPoly) (l : ℕ) : CPolyQ :=
     (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.1
     (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.2
 
-/-- The concrete pseudo-division quotient `chainS fuel P Q l` for the chain pair `(chainG l, chainG (l+1))`. -/
+/-- The concrete pseudo-division quotient `chainS fuel P Q l` for the chain pair `(chain l, chain (l+1))`. -/
 noncomputable def chainS (fuel : ℕ) (P Q : BPoly) (l : ℕ) : BPoly :=
-  (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose
+  (toBPoly_bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose
 
-/-- The concrete pseudo-division content `chainC fuel P Q l` for the chain pair `(chainG l, chainG (l+1))`. -/
+/-- The concrete pseudo-division content `chainC fuel P Q l` for the chain pair `(chain l, chain (l+1))`. -/
 noncomputable def chainC (fuel : ℕ) (P Q : BPoly) (l : ℕ) : CPolyQ :=
-  (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose_spec.choose
+  (toBPoly_bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose_spec.choose
 
-/-- `chainG fuel P Q 0 = P`. -/
-@[simp] theorem chainG_zero (fuel : ℕ) (P Q : BPoly) : chainG fuel P Q 0 = P := rfl
+/-- `chain fuel P Q 0 = P`. -/
+@[simp] theorem chainG_zero (fuel : ℕ) (P Q : BPoly) : chain fuel P Q 0 = P := rfl
 
-/-- `chainG fuel P Q 1 = Q`. -/
-@[simp] theorem chainG_one (fuel : ℕ) (P Q : BPoly) : chainG fuel P Q 1 = Q := by
-  rw [chainG, goState_succ_fst]; rfl
+/-- `chain fuel P Q 1 = Q`. -/
+@[simp] theorem chainG_one (fuel : ℕ) (P Q : BPoly) : chain fuel P Q 1 = Q := by
+  rw [chain, goState_succ_fst]; rfl
 
 /-- The pseudo-division identity holds for the concrete `chainS`/`chainC`. -/
 theorem chain_hsc (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
-    Polynomial.C (toPoly (chainC fuel P Q l)) * toBPoly (chainG fuel P Q l)
-      = toBPoly (chainS fuel P Q l) * toBPoly (chainG fuel P Q (l + 1))
-        + toBPoly (bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))) :=
-  (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose_spec.choose_spec
+    Polynomial.C (toPoly (chainC fuel P Q l)) * toBPoly (chain fuel P Q l)
+      = toBPoly (chainS fuel P Q l) * toBPoly (chain fuel P Q (l + 1))
+        + toBPoly (bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))) :=
+  (toBPoly_bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose_spec.choose_spec
 
-/-- The divided-PRS recurrence `chainG (l+2) = bdivC fuel (prem (chainG l) (chainG (l+1))) (chainBt l)`. -/
+/-- The divided-PRS recurrence `chain (l+2) = bdivC fuel (prem (chain l) (chain (l+1))) (chainBt l)`. -/
 theorem chain_hG2 (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
-    chainG fuel P Q (l + 2)
-      = bdivC fuel (bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1)))
+    chain fuel P Q (l + 2)
+      = bdivC fuel (bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1)))
           (chainBt fuel P Q l) := by
-  rw [chainG, goState_fst_add_two, chainBt]
+  rw [chain, goState_fst_add_two, chainBt]
   rfl
 
 /-- The filter identity for the concrete chain:
-`toBPoly (bsubresultantGcd fuel (deg (chainG (m+2))) P Q) = toBPoly (chainG (m+2))`. -/
+`toBPoly (bsubresultantGcd fuel (deg (chain (m+2))) P Q) = toBPoly (chain (m+2))`. -/
 theorem chain_hfilt (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel)
-    (hnz : ∀ i ≤ m + 2, ¬ bisZero (chainG fuel P Q i) = true)
-    (hzN : bisZero (chainG fuel P Q (m + 2 + 1)) = true)
-    (hstrict : ∀ i < m + 2, bdeg (chainG fuel P Q (i + 1)) < bdeg (chainG fuel P Q i)) :
-    toBPoly (bsubresultantGcd fuel (toBPoly (chainG fuel P Q (m + 2))).natDegree P Q)
-      = toBPoly (chainG fuel P Q (m + 2)) := by
+    (hnz : ∀ i ≤ m + 2, ¬ bisZero (chain fuel P Q i) = true)
+    (hzN : bisZero (chain fuel P Q (m + 2 + 1)) = true)
+    (hstrict : ∀ i < m + 2, bdeg (chain fuel P Q (i + 1)) < bdeg (chain fuel P Q i)) :
+    toBPoly (bsubresultantGcd fuel (toBPoly (chain fuel P Q (m + 2))).natDegree P Q)
+      = toBPoly (chain fuel P Q (m + 2)) := by
   have hfil := subresPRS_filter_singleton fuel P Q (m + 2) hfo hnz hzN hstrict
   rw [bdeg_eq_natDegree] at hfil
-  exact toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel P Q (chainG fuel P Q) m hfil
+  exact toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel P Q (chain fuel P Q) m hfil
 
 /-! ### The clean concrete agreement: `lrtGcdCompute ↔ lrtSubresultant` for the real `subresPRS` -/
 
 /-- The clean concrete `lrtGcdCompute ↔ lrtSubresultant` agreement for the real
 `subresPRS fuel (liftCtoBPoly D) (bArgAmtD' A D)` chain: for a residue map `φ` killing `toPoly R`, under
 the regularity inputs, `IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`
-over `S = ℚ[t]/(R)` at `j = (toBPoly (chainG (m+2))).natDegree`. -/
+over `S = ℚ[t]/(R)` at `j = (toBPoly (chain (m+2))).natDegree`. -/
 theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S] [IsDomain S]
     (φ : ℚ[X] →+* S) (fuel : ℕ) (R A D : CPolyQ) (m : ℕ)
     (hRcn : cnorm R ≠ []) (hφR : φ (toPoly R) = 0)
-    (hd0 : (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) 0)).natDegree
+    (hd0 : (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) 0)).natDegree
       = (toPoly D).natDegree)
-    (hd1 : (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) 1)).natDegree
+    (hd1 : (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) 1)).natDegree
       = (toPoly D).natDegree - 1)
     -- singleton-filter inputs (chain nonzero through m+2, zero after, strict bdeg decrease, fuel)
     (hfoF : m + 2 + 1 < fuel)
-    (hnzF : ∀ i ≤ m + 2, ¬ bisZero (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) i) = true)
-    (hzNF : bisZero (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2 + 1)) = true)
+    (hnzF : ∀ i ≤ m + 2, ¬ bisZero (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) i) = true)
+    (hzNF : bisZero (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2 + 1)) = true)
     (hstrictF : ∀ i < m + 2,
-      bdeg (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (i + 1))
-        < bdeg (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) i))
+      bdeg (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (i + 1))
+        < bdeg (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) i))
     -- Collins β-divisibility + chain degree/nonzero regularity
     (hβcn : ∀ l ≤ m, cnorm (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ [])
-    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
-        (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1)),
+    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
+        (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1)),
       toPoly (cmod fuel a (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l)) = 0)
     (hc0 : ∀ l ≤ m, toPoly (chainC fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ 0)
     (hβ0 : ∀ l ≤ m, toPoly (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ 0)
-    (hlc : ∀ l ≤ m, (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).coeff
-      (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l ≤ m, (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 2))).natDegree
-      < (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree)
-    (hjlt : ∀ l < m, (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
-      < (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 2))).natDegree)
+    (hlc : ∀ l ≤ m, (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).coeff
+      (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 2))).natDegree
+      < (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree)
+    (hjlt : ∀ l < m, (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
+      < (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 2))).natDegree)
     (hQ : ∀ l ≤ m, (toBPoly (chainS fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree
-        + (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree
-      ≤ (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree)
-    (hCne : toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2)) ≠ 0)
+        + (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree
+      ≤ (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree)
+    (hCne : toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2)) ≠ 0)
     -- bprimitivePartX content-exactness on the degree-j element
     (hprim : IsPrimitivePartXInput fuel
       (bsubresultantGcd fuel
-        (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
+        (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
         (liftCtoBPoly D) (bArgAmtD' A D)))
     (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 →
         Polynomial.C a * lrtSubresultant (toPoly A) (toPoly D)
-            (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
+            (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
           = Polynomial.C b * toBPoly (lrtSubresultantCompute fuel
-            (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)
+            (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)
         → φ a ≠ 0 ∧ φ b ≠ 0)
     {u : ℚ} (hu : u ≠ 0)
     (hgu : toPoly (cgcdExt fuel
         (blc (bredR fuel R (lrtSubresultantCompute fuel
-          (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D))) R).1
+          (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D))) R).1
       = Polynomial.C u)
     (hpz : ¬ bisZero (bredR fuel R
         (lrtSubresultantCompute fuel
-          (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)) = true) :
+          (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)) = true) :
     IsSimilar ((Polynomial.mapRingHom φ)
         (lrtSubresultant (toPoly A) (toPoly D)
-          (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree))
+          (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree))
       ((Polynomial.mapRingHom φ) (toBPoly
         (lrtGcdCompute fuel
-          (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree R A D))) := by
+          (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree R A D))) := by
   have hfilt := chain_hfilt fuel (liftCtoBPoly D) (bArgAmtD' A D) m hfoF hnzF hzNF hstrictF
   have hchain : IsSubresPRSChainInput fuel
-      (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D))
+      (chain fuel (liftCtoBPoly D) (bArgAmtD' A D))
       (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D))
       (chainS fuel (liftCtoBPoly D) (bArgAmtD' A D))
       (chainC fuel (liftCtoBPoly D) (bArgAmtD' A D)) m := {
@@ -587,7 +587,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
     quotient_degree_le := hQ
     endpoint_ne_zero := hCne }
   exact lrtGcdCompute_isSimilar_lrtSubresultant φ fuel R A D
-    (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D))
+    (chain fuel (liftCtoBPoly D) (bArgAmtD' A D))
     (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D))
     (chainS fuel (liftCtoBPoly D) (bArgAmtD' A D))
     (chainC fuel (liftCtoBPoly D) (bArgAmtD' A D)) m
@@ -596,21 +596,21 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
     hchain hfilt hprim hne hu hgu hpz
 
 -- Restatement: the divided-PRS recurrence `hG2` holds DEFINITIONALLY for the concrete `subresPRS`
--- chain element `chainG` and β-divisor `chainBt` (no list/recurrence plumbing).
+-- chain element `chain` and β-divisor `chainBt` (no list/recurrence plumbing).
 example (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
-    chainG fuel P Q (l + 2)
-      = bdivC fuel (bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1)))
+    chain fuel P Q (l + 2)
+      = bdivC fuel (bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1)))
           (chainBt fuel P Q l) :=
   chain_hG2 fuel P Q l
 
 -- Restatement: the degree-`j` filter of the REAL `subresPRS` returns the chain's degree-`j` element —
 -- the singleton-filter fact `hfilt` DISCHARGED from strict `bdeg` decrease (no hypothesis taken).
 example (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel)
-    (hnz : ∀ i ≤ m + 2, ¬ bisZero (chainG fuel P Q i) = true)
-    (hzN : bisZero (chainG fuel P Q (m + 2 + 1)) = true)
-    (hstrict : ∀ i < m + 2, bdeg (chainG fuel P Q (i + 1)) < bdeg (chainG fuel P Q i)) :
-    toBPoly (bsubresultantGcd fuel (toBPoly (chainG fuel P Q (m + 2))).natDegree P Q)
-      = toBPoly (chainG fuel P Q (m + 2)) :=
+    (hnz : ∀ i ≤ m + 2, ¬ bisZero (chain fuel P Q i) = true)
+    (hzN : bisZero (chain fuel P Q (m + 2 + 1)) = true)
+    (hstrict : ∀ i < m + 2, bdeg (chain fuel P Q (i + 1)) < bdeg (chain fuel P Q i)) :
+    toBPoly (bsubresultantGcd fuel (toBPoly (chain fuel P Q (m + 2))).natDegree P Q)
+      = toBPoly (chain fuel P Q (m + 2)) :=
   chain_hfilt fuel P Q m hfo hnz hzN hstrict
 
 

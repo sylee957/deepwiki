@@ -7,7 +7,7 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.LaurentCore
 
 For a hyperexponential monomial `t` (`Dt = η·t`), the polynomial + special part `fₚ + fₛ` is a Laurent
 polynomial `∑ⱼ aⱼ tʲ`; each term integrates by solving the base RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` via
-`CRischField.crischDESolve`, and the normal part goes through `cIntegrateReducedG`. -/
+`CRischField.crischDESolve`, and the normal part goes through `cIntegrateReduced`. -/
 
 open Polynomial
 
@@ -18,30 +18,30 @@ namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
-/-! ### The full hyperexponential integral driver `cIntegrateHyperexpG`
+/-! ### The full hyperexponential integral driver `cIntegrateHyperexp`
 
-`cIntegrateHyperexpG Dt a d cands` canonical-splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, routes the Laurent part
-through `cIntegrateHyperexpLaurentG` and the normal part through `cIntegrateReducedG`, and combines the
+`cIntegrateHyperexp Dt a d cands` canonical-splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, routes the Laurent part
+through `cIntegrateHyperexpLaurent` and the normal part through `cIntegrateReduced`, and combines the
 rational parts. -/
 
-/-- Full hyperexponential integral `cIntegrateHyperexpG Dt a d cands` for `f = a/d ∈ k(t)` with a monomial
+/-- Full hyperexponential integral `cIntegrateHyperexp Dt a d cands` for `f = a/d ∈ k(t)` with a monomial
 `t` (`Dt = η·t`): returns `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`, or `none`.
 Canonical-splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrates the Laurent part `fₚ + b/dₛ` by
-`cIntegrateHyperexpLaurentG` and the normal part `cₙ/dₙ` by `cIntegrateReducedG`, and combines the
+`cIntegrateHyperexpLaurent` and the normal part `cₙ/dₙ` by `cIntegrateReduced`, and combines the
 rational parts; `none` if the Laurent integration fails. -/
-def cIntegrateHyperexpG (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
+def cIntegrateHyperexp (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
     Option (IntegralResultG α) :=
-  let η : α := cExpEtaG Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt a d
-  let neg : List α := cHyperexpSpecialNegG b ds
-  match cIntegrateHyperexpLaurentG η fp neg with
+  let η : α := cExpEta Dt
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
+  let neg : List α := cHyperexpSpecialNeg b ds
+  match cIntegrateHyperexpLaurent η fp neg with
   | none => none
   | some (lnum, lden) =>
-    let nrm := cIntegrateReducedG Dt cn dn cands
+    let nrm := cIntegrateReduced Dt cn dn cands
     let (gnum, gden) := nrm.rational
     -- combine `lnum/lden + gnum/gden`.
-    let num := caddG (cmulG lnum gden) (cmulG gnum lden)
-    let den := cmulG lden gden
+    let num := cadd (cmul lnum gden) (cmul gnum lden)
+    let den := cmul lden gden
     some ⟨(num, den), nrm.logs⟩
 
 end CPoly
@@ -70,16 +70,16 @@ def hyperexpInvD : CPoly Lvl1 := [CField.zero, CField.one]
 residues). -/
 def hyperexpInvCands : List Lvl1 := [CField.zero, CField.one]
 
-/-- The hyperexponential coefficient `η = Dt/t = 1` for `Dt = [0, 1]`: `cExpEtaG` reads `η = 1 ∈ ℚ(x)`. -/
+/-- The hyperexponential coefficient `η = Dt/t = 1` for `Dt = [0, 1]`: `cExpEta` reads `η = 1 ∈ ℚ(x)`. -/
 theorem hyperexp_eta_eq_one :
-    CField.isZero (CField.sub (cExpEtaG hyperexpDt) (CField.one : Lvl1)) = true := by native_decide
+    CField.isZero (CField.sub (cExpEta hyperexpDt) (CField.one : Lvl1)) = true := by native_decide
 
 /-- The driver lands `∫ 1/exp = −1/exp` with `D(∫f) = f`: on `f = 1/t` over `ℚ(x)[t]` (`Dt = η·t`, `η = 1`)
-`cIntegrateHyperexpG` returns `some res` with rational part `−1/t` and no logs, satisfying
-`checkIdentityG`. -/
+`cIntegrateHyperexp` returns `some res` with rational part `−1/t` and no logs, satisfying
+`checkIdentity`. -/
 theorem hyperexpInv_landsSpecialPart :
-    (match CPoly.cIntegrateHyperexpG hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
-      | some res => CPoly.checkIdentityG hyperexpDt res hyperexpInvA hyperexpInvD
+    (match CPoly.cIntegrateHyperexp hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
+      | some res => CPoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
       | none => false) = true := by native_decide
 
 #print axioms hyperexpInv_landsSpecialPart
@@ -95,17 +95,17 @@ def hyperexpPolySpecA : CPoly Lvl1 := [CField.one, CField.zero, CField.one]
 /-- Integrand denominator `d = t` for `f = (t²+1)/t` over `CPoly Lvl1`. -/
 def hyperexpPolySpecD : CPoly Lvl1 := [CField.zero, CField.one]
 
-/-- The driver lands `∫(exp + 1/exp) = exp − 1/exp` with `D(∫f) = f`: `cIntegrateHyperexpG` integrates each
-term (`q₁ = 1`, `q₋₁ = −1`), recombining to `t − t⁻¹` satisfying `checkIdentityG`. -/
+/-- The driver lands `∫(exp + 1/exp) = exp − 1/exp` with `D(∫f) = f`: `cIntegrateHyperexp` integrates each
+term (`q₁ = 1`, `q₋₁ = −1`), recombining to `t − t⁻¹` satisfying `checkIdentity`. -/
 theorem hyperexpPolySpec_lands :
-    (match CPoly.cIntegrateHyperexpG hyperexpDt hyperexpPolySpecA hyperexpPolySpecD
+    (match CPoly.cIntegrateHyperexp hyperexpDt hyperexpPolySpecA hyperexpPolySpecD
         hyperexpInvCands with
-      | some res => CPoly.checkIdentityG hyperexpDt res hyperexpPolySpecA hyperexpPolySpecD
+      | some res => CPoly.checkIdentity hyperexpDt res hyperexpPolySpecA hyperexpPolySpecD
       | none => false) = true := by native_decide
 
 /-! ### A special + normal mix — the special part lands, the normal log part overshoots
 
-On `f = t⁻¹ + 1/(t−1)` over `ℚ(x)[t]` (`t = exp`, `Dt = t`), `cIntegrateHyperexpG` lands the special part
+On `f = t⁻¹ + 1/(t−1)` over `ℚ(x)[t]` (`t = exp`, `Dt = t`), `cIntegrateHyperexp` lands the special part
 `−1/t` but its normal log part `log(t−1)` overshoots `1/(t−1)` by the residual `R = 1`, so the full-`f`
 identity fails — closed by the residual-feedback driver elsewhere. -/
 
@@ -118,18 +118,18 @@ def hyperexpSpecNormD : CPoly Lvl1 := [CField.zero, CField.neg CField.one, CFiel
 /-- Residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for the special+normal mix. -/
 def hyperexpSpecNormCands : List Lvl1 := [CField.zero, CField.one, CField.neg CField.one]
 
-/-- The driver runs on the special+normal integrand `f = t⁻¹ + 1/(t−1)`: `cIntegrateHyperexpG` returns
+/-- The driver runs on the special+normal integrand `f = t⁻¹ + 1/(t−1)`: `cIntegrateHyperexp` returns
 `some` (the normal log part overshoots, so the full-`f` identity does not hold). -/
 theorem hyperexpSpecNorm_runs :
-    (CPoly.cIntegrateHyperexpG hyperexpDt hyperexpSpecNormA hyperexpSpecNormD
+    (CPoly.cIntegrateHyperexp hyperexpDt hyperexpSpecNormA hyperexpSpecNormD
       hyperexpSpecNormCands).isSome = true := by native_decide
 
 /-- The special part `1/t` of the special+normal integrand integrates exactly: its special part is exactly
-the inverse integrand (`a = 1`, `d = t`), so this is `hyperexpInv_landsSpecialPart` — `cIntegrateHyperexpG`
-gives `−1/t` satisfying `checkIdentityG`. -/
+the inverse integrand (`a = 1`, `d = t`), so this is `hyperexpInv_landsSpecialPart` — `cIntegrateHyperexp`
+gives `−1/t` satisfying `checkIdentity`. -/
 theorem hyperexpSpecNorm_specialPart_exact :
-    (match CPoly.cIntegrateHyperexpG hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
-      | some res => CPoly.checkIdentityG hyperexpDt res hyperexpInvA hyperexpInvD
+    (match CPoly.cIntegrateHyperexp hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
+      | some res => CPoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
       | none => false) = true := hyperexpInv_landsSpecialPart
 
 #print axioms hyperexpSpecNorm_runs

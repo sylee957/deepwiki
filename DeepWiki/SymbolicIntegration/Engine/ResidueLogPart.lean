@@ -19,7 +19,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 structure LawfulResidueLogPart (Dt hNum Dstar : CPoly α) (logs : List (α × CPoly α)) : Prop where
   /-- `Σᵢ cᵢ · (D(amG vᵢ) / amG vᵢ) = ⟦hNum/Dstar⟧`. -/
   residue_match : (logs.map (fun cv => amG α (Polynomial.C (CFieldSpec.toK cv.1))
-        * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
-      = amG α (toPolyG hNum) / amG α (toPolyG Dstar)
+        * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
+      = amG α (toPoly hNum) / amG α (toPoly Dstar)
 
 end DeepWiki.SymbolicIntegration

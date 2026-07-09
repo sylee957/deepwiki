@@ -11,7 +11,7 @@ Trager's algebraic-integration algorithm — the simple-radical rational part (A
 basis (Ch. 2 §5), the residue double resultant (Ch. 5 §2, eq. 7), the divisor/torsion log part (Ch. 5 §3
 / Ch. 6), and the unified driver — as **computable** functions, each validated by `native_decide`. This
 catalog records the **CORRECTNESS** of those same algorithm pieces: `D(∫f) = f` proven as a **general
-theorem** in the genuine field `K = CFieldSpec.K α` (read through the Horner bridge `toPolyG`, with the
+theorem** in the genuine field `K = CFieldSpec.K α` (read through the Horner bridge `toPoly`, with the
 formal variable `X` the curve generator `y`), **without** `native_decide` — axiom-clean `[propext,
 Classical.choice, Quot.sound]`.
 
@@ -57,7 +57,7 @@ namespace DeepWiki.Tiaf
 /-! ## The simple-radical derivation is a derivation (App. A §1) -/
 
 /-- **★ The radical-derivation keystone** `toPolyG_radDeriv` (Trager, Appendix A §1, p.74): through the
-Horner bridge `toPolyG` (with `X` the radical generator `y`), the diagonal derivation `radDeriv n f` IS
+Horner bridge `toPoly` (with `X` the radical generator `y`), the diagonal derivation `radDeriv n f` IS
 Mathlib's `Differential.implicitDeriv (C (toK ℓ) · X)` for the rule `y' = ℓ·y`, `ℓ = logDerRadicand n f =
 f'/(nf)`. Trager's `(f/y)'` insight as an honest `K[X]` identity — the source of additivity and Leibniz.
 Abstract (`[propext, Classical.choice, Quot.sound]`, no `native_decide`). -/
@@ -150,17 +150,17 @@ abbrev sound_radCapstone := @RadElem.isAlgebraicIntegral_of_parts
 /-! ## The general-curve derivation is a derivation (Ch. 2–4, implicit `y' = −f_x/f_y`) -/
 
 /-- **★ The fuel-free general-derivation keystone** `mk_toPolyG_afDerivWf` (Trager, Chapters 2–4): for an
-arbitrary monic curve `f`, `afDerivWf f` realizes Mathlib's `implicitDeriv (toPolyG yprime)` in the quotient
-`K[X] ⧸ (toPolyG f)`, with `yprime = afYprimeWf f = −f_x·f_y⁻¹` — the implicit-function-theorem total
+arbitrary monic curve `f`, `afDerivWf f` realizes Mathlib's `implicitDeriv (toPoly yprime)` in the quotient
+`K[X] ⧸ (toPoly f)`, with `yprime = afYprimeWf f = −f_x·f_y⁻¹` — the implicit-function-theorem total
 derivative without an external fuel parameter. -/
 abbrev sound_afDeriv_keystone := @CPoly.mk_toPolyG_afDerivWf
 
 /-- **★ `afDerivWf` is additive** `mk_toPolyG_afDerivWf_add` (Trager, Chapters 2–4): the general curve
-derivation commutes with `caddG` in the quotient `K[X] ⧸ (toPolyG f)`. -/
+derivation commutes with `cadd` in the quotient `K[X] ⧸ (toPoly f)`. -/
 abbrev sound_afDeriv_add := @CPoly.mk_toPolyG_afDerivWf_add
 
 /-- **★ `afDerivWf` is Leibniz** `mk_toPolyG_afDerivWf_afMul` (Trager, Chapters 2–4): the product rule for
-`afMul` in the carrier `K[X] ⧸ (toPolyG f)`, valid when the fuel-free gcd of `f_y` and `f` is a nonzero
+`afMul` in the carrier `K[X] ⧸ (toPoly f)`, valid when the fuel-free gcd of `f_y` and `f` is a nonzero
 constant. -/
 abbrev sound_afDeriv_mul := @CPoly.mk_toPolyG_afDerivWf_afMul
 
@@ -168,7 +168,7 @@ abbrev sound_afDeriv_mul := @CPoly.mk_toPolyG_afDerivWf_afMul
 
 /-- **The general rational-integral soundness predicate** `IsGeneralRationalIntegralWf f g v` (Trager,
 Chapter 4): the carrier element `v` integrates `g` over `K(x)[y]/(f)`, rational part only — the quotient
-identity `afDerivWf f v = g` in `K[X] ⧸ (toPolyG f)`. The general analogue of
+identity `afDerivWf f v = g` in `K[X] ⧸ (toPoly f)`. The general analogue of
 `IsRadicalRationalIntegral`. -/
 abbrev sound_genRationalPredicate := @CPoly.IsGeneralRationalIntegralWf
 
@@ -180,7 +180,7 @@ abbrev sound_genGen := @CPoly.mk_toPolyG_afDerivWf_genGen
 
 /-- **★ The general rational-part telescoping soundness** `generalReduceRationalTelescopeWf` (Trager, Chapter
 4, eq.-11 reduction): given each step's coupled eq.-11 quotient identity `mk(afDerivWf cⱼ) = mk Lⱼ − mk
-Lⱼ₊₁`, the assembled antiderivative `v = cs.foldl caddG []` satisfies `afDerivWf(v) = integrand − final-leftover` in
+Lⱼ₊₁`, the assembled antiderivative `v = cs.foldl cadd []` satisfies `afDerivWf(v) = integrand − final-leftover` in
 the carrier — the general analogue of the radical `radReduceRationalTelescope`, the per-step eq.-11
 congruence isolated as the named hypothesis. -/
 abbrev sound_genRationalTelescope := @CPoly.generalReduceRationalTelescopeWf
@@ -190,12 +190,12 @@ abbrev sound_genRationalTelescope := @CPoly.generalReduceRationalTelescopeWf
 /-- **The general single-log soundness predicate** `IsGeneralLogTermWf f u integrand` (Trager, Chapter 5
 §1): the carrier element `u` is a correct single log argument for `integrand` over `K(x)[y]/(f)` — the
 quotient identity `D(log u) = integrand`, i.e. `afDerivWf(u)/u = integrand` cross-multiplied in `K[X] ⧸
-(toPolyG f)`. The general analogue of `IsRadicalLogTerm`. -/
+(toPoly f)`. The general analogue of `IsRadicalLogTerm`. -/
 abbrev sound_genLogPredicate := @CPoly.IsGeneralLogTermWf
 
 /-- **★ The engine's general log certificate IS the single-log soundness** `isGeneralLogTermWf_of_logCert`
 (Trager, Chapter 5 §1): the `native_decide`-checkable
-`cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true` (the division-free
+`cisZero (csub (afDerivWf f u) (afMul f u integrand)) = true` (the division-free
 `afDerivWf f u = afMul f u integrand`) yields the abstract quotient identity `D(log u) =
 integrand`. So every validated general log certificate — the non-hyperelliptic `y³ − x² − 1` arguments `u ∝
 y`, `u ∝ y² + x` — IS, abstractly, the single-log soundness. -/
@@ -230,7 +230,7 @@ abbrev sound_genCapstonePredicate := @CPoly.IsGeneralAlgebraicIntegralWf
 `isGeneralAlgebraicIntegralWf_of_parts` (Trager, Chapter 4 + Chapter 5): given the rational-part soundness
 (telescoping), the log-part soundness (residue partial fraction), and the integrand split `g = ratPart +
 logPart`, the unified general integrator's output satisfies `D(v + Σ cᵢ log uᵢ) = g` in the carrier quotient
-`K[X] ⧸ (toPolyG f)` — the full algebraic `D(∫g) = g` for an arbitrary curve, the general analogue of
+`K[X] ⧸ (toPoly f)` — the full algebraic `D(∫g) = g` for an arbitrary curve, the general analogue of
 `isAlgebraicIntegral_of_parts`. -/
 abbrev sound_genCapstone := @CPoly.isGeneralAlgebraicIntegralWf_of_parts
 

@@ -35,10 +35,10 @@ def mixedCands : List RadX3 := [CField.zero, CField.one]
 /-- The integrand `f = t` over `CPoly RadX3` (`[0, 1]`): a pure polynomial part. -/
 def mixedTa : CPoly RadX3 := [CField.zero, CField.one]
 
-/-- `∫ t dt = t²/2` over `RadX3[t]`, validated `D(∫f) = f` via `checkIdentityG`. -/
+/-- `∫ t dt = t²/2` over `RadX3[t]`, validated `D(∫f) = f` via `checkIdentity`. -/
 theorem mixedT_integral_eq :
     (match CPoly.cIntegrateGFullWf mixedDt mixedTa mixedD mixedCands with
-      | some res => CPoly.checkIdentityG mixedDt res mixedTa mixedD
+      | some res => CPoly.checkIdentity mixedDt res mixedTa mixedD
       | none => false) = true := by native_decide
 
 /-! ### `∫ t² dt = t³/3` and `∫ (2t+1) dt = t²+t` over `RadX3[t]` -/
@@ -49,7 +49,7 @@ def mixedT2a : CPoly RadX3 := [CField.zero, CField.zero, CField.one]
 /-- `∫ t² dt = t³/3` over `RadX3[t]`, validated `D(∫f) = f`. -/
 theorem mixedT2_integral_eq :
     (match CPoly.cIntegrateGFullWf mixedDt mixedT2a mixedD mixedCands with
-      | some res => CPoly.checkIdentityG mixedDt res mixedT2a mixedD
+      | some res => CPoly.checkIdentity mixedDt res mixedT2a mixedD
       | none => false) = true := by native_decide
 
 /-- The integrand `f = 2t + 1` over `CPoly RadX3` (`[1,2]`). -/
@@ -58,7 +58,7 @@ def mixedLina : CPoly RadX3 := [CField.one, CField.add CField.one CField.one]
 /-- `∫ (2t+1) dt = t²+t` over `RadX3[t]`, validated `D(∫f) = f`. -/
 theorem mixedLin_integral_eq :
     (match CPoly.cIntegrateGFullWf mixedDt mixedLina mixedD mixedCands with
-      | some res => CPoly.checkIdentityG mixedDt res mixedLina mixedD
+      | some res => CPoly.checkIdentity mixedDt res mixedLina mixedD
       | none => false) = true := by native_decide
 
 /-! ### `∫ dt/t = log t` over `RadX3[t]` — the normal-part / Rothstein–Trager log route -/
@@ -72,22 +72,22 @@ def mixedRecipDen : CPoly RadX3 := [CField.zero, CField.one]
 /-- `∫ dt/t = log t` over `RadX3[t]`, validated `D(log t) = 1/t` via the residue-log route. -/
 theorem mixedRecip_integral_eq :
     (match CPoly.cIntegrateGFullWf mixedDt mixedRecipNum mixedRecipDen mixedCands with
-      | some res => CPoly.checkIdentityG mixedDt res mixedRecipNum mixedRecipDen
+      | some res => CPoly.checkIdentity mixedDt res mixedRecipNum mixedRecipDen
       | none => false) = true := by native_decide
 
 /-! ### The algebraic-coefficient boundary: `∫ y dt` does not validate
 
 `y = √(x³+1)` is not a `D`-constant (`D(y) = ℓ·y ≠ 0`), so the would-be antiderivative `y·t` is not a
-genuine antiderivative and `checkIdentityG` is false. -/
+genuine antiderivative and `checkIdentity` is false. -/
 
 /-- The integrand `f = y = √(x³+1)` over `CPoly RadX3` (`[radX3Gen]`; `y` is not a `D`-constant). -/
 def mixedYa : CPoly RadX3 := [radX3Gen]
 
-/-- `∫ y dt` does not satisfy `D(∫f) = f`: the driver returns `some (y·t)` but `checkIdentityG` is
+/-- `∫ y dt` does not satisfy `D(∫f) = f`: the driver returns `some (y·t)` but `checkIdentity` is
 false, since `y` is not a `D`-constant. -/
 theorem mixedY_not_validated :
     (match CPoly.cIntegrateGFullWf mixedDt mixedYa mixedD mixedCands with
-      | some res => CPoly.checkIdentityG mixedDt res mixedYa mixedD
+      | some res => CPoly.checkIdentity mixedDt res mixedYa mixedD
       | none => false) = false := by native_decide
 
 /-! ### A multi-level RDE descent through the algebraic solver
@@ -108,26 +108,26 @@ def mixedRdeG : CPoly RadX3 := [CField.one, CField.one]
 /-- The RDE right-hand side denominator `gden = 1 ∈ RadX3[t]`. -/
 def mixedRdeGden : CPoly RadX3 := [CField.one]
 
-/-- The RDE `Dy + 1·y = t + 1` over `RadX3[t]` is solved (`cRischDEG` returns `some`). -/
+/-- The RDE `Dy + 1·y = t + 1` over `RadX3[t]` is solved (`cRischDE` returns `some`). -/
 theorem mixedRde_radx3_isSome :
-    (CPoly.cRischDEG ([CField.one] : CPoly RadX3)
+    (CPoly.cRischDE ([CField.one] : CPoly RadX3)
       mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden).isSome = true := by native_decide
 
 /-- A multi-level RDE descent: `Dy + 1·y = t + 1` solved over `RadX3[t]` with solution `y = t`, the
-RDE identity checked via `cisZeroG`; the solve recurses into `crischDESolve` over `RadX3`. -/
+RDE identity checked via `cisZero`; the solve recurses into `crischDESolve` over `RadX3`. -/
 theorem mixedRde_radx3_descends :
-    (match CPoly.cRischDEG ([CField.one] : CPoly RadX3)
+    (match CPoly.cRischDE ([CField.one] : CPoly RadX3)
         mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden with
       | some (ynum, yden) =>
-          CPoly.cisZeroG (CPoly.csubG
-            (CPoly.caddG (CPoly.cmonomialDeriv ([CField.one] : CPoly RadX3) ynum)
-              (CPoly.cmulG mixedRdeF ynum))
-            (CPoly.cmulG mixedRdeG yden))
+          CPoly.cisZero (CPoly.csub
+            (CPoly.cadd (CPoly.cmonomialDeriv ([CField.one] : CPoly RadX3) ynum)
+              (CPoly.cmul mixedRdeF ynum))
+            (CPoly.cmul mixedRdeG yden))
       | none => false) = true := by native_decide
 
 /-! ### A hyperexponential Laurent integral whose special-part step descends through the algebraic solver
 
-For a hyperexponential `t` (`Dt = η·t`), the Laurent integrator `cIntegrateHyperexpLaurentG` integrates
+For a hyperexponential `t` (`Dt = η·t`), the Laurent integrator `cIntegrateHyperexpLaurent` integrates
 `∫ ∑ⱼ aⱼ tʲ` term by term, each `∫ aⱼ tʲ` solved as `crischDESolve (j·η) aⱼ`.  At `α = RadX3` the
 negative-index term calls `crischDESolve` with a nonzero scalar, descending to ℚ(x).  Integrates
 `t = exp` (`η = 1`). -/
@@ -135,13 +135,13 @@ negative-index term calls `crischDESolve` with a nonzero scalar, descending to �
 /-- The hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `RadX3[t]` (`t = exp`, `η = 1`). -/
 def mixedHyperexpDt : CPoly RadX3 := [CField.zero, CField.one]
 
-/-- `η = Dt/t = 1` over `RadX3`: `cExpEtaG` reads `η = 1` off `Dt = [0, 1]`. -/
+/-- `η = Dt/t = 1` over `RadX3`: `cExpEta` reads `η = 1` off `Dt = [0, 1]`. -/
 theorem mixedHyperexp_eta_eq_one :
-    CField.isZero (CField.sub (cExpEtaG mixedHyperexpDt) (CField.one : RadX3)) = true := by
+    CField.isZero (CField.sub (cExpEta mixedHyperexpDt) (CField.one : RadX3)) = true := by
   native_decide
 
-/-- The per-term coefficient `(−1)·η = −1 ∈ RadX3` for the `t⁻¹` Laurent term (`cLaurentShiftG η (−1)`). -/
-def mixedLaurentShiftNeg1 : RadX3 := CPoly.cLaurentShiftG (CField.one : RadX3) (-1)
+/-- The per-term coefficient `(−1)·η = −1 ∈ RadX3` for the `t⁻¹` Laurent term (`cLaurentShift η (−1)`). -/
+def mixedLaurentShiftNeg1 : RadX3 := CPoly.cLaurentShift (CField.one : RadX3) (-1)
 
 /-- The per-term coefficient `(−1)·η` is a nonzero scalar over `RadX3`:
 `RadExt.isScalar` is `true` and `CField.isZero` is `false`. -/
@@ -159,30 +159,30 @@ theorem mixedLaurentTerm_descends :
 /-- `∫ t⁻¹ = −t⁻¹` over `RadX3[t]` via the Laurent integrator, the special-part step descending
 through the algebraic solver, validated `D(∫f) = f`. -/
 theorem mixedHyperexpRecip_integral_descends :
-    (match CPoly.cIntegrateHyperexpLaurentG (CField.one : RadX3) [] [CField.one] with
+    (match CPoly.cIntegrateHyperexpLaurent (CField.one : RadX3) [] [CField.one] with
       | some (num, den) =>
-          CPoly.checkIdentityG mixedHyperexpDt ⟨(num, den), []⟩ [CField.one] [CField.zero, CField.one]
+          CPoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩ [CField.one] [CField.zero, CField.one]
       | none => false) = true := by native_decide
 
 /-- `∫ (t + t⁻¹) = t − t⁻¹` over `RadX3[t]` via the Laurent integrator (polynomial part plus a
 descending special part), validated `D(∫f) = f`. -/
 theorem mixedHyperexpPolySpec_integral_descends :
-    (match CPoly.cIntegrateHyperexpLaurentG (CField.one : RadX3) [CField.zero, CField.one]
+    (match CPoly.cIntegrateHyperexpLaurent (CField.one : RadX3) [CField.zero, CField.one]
         [CField.one] with
       | some (num, den) =>
-          CPoly.checkIdentityG mixedHyperexpDt ⟨(num, den), []⟩
+          CPoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩
             [CField.one, CField.zero, CField.one] [CField.zero, CField.one]
       | none => false) = true := by native_decide
 
-/-! ### The full `cIntegrateHyperexpG` top entry over `RadX3` -/
+/-! ### The full `cIntegrateHyperexp` top entry over `RadX3` -/
 
-/-- `cIntegrateHyperexpG`'s top entry validates over `RadX3`: on `f = (t²+1)/t = t + t⁻¹` it returns
-`some res` with `checkIdentityG` confirming `D(res) = f`. -/
+/-- `cIntegrateHyperexp`'s top entry validates over `RadX3`: on `f = (t²+1)/t = t + t⁻¹` it returns
+`some res` with `checkIdentity` confirming `D(res) = f`. -/
 theorem mixedHyperexpG_topEntry_validates :
-    (match CPoly.cIntegrateHyperexpG mixedHyperexpDt [CField.one, CField.zero, CField.one]
+    (match CPoly.cIntegrateHyperexp mixedHyperexpDt [CField.one, CField.zero, CField.one]
         [CField.zero, CField.one] [CField.zero, CField.one] with
       | some res =>
-          CPoly.checkIdentityG mixedHyperexpDt res [CField.one, CField.zero, CField.one]
+          CPoly.checkIdentity mixedHyperexpDt res [CField.one, CField.zero, CField.one]
             [CField.zero, CField.one]
       | none => false) = true := by native_decide
 

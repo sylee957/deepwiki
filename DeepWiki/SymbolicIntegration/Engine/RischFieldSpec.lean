@@ -109,32 +109,32 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 open CPoly
 
 /-- Cleared-to-field layer bridge for the RDE oracle: given the cleared polynomial identity of
-`cRischDEG_rdeCleared_gen` (with `D = implicitDeriv (toPolyG Dt)`) and the denominators `fden`,
+`cRischDEG_rdeCleared_gen` (with `D = implicitDeriv (toPoly Dt)`) and the denominators `fden`,
 `gden`, `yden` nonzero, the field-level Risch-DE identity
 `towerFractionFieldDerivG Dt (amG ynum/amG yden) + (amG fnum/amG fden)·(amG ynum/amG yden)
 = amG gnum/amG gden` holds over `RatFunc (CFieldSpec.K α)`. -/
 theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : CPoly α)
-    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
-    (hcleared : amG α (toPolyG gden) * amG α (toPolyG fden)
-          * (amG α (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum)) * amG α (toPolyG yden)
-              - amG α (toPolyG ynum) * amG α (Differential.implicitDeriv (toPolyG Dt) (toPolyG yden)))
-        + amG α (toPolyG gden) * amG α (toPolyG fnum) * amG α (toPolyG ynum) * amG α (toPolyG yden)
-      = amG α (toPolyG gnum) * amG α (toPolyG fden) * amG α (toPolyG yden) ^ 2) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG ynum) / amG α (toPolyG yden))
-        + amG α (toPolyG fnum) / amG α (toPolyG fden)
-          * (amG α (toPolyG ynum) / amG α (toPolyG yden))
-      = amG α (toPolyG gnum) / amG α (toPolyG gden) := by
+    (hfden : toPoly fden ≠ 0) (hgden : toPoly gden ≠ 0) (hyden : toPoly yden ≠ 0)
+    (hcleared : amG α (toPoly gden) * amG α (toPoly fden)
+          * (amG α (Differential.implicitDeriv (toPoly Dt) (toPoly ynum)) * amG α (toPoly yden)
+              - amG α (toPoly ynum) * amG α (Differential.implicitDeriv (toPoly Dt) (toPoly yden)))
+        + amG α (toPoly gden) * amG α (toPoly fnum) * amG α (toPoly ynum) * amG α (toPoly yden)
+      = amG α (toPoly gnum) * amG α (toPoly fden) * amG α (toPoly yden) ^ 2) :
+    towerFractionFieldDerivG Dt (amG α (toPoly ynum) / amG α (toPoly yden))
+        + amG α (toPoly fnum) / amG α (toPoly fden)
+          * (amG α (toPoly ynum) / amG α (toPoly yden))
+      = amG α (toPoly gnum) / amG α (toPoly gden) := by
   -- nonzero readings
-  have hFDne : amG α (toPolyG fden) ≠ 0 := amG_toPolyG_ne_zero hfden
-  have hGDne : amG α (toPolyG gden) ≠ 0 := amG_toPolyG_ne_zero hgden
-  have hYDne : amG α (toPolyG yden) ≠ 0 := amG_toPolyG_ne_zero hyden
+  have hFDne : amG α (toPoly fden) ≠ 0 := amG_toPolyG_ne_zero hfden
+  have hGDne : amG α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hYDne : amG α (toPoly yden) ≠ 0 := amG_toPolyG_ne_zero hyden
   -- the quotient rule reads `D(YN/YD) = (amG(D ynum)·YD − YN·amG(D yden))/YD²`
   rw [towerFractionFieldDerivG_div, div_mul_div_comm,
     div_add_div _ _ (pow_ne_zero 2 hYDne) (mul_ne_zero hFDne hYDne),
     div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hYDne) (mul_ne_zero hFDne hYDne)) hGDne]
   ring_nf
   ring_nf at hcleared
-  linear_combination amG α (toPolyG yden) * hcleared
+  linear_combination amG α (toPoly yden) * hcleared
 
 end ClearedToField
 

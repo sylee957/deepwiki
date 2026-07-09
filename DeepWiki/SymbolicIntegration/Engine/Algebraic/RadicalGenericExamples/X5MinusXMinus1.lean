@@ -19,9 +19,9 @@ A higher-degree radicand `√(x⁵ − x − 1)`. Degree 5 (odd) ⟹ not a squar
 /-- The radicand `f₂ = x⁵ − x − 1 ∈ ℚ(x)` (numerator `[-1,-1,0,0,0,1]`) for `√(x⁵−x−1)`. -/
 def radicandX5mXm1 : QFunNZG ℚ := qxOfNum [-1, -1, 0, 0, 0, 1]
 
-/-- **`toPolyG [-1,-1,0,0,0,1] = −1 − x + x⁵` has `natDegree 5`** in `ℚ[X]`. -/
-theorem natDeg_toPolyG_X5mXm1 : (toPolyG ([-1, -1, 0, 0, 0, 1] : CPoly ℚ)).natDegree = 5 := by
-  have h : toPolyG ([-1, -1, 0, 0, 0, 1] : CPoly ℚ) = (C (-1) + C (-1) * X) + X ^ 5 := by
+/-- **`toPoly [-1,-1,0,0,0,1] = −1 − x + x⁵` has `natDegree 5`** in `ℚ[X]`. -/
+theorem natDeg_toPolyG_X5mXm1 : (toPoly ([-1, -1, 0, 0, 0, 1] : CPoly ℚ)).natDegree = 5 := by
+  have h : toPoly ([-1, -1, 0, 0, 0, 1] : CPoly ℚ) = (C (-1) + C (-1) * X) + X ^ 5 := by
     simp only [denote]
     show C (-1 : ℚ) + X * (C (-1) + X * (C 0 + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))))) = _
     simp; ring
@@ -75,7 +75,7 @@ def radX5DtExp : CPoly RadX5 := [CField.zero, CField.one]
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x⁵−x−1)][eˣ]`: the mixed-tower `d/dt` computation over the degree-5 radical
 base. -/
 theorem radX5_monomialDeriv_t2sq :
-    cisZeroG (csubG (cmonomialDeriv radX5DtExp radX5T2sq) radX5TwoT2sq) = true := by native_decide
+    cisZero (csub (cmonomialDeriv radX5DtExp radX5T2sq) radX5TwoT2sq) = true := by native_decide
 
 /-- The `RadX5[t]`-polynomial `y·t = [0, y]` (`y = √(x⁵−x−1)`, `t = eˣ`). -/
 def radX5GenT : CPoly RadX5 := [CField.zero, radX5Gen]
@@ -87,6 +87,6 @@ def radX5GenTDeriv : CPoly RadX5 :=
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x⁵−x−1)][eˣ]`: the mixed derivation over the degree-5 radical base
 (`ℓ = (5x⁴−1)/(2(x⁵−x−1))`). -/
 theorem radX5_monomialDeriv_genT :
-    cisZeroG (csubG (cmonomialDeriv radX5DtExp radX5GenT) radX5GenTDeriv) = true := by native_decide
+    cisZero (csub (cmonomialDeriv radX5DtExp radX5GenT) radX5GenTDeriv) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

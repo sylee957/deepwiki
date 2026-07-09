@@ -39,7 +39,7 @@ constant-in-`y` term `z·D'(x)` (`qxOfNum [z] · Dder`, a singleton `CPoly`) min
 `Z`-dependent coefficient is the `y⁰` one, so `res_Y` of this against `F` has `Z`-degree
 `≤ deg_y F = n`. `Dder = D'(x) ∈ K(x)` is supplied by the caller. -/
 def zDderMinusG (g : CPoly (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (z : ℚ) : CPoly (QFunNZG ℚ) :=
-  csubG [CField.mul (qxOfNum [z]) Dder] g
+  csub [CField.mul (qxOfNum [z]) Dder] g
 
 /-- `resYAtNode f g Dder z = res_Y(z·D'(X) − g(X, Y), F(X, Y))` at the rational node `Z = z`,
 read as a `ℚ[X]`-polynomial: the resultant in `y` (`cresultantG fuelY` over the field
@@ -66,15 +66,15 @@ coefficients). The outer `res_X(·, D)` is `∏` over the `deg_X D` roots of `D`
 arbitrary monic curve `F = f`: the full double resultant `R(Z) = res_X(res_Y(Z·D'(X) − g(X, Y), F(X, Y)),
 D(X))`, in the residue indeterminate `Z`. Computed by evaluation + interpolation: for nodes
 `z = 0, …, n·deg_X D`, the inner `res_Y` (`resYAtNode`) gives `res_Y(z·D' − g, F)`, then `res_X(·, D)`
-gives `R(z) ∈ ℚ`, and `cinterpolateG` recovers `R(Z)`; `deg_Z R ≤ n·deg_X D` (`n = deg_y f`). Generalizes
+gives `R(z) ∈ ℚ`, and `cinterpolate` recovers `R(Z)`; `deg_Z R ≤ n·deg_X D` (`n = deg_y f`). Generalizes
 `cAlgResidueResultant`'s hyperelliptic norm shortcut. `Dder = D'(x) ∈ K(x)` supplied by the caller. -/
 def genResidueResultant (f g : CPoly (QFunNZG ℚ)) (Dder : QFunNZG ℚ)
     (D : CPoly ℚ) : CPoly ℚ :=
-  let nNodes := cdegG f * cdegG D + 1                        -- `deg_Z R ≤ n · deg_X D`
+  let nNodes := cdeg f * cdeg D + 1                        -- `deg_Z R ≤ n · deg_X D`
   let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
     let z : ℚ := (k : ℚ)
     (z, cresultantWf (resYAtNode f g Dder z) D))
-  cinterpolateG pts
+  cinterpolate pts
 
 end CPoly
 
@@ -112,9 +112,9 @@ def genResTrigExpected : CPoly ℚ := [1, 1, 0, 1]
 
 /-- The full double resultant on the trigonal cubic: for `∫ (y/(x − 1)) dx` on the non-hyperelliptic
 `y³ + xy + x = 0` (`n = 3`), `genResidueResultant` produces `R(Z) = Z³ + Z + 1 = F(1, Z)`, the curve
-fiber over the pole `x = 1`, via `cisZeroG` of `R − (Z³ + Z + 1)`. -/
+fiber over the pole `x = 1`, via `cisZero` of `R − (Z³ + Z + 1)`. -/
 theorem genResTrig_resultant_eq :
-    cisZeroG (csubG genResTrigR genResTrigExpected) = true := by native_decide
+    cisZero (csub genResTrigR genResTrigExpected) = true := by native_decide
 
 /-- The residues are the roots of `F(1, Z)`: `Z = 0` is not a residue (`cIsResidue R 0 = false`), matching
 `R = F(1, Z) = Z³ + Z + 1` whose roots are the three `y`-values over the pole `x = 1`. -/
@@ -140,9 +140,9 @@ def genResTrigExpected1 : CPoly ℚ := [-1, 3, -3, 1]
 
 /-- The double resultant gives `(Z − 1)³` for the sheet-independent residue: for `∫ dx/(x − 1)` on
 `y³ + xy + x = 0` (`g = 1`), `genResidueResultant` produces `R(Z) = (Z − 1)³`, the residue `1` repeated
-once per sheet, via `cisZeroG` of `R − (Z − 1)³`. -/
+once per sheet, via `cisZero` of `R − (Z − 1)³`. -/
 theorem genResTrig1_resultant_eq :
-    cisZeroG (csubG genResTrigR1 genResTrigExpected1) = true := by native_decide
+    cisZero (csub genResTrigR1 genResTrigExpected1) = true := by native_decide
 
 /-- The common residue `1` is a root of `R`: `cIsResidue R 1 = true` for `R(Z) = (Z − 1)³`. -/
 theorem genResTrig1_residue_one :
@@ -170,14 +170,14 @@ def genResHypDder : QFunNZG ℚ := qxOfNum [-1, 2]
 
 /-- Conservativity: the general double resultant reproduces the hyperelliptic norm resultant. On `y² = x`
 with `g = y`, `D = x² − x`, the general `genResidueResultant` equals the dedicated `cAlgResidueResultant`
-(both `R(Z) = Z⁴ − Z²`), via `cisZeroG` of their difference. -/
+(both `R(Z) = Z⁴ − Z²`), via `cisZero` of their difference. -/
 theorem genResHyp_conservativity :
-    cisZeroG (csubG
+    cisZero (csub
       (genResidueResultant genResHypF genResHypG genResHypDder genResHypD)
       (cAlgResidueResultant algResExX_D algResExX_rho algResExX_g0 algResExX_g1)) = true := by
   native_decide
 
-example : cisZeroG (csubG
+example : cisZero (csub
     (genResidueResultant genResTrigF genResTrigG genResTrigDder genResTrigD)
     [1, 1, 0, 1]) = true := by native_decide
 

@@ -19,26 +19,26 @@ def tanDeriv (p : List (CPoly ℚ)) : List (CPoly ℚ) :=
   -- κ_D: coefficientwise d/dx
   let kappa : List (CPoly ℚ) := p.map cderivQ
   -- (t²+1)·dp/dt : shift the formal t-derivative by t² and by t⁰.
-  let dpdt : List (CPoly ℚ) := (p.drop 1).zipIdx.map (fun (c, i) => cscaleG ((i : ℚ) + 1) c)
+  let dpdt : List (CPoly ℚ) := (p.drop 1).zipIdx.map (fun (c, i) => cscale ((i : ℚ) + 1) c)
   -- multiply dpdt by (t²+1): result_k = dpdt_{k-2} + dpdt_k
   let mulDt : List (CPoly ℚ) :=
     (List.range (dpdt.length + 2)).map (fun k =>
       let lo : CPoly ℚ := if k ≥ 2 then dpdt.getD (k - 2) [] else []
       let hi : CPoly ℚ := dpdt.getD k []
-      caddG lo hi)
+      cadd lo hi)
   -- add κ_D and (t²+1)dp/dt coefficientwise (over the t-degree).
   let n := max kappa.length mulDt.length
-  (List.range n).map (fun k => caddG (kappa.getD k []) (mulDt.getD k []))
+  (List.range n).map (fun k => cadd (kappa.getD k []) (mulDt.getD k []))
 
 /-- `tcoeff p m`: the `tᵐ`-coefficient (in `ℚ(x)`) of a `t`-polynomial, `[]` (zero) past the end. -/
 def tcoeff (p : List (CPoly ℚ)) (m : ℕ) : CPoly ℚ := p.getD m []
 
 /-- `tdeg p`: the `t`-degree (highest index with a nonzero coefficient), `0` for the zero polynomial. -/
 def tdeg (p : List (CPoly ℚ)) : ℕ :=
-  ((p.zipIdx.filter (fun (c, _) => ¬ cisZeroG c)).map (fun (_, i) => i)).foldl max 0
+  ((p.zipIdx.filter (fun (c, _) => ¬ cisZero c)).map (fun (_, i) => i)).foldl max 0
 
 /-- `t`-polynomial zero test `tisZero p`: every `ℚ(x)`-coefficient is zero. -/
-def tisZero (p : List (CPoly ℚ)) : Bool := p.all cisZeroG
+def tisZero (p : List (CPoly ℚ)) : Bool := p.all cisZero
 
 /-- `tshiftScale s m = s·tᵐ`: the single-term `t`-polynomial `[0,…,0,s]` with `m` leading zeros. -/
 def tshiftScale (s : CPoly ℚ) (m : ℕ) : List (CPoly ℚ) :=
@@ -47,15 +47,15 @@ def tshiftScale (s : CPoly ℚ) (m : ℕ) : List (CPoly ℚ) :=
 /-- `tsub p q`: coefficientwise subtraction `pₖ − qₖ` of `t`-polynomials over `ℚ(x)`. -/
 def tsub (p q : List (CPoly ℚ)) : List (CPoly ℚ) :=
   let n := max p.length q.length
-  (List.range n).map (fun k => csubG (p.getD k []) (q.getD k []))
+  (List.range n).map (fun k => csub (p.getD k []) (q.getD k []))
 
 /-- `tadd p q`: coefficientwise addition `pₖ + qₖ` of `t`-polynomials over `ℚ(x)`. -/
 def tadd (p q : List (CPoly ℚ)) : List (CPoly ℚ) :=
   let n := max p.length q.length
-  (List.range n).map (fun k => caddG (p.getD k []) (q.getD k []))
+  (List.range n).map (fun k => cadd (p.getD k []) (q.getD k []))
 
 /-- `cscaleListQ s p`: scale every `ℚ[x]`-coefficient of the `t`-polynomial `p` by `s ∈ ℚ`. -/
-def cscaleListQ (s : ℚ) (p : List (CPoly ℚ)) : List (CPoly ℚ) := p.map (cscaleG s)
+def cscaleListQ (s : ℚ) (p : List (CPoly ℚ)) : List (CPoly ℚ) := p.map (cscale s)
 
 /-! ## Gaussian evaluation and exact division -/
 
@@ -64,18 +64,18 @@ def cscaleListQ (s : ℚ) (p : List (CPoly ℚ)) : List (CPoly ℚ) := p.map (cs
 def evalAtI (p : List (CPoly ℚ)) : CPoly ℚ × CPoly ℚ :=
   p.foldr (fun (a : CPoly ℚ) (acc : CPoly ℚ × CPoly ℚ) =>
     -- acc = (u, v) standing for u + v√−1; new = a + √−1·acc = a + (u + v√−1)√−1 = (a − v) + u√−1.
-    (caddG a (cscaleG (-1) acc.2), acc.1)) ([], [])
+    (cadd a (cscale (-1) acc.2), acc.1)) ([], [])
 
 /-- `cmulI (a,b) (c,d) = (ac − bd, ad + bc)`: `k(√−1)`-multiplication on pairs (`√−1² = −1`). -/
 def cmulI (x y : CPoly ℚ × CPoly ℚ) : CPoly ℚ × CPoly ℚ :=
-  (csubG (cmulG x.1 y.1) (cmulG x.2 y.2), caddG (cmulG x.1 y.2) (cmulG x.2 y.1))
+  (csub (cmul x.1 y.1) (cmul x.2 y.2), cadd (cmul x.1 y.2) (cmul x.2 y.1))
 
 /-- `csubI (a,b) (c,d) = (a−c, b−d)`: `k(√−1)`-subtraction on pairs. -/
 def csubI (x y : CPoly ℚ × CPoly ℚ) : CPoly ℚ × CPoly ℚ :=
-  (csubG x.1 y.1, csubG x.2 y.2)
+  (csub x.1 y.1, csub x.2 y.2)
 
 /-- `cisZeroI (a,b)`: `k(√−1)`-zero test on a pair (both parts vanish). -/
-def cisZeroI (x : CPoly ℚ × CPoly ℚ) : Bool := cisZeroG x.1 && cisZeroG x.2
+def cisZeroI (x : CPoly ℚ × CPoly ℚ) : Bool := cisZero x.1 && cisZero x.2
 
 /-- `divByTminusI p = q` with `p = (t − √−1)·q`: synthetic (Ruffini) division of a `k(√−1)[t]`-poly
 by `t − √−1`, exact when `p(√−1) = 0`; the remainder is dropped. -/
@@ -87,12 +87,12 @@ def divByTminusI (p : List (CPoly ℚ × CPoly ℚ)) : List (CPoly ℚ × CPoly 
     | [], _, acc => acc                                   -- last (lowest) coeff is the remainder, dropped
     | a :: rest, carry, acc =>
         -- current quotient coefficient = carry; next carry = a + √−1·carry.
-        go rest (caddG' a (cmulI I carry)) (carry :: acc)
-  -- `caddG'` on pairs:
+        go rest (cadd' a (cmulI I carry)) (carry :: acc)
+  -- `cadd'` on pairs:
   go (p.reverse) ([], []) [] |>.drop 0
 where
   /-- pair addition for the synthetic-division carry. -/
-  caddG' (x y : CPoly ℚ × CPoly ℚ) : CPoly ℚ × CPoly ℚ := (caddG x.1 y.1, caddG x.2 y.2)
+  cadd' (x y : CPoly ℚ × CPoly ℚ) : CPoly ℚ × CPoly ℚ := (cadd x.1 y.1, cadd x.2 y.2)
 
 /-! ## Tangent cancellation solver -/
 
@@ -116,10 +116,10 @@ def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : CPoly ℚ) :
     let e1 := evalAtI c1                                     -- c₁(√−1) = (re, im)
     let e2 := evalAtI c2                                     -- c₂(√−1)
     -- c₂(√−1)·√−1 = (−e2.im, e2.re); z = e1 + that.
-    let z1 := csubG e1.1 e2.2
-    let z2 := caddG e1.2 e2.1
+    let z1 := csub e1.1 e2.2
+    let z2 := cadd e1.2 e2.1
     -- base solve CoupledDESystem(b₀, b₂ − nη, z₁, z₂), η = 1 ⇒ shift b₂ by −(n+1).
-    let b2shift := csubG b2 (cscaleG nN [CField.one])
+    let b2shift := csub b2 (cscale nN [CField.one])
     match cCoupledDESystem (-1) b0 b2shift z1 z2 dbound with
     | none => none
     | some (s1, s2) =>
@@ -136,7 +136,7 @@ def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : CPoly ℚ) :
       let quot := divByTminusI cpairs
       let d1 : List (CPoly ℚ) := quot.map Prod.fst
       let d2 : List (CPoly ℚ) := quot.map Prod.snd
-      match cCoupledDECancelTan dbound b0 (caddG b2 [CField.one]) d1 d2 n with
+      match cCoupledDECancelTan dbound b0 (cadd b2 [CField.one]) d1 d2 n with
       | none => none
       | some (h1, h2) =>
         -- return (h₁t + h₂ + s₁, h₂t − h₁ + s₂).

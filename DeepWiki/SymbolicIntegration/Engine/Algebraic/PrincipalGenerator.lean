@@ -37,7 +37,7 @@ def cantorReduceTrackedAux : ℕ → ℕ → CPoly α → MumfordDivisor α → 
     MumfordDivisor α × List (CPoly α)
   | 0, _, _, D, acc => (D, acc)
   | fuel + 1, g, ρ, D, acc =>
-    if cdegG D.u ≤ g then (D, acc)
+    if cdeg D.u ≤ g then (D, acc)
     else cantorReduceTrackedAux fuel g ρ (cantorReduceStep ρ D) (acc ++ [D.v])
 
 /-- Tracked Cantor reduction `cantorReduceTracked ρ g D = (reduced, vs)`: bring `(u, v)` to reduced
@@ -45,7 +45,7 @@ form `deg u ≤ g` (as `cantorReduce`), also returning the list `vs` of every re
 The product `∏ (y − vᵢ)` is the function swapping `D` for its reduced form. -/
 def cantorReduceTracked (ρ : CPoly α) (g : ℕ) (D : MumfordDivisor α) :
     MumfordDivisor α × List (CPoly α) :=
-  cantorReduceTrackedAux (cdegG D.u + 1) g ρ D []
+  cantorReduceTrackedAux (cdeg D.u + 1) g ρ D []
 
 /-- Tracked Jacobian group law `cantorAddTracked ρ g D₁ D₂ = (D₁ ⊕ D₂, vs)`: `cantorAdd` with the
 list `vs` of the `y − v` step-functions emitted by the reduction of the composite. The composition

@@ -105,7 +105,7 @@ def radAssembleRatPart (ρ : QFunNZG ℚ)
     (runs : List (Bool × CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ)) : RadElem (QFunNZG ℚ) :=
   runs.foldl
     (fun acc (isV, fi, e, _, vNum, _) =>
-      let denomPow := if isV then cpowG fi (e - 1) else cpowG fi e
+      let denomPow := if isV then cpow fi (e - 1) else cpow fi e
       radAdd acc
         [CField.zero, CField.div (qxOfNum vNum) (CField.mul (qxOfNum denomPow) ρ)])
     radZero
@@ -119,7 +119,7 @@ def rtRatRho : QFunNZG ℚ := qxOfNum [1, 0, 1]
 def rtRatR : CPoly ℚ := [1]
 
 /-- Rational-only round-trip denominator `B = (x−1)²`. -/
-def rtRatB : CPoly ℚ := cpowG [-1, 1] 2
+def rtRatB : CPoly ℚ := cpow [-1, 1] 2
 
 /-- A non-principal residual for the rational-only log solve. -/
 def rtRatNonPrincipalResidual : RadElem (QFunNZG ℚ) := radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CField.one
@@ -143,7 +143,7 @@ def rtCombRho : QFunNZG ℚ := qxOfNum [1, 0, 1]
 def rtCombR : CPoly ℚ := [1]
 
 /-- Combined round-trip rational denominator `B = (x−1)²`. -/
-def rtCombB : CPoly ℚ := cpowG [-1, 1] 2
+def rtCombB : CPoly ℚ := cpow [-1, 1] 2
 
 /-- The combined round-trip's log argument `u = x + y = [x, 1]`. -/
 def rtCombU : RadElem (QFunNZG ℚ) := [qxOfNum [0, 1], CField.one]

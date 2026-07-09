@@ -49,16 +49,16 @@ def limIntBaseWrap (η a : QFunNZG ℚ) : Option (QFunNZG ℚ × QFunNZG ℚ) :=
 def prim2ExampleP : CPoly (QFunNZG ℚ) := [qConstParamG 1, limIntSingleExampleA]
 
 -- Sanity print: `∫p = x·t + (1/2)·t²`.
-#eval (cIntegratePrimPolyDegRaiseG limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
+#eval (cIntegratePrimPolyDegRaise limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
     prim2ExampleP).map (fun q => q.map (fun c => CPoly.qnormPairG c.1.1 c.1.2))
 
 /-- The degree-raising primitive-polynomial integrator is correct on the two-level example. -/
 theorem cIntegratePrimPolyDegRaiseG_example :
-    (match cIntegratePrimPolyDegRaiseG limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
+    (match cIntegratePrimPolyDegRaise limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
         prim2ExampleP with
       | some q =>
-          cisZeroG (csubG (cmonomialDeriv [limIntSingleExampleEta] q) prim2ExampleP)
-            && decide (cdegG q = 2)
+          cisZero (csub (cmonomialDeriv [limIntSingleExampleEta] q) prim2ExampleP)
+            && decide (cdeg q = 2)
       | none => false) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

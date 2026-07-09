@@ -43,16 +43,16 @@ def radOne : RadElem α := [CField.one]
 def radGen : RadElem α := [CField.zero, CField.one]
 
 /-- **Componentwise addition** in `α[y]/(yⁿ − f)` (the shorter list zero-extended). -/
-def radAdd (p q : RadElem α) : RadElem α := CPoly.caddG p q
+def radAdd (p q : RadElem α) : RadElem α := CPoly.cadd p q
 
 /-- **Negation** in `α[y]/(yⁿ − f)`, componentwise. -/
-def radNeg (p : RadElem α) : RadElem α := CPoly.cnegG p
+def radNeg (p : RadElem α) : RadElem α := CPoly.cneg p
 
 /-- **Subtraction** in `α[y]/(yⁿ − f)`, `p − q := p + (−q)`. -/
-def radSub (p q : RadElem α) : RadElem α := CPoly.csubG p q
+def radSub (p q : RadElem α) : RadElem α := CPoly.csub p q
 
 /-- **Scalar multiplication** of a `RadElem` by a base element `c : α`, componentwise. -/
-def radScale (c : α) (p : RadElem α) : RadElem α := CPoly.cscaleG c p
+def radScale (c : α) (p : RadElem α) : RadElem α := CPoly.cscale c p
 
 /-- **Reduce a free `y`-polynomial modulo `yⁿ = f`**: fold every coefficient at index `≥ n` down by
 `y^{n+k} = f·yᵏ` (the coefficient `aₘ` at index `m = n + k` adds `aₘ·f` to index `k`). Implemented by a
@@ -61,7 +61,7 @@ list of length `≤ n`. -/
 def radReduce (n : ℕ) (f : α) : ℕ → RadElem α → RadElem α
   | 0, p => p
   | fuel + 1, p =>
-    let p := CPoly.cnormG p
+    let p := CPoly.cnorm p
     if (p : List α).length ≤ n then p
     else
       -- the top coefficient sits at index `length − 1 = n + k` with `k = length − 1 − n`; fold it down
@@ -70,17 +70,17 @@ def radReduce (n : ℕ) (f : α) : ℕ → RadElem α → RadElem α
       let k := m - n
       let am := (p : List α).getLast?.getD CField.zero
       let p' := (p : List α).dropLast                       -- drop the top coefficient
-      let foldIn := CPoly.cshiftG k [CField.mul am f]       -- `am·f · yᵏ`
-      radReduce n f fuel (CPoly.caddG p' foldIn)
+      let foldIn := CPoly.cshift k [CField.mul am f]       -- `am·f · yᵏ`
+      radReduce n f fuel (CPoly.cadd p' foldIn)
 
-/-- **Multiplication** in `α[y]/(yⁿ − f)`: free polynomial multiplication in `y` (`cmulG`) followed by
+/-- **Multiplication** in `α[y]/(yⁿ − f)`: free polynomial multiplication in `y` (`cmul`) followed by
 the reduction `yⁿ → f` (`radReduce`). Fuel for the reduction is the product length (`≤ 2n`). -/
 def radMul (n : ℕ) (f : α) (p q : RadElem α) : RadElem α :=
-  let prod := CPoly.cmulG p q
+  let prod := CPoly.cmul p q
   radReduce n f ((prod : List α).length + 1) prod
 
-/-- **Zero test** in `α[y]/(yⁿ − f)`: read `cisZeroG` off the coefficient list (all components vanish). -/
-def radIsZero (p : RadElem α) : Bool := CPoly.cisZeroG p
+/-- **Zero test** in `α[y]/(yⁿ − f)`: read `cisZero` off the coefficient list (all components vanish). -/
+def radIsZero (p : RadElem α) : Bool := CPoly.cisZero p
 
 /-! ### The diagonal derivation `radDeriv`
 
@@ -92,14 +92,14 @@ variable [CDiffField α]
 /-- `logDerRadicand n f = f'/(n·f)` as a base element: the diagonal `radDeriv` multiplier, with
 `y' = logDerRadicand · y` and the `yⁱ`-component scaled by `i · logDerRadicand`. -/
 def logDerRadicand (n : ℕ) (f : α) : α :=
-  CField.div (CDiffField.cderiv f) (CField.mul (CPoly.cnatCastG n) f)
+  CField.div (CDiffField.cderiv f) (CField.mul (CPoly.cnatCast n) f)
 
 /-- The diagonal radical derivation `radDeriv n f [a₀,…] = [D a₀ + 0·a₀·ℓ, D a₁ + 1·a₁·ℓ, …]`
 (`ℓ = f'/(n·f)`): the `i`-th component maps `aᵢ ↦ D(aᵢ) + aᵢ·(i·ℓ)`, preserving each `yⁱ`-component. -/
 def radDeriv (n : ℕ) (f : α) (p : RadElem α) : RadElem α :=
   let ℓ := logDerRadicand n f
   (p.zipIdx.map (fun (a, i) =>
-    CField.add (CDiffField.cderiv a) (CField.mul a (CField.mul (CPoly.cnatCastG i) ℓ))))
+    CField.add (CDiffField.cderiv a) (CField.mul a (CField.mul (CPoly.cnatCast i) ℓ))))
 
 end RadElem
 
@@ -108,7 +108,7 @@ def qxOfNum (num : CPoly ℚ) : QFunNZG ℚ :=
   ⟨(num, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- A `ℚ(x)` value `num/den` from a numerator and a nonzero denominator `CPoly ℚ`. -/
-def qxOfFrac (num den : CPoly ℚ) (h : CPoly.cisZeroG den = false) : QFunNZG ℚ :=
+def qxOfFrac (num den : CPoly ℚ) (h : CPoly.cisZero den = false) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 
 /-- The radicand `f = x³ + 1 ∈ ℚ(x)` (numerator `[1,0,0,1]` = `1 + x³`). -/
@@ -135,7 +135,7 @@ variable {α : Type*} [CField α]
 def radProj (i : ℕ) (p : RadElem α) : RadElem α :=
   match (p : List α)[i]? with
   | none => []
-  | some a => CPoly.cnormG (CPoly.cshiftG i [a])
+  | some a => CPoly.cnorm (CPoly.cshift i [a])
 
 end RadElem
 
@@ -151,20 +151,20 @@ namespace CPoly
 variable {α : Type*} [CField α]
 
 /-- Case-1 cofactor `radCase1Cofactor k V Df f C = B`: the degree-`< deg V` polynomial solving
-`(1−k)·V'·f·B ≡ C (mod V)` via `cdiophantineG ((1−k)·V'·f) V C`. `Df = V'` is passed in. -/
+`(1−k)·V'·f·B ≡ C (mod V)` via `cdiophantine ((1−k)·V'·f) V C`. `Df = V'` is passed in. -/
 def radCase1Cofactor (k : ℕ) (V Df f C : CPoly α) : CPoly α :=
-  let oneMinusK := cnegG [cnatCastG (k - 1)]                    -- the constant `(1 − k) = −(k−1)`
-  let coeff := cmulG oneMinusK (cmulG Df f)                     -- `(1−k)·V'·f`
-  (cdiophantineG coeff V C).1
+  let oneMinusK := cneg [cnatCast (k - 1)]                    -- the constant `(1 − k) = −(k−1)`
+  let coeff := cmul oneMinusK (cmul Df f)                     -- `(1−k)·V'·f`
+  (cdiophantine coeff V C).1
 
 /-- Case-1 residual `radCase1Residual k V Df f g B C Bder = D`: the lowered-`k` numerator
 `D = ((1−k)V'fB − C)/V + B'f + Bg`. `Df = V'`, `Bder = B'`, `g` from `(f/y)' = g/y` passed in; division
 by `V` is `cdivWf`. -/
 def radCase1Residual (k : ℕ) (V Df f g B C Bder : CPoly α) : CPoly α :=
-  let oneMinusK := cnegG [cnatCastG (k - 1)]
-  let topNum := csubG (cmulG oneMinusK (cmulG Df (cmulG f B))) C  -- `(1−k)V'fB − C`
+  let oneMinusK := cneg [cnatCast (k - 1)]
+  let topNum := csub (cmul oneMinusK (cmul Df (cmul f B))) C  -- `(1−k)V'fB − C`
   let quotient := cdivWf topNum V                                 -- `((1−k)V'fB − C)/V`
-  caddG quotient (caddG (cmulG Bder f) (cmulG B g))               -- `… + B'f + Bg`
+  cadd quotient (cadd (cmul Bder f) (cmul B g))               -- `… + B'f + Bg`
 
 /-! ### Case 2 rational-part reduction (`θ' = 1`, `n = 2`)
 
@@ -174,22 +174,22 @@ The piece `C/(Wᵏy)` where `W` is a squarefree factor of the radicand `f` (not 
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`, cleared identity `B·(½−k)W'h − C + W·(B'h + ½Bh') = W·D`. -/
 
 /-- Case-2 cofactor (`n = 2`) `radCase2Cofactor k W h C = B`: the degree-`< deg W` polynomial solving
-`B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantineG ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderivG W`. -/
+`B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantine ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderiv W`. -/
 def radCase2Cofactor (k : ℕ) (W h C : CPoly α) : CPoly α :=
-  let half : CPoly α := [CField.div CField.one (cnatCastG 2)]              -- `½`
-  let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- `(½ − k)·W'·h`
-  (cdiophantineG coef W C).1
+  let half : CPoly α := [CField.div CField.one (cnatCast 2)]              -- `½`
+  let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- `(½ − k)·W'·h`
+  (cdiophantine coef W C).1
 
 /-- Case-2 residual (`n = 2`) `radCase2Residual k W h C B = D`: the lowered-`k` numerator
-`D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderivG B`, `h'` is `cderivG h`, division by `W` is
+`D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderiv B`, `h'` is `cderiv h`, division by `W` is
 `cdivWf`. -/
 def radCase2Residual (k : ℕ) (W h C B : CPoly α) : CPoly α :=
-  let half : CPoly α := [CField.div CField.one (cnatCastG 2)]              -- `½`
-  let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- `(½ − k)·W'·h`
-  let topNum := csubG (cmulG B coef) C                                      -- `B·(½−k)W'h − C`
+  let half : CPoly α := [CField.div CField.one (cnatCast 2)]              -- `½`
+  let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- `(½ − k)·W'·h`
+  let topNum := csub (cmul B coef) C                                      -- `B·(½−k)W'h − C`
   let quotient := cdivWf topNum W                                           -- `/W`
-  caddG quotient (caddG (cmulG (cderivG B) h)                              -- `+ B'h`
-    (cmulG half (cmulG B (cderivG h))))                                     -- `+ ½Bh'`
+  cadd quotient (cadd (cmul (cderiv B) h)                              -- `+ B'h`
+    (cmul half (cmul B (cderiv h))))                                     -- `+ ½Bh'`
 
 /-! ### Case 3 rational-part reduction (`θ' = 1`)
 
@@ -201,20 +201,20 @@ gives `b = lcf(C) / ((j+1) + lcf(g))` and residual `D = B'f + Bg − C` with `de
 `B = b·θ^{j+1}` (`j+1 = deg C − deg f + 1`) with `b = lcf(C) / ((j+1) + lcf(g))`, cancelling the leading
 term of `C` in the `C/y` degree-lowering (`[]` when `deg C < deg f`). -/
 def radCase3Cofactor (f g C : CPoly α) : CPoly α :=
-  let dC := cdegG C
-  let dF := cdegG f
-  if cisZeroG C || dC < dF then []
+  let dC := cdeg C
+  let dF := cdeg f
+  if cisZero C || dC < dF then []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CField.add (cnatCastG jp1) (cleadG g)            -- `(j+1) + lcf(g)`
-    let b := CField.div (cleadG C) denom                          -- `b = lcf(C)/((j+1)+lcf(g))`
-    cshiftG jp1 [b]                                                -- `b·θ^{j+1}`
+    let denom := CField.add (cnatCast jp1) (clead g)            -- `(j+1) + lcf(g)`
+    let b := CField.div (clead C) denom                          -- `b = lcf(C)/((j+1)+lcf(g))`
+    cshift jp1 [b]                                                -- `b·θ^{j+1}`
 
 /-- Case-3 residual `radCase3Residual f g B C Bder = D`: the lowered-degree numerator `D = B'f + Bg − C`
 of the `C/y` step. `Bder = B'`, `g` from `(f/y)' = g/y` passed in; with `B` from `radCase3Cofactor`,
 `deg D < deg C`. -/
 def radCase3Residual (f g B C Bder : CPoly α) : CPoly α :=
-  csubG (caddG (cmulG Bder f) (cmulG B g)) C                       -- `B'f + Bg − C`
+  csub (cadd (cmul Bder f) (cmul B g)) C                       -- `B'f + Bg − C`
 
 /-! ### `θ = log v` rational-part reduction
 
@@ -227,14 +227,14 @@ Case 3. -/
 `b = lcf(C) / ((j+1)·θ' + lcf(g))` for any `θ` of derivative `Dt = θ'` (`[]` when `deg C < deg f`);
 `Dt = 1` recovers Case 3. -/
 def radCase3CofactorGen (Dt : α) (f g C : CPoly α) : CPoly α :=
-  let dC := cdegG C
-  let dF := cdegG f
-  if cisZeroG C || dC < dF then []
+  let dC := cdeg C
+  let dF := cdeg f
+  if cisZero C || dC < dF then []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CField.add (CField.mul (cnatCastG jp1) Dt) (cleadG g)  -- `(j+1)·θ' + lcf(g)`
-    let b := CField.div (cleadG C) denom                          -- `b = lcf(C)/((j+1)θ' + lcf(g))`
-    cshiftG jp1 [b]                                                -- `b·θ^{j+1}`
+    let denom := CField.add (CField.mul (cnatCast jp1) Dt) (clead g)  -- `(j+1)·θ' + lcf(g)`
+    let b := CField.div (clead C) denom                          -- `b = lcf(C)/((j+1)θ' + lcf(g))`
+    cshift jp1 [b]                                                -- `b·θ^{j+1}`
 
 /-! ### `θ = exp v` rational-part reduction
 
@@ -254,15 +254,15 @@ def radExpCofactor (k : ℕ) (vder : α) (f g C : CPoly α) : CPoly α :=
   let f0 := radConstCoeff f
   let g0 := radConstCoeff g
   let c0 := radConstCoeff C
-  let denom := CField.sub g0 (CField.mul (CField.mul (cnatCastG k) vder) f0)  -- `g₀ − k·v'·f₀`
+  let denom := CField.sub g0 (CField.mul (CField.mul (cnatCast k) vder) f0)  -- `g₀ − k·v'·f₀`
   [CField.div c0 denom]                                                       -- `[b₀]`
 
 /-- `θ = exp v` `C/(θᵏy)` residual `radExpResidual k vder f g B C Bder = D`: the lowered-`k` numerator
 `D = ((B'f + Bg − k·v'·B·f) − C)/θ`. `vder = v'`, `Bder = B'`, `g` passed in; division by `θ` is
 `cdivWf _ [0,1]`. -/
 def radExpResidual (k : ℕ) (vder : α) (f g B C Bder : CPoly α) : CPoly α :=
-  let kvBf := cmulG [CField.mul (cnatCastG k) vder] (cmulG B f)    -- `k·v'·B·f`
-  let num := csubG (csubG (caddG (cmulG Bder f) (cmulG B g)) kvBf) C  -- `B'f + Bg − kv'Bf − C`
+  let kvBf := cmul [CField.mul (cnatCast k) vder] (cmul B f)    -- `k·v'·B·f`
+  let num := csub (csub (cadd (cmul Bder f) (cmul B g)) kvBf) C  -- `B'f + Bg − kv'Bf − C`
   cdivWf num [CField.zero, CField.one]                             -- `… / θ`
 
 end CPoly

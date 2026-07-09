@@ -14,7 +14,7 @@ open CPoly
 def qConstG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element. -/
-def qFracG (num den : List ℚ) (h : CPoly.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
+def qFracG (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 
 /-! ### Primitive case `t = log x`, `Dt = 1/x` -/
@@ -34,7 +34,7 @@ theorem primitivePolyIntegrate_example :
       let q := res.1
       let rem := res.2
       let Dq := CPoly.cmonomialDeriv primitivePolyIntegrateExampleDt q
-      CPoly.cisZeroG (CPoly.csubG (CPoly.caddG Dq rem) primitivePolyIntegrateExampleP)) = true := by
+      CPoly.cisZero (CPoly.csub (CPoly.cadd Dq rem) primitivePolyIntegrateExampleP)) = true := by
   native_decide
 
 /-! ### Nonlinear case `t = tan x`, `Dt = t² + 1` -/
@@ -51,12 +51,12 @@ theorem polyReduceTower_example :
       let q := res.1
       let r := res.2
       let Dq := CPoly.cmonomialDeriv polyReduceTowerExampleDt q
-      CPoly.cisZeroG (CPoly.csubG (CPoly.caddG Dq r) polyReduceTowerExampleP)) = true := by
+      CPoly.cisZero (CPoly.csub (CPoly.cadd Dq r) polyReduceTowerExampleP)) = true := by
   native_decide
 
 /-- The reduced remainder has `t`-degree `< δ(t)` in the nonlinear example. -/
 theorem polyReduceTower_example_remainder_degree :
-    CPoly.cdegG (CPoly.cPolyReduceTower polyReduceTowerExampleDt 8 polyReduceTowerExampleP).2 = 1 := by
+    CPoly.cdeg (CPoly.cPolyReduceTower polyReduceTowerExampleDt 8 polyReduceTowerExampleP).2 = 1 := by
   native_decide
 
 end DeepWiki.SymbolicIntegration

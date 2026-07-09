@@ -163,18 +163,18 @@ def drvRun : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ) := radIntegrateCase2Wf d
 /-- The radicand `ρ = θ³ − θ` lifted to a level-2 scalar `ρ ∈ ℚ(x)(t₁) = Lvl2`. -/
 def drvRhoLvl2 : Lvl2 := lvl2OfNum drvRho
 
-/-- The common-denominator power `W² = θ²` over `ℚ(x)[θ]`, `cpowG W 2`. -/
-def drvW2 : CPoly (QFunNZG ℚ) := cpowG drvW 2
+/-- The common-denominator power `W² = θ²` over `ℚ(x)[θ]`, `cpow W 2`. -/
+def drvW2 : CPoly (QFunNZG ℚ) := cpow drvW 2
 
 /-- The rational part `v = vNum/(W²·y)` lifted to `RadElem Lvl2` as `[0, vNum/(W²·ρ)]`. -/
 def drvVlift : RadElem Lvl2 :=
-  [CField.zero, CField.div (lvl2OfNum drvRun.2) (lvl2OfNum (cmulG drvW2 drvRho))]
+  [CField.zero, CField.div (lvl2OfNum drvRun.2) (lvl2OfNum (cmul drvW2 drvRho))]
 
 /-- The integrand's rational part `C₀/(W²y) − Crem/(Wy)` lifted to `RadElem Lvl2`. -/
 def drvRatLift : RadElem Lvl2 :=
   [CField.zero,
-    CField.sub (CField.div (lvl2OfNum drvC) (lvl2OfNum (cmulG drvW2 drvRho)))
-      (CField.div (lvl2OfNum drvRun.1) (lvl2OfNum (cmulG drvW drvRho)))]
+    CField.sub (CField.div (lvl2OfNum drvC) (lvl2OfNum (cmul drvW2 drvRho)))
+      (CField.div (lvl2OfNum drvRun.1) (lvl2OfNum (cmul drvW drvRho)))]
 
 /-- The Case-2 driver integrates over the tower base: `radDeriv 2` of the rational part `v = vNum/(θ²√ρ)`
 equals `1/(θ²√ρ) − Crem/(θ√ρ)`, the rational part of `1/(θ²·√(θ³−θ))`, at level 2. -/

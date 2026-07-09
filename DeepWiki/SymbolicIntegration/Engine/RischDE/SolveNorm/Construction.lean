@@ -39,7 +39,7 @@ variable {β : Type*} [CField β] [CFieldSpec β]
 /-- A `[CField β]`-data lowest-terms reducer that rebuilds the `qReduce` representative. -/
 def reduceSoundOpt (a : QFunNZG β) : Option (QFunNZG β) :=
   let rd := QFunNZG.reduceDen a
-  if h : CPoly.cisZeroG rd = false then some ⟨(QFunNZG.reduceNum a, rd), h⟩ else none
+  if h : CPoly.cisZero rd = false then some ⟨(QFunNZG.reduceNum a, rd), h⟩ else none
 
 /-- `reduceSoundOpt a` is exactly `some (qReduce a)`. -/
 theorem reduceSoundOpt_eq (a : QFunNZG β) : reduceSoundOpt a = some (qReduce a) := by
@@ -53,10 +53,10 @@ section Normality
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
 /-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its own normal part
-`toPolyG (cSplitFactorFastG [1] _ h.1.2).1 = toPolyG h.1.2`. -/
+`toPoly (cSplitFactorFast [1] _ h.1.2).1 = toPoly h.1.2`. -/
 def IsWeaklyNormalizedNorm (h : QFunNZG β) : Prop :=
-  toPolyG (CPoly.cSplitFactorFastG ([CField.one] : CPoly β) h.1.2).1
-    = toPolyG h.1.2
+  toPoly (CPoly.cSplitFactorFast ([CField.one] : CPoly β) h.1.2).1
+    = toPoly h.1.2
 
 end Normality
 

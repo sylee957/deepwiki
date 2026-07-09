@@ -13,9 +13,9 @@ open CPoly QFunNZG
 
 /-! ### The differential-spec bridge `CDiffFieldSpec (QFunNZG ℚ)` -/
 
-/-- The base derivation `implicitDeriv (toPolyG 1)` whose fraction-field extension realizes `towerDerivQFunNZG [1]`. -/
+/-- The base derivation `implicitDeriv (toPoly 1)` whose fraction-field extension realizes `towerDerivQFunNZG [1]`. -/
 noncomputable def baseDerivQ : Derivation ℤ (CFieldSpec.K ℚ)[X] (CFieldSpec.K ℚ)[X] :=
-  Differential.implicitDeriv (CPoly.toPolyG ([CField.one] : CPoly ℚ))
+  Differential.implicitDeriv (CPoly.toPoly ([CField.one] : CPoly ℚ))
 
 /-- `CDiffFieldSpec (QFunNZG ℚ)` using `fractionFieldDifferential baseDerivQ` and `toQFunNZG_towerDerivQFunNZG [1]`. -/
 noncomputable instance instCDiffFieldSpecQFunNZG : CDiffFieldSpec (QFunNZG ℚ) where

@@ -36,7 +36,7 @@ def qReduceMat (I : GenDivisor) : GenDivisor :=
 of `toOCoords`). -/
 def wToAf (basis : List (CPoly (QFunNZG ℚ))) (row : List (QFunNZG ℚ)) : CPoly (QFunNZG ℚ) :=
   (List.range basis.length).foldl (fun acc i =>
-    caddG acc (cscaleG (row.getD i CField.zero) (basis.getD i []))) ([] : CPoly (QFunNZG ℚ))
+    cadd acc (cscale (row.getD i CField.zero) (basis.getD i []))) ([] : CPoly (QFunNZG ℚ))
 
 /-! ### `div(g) = g·O`: the principal divisor (`principalDivisor`) -/
 
@@ -44,7 +44,7 @@ def wToAf (basis : List (CPoly (QFunNZG ℚ))) (row : List (QFunNZG ℚ)) : CPol
 of `g·wᵢ = afMul f g wᵢ` (via `B⁻¹`); empty matrix if `B` is singular. -/
 def principalDivisor (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
     (g : CPoly (QFunNZG ℚ)) : GenDivisor :=
-  let n := cdegG f
+  let n := cdeg f
   let B := orderToPowerMatrix n basis
   match matInvG n B with
   | none => []
@@ -53,10 +53,10 @@ def principalDivisor (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ
 
 /-! ### Clearing a fractional ideal to an integral `K[x]`-matrix at a common denominator (`idealClear`) -/
 
-/-- Clear a fractional ideal to `(δ, N)` with `δ = commonDenomG I` and `Nᵢⱼ = δ·Iᵢⱼ` over `K[x]`, so
+/-- Clear a fractional ideal to `(δ, N)` with `δ = commonDenom I` and `Nᵢⱼ = δ·Iᵢⱼ` over `K[x]`, so
 `I = (1/δ)·N`. -/
 def idealClear (I : GenDivisor) : CPoly ℚ × PolyMatrix ℚ :=
-  let δ : CPoly ℚ := commonDenomG I
+  let δ : CPoly ℚ := commonDenom I
   (δ, I.map (clearRowExact δ))
 
 /-! ### The ideal product `I·J` (the Pic group law) (`idealProduct`) -/
@@ -66,7 +66,7 @@ the `n²` cross-products `genᵢ·genₖ`, cleared to a common denominator and `
 generators; `[]` if `B` is singular. -/
 def idealProduct (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
     (I J : GenDivisor) : GenDivisor :=
-  let n := cdegG f
+  let n := cdeg f
   let B := orderToPowerMatrix n basis
   match matInvG n B with
   | none => []
@@ -78,25 +78,25 @@ def idealProduct (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
         J.map (fun gk =>
           toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk)))))
     -- clear to K[x] at a common denom δ, Hermite-reduce, take the n nonzero rows
-    let δ : CPoly ℚ := commonDenomG cross
+    let δ : CPoly ℚ := commonDenom cross
     let N : PolyMatrix ℚ := cross.map (clearRowExact δ)
-    let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZeroG)
+    let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZero)
     -- read back the first n rows as the fractional ideal (1/δ)·Nhat, then put every entry in lowest terms
     -- (`qReduceMat`, value-preserving) so the product fed back into the next `idealProduct` is canonical
     qReduceMat ((List.range n).map (fun i =>
       (List.range n).map (fun j =>
         let num := (nz.getD i []).getD j []
-        let dd := cnormG δ
-        if h : cisZeroG dd = false then qReduceNZG (qxOfFrac num dd h) else CField.zero)))
+        let dd := cnorm δ
+        if h : cisZero dd = false then qReduceNZG (qxOfFrac num dd h) else CField.zero)))
 
 /-! ### Normalization / equality of fractional ideals (`idealHNF`, `idealEq`, `idealIsIntegral`) -/
 
 /-- The Hermite normal form `idealHNF I = (δ, H)`: clear `I` to `(δ, N)`, `hermiteRowReduce` over
-`K[x]`, keep the nonzero rows normalized by `cnormG`; the presentation `(1/δ)·H`. -/
+`K[x]`, keep the nonzero rows normalized by `cnorm`; the presentation `(1/δ)·H`. -/
 def idealHNF (I : GenDivisor) : CPoly ℚ × PolyMatrix ℚ :=
   let (δ, N) := idealClear I
-  let H := (hermiteRowReduce N).filter (fun row => !row.all cisZeroG)
-  (cnormG δ, H.map (fun row => row.map cnormG))
+  let H := (hermiteRowReduce N).filter (fun row => !row.all cisZero)
+  (cnorm δ, H.map (fun row => row.map cnorm))
 
 /-- `true` iff two fractional ideals are equal `idealEq I J`: scale both to the common denominator
 `δ_I·δ_J`, `hermiteRowReduce` over `K[x]`, and compare the normal forms entrywise. -/
@@ -105,28 +105,28 @@ def idealEq (I J : GenDivisor) : Bool :=
   let (δJ, _) := idealClear J
   -- scale both ideals to the common denom δI·δJ, then compare cleared HNFs
   let scale : CPoly ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
-    let cc := cnormG c
+    let cc := cnorm c
     K.map (fun row => row.map (fun z =>
       let zz := qReduceNZG z
       let num := zz.1.1
-      let den := cnormG zz.1.2
-      cdivWf (cmulG cc num) den))
-  let NI := scale (cmulG δI δJ) I
-  let NJ := scale (cmulG δI δJ) J
-  let HI := (hermiteRowReduce NI).filter (fun row => !row.all cisZeroG)
-  let HJ := (hermiteRowReduce NJ).filter (fun row => !row.all cisZeroG)
+      let den := cnorm zz.1.2
+      cdivWf (cmul cc num) den))
+  let NI := scale (cmul δI δJ) I
+  let NJ := scale (cmul δI δJ) J
+  let HI := (hermiteRowReduce NI).filter (fun row => !row.all cisZero)
+  let HJ := (hermiteRowReduce NJ).filter (fun row => !row.all cisZero)
   let n := max HI.length HJ.length
   let w := max (HI.headD []).length (HJ.headD []).length
   (List.range n).all (fun i =>
     (List.range w).all (fun j =>
-      cisZeroG (csubG ((HI.getD i []).getD j []) ((HJ.getD i []).getD j []))))
+      cisZero (csub ((HI.getD i []).getD j []) ((HJ.getD i []).getD j []))))
 
 /-- `true` iff the divisor is integral `idealIsIntegral I`: every entry reduces to a fraction with
 denominator `1` (i.e. `I ⊆ O`). -/
 def idealIsIntegral (I : GenDivisor) : Bool :=
   I.all (fun row => row.all (fun z =>
     let zz := qReduceNZG z
-    cisZeroG (csubG (cnormG zz.1.2) [CField.one])))
+    cisZero (csub (cnorm zz.1.2) [CField.one])))
 
 end CPoly
 

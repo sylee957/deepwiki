@@ -2,10 +2,10 @@ import DeepWiki.SymbolicIntegration.Engine.Subresultant
 import DeepWiki.SymbolicIntegration.Engine.LinearSolveCorrect
 import DeepWiki.SymbolicIntegration.Subresultants
 
-/-! # `toPolyG (cSubresultantG …) = subresultant …` (L4b, the subresultant certification)
+/-! # `toPoly (cSubresultant …) = subresultant …` (L4b, the subresultant certification)
 
-The computable Sylvester-submatrix subresultant `cSubresultantG` computes Mathlib's abstract
-`DeepWiki.SymbolicIntegration.subresultant` under the `toPolyG` bridge. Built from the `toK`-determinant
+The computable Sylvester-submatrix subresultant `cSubresultant` computes Mathlib's abstract
+`DeepWiki.SymbolicIntegration.subresultant` under the `toPoly` bridge. Built from the `toK`-determinant
 homomorphism `toK_cDetG_eq_det` (Subresultant.lean) plus the index correspondence
 `cBSylvesterRows`/`cSubRowIdx`/`cSubColIdx` ↔ `bSylvester`/`subRow`/`subCol`. This is the last purely
 computational bridge of the root-free LRT log part. -/
@@ -55,11 +55,11 @@ theorem cSubColIdx_getD (n m j i : ℕ) (s : Fin (m + n - 2 * j)) :
 /-! ### The Sylvester-matrix entry correspondence -/
 
 /-- `cBSylvesterRows` reads as the abstract `bSylvester`. Entry `(RR, CC)` of the computable Sylvester
-matrix, read through `toK`, equals the abstract `bSylvester (toPolyG p) (toPolyG q) n m` entry. -/
+matrix, read through `toK`, equals the abstract `bSylvester (toPoly p) (toPoly q) n m` entry. -/
 theorem toK_cBSylvesterRows_getD (p q : CPoly α) (n m : ℕ) {RR CC : ℕ}
     (hR : RR < m + n) (hC : CC < m + n) :
     toK (((cBSylvesterRows p q n m).getD RR []).getD CC CField.zero)
-      = bSylvester (toPolyG p) (toPolyG q) n m ⟨RR, hR⟩ ⟨CC, hC⟩ := by
+      = bSylvester (toPoly p) (toPoly q) n m ⟨RR, hR⟩ ⟨CC, hC⟩ := by
   rw [cBSylvesterRows]
   simp only [bSylvester, Matrix.of_apply]
   by_cases hRm : RR < m
@@ -89,7 +89,7 @@ computable submatrix equals `(bSylvester …).submatrix (subRow …) (subCol …
 theorem matrixOfList_cSubmatrix (p q : CPoly α) (n m j i : ℕ) :
     matrixOfList ((cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)).map
         (fun row => row.map toK)) (m + n - 2 * j)
-      = (bSylvester (toPolyG p) (toPolyG q) n m).submatrix (subRow n m j) (subCol n m j i) := by
+      = (bSylvester (toPoly p) (toPoly q) n m).submatrix (subRow n m j) (subCol n m j i) := by
   ext r c
   have hr : (r : ℕ) < (cSubRowIdx n m j).length := by rw [cSubRowIdx_length]; exact r.isLt
   have hc : (c : ℕ) < (cSubColIdx n m j i).length := by rw [cSubColIdx_length]; exact c.isLt
@@ -102,12 +102,12 @@ theorem matrixOfList_cSubmatrix (p q : CPoly α) (n m j i : ℕ) :
     cSubRowIdx_getD n m j r, cSubColIdx_getD n m j i c,
     toK_cBSylvesterRows_getD p q n m (subRow n m j r).isLt (subCol n m j i c).isLt]
 
-/-- The subresultant certification. `toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p)
-(toPolyG q) n m j`: the computable Sylvester-submatrix subresultant computes Mathlib's abstract
+/-- The subresultant certification. `toPoly (cSubresultant p q n m j) = subresultant (toPoly p)
+(toPoly q) n m j`: the computable Sylvester-submatrix subresultant computes Mathlib's abstract
 subresultant. -/
 @[denote] theorem toPolyG_cSubresultantG (p q : CPoly α) (n m j : ℕ) :
-    toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p) (toPolyG q) n m j := by
-  rw [toPolyG_eq_sum_range, subresultant, cSubresultantG, List.length_map, List.length_range]
+    toPoly (cSubresultant p q n m j) = subresultant (toPoly p) (toPoly q) n m j := by
+  rw [toPolyG_eq_sum_range, subresultant, cSubresultant, List.length_map, List.length_range]
   apply Finset.sum_congr rfl
   intro i hi
   rw [Finset.mem_range] at hi

@@ -32,7 +32,7 @@ an `𝔽_p`-point (both coordinates `< p`), used to sort/compare point divisors 
 def ptKey (p : ℕ) (P : ZMod p × ZMod p) : ℕ := P.1.val * p + P.2.val
 
 /-- Canonical form of a point divisor `pdivCanon p D` — sort `D` by `ptKey` so two divisors with the
-same points-with-multiplicity become the *same* list (the analogue of `cnormG` / `mumfordNormEq`). Sorting
+same points-with-multiplicity become the *same* list (the analogue of `cnorm` / `mumfordNormEq`). Sorting
 (not set-dedup) preserves multiplicity. -/
 def pdivCanon (p : ℕ) (D : RedDiv p) : RedDiv p :=
   D.mergeSort (fun P Q => ptKey p P ≤ ptKey p Q)
@@ -56,8 +56,8 @@ def rootsWithMult (scan : List α) (poly : CPoly α) : List α :=
     let rec mult : ℕ → CPoly α → ℕ
       | 0, _ => 0
       | k + 1, q =>
-        if cisZeroG q then 0
-        else if CField.isZero (cevalG q r) then 1 + mult k (cdivWf q [CField.neg r, CField.one])
+        if cisZero q then 0
+        else if CField.isZero (ceval q r) then 1 + mult k (cdivWf q [CField.neg r, CField.one])
         else 0
     (List.replicate (mult (poly.length + 1) poly) r) ++ acc) []
 
@@ -75,7 +75,7 @@ def ptToMum {α : Type*} [CField α] (ρ : CPoly α) (g : ℕ) (pts : List (α �
 /-- Reduced Mumford pair → point list `mumToPts scan D`: the roots of `D.u` with multiplicity
 (`rootsWithMult` over `scan`) each paired with `y = D.v(root)`. -/
 def mumToPts {α : Type*} [CField α] (scan : List α) (D : MumfordDivisor α) : List (α × α) :=
-  (CPoly.rootsWithMult scan D.u).map (fun r => (r, cevalG D.v r))
+  (CPoly.rootsWithMult scan D.u).map (fun r => (r, ceval D.v r))
 
 /-! ## The group law: compose (`++`) then reduce (round-trip to Cantor), and `picOrder` -/
 

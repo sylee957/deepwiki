@@ -10,7 +10,7 @@ Solving `Dy + f·y = g` for `y` in a monomial extension — the engine of the ex
 integration algorithm. The **whole RDE pipeline** is now rendered as a **computable** solver over the
 monomial tower ℚ(x)[t]: weak normalizer + normal denominator (§6.1/§6.2), special denominator (§6.2),
 degree bound (§6.3), SPDE (§6.4), the non-cancellation case (§6.5) and the primitive + hyperexponential
-cancellation cases (§6.6), assembled into the full fuel-free `cRischDEG` and validated end-to-end on
+cancellation cases (§6.6), assembled into the full fuel-free `cRischDE` and validated end-to-end on
 Examples 6.5.1 / 6.4.1.
 
 **Computable-vs-abstract.** Each stage below is a computable function validated by `native_decide` on the
@@ -70,7 +70,7 @@ book items. -/
 def qConst6 (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element, with `den ≠ 0` discharged by `native_decide`. -/
-def qFrac6 (num den : List ℚ) (h : CPoly.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
+def qFrac6 (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 
 /-- The variable `x ∈ ℚ(x)` as `QFunNZG ℚ` (numerator `[0,1]`, denominator `[1]`). -/
@@ -79,34 +79,34 @@ def qX6 : QFunNZG ℚ := qFrac6 [0, 1] [1]
 /-- **Cleared Risch-DE identity check over the generic ℚ(x)[t]** (the `QFunNZG ℚ` mirror of the engine's
 `rdeClearedCheck`): `true` iff `y = ynum/yden` solves `Dy + (fnum/fden)·y = gnum/gden`, verified as the
 polynomial identity obtained by clearing all denominators (`Dy = (D(ynum)·yden − ynum·D(yden))/yden²`):
-`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²`, decided by `cisZeroG`
+`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²`, decided by `cisZero`
 of the cleared difference (`D = cmonomialDeriv Dt`). -/
 def rdeClearedCheckG6 (Dt fnum fden gnum gden ynum yden : CPoly (QFunNZG ℚ)) : Bool :=
   let Dyn := CPoly.cmonomialDeriv Dt ynum
   let Dyd := CPoly.cmonomialDeriv Dt yden
-  let lhs := CPoly.caddG
-    (CPoly.cmulG (CPoly.cmulG gden fden) (CPoly.csubG (CPoly.cmulG Dyn yden) (CPoly.cmulG ynum Dyd)))
-    (CPoly.cmulG (CPoly.cmulG (CPoly.cmulG gden fnum) ynum) yden)
-  let rhs := CPoly.cmulG (CPoly.cmulG gnum fden) (CPoly.cmulG yden yden)
-  CPoly.cisZeroG (CPoly.csubG lhs rhs)
+  let lhs := CPoly.cadd
+    (CPoly.cmul (CPoly.cmul gden fden) (CPoly.csub (CPoly.cmul Dyn yden) (CPoly.cmul ynum Dyd)))
+    (CPoly.cmul (CPoly.cmul (CPoly.cmul gden fnum) ynum) yden)
+  let rhs := CPoly.cmul (CPoly.cmul gnum fden) (CPoly.cmul yden yden)
+  CPoly.cisZero (CPoly.csub lhs rhs)
 
 /-! ## §6.1 The Normal Part of the Denominator — computable + validated -/
 
 /-- **Algorithm `WeakNormalizer`** (§6.1, p.183): the fuel-free computable
-`cWeakNormalizerG Dt fnum fden = q ∈ k[t]` (the generic engine at the generic ℚ(x) = `QFunNZG ℚ`)
+`cWeakNormalizer Dt fnum fden = q ∈ k[t]` (the generic engine at the generic ℚ(x) = `QFunNZG ℚ`)
 over the tower, returning `q` such that `f − Dq/q` is weakly normalized (via the residue resultant and
 its positive integer roots). Computable + `native_decide`-validated; abstract correctness deferred. -/
-noncomputable abbrev alg_6_1_weakNormalizer := cWeakNormalizerG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_1_weakNormalizer := cWeakNormalizer (α := QFunNZG ℚ)
 
 /-- **Algorithm `RdeNormalDenominator`** (§6.2 eq. 6.2 / Cor 6.1.1, p.185): the fuel-free computable
-`cRdeNormalDenominatorG Dt fnum fden gnum gden` (the generic engine at `QFunNZG ℚ`) over the tower,
+`cRdeNormalDenominator Dt fnum fden gnum gden` (the generic engine at `QFunNZG ℚ`) over the tower,
 returning `none` (no solution) or the reduction quadruplet `(a, b, c, h)` reducing `Dy + f·y = g` to the
 simple-part equation `a·Dq + b·q = c` with `q = y·h`. Computable + `native_decide`-validated; abstract
 correctness deferred. -/
-noncomputable abbrev alg_6_2_normalDenominator := cRdeNormalDenominatorG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_2_normalDenominator := cRdeNormalDenominator (α := QFunNZG ℚ)
 
 /-- **Example 6.1.2** (§6.1/§6.2, p.183/185/186): for `Dy + (t²+1)y = 1/t²` (`t = tan x`, `Dt = 1+t²`),
-`cWeakNormalizerG` returns `q = 1` (already weakly normalized) and `cRdeNormalDenominatorG` returns the
+`cWeakNormalizer` returns `q = 1` (already weakly normalized) and `cRdeNormalDenominator` returns the
 book's quadruplet `(a, b, c, h) = (t, (t−1)(t²+1), 1, t)`, pinned componentwise over the generic ℚ(x)[t]
 (`native_decide`). -/
 theorem ex_6_1_2 :
@@ -119,26 +119,26 @@ theorem ex_6_1_2 :
      let exB : CPoly (QFunNZG ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]  -- `(t−1)(t²+1)`
      let exC : CPoly (QFunNZG ℚ) := [qConst6 1]                                 -- `c = 1`
      let exH : CPoly (QFunNZG ℚ) := [qConst6 0, qConst6 1]                       -- `h = t`
-     CPoly.cisZeroG (CPoly.csubG (CPoly.cWeakNormalizerG Dt fnum fden) [CField.one])
-     ∧ (match CPoly.cRdeNormalDenominatorG Dt fnum fden gnum gden with
+     CPoly.cisZero (CPoly.csub (CPoly.cWeakNormalizer Dt fnum fden) [CField.one])
+     ∧ (match CPoly.cRdeNormalDenominator Dt fnum fden gnum gden with
         | some (a, b, c, h) =>
-            CPoly.cisZeroG (CPoly.csubG a exA)
-              && CPoly.cisZeroG (CPoly.csubG b exB)
-              && CPoly.cisZeroG (CPoly.csubG c exC)
-              && CPoly.cisZeroG (CPoly.csubG h exH)
+            CPoly.cisZero (CPoly.csub a exA)
+              && CPoly.cisZero (CPoly.csub b exB)
+              && CPoly.cisZero (CPoly.csub c exC)
+              && CPoly.cisZero (CPoly.csub h exH)
         | none => false) = true) := by native_decide
 
 /-! ## §6.2 The Special Part of the Denominator — computable + validated -/
 
 /-- **Algorithm `RdeSpecialDenominator`** (§6.2, the `RdeSpecialDenom{Exp,Tan}` boxes, p.190/192): the
-fuel-free computable `cRdeSpecialDenominatorG Dt a b c` (the generic engine at `QFunNZG ℚ`) over the tower,
+fuel-free computable `cRdeSpecialDenominator Dt a b c` (the generic engine at `QFunNZG ℚ`) over the tower,
 reducing the simple-part equation `a·Dq + b·q = c` to a polynomial equation over `k[t]` by clearing the
 special factor `p` (the substitution `q = h·pⁿ`). Computable + `native_decide`-validated; abstract
 correctness deferred. -/
-noncomputable abbrev alg_6_2_specialDenominator := cRdeSpecialDenominatorG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_2_specialDenominator := cRdeSpecialDenominator (α := QFunNZG ℚ)
 
 /-- **Example 6.2.2** (§6.2, the `RdeSpecialDenomTan` box, p.192): continuing Ex 6.1.2,
-`cRdeSpecialDenominatorG` on `(a, b, c) = (t, (t−1)(t²+1), 1)` (special irreducible `p = t²+1`,
+`cRdeSpecialDenominator` on `(a, b, c) = (t, (t−1)(t²+1), 1)` (special irreducible `p = t²+1`,
 `n_b = 1`, `n_c = 0`, `n = N = 0`) returns the *unchanged* `(t, (t−1)(t²+1), 1, 1)` over the generic
 ℚ(x)[t] (`native_decide`). -/
 theorem ex_6_2_2 :
@@ -146,63 +146,63 @@ theorem ex_6_2_2 :
      let exA : CPoly (QFunNZG ℚ) := [qConst6 0, qConst6 1]                       -- `a = t`
      let exB : CPoly (QFunNZG ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]  -- `(t−1)(t²+1)`
      let exC : CPoly (QFunNZG ℚ) := [qConst6 1]                                 -- `c = 1`
-     match CPoly.cRdeSpecialDenominatorG Dt exA exB exC with
+     match CPoly.cRdeSpecialDenominator Dt exA exB exC with
      | (abar, bbar, cbar, h) =>
-         CPoly.cisZeroG (CPoly.csubG abar exA)
-           && CPoly.cisZeroG (CPoly.csubG bbar exB)
-           && CPoly.cisZeroG (CPoly.csubG cbar exC)
-           && CPoly.cisZeroG (CPoly.csubG h [CField.one])) = true := by native_decide
+         CPoly.cisZero (CPoly.csub abar exA)
+           && CPoly.cisZero (CPoly.csub bbar exB)
+           && CPoly.cisZero (CPoly.csub cbar exC)
+           && CPoly.cisZero (CPoly.csub h [CField.one])) = true := by native_decide
 
 /-! ## §6.3 Degree Bounds — computable + validated -/
 
 /-- **Algorithm `RdeBoundDegree`** (§6.3, the `RdeBoundDegree{Base,Prim,Exp,NonLinear}` boxes,
-p.198–201): the computable `cRdeBoundDegreeG Dt a b c = n ∈ ℕ` (the generic engine at `QFunNZG ℚ`)
+p.198–201): the computable `cRdeBoundDegree Dt a b c = n ∈ ℕ` (the generic engine at `QFunNZG ℚ`)
 over the tower, an explicit upper bound on `deg_t(q)` for any polynomial solution `q` of
 `a·Dq + b·q = c`, case-split by `δ = deg(Dt)`. Computable + `native_decide`-validated; abstract
 correctness deferred. -/
-noncomputable abbrev alg_6_3_boundDegree := cRdeBoundDegreeG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_3_boundDegree := cRdeBoundDegree (α := QFunNZG ℚ)
 
 /-- **Example 6.3.4** (§6.3, the `RdeBoundDegreeNonLinear` box, p.202): continuing Ex 6.1.2/6.2.2,
-`cRdeBoundDegreeG` on `(a, b, c) = (t, (t−1)(t²+1), 1)` with `δ = 2` returns the degree bound `0`
+`cRdeBoundDegree` on `(a, b, c) = (t, (t−1)(t²+1), 1)` with `δ = 2` returns the degree bound `0`
 (any polynomial solution lies in ℚ(x)) over the generic ℚ(x)[t], `native_decide`. -/
 theorem ex_6_3_4 :
     (let Dt : CPoly (QFunNZG ℚ) := [qConst6 1, qConst6 0, qConst6 1]
      let exA : CPoly (QFunNZG ℚ) := [qConst6 0, qConst6 1]
      let exB : CPoly (QFunNZG ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]
      let exC : CPoly (QFunNZG ℚ) := [qConst6 1]
-     CPoly.cRdeBoundDegreeG Dt exA exB exC) = 0 := by native_decide
+     CPoly.cRdeBoundDegree Dt exA exB exC) = 0 := by native_decide
 
 /-! ## §6.4 The SPDE Algorithm — computable -/
 
 /-- **Algorithm `SPDE`** (§6.4, Rothstein's `SPDE(a, b, c, D, n)` box, p.203): the fuel-free computable
-`cSPDEG Dt a b c n` (the generic engine at `QFunNZG ℚ`) over the tower — the recursive
+`cSPDE Dt a b c n` (the generic engine at `QFunNZG ℚ`) over the tower — the recursive
 `gcd(a, b)`-peeling reduction of the degree-bounded `a·Dq + b·q = c` to one with `a = 1`. Returns
 `none` ("no solution of degree ≤ n") or `(b̄, c̄, m, α, β)`. Computable (exercised through the
 full-solver no-solution run `ex_6_4_1`); abstract correctness (Thm 6.4.1) deferred. -/
-noncomputable abbrev alg_6_4_spde := cSPDEG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_4_spde := cSPDE (α := QFunNZG ℚ)
 
 /-! ## §6.5 The Non-Cancellation Cases — computable + validated -/
 
 /-- **Algorithm `PolyRischDENoCancel`** (§6.5, the `PolyRischDENoCancel1(b, c, D, n)` box, p.208): the
-fuel-free computable `cPolyRischDENoCancelG Dt b c n` (the generic engine at `QFunNZG ℚ`) over the tower — the
+fuel-free computable `cPolyRischDENoCancel Dt b c n` (the generic engine at `QFunNZG ℚ`) over the tower — the
 non-cancellation case solving `Dq + b·q = c` degree-by-degree from the top down
 (`lc(c) = lc(b)·lc(q)`). Returns `Option (CPoly (QFunNZG ℚ))`. Computable +
 `native_decide`-validated end-to-end; abstract correctness deferred. -/
-noncomputable abbrev alg_6_5_polyRischDENoCancel := cPolyRischDENoCancelG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_5_polyRischDENoCancel := cPolyRischDENoCancel (α := QFunNZG ℚ)
 
-/-- **Algorithm `PolyRischDE`** (§6.5/§6.6 dispatcher): the fuel-free computable `cPolyRischDEG Dt b c n`
+/-- **Algorithm `PolyRischDE`** (§6.5/§6.6 dispatcher): the fuel-free computable `cPolyRischDE Dt b c n`
 (the generic engine at `QFunNZG ℚ`) routing `Dq + b·q = c` to the non-cancellation solver or the
 primitive/hyperexponential cancellation solvers by monomial type and `deg(b)` (Lemma 6.5.1). -/
-noncomputable abbrev alg_6_5_polyRischDE := cPolyRischDEG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_5_polyRischDE := cPolyRischDE (α := QFunNZG ℚ)
 
-/-- **The full Risch DE solver**: the fuel-free computable `cRischDEG Dt fnum fden gnum gden` (the
+/-- **The full Risch DE solver**: the fuel-free computable `cRischDE Dt fnum fden gnum gden` (the
 canonical generic engine, here at the generic ℚ(x) = `QFunNZG ℚ`) over the tower, chaining normal
 denominator (§6.2) → special denominator (§6.2) → degree bound (§6.3) → SPDE (§6.4) → PolyRischDE
 (§6.5/§6.6), reconstructing `y` solving `Dy + f·y = g`, or `none`. The generic mirror has its own
 cleared-identity correctness layer; validated end-to-end on Ex 6.5.1 / 6.4.1. -/
-noncomputable abbrev alg_6_rischDE := cRischDEG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_rischDE := cRischDE (α := QFunNZG ℚ)
 
-/-- **Example 6.5.1** (§6.5, p.208): the full `cRischDEG` solves
+/-- **Example 6.5.1** (§6.5, p.208): the full `cRischDE` solves
 `Dy + (t²+1)y = t³+(x+1)t²+t+(x+2)` (`t = tan x`) end-to-end, returning `y = t + x`, verified to
 *actually solve* the equation by the cleared polynomial identity over the generic ℚ(x)[t]
 (`native_decide`). -/
@@ -213,11 +213,11 @@ theorem ex_6_5_1 :
      -- `g = t³ + (x+1)t² + t + (x+2)` (low→high in `t`)
      let gnum : CPoly (QFunNZG ℚ) :=
        [CField.add qX6 (qConst6 2), qConst6 1, CField.add qX6 (qConst6 1), qConst6 1]
-     match CPoly.cRischDEG Dt fnum fden gnum fden with
+     match CPoly.cRischDE Dt fnum fden gnum fden with
      | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum fden ynum yden
      | none => false) = true := by native_decide
 
-/-- **Example 6.4.1** (§6.4, p.204): the full `cRischDEG` on `Dy + (t²+1)y = 1/t²` (`t = tan x`) returns
+/-- **Example 6.4.1** (§6.4, p.204): the full `cRischDE` on `Dy + (t²+1)y = 1/t²` (`t = tan x`) returns
 `none` — `SPDE` reaches `n = −1 < 0` with `c ≠ 0`, so `∫ e^{tan x}/tan²x dx` is not elementary over the
 generic ℚ(x)[t] (`native_decide`). -/
 theorem ex_6_4_1 :
@@ -226,24 +226,24 @@ theorem ex_6_4_1 :
      let fden : CPoly (QFunNZG ℚ) := [qConst6 1]
      let gnum : CPoly (QFunNZG ℚ) := [qConst6 1]
      let gden : CPoly (QFunNZG ℚ) := [qConst6 0, qConst6 0, qConst6 1]            -- `1/t²`
-     CPoly.cRischDEG Dt fnum fden gnum gden).isNone = true := by native_decide
+     CPoly.cRischDE Dt fnum fden gnum gden).isNone = true := by native_decide
 
 /-! ## §6.6 The Cancellation Cases — primitive + hyperexponential computable + validated -/
 
 /-- **Algorithm `PolyRischDECancelPrim`** (§6.6, p.212): the fuel-free computable
-`cPolyRischDECancelPrimG Dt b c n` (the generic engine at `QFunNZG ℚ`) over the tower — the
-primitive cancellation case (`Dt ∈ k`, `b ∈ k*`, where `cPolyRischDENoCancelG` cannot proceed),
+`cPolyRischDECancelPrim Dt b c n` (the generic engine at `QFunNZG ℚ`) over the tower — the
+primitive cancellation case (`Dt ∈ k`, `b ∈ k*`, where `cPolyRischDENoCancel` cannot proceed),
 recursing degree-by-degree into the eq. 6.23 base Risch DE over `k = ℚ(x)` after the §5.12 `b = Dz/z`
 test. Returns `Option (CPoly (QFunNZG ℚ))`. Computable + `native_decide`-validated; abstract
 correctness deferred. -/
-noncomputable abbrev alg_6_6_cancelPrim := cPolyRischDECancelPrimG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_6_cancelPrim := cPolyRischDECancelPrim (α := QFunNZG ℚ)
 
 /-- **Algorithm `PolyRischDECancelExp`** (§6.6, p.213): the fuel-free computable
-`cPolyRischDECancelExpG Dt b c n` (the generic engine at `QFunNZG ℚ`) over the tower — the
+`cPolyRischDECancelExp Dt b c n` (the generic engine at `QFunNZG ℚ`) over the tower — the
 hyperexponential cancellation case (`Dt/t = η ∈ k`, `δ = 1`, `b ∈ k*`), recursing degree-by-degree into
 the eq. 6.24 base RDE `RischDE(b + m·η, lc(c))` over ℚ(x). Returns `Option (CPoly (QFunNZG ℚ))`.
 Computable + `native_decide`-validated; abstract correctness deferred. -/
-noncomputable abbrev alg_6_6_cancelExp := cPolyRischDECancelExpG (α := QFunNZG ℚ)
+noncomputable abbrev alg_6_6_cancelExp := cPolyRischDECancelExp (α := QFunNZG ℚ)
 
 /-- **The base Risch DE over ℚ(x)** (§6.6 eq. 6.23): the generic tower base solve
 `CRischField.crischDESolve (α := QFunNZG ℚ) f g = Option (QFunNZG ℚ)` solving `Ds + f·s = g` over
@@ -259,41 +259,41 @@ noncomputable abbrev alg_6_6_rischDEBase := @CRischField.crischDESolve (QFunNZG 
 at this level. Computable + `native_decide`-validated (`ex_6_6_rationalRDE`). -/
 noncomputable abbrev alg_6_6_rationalRDE := @CRischField.crischDESolve (QFunNZG ℚ) _ _
 
-/-- **Example (§6.6, p.212)**, primitive cancellation: `cPolyRischDECancelPrimG` on
+/-- **Example (§6.6, p.212)**, primitive cancellation: `cPolyRischDECancelPrim` on
 `Dq + 1·q = log(x) + 1/x` (`t = log x`, `b = 1 ∈ ℚ*`) solves to `q = log(x) = t`, verified to *actually
 solve* `Dq + b·q = c` by the cleared difference over the generic ℚ(x)[t] (`native_decide`); the
-dispatcher `cPolyRischDEG` routes the same input to the cancellation solver. -/
+dispatcher `cPolyRischDE` routes the same input to the cancellation solver. -/
 theorem ex_6_6_cancelPrim :
     (let Dt : CPoly (QFunNZG ℚ) := [qFrac6 [1] [0, 1]]                          -- `Dt = 1/x`
      let b : CPoly (QFunNZG ℚ) := [qConst6 1]                                   -- `b = 1`
      let c : CPoly (QFunNZG ℚ) := [qFrac6 [1] [0, 1], qConst6 1]                 -- `c = t + 1/x`
-     (match CPoly.cPolyRischDECancelPrimG Dt b c 5 with
+     (match CPoly.cPolyRischDECancelPrim Dt b c 5 with
        | some q =>
-           CPoly.cisZeroG (CPoly.csubG
-             (CPoly.caddG (CPoly.cmonomialDeriv Dt q) (CPoly.cmulG b q)) c)
+           CPoly.cisZero (CPoly.csub
+             (CPoly.cadd (CPoly.cmonomialDeriv Dt q) (CPoly.cmul b q)) c)
        | none => false)
-     && (match CPoly.cPolyRischDEG Dt b c 5, CPoly.cPolyRischDECancelPrimG Dt b c 5 with
-         | some q1, some q2 => CPoly.cisZeroG (CPoly.csubG q1 q2)
+     && (match CPoly.cPolyRischDE Dt b c 5, CPoly.cPolyRischDECancelPrim Dt b c 5 with
+         | some q1, some q2 => CPoly.cisZero (CPoly.csub q1 q2)
          | _, _ => false)) = true := by native_decide
 
-/-- **Example (§6.6, p.213)**, hyperexponential cancellation: `cPolyRischDECancelExpG` on
+/-- **Example (§6.6, p.213)**, hyperexponential cancellation: `cPolyRischDECancelExp` on
 `Dq + (1/x)·q = (2+x)·exp(x)` (`t = exp x`, `η = 1`, `b = 1/x`) solves to `q = x·exp(x) = x·t`, verified
 to *actually solve* `Dq + b·q = c` by the cleared difference over the generic ℚ(x)[t] (`native_decide`);
-the dispatcher `cPolyRischDEG` routes the same input to the hyperexponential cancellation solver. -/
+the dispatcher `cPolyRischDE` routes the same input to the hyperexponential cancellation solver. -/
 theorem ex_6_6_cancelExp :
     (let Dt : CPoly (QFunNZG ℚ) := [qConst6 0, qConst6 1]                        -- `Dt = t`
      let b : CPoly (QFunNZG ℚ) := [qFrac6 [1] [0, 1]]                           -- `b = 1/x`
      let c : CPoly (QFunNZG ℚ) := [qConst6 0, qFrac6 [2, 1] [1]]                 -- `c = (2+x)t`
-     (match CPoly.cPolyRischDECancelExpG Dt b c 5 with
+     (match CPoly.cPolyRischDECancelExp Dt b c 5 with
        | some q =>
-           CPoly.cisZeroG (CPoly.csubG
-             (CPoly.caddG (CPoly.cmonomialDeriv Dt q) (CPoly.cmulG b q)) c)
+           CPoly.cisZero (CPoly.csub
+             (CPoly.cadd (CPoly.cmonomialDeriv Dt q) (CPoly.cmul b q)) c)
        | none => false)
-     && (match CPoly.cPolyRischDEG Dt b c 5, CPoly.cPolyRischDECancelExpG Dt b c 5 with
-         | some q1, some q2 => CPoly.cisZeroG (CPoly.csubG q1 q2)
+     && (match CPoly.cPolyRischDE Dt b c 5, CPoly.cPolyRischDECancelExp Dt b c 5 with
+         | some q1, some q2 => CPoly.cisZero (CPoly.csub q1 q2)
          | _, _ => false)) = true := by native_decide
 
-/-- **Example (§6.6 eq. 6.23)**, general non-constant base recursion: `cRischDEG` on
+/-- **Example (§6.6 eq. 6.23)**, general non-constant base recursion: `cRischDE` on
 `Dy + (1/x)y = 2·log(x) + 1` (`t = log x`) drives the primitive cancellation case through the
 non-constant base RDE `RischDE(1/x, 2) = x` over ℚ(x) to `y = x·log(x)`, verified by the cleared
 identity over the generic ℚ(x)[t] (`native_decide`). The eq. 6.23 base solve target — `crischDESolve`
@@ -304,7 +304,7 @@ theorem ex_6_6_baseRecursion :
      let fden : CPoly (QFunNZG ℚ) := [qConst6 1]
      let gnum : CPoly (QFunNZG ℚ) := [qConst6 1, qConst6 2]                      -- `g = 2t + 1`
      let gden : CPoly (QFunNZG ℚ) := [qConst6 1]
-     (match CPoly.cRischDEG Dt fnum fden gnum gden with
+     (match CPoly.cRischDE Dt fnum fden gnum gden with
        | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum gden ynum yden
        | none => false)
      && (match CRischField.crischDESolve (qFrac6 [1] [0, 1]) (qConst6 2) with

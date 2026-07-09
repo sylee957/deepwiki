@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.HermiteCorrectness
 /-! # Interface: `LawfulSquarefreeDecomposition`
 
 The squarefree-decomposition stage of the Risch reduced case, stated purely against the polynomial
-denotation `toPolyG` — no concrete algorithm. A list `decomp = [v₁, …, vₘ]` (the multiplicity-`i` factor at
+denotation `toPoly` — no concrete algorithm. A list `decomp = [v₁, …, vₘ]` (the multiplicity-`i` factor at
 index `i-1`) is a *lawful* squarefree decomposition of `d` when its factors denote a monic, squarefree,
 pairwise-coprime family whose powered product `∏ᵢ vᵢ^i` reconstructs `d` up to associates. Algorithmic
 realizations live with the squarefree decomposition engines. -/
@@ -41,18 +41,18 @@ open CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPolyG`, the factors are
-monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPolyG decomp) = ∏ᵢ vᵢ^i`
+/-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
+monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
 structure LawfulSquarefreeDecomposition (d : CPoly α) (decomp : List (CPoly α)) : Prop where
   /-- The powered product `∏ᵢ vᵢ^i` reconstructs `d` up to associates. -/
-  reconstruct : Associated (toPolyG d) (prodPow 1 (decomp.map toPolyG))
+  reconstruct : Associated (toPoly d) (prodPow 1 (decomp.map toPoly))
   /-- Each factor is monic. -/
-  monic : ∀ p ∈ decomp, (toPolyG p).Monic
+  monic : ∀ p ∈ decomp, (toPoly p).Monic
   /-- Each factor is squarefree. -/
-  squarefree : ∀ p ∈ decomp, Squarefree (toPolyG p)
+  squarefree : ∀ p ∈ decomp, Squarefree (toPoly p)
   /-- Distinct factors are relatively prime. -/
-  coprime : decomp.Pairwise (fun p q => IsRelPrime (toPolyG p) (toPolyG q))
+  coprime : decomp.Pairwise (fun p q => IsRelPrime (toPoly p) (toPoly q))
 
 namespace LawfulSquarefreeDecomposition
 
@@ -60,7 +60,7 @@ namespace LawfulSquarefreeDecomposition
 consumes abstractly (not from the concrete Yun loop). -/
 theorem prod_squarefree {d : CPoly α} {decomp : List (CPoly α)}
     (h : LawfulSquarefreeDecomposition d decomp) :
-    Squarefree ((decomp.map toPolyG).prod) := by
+    Squarefree ((decomp.map toPoly).prod) := by
   refine squarefree_list_prod _ ?_ ?_
   · rw [List.pairwise_map]; exact h.coprime
   · intro p hp; rw [List.mem_map] at hp; obtain ⟨q, hq, rfl⟩ := hp; exact h.squarefree q hq
@@ -68,7 +68,7 @@ theorem prod_squarefree {d : CPoly α} {decomp : List (CPoly α)}
 /-- The radical `∏ᵢ vᵢ` is monic. -/
 theorem prod_monic {d : CPoly α} {decomp : List (CPoly α)}
     (h : LawfulSquarefreeDecomposition d decomp) :
-    ((decomp.map toPolyG).prod).Monic := by
+    ((decomp.map toPoly).prod).Monic := by
   refine monic_list_prod _ ?_
   intro p hp; rw [List.mem_map] at hp; obtain ⟨q, hq, rfl⟩ := hp; exact h.monic q hq
 

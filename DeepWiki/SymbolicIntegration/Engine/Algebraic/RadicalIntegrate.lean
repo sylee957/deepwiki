@@ -34,8 +34,8 @@ def radReduceCase1Iterate (der : CPoly α → CPoly α) (V Df f g : CPoly α) (k
       let Bder := der B
       let D := radCase1Residual k V Df f g B C Bder
       -- contribution `B·f/(V^{k−1}y)` over the common denominator `V^{k0−1}`: `B·f·V^{k0−k}`
-      let contrib := cmulG (cmulG B f) (cpowG V (k0 - k))
-      radReduceCase1Iterate der V Df f g k0 fuel (k - 1) (cnegG D) (caddG vNum contrib)
+      let contrib := cmul (cmul B f) (cpow V (k0 - k))
+      radReduceCase1Iterate der V Df f g k0 fuel (k - 1) (cneg D) (cadd vNum contrib)
 
 /-- The simple-radical rational-part driver: `∫ C/(V^{k0}y)` over `yⁿ = f` with `V` squarefree coprime
 to `f`. Computes `Df = V'` and runs `radReduceCase1Iterate` from `k0` down to `1`, returning the leftover
@@ -60,42 +60,42 @@ def sqrtxF : CPoly ℚ := [0, 1]
 def sqrtxV : CPoly ℚ := [-1, 1]
 
 /-- Driver example Case-1 helper `g = ((n−1)/n)·f' = (1/2)·1 = 1/2` (`n = 2`, `(f/y)' = g/y`), `[1/2]`. -/
-def sqrtxG : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG sqrtxF)
+def sqrtxG : CPoly ℚ := cscale (1/2 : ℚ) (cderiv sqrtxF)
 
 /-- Driver example numerator `C₀ = 1` (integrand `1/((x−1)³√x)`), `[1]`. -/
 def sqrtxC : CPoly ℚ := [1]
 
 /-- The driver run on `∫ 1/((x−1)³√x)`: two Hermite steps, returning `(Crem, vNum)` with `vNum` over
 `V² = (x−1)²`. -/
-def sqrtxRun : CPoly ℚ × CPoly ℚ := radIntegrateCase1 cderivG sqrtxV sqrtxF sqrtxG 3 sqrtxC
+def sqrtxRun : CPoly ℚ × CPoly ℚ := radIntegrateCase1 cderiv sqrtxV sqrtxF sqrtxG 3 sqrtxC
 
 /-- The accumulated rational-part numerator is `vNum = (3/4)x² − (5/4)x` over `V² = (x−1)²`. -/
 theorem sqrtxRun_vNum_eq :
-    cisZeroG (csubG sqrtxRun.2 [(0 : ℚ), -5/4, 3/4]) = true := by native_decide
+    cisZero (csub sqrtxRun.2 [(0 : ℚ), -5/4, 3/4]) = true := by native_decide
 
 /-- The leftover `k = 1` residual is `Crem = 3/8` (the term `∫ (3/8)/((x−1)√x)`). -/
 theorem sqrtxRun_remainder_eq :
-    cisZeroG (csubG sqrtxRun.1 [(3/8 : ℚ)]) = true := by native_decide
+    cisZero (csub sqrtxRun.1 [(3/8 : ℚ)]) = true := by native_decide
 
 /-- The radicand `f = x` lifted to `ℚ(x)` (`QFunNZG ℚ`), the Picture-B radicand for `radDeriv 2`. -/
 def sqrtxFqx : QFunNZG ℚ := qxOfNum [0, 1]
 
 /-- The common-denominator power `V² = (x−1)²` as a `ℚ[x]` polynomial (the denominator of `vNum`). -/
-def sqrtxV2 : CPoly ℚ := cpowG sqrtxV 2
+def sqrtxV2 : CPoly ℚ := cpow sqrtxV 2
 
 /-- The initial denominator power `V³ = (x−1)³` as a `ℚ[x]` polynomial (the integrand's denominator). -/
-def sqrtxV3 : CPoly ℚ := cpowG sqrtxV 3
+def sqrtxV3 : CPoly ℚ := cpow sqrtxV 3
 
 /-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (QFunNZG ℚ)` as `[0, vNum/(V²·f)]`. -/
 def sqrtxVlift : RadElem (QFunNZG ℚ) :=
-  [CField.zero, CField.div (qxOfNum sqrtxRun.2) (qxOfNum (cmulG sqrtxV2 sqrtxF))]
+  [CField.zero, CField.div (qxOfNum sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
 
 /-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (QFunNZG ℚ)` as
 `[0, C₀/(V³·f) − Crem/(V·f)]`. -/
 def sqrtxRatLift : RadElem (QFunNZG ℚ) :=
   [CField.zero,
-    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmulG sqrtxV3 sqrtxF)))
-      (CField.div (qxOfNum sqrtxRun.1) (qxOfNum (cmulG sqrtxV sqrtxF)))]
+    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmul sqrtxV3 sqrtxF)))
+      (CField.div (qxOfNum sqrtxRun.1) (qxOfNum (cmul sqrtxV sqrtxF)))]
 
 /-- The driver integrates `∫ 1/((x−1)³√x)`: `radDeriv 2 x (lift v) = lift(C₀/(V³√x) − Crem/(V√x))` over
 `ℚ(x)`, checked by `radIsZero` of the difference. -/
@@ -114,14 +114,14 @@ def cubeF : CPoly ℚ := [1, 0, 0, 1]
 def cubeV : CPoly ℚ := [-1, 1]
 
 /-- Headline-radicand Case-1 helper `g = ((n−1)/n)·f' = (1/2)·3x² = (3/2)x²` (`n = 2`, `(f/y)' = g/y`). -/
-def cubeG : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG cubeF)
+def cube : CPoly ℚ := cscale (1/2 : ℚ) (cderiv cubeF)
 
 /-- Headline-radicand numerator `C₀ = 1` (integrand `1/((x−1)³√(x³+1))`), `[1]`. -/
 def cubeC : CPoly ℚ := [1]
 
 /-- The driver run on `∫ 1/((x−1)³√(x³+1))`: two Hermite steps, returning `(Crem, vNum)` with `vNum`
 over `V² = (x−1)²`. -/
-def cubeRun : CPoly ℚ × CPoly ℚ := radIntegrateCase1 cderivG cubeV cubeF cubeG 3 cubeC
+def cubeRun : CPoly ℚ × CPoly ℚ := radIntegrateCase1 cderiv cubeV cubeF cube 3 cubeC
 
 /-- The headline radicand `f = x³ + 1` lifted to `ℚ(x)` (`QFunNZG ℚ`), the Picture-B radicand. -/
 def cubeFqx : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]
@@ -129,14 +129,14 @@ def cubeFqx : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]
 /-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (QFunNZG ℚ)` — the pure-`y` element
 `[0, vNum/(V²·f)]` over `ℚ(x)`. -/
 def cubeVlift : RadElem (QFunNZG ℚ) :=
-  [CField.zero, CField.div (qxOfNum cubeRun.2) (qxOfNum (cmulG (cpowG cubeV 2) cubeF))]
+  [CField.zero, CField.div (qxOfNum cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
 
 /-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (QFunNZG ℚ)` — the pure-`y`
 element `[0, C₀/(V³·f) − Crem/(V·f)]` over `ℚ(x)`. -/
 def cubeRatLift : RadElem (QFunNZG ℚ) :=
   [CField.zero,
-    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmulG (cpowG cubeV 3) cubeF)))
-      (CField.div (qxOfNum cubeRun.1) (qxOfNum (cmulG cubeV cubeF)))]
+    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmul (cpow cubeV 3) cubeF)))
+      (CField.div (qxOfNum cubeRun.1) (qxOfNum (cmul cubeV cubeF)))]
 
 /-- The driver integrates `∫ 1/((x−1)³√(x³+1))` on the elliptic curve `y² = x³ + 1`:
 `radDeriv 2 (x³+1) (lift v) = lift(C₀/(V³√(x³+1)) − Crem/(V√(x³+1)))`, checked by `radIsZero`. -/

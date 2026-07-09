@@ -20,15 +20,15 @@ def qnumCoeffG (c : QFunNZG β) : CPoly β := c.1.1
 /-- The denominator `CPoly β` of a `QFunNZG β` coefficient. -/
 def qdenCoeffG (c : QFunNZG β) : CPoly β := c.1.2
 
-/-- Clear denominators `cclearDenomsG p ∈ GBPoly β`: multiply `p` over `α = QFunNZG β` by the product of
+/-- Clear denominators `cclearDenoms p ∈ GBPoly β`: multiply `p` over `α = QFunNZG β` by the product of
 its coefficient denominators, so coefficient `i` becomes `numᵢ · ∏_{j≠i} denⱼ ∈ CPoly β`. -/
-def cclearDenomsG (p : CPoly (QFunNZG β)) : GBPoly β :=
+def cclearDenoms (p : CPoly (QFunNZG β)) : GBPoly β :=
   let cs : List (QFunNZG β) := p
   let dens : List (CPoly β) := cs.map qdenCoeffG
   cs.zipIdx.map (fun (ci, i) =>
     let prodOthers := (dens.zipIdx.filter (fun (_, j) => j ≠ i)).foldl
-      (fun acc (d, _) => CPoly.cmulG acc d) [CField.one]
-    CPoly.cmulG (qnumCoeffG ci) prodOthers)
+      (fun acc (d, _) => CPoly.cmul acc d) [CField.one]
+    CPoly.cmul (qnumCoeffG ci) prodOthers)
 
 /-- Lift back `liftGBPolyG p ∈ CPoly (QFunNZG β)`: read each `CPoly β` coefficient `c` as the fraction
 `c/1`. Inverse of clearing denominators. -/

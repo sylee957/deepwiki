@@ -141,7 +141,7 @@ def radLogResG1 : CPoly ℚ := [1]
 def radLogResR : CPoly ℚ := cAlgResidueResultant radLogResD radLogResRho radLogResG0 radLogResG1
 
 -- Sanity print: `R(Z) = 16·Z⁴(Z² − 1) = −16·Z⁴ + 16·Z⁶` (low→high in `Z`).
-#eval (cnormG radLogResR : List ℚ)
+#eval (cnorm radLogResR : List ℚ)
 
 /-- The finite-pole residues are `±1`: `cAlgResidueResultant` returns `R(Z) = 16·Z⁴(Z² − 1)`, so
 `cIsResidue R (±1) = true` and `cIsResidue R 0 = true`. -/
@@ -174,7 +174,7 @@ variable {α : Type*} [CField α]
 /-- Heuristic log argument for `∫ dx/√(x² + bx + c)`: `radQuadraticLogArg b = [b/2, 1]`, the element
 `u = x + b/2 + y` of `α[y]/(y² − (x² + bx + c))`. -/
 def radQuadraticLogArg (b : α) : RadElem α :=
-  [CField.div b (CPoly.cnatCastG 2), CField.one]
+  [CField.div b (CPoly.cnatCast 2), CField.one]
 
 end RadElem
 

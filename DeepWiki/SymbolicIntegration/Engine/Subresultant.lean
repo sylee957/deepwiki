@@ -4,11 +4,11 @@ import DeepWiki.ComputableAlgebra.ListDet
 
 /-! # Computable determinant + subresultant (L1 of the computable-LRT build)
 
-`cDetGn` is a generic `[CField α]` cofactor-expansion determinant on a row-list matrix; `cSubresultantG`
+`cDetGn` is a generic `[CField α]` cofactor-expansion determinant on a row-list matrix; `cSubresultant`
 builds the subresultant of two `CPoly α` polynomials as the Sylvester-submatrix determinant with one
 polynomial column (`Σ_i (scalar cofactor det)·tⁱ`), mirroring the abstract
 `DeepWiki.SymbolicIntegration.subresultant`. Foundation for the symbolic (root-free) LRT log part — see
-`docs/computable-lrt.md`. Validated by `native_decide`; abstract `toPolyG` correctness layered later. -/
+`docs/computable-lrt.md`. Validated by `native_decide`; abstract `toPoly` correctness layered later. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -30,14 +30,14 @@ def cDetGn : ℕ → List (List α) → α
       if j % 2 = 0 then term else CField.neg term)).foldl CField.add CField.zero
 
 /-- Determinant of a square row-list matrix (`cDetGn` at its own row-count). -/
-def cDetG (M : List (List α)) : α := cDetGn M.length M
+def cDet (M : List (List α)) : α := cDetGn M.length M
 
 /-- The Sylvester matrix of `p` (degree-`< n` slots) and `q` (degree-`< m` slots) as an `(m+n)×(m+n)`
 row-list matrix: `m` shifted rows of `p`'s coefficients then `n` shifted rows of `q`'s (coefficients low to
 high within a row, padded with zeros). Used for the resultant/subresultant. -/
 def cSylvesterRows (p q : CPoly α) (n m : ℕ) : List (List α) :=
-  let pc : List α := (cnormG p)
-  let qc : List α := (cnormG q)
+  let pc : List α := (cnorm p)
+  let qc : List α := (cnorm q)
   let width := m + n
   let shiftRow (coeffs : List α) (k : ℕ) : List α :=
     (List.replicate k CField.zero ++ coeffs ++ List.replicate width CField.zero).take width
@@ -47,8 +47,8 @@ def cSylvesterRows (p q : CPoly α) (n m : ℕ) : List (List α) :=
 `n` `B`-rows, entry `(i,l) = A.coeff(n+i−l)` (`i≤l≤i+n`) resp. `B.coeff(i−l)` (`i−m≤l≤i`), coefficients
 high-to-low. -/
 def cBSylvesterRows (p q : CPoly α) (n m : ℕ) : List (List α) :=
-  let pc : List α := cnormG p
-  let qc : List α := cnormG q
+  let pc : List α := cnorm p
+  let qc : List α := cnorm q
   let width := m + n
   let arow (i : ℕ) : List α := (List.range width).map (fun l =>
     if i ≤ l ∧ l ≤ i + n then pc.getD (n + i - l) CField.zero else CField.zero)
@@ -71,23 +71,23 @@ def cSubmatrix (M : List (List α)) (rows cols : List ℕ) : List (List α) :=
 /-- **The `j`-th subresultant polynomial** `Sⱼ(p,q) = Σ_{i=0}^{j} det(ⱼSᵢ)·tⁱ` (coefficients low-to-high),
 mirroring `DeepWiki.SymbolicIntegration.subresultant p q n m j`. The symbolic (root-free) LRT log arguments
 are these. -/
-def cSubresultantG (p q : CPoly α) (n m j : ℕ) : CPoly α :=
+def cSubresultant (p q : CPoly α) (n m j : ℕ) : CPoly α :=
   (List.range (j + 1)).map (fun i =>
-    cDetG (cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)))
+    cDet (cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)))
 
 /-- **The parametric subresultant `Sⱼ(z,t)`** of `Dstar` and `A − z·Dd` — the symbolic RT log argument, a
 polynomial in `t` whose coefficients are polynomials in the residue `z`, **computed without roots** by
-interpolation in `z` (`cSubresultantG` at `z = 0,1,…,n+m` per `t`-coefficient, then `cinterpolateG`). Output:
+interpolation in `z` (`cSubresultant` at `z = 0,1,…,n+m` per `t`-coefficient, then `cinterpolate`). Output:
 `List (CPoly α)`, the `z`-polynomial coefficient of each `tᵏ` (`k = 0..j`). -/
 def cSubresultantParam (Dstar A Dd : CPoly α) (n m j : ℕ) : List (CPoly α) :=
   let N := n + m + 1
   (List.range (j + 1)).map (fun k =>
-    cinterpolateG ((List.range N).map (fun jj =>
-      let c := cnatCastG jj
-      (c, ((cSubresultantG Dstar (csubG A (cscaleG c Dd)) n m j : CPoly α) : List α).getD k
+    cinterpolate ((List.range N).map (fun jj =>
+      let c := cnatCast jj
+      (c, ((cSubresultant Dstar (csub A (cscale c Dd)) n m j : CPoly α) : List α).getD k
         CField.zero))))
 
-/-! ### `toK`-determinant homomorphism (L4b): certifying `cDetG` against `Matrix.det` -/
+/-! ### `toK`-determinant homomorphism (L4b): certifying `cDet` against `Matrix.det` -/
 
 section Spec
 
@@ -122,17 +122,17 @@ computable cofactor determinant maps to the generic-`CommRing` determinant over 
       · simp only [if_pos hpar, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
       · simp only [if_neg hpar, CFieldSpec.toK_neg, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
 
-/-- `toK (cDetG M) = listDetn M.length (M.map (map toK))`. -/
+/-- `toK (cDet M) = listDetn M.length (M.map (map toK))`. -/
 @[denote] theorem toK_cDetG (M : List (List α)) :
-    toK (cDetG M) = listDetn M.length (M.map (fun r => r.map toK)) := by
-  rw [cDetG, toK_cDetGn]
+    toK (cDet M) = listDetn M.length (M.map (fun r => r.map toK)) := by
+  rw [cDet, toK_cDetGn]
 
-/-- **`cDetG` computes `Matrix.det`.** For a well-formed `n × n` row-list `M`, the computable determinant
-`toK (cDetG M)` equals `(matrixOfList (M.map (map toK)) n).det` — the full bridge from the computable
+/-- **`cDet` computes `Matrix.det`.** For a well-formed `n × n` row-list `M`, the computable determinant
+`toK (cDet M)` equals `(matrixOfList (M.map (map toK)) n).det` — the full bridge from the computable
 cofactor determinant to Mathlib's abstract determinant over `K`. -/
 theorem toK_cDetG_eq_det (M : List (List α)) (n : ℕ) (hlen : M.length = n)
     (hrows : ∀ r ∈ M, r.length = n) :
-    toK (cDetG M) = (matrixOfList (M.map (fun r => r.map toK)) n).det := by
+    toK (cDet M) = (matrixOfList (M.map (fun r => r.map toK)) n).det := by
   have hlen' : (M.map (fun r => r.map toK)).length = n := by rw [List.length_map]; exact hlen
   have hrows' : ∀ r ∈ (M.map (fun r => r.map toK)), r.length = n := by
     intro r hr; rw [List.mem_map] at hr; obtain ⟨s, hs, rfl⟩ := hr
@@ -148,37 +148,37 @@ end CPoly
 open CPoly
 
 /-- `det [[1,2],[3,4]] = −2` over `ℚ`. -/
-theorem cDetG_two_by_two : cDetG ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := by native_decide
+theorem cDetG_two_by_two : cDet ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := by native_decide
 
 /-- `det [[2,0,1],[1,3,2],[0,1,1]] = 3` over `ℚ` (cofactor expansion). -/
 theorem cDetG_three_by_three :
-    cDetG ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by native_decide
+    cDet ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by native_decide
 
-/-- **`cDetG ∘ cSylvesterRows` computes the resultant** (up to the standard `(-1)^{deg p·deg q}` sign):
+/-- **`cDet ∘ cSylvesterRows` computes the resultant** (up to the standard `(-1)^{deg p·deg q}` sign):
 here `Res(t²−1, t+2) = 3` matches `cresultantWf` with the even sign — validating the Sylvester construction
 against the proven `cresultantWf`. -/
 theorem cDetG_cSylvesterRows_eq_resultant :
-    cDetG (cSylvesterRows ([-1, 0, 1] : CPoly ℚ) ([2, 1] : CPoly ℚ) 2 1)
+    cDet (cSylvesterRows ([-1, 0, 1] : CPoly ℚ) ([2, 1] : CPoly ℚ) 2 1)
       = cresultantWf ([-1, 0, 1] : CPoly ℚ) ([2, 1] : CPoly ℚ) := by native_decide
 
 /-- The **0-th subresultant is the resultant** (constant polynomial): `S₀(t²−1, t+2) = [3]` — the full
 `bSylvester` determinant, matching `cresultantWf`. -/
 theorem cSubresultantG_zero :
-    cSubresultantG ([-1, 0, 1] : CPoly ℚ) ([2, 1] : CPoly ℚ) 2 1 0
+    cSubresultant ([-1, 0, 1] : CPoly ℚ) ([2, 1] : CPoly ℚ) 2 1 0
       = [cresultantWf ([-1, 0, 1] : CPoly ℚ) ([2, 1] : CPoly ℚ)] := by native_decide
 
 /-- The **degree-1 subresultant of `(t²−1, t+2)` is `t+2`** (`= q`, since `deg q = 1`): `S₁ = [2,1]`. -/
 theorem cSubresultantG_one :
-    cSubresultantG ([-1, 0, 1] : CPoly ℚ) ([2, 1] : CPoly ℚ) 2 1 1 = [2, 1] := by native_decide
+    cSubresultant ([-1, 0, 1] : CPoly ℚ) ([2, 1] : CPoly ℚ) 2 1 1 = [2, 1] := by native_decide
 
 /-- **L2a — parametric = scalar at a point.** `S₁(z,t)` of `(t²−1, t − z·2t)` is `(1−2z)·t`; evaluated at
 `z = 2` (a sample point) it equals the *scalar* subresultant `S₁(t²−1, −3t)` (`= −3t`). The interpolation is
 exact at the sample nodes — validating the root-free parametric log-argument. -/
 theorem cSubresultantParam_eval :
     (cSubresultantParam ([-1, 0, 1] : CPoly ℚ) ([0, 1] : CPoly ℚ) ([0, 2] : CPoly ℚ) 2 1 1).map
-        (fun zp => cHornerG zp (2 : ℚ))
-      = (cnormG (cSubresultantG ([-1, 0, 1] : CPoly ℚ)
-          (csubG ([0, 1] : CPoly ℚ) (cscaleG (2 : ℚ) ([0, 2] : CPoly ℚ))) 2 1 1) : List ℚ) := by
+        (fun zp => cHorner zp (2 : ℚ))
+      = (cnorm (cSubresultant ([-1, 0, 1] : CPoly ℚ)
+          (csub ([0, 1] : CPoly ℚ) (cscale (2 : ℚ) ([0, 2] : CPoly ℚ))) 2 1 1) : List ℚ) := by
   native_decide
 
 end DeepWiki.SymbolicIntegration

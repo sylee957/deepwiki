@@ -527,7 +527,7 @@ num/den lists over `CPoly ℚ = List ℚ`, mirroring `qConst5`/`qFrac5` of the �
 items. -/
 
 /-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element, `den ≠ 0` discharged by `native_decide`. -/
-def qFrac3 (num den : List ℚ) (h : CPoly.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
+def qFrac3 (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 
 /-- Example 3.5.1's `Dt = −t²−(3/(2x))t+1/(2x)` over the generic ℚ(x)[t] (low→high in `t`). -/
@@ -548,45 +548,45 @@ def ex351Ps : CPoly (QFunNZG ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1
 
 /-- Recombine a positional-by-multiplicity factor list `[q₁, q₂, …]` into `∏ᵢ qᵢ^i` over ℚ(x)[t]. -/
 def ex352Recombine (qs : List (CPoly (QFunNZG ℚ))) : CPoly (QFunNZG ℚ) :=
-  qs.zipIdx.foldl (fun acc (qi, i) => CPoly.cmulG acc (CPoly.cpowG qi (i + 1))) [CField.one]
+  qs.zipIdx.foldl (fun acc (qi, i) => CPoly.cmul acc (CPoly.cpow qi (i + 1))) [CField.one]
 
 /-- Example 3.5.2's expected normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` (book p.102), as `4x²·(t−1)·(xt−1)²`. -/
 def ex352Pn : CPoly (QFunNZG ℚ) :=
-  CPoly.cmulG [qFrac3 [0, 0, 4] [1]]
-    (CPoly.cmulG [qFrac3 [-1] [1], qFrac3 [1] [1]]
-      (CPoly.cmulG [qFrac3 [-1] [1], qFrac3 [0, 1] [1]] [qFrac3 [-1] [1], qFrac3 [0, 1] [1]]))
+  CPoly.cmul [qFrac3 [0, 0, 4] [1]]
+    (CPoly.cmul [qFrac3 [-1] [1], qFrac3 [1] [1]]
+      (CPoly.cmul [qFrac3 [-1] [1], qFrac3 [0, 1] [1]] [qFrac3 [-1] [1], qFrac3 [0, 1] [1]]))
 
 /-- Example 3.5.2's expected special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)` (book p.102). -/
 def ex352Ps : CPoly (QFunNZG ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
 
-/-- **Example 3.5.1** (§3.5, p.101): the COMPUTABLE fraction-free `cSplitFactorFastG` (the canonical
+/-- **Example 3.5.1** (§3.5, p.101): the COMPUTABLE fraction-free `cSplitFactorFast` (the canonical
 generic engine at the generic ℚ(x) = `QFunNZG ℚ`) splits the degree-5 `p` over ℚ(x)[t]
 (`Dt = −t²−(3/2x)t+1/(2x)`) into Bronstein's `pₙ` (degree 3) and `pₛ = t²+(1/x)t−(2x−1)/(4x²)` (degree
 2), monic-normalized, by `native_decide` — where the naive ℚ(x)-Euclidean kernel did not finish
 (coefficient swell). -/
 theorem ex_3_5_1 :
-    (CPoly.cdegG (CPoly.cSplitFactorFastG ex351Dt ex351P).1,
-       CPoly.cdegG (CPoly.cSplitFactorFastG ex351Dt ex351P).2) = (3, 2)
-    ∧ CPoly.cisZeroG (CPoly.csubG
-        (CPoly.cmonicG (CPoly.cSplitFactorFastG ex351Dt ex351P).1) (CPoly.cmonicG ex351Pn)) = true
-    ∧ CPoly.cisZeroG (CPoly.csubG
-        (CPoly.cmonicG (CPoly.cSplitFactorFastG ex351Dt ex351P).2) (CPoly.cmonicG ex351Ps)) = true := by
+    (CPoly.cdeg (CPoly.cSplitFactorFast ex351Dt ex351P).1,
+       CPoly.cdeg (CPoly.cSplitFactorFast ex351Dt ex351P).2) = (3, 2)
+    ∧ CPoly.cisZero (CPoly.csub
+        (CPoly.cmonic (CPoly.cSplitFactorFast ex351Dt ex351P).1) (CPoly.cmonic ex351Pn)) = true
+    ∧ CPoly.cisZero (CPoly.csub
+        (CPoly.cmonic (CPoly.cSplitFactorFast ex351Dt ex351P).2) (CPoly.cmonic ex351Ps)) = true := by
   native_decide
 
-/-- **Example 3.5.2** (§3.5, p.102): the COMPUTABLE fraction-free `cSplitSquarefreeFactorFastG` (Yun in
+/-- **Example 3.5.2** (§3.5, p.102): the COMPUTABLE fraction-free `cSplitSquarefreeFactorFast` (Yun in
 `t` + per-factor differential special/normal split, the generic engine at the generic ℚ(x) =
 `QFunNZG ℚ`) on the same degree-5 `p` returns `N`-factor `t`-degrees `[1, 1]` and `S`-factor `t`-degrees
 `[2, 0]`, recombining (by multiplicity) to Bronstein's normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` and
 special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)`, all monic-normalized, by `native_decide`. -/
 theorem ex_3_5_2 :
-    (((CPoly.cSplitSquarefreeFactorFastG ex351Dt ex351P).1).map CPoly.cdegG,
-       ((CPoly.cSplitSquarefreeFactorFastG ex351Dt ex351P).2).map CPoly.cdegG) = ([1, 1], [2, 0])
-    ∧ CPoly.cisZeroG (CPoly.csubG
-        (CPoly.cmonicG (ex352Recombine (CPoly.cSplitSquarefreeFactorFastG ex351Dt ex351P).1))
-        (CPoly.cmonicG ex352Pn)) = true
-    ∧ CPoly.cisZeroG (CPoly.csubG
-        (CPoly.cmonicG (ex352Recombine (CPoly.cSplitSquarefreeFactorFastG ex351Dt ex351P).2))
-        (CPoly.cmonicG ex352Ps)) = true := by
+    (((CPoly.cSplitSquarefreeFactorFast ex351Dt ex351P).1).map CPoly.cdeg,
+       ((CPoly.cSplitSquarefreeFactorFast ex351Dt ex351P).2).map CPoly.cdeg) = ([1, 1], [2, 0])
+    ∧ CPoly.cisZero (CPoly.csub
+        (CPoly.cmonic (ex352Recombine (CPoly.cSplitSquarefreeFactorFast ex351Dt ex351P).1))
+        (CPoly.cmonic ex352Pn)) = true
+    ∧ CPoly.cisZero (CPoly.csub
+        (CPoly.cmonic (ex352Recombine (CPoly.cSplitSquarefreeFactorFast ex351Dt ex351P).2))
+        (CPoly.cmonic ex352Ps)) = true := by
   native_decide
 
 /-! ## Chapter 3 Exercises -/

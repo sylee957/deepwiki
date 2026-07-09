@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.NormalPartSoundness.Properness
 
 /-! # Abstract soundness for the tower integrator's normal part
 
-Hermite-telescoping soundness for `cHermiteReduceTowerG`: the assembled rational part `g` satisfies
+Hermite-telescoping soundness for `cHermiteReduceTower`: the assembled rational part `g` satisfies
 `D(g) + h = a/d`, together with the leftover-properness degree analysis (unconditional for
 `deg Dt ≤ 1`, margin-gated for `deg Dt ≥ 2`). -/
 
@@ -19,23 +19,23 @@ open CPoly QFunNZG
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-! ### The normal-part assembly through the `checkIdentityG` certificate -/
+/-! ### The normal-part assembly through the `checkIdentity` certificate -/
 
-/-- The fuel-free reduced-case field identity from the `checkIdentityG` certificate: for
-`res = cIntegrateReducedG Dt a d cands`, if `checkIdentityG Dt res a d = true`, then
+/-- The fuel-free reduced-case field identity from the `checkIdentity` certificate: for
+`res = cIntegrateReduced Dt a d cands`, if `checkIdentity Dt res a d = true`, then
 `D(g) + logResidueSumG Dt res.logs = amG a/amG d`. -/
 theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCoreWf α] (Dt : CPoly α)
     (a d : CPoly α) (cands : List α)
-    (hgden : toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
-    (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ (CPoly.cIntegrateReducedG Dt a d cands).logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPoly.checkIdentityG Dt (CPoly.cIntegrateReducedG Dt a d cands) a d = true) :
+    (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
+    (haden : toPoly d ≠ 0)
+    (hlogs : ∀ cv ∈ (CPoly.cIntegrateReduced Dt a d cands).logs, toPoly cv.2 ≠ 0)
+    (hcheck : CPoly.checkIdentity Dt (CPoly.cIntegrateReduced Dt a d cands) a d = true) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.1)
-          / amG α (toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPoly.cIntegrateReducedG Dt a d cands).logs
-      = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_checkIdentityG Dt (CPoly.cIntegrateReducedG Dt a d cands) a d
+        (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+      = amG α (toPoly a) / amG α (toPoly d) :=
+  field_identity_of_checkIdentityG Dt (CPoly.cIntegrateReduced Dt a d cands) a d
     hgden haden hlogs hcheck
 
 /-! ### Axiom audit — rests only on the standard kernel axioms

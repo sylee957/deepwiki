@@ -20,9 +20,9 @@ open RadElem CPoly
 /-- The radicand `f₁ = x³ − 2 ∈ ℚ(x)` (numerator `[-2,0,0,1] = −2 + x³`) for `√(x³−2)`. -/
 def radicandX3m2 : QFunNZG ℚ := qxOfNum [-2, 0, 0, 1]
 
-/-- **`toPolyG [-2,0,0,1] = −2 + x³` has `natDegree 3`** in `ℚ[X]`. -/
-theorem natDeg_toPolyG_X3m2 : (toPolyG ([-2, 0, 0, 1] : CPoly ℚ)).natDegree = 3 := by
-  have h : toPolyG ([-2, 0, 0, 1] : CPoly ℚ) = C (-2) + X ^ 3 := by
+/-- **`toPoly [-2,0,0,1] = −2 + x³` has `natDegree 3`** in `ℚ[X]`. -/
+theorem natDeg_toPolyG_X3m2 : (toPoly ([-2, 0, 0, 1] : CPoly ℚ)).natDegree = 3 := by
+  have h : toPoly ([-2, 0, 0, 1] : CPoly ℚ) = C (-2) + X ^ 3 := by
     simp only [denote]
     show C (-2 : ℚ) + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
@@ -80,7 +80,7 @@ def radX3m2DtExp : CPoly RadX3m2 := [CField.zero, CField.one]
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x³−2)][eˣ]`: `cmonomialDeriv` (`t = eˣ`, `Dt = t`, coefficient derivation
 `radDeriv 2 (x³−2)`) gives `2t·t = 2t²`. -/
 theorem radX3m2_monomialDeriv_t2sq :
-    cisZeroG (csubG (cmonomialDeriv radX3m2DtExp radX3m2T2sq) radX3m2TwoT2sq) = true := by
+    cisZero (csub (cmonomialDeriv radX3m2DtExp radX3m2T2sq) radX3m2TwoT2sq) = true := by
   native_decide
 
 /-- The `RadX3m2[t]`-polynomial `y·t = [0, y]` (`y = √(x³−2)`, `t = eˣ`). -/
@@ -94,7 +94,7 @@ def radX3m2GenTDeriv : CPoly RadX3m2 :=
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³−2)][eˣ]`: both `D(y) = ℓ·y` (`ℓ = 3x²/(2(x³−2))`) and `D(t) = t`
 fire. -/
 theorem radX3m2_monomialDeriv_genT :
-    cisZeroG (csubG (cmonomialDeriv radX3m2DtExp radX3m2GenT) radX3m2GenTDeriv) = true := by
+    cisZero (csub (cmonomialDeriv radX3m2DtExp radX3m2GenT) radX3m2GenTDeriv) = true := by
   native_decide
 
 end DeepWiki.SymbolicIntegration

@@ -26,18 +26,18 @@ def canonHNF (M : PolyMatrix ℚ) : PolyMatrix ℚ :=
   -- 1. scale each row so its diagonal pivot is monic
   let M1 : PolyMatrix ℚ := (List.range n).foldl (fun acc i =>
     let piv := polyMatGet acc i i
-    if cisZeroG piv then acc
-    else rowScale acc i [CField.inv (cleadG piv)]) M
+    if cisZero piv then acc
+    else rowScale acc i [CField.inv (clead piv)]) M
   -- 2. reduce each above-pivot entry M[k][i] (k < i) mod the monic pivot M[i][i]
   (List.range n).foldl (fun acc i =>
     let piv := polyMatGet acc i i
-    if cisZeroG piv then acc
+    if cisZero piv then acc
     else
       (List.range n).foldl (fun a k =>
         if k < i then
           let e := polyMatGet a k i
           let q := cdivWf e piv
-          if cisZeroG q then a else rowSub a k i q
+          if cisZero q then a else rowSub a k i q
         else a) acc) M1
 
 /-- `true` iff two fractional ideals have the same canonical HNF `canonHNFEq I J`: scale both to the
@@ -47,21 +47,21 @@ def canonHNFEq (I J : GenDivisor) : Bool :=
   let (δI, _) := idealClear I
   let (δJ, _) := idealClear J
   let scale : CPoly ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
-    let cc := cnormG c
+    let cc := cnorm c
     K.map (fun row => row.map (fun z =>
       let zz := qReduceNZG z
       let num := zz.1.1
-      let den := cnormG zz.1.2
-      cdivWf (cmulG cc num) den))
-  let NI := scale (cmulG δI δJ) I
-  let NJ := scale (cmulG δI δJ) J
-  let HI := canonHNF ((hermiteRowReduce NI).filter (fun row => !row.all cisZeroG))
-  let HJ := canonHNF ((hermiteRowReduce NJ).filter (fun row => !row.all cisZeroG))
+      let den := cnorm zz.1.2
+      cdivWf (cmul cc num) den))
+  let NI := scale (cmul δI δJ) I
+  let NJ := scale (cmul δI δJ) J
+  let HI := canonHNF ((hermiteRowReduce NI).filter (fun row => !row.all cisZero))
+  let HJ := canonHNF ((hermiteRowReduce NJ).filter (fun row => !row.all cisZero))
   let n := max HI.length HJ.length
   let w := max (HI.headD []).length (HJ.headD []).length
   (List.range n).all (fun i =>
     (List.range w).all (fun j =>
-      cisZeroG (csubG ((HI.getD i []).getD j []) ((HJ.getD i []).getD j []))))
+      cisZero (csub ((HI.getD i []).getD j []) ((HJ.getD i []).getD j []))))
 
 end CPoly
 
@@ -77,12 +77,12 @@ are unused (kept for the uniform divisor-API signature). -/
 def idealReduce (_f : CPoly (QFunNZG ℚ)) (_basis : List (CPoly (QFunNZG ℚ)))
     (I : GenDivisor) : GenDivisor :=
   let (δ, N) := idealClear I
-  let H := canonHNF ((hermiteRowReduce N).filter (fun row => !row.all cisZeroG))
-  let dd := cnormG δ
+  let H := canonHNF ((hermiteRowReduce N).filter (fun row => !row.all cisZero))
+  let dd := cnorm δ
   -- read back as the fractional ideal (1/δ)·Ĥ, then reduce every entry to lowest terms (`qReduceMat`,
   -- value-preserving via `toQFunNZG_qReduce`) so the reduced representative carries no swollen factors
   qReduceMat (H.map (fun row => row.map (fun p =>
-    if h : cisZeroG dd = false then qReduceNZG (qxOfFrac p dd h) else qxOfNum p)))
+    if h : cisZero dd = false then qReduceNZG (qxOfFrac p dd h) else qxOfNum p)))
 
 /-! ### Principality: is the ideal `g·O`? (`genCandidates`, `isPrincipalIdeal`) -/
 
@@ -90,7 +90,7 @@ def idealReduce (_f : CPoly (QFunNZG ℚ)) (_basis : List (CPoly (QFunNZG ℚ)))
 integral matrix reconstructed as a `K(x, y)` element (`wToAf basis`). For a principal ideal `g·O` the
 generator `g` is among these up to a unit. -/
 def genCandidates (basis : List (CPoly (QFunNZG ℚ))) (I : GenDivisor) : List (CPoly (QFunNZG ℚ)) :=
-  let H := canonHNF ((hermiteRowReduce (idealClear I).2).filter (fun row => !row.all cisZeroG))
+  let H := canonHNF ((hermiteRowReduce (idealClear I).2).filter (fun row => !row.all cisZero))
   H.map (fun row => wToAf basis (row.map qxOfNum))
 
 /-- `true` iff `I` is principal `isPrincipalIdeal f basis I`: `canonHNFEq I (principalDivisor f basis
@@ -117,7 +117,7 @@ def genDivisorOrderAux (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG �
 principal (⟹ `δ` is `m`-torsion), searching up to `fuel` multiples; `none` if no `m ≤ fuel` works. -/
 def genDivisorOrder (fuel : ℕ) (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
     (δ : GenDivisor) : Option ℕ :=
-  genDivisorOrderAux f basis δ fuel (idealIdentity (cdegG f)) 0
+  genDivisorOrderAux f basis δ fuel (idealIdentity (cdeg f)) 0
 
 end CPoly
 

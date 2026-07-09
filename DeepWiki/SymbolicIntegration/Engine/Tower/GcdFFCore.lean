@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 
 /-! # The generic fraction-free gcd, upstream of the integration pipeline
 An upstream copy of the flat recursive fraction-free gcd (names `gb*Core`, `cprimPRSgcdGenCore`,
-`cclearDenomsCoreG`/`liftGBPolyCoreG`, class `CFracGcdCore`, wrapper `cgcdFFCore`) positioned before the
+`cclearDenomsCore`/`liftGBPolyCoreG`, class `CFracGcdCore`, wrapper `cgcdFFCore`) positioned before the
 integration engine so it can run its gcds flat: clear denominators into the GCD-domain `CPoly β = β[s]`,
 run a primitive PRS stripping the content each step, recurse one level down, bottoming at the raw
 Euclidean gcd over ℚ. -/
@@ -21,29 +21,29 @@ abbrev GBPolyCore (B : Type*) [CField B] := List (CPoly B)
 
 namespace GBPolyCore
 
-/-- Normalize a `GBPolyCore`: `cnormG` each coefficient, then strip trailing `cisZeroG` coefficients. -/
+/-- Normalize a `GBPolyCore`: `cnorm` each coefficient, then strip trailing `cisZero` coefficients. -/
 def gbnormCore : GBPolyCore B → GBPolyCore B
   | [] => []
   | a :: as =>
-    let a := CPoly.cnormG a
+    let a := CPoly.cnorm a
     match gbnormCore as with
-    | [] => if CPoly.cisZeroG a then [] else [a]
+    | [] => if CPoly.cisZero a then [] else [a]
     | r => a :: r
 
-/-- Coefficientwise addition of two `GBPolyCore`s in `t` (each `t`-coefficient added via `caddG`). -/
+/-- Coefficientwise addition of two `GBPolyCore`s in `t` (each `t`-coefficient added via `cadd`). -/
 def gbaddCore : GBPolyCore B → GBPolyCore B → GBPolyCore B
   | [], q => q
   | p, [] => p
-  | a :: as, b :: bs => CPoly.caddG a b :: gbaddCore as bs
+  | a :: as, b :: bs => CPoly.cadd a b :: gbaddCore as bs
 
-/-- Negation of a `GBPolyCore`, each `t`-coefficient negated via `cnegG`. -/
-def gbnegCore (p : GBPolyCore B) : GBPolyCore B := p.map CPoly.cnegG
+/-- Negation of a `GBPolyCore`, each `t`-coefficient negated via `cneg`. -/
+def gbnegCore (p : GBPolyCore B) : GBPolyCore B := p.map CPoly.cneg
 
 /-- Subtraction of `GBPolyCore`s, `p − q := p + (−q)`. -/
 def gbsubCore (p q : GBPolyCore B) : GBPolyCore B := gbaddCore p (gbnegCore q)
 
-/-- Scale `gbscaleCCore c p`: multiply every `t`-coefficient by the `B[s]` scalar `c` via `cmulG`. -/
-def gbscaleCCore (c : CPoly B) (p : GBPolyCore B) : GBPolyCore B := p.map (CPoly.cmulG c)
+/-- Scale `gbscaleCCore c p`: multiply every `t`-coefficient by the `B[s]` scalar `c` via `cmul`. -/
+def gbscaleCCore (c : CPoly B) (p : GBPolyCore B) : GBPolyCore B := p.map (CPoly.cmul c)
 
 /-- Shift in `t` `gbshiftCore k p = tᵏ · p`: prepend `k` zero (`= []`) `t`-coefficients. -/
 def gbshiftCore : ℕ → GBPolyCore B → GBPolyCore B
@@ -91,7 +91,7 @@ def gbprimitivePartCore (cgcdB : CPoly B → CPoly B → CPoly B) (p : GBPolyCor
     GBPolyCore B :=
   let p := gbnormCore p
   let g := gbcontentCore cgcdB p
-  if CPoly.cisZeroG g then p else gbnormCore (p.map (fun c => CPoly.cdivWf c g))
+  if CPoly.cisZero g then p else gbnormCore (p.map (fun c => CPoly.cdivWf c g))
 
 end GBPolyCore
 
@@ -122,15 +122,15 @@ def qnumCoeffCoreG (c : QFunNZG β) : CPoly β := c.1.1
 /-- The denominator `CPoly β` of a `QFunNZG β` coefficient. -/
 def qdenCoeffCoreG (c : QFunNZG β) : CPoly β := c.1.2
 
-/-- Clear denominators `cclearDenomsCoreG p ∈ GBPolyCore β`: multiply `p` over `α = QFunNZG β` by the
+/-- Clear denominators `cclearDenomsCore p ∈ GBPolyCore β`: multiply `p` over `α = QFunNZG β` by the
 product of its coefficient denominators, so coefficient `i` becomes `numᵢ · ∏_{j≠i} denⱼ ∈ CPoly β`. -/
-def cclearDenomsCoreG (p : CPoly (QFunNZG β)) : GBPolyCore β :=
+def cclearDenomsCore (p : CPoly (QFunNZG β)) : GBPolyCore β :=
   let cs : List (QFunNZG β) := p
   let dens : List (CPoly β) := cs.map qdenCoeffCoreG
   cs.zipIdx.map (fun (ci, i) =>
     let prodOthers := (dens.zipIdx.filter (fun (_, j) => j ≠ i)).foldl
-      (fun acc (d, _) => CPoly.cmulG acc d) [CField.one]
-    CPoly.cmulG (qnumCoeffCoreG ci) prodOthers)
+      (fun acc (d, _) => CPoly.cmul acc d) [CField.one]
+    CPoly.cmul (qnumCoeffCoreG ci) prodOthers)
 
 /-- Lift back `liftGBPolyCoreG p ∈ CPoly (QFunNZG β)`: read each `CPoly β` coefficient `c` as the
 fraction `c/1`. -/

@@ -17,7 +17,7 @@ def gdDivY : GenDivisor := principalDivisor gcuspCubicF gcuspCubicBasis gcuspCub
 def gdDivYsq : GenDivisor := principalDivisor gcuspCubicF gcuspCubicBasis gcuspCubicYsq
 
 /-- The identity divisor `O` on `y³ = x²`. -/
-def gdIdentity : GenDivisor := idealIdentity (cdegG gcuspCubicF)
+def gdIdentity : GenDivisor := idealIdentity (cdeg gcuspCubicF)
 
 -- Sanity print: the integral basis `[1, y, y²/x]`.
 #eval gcuspCubicBasis.map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
@@ -36,9 +36,9 @@ def gdIdentity : GenDivisor := idealIdentity (cdegG gcuspCubicF)
 
 /-- The integral basis of `y³ = x²` is `[1, y, y²/x]`, not the power basis. -/
 theorem gd_integralBasis_nontrivial :
-    (cisZeroG (csubG (gcuspCubicBasis.getD 2 []) [CField.zero, CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZeroG (csubG (gcuspCubicBasis.getD 0 []) [CField.one])
-      && cisZeroG (csubG (gcuspCubicBasis.getD 1 []) [CField.zero, CField.one])) = true := by
+    (cisZero (csub (gcuspCubicBasis.getD 2 []) [CField.zero, CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub (gcuspCubicBasis.getD 0 []) [CField.one])
+      && cisZero (csub (gcuspCubicBasis.getD 1 []) [CField.zero, CField.one])) = true := by
   native_decide
 
 /-! ### The Pic group law `div(y)·div(y) = div(y²)` on `y³ = x²` (`native_decide`) -/
@@ -69,7 +69,7 @@ theorem gd_divY_divYsq_integral :
 /-- The general-curve divisor representation validates on `y³ = x²`. -/
 theorem gen_divisor_representation_validates :
     -- the integral basis is genuinely non-trivial (not the power basis)
-    (cisZeroG (csubG (gcuspCubicBasis.getD 2 [])
+    (cisZero (csub (gcuspCubicBasis.getD 2 [])
         [CField.zero, CField.zero, qxOfFrac [1] [0, 1] (by decide)]))
     -- the Pic group law div(y)·div(y) = div(y²)
     ∧ idealEq (idealProduct gcuspCubicF gcuspCubicBasis gdDivY gdDivY) gdDivYsq = true

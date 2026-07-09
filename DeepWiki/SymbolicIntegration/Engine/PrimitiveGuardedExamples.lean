@@ -5,18 +5,18 @@ import DeepWiki.SymbolicIntegration.Engine.IntegratorCases
 
 The guarded primitive case `primitiveGuardedCase` (P2) integrates constant-coefficient canonical-primitive
 inputs and *declines* off-domain ones. These `native_decide` checks confirm it is non-vacuous (produces
-`checkIdentityG`-passing antiderivatives) and honestly declining. `Lvl1 = QFunNZG ℚ = ℚ(x)`, `Dt = 1`. -/
+`checkIdentity`-passing antiderivatives) and honestly declining. `Lvl1 = QFunNZG ℚ = ℚ(x)`, `Dt = 1`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 open CPoly
 
 /-- `∫ 1/t² = −1/t` over `ℚ(x)[t]` (`Dt = 1`): the poly part is `0` (guard passes trivially), the normal
-part `1/t²` integrates; `primitiveGuardedCase` lands a `checkIdentityG`-passing result. -/
+part `1/t²` integrates; `primitiveGuardedCase` lands a `checkIdentity`-passing result. -/
 theorem primitiveGuardedCase_invSq :
     (match cIntegrateCase primitiveGuardedCase ([CField.one] : CPoly Lvl1)
         [CField.one] [CField.zero, CField.zero, CField.one] [CField.zero] with
-      | some res => checkIdentityG ([CField.one] : CPoly Lvl1) res [CField.one]
+      | some res => checkIdentity ([CField.one] : CPoly Lvl1) res [CField.one]
           [CField.zero, CField.zero, CField.one]
       | none => false) = true := by native_decide
 
@@ -25,10 +25,10 @@ passes and the `b = 0` poly-RDE integrates it. -/
 theorem primitiveGuardedCase_polyT :
     (match cIntegrateCase primitiveGuardedCase ([CField.one] : CPoly Lvl1)
         [CField.zero, CField.one] [CField.one] [] with
-      | some res => checkIdentityG ([CField.one] : CPoly Lvl1) res [CField.zero, CField.one] [CField.one]
+      | some res => checkIdentity ([CField.one] : CPoly Lvl1) res [CField.zero, CField.one] [CField.one]
       | none => false) = true := by native_decide
 
-/-- With a non-primitive `Dt = t` (`toPolyG Dt ≠ 1`), the guard fails and
+/-- With a non-primitive `Dt = t` (`toPoly Dt ≠ 1`), the guard fails and
 `primitiveGuardedCase` returns `none` — it does not return a wrong answer. -/
 theorem primitiveGuardedCase_declines_nonPrimitive :
     cIntegrateCase primitiveGuardedCase ([CField.zero, CField.one] : CPoly Lvl1)
@@ -36,13 +36,13 @@ theorem primitiveGuardedCase_declines_nonPrimitive :
 
 /-- Automatic candidates find fractional residues: `∫ 1/(t²−1) = ½log(t−1) − ½log(t+1)` has residues
 `±1/2`. With `candidates := defaultResidueCandidates 3` (the bounded rational sweep, *not* a hand-picked
-list), `primitiveGuardedCase` lands a `checkIdentityG`-passing result — `candidates` is computed
+list), `primitiveGuardedCase` lands a `checkIdentity`-passing result — `candidates` is computed
 automatically. -/
 theorem primitiveGuardedCase_autoCands_log :
     (match cIntegrateCase primitiveGuardedCase ([CField.one] : CPoly Lvl1)
         [CField.one] [CField.neg CField.one, CField.zero, CField.one]
         (defaultResidueCandidates 3) with
-      | some res => checkIdentityG ([CField.one] : CPoly Lvl1) res [CField.one]
+      | some res => checkIdentity ([CField.one] : CPoly Lvl1) res [CField.one]
           [CField.neg CField.one, CField.zero, CField.one]
       | none => false) = true := by native_decide
 

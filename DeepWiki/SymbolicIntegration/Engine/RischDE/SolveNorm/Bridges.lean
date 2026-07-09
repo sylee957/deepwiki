@@ -25,10 +25,10 @@ theorem towerFractionFieldDerivG_toQFunNZG (x : QFunNZG β) :
 omit [CDiffField β] [CDiffFieldSpec β] [CRischField β]
   [Algebra ℚ (CFieldSpec.K β)] in
 /-- `toQFunNZG_qOfPolyNZG_ne_zero`: the lift `q' = q/1` has nonzero field image when `q` is nonzero. -/
-theorem toQFunNZG_qOfPolyNZG_ne_zero (q : CPoly β) (hq : CPoly.cisZeroG q = false) :
+theorem toQFunNZG_qOfPolyNZG_ne_zero (q : CPoly β) (hq : CPoly.cisZero q = false) :
     toQFunNZG (qOfPolyNZG q) ≠ 0 := by
   rw [toQFunNZG]
-  show amG β (toPolyG q) / amG β (toPolyG ([CField.one] : CPoly β)) ≠ 0
+  show amG β (toPoly q) / amG β (toPoly ([CField.one] : CPoly β)) ≠ 0
   simp only [denote, map_one, mul_zero, add_zero, div_one]
   exact amG_toPolyG_ne_zero (CPoly.toPolyG_ne_zero_of_cisZeroG_false hq)
 

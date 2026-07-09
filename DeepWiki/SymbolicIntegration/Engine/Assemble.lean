@@ -4,8 +4,8 @@ import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
 /-! # The abstract one-level Risch assembler (Stage-1)
 
 The abstract soundness *core* of the one-level Risch integrator, proven purely over stage-result data —
-**no concrete algorithm** (`cIntegrateCase`, `canonicalRepresentationFastG`, `cIntegrateReducedG`,
-`cHermiteReduceTowerG`, …) appears in this file. The concrete assembler (the `cIntegrateCase` def, the
+**no concrete algorithm** (`cIntegrateCase`, `canonicalRepresentationFast`, `cIntegrateReduced`,
+`cHermiteReduceTower`, …) appears in this file. The concrete assembler (the `cIntegrateCase` def, the
 per-case `MonomialCase` instances, the reduced-stage realizations, and the end-to-end one-shots) lives in
 `IntegratorAssembly.lean`, which imports this file. See `docs/risch-two-stage-discipline.md`. -/
 
@@ -29,7 +29,7 @@ structure MonomialCase (α : Type*) [CField α] [CDiffField α] where
 def combineSN (snum sden : CPoly α) (nrm : IntegralResultG α) : IntegralResultG α :=
   let gnum := nrm.rational.1
   let gden := nrm.rational.2
-  ⟨(caddG (cmulG snum gden) (cmulG gnum sden), cmulG sden gden), nrm.logs⟩
+  ⟨(cadd (cmul snum gden) (cmul gnum sden), cmul sden gden), nrm.logs⟩
 
 end CPoly
 
@@ -39,33 +39,33 @@ open scoped Differential
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- The tower fraction-field element `⟦num/den⟧ = amG(toPolyG num) / amG(toPolyG den)`. -/
+/-- The tower fraction-field element `⟦num/den⟧ = amG(toPoly num) / amG(toPoly den)`. -/
 noncomputable abbrev fieldFrac (num den : CPoly α) : RatFunc (CFieldSpec.K α) :=
-  amG α (toPolyG num) / amG α (toPolyG den)
+  amG α (toPoly num) / amG α (toPoly den)
 
 /-- **The abstract assembler soundness core (no concrete algorithm).** Purely from the abstract stage
 results — a special-part fraction `snum/sden` differentiating to `specialVal`, a normal-part result `nrm`
 that is an antiderivative of `cn/dn` (`hNrmField`), and the canonical reconstruction `specialVal + ⟦cn/dn⟧ =
 ⟦a/d⟧` (`hrecon`) — the combined result `combineSN snum sden nrm` is an antiderivative of `a/d`. This is the
 soundness proven *against the interface data*; the concrete assembler (`IntegratorAssembly.lean`) is a
-wrapper that supplies these from `canonicalRepresentationFastG` / the reduced stage. -/
+wrapper that supplies these from `canonicalRepresentationFast` / the reduced stage. -/
 theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : CPoly α) (nrm : IntegralResultG α)
     (specialVal : RatFunc (CFieldSpec.K α))
-    (hsden : toPolyG sden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
+    (hsden : toPoly sden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
     (hNrmField : IsIntegralResultG Dt cn dn nrm)
     (hrecon : specialVal + fieldFrac cn dn = fieldFrac a d) :
     IsIntegralResultG Dt a d (combineSN snum sden nrm) := by
   simp only [IsIntegralResultG] at hNrmField ⊢
   show towerFractionFieldDerivG Dt
-      (amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
-        / amG α (toPolyG (cmulG sden nrm.rational.2))) + logResidueSumG Dt nrm.logs = _
-  have hAsden : amG α (toPolyG sden) ≠ 0 := amG_toPolyG_ne_zero hsden
-  have hAgden : amG α (toPolyG nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
-  have hcombine : amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
-        / amG α (toPolyG (cmulG sden nrm.rational.2))
-      = amG α (toPolyG snum) / amG α (toPolyG sden)
-        + amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2) := by
+      (amG α (toPoly (cadd (cmul snum nrm.rational.2) (cmul nrm.rational.1 sden)))
+        / amG α (toPoly (cmul sden nrm.rational.2))) + logResidueSumG Dt nrm.logs = _
+  have hAsden : amG α (toPoly sden) ≠ 0 := amG_toPolyG_ne_zero hsden
+  have hAgden : amG α (toPoly nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hcombine : amG α (toPoly (cadd (cmul snum nrm.rational.2) (cmul nrm.rational.1 sden)))
+        / amG α (toPoly (cmul sden nrm.rational.2))
+      = amG α (toPoly snum) / amG α (toPoly sden)
+        + amG α (toPoly nrm.rational.1) / amG α (toPoly nrm.rational.2) := by
     -- front-load transport (denotation + `amG` homomorphism) to a pure fraction-field goal, then math
     simp only [denote, map_add, map_mul]
     field_simp

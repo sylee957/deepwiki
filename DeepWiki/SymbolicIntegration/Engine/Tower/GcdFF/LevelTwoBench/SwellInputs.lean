@@ -37,7 +37,7 @@ def lin2 (a0 a1 : Lvl2) : CPoly Lvl2 := [a0, a1]
 /-- The fixed level-2 gcd target `(t₂ + t₁)·(t₂ − 1/t₁)`, degree 2 in `t₂` with a genuine `1/t₁`
 denominator. -/
 def commonFactor2 : CPoly Lvl2 :=
-  cmulG (lin2 t1 CField.one) (lin2 (CField.neg invT1) CField.one)
+  cmul (lin2 t1 CField.one) (lin2 (CField.neg invT1) CField.one)
 
 /-- The cofactor-coefficient cycle for `p` (period 5 through `t₁`, `1/t₁`, `t₁+1`, `1/(t₁+1)`, `t₁−1`). -/
 def cyc2A : ℕ → Lvl2
@@ -50,22 +50,22 @@ def cyc2B : ℕ → Lvl2
 /-- The `p`-cofactor `∏_{i<k} (t₂ + cyc2A i)`, a `t₂`-polynomial of degree `k`. -/
 def prod2A : ℕ → CPoly Lvl2
   | 0 => [CField.one]
-  | n + 1 => cmulG (lin2 (cyc2A n) CField.one) (prod2A n)
+  | n + 1 => cmul (lin2 (cyc2A n) CField.one) (prod2A n)
 
 /-- The `q`-cofactor `∏_{i<k} (t₂ − cyc2B i)`, degree `k`, coprime to `prod2A k`. -/
 def prod2B : ℕ → CPoly Lvl2
   | 0 => [CField.one]
-  | n + 1 => cmulG (lin2 (CField.neg (cyc2B n)) CField.one) (prod2B n)
+  | n + 1 => cmul (lin2 (CField.neg (cyc2B n)) CField.one) (prod2B n)
 
 /-- The level-2 benchmark dividend `p = commonFactor2 · prod2A k`, total `t₂`-degree `k + 2`. -/
-def benchP2 (k : ℕ) : CPoly Lvl2 := cmulG commonFactor2 (prod2A k)
+def benchP2 (k : ℕ) : CPoly Lvl2 := cmul commonFactor2 (prod2A k)
 
 /-- The level-2 benchmark divisor `q = commonFactor2 · prod2B k`, total `t₂`-degree `k + 2`;
 `gcd(benchP2 k, benchQ2 k) ~ commonFactor2` (degree 2). -/
-def benchQ2 (k : ℕ) : CPoly Lvl2 := cmulG commonFactor2 (prod2B k)
+def benchQ2 (k : ℕ) : CPoly Lvl2 := cmul commonFactor2 (prod2B k)
 
-/-- The naive Euclidean gcd `cmonicG (cgcdWf …)` of the level-2 benchmark pair (the swelling kernel). -/
-def benchExtGcd2 (k : ℕ) : CPoly Lvl2 := CPoly.cmonicG (CPoly.cgcdWf (benchP2 k) (benchQ2 k)).1
+/-- The naive Euclidean gcd `cmonic (cgcdWf …)` of the level-2 benchmark pair (the swelling kernel). -/
+def benchExtGcd2 (k : ℕ) : CPoly Lvl2 := CPoly.cmonic (CPoly.cgcdWf (benchP2 k) (benchQ2 k)).1
 
 /-- The raw stored size of one `QFunNZG ℚ` scalar: list lengths + `Σ(|num|+den)` of the ℚ entries. -/
 def sizeLvl1 (z : QFunNZG ℚ) : ℕ :=

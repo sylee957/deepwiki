@@ -30,7 +30,7 @@ def algResExX_expected : CPoly ℚ := [0, 0, -1, 0, 1]
 
 /-- `cAlgResidueResultant` on `∫ dx/((x − 1)·y)` over `y² = x` produces `Z⁴ − Z²`. -/
 theorem algResExX_resultant_eq :
-    cisZeroG (csubG algResExX_R algResExX_expected) = true := by native_decide
+    cisZero (csub algResExX_R algResExX_expected) = true := by native_decide
 
 /-- The residues `±1` and branch-place root `0` are roots of the computed resultant. -/
 theorem algResExX_residues_pm_one :
@@ -47,7 +47,7 @@ theorem algResExX_all_residues_integer :
     cResiduesMatch algResExX_R [0, 0, 1, -1] = true := by native_decide
 
 /-- Restatement: the `n = 2` residue resultant of `∫ dx/((x − 1)·y)` on `y² = x` is `Z⁴ − Z²`. -/
-example : cisZeroG (csubG
+example : cisZero (csub
     (cAlgResidueResultant algResExX_D algResExX_rho algResExX_g0 algResExX_g1)
     [0, 0, -1, 0, 1]) = true := by native_decide
 

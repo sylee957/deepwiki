@@ -20,22 +20,22 @@ Decide whether `n·b = Dz/z` for a nonzero `n ∈ ℤ` and `z ∈ k*` (a logarit
 with `b ∈ k = ℚ(x)`, `D = d/dx`. A logarithmic derivative `Dz/z` is always proper (`deg num < deg den`),
 so a non-proper `b` (in particular every nonzero constant) is provably not one. -/
 
-/-- **`d/dx` on `CPoly ℚ`** `cderivQ p = cderivG p`: the plain formal derivative (the generic `cderivG`
+/-- **`d/dx` on `CPoly ℚ`** `cderivQ p = cderiv p`: the plain formal derivative (the generic `cderiv`
 specialized at the constant field `ℚ`, the base monomial derivation `D` with `Dx = 1`, `κ_D = 0`). -/
-abbrev cderivQ (p : CPoly ℚ) : CPoly ℚ := cderivG p
+abbrev cderivQ (p : CPoly ℚ) : CPoly ℚ := cderiv p
 
 /-- **Generic lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPairG num den =
 (num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdWf`); the zero
 numerator gives `([], [1])`. The generic mirror of `Compute.qnorm` one tower level down, used to read the
 polynomial part / denominator of a `QFunNZG ℚ`-valued base-field element. -/
 def qnormPairG (num den : CPoly ℚ) : CPoly ℚ × CPoly ℚ :=
-  if cisZeroG num then ([], [(1 : ℚ)])
+  if cisZero num then ([], [(1 : ℚ)])
   else
     let g := (cgcdWf num den).1
     let num' := cdivWf num g
     let den' := cdivWf den g
-    let s := (cleadG den')⁻¹
-    (cscaleG s num', cscaleG s den')
+    let s := (clead den')⁻¹
+    (cscale s num', cscale s den')
 
 /-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (denominator `[1]` nonzero by
 `cisZeroG_one_singleton`). -/
@@ -45,7 +45,7 @@ def qConstParamG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZe
 (`deg a < deg d`, nonzero numerator). -/
 def cBaseIsProper (b : QFunNZG ℚ) : Bool :=
   let bn := qnormPairG b.1.1 b.1.2
-  cdegG bn.1 < cdegG bn.2 && !cisZeroG bn.1
+  cdeg bn.1 < cdeg bn.2 && !cisZero bn.1
 
 /-- Parametric-logarithmic-derivative test over the base field `cParametricLogDeriv b`, for
 `b ∈ k = ℚ(x)`: `true` iff `b` could be a logarithmic derivative of a `ℚ(x)`-radical (`n·b = Dz/z` for
@@ -70,7 +70,7 @@ def cParamLogDerivCandidate (fval wval : QFunNZG ℚ) : Option ℚ :=
     let r := CField.div fval wval
     -- `r ∈ ℚ` iff its lowest-terms denominator is a (nonzero) constant and numerator degree 0.
     let rn := qnormPairG r.1.1 r.1.2
-    if cdegG rn.1 = 0 ∧ cdegG rn.2 = 0 then
+    if cdeg rn.1 = 0 ∧ cdeg rn.2 = 0 then
       some (((rn.1 : List ℚ).headD 0) / ((rn.2 : List ℚ).headD 1))
     else none
 
@@ -109,8 +109,8 @@ polynomial equation becomes a homogeneous linear system over `ℚ`, whose kernel
 
 /-- Polynomial lcm over ℚ `cLcmQ p q = p·q / gcd(p, q)` (monic). -/
 def cLcmQ (p q : CPoly ℚ) : CPoly ℚ :=
-  if cisZeroG p ∨ cisZeroG q then []
-  else cmonicG (cdivWf (cmulG p q) (cgcdWf p q).1)
+  if cisZero p ∨ cisZero q then []
+  else cmonic (cdivWf (cmul p q) (cgcdWf p q).1)
 
 /-- `tⁱ`-coefficient of a `CPoly ℚ` `cCoeffQ p i = coefficient(p, tⁱ)` (`0` out of range). -/
 def cCoeffQ (p : CPoly ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
@@ -124,11 +124,11 @@ def cLinearConstraintsQ (gnums gdens : List (CPoly ℚ)) :
   let d := gdens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
   let qrs : List (CPoly ℚ × CPoly ℚ) :=
     (List.zip gnums gdens).map (fun (gn, gd) =>
-      let dgi := cmulG gn (cdivWf d gd)             -- `d·gᵢ = gnumᵢ·(d/gdenᵢ)`
+      let dgi := cmul gn (cdivWf d gd)             -- `d·gᵢ = gnumᵢ·(d/gdenᵢ)`
       cdivmodWf dgi d)                              -- `(qᵢ, rᵢ)`
   let qs := qrs.map Prod.fst
   let rs := qrs.map Prod.snd
-  let nrows := cdegG d                              -- rows `i = 0 .. deg(d)−1`
+  let nrows := cdeg d                              -- rows `i = 0 .. deg(d)−1`
   let m := gnums.length
   let M : List (List ℚ) :=
     (List.range nrows).map (fun i =>
@@ -170,8 +170,8 @@ def cLimitedIntegrate (fnum fden : CPoly ℚ) (wnums wdens : List (CPoly ℚ)) :
   -- generator `g₀ = f`, then `gᵢ = Dwᵢ/wᵢ` (logarithmic derivative of `wᵢ`).
   let logDerivs : List (CPoly ℚ × CPoly ℚ) :=
     (List.zip wnums wdens).map (fun (wn, wd) =>
-      let num := csubG (cmulG (cderivQ wn) wd) (cmulG wn (cderivQ wd))
-      let den := cmulG wn wd
+      let num := csub (cmul (cderivQ wn) wd) (cmul wn (cderivQ wd))
+      let den := cmul wn wd
       (num, den))
   let gnums := fnum :: logDerivs.map Prod.fst
   let gdens := fden :: logDerivs.map Prod.snd
@@ -247,10 +247,10 @@ def paramConstraintCheck (gnums gdens : List (CPoly ℚ)) (cs : List ℚ) : Bool
   let d := gdens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
   let total : CPoly ℚ :=
     ((List.zip gnums gdens).zip cs).foldl (fun acc ((gn, gd), c) =>
-      let dgi := cmulG gn (cdivWf d gd)
+      let dgi := cmul gn (cdivWf d gd)
       let ri := cmodWf dgi d
-      caddG acc (cscaleG c ri)) []
-  cisZeroG total
+      cadd acc (cscale c ri)) []
+  cisZero total
 
 /-- **The parametric Risch differential equation reduces to a constant linear system**
 (`native_decide`). For
@@ -321,7 +321,7 @@ theorem limitedIntegrate_example :
      -- the generators `cLimitedIntegrate` builds: `g₀ = f`, `gᵢ = Dwᵢ/wᵢ`.
      let logDerivs : List (CPoly ℚ × CPoly ℚ) :=
        (List.zip wnums wdens).map (fun (wn, wd) =>
-         (csubG (cmulG (cderivQ wn) wd) (cmulG wn (cderivQ wd)), cmulG wn wd))
+         (csub (cmul (cderivQ wn) wd) (cmul wn (cderivQ wd)), cmul wn wd))
      let gnums := limitedIntExampleFnum :: logDerivs.map Prod.fst
      let gdens := limitedIntExampleFden :: logDerivs.map Prod.snd
      let basis := cLimitedIntegrate limitedIntExampleFnum limitedIntExampleFden wnums wdens

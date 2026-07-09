@@ -19,30 +19,30 @@ abbrev GBPoly (B : Type*) [CField B] := List (CPoly B)
 
 namespace GBPoly
 
-/-- Normalize a `GBPoly`: `cnormG` each coefficient, then strip trailing `cisZeroG` coefficients (zero
+/-- Normalize a `GBPoly`: `cnorm` each coefficient, then strip trailing `cisZero` coefficients (zero
 polynomial becomes `[]`). -/
 def gbnorm : GBPoly B → GBPoly B
   | [] => []
   | a :: as =>
-    let a := CPoly.cnormG a
+    let a := CPoly.cnorm a
     match gbnorm as with
-    | [] => if CPoly.cisZeroG a then [] else [a]
+    | [] => if CPoly.cisZero a then [] else [a]
     | r => a :: r
 
-/-- Coefficientwise addition of two `GBPoly`s in `t` (each `t`-coefficient added via `caddG`). -/
+/-- Coefficientwise addition of two `GBPoly`s in `t` (each `t`-coefficient added via `cadd`). -/
 def gbadd : GBPoly B → GBPoly B → GBPoly B
   | [], q => q
   | p, [] => p
-  | a :: as, b :: bs => CPoly.caddG a b :: gbadd as bs
+  | a :: as, b :: bs => CPoly.cadd a b :: gbadd as bs
 
-/-- Negation of a `GBPoly`, each `t`-coefficient negated via `cnegG`. -/
-def gbneg (p : GBPoly B) : GBPoly B := p.map CPoly.cnegG
+/-- Negation of a `GBPoly`, each `t`-coefficient negated via `cneg`. -/
+def gbneg (p : GBPoly B) : GBPoly B := p.map CPoly.cneg
 
 /-- Subtraction of `GBPoly`s, `p − q := p + (−q)`. -/
 def gbsub (p q : GBPoly B) : GBPoly B := gbadd p (gbneg q)
 
-/-- Scale `gbscaleC c p`: multiply every `t`-coefficient by the `B[s]` scalar `c` via `cmulG`. -/
-def gbscaleC (c : CPoly B) (p : GBPoly B) : GBPoly B := p.map (CPoly.cmulG c)
+/-- Scale `gbscaleC c p`: multiply every `t`-coefficient by the `B[s]` scalar `c` via `cmul`. -/
+def gbscaleC (c : CPoly B) (p : GBPoly B) : GBPoly B := p.map (CPoly.cmul c)
 
 /-- Shift in `t` `gbshift k p = tᵏ · p`: prepend `k` zero (`= []`) `t`-coefficients. -/
 def gbshift : ℕ → GBPoly B → GBPoly B
@@ -89,7 +89,7 @@ content via `cdivWf`. Leaves `[]` unchanged. -/
 def gbprimitivePart (cgcdB : CPoly B → CPoly B → CPoly B) (p : GBPoly B) : GBPoly B :=
   let p := gbnorm p
   let g := gbcontent cgcdB p
-  if CPoly.cisZeroG g then p else gbnorm (p.map (fun c => CPoly.cdivWf c g))
+  if CPoly.cisZero g then p else gbnorm (p.map (fun c => CPoly.cdivWf c g))
 
 end GBPoly
 

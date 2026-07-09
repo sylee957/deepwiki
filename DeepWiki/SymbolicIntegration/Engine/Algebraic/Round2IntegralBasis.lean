@@ -25,7 +25,7 @@ the root `a` (`qEvalAtRoot`). -/
 /-- Evaluate a `ℚ(x)` element at a root `a`: `qEvalAtRoot z a = num(a)/den(a) ∈ ℚ`, Horner-evaluating the
 numerator and denominator of `z : QFunNZG ℚ` and dividing. The reduction `z mod (x − a)`. -/
 def qEvalAtRoot (z : QFunNZG ℚ) (a : ℚ) : ℚ :=
-  CField.div (cevalG (z.1.1 : CPoly ℚ) a) (cevalG (z.1.2 : CPoly ℚ) a)
+  CField.div (ceval (z.1.1 : CPoly ℚ) a) (ceval (z.1.2 : CPoly ℚ) a)
 
 /-! ### A full kernel basis of a `β`-matrix (`kernelBasisG`) -/
 
@@ -55,14 +55,14 @@ denominator is `1` for a monic `f`), whose squarefree part bounds the bad primes
 def discNum (f : CPoly (QFunNZG ℚ)) : CPoly ℚ := (discriminant f).1.1
 
 /-- The bad primes of `f` `badPrimes f`: the distinct monic squarefree factors of the discriminant
-numerator (Yun factorization) with `p² ∣ d` (tested by `cisZeroG (cmodWf d (p·p))`) — the primes where the
+numerator (Yun factorization) with `p² ∣ d` (tested by `cisZero (cmodWf d (p·p))`) — the primes where the
 equation order may be non-maximal. -/
 def badPrimes (f : CPoly (QFunNZG ℚ)) : List (CPoly ℚ) :=
   let d := discNum f
-  let sqf := cSqfreeYunFFG d
+  let sqf := cSqfreeYunFF d
   -- distinct nonconstant squarefree factors, each made monic
-  let distinct := (sqf.map cmonicG).filter (fun p => 0 < cdegG p)
-  distinct.filter (fun p => cisZeroG (cmodWf d (cmulG p p)))
+  let distinct := (sqf.map cmonic).filter (fun p => 0 < cdeg p)
+  distinct.filter (fun p => cisZero (cmodWf d (cmul p p)))
 
 /-! ### The cusp `f = y² − x³` over `ℚ(x)`
 
@@ -80,7 +80,7 @@ def cuspY : CPoly (QFunNZG ℚ) := afBasisElem 1
 /-- The bad prime of the cusp is `x`: `badPrimes cuspF = [x]` (the single monic factor `x = [0, 1]` with
 `x² ∣ 4x³`). -/
 theorem cusp_badPrimes_eq :
-    (badPrimes cuspF).map cmonicG = [([0, 1] : CPoly ℚ)] := by native_decide
+    (badPrimes cuspF).map cmonic = [([0, 1] : CPoly ℚ)] := by native_decide
 
 /-! ### The p-trace-radical `I_p` at a linear prime (`pTraceRadical`)
 
@@ -105,7 +105,7 @@ def traceMatrixAtRoot (f : CPoly (QFunNZG ℚ)) (a : ℚ) : List (List ℚ) :=
 The kernel of `traceMatrixAtRoot f a` (`kernelBasisG`) lifts to constant coordinate rows which, with the
 `p·ωᵢ` rows, generate `I_p ⊇ p·O`; `hermiteRowReduce` triangularizes to the basis. -/
 def pTraceRadical (f : CPoly (QFunNZG ℚ)) (p : CPoly ℚ) (a : ℚ) : PolyMatrix ℚ :=
-  let n := cdegG f
+  let n := cdeg f
   let kers : List (List ℚ) := kernelBasisG n (traceMatrixAtRoot f a)
   -- lift each kernel vector to a constant `ℚ[x]` coordinate row (the residue generators)
   let kerRows : PolyMatrix ℚ := kers.map (fun v => (List.range n).map (fun i => [v.getD i 0]))
@@ -114,7 +114,7 @@ def pTraceRadical (f : CPoly (QFunNZG ℚ)) (p : CPoly ℚ) (a : ℚ) : PolyMatr
     (List.range n).map (fun j => if i = j then p else ([] : CPoly ℚ)))
   let gens : PolyMatrix ℚ := kerRows ++ pRows
   let reduced := hermiteRowReduce gens
-  reduced.filter (fun row => !row.all cisZeroG)
+  reduced.filter (fun row => !row.all cisZero)
 
 end CPoly
 
@@ -133,12 +133,12 @@ theorem cusp_traceMatrixAtRoot_eq :
 /-- The cusp p-trace-radical kernel is `(0, 1) = y`: the kernel basis of the reduced trace matrix mod `x`
 is the single vector `(0, 1)`, the order element `y`. -/
 theorem cusp_pTraceRadical_kernel_eq :
-    kernelBasisG (cdegG cuspF) (traceMatrixAtRoot cuspF 0) = [[0, 1]] := by native_decide
+    kernelBasisG (cdeg cuspF) (traceMatrixAtRoot cuspF 0) = [[0, 1]] := by native_decide
 
 /-- The cusp p-trace-radical has `K[x]`-basis `[x, y]`: `pTraceRadical (y² − x³) x` Hermite-reduces
 `{y, x·1, x·y}` to the rows `[x, 0]` and `[0, 1]`, i.e. `I_x = ⟨x, y⟩`, strictly larger than `x·O`. -/
 theorem cusp_pTraceRadical_basis :
-    (pTraceRadical cuspF [0, 1] 0).map (fun row => row.map cmonicG) =
+    (pTraceRadical cuspF [0, 1] 0).map (fun row => row.map cmonic) =
       [[[0, 1], []], [[], [1]]] := by native_decide
 
 /-! ### The idealizer `Î = (I_p : I_p)` — one Round-2 enlargement (`round2Step`)
@@ -216,8 +216,8 @@ normalized denominators (`z.1.2`), a coarse common multiple used to clear `M` to
 def commonDenomQ (M : List (List (QFunNZG ℚ))) : CPoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
-      let den := cnormG (z.1.2 : CPoly ℚ)
-      if cisZeroG den || cisZeroG (csubG den [CField.one]) then a else cmulG a den)
+      let den := cnorm (z.1.2 : CPoly ℚ)
+      if cisZero den || cisZero (csub den [CField.one]) then a else cmul a den)
       acc) [CField.one]
 
 /-- Clear a `K(x)`-row to a `K[x]`-row at denominator `δ` `clearRow δ row = [num(δ·zᵢ)]`: multiply each
@@ -234,7 +234,7 @@ inverts the first `n` rows, and scales by `δ`: the columns of `δ·N̂⁻¹` ar
 `orderBasis` unchanged if any inverse is singular. -/
 def idealizerBasis (f : CPoly (QFunNZG ℚ)) (orderBasis : List (CPoly (QFunNZG ℚ)))
     (ipRows : PolyMatrix ℚ) : List (CPoly (QFunNZG ℚ)) :=
-  let n := cdegG f
+  let n := cdeg f
   let B : List (List (QFunNZG ℚ)) := ipBasisMatrix n ipRows
   match matInvG n B with
   | none => orderBasis
@@ -267,10 +267,10 @@ end CPoly
 namespace CPoly
 
 /-- `true` iff a `K(x, y)` order basis equals the power basis `[1, y, …, yⁿ⁻¹]` `isPowerBasis n basis`:
-each `basisᵢ` is `cisZeroG`-equal to `yⁱ`. Tests whether `round2Step` grew the order. -/
+each `basisᵢ` is `cisZero`-equal to `yⁱ`. Tests whether `round2Step` grew the order. -/
 def isPowerBasis (n : ℕ) (basis : List (CPoly (QFunNZG ℚ))) : Bool :=
   (List.range n).all (fun i =>
-    cisZeroG (csubG (basis.getD i []) (afBasisElem i)))
+    cisZero (csub (basis.getD i []) (afBasisElem i)))
 
 /-- One Ford–Zassenhaus Round-2 enlargement `round2Step f = (newBasis, grew)`. From the equation order
 `O = powerBasis f`, for the first bad prime `p = x − a`, computes the p-trace-radical `I_p` and the idealizer
@@ -278,12 +278,12 @@ def isPowerBasis (n : ℕ) (basis : List (CPoly (QFunNZG ℚ))) : Bool :=
 power basis with `grew = false`. -/
 def round2Step (f : CPoly (QFunNZG ℚ)) :
     List (CPoly (QFunNZG ℚ)) × Bool :=
-  let n := cdegG f
+  let n := cdeg f
   let O := powerBasis f
   match (badPrimes f) with
   | [] => (O, false)
   | p :: _ =>
-    let pm := cmonicG p
+    let pm := cmonic p
     -- root of a monic linear prime `p = [−a, 1]` is `a = −p₀`
     let a : ℚ := CField.neg (pm.getD 0 CField.zero)
     let ip := pTraceRadical f pm a
@@ -309,15 +309,15 @@ theorem cusp_round2_grew :
     (round2Step cuspF).2 = true := by native_decide
 
 /-- The enlarged generator is `y/x`: `round2Step cuspF` produces `[1, y/x]` (second vector `[0, 1/x]`, first
-`[1]`), checked by `cisZeroG (cuspNewGen − [0, 1/x])`. -/
+`[1]`), checked by `cisZero (cuspNewGen − [0, 1/x])`. -/
 theorem cusp_round2_newGen_eq :
-    (cisZeroG (csubG cuspNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZeroG (csubG ((round2Step cuspF).1.getD 0 []) [CField.one])) = true := by native_decide
+    (cisZero (csub cuspNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((round2Step cuspF).1.getD 0 []) [CField.one])) = true := by native_decide
 
 /-- The enlarged generator `y/x` is integral: `afMul f (y/x) (y/x) = x` in `ℚ(x)[y]/(y² − x³)`, checked by
-`cisZeroG (afMul f (y/x) (y/x) − x)`. -/
+`cisZero (afMul f (y/x) (y/x) − x)`. -/
 theorem cusp_newGen_integral :
-    cisZeroG (csubG (afMul cuspF cuspNewGen cuspNewGen) [qxOfNum [0, 1]]) = true := by native_decide
+    cisZero (csub (afMul cuspF cuspNewGen cuspNewGen) [qxOfNum [0, 1]]) = true := by native_decide
 
 /-- `[1, y/x]` is the maximal order — a second `round2Step` does not grow it: the idealizer against the
 enlarged basis `[1, y/x]` returns `[1, y/x]` again, a fixed point. -/
@@ -326,7 +326,7 @@ theorem cusp_secondStep_stable :
     let ip2 := pTraceRadical cuspF [0, 1] 0
     let O3 := idealizerBasis cuspF O2 ip2
     (List.range 2).all (fun i =>
-      cisZeroG (csubG (O3.getD i []) (O2.getD i []))) = true := by native_decide
+      cisZero (csub (O3.getD i []) (O2.getD i []))) = true := by native_decide
 
 /-! ### A second curve: the node `f = y² − x²(x + 1)` enlarges `[1, y] → [1, y/x]`
 
@@ -345,16 +345,16 @@ def nodeNewGen : CPoly (QFunNZG ℚ) := (round2Step nodeF).1.getD 1 []
 /-- The node bad prime is `x`, and `round2Step` enlarges to `[1, y/x]`: `badPrimes nodeF = [x]`, `.2 = true`,
 new generator `[0, 1/x] = y/x`, first vector `1`. -/
 theorem node_round2_newGen_eq :
-    ((badPrimes nodeF).map cmonicG = [([0, 1] : CPoly ℚ)]
+    ((badPrimes nodeF).map cmonic = [([0, 1] : CPoly ℚ)]
       && (round2Step nodeF).2
-      && cisZeroG (csubG nodeNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZeroG (csubG ((round2Step nodeF).1.getD 0 []) [CField.one])) = true := by
+      && cisZero (csub nodeNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((round2Step nodeF).1.getD 0 []) [CField.one])) = true := by
   native_decide
 
 /-- The node's enlarged generator is integral with relation `(y/x)² = x + 1`: `afMul f (y/x) (y/x) = x + 1`
-in `ℚ(x)[y]/(y² − x²(x+1))`, checked by `cisZeroG (afMul f (y/x) (y/x) − (x + 1))`. -/
+in `ℚ(x)[y]/(y² − x²(x+1))`, checked by `cisZero (afMul f (y/x) (y/x) − (x + 1))`. -/
 theorem node_newGen_integral :
-    cisZeroG (csubG (afMul nodeF nodeNewGen nodeNewGen) [qxOfNum [1, 1]]) = true := by native_decide
+    cisZero (csub (afMul nodeF nodeNewGen nodeNewGen) [qxOfNum [1, 1]]) = true := by native_decide
 
 /-- `[1, y/x]` is the maximal order of the node — a second `round2Step` does not grow it: the idealizer
 against `[1, y/x]` returns `[1, y/x]` again. -/
@@ -363,7 +363,7 @@ theorem node_secondStep_stable :
     let ip2 := pTraceRadical nodeF [0, 1] 0
     let O3 := idealizerBasis nodeF O2 ip2
     (List.range 2).all (fun i =>
-      cisZeroG (csubG (O3.getD i []) (O2.getD i []))) = true := by native_decide
+      cisZero (csub (O3.getD i []) (O2.getD i []))) = true := by native_decide
 
 /-! ### Scope of `round2Step`
 

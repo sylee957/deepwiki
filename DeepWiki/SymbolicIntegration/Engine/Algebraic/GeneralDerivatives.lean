@@ -12,15 +12,15 @@ namespace CPoly
 variable {α : Type*} [CField α]
 
 /-- The formal `y`-derivative `∂f/∂y` of a general curve polynomial. -/
-def afFy (f : CPoly α) : CPoly α := cderivG f
+def afFy (f : CPoly α) : CPoly α := cderiv f
 
 section AfFyDenote
 
 variable [CFieldSpec α]
 
-/-- `afFy` reads as the formal derivative through `toPolyG`. -/
+/-- `afFy` reads as the formal derivative through `toPoly`. -/
 theorem derivative_toPolyG_eq_afFy (f : CPoly α) :
-    Polynomial.derivative (toPolyG f) = toPolyG (afFy f) := by
+    Polynomial.derivative (toPoly f) = toPoly (afFy f) := by
   simp only [afFy, denote]
 
 end AfFyDenote

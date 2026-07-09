@@ -25,23 +25,23 @@ For a carrier element `u ∈ K(x)[y]/(f)`, `D(log u) = afDerivWf(u)/u`; the pred
 cross-multiplied (division-free) quotient equation in `K[X] ⧸ afIdeal f`. -/
 
 /-- Single-log soundness predicate: `D(log u) = integrand`, read as
-`mk(toPolyG(afDerivWf f u)) = mk(toPolyG u)·mk(toPolyG integrand)` in the quotient. -/
+`mk(toPoly(afDerivWf f u)) = mk(toPoly u)·mk(toPoly integrand)` in the quotient. -/
 def IsGeneralLogTermWf (f u integrand : CPoly α) : Prop :=
-  Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u))
-    = Ideal.Quotient.mk (afIdeal f) (toPolyG u)
-      * Ideal.Quotient.mk (afIdeal f) (toPolyG integrand)
+  Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f u))
+    = Ideal.Quotient.mk (afIdeal f) (toPoly u)
+      * Ideal.Quotient.mk (afIdeal f) (toPoly integrand)
 
 omit [CDiffFieldSpec α] in
 /-- The engine log-derivative certificate as a `K[X]` equality. -/
 theorem toPolyG_afDerivWf_eq_of_logCert (f u integrand : CPoly α)
-    (h : cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true) :
-    toPolyG (afDerivWf f u) = toPolyG (afMul f u integrand) := by
+    (h : cisZero (csub (afDerivWf f u) (afMul f u integrand)) = true) :
+    toPoly (afDerivWf f u) = toPoly (afMul f u integrand) := by
   simpa [cisZeroG_iff, sub_eq_zero] using h
 
 omit [CDiffFieldSpec α] in
 /-- An engine log-derivative certificate implies the single-log predicate. -/
-theorem isGeneralLogTermWf_of_logCert (f u integrand : CPoly α) (hf : cnormG f ≠ [])
-    (h : cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true) :
+theorem isGeneralLogTermWf_of_logCert (f u integrand : CPoly α) (hf : cnorm f ≠ [])
+    (h : cisZero (csub (afDerivWf f u) (afMul f u integrand)) = true) :
     IsGeneralLogTermWf f u integrand := by
   rw [IsGeneralLogTermWf, toPolyG_afDerivWf_eq_of_logCert f u integrand h,
     mk_toPolyG_afMul f u integrand hf]
@@ -49,20 +49,20 @@ theorem isGeneralLogTermWf_of_logCert (f u integrand : CPoly α) (hf : cnormG f 
 /-- The two-term log-derivative numerator `c₁·D(u₁)·u₂ + c₂·D(u₂)·u₁`. -/
 def afLogSum2Wf (f : CPoly α) (c₁ : α) (u₁ : CPoly α) (c₂ : α) (u₂ : CPoly α) :
     CPoly α :=
-  caddG (afMul f (cscaleG c₁ (afDerivWf f u₁)) u₂)
-    (afMul f (cscaleG c₂ (afDerivWf f u₂)) u₁)
+  cadd (afMul f (cscale c₁ (afDerivWf f u₁)) u₂)
+    (afMul f (cscale c₂ (afDerivWf f u₂)) u₁)
 
 omit [CDiffFieldSpec α] in
 /-- Two log-derivative terms add in quotient form. -/
 theorem mk_toPolyG_afLogSum2Wf (f : CPoly α) (c₁ : α) (u₁ : CPoly α) (c₂ : α)
-    (u₂ : CPoly α) (hf : cnormG f ≠ []) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSum2Wf f c₁ u₁ c₂ u₂))
+    (u₂ : CPoly α) (hf : cnorm f ≠ []) :
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afLogSum2Wf f c₁ u₁ c₂ u₂))
       = Polynomial.C (CFieldSpec.toK c₁)
-          * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u₁))
-          * Ideal.Quotient.mk (afIdeal f) (toPolyG u₂)
+          * Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f u₁))
+          * Ideal.Quotient.mk (afIdeal f) (toPoly u₂)
         + Polynomial.C (CFieldSpec.toK c₂)
-      * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u₂))
-      * Ideal.Quotient.mk (afIdeal f) (toPolyG u₁) := by
+      * Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f u₂))
+      * Ideal.Quotient.mk (afIdeal f) (toPoly u₁) := by
   rw [afLogSum2Wf]
   simp only [denote, map_add, map_mul, mk_toPolyG_afMul _ _ _ hf]
 
@@ -70,43 +70,43 @@ theorem mk_toPolyG_afLogSum2Wf (f : CPoly α) (c₁ : α) (u₁ : CPoly α) (c�
 def afLogSumNumWf (f : CPoly α) (args : List (α × CPoly α)) (cofs : List (CPoly α)) :
     CPoly α :=
   ((args.zip cofs).map (fun p =>
-    afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2)).foldl caddG ([] : CPoly α)
+    afMul f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)).foldl cadd ([] : CPoly α)
 
 /-- Multi-term log-soundness predicate: `Σ cᵢ·afDerivWf(uᵢ)/uᵢ = logpart` in the quotient,
 cross-multiplied by the common denominator. -/
 def IsGeneralLogIntegralWf (f logpart commonDenomQ : CPoly α)
     (args : List (α × CPoly α)) (cofs : List (CPoly α)) : Prop :=
-  Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
-    = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenomQ))
+  Ideal.Quotient.mk (afIdeal f) (toPoly (afLogSumNumWf f args cofs))
+    = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f logpart commonDenomQ))
 
 omit [CDiffFieldSpec α] in
 /-- The residue-sum numerator of the empty log part is zero in the quotient. -/
 theorem mk_toPolyG_afLogSumNumWf_nil (f : CPoly α) (cofs : List (CPoly α)) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f [] cofs)) = 0 := by
-  show Ideal.Quotient.mk (afIdeal f) (toPolyG ([] : CPoly α)) = 0
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afLogSumNumWf f [] cofs)) = 0 := by
+  show Ideal.Quotient.mk (afIdeal f) (toPoly ([] : CPoly α)) = 0
   rw [toPolyG_nil, map_zero]
 
 omit [CDiffFieldSpec α] in
 /-- The residue-sum numerator distributes over the args list. -/
 theorem mk_toPolyG_afLogSumNumWf_eq_sum (f : CPoly α) (args : List (α × CPoly α))
     (cofs : List (CPoly α)) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afLogSumNumWf f args cofs))
       = ((args.zip cofs).map (fun p =>
           Ideal.Quotient.mk (afIdeal f)
-            (toPolyG (afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2)))).sum := by
+            (toPoly (afMul f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)))).sum := by
   rw [afLogSumNumWf]
   set terms := (args.zip cofs).map (fun p =>
-    afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2) with hterms
+    afMul f (cscale p.1.1 (afDerivWf f p.1.2)) p.2) with hterms
   have hfold : ∀ (ts : List (CPoly α)) (acc : CPoly α),
-      Ideal.Quotient.mk (afIdeal f) (toPolyG (ts.foldl caddG acc))
-        = Ideal.Quotient.mk (afIdeal f) (toPolyG acc)
-          + (ts.map (fun t => Ideal.Quotient.mk (afIdeal f) (toPolyG t))).sum := by
+      Ideal.Quotient.mk (afIdeal f) (toPoly (ts.foldl cadd acc))
+        = Ideal.Quotient.mk (afIdeal f) (toPoly acc)
+          + (ts.map (fun t => Ideal.Quotient.mk (afIdeal f) (toPoly t))).sum := by
     intro ts
     induction ts with
     | nil => intro acc; simp
     | cons t ts ih =>
       intro acc
-      rw [List.foldl_cons, ih (caddG acc t)]
+      rw [List.foldl_cons, ih (cadd acc t)]
       simp only [denote, map_add, List.map_cons, List.sum_cons]
       ring
   rw [hfold terms ([] : CPoly α)]
@@ -119,8 +119,8 @@ theorem isGeneralLogIntegralWf_of_residue_match (f logpart commonDenomQ : CPoly 
     (args : List (α × CPoly α)) (cofs : List (CPoly α))
     (hmatch : ((args.zip cofs).map (fun p =>
           Ideal.Quotient.mk (afIdeal f)
-            (toPolyG (afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2)))).sum
-        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenomQ))) :
+            (toPoly (afMul f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)))).sum
+        = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f logpart commonDenomQ))) :
     IsGeneralLogIntegralWf f logpart commonDenomQ args cofs := by
   rw [IsGeneralLogIntegralWf, mk_toPolyG_afLogSumNumWf_eq_sum, hmatch]
 
@@ -129,8 +129,8 @@ omit [CDiffFieldSpec α] in
 theorem isGeneralLogIntegralWf_singleton (f logpart commonDenomQ : CPoly α)
     (c : α) (u cof : CPoly α)
     (hmatch : Ideal.Quotient.mk (afIdeal f)
-          (toPolyG (afMul f (cscaleG c (afDerivWf f u)) cof))
-        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenomQ))) :
+          (toPoly (afMul f (cscale c (afDerivWf f u)) cof))
+        = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f logpart commonDenomQ))) :
     IsGeneralLogIntegralWf f logpart commonDenomQ [(c, u)] [cof] := by
   apply isGeneralLogIntegralWf_of_residue_match
   simpa using hmatch
@@ -140,7 +140,7 @@ end CPoly
 /-! ### The logarithmic-derivative residue, general-carrier framing
 
 The residue of `D(log u) = afDerivWf(u)/u` at a place over `x₀` equals the vanishing order of `u` there:
-in the general setting `afDerivWf(u)/u` localizes (through `toPolyG`) to the base-field log-derivative on
+in the general setting `afDerivWf(u)/u` localizes (through `toPoly`) to the base-field log-derivative on
 the place's uniformizer, so the base-field `logDeriv_residue_eq_multiplicity` carries the content. -/
 
 namespace LogResidue
@@ -242,31 +242,31 @@ end LogResidue
 namespace CPoly
 
 /-- The interpolation-uniqueness characterization of `genResidueResultant`: if `R : ℚ[X]` has
-`degree < cdegG f * cdegG D + 2` and `R.eval (k : ℚ) = cresultantWf (resYAtNode f g Dder (k : ℚ)) D`
-at each node `k`, then `toPolyG (genResidueResultant f g Dder D) = R`. -/
+`degree < cdeg f * cdeg D + 2` and `R.eval (k : ℚ) = cresultantWf (resYAtNode f g Dder (k : ℚ)) D`
+at each node `k`, then `toPoly (genResidueResultant f g Dder D) = R`. -/
 theorem toPolyG_genResidueResultant_eq_of_eval
     (f g : CPoly (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (D : CPoly ℚ)
     (R : ℚ[X])
-    (hRdeg : R.degree < (cdegG f * cdegG D + 2 : ℕ))
-    (hnode : ∀ k ∈ Finset.range (cdegG f * cdegG D + 1 + 1),
+    (hRdeg : R.degree < (cdeg f * cdeg D + 2 : ℕ))
+    (hnode : ∀ k ∈ Finset.range (cdeg f * cdeg D + 1 + 1),
       R.eval ((k : ℚ))
         = cresultantWf (resYAtNode f g Dder ((k : ℚ))) D) :
-    toPolyG (genResidueResultant f g Dder D) = R := by
+    toPoly (genResidueResultant f g Dder D) = R := by
   classical
   -- Lean elaborates the engine's `(range n).map (fun k:ℕ => ((k:ℚ), …))` by lifting the tuple coercion to a
   -- DOUBLE map `((range n).map Nat.cast).map (fun z:ℚ => (z, …))`. We pin `pts` in exactly that doubly-mapped
   -- form (so `hpts` is `rfl` against the engine), and the list-shape lemmas compose over the two `List.map`s.
-  -- `zs` = the `ℚ`-node abscissae. Build it via `List.range'` reused through `cnatCastG`-free `map`; pin it
+  -- `zs` = the `ℚ`-node abscissae. Build it via `List.range'` reused through `cnatCast`-free `map`; pin it
   -- with `List.Nodup`/`length`/`mem` facts proven by the dedicated `range_map` lemmas (the coercion makes the
   -- literal `(range).map (↑·)` re-display as a `flatMap`/`do`-block, so we keep the facts, not the syntax).
   -- `zs` = the `ℚ`-node abscissae, kept as the EXPLICIT cast-map of `range` (`List.map_coe_range`) so the
   -- coercion does not re-lift into a `flatMap`. Facts proven by the `range`/`map` lemmas via `simp`.
-  set zs : List ℚ := (List.range (cdegG f * cdegG D + 1 + 1)).map (Nat.cast) with hzs
-  have hzs_len : zs.length = cdegG f * cdegG D + 1 + 1 := by
+  set zs : List ℚ := (List.range (cdeg f * cdeg D + 1 + 1)).map (Nat.cast) with hzs
+  have hzs_len : zs.length = cdeg f * cdeg D + 1 + 1 := by
     rw [hzs, List.length_map, List.length_range]
   have hzs_nodup : zs.Nodup :=
     hzs ▸ List.Nodup.map (fun a b hab => Nat.cast_injective hab) List.nodup_range
-  have hzs_mem : ∀ k, k ∈ List.range (cdegG f * cdegG D + 1 + 1) → ((k : ℚ)) ∈ zs := by
+  have hzs_mem : ∀ k, k ∈ List.range (cdeg f * cdeg D + 1 + 1) → ((k : ℚ)) ∈ zs := by
     intro k hk; rw [hzs, List.mem_map]; exact ⟨k, hk, rfl⟩
   set pts : List (ℚ × ℚ) :=
     zs.map (fun z => (z, cresultantWf (resYAtNode f g Dder z) D))
@@ -274,14 +274,14 @@ theorem toPolyG_genResidueResultant_eq_of_eval
   -- bridge the engine's node list to `pts` STRUCTURALLY (no resultant evaluation): the engine's
   -- `(range).map (fun k:ℕ => let z:=↑k; (z, …))` and `pts = ((range).map ↑).map (fun z:ℚ => (z, …))` are the
   -- SAME up to `flatMap_pure_eq_map` (the lifted coercion) + `map_map`.
-  have hcompute : genResidueResultant f g Dder D = cinterpolateG pts := by
+  have hcompute : genResidueResultant f g Dder D = cinterpolate pts := by
     rw [genResidueResultant, hpts, hzs]
     congr 1
     rw [List.map_map]
     -- the engine's inner `do let a ← range; pure ↑a` IS `range.map Nat.cast` (`flatMap_pure_eq_map`),
     -- then `map_map` collapses both sides to `range.map ((z,…) ∘ ↑)`
-    rw [show (do let a ← List.range (cdegG f * cdegG D + 1 + 1); pure (↑a : ℚ))
-        = (List.range (cdegG f * cdegG D + 1 + 1)).map (Nat.cast) from
+    rw [show (do let a ← List.range (cdeg f * cdeg D + 1 + 1); pure (↑a : ℚ))
+        = (List.range (cdeg f * cdeg D + 1 + 1)).map (Nat.cast) from
       List.flatMap_pure_eq_map _ _, List.map_map]
   have htoK : ∀ q : ℚ, CFieldSpec.toK q = q := fun _ => rfl
   -- node-abscissa images = `zs`; reusable membership/length/nodup facts over the double map
@@ -297,26 +297,26 @@ theorem toPolyG_genResidueResultant_eq_of_eval
   have hne : pts ≠ [] := by
     rw [hpts, Ne, List.map_eq_nil_iff]
     intro hzsnil; rw [hzsnil] at hzs_len; simp at hzs_len
-  have hlen : pts.length = cdegG f * cdegG D + 1 + 1 := by
+  have hlen : pts.length = cdeg f * cdeg D + 1 + 1 := by
     rw [hpts, List.length_map, hzs_len]
   rw [hcompute]
   -- Lagrange uniqueness: degree `< #nodes` both sides, agreeing at the nodes
   refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := ℚ) (ι := ℕ)
-    (s := Finset.range (cdegG f * cdegG D + 1 + 1))
+    (s := Finset.range (cdeg f * cdeg D + 1 + 1))
     (v := fun k => (k : ℚ))
-    (f := toPolyG (cinterpolateG pts)) (g := R)
+    (f := toPoly (cinterpolate pts)) (g := R)
     (fun a _ b _ hab => Nat.cast_injective hab) ?_ ?_ ?_
-  · -- `degree (toPolyG (cinterpolateG pts)) < #nodes`
+  · -- `degree (toPoly (cinterpolate pts)) < #nodes`
     rw [Finset.card_range, Nat.cast_withBot]
     have := degree_toPolyG_cinterpolateG_lt pts hne
     rw [hlen] at this
     simpa [Nat.cast_withBot] using this
-  · -- `degree R < #nodes`: `cdegG f · cdegG D + 2 = #nodes`
+  · -- `degree R < #nodes`: `cdeg f · cdeg D + 2 = #nodes`
     rw [Finset.card_range, Nat.cast_withBot]
-    have hcard : (cdegG f * cdegG D + 1 + 1 : ℕ) = (cdegG f * cdegG D + 2 : ℕ) := by ring
+    have hcard : (cdeg f * cdeg D + 1 + 1 : ℕ) = (cdeg f * cdeg D + 2 : ℕ) := by ring
     rw [hcard]
     exact hRdeg
-  · -- agree at the nodes: `toPolyG(cinterpolateG pts)((k:ℚ)) = node value = R((k:ℚ))`
+  · -- agree at the nodes: `toPoly(cinterpolate pts)((k:ℚ)) = node value = R((k:ℚ))`
     intro k hk
     -- `(k:ℚ) ∈ zs` since `zs = (range n).map (↑·)` and `k ∈ range n`
     have hzmem : ((k : ℚ)) ∈ zs := by
@@ -341,21 +341,21 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- The fuel-free full general algebraic-integral soundness predicate. -/
 def IsGeneralAlgebraicIntegralWf (f g v commonDenomQ : CPoly α)
     (args : List (α × CPoly α)) (cofs : List (CPoly α)) : Prop :=
-  Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f (afDerivWf f v) commonDenomQ))
-    + Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
-  = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f g commonDenomQ))
+  Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f (afDerivWf f v) commonDenomQ))
+    + Ideal.Quotient.mk (afIdeal f) (toPoly (afLogSumNumWf f args cofs))
+  = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f g commonDenomQ))
 
 omit [CDiffFieldSpec α] in
 /-- The fuel-free full general algebraic integral composes from Wf rational and log soundness. -/
 theorem isGeneralAlgebraicIntegralWf_of_parts (f g v ratPart logPart commonDenomQ : CPoly α)
     (args : List (α × CPoly α)) (cofs : List (CPoly α))
     (hrat : Ideal.Quotient.mk (afIdeal f)
-          (toPolyG (afMul f (afDerivWf f v) commonDenomQ))
-        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f ratPart commonDenomQ)))
+          (toPoly (afMul f (afDerivWf f v) commonDenomQ))
+        = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f ratPart commonDenomQ)))
     (hlog : IsGeneralLogIntegralWf f logPart commonDenomQ args cofs)
-    (hsplit : Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f ratPart commonDenomQ))
-        + Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logPart commonDenomQ))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f g commonDenomQ))) :
+    (hsplit : Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f ratPart commonDenomQ))
+        + Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f logPart commonDenomQ))
+      = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f g commonDenomQ))) :
     IsGeneralAlgebraicIntegralWf f g v commonDenomQ args cofs := by
   rw [IsGeneralAlgebraicIntegralWf, hrat, hlog, hsplit]
 

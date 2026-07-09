@@ -23,9 +23,9 @@ def benchP (k : ℕ) : CPoly (QFunNZG ℚ) := gBenchP k
 `gcd(benchP k, benchQ k) = gCommonFactor` (degree 2). -/
 def benchQ (k : ℕ) : CPoly (QFunNZG ℚ) := gBenchQ k
 
-/-- The naive Euclidean gcd `cmonicG (cgcdWf …)` of the benchmark pair, monic-normalized (the swelling
+/-- The naive Euclidean gcd `cmonic (cgcdWf …)` of the benchmark pair, monic-normalized (the swelling
 kernel over the fraction field). -/
-def benchExtGcd (k : ℕ) : CPoly (QFunNZG ℚ) := cmonicG (cgcdWf (benchP k) (benchQ k)).1
+def benchExtGcd (k : ℕ) : CPoly (QFunNZG ℚ) := cmonic (cgcdWf (benchP k) (benchQ k)).1
 
 /-! ### The `qReduce`-in-the-loop gcd — the swell-control prototype at `α = QFunNZG ℚ` -/
 
@@ -38,19 +38,19 @@ def normCoeffs (p : CPoly (QFunNZG ℚ)) : CPoly (QFunNZG ℚ) :=
 (otherwise mirroring `cdivmodG`): `benchDivmodNorm fuel p q = (quotient, remainder)`. -/
 def benchDivmodNorm : ℕ → CPoly (QFunNZG ℚ) → CPoly (QFunNZG ℚ) →
     CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)
-  | 0, p, _ => ([], cnormG p)
+  | 0, p, _ => ([], cnorm p)
   | fuel + 1, p, q =>
-    let p := cnormG p
-    let q := cnormG q
-    if cisZeroG q then ([], [])
+    let p := cnorm p
+    let q := cnorm q
+    if cisZero q then ([], [])
     else if (p : List (QFunNZG ℚ)).length < (q : List (QFunNZG ℚ)).length then ([], p)
     else
-      let c := CField.div (cleadG p) (cleadG q)
+      let c := CField.div (clead p) (clead q)
       let k := (p : List (QFunNZG ℚ)).length - (q : List (QFunNZG ℚ)).length
-      let term := cshiftG k [c]
-      let p' := normCoeffs (cnormG (csubG p (cmulG term q)))
+      let term := cshift k [c]
+      let p' := normCoeffs (cnorm (csub p (cmul term q)))
       let (quo, rem) := benchDivmodNorm fuel p' q
-      (caddG term quo, rem)
+      (cadd term quo, rem)
 
 /-- The remainder of `benchDivmodNorm` (`cdivmodG`-style remainder with per-step `qReduce`). -/
 def benchModNorm (fuel : ℕ) (p q : CPoly (QFunNZG ℚ)) : CPoly (QFunNZG ℚ) :=
@@ -59,14 +59,14 @@ def benchModNorm (fuel : ℕ) (p q : CPoly (QFunNZG ℚ)) : CPoly (QFunNZG ℚ) 
 /-- Plain Euclidean gcd loop with per-step coefficient `qReduce` (`benchModNorm` remainder, `normCoeffs`
 each step): the swell-control gcd at `α = QFunNZG ℚ`. -/
 def benchNormGcdGo : ℕ → CPoly (QFunNZG ℚ) → CPoly (QFunNZG ℚ) → CPoly (QFunNZG ℚ)
-  | 0, a, _ => cnormG a
+  | 0, a, _ => cnorm a
   | fuel + 1, a, b =>
-    if cisZeroG b then cnormG a
+    if cisZero b then cnorm a
     else benchNormGcdGo fuel b (normCoeffs (benchModNorm (fuel + 1) a b))
 
 /-- The monic `qReduce`-in-the-loop gcd of the benchmark pair (the swell-controlled prototype). -/
 def benchNormGcd (k : ℕ) : CPoly (QFunNZG ℚ) :=
-  normCoeffs (cmonicG (benchNormGcdGo 60 (benchP k) (benchQ k)))
+  normCoeffs (cmonic (benchNormGcdGo 60 (benchP k) (benchQ k)))
 
 /-! ### The swell measure and the pinned witnesses (`native_decide`) -/
 

@@ -37,8 +37,8 @@ def radReduceCase1IterateWf (der : CPoly α → CPoly α) (V Df f g : CPoly α) 
       let B := radCase1Cofactor k V Df f C
       let Bder := der B
       let D := radCase1Residual k V Df f g B C Bder
-      let contrib := cmulG (cmulG B f) (cpowG V (k0 - k))
-      radReduceCase1IterateWf der V Df f g k0 (k - 1) (cnegG D) (caddG vNum contrib)
+      let contrib := cmul (cmul B f) (cpow V (k0 - k))
+      radReduceCase1IterateWf der V Df f g k0 (k - 1) (cneg D) (cadd vNum contrib)
 termination_by k => k
 decreasing_by exact Nat.sub_lt (Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.lt_of_not_le hk).le) Nat.zero_lt_one
 
@@ -66,8 +66,8 @@ def radReduceCase2IterateWf (W h ρ : CPoly α) (k0 : ℕ) :
     else
       let B := radCase2CofactorC k W h C
       let D := radCase2ResidualC k W h C B
-      let contrib := cmulG (cmulG B ρ) (cpowG W (k0 - k))
-      radReduceCase2IterateWf W h ρ k0 (k - 1) (cnegG D) (caddG vNum contrib)
+      let contrib := cmul (cmul B ρ) (cpow W (k0 - k))
+      radReduceCase2IterateWf W h ρ k0 (k - 1) (cneg D) (cadd vNum contrib)
 termination_by k => k
 decreasing_by exact Nat.sub_lt (Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.lt_of_not_le hk).le) Nat.zero_lt_one
 
@@ -79,26 +79,26 @@ def radIntegrateCase2Wf (W ρ : CPoly α) (k0 : ℕ) (C : CPoly α) : CPoly α �
 
 /-! ## The Case-3 (`C/y`) degree-lowering `radReduceCase3IterateWf`
 
-Termination is by `(cnormG C).length`; unlike Cases 1–2 the degree drop is data-driven, so the
+Termination is by `(cnorm C).length`; unlike Cases 1–2 the degree drop is data-driven, so the
 recursion is taken only under a structural length-drop guard. -/
 
 /-- Iterated Case-3 reduction `radReduceCase3IterateWf der f g C vNum = (Crem, vNumOut)`: while
 `deg C ≥ deg f`, cancel the leading term with `B = radCase3Cofactor`, form the residual
 `D = radCase3Residual`, accumulate `B·f` into `vNum`, and recurse on `−D`; bottom at `deg C < deg f`
-(or `C = 0`) returning `(C, vNum)`. Well-founded on `(cnormG C).length` under the structural
+(or `C = 0`) returning `(C, vNum)`. Well-founded on `(cnorm C).length` under the structural
 length-drop guard (on a real run the leading term cancels, so the guard always holds). `der` the base
 derivation, `f` the radicand, `g` from `(f/y)' = g/y`. `[CField α]`-only. -/
 def radReduceCase3IterateWf (der : CPoly α → CPoly α) (f g : CPoly α) :
     CPoly α → CPoly α → CPoly α × CPoly α
   | C, vNum =>
-    if cisZeroG C || cdegG C < cdegG f then (C, vNum)
+    if cisZero C || cdeg C < cdeg f then (C, vNum)
     else
       let B := radCase3Cofactor f g C
       let D := radCase3Residual f g B C (der B)
-      if (cnormG (cnegG D) : List α).length < (cnormG C : List α).length then
-        radReduceCase3IterateWf der f g (cnegG D) (caddG vNum (cmulG B f))
+      if (cnorm (cneg D) : List α).length < (cnorm C : List α).length then
+        radReduceCase3IterateWf der f g (cneg D) (cadd vNum (cmul B f))
       else (C, vNum)   -- unreachable on a real run (the leading term cancels, `deg D < deg C`)
-termination_by C => (cnormG C : List α).length
+termination_by C => (cnorm C : List α).length
 decreasing_by assumption
 
 /-- Case-3 simple-radical rational-part driver `radIntegrateCase3Wf der f g C = (Crem, vNum)`: the
@@ -109,28 +109,28 @@ def radIntegrateCase3Wf (der : CPoly α → CPoly α) (f g C : CPoly α) : CPoly
 /-! ## The multi-case dispatch `radIntegrateRationalWf` -/
 
 /-- Multi-case simple-radical rational-part driver `radIntegrateRationalWf ρ R B` over `y² = ρ`,
-denominator `B` monic, numerator `R` proper: squarefree-decompose `B` (`cSqfreeYunFFG`), split each
+denominator `B` monic, numerator `R` proper: squarefree-decompose `B` (`cSqfreeYunFF`), split each
 factor into its `V`-part / `W`-part (`cgcdWf`/`cdivWf` against `ρ`), partial-fraction `R`
 (`radPartialFractionCoprime`), and dispatch each summand to the Case-1 / Case-2 Hermite descent.
 Returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`. `[CFracGcdCoreWf α]` supplies
 the squarefree factorization. -/
 def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : CPoly α) :
     List (Bool × CPoly α × ℕ × CPoly α × CPoly α × CPoly α) :=
-  let g : CPoly α := cscaleG (CField.div CField.one (cnatCastG 2)) (cderivG ρ)   -- `½·ρ'` (n = 2)
+  let g : CPoly α := cscale (CField.div CField.one (cnatCast 2)) (cderiv ρ)   -- `½·ρ'` (n = 2)
   let factored : List (CPoly α × ℕ) :=
-    (cSqfreeYunFFG B).zipIdx.filterMap (fun (Bi, i) =>
-      if cdegG Bi = 0 then none else some (Bi, i + 1))
+    (cSqfreeYunFF B).zipIdx.filterMap (fun (Bi, i) =>
+      if cdeg Bi = 0 then none else some (Bi, i + 1))
   let split : List (Bool × CPoly α × ℕ) :=
     factored.flatMap (fun (Bi, e) =>
-      let Wi := cmonicG (cgcdWf Bi ρ).1
+      let Wi := cmonic (cgcdWf Bi ρ).1
       let Vi := cdivWf Bi Wi
-      (if cdegG Vi = 0 then [] else [(true, Vi, e)]) ++
-      (if cdegG Wi = 0 then [] else [(false, Wi, e)]))
-  let primePowers : List (CPoly α) := split.map (fun (_, fi, e) => cpowG fi e)
+      (if cdeg Vi = 0 then [] else [(true, Vi, e)]) ++
+      (if cdeg Wi = 0 then [] else [(false, Wi, e)]))
+  let primePowers : List (CPoly α) := split.map (fun (_, fi, e) => cpow fi e)
   let nums : List (CPoly α) := radPartialFractionCoprime R primePowers
   (split.zip nums).map (fun ((isV, fi, e), Ni) =>
     if isV then
-      let (Crem, vNum) := radReduceCase1IterateWf cderivG fi (cderivG fi) ρ g e e Ni []
+      let (Crem, vNum) := radReduceCase1IterateWf cderiv fi (cderiv fi) ρ g e e Ni []
       (true, fi, e, Ni, vNum, Crem)
     else
       let (Crem, vNum) := radReduceCase2IterateWf fi (cdivWf ρ fi) ρ e e Ni []

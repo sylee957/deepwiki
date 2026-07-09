@@ -28,18 +28,18 @@ leading term of `C` for any derivation `der` (with `B' = der B`). Degree `m = de
 coefficient `b = lcf(C)/κ` with `κ = lcf(der(θ^m)·f + θ^m·g)`. Returns `[]` when `deg C < deg f`. Generic
 over `[CField α]`. -/
 def radCase3CofactorTower (der : CPoly α → CPoly α) (f g C : CPoly α) : CPoly α :=
-  if cisZeroG C || cdegG C < cdegG f then []
+  if cisZero C || cdeg C < cdeg f then []
   else
-    let m := cdegG C - cdegG g                                      -- `deg B`, so `deg(B·g) = deg C`
-    let trial := cshiftG m [CField.one]                            -- the unit cofactor `θ^m`
-    let κ := cleadG (caddG (cmulG (der trial) f) (cmulG trial g))  -- per-unit-`b` leading contribution
-    let b := CField.div (cleadG C) κ                               -- `b = lcf(C)/κ`
-    cshiftG m [b]                                                   -- `b·θ^m`
+    let m := cdeg C - cdeg g                                      -- `deg B`, so `deg(B·g) = deg C`
+    let trial := cshift m [CField.one]                            -- the unit cofactor `θ^m`
+    let κ := clead (cadd (cmul (der trial) f) (cmul trial g))  -- per-unit-`b` leading contribution
+    let b := CField.div (clead C) κ                               -- `b = lcf(C)/κ`
+    cshift m [b]                                                   -- `b·θ^m`
 
 /-! ### The iterated Case-3 reduction with the actual derivation
 
 `radReduceCase3IterateG` is `radReduceCase3Iterate` with the cofactor swapped to the generic
-`radCase3CofactorTower der`, well-founded on `(cnormG C).length` under a degree-drop guard. -/
+`radCase3CofactorTower der`, well-founded on `(cnorm C).length` under a degree-drop guard. -/
 
 /-- Fuel-free iterated Case-3 reduction `radReduceCase3IterateG der f g C vNum = (Crem, vNumOut)`, using
 the generic cofactor `B := radCase3CofactorTower der f g C`: while `deg C ≥ deg f`, cancel the leading term
@@ -48,14 +48,14 @@ on `−D`; bottom at `deg C < deg f`. `der` the radicand-level derivation. Gener
 def radReduceCase3IterateG (der : CPoly α → CPoly α) (f g : CPoly α) :
     CPoly α → CPoly α → CPoly α × CPoly α
   | C, vNum =>
-    if cisZeroG C || cdegG C < cdegG f then (C, vNum)
+    if cisZero C || cdeg C < cdeg f then (C, vNum)
     else
       let B := radCase3CofactorTower der f g C
       let D := radCase3Residual f g B C (der B)
-      if (cnormG (cnegG D) : List α).length < (cnormG C : List α).length then
-        radReduceCase3IterateG der f g (cnegG D) (caddG vNum (cmulG B f))
+      if (cnorm (cneg D) : List α).length < (cnorm C : List α).length then
+        radReduceCase3IterateG der f g (cneg D) (cadd vNum (cmul B f))
       else (C, vNum)
-termination_by C => (cnormG C : List α).length
+termination_by C => (cnorm C : List α).length
 decreasing_by assumption
 
 /-- Case-3 rational-part driver with the actual derivation `radIntegrateCase3G der f g C = (Crem, vNum)`
@@ -79,7 +79,7 @@ def expC3Rho : CPoly (QFunNZG ℚ) := [CField.one, CField.one]
 /-- The exp-tower Case-3 helper `g = ½ρ'` over `ℚ(x)[θ]` with the `θ' = θ` derivation: `ρ' = θ`, so
 `g = θ/2 = [0, 1/2]` (degree `1`, matching `deg f`). -/
 def expC3G : CPoly (QFunNZG ℚ) :=
-  cscaleG (CField.div CField.one (cnatCastG 2)) (cmonomialDeriv expDt1 expC3Rho)
+  cscale (CField.div CField.one (cnatCast 2)) (cmonomialDeriv expDt1 expC3Rho)
 
 /-- The exp-tower Case-3 numerator `C = ρ = θ+1 ∈ ℚ(x)[θ]` (integrand `√(eˣ+1) = ρ/y`), `[1,1]`. -/
 def expC3C : CPoly (QFunNZG ℚ) := [CField.one, CField.one]
@@ -95,9 +95,9 @@ def expC3Run : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ) :=
        expC3Run.1.map (fun (z : QFunNZG ℚ) => (z.1.1 : List ℚ)))
 
 /-- Case-3-G computes `vNum = 2ρ` (so `v = 2y`) over the exp tower: the reduction with `θ' = θ` produces
-`vNum = 2(θ+1) = 2ρ`, checked by `cisZeroG (vNum − 2ρ)`. -/
+`vNum = 2(θ+1) = 2ρ`, checked by `cisZero (vNum − 2ρ)`. -/
 theorem expC3_vNum_eq_two_rho :
-    cisZeroG (csubG expC3Run.2 (cscaleG (cnatCastG 2) expC3Rho)) = true := by native_decide
+    cisZero (csub expC3Run.2 (cscale (cnatCast 2) expC3Rho)) = true := by native_decide
 
 /-- The exp-tower radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)(eˣ) = Lvl2` lifted to a level-2 scalar, the radicand for
 `radDeriv 2` (the same value as `expRadicand`). -/
@@ -142,11 +142,11 @@ theorem rtFull_split_exact :
 denominator of `u = (y−1)/(y+1) = ((θ+2)−2y)/θ`. -/
 def rtFullDenTheta : CPoly (QFunNZG ℚ) := [CField.zero, CField.one]
 
-/-- The fully-computed recovered result `F'`: `cIntegrateElementaryG` over `ℚ(x)(eˣ)` with the computed
+/-- The fully-computed recovered result `F'`: `cIntegrateElementary` over `ℚ(x)(eˣ)` with the computed
 rational part `expC3Vlift` (`v = 2y`) and the log argument computed from the residual by `radLogArgSolveG`,
 assembling `F' = ⟨2y, [(1, u)]⟩`. -/
 def rtFullRecovered : AlgIntegralResultG Lvl2 :=
-  @cIntegrateElementaryG _ _ _ expTowerDiff expC3RhoLvl2 expC3Vlift rtFullLogResidual
+  @cIntegrateElementary _ _ _ expTowerDiff expC3RhoLvl2 expC3Vlift rtFullLogResidual
     CField.one rtFullDenTheta 1
 
 -- Sanity print: the recovered rational part `v` (should be `2y = [0,2]`, i.e. coefficient `2` on `y`) and
@@ -175,25 +175,25 @@ theorem rtFull_ratPart_eq_two_y :
     radIsZero (radSub rtFullRecovered.ratPart
       [CField.zero, CField.add CField.one CField.one]) = true := by native_decide
 
-/-! ### `radIntegrateCase3G cderivG` reduces to the ℚ-base behavior at `α = ℚ(x)`
+/-! ### `radIntegrateCase3G cderiv` reduces to the ℚ-base behavior at `α = ℚ(x)`
 
-Conservativity: at the ℚ-base (`θ = x`, `θ' = 1`), `radIntegrateCase3G cderivG` reproduces
-`radIntegrateCase3Wf cderivG` on `∫ x⁴/√(x³+1)`. -/
+Conservativity: at the ℚ-base (`θ = x`, `θ' = 1`), `radIntegrateCase3G cderiv` reproduces
+`radIntegrateCase3Wf cderiv` on `∫ x⁴/√(x³+1)`. -/
 
 /-- ℚ-base radicand `ρ = x³ + 1 ∈ ℚ(x)` as `CPoly ℚ` `[1,0,0,1]` (the same value as `c3itRho`). -/
 def stretchRho : CPoly ℚ := [1, 0, 0, 1]
 
-/-- ℚ-base helper `g = ½ρ' = (3/2)x²` (`θ' = 1`) (the same value as `c3itG`). -/
-def stretchG : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG stretchRho)
+/-- ℚ-base helper `g = ½ρ' = (3/2)x²` (`θ' = 1`) (the same value as `c3it`). -/
+def stretchG : CPoly ℚ := cscale (1/2 : ℚ) (cderiv stretchRho)
 
 /-- ℚ-base numerator `C = x⁴ ∈ ℚ(x)` (`[0,0,0,0,1]`) (the same value as `c3itC`). -/
 def stretchC : CPoly ℚ := [0, 0, 0, 0, 1]
 
-/-- `radIntegrateCase3G cderivG` agrees with `radIntegrateCase3Wf cderivG` at the ℚ-base: on `∫ x⁴/√(x³+1)`
+/-- `radIntegrateCase3G cderiv` agrees with `radIntegrateCase3Wf cderiv` at the ℚ-base: on `∫ x⁴/√(x³+1)`
 the two drivers produce identical `(Crem, vNum)`, checked by structural equality. -/
 theorem stretch_case3G_eq_case3_base :
-    radIntegrateCase3G cderivG stretchRho stretchG stretchC
-      = radIntegrateCase3Wf cderivG stretchRho stretchG stretchC := by native_decide
+    radIntegrateCase3G cderiv stretchRho stretchG stretchC
+      = radIntegrateCase3Wf cderiv stretchRho stretchG stretchC := by native_decide
 
 /-! ### `#print axioms` — the rational half computed over the tower -/
 
@@ -210,7 +210,7 @@ theorem stretch_case3G_eq_case3_base :
 #print axioms rtFull_ratPart_eq_two_y
 #print axioms rtFull_shape
 
--- STRETCH: `radIntegrateCase3G cderivG` reduces to the ℚ-base `radIntegrateCase3Wf` (conservative):
+-- STRETCH: `radIntegrateCase3G cderiv` reduces to the ℚ-base `radIntegrateCase3Wf` (conservative):
 #print axioms stretch_case3G_eq_case3_base
 
 end DeepWiki.SymbolicIntegration

@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
 /-! # The one-level LRT (root-free) assembler core
 
 Combines the special/polynomial part (a rational fraction `snum/sden`, identical to the rational assembler)
-with the reduced LRT result (`cIntegrateReducedLrtG`, symbolic algebraic-residue logs) into a single
+with the reduced LRT result (`cIntegrateReducedLrt`, symbolic algebraic-residue logs) into a single
 `LrtResultG`, and proves the combined soundness `IsIntegralResultLrtG`. The LRT analogue of `combineSN` /
 `combineSN_isIntegralResult`: the only new content over the rational assembler is transferring the special-part
 reconstruction from `K` to each splitting extension `E` via `ratFuncBaseChange` (exactly as `hherm_lrt_E` does
@@ -22,10 +22,10 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 `(snum·gden + gnum·sden)/(sden·gden) + logs`. The LRT analogue of `combineSN` (same rational combine, symbolic
 log list carried through). -/
 def combineSNLrt (snum sden : CPoly α) (r : LrtResultG α) : LrtResultG α :=
-  ⟨(caddG (cmulG snum r.rational.2) (cmulG r.rational.1 sden), cmulG sden r.rational.2), r.logs⟩
+  ⟨(cadd (cmul snum r.rational.2) (cmul r.rational.1 sden), cmul sden r.rational.2), r.logs⟩
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- `amGExt (toPolyG p) ≠ 0` when `toPolyG p ≠ 0`: base change (`φ` injective) and the fraction-field
+/-- `amGExt (toPoly p) ≠ 0` when `toPoly p ≠ 0`: base change (`φ` injective) and the fraction-field
 embedding are injective. -/
 theorem amGExt_ne_zero {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E]
     {p : (CFieldSpec.K α)[X]} (hp : p ≠ 0) : amGExt (E := E) p ≠ 0 := by
@@ -39,7 +39,7 @@ result `combineSNLrt snum sden r` is an antiderivative of `a/d` over **every** a
 differential extension `E`. The base-change of `hspecK` to `E` (`ratFuncBaseChange`) is the only step beyond
 `combineSN_isIntegralResult`. -/
 theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : CPoly α)
-    (r : LrtResultG α) (hsden : toPolyG sden ≠ 0) (hgden : toPolyG r.rational.2 ≠ 0)
+    (r : LrtResultG α) (hsden : toPoly sden ≠ 0) (hgden : toPoly r.rational.2 ≠ 0)
     (hspecK : towerFractionFieldDerivG Dt (fieldFrac snum sden) + fieldFrac cn dn = fieldFrac a d)
     (hNrmField : IsIntegralResultLrtG Dt cn dn r) :
     IsIntegralResultLrtG Dt a d (combineSNLrt snum sden r) := by
@@ -49,27 +49,27 @@ theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : CPoly α)
   simp only [fieldFrac] at hspecE
   rw [map_add, ratFuncBaseChange_towerFractionFieldDerivG, ratFuncBaseChange_amG_div,
     ratFuncBaseChange_amG_div] at hspecE
-  have hAsden : amGExt (E := F) (toPolyG sden) ≠ 0 := amGExt_ne_zero hsden
-  have hAgden : amGExt (E := F) (toPolyG r.rational.2) ≠ 0 := amGExt_ne_zero hgden
+  have hAsden : amGExt (E := F) (toPoly sden) ≠ 0 := amGExt_ne_zero hsden
+  have hAgden : amGExt (E := F) (toPoly r.rational.2) ≠ 0 := amGExt_ne_zero hgden
   simp only [combineSNLrt]
-  have e1 : amGExt (E := F) (toPolyG (caddG (cmulG snum r.rational.2) (cmulG r.rational.1 sden)))
-      = amGExt (E := F) (toPolyG snum) * amGExt (E := F) (toPolyG r.rational.2)
-        + amGExt (E := F) (toPolyG r.rational.1) * amGExt (E := F) (toPolyG sden) := by
+  have e1 : amGExt (E := F) (toPoly (cadd (cmul snum r.rational.2) (cmul r.rational.1 sden)))
+      = amGExt (E := F) (toPoly snum) * amGExt (E := F) (toPoly r.rational.2)
+        + amGExt (E := F) (toPoly r.rational.1) * amGExt (E := F) (toPoly sden) := by
     simp only [amGExt, denote, Polynomial.map_add, Polynomial.map_mul, map_add, map_mul]
-  have e2 : amGExt (E := F) (toPolyG (cmulG sden r.rational.2))
-      = amGExt (E := F) (toPolyG sden) * amGExt (E := F) (toPolyG r.rational.2) := by
+  have e2 : amGExt (E := F) (toPoly (cmul sden r.rational.2))
+      = amGExt (E := F) (toPoly sden) * amGExt (E := F) (toPoly r.rational.2) := by
     simp only [amGExt, denote, Polynomial.map_mul, map_mul]
-  have hcombine : amGExt (E := F) (toPolyG (caddG (cmulG snum r.rational.2) (cmulG r.rational.1 sden)))
-        / amGExt (E := F) (toPolyG (cmulG sden r.rational.2))
-      = amGExt (E := F) (toPolyG snum) / amGExt (E := F) (toPolyG sden)
-        + amGExt (E := F) (toPolyG r.rational.1) / amGExt (E := F) (toPolyG r.rational.2) := by
+  have hcombine : amGExt (E := F) (toPoly (cadd (cmul snum r.rational.2) (cmul r.rational.1 sden)))
+        / amGExt (E := F) (toPoly (cmul sden r.rational.2))
+      = amGExt (E := F) (toPoly snum) / amGExt (E := F) (toPoly sden)
+        + amGExt (E := F) (toPoly r.rational.1) / amGExt (E := F) (toPoly r.rational.2) := by
     rw [e1, e2, div_add_div _ _ hAsden hAgden]; congr 1; ring
   rw [hcombine, map_add, add_assoc, hNE]
   exact hspecE
 
-/-- **The one-level primitive LRT case integrator.** Canonical split (`canonicalRepresentationFastG`) →
+/-- **The one-level primitive LRT case integrator.** Canonical split (`canonicalRepresentationFast`) →
 special part via the case hook `C.integrateSpecial` (rational, shared with the rational solver) → reduced
-normal part via the root-free `cIntegrateReducedLrtG` → combined with `combineSNLrt`. The LRT analogue of
+normal part via the root-free `cIntegrateReducedLrt` → combined with `combineSNLrt`. The LRT analogue of
 `cIntegrateCase` (no candidate sweep, no `reducedCorrect` post-processing: the primitive LRT reduced
 integrator is direct). -/
 def cIntegrateCaseLrt [CFracGcdCoreWf α] (C : MonomialCase α) (Dt a d : CPoly α) :
@@ -77,11 +77,11 @@ def cIntegrateCaseLrt [CFracGcdCoreWf α] (C : MonomialCase α) (Dt a d : CPoly 
   -- **Primitive-case runtime guard** (`Dθ ∈ k`, i.e. `deg Dt = 0`): the LRT reduced integrator is
   -- primitive-specific, so a successful run *decides* `deg Dt = 0` — discharging `hDt0` from the branch
   -- rather than carrying it as a frontier hypothesis.
-  if cdegG Dt = 0 then
-    let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt a d
+  if cdeg Dt = 0 then
+    let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
     match C.integrateSpecial Dt fp b ds with
     | none => none
-    | some (snum, sden) => some (combineSNLrt snum sden (cIntegrateReducedLrtG Dt cn dn))
+    | some (snum, sden) => some (combineSNLrt snum sden (cIntegrateReducedLrt Dt cn dn))
   else none
 
 open Classical in
@@ -93,28 +93,28 @@ The LRT analogue of `cIntegrateCase_sound`; the reduced-denominator nonvanishing
 theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
     (hgcd : GcdFFCorrect (α := α))
     (C : MonomialCase α) (Dt a d : CPoly α) (res : LrtResultG α) (snum sden : CPoly α)
-    (specialVal : RatFunc (CFieldSpec.K α)) (hd0 : toPolyG d ≠ 0)
+    (specialVal : RatFunc (CFieldSpec.K α)) (hd0 : toPoly d ≠ 0)
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden))
-    (hsome : cIntegrateCaseLrt C Dt a d = some res) (hsden : toPolyG sden ≠ 0)
+    (hsome : cIntegrateCaseLrt C Dt a d = some res) (hsden : toPoly sden ≠ 0)
     (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
-    (hNrmField : (toPolyG Dt).natDegree = 0 → IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)))
+    (hNrmField : (toPoly Dt).natDegree = 0 → IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
+      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)))
     (hrecon : specialVal + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
     IsIntegralResultLrtG Dt a d res := by
   -- the primitive-case guard is *decided* by a successful run: `cIntegrateCaseLrt = some res ⟹ deg Dt = 0`
-  have hguard : cdegG Dt = 0 := by
+  have hguard : cdeg Dt = 0 := by
     by_contra h; rw [cIntegrateCaseLrt, if_neg h] at hsome; simp at hsome
-  have hDt0 : (toPolyG Dt).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hguard
-  have hgden : toPolyG (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0 :=
+  have hDt0 : (toPoly Dt).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hguard
+  have hgden : toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0 :=
     toPolyG_cHermiteReduceTowerG_den_ne_zero hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) (Polynomial.primPart_ne_zero _)
   have hshape : res
-      = combineSNLrt snum sden (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) := by
+      = combineSNLrt snum sden (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) := by
     have hexp : cIntegrateCaseLrt C Dt a d
-        = some (combineSNLrt snum sden (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d))) := by
+        = some (combineSNLrt snum sden (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d))) := by
       rw [cIntegrateCaseLrt, if_pos hguard]
       simp only [crPoly, crSpecNum, crSpecDen, crNormNum, crNormDen] at hSpec ⊢
-      rcases hcrep : canonicalRepresentationFastG Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+      rcases hcrep : canonicalRepresentationFast Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
       rw [hcrep] at hSpec
       dsimp only at hSpec ⊢
       rw [hSpec]
@@ -122,7 +122,7 @@ theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
     exact (Option.some.injEq _ _ ▸ hsome).symm
   rw [hshape]
   refine combineSNLrt_isIntegralResultLrt Dt a d (crNormNum Dt a d) (crNormDen Dt a d) snum sden
-    (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) hsden hgden ?_ (hNrmField hDt0)
+    (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) hsden hgden ?_ (hNrmField hDt0)
   rw [hSpecField]; exact hrecon
 
 end DeepWiki.SymbolicIntegration

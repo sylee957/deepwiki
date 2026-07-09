@@ -25,39 +25,39 @@ def case1V : CPoly ℚ := [-1, 1]
 /-- Case-1 example numerator `C = 1`, `[1]`. -/
 def case1C : CPoly ℚ := [1]
 
-/-- `V' = (x−1)' = 1` over `ℚ[x]` (`cderivG`, `θ' = 1`, ℚ-constant coefficients). -/
-def case1Vder : CPoly ℚ := cderivG case1V
+/-- `V' = (x−1)' = 1` over `ℚ[x]` (`cderiv`, `θ' = 1`, ℚ-constant coefficients). -/
+def case1Vder : CPoly ℚ := cderiv case1V
 
 /-- `g = ((n−1)/n)·f' = (1/2)·1 = 1/2` for `n = 2`, `f = x` squarefree (`(f/y)' = g/y`), `[1/2]`. -/
-def case1G : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG case1F)
+def case1 : CPoly ℚ := cscale (1/2 : ℚ) (cderiv case1F)
 
 /-- The solved Case-1 cofactor `B` for `−x·B ≡ 1 (mod x−1)` — expected `B = −1`. -/
 def case1B : CPoly ℚ := radCase1Cofactor 2 case1V case1Vder case1F case1C
 
 /-- The Case-1 residual `D` — expected the constant `1/2`. -/
 def case1D : CPoly ℚ :=
-  radCase1Residual 2 case1V case1Vder case1F case1G case1B case1C (cderivG case1B)
+  radCase1Residual 2 case1V case1Vder case1F case1 case1B case1C (cderiv case1B)
 
 /-- The cofactor is `B = −1`: `−x·B ≡ 1 (mod x−1)` gives `B = −1`. -/
 theorem case1_cofactor_eq :
-    cisZeroG (csubG case1B [(-1 : ℚ)]) = true := by native_decide
+    cisZero (csub case1B [(-1 : ℚ)]) = true := by native_decide
 
 /-- The Case-1 congruence `(1−k)V'fB − C ≡ 0 (mod V)` holds: `cmodWf ((1−k)V'fB − C) V` vanishes. -/
 theorem case1_congruence :
-    cisZeroG (cmodWf
-      (csubG (cmulG (cnegG [cnatCastG 1]) (cmulG case1Vder (cmulG case1F case1B))) case1C)
+    cisZero (cmodWf
+      (csub (cmul (cneg [cnatCast 1]) (cmul case1Vder (cmul case1F case1B))) case1C)
       case1V) = true := by native_decide
 
 /-- The Case-1 cleared identity `(1−k)V'fB − C + V·(B'f + Bg) = V·D` in `ℚ[x]` (`B = −1`, `D = 1/2`). -/
 theorem case1_cleared_identity :
-    cisZeroG (csubG
-      (caddG
-        (csubG (cmulG (cnegG [cnatCastG 1]) (cmulG case1Vder (cmulG case1F case1B))) case1C)
-        (cmulG case1V (caddG (cmulG (cderivG case1B) case1F) (cmulG case1B case1G))))
-      (cmulG case1V case1D)) = true := by native_decide
+    cisZero (csub
+      (cadd
+        (csub (cmul (cneg [cnatCast 1]) (cmul case1Vder (cmul case1F case1B))) case1C)
+        (cmul case1V (cadd (cmul (cderiv case1B) case1F) (cmul case1B case1))))
+      (cmul case1V case1D)) = true := by native_decide
 
 /-- The residual `D = 1/2` has degree `< deg V`, so the multiplicity dropped `k = 2 → 1`. -/
 theorem case1_residual_eq :
-    cisZeroG (csubG case1D [(1/2 : ℚ)]) = true := by native_decide
+    cisZero (csub case1D [(1/2 : ℚ)]) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

@@ -19,26 +19,26 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 the polynomial part `⟦fpPart⟧`, `integrateSpecial`/`reducedCorrect` are the Laurent/normal solves. -/
 theorem cIntegrateCase_hyperexp_sound (Dt a d : CPoly α)
     (cands : List α) (res : IntegralResultG α) (lnum lden : CPoly α) (nrm : IntegralResultG α)
-    (fpPart : CPoly α) (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
-    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt) (crPoly Dt a d)
-        (cHyperexpSpecialNegG (crSpecNum Dt a d) (crSpecDen Dt a d)) = some (lnum, lden))
-    (hNrm : cIntegrateHyperexpNormalG Dt (crNormNum Dt a d) (crNormDen Dt a d) cands = some nrm)
+    (fpPart : CPoly α) (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
+    (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt) (crPoly Dt a d)
+        (cHyperexpSpecialNeg (crSpecNum Dt a d) (crSpecDen Dt a d)) = some (lnum, lden))
+    (hNrm : cIntegrateHyperexpNormal Dt (crNormNum Dt a d) (crNormDen Dt a d) cands = some nrm)
     (hsome : cIntegrateCase hyperexpCase Dt a d cands = some res)
-    (hLaurField : towerFractionFieldDerivG Dt (fieldFrac lnum lden) = amG α (toPolyG fpPart))
+    (hLaurField : towerFractionFieldDerivG Dt (fieldFrac lnum lden) = amG α (toPoly fpPart))
     (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)
-    (hrecon : amG α (toPolyG fpPart) + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
+    (hrecon : amG α (toPoly fpPart) + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
     IsIntegralResultG Dt a d res :=
-  cIntegrateCase_sound hyperexpCase Dt a d cands res lnum lden nrm (amG α (toPolyG fpPart))
+  cIntegrateCase_sound hyperexpCase Dt a d cands res lnum lden nrm (amG α (toPoly fpPart))
     hlden hgden hLaur hNrm hsome hLaurField hNrmField hrecon
 
 /-- **The primitive case, as a corollary of the generic soundness.** The special part is the polynomial
 `qₚ` (as `qₚ/1`) from the `b = 0` RDE; the reduced part needs no correction, so `nrm` is `redNorm`. -/
 theorem cIntegrateCase_primitive_sound (Dt a d : CPoly α) (cands : List α) (res : IntegralResultG α)
     (qp : CPoly α) (specialVal : RatFunc (CFieldSpec.K α))
-    (hsden : toPolyG ([CField.one] : CPoly α) ≠ 0)
-    (hgden : toPolyG (redNorm Dt a d cands).rational.2 ≠ 0)
-    (hb : cisZeroG (crSpecNum Dt a d) = true)
-    (hqp : cPolyRischDEG Dt [] (crPoly Dt a d) ((cdegG (crPoly Dt a d) : ℤ) + 1) = some qp)
+    (hsden : toPoly ([CField.one] : CPoly α) ≠ 0)
+    (hgden : toPoly (redNorm Dt a d cands).rational.2 ≠ 0)
+    (hb : cisZero (crSpecNum Dt a d) = true)
+    (hqp : cPolyRischDE Dt [] (crPoly Dt a d) ((cdeg (crPoly Dt a d) : ℤ) + 1) = some qp)
     (hsome : cIntegrateCase primitiveCase Dt a d cands = some res)
     (hSpecField : towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = specialVal)
     (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) (redNorm Dt a d cands))
@@ -56,12 +56,12 @@ own poly-RDE soundness), leaving only the shared reduced identity (`hNrmField`) 
 (`hrecon`). One step closer to unconditional. -/
 theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
     (a d : CPoly α) (cands : List α) (res : IntegralResultG α) (qp : CPoly α)
-    (hgden : toPolyG (redNorm ([CField.one] : CPoly α) a d cands).rational.2 ≠ 0)
-    (hb : cisZeroG (crSpecNum ([CField.one] : CPoly α) a d) = true)
-    (hfp : cisZeroG (crPoly ([CField.one] : CPoly α) a d) = false)
-    (hconst : Differential.mapCoeffs (toPolyG (crPoly ([CField.one] : CPoly α) a d)) = 0)
-    (hqp : cPolyRischDEG ([CField.one] : CPoly α) [] (crPoly ([CField.one] : CPoly α) a d)
-        ((cdegG (crPoly ([CField.one] : CPoly α) a d) : ℤ) + 1) = some qp)
+    (hgden : toPoly (redNorm ([CField.one] : CPoly α) a d cands).rational.2 ≠ 0)
+    (hb : cisZero (crSpecNum ([CField.one] : CPoly α) a d) = true)
+    (hfp : cisZero (crPoly ([CField.one] : CPoly α) a d) = false)
+    (hconst : Differential.mapCoeffs (toPoly (crPoly ([CField.one] : CPoly α) a d)) = 0)
+    (hqp : cPolyRischDE ([CField.one] : CPoly α) [] (crPoly ([CField.one] : CPoly α) a d)
+        ((cdeg (crPoly ([CField.one] : CPoly α) a d) : ℤ) + 1) = some qp)
     (hsome : cIntegrateCase primitiveCase ([CField.one] : CPoly α) a d cands = some res)
     (hNrmField : IsIntegralResultG ([CField.one] : CPoly α) (crNormNum ([CField.one] : CPoly α) a d)
         (crNormDen ([CField.one] : CPoly α) a d) (redNorm ([CField.one] : CPoly α) a d cands))
@@ -69,7 +69,7 @@ theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
           + fieldFrac (crNormNum ([CField.one] : CPoly α) a d) (crNormDen ([CField.one] : CPoly α) a d)
         = fieldFrac a d) :
     IsIntegralResultG ([CField.one] : CPoly α) a d res := by
-  have hone : toPolyG ([CField.one] : CPoly α) = 1 := by
+  have hone : toPoly ([CField.one] : CPoly α) = 1 := by
     simp only [denote]
     simp
   exact cIntegrateCase_primitive_sound ([CField.one] : CPoly α) a d cands res qp
@@ -82,27 +82,27 @@ theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
 /-- **Primitive case with BOTH `hSpecField` and `hrecon` discharged** (canonical primitive `Dt = 1`,
 `fₚ ≠ 0`, special part `b = 0`): the special-part identity comes from the poly-RDE soundness and the
 reconstruction from `canonicalReconstruction` (the `b = 0` special term vanishes). The only remaining
-inputs are the shared reduced identity (`hNrmField`) and the `cSplitFactorFastG` split-correctness facts
+inputs are the shared reduced identity (`hNrmField`) and the `cSplitFactorFast` split-correctness facts
 (`hsplit`, coprimality) — the engine's split frontier. -/
 theorem cIntegrateCase_primitive_sound_full [CharZero (CFieldSpec.K α)]
     (a d : CPoly α) (cands : List α) (res : IntegralResultG α) (qp : CPoly α)
-    (hgden : toPolyG (redNorm ([CField.one] : CPoly α) a d cands).rational.2 ≠ 0)
-    (hb : cisZeroG (crSpecNum ([CField.one] : CPoly α) a d) = true)
-    (hfp : cisZeroG (crPoly ([CField.one] : CPoly α) a d) = false)
-    (hconst : Differential.mapCoeffs (toPolyG (crPoly ([CField.one] : CPoly α) a d)) = 0)
-    (hqp : cPolyRischDEG ([CField.one] : CPoly α) [] (crPoly ([CField.one] : CPoly α) a d)
-        ((cdegG (crPoly ([CField.one] : CPoly α) a d) : ℤ) + 1) = some qp)
+    (hgden : toPoly (redNorm ([CField.one] : CPoly α) a d cands).rational.2 ≠ 0)
+    (hb : cisZero (crSpecNum ([CField.one] : CPoly α) a d) = true)
+    (hfp : cisZero (crPoly ([CField.one] : CPoly α) a d) = false)
+    (hconst : Differential.mapCoeffs (toPoly (crPoly ([CField.one] : CPoly α) a d)) = 0)
+    (hqp : cPolyRischDE ([CField.one] : CPoly α) [] (crPoly ([CField.one] : CPoly α) a d)
+        ((cdeg (crPoly ([CField.one] : CPoly α) a d) : ℤ) + 1) = some qp)
     (hsome : cIntegrateCase primitiveCase ([CField.one] : CPoly α) a d cands = some res)
     (hNrmField : IsIntegralResultG ([CField.one] : CPoly α) (crNormNum ([CField.one] : CPoly α) a d)
         (crNormDen ([CField.one] : CPoly α) a d) (redNorm ([CField.one] : CPoly α) a d cands))
-    (hd : toPolyG d ≠ 0)
-    (hdn : toPolyG (crNormDen ([CField.one] : CPoly α) a d) ≠ 0)
-    (hds : toPolyG (crSpecDen ([CField.one] : CPoly α) a d) ≠ 0)
-    (hsplit : toPolyG d
-      = toPolyG (crSpecDen ([CField.one] : CPoly α) a d) * toPolyG (crNormDen ([CField.one] : CPoly α) a d))
-    (hgdeg : (toPolyG (cgcdWf (crNormDen ([CField.one] : CPoly α) a d)
+    (hd : toPoly d ≠ 0)
+    (hdn : toPoly (crNormDen ([CField.one] : CPoly α) a d) ≠ 0)
+    (hds : toPoly (crSpecDen ([CField.one] : CPoly α) a d) ≠ 0)
+    (hsplit : toPoly d
+      = toPoly (crSpecDen ([CField.one] : CPoly α) a d) * toPoly (crNormDen ([CField.one] : CPoly α) a d))
+    (hgdeg : (toPoly (cgcdWf (crNormDen ([CField.one] : CPoly α) a d)
         (crSpecDen ([CField.one] : CPoly α) a d)).1).natDegree = 0)
-    (hgne : toPolyG (cgcdWf (crNormDen ([CField.one] : CPoly α) a d)
+    (hgne : toPoly (cgcdWf (crNormDen ([CField.one] : CPoly α) a d)
         (crSpecDen ([CField.one] : CPoly α) a d)).1 ≠ 0) :
     IsIntegralResultG ([CField.one] : CPoly α) a d res := by
   have hspec0 : fieldFrac (crSpecNum ([CField.one] : CPoly α) a d)

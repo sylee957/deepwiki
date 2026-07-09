@@ -13,20 +13,20 @@ open CPoly
 
 open CPoly in
 /-- `toPoly2 p`: bivariate bridge `List (CPoly ℚ) → ℚ[x][t]`, Horner over `t`,
-`toPoly2 (c :: cs) = C(toPolyG c) + X·toPoly2 cs`. -/
+`toPoly2 (c :: cs) = C(toPoly c) + X·toPoly2 cs`. -/
 noncomputable def toPoly2 : List (CPoly ℚ) → Polynomial (Polynomial ℚ)
   | [] => 0
-  | c :: cs => Polynomial.C (toPolyG c) + Polynomial.X * toPoly2 cs
+  | c :: cs => Polynomial.C (toPoly c) + Polynomial.X * toPoly2 cs
 
 @[simp] theorem toPoly2_nil : toPoly2 [] = 0 := rfl
 
 @[simp] theorem toPoly2_cons (c : CPoly ℚ) (cs : List (CPoly ℚ)) :
-    toPoly2 (c :: cs) = Polynomial.C (toPolyG c) + Polynomial.X * toPoly2 cs := rfl
+    toPoly2 (c :: cs) = Polynomial.C (toPoly c) + Polynomial.X * toPoly2 cs := rfl
 
-/-- `toPoly2_eq_sum_getD`: `toPoly2 p = Σ_{k<N} C(toPolyG (p.getD k []))·Xᵏ` for any `N ≥ p.length`. -/
+/-- `toPoly2_eq_sum_getD`: `toPoly2 p = Σ_{k<N} C(toPoly (p.getD k []))·Xᵏ` for any `N ≥ p.length`. -/
 theorem toPoly2_eq_sum_getD (p : List (CPoly ℚ)) (N : ℕ) (hN : p.length ≤ N) :
     toPoly2 p = ∑ k ∈ Finset.range N,
-      Polynomial.C (toPolyG (p.getD k [])) * Polynomial.X ^ k := by
+      Polynomial.C (toPoly (p.getD k [])) * Polynomial.X ^ k := by
   induction p generalizing N with
   | nil =>
     simp only [toPoly2_nil, List.getD_nil, toPolyG_nil, map_zero, zero_mul, Finset.sum_const_zero]
@@ -93,9 +93,9 @@ theorem toPoly2_tsub (p q : List (CPoly ℚ)) :
   rw [sub_mul]
 
 open CPoly in
-/-- `toPoly2_coeff`: `(toPoly2 p).coeff k = toPolyG (p.getD k [])`. -/
+/-- `toPoly2_coeff`: `(toPoly2 p).coeff k = toPoly (p.getD k [])`. -/
 theorem toPoly2_coeff (p : List (CPoly ℚ)) (k : ℕ) :
-    (toPoly2 p).coeff k = toPolyG (p.getD k []) := by
+    (toPoly2 p).coeff k = toPoly (p.getD k []) := by
   induction p generalizing k with
   | nil => simp
   | cons c cs ih =>
@@ -107,9 +107,9 @@ theorem toPoly2_coeff (p : List (CPoly ℚ)) (k : ℕ) :
       simp
 
 open CPoly in
-/-- `toPoly2_map_cmulG`: `toPoly2 (p.map (cmulG s)) = C(toPolyG s) · toPoly2 p`. -/
+/-- `toPoly2_map_cmulG`: `toPoly2 (p.map (cmul s)) = C(toPoly s) · toPoly2 p`. -/
 theorem toPoly2_map_cmulG (s : CPoly ℚ) (p : List (CPoly ℚ)) :
-    toPoly2 (p.map (cmulG s)) = Polynomial.C (toPolyG s) * toPoly2 p := by
+    toPoly2 (p.map (cmul s)) = Polynomial.C (toPoly s) * toPoly2 p := by
   induction p with
   | nil => simp
   | cons c cs ih =>
@@ -118,12 +118,12 @@ theorem toPoly2_map_cmulG (s : CPoly ℚ) (p : List (CPoly ℚ)) :
     ring
 
 open CPoly in
-/-- `toPolyG_foldl_caddG`: `toPolyG ((List.range n).foldl (fun acc i => caddG acc (g i)) init)
-= toPolyG init + Σ_{i<n} toPolyG (g i)`. -/
+/-- `toPolyG_foldl_caddG`: `toPoly ((List.range n).foldl (fun acc i => cadd acc (g i)) init)
+= toPoly init + Σ_{i<n} toPoly (g i)`. -/
 theorem toPolyG_foldl_caddG (g : ℕ → CPoly ℚ) :
     ∀ (n : ℕ) (init : CPoly ℚ),
-      toPolyG ((List.range n).foldl (fun acc i => caddG acc (g i)) init)
-        = toPolyG init + ∑ i ∈ Finset.range n, toPolyG (g i) := by
+      toPoly ((List.range n).foldl (fun acc i => cadd acc (g i)) init)
+        = toPoly init + ∑ i ∈ Finset.range n, toPoly (g i) := by
   intro n
   induction n with
   | zero => intro init; simp
@@ -141,7 +141,7 @@ open CPoly in
 theorem toPoly2_mulT (p q : List (CPoly ℚ)) :
     toPoly2 ((List.range (p.length + q.length)).map (fun k =>
         (List.range (k + 1)).foldl (fun acc i =>
-          caddG acc (cmulG (p.getD i []) (q.getD (k - i) []))) []))
+          cadd acc (cmul (p.getD i []) (q.getD (k - i) []))) []))
       = toPoly2 p * toPoly2 q := by
   apply Polynomial.ext
   intro k
@@ -164,21 +164,21 @@ theorem toPoly2_mulT (p q : List (CPoly ℚ)) :
 
 open CPoly in
 /-- `tanDeriv_dpdt_getD`: the formal `t`-derivative reads coefficientwise,
-`dpdt.getD k [] = cscaleG ((k:ℚ)+1) (p.getD (k+1) [])`. -/
+`dpdt.getD k [] = cscale ((k:ℚ)+1) (p.getD (k+1) [])`. -/
 theorem tanDeriv_dpdt_getD (p : List (CPoly ℚ)) (k : ℕ) :
-    ((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1)).getD k []
-      = cscaleG ((k : ℚ) + 1) (p.getD (k + 1) []) := by
+    ((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).getD k []
+      = cscale ((k : ℚ) + 1) (p.getD (k + 1) []) := by
   rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_zipIdx, List.getElem?_drop,
     List.getD_eq_getElem?_getD, show (0 + k) = k from by ring, show (1 + k) = (k + 1) from by ring]
   cases p[k + 1]? with
-  | none => simp [cscaleG]
+  | none => simp [cscale]
   | some a => simp
 
 open CPoly in
 /-- `toPoly2_dpdt`: `toPoly2 dpdt = D_t (toPoly2 p)` (`Polynomial.derivative`) for `dpdt` the formal
 `dp/dt` list. -/
 theorem toPoly2_dpdt (p : List (CPoly ℚ)) :
-    toPoly2 ((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1))
+    toPoly2 ((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1))
       = Polynomial.derivative (toPoly2 p) := by
   apply Polynomial.ext
   intro k
@@ -193,7 +193,7 @@ open CPoly in
 /-- `toPoly2_mulDt`: `toPoly2 mulDt = (X²+1)·toPoly2 dpdt` for `mulDt` the `(t²+1)·dpdt` list. -/
 theorem toPoly2_mulDt (dpdt : List (CPoly ℚ)) :
     toPoly2 ((List.range (dpdt.length + 2)).map (fun k =>
-        caddG (if k ≥ 2 then dpdt.getD (k - 2) [] else []) (dpdt.getD k [])))
+        cadd (if k ≥ 2 then dpdt.getD (k - 2) [] else []) (dpdt.getD k [])))
       = (Polynomial.X ^ 2 + 1) * toPoly2 dpdt := by
   apply Polynomial.ext
   intro k
@@ -201,7 +201,7 @@ theorem toPoly2_mulDt (dpdt : List (CPoly ℚ)) :
   by_cases hk : k < dpdt.length + 2
   · rw [getD_range_map _ _ _ hk]
     simp only [denote]
-    rw [toPoly2_coeff, apply_ite toPolyG, toPolyG_nil]
+    rw [toPoly2_coeff, apply_ite toPoly, toPolyG_nil]
     by_cases h2 : 2 ≤ k
     · rw [if_pos h2, toPoly2_coeff]
     · rw [if_neg h2, toPoly2_coeff]
@@ -220,11 +220,11 @@ theorem toPoly2_tanDeriv (p : List (CPoly ℚ)) :
       = toPoly2 (p.map cderivQ)
         + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 p) := by
   show toPoly2 (tadd (p.map cderivQ)
-      ((List.range (((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1)).length + 2)).map
-        (fun k => caddG
-          (if k ≥ 2 then ((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1)).getD (k - 2) []
+      ((List.range (((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).length + 2)).map
+        (fun k => cadd
+          (if k ≥ 2 then ((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).getD (k - 2) []
             else [])
-          (((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1)).getD k [])))) = _
+          (((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).getD k [])))) = _
   rw [toPoly2_tadd, toPoly2_mulDt, toPoly2_dpdt]
 
 /-! ## Tangent cleared checks -/
@@ -241,13 +241,13 @@ def cancelTanClearedCheck (b0 b2 : CPoly ℚ) (c1 c2 q1 q2 : List (CPoly ℚ)) :
   -- diagonal shift `±2t`: as a t-polynomial, `2t = [0, 2]` (ℚ[x]-coefficients [0] then [2]).
   let twoT : List (CPoly ℚ) := [[], [2]]
   -- matrix·(q₁;q₂): row1 = (b₀−2t)q₁ + (−b₂)q₂; row2 = b₂q₁ + (b₀+2t)q₂  (as t-polynomials).
-  let mulConst : CPoly ℚ → List (CPoly ℚ) → List (CPoly ℚ) := fun s p => p.map (cmulG s)
+  let mulConst : CPoly ℚ → List (CPoly ℚ) → List (CPoly ℚ) := fun s p => p.map (cmul s)
   let mulT : List (CPoly ℚ) → List (CPoly ℚ) → List (CPoly ℚ) := fun p q =>
     let n := p.length + q.length
     (List.range n).map (fun k =>
       (List.range (k + 1)).foldl (fun acc i =>
-        caddG acc (cmulG (p.getD i []) (q.getD (k - i) []))) [])
-  let row1 := tadd (tsub (mulConst b0 q1) (mulT twoT q1)) (mulConst (cscaleG (-1) b2) q2)
+        cadd acc (cmul (p.getD i []) (q.getD (k - i) []))) [])
+  let row1 := tadd (tsub (mulConst b0 q1) (mulT twoT q1)) (mulConst (cscale (-1) b2) q2)
   let row2 := tadd (mulConst b2 q1) (tsub (mulConst b0 q2) (mulT twoT q2))
   let r1 := tsub (tadd (tanDeriv q1) row1) c1
   let r2 := tsub (tadd (tanDeriv q2) row2) c2
@@ -260,7 +260,7 @@ theorem toPoly2_twoT :
   show toPoly2 ([[], [2]] : List (CPoly ℚ)) = _
   rw [toPoly2_cons, toPoly2_cons, toPoly2_nil]
   simp only [toPolyG_nil, map_zero, mul_zero, add_zero, zero_add]
-  rw [show toPolyG ([2] : CPoly ℚ) = Polynomial.C 2 by
+  rw [show toPoly ([2] : CPoly ℚ) = Polynomial.C 2 by
     simp only [denote]
     simp [CFieldSpec.toK]]
   ring
@@ -272,13 +272,13 @@ solves the tangent `t`-polynomial system at the `ℚ[x][t]` level — both rows 
 theorem cancelTanClearedCheck_sound (b0 b2 : CPoly ℚ) (c1 c2 q1 q2 : List (CPoly ℚ))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
-        + (Polynomial.C (toPolyG b0) * toPoly2 q1
+        + (Polynomial.C (toPoly b0) * toPoly2 q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
-        + Polynomial.C (toPolyG (cscaleG (-1) b2)) * toPoly2 q2
+        + Polynomial.C (toPoly (cscale (-1) b2)) * toPoly2 q2
       = toPoly2 c1 ∧
       (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
-        + Polynomial.C (toPolyG b2) * toPoly2 q1
-        + (Polynomial.C (toPolyG b0) * toPoly2 q2
+        + Polynomial.C (toPoly b2) * toPoly2 q1
+        + (Polynomial.C (toPoly b0) * toPoly2 q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
       = toPoly2 c2 := by
   rw [cancelTanClearedCheck, Bool.and_eq_true] at hcheck
@@ -297,13 +297,13 @@ theorem cCoupledDECancelTan_sound_of_check (dbound : ℕ) (b0 b2 : CPoly ℚ)
     (_hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
-        + (Polynomial.C (toPolyG b0) * toPoly2 q1
+        + (Polynomial.C (toPoly b0) * toPoly2 q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
-        + Polynomial.C (toPolyG (cscaleG (-1) b2)) * toPoly2 q2
+        + Polynomial.C (toPoly (cscale (-1) b2)) * toPoly2 q2
       = toPoly2 c1 ∧
       (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
-        + Polynomial.C (toPolyG b2) * toPoly2 q1
-        + (Polynomial.C (toPolyG b0) * toPoly2 q2
+        + Polynomial.C (toPoly b2) * toPoly2 q1
+        + (Polynomial.C (toPoly b0) * toPoly2 q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
       = toPoly2 c2 :=
   cancelTanClearedCheck_sound b0 b2 c1 c2 q1 q2 hcheck
@@ -327,13 +327,13 @@ example (dbound : ℕ) (b0 b2 : CPoly ℚ) (c1 c2 q1 q2 : List (CPoly ℚ)) (n :
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
-        + (Polynomial.C (toPolyG b0) * toPoly2 q1
+        + (Polynomial.C (toPoly b0) * toPoly2 q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
-        + Polynomial.C (toPolyG (cscaleG (-1) b2)) * toPoly2 q2
+        + Polynomial.C (toPoly (cscale (-1) b2)) * toPoly2 q2
       = toPoly2 c1 ∧
       (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
-        + Polynomial.C (toPolyG b2) * toPoly2 q1
-        + (Polynomial.C (toPolyG b0) * toPoly2 q2
+        + Polynomial.C (toPoly b2) * toPoly2 q1
+        + (Polynomial.C (toPoly b0) * toPoly2 q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
       = toPoly2 c2 :=
   cCoupledDECancelTan_sound_of_check dbound b0 b2 c1 c2 q1 q2 n hsome hcheck

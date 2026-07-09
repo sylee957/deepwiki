@@ -76,8 +76,8 @@ theorem qfAdjugate_mul_cuspBasis :
     let A := (qfAdjugate B).1
     let d := bareissDet M'
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
-      cisZeroG (csubG
-        ((List.range 2).foldl (fun acc k => caddG acc (cmulG (getEntry M' i k) (getEntry A k j))) [])
+      cisZero (csub
+        ((List.range 2).foldl (fun acc k => cadd acc (cmul (getEntry M' i k) (getEntry A k j))) [])
         (if i = j then d else [])))) = true := by native_decide
 
 /-- `qfSolve` solves `M·x = b` over `ℚ(x)` on the `3×3` fraction matrix `qfFracMat3` with `b = [1, 1, 1]`:
@@ -102,30 +102,30 @@ fraction-free `qfDet`/`qfInv` stay flat with a single bounded `ℚ[x]` per matri
 
 open CPoly
 
-/-- The fraction-path determinant total degree `cdegG num + cdegG den` of the unreduced `ℚ(x)` value
+/-- The fraction-path determinant total degree `cdeg num + cdeg den` of the unreduced `ℚ(x)` value
 `fieldDet qfFracMat3` (numerator degree `9` plus denominator degree `15`, total `24`). -/
 def qfDetFracTotalDeg : ℕ :=
   let z := fieldDet qfFracMat3
-  cdegG z.1.1 + cdegG z.1.2
+  cdeg z.1.1 + cdeg z.1.2
 
-/-- The fraction-free determinant flat degree `cdegG num` of `qfDet qfFracMat3`, the degree of the single
+/-- The fraction-free determinant flat degree `cdeg num` of `qfDet qfFracMat3`, the degree of the single
 `ℚ[x]` determinant numerator over the single denominator `D³`. -/
-def qfDetFlatDeg : ℕ := cdegG (qfDet qfFracMat3).1.1
+def qfDetFlatDeg : ℕ := cdeg (qfDet qfFracMat3).1.1
 
-/-- The fraction-path inverse max total degree `max over entries of (cdegG num + cdegG den)` of
+/-- The fraction-path inverse max total degree `max over entries of (cdeg num + cdeg den)` of
 `matInvG 3 qfFracMat3`, the largest numerator+denominator degree among the unreduced `ℚ(x)` inverse
 entries (`= 41`). -/
 def qfInvFracMaxTotalDeg : ℕ :=
   match matInvG 3 qfFracMat3 with
   | none => 0
   | some Minv =>
-    ((Minv.map (fun row => row.map (fun z => cdegG z.1.1 + cdegG z.1.2))).flatten).foldl max 0
+    ((Minv.map (fun row => row.map (fun z => cdeg z.1.1 + cdeg z.1.2))).flatten).foldl max 0
 
-/-- The fraction-free inverse max entry degree `max over entries of cdegG` of the `ℚ[x]` adjugate
+/-- The fraction-free inverse max entry degree `max over entries of cdeg` of the `ℚ[x]` adjugate
 `(qfInv qfFracMat3).2`, the largest degree among the flat inverse-numerator entries over the single
 shared determinant. -/
 def qfInvFlatMaxDeg : ℕ :=
-  ((((qfInv qfFracMat3).2).map (fun row => row.map cdegG)).flatten).foldl max 0
+  ((((qfInv qfFracMat3).2).map (fun row => row.map cdeg)).flatten).foldl max 0
 
 /-- The measured swell win: `qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvFracMaxTotalDeg`
 — the fraction-free degrees are strictly below the fraction-path degrees on the `3×3` fraction matrix. -/

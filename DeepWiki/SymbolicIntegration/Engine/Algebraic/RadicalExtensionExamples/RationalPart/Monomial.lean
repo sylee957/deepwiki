@@ -51,22 +51,22 @@ def logD : CPoly (QFunNZG ℚ) :=
 /-- The `log` cofactor is the constant monomial `B = θ²`: `b = (5/(2x))/((2)(1/x) + 1/(2x)) = 1` at
 degree `j+1 = 2`. -/
 theorem logCase_cofactor_eq :
-    cisZeroG (csubG logB [CField.zero, CField.zero, (CField.one : QFunNZG ℚ)]) = true := by
+    cisZero (csub logB [CField.zero, CField.zero, (CField.one : QFunNZG ℚ)]) = true := by
   native_decide
 
 /-- The `θ = log v` cleared identity `B'f + Bg − C = D` in `ℚ(x)[log x]` (`B = θ²`, `B' = cmonomialDeriv
 [1/x] B`, `D = −θ`). -/
 theorem logCase_cleared_identity :
-    cisZeroG (csubG
-      (csubG (caddG (cmulG (cmonomialDeriv logDtPoly logB) logF) (cmulG logB logG)) logC)
+    cisZero (csub
+      (csub (cadd (cmul (cmonomialDeriv logDtPoly logB) logF) (cmul logB logG)) logC)
       logD) = true := by native_decide
 
 /-- The `log` residual `D = −θ` has `θ`-degree `1`, strictly below `deg_θ C = 2`. -/
 theorem logCase_residual_eq :
-    cisZeroG (csubG logD [CField.zero, (CField.neg CField.one : QFunNZG ℚ)]) = true := by native_decide
+    cisZero (csub logD [CField.zero, (CField.neg CField.one : QFunNZG ℚ)]) = true := by native_decide
 
 /-- The `θ = log v` step strictly lowers `deg_θ C`: `deg D = 1 < deg C = 2` over `ℚ(x)[log x]`. -/
-theorem logCase_degree_drop : cdegG logD < cdegG logC := by native_decide
+theorem logCase_degree_drop : cdeg logD < cdeg logC := by native_decide
 
 /-! #### `θ = exp v` validates: `∫ C/(θy)` over `ℚ(x)[eˣ]`, `y = √(eˣ+1)`
 
@@ -101,27 +101,27 @@ def expD : CPoly (QFunNZG ℚ) :=
 
 /-- The `exp` cofactor is the constant `B = [−1]`: `b₀ = 1/(0 − 1·1·1) = −1` over `ℚ(x)[eˣ]`. -/
 theorem expCase_cofactor_eq :
-    cisZeroG (csubG expB [(CField.neg CField.one : QFunNZG ℚ)]) = true := by native_decide
+    cisZero (csub expB [(CField.neg CField.one : QFunNZG ℚ)]) = true := by native_decide
 
 /-- The `θ = exp v` constant-term congruence `(B'f + Bg − kv'Bf) − C ≡ 0 (mod θ)`: the numerator `(−1/2)θ`
 is divisible by `θ`. -/
 theorem expCase_congruence :
-    cisZeroG (cmodWf
-      (csubG (csubG (caddG (cmulG (cmonomialDeriv expDtPoly expB) expF) (cmulG expB expG))
-          (cmulG [CField.mul (cnatCastG 1) expVder] (cmulG expB expF))) expC)
+    cisZero (cmodWf
+      (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB expG))
+          (cmul [CField.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
       [CField.zero, CField.one]) = true := by native_decide
 
 /-- The `θ = exp v` cleared identity `(B'f + Bg − k·v'·B·f) − C = θ·D` in `ℚ(x)[eˣ]` (`B = [−1]`,
 `D = [−1/2]`). -/
 theorem expCase_cleared_identity :
-    cisZeroG (csubG
-      (csubG (csubG (caddG (cmulG (cmonomialDeriv expDtPoly expB) expF) (cmulG expB expG))
-          (cmulG [CField.mul (cnatCastG 1) expVder] (cmulG expB expF))) expC)
-      (cmulG [CField.zero, CField.one] expD)) = true := by native_decide
+    cisZero (csub
+      (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB expG))
+          (cmul [CField.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
+      (cmul [CField.zero, CField.one] expD)) = true := by native_decide
 
 /-- The `exp` residual `D = −1/2` (a `θ`-constant): the `C/(θᵏy)` step lowered the `θ`-power multiplicity
 `k = 1 → 0`. -/
 theorem expCase_residual_eq :
-    cisZeroG (csubG expD [qxOfNum [-1/2]]) = true := by native_decide
+    cisZero (csub expD [qxOfNum [-1/2]]) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

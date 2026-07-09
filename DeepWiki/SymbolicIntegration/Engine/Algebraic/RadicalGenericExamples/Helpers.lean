@@ -40,17 +40,17 @@ theorem irreducible_radDeg2_of_not_isSquare {f : QFunNZG ℚ}
 
 /-! ### Reading a `qxOfNum` radicand into `ℚ(x)` and its `natDegree`
 
-`CFieldSpec.toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPolyG num)` (generic in `num`), plus a
+`CFieldSpec.toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPoly num)` (generic in `num`), plus a
 per-radicand `natDegree` computation. -/
 
-/-- `toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPolyG num)`: a denominator-`1` ℚ(x)-value reads
-through the tower bridge as the algebra-map image of its numerator (denominator `toPolyG [1] = 1`). -/
+/-- `toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPoly num)`: a denominator-`1` ℚ(x)-value reads
+through the tower bridge as the algebra-map image of its numerator (denominator `toPoly [1] = 1`). -/
 theorem toK_qxOfNum (num : CPoly ℚ) :
-    CFieldSpec.toK (qxOfNum num : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (toPolyG num) := by
+    CFieldSpec.toK (qxOfNum num : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (toPoly num) := by
   show QFunNZG.toQFunNZG (qxOfNum num) = _
   rw [QFunNZG.toQFunNZG]
-  show QFunNZG.amG ℚ (toPolyG num) / QFunNZG.amG ℚ (toPolyG ([CField.one] : CPoly ℚ)) = _
-  have h2 : toPolyG ([CField.one] : CPoly ℚ) = 1 := by
+  show QFunNZG.amG ℚ (toPoly num) / QFunNZG.amG ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
+  have h2 : toPoly ([CField.one] : CPoly ℚ) = 1 := by
     show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h2, map_one, div_one]
   rfl

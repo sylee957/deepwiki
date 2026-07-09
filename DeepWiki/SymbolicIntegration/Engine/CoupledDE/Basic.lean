@@ -87,13 +87,13 @@ theorem matAddQ_len (A B : List (List ℚ)) : (matAddQ A B).length = min A.lengt
 def cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 : CPoly ℚ) (d : ℕ) :
     Option (CPoly ℚ × CPoly ℚ) :=
   -- choose enough rows: any residual coefficient lives below this degree.
-  let degs : List ℕ := [cdegG b1 + d, cdegG b2 + d, cdegG z1, cdegG z2, d]
+  let degs : List ℕ := [cdeg b1 + d, cdeg b2 + d, cdeg z1, cdeg z2, d]
   let nrows : ℕ := (degs.foldl max 0) + 2
   -- the four polynomial-multiplication / derivation coefficient blocks, each `nrows × (d+1)`.
   let Dblk := derivMatrixQ d nrows
   let B1 := mulMatrixQ b1 d nrows
   let B2 := mulMatrixQ b2 d nrows
-  let aB2 := mulMatrixQ (cscaleG a b2) d nrows
+  let aB2 := mulMatrixQ (cscale a b2) d nrows
   -- row 1: `(D + b₁)·u + (a·b₂)·v`; row 2: `b₂·u + (D + b₁)·v`.
   let row1u := matAddQ Dblk B1
   let row1v := aB2
@@ -107,7 +107,7 @@ def cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 : CPoly ℚ) (d : ℕ) :
   | some sol =>
     let y1 : CPoly ℚ := (List.range (d + 1)).map (fun i => sol.getD i 0)
     let y2 : CPoly ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)
-    some (cnormG y1, cnormG y2)
+    some (cnorm y1, cnorm y2)
 
 end CPoly
 
@@ -125,16 +125,16 @@ def coupledExZ1 : CPoly ℚ := [2, 0, -8]       -- 2 − 8x²
 def coupledExZ2 : CPoly ℚ := [4, -4]          -- 4 − 4x
 
 /-- `coupledClearedCheck a b1 b2 z1 z2 y1 y2`: `true` iff `(y₁, y₂)` solves the base coupled system over
-ℚ(x), i.e. both cleared residuals `Dyᵢ + … − zᵢ` are `cisZeroG`. -/
+ℚ(x), i.e. both cleared residuals `Dyᵢ + … − zᵢ` are `cisZero`. -/
 def coupledClearedCheck (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPoly ℚ) : Bool :=
-  let r1 := csubG (caddG (caddG (cderivQ y1) (cmulG b1 y1)) (cscaleG a (cmulG b2 y2))) z1
-  let r2 := csubG (caddG (caddG (cderivQ y2) (cmulG b2 y1)) (cmulG b1 y2)) z2
-  cisZeroG r1 && cisZeroG r2
+  let r1 := csub (cadd (cadd (cderivQ y1) (cmul b1 y1)) (cscale a (cmul b2 y2))) z1
+  let r2 := csub (cadd (cadd (cderivQ y2) (cmul b2 y1)) (cmul b1 y2)) z2
+  cisZero r1 && cisZero r2
 
 /-! ### Base coupled-system soundness from the cleared check
 
 The bridge `coupledClearedCheck = true ⟹ the two field identities over ℚ[X]`
-(`coupledClearedCheck_sound`), via `cisZeroG_iff` and the `toPolyG` ring/derivation homs. The check is
+(`coupledClearedCheck_sound`), via `cisZeroG_iff` and the `toPoly` ring/derivation homs. The check is
 dischargeable through `cConstSolveUniqueQ_sound`, so the `*_of_check` lemmas here are the
 self-certifying intermediate. -/
 
@@ -143,10 +143,10 @@ solves the base coupled system at the `ℚ[X]` level — `D(y₁) + b₁·y₁ +
 `D(y₂) + b₂·y₁ + b₁·y₂ = z₂` (`D = Polynomial.derivative`). -/
 theorem coupledClearedCheck_sound (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPoly ℚ)
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
-    Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
-        + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
-      Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
-        + toPolyG b1 * toPolyG y2 = toPolyG z2 := by
+    Polynomial.derivative (toPoly y1) + toPoly b1 * toPoly y1
+        + Polynomial.C a * (toPoly b2 * toPoly y2) = toPoly z1 ∧
+      Polynomial.derivative (toPoly y2) + toPoly b2 * toPoly y1
+        + toPoly b1 * toPoly y2 = toPoly z2 := by
   rw [coupledClearedCheck, Bool.and_eq_true] at hcheck
   obtain ⟨h1, h2⟩ := hcheck
   rw [cisZeroG_iff] at h1 h2
@@ -165,10 +165,10 @@ theorem cCoupledDESystem_sound_of_check (a : ℚ) (b1 b2 z1 z2 : CPoly ℚ) (d :
     (y1 y2 : CPoly ℚ)
     (_hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2))
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
-    Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
-        + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
-      Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
-        + toPolyG b1 * toPolyG y2 = toPolyG z2 :=
+    Polynomial.derivative (toPoly y1) + toPoly b1 * toPoly y1
+        + Polynomial.C a * (toPoly b2 * toPoly y2) = toPoly z1 ∧
+      Polynomial.derivative (toPoly y2) + toPoly b2 * toPoly y1
+        + toPoly b1 * toPoly y2 = toPoly z2 :=
   coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2 hcheck
 
 -- **Sanity print.** The worked base solve returns `(−1, 2x+1)`.
@@ -192,10 +192,10 @@ theorem coupledDESystem_example :
 example (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPoly ℚ) (d : ℕ)
     (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2))
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
-    Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
-        + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
-      Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
-        + toPolyG b1 * toPolyG y2 = toPolyG z2 :=
+    Polynomial.derivative (toPoly y1) + toPoly b1 * toPoly y1
+        + Polynomial.C a * (toPoly b2 * toPoly y2) = toPoly z1 ∧
+      Polynomial.derivative (toPoly y2) + toPoly b2 * toPoly y1
+        + toPoly b1 * toPoly y2 = toPoly z2 :=
   cCoupledDESystem_sound_of_check a b1 b2 z1 z2 d y1 y2 hsome hcheck
 
 #print axioms coupledClearedCheck_sound

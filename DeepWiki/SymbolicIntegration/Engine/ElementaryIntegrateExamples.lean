@@ -50,9 +50,9 @@ theorem elemLogResidual_eq_integrand_sub_ratDeriv :
 /-- The log-solve denominator `D = θ = eˣ` as the `CPoly (QFunNZG ℚ)` `[0, 1]`. -/
 def elemDenTheta : CPoly (QFunNZG ℚ) := [CField.zero, CField.one]
 
-/-- The recovered result `F' = cIntegrateElementaryG ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
+/-- The recovered result `F' = cIntegrateElementary ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
 def elemRecovered : AlgIntegralResultG Lvl2 :=
-  @cIntegrateElementaryG _ _ _ expTowerDiff elemRho elemRatPart elemLogResidual CField.one elemDenTheta 1
+  @cIntegrateElementary _ _ _ expTowerDiff elemRho elemRatPart elemLogResidual CField.one elemDenTheta 1
 
 /-- Round-trip `algDerivG F' = elemIntegrand` over ℚ(x)(eˣ): `radIsZero (algDerivG F' − integrand)`. -/
 theorem rt_elementary_combined :

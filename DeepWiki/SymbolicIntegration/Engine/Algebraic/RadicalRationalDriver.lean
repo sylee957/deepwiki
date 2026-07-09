@@ -37,8 +37,8 @@ def radReduceCase2Iterate (W h ρ : CPoly α) (k0 : ℕ) :
       let B := radCase2CofactorC k W h C
       let D := radCase2ResidualC k W h C B
       -- contribution `B·ρ/(Wᵏy)` over the common denominator `W^{k0}`: `B·ρ·W^{k0−k}`
-      let contrib := cmulG (cmulG B ρ) (cpowG W (k0 - k))
-      radReduceCase2Iterate W h ρ k0 fuel (k - 1) (cnegG D) (caddG vNum contrib)
+      let contrib := cmul (cmul B ρ) (cpow W (k0 - k))
+      radReduceCase2Iterate W h ρ k0 fuel (k - 1) (cneg D) (cadd vNum contrib)
 
 /-- Case-2 simple-radical rational-part driver `radIntegrateCase2 W ρ k0 C = (Crem, vNum)` for
 `∫ C/(W^{k0}y)` over `y² = ρ`, `W ∣ ρ`: computes `h = ρ/W` and runs `radReduceCase2Iterate` from `k0`
@@ -60,17 +60,17 @@ def radReduceCase3Iterate (der : CPoly α → CPoly α) (f g : CPoly α) :
     ℕ → CPoly α → CPoly α → CPoly α × CPoly α
   | 0, C, vNum => (C, vNum)
   | fuel + 1, C, vNum =>
-    if cisZeroG C || cdegG C < cdegG f then (C, vNum)
+    if cisZero C || cdeg C < cdeg f then (C, vNum)
     else
       let B := radCase3Cofactor f g C
       let D := radCase3Residual f g B C (der B)
-      radReduceCase3Iterate der f g fuel (cnegG D) (caddG vNum (cmulG B f))
+      radReduceCase3Iterate der f g fuel (cneg D) (cadd vNum (cmul B f))
 
 /-- Case-3 simple-radical rational-part driver `radIntegrateCase3 der f g C = (Crem, vNum)` for `∫ C/y`
 over `y² = f`: runs `radReduceCase3Iterate` (fuel `deg C + 1`), returning the irreducible leftover `Crem`
 and the numerator `vNum`. Master identity `∫ C/y = vNum/y + ∫ Crem/y`. Generic over `[CField α]`. -/
 def radIntegrateCase3 (der : CPoly α → CPoly α) (f g C : CPoly α) : CPoly α × CPoly α :=
-  radReduceCase3Iterate der f g (cdegG C + 1) C []
+  radReduceCase3Iterate der f g (cdeg C + 1) C []
 
 /-! ### The partial-fraction front-end
 
@@ -79,12 +79,12 @@ partial-fractioned across them before the resulting pieces are handled by the ca
 
 /-- Partial fraction across coprime prime-powers `radPartialFractionCoprime R Gs = [N₁,…,Nₘ]`: for
 pairwise-coprime `Gs` with `B = ∏Gᵢ` and proper `R`, returns `Nᵢ` with `R/B = Σᵢ Nᵢ/Gᵢ`,
-`deg Nᵢ < deg Gᵢ`, by iterating the Bézout split `cdiophantineG`. Generic over `[CField α]`. -/
+`deg Nᵢ < deg Gᵢ`, by iterating the Bézout split `cdiophantine`. Generic over `[CField α]`. -/
 def radPartialFractionCoprime : CPoly α → List (CPoly α) → List (CPoly α)
   | _, [] => []
   | R, G :: rest =>
-    let P := cprodG rest
-    let (Ni, c) := cdiophantineG P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
+    let P := cprod rest
+    let (Ni, c) := cdiophantine P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
     Ni :: radPartialFractionCoprime c rest
 
 end CPoly
@@ -113,17 +113,17 @@ def c2itRun : CPoly ℚ × CPoly ℚ := radIntegrateCase2 c2itW c2itRho 3 c2itC
 def c2itRhoQx : QFunNZG ℚ := qxOfNum [0, -1, 0, 1]
 
 /-- The common-denominator power `W³ = x³` as a `ℚ[x]` polynomial. -/
-def c2itW3 : CPoly ℚ := cpowG c2itW 3
+def c2itW3 : CPoly ℚ := cpow c2itW 3
 
 /-- The rational part `v = vNum/(W³·y)` lifted to `RadElem (QFunNZG ℚ)` as `[0, vNum/(W³·ρ)]`. -/
 def c2itVlift : RadElem (QFunNZG ℚ) :=
-  [CField.zero, CField.div (qxOfNum c2itRun.2) (qxOfNum (cmulG c2itW3 c2itRho))]
+  [CField.zero, CField.div (qxOfNum c2itRun.2) (qxOfNum (cmul c2itW3 c2itRho))]
 
 /-- The integrand's rational part `C₀/(W³y) − Crem/(Wy)` lifted to `RadElem (QFunNZG ℚ)`. -/
 def c2itRatLift : RadElem (QFunNZG ℚ) :=
   [CField.zero,
-    CField.sub (CField.div (qxOfNum c2itC) (qxOfNum (cmulG c2itW3 c2itRho)))
-      (CField.div (qxOfNum c2itRun.1) (qxOfNum (cmulG c2itW c2itRho)))]
+    CField.sub (CField.div (qxOfNum c2itC) (qxOfNum (cmul c2itW3 c2itRho)))
+      (CField.div (qxOfNum c2itRun.1) (qxOfNum (cmul c2itW c2itRho)))]
 
 /-- The Case-2 iterate integrates `∫ 1/(x³·√(x³−x))`: `radDeriv 2 (x³−x)` of the rational part
 `v = vNum/(W³√(x³−x))` equals `C₀/(W³√(x³−x)) − Crem/(W√(x³−x))`, the rational part of the integrand. -/
@@ -139,14 +139,14 @@ through `radDeriv 2 (x³+1)`. -/
 def c3itRho : CPoly ℚ := [1, 0, 0, 1]
 
 /-- Helper `g = ½ρ' = (3/2)x²` (`(f/y)' = g/y`). -/
-def c3itG : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG c3itRho)
+def c3it : CPoly ℚ := cscale (1/2 : ℚ) (cderiv c3itRho)
 
 /-- Numerator `C = x⁴` (integrand `x⁴/√(x³+1)`, `deg C ≥ deg ρ`), `[0,0,0,0,1]`. -/
 def c3itC : CPoly ℚ := [0, 0, 0, 0, 1]
 
-/-- The Case-3 run `radIntegrateCase3 cderivG ρ g C = (Crem, vNum)` on `∫ x⁴/√(x³+1)`, returning the
+/-- The Case-3 run `radIntegrateCase3 cderiv ρ g C = (Crem, vNum)` on `∫ x⁴/√(x³+1)`, returning the
 irreducible residual and the numerator over `y`. -/
-def c3itRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3 cderivG c3itRho c3itG c3itC
+def c3itRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3 cderiv c3itRho c3it c3itC
 
 /-- The radicand `ρ = x³ + 1` lifted to `ℚ(x)` (`QFunNZG ℚ`), the radicand for `radDeriv 2`. -/
 def c3itRhoQx : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]
@@ -157,7 +157,7 @@ def c3itVlift : RadElem (QFunNZG ℚ) :=
 
 /-- The integrand's rational part `C/y − Crem/y` lifted to `RadElem (QFunNZG ℚ)` as `[0, (C − Crem)/ρ]`. -/
 def c3itRatLift : RadElem (QFunNZG ℚ) :=
-  [CField.zero, CField.div (qxOfNum (csubG c3itC c3itRun.1)) (qxOfNum c3itRho)]
+  [CField.zero, CField.div (qxOfNum (csub c3itC c3itRun.1)) (qxOfNum c3itRho)]
 
 /-- The Case-3 iterate integrates `∫ x⁴/√(x³+1)`: `radDeriv 2 (x³+1)` of the rational part `v = vNum/√(x³+1)`
 equals `x⁴/√(x³+1) − Crem/√(x³+1)`, the rational part of the integrand. -/
@@ -177,7 +177,7 @@ def mcRho : CPoly ℚ := [0, 1]
 def mcR : CPoly ℚ := [1]
 
 /-- Denominator `B = (x−1)²·x² = x⁴ − 2x³ + x²`, presented unfactored `[0,0,1,−2,1]`. -/
-def mcB : CPoly ℚ := cmulG (cpowG [-1, 1] 2) (cpowG [0, 1] 2)
+def mcB : CPoly ℚ := cmul (cpow [-1, 1] 2) (cpow [0, 1] 2)
 
 /-- The radicand `ρ = x` as `QFunNZG ℚ`, the base of the `RadElem` lift for the multi-case
 `∫ 1/((x−1)²x²·√x)` validation. -/

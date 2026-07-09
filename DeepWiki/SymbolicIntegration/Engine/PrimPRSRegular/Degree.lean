@@ -21,7 +21,7 @@ variable {β : Type*} [CField β] [CFieldSpec β]
 
 /-- **`(toGBCoeffPoly p).natDegree` is bounded by the normalized `t`-length**:
 `(toGBCoeffPoly p).natDegree ≤ (gbnormCore p).length − 1`. The `GBPolyCore` mirror of
-`natDegree_toPolyG_le` — coefficients past `(gbnormCore p).length` read `toPolyG [] = 0`. -/
+`natDegree_toPolyG_le` — coefficients past `(gbnormCore p).length` read `toPoly [] = 0`. -/
 theorem natDegree_toGBCoeffPoly_le (p : GBPolyCore β) :
     (toGBCoeffPoly p).natDegree ≤ (gbnormCore p).length - 1 := by
   rw [← toGBCoeffPoly_gbnormCore]
@@ -65,10 +65,10 @@ The content strip preserves the `t`-degree, and the single loop body `lc(q)·p �
 drops the `t`-degree over the integral domain `R = (CFieldSpec.K β)[X]`, so termination's only remaining
 conditional ingredient is the fuel-bounded loop completing. -/
 
-/-- **`toPolyG (gblcCore (gbnormCore p))` is the leading coefficient of `toGBCoeffPoly p`**, via
+/-- **`toPoly (gblcCore (gbnormCore p))` is the leading coefficient of `toGBCoeffPoly p`**, via
 `toPolyG_gblcCore_eq_coeff` and `gbdegCore_eq_natDegree`. -/
 theorem toPolyG_gblcCore_eq_leadingCoeff (p : GBPolyCore β) :
-    CPoly.toPolyG (gblcCore (gbnormCore p)) = (toGBCoeffPoly p).leadingCoeff := by
+    CPoly.toPoly (gblcCore (gbnormCore p)) = (toGBCoeffPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← gbdegCore_eq_natDegree, toPolyG_gblcCore_eq_coeff,
     toGBCoeffPoly_gbnormCore]
   congr 1
@@ -253,7 +253,7 @@ size bound, `(toGBCoeffPoly (gbprimitivePartCore cgcdB p)).natDegree = (toGBCoef
 (the strip is a `β(s)`-unit scaling, and `Associated` polynomials over `β(s)` have equal `natDegree`). -/
 theorem natDegree_toGBCoeffPoly_gbprimitivePartCore (fuel : ℕ)
     (cgcdB : CPoly β → CPoly β → CPoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
-    (hfuel : ∀ a ∈ gbnormCore p, (CPoly.cnormG a : List β).length ≤ fuel) :
+    (hfuel : ∀ a ∈ gbnormCore p, (CPoly.cnorm a : List β).length ≤ fuel) :
     (toGBCoeffPoly (gbprimitivePartCore cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree := by
   have hassoc := associated_toGBPolyG_gbprimitivePartCore_total fuel cgcdB hcorr p hfuel
   have := natDegree_eq_of_associated hassoc
@@ -267,7 +267,7 @@ holds iff `(toGBCoeffPoly prem).natDegree < (toGBCoeffPoly Q).natDegree`. -/
 theorem gbnormGuard_iff_premDegree (cgcdB : CPoly β → CPoly β → CPoly β) (hcorr : CgcdBCorrect cgcdB)
     (P Q : GBPolyCore β) (hQ : gbisZeroCore (gbnormCore Q) = false)
     (hfuel : ∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
-      (CPoly.cnormG a : List β).length ≤ 30)
+      (CPoly.cnorm a : List β).length ≤ 30)
     (hrz : gbisZeroCore (gbprimitivePartCore cgcdB
       (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))) = false) :
     ((gbnormCore (gbprimitivePartCore cgcdB

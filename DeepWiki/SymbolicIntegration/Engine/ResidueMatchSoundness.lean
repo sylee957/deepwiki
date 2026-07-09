@@ -154,20 +154,20 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- **The primitive RT residue match in the engine's `amG`/`towerFractionFieldDerivG` vocabulary** — for
-a primitive monomial with `toPolyG Dt = C w`, a squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, and every
+a primitive monomial with `toPoly Dt = C w`, a squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, and every
 root normal, the engine-shaped residue sum `∑_{α∈s} amG(C(c_α))·(D(t−α)/(t−α)) = a/d` over
 `RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt`. The unconditional `hmatch` for
 primitive tower extensions. -/
 theorem primitive_monomial_residue_match_engine (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
-    (a : (CFieldSpec.K α)[X]) (w : CFieldSpec.K α) (hDt : toPolyG Dt = C w)
+    (a : (CFieldSpec.K α)[X]) (w : CFieldSpec.K α) (hDt : toPoly Dt = C w)
     (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, w ≠ β′) :
     ∑ β ∈ s, amG α
-          (C (a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))
+          (C (a.eval β / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))
         * (towerFractionFieldDerivG Dt (amG α (X - C β)) / amG α (X - C β))
       = amG α a / amG α (Lagrange.nodal s id) := by
   show ∑ β ∈ s, algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))
-          (C (a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))
-        * (extendDeriv (Differential.implicitDeriv (toPolyG Dt))
+          (C (a.eval β / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))
+        * (extendDeriv (Differential.implicitDeriv (toPoly Dt))
               (algebraMap _ (RatFunc (CFieldSpec.K α)) (X - C β))
             / algebraMap _ (RatFunc (CFieldSpec.K α)) (X - C β))
       = _

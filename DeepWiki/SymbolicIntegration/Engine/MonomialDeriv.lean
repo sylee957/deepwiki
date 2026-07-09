@@ -66,29 +66,29 @@ def cmapDeriv {α : Type*} [CField α] [CDiffField α] (p : CPoly α) : CPoly α
 /-- Monomial derivation `cmonomialDeriv Dt p = cmapDeriv p + (dp/dt)·Dt`: the derivation on `k[t]`
 with `Dt` the derivative of the monomial `t`. Needs only `[CDiffField α]`, so it reduces. -/
 def cmonomialDeriv {α : Type*} [CField α] [CDiffField α] (Dt p : CPoly α) : CPoly α :=
-  caddG (cmapDeriv p) (cmulG (cderivG p) Dt)
+  cadd (cmapDeriv p) (cmul (cderiv p) Dt)
 
-/-- `toPolyG (cmapDeriv p) = Differential.mapCoeffs (toPolyG p)`: the coefficientwise computable
+/-- `toPoly (cmapDeriv p) = Differential.mapCoeffs (toPoly p)`: the coefficientwise computable
 derivation realizes Mathlib's polynomial coefficient-map derivation. -/
 @[denote] theorem toPolyG_cmapDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
     (p : CPoly α) :
-    toPolyG (cmapDeriv p) = Differential.mapCoeffs (toPolyG p) := by
+    toPoly (cmapDeriv p) = Differential.mapCoeffs (toPoly p) := by
   induction p with
   | nil => simp [cmapDeriv]
   | cons a as ih =>
-    show toPolyG (CDiffField.cderiv a :: cmapDeriv as) = Differential.mapCoeffs (toPolyG (a :: as))
+    show toPoly (CDiffField.cderiv a :: cmapDeriv as) = Differential.mapCoeffs (toPoly (a :: as))
     rw [toPolyG_cons, ih, toPolyG_cons, map_add, Differential.mapCoeffs_C, CDiffFieldSpec.toK_cderiv,
       Derivation.leibniz, Differential.mapCoeffs_X, smul_zero, add_zero, smul_eq_mul]
 
-/-- `toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p)`: the
+/-- `toPoly (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPoly Dt) (toPoly p)`: the
 computable monomial derivation realizes Mathlib's `implicitDeriv`. -/
 @[denote] theorem toPolyG_cmonomialDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
     (Dt p : CPoly α) :
-    toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p) := by
+    toPoly (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPoly Dt) (toPoly p) := by
   rw [cmonomialDeriv]
   simp only [denote]
-  rw [show Differential.implicitDeriv (toPolyG Dt) (toPolyG p)
-      = Differential.mapCoeffs (toPolyG p) + toPolyG Dt * Polynomial.derivative (toPolyG p) from by
+  rw [show Differential.implicitDeriv (toPoly Dt) (toPoly p)
+      = Differential.mapCoeffs (toPoly p) + toPoly Dt * Polynomial.derivative (toPoly p) from by
         simp [Differential.implicitDeriv, derivative']]
   ring
 

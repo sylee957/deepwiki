@@ -95,21 +95,21 @@ list of monic squarefree factors `dⱼ` of `p` paired with their multiplicities 
 by Yun: `c ← gcd(p, p′)`, `w ← p/c` (product of the distinct factors), then peel `dⱼ = w/gcd(w,c)`,
 `w ← gcd(w,c)`, `c ← c/gcd(w,c)`. Euclidean leaves are fuel-free; constant factors are dropped. -/
 def cSquarefreeFactorsQ (p : CPoly ℚ) : List (CPoly ℚ × ℕ) :=
-  let p := cmonicG p
-  let c0 := cmonicG (cgcdWf p (cderivG p)).1
+  let p := cmonic p
+  let c0 := cmonic (cgcdWf p (cderiv p)).1
   let w0 := cdivWf p c0
   let rec go : ℕ → CPoly ℚ → CPoly ℚ → ℕ → List (CPoly ℚ × ℕ)
     | 0, _, _, _ => []
     | f + 1, w, c, i =>
-      if cdegG c = 0 then
-        (if cdegG w = 0 then [] else [(cmonicG w, i)])
+      if cdeg c = 0 then
+        (if cdeg w = 0 then [] else [(cmonic w, i)])
       else
-        let y := cmonicG (cgcdWf w c).1
+        let y := cmonic (cgcdWf w c).1
         let z := cdivWf w y
         let cnext := cdivWf c y
         let rest := go f y cnext (i + 1)
-        if cdegG z = 0 then rest else (cmonicG z, i) :: rest
-  go (cdegG p + 1) w0 c0 1
+        if cdeg z = 0 then rest else (cmonic z, i) :: rest
+  go (cdeg p + 1) w0 c0 1
 
 /-! ### The base monomial derivation and small helpers -/
 
@@ -117,10 +117,10 @@ def cSquarefreeFactorsQ (p : CPoly ℚ) : List (CPoly ℚ × ℕ) :=
 `D = Dt·d/dt`, `κ_D = 0` since the coefficient field `ℚ` is constants under `D`). For `Dt = [1]` this is
 `d/dt` (ordinary rational integration, `t = x`); `Dt = [0,1]` gives the exponential monomial
 `t = exp(x)` (`Dt = t`); `Dt = [1,0,1]` the hypertangent `t = tan(x)` (`Dt = 1 + t²`). -/
-def cDerivMonomialQ (Dt p : CPoly ℚ) : CPoly ℚ := cmulG (cderivG p) Dt
+def cDerivMonomialQ (Dt p : CPoly ℚ) : CPoly ℚ := cmul (cderiv p) Dt
 
 /-- **Product of a list of `CPoly ℚ`** `cProductQ [p₁,…,pₙ] = p₁⋯pₙ` (`[1]` for the empty list). -/
-def cProductQ (ps : List (CPoly ℚ)) : CPoly ℚ := ps.foldl cmulG [(1 : ℚ)]
+def cProductQ (ps : List (CPoly ℚ)) : CPoly ℚ := ps.foldl cmul [(1 : ℚ)]
 
 /-- **`tⁱ`-coefficient of a `CPoly ℚ`** `cParCoeffQ p i = coefficient(p, tⁱ)` (`0` out of range). -/
 def cParCoeffQ (p : CPoly ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
@@ -163,9 +163,9 @@ def cParallelAnsatzQ (d : CPoly ℚ) (degA : ℤ) :
     List (CPoly ℚ) × CPoly ℚ × ℕ :=
   let sf := cSquarefreeFactorsQ d
   let ps := sf.map Prod.fst
-  let s := cProductQ (sf.map (fun (p, e) => cpowG p (e - 1)))
-  let degS : ℤ := (cdegG s : ℤ)
-  let degD : ℤ := (cdegG d : ℤ)
+  let s := cProductQ (sf.map (fun (p, e) => cpow p (e - 1)))
+  let degS : ℤ := (cdeg s : ℤ)
+  let degD : ℤ := (cdeg d : ℤ)
   let bound : ℤ := max degS (degA - degD + degS) + 1
   (ps, s, bound.toNat + 1)
 
@@ -181,25 +181,25 @@ matrix `rows` and right-hand side `rhs = coeffs(a·s)` over the unknowns `(u₀,
 (`nU` numerator coefficients then `m = #squarefree factors` log coefficients). Fed to `cConstSolveAnyQ`. -/
 def cParallelSystemQ (Dt a d : CPoly ℚ) :
     List (List ℚ) × List ℚ × ℕ × ℕ :=
-  let lcd := cleadG d
-  let a := cscaleG (1 / lcd) a                                   -- make `d` monic: `f = a/d` unchanged
-  let (ps, s, nU) := cParallelAnsatzQ d (cdegG a : ℤ)
+  let lcd := clead d
+  let a := cscale (1 / lcd) a                                   -- make `d` monic: `f = a/d` unchanged
+  let (ps, s, nU) := cParallelAnsatzQ d (cdeg a : ℤ)
   let m := ps.length
   let prodPs := cProductQ ps
-  let s2 := cmulG s s
+  let s2 := cmul s s
   let Ds := cDerivMonomialQ Dt s
-  let target := cmulG a s                                        -- rhs `a·s`
+  let target := cmul a s                                        -- rhs `a·s`
   -- `uᵢ`-column: `b = tⁱ` contributes `(D(tⁱ)·s − tⁱ·Ds)·∏pⱼ` to the lhs of (10.6).
   let uPolys : List (CPoly ℚ) := (List.range nU).map (fun i =>
-    let bi : CPoly ℚ := cshiftG i [(1 : ℚ)]
-    cmulG (csubG (cmulG (cDerivMonomialQ Dt bi) s) (cmulG bi Ds)) prodPs)
+    let bi : CPoly ℚ := cshift i [(1 : ℚ)]
+    cmul (csub (cmul (cDerivMonomialQ Dt bi) s) (cmul bi Ds)) prodPs)
   -- `cⱼ`-column: `Dpⱼ·s²·∏_{k≠j}pₖ`.
   let cPolys : List (CPoly ℚ) := (List.range m).map (fun j =>
     let pj := ps.getD j [(1 : ℚ)]
     let others := cProductQ (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
-    cmulG (cmulG (cDerivMonomialQ Dt pj) s2) others)
+    cmul (cmul (cDerivMonomialQ Dt pj) s2) others)
   let allPolys := uPolys ++ cPolys
-  let nrows := (target :: allPolys).foldl (fun acc p => max acc (cnormG p).length) 0
+  let nrows := (target :: allPolys).foldl (fun acc p => max acc (cnorm p).length) 0
   let rows : List (List ℚ) :=
     (List.range nrows).map (fun i => allPolys.map (fun p => cParCoeffQ p i))
   let rhs : List ℚ := (List.range nrows).map (fun i => cParCoeffQ target i)
@@ -223,20 +223,20 @@ identity `D(∫f) = f`. -/
 def cParallelIntegrate (Dt a d : CPoly ℚ) :
     Option ((CPoly ℚ × CPoly ℚ) × List (ℚ × CPoly ℚ)) :=
   let (rows, rhs, nU, m) := cParallelSystemQ Dt a d
-  let (ps, s, _) := cParallelAnsatzQ d (cdegG (cscaleG (1 / cleadG d) a) : ℤ)
+  let (ps, s, _) := cParallelAnsatzQ d (cdeg (cscale (1 / clead d) a) : ℤ)
   match cConstSolveAnyQ rows rhs (nU + m) with
   | none => none
   | some sol =>
     let b : CPoly ℚ := (List.range nU).map (fun i => sol.getD i 0)   -- numerator coefficients
     let cs : List ℚ := (List.range m).map (fun j => sol.getD (nU + j) 0)
     let logs : List (ℚ × CPoly ℚ) := (List.zip cs ps).filter (fun (c, _) => c ≠ 0)
-    some ((cnormG b, s), logs)
+    some ((cnorm b, s), logs)
 
 /-! ### The cleared antiderivative identity `D(∫f) = f` — the validation predicate
 
 The returned `((b, s), [(cⱼ, pⱼ)])` reconstructs `∫f = b/s + Σⱼ cⱼ·log(pⱼ)`, whose derivative is the
 rational function `D(b/s) + Σⱼ cⱼ·Dpⱼ/pⱼ`. We assemble that as a single `(num, den)` over `ℚ(t)` and
-check `D(∫f) = a/d` by the *cleared* identity `num·d − a·den = 0` (`cisZeroG`), the faithful
+check `D(∫f) = a/d` by the *cleared* identity `num·d − a·den = 0` (`cisZero`), the faithful
 `D(∫f) = f`. -/
 
 /-- **Derivative of a parallel-integration result, as a single fraction** `cParallelResultDerivQ Dt
@@ -248,26 +248,26 @@ def cParallelResultDerivQ (Dt : CPoly ℚ)
   let ((b, s), logs) := res
   let ps := logs.map Prod.snd
   let prodPs := cProductQ ps
-  let s2 := cmulG s s
-  let den := cmulG s2 prodPs                                        -- `s²·∏pⱼ`
+  let s2 := cmul s s
+  let den := cmul s2 prodPs                                        -- `s²·∏pⱼ`
   -- rational part `D(b/s) = (Db·s − b·Ds)/s²`, over `den`: numerator `(Db·s − b·Ds)·∏pⱼ`.
   let Ds := cDerivMonomialQ Dt s
-  let ratNum := cmulG (csubG (cmulG (cDerivMonomialQ Dt b) s) (cmulG b Ds)) prodPs
+  let ratNum := cmul (csub (cmul (cDerivMonomialQ Dt b) s) (cmul b Ds)) prodPs
   -- log part `Σ cⱼ·Dpⱼ/pⱼ`, over `den`: `Σ cⱼ·Dpⱼ·s²·∏_{k≠j}pₖ`.
   let logNum : CPoly ℚ := (logs.zipIdx).foldl (fun acc ((c, pj), j) =>
     let others := cProductQ (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
-    caddG acc (cscaleG c (cmulG (cmulG (cDerivMonomialQ Dt pj) s2) others))) []
-  (caddG ratNum logNum, den)
+    cadd acc (cscale c (cmul (cmul (cDerivMonomialQ Dt pj) s2) others))) []
+  (cadd ratNum logNum, den)
 
 /-- **The cleared antiderivative check** `cParallelCheckQ fuel Dt a d res`: `true` iff the
 parallel-integration result `res = ((b,s), logs)` satisfies `D(b/s + Σ cⱼ log pⱼ) = a/d` as rational
-functions over `ℚ(t)`, decided by `cisZeroG (num·d − a·den)` where `(num, den) =
+functions over `ℚ(t)`, decided by `cisZero (num·d − a·den)` where `(num, den) =
 cParallelResultDerivQ … res`. This is the faithful `D(∫f) = f` certificate (no equality decision on
-`QFunNZG ℚ` needed — the polynomial cross-difference is `cisZeroG`-tested over `ℚ`). -/
+`QFunNZG ℚ` needed — the polynomial cross-difference is `cisZero`-tested over `ℚ`). -/
 def cParallelCheckQ (Dt a d : CPoly ℚ)
     (res : (CPoly ℚ × CPoly ℚ) × List (ℚ × CPoly ℚ)) : Bool :=
   let (num, den) := cParallelResultDerivQ Dt res
-  cisZeroG (csubG (cmulG num d) (cmulG a den))
+  cisZero (csub (cmul num d) (cmul a den))
 
 end CPoly
 
@@ -304,7 +304,7 @@ def cToRatCoeffsQ (p : CPoly (QFunNZG ℚ)) : Option (CPoly ℚ) :=
       let g := (cgcdWf num den).1
       let num' := cdivWf num g
       let den' := cdivWf den g
-      if cdegG num' = 0 ∧ cdegG den' = 0 then
+      if cdeg num' = 0 ∧ cdeg den' = 0 then
         some ((((num' : List ℚ).headD 0) / ((den' : List ℚ).headD 1)) :: qs)
       else none) (some [])
 

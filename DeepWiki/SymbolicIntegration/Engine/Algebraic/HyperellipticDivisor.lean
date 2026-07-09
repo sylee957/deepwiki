@@ -29,9 +29,9 @@ structure MumfordDivisor (α : Type*) where
 /-- Mumford validity: `(D.u, D.v)` is a valid semi-reduced divisor on `y² = ρ` — `D.u` monic,
 `deg D.v < deg D.u`, and `D.u ∣ (D.v² − ρ)` (the on-curve constraint). -/
 def mumfordValid (ρ : CPoly α) (D : MumfordDivisor α) : Bool :=
-  cisMonicG D.u
-    && (cdegG D.v < cdegG D.u || cisZeroG D.v)
-    && cdvdG D.u (csubG (cmulG D.v D.v) ρ)
+  cisMonic D.u
+    && (cdeg D.v < cdeg D.u || cisZero D.v)
+    && cdvd D.u (csub (cmul D.v D.v) ρ)
 
 /-! ### The divisor of a single affine point, and the identity -/
 
@@ -46,12 +46,12 @@ def mumfordPoint (x0 y0 : α) : MumfordDivisor α := ⟨[CField.neg x0, CField.o
 /-- The opposite `mumfordOpposite D = (u, (−v) mod u)` — the Jacobian inverse: same support,
 opposite sheet `yᵢ ↦ −yᵢ`. -/
 def mumfordOpposite (D : MumfordDivisor α) : MumfordDivisor α :=
-  ⟨D.u, cmodWf (cnegG D.v) D.u⟩
+  ⟨D.u, cmodWf (cneg D.v) D.u⟩
 
 /-! ### Reducedness `deg u ≤ g` -/
 
 /-- Reducedness test `mumfordIsReduced g D`: `deg D.u ≤ g` (the genus). -/
-def mumfordIsReduced (g : ℕ) (D : MumfordDivisor α) : Bool := cdegG D.u ≤ g
+def mumfordIsReduced (g : ℕ) (D : MumfordDivisor α) : Bool := cdeg D.u ≤ g
 
 /-! ### The residue divisor as a Mumford pair
 
@@ -60,12 +60,12 @@ From support points `[(x₁, y₁), …]`: `u = ∏ᵢ (x − xᵢ)` monic, `v` 
 
 /-- Support polynomial `mumfordSupportPoly xs = ∏ᵢ (x − xᵢ)` (monic) for a support list `xs`. -/
 def mumfordSupportPoly (xs : List α) : CPoly α :=
-  xs.foldl (fun acc xi => cmulG acc [CField.neg xi, CField.one]) [CField.one]
+  xs.foldl (fun acc xi => cmul acc [CField.neg xi, CField.one]) [CField.one]
 
 /-- The residue divisor as a Mumford pair `residueDivisorMumford pts = (u, v)`: from support points
 `pts = [(x₁, y₁), …]`, `u = ∏ᵢ (x − xᵢ)` and `v` the Lagrange interpolant through `(xᵢ, yᵢ)`. -/
 def residueDivisorMumford (pts : List (α × α)) : MumfordDivisor α :=
-  ⟨mumfordSupportPoly (pts.map Prod.fst), cinterpolateG pts⟩
+  ⟨mumfordSupportPoly (pts.map Prod.fst), cinterpolate pts⟩
 
 end CPoly
 

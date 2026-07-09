@@ -29,8 +29,8 @@ def case2H : CPoly ℚ := [-1, 0, 1]
 /-- Case-2 example numerator `C = 1`, `[1]`. -/
 def case2C : CPoly ℚ := [1]
 
-/-- `W' = x' = 1` over `ℚ[x]` (`cderivG`, `θ' = 1`). -/
-def case2Wder : CPoly ℚ := cderivG case2W
+/-- `W' = x' = 1` over `ℚ[x]` (`cderiv`, `θ' = 1`). -/
+def case2Wder : CPoly ℚ := cderiv case2W
 
 /-- The solved Case-2 cofactor `B` for `B·(½−2)·W'·h ≡ 1 (mod x)` — expected `B = 2/3`. -/
 def case2B : CPoly ℚ := radCase2Cofactor 2 case2W case2H case2C
@@ -41,30 +41,30 @@ def case2D : CPoly ℚ :=
 
 /-- The cofactor is `B = 2/3`: `B·(½−2)·W'·h ≡ 1 (mod x)` gives `B = 2/3`. -/
 theorem case2_cofactor_eq :
-    cisZeroG (csubG case2B [(2/3 : ℚ)]) = true := by native_decide
+    cisZero (csub case2B [(2/3 : ℚ)]) = true := by native_decide
 
 /-- The Case-2 congruence `B·(½−k)·W'·h − C ≡ 0 (mod W)` holds: `cmodWf (B·(½−k)W'h − C) W` vanishes. -/
 theorem case2_congruence :
-    cisZeroG (cmodWf
-      (csubG (cmulG case2B
-        (cmulG (csubG [CField.div CField.one (cnatCastG 2)] [cnatCastG 2])
-          (cmulG case2Wder case2H))) case2C)
+    cisZero (cmodWf
+      (csub (cmul case2B
+        (cmul (csub [CField.div CField.one (cnatCast 2)] [cnatCast 2])
+          (cmul case2Wder case2H))) case2C)
       case2W) = true := by native_decide
 
 /-- The Case-2 cleared identity `B·(½−k)W'h − C + W·(B'h + ½Bh') = W·D` in `ℚ[x]` (`B = 2/3`, `D = −x/3`). -/
 theorem case2_cleared_identity :
-    cisZeroG (csubG
-      (caddG
-        (csubG (cmulG case2B
-          (cmulG (csubG [CField.div CField.one (cnatCastG 2)] [cnatCastG 2])
-            (cmulG case2Wder case2H))) case2C)
-        (cmulG case2W
-          (caddG (cmulG (cderivG case2B) case2H)
-            (cmulG [CField.div CField.one (cnatCastG 2)] (cmulG case2B (cderivG case2H))))))
-      (cmulG case2W case2D)) = true := by native_decide
+    cisZero (csub
+      (cadd
+        (csub (cmul case2B
+          (cmul (csub [CField.div CField.one (cnatCast 2)] [cnatCast 2])
+            (cmul case2Wder case2H))) case2C)
+        (cmul case2W
+          (cadd (cmul (cderiv case2B) case2H)
+            (cmul [CField.div CField.one (cnatCast 2)] (cmul case2B (cderiv case2H))))))
+      (cmul case2W case2D)) = true := by native_decide
 
 /-- The residual `D = −x/3`, so the Case-2 step lowered the multiplicity of `W = x` from `k = 2` to `1`. -/
 theorem case2_residual_eq :
-    cisZeroG (csubG case2D [(0 : ℚ), -1/3]) = true := by native_decide
+    cisZero (csub case2D [(0 : ℚ), -1/3]) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

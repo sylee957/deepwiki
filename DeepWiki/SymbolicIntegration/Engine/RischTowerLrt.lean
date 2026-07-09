@@ -29,7 +29,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- **The recursive LRT Risch solver as a class.** The computable data (`case`) plus the two soundness laws:
 `specialSound` (the special/polynomial part reconstructs `a/d`, a `K`-level identity — shared with the rational
-solver) and `reducedSoundLrt` (the reduced normal part integrates to `cIntegrateReducedLrtG` with algebraic
+solver) and `reducedSoundLrt` (the reduced normal part integrates to `cIntegrateReducedLrt` with algebraic
 residues, `IsIntegralResultLrtG` over every alg-closed extension `E`). One `instance` assembles `integrate` /
 `soundFormalLrt` by resolution. The reduced law is the *dischargeable* frontier `PrimitiveFrontierLrt` — no
 rational-residue restriction. -/
@@ -40,20 +40,20 @@ class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField �
   case : MonomialCase α
   /-- Special-part soundness + reconstruction (`K`-level, existential special value — identical to the rational
   solver's `specialSound`). The `d ≠ 0` precondition is supplied by the integrator's guard. -/
-  specialSound : ∀ (Dt a d snum sden : CPoly α), toPolyG d ≠ 0 →
+  specialSound : ∀ (Dt a d snum sden : CPoly α), toPoly d ≠ 0 →
     case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden) →
-    toPolyG sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
+    toPoly sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
       towerFractionFieldDerivG Dt (fieldFrac snum sden) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d
-  /-- Reduced-part soundness with algebraic residues: `cₙ/dₙ` integrates to `cIntegrateReducedLrtG …` over every
+  /-- Reduced-part soundness with algebraic residues: `cₙ/dₙ` integrates to `cIntegrateReducedLrt …` over every
   alg-closed differential extension `E`. This is exactly `PrimitiveFrontierLrt.hreducedLrt` — the dischargeable
   frontier (no rational-residue restriction). -/
-  reducedSoundLrt : ∀ (Dt a d : CPoly α), toPolyG d ≠ 0 → (toPolyG Dt).natDegree = 0 →
+  reducedSoundLrt : ∀ (Dt a d : CPoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
     IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d))
+      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d))
   /-- **Optional single-`w` limited integrator** (Bronstein §5.8/§5.12) — `(anum, aden, ηnum, ηden) ↦
   ((bnum, bden), c)` with `anum/aden = D(bnum/bden) + c·(ηnum/ηden)` over `α(s)`. Feeds the degree-raising
-  coefficient recursion `cIntegratePrimPolyDegRaiseG` its `c` (the `c·tᵐ⁺¹/(m+1)` term). Defaults to `none` ⟹
+  coefficient recursion `cIntegratePrimPolyDegRaise` its `c` (the `c·tᵐ⁺¹/(m+1)` term). Defaults to `none` ⟹
   the tower recursion falls back to the log-free coefficient integrator (`c = 0`), so existing instances are
   unaffected; a `(b,c)` instance (base = `cLimitedIntegrateSingleBase`) flips on degree-raising. Soundness is
   telescoping (`cIntegratePrimPolyDegRaiseG_sound` needs no correctness law on this). -/
@@ -66,7 +66,7 @@ namespace LawfulRischLevelLrt
 `cIntegrateCaseLrt` (no candidate sweep). **Guards on `d ≠ 0`**, so a successful run supplies `d ≠ 0` to the
 soundness laws. -/
 def integrate [LawfulRischLevelLrt α] (Dt a d : CPoly α) : Option (LrtResultG α) :=
-  if cisZeroG d then none else cIntegrateCaseLrt case Dt a d
+  if cisZero d then none else cIntegrateCaseLrt case Dt a d
 
 /-- **Formal LRT soundness.** Any successful run satisfies the algebraic-residue log-derivative identity
 `IsIntegralResultLrtG` — over every alg-closed differential extension `E`, `D_E(rational) + Σ residue logs =
@@ -75,13 +75,13 @@ a/d`. Composed from the instance's `specialSound` + `reducedSoundLrt` through th
 theorem soundFormalLrt [LawfulRischLevelLrt α] (Dt a d : CPoly α) (res : LrtResultG α)
     (h : integrate Dt a d = some res) : IsIntegralResultLrtG Dt a d res := by
   rw [integrate] at h
-  by_cases hdz : cisZeroG d = true
+  by_cases hdz : cisZero d = true
   · rw [if_pos hdz] at h; simp at h
   · rw [if_neg hdz] at h
-    have hd0 : toPolyG d ≠ 0 := fun hh => hdz ((cisZeroG_iff d).mpr hh)
+    have hd0 : toPoly d ≠ 0 := fun hh => hdz ((cisZeroG_iff d).mpr hh)
     have h0 : cIntegrateCaseLrt case Dt a d = some res := h
     rw [cIntegrateCaseLrt] at h
-    rcases hcrep : canonicalRepresentationFastG Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+    rcases hcrep : canonicalRepresentationFast Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
     rw [hcrep] at h
     dsimp only at h
     rcases hspec : case.integrateSpecial Dt fp b ds with _ | ⟨snum, sden⟩
@@ -117,8 +117,8 @@ This is the `intR`-soundness the tower coefficient recursion consumes — descen
 `integrateRational_sound` on the rational side. -/
 theorem integrateRationalLrt_sound [LawfulRischLevelLrt α] (Dt a d num den : CPoly α)
     (h : integrateRationalLrt Dt a d = some (num, den)) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG num) / amG α (toPolyG den))
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
+    towerFractionFieldDerivG Dt (amG α (toPoly num) / amG α (toPoly den))
+      = amG α (toPoly a) / amG α (toPoly d) := by
   unfold integrateRationalLrt at h
   rw [Option.bind_eq_some_iff] at h
   obtain ⟨r, hint, hguard⟩ := h
@@ -143,12 +143,12 @@ integrability **iff** the root-free residue guard passes. The `←` (sufficiency
 `reducedSoundLrt`; the `→` (necessity/completeness) on the frontier. The completeness frontier is an *instance
 argument*, never a class field — so `soundFormalLrt` stays independent of it (the deliberate decoupling). -/
 theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPolyG d ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0)
-    (hR0 : toPolyG (cResidueResultantTowerG Dt
-        (cHermiteReduceTowerG Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
-        (cHermiteReduceTowerG Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0) :
+    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0)
+    (hR0 : toPoly (cResidueResultantTower Dt
+        (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
+        (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0) :
     IsElementaryIntegrableGenuineLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      ↔ cResidueConstantGuardG Dt (crNormNum Dt a d) (crNormDen Dt a d) = true :=
+      ↔ cResidueConstantGuard Dt (crNormNum Dt a d) (crNormDen Dt a d) = true :=
   primitiveLrtDecides_of_setup hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
     (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hR0 (reducedSoundLrt Dt a d hd0 hDt0)
 
@@ -156,12 +156,12 @@ theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd 
 reduced normal part is not genuinely elementary integrable — a decidable non-integrability certificate that the
 solver's class produces directly (given the Liouville frontier). -/
 theorem not_isElementaryIntegrable_reduced [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α) (hd0 : toPolyG d ≠ 0)
-    (hDt0 : (toPolyG Dt).natDegree = 0)
-    (hR0 : toPolyG (cResidueResultantTowerG Dt
-        (cHermiteReduceTowerG Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
-        (cHermiteReduceTowerG Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0)
-    (hguard : cResidueConstantGuardG Dt (crNormNum Dt a d) (crNormDen Dt a d) = false) :
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0)
+    (hDt0 : (toPoly Dt).natDegree = 0)
+    (hR0 : toPoly (cResidueResultantTower Dt
+        (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
+        (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0)
+    (hguard : cResidueConstantGuard Dt (crNormNum Dt a d) (crNormDen Dt a d) = false) :
     ¬ IsElementaryIntegrableGenuineLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d) := by
   rw [reducedDecides hgcd Dt a d hd0 hDt0 hR0, hguard]; simp
 

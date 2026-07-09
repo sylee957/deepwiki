@@ -28,7 +28,7 @@ By extended Euclid: solve `s·g + t·(yⁿ − f) = 1` and reduce `s` mod `yⁿ 
 
 /-- The defining modulus `radModulus n f = [−f, 0, …, 0, 1] = yⁿ − f` as a `CPoly α`. -/
 def radModulus (n : ℕ) (f : α) : CPoly α :=
-  CPoly.csubG (CPoly.cshiftG n [CField.one]) [f]
+  CPoly.csub (CPoly.cshift n [CField.one]) [f]
 
 /-- The general-`n` inverse `radInvN n f g` of `g ∈ α[y]/(yⁿ − f)` via extended Euclid: from
 `cbezoutOneWf g (yⁿ − f) = (s, _)` with `s·g + t·(yⁿ − f) = 1`, the inverse is `s` reduced mod `yⁿ = f`.
@@ -157,13 +157,13 @@ theorem toK_cubeRadicand :
     CFieldSpec.toK (cubeRadicand : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 2) := by
   show QFunNZG.toQFunNZG cubeRadicand = _
   rw [QFunNZG.toQFunNZG]
-  show QFunNZG.amG ℚ (toPolyG ([1, 0, 1] : CPoly ℚ))
-      / QFunNZG.amG ℚ (toPolyG ([CField.one] : CPoly ℚ)) = _
-  have h1 : toPolyG ([1, 0, 1] : CPoly ℚ) = 1 + X ^ 2 := by
+  show QFunNZG.amG ℚ (toPoly ([1, 0, 1] : CPoly ℚ))
+      / QFunNZG.amG ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
+  have h1 : toPoly ([1, 0, 1] : CPoly ℚ) = 1 + X ^ 2 := by
     simp only [denote]
     show C (1 : ℚ) + X * (C 0 + X * (C 1 + X * 0)) = _
     simp; ring
-  have h2 : toPolyG ([CField.one] : CPoly ℚ) = 1 := by
+  have h2 : toPoly ([CField.one] : CPoly ℚ) = 1 := by
     show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h1, h2]
   show QFunNZG.amG ℚ (1 + X ^ 2) / QFunNZG.amG ℚ 1 = _
@@ -285,14 +285,14 @@ def cubeGenTDeriv : CPoly RadX3root :=
 /-- `D(y·t) = (ℓ+1)·y·t` over `RadX3root[t] = ℚ(x)[∛(x²+1)][eˣ]`: `cmonomialDeriv` runs both the cube-root
 coefficient derivation (`ℓ·y`) and the `d/dt` part (`y`). -/
 theorem cube_monomialDeriv_genT_eq :
-    CPoly.cisZeroG (CPoly.csubG
+    CPoly.cisZero (CPoly.csub
       (CPoly.cmonomialDeriv cubeDtExp cubeGenT) cubeGenTDeriv) = true := by native_decide
 
 /-- The mixed cube-root derivation runs the coefficient derivation: `D(y·t)` is neither zero nor equal to
 the pure-`d/dt` result `y·t`, confirming the cube-root-base `cderiv` contributed the `ℓ·y·t` term. -/
 theorem cube_monomialDeriv_genT_runs_coeff :
-    (CPoly.cisZeroG (CPoly.cmonomialDeriv cubeDtExp cubeGenT) = false) ∧
-    (CPoly.cisZeroG (CPoly.csubG
+    (CPoly.cisZero (CPoly.cmonomialDeriv cubeDtExp cubeGenT) = false) ∧
+    (CPoly.cisZero (CPoly.csub
       (CPoly.cmonomialDeriv cubeDtExp cubeGenT) cubeGenT) = false) := by
   constructor <;> native_decide
 

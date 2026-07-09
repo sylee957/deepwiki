@@ -4,10 +4,10 @@ import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
 
 /-! # Guarded primitive special integration
 
-The primitive `b = 0` poly-RDE `cPolyRischDEG Dt [] fp` is term-by-term integration, correct only for
-`Dt = 1` (canonical primitive) with constant coefficients (`mapCoeffs (toPolyG fp) = 0`). Rather than
+The primitive `b = 0` poly-RDE `cPolyRischDE Dt [] fp` is term-by-term integration, correct only for
+`Dt = 1` (canonical primitive) with constant coefficients (`mapCoeffs (toPoly fp) = 0`). Rather than
 assume the resulting field identity (`hspecialField`), `primitiveGuardedCase` guards the hook on those
-two conditions — both *computable* (`cisZeroG (csubG Dt [1])` and `cisZeroG (cmapDeriv fp)`) — so a
+two conditions — both *computable* (`cisZero (csub Dt [1])` and `cisZero (cmapDeriv fp)`) — so a
 successful special integration a-priori *guarantees* the identity. Declining outside the domain is honest:
 the algorithm is sound and complete for the constant-coefficient canonical-primitive case, while the
 non-constant case belongs to the general primitive recursion. -/
@@ -23,11 +23,11 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- Rational `p/q ∈ α` (`p : ℤ`, `q : ℕ`) via the `[CField α]` casts — `p.natAbs` lifted, negated when
 `p < 0`, divided by `q`. -/
 def CPoly.cRatG (p : ℤ) (q : ℕ) : α :=
-  CField.div (if p < 0 then CField.neg (CPoly.cnatCastG p.natAbs) else CPoly.cnatCastG p.natAbs)
-    (CPoly.cnatCastG q)
+  CField.div (if p < 0 then CField.neg (CPoly.cnatCast p.natAbs) else CPoly.cnatCast p.natAbs)
+    (CPoly.cnatCast q)
 
 /-- Automatic residue candidates from the bounded rational sweep `{p/q : |p| ≤ bound, 1 ≤ q ≤ bound}`.
-`cRationalResiduesG` filters these to the actual residues (roots of the residue resultant), so the reduced
+`cRationalResidues` filters these to the actual residues (roots of the residue resultant), so the reduced
 integrator needs *no externally supplied* candidate list for small-rational residues — `candidates` becomes
 a fixed computable function. Completeness is bounded (large / non-rational residues need a bigger sweep or
 root-finding); soundness is unaffected (any candidate list is filtered to genuine roots). -/
@@ -36,24 +36,24 @@ def CPoly.defaultResidueCandidates (bound : ℕ) : List α :=
     (List.range bound).map (fun j => CPoly.cRatG ((i : ℤ) - (bound : ℤ)) (j + 1)))
 
 omit [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
-/-- `cisZeroG (cmapDeriv fp) = true` proves that `fp` has constant coefficients. -/
+/-- `cisZero (cmapDeriv fp) = true` proves that `fp` has constant coefficients. -/
 theorem mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (fp : CPoly α)
-    (h : cisZeroG (cmapDeriv fp) = true) : Differential.mapCoeffs (toPolyG fp) = 0 := by
-  have hzero : toPolyG (cmapDeriv fp) = 0 := (cisZeroG_iff _).mp h
+    (h : cisZero (cmapDeriv fp) = true) : Differential.mapCoeffs (toPoly fp) = 0 := by
+  have hzero : toPoly (cmapDeriv fp) = 0 := (cisZeroG_iff _).mp h
   simpa only [denote] using hzero
 
 omit [CFracGcdCoreWf α] in
-/-- The poly-RDE field identity holds for any `Dt` with `toPolyG Dt = 1`. -/
+/-- The poly-RDE field identity holds for any `Dt` with `toPoly Dt = 1`. -/
 theorem field_identity_Dt1 (Dt c q : CPoly α) (n : ℤ)
-    (hDt1 : toPolyG Dt = 1) (hc : cisZeroG c = false) (hdeg : (cdegG c : ℤ) + 1 ≤ n)
-    (hsome : cPolyRischDEG Dt ([] : CPoly α) c n = some q)
-    (hconst : Differential.mapCoeffs (toPolyG c) = 0) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPoly α)))
-      = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPoly α)) := by
+    (hDt1 : toPoly Dt = 1) (hc : cisZero c = false) (hdeg : (cdeg c : ℤ) + 1 ≤ n)
+    (hsome : cPolyRischDE Dt ([] : CPoly α) c n = some q)
+    (hconst : Differential.mapCoeffs (toPoly c) = 0) :
+    towerFractionFieldDerivG Dt (amG α (toPoly q) / amG α (toPoly ([CField.one] : CPoly α)))
+      = amG α (toPoly c) / amG α (toPoly ([CField.one] : CPoly α)) := by
   have hcongr : towerFractionFieldDerivG Dt = towerFractionFieldDerivG ([CField.one] : CPoly α) := by
     unfold towerFractionFieldDerivG
     simp only [hDt1, denote, map_one, mul_zero, add_zero]
-  have hsome1 : cPolyRischDEG ([CField.one] : CPoly α) ([] : CPoly α) c n = some q := by
+  have hsome1 : cPolyRischDE ([CField.one] : CPoly α) ([] : CPoly α) c n = some q := by
     rw [cPolyRischDEG_nil_eq _ c n hc hdeg]
     rw [cPolyRischDEG_nil_eq _ c n hc hdeg] at hsome; exact hsome
   rw [hcongr]
@@ -62,30 +62,30 @@ theorem field_identity_Dt1 (Dt c q : CPoly α) (n : ℤ)
 omit [CFracGcdCoreWf α] in
 /-- The primitive special-part identity holds under the guarded regime. -/
 theorem primitive_special_identity (Dt fp qp : CPoly α)
-    (hDt1 : toPolyG Dt = 1) (hconst : Differential.mapCoeffs (toPolyG fp) = 0)
-    (hsome : cPolyRischDEG Dt ([] : CPoly α) fp ((cdegG fp : ℤ) + 1) = some qp) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG qp) / amG α (toPolyG ([CField.one] : CPoly α)))
-      = amG α (toPolyG fp) / amG α (toPolyG ([CField.one] : CPoly α)) := by
-  by_cases hfp : cisZeroG fp = true
+    (hDt1 : toPoly Dt = 1) (hconst : Differential.mapCoeffs (toPoly fp) = 0)
+    (hsome : cPolyRischDE Dt ([] : CPoly α) fp ((cdeg fp : ℤ) + 1) = some qp) :
+    towerFractionFieldDerivG Dt (amG α (toPoly qp) / amG α (toPoly ([CField.one] : CPoly α)))
+      = amG α (toPoly fp) / amG α (toPoly ([CField.one] : CPoly α)) := by
+  by_cases hfp : cisZero fp = true
   · -- `fp = 0`: the poly-RDE returns `[]`, both sides vanish
-    have hbnil : cisZeroG ([] : CPoly α) = true := by rw [cisZeroG_iff, toPolyG_nil]
-    have hnil : cPolyRischDEG Dt ([] : CPoly α) fp ((cdegG fp : ℤ) + 1) = some [] := by
-      rw [cPolyRischDEG]; simp only [hbnil, if_true, hfp]
+    have hbnil : cisZero ([] : CPoly α) = true := by rw [cisZeroG_iff, toPolyG_nil]
+    have hnil : cPolyRischDE Dt ([] : CPoly α) fp ((cdeg fp : ℤ) + 1) = some [] := by
+      rw [cPolyRischDE]; simp only [hbnil, if_true, hfp]
     rw [hnil] at hsome
     obtain rfl : qp = [] := (Option.some.injEq _ _).mp hsome.symm
-    have hfp0 : toPolyG fp = 0 := (cisZeroG_iff fp).mp hfp
+    have hfp0 : toPoly fp = 0 := (cisZeroG_iff fp).mp hfp
     rw [toPolyG_nil, hfp0, map_zero, zero_div, map_zero]
   · exact field_identity_Dt1 Dt fp qp _ hDt1 (by simpa using hfp) (le_refl _) hsome hconst
 
 /-- The guarded primitive monomial case. -/
 def primitiveGuardedCase : MonomialCase α where
   integrateSpecial Dt fp b _ds :=
-    if cisZeroG b && cisZeroG (csubG Dt [CField.one]) && cisZeroG (cmapDeriv fp) then
-      match cPolyRischDEG Dt [] fp ((cdegG fp : ℤ) + 1) with
+    if cisZero b && cisZero (csub Dt [CField.one]) && cisZero (cmapDeriv fp) then
+      match cPolyRischDE Dt [] fp ((cdeg fp : ℤ) + 1) with
       | none => none
       | some qp => some (qp, [CField.one])
     else none
   reducedCorrect _Dt nrm :=
-    if nrm.logs.all (fun cv => cisZeroG [CDiffField.cderiv cv.1]) then some nrm else none
+    if nrm.logs.all (fun cv => cisZero [CDiffField.cderiv cv.1]) then some nrm else none
 
 end DeepWiki.SymbolicIntegration

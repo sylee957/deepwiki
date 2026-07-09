@@ -27,19 +27,19 @@ def cantorCompose (ρ : CPoly α) (D₁ D₂ : MumfordDivisor α) : MumfordDivis
   -- first extended gcd: d₁ = gcd(u₁,u₂) = e₁·u₁ + e₂·u₂
   let (d₁, e₁, e₂) := cgcdWf u₁ u₂
   -- second extended gcd: d = gcd(d₁, v₁+v₂) = c₁·d₁ + c₂·(v₁+v₂)
-  let vsum := caddG v₁ v₂
+  let vsum := cadd v₁ v₂
   let (d, c₁, c₂) := cgcdWf d₁ vsum
   -- cofactors of d over (u₁, u₂, v₁+v₂)
-  let s₁ := cmulG c₁ e₁
-  let s₂ := cmulG c₁ e₂
+  let s₁ := cmul c₁ e₁
+  let s₂ := cmul c₁ e₂
   let s₃ := c₂
   -- u = u₁·u₂/d²  (monic-normalized)
-  let d2 := cmulG d d
-  let u := cmonicG (cdivWf (cmulG u₁ u₂) d2)
+  let d2 := cmul d d
+  let u := cmonic (cdivWf (cmul u₁ u₂) d2)
   -- v numerator = s₁·u₁·v₂ + s₂·u₂·v₁ + s₃·(v₁·v₂ + ρ)
   let vnum :=
-    caddG (caddG (cmulG s₁ (cmulG u₁ v₂)) (cmulG s₂ (cmulG u₂ v₁)))
-      (cmulG s₃ (caddG (cmulG v₁ v₂) ρ))
+    cadd (cadd (cmul s₁ (cmul u₁ v₂)) (cmul s₂ (cmul u₂ v₁)))
+      (cmul s₃ (cadd (cmul v₁ v₂) ρ))
   -- v = (vnum / d) mod u
   let v := cmodWf (cdivWf vnum d) u
   ⟨u, v⟩
@@ -50,8 +50,8 @@ def cantorCompose (ρ : CPoly α) (D₁ D₂ : MumfordDivisor α) : MumfordDivis
 `deg u`. Generic over `[CField α]`. -/
 def cantorReduceStep (ρ : CPoly α) (D : MumfordDivisor α) : MumfordDivisor α :=
   let u := D.u; let v := D.v
-  let unew := cmonicG (cdivWf (csubG ρ (cmulG v v)) u)
-  let vnew := cmodWf (cnegG v) unew
+  let unew := cmonic (cdivWf (csub ρ (cmul v v)) u)
+  let vnew := cmodWf (cneg v) unew
   ⟨unew, vnew⟩
 
 /-- Cantor reduction driver `cantorReduceAux fuel g ρ (u, v)`: apply `cantorReduceStep` until
@@ -59,13 +59,13 @@ def cantorReduceStep (ρ : CPoly α) (D : MumfordDivisor α) : MumfordDivisor α
 def cantorReduceAux : ℕ → ℕ → CPoly α → MumfordDivisor α → MumfordDivisor α
   | 0, _, _, D => D
   | fuel + 1, g, ρ, D =>
-    if cdegG D.u ≤ g then D
+    if cdeg D.u ≤ g then D
     else cantorReduceAux fuel g ρ (cantorReduceStep ρ D)
 
 /-- Cantor reduction `cantorReduce ρ g D`: bring a semi-reduced Mumford pair to the unique reduced form
 `deg u ≤ g` by repeating `cantorReduceStep`. Generic over `[CField α]`. -/
 def cantorReduce (ρ : CPoly α) (g : ℕ) (D : MumfordDivisor α) : MumfordDivisor α :=
-  cantorReduceAux (cdegG D.u + 1) g ρ D
+  cantorReduceAux (cdeg D.u + 1) g ρ D
 
 /-! ### The group law `cantorAdd = reduce ∘ compose` -/
 
@@ -77,11 +77,11 @@ def cantorAdd (ρ : CPoly α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) : Mumfor
 
 /-! ### Normalized equality of Mumford pairs -/
 
-/-- Normalized equality of Mumford pairs `mumfordNormEq D₁ D₂`: `cnormG`-equal on both `u` and `v`, i.e.
+/-- Normalized equality of Mumford pairs `mumfordNormEq D₁ D₂`: `cnorm`-equal on both `u` and `v`, i.e.
 equal as polynomials independent of trailing-zero list encoding. Generic over `[CField α]` with
 `[DecidableEq α]`. -/
 def mumfordNormEq [DecidableEq α] (D₁ D₂ : MumfordDivisor α) : Bool :=
-  (cnormG D₁.u == cnormG D₂.u) && (cnormG D₁.v == cnormG D₂.v)
+  (cnorm D₁.u == cnorm D₂.u) && (cnorm D₁.v == cnorm D₂.v)
 
 /-! ### The scalar multiple `n·D` (`cantorMul`) -/
 
