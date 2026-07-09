@@ -46,7 +46,7 @@ CFieldSpec α extends CRingSpec α    -- adds [Field R] + toK_inv;  K := R  (kee
 
 ## Phase order (delete/weaken consumers only after their base is generalized)
 
-**P1 — introduce the ring base, zero call-site churn.** Add `CCommRing`, `CRingSpec`; make
+**P1 — DONE (commit below).** introduce the ring base, zero call-site churn. Add `CCommRing`, `CRingSpec`; make
 `CField extends CCommRing`, `CFieldSpec extends CRingSpec` (`R := K`, `K` kept as alias). Provide the
 `CField ⇒ CCommRing` / `CFieldSpec ⇒ CRingSpec` paths so all existing instances still resolve.
 *Verify (spike):* the whole build is unchanged and green; `#check (inferInstance : CCommRing ℚ)` works via
