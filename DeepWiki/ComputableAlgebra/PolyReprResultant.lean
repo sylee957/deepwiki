@@ -1,5 +1,6 @@
 import DeepWiki.ComputableAlgebra.PolyReprDegree
 import DeepWiki.ComputableAlgebra.ListDet
+import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Toward a generic computable resultant (Sylvester determinant)
 
@@ -116,5 +117,71 @@ def cResultantDeriv (p : P α) : α := cResultant p (cderiv p)
 example : cResultantDeriv ([-1, 0, 1] : List ℚ) ≠ 0 := by native_decide
 /-- `cResultantDeriv` reduces: `(x − 1)²` has a repeated factor, so `res(p, p') = 0`. -/
 example : cResultantDeriv ([1, -2, 1] : List ℚ) = 0 := by native_decide
+
+/-! ### The abstract bridge: `cResultant` denotes `Polynomial.resultant`
+
+`cSylvester`'s layout matches `Polynomial.sylvester` entry-wise (no permutation): first block = `q`-strips
+with `Icc j (j+n)`, second block at column `m+j′` = `p`-strips with `Icc j′ (j′+m)`. -/
+
+section AbstractBridge
+variable [CRingSpec α]
+
+/-- The mapped Sylvester row-list has `m+n` rows. -/
+theorem cSylvester_length (p q : P α) (m n : ℕ) :
+    ((cSylvester p q m n).map (fun row => row.map CRingSpec.toR)).length = m + n := by
+  rw [List.length_map, cSylvester, List.length_map, List.length_range]
+
+/-- Each mapped Sylvester row has `m+n` entries. -/
+theorem cSylvester_row_length (p q : P α) (m n : ℕ) (r : List (CRingSpec.R α))
+    (hr : r ∈ (cSylvester p q m n).map (fun row => row.map CRingSpec.toR)) : r.length = m + n := by
+  rw [List.mem_map] at hr
+  obtain ⟨row, hrow, rfl⟩ := hr
+  rw [cSylvester, List.mem_map] at hrow
+  obtain ⟨i, _, rfl⟩ := hrow
+  rw [List.length_map, List.length_map, List.length_range]
+
+/-- `matrixOfList` of the mapped Sylvester row-list is exactly `Polynomial.sylvester`. -/
+theorem matrixOfList_cSylvester (p q : P α) (m n : ℕ) :
+    matrixOfList ((cSylvester p q m n).map (fun row => row.map CRingSpec.toR)) (m + n)
+      = Polynomial.sylvester (toPoly p) (toPoly q) m n := by
+  ext i j
+  rw [matrixOfList, Matrix.of_apply, Polynomial.sylvester, Matrix.of_apply]
+  have hgetd : (((cSylvester p q m n).map (fun row => row.map CRingSpec.toR)).getD (i : ℕ)
+        []).getD (j : ℕ) 0
+      = CRingSpec.toR (if (j : ℕ) < m
+          then (if (j : ℕ) ≤ (i : ℕ) ∧ (i : ℕ) ≤ (j : ℕ) + n then coeff q ((i : ℕ) - j)
+            else CCommRing.zero)
+          else (if ((j : ℕ) - m) ≤ (i : ℕ) ∧ (i : ℕ) ≤ ((j : ℕ) - m) + m
+            then coeff p ((i : ℕ) - ((j : ℕ) - m)) else CCommRing.zero)) := by
+    simp only [List.getD_eq_getElem?_getD, List.getElem?_map, cSylvester,
+      List.getElem?_range (Fin.is_lt i), List.getElem?_range (Fin.is_lt j), Option.map_some,
+      Option.getD_some]
+  rw [hgetd]
+  induction j using Fin.addCases with
+  | left jl =>
+    rw [Fin.addCases_left]
+    simp only [Fin.val_castAdd, Set.mem_Icc]
+    rw [if_pos jl.is_lt]
+    split_ifs with h
+    · rw [coeff_toPoly]
+    · rw [CRingSpec.toR_zero]
+  | right jr =>
+    rw [Fin.addCases_right]
+    simp only [Fin.val_natAdd, Set.mem_Icc, Nat.add_sub_cancel_left]
+    rw [if_neg (by omega : ¬ m + (jr : ℕ) < m)]
+    split_ifs with h
+    · rw [coeff_toPoly]
+    · rw [CRingSpec.toR_zero]
+
+/-- **The resultant bridge:** the computable `cResultant` denotes `Polynomial.resultant`. -/
+theorem toR_cResultant (p q : P α) :
+    CRingSpec.toR (cResultant p q)
+      = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q) := by
+  rw [cResultant, toR_clistDetn,
+    listDetn_eq_det _ _ (cSylvester_length p q (cdeg p) (cdeg q))
+      (cSylvester_row_length p q (cdeg p) (cdeg q)),
+    matrixOfList_cSylvester, Polynomial.resultant]
+
+end AbstractBridge
 
 end DeepWiki.SymbolicIntegration.CPolyRepr
