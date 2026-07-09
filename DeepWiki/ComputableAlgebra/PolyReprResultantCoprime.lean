@@ -9,9 +9,9 @@ file with field-path-only `[CField]/[CFieldSpec]` variables (so `CRingSpec.R α 
 
 open Polynomial
 
-namespace DeepWiki.SymbolicIntegration.CPolyRepr
+namespace DeepWiki.SymbolicIntegration.CPoly
 
-variable {P : Type u → Type u} [CPolyRepr P] {α : Type u} [CField α] [CFieldSpec α]
+variable {P : Type u → Type u} [CPoly P] {α : Type u} [CField α] [CFieldSpec α]
 
 /-- **Nonzero resultant ⇒ coprime:** if `p, q` are not both zero and the computable resultant denotes a
 nonzero value, then `toPoly p` and `toPoly q` are coprime. Links the computable resultant to the
@@ -22,4 +22,4 @@ theorem isCoprime_of_cResultant_ne_zero (p q : P α) (hpq : toPoly p ≠ 0 ∨ t
   by_contra hnc
   exact h (Polynomial.resultant_eq_zero_iff.mpr ⟨hpq, hnc⟩)
 
-end DeepWiki.SymbolicIntegration.CPolyRepr
+end DeepWiki.SymbolicIntegration.CPoly

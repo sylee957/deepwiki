@@ -1,16 +1,16 @@
 import DeepWiki.ComputableAlgebra.PolyReprDegree
 
-/-! # A sparse `CPolyRepr` instance — the payoff (Step 5)
+/-! # A sparse `CPoly` instance — the payoff (Step 5)
 
 `SparsePoly α` wraps a *sparse* association list of `(degree, coefficient)` pairs — a genuinely
 different carrier from the dense `List α`. (It is a one-field `structure`, not a `def`-synonym for
 `List`, so it inherits nothing and does not collide with the dense `List` instance — the same newtype
-discipline as the min-plus carriers.) Giving it a `CPolyRepr` instance means **every** generic op
+discipline as the min-plus carriers.) Giving it a `CPoly` instance means **every** generic op
 (`add`/`neg`/`scale`/`mul`, `toPoly`, `cisZero`/`cdeg`/`clead`/`cnorm`) and every correctness square
 works on it for free, with the same `native_decide` showcase — proving the abstraction is genuinely
 representation-independent. See `docs/representation-independent-poly.md`. -/
 
-namespace DeepWiki.SymbolicIntegration.CPolyRepr
+namespace DeepWiki.SymbolicIntegration.CPoly
 
 /-- Sparse association-list polynomial: `(degree, coefficient)` pairs (a one-field wrapper). -/
 structure SparsePoly (α : Type u) where
@@ -51,8 +51,8 @@ theorem scoeff_ge (p : List (ℕ × α)) (i : ℕ)
 
 end SparsePoly
 
-/-- The sparse representation is a `CPolyRepr` — the generic engine works on it unchanged. -/
-instance instSparse : CPolyRepr SparsePoly where
+/-- The sparse representation is a `CPoly` — the generic engine works on it unchanged. -/
+instance instSparse : CPoly SparsePoly where
   coeff p i := SparsePoly.scoeff p.toList i
   degBound p := p.toList.foldr (fun kv acc => max (kv.1 + 1) acc) 0
   ofFn n f := ⟨(List.range n).map (fun i => (i, f i))⟩
@@ -80,4 +80,4 @@ example : cdeg (cderiv (SparsePoly.ofList [(0, 1), (2, 3)] : SparsePoly ℚ)) = 
 example : ceval (2 : ℚ) (SparsePoly.ofList [(0, 1), (1, 2), (2, 3)] : SparsePoly ℚ) = 17 := by
   native_decide
 
-end DeepWiki.SymbolicIntegration.CPolyRepr
+end DeepWiki.SymbolicIntegration.CPoly

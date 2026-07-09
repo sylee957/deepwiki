@@ -1,6 +1,6 @@
 import DeepWiki.ComputableAlgebra.PolyReprDenote
 
-/-! # Representation-generic exact-degree layer for `CPolyRepr` (Step 2)
+/-! # Representation-generic exact-degree layer for `CPoly` (Step 2)
 
 `degBound` is only an *upper* bound. The exact-degree ops — `cisZero`, `cdeg` (honest degree), `clead`
 (leading coefficient), `cnorm` (trailing-zero-free canonical form) — are defined on the interface from
@@ -10,9 +10,9 @@ correctness is stated through the `toPoly` denotation. Representation-generic; n
 
 open Polynomial
 
-namespace DeepWiki.SymbolicIntegration.CPolyRepr
+namespace DeepWiki.SymbolicIntegration.CPoly
 
-variable {P : Type u → Type u} [CPolyRepr P] {α : Type u} [CCommRing α]
+variable {P : Type u → Type u} [CPoly P] {α : Type u} [CCommRing α]
 
 /-- The coefficient support: indices `i < degBound p` whose coefficient is `isZero`-nonzero. -/
 def support (p : P α) : List ℕ :=
@@ -138,4 +138,4 @@ example : clead ([1, 2, 0] : List ℚ) = 2 := by native_decide
 /-- `cnorm` reduces: `[1, 2, 0, 0]` normalizes to `[1, 2]`. -/
 example : cnorm ([1, 2, 0, 0] : List ℚ) = [1, 2] := by native_decide
 
-end DeepWiki.SymbolicIntegration.CPolyRepr
+end DeepWiki.SymbolicIntegration.CPoly

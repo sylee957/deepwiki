@@ -1,7 +1,7 @@
 import DeepWiki.ComputableAlgebra.PolyReprDegree
 import DeepWiki.ComputableAlgebra.PolyReprSparse
 
-/-! # Generic Euclidean division on `CPolyRepr`
+/-! # Generic Euclidean division on `CPoly`
 
 `cdivmod p q = (Q, R)` is fuel-less Euclidean division of `p` by `q` over a computable field: repeatedly
 cancel `p`'s leading term with the monomial `(clead p / clead q)·X^(cdeg p − cdeg q)·q`. The public op is
@@ -9,14 +9,14 @@ a thin wrapper `cdivmod p q := cdivmodCore (cdeg p + 1) p q` over the fuel-threa
 (the `cdeg p + 1` fuel is always sufficient — each step strictly drops the degree — so it is hidden). The
 **division identity** `toPoly p = toPoly q · toPoly Q + toPoly R` holds for *every* `fuel` on the core (by
 pure algebra + induction, no degree argument) and specialises to the fuel-less `cdivmod`.
-Representation-generic: runs on any `CPolyRepr` (dense or sparse), reduces under `native_decide` (the core
+Representation-generic: runs on any `CPoly` (dense or sparse), reduces under `native_decide` (the core
 is structural recursion — no well-founded recursion). See `docs/representation-independent-poly.md`. -/
 
 open Polynomial
 
-namespace DeepWiki.SymbolicIntegration.CPolyRepr
+namespace DeepWiki.SymbolicIntegration.CPoly
 
-variable {P : Type u → Type u} [CPolyRepr P] {α : Type u} [CCommRing α]
+variable {P : Type u → Type u} [CPoly P] {α : Type u} [CCommRing α]
 
 /-- The zero polynomial as a length-0 representation. -/
 def czero : P α := ofFn 0 (fun _ => CCommRing.zero)
@@ -235,4 +235,4 @@ example :
 example : cdeg (cgcdExt (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
     (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
 
-end DeepWiki.SymbolicIntegration.CPolyRepr
+end DeepWiki.SymbolicIntegration.CPoly

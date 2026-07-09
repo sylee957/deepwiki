@@ -13,9 +13,9 @@ rest of the file uses — hence the fresh `variable` block. See `docs/representa
 
 open Polynomial
 
-namespace DeepWiki.SymbolicIntegration.CPolyRepr
+namespace DeepWiki.SymbolicIntegration.CPoly
 
-variable {P : Type u → Type u} [CPolyRepr P] {α : Type u} [CField α] [CFieldSpec α]
+variable {P : Type u → Type u} [CPoly P] {α : Type u} [CField α] [CFieldSpec α]
 
 /-- **One division step strictly lowers degree:** with `p, q ≠ 0` and `cdeg q ≤ cdeg p`, cancelling
 `p`'s leading term against `q` gives a polynomial of strictly smaller `degree`. -/
@@ -286,4 +286,4 @@ theorem toPoly_squarefree_factor (p : P α) (hp : ¬ cisZero (P := P) p = true) 
 /-- `csquarefreePart` reduces (dense): the squarefree part of `(x − 1)² = 1 − 2x + x²` has degree `1`. -/
 example : cdeg (csquarefreePart ([1, -2, 1] : List ℚ)) = 1 := by native_decide
 
-end DeepWiki.SymbolicIntegration.CPolyRepr
+end DeepWiki.SymbolicIntegration.CPoly

@@ -3,17 +3,17 @@ import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 
-/-! # Representation-generic fractions over `CPolyRepr` (Step 6)
+/-! # Representation-generic fractions over `CPoly` (Step 6)
 
 Once the polynomial layer is representation-independent, a *fraction* is just a num/den pair over any
-`CPolyRepr P` — `GFrac P α` — with the standard fraction arithmetic built from the generic polynomial
+`CPoly P` — `GFrac P α` — with the standard fraction arithmetic built from the generic polynomial
 ops. Its denotation into `RatFunc` and the field-homomorphism laws follow from the `toPoly` squares, so
 they hold for **every** representation. `native_decide` validates the computable ops on both the dense
 `List` and the sparse `SparsePoly` carriers. See `docs/representation-independent-poly.md`. -/
 
 open Polynomial
 
-namespace DeepWiki.SymbolicIntegration.CPolyRepr
+namespace DeepWiki.SymbolicIntegration.CPoly
 
 /-- A fraction over a representation-independent polynomial: a numerator/denominator pair. -/
 structure GFrac (P : Type u → Type u) (α : Type u) where
@@ -24,7 +24,7 @@ structure GFrac (P : Type u → Type u) (α : Type u) where
 
 namespace GFrac
 
-variable {P : Type u → Type u} [CPolyRepr P] {α : Type u}
+variable {P : Type u → Type u} [CPoly P] {α : Type u}
 
 /-- Componentwise decidable equality (computable; reduces under `native_decide`). -/
 instance instDecidableEq [DecidableEq (P α)] : DecidableEq (GFrac P α)
@@ -34,12 +34,12 @@ instance instDecidableEq [DecidableEq (P α)] : DecidableEq (GFrac P α)
 
 /-- Fraction multiplication `(n₁/d₁)·(n₂/d₂) = (n₁n₂)/(d₁d₂)`. -/
 def mul [CCommRing α] (x y : GFrac P α) : GFrac P α :=
-  ⟨CPolyRepr.mul x.num y.num, CPolyRepr.mul x.den y.den⟩
+  ⟨CPoly.mul x.num y.num, CPoly.mul x.den y.den⟩
 
 /-- Fraction addition `(n₁/d₁)+(n₂/d₂) = (n₁d₂ + n₂d₁)/(d₁d₂)`. -/
 def add [CCommRing α] (x y : GFrac P α) : GFrac P α :=
-  ⟨CPolyRepr.add (CPolyRepr.mul x.num y.den) (CPolyRepr.mul y.num x.den),
-    CPolyRepr.mul x.den y.den⟩
+  ⟨CPoly.add (CPoly.mul x.num y.den) (CPoly.mul y.num x.den),
+    CPoly.mul x.den y.den⟩
 
 /-- **Reduce to lowest terms** by dividing numerator and denominator by their gcd (adopts the fuel-less
 `cgcd` + `cdivmod`). -/
@@ -90,19 +90,19 @@ example : GFrac.mul (⟨[1, 1], [1]⟩ : GFrac List ℚ) ⟨[1], [0, 1]⟩ = ⟨
 
 /-- `reduce` lowers `(x² − 1)/(x − 1)` to `(x + 1)/1`: numerator honest degree `1`, denominator `0`. -/
 example :
-    (CPolyRepr.cdeg (GFrac.reduce (⟨[-1, 0, 1], [-1, 1]⟩ : GFrac List ℚ)).num,
-      CPolyRepr.cdeg (GFrac.reduce (⟨[-1, 0, 1], [-1, 1]⟩ : GFrac List ℚ)).den) = (1, 0) := by
+    (CPoly.cdeg (GFrac.reduce (⟨[-1, 0, 1], [-1, 1]⟩ : GFrac List ℚ)).num,
+      CPoly.cdeg (GFrac.reduce (⟨[-1, 0, 1], [-1, 1]⟩ : GFrac List ℚ)).den) = (1, 0) := by
   native_decide
 
 /-- Sparse: the same fraction multiplication over the sparse carrier `GFrac SparsePoly ℚ` computes —
 its numerator `(1+x)·1` has honest degree `1`, its denominator `1·x` degree `1` (via the rep-agnostic
 `cdeg`, since the `mul` result lands in dense `ofFn` form on either carrier). -/
 example :
-    (CPolyRepr.cdeg (GFrac.mul
+    (CPoly.cdeg (GFrac.mul
         (⟨SparsePoly.ofList [(0, 1), (1, 1)], SparsePoly.ofList [(0, 1)]⟩ : GFrac SparsePoly ℚ)
         ⟨SparsePoly.ofList [(0, 1)], SparsePoly.ofList [(1, 1)]⟩).num,
-      CPolyRepr.cdeg (GFrac.mul
+      CPoly.cdeg (GFrac.mul
         (⟨SparsePoly.ofList [(0, 1), (1, 1)], SparsePoly.ofList [(0, 1)]⟩ : GFrac SparsePoly ℚ)
         ⟨SparsePoly.ofList [(0, 1)], SparsePoly.ofList [(1, 1)]⟩).den) = (1, 1) := by native_decide
 
-end DeepWiki.SymbolicIntegration.CPolyRepr
+end DeepWiki.SymbolicIntegration.CPoly

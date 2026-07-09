@@ -1,7 +1,7 @@
 import DeepWiki.ComputableAlgebra.PolyRepr
 import Mathlib.Algebra.Polynomial.Div
 
-/-! # Representation-generic denotation for `CPolyRepr` (Step 3)
+/-! # Representation-generic denotation for `CPoly` (Step 3)
 
 The denotation `toPoly : P α → (CRingSpec.R α)[X]` reads a representation-independent computable
 polynomial as a genuine Mathlib polynomial, via `coeff` alone. The fundamental bridge
@@ -11,9 +11,9 @@ every representation at once. See `docs/representation-independent-poly.md`. -/
 
 open Polynomial
 
-namespace DeepWiki.SymbolicIntegration.CPolyRepr
+namespace DeepWiki.SymbolicIntegration.CPoly
 
-variable {P : Type u → Type u} [CPolyRepr P] {α : Type u} [CCommRing α] [CRingSpec α]
+variable {P : Type u → Type u} [CPoly P] {α : Type u} [CCommRing α] [CRingSpec α]
 
 /-- Representation-generic denotation into `(CRingSpec.R α)[X]`: `∑ i<degBound, C(toR(coeff p i))·Xⁱ`. -/
 noncomputable def toPoly (p : P α) : (CRingSpec.R α)[X] :=
@@ -72,7 +72,7 @@ theorem toPoly_mul (p q : P α) : toPoly (mul p q) = toPoly p * toPoly q := by
 /-! ### A first generic *algorithm* on the interface: polynomial power
 
 `cpow p n = pⁿ`, built from the generic `mul`, with `toPoly_cpow : toPoly (cpow p n) = (toPoly p)^n`.
-It runs on any `CPolyRepr` (dense or sparse) and is correct by the multiplicative square — the pattern
+It runs on any `CPoly` (dense or sparse) and is correct by the multiplicative square — the pattern
 every higher algorithm (division, gcd, …) follows when built bottom-up on the interface. -/
 
 /-- The multiplicative unit `1` as a length-1 representation. -/
@@ -234,4 +234,4 @@ theorem ceval_eq_zero_iff_dvd (r : α) (p : P α) :
   rw [toR_ceval]
   exact (Polynomial.dvd_iff_isRoot (a := CRingSpec.toR r) (p := toPoly p)).symm
 
-end DeepWiki.SymbolicIntegration.CPolyRepr
+end DeepWiki.SymbolicIntegration.CPoly

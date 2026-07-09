@@ -12,7 +12,7 @@ bridging it to `listDetn` over the denotation ring. The Sylvester matrix + resul
 
 open Polynomial
 
-namespace DeepWiki.SymbolicIntegration.CPolyRepr
+namespace DeepWiki.SymbolicIntegration.CPoly
 
 variable {α : Type u} [CCommRing α]
 
@@ -92,7 +92,7 @@ strips of `q` then `p`), matching `Polynomial.sylvester`'s column layout; `cResu
 Polynomial.resultant (toPoly p) (toPoly q)` (via `toR_clistDetn` + `listDetn_eq_det` +
 `Polynomial.resultant_map_map`) is the remaining piece. -/
 
-variable {P : Type u → Type u} [CPolyRepr P]
+variable {P : Type u → Type u} [CPoly P]
 
 /-- The `(m+n)×(m+n)` Sylvester coefficient matrix of `p, q` (as a row-list). -/
 def cSylvester (p q : P α) (m n : ℕ) : List (List α) :=
@@ -184,4 +184,4 @@ theorem toR_cResultant (p q : P α) :
 
 end AbstractBridge
 
-end DeepWiki.SymbolicIntegration.CPolyRepr
+end DeepWiki.SymbolicIntegration.CPoly

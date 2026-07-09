@@ -3,7 +3,7 @@ import DeepWiki.ComputableAlgebra.PolyReprSparse
 
 /-! # `CPolyEngine` — the fat, migration-ready polynomial interface
 
-`CPolyRepr` is the thin representation interface (`coeff`/`degBound`/`ofFn`). `CPolyEngine` extends it
+`CPoly` is the thin representation interface (`coeff`/`degBound`/`ofFn`). `CPolyEngine` extends it
 with the polynomial *operations as class fields* — so an instance supplies its **own efficient ops** and
 proves their denotation squares as specs. Crucially the `List` instance supplies the **existing engine
 ops** (`DensePoly.cadd`/`cmul`/`cnorm`/…), so `CPolyEngine.add (p : List α) = DensePoly.cadd p` **definitionally**
@@ -22,7 +22,7 @@ universe u
 /-- The fat polynomial-engine interface: the operations are fields (an instance provides its own), with
 the denotation squares as specs. `CRingSpec.{u,u}` pins the coefficient ring to the same universe (which
 every actual coefficient — `ℚ`, `CFrac β`, … — satisfies). -/
-class CPolyEngine (P : Type u → Type u) extends CPolyRepr P where
+class CPolyEngine (P : Type u → Type u) extends CPoly P where
   /-- Addition. -/
   add : {α : Type u} → [CCommRing α] → P α → P α → P α
   /-- Multiplication. -/
@@ -40,21 +40,21 @@ class CPolyEngine (P : Type u → Type u) extends CPolyRepr P where
   /-- Leading coefficient. -/
   clead : {α : Type u} → [CCommRing α] → P α → α
   toPoly_add : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p q : P α),
-    CPolyRepr.toPoly (add p q) = CPolyRepr.toPoly p + CPolyRepr.toPoly q
+    CPoly.toPoly (add p q) = CPoly.toPoly p + CPoly.toPoly q
   toPoly_mul : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p q : P α),
-    CPolyRepr.toPoly (mul p q) = CPolyRepr.toPoly p * CPolyRepr.toPoly q
+    CPoly.toPoly (mul p q) = CPoly.toPoly p * CPoly.toPoly q
   toPoly_neg : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
-    CPolyRepr.toPoly (neg p) = - CPolyRepr.toPoly p
+    CPoly.toPoly (neg p) = - CPoly.toPoly p
   toPoly_scale : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (c : α) (p : P α),
-    CPolyRepr.toPoly (scale c p) = Polynomial.C (CRingSpec.toR c) * CPolyRepr.toPoly p
+    CPoly.toPoly (scale c p) = Polynomial.C (CRingSpec.toR c) * CPoly.toPoly p
   toPoly_cnorm : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
-    CPolyRepr.toPoly (cnorm p) = CPolyRepr.toPoly p
+    CPoly.toPoly (cnorm p) = CPoly.toPoly p
   cisZero_iff : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
-    cisZero p = true ↔ CPolyRepr.toPoly p = 0
+    cisZero p = true ↔ CPoly.toPoly p = 0
   cdeg_eq_natDegree : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
-    cdeg p = (CPolyRepr.toPoly p).natDegree
+    cdeg p = (CPoly.toPoly p).natDegree
   toR_clead_eq_leadingCoeff : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
-    CRingSpec.toR (clead p) = (CPolyRepr.toPoly p).leadingCoeff
+    CRingSpec.toR (clead p) = (CPoly.toPoly p).leadingCoeff
 
 /-- **The `List` instance IS the concrete engine** — its ops are `DensePoly.c*`, defeq to the engine's,
 so a migrated declaration computes the same list output (⇒ `native_decide`-preserving). -/
@@ -78,23 +78,23 @@ instance instEngineList : CPolyEngine List where
 
 /-- **The `SparsePoly` instance** supplies the generic `ofFn`-based ops, so a migrated declaration also
 runs on the sparse carrier — the representation-independence payoff at the engine level. -/
-instance instEngineSparse : CPolyEngine CPolyRepr.SparsePoly where
-  add := CPolyRepr.add
-  mul := CPolyRepr.mul
-  neg := CPolyRepr.neg
-  scale := CPolyRepr.scale
-  cnorm := CPolyRepr.cnorm
-  cisZero := CPolyRepr.cisZero
-  cdeg := CPolyRepr.cdeg
-  clead := CPolyRepr.clead
-  toPoly_add p q := CPolyRepr.toPoly_add p q
-  toPoly_mul p q := CPolyRepr.toPoly_mul p q
-  toPoly_neg p := CPolyRepr.toPoly_neg p
-  toPoly_scale c p := CPolyRepr.toPoly_scale c p
-  toPoly_cnorm p := CPolyRepr.toPoly_cnorm p
-  cisZero_iff p := CPolyRepr.cisZero_iff p
-  cdeg_eq_natDegree p := CPolyRepr.cdeg_eq_natDegree p
-  toR_clead_eq_leadingCoeff p := CPolyRepr.toR_clead_eq_leadingCoeff p
+instance instEngineSparse : CPolyEngine CPoly.SparsePoly where
+  add := CPoly.add
+  mul := CPoly.mul
+  neg := CPoly.neg
+  scale := CPoly.scale
+  cnorm := CPoly.cnorm
+  cisZero := CPoly.cisZero
+  cdeg := CPoly.cdeg
+  clead := CPoly.clead
+  toPoly_add p q := CPoly.toPoly_add p q
+  toPoly_mul p q := CPoly.toPoly_mul p q
+  toPoly_neg p := CPoly.toPoly_neg p
+  toPoly_scale c p := CPoly.toPoly_scale c p
+  toPoly_cnorm p := CPoly.toPoly_cnorm p
+  cisZero_iff p := CPoly.cisZero_iff p
+  cdeg_eq_natDegree p := CPoly.cdeg_eq_natDegree p
+  toR_clead_eq_leadingCoeff p := CPoly.toR_clead_eq_leadingCoeff p
 
 /-! ### The engine ops are the `List`-instance ops (defeq), so `native_decide` is preserved -/
 

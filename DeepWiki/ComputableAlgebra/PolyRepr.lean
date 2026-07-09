@@ -2,7 +2,7 @@ import DeepWiki.ComputableAlgebra.Polynomial
 
 /-! # A representation-independent computable-polynomial interface
 
-`CPolyRepr P` abstracts a computable polynomial over the *representation* `P` (dense `List`, sparse
+`CPoly P` abstracts a computable polynomial over the *representation* `P` (dense `List`, sparse
 `List (ℕ × α)`, …) behind three primitives — `coeff` (coefficient at a degree, `0` past the end),
 `degBound` (an upper bound on the degree), and `ofFn` (dense construction from a length + coefficient
 function) — plus two spec laws. Arithmetic and its correctness are then defined **once, generically**,
@@ -21,7 +21,7 @@ universe u
 /-- Representation-independent computable-polynomial interface over a computable commutative-ring
 coefficient: `coeff` reads a coefficient (the ring `zero` past the end), `degBound` bounds the degree,
 `ofFn` builds densely from a length and coefficient function. The two laws pin `coeff` on both. -/
-class CPolyRepr (P : Type u → Type u) where
+class CPoly (P : Type u → Type u) where
   /-- Coefficient at degree `i` (`CCommRing.zero` past the end). -/
   coeff : {α : Type u} → [CCommRing α] → P α → ℕ → α
   /-- A degree bound: `coeff p i = 0` for `i ≥ degBound p`. -/
@@ -34,12 +34,12 @@ class CPolyRepr (P : Type u → Type u) where
   /-- Coefficients past the degree bound are `0`. -/
   coeff_ge : ∀ {α} [CCommRing α] (p : P α) (i : ℕ), degBound p ≤ i → coeff p i = CCommRing.zero
 
-namespace CPolyRepr
+namespace CPoly
 
 /-! ### The dense-`List` instance (the concrete `DensePoly α = List α` engine) -/
 
 /-- Dense-coefficient-list representation (index = degree, low→high) — the concrete `DensePoly` engine. -/
-instance instList : CPolyRepr List where
+instance instList : CPoly List where
   coeff p i := (p : List _).getD i CCommRing.zero
   degBound p := (p : List _).length
   ofFn n f := (List.range n).map f
@@ -60,7 +60,7 @@ Each op is a coefficient formula through `ofFn`; its correctness is the `toR`-im
 `toR (coeff (op …) i) = <ring formula on toR (coeff …) i>`, proven from the interface laws + the
 `CRingSpec` ring-hom laws alone — so it holds for **every** representation (no `List` induction). -/
 
-variable {P : Type u → Type u} [CPolyRepr P] {α : Type u} [CCommRing α]
+variable {P : Type u → Type u} [CPoly P] {α : Type u} [CCommRing α]
 
 /-- Coefficientwise addition. -/
 def add (p q : P α) : P α :=
@@ -144,6 +144,6 @@ example : (scale (2 : ℚ) [1, -2, 3]) = [2, -4, 6] := by native_decide
 (length `degBound p + degBound q = 4`, so an unnormalized trailing `0` — Phase 2 adds `cnorm`). -/
 example : (mul ([1, 2] : List ℚ) [3, 4]) = [3, 10, 8, 0] := by native_decide
 
-end CPolyRepr
+end CPoly
 
 end DeepWiki.SymbolicIntegration
