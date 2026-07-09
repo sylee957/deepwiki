@@ -18,7 +18,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -27,7 +27,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **Exact division respects `toPoly`**: `cdivWf P Q` denotes `toPoly P / toPoly Q` whenever the
 division is exact, so `toPoly`-equal (and exactly-divisible) numerator/denominator pairs give the same
 `cdivWf` denotation — the bridge for matching a radical-form numerator to the `cnorm`'d def field. -/
-theorem toPolyG_cdivWf_congr [CFracGcdCoreWf α] (P1 Q1 P2 Q2 : CPoly α)
+theorem toPolyG_cdivWf_congr [CFracGcdCoreWf α] (P1 Q1 P2 Q2 : DensePoly α)
     (hP : toPoly P1 = toPoly P2) (hQ : toPoly Q1 = toPoly Q2)
     (hQ1 : toPoly Q1 ≠ 0) (hdvd1 : toPoly Q1 ∣ toPoly P1) :
     toPoly (cdivWf P1 Q1) = toPoly (cdivWf P2 Q2) := by
@@ -64,7 +64,7 @@ theorem dvd_num_of_isQRegularG {Q r D : (CFieldSpec.K α)[X]} {e : ℕ} (hD : D 
 /-- **`Q`-regular is closed under the tower derivative** `towerFractionFieldDeriv Dt`: if `f = am p/am q`
 with `q` coprime to `Q`, then `D_tower f` has denominator `q²`, still coprime to `Q`. Uses the tower
 quotient rule. -/
-theorem IsQRegular.deriv {Q : (CFieldSpec.K α)[X]} {f : RatFunc (CFieldSpec.K α)} (Dt : CPoly α)
+theorem IsQRegular.deriv {Q : (CFieldSpec.K α)[X]} {f : RatFunc (CFieldSpec.K α)} (Dt : DensePoly α)
     (hf : IsQRegular Q f) : IsQRegular Q (towerFractionFieldDeriv Dt f) := by
   obtain ⟨p, q, hq, hQ, hfeq⟩ := hf
   refine ⟨Differential.implicitDeriv (toPoly Dt) p * q - p * Differential.implicitDeriv (toPoly Dt) q,
@@ -75,8 +75,8 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The inner-loop `gloc` denominator is a power of `v`** (times the seed denominator): the
 accumulator denominator only ever multiplies by `cpow v (j+1)`. So a factor's `gloc` denominator is
 coprime to any polynomial coprime to `v` — the key to `Vk`-regularity of the other factors. -/
-theorem toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow (Dt v u : CPoly α) :
-    ∀ (j : ℕ) (a : CPoly α) (g : CPoly α × CPoly α),
+theorem toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow (Dt v u : DensePoly α) :
+    ∀ (j : ℕ) (a : DensePoly α) (g : DensePoly α × DensePoly α),
       ∃ N, toPoly (cHermiteReduceTowerInnerWf Dt v u j a g).1.2
         = toPoly g.2 * toPoly v ^ N := by
   intro j
@@ -96,8 +96,8 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **A factor's `gloc` fraction is `Q`-regular** whenever `Q` is coprime to `v`: the `gloc` denominator
 (from the `(0,1)` seed) is `(toPoly v)^N`, coprime to `Q`. This makes the *other* factors'
 contributions `Vk`-regular in the fold. -/
-theorem gloc_isQRegularG (Dt v u : CPoly α) {Q : (CFieldSpec.K α)[X]} (hv : toPoly v ≠ 0)
-    (hcop : IsRelPrime Q (toPoly v)) (j : ℕ) (a : CPoly α) :
+theorem gloc_isQRegularG (Dt v u : DensePoly α) {Q : (CFieldSpec.K α)[X]} (hv : toPoly v ≠ 0)
+    (hcop : IsRelPrime Q (toPoly v)) (j : ℕ) (a : DensePoly α) :
     IsQRegular Q
       (am α (toPoly (cHermiteReduceTowerInnerWf Dt v u j a
           ([CField.zero], [CField.one])).1.1)
@@ -107,7 +107,7 @@ theorem gloc_isQRegularG (Dt v u : CPoly α) {Q : (CFieldSpec.K α)[X]} (hv : to
     ([CField.zero], [CField.one])
   have hden : toPoly (cHermiteReduceTowerInnerWf Dt v u j a ([CField.zero], [CField.one])).1.2
       = toPoly v ^ N := by
-    rw [hN, show toPoly ([CField.one] : CPoly α) = 1 from by
+    rw [hN, show toPoly ([CField.one] : DensePoly α) = 1 from by
       simp only [denote, mul_zero, add_zero, map_one], one_mul]
   exact ⟨_, _, by rw [hden]; exact pow_ne_zero N hv, by rw [hden]; exact hcop.pow_right, rfl⟩
 
@@ -120,7 +120,7 @@ theorem isQRegularG_list_sum {Q : (CFieldSpec.K α)[X]} (L : List (RatFunc (CFie
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Cross-multiplied fraction-pair addition reads as the fraction sum:
 `⟦(a₁·b₂ + b₁·a₂) / (a₂·b₂)⟧ = ⟦a₁/a₂⟧ + ⟦b₁/b₂⟧` (denominators nonzero). -/
-theorem fracPair_add (a1 a2 b1 b2 : CPoly α) (ha2 : toPoly a2 ≠ 0) (hb2 : toPoly b2 ≠ 0) :
+theorem fracPair_add (a1 a2 b1 b2 : DensePoly α) (ha2 : toPoly a2 ≠ 0) (hb2 : toPoly b2 ≠ 0) :
     am α (toPoly (cadd (cmul a1 b2) (cmul b1 a2))) / am α (toPoly (cmul a2 b2))
       = am α (toPoly a1) / am α (toPoly a2) + am α (toPoly b1) / am α (toPoly b2) := by
   simp only [denote, map_add, map_mul]
@@ -131,9 +131,9 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The guarded `gloc`-fold reads as a fraction sum.** The `cHermiteReduceTower` `g`-fold
 (`foldl` with `if skip then acc else acc + gloc`) denotes `⟦init⟧ + Σ_{non-skipped} ⟦gloc⟧`, given the
 seed and each non-skipped `gloc` have nonzero denominator. -/
-theorem fracPair_foldl_sum {β : Type*} (glocOf : β → CPoly α × CPoly α) (skip : β → Prop)
+theorem fracPair_foldl_sum {β : Type*} (glocOf : β → DensePoly α × DensePoly α) (skip : β → Prop)
     [DecidablePred skip] :
-    ∀ (L : List β) (init : CPoly α × CPoly α), toPoly init.2 ≠ 0 →
+    ∀ (L : List β) (init : DensePoly α × DensePoly α), toPoly init.2 ≠ 0 →
       (∀ x ∈ L, ¬ skip x → toPoly (glocOf x).2 ≠ 0) →
       am α (toPoly (L.foldl (fun acc x => if skip x then acc
               else (cadd (cmul acc.1 (glocOf x).2) (cmul (glocOf x).1 acc.2),
@@ -170,9 +170,9 @@ theorem fracPair_foldl_sum {β : Type*} (glocOf : β → CPoly α × CPoly α) (
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The guarded Hermite fold keeps a nonzero denominator: from `init.2 ≠ 0` and each non-skipped
 `gloc.2 ≠ 0`, the folded `.2` is nonzero (the denominators only ever multiply). -/
-theorem foldl_den_ne_zero {β : Type*} (glocOf : β → CPoly α × CPoly α) (skip : β → Prop)
+theorem foldl_den_ne_zero {β : Type*} (glocOf : β → DensePoly α × DensePoly α) (skip : β → Prop)
     [DecidablePred skip] :
-    ∀ (L : List β) (init : CPoly α × CPoly α), toPoly init.2 ≠ 0 →
+    ∀ (L : List β) (init : DensePoly α × DensePoly α), toPoly init.2 ≠ 0 →
       (∀ x ∈ L, ¬ skip x → toPoly (glocOf x).2 ≠ 0) →
       toPoly (L.foldl (fun acc x => if skip x then acc
               else (cadd (cmul acc.1 (glocOf x).2) (cmul (glocOf x).1 acc.2),
@@ -194,7 +194,7 @@ variable [CFracGcdCoreWf α]
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The `cHermiteReduceTower` rational part `⟦g⟧` reads as `Σ_{non-skipped factors} ⟦gloc⟧`, the
 guarded fold over `(cSqfreeYunFF d).zipIdx` instantiating `fracPair_foldl_sum`. -/
-theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : CPoly α)
+theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : DensePoly α)
     (hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
       toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CField.zero], [CField.one])).1.2 ≠ 0) :
@@ -205,9 +205,9 @@ theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : CPoly α)
                 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.1)
             / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
                 (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.2))).sum := by
-  have hone : toPoly ([CField.one] : CPoly α) = 1 := by
+  have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
-  have hz : toPoly ([CField.zero] : CPoly α) = 0 := by
+  have hz : toPoly ([CField.zero] : DensePoly α) = 0 := by
     simp only [denote, mul_zero, add_zero, map_zero]
   rw [cHermiteReduceTower]
   simp only [toPolyG_cnormG]
@@ -219,7 +219,7 @@ theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : CPoly α)
   rw [hz, hone, map_zero, map_one, zero_div, zero_add]
 
 /-- The `gloc` fraction of a Hermite-fold factor `x = (v, idx)` (multiplicity `idx+1`). -/
-noncomputable def glocFrac (Dt a d : CPoly α) (x : CPoly α × ℕ) : RatFunc (CFieldSpec.K α) :=
+noncomputable def glocFrac (Dt a d : DensePoly α) (x : DensePoly α × ℕ) : RatFunc (CFieldSpec.K α) :=
   am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
       ([CField.zero], [CField.one])).1.1)
     / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
@@ -227,7 +227,7 @@ noncomputable def glocFrac (Dt a d : CPoly α) (x : CPoly α × ℕ) : RatFunc (
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
 /-- A fold factor's `gloc` fraction is `Q`-regular for `Q` coprime to its `v`. -/
-theorem glocFracG_isQRegularG (Dt a d : CPoly α) {Q : (CFieldSpec.K α)[X]} (x : CPoly α × ℕ)
+theorem glocFracG_isQRegularG (Dt a d : DensePoly α) {Q : (CFieldSpec.K α)[X]} (x : DensePoly α × ℕ)
     (hv : toPoly x.1 ≠ 0) (hcop : IsRelPrime Q (toPoly x.1)) :
     IsQRegular Q (glocFrac Dt a d x) :=
   gloc_isQRegularG Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) hv hcop (x.2 + 1 - 1) a
@@ -236,7 +236,7 @@ theorem glocFracG_isQRegularG (Dt a d : CPoly α) {Q : (CFieldSpec.K α)[X]} (x 
 so its tower derivative splits (`map_list_sum`); permuting `kelem` to the front and cancelling leaves
 `Σ_{j≠k} D(⟦gloc_j⟧)`, each `Vk`-regular (`glocFracG_isQRegularG.deriv`, coprimality `hcop`). Tower analog
 of `deriv_fold_sub_glocIncr_isQRegular`. -/
-theorem deriv_fold_sub_isQRegularG (Dt a d : CPoly α) (kelem : CPoly α × ℕ)
+theorem deriv_fold_sub_isQRegularG (Dt a d : DensePoly α) (kelem : DensePoly α × ℕ)
     (hkmem : kelem ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)))
     (hnd : ((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).Nodup)
     (hV : ∀ x ∈ (cSqfreeYunFF d).zipIdx, toPoly x.1 ≠ 0)
@@ -249,7 +249,7 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : CPoly α) (kelem : CPoly α × ℕ)
         - towerFractionFieldDeriv Dt (glocFrac Dt a d kelem)) := by
   classical
   set kept := (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)) with hkeptdef
-  have hone : toPoly ([CField.one] : CPoly α) = 1 := by
+  have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
     rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, toR_eq_toK, CFieldSpec.toK_one, map_one]
   have hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
       toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
@@ -280,8 +280,8 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : CPoly α) (kelem : CPoly α × ℕ)
 /-- **The total fold residual** (per-factor identities `hstep` given): `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` with
 `R = C(1−m)·a + Σ residNum`, `m` the number of kept factors. Sums `D⟦g⟧ = Σ D⟦gloc⟧` using each
 factor's `hstep : D⟦gloc x⟧ = ⟦a/d⟧ − ⟦residNum x /d⟧`. Tower analog of `total_fold_residual_over_D`. -/
-theorem total_fold_residual_tower (Dt a d : CPoly α)
-    (residNum : CPoly α × ℕ → (CFieldSpec.K α)[X]) (hd : toPoly d ≠ 0)
+theorem total_fold_residual_tower (Dt a d : DensePoly α)
+    (residNum : DensePoly α × ℕ → (CFieldSpec.K α)[X]) (hd : toPoly d ≠ 0)
     (hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
       toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CField.zero], [CField.one])).1.2 ≠ 0)
@@ -328,7 +328,7 @@ factor-`k` step (`Dgk = af − ⟦residNum_k/D⟧`), `Vk`-regularity of `Dg − 
 `vk^(e+1) ∣ D`, and `vk^e ∣ residNum_k`: `vk^(e+1) ∣ (residNum_k − R)` by order extraction, and
 `vk^e ∣ residNum_k` gives `vk^e ∣ R`. Tower analog of `dvd_residNum_factor`. -/
 theorem dvd_R_of_factor {vk R residNum_k : (CFieldSpec.K α)[X]}
-    {af Dg Dgk : RatFunc (CFieldSpec.K α)} (e : ℕ) (D : CPoly α) (hD : toPoly D ≠ 0)
+    {af Dg Dgk : RatFunc (CFieldSpec.K α)} (e : ℕ) (D : DensePoly α) (hD : toPoly D ≠ 0)
     (hR : af - Dg = am α R / am α (toPoly D))
     (hstepk : Dgk = af - am α residNum_k / am α (toPoly D))
     (hderiv : IsQRegular vk (Dg - Dgk))
@@ -348,11 +348,11 @@ omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
 `(j', A')`, `cdiophantine`'s cofactors satisfy `b·(u·Dv) + c·v = −A'·C((j'+1)⁻¹)`. Uses
 `toPolyG_cdiophantineG`; the coprimality `gcd(u·Dv, v)` degree-0/nonzero is the input (from `v`
 squarefree + coprime to `u`). -/
-theorem cHermiteInner_hbez_of_gcd (Dt v u : CPoly α)
+theorem cHermiteInner_hbez_of_gcd (Dt v u : DensePoly α)
     (hqn : cnorm v ≠ [])
     (hgdeg : (toPoly (cgcdWf (cmul u (cmonomialDeriv Dt v)) v).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (cmul u (cmonomialDeriv Dt v)) v).1 ≠ 0) :
-    ∀ (j' : ℕ) (A' : CPoly α),
+    ∀ (j' : ℕ) (A' : DensePoly α),
       toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
             (cscale (CField.neg (CField.inv (cnatCast (j' + 1)))) A')).1
           * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
@@ -363,7 +363,7 @@ theorem cHermiteInner_hbez_of_gcd (Dt v u : CPoly α)
   have h := toPolyG_cdiophantineG (cmul u (cmonomialDeriv Dt v)) v
     (cscale (CField.neg (CField.inv (cnatCast (j' + 1)))) A') hqn hgdeg hgne
   rw [toPolyG_cmulG, toPolyG_cmonomialDeriv] at h
-  rw [h, toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_neg, CFieldSpec.toK_inv, CPoly.toK_cnatCastG,
+  rw [h, toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_neg, CFieldSpec.toK_inv, DensePoly.toK_cnatCastG,
     Nat.cast_add_one, Polynomial.C_neg]
   ring
 
@@ -371,7 +371,7 @@ omit [CFracGcdCoreWf α] in
 /-- **The per-factor `hstep` identity** (`D⟦gloc x⟧ = ⟦a/d⟧ − ⟦residNum/d⟧`), from M2 and the isolated
 inputs: `d ≠ 0`, the gcd coprimality of `(u·Dv, v)` (`hgdeg`/`hgne`), and `u·v^i = d` (`hud`, from
 `v^i ∣ d`). Here `residNum = afin · v^(i−1)` (`afin` the inner-loop residual). -/
-theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : CPoly α) (x : CPoly α × ℕ)
+theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : DensePoly α) (x : DensePoly α × ℕ)
     (hd : toPoly d ≠ 0) (hv : toPoly x.1 ≠ 0)
     (hgdeg : (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
         (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0)
@@ -386,17 +386,17 @@ theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : CPoly α)
   set u := cdivWf d (cpow x.1 (x.2 + 1)) with hudef
   have hu : toPoly u ≠ 0 := fun h0 => hd (by rw [← hud, h0, zero_mul])
   have hqn : cnorm x.1 ≠ [] := fun h => hv ((cisZeroG_iff x.1).mp (by simp [cisZero, h]))
-  have hone : toPoly ([CField.one] : CPoly α) ≠ 0 := by
-    rw [show toPoly ([CField.one] : CPoly α) = 1 from by
+  have hone : toPoly ([CField.one] : DensePoly α) ≠ 0 := by
+    rw [show toPoly ([CField.one] : DensePoly α) = 1 from by
       simp only [denote, mul_zero, add_zero, map_one]]
     exact one_ne_zero
   have hbez := cHermiteInner_hbez_of_gcd Dt x.1 u hqn hgdeg hgne
   have hM2 := cHermiteReduceTowerInnerWf_spec_acc Dt x.1 u hu hv hbez x.2 a
     ([CField.zero], [CField.one]) hone
   -- the seed fraction ⟦0/1⟧ = 0.
-  have hz : am α (toPoly ([CField.zero] : CPoly α)) = 0 := by
+  have hz : am α (toPoly ([CField.zero] : DensePoly α)) = 0 := by
     simp only [denote, mul_zero, add_zero, map_zero]
-  have ho : am α (toPoly ([CField.one] : CPoly α)) = 1 := by
+  have ho : am α (toPoly ([CField.one] : DensePoly α)) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
   rw [hz, ho, zero_div, map_zero, add_zero] at hM2
   -- `am u · am v^(i) = am d`.
@@ -417,14 +417,14 @@ theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : CPoly α)
   ring
 
 /-- The per-factor residual numerator `residNum x = afin · v^(i−1)` (`afin` the inner-loop residual). -/
-noncomputable def residNum (Dt a d : CPoly α) (x : CPoly α × ℕ) : (CFieldSpec.K α)[X] :=
+noncomputable def residNum (Dt a d : DensePoly α) (x : DensePoly α × ℕ) : (CFieldSpec.K α)[X] :=
   toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
     ([CField.zero], [CField.one])).2 * toPoly x.1 ^ x.2
 
 /-- **All per-factor `hstep` identities** hold, given the per-factor gcd coprimality (`hcopgcd`, the
 standard Hermite precondition — the single remaining frontier). Discharges `hv`/`hpow`/`hud` from the
 Yun structural facts (`get_ne_zero`, `pow_dvd`, `cdivWf_pow_mul`) via the zipIdx→get bridge. -/
-theorem all_hstep [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
+theorem all_hstep [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
@@ -449,7 +449,7 @@ theorem all_hstep [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The gloc denominators are nonzero (`= v^N`, `v` a nonzero Yun factor) — the `hden` input of both
 `cHermiteReduceTowerG_frac_eq_sum` and `total_fold_residual_tower`. -/
-theorem hden_of [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
+theorem hden_of [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
       toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
@@ -461,7 +461,7 @@ theorem hden_of [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (D
     rw [← hget]; exact cSqfreeYunFFG_get_ne_zero hgcd d hd0 hpp x.2 hidx
   obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt x.1
     (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CField.zero], [CField.one])
-  rw [hN, show toPoly ([CField.one] : CPoly α) = 1 from by
+  rw [hN, show toPoly ([CField.one] : DensePoly α) = 1 from by
     simp only [denote, mul_zero, add_zero, map_one], one_mul]
   exact pow_ne_zero N hv
 
@@ -470,10 +470,10 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 the guarded fold starts at `1` and only multiplies nonzero `gloc` denominators (`hden_of`), so
 `foldl_den_ne_zero` gives the result. Discharges `hgd0`. -/
 theorem toPolyG_cHermiteReduceTowerG_den_ne_zero [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0)
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hpp : (toPoly d).primPart ≠ 0) :
     toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0 := by
-  have hone : toPoly ([CField.one] : CPoly α) = 1 := by
+  have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
   rw [cHermiteReduceTower]
   simp only [toPolyG_cnormG]
@@ -486,7 +486,7 @@ theorem toPolyG_cHermiteReduceTowerG_den_ne_zero [CharZero (CFieldSpec.K α)]
 /-- **The `R` residual identity** `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` (`R = C(1−m)·a + Σ residNum`), from
 `total_fold_residual_tower` fed by `all_hstep` and `hden_of`. Modulo the per-factor gcd coprimality. -/
 theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
@@ -507,7 +507,7 @@ theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (�
 /-- **Each `vk^idx` divides `R`** (the per-factor order bounds), by `dvd_R_of_factor` fed by the `R`
 residual identity, `all_hstep`, `deriv_fold_sub`, `hpow`, and `hresk = dvd_mul_left`. The `hV`/`hnd`/`hcop`
 inputs to `deriv_fold_sub` are the Yun structural facts. Modulo the per-factor gcd coprimality. -/
-theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
+theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
@@ -552,7 +552,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The kept factor powers `vk^idx` are pairwise relatively prime (distinct Yun factors coprime,
 `IsRelPrime.pow`). -/
 theorem powers_pairwise_coprime [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0) :
+    (d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0) :
     List.Pairwise IsRelPrime
       (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
         (fun x => toPoly x.1 ^ x.2)) := by
@@ -573,7 +573,7 @@ theorem powers_pairwise_coprime [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
 /-- **The product `∏ vk^idx ∣ R`** — the kept factor powers, each dividing `R` (`all_vkidx_dvd_R`) and
 pairwise coprime (`powers_pairwise_coprime`), so their product divides `R` (`list_prod_dvd_of_pairwise`).
 Modulo the per-factor gcd coprimality. -/
-theorem prod_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
+theorem prod_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
@@ -596,7 +596,7 @@ from the `R` residual identity + the quotient rule for `D⟦g⟧` + `am` injecti
 valuation `R` (`prod_vkidx_dvd_R`) to the field-identity `resNum`. `hgden`: `gden ≠ 0` (a standard
 precondition). -/
 theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
@@ -638,7 +638,7 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 `d ~ prodPow 1 (Yun factors)`: since `prodPow 1 L = Dstar · FiltProd` and `d = Dstar · W`, cancelling
 `Dstar` gives `W ~ FiltProd`, hence `W ∣ FiltProd`. Reduces `hWdvd` to the single clean fact that Yun
 factorization reconstructs its input up to associates. -/
-theorem hWdvd_of_reconstruction (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
+theorem hWdvd_of_reconstruction (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0)
     (hrecon : Associated (toPoly d) (prodPow 1 ((cSqfreeYunFF d).map toPoly))) :
     toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2)
@@ -659,7 +659,7 @@ multiplicity-product, carried as the frontier `hWdvd`): `resNum = R·gden²` and
 `W ∣ ∏vk^idx ∣ R` gives `W·gden² ∣ R·gden² = resNum`. This is the hypothesis of
 `hermiteTowerStep_field_identity_of_radical`. -/
 theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
@@ -683,7 +683,7 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (
 division of `toPoly`-equal args, so `toPolyG_cdivWf_congr` (with the projection form as `P1/Q1` so the
 nonzero/divisibility side-goals stay projection-based and reuse `den_ne_zero`/`hWgd`) closes it. -/
 theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
@@ -725,7 +725,7 @@ reconstruction now internal) and the radical split `toPolyG_yunRadical_split`. `
 condition `hcopgcd` (per-factor gcd coprimality — `v` coprime `D(v)`, e.g. false for `v=t` under
 hyperexponential `D`), which is correctly a hypothesis (matching Bronstein's `hnorm`). -/
 theorem cHermiteReduceTowerG_field_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0

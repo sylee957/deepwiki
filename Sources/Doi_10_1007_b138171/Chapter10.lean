@@ -11,7 +11,7 @@ as a **computable** algorithm over the base monomial field `k = ℚ`, the field 
 arguments), the eq. 10.6 linear system, and the particular-solution solve, validated on `t = x`,
 `t = exp x` integrands and on the documented **heuristic failure**.
 
-**Computable-vs-abstract.** Each algorithm below is a computable function over `CPoly ℚ` (= ℚ(t))
+**Computable-vs-abstract.** Each algorithm below is a computable function over `DensePoly ℚ` (= ℚ(t))
 validated by `native_decide` on a worked integrand (checking the returned `∫f = b/s + Σ cⱼ log pⱼ`
 *actually satisfies* `D(∫f) = f` via the cleared identity `num·d − a·den = 0`); abstract correctness
 (that a returned ansatz solution satisfies (10.1)) is **NOT** proved. The method is **heuristic, not
@@ -37,7 +37,7 @@ simple-differential-field exponent bounds remain deferred.
 §10.4 Simple Differential Fields: Def 10.4.1; Thm 10.4.1; Cor 10.4.1; Lemma 10.4.1 (the
   simple-differential-field exponent bounds — out of scope of the base-field engine). -/
 
-open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPoly
+open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.DensePoly
 
 namespace DeepWiki.Si
 
@@ -59,7 +59,7 @@ correctness deferred. -/
 def alg_10_3_parallelIntegrate := @cParallelIntegrate
 
 /-- **Parallel integration over the tower `ℚ(x)[t]`** (§10.3, the genuine-tower signature): the
-computable `cParallelIntegrateTower Dt a d` over `a d : CPoly (CFrac ℚ)`. The base-field case (`Dt, a,
+computable `cParallelIntegrateTower Dt a d` over `a d : DensePoly (CFrac ℚ)`. The base-field case (`Dt, a,
 d` all with `ℚ`-constant coefficients, so `k = ℚ`) is routed through `cParallelIntegrate` and lifted back
 to `CFrac ℚ` coefficients; a genuine `x`-dependent coefficient (the full tower, needing the §10.2
 special-polynomial list + `F̄`-factorization) returns `none` — the documented continuation. -/

@@ -10,7 +10,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPoly
+open RadElem DensePoly
 
 /-! ### The generic irreducibility helper
 
@@ -45,12 +45,12 @@ per-radicand `natDegree` computation. -/
 
 /-- `toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPoly num)`: a denominator-`1` ℚ(x)-value reads
 through the tower bridge as the algebra-map image of its numerator (denominator `toPoly [1] = 1`). -/
-theorem toK_qxOfNum (num : CPoly ℚ) :
+theorem toK_qxOfNum (num : DensePoly ℚ) :
     CFieldSpec.toK (qxOfNum num : CFrac ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (toPoly num) := by
   show CFrac.toCFrac (qxOfNum num) = _
   rw [CFrac.toCFrac]
-  show CFrac.am ℚ (toPoly num) / CFrac.am ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
-  have h2 : toPoly ([CField.one] : CPoly ℚ) = 1 := by
+  show CFrac.am ℚ (toPoly num) / CFrac.am ℚ (toPoly ([CField.one] : DensePoly ℚ)) = _
+  have h2 : toPoly ([CField.one] : DensePoly ℚ) = 1 := by
     show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h2, map_one, div_one]
   rfl

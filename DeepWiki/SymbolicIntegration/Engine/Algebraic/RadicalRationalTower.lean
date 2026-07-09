@@ -12,9 +12,9 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPoly
+open RadElem DensePoly
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -27,7 +27,7 @@ rather than baked to the formal `θ' = 1`. -/
 leading term of `C` for any derivation `der` (with `B' = der B`). Degree `m = deg C − deg g`, leading
 coefficient `b = lcf(C)/κ` with `κ = lcf(der(θ^m)·f + θ^m·g)`. Returns `[]` when `deg C < deg f`. Generic
 over `[CField α]`. -/
-def radCase3CofactorTower (der : CPoly α → CPoly α) (f g C : CPoly α) : CPoly α :=
+def radCase3CofactorTower (der : DensePoly α → DensePoly α) (f g C : DensePoly α) : DensePoly α :=
   if cisZero C || cdeg C < cdeg f then []
   else
     let m := cdeg C - cdeg g                                      -- `deg B`, so `deg(B·g) = deg C`
@@ -45,8 +45,8 @@ def radCase3CofactorTower (der : CPoly α → CPoly α) (f g C : CPoly α) : CPo
 the generic cofactor `B := radCase3CofactorTower der f g C`: while `deg C ≥ deg f`, cancel the leading term
 with `B`, form the residual `D := radCase3Residual f g B C (der B)`, accumulate `B·f` into `vNum`, recurse
 on `−D`; bottom at `deg C < deg f`. `der` the radicand-level derivation. Generic over `[CField α]`. -/
-def radReduceCase3IterateG (der : CPoly α → CPoly α) (f g : CPoly α) :
-    CPoly α → CPoly α → CPoly α × CPoly α
+def radReduceCase3IterateG (der : DensePoly α → DensePoly α) (f g : DensePoly α) :
+    DensePoly α → DensePoly α → DensePoly α × DensePoly α
   | C, vNum =>
     if cisZero C || cdeg C < cdeg f then (C, vNum)
     else
@@ -61,32 +61,32 @@ decreasing_by assumption
 /-- Case-3 rational-part driver with the actual derivation `radIntegrateCase3G der f g C = (Crem, vNum)`
 for `∫ C/y` over `y² = f`: runs `radReduceCase3IterateG`, returning the irreducible leftover and the
 numerator over `y`. Master identity `∫ C/y = vNum/y + ∫ Crem/y`. Generic over `[CField α]`. -/
-def radIntegrateCase3G (der : CPoly α → CPoly α) (f g C : CPoly α) : CPoly α × CPoly α :=
+def radIntegrateCase3G (der : DensePoly α → DensePoly α) (f g C : DensePoly α) : DensePoly α × DensePoly α :=
   radReduceCase3IterateG der f g C []
 
-end CPoly
+end DensePoly
 
 /-! ### Case-3-G computes the rational part `v = 2y` for `∫√(eˣ+1) dx`
 
 Over `α = ℚ(x)(eˣ)`, `θ = eˣ`, `ρ = θ+1`, with the derivation `θ' = θ`: the integrand `√(eˣ+1) = ρ/y`
 gives `C = ρ`, and `radIntegrateCase3G` computes `vNum = 2ρ`, so `v = 2y`. -/
 
-open RadElem CPoly
+open RadElem DensePoly
 
-/-- The exp-tower radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)[θ]` (`y² = ρ`) as `CPoly (CFrac ℚ)` `[1,1]`. -/
-def expC3Rho : CPoly (CFrac ℚ) := [CField.one, CField.one]
+/-- The exp-tower radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)[θ]` (`y² = ρ`) as `DensePoly (CFrac ℚ)` `[1,1]`. -/
+def expC3Rho : DensePoly (CFrac ℚ) := [CField.one, CField.one]
 
 /-- The exp-tower Case-3 helper `g = ½ρ'` over `ℚ(x)[θ]` with the `θ' = θ` derivation: `ρ' = θ`, so
 `g = θ/2 = [0, 1/2]` (degree `1`, matching `deg f`). -/
-def expC3 : CPoly (CFrac ℚ) :=
+def expC3 : DensePoly (CFrac ℚ) :=
   cscale (CField.div CField.one (cnatCast 2)) (cmonomialDeriv expDt1 expC3Rho)
 
 /-- The exp-tower Case-3 numerator `C = ρ = θ+1 ∈ ℚ(x)[θ]` (integrand `√(eˣ+1) = ρ/y`), `[1,1]`. -/
-def expC3C : CPoly (CFrac ℚ) := [CField.one, CField.one]
+def expC3C : DensePoly (CFrac ℚ) := [CField.one, CField.one]
 
 /-- The Case-3-G run `radIntegrateCase3G (cmonomialDeriv expDt1) ρ (½ρ') C = (Crem, vNum)` on `∫√(eˣ+1) dx`
 with the `θ' = θ` derivation: the cofactor `B = [2]` gives `vNum = 2ρ`. -/
-def expC3Run : CPoly (CFrac ℚ) × CPoly (CFrac ℚ) :=
+def expC3Run : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ) :=
   radIntegrateCase3G (cmonomialDeriv expDt1) expC3Rho expC3 expC3C
 
 -- Sanity print: the COMPUTED rational-part numerator `vNum` (should be `2ρ = 2θ+2 = [2,2]`) and the
@@ -138,9 +138,9 @@ theorem rtFull_split_exact :
       (radSub rtFullIntegrand (@radDeriv _ _ expTowerDiff 2 expC3RhoLvl2 expC3Vlift))) = true := by
   native_decide
 
-/-- The fixed log-solve denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as `CPoly (CFrac ℚ)` `[0, 1]`; the
+/-- The fixed log-solve denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as `DensePoly (CFrac ℚ)` `[0, 1]`; the
 denominator of `u = (y−1)/(y+1) = ((θ+2)−2y)/θ`. -/
-def rtFullDenTheta : CPoly (CFrac ℚ) := [CField.zero, CField.one]
+def rtFullDenTheta : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
 
 /-- The fully-computed recovered result `F'`: `cIntegrateElementary` over `ℚ(x)(eˣ)` with the computed
 rational part `expC3Vlift` (`v = 2y`) and the log argument computed from the residual by `radLogArgSolve`,
@@ -180,14 +180,14 @@ theorem rtFull_ratPart_eq_two_y :
 Conservativity: at the ℚ-base (`θ = x`, `θ' = 1`), `radIntegrateCase3G cderiv` reproduces
 `radIntegrateCase3Wf cderiv` on `∫ x⁴/√(x³+1)`. -/
 
-/-- ℚ-base radicand `ρ = x³ + 1 ∈ ℚ(x)` as `CPoly ℚ` `[1,0,0,1]` (the same value as `c3itRho`). -/
-def stretchRho : CPoly ℚ := [1, 0, 0, 1]
+/-- ℚ-base radicand `ρ = x³ + 1 ∈ ℚ(x)` as `DensePoly ℚ` `[1,0,0,1]` (the same value as `c3itRho`). -/
+def stretchRho : DensePoly ℚ := [1, 0, 0, 1]
 
 /-- ℚ-base helper `g = ½ρ' = (3/2)x²` (`θ' = 1`) (the same value as `c3it`). -/
-def stretch : CPoly ℚ := cscale (1/2 : ℚ) (cderiv stretchRho)
+def stretch : DensePoly ℚ := cscale (1/2 : ℚ) (cderiv stretchRho)
 
 /-- ℚ-base numerator `C = x⁴ ∈ ℚ(x)` (`[0,0,0,0,1]`) (the same value as `c3itC`). -/
-def stretchC : CPoly ℚ := [0, 0, 0, 0, 1]
+def stretchC : DensePoly ℚ := [0, 0, 0, 0, 1]
 
 /-- `radIntegrateCase3G cderiv` agrees with `radIntegrateCase3Wf cderiv` at the ℚ-base: on `∫ x⁴/√(x³+1)`
 the two drivers produce identical `(Crem, vNum)`, checked by structural equality. -/

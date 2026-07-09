@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPoly
+open RadElem DensePoly
 
 /-! ### `cIntegrateElementary` — the driver over a tower base `α = CFrac β` -/
 
@@ -20,7 +20,7 @@ open RadElem CPoly
 On `some N` packs the log term `(c, N/D)`; on `none` returns `⟨v, []⟩`. -/
 def cIntegrateElementary {β : Type*} [CField β] [CFieldDomain β] [CDiffField (CFrac β)]
     (ρ : CFrac β) (v : RadElem (CFrac β)) (residual : RadElem (CFrac β)) (c : CFrac β)
-    (D : CPoly β) (degBound : ℕ) : AlgIntegralResult (CFrac β) :=
+    (D : DensePoly β) (degBound : ℕ) : AlgIntegralResult (CFrac β) :=
   match radLogArgSolve ρ residual D degBound with
   | none => ⟨v, []⟩
   | some N =>

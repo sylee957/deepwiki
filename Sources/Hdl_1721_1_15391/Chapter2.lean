@@ -26,7 +26,7 @@ Ch. 2 §5: the simple-radical integral basis for radical degree `n ≥ 3` (only 
   `[1, y/d]` hyperelliptic case, is realized and validated; the general `dᵢ = ∏ⱼ Pⱼ^{⌊i·eⱼ/n⌋}` for the
   higher radicals `y², …, y^{n−1}` is unbuilt) `[deferred]`. -/
 
-open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPoly
+open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.DensePoly
 
 namespace DeepWiki.Tiaf
 

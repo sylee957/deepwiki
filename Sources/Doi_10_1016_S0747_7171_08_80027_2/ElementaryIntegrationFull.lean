@@ -115,14 +115,14 @@ for **any** radicand-level derivation `der` (with `B' = der B`), NOT just the fo
 degree `m = deg C − deg g` and leading coefficient `b = lcf(C)/κ` (`κ = lcf(der(θ^m)·f + θ^m·g)`) are read
 off `der` itself, so the cofactor shape follows the ACTUAL derivation (degree-lowering for `θ' = 1`,
 degree-preserving for `θ' = θ`). -/
-abbrev bie_case3_cofactor_tower := @CPoly.radCase3CofactorTower
+abbrev bie_case3_cofactor_tower := @DensePoly.radCase3CofactorTower
 
 /-- **One Case-3 degree-lowering step over a tower** (Bronstein 1990, elementary integral `v + Σ log u` over
 a transcendental tower, rational part COMPUTED): `radReduceCase3IterateG` is the fuel-free Case-3 iterator
 with the cofactor swapped to `radCase3CofactorTower der`, so the **ACTUAL** derivation drives both the
 cofactor `B` and the residual `D = der B·f + Bg − C`. It recurses directly on the degree of `C`,
 accumulating `B·f` into the rational-part numerator, and bottoms at `deg C < deg f`. -/
-abbrev bie_case3_iterate_tower := @CPoly.radReduceCase3IterateG
+abbrev bie_case3_iterate_tower := @DensePoly.radReduceCase3IterateG
 
 /-- **★ The `∫ C/y` rational-part driver COMPUTED over a transcendental tower** (Bronstein 1990, Integration
 of Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower,
@@ -130,7 +130,7 @@ principal case, rational part COMPUTED): `radIntegrateCase3G der ρ g C` runs `r
 the ACTUAL derivation `der` (e.g. `cmonomialDeriv [θ]`, `θ' = θ` over the exp tower) and no runtime fuel to
 **compute** the rational-part numerator. Over `α = ℚ(x)(eˣ)` for `∫√(eˣ+1) dx` it computes `vNum = 2ρ`, so
 the rational part `v = 2y = 2√(eˣ+1)` — an OUTPUT, no longer a supplied constant. -/
-abbrev bie_rational_over_tower := @CPoly.radIntegrateCase3G
+abbrev bie_rational_over_tower := @DensePoly.radIntegrateCase3G
 
 /-- **★★ BOTH halves COMPUTED: `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over ℚ(x)(eˣ), no supplied `v`**
 (Bronstein 1990, Integration of Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over

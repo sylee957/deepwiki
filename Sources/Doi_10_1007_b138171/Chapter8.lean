@@ -12,7 +12,7 @@ The §8.4 hypertangent case is now rendered as a **computable** solver over `k =
 (eq. 8.2/8.10, polynomial ansatz over ℚ(x)) and the degree-recursive tangent box `cCoupledDECancelTan`
 (book p.265), validated end-to-end on Example 8.4.1.
 
-**Computable-vs-abstract.** Each algorithm below is a computable function over `CPoly ℚ` (= ℚ(x), the
+**Computable-vs-abstract.** Each algorithm below is a computable function over `DensePoly ℚ` (= ℚ(x), the
 base the §8.4 tangent recursion reaches) validated by `native_decide` on Example 8.4.1. Both the **base**
 coupled system AND the §8.4 **tangent** box now have abstract soundness **PROVED unconditionally**
 (`native_decide`-free): `cCoupledDESystem_sound` (`ComputableCoupledDEAssembly`) for the base solve
@@ -50,7 +50,7 @@ native_decide-validated on Example 8.4.1, see `alg_8_1_coupledDESystem`/`alg_8_4
   — and the eq-8.2 real form `[[f₁, af₂], [f₂, f₁]]` of `Dy + b·y = c`, where `f₁ = b₀ − nηt` sits on
   **both** diagonals — has `b₀ − nηt` there, so the box's `+` is a misprint for `−`. -/
 
-open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPoly
+open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.DensePoly
 
 namespace DeepWiki.Si
 

@@ -13,7 +13,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPoly
+open RadElem DensePoly
 
 /-! ### Generic Gaussian elimination over `[CField β]`: a nonzero kernel vector of a `β`-matrix
 
@@ -87,24 +87,24 @@ variable {β : Type*} [CField β] [CFieldDomain β] [CDiffField (CFrac β)]
 
 /-- A `β(x)` value from a numerator: `qOfNum num = num/1 ∈ CFrac β`. The generic analogue of
 `qxOfNum`. -/
-def qOfNum (num : CPoly β) : CFrac β :=
+def qOfNum (num : DensePoly β) : CFrac β :=
   ⟨(num, [CField.one]), CFrac.cisZeroG_one_singleton⟩
 
 /-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. The generic analogue of
 `qxMonomial`. -/
 def qMonomial (k : ℕ) : CFrac β := qOfNum (cshift k [(CField.one : β)])
 
-/-- The numerator coefficient list of a `β(x)` element: `qNum z = z.1.1 ∈ CPoly β`. -/
-def qNum (z : CFrac β) : CPoly β := z.1.1
+/-- The numerator coefficient list of a `β(x)` element: `qNum z = z.1.1 ∈ DensePoly β`. -/
+def qNum (z : CFrac β) : DensePoly β := z.1.1
 
-/-- The denominator coefficient list of a `β(x)` element: `qDen z = z.1.2 ∈ CPoly β`. -/
-def qDen (z : CFrac β) : CPoly β := z.1.2
+/-- The denominator coefficient list of a `β(x)` element: `qDen z = z.1.2 ∈ DensePoly β`. -/
+def qDen (z : CFrac β) : DensePoly β := z.1.2
 
 /-- The cleared log-derivative residual over `α = CFrac β`:
 `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' − radMul(N, integrand)·D`, where
 `D' = CDiffField.cderiv (qOfNum D)` is the actual base-field derivation (essential over a tower where
 `θ' ≠ 1`, unlike the formal `cderiv`). `β`-linear in `N`; the generic analogue of `radLogResidualQ`. -/
-def radLogResidual (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : CPoly β)
+def radLogResidual (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly β)
     (N : RadElem (CFrac β)) : RadElem (CFrac β) :=
   let Dq : CFrac β := qOfNum D
   let Dpq : CFrac β := CDiffField.cderiv Dq
@@ -122,16 +122,16 @@ def radLogBasis (degBound : ℕ) : List (RadElem (CFrac β)) :=
 /-- The `β`-matrix of the cleared log-derivative system over `α = CFrac β`: for each basis column, the
 residual's cleared numerators (common denominator across columns), one row per `x`-power per component, one
 column per basis index; a kernel vector gives a solving `N`. The generic analogue of `radLogMatrixQ`. -/
-def radLogMatrix (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : CPoly β)
+def radLogMatrix (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly β)
     (degBound : ℕ) : List (List β) × ℕ :=
   let basis := radLogBasis (β := β) degBound
   let nCols := basis.length
   let resids : List (RadElem (CFrac β)) := basis.map (radLogResidual ρ integrand D)
   let rowsForComp : ℕ → List (List β) := fun i =>
     let entryOf : ℕ → CFrac β := fun j => (resids[j]!).getD i CField.zero
-    let nums : List (CPoly β) := (List.range nCols).map (fun j => cnorm (qNum (entryOf j)))
-    let dens : List (CPoly β) := (List.range nCols).map (fun j => cnorm (qDen (entryOf j)))
-    let cleared : List (CPoly β) := (List.range nCols).map (fun j =>
+    let nums : List (DensePoly β) := (List.range nCols).map (fun j => cnorm (qNum (entryOf j)))
+    let dens : List (DensePoly β) := (List.range nCols).map (fun j => cnorm (qDen (entryOf j)))
+    let cleared : List (DensePoly β) := (List.range nCols).map (fun j =>
       let prod := (List.range nCols).foldl (fun acc k =>
         if k = j then acc else cmul acc (dens[k]!)) [(CField.one : β)]
       cnorm (cmul (nums[j]!) prod))
@@ -146,7 +146,7 @@ def radLogMatrix (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : CPoly β)
 with `N = a₀ + a₁·y` (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel
 vector of the `β`-matrix `radLogMatrix` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. The
 generic analogue of `radLogArgSolveQ` — the whole solve runs over any tower base `β`. -/
-def radLogArgSolve (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : CPoly β)
+def radLogArgSolve (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly β)
     (degBound : ℕ) : Option (RadElem (CFrac β)) :=
   let (rows, nCols) := radLogMatrix ρ integrand D degBound
   match kernelVector nCols rows with

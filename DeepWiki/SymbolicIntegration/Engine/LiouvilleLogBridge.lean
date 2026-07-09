@@ -177,7 +177,7 @@ With `logDerivs = []`, `cLogIsNewMonomial` decides only `w ≠ 0` — necessary 
 
 section ComputableEmptyBase
 
-open CPoly
+open DensePoly
 
 /-- `crref.go` halts once the working column reaches `ncols = 1`, returning the accumulated pivot
 rows/columns reversed. -/
@@ -227,15 +227,15 @@ private lemma nullspace_single_col (M : List (List ℚ)) :
 /-- `cLogIsNewMonomial [] w = true` iff the cleared coefficient column `(cLinearDepData [] w).1`
 has a nonzero entry — the empty-base test decides `w ≠ 0`. -/
 theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : CFrac ℚ) :
-    CPoly.cLogIsNewMonomial [] w =
-      ((CPoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
-  have hbridge : CPoly.cLogIsNewMonomial [] w =
-      !((cNullspaceBasisQ (CPoly.cLinearDepData [] w).1
-          ((CPoly.cLinearDepData [] w).2 + 1)).any
-        (fun rel => rel.getD (CPoly.cLinearDepData [] w).2 0 ≠ 0)) := rfl
-  have h2 : (CPoly.cLinearDepData [] w).2 = 0 := rfl
+    DensePoly.cLogIsNewMonomial [] w =
+      ((DensePoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
+  have hbridge : DensePoly.cLogIsNewMonomial [] w =
+      !((cNullspaceBasisQ (DensePoly.cLinearDepData [] w).1
+          ((DensePoly.cLinearDepData [] w).2 + 1)).any
+        (fun rel => rel.getD (DensePoly.cLinearDepData [] w).2 0 ≠ 0)) := rfl
+  have h2 : (DensePoly.cLinearDepData [] w).2 = 0 := rfl
   rw [hbridge, h2, show (0 : ℕ) + 1 = 1 from rfl]
-  set M := (CPoly.cLinearDepData [] w).1 with hM
+  set M := (DensePoly.cLinearDepData [] w).1 with hM
   rw [nullspace_single_col M, crref_single_col_pivots M]
   cases hfind : M.find? (fun r => (r.getD 0 0) ≠ 0) with
   | none => simp
@@ -244,7 +244,7 @@ theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : CFrac ℚ) :
 /-- `cExpIsNewMonomial ws b = cLogIsNewMonomial ws b`: the exponential structure test is
 definitionally the logarithmic one. -/
 theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (ws : List (CFrac ℚ)) (b : CFrac ℚ) :
-    CPoly.cExpIsNewMonomial ws b = CPoly.cLogIsNewMonomial ws b := rfl
+    DensePoly.cExpIsNewMonomial ws b = DensePoly.cLogIsNewMonomial ws b := rfl
 
 end ComputableEmptyBase
 
@@ -267,8 +267,8 @@ example (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv u) :
 
 -- The empty-base computable test decides only "cleared column nonzero" (≈ `w ≠ 0`).
 example (w : CFrac ℚ) :
-    CPoly.cLogIsNewMonomial [] w =
-      ((CPoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
+    DensePoly.cLogIsNewMonomial [] w =
+      ((DensePoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
   cLogIsNewMonomial_nil_eq_col_nonzero w
 
 end Restatements

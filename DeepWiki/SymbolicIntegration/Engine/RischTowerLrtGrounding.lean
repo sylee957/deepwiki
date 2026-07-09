@@ -22,7 +22,7 @@ certificate) is the separate `LrtLiouvilleFrontier` (Liouville criterion). See `
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 /-- **★ The re-based recursive LRT solver is sound on the concrete ℚ(x)-tower, from the honest frontiers alone.**
 At carrier `CFrac ℚ` (so `a/d ∈ (CFrac ℚ)(t)`, a genuine two-level tower), a successful run of the
@@ -32,7 +32,7 @@ honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this l
 undischargeable `PrimitiveFrontier`. -/
 theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
     [Fact (GcdFFCorrect (α := CFrac ℚ))] [PrimitiveFrontierLrt (CFrac ℚ)]
-    (Dt a d : CPoly (CFrac ℚ)) (res : LrtResult (CFrac ℚ))
+    (Dt a d : DensePoly (CFrac ℚ)) (res : LrtResult (CFrac ℚ))
     (h : LawfulRischLevelLrt.integrate Dt a d = some res) :
     IsIntegralResultLrt Dt a d res :=
   LawfulRischLevelLrt.soundFormalLrt Dt a d res h
@@ -43,8 +43,8 @@ input at each level *constructs* the `PrimitiveFrontierLrt` instances, hence (wi
 recursive LRT solver at that depth. This is the honest closure — the solver's soundness rests on genuine
 integrability conditions, nothing opaque. -/
 noncomputable example [Fact (GcdFFCorrect (α := CFrac ℚ))]
-    (hgenℚ : ∀ (Dt a d : CPoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
-    (hgenℚx : ∀ (Dt a d : CPoly (CFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
+    (hgenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
+    (hgenℚx : ∀ (Dt a d : DensePoly (CFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
     LawfulRischLevelLrt (CFrac ℚ) :=
   letI : PrimitiveFrontierLrt ℚ := ⟨hreducedLrt_of_genuineAll gcdFFCorrect_Q hgenℚ⟩
   letI : PrimitiveFrontierLrt (CFrac ℚ) :=

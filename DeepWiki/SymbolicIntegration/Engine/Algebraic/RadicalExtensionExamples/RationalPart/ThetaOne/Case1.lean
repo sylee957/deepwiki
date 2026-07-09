@@ -14,28 +14,28 @@ namespace DeepWiki.SymbolicIntegration
 Radicand `y² = f = x`, `V = x − 1`, `k = 2`, `C = 1` (integrand `1/((x−1)²√x)`): the congruence gives
 `B = −1` and residual `D = 1/2` (constant), dropping the multiplicity `2 → 1`; `g = f'/2 = 1/2`. -/
 
-open CPoly
+open DensePoly
 
 /-- Case-1 example radicand `f = x` (`y² = x`, `y = √x`), as a `ℚ[x]` polynomial `[0, 1]`. -/
-def case1F : CPoly ℚ := [0, 1]
+def case1F : DensePoly ℚ := [0, 1]
 
 /-- Case-1 example squarefree denominator factor `V = x − 1` (coprime to `f = x`), `[−1, 1]`. -/
-def case1V : CPoly ℚ := [-1, 1]
+def case1V : DensePoly ℚ := [-1, 1]
 
 /-- Case-1 example numerator `C = 1`, `[1]`. -/
-def case1C : CPoly ℚ := [1]
+def case1C : DensePoly ℚ := [1]
 
 /-- `V' = (x−1)' = 1` over `ℚ[x]` (`cderiv`, `θ' = 1`, ℚ-constant coefficients). -/
-def case1Vder : CPoly ℚ := cderiv case1V
+def case1Vder : DensePoly ℚ := cderiv case1V
 
 /-- `g = ((n−1)/n)·f' = (1/2)·1 = 1/2` for `n = 2`, `f = x` squarefree (`(f/y)' = g/y`), `[1/2]`. -/
-def case1 : CPoly ℚ := cscale (1/2 : ℚ) (cderiv case1F)
+def case1 : DensePoly ℚ := cscale (1/2 : ℚ) (cderiv case1F)
 
 /-- The solved Case-1 cofactor `B` for `−x·B ≡ 1 (mod x−1)` — expected `B = −1`. -/
-def case1B : CPoly ℚ := radCase1Cofactor 2 case1V case1Vder case1F case1C
+def case1B : DensePoly ℚ := radCase1Cofactor 2 case1V case1Vder case1F case1C
 
 /-- The Case-1 residual `D` — expected the constant `1/2`. -/
-def case1D : CPoly ℚ :=
+def case1D : DensePoly ℚ :=
   radCase1Residual 2 case1V case1Vder case1F case1 case1B case1C (cderiv case1B)
 
 /-- The cofactor is `B = −1`: `−x·B ≡ 1 (mod x−1)` gives `B = −1`. -/

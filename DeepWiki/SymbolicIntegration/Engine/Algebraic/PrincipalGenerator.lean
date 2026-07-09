@@ -13,7 +13,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -26,15 +26,15 @@ returns the reduced pair **and** the `v` of this step (so the caller multiplies 
 /-- One tracked Cantor reduction step `cantorReduceStepTracked ρ (u, v) = ((u', v'), v)`: the
 ordinary `cantorReduceStep` (`u' = monic((ρ − v²)/u)`, `v' = (−v) mod u'`) paired with the `v` of
 this step, the data of the driving function `y − v(x)`. -/
-def cantorReduceStepTracked (ρ : CPoly α) (D : MumfordDivisor α) :
-    MumfordDivisor α × CPoly α :=
+def cantorReduceStepTracked (ρ : DensePoly α) (D : MumfordDivisor α) :
+    MumfordDivisor α × DensePoly α :=
   (cantorReduceStep ρ D, D.v)
 
 /-- Tracked Cantor reduction loop `cantorReduceTrackedAux fuel g ρ (u, v) acc`: apply
 `cantorReduceStep` until `deg u ≤ g`, accumulating each step's `v` (the `y − v` factor) onto `acc`
 (newest last), stopping when the structural `fuel` counter is exhausted. -/
-def cantorReduceTrackedAux : ℕ → ℕ → CPoly α → MumfordDivisor α → List (CPoly α) →
-    MumfordDivisor α × List (CPoly α)
+def cantorReduceTrackedAux : ℕ → ℕ → DensePoly α → MumfordDivisor α → List (DensePoly α) →
+    MumfordDivisor α × List (DensePoly α)
   | 0, _, _, D, acc => (D, acc)
   | fuel + 1, g, ρ, D, acc =>
     if cdeg D.u ≤ g then (D, acc)
@@ -43,30 +43,30 @@ def cantorReduceTrackedAux : ℕ → ℕ → CPoly α → MumfordDivisor α → 
 /-- Tracked Cantor reduction `cantorReduceTracked ρ g D = (reduced, vs)`: bring `(u, v)` to reduced
 form `deg u ≤ g` (as `cantorReduce`), also returning the list `vs` of every reduction step's `v`.
 The product `∏ (y − vᵢ)` is the function swapping `D` for its reduced form. -/
-def cantorReduceTracked (ρ : CPoly α) (g : ℕ) (D : MumfordDivisor α) :
-    MumfordDivisor α × List (CPoly α) :=
+def cantorReduceTracked (ρ : DensePoly α) (g : ℕ) (D : MumfordDivisor α) :
+    MumfordDivisor α × List (DensePoly α) :=
   cantorReduceTrackedAux (cdeg D.u + 1) g ρ D []
 
 /-- Tracked Jacobian group law `cantorAddTracked ρ g D₁ D₂ = (D₁ ⊕ D₂, vs)`: `cantorAdd` with the
 list `vs` of the `y − v` step-functions emitted by the reduction of the composite. The composition
 `cantorCompose` is performed first; its reduction to `deg u ≤ g` accumulates the `vs`. -/
-def cantorAddTracked (ρ : CPoly α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) :
-    MumfordDivisor α × List (CPoly α) :=
+def cantorAddTracked (ρ : DensePoly α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) :
+    MumfordDivisor α × List (DensePoly α) :=
   cantorReduceTracked ρ g (cantorCompose ρ D₁ D₂)
 
 /-- Tracked scalar multiple `cantorMulTracked ρ g n D = (n·D, vs)`: the `n`-fold Cantor sum `n·D`
 (as `cantorMul`) with the accumulated list `vs` of all `y − v` step-functions emitted across the
 `n − 1` additions' reductions. When `n·D = O`, `∏ (y − vᵢ)` over `vs` is the principal generator `g`
 with `div(g) = n·D`. By `ℕ`-recursion `(n+1)·D = D ⊕ (n·D)`. -/
-def cantorMulTracked (ρ : CPoly α) (g : ℕ) :
-    ℕ → MumfordDivisor α → MumfordDivisor α × List (CPoly α)
+def cantorMulTracked (ρ : DensePoly α) (g : ℕ) :
+    ℕ → MumfordDivisor α → MumfordDivisor α × List (DensePoly α)
   | 0, _ => (mumfordIdentity, [])
   | n + 1, D =>
     let (acc, vsAcc) := cantorMulTracked ρ g n D
     let (res, vsStep) := cantorAddTracked ρ g D acc
     (res, vsAcc ++ vsStep)
 
-end CPoly
+end DensePoly
 
 /-! ## The principal generator as a `RadElem`
 
@@ -75,25 +75,25 @@ end CPoly
 base field. `principalGenerator` lifts the constant `v`s to `ℚ(x)` and multiplies the factors `y − vᵢ`
 together (in `(CFrac ℚ)[y]/(y² − ρ)`) into the generator `g`. -/
 
-open CPoly RadElem
+open DensePoly RadElem
 
 /-- Lift a base `v` to a `y − v` factor over `ℚ(x)`: `genFactorOfV v = [−(v as ℚ(x)), 1]`, the
 `RadElem (CFrac ℚ)` `y − v(x)` of one Cantor reduction step, with the (genus-1) constant `v = [c]`
 embedded into `ℚ(x)` via `qxOfNum`. For the empty `v = []` (the factor `y`) this is `[0, 1]`. -/
-def genFactorOfV (v : CPoly ℚ) : RadElem (CFrac ℚ) :=
+def genFactorOfV (v : DensePoly ℚ) : RadElem (CFrac ℚ) :=
   [CField.neg (qxOfNum v), CField.one]
 
 /-- The principal generator from tracked `v`s: `principalGeneratorOfVs ρ vs = ∏ᵢ (y − vᵢ)`, the
 product of the `y − vᵢ` step-functions (`genFactorOfV`) of a `cantorMulTracked` run, taken in the
 radical extension (`radMul 2 ρ`) starting from `radOne`. -/
-def principalGeneratorOfVs (ρ : CFrac ℚ) (vs : List (CPoly ℚ)) : RadElem (CFrac ℚ) :=
+def principalGeneratorOfVs (ρ : CFrac ℚ) (vs : List (DensePoly ℚ)) : RadElem (CFrac ℚ) :=
   vs.foldl (fun acc v => radMul 2 ρ acc (genFactorOfV v)) radOne
 
 /-- The principal generator of a torsion divisor `principalGenerator ρ ρq g m D` — for `D` of
 order `m` on `y² = ρ`, the function `g` with `div(g) = m·D`: runs `cantorMulTracked ρq g m D`
 and multiplies the tracked `y − v` factors (`principalGeneratorOfVs`). `ρq` is the radicand as
 a `ℚ[x]` polynomial, `ρ` the same radicand as a `ℚ(x)` element. -/
-def principalGenerator (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
+def principalGenerator (ρ : CFrac ℚ) (ρq : DensePoly ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
     RadElem (CFrac ℚ) :=
   principalGeneratorOfVs ρ (cantorMulTracked ρq g m D).2
 

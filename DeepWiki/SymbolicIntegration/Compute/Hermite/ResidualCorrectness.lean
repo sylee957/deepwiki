@@ -16,7 +16,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-! ### The residual-recovery identity -/
 
 /-- The denominators of a Hermite residual wrapper are nonzero. -/
-structure IsHermiteResidualInput (D gden Dstar : CPoly ℚ) : Prop where
+structure IsHermiteResidualInput (D gden Dstar : DensePoly ℚ) : Prop where
   /-- The original denominator reads nonzero. -/
   den_ne : toPoly D ≠ 0
   /-- The rational-part denominator reads nonzero. -/
@@ -51,8 +51,8 @@ theorem residual_numerator_ratFunc (A D gnum gden : ℚ[X]) (hD : D ≠ 0) (hgde
 
 open scoped Differential in
 /-- Full `hermiteReduce` residual correctness in `RatFunc ℚ` from an exact-division certificate. -/
-theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : CPoly ℚ)
-    (gnum gden Dstar : CPoly ℚ)
+theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : DensePoly ℚ)
+    (gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
     (hexact : toPoly (cmod fuel
         (cmul (csub (cmul A (cmul gden gden))
@@ -102,13 +102,13 @@ theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : CPoly ℚ)
   linear_combination hresid
 
 /-- `toQFun` is invariant under `cnorm` of both components. -/
-theorem toQFun_cnorm (gnum gden : CPoly ℚ) :
+theorem toQFun_cnorm (gnum gden : DensePoly ℚ) :
     toQFun (cnorm gnum, cnorm gden) = toQFun (gnum, gden) := by
   simp only [toQFun, toPoly_cnorm]
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness with the `cnorm`-wrapped residual numerator. -/
-theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ)
+theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
     (hexact : toPoly (cmod fuel
         (cmul (csub (cmul A (cmul gden gden))
@@ -127,7 +127,7 @@ theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ)
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness from an algebraic divisibility certificate. -/
-theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ)
+theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
@@ -156,7 +156,7 @@ theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar 
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness from two split divisibility certificates. -/
-theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ)
+theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
@@ -196,7 +196,7 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness from the radical clause plus one residual certificate. -/
-theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ)
+theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
@@ -241,20 +241,20 @@ theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Ds
 /-! ### Decidable residual-honesty bundle -/
 
 /-- Decidable residual-recovery honesty bundle for `hermiteReduce`'s computed rational part and radical. -/
-def HermiteResComp (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ) : Prop :=
+def HermiteResComp (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ) : Prop :=
   let resNum' := csub (cmul A (cmul gden gden))
     (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))
   cnorm (cmod fuel resNum' D) = [] ∧
     cnorm (cmod fuel (cmul (cdiv fuel resNum' D) Dstar) (cmul gden gden)) = []
 
 /-- `HermiteResComp` is decidable. -/
-instance decHermiteResComp (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ) :
+instance decHermiteResComp (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ) :
     Decidable (HermiteResComp fuel A D gnum gden Dstar) := by
   unfold HermiteResComp; infer_instance
 
 open scoped Differential in
 /-- Unconditional `hermiteReduce` residual correctness from the decidable residual-honesty bundle. -/
-theorem hermiteReduce_residual_correct_uncond (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ)
+theorem hermiteReduce_residual_correct_uncond (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
@@ -273,7 +273,7 @@ theorem hermiteReduce_residual_correct_uncond (fuel : ℕ) (A D gnum gden Dstar 
     hresD hg2
 
 open scoped Differential in
-example (fuel : ℕ) (A D gnum gden Dstar : CPoly ℚ)
+example (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)

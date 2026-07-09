@@ -18,7 +18,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 namespace ResidueMatchTower
 
@@ -148,7 +148,7 @@ end ResidueMatchTower
 Restated over `am α = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))` and
 `towerFractionFieldDeriv Dt`, in the form `logResidueSumG_eq_of_residue_match` consumes. -/
 
-open CPoly CFrac
+open DensePoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -158,7 +158,7 @@ a primitive monomial with `toPoly Dt = C w`, a squarefree `d = ∏_{α∈s}(t−
 root normal, the engine-shaped residue sum `∑_{α∈s} am(C(c_α))·(D(t−α)/(t−α)) = a/d` over
 `RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDeriv Dt`. The unconditional `hmatch` for
 primitive tower extensions. -/
-theorem primitive_monomial_residue_match_engine (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
+theorem primitive_monomial_residue_match_engine (Dt : DensePoly α) (s : Finset (CFieldSpec.K α))
     (a : (CFieldSpec.K α)[X]) (w : CFieldSpec.K α) (hDt : toPoly Dt = C w)
     (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, w ≠ β′) :
     ∑ β ∈ s, am α

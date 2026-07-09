@@ -14,37 +14,37 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-! ### Positive-integer-root test for residue resultants
 
 The weak normalizer needs the positive integer roots of the residue resultant `r ∈ α[z]`; the nodes
 `n : ℕ` are lifted by the `[CField α]`-only natural cast `cnatCast`. -/
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
 /-- `cisRootNat r n = true` iff `r(cnatCast n) = 0` in `α` (Horner via `cHorner`): whether the
 natural number `n`, lifted to `α`, is a root of `r`. -/
-def cisRootNat (r : CPoly α) (n : ℕ) : Bool :=
+def cisRootNat (r : DensePoly α) (n : ℕ) : Bool :=
   CField.isZero (cHorner r (cnatCast n))
 
 /-- `cPosIntRoots r bound = [n ∈ {1,…,bound} : r(cnatCast n) = 0]`: the positive integer roots of
 `r` up to `bound`; empty for an already-weakly-normalized input. -/
-def cPosIntRoots (r : CPoly α) (bound : ℕ) : List ℕ :=
+def cPosIntRoots (r : DensePoly α) (bound : ℕ) : List ℕ :=
   (List.range bound).filterMap (fun k =>
     let n : ℕ := k + 1
     if cisRootNat r n then some n else none)
 
-end CPoly
+end DensePoly
 
 /-! ### The generic degree bound over the tower
 
 `cRdeBoundDegree` is the explicit `deg_t(q)` upper bound, case-split by `δ = deg(Dt)`. Purely
 list-degree arithmetic — `[CField α]`-only. -/
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -53,7 +53,7 @@ polynomial solution `q ∈ α[t]` of `a·Dq + b·q = c`. With `d_a, d_b, d_c` th
 nonlinear (`δ ≥ 2`) `max(0, d_c − max(d_a + δ − 1, d_b))`; hyperexponential (`δ = 1`)
 `max(0, d_c − max(d_b, d_a))`; primitive (`δ = 0`) `max(0, d_c − d_b)` if `d_b > d_a` else
 `max(0, d_c − d_a + 1)`. -/
-def cRdeBoundDegree (Dt : CPoly α) (a b c : CPoly α) : ℕ :=
+def cRdeBoundDegree (Dt : DensePoly α) (a b c : DensePoly α) : ℕ :=
   let da : ℤ := (cdeg a : ℤ)
   let db : ℤ := (cdeg b : ℤ)
   let dc : ℤ := (cdeg c : ℤ)
@@ -75,10 +75,10 @@ monomial (`Dt = 1`) with constant coefficients this is termwise `∫ Σ cᵢtⁱ
 /-- Generic polynomial antiderivative `cIntegratePoly c = q` with `Dq = c` and `q(0) = 0`, for the
 canonical primitive monomial (`Dt = 1`) and constant coefficients: termwise
 `∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}` (`cᵢ/(i+1) = CField.div cᵢ (cnatCast (i+1))`). -/
-def cIntegratePoly (c : CPoly α) : CPoly α :=
+def cIntegratePoly (c : DensePoly α) : DensePoly α :=
   CField.zero :: ((c : List α).zipIdx.map (fun (a, i) => CField.div a (cnatCast (i + 1))))
 
-end CPoly
+end DensePoly
 
 /-! ### Shared level-2 RDE data
 

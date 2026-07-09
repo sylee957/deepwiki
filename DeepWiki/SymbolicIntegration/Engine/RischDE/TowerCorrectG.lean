@@ -13,7 +13,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 /-! ### Generic helper lemmas
 
@@ -22,7 +22,7 @@ gcd `g` taken abstractly. -/
 
 /-- After dividing `a, b` by a nonzero gcd `g`, the gcd of `bd, ad` is a unit. -/
 theorem cgcdWf_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α]
-    (a b ad bd g : CPoly α) (hgne : toPoly g ≠ 0)
+    (a b ad bd g : DensePoly α) (hgne : toPoly g ≠ 0)
     (hgassoc : Associated (toPoly g) (gcd (toPoly a) (toPoly b)))
     (hdiva : toPoly ad * toPoly g = toPoly a)
     (hdivb : toPoly bd * toPoly g = toPoly b) :
@@ -39,7 +39,7 @@ theorem cgcdWf_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α]
   exact isUnit_of_dvd_one hG1
 
 /-- `toPoly (cdivWf a g) * toPoly g = toPoly a` from `g ~ gcd(a, b)` (`g ∣ a`) and `g ≠ 0`. -/
-theorem cdivWf_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : CPoly α)
+theorem cdivWf_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : DensePoly α)
     (hg0 : cnorm g ≠ [])
     (hgassoc : Associated (toPoly g) (gcd (toPoly a) (toPoly b))) :
     toPoly (cdivWf a g) * toPoly g = toPoly a := by
@@ -47,7 +47,7 @@ theorem cdivWf_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : 
   exact toPolyG_cdivWf_exact a g hg0 hgdvd
 
 /-- `toPoly (cdivWf b g) * toPoly g = toPoly b` from `g ~ gcd(a, b)` (`g ∣ b`). -/
-theorem cdivWf_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : CPoly α)
+theorem cdivWf_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : DensePoly α)
     (hg0 : cnorm g ≠ [])
     (hgassoc : Associated (toPoly g) (gcd (toPoly a) (toPoly b))) :
     toPoly (cdivWf b g) * toPoly g = toPoly b := by
@@ -55,7 +55,7 @@ theorem cdivWf_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : 
   exact toPolyG_cdivWf_exact b g hg0 hgdvd
 
 /-- `toPoly (cdivWf c g) * toPoly g = toPoly c` from `cdvd g c = true` (`g ∣ c`). -/
-theorem cdivWf_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (c g : CPoly α)
+theorem cdivWf_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (c g : DensePoly α)
     (hg0 : cnorm g ≠ [])
     (hdvd : cdvd g c = true) :
     toPoly (cdivWf c g) * toPoly g = toPoly c := by
@@ -65,7 +65,7 @@ theorem cdivWf_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (c g : 
 /-- One `cSPDE` peel's cleared lifting: with `D = implicitDeriv (toPoly Dt)`, Bézout certificate
 `bd·r + ad·z = cd`, and `h` solving the reduced equation, `q = ad·h + r` solves `ad·D(q) + bd·q = cd`. -/
 theorem cSPDE_peel_cleared_gen {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    (Dt ad bd cd r z h : CPoly α)
+    (Dt ad bd cd r z h : DensePoly α)
     (hbez : toPoly bd * toPoly r + toPoly ad * toPoly z = toPoly cd)
     (hred : toPoly ad * Differential.implicitDeriv (toPoly Dt) (toPoly h)
         + (toPoly bd + Differential.implicitDeriv (toPoly Dt) (toPoly ad)) * toPoly h
@@ -83,7 +83,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `toPoly (cdivWf p q) * toPoly q = toPoly p` from `toPoly q ∣ toPoly p` (nonzero divisor). -/
-theorem toPolyG_cdivWf_exact_mul_gen (p q : CPoly α)
+theorem toPolyG_cdivWf_exact_mul_gen (p q : DensePoly α)
     (hq0 : cnorm q ≠ [])
     (hQdvd : toPoly q ∣ toPoly p) :
     toPoly (cdivWf p q) * toPoly q = toPoly p :=

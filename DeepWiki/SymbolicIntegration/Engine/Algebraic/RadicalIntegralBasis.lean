@@ -16,7 +16,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -30,13 +30,13 @@ variable [CFracGcdCoreWf α]
 /-- Square part `radSquarePart ρ = d = ∏ᵢ Pᵢ^{⌊i/2⌋}`: the root of the largest square divisor of `ρ`
 (each squarefree part `Pᵢ` of multiplicity `i` contributes `Pᵢ^{⌊i/2⌋}`), so `d² ∣ ρ` and `ρ/d²` is
 squarefree. Monic. -/
-def radSquarePart (ρ : CPoly α) : CPoly α :=
+def radSquarePart (ρ : DensePoly α) : DensePoly α :=
   (cSqfreeYunFF ρ).zipIdx.foldl
     (fun acc (Pi, i) => cmul acc (cpow Pi ((i + 1) / 2))) [CField.one]
 
 /-- Squarefree part `radSquarefreePart ρ = s = ∏_{i odd} Pᵢ = ρ/d²`: one copy of each odd-multiplicity
 factor `Pᵢ`, so `ρ = d²·s` with `d = radSquarePart` and `s` squarefree by construction. Monic. -/
-def radSquarefreePart (ρ : CPoly α) : CPoly α :=
+def radSquarefreePart (ρ : DensePoly α) : DensePoly α :=
   (cSqfreeYunFF ρ).zipIdx.foldl
     (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmul acc Pi else acc) [CField.one]
 
@@ -48,7 +48,7 @@ the maximal integral element of the form `y/q`. Returned as the pair `(d, s)`. -
 /-- The simple-radical integral basis `radIntegralBasis ρ = (d, s)` for `ℚ[x][y]/(y² − ρ)`: the integral
 closure of `ℚ[x]` has basis `[1, y/d]` with `d = radSquarePart ρ`, `s = radSquarefreePart ρ = ρ/d²`
 squarefree, `(y/d)² = s` (`[1, y]` for squarefree `ρ`). -/
-def radIntegralBasis (ρ : CPoly α) : CPoly α × CPoly α :=
+def radIntegralBasis (ρ : DensePoly α) : DensePoly α × DensePoly α :=
   (radSquarePart ρ, radSquarefreePart ρ)
 
 /-! ### Integral-closure validation predicates
@@ -63,7 +63,7 @@ because `s` is squarefree. -/
 ρ` — so `s = ρ/d²` is a genuine `ℚ[x]` polynomial (no fractional residue), the precondition that `y/d`
 satisfies the monic `T² − s = 0` over `ℚ[x]`. Checked by `cisZero (d²·s − ρ)`, comparing monic-normalized
 (the Yun factors are monic, so `d, s` are; `ρ` is taken monic). `[CField α] [CFracGcdCoreWf α]`-generic. -/
-def radSplitExact (ρ : CPoly α) : Bool :=
+def radSplitExact (ρ : DensePoly α) : Bool :=
   let d := radSquarePart ρ
   let s := radSquarefreePart ρ
   cisZero (csub (cmul (cmul d d) s) (cmonic ρ))
@@ -73,7 +73,7 @@ def radSplitExact (ρ : CPoly α) : Bool :=
 integral over `ℚ[x]`" — `(y/d)² = s` is a squarefree polynomial, so `y/d` is a root of the monic
 `T² − s ∈ ℚ[x][T]` and the integral closure contains it. Checked by `cdeg (gcd s s') = 0`. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
-def radSquarefreePartIsSquarefree (ρ : CPoly α) : Bool :=
+def radSquarefreePartIsSquarefree (ρ : DensePoly α) : Bool :=
   let s := radSquarefreePart ρ
   cdeg (cgcdMonicWf s (cderiv s)) = 0
 
@@ -84,7 +84,7 @@ def radSquarefreePartIsSquarefree (ρ : CPoly α) : Bool :=
 the form `y/q`. Returns `true` (= "not integral", `P² ∤ s`) for nonconstant `P`; `false` for constant `P`
 (`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `cdvd`. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
-def radNotIntegralFactor (ρ P : CPoly α) : Bool :=
+def radNotIntegralFactor (ρ P : DensePoly α) : Bool :=
   let s := radSquarefreePart ρ
   if cdeg P = 0 then false else !(cdvd (cmul P P) s)
 
@@ -98,7 +98,7 @@ For `y² = s` with `s` squarefree, the minimal polynomial of `y/d` is `T² − s
 polynomial `T² − s` of the basis element `y/d` (`s = radSquarefreePart ρ`): `disc(T² − s) = 0² − 4·1·(−s)
 = 4s`. The polynomial discriminant `disc(T² + bT + c) = b² − 4c` at `b = 0, c = −s`. (Up to the unit `1`
 this is `s` itself; the `4` is the classical normalization.) `[CField α] [CFracGcdCoreWf α]`-generic. -/
-def radBasisDiscriminant (ρ : CPoly α) : CPoly α :=
+def radBasisDiscriminant (ρ : DensePoly α) : DensePoly α :=
   cscale (cnatCast 4) (radSquarefreePart ρ)
 
 /-- **Genus** `radGenus ρ = ⌈deg s / 2⌉ − 1` — the genus of the hyperelliptic curve `y² = s`
@@ -106,19 +106,19 @@ def radBasisDiscriminant (ρ : CPoly α) : CPoly α :=
 `(m + 1)/2` is `⌈m/2⌉`). For simple radicals `y² = s`, `g = 0` (rational) for `deg s ≤ 2`, `g = 1`
 (elliptic) for `deg s ∈ {3, 4}`, etc. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
-def radGenus (ρ : CPoly α) : ℕ :=
+def radGenus (ρ : DensePoly α) : ℕ :=
   let m := cdeg (radSquarefreePart ρ)
   (m + 1) / 2 - 1
 
-end CPoly
+end DensePoly
 
 /-! ## Examples over `ℚ[x]` (`native_decide`)
 
-`α = ℚ`, so `CPoly ℚ = ℚ[x]` and the radicand `ρ ∈ ℚ[x]` is a coefficient list (low to high). All
+`α = ℚ`, so `DensePoly ℚ = ℚ[x]` and the radicand `ρ ∈ ℚ[x]` is a coefficient list (low to high). All
 operations are list/`ℚ` arithmetic; the `CFracGcdCore ℚ` / `CField ℚ` instances reduce in the native
 compiler. -/
 
-open CPoly
+open DensePoly
 
 /-! ### The square-part / squarefree-part split computes
 
@@ -126,13 +126,13 @@ open CPoly
 x⁴(x−1)` (→ `d = x², s = x−1`). -/
 
 /-- The radicand `ρ = x³ + 1 ∈ ℚ[x]` (`[1,0,0,1]`), squarefree. -/
-def basisRhoX3p1 : CPoly ℚ := [1, 0, 0, 1]
+def basisRhoX3p1 : DensePoly ℚ := [1, 0, 0, 1]
 
 /-- The radicand `ρ = x³ + x² = x²(x+1) ∈ ℚ[x]` (`[0,0,1,1]`), square part `x`. -/
-def basisRhoX3pX2 : CPoly ℚ := [0, 0, 1, 1]
+def basisRhoX3pX2 : DensePoly ℚ := [0, 0, 1, 1]
 
 /-- The radicand `ρ = x⁵ − x⁴ = x⁴(x−1) ∈ ℚ[x]` (`[0,0,0,0,-1,1]`), square part `x²`. -/
-def basisRhoX5mX4 : CPoly ℚ := [0, 0, 0, 0, -1, 1]
+def basisRhoX5mX4 : DensePoly ℚ := [0, 0, 0, 0, -1, 1]
 
 /-- **Squarefree `ρ = x³+1` ⇒ `d = 1`** (`native_decide`): the square part of a squarefree radicand is the
 unit `1`, so the basis is `[1, y]`. -/
@@ -233,10 +233,10 @@ The basis discriminant `4s`, and the hyperelliptic genus `⌈deg s/2⌉ − 1`: 
 `y² = x³+1` (genus 1, elliptic ✓), `y² = x⁵+1` (genus 2). -/
 
 /-- The radicand `ρ = x ∈ ℚ[x]` (`[0,1]`), `y² = x` (the parabola / rational curve). -/
-def basisRhoX : CPoly ℚ := [0, 1]
+def basisRhoX : DensePoly ℚ := [0, 1]
 
 /-- The radicand `ρ = x⁵ + 1 ∈ ℚ[x]` (`[1,0,0,0,0,1]`), `y² = x⁵+1` (genus-2 hyperelliptic). -/
-def basisRhoX5p1 : CPoly ℚ := [1, 0, 0, 0, 0, 1]
+def basisRhoX5p1 : DensePoly ℚ := [1, 0, 0, 0, 0, 1]
 
 /-- **Discriminant `disc = 4(x+1)` for `x²(x+1)`** (`native_decide`): the basis `[1, y/x]` has minimal
 polynomial `T² − (x+1)`, discriminant `4(x+1) = 4x + 4` (`[4,4]`). -/

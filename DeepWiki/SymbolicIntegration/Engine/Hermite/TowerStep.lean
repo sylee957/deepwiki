@@ -12,14 +12,14 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The tower derivation on a polynomial image: `D_tower(am p) = am (D p)` for
 `D = implicitDeriv (toPoly Dt)` (the `den = 1` case of the quotient rule). -/
-theorem towerFractionFieldDerivG_amG (Dt : CPoly α) (p : (CFieldSpec.K α)[X]) :
+theorem towerFractionFieldDerivG_amG (Dt : DensePoly α) (p : (CFieldSpec.K α)[X]) :
     towerFractionFieldDeriv Dt (am α p)
       = am α (Differential.implicitDeriv (toPoly Dt) p) := by
   have h := towerFractionFieldDerivG_div Dt p 1
@@ -29,7 +29,7 @@ theorem towerFractionFieldDerivG_amG (Dt : CPoly α) (p : (CFieldSpec.K α)[X]) 
 `D = implicitDeriv (toPoly Dt)`, `U, V ≠ 0`, and the Diophantine relation
 `B·(U·DV) + C·V = -A·C((j+1)⁻¹)`, one step drops the `V`-power by one and emits `B/V^(j+1)`:
 `am A/(am U · am V^(j+2)) = D_tower(am B/am V^(j+1)) + am(-(C(j+1))·C - U·DB)/(am U·am V^(j+1))`. -/
-theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt : CPoly α)
+theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt : DensePoly α)
     (A B C U V : (CFieldSpec.K α)[X]) (hU : U ≠ 0) (hV : V ≠ 0) (j : ℕ)
     (hrel : B * (U * Differential.implicitDeriv (toPoly Dt) V) + C * V
         = -A * Polynomial.C (((j : CFieldSpec.K α) + 1)⁻¹)) :
@@ -91,7 +91,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 open CFrac in
 /-- The inner-loop accumulator update reads as a fraction sum:
 `⟦(g₁·Vpow + b·g₂) / (g₂·Vpow)⟧ = ⟦g₁/g₂⟧ + ⟦b/Vpow⟧`. -/
-theorem fieldFrac_step_add (g1 g2 b Vpow : CPoly α)
+theorem fieldFrac_step_add (g1 g2 b Vpow : DensePoly α)
     (hg2 : toPoly g2 ≠ 0) (hVpow : toPoly Vpow ≠ 0) :
     am α (toPoly (cadd (cmul g1 Vpow) (cmul b g2))) / am α (toPoly (cmul g2 Vpow))
       = am α (toPoly g1) / am α (toPoly g2) + am α (toPoly b) / am α (toPoly Vpow) := by
@@ -104,16 +104,16 @@ open CFrac in
 derivation `D = implicitDeriv (toPoly Dt)`, and every step's `cdiophantine` cofactors satisfying
 the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` telescopes M1:
 `⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧) = D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧`. -/
-theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : CPoly α)
+theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : DensePoly α)
     (hu : toPoly u ≠ 0) (hv : toPoly v ≠ 0)
-    (hbez : ∀ (j' : ℕ) (A' : CPoly α),
+    (hbez : ∀ (j' : ℕ) (A' : DensePoly α),
       toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
             (cscale (CField.neg (CField.inv (cnatCast (j' + 1)))) A')).1
           * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
         + toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
             (cscale (CField.neg (CField.inv (cnatCast (j' + 1)))) A')).2 * toPoly v
       = -toPoly A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
-    ∀ (j : ℕ) (A : CPoly α) (g : CPoly α × CPoly α), toPoly g.2 ≠ 0 →
+    ∀ (j : ℕ) (A : DensePoly α) (g : DensePoly α × DensePoly α), toPoly g.2 ≠ 0 →
       am α (toPoly A) / (am α (toPoly u) * am α (toPoly v) ^ (j + 1))
           + towerFractionFieldDeriv Dt (am α (toPoly g.1) / am α (toPoly g.2))
         = towerFractionFieldDeriv Dt
@@ -167,7 +167,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
         = -(Polynomial.C ((j : CFieldSpec.K α) + 1)) * toPoly C
           - toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly B) := by
       rw [hA']
-      simp only [denote, CFieldSpec.toK_neg, hjval, CPoly.toK_cnatCastG, Nat.cast_add_one, map_neg]
+      simp only [denote, CFieldSpec.toK_neg, hjval, DensePoly.toK_cnatCastG, Nat.cast_add_one, map_neg]
     rw [hstepadd, hVpoweq] at ihA
     rw [map_add] at ihA
     rw [hA'eq] at ihA
@@ -187,7 +187,7 @@ M1/M2 + Yun discharge). Mirrors `canonicalReconstruction`. -/
 and the exact-division relation `⟦hNum⟧·⟦d·gden²⟧ = ⟦resNum⟧·⟦Dstar⟧` (with `resNum = a·gden² - d·gp`,
 `gp = D(gnum)·gden - gnum·D(gden)`), the reduced part telescopes:
 `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
-theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPoly α)
+theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : DensePoly α)
     (hd : am α (toPoly d) ≠ 0) (hgden : am α (toPoly gden) ≠ 0)
     (hDstar : am α (toPoly Dstar) ≠ 0)
     (hexact : am α (toPoly hNum)
@@ -227,7 +227,7 @@ open CFrac in
 /-- The whole-step Hermite field identity from the radical split. With `hNum` the exact quotient
 `cdivWf (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
 reduced part telescopes: `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
-theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : CPoly α)
+theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : DensePoly α)
     (hd : am α (toPoly d) ≠ 0) (hgden : am α (toPoly gden) ≠ 0)
     (hDstar : am α (toPoly Dstar) ≠ 0)
     (hresDen : cnorm (cmul d (cmul gden gden)) ≠ [])

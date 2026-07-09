@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 /-! ### The overshoot identity `D(logPart) = a/d + R` for the hyperexponential monomial
 
@@ -53,7 +53,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- Engine-vocabulary overshoot: the per-root `List` sum equals `am(C(b·∑c)) + a/d` over
 `RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDeriv Dt`, unconditional in `∑c`. -/
-theorem hyperexp_overshoot_list_engine (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
+theorem hyperexp_overshoot_list_engine (Dt : DensePoly α) (s : Finset (CFieldSpec.K α))
     (a : (CFieldSpec.K α)[X]) (b : CFieldSpec.K α) (hDt : toPoly Dt = C b * X)
     (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′) :
     ((s.toList.map (fun β =>
@@ -81,8 +81,8 @@ theorem hyperexp_overshoot_list_engine (Dt : CPoly α) (s : Finset (CFieldSpec.K
 /-- Engine residue-match overshoot: the log sum `∑_{(c,v)∈logs} am(C(toK c))·D(log v)` equals
 `am(C(b·∑c)) + am(hNum)/am(hDen)` over `RatFunc (CFieldSpec.K α)`, given the per-root form `hform`,
 unconditional in `∑c`. -/
-theorem hyperexp_engine_overshoot (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
-    (hNum hDen : CPoly α) (b : CFieldSpec.K α) (logs : List (α × CPoly α))
+theorem hyperexp_engine_overshoot (Dt : DensePoly α) (s : Finset (CFieldSpec.K α))
+    (hNum hDen : DensePoly α) (b : CFieldSpec.K α) (logs : List (α × DensePoly α))
     (hDt : toPoly Dt = C b * X)
     (hden : toPoly hDen = Lagrange.nodal s id)
     (hA : (toPoly hNum).degree < s.card) (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
@@ -120,39 +120,39 @@ Composing the Hermite half with the overshoot residue sum. -/
 half/per-root hypotheses, `D(g) + logResidueSum Dt res.logs = am a/am d + am(C(b·∑c))` over
 `RatFunc (CFieldSpec.K α)`, unconditional in `∑c`. -/
 theorem field_identity_of_cIntegrateReducedG_hyperexp_overshoot [CFracGcdCoreWf α]
-    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
     (hherm : towerFractionFieldDeriv Dt
-            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+            (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
           + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
             / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
         = am α (toPoly a) / am α (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPoly.cIntegrateReduced Dt a d cands).logs.map
+    (hform : (DensePoly.cIntegrateReduced Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPoly cv.2))
         = s.toList.map (fun β =>
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
     towerFractionFieldDeriv Dt
-        (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+        (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (DensePoly.cIntegrateReduced Dt a d cands).logs
       = am α (toPoly a) / am α (toPoly d)
         + am α (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β)) := by
-  rw [logResidueSumG_eq_logDeriv_sum Dt (CPoly.cIntegrateReduced Dt a d cands).logs,
+  rw [logResidueSumG_eq_logDeriv_sum Dt (DensePoly.cIntegrateReduced Dt a d cands).logs,
     hyperexp_engine_overshoot Dt s (cHermiteReduceTower Dt a d).2.1
       (cHermiteReduceTower Dt a d).2.2 b
-      (CPoly.cIntegrateReduced Dt a d cands).logs hDt hden hA hnorm hform]
+      (DensePoly.cIntegrateReduced Dt a d cands).logs hDt hden hA hnorm hform]
   set Dg := towerFractionFieldDeriv Dt
-    (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-      / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2)) with hDg
+    (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+      / am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2)) with hDg
   set h := am α (toPoly (cHermiteReduceTower Dt a d).2.1)
     / am α (toPoly (cHermiteReduceTower Dt a d).2.2) with hh
   set R := am α (C (b * ∑ β ∈ s,
@@ -172,41 +172,41 @@ variable [CRischField α]
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Output shape of `cIntegrateHyperexpNormal`: when it returns `some res` and the base oracle succeeds
 on `R`, `res` has the same logs and rational part `g − ∫R`. -/
-theorem cIntegrateHyperexpNormalG_shape [CFracGcdCoreWf α] (Dt : CPoly α)
-    (a d : CPoly α) (cands : List α) (res : IntegralResult α) (intR : α)
+theorem cIntegrateHyperexpNormalG_shape [CFracGcdCoreWf α] (Dt : DensePoly α)
+    (a d : DensePoly α) (cands : List α) (res : IntegralResult α) (intR : α)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
+        (cHyperexpResidual (cExpEta Dt) (DensePoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
-    (hsome : CPoly.cIntegrateHyperexpNormal Dt a d cands = some res) :
-    res = ⟨(csub (CPoly.cIntegrateReduced Dt a d cands).rational.1
-              (cmul [intR] (CPoly.cIntegrateReduced Dt a d cands).rational.2),
-            (CPoly.cIntegrateReduced Dt a d cands).rational.2),
-          (CPoly.cIntegrateReduced Dt a d cands).logs⟩ := by
-  rw [CPoly.cIntegrateHyperexpNormal] at hsome
+    (hsome : DensePoly.cIntegrateHyperexpNormal Dt a d cands = some res) :
+    res = ⟨(csub (DensePoly.cIntegrateReduced Dt a d cands).rational.1
+              (cmul [intR] (DensePoly.cIntegrateReduced Dt a d cands).rational.2),
+            (DensePoly.cIntegrateReduced Dt a d cands).rational.2),
+          (DensePoly.cIntegrateReduced Dt a d cands).logs⟩ := by
+  rw [DensePoly.cIntegrateHyperexpNormal] at hsome
   simp only [hintRsome] at hsome
   exact (Option.some.injEq _ _ ▸ hsome).symm
 
 /-- Normal-part driver soundness `D(∫fₙ) = fₙ` for `cIntegrateHyperexpNormal`, unconditional in `∑c`,
 given the base-oracle residual `hintR` and the residual-read bridge `hRval`. -/
-theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α)
+theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α)
     (cands : List α) (res : IntegralResult α) (intR : α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
-    (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
+    (hgden : toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
+        (cHyperexpResidual (cExpEta Dt) (DensePoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
-    (hsome : CPoly.cIntegrateHyperexpNormal Dt a d cands = some res)
+    (hsome : DensePoly.cIntegrateHyperexpNormal Dt a d cands = some res)
     (hherm : towerFractionFieldDeriv Dt
-            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+            (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
           + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
             / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
         = am α (toPoly a) / am α (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPoly.cIntegrateReduced Dt a d cands).logs.map
+    (hform : (DensePoly.cIntegrateReduced Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPoly cv.2))
         = s.toList.map (fun β =>
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
@@ -215,10 +215,10 @@ theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d
     (hintR : towerFractionFieldDeriv Dt (am α (Polynomial.C (CFieldSpec.toK intR)))
         = am α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
-              (CPoly.cIntegrateReduced Dt a d cands).logs))))
+              (DensePoly.cIntegrateReduced Dt a d cands).logs))))
     (hRval : am α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
-              (CPoly.cIntegrateReduced Dt a d cands).logs)))
+              (DensePoly.cIntegrateReduced Dt a d cands).logs)))
         = am α (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))) :
@@ -226,8 +226,8 @@ theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d
         + logResidueSum Dt res.logs
       = am α (toPoly a) / am α (toPoly d) := by
   rw [cIntegrateHyperexpNormalG_shape Dt a d cands res intR hintRsome hsome]
-  set gnum := (CPoly.cIntegrateReduced Dt a d cands).rational.1 with hgnum
-  set gden := (CPoly.cIntegrateReduced Dt a d cands).rational.2 with hgdenE
+  set gnum := (DensePoly.cIntegrateReduced Dt a d cands).rational.1 with hgnum
+  set gden := (DensePoly.cIntegrateReduced Dt a d cands).rational.2 with hgdenE
   have hAgden : am α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgden
   have hnewrat : am α (toPoly (csub gnum (cmul [intR] gden))) / am α (toPoly gden)
       = am α (toPoly gnum) / am α (toPoly gden) - am α (Polynomial.C (CFieldSpec.toK intR)) := by
@@ -237,7 +237,7 @@ theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d
   have hover := field_identity_of_cIntegrateReducedG_hyperexp_overshoot Dt a d cands s b
     hDt hherm hden hA hnorm hform
   set Dg := towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden)) with hDg
-  set L := logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs with hL
+  set L := logResidueSum Dt (DensePoly.cIntegrateReduced Dt a d cands).logs with hL
   set R := am α (C (b * ∑ β ∈ s,
     (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
       / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β)) with hR
@@ -255,25 +255,25 @@ noncomputable local instance : Algebra ℚ (CFieldSpec.K (CFrac ℚ)) :=
 
 /-- Normal-part driver soundness over `ℚ(x)(t)`, unconditional in `∑c` — the `CFrac ℚ` instance of
 `cIntegrateHyperexpNormalG_sound`. -/
-theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (CFrac ℚ))
-    (a d : CPoly (CFrac ℚ)) (cands : List (CFrac ℚ)) (res : IntegralResult (CFrac ℚ))
+theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : DensePoly (CFrac ℚ))
+    (a d : DensePoly (CFrac ℚ)) (cands : List (CFrac ℚ)) (res : IntegralResult (CFrac ℚ))
     (intR : CFrac ℚ) (s : Finset (CFieldSpec.K (CFrac ℚ))) (b : CFieldSpec.K (CFrac ℚ))
     (hDt : toPoly Dt = C b * X)
-    (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
+    (hgden : toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : CFrac ℚ)
-        (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
+        (cHyperexpResidual (cExpEta Dt) (DensePoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
-    (hsome : CPoly.cIntegrateHyperexpNormal Dt a d cands = some res)
+    (hsome : DensePoly.cIntegrateHyperexpNormal Dt a d cands = some res)
     (hherm : towerFractionFieldDeriv Dt
-            (am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+            (am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
           + am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
             / am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
         = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPoly.cIntegrateReduced Dt a d cands).logs.map
+    (hform : (DensePoly.cIntegrateReduced Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPoly cv.2))
         = s.toList.map (fun β =>
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
@@ -282,10 +282,10 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (CFrac ℚ))
     (hintR : towerFractionFieldDeriv Dt (am (CFrac ℚ) (Polynomial.C (CFieldSpec.toK intR)))
         = am (CFrac ℚ) (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
-              (CPoly.cIntegrateReduced Dt a d cands).logs))))
+              (DensePoly.cIntegrateReduced Dt a d cands).logs))))
     (hRval : am (CFrac ℚ) (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
-              (CPoly.cIntegrateReduced Dt a d cands).logs)))
+              (DensePoly.cIntegrateReduced Dt a d cands).logs)))
         = am (CFrac ℚ) (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))) :
@@ -305,21 +305,21 @@ giving `D(res) + logResidueSum = a/d`, unconditional in `∑c`. -/
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Output shape of `cIntegrateHyperexpFull`: when it returns `some res` and both the Laurent and normal
 parts succeed, `res` is the combined rational part with the normal logs. -/
-theorem cIntegrateHyperexpFullG_shape [CFracGcdCoreWf α] (Dt : CPoly α)
-    (a d : CPoly α) (cands : List α) (res : IntegralResult α) (lnum lden : CPoly α)
+theorem cIntegrateHyperexpFullG_shape [CFracGcdCoreWf α] (Dt : DensePoly α)
+    (a d : DensePoly α) (cands : List α) (res : IntegralResult α) (lnum lden : DensePoly α)
     (nrm : IntegralResult α)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
         (canonicalRepresentationFast Dt a d).1
         (cHyperexpSpecialNeg (canonicalRepresentationFast Dt a d).2.1.1
           (canonicalRepresentationFast Dt a d).2.1.2)
       = some (lnum, lden))
-    (hNrm : CPoly.cIntegrateHyperexpNormal Dt
+    (hNrm : DensePoly.cIntegrateHyperexpNormal Dt
         (canonicalRepresentationFast Dt a d).2.2.1
         (canonicalRepresentationFast Dt a d).2.2.2 cands = some nrm)
-    (hsome : CPoly.cIntegrateHyperexpFull Dt a d cands = some res) :
+    (hsome : DensePoly.cIntegrateHyperexpFull Dt a d cands = some res) :
     res = ⟨(cadd (cmul lnum nrm.rational.2) (cmul nrm.rational.1 lden), cmul lden nrm.rational.2),
           nrm.logs⟩ := by
-  rw [CPoly.cIntegrateHyperexpFull] at hsome
+  rw [DensePoly.cIntegrateHyperexpFull] at hsome
   rcases hcrep : canonicalRepresentationFast Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
   rw [hcrep] at hsome hLaur hNrm
   simp only [hLaur, hNrm] at hsome
@@ -328,18 +328,18 @@ theorem cIntegrateHyperexpFullG_shape [CFracGcdCoreWf α] (Dt : CPoly α)
 /-- Full hyperexponential driver soundness `D(∫f) = f` for `cIntegrateHyperexpFull`, unconditional in
 `∑c` — composes the Laurent field identity, the normal-part field identity, and the canonical
 reconstruction. -/
-theorem cIntegrateHyperexpFullG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α)
-    (cands : List α) (res : IntegralResult α) (lnum lden : CPoly α) (nrm : IntegralResult α)
-    (fpPart : CPoly α) (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
+theorem cIntegrateHyperexpFullG_sound [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α)
+    (cands : List α) (res : IntegralResult α) (lnum lden : DensePoly α) (nrm : IntegralResult α)
+    (fpPart : DensePoly α) (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
         (canonicalRepresentationFast Dt a d).1
         (cHyperexpSpecialNeg (canonicalRepresentationFast Dt a d).2.1.1
           (canonicalRepresentationFast Dt a d).2.1.2)
       = some (lnum, lden))
-    (hNrm : CPoly.cIntegrateHyperexpNormal Dt
+    (hNrm : DensePoly.cIntegrateHyperexpNormal Dt
         (canonicalRepresentationFast Dt a d).2.2.1
         (canonicalRepresentationFast Dt a d).2.2.2 cands = some nrm)
-    (hsome : CPoly.cIntegrateHyperexpFull Dt a d cands = some res)
+    (hsome : DensePoly.cIntegrateHyperexpFull Dt a d cands = some res)
     (hLaurField : towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))
         = am α (toPoly fpPart))
     (hNrmField : towerFractionFieldDeriv Dt
@@ -386,27 +386,27 @@ example {K : Type*} [Field K] [Differential K] [Algebra ℚ K] (s : Finset K) (a
 
 -- The reduced-capstone overshoot identity: `cIntegrateReduced` has the same hyperexp overshoot
 -- statement.
-example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
+example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hDt : toPoly Dt = C b * X)
     (hherm : towerFractionFieldDeriv Dt
-            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+            (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
           + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
             / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
         = am α (toPoly a) / am α (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPoly.cIntegrateReduced Dt a d cands).logs.map
+    (hform : (DensePoly.cIntegrateReduced Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPoly cv.2))
         = s.toList.map (fun β =>
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
     towerFractionFieldDeriv Dt
-        (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+        (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (DensePoly.cIntegrateReduced Dt a d cands).logs
       = am α (toPoly a) / am α (toPoly d)
         + am α (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
@@ -416,24 +416,24 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
 
 -- The §5.9 normal-part driver soundness: `cIntegrateHyperexpNormal = some res ⟹ D(res) = a/d` under
 -- the same residual-oracle hypothesis.
-example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
+example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (res : IntegralResult α) (intR : α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
-    (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
+    (hgden : toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
+        (cHyperexpResidual (cExpEta Dt) (DensePoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
-    (hsome : CPoly.cIntegrateHyperexpNormal Dt a d cands = some res)
+    (hsome : DensePoly.cIntegrateHyperexpNormal Dt a d cands = some res)
     (hherm : towerFractionFieldDeriv Dt
-            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+            (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
           + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
             / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
         = am α (toPoly a) / am α (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPoly.cIntegrateReduced Dt a d cands).logs.map
+    (hform : (DensePoly.cIntegrateReduced Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPoly cv.2))
         = s.toList.map (fun β =>
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
@@ -442,10 +442,10 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
     (hintR : towerFractionFieldDeriv Dt (am α (Polynomial.C (CFieldSpec.toK intR)))
         = am α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
-              (CPoly.cIntegrateReduced Dt a d cands).logs))))
+              (DensePoly.cIntegrateReduced Dt a d cands).logs))))
     (hRval : am α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
-              (CPoly.cIntegrateReduced Dt a d cands).logs)))
+              (DensePoly.cIntegrateReduced Dt a d cands).logs)))
         = am α (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))) :
@@ -457,18 +457,18 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
 
 -- The full hyperexp driver soundness: `cIntegrateHyperexpFull = some res ⟹ D(res) = a/d`, combining
 -- the canonical and normal parts.
-example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
-    (res : IntegralResult α) (lnum lden : CPoly α) (nrm : IntegralResult α) (fpPart : CPoly α)
+example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+    (res : IntegralResult α) (lnum lden : DensePoly α) (nrm : IntegralResult α) (fpPart : DensePoly α)
     (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
         (canonicalRepresentationFast Dt a d).1
         (cHyperexpSpecialNeg (canonicalRepresentationFast Dt a d).2.1.1
           (canonicalRepresentationFast Dt a d).2.1.2)
       = some (lnum, lden))
-    (hNrm : CPoly.cIntegrateHyperexpNormal Dt
+    (hNrm : DensePoly.cIntegrateHyperexpNormal Dt
         (canonicalRepresentationFast Dt a d).2.2.1
         (canonicalRepresentationFast Dt a d).2.2.2 cands = some nrm)
-    (hsome : CPoly.cIntegrateHyperexpFull Dt a d cands = some res)
+    (hsome : DensePoly.cIntegrateHyperexpFull Dt a d cands = some res)
     (hLaurField : towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))
         = am α (toPoly fpPart))
     (hNrmField : towerFractionFieldDeriv Dt

@@ -10,14 +10,14 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac GBPolyCore
+open DensePoly CFrac GBPolyCore
 
 section Lift
 
 variable {β : Type*} [CField β] [CFieldDomain β]
 
-/-- `qOfPolyNZ q`: lift a polynomial `q : CPoly β` to `CFrac β` as `q/1`. -/
-def qOfPolyNZ (q : CPoly β) : CFrac β :=
+/-- `qOfPolyNZ q`: lift a polynomial `q : DensePoly β` to `CFrac β` as `q/1`. -/
+def qOfPolyNZ (q : DensePoly β) : CFrac β :=
   ⟨(q, [CField.one]), CFrac.cisZeroG_one_singleton⟩
 
 end Lift
@@ -28,7 +28,7 @@ variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]
 
 /-- `weakNormalizedF f q' = f − Dq'/q'` over `CFrac β`: the weakly-normalized field element. -/
 def weakNormalizedF (f q' : CFrac β) : CFrac β :=
-  qsubNZ f (qmulNZ (towerDerivCFrac ([CField.one] : CPoly β) q') (qinvNZ q'))
+  qsubNZ f (qmulNZ (towerDerivCFrac ([CField.one] : DensePoly β) q') (qinvNZ q'))
 
 end Helpers
 
@@ -39,7 +39,7 @@ variable {β : Type*} [CField β] [CFieldSpec β]
 /-- A `[CField β]`-data lowest-terms reducer that rebuilds the `qReduce` representative. -/
 def reduceSoundOpt (a : CFrac β) : Option (CFrac β) :=
   let rd := CFrac.reduceDen a
-  if h : CPoly.cisZero rd = false then some ⟨(CFrac.reduceNum a, rd), h⟩ else none
+  if h : DensePoly.cisZero rd = false then some ⟨(CFrac.reduceNum a, rd), h⟩ else none
 
 /-- `reduceSoundOpt a` is exactly `some (qReduce a)`. -/
 theorem reduceSoundOpt_eq (a : CFrac β) : reduceSoundOpt a = some (qReduce a) := by
@@ -55,7 +55,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 /-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its own normal part
 `toPoly (cSplitFactorFast [1] _ h.1.2).1 = toPoly h.1.2`. -/
 def IsWeaklyNormalizedNorm (h : CFrac β) : Prop :=
-  toPoly (CPoly.cSplitFactorFast ([CField.one] : CPoly β) h.1.2).1
+  toPoly (DensePoly.cSplitFactorFast ([CField.one] : DensePoly β) h.1.2).1
     = toPoly h.1.2
 
 end Normality

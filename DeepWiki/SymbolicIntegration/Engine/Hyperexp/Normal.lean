@@ -17,18 +17,18 @@ namespace DeepWiki.SymbolicIntegration
 Over `ℚ(x)[t]` (`t = exp x`, `Dt = η·t`, `η = 1`), `f = 1/(t−1)` has log part `log(t−1)` overshooting by
 `R = 1`; the feedback subtracts `∫R = x`. -/
 
-open CPoly
+open DensePoly
 
-/-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `CPoly NLvl1 = ℚ(x)[t]` (`t = exp x`,
+/-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `DensePoly NLvl1 = ℚ(x)[t]` (`t = exp x`,
 `η = 1`). -/
-def nHyperexpDt : CPoly NLvl1 := [CField.zero, CField.one]
+def nHyperexpDt : DensePoly NLvl1 := [CField.zero, CField.one]
 
-/-- The integrand numerator `a = 1` over `CPoly NLvl1 = ℚ(x)[t]` for `f = 1/(t−1) = 1/(exp x − 1)`. -/
-def nNormInvA : CPoly NLvl1 := [CField.one]
+/-- The integrand numerator `a = 1` over `DensePoly NLvl1 = ℚ(x)[t]` for `f = 1/(t−1) = 1/(exp x − 1)`. -/
+def nNormInvA : DensePoly NLvl1 := [CField.one]
 
-/-- The integrand denominator `d = t − 1 = [−1, 1]` over `CPoly NLvl1 = ℚ(x)[t]` for
+/-- The integrand denominator `d = t − 1 = [−1, 1]` over `DensePoly NLvl1 = ℚ(x)[t]` for
 `f = 1/(t−1) = 1/(exp x − 1)` (a normal factor: `gcd(t−1, Dt) = 1`). -/
-def nNormInvD : CPoly NLvl1 := [CField.neg CField.one, CField.one]
+def nNormInvD : DensePoly NLvl1 := [CField.neg CField.one, CField.one]
 
 /-- Residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for `1/(exp x − 1)` (genuine residue
 `1`). -/
@@ -51,25 +51,25 @@ theorem nNormInv_baseIntegral_eq_x :
 /-- The plain reduced driver overshoots on `f = 1/(exp x − 1)`: `cIntegrateReduced` returns `log(t−1)`,
 which overshoots by `R = 1`, so `checkIdentity = false`. -/
 theorem nNormInv_reduced_overshoots :
-    CPoly.checkIdentity nHyperexpDt
+    DensePoly.checkIdentity nHyperexpDt
       (cIntegrateReduced nHyperexpDt nNormInvA nNormInvD nNormInvCands)
       nNormInvA nNormInvD = false := by native_decide
 
 /-- The residual-feedback driver lands `∫ 1/(exp x − 1) = log(exp x − 1) − x` with `D(∫f) = f`:
 `cIntegrateHyperexpNormal` returns `some res` satisfying `checkIdentity`. -/
 theorem nNormInv_landsNormalPart :
-    (match CPoly.cIntegrateHyperexpNormal nHyperexpDt nNormInvA nNormInvD nNormInvCands with
-      | some res => CPoly.checkIdentity nHyperexpDt res nNormInvA nNormInvD
+    (match DensePoly.cIntegrateHyperexpNormal nHyperexpDt nNormInvA nNormInvD nNormInvCands with
+      | some res => DensePoly.checkIdentity nHyperexpDt res nNormInvA nNormInvD
       | none => false) = true := by native_decide
 
 /-- The driver's result on `f = 1/(exp x − 1)` is exactly `log(t−1) − x`: rational part `−x` and a single
 log with argument `t − 1`. Pins the shape, not just the derivative identity. -/
 theorem nNormInv_result_is_logTMinus1_minus_x :
-    (match CPoly.cIntegrateHyperexpNormal nHyperexpDt nNormInvA nNormInvD nNormInvCands with
+    (match DensePoly.cIntegrateHyperexpNormal nHyperexpDt nNormInvA nNormInvD nNormInvCands with
       | some res =>
-        CPoly.cisZero (CPoly.csub res.rational.1 [CField.neg nLvl1X])
+        DensePoly.cisZero (DensePoly.csub res.rational.1 [CField.neg nLvl1X])
           && res.logs.length == 1
-          && (res.logs.all (fun cv => CPoly.cisZero (CPoly.csub cv.2 nNormInvD)))
+          && (res.logs.all (fun cv => DensePoly.cisZero (DensePoly.csub cv.2 nNormInvD)))
       | none => false) = true := by native_decide
 
 /-! ### The special + normal mix: `∫ (1/exp + 1/(exp−1)) = −1/exp + log(exp−1) − x`
@@ -78,12 +78,12 @@ The combined driver on `f = 1/t + 1/(t−1) = (2t−1)/(t²−t)` over `ℚ(x)[t
 part lands `−1/t`, the normal part `log(t−1) − x`, so `∫f = −1/t + log(t−1) − x`, satisfying
 `D(∫f) = f`. -/
 
-/-- Integrand numerator `a = 2t − 1` for `f = (2t−1)/(t²−t) = 1/t + 1/(t−1)` over `CPoly NLvl1`. -/
-def nSpecNormA : CPoly NLvl1 := [CField.neg CField.one, CField.add CField.one CField.one]
+/-- Integrand numerator `a = 2t − 1` for `f = (2t−1)/(t²−t) = 1/t + 1/(t−1)` over `DensePoly NLvl1`. -/
+def nSpecNormA : DensePoly NLvl1 := [CField.neg CField.one, CField.add CField.one CField.one]
 
-/-- Integrand denominator `d = t² − t = t(t−1)` for `f = (2t−1)/(t²−t)` over `CPoly NLvl1` (special factor
+/-- Integrand denominator `d = t² − t = t(t−1)` for `f = (2t−1)/(t²−t)` over `DensePoly NLvl1` (special factor
 `t`, normal factor `t−1`). -/
-def nSpecNormD : CPoly NLvl1 := [CField.zero, CField.neg CField.one, CField.one]
+def nSpecNormD : DensePoly NLvl1 := [CField.zero, CField.neg CField.one, CField.one]
 
 /-- Residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for the special+normal mix. -/
 def nSpecNormCands : List NLvl1 := [CField.zero, CField.one, CField.neg CField.one]
@@ -91,16 +91,16 @@ def nSpecNormCands : List NLvl1 := [CField.zero, CField.one, CField.neg CField.o
 /-- The special-part-only driver still overshoots on the special+normal mix: `cIntegrateHyperexp` returns
 `some` but its normal log part overshoots by `R = 1`, so `checkIdentity = false`. -/
 theorem nSpecNorm_specialOnly_overshoots :
-    (match CPoly.cIntegrateHyperexp nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
-      | some res => CPoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
+    (match DensePoly.cIntegrateHyperexp nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
+      | some res => DensePoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = false := by native_decide
 
 /-- The full driver lands `∫ (1/exp + 1/(exp−1)) = −1/exp + log(exp−1) − x` with `D(∫f) = f`:
 `cIntegrateHyperexpFull` integrates the special part to `−1/t` and the normal part to `log(t−1) − x`,
 returning `some res` satisfying `checkIdentity`. -/
 theorem nSpecNorm_full_lands :
-    (match CPoly.cIntegrateHyperexpFull nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
-      | some res => CPoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
+    (match DensePoly.cIntegrateHyperexpFull nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
+      | some res => DensePoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = true := by native_decide
 
 /-! ### A non-constant base residual: `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²`
@@ -109,17 +109,17 @@ Take `t = exp(x²)`, so `Dt = η·t` with `η = 2x` non-constant, over `ℚ(x)[t
 residue is the constant `1`, the log part overshoots by `R = 2x` (non-constant), and the feedback
 integrates `∫R = x²`, landing `log(t−1) − x²`. -/
 
-/-- Hyperexponential monomial derivative `Dt = η·t = [0, 2x]` over `CPoly NLvl1 = ℚ(x)[t]`
+/-- Hyperexponential monomial derivative `Dt = η·t = [0, 2x]` over `DensePoly NLvl1 = ℚ(x)[t]`
 (`t = exp(x²)`, non-constant `η = 2x ∈ ℚ(x)`). -/
-def nVarDt : CPoly NLvl1 := [CField.zero, nLvl1TwoX]
+def nVarDt : DensePoly NLvl1 := [CField.zero, nLvl1TwoX]
 
-/-- Integrand numerator `a = 2x` over `CPoly NLvl1` for `f = 2x/(t−1) = 2x/(exp(x²) − 1)`, so the residue
+/-- Integrand numerator `a = 2x` over `DensePoly NLvl1` for `f = 2x/(t−1) = 2x/(exp(x²) − 1)`, so the residue
 `2x/(η·1) = 1` is constant. -/
-def nVarNormA : CPoly NLvl1 := [nLvl1TwoX]
+def nVarNormA : DensePoly NLvl1 := [nLvl1TwoX]
 
-/-- Integrand denominator `d = t − 1` over `CPoly NLvl1` for `f = 2x/(t−1)` (normal: `gcd(t−1, Dt) =
+/-- Integrand denominator `d = t − 1` over `DensePoly NLvl1` for `f = 2x/(t−1)` (normal: `gcd(t−1, Dt) =
 1`). -/
-def nVarNormD : CPoly NLvl1 := [CField.neg CField.one, CField.one]
+def nVarNormD : DensePoly NLvl1 := [CField.neg CField.one, CField.one]
 
 /-- Residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for `2x/(exp(x²) − 1)` (residue `1`). -/
 def nVarNormCands : List NLvl1 := [CField.zero, CField.one, CField.neg CField.one]
@@ -143,10 +143,10 @@ theorem nVarNorm_baseIntegral_eq_xSq :
 `cIntegrateHyperexpNormal` reads the non-constant residual `R = 2x`, integrates `∫R = x²`, and returns
 `log(t−1) − x²` (rational part `−x²`, one log) satisfying `checkIdentity`. -/
 theorem nVarNorm_landsNormalPart :
-    (match CPoly.cIntegrateHyperexpNormal nVarDt nVarNormA nVarNormD nVarNormCands with
+    (match DensePoly.cIntegrateHyperexpNormal nVarDt nVarNormA nVarNormD nVarNormCands with
       | some res =>
-        CPoly.checkIdentity nVarDt res nVarNormA nVarNormD
-          && CPoly.cisZero (CPoly.csub res.rational.1 [CField.neg nLvl1XSq])
+        DensePoly.checkIdentity nVarDt res nVarNormA nVarNormD
+          && DensePoly.cisZero (DensePoly.csub res.rational.1 [CField.neg nLvl1XSq])
           && res.logs.length == 1
       | none => false) = true := by native_decide
 

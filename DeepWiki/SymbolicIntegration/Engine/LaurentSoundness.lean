@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
@@ -19,13 +19,13 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `Dt` is the monomial hyperexponential derivative `η * t`. -/
-abbrev IsHyperexpMonomial (Dt : CPoly α) (η : α) : Prop :=
+abbrev IsHyperexpMonomial (Dt : DensePoly α) (η : α) : Prop :=
   toPoly Dt = Polynomial.C (CFieldSpec.toK η) * Polynomial.X
 
 /-- **The tower derivative of a polynomial image is the image of `cmonomialDeriv`**:
 `D_tower(⟦p⟧) = ⟦cmonomialDeriv Dt p⟧`. Grounds every Laurent-term computation at the polynomial level
 (`extendDeriv_algebraMap` + `toPolyG_cmonomialDeriv`). -/
-theorem towerFractionFieldDerivG_amG_poly (Dt p : CPoly α) :
+theorem towerFractionFieldDerivG_amG_poly (Dt p : DensePoly α) :
     towerFractionFieldDeriv Dt (am α (toPoly p)) = am α (toPoly (cmonomialDeriv Dt p)) := by
   rw [towerFractionFieldDeriv, extendDeriv_algebraMap]
   simp only [denote]
@@ -35,18 +35,18 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 theorem toK_cLaurentShiftG_natCast [CRischField α] (η : α) (k : ℕ) :
     CFieldSpec.toK (cLaurentShift η (k : ℤ)) = (k : CFieldSpec.K α) * CFieldSpec.toK η := by
   rw [cLaurentShift, Int.natAbs_natCast, if_neg (Int.not_lt.mpr (Int.natCast_nonneg k)),
-    CFieldSpec.toK_mul, CPoly.toK_cnatCastG]
+    CFieldSpec.toK_mul, DensePoly.toK_cnatCastG]
 
 /-- **A non-negative Laurent term is an antiderivative.** For a hyperexponential monomial
 `Dt = η·t` and a solved coefficient `cLaurentIntCoeff η k aₖ = some qₖ` (`k : ℕ`),
 `D_tower(⟦qₖ·tᵏ⟧) = ⟦aₖ·tᵏ⟧`. Product/power rule + `crischDESolve` soundness collapse `(qₖ)′ + k·η·qₖ` to
 `aₖ`. -/
 theorem cIntegrateHyperexpLaurent_pos_term [CRischField α] [CRischFieldSpec α]
-    (Dt : CPoly α) (η : α) (k : ℕ) (ak qk : α)
+    (Dt : DensePoly α) (η : α) (k : ℕ) (ak qk : α)
     (hDt : IsHyperexpMonomial Dt η)
     (hsolve : cLaurentIntCoeff η (k : ℤ) ak = some qk) :
-    towerFractionFieldDeriv Dt (am α (toPoly (cshift k ([qk] : CPoly α))))
-      = am α (toPoly (cshift k ([ak] : CPoly α))) := by
+    towerFractionFieldDeriv Dt (am α (toPoly (cshift k ([qk] : DensePoly α))))
+      = am α (toPoly (cshift k ([ak] : DensePoly α))) := by
   rw [towerFractionFieldDerivG_amG_poly]
   congr 1
   have hspec := CRischFieldSpec.crischDESolve_spec (cLaurentShift η (k : ℤ)) ak qk hsolve
@@ -70,20 +70,20 @@ theorem toK_cLaurentShiftG_negCast [CRischField α] (η : α) (i : ℕ) :
       = -((i : CFieldSpec.K α) + 1) * CFieldSpec.toK η := by
   have hnat : (-(i + 1 : ℤ)).natAbs = i + 1 := by omega
   rw [cLaurentShift, hnat, if_pos (by omega), CFieldSpec.toK_mul, CFieldSpec.toK_neg,
-    CPoly.toK_cnatCastG]
+    DensePoly.toK_cnatCastG]
   push_cast; ring
 
 /-- **A negative Laurent term is an antiderivative.** For `Dt = η·t` and a solved
 coefficient `cLaurentIntCoeff η (-(i+1)) a = some q`, `D_tower(⟦q·t^{-(i+1)}⟧) = ⟦a·t^{-(i+1)}⟧`. Quotient
 rule + `crischDESolve` soundness on the negative shift. -/
 theorem cIntegrateHyperexpLaurent_neg_term [CRischField α] [CRischFieldSpec α]
-    (Dt : CPoly α) (η : α) (i : ℕ) (a q : α)
+    (Dt : DensePoly α) (η : α) (i : ℕ) (a q : α)
     (hDt : IsHyperexpMonomial Dt η)
     (hsolve : cLaurentIntCoeff η (-(i + 1 : ℤ)) a = some q) :
     towerFractionFieldDeriv Dt
-        (am α (toPoly ([q] : CPoly α)) / am α (toPoly (cshift (i + 1) ([CField.one] : CPoly α))))
-      = am α (toPoly ([a] : CPoly α))
-        / am α (toPoly (cshift (i + 1) ([CField.one] : CPoly α))) := by
+        (am α (toPoly ([q] : DensePoly α)) / am α (toPoly (cshift (i + 1) ([CField.one] : DensePoly α))))
+      = am α (toPoly ([a] : DensePoly α))
+        / am α (toPoly (cshift (i + 1) ([CField.one] : DensePoly α))) := by
   have hspec := CRischFieldSpec.crischDESolve_spec (cLaurentShift η (-(i + 1 : ℤ))) a q hsolve
   rw [toK_cLaurentShiftG_negCast] at hspec
   simp only [denote, mul_zero, add_zero, map_one, mul_one]
@@ -113,12 +113,12 @@ theorem cIntegrateHyperexpLaurent_neg_term [CRischField α] [CRischFieldSpec α]
 solves the shift-`k` RDE, `D_tower(∑ₖ ⟦qₖ·tᵏ⟧) = ∑ₖ ⟦aₖ·tᵏ⟧`. The additive assembly of
 `cIntegrateHyperexpLaurent_pos_term` over the term list. -/
 theorem towerFractionFieldDerivG_laurent_pos_sum [CRischField α] [CRischFieldSpec α]
-    (Dt : CPoly α) (η : α) (l : List (ℕ × α × α))
+    (Dt : DensePoly α) (η : α) (l : List (ℕ × α × α))
     (hDt : IsHyperexpMonomial Dt η)
     (hall : ∀ t ∈ l, cLaurentIntCoeff η (t.1 : ℤ) t.2.1 = some t.2.2) :
     towerFractionFieldDeriv Dt
-        ((l.map (fun t => am α (toPoly (cshift t.1 ([t.2.2] : CPoly α))))).sum)
-      = (l.map (fun t => am α (toPoly (cshift t.1 ([t.2.1] : CPoly α))))).sum := by
+        ((l.map (fun t => am α (toPoly (cshift t.1 ([t.2.2] : DensePoly α))))).sum)
+      = (l.map (fun t => am α (toPoly (cshift t.1 ([t.2.1] : DensePoly α))))).sum := by
   rw [map_list_sum, List.map_map]
   congr 1
   apply List.map_congr_left
@@ -130,9 +130,9 @@ theorem towerFractionFieldDerivG_laurent_pos_sum [CRischField α] [CRischFieldSp
 `pos.zipIdx s` (shifts `s, s+1, …`) returns `coeffs`, then `D_tower(⟦tˢ·coeffs⟧) = ⟦tˢ·pos⟧`. Direct
 induction on `pos`, splitting the Horner list off the head and applying the single-term identity plus the
 induction hypothesis at offset `s+1`. -/
-theorem laurentPosGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPoly α) (η : α)
+theorem laurentPosGo_sound [CRischField α] [CRischFieldSpec α] (Dt : DensePoly α) (η : α)
     (hDt : IsHyperexpMonomial Dt η) :
-    ∀ (pos coeffs : CPoly α) (s : ℕ),
+    ∀ (pos coeffs : DensePoly α) (s : ℕ),
       ((pos.zipIdx s).foldr (fun ck acc =>
           match acc with
           | none => none
@@ -169,17 +169,17 @@ theorem laurentPosGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPoly α)
         rw [Option.some.injEq] at h
         subst h
         have hsplit1 : toPoly (cshift s (q :: restCoeffs))
-            = toPoly (cshift s ([q] : CPoly α)) + toPoly (cshift (s + 1) restCoeffs) := by
+            = toPoly (cshift s ([q] : DensePoly α)) + toPoly (cshift (s + 1) restCoeffs) := by
           simp only [denote, mul_zero, add_zero, pow_succ]; ring
         have hsplit2 : toPoly (cshift s (a :: as))
-            = toPoly (cshift s ([a] : CPoly α)) + toPoly (cshift (s + 1) as) := by
+            = toPoly (cshift s ([a] : DensePoly α)) + toPoly (cshift (s + 1) as) := by
           simp only [denote, mul_zero, add_zero, pow_succ]; ring
         rw [hsplit1, map_add, map_add, hsplit2, map_add,
           cIntegrateHyperexpLaurent_pos_term Dt η s a q hDt hq, ih restCoeffs (s + 1) hrest]
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Top-coefficient split through `toPoly`: `toPoly (p ++ q) = toPoly p + Xᵖ·ˡᵉⁿ · toPoly q`. -/
-theorem toPolyG_append_laurent (p q : CPoly α) :
+theorem toPolyG_append_laurent (p q : DensePoly α) :
     toPoly (p ++ q) = toPoly p + Polynomial.X ^ (p : List α).length * toPoly q := by
   induction p with
   | nil => simp
@@ -227,7 +227,7 @@ theorem laurentGo_length [CRischField α] (η : α) (sh : ℕ → ℤ) :
 `neg.zipIdx s` (shifts `-(s+1), -(s+2), …`) returns `negCoeffs`, then over the fixed denominator
 `t^(s+neg.length)`, `D_tower(⟦negCoeffs.reverse⟧/⟦t^(s+len)⟧) = ⟦neg.reverse⟧/⟦t^(s+len)⟧`. The head splits
 off the reversed list as `⟦q⟧/t^(s+1)` plus the tail at offset `s+1` (same denominator, IH). -/
-theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPoly α) (η : α)
+theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : DensePoly α) (η : α)
     (hDt : IsHyperexpMonomial Dt η) :
     ∀ (neg negCoeffs : List α) (s : ℕ),
       ((neg.zipIdx s).foldr (fun ck acc =>
@@ -239,9 +239,9 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPoly α)
             | some q => some (q :: tail)) (some []) = some negCoeffs) →
       towerFractionFieldDeriv Dt
           (am α (toPoly negCoeffs.reverse)
-            / am α (toPoly (cshift (s + neg.length) ([CField.one] : CPoly α))))
+            / am α (toPoly (cshift (s + neg.length) ([CField.one] : DensePoly α))))
         = am α (toPoly neg.reverse)
-          / am α (toPoly (cshift (s + neg.length) ([CField.one] : CPoly α))) := by
+          / am α (toPoly (cshift (s + neg.length) ([CField.one] : DensePoly α))) := by
   intro neg
   induction neg with
   | nil =>
@@ -269,12 +269,12 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPoly α)
         have hlen : restCoeffs.length = as.length := laurentGo_length η _ as restCoeffs (s + 1) hrest
         have hXne : am α (Polynomial.X : (CFieldSpec.K α)[X]) ≠ 0 :=
           (map_ne_zero_iff (am α) (RatFunc.algebraMap_injective _)).mpr Polynomial.X_ne_zero
-        have hden : ∀ k, toPoly (cshift k ([CField.one] : CPoly α)) = (Polynomial.X : (CFieldSpec.K α)[X]) ^ k := by
+        have hden : ∀ k, toPoly (cshift k ([CField.one] : DensePoly α)) = (Polynomial.X : (CFieldSpec.K α)[X]) ^ k := by
           intro k
           simp only [denote, mul_zero, add_zero, map_one, mul_one]
-        have hqsingle : toPoly ([q] : CPoly α) = Polynomial.C (CFieldSpec.toK q) := by
+        have hqsingle : toPoly ([q] : DensePoly α) = Polynomial.C (CFieldSpec.toK q) := by
           simp only [denote, mul_zero, add_zero]
-        have hasingle : toPoly ([a] : CPoly α) = Polynomial.C (CFieldSpec.toK a) := by
+        have hasingle : toPoly ([a] : DensePoly α) = Polynomial.C (CFieldSpec.toK a) := by
           simp only [denote, mul_zero, add_zero]
         have hnumL : toPoly (q :: restCoeffs).reverse
             = toPoly restCoeffs.reverse
@@ -287,9 +287,9 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPoly α)
           rw [List.length_cons]; ring
         have hfrac : ∀ c : α,
             am α (Polynomial.X ^ as.length * Polynomial.C (CFieldSpec.toK c))
-                / am α (toPoly (cshift (s + (a :: as).length) ([CField.one] : CPoly α)))
-              = am α (toPoly ([c] : CPoly α))
-                / am α (toPoly (cshift (s + 1) ([CField.one] : CPoly α))) := by
+                / am α (toPoly (cshift (s + (a :: as).length) ([CField.one] : DensePoly α)))
+              = am α (toPoly ([c] : DensePoly α))
+                / am α (toPoly (cshift (s + 1) ([CField.one] : DensePoly α))) := by
           intro c
           rw [hden, hden,
             show s + (a :: as).length = as.length + (s + 1) from by rw [List.length_cons]; ring,
@@ -308,16 +308,16 @@ some (num, den)`, then `D_tower(⟦num/den⟧) = ⟦pos⟧ + ⟦neg.reverse⟧/�
 identity for the full hyperexponential Laurent integrand (non-negative part `pos`, negative part
 `neg` read as `∑ᵢ neg[i]·t^{-(i+1)} = ⟦neg.reverse⟧/tᵐ`). -/
 theorem cIntegrateHyperexpLaurentG_sound [CRischField α] [CRischFieldSpec α]
-    (Dt : CPoly α) (η : α) (pos : CPoly α) (neg : List α) (num den : CPoly α)
+    (Dt : DensePoly α) (η : α) (pos : DensePoly α) (neg : List α) (num den : DensePoly α)
     (hDt : IsHyperexpMonomial Dt η)
     (hsome : cIntegrateHyperexpLaurent η pos neg = some (num, den)) :
     towerFractionFieldDeriv Dt (am α (toPoly num) / am α (toPoly den))
       = am α (toPoly pos)
         + am α (toPoly neg.reverse)
-          / am α (toPoly (cshift neg.length ([CField.one] : CPoly α))) := by
+          / am α (toPoly (cshift neg.length ([CField.one] : DensePoly α))) := by
   have hXne : am α (Polynomial.X : (CFieldSpec.K α)[X]) ≠ 0 :=
     (map_ne_zero_iff (am α) (RatFunc.algebraMap_injective _)).mpr Polynomial.X_ne_zero
-  have hdenpow : toPoly (cshift neg.length ([CField.one] : CPoly α))
+  have hdenpow : toPoly (cshift neg.length ([CField.one] : DensePoly α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ neg.length := by
     simp only [denote, mul_zero, add_zero, map_one, mul_one]
   rw [cIntegrateHyperexpLaurent] at hsome
@@ -344,7 +344,7 @@ theorem cIntegrateHyperexpLaurentG_sound [CRischField α] [CRischFieldSpec α]
 `cIntegrateHyperexpLaurent η pos [] = some (num, den)`, then `D_tower(⟦num/den⟧) = ⟦pos⟧` — the antiderivative
 identity for a purely non-negative hyperexponential Laurent integrand (`den = 1`). -/
 theorem cIntegrateHyperexpLaurentG_pos_sound [CRischField α] [CRischFieldSpec α]
-    (Dt : CPoly α) (η : α) (pos num den : CPoly α)
+    (Dt : DensePoly α) (η : α) (pos num den : DensePoly α)
     (hDt : IsHyperexpMonomial Dt η)
     (hsome : cIntegrateHyperexpLaurent η pos [] = some (num, den)) :
     towerFractionFieldDeriv Dt (am α (toPoly num) / am α (toPoly den))
@@ -358,8 +358,8 @@ theorem cIntegrateHyperexpLaurentG_pos_sound [CRischField α] [CRischFieldSpec �
     simp only [List.reverse_nil, List.nil_append, Option.some.injEq, Prod.mk.injEq] at hsome
     obtain ⟨hnum, hden⟩ := hsome
     subst hnum; subst hden
-    have hden1 : toPoly (cshift (0 : ℕ) ([CField.one] : CPoly α)) = 1 := by
-      show toPoly ([CField.one] : CPoly α) = 1
+    have hden1 : toPoly (cshift (0 : ℕ) ([CField.one] : DensePoly α)) = 1 := by
+      show toPoly ([CField.one] : DensePoly α) = 1
       simp only [denote, mul_zero, add_zero, map_one]
     rw [hden1, map_one, div_one]
     simpa using laurentPosGo_sound Dt η hDt pos posCoeffs 0 hp

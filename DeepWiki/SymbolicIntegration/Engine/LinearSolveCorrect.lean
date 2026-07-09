@@ -6,7 +6,7 @@ Abstract correctness over `ℚ` of `crref` (list-based Gauss–Jordan reduction 
 `cConstSolveUniqueQ` (back-substituted solution): the solution-preserving invariant, the forward
 reduced-echelon structure, and the headline `cConstSolveUniqueQ_sound`. -/
 
-namespace DeepWiki.SymbolicIntegration.CPoly
+namespace DeepWiki.SymbolicIntegration.DensePoly
 
 /-- `getD` past the end is the default (generic). -/
 theorem getD_long_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : l.length ≤ n) :
@@ -843,4 +843,4 @@ theorem cConstSolveUniqueQ_sound (Arows : List (List ℚ)) (urhs : List ℚ) (nc
       linarith [hsolvei]
 
 
-end DeepWiki.SymbolicIntegration.CPoly
+end DeepWiki.SymbolicIntegration.DensePoly

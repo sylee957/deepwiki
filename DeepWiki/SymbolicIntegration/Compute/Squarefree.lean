@@ -10,12 +10,12 @@ namespace Compute
 
 /-- Squarefree factorization `csqfreeFactor fuel p = [(Q₁,1),(Q₂,2),…]` into monic squarefree
 parts `Qᵢ` of multiplicity `i`, `p = c·∏ᵢ Qᵢ^i`; fuel-bounded. -/
-def csqfreeFactor (fuel : ℕ) (p : CPoly ℚ) : List (CPoly ℚ × ℕ) :=
+def csqfreeFactor (fuel : ℕ) (p : DensePoly ℚ) : List (DensePoly ℚ × ℕ) :=
   let p := cnorm p
   let (g, _, _) := cgcdExt fuel p (cderiv p)
   let b1 := cdiv fuel p g
   let d1 := csub (cdiv fuel (cderiv p) g) (cderiv b1)
-  let rec go : ℕ → CPoly ℚ → CPoly ℚ → ℕ → List (CPoly ℚ × ℕ)
+  let rec go : ℕ → DensePoly ℚ → DensePoly ℚ → ℕ → List (DensePoly ℚ × ℕ)
     | 0, _, _, _ => []
     | fo + 1, b, d, i =>
       if b.length ≤ 1 then []   -- `b` constant: no factors of multiplicity at least `i` remain.

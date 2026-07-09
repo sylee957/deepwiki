@@ -15,21 +15,21 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- `p` refines `q` when `p`'s denotation is `q`. -/
 def RefinesPoly {α : Type*} [CField α] [CFieldSpec α]
-    (p : CPoly α) (q : (CFieldSpec.K α)[X]) : Prop :=
+    (p : DensePoly α) (q : (CFieldSpec.K α)[X]) : Prop :=
   toPoly p = q
 
 /-- Every computable polynomial refines its own denotation. -/
-theorem refinesPolyG_self {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+theorem refinesPolyG_self {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α) :
     RefinesPoly p (toPoly p) := rfl
 
 namespace RefinesPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α]
-variable {p q : CPoly α} {p' q' : (CFieldSpec.K α)[X]}
+variable {p q : DensePoly α} {p' q' : (CFieldSpec.K α)[X]}
 
 /-- Introduce `RefinesPoly` from a denotation equality. -/
 theorem intro (h : toPoly p = p') : RefinesPoly p p' := h

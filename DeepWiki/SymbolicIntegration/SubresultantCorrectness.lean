@@ -23,7 +23,7 @@ Modeling the residue ring `ℚ[t]/(R)` by an arbitrary ring hom `φ : ℚ[X] →
 monic-in-`x` normalization `bmonicXmodR` is multiplication by a residue-ring unit. -/
 
 /-- For `φ` killing `toPoly R`, `φ (toPoly (credR fuel R c)) = φ (toPoly c)`. -/
-theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R c : CPoly ℚ)
+theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R c : DensePoly ℚ)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     φ (toPoly (credR fuel R c)) = φ (toPoly c) := by
   have hdiv := toPoly_cdivmod' fuel c R hR
@@ -33,7 +33,7 @@ theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : 
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
 `Φ (toBPoly (p.map (credR fuel R))) = Φ (toBPoly p)`. -/
-theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly ℚ)
+theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : DensePoly ℚ)
     (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ) (toBPoly (p.map (credR fuel R)))
       = (Polynomial.mapRingHom φ) (toBPoly p) := by
@@ -45,14 +45,14 @@ theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+*
     rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C, map_toPoly_credR φ fuel R a hR hφR]
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, `Φ (toBPoly (bredR fuel R p)) = Φ (toBPoly p)`. -/
-theorem mapRingHom_toBPoly_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly ℚ)
+theorem mapRingHom_toBPoly_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : DensePoly ℚ)
     (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ) (toBPoly (bredR fuel R p)) = (Polynomial.mapRingHom φ) (toBPoly p) := by
   rw [bredR, toBPoly_bnorm, mapRingHom_toBPoly_map_credR φ fuel R p hR hφR]
 
 /-- `cinvMod` is the mod-`R` inverse: for `φ` killing `toPoly R`, when the extended-Euclidean gcd of `c, R`
 reduces to a nonzero constant `C u`, `φ (toPoly (cinvMod fuel R c)) · φ (toPoly c) = 1`. -/
-theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R c : CPoly ℚ)
+theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R c : DensePoly ℚ)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
     (hg : toPoly (cgcdExt fuel c R).1 = Polynomial.C u) :
     φ (toPoly (cinvMod fuel R c)) * φ (toPoly c) = 1 := by
@@ -76,7 +76,7 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (f
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
 `Φ (toBPoly (q.map (fun c => credR fuel R (cmul c inv)))) = C (φ (toPoly inv)) · Φ (toBPoly q)`. -/
 theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ)
-    (R inv : CPoly ℚ) (q : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
+    (R inv : DensePoly ℚ) (q : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ) (toBPoly (q.map (fun c => credR fuel R (cmul c inv))))
       = Polynomial.C (φ (toPoly inv)) * (Polynomial.mapRingHom φ) (toBPoly q) := by
   induction q with
@@ -91,7 +91,7 @@ theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, when the leading coefficient's mod-`R` gcd reduces
 to a nonzero constant `C u`, `Φ (toBPoly (bmonicXmodR fuel R p)) = C (φ (toPoly inv)) · Φ (toBPoly p)` with
 `φ (toPoly inv)` a unit in `S`. -/
-theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly ℚ)
+theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : DensePoly ℚ)
     (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
     (hg : toPoly (cgcdExt fuel (blc (bredR fuel R p)) R).1 = Polynomial.C u)
     (hpz : ¬ bisZero (bredR fuel R p) = true) :
@@ -114,7 +114,7 @@ theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →
 `φ : ℚ[X] →+* S` killing `toPoly R`, under the whole-chain and regularity hypotheses,
 `IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`. -/
 theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDomain S] (φ : ℚ[X] →+* S)
-    (fuel : ℕ) (R A D : CPoly ℚ) (G : ℕ → BPoly) (bt : ℕ → CPoly ℚ) (s : ℕ → BPoly) (c : ℕ → CPoly ℚ) (m : ℕ)
+    (fuel : ℕ) (R A D : DensePoly ℚ) (G : ℕ → BPoly) (bt : ℕ → DensePoly ℚ) (s : ℕ → BPoly) (c : ℕ → DensePoly ℚ) (m : ℕ)
     (hRcn : cnorm R ≠ []) (hφR : φ (toPoly R) = 0)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
@@ -161,13 +161,13 @@ below. -/
 
 -- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·toBPoly(bdivC fuel p c) = toBPoly p`
 -- when every x-coefficient divides exactly.
-example (fuel : ℕ) (p : BPoly) (c : CPoly ℚ) (hc : cnorm c ≠ [])
+example (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
   toBPoly_bdivC_exact fuel p c hc hrem
 
 -- Restatement: the LRT subresultant is ℚ[t]-similar to the next divided PRS pair's subresultant.
-example (fuel : ℕ) (A D β : CPoly ℚ) (j : ℕ) (s : BPoly) (c : CPoly ℚ)
+example (fuel : ℕ) (A D β : DensePoly ℚ) (j : ℕ) (s : BPoly) (c : DensePoly ℚ)
     (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
         = toBPoly s * toBPoly (bArgAmtD' A D)
           + toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
@@ -185,7 +185,7 @@ example (fuel : ℕ) (A D β : CPoly ℚ) (j : ℕ) (s : BPoly) (c : CPoly ℚ)
     hc0 hβ0 hjm hjn hB hQ
 
 -- Restatement: the WHOLE computable PRS chain telescopes — `Sⱼ(G 0, G 1) ~ Sⱼ(G m, G (m+1))` for any `m`.
-example (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → CPoly ℚ) (s : ℕ → BPoly) (c : ℕ → CPoly ℚ) (j m : ℕ)
+example (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → DensePoly ℚ) (s : ℕ → BPoly) (c : ℕ → DensePoly ℚ) (j m : ℕ)
     (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
         = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
     (hβcn : ∀ l < m, cnorm (bt l) ≠ [])
@@ -214,7 +214,7 @@ example (fuel : ℕ) (P Q : BPoly) (G : ℕ → BPoly) (m : ℕ)
 
 -- Restatement: FACT 2 — the `bmonicXmodR` mod-`R` unit bridge. Over any `φ : ℚ[X] →+* S` killing
 -- `toPoly R`, `bmonicXmodR`'s `Φ`-image is a residue-ring UNIT (`η · η' = 1`) times `toBPoly p`'s.
-example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly ℚ) (p : BPoly)
+example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : DensePoly ℚ) (p : BPoly)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
     (hg : toPoly (cgcdExt fuel (blc (bredR fuel R p)) R).1 = Polynomial.C u)
     (hpz : ¬ bisZero (bredR fuel R p) = true) :
@@ -230,16 +230,16 @@ Mirrors the internal `subresPRS.go` recurrence as a top-level state machine `goS
 chain data `G`/`bt`/`s`/`c` and its side-conditions can be supplied from the real `subresPRS fuel P Q`. -/
 
 /-- ψ-accumulator update of one `subresPRS.go` step: `ψ' = (−lc Ri₋₁)^δ / ψ^(δ−1)` (`ψ' = ψ` when `δ = 0`). -/
-def goPsi' (fuel : ℕ) (Ri_1 : BPoly) (psi : CPoly ℚ) (dp : ℕ) : CPoly ℚ :=
+def goPsi' (fuel : ℕ) (Ri_1 : BPoly) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
   if dp = 0 then psi else cdiv fuel (cpowP (cneg (blc Ri_1)) dp) (cpowP psi (dp - 1))
 
 /-- β-divisor of one `subresPRS.go` step: `β = −lc(Ri₋₁) · ψ'^δ` with `ψ'` from `goPsi'`. -/
-def goBeta (fuel : ℕ) (Ri_1 : BPoly) (psi : CPoly ℚ) (dp : ℕ) : CPoly ℚ :=
+def goBeta (fuel : ℕ) (Ri_1 : BPoly) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
   cmul (cneg (blc Ri_1)) (cpowP (goPsi' fuel Ri_1 psi dp) dp)
 
 /-- One `subresPRS.go` step on the state `(Ri₋₁, Ri, ψ, δ) ↦ (Ri, Ri₊₁, ψ', δ')` with
 `Ri₊₁ = bdivC fuel (prem Ri₋₁ Ri) β`, `ψ' = goPsi'`, `β = goBeta`, `δ' = bdeg Ri − bdeg Ri₊₁`. -/
-def goStep (fuel : ℕ) : BPoly × BPoly × CPoly ℚ × ℕ → BPoly × BPoly × CPoly ℚ × ℕ
+def goStep (fuel : ℕ) : BPoly × BPoly × DensePoly ℚ × ℕ → BPoly × BPoly × DensePoly ℚ × ℕ
   | (Ri_1, Ri, psi, dp) =>
     let psi' := goPsi' fuel Ri_1 psi dp
     let beta := goBeta fuel Ri_1 psi dp
@@ -247,26 +247,26 @@ def goStep (fuel : ℕ) : BPoly × BPoly × CPoly ℚ × ℕ → BPoly × BPoly 
     (Ri, Ri1, psi', bdeg Ri - bdeg Ri1)
 
 /-- The `subresPRS.go` state at index `i`: `goState fuel s₀ i = goStepⁱ s₀`. -/
-def goState (fuel : ℕ) (s0 : BPoly × BPoly × CPoly ℚ × ℕ) : ℕ → BPoly × BPoly × CPoly ℚ × ℕ
+def goState (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ × ℕ) : ℕ → BPoly × BPoly × DensePoly ℚ × ℕ
   | 0 => s0
   | i + 1 => goStep fuel (goState fuel s0 i)
 
 /-- `goState fuel (goStep fuel s₀) k = goState fuel s₀ (k+1)`. -/
-theorem goState_goStep (fuel : ℕ) (s0 : BPoly × BPoly × CPoly ℚ × ℕ) (k : ℕ) :
+theorem goState_goStep (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ × ℕ) (k : ℕ) :
     goState fuel (goStep fuel s0) k = goState fuel s0 (k + 1) := by
   induction k generalizing s0 with
   | zero => rfl
   | succ n ih => rw [goState, goState, ih]
 
 /-- `(goState fuel s₀ (l+1)).1 = (goState fuel s₀ l).2.1`. -/
-theorem goState_succ_fst (fuel : ℕ) (s0 : BPoly × BPoly × CPoly ℚ × ℕ) (l : ℕ) :
+theorem goState_succ_fst (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ × ℕ) (l : ℕ) :
     (goState fuel s0 (l + 1)).1 = (goState fuel s0 l).2.1 := by
   show (goStep fuel (goState fuel s0 l)).1 = _
   rw [goStep]
 
 /-- The divided-PRS recurrence for `goState`: `(goState fuel s₀ (l+2)).1 = bdivC fuel (prem …)
 (goBeta …)`, holding definitionally. -/
-theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × CPoly ℚ × ℕ) (l : ℕ) :
+theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ × ℕ) (l : ℕ) :
     (goState fuel s0 (l + 2)).1
       = bdivC fuel (bpsremainder fuel (goState fuel s0 l).1 (goState fuel s0 (l + 1)).1)
           (goBeta fuel (goState fuel s0 l).1 (goState fuel s0 l).2.2.1 (goState fuel s0 l).2.2.2) := by
@@ -278,7 +278,7 @@ theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × CPoly ℚ × �
 /-! #### The `go`-list ↔ `goState` bridge -/
 
 /-- While `s.2.1` is nonzero, `go fuel (fo+1) …` emits it and recurses on the `goStep`-advanced state. -/
-theorem go_step_state (fuel fo : ℕ) (s : BPoly × BPoly × CPoly ℚ × ℕ) (hz : ¬ bisZero s.2.1 = true) :
+theorem go_step_state (fuel fo : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (hz : ¬ bisZero s.2.1 = true) :
     subresPRS.go fuel (fo + 1) s.1 s.2.1 s.2.2.1 s.2.2.2
       = s.2.1 :: subresPRS.go fuel fo (goStep fuel s).1 (goStep fuel s).2.1
           (goStep fuel s).2.2.1 (goStep fuel s).2.2.2 := by
@@ -290,7 +290,7 @@ theorem go_step_state (fuel fo : ℕ) (s : BPoly × BPoly × CPoly ℚ × ℕ) (
 
 /-- While the chain stays nonzero through index `k` and `k < fo`, the `k`-th element of `go fuel fo …` is
 `(goState fuel s k).2.1`. -/
-theorem go_getD (fuel : ℕ) (s : BPoly × BPoly × CPoly ℚ × ℕ) (k fo : ℕ) (hfo : k < fo)
+theorem go_getD (fuel : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (k fo : ℕ) (hfo : k < fo)
     (hnz : ∀ i ≤ k, ¬ bisZero (goState fuel s i).2.1 = true) :
     (subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2).getD k [] = (goState fuel s k).2.1 := by
   induction k generalizing s fo with
@@ -321,7 +321,7 @@ theorem subresPRS_getD (fuel : ℕ) (P Q : BPoly) (i : ℕ) (hfo : i ≤ fuel)
     rw [h, goState_succ_fst]
 
 /-- If `s.2.1` is zero, `go fuel fo … = []`. -/
-theorem go_zero (fuel fo : ℕ) (s : BPoly × BPoly × CPoly ℚ × ℕ) (hz : bisZero s.2.1 = true) :
+theorem go_zero (fuel fo : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (hz : bisZero s.2.1 = true) :
     subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2 = [] := by
   cases fo with
   | zero => rw [subresPRS.go.eq_1]
@@ -333,7 +333,7 @@ theorem go_zero (fuel fo : ℕ) (s : BPoly × BPoly × CPoly ℚ × ℕ) (hz : b
 
 /-- When the chain is nonzero through `k`, zero at `k+1`, and fuel suffices,
 `go fuel fo … = (List.range (k+1)).map (fun i => (goState fuel s i).2.1)`. -/
-theorem go_eq_range (fuel : ℕ) (s : BPoly × BPoly × CPoly ℚ × ℕ) (k fo : ℕ) (hfo : k + 1 < fo)
+theorem go_eq_range (fuel : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (k fo : ℕ) (hfo : k + 1 < fo)
     (hnz : ∀ i ≤ k, ¬ bisZero (goState fuel s i).2.1 = true)
     (hz : bisZero (goState fuel s (k + 1)).2.1 = true) :
     subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2
@@ -391,7 +391,7 @@ theorem subresPRS_eq_range (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < f
     (hzN : bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (N + 1)).1 = true) :
     subresPRS fuel P Q
       = (List.range (N + 1)).map (fun i => (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1) := by
-  set s0 : BPoly × BPoly × CPoly ℚ × ℕ := (P, Q, [-1], bdeg P - bdeg Q) with hs0
+  set s0 : BPoly × BPoly × DensePoly ℚ × ℕ := (P, Q, [-1], bdeg P - bdeg Q) with hs0
   rw [subresPRS.eq_def]
   cases N with
   | zero =>
@@ -440,7 +440,7 @@ theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N
         (fun R => decide (bdeg R = bdeg (goState fuel (P, Q, [-1], bdeg P - bdeg Q) N).1
           ∧ ¬ bisZero R))
       = [(goState fuel (P, Q, [-1], bdeg P - bdeg Q) N).1] := by
-  set s0 : BPoly × BPoly × CPoly ℚ × ℕ := (P, Q, [-1], bdeg P - bdeg Q) with hs0
+  set s0 : BPoly × BPoly × DensePoly ℚ × ℕ := (P, Q, [-1], bdeg P - bdeg Q) with hs0
   set G := fun i => (goState fuel s0 i).1 with hG
   rw [subresPRS_eq_range fuel P Q N hfo hnz hzN, List.filter_map]
   have hfilt : (List.range (N + 1)).filter
@@ -461,7 +461,7 @@ noncomputable def chain (fuel : ℕ) (P Q : BPoly) (i : ℕ) : BPoly :=
   (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1
 
 /-- The concrete `subresPRS` β-divisor `chainBt fuel P Q l := goBeta …` at the `l`-th state. -/
-noncomputable def chainBt (fuel : ℕ) (P Q : BPoly) (l : ℕ) : CPoly ℚ :=
+noncomputable def chainBt (fuel : ℕ) (P Q : BPoly) (l : ℕ) : DensePoly ℚ :=
   goBeta fuel (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).1
     (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.1
     (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.2
@@ -471,7 +471,7 @@ noncomputable def chainS (fuel : ℕ) (P Q : BPoly) (l : ℕ) : BPoly :=
   (toBPoly_bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose
 
 /-- The concrete pseudo-division content `chainC fuel P Q l` for the chain pair `(chain l, chain (l+1))`. -/
-noncomputable def chainC (fuel : ℕ) (P Q : BPoly) (l : ℕ) : CPoly ℚ :=
+noncomputable def chainC (fuel : ℕ) (P Q : BPoly) (l : ℕ) : DensePoly ℚ :=
   (toBPoly_bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose_spec.choose
 
 /-- `chain fuel P Q 0 = P`. -/
@@ -515,7 +515,7 @@ theorem chain_hfilt (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel
 the regularity inputs, `IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`
 over `S = ℚ[t]/(R)` at `j = (toBPoly (chain (m+2))).natDegree`. -/
 theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S] [IsDomain S]
-    (φ : ℚ[X] →+* S) (fuel : ℕ) (R A D : CPoly ℚ) (m : ℕ)
+    (φ : ℚ[X] →+* S) (fuel : ℕ) (R A D : DensePoly ℚ) (m : ℕ)
     (hRcn : cnorm R ≠ []) (hφR : φ (toPoly R) = 0)
     (hd0 : (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) 0)).natDegree
       = (toPoly D).natDegree)

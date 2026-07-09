@@ -11,20 +11,20 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-! ### Multifactor increment list -/
 
 /-- The per-factor `gloc` increment of `hermiteReduce`'s `g`-fold. -/
-def glocIncr (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ × ℕ) : QFun :=
+def glocIncr (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ × ℕ) : QFun :=
   let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
   let U := cdiv fuel D Vi_pow
   (hermiteInner fuel Vi.1 U (Vi.2 - 1) A qzero).1
 
 /-- The list of `gloc` increments for the kept factors (`i ≥ 2`). -/
-def glocList (fuel : ℕ) (A D : CPoly ℚ) (factors : List (CPoly ℚ × ℕ)) : List QFun :=
+def glocList (fuel : ℕ) (A D : DensePoly ℚ) (factors : List (DensePoly ℚ × ℕ)) : List QFun :=
   (factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (glocIncr fuel A D)
 
 /-- The conditional `g`-fold is the plain `qadd`-fold over the increment list. -/
-theorem foldl_cond_eq_foldl_glocList (fuel : ℕ) (A D : CPoly ℚ) (factors : List (CPoly ℚ × ℕ))
+theorem foldl_cond_eq_foldl_glocList (fuel : ℕ) (A D : DensePoly ℚ) (factors : List (DensePoly ℚ × ℕ))
     (init : QFun) :
     factors.foldl
-        (fun (gAcc : QFun) (Vi : CPoly ℚ × ℕ) =>
+        (fun (gAcc : QFun) (Vi : DensePoly ℚ × ℕ) =>
           if Vi.2 ≤ 1 then gAcc
           else
             let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
@@ -56,8 +56,8 @@ theorem foldl_cond_eq_foldl_glocList (fuel : ℕ) (A D : CPoly ℚ) (factors : L
 /-! ### Increment denominator nonzero -/
 
 /-- `hermiteInner` preserves nonzero accumulator denominator. -/
-theorem hermiteInner_den_ne_zero (fuel : ℕ) (V U : CPoly ℚ) (hV : toPoly V ≠ 0) :
-    ∀ (j : ℕ) (A : CPoly ℚ) (g : QFun), toPoly g.2 ≠ 0 →
+theorem hermiteInner_den_ne_zero (fuel : ℕ) (V U : DensePoly ℚ) (hV : toPoly V ≠ 0) :
+    ∀ (j : ℕ) (A : DensePoly ℚ) (g : QFun), toPoly g.2 ≠ 0 →
       toPoly (hermiteInner fuel V U j A g).1.2 ≠ 0 := by
   intro j
   induction j with
@@ -76,7 +76,7 @@ theorem hermiteInner_den_ne_zero (fuel : ℕ) (V U : CPoly ℚ) (hV : toPoly V �
     exact ih _ _ hgnew
 
 /-- The `glocIncr` increment has nonzero denominator when its factor is nonzero. -/
-theorem glocIncr_den_ne_zero (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ × ℕ) (hV : toPoly Vi.1 ≠ 0) :
+theorem glocIncr_den_ne_zero (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ × ℕ) (hV : toPoly Vi.1 ≠ 0) :
     toPoly (glocIncr fuel A D Vi).2 ≠ 0 :=
   hermiteInner_den_ne_zero fuel Vi.1 _ hV (Vi.2 - 1) A qzero (by simp [qzero, toPoly_cons])
 

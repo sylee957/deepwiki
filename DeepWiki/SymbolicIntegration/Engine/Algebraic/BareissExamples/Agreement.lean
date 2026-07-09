@@ -10,15 +10,15 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- Embed a `ℚ[x]`-matrix into `ℚ(x)`: `fromQ M` replaces each entry `p` by `qxOfNum p = p/1`. -/
-def fromQ (M : List (List (CPoly ℚ))) : List (List (CFrac ℚ)) :=
+def fromQ (M : List (List (DensePoly ℚ))) : List (List (CFrac ℚ)) :=
   M.map (fun row => row.map qxOfNum)
 
 /-- A `2×2` `ℚ[x]`-matrix `[[2, x], [x, x² + 2x³]]`, the trace matrix of the curve `y² − xy − x³`;
 its determinant is the discriminant `x² + 4x³`. -/
-def bareissNonRadT : List (List (CPoly ℚ)) :=
+def bareissNonRadT : List (List (DensePoly ℚ)) :=
   [[[2], [0, 1]], [[0, 1], [0, 0, 1, 2]]]
 
 /-- `bareissDet = fieldDet ∘ fromQ` on the `2×2` trace matrix, both the discriminant `x² + 4x³`. -/
@@ -32,7 +32,7 @@ theorem bareissDet_nonRad_eq :
 
 /-- A `3×3` `ℚ[x]`-matrix, the trace matrix of the trigonal curve `y³ + xy + x`; its determinant is
 the discriminant `−4x³ − 27x²`. Entries are the Newton power sums `Tr(yⁱ⁺ʲ)`. -/
-def bareissTrigT : List (List (CPoly ℚ)) :=
+def bareissTrigT : List (List (DensePoly ℚ)) :=
   [[[3], [], [0, -2]],
    [[], [0, -2], [0, -3]],
    [[0, -2], [0, -3], [0, 0, 2]]]
@@ -48,7 +48,7 @@ theorem bareissDet_trig_eq :
 
 /-- A `4×4` Vandermonde `ℚ[x]`-matrix with nodes `[x, x+1, x+2, x+3]`, row `i` = `[xⁱ, (x+1)ⁱ, (x+2)ⁱ,
 (x+3)ⁱ]`; determinant `∏_{i<j}(nodeⱼ − nodeᵢ) = 12`. -/
-def bareissVander4 : List (List (CPoly ℚ)) :=
+def bareissVander4 : List (List (DensePoly ℚ)) :=
   [[[1], [1], [1], [1]],
    [[0, 1], [1, 1], [2, 1], [3, 1]],
    [cmul [0, 1] [0, 1], cmul [1, 1] [1, 1], cmul [2, 1] [2, 1], cmul [3, 1] [3, 1]],

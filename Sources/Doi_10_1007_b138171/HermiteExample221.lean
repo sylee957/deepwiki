@@ -18,13 +18,13 @@ namespace DeepWiki.SymbolicIntegration.Compute
 `f = (x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)`, `D = x²(x²+2)³`,
 `∫ f = 1/x + 6x/(x²+2)² − (x−3)/(x²+2) + ∫ dx/x` -/
 
-/-- **`A = x⁷ − 24x⁴ − 4x² + 8x − 8`** as a `CPoly ℚ` (Example 2.2.1 numerator), coefficients low→high:
+/-- **`A = x⁷ − 24x⁴ − 4x² + 8x − 8`** as a `DensePoly ℚ` (Example 2.2.1 numerator), coefficients low→high:
 `[−8, 8, −4, 0, −24, 0, 0, 1]`. -/
-def cA221 : CPoly ℚ := [-8, 8, -4, 0, -24, 0, 0, 1]
+def cA221 : DensePoly ℚ := [-8, 8, -4, 0, -24, 0, 0, 1]
 
-/-- **`D = x⁸ + 6x⁶ + 12x⁴ + 8x² = x²(x²+2)³`** as a `CPoly ℚ` (Example 2.2.1 denominator),
+/-- **`D = x⁸ + 6x⁶ + 12x⁴ + 8x² = x²(x²+2)³`** as a `DensePoly ℚ` (Example 2.2.1 denominator),
 coefficients low→high: `[0, 0, 8, 0, 12, 0, 6, 0, 1]`. -/
-def cD221 : CPoly ℚ := [0, 0, 8, 0, 12, 0, 6, 0, 1]
+def cD221 : DensePoly ℚ := [0, 0, 8, 0, 12, 0, 6, 0, 1]
 
 -- **Example 2.2.1, the squarefree factorization** `D = x²·(x²+2)³`: Yun returns `[(x, 2), (x²+2, 3)]`.
 #eval csqfreeFactor 40 cD221
@@ -119,9 +119,9 @@ example :
     have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
     revert this; decide
   have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : CPoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
-  have hDstar : cnorm ([0, 2, 0, 1] : CPoly ℚ) ≠ [] := by decide
+  have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
   have hexact : toPoly (cmod 40
       (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
           (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
@@ -141,7 +141,7 @@ theorem hermite_ex221_sqfreeExactComp : SqfreeExactComp 40 cD221 := by native_de
 `toPoly_Dstar_dvd_D`, discharged through the `native_decide`'d computable bundle
 `hermite_ex221_sqfreeExactComp`. -/
 example :
-    toPoly ((csqfreeFactor 40 cD221).foldl (fun acc (vi : CPoly ℚ × ℕ) => cmul acc vi.1) [1])
+    toPoly ((csqfreeFactor 40 cD221).foldl (fun acc (vi : DensePoly ℚ × ℕ) => cmul acc vi.1) [1])
       ∣ toPoly cD221 :=
   toPoly_Dstar_dvd_D 40 cD221 (SqfreeExactComp_to_SqfreeExact 40 cD221 hermite_ex221_sqfreeExactComp)
 
@@ -181,9 +181,9 @@ example :
     have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
     revert this; decide
   have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : CPoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
-  have hDstar : cnorm ([0, 2, 0, 1] : CPoly ℚ) ≠ [] := by decide
+  have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
   have hfuel : (cnorm (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
       (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
         (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by
@@ -203,7 +203,7 @@ cert remains `native_decide`'d — the abstract radical content is genuinely pro
 computed radical `Dstar = x³+2x` (the `csqfreeFactor 40 cD221` fold) divides `D`, transported to the
 literal `[0,2,0,1]` (`native_decide` fold-equality + `toPoly_Dstar_dvd_D`). -/
 theorem hermite_ex221_Dstar_dvd : toPoly [0, 2, 0, 1] ∣ toPoly cD221 := by
-  have hfold : ((csqfreeFactor 40 cD221).foldl (fun acc (vi : CPoly ℚ × ℕ) => cmul acc vi.1) [1])
+  have hfold : ((csqfreeFactor 40 cD221).foldl (fun acc (vi : DensePoly ℚ × ℕ) => cmul acc vi.1) [1])
       = [0, 2, 0, 1] := by native_decide
   have := toPoly_Dstar_dvd_D 40 cD221
     (SqfreeExactComp_to_SqfreeExact 40 cD221 hermite_ex221_sqfreeExactComp)
@@ -228,9 +228,9 @@ example :
     have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
     revert this; decide
   have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : CPoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
-  have hDstar : cnorm ([0, 2, 0, 1] : CPoly ℚ) ≠ [] := by decide
+  have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
   have hfuel : (cnorm (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
       (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
         (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by

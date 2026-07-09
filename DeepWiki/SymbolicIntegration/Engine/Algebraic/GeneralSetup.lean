@@ -7,28 +7,28 @@ algebraic-function computation modules. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- The cuspidal cubic `f = y³ - x² ∈ ℚ(x)[y]`. -/
-def gcuspCubicF : CPoly (CFrac ℚ) :=
+def gcuspCubicF : DensePoly (CFrac ℚ) :=
   [qxOfNum [0, 0, -1], CField.zero, CField.zero, CField.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(y³ - x²)`. -/
-def gcuspCubicY : CPoly (CFrac ℚ) := afBasisElem 1
+def gcuspCubicY : DensePoly (CFrac ℚ) := afBasisElem 1
 
 /-- The element `y²` of `ℚ(x)[y]/(y³ - x²)`. -/
-def gcuspCubicYsq : CPoly (CFrac ℚ) := afBasisElem 2
+def gcuspCubicYsq : DensePoly (CFrac ℚ) := afBasisElem 2
 
 /-- A `ℚ(x)` value `xᵏ`, used as an ansatz scalar. -/
 def qxMon (k : ℕ) : CFrac ℚ := qxOfNum (cshift k [(1 : ℚ)])
 
 /-- The ansatz monomials `xʲ * wᵢ` over an integral basis. -/
-def afRatMonomials (basis : List (CPoly (CFrac ℚ))) (degBound : ℕ) :
-    List (CPoly (CFrac ℚ)) :=
+def afRatMonomials (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ) :
+    List (DensePoly (CFrac ℚ)) :=
   basis.flatMap (fun wi =>
     (List.range (degBound + 1)).map (fun j => cscale (qxMon j) wi))
 
 /-- The integral basis of the cuspidal cubic `y³ = x²`. -/
-def gcuspCubicBasis : List (CPoly (CFrac ℚ)) := integralBasis gcuspCubicF
+def gcuspCubicBasis : List (DensePoly (CFrac ℚ)) := integralBasis gcuspCubicF
 
 end DeepWiki.SymbolicIntegration

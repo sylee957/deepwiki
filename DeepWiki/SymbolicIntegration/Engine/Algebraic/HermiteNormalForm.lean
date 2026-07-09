@@ -1,31 +1,31 @@
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 
-/-! # Hermite row reduction (Hermite normal form) over the Euclidean domain `K[x] = CPoly`
+/-! # Hermite row reduction (Hermite normal form) over the Euclidean domain `K[x] = DensePoly`
 
 Triangularizes a matrix of polynomials by ring row operations only (swap, scale by a ring
 element, subtract a ring multiple), reducing below-pivot entries by the Euclidean quotient
-`cdivWf`. `PolyMatrix α := List (List (CPoly α))`; `hermiteRowReduce` returns the upper-triangular
-form and `hermiteRank` its row rank over `K(x)`. Validated on `CPoly ℚ` matrices. -/
+`cdivWf`. `PolyMatrix α := List (List (DensePoly α))`; `hermiteRowReduce` returns the upper-triangular
+form and `hermiteRank` its row rank over `K(x)`. Validated on `DensePoly ℚ` matrices. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
 /-! ### The matrix representation `PolyMatrix α` and the Euclidean row operations
 
-A `PolyMatrix α` is a `List` of rows of `CPoly α` entries, indexed by position; the row helpers
+A `PolyMatrix α` is a `List` of rows of `DensePoly α` entries, indexed by position; the row helpers
 only swap, scale by a ring element, and subtract a ring multiple of one row from another. -/
 
-/-- A matrix of polynomials over a computable field `α`: `List (List (CPoly α))`, indexed by
+/-- A matrix of polynomials over a computable field `α`: `List (List (DensePoly α))`, indexed by
 position. -/
-abbrev PolyMatrix (α : Type*) := List (List (CPoly α))
+abbrev PolyMatrix (α : Type*) := List (List (DensePoly α))
 
 /-- Entry `M[i][j]` of a `PolyMatrix` (the zero polynomial `[]` out of range), via `getD`. -/
-def polyMatGet (M : PolyMatrix α) (i j : ℕ) : CPoly α :=
+def polyMatGet (M : PolyMatrix α) (i j : ℕ) : DensePoly α :=
   (M.getD i []).getD j []
 
 /-- Number of columns of a `PolyMatrix` (the length of its first row; `0` if empty). -/
@@ -37,12 +37,12 @@ def rowSwap (M : PolyMatrix α) (i j : ℕ) : PolyMatrix α :=
   let rj := M.getD j []
   (M.set i rj).set j ri
 
-/-- Scale row `i` of a `PolyMatrix` by a polynomial `c : CPoly α`, entrywise `cmul`. -/
-def rowScale (M : PolyMatrix α) (i : ℕ) (c : CPoly α) : PolyMatrix α :=
+/-- Scale row `i` of a `PolyMatrix` by a polynomial `c : DensePoly α`, entrywise `cmul`. -/
+def rowScale (M : PolyMatrix α) (i : ℕ) (c : DensePoly α) : PolyMatrix α :=
   M.set i ((M.getD i []).map (fun a => cmul c a))
 
 /-- Subtract `q · (row k)` from row `i` of a `PolyMatrix`, entrywise (`row i ↦ row i − q · row k`). -/
-def rowSub (M : PolyMatrix α) (i k : ℕ) (q : CPoly α) : PolyMatrix α :=
+def rowSub (M : PolyMatrix α) (i k : ℕ) (q : DensePoly α) : PolyMatrix α :=
   let ri := M.getD i []
   let rk := M.getD k []
   M.set i ((List.range (max ri.length rk.length)).map (fun c =>
@@ -119,25 +119,25 @@ def hermiteRank (M : PolyMatrix α) : ℕ :=
 
 /-- Product of the diagonal entries `∏ᵢ M[i][i]` of a `PolyMatrix` (the determinant of an
 upper-triangular matrix), used to certify row-equivalence up to a unit. -/
-def polyMatDiagProd (M : PolyMatrix α) : CPoly α :=
+def polyMatDiagProd (M : PolyMatrix α) : DensePoly α :=
   let n := min M.length (polyMatNCols M)
   (List.range n).foldl (fun acc i => cmul acc (polyMatGet M i i)) [CField.one]
 
 /-- The `2×2` polynomial determinant `M[0][0]·M[1][1] − M[0][1]·M[1][0]` of a `PolyMatrix`. -/
-def polyMat2x2Det (M : PolyMatrix α) : CPoly α :=
+def polyMat2x2Det (M : PolyMatrix α) : DensePoly α :=
   csub (cmul (polyMatGet M 0 0) (polyMatGet M 1 1))
         (cmul (polyMatGet M 0 1) (polyMatGet M 1 0))
 
-end CPoly
+end DensePoly
 
-/-! ### `native_decide` validation over `CPoly ℚ = ℚ[x]`
+/-! ### `native_decide` validation over `DensePoly ℚ = ℚ[x]`
 
 Concrete `2×2`/`3×3` matrices reduce to upper-triangular form, preserve the determinant up to a
 unit, and (for a rank-deficient case) drop to a zero row. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- A concrete `2×2` matrix over `ℚ[x]`: `[[x² + 1, x], [x³, x + 2]]` (entries low→high). -/
 def hermiteEx2 : PolyMatrix ℚ :=

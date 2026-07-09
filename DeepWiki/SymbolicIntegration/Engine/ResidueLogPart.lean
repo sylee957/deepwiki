@@ -10,13 +10,13 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- `logs` is a residue-log part of `hNum/Dstar`: `Σᵢ cᵢ · D(log vᵢ) = ⟦hNum/Dstar⟧`. -/
-structure LawfulResidueLogPart (Dt hNum Dstar : CPoly α) (logs : List (α × CPoly α)) : Prop where
+structure LawfulResidueLogPart (Dt hNum Dstar : DensePoly α) (logs : List (α × DensePoly α)) : Prop where
   /-- `Σᵢ cᵢ · (D(am vᵢ) / am vᵢ) = ⟦hNum/Dstar⟧`. -/
   residue_match : (logs.map (fun cv => am α (Polynomial.C (CFieldSpec.toK cv.1))
         * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum

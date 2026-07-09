@@ -6,7 +6,7 @@ import DeepWiki.ComputableAlgebra.PolyReprSparse
 `CPolyRepr` is the thin representation interface (`coeff`/`degBound`/`ofFn`). `CPolyEngine` extends it
 with the polynomial *operations as class fields* — so an instance supplies its **own efficient ops** and
 proves their denotation squares as specs. Crucially the `List` instance supplies the **existing engine
-ops** (`CPoly.cadd`/`cmul`/`cnorm`/…), so `CPolyEngine.add (p : List α) = CPoly.cadd p` **definitionally**
+ops** (`DensePoly.cadd`/`cmul`/`cnorm`/…), so `CPolyEngine.add (p : List α) = DensePoly.cadd p` **definitionally**
 — a declaration re-parametrised over `[CPolyEngine P]` computes *exactly* the engine's list output at the
 `List` instance, so `native_decide` is preserved. This is what makes the engine call-site migration a
 behaviour-preserving, defeq-safe re-point (module by module). The `SparsePoly` instance supplies the
@@ -56,25 +56,25 @@ class CPolyEngine (P : Type u → Type u) extends CPolyRepr P where
   toR_clead_eq_leadingCoeff : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
     CRingSpec.toR (clead p) = (CPolyRepr.toPoly p).leadingCoeff
 
-/-- **The `List` instance IS the concrete engine** — its ops are `CPoly.c*`, defeq to the engine's,
+/-- **The `List` instance IS the concrete engine** — its ops are `DensePoly.c*`, defeq to the engine's,
 so a migrated declaration computes the same list output (⇒ `native_decide`-preserving). -/
 instance instEngineList : CPolyEngine List where
-  add := CPoly.cadd
-  mul := CPoly.cmul
-  neg := CPoly.cneg
-  scale := CPoly.cscale
-  cnorm := CPoly.cnorm
-  cisZero := CPoly.cisZero
-  cdeg := CPoly.cdeg
-  clead := CPoly.clead
-  toPoly_add p q := by rw [toPoly_list_eq, CPoly.toPolyG_caddG, ← toPoly_list_eq, ← toPoly_list_eq]
-  toPoly_mul p q := by rw [toPoly_list_eq, CPoly.toPolyG_cmulG, ← toPoly_list_eq, ← toPoly_list_eq]
-  toPoly_neg p := by rw [toPoly_list_eq, CPoly.toPolyG_cnegG, ← toPoly_list_eq]
-  toPoly_scale c p := by rw [toPoly_list_eq, CPoly.toPolyG_cscaleG, ← toPoly_list_eq]
-  toPoly_cnorm p := by rw [toPoly_list_eq, CPoly.toPolyG_cnormG, ← toPoly_list_eq]
-  cisZero_iff p := by rw [toPoly_list_eq]; exact CPoly.cisZeroG_iff p
-  cdeg_eq_natDegree p := by rw [toPoly_list_eq]; exact CPoly.cdegG_eq_natDegree p
-  toR_clead_eq_leadingCoeff p := by rw [toPoly_list_eq]; exact CPoly.toR_cleadG_eq_leadingCoeff p
+  add := DensePoly.cadd
+  mul := DensePoly.cmul
+  neg := DensePoly.cneg
+  scale := DensePoly.cscale
+  cnorm := DensePoly.cnorm
+  cisZero := DensePoly.cisZero
+  cdeg := DensePoly.cdeg
+  clead := DensePoly.clead
+  toPoly_add p q := by rw [toPoly_list_eq, DensePoly.toPolyG_caddG, ← toPoly_list_eq, ← toPoly_list_eq]
+  toPoly_mul p q := by rw [toPoly_list_eq, DensePoly.toPolyG_cmulG, ← toPoly_list_eq, ← toPoly_list_eq]
+  toPoly_neg p := by rw [toPoly_list_eq, DensePoly.toPolyG_cnegG, ← toPoly_list_eq]
+  toPoly_scale c p := by rw [toPoly_list_eq, DensePoly.toPolyG_cscaleG, ← toPoly_list_eq]
+  toPoly_cnorm p := by rw [toPoly_list_eq, DensePoly.toPolyG_cnormG, ← toPoly_list_eq]
+  cisZero_iff p := by rw [toPoly_list_eq]; exact DensePoly.cisZeroG_iff p
+  cdeg_eq_natDegree p := by rw [toPoly_list_eq]; exact DensePoly.cdegG_eq_natDegree p
+  toR_clead_eq_leadingCoeff p := by rw [toPoly_list_eq]; exact DensePoly.toR_cleadG_eq_leadingCoeff p
 
 /-- **The `SparsePoly` instance** supplies the generic `ofFn`-based ops, so a migrated declaration also
 runs on the sparse carrier — the representation-independence payoff at the engine level. -/
@@ -100,6 +100,6 @@ instance instEngineSparse : CPolyEngine CPolyRepr.SparsePoly where
 
 /-- A declaration re-parametrised over `[CPolyEngine P]` computes exactly the engine output at `List`. -/
 example : (CPolyEngine.mul (CPolyEngine.add ([1,2] : List ℚ) [3,4]) [1])
-    = CPoly.cmul (CPoly.cadd [1,2] [3,4]) [1] := by native_decide
+    = DensePoly.cmul (DensePoly.cadd [1,2] [3,4]) [1] := by native_decide
 
 end DeepWiki.SymbolicIntegration

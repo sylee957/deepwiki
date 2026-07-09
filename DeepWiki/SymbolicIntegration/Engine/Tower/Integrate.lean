@@ -17,7 +17,7 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
 
-This is the headline. We run `cHermiteReduceTower` over `CPoly (CFrac (CFrac ℚ)) =
+This is the headline. We run `cHermiteReduceTower` over `DensePoly (CFrac (CFrac ℚ)) =
 ℚ(x)(t₁)[t₂]` (tower level 2, the new monomial `t₂`) on a concrete proper fraction whose
 denominator has a repeated `t₂`-factor, and certify `D(g) + h = f`. The setting is Bronstein's
 Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt₂ = t₂² + 1`), and
@@ -27,7 +27,7 @@ Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt�
 `D(g) + h = (t₂²+1)/t₂² − 1 = 1/t₂² = f`.
 
 All coefficients are level-2 *constants* (elements of ℚ ⊂ ℚ(x)(t₁) = `Lvl2`), so the engine genuinely
-runs the level-2 `CField`/`CDiffField` instances over `CPoly Lvl2`. The `CField (CFrac (CFrac ℚ))`
+runs the level-2 `CField`/`CDiffField` instances over `DensePoly Lvl2`. The `CField (CFrac (CFrac ℚ))`
 and `CDiffField (CFrac (CFrac ℚ))` instances are `[CField …]`-computable with `Prop`-erased subtype
 proofs, so nothing noncomputable reaches the native compiler — `native_decide` reduces. The load-bearing
 check is the cleared-denominator form of `D(gnum/gden) + h_num/h_den = a/d`, equating numerators over the
@@ -38,16 +38,16 @@ open CFrac
 /-- Level-2 scalar `2 = 1 + 1 ∈ Lvl2 = ℚ(x)(t₁)`. -/
 def lvl2Two : Lvl2 := CField.add CField.one CField.one
 
-/-- Level-2 monomial derivative `Dt₂ = t₂² + 1` over `CPoly Lvl2 = ℚ(x)(t₁)[t₂]` (so `t₂ = tan`,
+/-- Level-2 monomial derivative `Dt₂ = t₂² + 1` over `DensePoly Lvl2 = ℚ(x)(t₁)[t₂]` (so `t₂ = tan`,
 Bronstein Example 5.3.1 lifted to level 2; constant coefficients in ℚ ⊂ ℚ(x)(t₁)). -/
-def towerHermiteLvl2Dt : CPoly Lvl2 := [CField.one, CField.zero, CField.one]
+def towerHermiteLvl2Dt : DensePoly Lvl2 := [CField.one, CField.zero, CField.one]
 
-/-- Level-2 numerator `a = 1` over `CPoly Lvl2` (constant coefficient `1 ∈ ℚ(x)(t₁)`). -/
-def towerHermiteLvl2A : CPoly Lvl2 := [CField.one]
+/-- Level-2 numerator `a = 1` over `DensePoly Lvl2` (constant coefficient `1 ∈ ℚ(x)(t₁)`). -/
+def towerHermiteLvl2A : DensePoly Lvl2 := [CField.one]
 
-/-- Level-2 denominator `d = t₂²` over `CPoly Lvl2` — the normal factor `t₂` of multiplicity 2 (under
+/-- Level-2 denominator `d = t₂²` over `DensePoly Lvl2` — the normal factor `t₂` of multiplicity 2 (under
 `Dt₂ = t₂² + 1`, `t₂` is normal and `t₂²` its square), so Hermite lowers the power. -/
-def towerHermiteLvl2D : CPoly Lvl2 := [CField.zero, CField.zero, CField.one]
+def towerHermiteLvl2D : DensePoly Lvl2 := [CField.zero, CField.zero, CField.one]
 
 /-! ### Level-2 canonical-representation test data
 
@@ -69,13 +69,13 @@ def lvl2NegTwo : Lvl2 := CField.neg (CField.add CField.one CField.one)
 def lvl2NegThree : Lvl2 := CField.neg (CField.add CField.one (CField.add CField.one CField.one))
 
 /-- Level-2 canonical-rep numerator `a = t₂³` over `ℚ(x)(t₁)[t₂]` (constant coefficients in ℚ). -/
-def towerCanRepLvl2A : CPoly Lvl2 := [CField.zero, CField.zero, CField.zero, CField.one]
+def towerCanRepLvl2A : DensePoly Lvl2 := [CField.zero, CField.zero, CField.zero, CField.one]
 
 /-- Level-2 canonical-rep denominator `d = (t₂−1)(t₂−2) = t₂² − 3t₂ + 2` over `ℚ(x)(t₁)[t₂]` (monic). -/
-def towerCanRepLvl2D : CPoly Lvl2 := [lvl2Two, lvl2NegThree, CField.one]
+def towerCanRepLvl2D : DensePoly Lvl2 := [lvl2Two, lvl2NegThree, CField.one]
 
 /-- Level-2 monomial derivative `Dt₂ = t₂ − 1` (root `t₂ = 1` special, `t₂ = 2` normal). -/
-def towerCanRepLvl2Dt : CPoly Lvl2 := [lvl2NegOne, CField.one]
+def towerCanRepLvl2Dt : DensePoly Lvl2 := [lvl2NegOne, CField.one]
 
 /-! ## The logarithmic part (Rothstein-Trager §5.6) and the reduced-case capstone `cIntegrateReduced`
 
@@ -91,7 +91,7 @@ nodes through the existing `cnatCast : ℕ → α` (`[CField α]`-only), and tak
 `α` elements (the natural generic form) — so the whole log part generalizes. `cratCast` additionally
 gives the `ℚ → α` embedding for convenience. -/
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -107,12 +107,12 @@ def cratCast (q : ℚ) : α :=
 (index = degree, low→high) at `c ∈ α` by Horner's rule. The generic mirror of `ceval`
 (`ComputableIntegrate`), redefined here to avoid that heavy import. Used to test whether a candidate
 residue `c` is a root of the residue resultant `R(c) = 0`. Needs only `[CField α]`. -/
-def cHorner (p : CPoly α) (c : α) : α :=
+def cHorner (p : DensePoly α) (c : α) : α :=
   (p : List α).foldr (fun coeff acc => CField.add coeff (CField.mul c acc)) CField.zero
 
-end CPoly
+end DensePoly
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -124,28 +124,28 @@ residue `c` — the shared building block of the fuel-free residue resultant / l
 
 /-- Generic `a − c·Dd` `cAmcDd Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
 the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
-def cAmcDd (Dt a d : CPoly α) (c : α) : CPoly α :=
+def cAmcDd (Dt a d : DensePoly α) (c : α) : DensePoly α :=
   csub a (cscale c (cmonomialDeriv Dt d))
 
-end CPoly
+end DensePoly
 
 /-! ### The generic integral result and the cleared antiderivative identity
 
 `IntegralResult α` is the generic mirror of `IntegralResult`: the rational part `g = num/den ∈ α(t)`
-plus the logarithmic part `[(cᵢ, vᵢ)]` (coefficients `cᵢ : α`, arguments `vᵢ : CPoly α`).
+plus the logarithmic part `[(cᵢ, vᵢ)]` (coefficients `cᵢ : α`, arguments `vᵢ : DensePoly α`).
 `checkIdentity` verifies the antiderivative identity `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f`, cleared of
 denominators — the generic mirror of `IntegralResult.checkIdentity`. -/
 
 /-- The generic integral result: `∫ f = rational + ∑ᵢ coeff·log(arg)` over the tower, with
 `rational = (num, den)` the rational part `g = num/den ∈ α(t)` and `logs = [(cᵢ, vᵢ)]` the logarithmic
-part (each `cᵢ : α`, each `vᵢ : CPoly α`). The generic mirror of `IntegralResult`. -/
+part (each `cᵢ : α`, each `vᵢ : DensePoly α`). The generic mirror of `IntegralResult`. -/
 structure IntegralResult (α : Type*) [CField α] where
   /-- The rational part `g = num/den ∈ α(t)` of `∫ f`. -/
-  rational : CPoly α × CPoly α
-  /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f` (`α`-coefficients, `CPoly α` arguments). -/
-  logs : List (α × CPoly α)
+  rational : DensePoly α × DensePoly α
+  /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f` (`α`-coefficients, `DensePoly α` arguments). -/
+  logs : List (α × DensePoly α)
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -156,14 +156,14 @@ add `D(g) = (D(gnum)·gden − gnum·D(gden))/gden²`, and equate with `f` over 
 `(gprimeNum·Lden + Lnum·gden²)·aden = anum·(gden²·Lden)`, by `cisZero` of the cleared difference. The
 generic mirror of `IntegralResult.checkIdentity` (`α` has no `DecidableEq`, hence the `cisZero∘csub`
 form). -/
-def checkIdentity (Dt : CPoly α) (res : IntegralResult α) (anum aden : CPoly α) : Bool :=
+def checkIdentity (Dt : DensePoly α) (res : IntegralResult α) (anum aden : DensePoly α) : Bool :=
   let gnum := res.rational.1
   let gden := res.rational.2
   let gprimeNum := csub (cmul (cmonomialDeriv Dt gnum) gden) (cmul gnum (cmonomialDeriv Dt gden))
   let gden2 := cmul gden gden
-  let Lstart : CPoly α × CPoly α := ([CField.zero], [CField.one])
+  let Lstart : DensePoly α × DensePoly α := ([CField.zero], [CField.one])
   let (Lnum, Lden) := res.logs.foldl
-    (fun (acc : CPoly α × CPoly α) (cv : α × CPoly α) =>
+    (fun (acc : DensePoly α × DensePoly α) (cv : α × DensePoly α) =>
       let c := cv.1
       let v := cv.2
       let Dv := cmonomialDeriv Dt v
@@ -174,11 +174,11 @@ def checkIdentity (Dt : CPoly α) (res : IntegralResult α) (anum aden : CPoly �
   let rhs := cmul anum (cmul gden2 Lden)
   cisZero (csub lhs rhs)
 
-end CPoly
+end DensePoly
 
 /-! ### Level-2 reduced integration test data
 
-Bronstein's Example 5.6.2 construction lifted to tower level 2. Over `CPoly Lvl2 =
+Bronstein's Example 5.6.2 construction lifted to tower level 2. Over `DensePoly Lvl2 =
 ℚ(x)(t₁)[t₂]` the monomial `t₂` is independent (`Dt₂ = 1`), and the simple integrand
 `f = (1/2)·D(t₂+1)/(t₂+1) − (1/2)·D(t₂−1)/(t₂−1)` over ℚ(x)(t₁)(t₂) has the known elementary
 antiderivative `(1/2)log(t₂+1) − (1/2)log(t₂−1)`. Since `D(t₂±1) = Dt₂ = 1`, the integrand is
@@ -186,39 +186,39 @@ antiderivative `(1/2)log(t₂+1) − (1/2)log(t₂−1)`. Since `D(t₂±1) = Dt
 t₂² − 1`. The residues of `R(z) = res_t(d, a − z·Dd)` are `±1/2` with log arguments `t₂ ± 1`.
 
 The generic reduced-case capstone `cIntegrateReduced` (Hermite rational part + Rothstein–Trager
-residue logs) runs over `CPoly Lvl2` and recovers the integral: `g = 0`, residues `±1/2` from the
+residue logs) runs over `DensePoly Lvl2` and recovers the integral: `g = 0`, residues `±1/2` from the
 candidate set, logs `t₂ ± 1`. The headline check is the antiderivative identity `D(∫f) = f`
 (`checkIdentity`, cleared of denominators, by `cisZero`) — the whole elementary tower integral
 executing and differentiating back to `f`, at level 2. All coefficients are ℚ-constants lifted into
 `Lvl2` (via `cratCast`), so the engine genuinely runs the level-2 `CField`/`CDiffField` instances. The
 fuel-free validations are in `ComputableTowerWellFounded`. -/
 
-open CPoly
+open DensePoly
 
-/-- Level-2 monomial derivative `Dt₂ = 1` over `CPoly Lvl2 = ℚ(x)(t₁)[t₂]` (`t₂` independent). -/
-def towerIntLvl2Dt : CPoly Lvl2 := [CField.one]
+/-- Level-2 monomial derivative `Dt₂ = 1` over `DensePoly Lvl2 = ℚ(x)(t₁)[t₂]` (`t₂` independent). -/
+def towerIntLvl2Dt : DensePoly Lvl2 := [CField.one]
 
-/-- Level-2 log argument `v₊ = t₂ + 1` over `CPoly Lvl2` (low→high in `t₂`). -/
-def towerIntLvl2VPlus : CPoly Lvl2 := [CField.one, CField.one]
+/-- Level-2 log argument `v₊ = t₂ + 1` over `DensePoly Lvl2` (low→high in `t₂`). -/
+def towerIntLvl2VPlus : DensePoly Lvl2 := [CField.one, CField.one]
 
-/-- Level-2 log argument `v₋ = t₂ − 1` over `CPoly Lvl2`. -/
-def towerIntLvl2VMinus : CPoly Lvl2 := [CField.neg CField.one, CField.one]
+/-- Level-2 log argument `v₋ = t₂ − 1` over `DensePoly Lvl2`. -/
+def towerIntLvl2VMinus : DensePoly Lvl2 := [CField.neg CField.one, CField.one]
 
 /-- Level-2 scalar `1/2 ∈ Lvl2` (the residue coefficient), via the generic `cratCast`. -/
 def towerIntLvl2Half : Lvl2 := cratCast (1/2)
 
-/-- The level-2 integrand numerator `a = (1/2)·D(v₊)·v₋ − (1/2)·D(v₋)·v₊` over `CPoly Lvl2`, so
+/-- The level-2 integrand numerator `a = (1/2)·D(v₊)·v₋ − (1/2)·D(v₋)·v₊` over `DensePoly Lvl2`, so
 `a/d = (1/2)·D(v₊)/v₊ − (1/2)·D(v₋)/v₋` with `d = v₊·v₋`. Its elementary antiderivative is
 `(1/2)log(v₊) − (1/2)log(v₋)`. -/
-def towerIntLvl2Num : CPoly Lvl2 :=
+def towerIntLvl2Num : DensePoly Lvl2 :=
   csub
     (cscale towerIntLvl2Half
       (cmul (cmonomialDeriv towerIntLvl2Dt towerIntLvl2VPlus) towerIntLvl2VMinus))
     (cscale towerIntLvl2Half
       (cmul (cmonomialDeriv towerIntLvl2Dt towerIntLvl2VMinus) towerIntLvl2VPlus))
 
-/-- The level-2 integrand denominator `d = v₊·v₋ = (t₂+1)(t₂−1) = t₂² − 1` over `CPoly Lvl2`. -/
-def towerIntLvl2Den : CPoly Lvl2 := cmul towerIntLvl2VPlus towerIntLvl2VMinus
+/-- The level-2 integrand denominator `d = v₊·v₋ = (t₂+1)(t₂−1) = t₂² − 1` over `DensePoly Lvl2`. -/
+def towerIntLvl2Den : DensePoly Lvl2 := cmul towerIntLvl2VPlus towerIntLvl2VMinus
 
 /-- The level-2 residue candidate set `{1/2, −1/2, 1, −1, 0}` as `Lvl2` constants (the residues `±1/2`
 are inside; the rest are rejected by `R(c) ≠ 0`). -/

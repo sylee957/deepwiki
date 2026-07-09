@@ -112,7 +112,7 @@ end DeepWiki.SymbolicIntegration.ResidueBridge
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly Polynomial Classical
+open DensePoly Polynomial Classical
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [CharZero (CFieldSpec.K α)]
@@ -120,7 +120,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Each Yun factor is `Associated` to a distinct `sqfreeFactPart` of the residue resultant (index `1 + k`),
 by `cSqfreeYunFFG_forall₂`. -/
-theorem associated_toPolyG_cSqfreeYunFFG_get (hgcd : GcdFFCorrect (α := α)) (R : CPoly α)
+theorem associated_toPolyG_cSqfreeYunFFG_get (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
     (hR0 : toPoly R ≠ 0) (hpp : (toPoly R).primPart ≠ 0)
     (k : ℕ) (hk : k < (cSqfreeYunFF R).length) :
     Associated (toPoly (cSqfreeYunFF R)[k]) (sqfreeFactPart (toPoly R) (1 + k)) := by
@@ -136,7 +136,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Stage 1.** The Yun factors of `R` (as polynomial images) are pairwise coprime: each is `Associated` to a
 distinct `sqfreeFactPart` of `toPoly R`, and those are pairwise relatively prime
 (`sqfreeFactPart_isRelPrime`). -/
-theorem pairwise_isCoprime_toPolyG_cSqfreeYunFFG (hgcd : GcdFFCorrect (α := α)) (R : CPoly α)
+theorem pairwise_isCoprime_toPolyG_cSqfreeYunFFG (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
     (hR0 : toPoly R ≠ 0) (hpp : (toPoly R).primPart ≠ 0) :
     (cSqfreeYunFF R).Pairwise (fun a b => IsCoprime (toPoly a) (toPoly b)) := by
   rw [List.pairwise_iff_get]
@@ -174,7 +174,7 @@ multiplicities: `⟦cmonic R⟧ = ∏ ⟦Rₖ⟧^(1+k)`. Via `cSqfreeYunFFG_reco
 to that product), lifted through `normalize`: both `⟦cmonic R⟧ = normalize ⟦R⟧` and the (monic) product equal
 `normalize` of associated polynomials, hence are equal. The Yun factors are already monic
 (`cSqfreeYunFFG_monic`), so no per-factor normalization is needed. -/
-theorem toPolyG_cmonicG_eq_prod_yun (hgcd : GcdFFCorrect (α := α)) (R : CPoly α)
+theorem toPolyG_cmonicG_eq_prod_yun (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
     (hR0 : toPoly R ≠ 0) (hpp : (toPoly R).primPart ≠ 0) :
     toPoly (cmonic R) = ((cSqfreeYunFF R).zipIdx.map fun x => toPoly x.1 ^ (1 + x.2)).prod := by
   have hrhs : prodPow 1 ((cSqfreeYunFF R).map toPoly)
@@ -192,10 +192,10 @@ open Differential ResidueBridge in
 /-- **Stage 3a.** Each Yun factor of `R` has `D`-constant coefficients, given the monic normalization of `R`
 does (the guard). Apply the list-level core `mapCoeffs_eq_zero_of_mem_coprime_prod` to the pairwise-coprime
 monic decomposition of `⟦cmonic R⟧` (Stages 1 + 2). -/
-theorem mapCoeffs_toPolyG_yunFactor_eq_zero (hgcd : GcdFFCorrect (α := α)) (R : CPoly α)
+theorem mapCoeffs_toPolyG_yunFactor_eq_zero (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
     (hR0 : toPoly R ≠ 0) (hpp : (toPoly R).primPart ≠ 0)
     (hguard : mapCoeffs (toPoly (cmonic R)) = 0)
-    {Ri : CPoly α} (hRi : Ri ∈ cSqfreeYunFF R) :
+    {Ri : DensePoly α} (hRi : Ri ∈ cSqfreeYunFF R) :
     mapCoeffs (toPoly Ri) = 0 := by
   have hfst : (cSqfreeYunFF R).zipIdx.map Prod.fst = cSqfreeYunFF R :=
     List.zipIdx_map_fst 0 _
@@ -225,7 +225,7 @@ open Differential in
 residue resultant `R` is `D`-constant (the guard) and nonzero. Each log's `Rᵢ` is a Yun factor of `R`, so has
 `D`-constant coefficients (Stage 3a); since `Rᵢ` is monic, `⟦cmonic Rᵢ⟧ = ⟦Rᵢ⟧`, and `cisZero (cmapDeriv ·)`
 is the computable reading of `mapCoeffs ⟦·⟧ = 0`. -/
-theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPoly α)
+theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α)
     (hR0 : toPoly (cResidueResultantTower Dt hNum Dstar) ≠ 0)
     (hguard : cisZero (cmapDeriv (cmonic (cResidueResultantTower Dt hNum Dstar))) = true) :
     (cLrtLogArg Dt hNum Dstar).all (fun RS => cisZero (cmapDeriv (cmonic RS.1))) = true := by
@@ -263,7 +263,7 @@ constant: `cResidueConstantGuard a d = true → allResiduesConstantLrt (cIntegra
 Both sides run on the same Hermite reduce, so this is `all_cLrtLogArgG_residueConstant_of_guard` at
 `(hNum, Dstar) = (H.2.1, H.2.2)`. The `hR0` precondition (nonzero residue resultant) is the same one the raw
 reduced soundness (`isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`) requires, supplied by the setup. -/
-theorem allResiduesConstantLrtG_of_guard (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
+theorem allResiduesConstantLrtG_of_guard (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
     (hR0 : toPoly (cResidueResultantTower Dt (cHermiteReduceTower Dt a d).2.1
       (cHermiteReduceTower Dt a d).2.2) ≠ 0)
     (hguard : cResidueConstantGuard Dt a d = true) :

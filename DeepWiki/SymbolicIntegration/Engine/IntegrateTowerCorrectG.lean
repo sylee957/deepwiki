@@ -12,7 +12,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 /-! ### The generic fraction-field derivation -/
 
@@ -21,13 +21,13 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- Tower fraction-field derivation `extendDeriv (implicitDeriv (toPoly Dt))` on
 `RatFunc (CFieldSpec.K α)`. -/
-noncomputable def towerFractionFieldDeriv (Dt : CPoly α) :
+noncomputable def towerFractionFieldDeriv (Dt : DensePoly α) :
     Derivation ℤ (RatFunc (CFieldSpec.K α)) (RatFunc (CFieldSpec.K α)) :=
   extendDeriv (Differential.implicitDeriv (toPoly Dt))
 
 /-- Quotient rule on a fraction of polynomial images: `towerFractionFieldDeriv Dt (am gnum / am gden)
 = (am(Δ gnum)·am(gden) − am(gnum)·am(Δ gden)) / (am gden)²`, `Δ = implicitDeriv (toPoly Dt)`. -/
-theorem towerFractionFieldDerivG_div (Dt : CPoly α) (gnum gden : (CFieldSpec.K α)[X]) :
+theorem towerFractionFieldDerivG_div (Dt : DensePoly α) (gnum gden : (CFieldSpec.K α)[X]) :
     towerFractionFieldDeriv Dt (am α gnum / am α gden)
       = (am α (Differential.implicitDeriv (toPoly Dt) gnum) * am α gden
           - am α gnum * am α (Differential.implicitDeriv (toPoly Dt) gden))
@@ -37,7 +37,7 @@ theorem towerFractionFieldDerivG_div (Dt : CPoly α) (gnum gden : (CFieldSpec.K 
 
 /-- Per-term log-derivative reading:
 `towerFractionFieldDeriv Dt (am v)/am v = am (toPoly (cmonomialDeriv Dt v))/am (toPoly v)`. -/
-theorem towerFractionFieldDerivG_logDeriv (Dt v : CPoly α) :
+theorem towerFractionFieldDerivG_logDeriv (Dt v : DensePoly α) :
     towerFractionFieldDeriv Dt (am α (toPoly v)) / am α (toPoly v)
       = am α (toPoly (cmonomialDeriv Dt v)) / am α (toPoly v) := by
   rw [towerFractionFieldDeriv, extendDeriv_algebraMap]
@@ -47,7 +47,7 @@ theorem towerFractionFieldDerivG_logDeriv (Dt v : CPoly α) :
 
 /-- Logarithmic-part residue sum `∑_{(c,v)∈logs} am(C(toK c))·(Δv)/v` over
 `RatFunc (CFieldSpec.K α)`, `Δ = implicitDeriv (toPoly Dt)`. -/
-noncomputable def logResidueSum (Dt : CPoly α) (logs : List (α × CPoly α)) :
+noncomputable def logResidueSum (Dt : DensePoly α) (logs : List (α × DensePoly α)) :
     RatFunc (CFieldSpec.K α) :=
   (logs.map (fun cv =>
     am α (Polynomial.C (CFieldSpec.toK cv.1))
@@ -55,13 +55,13 @@ noncomputable def logResidueSum (Dt : CPoly α) (logs : List (α × CPoly α)) :
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `logResidueSum` of the empty list is `0`. -/
-@[simp] theorem logResidueSumG_nil (Dt : CPoly α) : logResidueSum Dt ([] : List (α × CPoly α)) = 0 :=
+@[simp] theorem logResidueSumG_nil (Dt : DensePoly α) : logResidueSum Dt ([] : List (α × DensePoly α)) = 0 :=
   rfl
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `logResidueSum` peels the head: `logResidueSum Dt ((c,v) :: rest) = am(C(toK c))·(Δv)/v
 + logResidueSum Dt rest`. -/
-theorem logResidueSumG_cons (Dt : CPoly α) (cv : α × CPoly α) (rest : List (α × CPoly α)) :
+theorem logResidueSumG_cons (Dt : DensePoly α) (cv : α × DensePoly α) (rest : List (α × DensePoly α)) :
     logResidueSum Dt (cv :: rest)
       = am α (Polynomial.C (CFieldSpec.toK cv.1))
           * (am α (toPoly (cmonomialDeriv Dt cv.2)) / am α (toPoly cv.2))
@@ -70,7 +70,7 @@ theorem logResidueSumG_cons (Dt : CPoly α) (cv : α × CPoly α) (rest : List (
 
 /-- `logResidueSum` reads as the monomial log-derivative sum
 `∑_{(c,v)} am(C(toK c))·(towerFractionFieldDeriv Dt (am v)/am v)`. -/
-theorem logResidueSumG_eq_logDeriv_sum (Dt : CPoly α) (logs : List (α × CPoly α)) :
+theorem logResidueSumG_eq_logDeriv_sum (Dt : DensePoly α) (logs : List (α × DensePoly α)) :
     logResidueSum Dt logs
       = (logs.map (fun cv =>
           am α (Polynomial.C (CFieldSpec.toK cv.1))
@@ -85,12 +85,12 @@ theorem logResidueSumG_eq_logDeriv_sum (Dt : CPoly α) (logs : List (α × CPoly
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The `checkIdentity` fold computes the residue sum: its running fraction equals the seed fraction
 plus `logResidueSum`, with the running denominator staying nonzero. -/
-theorem checkIdentityG_fold_eq (Dt : CPoly α) :
-    ∀ (logs : List (α × CPoly α)) (snum sden : CPoly α),
+theorem checkIdentityG_fold_eq (Dt : DensePoly α) :
+    ∀ (logs : List (α × DensePoly α)) (snum sden : DensePoly α),
       toPoly sden ≠ 0 →
       (∀ cv ∈ logs, toPoly cv.2 ≠ 0) →
       let res := logs.foldl
-        (fun (acc : CPoly α × CPoly α) (cv : α × CPoly α) =>
+        (fun (acc : DensePoly α × DensePoly α) (cv : α × DensePoly α) =>
           let c := cv.1
           let v := cv.2
           let Dv := cmonomialDeriv Dt v
@@ -144,11 +144,11 @@ theorem checkIdentityG_fold_eq (Dt : CPoly α) :
 /-- `checkIdentity = true ⟹ field identity`: a passed check gives
 `towerFractionFieldDeriv Dt (am gnum / am gden) + logResidueSum Dt res.logs = am anum / am aden`
 over `RatFunc (CFieldSpec.K α)` — the engine's `D(∫f) = f` in field form. -/
-theorem field_identity_of_checkIdentityG (Dt : CPoly α) (res : IntegralResult α)
-    (anum aden : CPoly α)
+theorem field_identity_of_checkIdentityG (Dt : DensePoly α) (res : IntegralResult α)
+    (anum aden : DensePoly α)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly aden ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
-    (hcheck : CPoly.checkIdentity Dt res anum aden = true) :
+    (hcheck : DensePoly.checkIdentity Dt res anum aden = true) :
     towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
         + logResidueSum Dt res.logs
       = am α (toPoly anum) / am α (toPoly aden) := by
@@ -160,7 +160,7 @@ theorem field_identity_of_checkIdentityG (Dt : CPoly α) (res : IntegralResult �
   set gden2 := cmul gden gden with hgden2
   -- the fold result `(Lnum, Lden)`
   set folded := res.logs.foldl
-    (fun (acc : CPoly α × CPoly α) (cv : α × CPoly α) =>
+    (fun (acc : DensePoly α × DensePoly α) (cv : α × DensePoly α) =>
       let c := cv.1
       let v := cv.2
       let Dv := cmonomialDeriv Dt v
@@ -168,15 +168,15 @@ theorem field_identity_of_checkIdentityG (Dt : CPoly α) (res : IntegralResult �
       (cadd (cmul acc.1 v) (cmul termNum acc.2), cmul acc.2 v))
     ([CField.zero], [CField.one]) with hfolded
   -- the fold computes `logResidueSum` over the field, with nonzero `Lden`
-  have hseedden : toPoly ([CField.one] : CPoly α) ≠ 0 := by
+  have hseedden : toPoly ([CField.one] : DensePoly α) ≠ 0 := by
     simp only [denote, mul_zero, add_zero]
     exact one_ne_zero
   obtain ⟨hLden_ne, hLfield⟩ := checkIdentityG_fold_eq Dt res.logs [CField.zero] [CField.one]
     hseedden hlogs
   rw [← hfolded] at hLden_ne hLfield
   -- the seed fraction `0/1 = 0`
-  have hseed0 : am α (toPoly ([CField.zero] : CPoly α))
-      / am α (toPoly ([CField.one] : CPoly α)) = 0 := by
+  have hseed0 : am α (toPoly ([CField.zero] : DensePoly α))
+      / am α (toPoly ([CField.one] : DensePoly α)) = 0 := by
     simp only [denote, map_zero, mul_zero, add_zero, zero_div]
   rw [hseed0, zero_add] at hLfield
   -- abbreviations over the field
@@ -198,7 +198,7 @@ theorem field_identity_of_checkIdentityG (Dt : CPoly α) (res : IntegralResult �
     rw [hGD]
   have hLfield' : logResidueSum Dt res.logs = LN / LD := by rw [← hLfield, hLN, hLD]
   -- ── the converse direction: extract the cleared polynomial identity from `checkIdentity = true` ──
-  rw [CPoly.checkIdentity] at hcheck
+  rw [DensePoly.checkIdentity] at hcheck
   simp only [← hgnum, ← hgdenE, ← hgp, ← hgden2, ← hfolded] at hcheck
   rw [cisZeroG_iff] at hcheck
   simp only [denote, sub_eq_zero] at hcheck

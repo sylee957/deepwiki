@@ -41,7 +41,7 @@ computationally rendered and example-validated but not proved correct), the full
 construction, the genuine-tower §7.1 case and its hypertangent/nonlinear cancellation, and the §7.2
 Corollary 7.2.1 back-substitution to a nonparametric RDE. -/
 
-open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPoly
+open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.DensePoly
 
 namespace DeepWiki.Si
 
@@ -99,6 +99,6 @@ solver `cConstSolveUniqueQ Arows urhs ncols` (the `crref` Gauss–Jordan + back-
 correct** — if it returns `some x` then `x` solves the ℚ-linear system `A·x = b` rowwise. Proved
 `native_decide`-free via the solution-preserving and reduced-echelon `crref` invariants
 (`ComputableLinearSolveCorrect`). The solution-set correctness underlying the §7.1/§7.3 constant solve. -/
-abbrev alg_7_1_constSystem_solve_sound := @CPoly.cConstSolveUniqueQ_sound
+abbrev alg_7_1_constSystem_solve_sound := @DensePoly.cConstSolveUniqueQ_sound
 
 end DeepWiki.Si

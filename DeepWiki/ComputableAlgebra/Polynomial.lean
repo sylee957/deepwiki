@@ -10,8 +10,8 @@ import DeepWiki.Transfer.Denote
 `CField α`: computable field operations (`zero`/`one`/`add`/`mul`/`neg`/`inv`, zero test) that
 reduce, with meaning supplied by a companion `CFieldSpec` homomorphism `toK : α → K` into a Mathlib
 `Field K`. Over any `CField`, generic scalar powers and a dense polynomial engine
-`CPoly α := List α` provide computable arithmetic with a Horner bridge
-`toPoly : CPoly α → (CFieldSpec.K α)[X]`. -/
+`DensePoly α := List α` provide computable arithmetic with a Horner bridge
+`toPoly : DensePoly α → (CFieldSpec.K α)[X]`. -/
 
 open Polynomial
 
@@ -54,8 +54,8 @@ end CField
 
 `CCommRing α` is the ring fragment of `CField` (no `inv`): the coefficient constraint the ring-generic
 polynomial engine actually needs (20 of the 21 core `c*` ops use only these). Every `CField` is a
-`CCommRing` (bridge instance below), and a `CPoly` over a `CCommRing` is itself a `CCommRing`, so
-bivariate polynomials are just `CPoly (CPoly _)`. See `docs/ring-generalization-plan.md`. -/
+`CCommRing` (bridge instance below), and a `DensePoly` over a `CCommRing` is itself a `CCommRing`, so
+bivariate polynomials are just `DensePoly (DensePoly _)`. See `docs/ring-generalization-plan.md`. -/
 
 /-- Computable commutative-ring operations: `zero`/`one`/`add`/`mul`/`neg` and a zero test `isZero`;
 bridge-free, so instances reduce in the native compiler (`native_decide`). -/
@@ -93,7 +93,7 @@ instance (priority := 100) instCCommRingOfCField {α : Type*} [CField α] : CCom
 
 /-- Computable-commutative-ring specification: the bridge `toR : α → R` into a Mathlib `CommRing R`
 intertwining `zero`/`one`/`add`/`mul`/`neg`, plus `isZero_iff`. The ring analogue of `CFieldSpec`; the
-ring-generic denotation `toPoly : CPoly α → (CRingSpec.R α)[X]` lands in this `CommRing`. -/
+ring-generic denotation `toPoly : DensePoly α → (CRingSpec.R α)[X]` lands in this `CommRing`. -/
 class CRingSpec (α : Type*) [CCommRing α] where
   /-- The genuine Mathlib commutative ring the bridge lands in. -/
   R : Type*
@@ -191,7 +191,7 @@ them back to the `CField` head that field-path call sites and their satellite le
     CCommRing.neg a = CField.neg a := rfl
 
 /-- `CRingSpec.R α = CFieldSpec.K α`, a `Field`, so field-level squares over the ring-generic
-`toPoly : CPoly α → (CRingSpec.R α)[X]` find `⁻¹`/`GroupWithZero` on the field path. -/
+`toPoly : DensePoly α → (CRingSpec.R α)[X]` find `⁻¹`/`GroupWithZero` on the field path. -/
 instance (priority := 100) instFieldROfCFieldSpec {α : Type*} [CField α] [CFieldSpec α] :
     Field (CRingSpec.R α) := instFieldK α
 
@@ -274,30 +274,30 @@ instance : CFieldSpec ℚ where
   toK_inv _ := rfl
   isZero_iff a := by show decide (a = 0) = true ↔ id a = 0; simp
 
-/-! ### The polynomial engine `CPoly α := List α`
+/-! ### The polynomial engine `DensePoly α := List α`
 
 Dense-coefficient lists (index = degree, low to high) over `[CField α]`, with arithmetic built from
 the `CField` operations and a Horner bridge `toPoly` into `(CFieldSpec.K α)[X]`. -/
 
 /-- Generic dense coefficient list over a computable field `α` (index = degree, low to high).
 A reducible `abbrev` for `List α` so the `List` instances (`BEq`/`DecidableEq`/…) transfer and the
-ℚ-specialization `CPoly ℚ := CPoly ℚ` stays defeq to `List ℚ`. -/
-abbrev CPoly (α : Type*) := List α
+ℚ-specialization `DensePoly ℚ := DensePoly ℚ` stays defeq to `List ℚ`. -/
+abbrev DensePoly (α : Type*) := List α
 
-namespace CPoly
+namespace DensePoly
 
-/-- Pad a `CPoly` on the high-degree end with zeros up to length `n`; no-op if length is already
+/-- Pad a `DensePoly` on the high-degree end with zeros up to length `n`; no-op if length is already
 at least `n`. -/
-def cpad {α : Type*} [CField α] (n : ℕ) (p : CPoly α) : CPoly α :=
+def cpad {α : Type*} [CField α] (n : ℕ) (p : DensePoly α) : DensePoly α :=
   (p : List α) ++ List.replicate (n - (p : List α).length) CField.zero
 
 /-- Reverse coefficients after zero-padding to degree bound `k`: `creverseDeg k p` represents
 `X^k * p(X⁻¹)` when `k` bounds the degree of `p`. -/
-def creverseDeg {α : Type*} [CField α] (k : ℕ) (p : CPoly α) : CPoly α :=
+def creverseDeg {α : Type*} [CField α] (k : ℕ) (p : DensePoly α) : DensePoly α :=
   (cpad (k + 1) p).reverse
 
-/-- Monomial `c * X^n` as a `CPoly`: `n` low-degree zeros followed by coefficient `c`. -/
-def cMonomial {α : Type*} [CField α] (c : α) (n : ℕ) : CPoly α :=
+/-- Monomial `c * X^n` as a `DensePoly`: `n` low-degree zeros followed by coefficient `c`. -/
+def cMonomial {α : Type*} [CField α] (c : α) (n : ℕ) : DensePoly α :=
   (List.replicate n CField.zero ++ [c] : List α)
 
 /-- Generic power of a field element: `cfpow c n = cⁿ` over `[CField α]` by `ℕ`-recursion. -/
@@ -306,7 +306,7 @@ def cfpow {α : Type*} [CField α] (c : α) : ℕ → α
   | n + 1 => CField.mul c (cfpow c n)
 
 /-- Horner evaluation `ceval p c = p(c)` for a dense coefficient list, low degree first. -/
-def ceval {α : Type*} [CField α] (p : CPoly α) (c : α) : α :=
+def ceval {α : Type*} [CField α] (p : DensePoly α) (c : α) : α :=
   (p : List α).foldr (fun coeff acc => CField.add coeff (CField.mul c acc)) CField.zero
 
 /-- `toK (cfpow c n) = (toK c) ^ n`: generic constant power realizes the `K`-power. -/
@@ -339,69 +339,69 @@ theorem prodG_sub_ne_zero {α : Type*} [CField α] [CFieldSpec α] {zk : α} {ot
   obtain ⟨zj, hzj, hzeq⟩ := hy
   exact hne zj hzj (sub_eq_zero.mp hzeq).symm
 
-/-- Normalize a `CPoly` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
+/-- Normalize a `DensePoly` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnorm` is a canonical form (the zero polynomial becomes `[]`). -/
-def cnorm {α : Type*} [CCommRing α] : CPoly α → CPoly α
+def cnorm {α : Type*} [CCommRing α] : DensePoly α → DensePoly α
   | [] => []
   | a :: as => match cnorm as with
     | [] => if CCommRing.isZero a then [] else [a]
     | r => a :: r
 
-/-- Coefficientwise addition of two `CPoly`s (the shorter is zero-extended implicitly). -/
-def cadd {α : Type*} [CCommRing α] : CPoly α → CPoly α → CPoly α
+/-- Coefficientwise addition of two `DensePoly`s (the shorter is zero-extended implicitly). -/
+def cadd {α : Type*} [CCommRing α] : DensePoly α → DensePoly α → DensePoly α
   | [], q => q
   | p, [] => p
   | a :: as, b :: bs => CCommRing.add a b :: cadd as bs
 
-/-- Negation of a `CPoly`, coefficientwise. -/
-def cneg {α : Type*} [CCommRing α] (p : CPoly α) : CPoly α := (p : List α).map CCommRing.neg
+/-- Negation of a `DensePoly`, coefficientwise. -/
+def cneg {α : Type*} [CCommRing α] (p : DensePoly α) : DensePoly α := (p : List α).map CCommRing.neg
 
-/-- Subtraction of `CPoly`s, `p − q := p + (−q)`. -/
-def csub {α : Type*} [CCommRing α] (p q : CPoly α) : CPoly α := cadd p (cneg q)
+/-- Subtraction of `DensePoly`s, `p − q := p + (−q)`. -/
+def csub {α : Type*} [CCommRing α] (p q : DensePoly α) : DensePoly α := cadd p (cneg q)
 
-/-- Scalar multiplication of a `CPoly` by `c : α`, coefficientwise. -/
-def cscale {α : Type*} [CCommRing α] (c : α) (p : CPoly α) : CPoly α := (p : List α).map (CCommRing.mul c)
+/-- Scalar multiplication of a `DensePoly` by `c : α`, coefficientwise. -/
+def cscale {α : Type*} [CCommRing α] (c : α) (p : DensePoly α) : DensePoly α := (p : List α).map (CCommRing.mul c)
 
 /-- Degree shift `cshift k p = x^k · p`: prepend `k` zero coefficients. -/
-def cshift {α : Type*} [CCommRing α] : ℕ → CPoly α → CPoly α
+def cshift {α : Type*} [CCommRing α] : ℕ → DensePoly α → DensePoly α
   | 0, p => p
   | n + 1, p => CCommRing.zero :: cshift n p
 
 /-- `(cshift k p).length = k + p.length`. -/
-theorem cshiftG_length {α : Type*} [CField α] (k : ℕ) (p : CPoly α) :
+theorem cshiftG_length {α : Type*} [CField α] (k : ℕ) (p : DensePoly α) :
     (cshift k p : List α).length = k + (p : List α).length := by
   induction k with
   | zero => simp [cshift]
   | succ m ih => rw [cshift]; simp only [List.length_cons, ih]; omega
 
-/-- Polynomial multiplication of `CPoly`s (schoolbook convolution via `cshift`/`cscale`). -/
-def cmul {α : Type*} [CCommRing α] : CPoly α → CPoly α → CPoly α
+/-- Polynomial multiplication of `DensePoly`s (schoolbook convolution via `cshift`/`cscale`). -/
+def cmul {α : Type*} [CCommRing α] : DensePoly α → DensePoly α → DensePoly α
   | [], _ => []
   | a :: as, q => cadd (cscale a q) (CCommRing.zero :: cmul as q)
 
-/-- Product of a list of `CPoly`s, folding `cmul` from `[1]`. -/
-def cprod {α : Type*} [CCommRing α] (ps : List (CPoly α)) : CPoly α :=
+/-- Product of a list of `DensePoly`s, folding `cmul` from `[1]`. -/
+def cprod {α : Type*} [CCommRing α] (ps : List (DensePoly α)) : DensePoly α :=
   ps.foldl (fun acc p => cmul acc p) [CCommRing.one]
 
-/-- Power of a `CPoly` by `ℕ`-recursion (`[1]` at `0`). -/
-def cpow {α : Type*} [CCommRing α] (p : CPoly α) : ℕ → CPoly α
+/-- Power of a `DensePoly` by `ℕ`-recursion (`[1]` at `0`). -/
+def cpow {α : Type*} [CCommRing α] (p : DensePoly α) : ℕ → DensePoly α
   | 0 => [CCommRing.one]
   | n + 1 => cmul p (cpow p n)
 
-/-- Leading coefficient of a `CPoly` (top nonzero coefficient; `zero` for the zero polynomial). -/
-def clead {α : Type*} [CCommRing α] (p : CPoly α) : α := ((cnorm p : List α).getLast?.getD CCommRing.zero)
+/-- Leading coefficient of a `DensePoly` (top nonzero coefficient; `zero` for the zero polynomial). -/
+def clead {α : Type*} [CCommRing α] (p : DensePoly α) : α := ((cnorm p : List α).getLast?.getD CCommRing.zero)
 
-/-- Degree of a `CPoly` as a `ℕ`: `(length of normalized p) − 1`, with `cdeg 0 = 0`. -/
-def cdeg {α : Type*} [CCommRing α] (p : CPoly α) : ℕ := (cnorm p : List α).length - 1
+/-- Degree of a `DensePoly` as a `ℕ`: `(length of normalized p) − 1`, with `cdeg 0 = 0`. -/
+def cdeg {α : Type*} [CCommRing α] (p : DensePoly α) : ℕ := (cnorm p : List α).length - 1
 
-/-- Zero test for a `CPoly`: `true` iff it normalizes to `[]`. -/
-def cisZero {α : Type*} [CCommRing α] (p : CPoly α) : Bool := (cnorm p : List α).isEmpty
+/-- Zero test for a `DensePoly`: `true` iff it normalizes to `[]`. -/
+def cisZero {α : Type*} [CCommRing α] (p : DensePoly α) : Bool := (cnorm p : List α).isEmpty
 
-/-- **Keystone instance.** A `CPoly` over a computable commutative ring is itself a computable commutative
+/-- **Keystone instance.** A `DensePoly` over a computable commutative ring is itself a computable commutative
 ring (`add := cadd`, `mul := cmul`, `neg := cneg`, `zero := []`, `one := [one]`, `isZero := cisZero`) — so
-`CPoly (CPoly _)` is a valid coefficient tower and bivariate polynomials need no separate definition. All
+`DensePoly (DensePoly _)` is a valid coefficient tower and bivariate polynomials need no separate definition. All
 ops reduce, so the tower stays `native_decide`-executable. See `docs/ring-generalization-plan.md`. -/
-instance instCCommRingCPoly {α : Type*} [CCommRing α] : CCommRing (CPoly α) where
+instance instCCommRingCPoly {α : Type*} [CCommRing α] : CCommRing (DensePoly α) where
   zero := []
   one := [CCommRing.one]
   add := cadd
@@ -409,48 +409,48 @@ instance instCCommRingCPoly {α : Type*} [CCommRing α] : CCommRing (CPoly α) w
   neg := cneg
   isZero := cisZero
 
-/-- Make a `CPoly` monic (lead coefficient `1`) by scaling by `(clead)⁻¹`; the zero polynomial
+/-- Make a `DensePoly` monic (lead coefficient `1`) by scaling by `(clead)⁻¹`; the zero polynomial
 stays `[]`. -/
-def cmonic {α : Type*} [CField α] (p : CPoly α) : CPoly α :=
+def cmonic {α : Type*} [CField α] (p : DensePoly α) : DensePoly α :=
   let p := cnorm p
   if cisZero p then [] else cscale (CField.inv (clead p)) p
 
-/-- Monic test for a `CPoly`: `true` iff `cmonic p = p` as normalized lists. -/
-def cisMonic {α : Type*} [CField α] (p : CPoly α) : Bool := cisZero (csub (cmonic p) p)
+/-- Monic test for a `DensePoly`: `true` iff `cmonic p = p` as normalized lists. -/
+def cisMonic {α : Type*} [CField α] (p : DensePoly α) : Bool := cisZero (csub (cmonic p) p)
 
 /-! ### The generic Horner bridge `toPoly` and its homomorphism lemmas
 
 From here on the bridge `[CFieldSpec α]` is in scope: `toPoly` and every correctness lemma carry the
 extra binder, while the engine ops above need only `[CField α]`. -/
 
-/-- Generic bridge to `(CFieldSpec.K α)[X]`: `toPoly p` reads a `CPoly` coefficient list (index =
+/-- Generic bridge to `(CFieldSpec.K α)[X]`: `toPoly p` reads a `DensePoly` coefficient list (index =
 degree, low to high) as a `Polynomial (CFieldSpec.K α)` in Horner form `p₀ + x·(p₁ + x·(p₂ + …))`,
 each coefficient embedded via `toK`. -/
-noncomputable def toPoly {α : Type*} [CCommRing α] [CRingSpec α] : CPoly α → (CRingSpec.R α)[X]
+noncomputable def toPoly {α : Type*} [CCommRing α] [CRingSpec α] : DensePoly α → (CRingSpec.R α)[X]
   | [] => 0
   | a :: p => Polynomial.C (CRingSpec.toR a) + X * toPoly p
 
 /-- `toPoly [] = 0`: the empty coefficient list is the zero polynomial. -/
 @[simp, denote] theorem toPolyG_nil {α : Type*} [CCommRing α] [CRingSpec α] :
-    toPoly ([] : CPoly α) = 0 := rfl
+    toPoly ([] : DensePoly α) = 0 := rfl
 
 /-- `toPoly`'s leading recursion (Horner): `toPoly (a :: p) = C (toK a) + X · toPoly p`. -/
-@[simp, denote] theorem toPolyG_cons {α : Type*} [CCommRing α] [CRingSpec α] (a : α) (p : CPoly α) :
+@[simp, denote] theorem toPolyG_cons {α : Type*} [CCommRing α] [CRingSpec α] (a : α) (p : DensePoly α) :
     toPoly (a :: p) = Polynomial.C (CRingSpec.toR a) + X * toPoly p := rfl
 
 /-- `toPoly [CField.one] = 1`: the singleton coefficient list `[1]` reads as the polynomial `1`. -/
 @[denote] theorem toPolyG_one_singleton {α : Type*} [CCommRing α] [CRingSpec α] :
-    toPoly ([CCommRing.one] : CPoly α) = 1 := by
+    toPoly ([CCommRing.one] : DensePoly α) = 1 := by
   rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CRingSpec.toR_one, map_one]
 
 /-- `toPoly [CField.one] ≠ 0`: the singleton coefficient list `[1]` reads nontrivially. -/
 theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
-    toPoly ([CField.one] : CPoly α) ≠ 0 := by
+    toPoly ([CField.one] : DensePoly α) ≠ 0 := by
   simp only [denote, map_one, mul_zero, add_zero]
   exact (one_ne_zero : (1 : Polynomial (CFieldSpec.K α)) ≠ 0)
 
 /-- `toPoly` is additive: `cadd` realizes `(CFieldSpec.K α)[X]` addition under the Horner bridge. -/
-@[simp, denote] theorem toPolyG_caddG {α : Type*} [CCommRing α] [CRingSpec α] (p q : CPoly α) :
+@[simp, denote] theorem toPolyG_caddG {α : Type*} [CCommRing α] [CRingSpec α] (p q : DensePoly α) :
     toPoly (cadd p q) = toPoly p + toPoly q := by
   induction p generalizing q with
   | nil => simp [cadd]
@@ -463,7 +463,7 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
 
 /-- `toPoly` of a `cadd` fold is the running sum of the term images. -/
 @[denote] theorem toPolyG_foldl_caddG {α : Type*} [CCommRing α] [CRingSpec α]
-    (f : α × α → CPoly α) (pts : List (α × α)) (init : CPoly α) :
+    (f : α × α → DensePoly α) (pts : List (α × α)) (init : DensePoly α) :
     toPoly (pts.foldl (fun acc p => cadd acc (f p)) init)
       = toPoly init + (pts.map (fun p => toPoly (f p))).sum := by
   induction pts generalizing init with
@@ -474,7 +474,7 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
     ring
 
 /-- `toPoly` commutes with negation: `toPoly (cneg p) = − toPoly p`. -/
-@[simp, denote] theorem toPolyG_cnegG {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+@[simp, denote] theorem toPolyG_cnegG {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
     toPoly (cneg p) = - toPoly p := by
   induction p with
   | nil => simp [cneg]
@@ -483,13 +483,13 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
     simp only [denote, ih, map_neg]; ring
 
 /-- `toPoly` realizes subtraction: `toPoly (csub p q) = toPoly p − toPoly q`. -/
-@[simp, denote] theorem toPolyG_csubG {α : Type*} [CCommRing α] [CRingSpec α] (p q : CPoly α) :
+@[simp, denote] theorem toPolyG_csubG {α : Type*} [CCommRing α] [CRingSpec α] (p q : DensePoly α) :
     toPoly (csub p q) = toPoly p - toPoly q := by
   rw [csub]
   simp only [denote, sub_eq_add_neg]
 
 /-- `toPoly` realizes scalar multiplication: `toPoly (cscale c p) = C (toK c) · toPoly p`. -/
-@[simp, denote] theorem toPolyG_cscaleG {α : Type*} [CCommRing α] [CRingSpec α] (c : α) (p : CPoly α) :
+@[simp, denote] theorem toPolyG_cscaleG {α : Type*} [CCommRing α] [CRingSpec α] (c : α) (p : DensePoly α) :
     toPoly (cscale c p) = Polynomial.C (CRingSpec.toR c) * toPoly p := by
   induction p with
   | nil => simp [cscale]
@@ -498,7 +498,7 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
     simp only [denote, ih, map_mul]; ring
 
 /-- `toPoly` realizes the degree shift: `toPoly (cshift k p) = X^k · toPoly p`. -/
-@[simp, denote] theorem toPolyG_cshiftG {α : Type*} [CCommRing α] [CRingSpec α] (k : ℕ) (p : CPoly α) :
+@[simp, denote] theorem toPolyG_cshiftG {α : Type*} [CCommRing α] [CRingSpec α] (k : ℕ) (p : DensePoly α) :
     toPoly (cshift k p) = X ^ k * toPoly p := by
   induction k with
   | zero => simp [cshift]
@@ -507,7 +507,7 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
     simp only [denote, ih, map_zero]; ring
 
 /-- `toPoly` is multiplicative: `cmul` realizes `(CFieldSpec.K α)[X]` multiplication. -/
-@[simp, denote] theorem toPolyG_cmulG {α : Type*} [CCommRing α] [CRingSpec α] (p q : CPoly α) :
+@[simp, denote] theorem toPolyG_cmulG {α : Type*} [CCommRing α] [CRingSpec α] (p q : DensePoly α) :
     toPoly (cmul p q) = toPoly p * toPoly q := by
   induction p with
   | nil => simp [cmul]
@@ -516,7 +516,7 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
     simp only [denote, ih, map_zero]; ring
 
 /-- `toPoly` realizes the `ℕ`-power: `toPoly (cpow p n) = (toPoly p) ^ n`. -/
-@[simp, denote] theorem toPolyG_cpowG {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) (n : ℕ) :
+@[simp, denote] theorem toPolyG_cpowG {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) (n : ℕ) :
     toPoly (cpow p n) = (toPoly p) ^ n := by
   induction n with
   | zero => simp [cpow, denote]
@@ -539,19 +539,19 @@ def cnsmul {α : Type*} [CField α] : ℕ → α → α
   | succ n ih => rw [cnsmul, CFieldSpec.toK_add, ih, succ_nsmul']
 
 /-- Generic formal derivative `cderiv [a₀,a₁,a₂,…] = [1·a₁, 2·a₂, 3·a₃, …]`. -/
-def cderiv {α : Type*} [CField α] : CPoly α → CPoly α
+def cderiv {α : Type*} [CField α] : DensePoly α → DensePoly α
   | [] => []
   | _ :: as => go 1 as
 where
   /-- Auxiliary: from degree `k`, emit `cnsmul k a` for each coefficient `a` (the derivative tail). -/
-  go : ℕ → CPoly α → CPoly α
+  go : ℕ → DensePoly α → DensePoly α
   | _, [] => []
   | k, a :: as => cnsmul k a :: go (k + 1) as
 
 /-- `cderiv` realizes the `K[X]` derivative: `toPoly (cderiv p) = Polynomial.derivative (toPoly p)`. -/
-@[denote] theorem toPolyG_cderivG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+@[denote] theorem toPolyG_cderivG {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α) :
     toPoly (cderiv p) = Polynomial.derivative (toPoly p) := by
-  suffices h : ∀ (as : CPoly α) (k : ℕ),
+  suffices h : ∀ (as : DensePoly α) (k : ℕ),
       toPoly (cderiv.go k as)
         = (k : (CFieldSpec.K α)[X]) * toPoly as + X * Polynomial.derivative (toPoly as) by
     cases p with
@@ -576,15 +576,15 @@ where
 /-! ### Normalization, degree, leading coefficient — generic correctness -/
 
 /-- `cnorm [] = []`. -/
-@[simp] theorem cnormG_nil {α : Type*} [CCommRing α] : cnorm ([] : CPoly α) = [] := rfl
+@[simp] theorem cnormG_nil {α : Type*} [CCommRing α] : cnorm ([] : DensePoly α) = [] := rfl
 
 /-- `cnorm` on a cons cell, unfolded to its defining `match` (definitional). -/
-theorem cnormG_cons_eq {α : Type*} [CCommRing α] (a : α) (as : CPoly α) :
+theorem cnormG_cons_eq {α : Type*} [CCommRing α] (a : α) (as : DensePoly α) :
     cnorm (a :: as)
       = (match cnorm as with | [] => if CCommRing.isZero a then [] else [a] | r => a :: r) := rfl
 
 /-- `cnorm` is idempotent: stripping trailing zeros twice is the same as once. -/
-@[simp] theorem cnormG_idem {α : Type*} [CCommRing α] (p : CPoly α) : cnorm (cnorm p) = cnorm p := by
+@[simp] theorem cnormG_idem {α : Type*} [CCommRing α] (p : DensePoly α) : cnorm (cnorm p) = cnorm p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
@@ -596,20 +596,20 @@ theorem cnormG_cons_eq {α : Type*} [CCommRing α] (a : α) (as : CPoly α) :
       simp only [cnormG_cons_eq, ih]
 
 /-- `clead` is invariant under `cnorm`: `clead (cnorm p) = clead p`. -/
-theorem cleadG_cnormG {α : Type*} [CCommRing α] (p : CPoly α) : clead (cnorm p) = clead p := by
+theorem cleadG_cnormG {α : Type*} [CCommRing α] (p : DensePoly α) : clead (cnorm p) = clead p := by
   simp only [clead, cnormG_idem]
 
 /-- `cisZero` is invariant under `cnorm`. -/
-theorem cisZeroG_cnormG {α : Type*} [CCommRing α] (q : CPoly α) : cisZero (cnorm q) = cisZero q := by
+theorem cisZeroG_cnormG {α : Type*} [CCommRing α] (q : DensePoly α) : cisZero (cnorm q) = cisZero q := by
   simp only [cisZero, cnormG_idem]
 
 /-- `cdeg` is invariant under `cnorm`. -/
-theorem cdegG_cnormG {α : Type*} [CCommRing α] (p : CPoly α) : cdeg (cnorm p) = cdeg p := by
+theorem cdegG_cnormG {α : Type*} [CCommRing α] (p : DensePoly α) : cdeg (cnorm p) = cdeg p := by
   simp only [cdeg, cnormG_idem]
 
 /-- `toPoly` ignores normalization: `toPoly (cnorm p) = toPoly p` — stripping trailing zeros
 does not change the polynomial (the dropped coefficients are zero, via `isZero_iff`). -/
-@[simp, denote] theorem toPolyG_cnormG {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+@[simp, denote] theorem toPolyG_cnormG {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
     toPoly (cnorm p) = toPoly p := by
   induction p with
   | nil => rfl
@@ -633,7 +633,7 @@ does not change the polynomial (the dropped coefficients are zero, via `isZero_i
 
 /-- Coefficient read: the `i`-th coefficient of `toPoly p` is `toK` of the `i`-th list entry
 (`0` past the end). The Horner bridge realizes the dense coefficient list exactly. -/
-theorem toPolyG_coeff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) (i : ℕ) :
+theorem toPolyG_coeff {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) (i : ℕ) :
     (toPoly p).coeff i = CRingSpec.toR ((p : List α).getD i CCommRing.zero) := by
   induction p generalizing i with
   | nil => simp [CRingSpec.toR_zero]
@@ -644,7 +644,7 @@ theorem toPolyG_coeff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) 
     | succ n => simp [coeff_X_mul, ih]
 
 /-- `toPoly` of a coefficient list is its dense polynomial `∑ i, C(toK cᵢ) * X^i`. -/
-theorem toPolyG_eq_sum_range {α : Type*} [CCommRing α] [CRingSpec α] (l : CPoly α) :
+theorem toPolyG_eq_sum_range {α : Type*} [CCommRing α] [CRingSpec α] (l : DensePoly α) :
     toPoly l =
       ∑ i ∈ Finset.range l.length, C (CRingSpec.toR ((l : List α).getD i CCommRing.zero)) * X ^ i := by
   induction l with
@@ -659,12 +659,12 @@ theorem toPolyG_eq_sum_range {α : Type*} [CCommRing α] [CRingSpec α] (l : CPo
     ring
 
 /-- `toK` reads a normalized coefficient as the corresponding coefficient of `toPoly p`. -/
-theorem toR_cnormG_getD {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) (k : ℕ) :
+theorem toR_cnormG_getD {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) (k : ℕ) :
     CRingSpec.toR ((cnorm p : List α).getD k CCommRing.zero) = (toPoly p).coeff k := by
   rw [← toPolyG_coeff, toPolyG_cnormG]
 
 /-- `cnorm` has no trailing zero: `(cnorm p).getLast?` is never a zero coefficient. -/
-theorem cnormG_getLast?_ne_some_zero {α : Type*} [CCommRing α] (p : CPoly α) :
+theorem cnormG_getLast?_ne_some_zero {α : Type*} [CCommRing α] (p : DensePoly α) :
     ∀ v, (cnorm p : List α).getLast? = some v → CCommRing.isZero v = false := by
   induction p with
   | nil => simp
@@ -684,8 +684,8 @@ theorem cnormG_getLast?_ne_some_zero {α : Type*} [CCommRing α] (p : CPoly α) 
       rw [List.getLast?_cons_cons] at hv
       exact ih v hv
 
-/-- For a normalized nonzero `CPoly`, the leading coefficient `clead` is nonzero (in `K`). -/
-theorem toR_cleadG_ne_zero {α : Type*} [CCommRing α] [CRingSpec α] {p : CPoly α} (h : cnorm p ≠ []) :
+/-- For a normalized nonzero `DensePoly`, the leading coefficient `clead` is nonzero (in `K`). -/
+theorem toR_cleadG_ne_zero {α : Type*} [CCommRing α] [CRingSpec α] {p : DensePoly α} (h : cnorm p ≠ []) :
     CRingSpec.toR (clead p) ≠ 0 := by
   rw [clead]
   rcases hl : (cnorm p : List α).getLast? with _ | v
@@ -697,13 +697,13 @@ theorem toR_cleadG_ne_zero {α : Type*} [CCommRing α] [CRingSpec α] {p : CPoly
     exact absurd this (by simp)
 
 /-- `clead` is the coefficient at the top index: `toK (clead p) = (toPoly p).coeff (cdeg p)`. -/
-theorem toR_cleadG_eq_coeff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+theorem toR_cleadG_eq_coeff {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
     CRingSpec.toR (clead p) = (toPoly p).coeff (cdeg p) := by
   rw [clead, cdeg, ← toPolyG_cnormG, toPolyG_coeff, List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
 
 /-- Degree bound: `natDegree (toPoly p) ≤ (cnorm p).length − 1`. -/
-theorem natDegree_toPolyG_le {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+theorem natDegree_toPolyG_le {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
     (toPoly p).natDegree ≤ (cnorm p : List α).length - 1 := by
   rw [← toPolyG_cnormG]
   apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
@@ -712,7 +712,7 @@ theorem natDegree_toPolyG_le {α : Type*} [CCommRing α] [CRingSpec α] (p : CPo
     CRingSpec.toR_zero]
 
 /-- `cdeg` is the honest `natDegree`: `cdeg p = (toPoly p).natDegree`. -/
-theorem cdegG_eq_natDegree {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+theorem cdegG_eq_natDegree {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
     cdeg p = (toPoly p).natDegree := by
   rcases eq_or_ne (cnorm p) [] with h | h
   · have h0 : toPoly p = 0 := by rw [← toPolyG_cnormG, h, toPolyG_nil]
@@ -723,7 +723,7 @@ theorem cdegG_eq_natDegree {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly
     exact toR_cleadG_ne_zero h
 
 /-- For a nonzero generic polynomial, the normalized list length is `natDegree + 1`. -/
-theorem length_cnormG_of_ne {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α)
+theorem length_cnormG_of_ne {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α)
     (h : cnorm p ≠ []) :
     (cnorm p : List α).length = (toPoly p).natDegree + 1 := by
   have hd := cdegG_eq_natDegree p
@@ -732,7 +732,7 @@ theorem length_cnormG_of_ne {α : Type*} [CCommRing α] [CRingSpec α] (p : CPol
   omega
 
 /-- `toK (clead p)` is the honest `leadingCoeff`: `toK (clead p) = (toPoly p).leadingCoeff`. -/
-theorem toR_cleadG_eq_leadingCoeff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+theorem toR_cleadG_eq_leadingCoeff {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
     CRingSpec.toR (clead p) = (toPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← cdegG_eq_natDegree, ← toR_cleadG_eq_coeff]
 
@@ -741,23 +741,23 @@ On a field coefficient the ring bridge is the field bridge (`toR = toK`, by defe
 same readings phrased with `CFieldSpec.toK` for the field-only call sites. -/
 
 /-- Field-path alias: `toK` reads a normalized coefficient as the corresponding `toPoly` coefficient. -/
-theorem toK_cnormG_getD {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) (k : ℕ) :
+theorem toK_cnormG_getD {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α) (k : ℕ) :
     CFieldSpec.toK ((cnorm p : List α).getD k CField.zero) = (toPoly p).coeff k :=
   toR_cnormG_getD p k
 
 /-- Field-path alias: `toK (clead p) = (toPoly p).coeff (cdeg p)`. -/
-theorem toK_cleadG_eq_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+theorem toK_cleadG_eq_coeff {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α) :
     CFieldSpec.toK (clead p) = (toPoly p).coeff (cdeg p) :=
   toR_cleadG_eq_coeff p
 
 /-- Field-path alias: `toK (clead p) = (toPoly p).leadingCoeff`. -/
-theorem toK_cleadG_eq_leadingCoeff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+theorem toK_cleadG_eq_leadingCoeff {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α) :
     CFieldSpec.toK (clead p) = (toPoly p).leadingCoeff :=
   toR_cleadG_eq_leadingCoeff p
 
 /-- `cnorm p = []` iff `toPoly p = 0` (the list normalizes to empty exactly for the zero
 polynomial). -/
-theorem cnormG_eq_nil_iff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+theorem cnormG_eq_nil_iff {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
     cnorm p = [] ↔ toPoly p = 0 := by
   constructor
   · intro h; rw [← toPolyG_cnormG, h, toPolyG_nil]
@@ -769,7 +769,7 @@ theorem cnormG_eq_nil_iff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly 
 
 /-- `length (cnorm p) < length (cnorm q)` (with `cnorm q ≠ []`) gives
 `deg (toPoly p) < deg (toPoly q)`. -/
-theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CCommRing α] [CRingSpec α] (p q : CPoly α)
+theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CCommRing α] [CRingSpec α] (p q : DensePoly α)
     (hq : cnorm q ≠ []) (hlen : (cnorm p : List α).length < (cnorm q : List α).length) :
     (toPoly p).degree < (toPoly q).degree := by
   have hq0 : toPoly q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
@@ -784,25 +784,25 @@ theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CCommRing α] [CRingSpec α
     omega
 
 /-- `cisZero` reads as `toPoly = 0`: `cisZero p = true ↔ toPoly p = 0`. -/
-theorem cisZeroG_iff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+theorem cisZeroG_iff {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
     cisZero p = true ↔ toPoly p = 0 := by
   rw [cisZero, ← cnormG_eq_nil_iff]
   exact (List.isEmpty_iff (l := (cnorm p : List α)))
 
 /-- `cisZero p = false` gives `toPoly p ≠ 0`. -/
-theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CCommRing α] [CRingSpec α] {p : CPoly α}
+theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CCommRing α] [CRingSpec α] {p : DensePoly α}
     (h : cisZero p = false) :
     toPoly p ≠ 0 := by
   rw [Bool.eq_false_iff, Ne, cisZeroG_iff] at h
   exact h
 
-/-- **Denotational keystone.** A `CPoly` over `[CCommRing α] [CRingSpec α]` is a `CRingSpec` with
+/-- **Denotational keystone.** A `DensePoly` over `[CCommRing α] [CRingSpec α]` is a `CRingSpec` with
 `R := (CRingSpec.R α)[X]` and `toR := toPoly`, the Horner ring homomorphism (its hom laws are the
-`toPolyG_*` squares). Together with `instCCommRingCPoly` this makes `CPoly (CPoly _)` a fully
+`toPolyG_*` squares). Together with `instCCommRingCPoly` this makes `DensePoly (DensePoly _)` a fully
 denotable ring coefficient — bivariate polynomials denote into the iterated polynomial ring
 `(R α)[X][X]` with no separate development. See `docs/ring-generalization-plan.md`. -/
 noncomputable instance instCRingSpecCPoly {α : Type*} [CCommRing α] [CRingSpec α] :
-    CRingSpec (CPoly α) where
+    CRingSpec (DensePoly α) where
   R := (CRingSpec.R α)[X]
   toR := toPoly
   toR_zero := toPolyG_nil
@@ -813,7 +813,7 @@ noncomputable instance instCRingSpecCPoly {α : Type*} [CCommRing α] [CRingSpec
   isZero_iff := cisZeroG_iff
 
 /-- Monic-normalization is a unit-scaling: `toPoly (cmonic p)` is associated to `toPoly p` in `K[X]`. -/
-theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α) :
     Associated (toPoly (cmonic p)) (toPoly p) := by
   rw [cmonic]
   split_ifs with h
@@ -829,7 +829,7 @@ theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p :
         (by rw [toR_eq_toK, CFieldSpec.toK_inv]; exact inv_ne_zero (toR_cleadG_ne_zero hne))))
 
 /-- `toPoly (cmonic p)` is monic for `toPoly p ≠ 0`. -/
-theorem monic_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α)
+theorem monic_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α)
     (hp : toPoly p ≠ 0) :
     (toPoly (cmonic p)).Monic := by
   have hz : cisZero (cnorm p) = false := by
@@ -843,6 +843,6 @@ theorem monic_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPol
   rw [toR_eq_toK, CFieldSpec.toK_inv, ← toR_eq_toK, toR_cleadG_eq_leadingCoeff, toPolyG_cnormG,
     inv_mul_cancel₀ (Polynomial.leadingCoeff_ne_zero.mpr hp)]
 
-end CPoly
+end DensePoly
 
 end DeepWiki.SymbolicIntegration

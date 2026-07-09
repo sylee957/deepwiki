@@ -3,26 +3,26 @@ import DeepWiki.ComputableAlgebra.GenericBezout
 
 /-! # Well-founded generic resultant `cresultantWf`
 
-The Euclidean-PRS resultant on `CPoly`, by well-founded recursion on `cresultantMeasure`;
+The Euclidean-PRS resultant on `DensePoly`, by well-founded recursion on `cresultantMeasure`;
 `[CField α]`-only, with the Sylvester-resultant identity `toPolyG_cresultantWf`. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
 /-- Well-founded measure for `cresultantWf`: `2·(len p + len q) + len q`, `len` the normalized-list
 length; strictly dropped by both the swap and reduce branches. -/
-def cresultantMeasure (p q : CPoly α) : ℕ :=
+def cresultantMeasure (p q : DensePoly α) : ℕ :=
   2 * ((cnorm p : List α).length + (cnorm q : List α).length) + (cnorm q : List α).length
 
 /-- Generic univariate resultant `cresultantWf p q = res(p, q) ∈ α` by the Euclidean PRS,
 `[CField α]`-only; base cases `q = 0` (`1` if `p` constant, else `0`) and constant `q = c`
 (`c^(deg p)`). -/
-def cresultantWf (p q : CPoly α) : α :=
+def cresultantWf (p q : DensePoly α) : α :=
   let pn := cnorm p
   let qn := cnorm q
   if cisZero qn then
@@ -50,7 +50,7 @@ variable [CFieldSpec α]
 omit [CFieldSpec α] in
 /-- The swap strictly drops the measure: `len p < len q` gives
 `cresultantMeasure q p < cresultantMeasure p q`. -/
-theorem cresultantMeasure_swap_lt (p q : CPoly α)
+theorem cresultantMeasure_swap_lt (p q : DensePoly α)
     (hpq : (cnorm p : List α).length < (cnorm q : List α).length) :
     cresultantMeasure q p < cresultantMeasure p q := by
   simp only [cresultantMeasure]
@@ -58,7 +58,7 @@ theorem cresultantMeasure_swap_lt (p q : CPoly α)
 
 /-- The reduce strictly drops the measure: for a nonzero divisor `q` with `len q ≤ len p`,
 `cresultantMeasure q (cnorm (cmodWf p q)) < cresultantMeasure p q`. -/
-theorem cresultantMeasure_reduce_lt (p q : CPoly α) (hq : cnorm q ≠ [])
+theorem cresultantMeasure_reduce_lt (p q : DensePoly α) (hq : cnorm q ≠ [])
     (hpq : ¬ (cnorm p : List α).length < (cnorm q : List α).length) :
     cresultantMeasure q (cnorm (cmodWf p q)) < cresultantMeasure p q := by
   have hr : (cnorm (cmodWf p q) : List α).length < (cnorm q : List α).length :=
@@ -68,7 +68,7 @@ theorem cresultantMeasure_reduce_lt (p q : CPoly α) (hq : cnorm q ≠ [])
 
 /-- Quotient degree: for a non-constant divisor with `deg q ≤ deg p`,
 `natDegree (cdivWf p q) + natDegree q = natDegree p`. -/
-theorem cdivWf_natDegree_add (p q : CPoly α) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
+theorem cdivWf_natDegree_add (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
     (hq2 : 2 ≤ (cnorm q : List α).length) (hpq : (cnorm q : List α).length ≤ (cnorm p : List α).length) :
     (toPoly (cdivWf p q)).natDegree + (toPoly q).natDegree = (toPoly p).natDegree := by
   have hP : toPoly p ≠ 0 := fun h => hp ((cnormG_eq_nil_iff p).mpr h)
@@ -99,7 +99,7 @@ theorem cdivWf_natDegree_add (p q : CPoly α) (hp : cnorm p ≠ []) (hq : cnorm 
 
 /-- Sylvester-resultant identity for `cresultantWf`:
 `toK (cresultantWf p q) = Polynomial.resultant (toPoly p) (toPoly q) (deg p) (deg q)`. -/
-@[denote] theorem toPolyG_cresultantWf (p q : CPoly α) :
+@[denote] theorem toPolyG_cresultantWf (p q : DensePoly α) :
     CFieldSpec.toK (cresultantWf p q)
       = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q) := by
   induction p, q using cresultantWf.induct with
@@ -230,6 +230,6 @@ theorem cdivWf_natDegree_add (p q : CPoly α) (hp : cnorm p ≠ []) (hq : cnorm 
     have hq : cnorm q ≠ [] := fun h => by simp [cisZero, h] at hcz'
     exact absurd (cresultantMeasure_reduce_lt p q hq hpqlen) hdec'
 
-end CPoly
+end DensePoly
 
 end DeepWiki.SymbolicIntegration

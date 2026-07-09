@@ -15,7 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### Agreement: `qfDet = fieldDet` on the trace-matrix curves and `ℚ(x)`-fraction matrices -/
 
-open CPoly
+open DensePoly
 
 /-- `qfDet = fieldDet` on the non-radical trace matrix of `y² − xy − x³`, both the discriminant
 `x² + 4x³`. -/
@@ -100,7 +100,7 @@ On the `3×3` fraction matrix `qfFracMat3`, the fraction path (`fieldDet`/`matIn
 a determinant of total degree `24` and inverse entries of total degree up to `41`, while the
 fraction-free `qfDet`/`qfInv` stay flat with a single bounded `ℚ[x]` per matrix. -/
 
-open CPoly
+open DensePoly
 
 /-- The fraction-path determinant total degree `cdeg num + cdeg den` of the unreduced `ℚ(x)` value
 `fieldDet qfFracMat3` (numerator degree `9` plus denominator degree `15`, total `24`). -/

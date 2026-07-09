@@ -12,9 +12,9 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -25,19 +25,19 @@ computed by the well-founded `cdiophantine`. -/
 
 /-- `f_y⁻¹ mod f` — `afFyInvWf f = (cdiophantine (afFy f) f [1]).1`, the first Bézout cofactor `s` of
 `s·f_y + t·f = 1`. The inverse of `∂f/∂y` in `K(x)[y]/(f)` (valid for separable `f`), degree `< deg f`. -/
-def afFyInvWf (f : CPoly α) : CPoly α :=
+def afFyInvWf (f : DensePoly α) : DensePoly α :=
   (cdiophantine (afFy f) f [CField.one]).1
 
 variable [CDiffField α]
 
 /-- The implicit derivative `afYprimeWf f = afReduce f (−f_x · afFyInvWf f)`:
 `y' = −(∂f/∂x)·(∂f/∂y)⁻¹ mod f`. -/
-def afYprimeWf (f : CPoly α) : CPoly α :=
+def afYprimeWf (f : DensePoly α) : DensePoly α :=
   afReduce f (cmul (cneg (afFx f)) (afFyInvWf f))
 
 /-- The general derivation `afDerivWf f u = afReduce f (u.map cderiv + cderiv u · afYprimeWf f)`: the
 product rule `D(u) = Σᵢ aᵢ'·yⁱ + (Σᵢ aᵢ·i·yⁱ⁻¹)·y'`. `[CField α] [CDiffField α]`-generic. -/
-def afDerivWf (f u : CPoly α) : CPoly α :=
+def afDerivWf (f u : DensePoly α) : DensePoly α :=
   afReduce f (cadd ((u : List α).map CDiffField.cderiv) (cmul (cderiv u) (afYprimeWf f)))
 
 section WfInvariant
@@ -51,11 +51,11 @@ The shared quotient API lives in `ComputableGeneralQuotient`; separability is ph
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 /-- `afDerivWf = afReduce f ∘ cmonomialDeriv (afYprimeWf f)` definitionally. -/
-theorem afDerivWf_eq_afReduce_cmonomialDeriv (f u : CPoly α) :
+theorem afDerivWf_eq_afReduce_cmonomialDeriv (f u : DensePoly α) :
     afDerivWf f u = afReduce f (cmonomialDeriv (afYprimeWf f) u) := rfl
 
 /-- The Wf keystone: `afDerivWf` realizes `implicitDeriv (toPoly (afYprimeWf f))` in the quotient. -/
-theorem mk_toPolyG_afDerivWf (f u : CPoly α) (hf : cnorm f ≠ []) :
+theorem mk_toPolyG_afDerivWf (f u : DensePoly α) (hf : cnorm f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f u))
       = Ideal.Quotient.mk (afIdeal f)
           (Differential.implicitDeriv (toPoly (afYprimeWf f)) (toPoly u)) := by
@@ -63,7 +63,7 @@ theorem mk_toPolyG_afDerivWf (f u : CPoly α) (hf : cnorm f ≠ []) :
   simp only [denote]
 
 /-- `afDerivWf` is additive modulo the curve ideal. -/
-theorem mk_toPolyG_afDerivWf_add (f a b : CPoly α) (hf : cnorm f ≠ []) :
+theorem mk_toPolyG_afDerivWf_add (f a b : DensePoly α) (hf : cnorm f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (cadd a b)))
       = Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f a))
         + Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f b)) := by
@@ -73,13 +73,13 @@ theorem mk_toPolyG_afDerivWf_add (f a b : CPoly α) (hf : cnorm f ≠ []) :
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Bézout inverse of `f_y` in the quotient. -/
-theorem mk_toPolyG_afFyInvWf_mul_afFy (f : CPoly α) (hf : cnorm f ≠ [])
+theorem mk_toPolyG_afFyInvWf_mul_afFy (f : DensePoly α) (hf : cnorm f ≠ [])
     (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f)
         (toPoly (afFyInvWf f) * toPoly (afFy f)) = 1 := by
   have hbez := toPolyG_cdiophantineG (afFy f) f [CField.one] hf hgdeg hgne
-  have hone : toPoly ([CField.one] : CPoly α) = 1 := by
+  have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
     simp only [denote]
     simp
   rw [hone] at hbez
@@ -92,7 +92,7 @@ theorem mk_toPolyG_afFyInvWf_mul_afFy (f : CPoly α) (hf : cnorm f ≠ [])
   rw [map_sub, hmem, map_one, sub_zero]
 
 /-- The implicit derivation kills the curve generator modulo its ideal. -/
-theorem implicitDerivWf_curve_mem (f : CPoly α) (hf : cnorm f ≠ [])
+theorem implicitDerivWf_curve_mem (f : DensePoly α) (hf : cnorm f ≠ [])
     (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0) :
     Differential.implicitDeriv (toPoly (afYprimeWf f)) (toPoly f) ∈ afIdeal f := by
@@ -113,7 +113,7 @@ theorem implicitDerivWf_curve_mem (f : CPoly α) (hf : cnorm f ≠ [])
     map_neg, map_mul, hfyinv, mul_one, add_neg_cancel]
 
 /-- The implicit derivation maps `afIdeal f` into itself. -/
-theorem implicitDerivWf_mem_afIdeal (f : CPoly α) (hf : cnorm f ≠ [])
+theorem implicitDerivWf_mem_afIdeal (f : DensePoly α) (hf : cnorm f ≠ [])
     (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0)
     {x : (CFieldSpec.K α)[X]} (hx : x ∈ afIdeal f) :
@@ -126,7 +126,7 @@ theorem implicitDerivWf_mem_afIdeal (f : CPoly α) (hf : cnorm f ≠ [])
   · exact Ideal.subset_span (Set.mem_singleton _)
 
 /-- The implicit derivation descends to the quotient by `afIdeal f`. -/
-theorem mk_implicitDerivWf_congr (f : CPoly α) (hf : cnorm f ≠ [])
+theorem mk_implicitDerivWf_congr (f : DensePoly α) (hf : cnorm f ≠ [])
     (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0)
     {p q : (CFieldSpec.K α)[X]}
@@ -140,7 +140,7 @@ theorem mk_implicitDerivWf_congr (f : CPoly α) (hf : cnorm f ≠ [])
   rw [← Ideal.Quotient.eq_zero_iff_mem, map_sub, hpq, sub_self]
 
 /-- `afDerivWf` is Leibniz modulo the curve ideal. -/
-theorem mk_toPolyG_afDerivWf_afMul (f a b : CPoly α) (hf : cnorm f ≠ [])
+theorem mk_toPolyG_afDerivWf_afMul (f a b : DensePoly α) (hf : cnorm f ≠ [])
     (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (afMul f a b)))
@@ -157,24 +157,24 @@ theorem mk_toPolyG_afDerivWf_afMul (f a b : CPoly α) (hf : cnorm f ≠ [])
   ring
 
 /-- `afDerivWf` kills `1` modulo the curve ideal. -/
-theorem mk_toPolyG_afDerivWf_one (f : CPoly α) (hf : cnorm f ≠ []) :
+theorem mk_toPolyG_afDerivWf_one (f : DensePoly α) (hf : cnorm f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f [CField.one])) = 0 := by
   rw [mk_toPolyG_afDerivWf f _ hf]
-  have h1 : toPoly ([CField.one] : CPoly α) = 1 := by
+  have h1 : toPoly ([CField.one] : DensePoly α) = 1 := by
     simp only [denote]
     simp
   rw [h1, Derivation.map_one_eq_zero, map_zero]
 
 omit [CDiffFieldSpec α] in
 /-- The `afDerivWf` round-trip certificate is the free-polynomial integrand identity. -/
-theorem toPolyG_afDerivWf_eq_of_roundtrip (f v g : CPoly α)
+theorem toPolyG_afDerivWf_eq_of_roundtrip (f v g : DensePoly α)
     (hcheck : cisZero (csub (afDerivWf f v) g) = true) :
     toPoly (afDerivWf f v) = toPoly g := by
   simpa [cisZeroG_iff, sub_eq_zero] using hcheck
 
 end WfInvariant
 
-end CPoly
+end DensePoly
 
 /-! ## The flat rational and log-argument solvers
 
@@ -182,22 +182,22 @@ Build a `ℚ`-matrix from `afDerivWf` and solve it with `kernelBasis`; specializ
 
 /-- Rational-part residual columns `afRatColumnsWf f basis degBound integrand`: the per-monomial
 derivatives `afDerivWf f (xʲ wᵢ)` followed by the forced `−integrand` column. -/
-def afRatColumnsWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : CPoly (CFrac ℚ)) : List (CPoly (CFrac ℚ)) :=
+def afRatColumnsWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : List (DensePoly (CFrac ℚ)) :=
   (afRatMonomials basis degBound).map (afDerivWf f) ++ [cneg integrand]
 
 /-- `ℚ`-matrix of the rational-part system `afRatMatrixWf f basis degBound integrand`: clear each `K(x)`
 coordinate of `afRatColumnsWf` to numerators over a common denominator, read off `x`-power coefficients. -/
-def afRatMatrixWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : CPoly (CFrac ℚ)) : List (List ℚ) × ℕ :=
+def afRatMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : List (List ℚ) × ℕ :=
   let cols := afRatColumnsWf f basis degBound integrand
   let nCols := cols.length
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
     let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CField.zero
-    let nums : List (CPoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
-    let dens : List (CPoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
-    let cleared : List (CPoly ℚ) := (List.range nCols).map (fun k =>
+    let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
+    let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
+    let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
       let prod := (List.range nCols).foldl (fun acc l =>
         if l = k then acc else cmul acc (dens[l]!)) [(1 : ℚ)]
       cnorm (cmul (nums[k]!) prod))
@@ -211,8 +211,8 @@ def afRatMatrixWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
 /-- General rational-part solve `afRationalSolveWf f basis degBound integrand = some v`: the rational part
 `v = Σ c_{ij} xʲ wᵢ` with `afDeriv f v = integrand`, by a `K`-linear solve over the integral basis (build
 `afRatMatrixWf`, find a kernel vector with nonzero RHS coordinate, normalize, reassemble `v`). -/
-def afRationalSolveWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : CPoly (CFrac ℚ)) : Option (CPoly (CFrac ℚ)) :=
+def afRationalSolveWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : Option (DensePoly (CFrac ℚ)) :=
   let (rows, nCols) := afRatMatrixWf f basis degBound integrand
   let kers := kernelBasis nCols rows
   match kers.find? (fun c => c.getD (nCols - 1) 0 ≠ 0) with
@@ -220,35 +220,35 @@ def afRationalSolveWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
   | some c =>
     let rhs := c.getD (nCols - 1) 0
     let monos := afRatMonomials basis degBound
-    let v : CPoly (CFrac ℚ) :=
+    let v : DensePoly (CFrac ℚ) :=
       (List.range monos.length).foldl (fun acc idx =>
         let coeff : ℚ := c.getD idx 0 / rhs
-        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : CPoly (CFrac ℚ))
+        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : DensePoly (CFrac ℚ))
     some v
 
 /-- Log-derivative residual `afLogResidualWf f integrand u = afDerivWf f u − afMul f u integrand`. -/
-def afLogResidualWf (f integrand u : CPoly (CFrac ℚ)) : CPoly (CFrac ℚ) :=
+def afLogResidualWf (f integrand u : DensePoly (CFrac ℚ)) : DensePoly (CFrac ℚ) :=
   csub (afDerivWf f u) (afMul f u integrand)
 
 /-- Log-argument residual columns `afLogColumnsWf f basis degBound integrand`: the per-monomial
 log-derivative residuals `afLogResidualWf f integrand (xʲ wᵢ)` (no forced `−integrand` column — the log
 system is homogeneous in `u`). -/
-def afLogColumnsWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : CPoly (CFrac ℚ)) : List (CPoly (CFrac ℚ)) :=
+def afLogColumnsWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : List (DensePoly (CFrac ℚ)) :=
   (afRatMonomials basis degBound).map (afLogResidualWf f integrand)
 
 /-- `ℚ`-matrix of the log-argument system `afLogMatrixWf f basis degBound integrand`: identical extraction
 on the homogeneous columns `afLogColumnsWf`. -/
-def afLogMatrixWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : CPoly (CFrac ℚ)) : List (List ℚ) × ℕ :=
+def afLogMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : List (List ℚ) × ℕ :=
   let cols := afLogColumnsWf f basis degBound integrand
   let nCols := cols.length
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
     let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CField.zero
-    let nums : List (CPoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
-    let dens : List (CPoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
-    let cleared : List (CPoly ℚ) := (List.range nCols).map (fun k =>
+    let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
+    let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
+    let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
       let prod := (List.range nCols).foldl (fun acc l =>
         if l = k then acc else cmul acc (dens[l]!)) [(1 : ℚ)]
       cnorm (cmul (nums[k]!) prod))
@@ -262,18 +262,18 @@ def afLogMatrixWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
 /-- General log-argument solve `afLogArgSolveWf f basis degBound integrand = some u`: the log argument
 `u = Σ c_{ij} xʲ wᵢ` with `afDeriv f u = afMul f u integrand` (`∫ integrand = log u`), by the homogeneous
 `K`-linear solve (build `afLogMatrixWf`, find the first nonzero kernel vector, reassemble `u`). -/
-def afLogArgSolveWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : CPoly (CFrac ℚ)) : Option (CPoly (CFrac ℚ)) :=
+def afLogArgSolveWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : Option (DensePoly (CFrac ℚ)) :=
   let (rows, nCols) := afLogMatrixWf f basis degBound integrand
   let kers := kernelBasis nCols rows
   match kers.find? (fun c => c.any (fun a => a ≠ 0)) with
   | none => none
   | some c =>
     let monos := afRatMonomials basis degBound
-    let u : CPoly (CFrac ℚ) :=
+    let u : DensePoly (CFrac ℚ) :=
       (List.range monos.length).foldl (fun acc idx =>
         let coeff : ℚ := c.getD idx 0
-        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : CPoly (CFrac ℚ))
+        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : DensePoly (CFrac ℚ))
     some u
 
 /-! ## The top-level `afIntegrateAlgebraicWf` -/
@@ -283,9 +283,9 @@ some (v, u)`: `∫ (ratIntegrand + logIntegrand) dx = v + log u` (principal case
 `afRationalSolveWf` (`afDeriv f v = ratIntegrand`) and the log argument `u` by `afLogArgSolveWf`
 (`afDeriv f u = afMul f u logIntegrand`), both `K`-linear solves through `afDerivWf`. `none` if either
 solve fails. The general analogue of `cIntegrateAlgebraicWf`. -/
-def afIntegrateAlgebraicWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
-    (degBound : ℕ) (ratIntegrand logIntegrand : CPoly (CFrac ℚ)) :
-    Option (CPoly (CFrac ℚ) × CPoly (CFrac ℚ)) :=
+def afIntegrateAlgebraicWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+    (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) :
+    Option (DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) :=
   match afRationalSolveWf f basis degBound ratIntegrand,
         afLogArgSolveWf f basis degBound logIntegrand with
   | some v, some u => some (v, u)
@@ -296,16 +296,16 @@ def afIntegrateAlgebraicWf (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac �
 `∫ (y + afDerivWf(y)/y) dx = (3/5)xy + log y` on `y³ = x²`, checked by `afDerivWf` (`native_decide`). -/
 
 /-- The rational summand input for the cuspidal-cubic combined validation. -/
-def gcCombineRatIntegrandWf : CPoly (CFrac ℚ) := gcuspCubicY
+def gcCombineRatIntegrandWf : DensePoly (CFrac ℚ) := gcuspCubicY
 
 /-- The log-derivative input for the cuspidal-cubic combined validation. -/
-def gcCombineLogIntegrandWf : CPoly (CFrac ℚ) :=
+def gcCombineLogIntegrandWf : DensePoly (CFrac ℚ) :=
   afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
     [CField.zero, CField.zero, qxOfFrac [1] [0, 0, 1] (by decide)]
 
 /-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
 `∫ (y + afDerivWf(y)/y) dx`. -/
-def gcCombineSolvedWf : Option (CPoly (CFrac ℚ) × CPoly (CFrac ℚ)) :=
+def gcCombineSolvedWf : Option (DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) :=
   afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcCombineRatIntegrandWf gcCombineLogIntegrandWf
 
 /-- The general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y`:

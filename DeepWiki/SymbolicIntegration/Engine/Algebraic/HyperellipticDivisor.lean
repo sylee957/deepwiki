@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -21,14 +21,14 @@ variable {α : Type*} [CField α]
 polynomials, with support the roots `xᵢ` of `u` on sheet `yᵢ = v(xᵢ)`. -/
 structure MumfordDivisor (α : Type*) where
   /-- The monic `u(x)`: its roots are the support `x`-coordinates (with multiplicity). -/
-  u : CPoly α
+  u : DensePoly α
   /-- The sheet selector `v(x)` with `deg v < deg u`: `yᵢ = v(xᵢ)` picks the sheet at each `xᵢ`. -/
-  v : CPoly α
+  v : DensePoly α
   deriving Repr, DecidableEq
 
 /-- Mumford validity: `(D.u, D.v)` is a valid semi-reduced divisor on `y² = ρ` — `D.u` monic,
 `deg D.v < deg D.u`, and `D.u ∣ (D.v² − ρ)` (the on-curve constraint). -/
-def mumfordValid (ρ : CPoly α) (D : MumfordDivisor α) : Bool :=
+def mumfordValid (ρ : DensePoly α) (D : MumfordDivisor α) : Bool :=
   cisMonic D.u
     && (cdeg D.v < cdeg D.u || cisZero D.v)
     && cdvd D.u (csub (cmul D.v D.v) ρ)
@@ -59,7 +59,7 @@ From support points `[(x₁, y₁), …]`: `u = ∏ᵢ (x − xᵢ)` monic, `v` 
 `(xᵢ, yᵢ)`. Bridges a residue pole set to a Mumford divisor. -/
 
 /-- Support polynomial `mumfordSupportPoly xs = ∏ᵢ (x − xᵢ)` (monic) for a support list `xs`. -/
-def mumfordSupportPoly (xs : List α) : CPoly α :=
+def mumfordSupportPoly (xs : List α) : DensePoly α :=
   xs.foldl (fun acc xi => cmul acc [CField.neg xi, CField.one]) [CField.one]
 
 /-- The residue divisor as a Mumford pair `residueDivisorMumford pts = (u, v)`: from support points
@@ -67,18 +67,18 @@ def mumfordSupportPoly (xs : List α) : CPoly α :=
 def residueDivisorMumford (pts : List (α × α)) : MumfordDivisor α :=
   ⟨mumfordSupportPoly (pts.map Prod.fst), cinterpolate pts⟩
 
-end CPoly
+end DensePoly
 
 /-! ## Validation over `ℚ[x]` (`native_decide`)
 
 The flagship curve is the elliptic `y² = x³ + 1` (genus 1). -/
 
-open CPoly
+open DensePoly
 
 /-! ### The elliptic curve `y² = x³ + 1` and three points -/
 
 /-- The radicand `ρ = x³ + 1 ∈ ℚ[x]` (`[1,0,0,1]`): the elliptic curve `y² = x³ + 1` (genus 1). -/
-def hypRhoX3p1 : CPoly ℚ := [1, 0, 0, 1]
+def hypRhoX3p1 : DensePoly ℚ := [1, 0, 0, 1]
 
 /-- The point `(0, 1)` on `y² = x³ + 1` (`1² = 0³ + 1`): Mumford `(x, 1)`. -/
 def hypPt01 : MumfordDivisor ℚ := mumfordPoint (0 : ℚ) 1
@@ -151,7 +151,7 @@ theorem mumfordValid_sum0123 : mumfordValid hypRhoX3p1 hypSum0123 = true := by n
 `(x − 1, ±1)`. -/
 
 /-- The radicand `ρ = x ∈ ℚ[x]` (`[0,1]`): the curve `y² = x` of the residue example (`√x`). -/
-def hypRhoX : CPoly ℚ := [0, 1]
+def hypRhoX : DensePoly ℚ := [0, 1]
 
 /-- The residue divisor of `r = +1` of `∫ dx/((x−1)√x)`: support `{x = 1}`, sheet `y = +1`. -/
 def hypResDivP1 : MumfordDivisor ℚ := residueDivisorMumford [((1 : ℚ), 1)]

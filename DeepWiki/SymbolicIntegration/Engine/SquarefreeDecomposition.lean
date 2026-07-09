@@ -14,7 +14,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- **The product of pairwise-coprime squarefree polynomials is squarefree** (list form). -/
 theorem squarefree_list_prod {K : Type*} [Field K] (L : List K[X])
@@ -37,14 +37,14 @@ theorem monic_list_prod {K : Type*} [Field K] (L : List K[X]) (h : ∀ p ∈ L, 
     rw [List.prod_cons]
     exact (h a (List.mem_cons_self ..)).mul (ih (fun p hp => h p (List.mem_cons_of_mem a hp)))
 
-open CPoly
+open DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
-structure LawfulSquarefreeDecomposition (d : CPoly α) (decomp : List (CPoly α)) : Prop where
+structure LawfulSquarefreeDecomposition (d : DensePoly α) (decomp : List (DensePoly α)) : Prop where
   /-- The powered product `∏ᵢ vᵢ^i` reconstructs `d` up to associates. -/
   reconstruct : Associated (toPoly d) (prodPow 1 (decomp.map toPoly))
   /-- Each factor is monic. -/
@@ -58,7 +58,7 @@ namespace LawfulSquarefreeDecomposition
 
 /-- The radical `∏ᵢ vᵢ` (the plain product of the factors) is squarefree — the property the Hermite stage
 consumes abstractly (not from the concrete Yun loop). -/
-theorem prod_squarefree {d : CPoly α} {decomp : List (CPoly α)}
+theorem prod_squarefree {d : DensePoly α} {decomp : List (DensePoly α)}
     (h : LawfulSquarefreeDecomposition d decomp) :
     Squarefree ((decomp.map toPoly).prod) := by
   refine squarefree_list_prod _ ?_ ?_
@@ -66,7 +66,7 @@ theorem prod_squarefree {d : CPoly α} {decomp : List (CPoly α)}
   · intro p hp; rw [List.mem_map] at hp; obtain ⟨q, hq, rfl⟩ := hp; exact h.squarefree q hq
 
 /-- The radical `∏ᵢ vᵢ` is monic. -/
-theorem prod_monic {d : CPoly α} {decomp : List (CPoly α)}
+theorem prod_monic {d : DensePoly α} {decomp : List (DensePoly α)}
     (h : LawfulSquarefreeDecomposition d decomp) :
     ((decomp.map toPoly).prod).Monic := by
   refine monic_list_prod _ ?_

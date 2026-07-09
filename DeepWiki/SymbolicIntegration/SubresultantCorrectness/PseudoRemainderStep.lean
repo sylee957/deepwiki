@@ -12,7 +12,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-- One subresultant-PRS step through `toBPoly`: from the pseudo-division identity for `(s, c)`,
 `C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · Sⱼ(B, Rem; m,n)` under the degree bounds. -/
 theorem subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPoly) (n m j : ℕ)
-    (s : BPoly) (c : CPoly ℚ)
+    (s : BPoly) (c : DensePoly ℚ)
     (hsc : Polynomial.C (toPoly c) * toBPoly p
         = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
     (hjm : j ≤ m) (hjn : j < n)
@@ -29,7 +29,7 @@ theorem subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPoly) (n 
 quotient-degree bound, the subresultant reduction. -/
 theorem exists_subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPoly) (n m j : ℕ)
     (hjm : j ≤ m) (hjn : j < n) (hB : (toBPoly q).natDegree ≤ m) :
-    ∃ (s : BPoly) (c : CPoly ℚ),
+    ∃ (s : BPoly) (c : DensePoly ℚ),
       Polynomial.C (toPoly c) * toBPoly p
           = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q)
         ∧ ((toBPoly s).natDegree + m ≤ n →

@@ -3,7 +3,7 @@ import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Correctness of the computable engine (`toPoly` agreement bridge)
-Through the `toPoly : CPoly ℚ → ℚ[X]` bridge, the computable operations (`cdivmod`/`cgcdExt`/
+Through the `toPoly : DensePoly ℚ → ℚ[X]` bridge, the computable operations (`cdivmod`/`cgcdExt`/
 `cresultant`/…) realize the `ℚ[X]` operations on all inputs, culminating in the resultant agreement
 `cresultant = Polynomial.resultant`. -/
 
@@ -12,21 +12,21 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration.Compute
 
 /-- `cnorm [] = []`. -/
-@[simp] theorem cnorm_nil : cnorm ([] : CPoly ℚ) = [] := rfl
+@[simp] theorem cnorm_nil : cnorm ([] : DensePoly ℚ) = [] := rfl
 
 /-- `cnorm` on a cons cell, unfolded to its defining `match`. -/
-theorem cnorm_cons_eq (a : ℚ) (as : CPoly ℚ) :
+theorem cnorm_cons_eq (a : ℚ) (as : DensePoly ℚ) :
     cnorm (a :: as)
       = (match cnorm as with | [] => if a = 0 then [] else [a] | r => a :: r) := by
-  show CPoly.cnorm (a :: as)
-      = (match CPoly.cnorm as with | [] => if a = 0 then [] else [a] | r => a :: r)
-  rw [CPoly.cnormG_cons_eq]
-  cases CPoly.cnorm as with
+  show DensePoly.cnorm (a :: as)
+      = (match DensePoly.cnorm as with | [] => if a = 0 then [] else [a] | r => a :: r)
+  rw [DensePoly.cnormG_cons_eq]
+  cases DensePoly.cnorm as with
   | nil => show (if (decide (a = 0) = true) then _ else _) = _; by_cases ha : a = 0 <;> simp [ha]
   | cons b bs => rfl
 
 /-- `cnorm` is idempotent: stripping trailing zeros twice is the same as once. -/
-@[simp] theorem cnorm_idem (p : CPoly ℚ) : cnorm (cnorm p) = cnorm p := by
+@[simp] theorem cnorm_idem (p : DensePoly ℚ) : cnorm (cnorm p) = cnorm p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
@@ -38,7 +38,7 @@ theorem cnorm_cons_eq (a : ℚ) (as : CPoly ℚ) :
       simp only [cnorm_cons_eq, ih]
 
 /-- `toPoly (cnorm p) = toPoly p`: stripping trailing zeros does not change the polynomial. -/
-@[simp] theorem toPoly_cnorm (p : CPoly ℚ) : toPoly (cnorm p) = toPoly p := by
+@[simp] theorem toPoly_cnorm (p : DensePoly ℚ) : toPoly (cnorm p) = toPoly p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
@@ -55,7 +55,7 @@ theorem cnorm_cons_eq (a : ℚ) (as : CPoly ℚ) :
 
 /-- Euclidean-division identity through `toPoly` (for `q` normalized and nonzero):
 `toPoly p = toPoly (quotient) · toPoly q + toPoly (remainder)`. -/
-theorem toPoly_cdivmod (fuel : ℕ) (p q : CPoly ℚ) (hqn : cnorm q = q) (hq0 : q ≠ []) :
+theorem toPoly_cdivmod (fuel : ℕ) (p q : DensePoly ℚ) (hqn : cnorm q = q) (hq0 : q ≠ []) :
     toPoly p
       = toPoly (cdivmod fuel p q).1 * toPoly q + toPoly (cdivmod fuel p q).2 := by
   induction fuel generalizing p with
@@ -79,7 +79,7 @@ theorem toPoly_cdivmod (fuel : ℕ) (p q : CPoly ℚ) (hqn : cnorm q = q) (hq0 :
       linear_combination hih
 
 /-- `cdivmod fuel p q = cdivmod fuel p (cnorm q)`: `cdivmod` normalizes its divisor. -/
-theorem cdivmod_cnorm_right (fuel : ℕ) (p q : CPoly ℚ) :
+theorem cdivmod_cnorm_right (fuel : ℕ) (p q : DensePoly ℚ) :
     cdivmod fuel p q = cdivmod fuel p (cnorm q) := by
   cases fuel with
   | zero => rfl
@@ -87,14 +87,14 @@ theorem cdivmod_cnorm_right (fuel : ℕ) (p q : CPoly ℚ) :
 
 /-- Euclidean-division identity through `toPoly` for an arbitrary nonzero divisor (`cnorm q ≠ []`):
 `toPoly p = toPoly (quotient) · toPoly q + toPoly (remainder)`. -/
-theorem toPoly_cdivmod' (fuel : ℕ) (p q : CPoly ℚ) (hq0 : cnorm q ≠ []) :
+theorem toPoly_cdivmod' (fuel : ℕ) (p q : DensePoly ℚ) (hq0 : cnorm q ≠ []) :
     toPoly p
       = toPoly (cdivmod fuel p q).1 * toPoly q + toPoly (cdivmod fuel p q).2 := by
   rw [cdivmod_cnorm_right]
   simpa [toPoly_cnorm] using toPoly_cdivmod fuel p (cnorm q) (cnorm_idem q) hq0
 
 /-- Exact division through `toPoly`: zero `cmod` gives quotient times divisor. -/
-theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly ℚ) (hq : cnorm q ≠ [])
+theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hrem : toPoly (cmod fuel p q) = 0) :
     toPoly p = toPoly (cdiv fuel p q) * toPoly q := by
   have h := toPoly_cdivmod' fuel p q hq
@@ -103,14 +103,14 @@ theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly ℚ) (hq : cnorm q �
   exact h
 
 /-- A vanishing computable remainder gives divisibility through `toPoly`. -/
-theorem toPoly_dvd_of_cmod_zero (fuel : ℕ) (p q : CPoly ℚ) (hq : cnorm q ≠ [])
+theorem toPoly_dvd_of_cmod_zero (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hrem : toPoly (cmod fuel p q) = 0) :
     toPoly q ∣ toPoly p :=
   ⟨toPoly (cdiv fuel p q), by rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, mul_comm]⟩
 
 /-- Bézout identity through `toPoly` for `cgcdExt`: with `(g, s, t) = cgcdExt fuel a b`,
 `toPoly s · toPoly a + toPoly t · toPoly b = toPoly g`. -/
-theorem toPoly_cgcdExt (fuel : ℕ) (a b : CPoly ℚ) :
+theorem toPoly_cgcdExt (fuel : ℕ) (a b : DensePoly ℚ) :
     toPoly (cgcdExt fuel a b).2.1 * toPoly a + toPoly (cgcdExt fuel a b).2.2 * toPoly b
       = toPoly (cgcdExt fuel a b).1 := by
   induction fuel generalizing a b with
@@ -133,7 +133,7 @@ theorem toPoly_cgcdExt (fuel : ℕ) (a b : CPoly ℚ) :
 
 /-- The `LogToAtan` cofactor invariant `B·D − A·C = G` in `ℚ[X]`: for
 `(G, D, C) = cgcdExt fuel B (−A)`, `toPoly B · toPoly D − toPoly A · toPoly C = toPoly G`. -/
-theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : CPoly ℚ) :
+theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : DensePoly ℚ) :
     toPoly B * toPoly (cgcdExt fuel B (cneg A)).2.1
         - toPoly A * toPoly (cgcdExt fuel B (cneg A)).2.2
       = toPoly (cgcdExt fuel B (cneg A)).1 := by
@@ -142,7 +142,7 @@ theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : CPoly ℚ) :
   linear_combination h
 
 /-! ### The bivariate bridge `toBPoly : BPoly → ℚ[t][x]` and its homomorphism lemmas
-Reads a `BPoly = List (CPoly ℚ)` as a `Polynomial (Polynomial ℚ)` in `x`, each `x`-coefficient via
+Reads a `BPoly = List (DensePoly ℚ)` as a `Polynomial (Polynomial ℚ)` in `x`, each `x`-coefficient via
 `toPoly`; the homomorphism lemmas reduce the `BPoly` algebra to `(ℚ[X])[X]` operations. -/
 
 /-- Bivariate bridge `toBPoly : BPoly → (ℚ[X])[X]`: read a `BPoly` as a `Polynomial (Polynomial ℚ)`
@@ -153,79 +153,79 @@ noncomputable def toBPoly : BPoly → Polynomial (Polynomial ℚ)
 
 @[simp] theorem toBPoly_nil : toBPoly ([] : BPoly) = 0 := rfl
 
-@[simp] theorem toBPoly_cons (a : CPoly ℚ) (p : BPoly) :
+@[simp] theorem toBPoly_cons (a : DensePoly ℚ) (p : BPoly) :
     toBPoly (a :: p) = Polynomial.C (toPoly a) + Polynomial.X * toBPoly p := rfl
 
-/-! ### Bridges to the generic keystone engine (`CPoly.toPoly` / `c*` at coefficient `CPoly ℚ`)
-`BPoly = CPoly (CPoly ℚ)` and the ring-generalized engine makes `CPoly.toPoly`/`cadd`/… valid at the
-`CPoly ℚ` coefficient (keystone `CRingSpec (CPoly ℚ)`). These identify the hand-written `ℚ`-bivariate
+/-! ### Bridges to the generic keystone engine (`DensePoly.toPoly` / `c*` at coefficient `DensePoly ℚ`)
+`BPoly = DensePoly (DensePoly ℚ)` and the ring-generalized engine makes `DensePoly.toPoly`/`cadd`/… valid at the
+`DensePoly ℚ` coefficient (keystone `CRingSpec (DensePoly ℚ)`). These identify the hand-written `ℚ`-bivariate
 layer with the generic one, so the `b*` homomorphism satellites reduce to the generic `toPolyG_*`
 squares instead of re-proving the recursions. -/
 
-/-- The single-variable `ℚ` denotation IS the generic one: `Compute.toPoly = CPoly.toPoly` at `CPoly ℚ`. -/
-theorem toPoly_eq_toPolyG (p : CPoly ℚ) : toPoly p = CPoly.toPoly p := by
+/-- The single-variable `ℚ` denotation IS the generic one: `Compute.toPoly = DensePoly.toPoly` at `DensePoly ℚ`. -/
+theorem toPoly_eq_toPolyG (p : DensePoly ℚ) : toPoly p = DensePoly.toPoly p := by
   induction p with
   | nil => rfl
-  | cons a as ih => rw [toPoly, ih, CPoly.toPolyG_cons]; rfl
+  | cons a as ih => rw [toPoly, ih, DensePoly.toPolyG_cons]; rfl
 
-/-- The bivariate denotation IS the generic keystone denotation: `toBPoly = CPoly.toPoly` at `CPoly (CPoly ℚ)`. -/
-theorem toBPoly_eq_toPolyG (p : BPoly) : toBPoly p = CPoly.toPoly p := by
+/-- The bivariate denotation IS the generic keystone denotation: `toBPoly = DensePoly.toPoly` at `DensePoly (DensePoly ℚ)`. -/
+theorem toBPoly_eq_toPolyG (p : BPoly) : toBPoly p = DensePoly.toPoly p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
-    rw [toBPoly, ih, CPoly.toPolyG_cons, toPoly_eq_toPolyG,
-      show CRingSpec.toR a = CPoly.toPoly a from rfl]
+    rw [toBPoly, ih, DensePoly.toPolyG_cons, toPoly_eq_toPolyG,
+      show CRingSpec.toR a = DensePoly.toPoly a from rfl]
 
-/-- `badd = cadd` at coefficient `CPoly ℚ` (definitional). -/
-theorem badd_eq (p q : BPoly) : badd p q = CPoly.cadd p q := rfl
+/-- `badd = cadd` at coefficient `DensePoly ℚ` (definitional). -/
+theorem badd_eq (p q : BPoly) : badd p q = DensePoly.cadd p q := rfl
 
-/-- `bmul = cmul` at coefficient `CPoly ℚ` (definitional). -/
-theorem bmul_eq (p q : BPoly) : bmul p q = CPoly.cmul p q := rfl
+/-- `bmul = cmul` at coefficient `DensePoly ℚ` (definitional). -/
+theorem bmul_eq (p q : BPoly) : bmul p q = DensePoly.cmul p q := rfl
 
-/-- `bshift = cshift` at coefficient `CPoly ℚ` (definitional). -/
-theorem bshift_eq (k : ℕ) (p : BPoly) : bshift k p = CPoly.cshift k p := rfl
+/-- `bshift = cshift` at coefficient `DensePoly ℚ` (definitional). -/
+theorem bshift_eq (k : ℕ) (p : BPoly) : bshift k p = DensePoly.cshift k p := rfl
 
-/-- `bneg = cneg` at coefficient `CPoly ℚ` (definitional). -/
-theorem bneg_eq (p : BPoly) : bneg p = CPoly.cneg p := rfl
+/-- `bneg = cneg` at coefficient `DensePoly ℚ` (definitional). -/
+theorem bneg_eq (p : BPoly) : bneg p = DensePoly.cneg p := rfl
 
-/-- `bscaleC = cscale` at coefficient `CPoly ℚ` (definitional). -/
-theorem bscaleC_eq (c : CPoly ℚ) (p : BPoly) : bscaleC c p = CPoly.cscale c p := rfl
+/-- `bscaleC = cscale` at coefficient `DensePoly ℚ` (definitional). -/
+theorem bscaleC_eq (c : DensePoly ℚ) (p : BPoly) : bscaleC c p = DensePoly.cscale c p := rfl
 
-/-- `bsub = csub` at coefficient `CPoly ℚ` (definitional). -/
-theorem bsub_eq (p q : BPoly) : bsub p q = CPoly.csub p q := rfl
+/-- `bsub = csub` at coefficient `DensePoly ℚ` (definitional). -/
+theorem bsub_eq (p q : BPoly) : bsub p q = DensePoly.csub p q := rfl
 
 /-- `toBPoly` is additive: `badd` realizes `(ℚ[X])[X]` addition. -/
 theorem toBPoly_badd (p q : BPoly) : toBPoly (badd p q) = toBPoly p + toBPoly q := by
-  simp only [toBPoly_eq_toPolyG, badd_eq, CPoly.toPolyG_caddG]
+  simp only [toBPoly_eq_toPolyG, badd_eq, DensePoly.toPolyG_caddG]
 
 /-- `bneg` realizes `(ℚ[X])[X]` negation through `toBPoly`. -/
 theorem toBPoly_bneg (p : BPoly) : toBPoly (bneg p) = - toBPoly p := by
-  simp only [toBPoly_eq_toPolyG, bneg_eq, CPoly.toPolyG_cnegG]
+  simp only [toBPoly_eq_toPolyG, bneg_eq, DensePoly.toPolyG_cnegG]
 
 /-- `bsub` realizes `(ℚ[X])[X]` subtraction through `toBPoly`. -/
 theorem toBPoly_bsub (p q : BPoly) : toBPoly (bsub p q) = toBPoly p - toBPoly q := by
-  simp only [toBPoly_eq_toPolyG, bsub_eq, CPoly.toPolyG_csubG]
+  simp only [toBPoly_eq_toPolyG, bsub_eq, DensePoly.toPolyG_csubG]
 
 /-- `bscaleC c p` realizes scaling by a `ℚ[t]` coefficient: `C (toPoly c) · toBPoly p`. -/
-theorem toBPoly_bscaleC (c : CPoly ℚ) (p : BPoly) :
+theorem toBPoly_bscaleC (c : DensePoly ℚ) (p : BPoly) :
     toBPoly (bscaleC c p) = Polynomial.C (toPoly c) * toBPoly p := by
-  simp only [toBPoly_eq_toPolyG, bscaleC_eq, CPoly.toPolyG_cscaleG, toPoly_eq_toPolyG,
-    show ∀ c : CPoly ℚ, CRingSpec.toR c = CPoly.toPoly c from fun _ => rfl]
+  simp only [toBPoly_eq_toPolyG, bscaleC_eq, DensePoly.toPolyG_cscaleG, toPoly_eq_toPolyG,
+    show ∀ c : DensePoly ℚ, CRingSpec.toR c = DensePoly.toPoly c from fun _ => rfl]
 
 /-- `bshift k p` realizes the `x`-shift: `Xᵏ · toBPoly p`. -/
 theorem toBPoly_bshift (k : ℕ) (p : BPoly) :
     toBPoly (bshift k p) = Polynomial.X ^ k * toBPoly p := by
-  simp only [toBPoly_eq_toPolyG, bshift_eq, CPoly.toPolyG_cshiftG]
+  simp only [toBPoly_eq_toPolyG, bshift_eq, DensePoly.toPolyG_cshiftG]
 
 /-- `toBPoly` is multiplicative: `bmul` realizes `(ℚ[X])[X]` multiplication. -/
 theorem toBPoly_bmul (p q : BPoly) : toBPoly (bmul p q) = toBPoly p * toBPoly q := by
-  simp only [toBPoly_eq_toPolyG, bmul_eq, CPoly.toPolyG_cmulG]
+  simp only [toBPoly_eq_toPolyG, bmul_eq, DensePoly.toPolyG_cmulG]
 
 /-- `bnorm [] = []`. -/
 @[simp] theorem bnorm_nil : bnorm ([] : BPoly) = [] := rfl
 
 /-- `bnorm` on a cons cell, unfolded to its defining `match`. -/
-theorem bnorm_cons_eq (a : CPoly ℚ) (as : BPoly) :
+theorem bnorm_cons_eq (a : DensePoly ℚ) (as : BPoly) :
     bnorm (a :: as)
       = (match bnorm as with
           | [] => if cisZero (cnorm a) then [] else [cnorm a]
@@ -279,7 +279,7 @@ theorem bpsremainder_bnorm_right (fuel : ℕ) (p q : BPoly) :
 /-- Pseudo-division identity through `toBPoly`: there exist a multiplier `c ∈ ℚ[t]` and quotient `s`
 with `C (toPoly c) · toBPoly p = toBPoly s · toBPoly q + toBPoly (bpsremainder fuel p q)`. -/
 theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
-    ∃ (s : BPoly) (c : CPoly ℚ),
+    ∃ (s : BPoly) (c : DensePoly ℚ),
       Polynomial.C (toPoly c) * toBPoly p
         = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q) := by
   induction fuel generalizing p with
@@ -309,7 +309,7 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
 
 /-- Diophantine/Bézout solver correctness through `toPoly`: when `gcd(p, q)` is a nonzero constant,
 `cdiophantine fuel p q rhs = (B, C)` satisfies `toPoly B · toPoly p + toPoly C · toPoly q = toPoly rhs`. -/
-theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : CPoly ℚ) (hq : cnorm q ≠ [])
+theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
     (hgc : clead (cgcdExt fuel p q).1 ≠ 0) :
     toPoly (cdiophantine fuel p q rhs).1 * toPoly p
@@ -332,20 +332,20 @@ theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : CPoly ℚ) (hq : cnorm q ≠
 
 /-- `cgcdExt`'s gcd is greatest among common divisors: any `d` dividing both `toPoly a` and
 `toPoly b` divides `toPoly (cgcdExt fuel a b).1`. -/
-theorem toPoly_dvd_cgcdExt {d : ℚ[X]} (fuel : ℕ) (a b : CPoly ℚ)
+theorem toPoly_dvd_cgcdExt {d : ℚ[X]} (fuel : ℕ) (a b : DensePoly ℚ)
     (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) :
     d ∣ toPoly (cgcdExt fuel a b).1 := by
   rw [← toPoly_cgcdExt fuel a b]
   exact dvd_add (ha.mul_left _) (hb.mul_left _)
 
 /-- Termination predicate for `cgcdExt`: the remainder sequence reaches `0` within `fuel`. -/
-def cgcdTerminates : ℕ → CPoly ℚ → CPoly ℚ → Prop
+def cgcdTerminates : ℕ → DensePoly ℚ → DensePoly ℚ → Prop
   | 0, _, b => cisZero b = true
   | fuel + 1, a, b => cisZero b = true ∨ cgcdTerminates fuel b (cmod (fuel + 1) a b)
 
 /-- `cgcdExt`'s gcd divides both inputs when the algorithm terminates: under `cgcdTerminates`,
 `toPoly (cgcdExt fuel a b).1` divides `toPoly a` and `toPoly b`. -/
-theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : CPoly ℚ), cgcdTerminates fuel a b →
+theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : DensePoly ℚ), cgcdTerminates fuel a b →
     toPoly (cgcdExt fuel a b).1 ∣ toPoly a ∧ toPoly (cgcdExt fuel a b).1 ∣ toPoly b := by
   intro fuel
   induction fuel with
@@ -435,7 +435,7 @@ theorem toQFun_foldl_qadd (gs : List QFun) (init : QFun) (hinit : toPoly init.2 
 `(toPoly p).coeff i = p.getD i 0`, from which `cdeg`/`clead` are the `natDegree`/`leadingCoeff`. -/
 
 /-- Coefficient read: `(toPoly p).coeff i = p.getD i 0`. -/
-theorem toPoly_coeff (p : CPoly ℚ) (i : ℕ) : (toPoly p).coeff i = p.getD i 0 := by
+theorem toPoly_coeff (p : DensePoly ℚ) (i : ℕ) : (toPoly p).coeff i = p.getD i 0 := by
   induction p generalizing i with
   | nil => simp
   | cons a as ih =>
@@ -445,7 +445,7 @@ theorem toPoly_coeff (p : CPoly ℚ) (i : ℕ) : (toPoly p).coeff i = p.getD i 0
     | succ n => simp [coeff_X_mul, ih]
 
 /-- Degree bound: `natDegree (toPoly p) ≤ (cnorm p).length − 1`. -/
-theorem natDegree_toPoly_le (p : CPoly ℚ) : (toPoly p).natDegree ≤ (cnorm p).length - 1 := by
+theorem natDegree_toPoly_le (p : DensePoly ℚ) : (toPoly p).natDegree ≤ (cnorm p).length - 1 := by
   rw [← toPoly_cnorm]
   apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
   intro m hm
@@ -453,7 +453,7 @@ theorem natDegree_toPoly_le (p : CPoly ℚ) : (toPoly p).natDegree ≤ (cnorm p)
   rfl
 
 /-- `cnorm` has no trailing zero: `(cnorm p).getLast? ≠ some 0`. -/
-theorem cnorm_getLast?_ne_some_zero (p : CPoly ℚ) : (cnorm p).getLast? ≠ some 0 := by
+theorem cnorm_getLast?_ne_some_zero (p : DensePoly ℚ) : (cnorm p).getLast? ≠ some 0 := by
   induction p with
   | nil => simp
   | cons a as ih =>
@@ -466,24 +466,24 @@ theorem cnorm_getLast?_ne_some_zero (p : CPoly ℚ) : (cnorm p).getLast? ≠ som
       rw [List.getLast?_cons_cons]
       exact ih
 
-/-- For a normalized nonzero `CPoly ℚ`, the leading coefficient `clead` is nonzero. -/
-theorem clead_ne_zero {p : CPoly ℚ} (h : cnorm p ≠ []) : clead p ≠ 0 := by
-  show CPoly.clead p ≠ 0
-  rcases hl : (CPoly.cnorm p).getLast? with _ | v
+/-- For a normalized nonzero `DensePoly ℚ`, the leading coefficient `clead` is nonzero. -/
+theorem clead_ne_zero {p : DensePoly ℚ} (h : cnorm p ≠ []) : clead p ≠ 0 := by
+  show DensePoly.clead p ≠ 0
+  rcases hl : (DensePoly.cnorm p).getLast? with _ | v
   · exact absurd (List.getLast?_eq_none_iff.mp hl) h
-  · simp only [CPoly.clead, hl, Option.getD_some]
+  · simp only [DensePoly.clead, hl, Option.getD_some]
     rintro rfl
     exact cnorm_getLast?_ne_some_zero p hl
 
 /-- `clead p = (toPoly p).coeff (cdeg p)`: the leading coefficient sits at the top index. -/
-theorem clead_eq_coeff (p : CPoly ℚ) : clead p = (toPoly p).coeff (cdeg p) := by
-  show CPoly.clead p = _
-  rw [CPoly.clead, cdeg, ← toPoly_cnorm, toPoly_coeff, List.getD_eq_getElem?_getD,
+theorem clead_eq_coeff (p : DensePoly ℚ) : clead p = (toPoly p).coeff (cdeg p) := by
+  show DensePoly.clead p = _
+  rw [DensePoly.clead, cdeg, ← toPoly_cnorm, toPoly_coeff, List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
   rfl
 
 /-- `cdeg p = (toPoly p).natDegree`: `cdeg` is the honest `natDegree`. -/
-theorem cdeg_eq_natDegree (p : CPoly ℚ) : cdeg p = (toPoly p).natDegree := by
+theorem cdeg_eq_natDegree (p : DensePoly ℚ) : cdeg p = (toPoly p).natDegree := by
   rcases eq_or_ne (cnorm p) [] with h | h
   · have h0 : toPoly p = 0 := by rw [← toPoly_cnorm, h, toPoly_nil]
     rw [cdeg, h, h0]; simp
@@ -493,7 +493,7 @@ theorem cdeg_eq_natDegree (p : CPoly ℚ) : cdeg p = (toPoly p).natDegree := by
     exact clead_ne_zero h
 
 /-- `clead p = (toPoly p).leadingCoeff`: `clead` is the honest `leadingCoeff`. -/
-theorem clead_eq_leadingCoeff (p : CPoly ℚ) : clead p = (toPoly p).leadingCoeff := by
+theorem clead_eq_leadingCoeff (p : DensePoly ℚ) : clead p = (toPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← cdeg_eq_natDegree, ← clead_eq_coeff]
 
 /-- One Euclidean-division step strictly drops the degree in `ℚ[X]`:
@@ -522,7 +522,7 @@ theorem degree_reduce_step_lt {P Q : ℚ[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
     hTlc.symm
 
 /-- `cnorm p = []` iff `toPoly p = 0` (the list normalizes to empty exactly for the zero polynomial). -/
-theorem cnorm_eq_nil_iff (p : CPoly ℚ) : cnorm p = [] ↔ toPoly p = 0 := by
+theorem cnorm_eq_nil_iff (p : DensePoly ℚ) : cnorm p = [] ↔ toPoly p = 0 := by
   constructor
   · intro h; rw [← toPoly_cnorm, h, toPoly_nil]
   · intro h
@@ -532,7 +532,7 @@ theorem cnorm_eq_nil_iff (p : CPoly ℚ) : cnorm p = [] ↔ toPoly p = 0 := by
     exact hcl rfl
 
 /-- `cmonic` realizes `normalize` through `toPoly`: `toPoly (cmonic q) = normalize (toPoly q)`. -/
-theorem toPoly_cmonic_eq_normalize (q : CPoly ℚ) :
+theorem toPoly_cmonic_eq_normalize (q : DensePoly ℚ) :
     toPoly (cmonic q) = normalize (toPoly q) := by
   unfold cmonic
   by_cases h : cisZero (cnorm q)
@@ -551,7 +551,7 @@ theorem toPoly_cmonic_eq_normalize (q : CPoly ℚ) :
           simp [hlc], toPoly_cnorm, mul_comm]
 
 /-- For a nonzero polynomial, the normalized list length is `natDegree + 1`. -/
-theorem length_cnorm_of_ne (p : CPoly ℚ) (h : cnorm p ≠ []) :
+theorem length_cnorm_of_ne (p : DensePoly ℚ) (h : cnorm p ≠ []) :
     (cnorm p).length = (toPoly p).natDegree + 1 := by
   have hd := cdeg_eq_natDegree p
   rw [cdeg] at hd
@@ -560,7 +560,7 @@ theorem length_cnorm_of_ne (p : CPoly ℚ) (h : cnorm p ≠ []) :
 
 /-- One `cdivmod` step strictly shortens the normalized list: the remainder-loop replacement has
 strictly smaller normalized length than `p`. -/
-theorem step_length_lt (p q : CPoly ℚ) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
+theorem step_length_lt (p q : DensePoly ℚ) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
     (hpq : (cnorm q).length ≤ (cnorm p).length) :
     (cnorm (csub (cnorm p)
         (cmul (cshift ((cnorm p).length - (cnorm q).length) [clead p / clead q])
@@ -596,17 +596,17 @@ theorem step_length_lt (p q : CPoly ℚ) (hp : cnorm p ≠ []) (hq : cnorm q ≠
     omega
 
 /-- `clead` is invariant under `cnorm`: `clead (cnorm p) = clead p`. -/
-theorem clead_cnorm (p : CPoly ℚ) : clead (cnorm p) = clead p := by
-  show CPoly.clead (CPoly.cnorm p) = CPoly.clead p
-  simp only [CPoly.clead, CPoly.cnormG_idem]
+theorem clead_cnorm (p : DensePoly ℚ) : clead (cnorm p) = clead p := by
+  show DensePoly.clead (DensePoly.cnorm p) = DensePoly.clead p
+  simp only [DensePoly.clead, DensePoly.cnormG_idem]
 
 /-- `cisZero` is invariant under `cnorm`. -/
-theorem cisZero_cnorm (q : CPoly ℚ) : cisZero (cnorm q) = cisZero q := by
+theorem cisZero_cnorm (q : DensePoly ℚ) : cisZero (cnorm q) = cisZero q := by
   simp only [cisZero, cnorm_idem]
 
 /-- Remainder degree bound: with enough fuel and a nonzero divisor, `cmod fuel p q` has strictly
 smaller normalized length than `q`. -/
-theorem cmod_length_lt (fuel : ℕ) (p q : CPoly ℚ) (hq : cnorm q ≠ [])
+theorem cmod_length_lt (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hfuel : (cnorm p).length ≤ fuel) :
     (cnorm (cmod fuel p q)).length < (cnorm q).length := by
   induction fuel generalizing p with
@@ -639,7 +639,7 @@ theorem cmod_length_lt (fuel : ℕ) (p q : CPoly ℚ) (hq : cnorm q ≠ [])
       omega
 
 /-- Divisibility gives a vanishing computable remainder, assuming enough fuel. -/
-theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : CPoly ℚ) (hq : cnorm q ≠ [])
+theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hfuel : (cnorm p).length ≤ fuel) (hdvd : toPoly q ∣ toPoly p) :
     toPoly (cmod fuel p q) = 0 := by
   have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
@@ -667,7 +667,7 @@ theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : CPoly ℚ) (hq : cnorm q ≠ [])
 /-- Euclidean-gcd descent terminates for sufficient fuel: when `fuel` bounds the first argument's
 normalized length and strictly bounds the second's, `cgcdTerminates fuel a b` holds. -/
 theorem cgcdTerminates_of_fuel :
-    ∀ (fuel : ℕ) (a b : CPoly ℚ), (cnorm a).length ≤ fuel → (cnorm b).length < fuel →
+    ∀ (fuel : ℕ) (a b : DensePoly ℚ), (cnorm a).length ≤ fuel → (cnorm b).length < fuel →
       cgcdTerminates fuel a b := by
   intro fuel
   induction fuel with
@@ -687,7 +687,7 @@ theorem cgcdTerminates_of_fuel :
 
 /-- Symmetric entry to `cgcdTerminates_of_fuel`: if `fuel` strictly bounds both normalized argument
 lengths, `cgcdTerminates fuel a b` holds. -/
-theorem cgcdTerminates_of_fuel_lt (fuel : ℕ) (a b : CPoly ℚ)
+theorem cgcdTerminates_of_fuel_lt (fuel : ℕ) (a b : DensePoly ℚ)
     (ha : (cnorm a).length < fuel) (hb : (cnorm b).length < fuel) :
     cgcdTerminates fuel a b :=
   cgcdTerminates_of_fuel fuel a b (le_of_lt ha) hb
@@ -695,7 +695,7 @@ theorem cgcdTerminates_of_fuel_lt (fuel : ℕ) (a b : CPoly ℚ)
 /-- The Euclidean remainder never exceeds the dividend's length:
 `(cnorm (cmod fuel a b)).length ≤ (cnorm a).length`. -/
 theorem cmod_length_le_left :
-    ∀ (fuel : ℕ) (a b : CPoly ℚ), (cnorm (cmod fuel a b)).length ≤ (cnorm a).length := by
+    ∀ (fuel : ℕ) (a b : DensePoly ℚ), (cnorm (cmod fuel a b)).length ≤ (cnorm a).length := by
   intro fuel
   induction fuel with
   | zero =>
@@ -732,7 +732,7 @@ theorem cmod_length_le_left :
 /-- `cgcdExt`'s gcd is no longer than its larger input:
 `(cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length`. -/
 theorem cgcdExt_fst_length_le :
-    ∀ (fuel : ℕ) (a b : CPoly ℚ),
+    ∀ (fuel : ℕ) (a b : DensePoly ℚ),
       (cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length := by
   intro fuel
   induction fuel with
@@ -763,7 +763,7 @@ theorem cgcdExt_fst_length_le :
 
 /-- Quotient degree: for a non-constant divisor with `deg q ≤ deg p` and enough fuel,
 `natDegree (cdiv …) + natDegree q = natDegree p`. -/
-theorem cdiv_natDegree_add (fuel : ℕ) (p q : CPoly ℚ) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
+theorem cdiv_natDegree_add (fuel : ℕ) (p q : DensePoly ℚ) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
     (hq2 : 2 ≤ (cnorm q).length) (hpq : (cnorm q).length ≤ (cnorm p).length)
     (hfuel : (cnorm p).length ≤ fuel) :
     (toPoly (cdiv fuel p q)).natDegree + (toPoly q).natDegree = (toPoly p).natDegree := by
@@ -800,25 +800,25 @@ theorem cpow_eq (c : ℚ) (n : ℕ) : cpow c n = c ^ n := by
   | succ n ih => rw [cpow, ih, pow_succ']
 
 /-- `cdeg` is invariant under `cnorm`. -/
-theorem cdeg_cnorm (p : CPoly ℚ) : cdeg (cnorm p) = cdeg p := by
+theorem cdeg_cnorm (p : DensePoly ℚ) : cdeg (cnorm p) = cdeg p := by
   simp only [cdeg, cnorm_idem]
 
 /-- `cmod` is invariant under normalizing both arguments. -/
-theorem cmod_cnorm_both (fuel : ℕ) (p q : CPoly ℚ) :
+theorem cmod_cnorm_both (fuel : ℕ) (p q : DensePoly ℚ) :
     cmod fuel (cnorm p) (cnorm q) = cmod fuel p q := by
   cases fuel with
   | zero => simp [cmod, cdivmod]
   | succ fuel => simp only [cmod, cdivmod, cnorm_idem]
 
 /-- `cresultant` is invariant under normalizing both arguments (it normalizes them internally). -/
-theorem cresultant_cnorm (fuel : ℕ) (p q : CPoly ℚ) :
+theorem cresultant_cnorm (fuel : ℕ) (p q : DensePoly ℚ) :
     cresultant fuel (cnorm p) (cnorm q) = cresultant fuel p q := by
   cases fuel with
   | zero => rfl
   | succ fuel => simp only [cresultant, cnorm_idem]
 
 /-- `cresultant = Polynomial.resultant` for the case `deg q ≤ deg p` (with enough fuel). -/
-theorem cresultant_eq_of_ge : ∀ (fuel : ℕ) (p q : CPoly ℚ),
+theorem cresultant_eq_of_ge : ∀ (fuel : ℕ) (p q : DensePoly ℚ),
     (cnorm q).length ≤ (cnorm p).length →
     (cnorm p).length + (cnorm q).length + 1 ≤ fuel →
     cresultant fuel p q = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q) := by
@@ -897,7 +897,7 @@ theorem cresultant_eq_of_ge : ∀ (fuel : ℕ) (p q : CPoly ℚ),
         ring
 
 /-- `cresultant = Polynomial.resultant`, the general case (for any `p, q`, with sufficient fuel). -/
-theorem cresultant_eq (fuel : ℕ) (p q : CPoly ℚ)
+theorem cresultant_eq (fuel : ℕ) (p q : DensePoly ℚ)
     (hfuel : (cnorm p).length + (cnorm q).length + 2 ≤ fuel) :
     cresultant fuel p q = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q) := by
   by_cases hpq : (cnorm q).length ≤ (cnorm p).length

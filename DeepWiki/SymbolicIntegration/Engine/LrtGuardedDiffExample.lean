@@ -9,7 +9,7 @@ where it discriminates integrable from non-integrable reduced parts by residue-c
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- The ℚ(x) coefficient `1/x` (numerator `1`, denominator `x`) as a `CFrac ℚ`, the test coefficient
 for the guard checks below. -/
@@ -17,18 +17,18 @@ def gcInvX : CFrac ℚ := ⟨([1], [(0 : ℚ), 1]), by decide⟩
 
 /-- The residue-constant guard declines the reduced part `1/t` over `ℚ(x)(log x)`. -/
 theorem cResidueConstantGuardG_declines_invLog :
-    cResidueConstantGuard ([gcInvX] : CPoly (CFrac ℚ))
+    cResidueConstantGuard ([gcInvX] : DensePoly (CFrac ℚ))
       [CField.one] [CField.zero, CField.one] = false := by native_decide
 
 /-- The residue-constant guard accepts `(1/x)/t` over `ℚ(x)(log x)`. -/
 theorem cResidueConstantGuardG_accepts_invXinvLog :
-    cResidueConstantGuard ([gcInvX] : CPoly (CFrac ℚ))
+    cResidueConstantGuard ([gcInvX] : DensePoly (CFrac ℚ))
       [gcInvX] [CField.zero, CField.one] = true := by native_decide
 
 /-- If the LRT Liouville frontier holds, `1/t` over `ℚ(x)(log x)` is not genuinely elementary integrable. -/
 theorem not_genuinelyIntegrableLrt_invLog [Algebra ℚ (CFieldSpec.K (CFrac ℚ))]
     [LrtLiouvilleFrontier (CFrac ℚ)] :
-    ¬ IsElementaryIntegrableGenuineLrt ([gcInvX] : CPoly (CFrac ℚ))
+    ¬ IsElementaryIntegrableGenuineLrt ([gcInvX] : DensePoly (CFrac ℚ))
       [CField.one] [CField.zero, CField.one] :=
   not_isElementaryIntegrableGenuineLrt _ _ _
     (fun h => absurd ((cisZeroG_iff _).mpr h) (by native_decide))

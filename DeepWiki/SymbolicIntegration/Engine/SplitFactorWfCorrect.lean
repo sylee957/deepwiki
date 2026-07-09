@@ -17,21 +17,21 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
 /-- The fraction-free gcd frontier: `cgcdFFCoreWf` is a genuine gcd through `toPoly`. Holds
 unconditionally at `ℚ` (the Euclidean gcd); the tower case is the engine's PRS-regularity frontier. -/
 def GcdFFCorrect : Prop :=
-  ∀ a b : CPoly α,
+  ∀ a b : DensePoly α,
     Associated (toPoly (CFracGcdCoreWf.cgcdFFCoreWf a b)) (gcd (toPoly a) (toPoly b))
 
 /-- **M1 — the per-step bridge.** Under the gcd frontier, the computable split step
 `cstep Dt p = cdivWf (gcd_t(p, Dp)) (gcd_t(p, dp/dt))` denotes the abstract
 `splitFactorStep (toPoly Dt) (toPoly p) = gcd(P, D P)/gcd(P, dP)` up to associates. -/
 theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt p : CPoly α) (hp : toPoly p ≠ 0) :
+    (hgcd : GcdFFCorrect (α := α)) (Dt p : DensePoly α) (hp : toPoly p ≠ 0) :
     Associated (toPoly (cstep Dt p)) (splitFactorStep (toPoly Dt) (toPoly p)) := by
   set A := CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p) with hAdef
   set B := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p) with hBdef
@@ -66,12 +66,12 @@ derivation `D = implicitDeriv (toPoly Dt)`: `toPoly p = toPoly pₛ · toPoly p�
 squarefree factor of `pₙ` normal. Well-founded induction mirroring the abstract `splitFactor`, with the
 per-step bridge (M1) transferring the `IsSpecial`/`IsNormalSqfree`/degree-drop facts through `toPoly`. -/
 theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt : CPoly α) :
-    ∀ (p : CPoly α), toPoly p ≠ 0 →
+    (hgcd : GcdFFCorrect (α := α)) (Dt : DensePoly α) :
+    ∀ (p : DensePoly α), toPoly p ≠ 0 →
       @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩ (toPoly p)
         (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) := by
   letI : Differential (CFieldSpec.K α)[X] := ⟨Differential.implicitDeriv (toPoly Dt)⟩
-  have hmain : ∀ (n : ℕ) (p : CPoly α), (cnorm p : List α).length ≤ n → toPoly p ≠ 0 →
+  have hmain : ∀ (n : ℕ) (p : DensePoly α), (cnorm p : List α).length ≤ n → toPoly p ≠ 0 →
       IsSplittingFactorizationGen (toPoly p)
         (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) := by
     intro n
@@ -90,10 +90,10 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
         have hstepdeg : (splitFactorStep (toPoly Dt) (toPoly p)).natDegree = 0 := by
           rw [← natDegree_eq_of_associated hAstep, ← cdegG_eq_natDegree, hSdeg]
         have hnorm := isNormalSqfree_of_splitFactorStep_natDegree_zero (toPoly Dt) hp hstepdeg
-        have hone : toPoly ([CField.one] : CPoly α) = 1 := by
+        have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
           simp only [denote]
           simp
-        show IsSplittingFactorizationGen (toPoly p) (toPoly ([CField.one] : CPoly α)) (toPoly p)
+        show IsSplittingFactorizationGen (toPoly p) (toPoly ([CField.one] : DensePoly α)) (toPoly p)
         rw [hone]
         exact ⟨(one_mul _).symm, isSpecial_one, hnorm⟩
       · rw [if_neg hSdeg]
@@ -143,7 +143,7 @@ instance : CharZero (CFieldSpec.K ℚ) := inferInstanceAs (CharZero ℚ)
 
 /-- **Unconditional abstract correctness of `cSplitFactorFast` at the `ℚ` base.** For `p ≠ 0`,
 `cSplitFactorFast Dt p` is a genuine general splitting factorization of `p` — no gcd hypothesis. -/
-theorem cSplitFactorFastG_isSplittingFactorizationGen_Q (Dt p : CPoly ℚ) (hp : toPoly p ≠ 0) :
+theorem cSplitFactorFastG_isSplittingFactorizationGen_Q (Dt p : DensePoly ℚ) (hp : toPoly p ≠ 0) :
     @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩ (toPoly p)
       (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) :=
   cSplitFactorFastG_isSplittingFactorizationGen gcdFFCorrect_Q Dt p hp

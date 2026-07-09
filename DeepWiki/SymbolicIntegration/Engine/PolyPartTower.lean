@@ -9,7 +9,7 @@ monomial in the constant-coefficient sub-case. Both generic over `[CField α] [C
 namespace DeepWiki.SymbolicIntegration
 
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -22,7 +22,7 @@ For a nonlinear monomial `t` (`δ(t) = deg(Dt) ≥ 2`, `λ(t) = lc(Dt)`), every 
 monomial `t` (`δ(t) = deg(Dt) ≥ 2`, `λ(t) = lc(Dt)`): `p = D(q) + r` with `deg(r) < δ(t)`, peeling
 `q₀ = (lc(p)/(m·λ(t)))·tᵐ` (`m = deg(p) − δ(t) + 1`) whose monomial derivative `D(q₀)`
 (`cmonomialDeriv Dt`) cancels the top of `p`, then recursing on `p − D(q₀)`. Fuel-bounded; generic. -/
-def cPolyReduceTower (Dt : CPoly α) : ℕ → CPoly α → CPoly α × CPoly α
+def cPolyReduceTower (Dt : DensePoly α) : ℕ → DensePoly α → DensePoly α × DensePoly α
   | 0, p => ([], cnorm p)
   | fuel + 1, p =>
     let p := cnorm p
@@ -48,7 +48,7 @@ proceeds top-down. We implement the **constant-coefficient sub-case** `c = aₘ/
 top-down by peeling `q₀ = c·t^(m+1)/(m+1)` for each leading term `aₘ` with `c = aₘ/((m+1)·Dt)`
 (constant-coefficient sub-case `b = 0`). Returns `(q, rem)` with `D(q) + rem = p`, peeling all degrees
 `≥ 1` (the degree-`0` term stays in `rem`). Fuel-bounded; generic. -/
-def cPrimitivePolyIntegrate (Dt : CPoly α) : ℕ → CPoly α → CPoly α × CPoly α
+def cPrimitivePolyIntegrate (Dt : DensePoly α) : ℕ → DensePoly α → DensePoly α × DensePoly α
   | 0, p => ([], cnorm p)
   | fuel + 1, p =>
     let p := cnorm p
@@ -66,6 +66,6 @@ def cPrimitivePolyIntegrate (Dt : CPoly α) : ℕ → CPoly α → CPoly α × C
       let (q, rem) := cPrimitivePolyIntegrate Dt fuel p'
       (cadd q0 q, rem)
 
-end CPoly
+end DensePoly
 
 end DeepWiki.SymbolicIntegration

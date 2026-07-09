@@ -14,7 +14,7 @@ analogue of `LiouvilleFrontier` / `not_isElementaryIntegrableGenuine`, with **no
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
@@ -28,14 +28,14 @@ theorem. The completeness analogue of the reduced-soundness frontier `PrimitiveF
 class LrtLiouvilleFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
   /-- Genuine (broad) elementary integrability ⟹ the residue-constancy guard passes. -/
-  descendGenuineLrt : ∀ (Dt a d : CPoly α), toPoly d ≠ 0 →
+  descendGenuineLrt : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 →
     IsElementaryIntegrableGenuineLrt Dt a d → cResidueConstantGuard Dt a d = true
 
 /-- **Derived completeness — a decidable non-integrability certificate (root-free).** If the integrability
 guard *fails* (`cResidueConstantGuard = false`: some residue is non-constant), then `a/d` is **not** genuinely
 (broadly) elementary integrable. Non-vacuous, and with **no rational-residue restriction** (unlike the rational
 `not_isElementaryIntegrableGenuine`) — modulo the Liouville frontier `descendGenuineLrt`. -/
-theorem not_isElementaryIntegrableGenuineLrt [LrtLiouvilleFrontier α] (Dt a d : CPoly α)
+theorem not_isElementaryIntegrableGenuineLrt [LrtLiouvilleFrontier α] (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hguard : cResidueConstantGuard Dt a d = false) :
     ¬ IsElementaryIntegrableGenuineLrt Dt a d := by
   intro h

@@ -13,7 +13,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-! ## The reduced-divisor representation `RedDiv p` (a sorted `𝔽_p`-point list) -/
 
@@ -43,7 +43,7 @@ def pdivEq (p : ℕ) (D₁ D₂ : RedDiv p) : Bool := pdivCanon p D₁ == pdivCa
 
 /-! ## Light point-extraction: roots of `u(x)` over `𝔽_p` (`rootsWithMult`) -/
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -51,9 +51,9 @@ variable {α : Type*} [CField α]
 `𝔽_p` via `zmodGrid`), the multiplicity of `r` as a root of `poly`, found by repeatedly dividing out
 `(x − r)` (each exact division by `cdivWf`); emit `r` repeated that many times. The
 independent `𝔽_p` point-extraction reading the support out of a reduced `u(x)`. Generic over `[CField α]`. -/
-def rootsWithMult (scan : List α) (poly : CPoly α) : List α :=
+def rootsWithMult (scan : List α) (poly : DensePoly α) : List α :=
   scan.foldr (fun r acc =>
-    let rec mult : ℕ → CPoly α → ℕ
+    let rec mult : ℕ → DensePoly α → ℕ
       | 0, _ => 0
       | k + 1, q =>
         if cisZero q then 0
@@ -61,13 +61,13 @@ def rootsWithMult (scan : List α) (poly : CPoly α) : List α :=
         else 0
     (List.replicate (mult (poly.length + 1) poly) r) ++ acc) []
 
-end CPoly
+end DensePoly
 
 /-! ## The point-list ↔ Mumford round-trip (the reduction engine) -/
 
 /-- Point list → reduced Mumford pair `ptToMum ρ g pts`: fold `cantorCompose`/`cantorReduce` over the
 single points `mumfordPoint Pᵢ` from `mumfordIdentity`, giving the reduced representative of `Σ (Pᵢ − ∞)`. -/
-def ptToMum {α : Type*} [CField α] (ρ : CPoly α) (g : ℕ) (pts : List (α × α)) :
+def ptToMum {α : Type*} [CField α] (ρ : DensePoly α) (g : ℕ) (pts : List (α × α)) :
     MumfordDivisor α :=
   pts.foldl (fun acc P => cantorReduce ρ g (cantorCompose ρ acc (mumfordPoint P.1 P.2)))
     mumfordIdentity
@@ -75,7 +75,7 @@ def ptToMum {α : Type*} [CField α] (ρ : CPoly α) (g : ℕ) (pts : List (α �
 /-- Reduced Mumford pair → point list `mumToPts scan D`: the roots of `D.u` with multiplicity
 (`rootsWithMult` over `scan`) each paired with `y = D.v(root)`. -/
 def mumToPts {α : Type*} [CField α] (scan : List α) (D : MumfordDivisor α) : List (α × α) :=
-  (CPoly.rootsWithMult scan D.u).map (fun r => (r, ceval D.v r))
+  (DensePoly.rootsWithMult scan D.u).map (fun r => (r, ceval D.v r))
 
 /-! ## The group law: compose (`++`) then reduce (round-trip to Cantor), and `picOrder` -/
 
@@ -88,26 +88,26 @@ representative (`deg ≤ g`) by the round-trip `mumToPts (zmodGrid p) (ptToMum D
 Mumford pair via Cantor compose/reduce, read the support back), then canonicalise. The point-list analogue
 of `cantorReduce`; light `𝔽_p[x]` arithmetic on short lists — no HNF. Root extraction uses its own
 structural length bound. -/
-def pdivReduce (p : ℕ) [CField (ZMod p)] (ρ : CPoly (ZMod p)) (g : ℕ) (D : RedDiv p) : RedDiv p :=
+def pdivReduce (p : ℕ) [CField (ZMod p)] (ρ : DensePoly (ZMod p)) (g : ℕ) (D : RedDiv p) : RedDiv p :=
   pdivCanon p (mumToPts (zmodGrid p) (ptToMum ρ g D))
 
 /-- The Picard group law `pdivAdd p ρ g D₁ D₂ = pdivReduce ρ g (D₁ ++ D₂)` — the sum of two reduced
 point divisors as the reduced representative of `[D₁] + [D₂]` in `Pic⁰(C)(𝔽_p)` (compose by `++`, reduce by
 the Cantor round-trip). Identity `[]` (the class of `0·∞`); the analogue of `cantorAdd`. -/
-def pdivAdd (p : ℕ) [CField (ZMod p)] (ρ : CPoly (ZMod p)) (g : ℕ) (D₁ D₂ : RedDiv p) : RedDiv p :=
+def pdivAdd (p : ℕ) [CField (ZMod p)] (ρ : DensePoly (ZMod p)) (g : ℕ) (D₁ D₂ : RedDiv p) : RedDiv p :=
   pdivReduce p ρ g (pdivCompose D₁ D₂)
 
 /-- The scalar multiple `picMul p ρ g n D = n·D` (the `n`-fold Picard sum), `0·D = []` (the identity).
 By `ℕ`-recursion `(n+1)·D = D + n·D`. The order of `D` is the least `n ≥ 1` with `picMul … n D ≈ []` — the
 analogue of `cantorMul`. -/
-def picMul (p : ℕ) [CField (ZMod p)] (ρ : CPoly (ZMod p)) (g : ℕ) : ℕ → RedDiv p → RedDiv p
+def picMul (p : ℕ) [CField (ZMod p)] (ρ : DensePoly (ZMod p)) (g : ℕ) : ℕ → RedDiv p → RedDiv p
   | 0, _ => []
   | n + 1, D => pdivAdd p ρ g D (picMul p ρ g n D)
 
 /-- Order-search loop `picOrderAux fuel p ρ g D acc n`: with `acc = n·D`, test `(n+1)·D = D + acc`
 against the identity `[]` (`pdivEq`); on a hit return `some (n+1)`, else recurse. `fuel` bounds the
 multiples tried (the finite group order is the ceiling). The analogue of `cantorOrderAux`. -/
-def picOrderAux : ℕ → (p : ℕ) → [CField (ZMod p)] → CPoly (ZMod p) → ℕ → RedDiv p → RedDiv p → ℕ →
+def picOrderAux : ℕ → (p : ℕ) → [CField (ZMod p)] → DensePoly (ZMod p) → ℕ → RedDiv p → RedDiv p → ℕ →
     Option ℕ
   | 0, _, _, _, _, _, _, _ => none
   | fuel + 1, p, _, ρ, g, D, acc, n =>
@@ -119,7 +119,7 @@ def picOrderAux : ℕ → (p : ℕ) → [CField (ZMod p)] → CPoly (ZMod p) →
 identity class) in `Pic⁰(C)(𝔽_p)` for `y² = ρ`, searching `1·D, 2·D, …` up to `fuel` multiples (`pdivEq`).
 `none` if no `m ≤ fuel` works. The general analogue of `cantorOrder` — reading the order of a *specific*
 class on the point-list representation, beyond the genus-1 point-count ceiling. -/
-def picOrder (fuel p : ℕ) [CField (ZMod p)] (ρ : CPoly (ZMod p)) (g : ℕ) (D : RedDiv p) : Option ℕ :=
+def picOrder (fuel p : ℕ) [CField (ZMod p)] (ρ : DensePoly (ZMod p)) (g : ℕ) (D : RedDiv p) : Option ℕ :=
   picOrderAux fuel p ρ g D [] 0
 
 end DeepWiki.SymbolicIntegration
@@ -131,11 +131,11 @@ matches the Mumford/Cantor order for the same class. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- The genus-2 radicand `ρ = x⁵ + 1 ∈ 𝔽₁₁[x]` (`polyToZMod` of Cantor's `hypRhoX5p1`), the curve
 `y² = x⁵ + 1` over `𝔽₁₁`. Genus 2 — `|Pic⁰| ≠ N_p`. -/
-def picRhoX5p1Mod11 : CPoly (ZMod 11) := polyToZMod 11 hypRhoX5p1
+def picRhoX5p1Mod11 : DensePoly (ZMod 11) := polyToZMod 11 hypRhoX5p1
 
 /-- The class `(0,1) − ∞` on `y² = x⁵ + 1` over `𝔽₁₁`, as the singleton point divisor `[(0, 1)]`. -/
 def picPt01_X5p1 : RedDiv 11 := [((0 : ZMod 11), (1 : ZMod 11))]
@@ -172,11 +172,11 @@ On `y² = x³ + 1` over `𝔽₁₁` (torsion `ℤ/6`), the point-list order of 
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- The genus-1 radicand `ρ = x³ + 1 ∈ 𝔽₁₁[x]` (`polyToZMod` of Cantor's `hypRhoX3p1`), the curve
 `y² = x³ + 1` over `𝔽₁₁`. Torsion `ℤ/6`. -/
-def picRhoX3p1Mod11 : CPoly (ZMod 11) := polyToZMod 11 hypRhoX3p1
+def picRhoX3p1Mod11 : DensePoly (ZMod 11) := polyToZMod 11 hypRhoX3p1
 
 /-- The class `(2, 3) − ∞` on `y² = x³ + 1` over `𝔽₁₁`, as `[(2, 3)]`. -/
 def picPt23_X3p1 : RedDiv 11 := [((2 : ZMod 11), (3 : ZMod 11))]
@@ -199,7 +199,7 @@ end DeepWiki.SymbolicIntegration
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 /-- The point-list Picard group law and `picOrder` validate: on genus-2 `y² = x⁵ + 1` over `𝔽₁₁`,
 `picOrder` reads the order of `(0,1) − ∞` as 5 matching Cantor, with `2·((0,1)−∞)` a degree-2 divisor and

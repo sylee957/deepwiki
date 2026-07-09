@@ -23,7 +23,7 @@ accessors (`crPoly`/…/`redNorm`), canonical reconstruction, and generic soundn
 namespace DeepWiki.SymbolicIntegration
 
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -31,7 +31,7 @@ variable [CFracGcdCoreWf α]
 
 /-- The generic one-level Risch integrator, parameterized by a monomial case `C`: canonical-split, run the
 case's special-part hook, correct the reduced normal part, and combine. -/
-def cIntegrateCase (C : MonomialCase α) (Dt a d : CPoly α) (cands : List α) :
+def cIntegrateCase (C : MonomialCase α) (Dt a d : DensePoly α) (cands : List α) :
     Option (IntegralResult α) :=
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
   match C.integrateSpecial Dt fp b ds with
@@ -41,9 +41,9 @@ def cIntegrateCase (C : MonomialCase α) (Dt a d : CPoly α) (cands : List α) :
     | none => none
     | some nrm => some (combineSN snum sden nrm)
 
-end CPoly
+end DensePoly
 
-open CPoly
+open DensePoly
 open CFrac Polynomial
 open scoped Differential
 
@@ -71,22 +71,22 @@ theorem canonicalRepFast_field_identity {K : Type*} [Field K] (a d q r dn ds b c
   ring
 
 /-- Polynomial part `fₚ` of `canonicalRepresentationFast Dt a d`. -/
-abbrev crPoly (Dt a d : CPoly α) : CPoly α := (canonicalRepresentationFast Dt a d).1
+abbrev crPoly (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentationFast Dt a d).1
 /-- Special-part numerator `b` of the canonical split. -/
-abbrev crSpecNum (Dt a d : CPoly α) : CPoly α := (canonicalRepresentationFast Dt a d).2.1.1
+abbrev crSpecNum (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentationFast Dt a d).2.1.1
 /-- Special-part denominator `dₛ` of the canonical split. -/
-abbrev crSpecDen (Dt a d : CPoly α) : CPoly α := (canonicalRepresentationFast Dt a d).2.1.2
+abbrev crSpecDen (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentationFast Dt a d).2.1.2
 /-- Normal-part numerator `cₙ` of the canonical split. -/
-abbrev crNormNum (Dt a d : CPoly α) : CPoly α := (canonicalRepresentationFast Dt a d).2.2.1
+abbrev crNormNum (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentationFast Dt a d).2.2.1
 /-- Normal-part denominator `dₙ` of the canonical split. -/
-abbrev crNormDen (Dt a d : CPoly α) : CPoly α := (canonicalRepresentationFast Dt a d).2.2.2
+abbrev crNormDen (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentationFast Dt a d).2.2.2
 /-- The reduced integral of the normal part `cₙ/dₙ`. -/
-abbrev redNorm (Dt a d : CPoly α) (cands : List α) : IntegralResult α :=
+abbrev redNorm (Dt a d : DensePoly α) (cands : List α) : IntegralResult α :=
   cIntegrateReduced Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
 
 omit [CDiffFieldSpec α] [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Canonical split pieces recombine as `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`. -/
-theorem canonicalReconstruction (Dt a d : CPoly α)
+theorem canonicalReconstruction (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0)
     (hdn : toPoly (crNormDen Dt a d) ≠ 0)
     (hds : toPoly (crSpecDen Dt a d) ≠ 0)
@@ -111,7 +111,7 @@ theorem canonicalReconstruction (Dt a d : CPoly α)
   have hadiv : toPoly a = toPoly qr.1 * toPoly d + toPoly qr.2 := toPolyG_cdivmodWf a d hcnd
   have hbcr : toPoly bc.1 * toPoly sn.1 + toPoly bc.2 * toPoly sn.2 = toPoly qr.2 :=
     toPolyG_cextendedEuclideanSplitWf sn.1 sn.2 qr.2 uw.1 uw.2 hcns hbez
-  have hone : am α (toPoly ([CField.one] : CPoly α)) = 1 := by
+  have hone : am α (toPoly ([CField.one] : DensePoly α)) = 1 := by
     simp only [denote]
     simp
   rw [hone, div_one]
@@ -120,8 +120,8 @@ theorem canonicalReconstruction (Dt a d : CPoly α)
 
 omit [CRischField α] in
 /-- Generic soundness of `cIntegrateCase` from special-part, normal-part, and reconstruction hypotheses. -/
-theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPoly α) (cands : List α)
-    (res : IntegralResult α) (snum sden : CPoly α) (nrm : IntegralResult α)
+theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : DensePoly α) (cands : List α)
+    (res : IntegralResult α) (snum sden : DensePoly α) (nrm : IntegralResult α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPoly sden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)

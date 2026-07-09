@@ -19,7 +19,7 @@ close the polynomial part; the reduced part goes through the root-free assembler
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac Polynomial
+open DensePoly CFrac Polynomial
 open scoped Differential
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
@@ -27,7 +27,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CharZero (CFieldSpec.K β)] [Fact (GcdFFCorrect (α := β))] [LawfulRischLevelLrt β]
 
 /-- Embed a polynomial as a fraction `num/1 ∈ CFrac β`. -/
-def qEmbedNum {β : Type*} [CField β] [CFieldDomain β] (num : CPoly β) : CFrac β :=
+def qEmbedNum {β : Type*} [CField β] [CFieldDomain β] (num : DensePoly β) : CFrac β :=
   ⟨(num, [CField.one]), CFrac.cisZeroG_one_singleton⟩
 
 /-- Integrate a coefficient `c ∈ CFrac β = β(s)` by recursing into
@@ -55,9 +55,9 @@ theorem towerCoeffIntegrateLrt_sound (c b : CFrac β) (h : towerCoeffIntegrateLr
           (CFieldSpec.toK (CField.div (qEmbedNum bn) (qEmbedNum bd))) := by
     rw [CDiffFieldSpec.toK_cderiv]
     rfl
-  have htoK_embed : ∀ num : CPoly β, CFieldSpec.toK (qEmbedNum num) = CFrac.am β (toPoly num) := by
+  have htoK_embed : ∀ num : DensePoly β, CFieldSpec.toK (qEmbedNum num) = CFrac.am β (toPoly num) := by
     intro num
-    show CFrac.am β (toPoly num) / CFrac.am β (toPoly ([CField.one] : CPoly β))
+    show CFrac.am β (toPoly num) / CFrac.am β (toPoly ([CField.one] : DensePoly β))
       = CFrac.am β (toPoly num)
     simp only [denote, map_one, mul_zero, add_zero, div_one]
   have htoK_c : CFieldSpec.toK c
@@ -80,14 +80,14 @@ def towerCoeffIntegrateSingleLrt (η c : CFrac β) : Option (CFrac β × CFrac �
 `cIntegratePrimPolyDegRaise` with `towerCoeffIntegrateSingleLrt` as the single-`w` `limInt` (real `(b,c)` when
 the class provides `limitedIntegrateSingle`, else log-free `c = 0`). Soundness `D_tower(q) = p` is the
 telescoping `cIntegratePrimPolyDegRaiseG_sound` with no `limInt` correctness hypothesis. -/
-def towerPolyIntegrateLrt (η : CFrac β) (p : CPoly (CFrac β)) : Option (CPoly (CFrac β)) :=
+def towerPolyIntegrateLrt (η : CFrac β) (p : DensePoly (CFrac β)) : Option (DensePoly (CFrac β)) :=
   cIntegratePrimPolyDegRaise η (towerCoeffIntegrateSingleLrt η) (cdeg p + 2) p
 
 omit [CRischField β] in
 /-- The LRT tower step's polynomial-part soundness: `D_tower(q) = p`, the telescoping
 `cIntegratePrimPolyDegRaiseG_sound` (each step's `q₀` is subtracted then added back, so the identity holds for
 *any* coefficient integrator — no `towerCoeffIntegrateLrt_sound` needed). -/
-theorem towerPolyIntegrateLrt_sound (η : CFrac β) (p q : CPoly (CFrac β))
+theorem towerPolyIntegrateLrt_sound (η : CFrac β) (p q : DensePoly (CFrac β))
     (h : towerPolyIntegrateLrt η p = some q) :
     Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPoly q) = toPoly p :=
   cIntegratePrimPolyDegRaiseG_sound η _ (cdeg p + 2) p q h
@@ -96,12 +96,12 @@ omit [CRischField β] in
 /-- The LRT tower step's special-part field identity (`Dθ = 1`): from `towerPolyIntegrateLrt_sound`, the
 polynomial antiderivative `qp` of `fp` gives `D_tower(⟦qp/1⟧) = ⟦fp/1⟧`. The `Dt` + `toPoly Dt = 1`
 special identity for the tower step, with GENERAL coefficients via the LRT recursion. -/
-theorem tower_special_identityLrt (Dt fp qp : CPoly (CFrac β)) (hDt : toPoly Dt = 1)
+theorem tower_special_identityLrt (Dt fp qp : DensePoly (CFrac β)) (hDt : toPoly Dt = 1)
     (h : towerPolyIntegrateLrt CField.one fp = some qp) :
     towerFractionFieldDeriv Dt (fieldFrac qp [CField.one]) = fieldFrac fp [CField.one] := by
   have hpoly := towerPolyIntegrateLrt_sound CField.one fp qp h
   rw [CFieldSpec.toK_one, Polynomial.C_1] at hpoly
-  have hone : toPoly ([CField.one] : CPoly (CFrac β)) = 1 := by
+  have hone : toPoly ([CField.one] : DensePoly (CFrac β)) = 1 := by
     simp only [denote, map_one, mul_zero, add_zero]
   have hbridge : towerFractionFieldDeriv Dt (CFrac.am (CFrac β) (toPoly qp))
       = CFrac.am (CFrac β) (Differential.implicitDeriv (toPoly Dt) (toPoly qp)) := by
@@ -131,7 +131,7 @@ Under the guard (`b = 0`, `Dθ = 1`) the LRT polynomial recursion `towerPolyInte
 vanishing, `b = 0`) closes; off the guard the hook returns `none`. This is the `specialSound` field of the LRT
 tower instance. -/
 theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := CFrac β))]
-    (Dt a d snum sden : CPoly (CFrac β)) (hd0 : toPoly d ≠ 0)
+    (Dt a d snum sden : DensePoly (CFrac β)) (hd0 : toPoly d ≠ 0)
     (hhook : (towerPrimitiveCaseLrt (β := β)).integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
       (crSpecDen Dt a d) = some (snum, sden)) :
     toPoly sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K (CFrac β)),

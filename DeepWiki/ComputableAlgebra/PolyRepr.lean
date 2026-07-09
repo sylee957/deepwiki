@@ -7,7 +7,7 @@ import DeepWiki.ComputableAlgebra.Polynomial
 `degBound` (an upper bound on the degree), and `ofFn` (dense construction from a length + coefficient
 function) — plus two spec laws. Arithmetic and its correctness are then defined **once, generically**,
 so a new representation is a drop-in instance. The dense `List` instance below recovers the concrete
-`CPoly α := List α` engine.
+`DensePoly α := List α` engine.
 
 Feasibility (both validated here): the derived ops reduce under `native_decide` at the `List` instance,
 and the coefficient-correctness squares are representation-generic — proven through the `CRingSpec`
@@ -36,9 +36,9 @@ class CPolyRepr (P : Type u → Type u) where
 
 namespace CPolyRepr
 
-/-! ### The dense-`List` instance (the concrete `CPoly α = List α` engine) -/
+/-! ### The dense-`List` instance (the concrete `DensePoly α = List α` engine) -/
 
-/-- Dense-coefficient-list representation (index = degree, low→high) — the concrete `CPoly` engine. -/
+/-- Dense-coefficient-list representation (index = degree, low→high) — the concrete `DensePoly` engine. -/
 instance instList : CPolyRepr List where
   coeff p i := (p : List _).getD i CCommRing.zero
   degBound p := (p : List _).length

@@ -15,7 +15,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly
+open DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
@@ -24,9 +24,9 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 abstract subresultant of `(Dstar, A − c·B)` (`B = toPoly Dd`), for any value `c`. Immediate from the L4b
 certification `toPolyG_cSubresultantG` plus the `csub`/`cscale` bridges — no interpolation needed (this is
 the per-node fact the interpolation extends to all residues). -/
-theorem toK_cSubresultantG_getD_eq_coeff (Dstar A Dd : CPoly α) (c : α) (n m j k : ℕ) :
+theorem toK_cSubresultantG_getD_eq_coeff (Dstar A Dd : DensePoly α) (c : α) (n m j k : ℕ) :
     CFieldSpec.toK
-        (((cSubresultant Dstar (csub A (cscale c Dd)) n m j : CPoly α) : List α).getD k
+        (((cSubresultant Dstar (csub A (cscale c Dd)) n m j : DensePoly α) : List α).getD k
           CField.zero)
       = (subresultant (toPoly Dstar)
           (toPoly A - C (CFieldSpec.toK c) * toPoly Dd) n m j).coeff k := by
@@ -37,9 +37,9 @@ variable [CDiffField α] [CDiffFieldSpec α]
 
 /-- The per-value subresultant agreement with the **tower derivation** `Dd = cmonomialDeriv Dt Dstar`, so
 `B = implicitDeriv (toPoly Dt) (toPoly Dstar)` — the form used by `cLrtLogArg`. -/
-theorem toK_cSubresultantG_getD_eq_coeff_monomial (Dt Dstar A : CPoly α) (c : α) (n m j k : ℕ) :
+theorem toK_cSubresultantG_getD_eq_coeff_monomial (Dt Dstar A : DensePoly α) (c : α) (n m j k : ℕ) :
     CFieldSpec.toK
-        (((cSubresultant Dstar (csub A (cscale c (cmonomialDeriv Dt Dstar))) n m j : CPoly α) :
+        (((cSubresultant Dstar (csub A (cscale c (cmonomialDeriv Dt Dstar))) n m j : DensePoly α) :
             List α).getD k CField.zero)
       = (subresultant (toPoly Dstar)
           (toPoly A - C (CFieldSpec.toK c)
@@ -57,7 +57,7 @@ have degree `< N = cdeg Dstar + cdeg Dd + 1` (`natDegree_coeff_lrtSubresultantGe
 `degree_toPolyG_cinterpolateG_lt`) and agree at the `N` integer nodes (per-value agreement + coefficient/eval
 commutation + `lrtSubresultantGen_eval`). So the engine's interpolated log argument IS the abstract
 subresultant coefficient. -/
-theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd : CPoly α) (j k : ℕ)
+theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd : DensePoly α) (j k : ℕ)
     (hm : cdeg Dd = cdeg Dstar - 1) :
     toPoly ((cSubresultantParam Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k [])
       = (lrtSubresultantGen (toPoly A) (toPoly Dstar) (toPoly Dd) j).coeff k := by
@@ -73,20 +73,20 @@ theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd
     have hget : (cSubresultantParam Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k []
         = cinterpolate ((List.range N).map (fun jj =>
             (cnatCast jj, ((cSubresultant Dstar (csub A (cscale (cnatCast jj) Dd))
-              (cdeg Dstar) (cdeg Dd) j : CPoly α) : List α).getD k CField.zero))) := by
+              (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CField.zero))) := by
       rw [cSubresultantParam]
       rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range hk]
       rfl
     set pts : List (α × α) := (List.range N).map (fun jj =>
       (cnatCast jj, ((cSubresultant Dstar (csub A (cscale (cnatCast jj) Dd))
-        (cdeg Dstar) (cdeg Dd) j : CPoly α) : List α).getD k CField.zero)) with hpts
+        (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CField.zero)) with hpts
     have hlen : pts.length = N := by rw [hpts, List.length_map, List.length_range]
     have hne : pts ≠ [] := by rw [hpts]; simp [hN]
     have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
       have : pts.map (fun p => CFieldSpec.toK p.1)
           = (List.range N).map (Nat.cast : ℕ → CFieldSpec.K α) := by
         rw [hpts, List.map_map]; apply List.map_congr_left; intro jj _
-        simp only [Function.comp_apply, CPoly.toK_cnatCastG]
+        simp only [Function.comp_apply, DensePoly.toK_cnatCastG]
       rw [this]; exact (List.nodup_range).map Nat.cast_injective
     rw [hget]
     symm
@@ -107,10 +107,10 @@ theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd
     · intro jj hjj
       rw [Finset.mem_range] at hjj
       have hmem : (cnatCast jj, ((cSubresultant Dstar (csub A (cscale (cnatCast jj) Dd))
-          (cdeg Dstar) (cdeg Dd) j : CPoly α) : List α).getD k CField.zero) ∈ pts := by
+          (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CField.zero) ∈ pts := by
         rw [hpts, List.mem_map]; exact ⟨jj, List.mem_range.mpr hjj, rfl⟩
       rw [show (jj : CFieldSpec.K α) = CFieldSpec.toK (cnatCast jj : α) from
-          (CPoly.toK_cnatCastG jj).symm]
+          (DensePoly.toK_cnatCastG jj).symm]
       rw [eval_toPolyG_cinterpolateG pts hnodup hmem, toK_cSubresultantG_getD_eq_coeff, hcommute,
         lrtSubresultantGen_eval, hnm, hmm, ← hdd]
   · -- `k > j`: both are `0`

@@ -9,7 +9,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
@@ -17,7 +17,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `b / ds` has a nonzero proper special denominator. -/
-structure IsProperSpecialPart (b ds : CPoly α) : Prop where
+structure IsProperSpecialPart (b ds : DensePoly α) : Prop where
   /-- `ds` is nonzero according to `cisZero`. -/
   nz : cisZero ds = false
   /-- The special denominator has positive degree. -/
@@ -29,7 +29,7 @@ structure IsProperSpecialPart (b ds : CPoly α) : Prop where
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `ds` is the monomial denominator of a proper special part `b / ds`. -/
-structure IsSpecialDenominator (b ds : CPoly α) : Prop extends IsProperSpecialPart b ds where
+structure IsSpecialDenominator (b ds : DensePoly α) : Prop extends IsProperSpecialPart b ds where
   /-- `ds` denotes its leading coefficient times `X ^ cdeg ds`. -/
   mono : toPoly ds = Polynomial.C (CFieldSpec.toK (clead ds)) * Polynomial.X ^ cdeg ds
 
@@ -37,7 +37,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **`cHyperexpSpecialNeg` correctness (polynomial identity).** For a special denominator `dₛ = c·tᵐ`
 (read via `clead`/`cdeg`) with `c ≠ 0` and a proper numerator `b` (degree `< m`),
 `C(c) · toPoly (cHyperexpSpecialNeg b dₛ).reverse = toPoly b`. -/
-theorem cHyperexpSpecialNegG_reverse_smul [CRischField α] (b ds : CPoly α)
+theorem cHyperexpSpecialNegG_reverse_smul [CRischField α] (b ds : DensePoly α)
     (hsp : IsProperSpecialPart b ds) :
     Polynomial.C (CFieldSpec.toK (clead ds)) * toPoly (cHyperexpSpecialNeg b ds).reverse
       = toPoly b := by
@@ -72,16 +72,16 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The special-part connector.** For a monomial special denominator `dₛ = c·tᵐ` with `c ≠ 0` and a
 proper `b`, `⟦(cHyperexpSpecialNeg b dₛ).reverse⟧/⟦tᵐ⟧ = ⟦b/dₛ⟧` — the negative Laurent coefficients read
 the special part `b/dₛ` faithfully. Cross-multiplies the polynomial identity through `am`. -/
-theorem cHyperexpSpecialNegG_frac [CRischField α] (b ds : CPoly α)
+theorem cHyperexpSpecialNegG_frac [CRischField α] (b ds : DensePoly α)
     (hds : IsSpecialDenominator b ds) :
     am α (toPoly (cHyperexpSpecialNeg b ds).reverse)
-        / am α (toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CField.one] : CPoly α)))
+        / am α (toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CField.one] : DensePoly α)))
       = am α (toPoly b) / am α (toPoly ds) := by
   have hlen : (cHyperexpSpecialNeg b ds).length = cdeg ds := by
     rw [cHyperexpSpecialNeg, if_neg (by simp [hds.nz]), if_neg (Nat.ne_of_gt hds.mpos),
       List.length_map, List.length_range]
   have hpoly := cHyperexpSpecialNegG_reverse_smul b ds hds.toIsProperSpecialPart
-  have hdenpow : toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CField.one] : CPoly α))
+  have hdenpow : toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CField.one] : DensePoly α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ cdeg ds := by
     rw [hlen]
     simp only [denote, mul_zero, add_zero, map_one, mul_one]
@@ -101,7 +101,7 @@ b dₛ) = some (lnum, lden)` then `D_tower(⟦lnum/lden⟧) = ⟦fp⟧ + ⟦b/d�
 antiderivative of the full special+polynomial part `fp + b/dₛ`. Composes the general Laurent soundness with
 the special-part connector. -/
 theorem cIntegrateHyperexpLaurentG_special_sound [CRischField α] [CRischFieldSpec α]
-    (Dt : CPoly α) (η : α) (fp b ds lnum lden : CPoly α)
+    (Dt : DensePoly α) (η : α) (fp b ds lnum lden : DensePoly α)
     (hDt : IsHyperexpMonomial Dt η) (hds : IsSpecialDenominator b ds)
     (hsome : cIntegrateHyperexpLaurent η fp (cHyperexpSpecialNeg b ds) = some (lnum, lden)) :
     towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))

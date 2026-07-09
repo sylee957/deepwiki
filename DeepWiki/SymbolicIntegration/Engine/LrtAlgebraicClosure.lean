@@ -9,14 +9,14 @@ This file instantiates that polymorphic statement at the canonical `E = Algebrai
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac Polynomial
+open DensePoly CFrac Polynomial
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CharZero (CFieldSpec.K α)]
 
 /-- **The LRT soundness, concretely over the algebraic closure.** Instantiates the `∀ E [IsAlgClosed E] …`
 identity of `IsIntegralResultLrt` at `E = AlgebraicClosure (CFieldSpec.K α)`. -/
-theorem isIntegralResultLrtG_algebraicClosure (Dt anum aden : CPoly α) (res : LrtResult α)
+theorem isIntegralResultLrtG_algebraicClosure (Dt anum aden : DensePoly α) (res : LrtResult α)
     (h : IsIntegralResultLrt Dt anum aden res) :
     (towerDerivExt Dt (amGExt (toPoly res.rational.1) / amGExt (toPoly res.rational.2))
         + logResidueSumLrt Dt res.logs : RatFunc (AlgebraicClosure (CFieldSpec.K α)))

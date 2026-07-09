@@ -59,24 +59,24 @@ noncomputable instance instCDiffFieldSpecQ : CDiffFieldSpec ℚ where
     show (0 : ℚ) = (0 : Derivation ℤ ℚ ℚ) a
     rw [Derivation.coe_zero]; rfl
 
-/-! ### The monomial derivation on `CPoly α` -/
+/-! ### The monomial derivation on `DensePoly α` -/
 
-namespace CPoly
+namespace DensePoly
 
 /-- Coefficientwise derivation `cmapDeriv p = p.map cderiv`: apply `CDiffField.cderiv` to every
 coefficient (the coefficientwise part of the monomial derivation). -/
-def cmapDeriv {α : Type*} [CField α] [CDiffField α] (p : CPoly α) : CPoly α :=
+def cmapDeriv {α : Type*} [CField α] [CDiffField α] (p : DensePoly α) : DensePoly α :=
   (p : List α).map CDiffField.cderiv
 
 /-- Monomial derivation `cmonomialDeriv Dt p = cmapDeriv p + (dp/dt)·Dt`: the derivation on `k[t]`
 with `Dt` the derivative of the monomial `t`. Needs only `[CDiffField α]`, so it reduces. -/
-def cmonomialDeriv {α : Type*} [CField α] [CDiffField α] (Dt p : CPoly α) : CPoly α :=
+def cmonomialDeriv {α : Type*} [CField α] [CDiffField α] (Dt p : DensePoly α) : DensePoly α :=
   cadd (cmapDeriv p) (cmul (cderiv p) Dt)
 
 /-- `toPoly (cmapDeriv p) = Differential.mapCoeffs (toPoly p)`: the coefficientwise computable
 derivation realizes Mathlib's polynomial coefficient-map derivation. -/
 @[denote] theorem toPolyG_cmapDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
-    (p : CPoly α) :
+    (p : DensePoly α) :
     toPoly (cmapDeriv p) = Differential.mapCoeffs (toPoly p) := by
   induction p with
   | nil => simp [cmapDeriv]
@@ -90,7 +90,7 @@ derivation realizes Mathlib's polynomial coefficient-map derivation. -/
 /-- `toPoly (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPoly Dt) (toPoly p)`: the
 computable monomial derivation realizes Mathlib's `implicitDeriv`. -/
 @[denote] theorem toPolyG_cmonomialDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
-    (Dt p : CPoly α) :
+    (Dt p : DensePoly α) :
     toPoly (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPoly Dt) (toPoly p) := by
   rw [cmonomialDeriv]
   simp only [denote]
@@ -100,6 +100,6 @@ computable monomial derivation realizes Mathlib's `implicitDeriv`. -/
   ring
 
 
-end CPoly
+end DensePoly
 
 end DeepWiki.SymbolicIntegration

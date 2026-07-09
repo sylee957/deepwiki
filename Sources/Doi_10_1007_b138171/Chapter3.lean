@@ -522,42 +522,42 @@ abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_root_const_coeffs
 /-! ### Generic-carrier input builders for the §3.5 split examples (catalog-local)
 
 The §3.5 split examples over the generic ℚ(x) = `CFrac ℚ` carrier read their ℚ(x) coefficients as
-num/den lists over `CPoly ℚ = List ℚ`, mirroring `qConst5`/`qFrac5` of the §5 catalog (the
+num/den lists over `DensePoly ℚ = List ℚ`, mirroring `qConst5`/`qFrac5` of the §5 catalog (the
 `ComputableTowerRefoundProbe` construction one tower level down). Catalog infrastructure, not book
 items. -/
 
 /-- A ℚ(x) fraction `num/den` as a `CFrac ℚ` element, `den ≠ 0` discharged by `native_decide`. -/
-def qFrac3 (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : CFrac ℚ :=
+def qFrac3 (num den : List ℚ) (h : DensePoly.cisZero den = false := by native_decide) : CFrac ℚ :=
   ⟨(num, den), h⟩
 
 /-- Example 3.5.1's `Dt = −t²−(3/(2x))t+1/(2x)` over the generic ℚ(x)[t] (low→high in `t`). -/
-def ex351Dt : CPoly (CFrac ℚ) := [qFrac3 [1] [0, 2], qFrac3 [-3] [0, 2], qFrac3 [-1] [1]]
+def ex351Dt : DensePoly (CFrac ℚ) := [qFrac3 [1] [0, 2], qFrac3 [-3] [0, 2], qFrac3 [-1] [1]]
 
 /-- Example 3.5.1's degree-5 `p = 4x⁴t⁵−4x³(x+1)t⁴+x²(2x−3)t³+x(2x²+7x+2)t²−(4x²+4x−1)t+2x−1` over the
 generic ℚ(x)[t] (low→high in `t`; ℚ[x] coefficients, denominator `1`). -/
-def ex351P : CPoly (CFrac ℚ) :=
+def ex351P : DensePoly (CFrac ℚ) :=
   [qFrac3 [-1, 2] [1], qFrac3 [1, -4, -4] [1], qFrac3 [0, 2, 7, 2] [1],
    qFrac3 [0, 0, -3, 2] [1], qFrac3 [0, 0, 0, -4, -4] [1], qFrac3 [0, 0, 0, 0, 4] [1]]
 
 /-- Example 3.5.1's expected normal part `pₙ = 4x⁴t³−4x³(x+2)t²+4x²(2x+1)t−4x²` (book p.101). -/
-def ex351Pn : CPoly (CFrac ℚ) :=
+def ex351Pn : DensePoly (CFrac ℚ) :=
   [qFrac3 [0, 0, -4] [1], qFrac3 [0, 0, 4, 8] [1], qFrac3 [0, 0, 0, -8, -4] [1], qFrac3 [0, 0, 0, 0, 4] [1]]
 
 /-- Example 3.5.1's expected special part `pₛ = t²+(1/x)t−(2x−1)/(4x²)` (book p.101). -/
-def ex351Ps : CPoly (CFrac ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
+def ex351Ps : DensePoly (CFrac ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
 
 /-- Recombine a positional-by-multiplicity factor list `[q₁, q₂, …]` into `∏ᵢ qᵢ^i` over ℚ(x)[t]. -/
-def ex352Recombine (qs : List (CPoly (CFrac ℚ))) : CPoly (CFrac ℚ) :=
-  qs.zipIdx.foldl (fun acc (qi, i) => CPoly.cmul acc (CPoly.cpow qi (i + 1))) [CField.one]
+def ex352Recombine (qs : List (DensePoly (CFrac ℚ))) : DensePoly (CFrac ℚ) :=
+  qs.zipIdx.foldl (fun acc (qi, i) => DensePoly.cmul acc (DensePoly.cpow qi (i + 1))) [CField.one]
 
 /-- Example 3.5.2's expected normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` (book p.102), as `4x²·(t−1)·(xt−1)²`. -/
-def ex352Pn : CPoly (CFrac ℚ) :=
-  CPoly.cmul [qFrac3 [0, 0, 4] [1]]
-    (CPoly.cmul [qFrac3 [-1] [1], qFrac3 [1] [1]]
-      (CPoly.cmul [qFrac3 [-1] [1], qFrac3 [0, 1] [1]] [qFrac3 [-1] [1], qFrac3 [0, 1] [1]]))
+def ex352Pn : DensePoly (CFrac ℚ) :=
+  DensePoly.cmul [qFrac3 [0, 0, 4] [1]]
+    (DensePoly.cmul [qFrac3 [-1] [1], qFrac3 [1] [1]]
+      (DensePoly.cmul [qFrac3 [-1] [1], qFrac3 [0, 1] [1]] [qFrac3 [-1] [1], qFrac3 [0, 1] [1]]))
 
 /-- Example 3.5.2's expected special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)` (book p.102). -/
-def ex352Ps : CPoly (CFrac ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
+def ex352Ps : DensePoly (CFrac ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
 
 /-- **Example 3.5.1** (§3.5, p.101): the COMPUTABLE fraction-free `cSplitFactorFast` (the canonical
 generic engine at the generic ℚ(x) = `CFrac ℚ`) splits the degree-5 `p` over ℚ(x)[t]
@@ -565,12 +565,12 @@ generic engine at the generic ℚ(x) = `CFrac ℚ`) splits the degree-5 `p` over
 2), monic-normalized, by `native_decide` — where the naive ℚ(x)-Euclidean kernel did not finish
 (coefficient swell). -/
 theorem ex_3_5_1 :
-    (CPoly.cdeg (CPoly.cSplitFactorFast ex351Dt ex351P).1,
-       CPoly.cdeg (CPoly.cSplitFactorFast ex351Dt ex351P).2) = (3, 2)
-    ∧ CPoly.cisZero (CPoly.csub
-        (CPoly.cmonic (CPoly.cSplitFactorFast ex351Dt ex351P).1) (CPoly.cmonic ex351Pn)) = true
-    ∧ CPoly.cisZero (CPoly.csub
-        (CPoly.cmonic (CPoly.cSplitFactorFast ex351Dt ex351P).2) (CPoly.cmonic ex351Ps)) = true := by
+    (DensePoly.cdeg (DensePoly.cSplitFactorFast ex351Dt ex351P).1,
+       DensePoly.cdeg (DensePoly.cSplitFactorFast ex351Dt ex351P).2) = (3, 2)
+    ∧ DensePoly.cisZero (DensePoly.csub
+        (DensePoly.cmonic (DensePoly.cSplitFactorFast ex351Dt ex351P).1) (DensePoly.cmonic ex351Pn)) = true
+    ∧ DensePoly.cisZero (DensePoly.csub
+        (DensePoly.cmonic (DensePoly.cSplitFactorFast ex351Dt ex351P).2) (DensePoly.cmonic ex351Ps)) = true := by
   native_decide
 
 /-- **Example 3.5.2** (§3.5, p.102): the COMPUTABLE fraction-free `cSplitSquarefreeFactorFast` (Yun in
@@ -579,14 +579,14 @@ theorem ex_3_5_1 :
 `[2, 0]`, recombining (by multiplicity) to Bronstein's normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` and
 special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)`, all monic-normalized, by `native_decide`. -/
 theorem ex_3_5_2 :
-    (((CPoly.cSplitSquarefreeFactorFast ex351Dt ex351P).1).map CPoly.cdeg,
-       ((CPoly.cSplitSquarefreeFactorFast ex351Dt ex351P).2).map CPoly.cdeg) = ([1, 1], [2, 0])
-    ∧ CPoly.cisZero (CPoly.csub
-        (CPoly.cmonic (ex352Recombine (CPoly.cSplitSquarefreeFactorFast ex351Dt ex351P).1))
-        (CPoly.cmonic ex352Pn)) = true
-    ∧ CPoly.cisZero (CPoly.csub
-        (CPoly.cmonic (ex352Recombine (CPoly.cSplitSquarefreeFactorFast ex351Dt ex351P).2))
-        (CPoly.cmonic ex352Ps)) = true := by
+    (((DensePoly.cSplitSquarefreeFactorFast ex351Dt ex351P).1).map DensePoly.cdeg,
+       ((DensePoly.cSplitSquarefreeFactorFast ex351Dt ex351P).2).map DensePoly.cdeg) = ([1, 1], [2, 0])
+    ∧ DensePoly.cisZero (DensePoly.csub
+        (DensePoly.cmonic (ex352Recombine (DensePoly.cSplitSquarefreeFactorFast ex351Dt ex351P).1))
+        (DensePoly.cmonic ex352Pn)) = true
+    ∧ DensePoly.cisZero (DensePoly.csub
+        (DensePoly.cmonic (ex352Recombine (DensePoly.cSplitSquarefreeFactorFast ex351Dt ex351P).2))
+        (DensePoly.cmonic ex352Ps)) = true := by
   native_decide
 
 /-! ## Chapter 3 Exercises -/

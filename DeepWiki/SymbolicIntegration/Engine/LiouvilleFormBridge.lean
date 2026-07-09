@@ -16,7 +16,7 @@ criterion (`isLiouville_logExtension_uncond`, `ratFunc_logarithmFree_iff_residue
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac Polynomial
+open DensePoly CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
@@ -27,7 +27,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 logarithmic-derivative sum, `Δ = towerFractionFieldDeriv Dt`. This exhibits the engine's soundness predicate
 directly in the abstract Liouville form (the shape `ratFunc_liouville`/`isLiouville_logExtension_uncond`
 consume), the entry point for the completeness descent. -/
-theorem isIntegralResultG_iff_liouvilleForm (Dt anum aden : CPoly α) (res : IntegralResult α) :
+theorem isIntegralResultG_iff_liouvilleForm (Dt anum aden : DensePoly α) (res : IntegralResult α) :
     IsIntegralResult Dt anum aden res ↔
       towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
         + (res.logs.map (fun cv => am α (Polynomial.C (CFieldSpec.toK cv.1))

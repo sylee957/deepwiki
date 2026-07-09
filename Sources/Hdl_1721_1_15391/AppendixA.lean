@@ -32,7 +32,7 @@ App. A: the radical degree `n ≥ 3` (only `n = 2` validated end-to-end; the car
   exercised only at `n = 2`) `[deferred]`. -/
 
 open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.RadElem
-open DeepWiki.SymbolicIntegration.CPoly
+open DeepWiki.SymbolicIntegration.DensePoly
 
 namespace DeepWiki.Tiaf
 
@@ -151,15 +151,15 @@ abbrev appA_expTheta_cleared_identity := @expCase_cleared_identity
 runtime fuel, accumulating each cofactor
 contribution `Bⱼf/(V^{kⱼ−1}y)` into a running numerator `vNum`, with the master identity
 `∫ C/(V^{k₀}y) = vNum/(V^{k₀−1}y) + ∫ Crem/(Vy)`. -/
-abbrev appA_case1_iterate := @CPoly.radReduceCase1IterateWf
+abbrev appA_case1_iterate := @DensePoly.radReduceCase1IterateWf
 
 /-- **The fuel-free simple-radical rational-part driver** `radIntegrateCase1Wf` (Trager, Appendix A §2):
 wraps `radReduceCase1IterateWf`, decoupling the `R/y` integrand, running the iterated Case-1 reduction,
 and assembling the accumulated rational part `v` without runtime fuel. -/
-abbrev appA_radIntegrateCase1 := @CPoly.radIntegrateCase1Wf
+abbrev appA_radIntegrateCase1 := @DensePoly.radIntegrateCase1Wf
 
 /-- The Case-1 driver run `radIntegrateCase1Wf cderiv V f g 3 C` on `∫ 1/((x−1)³√x)`. -/
-def appA_sqrtxRun : CPoly ℚ × CPoly ℚ :=
+def appA_sqrtxRun : DensePoly ℚ × DensePoly ℚ :=
   radIntegrateCase1Wf cderiv sqrtxV sqrtxF sqrtx 3 sqrtxC
 
 /-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (CFrac ℚ)`. -/
@@ -182,7 +182,7 @@ theorem appA_sqrtxDriver_integrates :
   native_decide
 
 /-- The Case-1 driver run on `∫ 1/((x−1)³√(x³+1))`. -/
-def appA_cubeRun : CPoly ℚ × CPoly ℚ :=
+def appA_cubeRun : DensePoly ℚ × DensePoly ℚ :=
   radIntegrateCase1Wf cderiv cubeV cubeF cube 3 cubeC
 
 /-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (CFrac ℚ)`. -/
@@ -211,11 +211,11 @@ abbrev appA_case2cDriver_integrates := @case2cDriver_integrates
 `radIntegrateRationalWf` squarefree-decomposes the rational denominator, splits each factor into its
 `V`-part and `W`-part, partial-fractions the numerator, and dispatches every summand to the fuel-free
 Case-1 or Case-2 reduction without runtime fuel. -/
-abbrev appA_radIntegrateRational := @CPoly.radIntegrateRationalWf
+abbrev appA_radIntegrateRational := @DensePoly.radIntegrateRationalWf
 
 /-- The multi-case dispatch run `radIntegrateRationalWf ρ R B` on `∫ 1/((x−1)²x²·√x)`. -/
-def appA_mcRun : List (Bool × CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ) :=
-  CPoly.radIntegrateRationalWf mcRho mcR mcB
+def appA_mcRun : List (Bool × DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePoly ℚ) :=
+  DensePoly.radIntegrateRationalWf mcRho mcR mcB
 
 /-- **Appendix A §2** (`native_decide`): on `∫ 1/((x−1)²x²·√x)` the dispatcher classifies the mixed
 denominator into one `V` factor and one `W` factor, both of multiplicity `2`. -/
@@ -224,11 +224,11 @@ theorem appA_mcRun_classification :
   native_decide
 
 /-- Pull the `V`-factor reduction `(Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)` out of `appA_mcRun`. -/
-def appA_mcV : CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ :=
+def appA_mcV : DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePoly ℚ :=
   (appA_mcRun.headD (true, [], 0, [], [], [])).2
 
 /-- Pull the `W`-factor reduction `(Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)` out of `appA_mcRun`. -/
-def appA_mcW : CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ :=
+def appA_mcW : DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePoly ℚ :=
   (appA_mcRun.getD 1 (false, [], 0, [], [], [])).2
 
 /-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (CFrac ℚ)`. -/

@@ -14,7 +14,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPoly
+open RadElem DensePoly
 
 /-! ### The logarithmic-derivative certificate `radIsLogIntegral` -/
 
@@ -122,23 +122,23 @@ theorem radLog_finitePole_wrong_sign :
 Rationalizing `1/(x y) = y/(x³+x)`: numerator `g = y`, denominator `D = x³ + x`. The resultant
 `cAlgResidueResultant` computes `R(Z)`, whose roots are the residues. -/
 
-open CPoly
+open DensePoly
 
 /-- Residue-connection radicand `ρ = x² + 1` (curve `y² = x²+1`), `ℚ[x]` `[1, 0, 1]`. -/
-def radLogResRho : CPoly ℚ := [1, 0, 1]
+def radLogResRho : DensePoly ℚ := [1, 0, 1]
 
 /-- Residue-connection denominator `D = x³ + x = x(x²+1)` of `f = y/(x³+x)` — its finite root `x = 0`
 carries the pole, `x = ±i` the branch places, `ℚ[x]` `[0, 1, 0, 1]`. -/
-def radLogResD : CPoly ℚ := [0, 1, 0, 1]
+def radLogResD : DensePoly ℚ := [0, 1, 0, 1]
 
 /-- Residue-connection numerator low part `g₀ = 0` (`g(x,y) = y` has no `y⁰` part). -/
-def radLogResG0 : CPoly ℚ := []
+def radLogResG0 : DensePoly ℚ := []
 
 /-- Residue-connection numerator `y`-coefficient `g₁ = 1` (`g(x,y) = y`), `ℚ[x]` `[1]`. -/
-def radLogResG1 : CPoly ℚ := [1]
+def radLogResG1 : DensePoly ℚ := [1]
 
 /-- The computed residue resultant `R(Z)` for `∫ dx/(x√(x²+1))` (`n = 2`). -/
-def radLogResR : CPoly ℚ := cAlgResidueResultant radLogResD radLogResRho radLogResG0 radLogResG1
+def radLogResR : DensePoly ℚ := cAlgResidueResultant radLogResD radLogResRho radLogResG0 radLogResG1
 
 -- Sanity print: `R(Z) = 16·Z⁴(Z² − 1) = −16·Z⁴ + 16·Z⁶` (low→high in `Z`).
 #eval (cnorm radLogResR : List ℚ)
@@ -174,7 +174,7 @@ variable {α : Type*} [CField α]
 /-- Heuristic log argument for `∫ dx/√(x² + bx + c)`: `radQuadraticLogArg b = [b/2, 1]`, the element
 `u = x + b/2 + y` of `α[y]/(y² − (x² + bx + c))`. -/
 def radQuadraticLogArg (b : α) : RadElem α :=
-  [CField.div b (CPoly.cnatCast 2), CField.one]
+  [CField.div b (DensePoly.cnatCast 2), CField.one]
 
 end RadElem
 

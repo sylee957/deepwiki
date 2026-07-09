@@ -12,7 +12,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 /-! ## The abstract degree bound over `K[X]`, strict-domination cases
 
@@ -216,7 +216,7 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-- `cRdeBoundDegree Dt a b c = rdeBoundDegreeAbstract (toPoly Dt) (toPoly a) (toPoly b) (toPoly c)`
 over `(CFieldSpec.K α)[X]`. -/
-theorem cRdeBoundDegreeG_eq_abstract (Dt : CPoly α) (a b c : CPoly α) :
+theorem cRdeBoundDegreeG_eq_abstract (Dt : DensePoly α) (a b c : DensePoly α) :
     cRdeBoundDegree Dt a b c
       = rdeBoundDegreeAbstract (toPoly Dt) (toPoly a) (toPoly b) (toPoly c) := by
   simp only [cRdeBoundDegree, rdeBoundDegreeAbstract, cdegG_eq_natDegree]
@@ -229,10 +229,10 @@ section ComputableBound
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
-/-- The degree bound at the `CPoly` layer, modulo the cancellation residual: any `IsReducedRdeSol Dt a b c q`
+/-- The degree bound at the `DensePoly` layer, modulo the cancellation residual: any `IsReducedRdeSol Dt a b c q`
 has `cdeg q ≤ cRdeBoundDegree Dt a b c`, provided the residual `hres` discharges the leading-term
 cancellation case `(toPoly c).coeff (candTopDegree …) = 0`. -/
-theorem cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPoly α) (a b c q : CPoly α)
+theorem cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : DensePoly α) (a b c q : DensePoly α)
     (hsol : IsReducedRdeSol Dt a b c q)
     (hres : (toPoly c).coeff
           (candTopDegree (toPoly Dt) (toPoly a) (toPoly b) (toPoly q)) = 0 →
@@ -256,10 +256,10 @@ section WiringWf
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
 /-- The degree-bound cancellation residual over the special-cleared coefficients. -/
-def RdeBoundCancellationResidualWf (Dt fnum fden gnum gden : CPoly α) : Prop :=
-  ∀ a0 b0 c0 h0 : CPoly α,
+def RdeBoundCancellationResidualWf (Dt fnum fden gnum gden : DensePoly α) : Prop :=
+  ∀ a0 b0 c0 h0 : DensePoly α,
     cRdeNormalDenominator Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
-    ∀ q : CPoly α,
+    ∀ q : DensePoly α,
       IsReducedRdeSol Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
           (cRdeSpecialDenominator Dt a0 b0 c0).2.1
           (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1 q →
@@ -274,11 +274,11 @@ def RdeBoundCancellationResidualWf (Dt fnum fden gnum gden : CPoly α) : Prop :=
         (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1
 
 /-- The `hbound` field follows from the cancellation residual. -/
-theorem hboundWf_of_cancellationResidualWf (Dt fnum fden gnum gden : CPoly α)
+theorem hboundWf_of_cancellationResidualWf (Dt fnum fden gnum gden : DensePoly α)
     (hres : RdeBoundCancellationResidualWf Dt fnum fden gnum gden) :
-    ∀ a0 b0 c0 h0 : CPoly α,
+    ∀ a0 b0 c0 h0 : DensePoly α,
       cRdeNormalDenominator Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
-      ∀ q : CPoly α,
+      ∀ q : DensePoly α,
         IsReducedRdeSol Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
             (cRdeSpecialDenominator Dt a0 b0 c0).2.1
             (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1 q →
@@ -296,7 +296,7 @@ end WiringWf
 
 -- The Wf residual has exactly `RischDEInnerCompletenessWf.hbound`'s field shape.
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-    [CRischField α] (Dt fnum fden gnum gden : CPoly α)
+    [CRischField α] (Dt fnum fden gnum gden : DensePoly α)
     (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
       (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true)
     (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
@@ -316,19 +316,19 @@ open scoped Differential
 /-- A concrete reduced primitive RDE solution: over `ℚ[x]`, `q = x` solves `1·Dq + 1·q = x + 1`
 (`a = 1`, `b = 1`, `Dt = 1`, `D = d/dx`), an `IsReducedRdeSol` instance. -/
 theorem reducedRdeSol_witness :
-    IsReducedRdeSol ([1] : CPoly ℚ) [1] [1] [1, 1] [0, 1] := by
-  show toPoly ([1] : CPoly ℚ)
-        * Differential.implicitDeriv (toPoly ([1] : CPoly ℚ)) (toPoly ([0, 1] : CPoly ℚ))
-      + toPoly ([1] : CPoly ℚ) * toPoly ([0, 1] : CPoly ℚ) = toPoly ([1, 1] : CPoly ℚ)
-  have h1 : toPoly ([1] : CPoly ℚ) = 1 := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
-  have hx : toPoly ([0, 1] : CPoly ℚ) = X := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
-  have hc : toPoly ([1, 1] : CPoly ℚ) = 1 + X := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
+    IsReducedRdeSol ([1] : DensePoly ℚ) [1] [1] [1, 1] [0, 1] := by
+  show toPoly ([1] : DensePoly ℚ)
+        * Differential.implicitDeriv (toPoly ([1] : DensePoly ℚ)) (toPoly ([0, 1] : DensePoly ℚ))
+      + toPoly ([1] : DensePoly ℚ) * toPoly ([0, 1] : DensePoly ℚ) = toPoly ([1, 1] : DensePoly ℚ)
+  have h1 : toPoly ([1] : DensePoly ℚ) = 1 := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
+  have hx : toPoly ([0, 1] : DensePoly ℚ) = X := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
+  have hc : toPoly ([1, 1] : DensePoly ℚ) = 1 + X := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
   rw [h1, hx, hc, Differential.implicitDeriv_X]; ring
 
 /-- The computable degree bound holds on the witness: for `1·Dq + 1·q = x + 1` over `ℚ[x]`, `q = x` has
 `cdeg q = 1 ≤ cRdeBoundDegree [1] [1] [1] [1,1] = 2`. -/
 theorem cdegG_le_cRdeBoundDegreeG_witness :
-    cdeg ([0, 1] : CPoly ℚ) ≤ cRdeBoundDegree ([1] : CPoly ℚ) [1] [1] [1, 1] := by
+    cdeg ([0, 1] : DensePoly ℚ) ≤ cRdeBoundDegree ([1] : DensePoly ℚ) [1] [1] [1, 1] := by
   native_decide
 
 end Witness

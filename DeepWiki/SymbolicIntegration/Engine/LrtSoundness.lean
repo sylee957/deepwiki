@@ -19,7 +19,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 /-- The coefficient-list polynomial `Σ_{(a,k) ∈ l.zipIdx s} C a · Xᵏ = Σ_{i<len} C(l[i])·X^{s+i}`. -/
 theorem zipIdx_C_mul_X_pow_sum_eq {R : Type*} [Semiring R] (l : List R) (s : ℕ) :
@@ -64,7 +64,7 @@ leading `t`-coefficient. The monic normalization is required for tower soundness
 leading-coefficient unit `sᵢ(c)` whose *tower* log-derivative `D_base(sᵢ(c))/sᵢ(c)` does **not** vanish
 (unlike the formal `d/dx` case), so the raw argument gives a spurious extra term. Dividing by the leading
 coefficient turns `Sᵢ(c)` into the **monic gcd**, whose log-derivative is exactly the RT residue term. -/
-noncomputable def evalLrtArg (Si : List (CPoly α)) (c : E) : E[X] :=
+noncomputable def evalLrtArg (Si : List (DensePoly α)) (c : E) : E[X] :=
   let raw : E[X] := (Si.zipIdx.map (fun p =>
     C ((toPoly p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c) * X ^ p.2)).sum
   raw * C raw.leadingCoeff⁻¹
@@ -73,7 +73,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **`evalLrtArg`'s raw sum is the base-changed abstract polynomial.** Given the coefficient identity
 `toPoly (Sᵢ.getD n []) = P.coeff n` (P the abstract `lrtSubresultantGen`), the computable raw sum equals
 `P.map (eval₂RingHom (algebraMap K E) c)` (`= S`, the base-changed subresultant at `z = c`). -/
-theorem raw_eq_map (Si : List (CPoly α)) (c : E) (P : ((CFieldSpec.K α)[X])[X])
+theorem raw_eq_map (Si : List (DensePoly α)) (c : E) (P : ((CFieldSpec.K α)[X])[X])
     (hg4c : ∀ n, toPoly (Si.getD n []) = P.coeff n) :
     (Si.zipIdx.map (fun p => Polynomial.C ((toPoly p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c)
         * Polynomial.X ^ p.2)).sum
@@ -95,7 +95,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **The monic log argument is the residue-pole product.** Given the coefficient identity and that
 the base-changed subresultant `S` is similar to `∏_{β}(t−β)`, `evalLrtArg Sᵢ c = ∏_{β}(t−β)`. Composes
 `raw_eq_map` (`raw = S`) with `monicNormalize_eq_of_isSimilar_prod` (`monic(S) = ∏`). -/
-theorem evalLrtArg_eq_prod (Si : List (CPoly α)) (c : E) (A D B : (CFieldSpec.K α)[X]) (j : ℕ)
+theorem evalLrtArg_eq_prod (Si : List (DensePoly α)) (c : E) (A D B : (CFieldSpec.K α)[X]) (j : ℕ)
     (poles : Multiset E) (hφ : Function.Injective (algebraMap (CFieldSpec.K α) E))
     (hg4c : ∀ n, toPoly (Si.getD n []) = (lrtSubresultantGen A D B j).coeff n)
     (hsim : IsSimilar (subresultant (D.map (algebraMap (CFieldSpec.K α) E))
@@ -119,11 +119,11 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 (`Dstar.map (·::[])` — a `t`-polynomial with *constant* `z`-coefficients, no residue dependence), `evalLrtArg`'s
 raw sum is `Dstar_E`, and when `Dstar_E` is monic the monic normalization is trivial. This is the log argument
 of a single pure log `c·D(Dstar)/Dstar` (all poles share one residue) — the `i = n` branch of `cLrtLogArg`. -/
-theorem evalLrtArg_const_embed_eq (Dstar : CPoly α) (c : E)
+theorem evalLrtArg_const_embed_eq (Dstar : DensePoly α) (c : E)
     (hmonic : ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).Monic) :
-    evalLrtArg (Dstar.map (fun x => ([x] : CPoly α))) c
+    evalLrtArg (Dstar.map (fun x => ([x] : DensePoly α))) c
       = (toPoly Dstar).map (algebraMap (CFieldSpec.K α) E) := by
-  have hg4c : ∀ n, toPoly ((Dstar.map (fun x => ([x] : CPoly α))).getD n [])
+  have hg4c : ∀ n, toPoly ((Dstar.map (fun x => ([x] : DensePoly α))).getD n [])
       = ((toPoly Dstar).map C).coeff n := by
     intro n
     rw [Polynomial.coeff_map, toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_map,
@@ -131,10 +131,10 @@ theorem evalLrtArg_const_embed_eq (Dstar : CPoly α) (c : E)
     cases h : Dstar[n]? with
     | none => simp [toPolyG_nil, CFieldSpec.toK_zero]
     | some a => simp [toPolyG_cons, toPolyG_nil]
-  have hraw : ((Dstar.map (fun x => ([x] : CPoly α))).zipIdx.map (fun p =>
+  have hraw : ((Dstar.map (fun x => ([x] : DensePoly α))).zipIdx.map (fun p =>
         C ((toPoly p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c) * X ^ p.2)).sum
       = (toPoly Dstar).map (algebraMap (CFieldSpec.K α) E) := by
-    rw [raw_eq_map (Dstar.map (fun x => ([x] : CPoly α))) c ((toPoly Dstar).map C) hg4c,
+    rw [raw_eq_map (Dstar.map (fun x => ([x] : DensePoly α))) c ((toPoly Dstar).map C) hg4c,
       Polynomial.map_map]
     have hcomp : (Polynomial.eval₂RingHom (algebraMap (CFieldSpec.K α) E) c).comp
         (C : (CFieldSpec.K α) →+* (CFieldSpec.K α)[X]) = algebraMap (CFieldSpec.K α) E := by
@@ -148,7 +148,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 `toPolyG_cSubresultantParam_getD`, `evalLrtArg (cSubresultantParam Dstar hNum Dd (cdeg Dstar)(cdeg Dd) j) c
 = ∏_{β}(t−β)`, given `deg Dd = deg Dstar − 1` and `IsSimilar S (∏)`. -/
 theorem evalLrtArg_cSubresultantParam_eq_prod [CharZero (CFieldSpec.K α)]
-    (Dstar hNum Dd : CPoly α) (c : E) (j : ℕ) (poles : Multiset E)
+    (Dstar hNum Dd : DensePoly α) (c : E) (j : ℕ) (poles : Multiset E)
     (hm : cdeg Dd = cdeg Dstar - 1)
     (hφ : Function.Injective (algebraMap (CFieldSpec.K α) E))
     (hsim : IsSimilar (subresultant ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E))
@@ -168,7 +168,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 match), `evalLrtArg (cSubresultantParam … i) c = ∏_{β ∈ allpoles, res β = c}(t − β)`. Chains
 `evalLrtArg_cSubresultantParam_eq_prod` with `isSimilar_subresultant_prod`. -/
 theorem evalLrtArg_eq_fiber_prod [CharZero (CFieldSpec.K α)] [IsAlgClosed E]
-    (Dstar hNum Dd : CPoly α) (allpoles : Finset E) (c : E) (i : ℕ)
+    (Dstar hNum Dd : DensePoly α) (allpoles : Finset E) (c : E) (i : ℕ)
     (hm : cdeg Dd = cdeg Dstar - 1)
     (hsplit : (toPoly Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
     (hB : ∀ β ∈ allpoles, ((toPoly Dd).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ 0)
@@ -201,7 +201,7 @@ variable [Differential E] [Algebra ℚ E]
 
 /-- The `E`-tower derivation on `RatFunc E`: `extendDeriv` of `implicitDeriv (Dt base-changed to E)`. The
 generic (any differential extension `E`) analogue of `towerFractionFieldDeriv`. -/
-noncomputable def towerDerivExt (Dt : CPoly α) : Derivation ℤ (RatFunc E) (RatFunc E) :=
+noncomputable def towerDerivExt (Dt : DensePoly α) : Derivation ℤ (RatFunc E) (RatFunc E) :=
   extendDeriv (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)))
 
 omit [CDiffField α] [CDiffFieldSpec α] [Differential E] [Algebra ℚ E] in
@@ -241,7 +241,7 @@ theorem ratFuncBaseChange_amG (p : (CFieldSpec.K α)[X]) :
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Quotient rule for `towerDerivExt`** (the `E`-analogue of `towerFractionFieldDerivG_div`): for `E`-polys
 `P, Q`, `Δ(P/Q) = (Δ'P·Q − P·Δ'Q)/Q²` in `RatFunc E`, where `Δ' = implicitDeriv (Dt base-changed to E)`. -/
-theorem towerDerivExt_div (Dt : CPoly α) (P Q : E[X]) :
+theorem towerDerivExt_div (Dt : DensePoly α) (P Q : E[X]) :
     towerDerivExt Dt (algebraMap E[X] (RatFunc E) P / algebraMap E[X] (RatFunc E) Q)
       = (algebraMap E[X] (RatFunc E)
             (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)) P)
@@ -258,7 +258,7 @@ theorem towerDerivExt_div (Dt : CPoly α) (P Q : E[X]) :
 corresponding `amGExt`-fraction. Via both quotient rules (`towerFractionFieldDerivG_div`, `towerDerivExt_div`)
 and `implicitDeriv_map` (the monomial derivation commutes with base change). -/
 theorem ratFuncBaseChange_towerFractionFieldDerivG [Algebra ℚ (CFieldSpec.K α)]
-    [DifferentialAlgebra (CFieldSpec.K α) E] (Dt : CPoly α)
+    [DifferentialAlgebra (CFieldSpec.K α) E] (Dt : DensePoly α)
     (gnum gden : (CFieldSpec.K α)[X]) :
     ratFuncBaseChange E (towerFractionFieldDeriv Dt (am α gnum / am α gden))
       = towerDerivExt Dt (amGExt (E := E) gnum / amGExt (E := E) gden) := by
@@ -273,7 +273,7 @@ identified via `toPolyG_hNum'_eq_2_1`), `Dstar = H.2.2`. `hcopgcd` is the genuin
 condition. This is the `hherm` input to `isIntegralResultLrtG_of_hherm_of_logMatch`. -/
 theorem hherm_lrt_E [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
     [DifferentialAlgebra (CFieldSpec.K α) E] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
@@ -293,8 +293,8 @@ theorem hherm_lrt_E [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The **algebraic residue sum** over `E`: `Σᵢ Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)` — the honest
 denotation of the symbolic LRT log part, summing over the residues (roots of each `Rᵢ`) in `E`. -/
-noncomputable def logResidueSumLrt (Dt : CPoly α)
-    (logs : List (CPoly α × List (CPoly α))) : RatFunc E :=
+noncomputable def logResidueSumLrt (Dt : DensePoly α)
+    (logs : List (DensePoly α × List (DensePoly α))) : RatFunc E :=
   (logs.map (fun p =>
     (((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
       algebraMap E (RatFunc E) c
@@ -302,12 +302,12 @@ noncomputable def logResidueSumLrt (Dt : CPoly α)
             / algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c)))).sum)).sum
 
 /-- The per-pole logarithmic term `(Δ (t−β))/(t−β)` for a pole `β ∈ E`. -/
-noncomputable def poleTerm (Dt : CPoly α) (β : E) : RatFunc E :=
+noncomputable def poleTerm (Dt : DensePoly α) (β : E) : RatFunc E :=
   towerDerivExt Dt (algebraMap E[X] (RatFunc E) (X - C β))
     / algebraMap E[X] (RatFunc E) (X - C β)
 
 /-- The single-`(Rᵢ, Sᵢ)` residue term: `Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)`. -/
-noncomputable def logResidueTermLrt (Dt : CPoly α) (p : CPoly α × List (CPoly α)) : RatFunc E :=
+noncomputable def logResidueTermLrt (Dt : DensePoly α) (p : DensePoly α × List (DensePoly α)) : RatFunc E :=
   (((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
     algebraMap E (RatFunc E) c
       * (towerDerivExt Dt (algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c))
@@ -315,13 +315,13 @@ noncomputable def logResidueTermLrt (Dt : CPoly α) (p : CPoly α × List (CPoly
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `logResidueSumLrt` is the sum of the per-`(Rᵢ, Sᵢ)` terms. -/
-theorem logResidueSumLrtG_eq_sum (Dt : CPoly α) (logs : List (CPoly α × List (CPoly α))) :
+theorem logResidueSumLrtG_eq_sum (Dt : DensePoly α) (logs : List (DensePoly α × List (DensePoly α))) :
     logResidueSumLrt (E := E) Dt logs = (logs.map (logResidueTermLrt (E := E) Dt)).sum := rfl
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Rewrite the residue sum termwise: if each `(Rᵢ, Sᵢ)` term equals `f p`, then `logResidueSumLrt = Σ f`. -/
-theorem logResidueSumLrtG_eq_termwise (Dt : CPoly α) (logs : List (CPoly α × List (CPoly α)))
-    (f : CPoly α × List (CPoly α) → RatFunc E)
+theorem logResidueSumLrtG_eq_termwise (Dt : DensePoly α) (logs : List (DensePoly α × List (DensePoly α)))
+    (f : DensePoly α × List (DensePoly α) → RatFunc E)
     (hterm : ∀ p ∈ logs, logResidueTermLrt Dt p = f p) :
     logResidueSumLrt (E := E) Dt logs = (logs.map f).sum := by
   rw [logResidueSumLrtG_eq_sum]
@@ -329,13 +329,13 @@ theorem logResidueSumLrtG_eq_termwise (Dt : CPoly α) (logs : List (CPoly α × 
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `logResidueSumLrt` of the empty log list is `0`. -/
-@[simp] theorem logResidueSumLrtG_nil (Dt : CPoly α) :
-    logResidueSumLrt (E := E) Dt ([] : List (CPoly α × List (CPoly α))) = 0 := rfl
+@[simp] theorem logResidueSumLrtG_nil (Dt : DensePoly α) :
+    logResidueSumLrt (E := E) Dt ([] : List (DensePoly α × List (DensePoly α))) = 0 := rfl
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `logResidueSumLrt` peels the head. -/
-theorem logResidueSumLrtG_cons (Dt : CPoly α) (p : CPoly α × List (CPoly α))
-    (rest : List (CPoly α × List (CPoly α))) :
+theorem logResidueSumLrtG_cons (Dt : DensePoly α) (p : DensePoly α × List (DensePoly α))
+    (rest : List (DensePoly α × List (DensePoly α))) :
     logResidueSumLrt (E := E) Dt (p :: rest)
       = logResidueTermLrt (E := E) Dt p + logResidueSumLrt (E := E) Dt rest := by
   rw [logResidueSumLrtG_eq_sum, logResidueSumLrtG_eq_sum, List.map_cons, List.sum_cons]
@@ -344,7 +344,7 @@ theorem logResidueSumLrtG_cons (Dt : CPoly α) (p : CPoly α × List (CPoly α))
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Log-derivative additivity for the `E`-tower derivation.** `D(a·b)/(a·b) = D(a)/a + D(b)/b`. -/
-theorem towerDerivExt_div_mul (Dt : CPoly α) (a b : RatFunc E) (ha : a ≠ 0) (hb : b ≠ 0) :
+theorem towerDerivExt_div_mul (Dt : DensePoly α) (a b : RatFunc E) (ha : a ≠ 0) (hb : b ≠ 0) :
     towerDerivExt Dt (a * b) / (a * b)
       = towerDerivExt Dt a / a + towerDerivExt Dt b / b := by
   rw [Derivation.leibniz]
@@ -356,7 +356,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Log-derivative of a product is the sum of log-derivatives**: `D(∏ xᵢ)/∏ xᵢ = Σ D(xᵢ)/xᵢ` (for nonzero
 factors). This is the algebraic core of the residue↔pole reindexing — it splits the log-derivative of a
 `gcd = ∏(t−β)` into the per-pole terms `monomial_residue_match_of_cancel` sums over. -/
-theorem towerDerivExt_div_prod (Dt : CPoly α) (l : Multiset (RatFunc E)) (hl : ∀ x ∈ l, x ≠ 0) :
+theorem towerDerivExt_div_prod (Dt : DensePoly α) (l : Multiset (RatFunc E)) (hl : ∀ x ∈ l, x ≠ 0) :
     towerDerivExt Dt l.prod / l.prod = (l.map (fun x => towerDerivExt Dt x / x)).sum := by
   induction l using Multiset.induction with
   | empty => simp
@@ -371,7 +371,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Log-derivative of a product of **polynomial** factors through `algebraMap`:
 `D(⟦∏ pᵢ⟧)/⟦∏ pᵢ⟧ = Σ D(⟦pᵢ⟧)/⟦pᵢ⟧` (`⟦·⟧ = algebraMap E[X] (RatFunc E)`, nonzero factors). This is the
 form applied to a `gcd = ∏(t−β)` — it produces the per-pole terms directly. -/
-theorem towerDerivExt_div_algebraMap_prod (Dt : CPoly α) (l : Multiset E[X]) (hl : ∀ p ∈ l, p ≠ 0) :
+theorem towerDerivExt_div_algebraMap_prod (Dt : DensePoly α) (l : Multiset E[X]) (hl : ∀ p ∈ l, p ≠ 0) :
     towerDerivExt Dt (algebraMap E[X] (RatFunc E) l.prod) / algebraMap E[X] (RatFunc E) l.prod
       = (l.map (fun p => towerDerivExt Dt (algebraMap E[X] (RatFunc E) p)
           / algebraMap E[X] (RatFunc E) p)).sum := by
@@ -388,7 +388,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 monic log argument `evalLrtArg Sᵢ c` factors as `∏_{β ∈ fac c}(t−β)` (the gcd as linear factors), the
 per-`Rᵢ` residue term becomes `Σ_{c ∈ roots Rᵢ} c·(Σ_{β ∈ fac c} poleTerm β)` — via the log-derivative
 product split. Combined with `residue_pole_regroup` this collapses to the pole sum. -/
-theorem logResidueTermLrtG_eq_pole_sum (Dt : CPoly α) (p : CPoly α × List (CPoly α))
+theorem logResidueTermLrtG_eq_pole_sum (Dt : DensePoly α) (p : DensePoly α × List (DensePoly α))
     (fac : E → Multiset E)
     (hfac : ∀ c ∈ ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
       evalLrtArg p.2 c = ((fac c).map (fun β => X - C β)).prod) :
@@ -412,7 +412,7 @@ tower residue-match identity `monomial_residue_match_of_cancel` at `K := E` with
 summand): the residue-weighted pole sum `Σ_β res(β)·poleTerm β` equals `a/∏_{β∈s}(t−β)`, where the RT
 residue `res β = a(β)/D(∏)(β)` and `hcancel` is the (automatically-true for a primitive `Dt`)
 polynomial-part cancellation. -/
-theorem pole_sum_eq_normalPart (Dt : CPoly α) (a : E[X]) (s : Finset E)
+theorem pole_sum_eq_normalPart (Dt : DensePoly α) (a : E[X]) (s : Finset E)
     (hA : a.degree < s.card)
     (hnorm : ∀ β ∈ s, ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
     (hcancel : ∑ β ∈ s, algebraMap E[X] (RatFunc E)
@@ -458,7 +458,7 @@ of a pole set `polesᵢ` and each monic log argument factors over the residue-`c
 `residue_pole_regroup` (residue↔pole). -/
 theorem logResidueTermLrtG_eq_finset_pole_sum {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
     [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-    (Dt : CPoly α) (p : CPoly α × List (CPoly α)) (polesᵢ : Finset E) (res : E → E)
+    (Dt : DensePoly α) (p : DensePoly α × List (DensePoly α)) (polesᵢ : Finset E) (res : E → E)
     (hroots : ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots = (polesᵢ.image res).val)
     (hfac : ∀ c ∈ ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
       evalLrtArg p.2 c = ((polesᵢ.filter (fun β => res β = c)).val.map (fun β => X - C β)).prod) :
@@ -489,7 +489,7 @@ off the residues from this. -/
 theorem toPolyG_cResidueResultantTowerG_map {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
     [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E]
     [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E]
-    (Dt a d : CPoly α) (hDmonic : (toPoly d).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
+    (Dt a d : DensePoly α) (hDmonic : (toPoly d).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly a).natDegree < (toPoly d).natDegree) :
     (toPoly (cResidueResultantTower Dt a d)).map (algebraMap (CFieldSpec.K α) E)
       = rtResultantGen ((toPoly a).map (algebraMap (CFieldSpec.K α) E))
@@ -508,7 +508,7 @@ Rothstein–Trager normality (`D(Dstar)(β) ≠ 0` at poles). This is the `hroot
 theorem residueResultant_map_roots {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
     [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E]
     [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
-    (Dt hNum Dstar : CPoly α) (hDmonic : (toPoly Dstar).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
+    (Dt hNum Dstar : DensePoly α) (hDmonic : (toPoly Dstar).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hB : ∀ β ∈ ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
         (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E))
@@ -576,8 +576,8 @@ the list-sum of per-entry pole sums equals the full sum over `allpoles`. Dischar
 `logResidueSumLrtG_eq_poleSum`/`_eq_normalPart`. -/
 theorem sum_filter_rootSet_partition {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
     [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-    (Dt : CPoly α) (allpoles : Finset E) (res : E → E)
-    (logs : List (CPoly α × List (CPoly α))) (rootSet : CPoly α × List (CPoly α) → Finset E)
+    (Dt : DensePoly α) (allpoles : Finset E) (res : E → E)
+    (logs : List (DensePoly α × List (DensePoly α))) (rootSet : DensePoly α × List (DensePoly α) → Finset E)
     (hdisj : logs.Pairwise (fun p q => Disjoint (rootSet p) (rootSet q)))
     (hcover : ∀ β ∈ allpoles, ∃ p ∈ logs, res β ∈ rootSet p) :
     (logs.map (fun p => ∑ β ∈ allpoles.filter (fun β => res β ∈ rootSet p),
@@ -633,8 +633,8 @@ Chains `logResidueSumLrtG_eq_termwise` (sum over entries) with `logResidueTermLr
 `allpoles` (the LRT/Yun fiber-size decomposition). -/
 theorem logResidueSumLrtG_eq_poleSum {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
     [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-    (Dt : CPoly α) (logs : List (CPoly α × List (CPoly α))) (allpoles : Finset E) (res : E → E)
-    (polesOf : CPoly α × List (CPoly α) → Finset E)
+    (Dt : DensePoly α) (logs : List (DensePoly α × List (DensePoly α))) (allpoles : Finset E) (res : E → E)
+    (polesOf : DensePoly α × List (DensePoly α) → Finset E)
     (hroots : ∀ p ∈ logs, ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots
       = ((polesOf p).image res).val)
     (hfac : ∀ p ∈ logs, ∀ c ∈ ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
@@ -657,8 +657,8 @@ over a pole partition `polesOf`) with `pole_sum_eq_normalPart` (the Rothstein–
 `res β = hNum(β)/D(∏)(β)`. -/
 theorem logResidueSumLrtG_eq_normalPart {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
     [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-    (Dt hNum : CPoly α) (logs : List (CPoly α × List (CPoly α))) (allpoles : Finset E)
-    (polesOf : CPoly α × List (CPoly α) → Finset E)
+    (Dt hNum : DensePoly α) (logs : List (DensePoly α × List (DensePoly α))) (allpoles : Finset E)
+    (polesOf : DensePoly α × List (DensePoly α) → Finset E)
     (hroots : ∀ p ∈ logs, ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots
       = ((polesOf p).image (fun β => ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
           / (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E))
@@ -699,7 +699,7 @@ log arg = its fiber product, from `evalLrtArg_eq_fiber_prod`) ⟹ `hfac`. Conclu
 hNum/∏(t−β)`. -/
 theorem logResidueSumLrtG_eq_normalPart_of_yun {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
     [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-    (Dt hNum : CPoly α) (logs : List (CPoly α × List (CPoly α))) (allpoles : Finset E) (res : E → E)
+    (Dt hNum : DensePoly α) (logs : List (DensePoly α × List (DensePoly α))) (allpoles : Finset E) (res : E → E)
     (hres : res = fun β => ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
         / (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E))
             (Lagrange.nodal allpoles id)).eval β)
@@ -747,7 +747,7 @@ theorem logResidueSumLrtG_eq_normalPart_of_yun {α : Type*} [CField α] [CFieldS
 reduced field identity `D(g) + logResidueSumLrt = a/d` holds. -/
 theorem field_identity_lrt_of_hherm_of_logMatch {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
     [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-    (Dt gnum gden hNum hDen anum aden : CPoly α) (logs : List (CPoly α × List (CPoly α)))
+    (Dt gnum gden hNum hDen anum aden : DensePoly α) (logs : List (DensePoly α × List (DensePoly α)))
     (hlog : (logResidueSumLrt Dt logs : RatFunc E) = amGExt (toPoly hNum) / amGExt (toPoly hDen))
     (hherm : (towerDerivExt Dt (amGExt (toPoly gnum) / amGExt (toPoly gden))
           + amGExt (toPoly hNum) / amGExt (toPoly hDen) : RatFunc E)
@@ -763,7 +763,7 @@ in `E`), the `E`-tower derivative of the rational part plus the algebraic residu
 (base-changed to `E`). The `E`-quantification is the descent vehicle (instantiate `E` at the algebraic closure
 to prove; injectivity of the base change gives the `K`-level statement). This is the root-free analogue of
 `IsIntegralResult` handling algebraic residues. -/
-def IsIntegralResultLrt (Dt anum aden : CPoly α) (res : LrtResult α) : Prop :=
+def IsIntegralResultLrt (Dt anum aden : DensePoly α) (res : LrtResult α) : Prop :=
   ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
     [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
     (towerDerivExt Dt (amGExt (toPoly res.rational.1) / amGExt (toPoly res.rational.2))
@@ -776,8 +776,8 @@ logMatch` under the `E`-quantifier: given, over every splitting extension `E`, t
 soundness predicate `IsIntegralResultLrt` holds. This is the final-assembly skeleton: what remains is
 discharging `hlog` (via `logResidueSumLrtG_eq_normalPart` + the Yun partition) and `hherm` (base-change of
 the Hermite tower soundness) for `res = cIntegrateReducedLrt`. -/
-theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPoly α) (res : LrtResult α)
-    (hNum hDen : CPoly α)
+theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : DensePoly α) (res : LrtResult α)
+    (hNum hDen : DensePoly α)
     (hlog : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
         (logResidueSumLrt Dt res.logs : RatFunc E) = amGExt (toPoly hNum) / amGExt (toPoly hDen))
@@ -798,7 +798,7 @@ there are no poles and hence no residues. The residue resultant of a constant is
 (`cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero`), whose Yun factorization is empty
 (`cSqfreeYunFFG_eq_nil_of_cdegG_zero`), so the `filterMap` runs over the empty list. The trivial-normal-part
 (no-poles) base of the reduced soundness. -/
-theorem cLrtLogArgG_eq_nil_of_cdegG_zero (Dt hNum Dstar : CPoly α) (hDstar : cdeg Dstar = 0) :
+theorem cLrtLogArgG_eq_nil_of_cdegG_zero (Dt hNum Dstar : DensePoly α) (hDstar : cdeg Dstar = 0) :
     cLrtLogArg Dt hNum Dstar = [] := by
   have hR := cSqfreeYunFFG_eq_nil_of_cdegG_zero (cResidueResultantTower Dt hNum Dstar)
     (cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero Dt hNum Dstar hDstar)
@@ -809,13 +809,13 @@ variable [CFracGcdCoreWf α] in
 /-- **Membership in `cLrtLogArg`.** Each entry `p` comes from a `(Rᵢ, idx)` in the Yun factorization
 `cSqfreeYunFF R` (`R = cResidueResultantTower …`) with `Rᵢ` non-constant, and `p = (Rᵢ, cSubresultantParam
 … (idx+1))`. Unfolds the `filterMap ∘ zipIdx`; the foundation for the per-entry Yun facts. -/
-theorem mem_cLrtLogArgG (Dt hNum Dstar : CPoly α) (p : CPoly α × List (CPoly α))
+theorem mem_cLrtLogArgG (Dt hNum Dstar : DensePoly α) (p : DensePoly α × List (DensePoly α))
     (hp : p ∈ cLrtLogArg Dt hNum Dstar) :
     ∃ idx, (p.1, idx) ∈ (cSqfreeYunFF (cResidueResultantTower Dt hNum Dstar)).zipIdx
       ∧ ¬ ((cnorm p.1 : List α).length ≤ 1)
       ∧ (idx + 1 ≠ cdeg Dstar → p.2 = cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdeg Dstar)
           (cdeg (cmonomialDeriv Dt Dstar)) (idx + 1))
-      ∧ (idx + 1 = cdeg Dstar → p.2 = Dstar.map (fun x => ([x] : CPoly α))) := by
+      ∧ (idx + 1 = cdeg Dstar → p.2 = Dstar.map (fun x => ([x] : DensePoly α))) := by
   rw [cLrtLogArg, List.mem_filterMap] at hp
   obtain ⟨⟨Ri, idx⟩, hmem, hfn⟩ := hp
   simp only at hfn
@@ -835,7 +835,7 @@ theorem mem_cLrtLogArgG (Dt hNum Dstar : CPoly α) (p : CPoly α × List (CPoly 
 omit [CDiffField α] [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- `R` is a nonzero input for the squarefree Yun factorization. -/
-structure IsYunFactorizationInput (R : CPoly α) [NormalizedGCDMonoid (CFieldSpec.K α)] : Prop where
+structure IsYunFactorizationInput (R : DensePoly α) [NormalizedGCDMonoid (CFieldSpec.K α)] : Prop where
   /-- `R` denotes a nonzero polynomial. -/
   nonzero : toPoly R ≠ 0
   /-- The primitive part of `R` denotes a nonzero polynomial. -/
@@ -848,9 +848,9 @@ variable [CFracGcdCoreWf α] in
 (`cSqfreeYunFFG_squarefree`), so over char-zero `K` it is separable, and its base change to `E` stays
 separable ⟹ `Nodup` roots. -/
 theorem nodup_roots_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α)
     (hR : IsYunFactorizationInput (cResidueResultantTower Dt hNum Dstar))
-    (p : CPoly α × List (CPoly α)) (hp : p ∈ cLrtLogArg Dt hNum Dstar) :
+    (p : DensePoly α × List (DensePoly α)) (hp : p ∈ cLrtLogArg Dt hNum Dstar) :
     ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.Nodup := by
   obtain ⟨idx, hmem, _, _⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
   have hget : (cSqfreeYunFF (cResidueResultantTower Dt hNum Dstar))[idx]? = some p.1 :=
@@ -998,7 +998,7 @@ variable [CFracGcdCoreWf α] in
 /-- **Distinct Yun factors have disjoint roots over `E`.** `cSqfreeYunFFG_isRelPrime` (`IsRelPrime`) ⟹
 `IsCoprime` (PID) ⟹ `IsCoprime` over `E` (base change) ⟹ disjoint roots. -/
 theorem disjoint_yun_factors [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
     (hR : IsYunFactorizationInput R) {j k : ℕ} (hj : j < (cSqfreeYunFF R).length)
     (hk : k < (cSqfreeYunFF R).length) (hjk : j ≠ k) :
     Disjoint ((toPoly ((cSqfreeYunFF R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
@@ -1014,7 +1014,7 @@ variable [CFracGcdCoreWf α] in
 /-- **A Yun factor stays squarefree over `E`.** Squarefree over char-zero `K` ⟹ separable ⟹ separable over
 `E` (base change) ⟹ squarefree over `E`. -/
 theorem yun_factor_map_squarefree [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
     (hR : IsYunFactorizationInput R) {j : ℕ} (hj : j < (cSqfreeYunFF R).length) :
     Squarefree ((toPoly ((cSqfreeYunFF R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)) :=
   ((PerfectField.separable_iff_squarefree.mpr
@@ -1028,7 +1028,7 @@ variable [CFracGcdCoreWf α] in
 (reconstruction), and `c` is a simple root of only `R_idx` (squarefree ⟹ mult 1; coprimality ⟹ mult 0
 elsewhere), so `rootMult_prodPow_of_unique` gives `1 + idx`. -/
 theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
     (hR : IsYunFactorizationInput R) (idx : ℕ) (hidx : idx < (cSqfreeYunFF R).length) (c : E)
     (hc : c ∈ ((toPoly ((cSqfreeYunFF R).get ⟨idx, hidx⟩)).map (algebraMap (CFieldSpec.K α) E)).roots) :
     rootMultiplicity c ((toPoly R).map (algebraMap (CFieldSpec.K α) E)) = idx + 1 := by
@@ -1072,7 +1072,7 @@ entry structure (`mem_cLrtLogArgG`: `p.2 = cSubresultantParam … (idx+1)`), est
 `evalLrtArg_eq_fiber_prod`; the fiber `Dd_E = implicitDeriv Dt_E Dstar_E` alignment closes it. -/
 theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
-    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPoly α) (allpoles : Finset E)
+    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
     (hDmonic : (toPoly Dstar).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hsplit : (toPoly Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
@@ -1084,7 +1084,7 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
         < (Lagrange.nodal allpoles id).natDegree)
     (hB_deg : ((toPoly (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)).natDegree
         ≤ (Lagrange.nodal allpoles id).natDegree - 1)
-    (p : CPoly α × List (CPoly α)) (hp : p ∈ cLrtLogArg Dt hNum Dstar)
+    (p : DensePoly α × List (DensePoly α)) (hp : p ∈ cLrtLogArg Dt hNum Dstar)
     (c : E) (hc : c ∈ ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots) :
     evalLrtArg p.2 c = ((allpoles.filter (fun β =>
         ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
@@ -1168,7 +1168,7 @@ variable [CFracGcdCoreWf α] in
 distinct Yun-factor position, and distinct Yun factors are coprime hence disjoint (`disjoint_yun_factors`).
 Via `List.pairwise_filterMap` over the `zipIdx`. -/
 theorem disjoint_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α)
     (hR : IsYunFactorizationInput (cResidueResultantTower Dt hNum Dstar)) :
     (cLrtLogArg Dt hNum Dstar).Pairwise (fun p q =>
       Disjoint ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
@@ -1194,7 +1194,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **A Yun factor with a root is non-constant** (`¬ (cnorm Rᵢ).length ≤ 1`): a root forces
 `natDegree(Rᵢ) ≥ 1`, but `(cnorm Rᵢ).length ≤ 1` forces `natDegree ≤ 0`. This certifies the `filterMap`
 guard for the residue-hosting entry in `hcover`. -/
-theorem not_len_le_one_of_root {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E] (Ri : CPoly α)
+theorem not_len_le_one_of_root {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E] (Ri : DensePoly α)
     (hR0 : toPoly Ri ≠ 0) (c : E)
     (hc : c ∈ ((toPoly Ri).map (algebraMap (CFieldSpec.K α) E)).roots) :
     ¬ ((cnorm Ri : List α).length ≤ 1) := by
@@ -1215,7 +1215,7 @@ variable [CFracGcdCoreWf α] in
 -/
 theorem residue_of_root_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
-    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPoly α) (allpoles : Finset E)
+    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
     (hDmonic : (toPoly Dstar).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hB : ∀ β ∈ ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
@@ -1226,7 +1226,7 @@ theorem residue_of_root_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type
         ≤ ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1)
     (hsplit : (toPoly Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
     (hR0 : toPoly (cResidueResultantTower Dt hNum Dstar) ≠ 0)
-    (p : CPoly α × List (CPoly α)) (hp : p ∈ cLrtLogArg Dt hNum Dstar)
+    (p : DensePoly α × List (DensePoly α)) (hp : p ∈ cLrtLogArg Dt hNum Dstar)
     (c : E) (hc : c ∈ ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots) :
     ∃ β ∈ allpoles, ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
         / (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E))
@@ -1253,11 +1253,11 @@ variable [CFracGcdCoreWf α] in
 entry `(Rᵢ, Sᵢ) ∈ cLrtLogArg` — `Sᵢ` is `Dstar` (`idx+1 = deg Dstar`, the single-pure-log branch) or the
 subresultant otherwise. The constructive direction of `mem_cLrtLogArgG`, used by `hcover` (which only needs the
 hosting entry's `Rᵢ`, not its `Sᵢ`). -/
-theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : CPoly α) (idx : ℕ) (Ri : CPoly α)
+theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : DensePoly α) (idx : ℕ) (Ri : DensePoly α)
     (hget : (cSqfreeYunFF (cResidueResultantTower Dt hNum Dstar))[idx]? = some Ri)
     (hlen : ¬ ((cnorm Ri : List α).length ≤ 1)) :
     ∃ Si, (Ri, Si) ∈ cLrtLogArg Dt hNum Dstar := by
-  refine ⟨if idx + 1 = cdeg Dstar then Dstar.map (fun c => ([c] : CPoly α))
+  refine ⟨if idx + 1 = cdeg Dstar then Dstar.map (fun c => ([c] : DensePoly α))
       else cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdeg Dstar)
         (cdeg (cmonomialDeriv Dt Dstar)) (idx + 1), ?_⟩
   rw [cLrtLogArg]
@@ -1273,7 +1273,7 @@ is a root of some Yun factor `Rᵢ_E`; that `Rᵢ` is non-constant (`not_len_le_
 entry (`mem_cLrtLogArgG_of_yun_factor`). -/
 theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
-    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPoly α) (allpoles : Finset E)
+    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
     (hDmonic : (toPoly Dstar).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hB : ∀ β ∈ ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
@@ -1323,7 +1323,7 @@ open Classical in
 conditions. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG.{u} [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
@@ -1350,7 +1350,7 @@ conditions are normality, properness, degree control, and polynomial-part cancel
 `logResidueSumLrt (cLrtLogArg …) = hNum/Dstar`, the capstone's `hlog`. -/
 theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E] [DifferentialAlgebra (CFieldSpec.K α) E]
-    [IsAlgClosed E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPoly α)
+    [IsAlgClosed E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α)
     (hDmonic : (toPoly Dstar).Monic) (hDsep : (toPoly Dstar).Separable)
     (hDt0 : (toPoly Dt).natDegree = 0) (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hR : IsYunFactorizationInput (cResidueResultantTower Dt hNum Dstar))
@@ -1408,7 +1408,7 @@ the primitive monomial `Dθ ∈ k`), the factor `((toPoly Dt).map φ − C β′
 a linear, hence `0`, so the whole RT-cancellation sum vanishes with **no** side hypothesis. -/
 theorem hcancel_of_primitive {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E] [Differential E]
-    (Dt hNum Dstar : CPoly α) (hDt0 : (toPoly Dt).natDegree = 0) :
+    (Dt hNum Dstar : DensePoly α) (hDt0 : (toPoly Dt).natDegree = 0) :
     (∑ β ∈ ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
         algebraMap E[X] (RatFunc E)
         (C (((toPoly hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
@@ -1447,7 +1447,7 @@ degree/properness conditions `hAnd`/`hAdeg`/`hB_deg` follow from the `K`-level `
 (`φ = algebraMap` preserves `natDegree` over a field; `Dstar` monic + separable ⟹ its root count is its degree).
 Unlike the rational `hreduced`, this is general: residues may be algebraic. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFieldSpec.K α)]
-    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
@@ -1527,7 +1527,7 @@ monomial derivation `Dt` avoids the pole derivatives (`η ≠ β′`). Being a `
 field — its `E`-universe auto-generalizes, so it can be instantiated at `E = AlgebraicClosure K` (whose universe
 is the *existential* one of `CFieldSpec.K`), which a rigid structure-field universe cannot. This is what lets
 `hR0` be *derived* rather than assumed (see `hR0_of_normalityData`). -/
-def LrtPoleNormalityData (Dt a d : CPoly α) : Prop :=
+def LrtPoleNormalityData (Dt a d : DensePoly α) : Prop :=
   ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
     [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
     ∀ β ∈ ((toPoly (cHermiteReduceTower Dt a d).2.2).map
@@ -1540,7 +1540,7 @@ open scoped Differential in
 (`deg Dt = 0`, `(Dt)(β) = η` constant) this is exactly `η ∉ range(D_E)`: `η = Dt` is not a derivative, so
 `t` is a genuine monomial. A property of the tower
 LEVEL's monomial `Dt` alone — so it discharges the per-input `hE` for **every** `a/d` at once. -/
-def GenuinePrimitiveMonomialLrt (Dt : CPoly α) : Prop :=
+def GenuinePrimitiveMonomialLrt (Dt : DensePoly α) : Prop :=
   ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
     [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
     ∀ (β : E), ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′
@@ -1551,7 +1551,7 @@ variable [CFracGcdCoreWf α] in
 (quantified over a specific integrand's Hermite poles) is an immediate consequence of
 `GenuinePrimitiveMonomialLrt Dt` (which covers *all* `β`); the input `a/d` drops out. This is the faithfulness
 reframing: genuine normality is a property of the monomial, not of each integrand. -/
-theorem lrtPoleNormalityData_of_genuineMonomial {Dt a d : CPoly α}
+theorem lrtPoleNormalityData_of_genuineMonomial {Dt a d : DensePoly α}
     (hgen : GenuinePrimitiveMonomialLrt Dt) : LrtPoleNormalityData Dt a d :=
   fun E _ _ _ _ _ _ β _ => hgen E β
 
@@ -1574,7 +1574,7 @@ deriving `.natDegree hAD` from the `.degree` discharge (`hAD_degree_of_genuineMo
 and handling `deg Dstar = 0` as the trivially-sound no-poles branch (`…_of_noPoles`). So this structure now
 carries the **single** genuine monomial condition `hE`; `cLrtLogArg`'s `i = deg Dstar` branch handles the
 pure-single-log case. -/
-structure LrtReducedGenuineData (Dt a d : CPoly α) : Prop where
+structure LrtReducedGenuineData (Dt a d : DensePoly α) : Prop where
   /-- The **single** genuine condition: the **input-independent** monomial normality `η = Dt` is not a
   derivative (`GenuinePrimitiveMonomialLrt Dt`). *Every* per-input condition — the Yun-factor coprimality
   `hcopgcd`, the residue resultant nonzero `hR0`, the monomial-derivative degree drop `hm`, the pole-normality

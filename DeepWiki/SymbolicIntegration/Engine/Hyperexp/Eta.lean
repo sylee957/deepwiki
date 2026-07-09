@@ -8,14 +8,14 @@ monomial `Dt = η·t`. -/
 namespace DeepWiki.SymbolicIntegration
 
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
 /-- Hyperexponential coefficient `cExpEta Dt = Dt/t = η ∈ α` for a monomial `Dt = η·t`. -/
-def cExpEta (Dt : CPoly α) : α :=
+def cExpEta (Dt : DensePoly α) : α :=
   clead (cdivWf Dt (cshift 1 [CField.one]))
 
-end CPoly
+end DensePoly
 
 end DeepWiki.SymbolicIntegration

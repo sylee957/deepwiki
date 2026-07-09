@@ -54,14 +54,14 @@ coupled-system layer), the full §5.12/§7.3 logarithmic-derivative-of-a-radical
 `cParametricLogDeriv` constant stub decides only the reachable obstruction), and the cancellation
 refinements of `RdeSpecialDenominator`/`RdeBoundDegree` (which only *raise* the bound in that case). -/
 
-open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPoly
+open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.DensePoly
 
 namespace DeepWiki.Si
 
 /-! ### Generic-carrier input builders (catalog-local)
 
 The §6 smoke examples over the generic ℚ(x) = `CFrac ℚ` carrier read their ℚ(x) coefficients as
-num/den lists over `CPoly ℚ = List ℚ`. These builders (`qConst6`/`qFrac6`) wrap a num/den pair as a
+num/den lists over `DensePoly ℚ = List ℚ`. These builders (`qConst6`/`qFrac6`) wrap a num/den pair as a
 `CFrac ℚ` element (the `ComputableTowerRefoundProbe` construction). They are catalog infrastructure, not
 book items. -/
 
@@ -70,7 +70,7 @@ book items. -/
 def qConst6 (n : ℚ) : CFrac ℚ := ⟨([n], [(1 : ℚ)]), CFrac.cisZeroG_one_singleton⟩
 
 /-- A ℚ(x) fraction `num/den` as a `CFrac ℚ` element, with `den ≠ 0` discharged by `native_decide`. -/
-def qFrac6 (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : CFrac ℚ :=
+def qFrac6 (num den : List ℚ) (h : DensePoly.cisZero den = false := by native_decide) : CFrac ℚ :=
   ⟨(num, den), h⟩
 
 /-- The variable `x ∈ ℚ(x)` as `CFrac ℚ` (numerator `[0,1]`, denominator `[1]`). -/
@@ -81,14 +81,14 @@ def qX6 : CFrac ℚ := qFrac6 [0, 1] [1]
 polynomial identity obtained by clearing all denominators (`Dy = (D(ynum)·yden − ynum·D(yden))/yden²`):
 `gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²`, decided by `cisZero`
 of the cleared difference (`D = cmonomialDeriv Dt`). -/
-def rdeClearedCheckG6 (Dt fnum fden gnum gden ynum yden : CPoly (CFrac ℚ)) : Bool :=
-  let Dyn := CPoly.cmonomialDeriv Dt ynum
-  let Dyd := CPoly.cmonomialDeriv Dt yden
-  let lhs := CPoly.cadd
-    (CPoly.cmul (CPoly.cmul gden fden) (CPoly.csub (CPoly.cmul Dyn yden) (CPoly.cmul ynum Dyd)))
-    (CPoly.cmul (CPoly.cmul (CPoly.cmul gden fnum) ynum) yden)
-  let rhs := CPoly.cmul (CPoly.cmul gnum fden) (CPoly.cmul yden yden)
-  CPoly.cisZero (CPoly.csub lhs rhs)
+def rdeClearedCheckG6 (Dt fnum fden gnum gden ynum yden : DensePoly (CFrac ℚ)) : Bool :=
+  let Dyn := DensePoly.cmonomialDeriv Dt ynum
+  let Dyd := DensePoly.cmonomialDeriv Dt yden
+  let lhs := DensePoly.cadd
+    (DensePoly.cmul (DensePoly.cmul gden fden) (DensePoly.csub (DensePoly.cmul Dyn yden) (DensePoly.cmul ynum Dyd)))
+    (DensePoly.cmul (DensePoly.cmul (DensePoly.cmul gden fnum) ynum) yden)
+  let rhs := DensePoly.cmul (DensePoly.cmul gnum fden) (DensePoly.cmul yden yden)
+  DensePoly.cisZero (DensePoly.csub lhs rhs)
 
 /-! ## §6.1 The Normal Part of the Denominator — computable + validated -/
 
@@ -110,22 +110,22 @@ noncomputable abbrev alg_6_2_normalDenominator := cRdeNormalDenominator (α := C
 book's quadruplet `(a, b, c, h) = (t, (t−1)(t²+1), 1, t)`, pinned componentwise over the generic ℚ(x)[t]
 (`native_decide`). -/
 theorem ex_6_1_2 :
-    (let Dt : CPoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]              -- `Dt = t²+1`
-     let fnum : CPoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]            -- `f = t²+1`
-     let fden : CPoly (CFrac ℚ) := [qConst6 1]
-     let gnum : CPoly (CFrac ℚ) := [qConst6 1]                                -- `g = 1/t²`
-     let gden : CPoly (CFrac ℚ) := [qConst6 0, qConst6 0, qConst6 1]
-     let exA : CPoly (CFrac ℚ) := [qConst6 0, qConst6 1]                       -- `a = t`
-     let exB : CPoly (CFrac ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]  -- `(t−1)(t²+1)`
-     let exC : CPoly (CFrac ℚ) := [qConst6 1]                                 -- `c = 1`
-     let exH : CPoly (CFrac ℚ) := [qConst6 0, qConst6 1]                       -- `h = t`
-     CPoly.cisZero (CPoly.csub (CPoly.cWeakNormalizer Dt fnum fden) [CField.one])
-     ∧ (match CPoly.cRdeNormalDenominator Dt fnum fden gnum gden with
+    (let Dt : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]              -- `Dt = t²+1`
+     let fnum : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]            -- `f = t²+1`
+     let fden : DensePoly (CFrac ℚ) := [qConst6 1]
+     let gnum : DensePoly (CFrac ℚ) := [qConst6 1]                                -- `g = 1/t²`
+     let gden : DensePoly (CFrac ℚ) := [qConst6 0, qConst6 0, qConst6 1]
+     let exA : DensePoly (CFrac ℚ) := [qConst6 0, qConst6 1]                       -- `a = t`
+     let exB : DensePoly (CFrac ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]  -- `(t−1)(t²+1)`
+     let exC : DensePoly (CFrac ℚ) := [qConst6 1]                                 -- `c = 1`
+     let exH : DensePoly (CFrac ℚ) := [qConst6 0, qConst6 1]                       -- `h = t`
+     DensePoly.cisZero (DensePoly.csub (DensePoly.cWeakNormalizer Dt fnum fden) [CField.one])
+     ∧ (match DensePoly.cRdeNormalDenominator Dt fnum fden gnum gden with
         | some (a, b, c, h) =>
-            CPoly.cisZero (CPoly.csub a exA)
-              && CPoly.cisZero (CPoly.csub b exB)
-              && CPoly.cisZero (CPoly.csub c exC)
-              && CPoly.cisZero (CPoly.csub h exH)
+            DensePoly.cisZero (DensePoly.csub a exA)
+              && DensePoly.cisZero (DensePoly.csub b exB)
+              && DensePoly.cisZero (DensePoly.csub c exC)
+              && DensePoly.cisZero (DensePoly.csub h exH)
         | none => false) = true) := by native_decide
 
 /-! ## §6.2 The Special Part of the Denominator — computable + validated -/
@@ -142,16 +142,16 @@ noncomputable abbrev alg_6_2_specialDenominator := cRdeSpecialDenominator (α :=
 `n_b = 1`, `n_c = 0`, `n = N = 0`) returns the *unchanged* `(t, (t−1)(t²+1), 1, 1)` over the generic
 ℚ(x)[t] (`native_decide`). -/
 theorem ex_6_2_2 :
-    (let Dt : CPoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]
-     let exA : CPoly (CFrac ℚ) := [qConst6 0, qConst6 1]                       -- `a = t`
-     let exB : CPoly (CFrac ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]  -- `(t−1)(t²+1)`
-     let exC : CPoly (CFrac ℚ) := [qConst6 1]                                 -- `c = 1`
-     match CPoly.cRdeSpecialDenominator Dt exA exB exC with
+    (let Dt : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]
+     let exA : DensePoly (CFrac ℚ) := [qConst6 0, qConst6 1]                       -- `a = t`
+     let exB : DensePoly (CFrac ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]  -- `(t−1)(t²+1)`
+     let exC : DensePoly (CFrac ℚ) := [qConst6 1]                                 -- `c = 1`
+     match DensePoly.cRdeSpecialDenominator Dt exA exB exC with
      | (abar, bbar, cbar, h) =>
-         CPoly.cisZero (CPoly.csub abar exA)
-           && CPoly.cisZero (CPoly.csub bbar exB)
-           && CPoly.cisZero (CPoly.csub cbar exC)
-           && CPoly.cisZero (CPoly.csub h [CField.one])) = true := by native_decide
+         DensePoly.cisZero (DensePoly.csub abar exA)
+           && DensePoly.cisZero (DensePoly.csub bbar exB)
+           && DensePoly.cisZero (DensePoly.csub cbar exC)
+           && DensePoly.cisZero (DensePoly.csub h [CField.one])) = true := by native_decide
 
 /-! ## §6.3 Degree Bounds — computable + validated -/
 
@@ -166,11 +166,11 @@ noncomputable abbrev alg_6_3_boundDegree := cRdeBoundDegree (α := CFrac ℚ)
 `cRdeBoundDegree` on `(a, b, c) = (t, (t−1)(t²+1), 1)` with `δ = 2` returns the degree bound `0`
 (any polynomial solution lies in ℚ(x)) over the generic ℚ(x)[t], `native_decide`. -/
 theorem ex_6_3_4 :
-    (let Dt : CPoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]
-     let exA : CPoly (CFrac ℚ) := [qConst6 0, qConst6 1]
-     let exB : CPoly (CFrac ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]
-     let exC : CPoly (CFrac ℚ) := [qConst6 1]
-     CPoly.cRdeBoundDegree Dt exA exB exC) = 0 := by native_decide
+    (let Dt : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]
+     let exA : DensePoly (CFrac ℚ) := [qConst6 0, qConst6 1]
+     let exB : DensePoly (CFrac ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]
+     let exC : DensePoly (CFrac ℚ) := [qConst6 1]
+     DensePoly.cRdeBoundDegree Dt exA exB exC) = 0 := by native_decide
 
 /-! ## §6.4 The SPDE Algorithm — computable -/
 
@@ -186,7 +186,7 @@ noncomputable abbrev alg_6_4_spde := cSPDE (α := CFrac ℚ)
 /-- **Algorithm `PolyRischDENoCancel`** (§6.5, the `PolyRischDENoCancel1(b, c, D, n)` box, p.208): the
 fuel-free computable `cPolyRischDENoCancel Dt b c n` (the generic engine at `CFrac ℚ`) over the tower — the
 non-cancellation case solving `Dq + b·q = c` degree-by-degree from the top down
-(`lc(c) = lc(b)·lc(q)`). Returns `Option (CPoly (CFrac ℚ))`. Computable +
+(`lc(c) = lc(b)·lc(q)`). Returns `Option (DensePoly (CFrac ℚ))`. Computable +
 `native_decide`-validated end-to-end; abstract correctness deferred. -/
 noncomputable abbrev alg_6_5_polyRischDENoCancel := cPolyRischDENoCancel (α := CFrac ℚ)
 
@@ -207,13 +207,13 @@ noncomputable abbrev alg_6_rischDE := cRischDE (α := CFrac ℚ)
 *actually solve* the equation by the cleared polynomial identity over the generic ℚ(x)[t]
 (`native_decide`). -/
 theorem ex_6_5_1 :
-    (let Dt : CPoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]              -- `Dt = t²+1`
-     let fnum : CPoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]            -- `f = t²+1`
-     let fden : CPoly (CFrac ℚ) := [qConst6 1]
+    (let Dt : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]              -- `Dt = t²+1`
+     let fnum : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]            -- `f = t²+1`
+     let fden : DensePoly (CFrac ℚ) := [qConst6 1]
      -- `g = t³ + (x+1)t² + t + (x+2)` (low→high in `t`)
-     let gnum : CPoly (CFrac ℚ) :=
+     let gnum : DensePoly (CFrac ℚ) :=
        [CField.add qX6 (qConst6 2), qConst6 1, CField.add qX6 (qConst6 1), qConst6 1]
-     match CPoly.cRischDE Dt fnum fden gnum fden with
+     match DensePoly.cRischDE Dt fnum fden gnum fden with
      | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum fden ynum yden
      | none => false) = true := by native_decide
 
@@ -221,12 +221,12 @@ theorem ex_6_5_1 :
 `none` — `SPDE` reaches `n = −1 < 0` with `c ≠ 0`, so `∫ e^{tan x}/tan²x dx` is not elementary over the
 generic ℚ(x)[t] (`native_decide`). -/
 theorem ex_6_4_1 :
-    (let Dt : CPoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]
-     let fnum : CPoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]
-     let fden : CPoly (CFrac ℚ) := [qConst6 1]
-     let gnum : CPoly (CFrac ℚ) := [qConst6 1]
-     let gden : CPoly (CFrac ℚ) := [qConst6 0, qConst6 0, qConst6 1]            -- `1/t²`
-     CPoly.cRischDE Dt fnum fden gnum gden).isNone = true := by native_decide
+    (let Dt : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]
+     let fnum : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 0, qConst6 1]
+     let fden : DensePoly (CFrac ℚ) := [qConst6 1]
+     let gnum : DensePoly (CFrac ℚ) := [qConst6 1]
+     let gden : DensePoly (CFrac ℚ) := [qConst6 0, qConst6 0, qConst6 1]            -- `1/t²`
+     DensePoly.cRischDE Dt fnum fden gnum gden).isNone = true := by native_decide
 
 /-! ## §6.6 The Cancellation Cases — primitive + hyperexponential computable + validated -/
 
@@ -234,14 +234,14 @@ theorem ex_6_4_1 :
 `cPolyRischDECancelPrim Dt b c n` (the generic engine at `CFrac ℚ`) over the tower — the
 primitive cancellation case (`Dt ∈ k`, `b ∈ k*`, where `cPolyRischDENoCancel` cannot proceed),
 recursing degree-by-degree into the eq. 6.23 base Risch DE over `k = ℚ(x)` after the §5.12 `b = Dz/z`
-test. Returns `Option (CPoly (CFrac ℚ))`. Computable + `native_decide`-validated; abstract
+test. Returns `Option (DensePoly (CFrac ℚ))`. Computable + `native_decide`-validated; abstract
 correctness deferred. -/
 noncomputable abbrev alg_6_6_cancelPrim := cPolyRischDECancelPrim (α := CFrac ℚ)
 
 /-- **Algorithm `PolyRischDECancelExp`** (§6.6, p.213): the fuel-free computable
 `cPolyRischDECancelExp Dt b c n` (the generic engine at `CFrac ℚ`) over the tower — the
 hyperexponential cancellation case (`Dt/t = η ∈ k`, `δ = 1`, `b ∈ k*`), recursing degree-by-degree into
-the eq. 6.24 base RDE `RischDE(b + m·η, lc(c))` over ℚ(x). Returns `Option (CPoly (CFrac ℚ))`.
+the eq. 6.24 base RDE `RischDE(b + m·η, lc(c))` over ℚ(x). Returns `Option (DensePoly (CFrac ℚ))`.
 Computable + `native_decide`-validated; abstract correctness deferred. -/
 noncomputable abbrev alg_6_6_cancelExp := cPolyRischDECancelExp (α := CFrac ℚ)
 
@@ -254,7 +254,7 @@ noncomputable abbrev alg_6_6_rischDEBase := @CRischField.crischDESolve (CFrac �
 
 /-- **The rational Risch DE over ℚ(x)** (§6.6 eq. 6.23 base solve): the generic tower base solve
 `CRischField.crischDESolve (α := CFrac ℚ)` — the whole Ch. 6 pipeline re-run at the base level over
-`CPoly ℚ = ℚ[x]` (the recursive `instCRischFieldCFrac`, bottoming at `CRischField ℚ`). The generic
+`DensePoly ℚ = ℚ[x]` (the recursive `instCRischFieldCFrac`, bottoming at `CRischField ℚ`). The generic
 `CFrac ℚ` carrier needs no special-cased `cRationalRDE`: the rational base solve *is* `crischDESolve`
 at this level. Computable + `native_decide`-validated (`ex_6_6_rationalRDE`). -/
 noncomputable abbrev alg_6_6_rationalRDE := @CRischField.crischDESolve (CFrac ℚ) _ _
@@ -264,16 +264,16 @@ noncomputable abbrev alg_6_6_rationalRDE := @CRischField.crischDESolve (CFrac �
 solve* `Dq + b·q = c` by the cleared difference over the generic ℚ(x)[t] (`native_decide`); the
 dispatcher `cPolyRischDE` routes the same input to the cancellation solver. -/
 theorem ex_6_6_cancelPrim :
-    (let Dt : CPoly (CFrac ℚ) := [qFrac6 [1] [0, 1]]                          -- `Dt = 1/x`
-     let b : CPoly (CFrac ℚ) := [qConst6 1]                                   -- `b = 1`
-     let c : CPoly (CFrac ℚ) := [qFrac6 [1] [0, 1], qConst6 1]                 -- `c = t + 1/x`
-     (match CPoly.cPolyRischDECancelPrim Dt b c 5 with
+    (let Dt : DensePoly (CFrac ℚ) := [qFrac6 [1] [0, 1]]                          -- `Dt = 1/x`
+     let b : DensePoly (CFrac ℚ) := [qConst6 1]                                   -- `b = 1`
+     let c : DensePoly (CFrac ℚ) := [qFrac6 [1] [0, 1], qConst6 1]                 -- `c = t + 1/x`
+     (match DensePoly.cPolyRischDECancelPrim Dt b c 5 with
        | some q =>
-           CPoly.cisZero (CPoly.csub
-             (CPoly.cadd (CPoly.cmonomialDeriv Dt q) (CPoly.cmul b q)) c)
+           DensePoly.cisZero (DensePoly.csub
+             (DensePoly.cadd (DensePoly.cmonomialDeriv Dt q) (DensePoly.cmul b q)) c)
        | none => false)
-     && (match CPoly.cPolyRischDE Dt b c 5, CPoly.cPolyRischDECancelPrim Dt b c 5 with
-         | some q1, some q2 => CPoly.cisZero (CPoly.csub q1 q2)
+     && (match DensePoly.cPolyRischDE Dt b c 5, DensePoly.cPolyRischDECancelPrim Dt b c 5 with
+         | some q1, some q2 => DensePoly.cisZero (DensePoly.csub q1 q2)
          | _, _ => false)) = true := by native_decide
 
 /-- **Example (§6.6, p.213)**, hyperexponential cancellation: `cPolyRischDECancelExp` on
@@ -281,16 +281,16 @@ theorem ex_6_6_cancelPrim :
 to *actually solve* `Dq + b·q = c` by the cleared difference over the generic ℚ(x)[t] (`native_decide`);
 the dispatcher `cPolyRischDE` routes the same input to the hyperexponential cancellation solver. -/
 theorem ex_6_6_cancelExp :
-    (let Dt : CPoly (CFrac ℚ) := [qConst6 0, qConst6 1]                        -- `Dt = t`
-     let b : CPoly (CFrac ℚ) := [qFrac6 [1] [0, 1]]                           -- `b = 1/x`
-     let c : CPoly (CFrac ℚ) := [qConst6 0, qFrac6 [2, 1] [1]]                 -- `c = (2+x)t`
-     (match CPoly.cPolyRischDECancelExp Dt b c 5 with
+    (let Dt : DensePoly (CFrac ℚ) := [qConst6 0, qConst6 1]                        -- `Dt = t`
+     let b : DensePoly (CFrac ℚ) := [qFrac6 [1] [0, 1]]                           -- `b = 1/x`
+     let c : DensePoly (CFrac ℚ) := [qConst6 0, qFrac6 [2, 1] [1]]                 -- `c = (2+x)t`
+     (match DensePoly.cPolyRischDECancelExp Dt b c 5 with
        | some q =>
-           CPoly.cisZero (CPoly.csub
-             (CPoly.cadd (CPoly.cmonomialDeriv Dt q) (CPoly.cmul b q)) c)
+           DensePoly.cisZero (DensePoly.csub
+             (DensePoly.cadd (DensePoly.cmonomialDeriv Dt q) (DensePoly.cmul b q)) c)
        | none => false)
-     && (match CPoly.cPolyRischDE Dt b c 5, CPoly.cPolyRischDECancelExp Dt b c 5 with
-         | some q1, some q2 => CPoly.cisZero (CPoly.csub q1 q2)
+     && (match DensePoly.cPolyRischDE Dt b c 5, DensePoly.cPolyRischDECancelExp Dt b c 5 with
+         | some q1, some q2 => DensePoly.cisZero (DensePoly.csub q1 q2)
          | _, _ => false)) = true := by native_decide
 
 /-- **Example (§6.6 eq. 6.23)**, general non-constant base recursion: `cRischDE` on
@@ -299,12 +299,12 @@ non-constant base RDE `RischDE(1/x, 2) = x` over ℚ(x) to `y = x·log(x)`, veri
 identity over the generic ℚ(x)[t] (`native_decide`). The eq. 6.23 base solve target — `crischDESolve`
 at `CFrac ℚ` on `(1/x, 2)` — is checked to return `s = x`. -/
 theorem ex_6_6_baseRecursion :
-    (let Dt : CPoly (CFrac ℚ) := [qFrac6 [1] [0, 1]]                          -- `Dt = 1/x`
-     let fnum : CPoly (CFrac ℚ) := [qFrac6 [1] [0, 1]]                        -- `f = 1/x`
-     let fden : CPoly (CFrac ℚ) := [qConst6 1]
-     let gnum : CPoly (CFrac ℚ) := [qConst6 1, qConst6 2]                      -- `g = 2t + 1`
-     let gden : CPoly (CFrac ℚ) := [qConst6 1]
-     (match CPoly.cRischDE Dt fnum fden gnum gden with
+    (let Dt : DensePoly (CFrac ℚ) := [qFrac6 [1] [0, 1]]                          -- `Dt = 1/x`
+     let fnum : DensePoly (CFrac ℚ) := [qFrac6 [1] [0, 1]]                        -- `f = 1/x`
+     let fden : DensePoly (CFrac ℚ) := [qConst6 1]
+     let gnum : DensePoly (CFrac ℚ) := [qConst6 1, qConst6 2]                      -- `g = 2t + 1`
+     let gden : DensePoly (CFrac ℚ) := [qConst6 1]
+     (match DensePoly.cRischDE Dt fnum fden gnum gden with
        | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum gden ynum yden
        | none => false)
      && (match CRischField.crischDESolve (qFrac6 [1] [0, 1]) (qConst6 2) with

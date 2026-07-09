@@ -27,7 +27,7 @@ The driver's log half is exactly the principal-case linear solve of
   duplicated here. -/
 
 open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.RadElem
-open DeepWiki.SymbolicIntegration.CPoly
+open DeepWiki.SymbolicIntegration.DensePoly
 
 namespace DeepWiki.Tiaf
 
@@ -89,7 +89,7 @@ abbrev full_integrate := @cIntegrateAlgebraicWf
 /-- The dispatch's reconstructed rational part for `∫ 1/((x−1)²√(x²+1))`, built from
 `radIntegrateRationalWf`. -/
 def full_rtRatV : RadElem (CFrac ℚ) :=
-  radAssembleRatPart rtRatRho (CPoly.radIntegrateRationalWf (qxNum rtRatRho) rtRatR rtRatB)
+  radAssembleRatPart rtRatRho (DensePoly.radIntegrateRationalWf (qxNum rtRatRho) rtRatR rtRatB)
 
 /-- The rational-only benchmark integrand: `algDerivQ ⟨full_rtRatV, []⟩`. -/
 def full_rtRatIntegrand : RadElem (CFrac ℚ) := algDerivQ rtRatRho ⟨full_rtRatV, []⟩
@@ -135,7 +135,7 @@ theorem full_roundtrip_log_shape :
 /-- The dispatch's reconstructed rational part for the combined round-trip, built from
 `radIntegrateRationalWf`. -/
 def full_rtCombVdispatch : RadElem (CFrac ℚ) :=
-  radAssembleRatPart rtCombRho (CPoly.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
+  radAssembleRatPart rtCombRho (DensePoly.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
 
 /-- The combined starting antiderivative `F = full_rtCombVdispatch + log(rtCombU)`. -/
 def full_rtCombF : AlgIntegralResult (CFrac ℚ) := ⟨full_rtCombVdispatch, [(CField.one, rtCombU)]⟩

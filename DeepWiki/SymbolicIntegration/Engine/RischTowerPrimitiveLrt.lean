@@ -26,7 +26,7 @@ integrability conditions, not an opaque soundness obligation. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac Polynomial
+open DensePoly CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
@@ -36,14 +36,14 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 Liouville form `⟦rational⟧ + Σᵢ Σ_{Rᵢ(c)=0} c·log(Sᵢ(c,t))` — an `LrtResult`, whose residue coefficients
 `c` may be **algebraic** over the constants. The root-free analogue of `IsElementaryIntegrable`, which
 restricts the coefficients to `K`. -/
-def IsElementaryIntegrableLrt (Dt a d : CPoly α) : Prop :=
+def IsElementaryIntegrableLrt (Dt a d : DensePoly α) : Prop :=
   ∃ res : LrtResult α, IsIntegralResultLrt Dt a d res
 
 omit [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The LRT soundness→completeness bridge.** Any `IsIntegralResultLrt` witness makes `a/d`
 elementary-integrable in the broad (algebraic-residue) sense — verbatim, the LRT analogue of
 `IsElementaryIntegrable.of_isIntegralResult`. -/
-theorem IsElementaryIntegrableLrt.of_isIntegralResultLrt {Dt a d : CPoly α} {res : LrtResult α}
+theorem IsElementaryIntegrableLrt.of_isIntegralResultLrt {Dt a d : DensePoly α} {res : LrtResult α}
     (h : IsIntegralResultLrt Dt a d res) : IsElementaryIntegrableLrt Dt a d :=
   ⟨res, h⟩
 
@@ -58,7 +58,7 @@ class PrimitiveFrontierLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField 
   /-- Reduced-part soundness with algebraic residues: `cₙ/dₙ` integrates to `cIntegrateReducedLrt …`, whose
   log part carries symbolic algebraic residues. The `d ≠ 0` precondition is supplied by the integrator guard;
   the normalized-denominator nonvanishing is *proven* downstream (Hermite denominator ≠ 0 from `dₙ ≠ 0`). -/
-  hreducedLrt : ∀ (Dt a d : CPoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
+  hreducedLrt : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
     IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d))
 
@@ -68,9 +68,9 @@ reduced input `(a', d')` with `d' ≠ 0` (which `isIntegralResultLrtG_cIntegrate
 per input, modulo the genuine side conditions), then the frontier field `hreducedLrt` holds — specialize to
 the canonical normalized parts `(cₙ, dₙ)`, whose denominator is nonzero (`crNormDen_ne_zero_of_charZero`). -/
 theorem hreducedLrt_of_reducedSoundLrt [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (hRed : ∀ (Dt a' d' : CPoly α), toPoly d' ≠ 0 → (toPoly Dt).natDegree = 0 →
+    (hRed : ∀ (Dt a' d' : DensePoly α), toPoly d' ≠ 0 → (toPoly Dt).natDegree = 0 →
       IsIntegralResultLrt Dt a' d' (cIntegrateReducedLrt Dt a' d'))
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
     IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) :=
   hRed Dt (crNormNum Dt a d) (crNormDen Dt a d) (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hDt0
@@ -82,8 +82,8 @@ holds. This closes the frontier down to those **necessary** conditions — no ra
 opaque soundness field. Instantiate `PrimitiveFrontierLrt` in one line: `⟨hreducedLrt_of_genuineAll hgcd
 genuineData⟩`. -/
 theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (hgen : ∀ (Dt a' d' : CPoly α), toPoly d' ≠ 0 → LrtReducedGenuineData Dt a' d')
-    (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
+    (hgen : ∀ (Dt a' d' : DensePoly α), toPoly d' ≠ 0 → LrtReducedGenuineData Dt a' d')
+    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
     IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) :=
   -- apply `_of_genuine` directly at the canonical normal part, whose properness `deg crNormNum < deg crNormDen`
@@ -96,7 +96,7 @@ theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorr
 -- The closure genuinely constructs the frontier: given the genuine data for every reduced input, a
 -- `PrimitiveFrontierLrt` instance follows (hence the whole assembled root-free LRT solver).
 example [CharZero (CFieldSpec.K α)] [Fact (GcdFFCorrect (α := α))]
-    (hgen : ∀ (Dt a d : CPoly α), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
+    (hgen : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
     PrimitiveFrontierLrt α :=
   ⟨hreducedLrt_of_genuineAll (Fact.out (p := GcdFFCorrect (α := α))) hgen⟩
 
@@ -104,7 +104,7 @@ example [CharZero (CFieldSpec.K α)] [Fact (GcdFFCorrect (α := α))]
 `PrimitiveFrontierLrt` instance, the canonical normal part `cₙ/dₙ` is elementary-integrable in the
 algebraic-residue sense — the LRT analogue of the reduced-part payoff of `PrimitiveFrontier`. -/
 theorem isElementaryIntegrableLrtG_crNorm_of_frontier [CharZero (CFieldSpec.K α)]
-    [Fact (GcdFFCorrect (α := α))] [PrimitiveFrontierLrt α] (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0)
+    [Fact (GcdFFCorrect (α := α))] [PrimitiveFrontierLrt α] (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hDt0 : (toPoly Dt).natDegree = 0) :
     IsElementaryIntegrableLrt Dt (crNormNum Dt a d) (crNormDen Dt a d) :=
   ⟨_, PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0⟩

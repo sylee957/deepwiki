@@ -4,7 +4,7 @@ import Mathlib.LinearAlgebra.Lagrange
 
 /-! # Computable Rothstein–Trager resultant bridge
 `rtResultantCompute` recovers the bivariate resultant `res_x(D, A − t·D')` by evaluation and Lagrange
-interpolation on `CPoly ℚ = List ℚ`; this file proves it realizes `rtResultant` through the `toPoly`
+interpolation on `DensePoly ℚ = List ℚ`; this file proves it realizes `rtResultant` through the `toPoly`
 bridge, plus the base-change lemmas used for residue regularity. -/
 
 open Polynomial
@@ -26,7 +26,7 @@ theorem toPoly_clagNum (xs : List ℚ) :
 
 /-- `toPoly` of the `cinterpolate` accumulator fold is the running sum: folding `cadd acc (f p)`
 over `pts` maps under `toPoly` to `toPoly init + ∑ p, toPoly (f p)`. -/
-theorem toPoly_foldl_cadd (f : ℚ × ℚ → CPoly ℚ) (pts : List (ℚ × ℚ)) (init : CPoly ℚ) :
+theorem toPoly_foldl_cadd (f : ℚ × ℚ → DensePoly ℚ) (pts : List (ℚ × ℚ)) (init : DensePoly ℚ) :
     toPoly (pts.foldl (fun acc p => cadd acc (f p)) init)
       = toPoly init + (pts.map (fun p => toPoly (f p))).sum := by
   induction pts generalizing init with
@@ -95,7 +95,7 @@ theorem eval_term_at_other (xk yk x : ℚ) (others : List ℚ) (hx : x ∈ other
 /-! ### `cinterpolate` evaluation and degree -/
 
 /-- The `cinterpolate` local `term` function for a points list with abscissas `xs`. -/
-private def cinterpTermQ (xs : List ℚ) (p : ℚ × ℚ) : CPoly ℚ :=
+private def cinterpTermQ (xs : List ℚ) (p : ℚ × ℚ) : DensePoly ℚ :=
   cscale (p.2 / ((xs.filter (· != p.1)).foldl (fun acc xj => acc * (p.1 - xj)) 1))
     (clagNum (xs.filter (· != p.1)))
 
@@ -269,14 +269,14 @@ theorem natDegree_rtResultant_le (A D : ℚ[X]) :
 
 open Polynomial in
 /-- `toPoly (csub A (cscale a (cderiv D))) = toPoly A − C a · derivative (toPoly D)`. -/
-theorem toPoly_sample (A D : CPoly ℚ) (a : ℚ) :
+theorem toPoly_sample (A D : DensePoly ℚ) (a : ℚ) :
     toPoly (csub A (cscale a (cderiv D)))
       = toPoly A - Polynomial.C a * derivative (toPoly D) := by
   rw [toPoly_csub, toPoly_cscale, toPoly_cderiv]
 
 open Polynomial in
 /-- Point-agreement (monic `D`): `cresultant fuel D (A − a·D') = (rtResultant (toPoly A) (toPoly D)).eval a`. -/
-theorem cresultant_sample_eq_eval (A D : CPoly ℚ) (a : ℚ)
+theorem cresultant_sample_eq_eval (A D : DensePoly ℚ) (a : ℚ)
     (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree)
     (fuel : ℕ)
     (hfuel : (cnorm D).length + (cnorm (csub A (cscale a (cderiv D)))).length + 2 ≤ fuel) :
@@ -308,7 +308,7 @@ theorem cresultant_sample_eq_eval (A D : CPoly ℚ) (a : ℚ)
 open Polynomial in
 /-- `rtResultantCompute` realizes `rtResultant` (monic `D`, `deg A < deg D`, sufficient fuel):
 `toPoly (rtResultantCompute fuel A D) = rtResultant (toPoly A) (toPoly D)`. -/
-theorem toPoly_rtResultantCompute_eq_rtResultant (A D : CPoly ℚ) (fuel : ℕ)
+theorem toPoly_rtResultantCompute_eq_rtResultant (A D : DensePoly ℚ) (fuel : ℕ)
     (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree)
     (hfuel : ∀ k ∈ Finset.range (cdeg D + 1),
       (cnorm D).length + (cnorm (csub A (cscale (k : ℚ) (cderiv D)))).length + 2 ≤ fuel) :

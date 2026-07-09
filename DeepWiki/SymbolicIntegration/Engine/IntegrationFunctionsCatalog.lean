@@ -22,7 +22,7 @@ or removed. Documentation only — no new mathematics. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 /-! ## Verified references — transcendental engines -/
 

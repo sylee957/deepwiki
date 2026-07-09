@@ -26,7 +26,7 @@ gden)` satisfies the per-factor identities (`hstep`), then `R·gden² = resNum'`
 C(1−n)·A + Σ residNumIncr` is the interference numerator and `resNum' = A·gden² − D·(gnum'·gden −
 gnum·gden')` the quotient-rule residual numerator. Both equal the residual `A/D − g′` over their
 denominators; cross-multiplying and `am`-injectivity pin the polynomial identity. -/
-theorem residNum_eq_resNumPrime (fuel : ℕ) (A D gnum gden : CPoly ℚ) (factors : List (CPoly ℚ × ℕ))
+theorem residNum_eq_resNumPrime (fuel : ℕ) (A D gnum gden : DensePoly ℚ) (factors : List (DensePoly ℚ × ℕ))
     (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0)
     (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
     (hg : toQFun ((glocList fuel A D factors).foldl qadd qzero) = toQFun (gnum, gden))

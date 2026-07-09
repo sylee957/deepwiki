@@ -11,13 +11,13 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly CFrac
+open DensePoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- Interface law for a Hermite reduction output `(gnum, gden, hNum, Dstar)` of `a/d`. -/
-structure LawfulHermiteReduction (Dt a d gnum gden hNum Dstar : CPoly α) : Prop where
+structure LawfulHermiteReduction (Dt a d gnum gden hNum Dstar : DensePoly α) : Prop where
   /-- The cleared Hermite identity `D⟦gnum/gden⟧ + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
   field_identity : towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
       + am α (toPoly hNum) / am α (toPoly Dstar) = am α (toPoly a) / am α (toPoly d)

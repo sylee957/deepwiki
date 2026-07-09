@@ -33,11 +33,11 @@ recursive instance for the whole tower, generalizing the ℚ-specific base `inst
 noncomputable instance instCDiffFieldSpecCFracGRec {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
     [CDiffFieldSpec α] [CFieldDomain α] [Algebra ℚ (CFieldSpec.K α)] : CDiffFieldSpec (CFrac α) where
   diffK := fractionFieldDifferential
-    (Differential.implicitDeriv (CPoly.toPoly ([CField.one] : CPoly α)))
+    (Differential.implicitDeriv (DensePoly.toPoly ([CField.one] : DensePoly α)))
   toK_cderiv a := by
     show CFrac.toCFrac (CFrac.towerDerivCFrac [CField.one] a)
       = @Differential.deriv _ _ (fractionFieldDifferential
-          (Differential.implicitDeriv (CPoly.toPoly ([CField.one] : CPoly α)))) (CFrac.toCFrac a)
+          (Differential.implicitDeriv (DensePoly.toPoly ([CField.one] : DensePoly α)))) (CFrac.toCFrac a)
     rw [CFrac.toCFracG_towerDerivCFracG [CField.one] a]
     rfl
 

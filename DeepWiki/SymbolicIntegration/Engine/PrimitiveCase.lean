@@ -21,8 +21,8 @@ integrates `f = a/d ∈ K(x)(…)(t)` when `t` is primitive.
 ## The carrier and the recursion
 
 * **Carrier.** The tower is the iterated computable fraction field `CFrac` over the computable field
-  `CField` / polynomial `CPoly` (see `ComputableAlgebra.Polynomial`). Level `n` is
-  `CPoly (CFracGⁿ K)`. Everything is `native_decide`-executable.
+  `CField` / polynomial `DensePoly` (see `ComputableAlgebra.Polynomial`). Level `n` is
+  `DensePoly (CFracGⁿ K)`. Everything is `native_decide`-executable.
 * **The solver interface** is the class `LawfulRischLevelLrt` (`RischTowerLrt`). It bundles the
   per-level computable case hook (`case : MonomialCase`) with its soundness fields. `LawfulX`/`X` idiom:
   the computable half reduces; the abstract soundness lives in the lawful half.

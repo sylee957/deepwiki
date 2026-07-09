@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -30,7 +30,7 @@ def cnatCast : ℕ → α
 
 /-- Generic Lagrange basis numerator `clagNum zs = ∏ⱼ (z − zⱼ)` over abscissas `zs`, built from the
 degree-1 factors `[−zⱼ, 1]` via `cmul`. -/
-def clagNum : List α → CPoly α
+def clagNum : List α → DensePoly α
   | [] => [CField.one]
   | z :: zs => cmul [CField.neg z, CField.one] (clagNum zs)
 
@@ -48,9 +48,9 @@ def clagNum : List α → CPoly α
 /-- Generic Lagrange interpolation `cinterpolate pts = R(z)` with `R(zₖ) = yₖ` for each
 `(zₖ, yₖ) ∈ pts` (distinct abscissas, over the field `α`): `∑ₖ yₖ · ∏_{j≠k}(z − zⱼ)/(zₖ − zⱼ)`. The
 scalar `1/∏(zₖ − zⱼ)` is a `CField.inv`; the per-term polynomial uses `cmul`/`cscale`/`cadd`. -/
-def cinterpolate (pts : List (α × α)) : CPoly α :=
+def cinterpolate (pts : List (α × α)) : DensePoly α :=
   let zs := pts.map Prod.fst
-  let term : α × α → CPoly α := fun (zk, yk) =>
+  let term : α × α → DensePoly α := fun (zk, yk) =>
     let others := zs.filter (fun zj => CField.isZero (CField.sub zj zk) = false)
     let num := clagNum others
     let denom := others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one
@@ -108,7 +108,7 @@ theorem eval_toPolyG_termG_at_other (zk yk x : α) (others : List α) (hx : x �
   rw [this, mul_zero]
 
 /-- The `cinterpolate` local `term` function for a points list with abscissas `zs`. -/
-private def cinterpTerm (zs : List α) (p : α × α) : CPoly α :=
+private def cinterpTerm (zs : List α) (p : α × α) : DensePoly α :=
   cscale (CField.div p.2 ((zs.filter (fun zj => CField.isZero (CField.sub zj p.1) = false)).foldl
       (fun acc zj => CField.mul acc (CField.sub p.1 zj)) CField.one))
     (clagNum (zs.filter (fun zj => CField.isZero (CField.sub zj p.1) = false)))
@@ -242,7 +242,7 @@ example (pts : List (α × α)) (hnodup : (pts.map (fun p => CFieldSpec.toK p.1)
     (toPoly (cinterpolate pts)).eval (CFieldSpec.toK zk) = CFieldSpec.toK yk :=
   eval_toPolyG_cinterpolateG pts hnodup hmem
 
-end CPoly
+end DensePoly
 
 /-! ### The seed-generic abstract Rothstein-Trager resultant `R(z) = res_t(d, a - z*Dd)` -/
 

@@ -13,7 +13,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPoly
+open RadElem DensePoly
 
 /-! ### Gaussian elimination over ℚ: a nonzero kernel vector of a ℚ-matrix
 
@@ -44,15 +44,15 @@ def qxMonomial (k : ℕ) : CFrac ℚ := qMonomial k
 radMul(N, integrand)·D` in `(CFrac ℚ)[y]/(y² − ρ)`, whose vanishing says `∫(integrand) dx = log(N/D)`;
 `ℚ`-linear in `N`. The `ℚ`-base specialization of `radLogResidual` (which uses the actual base-field
 derivation `CDiffField.cderiv`, agreeing with the formal `cderiv` on the untowered base `ℚ(x)`). -/
-def radLogResidualQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : CPoly ℚ)
+def radLogResidualQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
     (N : RadElem (CFrac ℚ)) : RadElem (CFrac ℚ) :=
   radLogResidual ρ integrand D N
 
 /-- The numerator coefficient list `qxNum z = z.1.1 ∈ ℚ[x]` of a ℚ(x) element — specialization of `qNum`. -/
-def qxNum (z : CFrac ℚ) : CPoly ℚ := qNum z
+def qxNum (z : CFrac ℚ) : DensePoly ℚ := qNum z
 
 /-- The denominator coefficient list `qxDen z = z.1.2 ∈ ℚ[x]` of a ℚ(x) element — specialization of `qDen`. -/
-def qxDen (z : CFrac ℚ) : CPoly ℚ := qDen z
+def qxDen (z : CFrac ℚ) : DensePoly ℚ := qDen z
 
 /-- The monomial basis `radLogBasisQ degBound` for the ansatz `N = a₀ + a₁·y`: the `2·(degBound+1)`
 elements `[xᵏ, 0]` then `[0, xᵏ]`, giving the matrix columns — specialization of `radLogBasis`. -/
@@ -62,7 +62,7 @@ def radLogBasisQ (degBound : ℕ) : List (RadElem (CFrac ℚ)) :=
 /-- The `ℚ`-matrix of the cleared log-derivative system: for each basis column `Nⱼ`, the residual's
 cleared numerators `Pᵢⱼ` (common denominator across columns), one row per `x`-power per component, one
 column per basis index; a kernel vector gives the coefficients of a solving `N`. -/
-def radLogMatrixQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : CPoly ℚ)
+def radLogMatrixQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
     (degBound : ℕ) : List (List ℚ) × ℕ :=
   radLogMatrix ρ integrand D degBound
 
@@ -71,7 +71,7 @@ def radLogMatrixQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : CPoly 
 /-- Solve for the log argument: `radLogArgSolveQ ρ integrand D degBound = some N` with `N = a₀ + a₁·y`
 (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel vector of the
 `ℚ`-matrix `radLogMatrixQ` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. -/
-def radLogArgSolveQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : CPoly ℚ)
+def radLogArgSolveQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
     (degBound : ℕ) : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolve ρ integrand D degBound
 

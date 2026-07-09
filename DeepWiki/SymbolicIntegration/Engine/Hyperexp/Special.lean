@@ -14,7 +14,7 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
@@ -29,7 +29,7 @@ rational parts. -/
 Canonical-splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrates the Laurent part `fₚ + b/dₛ` by
 `cIntegrateHyperexpLaurent` and the normal part `cₙ/dₙ` by `cIntegrateReduced`, and combines the
 rational parts; `none` if the Laurent integration fails. -/
-def cIntegrateHyperexp (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
+def cIntegrateHyperexp (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) :
     Option (IntegralResult α) :=
   let η : α := cExpEta Dt
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
@@ -44,27 +44,27 @@ def cIntegrateHyperexp (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
     let den := cmul lden gden
     some ⟨(num, den), nrm.logs⟩
 
-end CPoly
+end DensePoly
 
 /-! ### Validation: `∫ 1/exp = −1/exp` at a hyperexponential tower level
 
 `f = t⁻¹ = 1/exp` over `ℚ(x)[t]` (`t = exp x`, `Dt = η·t`, `η = 1`) canonical-splits into the special part
 `fₛ = 1/t` (`a₋₁ = 1`), whose base RDE `crischDESolve (−1) 1` gives `q₋₁ = −1`, so `∫ t⁻¹ = −1/t`. -/
 
-open CPoly
+open DensePoly
 
 /-- Base field `Lvl1 = CFrac ℚ = ℚ(x)` over which the hyperexponential monomial `t = exp x` sits. -/
 abbrev Lvl1 : Type := CFrac ℚ
 
-/-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `CPoly Lvl1 = ℚ(x)[t]` (`t = exp x`,
+/-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `DensePoly Lvl1 = ℚ(x)[t]` (`t = exp x`,
 `η = 1`). -/
-def hyperexpDt : CPoly Lvl1 := [CField.zero, CField.one]
+def hyperexpDt : DensePoly Lvl1 := [CField.zero, CField.one]
 
-/-- Integrand numerator `a = 1` over `CPoly Lvl1 = ℚ(x)[t]` for `f = 1/t = 1/exp`. -/
-def hyperexpInvA : CPoly Lvl1 := [CField.one]
+/-- Integrand numerator `a = 1` over `DensePoly Lvl1 = ℚ(x)[t]` for `f = 1/t = 1/exp`. -/
+def hyperexpInvA : DensePoly Lvl1 := [CField.one]
 
-/-- Integrand denominator `d = t = [0, 1]` over `CPoly Lvl1 = ℚ(x)[t]` for `f = 1/t = 1/exp`. -/
-def hyperexpInvD : CPoly Lvl1 := [CField.zero, CField.one]
+/-- Integrand denominator `d = t = [0, 1]` over `DensePoly Lvl1 = ℚ(x)[t]` for `f = 1/t = 1/exp`. -/
+def hyperexpInvD : DensePoly Lvl1 := [CField.zero, CField.one]
 
 /-- Residue candidate set `{0, 1}` as `Lvl1 = ℚ(x)` constants for the `1/exp` integral (no genuine
 residues). -/
@@ -78,8 +78,8 @@ theorem hyperexp_eta_eq_one :
 `cIntegrateHyperexp` returns `some res` with rational part `−1/t` and no logs, satisfying
 `checkIdentity`. -/
 theorem hyperexpInv_landsSpecialPart :
-    (match CPoly.cIntegrateHyperexp hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
-      | some res => CPoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
+    (match DensePoly.cIntegrateHyperexp hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
+      | some res => DensePoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
       | none => false) = true := by native_decide
 
 #print axioms hyperexpInv_landsSpecialPart
@@ -89,18 +89,18 @@ theorem hyperexpInv_landsSpecialPart :
 Over `ℚ(x)[t]` (`t = exp`, `Dt = t`), `f = t + t⁻¹` has `fₚ = t` (`a₁ = 1`) and `fₛ = t⁻¹` (`a₋₁ = 1`); the
 per-term RDEs give `q₁ = 1`, `q₋₁ = −1`, so `∫(t + t⁻¹) = t − t⁻¹`. Assembled as `f = (t²+1)/t`. -/
 
-/-- Integrand numerator `a = t² + 1` for `f = (t²+1)/t = t + 1/t = exp + 1/exp` over `CPoly Lvl1`. -/
-def hyperexpPolySpecA : CPoly Lvl1 := [CField.one, CField.zero, CField.one]
+/-- Integrand numerator `a = t² + 1` for `f = (t²+1)/t = t + 1/t = exp + 1/exp` over `DensePoly Lvl1`. -/
+def hyperexpPolySpecA : DensePoly Lvl1 := [CField.one, CField.zero, CField.one]
 
-/-- Integrand denominator `d = t` for `f = (t²+1)/t` over `CPoly Lvl1`. -/
-def hyperexpPolySpecD : CPoly Lvl1 := [CField.zero, CField.one]
+/-- Integrand denominator `d = t` for `f = (t²+1)/t` over `DensePoly Lvl1`. -/
+def hyperexpPolySpecD : DensePoly Lvl1 := [CField.zero, CField.one]
 
 /-- The driver lands `∫(exp + 1/exp) = exp − 1/exp` with `D(∫f) = f`: `cIntegrateHyperexp` integrates each
 term (`q₁ = 1`, `q₋₁ = −1`), recombining to `t − t⁻¹` satisfying `checkIdentity`. -/
 theorem hyperexpPolySpec_lands :
-    (match CPoly.cIntegrateHyperexp hyperexpDt hyperexpPolySpecA hyperexpPolySpecD
+    (match DensePoly.cIntegrateHyperexp hyperexpDt hyperexpPolySpecA hyperexpPolySpecD
         hyperexpInvCands with
-      | some res => CPoly.checkIdentity hyperexpDt res hyperexpPolySpecA hyperexpPolySpecD
+      | some res => DensePoly.checkIdentity hyperexpDt res hyperexpPolySpecA hyperexpPolySpecD
       | none => false) = true := by native_decide
 
 /-! ### A special + normal mix — the special part lands, the normal log part overshoots
@@ -109,11 +109,11 @@ On `f = t⁻¹ + 1/(t−1)` over `ℚ(x)[t]` (`t = exp`, `Dt = t`), `cIntegrateH
 `−1/t` but its normal log part `log(t−1)` overshoots `1/(t−1)` by the residual `R = 1`, so the full-`f`
 identity fails — closed by the residual-feedback driver elsewhere. -/
 
-/-- Integrand numerator `a = 2t − 1` for `f = (2t−1)/(t²−t) = 1/t + 1/(t−1)` over `CPoly Lvl1`. -/
-def hyperexpSpecNormA : CPoly Lvl1 := [CField.neg CField.one, CField.add CField.one CField.one]
+/-- Integrand numerator `a = 2t − 1` for `f = (2t−1)/(t²−t) = 1/t + 1/(t−1)` over `DensePoly Lvl1`. -/
+def hyperexpSpecNormA : DensePoly Lvl1 := [CField.neg CField.one, CField.add CField.one CField.one]
 
-/-- Integrand denominator `d = t² − t = t(t−1)` for `f = (2t−1)/(t²−t)` over `CPoly Lvl1`. -/
-def hyperexpSpecNormD : CPoly Lvl1 := [CField.zero, CField.neg CField.one, CField.one]
+/-- Integrand denominator `d = t² − t = t(t−1)` for `f = (2t−1)/(t²−t)` over `DensePoly Lvl1`. -/
+def hyperexpSpecNormD : DensePoly Lvl1 := [CField.zero, CField.neg CField.one, CField.one]
 
 /-- Residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for the special+normal mix. -/
 def hyperexpSpecNormCands : List Lvl1 := [CField.zero, CField.one, CField.neg CField.one]
@@ -121,15 +121,15 @@ def hyperexpSpecNormCands : List Lvl1 := [CField.zero, CField.one, CField.neg CF
 /-- The driver runs on the special+normal integrand `f = t⁻¹ + 1/(t−1)`: `cIntegrateHyperexp` returns
 `some` (the normal log part overshoots, so the full-`f` identity does not hold). -/
 theorem hyperexpSpecNorm_runs :
-    (CPoly.cIntegrateHyperexp hyperexpDt hyperexpSpecNormA hyperexpSpecNormD
+    (DensePoly.cIntegrateHyperexp hyperexpDt hyperexpSpecNormA hyperexpSpecNormD
       hyperexpSpecNormCands).isSome = true := by native_decide
 
 /-- The special part `1/t` of the special+normal integrand integrates exactly: its special part is exactly
 the inverse integrand (`a = 1`, `d = t`), so this is `hyperexpInv_landsSpecialPart` — `cIntegrateHyperexp`
 gives `−1/t` satisfying `checkIdentity`. -/
 theorem hyperexpSpecNorm_specialPart_exact :
-    (match CPoly.cIntegrateHyperexp hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
-      | some res => CPoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
+    (match DensePoly.cIntegrateHyperexp hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
+      | some res => DensePoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
       | none => false) = true := hyperexpInv_landsSpecialPart
 
 #print axioms hyperexpSpecNorm_runs

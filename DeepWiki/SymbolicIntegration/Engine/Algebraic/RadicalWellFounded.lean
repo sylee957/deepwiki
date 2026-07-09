@@ -14,9 +14,9 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPoly
+open RadElem DensePoly
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
@@ -29,8 +29,8 @@ multiplicity `k`. -/
 (Crem, vNumOut)`: at `k ≥ 2` solve the cofactor `B = radCase1Cofactor`, form the residual
 `D = radCase1Residual`, accumulate `B·f·V^{k0−k}` into `vNum`, and recurse on `−D` at `k − 1`;
 bottom at `k ≤ 1` returning `(C, vNum)`. Well-founded on `k`; `[CField α]`-only. -/
-def radReduceCase1IterateWf (der : CPoly α → CPoly α) (V Df f g : CPoly α) (k0 : ℕ) :
-    ℕ → CPoly α → CPoly α → CPoly α × CPoly α
+def radReduceCase1IterateWf (der : DensePoly α → DensePoly α) (V Df f g : DensePoly α) (k0 : ℕ) :
+    ℕ → DensePoly α → DensePoly α → DensePoly α × DensePoly α
   | k, C, vNum =>
     if hk : k ≤ 1 then (C, vNum)
     else
@@ -45,8 +45,8 @@ decreasing_by exact Nat.sub_lt (Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.lt_of_no
 /-- Case-1 simple-radical rational-part driver `radIntegrateCase1Wf der V f g k0 C = (Crem, vNum)`:
 run `radReduceCase1IterateWf` with `Df = der V` from multiplicity `k0` down to `1`. Master identity
 `∫ C/(V^{k0}y) = vNum/(V^{k0−1}y) + ∫ Crem/(Vy)`. -/
-def radIntegrateCase1Wf (der : CPoly α → CPoly α) (V f g : CPoly α) (k0 : ℕ) (C : CPoly α) :
-    CPoly α × CPoly α :=
+def radIntegrateCase1Wf (der : DensePoly α → DensePoly α) (V f g : DensePoly α) (k0 : ℕ) (C : DensePoly α) :
+    DensePoly α × DensePoly α :=
   radReduceCase1IterateWf der V (der V) f g k0 k0 C []
 
 /-! ## The Case-2 Hermite descent `radReduceCase2IterateWf`
@@ -59,8 +59,8 @@ at `k ≥ 2` solve the cofactor `B = radCase2CofactorC`, form the residual `D = 
 accumulate `B·ρ·W^{k0−k}` into `vNum`, and recurse on `−D` at `k − 1`; bottom at `k ≤ 1` returning
 `(C, vNum)`. `W` a squarefree factor of the radicand `ρ`, `h = ρ/W`. Well-founded on `k`;
 `[CField α]`-only. -/
-def radReduceCase2IterateWf (W h ρ : CPoly α) (k0 : ℕ) :
-    ℕ → CPoly α → CPoly α → CPoly α × CPoly α
+def radReduceCase2IterateWf (W h ρ : DensePoly α) (k0 : ℕ) :
+    ℕ → DensePoly α → DensePoly α → DensePoly α × DensePoly α
   | k, C, vNum =>
     if hk : k ≤ 1 then (C, vNum)
     else
@@ -74,7 +74,7 @@ decreasing_by exact Nat.sub_lt (Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.lt_of_no
 /-- Case-2 simple-radical rational-part driver `radIntegrateCase2Wf W ρ k0 C = (Crem, vNum)`: run
 `radReduceCase2IterateWf` with `h = cdivWf ρ W` from multiplicity `k0` down to `1`. Master identity
 `∫ C/(W^{k0}y) = vNum/(W^{k0}y) + ∫ Crem/(Wy)`. -/
-def radIntegrateCase2Wf (W ρ : CPoly α) (k0 : ℕ) (C : CPoly α) : CPoly α × CPoly α :=
+def radIntegrateCase2Wf (W ρ : DensePoly α) (k0 : ℕ) (C : DensePoly α) : DensePoly α × DensePoly α :=
   radReduceCase2IterateWf W (cdivWf ρ W) ρ k0 k0 C []
 
 /-! ## The Case-3 (`C/y`) degree-lowering `radReduceCase3IterateWf`
@@ -88,8 +88,8 @@ recursion is taken only under a structural length-drop guard. -/
 (or `C = 0`) returning `(C, vNum)`. Well-founded on `(cnorm C).length` under the structural
 length-drop guard (on a real run the leading term cancels, so the guard always holds). `der` the base
 derivation, `f` the radicand, `g` from `(f/y)' = g/y`. `[CField α]`-only. -/
-def radReduceCase3IterateWf (der : CPoly α → CPoly α) (f g : CPoly α) :
-    CPoly α → CPoly α → CPoly α × CPoly α
+def radReduceCase3IterateWf (der : DensePoly α → DensePoly α) (f g : DensePoly α) :
+    DensePoly α → DensePoly α → DensePoly α × DensePoly α
   | C, vNum =>
     if cisZero C || cdeg C < cdeg f then (C, vNum)
     else
@@ -103,7 +103,7 @@ decreasing_by assumption
 
 /-- Case-3 simple-radical rational-part driver `radIntegrateCase3Wf der f g C = (Crem, vNum)`: the
 `C/y` degree-lowering from an empty accumulator. Master identity `∫ C/y = vNum/y + ∫ Crem/y`. -/
-def radIntegrateCase3Wf (der : CPoly α → CPoly α) (f g C : CPoly α) : CPoly α × CPoly α :=
+def radIntegrateCase3Wf (der : DensePoly α → DensePoly α) (f g C : DensePoly α) : DensePoly α × DensePoly α :=
   radReduceCase3IterateWf der f g C []
 
 /-! ## The multi-case dispatch `radIntegrateRationalWf` -/
@@ -114,20 +114,20 @@ factor into its `V`-part / `W`-part (`cgcdWf`/`cdivWf` against `ρ`), partial-fr
 (`radPartialFractionCoprime`), and dispatch each summand to the Case-1 / Case-2 Hermite descent.
 Returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`. `[CFracGcdCoreWf α]` supplies
 the squarefree factorization. -/
-def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : CPoly α) :
-    List (Bool × CPoly α × ℕ × CPoly α × CPoly α × CPoly α) :=
-  let g : CPoly α := cscale (CField.div CField.one (cnatCast 2)) (cderiv ρ)   -- `½·ρ'` (n = 2)
-  let factored : List (CPoly α × ℕ) :=
+def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : DensePoly α) :
+    List (Bool × DensePoly α × ℕ × DensePoly α × DensePoly α × DensePoly α) :=
+  let g : DensePoly α := cscale (CField.div CField.one (cnatCast 2)) (cderiv ρ)   -- `½·ρ'` (n = 2)
+  let factored : List (DensePoly α × ℕ) :=
     (cSqfreeYunFF B).zipIdx.filterMap (fun (Bi, i) =>
       if cdeg Bi = 0 then none else some (Bi, i + 1))
-  let split : List (Bool × CPoly α × ℕ) :=
+  let split : List (Bool × DensePoly α × ℕ) :=
     factored.flatMap (fun (Bi, e) =>
       let Wi := cmonic (cgcdWf Bi ρ).1
       let Vi := cdivWf Bi Wi
       (if cdeg Vi = 0 then [] else [(true, Vi, e)]) ++
       (if cdeg Wi = 0 then [] else [(false, Wi, e)]))
-  let primePowers : List (CPoly α) := split.map (fun (_, fi, e) => cpow fi e)
-  let nums : List (CPoly α) := radPartialFractionCoprime R primePowers
+  let primePowers : List (DensePoly α) := split.map (fun (_, fi, e) => cpow fi e)
+  let nums : List (DensePoly α) := radPartialFractionCoprime R primePowers
   (split.zip nums).map (fun ((isV, fi, e), Ni) =>
     if isV then
       let (Crem, vNum) := radReduceCase1IterateWf cderiv fi (cderiv fi) ρ g e e Ni []
@@ -136,7 +136,7 @@ def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : CPoly α) :
       let (Crem, vNum) := radReduceCase2IterateWf fi (cdivWf ρ fi) ρ e e Ni []
       (false, fi, e, Ni, vNum, Crem))
 
-end CPoly
+end DensePoly
 
 /-! ### The unified algebraic integrator `cIntegrateAlgebraicWf` (radical top-level) -/
 
@@ -144,11 +144,11 @@ end CPoly
 `∫ R/(B·y) dx = v + c·log u` (principal case). Computes the rational part `v` by the multi-case
 dispatch (`radIntegrateRationalWf` + `radAssembleRatPart`), then solves the log argument on
 `residual` (`radLogArgSolveQ ρ residual D degBound`); on `none` returns just the rational part. -/
-def cIntegrateAlgebraicWf (ρ : CFrac ℚ) (R B : CPoly ℚ)
-    (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : CPoly ℚ) (degBound : ℕ) :
+def cIntegrateAlgebraicWf (ρ : CFrac ℚ) (R B : DensePoly ℚ)
+    (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) :
     AlgIntegralResult (CFrac ℚ) :=
-  let ρpoly : CPoly ℚ := qxNum ρ
-  let runs := CPoly.radIntegrateRationalWf ρpoly R B
+  let ρpoly : DensePoly ℚ := qxNum ρ
+  let runs := DensePoly.radIntegrateRationalWf ρpoly R B
   let v := radAssembleRatPart ρ runs
   match radLogArgSolveQ ρ residual D degBound with
   | none => ⟨v, []⟩

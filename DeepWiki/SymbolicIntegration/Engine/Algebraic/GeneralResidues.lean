@@ -14,11 +14,11 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPoly
+namespace DensePoly
 
 variable {α : Type*} [CField α]
 
-/-! ### Reading a `K(x)`-value that is a polynomial back as `K[x] = CPoly ℚ`
+/-! ### Reading a `K(x)`-value that is a polynomial back as `K[x] = DensePoly ℚ`
 
 The inner `res_Y` lands in `α = K(x) = CFrac ℚ`. When `F` is monic in `y` the resultant is a genuine
 *polynomial* in `x`, so the `CFrac ℚ` value is `numerator/denominator` with the denominator a nonzero
@@ -29,23 +29,23 @@ literally `1`). `qToPolyQ` recovers the `ℚ[x]`-polynomial by the exact divisio
 /-- `qToPolyQ v = numerator(v) / denominator(v)` (`cdivWf` over ℚ): read a `CFrac ℚ` value as a
 `ℚ[x]`-polynomial. Faithful exactly when `denominator(v) ∣ numerator(v)` — true for the inner
 `res_Y` against a `y`-monic `F`, which is a polynomial in `x` with a constant denominator. -/
-def qToPolyQ (v : CFrac ℚ) : CPoly ℚ :=
+def qToPolyQ (v : CFrac ℚ) : DensePoly ℚ :=
   cdivWf v.1.1 v.1.2
 
 /-! ### The inner `res_Y(Z·D' − g, F)` at a rational `Z`-node -/
 
 /-- `zDderMinus g Dder z`: the `y`-polynomial `z·D'(x) − g(x, y)` at a rational node `z` — the
-constant-in-`y` term `z·D'(x)` (`qxOfNum [z] · Dder`, a singleton `CPoly`) minus `g`. Its only
+constant-in-`y` term `z·D'(x)` (`qxOfNum [z] · Dder`, a singleton `DensePoly`) minus `g`. Its only
 `Z`-dependent coefficient is the `y⁰` one, so `res_Y` of this against `F` has `Z`-degree
 `≤ deg_y F = n`. `Dder = D'(x) ∈ K(x)` is supplied by the caller. -/
-def zDderMinus (g : CPoly (CFrac ℚ)) (Dder : CFrac ℚ) (z : ℚ) : CPoly (CFrac ℚ) :=
+def zDderMinus (g : DensePoly (CFrac ℚ)) (Dder : CFrac ℚ) (z : ℚ) : DensePoly (CFrac ℚ) :=
   csub [CField.mul (qxOfNum [z]) Dder] g
 
 /-- `resYAtNode f g Dder z = res_Y(z·D'(X) − g(X, Y), F(X, Y))` at the rational node `Z = z`,
 read as a `ℚ[X]`-polynomial: the resultant in `y` (`cresultantG fuelY` over the field
-`α = CFrac ℚ`) of `zDderMinus g Dder z` against the monic curve `f`, recovered as `CPoly ℚ` by
+`α = CFrac ℚ`) of `zDderMinus g Dder z` against the monic curve `f`, recovered as `DensePoly ℚ` by
 `qToPolyQ`. The general-curve replacement for the `n = 2` norm `(z·D' − g₀)² − g₁²·ρ`. -/
-def resYAtNode (f g : CPoly (CFrac ℚ)) (Dder : CFrac ℚ) (z : ℚ) : CPoly ℚ :=
+def resYAtNode (f g : DensePoly (CFrac ℚ)) (Dder : CFrac ℚ) (z : ℚ) : DensePoly ℚ :=
   qToPolyQ (cresultantWf (zDderMinus g Dder z) f)
 
 /-! ### The full general-`F` residue resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)`
@@ -68,15 +68,15 @@ D(X))`, in the residue indeterminate `Z`. Computed by evaluation + interpolation
 `z = 0, …, n·deg_X D`, the inner `res_Y` (`resYAtNode`) gives `res_Y(z·D' − g, F)`, then `res_X(·, D)`
 gives `R(z) ∈ ℚ`, and `cinterpolate` recovers `R(Z)`; `deg_Z R ≤ n·deg_X D` (`n = deg_y f`). Generalizes
 `cAlgResidueResultant`'s hyperelliptic norm shortcut. `Dder = D'(x) ∈ K(x)` supplied by the caller. -/
-def genResidueResultant (f g : CPoly (CFrac ℚ)) (Dder : CFrac ℚ)
-    (D : CPoly ℚ) : CPoly ℚ :=
+def genResidueResultant (f g : DensePoly (CFrac ℚ)) (Dder : CFrac ℚ)
+    (D : DensePoly ℚ) : DensePoly ℚ :=
   let nNodes := cdeg f * cdeg D + 1                        -- `deg_Z R ≤ n · deg_X D`
   let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
     let z : ℚ := (k : ℚ)
     (z, cresultantWf (resYAtNode f g Dder z) D))
   cinterpolate pts
 
-end CPoly
+end DensePoly
 
 /-! ### Example: the trigonal curve `F = y³ + x·y + x` (`n = 3`)
 
@@ -85,30 +85,30 @@ A non-hyperelliptic cubic curve over `K(x) = CFrac ℚ`. With `g = y` and `D = x
 `F(1, y) = y³ + y + 1` and `R(Z) = F(1, Z) = Z³ + Z + 1`. The inner elimination is the full bivariate
 `res_Y`, giving a residue that depends on the sheet `y₀`. -/
 
-open CPoly
+open DensePoly
 
-/-- The trigonal curve `F = y³ + x·y + x ∈ K(x)[y]` as `CPoly (CFrac ℚ)` `[x, x, 0, 1]` — the `n = 3`
+/-- The trigonal curve `F = y³ + x·y + x ∈ K(x)[y]` as `DensePoly (CFrac ℚ)` `[x, x, 0, 1]` — the `n = 3`
 non-hyperelliptic curve. -/
-def genResTrigF : CPoly (CFrac ℚ) :=
+def genResTrigF : DensePoly (CFrac ℚ) :=
   [qxOfNum [0, 1], qxOfNum [0, 1], CField.zero, CField.one]
 
-/-- The bivariate numerator `g = y` on the trigonal curve (`CPoly (CFrac ℚ)` `[0, 1]`); its residue
+/-- The bivariate numerator `g = y` on the trigonal curve (`DensePoly (CFrac ℚ)` `[0, 1]`); its residue
 `y₀/D'` depends on the sheet, so `res_Y` cannot collapse to a norm. -/
-def genResTrig : CPoly (CFrac ℚ) := [CField.zero, CField.one]
+def genResTrig : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
 
-/-- The denominator `D = x − 1` (`CPoly ℚ` `[−1, 1]`): one simple pole at `x = 1`. -/
-def genResTrigD : CPoly ℚ := [-1, 1]
+/-- The denominator `D = x − 1` (`DensePoly ℚ` `[−1, 1]`): one simple pole at `x = 1`. -/
+def genResTrigD : DensePoly ℚ := [-1, 1]
 
 /-- The denominator derivative `D'(x) = 1 ∈ K(x)` (`qxOfNum [1]`). -/
 def genResTrigDder : CFrac ℚ := qxOfNum [1]
 
 /-- The computed general residue resultant `R(Z)` for `∫ (y/(x−1)) dx` on `y³ + xy + x = 0`. -/
-def genResTrigR : CPoly ℚ :=
+def genResTrigR : DensePoly ℚ :=
   genResidueResultant genResTrigF genResTrig genResTrigDder genResTrigD
 
 /-- The expected `R(Z) = F(1, Z) = Z³ + Z + 1` (low→high in `Z`, `[1, 1, 0, 1]`): the residues are the
 three roots `y₀` of the curve fiber `F(1, y) = y³ + y + 1`. -/
-def genResTrigExpected : CPoly ℚ := [1, 1, 0, 1]
+def genResTrigExpected : DensePoly ℚ := [1, 1, 0, 1]
 
 /-- The full double resultant on the trigonal cubic: for `∫ (y/(x − 1)) dx` on the non-hyperelliptic
 `y³ + xy + x = 0` (`n = 3`), `genResidueResultant` produces `R(Z) = Z³ + Z + 1 = F(1, Z)`, the curve
@@ -126,17 +126,17 @@ theorem genResTrig_zero_not_residue :
 For the same trigonal curve with `g = 1` and `D = x − 1`, the residue at each of the three places above
 `x = 1` is the same `g/D' = 1`, so `R(Z) = (Z − 1)³` (a triple root at the common residue `1`). -/
 
-/-- The constant-in-`y` numerator `g = 1` on the trigonal curve (`CPoly (CFrac ℚ)` `[1]`): `f = 1/D`
+/-- The constant-in-`y` numerator `g = 1` on the trigonal curve (`DensePoly (CFrac ℚ)` `[1]`): `f = 1/D`
 has the same residue on every sheet. -/
-def genResTrigG1 : CPoly (CFrac ℚ) := [CField.one]
+def genResTrigG1 : DensePoly (CFrac ℚ) := [CField.one]
 
 /-- The computed `R(Z)` for `∫ dx/(x − 1)` on the trigonal curve `y³ + xy + x = 0`. -/
-def genResTrigR1 : CPoly ℚ :=
+def genResTrigR1 : DensePoly ℚ :=
   genResidueResultant genResTrigF genResTrigG1 genResTrigDder genResTrigD
 
 /-- The expected `R(Z) = (Z − 1)³ = Z³ − 3Z² + 3Z − 1` (low→high, `[−1, 3, −3, 1]`): the common residue
 `1` on all three sheets, with multiplicity `n = 3`. -/
-def genResTrigExpected1 : CPoly ℚ := [-1, 3, -3, 1]
+def genResTrigExpected1 : DensePoly ℚ := [-1, 3, -3, 1]
 
 /-- The double resultant gives `(Z − 1)³` for the sheet-independent residue: for `∫ dx/(x − 1)` on
 `y³ + xy + x = 0` (`g = 1`), `genResidueResultant` produces `R(Z) = (Z − 1)³`, the residue `1` repeated
@@ -154,16 +154,16 @@ On the simple radical case `y² = x` with `g = y`, `D = x² − x`, the general 
 `res_Y`) and the dedicated hyperelliptic `cAlgResidueResultant` (norm `(Z·D' − g₀)² − g₁²·ρ`) both give
 `R(Z) = Z⁴ − Z²`: the general double resultant contains the hyperelliptic norm as the `n = 2` case. -/
 
-/-- The hyperelliptic curve `F = y² − x ∈ K(x)[y]` as a general-carrier polynomial (`CPoly (CFrac ℚ)`
+/-- The hyperelliptic curve `F = y² − x ∈ K(x)[y]` as a general-carrier polynomial (`DensePoly (CFrac ℚ)`
 `[−x, 0, 1]`, `ρ = x`) — the `cAlgResidueResultant` example `y = √x`, as a `genResidueResultant` curve. -/
-def genResHypF : CPoly (CFrac ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
+def genResHypF : DensePoly (CFrac ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
 
-/-- The numerator `g = y` on `y² = x` (`CPoly (CFrac ℚ)` `[0, 1]`; `g₀ = 0`, `g₁ = 1`). -/
-def genResHyp : CPoly (CFrac ℚ) := [CField.zero, CField.one]
+/-- The numerator `g = y` on `y² = x` (`DensePoly (CFrac ℚ)` `[0, 1]`; `g₀ = 0`, `g₁ = 1`). -/
+def genResHyp : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
 
 /-- The denominator `D = x² − x ∈ ℚ[x]` (`[0, −1, 1]`) and its derivative `D' = 2x − 1 ∈ K(x)`
 (`qxOfNum [−1, 2]`). -/
-def genResHypD : CPoly ℚ := [0, -1, 1]
+def genResHypD : DensePoly ℚ := [0, -1, 1]
 
 /-- `D'(x) = 2x − 1 ∈ K(x)` for the hyperelliptic conservativity check. -/
 def genResHypDder : CFrac ℚ := qxOfNum [-1, 2]

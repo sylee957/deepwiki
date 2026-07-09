@@ -12,7 +12,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPoly
+open RadElem DensePoly
 
 /-! ### Division in the radical extension `α[y]/(y² − ρ)` (`n = 2`) and the log-derivative -/
 
@@ -99,7 +99,7 @@ example (ρ : CFrac ℚ) (F : AlgIntegralResult (CFrac ℚ)) : algDerivQ ρ F = 
 
 /-- **Assemble the rational part `v` from a multi-case dispatch run**. -/
 def radAssembleRatPart (ρ : CFrac ℚ)
-    (runs : List (Bool × CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ)) : RadElem (CFrac ℚ) :=
+    (runs : List (Bool × DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePoly ℚ)) : RadElem (CFrac ℚ) :=
   runs.foldl
     (fun acc (isV, fi, e, _, vNum, _) =>
       let denomPow := if isV then cpow fi (e - 1) else cpow fi e
@@ -113,10 +113,10 @@ def radAssembleRatPart (ρ : CFrac ℚ)
 def rtRatRho : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- Rational-only round-trip numerator `R = 1`. -/
-def rtRatR : CPoly ℚ := [1]
+def rtRatR : DensePoly ℚ := [1]
 
 /-- Rational-only round-trip denominator `B = (x−1)²`. -/
-def rtRatB : CPoly ℚ := cpow [-1, 1] 2
+def rtRatB : DensePoly ℚ := cpow [-1, 1] 2
 
 /-- A non-principal residual for the rational-only log solve. -/
 def rtRatNonPrincipalResidual : RadElem (CFrac ℚ) := radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CField.one
@@ -131,16 +131,16 @@ def rtLogXRho : CFrac ℚ := qxOfNum [0, 1, 0, 1]
 def rtLogIntegrand : RadElem (CFrac ℚ) := radInvYLift rtLogXRho CField.one
 
 /-- The fixed log-solve denominator `D = x`. -/
-def rtLogD : CPoly ℚ := [0, 1]
+def rtLogD : DensePoly ℚ := [0, 1]
 
 /-- Combined round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
 def rtCombRho : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- Combined round-trip rational numerator `R = 1`. -/
-def rtCombR : CPoly ℚ := [1]
+def rtCombR : DensePoly ℚ := [1]
 
 /-- Combined round-trip rational denominator `B = (x−1)²`. -/
-def rtCombB : CPoly ℚ := cpow [-1, 1] 2
+def rtCombB : DensePoly ℚ := cpow [-1, 1] 2
 
 /-- The combined round-trip's log argument `u = x + y = [x, 1]`. -/
 def rtCombU : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CField.one]

@@ -41,14 +41,14 @@ open DeepWiki.SymbolicIntegration
 
 /-- `DivisorTorsionDecisionFrontier isTorsion` relates `elementarityViaTorsion` to `isTorsion`. -/
 def DivisorTorsionDecisionFrontier
-    (isTorsion : CPoly.MumfordDivisor ℚ → Prop) : Prop :=
-  ∀ (ρq : CPoly ℚ) (g : ℕ) (D : CPoly.MumfordDivisor ℚ),
+    (isTorsion : DensePoly.MumfordDivisor ℚ → Prop) : Prop :=
+  ∀ (ρq : DensePoly ℚ) (g : ℕ) (D : DensePoly.MumfordDivisor ℚ),
     ∃ (p : ℕ) (_ : Fact p.Prime),
       (elementarityViaTorsion p ρq g D = true ↔ isTorsion D)
 
 /-- `elementarityViaTorsion p ρq g D = true` iff `isTorsionDivisor` returns `some m`. -/
 theorem elementarityViaTorsion_iff_some (p : ℕ) [Fact p.Prime]
-    (ρq : CPoly ℚ) (g : ℕ) (D : CPoly.MumfordDivisor ℚ) :
+    (ρq : DensePoly ℚ) (g : ℕ) (D : DensePoly.MumfordDivisor ℚ) :
     elementarityViaTorsion p ρq g D = true
       ↔ ∃ m, isTorsionDivisor p ρq g D = some m := by
   unfold elementarityViaTorsion
@@ -56,7 +56,7 @@ theorem elementarityViaTorsion_iff_some (p : ℕ) [Fact p.Prime]
 
 /-- `(torsionLogTerm p ρ ρq g D).isSome = true` iff `isTorsionDivisor` returns `some m`. -/
 theorem torsionLogTerm_isSome_iff (p : ℕ) [Fact p.Prime]
-    (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g : ℕ) (D : CPoly.MumfordDivisor ℚ) :
+    (ρ : CFrac ℚ) (ρq : DensePoly ℚ) (g : ℕ) (D : DensePoly.MumfordDivisor ℚ) :
     (torsionLogTerm p ρ ρq g D).isSome = true
       ↔ ∃ m, isTorsionDivisor p ρq g D = some m := by
   unfold torsionLogTerm
@@ -72,7 +72,7 @@ section Assembly
 
 open DeepWiki.SymbolicIntegration
 
-variable (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g : ℕ) (D : CPoly.MumfordDivisor ℚ)
+variable (ρ : CFrac ℚ) (ρq : DensePoly ℚ) (g : ℕ) (D : DensePoly.MumfordDivisor ℚ)
 
 /-- `AlgebraicCompletenessResidual` bundles torsion detection and the elementarity criterion. -/
 structure AlgebraicCompletenessResidual (p : ℕ) [Fact p.Prime]
@@ -109,14 +109,14 @@ open DeepWiki.SymbolicIntegration
 
 -- ★ The decision-procedure equivalence: the engine emits a log term iff the integrand is elementary,
 -- modulo the two named deep frontiers (the Liouville criterion + the good-reduction torsion decision).
-example (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g : ℕ) (D : CPoly.MumfordDivisor ℚ)
+example (ρ : CFrac ℚ) (ρq : DensePoly ℚ) (g : ℕ) (D : DensePoly.MumfordDivisor ℚ)
     {isTorsion elem : Prop} (p : ℕ) [Fact p.Prime]
     (hres : AlgebraicCompletenessResidual ρq g D p isTorsion elem) :
     (torsionLogTerm p ρ ρq g D).isSome = true ↔ elem :=
   cIntegrateAlgebraicWf_complete_of_residual ρ ρq g D p hres
 
 -- ★ The headline "none ⟹ not elementary" for the algebraic integrator's log part, modulo the frontiers.
-example (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g : ℕ) (D : CPoly.MumfordDivisor ℚ)
+example (ρ : CFrac ℚ) (ρq : DensePoly ℚ) (g : ℕ) (D : DensePoly.MumfordDivisor ℚ)
     {isTorsion elem : Prop} (p : ℕ) [Fact p.Prime]
     (hres : AlgebraicCompletenessResidual ρq g D p isTorsion elem) (hne : ¬ elem) :
     (torsionLogTerm p ρ ρq g D).isNone = true :=
