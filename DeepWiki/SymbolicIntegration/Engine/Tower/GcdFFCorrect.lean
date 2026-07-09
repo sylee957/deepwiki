@@ -104,53 +104,42 @@ noncomputable def toGBCoeffPoly : GBPolyCore β → ((CFieldSpec.K β)[X])[X]
 @[simp] theorem toGBCoeffPoly_cons (a : CPoly β) (p : GBPolyCore β) :
     toGBCoeffPoly (a :: p) = Polynomial.C (CPoly.toPoly a) + Polynomial.X * toGBCoeffPoly p := rfl
 
+/-! The `GBPolyCore` bivariate denotation IS the generic keystone denotation at coefficient `CPoly β`
+(`GBPolyCore β = CPoly (CPoly β)`, `CRingSpec.R (CPoly β) = (CFieldSpec.K β)[X]`), so the `gb*Core`
+homomorphism satellites reduce to the generic `toPolyG_*` squares (each `gb*Core = c*` from `GcdFFCore`). -/
+
+/-- The bivariate denotation IS the generic one: `toGBCoeffPoly = CPoly.toPoly` at `CPoly (CPoly β)`. -/
+theorem toGBCoeffPoly_eq_toPolyG (p : GBPolyCore β) : toGBCoeffPoly p = CPoly.toPoly p := by
+  induction p with
+  | nil => rfl
+  | cons a as ih =>
+    rw [toGBCoeffPoly, ih, CPoly.toPolyG_cons, show CRingSpec.toR a = CPoly.toPoly a from rfl]
+
 /-- `toGBCoeffPoly` is additive: `gbaddCore` realizes `R[t]` addition. -/
 theorem toGBCoeffPoly_gbaddCore (p q : GBPolyCore β) :
     toGBCoeffPoly (gbaddCore p q) = toGBCoeffPoly p + toGBCoeffPoly q := by
-  induction p generalizing q with
-  | nil => simp [gbaddCore]
-  | cons a as ih =>
-    cases q with
-    | nil => simp [gbaddCore]
-    | cons b bs =>
-      simp only [gbaddCore, toGBCoeffPoly_cons, ih bs, denote, map_add]
-      ring
+  simp only [toGBCoeffPoly_eq_toPolyG]; exact CPoly.toPolyG_caddG p q
 
 /-- `toGBCoeffPoly` is negation-compatible: `gbnegCore` realizes `R[t]` negation. -/
 theorem toGBCoeffPoly_gbnegCore (p : GBPolyCore β) :
     toGBCoeffPoly (gbnegCore p) = - toGBCoeffPoly p := by
-  induction p with
-  | nil => simp [gbnegCore]
-  | cons a as ih =>
-    show toGBCoeffPoly (CPoly.cneg a :: gbnegCore as) = _
-    simp only [toGBCoeffPoly_cons, denote, map_neg, ih]
-    ring
+  simp only [toGBCoeffPoly_eq_toPolyG]; exact CPoly.toPolyG_cnegG p
 
 /-- `toGBCoeffPoly` is subtraction-compatible: `gbsubCore` realizes `R[t]` subtraction. -/
 theorem toGBCoeffPoly_gbsubCore (p q : GBPolyCore β) :
     toGBCoeffPoly (gbsubCore p q) = toGBCoeffPoly p - toGBCoeffPoly q := by
-  simp [gbsubCore, toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbnegCore, sub_eq_add_neg]
+  simp only [toGBCoeffPoly_eq_toPolyG]; exact CPoly.toPolyG_csubG p q
 
 /-- `toGBCoeffPoly` realizes scaling by a `β[s]` coefficient: `gbscaleCCore c p` is
 `C (toPoly c) · toGBCoeffPoly p`. -/
 theorem toGBCoeffPoly_gbscaleCCore (c : CPoly β) (p : GBPolyCore β) :
     toGBCoeffPoly (gbscaleCCore c p) = Polynomial.C (CPoly.toPoly c) * toGBCoeffPoly p := by
-  induction p with
-  | nil => simp [gbscaleCCore]
-  | cons a as ih =>
-    show toGBCoeffPoly (CPoly.cmul c a :: gbscaleCCore c as) = _
-    simp only [toGBCoeffPoly_cons, denote, map_mul, ih]
-    ring
+  simp only [toGBCoeffPoly_eq_toPolyG]; exact CPoly.toPolyG_cscaleG c p
 
 /-- `toGBCoeffPoly` realizes the `t`-shift: `gbshiftCore k p` is `tᵏ · toGBCoeffPoly p`. -/
 theorem toGBCoeffPoly_gbshiftCore (k : ℕ) (p : GBPolyCore β) :
     toGBCoeffPoly (gbshiftCore k p) = Polynomial.X ^ k * toGBCoeffPoly p := by
-  induction k with
-  | zero => simp [gbshiftCore]
-  | succ n ih =>
-    show toGBCoeffPoly ([] :: gbshiftCore n p) = _
-    simp only [toGBCoeffPoly_cons, toPolyG_nil, map_zero, ih]
-    ring
+  simp only [toGBCoeffPoly_eq_toPolyG]; exact CPoly.toPolyG_cshiftG k p
 
 omit [CFieldSpec β] in
 /-- `gbnormCore [] = []`. -/

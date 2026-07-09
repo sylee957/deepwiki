@@ -30,25 +30,23 @@ def gbnormCore : GBPolyCore B → GBPolyCore B
     | [] => if CPoly.cisZero a then [] else [a]
     | r => a :: r
 
-/-- Coefficientwise addition of two `GBPolyCore`s in `t` (each `t`-coefficient added via `cadd`). -/
-def gbaddCore : GBPolyCore B → GBPolyCore B → GBPolyCore B
-  | [], q => q
-  | p, [] => p
-  | a :: as, b :: bs => CPoly.cadd a b :: gbaddCore as bs
+/-! The `GBPolyCore` arithmetic is the ring-generalized generic engine at coefficient `CPoly B`
+(`GBPolyCore B = CPoly (CPoly B)`, keystone `CCommRing (CPoly B)`): each `gb*Core` is the generic `c*`. -/
 
-/-- Negation of a `GBPolyCore`, each `t`-coefficient negated via `cneg`. -/
-def gbnegCore (p : GBPolyCore B) : GBPolyCore B := p.map CPoly.cneg
+/-- Coefficientwise addition of two `GBPolyCore`s in `t` — the generic `cadd` at coefficient `CPoly B`. -/
+def gbaddCore (p q : GBPolyCore B) : GBPolyCore B := CPoly.cadd p q
 
-/-- Subtraction of `GBPolyCore`s, `p − q := p + (−q)`. -/
-def gbsubCore (p q : GBPolyCore B) : GBPolyCore B := gbaddCore p (gbnegCore q)
+/-- Negation of a `GBPolyCore` — the generic `cneg` at coefficient `CPoly B`. -/
+def gbnegCore (p : GBPolyCore B) : GBPolyCore B := CPoly.cneg p
 
-/-- Scale `gbscaleCCore c p`: multiply every `t`-coefficient by the `B[s]` scalar `c` via `cmul`. -/
-def gbscaleCCore (c : CPoly B) (p : GBPolyCore B) : GBPolyCore B := p.map (CPoly.cmul c)
+/-- Subtraction of `GBPolyCore`s — the generic `csub` at coefficient `CPoly B`. -/
+def gbsubCore (p q : GBPolyCore B) : GBPolyCore B := CPoly.csub p q
 
-/-- Shift in `t` `gbshiftCore k p = tᵏ · p`: prepend `k` zero (`= []`) `t`-coefficients. -/
-def gbshiftCore : ℕ → GBPolyCore B → GBPolyCore B
-  | 0, p => p
-  | n + 1, p => [] :: gbshiftCore n p
+/-- Scale `gbscaleCCore c p` — the generic `cscale` at coefficient `CPoly B`. -/
+def gbscaleCCore (c : CPoly B) (p : GBPolyCore B) : GBPolyCore B := CPoly.cscale c p
+
+/-- Shift in `t` `gbshiftCore k p = tᵏ · p` — the generic `cshift` at coefficient `CPoly B`. -/
+def gbshiftCore (k : ℕ) (p : GBPolyCore B) : GBPolyCore B := CPoly.cshift k p
 
 /-- Zero test for a `GBPolyCore`: `true` iff it normalizes to `[]` (via `List.isEmpty`). -/
 def gbisZeroCore (p : GBPolyCore B) : Bool := (gbnormCore p).isEmpty
