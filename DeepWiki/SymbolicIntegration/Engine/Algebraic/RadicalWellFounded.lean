@@ -143,14 +143,14 @@ end CPoly
 /-- Unified algebraic integrator `cIntegrateAlgebraicWf ρ R B residual c D degBound` over `y² = ρ`:
 `∫ R/(B·y) dx = v + c·log u` (principal case). Computes the rational part `v` by the multi-case
 dispatch (`radIntegrateRationalWf` + `radAssembleRatPart`), then solves the log argument on
-`residual` (`radLogArgSolve ρ residual D degBound`); on `none` returns just the rational part. -/
+`residual` (`radLogArgSolveQ ρ residual D degBound`); on `none` returns just the rational part. -/
 def cIntegrateAlgebraicWf (ρ : QFunNZ ℚ) (R B : CPoly ℚ)
     (residual : RadElem (QFunNZ ℚ)) (c : QFunNZ ℚ) (D : CPoly ℚ) (degBound : ℕ) :
-    AlgIntegralResult :=
+    AlgIntegralResultQ :=
   let ρpoly : CPoly ℚ := qxNum ρ
   let runs := CPoly.radIntegrateRationalWf ρpoly R B
   let v := radAssembleRatPart ρ runs
-  match radLogArgSolve ρ residual D degBound with
+  match radLogArgSolveQ ρ residual D degBound with
   | none => ⟨v, []⟩
   | some N =>
     let Dq : QFunNZ ℚ := qxOfNum D

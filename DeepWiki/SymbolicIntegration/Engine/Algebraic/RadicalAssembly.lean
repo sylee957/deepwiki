@@ -70,35 +70,35 @@ theorem radLogDeriv_eq_integrand_arcsinh :
     radIsZero (radSub (radLogDeriv fullRhoArcsinh fullUxPlusY) fullIntegrandArcsinh) = true := by
   native_decide
 
-/-! ### `AlgIntegralResultG` and its derivative -/
+/-! ### `AlgIntegralResult` and its derivative -/
 
 /-- Tower-generic elementary integral `∫ = v + Σ cᵢ log uᵢ`: rational part `v : RadElem α` plus
 log terms `[(cᵢ, uᵢ)]` (`cᵢ ∈ α`, `uᵢ ∈ α[y]/(y² − ρ)`). -/
-structure AlgIntegralResultG (α : Type*) [CField α] where
+structure AlgIntegralResult (α : Type*) [CField α] where
   /-- The rational part `v` of `∫ = v + Σ cᵢ log uᵢ` (a `RadElem α`). -/
   ratPart : RadElem α
   /-- The log terms `[(cᵢ, uᵢ)]` (`cᵢ ∈ α`, `uᵢ : RadElem α`). -/
   logTerms : List (α × RadElem α)
 
-/-- Derivative `algDerivG ρ F = radDeriv v + Σ cᵢ · radLogDeriv uᵢ` in `α[y]/(y² − ρ)`, using the
+/-- Derivative `algDeriv ρ F = radDeriv v + Σ cᵢ · radLogDeriv uᵢ` in `α[y]/(y² − ρ)`, using the
 tower's `CDiffField.cderiv` as base derivation. -/
-def algDerivG {α : Type*} [CField α] [CDiffField α] (ρ : α) (F : AlgIntegralResultG α) : RadElem α :=
+def algDeriv {α : Type*} [CField α] [CDiffField α] (ρ : α) (F : AlgIntegralResult α) : RadElem α :=
   F.logTerms.foldl
     (fun acc (c, u) => radAdd acc (radScale c (radLogDeriv ρ u)))
     (radDeriv 2 ρ F.ratPart)
 
 /-- **The full algebraic integral `∫ = v + Σ cᵢ log uᵢ`** (principal case) — the tower-generic
-`AlgIntegralResultG` specialized to the `ℚ(x)` base `QFunNZ ℚ`. -/
-abbrev AlgIntegralResult := AlgIntegralResultG (QFunNZ ℚ)
+`AlgIntegralResult` specialized to the `ℚ(x)` base `QFunNZ ℚ`. -/
+abbrev AlgIntegralResultQ := AlgIntegralResult (QFunNZ ℚ)
 
-/-- **The derivative of a full algebraic integral** `algDeriv ρ F = radDeriv v + Σ cᵢ·radLogDeriv uᵢ`,
-the `QFunNZ ℚ` specialization of `algDerivG`. -/
-def algDeriv (ρ : QFunNZ ℚ) (F : AlgIntegralResult) : RadElem (QFunNZ ℚ) :=
-  algDerivG ρ F
+/-- **The derivative of a full algebraic integral** `algDerivQ ρ F = radDeriv v + Σ cᵢ·radLogDeriv uᵢ`,
+the `QFunNZ ℚ` specialization of `algDeriv`. -/
+def algDerivQ (ρ : QFunNZ ℚ) (F : AlgIntegralResultQ) : RadElem (QFunNZ ℚ) :=
+  algDeriv ρ F
 
 -- The concrete result/derivative are exactly the generic ones at the `ℚ(x)` base (`base + abbrev`).
-example : AlgIntegralResult = AlgIntegralResultG (QFunNZ ℚ) := rfl
-example (ρ : QFunNZ ℚ) (F : AlgIntegralResult) : algDeriv ρ F = algDerivG ρ F := rfl
+example : AlgIntegralResultQ = AlgIntegralResult (QFunNZ ℚ) := rfl
+example (ρ : QFunNZ ℚ) (F : AlgIntegralResultQ) : algDerivQ ρ F = algDeriv ρ F := rfl
 
 /-- **Assemble the rational part `v` from a multi-case dispatch run**. -/
 def radAssembleRatPart (ρ : QFunNZ ℚ)

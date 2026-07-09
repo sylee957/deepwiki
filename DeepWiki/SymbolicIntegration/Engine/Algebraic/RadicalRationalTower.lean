@@ -6,7 +6,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalOverTower
 The Case-3 `C/y` degree-lowering generalized to run with the actual radicand-level derivation `der`
 (e.g. `cmonomialDeriv [θ]`, `θ' = θ`, over `α = ℚ(x)(eˣ)`), so the rational part `v` is an output
 rather than supplied. Combined with the computed log half, gives the fully-computed round-trip
-`algDerivG ⟨2y, [(1, (y−1)/(y+1))]⟩ = √(eˣ+1)` over the tower. -/
+`algDeriv ⟨2y, [(1, (y−1)/(y+1))]⟩ = √(eˣ+1)` over the tower. -/
 
 open Polynomial
 
@@ -122,7 +122,7 @@ theorem expC3_radDeriv_vlift_eq :
 /-! ### The fully-computed round-trip: both halves of `∫√(eˣ+1) dx` over ℚ(x)(eˣ)
 
 Combining the computed rational half (`v = 2y`) with the computed log half (`u = (y−1)/(y+1)`):
-`algDerivG ⟨v, [(1, u)]⟩ = y`, the integrand, over the tower, with neither half supplied. -/
+`algDeriv ⟨v, [(1, u)]⟩ = y`, the integrand, over the tower, with neither half supplied. -/
 
 /-- The round-trip integrand `√(eˣ+1) = y = [0,1]` over `ℚ(x)(eˣ)` (the same value as `radGen`). -/
 def rtFullIntegrand : RadElem Lvl2 := (radGen : RadElem Lvl2)
@@ -143,9 +143,9 @@ denominator of `u = (y−1)/(y+1) = ((θ+2)−2y)/θ`. -/
 def rtFullDenTheta : CPoly (QFunNZ ℚ) := [CField.zero, CField.one]
 
 /-- The fully-computed recovered result `F'`: `cIntegrateElementary` over `ℚ(x)(eˣ)` with the computed
-rational part `expC3Vlift` (`v = 2y`) and the log argument computed from the residual by `radLogArgSolveG`,
+rational part `expC3Vlift` (`v = 2y`) and the log argument computed from the residual by `radLogArgSolve`,
 assembling `F' = ⟨2y, [(1, u)]⟩`. -/
-def rtFullRecovered : AlgIntegralResultG Lvl2 :=
+def rtFullRecovered : AlgIntegralResult Lvl2 :=
   @cIntegrateElementary _ _ _ expTowerDiff expC3RhoLvl2 expC3Vlift rtFullLogResidual
     CField.one rtFullDenTheta 1
 
@@ -155,12 +155,12 @@ def rtFullRecovered : AlgIntegralResultG Lvl2 :=
        rtFullRecovered.logTerms.map (fun (_, u) =>
          u.map (fun (z : Lvl2) => (z.1.1.map (fun (w : QFunNZ ℚ) => (w.1.1 : List ℚ))))))
 
-/-- The fully-computed round-trip `algDerivG F' = √(eˣ+1)` with both halves computed: the elementary integral
+/-- The fully-computed round-trip `algDeriv F' = √(eˣ+1)` with both halves computed: the elementary integral
 `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over `ℚ(x)(eˣ)`, `v = 2y` from `radIntegrateCase3G` and
-`u = (y−1)/(y+1)` from `radLogArgSolveG`, with `algDerivG F' = y`. Checked by `radIsZero` of
-`algDerivG F' − y`. -/
+`u = (y−1)/(y+1)` from `radLogArgSolve`, with `algDeriv F' = y`. Checked by `radIsZero` of
+`algDeriv F' − y`. -/
 theorem rtFull_both_halves_computed :
-    radIsZero (radSub (@algDerivG _ _ expTowerDiff expC3RhoLvl2 rtFullRecovered) rtFullIntegrand)
+    radIsZero (radSub (@algDeriv _ _ expTowerDiff expC3RhoLvl2 rtFullRecovered) rtFullIntegrand)
       = true := by native_decide
 
 /-- The fully-computed result has a nonzero rational part and one log term: `F'` carries a nonzero `ratPart`

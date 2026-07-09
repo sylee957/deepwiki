@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalOverTower
 
 /-! # Generic radical log-argument examples
 
-Worked `radLogArgSolveG` examples over the rational base and an exponential tower base.
+Worked `radLogArgSolve` examples over the rational base and an exponential tower base.
 -/
 
 open Polynomial
@@ -15,7 +15,7 @@ open RadElem CPoly
 
 /-! ### Generic solver over the rational base
 
-At `β = ℚ`, `radLogArgSolveG` reproduces the arcsinh solve `∫ dx/√(x²+1) = log(x + y)`, confirming the
+At `β = ℚ`, `radLogArgSolve` reproduces the arcsinh solve `∫ dx/√(x²+1) = log(x + y)`, confirming the
 generalization is conservative. -/
 
 /-- The radicand `ρ = x²+1 ∈ ℚ(x)` (`y = √(x²+1)`), `[1,0,1]` — the arcsinh case at `β = ℚ`. -/
@@ -27,15 +27,15 @@ def genArgIntegrandArcsinh : RadElem (QFunNZ ℚ) := radInvYLift genArgRhoArcsin
 /-- The field element `x ∈ ℚ(x)`, `[0,1]` — for matching `N = c·(x + y)`. -/
 def genArgX : QFunNZ ℚ := qxOfNum [0, 1]
 
-/-- The computed arcsinh log argument under the generic solver: `radLogArgSolveG` at `β = ℚ`, `ρ = x²+1`,
+/-- The computed arcsinh log argument under the generic solver: `radLogArgSolve` at `β = ℚ`, `ρ = x²+1`,
 `D = 1`, ansatz degree `1` (expected `N = x + y`). -/
 def genArgSolvedArcsinh : Option (RadElem (QFunNZ ℚ)) :=
-  radLogArgSolveG genArgRhoArcsinh genArgIntegrandArcsinh [1] 1
+  radLogArgSolve genArgRhoArcsinh genArgIntegrandArcsinh [1] 1
 
 -- Computed numerator `N` for arcsinh under the generic solver, a multiple of `x + y`.
 #eval (genArgSolvedArcsinh.map (fun N => N.map (fun z => ((qNum z : List ℚ), (qDen z : List ℚ)))))
 
-/-- `radLogArgSolveG` computes `u = x + y` for `∫ dx/√(x²+1)` at `β = ℚ`: the solved `N` passes the
+/-- `radLogArgSolve` computes `u = x + y` for `∫ dx/√(x²+1)` at `β = ℚ`: the solved `N` passes the
 log-derivative certificate, reproducing the `ℚ`-base solve. -/
 theorem genArg_arcsinh_isLogIntegral :
     (genArgSolvedArcsinh.map (fun N =>
@@ -70,24 +70,24 @@ def expArgRho : Lvl2 := expRadicand
 for the log-derivative system. -/
 def expArgIntegrand : RadElem Lvl2 := radInvYLift expArgRho CField.one
 
-/-- The computed log argument for `∫ dx/√(eˣ+1)` over the tower: `radLogArgSolveG` at `β = ℚ(x)`,
+/-- The computed log argument for `∫ dx/√(eˣ+1)` over the tower: `radLogArgSolve` at `β = ℚ(x)`,
 `α = ℚ(x)(eˣ)`, with `expTowerDiff`, `ρ = eˣ+1`, `D = θ`, ansatz degree `1` (expected `N = (θ+2) − 2y`,
 so `u = N/θ = (y−1)/(y+1)`). -/
 def expArgSolved : Option (RadElem Lvl2) :=
-  @radLogArgSolveG _ _ _ expTowerDiff expArgRho expArgIntegrand expDenTheta 1
+  @radLogArgSolve _ _ _ expTowerDiff expArgRho expArgIntegrand expDenTheta 1
 
 -- Computed numerator `N` for `∫ dx/√(eˣ+1)` over the tower, a multiple of `(θ+2) − 2y`.
 #eval (expArgSolved.map (fun N => N.map (fun z =>
   ((qNum (β := QFunNZ ℚ) z).map (fun w => (w.1.1 : List ℚ)),
    (qDen (β := QFunNZ ℚ) z).map (fun w => (w.1.1 : List ℚ))))))
 
-/-- `radLogArgSolveG` computes the log argument for `∫ dx/√(eˣ+1)` over `ℚ(x)(eˣ)`: the generic solver,
+/-- `radLogArgSolve` computes the log argument for `∫ dx/√(eˣ+1)` over `ℚ(x)(eˣ)`: the generic solver,
 its Gaussian elimination running over `β = ℚ(x)`, returns `some N`. -/
 theorem expArg_solves :
     (expArgSolved.map (fun _ => true)) = some true := by native_decide
 
 /-- The computed `u = N/θ` integrates `∫ dx/√(eˣ+1)` over `ℚ(x)(eˣ)`: the log argument `N` computed by
-`radLogArgSolveG` yields `u = N/θ` passing the log-derivative certificate at the exponential instance
+`radLogArgSolve` yields `u = N/θ` passing the log-derivative certificate at the exponential instance
 `expTowerDiff`, i.e. `∫ dx/√(eˣ+1) = log((y−1)/(y+1))`. -/
 theorem expArg_isLogIntegral :
     (expArgSolved.map (fun N =>
@@ -109,7 +109,7 @@ theorem expArg_matches_closed_form :
 
 /-! ### Axiom audit for the generic log-argument solver -/
 
--- The generic solver reproduces `radLogArgSolve` at `β = ℚ`.
+-- The generic solver reproduces `radLogArgSolveQ` at `β = ℚ`.
 #print axioms genArg_arcsinh_isLogIntegral
 #print axioms genArg_arcsinh_matches_closed_form
 

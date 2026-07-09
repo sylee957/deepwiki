@@ -45,15 +45,15 @@ theorem cIntegrateAlgebraicWf_isAlgebraicIntegral
   RadElem.isAlgebraicIntegral_of_parts 2 ρ f _ ratPart logPart commonDenomQ _ cofs hrat hlog hsplit
 
 /-- The radical capstone `cIntegrateAlgebraicWf_sound`: from the engine round-trip certificate
-`radIsZero (radSub (algDeriv ρ F) integrand) = true` alone, `toPoly (algDeriv ρ F) = toPoly
+`radIsZero (radSub (algDerivQ ρ F) integrand) = true` alone, `toPoly (algDerivQ ρ F) = toPoly
 integrand` — the un-cross-multiplied `D(v + Σ cᵢ log uᵢ) = f`. -/
 theorem cIntegrateAlgebraicWf_sound
     (ρ : QFunNZ ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZ ℚ))
     (c : QFunNZ ℚ) (D : CPoly ℚ) (degBound : ℕ) (integrand : RadElem (QFunNZ ℚ))
     (hrt : RadElem.radIsZero
-      (RadElem.radSub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
+      (RadElem.radSub (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
       = true) :
-    CPoly.toPoly (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
+    CPoly.toPoly (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
       = CPoly.toPoly integrand :=
   toPolyG_algDeriv_eq_of_roundtrip ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound) integrand hrt
 
@@ -131,9 +131,9 @@ theorem afIntegrateAlgebraicWf_isGeneralRationalIntegralWf
 example (ρ : QFunNZ ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZ ℚ))
     (c : QFunNZ ℚ) (D : CPoly ℚ) (degBound : ℕ) (integrand : RadElem (QFunNZ ℚ))
     (hrt : RadElem.radIsZero
-      (RadElem.radSub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
+      (RadElem.radSub (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
       = true) :
-    CPoly.toPoly (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
+    CPoly.toPoly (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
       = CPoly.toPoly integrand :=
   cIntegrateAlgebraicWf_sound ρ R B residual c D degBound integrand hrt
 

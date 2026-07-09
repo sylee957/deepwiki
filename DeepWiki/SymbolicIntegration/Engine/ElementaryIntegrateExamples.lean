@@ -28,11 +28,11 @@ def elemLogArg : RadElem Lvl2 :=
 
 /-- The combined antiderivative `F = 2y + log((y−1)/(y+1))` over ℚ(x)(eˣ): `elemRatPart` plus one
 log term `(1, elemLogArg)`. -/
-def elemF : AlgIntegralResultG Lvl2 := ⟨elemRatPart, [(CField.one, elemLogArg)]⟩
+def elemF : AlgIntegralResult Lvl2 := ⟨elemRatPart, [(CField.one, elemLogArg)]⟩
 
-/-- The combined integrand `algDerivG F` over ℚ(x)(eˣ) with the exp-tower derivation, equal to
+/-- The combined integrand `algDeriv F` over ℚ(x)(eˣ) with the exp-tower derivation, equal to
 `√(eˣ+1) = y`. -/
-def elemIntegrand : RadElem Lvl2 := @algDerivG _ _ expTowerDiff elemRho elemF
+def elemIntegrand : RadElem Lvl2 := @algDeriv _ _ expTowerDiff elemRho elemF
 
 /-- The combined integrand equals the radical generator `y`: `radIsZero (elemIntegrand − radGen)`. -/
 theorem elemIntegrand_eq_radGen :
@@ -51,12 +51,12 @@ theorem elemLogResidual_eq_integrand_sub_ratDeriv :
 def elemDenTheta : CPoly (QFunNZ ℚ) := [CField.zero, CField.one]
 
 /-- The recovered result `F' = cIntegrateElementary ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
-def elemRecovered : AlgIntegralResultG Lvl2 :=
+def elemRecovered : AlgIntegralResult Lvl2 :=
   @cIntegrateElementary _ _ _ expTowerDiff elemRho elemRatPart elemLogResidual CField.one elemDenTheta 1
 
-/-- Round-trip `algDerivG F' = elemIntegrand` over ℚ(x)(eˣ): `radIsZero (algDerivG F' − integrand)`. -/
+/-- Round-trip `algDeriv F' = elemIntegrand` over ℚ(x)(eˣ): `radIsZero (algDeriv F' − integrand)`. -/
 theorem rt_elementary_combined :
-    radIsZero (radSub (@algDerivG _ _ expTowerDiff elemRho elemRecovered) elemIntegrand) = true := by
+    radIsZero (radSub (@algDeriv _ _ expTowerDiff elemRho elemRecovered) elemIntegrand) = true := by
   native_decide
 
 /-- The recovered result has nonzero rational part and exactly one log term:

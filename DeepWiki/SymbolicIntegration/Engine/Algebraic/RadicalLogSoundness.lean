@@ -541,16 +541,16 @@ end RadElem
 /-! ### Input (b): discharging the integrand split for the `cIntegrateAlgebraic` driver
 
 For the actual driver, the `hsplit` hypothesis is not an extra assumption: the engine's own
-round-trip certificate `algDeriv ρ F = integrand` (in `radIsZero`-tested form) is the integrand
-split un-cross-multiplied, since `algDeriv ρ F = radDeriv(v) + Σ cᵢ·radLogDeriv(uᵢ)`. -/
+round-trip certificate `algDerivQ ρ F = integrand` (in `radIsZero`-tested form) is the integrand
+split un-cross-multiplied, since `algDerivQ ρ F = radDeriv(v) + Σ cᵢ·radLogDeriv(uᵢ)`. -/
 
 /-- The engine round-trip certificate is the integrand split (un-cross-multiplied): for output
-`F : AlgIntegralResult` over `y² = ρ`, `radIsZero (radSub (algDeriv ρ F) integrand) = true`
-yields `toPoly (algDeriv ρ F) = toPoly integrand` in `K[X]`. -/
-theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZ ℚ) (F : AlgIntegralResult)
+`F : AlgIntegralResultQ` over `y² = ρ`, `radIsZero (radSub (algDerivQ ρ F) integrand) = true`
+yields `toPoly (algDerivQ ρ F) = toPoly integrand` in `K[X]`. -/
+theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZ ℚ) (F : AlgIntegralResultQ)
     (integrand : RadElem (QFunNZ ℚ))
-    (hrt : RadElem.radIsZero (RadElem.radSub (algDeriv ρ F) integrand) = true) :
-    CPoly.toPoly (algDeriv ρ F) = CPoly.toPoly integrand := by
+    (hrt : RadElem.radIsZero (RadElem.radSub (algDerivQ ρ F) integrand) = true) :
+    CPoly.toPoly (algDerivQ ρ F) = CPoly.toPoly integrand := by
   rw [RadElem.radIsZero, RadElem.radSub] at hrt
   exact RefinesPoly.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) hrt
 

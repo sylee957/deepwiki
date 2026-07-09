@@ -4,7 +4,7 @@ import Sources.Hdl_1721_1_15391.Source
 /-! # Trager catalog — the unified full algebraic integral `∫ = v + Σ cᵢ log uᵢ` (Appendix A + Ch. 5, principal case)
 The culmination of the simple-radical arc. Appendix A (catalog `Sources.Hdl_1721_1_15391.AppendixA`)
 builds the **rational part** `v`; Chapter 5 (catalog `Sources.Hdl_1721_1_15391.Chapter5`) builds the
-**residues** `cᵢ` and **solves** the **log argument** `uᵢ` (`radLogArgSolve`). The
+**residues** `cᵢ` and **solves** the **log argument** `uᵢ` (`radLogArgSolveQ`). The
 `DeepWiki.SymbolicIntegration` library unifies them in `ComputableRadicalWellFounded`: a single fuel-free
 driver `cIntegrateAlgebraicWf` that computes **both** halves and assembles the full
 `∫ R/(B·y) dx = v + Σ cᵢ log uᵢ`
@@ -16,8 +16,8 @@ result differentiates to the same integrand.
 **Computable-vs-abstract.** Every entry below is a computable function or a `native_decide` round-trip
 witness on a worked integral; the abstract correctness (that `cIntegrateAlgebraicWf`'s output IS the integral
 for every input) is validated by the examples, not proved in general. The driver is honest about its scope:
-on the **principal** case (`radLogArgSolve` returns `some`) it produces the full `v + Σ cᵢ log uᵢ`; on the
-**non-principal / torsion** boundary (`radLogArgSolve` returns `none`) it returns the rational part with an
+on the **principal** case (`radLogArgSolveQ` returns `some`) it produces the full `v + Σ cᵢ log uᵢ`; on the
+**non-principal / torsion** boundary (`radLogArgSolveQ` returns `none`) it returns the rational part with an
 empty log list, a documented partial.
 
 ## NOT YET FORMALIZED (audit 2026-06-26)
@@ -44,7 +44,7 @@ abbrev full_radInv2 := @RadElem.radInv2
 
 /-- **The logarithmic derivative in `α[y]/(y² − ρ)`** `radLogDeriv ρ u = (radDeriv u)·u⁻¹` (Trager,
 Appendix A / Ch. 5 §1): the genuine `RadElem` `u'/u = D(log u)` (honest division via `radInv2`) — the
-un-cross-multiplied form of the log-derivative certificate, the building block of `algDeriv`. -/
+un-cross-multiplied form of the log-derivative certificate, the building block of `algDerivQ`. -/
 abbrev full_radLogDeriv := @RadElem.radLogDeriv
 
 /-- **Appendix A, `n = 2`** (validation): `u · u⁻¹ = 1` in `(ℚ(x))[y]/(y² − (x²+1))` — the conjugate-norm
@@ -62,13 +62,13 @@ abbrev full_radLogDeriv_eq_integrand := @radLogDeriv_eq_integrand_arcsinh
 /-- **The full algebraic integral `∫ = v + Σ cᵢ log uᵢ`** (Trager, Appendix A + Ch. 5, principal case):
 the bundle of a rational part `v` (a `RadElem`) and a list of log terms `[(cᵢ, uᵢ)]` (residue coefficient
 `cᵢ ∈ ℚ(x)`, argument `uᵢ` a `RadElem`) — the output of `cIntegrateAlgebraicWf`, differentiated by
-`algDeriv`. -/
-abbrev full_integralResult := @AlgIntegralResult
+`algDerivQ`. -/
+abbrev full_integralResult := @AlgIntegralResultQ
 
-/-- **The derivative of a full algebraic integral** `algDeriv ρ F = radDeriv v + Σ cᵢ · radLogDeriv uᵢ`
+/-- **The derivative of a full algebraic integral** `algDerivQ ρ F = radDeriv v + Σ cᵢ · radLogDeriv uᵢ`
 (Trager, Appendix A + Ch. 5): the genuine `RadElem` `D(v + Σ cᵢ log uᵢ)` in `(ℚ(x))[y]/(y² − ρ)`, each log
 term contributing `cᵢ · (uᵢ'/uᵢ)` via the honest `radLogDeriv`. The round-trip's comparison side. -/
-abbrev full_algDeriv := @algDeriv
+abbrev full_algDeriv := @algDerivQ
 
 /-- **Assemble the rational part from the multi-case dispatch run** `radAssembleRatPart ρ runs` (Trager,
 Appendix A §2): sum the per-factor rational parts of `radIntegrateRationalWf` into one `RadElem`, each
@@ -80,9 +80,9 @@ abbrev full_assembleRatPart := @radAssembleRatPart
 /-- **★ The unified fuel-free algebraic integrator** `cIntegrateAlgebraicWf ρ R B residual c D degBound`
 (Trager, Appendix A + Ch. 5, principal case): produces the full `∫ R/(B·y) dx = v + c·log u` over `y² = ρ`
 by computing the rational part `v` (fuel-free multi-case dispatch `radIntegrateRationalWf` +
-`radAssembleRatPart`) AND solving the log argument on the `residual` integrand (`radLogArgSolve`, the
+`radAssembleRatPart`) AND solving the log argument on the `residual` integrand (`radLogArgSolveQ`, the
 principal-case linear solve), packing `(c, u/D)`. On the non-principal / torsion boundary
-(`radLogArgSolve = none`) it returns the rational part with an empty log list (a documented partial). Both
+(`radLogArgSolveQ = none`) it returns the rational part with an empty log list (a documented partial). Both
 Appendix A and Ch. 5 §1–§2 in one driver, with no top-level `ℕ` fuel. -/
 abbrev full_integrate := @cIntegrateAlgebraicWf
 
@@ -91,20 +91,20 @@ abbrev full_integrate := @cIntegrateAlgebraicWf
 def full_rtRatV : RadElem (QFunNZ ℚ) :=
   radAssembleRatPart rtRatRho (CPoly.radIntegrateRationalWf (qxNum rtRatRho) rtRatR rtRatB)
 
-/-- The rational-only benchmark integrand: `algDeriv ⟨full_rtRatV, []⟩`. -/
-def full_rtRatIntegrand : RadElem (QFunNZ ℚ) := algDeriv rtRatRho ⟨full_rtRatV, []⟩
+/-- The rational-only benchmark integrand: `algDerivQ ⟨full_rtRatV, []⟩`. -/
+def full_rtRatIntegrand : RadElem (QFunNZ ℚ) := algDerivQ rtRatRho ⟨full_rtRatV, []⟩
 
 /-- The recovered rational-only result for `∫ 1/((x−1)²√(x²+1))`: the rational part is reconstructed
 by `radIntegrateRationalWf`, and the non-principal residual gives an empty log list. -/
-def full_rtRatRecovered : AlgIntegralResult :=
+def full_rtRatRecovered : AlgIntegralResultQ :=
   cIntegrateAlgebraicWf rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual CField.one [0, 0, 1] 1
 
 /-- **★ Round-trip (rational-only): `∫ 1/((x−1)²√(x²+1))`** (Trager, Appendix A §2, `native_decide`): start
 from `F = ⟨v, []⟩` (the dispatch's rational part, no log term), differentiate to `integrand = radDeriv v`,
 and `cIntegrateAlgebraicWf` reconstructs an antiderivative from `(R, B) = (1, (x−1)²)` with an EMPTY log
-list (the non-principal residual ⇒ no spurious log term), so `algDeriv F' = integrand`. -/
+list (the non-principal residual ⇒ no spurious log term), so `algDerivQ F' = integrand`. -/
 theorem full_roundtrip_rational :
-    radIsZero (radSub (algDeriv rtRatRho full_rtRatRecovered) full_rtRatIntegrand) = true := by
+    radIsZero (radSub (algDerivQ rtRatRho full_rtRatRecovered) full_rtRatIntegrand) = true := by
   native_decide
 
 /-- **The rational-only result has nonzero rational part and empty log list** (`native_decide`): the
@@ -116,14 +116,14 @@ theorem full_roundtrip_rational_shape :
 
 /-- The recovered log-only result for `∫ dx/(x√(x²+1))`: empty rational part and one computed
 principal log term. -/
-def full_rtLogRecovered : AlgIntegralResult :=
+def full_rtLogRecovered : AlgIntegralResultQ :=
   cIntegrateAlgebraicWf rtLogRho [1] [1] rtLogIntegrand CField.one rtLogD 0
 
 /-- **★ Round-trip (log-only): `∫ dx/(x√(x²+1)) = log((y − 1)/x)`** (Trager, Ch. 5 §1, `native_decide`):
 `cIntegrateAlgebraicWf` computes an empty rational part and one log term `1·log u` with `u = N/x` the
-SOLVER'S output (`radLogArgSolve`, a constant multiple of `y − 1`); `algDeriv F' = integrand`. -/
+SOLVER'S output (`radLogArgSolveQ`, a constant multiple of `y − 1`); `algDerivQ F' = integrand`. -/
 theorem full_roundtrip_log :
-    radIsZero (radSub (algDeriv rtLogRho full_rtLogRecovered) rtLogIntegrand) = true := by
+    radIsZero (radSub (algDerivQ rtLogRho full_rtLogRecovered) rtLogIntegrand) = true := by
   native_decide
 
 /-- **The log-only result has empty rational part and one log term** (`native_decide`): the structural
@@ -138,25 +138,25 @@ def full_rtCombVdispatch : RadElem (QFunNZ ℚ) :=
   radAssembleRatPart rtCombRho (CPoly.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
 
 /-- The combined starting antiderivative `F = full_rtCombVdispatch + log(rtCombU)`. -/
-def full_rtCombF : AlgIntegralResult := ⟨full_rtCombVdispatch, [(CField.one, rtCombU)]⟩
+def full_rtCombF : AlgIntegralResultQ := ⟨full_rtCombVdispatch, [(CField.one, rtCombU)]⟩
 
-/-- The combined benchmark integrand: `algDeriv full_rtCombF`. -/
-def full_rtCombIntegrand : RadElem (QFunNZ ℚ) := algDeriv rtCombRho full_rtCombF
+/-- The combined benchmark integrand: `algDerivQ full_rtCombF`. -/
+def full_rtCombIntegrand : RadElem (QFunNZ ℚ) := algDerivQ rtCombRho full_rtCombF
 
 /-- The recovered combined result for `F = v + log(x + y)`: both the rational part and the log
 argument are reconstructed by `cIntegrateAlgebraicWf`. -/
-def full_rtCombRecovered : AlgIntegralResult :=
+def full_rtCombRecovered : AlgIntegralResultQ :=
   cIntegrateAlgebraicWf rtCombRho rtCombR rtCombB rtCombLogResidual CField.one [1] 1
 
 /-- **★★ Round-trip (COMBINED): `F = v + c·log u`, BOTH parts nonzero** (Trager, Appendix A + Ch. 5,
 `native_decide`): THE FULL-INTEGRATOR PROOF. On `y² = x²+1`, start from `F = v + 1·log u` (`v` the
 dispatch's rational part of `∫ 1/((x−1)²√(x²+1))`, `u = x + y` the arcsinh argument), differentiate to
 `integrand = radDeriv v + radLogDeriv u`, integrate back: `cIntegrateAlgebraicWf` reconstructs the rational
-part `v` from `(R, B)` by the dispatch AND solves the log argument, and `algDeriv F' = integrand`. The
+part `v` from `(R, B)` by the dispatch AND solves the log argument, and `algDerivQ F' = integrand`. The
 engine produces the FULL `v + Σ cᵢ log uᵢ` (rational + log, principal case), both halves computed from
 polynomial / residual inputs, round-trip-validated through the real radical derivation. -/
 theorem full_roundtrip_combined :
-    radIsZero (radSub (algDeriv rtCombRho full_rtCombRecovered) full_rtCombIntegrand) = true := by
+    radIsZero (radSub (algDerivQ rtCombRho full_rtCombRecovered) full_rtCombIntegrand) = true := by
   native_decide
 
 /-- **The combined result has nonzero rational part AND one log term** (`native_decide`): the structural
