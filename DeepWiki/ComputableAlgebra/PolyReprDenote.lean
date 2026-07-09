@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.PolyRepr
+import Mathlib.Algebra.Polynomial.Div
 
 /-! # Representation-generic denotation for `CPolyRepr` (Step 3)
 
@@ -216,5 +217,11 @@ theorem toR_ceval (x : α) (p : P α) :
 
 /-- `ceval` reduces (dense): `(1 + 2x + 3x²)` at `x = 2` is `1 + 4 + 12 = 17`. -/
 example : ceval (2 : ℚ) ([1, 2, 3] : List ℚ) = 17 := by native_decide
+
+/-- **Factor theorem:** `r` is a root (`ceval r p` denotes `0`) iff `(X − r) ∣ toPoly p`. -/
+theorem ceval_eq_zero_iff_dvd (r : α) (p : P α) :
+    CRingSpec.toR (ceval r p) = 0 ↔ (X - Polynomial.C (CRingSpec.toR r)) ∣ toPoly p := by
+  rw [toR_ceval]
+  exact (Polynomial.dvd_iff_isRoot (a := CRingSpec.toR r) (p := toPoly p)).symm
 
 end DeepWiki.SymbolicIntegration.CPolyRepr
