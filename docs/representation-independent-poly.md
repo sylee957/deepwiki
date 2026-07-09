@@ -188,7 +188,9 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   `Matrix.ext`: the `getD`-of-`range·map` chain reduces, then a `Fin.addCases` induction matches
   `cSylvester`'s two blocks to `Polynomial.sylvester`'s exactly — no permutation — via `coeff_toPoly` +
   `Set.Icc`↔`∧`) → `Polynomial.resultant`. So `cResultant` is native_decide-executable *and* a-priori
-  correct against Mathlib.
+  correct against Mathlib. Linked to the gcd subsystem by `isCoprime_of_cResultant_ne_zero`
+  (`PolyReprResultantCoprime.lean`): a nonzero computable resultant of not-both-zero `p, q` certifies
+  `IsCoprime (toPoly p) (toPoly q)` (via the bridge + Mathlib `resultant_eq_zero_iff`).
 
 Each computable op reduces under `native_decide` on both the dense `List` and sparse `SparsePoly`
 carriers — the same algorithm, two representations — and the algebraic correctness is a-priori (not merely
