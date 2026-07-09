@@ -156,58 +156,78 @@ noncomputable def toBPoly : BPoly → Polynomial (Polynomial ℚ)
 @[simp] theorem toBPoly_cons (a : CPolyQ) (p : BPoly) :
     toBPoly (a :: p) = Polynomial.C (toPoly a) + Polynomial.X * toBPoly p := rfl
 
+/-! ### Bridges to the generic keystone engine (`CPoly.toPoly` / `c*` at coefficient `CPolyQ`)
+`BPoly = CPoly CPolyQ` and the ring-generalized engine makes `CPoly.toPoly`/`cadd`/… valid at the
+`CPolyQ` coefficient (keystone `CRingSpec (CPoly ℚ)`). These identify the hand-written `ℚ`-bivariate
+layer with the generic one, so the `b*` homomorphism satellites reduce to the generic `toPolyG_*`
+squares instead of re-proving the recursions. -/
+
+/-- The single-variable `ℚ` denotation IS the generic one: `Compute.toPoly = CPoly.toPoly` at `CPolyQ`. -/
+theorem toPoly_eq_toPolyG (p : CPolyQ) : toPoly p = CPoly.toPoly p := by
+  induction p with
+  | nil => rfl
+  | cons a as ih => rw [toPoly, ih, CPoly.toPolyG_cons]; rfl
+
+/-- The bivariate denotation IS the generic keystone denotation: `toBPoly = CPoly.toPoly` at `CPoly CPolyQ`. -/
+theorem toBPoly_eq_toPolyG (p : BPoly) : toBPoly p = CPoly.toPoly p := by
+  induction p with
+  | nil => rfl
+  | cons a as ih =>
+    rw [toBPoly, ih, CPoly.toPolyG_cons, toPoly_eq_toPolyG,
+      show CRingSpec.toR a = CPoly.toPoly a from rfl]
+
+/-- `badd = cadd` at coefficient `CPolyQ`. -/
+theorem badd_eq (p q : BPoly) : badd p q = CPoly.cadd p q := by
+  induction p generalizing q with
+  | nil => cases q <;> rfl
+  | cons a as ih => cases q with | nil => rfl | cons b bs => rw [badd, ih]; rfl
+
+/-- `bmul = cmul` at coefficient `CPolyQ`. -/
+theorem bmul_eq (p q : BPoly) : bmul p q = CPoly.cmul p q := by
+  induction p with
+  | nil => rfl
+  | cons a as ih => rw [bmul, ih, badd_eq]; rfl
+
+/-- `bshift = cshift` at coefficient `CPolyQ`. -/
+theorem bshift_eq (k : ℕ) (p : BPoly) : bshift k p = CPoly.cshift k p := by
+  induction k with | zero => rfl | succ n ih => rw [bshift, ih]; rfl
+
+/-- `bneg = cneg` at coefficient `CPolyQ` (definitional). -/
+theorem bneg_eq (p : BPoly) : bneg p = CPoly.cneg p := rfl
+
+/-- `bscaleC = cscale` at coefficient `CPolyQ` (definitional). -/
+theorem bscaleC_eq (c : CPolyQ) (p : BPoly) : bscaleC c p = CPoly.cscale c p := rfl
+
+/-- `bsub = csub` at coefficient `CPolyQ`. -/
+theorem bsub_eq (p q : BPoly) : bsub p q = CPoly.csub p q := by
+  rw [bsub, CPoly.csub, badd_eq, bneg_eq]
+
 /-- `toBPoly` is additive: `badd` realizes `(ℚ[X])[X]` addition. -/
 theorem toBPoly_badd (p q : BPoly) : toBPoly (badd p q) = toBPoly p + toBPoly q := by
-  induction p generalizing q with
-  | nil => simp [badd]
-  | cons a as ih =>
-    cases q with
-    | nil => simp [badd]
-    | cons b bs =>
-      simp only [badd, toBPoly_cons, ih, toPoly_cadd, map_add]
-      ring
+  simp only [toBPoly_eq_toPolyG, badd_eq, CPoly.toPolyG_caddG]
 
 /-- `bneg` realizes `(ℚ[X])[X]` negation through `toBPoly`. -/
 theorem toBPoly_bneg (p : BPoly) : toBPoly (bneg p) = - toBPoly p := by
-  induction p with
-  | nil => simp [bneg]
-  | cons a as ih =>
-    show toBPoly (cneg a :: bneg as) = _
-    simp only [toBPoly_cons, toPoly_cneg, map_neg, ih]
-    ring
+  simp only [toBPoly_eq_toPolyG, bneg_eq, CPoly.toPolyG_cnegG]
 
 /-- `bsub` realizes `(ℚ[X])[X]` subtraction through `toBPoly`. -/
 theorem toBPoly_bsub (p q : BPoly) : toBPoly (bsub p q) = toBPoly p - toBPoly q := by
-  simp [bsub, toBPoly_badd, toBPoly_bneg, sub_eq_add_neg]
+  simp only [toBPoly_eq_toPolyG, bsub_eq, CPoly.toPolyG_csubG]
 
 /-- `bscaleC c p` realizes scaling by a `ℚ[t]` coefficient: `C (toPoly c) · toBPoly p`. -/
 theorem toBPoly_bscaleC (c : CPolyQ) (p : BPoly) :
     toBPoly (bscaleC c p) = Polynomial.C (toPoly c) * toBPoly p := by
-  induction p with
-  | nil => simp [bscaleC]
-  | cons a as ih =>
-    show toBPoly (cmul c a :: bscaleC c as) = _
-    simp only [toBPoly_cons, toPoly_cmul, map_mul, ih]
-    ring
+  simp only [toBPoly_eq_toPolyG, bscaleC_eq, CPoly.toPolyG_cscaleG, toPoly_eq_toPolyG,
+    show ∀ c : CPolyQ, CRingSpec.toR c = CPoly.toPoly c from fun _ => rfl]
 
 /-- `bshift k p` realizes the `x`-shift: `Xᵏ · toBPoly p`. -/
 theorem toBPoly_bshift (k : ℕ) (p : BPoly) :
     toBPoly (bshift k p) = Polynomial.X ^ k * toBPoly p := by
-  induction k with
-  | zero => simp [bshift]
-  | succ n ih =>
-    show toBPoly ([] :: bshift n p) = _
-    simp only [toBPoly_cons, toPoly_nil, map_zero, ih]
-    ring
+  simp only [toBPoly_eq_toPolyG, bshift_eq, CPoly.toPolyG_cshiftG]
 
 /-- `toBPoly` is multiplicative: `bmul` realizes `(ℚ[X])[X]` multiplication. -/
 theorem toBPoly_bmul (p q : BPoly) : toBPoly (bmul p q) = toBPoly p * toBPoly q := by
-  induction p with
-  | nil => simp [bmul]
-  | cons a as ih =>
-    show toBPoly (badd (bscaleC a q) ([] :: bmul as q)) = _
-    simp only [toBPoly_badd, toBPoly_bscaleC, toBPoly_cons, toPoly_nil, map_zero, ih]
-    ring
+  simp only [toBPoly_eq_toPolyG, bmul_eq, CPoly.toPolyG_cmulG]
 
 /-- `bnorm [] = []`. -/
 @[simp] theorem bnorm_nil : bnorm ([] : BPoly) = [] := rfl
