@@ -50,6 +50,7 @@ theorem cHyperexpSpecialNegG_reverse_smul [CRischField α] (b ds : CPoly α)
   apply Polynomial.ext
   intro j
   rw [Polynomial.coeff_C_mul, toPolyG_coeff, toPolyG_coeff]
+  simp only [toR_eq_toK, ccrZero_eq_cfield]
   by_cases hj : j < cdeg ds
   · have hget : (cHyperexpSpecialNeg b ds).reverse.getD j CField.zero
         = CField.mul ((b : List α).getD j CField.zero) (CField.inv (clead ds)) := by

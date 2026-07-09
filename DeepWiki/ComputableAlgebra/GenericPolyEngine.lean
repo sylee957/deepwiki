@@ -168,8 +168,27 @@ instance (priority := 100) instCRingSpecOfCFieldSpec {α : Type*} [CField α] [C
   isZero_iff := CFieldSpec.isZero_iff
 
 /-- On a field coefficient the ring bridge IS the field bridge (`R = K`, `toR = toK`), by defeq. -/
-theorem toR_eq_toK {α : Type*} [CField α] [CFieldSpec α] (a : α) :
+@[simp, denote] theorem toR_eq_toK {α : Type*} [CField α] [CFieldSpec α] (a : α) :
     CRingSpec.toR a = CFieldSpec.toK a := rfl
+
+/-! ### Field-path element normalizers
+The ring-generic engine ops emit `CCommRing.zero`/`one`/… (from the weakened `[CCommRing]` definitions);
+on a field coefficient these are defeq to the `CField` operations, so these `@[simp]` lemmas normalize
+them back to the `CField` head that field-path call sites and their satellite lemmas are phrased in. -/
+
+/-- Field-path: `CCommRing.zero = CField.zero`. -/
+@[simp] theorem ccrZero_eq_cfield {α : Type*} [CField α] : (CCommRing.zero : α) = CField.zero := rfl
+/-- Field-path: `CCommRing.one = CField.one`. -/
+@[simp] theorem ccrOne_eq_cfield {α : Type*} [CField α] : (CCommRing.one : α) = CField.one := rfl
+/-- Field-path: `CCommRing.add = CField.add`. -/
+@[simp] theorem ccrAdd_eq_cfield {α : Type*} [CField α] (a b : α) :
+    CCommRing.add a b = CField.add a b := rfl
+/-- Field-path: `CCommRing.mul = CField.mul`. -/
+@[simp] theorem ccrMul_eq_cfield {α : Type*} [CField α] (a b : α) :
+    CCommRing.mul a b = CField.mul a b := rfl
+/-- Field-path: `CCommRing.neg = CField.neg`. -/
+@[simp] theorem ccrNeg_eq_cfield {α : Type*} [CField α] (a : α) :
+    CCommRing.neg a = CField.neg a := rfl
 
 /-- `CRingSpec.R α = CFieldSpec.K α`, a `Field`, so field-level squares over the ring-generic
 `toPoly : CPoly α → (CRingSpec.R α)[X]` find `⁻¹`/`GroupWithZero` on the field path. -/
@@ -370,7 +389,7 @@ def cpow {α : Type*} [CCommRing α] (p : CPoly α) : ℕ → CPoly α
   | n + 1 => cmul p (cpow p n)
 
 /-- Leading coefficient of a `CPoly` (top nonzero coefficient; `zero` for the zero polynomial). -/
-def clead {α : Type*} [CField α] (p : CPoly α) : α := ((cnorm p : List α).getLast?.getD CField.zero)
+def clead {α : Type*} [CCommRing α] (p : CPoly α) : α := ((cnorm p : List α).getLast?.getD CCommRing.zero)
 
 /-- Degree of a `CPoly` as a `ℕ`: `(length of normalized p) − 1`, with `cdeg 0 = 0`. -/
 def cdeg {α : Type*} [CCommRing α] (p : CPoly α) : ℕ := (cnorm p : List α).length - 1
@@ -412,17 +431,17 @@ noncomputable def toPoly {α : Type*} [CCommRing α] [CRingSpec α] : CPoly α �
   | a :: p => Polynomial.C (CRingSpec.toR a) + X * toPoly p
 
 /-- `toPoly [] = 0`: the empty coefficient list is the zero polynomial. -/
-@[simp, denote] theorem toPolyG_nil {α : Type*} [CField α] [CFieldSpec α] :
+@[simp, denote] theorem toPolyG_nil {α : Type*} [CCommRing α] [CRingSpec α] :
     toPoly ([] : CPoly α) = 0 := rfl
 
 /-- `toPoly`'s leading recursion (Horner): `toPoly (a :: p) = C (toK a) + X · toPoly p`. -/
-@[simp, denote] theorem toPolyG_cons {α : Type*} [CField α] [CFieldSpec α] (a : α) (p : CPoly α) :
-    toPoly (a :: p) = Polynomial.C (CFieldSpec.toK a) + X * toPoly p := rfl
+@[simp, denote] theorem toPolyG_cons {α : Type*} [CCommRing α] [CRingSpec α] (a : α) (p : CPoly α) :
+    toPoly (a :: p) = Polynomial.C (CRingSpec.toR a) + X * toPoly p := rfl
 
 /-- `toPoly [CField.one] = 1`: the singleton coefficient list `[1]` reads as the polynomial `1`. -/
-@[denote] theorem toPolyG_one_singleton {α : Type*} [CField α] [CFieldSpec α] :
-    toPoly ([CField.one] : CPoly α) = 1 := by
-  rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+@[denote] theorem toPolyG_one_singleton {α : Type*} [CCommRing α] [CRingSpec α] :
+    toPoly ([CCommRing.one] : CPoly α) = 1 := by
+  rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CRingSpec.toR_one, map_one]
 
 /-- `toPoly [CField.one] ≠ 0`: the singleton coefficient list `[1]` reads nontrivially. -/
 theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
@@ -431,7 +450,7 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
   exact (one_ne_zero : (1 : Polynomial (CFieldSpec.K α)) ≠ 0)
 
 /-- `toPoly` is additive: `cadd` realizes `(CFieldSpec.K α)[X]` addition under the Horner bridge. -/
-@[simp, denote] theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPoly α) :
+@[simp, denote] theorem toPolyG_caddG {α : Type*} [CCommRing α] [CRingSpec α] (p q : CPoly α) :
     toPoly (cadd p q) = toPoly p + toPoly q := by
   induction p generalizing q with
   | nil => simp [cadd]
@@ -443,7 +462,7 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
       ring
 
 /-- `toPoly` of a `cadd` fold is the running sum of the term images. -/
-@[denote] theorem toPolyG_foldl_caddG {α : Type*} [CField α] [CFieldSpec α]
+@[denote] theorem toPolyG_foldl_caddG {α : Type*} [CCommRing α] [CRingSpec α]
     (f : α × α → CPoly α) (pts : List (α × α)) (init : CPoly α) :
     toPoly (pts.foldl (fun acc p => cadd acc (f p)) init)
       = toPoly init + (pts.map (fun p => toPoly (f p))).sum := by
@@ -455,49 +474,49 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
     ring
 
 /-- `toPoly` commutes with negation: `toPoly (cneg p) = − toPoly p`. -/
-@[simp, denote] theorem toPolyG_cnegG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+@[simp, denote] theorem toPolyG_cnegG {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
     toPoly (cneg p) = - toPoly p := by
   induction p with
   | nil => simp [cneg]
   | cons a as ih =>
-    show toPoly (CField.neg a :: cneg as) = -toPoly (a :: as)
+    show toPoly (CCommRing.neg a :: cneg as) = -toPoly (a :: as)
     simp only [denote, ih, map_neg]; ring
 
 /-- `toPoly` realizes subtraction: `toPoly (csub p q) = toPoly p − toPoly q`. -/
-@[simp, denote] theorem toPolyG_csubG {α : Type*} [CField α] [CFieldSpec α] (p q : CPoly α) :
+@[simp, denote] theorem toPolyG_csubG {α : Type*} [CCommRing α] [CRingSpec α] (p q : CPoly α) :
     toPoly (csub p q) = toPoly p - toPoly q := by
   rw [csub]
   simp only [denote, sub_eq_add_neg]
 
 /-- `toPoly` realizes scalar multiplication: `toPoly (cscale c p) = C (toK c) · toPoly p`. -/
-@[simp, denote] theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : CPoly α) :
-    toPoly (cscale c p) = Polynomial.C (CFieldSpec.toK c) * toPoly p := by
+@[simp, denote] theorem toPolyG_cscaleG {α : Type*} [CCommRing α] [CRingSpec α] (c : α) (p : CPoly α) :
+    toPoly (cscale c p) = Polynomial.C (CRingSpec.toR c) * toPoly p := by
   induction p with
   | nil => simp [cscale]
   | cons a as ih =>
-    show toPoly (CField.mul c a :: cscale c as) = Polynomial.C (CFieldSpec.toK c) * toPoly (a :: as)
+    show toPoly (CCommRing.mul c a :: cscale c as) = Polynomial.C (CRingSpec.toR c) * toPoly (a :: as)
     simp only [denote, ih, map_mul]; ring
 
 /-- `toPoly` realizes the degree shift: `toPoly (cshift k p) = X^k · toPoly p`. -/
-@[simp, denote] theorem toPolyG_cshiftG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (p : CPoly α) :
+@[simp, denote] theorem toPolyG_cshiftG {α : Type*} [CCommRing α] [CRingSpec α] (k : ℕ) (p : CPoly α) :
     toPoly (cshift k p) = X ^ k * toPoly p := by
   induction k with
   | zero => simp [cshift]
   | succ n ih =>
-    show toPoly (CField.zero :: cshift n p) = X ^ (n + 1) * toPoly p
+    show toPoly (CCommRing.zero :: cshift n p) = X ^ (n + 1) * toPoly p
     simp only [denote, ih, map_zero]; ring
 
 /-- `toPoly` is multiplicative: `cmul` realizes `(CFieldSpec.K α)[X]` multiplication. -/
-@[simp, denote] theorem toPolyG_cmulG {α : Type*} [CField α] [CFieldSpec α] (p q : CPoly α) :
+@[simp, denote] theorem toPolyG_cmulG {α : Type*} [CCommRing α] [CRingSpec α] (p q : CPoly α) :
     toPoly (cmul p q) = toPoly p * toPoly q := by
   induction p with
   | nil => simp [cmul]
   | cons a as ih =>
-    show toPoly (cadd (cscale a q) (CField.zero :: cmul as q)) = toPoly (a :: as) * toPoly q
+    show toPoly (cadd (cscale a q) (CCommRing.zero :: cmul as q)) = toPoly (a :: as) * toPoly q
     simp only [denote, ih, map_zero]; ring
 
 /-- `toPoly` realizes the `ℕ`-power: `toPoly (cpow p n) = (toPoly p) ^ n`. -/
-@[simp, denote] theorem toPolyG_cpowG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) (n : ℕ) :
+@[simp, denote] theorem toPolyG_cpowG {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) (n : ℕ) :
     toPoly (cpow p n) = (toPoly p) ^ n := by
   induction n with
   | zero => simp [cpow, denote]
@@ -549,6 +568,7 @@ where
     show toPoly (cnsmul k b :: cderiv.go (k + 1) bs) = _
     rw [toPolyG_cons, ih (k + 1), toPolyG_cons, derivative_add, derivative_C, derivative_mul,
       derivative_X]
+    simp only [toR_eq_toK]
     have hk : Polynomial.C (CFieldSpec.toK (cnsmul k b)) = (k : (CFieldSpec.K α)[X]) * Polynomial.C (CFieldSpec.toK b) := by
       rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
     rw [hk]; push_cast; ring
@@ -556,40 +576,40 @@ where
 /-! ### Normalization, degree, leading coefficient — generic correctness -/
 
 /-- `cnorm [] = []`. -/
-@[simp] theorem cnormG_nil {α : Type*} [CField α] : cnorm ([] : CPoly α) = [] := rfl
+@[simp] theorem cnormG_nil {α : Type*} [CCommRing α] : cnorm ([] : CPoly α) = [] := rfl
 
 /-- `cnorm` on a cons cell, unfolded to its defining `match` (definitional). -/
-theorem cnormG_cons_eq {α : Type*} [CField α] (a : α) (as : CPoly α) :
+theorem cnormG_cons_eq {α : Type*} [CCommRing α] (a : α) (as : CPoly α) :
     cnorm (a :: as)
-      = (match cnorm as with | [] => if CField.isZero a then [] else [a] | r => a :: r) := rfl
+      = (match cnorm as with | [] => if CCommRing.isZero a then [] else [a] | r => a :: r) := rfl
 
 /-- `cnorm` is idempotent: stripping trailing zeros twice is the same as once. -/
-@[simp] theorem cnormG_idem {α : Type*} [CField α] (p : CPoly α) : cnorm (cnorm p) = cnorm p := by
+@[simp] theorem cnormG_idem {α : Type*} [CCommRing α] (p : CPoly α) : cnorm (cnorm p) = cnorm p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
     rw [cnormG_cons_eq]
     cases h : cnorm as with
-    | nil => cases ha : CField.isZero a <;> simp [cnormG_cons_eq, ha]
+    | nil => cases ha : CCommRing.isZero a <;> simp [cnormG_cons_eq, ha]
     | cons b bs =>
       rw [h] at ih
       simp only [cnormG_cons_eq, ih]
 
 /-- `clead` is invariant under `cnorm`: `clead (cnorm p) = clead p`. -/
-theorem cleadG_cnormG {α : Type*} [CField α] (p : CPoly α) : clead (cnorm p) = clead p := by
+theorem cleadG_cnormG {α : Type*} [CCommRing α] (p : CPoly α) : clead (cnorm p) = clead p := by
   simp only [clead, cnormG_idem]
 
 /-- `cisZero` is invariant under `cnorm`. -/
-theorem cisZeroG_cnormG {α : Type*} [CField α] (q : CPoly α) : cisZero (cnorm q) = cisZero q := by
+theorem cisZeroG_cnormG {α : Type*} [CCommRing α] (q : CPoly α) : cisZero (cnorm q) = cisZero q := by
   simp only [cisZero, cnormG_idem]
 
 /-- `cdeg` is invariant under `cnorm`. -/
-theorem cdegG_cnormG {α : Type*} [CField α] (p : CPoly α) : cdeg (cnorm p) = cdeg p := by
+theorem cdegG_cnormG {α : Type*} [CCommRing α] (p : CPoly α) : cdeg (cnorm p) = cdeg p := by
   simp only [cdeg, cnormG_idem]
 
 /-- `toPoly` ignores normalization: `toPoly (cnorm p) = toPoly p` — stripping trailing zeros
 does not change the polynomial (the dropped coefficients are zero, via `isZero_iff`). -/
-@[simp, denote] theorem toPolyG_cnormG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+@[simp, denote] theorem toPolyG_cnormG {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
     toPoly (cnorm p) = toPoly p := by
   induction p with
   | nil => rfl
@@ -600,9 +620,9 @@ does not change the polynomial (the dropped coefficients are zero, via `isZero_i
       rw [h] at ih
       simp only [toPolyG_nil] at ih
       have has : toPoly as = 0 := ih.symm
-      cases ha : CField.isZero a with
+      cases ha : CCommRing.isZero a with
       | true =>
-        have ha0 : CFieldSpec.toK a = 0 := (CFieldSpec.isZero_iff a).mp ha
+        have ha0 : CRingSpec.toR a = 0 := (CRingSpec.isZero_iff a).mp ha
         rw [if_pos rfl, toPolyG_nil, toPolyG_cons, has, mul_zero, add_zero, ha0, map_zero]
       | false =>
         rw [if_neg (by simp), toPolyG_cons, toPolyG_nil, mul_zero, add_zero, toPolyG_cons, has,
@@ -613,10 +633,10 @@ does not change the polynomial (the dropped coefficients are zero, via `isZero_i
 
 /-- Coefficient read: the `i`-th coefficient of `toPoly p` is `toK` of the `i`-th list entry
 (`0` past the end). The Horner bridge realizes the dense coefficient list exactly. -/
-theorem toPolyG_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) (i : ℕ) :
-    (toPoly p).coeff i = CFieldSpec.toK ((p : List α).getD i CField.zero) := by
+theorem toPolyG_coeff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) (i : ℕ) :
+    (toPoly p).coeff i = CRingSpec.toR ((p : List α).getD i CCommRing.zero) := by
   induction p generalizing i with
-  | nil => simp [CFieldSpec.toK_zero]
+  | nil => simp [CRingSpec.toR_zero]
   | cons a as ih =>
     rw [toPolyG_cons]
     cases i with
@@ -624,9 +644,9 @@ theorem toPolyG_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) (i
     | succ n => simp [coeff_X_mul, ih]
 
 /-- `toPoly` of a coefficient list is its dense polynomial `∑ i, C(toK cᵢ) * X^i`. -/
-theorem toPolyG_eq_sum_range {α : Type*} [CField α] [CFieldSpec α] (l : CPoly α) :
+theorem toPolyG_eq_sum_range {α : Type*} [CCommRing α] [CRingSpec α] (l : CPoly α) :
     toPoly l =
-      ∑ i ∈ Finset.range l.length, C (CFieldSpec.toK ((l : List α).getD i CField.zero)) * X ^ i := by
+      ∑ i ∈ Finset.range l.length, C (CRingSpec.toR ((l : List α).getD i CCommRing.zero)) * X ^ i := by
   induction l with
   | nil => simp
   | cons a p ih =>
@@ -639,20 +659,20 @@ theorem toPolyG_eq_sum_range {α : Type*} [CField α] [CFieldSpec α] (l : CPoly
     ring
 
 /-- `toK` reads a normalized coefficient as the corresponding coefficient of `toPoly p`. -/
-theorem toK_cnormG_getD {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) (k : ℕ) :
-    CFieldSpec.toK ((cnorm p : List α).getD k CField.zero) = (toPoly p).coeff k := by
+theorem toR_cnormG_getD {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) (k : ℕ) :
+    CRingSpec.toR ((cnorm p : List α).getD k CCommRing.zero) = (toPoly p).coeff k := by
   rw [← toPolyG_coeff, toPolyG_cnormG]
 
 /-- `cnorm` has no trailing zero: `(cnorm p).getLast?` is never a zero coefficient. -/
-theorem cnormG_getLast?_ne_some_zero {α : Type*} [CField α] (p : CPoly α) :
-    ∀ v, (cnorm p : List α).getLast? = some v → CField.isZero v = false := by
+theorem cnormG_getLast?_ne_some_zero {α : Type*} [CCommRing α] (p : CPoly α) :
+    ∀ v, (cnorm p : List α).getLast? = some v → CCommRing.isZero v = false := by
   induction p with
   | nil => simp
   | cons a as ih =>
     rw [cnormG_cons_eq]
     cases h : cnorm as with
     | nil =>
-      cases ha : CField.isZero a with
+      cases ha : CCommRing.isZero a with
       | true => rw [if_pos rfl]; simp
       | false =>
         intro v hv
@@ -665,45 +685,45 @@ theorem cnormG_getLast?_ne_some_zero {α : Type*} [CField α] (p : CPoly α) :
       exact ih v hv
 
 /-- For a normalized nonzero `CPoly`, the leading coefficient `clead` is nonzero (in `K`). -/
-theorem toK_cleadG_ne_zero {α : Type*} [CField α] [CFieldSpec α] {p : CPoly α} (h : cnorm p ≠ []) :
-    CFieldSpec.toK (clead p) ≠ 0 := by
+theorem toR_cleadG_ne_zero {α : Type*} [CCommRing α] [CRingSpec α] {p : CPoly α} (h : cnorm p ≠ []) :
+    CRingSpec.toR (clead p) ≠ 0 := by
   rw [clead]
   rcases hl : (cnorm p : List α).getLast? with _ | v
   · exact absurd (List.getLast?_eq_none_iff.mp hl) h
   · simp only [Option.getD_some]
     intro hv
     have := cnormG_getLast?_ne_some_zero p v hl
-    rw [(CFieldSpec.isZero_iff v).mpr hv] at this
+    rw [(CRingSpec.isZero_iff v).mpr hv] at this
     exact absurd this (by simp)
 
 /-- `clead` is the coefficient at the top index: `toK (clead p) = (toPoly p).coeff (cdeg p)`. -/
-theorem toK_cleadG_eq_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
-    CFieldSpec.toK (clead p) = (toPoly p).coeff (cdeg p) := by
+theorem toR_cleadG_eq_coeff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+    CRingSpec.toR (clead p) = (toPoly p).coeff (cdeg p) := by
   rw [clead, cdeg, ← toPolyG_cnormG, toPolyG_coeff, List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
 
 /-- Degree bound: `natDegree (toPoly p) ≤ (cnorm p).length − 1`. -/
-theorem natDegree_toPolyG_le {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+theorem natDegree_toPolyG_le {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
     (toPoly p).natDegree ≤ (cnorm p : List α).length - 1 := by
   rw [← toPolyG_cnormG]
   apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
   intro m hm
   rw [toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega), Option.getD_none,
-    CFieldSpec.toK_zero]
+    CRingSpec.toR_zero]
 
 /-- `cdeg` is the honest `natDegree`: `cdeg p = (toPoly p).natDegree`. -/
-theorem cdegG_eq_natDegree {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+theorem cdegG_eq_natDegree {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
     cdeg p = (toPoly p).natDegree := by
   rcases eq_or_ne (cnorm p) [] with h | h
   · have h0 : toPoly p = 0 := by rw [← toPolyG_cnormG, h, toPolyG_nil]
     rw [cdeg, h, h0]; simp
   · refine le_antisymm ?_ (natDegree_toPolyG_le p)
     apply Polynomial.le_natDegree_of_ne_zero
-    rw [← toK_cleadG_eq_coeff]
-    exact toK_cleadG_ne_zero h
+    rw [← toR_cleadG_eq_coeff]
+    exact toR_cleadG_ne_zero h
 
 /-- For a nonzero generic polynomial, the normalized list length is `natDegree + 1`. -/
-theorem length_cnormG_of_ne {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α)
+theorem length_cnormG_of_ne {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α)
     (h : cnorm p ≠ []) :
     (cnorm p : List α).length = (toPoly p).natDegree + 1 := by
   have hd := cdegG_eq_natDegree p
@@ -712,25 +732,44 @@ theorem length_cnormG_of_ne {α : Type*} [CField α] [CFieldSpec α] (p : CPoly 
   omega
 
 /-- `toK (clead p)` is the honest `leadingCoeff`: `toK (clead p) = (toPoly p).leadingCoeff`. -/
+theorem toR_cleadG_eq_leadingCoeff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
+    CRingSpec.toR (clead p) = (toPoly p).leadingCoeff := by
+  rw [Polynomial.leadingCoeff, ← cdegG_eq_natDegree, ← toR_cleadG_eq_coeff]
+
+/-! ### Field-path `toK` aliases of the `toR` clead/coeff readings
+On a field coefficient the ring bridge is the field bridge (`toR = toK`, by defeq), so these expose the
+same readings phrased with `CFieldSpec.toK` for the field-only call sites. -/
+
+/-- Field-path alias: `toK` reads a normalized coefficient as the corresponding `toPoly` coefficient. -/
+theorem toK_cnormG_getD {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) (k : ℕ) :
+    CFieldSpec.toK ((cnorm p : List α).getD k CField.zero) = (toPoly p).coeff k :=
+  toR_cnormG_getD p k
+
+/-- Field-path alias: `toK (clead p) = (toPoly p).coeff (cdeg p)`. -/
+theorem toK_cleadG_eq_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+    CFieldSpec.toK (clead p) = (toPoly p).coeff (cdeg p) :=
+  toR_cleadG_eq_coeff p
+
+/-- Field-path alias: `toK (clead p) = (toPoly p).leadingCoeff`. -/
 theorem toK_cleadG_eq_leadingCoeff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
-    CFieldSpec.toK (clead p) = (toPoly p).leadingCoeff := by
-  rw [Polynomial.leadingCoeff, ← cdegG_eq_natDegree, ← toK_cleadG_eq_coeff]
+    CFieldSpec.toK (clead p) = (toPoly p).leadingCoeff :=
+  toR_cleadG_eq_leadingCoeff p
 
 /-- `cnorm p = []` iff `toPoly p = 0` (the list normalizes to empty exactly for the zero
 polynomial). -/
-theorem cnormG_eq_nil_iff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+theorem cnormG_eq_nil_iff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
     cnorm p = [] ↔ toPoly p = 0 := by
   constructor
   · intro h; rw [← toPolyG_cnormG, h, toPolyG_nil]
   · intro h
     by_contra hne
-    have hcl := toK_cleadG_ne_zero hne
-    rw [toK_cleadG_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
+    have hcl := toR_cleadG_ne_zero hne
+    rw [toR_cleadG_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
     exact hcl rfl
 
 /-- `length (cnorm p) < length (cnorm q)` (with `cnorm q ≠ []`) gives
 `deg (toPoly p) < deg (toPoly q)`. -/
-theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CField α] [CFieldSpec α] (p q : CPoly α)
+theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CCommRing α] [CRingSpec α] (p q : CPoly α)
     (hq : cnorm q ≠ []) (hlen : (cnorm p : List α).length < (cnorm q : List α).length) :
     (toPoly p).degree < (toPoly q).degree := by
   have hq0 : toPoly q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
@@ -745,17 +784,33 @@ theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CField α] [CFieldSpec α] 
     omega
 
 /-- `cisZero` reads as `toPoly = 0`: `cisZero p = true ↔ toPoly p = 0`. -/
-theorem cisZeroG_iff {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
+theorem cisZeroG_iff {α : Type*} [CCommRing α] [CRingSpec α] (p : CPoly α) :
     cisZero p = true ↔ toPoly p = 0 := by
   rw [cisZero, ← cnormG_eq_nil_iff]
   exact (List.isEmpty_iff (l := (cnorm p : List α)))
 
 /-- `cisZero p = false` gives `toPoly p ≠ 0`. -/
-theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CField α] [CFieldSpec α] {p : CPoly α}
+theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CCommRing α] [CRingSpec α] {p : CPoly α}
     (h : cisZero p = false) :
     toPoly p ≠ 0 := by
   rw [Bool.eq_false_iff, Ne, cisZeroG_iff] at h
   exact h
+
+/-- **Denotational keystone.** A `CPoly` over `[CCommRing α] [CRingSpec α]` is a `CRingSpec` with
+`R := (CRingSpec.R α)[X]` and `toR := toPoly`, the Horner ring homomorphism (its hom laws are the
+`toPolyG_*` squares). Together with `instCCommRingCPoly` this makes `CPoly (CPoly _)` a fully
+denotable ring coefficient — bivariate polynomials denote into the iterated polynomial ring
+`(R α)[X][X]` with no separate development. See `docs/ring-generalization-plan.md`. -/
+noncomputable instance instCRingSpecCPoly {α : Type*} [CCommRing α] [CRingSpec α] :
+    CRingSpec (CPoly α) where
+  R := (CRingSpec.R α)[X]
+  toR := toPoly
+  toR_zero := toPolyG_nil
+  toR_one := toPolyG_one_singleton
+  toR_add := toPolyG_caddG
+  toR_mul := toPolyG_cmulG
+  toR_neg := toPolyG_cnegG
+  isZero_iff := cisZeroG_iff
 
 /-- Monic-normalization is a unit-scaling: `toPoly (cmonic p)` is associated to `toPoly p` in `K[X]`. -/
 theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
@@ -771,7 +826,7 @@ theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p :
       exact h (by rw [cisZeroG_cnormG, cisZeroG_iff, ← toPolyG_cnormG, he, toPolyG_nil])
     exact associated_unit_mul_left _ _
       (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr
-        (by rw [CFieldSpec.toK_inv]; exact inv_ne_zero (toK_cleadG_ne_zero hne))))
+        (by rw [toR_eq_toK, CFieldSpec.toK_inv]; exact inv_ne_zero (toR_cleadG_ne_zero hne))))
 
 /-- `toPoly (cmonic p)` is monic for `toPoly p ≠ 0`. -/
 theorem monic_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α)
@@ -781,11 +836,11 @@ theorem monic_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPol
     rw [← Bool.not_eq_true, cisZeroG_iff, toPolyG_cnormG]
     exact hp
   have hcform : toPoly (cmonic p)
-      = Polynomial.C (CFieldSpec.toK (CField.inv (clead (cnorm p)))) * toPoly p := by
+      = Polynomial.C (CRingSpec.toR (CField.inv (clead (cnorm p)))) * toPoly p := by
     rw [cmonic, if_neg (by rw [hz]; decide), toPolyG_cscaleG, toPolyG_cnormG]
   rw [hcform]
   refine monic_C_mul_of_mul_leadingCoeff_eq_one ?_
-  rw [CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, toPolyG_cnormG,
+  rw [toR_eq_toK, CFieldSpec.toK_inv, ← toR_eq_toK, toR_cleadG_eq_leadingCoeff, toPolyG_cnormG,
     inv_mul_cancel₀ (Polynomial.leadingCoeff_ne_zero.mpr hp)]
 
 end CPoly

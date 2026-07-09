@@ -31,7 +31,7 @@ theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (
   | cons a as ih =>
     intro k
     -- `(a :: as).zipIdx k = (a, k) :: as.zipIdx (k+1)`; map and read `toPoly`
-    simp only [List.zipIdx_cons, List.map_cons, toPolyG_cons]
+    simp only [List.zipIdx_cons, List.map_cons, toPolyG_cons, toR_eq_toK]
     -- `X^{k+1} · (C(toK (a/(k+1))) + X · toPoly(tail)) = C(..)·X^{k+1} + X^{k+2}·toPoly(tail)`
     rw [mul_add, derivative_add]
     -- the head term: `D(C(toK (a/(k+1)))·X^{k+1}) = (k+1)·C(toK (a/(k+1)))·X^k`
@@ -73,7 +73,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 theorem derivative_toPolyG_cIntegratePolyG [CharZero (CFieldSpec.K α)] (c : CPoly α) :
     Polynomial.derivative (toPoly (CPoly.cIntegratePoly c)) = toPoly c := by
   have h := derivative_Xpow_mul_toPolyG_integrateTail c 0
-  simpa only [CPoly.cIntegratePoly, toPolyG_cons, CFieldSpec.toK_zero, map_zero, zero_add,
+  simpa only [CPoly.cIntegratePoly, toPolyG_cons, toR_eq_toK, CFieldSpec.toK_zero, map_zero, zero_add,
     pow_zero, pow_one, one_mul, List.zipIdx] using h
 
 /-! ### The `cmonomialDeriv [1]` (monomial-derivation) form over a constant base
@@ -237,7 +237,7 @@ theorem cIntegratePolyG_const_coeff [CharZero (CFieldSpec.K α)] (c : CPoly α)
   have hcoeff0 : Q.coeff 0 = 0 := by
     rw [hQ, Differential.coeff_mapCoeffs]
     have : (toPoly (CPoly.cIntegratePoly c)).coeff 0 = 0 := by
-      rw [CPoly.cIntegratePoly, toPolyG_cons, coeff_add, coeff_C_zero, CFieldSpec.toK_zero,
+      rw [CPoly.cIntegratePoly, toPolyG_cons, coeff_add, coeff_C_zero, toR_eq_toK, CFieldSpec.toK_zero,
         coeff_X_mul_zero, add_zero]
     rw [this, map_zero]
   -- `derivative Q = 0` ⟹ `natDegree Q = 0` ⟹ `Q = C (coeff Q 0) = 0`

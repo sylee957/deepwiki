@@ -82,7 +82,9 @@ derivation realizes Mathlib's polynomial coefficient-map derivation. -/
   | nil => simp [cmapDeriv]
   | cons a as ih =>
     show toPoly (CDiffField.cderiv a :: cmapDeriv as) = Differential.mapCoeffs (toPoly (a :: as))
-    rw [toPolyG_cons, ih, toPolyG_cons, map_add, Differential.mapCoeffs_C, CDiffFieldSpec.toK_cderiv,
+    rw [toPolyG_cons, ih, toPolyG_cons]
+    simp only [toR_eq_toK]
+    rw [map_add, Differential.mapCoeffs_C, CDiffFieldSpec.toK_cderiv,
       Derivation.leibniz, Differential.mapCoeffs_X, smul_zero, add_zero, smul_eq_mul]
 
 /-- `toPoly (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPoly Dt) (toPoly p)`: the

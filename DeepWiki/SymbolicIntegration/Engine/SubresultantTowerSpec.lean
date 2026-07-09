@@ -30,7 +30,7 @@ theorem toK_cSubresultantG_getD_eq_coeff (Dstar A Dd : CPoly α) (c : α) (n m j
           CField.zero)
       = (subresultant (toPoly Dstar)
           (toPoly A - C (CFieldSpec.toK c) * toPoly Dd) n m j).coeff k := by
-  rw [← toPolyG_coeff]
+  rw [← ccrZero_eq_cfield, ← toR_eq_toK, ← toPolyG_coeff]
   simp only [denote]
 
 variable [CDiffField α] [CDiffFieldSpec α]

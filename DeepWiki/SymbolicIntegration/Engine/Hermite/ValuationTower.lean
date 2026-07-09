@@ -250,7 +250,7 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : CPoly α) (kelem : CPoly α × ℕ)
   classical
   set kept := (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)) with hkeptdef
   have hone : toPoly ([CField.one] : CPoly α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, toR_eq_toK, CFieldSpec.toK_one, map_one]
   have hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
       toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CField.zero], [CField.one])).1.2 ≠ 0 := by
@@ -363,7 +363,7 @@ theorem cHermiteInner_hbez_of_gcd (Dt v u : CPoly α)
   have h := toPolyG_cdiophantineG (cmul u (cmonomialDeriv Dt v)) v
     (cscale (CField.neg (CField.inv (cnatCast (j' + 1)))) A') hqn hgdeg hgne
   rw [toPolyG_cmulG, toPolyG_cmonomialDeriv] at h
-  rw [h, toPolyG_cscaleG, CFieldSpec.toK_neg, CFieldSpec.toK_inv, CPoly.toK_cnatCastG,
+  rw [h, toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_neg, CFieldSpec.toK_inv, CPoly.toK_cnatCastG,
     Nat.cast_add_one, Polynomial.C_neg]
   ring
 

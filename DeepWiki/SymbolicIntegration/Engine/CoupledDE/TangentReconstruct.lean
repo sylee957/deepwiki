@@ -102,7 +102,7 @@ theorem pairToS_I : pairToS (([], [CField.one]) : CPoly ℚ × CPoly ℚ) = iU :
     unfold toS
     rw [show ([CField.one] : CPoly ℚ) = (CField.one : ℚ) :: ([] : CPoly ℚ) from rfl,
       toPolyG_cons, toPolyG_nil]
-    rw [show CFieldSpec.toK (CField.one : ℚ) = 1 from rfl]
+    rw [show CRingSpec.toR (CField.one : ℚ) = 1 from rfl]
     simp]
   ring
 

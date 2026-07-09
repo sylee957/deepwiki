@@ -301,7 +301,7 @@ agrees with the coefficient-ring embedding. -/
     GBPolyCore.toGBCoeffPoly_coeff, toPolyG_coeff, CPoly.liftGBPolyCore,
     List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map]
   cases h : p[i]? with
-  | none => simp [CFieldSpec.toK_zero, toPolyG_nil, map_zero]
+  | none => simp [Option.map_none, CFieldSpec.toK_zero, toPolyG_nil, map_zero]
   | some c =>
     simp only [Option.map_some, Option.getD_some]
     show CFrac.toCFrac _ = CFrac.am β (CPoly.toPoly c)
@@ -422,7 +422,7 @@ theorem toGBPolyG_cclearDenomsCoreG_coeff (p : CPoly (CFrac β)) (i : ℕ) :
       rw [toCFracG_eq_div]
     have hden0 : CFrac.am β (CPoly.toPoly (CPoly.qdenCoeffCore (p.getD i CField.zero))) ≠ 0 :=
       CFrac.amG_toPolyG_ne_zero (toPolyG_qdenCoeffCoreG_ne_zero _)
-    rw [hcoeff, hcd]
+    rw [ccrZero_eq_cfield, hcoeff, hcd]
     have hpushP : CFrac.am β (((dens.zipIdx.filter (fun de => decide (de.2 ≠ i))).map
         (fun de => CPoly.toPoly de.1)).prod)
         * CFrac.am β (CPoly.toPoly (CPoly.qdenCoeffCore (p.getD i CField.zero)))

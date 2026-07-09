@@ -68,9 +68,12 @@ theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
     rw [radDerivFrom, List.zipIdx_cons, List.map_cons]
     show CPoly.toPoly (CField.add (CDiffField.cderiv a)
           (CField.mul a (CField.mul (CPoly.cnatCast k) ℓ)) :: radDerivFrom ℓ (k + 1) as) = _
-    rw [CPoly.toPolyG_cons, CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_mul,
+    rw [CPoly.toPolyG_cons]
+    simp only [toR_eq_toK]
+    rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_mul,
       CDiffFieldSpec.toK_cderiv, CPoly.toK_cnatCastG]
     rw [ih (k + 1), CPoly.toPolyG_cons]
+    simp only [toR_eq_toK]
     -- expand `mapCoeffs (C(toK a) + X·toPoly as)` and `derivative (C(toK a) + X·toPoly as)` by the
     -- derivation/derivative product rules (`mapCoeffs X = 0`, `derivative X = 1`, `derivative C = 0`).
     have hmc : Differential.mapCoeffs (Polynomial.C (CFieldSpec.toK a) + X * CPoly.toPoly as)
@@ -116,11 +119,13 @@ theorem toPolyG_radDeriv_linear (n : ℕ) (f a₀ a₁ : α) :
   -- Read `a₀ + a₁X` in `K[X]` before applying the implicit derivation.
   have hv : CPoly.toPoly ([a₀, a₁] : RadElem α)
       = Polynomial.C (CFieldSpec.toK a₀) + Polynomial.C (CFieldSpec.toK a₁) * X := by
-    rw [CPoly.toPolyG_cons, CPoly.toPolyG_cons, CPoly.toPolyG_nil, mul_zero, add_zero]; ring
+    rw [CPoly.toPolyG_cons, CPoly.toPolyG_cons, CPoly.toPolyG_nil, mul_zero, add_zero]
+    simp only [toR_eq_toK]; ring
   rw [hv, map_add, Derivation.leibniz, Differential.implicitDeriv_C, Differential.implicitDeriv_C,
     Differential.implicitDeriv_X, smul_eq_mul, smul_eq_mul]
-  rw [CPoly.toPolyG_cons, CPoly.toPolyG_cons, CPoly.toPolyG_nil, mul_zero, add_zero,
-    CFieldSpec.toK_add, CFieldSpec.toK_mul, CDiffFieldSpec.toK_cderiv, CDiffFieldSpec.toK_cderiv,
+  rw [CPoly.toPolyG_cons, CPoly.toPolyG_cons, CPoly.toPolyG_nil, mul_zero, add_zero]
+  simp only [toR_eq_toK]
+  rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, CDiffFieldSpec.toK_cderiv, CDiffFieldSpec.toK_cderiv,
     map_add, map_mul]
   ring
 
@@ -130,7 +135,9 @@ theorem toPolyG_radDeriv_zero_cons (n : ℕ) (f c : α) :
       = Polynomial.C (CFieldSpec.toK
           (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f)))) * X := by
   rw [toPolyG_radDeriv_linear, CPoly.toPolyG_cons, CPoly.toPolyG_cons, CPoly.toPolyG_nil,
-    mul_zero, add_zero, CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_zero]
+    mul_zero, add_zero]
+  simp only [toR_eq_toK]
+  rw [CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_zero]
   rw [map_zero, map_zero, zero_add]
   ring
 
@@ -227,6 +234,7 @@ theorem mk_toPolyG_radReduce_step (n : ℕ) (f : α) (q : RadElem α)
       = CPoly.toPoly (q : List α).dropLast + X ^ m * Polynomial.C (CFieldSpec.toK am) := by
     conv_lhs => rw [← hsplit]
     rw [toPolyG_append, CPoly.toPolyG_cons, CPoly.toPolyG_nil, mul_zero, add_zero, ← hmdef]
+    simp only [toR_eq_toK]
   -- `toPoly fold = toPoly (dropLast q) + X^(m−n)·(C(toK am)·C(toK f))`
   have hkeq : (q : List α).length - 1 - n = m - n := by rw [hlenq]; omega
   have hfold : CPoly.toPoly (CPoly.cadd (q : List α).dropLast

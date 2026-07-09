@@ -114,6 +114,7 @@ subresultant. -/
   congr 1
   rw [getD_map_of_lt _ _ _ (0 : ℕ) _ (by rw [List.length_range]; exact hi), getD_range_of_lt hi]
   congr 1
+  simp only [toR_eq_toK]
   rw [toK_cDetG_eq_det _ (m + n - 2 * j)
       (by rw [cSubmatrix, List.length_map, cSubRowIdx_length])
       (by
