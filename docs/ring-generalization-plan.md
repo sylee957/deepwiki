@@ -99,9 +99,19 @@ aliases of the now-`toR` chain lemmas. The full redesign was NOT needed. `cmonic
 - **P5a — DONE (commit `250d3d05`).** The GBPoly op set in `GcdFF/Carrier.lean` (`gbnorm`/…/`gbprimitivePart`,
   ~75 L) was a byte-identical **dead** duplicate of the live `GBPolyCore` machinery (leftover benchmark
   scaffolding — zero references). Deleted; kept the live `GBPoly = List (CPoly B)` type alias.
-- **P5 remaining:** `GBPoly` and `GBPolyCore` are now both thin `List (CPoly B)` aliases used for different
-  roles (denominator carrier vs gcd carrier); the op-level duplication is gone. Full `CPoly (CPoly B)` +
-  generic-`c*` collapse of `GBPolyCore` shares the same correctness-port cost as P4's residual.
+- **P5b — DONE (commit `7a7d2632`).** Redefined the `GBPolyCore` arith ops (gbaddCore/gbnegCore/gbsubCore/
+  gbscaleCCore/gbshiftCore) as generic `c*` wrappers (`GBPolyCore B = CPoly (CPoly B)`); added the
+  `toGBCoeffPoly_eq_toPolyG` denotation bridge and collapsed the five `toGBCoeffPoly_gb*Core` satellites to
+  generic-backed proofs. gbnormCore/gbpsremainderCore/gbcontentCore/gbprimitivePartCore (the genuine
+  fraction-free PRS-gcd algorithm) keep their defs.
+- **Net result:** the THREE `List (CPoly _)` carriers (`BPoly`, `GBPoly`, `GBPolyCore`) are the only ones in
+  the tree, and their **arithmetic is now the generic engine** (wrappers) or deleted (dead GBPoly ops). The
+  bivariate arithmetic + denotation duplication is fully eliminated. Remaining "separate definitions" —
+  the canonicalizing `bnorm`/`gbnormCore`, the `bpsremainder`/`gbpsremainderCore` PRS, and the
+  subresultant-vs-gcd correctness developments — are **genuine algorithm content, not duplication** (the
+  scan's "~1500 L evaporate" was optimistic; the real redundancy was the ~75 L dead ops + ~60 L arith
+  recursions, now gone). The residual `BPoly = GBPolyCore ℚ` PRS overlap is a cross-subtree correctness
+  port with little payoff (the two correctness devs prove different theorems).
 
 ## Rollback & sequencing
 
