@@ -191,6 +191,28 @@ theorem cmonic_monic (p : P α) (hp : ¬ cisZero (P := P) p = true) : (toPoly (c
   rw [Polynomial.Monic, toPoly_cmonic, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C,
     inv_mul_cancel₀ hlcP]
 
+/-- `cmonic g` is an associate of `g` (they differ by the unit `C (leadingCoeff)`). -/
+theorem cmonic_associated (g : P α) (hg : ¬ cisZero (P := P) g = true) :
+    Associated (toPoly (cmonic g)) (toPoly g) := by
+  have hG : toPoly g ≠ 0 := fun h => hg ((cisZero_iff g).mpr h)
+  have hlc : (toPoly g).leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hG
+  refine ⟨(isUnit_C.mpr (isUnit_iff_ne_zero.mpr hlc)).unit, ?_⟩
+  rw [IsUnit.unit_spec, toPoly_cmonic, mul_right_comm, ← Polynomial.C_mul, inv_mul_cancel₀ hlc,
+    Polynomial.C_1, one_mul]
+
+/-- The canonical (monic) gcd `cmonic (cgcd a b)`. -/
+def cmonicGcd (fuel : ℕ) (a b : P α) : P α := cmonic (cgcd fuel a b)
+
+/-- **The canonical monic gcd:** `cmonicGcd a b` is monic and divides both `a` and `b` — the unique
+monic greatest common divisor. -/
+theorem cmonicGcd_isGCD (fuel : ℕ) (a b : P α) (h : cdeg b < fuel)
+    (hg : ¬ cisZero (P := P) (cgcd fuel a b) = true) :
+    (toPoly (cmonicGcd fuel a b)).Monic ∧
+      toPoly (cmonicGcd fuel a b) ∣ toPoly a ∧ toPoly (cmonicGcd fuel a b) ∣ toPoly b := by
+  have hassoc := cmonic_associated (cgcd fuel a b) hg
+  exact ⟨cmonic_monic _ hg, (hassoc.dvd_iff_dvd_left).mpr (cgcd_dvd fuel a b h).1,
+    (hassoc.dvd_iff_dvd_left).mpr (cgcd_dvd fuel a b h).2⟩
+
 /-- `cmonic` reduces (dense): `2 + 4x` scales to the monic `1/2 + x`. -/
 example : cmonic ([2, 4] : List ℚ) = ([1/2, 1] : List ℚ) := by native_decide
 
