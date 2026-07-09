@@ -160,9 +160,15 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
 - **Downstream of the gcd** (`PolyReprDivisionDegree.lean`): `cgcd_isGCD` (the greatest-common-divisor
   universal property, instance-free), `cdivmod_exact` (`q ∣ p ⇒` zero remainder), `toPoly_mul_cdiv_of_dvd`
   (`q ∣ p ⇒ p = q·(p/q)`, the cofactor factorization), `cmonic` monic normalization
-  (`cmonic_monic`), and the **squarefree part** `csquarefreePart p = p / gcd(p, p')` with its cofactor
+  (`cmonic_monic`), the **squarefree part** `csquarefreePart p = p / gcd(p, p')` with its cofactor
   factorization `toPoly_squarefree_factor : p = gcd(p, p') · squarefreePart p` (the Risch/integration
-  entry point; genuine squarefree-ness of the quotient is the remaining frontier).
+  entry point; genuine squarefree-ness of the quotient is the remaining frontier), and the degree API
+  `cdeg_cmul`/`cdeg_cpow`.
+- **Extended Euclidean & coprimality** (`PolyReprDivision.lean`): `cgcdExt fuel a b = (g, s, t)` with the
+  **Bézout identity** `toPoly_cgcdExt : s·a + t·b = g` (at every fuel, from the division identity), and
+  `isCoprime_of_cgcdExt_isUnit` (unit gcd ⇒ Mathlib `IsCoprime`) — the partial-fractions entry point.
+- **Evaluation** (`PolyReprDenote.lean`): `ceval` with `toR_ceval` (= Mathlib `eval`), the ring-hom
+  squares `toR_ceval_add`/`toR_ceval_mul`, and the factor theorem `ceval_eq_zero_iff_dvd`.
 
 Each computable op reduces under `native_decide` on both the dense `List` and sparse `SparsePoly`
 carriers — the same algorithm, two representations — and the algebraic correctness is a-priori (not merely
