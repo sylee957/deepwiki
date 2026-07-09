@@ -34,4 +34,18 @@ gate-green commit (a rename must be atomic — the intermediate state doesn't co
   decision (different concept — the fraction-field tower — not the `CPoly` op layer).
 
 ## Status
-- P1: in progress.
+- **P1 DONE** (commit): concrete `CPoly → CPolyQ`, 495 occ. Gate PASS.
+- **P2 DONE** (commit): generic `CPolyG → CPoly`, 5667 occ. Gate PASS. **The type inversion — the stated
+  goal — is complete: generic is `CPoly α`, concrete is `CPolyQ`.**
+- **P3/P4 BLOCKED by multi-way name overloads** (do not force):
+  - `toPoly` exists THREE ways in overlapping scopes — `Compute.toPoly` (concrete bridge), the top-level
+    `DeepWiki.SymbolicIntegration.toPoly` (the algebraic/Zassenhaus `List R → R[X]` helper, used across
+    ~10 `Engine/Algebraic/` files), and the would-be generic (from `toPolyG`). ~150 files `open CPoly`, so a
+    generic `CPoly.toPoly` would clash pervasively with the always-in-scope top-level algebraic `toPoly`.
+    Dropping the bridge-`G` therefore needs BOTH other `toPoly` families disambiguated first — high-risk,
+    unrelated churn.
+  - `cderiv` (op-`G` phase) = `CDiffField.cderiv`, the abstract derivation used throughout the engine; a
+    bare rename corrupts it.
+  - **Residual inconsistency (accepted):** generic ops/bridge keep `G` (`CPoly.caddG`, `toPolyG`) while the
+    generic *type* is unmarked `CPoly`. The `G` now reads as "generic-engine op." Completing P3/P4 to remove
+    it requires the multi-way `toPoly`/`cderiv` disambiguation above — a separate, larger effort, deferred.
