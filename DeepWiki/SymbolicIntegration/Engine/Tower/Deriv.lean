@@ -2,10 +2,10 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Field
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
 
-/-! # A computable derivation on the tower carrier `QFunNZ α`
-`towerDerivQFunNZ Dt` is the fraction-field quotient-rule derivation on `QFunNZ α`, and
-`instCDiffFieldQFunNZ` makes `CDiffField` iterate up the tower with the new monomial as an independent
-variable (`Dt = [1]`). Both are computable (no `CFieldSpec`), and `toQFunNZG_towerDerivQFunNZG` bridges to
+/-! # A computable derivation on the tower carrier `CFrac α`
+`towerDerivCFrac Dt` is the fraction-field quotient-rule derivation on `CFrac α`, and
+`instCDiffFieldCFrac` makes `CDiffField` iterate up the tower with the new monomial as an independent
+variable (`Dt = [1]`). Both are computable (no `CFieldSpec`), and `toCFracG_towerDerivCFracG` bridges to
 Mathlib's abstract `extendDeriv` on `RatFunc (CFieldSpec.K α)`. -/
 
 open Polynomial
@@ -14,57 +14,57 @@ namespace DeepWiki.SymbolicIntegration
 
 open scoped Differential
 
-namespace QFunNZ
+namespace CFrac
 
-/-! ### The computable tower derivation `towerDerivQFunNZ Dt` -/
+/-! ### The computable tower derivation `towerDerivCFrac Dt` -/
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldDomain α]
 
-/-- The tower derivation `towerDerivQFunNZ Dt (n/d) = (D n · d − n · D d)/(d·d)` on `QFunNZ α`, with
+/-- The tower derivation `towerDerivCFrac Dt (n/d) = (D n · d − n · D d)/(d·d)` on `CFrac α`, with
 `D = cmonomialDeriv Dt`; the fraction-field quotient rule, computable (no `CFieldSpec`). -/
-def towerDerivQFunNZ (Dt : CPoly α) (x : QFunNZ α) : QFunNZ α :=
+def towerDerivCFrac (Dt : CPoly α) (x : CFrac α) : CFrac α :=
   ⟨(CPoly.csub (CPoly.cmul (CPoly.cmonomialDeriv Dt x.1.1) x.1.2)
       (CPoly.cmul x.1.1 (CPoly.cmonomialDeriv Dt x.1.2)),
     CPoly.cmul x.1.2 x.1.2),
     cmulG_ne_zero_of x.2 x.2⟩
 
-/-- The numerator of `towerDerivQFunNZ Dt x` is `D n · d − n · D d` (with `D = cmonomialDeriv Dt`). -/
-theorem towerDerivQFunNZG_num (Dt : CPoly α) (x : QFunNZ α) :
-    (towerDerivQFunNZ Dt x).1.1
+/-- The numerator of `towerDerivCFrac Dt x` is `D n · d − n · D d` (with `D = cmonomialDeriv Dt`). -/
+theorem towerDerivCFracG_num (Dt : CPoly α) (x : CFrac α) :
+    (towerDerivCFrac Dt x).1.1
       = CPoly.csub (CPoly.cmul (CPoly.cmonomialDeriv Dt x.1.1) x.1.2)
           (CPoly.cmul x.1.1 (CPoly.cmonomialDeriv Dt x.1.2)) := rfl
 
-/-- The denominator of `towerDerivQFunNZ Dt x` is `d·d`. -/
-theorem towerDerivQFunNZG_den (Dt : CPoly α) (x : QFunNZ α) :
-    (towerDerivQFunNZ Dt x).1.2 = CPoly.cmul x.1.2 x.1.2 := rfl
+/-- The denominator of `towerDerivCFrac Dt x` is `d·d`. -/
+theorem towerDerivCFracG_den (Dt : CPoly α) (x : CFrac α) :
+    (towerDerivCFrac Dt x).1.2 = CPoly.cmul x.1.2 x.1.2 := rfl
 
-end QFunNZ
+end CFrac
 
-/-! ### The iterating instance `CDiffField (QFunNZ α)` -/
+/-! ### The iterating instance `CDiffField (CFrac α)` -/
 
 section
 variable {α : Type*} [CField α] [CDiffField α] [CFieldDomain α]
 
-/-- `CDiffField (QFunNZ α)` with `cderiv := towerDerivQFunNZ [CField.one]`: the new monomial is an
+/-- `CDiffField (CFrac α)` with `cderiv := towerDerivCFrac [CField.one]`: the new monomial is an
 independent variable (`Dt = 1`), so `CDiffField` iterates up the tower. Computable (no `CFieldSpec`). -/
-instance instCDiffFieldQFunNZ : CDiffField (QFunNZ α) where
-  cderiv := QFunNZ.towerDerivQFunNZ [CField.one]
+instance instCDiffFieldCFrac : CDiffField (CFrac α) where
+  cderiv := CFrac.towerDerivCFrac [CField.one]
 
 end
 
 /-! ### The level-2 derivation computes (`native_decide`) -/
 
-/-- A level-2 scalar `c ∈ Lvl2 = QFunNZ (QFunNZ ℚ) = ℚ(x)(t₁)` from a numerator/denominator pair of
-`CPoly (QFunNZ ℚ)`s, with denominator a nonzero singleton `[d]`. -/
-def lvl2OfList (num : CPoly (QFunNZ ℚ)) (d : QFunNZ ℚ)
-    (h : CPoly.cisZero ([d] : CPoly (QFunNZ ℚ)) = false) : Lvl2 := ⟨(num, [d]), h⟩
+/-- A level-2 scalar `c ∈ Lvl2 = CFrac (CFrac ℚ) = ℚ(x)(t₁)` from a numerator/denominator pair of
+`CPoly (CFrac ℚ)`s, with denominator a nonzero singleton `[d]`. -/
+def lvl2OfList (num : CPoly (CFrac ℚ)) (d : CFrac ℚ)
+    (h : CPoly.cisZero ([d] : CPoly (CFrac ℚ)) = false) : Lvl2 := ⟨(num, [d]), h⟩
 
 /-- The level-2 scalar `t₁ ∈ ℚ(x)(t₁)` (numerator `[0, 1]` over ℚ(x): `t₁ = 0 + 1·t₁`, denominator
 `[1]`). -/
 def lvl2T1 : Lvl2 :=
-  lvl2OfList [(CField.zero : QFunNZ ℚ), CField.one] (CField.one : QFunNZ ℚ) (by native_decide)
+  lvl2OfList [(CField.zero : CFrac ℚ), CField.one] (CField.one : CFrac ℚ) (by native_decide)
 
-/-! #### The level-2 scalar derivation `towerDerivQFunNZ` reduces -/
+/-! #### The level-2 scalar derivation `towerDerivCFrac` reduces -/
 
 /-- `D(t₁) = 1` at level 2: the level-2 derivation applied to `t₁` is `1` (checked via `CField.isZero` of
 the difference). -/
@@ -117,23 +117,23 @@ example :
       (CPoly.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), lvl2T1])
       [lvl2T1, (CField.one : Lvl2)]) = true := by native_decide
 
-/-! ### The abstract bridge `toQFunNZ (towerDerivQFunNZ Dt x) = extendDeriv …` -/
+/-! ### The abstract bridge `toCFrac (towerDerivCFrac Dt x) = extendDeriv …` -/
 
-namespace QFunNZ
+namespace CFrac
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α] [CFieldDomain α]
 variable [Algebra ℚ (CFieldSpec.K α)]
 
-/-- `toQFunNZ (towerDerivQFunNZ Dt x) = extendDeriv (implicitDeriv (toPoly Dt)) (toQFunNZ x)` in
+/-- `toCFrac (towerDerivCFrac Dt x) = extendDeriv (implicitDeriv (toPoly Dt)) (toCFrac x)` in
 `RatFunc (CFieldSpec.K α)`: the computable tower derivation realizes Mathlib's `extendDeriv`. -/
-theorem toQFunNZG_towerDerivQFunNZG (Dt : CPoly α) (x : QFunNZ α) :
-    toQFunNZ (towerDerivQFunNZ Dt x)
-      = extendDeriv (Differential.implicitDeriv (CPoly.toPoly Dt)) (toQFunNZ x) := by
+theorem toCFracG_towerDerivCFracG (Dt : CPoly α) (x : CFrac α) :
+    toCFrac (towerDerivCFrac Dt x)
+      = extendDeriv (Differential.implicitDeriv (CPoly.toPoly Dt)) (toCFrac x) := by
   obtain ⟨⟨n, d⟩, hd⟩ := x
-  -- read `toQFunNZ x` as `RatFunc.mk (toPoly n) (toPoly d)`, apply the quotient rule `extendDeriv_mk`.
-  have hxmk : toQFunNZ (⟨(n, d), hd⟩ : QFunNZ α)
+  -- read `toCFrac x` as `RatFunc.mk (toPoly n) (toPoly d)`, apply the quotient rule `extendDeriv_mk`.
+  have hxmk : toCFrac (⟨(n, d), hd⟩ : CFrac α)
       = RatFunc.mk (CPoly.toPoly n) (CPoly.toPoly d) := by
-    rw [toQFunNZ, RatFunc.mk_eq_div]
+    rw [toCFrac, RatFunc.mk_eq_div]
   rw [hxmk, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul, map_mul, map_pow]
   -- the LHS numerator/denominator, read through `toPoly`, with `toPolyG_cmonomialDeriv` identifying
   -- the computable monomial derivation as `implicitDeriv (toPoly Dt)`.
@@ -142,7 +142,7 @@ theorem toQFunNZG_towerDerivQFunNZG (Dt : CPoly α) (x : QFunNZ α) :
       / am α (CPoly.toPoly (CPoly.cmul d d)) = _
   simp [CPoly.toPolyG_cmonomialDeriv, map_sub, map_mul, pow_two]
 
-end QFunNZ
+end CFrac
 
 /-! ### Axiom audit -/
 
@@ -156,6 +156,6 @@ end QFunNZ
 
 -- The abstract bridge (computable tower derivation vs `extendDeriv`):
 -- `[propext, Classical.choice, Quot.sound]` (no native axiom — it is a proof, not a computation).
-#print axioms QFunNZ.toQFunNZG_towerDerivQFunNZG
+#print axioms CFrac.toCFracG_towerDerivCFracG
 
 end DeepWiki.SymbolicIntegration

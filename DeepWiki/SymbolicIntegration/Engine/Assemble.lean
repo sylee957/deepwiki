@@ -33,7 +33,7 @@ def combineSN (snum sden : CPoly α) (nrm : IntegralResult α) : IntegralResult 
 
 end CPoly
 
-open CPoly QFunNZ Polynomial
+open CPoly CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]

@@ -33,7 +33,7 @@ Layer 3  Case typeclass            CMonomialCase α        (Prop-free hooks)    
 Layer 4  Generic assembler         cIntegrate [CMonomialCase α] [CResidueSource α]        (NEW)
            + cIntegrate_sound  [LawfulCMonomialCase α]   (proven ONCE)
 Layer 5  Instances                 Primitive · Hyperexp · Hypertangent                    (thin)
-Layer 6  Tower recursion           CMonomialCase (QFunNZG β)  from  [… β]                 (the descent)
+Layer 6  Tower recursion           CMonomialCase (CFracG β)  from  [… β]                 (the descent)
 ```
 
 ## Layer 3 — the case typeclass (Prop-free, `native_decide`-friendly)
@@ -86,7 +86,7 @@ class LawfulCResidueSource (α) [CField α] [CFieldSpec α] [CResidueSource α] 
 
 Instances: `CResidueSource ℚ` = rational-root enumeration on `R`
 (`±(divisors of constant-coeff numerator)/(divisors of leading)`) — sound always, `Lawful` for the
-rational-residue slice (what the `native_decide` examples exercise); `CResidueSource (QFunNZG β)` reads the
+rational-residue slice (what the `native_decide` examples exercise); `CResidueSource (CFracG β)` reads the
 constant part of `R`'s `ℚ(x)`-coefficients and delegates to the ℚ enumerator. **Frontier:** irrational
 algebraic residues (roots of `R` in an extension of ℚ) need Bronstein's `factor(R)` + symbolic `K(α)`
 arithmetic — a richer instance you swap in; the default ℚ instance is sound-but-incomplete there, and
@@ -141,11 +141,11 @@ proven from: `canonicalRepresentationFastG` faithful (Layer 2 lemma) + `cIntegra
 
 ## Layer 6 — the tower descent (unchanged in spirit)
 
-The recursion `k(t) → k` is already the `CRischField (QFunNZG β)` instance (`Tower/RischDEInstance.lean`).
-`CMonomialCase (QFunNZG β)` is built from the level-`β` structure the same way; the assembler at level `n+1`
-calls the shared stages over `QFunNZG β` and the hooks recurse into level `n`. Termination bottoms at
+The recursion `k(t) → k` is already the `CRischField (CFracG β)` instance (`Tower/RischDEInstance.lean`).
+`CMonomialCase (CFracG β)` is built from the level-`β` structure the same way; the assembler at level `n+1`
+calls the shared stages over `CFracG β` and the hooks recurse into level `n`. Termination bottoms at
 `CMonomialCase ℚ` (rational base case, `integrateSpecial = pure`, `reducedResidual = pure`).
-`CResidueSource (QFunNZG β)` likewise delegates to `CResidueSource ℚ` — residues are constants in `C = ℚ`
+`CResidueSource (CFracG β)` likewise delegates to `CResidueSource ℚ` — residues are constants in `C = ℚ`
 regardless of tower depth, so the ℚ enumerator is the single base of that descent too.
 
 ## Completeness — the parallel pair
@@ -265,7 +265,7 @@ frontiers, two are discharged (split, Hermite) and only the **RT residue match**
 
 ## Phases
 
-- [ ] P0 — `CResidueSource α` + `CResidueSource ℚ` (rational-root enumeration) + `CResidueSource (QFunNZG β)`
+- [ ] P0 — `CResidueSource α` + `CResidueSource ℚ` (rational-root enumeration) + `CResidueSource (CFracG β)`
   (delegate to ℚ). Self-contained and additive: gives "no manual `cands`" ergonomics via a top wrapper
   `cIntegrateGFullAutoWf a d := cIntegrateGFullWf a d (residueCandidates (cResidueResultantTowerG …))`
   *before* any assembler work; validate it reproduces the hand-built `cands` on the existing examples.

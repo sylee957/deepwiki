@@ -128,7 +128,7 @@ The round-trip theorem turns an engine certificate into rational-part soundness.
 open CPoly
 
 /-- The named general run `∫ y dx = (3/5)x·y` on `y³ = x²` is sound through `afDerivWf`. -/
-theorem isGeneralRationalIntegralWf_cuspCubic_intY (v : CPoly (QFunNZ ℚ))
+theorem isGeneralRationalIntegralWf_cuspCubic_intY (v : CPoly (CFrac ℚ))
     (hcheck : cisZero (csub (afDerivWf gcuspCubicF v) gcuspCubicY) = true) :
     CPoly.IsGeneralRationalIntegralWf gcuspCubicF gcuspCubicY v :=
   CPoly.isGeneralRationalIntegralWf_of_roundtrip gcuspCubicF v gcuspCubicY hcheck

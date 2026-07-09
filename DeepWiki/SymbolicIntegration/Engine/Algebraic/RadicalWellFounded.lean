@@ -144,8 +144,8 @@ end CPoly
 `∫ R/(B·y) dx = v + c·log u` (principal case). Computes the rational part `v` by the multi-case
 dispatch (`radIntegrateRationalWf` + `radAssembleRatPart`), then solves the log argument on
 `residual` (`radLogArgSolveQ ρ residual D degBound`); on `none` returns just the rational part. -/
-def cIntegrateAlgebraicWf (ρ : QFunNZ ℚ) (R B : CPoly ℚ)
-    (residual : RadElem (QFunNZ ℚ)) (c : QFunNZ ℚ) (D : CPoly ℚ) (degBound : ℕ) :
+def cIntegrateAlgebraicWf (ρ : CFrac ℚ) (R B : CPoly ℚ)
+    (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : CPoly ℚ) (degBound : ℕ) :
     AlgIntegralResultQ :=
   let ρpoly : CPoly ℚ := qxNum ρ
   let runs := CPoly.radIntegrateRationalWf ρpoly R B
@@ -153,8 +153,8 @@ def cIntegrateAlgebraicWf (ρ : QFunNZ ℚ) (R B : CPoly ℚ)
   match radLogArgSolveQ ρ residual D degBound with
   | none => ⟨v, []⟩
   | some N =>
-    let Dq : QFunNZ ℚ := qxOfNum D
-    let u : RadElem (QFunNZ ℚ) := N.map (fun z => CField.div z Dq)
+    let Dq : CFrac ℚ := qxOfNum D
+    let u : RadElem (CFrac ℚ) := N.map (fun z => CField.div z Dq)
     ⟨v, [(c, u)]⟩
 
 end DeepWiki.SymbolicIntegration

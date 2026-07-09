@@ -14,18 +14,18 @@ open CPoly
 
 /-- The residue-constant guard declines the reduced part `1/t` over `ℚ(x)(log x)`. -/
 theorem cResidueConstantGuardG_declines_invLog :
-    cResidueConstantGuard ([BenchG.gcInvX] : CPoly (QFunNZ ℚ))
+    cResidueConstantGuard ([BenchG.gcInvX] : CPoly (CFrac ℚ))
       [CField.one] [CField.zero, CField.one] = false := by native_decide
 
 /-- The residue-constant guard accepts `(1/x)/t` over `ℚ(x)(log x)`. -/
 theorem cResidueConstantGuardG_accepts_invXinvLog :
-    cResidueConstantGuard ([BenchG.gcInvX] : CPoly (QFunNZ ℚ))
+    cResidueConstantGuard ([BenchG.gcInvX] : CPoly (CFrac ℚ))
       [BenchG.gcInvX] [CField.zero, CField.one] = true := by native_decide
 
 /-- If the LRT Liouville frontier holds, `1/t` over `ℚ(x)(log x)` is not genuinely elementary integrable. -/
-theorem not_genuinelyIntegrableLrt_invLog [Algebra ℚ (CFieldSpec.K (QFunNZ ℚ))]
-    [LrtLiouvilleFrontier (QFunNZ ℚ)] :
-    ¬ IsElementaryIntegrableGenuineLrt ([BenchG.gcInvX] : CPoly (QFunNZ ℚ))
+theorem not_genuinelyIntegrableLrt_invLog [Algebra ℚ (CFieldSpec.K (CFrac ℚ))]
+    [LrtLiouvilleFrontier (CFrac ℚ)] :
+    ¬ IsElementaryIntegrableGenuineLrt ([BenchG.gcInvX] : CPoly (CFrac ℚ))
       [CField.one] [CField.zero, CField.one] :=
   not_isElementaryIntegrableGenuineLrt _ _ _
     (fun h => absurd ((cisZeroG_iff _).mpr h) (by native_decide))

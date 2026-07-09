@@ -14,7 +14,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
@@ -267,30 +267,30 @@ theorem cPolyRischDEG_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra �
     (cPolyRischDEG_nil_eq ([CField.one] : CPoly α) c n hc hdeg)
     (cIntegratePolyG_const_coeff c hconst)
 
-/-! ### The deliverable at the level-1 carrier `α = QFunNZ ℚ = ℚ(x)` -/
+/-! ### The deliverable at the level-1 carrier `α = CFrac ℚ = ℚ(x)` -/
 
-/-- `CharZero (CFieldSpec.K (QFunNZ ℚ))` via `RatFunc ℚ`: local instance for the polynomial-branch
+/-- `CharZero (CFieldSpec.K (CFrac ℚ))` via `RatFunc ℚ`: local instance for the polynomial-branch
 one-shot over the carrier abbreviation. -/
-noncomputable local instance : CharZero (CFieldSpec.K (QFunNZ ℚ)) :=
+noncomputable local instance : CharZero (CFieldSpec.K (CFrac ℚ)) :=
   inferInstanceAs (CharZero (RatFunc ℚ))
 
-/-- Local `ℚ`-algebra structure on `CFieldSpec.K (QFunNZ ℚ)` via `RatFunc ℚ`. -/
-noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZ ℚ)) :=
+/-- Local `ℚ`-algebra structure on `CFieldSpec.K (CFrac ℚ)` via `RatFunc ℚ`. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (CFrac ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
-/-- Fuel-free checker-free one-shot at `α = QFunNZ ℚ`: if `cPolyRischDE [CField.one] [] c n = some q`
-over `ℚ(x) = QFunNZ ℚ` (nonzero `c` within the degree budget, constant base), then
+/-- Fuel-free checker-free one-shot at `α = CFrac ℚ`: if `cPolyRischDE [CField.one] [] c n = some q`
+over `ℚ(x) = CFrac ℚ` (nonzero `c` within the degree budget, constant base), then
 `towerFractionFieldDeriv [1] (am(toPoly q)/am 1) = am(toPoly c)/am 1` over `RatFunc ℚ`. The
-`QFunNZ ℚ` instance of `field_identity_of_cPolyRischDEG`. -/
-theorem field_identity_of_cPolyRischDEG_qfunNZG (c q : CPoly (QFunNZ ℚ)) (n : ℤ)
+`CFrac ℚ` instance of `field_identity_of_cPolyRischDEG`. -/
+theorem field_identity_of_cPolyRischDEG_qfunNZG (c q : CPoly (CFrac ℚ)) (n : ℤ)
     (hc : CPoly.cisZero c = false) (hdeg : (CPoly.cdeg c : ℤ) + 1 ≤ n)
-    (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly (QFunNZ ℚ)) ([] : CPoly (QFunNZ ℚ)) c n
+    (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly (CFrac ℚ)) ([] : CPoly (CFrac ℚ)) c n
         = some q)
     (hconst : Differential.mapCoeffs (toPoly q) = 0) :
-    towerFractionFieldDeriv ([CField.one] : CPoly (QFunNZ ℚ))
-        (am (QFunNZ ℚ) (toPoly q) / am (QFunNZ ℚ) (toPoly ([CField.one] : CPoly (QFunNZ ℚ))))
-      = am (QFunNZ ℚ) (toPoly c)
-          / am (QFunNZ ℚ) (toPoly ([CField.one] : CPoly (QFunNZ ℚ))) :=
+    towerFractionFieldDeriv ([CField.one] : CPoly (CFrac ℚ))
+        (am (CFrac ℚ) (toPoly q) / am (CFrac ℚ) (toPoly ([CField.one] : CPoly (CFrac ℚ))))
+      = am (CFrac ℚ) (toPoly c)
+          / am (CFrac ℚ) (toPoly ([CField.one] : CPoly (CFrac ℚ))) :=
   field_identity_of_cPolyRischDEG c q n hc hdeg hsome hconst
 
 /-! ### Restatements of the polynomial-branch identities -/
@@ -308,16 +308,16 @@ example [CharZero (CFieldSpec.K α)] (c : CPoly α)
       = true :=
   checkIdentityG_cIntegratePolyG_const c hconst
 
--- At `α = QFunNZ ℚ`, a successful polynomial RDE solve differentiates back to the integrand.
-example (c q : CPoly (QFunNZ ℚ)) (n : ℤ)
+-- At `α = CFrac ℚ`, a successful polynomial RDE solve differentiates back to the integrand.
+example (c q : CPoly (CFrac ℚ)) (n : ℤ)
     (hc : CPoly.cisZero c = false) (hdeg : (CPoly.cdeg c : ℤ) + 1 ≤ n)
-    (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly (QFunNZ ℚ)) ([] : CPoly (QFunNZ ℚ)) c n
+    (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly (CFrac ℚ)) ([] : CPoly (CFrac ℚ)) c n
         = some q)
     (hconst : Differential.mapCoeffs (toPoly q) = 0) :
-    towerFractionFieldDeriv ([CField.one] : CPoly (QFunNZ ℚ))
-        (am (QFunNZ ℚ) (toPoly q) / am (QFunNZ ℚ) (toPoly ([CField.one] : CPoly (QFunNZ ℚ))))
-      = am (QFunNZ ℚ) (toPoly c)
-          / am (QFunNZ ℚ) (toPoly ([CField.one] : CPoly (QFunNZ ℚ))) :=
+    towerFractionFieldDeriv ([CField.one] : CPoly (CFrac ℚ))
+        (am (CFrac ℚ) (toPoly q) / am (CFrac ℚ) (toPoly ([CField.one] : CPoly (CFrac ℚ))))
+      = am (CFrac ℚ) (toPoly c)
+          / am (CFrac ℚ) (toPoly ([CField.one] : CPoly (CFrac ℚ))) :=
   field_identity_of_cPolyRischDEG_qfunNZG c q n hc hdeg hsome hconst
 
 -- Differential-constant integrand coefficients give differential-constant antiderivative coefficients.

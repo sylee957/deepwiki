@@ -110,32 +110,32 @@ def cprimPRSgcdGenCore (cgcdB : CPoly B → CPoly B → CPoly B) :
       let r := GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q)
       cprimPRSgcdGenCore cgcdB fuel Q r
 
-/-! ### Clear denominators `CPoly (QFunNZ β) ↔ GBPolyCore β` (`β(s)[t] ↔ (β[s])[t]`) -/
+/-! ### Clear denominators `CPoly (CFrac β) ↔ GBPolyCore β` (`β(s)[t] ↔ (β[s])[t]`) -/
 
 namespace CPoly
 
 variable {β : Type*} [CField β] [CFieldDomain β]
 
-/-- The numerator `CPoly β` of a `QFunNZ β` coefficient. -/
-def qnumCoeffCore (c : QFunNZ β) : CPoly β := c.1.1
+/-- The numerator `CPoly β` of a `CFrac β` coefficient. -/
+def qnumCoeffCore (c : CFrac β) : CPoly β := c.1.1
 
-/-- The denominator `CPoly β` of a `QFunNZ β` coefficient. -/
-def qdenCoeffCore (c : QFunNZ β) : CPoly β := c.1.2
+/-- The denominator `CPoly β` of a `CFrac β` coefficient. -/
+def qdenCoeffCore (c : CFrac β) : CPoly β := c.1.2
 
-/-- Clear denominators `cclearDenomsCore p ∈ GBPolyCore β`: multiply `p` over `α = QFunNZ β` by the
+/-- Clear denominators `cclearDenomsCore p ∈ GBPolyCore β`: multiply `p` over `α = CFrac β` by the
 product of its coefficient denominators, so coefficient `i` becomes `numᵢ · ∏_{j≠i} denⱼ ∈ CPoly β`. -/
-def cclearDenomsCore (p : CPoly (QFunNZ β)) : GBPolyCore β :=
-  let cs : List (QFunNZ β) := p
+def cclearDenomsCore (p : CPoly (CFrac β)) : GBPolyCore β :=
+  let cs : List (CFrac β) := p
   let dens : List (CPoly β) := cs.map qdenCoeffCore
   cs.zipIdx.map (fun (ci, i) =>
     let prodOthers := (dens.zipIdx.filter (fun (_, j) => j ≠ i)).foldl
       (fun acc (d, _) => CPoly.cmul acc d) [CField.one]
     CPoly.cmul (qnumCoeffCore ci) prodOthers)
 
-/-- Lift back `liftGBPolyCore p ∈ CPoly (QFunNZ β)`: read each `CPoly β` coefficient `c` as the
+/-- Lift back `liftGBPolyCore p ∈ CPoly (CFrac β)`: read each `CPoly β` coefficient `c` as the
 fraction `c/1`. -/
-def liftGBPolyCore (p : GBPolyCore β) : CPoly (QFunNZ β) :=
-  p.map (fun c => (⟨(c, [CField.one]), QFunNZ.cisZeroG_one_singleton⟩ : QFunNZ β))
+def liftGBPolyCore (p : GBPolyCore β) : CPoly (CFrac β) :=
+  p.map (fun c => (⟨(c, [CField.one]), CFrac.cisZeroG_one_singleton⟩ : CFrac β))
 
 end CPoly
 

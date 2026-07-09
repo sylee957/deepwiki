@@ -26,30 +26,30 @@ def qfLcm (a b : CPoly α) : CPoly α :=
 
 /-- The common denominator of a `ℚ(x)`-row `qfRowDen row`, the monic lcm of the entry denominators;
 scaling the row by this `D ∈ ℚ[x]` lands every entry in `ℚ[x]`. -/
-def qfRowDen (row : List (QFunNZ ℚ)) : CPoly ℚ :=
+def qfRowDen (row : List (CFrac ℚ)) : CPoly ℚ :=
   row.foldl (fun acc z => qfLcm acc (cmonic (z.1.2 : CPoly ℚ))) [CField.one]
 
 /-- The common denominator of a whole `ℚ(x)`-matrix `qfMatDen M`, the lcm over all rows of `qfRowDen`;
 the single `D ∈ ℚ[x]` with `D·M ∈ ℚ[x]ⁿˣⁿ` and `det(D·M) = Dⁿ·det M`. -/
-def qfMatDen (M : List (List (QFunNZ ℚ))) : CPoly ℚ :=
+def qfMatDen (M : List (List (CFrac ℚ))) : CPoly ℚ :=
   M.foldl (fun acc row => qfLcm acc (qfRowDen row)) [CField.one]
 
 /-! ### Clearing a `ℚ(x)`-row / matrix into `ℚ[x]` (`qfClearRow`/`qfClearMatrix`) -/
 
 /-- Clear a single `ℚ(x)` entry by a common denominator `D` `qfClearEntry D z = num(z)·(D/den(z))`, the
 `ℚ[x]` polynomial `D·z` (exact since `den(z) | D`). -/
-def qfClearEntry (D : CPoly ℚ) (z : QFunNZ ℚ) : CPoly ℚ :=
+def qfClearEntry (D : CPoly ℚ) (z : CFrac ℚ) : CPoly ℚ :=
   cmul (z.1.1 : CPoly ℚ) (cdivWf D (z.1.2 : CPoly ℚ))
 
 /-- Clear a single `ℚ(x)`-row to `ℚ[x]` `qfClearRow row = ([D·zᵢ], D)` where `D = qfRowDen row`;
 returns the cleared `ℚ[x]`-row paired with the clearing factor `D`. -/
-def qfClearRow (row : List (QFunNZ ℚ)) : List (CPoly ℚ) × CPoly ℚ :=
+def qfClearRow (row : List (CFrac ℚ)) : List (CPoly ℚ) × CPoly ℚ :=
   let D := qfRowDen row
   (row.map (qfClearEntry D), D)
 
 /-- Clear a whole `ℚ(x)`-matrix to `ℚ[x]` by a single common denominator `qfClearMatrix M = (D·M, D)`
 where `D = qfMatDen M`; the scalar factor `D` tracks the determinant scale `det(D·M) = Dⁿ·det M`. -/
-def qfClearMatrix (M : List (List (QFunNZ ℚ))) : List (List (CPoly ℚ)) × CPoly ℚ :=
+def qfClearMatrix (M : List (List (CFrac ℚ))) : List (List (CPoly ℚ)) × CPoly ℚ :=
   let D := qfMatDen M
   (M.map (fun row => row.map (qfClearEntry D)), D)
 
@@ -57,7 +57,7 @@ def qfClearMatrix (M : List (List (QFunNZ ℚ))) : List (List (CPoly ℚ)) × CP
 
 /-- The fraction-free determinant of a `ℚ(x)`-matrix `qfDet M`: clear `M` to `M' = D·M ∈ ℚ[x]`, run
 `bareissDet M'`, and divide back by `Dⁿ`, returning `qxOfNum(bareissDet M') / qxOfNum(Dⁿ)`. -/
-def qfDet (M : List (List (QFunNZ ℚ))) : QFunNZ ℚ :=
+def qfDet (M : List (List (CFrac ℚ))) : CFrac ℚ :=
   let n := M.length
   let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
@@ -67,29 +67,29 @@ def qfDet (M : List (List (QFunNZ ℚ))) : QFunNZ ℚ :=
 /-- The fraction-free adjugate `(adj(D·M), D)` of a `ℚ(x)`-matrix `qfAdjugate M`: clear `M` to
 `M' = D·M ∈ ℚ[x]` and return the `ℚ[x]` adjugate `bareissAdjugate M'` paired with `D`; the genuine
 `ℚ(x)`-adjugate is `adj(M') / Dⁿ⁻¹`. -/
-def qfAdjugate (M : List (List (QFunNZ ℚ))) : List (List (CPoly ℚ)) × CPoly ℚ :=
+def qfAdjugate (M : List (List (CFrac ℚ))) : List (List (CPoly ℚ)) × CPoly ℚ :=
   let (M', D) := qfClearMatrix M
   (bareissAdjugate M', D)
 
 /-- The fraction-free inverse representation of a `ℚ(x)`-matrix `qfInv M = (det(M'), D·adj(M'))` with
 `M' = D·M ∈ ℚ[x]`: a pair of flat `ℚ[x]` polynomials with `M⁻¹[i][j] = (D·adj(M'))[i][j] / det(M')`,
 one shared denominator `det(M')`. -/
-def qfInv (M : List (List (QFunNZ ℚ))) : CPoly ℚ × List (List (CPoly ℚ)) :=
+def qfInv (M : List (List (CFrac ℚ))) : CPoly ℚ × List (List (CPoly ℚ)) :=
   let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
   let adjPoly := bareissAdjugate M'
   (detPoly, adjPoly.map (fun row => row.map (fun e => cmul D e)))
 
 /-- A single `ℚ(x)` entry of the fraction-free inverse `qfInvEntry M i j = (D·adj(M'))[i][j] /
-det(M') : QFunNZ ℚ`, reading the `(i, j)` entry of `qfInv` back into `ℚ(x)`. -/
-def qfInvEntry (M : List (List (QFunNZ ℚ))) (i j : ℕ) : QFunNZ ℚ :=
+det(M') : CFrac ℚ`, reading the `(i, j)` entry of `qfInv` back into `ℚ(x)`. -/
+def qfInvEntry (M : List (List (CFrac ℚ))) (i j : ℕ) : CFrac ℚ :=
   let dn := qfInv M
   CField.mul (qxOfNum (getEntry dn.2 i j)) (CField.inv (qxOfNum dn.1))
 
 /-- The fraction-free Cramer solve of `M·x = b` over `ℚ(x)` `qfSolve M b`: clear `M` to `M' = D·M` and
 the rhs to `D·b`, then run `bareissSolve M' (D·b)`, giving `x = (det M'·x)/det M'` with one shared
 denominator. -/
-def qfSolve (M : List (List (QFunNZ ℚ))) (b : List (QFunNZ ℚ)) :
+def qfSolve (M : List (List (CFrac ℚ))) (b : List (CFrac ℚ)) :
     CPoly ℚ × List (CPoly ℚ) :=
   let (M', D) := qfClearMatrix M
   let b' := b.map (qfClearEntry D)

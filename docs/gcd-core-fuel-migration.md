@@ -77,7 +77,7 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   Kept shared `cAmcDdG`.
 - **G6a** ✅ deleted orphaned `cSplitSquarefreeFactorFastG`.
 - **G6b** ✅ retired the fuel'd §5 split-factor/canonical-rep Tower layer: (G6b-1) slimmed SplitFactorTowerCorrectG
-  to its live `CDiffFieldSpec` bridge (`baseDerivQ` + `instCDiffFieldSpecQFunNZG`), deleting the dead fuel'd
+  to its live `CDiffFieldSpec` bridge (`baseDerivQ` + `instCDiffFieldSpecCFracG`), deleting the dead fuel'd
   correctness decls; (G6b-2) slimmed Tower/Unify to a thin re-export waypoint (2 dead probe theorems removed)
   and deleted the now-orphaned `cSplitFactorFastG` + `canonicalRepresentationFastG` from Tower/Integrate.
   Wf twins carry all runtime. Kept the Yun squarefree section (`cSqfreeYunFFG`, still used by G5).
@@ -225,10 +225,10 @@ phases are LARGE interdependent cataloged-API cascades — deliberate focused se
   correctness (`canonicalRepresentationFastG_reconstructs_qfunNZG`, `_simple_proper_qfunNZG`,
   `cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG`, `cstepGQ`, `associated_toPolyG_cstepGQ`,
   `associated_toPolyG_cgcdFFCore_reg`, the `C*RegularQ` classes) with **LIVE infrastructure**: `baseDerivQ`
-  (used by RadicalIntegralSoundness) and the INSTANCE `instCDiffFieldSpecQFunNZG` (load-bearing — instance
+  (used by RadicalIntegralSoundness) and the INSTANCE `instCDiffFieldSpecCFracG` (load-bearing — instance
   usage is invisible to a name-scan; its absence is the "failed to synthesize CDiffFieldSpec" error).
   So G6b = SURGICAL SLIM: delete only the dead fuel'd correctness decls, KEEP `baseDerivQ` /
-  `instCDiffFieldSpecQFunNZG` / `toPolyG_cone_qfunNZG` (and the file itself as import waypoint). Then delete
+  `instCDiffFieldSpecCFracG` / `toPolyG_cone_qfunNZG` (and the file itself as import waypoint). Then delete
   Tower/Unify's 2 dead theorems (keep the file if it's still an import waypoint for Chapter5/6, else delete
   with direct-import fixes). ★ SCAN-BUG LESSON: the consumer-scan regex MUST allow `noncomputable `/`private `/
   `@[…] ` prefixes before def/theorem/instance — the naive `^\s*(def|theorem|…)` misses `noncomputable def`

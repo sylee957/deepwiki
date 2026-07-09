@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 /-! ### The `CRischFieldSpec` class
 
@@ -138,9 +138,9 @@ theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : CPoly α)
 
 end ClearedToField
 
-/-! ### Recursive `CRischFieldSpec (QFunNZ β)` layer boundary
+/-! ### Recursive `CRischFieldSpec (CFrac β)` layer boundary
 
 The cleared → field half is supplied by `rischDE_field_of_cleared`; a recursive instance over
-`QFunNZ β` also needs a structural decomposition theorem for the generic RDE pipeline. -/
+`CFrac β` also needs a structural decomposition theorem for the generic RDE pipeline. -/
 
 end DeepWiki.SymbolicIntegration

@@ -54,7 +54,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 /-! ### Task 1 (engine vocabulary): the list↔Finset bridge over `K = CFieldSpec.K α`
 
@@ -64,7 +64,7 @@ vocabulary. Its `List`-form bridge restates `primitive_residue_match_list` over 
 `towerFractionFieldDeriv` unfolding — the `List`-shaped primitive residue match exactly as the engine's
 `logResidueSumG_eq_of_residue_match` consumes it (a `List` of `(residue, factor)` pairs over `CFieldSpec.K α`). -/
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -1191,50 +1191,50 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
   cIntegrateGFullWf_hyperexp_oneShot Dt a d cands res s b hb hDt ⟨hbz, hfp⟩ hsome hrecon
     hherm hden hA hnorm hsum hform
 
-/-! ### ★ The PRIMITIVE one-shot at the level-1 carrier `α = QFunNZ ℚ = ℚ(x)`
+/-! ### ★ The PRIMITIVE one-shot at the level-1 carrier `α = CFrac ℚ = ℚ(x)`
 
-Instantiating the primitive one-shot at the generic level-1 carrier `α = QFunNZ ℚ`, where `CFieldSpec.K
-(QFunNZ ℚ) = RatFunc ℚ` (genuine `Algebra ℚ`). The concrete checker-free fueled and fuel-free drivers
+Instantiating the primitive one-shot at the generic level-1 carrier `α = CFrac ℚ`, where `CFieldSpec.K
+(CFrac ℚ) = RatFunc ℚ` (genuine `Algebra ℚ`). The concrete checker-free fueled and fuel-free drivers
 differentiate back to the integrand for primitive (logarithmic) tower extensions over `ℚ(x)(t)`. The local
 instance bridges the carrier abbreviation to `RatFunc ℚ`. -/
 
-/-- The engine carrier `CFieldSpec.K (QFunNZ ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
-`QFunNZ ℚ` deliverable synthesizes the **same** `Algebra ℚ` the bridge `towerFractionFieldDeriv` uses. -/
-noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZ ℚ)) :=
+/-- The engine carrier `CFieldSpec.K (CFrac ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
+`CFrac ℚ` deliverable synthesizes the **same** `Algebra ℚ` the bridge `towerFractionFieldDeriv` uses. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (CFrac ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
-/-- `CharZero (CFieldSpec.K (QFunNZ ℚ)) = CharZero (RatFunc ℚ)`: local instance so the poly-branch capstone
+/-- `CharZero (CFieldSpec.K (CFrac ℚ)) = CharZero (RatFunc ℚ)`: local instance so the poly-branch capstone
 synthesizes the `CharZero` that `cIntegrateGFullWf_poly_oneShot_base`'s `hpoly` discharge needs over the carrier
 abbreviation. -/
-noncomputable local instance : CharZero (CFieldSpec.K (QFunNZ ℚ)) :=
+noncomputable local instance : CharZero (CFieldSpec.K (CFrac ℚ)) :=
   inferInstanceAs (CharZero (RatFunc ℚ))
 
-/-- **★★★ The fuel-free PRIMITIVE one-shot for `cIntegrateGFullWf` over `ℚ(x)(t)`** — the `QFunNZ ℚ`
+/-- **★★★ The fuel-free PRIMITIVE one-shot for `cIntegrateGFullWf` over `ℚ(x)(t)`** — the `CFrac ℚ`
 instance of `cIntegrateGFullWf_primitive_oneShot`. -/
-theorem cIntegrateGFullWf_primitive_oneShot_qfunNZG (Dt : CPoly (QFunNZ ℚ))
-    (a d : CPoly (QFunNZ ℚ)) (cands : List (QFunNZ ℚ)) (res : IntegralResult (QFunNZ ℚ))
-    (s : Finset (CFieldSpec.K (QFunNZ ℚ))) (w : CFieldSpec.K (QFunNZ ℚ))
+theorem cIntegrateGFullWf_primitive_oneShot_qfunNZG (Dt : CPoly (CFrac ℚ))
+    (a d : CPoly (CFrac ℚ)) (cands : List (CFrac ℚ)) (res : IntegralResult (CFrac ℚ))
+    (s : Finset (CFieldSpec.K (CFrac ℚ))) (w : CFieldSpec.K (CFrac ℚ))
     (hDt : toPoly Dt = C w)
     (hbranch : IsPureNormalBranch Dt a d)
     (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
-    (hrecon : am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-          / am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
-        = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d))
+    (hrecon : am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+          / am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
+        = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d))
     (hherm : towerFractionFieldDeriv Dt
-            (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt
+            (am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt
                   (canonicalRepresentationFast Dt a d).2.2.1
                   (canonicalRepresentationFast Dt a d).2.2.2 cands).rational.1)
-              / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt
+              / am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt
                   (canonicalRepresentationFast Dt a d).2.2.1
                   (canonicalRepresentationFast Dt a d).2.2.2 cands).rational.2))
-          + am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt
+          + am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt
                 (canonicalRepresentationFast Dt a d).2.2.1
                 (canonicalRepresentationFast Dt a d).2.2.2).2.1)
-            / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt
+            / am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt
                 (canonicalRepresentationFast Dt a d).2.2.1
                 (canonicalRepresentationFast Dt a d).2.2.2).2.2)
-        = am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-            / am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
+        = am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+            / am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
     (hden : toPoly (cHermiteReduceTower Dt
           (canonicalRepresentationFast Dt a d).2.2.1
           (canonicalRepresentationFast Dt a d).2.2.2).2.2 = Lagrange.nodal s id)
@@ -1253,38 +1253,38 @@ theorem cIntegrateGFullWf_primitive_oneShot_qfunNZG (Dt : CPoly (QFunNZ ℚ))
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
     towerFractionFieldDeriv Dt
-        (am (QFunNZ ℚ) (toPoly res.rational.1) / am (QFunNZ ℚ) (toPoly res.rational.2))
+        (am (CFrac ℚ) (toPoly res.rational.1) / am (CFrac ℚ) (toPoly res.rational.2))
         + logResidueSum Dt res.logs
-      = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d) :=
+      = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d) :=
   cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hbranch hsome hrecon hherm hden hA
     hnorm hform
 
 /-- **★★★ The fuel-free HYPEREXPONENTIAL one-shot for `cIntegrateGFullWf` over `ℚ(x)(t)`, gated on
-`∑c = 0`** — the `QFunNZ ℚ` instance of `cIntegrateGFullWf_hyperexp_oneShot`. -/
-theorem cIntegrateGFullWf_hyperexp_oneShot_qfunNZG (Dt : CPoly (QFunNZ ℚ))
-    (a d : CPoly (QFunNZ ℚ)) (cands : List (QFunNZ ℚ)) (res : IntegralResult (QFunNZ ℚ))
-    (s : Finset (CFieldSpec.K (QFunNZ ℚ))) (b : CFieldSpec.K (QFunNZ ℚ))
+`∑c = 0`** — the `CFrac ℚ` instance of `cIntegrateGFullWf_hyperexp_oneShot`. -/
+theorem cIntegrateGFullWf_hyperexp_oneShot_qfunNZG (Dt : CPoly (CFrac ℚ))
+    (a d : CPoly (CFrac ℚ)) (cands : List (CFrac ℚ)) (res : IntegralResult (CFrac ℚ))
+    (s : Finset (CFieldSpec.K (CFrac ℚ))) (b : CFieldSpec.K (CFrac ℚ))
     (hb : b ≠ 0) (hDt : toPoly Dt = C b * X)
     (hbranch : IsPureNormalBranch Dt a d)
     (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
-    (hrecon : am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-          / am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
-        = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d))
+    (hrecon : am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+          / am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
+        = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d))
     (hherm : towerFractionFieldDeriv Dt
-            (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt
+            (am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt
                   (canonicalRepresentationFast Dt a d).2.2.1
                   (canonicalRepresentationFast Dt a d).2.2.2 cands).rational.1)
-              / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt
+              / am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt
                   (canonicalRepresentationFast Dt a d).2.2.1
                   (canonicalRepresentationFast Dt a d).2.2.2 cands).rational.2))
-          + am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt
+          + am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt
                 (canonicalRepresentationFast Dt a d).2.2.1
                 (canonicalRepresentationFast Dt a d).2.2.2).2.1)
-            / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt
+            / am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt
                 (canonicalRepresentationFast Dt a d).2.2.1
                 (canonicalRepresentationFast Dt a d).2.2.2).2.2)
-        = am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-            / am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
+        = am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+            / am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
     (hden : toPoly (cHermiteReduceTower Dt
           (canonicalRepresentationFast Dt a d).2.2.1
           (canonicalRepresentationFast Dt a d).2.2.2).2.2 = Lagrange.nodal s id)
@@ -1307,9 +1307,9 @@ theorem cIntegrateGFullWf_hyperexp_oneShot_qfunNZG (Dt : CPoly (QFunNZ ℚ))
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
     towerFractionFieldDeriv Dt
-        (am (QFunNZ ℚ) (toPoly res.rational.1) / am (QFunNZ ℚ) (toPoly res.rational.2))
+        (am (CFrac ℚ) (toPoly res.rational.1) / am (CFrac ℚ) (toPoly res.rational.2))
         + logResidueSum Dt res.logs
-      = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d) :=
+      = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d) :=
   cIntegrateGFullWf_hyperexp_oneShot Dt a d cands res s b hb hDt hbranch hsome hrecon hherm hden hA
     hnorm hsum hform
 
@@ -1424,15 +1424,15 @@ hypotheses. -/
 -- ★ Composed into the PRIMITIVE one-shot: with `hA` produced by the bridge from leftover properness, the
 -- reduced-case identity `D(g) + logResidueSum = a/d` holds — `hA` is no longer a free hypothesis but the
 -- proper-fraction property of the Hermite leftover.
-example (Dt : CPoly (QFunNZ ℚ)) (a d : CPoly (QFunNZ ℚ))
-    (cands : List (QFunNZ ℚ)) (s : Finset (CFieldSpec.K (QFunNZ ℚ))) (w : CFieldSpec.K (QFunNZ ℚ))
+example (Dt : CPoly (CFrac ℚ)) (a d : CPoly (CFrac ℚ))
+    (cands : List (CFrac ℚ)) (s : Finset (CFieldSpec.K (CFrac ℚ))) (w : CFieldSpec.K (CFrac ℚ))
     (hDt : toPoly Dt = C w)
     (hherm : towerFractionFieldDeriv Dt
-            (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d))
+            (am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hproper : (toPoly (cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (cHermiteReduceTower Dt a d).2.2).degree)
@@ -1444,10 +1444,10 @@ example (Dt : CPoly (QFunNZ ℚ)) (a d : CPoly (QFunNZ ℚ))
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
     towerFractionFieldDeriv Dt
-        (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        (am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
         + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
-      = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d) :=
+      = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d) :=
   field_identity_of_cIntegrateReducedG_primitive Dt a d cands s w hDt hherm hden
     (cHermiteReduceTowerG_numer_degree_lt Dt a d s hden hproper) hnorm hform
 
@@ -1467,19 +1467,19 @@ regularity facts, **not** free side conditions. The fold accumulator is exposed 
 
 /-- **`hA` discharged for the fuel-free Hermite reducer when `deg Dt ≤ 1`.** -/
 theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
-    (Dt : CPoly (QFunNZ ℚ)) (a d : CPoly (QFunNZ ℚ))
-    (s : Finset (CFieldSpec.K (QFunNZ ℚ)))
+    (Dt : CPoly (CFrac ℚ)) (a d : CPoly (CFrac ℚ))
+    (s : Finset (CFieldSpec.K (CFrac ℚ)))
     (hDtdeg : (toPoly Dt).natDegree ≤ 1)
     (haProper : (toPoly a).degree < (toPoly d).degree)
     (hv : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
-    (hb : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPoly (QFunNZ ℚ)),
+    (hb : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPoly (CFrac ℚ)),
         (toPoly (cdiophantine
             (cmul (cdivWf d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
-    (g : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
+    (g : CPoly (CFrac ℚ) × CPoly (CFrac ℚ))
     (hgeq : g = (cSqfreeYunFF d).zipIdx.foldl
-      (fun (gAcc : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) (vi, idx) =>
+      (fun (gAcc : CPoly (CFrac ℚ) × CPoly (CFrac ℚ)) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
@@ -1492,7 +1492,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
       ∣ toPoly (cmul (csub (cmul a (cmul g.2 g.2))
           (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2)))))
         ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one])))
-    (hresDen : cnorm (cmul d (cmul g.2 g.2)) ≠ ([] : CPoly (QFunNZ ℚ))) :
+    (hresDen : cnorm (cmul d (cmul g.2 g.2)) ≠ ([] : CPoly (CFrac ℚ))) :
     (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card := by
   have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d
     (cSqfreeYunFF d) hDtdeg haProper
@@ -1523,30 +1523,30 @@ simple-part properness and the Wf Hermite degree bridge, leaving only the genuin
 and exact-division connectors. -/
 
 /-- **The fuel-free primitive one-shot at `ℚ(x)(t)` with `hA` discharged from simple properness.** -/
-theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : CPoly (QFunNZ ℚ))
-    (a d : CPoly (QFunNZ ℚ)) (cands : List (QFunNZ ℚ)) (res : IntegralResult (QFunNZ ℚ))
-    (s : Finset (CFieldSpec.K (QFunNZ ℚ))) (w : CFieldSpec.K (QFunNZ ℚ))
+theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : CPoly (CFrac ℚ))
+    (a d : CPoly (CFrac ℚ)) (cands : List (CFrac ℚ)) (res : IntegralResult (CFrac ℚ))
+    (s : Finset (CFieldSpec.K (CFrac ℚ))) (w : CFieldSpec.K (CFrac ℚ))
     (hDt : toPoly Dt = C w)
     (hbranch : IsPureNormalBranch Dt a d)
     (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
-    (hrecon : am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-          / am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
-        = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d))
+    (hrecon : am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+          / am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
+        = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d))
     (hherm : towerFractionFieldDeriv Dt
-            (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt
+            (am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt
                   (canonicalRepresentationFast Dt a d).2.2.1
                   (canonicalRepresentationFast Dt a d).2.2.2 cands).rational.1)
-              / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt
+              / am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt
                   (canonicalRepresentationFast Dt a d).2.2.1
                   (canonicalRepresentationFast Dt a d).2.2.2 cands).rational.2))
-          + am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt
+          + am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt
                 (canonicalRepresentationFast Dt a d).2.2.1
                 (canonicalRepresentationFast Dt a d).2.2.2).2.1)
-            / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt
+            / am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt
                 (canonicalRepresentationFast Dt a d).2.2.1
                 (canonicalRepresentationFast Dt a d).2.2.2).2.2)
-        = am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-            / am (QFunNZ ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
+        = am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+            / am (CFrac ℚ) (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
     (hden : toPoly (cHermiteReduceTower Dt
           (canonicalRepresentationFast Dt a d).2.2.1
           (canonicalRepresentationFast Dt a d).2.2.2).2.2 = Lagrange.nodal s id)
@@ -1566,14 +1566,14 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : CPoly (QFu
     (hv : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hbk : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).zipIdx,
-        ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPoly (QFunNZ ℚ)),
+        ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPoly (CFrac ℚ)),
         (toPoly (cdiophantine
             (cmul (cdivWf (canonicalRepresentationFast Dt a d).2.2.2
               (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
-    (g : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
+    (g : CPoly (CFrac ℚ) × CPoly (CFrac ℚ))
     (hgeq : g = (cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).zipIdx.foldl
-      (fun (gAcc : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) (vi, idx) =>
+      (fun (gAcc : CPoly (CFrac ℚ) × CPoly (CFrac ℚ)) (vi, idx) =>
         let i := idx + 1
         if i ≤ 1 then gAcc
         else
@@ -1590,11 +1590,11 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : CPoly (QFu
         ((cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).foldl
           (fun acc vi => cmul acc vi) [CField.one])))
     (hresDen : cnorm (cmul (canonicalRepresentationFast Dt a d).2.2.2 (cmul g.2 g.2))
-      ≠ ([] : CPoly (QFunNZ ℚ))) :
+      ≠ ([] : CPoly (CFrac ℚ))) :
     towerFractionFieldDeriv Dt
-        (am (QFunNZ ℚ) (toPoly res.rational.1) / am (QFunNZ ℚ) (toPoly res.rational.2))
+        (am (CFrac ℚ) (toPoly res.rational.1) / am (CFrac ℚ) (toPoly res.rational.2))
         + logResidueSum Dt res.logs
-      = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d) := by
+      = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d) := by
   have hDtdeg : (toPoly Dt).natDegree ≤ 1 := by
     rw [hDt, Polynomial.natDegree_C]; exact Nat.zero_le 1
   have hA := cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one Dt
@@ -1614,117 +1614,117 @@ simple-proper bridge is still a later cleanup target. -/
 /-- **The fuel-free primitive-base poly one-shot at `ℚ(x)(t)` with `hpoly` and `hA` discharged from simple
 properness.** -/
 theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
-    (a d : CPoly (QFunNZ ℚ)) (cands : List (QFunNZ ℚ)) (res : IntegralResult (QFunNZ ℚ))
-    (qp : CPoly (QFunNZ ℚ)) (s : Finset (CFieldSpec.K (QFunNZ ℚ)))
-    (hbranch : IsPolynomialBranch ([CField.one] : CPoly (QFunNZ ℚ)) a d)
-    (hsome : CPoly.cIntegrateGFullWf ([CField.one] : CPoly (QFunNZ ℚ)) a d cands = some res)
-    (hqp : CPoly.cPolyRischDE ([CField.one] : CPoly (QFunNZ ℚ)) []
-        (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).1
-        ((CPoly.cdeg (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).1 : ℤ) + 1)
+    (a d : CPoly (CFrac ℚ)) (cands : List (CFrac ℚ)) (res : IntegralResult (CFrac ℚ))
+    (qp : CPoly (CFrac ℚ)) (s : Finset (CFieldSpec.K (CFrac ℚ)))
+    (hbranch : IsPolynomialBranch ([CField.one] : CPoly (CFrac ℚ)) a d)
+    (hsome : CPoly.cIntegrateGFullWf ([CField.one] : CPoly (CFrac ℚ)) a d cands = some res)
+    (hqp : CPoly.cPolyRischDE ([CField.one] : CPoly (CFrac ℚ)) []
+        (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).1
+        ((CPoly.cdeg (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).1 : ℤ) + 1)
         = some qp)
-    (hgden : am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced ([CField.one] : CPoly (QFunNZ ℚ))
-          (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-          (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 cands).rational.2)
+    (hgden : am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced ([CField.one] : CPoly (CFrac ℚ))
+          (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+          (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 cands).rational.2)
         ≠ 0)
     (hconst : Differential.mapCoeffs
-        (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).1) = 0)
-    (hherm : towerFractionFieldDeriv ([CField.one] : CPoly (QFunNZ ℚ))
-            (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced ([CField.one] : CPoly (QFunNZ ℚ))
-                  (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-                  (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 cands).rational.1)
-              / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced ([CField.one] : CPoly (QFunNZ ℚ))
-                  (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-                  (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 cands).rational.2))
-          + am (QFunNZ ℚ) (toPoly (cHermiteReduceTower ([CField.one] : CPoly (QFunNZ ℚ))
-                (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-                (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).2.1)
-            / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower ([CField.one] : CPoly (QFunNZ ℚ))
-                (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-                (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).2.2)
-        = am (QFunNZ ℚ)
-            (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1)
-          / am (QFunNZ ℚ)
-            (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2))
-    (hden : toPoly (cHermiteReduceTower ([CField.one] : CPoly (QFunNZ ℚ))
-          (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-          (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).2.2
+        (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).1) = 0)
+    (hherm : towerFractionFieldDeriv ([CField.one] : CPoly (CFrac ℚ))
+            (am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced ([CField.one] : CPoly (CFrac ℚ))
+                  (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+                  (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 cands).rational.1)
+              / am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced ([CField.one] : CPoly (CFrac ℚ))
+                  (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+                  (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 cands).rational.2))
+          + am (CFrac ℚ) (toPoly (cHermiteReduceTower ([CField.one] : CPoly (CFrac ℚ))
+                (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+                (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).2.1)
+            / am (CFrac ℚ) (toPoly (cHermiteReduceTower ([CField.one] : CPoly (CFrac ℚ))
+                (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+                (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).2.2)
+        = am (CFrac ℚ)
+            (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1)
+          / am (CFrac ℚ)
+            (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2))
+    (hden : toPoly (cHermiteReduceTower ([CField.one] : CPoly (CFrac ℚ))
+          (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+          (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).2.2
         = Lagrange.nodal s id)
-    (hnorm : ∀ β ∈ s, (1 : CFieldSpec.K (QFunNZ ℚ)) ≠ β′)
-    (hform : (CPoly.cIntegrateReduced ([CField.one] : CPoly (QFunNZ ℚ))
-            (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-            (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 cands).logs.map
+    (hnorm : ∀ β ∈ s, (1 : CFieldSpec.K (CFrac ℚ)) ≠ β′)
+    (hform : (CPoly.cIntegrateReduced ([CField.one] : CPoly (CFrac ℚ))
+            (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+            (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPoly cv.2))
         = s.toList.map (fun β =>
-            ((toPoly (cHermiteReduceTower ([CField.one] : CPoly (QFunNZ ℚ))
-                  (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-                  (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).2.1).eval β
-                / (Differential.implicitDeriv (toPoly ([CField.one] : CPoly (QFunNZ ℚ)))
+            ((toPoly (cHermiteReduceTower ([CField.one] : CPoly (CFrac ℚ))
+                  (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+                  (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).2.1).eval β
+                / (Differential.implicitDeriv (toPoly ([CField.one] : CPoly (CFrac ℚ)))
                     (Lagrange.nodal s id)).eval β,
               X - C β)))
-    (haProper : (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1).degree
-      < (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).degree)
+    (haProper : (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1).degree
+      < (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).degree)
     (hv : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast
-          ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).zipIdx,
+          ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hbk : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast
-          ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).zipIdx,
-        ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPoly (QFunNZ ℚ)),
+          ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).zipIdx,
+        ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPoly (CFrac ℚ)),
         (toPoly (cdiophantine
             (cmul (cdivWf (canonicalRepresentationFast
-              ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 (cpow p.1 (p.2 + 1)))
-              (cmonomialDeriv ([CField.one] : CPoly (QFunNZ ℚ)) p.1)) p.1 rhs).1).degree
+              ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 (cpow p.1 (p.2 + 1)))
+              (cmonomialDeriv ([CField.one] : CPoly (CFrac ℚ)) p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
-    (g : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
+    (g : CPoly (CFrac ℚ) × CPoly (CFrac ℚ))
     (hgeq : g = (cSqfreeYunFF (canonicalRepresentationFast
-        ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).zipIdx.foldl
-      (fun (gAcc : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) (vi, idx) =>
+        ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).zipIdx.foldl
+      (fun (gAcc : CPoly (CFrac ℚ) × CPoly (CFrac ℚ)) (vi, idx) =>
         let i := idx + 1
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpow vi i
           let u := cdivWf (canonicalRepresentationFast
-            ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 Vi_pow
-          let gloc := (cHermiteReduceTowerInnerWf ([CField.one] : CPoly (QFunNZ ℚ)) vi u (i - 1)
-            (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
+            ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 Vi_pow
+          let gloc := (cHermiteReduceTowerInnerWf ([CField.one] : CPoly (CFrac ℚ)) vi u (i - 1)
+            (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
             ([CField.zero], [CField.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
       ([CField.zero], [CField.one]))
     (hdvd : toPoly (cmul (canonicalRepresentationFast
-          ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 (cmul g.2 g.2))
+          ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul (canonicalRepresentationFast
-            ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1 (cmul g.2 g.2))
-          (cmul (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2
-            (csub (cmul (cmonomialDeriv ([CField.one] : CPoly (QFunNZ ℚ)) g.1) g.2)
-              (cmul g.1 (cmonomialDeriv ([CField.one] : CPoly (QFunNZ ℚ)) g.2)))))
+            ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1 (cmul g.2 g.2))
+          (cmul (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2
+            (csub (cmul (cmonomialDeriv ([CField.one] : CPoly (CFrac ℚ)) g.1) g.2)
+              (cmul g.1 (cmonomialDeriv ([CField.one] : CPoly (CFrac ℚ)) g.2)))))
         ((cSqfreeYunFF (canonicalRepresentationFast
-          ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2).foldl (fun acc vi => cmul acc vi) [CField.one])))
+          ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2).foldl (fun acc vi => cmul acc vi) [CField.one])))
     (hresDen : cnorm (cmul (canonicalRepresentationFast
-      ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 (cmul g.2 g.2)) ≠ ([] : CPoly (QFunNZ ℚ)))
-    (hrecon : am (QFunNZ ℚ)
-          (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).1)
-        + am (QFunNZ ℚ)
-            (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1)
-          / am (QFunNZ ℚ)
-            (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2)
-        = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d)) :
-    towerFractionFieldDeriv ([CField.one] : CPoly (QFunNZ ℚ))
-        (am (QFunNZ ℚ) (toPoly res.rational.1) / am (QFunNZ ℚ) (toPoly res.rational.2))
-        + logResidueSum ([CField.one] : CPoly (QFunNZ ℚ)) res.logs
-      = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d) := by
-  have hDt : toPoly ([CField.one] : CPoly (QFunNZ ℚ)) = C (1 : CFieldSpec.K (QFunNZ ℚ)) := by
+      ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 (cmul g.2 g.2)) ≠ ([] : CPoly (CFrac ℚ)))
+    (hrecon : am (CFrac ℚ)
+          (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).1)
+        + am (CFrac ℚ)
+            (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1)
+          / am (CFrac ℚ)
+            (toPoly (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2)
+        = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d)) :
+    towerFractionFieldDeriv ([CField.one] : CPoly (CFrac ℚ))
+        (am (CFrac ℚ) (toPoly res.rational.1) / am (CFrac ℚ) (toPoly res.rational.2))
+        + logResidueSum ([CField.one] : CPoly (CFrac ℚ)) res.logs
+      = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d) := by
+  have hDt : toPoly ([CField.one] : CPoly (CFrac ℚ)) = C (1 : CFieldSpec.K (CFrac ℚ)) := by
     simp only [denote, map_one, mul_zero, add_zero]
-  have hDtdeg : (toPoly ([CField.one] : CPoly (QFunNZ ℚ))).natDegree ≤ 1 := by
+  have hDtdeg : (toPoly ([CField.one] : CPoly (CFrac ℚ))).natDegree ≤ 1 := by
     rw [hDt, Polynomial.natDegree_C]; exact Nat.zero_le 1
   have hA := cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
-    ([CField.one] : CPoly (QFunNZ ℚ))
-    (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-    (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 s hDtdeg
+    ([CField.one] : CPoly (CFrac ℚ))
+    (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+    (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 s hDtdeg
     haProper hv hbk hden g hgeq hdvd hresDen
   have hnormal := field_identity_of_cIntegrateReducedG_primitive
-    ([CField.one] : CPoly (QFunNZ ℚ))
-    (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.1
-    (canonicalRepresentationFast ([CField.one] : CPoly (QFunNZ ℚ)) a d).2.2.2 cands s
-    (1 : CFieldSpec.K (QFunNZ ℚ)) hDt hherm hden hA hnorm hform
+    ([CField.one] : CPoly (CFrac ℚ))
+    (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.1
+    (canonicalRepresentationFast ([CField.one] : CPoly (CFrac ℚ)) a d).2.2.2 cands s
+    (1 : CFieldSpec.K (CFrac ℚ)) hDt hherm hden hA hnorm hform
   exact cIntegrateGFullWf_poly_oneShot_base a d cands res qp hbranch hsome hqp hgden hconst hnormal
     hrecon
 

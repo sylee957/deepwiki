@@ -42,7 +42,7 @@ logarithmic derivative `Dw/w` — so the vehicle is `cParamRischDE [a, η]` dire
    `LimitedIntegrate` over `ℚ(x)` needs a **Hermite reduction** first (rational part), then the polynomial part
    via the kernel solve. So even the base case is more than the existing code.
 2. **Higher levels recurse.** For a primitive `t` over `k`, §5.12: `a = Dv + c·Dt` "is reduced to a limited
-   integration problem in `k`" — i.e. `LimitedIntegrate` over `QFunNZG β` calls `LimitedIntegrate` over `β`.
+   integration problem in `k`" — i.e. `LimitedIntegrate` over `CFracG β` calls `LimitedIntegrate` over `β`.
    Structurally parallel to the main tower integrator (`RischSolverTowerLrt`), base case = the ℚ solver.
 3. **Degree-raising soundness.** `cLimitedIntegratePolyRatG_poly_sound` currently proves `D_tower(q) = p` for
    `deg q = deg p`; it must extend to `deg q = deg p + 1` with the constant leading coefficient `c`.
@@ -52,7 +52,7 @@ logarithmic derivative `Dw/w` — so the vehicle is `cParamRischDE [a, η]` dire
 Each phase is its own gate-green commit.
 
 - **Phase 1 — base single-`w` limited integration. ✅ DONE (`LimitedIntegrateSingle.lean`).**
-  `cLimitedIntegrateSingleBase (a η : QFunNZG ℚ) : Option (QFunNZG ℚ × ℚ)` returning `(b, c)` with
+  `cLimitedIntegrateSingleBase (a η : CFracG ℚ) : Option (CFracG ℚ × ℚ)` returning `(b, c)` with
   `a = D(b) + c·η`, built from `cLinearConstraintsQ [a,η]` + `cNullspaceBasisQ` (find the `c₀ ≠ 0` kernel vector,
   normalize `c₀ = 1`, `c = −c₁`) + base polynomial integration of the cleared residual for `b`. Native-`decide`
   validated: `LimitedIntegrate(1+1/x, 1/x) = (x, 1)`. Scope: the **polynomial-`b`** regime; rational-`b` is 1b.
@@ -64,7 +64,7 @@ Each phase is its own gate-green commit.
   needs only Phase 1 + this (coefficients live at the base `ℚ(x)`); higher towers need Phase 2.
 - **Phase 1b — base rational `b`.** Hermite-reduce the rational part before the kernel solve, so `b ∈ ℚ(x)`
   (not just `ℚ[x]`). Extends `cLimitedIntegrate` past its polynomial-only limitation.
-- **Phase 2 — tower recursion (3+ levels).** `cLimitedIntegrateSingleG` over `QFunNZG β` (base case = Phase 1/1b;
+- **Phase 2 — tower recursion (3+ levels).** `cLimitedIntegrateSingleG` over `CFracG β` (base case = Phase 1/1b;
   recursive case = Hermite + residue at level `β` + recurse), the single-`w` analogue of `cIntegrateReducedLrtG`.
 - **Phase 3-wire — wire into the LRT solver. ✅ DONE (`RischSolverTowerLrt.lean`).** `towerPolyIntegrateLrt`
   now = `cIntegratePrimPolyDegRaiseG η (towerCoeffIntegrateLrt wrapped b ↦ (b,0)) (deg p + 2)`, with

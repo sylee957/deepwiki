@@ -13,7 +13,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 variable {α : Type*} [CField α] [CDiffField α]
 

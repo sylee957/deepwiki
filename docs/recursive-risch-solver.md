@@ -35,7 +35,7 @@ to "write the structure once, without threaded parameters, and it is assembled."
    law proven inside from the poly-RDE identity + `canonicalReconstruction`). Written once → the whole solver
    resolves.
 
-3. **The tower step** (to build) — `instance [LawfulRischLevel α] : LawfulRischLevel (QFunNZG α)`. Its
+3. **The tower step** (to build) — `instance [LawfulRischLevel α] : LawfulRischLevel (CFracG α)`. Its
    `specialSound` is *derived from the lower instance's `sound`* (the special part is computed by the
    level below), displacing the ad-hoc `cIntegrate…`. This is where the recursion becomes automatic.
 
@@ -75,7 +75,7 @@ soundness.** Recursion reorganizes the tower; it does not remove the leaves.
   canonical-primitive domain; validated `native_decide`). `PrimitiveFrontier` dropped `hspecialField`; it is
   now `{candidates, hreduced}`. The general non-constant-coefficient case still needs the coefficient recursion
   below.
-- **P2 recursion (tower step)** — the `instance [LawfulRischLevel α] : LawfulRischLevel (QFunNZG α)`, deriving
+- **P2 recursion (tower step)** — the `instance [LawfulRischLevel α] : LawfulRischLevel (CFracG α)`, deriving
   `specialSound` from the lower instance's `sound`. **Found
   2026-07-04 (an ALGORITHM task, not just a proof):** the engine's primitive-polynomial integration is
   **constant-coefficient-only**. `cPolyRischDEG …[]… = cIntegratePolyG` is term-by-term

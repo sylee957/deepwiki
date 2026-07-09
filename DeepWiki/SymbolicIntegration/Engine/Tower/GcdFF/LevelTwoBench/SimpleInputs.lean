@@ -11,9 +11,9 @@ open BenchG in
 def lvl2One : Lvl2 := CField.one
 
 open BenchG in
-/-- The `Lvl2` scalar `t₁ = s/1` (numerator `[0, 1] ∈ (QFunNZ ℚ)[s]`, denominator `[1]`). -/
+/-- The `Lvl2` scalar `t₁ = s/1` (numerator `[0, 1] ∈ (CFrac ℚ)[s]`, denominator `[1]`). -/
 def lvl2T1scalar : Lvl2 :=
-  ⟨([(CField.zero : QFunNZ ℚ), CField.one], [CField.one]), QFunNZ.cisZeroG_one_singleton⟩
+  ⟨([(CField.zero : CFrac ℚ), CField.one], [CField.one]), CFrac.cisZeroG_one_singleton⟩
 
 open BenchG in
 /-- The `t₂`-polynomial `(t₂ − t₁)·(t₂ + 1)` over `Lvl2 = ℚ(x)(t₁)` (low→high in `t₂`). -/

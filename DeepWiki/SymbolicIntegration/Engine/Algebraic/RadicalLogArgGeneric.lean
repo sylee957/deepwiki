@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtension
 /-! # Solving for the log argument `u` over a transcendental tower base
 
 The log-argument solve, generalized off `ℚ` to an arbitrary computable base `[CField β]`. When
-`α = QFunNZ β = β(x)`, the cleared log-derivative system is `β`-linear, so `gaussElim`/`kernelVector`
+`α = CFrac β = β(x)`, the cleared log-derivative system is `β`-linear, so `gaussElim`/`kernelVector`
 (the `CField`-generic analogues of `ratRref`/`ratKernelVector`) and `radLogArgSolve` solve it over any
 `β`. Over `α = ℚ(x)(eˣ)`, `radLogArgSolve` computes `N = (θ+2) − 2y` for `∫ dx/√(eˣ+1)`,
 whose `u = N/θ` passes the log-derivative certificate; the `ℚ`-base instance specializes
@@ -76,59 +76,59 @@ def kernelVector {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) 
       acc.set pc v) base
     some withPivots
 
-/-! ### The generic cleared log-derivative residual + matrix over `α = QFunNZ β`
+/-! ### The generic cleared log-derivative residual + matrix over `α = CFrac β`
 
-Over `α = QFunNZ β = β(x)`, the residual `radDeriv(N)·D − N·D' − radMul(N, integrand)·D` is a pair of
+Over `α = CFrac β = β(x)`, the residual `radDeriv(N)·D − N·D' − radMul(N, integrand)·D` is a pair of
 `β(x)` elements; clearing each to a numerator over `β` gives a `β`-matrix solved by
 `gaussElim`/`kernelVector`. The generic analogue of `radLogResidualQ`/`radLogMatrixQ`. -/
 
 section
-variable {β : Type*} [CField β] [CFieldDomain β] [CDiffField (QFunNZ β)]
+variable {β : Type*} [CField β] [CFieldDomain β] [CDiffField (CFrac β)]
 
-/-- A `β(x)` value from a numerator: `qOfNum num = num/1 ∈ QFunNZ β`. The generic analogue of
+/-- A `β(x)` value from a numerator: `qOfNum num = num/1 ∈ CFrac β`. The generic analogue of
 `qxOfNum`. -/
-def qOfNum (num : CPoly β) : QFunNZ β :=
-  ⟨(num, [CField.one]), QFunNZ.cisZeroG_one_singleton⟩
+def qOfNum (num : CPoly β) : CFrac β :=
+  ⟨(num, [CField.one]), CFrac.cisZeroG_one_singleton⟩
 
 /-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. The generic analogue of
 `qxMonomial`. -/
-def qMonomial (k : ℕ) : QFunNZ β := qOfNum (cshift k [(CField.one : β)])
+def qMonomial (k : ℕ) : CFrac β := qOfNum (cshift k [(CField.one : β)])
 
 /-- The numerator coefficient list of a `β(x)` element: `qNum z = z.1.1 ∈ CPoly β`. -/
-def qNum (z : QFunNZ β) : CPoly β := z.1.1
+def qNum (z : CFrac β) : CPoly β := z.1.1
 
 /-- The denominator coefficient list of a `β(x)` element: `qDen z = z.1.2 ∈ CPoly β`. -/
-def qDen (z : QFunNZ β) : CPoly β := z.1.2
+def qDen (z : CFrac β) : CPoly β := z.1.2
 
-/-- The cleared log-derivative residual over `α = QFunNZ β`:
+/-- The cleared log-derivative residual over `α = CFrac β`:
 `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' − radMul(N, integrand)·D`, where
 `D' = CDiffField.cderiv (qOfNum D)` is the actual base-field derivation (essential over a tower where
 `θ' ≠ 1`, unlike the formal `cderiv`). `β`-linear in `N`; the generic analogue of `radLogResidualQ`. -/
-def radLogResidual (ρ : QFunNZ β) (integrand : RadElem (QFunNZ β)) (D : CPoly β)
-    (N : RadElem (QFunNZ β)) : RadElem (QFunNZ β) :=
-  let Dq : QFunNZ β := qOfNum D
-  let Dpq : QFunNZ β := CDiffField.cderiv Dq
+def radLogResidual (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : CPoly β)
+    (N : RadElem (CFrac β)) : RadElem (CFrac β) :=
+  let Dq : CFrac β := qOfNum D
+  let Dpq : CFrac β := CDiffField.cderiv Dq
   radSub (radSub (radScale Dq (radDeriv 2 ρ N)) (radScale Dpq N))
     (radScale Dq (radMul 2 ρ N integrand))
 
-/-- The monomial basis of numerators over `α = QFunNZ β`: `radLogBasis degBound` gives the
+/-- The monomial basis of numerators over `α = CFrac β`: `radLogBasis degBound` gives the
 `2·(degBound+1)` elements `[xᵏ, 0]` then `[0, xᵏ]`. The generic analogue of `radLogBasisQ`. -/
-def radLogBasis (degBound : ℕ) : List (RadElem (QFunNZ β)) :=
+def radLogBasis (degBound : ℕ) : List (RadElem (CFrac β)) :=
   ((List.range (degBound + 1)).map
-    (fun k => ([qMonomial k, CField.zero] : RadElem (QFunNZ β)))) ++
+    (fun k => ([qMonomial k, CField.zero] : RadElem (CFrac β)))) ++
   ((List.range (degBound + 1)).map
-    (fun k => ([CField.zero, qMonomial k] : RadElem (QFunNZ β))))
+    (fun k => ([CField.zero, qMonomial k] : RadElem (CFrac β))))
 
-/-- The `β`-matrix of the cleared log-derivative system over `α = QFunNZ β`: for each basis column, the
+/-- The `β`-matrix of the cleared log-derivative system over `α = CFrac β`: for each basis column, the
 residual's cleared numerators (common denominator across columns), one row per `x`-power per component, one
 column per basis index; a kernel vector gives a solving `N`. The generic analogue of `radLogMatrixQ`. -/
-def radLogMatrix (ρ : QFunNZ β) (integrand : RadElem (QFunNZ β)) (D : CPoly β)
+def radLogMatrix (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : CPoly β)
     (degBound : ℕ) : List (List β) × ℕ :=
   let basis := radLogBasis (β := β) degBound
   let nCols := basis.length
-  let resids : List (RadElem (QFunNZ β)) := basis.map (radLogResidual ρ integrand D)
+  let resids : List (RadElem (CFrac β)) := basis.map (radLogResidual ρ integrand D)
   let rowsForComp : ℕ → List (List β) := fun i =>
-    let entryOf : ℕ → QFunNZ β := fun j => (resids[j]!).getD i CField.zero
+    let entryOf : ℕ → CFrac β := fun j => (resids[j]!).getD i CField.zero
     let nums : List (CPoly β) := (List.range nCols).map (fun j => cnorm (qNum (entryOf j)))
     let dens : List (CPoly β) := (List.range nCols).map (fun j => cnorm (qDen (entryOf j)))
     let cleared : List (CPoly β) := (List.range nCols).map (fun j =>
@@ -142,19 +142,19 @@ def radLogMatrix (ρ : QFunNZ β) (integrand : RadElem (QFunNZ β)) (D : CPoly �
   let nonzero := allRows.filter (fun row => row.any (fun a => !CField.isZero a))
   (nonzero, nCols)
 
-/-- Solve for the log argument over `α = QFunNZ β`: `radLogArgSolve ρ integrand D degBound = some N`
+/-- Solve for the log argument over `α = CFrac β`: `radLogArgSolve ρ integrand D degBound = some N`
 with `N = a₀ + a₁·y` (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel
 vector of the `β`-matrix `radLogMatrix` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. The
 generic analogue of `radLogArgSolveQ` — the whole solve runs over any tower base `β`. -/
-def radLogArgSolve (ρ : QFunNZ β) (integrand : RadElem (QFunNZ β)) (D : CPoly β)
-    (degBound : ℕ) : Option (RadElem (QFunNZ β)) :=
+def radLogArgSolve (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : CPoly β)
+    (degBound : ℕ) : Option (RadElem (CFrac β)) :=
   let (rows, nCols) := radLogMatrix ρ integrand D degBound
   match kernelVector nCols rows with
   | none => none
   | some c =>
-    let a0 : QFunNZ β := (List.range (degBound + 1)).foldl (fun acc k =>
+    let a0 : CFrac β := (List.range (degBound + 1)).foldl (fun acc k =>
       CField.add acc (CField.mul (qOfNum [c.getD k CField.zero]) (qMonomial k))) CField.zero
-    let a1 : QFunNZ β := (List.range (degBound + 1)).foldl (fun acc k =>
+    let a1 : CFrac β := (List.range (degBound + 1)).foldl (fun acc k =>
       CField.add acc (CField.mul (qOfNum [c.getD (degBound + 1 + k) CField.zero]) (qMonomial k)))
       CField.zero
     some [a0, a1]

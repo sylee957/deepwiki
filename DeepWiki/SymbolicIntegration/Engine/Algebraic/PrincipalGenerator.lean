@@ -73,28 +73,28 @@ end CPoly
 `cantorMulTracked` collects the step `v`s (degree-`< g` polynomials over the base). For the elliptic case
 (`g = 1`) each step `v` is a **constant** `c`, and the factor `y − v` is the `RadElem` `[−c, 1]` over the
 base field. `principalGenerator` lifts the constant `v`s to `ℚ(x)` and multiplies the factors `y − vᵢ`
-together (in `(QFunNZ ℚ)[y]/(y² − ρ)`) into the generator `g`. -/
+together (in `(CFrac ℚ)[y]/(y² − ρ)`) into the generator `g`. -/
 
 open CPoly RadElem
 
 /-- Lift a base `v` to a `y − v` factor over `ℚ(x)`: `genFactorOfV v = [−(v as ℚ(x)), 1]`, the
-`RadElem (QFunNZ ℚ)` `y − v(x)` of one Cantor reduction step, with the (genus-1) constant `v = [c]`
+`RadElem (CFrac ℚ)` `y − v(x)` of one Cantor reduction step, with the (genus-1) constant `v = [c]`
 embedded into `ℚ(x)` via `qxOfNum`. For the empty `v = []` (the factor `y`) this is `[0, 1]`. -/
-def genFactorOfV (v : CPoly ℚ) : RadElem (QFunNZ ℚ) :=
+def genFactorOfV (v : CPoly ℚ) : RadElem (CFrac ℚ) :=
   [CField.neg (qxOfNum v), CField.one]
 
 /-- The principal generator from tracked `v`s: `principalGeneratorOfVs ρ vs = ∏ᵢ (y − vᵢ)`, the
 product of the `y − vᵢ` step-functions (`genFactorOfV`) of a `cantorMulTracked` run, taken in the
 radical extension (`radMul 2 ρ`) starting from `radOne`. -/
-def principalGeneratorOfVs (ρ : QFunNZ ℚ) (vs : List (CPoly ℚ)) : RadElem (QFunNZ ℚ) :=
+def principalGeneratorOfVs (ρ : CFrac ℚ) (vs : List (CPoly ℚ)) : RadElem (CFrac ℚ) :=
   vs.foldl (fun acc v => radMul 2 ρ acc (genFactorOfV v)) radOne
 
 /-- The principal generator of a torsion divisor `principalGenerator ρ ρq g m D` — for `D` of
 order `m` on `y² = ρ`, the function `g` with `div(g) = m·D`: runs `cantorMulTracked ρq g m D`
 and multiplies the tracked `y − v` factors (`principalGeneratorOfVs`). `ρq` is the radicand as
 a `ℚ[x]` polynomial, `ρ` the same radicand as a `ℚ(x)` element. -/
-def principalGenerator (ρ : QFunNZ ℚ) (ρq : CPoly ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
-    RadElem (QFunNZ ℚ) :=
+def principalGenerator (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
+    RadElem (CFrac ℚ) :=
   principalGeneratorOfVs ρ (cantorMulTracked ρq g m D).2
 
 /-! ## Recovering `g = y − 1` for `(0, 1)` on `y² = x³ + 1`
@@ -104,14 +104,14 @@ def principalGenerator (ρ : QFunNZ ℚ) (ρq : CPoly ℚ) (g m : ℕ) (D : Mumf
 
 open RadElem
 
-/-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`QFunNZ ℚ`), for the radical-extension product. -/
-def pgRhoX3p1 : QFunNZ ℚ := qxOfNum [1, 0, 0, 1]
+/-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`CFrac ℚ`), for the radical-extension product. -/
+def pgRhoX3p1 : CFrac ℚ := qxOfNum [1, 0, 0, 1]
 
 /-- The recovered generator `gen = principalGenerator … (0, 1) 3` for `y² = x³ + 1` — expected `y − 1`. -/
-def pgGen01 : RadElem (QFunNZ ℚ) := principalGenerator pgRhoX3p1 hypRhoX3p1 1 3 hypPt01
+def pgGen01 : RadElem (CFrac ℚ) := principalGenerator pgRhoX3p1 hypRhoX3p1 1 3 hypPt01
 
 /-- The target generator `y − 1 = [−1, 1]` over `ℚ(x)` (the constant `v = 1` flex tangent line). -/
-def pgYm1 : RadElem (QFunNZ ℚ) := [CField.neg CField.one, CField.one]
+def pgYm1 : RadElem (CFrac ℚ) := [CField.neg CField.one, CField.one]
 
 /-- The principal generator of `3·(0, 1)` on `y² = x³ + 1` is `y − 1` (`= [−1, 1]`): so
 `div(y − 1) = 3·(0, 1) − 3·∞ = 3·D` and the log term is `(1/3)·log(y − 1)`. -/
@@ -120,7 +120,7 @@ theorem principalGenerator_pt01_eq :
 
 /-- The recovered generator is the raw `RadElem` `[−1, 1]` (`= y − 1`). -/
 theorem pgGen01_raw :
-    radIsZero (radSub pgGen01 [CField.neg (CField.one : QFunNZ ℚ), CField.one]) = true := by
+    radIsZero (radSub pgGen01 [CField.neg (CField.one : CFrac ℚ), CField.one]) = true := by
   native_decide
 
 /-! ### The `(1/3)·log(y − 1)` differential check
@@ -130,7 +130,7 @@ The log term is `(1/3)·log g` with `g = y − 1`, so its differential is `ι = 
 `radDeriv g = radMul g (radScale 3 ι)` confirms `g` is the `(1/3)`-log argument. -/
 
 /-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1`. -/
-def pgDiff01 : RadElem (QFunNZ ℚ) :=
+def pgDiff01 : RadElem (CFrac ℚ) :=
   radScale (CField.div CField.one (qxOfNum [3])) (radLogDeriv pgRhoX3p1 pgYm1)
 
 /-- The `(1/3)·log(y − 1)` differential passes the log-derivative certificate
@@ -155,7 +155,7 @@ passes the log-derivative certificate `radDeriv g = radMul g (3·ι)`. -/
 theorem principal_generator_validates :
     -- the recovered generator is y − 1
     (radIsZero (radSub pgGen01 pgYm1) = true
-      ∧ radIsZero (radSub pgGen01 [CField.neg (CField.one : QFunNZ ℚ), CField.one]) = true)
+      ∧ radIsZero (radSub pgGen01 [CField.neg (CField.one : CFrac ℚ), CField.one]) = true)
     -- the order of D = (0,1) is 3 (the torsion decision feeding the construction)
     ∧ cantorOrder 8 hypRhoX3p1 1 hypPt01 = some 3
     -- the (1/3)·log(y − 1) differential passes the log-derivative certificate

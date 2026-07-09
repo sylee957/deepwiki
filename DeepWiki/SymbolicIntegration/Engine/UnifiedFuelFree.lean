@@ -56,9 +56,9 @@ theorem field_identity_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
     (hcheck : CPoly.checkIdentity Dt res a d = true) :
     towerFractionFieldDeriv Dt
-        (QFunNZ.am α (toPoly res.rational.1) / QFunNZ.am α (toPoly res.rational.2))
+        (CFrac.am α (toPoly res.rational.1) / CFrac.am α (toPoly res.rational.2))
         + logResidueSum Dt res.logs
-      = QFunNZ.am α (toPoly a) / QFunNZ.am α (toPoly d) :=
+      = CFrac.am α (toPoly a) / CFrac.am α (toPoly d) :=
 by
   have _ := hsome
   exact field_identity_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
@@ -87,9 +87,9 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
     (hcheck : CPoly.checkIdentity Dt res a d = true) :
     towerFractionFieldDeriv Dt
-        (QFunNZ.am α (toPoly res.rational.1) / QFunNZ.am α (toPoly res.rational.2))
+        (CFrac.am α (toPoly res.rational.1) / CFrac.am α (toPoly res.rational.2))
         + logResidueSum Dt res.logs
-      = QFunNZ.am α (toPoly a) / QFunNZ.am α (toPoly d) :=
+      = CFrac.am α (toPoly a) / CFrac.am α (toPoly d) :=
   field_identity_of_cIntegrateGFullWf_of_checkIdentityG Dt a d cands res hsome hgden haden hlogs hcheck
 
 /-! ## Level-2 validation for the fuel-free top entry

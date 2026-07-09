@@ -47,8 +47,8 @@ theorem elemLogResidual_eq_integrand_sub_ratDeriv :
       (radSub elemIntegrand (@radDeriv _ _ expTowerDiff 2 elemRho elemRatPart))) = true := by
   native_decide
 
-/-- The log-solve denominator `D = θ = eˣ` as the `CPoly (QFunNZ ℚ)` `[0, 1]`. -/
-def elemDenTheta : CPoly (QFunNZ ℚ) := [CField.zero, CField.one]
+/-- The log-solve denominator `D = θ = eˣ` as the `CPoly (CFrac ℚ)` `[0, 1]`. -/
+def elemDenTheta : CPoly (CFrac ℚ) := [CField.zero, CField.one]
 
 /-- The recovered result `F' = cIntegrateElementary ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
 def elemRecovered : AlgIntegralResult Lvl2 :=

@@ -71,13 +71,13 @@ rational-residue restriction — the primitive integrator using LRT, at parity w
   inference (`failed to infer universe levels`). The reduction is already proven as a theorem
   (`hreducedLrt_of_genuineAll`), which is the honest content; the class-field form is cosmetic.
 
-- **Tower step** (`[LawfulRischLevelLrt α] → LawfulRischLevelLrt (QFunNZG α)`): unbuilt in *both*
+- **Tower step** (`[LawfulRischLevelLrt α] → LawfulRischLevelLrt (CFracG α)`): unbuilt in *both*
   solvers (only the primitive base is instantiated). Two obstructions: (1) the recursive carrier
-  typeclasses `CharZero (CFieldSpec.K (QFunNZG α))` / `Algebra ℚ …` / `Fact (GcdFFCorrect (QFunNZG α))`
+  typeclasses `CharZero (CFieldSpec.K (CFracG α))` / `Algebra ℚ …` / `Fact (GcdFFCorrect (CFracG α))`
   exist only as **local-per-file** instances, not global recursive ones (`CRischField`/`CFracGcdCoreWf`
-  at `QFunNZG` *are* global); (2) the reduced soundness at level `QFunNZG α` is gated by the genuine
-  conditions for `QFunNZG-α` inputs — per-input hypotheses (the Bronstein frontier), so no
-  unconditional recursive `PrimitiveFrontierLrt (QFunNZG α)` instance exists; a tower step would have
+  at `CFracG` *are* global); (2) the reduced soundness at level `CFracG α` is gated by the genuine
+  conditions for `CFracG-α` inputs — per-input hypotheses (the Bronstein frontier), so no
+  unconditional recursive `PrimitiveFrontierLrt (CFracG α)` instance exists; a tower step would have
   to thread the genuine data at each level. This is a large new construction, not a refactor.
 
 - **Retiring the rational `LawfulRischLevel`**: it is now subsumed by the genuine LRT solver

@@ -7,7 +7,7 @@ soundness *and* completeness, no assumed hypotheses left.
 ## Where we are (2026-07-05)
 
 - **Recursion: built.** `LawfulRischLevel α` (class, `RischTower.lean`) + `instLawfulRischLevelPrimitive`
-  (base) + `instLawfulRischLevelTower` (step, `[LawfulRischLevel β] → LawfulRischLevel (QFunNZG β)`). A solver
+  (base) + `instLawfulRischLevelTower` (step, `[LawfulRischLevel β] → LawfulRischLevel (CFracG β)`). A solver
   resolves at every tower depth (validated at depth 2). The coefficient recursion is sound
   (`towerCoeffIntegrate_sound`, denotational; the rational path is load-bearing here — a coefficient integral
   is *limited* integration, log-free by nature).
@@ -73,7 +73,7 @@ Phases (each its own gate-green commit):
   rational `LawfulRischLevel` reduced-log path + `PrimitiveFrontier` (the undischargeable frontier). Keep the
   generic coefficient recursion (`cLimitedIntegratePolyRatG`) — it is result-type-agnostic and reused.
 - **Phase 4 — grounding + the honest end state.** DONE. `RischTowerLrtGrounding.lean`:
-  `lrtSolver_sound_on_tower` — on the concrete carrier `QFunNZG ℚ` (the real ℚ(x)-tower), the assembled
+  `lrtSolver_sound_on_tower` — on the concrete carrier `CFracG ℚ` (the real ℚ(x)-tower), the assembled
   `LawfulRischLevelLrt.integrate` is sound (`IsIntegralResultLrtG`) depending on **only** the two honest
   frontiers (`PrimitiveFrontierLrt` at the levels used + the tower-level gcd `Fact`; `Fact (GcdFFCorrect ℚ)` is
   a resolved instance). Plus an `example` deriving the whole solver from `LrtReducedGenuineData` via
@@ -99,7 +99,7 @@ believed-correct algorithms, plus genuine scope conditions** — eliminable *in 
     `algebraMap` injectivity give `R ≠ 0`. See the ★ universe note in the recipe below.
   The 5 survivors are genuine (Bronstein's own hypotheses): `hcopgcd`/`hE` = normality, `hDt0` = primitive-case
   scope, `hm` = the exact degree-drop (only an *upper* bound is provable generically), `hAD` = Hermite
-  properness (dischargeable-in-principle but only via a concrete-carrier `QFunNZG ℚ` lemma with several
+  properness (dischargeable-in-principle but only via a concrete-carrier `CFracG ℚ` lemma with several
   engine-regularity side conditions, so it stays for now).
 
   **★ Drop recipe (all deps confirmed to exist, 2026-07-05):** a ~150-line multi-lemma dev in `LrtSoundness.lean`:
@@ -153,13 +153,13 @@ recursion is retired.
    (a rational genuine result is an algebraic one — each rational log `(c,v)` is the root of `X−c`). Then
    `LrtLiouvilleFrontier ⇒ LiouvilleFrontier` (both descend to the same `cResidueConstantGuardG`), retiring
    the separately-assumed rational completeness frontier. **Smallest, cleanest first win.**
-2. **Discharge the reduced soundness at the concrete carrier.** Materialize `PrimitiveFrontier (QFunNZG ℚ)`
+2. **Discharge the reduced soundness at the concrete carrier.** Materialize `PrimitiveFrontier (CFracG ℚ)`
    (and the tower carriers) from the proven δ≤1 normal-part soundness — turning the assumed `hreduced` into a
    theorem for the concrete levels. Then `instLawfulRischLevelTower` resolves with a real base.
 3. **Discharge the completeness bridge** (`descendGenuine`/`descendGenuineLrt`) — the computable→abstract
    residue criterion, using the proven keystones. The residue bridge just built is the sufficiency half; this
    is the necessary half.
-4. **Materialize the ground instance.** With 1–3, `instance : LawfulRischLevel (QFunNZG ℚ)` resolves with no
+4. **Materialize the ground instance.** With 1–3, `instance : LawfulRischLevel (CFracG ℚ)` resolves with no
    hypotheses → the recursive solver is fully proven, soundness + completeness, no dangling frontier.
 
 **Decision to make for step 2/4:** keep `LawfulRischLevel` on `IntegralResultG` (rational — load-bearing for

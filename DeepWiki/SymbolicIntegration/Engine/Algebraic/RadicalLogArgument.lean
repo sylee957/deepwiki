@@ -38,31 +38,31 @@ numerator gives the `ℚ`-matrix of the system. -/
 
 /-- The ℚ(x) value `xᵏ`: numerator the `k`-th monomial `[0,…,0,1]`, denominator `1` — the `ℚ`-base
 specialization of `qMonomial`. -/
-def qxMonomial (k : ℕ) : QFunNZ ℚ := qMonomial k
+def qxMonomial (k : ℕ) : CFrac ℚ := qMonomial k
 
 /-- The cleared log-derivative residual `radLogResidualQ ρ integrand D N = radDeriv(N)·D − N·D' −
-radMul(N, integrand)·D` in `(QFunNZ ℚ)[y]/(y² − ρ)`, whose vanishing says `∫(integrand) dx = log(N/D)`;
+radMul(N, integrand)·D` in `(CFrac ℚ)[y]/(y² − ρ)`, whose vanishing says `∫(integrand) dx = log(N/D)`;
 `ℚ`-linear in `N`. The `ℚ`-base specialization of `radLogResidual` (which uses the actual base-field
 derivation `CDiffField.cderiv`, agreeing with the formal `cderiv` on the untowered base `ℚ(x)`). -/
-def radLogResidualQ (ρ : QFunNZ ℚ) (integrand : RadElem (QFunNZ ℚ)) (D : CPoly ℚ)
-    (N : RadElem (QFunNZ ℚ)) : RadElem (QFunNZ ℚ) :=
+def radLogResidualQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : CPoly ℚ)
+    (N : RadElem (CFrac ℚ)) : RadElem (CFrac ℚ) :=
   radLogResidual ρ integrand D N
 
 /-- The numerator coefficient list `qxNum z = z.1.1 ∈ ℚ[x]` of a ℚ(x) element — specialization of `qNum`. -/
-def qxNum (z : QFunNZ ℚ) : CPoly ℚ := qNum z
+def qxNum (z : CFrac ℚ) : CPoly ℚ := qNum z
 
 /-- The denominator coefficient list `qxDen z = z.1.2 ∈ ℚ[x]` of a ℚ(x) element — specialization of `qDen`. -/
-def qxDen (z : QFunNZ ℚ) : CPoly ℚ := qDen z
+def qxDen (z : CFrac ℚ) : CPoly ℚ := qDen z
 
 /-- The monomial basis `radLogBasisQ degBound` for the ansatz `N = a₀ + a₁·y`: the `2·(degBound+1)`
 elements `[xᵏ, 0]` then `[0, xᵏ]`, giving the matrix columns — specialization of `radLogBasis`. -/
-def radLogBasisQ (degBound : ℕ) : List (RadElem (QFunNZ ℚ)) :=
+def radLogBasisQ (degBound : ℕ) : List (RadElem (CFrac ℚ)) :=
   radLogBasis degBound
 
 /-- The `ℚ`-matrix of the cleared log-derivative system: for each basis column `Nⱼ`, the residual's
 cleared numerators `Pᵢⱼ` (common denominator across columns), one row per `x`-power per component, one
 column per basis index; a kernel vector gives the coefficients of a solving `N`. -/
-def radLogMatrixQ (ρ : QFunNZ ℚ) (integrand : RadElem (QFunNZ ℚ)) (D : CPoly ℚ)
+def radLogMatrixQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : CPoly ℚ)
     (degBound : ℕ) : List (List ℚ) × ℕ :=
   radLogMatrix ρ integrand D degBound
 
@@ -71,8 +71,8 @@ def radLogMatrixQ (ρ : QFunNZ ℚ) (integrand : RadElem (QFunNZ ℚ)) (D : CPol
 /-- Solve for the log argument: `radLogArgSolveQ ρ integrand D degBound = some N` with `N = a₀ + a₁·y`
 (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel vector of the
 `ℚ`-matrix `radLogMatrixQ` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. -/
-def radLogArgSolveQ (ρ : QFunNZ ℚ) (integrand : RadElem (QFunNZ ℚ)) (D : CPoly ℚ)
-    (degBound : ℕ) : Option (RadElem (QFunNZ ℚ)) :=
+def radLogArgSolveQ (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : CPoly ℚ)
+    (degBound : ℕ) : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolve ρ integrand D degBound
 
 /-! ### Solve-then-verify: arcsinh / arccosh / finite-pole
@@ -81,20 +81,20 @@ For each target `radLogArgSolveQ` computes `N`; the computed `u = N/D` is fed to
 certificate `radIsLogIntegral` and compared against the closed form. -/
 
 /-- The radicand `ρ = x²+1 ∈ ℚ(x)` (`y = √(x²+1)`), `[1,0,1]`. -/
-def radArgRhoArcsinh : QFunNZ ℚ := qxOfNum [1, 0, 1]
+def radArgRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- The radicand `ρ = x²−1 ∈ ℚ(x)` (`y = √(x²−1)`), `[−1,0,1]`. -/
-def radArgRhoArccosh : QFunNZ ℚ := qxOfNum [-1, 0, 1]
+def radArgRhoArccosh : CFrac ℚ := qxOfNum [-1, 0, 1]
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over ℚ(x) (`ρ = x²+1`). -/
-def radArgIntegrandArcsinh : RadElem (QFunNZ ℚ) := radInvYLift radArgRhoArcsinh CField.one
+def radArgIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift radArgRhoArcsinh CField.one
 
 /-- The integrand `1/y` of `∫ dx/√(x²−1)`, lifted to `[0, 1/ρ]` over ℚ(x) (`ρ = x²−1`). -/
-def radArgIntegrandArccosh : RadElem (QFunNZ ℚ) := radInvYLift radArgRhoArccosh CField.one
+def radArgIntegrandArccosh : RadElem (CFrac ℚ) := radInvYLift radArgRhoArccosh CField.one
 
 /-- The computed log argument for `∫ dx/√(x²+1)`: `radLogArgSolveQ` with `ρ = x²+1`, `D = 1`, ansatz
 degree `1` (expected `N = x + y` up to a constant). -/
-def radArgSolvedArcsinh : Option (RadElem (QFunNZ ℚ)) :=
+def radArgSolvedArcsinh : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolveQ radArgRhoArcsinh radArgIntegrandArcsinh [1] 1
 
 -- Computed numerator `N` for arcsinh, expected up to scalar as `x + y`.
@@ -109,7 +109,7 @@ theorem radArg_arcsinh_compute_verify :
 
 /-- The computed log argument for `∫ dx/√(x²−1)`: `radLogArgSolveQ` with `ρ = x²−1`, `D = 1`, ansatz
 degree `1` (expected `N = x + y`). -/
-def radArgSolvedArccosh : Option (RadElem (QFunNZ ℚ)) :=
+def radArgSolvedArccosh : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolveQ radArgRhoArccosh radArgIntegrandArccosh [1] 1
 
 /-- `radLogArgSolveQ` computes `u = x + y` for `∫ dx/√(x²−1)`: the solved `N` passes the log-derivative
@@ -123,17 +123,17 @@ theorem radArg_arccosh_compute_verify :
 
 /-- The field element `x·ρ = x·(x²+1) = x + x³ ∈ ℚ(x)`, `[0,1,0,1]` — denominator of the lifted integrand
 `1/(x·y)`. -/
-def radArgXRho : QFunNZ ℚ := qxOfNum [0, 1, 0, 1]
+def radArgXRho : CFrac ℚ := qxOfNum [0, 1, 0, 1]
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`, lifted to `[0, 1/(x·ρ)]` over ℚ(x). -/
-def radArgIntegrandFinite : RadElem (QFunNZ ℚ) := radInvYLift radArgXRho CField.one
+def radArgIntegrandFinite : RadElem (CFrac ℚ) := radInvYLift radArgXRho CField.one
 
 /-- The field element `x ∈ ℚ(x)`, `[0,1]` — the fixed denominator `D = x` of the finite-pole case. -/
-def radArgXBaseX : QFunNZ ℚ := qxOfNum [0, 1]
+def radArgXBaseX : CFrac ℚ := qxOfNum [0, 1]
 
 /-- The computed log argument for `∫ dx/(x√(x²+1))`: `radLogArgSolveQ` with `ρ = x²+1`, `D = x`, ansatz
 degree `0` (expected `N = y − 1`, so `u = (y − 1)/x`). -/
-def radArgSolvedFinite : Option (RadElem (QFunNZ ℚ)) :=
+def radArgSolvedFinite : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolveQ radArgRhoArcsinh radArgIntegrandFinite [0, 1] 0
 
 -- Computed numerator `N` for the finite-pole case, expected up to scalar as `y − 1`.
@@ -169,15 +169,15 @@ is no bounded `N/D`, so `radLogArgSolveQ` returns `none`. -/
 
 /-- The field element `x²·ρ = x²·(x²+1) = x² + x⁴ ∈ ℚ(x)`, `[0,0,1,0,1]` — denominator of the lifted
 integrand `1/(x²·y)`. -/
-def radArgX2Rho : QFunNZ ℚ := qxOfNum [0, 0, 1, 0, 1]
+def radArgX2Rho : CFrac ℚ := qxOfNum [0, 0, 1, 0, 1]
 
 /-- The integrand `1/(x² y)` of `∫ dx/(x²√(x²+1))`, lifted to `[0, 1/(x²·ρ)]` over `ℚ(x)` (a double
 pole at `x = 0`). -/
-def radArgIntegrandDouble : RadElem (QFunNZ ℚ) := radInvYLift radArgX2Rho CField.one
+def radArgIntegrandDouble : RadElem (CFrac ℚ) := radInvYLift radArgX2Rho CField.one
 
 /-- The solve for the double-pole target: `radLogArgSolveQ` with `ρ = x²+1`, `D = x²`, degree `1`
 (expected `none`). -/
-def radArgSolvedDouble : Option (RadElem (QFunNZ ℚ)) :=
+def radArgSolvedDouble : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolveQ radArgRhoArcsinh radArgIntegrandDouble [0, 0, 1] 1
 
 /-- Negative control: the double-pole target has no bounded log argument —

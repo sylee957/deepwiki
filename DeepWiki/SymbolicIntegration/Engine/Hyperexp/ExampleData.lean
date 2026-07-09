@@ -2,14 +2,14 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
 /-! # Shared hyperexponential tower example data
 
-Common `QFunNZ ℚ` constants used by hyperexponential `native_decide` examples and tower-reduction demos.
+Common `CFrac ℚ` constants used by hyperexponential `native_decide` examples and tower-reduction demos.
 -/
 
 namespace DeepWiki.SymbolicIntegration
 
 
-/-- The base field `NLvl1 = QFunNZ ℚ = ℚ(x)` used by hyperexponential tower examples. -/
-abbrev NLvl1 : Type := QFunNZ ℚ
+/-- The base field `NLvl1 = CFrac ℚ = ℚ(x)` used by hyperexponential tower examples. -/
+abbrev NLvl1 : Type := CFrac ℚ
 
 /-- The base variable `x ∈ NLvl1 = ℚ(x)`, represented as the fraction `x/1`. -/
 def nLvl1X : NLvl1 := ⟨([CField.zero, CField.one], [CField.one]), by native_decide⟩

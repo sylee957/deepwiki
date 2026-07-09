@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 section RawSolveField
 
@@ -38,7 +38,7 @@ theorem cdegG_one_eq_zero_wf : cdeg ([CField.one] : CPoly β) = 0 := by
 
 /-- Residual hypotheses for `crischDERawSolveWf` field soundness: the structural residual, the
 positive-`deg(bbar)` dispatcher side-condition, and the two input-denominator nonzero facts. -/
-structure RawSolveResidualWf (ftilde gtilde : QFunNZ β) : Prop where
+structure RawSolveResidualWf (ftilde gtilde : CFrac β) : Prop where
   /-- The structural residual on the base solve, for the matching normal-denominator output. -/
   hres : ∀ a0 b0 c0 h0 : CPoly β,
     cRdeNormalDenominator ([CField.one] : CPoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
@@ -63,7 +63,7 @@ structure RawSolveResidualWf (ftilde gtilde : QFunNZ β) : Prop where
 
 /-- If `crischDERawSolveWf ftilde gtilde = some y` and `RawSolveResidualWf ftilde gtilde` holds, then
 `y = ynum/yden` solves the field-level Risch DE `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. -/
-theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : QFunNZ β)
+theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : CFrac β)
     (hsolve : crischDERawSolveWf ftilde gtilde = some y)
     (hres : RawSolveResidualWf ftilde gtilde) :
     towerFractionFieldDeriv ([CField.one] : CPoly β)

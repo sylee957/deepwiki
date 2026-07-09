@@ -12,7 +12,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 /-! ## The abstract degree bound over `K[X]`, strict-domination cases
 

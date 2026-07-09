@@ -11,10 +11,10 @@ open CPoly Polynomial
 /-! ### Base limited integration -/
 
 /-- `a = 1 + 1/x = (x+1)/x ∈ ℚ(x)`. -/
-def limIntSingleExampleA : QFunNZ ℚ := ⟨([1, 1], [0, 1]), by decide⟩
+def limIntSingleExampleA : CFrac ℚ := ⟨([1, 1], [0, 1]), by decide⟩
 
 /-- `η = 1/x ∈ ℚ(x)` (the primitive derivative `Dt = 1/x`). -/
-def limIntSingleExampleEta : QFunNZ ℚ := ⟨([1], [0, 1]), by decide⟩
+def limIntSingleExampleEta : CFrac ℚ := ⟨([1], [0, 1]), by decide⟩
 
 -- Sanity print: `cLimitedIntegrateSingleBase (1+1/x) (1/x)` returns `b = x`, `c = 1`.
 #eval (cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta).map
@@ -42,11 +42,11 @@ theorem limitedIntegrateSingleBaseNumDen_example :
 /-! ### Degree-raising primitive polynomial integration -/
 
 /-- The base single-`w` limited integrator wrapped with constants embedded in `ℚ(x)`. -/
-def limIntBaseWrap (η a : QFunNZ ℚ) : Option (QFunNZ ℚ × QFunNZ ℚ) :=
+def limIntBaseWrap (η a : CFrac ℚ) : Option (CFrac ℚ × CFrac ℚ) :=
   (cLimitedIntegrateSingleBase a η).map (fun bc => (bc.1, CPoly.qConstParam bc.2))
 
 /-- `p = 1 + (1 + 1/x)·t ∈ ℚ(x)[t]`. -/
-def prim2ExampleP : CPoly (QFunNZ ℚ) := [qConstParam 1, limIntSingleExampleA]
+def prim2ExampleP : CPoly (CFrac ℚ) := [qConstParam 1, limIntSingleExampleA]
 
 -- Sanity print: `∫p = x·t + (1/2)·t²`.
 #eval (cIntegratePrimPolyDegRaise limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3

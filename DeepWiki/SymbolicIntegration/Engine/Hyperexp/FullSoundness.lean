@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 /-! ### The overshoot identity `D(logPart) = a/d + R` for the hyperexponential monomial
 
@@ -243,33 +243,33 @@ theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d
       / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β)) with hR
   rw [show Dg - R + L = (Dg + L) - R by ring, hover, add_sub_cancel_right]
 
-/-! ### The driver soundness at the level-1 carrier `α = QFunNZ ℚ = ℚ(x)`
+/-! ### The driver soundness at the level-1 carrier `α = CFrac ℚ = ℚ(x)`
 
-The normal-part driver soundness instantiated at `α = QFunNZ ℚ` (`CFieldSpec.K (QFunNZ ℚ) = RatFunc ℚ`),
+The normal-part driver soundness instantiated at `α = CFrac ℚ` (`CFieldSpec.K (CFrac ℚ) = RatFunc ℚ`),
 unconditional in `∑c`. -/
 
-/-- Local instance: the engine carrier `CFieldSpec.K (QFunNZ ℚ)` is `RatFunc ℚ` as a `ℚ`-algebra, matching
+/-- Local instance: the engine carrier `CFieldSpec.K (CFrac ℚ)` is `RatFunc ℚ` as a `ℚ`-algebra, matching
 the `Algebra ℚ` the bridge `towerFractionFieldDeriv` uses. -/
-noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZ ℚ)) :=
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (CFrac ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
-/-- Normal-part driver soundness over `ℚ(x)(t)`, unconditional in `∑c` — the `QFunNZ ℚ` instance of
+/-- Normal-part driver soundness over `ℚ(x)(t)`, unconditional in `∑c` — the `CFrac ℚ` instance of
 `cIntegrateHyperexpNormalG_sound`. -/
-theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (QFunNZ ℚ))
-    (a d : CPoly (QFunNZ ℚ)) (cands : List (QFunNZ ℚ)) (res : IntegralResult (QFunNZ ℚ))
-    (intR : QFunNZ ℚ) (s : Finset (CFieldSpec.K (QFunNZ ℚ))) (b : CFieldSpec.K (QFunNZ ℚ))
+theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (CFrac ℚ))
+    (a d : CPoly (CFrac ℚ)) (cands : List (CFrac ℚ)) (res : IntegralResult (CFrac ℚ))
+    (intR : CFrac ℚ) (s : Finset (CFieldSpec.K (CFrac ℚ))) (b : CFieldSpec.K (CFrac ℚ))
     (hDt : toPoly Dt = C b * X)
     (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
-    (hintRsome : CRischField.crischDESolve (CField.zero : QFunNZ ℚ)
+    (hintRsome : CRischField.crischDESolve (CField.zero : CFrac ℚ)
         (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
     (hsome : CPoly.cIntegrateHyperexpNormal Dt a d cands = some res)
     (hherm : towerFractionFieldDeriv Dt
-            (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d))
+            (am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am (CFrac ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
@@ -279,20 +279,20 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (QFunNZ ℚ))
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
-    (hintR : towerFractionFieldDeriv Dt (am (QFunNZ ℚ) (Polynomial.C (CFieldSpec.toK intR)))
-        = am (QFunNZ ℚ) (Polynomial.C (CFieldSpec.toK
+    (hintR : towerFractionFieldDeriv Dt (am (CFrac ℚ) (Polynomial.C (CFieldSpec.toK intR)))
+        = am (CFrac ℚ) (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
               (CPoly.cIntegrateReduced Dt a d cands).logs))))
-    (hRval : am (QFunNZ ℚ) (Polynomial.C (CFieldSpec.toK
+    (hRval : am (CFrac ℚ) (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
               (CPoly.cIntegrateReduced Dt a d cands).logs)))
-        = am (QFunNZ ℚ) (C (b * ∑ β ∈ s,
+        = am (CFrac ℚ) (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))) :
     towerFractionFieldDeriv Dt
-        (am (QFunNZ ℚ) (toPoly res.rational.1) / am (QFunNZ ℚ) (toPoly res.rational.2))
+        (am (CFrac ℚ) (toPoly res.rational.1) / am (CFrac ℚ) (toPoly res.rational.2))
         + logResidueSum Dt res.logs
-      = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d) :=
+      = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d) :=
   cIntegrateHyperexpNormalG_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 

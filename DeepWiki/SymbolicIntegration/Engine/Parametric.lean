@@ -27,7 +27,7 @@ abbrev cderivQ (p : CPoly ℚ) : CPoly ℚ := cderiv p
 /-- **Generic lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPair num den =
 (num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdWf`); the zero
 numerator gives `([], [1])`. The generic mirror of `Compute.qnorm` one tower level down, used to read the
-polynomial part / denominator of a `QFunNZ ℚ`-valued base-field element. -/
+polynomial part / denominator of a `CFrac ℚ`-valued base-field element. -/
 def qnormPair (num den : CPoly ℚ) : CPoly ℚ × CPoly ℚ :=
   if cisZero num then ([], [(1 : ℚ)])
   else
@@ -37,13 +37,13 @@ def qnormPair (num den : CPoly ℚ) : CPoly ℚ × CPoly ℚ :=
     let s := (clead den')⁻¹
     (cscale s num', cscale s den')
 
-/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZ ℚ` element (denominator `[1]` nonzero by
+/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `CFrac ℚ` element (denominator `[1]` nonzero by
 `cisZeroG_one_singleton`). -/
-def qConstParam (n : ℚ) : QFunNZ ℚ := ⟨([n], [(1 : ℚ)]), QFunNZ.cisZeroG_one_singleton⟩
+def qConstParam (n : ℚ) : CFrac ℚ := ⟨([n], [(1 : ℚ)]), CFrac.cisZeroG_one_singleton⟩
 
-/-- `cBaseIsProper b`: `true` iff the lowest-terms `QFunNZ ℚ` value `b = a/d ∈ ℚ(x)` is proper
+/-- `cBaseIsProper b`: `true` iff the lowest-terms `CFrac ℚ` value `b = a/d ∈ ℚ(x)` is proper
 (`deg a < deg d`, nonzero numerator). -/
-def cBaseIsProper (b : QFunNZ ℚ) : Bool :=
+def cBaseIsProper (b : CFrac ℚ) : Bool :=
   let bn := qnormPair b.1.1 b.1.2
   cdeg bn.1 < cdeg bn.2 && !cisZero bn.1
 
@@ -51,7 +51,7 @@ def cBaseIsProper (b : QFunNZ ℚ) : Bool :=
 `b ∈ k = ℚ(x)`: `true` iff `b` could be a logarithmic derivative of a `ℚ(x)`-radical (`n·b = Dz/z` for
 nonzero `n ∈ ℤ`, `z ∈ ℚ(x)*`), `false` iff provably not. A non-proper `b` (in particular every nonzero
 constant) is ruled out; a proper `b` is conservatively accepted. -/
-def cParametricLogDeriv (b : QFunNZ ℚ) : Bool :=
+def cParametricLogDeriv (b : CFrac ℚ) : Bool :=
   -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
   CField.isZero b || cBaseIsProper b
 
@@ -59,11 +59,11 @@ def cParametricLogDeriv (b : QFunNZ ℚ) : Bool :=
 
 Decide `n·f = Dv/v + m·Dθ/θ` for integers `n ≠ 0, m` and `v ∈ ℚ(x)*`: solve for the candidate constant
 `c = m/n` from `c·(Dθ/θ) = f`, then test whether `N·f − M·(Dθ/θ)` is a logarithmic derivative of a
-radical. `f` and `Dθ/θ` are passed as reduced `QFunNZ ℚ` values. -/
+radical. `f` and `Dθ/θ` are passed as reduced `CFrac ℚ` values. -/
 
 /-- `cParamLogDerivCandidate fval wval`: the candidate constant `c = m/n ∈ ℚ` from `c·wval = fval` over
 `ℚ(x)`, returned when `fval/wval` is a `ℚ`-constant (and `wval ≠ 0`), else `none`. -/
-def cParamLogDerivCandidate (fval wval : QFunNZ ℚ) : Option ℚ :=
+def cParamLogDerivCandidate (fval wval : CFrac ℚ) : Option ℚ :=
   -- `c·wval = fval` over ℚ(x); a constant candidate `c ∈ ℚ` exists iff `fval/wval ∈ ℚ`.
   if CField.isZero wval then none
   else
@@ -79,8 +79,8 @@ def cParamLogDerivCandidate (fval wval : QFunNZ ℚ) : Option ℚ :=
 solves for the candidate constant `c = m/n` (`cParamLogDerivCandidate`), then tests whether the residue
 `N·f − M·(Dθ/θ)` is a logarithmic derivative of a radical (`cParametricLogDeriv`), reporting the residue as
 the witness `v` (`v = 1` when it vanishes). -/
-def cParamLogDeriv (fval θlogderiv : QFunNZ ℚ) :
-    Option (ℤ × ℤ × QFunNZ ℚ) :=
+def cParamLogDeriv (fval θlogderiv : CFrac ℚ) :
+    Option (ℤ × ℤ × CFrac ℚ) :=
   match cParamLogDerivCandidate fval θlogderiv with
   | none =>
     -- no constant candidate `c`: fall back to the pure logarithmic-derivative test `n·f = Dv/v`
@@ -186,9 +186,9 @@ For `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1` over `k = ℚ`, `cParamLogDeriv` r
 open CPoly
 
 /-- `f = 11 ∈ ℚ ⊂ ℚ(x)`. -/
-def paramLogDerivExampleF : QFunNZ ℚ := CPoly.qConstParam 11
+def paramLogDerivExampleF : CFrac ℚ := CPoly.qConstParam 11
 /-- `Dθ/θ = 1` (exponential `θ`, `Dθ = θ`). -/
-def paramLogDerivExampleW : QFunNZ ℚ := CPoly.qConstParam 1
+def paramLogDerivExampleW : CFrac ℚ := CPoly.qConstParam 1
 
 -- **Sanity print.** `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
 #eval (CPoly.cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map

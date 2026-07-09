@@ -9,7 +9,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 namespace CPoly
 

@@ -93,10 +93,10 @@ def fieldDetSized : ℕ → List (List α) → α
 row count as the dimension): `det M = Σⱼ (−1)ʲ · M[0][j] · det(minor₀ⱼ)`. -/
 def fieldDet (M : List (List α)) : α := fieldDetSized M.length M
 
-/-- The discriminant of the monic curve `f` over `ℚ(x) = QFunNZ ℚ`: `det[Tr(ωᵢ·ωⱼ)]` for the
+/-- The discriminant of the monic curve `f` over `ℚ(x) = CFrac ℚ`: `det[Tr(ωᵢ·ωⱼ)]` for the
 power basis, computed fraction-free via `qfDet` (Bareiss over a common `ℚ[x]` denominator).
 Equal to `fieldDet (traceMatrix f (powerBasis f))`, hence to `± Resultant(f, f')`. -/
-def discriminant (f : CPoly (QFunNZ ℚ)) : QFunNZ ℚ :=
+def discriminant (f : CPoly (CFrac ℚ)) : CFrac ℚ :=
   qfDet (traceMatrix f (powerBasis f))
 
 /-- `Resultant(f, f')` for the curve `f`: `cresultantWf` of `f` against its `y`-derivative
@@ -109,12 +109,12 @@ end CPoly
 
 open CPoly
 
-/-- The non-radical curve `f = y² − x·y − x³ ∈ ℚ(x)[y]` as a `CPoly (QFunNZ ℚ)` `[−x³, −x, 1]`. -/
-def afNonRadF : CPoly (QFunNZ ℚ) :=
+/-- The non-radical curve `f = y² − x·y − x³ ∈ ℚ(x)[y]` as a `CPoly (CFrac ℚ)` `[−x³, −x, 1]`. -/
+def afNonRadF : CPoly (CFrac ℚ) :=
   [qxOfNum [0, 0, 0, -1], qxOfNum [0, -1], CField.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(f)` (`afBasisElem 1 = [0, 1]`). -/
-def afNonRadY : CPoly (QFunNZ ℚ) := afBasisElem 1
+def afNonRadY : CPoly (CFrac ℚ) := afBasisElem 1
 
 /-- `Tr(y) = x` on the non-radical curve `y² − xy − x³`: the field trace of the generator `y` is the
 `ℚ(x)` value `x`, nonzero unlike a radical curve. -/
@@ -154,8 +154,8 @@ theorem afNonRad_discriminant_eq_neg_resultant :
 
 /-! ### The trigonal curve `f = y³ + x·y + x` over `ℚ(x)` (`n = 3`) -/
 
-/-- The trigonal curve `f = y³ + x·y + x ∈ ℚ(x)[y]` as the `CPoly (QFunNZ ℚ)` `[x, x, 0, 1]`. -/
-def afTrigF : CPoly (QFunNZ ℚ) :=
+/-- The trigonal curve `f = y³ + x·y + x ∈ ℚ(x)[y]` as the `CPoly (CFrac ℚ)` `[x, x, 0, 1]`. -/
+def afTrigF : CPoly (CFrac ℚ) :=
   [qxOfNum [0, 1], qxOfNum [0, 1], CField.zero, CField.one]
 
 /-- `Tr(1) = 3` on the trigonal curve: the trace of `1` is `n = 3`, the `ℚ(x)` constant `3`. -/
@@ -179,9 +179,9 @@ theorem afTrig_discriminant_eq_resultant :
 
 /-! ### Conservativity: on a radical curve `f = y² − ρ`, `Tr(y) = 0` -/
 
-/-- The radical curve `f = y² − (x³ + 1) ∈ ℚ(x)[y]` as the `CPoly (QFunNZ ℚ)` `[−(x³+1), 0, 1]`,
+/-- The radical curve `f = y² − (x³ + 1) ∈ ℚ(x)[y]` as the `CPoly (CFrac ℚ)` `[−(x³+1), 0, 1]`,
 i.e. `y = √(x³+1)` on the general carrier. -/
-def afRadF : CPoly (QFunNZ ℚ) :=
+def afRadF : CPoly (CFrac ℚ) :=
   [qxOfNum [-1, 0, 0, -1], CField.zero, CField.one]
 
 /-- `Tr(y) = 0` on the radical curve `y² − (x³+1)`: a radical generator is traceless, agreeing with

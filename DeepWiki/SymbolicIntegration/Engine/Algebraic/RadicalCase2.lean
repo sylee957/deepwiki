@@ -94,30 +94,30 @@ theorem case2c_cleared_identity :
 
 /-! #### The end-to-end `radDeriv` validation
 
-Over `(QFunNZ ℚ)[y]/(y² − (x³−x))`, the rational part `v = Bf/(Wᵏy)`, integrand `C/(Wᵏy)`, and residual
+Over `(CFrac ℚ)[y]/(y² − (x³−x))`, the rational part `v = Bf/(Wᵏy)`, integrand `C/(Wᵏy)`, and residual
 `D/(W^{k−1}y)` lift to pure-`y` elements, and `radDeriv 2 (x³−x)` confirms `D(v) = C/(Wᵏy) + D/(W^{k−1}y)`. -/
 
-/-- The radicand `f = x³ − x` lifted to `ℚ(x)` (`QFunNZ ℚ`) for `radDeriv 2`. -/
-def case2cFqx : QFunNZ ℚ := qxOfNum [0, -1, 0, 1]
+/-- The radicand `f = x³ − x` lifted to `ℚ(x)` (`CFrac ℚ`) for `radDeriv 2`. -/
+def case2cFqx : CFrac ℚ := qxOfNum [0, -1, 0, 1]
 
 /-- `Wᵏ = x²` as a `ℚ[x]` polynomial (`k = 2`). -/
 def case2cWk : CPoly ℚ := cpow case2cW 2
 
-/-- The rational part `v = Bf/(Wᵏy)` lifted to the pure-`y` element `[0, (Bf/Wᵏ)/f] ∈ RadElem (QFunNZ ℚ)`. -/
-def case2cVlift : RadElem (QFunNZ ℚ) :=
+/-- The rational part `v = Bf/(Wᵏy)` lifted to the pure-`y` element `[0, (Bf/Wᵏ)/f] ∈ RadElem (CFrac ℚ)`. -/
+def case2cVlift : RadElem (CFrac ℚ) :=
   [CField.zero,
     CField.div (qxOfNum (cmul case2cB case2cF))
       (qxOfNum (cmul case2cWk case2cF))]
 
 /-- The integrand rational part `C/(Wᵏy) + D/(W^{k−1}y)` lifted to the pure-`y` element
-`[0, (C/Wᵏ)/f + (D/W^{k−1})/f] ∈ RadElem (QFunNZ ℚ)` (what `radDeriv(v)` equals). -/
-def case2cRatLift : RadElem (QFunNZ ℚ) :=
+`[0, (C/Wᵏ)/f + (D/W^{k−1})/f] ∈ RadElem (CFrac ℚ)` (what `radDeriv(v)` equals). -/
+def case2cRatLift : RadElem (CFrac ℚ) :=
   [CField.zero,
     CField.add
       (CField.div (qxOfNum case2cC) (qxOfNum (cmul case2cWk case2cF)))
       (CField.div (qxOfNum case2cD) (qxOfNum (cmul case2cW case2cF)))]
 
-/-- Case 2 integrates `∫ 1/(x²·√(x³−x))`: over `(QFunNZ ℚ)[y]/(y² − (x³−x))`, `radDeriv 2 (x³−x)` of the
+/-- Case 2 integrates `∫ 1/(x²·√(x³−x))`: over `(CFrac ℚ)[y]/(y² − (x³−x))`, `radDeriv 2 (x³−x)` of the
 rational part `v = Bf/(W²√(x³−x))` equals `C/(W²√(x³−x)) + D/(W·√(x³−x))`. -/
 theorem case2cDriver_integrates :
     radIsZero (radSub (radDeriv 2 case2cFqx case2cVlift) case2cRatLift) = true := by native_decide

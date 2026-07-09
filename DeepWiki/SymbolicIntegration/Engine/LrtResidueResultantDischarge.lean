@@ -13,7 +13,7 @@ the `K`-level result used by the reduced LRT integrator soundness theorem. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Polynomial CPoly QFunNZ Classical
+open Polynomial CPoly CFrac Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]

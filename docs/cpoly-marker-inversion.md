@@ -30,20 +30,20 @@ gate-green commit (a rename must be atomic — the intermediate state doesn't co
 - **P3 — bridge `toPolyG → toPoly`** (~5.2k): first relift concrete `Compute.toPoly → toPolyQ`
   (namespace-aware; leave the unrelated `PolynomialIrreducibility.toPoly`), then `\btoPolyG\b → toPoly`.
 - **P4 — drop op-`G`** (~155 ops, ~thousands of refs): relift concrete `Compute.cX → cXQ` (namespace-aware,
-  handle `cderiv`), then `\bcXG\b → cX` per op. Do in op-family batches; `amG`/`QFunNZG` are a *separate*
+  handle `cderiv`), then `\bcXG\b → cX` per op. Do in op-family batches; `amG`/`CFracG` are a *separate*
   decision (different concept — the fraction-field tower — not the `CPoly` op layer).
 
 ## The rest of the generic engine (QFun tower + radical pairs) — DONE
 
 After the CPoly engine, the same safe de-`G` was extended to the **fraction-field-tower layer** (84 decl
-names, 4708 occ): `QFunNZG→QFunNZ`, `amG→am`, the QFun ops (`qmulG`/`qaddG`/`qinvG`/`qOfNumG`/…→`qmul`/…),
-tower bridges (`toQFunNZG`/`towerFractionFieldDerivG`/`toGBPolyG`/`liftKG`), matrix ops
+names, 4708 occ): `CFracG→CFrac`, `amG→am`, the QFun ops (`qmulG`/`qaddG`/`qinvG`/`qOfNumG`/…→`qmul`/…),
+tower bridges (`toCFracG`/`towerFractionFieldDerivG`/`toGBPolyG`/`liftKG`), matrix ops
 (`matMulG`/`matInvG`/`gaussElimG`/`kernelBasisG`), Prop/result types (`IntegralResultG`/`IsIntegralResultG`/
 `LrtResultG`/`logResidueSumG`/…); plus the **6 radical generic/ℚ twin pairs** (`algDerivG`/`algDeriv`,
 `AlgIntegralResultG`, `radLog{Basis,Matrix,Residual,ArgSolve}G`) relifted-then-de-`G`'d like CPoly.
 
 **New gotchas found:** (1) a **local `set am := amG α`** binding shadowed the de-`G`'d global `am` at a
-`rw [amG]` site → fix by qualifying `rw [QFunNZ.am]`; (2) `RefinesPolyG` is also a **module/file name** →
+`rw [amG]` site → fix by qualifying `rw [CFrac.am]`; (2) `RefinesPolyG` is also a **module/file name** →
 `git mv RefinesPolyG.lean RefinesPoly.lean` (de-`G` rewrote the `import` path but not the file).
 
 **Justified exceptions kept with `G`:** `logG`/`expG` (would shadow `Real.log`/`Real.exp`), `nsmulG`
@@ -65,7 +65,7 @@ harmless.
   concrete ops did NOT need relifting. The only scope work (Step A) was lifting the 3 root-namespace/
   always-in-scope conflicts — algebraic `toPoly→listToPoly`, `commonDenom→commonDenomQ`,
   `cinterpTerm→cinterpTermQ` — and dropping the 2 vestigial `open Compute` (Parametric, LaurentSpecialSoundness).
-  One struct-field clash fixed: `IsProperSpecialPart.clead → lc_nz`. `amG`/`QFunNZG`/`fieldFrac` kept
+  One struct-field clash fixed: `IsProperSpecialPart.clead → lc_nz`. `amG`/`CFracG`/`fieldFrac` kept
   (separate fraction-field-tower layer, not the CPoly op layer). Residual: `cgcdExtG`/`cdivmodG`/`cresultantG`
   are stale doc-comment mentions of deleted fuel ops (harmless prose).
 

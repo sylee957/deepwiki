@@ -2,11 +2,11 @@
 
 Self-contained instructions for retiring the fuel-threaded `cRischDEG` Risch-DE solver in
 favour of the well-founded `cRischDEG`, at the level that matters: the
-`CRischField (QFunNZG β)` **instance**. Written to be executed by an agent without prior
+`CRischField (CFracG β)` **instance**. Written to be executed by an agent without prior
 conversation context. Read this whole file before touching anything.
 
 **One-line goal.** Make the tower Risch-DE recursion *actually* fuel-free by rebasing the
-`CRischField (QFunNZG β)` instance's `crischDESolve` from `cRischDEG […] towerRischDEFuel`
+`CRischField (CFracG β)` instance's `crischDESolve` from `cRischDEG […] towerRischDEFuel`
 onto `cRischDEG`, then retire the orphaned fuel'd solver + its soundness track.
 
 **Status when this plan was written (2026-07-02).** Assessed only — no code changed. Two
@@ -26,7 +26,7 @@ top of the pipeline *looks* fuel-free.
 
 **But the tower recursion re-introduces fuel at every level.** The base solve of the tower is
 the typeclass method `CRischField.crischDESolve`. Its only non-trivial instance,
-`instCRischFieldQFunNZG : CRischField (QFunNZG β)` (`Computable/Tower/RischDE.lean:465`), is
+`instCRischFieldCFracG : CRischField (CFracG β)` (`Computable/Tower/RischDE.lean:465`), is
 defined as
 
 ```
@@ -63,7 +63,7 @@ porting that soundness.
    (`Computable/Tower/RischDEWellFounded.lean:418`) — a **different** gcd class. The rebased
    instance, every one of its consumers, and the whole tower recursion must therefore carry
    `CFracGcdCoreWf`. Feasible: the recursion instances exist —
-   `instCFracGcdCoreWfQFunNZG : CFracGcdCoreWf (QFunNZG β)` (`Computable/Tower/WellFounded.lean:151`),
+   `instCFracGcdCoreWfCFracG : CFracGcdCoreWf (CFracG β)` (`Computable/Tower/WellFounded.lean:151`),
    `CFracGcdCoreWf ℚ` (`…:139`), `CFracGcdCoreWf RadX3` (`Computable/MixedTowerIntegrate.lean:96`).
 
 3. **Soundness re-wiring (~9 files).** The fuel'd soundness development reasons symbolically
@@ -77,7 +77,7 @@ porting that soundness.
    `crischDESolveSoundWf_field`, `Computable/RischDE/SolveSoundWf.lean:174`). The headline to
    port is `crischDESolve_field_of_witness_residual` (`Computable/SoundnessCapstone.lean:294`).
 
-4. **Open-problem entanglement.** There is deliberately **no** `CRischFieldSpec (QFunNZG β)`
+4. **Open-problem entanglement.** There is deliberately **no** `CRischFieldSpec (CFracG β)`
    instance — it is a known-open goal (`Computable/SoundnessCapstone.lean:476`,
    `Computable/RischDE/SolveNorm.lean:493`). The fuel'd `SoundnessCapstone` is *partial progress
    toward it*. The migration must **port** that partial progress onto `cRischDEG`, not discard
@@ -123,7 +123,7 @@ as the final gate. Every new `Sources/*` module must be imported into `Sources.l
 2. Confirm the §3 line numbers against live code; the counts/anchors will have drifted.
 3. Decide the new home for the instance (Phase P2). Recommended: a new module
    `Computable/Tower/RischDEInstance.lean` importing `Tower.RischDEWellFounded` (which transitively
-   has `Tower.RischDE`), so it sees both `cRischDEG` and `QFunNZG`/`cdenomNormalGateG`.
+   has `Tower.RischDE`), so it sees both `cRischDEG` and `CFracG`/`cdenomNormalGateG`.
 
 > **P1 FEASIBILITY VERDICT (2026-07-02): GREEN — mechanical mirror-port, not blocked on the open
 > spec.** The fuel'd headline `crischDESolve_field_of_witness_residual`
@@ -213,7 +213,7 @@ not refactoring.
 
 ### P2 — Relocate + rebase the instance (the atomic switch; the big commit)
 1. Create `Computable/Tower/RischDEInstance.lean` (imports `Tower.RischDEWellFounded`). Define
-   `instCRischFieldQFunNZG : CRischField (QFunNZG β)` with `variable {β} [CField β] [CDiffField β]
+   `instCRischFieldCFracG : CRischField (CFracG β)` with `variable {β} [CField β] [CDiffField β]
    [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β]` (note `CFracGcdCoreWf`), body identical to
    the fuel'd one but calling `cRischDEG ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2`
    (no fuel). Move the two reduction lemmas here, restated over `cRischDEG`; their proofs stay
@@ -249,9 +249,9 @@ not refactoring.
 >   files that *unfold the instance body via the reduction lemmas* and so break on the switch; each must
 >   repoint to the Wf reduction lemmas + `crischDERawSolveWf_field_of_residual` (SoundnessCapstone's
 >   `crischDESolve_field_of_witness_residual`) / the Wf raw-solve soundness.
-> - **`CRischField.crischDESolve` on QFunNZG appears in ~24 files** but the vast majority are *runtime
+> - **`CRischField.crischDESolve` on CFracG appears in ~24 files** but the vast majority are *runtime
 >   `def` call sites* (they compute a solve; they do NOT reason about the fuel'd body), so they survive the
->   switch untouched — the body is still `Option (QFunNZG β)`-valued, just fuel-free. Do NOT touch these.
+>   switch untouched — the body is still `Option (CFracG β)`-valued, just fuel-free. Do NOT touch these.
 > - **`[CFracGcdCore β]` (fuel'd, non-Wf) = 48 occurrences across 9 files**, but this cuts across TWO
 >   concerns: (a) the fuel'd **gcd** machinery `cgcdFFCore` (`Tower/GcdFFCore.lean`, `Tower/GcdFFCorrect.lean`,
 >   `WeakNormalizerCorrect.lean`) — genuinely needs `[CFracGcdCore β]`, NOT touched by the RDE switch
@@ -260,7 +260,7 @@ not refactoring.
 >   `[CFracGcdCoreWf β]`. So the §2.2 propagation is narrower than 48; scope it by "does this signature need
 >   the RDE instance or the fuel'd gcd?" per occurrence.
 > - **The atomic character is real**: the new instance and the old cannot coexist (ambiguous
->   `CRischField (QFunNZG β)` resolution — §5 hard constraint), and `Tower/RischDEWellFounded.lean` (home of
+>   `CRischField (CFracG β)` resolution — §5 hard constraint), and `Tower/RischDEWellFounded.lean` (home of
 >   `cRischDEG`) already imports `Tower/RischDE.lean` (home of the old instance), so the new instance file
 >   must sit ABOVE `RischDEWellFounded` in the import DAG and the old instance deleted in the same commit.
 >   The tree is red from the delete until all 3 reduction-consumers + the instance-driven `[CFracGcdCoreWf]`
@@ -286,7 +286,7 @@ of the moved soundness theorems as `example`s to confirm they say the right thin
 fuel-retirement memory and CLAUDE.md if any convention shifted.
 
 ## 5. Hard constraints (do NOT)
-- **Do not** keep two `CRischField (QFunNZG β)` instances — instance resolution will go ambiguous.
+- **Do not** keep two `CRischField (CFracG β)` instances — instance resolution will go ambiguous.
   The switch is atomic (old out, new in) within P2.
 - **Do not** introduce a `cRischDEG = cRischDEG` axiom/`sorry` bridge to shortcut P2.4 — there is
   no true such equation (fixed fuel ≠ well-founded result).
@@ -308,7 +308,7 @@ migration to span multiple sessions; do not start P2 without P1 green.
 
 ## 7. Acceptance criteria (migration done)
 - [ ] `grep -rn '\bcRischDEG\b'` over `*.lean` empty; `towerRischDEFuel` gone.
-- [ ] `instCRischFieldQFunNZG.crischDESolve` runs `cRischDEG`; the tower is fuel-free end to end.
+- [ ] `instCRischFieldCFracG.crischDESolve` runs `cRischDEG`; the tower is fuel-free end to end.
 - [ ] The instance soundness (`crischDESolve`'s field identity) holds on the Wf oracle.
 - [ ] `Sources/…/Chapter6.lean` `native_decide` examples pass unchanged; catalog `#check`s resolve.
 - [ ] Bare `scripts/check.sh` → `GATE: PASS`; Sources orphan audit clean.

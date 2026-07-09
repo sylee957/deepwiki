@@ -3,15 +3,15 @@ import DeepWiki.SymbolicIntegration.Engine.ConcreteCoherence
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 
 /-! # Fraction-field tower examples: concrete-`Compute` coherence and level-2 `native_decide`
-The generic fraction field `QFunNZ` lives in `ComputableAlgebra.FractionField`; this file exercises it:
-the `α = ℚ` coherence with the concrete `Compute.*` engine, and the `Lvl2 = QFunNZ (QFunNZ ℚ)` tower
+The generic fraction field `CFrac` lives in `ComputableAlgebra.FractionField`; this file exercises it:
+the `α = ℚ` coherence with the concrete `Compute.*` engine, and the `Lvl2 = CFrac (CFrac ℚ)` tower
 computing end to end (`cmul`/`cgcdWf`/`cresultantWf`) under `native_decide`. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ### Tower level 1: `QFunNZ ℚ ≅ ℚ(x)` and its coherence with the concrete `Compute.*` engine -/
+/-! ### Tower level 1: `CFrac ℚ ≅ ℚ(x)` and its coherence with the concrete `Compute.*` engine -/
 
 /-- The underlying pair type of `QFun ℚ` is the concrete `Compute.QFun` (both `List ℚ × List ℚ`). -/
 example : QFun ℚ = Compute.QFun := rfl
@@ -22,8 +22,8 @@ example (d : CPoly ℚ) : CPoly.toPoly d = Compute.toPoly d :=
 
 /-! ### The tower computes at level 2 (`ℚ(x)(t₁)[t₂]`) (`native_decide`) -/
 
-/-- Tower level 2: `Lvl2 = QFunNZ (QFunNZ ℚ)`, the field ℚ(x)(t₁); `CPoly Lvl2 = ℚ(x)(t₁)[t₂]`. -/
-abbrev Lvl2 : Type := QFunNZ (QFunNZ ℚ)
+/-- Tower level 2: `Lvl2 = CFrac (CFrac ℚ)`, the field ℚ(x)(t₁); `CPoly Lvl2 = ℚ(x)(t₁)[t₂]`. -/
+abbrev Lvl2 : Type := CFrac (CFrac ℚ)
 
 /-- `1 + 1 ≠ 0` in `Lvl2 = ℚ(x)(t₁)`: the level-2 scalar `add`/`isZero` reduce. -/
 example : CField.isZero (CField.add (CField.one : Lvl2) CField.one) = false := by native_decide
@@ -59,7 +59,7 @@ example :
 example :
     CField.isZero
       (CField.add (CField.one : Lvl2)
-        (CField.inv ⟨([(CField.zero : QFunNZ ℚ), CField.one], [CField.one]),
-          QFunNZ.cisZeroG_one_singleton⟩))
+        (CField.inv ⟨([(CField.zero : CFrac ℚ), CField.one], [CField.one]),
+          CFrac.cisZeroG_one_singleton⟩))
       = false := by native_decide
 

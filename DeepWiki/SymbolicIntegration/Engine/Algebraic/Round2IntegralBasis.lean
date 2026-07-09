@@ -23,8 +23,8 @@ For a linear prime `p = x − a`, the residue field `K[x]/(p) = K` and reduction
 the root `a` (`qEvalAtRoot`). -/
 
 /-- Evaluate a `ℚ(x)` element at a root `a`: `qEvalAtRoot z a = num(a)/den(a) ∈ ℚ`, Horner-evaluating the
-numerator and denominator of `z : QFunNZ ℚ` and dividing. The reduction `z mod (x − a)`. -/
-def qEvalAtRoot (z : QFunNZ ℚ) (a : ℚ) : ℚ :=
+numerator and denominator of `z : CFrac ℚ` and dividing. The reduction `z mod (x − a)`. -/
+def qEvalAtRoot (z : CFrac ℚ) (a : ℚ) : ℚ :=
   CField.div (ceval (z.1.1 : CPoly ℚ) a) (ceval (z.1.2 : CPoly ℚ) a)
 
 /-! ### A full kernel basis of a `β`-matrix (`kernelBasis`) -/
@@ -52,12 +52,12 @@ open CPoly
 
 /-- The numerator of the discriminant as a `ℚ[x]` polynomial `discNum f = (discriminant f).1.1` (the
 denominator is `1` for a monic `f`), whose squarefree part bounds the bad primes. -/
-def discNum (f : CPoly (QFunNZ ℚ)) : CPoly ℚ := (discriminant f).1.1
+def discNum (f : CPoly (CFrac ℚ)) : CPoly ℚ := (discriminant f).1.1
 
 /-- The bad primes of `f` `badPrimes f`: the distinct monic squarefree factors of the discriminant
 numerator (Yun factorization) with `p² ∣ d` (tested by `cisZero (cmodWf d (p·p))`) — the primes where the
 equation order may be non-maximal. -/
-def badPrimes (f : CPoly (QFunNZ ℚ)) : List (CPoly ℚ) :=
+def badPrimes (f : CPoly (CFrac ℚ)) : List (CPoly ℚ) :=
   let d := discNum f
   let sqf := cSqfreeYunFF d
   -- distinct nonconstant squarefree factors, each made monic
@@ -69,13 +69,13 @@ def badPrimes (f : CPoly (QFunNZ ℚ)) : List (CPoly ℚ) :=
 `n = 2`, discriminant `4x³`, bad prime `x`; the order `[1, y]` is non-maximal since `y/x` is integral
 (`(y/x)² = x`). -/
 
-/-- The cusp curve `f = y² − x³ ∈ ℚ(x)[y]` (`a₀ = −x³`, monic), `CPoly (QFunNZ ℚ)` `[−x³, 0, 1]`. The
+/-- The cusp curve `f = y² − x³ ∈ ℚ(x)[y]` (`a₀ = −x³`, monic), `CPoly (CFrac ℚ)` `[−x³, 0, 1]`. The
 equation order `[1, y]` is non-maximal at `x`. -/
-def cuspF : CPoly (QFunNZ ℚ) :=
+def cuspF : CPoly (CFrac ℚ) :=
   [qxOfNum [0, 0, 0, -1], CField.zero, CField.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(y² − x³)` (`afBasisElem 1 = [0, 1]`). -/
-def cuspY : CPoly (QFunNZ ℚ) := afBasisElem 1
+def cuspY : CPoly (CFrac ℚ) := afBasisElem 1
 
 /-- The bad prime of the cusp is `x`: `badPrimes cuspF = [x]` (the single monic factor `x = [0, 1]` with
 `x² ∣ 4x³`). -/
@@ -90,21 +90,21 @@ matrix reduced mod `p` (evaluated at `a`), lifted and Hermite-reduced to a `K[x]
 namespace CPoly
 
 /-- The power-basis coordinate row of an order element `afCoordRow n z = [num(c₀), …, num(c_{n−1})]`: the
-first `n` coefficients of `z : CPoly (QFunNZ ℚ)` read as `ℚ[x]` numerators. -/
-def afCoordRow (n : ℕ) (z : CPoly (QFunNZ ℚ)) : List (CPoly ℚ) :=
-  (List.range n).map (fun i => ((z.getD i CField.zero : QFunNZ ℚ).1.1 : CPoly ℚ))
+first `n` coefficients of `z : CPoly (CFrac ℚ)` read as `ℚ[x]` numerators. -/
+def afCoordRow (n : ℕ) (z : CPoly (CFrac ℚ)) : List (CPoly ℚ) :=
+  (List.range n).map (fun i => ((z.getD i CField.zero : CFrac ℚ).1.1 : CPoly ℚ))
 
 /-- The trace matrix reduced at a linear prime root `a` `traceMatrixAtRoot f a`: the `n×n` `ℚ`-matrix
 `traceMatrix f (powerBasis f)` with every entry evaluated at `x = a` (`qEvalAtRoot`), i.e. `T mod (x − a)`.
 Its kernel is the p-trace-radical mod `p`. -/
-def traceMatrixAtRoot (f : CPoly (QFunNZ ℚ)) (a : ℚ) : List (List ℚ) :=
+def traceMatrixAtRoot (f : CPoly (CFrac ℚ)) (a : ℚ) : List (List ℚ) :=
   (traceMatrix f (powerBasis f)).map (fun row => row.map (fun e => qEvalAtRoot e a))
 
 /-- The p-trace-radical `I_p` at a linear prime `p = x − a` `pTraceRadical f p a`: a `K[x]`-basis of
 `I_p = { z ∈ O : p ∣ Tr(z·ωⱼ) ∀j }` as a `PolyMatrix ℚ` (rows = basis vectors in power-basis coordinates).
 The kernel of `traceMatrixAtRoot f a` (`kernelBasis`) lifts to constant coordinate rows which, with the
 `p·ωᵢ` rows, generate `I_p ⊇ p·O`; `hermiteRowReduce` triangularizes to the basis. -/
-def pTraceRadical (f : CPoly (QFunNZ ℚ)) (p : CPoly ℚ) (a : ℚ) : PolyMatrix ℚ :=
+def pTraceRadical (f : CPoly (CFrac ℚ)) (p : CPoly ℚ) (a : ℚ) : PolyMatrix ℚ :=
   let n := cdeg f
   let kers : List (List ℚ) := kernelBasis n (traceMatrixAtRoot f a)
   -- lift each kernel vector to a constant `ℚ[x]` coordinate row (the residue generators)
@@ -149,7 +149,7 @@ The enlarged order `Î = (I_p : I_p) = { z ∈ K(x, y) : z·I_p ⊆ I_p }`. With
 
 namespace CPoly
 
-/-! #### Field matrix algebra over `K(x) = QFunNZ ℚ` (inverse, product) -/
+/-! #### Field matrix algebra over `K(x) = CFrac ℚ` (inverse, product) -/
 
 /-- Matrix product over a `[CField β]` `matMul A Bm`: the `(i, j)` entry is `Σₖ A[i][k]·Bm[k][j]`. -/
 def matMul {β : Type*} [CField β] (A Bm : List (List β)) : List (List β) :=
@@ -202,18 +202,18 @@ def matInv {β : Type*} [CField β] (n : ℕ) (M : List (List β)) : Option (Lis
 
 /-- Lift a `K[x]` coordinate row to a `K(x, y)` element `rowToAf row = Σᵢ qxOfNum(rowᵢ)·yⁱ`, turning an
 `I_p`-basis row into the order element it represents. -/
-def rowToAf (row : List (CPoly ℚ)) : CPoly (QFunNZ ℚ) := row.map qxOfNum
+def rowToAf (row : List (CPoly ℚ)) : CPoly (CFrac ℚ) := row.map qxOfNum
 
-/-- The `I_p`-basis matrix `B` over `K(x)` `ipBasisMatrix n ipRows`: the `n×n` `QFunNZ ℚ`-matrix whose
+/-- The `I_p`-basis matrix `B` over `K(x)` `ipBasisMatrix n ipRows`: the `n×n` `CFrac ℚ`-matrix whose
 column `k` is the `k`-th `I_p`-basis row, `B[r][k] = qxOfNum (ipRows[k][r])` — the change of basis from the
 `I_p` basis to the power basis. -/
-def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix ℚ) : List (List (QFunNZ ℚ)) :=
+def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix ℚ) : List (List (CFrac ℚ)) :=
   (List.range n).map (fun r =>
     (List.range n).map (fun k => qxOfNum ((ipRows.getD k []).getD r [])))
 
 /-- The common denominator of a `K(x)`-matrix `commonDenomQ M`: the product over all entries of their
 normalized denominators (`z.1.2`), a coarse common multiple used to clear `M` to `K[x]`. -/
-def commonDenomQ (M : List (List (QFunNZ ℚ))) : CPoly ℚ :=
+def commonDenomQ (M : List (List (CFrac ℚ))) : CPoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
       let den := cnorm (z.1.2 : CPoly ℚ)
@@ -222,7 +222,7 @@ def commonDenomQ (M : List (List (QFunNZ ℚ))) : CPoly ℚ :=
 
 /-- Clear a `K(x)`-row to a `K[x]`-row at denominator `δ` `clearRow δ row = [num(δ·zᵢ)]`: multiply each
 entry by `δ` and take the numerator; the integral row `δ·row` when `δ` is a common denominator. -/
-def clearRow (δ : CPoly ℚ) (row : List (QFunNZ ℚ)) : List (CPoly ℚ) :=
+def clearRow (δ : CPoly ℚ) (row : List (CFrac ℚ)) : List (CPoly ℚ) :=
   row.map (fun z => (CField.mul (qxOfNum δ) z).1.1)
 
 /-! #### The idealizer of `I_p`, given an order basis (`idealizerBasis`) -/
@@ -232,17 +232,17 @@ the current order basis and the `I_p` `K[x]`-basis (`pTraceRadical` output). For
 `Mⱼ = B⁻¹ · multMatrix f ιⱼ` for each `ιⱼ`, stacks into `M`, clears to `N = δ·M` over `K[x]`, Hermite-reduces,
 inverts the first `n` rows, and scales by `δ`: the columns of `δ·N̂⁻¹` are the idealizer basis. Returns
 `orderBasis` unchanged if any inverse is singular. -/
-def idealizerBasis (f : CPoly (QFunNZ ℚ)) (orderBasis : List (CPoly (QFunNZ ℚ)))
-    (ipRows : PolyMatrix ℚ) : List (CPoly (QFunNZ ℚ)) :=
+def idealizerBasis (f : CPoly (CFrac ℚ)) (orderBasis : List (CPoly (CFrac ℚ)))
+    (ipRows : PolyMatrix ℚ) : List (CPoly (CFrac ℚ)) :=
   let n := cdeg f
-  let B : List (List (QFunNZ ℚ)) := ipBasisMatrix n ipRows
+  let B : List (List (CFrac ℚ)) := ipBasisMatrix n ipRows
   match matInv n B with
   | none => orderBasis
   | some Binv =>
     -- stack the `Mⱼ = Binv · multMatrix f ιⱼ` (each `n×n` over K(x))
-    let M : List (List (QFunNZ ℚ)) :=
+    let M : List (List (CFrac ℚ)) :=
       (List.range n).foldr (fun j acc =>
-        let ιj : CPoly (QFunNZ ℚ) := rowToAf ((ipRows.getD j []))
+        let ιj : CPoly (CFrac ℚ) := rowToAf ((ipRows.getD j []))
         let Mj := matMul Binv (multMatrix f ιj)
         Mj ++ acc) []
     -- clear to K[x] by a common denominator δ
@@ -250,13 +250,13 @@ def idealizerBasis (f : CPoly (QFunNZ ℚ)) (orderBasis : List (CPoly (QFunNZ �
     let N : PolyMatrix ℚ := M.map (clearRow δ)
     -- Hermite-reduce N over K[x]; the first n rows are the upper-triangular invertible part
     let reduced := hermiteRowReduce N
-    let Nhat : List (List (QFunNZ ℚ)) :=
+    let Nhat : List (List (CFrac ℚ)) :=
       (List.range n).map (fun i => (List.range n).map (fun j => qxOfNum ((reduced.getD i []).getD j [])))
     match matInv n Nhat with
     | none => orderBasis
     | some NhatInv =>
       -- columns of δ·N̂⁻¹ are the new basis vectors (in the [1,y,…] order/power basis)
-      let δq : QFunNZ ℚ := qxOfNum δ
+      let δq : CFrac ℚ := qxOfNum δ
       (List.range n).map (fun col =>
         (List.range n).map (fun row => CField.mul δq ((NhatInv.getD row []).getD col CField.zero)))
 
@@ -268,7 +268,7 @@ namespace CPoly
 
 /-- `true` iff a `K(x, y)` order basis equals the power basis `[1, y, …, yⁿ⁻¹]` `isPowerBasis n basis`:
 each `basisᵢ` is `cisZero`-equal to `yⁱ`. Tests whether `round2Step` grew the order. -/
-def isPowerBasis (n : ℕ) (basis : List (CPoly (QFunNZ ℚ))) : Bool :=
+def isPowerBasis (n : ℕ) (basis : List (CPoly (CFrac ℚ))) : Bool :=
   (List.range n).all (fun i =>
     cisZero (csub (basis.getD i []) (afBasisElem i)))
 
@@ -276,8 +276,8 @@ def isPowerBasis (n : ℕ) (basis : List (CPoly (QFunNZ ℚ))) : Bool :=
 `O = powerBasis f`, for the first bad prime `p = x − a`, computes the p-trace-radical `I_p` and the idealizer
 `Î = (I_p : I_p)`, returning `Î`'s basis and whether it strictly enlarged `O`. With no bad prime, returns the
 power basis with `grew = false`. -/
-def round2Step (f : CPoly (QFunNZ ℚ)) :
-    List (CPoly (QFunNZ ℚ)) × Bool :=
+def round2Step (f : CPoly (CFrac ℚ)) :
+    List (CPoly (CFrac ℚ)) × Bool :=
   let n := cdeg f
   let O := powerBasis f
   match (badPrimes f) with
@@ -301,7 +301,7 @@ open CPoly
 
 /-- The enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x³)`, the second basis vector of `round2Step`
 (`[0, 1/x]` in the `[1, y]` order basis). -/
-def cuspNewGen : CPoly (QFunNZ ℚ) := (round2Step cuspF).1.getD 1 []
+def cuspNewGen : CPoly (CFrac ℚ) := (round2Step cuspF).1.getD 1 []
 
 /-- `round2Step` enlarges the cusp order: `(round2Step cuspF).2 = true`, the idealizer strictly contains
 `[1, y]`. -/
@@ -334,13 +334,13 @@ The node `f = y² − x³ − x²`: discriminant `4x²(x + 1)`, bad prime `x`; `
 `[1, y/x]` with the relation `(y/x)² = x + 1`, so `[1, y/x]` is its maximal order too. -/
 
 /-- The node curve `f = y² − x²(x + 1) = y² − x³ − x² ∈ ℚ(x)[y]` (`a₀ = −(x³ + x²)`, monic), `CPoly
-(QFunNZ ℚ)` `[−(x³ + x²), 0, 1]`. An ordinary double point; `[1, y]` is non-maximal at `x`. -/
-def nodeF : CPoly (QFunNZ ℚ) :=
+(CFrac ℚ)` `[−(x³ + x²), 0, 1]`. An ordinary double point; `[1, y]` is non-maximal at `x`. -/
+def nodeF : CPoly (CFrac ℚ) :=
   [qxOfNum [0, 0, -1, -1], CField.zero, CField.one]
 
 /-- The enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x²(x+1))`, the second basis vector of `round2Step nodeF`
 (`[0, 1/x]`). -/
-def nodeNewGen : CPoly (QFunNZ ℚ) := (round2Step nodeF).1.getD 1 []
+def nodeNewGen : CPoly (CFrac ℚ) := (round2Step nodeF).1.getD 1 []
 
 /-- The node bad prime is `x`, and `round2Step` enlarges to `[1, y/x]`: `badPrimes nodeF = [x]`, `.2 = true`,
 new generator `[0, 1/x] = y/x`, first vector `1`. -/

@@ -547,8 +547,8 @@ split un-cross-multiplied, since `algDerivQ ρ F = radDeriv(v) + Σ cᵢ·radLog
 /-- The engine round-trip certificate is the integrand split (un-cross-multiplied): for output
 `F : AlgIntegralResultQ` over `y² = ρ`, `radIsZero (radSub (algDerivQ ρ F) integrand) = true`
 yields `toPoly (algDerivQ ρ F) = toPoly integrand` in `K[X]`. -/
-theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZ ℚ) (F : AlgIntegralResultQ)
-    (integrand : RadElem (QFunNZ ℚ))
+theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : CFrac ℚ) (F : AlgIntegralResultQ)
+    (integrand : RadElem (CFrac ℚ))
     (hrt : RadElem.radIsZero (RadElem.radSub (algDerivQ ρ F) integrand) = true) :
     CPoly.toPoly (algDerivQ ρ F) = CPoly.toPoly integrand := by
   rw [RadElem.radIsZero, RadElem.radSub] at hrt

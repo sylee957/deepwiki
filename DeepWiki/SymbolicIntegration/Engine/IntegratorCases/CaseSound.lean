@@ -9,7 +9,7 @@ generic case assembler and reduced-stage soundness.
 namespace DeepWiki.SymbolicIntegration
 
 open CPoly
-open QFunNZ Polynomial
+open CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]

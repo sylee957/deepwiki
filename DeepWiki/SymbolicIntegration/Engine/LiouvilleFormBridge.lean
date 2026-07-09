@@ -16,7 +16,7 @@ criterion (`isLiouville_logExtension_uncond`, `ratFunc_logarithmFree_iff_residue
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ Polynomial
+open CPoly CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]

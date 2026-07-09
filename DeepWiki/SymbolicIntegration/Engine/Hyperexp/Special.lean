@@ -53,8 +53,8 @@ end CPoly
 
 open CPoly
 
-/-- Base field `Lvl1 = QFunNZ ℚ = ℚ(x)` over which the hyperexponential monomial `t = exp x` sits. -/
-abbrev Lvl1 : Type := QFunNZ ℚ
+/-- Base field `Lvl1 = CFrac ℚ = ℚ(x)` over which the hyperexponential monomial `t = exp x` sits. -/
+abbrev Lvl1 : Type := CFrac ℚ
 
 /-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `CPoly Lvl1 = ℚ(x)[t]` (`t = exp x`,
 `η = 1`). -/

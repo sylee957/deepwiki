@@ -9,7 +9,7 @@ This file instantiates that polymorphic statement at the canonical `E = Algebrai
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ Polynomial
+open CPoly CFrac Polynomial
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CharZero (CFieldSpec.K α)]

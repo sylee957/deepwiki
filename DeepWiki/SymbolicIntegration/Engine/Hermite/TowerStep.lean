@@ -12,7 +12,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -48,7 +48,7 @@ theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt :
   -- constant casts: `am (C k) = algebraMap K (RatFunc K) k`, and `(j+1)·(j+1)⁻¹ = 1`.
   have e1 : ∀ k : CFieldSpec.K α, am (Polynomial.C k) = algebraMap (CFieldSpec.K α) (RatFunc _) k :=
     fun k => by
-      rw [hamdef, QFunNZ.am, ← Polynomial.algebraMap_eq]
+      rw [hamdef, CFrac.am, ← Polynomial.algebraMap_eq]
       exact (IsScalarTower.algebraMap_apply (CFieldSpec.K α) (CFieldSpec.K α)[X] (RatFunc _) k).symm
   have hc1 : am (Polynomial.C ((j : CFieldSpec.K α) + 1)) = (j : RatFunc (CFieldSpec.K α)) + 1 := by
     rw [e1, map_add, map_natCast, map_one]
@@ -88,7 +88,7 @@ theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt :
   ring
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-open QFunNZ in
+open CFrac in
 /-- The inner-loop accumulator update reads as a fraction sum:
 `⟦(g₁·Vpow + b·g₂) / (g₂·Vpow)⟧ = ⟦g₁/g₂⟧ + ⟦b/Vpow⟧`. -/
 theorem fieldFrac_step_add (g1 g2 b Vpow : CPoly α)
@@ -99,7 +99,7 @@ theorem fieldFrac_step_add (g1 g2 b Vpow : CPoly α)
   rw [div_add_div _ _ (amG_toPolyG_ne_zero hg2) (amG_toPolyG_ne_zero hVpow)]
   ring
 
-open QFunNZ in
+open CFrac in
 /-- The inner Hermite loop invariant with a general accumulator. For `u, v ≠ 0`, the tower
 derivation `D = implicitDeriv (toPoly Dt)`, and every step's `cdiophantine` cofactors satisfying
 the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` telescopes M1:
@@ -223,7 +223,7 @@ The exact-division `resDen ∣ resNum·Dstar` decomposes, by the pure field-alge
 pole-cancellation: the reduced residual's `W`-poles cancel). Tower analog of
 `hermiteReduce_residual_correct_of_radical`. -/
 
-open QFunNZ in
+open CFrac in
 /-- The whole-step Hermite field identity from the radical split. With `hNum` the exact quotient
 `cdivWf (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
 reduced part telescopes: `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/

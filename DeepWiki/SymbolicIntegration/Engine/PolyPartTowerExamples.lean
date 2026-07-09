@@ -10,21 +10,21 @@ open CPoly
 
 /-! ### Example helpers -/
 
-/-- A ℚ constant `n` as a `QFunNZ ℚ` element. -/
-def qConst (n : ℚ) : QFunNZ ℚ := ⟨([n], [(1 : ℚ)]), QFunNZ.cisZeroG_one_singleton⟩
+/-- A ℚ constant `n` as a `CFrac ℚ` element. -/
+def qConst (n : ℚ) : CFrac ℚ := ⟨([n], [(1 : ℚ)]), CFrac.cisZeroG_one_singleton⟩
 
-/-- A ℚ(x) fraction `num/den` as a `QFunNZ ℚ` element. -/
-def qFrac (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : QFunNZ ℚ :=
+/-- A ℚ(x) fraction `num/den` as a `CFrac ℚ` element. -/
+def qFrac (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : CFrac ℚ :=
   ⟨(num, den), h⟩
 
 /-! ### Primitive case `t = log x`, `Dt = 1/x` -/
 
 /-- Example monomial derivative for the primitive case: `Dt = 1/x`. -/
-def primitivePolyIntegrateExampleDt : CPoly (QFunNZ ℚ) :=
+def primitivePolyIntegrateExampleDt : CPoly (CFrac ℚ) :=
   [qFrac [1] [0, 1]]
 
 /-- The polynomial part `p = (1/x)·t²` over `ℚ(x)[t]`. -/
-def primitivePolyIntegrateExampleP : CPoly (QFunNZ ℚ) :=
+def primitivePolyIntegrateExampleP : CPoly (CFrac ℚ) :=
   [qConst 0, qConst 0, qFrac [1] [0, 1]]
 
 /-- `cPrimitivePolyIntegrate` satisfies `D(q) + rem = p` for the primitive monomial `t = log x`. -/
@@ -40,10 +40,10 @@ theorem primitivePolyIntegrate_example :
 /-! ### Nonlinear case `t = tan x`, `Dt = t² + 1` -/
 
 /-- Example monomial derivative for the nonlinear case: `Dt = t² + 1`. -/
-def polyReduceTowerExampleDt : CPoly (QFunNZ ℚ) := [qConst 1, qConst 0, qConst 1]
+def polyReduceTowerExampleDt : CPoly (CFrac ℚ) := [qConst 1, qConst 0, qConst 1]
 
 /-- The polynomial part `p = t³` over `ℚ(x)[t]`. -/
-def polyReduceTowerExampleP : CPoly (QFunNZ ℚ) := [qConst 0, qConst 0, qConst 0, qConst 1]
+def polyReduceTowerExampleP : CPoly (CFrac ℚ) := [qConst 0, qConst 0, qConst 0, qConst 1]
 
 /-- `cPolyReduceTower` satisfies `D(q) + r = p` for the nonlinear monomial `t = tan x`. -/
 theorem polyReduceTower_example :

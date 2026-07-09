@@ -16,15 +16,15 @@ open CPoly RadElem
 /-! ## `torsionLogTerm` — the non-principal branch as a usable function -/
 
 /-- The torsion log-term coefficient `oneOverMQ m = 1/m ∈ ℚ(x)`, i.e. `qxOfNum [1] / qxOfNum [m]`. -/
-def oneOverMQ (m : ℕ) : QFunNZ ℚ := CField.div (qxOfNum [1]) (qxOfNum [(m : ℚ)])
+def oneOverMQ (m : ℕ) : CFrac ℚ := CField.div (qxOfNum [1]) (qxOfNum [(m : ℚ)])
 
 /-- The non-principal `(1/m)·log` branch `torsionLogTerm p ρ ρq g D`: via `isTorsionDivisor p ρq g D`,
 returns `some (1/m, principalGenerator ρ ρq g m D)` when `D` is torsion of order `m` (log term
 `(1/m)·log g` with `div(g) = m·D`), else `none` (infinite order, not elementary). `ρ`/`ρq` are the
 radicand as `ℚ(x)`/`ℚ[x]`, `g` the genus. -/
 def torsionLogTerm (p : ℕ) [Fact p.Prime]
-    (ρ : QFunNZ ℚ) (ρq : CPoly ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
-    Option (QFunNZ ℚ × RadElem (QFunNZ ℚ)) :=
+    (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+    Option (CFrac ℚ × RadElem (CFrac ℚ)) :=
   match isTorsionDivisor p ρq g D with
   | none => none
   | some m => some (oneOverMQ m, principalGenerator ρ ρq g m D)
@@ -33,22 +33,22 @@ def torsionLogTerm (p : ℕ) [Fact p.Prime]
 
 open RadElem
 
-/-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`QFunNZ ℚ`), for the radical-extension generator. -/
-def tltRhoX3p1 : QFunNZ ℚ := qxOfNum [1, 0, 0, 1]
+/-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`CFrac ℚ`), for the radical-extension generator. -/
+def tltRhoX3p1 : CFrac ℚ := qxOfNum [1, 0, 0, 1]
 
 /-- The torsion log term `torsionLogTerm 5 ρ … (0, 1)` on `y² = x³ + 1` — expected `(1/3, y − 1)`. -/
-def tltTerm01 : Option (QFunNZ ℚ × RadElem (QFunNZ ℚ)) :=
+def tltTerm01 : Option (CFrac ℚ × RadElem (CFrac ℚ)) :=
   torsionLogTerm 5 tltRhoX3p1 hypRhoX3p1 1 hypPt01
 
 /-- The target generator `g = y − 1 = [−1, 1]` over `ℚ(x)` (the flex tangent line). -/
-def tltYm1 : RadElem (QFunNZ ℚ) := [CField.neg CField.one, CField.one]
+def tltYm1 : RadElem (CFrac ℚ) := [CField.neg CField.one, CField.one]
 
-/-- Field equality on `ℚ(x)`: `qEq a b = CField.isZero (a − b)`, the `Bool` test `a = b` in `QFunNZ ℚ`. -/
-def qEq (a b : QFunNZ ℚ) : Bool := CField.isZero (CField.sub a b)
+/-- Field equality on `ℚ(x)`: `qEq a b = CField.isZero (a − b)`, the `Bool` test `a = b` in `CFrac ℚ`. -/
+def qEq (a b : CFrac ℚ) : Bool := CField.isZero (CField.sub a b)
 
 /-- The recovered-term check `tltTermCheck t`: `Bool` that a term `t = (c, g)` equals `(1/3, y − 1)`,
 i.e. `qEq c (oneOverMQ 3)` and `radIsZero (radSub g tltYm1)`. -/
-def tltTermCheck (t : QFunNZ ℚ × RadElem (QFunNZ ℚ)) : Bool :=
+def tltTermCheck (t : CFrac ℚ × RadElem (CFrac ℚ)) : Bool :=
   qEq t.1 (oneOverMQ 3) && radIsZero (radSub t.2 tltYm1)
 
 /-- `torsionLogTerm` on `(0, 1)` returns a term whose coefficient is field-equal to `1/3`. -/
@@ -63,7 +63,7 @@ theorem tltTerm01_eq :
 
 /-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1`:
 `radScale (oneOverMQ 3) (radLogDeriv tltRhoX3p1 tltYm1)`. -/
-def tltDiff01 : RadElem (QFunNZ ℚ) :=
+def tltDiff01 : RadElem (CFrac ℚ) :=
   radScale (oneOverMQ 3) (radLogDeriv tltRhoX3p1 tltYm1)
 
 /-- The `(1/3)·log(y − 1)` differential passes the cleared log-derivative certificate
@@ -76,7 +76,7 @@ theorem tltTerm01_logderiv :
 /-- Assemble `∫ = v + (1/m)·log g` as an `AlgIntegralResultQ` `torsionAlgResult p ρ ρq g v D`: rational
 part `v` plus the `torsionLogTerm` in `logTerms` (empty if `D` is non-torsion). -/
 def torsionAlgResult (p : ℕ) [Fact p.Prime]
-    (ρ : QFunNZ ℚ) (ρq : CPoly ℚ) (g : ℕ) (v : RadElem (QFunNZ ℚ)) (D : MumfordDivisor ℚ) :
+    (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g : ℕ) (v : RadElem (CFrac ℚ)) (D : MumfordDivisor ℚ) :
     AlgIntegralResultQ :=
   match torsionLogTerm p ρ ρq g D with
   | none => ⟨v, []⟩
@@ -103,7 +103,7 @@ theorem tltResult01_algDeriv :
 /-! ## Non-torsion propagates to `none` on `y² = x³ − 2` -/
 
 /-- The radicand `ρ = x³ − 2` as a `ℚ(x)` element, for the non-torsion witness. -/
-def tltRhoX3m2 : QFunNZ ℚ := qxOfNum [-2, 0, 0, 1]
+def tltRhoX3m2 : CFrac ℚ := qxOfNum [-2, 0, 0, 1]
 
 /-- `torsionLogTerm` on the infinite-order `(3, 5)` returns `none` (not elementary). -/
 theorem tltTerm35_none :

@@ -20,12 +20,12 @@ open CPoly
 
 /-- A fractional `O`-ideal: an `n×n` matrix over `K(x)` whose row `i` is a generator
 `genᵢ = Σⱼ Mᵢⱼ wⱼ` in integral-basis `[w]`-coordinates. -/
-abbrev GenDivisor := List (List (QFunNZ ℚ))
+abbrev GenDivisor := List (List (CFrac ℚ))
 
 /-- The identity divisor `idealIdentity n = Iₙ` — the order `O`, the Pic neutral element. -/
 def idealIdentity (n : ℕ) : GenDivisor :=
   (List.range n).map (fun i =>
-    (List.range n).map (fun j => if i = j then (CField.one : QFunNZ ℚ) else CField.zero))
+    (List.range n).map (fun j => if i = j then (CField.one : CFrac ℚ) else CField.zero))
 
 /-- Entrywise lowest-terms reduction `qReduceMat I = I.map (List.map qReduce)`, value-preserving on
 each `ℚ(x)` entry (cancels common polynomial factors only). -/
@@ -34,16 +34,16 @@ def qReduceMat (I : GenDivisor) : GenDivisor :=
 
 /-- Reconstruct a `K(x, y)` element from `[w]`-coordinates: `wToAf basis row = Σⱼ rowⱼ·wⱼ` (inverse
 of `toOCoords`). -/
-def wToAf (basis : List (CPoly (QFunNZ ℚ))) (row : List (QFunNZ ℚ)) : CPoly (QFunNZ ℚ) :=
+def wToAf (basis : List (CPoly (CFrac ℚ))) (row : List (CFrac ℚ)) : CPoly (CFrac ℚ) :=
   (List.range basis.length).foldl (fun acc i =>
-    cadd acc (cscale (row.getD i CField.zero) (basis.getD i []))) ([] : CPoly (QFunNZ ℚ))
+    cadd acc (cscale (row.getD i CField.zero) (basis.getD i []))) ([] : CPoly (CFrac ℚ))
 
 /-! ### `div(g) = g·O`: the principal divisor (`principalDivisor`) -/
 
 /-- The principal divisor `principalDivisor f basis g = div(g) = g·O`: row `i` is the `[w]`-coordinates
 of `g·wᵢ = afMul f g wᵢ` (via `B⁻¹`); empty matrix if `B` is singular. -/
-def principalDivisor (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
-    (g : CPoly (QFunNZ ℚ)) : GenDivisor :=
+def principalDivisor (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
+    (g : CPoly (CFrac ℚ)) : GenDivisor :=
   let n := cdeg f
   let B := orderToPowerMatrix n basis
   match matInv n B with
@@ -64,7 +64,7 @@ def idealClear (I : GenDivisor) : CPoly ℚ × PolyMatrix ℚ :=
 /-- The ideal product `idealProduct f basis I J` (the Pic group law): the fractional `O`-ideal from
 the `n²` cross-products `genᵢ·genₖ`, cleared to a common denominator and `hermiteRowReduce`d to `n`
 generators; `[]` if `B` is singular. -/
-def idealProduct (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+def idealProduct (f : CPoly (CFrac ℚ)) (basis : List (CPoly (CFrac ℚ)))
     (I J : GenDivisor) : GenDivisor :=
   let n := cdeg f
   let B := orderToPowerMatrix n basis
@@ -73,7 +73,7 @@ def idealProduct (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
   | some Binv =>
     -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry put in lowest terms (`qReduceMat`,
     -- value-preserving) before the common-denominator clearing below
-    let cross : List (List (QFunNZ ℚ)) :=
+    let cross : List (List (CFrac ℚ)) :=
       qReduceMat (I.flatMap (fun gi =>
         J.map (fun gk =>
           toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk)))))

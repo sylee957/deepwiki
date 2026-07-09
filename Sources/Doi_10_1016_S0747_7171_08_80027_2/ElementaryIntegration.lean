@@ -27,7 +27,7 @@ namespace DeepWiki.Bie
 
 /-- **The exponential `CDiffField (ℚ(x)(t₁))` instance** (Bronstein 1990, Integration of Elementary
 Functions, JSC 9:117-173 — elementary = transcendental θ + algebraic y, exponential case): the level-2
-tower derivation `towerDerivQFunNZ [t₁]` whose new-monomial derivative is `Dt₁ = t₁` (so `t₁' = t₁`, i.e.
+tower derivation `towerDerivCFrac [t₁]` whose new-monomial derivative is `Dt₁ = t₁` (so `t₁' = t₁`, i.e.
 `t₁ = eˣ`). A local instance supplied explicitly to the radical ops via `@`, leaving the library default
 `t₁' = 1` tower untouched. -/
 abbrev bie_exp_tower_diff := @expTowerDiff
@@ -67,7 +67,7 @@ abbrev bie_exp_integral := @expIntegral_eq
 /-! ## The logarithmic companion: `∫ dx/(x√(log x)) = 2√(log x)` over ℚ(x)(log x) -/
 
 /-- **The logarithmic `CDiffField (ℚ(x)(t₁))` instance** (Bronstein 1990, logarithmic case): the level-2
-tower derivation `towerDerivQFunNZ [1/x]` whose new-monomial derivative is `Dt₁ = 1/x` (so `t₁' = 1/x`,
+tower derivation `towerDerivCFrac [1/x]` whose new-monomial derivative is `Dt₁ = 1/x` (so `t₁' = 1/x`,
 i.e. `t₁ = log x`). A local instance supplied via `@`. -/
 abbrev bie_log_tower_diff := @logTowerDiff
 
@@ -99,7 +99,7 @@ abbrev bie_driver_over_tower := @drvDriver_integrates
 
 /-- **★ The full fuel-free multi-case driver `radIntegrateRationalWf` computes over the tower base**
 (Bronstein 1990, concrete case; `native_decide`): the squarefree-decomposition + partial-fraction +
-V/W-classification + dispatch pipeline runs over `α = ℚ(x)` (`CFracGcdCoreWf (QFunNZ ℚ)` resolving
+V/W-classification + dispatch pipeline runs over `α = ℚ(x)` (`CFracGcdCoreWf (CFrac ℚ)` resolving
 recursively), producing exactly one per-factor record for the single `W`-factor `θ` of `B = θ²`. The entire
 generic rational-part driver instantiates at a tower-level base field with no top-level fuel. -/
 abbrev bie_full_driver_over_tower := @drvFullRun_length

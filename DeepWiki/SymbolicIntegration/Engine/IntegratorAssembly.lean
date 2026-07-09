@@ -44,7 +44,7 @@ def cIntegrateCase (C : MonomialCase α) (Dt a d : CPoly α) (cands : List α) :
 end CPoly
 
 open CPoly
-open QFunNZ Polynomial
+open CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]

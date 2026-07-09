@@ -10,7 +10,7 @@
 > assembled and gate-green (commits `40d41280`→`bb3d183c`): the coefficient recursion
 > (`cLimitedIntegratePolyRatG` + `towerCoeffIntegrate` + `towerPolyIntegrate`), its soundness
 > (`towerCoeffIntegrate_sound`, `towerPolyIntegrate_sound`, `tower_special_identity`), and the resolved
-> instance `instLawfulRischLevelTower : [LawfulRischLevel β] → LawfulRischLevel (QFunNZG β)`. A
+> instance `instLawfulRischLevelTower : [LawfulRischLevel β] → LawfulRischLevel (CFracG β)`. A
 > `noncomputable example` validates depth-2 resolution. **Design pivot:** the separate `RischSolver` class
 > below was a duplicate of `LawfulRischLevel` and is **retired** (commit `2ec560b7`); the step is built
 > directly on the single `LawfulRischLevel` abstraction. **Key finding:** the coefficient integrator's
@@ -68,12 +68,12 @@ a proven-correct algorithm.
 
 ## Remaining — the tower step
 
-`instance [RischSolver β] → RischSolver (QFunNZG β)` : integrate `a/d ∈ (QFunNZG β)(t)` by
+`instance [RischSolver β] → RischSolver (CFracG β)` : integrate `a/d ∈ (CFracG β)(t)` by
 - canonical rep (poly + reduced + special) — existing;
 - reduced part via genuine LRT (`cIntegrateReducedLrtG`) — **done, generic**;
 - polynomial part via `cLimitedIntegratePolyRatG η intR` with `intR c := RischSolver β.integrateRational Ds
-  (num c) (den c)` — the coefficient `c ∈ QFunNZG β = β(s)` is split into `num/den ∈ CPolyG β`, and `Ds` is
-  `β`'s monomial derivative. The plumbing: the `QFunNZG` fraction num/den extraction + threading `Ds` from
+  (num c) (den c)` — the coefficient `c ∈ CFracG β = β(s)` is split into `num/den ∈ CPolyG β`, and `Ds` is
+  `β`'s monomial derivative. The plumbing: the `CFracG` fraction num/den extraction + threading `Ds` from
   the differential-carrier structure.
 
 Soundness threads the LRT reduced soundness (`hreducedLrt`, closed to `LrtReducedGenuineData` genuine data)
@@ -87,10 +87,10 @@ class + base instance, the limited-integration interface + soundness, the coeffi
 **and its full soundness `D_tower(q) = p`** (`cLimitedIntegratePolyRatG_poly_sound`, no sorry). The reduced
 part (genuine LRT) and Hermite are already generic and reused verbatim.
 
-**Only the tower-step wiring remains** — the QFunNZG plumbing that supplies `intR := RischSolver β.integrateRational
-Ds (num c) (den c)` (split each coefficient `c ∈ QFunNZG β = β(s)` into `num/den ∈ CPolyG β`, thread `Ds` =
+**Only the tower-step wiring remains** — the CFracG plumbing that supplies `intR := RischSolver β.integrateRational
+Ds (num c) (den c)` (split each coefficient `c ∈ CFracG β = β(s)` into `num/den ∈ CPolyG β`, thread `Ds` =
 `β`'s monomial derivative), combines the polynomial-part result with the LRT reduced part (`combineSNLrt`), and
-threads the two soundness lemmas into the step instance `[RischSolver β] → RischSolver (QFunNZG β)`. The hard
+threads the two soundness lemmas into the step instance `[RischSolver β] → RischSolver (CFracG β)`. The hard
 mathematics — the coefficient recursion and its soundness — is done.
 
 ## Completeness (the LRT tower's other half)

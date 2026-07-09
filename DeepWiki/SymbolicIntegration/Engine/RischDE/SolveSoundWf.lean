@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 /-! ## The solver `crischDESolveSoundWf`
 
@@ -24,8 +24,8 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
   [CFracGcdCoreWf β] [CRischField β]
 
 /-- `crischDERawSolveWf ftilde gtilde`: run `cRischDE [1]` on the num/den components, re-lifting
-the returned `(ynum, yden)` to `QFunNZ β` under a `cisZero` denominator guard. -/
-def crischDERawSolveWf (ftilde gtilde : QFunNZ β) : Option (QFunNZ β) :=
+the returned `(ynum, yden)` to `CFrac β` under a `cisZero` denominator guard. -/
+def crischDERawSolveWf (ftilde gtilde : CFrac β) : Option (CFrac β) :=
   match CPoly.cRischDE ([CField.one] : CPoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
   | none => none
   | some (ynum, yden) =>
@@ -33,8 +33,8 @@ def crischDERawSolveWf (ftilde gtilde : QFunNZ β) : Option (QFunNZ β) :=
 
 omit [CFieldSpec β] [CFieldDomain β] in
 /-- `crischDERawSolveWf` returns `some y` exactly when `cRischDE [1]` returns a pair with nonzero
-denominator and `y` is its `QFunNZ` lift. -/
-theorem crischDERawSolveWf_some_iff (ftilde gtilde y : QFunNZ β) :
+denominator and `y` is its `CFrac` lift. -/
+theorem crischDERawSolveWf_some_iff (ftilde gtilde y : CFrac β) :
     crischDERawSolveWf ftilde gtilde = some y ↔
       ∃ ynum yden, ∃ hden : CPoly.cisZero yden = false,
         CPoly.cRischDE ([CField.one] : CPoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
@@ -52,12 +52,12 @@ theorem crischDERawSolveWf_some_iff (ftilde gtilde y : QFunNZ β) :
 
 /-- `crischDESolveSoundWf f g`: weak-normalize `f`, gate on `cisCanonNormalized`, reduce to lowest
 terms, solve via `crischDERawSolveWf`, and transform back by `y = ỹ/q'`. -/
-def crischDESolveSoundWf (f g : QFunNZ β) : Option (QFunNZ β) :=
+def crischDESolveSoundWf (f g : CFrac β) : Option (CFrac β) :=
   let q : CPoly β := cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2
   if CPoly.cisZero q then none
   else
-    let q' : QFunNZ β := qOfPolyNZ q
-    let ftilde : QFunNZ β := weakNormalizedF f q'
+    let q' : CFrac β := qOfPolyNZ q
+    let ftilde : CFrac β := weakNormalizedF f q'
     if cisCanonNormalized ftilde then
       match reduceSoundOpt ftilde with
       | none => none
@@ -81,12 +81,12 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 
 omit [CFieldSpec β] in
 /-- A successful Wf sound solve has a nonzero Wf weak normalizer. -/
-theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : QFunNZ β)
+theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     CPoly.cisZero (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2) = false := by
   set q : CPoly β := cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2 with hq
-  set q' : QFunNZ β := qOfPolyNZ q with hq'
-  set ftilde : QFunNZ β := weakNormalizedF f q' with hft
+  set q' : CFrac β := qOfPolyNZ q with hq'
+  set ftilde : CFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if CPoly.cisZero q then none
          else if cisCanonNormalized ftilde then
@@ -106,13 +106,13 @@ theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : QFunNZ β)
 
 omit [CFieldSpec β] in
 /-- A successful Wf sound solve passed the canonical-normality check. -/
-theorem crischDESolveSoundWf_check (f g y : QFunNZ β)
+theorem crischDESolveSoundWf_check (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     cisCanonNormalized (weakNormalizedF f
       (qOfPolyNZ (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2))) = true := by
   set q : CPoly β := cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2 with hq
-  set q' : QFunNZ β := qOfPolyNZ q with hq'
-  set ftilde : QFunNZ β := weakNormalizedF f q' with hft
+  set q' : CFrac β := qOfPolyNZ q with hq'
+  set ftilde : CFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if CPoly.cisZero q then none
          else if cisCanonNormalized ftilde then
@@ -133,7 +133,7 @@ theorem crischDESolveSoundWf_check (f g y : QFunNZ β)
       exact absurd hsolve (by simp)
 
 /-- A successful Wf sound solve supplies the Wf canonical-normality proposition. -/
-theorem crischDESolveSoundWf_isCanonNormalized (f g y : QFunNZ β)
+theorem crischDESolveSoundWf_isCanonNormalized (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     IsCanonNormalizedWf f
       (qOfPolyNZ (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2)) :=
@@ -149,9 +149,9 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- `RischDESoundnessWf f g`: every successful `crischDESolveSoundWf` run satisfies the field-level Risch-DE identity. -/
-structure RischDESoundnessWf (f g : QFunNZ β) : Prop where
+structure RischDESoundnessWf (f g : CFrac β) : Prop where
   /-- Every successful Wf solve returns a genuine field-level Risch-DE solution. -/
-  sound : ∀ y : QFunNZ β, crischDESolveSoundWf f g = some y →
+  sound : ∀ y : CFrac β, crischDESolveSoundWf f g = some y →
     towerFractionFieldDeriv ([CField.one] : CPoly β)
           (am β (toPoly y.1.1) / am β (toPoly y.1.2))
         + am β (toPoly f.1.1) / am β (toPoly f.1.2)
@@ -160,7 +160,7 @@ structure RischDESoundnessWf (f g : QFunNZ β) : Prop where
 
 /-- `crischDESolveSoundWf_field`: under `RischDESoundnessWf f g`, a successful `y` solves
 `D(Y) + F·Y = G` for the original `f, g`. -/
-theorem crischDESolveSoundWf_field (f g y : QFunNZ β)
+theorem crischDESolveSoundWf_field (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y)
     (hsound : RischDESoundnessWf f g) :
     towerFractionFieldDeriv ([CField.one] : CPoly β)
@@ -174,7 +174,7 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZ β)
 
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
-    (f g y : QFunNZ β) (hsolve : crischDESolveSoundWf f g = some y)
+    (f g y : CFrac β) (hsolve : crischDESolveSoundWf f g = some y)
     (hsound : RischDESoundnessWf f g) :
     towerFractionFieldDeriv ([CField.one] : CPoly β)
           (am β (toPoly y.1.1) / am β (toPoly y.1.2))

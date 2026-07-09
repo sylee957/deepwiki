@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 /-- `CTowerGcdWitnessWf α`: the `Prop`-class asserting `toPoly (cgcdFFCoreWf a b)` is `Associated` to
 `gcd (toPoly a) (toPoly b)` in `(CFieldSpec.K α)[X]`. -/

@@ -1,7 +1,7 @@
 # Risch — the two-stage discipline (abstract architecture ↔ per-solver realization)
 
 This is the organizing discipline for the whole Risch development. It supersedes the ad-hoc wiring that
-accreted in `Computable/Assemble.lean` (concrete `cHermiteReduceTowerG`/`cSqfreeYunFFG`/`QFunNZG ℚ`
+accreted in `Computable/Assemble.lean` (concrete `cHermiteReduceTowerG`/`cSqfreeYunFFG`/`CFracG ℚ`
 lemmas mixed into the assembler). It refines — does not replace — `docs/risch-typeclass-architecture.md`;
 that doc describes the *assembler shape*, this one fixes the *proof organization law* it must obey.
 
@@ -9,7 +9,7 @@ that doc describes the *assembler shape*, this one fixes the *proof organization
 
 **Stage 1 — the architecture is proven abstractly.** The one-level Risch assembler and its
 soundness/completeness are stated and proven **only** against stage *interfaces* and their *laws*. No
-concrete algorithm name (`cHermiteReduceTowerG`, `cSqfreeYunFFG`, `cIntegrateReducedG`, `QFunNZG ℚ`)
+concrete algorithm name (`cHermiteReduceTowerG`, `cSqfreeYunFFG`, `cIntegrateReducedG`, `CFracG ℚ`)
 appears anywhere in the architecture file. Stage 1 says: *"Risch is correct given each stage does its job."*
 
 **Stage 2 — each solver realizes its interface, independently.** Every concrete algorithm has **exactly
@@ -17,7 +17,7 @@ one** realization theorem: *"this algorithm satisfies its interface's laws."* Pr
 own file, never threaded into the assembler. Stage 2 says: *"this algorithm does its job."*
 
 **Composition is a corollary.** `assembler_sound` (Stage 1) ∘ the realization instances (Stage 2). The
-`QFunNZG ℚ` one-shots become one-line corollaries living next to their solvers — not in the architecture.
+`CFracG ℚ` one-shots become one-line corollaries living next to their solvers — not in the architecture.
 
 **1-1 rule.** Every notion carries a matched pair: a **mathematical** statement and an **algorithmic**
 statement, greppable and name-paired (see Naming below). Abstract proof ↔ algorithm proof, one to one.

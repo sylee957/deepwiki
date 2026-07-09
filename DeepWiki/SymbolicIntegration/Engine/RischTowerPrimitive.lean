@@ -13,7 +13,7 @@ frontier, so the recursive solver reuses it. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ Polynomial Classical
+open CPoly CFrac Polynomial Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]

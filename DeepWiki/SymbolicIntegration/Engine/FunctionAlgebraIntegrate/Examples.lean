@@ -14,19 +14,19 @@ open scoped Differential
 namespace CPoly
 
 /-- The square-root component curve `T₁ = y² − x ∈ ℚ(x)[y]`. -/
-def sqrtComponentCurve : CPoly (QFunNZ ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
+def sqrtComponentCurve : CPoly (CFrac ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
 
 /-- The square-root component integral `F₁ = (2/3)·x·y`. -/
-def sqrtComponentIntegral : CPoly (QFunNZ ℚ) := [CField.zero, qxOfNum [0, 2/3]]
+def sqrtComponentIntegral : CPoly (CFrac ℚ) := [CField.zero, qxOfNum [0, 2/3]]
 
 /-- The cube-root component curve `T₂ = y³ − x ∈ ℚ(x)[y]`. -/
-def cubeRootComponentCurve : CPoly (QFunNZ ℚ) := [qxOfNum [0, -1], CField.zero, CField.zero, CField.one]
+def cubeRootComponentCurve : CPoly (CFrac ℚ) := [qxOfNum [0, -1], CField.zero, CField.zero, CField.one]
 
 /-- The cube-root component integral `F₂ = (3/4)·x·y`. -/
-def cubeRootComponentIntegral : CPoly (QFunNZ ℚ) := [CField.zero, qxOfNum [0, 3/4]]
+def cubeRootComponentIntegral : CPoly (CFrac ℚ) := [CField.zero, qxOfNum [0, 3/4]]
 
 /-- The integrand `y = [0, 1]` (`afBasisElem 1`) of `∫y dx`. -/
-def componentIntegrandY : CPoly (QFunNZ ℚ) := afBasisElem 1
+def componentIntegrandY : CPoly (CFrac ℚ) := afBasisElem 1
 
 /-- Component 1 (`native_decide`): `∫y dx = (2/3)·x·y` on `y² − x = 0`, checked by
 `cisZero (afDerivWf (y²−x) F₁ − y)`. -/

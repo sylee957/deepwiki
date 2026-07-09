@@ -12,7 +12,7 @@ coprimality (`hsplit`/`hdn`/`hds`/`hgdeg`/`hgne` of `canonicalReconstruction`) a
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ Polynomial Classical
+open CPoly CFrac Polynomial Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]

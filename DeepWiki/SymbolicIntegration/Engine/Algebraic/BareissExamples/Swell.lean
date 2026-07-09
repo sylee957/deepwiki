@@ -12,7 +12,7 @@ open CPoly
 
 /-- The `3×3` Cauchy matrix over `ℚ(x)` `H[i][j] = 1/(x + i + j + 1)`, with denominators `x+1, …, x+5`;
 `fieldDet` over it carries an unreduced `ℚ(x)` value whose denominator balloons. -/
-def bareissCauchyQ : List (List (QFunNZ ℚ)) :=
+def bareissCauchyQ : List (List (CFrac ℚ)) :=
   [[qxOfFrac [1] [1, 1] (by decide), qxOfFrac [1] [2, 1] (by decide), qxOfFrac [1] [3, 1] (by decide)],
    [qxOfFrac [1] [2, 1] (by decide), qxOfFrac [1] [3, 1] (by decide), qxOfFrac [1] [4, 1] (by decide)],
    [qxOfFrac [1] [3, 1] (by decide), qxOfFrac [1] [4, 1] (by decide), qxOfFrac [1] [5, 1] (by decide)]]

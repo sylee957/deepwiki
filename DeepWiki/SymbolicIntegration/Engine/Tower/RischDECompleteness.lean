@@ -12,7 +12,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 /-! ## The uniform field-level RDE solvability and per-level completeness predicates -/
 
@@ -144,7 +144,7 @@ end Step
 
 /-! ### The per-level step
 
-The next-level solver over `QFunNZ β` is `crischDESolveSoundWf`; the induction hypothesis remains
+The next-level solver over `CFrac β` is `crischDESolveSoundWf`; the induction hypothesis remains
 `CRischFieldComplete β` (the cancellation subroutines recurse into `CRischField.crischDESolve` one level
 down). -/
 
@@ -154,49 +154,49 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- Next-level RDE completeness `CRischFieldCompleteWf β`: the public solver returns `some` on every
-solvable field-level RDE over `QFunNZ β`. -/
+solvable field-level RDE over `CFrac β`. -/
 def CRischFieldCompleteWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
-  ∀ f g : QFunNZ β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
+  ∀ f g : CFrac β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
 
 /-- The per-level step frontier `RischDEStepFrontierWf β`: given the base-oracle IH one level down, every
-solvable `QFunNZ β` RDE satisfies the weak-normalizer clauses, the inner residual-tip frontier, the
+solvable `CFrac β` RDE satisfies the weak-normalizer clauses, the inner residual-tip frontier, the
 polynomial solution/denominator guards, and the direct soundness certificate. -/
 structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
-  hwn : CRischFieldComplete β → ∀ f g : QFunNZ β, FieldRDESolvable f g →
+  hwn : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
     CPoly.cisZero (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
-  hck : CRischFieldComplete β → ∀ f g : QFunNZ β, FieldRDESolvable f g →
+  hck : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
     IsCanonNormalizedWf f
       (qOfPolyNZ (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
-  hpolysol : CRischFieldComplete β → ∀ f g : QFunNZ β, FieldRDESolvable f g →
+  hpolysol : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     ∃ ynum yden,
       IsCRischDEGPolySol ([CField.one] : CPoly β) ftildeR.1.1 ftildeR.1.2
         gtilde.1.1 gtilde.1.2 ynum yden
   /-- The consolidated inner residual-tip frontier, threaded through the IH. -/
-  hinnerFront : CRischFieldComplete β → ∀ f g : QFunNZ β, FieldRDESolvable f g →
+  hinnerFront : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     RischDEInnerDecisionFrontierWf ([CField.one] : CPoly β) ftildeR.1.1 ftildeR.1.2
       gtilde.1.1 gtilde.1.2
   /-- The returned denominator of a successful inner solve is nonzero. -/
-  hden : CRischFieldComplete β → ∀ f g : QFunNZ β, FieldRDESolvable f g → ∀ ynum yden : CPoly β,
+  hden : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g → ∀ ynum yden : CPoly β,
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     cRischDE ([CField.one] : CPoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
         = some (ynum, yden) →
       CPoly.cisZero yden = false
   /-- The direct soundness certificate for each solvable next-level RDE. -/
-  hsound : CRischFieldComplete β → ∀ f g : QFunNZ β, FieldRDESolvable f g →
+  hsound : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
     RischDESoundnessWf f g
 
 /-- Step: a complete base oracle one level down plus the per-level frontier makes the public RDE solver
-complete at the next `QFunNZ` level. -/
+complete at the next `CFrac` level. -/
 theorem crischFieldCompleteWf_step (hβ : CRischFieldComplete β)
     (hstep : RischDEStepFrontierWf β) : CRischFieldCompleteWf β := by
   intro f g hsol

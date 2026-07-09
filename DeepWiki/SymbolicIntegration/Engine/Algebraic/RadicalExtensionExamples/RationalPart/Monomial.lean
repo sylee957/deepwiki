@@ -20,38 +20,38 @@ For `C` with leading term `(5/(2x))θ²` the bracket `(j+1)·θ' + lcf(g) = 5/(2
 
 /-- `θ' = (log x)' = v'/v = 1/x ∈ ℚ(x)` (numerator `[1]`, denominator `[0,1] = x`), the derivative of
 the monomial `θ = log x`. -/
-def logDt : QFunNZ ℚ := qxOfFrac [1] [0, 1] (by decide)
+def logDt : CFrac ℚ := qxOfFrac [1] [0, 1] (by decide)
 
 /-- The ℚ(x) leading coefficient `lcf(g) = g = 1/(2x)` for `f = θ`, `g = (1/2)f'/f·f = 1/(2x)`
 (numerator `[1]`, denominator `[0,2] = 2x`). -/
-def clogLead : QFunNZ ℚ := qxOfFrac [1] [0, 2] (by decide)
+def clogLead : CFrac ℚ := qxOfFrac [1] [0, 2] (by decide)
 
 /-- The radicand `f = θ = log x ∈ ℚ(x)[θ]` (`y² = log x`), the `θ`-polynomial `[0, 1]`. -/
-def logF : CPoly (QFunNZ ℚ) := [CField.zero, CField.one]
+def logF : CPoly (CFrac ℚ) := [CField.zero, CField.one]
 
 /-- `g = 1/(2x)` as a degree-`0`-in-θ element of `ℚ(x)[θ]` (`(f/y)' = g/y`), `[1/(2x)]`. -/
-def clog : CPoly (QFunNZ ℚ) := [clogLead]
+def clog : CPoly (CFrac ℚ) := [clogLead]
 
 /-- The numerator `C = (5/(2x))θ² + θ ∈ ℚ(x)[θ]` (`deg_θ C = 2 ≥ m`), with leading coefficient
 `5/(2x) = (j+1)θ' + lcf(g)` chosen so the constant `b = 1` solves eq. 5. -/
-def logC : CPoly (QFunNZ ℚ) := [CField.zero, CField.one, qxOfFrac [5] [0, 2] (by decide)]
+def logC : CPoly (CFrac ℚ) := [CField.zero, CField.one, qxOfFrac [5] [0, 2] (by decide)]
 
 /-- The `θ`-derivative as a polynomial `[θ'] = [1/x] ∈ ℚ(x)[θ]`, the `Dt` for `cmonomialDeriv`. -/
-def logDtPoly : CPoly (QFunNZ ℚ) := [logDt]
+def logDtPoly : CPoly (CFrac ℚ) := [logDt]
 
 /-- The solved `θ = log v` leading-coefficient cofactor `B = b·θ² = 1·θ²` (`b = lcf(C)/bracket =
 (5/(2x))/(5/(2x)) = 1`, a constant). -/
-def logB : CPoly (QFunNZ ℚ) := radCase3CofactorGen logDt logF clog logC
+def logB : CPoly (CFrac ℚ) := radCase3CofactorGen logDt logF clog logC
 
 /-- The `θ = log v` residual `D = B'f + Bg − C`, with `B' = cmonomialDeriv [θ'] B` the full log-monomial
 derivative — expected `−θ` (degree `1 < deg_θ C = 2`). -/
-def logD : CPoly (QFunNZ ℚ) :=
+def logD : CPoly (CFrac ℚ) :=
   radCase3Residual logF clog logB logC (cmonomialDeriv logDtPoly logB)
 
 /-- The `log` cofactor is the constant monomial `B = θ²`: `b = (5/(2x))/((2)(1/x) + 1/(2x)) = 1` at
 degree `j+1 = 2`. -/
 theorem logCase_cofactor_eq :
-    cisZero (csub logB [CField.zero, CField.zero, (CField.one : QFunNZ ℚ)]) = true := by
+    cisZero (csub logB [CField.zero, CField.zero, (CField.one : CFrac ℚ)]) = true := by
   native_decide
 
 /-- The `θ = log v` cleared identity `B'f + Bg − C = D` in `ℚ(x)[log x]` (`B = θ²`, `B' = cmonomialDeriv
@@ -63,7 +63,7 @@ theorem logCase_cleared_identity :
 
 /-- The `log` residual `D = −θ` has `θ`-degree `1`, strictly below `deg_θ C = 2`. -/
 theorem logCase_residual_eq :
-    cisZero (csub logD [CField.zero, (CField.neg CField.one : QFunNZ ℚ)]) = true := by native_decide
+    cisZero (csub logD [CField.zero, (CField.neg CField.one : CFrac ℚ)]) = true := by native_decide
 
 /-- The `θ = log v` step strictly lowers `deg_θ C`: `deg D = 1 < deg C = 2` over `ℚ(x)[log x]`. -/
 theorem logCase_degree_drop : cdeg logD < cdeg logC := by native_decide
@@ -75,33 +75,33 @@ A 2-level exponential tower: base `ℚ(x)`, monomial `θ = exp x` (`θ' = θ`), 
 `B = [−1]`, residual `D = −1/2`, dropping `k = 1 → 0`. -/
 
 /-- The radicand `f = θ + 1 = eˣ + 1 ∈ ℚ(x)[θ]` (`y² = eˣ + 1`, `θ ∤ f`, `f₀ = 1`), `[1, 1]`. -/
-def expF : CPoly (QFunNZ ℚ) := [CField.one, CField.one]
+def expF : CPoly (CFrac ℚ) := [CField.one, CField.one]
 
 /-- `g = (1/2)θ ∈ ℚ(x)[θ]` for `f = θ+1`, `θ = exp x` (`(f/y)' = g/y`, `g₀ = 0`), `[0, 1/2]`. -/
-def cexp : CPoly (QFunNZ ℚ) := [CField.zero, qxOfNum [1/2]]
+def cexp : CPoly (CFrac ℚ) := [CField.zero, qxOfNum [1/2]]
 
 /-- The numerator `C = θ + 1 ∈ ℚ(x)[θ]` (`c₀ = 1`), `[1, 1]`. -/
-def expC : CPoly (QFunNZ ℚ) := [CField.one, CField.one]
+def expC : CPoly (CFrac ℚ) := [CField.one, CField.one]
 
-/-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CField.one` of `QFunNZ ℚ`. -/
-def expVder : QFunNZ ℚ := CField.one
+/-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CField.one` of `CFrac ℚ`. -/
+def expVder : CFrac ℚ := CField.one
 
 /-- `θ' = v'·θ = θ` as the `Dt` polynomial `[0, 1] ∈ ℚ(x)[θ]` for `cmonomialDeriv` (`θ = exp x` is a
 factor of its own derivative). -/
-def expDtPoly : CPoly (QFunNZ ℚ) := [CField.zero, CField.one]
+def expDtPoly : CPoly (CFrac ℚ) := [CField.zero, CField.one]
 
 /-- The solved `θ = exp v` `C/(θy)` cofactor `B = [b₀] = [−1]` (`b₀ = c₀/(g₀ − kv'f₀) = 1/(0−1) = −1`,
 a constant). -/
-def expB : CPoly (QFunNZ ℚ) := radExpCofactor 1 expVder expF cexp expC
+def expB : CPoly (CFrac ℚ) := radExpCofactor 1 expVder expF cexp expC
 
 /-- The `θ = exp v` `C/(θy)` residual `D = ((B'f + Bg − kv'Bf) − C)/θ`, `B' = cmonomialDeriv [θ] B` —
 expected `−1/2` (the multiplicity dropped `k = 1 → 0`). -/
-def expD : CPoly (QFunNZ ℚ) :=
+def expD : CPoly (CFrac ℚ) :=
   radExpResidual 1 expVder expF cexp expB expC (cmonomialDeriv expDtPoly expB)
 
 /-- The `exp` cofactor is the constant `B = [−1]`: `b₀ = 1/(0 − 1·1·1) = −1` over `ℚ(x)[eˣ]`. -/
 theorem expCase_cofactor_eq :
-    cisZero (csub expB [(CField.neg CField.one : QFunNZ ℚ)]) = true := by native_decide
+    cisZero (csub expB [(CField.neg CField.one : CFrac ℚ)]) = true := by native_decide
 
 /-- The `θ = exp v` constant-term congruence `(B'f + Bg − kv'Bf) − C ≡ 0 (mod θ)`: the numerator `(−1/2)θ`
 is divisible by `θ`. -/

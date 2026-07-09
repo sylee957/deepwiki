@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.RatFuncValuation.PolynomialOrderDrop
 import DeepWiki.SymbolicIntegration.Engine.RischDE.TowerGlue
-import DeepWiki.SymbolicIntegration.Engine.QFunNZGDiffSpec
+import DeepWiki.SymbolicIntegration.Engine.CFracGDiffSpec
 
 /-! # Carrier-generic RDE cleared-identity building blocks
 
@@ -13,7 +13,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 /-! ### Generic helper lemmas
 

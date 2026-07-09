@@ -52,18 +52,18 @@ open RadElem
 /-! ### Shared example data for `radInv2` and `radLogDeriv` -/
 
 /-- The radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`). -/
-def fullRhoArcsinh : QFunNZ ℚ := qxOfNum [1, 0, 1]
+def fullRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- The element `u = x + y = [x, 1]` over `ℚ(x)`, `y² = x²+1`. -/
-def fullUxPlusY : RadElem (QFunNZ ℚ) := [qxOfNum [0, 1], CField.one]
+def fullUxPlusY : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CField.one]
 
-/-- **`u · u⁻¹ = 1` in `(QFunNZ ℚ)[y]/(y² − (x²+1))`** (`native_decide`). -/
+/-- **`u · u⁻¹ = 1` in `(CFrac ℚ)[y]/(y² − (x²+1))`** (`native_decide`). -/
 theorem radInv2_mul_self_eq_one :
     radIsZero (radSub (radMul 2 fullRhoArcsinh fullUxPlusY (radInv2 fullRhoArcsinh fullUxPlusY))
       [CField.one]) = true := by native_decide
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over `ℚ(x)`. -/
-def fullIntegrandArcsinh : RadElem (QFunNZ ℚ) := radInvYLift fullRhoArcsinh CField.one
+def fullIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift fullRhoArcsinh CField.one
 
 /-- **`radLogDeriv` agrees with the arcsinh log-derivative certificate** (`native_decide`). -/
 theorem radLogDeriv_eq_integrand_arcsinh :
@@ -88,21 +88,21 @@ def algDeriv {α : Type*} [CField α] [CDiffField α] (ρ : α) (F : AlgIntegral
     (radDeriv 2 ρ F.ratPart)
 
 /-- **The full algebraic integral `∫ = v + Σ cᵢ log uᵢ`** (principal case) — the tower-generic
-`AlgIntegralResult` specialized to the `ℚ(x)` base `QFunNZ ℚ`. -/
-abbrev AlgIntegralResultQ := AlgIntegralResult (QFunNZ ℚ)
+`AlgIntegralResult` specialized to the `ℚ(x)` base `CFrac ℚ`. -/
+abbrev AlgIntegralResultQ := AlgIntegralResult (CFrac ℚ)
 
 /-- **The derivative of a full algebraic integral** `algDerivQ ρ F = radDeriv v + Σ cᵢ·radLogDeriv uᵢ`,
-the `QFunNZ ℚ` specialization of `algDeriv`. -/
-def algDerivQ (ρ : QFunNZ ℚ) (F : AlgIntegralResultQ) : RadElem (QFunNZ ℚ) :=
+the `CFrac ℚ` specialization of `algDeriv`. -/
+def algDerivQ (ρ : CFrac ℚ) (F : AlgIntegralResultQ) : RadElem (CFrac ℚ) :=
   algDeriv ρ F
 
 -- The concrete result/derivative are exactly the generic ones at the `ℚ(x)` base (`base + abbrev`).
-example : AlgIntegralResultQ = AlgIntegralResult (QFunNZ ℚ) := rfl
-example (ρ : QFunNZ ℚ) (F : AlgIntegralResultQ) : algDerivQ ρ F = algDeriv ρ F := rfl
+example : AlgIntegralResultQ = AlgIntegralResult (CFrac ℚ) := rfl
+example (ρ : CFrac ℚ) (F : AlgIntegralResultQ) : algDerivQ ρ F = algDeriv ρ F := rfl
 
 /-- **Assemble the rational part `v` from a multi-case dispatch run**. -/
-def radAssembleRatPart (ρ : QFunNZ ℚ)
-    (runs : List (Bool × CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ)) : RadElem (QFunNZ ℚ) :=
+def radAssembleRatPart (ρ : CFrac ℚ)
+    (runs : List (Bool × CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ)) : RadElem (CFrac ℚ) :=
   runs.foldl
     (fun acc (isV, fi, e, _, vNum, _) =>
       let denomPow := if isV then cpow fi (e - 1) else cpow fi e
@@ -113,7 +113,7 @@ def radAssembleRatPart (ρ : QFunNZ ℚ)
 /-! ### Shared round-trip inputs for algebraic integrators -/
 
 /-- Rational-only round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtRatRho : QFunNZ ℚ := qxOfNum [1, 0, 1]
+def rtRatRho : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- Rational-only round-trip numerator `R = 1`. -/
 def rtRatR : CPoly ℚ := [1]
@@ -122,22 +122,22 @@ def rtRatR : CPoly ℚ := [1]
 def rtRatB : CPoly ℚ := cpow [-1, 1] 2
 
 /-- A non-principal residual for the rational-only log solve. -/
-def rtRatNonPrincipalResidual : RadElem (QFunNZ ℚ) := radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CField.one
+def rtRatNonPrincipalResidual : RadElem (CFrac ℚ) := radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CField.one
 
 /-- Log-only round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtLogRho : QFunNZ ℚ := qxOfNum [1, 0, 1]
+def rtLogRho : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- The field element `x·ρ = x·(x²+1) = x + x³ ∈ ℚ(x)`. -/
-def rtLogXRho : QFunNZ ℚ := qxOfNum [0, 1, 0, 1]
+def rtLogXRho : CFrac ℚ := qxOfNum [0, 1, 0, 1]
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`. -/
-def rtLogIntegrand : RadElem (QFunNZ ℚ) := radInvYLift rtLogXRho CField.one
+def rtLogIntegrand : RadElem (CFrac ℚ) := radInvYLift rtLogXRho CField.one
 
 /-- The fixed log-solve denominator `D = x`. -/
 def rtLogD : CPoly ℚ := [0, 1]
 
 /-- Combined round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtCombRho : QFunNZ ℚ := qxOfNum [1, 0, 1]
+def rtCombRho : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- Combined round-trip rational numerator `R = 1`. -/
 def rtCombR : CPoly ℚ := [1]
@@ -146,9 +146,9 @@ def rtCombR : CPoly ℚ := [1]
 def rtCombB : CPoly ℚ := cpow [-1, 1] 2
 
 /-- The combined round-trip's log argument `u = x + y = [x, 1]`. -/
-def rtCombU : RadElem (QFunNZ ℚ) := [qxOfNum [0, 1], CField.one]
+def rtCombU : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CField.one]
 
 /-- The log residual `[0, 1/(x²+1)]` absorbed by the combined log solve. -/
-def rtCombLogResidual : RadElem (QFunNZ ℚ) := radInvYLift rtCombRho CField.one
+def rtCombLogResidual : RadElem (CFrac ℚ) := radInvYLift rtCombRho CField.one
 
 end DeepWiki.SymbolicIntegration

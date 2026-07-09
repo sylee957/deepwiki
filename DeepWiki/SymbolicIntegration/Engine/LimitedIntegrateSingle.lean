@@ -22,7 +22,7 @@ def cAntiderivBaseQ (p : CPoly ℚ) : CPoly ℚ :=
 (`b ∈ ℚ[x] ⊂ ℚ(x)`, `c ∈ ℚ`), or `none` if no such pair exists in this regime. Builds the two-generator
 constraint system `[a, η]` (`cLinearConstraintsQ`), takes the `c₀ ≠ 0` kernel vector (`cNullspaceBasisQ`),
 normalizes `c₀ = 1`, and recovers `b` by antidifferentiating the cleared polynomial residual `q₀ + c₁·q₁`. -/
-def cLimitedIntegrateSingleBase (a η : QFunNZ ℚ) : Option (QFunNZ ℚ × ℚ) :=
+def cLimitedIntegrateSingleBase (a η : CFrac ℚ) : Option (CFrac ℚ × ℚ) :=
   let gnums := [a.1.1, η.1.1]
   let gdens := [a.1.2, η.1.2]
   let (qs, M) := cLinearConstraintsQ gnums gdens
@@ -34,11 +34,11 @@ def cLimitedIntegrateSingleBase (a η : QFunNZ ℚ) : Option (QFunNZ ℚ × ℚ)
     let c1 := (v.getD 1 0) / c0                                   -- normalized `c₁` (`c₀ = 1`)
     let integrand := cadd (qs.getD 0 []) (cscale c1 (qs.getD 1 []))
     let bpoly := cAntiderivBaseQ integrand
-    some (⟨(bpoly, [(1 : ℚ)]), QFunNZ.cisZeroG_one_singleton⟩, -c1)
+    some (⟨(bpoly, [(1 : ℚ)]), CFrac.cisZeroG_one_singleton⟩, -c1)
 
 /-- **`cLimitedIntegrateSingleBase` in the num/den signature** of `LawfulRischLevelLrt.limitedIntegrateSingle`
 (`anum aden ηnum ηden ↦ ((bnum, bden), c)`) — the base ℚ instance's field for Phase 3-wire-2. Guards the
-denominators nonzero (`QFunNZ` needs `cisZero den = false`), then wraps `cLimitedIntegrateSingleBase`. -/
+denominators nonzero (`CFrac` needs `cisZero den = false`), then wraps `cLimitedIntegrateSingleBase`. -/
 def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : CPoly ℚ) :
     Option ((CPoly ℚ × CPoly ℚ) × ℚ) :=
   if hA : CPoly.cisZero aden = false then

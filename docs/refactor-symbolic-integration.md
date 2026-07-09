@@ -20,14 +20,14 @@ files follow its rules. Do not attempt Track B changes while executing Track A.
 - Overlapping ad-hoc name families: `ComputableTowerRischDE`, `ComputableRischDETowerCorrectG`,
   `ComputableTowerRischDECompleteness`, `ComputableRischDETowerGlue` all exist (permutations
   of the same words).
-- Historical variant markers survive in names: `G` (pre–QFunNZG-unification generic marker;
+- Historical variant markers survive in names: `G` (pre–CFracG-unification generic marker;
   ~151 `G`-suffixed defs), `FuelFree` / `WellFounded` / `Wf` (fuel-retirement transition;
   ~105 files still mention fuel), `Full`, `Fast`.
 - The aggregator `DeepWiki/SymbolicIntegration.lean` is a raw 195-import hand-ordered list,
   zero section comments.
 - Namespaces are healthy and must NOT change: everything under
   `DeepWiki.SymbolicIntegration`, with sub-namespaces `CPolyG` (~90 files), `RadElem`,
-  `QFunNZG`, `Compute`, `GBPolyCore`.
+  `CFracG`, `Compute`, `GBPolyCore`.
 - `Sources/Doi_10_1007_b138171/` (the Bronstein catalog) has 68 distinct
   `import DeepWiki.SymbolicIntegration.*` lines that must be rewritten in lockstep.
 
@@ -55,7 +55,7 @@ DeepWiki/SymbolicIntegration/          -- abstract theory on Mathlib carriers (~
      ├── RischDE/    -- base Risch DE: Normal, Special, DegreeBound*, *Cancellation, Solve*, Completeness…
      ├── Hyperexp/   -- Normal, NormalCore, Special, LaurentCore, Eta, ExampleData, FullSoundness
      ├── CoupledDE/  -- core, Assembly, TangentReconstruct
-     ├── Tower/      -- arbitrary-depth towers (QFunNZG): Field, Deriv, Reduce, GcdFF*, RischDE*,
+     ├── Tower/      -- arbitrary-depth towers (CFracG): Field, Deriv, Reduce, GcdFF*, RischDE*,
      │                  Integrate*, Unify, Bench, WellFounded
      └── Algebraic/  -- RadElem / algebraic curves: Radical*, General*, IntegralBasis*, Divisor*,
                         Picard*, Cantor*, Bareiss*, HenselLift, FiniteFieldFactor, Zassenhaus, Decide…

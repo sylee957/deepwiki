@@ -93,11 +93,11 @@ and `am (toPoly c) ≠ 0` in `(RatFunc (CFieldSpec.K β))[X]`. -/
 theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
     (hq : gbisZeroCore (gbnormCore q) = false) :
     ∃ (s : GBPolyCore β) (c : CPoly β),
-      Polynomial.C (QFunNZ.am β (CPoly.toPoly c)) * toGBPoly p
+      Polynomial.C (CFrac.am β (CPoly.toPoly c)) * toGBPoly p
           = toGBPoly s * toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)
-        ∧ QFunNZ.am β (CPoly.toPoly c) ≠ 0 := by
+        ∧ CFrac.am β (CPoly.toPoly c) ≠ 0 := by
   obtain ⟨s, c, hsc, hc⟩ := toGBCoeffPoly_gbpsremainderCore_ne_zero fuel p q hq
-  refine ⟨s, c, ?_, QFunNZ.amG_toPolyG_ne_zero hc⟩
+  refine ⟨s, c, ?_, CFrac.amG_toPolyG_ne_zero hc⟩
   have hl := congrArg (liftK β) hsc
   simp only [map_add, map_mul] at hl
   rw [liftKG_C] at hl

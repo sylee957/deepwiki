@@ -90,9 +90,9 @@ example (p : GBPolyCore β) : gbdegCore p = (toGBCoeffPoly p).natDegree := gbdeg
 -- Clause (ii) with the β(s)-unit multiplier is unconditional given the non-terminal loop guard.
 example (fuel : ℕ) (p q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false) :
     ∃ (s : GBPolyCore β) (c : CPoly β),
-      Polynomial.C (QFunNZ.am β (CPoly.toPoly c)) * toGBPoly p
+      Polynomial.C (CFrac.am β (CPoly.toPoly c)) * toGBPoly p
           = toGBPoly s * toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)
-        ∧ QFunNZ.am β (CPoly.toPoly c) ≠ 0 :=
+        ∧ CFrac.am β (CPoly.toPoly c) ≠ 0 :=
   toGBPolyG_gbpsremainderCore_ne_zero fuel p q hq
 
 -- The single pseudo-division step strictly drops the `t`-degree by leading-term cancellation.

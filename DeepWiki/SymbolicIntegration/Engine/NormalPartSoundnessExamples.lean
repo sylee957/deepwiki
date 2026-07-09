@@ -10,42 +10,42 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZ
+open CPoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-! ### The deliverables at the level-1 carrier `α = QFunNZ ℚ = ℚ(x)` -/
+/-! ### The deliverables at the level-1 carrier `α = CFrac ℚ = ℚ(x)` -/
 
-/-- The engine carrier `CFieldSpec.K (QFunNZ ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
-`QFunNZ ℚ` deliverables synthesize the **same** `Algebra ℚ` the bridge `towerFractionFieldDeriv` uses. -/
-noncomputable local instance normalPartSoundnessExamplesAlgebraRatKQFunNZG :
-    Algebra ℚ (CFieldSpec.K (QFunNZ ℚ)) :=
+/-- The engine carrier `CFieldSpec.K (CFrac ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
+`CFrac ℚ` deliverables synthesize the **same** `Algebra ℚ` the bridge `towerFractionFieldDeriv` uses. -/
+noncomputable local instance normalPartSoundnessExamplesAlgebraRatKCFracG :
+    Algebra ℚ (CFieldSpec.K (CFrac ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
 /-- The Hermite half over `ℚ(x)(t)`: the master Hermite telescoping `D(g) + h = a/d` (seed
-`([CField.zero], [CField.one])`) at the carrier `α = QFunNZ ℚ`, over `RatFunc ℚ`. -/
-theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : CPoly (QFunNZ ℚ))
-    (L₀ : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
-    (rest glocs : List (CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)))
+`([CField.zero], [CField.one])`) at the carrier `α = CFrac ℚ`, over `RatFunc ℚ`. -/
+theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : CPoly (CFrac ℚ))
+    (L₀ : CPoly (CFrac ℚ) × CPoly (CFrac ℚ))
+    (rest glocs : List (CPoly (CFrac ℚ) × CPoly (CFrac ℚ)))
     (hmem : ∀ g ∈ glocs, toPoly g.2 ≠ 0)
     (hstep : List.Forall₂ (fun g p =>
-        towerFractionFieldDeriv Dt (am (QFunNZ ℚ) (toPoly g.1) / am (QFunNZ ℚ) (toPoly g.2))
-          = am (QFunNZ ℚ) (toPoly (Prod.fst p).1) / am (QFunNZ ℚ) (toPoly (Prod.fst p).2)
-            - am (QFunNZ ℚ) (toPoly (Prod.snd p).1) / am (QFunNZ ℚ) (toPoly (Prod.snd p).2))
+        towerFractionFieldDeriv Dt (am (CFrac ℚ) (toPoly g.1) / am (CFrac ℚ) (toPoly g.2))
+          = am (CFrac ℚ) (toPoly (Prod.fst p).1) / am (CFrac ℚ) (toPoly (Prod.fst p).2)
+            - am (CFrac ℚ) (toPoly (Prod.snd p).1) / am (CFrac ℚ) (toPoly (Prod.snd p).2))
         glocs ((L₀ :: rest).zip rest)) :
     towerFractionFieldDeriv Dt
-        (am (QFunNZ ℚ) (toPoly (glocs.foldl
-            (fun (gAcc : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) gloc =>
+        (am (CFrac ℚ) (toPoly (glocs.foldl
+            (fun (gAcc : CPoly (CFrac ℚ) × CPoly (CFrac ℚ)) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-            (([CField.zero] : CPoly (QFunNZ ℚ)), ([CField.one] : CPoly (QFunNZ ℚ)))).1)
-          / am (QFunNZ ℚ) (toPoly (glocs.foldl
-            (fun (gAcc : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) gloc =>
+            (([CField.zero] : CPoly (CFrac ℚ)), ([CField.one] : CPoly (CFrac ℚ)))).1)
+          / am (CFrac ℚ) (toPoly (glocs.foldl
+            (fun (gAcc : CPoly (CFrac ℚ) × CPoly (CFrac ℚ)) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-            (([CField.zero] : CPoly (QFunNZ ℚ)), ([CField.one] : CPoly (QFunNZ ℚ)))).2))
-        + am (QFunNZ ℚ) (toPoly (rest.getLastD L₀).1)
-          / am (QFunNZ ℚ) (toPoly (rest.getLastD L₀).2)
-      = am (QFunNZ ℚ) (toPoly L₀.1) / am (QFunNZ ℚ) (toPoly L₀.2) :=
+            (([CField.zero] : CPoly (CFrac ℚ)), ([CField.one] : CPoly (CFrac ℚ)))).2))
+        + am (CFrac ℚ) (toPoly (rest.getLastD L₀).1)
+          / am (CFrac ℚ) (toPoly (rest.getLastD L₀).2)
+      = am (CFrac ℚ) (toPoly L₀.1) / am (CFrac ℚ) (toPoly L₀.2) :=
   cHermiteReduceTowerG_telescope_seed Dt L₀ rest glocs hmem hstep
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/

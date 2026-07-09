@@ -9,7 +9,7 @@ Rothstein-Trager residue interfaces.
 namespace DeepWiki.SymbolicIntegration
 
 open CPoly
-open QFunNZ Polynomial
+open CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
@@ -146,7 +146,7 @@ theorem cIntegrateReducedG_hyperexp_isIntegralResult_via_interfaces [CharZero (C
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
 
-open QFunNZ in
+open CFrac in
 /-- **Reduced-part soundness, Hermite half discharged.** Given the exact-division relation for the
 `cHermiteReduceTower` output (`hexact`) and the RT residue match (`hmatch`), the reduced normal part
 integrates correctly: `D(⟦reduced.rational⟧) + logResidueSum reduced.logs = ⟦a/d⟧`. The Hermite `hherm`

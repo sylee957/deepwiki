@@ -15,10 +15,10 @@ open RadElem CPoly
 /-! ### Radicand 1 — `f₁ = x³ − 2` (degree 3, odd)
 
 `x³ − 2` is the radicand of `√(x³ − 2)`. Odd degree ⟹ not a square ⟹ irreducible ⟹ the full carrier
-`RadExt (QFunNZ ℚ) 2 (x³−2)` and tower fire generically. -/
+`RadExt (CFrac ℚ) 2 (x³−2)` and tower fire generically. -/
 
 /-- The radicand `f₁ = x³ − 2 ∈ ℚ(x)` (numerator `[-2,0,0,1] = −2 + x³`) for `√(x³−2)`. -/
-def radicandX3m2 : QFunNZ ℚ := qxOfNum [-2, 0, 0, 1]
+def radicandX3m2 : CFrac ℚ := qxOfNum [-2, 0, 0, 1]
 
 /-- **`toPoly [-2,0,0,1] = −2 + x³` has `natDegree 3`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X3m2 : (toPoly ([-2, 0, 0, 1] : CPoly ℚ)).natDegree = 3 := by
@@ -30,43 +30,43 @@ theorem natDeg_toPolyG_X3m2 : (toPoly ([-2, 0, 0, 1] : CPoly ℚ)).natDegree = 3
 
 /-- **`x³ − 2` is not a square in `ℚ(x)`** — from the odd-degree helper (`natDegree 3`). -/
 theorem not_isSquare_radicandX3m2 :
-    ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX3m2 : QFunNZ ℚ) := by
+    ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX3m2 : CFrac ℚ) := by
   rw [radicandX3m2, toK_qxOfNum]
   exact not_isSquare_algebraMap_of_odd_natDegree (by rw [natDeg_toPolyG_X3m2]; decide)
 
 /-- **`y² − (x³−2)` is irreducible over `ℚ(x)`** — generic helper on the non-square `x³−2`. -/
 theorem irreducible_radX3m2 :
-    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3m2 : QFunNZ ℚ))) :=
+    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3m2 : CFrac ℚ))) :=
   irreducible_radDeg2_of_not_isSquare not_isSquare_radicandX3m2
 
 /-- The irreducibility `Fact` for `√(x³−2)`, registering it so `CFieldSpec (RadExt … 2 (x³−2))` resolves
 (the generic bridge consumes exactly this). -/
 instance fact_irreducible_radX3m2 :
-    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3m2 : QFunNZ ℚ)))) :=
+    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3m2 : CFrac ℚ)))) :=
   ⟨irreducible_radX3m2⟩
 
-/-- The radical field `ℚ(x)[√(x³−2)] = RadExt (QFunNZ ℚ) 2 (x³−2)`. -/
-abbrev RadX3m2 : Type := RadExt (QFunNZ ℚ) 2 radicandX3m2
+/-- The radical field `ℚ(x)[√(x³−2)] = RadExt (CFrac ℚ) 2 (x³−2)`. -/
+abbrev RadX3m2 : Type := RadExt (CFrac ℚ) 2 radicandX3m2
 
 /-- **`CFieldDomain RadX3m2` — discharged generically** (no bespoke work): from `instCFieldSpecRadExt`
 (with `fact_irreducible_radX3m2`) via the global `instCFieldDomainOfCFieldSpec`. The carrier
-`RadExt (QFunNZ ℚ) 2 (x³−2)` is a genuine field/domain. -/
+`RadExt (CFrac ℚ) 2 (x³−2)` is a genuine field/domain. -/
 noncomputable example : CFieldDomain RadX3m2 := inferInstance
 
-/-- **The mixed tower over `√(x³−2)` is a `CField`** — `QFunNZ RadX3m2 ≅ ℚ(x)[√(x³−2)](t)` resolves its
-`CField` *automatically* (the keystone `instCFieldQFunNZ` over the generic `CField`/`CFieldDomain`
+/-- **The mixed tower over `√(x³−2)` is a `CField`** — `CFrac RadX3m2 ≅ ℚ(x)[√(x³−2)](t)` resolves its
+`CField` *automatically* (the keystone `instCFieldCFrac` over the generic `CField`/`CFieldDomain`
 radical base). No `x³+1`-specific input. -/
-theorem cfield_qfunNZG_radX3m2 : Nonempty (CField (QFunNZ RadX3m2)) := ⟨inferInstance⟩
+theorem cfield_qfunNZG_radX3m2 : Nonempty (CField (CFrac RadX3m2)) := ⟨inferInstance⟩
 
 /-- **The mixed tower over `√(x³−2)` is a `CDiffField`** — inherits `d/dx + radical y' + ∂/∂t`
 generically. -/
-theorem cdiffField_qfunNZG_radX3m2 : Nonempty (CDiffField (QFunNZ RadX3m2)) := ⟨inferInstance⟩
+theorem cdiffField_qfunNZG_radX3m2 : Nonempty (CDiffField (CFrac RadX3m2)) := ⟨inferInstance⟩
 
 /-- The generator `y = √(x³−2)` as an element of `RadX3m2`. -/
 def radX3m2Gen : RadX3m2 := RadExt.gen
 
 /-- The diagonal multiplier `ℓ = f'/(2f) = 3x²/(2(x³−2)) ∈ ℚ(x)` for `D(y) = ℓ·y` over `√(x³−2)`. -/
-def radX3m2LogDer : QFunNZ ℚ := logDerRadicand 2 radicandX3m2
+def radX3m2LogDer : CFrac ℚ := logDerRadicand 2 radicandX3m2
 
 /-- The `RadX3m2[t]`-polynomial `t² = [0,0,1]` (transcendental square over `√(x³−2)`). -/
 def radX3m2T2sq : CPoly RadX3m2 := [CField.zero, CField.zero, CField.one]
