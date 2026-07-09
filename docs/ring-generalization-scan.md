@@ -75,3 +75,27 @@ Recommended phasing (each gate-green):
 
 Net: **large touch surface (~754 constraints), large cleanup (~1500 lines + a duplicate + 3 layers → 1)**.
 Worth doing; do it as a dedicated phased arc after the current naming/reorg work settles.
+
+## Empirical outcome (2026-07-09, arc complete — see `ring-generalization-plan.md`)
+
+The architecture generalization landed in full (P1–P3: `CCommRing`/`CRingSpec` base + keystones
+`CCommRing (CPoly α)` and `CRingSpec (CPoly α)`; `native_decide` survives; the whole engine is now
+ring-coefficient-generic with `CField` a specialization). The bivariate collapse landed as far as is
+**correct and safe** (P4a/b, P5a/b/c): all three `List (CPoly _)` carriers' **arithmetic now IS the generic
+engine** (thin `c*` wrappers), the dead `GBPoly` op set + the duplicate `GcdFF` denominator subtree are
+**deleted**, and `GBPoly` no longer exists.
+
+**But the "~1500 lines evaporate" estimate was optimistic.** The genuinely-duplicate code was small — the
+dead `GBPoly` ops (~75 L) + the `b*`/`gb*Core` arithmetic recursions (~60 L) + the duplicate denominator
+helpers — netting **≈ −46 lines** over the P4/P5 arc (the generalization adds base classes + bridge lemmas
+that offset raw deletions). The BULK the scan expected to remove is **genuine content, not duplication**:
+- the generic `cSubresultant` is **determinant-based**, a *different algorithm* than the PRS
+  `bpsremainder`/`gbpsremainderCore` — so `SubresultantCorrectness` (1278 L) is genuine subresultant-PRS
+  correctness, not a redundant copy;
+- the `bnorm`/`gbnormCore` **canonicalizing** normalization is a real op (not `cnorm @`);
+- Compute's PRS duplicate of `GBPolyCore` (`BPoly = GBPolyCore ℚ`) is left **deliberately**: unifying it
+  would make the concrete `Compute/` reference layer depend on the generic `Engine/Tower` gcd engine,
+  inverting the intended layering.
+
+The real win is the **architecture** (one ring-generic engine; bivariate polys are `CPoly (CPoly _)` going
+through it), not a large line-count deletion.
