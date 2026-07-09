@@ -85,6 +85,12 @@ theorem cdivmodCore_remainder_reduced :
           exact Polynomial.natDegree_lt_natDegree hp'ne hdeg
         exact cdivmodCore_remainder_reduced fuel p' q hq (by omega)
 
+/-- **The remainder is fully reduced** (fuel-less): if `q ≠ 0` the `cdivmod` remainder is zero or of
+honest degree `< cdeg q` — the Euclidean remainder property, now hypothesis-free. -/
+theorem cdivmod_remainder_reduced (p q : P α) (hq : ¬ cisZero (P := P) q = true) :
+    cisZero (P := P) (cdivmod p q).2 = true ∨ cdeg (cdivmod p q).2 < cdeg q :=
+  cdivmodCore_remainder_reduced (cdeg p + 1) p q hq (by omega)
+
 omit [CFieldSpec α] in
 /-- When the second argument is zero, `cgcdCore` returns the first. -/
 theorem cgcdCore_of_cisZero_snd (fuel : ℕ) (a b : P α) (h : cisZero (P := P) b = true) :
@@ -117,13 +123,17 @@ theorem cgcdCore_dvd :
       · have ih := cgcdCore_dvd fuel b rem (by omega)
         exact ⟨by rw [hid]; exact dvd_add (Dvd.dvd.mul_right ih.1 _) ih.2, ih.1⟩
 
-/-- **`cgcdCore` is a genuine gcd:** it divides both inputs and is divisible by every common divisor
-(the universal property of a greatest common divisor), assembling `cgcdCore_dvd` and `dvd_cgcdCore`. This is
-the instance-free statement — no `DecidableEq`/`GCDMonoid` on the abstract field needed. -/
-theorem cgcd_isGCD (fuel : ℕ) (a b : P α) (h : cdeg b < fuel) :
-    toPoly (cgcdCore fuel a b) ∣ toPoly a ∧ toPoly (cgcdCore fuel a b) ∣ toPoly b ∧
-      ∀ e, e ∣ toPoly a → e ∣ toPoly b → e ∣ toPoly (cgcdCore fuel a b) :=
-  ⟨(cgcdCore_dvd fuel a b h).1, (cgcdCore_dvd fuel a b h).2, fun e hea heb => dvd_cgcdCore fuel a b e hea heb⟩
+/-- **Full gcd correctness** (fuel-less): `cgcd a b` divides both `a` and `b` — hypothesis-free. -/
+theorem cgcd_dvd (a b : P α) :
+    toPoly (cgcd a b) ∣ toPoly a ∧ toPoly (cgcd a b) ∣ toPoly b :=
+  cgcdCore_dvd (cdeg b + 1) a b (by omega)
+
+/-- **`cgcd` is a genuine gcd** (fuel-less): it divides both inputs and every common divisor divides it
+(the universal property), assembling `cgcd_dvd` and `dvd_cgcd`. Instance-free. -/
+theorem cgcd_isGCD (a b : P α) :
+    toPoly (cgcd a b) ∣ toPoly a ∧ toPoly (cgcd a b) ∣ toPoly b ∧
+      ∀ e, e ∣ toPoly a → e ∣ toPoly b → e ∣ toPoly (cgcd a b) :=
+  ⟨(cgcd_dvd a b).1, (cgcd_dvd a b).2, fun e hea heb => dvd_cgcd a b e hea heb⟩
 
 /-! ### Degree of products and powers (over a field the coefficient ring is a domain) -/
 
@@ -141,33 +151,31 @@ theorem cdeg_cpow (p : P α) (n : ℕ) (hp : ¬ cisZero (P := P) p = true) :
   have hP : toPoly p ≠ 0 := fun h => hp ((cisZero_iff p).mpr h)
   rw [cdeg_eq_natDegree, toPoly_cpow, Polynomial.natDegree_pow, ← cdeg_eq_natDegree]
 
-/-- **Exact division:** if `q ∣ p` (and `q ≠ 0`, `fuel > cdeg p`), the `cdivmodCore` remainder is zero.
+/-- **Exact division** (fuel-less): if `q ∣ p` (and `q ≠ 0`), the `cdivmod` remainder is zero.
 The reduced remainder is a multiple of `q` of degree `< cdeg q`, hence zero. Gateway to exact quotients
 (cofactors, squarefree parts). -/
-theorem cdivmod_exact (fuel : ℕ) (p q : P α) (hq : ¬ cisZero (P := P) q = true)
-    (hfuel : cdeg p < fuel) (hdvd : toPoly q ∣ toPoly p) :
-    cisZero (P := P) (cdivmodCore fuel p q).2 = true := by
-  rcases cdivmodCore_remainder_reduced fuel p q hq hfuel with hz | hlt
+theorem cdivmod_exact (p q : P α) (hq : ¬ cisZero (P := P) q = true)
+    (hdvd : toPoly q ∣ toPoly p) : cisZero (P := P) (cdivmod p q).2 = true := by
+  rcases cdivmod_remainder_reduced p q hq with hz | hlt
   · exact hz
-  · have hqR : toPoly q ∣ toPoly (cdivmodCore fuel p q).2 := by
-      have hid := toPoly_cdivmodCore fuel p q
-      have : toPoly (cdivmodCore fuel p q).2
-          = toPoly p - toPoly q * toPoly (cdivmodCore fuel p q).1 := by rw [hid]; ring
+  · have hqR : toPoly q ∣ toPoly (cdivmod p q).2 := by
+      have hid := toPoly_cdivmod p q
+      have : toPoly (cdivmod p q).2
+          = toPoly p - toPoly q * toPoly (cdivmod p q).1 := by rw [hid]; ring
       rw [this]; exact dvd_sub hdvd (dvd_mul_right _ _)
-    by_cases hR0 : toPoly (cdivmodCore fuel p q).2 = 0
+    by_cases hR0 : toPoly (cdivmod p q).2 = 0
     · exact (cisZero_iff _).mpr hR0
     · exfalso
       have hle := Polynomial.natDegree_le_natDegree (Polynomial.degree_le_of_dvd hqR hR0)
       rw [← cdeg_eq_natDegree, ← cdeg_eq_natDegree] at hle
       omega
 
-/-- **Exact quotient recovers the dividend:** if `q ∣ p` then `p = q · (p / q)` — the cofactor
-factorization. Direct from the division identity with a zero remainder (`cdivmod_exact`). -/
-theorem toPoly_mul_cdiv_of_dvd (fuel : ℕ) (p q : P α) (hq : ¬ cisZero (P := P) q = true)
-    (hfuel : cdeg p < fuel) (hdvd : toPoly q ∣ toPoly p) :
-    toPoly p = toPoly q * toPoly (cdivmodCore fuel p q).1 := by
-  have hid := toPoly_cdivmodCore fuel p q
-  rw [(cisZero_iff _).mp (cdivmod_exact fuel p q hq hfuel hdvd), add_zero] at hid
+/-- **Exact quotient recovers the dividend** (fuel-less): if `q ∣ p` then `p = q · (p / q)` — the
+cofactor factorization. Direct from the division identity with a zero remainder (`cdivmod_exact`). -/
+theorem toPoly_mul_cdiv_of_dvd (p q : P α) (hq : ¬ cisZero (P := P) q = true)
+    (hdvd : toPoly q ∣ toPoly p) : toPoly p = toPoly q * toPoly (cdivmod p q).1 := by
+  have hid := toPoly_cdivmod p q
+  rw [(cisZero_iff _).mp (cdivmod_exact p q hq hdvd), add_zero] at hid
   exact hid
 
 /-! ### Monic normalization (the canonical associate) -/
@@ -200,18 +208,17 @@ theorem cmonic_associated (g : P α) (hg : ¬ cisZero (P := P) g = true) :
   rw [IsUnit.unit_spec, toPoly_cmonic, mul_right_comm, ← Polynomial.C_mul, inv_mul_cancel₀ hlc,
     Polynomial.C_1, one_mul]
 
-/-- The canonical (monic) gcd `cmonic (cgcdCore a b)`. -/
-def cmonicGcd (fuel : ℕ) (a b : P α) : P α := cmonic (cgcdCore fuel a b)
+/-- The canonical (monic) gcd `cmonic (cgcd a b)`. -/
+def cmonicGcd (a b : P α) : P α := cmonic (cgcd a b)
 
-/-- **The canonical monic gcd:** `cmonicGcd a b` is monic and divides both `a` and `b` — the unique
-monic greatest common divisor. -/
-theorem cmonicGcd_isGCD (fuel : ℕ) (a b : P α) (h : cdeg b < fuel)
-    (hg : ¬ cisZero (P := P) (cgcdCore fuel a b) = true) :
-    (toPoly (cmonicGcd fuel a b)).Monic ∧
-      toPoly (cmonicGcd fuel a b) ∣ toPoly a ∧ toPoly (cmonicGcd fuel a b) ∣ toPoly b := by
-  have hassoc := cmonic_associated (cgcdCore fuel a b) hg
-  exact ⟨cmonic_monic _ hg, (hassoc.dvd_iff_dvd_left).mpr (cgcdCore_dvd fuel a b h).1,
-    (hassoc.dvd_iff_dvd_left).mpr (cgcdCore_dvd fuel a b h).2⟩
+/-- **The canonical monic gcd** (fuel-less): `cmonicGcd a b` is monic and divides both `a` and `b` —
+the unique monic greatest common divisor. -/
+theorem cmonicGcd_isGCD (a b : P α) (hg : ¬ cisZero (P := P) (cgcd a b) = true) :
+    (toPoly (cmonicGcd a b)).Monic ∧
+      toPoly (cmonicGcd a b) ∣ toPoly a ∧ toPoly (cmonicGcd a b) ∣ toPoly b := by
+  have hassoc := cmonic_associated (cgcd a b) hg
+  exact ⟨cmonic_monic _ hg, (hassoc.dvd_iff_dvd_left).mpr (cgcd_dvd a b).1,
+    (hassoc.dvd_iff_dvd_left).mpr (cgcd_dvd a b).2⟩
 
 /-- `cmonic` reduces (dense): `2 + 4x` scales to the monic `1/2 + x`. -/
 example : cmonic ([2, 4] : List ℚ) = ([1/2, 1] : List ℚ) := by native_decide
@@ -223,14 +230,14 @@ factorization** `p = gcd(p, p') · csquarefreePart p` is proven here (from the e
 the fact that the quotient is genuinely squarefree is the deeper property left as a frontier. -/
 
 /-- The gcd of `p` and its derivative — the repeated-factor content, cofactor of the squarefree part. -/
-def csquarefreeCofactor (p : P α) : P α := cgcdCore (cdeg (cderiv p) + 1) p (cderiv p)
+def csquarefreeCofactor (p : P α) : P α := cgcd p (cderiv p)
 
 /-- The squarefree part `p / gcd(p, p')`. -/
-def csquarefreePart (p : P α) : P α := (cdivmodCore (cdeg p + 1) p (csquarefreeCofactor p)).1
+def csquarefreePart (p : P α) : P α := (cdivmod p (csquarefreeCofactor p)).1
 
 /-- `gcd(p, p')` divides `p`. -/
 theorem csquarefreeCofactor_dvd (p : P α) : toPoly (csquarefreeCofactor p) ∣ toPoly p :=
-  (cgcdCore_dvd (cdeg (cderiv p) + 1) p (cderiv p) (by omega)).1
+  (cgcd_dvd p (cderiv p)).1
 
 /-- **Cofactor factorization:** `toPoly p = toPoly (gcd(p, p')) · toPoly (squarefreePart p)` for
 nonzero `p`. -/
@@ -240,7 +247,7 @@ theorem toPoly_squarefree_factor (p : P α) (hp : ¬ cisZero (P := P) p = true) 
   have hg : ¬ cisZero (P := P) (csquarefreeCofactor p) = true := fun hz => by
     rw [(cisZero_iff _).mp hz, zero_dvd_iff] at hdvd
     exact hp ((cisZero_iff p).mpr hdvd)
-  exact toPoly_mul_cdiv_of_dvd (cdeg p + 1) p (csquarefreeCofactor p) hg (by omega) hdvd
+  exact toPoly_mul_cdiv_of_dvd p (csquarefreeCofactor p) hg hdvd
 
 /-- `csquarefreePart` reduces (dense): the squarefree part of `(x − 1)² = 1 − 2x + x²` has degree `1`. -/
 example : cdeg (csquarefreePart ([1, -2, 1] : List ℚ)) = 1 := by native_decide

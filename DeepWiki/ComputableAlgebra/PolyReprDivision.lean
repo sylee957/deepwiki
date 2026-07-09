@@ -57,31 +57,41 @@ theorem toPoly_cdivmodCore [CField α] [CRingSpec α] :
       simp only [toPoly_add]
       rw [ih]; ring
 
+/-- **Fuel-less Euclidean division** `cdivmod p q = (quotient, remainder)`: the `cdeg p + 1` fuel is
+always past `cdeg p`, so the remainder is fully reduced. The fuel is an internal constant, not a
+parameter. -/
+def cdivmod [CField α] (p q : P α) : P α × P α := cdivmodCore (cdeg p + 1) p q
+
+/-- **The division identity** (fuel-less): `toPoly p = toPoly q · toPoly Q + toPoly R`. -/
+theorem toPoly_cdivmod [CField α] [CRingSpec α] (p q : P α) :
+    toPoly p = toPoly q * toPoly (cdivmod p q).1 + toPoly (cdivmod p q).2 :=
+  toPoly_cdivmodCore (cdeg p + 1) p q
+
 /-! ### `native_decide` showcase: `(x² − 1) / (x − 1) = (x + 1, 0)`
 
 The generic algorithm runs on the dense `List` carrier and the sparse `SparsePoly` carrier alike. -/
 
 /-- Dense: dividing `x² − 1` by `x − 1` leaves remainder `0`. -/
-example : cisZero (cdivmodCore 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2 = true := by native_decide
+example : cisZero (cdivmod ([-1, 0, 1] : List ℚ) [-1, 1]).2 = true := by native_decide
 /-- Dense: the quotient `(x² − 1)/(x − 1)` normalizes to `x + 1`. -/
-example : cnorm (cdivmodCore 5 ([-1, 0, 1] : List ℚ) [-1, 1]).1 = ([1, 1] : List ℚ) := by native_decide
+example : cnorm (cdivmod ([-1, 0, 1] : List ℚ) [-1, 1]).1 = ([1, 1] : List ℚ) := by native_decide
 /-- Sparse: the same division on the sparse carrier — remainder `0`, quotient of honest degree `1`
 (`x + 1`). Same algorithm, different representation. -/
-example : cisZero (cdivmodCore 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
+example : cisZero (cdivmod (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
     (SparsePoly.ofList [(0, -1), (1, 1)])).2 = true := by native_decide
 /-- Sparse: the quotient of `(x² − 1)/(x − 1)` has honest degree `1`. -/
-example : cdeg (cdivmodCore 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
+example : cdeg (cdivmod (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
     (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
 
 /-! ### Computable divisibility test
 
 A zero remainder witnesses divisibility — the soundness of deciding `q ∣ p` by `cdivmodCore`. -/
 
-/-- **Divisibility from a zero remainder:** if `cdivmodCore fuel p q` leaves remainder zero, then
+/-- **Divisibility from a zero remainder:** if `cdivmod p q` leaves remainder zero, then
 `toPoly q ∣ toPoly p`. From the division identity. Representation-generic. -/
-theorem dvd_of_cisZero_cdivmod_snd [CField α] [CRingSpec α] (fuel : ℕ) (p q : P α)
-    (h : cisZero (P := P) (cdivmodCore fuel p q).2 = true) : toPoly q ∣ toPoly p := by
-  have hid := toPoly_cdivmodCore fuel p q
+theorem dvd_of_cisZero_cdivmod_snd [CField α] [CRingSpec α] (p q : P α)
+    (h : cisZero (P := P) (cdivmod p q).2 = true) : toPoly q ∣ toPoly p := by
+  have hid := toPoly_cdivmod p q
   rw [(cisZero_iff _).mp h, add_zero] at hid
   exact hid ▸ dvd_mul_right _ _
 
@@ -117,8 +127,16 @@ theorem dvd_cgcdCore [CField α] [CRingSpec α] :
         have hid := toPoly_cdivmodCore (cdeg a + 1) a b; rw [hid]; ring
       exact dvd_cgcdCore fuel b _ d hb (hrem ▸ dvd_sub ha (dvd_mul_of_dvd_left hb _))
 
-/-- `cgcdCore` reduces (dense): `gcd(x² − 1, x − 1)` normalizes to `x − 1`. -/
-example : cnorm (cgcdCore 5 ([-1, 0, 1] : List ℚ) [-1, 1]) = ([-1, 1] : List ℚ) := by native_decide
+/-- **Fuel-less Euclidean gcd** `cgcd a b`: the `cdeg b + 1` fuel bounds the Euclidean step count. -/
+def cgcd [CField α] (a b : P α) : P α := cgcdCore (cdeg b + 1) a b
+
+/-- **Common-divisor property** (fuel-less): every common divisor of `a`, `b` divides `cgcd a b`. -/
+theorem dvd_cgcd [CField α] [CRingSpec α] (a b : P α) (d : (CRingSpec.R α)[X])
+    (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) : d ∣ toPoly (cgcd a b) :=
+  dvd_cgcdCore (cdeg b + 1) a b d ha hb
+
+/-- `cgcd` reduces (dense): `gcd(x² − 1, x − 1)` normalizes to `x − 1`. -/
+example : cnorm (cgcd ([-1, 0, 1] : List ℚ) [-1, 1]) = ([-1, 1] : List ℚ) := by native_decide
 
 /-! ### Extended Euclidean algorithm (Bézout coefficients)
 
@@ -156,21 +174,31 @@ theorem toPoly_cgcdExtCore [CField α] [CRingSpec α] :
       rw [← hres] at ih
       rw [toPoly_csub, toPoly_mul, hdiv, ← ih]; ring
 
+/-- **Fuel-less extended Euclidean** `cgcdExt a b = (g, s, t)`: the `cdeg b + 1` fuel bounds the
+Euclidean step count. -/
+def cgcdExt [CField α] (a b : P α) : P α × P α × P α := cgcdExtCore (cdeg b + 1) a b
+
+/-- **The Bézout identity** (fuel-less): `toPoly s · a + toPoly t · b = toPoly g`. -/
+theorem toPoly_cgcdExt [CField α] [CRingSpec α] (a b : P α) :
+    toPoly (cgcdExt a b).2.1 * toPoly a + toPoly (cgcdExt a b).2.2 * toPoly b
+      = toPoly (cgcdExt a b).1 :=
+  toPoly_cgcdExtCore (cdeg b + 1) a b
+
 /-- **Every common divisor divides the extended gcd** — immediate from the Bézout identity
 `s·a + t·b = g` (no termination argument). -/
-theorem dvd_cgcdExt [CField α] [CRingSpec α] (fuel : ℕ) (a b : P α) (d : (CRingSpec.R α)[X])
-    (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) : d ∣ toPoly (cgcdExtCore fuel a b).1 := by
-  rw [← toPoly_cgcdExtCore fuel a b]
+theorem dvd_cgcdExt [CField α] [CRingSpec α] (a b : P α) (d : (CRingSpec.R α)[X])
+    (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) : d ∣ toPoly (cgcdExt a b).1 := by
+  rw [← toPoly_cgcdExt a b]
   exact dvd_add (Dvd.dvd.mul_left ha _) (Dvd.dvd.mul_left hb _)
 
 /-- **Coprimality from Bézout:** if the extended-gcd component is a unit, `toPoly a` and `toPoly b`
 are coprime (scale the Bézout identity by the inverse unit). -/
-theorem isCoprime_of_cgcdExt_isUnit [CField α] [CRingSpec α] (fuel : ℕ) (a b : P α)
-    (hu : IsUnit (toPoly (cgcdExtCore fuel a b).1)) : IsCoprime (toPoly a) (toPoly b) := by
+theorem isCoprime_of_cgcdExt_isUnit [CField α] [CRingSpec α] (a b : P α)
+    (hu : IsUnit (toPoly (cgcdExt a b).1)) : IsCoprime (toPoly a) (toPoly b) := by
   obtain ⟨u, hu⟩ := hu
-  refine ⟨(↑u⁻¹ : (CRingSpec.R α)[X]) * toPoly (cgcdExtCore fuel a b).2.1,
-    (↑u⁻¹ : (CRingSpec.R α)[X]) * toPoly (cgcdExtCore fuel a b).2.2, ?_⟩
-  rw [mul_assoc, mul_assoc, ← mul_add, toPoly_cgcdExtCore, ← hu, Units.inv_mul]
+  refine ⟨(↑u⁻¹ : (CRingSpec.R α)[X]) * toPoly (cgcdExt a b).2.1,
+    (↑u⁻¹ : (CRingSpec.R α)[X]) * toPoly (cgcdExt a b).2.2, ?_⟩
+  rw [mul_assoc, mul_assoc, ← mul_add, toPoly_cgcdExt, ← hu, Units.inv_mul]
 
 /-- **Partial-fraction existence:** for coprime `b, c`, every `a` splits as `a = e·c + f·b`
 (i.e. `a/(b·c) = f/c + e/b`) — the algebraic basis of partial-fraction decomposition. -/
@@ -198,12 +226,12 @@ theorem exists_crt [CField α] [CRingSpec α] (m₁ m₂ r₁ r₂ : P α)
 
 /-- `cgcdExtCore` reduces (dense): the Bézout combination `s·(x²−1) + t·(x−1)` equals the gcd. -/
 example :
-    cnorm (add (mul (cgcdExtCore 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.1 [-1, 0, 1])
-      (mul (cgcdExtCore 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.2 [-1, 1]))
-      = cnorm (cgcdExtCore 5 ([-1, 0, 1] : List ℚ) [-1, 1]).1 := by native_decide
+    cnorm (add (mul (cgcdExt ([-1, 0, 1] : List ℚ) [-1, 1]).2.1 [-1, 0, 1])
+      (mul (cgcdExt ([-1, 0, 1] : List ℚ) [-1, 1]).2.2 [-1, 1]))
+      = cnorm (cgcdExt ([-1, 0, 1] : List ℚ) [-1, 1]).1 := by native_decide
 /-- Sparse: the extended Euclidean algorithm runs on the sparse carrier too — the gcd of
 `x² − 1` and `x − 1` has honest degree `1`. -/
-example : cdeg (cgcdExtCore 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
+example : cdeg (cgcdExt (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
     (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
 
 end DeepWiki.SymbolicIntegration.CPolyRepr
