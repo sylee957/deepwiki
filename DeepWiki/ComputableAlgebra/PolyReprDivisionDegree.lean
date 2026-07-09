@@ -49,4 +49,40 @@ theorem degree_reduce_step_lt (p q : P α)
       Polynomial.leadingCoeff_X_pow, mul_one, hcval, div_mul_cancel₀ _ hlcQ]
   exact Polynomial.degree_sub_lt hdegR.symm hP hlcR.symm
 
+omit [CFieldSpec α] in
+/-- A division by a zero dividend leaves a zero remainder (the algorithm returns the dividend). -/
+theorem cisZero_cdivmod_snd (fuel : ℕ) (p q : P α) (h : cisZero (P := P) p = true) :
+    cisZero (P := P) (cdivmod fuel p q).2 = true := by
+  cases fuel with
+  | zero => rw [cdivmod]; exact h
+  | succ n => rw [cdivmod, if_pos (Or.inr h)]; exact h
+
+/-- **The remainder is fully reduced with enough fuel:** if `q ≠ 0` and `fuel > cdeg p`, then the
+`cdivmod` remainder is either zero or of honest degree `< cdeg q` — the Euclidean remainder property.
+Proven by threading `degree_reduce_step_lt` through the fuel recursion. -/
+theorem cdivmod_remainder_reduced :
+    ∀ (fuel : ℕ) (p q : P α), ¬ cisZero (P := P) q = true → cdeg p < fuel →
+      cisZero (P := P) (cdivmod fuel p q).2 = true ∨ cdeg (cdivmod fuel p q).2 < cdeg q
+  | 0, p, _, _, hlt => absurd hlt (by omega)
+  | fuel + 1, p, q, hq, hlt => by
+    rw [cdivmod]
+    by_cases h : cdeg p < cdeg q ∨ cisZero (P := P) p = true
+    · rw [if_pos h]
+      rcases h with h1 | h2
+      · exact Or.inr h1
+      · exact Or.inl h2
+    · rw [if_neg h]
+      obtain ⟨hnlt, hnz⟩ := not_or.mp h
+      set p' := csub p (mul
+        (cmonomial (P := P) (CField.div (clead p) (clead q)) (cdeg p - cdeg q)) q) with hp'
+      by_cases hz' : cisZero (P := P) p' = true
+      · exact Or.inl (cisZero_cdivmod_snd fuel p' q hz')
+      · have hdeg : (toPoly p').degree < (toPoly p).degree :=
+          hp' ▸ degree_reduce_step_lt p q hnz hq (not_lt.mp hnlt)
+        have hp'ne : toPoly p' ≠ 0 := fun hh => hz' ((cisZero_iff p').mpr hh)
+        have hcdeg : cdeg p' < cdeg p := by
+          rw [cdeg_eq_natDegree, cdeg_eq_natDegree]
+          exact Polynomial.natDegree_lt_natDegree hp'ne hdeg
+        exact cdivmod_remainder_reduced fuel p' q hq (by omega)
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
