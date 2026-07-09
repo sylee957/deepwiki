@@ -27,30 +27,26 @@ def bnorm : BPoly → BPoly
     | [] => if cisZero a then [] else [a]
     | r => a :: r
 
-/-- Coefficientwise addition of two `BPoly`s in `x` (each `x`-coefficient added via `cadd`). -/
-def badd : BPoly → BPoly → BPoly
-  | [], q => q
-  | p, [] => p
-  | a :: as, b :: bs => cadd a b :: badd as bs
+/-! The `BPoly` arithmetic is the ring-generalized generic engine at coefficient `CPolyQ`
+(`BPoly = CPoly CPolyQ`, keystone `CCommRing (CPoly ℚ)`): each `b*` is the corresponding `c*`. -/
 
-/-- Negation of a `BPoly`, each `x`-coefficient negated via `cneg`. -/
-def bneg (p : BPoly) : BPoly := p.map cneg
+/-- Coefficientwise addition of two `BPoly`s in `x` — the generic `cadd` at coefficient `CPolyQ`. -/
+def badd : BPoly → BPoly → BPoly := CPoly.cadd
 
-/-- Subtraction of `BPoly`s, `p − q := p + (−q)`. -/
-def bsub (p q : BPoly) : BPoly := badd p (bneg q)
+/-- Negation of a `BPoly` — the generic `cneg` at coefficient `CPolyQ`. -/
+def bneg (p : BPoly) : BPoly := CPoly.cneg p
 
-/-- Scale by a `CPolyQ` (a `ℚ[t]` scalar) `bscaleC c p`: multiply every `x`-coefficient by `c`. -/
-def bscaleC (c : CPolyQ) (p : BPoly) : BPoly := p.map (cmul c)
+/-- Subtraction of `BPoly`s — the generic `csub` at coefficient `CPolyQ`. -/
+def bsub (p q : BPoly) : BPoly := CPoly.csub p q
 
-/-- Shift in `x` `bshift k p = xᵏ · p`: prepend `k` zero `x`-coefficients. -/
-def bshift : ℕ → BPoly → BPoly
-  | 0, p => p
-  | n + 1, p => [] :: bshift n p
+/-- Scale by a `CPolyQ` (a `ℚ[t]` scalar) — the generic `cscale` at coefficient `CPolyQ`. -/
+def bscaleC (c : CPolyQ) (p : BPoly) : BPoly := CPoly.cscale c p
 
-/-- Polynomial multiplication of `BPoly`s in `x` (schoolbook convolution over `CPolyQ` coefficients). -/
-def bmul : BPoly → BPoly → BPoly
-  | [], _ => []
-  | a :: as, q => badd (bscaleC a q) ([] :: bmul as q)
+/-- Shift in `x` `bshift k p = xᵏ · p` — the generic `cshift` at coefficient `CPolyQ`. -/
+def bshift (k : ℕ) (p : BPoly) : BPoly := CPoly.cshift k p
+
+/-- Polynomial multiplication of `BPoly`s in `x` — the generic `cmul` at coefficient `CPolyQ`. -/
+def bmul : BPoly → BPoly → BPoly := CPoly.cmul
 
 /-- Zero test for a `BPoly`: `true` iff it normalizes to `[]`. -/
 def bisZero (p : BPoly) : Bool := bnorm p == []

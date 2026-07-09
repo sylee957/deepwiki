@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFF.Carrier
 
-/-! # Denominator clearing for fraction-free tower gcd benchmarks
+/-! # Denominator clearing for fraction-free tower gcd
 
 Conversion between `CFrac` coefficient polynomials and the bivariate `GBPoly`
 carrier.

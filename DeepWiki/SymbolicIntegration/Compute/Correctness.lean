@@ -176,21 +176,14 @@ theorem toBPoly_eq_toPolyG (p : BPoly) : toBPoly p = CPoly.toPoly p := by
     rw [toBPoly, ih, CPoly.toPolyG_cons, toPoly_eq_toPolyG,
       show CRingSpec.toR a = CPoly.toPoly a from rfl]
 
-/-- `badd = cadd` at coefficient `CPolyQ`. -/
-theorem badd_eq (p q : BPoly) : badd p q = CPoly.cadd p q := by
-  induction p generalizing q with
-  | nil => cases q <;> rfl
-  | cons a as ih => cases q with | nil => rfl | cons b bs => rw [badd, ih]; rfl
+/-- `badd = cadd` at coefficient `CPolyQ` (definitional). -/
+theorem badd_eq (p q : BPoly) : badd p q = CPoly.cadd p q := rfl
 
-/-- `bmul = cmul` at coefficient `CPolyQ`. -/
-theorem bmul_eq (p q : BPoly) : bmul p q = CPoly.cmul p q := by
-  induction p with
-  | nil => rfl
-  | cons a as ih => rw [bmul, ih, badd_eq]; rfl
+/-- `bmul = cmul` at coefficient `CPolyQ` (definitional). -/
+theorem bmul_eq (p q : BPoly) : bmul p q = CPoly.cmul p q := rfl
 
-/-- `bshift = cshift` at coefficient `CPolyQ`. -/
-theorem bshift_eq (k : ℕ) (p : BPoly) : bshift k p = CPoly.cshift k p := by
-  induction k with | zero => rfl | succ n ih => rw [bshift, ih]; rfl
+/-- `bshift = cshift` at coefficient `CPolyQ` (definitional). -/
+theorem bshift_eq (k : ℕ) (p : BPoly) : bshift k p = CPoly.cshift k p := rfl
 
 /-- `bneg = cneg` at coefficient `CPolyQ` (definitional). -/
 theorem bneg_eq (p : BPoly) : bneg p = CPoly.cneg p := rfl
@@ -198,9 +191,8 @@ theorem bneg_eq (p : BPoly) : bneg p = CPoly.cneg p := rfl
 /-- `bscaleC = cscale` at coefficient `CPolyQ` (definitional). -/
 theorem bscaleC_eq (c : CPolyQ) (p : BPoly) : bscaleC c p = CPoly.cscale c p := rfl
 
-/-- `bsub = csub` at coefficient `CPolyQ`. -/
-theorem bsub_eq (p q : BPoly) : bsub p q = CPoly.csub p q := by
-  rw [bsub, CPoly.csub, badd_eq, bneg_eq]
+/-- `bsub = csub` at coefficient `CPolyQ` (definitional). -/
+theorem bsub_eq (p q : BPoly) : bsub p q = CPoly.csub p q := rfl
 
 /-- `toBPoly` is additive: `badd` realizes `(ℚ[X])[X]` addition. -/
 theorem toBPoly_badd (p q : BPoly) : toBPoly (badd p q) = toBPoly p + toBPoly q := by
