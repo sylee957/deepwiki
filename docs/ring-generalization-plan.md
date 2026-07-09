@@ -81,17 +81,27 @@ that collapse `toR→toK`/`CCommRing→CField` on the field path automatically, 
 inserts at ~15 explicit-`rw` field-path sites across 10 files, plus `toK_cleadG_*`/`toK_cnormG_getD` field
 aliases of the now-`toR` chain lemmas. The full redesign was NOT needed. `cmonic` + field ops stay `[CField]`.
 
-**P4 — collapse `BPoly`.** Replace `BPoly` with `CPoly CPolyQ` (defeq), and each `b*` op with `c* @ CPolyQ`
-(`badd`→`cadd`, `bmul`→`cmul`, …); the pseudo-division subresultant (`bpsremainder`/`bsubresultantGcd`) →
-the generic ring-level subresultant instantiated at `CPolyQ`. Migrate the `SubresultantCorrectness/`
-cluster's bivariate lemmas to the generic ones. Delete the `b*` layer in `Compute/Subresultant`. *Verify:*
-the Rothstein–Trager log-part native_decide examples still pass. Risk: `SubresultantCorrectness` proofs may
-lean on `b*`-specific rewrite lemmas — port or re-derive from the generic satellites; do this last (it is
-the largest single chunk, ~1500 L).
+**P4 — collapse `BPoly` (IN PROGRESS).**
+- **P4a — DONE (commit `c7836ae8`).** Bridged the Compute ℚ-bivariate layer to the keystone:
+  `Compute.toPoly = CPoly.toPoly`, `toBPoly = CPoly.toPoly` (@ `CPoly CPolyQ`),
+  `badd/bmul/bshift/bneg/bscaleC/bsub = c*`. Collapsed the six `toBPoly_b*` homomorphism satellites to
+  generic-backed one-liners (`simp only [toBPoly_eq_toPolyG, b*_eq, CPoly.toPolyG_*]`).
+- **P4b — DONE (commit `6aec2625`).** Redefined the `b*` arithmetic ops as thin generic wrappers
+  (`badd := CPoly.cadd`, …); `b*_eq` bridges are now `rfl`. Deletes the duplicated recursions.
+- **P4 remaining (deferred — genuine, not duplicate):** `bnorm`/`bpsremainder`/`bsubresultantGcd` are the
+  real bivariate PRS *algorithm* (not the determinant `cSubresultant`); the `SubresultantCorrectness/`
+  cluster (1278 L) is the subresultant-PRS *correctness*, genuine content, not duplication. The residual
+  overlap is with `GBPolyCore` (`BPoly = GBPolyCore ℚ`), whose PRS ops coincide — but the correctness
+  developments (subresultant vs gcd) differ and unifying them is a cross-subtree correctness port, not a
+  mechanical collapse. Left as a separate arc.
 
-**P5 — unify `GBPoly`/`GBPolyCore`.** Both become `CPoly (CPoly B)`; delete the duplicate abbrev and
-re-point the 11 consumers. The fraction-free gcd (`cgcdFF*`) already works over a ring coefficient, so this
-is a type-alias unification. Gate.
+**P5 — unify `GBPoly`/`GBPolyCore`.**
+- **P5a — DONE (commit `250d3d05`).** The GBPoly op set in `GcdFF/Carrier.lean` (`gbnorm`/…/`gbprimitivePart`,
+  ~75 L) was a byte-identical **dead** duplicate of the live `GBPolyCore` machinery (leftover benchmark
+  scaffolding — zero references). Deleted; kept the live `GBPoly = List (CPoly B)` type alias.
+- **P5 remaining:** `GBPoly` and `GBPolyCore` are now both thin `List (CPoly B)` aliases used for different
+  roles (denominator carrier vs gcd carrier); the op-level duplication is gone. Full `CPoly (CPoly B)` +
+  generic-`c*` collapse of `GBPolyCore` shares the same correctness-port cost as P4's residual.
 
 ## Rollback & sequencing
 
