@@ -169,6 +169,13 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   `isCoprime_of_cgcdExt_isUnit` (unit gcd ⇒ Mathlib `IsCoprime`) — the partial-fractions entry point.
 - **Evaluation** (`PolyReprDenote.lean`): `ceval` with `toR_ceval` (= Mathlib `eval`), the ring-hom
   squares `toR_ceval_add`/`toR_ceval_mul`, and the factor theorem `ceval_eq_zero_iff_dvd`.
+- **Resultant** (`PolyReprResultant.lean`, in progress): `clistDetn` (computable cofactor determinant
+  over `CCommRing`) with the bridge `toR_clistDetn` (= Mathlib `listDetn`, hence `Matrix.det` via
+  `ListDet.listDetn_eq_det`); the Sylvester matrix `cSylvester` and `cResultant` = its `clistDetn`,
+  `native_decide`-validated against known resultants (`res(x−1,x−2)=−1`, `res(x²−1,x−1)=0`). Remaining:
+  the abstract bridge `toR (cResultant p q) = Polynomial.resultant (toPoly p) (toPoly q)` — needs
+  `matrixOfList (cSylvester …)` matched to `Polynomial.sylvester` (a `Fin`-`addCases`/`Set.Icc` layout
+  match, possibly up to a determinant-preserving permutation) then `resultant_map_map`.
 
 Each computable op reduces under `native_decide` on both the dense `List` and sparse `SparsePoly`
 carriers — the same algorithm, two representations — and the algebraic correctness is a-priori (not merely
