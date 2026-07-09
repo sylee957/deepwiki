@@ -40,30 +40,30 @@ theorem recombine_imp_not_irreducible {f : List ℤ} {n : ℤ} {facs : List (Lis
   by_cases hcond : 2 ≤ dc ∧ dc - 1 < lengthTrim f - 1 ∧ dividesExactly f cand (dc - 1)
   · obtain ⟨hdc2, hdclt, hdivex⟩ := hcond
     -- f = cand * q over ℤ
-    have hfac : toPolyZ f = toPoly cand * toPoly (divmodByMonic f cand (dc - 1)).1 :=
+    have hfac : toPolyZ f = listToPoly cand * listToPoly (divmodByMonic f cand (dc - 1)).1 :=
       dividesExactly_dvd hdivex
     set q := (divmodByMonic f cand (dc - 1)).1 with hqdef
-    -- natDegree (toPoly cand) = dc - 1  (cand reads as nonzero: lengthTrim ≥ 2 > 0)
+    -- natDegree (listToPoly cand) = dc - 1  (cand reads as nonzero: lengthTrim ≥ 2 > 0)
     have hcandne : lengthTrim cand ≠ 0 := by omega
-    have hcanddeg : (toPoly cand).natDegree = dc - 1 := natDegree_toPoly_eq hcandne
+    have hcanddeg : (listToPoly cand).natDegree = dc - 1 := natDegree_toPoly_eq hcandne
     -- N = natDegree f
     have hN : (toPolyZ f).natDegree = N := hmon.natDegree_eq
-    have hcandne0 : toPoly cand ≠ 0 := by
+    have hcandne0 : listToPoly cand ≠ 0 := by
       rw [Ne, toPoly_eq_zero_iff_lengthTrim]; omega
     have hfne0 : toPolyZ f ≠ 0 := hmon.monic.ne_zero
-    have hqpoly_ne0 : toPoly q ≠ 0 := by
+    have hqpoly_ne0 : listToPoly q ≠ 0 := by
       intro h; rw [hfac, h, mul_zero] at hfne0; exact hfne0 rfl
     -- degree sum: natDegree f = natDegree cand + natDegree q
-    have hdegsum : (toPoly cand).natDegree + (toPoly q).natDegree = N := by
+    have hdegsum : (listToPoly cand).natDegree + (listToPoly q).natDegree = N := by
       have := Polynomial.natDegree_mul hcandne0 hqpoly_ne0
       rw [← hfac, hN] at this; omega
     -- natDegree cand ≥ 1
-    have hcandpos : 0 < (toPoly cand).natDegree := by rw [hcanddeg]; omega
+    have hcandpos : 0 < (listToPoly cand).natDegree := by rw [hcanddeg]; omega
     -- natDegree f = lengthTrim f - 1, so dc - 1 < N gives natDegree q ≥ 1
     have hfdeg : (toPolyZ f).natDegree = lengthTrim f - 1 :=
       natDegree_toPoly_eq (by rw [Ne, ← toPoly_eq_zero_iff_lengthTrim]; exact hfne0)
     have hNbig : dc - 1 < N := by rw [hN] at hfdeg; omega
-    have hqpos : 0 < (toPoly q).natDegree := by omega
+    have hqpos : 0 < (listToPoly q).natDegree := by omega
     -- both factors are non-units; conclude not irreducible
     intro hirr
     rcases hirr.isUnit_or_isUnit hfac with hu | hu

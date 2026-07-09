@@ -74,10 +74,10 @@ def afLogSumNumWf (f : CPoly α) (args : List (α × CPoly α)) (cofs : List (CP
 
 /-- Multi-term log-soundness predicate: `Σ cᵢ·afDerivWf(uᵢ)/uᵢ = logpart` in the quotient,
 cross-multiplied by the common denominator. -/
-def IsGeneralLogIntegralWf (f logpart commonDenom : CPoly α)
+def IsGeneralLogIntegralWf (f logpart commonDenomQ : CPoly α)
     (args : List (α × CPoly α)) (cofs : List (CPoly α)) : Prop :=
   Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
-    = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenom))
+    = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenomQ))
 
 omit [CDiffFieldSpec α] in
 /-- The residue-sum numerator of the empty log part is zero in the quotient. -/
@@ -115,23 +115,23 @@ theorem mk_toPolyG_afLogSumNumWf_eq_sum (f : CPoly α) (args : List (α × CPoly
 
 omit [CDiffFieldSpec α] in
 /-- The log part composes from the per-term residue match. -/
-theorem isGeneralLogIntegralWf_of_residue_match (f logpart commonDenom : CPoly α)
+theorem isGeneralLogIntegralWf_of_residue_match (f logpart commonDenomQ : CPoly α)
     (args : List (α × CPoly α)) (cofs : List (CPoly α))
     (hmatch : ((args.zip cofs).map (fun p =>
           Ideal.Quotient.mk (afIdeal f)
             (toPolyG (afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2)))).sum
-        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenom))) :
-    IsGeneralLogIntegralWf f logpart commonDenom args cofs := by
+        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenomQ))) :
+    IsGeneralLogIntegralWf f logpart commonDenomQ args cofs := by
   rw [IsGeneralLogIntegralWf, mk_toPolyG_afLogSumNumWf_eq_sum, hmatch]
 
 omit [CDiffFieldSpec α] in
 /-- A one-term log part composes to `IsGeneralLogIntegralWf`. -/
-theorem isGeneralLogIntegralWf_singleton (f logpart commonDenom : CPoly α)
+theorem isGeneralLogIntegralWf_singleton (f logpart commonDenomQ : CPoly α)
     (c : α) (u cof : CPoly α)
     (hmatch : Ideal.Quotient.mk (afIdeal f)
           (toPolyG (afMul f (cscaleG c (afDerivWf f u)) cof))
-        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenom))) :
-    IsGeneralLogIntegralWf f logpart commonDenom [(c, u)] [cof] := by
+        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenomQ))) :
+    IsGeneralLogIntegralWf f logpart commonDenomQ [(c, u)] [cof] := by
   apply isGeneralLogIntegralWf_of_residue_match
   simpa using hmatch
 
@@ -331,7 +331,7 @@ end CPoly
 /-! ### Composing rational + log into the full algebraic integral soundness `D(∫f) = f`
 
 The full soundness `D(v + Σ cᵢ log uᵢ) = f` splits into the rational part `afDerivWf(v) = ratPart` and the
-log part `IsGeneralLogIntegralWf`. Cross-multiplied by `commonDenom = ∏ uⱼ`, the composed predicate
+log part `IsGeneralLogIntegralWf`. Cross-multiplied by `commonDenomQ = ∏ uⱼ`, the composed predicate
 `IsGeneralAlgebraicIntegralWf` follows from the two halves plus the split `f = ratPart + logPart`. -/
 
 namespace CPoly
@@ -339,24 +339,24 @@ namespace CPoly
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
 /-- The fuel-free full general algebraic-integral soundness predicate. -/
-def IsGeneralAlgebraicIntegralWf (f g v commonDenom : CPoly α)
+def IsGeneralAlgebraicIntegralWf (f g v commonDenomQ : CPoly α)
     (args : List (α × CPoly α)) (cofs : List (CPoly α)) : Prop :=
-  Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f (afDerivWf f v) commonDenom))
+  Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f (afDerivWf f v) commonDenomQ))
     + Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
-  = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f g commonDenom))
+  = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f g commonDenomQ))
 
 omit [CDiffFieldSpec α] in
 /-- The fuel-free full general algebraic integral composes from Wf rational and log soundness. -/
-theorem isGeneralAlgebraicIntegralWf_of_parts (f g v ratPart logPart commonDenom : CPoly α)
+theorem isGeneralAlgebraicIntegralWf_of_parts (f g v ratPart logPart commonDenomQ : CPoly α)
     (args : List (α × CPoly α)) (cofs : List (CPoly α))
     (hrat : Ideal.Quotient.mk (afIdeal f)
-          (toPolyG (afMul f (afDerivWf f v) commonDenom))
-        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f ratPart commonDenom)))
-    (hlog : IsGeneralLogIntegralWf f logPart commonDenom args cofs)
-    (hsplit : Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f ratPart commonDenom))
-        + Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logPart commonDenom))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f g commonDenom))) :
-    IsGeneralAlgebraicIntegralWf f g v commonDenom args cofs := by
+          (toPolyG (afMul f (afDerivWf f v) commonDenomQ))
+        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f ratPart commonDenomQ)))
+    (hlog : IsGeneralLogIntegralWf f logPart commonDenomQ args cofs)
+    (hsplit : Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f ratPart commonDenomQ))
+        + Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logPart commonDenomQ))
+      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f g commonDenomQ))) :
+    IsGeneralAlgebraicIntegralWf f g v commonDenomQ args cofs := by
   rw [IsGeneralAlgebraicIntegralWf, hrat, hlog, hsplit]
 
 end CPoly

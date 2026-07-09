@@ -211,9 +211,9 @@ def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix ℚ) : List (List (QFunNZG ℚ)
   (List.range n).map (fun r =>
     (List.range n).map (fun k => qxOfNum ((ipRows.getD k []).getD r [])))
 
-/-- The common denominator of a `K(x)`-matrix `commonDenom M`: the product over all entries of their
+/-- The common denominator of a `K(x)`-matrix `commonDenomQ M`: the product over all entries of their
 normalized denominators (`z.1.2`), a coarse common multiple used to clear `M` to `K[x]`. -/
-def commonDenom (M : List (List (QFunNZG ℚ))) : CPoly ℚ :=
+def commonDenomQ (M : List (List (QFunNZG ℚ))) : CPoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
       let den := cnormG (z.1.2 : CPoly ℚ)
@@ -246,7 +246,7 @@ def idealizerBasis (f : CPoly (QFunNZG ℚ)) (orderBasis : List (CPoly (QFunNZG 
         let Mj := matMulG Binv (multMatrix f ιj)
         Mj ++ acc) []
     -- clear to K[x] by a common denominator δ
-    let δ : CPoly ℚ := commonDenom M
+    let δ : CPoly ℚ := commonDenomQ M
     let N : PolyMatrix ℚ := M.map (clearRow δ)
     -- Hermite-reduce N over K[x]; the first n rows are the upper-triangular invertible part
     let reduced := hermiteRowReduce N

@@ -14,17 +14,17 @@ def dividesExactly (f g : List ℤ) (dg : ℕ) : Bool :=
   decide (lengthTrim (divmodByMonic f g dg).2 = 0)
 
 /-- A passing exact-division test yields the factorization
-`toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1`. -/
+`toPolyZ f = listToPoly g * listToPoly (divmodByMonic f g dg).1`. -/
 theorem dividesExactly_dvd {f g : List ℤ} {dg : ℕ} (h : dividesExactly f g dg = true) :
-    toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1 := by
+    toPolyZ f = listToPoly g * listToPoly (divmodByMonic f g dg).1 := by
   rw [dividesExactly, decide_eq_true_eq] at h
   have hid := divmodByMonic_spec f g dg
-  have hr0 : toPoly (divmodByMonic f g dg).2 = 0 := toPoly_eq_zero_of_lengthTrim_eq_zero h
+  have hr0 : listToPoly (divmodByMonic f g dg).2 = 0 := toPoly_eq_zero_of_lengthTrim_eq_zero h
   rw [toPolyZ, hid, hr0, add_zero]
 
-/-- A passing exact-division test yields a genuine **divisibility** `toPoly g ∣ toPolyZ f`. -/
+/-- A passing exact-division test yields a genuine **divisibility** `listToPoly g ∣ toPolyZ f`. -/
 theorem dvd_of_dividesExactly {f g : List ℤ} {dg : ℕ} (h : dividesExactly f g dg = true) :
-    toPoly g ∣ toPolyZ f :=
+    listToPoly g ∣ toPolyZ f :=
   ⟨_, dividesExactly_dvd h⟩
 
 /-- Shift `a % n` into the symmetric range `(−n/2, n/2]`: subtract `n` when the residue exceeds
@@ -40,11 +40,11 @@ def symModN (n : ℤ) (l : List ℤ) : List ℤ := l.map (symMod n)
 def listProd (fs : List (List ℤ)) : List ℤ :=
   fs.foldr (fun a acc => mulL a acc) [1]
 
-/-- `toPoly` of a `listProd` is the product of the factors' `toPoly`s. -/
+/-- `listToPoly` of a `listProd` is the product of the factors' `listToPoly`s. -/
 theorem toPoly_listProd (fs : List (List ℤ)) :
-    toPoly (listProd fs) = (fs.map toPoly).prod := by
+    listToPoly (listProd fs) = (fs.map listToPoly).prod := by
   induction fs with
-  | nil => simp [listProd, toPoly]
+  | nil => simp [listProd, listToPoly]
   | cons a as ih =>
     rw [listProd, List.foldr_cons, toPoly_mulL, List.map_cons, List.prod_cons, ← listProd, ih]
 

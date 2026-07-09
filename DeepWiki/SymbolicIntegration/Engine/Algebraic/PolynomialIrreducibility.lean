@@ -22,14 +22,14 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ## The computable coefficient-`List` polynomial engine
 
-Coefficients low-to-high: `[a₀, a₁, …]` ↦ `a₀ + a₁ X + …`. `toPoly` is the Horner reading
-`toPoly (a :: as) = C a + X * toPoly as`. `addL`/`mulL` are computable list arithmetic; the
+Coefficients low-to-high: `[a₀, a₁, …]` ↦ `a₀ + a₁ X + …`. `listToPoly` is the Horner reading
+`listToPoly (a :: as) = C a + X * listToPoly as`. `addL`/`mulL` are computable list arithmetic; the
 bridges `toPoly_addL` / `toPoly_mulL` connect them to Mathlib `Polynomial` `+`/`*`. -/
 
 /-- Horner reading of a coefficient list as a polynomial: `[a₀,…,aₖ] ↦ Σ aᵢ Xⁱ`. -/
-noncomputable def toPoly {R : Type*} [Semiring R] : List R → R[X]
+noncomputable def listToPoly {R : Type*} [Semiring R] : List R → R[X]
   | [] => 0
-  | a :: as => C a + X * toPoly as
+  | a :: as => C a + X * listToPoly as
 
 /-- Scale every coefficient by `c` (the `C c * ·` action on lists). -/
 def scaleL {R : Type*} [Mul R] (c : R) : List R → List R
@@ -47,16 +47,16 @@ def mulL {R : Type*} [Zero R] [Add R] [Mul R] : List R → List R → List R
   | [], _ => []
   | a :: as, bs => addL (scaleL a bs) (0 :: mulL as bs)
 
-@[simp] theorem toPoly_nil {R : Type*} [Semiring R] : toPoly ([] : List R) = 0 := rfl
+@[simp] theorem toPoly_nil {R : Type*} [Semiring R] : listToPoly ([] : List R) = 0 := rfl
 
 @[simp] theorem toPoly_cons {R : Type*} [Semiring R] (a : R) (as : List R) :
-    toPoly (a :: as) = C a + X * toPoly as := rfl
+    listToPoly (a :: as) = C a + X * listToPoly as := rfl
 
-/-- `(toPoly l).coeff i = l.getD i 0`: the Horner reading recovers the list entries. -/
+/-- `(listToPoly l).coeff i = l.getD i 0`: the Horner reading recovers the list entries. -/
 theorem coeff_toPoly {R : Type*} [Semiring R] (l : List R) (i : ℕ) :
-    (toPoly l).coeff i = l.getD i 0 := by
+    (listToPoly l).coeff i = l.getD i 0 := by
   induction l generalizing i with
-  | nil => simp [toPoly]
+  | nil => simp [listToPoly]
   | cons a as ih =>
     rw [toPoly_cons, coeff_add]
     cases i with
@@ -65,18 +65,18 @@ theorem coeff_toPoly {R : Type*} [Semiring R] (l : List R) (i : ℕ) :
       rw [coeff_C, if_neg (Nat.succ_ne_zero i), zero_add, coeff_X_mul, ih, List.getD]
       rfl
 
-/-- `toPoly` of a scaled list is `C c *` the polynomial. -/
+/-- `listToPoly` of a scaled list is `C c *` the polynomial. -/
 theorem toPoly_scaleL {R : Type*} [CommSemiring R] (c : R) (as : List R) :
-    toPoly (scaleL c as) = C c * toPoly as := by
+    listToPoly (scaleL c as) = C c * listToPoly as := by
   induction as with
   | nil => simp [scaleL]
   | cons a as ih =>
     simp only [scaleL, toPoly_cons, ih, C_mul]
     ring
 
-/-- `toPoly` is additive on `addL`. -/
+/-- `listToPoly` is additive on `addL`. -/
 theorem toPoly_addL {R : Type*} [CommSemiring R] (as bs : List R) :
-    toPoly (addL as bs) = toPoly as + toPoly bs := by
+    listToPoly (addL as bs) = listToPoly as + listToPoly bs := by
   induction as generalizing bs with
   | nil => simp [addL]
   | cons a as ih =>
@@ -86,19 +86,19 @@ theorem toPoly_addL {R : Type*} [CommSemiring R] (as bs : List R) :
       simp only [addL, toPoly_cons, ih, C_add]
       ring
 
-/-- `toPoly (mulL a b) = toPoly a * toPoly b`: list multiplication realizes polynomial
+/-- `listToPoly (mulL a b) = listToPoly a * listToPoly b`: list multiplication realizes polynomial
 multiplication. -/
 theorem toPoly_mulL {R : Type*} [CommSemiring R] (as bs : List R) :
-    toPoly (mulL as bs) = toPoly as * toPoly bs := by
+    listToPoly (mulL as bs) = listToPoly as * listToPoly bs := by
   induction as with
   | nil => simp [mulL]
   | cons a as ih =>
     simp only [mulL, toPoly_addL, toPoly_scaleL, toPoly_cons, ih, map_zero, zero_add]
     ring
 
-/-- Equal `toPoly` and equal length force equal lists. -/
+/-- Equal `listToPoly` and equal length force equal lists. -/
 theorem list_eq_of_toPoly_eq {R : Type*} [Semiring R] [Inhabited R] {l₁ l₂ : List R}
-    (hlen : l₁.length = l₂.length) (h : toPoly l₁ = toPoly l₂) : l₁ = l₂ := by
+    (hlen : l₁.length = l₂.length) (h : listToPoly l₁ = listToPoly l₂) : l₁ = l₂ := by
   apply List.ext_getElem! hlen
   intro i
   by_cases hi : i < l₁.length
@@ -114,21 +114,21 @@ theorem list_eq_of_toPoly_eq {R : Type*} [Semiring R] [Inhabited R] {l₁ l₂ :
 A coefficient list `lower ++ [1]` (lower of length `d`) reads as a monic polynomial of
 `natDegree` exactly `d`. -/
 
-/-- `toPoly lower` has `degree < lower.length` (a length-`d` list reads as a poly of degree
+/-- `listToPoly lower` has `degree < lower.length` (a length-`d` list reads as a poly of degree
 `< d`): all coefficients at index `≥ d` are `0`. -/
 theorem toPoly_degree_lt {R : Type*} [Semiring R] (lower : List R) :
-    (toPoly lower).degree < lower.length := by
+    (listToPoly lower).degree < lower.length := by
   rw [degree_lt_iff_coeff_zero]
   intro i hi
   rw [coeff_toPoly, List.getD_eq_default]
   exact_mod_cast hi
 
-/-- The polynomial of a candidate list `lower ++ [1]` is `X^d + (toPoly lower)`, where
+/-- The polynomial of a candidate list `lower ++ [1]` is `X^d + (listToPoly lower)`, where
 `d = lower.length`. -/
 theorem toPoly_append_one {R : Type*} [CommSemiring R] (lower : List R) :
-    toPoly (lower ++ [1]) = toPoly lower + X ^ lower.length := by
+    listToPoly (lower ++ [1]) = listToPoly lower + X ^ lower.length := by
   induction lower with
-  | nil => simp [toPoly]
+  | nil => simp [listToPoly]
   | cons a as ih =>
     simp only [List.cons_append, toPoly_cons, ih, List.length_cons]
     ring
@@ -136,9 +136,9 @@ theorem toPoly_append_one {R : Type*} [CommSemiring R] (lower : List R) :
 /-- A candidate list `lower ++ [1]` (lower of length `d`) reads as a monic poly of degree
 exactly `d`. -/
 theorem isMonicOfDegree_toPoly_append_one {R : Type*} [CommSemiring R] [Nontrivial R]
-    (lower : List R) : IsMonicOfDegree (toPoly (lower ++ [1])) lower.length := by
+    (lower : List R) : IsMonicOfDegree (listToPoly (lower ++ [1])) lower.length := by
   rw [toPoly_append_one]
-  have hlt : (toPoly lower).degree < ((lower.length : ℕ) : WithBot ℕ) :=
+  have hlt : (listToPoly lower).degree < ((lower.length : ℕ) : WithBot ℕ) :=
     (toPoly_degree_lt lower)
   refine ⟨?_, ?_⟩
   · refine natDegree_eq_of_degree_eq_some ?_
@@ -148,11 +148,11 @@ theorem isMonicOfDegree_toPoly_append_one {R : Type*} [CommSemiring R] [Nontrivi
   · rw [add_comm]
     exact monic_X_pow_add hlt
 
-/-- Any monic `q` of `natDegree` exactly `d` is `toPoly (lower ++ [1])` for
+/-- Any monic `q` of `natDegree` exactly `d` is `listToPoly (lower ++ [1])` for
 `lower = [q.coeff 0, …, q.coeff (d-1)]`. -/
 theorem eq_toPoly_lower_append_one {R : Type*} [CommRing R] {q : R[X]} {d : ℕ}
     (hq : IsMonicOfDegree q d) :
-    q = toPoly ((List.ofFn (fun i : Fin d => q.coeff i)) ++ [1]) := by
+    q = listToPoly ((List.ofFn (fun i : Fin d => q.coeff i)) ++ [1]) := by
   apply Polynomial.ext
   intro i
   rw [coeff_toPoly]
@@ -179,16 +179,16 @@ A computable, fixed-length normal form for polynomial-equality comparison. -/
 def padCoeffs {R : Type*} [Zero R] (l : List R) (m : ℕ) : List R :=
   (List.range m).map (fun i => l.getD i 0)
 
-/-- `padCoeffs l m` reads index `i < m` as `l.getD i 0 = (toPoly l).coeff i`. -/
+/-- `padCoeffs l m` reads index `i < m` as `l.getD i 0 = (listToPoly l).coeff i`. -/
 theorem padCoeffs_getElem {R : Type*} [Zero R] (l : List R) (m i : ℕ) (hi : i < m) :
     (padCoeffs l m).getD i 0 = l.getD i 0 := by
   rw [padCoeffs, List.getD_eq_getElem _ _ (by simpa using hi)]
   simp
 
-/-- If two lists have equal `toPoly`, their fixed-length normal forms coincide: equal
+/-- If two lists have equal `listToPoly`, their fixed-length normal forms coincide: equal
 polynomials have equal coefficients, hence equal `padCoeffs`. -/
 theorem padCoeffs_eq_of_toPoly_eq {R : Type*} [Semiring R] {l₁ l₂ : List R} (m : ℕ)
-    (h : toPoly l₁ = toPoly l₂) : padCoeffs l₁ m = padCoeffs l₂ m := by
+    (h : listToPoly l₁ = listToPoly l₂) : padCoeffs l₁ m = padCoeffs l₂ m := by
   unfold padCoeffs
   apply List.map_congr_left
   intro i hi
@@ -197,8 +197,8 @@ theorem padCoeffs_eq_of_toPoly_eq {R : Type*} [Semiring R] {l₁ l₂ : List R} 
 /-- If two lists agree on their first `m` coefficients and both read as polynomials of
 `degree < m`, they read as the same polynomial. -/
 theorem toPoly_eq_of_padCoeffs_eq {R : Type*} [Semiring R] {l₁ l₂ : List R} {m : ℕ}
-    (h1 : (toPoly l₁).degree < m) (h2 : (toPoly l₂).degree < m)
-    (h : padCoeffs l₁ m = padCoeffs l₂ m) : toPoly l₁ = toPoly l₂ := by
+    (h1 : (listToPoly l₁).degree < m) (h2 : (listToPoly l₂).degree < m)
+    (h : padCoeffs l₁ m = padCoeffs l₂ m) : listToPoly l₁ = listToPoly l₂ := by
   apply Polynomial.ext
   intro i
   by_cases hi : i < m
@@ -235,15 +235,15 @@ instance {p : ℕ} [NeZero p] (cf : List (ZMod p)) (n : ℕ) : Decidable (irredu
 
 /-! ## Soundness of the 𝔽_p decision -/
 
-/-- If the list search reports a monic degree-`n` target `cf` irreducible, then `toPoly cf`
+/-- If the list search reports a monic degree-`n` target `cf` irreducible, then `listToPoly cf`
 is `Irreducible` over `𝔽_p`. -/
 theorem irreducible_toPoly_of_irreducibleListModP {p : ℕ} [Fact p.Prime] {cf : List (ZMod p)}
-    {n : ℕ} (hmon : IsMonicOfDegree (toPoly cf) n) (hirr : irreducibleListModP cf n) :
-    Irreducible (toPoly cf) := by
+    {n : ℕ} (hmon : IsMonicOfDegree (listToPoly cf) n) (hirr : irreducibleListModP cf n) :
+    Irreducible (listToPoly cf) := by
   obtain ⟨hn, hsearch⟩ := hirr
-  have hfp_mon : (toPoly cf).Monic := hmon.monic
-  have hfp_deg : (toPoly cf).natDegree = n := hmon.natDegree_eq
-  have hne1 : toPoly cf ≠ 1 := by
+  have hfp_mon : (listToPoly cf).Monic := hmon.monic
+  have hfp_deg : (listToPoly cf).natDegree = n := hmon.natDegree_eq
+  have hne1 : listToPoly cf ≠ 1 := by
     intro h; rw [h, natDegree_one] at hfp_deg; omega
   rw [hfp_mon.irreducible_iff_lt_natDegree_lt hne1]
   rintro q hq hd ⟨g, hfac⟩
@@ -261,21 +261,21 @@ theorem irreducible_toPoly_of_irreducibleListModP {p : ℕ} [Fact p.Prime] {cf :
   have hgmon : IsMonicOfDegree g (n - q.natDegree) := by rw [hgdeg]; exact ⟨rfl, hg⟩
   -- the search range covers `d = natDegree q`
   have hrange : q.natDegree ∈ Finset.Ioc 0 (n / 2) := Finset.mem_Ioc.mpr ⟨hd1, hd2⟩
-  -- feed the lower-coefficient witnesses; product list ↦ same `toPoly` as `cf`
+  -- feed the lower-coefficient witnesses; product list ↦ same `listToPoly` as `cf`
   refine hsearch q.natDegree hrange (fun i => q.coeff i)
     (fun i : Fin (n - q.natDegree) => g.coeff (i : ℕ)) ?_
   apply padCoeffs_eq_of_toPoly_eq
   rw [toPoly_mulL]
   rw [← eq_toPoly_lower_append_one hqmon, ← eq_toPoly_lower_append_one hgmon, hfac]
 
-/-- The converse: a genuinely `Irreducible` monic degree-`n` target `toPoly cf` passes the
+/-- The converse: a genuinely `Irreducible` monic degree-`n` target `listToPoly cf` passes the
 list search. -/
 theorem irreducibleListModP_of_irreducible {p : ℕ} [Fact p.Prime] {cf : List (ZMod p)}
-    {n : ℕ} (hmon : IsMonicOfDegree (toPoly cf) n) (hirr : Irreducible (toPoly cf)) :
+    {n : ℕ} (hmon : IsMonicOfDegree (listToPoly cf) n) (hirr : Irreducible (listToPoly cf)) :
     irreducibleListModP cf n := by
-  have hfp_mon : (toPoly cf).Monic := hmon.monic
-  have hfp_deg : (toPoly cf).natDegree = n := hmon.natDegree_eq
-  have hne1 : toPoly cf ≠ 1 := by intro h; rw [h] at hirr; exact hirr.not_isUnit isUnit_one
+  have hfp_mon : (listToPoly cf).Monic := hmon.monic
+  have hfp_deg : (listToPoly cf).natDegree = n := hmon.natDegree_eq
+  have hne1 : listToPoly cf ≠ 1 := by intro h; rw [h] at hirr; exact hirr.not_isUnit isUnit_one
   -- degree of an irreducible monic is ≥ 1 (else it is `1`, a unit)
   have hn : 1 ≤ n := by
     rcases Nat.eq_zero_or_pos n with h0 | h0
@@ -288,17 +288,17 @@ theorem irreducibleListModP_of_irreducible {p : ℕ} [Fact p.Prime] {cf : List (
   -- the two candidate polynomials and their degrees
   have hqlen : (List.ofFn vq).length = d := List.length_ofFn
   have hglen : (List.ofFn vg).length = n - d := List.length_ofFn
-  have hqm : IsMonicOfDegree (toPoly (List.ofFn vq ++ [1])) d := by
+  have hqm : IsMonicOfDegree (listToPoly (List.ofFn vq ++ [1])) d := by
     have := isMonicOfDegree_toPoly_append_one (List.ofFn vq); rwa [hqlen] at this
-  have hgm : IsMonicOfDegree (toPoly (List.ofFn vg ++ [1])) (n - d) := by
+  have hgm : IsMonicOfDegree (listToPoly (List.ofFn vg ++ [1])) (n - d) := by
     have := isMonicOfDegree_toPoly_append_one (List.ofFn vg); rwa [hglen] at this
   -- the product is monic of degree n
   have hprod : IsMonicOfDegree
-      (toPoly (List.ofFn vq ++ [1]) * toPoly (List.ofFn vg ++ [1])) n := by
+      (listToPoly (List.ofFn vq ++ [1]) * listToPoly (List.ofFn vg ++ [1])) n := by
     have h := hqm.mul hgm
     rwa [Nat.add_sub_cancel' (le_trans hd2 (Nat.div_le_self n 2))] at h
   -- equal padCoeffs + degree bounds ⟹ equal polynomials ⟹ a real factorization
-  have heq : toPoly (List.ofFn vq ++ [1]) * toPoly (List.ofFn vg ++ [1]) = toPoly cf := by
+  have heq : listToPoly (List.ofFn vq ++ [1]) * listToPoly (List.ofFn vg ++ [1]) = listToPoly cf := by
     rw [← toPoly_mulL]
     refine toPoly_eq_of_padCoeffs_eq ?_ ?_ hcontra
     · refine (degree_le_natDegree).trans_lt ?_
@@ -307,35 +307,35 @@ theorem irreducibleListModP_of_irreducible {p : ℕ} [Fact p.Prime] {cf : List (
     · refine (degree_le_natDegree).trans_lt ?_
       rw [hfp_deg]
       exact_mod_cast Nat.lt_succ_self n
-  -- `toPoly (ofFn vq ++ [1])` is a monic degree-d divisor with `1 ≤ d ≤ n/2`: contradiction
+  -- `listToPoly (ofFn vq ++ [1])` is a monic degree-d divisor with `1 ≤ d ≤ n/2`: contradiction
   rw [hfp_mon.irreducible_iff_lt_natDegree_lt hne1] at hirr
-  refine hirr (toPoly (List.ofFn vq ++ [1])) hqm.monic ?_ ⟨_, heq.symm⟩
+  refine hirr (listToPoly (List.ofFn vq ++ [1])) hqm.monic ?_ ⟨_, heq.symm⟩
   rw [Finset.mem_Ioc, hqm.natDegree_eq, hfp_deg]
   exact ⟨hd1, hd2⟩
 
 /-- The list search decides irreducibility of a monic degree-`n` target over `𝔽_p` exactly. -/
 theorem irreducibleListModP_iff_irreducible {p : ℕ} [Fact p.Prime] {cf : List (ZMod p)}
-    {n : ℕ} (hmon : IsMonicOfDegree (toPoly cf) n) :
-    irreducibleListModP cf n ↔ Irreducible (toPoly cf) :=
+    {n : ℕ} (hmon : IsMonicOfDegree (listToPoly cf) n) :
+    irreducibleListModP cf n ↔ Irreducible (listToPoly cf) :=
   ⟨irreducible_toPoly_of_irreducibleListModP hmon, irreducibleListModP_of_irreducible hmon⟩
 
 /-! ## Reduction `ℤ[X] → 𝔽_p[X]` and the lift to `ℚ` -/
 
 /-- Read an integer coefficient list as `f : ℤ[X]` — the polynomial the certificate is about. -/
-noncomputable def toPolyZ (cf : List ℤ) : ℤ[X] := toPoly cf
+noncomputable def toPolyZ (cf : List ℤ) : ℤ[X] := listToPoly cf
 
 /-- Reduce a `ℤ`-coefficient list to a `(ZMod p)`-coefficient list (entrywise `Int.cast`):
-the mod-`p` reduction at the list level. `toPoly` commutes with it
+the mod-`p` reduction at the list level. `listToPoly` commutes with it
 (`toPoly_reduceCoeffs`). -/
 def reduceCoeffs (p : ℕ) (cf : List ℤ) : List (ZMod p) := cf.map (Int.cast)
 
-/-- `toPoly` commutes with mod-`p` reduction: `toPoly (reduceCoeffs p cf) = (toPolyZ cf).map …`
+/-- `listToPoly` commutes with mod-`p` reduction: `listToPoly (reduceCoeffs p cf) = (toPolyZ cf).map …`
 (the entrywise `Int.cast` on coefficients is the `Polynomial.map` of `Int.castRingHom`). -/
 theorem toPoly_reduceCoeffs (p : ℕ) (cf : List ℤ) :
-    toPoly (reduceCoeffs p cf) = (toPolyZ cf).map (Int.castRingHom (ZMod p)) := by
+    listToPoly (reduceCoeffs p cf) = (toPolyZ cf).map (Int.castRingHom (ZMod p)) := by
   unfold reduceCoeffs toPolyZ
   induction cf with
-  | nil => simp [toPoly]
+  | nil => simp [listToPoly]
   | cons a as ih =>
     simp only [List.map_cons, toPoly_cons, ih, Polynomial.map_add, Polynomial.map_mul,
       Polynomial.map_C, Polynomial.map_X]
@@ -354,12 +354,12 @@ theorem irreducibleByModP_sound {p : ℕ} [Fact p.Prime] {cf : List ℤ} {n : �
     Irreducible (toPolyZ cf) := by
   haveI : NeZero p := ⟨(Fact.out (p := p.Prime)).ne_zero⟩
   -- the reduction is monic of degree `n` over `𝔽_p`
-  have hmon' : IsMonicOfDegree (toPoly (reduceCoeffs p cf)) n := by
+  have hmon' : IsMonicOfDegree (listToPoly (reduceCoeffs p cf)) n := by
     rw [toPoly_reduceCoeffs]
     refine ⟨?_, hmon.monic.map _⟩
     rw [hmon.monic.natDegree_map, hmon.natDegree_eq]
   -- decode the `Bool` test into the 𝔽_p irreducibility predicate, get 𝔽_p irreducibility
-  have hirr_fp : Irreducible (toPoly (reduceCoeffs p cf)) :=
+  have hirr_fp : Irreducible (listToPoly (reduceCoeffs p cf)) :=
     irreducible_toPoly_of_irreducibleListModP hmon'
       (by rwa [irreducibleByModP, decide_eq_true_eq] at htest)
   -- lift to `ℤ` (hence `ℚ`) via Gauss's lemma
@@ -424,9 +424,9 @@ irreducible. The two facts below pin this limit. -/
 
 /-- `toPolyZ [1,0,0,0,1] = X⁴ + 1` (the lower part `[1,0,0,0]` reads as the constant `1`). -/
 theorem toPolyZ_X_pow_four_add_one : toPolyZ ([1, 0, 0, 0] ++ [1]) = X ^ 4 + 1 := by
-  show toPoly ([1, 0, 0, 0] ++ [1]) = X ^ 4 + 1
+  show listToPoly ([1, 0, 0, 0] ++ [1]) = X ^ 4 + 1
   rw [toPoly_append_one]
-  simp only [toPoly, map_one, map_zero, mul_zero, add_zero, zero_add, List.length_cons,
+  simp only [listToPoly, map_one, map_zero, mul_zero, add_zero, zero_add, List.length_cons,
     List.length_nil]
   ring
 
@@ -465,19 +465,19 @@ example : ∀ (p : ℕ) [Fact p.Prime] (cf : List ℤ) (n : ℕ),
 
 -- the 𝔽_p decision is genuinely BOTH directions.
 example {p : ℕ} [Fact p.Prime] (cf : List (ZMod p)) (n : ℕ)
-    (h : IsMonicOfDegree (toPoly cf) n) :
-    irreducibleListModP cf n ↔ Irreducible (toPoly cf) :=
+    (h : IsMonicOfDegree (listToPoly cf) n) :
+    irreducibleListModP cf n ↔ Irreducible (listToPoly cf) :=
   irreducibleListModP_iff_irreducible h
 
 -- the certificate lists ARE the named polynomials.
 example : toPolyZ ([1, 0] ++ [1]) = X ^ 2 + 1 := by
-  show toPoly _ = _; rw [toPoly_append_one]; simp [toPoly]; ring
+  show listToPoly _ = _; rw [toPoly_append_one]; simp [listToPoly]; ring
 example : toPolyZ ([-2, 0, 0] ++ [1]) = X ^ 3 - 2 := by
-  show toPoly _ = _; rw [toPoly_append_one]; simp [toPoly]; ring
+  show listToPoly _ = _; rw [toPoly_append_one]; simp [listToPoly]; ring
 example : toPolyZ ([-1, -1, 0] ++ [1]) = X ^ 3 - X - 1 := by
-  show toPoly _ = _; rw [toPoly_append_one]; simp [toPoly]; ring
+  show listToPoly _ = _; rw [toPoly_append_one]; simp [listToPoly]; ring
 example : toPolyZ ([1, 1, 1, 1] ++ [1]) = X ^ 4 + X ^ 3 + X ^ 2 + X + 1 := by
-  show toPoly _ = _; rw [toPoly_append_one]; simp [toPoly]; ring
+  show listToPoly _ = _; rw [toPoly_append_one]; simp [listToPoly]; ring
 
 -- the wall: `x⁴+1` is `ℚ`-irreducible AND fails the mod-`p` test at every small prime.
 example : Irreducible (toPolyZ ([1, 0, 0, 0] ++ [1])) ∧

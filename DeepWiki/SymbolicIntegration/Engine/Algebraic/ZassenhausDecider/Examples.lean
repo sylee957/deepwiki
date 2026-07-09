@@ -30,10 +30,10 @@ theorem recombine_ne_nil_X_sq_sub_one :
         (factorModP 5 (reduceCoeffs 5 ([-1, 0] ++ [1])))) ≠ [] := by native_decide
 
 /-- A passing `ℤ`-trial-division yields a genuine factorization
-`toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1`, so recombination never accepts a false factor. -/
+`toPolyZ f = listToPoly g * listToPoly (divmodByMonic f g dg).1`, so recombination never accepts a false factor. -/
 theorem irreducibleZassenhaus_sound_scope (f g : List ℤ) (dg : ℕ)
     (h : dividesExactly f g dg = true) :
-    toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1 :=
+    toPolyZ f = listToPoly g * listToPoly (divmodByMonic f g dg).1 :=
   dividesExactly_dvd h
 
 /-! ## The complete decider where the mod-`p` test provably fails
@@ -104,7 +104,7 @@ example : Irreducible (toPolyZ ([1, 0, 0, 0] ++ [1])) ∧
 
 -- the decider has `Bool` type and the keystone soundness brick has the intended factorization type.
 example : ∀ (f g : List ℤ) (dg : ℕ), dividesExactly f g dg = true →
-    toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1 :=
+    toPolyZ f = listToPoly g * listToPoly (divmodByMonic f g dg).1 :=
   fun _ _ _ h => dividesExactly_dvd h
 
 -- the PROVEN reducibility-soundness: recombine non-empty ⟹ ¬ Irreducible (monic degree-N input).

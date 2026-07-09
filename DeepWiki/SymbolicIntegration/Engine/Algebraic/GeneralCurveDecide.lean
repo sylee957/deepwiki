@@ -110,42 +110,42 @@ section Soundness
 
 variable (fuel : ℕ) (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ)
 variable (ratIntegrand logIntegrand : CPoly (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
-variable (hasLogPart : Bool) (integrand commonDenom : CPoly (QFunNZG ℚ))
+variable (hasLogPart : Bool) (integrand commonDenomQ : CPoly (QFunNZG ℚ))
 variable (cofs : List (CPoly (QFunNZG ℚ)))
 
 /-- The soundness residual: the per-branch instances turning each `some F` branch into
-`IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs` (the cross-multiplied
+`IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenomQ F.logTerms cofs` (the cross-multiplied
 `D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`) — clauses `hnolog`, `hprincipal`, `htorsion`
 for the three `some` branches. -/
 structure GeneralCurveDecideSoundnessResidual : Prop where
   /-- No-log branch: `D(⟨v, []⟩) = integrand` (rational part is the whole answer). -/
   hnolog : ∀ v, afRationalSolveWf f basis degBound ratIntegrand = some v →
     CPoly.IsGeneralAlgebraicIntegralWf f integrand
-      (GeneralCurveIntegralResult.mk v []).ratPart commonDenom
+      (GeneralCurveIntegralResult.mk v []).ratPart commonDenomQ
       (GeneralCurveIntegralResult.mk v []).logTerms cofs
   /-- Principal branch: `D(⟨v, [(1, u)]⟩) = integrand`. -/
   hprincipal : ∀ v u, afRationalSolveWf f basis degBound ratIntegrand = some v →
     afLogArgSolveWf f basis degBound logIntegrand = some u →
     CPoly.IsGeneralAlgebraicIntegralWf f integrand
-      (GeneralCurveIntegralResult.mk v [(CField.one, u)]).ratPart commonDenom
+      (GeneralCurveIntegralResult.mk v [(CField.one, u)]).ratPart commonDenomQ
       (GeneralCurveIntegralResult.mk v [(CField.one, u)]).logTerms cofs
   /-- Torsion branch: `D(⟨v, [term]⟩) = integrand`. -/
   htorsion : ∀ v term, afRationalSolveWf f basis degBound ratIntegrand = some v →
     genCurveTorsionLogTerm fuel f basis tin = some term →
     CPoly.IsGeneralAlgebraicIntegralWf f integrand
-      (GeneralCurveIntegralResult.mk v [term]).ratPart commonDenom
+      (GeneralCurveIntegralResult.mk v [term]).ratPart commonDenomQ
       (GeneralCurveIntegralResult.mk v [term]).logTerms cofs
 
 /-- Soundness: under the soundness residual, `cIntegrateGeneralCurveDecide … = some F` gives
-`IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs`, i.e.
+`IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenomQ F.logTerms cofs`, i.e.
 `D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`. -/
 theorem cIntegrateGeneralCurveDecide_sound
     (hres : GeneralCurveDecideSoundnessResidual fuel f basis degBound ratIntegrand logIntegrand tin
-      integrand commonDenom cofs)
+      integrand commonDenomQ cofs)
     (F : GeneralCurveIntegralResult)
     (hsome : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
       = some F) :
-    CPoly.IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs := by
+    CPoly.IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenomQ F.logTerms cofs := by
   unfold cIntegrateGeneralCurveDecide at hsome
   cases hv : afRationalSolveWf f basis degBound ratIntegrand with
   | none => rw [hv] at hsome; simp at hsome
@@ -342,15 +342,15 @@ section Restatements
 -- SOUNDNESS (modulo the named frontier): `some F → D(F) = integrand`.
 example (fuel : ℕ) (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ)
     (ratIntegrand logIntegrand : CPoly (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
-    (hasLogPart : Bool) (integrand commonDenom : CPoly (QFunNZG ℚ)) (cofs : List (CPoly (QFunNZG ℚ)))
+    (hasLogPart : Bool) (integrand commonDenomQ : CPoly (QFunNZG ℚ)) (cofs : List (CPoly (QFunNZG ℚ)))
     (hres : GeneralCurveDecideSoundnessResidual fuel f basis degBound ratIntegrand logIntegrand tin
-      integrand commonDenom cofs)
+      integrand commonDenomQ cofs)
     (F : GeneralCurveIntegralResult)
     (hsome : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
       = some F) :
-    CPoly.IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs :=
+    CPoly.IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenomQ F.logTerms cofs :=
   cIntegrateGeneralCurveDecide_sound fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
-    integrand commonDenom cofs hres F hsome
+    integrand commonDenomQ cofs hres F hsome
 
 -- COMPLETENESS (modulo the named frontier): `none → ¬ elementary` (non-principal path).
 example (fuel : ℕ) (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ)

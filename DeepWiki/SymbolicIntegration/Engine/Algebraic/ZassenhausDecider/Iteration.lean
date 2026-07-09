@@ -94,18 +94,18 @@ theorem liftStep_fst_congr (p m : ℕ) (f g h s t : List ℤ)
   have hfst : (liftStep p m f g h s t).1 = reduceModN (p ^ (2 * m)) g0 := rfl
   rw [hfst]
   -- reduceModN ≡ identity mod p^{2m}, then weaken to p^m
-  have hred : polyCongr (p ^ m) (toPoly (reduceModN (p ^ (2 * m)) g0)) (toPoly g0) :=
+  have hred : polyCongr (p ^ m) (listToPoly (reduceModN (p ^ (2 * m)) g0)) (listToPoly g0) :=
     polyCongr_of_dvd (pow_dvd_pow_two_mul p m) (polyCongr_toPoly_reduceModN _ _)
-  -- toPoly g0 = toPoly g + toPoly t * (defect), and defect ≡ 0 mod p^m
-  have hg0poly : toPoly g0 = toPoly g + toPoly t * (toPoly f - toPoly g * toPoly h) := by
+  -- listToPoly g0 = listToPoly g + listToPoly t * (defect), and defect ≡ 0 mod p^m
+  have hg0poly : listToPoly g0 = listToPoly g + listToPoly t * (listToPoly f - listToPoly g * listToPoly h) := by
     rw [hg0def, toPoly_addL, toPoly_mulL, hedef, toPoly_defectL, toPolyZ, toPolyZ, toPolyZ]
   -- defect ≡ 0 mod p^m  (C(p^m) ∣ defect)
-  obtain ⟨c, hc⟩ : (C ((p ^ m : ℕ) : ℤ)) ∣ (toPoly f - toPoly g * toPoly h) := by
+  obtain ⟨c, hc⟩ : (C ((p ^ m : ℕ) : ℤ)) ∣ (listToPoly f - listToPoly g * listToPoly h) := by
     rcases hdef with ⟨k, hk⟩; exact ⟨k, by simp only [toPolyZ] at hk; rw [hk]⟩
-  -- toPoly g0 ≡ toPoly g mod p^m
-  have hg0congr : polyCongr (p ^ m) (toPoly g0) (toPoly g) := by
+  -- listToPoly g0 ≡ listToPoly g mod p^m
+  have hg0congr : polyCongr (p ^ m) (listToPoly g0) (listToPoly g) := by
     rw [polyCongr, hg0poly, hc]
-    refine ⟨toPoly t * c, ?_⟩
+    refine ⟨listToPoly t * c, ?_⟩
     ring
   simp only [toPolyZ]
   exact polyCongr_trans hred hg0congr
@@ -118,15 +118,15 @@ theorem liftStep_snd_congr (p m : ℕ) (f g h s t : List ℤ)
   set h0 := addL h (mulL s e) with hh0def
   have hsnd : (liftStep p m f g h s t).2 = reduceModN (p ^ (2 * m)) h0 := rfl
   rw [hsnd]
-  have hred : polyCongr (p ^ m) (toPoly (reduceModN (p ^ (2 * m)) h0)) (toPoly h0) :=
+  have hred : polyCongr (p ^ m) (listToPoly (reduceModN (p ^ (2 * m)) h0)) (listToPoly h0) :=
     polyCongr_of_dvd (pow_dvd_pow_two_mul p m) (polyCongr_toPoly_reduceModN _ _)
-  have hh0poly : toPoly h0 = toPoly h + toPoly s * (toPoly f - toPoly g * toPoly h) := by
+  have hh0poly : listToPoly h0 = listToPoly h + listToPoly s * (listToPoly f - listToPoly g * listToPoly h) := by
     rw [hh0def, toPoly_addL, toPoly_mulL, hedef, toPoly_defectL, toPolyZ, toPolyZ, toPolyZ]
-  obtain ⟨c, hc⟩ : (C ((p ^ m : ℕ) : ℤ)) ∣ (toPoly f - toPoly g * toPoly h) := by
+  obtain ⟨c, hc⟩ : (C ((p ^ m : ℕ) : ℤ)) ∣ (listToPoly f - listToPoly g * listToPoly h) := by
     rcases hdef with ⟨k, hk⟩; exact ⟨k, by simp only [toPolyZ] at hk; rw [hk]⟩
-  have hh0congr : polyCongr (p ^ m) (toPoly h0) (toPoly h) := by
+  have hh0congr : polyCongr (p ^ m) (listToPoly h0) (listToPoly h) := by
     rw [polyCongr, hh0poly, hc]
-    refine ⟨toPoly s * c, ?_⟩
+    refine ⟨listToPoly s * c, ?_⟩
     ring
   simp only [toPolyZ]
   exact polyCongr_trans hred hh0congr

@@ -164,11 +164,11 @@ def radLogSumNum (n : ℕ) (ρ : α) (args : List (α × RadElem α)) (cofs : Li
 
 /-- The multi-term log-soundness predicate `IsRadicalLogIntegral n ρ logpart args cofs` — the
 log-derivative sum `Σ cᵢ·radDeriv(uᵢ)/uᵢ` equals `logpart` over `α[y]/(yⁿ − ρ)`, cross-
-multiplied by `commonDenom = ∏ⱼ uⱼ`: `mk(radLogSumNum) = mk(logpart·commonDenom)`. -/
-def IsRadicalLogIntegral (n : ℕ) (ρ : α) (logpart commonDenom : RadElem α)
+multiplied by `commonDenomQ = ∏ⱼ uⱼ`: `mk(radLogSumNum) = mk(logpart·commonDenomQ)`. -/
+def IsRadicalLogIntegral (n : ℕ) (ρ : α) (logpart commonDenomQ : RadElem α)
     (args : List (α × RadElem α)) (cofs : List (RadElem α)) : Prop :=
   Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radLogSumNum n ρ args cofs))
-    = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ logpart commonDenom))
+    = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ logpart commonDenomQ))
 
 omit [CDiffFieldSpec α] in
 /-- The residue-sum numerator of the empty log part is `0` in the quotient:
@@ -470,32 +470,32 @@ theorem mk_toPolyG_radLogSumNum_eq_sum (n : ℕ) (ρ : α) (args : List (α × R
 /-! ### Composing to `IsRadicalLogIntegral` soundness
 
 Given the per-term residue match (the sum of per-term quotient values equals
-`mk(logpart·commonDenom)`, the algebraic partial fraction), the structural fold composes to the
+`mk(logpart·commonDenomQ)`, the algebraic partial fraction), the structural fold composes to the
 integrator's log-part soundness `IsRadicalLogIntegral`. -/
 
 omit [CDiffFieldSpec α] in
 /-- The log-part soundness composes from the per-term residue match: given the residue-match
-hypothesis `hmatch` (the per-term sum equals `mk(logpart·commonDenom)`), the integrator's log
-part is log-sound (`IsRadicalLogIntegral n ρ logpart commonDenom args cofs`). -/
+hypothesis `hmatch` (the per-term sum equals `mk(logpart·commonDenomQ)`), the integrator's log
+part is log-sound (`IsRadicalLogIntegral n ρ logpart commonDenomQ args cofs`). -/
 theorem isRadicalLogIntegral_of_residue_match (n : ℕ) (ρ : α)
-    (logpart commonDenom : RadElem α) (args : List (α × RadElem α)) (cofs : List (RadElem α))
+    (logpart commonDenomQ : RadElem α) (args : List (α × RadElem α)) (cofs : List (RadElem α))
     (hmatch : ((args.zip cofs).map (fun p =>
           Ideal.Quotient.mk (radIdeal n ρ)
             (CPoly.toPolyG (radMul n ρ (radScale p.1.1 (radDeriv n ρ p.1.2)) p.2)))).sum
-        = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ logpart commonDenom))) :
-    IsRadicalLogIntegral n ρ logpart commonDenom args cofs := by
+        = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ logpart commonDenomQ))) :
+    IsRadicalLogIntegral n ρ logpart commonDenomQ args cofs := by
   rw [IsRadicalLogIntegral, mk_toPolyG_radLogSumNum_eq_sum, hmatch]
 
 omit [CDiffFieldSpec α] in
 /-- A single-log instance composes to `IsRadicalLogIntegral`: for `args = [(c, u)]`, `cofs =
-[cof]`, if `c·radDeriv(u)·cof = logpart·commonDenom` in the quotient, then the log part is
+[cof]`, if `c·radDeriv(u)·cof = logpart·commonDenomQ` in the quotient, then the log part is
 log-sound. -/
 theorem isRadicalLogIntegral_singleton (n : ℕ) (ρ : α)
-    (logpart commonDenom : RadElem α) (c : α) (u cof : RadElem α)
+    (logpart commonDenomQ : RadElem α) (c : α) (u cof : RadElem α)
     (hmatch : Ideal.Quotient.mk (radIdeal n ρ)
           (CPoly.toPolyG (radMul n ρ (radScale c (radDeriv n ρ u)) cof))
-        = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ logpart commonDenom))) :
-    IsRadicalLogIntegral n ρ logpart commonDenom [(c, u)] [cof] := by
+        = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ logpart commonDenomQ))) :
+    IsRadicalLogIntegral n ρ logpart commonDenomQ [(c, u)] [cof] := by
   apply isRadicalLogIntegral_of_residue_match
   -- `[(c,u)].zip [cof] = [((c,u), cof)]`, so the sum is the single term
   simpa using hmatch
@@ -505,34 +505,34 @@ theorem isRadicalLogIntegral_singleton (n : ℕ) (ρ : α)
 The integrator returns `⟨v, args⟩`, so `∫f = v + Σ cᵢ log uᵢ` and the full soundness splits into
 the rational part (`radDeriv(v) = ratPart(f)`, telescoping) and the log part
 (`Σ cᵢ·radDeriv(uᵢ)/uᵢ = logPart(f)`, `IsRadicalLogIntegral`). Cross-multiplied by
-`commonDenom = ∏ uⱼ`, the full identity is the sum of the two halves. -/
+`commonDenomQ = ∏ uⱼ`, the full identity is the sum of the two halves. -/
 
-/-- The full algebraic-integral soundness predicate `IsAlgebraicIntegral n ρ f v commonDenom args
-cofs` — `D(v + Σ cᵢ log uᵢ) = f` over `α[y]/(yⁿ − ρ)`, cross-multiplied by `commonDenom = ∏ uⱼ`:
-`mk(toPolyG(radDeriv v · commonDenom)) + mk(toPolyG(radLogSumNum args cofs)) =
-mk(toPolyG(f · commonDenom))`. -/
-def IsAlgebraicIntegral (n : ℕ) (ρ : α) (f v commonDenom : RadElem α)
+/-- The full algebraic-integral soundness predicate `IsAlgebraicIntegral n ρ f v commonDenomQ args
+cofs` — `D(v + Σ cᵢ log uᵢ) = f` over `α[y]/(yⁿ − ρ)`, cross-multiplied by `commonDenomQ = ∏ uⱼ`:
+`mk(toPolyG(radDeriv v · commonDenomQ)) + mk(toPolyG(radLogSumNum args cofs)) =
+mk(toPolyG(f · commonDenomQ))`. -/
+def IsAlgebraicIntegral (n : ℕ) (ρ : α) (f v commonDenomQ : RadElem α)
     (args : List (α × RadElem α)) (cofs : List (RadElem α)) : Prop :=
-  Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ (radDeriv n ρ v) commonDenom))
+  Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ (radDeriv n ρ v) commonDenomQ))
     + Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radLogSumNum n ρ args cofs))
-  = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ f commonDenom))
+  = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ f commonDenomQ))
 
 omit [CDiffFieldSpec α] in
 /-- The full algebraic integral `D(∫f) = f` composes from the rational + log soundness: given
 `hrat` (rational-part soundness), `hlog` (`IsRadicalLogIntegral`), and `hsplit` (the integrand
-split `f = ratPart + logPart`), the output satisfies `IsAlgebraicIntegral n ρ f v commonDenom
+split `f = ratPart + logPart`), the output satisfies `IsAlgebraicIntegral n ρ f v commonDenomQ
 args cofs`. -/
 theorem isAlgebraicIntegral_of_parts (n : ℕ) (ρ : α)
-    (f v ratPart logPart commonDenom : RadElem α)
+    (f v ratPart logPart commonDenomQ : RadElem α)
     (args : List (α × RadElem α)) (cofs : List (RadElem α))
     (hrat : Ideal.Quotient.mk (radIdeal n ρ)
-          (CPoly.toPolyG (radMul n ρ (radDeriv n ρ v) commonDenom))
-        = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ ratPart commonDenom)))
-    (hlog : IsRadicalLogIntegral n ρ logPart commonDenom args cofs)
-    (hsplit : Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ ratPart commonDenom))
-        + Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ logPart commonDenom))
-      = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ f commonDenom))) :
-    IsAlgebraicIntegral n ρ f v commonDenom args cofs := by
+          (CPoly.toPolyG (radMul n ρ (radDeriv n ρ v) commonDenomQ))
+        = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ ratPart commonDenomQ)))
+    (hlog : IsRadicalLogIntegral n ρ logPart commonDenomQ args cofs)
+    (hsplit : Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ ratPart commonDenomQ))
+        + Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ logPart commonDenomQ))
+      = Ideal.Quotient.mk (radIdeal n ρ) (CPoly.toPolyG (radMul n ρ f commonDenomQ))) :
+    IsAlgebraicIntegral n ρ f v commonDenomQ args cofs := by
   -- `radDeriv(v)·cd = ratPart·cd` (rational) and `radLogSumNum = logPart·cd` (log); sum = `f·cd` (split)
   rw [IsAlgebraicIntegral, hrat, hlog, hsplit]
 

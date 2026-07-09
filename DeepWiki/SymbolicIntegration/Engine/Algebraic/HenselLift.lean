@@ -70,9 +70,9 @@ coefficient reducer `reduceModN`. -/
 /-- The defect `f − g·h` of a factorization, as a coefficient list. -/
 def defectL (f g h : List ℤ) : List ℤ := subL f (mulL g h)
 
-/-- `toPoly (defectL f g h) = toPolyZ f − toPolyZ g * toPolyZ h`. -/
+/-- `listToPoly (defectL f g h) = toPolyZ f − toPolyZ g * toPolyZ h`. -/
 theorem toPoly_defectL (f g h : List ℤ) :
-    toPoly (defectL f g h) = toPolyZ f - toPolyZ g * toPolyZ h := by
+    listToPoly (defectL f g h) = toPolyZ f - toPolyZ g * toPolyZ h := by
   rw [defectL, toPoly_subL, toPoly_mulL, toPolyZ, toPolyZ, toPolyZ]
 
 /-- Reduce every coefficient mod `n` (entrywise `Int.emod` into `[0, n)`). -/
@@ -84,9 +84,9 @@ theorem reduceModN_congr_coeff (n : ℕ) (a : ℤ) : a - a % (n : ℤ) = (n : �
   have := Int.mul_ediv_add_emod a (n : ℤ)
   linarith [this]
 
-/-- `reduceModN` is congruent to the identity mod `n`: `toPoly (reduceModN n l) ≡ toPoly l (mod n)`. -/
+/-- `reduceModN` is congruent to the identity mod `n`: `listToPoly (reduceModN n l) ≡ listToPoly l (mod n)`. -/
 theorem polyCongr_toPoly_reduceModN (n : ℕ) (l : List ℤ) :
-    polyCongr n (toPoly (reduceModN n l)) (toPoly l) := by
+    polyCongr n (listToPoly (reduceModN n l)) (listToPoly l) := by
   induction l with
   | nil => simp [reduceModN]; exact polyCongr_refl n 0
   | cons a as ih =>
@@ -98,9 +98,9 @@ theorem polyCongr_toPoly_reduceModN (n : ℕ) (l : List ℤ) :
       congr 1
       have := reduceModN_congr_coeff n a
       linarith [this]
-    rw [show (C (a % (n : ℤ)) + X * toPoly (reduceModN n as))
-          - (C a + X * toPoly as)
-        = (C (a % (n : ℤ)) - C a) + X * (toPoly (reduceModN n as) - toPoly as) by ring,
+    rw [show (C (a % (n : ℤ)) + X * listToPoly (reduceModN n as))
+          - (C a + X * listToPoly as)
+        = (C (a % (n : ℤ)) - C a) + X * (listToPoly (reduceModN n as) - listToPoly as) by ring,
       hcoeff, hk]
     ring
 
@@ -178,31 +178,31 @@ theorem liftStep_congr (p m : ℕ) (f g h s t : List ℤ)
   have hsnd : (liftStep p m f g h s t).2 = reduceModN (p ^ (2 * m)) h0 := rfl
   rw [hfst, hsnd]
   -- step 1: toPolyZ g' ≡ toPolyZ g0, toPolyZ h' ≡ toPolyZ h0 (mod p^{2m})
-  have hcg : polyCongr (p ^ (2 * m)) (toPoly (reduceModN (p ^ (2 * m)) g0)) (toPoly g0) :=
+  have hcg : polyCongr (p ^ (2 * m)) (listToPoly (reduceModN (p ^ (2 * m)) g0)) (listToPoly g0) :=
     polyCongr_toPoly_reduceModN _ _
-  have hch : polyCongr (p ^ (2 * m)) (toPoly (reduceModN (p ^ (2 * m)) h0)) (toPoly h0) :=
+  have hch : polyCongr (p ^ (2 * m)) (listToPoly (reduceModN (p ^ (2 * m)) h0)) (listToPoly h0) :=
     polyCongr_toPoly_reduceModN _ _
-  -- toPoly g0 = toPoly g + toPoly t * (toPoly f − toPoly g * toPoly h)  (toPolyZ = toPoly defeq)
-  have hg0poly : toPoly g0 = toPoly g + toPoly t * (toPoly f - toPoly g * toPoly h) := by
+  -- listToPoly g0 = listToPoly g + listToPoly t * (listToPoly f − listToPoly g * listToPoly h)  (toPolyZ = listToPoly defeq)
+  have hg0poly : listToPoly g0 = listToPoly g + listToPoly t * (listToPoly f - listToPoly g * listToPoly h) := by
     rw [hg0def, toPoly_addL, toPoly_mulL, hedef, toPoly_defectL, toPolyZ, toPolyZ, toPolyZ]
-  have hh0poly : toPoly h0 = toPoly h + toPoly s * (toPoly f - toPoly g * toPoly h) := by
+  have hh0poly : listToPoly h0 = listToPoly h + listToPoly s * (listToPoly f - listToPoly g * listToPoly h) := by
     rw [hh0def, toPoly_addL, toPoly_mulL, hedef, toPoly_defectL, toPolyZ, toPolyZ, toPolyZ]
   -- the product of the reduced factors ≡ the product of g0,h0 (mod p^{2m})
   have hprod : polyCongr (p ^ (2 * m))
-      (toPoly (reduceModN (p ^ (2 * m)) g0) * toPoly (reduceModN (p ^ (2 * m)) h0))
-      (toPoly g0 * toPoly h0) := by
+      (listToPoly (reduceModN (p ^ (2 * m)) g0) * listToPoly (reduceModN (p ^ (2 * m)) h0))
+      (listToPoly g0 * listToPoly h0) := by
     -- g'h' − g0h0 = (g' − g0) h' + g0 (h' − h0)
     rcases hcg with ⟨kg, hkg⟩
     rcases hch with ⟨kh, hkh⟩
-    refine ⟨kg * toPoly (reduceModN (p ^ (2 * m)) h0) + toPoly g0 * kh, ?_⟩
+    refine ⟨kg * listToPoly (reduceModN (p ^ (2 * m)) h0) + listToPoly g0 * kh, ?_⟩
     have hexpand :
-        toPoly (reduceModN (p ^ (2 * m)) g0) * toPoly (reduceModN (p ^ (2 * m)) h0)
-          - toPoly g0 * toPoly h0
-        = (toPoly (reduceModN (p ^ (2 * m)) g0) - toPoly g0)
-            * toPoly (reduceModN (p ^ (2 * m)) h0)
-          + toPoly g0 * (toPoly (reduceModN (p ^ (2 * m)) h0) - toPoly h0) := by ring
+        listToPoly (reduceModN (p ^ (2 * m)) g0) * listToPoly (reduceModN (p ^ (2 * m)) h0)
+          - listToPoly g0 * listToPoly h0
+        = (listToPoly (reduceModN (p ^ (2 * m)) g0) - listToPoly g0)
+            * listToPoly (reduceModN (p ^ (2 * m)) h0)
+          + listToPoly g0 * (listToPoly (reduceModN (p ^ (2 * m)) h0) - listToPoly h0) := by ring
     rw [hexpand, hkg, hkh]; ring
-  -- the raw multiply-back (mod p^{2m}); `toPolyZ` unfolds to `toPoly` (defeq)
+  -- the raw multiply-back (mod p^{2m}); `toPolyZ` unfolds to `listToPoly` (defeq)
   have hraw := liftStepRaw_congr p m f g h s t hdef hbez
   simp only [toPolyZ] at hraw ⊢
   rw [← hg0poly, ← hh0poly] at hraw
@@ -219,13 +219,13 @@ coefficient list. -/
 def bezoutDefectL (s t gp hp : List ℤ) : List ℤ :=
   subL (addL (mulL s gp) (mulL t hp)) [1]
 
-/-- `toPoly (bezoutDefectL s t gp hp) = toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp − 1`. -/
+/-- `listToPoly (bezoutDefectL s t gp hp) = toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp − 1`. -/
 theorem toPoly_bezoutDefectL (s t gp hp : List ℤ) :
-    toPoly (bezoutDefectL s t gp hp)
+    listToPoly (bezoutDefectL s t gp hp)
       = toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp - 1 := by
   rw [bezoutDefectL, toPoly_subL, toPoly_addL, toPoly_mulL, toPoly_mulL, toPolyZ, toPolyZ, toPolyZ,
     toPolyZ]
-  simp [toPoly]
+  simp [listToPoly]
 
 /-- Lift the Bézout cofactors for `gp, hp`: with `b := s·gp + t·hp − 1`,
 `s' := s − s·b`, `t' := t − t·b`, each reduced mod `p^{2m}`. -/
@@ -277,36 +277,36 @@ theorem liftBezout_congr (p m : ℕ) (s t gp hp : List ℤ)
   have hfst : (liftBezout p m s t gp hp).1 = reduceModN (p ^ (2 * m)) s0 := rfl
   have hsnd : (liftBezout p m s t gp hp).2 = reduceModN (p ^ (2 * m)) t0 := rfl
   rw [hfst, hsnd]
-  -- `toPolyZ` unfolds to `toPoly` (defeq); normalize the goal
+  -- `toPolyZ` unfolds to `listToPoly` (defeq); normalize the goal
   simp only [toPolyZ]
   -- reduced cofactors are congruent to the raw ones (mod p^{2m})
-  have hcs : polyCongr (p ^ (2 * m)) (toPoly (reduceModN (p ^ (2 * m)) s0)) (toPoly s0) :=
+  have hcs : polyCongr (p ^ (2 * m)) (listToPoly (reduceModN (p ^ (2 * m)) s0)) (listToPoly s0) :=
     polyCongr_toPoly_reduceModN _ _
-  have hct : polyCongr (p ^ (2 * m)) (toPoly (reduceModN (p ^ (2 * m)) t0)) (toPoly t0) :=
+  have hct : polyCongr (p ^ (2 * m)) (listToPoly (reduceModN (p ^ (2 * m)) t0)) (listToPoly t0) :=
     polyCongr_toPoly_reduceModN _ _
-  -- raw cofactors as polynomials (in `toPoly` form throughout)
-  have hs0poly : toPoly s0
-      = toPoly s - toPoly s * (toPoly s * toPoly gp + toPoly t * toPoly hp - 1) := by
+  -- raw cofactors as polynomials (in `listToPoly` form throughout)
+  have hs0poly : listToPoly s0
+      = listToPoly s - listToPoly s * (listToPoly s * listToPoly gp + listToPoly t * listToPoly hp - 1) := by
     rw [hs0def, toPoly_subL, toPoly_mulL, hbdef0, toPoly_bezoutDefectL, toPolyZ, toPolyZ, toPolyZ,
       toPolyZ]
-  have ht0poly : toPoly t0
-      = toPoly t - toPoly t * (toPoly s * toPoly gp + toPoly t * toPoly hp - 1) := by
+  have ht0poly : listToPoly t0
+      = listToPoly t - listToPoly t * (listToPoly s * listToPoly gp + listToPoly t * listToPoly hp - 1) := by
     rw [ht0def, toPoly_subL, toPoly_mulL, hbdef0, toPoly_bezoutDefectL, toPolyZ, toPolyZ, toPolyZ,
       toPolyZ]
   -- the Bézout combination with reduced cofactors ≡ that with raw cofactors (mod p^{2m})
   have hcomb : polyCongr (p ^ (2 * m))
-      (toPoly (reduceModN (p ^ (2 * m)) s0) * toPoly gp
-        + toPoly (reduceModN (p ^ (2 * m)) t0) * toPoly hp)
-      (toPoly s0 * toPoly gp + toPoly t0 * toPoly hp) := by
+      (listToPoly (reduceModN (p ^ (2 * m)) s0) * listToPoly gp
+        + listToPoly (reduceModN (p ^ (2 * m)) t0) * listToPoly hp)
+      (listToPoly s0 * listToPoly gp + listToPoly t0 * listToPoly hp) := by
     rcases hcs with ⟨ks, hks⟩
     rcases hct with ⟨kt, hkt⟩
-    refine ⟨ks * toPoly gp + kt * toPoly hp, ?_⟩
+    refine ⟨ks * listToPoly gp + kt * listToPoly hp, ?_⟩
     have hexpand :
-        (toPoly (reduceModN (p ^ (2 * m)) s0) * toPoly gp
-          + toPoly (reduceModN (p ^ (2 * m)) t0) * toPoly hp)
-          - (toPoly s0 * toPoly gp + toPoly t0 * toPoly hp)
-        = (toPoly (reduceModN (p ^ (2 * m)) s0) - toPoly s0) * toPoly gp
-          + (toPoly (reduceModN (p ^ (2 * m)) t0) - toPoly t0) * toPoly hp := by ring
+        (listToPoly (reduceModN (p ^ (2 * m)) s0) * listToPoly gp
+          + listToPoly (reduceModN (p ^ (2 * m)) t0) * listToPoly hp)
+          - (listToPoly s0 * listToPoly gp + listToPoly t0 * listToPoly hp)
+        = (listToPoly (reduceModN (p ^ (2 * m)) s0) - listToPoly s0) * listToPoly gp
+          + (listToPoly (reduceModN (p ^ (2 * m)) t0) - listToPoly t0) * listToPoly hp := by ring
     rw [hexpand, hks, hkt]; ring
   -- raw soundness
   have hraw := liftBezoutRaw_congr p m s t gp hp hbdef

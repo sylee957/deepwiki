@@ -10,7 +10,7 @@ derivative problem `n·f = Dv/v + m·Dθ/θ`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPoly
+open CPoly
 
 namespace CPoly
 

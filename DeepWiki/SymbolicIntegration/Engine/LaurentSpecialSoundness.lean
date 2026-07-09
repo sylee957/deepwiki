@@ -9,7 +9,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPoly QFunNZG
+open CPoly QFunNZG
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]

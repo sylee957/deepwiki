@@ -95,7 +95,7 @@ theorem eval_term_at_other (xk yk x : ℚ) (others : List ℚ) (hx : x ∈ other
 /-! ### `cinterpolate` evaluation and degree -/
 
 /-- The `cinterpolate` local `term` function for a points list with abscissas `xs`. -/
-private def cinterpTerm (xs : List ℚ) (p : ℚ × ℚ) : CPolyQ :=
+private def cinterpTermQ (xs : List ℚ) (p : ℚ × ℚ) : CPolyQ :=
   cscale (p.2 / ((xs.filter (· != p.1)).foldl (fun acc xj => acc * (p.1 - xj)) 1))
     (clagNum (xs.filter (· != p.1)))
 
@@ -103,9 +103,9 @@ private def cinterpTerm (xs : List ℚ) (p : ℚ × ℚ) : CPolyQ :=
 ∑_{(xk,yk) ∈ pts} toPoly (term (xk,yk))`. -/
 theorem toPoly_cinterpolate (pts : List (ℚ × ℚ)) :
     toPoly (cinterpolate pts)
-      = (pts.map (fun p => toPoly (cinterpTerm (pts.map Prod.fst) p))).sum := by
+      = (pts.map (fun p => toPoly (cinterpTermQ (pts.map Prod.fst) p))).sum := by
   rw [cinterpolate, toPoly_cnorm, toPoly_foldl_cadd]
-  simp [cinterpTerm]
+  simp [cinterpTermQ]
 
 /-- Summing `if p.1 = xk then p.2 else 0` over a points list with distinct abscissas picks out the
 unique entry `(xk, yk)`. -/
@@ -144,17 +144,17 @@ theorem toPoly_cinterpolate_eval (pts : List (ℚ × ℚ)) (hnodup : (pts.map Pr
     {xk yk : ℚ} (hmem : (xk, yk) ∈ pts) :
     (toPoly (cinterpolate pts)).eval xk = yk := by
   rw [toPoly_cinterpolate]
-  rw [show (List.map (fun p => toPoly (cinterpTerm (pts.map Prod.fst) p)) pts).sum.eval xk
+  rw [show (List.map (fun p => toPoly (cinterpTermQ (pts.map Prod.fst) p)) pts).sum.eval xk
       = (Polynomial.evalRingHom xk)
-          (List.map (fun p => toPoly (cinterpTerm (pts.map Prod.fst) p)) pts).sum from rfl,
+          (List.map (fun p => toPoly (cinterpTermQ (pts.map Prod.fst) p)) pts).sum from rfl,
     map_list_sum, List.map_map]
   set xs := pts.map Prod.fst with hxs
   -- per-term evaluation at `xk`: `yk` on-node, `0` off-node
   have key : ∀ p ∈ pts,
-      ((Polynomial.evalRingHom xk) ∘ fun p => toPoly (cinterpTerm xs p)) p
+      ((Polynomial.evalRingHom xk) ∘ fun p => toPoly (cinterpTermQ xs p)) p
         = if p.1 = xk then p.2 else 0 := by
     rintro ⟨a, b⟩ hp
-    simp only [Function.comp_apply, Polynomial.coe_evalRingHom, cinterpTerm]
+    simp only [Function.comp_apply, Polynomial.coe_evalRingHom, cinterpTermQ]
     by_cases hak : a = xk
     · subst hak
       rw [if_pos rfl]
@@ -172,9 +172,9 @@ theorem toPoly_cinterpolate_eval (pts : List (ℚ × ℚ)) (hnodup : (pts.map Pr
 
 /-- Each `cinterpolate` term has `natDegree ≤ |others|`. -/
 theorem natDegree_cinterpTerm_le (xs : List ℚ) (p : ℚ × ℚ) :
-    (toPoly (cinterpTerm xs p)).natDegree ≤ (xs.filter (· != p.1)).length := by
+    (toPoly (cinterpTermQ xs p)).natDegree ≤ (xs.filter (· != p.1)).length := by
   obtain ⟨a, b⟩ := p
-  simp only [cinterpTerm, toPoly_cscale, toPoly_clagNum]
+  simp only [cinterpTermQ, toPoly_cscale, toPoly_clagNum]
   refine (natDegree_C_mul_le _ _).trans ?_
   refine (natDegree_list_prod_le _).trans ?_
   rw [List.map_map]
