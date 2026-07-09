@@ -21,14 +21,14 @@ open DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 /-! ## Decision Integrator -/
 
 /-- The self-determining algebraic integrator `cIntegrateAlgebraicDecide` over `y² = ρ`, returning
-`Option AlgIntegralResultQ`: computes the rational part `v`, then `some ⟨v, []⟩` if `hasLogPart =
+`Option (AlgIntegralResult (CFrac ℚ))`: computes the rational part `v`, then `some ⟨v, []⟩` if `hasLogPart =
 false`, `some ⟨v, [(c, N/D)]⟩` on a principal `radLogArgSolveQ = some N`, `some ⟨v, [(1/m, g)]⟩` when
 the residue divisor `Dm` is torsion, and `none` when it is non-torsion. -/
 def cIntegrateAlgebraicDecide (p : ℕ) [Fact p.Prime]
     (ρ : CFrac ℚ) (R B : CPoly ℚ)
     (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : CPoly ℚ) (degBound : ℕ)
     (ρq : CPoly ℚ) (gen : ℕ) (Dm : CPoly.MumfordDivisor ℚ) (hasLogPart : Bool) :
-    Option AlgIntegralResultQ :=
+    Option (AlgIntegralResult (CFrac ℚ)) :=
   let ρpoly : CPoly ℚ := qxNum ρ
   let runs := CPoly.radIntegrateRationalWf ρpoly R B
   let v := radAssembleRatPart ρ runs
@@ -46,7 +46,7 @@ def cIntegrateAlgebraicDecide (p : ℕ) [Fact p.Prime]
       | none => none
 
 /-- On the principal branch, `cIntegrateAlgebraicDecide … = some (cIntegrateAlgebraicWf …)`: the
-decision integrator returns the total integrator's `AlgIntegralResultQ` wrapped in `some`. -/
+decision integrator returns the total integrator's `AlgIntegralResult (CFrac ℚ)` wrapped in `some`. -/
 theorem cIntegrateAlgebraicDecide_principal_eq (p : ℕ) [Fact p.Prime]
     (ρ : CFrac ℚ) (R B : CPoly ℚ)
     (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : CPoly ℚ) (degBound : ℕ)
@@ -95,7 +95,7 @@ structure AlgebraicDecideSoundnessResidual : Prop where
 `toPoly (algDerivQ ρ F) = toPoly integrand`. Checker-free (no round-trip hypothesis). -/
 theorem cIntegrateAlgebraicDecide_sound
     (hres : AlgebraicDecideSoundnessResidual p ρ R B residual c D degBound ρq gen Dm integrand)
-    (F : AlgIntegralResultQ)
+    (F : AlgIntegralResult (CFrac ℚ))
     (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = some F) :
     CPoly.toPoly (algDerivQ ρ F) = CPoly.toPoly integrand := by
@@ -115,7 +115,7 @@ theorem cIntegrateAlgebraicDecide_sound
       rw [← hsome]
       -- the literal output equals `cIntegrateAlgebraicWf …` (same parts, same log term)
       have heq : (⟨radAssembleRatPart ρ (CPoly.radIntegrateRationalWf (qxNum ρ) R B),
-          [(c, N.map (fun z => CField.div z (qxOfNum D)))]⟩ : AlgIntegralResultQ)
+          [(c, N.map (fun z => CField.div z (qxOfNum D)))]⟩ : AlgIntegralResult (CFrac ℚ))
           = cIntegrateAlgebraicWf ρ R B residual c D degBound := by
         unfold cIntegrateAlgebraicWf
         rw [hN]
@@ -229,7 +229,7 @@ def decideNonPrincipalResidual : RadElem (CFrac ℚ) :=
 
 /-- `cIntegrateAlgebraicDecide` on the non-torsion `(3,5)` of `y² = x³ − 2`: a log-part input whose
 principal solve fails and whose residue divisor is non-torsion, expected to return `none`. -/
-def decideWitnessNonTorsion : Option AlgIntegralResultQ :=
+def decideWitnessNonTorsion : Option (AlgIntegralResult (CFrac ℚ)) :=
   cIntegrateAlgebraicDecide 5 tltRhoX3m2 [1] [1] decideNonPrincipalResidual CField.one [0, 0, 1] 1
     hypRhoX3m2 1 hypPt35 true
 
@@ -241,7 +241,7 @@ theorem decideWitnessNonTorsion_none : decideWitnessNonTorsion = none := by nati
 
 /-- `cIntegrateAlgebraicDecide` on the order-3 torsion flex `(0,1)` of `y² = x³ + 1`: a log-part
 input whose principal solve fails, expected to return `some ⟨v, [(1/3, y − 1)]⟩`. -/
-def decideWitnessTorsion : Option AlgIntegralResultQ :=
+def decideWitnessTorsion : Option (AlgIntegralResult (CFrac ℚ)) :=
   cIntegrateAlgebraicDecide 5 tltRhoX3p1 [1] [1] decideNonPrincipalResidual CField.one [0, 0, 1] 1
     hypRhoX3p1 1 hypPt01 true
 
@@ -257,7 +257,7 @@ theorem decideWitnessTorsion_some :
 
 /-- `cIntegrateAlgebraicDecide` on a principal-log example (`y² = x² + 1`, the `arcsinh` solve): with
 a principal `radLogArgSolveQ = some N`, expected to return `some` with a `1·log(N/D)` term. -/
-def decideWitnessPrincipal : Option AlgIntegralResultQ :=
+def decideWitnessPrincipal : Option (AlgIntegralResult (CFrac ℚ)) :=
   cIntegrateAlgebraicDecide 5 rtRatRho [1] [1]
     (radInvYLift rtRatRho CField.one) CField.one [1] 1
     (qxNum rtRatRho) 1 hypPt35 true
@@ -292,7 +292,7 @@ example (p : ℕ) [Fact p.Prime]
     (D : CPoly ℚ) (degBound : ℕ) (ρq : CPoly ℚ) (gen : ℕ) (Dm : CPoly.MumfordDivisor ℚ)
     (hasLogPart : Bool) (integrand : RadElem (CFrac ℚ))
     (hres : AlgebraicDecideSoundnessResidual p ρ R B residual c D degBound ρq gen Dm integrand)
-    (F : AlgIntegralResultQ)
+    (F : AlgIntegralResult (CFrac ℚ))
     (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = some F) :
     CPoly.toPoly (algDerivQ ρ F) = CPoly.toPoly integrand :=

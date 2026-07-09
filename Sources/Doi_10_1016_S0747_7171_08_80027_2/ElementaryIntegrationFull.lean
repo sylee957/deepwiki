@@ -77,7 +77,7 @@ abbrev bie_logarg_arcsinh_base := @genArg_arcsinh_isLogIntegral
 /-- **The tower-generic full elementary integral `∫ = v + Σ cᵢ log uᵢ`** (Bronstein 1990, Integration of
 Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower):
 `AlgIntegralResult α` bundles a rational part `v` (a `RadElem α`) plus log terms `[(c₁, u₁), …]` over an
-arbitrary base field `α` (the tower level `CFrac β`). The generic analogue of `AlgIntegralResultQ`; the
+arbitrary base field `α` (the tower level `CFrac β`). The generic analogue of `AlgIntegralResult (CFrac ℚ)`; the
 OUTPUT of `cIntegrateElementary`, differentiated by `algDeriv`. -/
 abbrev bie_alg_integral_result := @AlgIntegralResult
 

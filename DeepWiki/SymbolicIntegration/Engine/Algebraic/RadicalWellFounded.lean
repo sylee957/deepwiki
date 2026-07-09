@@ -146,7 +146,7 @@ dispatch (`radIntegrateRationalWf` + `radAssembleRatPart`), then solves the log 
 `residual` (`radLogArgSolveQ ρ residual D degBound`); on `none` returns just the rational part. -/
 def cIntegrateAlgebraicWf (ρ : CFrac ℚ) (R B : CPoly ℚ)
     (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : CPoly ℚ) (degBound : ℕ) :
-    AlgIntegralResultQ :=
+    AlgIntegralResult (CFrac ℚ) :=
   let ρpoly : CPoly ℚ := qxNum ρ
   let runs := CPoly.radIntegrateRationalWf ρpoly R B
   let v := radAssembleRatPart ρ runs

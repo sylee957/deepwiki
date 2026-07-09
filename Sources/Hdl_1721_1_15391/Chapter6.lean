@@ -70,7 +70,7 @@ Ch. 6 §1 A self-contained non-Mumford point-list reduction: `pdivReduce` reduce
   (Hermite/CRT interpolation handling repeated points without the Mumford round-trip) is the natural
   follow-up `[deferred]`.
 Ch. 5 §3 → integrator: wiring `(c/m, g)` into the non-principal branch — `principalGenerator` returns the
-  generator `g`; packaging `(c/m, g)` as an `AlgIntegralResultQ` log term (the `cIntegrateAlgebraicWf` branch
+  generator `g`; packaging `(c/m, g)` as an `AlgIntegralResult (CFrac ℚ)` log term (the `cIntegrateAlgebraicWf` branch
   where `radLogArgSolveQ`/`radLogArgSolve` returns `none`) closes the simple-radical log part end-to-end
   `[infra]`.
 Ch. 2–4 General algebraic curves (non-radical) — the *integral basis*: the divisor-class *order* for a

@@ -71,20 +71,20 @@ def tltDiff01 : RadElem (CFrac ℚ) :=
 theorem tltTerm01_logderiv :
     radIsLogIntegral 2 tltRhoX3p1 tltYm1 (radScale (qxOfNum [3]) tltDiff01) = true := by native_decide
 
-/-! ## Assembling the torsion term into an `AlgIntegralResultQ` -/
+/-! ## Assembling the torsion term into an `AlgIntegralResult (CFrac ℚ)` -/
 
-/-- Assemble `∫ = v + (1/m)·log g` as an `AlgIntegralResultQ` `torsionAlgResult p ρ ρq g v D`: rational
+/-- Assemble `∫ = v + (1/m)·log g` as an `AlgIntegralResult (CFrac ℚ)` `torsionAlgResult p ρ ρq g v D`: rational
 part `v` plus the `torsionLogTerm` in `logTerms` (empty if `D` is non-torsion). -/
 def torsionAlgResult (p : ℕ) [Fact p.Prime]
     (ρ : CFrac ℚ) (ρq : CPoly ℚ) (g : ℕ) (v : RadElem (CFrac ℚ)) (D : MumfordDivisor ℚ) :
-    AlgIntegralResultQ :=
+    AlgIntegralResult (CFrac ℚ) :=
   match torsionLogTerm p ρ ρq g D with
   | none => ⟨v, []⟩
   | some term => ⟨v, [term]⟩
 
 /-- The assembled torsion result `∫ = 0 + (1/3)·log(y − 1)` (no rational part) for `(0, 1)` on
 `y² = x³ + 1` — `torsionAlgResult` with `v = 0` (`radZero`). Expected `logTerms = [(1/3, y − 1)]`. -/
-def tltResult01 : AlgIntegralResultQ :=
+def tltResult01 : AlgIntegralResult (CFrac ℚ) :=
   torsionAlgResult 5 tltRhoX3p1 hypRhoX3p1 1 radZero hypPt01
 
 /-- The assembled `tltResult01` has empty rational part and one log term with coefficient field-equal
@@ -111,7 +111,7 @@ theorem tltTerm35_none :
 
 /-- The assembled result for the non-torsion `(3, 5)` — `torsionAlgResult` with `v = 0`; expected
 `⟨0, []⟩` (empty log list, the non-elementary signature). -/
-def tltResult35 : AlgIntegralResultQ :=
+def tltResult35 : AlgIntegralResult (CFrac ℚ) :=
   torsionAlgResult 5 tltRhoX3m2 hypRhoX3m2 1 radZero hypPt35
 
 /-- The non-torsion assembled result `tltResult35` has empty rational part and empty log list. -/
@@ -122,13 +122,13 @@ theorem tltResult35_shape :
 
 /-- The non-principal `(1/m)·log` branch computes and validates: on the order-3 point `(0, 1)` of
 `y² = x³ + 1`, `torsionLogTerm` returns `(1/3, y − 1)`, the differential passes the log-derivative
-certificate, and the term assembles into an `AlgIntegralResultQ` whose `algDerivQ` round-trips; on the
+certificate, and the term assembles into an `AlgIntegralResult (CFrac ℚ)` whose `algDerivQ` round-trips; on the
 infinite-order `(3, 5)` of `y² = x³ − 2` it returns `none` with an empty log list. -/
 theorem torsion_log_branch_validates :
     -- the non-principal branch fires on the order-3 flex (0,1), returning (1/3, y − 1)
     (tltTerm01.map tltTermCheck = some true
       ∧ radIsLogIntegral 2 tltRhoX3p1 tltYm1 (radScale (qxOfNum [3]) tltDiff01) = true)
-    -- the term assembles into the integrator's AlgIntegralResultQ and algDerivQ round-trips
+    -- the term assembles into the integrator's AlgIntegralResult (CFrac ℚ) and algDerivQ round-trips
     ∧ ((radIsZero tltResult01.ratPart,
         tltResult01.logTerms.length,
         tltResult01.logTerms.head?.map fun t => qEq t.1 (oneOverMQ 3)) = (true, 1, some true)

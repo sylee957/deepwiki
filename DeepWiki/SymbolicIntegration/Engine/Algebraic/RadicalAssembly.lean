@@ -87,18 +87,15 @@ def algDeriv {α : Type*} [CField α] [CDiffField α] (ρ : α) (F : AlgIntegral
     (fun acc (c, u) => radAdd acc (radScale c (radLogDeriv ρ u)))
     (radDeriv 2 ρ F.ratPart)
 
-/-- **The full algebraic integral `∫ = v + Σ cᵢ log uᵢ`** (principal case) — the tower-generic
-`AlgIntegralResult` specialized to the `ℚ(x)` base `CFrac ℚ`. -/
-abbrev AlgIntegralResultQ := AlgIntegralResult (CFrac ℚ)
 
 /-- **The derivative of a full algebraic integral** `algDerivQ ρ F = radDeriv v + Σ cᵢ·radLogDeriv uᵢ`,
 the `CFrac ℚ` specialization of `algDeriv`. -/
-def algDerivQ (ρ : CFrac ℚ) (F : AlgIntegralResultQ) : RadElem (CFrac ℚ) :=
+def algDerivQ (ρ : CFrac ℚ) (F : AlgIntegralResult (CFrac ℚ)) : RadElem (CFrac ℚ) :=
   algDeriv ρ F
 
 -- The concrete result/derivative are exactly the generic ones at the `ℚ(x)` base (`base + abbrev`).
-example : AlgIntegralResultQ = AlgIntegralResult (CFrac ℚ) := rfl
-example (ρ : CFrac ℚ) (F : AlgIntegralResultQ) : algDerivQ ρ F = algDeriv ρ F := rfl
+example : AlgIntegralResult (CFrac ℚ) = AlgIntegralResult (CFrac ℚ) := rfl
+example (ρ : CFrac ℚ) (F : AlgIntegralResult (CFrac ℚ)) : algDerivQ ρ F = algDeriv ρ F := rfl
 
 /-- **Assemble the rational part `v` from a multi-case dispatch run**. -/
 def radAssembleRatPart (ρ : CFrac ℚ)

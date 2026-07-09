@@ -63,7 +63,7 @@ abbrev full_radLogDeriv_eq_integrand := @radLogDeriv_eq_integrand_arcsinh
 the bundle of a rational part `v` (a `RadElem`) and a list of log terms `[(cᵢ, uᵢ)]` (residue coefficient
 `cᵢ ∈ ℚ(x)`, argument `uᵢ` a `RadElem`) — the output of `cIntegrateAlgebraicWf`, differentiated by
 `algDerivQ`. -/
-abbrev full_integralResult := @AlgIntegralResultQ
+abbrev full_integralResult := @AlgIntegralResult (CFrac ℚ)
 
 /-- **The derivative of a full algebraic integral** `algDerivQ ρ F = radDeriv v + Σ cᵢ · radLogDeriv uᵢ`
 (Trager, Appendix A + Ch. 5): the genuine `RadElem` `D(v + Σ cᵢ log uᵢ)` in `(ℚ(x))[y]/(y² − ρ)`, each log
@@ -96,7 +96,7 @@ def full_rtRatIntegrand : RadElem (CFrac ℚ) := algDerivQ rtRatRho ⟨full_rtRa
 
 /-- The recovered rational-only result for `∫ 1/((x−1)²√(x²+1))`: the rational part is reconstructed
 by `radIntegrateRationalWf`, and the non-principal residual gives an empty log list. -/
-def full_rtRatRecovered : AlgIntegralResultQ :=
+def full_rtRatRecovered : AlgIntegralResult (CFrac ℚ) :=
   cIntegrateAlgebraicWf rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual CField.one [0, 0, 1] 1
 
 /-- **★ Round-trip (rational-only): `∫ 1/((x−1)²√(x²+1))`** (Trager, Appendix A §2, `native_decide`): start
@@ -116,7 +116,7 @@ theorem full_roundtrip_rational_shape :
 
 /-- The recovered log-only result for `∫ dx/(x√(x²+1))`: empty rational part and one computed
 principal log term. -/
-def full_rtLogRecovered : AlgIntegralResultQ :=
+def full_rtLogRecovered : AlgIntegralResult (CFrac ℚ) :=
   cIntegrateAlgebraicWf rtLogRho [1] [1] rtLogIntegrand CField.one rtLogD 0
 
 /-- **★ Round-trip (log-only): `∫ dx/(x√(x²+1)) = log((y − 1)/x)`** (Trager, Ch. 5 §1, `native_decide`):
@@ -138,14 +138,14 @@ def full_rtCombVdispatch : RadElem (CFrac ℚ) :=
   radAssembleRatPart rtCombRho (CPoly.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
 
 /-- The combined starting antiderivative `F = full_rtCombVdispatch + log(rtCombU)`. -/
-def full_rtCombF : AlgIntegralResultQ := ⟨full_rtCombVdispatch, [(CField.one, rtCombU)]⟩
+def full_rtCombF : AlgIntegralResult (CFrac ℚ) := ⟨full_rtCombVdispatch, [(CField.one, rtCombU)]⟩
 
 /-- The combined benchmark integrand: `algDerivQ full_rtCombF`. -/
 def full_rtCombIntegrand : RadElem (CFrac ℚ) := algDerivQ rtCombRho full_rtCombF
 
 /-- The recovered combined result for `F = v + log(x + y)`: both the rational part and the log
 argument are reconstructed by `cIntegrateAlgebraicWf`. -/
-def full_rtCombRecovered : AlgIntegralResultQ :=
+def full_rtCombRecovered : AlgIntegralResult (CFrac ℚ) :=
   cIntegrateAlgebraicWf rtCombRho rtCombR rtCombB rtCombLogResidual CField.one [1] 1
 
 /-- **★★ Round-trip (COMBINED): `F = v + c·log u`, BOTH parts nonzero** (Trager, Appendix A + Ch. 5,
