@@ -4,6 +4,7 @@ import DeepWiki.ComputableAlgebra.PolyReprDenote
 import DeepWiki.ComputableAlgebra.PolyReprDegree
 import DeepWiki.ComputableAlgebra.PolyReprSparse
 import DeepWiki.ComputableAlgebra.PolyReprFrac
+import DeepWiki.ComputableAlgebra.PolyReprBridge
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.Fraction
