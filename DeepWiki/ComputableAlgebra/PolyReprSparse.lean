@@ -74,5 +74,10 @@ and leading coefficient `1` — the same algorithm, a different representation. 
 example : cdeg (cpow (SparsePoly.ofList [(0, 1), (1, 1)] : SparsePoly ℚ) 2) = 2 := by native_decide
 /-- Sparse `(1 + x)²` has leading coefficient `1`. -/
 example : clead (cpow (SparsePoly.ofList [(0, 1), (1, 1)] : SparsePoly ℚ) 2) = 1 := by native_decide
+/-- Sparse `cderiv`: `d/dx (1 + 3x²) = 6x` has honest degree `1` — same algorithm on the sparse carrier. -/
+example : cdeg (cderiv (SparsePoly.ofList [(0, 1), (2, 3)] : SparsePoly ℚ)) = 1 := by native_decide
+/-- Sparse `ceval`: `(1 + 2x + 3x²)` at `x = 2` is `17`. -/
+example : ceval (2 : ℚ) (SparsePoly.ofList [(0, 1), (1, 2), (2, 3)] : SparsePoly ℚ) = 17 := by
+  native_decide
 
 end DeepWiki.SymbolicIntegration.CPolyRepr
