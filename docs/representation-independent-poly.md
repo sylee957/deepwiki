@@ -169,19 +169,17 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   `isCoprime_of_cgcdExt_isUnit` (unit gcd ⇒ Mathlib `IsCoprime`) — the partial-fractions entry point.
 - **Evaluation** (`PolyReprDenote.lean`): `ceval` with `toR_ceval` (= Mathlib `eval`), the ring-hom
   squares `toR_ceval_add`/`toR_ceval_mul`, and the factor theorem `ceval_eq_zero_iff_dvd`.
-- **Resultant** (`PolyReprResultant.lean`, in progress): `clistDetn` (computable cofactor determinant
-  over `CCommRing`) with the bridge `toR_clistDetn` (= Mathlib `listDetn`, hence `Matrix.det` via
-  `ListDet.listDetn_eq_det`); the Sylvester matrix `cSylvester` and `cResultant` = its `clistDetn`,
-  `native_decide`-validated against known resultants (`res(x−1,x−2)=−1`, `res(x²−1,x−1)=0`). Remaining:
-  the abstract bridge `toR (cResultant p q) = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q)`.
-  **Verified (2026-07-09):** `cSylvester`'s layout matches `Polynomial.sylvester` *entry-wise, with no
-  permutation* — first block (columns `< m`) = `q`-coefficient strips with condition `Icc j (j+n)`, second
-  block (column `m+j′`) = `p`-coefficient strips with `Icc j′ (j′+m)`, exactly Mathlib's `j.addCases`
-  split. So the bridge chain is: `cResultant` → `toR_clistDetn` → `ListDet.listDetn_eq_det` (needs the two
-  well-formedness facts `length = m+n`, rows `= m+n`) → a `Matrix.ext` proving
-  `matrixOfList ((cSylvester …).map (map toR)) = Polynomial.sylvester (toPoly p) (toPoly q) m n` (the
-  `getD`-of-`range·map` reductions + `Fin.addCases` induction + `coeff_toPoly` + `Set.Icc`↔`∧`) →
-  `Polynomial.resultant`. Purely mechanical `Fin`/`getD` bookkeeping, no remaining mathematical content.
+- **Resultant** (`PolyReprResultant.lean`, COMPLETE): `clistDetn` (computable cofactor determinant over
+  `CCommRing`) with the bridge `toR_clistDetn` (= Mathlib `listDetn`, hence `Matrix.det` via
+  `ListDet.listDetn_eq_det`); the Sylvester matrix `cSylvester`, `cResultant` = its `clistDetn`, and
+  `cResultantDeriv p = cResultant p p'` (repeated-factor detector), `native_decide`-validated
+  (`res(x−1,x−2)=−1`, `res(x²−1,x−1)=0`). The **abstract bridge** `toR_cResultant : toR (cResultant p q) =
+  Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q)` is proven: `cResultant` → `toR_clistDetn`
+  → `listDetn_eq_det` (well-formedness `cSylvester_length`/`_row_length`) → `matrixOfList_cSylvester` (a
+  `Matrix.ext`: the `getD`-of-`range·map` chain reduces, then a `Fin.addCases` induction matches
+  `cSylvester`'s two blocks to `Polynomial.sylvester`'s exactly — no permutation — via `coeff_toPoly` +
+  `Set.Icc`↔`∧`) → `Polynomial.resultant`. So `cResultant` is native_decide-executable *and* a-priori
+  correct against Mathlib.
 
 Each computable op reduces under `native_decide` on both the dense `List` and sparse `SparsePoly`
 carriers — the same algorithm, two representations — and the algebraic correctness is a-priori (not merely
