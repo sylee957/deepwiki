@@ -49,13 +49,13 @@ import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.Subresultants
 
--- ## Concrete Compute layer + generic executable Computable engine
+-- ## Concrete `Compute` layer + generic executable `Engine`
 import DeepWiki.SymbolicIntegration.Compute
-import DeepWiki.SymbolicIntegration.Computable
+import DeepWiki.SymbolicIntegration.Engine
 
 /-! # Symbolic Integration — topic aggregator
 
 The abstract theory on Mathlib carriers, the concrete `Compute` layer over Mathlib
-`Polynomial`, and the generic executable `Computable` Risch engine (core, base Risch DE,
+`Polynomial`, and the generic executable Risch `Engine` (core, base Risch DE,
 hyperexponential, coupled systems, towers, algebraic functions, and the
 soundness/completeness capstone). -/

@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralLogSoundness
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogSoundness
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.GeneralLogSoundness
 import Sources.Doi_10_1016_S0747_7171_08_80027_2.Source
 
 /-! # Bronstein-1990 catalog — soundness pointer (the correctness of the algebraic arc beneath the tower)

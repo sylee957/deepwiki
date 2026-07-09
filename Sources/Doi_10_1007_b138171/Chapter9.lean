@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Structure
+import DeepWiki.SymbolicIntegration.Engine.Structure
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 9: Structure Theorems
@@ -6,7 +6,7 @@ The module of differentials, Rosenlicht's theorem, and the Risch / Rothstein–C
 theorems — the algebraic-independence results deciding whether a candidate `log(u)` / `exp(u)` is a
 *new transcendental monomial* over the field already built. The §9.3 Risch structure decision
 (Corollary 9.3.1) is now rendered as a **computable** test over the reachable base `k = ℚ(x)`
-(`DeepWiki.SymbolicIntegration.Computable.Structure`): for a logarithmic tower, (9.8)/(9.9) collapse to a
+(`DeepWiki.SymbolicIntegration.Engine.Structure`): for a logarithmic tower, (9.8)/(9.9) collapse to a
 ℚ-linear-dependence test among the logarithmic derivatives `wᵢ = Duᵢ/uᵢ ∈ ℚ(x)`, decided by the §7.1
 nullspace solver `cNullspaceBasisQ` (`crref` over ℚ), with the detected relation verified against the
 rational-function identity. Validated on `log(x²) = 2 log(x)` (dependent) vs `log(x), log(x+1)`

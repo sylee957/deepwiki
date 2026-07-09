@@ -1,8 +1,8 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalOverTower
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalOverTower
 
 /-! # Bronstein-1990 catalog — concrete elementary integration over a transcendental tower
 The **first formalized content** of this catalog. The library file
-`DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalOverTower` realizes the Bronstein-1990 grand unification
+`DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalOverTower` realizes the Bronstein-1990 grand unification
 (elementary = transcendental monomial θ + algebraic radical y) for **concrete** integrals: the
 algebraic-radical arc (`radDeriv`, `radMul`, the diagonal derivation) running **over** a transcendental
 tower base `α = ℚ(x)(θ)`, with θ exponential (`θ' = θ`, `θ = eˣ`) or logarithmic (`θ' = 1/x`, `θ = log x`).

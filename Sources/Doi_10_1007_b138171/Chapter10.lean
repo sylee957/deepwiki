@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Parallel
+import DeepWiki.SymbolicIntegration.Engine.Parallel
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 10: Parallel Integration
@@ -7,7 +7,7 @@ transcendental generator at a time, it integrates *all generators at once* by gu
 and the rational-part shape and solving an inhomogeneous **linear system over the constants** (the strong
 Liouville form `f = Dv + Σ cᵢ Duᵢ/uᵢ`, eq. 10.1). The §10.3 `ParallelIntegrate(f, D)` box is now rendered
 as a **computable** algorithm over the base monomial field `k = ℚ`, the field `ℚ(t)`
-(`DeepWiki.SymbolicIntegration.Computable.Parallel`): Yun squarefree factorization (the candidate log
+(`DeepWiki.SymbolicIntegration.Engine.Parallel`): Yun squarefree factorization (the candidate log
 arguments), the eq. 10.6 linear system, and the particular-solution solve, validated on `t = x`,
 `t = exp x` integrands and on the documented **heuristic failure**.
 

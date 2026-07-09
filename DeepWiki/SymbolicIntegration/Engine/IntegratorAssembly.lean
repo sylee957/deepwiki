@@ -1,0 +1,147 @@
+import DeepWiki.SymbolicIntegration.Engine.UnifiedFuelFree
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.NormalCore
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Special
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.FullSoundness
+import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
+import DeepWiki.SymbolicIntegration.Engine.HermiteTowerStep
+import DeepWiki.SymbolicIntegration.Engine.HermiteValuationTower
+import DeepWiki.SymbolicIntegration.Engine.OneShotAssembly
+import DeepWiki.SymbolicIntegration.Engine.HermiteReduction
+import DeepWiki.SymbolicIntegration.Engine.HermiteReductionRealization
+import DeepWiki.SymbolicIntegration.Engine.ResidueLogPart
+import DeepWiki.SymbolicIntegration.Engine.Assemble
+
+/-! # The generic one-level Risch assembler
+
+This file defines the `MonomialCase`-parameterized integrator `cIntegrateCase`, the canonical-split
+accessors (`crPoly`/…/`redNorm`), canonical reconstruction, and generic soundness theorem
+`cIntegrateCase_sound`.
+-/
+
+namespace DeepWiki.SymbolicIntegration
+
+open Compute
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+variable [CFracGcdCoreWf α]
+
+/-- The generic one-level Risch integrator, parameterized by a monomial case `C`: canonical-split, run the
+case's special-part hook, correct the reduced normal part, and combine. -/
+def cIntegrateCase (C : MonomialCase α) (Dt a d : CPolyG α) (cands : List α) :
+    Option (IntegralResultG α) :=
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
+  match C.integrateSpecial Dt fp b ds with
+  | none => none
+  | some (snum, sden) =>
+    match C.reducedCorrect Dt (cIntegrateReducedGWf Dt cn dn cands) with
+    | none => none
+    | some nrm => some (combineSN snum sden nrm)
+
+end CPolyG
+
+open CPolyG
+open QFunNZG Polynomial
+open scoped Differential
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+
+/-- From `a = q·d + r`, `d = dₛ·dₙ`, and `b·dₙ + c·dₛ = r`, the pieces recombine:
+`q + b/dₛ + c/dₙ = a/d`. -/
+theorem canonicalRepFast_field_identity {K : Type*} [Field K] (a d q r dn ds b c : K[X])
+    (hd : d ≠ 0) (hdn : dn ≠ 0) (hds : ds ≠ 0)
+    (hadiv : a = q * d + r) (hsplit : d = ds * dn) (hbcr : b * dn + c * ds = r) :
+    (algebraMap K[X] (RatFunc K) q)
+        + algebraMap K[X] (RatFunc K) b / algebraMap K[X] (RatFunc K) ds
+        + algebraMap K[X] (RatFunc K) c / algebraMap K[X] (RatFunc K) dn
+      = algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) d := by
+  set A := algebraMap K[X] (RatFunc K) with hA
+  have hAd : A d ≠ 0 := RatFunc.algebraMap_ne_zero hd
+  have hAdn : A dn ≠ 0 := RatFunc.algebraMap_ne_zero hdn
+  have hAds : A ds ≠ 0 := RatFunc.algebraMap_ne_zero hds
+  have hAa : A a = A q * (A ds * A dn) + (A b * A dn + A c * A ds) := by
+    rw [hadiv, hsplit, ← hbcr]; push_cast [hA]; ring
+  rw [show A d = A ds * A dn by rw [hsplit, map_mul]]
+  rw [eq_div_iff (mul_ne_zero hAds hAdn), hAa]
+  field_simp
+  ring
+
+/-- Polynomial part `fₚ` of `canonicalRepresentationFastGWf Dt a d`. -/
+abbrev crPoly (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).1
+/-- Special-part numerator `b` of the canonical split. -/
+abbrev crSpecNum (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.1.1
+/-- Special-part denominator `dₛ` of the canonical split. -/
+abbrev crSpecDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.1.2
+/-- Normal-part numerator `cₙ` of the canonical split. -/
+abbrev crNormNum (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.2.1
+/-- Normal-part denominator `dₙ` of the canonical split. -/
+abbrev crNormDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.2.2
+/-- The reduced integral of the normal part `cₙ/dₙ`. -/
+abbrev redNorm (Dt a d : CPolyG α) (cands : List α) : IntegralResultG α :=
+  cIntegrateReducedGWf Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
+
+omit [CDiffFieldSpec α] [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- Canonical split pieces recombine as `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`. -/
+theorem canonicalReconstruction (Dt a d : CPolyG α)
+    (hd : toPolyG d ≠ 0)
+    (hdn : toPolyG (crNormDen Dt a d) ≠ 0)
+    (hds : toPolyG (crSpecDen Dt a d) ≠ 0)
+    (hsplit : toPolyG d = toPolyG (crSpecDen Dt a d) * toPolyG (crNormDen Dt a d))
+    (hgdeg : (toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0) :
+    fieldFrac (crPoly Dt a d) [CField.one]
+        + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
+        + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
+      = fieldFrac a d := by
+  set qr := cdivmodWf a d with hqr
+  set sn := cSplitFactorFastGWf Dt d with hsn
+  set uw := cbezoutOneWf sn.1 sn.2 with huw
+  set bc := cextendedEuclideanSplitWf sn.1 sn.2 qr.2 uw.1 uw.2 with hbc
+  have hcanon : canonicalRepresentationFastGWf Dt a d = (qr.1, (bc.1, sn.2), (bc.2, sn.1)) := by
+    rw [canonicalRepresentationFastGWf, ← hqr, ← hsn, ← huw, ← hbc]
+  simp only [crPoly, crSpecNum, crSpecDen, crNormNum, crNormDen, fieldFrac, hcanon] at hdn hds hsplit hgdeg hgne ⊢
+  have hcnd : cnormG d ≠ [] := fun h => hd ((cisZeroG_iff d).mp (by simp [cisZeroG, h]))
+  have hcns : cnormG sn.2 ≠ [] := fun h => hds ((cisZeroG_iff sn.2).mp (by simp [cisZeroG, h]))
+  have hbez : toPolyG uw.1 * toPolyG sn.1 + toPolyG uw.2 * toPolyG sn.2 = 1 :=
+    toPolyG_cbezoutOneWf sn.1 sn.2 hgdeg hgne
+  have hadiv : toPolyG a = toPolyG qr.1 * toPolyG d + toPolyG qr.2 := toPolyG_cdivmodWf a d hcnd
+  have hbcr : toPolyG bc.1 * toPolyG sn.1 + toPolyG bc.2 * toPolyG sn.2 = toPolyG qr.2 :=
+    toPolyG_cextendedEuclideanSplitWf sn.1 sn.2 qr.2 uw.1 uw.2 hcns hbez
+  have hone : amG α (toPolyG ([CField.one] : CPolyG α)) = 1 := by
+    simp only [denote]
+    simp
+  rw [hone, div_one]
+  exact canonicalRepFast_field_identity (toPolyG a) (toPolyG d) (toPolyG qr.1) (toPolyG qr.2)
+    (toPolyG sn.1) (toPolyG sn.2) (toPolyG bc.1) (toPolyG bc.2) hd hdn hds hadiv hsplit hbcr
+
+omit [CRischField α] in
+/-- Generic soundness of `cIntegrateCase` from special-part, normal-part, and reconstruction hypotheses. -/
+theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPolyG α) (cands : List α)
+    (res : IntegralResultG α) (snum sden : CPolyG α) (nrm : IntegralResultG α)
+    (specialVal : RatFunc (CFieldSpec.K α))
+    (hsden : toPolyG sden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
+    (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
+      = some (snum, sden))
+    (hCorr : C.reducedCorrect Dt (redNorm Dt a d cands) = some nrm)
+    (hsome : cIntegrateCase C Dt a d cands = some res)
+    (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
+    (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)
+    (hrecon : specialVal + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
+    IsIntegralResultG Dt a d res := by
+  have hshape : res = combineSN snum sden nrm := by
+    rw [cIntegrateCase] at hsome
+    simp only [crPoly, crSpecNum, crSpecDen, redNorm, crNormNum, crNormDen] at hSpec hCorr
+    rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+    rw [hcrep] at hsome hSpec hCorr
+    simp only [hSpec, hCorr] at hsome
+    exact (Option.some.injEq _ _ ▸ hsome).symm
+  rw [hshape]
+  exact combineSN_isIntegralResult Dt a d (crNormNum Dt a d) (crNormDen Dt a d) snum sden nrm
+    specialVal hsden hgden hSpecField hNrmField hrecon
+
+end DeepWiki.SymbolicIntegration

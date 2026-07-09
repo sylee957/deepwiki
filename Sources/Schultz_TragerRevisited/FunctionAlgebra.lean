@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.FunctionAlgebraIntegrate
+import DeepWiki.SymbolicIntegration.Engine.FunctionAlgebraIntegrate
 import Sources.Schultz_TragerRevisited.Source
 
 /-! # Schultz §7.1 (function algebras / zero divisors) — catalog

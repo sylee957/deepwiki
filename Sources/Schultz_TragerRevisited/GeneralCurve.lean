@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralCurveDecide
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.GeneralCurveDecide
 import Sources.Schultz_TragerRevisited.Source
 
 /-! # Schultz §4 (general case — infinite places / divisors) — catalog

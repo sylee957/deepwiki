@@ -1,8 +1,8 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalDerivationInvariant
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalIntegralSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralIntegralSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralLogSoundness
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalDerivationInvariant
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalIntegralSoundness
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogSoundness
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.GeneralIntegralSoundness
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.GeneralLogSoundness
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — SOUNDNESS: `D(∫f) = f` for the algebraic integrator (abstract correctness)

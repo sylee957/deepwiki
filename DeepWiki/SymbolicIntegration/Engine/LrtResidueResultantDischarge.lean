@@ -1,0 +1,139 @@
+import DeepWiki.SymbolicIntegration.Engine.LrtSoundness
+import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
+import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Engine.RefinesPolyG
+import DeepWiki.SymbolicIntegration.Engine.LrtResidueResultantDischarge.GenuineMonomial
+
+/-! # Residue-resultant nonvanishing from pole normality
+
+Derives nonvanishing of the tower residue resultant from genuine pole normality. Over
+`E = AlgebraicClosure K`, normality gives nonvanishing of the implicit derivative at each pole, so
+`rtResultantGen_ne_zero` proves the base-changed resultant nonzero; injectivity of `algebraMap` then returns
+the `K`-level result used by the reduced LRT integrator soundness theorem. -/
+
+namespace DeepWiki.SymbolicIntegration
+
+open Polynomial Compute CPolyG QFunNZG Classical
+open scoped Differential
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+
+/-- **`hR0` is derivable from `hE` (specialized at the algebraic closure).** Given the primitive-case data
+(`hDt0`, `hAD`) and normality `hnorm` at the poles over `E = AlgebraicClosure K`, the residue resultant
+`cResidueResultantTowerGWf` is nonzero. The `hB` (`implicitDeriv` nonvanishing) is derived from `hnorm` exactly
+as in `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`; `hB_deg` is automatic from monic `Dstar` +
+`hDt0`; then `toPolyG_cResidueResultantTowerGWf_map` + `rtResultantGen_ne_zero` + `map` injectivity close it. -/
+theorem residueResultant_ne_zero_of_hnormAlgClosure [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hpp : (toPolyG d).primPart ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
+        < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree)
+    (hnorm : ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+              (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)))).roots.toFinset,
+        ((toPolyG Dt).map (algebraMap (CFieldSpec.K α)
+            (AlgebraicClosure (CFieldSpec.K α)))).eval β ≠ β′) :
+    toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+        (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0 := by
+  set hNum := (cHermiteReduceTowerGWf Dt a d).2.1 with hNumdef
+  set Dstar := (cHermiteReduceTowerGWf Dt a d).2.2 with hDstardef
+  set φ := algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)) with hφdef
+  have hDmonic : (toPolyG Dstar).Monic := toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0
+  have hDsep : (toPolyG Dstar).Separable :=
+    PerfectField.separable_iff_squarefree.mpr
+      (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
+  have hDmonicE : ((toPolyG Dstar).map φ).Monic := hDmonic.map φ
+  have hDsepE : ((toPolyG Dstar).map φ).Separable := (Polynomial.separable_map φ).mpr hDsep
+  have hB : ∀ β ∈ ((toPolyG Dstar).map φ).roots,
+      (Differential.implicitDeriv ((toPolyG Dt).map φ) ((toPolyG Dstar).map φ)).eval β ≠ 0 := by
+    intro β hβ
+    have hcop : IsCoprime ((toPolyG Dstar).map φ)
+        (Differential.implicitDeriv ((toPolyG Dt).map φ) ((toPolyG Dstar).map φ)) := by
+      rw [monic_separable_eq_nodal _ hDmonicE hDsepE, Lagrange.nodal]
+      exact (isCoprime_prod_X_sub_C_implicitDeriv_iff _ _).mpr (by simpa using hnorm)
+    exact isCoprime_X_sub_C_iff.mp (hcop.of_isCoprime_of_dvd_left
+      (dvd_iff_isRoot.mpr (Polynomial.isRoot_of_mem_roots hβ)))
+  have hAnd : ((toPolyG hNum).map φ).natDegree < ((toPolyG Dstar).map φ).natDegree := by
+    rw [Polynomial.natDegree_map, Polynomial.natDegree_map]; exact hAD
+  have hB_deg : (Differential.implicitDeriv ((toPolyG Dt).map φ) ((toPolyG Dstar).map φ)).natDegree
+      ≤ ((toPolyG Dstar).map φ).natDegree - 1 :=
+    natDegree_implicitDeriv_le_of_monic ((toPolyG Dt).map φ) ((toPolyG Dstar).map φ) hDmonicE
+      (by rw [Polynomial.natDegree_map]; exact hDt0)
+  have hmap_ne : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map φ ≠ 0 := by
+    rw [toPolyG_cResidueResultantTowerGWf_map Dt hNum Dstar hDmonic hDt0 hAD]
+    exact rtResultantGen_ne_zero _ _ _ hDmonicE.ne_zero hB hAnd hB_deg
+  exact fun h => hmap_ne (by rw [h, Polynomial.map_zero])
+
+/-- **`hR0` from the pole-normality `def`.** Instantiates `LrtPoleNormalityData` at `E = AlgebraicClosure K`
+(a `def`-hypothesis instantiation, so the `CFieldSpec.K α` universe unifies — the same mechanism as
+`isIntegralResultLrtG_algebraicClosure`) and feeds `residueResultant_ne_zero_of_hnormAlgClosure`. This is what
+lets `hR0` be *dropped* as a field of `LrtReducedGenuineData`. -/
+theorem hR0_of_normalityData [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
+        < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree)
+    (h : LrtPoleNormalityData Dt a d) :
+    toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+        (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0 :=
+  residueResultant_ne_zero_of_hnormAlgClosure hgcd Dt a d hd0 hpp hDt0 hAD
+    (h (AlgebraicClosure (CFieldSpec.K α)))
+
+set_option maxHeartbeats 800000 in
+/-- **The reduced integrator is sound in the no-poles / trivial-normal-part case** (`deg Dstar = 0`). With a
+constant squarefree denominator there are no residues, the log part is empty, and the leftover numerator
+vanishes by properness, leaving the pure Hermite identity. -/
+theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles [CharZero (CFieldSpec.K α)]
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0) (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt)
+    (hDstar0 : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree = 0) :
+    IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d) := by
+  have hcopgcd := hcopgcd_of_genuineMonomial hgcd Dt d hd0 hpp hgen
+  have hADdeg := hAD_degree_of_genuineMonomial hgcd Dt a d hd0 hpp hDtdeg haProper hgen
+  have hNum0 : toPolyG (cHermiteReduceTowerGWf Dt a d).2.1 = 0 := by
+    by_contra h; have := Polynomial.natDegree_lt_natDegree h hADdeg; omega
+  have hDstarcdeg : cdegG (cHermiteReduceTowerGWf Dt a d).2.2 = 0 := by
+    rw [cdegG_eq_natDegree]; exact hDstar0
+  intro E _ _ _ _ _ _
+  rw [cIntegrateReducedLrtG]
+  simp only [cLrtLogArgG_eq_nil_of_cdegG_zero Dt _ _ hDstarcdeg, logResidueSumLrtG_nil, add_zero]
+  have hh := hherm_lrt_E (E := E) hgcd Dt a d hd0 hpp hcopgcd
+  rw [hNum0, show amGExt (0 : (CFieldSpec.K α)[X]) = (0 : RatFunc E) from by simp [amGExt],
+    zero_div, add_zero] at hh
+  exact hh
+
+set_option maxHeartbeats 800000 in
+/-- **The assembled LRT reduced soundness from the genuine monomial property alone.** Given `d ≠ 0`, the
+decidable scope guard `hDt0`, the input properness `haProper` (`deg a < deg d`), and the single genuine datum
+`LrtReducedGenuineData` (now just `hE`), the root-free primitive reduced integrator `cIntegrateReducedLrtG` is
+sound. Case-splits on `deg Dstar`: **no poles** (`deg Dstar = 0`) is the trivially-sound no-poles branch
+(`…_of_noPoles`); otherwise the Hermite properness `hAD` is *derived* in `.natDegree` form from the `.degree`
+discharge (`hAD_degree_of_genuineMonomial` + `natDegree_lt_natDegree`, `deg Dstar ≥ 1`) and fed to `…_of_setup`
+alongside the derived `hR0`/`hm`/`hnorm`/`hcopgcd`. Every side condition flows from `hE`. -/
+theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldSpec.K α)]
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree) (hgen : LrtReducedGenuineData Dt a d) :
+    IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d) := by
+  have hDtdeg : (toPolyG Dt).natDegree ≤ 1 := hDt0 ▸ Nat.zero_le 1
+  by_cases hDstar0 : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree = 0
+  · -- no poles: `deg Dstar = 0` ⟹ trivially sound (the `.natDegree hAD = 0<0` gap)
+    exact isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles hgcd Dt a d hd0
+      (Polynomial.primPart_ne_zero _) hDtdeg haProper hgen.hE hDstar0
+  · -- `deg Dstar ≥ 1`: derive `.natDegree hAD` from the `.degree` discharge, then the residue path
+    have hADdeg := hAD_degree_of_genuineMonomial hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _)
+      hDtdeg haProper hgen.hE
+    have hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
+        < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree := by
+      by_cases hh : toPolyG (cHermiteReduceTowerGWf Dt a d).2.1 = 0
+      · rw [hh, Polynomial.natDegree_zero]; omega
+      · exact Polynomial.natDegree_lt_natDegree hh hADdeg
+    have hnorm : LrtPoleNormalityData Dt a d := lrtPoleNormalityData_of_genuineMonomial hgen.hE
+    exact isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup hgcd Dt a d hd0
+      (Polynomial.primPart_ne_zero _)
+      (hcopgcd_of_genuineMonomial hgcd Dt d hd0 (Polynomial.primPart_ne_zero _) hgen.hE)
+      hDt0 hAD ⟨hR0_of_normalityData hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _) hDt0 hAD hnorm,
+        Polynomial.primPart_ne_zero _⟩
+      (hm_of_genuineMonomial hgcd Dt a d hd0 hgen.hE hDt0) hnorm
+
+end DeepWiki.SymbolicIntegration

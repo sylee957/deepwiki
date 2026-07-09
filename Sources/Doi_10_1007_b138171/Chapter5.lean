@@ -1,8 +1,8 @@
-import DeepWiki.SymbolicIntegration.Computable.PolyPartTower
-import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
-import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
-import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
-import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
+import DeepWiki.SymbolicIntegration.Engine.PolyPartTower
+import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
+import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
+import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
+import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 5: Integration of Transcendental Functions
@@ -10,7 +10,7 @@ The core Risch integration algorithm for a single transcendental monomial extens
 **degree- and multiplicity-lowering reductions** of this chapter — Hermite (§5.3), the polynomial
 reduction (§5.4), the residue-criterion logarithmic part (§5.6), and the primitive-case reduced
 integration (§5.8) — are now rendered as **computable** algorithms over the monomial tower ℚ(x)[t]
-(`DeepWiki.SymbolicIntegration.Computable*`), each with `native_decide` evidence on a worked book
+(`DeepWiki.SymbolicIntegration.Engine*`), each with `native_decide` evidence on a worked book
 example. The chapter rests on Chapters 3–4 (differential/monomial extensions, the order function and
 the Rothstein–Trager resultant) and is the heart of the book.
 

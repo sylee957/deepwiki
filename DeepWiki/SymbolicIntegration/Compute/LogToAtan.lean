@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
-import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
+import DeepWiki.SymbolicIntegration.Engine.GenericPolyEngine
 
 /-! # Computable `LogToAtan` over `ℚ`
 An executable rendering of the `LogToAtan` algorithm on the dense coefficient carrier

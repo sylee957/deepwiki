@@ -162,10 +162,11 @@ doc-gen URL, so this is done once per topic, not per chapter). A topic that outg
 (≳50 files) may adopt **one to two levels of concept subdirectories**, with the renames
 batched into dedicated `git mv`-only commits (imports + aggregators only, zero declaration
 changes); `DeepWiki/SymbolicIntegration/` is the precedent. Its placement grammar:
-**directories encode the carrier-level area** (`Compute/`, `Computable/`, and under the
-engine `Computable/{RischDE,Hyperexp,CoupledDE,Tower,Algebraic}/`), **leaf names encode
+**directories encode the carrier-level area** (`Compute/` = the concrete ℚ reference layer,
+`Engine/` = the generic executable Risch engine, and under the engine
+`Engine/{RischDE,Hyperexp,CoupledDE,Tower,Algebraic}/`), **leaf names encode
 stage + kind**, and **dead historical markers are dropped opportunistically** (never the
-directory-implied `Computable` prefix). Kind suffixes: `Sound` / `Complete` / `Spec` /
+directory-implied `Engine` prefix). Kind suffixes: `Sound` / `Complete` / `Spec` /
 `Bench` / `Examples`. A subdirectory gets an aggregator `Foo.lean` alongside `Foo/`, and the
 topic root imports the area aggregators rather than every leaf.
 
@@ -402,10 +403,10 @@ not just defaults):
   `*Correct`/`*Sound` file (those masquerading as engine correctness get renamed
   to their concept, e.g. `GcdCorrect`→`FilterProdMul`, `CanonicalRepCorrect`→
   `CanonicalFieldIdentity`, `SplitFactorCorrect`→`SplitFactorHelpers`). The
-  `Computable/` engine's only theorems are **commuting squares through a
+  `Engine/` engine's only theorems are **commuting squares through a
   denotation**: for a computable `f`, the *one* satellite `⟦f x⟧ = F ⟦x⟧` (RHS a
   Layer-0 notion; a `_sound`/`_complete` pair for option-valued deciders) lives in
-  the file that *defines* `f` and is tagged `@[denote]` (see `Computable/Denote.lean`
+  the file that *defines* `f` and is tagged `@[denote]` (see `Engine/Denote.lean`
   and [[leanproofs-symbolic-integration-reorg]]). A new algorithm ships its square
   in its own file — not a separate `*Correct` file; existing end-to-end soundness
   developments (`*Soundness` assemblies) stay separate, but single stray squares

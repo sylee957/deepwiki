@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtensionExamples
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalCase2
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalWellFounded
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtensionExamples
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalCase2
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalWellFounded
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — Appendix A: Simple Radical Extensions

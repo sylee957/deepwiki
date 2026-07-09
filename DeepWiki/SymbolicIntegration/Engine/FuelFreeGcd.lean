@@ -1,0 +1,471 @@
+import DeepWiki.SymbolicIntegration.Engine.ConcreteCoherence
+import Mathlib.RingTheory.Polynomial.Content
+
+/-! # Well-founded generic Euclidean division and gcd
+
+Euclidean division, extended gcd, and divisibility testing on `CPolyG`, by well-founded recursion
+on the normalized list length. The defs are `[CField α]`-only (so they reduce under `native_decide`
+over noncomputable-`CFieldSpec` carriers); correctness through `toPolyG` is proved by well-founded
+induction on each def's own recursion. -/
+
+open Polynomial Classical
+
+namespace DeepWiki.SymbolicIntegration
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-! ### Euclidean division `cdivmodWf`
+
+Termination is by `(cnormG p).length`, strictly dropped each reduce step (`stepG_length_lt`). -/
+
+/-- One reduce step of Euclidean division: replace `p` by the leading-term-cancelled
+`cnormG (p − (clead p/clead q)·xᵏ·q)`. Recursion driver of `cdivmodWf`. -/
+def reduceStepWf (p q : CPolyG α) : CPolyG α :=
+  cnormG (csubG (cnormG p)
+    (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
+      [CField.div (cleadG p) (cleadG q)]) (cnormG q)))
+
+/-- Generic Euclidean division on `CPolyG`: `cdivmodWf p q = (quotient, remainder)` with
+`p = quotient · q + remainder` over `K` (`q ≠ 0`). Well-founded on `(cnormG p).length`. -/
+def cdivmodWf (p q : CPolyG α) : CPolyG α × CPolyG α :=
+  let pn := cnormG p
+  let qn := cnormG q
+  if cisZeroG qn then ([], [])
+  else if (pn : List α).length < (qn : List α).length then ([], pn)
+  else
+    let c := CField.div (cleadG pn) (cleadG qn)
+    let k := (pn : List α).length - (qn : List α).length
+    let term := cshiftG k [c]
+    let p' := reduceStepWf p q
+    if (cnormG p' : List α).length < (cnormG p : List α).length then
+      let (quo, rem) := cdivmodWf p' q
+      (caddG term quo, rem)
+    else (term, p')   -- unreachable over a genuine field (`stepG_length_lt`)
+termination_by (cnormG p).length
+decreasing_by assumption
+
+/-- Remainder of generic Euclidean division (`cdivmodWf`'s second component). -/
+def cmodWf (p q : CPolyG α) : CPolyG α := (cdivmodWf p q).2
+
+/-- Quotient of generic Euclidean division (`cdivmodWf`'s first component). -/
+def cdivWf (p q : CPolyG α) : CPolyG α := (cdivmodWf p q).1
+
+/-! ### Extended Euclidean algorithm `cgcdWf`
+
+Termination is by `(cnormG b).length`, strictly dropped by the remainder (`cmodWf_length_lt`). -/
+
+/-- Extended Euclidean algorithm on `CPolyG`: `cgcdWf a b = (g, s, t)` with `s·a + t·b = g` and
+`g = gcd(a, b)` over `K`. Well-founded on `(cnormG b).length`. -/
+def cgcdWf (a b : CPolyG α) : CPolyG α × CPolyG α × CPolyG α :=
+  if cisZeroG b then (cnormG a, [CField.one], [])
+  else
+    let q := cdivWf a b
+    let r := cmodWf a b
+    if (cnormG r : List α).length < (cnormG b : List α).length then
+      let (g, s, t) := cgcdWf b r
+      (g, t, csubG s (cmulG t q))
+    else (cnormG a, [CField.one], [])   -- unreachable over a genuine field (`cmodWf_length_lt`)
+termination_by (cnormG b).length
+decreasing_by assumption
+
+/-- The gcd component of the extended Euclidean algorithm (`cgcdWf`'s first component). -/
+def cgcdWfGcd (a b : CPolyG α) : CPolyG α := (cgcdWf a b).1
+
+/-- Generic monic gcd: monic-normalize the gcd component of `cgcdWf`. -/
+def cgcdMonicWf (p q : CPolyG α) : CPolyG α :=
+  cmonicG (cgcdWf p q).1
+
+/-! ### The reduce step strictly shortens
+
+The per-step length drop that discharges `cdivmodWf`'s own structural termination guard. -/
+
+variable [CFieldSpec α]
+
+/-- One Euclidean-division step strictly drops the degree in `(CFieldSpec.K α)[X]`: subtracting
+`C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient. -/
+theorem degreeG_reduce_step_lt {P Q : (CFieldSpec.K α)[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
+    (hpq : Q.natDegree ≤ P.natDegree) :
+    (P - C (P.leadingCoeff / Q.leadingCoeff)
+        * X ^ (P.natDegree - Q.natDegree) * Q).degree < P.degree := by
+  have hQlc : Q.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hQ
+  have hPlc : P.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hP
+  have hc0 : P.leadingCoeff / Q.leadingCoeff ≠ 0 := div_ne_zero hPlc hQlc
+  have hCc : (C (P.leadingCoeff / Q.leadingCoeff)) ≠ 0 := by rwa [Ne, Polynomial.C_eq_zero]
+  have hXk : (X ^ (P.natDegree - Q.natDegree) : (CFieldSpec.K α)[X]) ≠ 0 :=
+    pow_ne_zero _ Polynomial.X_ne_zero
+  set T := C (P.leadingCoeff / Q.leadingCoeff) * X ^ (P.natDegree - Q.natDegree) * Q with hT
+  have hT0 : T ≠ 0 := mul_ne_zero (mul_ne_zero hCc hXk) hQ
+  have hTnd : T.natDegree = P.natDegree := by
+    rw [hT, Polynomial.natDegree_mul (mul_ne_zero hCc hXk) hQ,
+      Polynomial.natDegree_mul hCc hXk, Polynomial.natDegree_C, Polynomial.natDegree_X_pow]
+    omega
+  have hTlc : T.leadingCoeff = P.leadingCoeff := by
+    rw [hT, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C,
+      Polynomial.leadingCoeff_X_pow, mul_one, div_mul_cancel₀ _ hQlc]
+  exact Polynomial.degree_sub_lt
+    (by rw [Polynomial.degree_eq_natDegree hP, Polynomial.degree_eq_natDegree hT0, hTnd]) hP
+    hTlc.symm
+
+/-- One reduce step strictly shortens the normalized list: `cnormG (p − (lcP/lcQ)·xᵏ·q)` has
+strictly smaller normalized length than `p`. -/
+theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])
+    (hpq : (cnormG q : List α).length ≤ (cnormG p : List α).length) :
+    (cnormG (csubG (cnormG p)
+        (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
+          [CField.div (cleadG p) (cleadG q)])
+          (cnormG q))) : List α).length < (cnormG p : List α).length := by
+  have hP : toPolyG p ≠ 0 := fun h => hp ((cnormG_eq_nil_iff p).mpr h)
+  have hQ : toPolyG q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
+  have hk : (cnormG p : List α).length - (cnormG q : List α).length
+      = (toPolyG p).natDegree - (toPolyG q).natDegree := by
+    rw [length_cnormG_of_ne p hp, length_cnormG_of_ne q hq]; omega
+  have hc : CFieldSpec.toK (CField.div (cleadG p) (cleadG q))
+      = (toPolyG p).leadingCoeff / (toPolyG q).leadingCoeff := by
+    rw [CFieldSpec.toK_div, toK_cleadG_eq_leadingCoeff, toK_cleadG_eq_leadingCoeff]
+  set step := csubG (cnormG p)
+    (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
+      [CField.div (cleadG p) (cleadG q)]) (cnormG q))
+    with hstepdef
+  have hstep : toPolyG step
+      = toPolyG p - C ((toPolyG p).leadingCoeff / (toPolyG q).leadingCoeff)
+          * X ^ ((toPolyG p).natDegree - (toPolyG q).natDegree) * toPolyG q := by
+    rw [hstepdef]
+    simp only [denote, hk]
+    simp only [mul_zero, add_zero]
+    have hcoef : CFieldSpec.toK (cleadG p) / CFieldSpec.toK (cleadG q)
+        = (toPolyG p).leadingCoeff / (toPolyG q).leadingCoeff := by
+      simpa [CFieldSpec.toK_div] using hc
+    rw [hcoef]
+    ring
+  have hpq' : (toPolyG q).natDegree ≤ (toPolyG p).natDegree := by
+    have e1 := length_cnormG_of_ne p hp
+    have e2 := length_cnormG_of_ne q hq
+    omega
+  have hdeg : (toPolyG step).degree < (toPolyG p).degree := by
+    rw [hstep]; exact degreeG_reduce_step_lt hP hQ hpq'
+  by_cases hs0 : toPolyG step = 0
+  · rw [(cnormG_eq_nil_iff _).mpr hs0, List.length_nil]
+    exact List.length_pos_iff.mpr hp
+  · have hne : cnormG step ≠ [] := fun h => hs0 ((cnormG_eq_nil_iff _).mp h)
+    have hlt := Polynomial.natDegree_lt_natDegree hs0 hdeg
+    rw [length_cnormG_of_ne _ hne, length_cnormG_of_ne p hp]
+    omega
+
+/-- The reduce step strictly shortens the normalized list (over `[CFieldSpec α]`): discharges
+`cdivmodWf`'s structural guard, so over a genuine field the reducing branch is always taken. -/
+theorem reduceStepWf_length_lt (p q : CPolyG α) (hcz : cisZeroG (cnormG q) = false)
+    (hlen : ¬ (cnormG p : List α).length < (cnormG q : List α).length) :
+    (cnormG (reduceStepWf p q) : List α).length < (cnormG p : List α).length := by
+  have hq : cnormG q ≠ [] := by
+    simpa [cisZeroG, List.isEmpty_iff] using hcz
+  have hle : (cnormG q : List α).length ≤ (cnormG p : List α).length := Nat.le_of_not_lt hlen
+  have hpn : cnormG p ≠ [] := by
+    intro h
+    rw [h, List.length_nil, Nat.le_zero] at hle
+    exact hq (List.length_eq_zero_iff.mp hle)
+  have hstep := stepG_length_lt (cnormG p) (cnormG q)
+    (by simpa using hpn) (by simpa using hq) (by simpa using hle)
+  rw [reduceStepWf]
+  simpa only [cnormG_idem, cleadG_cnormG] using hstep
+
+/-- Euclidean-division identity through `toPolyG` for `cdivmodWf` (nonzero divisor):
+`toPolyG p = toPolyG (quotient) · toPolyG q + toPolyG (remainder)`. -/
+theorem toPolyG_cdivmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
+    toPolyG p
+      = toPolyG (cdivmodWf p q).1 * toPolyG q + toPolyG (cdivmodWf p q).2 := by
+  -- Direct well-founded induction on `cdivmodWf`'s own recursion: the four branches are the divisor-zero
+  -- contradiction, the `deg p < deg q` base, the reduce step (IH on `p'`), and the unreachable branch.
+  induction p using cdivmodWf.induct (q := q) with
+  | case1 p =>
+    -- divisor zero contradicts `cnormG q ≠ []`
+    rename_i hcz
+    have hcz' : cisZeroG (cnormG q) = true := hcz
+    exact absurd (by simpa [cisZeroG, List.isEmpty_iff] using hcz') hq0
+  | case2 p =>
+    -- `deg p < deg q`: `cdivmodWf p q = ([], cnormG p)`
+    rename_i hcz hlen
+    have hcz' : cisZeroG (cnormG q) = false := by simpa using hcz
+    have hlen' : (cnormG p : List α).length < (cnormG q : List α).length := hlen
+    have hval : cdivmodWf p q = ([], cnormG p) := by
+      rw [cdivmodWf.eq_def, if_neg (by simp [hcz']), if_pos hlen']
+    rw [hval]
+    simp [toPolyG_cnormG]
+  | case3 p =>
+    -- reducing branch: `p = term·q + p'`, then IH `p' = quo·q + rem`
+    rename_i pn qn hcz hlen p' hdec quo rem hqr ih
+    have hcz' : cisZeroG (cnormG q) = false := by simpa using hcz
+    have hlen' : ¬ (cnormG p : List α).length < (cnormG q : List α).length := hlen
+    set term := cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
+      [CField.div (cleadG p) (cleadG q)] with hterm
+    have hval : cdivmodWf p q = (caddG term quo, rem) := by
+      rw [cdivmodWf.eq_def, if_neg (by simp [hcz']), if_neg hlen', if_pos hdec]
+      simp only [cleadG_cnormG, hterm]
+      rw [show (p.reduceStepWf q).cdivmodWf q = (quo, rem) from hqr]
+    rw [hval]
+    have hstep : toPolyG (reduceStepWf p q) = toPolyG p - toPolyG term * toPolyG q := by
+      simp [reduceStepWf, hterm]
+    have hih : toPolyG (reduceStepWf p q)
+        = toPolyG quo * toPolyG q + toPolyG rem := by
+      rw [ih, hqr]
+    simp only [denote]
+    rw [hstep] at hih
+    linear_combination hih
+  | case4 p =>
+    -- unreachable over a genuine field (`reduceStepWf_length_lt`)
+    rename_i pn qn hcz hlen p' hdec
+    have hcz' : cisZeroG (cnormG q) = false := by simpa using hcz
+    have hlen' : ¬ (cnormG p : List α).length < (cnormG q : List α).length := hlen
+    exact absurd (reduceStepWf_length_lt p q hcz' hlen') hdec
+
+/-- `toPolyG p = toPolyG (cdivWf p q) · toPolyG q + toPolyG (cmodWf p q)`: the Euclidean identity
+in quotient/remainder form (nonzero divisor). -/
+theorem toPolyG_cmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
+    toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) := by
+  rw [cdivWf, cmodWf]; exact toPolyG_cdivmodWf p q hq0
+
+/-! ### Remainder shortening and gcd correctness -/
+
+/-- The remainder strictly shortens below `(cnormG b).length` for a nonzero divisor: discharges
+`cgcdWf`'s structural guard, so over a genuine field the recursing branch is always taken. -/
+theorem cmodWf_length_lt (a b : CPolyG α) (hb : cnormG b ≠ []) :
+    (cnormG (cmodWf a b) : List α).length < (cnormG b : List α).length := by
+  rw [cmodWf]
+  induction a using cdivmodWf.induct (q := b) with
+  | case1 a =>
+    rename_i hcz
+    have hcz' : cisZeroG (cnormG b) = true := hcz
+    exact absurd (by simpa [cisZeroG, List.isEmpty_iff] using hcz') hb
+  | case2 a =>
+    rename_i hcz hlen
+    have hcz' : cisZeroG (cnormG b) = false := by simpa using hcz
+    have hlen' : (cnormG a : List α).length < (cnormG b : List α).length := hlen
+    have hval : cdivmodWf a b = ([], cnormG a) := by
+      rw [cdivmodWf.eq_def, if_neg (by simp [hcz']), if_pos hlen']
+    rw [hval, cnormG_idem]
+    exact hlen'
+  | case3 a =>
+    rename_i pn qn hcz hlen a' hdec quo rem hqr ih
+    have hcz' : cisZeroG (cnormG b) = false := by simpa using hcz
+    have hlen' : ¬ (cnormG a : List α).length < (cnormG b : List α).length := hlen
+    set term := cshiftG ((cnormG a : List α).length - (cnormG b : List α).length)
+      [CField.div (cleadG a) (cleadG b)] with hterm
+    have hval : cdivmodWf a b = (caddG term quo, rem) := by
+      rw [cdivmodWf.eq_def, if_neg (by simp [hcz']), if_neg hlen', if_pos hdec]
+      simp only [cleadG_cnormG, hterm]
+      rw [show (a.reduceStepWf b).cdivmodWf b = (quo, rem) from hqr]
+    rw [hval]
+    rw [hqr] at ih
+    exact ih
+  | case4 a =>
+    rename_i pn qn hcz hlen a' hdec
+    have hcz' : cisZeroG (cnormG b) = false := by simpa using hcz
+    have hlen' : ¬ (cnormG a : List α).length < (cnormG b : List α).length := hlen
+    exact absurd (reduceStepWf_length_lt a b hcz' hlen') hdec
+
+/-- Bézout identity through `toPolyG` for `cgcdWf`: with `(g, s, t) = cgcdWf a b`,
+`toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. -/
+theorem toPolyG_cgcdWf (a b : CPolyG α) :
+    toPolyG (cgcdWf a b).2.1 * toPolyG a + toPolyG (cgcdWf a b).2.2 * toPolyG b
+      = toPolyG (cgcdWf a b).1 := by
+  induction a, b using cgcdWf.induct with
+  | case1 a b =>
+    -- `cisZeroG b`: `cgcdWf a b = (cnormG a, [1], [])`, Bézout `1·a + 0·b = a`
+    rename_i hcz
+    have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hcz
+    have hval : cgcdWf a b = (cnormG a, [CField.one], []) := by
+      rw [cgcdWf.eq_def, if_pos hcz]
+    rw [hval]
+    simp [toPolyG_cnormG, toPolyG_cons, CFieldSpec.toK_one, hb0]
+  | case2 a b =>
+    -- recursing branch: `cgcdWf a b = (g, t, csubG s (cmulG t q))` with `(g,s,t) = cgcdWf b r`,
+    -- `r = cmodWf a b`, `q = cdivWf a b`. IH: `s·b + t·r = g`. Euclid: `a = q·b + r`.
+    -- the `have rr := a.cmodWf b` let-binder is auto-introduced between `hcz` and `hdec`; recover all.
+    rename_i hcz rr hdec g s t hgst ih
+    have hbne : cnormG b ≠ [] := by
+      intro h; rw [cisZeroG] at hcz; simp [h] at hcz
+    have hval : cgcdWf a b = (g, t, csubG s (cmulG t (cdivWf a b))) := by
+      rw [cgcdWf.eq_def, if_neg hcz, if_pos hdec]
+      show (let (g, s, t) := cgcdWf b (cmodWf a b); (g, t, csubG s (cmulG t (cdivWf a b)))) = _
+      rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst]
+    have heuclid : toPolyG a = toPolyG (cdivWf a b) * toPolyG b + toPolyG (cmodWf a b) :=
+      toPolyG_cmodWf a b hbne
+    -- IH at the recursive pair `(b, cmodWf a b)`: `s·b + t·r = g`
+    rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst] at ih
+    rw [hval]
+    simp only [denote]
+    simp only at ih
+    linear_combination ih + toPolyG t * heuclid
+  | case3 a b =>
+    -- unreachable over a genuine field (`cmodWf_length_lt`)
+    rename_i hcz rr hdec
+    have hbne : cnormG b ≠ [] := by
+      intro h; rw [cisZeroG] at hcz; simp [h] at hcz
+    exact absurd (cmodWf_length_lt a b hbne) hdec
+
+/-- `cgcdWf`'s gcd is greatest among common divisors: any `d` dividing both `toPolyG a` and
+`toPolyG b` divides `toPolyG (cgcdWf a b).1`. Immediate from Bézout. -/
+theorem toPolyG_dvd_cgcdWf {d : (CFieldSpec.K α)[X]} (a b : CPolyG α)
+    (ha : d ∣ toPolyG a) (hb : d ∣ toPolyG b) :
+    d ∣ toPolyG (cgcdWf a b).1 := by
+  rw [← toPolyG_cgcdWf a b]
+  exact dvd_add (ha.mul_left _) (hb.mul_left _)
+
+/-- `cgcdWf`'s gcd divides both inputs: `toPolyG (cgcdWf a b).1` divides `toPolyG a` and
+`toPolyG b`. With `toPolyG_dvd_cgcdWf` this characterizes it as an honest gcd in `K[X]`. -/
+theorem toPolyG_cgcdWf_dvd (a b : CPolyG α) :
+    toPolyG (cgcdWf a b).1 ∣ toPolyG a ∧ toPolyG (cgcdWf a b).1 ∣ toPolyG b := by
+  induction a, b using cgcdWf.induct with
+  | case1 a b =>
+    -- `cisZeroG b`: `cgcdWf a b = (cnormG a, ...)`, so `g = cnormG a ∣ a` (refl) and `g ∣ b = 0`
+    rename_i hcz
+    have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hcz
+    have hval : (cgcdWf a b).1 = cnormG a := by rw [cgcdWf.eq_def, if_pos hcz]
+    rw [hval]
+    simp only [denote]
+    exact ⟨dvd_refl _, by rw [hb0]; exact dvd_zero _⟩
+  | case2 a b =>
+    -- recursing branch: `(cgcdWf a b).1 = (cgcdWf b r).1 = g`, IH `g ∣ b ∧ g ∣ r`, Euclid `a = q·b + r`
+    rename_i hcz rr hdec g s t hgst ih
+    have hbne : cnormG b ≠ [] := by
+      intro h; rw [cisZeroG] at hcz; simp [h] at hcz
+    have hgfst : (cgcdWf a b).1 = g := by
+      rw [cgcdWf.eq_def, if_neg hcz, if_pos hdec]
+      show (let (g, s, t) := cgcdWf b (cmodWf a b); (g, t, csubG s (cmulG t (cdivWf a b)))).1 = g
+      rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst]
+    rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst] at ih
+    simp only at ih
+    obtain ⟨hgb, hgr⟩ := ih
+    have heuclid : toPolyG a = toPolyG (cdivWf a b) * toPolyG b + toPolyG (cmodWf a b) :=
+      toPolyG_cmodWf a b hbne
+    rw [hgfst]
+    refine ⟨?_, hgb⟩
+    rw [heuclid]
+    exact dvd_add (hgb.mul_left _) hgr
+  | case3 a b =>
+    -- unreachable over a genuine field (`cmodWf_length_lt`)
+    rename_i hcz rr hdec
+    have hbne : cnormG b ≠ [] := by
+      intro h; rw [cisZeroG] at hcz; simp [h] at hcz
+    exact absurd (cmodWf_length_lt a b hbne) hdec
+
+/-! ### Exact division through `toPolyG`
+
+When a polynomial divides another through the semantic bridge `toPolyG`, Euclidean division has zero
+remainder. -/
+
+/-- The Euclidean remainder vanishes when the divisor divides the dividend (through `toPolyG`). -/
+theorem toPolyG_cmodWf_eq_zero_of_dvd (p q : CPolyG α) (hq0 : cnormG q ≠ [])
+    (hdvd : toPolyG q ∣ toPolyG p) :
+    toPolyG (cmodWf p q) = 0 := by
+  have hid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
+    toPolyG_cmodWf p q hq0
+  have hdvdrem : toPolyG q ∣ toPolyG (cmodWf p q) := by
+    have : toPolyG (cmodWf p q)
+        = toPolyG p - toPolyG (cdivWf p q) * toPolyG q := by
+      rw [hid]; ring
+    rw [this]
+    exact dvd_sub hdvd (Dvd.intro_left _ rfl)
+  have hlen : (cnormG (cmodWf p q) : List α).length < (cnormG q : List α).length :=
+    cmodWf_length_lt p q hq0
+  by_contra hne
+  have hdeg : (toPolyG q).natDegree ≤ (toPolyG (cmodWf p q)).natDegree :=
+    Polynomial.natDegree_le_of_dvd hdvdrem hne
+  have hrn : cnormG (cmodWf p q) ≠ [] := fun h => hne ((cnormG_eq_nil_iff _).mp h)
+  rw [length_cnormG_of_ne _ hrn, length_cnormG_of_ne q hq0] at hlen
+  omega
+
+/-- Exact division through `toPolyG`: if `toPolyG q ∣ toPolyG p`, the Euclidean quotient times the
+divisor recovers the dividend. -/
+theorem toPolyG_cdivWf_exact (p q : CPolyG α) (hq0 : cnormG q ≠ [])
+    (hdvd : toPolyG q ∣ toPolyG p) :
+    toPolyG (cdivWf p q) * toPolyG q = toPolyG p := by
+  have hid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
+    toPolyG_cmodWf p q hq0
+  have hrem0 : toPolyG (cmodWf p q) = 0 :=
+    toPolyG_cmodWf_eq_zero_of_dvd p q hq0 hdvd
+  rw [hid, hrem0, add_zero]
+
+/-- `u·v^i = d` where `u = cdivWf d (v^i)`, given `v^i ∣ d` and `v ≠ 0`. -/
+theorem toPolyG_cdivWf_pow_mul (d v : CPolyG α) (i : ℕ) (hv : toPolyG v ≠ 0)
+    (hdvd : toPolyG v ^ i ∣ toPolyG d) :
+    toPolyG (cdivWf d (cpowG v i)) * toPolyG v ^ i = toPolyG d := by
+  have hcn : cnormG (cpowG v i) ≠ [] := by
+    intro h
+    have hz : toPolyG (cpowG v i) = 0 := (cisZeroG_iff _).mp (by simp [cisZeroG, h])
+    simp only [denote] at hz
+    exact pow_ne_zero i hv hz
+  have hd2 : toPolyG (cpowG v i) ∣ toPolyG d := by
+    simp only [denote]
+    exact hdvd
+  have h := toPolyG_cdivWf_exact d (cpowG v i) hcn hd2
+  simp only [denote] at h
+  exact h
+
+/-! ### The monic gcd divides both inputs (through `toPolyG`) -/
+
+/-- The monic gcd divides both inputs (through `toPolyG`). -/
+theorem toPolyG_cgcdMonicWf_dvd (p q : CPolyG α) :
+    toPolyG (cgcdMonicWf p q) ∣ toPolyG p ∧ toPolyG (cgcdMonicWf p q) ∣ toPolyG q := by
+  obtain ⟨hp, hq⟩ := toPolyG_cgcdWf_dvd p q
+  have hassoc : Associated (toPolyG (cgcdMonicWf p q)) (toPolyG (cgcdWf p q).1) := by
+    rw [cgcdMonicWf]
+    exact associated_toPolyG_cmonicG _
+  exact ⟨hassoc.dvd.trans hp, hassoc.dvd.trans hq⟩
+
+end CPolyG
+
+open CPolyG
+
+/-- Abstract correctness of the generic monic gcd `CPolyG.cgcdMonicWf`: over the genuine field
+`K = CFieldSpec.K α`, `toPolyG (CPolyG.cgcdMonicWf p q)` is associated to
+`gcd (toPolyG p) (toPolyG q)` in `K[X]`. -/
+theorem associated_toPolyG_cgcdMonicWf {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+    Associated (toPolyG (CPolyG.cgcdMonicWf p q)) (gcd (toPolyG p) (toPolyG q)) := by
+  obtain ⟨hdvd_p, hdvd_q⟩ := CPolyG.toPolyG_cgcdWf_dvd p q
+  have hassoc : Associated (toPolyG (CPolyG.cgcdMonicWf p q)) (toPolyG (CPolyG.cgcdWf p q).1) := by
+    rw [CPolyG.cgcdMonicWf]
+    exact associated_toPolyG_cmonicG _
+  refine hassoc.trans ?_
+  apply associated_of_dvd_dvd
+  · exact dvd_gcd hdvd_p hdvd_q
+  · exact CPolyG.toPolyG_dvd_cgcdWf p q (gcd_dvd_left _ _) (gcd_dvd_right _ _)
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CFieldSpec α]
+
+/-- Divisibility test `cdvdGWf q p = cisZeroG (cmodWf p q)`: decides `q ∣ p` by remainder-is-zero.
+Generic over `[CField α]`. -/
+def cdvdGWf (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
+
+/-- `cdvdGWf q p = true ↔ toPolyG (cmodWf p q) = 0`: the divisibility test reads as
+remainder-zero through `toPolyG`. -/
+theorem cdvdGWf_iff (q p : CPolyG α) :
+    cdvdGWf q p = true ↔ toPolyG (cmodWf p q) = 0 := by
+  rw [cdvdGWf, cisZeroG_iff]
+
+/-- A true `cdvdGWf q p` certifies polynomial divisibility `toPolyG q ∣ toPolyG p`
+(nonzero divisor `cnormG q ≠ []`). -/
+theorem dvd_of_cdvdGWf (q p : CPolyG α) (hq : cnormG q ≠ []) (h : cdvdGWf q p = true) :
+    toPolyG q ∣ toPolyG p := by
+  have hrem : toPolyG (cmodWf p q) = 0 := (cdvdGWf_iff q p).mp h
+  have heuclid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
+    toPolyG_cmodWf p q hq
+  rw [hrem, add_zero] at heuclid
+  exact ⟨toPolyG (cdivWf p q), by rw [heuclid]; ring⟩
+
+/-- A false `cdvdGWf q p` refutes polynomial divisibility `¬ toPolyG q ∣ toPolyG p`
+(nonzero divisor `cnormG q ≠ []`). -/
+theorem not_dvd_of_cdvdGWf_false (q p : CPolyG α) (hq : cnormG q ≠ [])
+    (h : cdvdGWf q p = false) : ¬ toPolyG q ∣ toPolyG p := by
+  intro hdvd
+  have hrem : toPolyG (cmodWf p q) = 0 := toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd
+  have htrue : cdvdGWf q p = true := (cdvdGWf_iff q p).mpr hrem
+  rw [htrue] at h
+  exact Bool.noConfusion h
+
+end CPolyG
+
+end DeepWiki.SymbolicIntegration

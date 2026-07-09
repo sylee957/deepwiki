@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalIntegralBasis
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalIntegralBasis
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — Chapter 2 §5: Integral Bases of Simple Radical Extensions

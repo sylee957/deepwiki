@@ -1,7 +1,7 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResiduesExamples
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogIntegral
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalResidueInfinity
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgument
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgebraicResiduesExamples
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogIntegral
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalResidueInfinity
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogArgument
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — Chapter 5: The Logarithmic Part (residue resultant §2 + log-differential check §1)
