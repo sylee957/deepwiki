@@ -8,7 +8,7 @@ field, so `CPoly CPolyQ` doesn't typecheck. Generalize the coefficient constrain
 
 ## Finding 1 — the engine is already ~95 % ring-level
 
-Of the 21 core `c*` ops in `GenericPolyEngine`, **20 use only `add`/`mul`/`neg`/`isZero`** (ring ops):
+Of the 21 core `c*` ops in `Polynomial`, **20 use only `add`/`mul`/`neg`/`isZero`** (ring ops):
 `cadd cmul cneg csub cscale cshift cnorm clead cdeg cisZero cpow cprod ceval cderiv cnsmul cMonomial
 cfpow cpad creverseDeg cisMonic`. **Exactly one — `cmonic`** (divide by the leading coefficient) — uses
 `CField.div`. So the op *bodies* barely change under generalization; only their typeclass *constraint*
