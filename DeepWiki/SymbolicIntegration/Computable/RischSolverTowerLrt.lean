@@ -151,16 +151,8 @@ theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := QFunNZG β
       have hDt1 : toPolyG Dt = 1 := by
         have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
         simpa only [denote, map_one, mul_zero, add_zero, sub_eq_zero] using hh
-      refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
-      · simp only [denote, mul_zero, add_zero]
-        exact one_ne_zero
-      · exact tower_special_identityLrt Dt (crPoly Dt a d) qp hDt1 hqp
-      · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
-          simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
-        have hrec := canonicalReconstruction_of_charZero
-          (Fact.out (p := GcdFFCorrect (α := QFunNZG β))) Dt a d hd0
-        rw [hvan, add_zero] at hrec
-        exact hrec
+      exact primitiveSpecialSoundCore Dt a d qp hd0 hb
+        (tower_special_identityLrt Dt (crPoly Dt a d) qp hDt1 hqp)
   · rw [if_neg hguard] at hhook; simp at hhook
 
 /-- The LRT tower step instance: `LawfulRischLevelLrt (QFunNZG β)` from a below-level LRT solver

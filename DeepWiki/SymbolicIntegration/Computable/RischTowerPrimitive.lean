@@ -19,6 +19,29 @@ open scoped Differential
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
+omit [CRischField α] in
+/-- **The shared primitive special-part soundness core** (base and tower). Given the polynomial-part special
+identity `hid : D_tower(⟦qp/1⟧) = ⟦fₚ/1⟧` and the vanishing special numerator `hb : crSpecNum = 0`, the
+`specialSound` conclusion follows: `⟦1⟧ ≠ 0`, the witness `v = ⟦fₚ/1⟧` is the special derivative (`hid`), and
+`v + ⟦cₙ/dₙ⟧ = a/d` from `canonicalReconstruction_of_charZero` with the special term dropping (`b = 0`).
+Agnostic to HOW `hid` was obtained — the base proves it via `cPolyRischDEGWf_nil_field_identity`, the tower via
+the `implicitDeriv`/`towerFractionFieldDerivG_div` bridge — so both `*_specialSound` proofs reduce to this. -/
+theorem primitiveSpecialSoundCore [Fact (GcdFFCorrect (α := α))]
+    (Dt a d qp : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hb : cisZeroG (crSpecNum Dt a d) = true)
+    (hid : towerFractionFieldDerivG Dt (fieldFrac qp [CField.one])
+      = fieldFrac (crPoly Dt a d) [CField.one]) :
+    toPolyG ([CField.one] : CPolyG α) ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
+      towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = v ∧
+      v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
+  refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], hid, ?_⟩
+  · simp only [denote, mul_zero, add_zero]; exact one_ne_zero
+  · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
+      simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
+    have hrec := canonicalReconstruction_of_charZero (Fact.out (p := GcdFFCorrect (α := α))) Dt a d hd0
+    rw [hvan, add_zero] at hrec
+    exact hrec
+
 /-- Primitive special-part soundness shared by the LRT primitive base and tower solvers. The special
 part is `primitiveGuardedCase.integrateSpecial`: under the guard (`b = 0`, `Dθ = 1`, constant `fₚ`) it solves
 the polynomial RDE and the reconstruction (`canonicalReconstruction_of_charZero`) closes with the special term
@@ -46,15 +69,8 @@ theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
         have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
         simpa only [denote, map_one, mul_zero, add_zero, sub_eq_zero] using hh
       have hconst := mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (crPoly Dt a d) hconstg
-      refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
-      · simp only [denote, mul_zero, add_zero]
-        exact one_ne_zero
-      · exact primitive_special_identity Dt (crPoly Dt a d) qp hDt1 hconst hqp
-      · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
-          simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
-        have hrec := canonicalReconstruction_of_charZero (Fact.out (p := GcdFFCorrect (α := α))) Dt a d hd0
-        rw [hvan, add_zero] at hrec
-        exact hrec
+      exact primitiveSpecialSoundCore Dt a d qp hd0 hb
+        (primitive_special_identity Dt (crPoly Dt a d) qp hDt1 hconst hqp)
   · rw [if_neg hguard] at hhook; simp at hhook
 
 end DeepWiki.SymbolicIntegration
