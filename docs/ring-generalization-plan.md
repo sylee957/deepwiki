@@ -65,6 +65,14 @@ reduces. Risk: the `CRingSpec (CPoly α)` `R = (R α)[X]` bridge must be a genui
 the real proof work is (bounded: it is the `toPoly` homomorphism already proven, re-typed over `CommRing`).
 Gate: `CPoly (CPoly ℚ)` typechecks + reduces.
 
+> **P3 spike finding (2026-07-09, reverted):** generalizing `toPoly` to `(CRingSpec.R α)[X]` cascades
+> through the **R/K instance boundary** — GenericPolyEngine needs only ~2 fixes (a `Field (CRingSpec.R α)`
+> instance + `CRingSpec.toR_*` in `denote`), but every downstream derivation/tower file breaks because
+> `am`/`implicitDeriv`/`mapCoeffs` want `Field`/`Differential`/`Algebra ℚ` on `CFieldSpec.K α` and `toPoly`
+> now yields `CRingSpec.R α` (defeq, but Lean won't unfold R→K for *instance* search). **Do first:** make
+> `CFieldSpec.K` reducibly `= CRingSpec.R` (CFieldSpec *inherits* R from CRingSpec, not a separate K field)
+> — kills the per-instance tax. Squares with `toK` in their result (`cons`/`cscale`) are the cascade drivers.
+
 **P3 — weaken the 20 ring-level `c*` ops + their squares to `[CCommRing]`/`[CRingSpec]`.** Mechanical,
 **batch by op family** (arith: `cadd`/`cmul`/`cneg`/`csub`/`cscale`/`cshift`; read: `clead`/`cdeg`/
 `cnorm`/`cisZero`; `cpow`/`cprod`/`ceval`/`cderiv`/`cnsmul`/`cMonomial`/`cfpow`). For each op, change
