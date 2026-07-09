@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Parametric
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
-import DeepWiki.SymbolicIntegration.Engine.GenericPolyEngine
+import DeepWiki.ComputableAlgebra.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.Engine.Tower.Field
 
 /-! # Computable parallel (Risch–Norman) integration over ℚ(t) (Bronstein Chapter 10)

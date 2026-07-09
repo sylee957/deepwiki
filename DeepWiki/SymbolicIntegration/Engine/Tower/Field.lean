@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.Engine.GenericPolyEngine
+import DeepWiki.ComputableAlgebra.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.Engine.ConcreteCoherence
-import DeepWiki.SymbolicIntegration.Engine.GenericBezout
+import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 
 /-! # The generic fraction field `QFunNZG α` (differential-tower carrier)

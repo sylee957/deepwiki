@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Field
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
-import DeepWiki.SymbolicIntegration.Engine.GenericBezout
+import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 

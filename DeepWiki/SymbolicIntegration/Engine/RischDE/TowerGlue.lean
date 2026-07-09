@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.GenericBezout
+import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.SymbolicIntegration.Engine.ConcreteCoherence
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 

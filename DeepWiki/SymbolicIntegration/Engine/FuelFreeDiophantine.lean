@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
-import DeepWiki.SymbolicIntegration.Engine.GenericBezout
+import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 
 /-! # Generic Bézout/Diophantine helpers

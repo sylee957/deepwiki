@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.TranscendentalOverAlgebraic
-import DeepWiki.SymbolicIntegration.Engine.GenericBezout
+import DeepWiki.ComputableAlgebra.GenericBezout
 import Mathlib.FieldTheory.KummerPolynomial
 import Mathlib.FieldTheory.RatFunc.Degree
 

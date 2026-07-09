@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
-import DeepWiki.SymbolicIntegration.Engine.ListDet
+import DeepWiki.ComputableAlgebra.ListDet
 
 /-! # Computable determinant + subresultant (L1 of the computable-LRT build)
 

@@ -11,8 +11,8 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Engine.FunctionAlgebraIntegrate
 import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
-import DeepWiki.SymbolicIntegration.Engine.GenericBezout
-import DeepWiki.SymbolicIntegration.Engine.GenericPolyEngine
+import DeepWiki.ComputableAlgebra.GenericBezout
+import DeepWiki.ComputableAlgebra.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp
@@ -31,7 +31,7 @@ import DeepWiki.SymbolicIntegration.Engine.LrtCompleteness
 import DeepWiki.SymbolicIntegration.Engine.IntegratorCompleteness
 import DeepWiki.SymbolicIntegration.Engine.LinearSolve
 import DeepWiki.SymbolicIntegration.Engine.LinearSolveCorrect
-import DeepWiki.SymbolicIntegration.Engine.ListDet
+import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.SymbolicIntegration.Engine.LiouvilleExpBridge
 import DeepWiki.SymbolicIntegration.Engine.LiouvilleFormBridge
 import DeepWiki.SymbolicIntegration.Engine.LiouvilleLogBridge
