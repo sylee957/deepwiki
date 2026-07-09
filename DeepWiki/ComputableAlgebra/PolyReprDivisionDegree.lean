@@ -178,6 +178,40 @@ theorem toPoly_mul_cdiv_of_dvd (p q : P α) (hq : ¬ cisZero (P := P) q = true)
   rw [(cisZero_iff _).mp (cdivmod_exact p q hq hdvd), add_zero] at hid
   exact hid
 
+/-! ### The Diophantine solver (adopts the fuel-less `cgcdExt` + `cdivmod`)
+
+`cdiophantine a b c` solves `s·a + t·b = c` whenever `gcd(a, b) ∣ c`: take the Bézout pair
+`(g, s₀, t₀) = cgcdExt a b` (so `s₀·a + t₀·b = g`), scale by `k = c / g` — the fuel-less exact quotient —
+to get `(k·s₀, k·t₀)`. Built entirely on the fuel-less generic engine. -/
+
+/-- Solve `s·a + t·b = c` (requires `gcd(a,b) ∣ c`): scale the Bézout pair by `c / gcd(a,b)`. -/
+def cdiophantine (a b c : P α) : P α × P α :=
+  let r := cgcdExt a b
+  let k := (cdivmod c r.1).1
+  (mul k r.2.1, mul k r.2.2)
+
+/-- **Diophantine correctness:** `s·a + t·b = c` for `(s, t) = cdiophantine a b c`, when the gcd
+divides `c`. -/
+theorem toPoly_cdiophantine (a b c : P α) (hg : ¬ cisZero (P := P) (cgcdExt a b).1 = true)
+    (hdvd : toPoly (cgcdExt a b).1 ∣ toPoly c) :
+    toPoly (cdiophantine a b c).1 * toPoly a + toPoly (cdiophantine a b c).2 * toPoly b = toPoly c := by
+  have hbez := toPoly_cgcdExt a b
+  have hexact := toPoly_mul_cdiv_of_dvd c (cgcdExt a b).1 hg hdvd
+  simp only [cdiophantine, toPoly_mul]
+  calc toPoly (cdivmod c (cgcdExt a b).1).1 * toPoly (cgcdExt a b).2.1 * toPoly a
+        + toPoly (cdivmod c (cgcdExt a b).1).1 * toPoly (cgcdExt a b).2.2 * toPoly b
+      = toPoly (cdivmod c (cgcdExt a b).1).1 *
+          (toPoly (cgcdExt a b).2.1 * toPoly a + toPoly (cgcdExt a b).2.2 * toPoly b) := by ring
+    _ = toPoly (cdivmod c (cgcdExt a b).1).1 * toPoly (cgcdExt a b).1 := by rw [hbez]
+    _ = toPoly c := by rw [mul_comm]; exact hexact.symm
+
+/-- `cdiophantine` reduces (dense): solving `s·(x−1) + t·(x−2) = 1` and checking `s·(x−1) + t·(x−2)`
+normalizes back to `1`. -/
+example :
+    cnorm (add (mul (cdiophantine ([-1, 1] : List ℚ) [-2, 1] [1]).1 [-1, 1])
+      (mul (cdiophantine ([-1, 1] : List ℚ) [-2, 1] [1]).2 [-2, 1])) = ([1] : List ℚ) := by
+  native_decide
+
 /-! ### Monic normalization (the canonical associate) -/
 
 /-- Scale a polynomial to monic by its inverse leading coefficient. -/
