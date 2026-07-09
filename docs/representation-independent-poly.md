@@ -173,9 +173,15 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   over `CCommRing`) with the bridge `toR_clistDetn` (= Mathlib `listDetn`, hence `Matrix.det` via
   `ListDet.listDetn_eq_det`); the Sylvester matrix `cSylvester` and `cResultant` = its `clistDetn`,
   `native_decide`-validated against known resultants (`res(x−1,x−2)=−1`, `res(x²−1,x−1)=0`). Remaining:
-  the abstract bridge `toR (cResultant p q) = Polynomial.resultant (toPoly p) (toPoly q)` — needs
-  `matrixOfList (cSylvester …)` matched to `Polynomial.sylvester` (a `Fin`-`addCases`/`Set.Icc` layout
-  match, possibly up to a determinant-preserving permutation) then `resultant_map_map`.
+  the abstract bridge `toR (cResultant p q) = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q)`.
+  **Verified (2026-07-09):** `cSylvester`'s layout matches `Polynomial.sylvester` *entry-wise, with no
+  permutation* — first block (columns `< m`) = `q`-coefficient strips with condition `Icc j (j+n)`, second
+  block (column `m+j′`) = `p`-coefficient strips with `Icc j′ (j′+m)`, exactly Mathlib's `j.addCases`
+  split. So the bridge chain is: `cResultant` → `toR_clistDetn` → `ListDet.listDetn_eq_det` (needs the two
+  well-formedness facts `length = m+n`, rows `= m+n`) → a `Matrix.ext` proving
+  `matrixOfList ((cSylvester …).map (map toR)) = Polynomial.sylvester (toPoly p) (toPoly q) m n` (the
+  `getD`-of-`range·map` reductions + `Fin.addCases` induction + `coeff_toPoly` + `Set.Icc`↔`∧`) →
+  `Polynomial.resultant`. Purely mechanical `Fin`/`getD` bookkeeping, no remaining mathematical content.
 
 Each computable op reduces under `native_decide` on both the dense `List` and sparse `SparsePoly`
 carriers — the same algorithm, two representations — and the algebraic correctness is a-priori (not merely
