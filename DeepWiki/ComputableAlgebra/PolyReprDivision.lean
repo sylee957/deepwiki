@@ -73,6 +73,18 @@ example : cisZero (cdivmod 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly �
 example : cdeg (cdivmod 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
     (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
 
+/-! ### Computable divisibility test
+
+A zero remainder witnesses divisibility — the soundness of deciding `q ∣ p` by `cdivmod`. -/
+
+/-- **Divisibility from a zero remainder:** if `cdivmod fuel p q` leaves remainder zero, then
+`toPoly q ∣ toPoly p`. From the division identity. Representation-generic. -/
+theorem dvd_of_cisZero_cdivmod_snd [CField α] [CRingSpec α] (fuel : ℕ) (p q : P α)
+    (h : cisZero (P := P) (cdivmod fuel p q).2 = true) : toPoly q ∣ toPoly p := by
+  have hid := toPoly_cdivmod fuel p q
+  rw [(cisZero_iff _).mp h, add_zero] at hid
+  exact hid ▸ dvd_mul_right _ _
+
 /-! ### Euclidean GCD and the common-divisor property
 
 `cgcd` is the Euclidean algorithm on `cdivmod` remainders. Its **common-divisor direction** — every
