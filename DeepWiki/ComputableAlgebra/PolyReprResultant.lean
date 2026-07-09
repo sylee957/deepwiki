@@ -82,4 +82,30 @@ example : clistDetn 2 ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := by native_dec
 /-- `clistDetn` reduces: a 3×3 determinant `|2 0 1; 1 3 2; 0 1 1| = 3`. -/
 example : clistDetn 3 ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by native_decide
 
+/-! ### The Sylvester matrix and the computable resultant
+
+`cSylvester p q m n` is the `(m+n)×(m+n)` Sylvester coefficient matrix (rows = shifted coefficient
+strips of `q` then `p`), matching `Polynomial.sylvester`'s column layout; `cResultant p q` is its
+`clistDetn`. Validated by `native_decide` against known resultants (`res(x−1,x−2) = −1` for coprime,
+`res(x²−1,x−1) = 0` for a common factor). The abstract bridge `toR (cResultant p q) =
+Polynomial.resultant (toPoly p) (toPoly q)` (via `toR_clistDetn` + `listDetn_eq_det` +
+`Polynomial.resultant_map_map`) is the remaining piece. -/
+
+variable {P : Type u → Type u} [CPolyRepr P]
+
+/-- The `(m+n)×(m+n)` Sylvester coefficient matrix of `p, q` (as a row-list). -/
+def cSylvester (p q : P α) (m n : ℕ) : List (List α) :=
+  (List.range (m + n)).map (fun i =>
+    (List.range (m + n)).map (fun j =>
+      if j < m then (if j ≤ i ∧ i ≤ j + n then coeff q (i - j) else CCommRing.zero)
+      else (if (j - m) ≤ i ∧ i ≤ (j - m) + m then coeff p (i - (j - m)) else CCommRing.zero)))
+
+/-- The computable resultant: the determinant of the Sylvester matrix (default degrees `cdeg`). -/
+def cResultant (p q : P α) : α := clistDetn (cdeg p + cdeg q) (cSylvester p q (cdeg p) (cdeg q))
+
+/-- `cResultant` reduces: `res(x − 1, x − 2) = −1` (coprime ⇒ nonzero). -/
+example : cResultant ([-1, 1] : List ℚ) [-2, 1] = -1 := by native_decide
+/-- `cResultant` reduces: `res(x² − 1, x − 1) = 0` (common factor ⇒ zero). -/
+example : cResultant ([-1, 0, 1] : List ℚ) [-1, 1] = 0 := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
