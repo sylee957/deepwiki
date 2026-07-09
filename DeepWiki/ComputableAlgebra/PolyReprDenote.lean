@@ -179,4 +179,42 @@ theorem toPoly_cderiv (p : P α) : toPoly (cderiv p) = (toPoly p).derivative := 
 /-- `cderiv` reduces (dense): `d/dx (1 + 2x + 3x²) = 2 + 6x` (stored as `[2,6,0]`). -/
 example : cderiv ([1, 2, 3] : List ℚ) = ([2, 6, 0] : List ℚ) := by native_decide
 
+/-! ### Evaluation (generic)
+
+`ceval x p = ∑ᵢ (coeff p i)·xⁱ`, summed with the ring's own `foldr`/`add` (no Mathlib `Finset.sum`
+on `α`, which is not a bundled semiring), with `toR_ceval : toR (ceval x p) = (toPoly p).eval (toR x)`. -/
+
+/-- Ring power by repeated multiplication (`α` is not a bundled `Monoid`). -/
+def cpowElem (x : α) : ℕ → α
+  | 0 => CCommRing.one
+  | n + 1 => CCommRing.mul x (cpowElem x n)
+
+/-- Generic evaluation `ceval x p = ∑ᵢ (coeff p i)·xⁱ` via the ring's own fold. -/
+def ceval (x : α) (p : P α) : α :=
+  ((List.range (degBound p)).map (fun i => CCommRing.mul (coeff p i) (cpowElem x i))).foldr
+    CCommRing.add CCommRing.zero
+
+/-- `toR (cpowElem x n) = (toR x) ^ n`. -/
+theorem toR_cpowElem (x : α) (n : ℕ) : CRingSpec.toR (cpowElem x n) = (CRingSpec.toR x) ^ n := by
+  induction n with
+  | zero => rw [cpowElem, CRingSpec.toR_one, pow_zero]
+  | succ m ih => rw [cpowElem, CRingSpec.toR_mul, ih, pow_succ, mul_comm]
+
+/-- **`ceval` correctness:** `toR (ceval x p) = (toPoly p).eval (toR x)`. Representation-generic. -/
+theorem toR_ceval (x : α) (p : P α) :
+    CRingSpec.toR (ceval x p) = (toPoly p).eval (CRingSpec.toR x) := by
+  rw [ceval, toR_foldr_add, List.map_map]
+  rw [show ((List.range (degBound p)).map
+        (CRingSpec.toR ∘ fun i => CCommRing.mul (coeff p i) (cpowElem x i)))
+      = (List.range (degBound p)).map
+        (fun i => CRingSpec.toR (coeff p i) * (CRingSpec.toR x) ^ i) from by
+    apply List.map_congr_left; intro i _
+    rw [Function.comp_apply, CRingSpec.toR_mul, toR_cpowElem]]
+  rw [sum_list_range, toPoly, Polynomial.eval_finsetSum]
+  apply Finset.sum_congr rfl; intro i _
+  rw [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_pow, Polynomial.eval_X]
+
+/-- `ceval` reduces (dense): `(1 + 2x + 3x²)` at `x = 2` is `1 + 4 + 12 = 17`. -/
+example : ceval (2 : ℚ) ([1, 2, 3] : List ℚ) = 17 := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
