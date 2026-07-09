@@ -72,6 +72,13 @@ def neg (p : P α) : P α := ofFn (degBound p) (fun i => CCommRing.neg (coeff p 
 /-- Scalar multiplication by `c : α`. -/
 def scale (c : α) (p : P α) : P α := ofFn (degBound p) (fun i => CCommRing.mul c (coeff p i))
 
+/-- Convolution multiplication: `coeff i = ∑_{j≤i} coeff p j · coeff q (i−j)` (a computable
+`CCommRing.add`-fold, since the Prop-free `CCommRing` has no `Finset.sum`). -/
+def mul (p q : P α) : P α :=
+  ofFn (degBound p + degBound q) (fun i =>
+    ((List.range (i + 1)).map (fun j => CCommRing.mul (coeff p j) (coeff q (i - j)))).foldr
+      CCommRing.add CCommRing.zero)
+
 section Spec
 variable [CRingSpec α]
 
@@ -104,6 +111,22 @@ theorem toR_coeff_scale (c : α) (p : P α) (i : ℕ) :
   · rename_i h; simp only [not_lt] at h
     rw [coeff_ge p i h, CRingSpec.toR_zero, mul_zero]
 
+/-- `toR` of a `CCommRing.add`-fold is the `R`-sum of the `toR` images (the fold homomorphism). -/
+theorem toR_foldr_add (l : List α) :
+    CRingSpec.toR (l.foldr CCommRing.add CCommRing.zero) = (l.map CRingSpec.toR).sum := by
+  induction l with
+  | nil => simp [CRingSpec.toR_zero]
+  | cons a as ih => rw [List.foldr_cons, CRingSpec.toR_add, ih, List.map_cons, List.sum_cons]
+
+/-- The `mul` coefficient square through `toR`: the `i`-th coefficient is the convolution sum. -/
+theorem toR_coeff_mul (p q : P α) (i : ℕ) (hi : i < degBound p + degBound q) :
+    CRingSpec.toR (coeff (mul p q) i)
+      = ((List.range (i + 1)).map
+          (fun j => CRingSpec.toR (coeff p j) * CRingSpec.toR (coeff q (i - j)))).sum := by
+  rw [mul, coeff_ofFn, if_pos hi, toR_foldr_add, List.map_map]
+  congr 1; apply List.map_congr_left; intro j _
+  simp only [Function.comp_apply, CRingSpec.toR_mul]
+
 end Spec
 
 /-! ### `native_decide` showcase — the dense `List` instance reduces through the interface -/
@@ -116,6 +139,10 @@ example : (neg ([1, -2, 3] : List ℚ)) = [-1, 2, -3] := by native_decide
 
 /-- Generic `scale` reduces under `native_decide` at the `List` instance. -/
 example : (scale (2 : ℚ) [1, -2, 3]) = [2, -4, 6] := by native_decide
+
+/-- Generic `mul` (convolution) reduces under `native_decide`: `(1+2x)(3+4x) = 3+10x+8x²`
+(length `degBound p + degBound q = 4`, so an unnormalized trailing `0` — Phase 2 adds `cnorm`). -/
+example : (mul ([1, 2] : List ℚ) [3, 4]) = [3, 10, 8, 0] := by native_decide
 
 end CPolyRepr
 
