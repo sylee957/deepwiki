@@ -53,7 +53,12 @@ CFieldSpec α extends CRingSpec α    -- adds [Field R] + toK_inv;  K := R  (kee
 the `CField ℚ` instance. Risk: **instance diamond** if any type gets both a direct `CCommRing` and a
 `CField`-derived one — none should yet. Gate: full build + native_decide showcase unchanged.
 
-**P2 — DONE (commit below).** the keystone `CCommRing (CPoly α)` / `CRingSpec (CPoly α)`.** Define them from `c*` ops; prove the
+**P2 — the `CCommRing (CPoly α)` keystone: DONE + native_decide-validated (commit below).** The
+*computational* keystone is in: `CCommRing (CPoly (CPoly ℚ))` resolves and bivariate `cmul` reduces under
+`native_decide`; `List (CPoly ℚ) = CPoly (CPoly ℚ)` by `rfl`. Weakened cadd/cmul/cneg/cisZero/cnorm/… to
+`[CCommRing]` with 5 `@[denote]` bridge lemmas. **Still remaining in this phase:** the *denotational*
+`CRingSpec (CPoly α)` keystone (`R := (R α)[X]`, `toR := toPoly` as a ring hom) — needed before P4's
+correctness collapse. The original P2 text: Define them from `c*` ops; prove the
 `CRingSpec` hom laws (`toPoly` is a ring hom — reuse the existing `@[denote]` squares). *Verify (spike):*
 `#check (inferInstance : CCommRing (CPoly ℚ))` and a `native_decide` on `cmul (X:CPoly (CPoly ℚ)) …`
 reduces. Risk: the `CRingSpec (CPoly α)` `R = (R α)[X]` bridge must be a genuine ring hom — this is where
