@@ -98,7 +98,7 @@ open CFieldSpec
 
 /-- **`toK` is a determinant homomorphism.** `toK (cDetGn n M) = listDetn n (M.map (map toK))` — the
 computable cofactor determinant maps to the generic-`CommRing` determinant over `K`. -/
-theorem toK_cDetGn : ∀ (n : ℕ) (M : List (List α)),
+@[denote] theorem toK_cDetGn : ∀ (n : ℕ) (M : List (List α)),
     toK (cDetGn n M) = listDetn n (M.map (fun r => r.map toK)) := by
   intro n
   induction n with
@@ -124,7 +124,7 @@ theorem toK_cDetGn : ∀ (n : ℕ) (M : List (List α)),
       · simp only [if_neg hpar, CFieldSpec.toK_neg, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
 
 /-- `toK (cDetG M) = listDetn M.length (M.map (map toK))`. -/
-theorem toK_cDetG (M : List (List α)) :
+@[denote] theorem toK_cDetG (M : List (List α)) :
     toK (cDetG M) = listDetn M.length (M.map (fun r => r.map toK)) := by
   rw [cDetG, toK_cDetGn]
 

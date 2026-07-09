@@ -49,9 +49,17 @@ loop) is reverted, not forced.
   (SubresultantSpec), toPolyG_liftGBPolyCoreG, toPolyG_foldl_cmulG (GcdFFCorrect),
   toPolyG_foldl_cmulG_plainList, toPolyG_cmonicG_eq_normalize (YunSquarefreeDecomposition),
   toPolyG_cAmcDdG (LogPartTowerSoundness), toPolyG_append (RadicalDerivationInvariant).
-- **Batch 2+ (candidates, per-lemma judgement):** the remaining unconditional squares that are
-  cross-file-reused (Subresultant `toK_cDetG`/`toK_cDetGn` once line-verified; radical-layer
-  `toPolyG_radDeriv`/`toPolyG_radDerivFrom` if used outside their file). Skip conditional and one-off.
+- **Batch 2 (determinant homomorphisms) — DONE:** toK_cDetGn, toK_cDetG (Subresultant) — the
+  `toK (cDetGn n M) = listDetn n (map toK M)` cofactor-determinant push-squares underlying the
+  resultant/subresultant/Bareiss layer. (`toK_cDetG_eq_det` stays untagged: conditional matrix bridge.)
+- **Foundational layer now COMPLETE.** The ~20 remaining untagged unconditional squares are, by the
+  curation criteria, deliberately *not* `@[denote]`: one-off local soundness/example helpers
+  (`toK_radicandX3p1`, `toPolyG_radInv2`, `toK_cubeRadicand`, the `qxOfNum`/`cLaurentShiftG`/
+  `cAlgResidueNorm` families, `toPolyG_scale_one`, `toPolyG_afBasisElem_one`, `toPolyG_radDeriv_logFold`),
+  multiply-back identities (`toPolyG_reduceNum_mul`/`reduceDen_mul`), composite-redundant convenience
+  lemmas (`toPolyG_termG`), and special-case overlaps (`toPolyG_radDeriv_{linear,radGen,zero_cons}`).
+  Each earns `@[denote]` only if a second cross-file consumer appears. Item 1's *foundational* scope is
+  closed; further tagging is by-exception, not a batch.
 
 ## Item 2 — denotation-square discipline (NOT STARTED)
 
