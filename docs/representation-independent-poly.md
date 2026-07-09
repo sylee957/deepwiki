@@ -1,10 +1,10 @@
 # Representation-independent computable polynomials (and fractions)
 
-**Goal.** Today `CPoly α := List α` — the computable polynomial engine is hard-wired to a *dense
+**Goal.** Today `DensePoly α := List α` — the computable polynomial engine is hard-wired to a *dense
 coefficient list*. Make it abstract over the **representation** `P` (dense `List`, sparse
 `List (ℕ × α)` / hashmap, …) behind an interface, and express the computational ops + their correctness
 generically, so a different representation is a drop-in instance. `CFrac` (num/den pairs) follows once
-`CPoly` is abstract.
+`DensePoly` is abstract.
 
 ## Feasibility — VALIDATED by spike (2026-07-09)
 
@@ -17,7 +17,7 @@ A standalone spike proved the two make-or-break properties hold:
 ## The interface (minimal core)
 
 ```
-class CPolyRepr (P : Type* → Type*) where
+class CPoly (P : Type* → Type*) where
   coeff    : {α} → [Zero α] → P α → ℕ → α          -- coefficient at degree i (0 past the end)
   degBound : {α} → P α → ℕ                          -- an UPPER bound: coeff p i = 0 for i ≥ degBound p
   ofFn     : {α} → ℕ → (ℕ → α) → P α                -- dense construction from length + coeff fn
@@ -53,13 +53,13 @@ representation-generic for free once those are.
 
 ## Interaction with the ring-generalization (already landed)
 
-Composes cleanly: ops are `{P} [CPolyRepr P] {α} [CCommRing α]`, with `CRingSpec` for the denotation —
+Composes cleanly: ops are `{P} [CPoly P] {α} [CCommRing α]`, with `CRingSpec` for the denotation —
 the coefficient stays a computable commutative ring (field a specialization). The keystone
 `CCommRing (P α)` (a polynomial-over-a-ring is a ring coefficient) is stated on the interface.
 
 ## Phased plan — Steps 1–6 BUILT (each gate-green, additive)
 
-1. **Foundation — DONE** (`PolyRepr.lean`, commits `b67959c2`+`068825a0`): the `CPolyRepr` class, the
+1. **Foundation — DONE** (`PolyRepr.lean`, commits `b67959c2`+`068825a0`): the `CPoly` class, the
    dense `List` instance, generic `add`/`neg`/`scale`/`mul` + `toR` coefficient squares + `native_decide`.
 2. **Exact-degree layer — DONE** (`PolyReprDegree.lean`, commit `9dc182de`): generic `cisZero`/`cdeg`/
    `clead`/`cnorm` on the coefficient support; `cisZero_iff` correctness; `native_decide`.
@@ -67,16 +67,16 @@ the coefficient stays a computable commutative ring (field a specialization). Th
    `coeff_toPoly` bridge, and the homomorphism squares `toPoly_add`/`neg`/`scale`/`mul` — all coefficient-
    wise, **no `List` induction**, so they hold for every representation.
 4. **Migration bridge — DONE** (`PolyReprBridge.lean`, commit `5f19a3e8`): `toPoly_list_eq`
-   (`CPolyRepr.toPoly = CPoly.toPoly` at `List`) + under-denotation op agreements (`add↔cadd`, …). This
+   (`CPoly.toPoly = DensePoly.toPoly` at `List`) + under-denotation op agreements (`add↔cadd`, …). This
    is the *enabler*: because every engine theorem is `toPoly`-stated, call sites can be re-pointed
-   `CPoly.c* → CPolyRepr.*` with proofs preserved. **Remaining bulk (documented, not yet done):** the
+   `DensePoly.c* → CPoly.*` with proofs preserved. **Remaining bulk (documented, not yet done):** the
    actual sweep of the ~hundreds of engine call sites + `toPolyG_*` proofs — mechanical but large, a
    dedicated multi-session migration on top of this foundation.
 5. **Second representation — DONE** (`PolyReprSparse.lean`, commit `496c73f0`): a sparse `SparsePoly`
    (association-list) instance; the generic engine runs on it unchanged (`native_decide` on `cdeg`/`clead`
    of sparsely-stored polynomials). **This is the proof of representation-independence.**
 6. **Fractions — DONE** (`PolyReprFrac.lean`, commit `9f8018bf`): `GFrac P α` (num/den over any
-   `CPolyRepr`), fraction `mul`/`add`, `RatFunc` denotation + `toRatFunc_mul`; `native_decide` on **both**
+   `CPoly`), fraction `mul`/`add`, `RatFunc` denotation + `toRatFunc_mul`; `native_decide` on **both**
    the dense and sparse carriers.
 
 **Net:** the abstraction is complete and validated end-to-end — interface, arithmetic, exact-degree
@@ -86,7 +86,7 @@ correctness, a second (sparse) carrier proving independence, and fractions — a
 
 ## ⚠ Step 4's engine call-site sweep is NOT a mechanical rename (evidence)
 
-Re-pointing the ~168 engine files that use `CPoly.c*` onto the interface **cannot** be done as a
+Re-pointing the ~168 engine files that use `DensePoly.c*` onto the interface **cannot** be done as a
 behaviour-preserving mechanical sweep, for two hard reasons established empirically:
 
 1. **The interface ops ≠ the engine ops as raw lists, over generic `[CCommRing α]`.** The engine's
@@ -94,29 +94,29 @@ behaviour-preserving mechanical sweep, for two hard reasons established empirica
    add (coeff p i) (coeff q i)` needs `CCommRing.add x 0 = x` — a *ring law* the Prop-free `CCommRing`
    does not have. `cmul` differs by a trailing zero even at `ℚ` (`[3,10,8]` vs `[3,10,8,0]`). The ops
    agree only **under the denotation** `toPoly` (that is exactly what the bridge proves), not as the raw
-   representations the engine computes with. So swapping `cadd → CPolyRepr.add` changes what the generic
+   representations the engine computes with. So swapping `cadd → CPoly.add` changes what the generic
    engine *computes*.
 2. **120 of the engine files carry `native_decide` examples** pinned to exact list outputs, and the
    engine's thousands of correctness proofs are **representation-specific** (`List` induction on `::`/`[]`,
-   `getD`, `length`). Re-parametrising a declaration by `{P} [CPolyRepr P]` forces every one of its proofs
+   `getD`, `length`). Re-parametrising a declaration by `{P} [CPoly P]` forces every one of its proofs
    to be re-done through the interface's denotation squares instead of list lemmas — i.e. **re-deriving
    the engine's correctness against the abstract interface**, which is the original engine-development
    effort, not a sweep.
 
 ## The `CPolyEngine` enabler — and why migration is connected-component-scale, not per-module
 
-`PolyEngine.lean` adds the **fat** interface `CPolyEngine extends CPolyRepr`: the polynomial ops are
+`PolyEngine.lean` adds the **fat** interface `CPolyEngine extends CPoly`: the polynomial ops are
 **class fields**, and the `List` instance supplies the *concrete engine ops* — `CPolyEngine.add (p :
-List α) = CPoly.cadd p` **definitionally**. So a declaration re-parametrised over `[CPolyEngine P]`
+List α) = DensePoly.cadd p` **definitionally**. So a declaration re-parametrised over `[CPolyEngine P]`
 computes *exactly* the engine's list output at `List`: **`native_decide` is preserved** and the ops need
 no bridge. The `SparsePoly` instance supplies the generic `ofFn` ops, so a migrated declaration also runs
 sparse. This is the enabler that removes the *op* mismatch (blocker #1 above).
 
 **But there is a second, harder coupling — the denotation.** A generic declaration `foo {P} [CPolyEngine
-P] (p : P α)` must state its correctness through the *generic* `CPolyRepr.toPoly` (the `List`-specific
-`CPoly.toPoly` doesn't typecheck at generic `P`). And `CPolyRepr.toPoly = CPoly.toPoly` at `List` is a
+P] (p : P α)` must state its correctness through the *generic* `CPoly.toPoly` (the `List`-specific
+`DensePoly.toPoly` doesn't typecheck at generic `P`). And `CPoly.toPoly = DensePoly.toPoly` at `List` is a
 *proven bridge* (`toPoly_list_eq`), **not** definitional. So the moment a module's `toPoly`-stated theorem
-is migrated, every downstream consumer that pattern-matches on `CPoly.toPoly` must migrate too. Migration
+is migrated, every downstream consumer that pattern-matches on `DensePoly.toPoly` must migrate too. Migration
 therefore propagates along the `toPoly` dependency graph: it is **connected-component-scale**, not
 one-isolated-module-at-a-time. Even the smallest correctness module (`ReductionRealization`, 1 decl) has a
 downstream consumer.
@@ -124,11 +124,11 @@ downstream consumer.
 **The two honest ways to finish it**, both large:
 1. **Component-by-component** re-derivation: migrate a `toPoly`-closed set of modules together (module +
    all consumers of its `toPoly` statements), gated per component. Correct, safe, multi-week.
-2. **Redefine the engine denotation** `CPoly.toPoly := CPolyRepr.toPoly` (make the bridge *definitional*),
+2. **Redefine the engine denotation** `DensePoly.toPoly := CPoly.toPoly` (make the bridge *definitional*),
    re-proving the ~50 `toPolyG_*` satellites in `Polynomial.lean`, after which per-module migration
    becomes transparent. Bounded to the core file but high-risk (it is imported by all 168 files).
 
-The delivered foundation (`CPolyRepr` + `CPolyEngine` + full correctness + bridge, all gate-green) is
+The delivered foundation (`CPoly` + `CPolyEngine` + full correctness + bridge, all gate-green) is
 what makes *either* route safe. It does not make the aggregate small: the engine port is a genuine
 re-derivation effort, correctly scoped here rather than faked by breaking the 120 `native_decide` suites.
 

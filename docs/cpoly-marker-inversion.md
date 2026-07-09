@@ -1,5 +1,10 @@
 # CPoly marker inversion — generic becomes the unmarked default
 
+> **Historical note (2026-07-09):** the dense-list carrier this doc calls `CPoly` (`abbrev CPoly α :=
+> List α`) was later renamed **`DensePoly`**, freeing `CPoly` for the abstract representation-independent
+> interface class (formerly `CPolyRepr`). Read `CPoly`/`CPolyQ` below as the historical names of what is
+> now `DensePoly`/`DensePoly ℚ`.
+
 **Goal.** Invert the generic-vs-concrete naming: the *generic* engine (the primary implementation, ~5.6k
 refs) takes the clean unmarked names; the *concrete ℚ reference layer* `Compute` (the minority, book
 native_decide examples) carries an explicit `Q` marker. Replaces the earlier "keep G" verdict — the user's
