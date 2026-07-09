@@ -146,4 +146,37 @@ example : cmonomial (5 : ℚ) 3 = ([0, 0, 0, 5] : List ℚ) := by native_decide
 /-- `cshift` reduces (dense): `x²·(1 + x) = [0,0,1,1]`. -/
 example : cshift 2 ([1, 1] : List ℚ) = ([0, 0, 1, 1] : List ℚ) := by native_decide
 
+/-! ### Formal derivative (generic)
+
+`cderiv p = p'` — the coefficient of `Xⁱ` in `p'` is `(i+1)·(coeff p (i+1))`, where the `ℕ`-multiple is
+the ring's own repeated addition `natMul` (`CCommRing` has no `ℕ`-`SMul`). The denotation square
+`toPoly_cderiv : toPoly (cderiv p) = (toPoly p)'` matches Mathlib's `Polynomial.derivative`. -/
+
+/-- Ring `ℕ`-multiple by repeated addition (`CCommRing` supplies no `SMul ℕ`). -/
+def natMul (x : α) : ℕ → α
+  | 0 => CCommRing.zero
+  | n + 1 => CCommRing.add x (natMul x n)
+
+/-- `toR (natMul x n) = n · toR x` — `toR` carries the ℕ-multiple to `natCast` multiplication. -/
+theorem toR_natMul (x : α) (n : ℕ) :
+    CRingSpec.toR (natMul x n) = (n : (CRingSpec.R α)) * CRingSpec.toR x := by
+  induction n with
+  | zero => rw [natMul, CRingSpec.toR_zero]; push_cast; ring
+  | succ m ih => rw [natMul, CRingSpec.toR_add, ih]; push_cast; ring
+
+/-- Generic formal derivative: coefficient of `Xⁱ` is `(i+1)·coeff p (i+1)`. -/
+def cderiv (p : P α) : P α := ofFn (degBound p) (fun i => natMul (coeff p (i + 1)) (i + 1))
+
+/-- **`cderiv` correctness:** `toPoly (cderiv p) = (toPoly p).derivative`. Representation-generic. -/
+theorem toPoly_cderiv (p : P α) : toPoly (cderiv p) = (toPoly p).derivative := by
+  apply Polynomial.ext; intro k
+  rw [coeff_toPoly, cderiv, coeff_ofFn, Polynomial.coeff_derivative]
+  by_cases hk : k < degBound p
+  · rw [if_pos hk, toR_natMul, coeff_toPoly]; push_cast; ring
+  · rw [if_neg hk, CRingSpec.toR_zero, coeff_toPoly, coeff_ge p (k + 1) (by omega),
+      CRingSpec.toR_zero, zero_mul]
+
+/-- `cderiv` reduces (dense): `d/dx (1 + 2x + 3x²) = 2 + 6x` (stored as `[2,6,0]`). -/
+example : cderiv ([1, 2, 3] : List ℚ) = ([2, 6, 0] : List ℚ) := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
