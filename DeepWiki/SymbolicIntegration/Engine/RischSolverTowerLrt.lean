@@ -36,7 +36,7 @@ def qEmbedNum {β : Type*} [CField β] [CFieldDomain β] (num : CPoly β) : CFra
 division. The coefficient integrator the LRT tower step feeds (wrapped) to `cIntegratePrimPolyDegRaise`,
 staying on the LRT track. -/
 def towerCoeffIntegrateLrt (c : CFrac β) : Option (CFrac β) :=
-  (LawfulRischLevelLrt.integrateRationalLrt [CField.one] (qnumCoeff c) (qdenCoeff c)).map fun bd =>
+  (LawfulRischLevelLrt.integrateRationalLrt [CField.one] (qnumCoeffCore c) (qdenCoeffCore c)).map fun bd =>
     CField.div (qEmbedNum bd.1) (qEmbedNum bd.2)
 
 omit [CRischField β] in
@@ -49,7 +49,7 @@ theorem towerCoeffIntegrateLrt_sound (c b : CFrac β) (h : towerCoeffIntegrateLr
   rw [Option.map_eq_some_iff] at h
   obtain ⟨⟨bn, bd⟩, hint, rfl⟩ := h
   have hsound := LawfulRischLevelLrt.integrateRationalLrt_sound [CField.one]
-    (qnumCoeff c) (qdenCoeff c) bn bd hint
+    (qnumCoeffCore c) (qdenCoeffCore c) bn bd hint
   have hcd : CFieldSpec.toK (CDiffField.cderiv (CField.div (qEmbedNum bn) (qEmbedNum bd)))
       = towerFractionFieldDeriv [CField.one]
           (CFieldSpec.toK (CField.div (qEmbedNum bn) (qEmbedNum bd))) := by
@@ -61,7 +61,7 @@ theorem towerCoeffIntegrateLrt_sound (c b : CFrac β) (h : towerCoeffIntegrateLr
       = CFrac.am β (toPoly num)
     simp only [denote, map_one, mul_zero, add_zero, div_one]
   have htoK_c : CFieldSpec.toK c
-      = CFrac.am β (toPoly (qnumCoeff c)) / CFrac.am β (toPoly (qdenCoeff c)) := rfl
+      = CFrac.am β (toPoly (qnumCoeffCore c)) / CFrac.am β (toPoly (qdenCoeffCore c)) := rfl
   rw [hcd, CFieldSpec.toK_div, htoK_embed bn, htoK_embed bd, htoK_c]
   exact hsound
 
@@ -71,8 +71,8 @@ theorem towerCoeffIntegrateLrt_sound (c b : CFrac β) (h : towerCoeffIntegrateLr
 single-`w` integrator (the default). This is the `limInt` that flips on the degree-raising `c·tᵐ⁺¹/(m+1)` term
 once a base `(b,c)` integrator (`cLimitedIntegrateSingleBase`) is present. -/
 def towerCoeffIntegrateSingleLrt (η c : CFrac β) : Option (CFrac β × CFrac β) :=
-  match LawfulRischLevelLrt.limitedIntegrateSingle (qnumCoeff c) (qdenCoeff c)
-      (qnumCoeff η) (qdenCoeff η) with
+  match LawfulRischLevelLrt.limitedIntegrateSingle (qnumCoeffCore c) (qdenCoeffCore c)
+      (qnumCoeffCore η) (qdenCoeffCore η) with
   | some ((bn, bd), cc) => some (CField.div (qEmbedNum bn) (qEmbedNum bd), qEmbedNum [cc])
   | none => (towerCoeffIntegrateLrt c).map fun b => (b, CField.zero)
 

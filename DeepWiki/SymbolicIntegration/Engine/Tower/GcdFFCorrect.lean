@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
-import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFF
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import Mathlib.RingTheory.Polynomial.Content
 

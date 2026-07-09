@@ -1,6 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.LrtGuarded
 import DeepWiki.SymbolicIntegration.Engine.LrtCompleteness
-import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFF
 
 /-! # The integrability guard over a differential tower
 
