@@ -99,4 +99,51 @@ theorem toPoly_cpow (p : P α) (n : ℕ) : toPoly (cpow p n) = (toPoly p) ^ n :=
 /-- The generic `cpow` reduces under `native_decide`: `(1 + x)² = 1 + 2x + x²` on the dense carrier. -/
 example : cpow ([1, 1] : List ℚ) 2 = [1, 2, 1, 0, 0] := by native_decide
 
+/-! ### Division-support ops: subtraction, monomials, degree shift (generic)
+
+`csub`, `cmonomial c k = c·Xᵏ`, and `cshift k p = Xᵏ·p` — the pieces a Euclidean division step needs,
+each with its denotation square, representation-generic. -/
+
+/-- Generic polynomial subtraction `csub p q = p - q`. -/
+def csub (p q : P α) : P α := add p (neg q)
+
+/-- `toPoly` realizes subtraction. -/
+theorem toPoly_csub (p q : P α) : toPoly (csub p q) = toPoly p - toPoly q := by
+  rw [csub, toPoly_add, toPoly_neg, sub_eq_add_neg]
+
+/-- The monomial `c·Xᵏ` as a length-`k+1` representation. -/
+def cmonomial (c : α) (k : ℕ) : P α := ofFn (k + 1) (fun i => if i = k then c else CCommRing.zero)
+
+/-- `toPoly (cmonomial c k) = C (toR c) · Xᵏ`. -/
+theorem toPoly_cmonomial (c : α) (k : ℕ) :
+    toPoly (cmonomial (P := P) c k) = Polynomial.C (CRingSpec.toR c) * X ^ k := by
+  apply Polynomial.ext; intro j
+  rw [coeff_toPoly, cmonomial, coeff_ofFn, Polynomial.coeff_C_mul, Polynomial.coeff_X_pow]
+  by_cases hj : j = k
+  · subst hj; rw [if_pos (Nat.lt_succ_self _), if_pos rfl, if_pos rfl, mul_one]
+  · rw [if_neg hj, ite_self, CRingSpec.toR_zero, if_neg hj, mul_zero]
+
+/-- Degree shift `cshift k p = Xᵏ·p` (multiply by `Xᵏ`). -/
+def cshift (k : ℕ) (p : P α) : P α :=
+  ofFn (degBound p + k) (fun i => if k ≤ i then coeff p (i - k) else CCommRing.zero)
+
+/-- `toPoly (cshift k p) = Xᵏ · toPoly p`. -/
+theorem toPoly_cshift (k : ℕ) (p : P α) : toPoly (cshift k p) = X ^ k * toPoly p := by
+  rw [mul_comm]
+  apply Polynomial.ext; intro j
+  rw [coeff_toPoly, cshift, coeff_ofFn, Polynomial.coeff_mul_X_pow']
+  by_cases hkj : k ≤ j
+  · by_cases hb : j < degBound p + k
+    · rw [if_pos hb, if_pos hkj, if_pos hkj, ← coeff_toPoly]
+    · rw [if_neg hb, if_pos hkj, CRingSpec.toR_zero, coeff_toPoly,
+        coeff_ge p (j - k) (by omega), CRingSpec.toR_zero]
+  · simp only [if_neg hkj, ite_self, CRingSpec.toR_zero]
+
+/-- `csub` reduces (dense): `(3 + 4x) - (1 + x) = 2 + 3x`. -/
+example : csub ([3, 4] : List ℚ) [1, 1] = [2, 3] := by native_decide
+/-- `cmonomial` reduces (dense): `5·x³ = [0,0,0,5]`. -/
+example : cmonomial (5 : ℚ) 3 = ([0, 0, 0, 5] : List ℚ) := by native_decide
+/-- `cshift` reduces (dense): `x²·(1 + x) = [0,0,1,1]`. -/
+example : cshift 2 ([1, 1] : List ℚ) = ([0, 0, 1, 1] : List ℚ) := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
