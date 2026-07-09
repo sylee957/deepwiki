@@ -293,7 +293,7 @@ theorem liftKG_C (c : (CFieldSpec.K β)[X]) :
 
 /-- `toPolyG (liftGBPolyCoreG p) = toGBPolyG p`: lifting coefficientwise as `c/1` then through `toPolyG`
 agrees with the coefficient-ring embedding. -/
-theorem toPolyG_liftGBPolyCoreG (p : GBPolyCore β) :
+@[denote] theorem toPolyG_liftGBPolyCoreG (p : GBPolyCore β) :
     toPolyG (CPolyG.liftGBPolyCoreG p) = toGBPolyG p := by
   apply Polynomial.ext
   intro i
@@ -360,7 +360,7 @@ theorem amG_commonDenG_ne_zero (p : CPolyG (QFunNZG β)) : QFunNZG.amG β (commo
 omit [CFieldDomain β] in
 /-- `toPolyG` of a `cmulG`-fold is `toPolyG init` times the product of the `toPolyG`-images of the folded
 list. -/
-theorem toPolyG_foldl_cmulG (init : CPolyG β) (ds : List (CPolyG β × ℕ)) :
+@[denote] theorem toPolyG_foldl_cmulG (init : CPolyG β) (ds : List (CPolyG β × ℕ)) :
     CPolyG.toPolyG (ds.foldl (fun acc de => CPolyG.cmulG acc de.1) init)
       = CPolyG.toPolyG init * (ds.map (fun de => CPolyG.toPolyG de.1)).prod := by
   induction ds generalizing init with

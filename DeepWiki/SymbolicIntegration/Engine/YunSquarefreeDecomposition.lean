@@ -89,7 +89,7 @@ theorem prodPow_one_cSqfreeYunFFGWf (d : CPolyG α) :
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
 /-- `cmonicG` realizes `normalize` through `toPolyG`: `toPolyG (cmonicG q) = normalize (toPolyG q)`.
 The monic associate of `toPolyG q` is its normalization. -/
-theorem toPolyG_cmonicG_eq_normalize (q : CPolyG α) :
+@[denote] theorem toPolyG_cmonicG_eq_normalize (q : CPolyG α) :
     toPolyG (cmonicG q) = normalize (toPolyG q) := by
   by_cases hq : toPolyG q = 0
   · have hcm : toPolyG (cmonicG q) = 0 := by
@@ -195,7 +195,7 @@ theorem prod_map_cSqfreeYunFFGgoWf_dvd (hgcd : GcdFFCorrect (α := α)) :
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
 /-- The Yun-radical `foldl`-product denotes the list product through `toPolyG`:
 `toPolyG (L.foldl cmulG init) = toPolyG init · ∏ (map toPolyG L)`. -/
-theorem toPolyG_foldl_cmulG_plainList (init : CPolyG α) (L : List (CPolyG α)) :
+@[denote] theorem toPolyG_foldl_cmulG_plainList (init : CPolyG α) (L : List (CPolyG α)) :
     toPolyG (L.foldl (fun acc vi => cmulG acc vi) init)
       = toPolyG init * (L.map toPolyG).prod := by
   induction L generalizing init with

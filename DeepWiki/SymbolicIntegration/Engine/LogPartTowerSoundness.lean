@@ -24,7 +24,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- `toPolyG (cAmcDdG Dt a d c) = toPolyG a − C(toK c)·implicitDeriv (toPolyG Dt) (toPolyG d)`. -/
-theorem toPolyG_cAmcDdG (Dt a d : CPolyG α) (c : α) :
+@[denote] theorem toPolyG_cAmcDdG (Dt a d : CPolyG α) (c : α) :
     toPolyG (cAmcDdG Dt a d c)
       = toPolyG a - Polynomial.C (CFieldSpec.toK c)
           * Differential.implicitDeriv (toPolyG Dt) (toPolyG d) := by

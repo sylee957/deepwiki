@@ -100,7 +100,7 @@ namespace CFieldSpec
   rw [CField.div, toK_mul, toK_inv, div_eq_mul_inv]
 
 /-- `toK` intertwines a `CField.add` fold with the corresponding field addition fold. -/
-theorem toK_foldl_add {α : Type*} [CField α] [CFieldSpec α] (z : α) (L : List α) :
+@[denote] theorem toK_foldl_add {α : Type*} [CField α] [CFieldSpec α] (z : α) (L : List α) :
     toK (L.foldl CField.add z) = (L.map toK).foldl (· + ·) (toK z) := by
   induction L generalizing z with
   | nil => simp
@@ -189,7 +189,7 @@ def cevalG {α : Type*} [CField α] (p : CPolyG α) (c : α) : α :=
 
 /-- The generic denominator fold `∏ acc·(zk − zⱼ)` reads through `toK` as
 `toK init · ∏ (toK zk − toK zⱼ)`. -/
-theorem toK_foldl_csub_mul {α : Type*} [CField α] [CFieldSpec α]
+@[denote] theorem toK_foldl_csub_mul {α : Type*} [CField α] [CFieldSpec α]
     (zk : α) (others : List α) (init : α) :
     CFieldSpec.toK (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) init)
       = CFieldSpec.toK init

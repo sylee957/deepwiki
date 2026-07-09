@@ -165,7 +165,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The top-coefficient split through `toPolyG`: `toPolyG (p ++ q) = toPolyG p + X^(p.length) ·
 toPolyG q`. The `append` homomorphism for the Horner bridge, the tool for peeling the top coefficient in
 `radReduce`. -/
-theorem toPolyG_append (p q : RadElem α) :
+@[denote] theorem toPolyG_append (p q : RadElem α) :
     CPolyG.toPolyG (p ++ q)
       = CPolyG.toPolyG p + X ^ (p : List α).length * CPolyG.toPolyG q := by
   induction p with
