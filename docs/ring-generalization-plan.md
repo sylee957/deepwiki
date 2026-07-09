@@ -104,8 +104,13 @@ aliases of the now-`toR` chain lemmas. The full redesign was NOT needed. `cmonic
   `toGBCoeffPoly_eq_toPolyG` denotation bridge and collapsed the five `toGBCoeffPoly_gb*Core` satellites to
   generic-backed proofs. gbnormCore/gbpsremainderCore/gbcontentCore/gbprimitivePartCore (the genuine
   fraction-free PRS-gcd algorithm) keep their defs.
-- **Net result:** the THREE `List (CPoly _)` carriers (`BPoly`, `GBPoly`, `GBPolyCore`) are the only ones in
-  the tree, and their **arithmetic is now the generic engine** (wrappers) or deleted (dead GBPoly ops). The
+- **P5c — DONE (commit `a388d5fd`).** `GcdFF/Denominators.lean`'s `qnumCoeff`/`qdenCoeff`/`cclearDenoms`/
+  `liftGBPoly` were byte-identical duplicates of `GcdFFCore`'s `*Core` versions; `cclearDenoms`/`liftGBPoly`
+  were already dead and `qnum/qdenCoeff` re-pointed to `*Core` in `RischSolverTowerLrt` (reachable, defeq).
+  That killed the whole `GcdFF/{Carrier,Denominators}` + `GcdFF.lean` aggregator + the `GBPoly` type alias —
+  **all three files deleted**, three stale `import ...GcdFF` lines dropped. `GBPoly` no longer exists.
+- **Net result:** only TWO `List (CPoly _)` carriers remain (`BPoly`, `GBPolyCore`; `GBPoly` deleted), and their
+  **arithmetic is now the generic engine** (wrappers). The P4/P5 arc is a net **−46 lines** + full generalization. The
   bivariate arithmetic + denotation duplication is fully eliminated. Remaining "separate definitions" —
   the canonicalizing `bnorm`/`gbnormCore`, the `bpsremainder`/`gbpsremainderCore` PRS, and the
   subresultant-vs-gcd correctness developments — are **genuine algorithm content, not duplication** (the
