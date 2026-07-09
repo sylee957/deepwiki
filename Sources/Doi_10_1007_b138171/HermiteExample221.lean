@@ -119,9 +119,9 @@ example :
     have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
     revert this; decide
   have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm [0, 8, 0, 12, 0, 6, 0, 1] = [] := (cnorm_eq_nil_iff _).mpr h
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : CPoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
-  have hDstar : cnorm [0, 2, 0, 1] ≠ [] := by decide
+  have hDstar : cnorm ([0, 2, 0, 1] : CPoly ℚ) ≠ [] := by decide
   have hexact : toPoly (cmod 40
       (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
           (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
@@ -181,9 +181,9 @@ example :
     have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
     revert this; decide
   have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm [0, 8, 0, 12, 0, 6, 0, 1] = [] := (cnorm_eq_nil_iff _).mpr h
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : CPoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
-  have hDstar : cnorm [0, 2, 0, 1] ≠ [] := by decide
+  have hDstar : cnorm ([0, 2, 0, 1] : CPoly ℚ) ≠ [] := by decide
   have hfuel : (cnorm (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
       (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
         (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by
@@ -228,9 +228,9 @@ example :
     have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
     revert this; decide
   have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm [0, 8, 0, 12, 0, 6, 0, 1] = [] := (cnorm_eq_nil_iff _).mpr h
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : CPoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
-  have hDstar : cnorm [0, 2, 0, 1] ≠ [] := by decide
+  have hDstar : cnorm ([0, 2, 0, 1] : CPoly ℚ) ≠ [] := by decide
   have hfuel : (cnorm (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
       (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
         (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by

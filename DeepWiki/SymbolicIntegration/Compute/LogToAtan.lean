@@ -11,30 +11,13 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-- Normalize a `CPoly ℚ` by stripping trailing (high-degree) zero coefficients (zero polynomial
-becomes `[]`). -/
-def cnorm : CPoly ℚ → CPoly ℚ := CPoly.cnorm
-
-/-- Coefficientwise addition of two `CPoly ℚ`s (the shorter is zero-extended implicitly). -/
-def cadd : CPoly ℚ → CPoly ℚ → CPoly ℚ := CPoly.cadd
-
-/-- Negation of a `CPoly ℚ`, coefficientwise. -/
-def cneg (p : CPoly ℚ) : CPoly ℚ := CPoly.cneg p
+-- The concrete `ℚ` engine reuses the generic ring-engine ops directly — `Compute.{cnorm,cadd,cneg,
+-- cscale,cshift,cmul,clead}` are re-exports of the generic `CPoly.*` (they specialize to `ℚ`
+-- identically), not separate definitions; only the genuinely `ℚ`-specific fuel ops live here.
+export CPoly (cnorm cadd cneg cscale cshift cmul clead)
 
 /-- Subtraction of `CPoly ℚ`s, `p − q := p + (−q)`. -/
 def csub (p q : CPoly ℚ) : CPoly ℚ := cadd p (cneg q)
-
-/-- Scalar multiplication of a `CPoly ℚ` by `c : ℚ`, coefficientwise. -/
-def cscale (c : ℚ) (p : CPoly ℚ) : CPoly ℚ := CPoly.cscale c p
-
-/-- Degree shift `cshift k p = x^k · p`: prepend `k` zero coefficients. -/
-def cshift : ℕ → CPoly ℚ → CPoly ℚ := CPoly.cshift
-
-/-- Polynomial multiplication of `CPoly ℚ`s (schoolbook convolution via `cshift`/`cscale`). -/
-def cmul : CPoly ℚ → CPoly ℚ → CPoly ℚ := CPoly.cmul
-
-/-- Leading coefficient of a `CPoly ℚ` (top nonzero coefficient; `0` for the zero polynomial). -/
-def clead (p : CPoly ℚ) : ℚ := CPoly.clead p
 
 /-- Zero test for a `CPoly ℚ`: `true` iff it normalizes to `[]`. -/
 def cisZero (p : CPoly ℚ) : Bool := cnorm p == []

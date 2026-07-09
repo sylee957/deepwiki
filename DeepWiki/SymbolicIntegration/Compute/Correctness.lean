@@ -238,7 +238,7 @@ theorem bnorm_cons_eq (a : CPoly ℚ) (as : BPoly) :
   | cons a as ih =>
     rw [bnorm_cons_eq]
     cases h : bnorm as with
-    | nil => cases ha : cisZero (cnorm a) <;> simp [bnorm_cons_eq, cnorm_idem, ha]
+    | nil => cases ha : cisZero (cnorm a) <;> simp [bnorm_cons_eq, ha]
     | cons b bs =>
       rw [h] at ih
       simp only [bnorm_cons_eq, cnorm_idem, ih]
@@ -739,7 +739,7 @@ theorem cgcdExt_fst_length_le :
   | zero =>
     intro a b
     rw [cgcdExt]
-    simp [cnorm_idem]
+    simp
   | succ fuel ih =>
     intro a b
     rw [cgcdExt]
@@ -807,7 +807,7 @@ theorem cdeg_cnorm (p : CPoly ℚ) : cdeg (cnorm p) = cdeg p := by
 theorem cmod_cnorm_both (fuel : ℕ) (p q : CPoly ℚ) :
     cmod fuel (cnorm p) (cnorm q) = cmod fuel p q := by
   cases fuel with
-  | zero => simp [cmod, cdivmod, cnorm_idem]
+  | zero => simp [cmod, cdivmod]
   | succ fuel => simp only [cmod, cdivmod, cnorm_idem]
 
 /-- `cresultant` is invariant under normalizing both arguments (it normalizes them internally). -/
