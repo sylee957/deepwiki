@@ -10,7 +10,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG GBPolyCore
+open CPoly GBPolyCore
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
@@ -23,7 +23,7 @@ nonzero exactly when `q ≠ 0` — so clause (ii)'s `β(s)`-unit multiplier is u
 (`q ≠ 0` in `t`), then `toPolyG (gblcCore q) ≠ 0` in `R = (CFieldSpec.K β)[X]`. The top normalized
 `t`-coefficient is `cnormG`-nonempty, hence `toPolyG`-nonzero (`gbnormCore_getLast?_toPolyG_ne_zero`). -/
 theorem toPolyG_gblcCore_ne_zero {q : GBPolyCore β} (hq : gbisZeroCore q = false) :
-    CPolyG.toPolyG (gblcCore q) ≠ 0 := by
+    CPoly.toPolyG (gblcCore q) ≠ 0 := by
   -- `gbnormCore q ≠ []` (zero test is `false`), so `getLast?` is `some v` with `toPolyG v ≠ 0`
   have hne : gbnormCore q ≠ [] := by
     rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem] at hq
@@ -40,15 +40,15 @@ a pseudo-division witness `(s, c)` with the Euclidean identity and `toPolyG c �
 `gbisZeroCore (gbnormCore q) = false`. -/
 theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
     (hq : gbisZeroCore (gbnormCore q) = false) :
-    ∃ (s : GBPolyCore β) (c : CPolyG β),
-      Polynomial.C (CPolyG.toPolyG c) * toGBCoeffPoly p
+    ∃ (s : GBPolyCore β) (c : CPoly β),
+      Polynomial.C (CPoly.toPolyG c) * toGBCoeffPoly p
           = toGBCoeffPoly s * toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q)
-        ∧ CPolyG.toPolyG c ≠ 0 := by
-  have hone : CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 := by
+        ∧ CPoly.toPolyG c ≠ 0 := by
+  have hone : CPoly.toPolyG ([CField.one] : CPoly β) = 1 := by
     simp only [denote]
     simp
   -- `lc(gbnormCore q)` reads nonzero (the divisor is nonzero)
-  have hlcq : CPolyG.toPolyG (gblcCore (gbnormCore q)) ≠ 0 :=
+  have hlcq : CPoly.toPolyG (gblcCore (gbnormCore q)) ≠ 0 :=
     toPolyG_gblcCore_ne_zero hq
   induction fuel generalizing p with
   | zero =>
@@ -69,17 +69,17 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
           (gbnormCore p))
           (gbscaleCCore (gblcCore (gbnormCore p))
             (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
-          = Polynomial.C (CPolyG.toPolyG (gblcCore (gbnormCore q))) * toGBCoeffPoly p
-            - Polynomial.C (CPolyG.toPolyG (gblcCore (gbnormCore p)))
+          = Polynomial.C (CPoly.toPolyG (gblcCore (gbnormCore q))) * toGBCoeffPoly p
+            - Polynomial.C (CPoly.toPolyG (gblcCore (gbnormCore p)))
               * Polynomial.X ^ ((gbnormCore p).length - (gbnormCore q).length) * toGBCoeffPoly q := by
         rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_gbsubCore, toGBCoeffPoly_gbscaleCCore,
           toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore, toGBCoeffPoly_gbnormCore,
           toGBCoeffPoly_gbnormCore]
         ring
       rw [hp', gbpsremainderCore_gbnormCore_right] at hsc
-      refine ⟨gbaddCore s' (gbscaleCCore (CPolyG.cmulG c' (gblcCore (gbnormCore p)))
+      refine ⟨gbaddCore s' (gbscaleCCore (CPoly.cmulG c' (gblcCore (gbnormCore p)))
           (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CField.one]])),
-          CPolyG.cmulG c' (gblcCore (gbnormCore q)), ?_, ?_⟩
+          CPoly.cmulG c' (gblcCore (gbnormCore q)), ?_, ?_⟩
       · rw [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
           toGBCoeffPoly_one]
         simp only [denote, map_mul]
@@ -92,10 +92,10 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
 and `amG (toPolyG c) ≠ 0` in `(RatFunc (CFieldSpec.K β))[X]`. -/
 theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
     (hq : gbisZeroCore (gbnormCore q) = false) :
-    ∃ (s : GBPolyCore β) (c : CPolyG β),
-      Polynomial.C (QFunNZG.amG β (CPolyG.toPolyG c)) * toGBPolyG p
+    ∃ (s : GBPolyCore β) (c : CPoly β),
+      Polynomial.C (QFunNZG.amG β (CPoly.toPolyG c)) * toGBPolyG p
           = toGBPolyG s * toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)
-        ∧ QFunNZG.amG β (CPolyG.toPolyG c) ≠ 0 := by
+        ∧ QFunNZG.amG β (CPoly.toPolyG c) ≠ 0 := by
   obtain ⟨s, c, hsc, hc⟩ := toGBCoeffPoly_gbpsremainderCore_ne_zero fuel p q hq
   refine ⟨s, c, ?_, QFunNZG.amG_toPolyG_ne_zero hc⟩
   have hl := congrArg (liftKG β) hsc
@@ -113,19 +113,19 @@ per-`t`-coefficient size bound, `Associated (toGBPolyG (gbprimitivePartCore cgcd
 Splits on whether the content `gbcontentCore cgcdB p` is zero (identity, reflexive) or nonzero (unit
 scaling). -/
 theorem associated_toGBPolyG_gbprimitivePartCore_total (fuel : ℕ)
-    (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
-    (hfuel : ∀ a ∈ gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel) :
+    (cgcdB : CPoly β → CPoly β → CPoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
+    (hfuel : ∀ a ∈ gbnormCore p, (CPoly.cnormG a : List β).length ≤ fuel) :
     Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p) := by
-  by_cases hgz : CPolyG.cisZeroG (gbcontentCore cgcdB p) = true
+  by_cases hgz : CPoly.cisZeroG (gbcontentCore cgcdB p) = true
   · -- content zero: gbprimitivePartCore is the identity `gbnormCore p`
     have hid : gbprimitivePartCore cgcdB p = gbnormCore p := by
       rw [gbprimitivePartCore, gbcontentCore_gbnormCore, if_pos hgz]
     rw [hid, toGBPolyG_gbnormCore]
   · -- content nonzero: the unit scaling (Mathlib content + cgcdB-fold-divides)
-    have hg0 : CPolyG.toPolyG (gbcontentCore cgcdB p) ≠ 0 := by
-      rw [Ne, ← CPolyG.cisZeroG_iff]; exact hgz
-    have hgcn : CPolyG.cnormG (gbcontentCore cgcdB p) ≠ [] := by
-      rw [Ne, CPolyG.cnormG_eq_nil_iff]; exact hg0
+    have hg0 : CPoly.toPolyG (gbcontentCore cgcdB p) ≠ 0 := by
+      rw [Ne, ← CPoly.cisZeroG_iff]; exact hgz
+    have hgcn : CPoly.cnormG (gbcontentCore cgcdB p) ≠ [] := by
+      rw [Ne, CPoly.cnormG_eq_nil_iff]; exact hg0
     exact associated_toGBPolyG_gbprimitivePartCore_of_correct fuel cgcdB hcorr p hgz hgcn hg0 hfuel
 
 end DeepWiki.SymbolicIntegration

@@ -13,7 +13,7 @@ rational-function identity. Validated on `log(x²) = 2 log(x)` (dependent) vs `l
 (independent).
 
 **Computable-vs-abstract.** Each decision below is a computable function over the generic `QFunNZG ℚ`
-(= ℚ(x)) / `CPolyG ℚ` validated by `native_decide` on the worked relations (checking the detected ℚ-coefficients
+(= ℚ(x)) / `CPoly ℚ` validated by `native_decide` on the worked relations (checking the detected ℚ-coefficients
 `rᵢ` *actually satisfy* `w = Σ rᵢ (Duᵢ/uᵢ)` over ℚ(x) via the cleared difference); the *abstract*
 correctness (the structure theorem `Dv = Du/u ↔ …`, Theorem 9.3.1) is **NOT** proved. The full nested
 tower (both index sets `E`, `L` over `C(x)(t₁,…,tₙ)` with level-by-level recursion), the §9.1 module of
@@ -41,7 +41,7 @@ differentials, §9.2 Rosenlicht, and §9.4 Rothstein–Caviness proof machinery 
   serves it identically; abstract correctness deferred).
 Exercises: Ex 9.1, Ex 9.2, Ex 9.3. -/
 
-open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPolyG
+open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPoly
 
 namespace DeepWiki.Si
 

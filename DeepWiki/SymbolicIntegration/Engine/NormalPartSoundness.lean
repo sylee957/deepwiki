@@ -14,7 +14,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -24,18 +24,18 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- The fuel-free reduced-case field identity from the `checkIdentityG` certificate: for
 `res = cIntegrateReducedG Dt a d cands`, if `checkIdentityG Dt res a d = true`, then
 `D(g) + logResidueSumG Dt res.logs = amG a/amG d`. -/
-theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCoreWf α] (Dt : CPolyG α)
-    (a d : CPolyG α) (cands : List α)
-    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
+theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCoreWf α] (Dt : CPoly α)
+    (a d : CPoly α) (cands : List α)
+    (hgden : toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
     (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedG Dt a d cands).logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt a d cands) a d = true) :
+    (hlogs : ∀ cv ∈ (CPoly.cIntegrateReducedG Dt a d cands).logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPoly.checkIdentityG Dt (CPoly.cIntegrateReducedG Dt a d cands) a d = true) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt a d cands).logs
+        (amG α (toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.1)
+          / amG α (toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPoly.cIntegrateReducedG Dt a d cands).logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt a d cands) a d
+  field_identity_of_checkIdentityG Dt (CPoly.cIntegrateReducedG Dt a d cands) a d
     hgden haden hlogs hcheck
 
 /-! ### Axiom audit — rests only on the standard kernel axioms

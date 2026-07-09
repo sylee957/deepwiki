@@ -90,5 +90,5 @@ import DeepWiki.SymbolicIntegration.Engine.YunSquarefreeDecomposition
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
 import DeepWiki.SymbolicIntegration.Engine.Assemble
 
-/-! # The generic executable Risch engine (`CField` / `CPolyG` world) — aggregator over the
+/-! # The generic executable Risch engine (`CField` / `CPoly` world) — aggregator over the
 core plus the RischDE, Hyperexp, CoupledDE, Tower, and Algebraic sub-areas. -/

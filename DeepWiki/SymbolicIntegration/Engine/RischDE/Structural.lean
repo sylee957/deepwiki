@@ -13,7 +13,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -22,10 +22,10 @@ variable {α : Type*} [CField α] [CDiffField α]
 This wrapper exposes the `cRischDEG` control-flow reading from the structural layer. -/
 
 /-- `cRischDEG = some _` forces the stage `some`-results. -/
-theorem cRischDEG_some_imp_stages_structural [CFracGcdCoreWf α] [CRischField α] (Dt : CPolyG α)
-    (fnum fden gnum gden ynum yden : CPolyG α)
+theorem cRischDEG_some_imp_stages_structural [CFracGcdCoreWf α] [CRischField α] (Dt : CPoly α)
+    (fnum fden gnum gden ynum yden : CPoly α)
     (hsucc : cRischDEG Dt fnum fden gnum gden = some (ynum, yden)) :
-    ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+    ∃ (a0 b0 c0 h0 bbar cbar : CPoly α) (m : ℤ) (α' β v : CPoly α),
       cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0)
       ∧ cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
@@ -46,8 +46,8 @@ routes to the non-cancellation solve `cPolyRischDENoCancelG`. -/
 
 /-- In the primitive regime (`cdegG Dt = 0`) with positive `deg(bbar)`, `cPolyRischDEG` reduces to
 `cPolyRischDENoCancelG`. -/
-theorem cPolyRischDEG_eq_noCancel_of_primitive [CRischField α] (Dt : CPolyG α)
-    (bbar cbar : CPolyG α) (m : ℤ) (hδ : cdegG Dt = 0) (hdb : 0 < cdegG bbar) :
+theorem cPolyRischDEG_eq_noCancel_of_primitive [CRischField α] (Dt : CPoly α)
+    (bbar cbar : CPoly α) (m : ℤ) (hδ : cdegG Dt = 0) (hdb : 0 < cdegG bbar) :
     cPolyRischDEG Dt bbar cbar m = cPolyRischDENoCancelG Dt bbar cbar m := by
   rw [cPolyRischDEG]
   have hlen : 0 < (cnormG bbar : List α).length := by
@@ -62,10 +62,10 @@ theorem cPolyRischDEG_eq_noCancel_of_primitive [CRischField α] (Dt : CPolyG α)
 
 /-- From a bare `cRischDEG` success in the primitive regime, the normal-denominator, SPDE, and
 non-cancellation stage results all hold. -/
-theorem cRischDEG_some_imp_noCancel_of_primitive [CFracGcdCoreWf α] [CRischField α] (Dt : CPolyG α)
-    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+theorem cRischDEG_some_imp_noCancel_of_primitive [CFracGcdCoreWf α] [CRischField α] (Dt : CPoly α)
+    (fnum fden gnum gden ynum yden : CPoly α) (hδ : cdegG Dt = 0)
     (hsucc : cRischDEG Dt fnum fden gnum gden = some (ynum, yden)) :
-    ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+    ∃ (a0 b0 c0 h0 bbar cbar : CPoly α) (m : ℤ) (α' β v : CPoly α),
       cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0)
       ∧ cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1
@@ -96,7 +96,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- A `cPolyRischDENoCancelG` success `= some q` yields the identity `D(q) + b·q = c` over
 `(CFieldSpec.K α)[X]`. -/
-theorem cPolyRischDENoCancelG_cleared_identity (Dt b c : CPolyG α) (n : ℤ) (q : CPolyG α)
+theorem cPolyRischDENoCancelG_cleared_identity (Dt b c : CPoly α) (n : ℤ) (q : CPoly α)
     (hsolve : cPolyRischDENoCancelG Dt b c n = some q) :
     Differential.implicitDeriv (toPolyG Dt) (toPolyG q) + toPolyG b * toPolyG q = toPolyG c := by
   fun_induction cPolyRischDENoCancelG Dt b c n generalizing q with
@@ -122,7 +122,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- `cSPDEGClearedGenWf`: the per-level certificate for `cSPDEG`, with `g = cgcdFFCoreWf a b` and
 divided coefficients via `cdivWf`. -/
-def cSPDEGClearedGenWf (Dt a b c : CPolyG α) (n : ℤ) : Prop :=
+def cSPDEGClearedGenWf (Dt a b c : CPoly α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
@@ -147,11 +147,11 @@ decreasing_by assumption
 
 /-- Under `cSPDEGClearedGenWf`, if `cSPDEG … = some (b̄, c̄, m, α, β)` then for every `h` solving
 `D(h) + b̄·h = c̄`, the reconstruction `q = α·h + β` solves `a·D(q) + b·q = c`. -/
-theorem cSPDEG_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar : CPolyG α) (m : ℤ)
-    (α' β : CPolyG α)
+theorem cSPDEG_cleared_lifting_gen (Dt a b c : CPoly α) (n : ℤ) (bbar cbar : CPoly α) (m : ℤ)
+    (α' β : CPoly α)
     (hspde : cSPDEG Dt a b c n = some (bbar, cbar, m, α', β))
     (hcert : cSPDEGClearedGenWf Dt a b c n) :
-    ∀ h : CPolyG α,
+    ∀ h : CPoly α,
       Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h = toPolyG cbar →
       toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' h) β))
           + toPolyG b * toPolyG (caddG (cmulG α' h) β)
@@ -238,7 +238,7 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar :
 
 /-- `CSPDEGClearedInputsGenWf`: the transparent per-level input predicate for `cSPDEG`'s
 cleared-certificate discharge. -/
-def CSPDEGClearedInputsGenWf (Dt a b c : CPolyG α) (n : ℤ) : Prop :=
+def CSPDEGClearedInputsGenWf (Dt a b c : CPoly α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
@@ -260,7 +260,7 @@ decreasing_by assumption
 
 omit [CDiffFieldSpec α] in
 /-- `CSPDEGClearedInputsGenWf Dt a b c n` implies the per-level certificate `cSPDEGClearedGenWf Dt a b c n`. -/
-theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : CPolyG α) (n : ℤ) (hin : CSPDEGClearedInputsGenWf Dt a b c n) :
+theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : CPoly α) (n : ℤ) (hin : CSPDEGClearedInputsGenWf Dt a b c n) :
     cSPDEGClearedGenWf Dt a b c n := by
   fun_induction CSPDEGClearedInputsGenWf Dt a b c n with
   | case1 a b c n hn =>
@@ -312,7 +312,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- Writing `dₙ = (cSplitFactorFastG Dt fden).1`, if `cRdeNormalDenominatorG … = some (a, b, c, h)`,
 the clearings are exact, and `Q` solves `a·D(Q) + b·Q = c`, then `Q` solves the cleared
 `gden·fden·(D(Q)·h − Q·D(h)) + gden·fnum·Q·h = gnum·fden·h²`. -/
-theorem cRdeNormalDenominatorG_cleared_lift (Dt : CPolyG α) (fnum fden gnum gden a b c h Q : CPolyG α)
+theorem cRdeNormalDenominatorG_cleared_lift (Dt : CPoly α) (fnum fden gnum gden a b c h Q : CPoly α)
     (hres : cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a, b, c, h))
     (hdn : toPolyG (cSplitFactorFastG Dt fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
@@ -366,10 +366,10 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- Lift under the transparent input predicate directly, composing `cSPDEG_cleared_lifting_gen` with
 `cSPDEGClearedGenWf_of_inputs`. -/
-theorem cSPDEG_cleared_lifting_of_inputs (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ)
-    (bbar cbar : CPolyG α) (m : ℤ) (α' β : CPolyG α)
+theorem cSPDEG_cleared_lifting_of_inputs (Dt : CPoly α) (a b c : CPoly α) (n : ℤ)
+    (bbar cbar : CPoly α) (m : ℤ) (α' β : CPoly α)
     (hspde : cSPDEG Dt a b c n = some (bbar, cbar, m, α', β))
-    (hin : CSPDEGClearedInputsGenWf Dt a b c n) (h : CPolyG α)
+    (hin : CSPDEGClearedInputsGenWf Dt a b c n) (h : CPoly α)
     (hh : Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h
       = toPolyG cbar) :
     toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' h) β))
@@ -379,8 +379,8 @@ theorem cSPDEG_cleared_lifting_of_inputs (Dt : CPolyG α) (a b c : CPolyG α) (n
     (cSPDEGClearedGenWf_of_inputs Dt a b c n hin) h hh
 
 /-- Feed the non-cancellation success through `cPolyRischDENoCancelG_cleared_identity` into the SPDE lifting. -/
-theorem cSPDEG_polyRischDENoCancel_cleared_of_inputs (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ)
-    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+theorem cSPDEG_polyRischDENoCancel_cleared_of_inputs (Dt : CPoly α) (a b c : CPoly α) (n : ℤ)
+    (bbar cbar : CPoly α) (m : ℤ) (α' β v : CPoly α)
     (hspde : cSPDEG Dt a b c n = some (bbar, cbar, m, α', β))
     (hin : CSPDEGClearedInputsGenWf Dt a b c n)
     (hpoly : cPolyRischDENoCancelG Dt bbar cbar m = some v) :
@@ -391,8 +391,8 @@ theorem cSPDEG_polyRischDENoCancel_cleared_of_inputs (Dt : CPolyG α) (a b c : C
     (cPolyRischDENoCancelG_cleared_identity Dt bbar cbar m v hpoly)
 
 /-- The spine instantiated at the degree bound `n = cRdeBoundDegreeG Dt a b c`. -/
-theorem cSPDEG_polyRischDENoCancel_cleared_at_boundDegree (Dt : CPolyG α) (a b c : CPolyG α)
-    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+theorem cSPDEG_polyRischDENoCancel_cleared_at_boundDegree (Dt : CPoly α) (a b c : CPoly α)
+    (bbar cbar : CPoly α) (m : ℤ) (α' β v : CPoly α)
     (hspde : cSPDEG Dt a b c (cRdeBoundDegreeG Dt a b c : ℤ) = some (bbar, cbar, m, α', β))
     (hin : CSPDEGClearedInputsGenWf Dt a b c (cRdeBoundDegreeG Dt a b c : ℤ))
     (hpoly : cPolyRischDENoCancelG Dt bbar cbar m = some v) :
@@ -405,9 +405,9 @@ theorem cSPDEG_polyRischDENoCancel_cleared_at_boundDegree (Dt : CPolyG α) (a b 
 /-- In the primitive regime, from the normal-denominator output, its divisibility certificates, the
 SPDE output under `CSPDEGClearedInputsGenWf`, and the poly-RDE identity `D(v) + bbar·v = cbar`, the
 reconstruction `ynum = (α'·v + β)·[1]`, `yden = h0` satisfies the cleared Risch-DE identity. -/
-theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : CPolyG α)
-    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
-    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : CPoly α)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPoly α)
+    (bbar cbar : CPoly α) (m : ℤ) (α' β v : CPoly α)
     (hprim : cdegG (cSpecialPolyG Dt) = 0)
     (hnorm : cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fden).1 ≠ 0)
@@ -443,7 +443,7 @@ theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : CPolyG α)
       = toPolyG c0 :=
     cSPDEG_cleared_lifting_of_inputs Dt a0 b0 c0
       (cRdeBoundDegreeG Dt a0 b0 c0 : ℤ) bbar cbar m α' β hspde hin v hidentity
-  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+  have hone : toPolyG ([CField.one] : CPoly α) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
   have hynum : toPolyG (cmulG Q [CField.one]) = toPolyG Q := by
     simp only [denote, hone, mul_one]
@@ -461,7 +461,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- `RischDEStructuralResidualWf`: the residual hypotheses of `rdeClearedIdentityWf_of_polyRDEIdentity`
 that a bare `cRischDEG` success does not self-certify. -/
-structure RischDEStructuralResidualWf (Dt : CPolyG α) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) :
+structure RischDEStructuralResidualWf (Dt : CPoly α) (fnum fden gnum gden a0 b0 c0 h0 : CPoly α) :
     Prop where
   /-- Primitive special regime: `cdegG (cSpecialPolyG Dt) = 0`. -/
   hprim : cdegG (cSpecialPolyG Dt) = 0
@@ -487,13 +487,13 @@ structure RischDEStructuralResidualWf (Dt : CPolyG α) (fnum fden gnum gden a0 b
 /-- Given a `cRischDEG` success, `cdegG Dt = 0`, positive `deg(bbar)`, and the residual
 `RischDEStructuralResidualWf`, the returned `y = ynum/yden` satisfies the cleared identity
 `gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²`. -/
-theorem rdeClearedWf_of_success_and_residual (Dt : CPolyG α)
-    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+theorem rdeClearedWf_of_success_and_residual (Dt : CPoly α)
+    (fnum fden gnum gden ynum yden : CPoly α) (hδ : cdegG Dt = 0)
     (hsucc : cRischDEG Dt fnum fden gnum gden = some (ynum, yden))
-    (hres : ∀ a0 b0 c0 h0 : CPolyG α,
+    (hres : ∀ a0 b0 c0 h0 : CPoly α,
       cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
       RischDEStructuralResidualWf Dt fnum fden gnum gden a0 b0 c0 h0)
-    (hdb : ∀ a0 b0 c0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+    (hdb : ∀ a0 b0 c0 bbar cbar : CPoly α, ∀ m : ℤ, ∀ α' β : CPoly α,
       cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1
@@ -517,7 +517,7 @@ theorem rdeClearedWf_of_success_and_residual (Dt : CPolyG α)
   have hcap := rdeClearedIdentityWf_of_polyRDEIdentity Dt fnum fden gnum gden a0 b0 c0 h0
     bbar cbar m α' β v hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hdvdB
     hres'.hdvdC hspde hres'.hin hidentity
-  have hh1 : (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.2 = ([CField.one] : CPolyG α) := by
+  have hh1 : (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.2 = ([CField.one] : CPoly α) := by
     rw [cRdeSpecialDenominatorG_primitive_eq Dt a0 b0 c0 hres'.hprim]
   rw [hh1] at hynum
   rw [hynum, hyden]
@@ -532,13 +532,13 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- The RDE oracle's field-level soundness in the primitive regime, from bare `cRischDEG` success
 and the residual: composes `rdeClearedWf_of_success_and_residual` with `rischDE_field_of_cleared`. -/
-theorem crischDEWf_field_of_success_and_residual (Dt : CPolyG α)
-    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+theorem crischDEWf_field_of_success_and_residual (Dt : CPoly α)
+    (fnum fden gnum gden ynum yden : CPoly α) (hδ : cdegG Dt = 0)
     (hsucc : cRischDEG Dt fnum fden gnum gden = some (ynum, yden))
-    (hres : ∀ a0 b0 c0 h0 : CPolyG α,
+    (hres : ∀ a0 b0 c0 h0 : CPoly α,
       cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
       RischDEStructuralResidualWf Dt fnum fden gnum gden a0 b0 c0 h0)
-    (hdb : ∀ a0 b0 c0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+    (hdb : ∀ a0 b0 c0 bbar cbar : CPoly α, ∀ m : ℤ, ∀ α' β : CPoly α,
       cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1

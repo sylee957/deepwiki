@@ -8,16 +8,16 @@ coefficients; this file proves the matrix assembly faithful and derives uncondit
 soundness by discharging the cleared-check via `cConstSolveUniqueQ_sound`. -/
 
 
-namespace DeepWiki.SymbolicIntegration.CPolyG
+namespace DeepWiki.SymbolicIntegration.CPoly
 
 open Polynomial
 
 /-- Over ℚ, `toPolyG` coefficient = list getD (toK = id). -/
-theorem toPolyG_coeff_q (p : CPolyG ℚ) (i : ℕ) : (toPolyG p).coeff i = p.getD i 0 := by
+theorem toPolyG_coeff_q (p : CPoly ℚ) (i : ℕ) : (toPolyG p).coeff i = p.getD i 0 := by
   rw [toPolyG_coeff]; rfl
 
 /-- `cnormG` never grows the length: `(cnormG p).length ≤ p.length`. -/
-theorem cnormG_length_le (p : CPolyG ℚ) : (cnormG p : List ℚ).length ≤ p.length := by
+theorem cnormG_length_le (p : CPoly ℚ) : (cnormG p : List ℚ).length ≤ p.length := by
   induction p with
   | nil => simp [cnormG]
   | cons a as ih =>
@@ -48,7 +48,7 @@ theorem getD_range_map_q (f : ℕ → ℚ) (n k : ℕ) (hk : k < n) :
 
 /-- The dot of a `mulMatrixQ b d nrows` row `r` (for `r < nrows`) with the coefficient vector of a
 degree-`≤ d` polynomial `y` is the `r`-th coefficient of `b * y`. -/
-theorem dotQ_mulMatrixQ_row (b y : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows)
+theorem dotQ_mulMatrixQ_row (b y : CPoly ℚ) (d nrows r : ℕ) (hr : r < nrows)
     (hyd : y.length ≤ d + 1) :
     dotQ ((mulMatrixQ b d nrows).getD r []) ((List.range (d + 1)).map (fun i => y.getD i 0))
       = (toPolyG (cmulG b y)).coeff r := by
@@ -99,7 +99,7 @@ theorem dotQ_mulMatrixQ_row (b y : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows
 
 /-- The dot of a `derivMatrixQ d nrows` row `r` (for `r < nrows`) with the coefficient vector of a
 degree-`≤ d` polynomial `y` is the `r`-th coefficient of `D y` (`Polynomial.derivative`). -/
-theorem dotQ_derivMatrixQ_row (y : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows)
+theorem dotQ_derivMatrixQ_row (y : CPoly ℚ) (d nrows r : ℕ) (hr : r < nrows)
     (hyd : y.length ≤ d + 1) :
     dotQ ((derivMatrixQ d nrows).getD r []) ((List.range (d + 1)).map (fun i => y.getD i 0))
       = (toPolyG (cderivQ y)).coeff r := by
@@ -149,7 +149,7 @@ theorem dotQ_zipWith_add (a b u : List ℚ) (hab : a.length = b.length) (hu : a.
         ring
 
 /-- The coupled-system first-row dot equals `coeff_r (D y1 + b1 y1 + ab2 y2)`. -/
-theorem dotQ_hcatRow (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows)
+theorem dotQ_hcatRow (b1 ab2 y1 y2 : CPoly ℚ) (d nrows r : ℕ) (hr : r < nrows)
     (hy1 : y1.length ≤ d + 1) (hy2 : y2.length ≤ d + 1) :
     dotQ ((hcatQ (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))
           (mulMatrixQ ab2 d nrows)).getD r [])
@@ -178,7 +178,7 @@ theorem dotQ_hcatRow (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nro
   rw [dotQ_derivMatrixQ_row y1 d nrows r hr hy1, dotQ_mulMatrixQ_row b1 y1 d nrows r hr hy1]
 
 /-- The coupled-system second-row dot equals `coeff_r (b2 y1 + D y2 + b1 y2)`. -/
-theorem dotQ_hcatRow2 (b1 b2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows)
+theorem dotQ_hcatRow2 (b1 b2 y1 y2 : CPoly ℚ) (d nrows r : ℕ) (hr : r < nrows)
     (hy1 : y1.length ≤ d + 1) (hy2 : y2.length ≤ d + 1) :
     dotQ ((hcatQ (mulMatrixQ b2 d nrows)
           (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))).getD r [])
@@ -203,7 +203,7 @@ theorem dotQ_hcatRow2 (b1 b2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nro
   rw [dotQ_derivMatrixQ_row y2 d nrows r hr hy2, dotQ_mulMatrixQ_row b1 y2 d nrows r hr hy2]
 
 /-- `coeff r (D y1 + b1 y1 + ab2 y2) = 0` for `r ≥ nrows` when `nrows` exceeds every term's degree. -/
-theorem coeff_residual_zero_of_ge (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ)
+theorem coeff_residual_zero_of_ge (b1 ab2 y1 y2 : CPoly ℚ) (d nrows r : ℕ)
     (hy1 : (toPolyG y1).natDegree ≤ d) (hy2 : (toPolyG y2).natDegree ≤ d)
     (hb1 : (toPolyG b1).natDegree + d + 2 ≤ nrows)
     (hab2 : (toPolyG ab2).natDegree + d + 2 ≤ nrows) (hd : d + 2 ≤ nrows)
@@ -249,12 +249,12 @@ theorem sol_split (sol : List ℚ) (d : ℕ) (hsol : sol.length = 2 * (d + 1)) :
 
 /-- The `cnormG`-padded coefficient list `padCoeffsQ z nrows` reads coefficient `k < nrows` as
 `(toPolyG z).coeff k`. -/
-theorem padCoeffsQ_getD (z : CPolyG ℚ) (nrows k : ℕ) (hk : k < nrows) :
+theorem padCoeffsQ_getD (z : CPoly ℚ) (nrows k : ℕ) (hk : k < nrows) :
     (padCoeffsQ z nrows).getD k 0 = (toPolyG z).coeff k := by
   rw [padCoeffsQ, getD_range_map_q _ nrows k hk, toPolyG_coeff_q]
 
 /-- First-row identity `coeff_r(D u1 + b1 u1 + a•(b2 u2)) = coeff_r(z1)` (`r < nrows`) from a solve. -/
-theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol : List ℚ)
+theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPoly ℚ) (d : ℕ) (sol : List ℚ)
     (nrows : ℕ) (hsollen : sol.length = 2 * (d + 1))
     (hsolve : ∀ k, k < (hcatQ (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))
         (mulMatrixQ (cscaleG a b2) d nrows)
@@ -271,8 +271,8 @@ theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol
         + (toPolyG (cmulG (cscaleG a b2)
             ((List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)))).coeff r
       = (toPolyG z1).coeff r := by
-  set u1 : CPolyG ℚ := (List.range (d + 1)).map (fun i => sol.getD i 0) with hu1def
-  set u2 : CPolyG ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0) with hu2def
+  set u1 : CPoly ℚ := (List.range (d + 1)).map (fun i => sol.getD i 0) with hu1def
+  set u2 : CPoly ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0) with hu2def
   set row1u := matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows) with hrow1u
   have hrow1u_len : row1u.length = nrows := by
     rw [hrow1u, matAddQ_len, derivMatrixQ_len, mulMatrixQ_len]; simp
@@ -297,7 +297,7 @@ theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol
   exact heq
 
 /-- Second-row identity `coeff_r(b2 u1 + D u2 + b1 u2) = coeff_r(z2)` (`r < nrows`). -/
-theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol : List ℚ)
+theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPoly ℚ) (d : ℕ) (sol : List ℚ)
     (nrows : ℕ) (hsollen : sol.length = 2 * (d + 1))
     (hsolve : ∀ k, k < (hcatQ (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))
         (mulMatrixQ (cscaleG a b2) d nrows)
@@ -314,8 +314,8 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol
           + (toPolyG (cmulG b1
               ((List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)))).coeff r)
       = (toPolyG z2).coeff r := by
-  set u1 : CPolyG ℚ := (List.range (d + 1)).map (fun i => sol.getD i 0) with hu1def
-  set u2 : CPolyG ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0) with hu2def
+  set u1 : CPoly ℚ := (List.range (d + 1)).map (fun i => sol.getD i 0) with hu1def
+  set u2 : CPoly ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0) with hu2def
   set row1u := matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows) with hrow1u
   have hrow1u_len : row1u.length = nrows := by
     rw [hrow1u, matAddQ_len, derivMatrixQ_len, mulMatrixQ_len]; simp
@@ -344,7 +344,7 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol
 
 /-- A successful `cCoupledDESystem` solve satisfies `coupledClearedCheck … = true`, discharged from
 `cConstSolveUniqueQ_sound` via the row identities and the residual degree bound. -/
-theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
+theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPoly ℚ)
     (d : ℕ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true := by
   rw [cCoupledDESystem] at hsome
@@ -359,8 +359,8 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
   · rw [hmatch] at hsome
     rw [Option.some.injEq, Prod.mk.injEq] at hsome
     obtain ⟨hy1, hy2⟩ := hsome
-    set u1 : CPolyG ℚ := (List.range (d + 1)).map (fun i => sol.getD i 0) with hu1def
-    set u2 : CPolyG ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0) with hu2def
+    set u1 : CPoly ℚ := (List.range (d + 1)).map (fun i => sol.getD i 0) with hu1def
+    set u2 : CPoly ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0) with hu2def
     -- block lengths.
     have hrow1u_len : row1u.length = nrows := by
       rw [hrow1u, matAddQ_len, derivMatrixQ_len, mulMatrixQ_len]; simp
@@ -494,39 +494,39 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
         rw [hab2u1] at hres
         linear_combination hb2y1 + hres - hz2z
 
-end DeepWiki.SymbolicIntegration.CPolyG
+end DeepWiki.SymbolicIntegration.CPoly
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG in
+open CPoly in
 /-- Base coupled-system soundness: a successful `cCoupledDESystem` solve `(y₁, y₂)` satisfies the two
 `ℚ[X]` identities `D(y₁) + b₁·y₁ + C a·(b₂·y₂) = z₁` and `D(y₂) + b₂·y₁ + b₁·y₂ = z₂`. -/
-theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
-    (y1 y2 : CPolyG ℚ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
+theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : CPoly ℚ) (d : ℕ)
+    (y1 y2 : CPoly ℚ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
         + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
       Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
         + toPolyG b1 * toPolyG y2 = toPolyG z2 :=
   coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2
-    (CPolyG.coupledClearedCheck_of_cCoupledDESystem a b1 b2 z1 z2 y1 y2 d hsome)
+    (CPoly.coupledClearedCheck_of_cCoupledDESystem a b1 b2 z1 z2 y1 y2 d hsome)
 
 /-! ### Restatements against the intended wording -/
 
 -- The base coupled-system solve satisfies the two `ℚ[X]` row identities without a separate cleared-check
 -- hypothesis; the check is discharged from `cConstSolveUniqueQ_sound`.
-example (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) (d : ℕ)
-    (hsome : CPolyG.cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
-    Polynomial.derivative (CPolyG.toPolyG y1) + CPolyG.toPolyG b1 * CPolyG.toPolyG y1
-        + Polynomial.C a * (CPolyG.toPolyG b2 * CPolyG.toPolyG y2) = CPolyG.toPolyG z1 ∧
-      Polynomial.derivative (CPolyG.toPolyG y2) + CPolyG.toPolyG b2 * CPolyG.toPolyG y1
-        + CPolyG.toPolyG b1 * CPolyG.toPolyG y2 = CPolyG.toPolyG z2 :=
+example (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPoly ℚ) (d : ℕ)
+    (hsome : CPoly.cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
+    Polynomial.derivative (CPoly.toPolyG y1) + CPoly.toPolyG b1 * CPoly.toPolyG y1
+        + Polynomial.C a * (CPoly.toPolyG b2 * CPoly.toPolyG y2) = CPoly.toPolyG z1 ∧
+      Polynomial.derivative (CPoly.toPolyG y2) + CPoly.toPolyG b2 * CPoly.toPolyG y1
+        + CPoly.toPolyG b1 * CPoly.toPolyG y2 = CPoly.toPolyG z2 :=
   cCoupledDESystem_sound a b1 b2 z1 z2 d y1 y2 hsome
 
 -- `cConstSolveUniqueQ` soundness: the returned solution solves `A·x = b` rowwise.
 example (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
     (hwidth : ∀ r ∈ Arows, r.length = ncols) (hlen : Arows.length = urhs.length)
-    (hsome : CPolyG.cConstSolveUniqueQ Arows urhs ncols = some x) :
-    ∀ i, i < Arows.length → CPolyG.dotQ (Arows.getD i []) x = urhs.getD i 0 :=
-  CPolyG.cConstSolveUniqueQ_sound Arows urhs ncols x hwidth hlen hsome
+    (hsome : CPoly.cConstSolveUniqueQ Arows urhs ncols = some x) :
+    ∀ i, i < Arows.length → CPoly.dotQ (Arows.getD i []) x = urhs.getD i 0 :=
+  CPoly.cConstSolveUniqueQ_sound Arows urhs ncols x hwidth hlen hsome
 
 end DeepWiki.SymbolicIntegration

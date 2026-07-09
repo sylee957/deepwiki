@@ -10,7 +10,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-! ### Radicand 3 — `f₃ = x³ + x` (degree 3, odd)
 
@@ -20,8 +20,8 @@ A third radicand `√(x³ + x) = √(x(x²+1))`. Odd degree ⟹ the full carrier
 def radicandX3pX : QFunNZG ℚ := qxOfNum [0, 1, 0, 1]
 
 /-- **`toPolyG [0,1,0,1] = x + x³` has `natDegree 3`** in `ℚ[X]`. -/
-theorem natDeg_toPolyG_X3pX : (toPolyG ([0, 1, 0, 1] : CPolyG ℚ)).natDegree = 3 := by
-  have h : toPolyG ([0, 1, 0, 1] : CPolyG ℚ) = C 1 * X + X ^ 3 := by
+theorem natDeg_toPolyG_X3pX : (toPolyG ([0, 1, 0, 1] : CPoly ℚ)).natDegree = 3 := by
+  have h : toPolyG ([0, 1, 0, 1] : CPoly ℚ) = C 1 * X + X ^ 3 := by
     simp only [denote]
     show C (0 : ℚ) + X * (C 1 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
@@ -62,23 +62,23 @@ def radX3pXGen : RadX3pX := RadExt.gen
 def radX3pXLogDer : QFunNZG ℚ := logDerRadicand 2 radicandX3pX
 
 /-- The `RadX3pX[t]`-polynomial `t² = [0,0,1]`. -/
-def radX3pXT2sq : CPolyG RadX3pX := [CField.zero, CField.zero, CField.one]
+def radX3pXT2sq : CPoly RadX3pX := [CField.zero, CField.zero, CField.one]
 
 /-- The `RadX3pX[t]`-polynomial `2·t² = [0,0,2]`, the expected `D(t²)` for `t = eˣ`. -/
-def radX3pXTwoT2sq : CPolyG RadX3pX := [CField.zero, CField.zero, CField.add CField.one CField.one]
+def radX3pXTwoT2sq : CPoly RadX3pX := [CField.zero, CField.zero, CField.add CField.one CField.one]
 
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX3pX` (`t = eˣ`). -/
-def radX3pXDtExp : CPolyG RadX3pX := [CField.zero, CField.one]
+def radX3pXDtExp : CPoly RadX3pX := [CField.zero, CField.one]
 
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed-tower `d/dt` computation over `√(x³+x)`. -/
 theorem radX3pX_monomialDeriv_t2sq :
     cisZeroG (csubG (cmonomialDeriv radX3pXDtExp radX3pXT2sq) radX3pXTwoT2sq) = true := by native_decide
 
 /-- The `RadX3pX[t]`-polynomial `y·t = [0, y]` (`y = √(x³+x)`, `t = eˣ`). -/
-def radX3pXGenT : CPolyG RadX3pX := [CField.zero, radX3pXGen]
+def radX3pXGenT : CPoly RadX3pX := [CField.zero, radX3pXGen]
 
 /-- The `RadX3pX[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected mixed `D(y·t)`. -/
-def radX3pXGenTDeriv : CPolyG RadX3pX :=
+def radX3pXGenTDeriv : CPoly RadX3pX :=
   [CField.zero, CField.mul (⟨[CField.zero, CField.add radX3pXLogDer CField.one]⟩ : RadX3pX) CField.one]
 
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed derivation over `√(x³+x)`

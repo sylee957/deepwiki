@@ -13,56 +13,56 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
 /-- Case-2 cofactor (`n = 2`) `radCase2CofactorC k W h C = B`: the degree-`< deg W` polynomial solving
 `B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantineG ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderivG W`. -/
-def radCase2CofactorC (k : ℕ) (W h C : CPolyG α) : CPolyG α :=
-  let half : CPolyG α := [CField.div CField.one (cnatCastG 2)]              -- ½
+def radCase2CofactorC (k : ℕ) (W h C : CPoly α) : CPoly α :=
+  let half : CPoly α := [CField.div CField.one (cnatCastG 2)]              -- ½
   let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- (½ − k)·W'·h
   (cdiophantineG coef W C).1
 
 /-- Case-2 residual (`n = 2`) `radCase2ResidualC k W h C B = D`: the lowered-`k` numerator
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderivG B`, `h'` is `cderivG h`, division by `W` is
 `cdivWf`. -/
-def radCase2ResidualC (k : ℕ) (W h C B : CPolyG α) : CPolyG α :=
-  let half : CPolyG α := [CField.div CField.one (cnatCastG 2)]              -- ½
+def radCase2ResidualC (k : ℕ) (W h C B : CPoly α) : CPoly α :=
+  let half : CPoly α := [CField.div CField.one (cnatCastG 2)]              -- ½
   let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- (½ − k)·W'·h
   let topNum := csubG (cmulG B coef) C                                      -- B·(½−k)W'h − C
   let quotient := cdivWf topNum W                                           -- /W
   caddG quotient (caddG (cmulG (cderivG B) h)                              -- + B'h
     (cmulG half (cmulG B (cderivG h))))                                     -- + ½Bh'
 
-end CPolyG
+end CPoly
 
 /-! #### Case 2 validated through `radDeriv`: `y² = x³−x`, `W = x`, `k = 2`
 
 Radicand `y² = f = x³ − x`, squarefree factor `W = x`, `h = f/W = x² − 1`, `k = 2`, `C = 1`; the
 congruence gives `B = 2/3` and residual `D = −x/3`, dropping the multiplicity `k = 2 → 1`. -/
 
-open CPolyG
+open CPoly
 
 /-- Example radicand `f = x³ − x = x(x−1)(x+1)` (`y² = f`, squarefree), `ℚ[x]` `[0,−1,0,1]`. -/
-def case2cF : CPolyG ℚ := [0, -1, 0, 1]
+def case2cF : CPoly ℚ := [0, -1, 0, 1]
 
 /-- Example squarefree factor `W = x` (a branch place of `√(x³−x)`), `[0,1]`. -/
-def case2cW : CPolyG ℚ := [0, 1]
+def case2cW : CPoly ℚ := [0, 1]
 
 /-- Example cofactor `h = f/W = x² − 1`, `[−1,0,1]`. -/
-def case2cH : CPolyG ℚ := [-1, 0, 1]
+def case2cH : CPoly ℚ := [-1, 0, 1]
 
 /-- Example numerator `C = 1`, `[1]`. -/
-def case2cC : CPolyG ℚ := [1]
+def case2cC : CPoly ℚ := [1]
 
 /-- The Case-2 cofactor `B` for `B·(½−2)·W'·h ≡ 1 (mod x)` — expected `B = 2/3`. -/
-def case2cB : CPolyG ℚ := radCase2CofactorC 2 case2cW case2cH case2cC
+def case2cB : CPoly ℚ := radCase2CofactorC 2 case2cW case2cH case2cC
 
 /-- The Case-2 residual `D` — expected `−x/3` (multiplicity dropped `k = 2 → 1`). -/
-def case2cD : CPolyG ℚ := radCase2ResidualC 2 case2cW case2cH case2cC case2cB
+def case2cD : CPoly ℚ := radCase2ResidualC 2 case2cW case2cH case2cC case2cB
 
 /-- The cofactor is `B = 2/3`: `cisZeroG (case2cB − 2/3)`. -/
 theorem case2c_cofactor_eq :
@@ -101,7 +101,7 @@ Over `(QFunNZG ℚ)[y]/(y² − (x³−x))`, the rational part `v = Bf/(Wᵏy)`,
 def case2cFqx : QFunNZG ℚ := qxOfNum [0, -1, 0, 1]
 
 /-- `Wᵏ = x²` as a `ℚ[x]` polynomial (`k = 2`). -/
-def case2cWk : CPolyG ℚ := cpowG case2cW 2
+def case2cWk : CPoly ℚ := cpowG case2cW 2
 
 /-- The rational part `v = Bf/(Wᵏy)` lifted to the pure-`y` element `[0, (Bf/Wᵏ)/f] ∈ RadElem (QFunNZG ℚ)`. -/
 def case2cVlift : RadElem (QFunNZG ℚ) :=

@@ -12,9 +12,9 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
-open CPolyG
+open CPoly
 
 /-! ### A canonical (unique) Hermite normal form over `K[x]` (`canonHNF`) -/
 
@@ -46,7 +46,7 @@ normal forms entrywise — a sound ideal-equality test. -/
 def canonHNFEq (I J : GenDivisor) : Bool :=
   let (δI, _) := idealClear I
   let (δJ, _) := idealClear J
-  let scale : CPolyG ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
+  let scale : CPoly ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
     let cc := cnormG c
     K.map (fun row => row.map (fun z =>
       let zz := qReduceNZG z
@@ -63,18 +63,18 @@ def canonHNFEq (I J : GenDivisor) : Bool :=
     (List.range w).all (fun j =>
       cisZeroG (csubG ((HI.getD i []).getD j []) ((HJ.getD i []).getD j []))))
 
-end CPolyG
+end CPoly
 
 /-! ### The reduced representative of a fractional ideal (`idealReduce`) -/
 
-open CPolyG
+open CPoly
 
-namespace CPolyG
+namespace CPoly
 
 /-- The canonical reduced representative `idealReduce f basis I`: clear `I` to `(δ, N)`,
 `hermiteRowReduce` and `canonHNF` over `K[x]`, read back as `(1/δ)·Ĥ` in lowest terms. `f`/`basis`
 are unused (kept for the uniform divisor-API signature). -/
-def idealReduce (_f : CPolyG (QFunNZG ℚ)) (_basis : List (CPolyG (QFunNZG ℚ)))
+def idealReduce (_f : CPoly (QFunNZG ℚ)) (_basis : List (CPoly (QFunNZG ℚ)))
     (I : GenDivisor) : GenDivisor :=
   let (δ, N) := idealClear I
   let H := canonHNF ((hermiteRowReduce N).filter (fun row => !row.all cisZeroG))
@@ -89,14 +89,14 @@ def idealReduce (_f : CPolyG (QFunNZG ℚ)) (_basis : List (CPolyG (QFunNZG ℚ)
 /-- The candidate single generators `genCandidates basis I`: each canonical-HNF row of `I`'s cleared
 integral matrix reconstructed as a `K(x, y)` element (`wToAf basis`). For a principal ideal `g·O` the
 generator `g` is among these up to a unit. -/
-def genCandidates (basis : List (CPolyG (QFunNZG ℚ))) (I : GenDivisor) : List (CPolyG (QFunNZG ℚ)) :=
+def genCandidates (basis : List (CPoly (QFunNZG ℚ))) (I : GenDivisor) : List (CPoly (QFunNZG ℚ)) :=
   let H := canonHNF ((hermiteRowReduce (idealClear I).2).filter (fun row => !row.all cisZeroG))
   H.map (fun row => wToAf basis (row.map qxOfNum))
 
 /-- `true` iff `I` is principal `isPrincipalIdeal f basis I`: `canonHNFEq I (principalDivisor f basis
 g)` for some candidate generator `g ∈ genCandidates basis I`. Sound — a `true` means `[I] = 0` in
 `Pic⁰(C)`. -/
-def isPrincipalIdeal (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
+def isPrincipalIdeal (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
     (I : GenDivisor) : Bool :=
   (genCandidates basis I).any (fun g => canonHNFEq I (principalDivisor f basis g))
 
@@ -105,7 +105,7 @@ def isPrincipalIdeal (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
 /-- Order-search loop `genDivisorOrderAux f basis δ fuel acc n`: with `acc = n·δ`, test
 `(n+1)·δ = idealProduct δ acc` for principality; on a hit return `some (n+1)`, else recurse.
 `fuel` bounds the remaining multiples. -/
-def genDivisorOrderAux (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (δ : GenDivisor) :
+def genDivisorOrderAux (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (δ : GenDivisor) :
     ℕ → GenDivisor → ℕ → Option ℕ
   | 0, _, _ => none
   | fuel + 1, acc, n =>
@@ -115,15 +115,15 @@ def genDivisorOrderAux (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG
 
 /-- The divisor order `genDivisorOrder fuel f basis δ`: `some m` = the smallest `m ≥ 1` with `m·δ`
 principal (⟹ `δ` is `m`-torsion), searching up to `fuel` multiples; `none` if no `m ≤ fuel` works. -/
-def genDivisorOrder (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
+def genDivisorOrder (fuel : ℕ) (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
     (δ : GenDivisor) : Option ℕ :=
   genDivisorOrderAux f basis δ fuel (idealIdentity (cdegG f)) 0
 
-end CPolyG
+end CPoly
 
 /-! ## Validation: principal classes have order 1 (`native_decide`) -/
 
-open CPolyG
+open CPoly
 
 /-- `div(y)` is principal and has order 1 on `y³ = x²`: `isPrincipalIdeal gdDivY = true` and
 `genDivisorOrder 4 … gdDivY = some 1`. -/
@@ -143,12 +143,12 @@ On `y² = x³ + 1` (integral basis `[1, y]`), the inflection point `(0, 1)` give
 `[(0,1) − ∞]`, represented by the place ideal `P = (x, y − 1)·O`: `P` and `P²` are non-principal but
 `P³ = div(y − 1)` is principal, so `order = 3`. -/
 
-/-- The curve `f = y² − (x³ + 1)` (`[−(x³+1), 0, 1]`) over `CPolyG (QFunNZG ℚ)`. -/
-def hcubeF : CPolyG (QFunNZG ℚ) := [qxOfNum [-1, 0, 0, -1], CField.zero, CField.one]
+/-- The curve `f = y² − (x³ + 1)` (`[−(x³+1), 0, 1]`) over `CPoly (QFunNZG ℚ)`. -/
+def hcubeF : CPoly (QFunNZG ℚ) := [qxOfNum [-1, 0, 0, -1], CField.zero, CField.one]
 
 /-- The integral basis `[1, y]` of `y² = x³ + 1` (no finite poles — the power basis, since `x³ + 1` is
 squarefree). -/
-def hcubeBasis : List (CPolyG (QFunNZG ℚ)) := integralBasis hcubeF
+def hcubeBasis : List (CPoly (QFunNZG ℚ)) := integralBasis hcubeF
 
 /-- The 3-torsion divisor `δ = P = (x, y − 1)·O` on `y² = x³ + 1`, built from its `O`-generators reduced
 to a `2×2` ideal matrix by one `idealProduct` with the identity. -/

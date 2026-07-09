@@ -10,7 +10,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG GBPolyCore
+open CPoly GBPolyCore
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
@@ -68,7 +68,7 @@ conditional ingredient is the fuel-bounded loop completing. -/
 /-- **`toPolyG (gblcCore (gbnormCore p))` is the leading coefficient of `toGBCoeffPoly p`**, via
 `toPolyG_gblcCore_eq_coeff` and `gbdegCore_eq_natDegree`. -/
 theorem toPolyG_gblcCore_eq_leadingCoeff (p : GBPolyCore β) :
-    CPolyG.toPolyG (gblcCore (gbnormCore p)) = (toGBCoeffPoly p).leadingCoeff := by
+    CPoly.toPolyG (gblcCore (gbnormCore p)) = (toGBCoeffPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← gbdegCore_eq_natDegree, toPolyG_gblcCore_eq_coeff,
     toGBCoeffPoly_gbnormCore]
   congr 1
@@ -252,8 +252,8 @@ theorem natDegree_toGBPolyG (p : GBPolyCore β) :
 size bound, `(toGBCoeffPoly (gbprimitivePartCore cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree`
 (the strip is a `β(s)`-unit scaling, and `Associated` polynomials over `β(s)` have equal `natDegree`). -/
 theorem natDegree_toGBCoeffPoly_gbprimitivePartCore (fuel : ℕ)
-    (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
-    (hfuel : ∀ a ∈ gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel) :
+    (cgcdB : CPoly β → CPoly β → CPoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
+    (hfuel : ∀ a ∈ gbnormCore p, (CPoly.cnormG a : List β).length ≤ fuel) :
     (toGBCoeffPoly (gbprimitivePartCore cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree := by
   have hassoc := associated_toGBPolyG_gbprimitivePartCore_total fuel cgcdB hcorr p hfuel
   have := natDegree_eq_of_associated hassoc
@@ -264,10 +264,10 @@ cgcdB`, the retained size bound on `prem`, `Q` nonzero, and the stripped node no
 `CPrimPRSGenRegular`-`step` guard
 `(gbnormCore (gbprimitivePartCore cgcdB prem)).length < (gbnormCore Q).length`
 holds iff `(toGBCoeffPoly prem).natDegree < (toGBCoeffPoly Q).natDegree`. -/
-theorem gbnormGuard_iff_premDegree (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB)
+theorem gbnormGuard_iff_premDegree (cgcdB : CPoly β → CPoly β → CPoly β) (hcorr : CgcdBCorrect cgcdB)
     (P Q : GBPolyCore β) (hQ : gbisZeroCore (gbnormCore Q) = false)
     (hfuel : ∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
-      (CPolyG.cnormG a : List β).length ≤ 30)
+      (CPoly.cnormG a : List β).length ≤ 30)
     (hrz : gbisZeroCore (gbprimitivePartCore cgcdB
       (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))) = false) :
     ((gbnormCore (gbprimitivePartCore cgcdB

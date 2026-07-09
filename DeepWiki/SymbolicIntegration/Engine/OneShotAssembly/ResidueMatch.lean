@@ -15,7 +15,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 namespace ResidueMatchTower
 

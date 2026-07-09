@@ -12,7 +12,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-! ### The cusp `y² = x³` (genus 0): the integral basis bounds the finite poles
 
@@ -21,7 +21,7 @@ coordinates over `[1, y/x]` are polynomials in `x`. Both `y` and `x·y` have pol
 with genus 0 their integrals are purely rational. -/
 
 /-- The cusp curve `f = y² − x³` over `ℚ(x)`, whose integral basis `[1, y/x]` bounds the finite poles. -/
-def gcuspF : CPolyG (QFunNZG ℚ) := cuspF
+def gcuspF : CPoly (QFunNZG ℚ) := cuspF
 
 /-- The cusp radicand `ρ = x³ ∈ ℚ(x)` (so `y² = ρ`), for the diagonal radical derivation `radDeriv 2 ρ`. -/
 def gcuspRho : QFunNZG ℚ := qxOfNum [0, 0, 0, 1]
@@ -58,14 +58,14 @@ driver `radIntegrateCase3Wf cderivG ρ g C` (`g = ½ρ' = (3/2)x²`) lowers `deg
 (fully rational) and `vNum = (2/5)x⁴`, so `v = vNum/y = (2/5)x·y`. -/
 
 /-- The cusp radicand `ρ = x³` as a `ℚ[x]` polynomial, for the Case-3 driver. -/
-def gcuspRhoP : CPolyG ℚ := [0, 0, 0, 1]
+def gcuspRhoP : CPoly ℚ := [0, 0, 0, 1]
 
 /-- `g = ½ρ' = (3/2)x²` over `ℚ[x]`, the diagonal `(ρ/y)' = g/y`. -/
-def gcuspGP : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG gcuspRhoP)
+def gcuspGP : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG gcuspRhoP)
 
 /-- The Case-3 driver run on `∫ y dx = ∫ x³/y` (`C = ρ = x³`): `radIntegrateCase3Wf cderivG ρ g ρ =
 (Crem, vNum)`, expected `(0, (2/5)x⁴)`. -/
-def gcuspYRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP gcuspRhoP
+def gcuspYRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP gcuspRhoP
 
 /-- The driver derives `Crem = 0` and `vNum = (2/5)x⁴` for `∫ y dx`: the Case-3 `C/y` degree-lowering on
 `C = x³` returns a zero leftover residual and rational-part numerator `vNum = (2/5)x⁴`, via `cisZeroG` of
@@ -111,7 +111,7 @@ theorem cusp_intXY_radDeriv :
 
 /-- The Case-3 driver run on `∫ x·y dx = ∫ x⁴/y` (`C = x⁴`): `radIntegrateCase3Wf cderivG ρ g (x⁴) =
 (Crem, vNum)`, expected `(0, (2/7)x⁵)`. -/
-def gcuspXYRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP [0, 0, 0, 0, 1]
+def gcuspXYRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP [0, 0, 0, 0, 1]
 
 /-- The driver derives `Crem = 0` and `vNum = (2/7)x⁵` for `∫ x·y dx`: the Case-3 `C/y` degree-lowering on
 `C = x⁴` returns a zero leftover and rational-part numerator `vNum = (2/7)x⁵`, via `cisZeroG` of `Crem`

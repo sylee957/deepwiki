@@ -50,7 +50,7 @@ Per-step eq.-11 quotient identity for the GENERAL curve: `generalReduceRationalT
   `Sources.Hdl_1721_1_15391.IntegrateFull` / `AppendixA`.) -/
 
 open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.RadElem
-open DeepWiki.SymbolicIntegration.CPolyG DeepWiki.SymbolicIntegration.LogResidue
+open DeepWiki.SymbolicIntegration.CPoly DeepWiki.SymbolicIntegration.LogResidue
 
 namespace DeepWiki.Tiaf
 
@@ -153,16 +153,16 @@ abbrev sound_radCapstone := @RadElem.isAlgebraicIntegral_of_parts
 arbitrary monic curve `f`, `afDerivWf f` realizes Mathlib's `implicitDeriv (toPolyG yprime)` in the quotient
 `K[X] ⧸ (toPolyG f)`, with `yprime = afYprimeWf f = −f_x·f_y⁻¹` — the implicit-function-theorem total
 derivative without an external fuel parameter. -/
-abbrev sound_afDeriv_keystone := @CPolyG.mk_toPolyG_afDerivWf
+abbrev sound_afDeriv_keystone := @CPoly.mk_toPolyG_afDerivWf
 
 /-- **★ `afDerivWf` is additive** `mk_toPolyG_afDerivWf_add` (Trager, Chapters 2–4): the general curve
 derivation commutes with `caddG` in the quotient `K[X] ⧸ (toPolyG f)`. -/
-abbrev sound_afDeriv_add := @CPolyG.mk_toPolyG_afDerivWf_add
+abbrev sound_afDeriv_add := @CPoly.mk_toPolyG_afDerivWf_add
 
 /-- **★ `afDerivWf` is Leibniz** `mk_toPolyG_afDerivWf_afMul` (Trager, Chapters 2–4): the product rule for
 `afMul` in the carrier `K[X] ⧸ (toPolyG f)`, valid when the fuel-free gcd of `f_y` and `f` is a nonzero
 constant. -/
-abbrev sound_afDeriv_mul := @CPolyG.mk_toPolyG_afDerivWf_afMul
+abbrev sound_afDeriv_mul := @CPoly.mk_toPolyG_afDerivWf_afMul
 
 /-! ## The general-curve rational-part soundness `D(v) = g` (Ch. 4, eq.-11 reduction) -/
 
@@ -170,20 +170,20 @@ abbrev sound_afDeriv_mul := @CPolyG.mk_toPolyG_afDerivWf_afMul
 Chapter 4): the carrier element `v` integrates `g` over `K(x)[y]/(f)`, rational part only — the quotient
 identity `afDerivWf f v = g` in `K[X] ⧸ (toPolyG f)`. The general analogue of
 `IsRadicalRationalIntegral`. -/
-abbrev sound_genRationalPredicate := @CPolyG.IsGeneralRationalIntegralWf
+abbrev sound_genRationalPredicate := @CPoly.IsGeneralRationalIntegralWf
 
 /-- **★ The first abstractly-verified general integral `D(y) = y'`** `mk_toPolyG_afDerivWf_genGen` (Trager,
 Chapters 2–4): the carrier generator `y` integrates the implicit derivative `yprime = −f_x/f_y` —
 `afDerivWf(y) = yprime` in the quotient, the general analogue of `D(√f) = f'/(nf)·√f` (needs only a nonzero
 curve, no separability). -/
-abbrev sound_genGen := @CPolyG.mk_toPolyG_afDerivWf_genGen
+abbrev sound_genGen := @CPoly.mk_toPolyG_afDerivWf_genGen
 
 /-- **★ The general rational-part telescoping soundness** `generalReduceRationalTelescopeWf` (Trager, Chapter
 4, eq.-11 reduction): given each step's coupled eq.-11 quotient identity `mk(afDerivWf cⱼ) = mk Lⱼ − mk
 Lⱼ₊₁`, the assembled antiderivative `v = cs.foldl caddG []` satisfies `afDerivWf(v) = integrand − final-leftover` in
 the carrier — the general analogue of the radical `radReduceRationalTelescope`, the per-step eq.-11
 congruence isolated as the named hypothesis. -/
-abbrev sound_genRationalTelescope := @CPolyG.generalReduceRationalTelescopeWf
+abbrev sound_genRationalTelescope := @CPoly.generalReduceRationalTelescopeWf
 
 /-! ## The general-curve log-part soundness `D(Σ cᵢ log uᵢ) = logpart` (Ch. 5 §1–§2) -/
 
@@ -191,7 +191,7 @@ abbrev sound_genRationalTelescope := @CPolyG.generalReduceRationalTelescopeWf
 §1): the carrier element `u` is a correct single log argument for `integrand` over `K(x)[y]/(f)` — the
 quotient identity `D(log u) = integrand`, i.e. `afDerivWf(u)/u = integrand` cross-multiplied in `K[X] ⧸
 (toPolyG f)`. The general analogue of `IsRadicalLogTerm`. -/
-abbrev sound_genLogPredicate := @CPolyG.IsGeneralLogTermWf
+abbrev sound_genLogPredicate := @CPoly.IsGeneralLogTermWf
 
 /-- **★ The engine's general log certificate IS the single-log soundness** `isGeneralLogTermWf_of_logCert`
 (Trager, Chapter 5 §1): the `native_decide`-checkable
@@ -199,7 +199,7 @@ abbrev sound_genLogPredicate := @CPolyG.IsGeneralLogTermWf
 `afDerivWf f u = afMul f u integrand`) yields the abstract quotient identity `D(log u) =
 integrand`. So every validated general log certificate — the non-hyperelliptic `y³ − x² − 1` arguments `u ∝
 y`, `u ∝ y² + x` — IS, abstractly, the single-log soundness. -/
-abbrev sound_genLogCertificate := @CPolyG.isGeneralLogTermWf_of_logCert
+abbrev sound_genLogCertificate := @CPoly.isGeneralLogTermWf_of_logCert
 
 /-- **★ The GENERAL residue double resultant's roots ARE Trager's per-place residues**
 `roots_genResidueResultant_eq_residues` (Trager, Chapter 5 §2, eq. 7): for an **arbitrary** curve, given the
@@ -215,7 +215,7 @@ abbrev sound_genResidueResultant_roots := @LogResidue.roots_genResidueResultant_
 algebraic partial fraction `A/D = Σ residue·logDeriv(X − α)`), the general integrator's log part satisfies
 `Σ cᵢ·afDerivWf(uᵢ)/uᵢ = logpart` in the quotient — the log half of the general capstone, the residue-sum
 distribution composed with the partial fraction. -/
-abbrev sound_genLogSoundness := @CPolyG.isGeneralLogIntegralWf_of_residue_match
+abbrev sound_genLogSoundness := @CPoly.isGeneralLogIntegralWf_of_residue_match
 
 /-! ## The general-curve capstone `D(∫g) = g` (Ch. 4 + Ch. 5) -/
 
@@ -224,7 +224,7 @@ commonDenom args cofs` (Trager, Chapter 4 + Chapter 5): the unified general inte
 is a correct antiderivative of `g` over `K(x)[y]/(f)` — `D(v + Σ cᵢ log uᵢ) = g`, splitting `afDerivWf(v) + Σ
 cᵢ·afDerivWf(uᵢ)/uᵢ` cross-multiplied by `commonDenom` in the carrier quotient. The general analogue of
 `IsAlgebraicIntegral`. -/
-abbrev sound_genCapstonePredicate := @CPolyG.IsGeneralAlgebraicIntegralWf
+abbrev sound_genCapstonePredicate := @CPoly.IsGeneralAlgebraicIntegralWf
 
 /-- **★★ THE GENERAL-CURVE CAPSTONE `D(∫g) = g` composes from rational + log soundness**
 `isGeneralAlgebraicIntegralWf_of_parts` (Trager, Chapter 4 + Chapter 5): given the rational-part soundness
@@ -232,6 +232,6 @@ abbrev sound_genCapstonePredicate := @CPolyG.IsGeneralAlgebraicIntegralWf
 logPart`, the unified general integrator's output satisfies `D(v + Σ cᵢ log uᵢ) = g` in the carrier quotient
 `K[X] ⧸ (toPolyG f)` — the full algebraic `D(∫g) = g` for an arbitrary curve, the general analogue of
 `isAlgebraicIntegral_of_parts`. -/
-abbrev sound_genCapstone := @CPolyG.isGeneralAlgebraicIntegralWf_of_parts
+abbrev sound_genCapstone := @CPoly.isGeneralAlgebraicIntegralWf_of_parts
 
 end DeepWiki.Tiaf

@@ -14,7 +14,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 /-! ## Engine layer: `cRischDEG.isSome` from stage `some`s -/
 
@@ -23,8 +23,8 @@ section EngineLayerWf
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
 /-- The Wf stage `some`s force `cRischDEG.isSome`. -/
-theorem cRischDEG_isSome_of_stages (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α)
-    (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+theorem cRischDEG_isSome_of_stages (Dt : CPoly α) (fnum fden gnum gden : CPoly α)
+    (a0 b0 c0 h0 bbar cbar : CPoly α) (m : ℤ) (α' β v : CPoly α)
     (hnorm : cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0))
     (hspde : cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
@@ -39,9 +39,9 @@ theorem cRischDEG_isSome_of_stages (Dt : CPolyG α) (fnum fden gnum gden : CPoly
   simp only [hspde, hpoly, Option.isSome_some]
 
 /-- The fuel-free assembled solve succeeds iff its three Wf stages succeed. -/
-theorem cRischDEG_isSome_iff_stages (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
+theorem cRischDEG_isSome_iff_stages (Dt : CPoly α) (fnum fden gnum gden : CPoly α) :
     (cRischDEG Dt fnum fden gnum gden).isSome = true ↔
-      ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+      ∃ (a0 b0 c0 h0 bbar cbar : CPoly α) (m : ℤ) (α' β v : CPoly α),
         cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0)
         ∧ cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
@@ -71,7 +71,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- `IsNoCancelSolK Dt b c q`: `implicitDeriv (toPolyG Dt) q + toPolyG b · q = toPolyG c` for
 `q ∈ (CFieldSpec.K α)[X]` — the non-cancellation equation `Dq + b·q = c`. -/
-def IsNoCancelSolK (Dt b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
+def IsNoCancelSolK (Dt b c : CPoly α) (q : (CFieldSpec.K α)[X]) : Prop :=
   Differential.implicitDeriv (toPolyG Dt) q + toPolyG b * q = toPolyG c
 
 end NoCancelPredicate
@@ -85,39 +85,39 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- `CancelPrimBaseOracle b c q`: the base oracle `crischDESolve (cleadG b) (cleadG c)` returns `some s`
 with `toK s = q.leadingCoeff` (completeness plus leading-coefficient agreement). -/
-def CancelPrimBaseOracle (b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
+def CancelPrimBaseOracle (b c : CPoly α) (q : (CFieldSpec.K α)[X]) : Prop :=
   ∃ s : α, CRischField.crischDESolve (cleadG b) (cleadG c) = some s
     ∧ CFieldSpec.toK s = q.leadingCoeff
 
 /-- `CancelPrimOracleComplete Dt b`: for every `c'` and degree-matched solution `q'`, the base oracle
 finds its leading coefficient (`CancelPrimBaseOracle b c' q'`). -/
-def CancelPrimOracleComplete (Dt b : CPolyG α) : Prop :=
-  ∀ (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
+def CancelPrimOracleComplete (Dt b : CPoly α) : Prop :=
+  ∀ (c' : CPoly α) (q' : (CFieldSpec.K α)[X]),
     IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' → CancelPrimBaseOracle b c' q'
 
 omit [CRischField α] in
 /-- `CancelPrimNoCancel Dt b`: every nonzero solution `q'` of `D q' + b·q' = c'` is degree-matched
 (`deg q' = deg c'`) — the regime where the engine's `m = deg c` search is exhaustive. -/
-def CancelPrimNoCancel (Dt b : CPolyG α) : Prop :=
-  ∀ (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
+def CancelPrimNoCancel (Dt b : CPoly α) : Prop :=
+  ∀ (c' : CPoly α) (q' : (CFieldSpec.K α)[X]),
     IsNoCancelSolK Dt b c' q' → q' ≠ 0 → (q'.natDegree : ℤ) = cdegG c'
 
 /-- `expCoeff Dt c b = cleadG b + (deg c)·cExpEtaG Dt`: the shifted base-RDE coefficient for the
 hyperexponential cancellation case. -/
-def expCoeff (Dt : CPolyG α) (c b : CPolyG α) : α :=
+def expCoeff (Dt : CPoly α) (c b : CPoly α) : α :=
   CField.add (cleadG b) (CField.mul (cnatCastG (cdegG c)) (cExpEtaG Dt))
 
 /-- `CancelExpBaseOracle Dt b c q`: the base oracle `crischDESolve (expCoeff Dt c b) (cleadG c)` returns
 `some s` with `toK s = q.leadingCoeff` (hyperexp analogue of `CancelPrimBaseOracle`). -/
-def CancelExpBaseOracle (Dt : CPolyG α) (b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
+def CancelExpBaseOracle (Dt : CPoly α) (b c : CPoly α) (q : (CFieldSpec.K α)[X]) : Prop :=
   ∃ s : α, CRischField.crischDESolve (expCoeff Dt c b) (cleadG c) = some s
     ∧ CFieldSpec.toK s = q.leadingCoeff
 
 /-- `CancelExpOracleComplete Dt b`: for every `c'` and degree-matched solution `q'`, the base oracle
 `crischDESolve (expCoeff Dt c' b) (cleadG c')` finds its leading coefficient (hyperexp analogue of
 `CancelPrimOracleComplete`). -/
-def CancelExpOracleComplete (Dt b : CPolyG α) : Prop :=
-  ∀ (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
+def CancelExpOracleComplete (Dt b : CPoly α) : Prop :=
+  ∀ (c' : CPoly α) (q' : (CFieldSpec.K α)[X]),
     IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' → CancelExpBaseOracle Dt b c' q'
 
 end CancelPredicate
@@ -134,13 +134,13 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [CRischField α]
 
 /-- The inner-solve exhaustiveness residual: the three stage-`some` implications. -/
-structure RischDESolveExhaustiveResidualWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
+structure RischDESolveExhaustiveResidualWf (Dt fnum fden gnum gden : CPoly α) : Prop where
   /-- A polynomial solution makes the normal-denominator step return `some`. -/
   hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true
   /-- A solution makes the SPDE peel return `some`. -/
   hspde : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    ∀ a0 b0 c0 h0 : CPolyG α,
+    ∀ a0 b0 c0 h0 : CPoly α,
       cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
       (cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
@@ -150,7 +150,7 @@ structure RischDESolveExhaustiveResidualWf (Dt fnum fden gnum gden : CPolyG α) 
             (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 : ℤ)).isSome = true
   /-- For the SPDE output, a solution makes the poly-RDE dispatcher return `some`. -/
   hpoly : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    ∀ a0 b0 c0 h0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+    ∀ a0 b0 c0 h0 bbar cbar : CPoly α, ∀ m : ℤ, ∀ α' β : CPoly α,
       cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
       cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
@@ -162,7 +162,7 @@ structure RischDESolveExhaustiveResidualWf (Dt fnum fden gnum gden : CPolyG α) 
       (cPolyRischDEG Dt bbar cbar m).isSome = true
 
 /-- The Wf exhaustiveness residual produces the exact Wf `hsolve` clause. -/
-theorem hsolveWf_of_exhaustiveResidualWf (Dt fnum fden gnum gden : CPolyG α)
+theorem hsolveWf_of_exhaustiveResidualWf (Dt fnum fden gnum gden : CPoly α)
     (hres : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden) :
     (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
       (cRischDEG Dt fnum fden gnum gden).isSome = true := by
@@ -185,7 +185,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [CRischField α]
 
 /-- `RischDEInnerCompletenessWf` assembled from its three component residuals. -/
-theorem rischDEInnerCompletenessWf_of_residuals (Dt fnum fden gnum gden : CPolyG α)
+theorem rischDEInnerCompletenessWf_of_residuals (Dt fnum fden gnum gden : CPoly α)
     (hnormRes : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden)
     (hboundRes : RdeBoundCancellationResidualWf Dt fnum fden gnum gden)
     (hsolveRes : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden) :
@@ -200,12 +200,12 @@ end AssembleWf
 
 -- The Wf solve residual fits directly into the Wf inner-completeness assembly.
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
+    [CRischField α] (Dt fnum fden gnum gden : CPoly α)
     (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
       (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true)
-    (hbound : ∀ a0 b0 c0 h0 : CPolyG α,
+    (hbound : ∀ a0 b0 c0 h0 : CPoly α,
       cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
-      ∀ q : CPolyG α,
+      ∀ q : CPoly α,
         IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 q →

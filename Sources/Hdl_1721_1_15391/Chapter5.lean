@@ -54,7 +54,7 @@ General algebraic curves (beyond simple radicals `yⁿ = ρ`): the GENERAL (non-
   the rational part on a general curve (Ch. 4) `[infra]`. -/
 
 open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.RadElem
-open DeepWiki.SymbolicIntegration.CPolyG
+open DeepWiki.SymbolicIntegration.CPoly
 
 namespace DeepWiki.Tiaf
 

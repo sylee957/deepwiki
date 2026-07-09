@@ -12,21 +12,21 @@ namespace DeepWiki.SymbolicIntegration
 
 open scoped Differential
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-- The curve ideal `(toPolyG f)` for the carrier `K[X] ⧸ (toPolyG f)`. -/
-noncomputable def afIdeal (f : CPolyG α) : Ideal (CFieldSpec.K α)[X] :=
+noncomputable def afIdeal (f : CPoly α) : Ideal (CFieldSpec.K α)[X] :=
   Ideal.span {toPolyG f}
 
 /-- Any multiple of `toPolyG f` lies in `afIdeal f`. -/
-theorem mul_curve_mem (f : CPolyG α) (c : (CFieldSpec.K α)[X]) :
+theorem mul_curve_mem (f : CPoly α) (c : (CFieldSpec.K α)[X]) :
     c * toPolyG f ∈ afIdeal f :=
   Ideal.mul_mem_left _ _ (Ideal.subset_span (Set.mem_singleton _))
 
 /-- `afReduce` preserves the quotient modulo `afIdeal f`. -/
-theorem mk_toPolyG_afReduce (f p : CPolyG α) (hf : cnormG f ≠ []) :
+theorem mk_toPolyG_afReduce (f p : CPoly α) (hf : cnormG f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afReduce f p))
       = Ideal.Quotient.mk (afIdeal f) (toPolyG p) := by
   rw [← sub_eq_zero, ← map_sub, Ideal.Quotient.eq_zero_iff_mem]
@@ -39,7 +39,7 @@ theorem mk_toPolyG_afReduce (f p : CPolyG α) (hf : cnormG f ≠ []) :
   exact neg_mem (mul_curve_mem f _)
 
 /-- `afMul` realizes multiplication in the quotient modulo `afIdeal f`. -/
-theorem mk_toPolyG_afMul (f a b : CPolyG α) (hf : cnormG f ≠ []) :
+theorem mk_toPolyG_afMul (f a b : CPoly α) (hf : cnormG f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f a b))
       = Ideal.Quotient.mk (afIdeal f) (toPolyG a)
         * Ideal.Quotient.mk (afIdeal f) (toPolyG b) := by
@@ -49,11 +49,11 @@ theorem mk_toPolyG_afMul (f a b : CPolyG α) (hf : cnormG f ≠ []) :
 variable [CDiffField α] [CDiffFieldSpec α]
 
 /-- `afFx` reads as coefficientwise base derivation through `toPolyG`. -/
-theorem mapCoeffs_toPolyG_eq_afFx (f : CPolyG α) :
+theorem mapCoeffs_toPolyG_eq_afFx (f : CPoly α) :
     Differential.mapCoeffs (toPolyG f) = toPolyG (afFx f) := by
   rw [afFx, ← cmapDeriv]
   simp only [denote]
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

@@ -3,7 +3,7 @@ import Mathlib.RingTheory.Polynomial.Content
 
 /-! # Well-founded generic Euclidean division and gcd
 
-Euclidean division, extended gcd, and divisibility testing on `CPolyG`, by well-founded recursion
+Euclidean division, extended gcd, and divisibility testing on `CPoly`, by well-founded recursion
 on the normalized list length. The defs are `[CField α]`-only (so they reduce under `native_decide`
 over noncomputable-`CFieldSpec` carriers); correctness through `toPolyG` is proved by well-founded
 induction on each def's own recursion. -/
@@ -12,7 +12,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
@@ -22,14 +22,14 @@ Termination is by `(cnormG p).length`, strictly dropped each reduce step (`stepG
 
 /-- One reduce step of Euclidean division: replace `p` by the leading-term-cancelled
 `cnormG (p − (clead p/clead q)·xᵏ·q)`. Recursion driver of `cdivmodWf`. -/
-def reduceStepWf (p q : CPolyG α) : CPolyG α :=
+def reduceStepWf (p q : CPoly α) : CPoly α :=
   cnormG (csubG (cnormG p)
     (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
       [CField.div (cleadG p) (cleadG q)]) (cnormG q)))
 
-/-- Generic Euclidean division on `CPolyG`: `cdivmodWf p q = (quotient, remainder)` with
+/-- Generic Euclidean division on `CPoly`: `cdivmodWf p q = (quotient, remainder)` with
 `p = quotient · q + remainder` over `K` (`q ≠ 0`). Well-founded on `(cnormG p).length`. -/
-def cdivmodWf (p q : CPolyG α) : CPolyG α × CPolyG α :=
+def cdivmodWf (p q : CPoly α) : CPoly α × CPoly α :=
   let pn := cnormG p
   let qn := cnormG q
   if cisZeroG qn then ([], [])
@@ -47,18 +47,18 @@ termination_by (cnormG p).length
 decreasing_by assumption
 
 /-- Remainder of generic Euclidean division (`cdivmodWf`'s second component). -/
-def cmodWf (p q : CPolyG α) : CPolyG α := (cdivmodWf p q).2
+def cmodWf (p q : CPoly α) : CPoly α := (cdivmodWf p q).2
 
 /-- Quotient of generic Euclidean division (`cdivmodWf`'s first component). -/
-def cdivWf (p q : CPolyG α) : CPolyG α := (cdivmodWf p q).1
+def cdivWf (p q : CPoly α) : CPoly α := (cdivmodWf p q).1
 
 /-! ### Extended Euclidean algorithm `cgcdWf`
 
 Termination is by `(cnormG b).length`, strictly dropped by the remainder (`cmodWf_length_lt`). -/
 
-/-- Extended Euclidean algorithm on `CPolyG`: `cgcdWf a b = (g, s, t)` with `s·a + t·b = g` and
+/-- Extended Euclidean algorithm on `CPoly`: `cgcdWf a b = (g, s, t)` with `s·a + t·b = g` and
 `g = gcd(a, b)` over `K`. Well-founded on `(cnormG b).length`. -/
-def cgcdWf (a b : CPolyG α) : CPolyG α × CPolyG α × CPolyG α :=
+def cgcdWf (a b : CPoly α) : CPoly α × CPoly α × CPoly α :=
   if cisZeroG b then (cnormG a, [CField.one], [])
   else
     let q := cdivWf a b
@@ -71,10 +71,10 @@ termination_by (cnormG b).length
 decreasing_by assumption
 
 /-- The gcd component of the extended Euclidean algorithm (`cgcdWf`'s first component). -/
-def cgcdWfGcd (a b : CPolyG α) : CPolyG α := (cgcdWf a b).1
+def cgcdWfGcd (a b : CPoly α) : CPoly α := (cgcdWf a b).1
 
 /-- Generic monic gcd: monic-normalize the gcd component of `cgcdWf`. -/
-def cgcdMonicWf (p q : CPolyG α) : CPolyG α :=
+def cgcdMonicWf (p q : CPoly α) : CPoly α :=
   cmonicG (cgcdWf p q).1
 
 /-! ### The reduce step strictly shortens
@@ -110,7 +110,7 @@ theorem degreeG_reduce_step_lt {P Q : (CFieldSpec.K α)[X]} (hP : P ≠ 0) (hQ :
 
 /-- One reduce step strictly shortens the normalized list: `cnormG (p − (lcP/lcQ)·xᵏ·q)` has
 strictly smaller normalized length than `p`. -/
-theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])
+theorem stepG_length_lt (p q : CPoly α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])
     (hpq : (cnormG q : List α).length ≤ (cnormG p : List α).length) :
     (cnormG (csubG (cnormG p)
         (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
@@ -155,7 +155,7 @@ theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q 
 
 /-- The reduce step strictly shortens the normalized list (over `[CFieldSpec α]`): discharges
 `cdivmodWf`'s structural guard, so over a genuine field the reducing branch is always taken. -/
-theorem reduceStepWf_length_lt (p q : CPolyG α) (hcz : cisZeroG (cnormG q) = false)
+theorem reduceStepWf_length_lt (p q : CPoly α) (hcz : cisZeroG (cnormG q) = false)
     (hlen : ¬ (cnormG p : List α).length < (cnormG q : List α).length) :
     (cnormG (reduceStepWf p q) : List α).length < (cnormG p : List α).length := by
   have hq : cnormG q ≠ [] := by
@@ -172,7 +172,7 @@ theorem reduceStepWf_length_lt (p q : CPolyG α) (hcz : cisZeroG (cnormG q) = fa
 
 /-- Euclidean-division identity through `toPolyG` for `cdivmodWf` (nonzero divisor):
 `toPolyG p = toPolyG (quotient) · toPolyG q + toPolyG (remainder)`. -/
-theorem toPolyG_cdivmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
+theorem toPolyG_cdivmodWf (p q : CPoly α) (hq0 : cnormG q ≠ []) :
     toPolyG p
       = toPolyG (cdivmodWf p q).1 * toPolyG q + toPolyG (cdivmodWf p q).2 := by
   -- Direct well-founded induction on `cdivmodWf`'s own recursion: the four branches are the divisor-zero
@@ -221,7 +221,7 @@ theorem toPolyG_cdivmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
 
 /-- `toPolyG p = toPolyG (cdivWf p q) · toPolyG q + toPolyG (cmodWf p q)`: the Euclidean identity
 in quotient/remainder form (nonzero divisor). -/
-theorem toPolyG_cmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
+theorem toPolyG_cmodWf (p q : CPoly α) (hq0 : cnormG q ≠ []) :
     toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) := by
   rw [cdivWf, cmodWf]; exact toPolyG_cdivmodWf p q hq0
 
@@ -229,7 +229,7 @@ theorem toPolyG_cmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
 
 /-- The remainder strictly shortens below `(cnormG b).length` for a nonzero divisor: discharges
 `cgcdWf`'s structural guard, so over a genuine field the recursing branch is always taken. -/
-theorem cmodWf_length_lt (a b : CPolyG α) (hb : cnormG b ≠ []) :
+theorem cmodWf_length_lt (a b : CPoly α) (hb : cnormG b ≠ []) :
     (cnormG (cmodWf a b) : List α).length < (cnormG b : List α).length := by
   rw [cmodWf]
   induction a using cdivmodWf.induct (q := b) with
@@ -266,7 +266,7 @@ theorem cmodWf_length_lt (a b : CPolyG α) (hb : cnormG b ≠ []) :
 
 /-- Bézout identity through `toPolyG` for `cgcdWf`: with `(g, s, t) = cgcdWf a b`,
 `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. -/
-theorem toPolyG_cgcdWf (a b : CPolyG α) :
+theorem toPolyG_cgcdWf (a b : CPoly α) :
     toPolyG (cgcdWf a b).2.1 * toPolyG a + toPolyG (cgcdWf a b).2.2 * toPolyG b
       = toPolyG (cgcdWf a b).1 := by
   induction a, b using cgcdWf.induct with
@@ -306,7 +306,7 @@ theorem toPolyG_cgcdWf (a b : CPolyG α) :
 
 /-- `cgcdWf`'s gcd is greatest among common divisors: any `d` dividing both `toPolyG a` and
 `toPolyG b` divides `toPolyG (cgcdWf a b).1`. Immediate from Bézout. -/
-theorem toPolyG_dvd_cgcdWf {d : (CFieldSpec.K α)[X]} (a b : CPolyG α)
+theorem toPolyG_dvd_cgcdWf {d : (CFieldSpec.K α)[X]} (a b : CPoly α)
     (ha : d ∣ toPolyG a) (hb : d ∣ toPolyG b) :
     d ∣ toPolyG (cgcdWf a b).1 := by
   rw [← toPolyG_cgcdWf a b]
@@ -314,7 +314,7 @@ theorem toPolyG_dvd_cgcdWf {d : (CFieldSpec.K α)[X]} (a b : CPolyG α)
 
 /-- `cgcdWf`'s gcd divides both inputs: `toPolyG (cgcdWf a b).1` divides `toPolyG a` and
 `toPolyG b`. With `toPolyG_dvd_cgcdWf` this characterizes it as an honest gcd in `K[X]`. -/
-theorem toPolyG_cgcdWf_dvd (a b : CPolyG α) :
+theorem toPolyG_cgcdWf_dvd (a b : CPoly α) :
     toPolyG (cgcdWf a b).1 ∣ toPolyG a ∧ toPolyG (cgcdWf a b).1 ∣ toPolyG b := by
   induction a, b using cgcdWf.induct with
   | case1 a b =>
@@ -356,7 +356,7 @@ When a polynomial divides another through the semantic bridge `toPolyG`, Euclide
 remainder. -/
 
 /-- The Euclidean remainder vanishes when the divisor divides the dividend (through `toPolyG`). -/
-theorem toPolyG_cmodWf_eq_zero_of_dvd (p q : CPolyG α) (hq0 : cnormG q ≠ [])
+theorem toPolyG_cmodWf_eq_zero_of_dvd (p q : CPoly α) (hq0 : cnormG q ≠ [])
     (hdvd : toPolyG q ∣ toPolyG p) :
     toPolyG (cmodWf p q) = 0 := by
   have hid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
@@ -378,7 +378,7 @@ theorem toPolyG_cmodWf_eq_zero_of_dvd (p q : CPolyG α) (hq0 : cnormG q ≠ [])
 
 /-- Exact division through `toPolyG`: if `toPolyG q ∣ toPolyG p`, the Euclidean quotient times the
 divisor recovers the dividend. -/
-theorem toPolyG_cdivWf_exact (p q : CPolyG α) (hq0 : cnormG q ≠ [])
+theorem toPolyG_cdivWf_exact (p q : CPoly α) (hq0 : cnormG q ≠ [])
     (hdvd : toPolyG q ∣ toPolyG p) :
     toPolyG (cdivWf p q) * toPolyG q = toPolyG p := by
   have hid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
@@ -388,7 +388,7 @@ theorem toPolyG_cdivWf_exact (p q : CPolyG α) (hq0 : cnormG q ≠ [])
   rw [hid, hrem0, add_zero]
 
 /-- `u·v^i = d` where `u = cdivWf d (v^i)`, given `v^i ∣ d` and `v ≠ 0`. -/
-theorem toPolyG_cdivWf_pow_mul (d v : CPolyG α) (i : ℕ) (hv : toPolyG v ≠ 0)
+theorem toPolyG_cdivWf_pow_mul (d v : CPoly α) (i : ℕ) (hv : toPolyG v ≠ 0)
     (hdvd : toPolyG v ^ i ∣ toPolyG d) :
     toPolyG (cdivWf d (cpowG v i)) * toPolyG v ^ i = toPolyG d := by
   have hcn : cnormG (cpowG v i) ≠ [] := by
@@ -406,7 +406,7 @@ theorem toPolyG_cdivWf_pow_mul (d v : CPolyG α) (i : ℕ) (hv : toPolyG v ≠ 0
 /-! ### The monic gcd divides both inputs (through `toPolyG`) -/
 
 /-- The monic gcd divides both inputs (through `toPolyG`). -/
-theorem toPolyG_cgcdMonicWf_dvd (p q : CPolyG α) :
+theorem toPolyG_cgcdMonicWf_dvd (p q : CPoly α) :
     toPolyG (cgcdMonicWf p q) ∣ toPolyG p ∧ toPolyG (cgcdMonicWf p q) ∣ toPolyG q := by
   obtain ⟨hp, hq⟩ := toPolyG_cgcdWf_dvd p q
   have hassoc : Associated (toPolyG (cgcdMonicWf p q)) (toPolyG (cgcdWf p q).1) := by
@@ -414,41 +414,41 @@ theorem toPolyG_cgcdMonicWf_dvd (p q : CPolyG α) :
     exact associated_toPolyG_cmonicG _
   exact ⟨hassoc.dvd.trans hp, hassoc.dvd.trans hq⟩
 
-end CPolyG
+end CPoly
 
-open CPolyG
+open CPoly
 
-/-- Abstract correctness of the generic monic gcd `CPolyG.cgcdMonicWf`: over the genuine field
-`K = CFieldSpec.K α`, `toPolyG (CPolyG.cgcdMonicWf p q)` is associated to
+/-- Abstract correctness of the generic monic gcd `CPoly.cgcdMonicWf`: over the genuine field
+`K = CFieldSpec.K α`, `toPolyG (CPoly.cgcdMonicWf p q)` is associated to
 `gcd (toPolyG p) (toPolyG q)` in `K[X]`. -/
-theorem associated_toPolyG_cgcdMonicWf {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
-    Associated (toPolyG (CPolyG.cgcdMonicWf p q)) (gcd (toPolyG p) (toPolyG q)) := by
-  obtain ⟨hdvd_p, hdvd_q⟩ := CPolyG.toPolyG_cgcdWf_dvd p q
-  have hassoc : Associated (toPolyG (CPolyG.cgcdMonicWf p q)) (toPolyG (CPolyG.cgcdWf p q).1) := by
-    rw [CPolyG.cgcdMonicWf]
+theorem associated_toPolyG_cgcdMonicWf {α : Type*} [CField α] [CFieldSpec α] (p q : CPoly α) :
+    Associated (toPolyG (CPoly.cgcdMonicWf p q)) (gcd (toPolyG p) (toPolyG q)) := by
+  obtain ⟨hdvd_p, hdvd_q⟩ := CPoly.toPolyG_cgcdWf_dvd p q
+  have hassoc : Associated (toPolyG (CPoly.cgcdMonicWf p q)) (toPolyG (CPoly.cgcdWf p q).1) := by
+    rw [CPoly.cgcdMonicWf]
     exact associated_toPolyG_cmonicG _
   refine hassoc.trans ?_
   apply associated_of_dvd_dvd
   · exact dvd_gcd hdvd_p hdvd_q
-  · exact CPolyG.toPolyG_dvd_cgcdWf p q (gcd_dvd_left _ _) (gcd_dvd_right _ _)
+  · exact CPoly.toPolyG_dvd_cgcdWf p q (gcd_dvd_left _ _) (gcd_dvd_right _ _)
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-- Divisibility test `cdvdG q p = cisZeroG (cmodWf p q)`: decides `q ∣ p` by remainder-is-zero.
 Generic over `[CField α]`. -/
-def cdvdG (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
+def cdvdG (q p : CPoly α) : Bool := cisZeroG (cmodWf p q)
 
 /-- `cdvdG q p = true ↔ toPolyG (cmodWf p q) = 0`: the divisibility test reads as
 remainder-zero through `toPolyG`. -/
-theorem cdvdG_iff (q p : CPolyG α) :
+theorem cdvdG_iff (q p : CPoly α) :
     cdvdG q p = true ↔ toPolyG (cmodWf p q) = 0 := by
   rw [cdvdG, cisZeroG_iff]
 
 /-- A true `cdvdG q p` certifies polynomial divisibility `toPolyG q ∣ toPolyG p`
 (nonzero divisor `cnormG q ≠ []`). -/
-theorem dvd_of_cdvdG (q p : CPolyG α) (hq : cnormG q ≠ []) (h : cdvdG q p = true) :
+theorem dvd_of_cdvdG (q p : CPoly α) (hq : cnormG q ≠ []) (h : cdvdG q p = true) :
     toPolyG q ∣ toPolyG p := by
   have hrem : toPolyG (cmodWf p q) = 0 := (cdvdG_iff q p).mp h
   have heuclid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
@@ -458,7 +458,7 @@ theorem dvd_of_cdvdG (q p : CPolyG α) (hq : cnormG q ≠ []) (h : cdvdG q p = t
 
 /-- A false `cdvdG q p` refutes polynomial divisibility `¬ toPolyG q ∣ toPolyG p`
 (nonzero divisor `cnormG q ≠ []`). -/
-theorem not_dvd_of_cdvdG_false (q p : CPolyG α) (hq : cnormG q ≠ [])
+theorem not_dvd_of_cdvdG_false (q p : CPoly α) (hq : cnormG q ≠ [])
     (h : cdvdG q p = false) : ¬ toPolyG q ∣ toPolyG p := by
   intro hdvd
   have hrem : toPolyG (cmodWf p q) = 0 := toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd
@@ -466,6 +466,6 @@ theorem not_dvd_of_cdvdG_false (q p : CPolyG α) (hq : cnormG q ≠ [])
   rw [htrue] at h
   exact Bool.noConfusion h
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

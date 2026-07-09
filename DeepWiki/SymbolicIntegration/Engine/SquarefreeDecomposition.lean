@@ -14,7 +14,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-- **The product of pairwise-coprime squarefree polynomials is squarefree** (list form). -/
 theorem squarefree_list_prod {K : Type*} [Field K] (L : List K[X])
@@ -37,14 +37,14 @@ theorem monic_list_prod {K : Type*} [Field K] (L : List K[X]) (h : ∀ p ∈ L, 
     rw [List.prod_cons]
     exact (h a (List.mem_cons_self ..)).mul (ih (fun p hp => h p (List.mem_cons_of_mem a hp)))
 
-open CPolyG
+open CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPolyG`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPolyG decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
-structure LawfulSquarefreeDecomposition (d : CPolyG α) (decomp : List (CPolyG α)) : Prop where
+structure LawfulSquarefreeDecomposition (d : CPoly α) (decomp : List (CPoly α)) : Prop where
   /-- The powered product `∏ᵢ vᵢ^i` reconstructs `d` up to associates. -/
   reconstruct : Associated (toPolyG d) (prodPow 1 (decomp.map toPolyG))
   /-- Each factor is monic. -/
@@ -58,7 +58,7 @@ namespace LawfulSquarefreeDecomposition
 
 /-- The radical `∏ᵢ vᵢ` (the plain product of the factors) is squarefree — the property the Hermite stage
 consumes abstractly (not from the concrete Yun loop). -/
-theorem prod_squarefree {d : CPolyG α} {decomp : List (CPolyG α)}
+theorem prod_squarefree {d : CPoly α} {decomp : List (CPoly α)}
     (h : LawfulSquarefreeDecomposition d decomp) :
     Squarefree ((decomp.map toPolyG).prod) := by
   refine squarefree_list_prod _ ?_ ?_
@@ -66,7 +66,7 @@ theorem prod_squarefree {d : CPolyG α} {decomp : List (CPolyG α)}
   · intro p hp; rw [List.mem_map] at hp; obtain ⟨q, hq, rfl⟩ := hp; exact h.squarefree q hq
 
 /-- The radical `∏ᵢ vᵢ` is monic. -/
-theorem prod_monic {d : CPolyG α} {decomp : List (CPolyG α)}
+theorem prod_monic {d : CPoly α} {decomp : List (CPoly α)}
     (h : LawfulSquarefreeDecomposition d decomp) :
     ((decomp.map toPolyG).prod).Monic := by
   refine monic_list_prod _ ?_

@@ -10,7 +10,7 @@ open BenchG
 
 namespace BenchLvl2
 
-open CPolyG
+open CPoly
 
 /-- The `Lvl2 = ℚ(x)(t₁)` scalar `t₁ = s/1` (numerator the monomial `[0,1] ∈ (QFunNZG ℚ)[s]`). -/
 def t1 : Lvl2 :=
@@ -32,11 +32,11 @@ def invT1p1 : Lvl2 :=
 def t1m1 : Lvl2 := CField.sub t1 CField.one
 
 /-- A linear `t₂`-polynomial `a0 + a1·t₂` over `Lvl2` (low→high in `t₂`). -/
-def lin2 (a0 a1 : Lvl2) : CPolyG Lvl2 := [a0, a1]
+def lin2 (a0 a1 : Lvl2) : CPoly Lvl2 := [a0, a1]
 
 /-- The fixed level-2 gcd target `(t₂ + t₁)·(t₂ − 1/t₁)`, degree 2 in `t₂` with a genuine `1/t₁`
 denominator. -/
-def commonFactor2 : CPolyG Lvl2 :=
+def commonFactor2 : CPoly Lvl2 :=
   cmulG (lin2 t1 CField.one) (lin2 (CField.neg invT1) CField.one)
 
 /-- The cofactor-coefficient cycle for `p` (period 5 through `t₁`, `1/t₁`, `t₁+1`, `1/(t₁+1)`, `t₁−1`). -/
@@ -48,24 +48,24 @@ def cyc2B : ℕ → Lvl2
   | 0 => invT1p1 | 1 => t1m1 | 2 => t1 | 3 => invT1 | 4 => t1p1 | n + 5 => cyc2B n
 
 /-- The `p`-cofactor `∏_{i<k} (t₂ + cyc2A i)`, a `t₂`-polynomial of degree `k`. -/
-def prod2A : ℕ → CPolyG Lvl2
+def prod2A : ℕ → CPoly Lvl2
   | 0 => [CField.one]
   | n + 1 => cmulG (lin2 (cyc2A n) CField.one) (prod2A n)
 
 /-- The `q`-cofactor `∏_{i<k} (t₂ − cyc2B i)`, degree `k`, coprime to `prod2A k`. -/
-def prod2B : ℕ → CPolyG Lvl2
+def prod2B : ℕ → CPoly Lvl2
   | 0 => [CField.one]
   | n + 1 => cmulG (lin2 (CField.neg (cyc2B n)) CField.one) (prod2B n)
 
 /-- The level-2 benchmark dividend `p = commonFactor2 · prod2A k`, total `t₂`-degree `k + 2`. -/
-def benchP2 (k : ℕ) : CPolyG Lvl2 := cmulG commonFactor2 (prod2A k)
+def benchP2 (k : ℕ) : CPoly Lvl2 := cmulG commonFactor2 (prod2A k)
 
 /-- The level-2 benchmark divisor `q = commonFactor2 · prod2B k`, total `t₂`-degree `k + 2`;
 `gcd(benchP2 k, benchQ2 k) ~ commonFactor2` (degree 2). -/
-def benchQ2 (k : ℕ) : CPolyG Lvl2 := cmulG commonFactor2 (prod2B k)
+def benchQ2 (k : ℕ) : CPoly Lvl2 := cmulG commonFactor2 (prod2B k)
 
 /-- The naive Euclidean gcd `cmonicG (cgcdWf …)` of the level-2 benchmark pair (the swelling kernel). -/
-def benchExtGcd2 (k : ℕ) : CPolyG Lvl2 := CPolyG.cmonicG (CPolyG.cgcdWf (benchP2 k) (benchQ2 k)).1
+def benchExtGcd2 (k : ℕ) : CPoly Lvl2 := CPoly.cmonicG (CPoly.cgcdWf (benchP2 k) (benchQ2 k)).1
 
 /-- The raw stored size of one `QFunNZG ℚ` scalar: list lengths + `Σ(|num|+den)` of the ℚ entries. -/
 def sizeLvl1 (z : QFunNZG ℚ) : ℕ :=
@@ -80,9 +80,9 @@ def sizeLvl2 (z : Lvl2) : ℕ :=
     (z.1.1.foldl (fun a c => a + sizeLvl1 c) 0) +
     (z.1.2.foldl (fun a c => a + sizeLvl1 c) 0)
 
-/-- The raw stored size of a whole `CPolyG Lvl2`: `sizeLvl2` summed over the `t₂`-coefficients plus the
+/-- The raw stored size of a whole `CPoly Lvl2`: `sizeLvl2` summed over the `t₂`-coefficients plus the
 `t₂`-length. -/
-def gcdSize2 (g : CPolyG Lvl2) : ℕ :=
+def gcdSize2 (g : CPoly Lvl2) : ℕ :=
   (g : List Lvl2).foldl (fun a z => a + sizeLvl2 z) g.length
 
 end BenchLvl2

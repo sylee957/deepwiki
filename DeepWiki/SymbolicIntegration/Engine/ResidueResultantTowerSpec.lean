@@ -14,7 +14,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
@@ -23,7 +23,7 @@ residue resultant `rtResultantGen (toPolyG a) (toPolyG d) B` (`B = implicitDeriv
 evaluated at `toK c`, for **monic** `d`, **constant** `Dt`, and proper `a` (`deg a < deg d`). The engine
 computes the resultant at the *actual* degree `deg(a − c·Dd)`; the abstract `rtResultantGen` uses the formal
 degree `deg d − 1`; `Polynomial.resultant_add_right_deg` reconciles them (`lc d = 1` from monic). -/
-theorem toK_cresultantWf_cAmcDdG_eq_eval (Dt a d : CPolyG α) (c : α)
+theorem toK_cresultantWf_cAmcDdG_eq_eval (Dt a d : CPoly α) (c : α)
     (hDmonic : (toPolyG d).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG a).natDegree < (toPolyG d).natDegree) :
     CFieldSpec.toK (cresultantWf d (cAmcDdG Dt a d c))
@@ -55,7 +55,7 @@ rtResultantGen (toPolyG a) (toPolyG d) B` (`B = implicitDeriv (toPolyG Dt) (toPo
 resultant samples) provably computes the general-derivation abstract residue resultant — via interpolation
 uniqueness (both have `z`-degree `≤ deg d` and agree at the `deg d + 1` integer nodes). This is the object
 `lazardRiobooTrager_output_isSimilar_gcd_gen` (G3) reasons about. -/
-theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)] (Dt a d : CPolyG α)
+theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)] (Dt a d : CPoly α)
     (hDmonic : (toPolyG d).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG a).natDegree < (toPolyG d).natDegree) :
     toPolyG (cResidueResultantTowerG Dt a d)
@@ -70,7 +70,7 @@ theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)] (Dt a d : C
     rw [hpts, List.map_map]
     apply List.map_congr_left
     intro k _
-    simp only [Function.comp_apply, CPolyG.toK_cnatCastG]
+    simp only [Function.comp_apply, CPoly.toK_cnatCastG]
   have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
     rw [hfst]; exact (List.nodup_range).map Nat.cast_injective
   have hlen : pts.length = cdegG d + 1 := by rw [hpts, List.length_map, List.length_range]
@@ -96,7 +96,7 @@ theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)] (Dt a d : C
     have hmem : (cnatCastG k, cresultantWf d (cAmcDdG Dt a d (cnatCastG k))) ∈ pts := by
       rw [hpts, List.mem_map]; exact ⟨k, List.mem_range.mpr hk, rfl⟩
     rw [show (k : CFieldSpec.K α) = CFieldSpec.toK (cnatCastG k : α) from
-        (CPolyG.toK_cnatCastG k).symm,
+        (CPoly.toK_cnatCastG k).symm,
       eval_toPolyG_cinterpolateG pts hnodup hmem,
       toK_cresultantWf_cAmcDdG_eq_eval Dt a d (cnatCastG k) hDmonic hDt0 hAD]
 
@@ -104,7 +104,7 @@ omit [CDiffFieldSpec α] in
 /-- **The residue resultant of a constant is a constant** (`cdegG d = 0 ⟹ cdegG (cResidueResultantTowerG
 Dt a d) = 0`): the interpolation runs over `n + 1 = 1` node, and a single-point Lagrange interpolant is a
 constant (`degree_toPolyG_cinterpolateG_lt`). The no-poles residue-resultant fact behind `cLrtLogArgG = []`. -/
-theorem cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero (Dt a d : CPolyG α) (hd : cdegG d = 0) :
+theorem cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero (Dt a d : CPoly α) (hd : cdegG d = 0) :
     cdegG (cResidueResultantTowerG Dt a d) = 0 := by
   rw [cResidueResultantTowerG]
   simp only [hd, Nat.zero_add]

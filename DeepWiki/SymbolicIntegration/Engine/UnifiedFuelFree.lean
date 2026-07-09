@@ -10,18 +10,18 @@ Fuel-free companion of `cIntegrateGFull`: a leaf substitution routing to `canoni
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG RadElem
+open CPoly RadElem
 
 /-! ## `cIntegrateGFullWf` — the fuel-free transcendental top entry (flat leaf substitution) -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
 /-- `cIntegrateGFullWf Dt a d cands`: the fuel-free full poly/special tower integral of `f = a/d ∈ α(t)`
 over `D = cmonomialDeriv Dt`, returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`
 or `none` (nonzero special part). A leaf substitution of `cIntegrateGFull`. -/
-def cIntegrateGFullWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+def cIntegrateGFullWf (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
     Option (IntegralResultG α) :=
   let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastG Dt a d
   if cisZeroG b then
@@ -40,7 +40,7 @@ def cIntegrateGFullWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
         some ⟨(num, gden), nrm.logs⟩
   else none
 
-end CPolyG
+end CPoly
 
 /-! ## Check-identity soundness bridge for the fuel-free top entry -/
 
@@ -50,11 +50,11 @@ end CPolyG
 theorem field_identity_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
-    (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
-    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResultG α)
+    (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
+    (hcheck : CPoly.checkIdentityG Dt res a d = true) :
     towerFractionFieldDerivG Dt
         (QFunNZG.amG α (toPolyG res.rational.1) / QFunNZG.amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
@@ -68,24 +68,24 @@ certificate. -/
 theorem isIntegralResultG_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
-    (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
-    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResultG α)
+    (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
-    CPolyG.IsIntegralResultG Dt a d res := by
+    (hcheck : CPoly.checkIdentityG Dt res a d = true) :
+    CPoly.IsIntegralResultG Dt a d res := by
   have _ := hsome
-  exact CPolyG.isIntegralResultG_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
+  exact CPoly.isIntegralResultG_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
 
 /-! ### Restatement against the intended wording -/
 
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
-    (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
-    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResultG α)
+    (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
+    (hcheck : CPoly.checkIdentityG Dt res a d = true) :
     towerFractionFieldDerivG Dt
         (QFunNZG.amG α (toPolyG res.rational.1) / QFunNZG.amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
@@ -97,25 +97,25 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
 `cIntegrateGFullWf` computes `∫ t₂ = (1/2)t₂²` over `ℚ(x)(t₁)[t₂]` (`Dt₂ = 1`), with no logarithmic
 part. -/
 
-open CPolyG
+open CPoly
 
-/-- Level-2 monomial derivative `Dt₂ = 1` over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]`. -/
-def towerFullLvl2Dt : CPolyG Lvl2 := [CField.one]
+/-- Level-2 monomial derivative `Dt₂ = 1` over `CPoly Lvl2 = ℚ(x)(t₁)[t₂]`. -/
+def towerFullLvl2Dt : CPoly Lvl2 := [CField.one]
 
-/-- The level-2 integrand numerator `f = t₂` over `CPolyG Lvl2`. -/
-def towerFullLvl2A : CPolyG Lvl2 := [CField.zero, CField.one]
+/-- The level-2 integrand numerator `f = t₂` over `CPoly Lvl2`. -/
+def towerFullLvl2A : CPoly Lvl2 := [CField.zero, CField.one]
 
-/-- The level-2 integrand denominator `d = 1` over `CPolyG Lvl2`. -/
-def towerFullLvl2D : CPolyG Lvl2 := [CField.one]
+/-- The level-2 integrand denominator `d = 1` over `CPoly Lvl2`. -/
+def towerFullLvl2D : CPoly Lvl2 := [CField.one]
 
 /-- The level-2 residue candidate set for the no-log polynomial-part example. -/
 def towerFullLvl2Cands : List Lvl2 := [CField.zero, CField.one]
 
 /-- `cIntegrateGFullWf` lands `∫ t₂ = (1/2)t₂²` at level 2, with `checkIdentityG` verifying `D(∫f) = f`. -/
 theorem towerFullLvl2_landsPolynomialPartWf :
-    (match CPolyG.cIntegrateGFullWf towerFullLvl2Dt towerFullLvl2A towerFullLvl2D
+    (match CPoly.cIntegrateGFullWf towerFullLvl2Dt towerFullLvl2A towerFullLvl2D
         towerFullLvl2Cands with
-      | some res => CPolyG.checkIdentityG towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
+      | some res => CPoly.checkIdentityG towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
       | none => false) = true := by native_decide
 
 

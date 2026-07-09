@@ -9,7 +9,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-! #### Case 2 validates: `∫ C/(W²y)` with `y = √(x³−x)`, `W = x`
 
@@ -18,25 +18,25 @@ Radicand `y² = f = x³ − x`, squarefree factor `W = x`, `h = f/W = x² − 1`
 `k = 2 → 1`. -/
 
 /-- Case-2 example radicand `f = x³ − x = x(x−1)(x+1)` (`y² = f`, squarefree), `ℚ[x]` `[0,−1,0,1]`. -/
-def case2F : CPolyG ℚ := [0, -1, 0, 1]
+def case2F : CPoly ℚ := [0, -1, 0, 1]
 
 /-- Case-2 example squarefree denominator factor `W = x` (a factor of `f`, a branch place), `[0, 1]`. -/
-def case2W : CPolyG ℚ := [0, 1]
+def case2W : CPoly ℚ := [0, 1]
 
 /-- Case-2 example cofactor `h = f/W = x² − 1`, `[−1, 0, 1]`. -/
-def case2H : CPolyG ℚ := [-1, 0, 1]
+def case2H : CPoly ℚ := [-1, 0, 1]
 
 /-- Case-2 example numerator `C = 1`, `[1]`. -/
-def case2C : CPolyG ℚ := [1]
+def case2C : CPoly ℚ := [1]
 
 /-- `W' = x' = 1` over `ℚ[x]` (`cderivG`, `θ' = 1`). -/
-def case2Wder : CPolyG ℚ := cderivG case2W
+def case2Wder : CPoly ℚ := cderivG case2W
 
 /-- The solved Case-2 cofactor `B` for `B·(½−2)·W'·h ≡ 1 (mod x)` — expected `B = 2/3`. -/
-def case2B : CPolyG ℚ := radCase2Cofactor 2 case2W case2H case2C
+def case2B : CPoly ℚ := radCase2Cofactor 2 case2W case2H case2C
 
 /-- The Case-2 residual `D` — expected `−x/3` (multiplicity dropped `k = 2 → 1`). -/
-def case2D : CPolyG ℚ :=
+def case2D : CPoly ℚ :=
   radCase2Residual 2 case2W case2H case2C case2B
 
 /-- The cofactor is `B = 2/3`: `B·(½−2)·W'·h ≡ 1 (mod x)` gives `B = 2/3`. -/

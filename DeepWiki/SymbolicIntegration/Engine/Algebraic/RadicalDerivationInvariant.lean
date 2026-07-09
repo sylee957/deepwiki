@@ -27,14 +27,14 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpe
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `toPolyG radGen = X`: the generator `y = √f` (`radGen = [0, 1]`) reads as `X` under the Horner
 bridge. -/
-@[denote] theorem toPolyG_radGen : CPolyG.toPolyG (radGen : RadElem α) = X := by
-  show CPolyG.toPolyG [CField.zero, CField.one] = X
+@[denote] theorem toPolyG_radGen : CPoly.toPolyG (radGen : RadElem α) = X := by
+  show CPoly.toPolyG [CField.zero, CField.one] = X
   simp only [denote, mul_zero, add_zero, map_zero, map_one, zero_add, mul_one]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `toPolyG [zero, c] = C (toK c) · X`: the pure-`y` element `c·y` reads as `C(toK c)·X`. -/
 theorem toPolyG_zero_cons (c : α) :
-    CPolyG.toPolyG ([CField.zero, c] : RadElem α) = Polynomial.C (CFieldSpec.toK c) * X := by
+    CPoly.toPolyG ([CField.zero, c] : RadElem α) = Polynomial.C (CFieldSpec.toK c) * X := by
   simp only [denote, mul_zero, add_zero, map_zero, zero_add]
   ring
 
@@ -44,7 +44,7 @@ radDerivFrom (logDerRadicand n f) 0`). Generalizing `k` is what lets the closed-
 go through. -/
 def radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) : RadElem α :=
   (List.zipIdx p k).map (fun a =>
-    CField.add (CDiffField.cderiv a.1) (CField.mul a.1 (CField.mul (CPolyG.cnatCastG a.2) ℓ)))
+    CField.add (CDiffField.cderiv a.1) (CField.mul a.1 (CField.mul (CPoly.cnatCastG a.2) ℓ)))
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 /-- `radDeriv n f p = radDerivFrom (logDerRadicand n f) 0 p`: unfolds `radDeriv`'s `zipIdx`
@@ -57,29 +57,29 @@ theorem radDeriv_eq_radDerivFrom (n : ℕ) (f : α) (p : RadElem α) :
 mapCoeffs(toPolyG p) + C(toK ℓ)·(X·derivative(toPolyG p) + (k:K[X])·toPolyG p)`. The `(k:K[X])·toPolyG p`
 term is the contribution of the running `zipIdx` index. -/
 theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
-    CPolyG.toPolyG (radDerivFrom ℓ k p)
-      = Differential.mapCoeffs (CPolyG.toPolyG p)
+    CPoly.toPolyG (radDerivFrom ℓ k p)
+      = Differential.mapCoeffs (CPoly.toPolyG p)
         + Polynomial.C (CFieldSpec.toK ℓ)
-          * (X * Polynomial.derivative (CPolyG.toPolyG p)
-              + (k : (CFieldSpec.K α)[X]) * CPolyG.toPolyG p) := by
+          * (X * Polynomial.derivative (CPoly.toPolyG p)
+              + (k : (CFieldSpec.K α)[X]) * CPoly.toPolyG p) := by
   induction p generalizing k with
   | nil => simp [radDerivFrom]
   | cons a as ih =>
     rw [radDerivFrom, List.zipIdx_cons, List.map_cons]
-    show CPolyG.toPolyG (CField.add (CDiffField.cderiv a)
-          (CField.mul a (CField.mul (CPolyG.cnatCastG k) ℓ)) :: radDerivFrom ℓ (k + 1) as) = _
-    rw [CPolyG.toPolyG_cons, CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_mul,
-      CDiffFieldSpec.toK_cderiv, CPolyG.toK_cnatCastG]
-    rw [ih (k + 1), CPolyG.toPolyG_cons]
+    show CPoly.toPolyG (CField.add (CDiffField.cderiv a)
+          (CField.mul a (CField.mul (CPoly.cnatCastG k) ℓ)) :: radDerivFrom ℓ (k + 1) as) = _
+    rw [CPoly.toPolyG_cons, CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_mul,
+      CDiffFieldSpec.toK_cderiv, CPoly.toK_cnatCastG]
+    rw [ih (k + 1), CPoly.toPolyG_cons]
     -- expand `mapCoeffs (C(toK a) + X·toPolyG as)` and `derivative (C(toK a) + X·toPolyG as)` by the
     -- derivation/derivative product rules (`mapCoeffs X = 0`, `derivative X = 1`, `derivative C = 0`).
-    have hmc : Differential.mapCoeffs (Polynomial.C (CFieldSpec.toK a) + X * CPolyG.toPolyG as)
+    have hmc : Differential.mapCoeffs (Polynomial.C (CFieldSpec.toK a) + X * CPoly.toPolyG as)
         = Polynomial.C (Differential.deriv (CFieldSpec.toK a))
-          + X * Differential.mapCoeffs (CPolyG.toPolyG as) := by
+          + X * Differential.mapCoeffs (CPoly.toPolyG as) := by
       rw [map_add, Differential.mapCoeffs_C, Derivation.leibniz, Differential.mapCoeffs_X, smul_zero,
         add_zero, smul_eq_mul]
-    have hder : Polynomial.derivative (Polynomial.C (CFieldSpec.toK a) + X * CPolyG.toPolyG as)
-        = CPolyG.toPolyG as + X * Polynomial.derivative (CPolyG.toPolyG as) := by
+    have hder : Polynomial.derivative (Polynomial.C (CFieldSpec.toK a) + X * CPoly.toPolyG as)
+        = CPoly.toPolyG as + X * Polynomial.derivative (CPoly.toPolyG as) := by
       rw [derivative_add, derivative_C, zero_add, derivative_mul, derivative_X, one_mul]
     rw [hmc, hder]
     simp only [map_add, map_mul, Polynomial.C_eq_natCast, Nat.cast_succ]
@@ -89,9 +89,9 @@ theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
 (`ℓ = f'/(nf)`): the diagonal derivation realizes `implicitDeriv` for `y' = ℓ·y`. -/
 @[denote]
 theorem toPolyG_radDeriv (n : ℕ) (f : α) (p : RadElem α) :
-    CPolyG.toPolyG (radDeriv n f p)
+    CPoly.toPolyG (radDeriv n f p)
       = Differential.implicitDeriv
-          (Polynomial.C (CFieldSpec.toK (logDerRadicand n f)) * X) (CPolyG.toPolyG p) := by
+          (Polynomial.C (CFieldSpec.toK (logDerRadicand n f)) * X) (CPoly.toPolyG p) := by
   rw [radDeriv_eq_radDerivFrom, toPolyG_radDerivFrom]
   -- `implicitDeriv v q = mapCoeffs q + v · derivative q`; here `v = C(toK ℓ)·X`, and the `k = 0` index
   -- term `0·toPolyG p` vanishes.
@@ -102,34 +102,34 @@ theorem toPolyG_radDeriv (n : ℕ) (f : α) (p : RadElem α) :
 
 /-- The radical generator differentiates to the logarithmic-derivative coefficient. -/
 theorem toPolyG_radDeriv_radGen (n : ℕ) (f : α) :
-    CPolyG.toPolyG (radDeriv n f (radGen : RadElem α))
-      = CPolyG.toPolyG ([CField.zero, logDerRadicand n f] : RadElem α) := by
+    CPoly.toPolyG (radDeriv n f (radGen : RadElem α))
+      = CPoly.toPolyG ([CField.zero, logDerRadicand n f] : RadElem α) := by
   rw [toPolyG_radDeriv, toPolyG_radGen, Differential.implicitDeriv_X,
     toPolyG_zero_cons (logDerRadicand n f)]
 
 /-- The two-term radical derivative has diagonal coefficients. -/
 theorem toPolyG_radDeriv_linear (n : ℕ) (f a₀ a₁ : α) :
-    CPolyG.toPolyG (radDeriv n f ([a₀, a₁] : RadElem α))
-      = CPolyG.toPolyG ([CDiffField.cderiv a₀,
+    CPoly.toPolyG (radDeriv n f ([a₀, a₁] : RadElem α))
+      = CPoly.toPolyG ([CDiffField.cderiv a₀,
           CField.add (CDiffField.cderiv a₁) (CField.mul a₁ (logDerRadicand n f))] : RadElem α) := by
   rw [toPolyG_radDeriv]
   -- Read `a₀ + a₁X` in `K[X]` before applying the implicit derivation.
-  have hv : CPolyG.toPolyG ([a₀, a₁] : RadElem α)
+  have hv : CPoly.toPolyG ([a₀, a₁] : RadElem α)
       = Polynomial.C (CFieldSpec.toK a₀) + Polynomial.C (CFieldSpec.toK a₁) * X := by
-    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]; ring
+    rw [CPoly.toPolyG_cons, CPoly.toPolyG_cons, CPoly.toPolyG_nil, mul_zero, add_zero]; ring
   rw [hv, map_add, Derivation.leibniz, Differential.implicitDeriv_C, Differential.implicitDeriv_C,
     Differential.implicitDeriv_X, smul_eq_mul, smul_eq_mul]
-  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
+  rw [CPoly.toPolyG_cons, CPoly.toPolyG_cons, CPoly.toPolyG_nil, mul_zero, add_zero,
     CFieldSpec.toK_add, CFieldSpec.toK_mul, CDiffFieldSpec.toK_cderiv, CDiffFieldSpec.toK_cderiv,
     map_add, map_mul]
   ring
 
 /-- The pure-`y` radical derivative has coefficient `D(c) + c * logDerRadicand n f`. -/
 theorem toPolyG_radDeriv_zero_cons (n : ℕ) (f c : α) :
-    CPolyG.toPolyG (radDeriv n f ([CField.zero, c] : RadElem α))
+    CPoly.toPolyG (radDeriv n f ([CField.zero, c] : RadElem α))
       = Polynomial.C (CFieldSpec.toK
           (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f)))) * X := by
-  rw [toPolyG_radDeriv_linear, CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil,
+  rw [toPolyG_radDeriv_linear, CPoly.toPolyG_cons, CPoly.toPolyG_cons, CPoly.toPolyG_nil,
     mul_zero, add_zero, CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_zero]
   rw [map_zero, map_zero, zero_add]
   ring
@@ -139,16 +139,16 @@ theorem toPolyG_radDeriv_zero_cons (n : ℕ) (f c : α) :
 /-- `radDeriv` is additive: `toPolyG (radDeriv n f (radAdd a b)) = toPolyG (radDeriv n f a) +
 toPolyG (radDeriv n f b)` in `K[X]`. -/
 @[denote] theorem toPolyG_radDeriv_radAdd (n : ℕ) (f : α) (a b : RadElem α) :
-    CPolyG.toPolyG (radDeriv n f (radAdd a b))
-      = CPolyG.toPolyG (radDeriv n f a) + CPolyG.toPolyG (radDeriv n f b) := by
+    CPoly.toPolyG (radDeriv n f (radAdd a b))
+      = CPoly.toPolyG (radDeriv n f a) + CPoly.toPolyG (radDeriv n f b) := by
   rw [toPolyG_radDeriv, toPolyG_radDeriv, toPolyG_radDeriv, radAdd]
   simp only [denote, map_add]
 
 /-- `radDeriv` distributes over a `radAdd` accumulator fold. -/
 theorem toPolyG_radDeriv_foldlRadAdd (n : ℕ) (f : α) (acc : RadElem α) (cs : List (RadElem α)) :
-    CPolyG.toPolyG (radDeriv n f (cs.foldl radAdd acc))
-      = CPolyG.toPolyG (radDeriv n f acc)
-        + (cs.map (fun c => CPolyG.toPolyG (radDeriv n f c))).sum := by
+    CPoly.toPolyG (radDeriv n f (cs.foldl radAdd acc))
+      = CPoly.toPolyG (radDeriv n f acc)
+        + (cs.map (fun c => CPoly.toPolyG (radDeriv n f c))).sum := by
   induction cs generalizing acc with
   | nil => simp
   | cons c cs ih =>
@@ -166,13 +166,13 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 toPolyG q`. The `append` homomorphism for the Horner bridge, the tool for peeling the top coefficient in
 `radReduce`. -/
 @[denote] theorem toPolyG_append (p q : RadElem α) :
-    CPolyG.toPolyG (p ++ q)
-      = CPolyG.toPolyG p + X ^ (p : List α).length * CPolyG.toPolyG q := by
+    CPoly.toPolyG (p ++ q)
+      = CPoly.toPolyG p + X ^ (p : List α).length * CPoly.toPolyG q := by
   induction p with
   | nil => simp
   | cons a as ih =>
-    show CPolyG.toPolyG (a :: (as ++ q)) = _
-    rw [CPolyG.toPolyG_cons, ih, CPolyG.toPolyG_cons]
+    show CPoly.toPolyG (a :: (as ++ q)) = _
+    rw [CPoly.toPolyG_cons, ih, CPoly.toPolyG_cons]
     simp only [List.length_cons, pow_succ]
     ring
 
@@ -211,10 +211,10 @@ normalized nonempty `q` of length `> n`, `mk (toPolyG (caddG (dropLast q) (cshif
 theorem mk_toPolyG_radReduce_step (n : ℕ) (f : α) (q : RadElem α)
     (hqne : (q : List α) ≠ []) (hlen : n < (q : List α).length) :
     Ideal.Quotient.mk (radIdeal n f)
-        (CPolyG.toPolyG (CPolyG.caddG (q : List α).dropLast
-          (CPolyG.cshiftG ((q : List α).length - 1 - n)
+        (CPoly.toPolyG (CPoly.caddG (q : List α).dropLast
+          (CPoly.cshiftG ((q : List α).length - 1 - n)
             [CField.mul ((q : List α).getLast hqne) f])))
-      = Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG q) := by
+      = Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG q) := by
   -- the top-coefficient decomposition `q = dropLast q ++ [getLast q]`
   set am := (q : List α).getLast hqne with hamdef
   have hsplit : (q : List α).dropLast ++ [am] = q := List.dropLast_append_getLast hqne
@@ -223,15 +223,15 @@ theorem mk_toPolyG_radReduce_step (n : ℕ) (f : α) (q : RadElem α)
     conv_lhs => rw [← hsplit]; rw [List.length_append, List.length_singleton]
   have hge : n ≤ m := by rw [hlenq] at hlen; omega
   -- `toPolyG q = toPolyG (dropLast q) + X^m · C(toK am)`
-  have htop : CPolyG.toPolyG q
-      = CPolyG.toPolyG (q : List α).dropLast + X ^ m * Polynomial.C (CFieldSpec.toK am) := by
+  have htop : CPoly.toPolyG q
+      = CPoly.toPolyG (q : List α).dropLast + X ^ m * Polynomial.C (CFieldSpec.toK am) := by
     conv_lhs => rw [← hsplit]
-    rw [toPolyG_append, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero, ← hmdef]
+    rw [toPolyG_append, CPoly.toPolyG_cons, CPoly.toPolyG_nil, mul_zero, add_zero, ← hmdef]
   -- `toPolyG fold = toPolyG (dropLast q) + X^(m−n)·(C(toK am)·C(toK f))`
   have hkeq : (q : List α).length - 1 - n = m - n := by rw [hlenq]; omega
-  have hfold : CPolyG.toPolyG (CPolyG.caddG (q : List α).dropLast
-        (CPolyG.cshiftG ((q : List α).length - 1 - n) [CField.mul am f]))
-      = CPolyG.toPolyG (q : List α).dropLast
+  have hfold : CPoly.toPolyG (CPoly.caddG (q : List α).dropLast
+        (CPoly.cshiftG ((q : List α).length - 1 - n) [CField.mul am f]))
+      = CPoly.toPolyG (q : List α).dropLast
         + X ^ (m - n) * (Polynomial.C (CFieldSpec.toK am) * Polynomial.C (CFieldSpec.toK f)) := by
     rw [hkeq]; simp [CFieldSpec.toK_mul]
   -- the `X^m` term of `toPolyG q` collapses, in the quotient, to `X^(m−n)·C(toK f)` (since `X^n ≡ C f`)
@@ -247,25 +247,25 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 p)) = mk (toPolyG p)` for any fuel. Each fold step preserves it (`mk_toPolyG_radReduce_step`); a fuel
 induction over the loop. This is what makes `radMul ≡ ·` modulo the radicand ideal. -/
 theorem mk_toPolyG_radReduce (n : ℕ) (f : α) (fuel : ℕ) (p : RadElem α) :
-    Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG (radReduce n f fuel p))
-      = Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG p) := by
+    Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG (radReduce n f fuel p))
+      = Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG p) := by
   induction fuel generalizing p with
   | zero => rw [radReduce]
   | succ fuel ih =>
     rw [radReduce]
-    by_cases hlen : (CPolyG.cnormG p : List α).length ≤ n
-    · simp only [hlen, if_true, CPolyG.toPolyG_cnormG]
+    by_cases hlen : (CPoly.cnormG p : List α).length ≤ n
+    · simp only [hlen, if_true, CPoly.toPolyG_cnormG]
     · -- the loop folds the top coefficient and recurses; `ih` + one step + `toPolyG_cnormG`
-      have hlt : n < (CPolyG.cnormG p : List α).length := Nat.lt_of_not_le hlen
-      have hqne : (CPolyG.cnormG p : List α) ≠ [] := by
+      have hlt : n < (CPoly.cnormG p : List α).length := Nat.lt_of_not_le hlen
+      have hqne : (CPoly.cnormG p : List α) ≠ [] := by
         intro h; rw [h] at hlt; simp at hlt
       simp only [hlen, if_false]
       rw [ih]
       -- match `radReduce`'s `getLast?.getD zero` to the step lemma's `getLast hqne`
-      have hgl : (CPolyG.cnormG p : List α).getLast?.getD CField.zero
-          = (CPolyG.cnormG p : List α).getLast hqne := by
+      have hgl : (CPoly.cnormG p : List α).getLast?.getD CField.zero
+          = (CPoly.cnormG p : List α).getLast hqne := by
         rw [List.getLast?_eq_some_getLast hqne, Option.getD_some]
-      rw [hgl, mk_toPolyG_radReduce_step n f (CPolyG.cnormG p) hqne hlt, CPolyG.toPolyG_cnormG]
+      rw [hgl, mk_toPolyG_radReduce_step n f (CPoly.cnormG p) hqne hlt, CPoly.toPolyG_cnormG]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `radMul` realizes the product modulo the ideal: `mk (radIdeal n f) (toPolyG (radMul n f a b)) =
@@ -273,9 +273,9 @@ mk (radIdeal n f) (toPolyG a) · mk (radIdeal n f) (toPolyG b)`. `radMul = radRe
 `radReduce` preserves the quotient (`mk_toPolyG_radReduce`) while `cmulG` realizes `K[X]`-multiplication
 exactly (`toPolyG_cmulG`). The ring structure of the carrier `K[X] ⧸ (Xⁿ − C(toK f))`. -/
 theorem mk_toPolyG_radMul (n : ℕ) (f : α) (a b : RadElem α) :
-    Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG (radMul n f a b))
-      = Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG a)
-        * Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG b) := by
+    Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG (radMul n f a b))
+      = Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG a)
+        * Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG b) := by
   rw [radMul, mk_toPolyG_radReduce]
   simp only [denote, map_mul]
 
@@ -292,7 +292,7 @@ theorem toK_logDerRadicand_mul (n : ℕ) (f : α)
     (hnf : (n : CFieldSpec.K α) * CFieldSpec.toK f ≠ 0) :
     (n : CFieldSpec.K α) * CFieldSpec.toK (logDerRadicand n f) * CFieldSpec.toK f
       = CFieldSpec.toK (CDiffField.cderiv f) := by
-  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, CPolyG.toK_cnatCastG]
+  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, CPoly.toK_cnatCastG]
   rw [mul_comm ((n : CFieldSpec.K α)) _, mul_assoc, div_mul_cancel₀ _ hnf]
 
 /-- The crux: `D(Xⁿ − C(toK f)) ∈ radIdeal n f` for `D = implicitDeriv (C(toK ℓ)·X)`. Computes
@@ -368,13 +368,13 @@ theorem mk_implicitDeriv_congr (n : ℕ) (f : α)
 mk (toPolyG (radMul n f a (radDeriv n f b)))`, valid when `n·toK f ≠ 0`. -/
 theorem mk_toPolyG_radDeriv_radMul (n : ℕ) (f : α)
     (hnf : (n : CFieldSpec.K α) * CFieldSpec.toK f ≠ 0) (a b : RadElem α) :
-    Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG (radDeriv n f (radMul n f a b)))
-      = Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG (radMul n f (radDeriv n f a) b))
-        + Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG (radMul n f a (radDeriv n f b))) := by
+    Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG (radDeriv n f (radMul n f a b)))
+      = Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG (radMul n f (radDeriv n f a) b))
+        + Ideal.Quotient.mk (radIdeal n f) (CPoly.toPolyG (radMul n f a (radDeriv n f b))) := by
   -- abbreviations
   set ℓX := Polynomial.C (CFieldSpec.toK (logDerRadicand n f)) * X with hℓX
-  set A := CPolyG.toPolyG a with hA
-  set B := CPolyG.toPolyG b with hB
+  set A := CPoly.toPolyG a with hA
+  set B := CPoly.toPolyG b with hB
   -- LHS: radDeriv realizes `D`, then `radMul ≡ A·B`, then `D` descends
   rw [toPolyG_radDeriv, ← hℓX]
   rw [mk_implicitDeriv_congr n f hnf (mk_toPolyG_radMul n f a b)]
@@ -389,16 +389,16 @@ theorem mk_toPolyG_radDeriv_radMul (n : ℕ) (f : α)
 /-- `radDeriv` kills `radZero` — `toPolyG (radDeriv n f radZero) = 0` in `K[X]` (`radZero = []`,
 `toPolyG [] = 0`, and `implicitDeriv v 0 = 0`). -/
 @[denote] theorem toPolyG_radDeriv_radZero (n : ℕ) (f : α) :
-    CPolyG.toPolyG (radDeriv n f (radZero : RadElem α)) = 0 := by
-  rw [toPolyG_radDeriv, show (radZero : RadElem α) = [] from rfl, CPolyG.toPolyG_nil, map_zero]
+    CPoly.toPolyG (radDeriv n f (radZero : RadElem α)) = 0 := by
+  rw [toPolyG_radDeriv, show (radZero : RadElem α) = [] from rfl, CPoly.toPolyG_nil, map_zero]
 
 /-- `radDeriv` kills `radOne` — `toPolyG (radDeriv n f radOne) = 0` in `K[X]` (`radOne = [1]`,
 `toPolyG [1] = 1`, and `implicitDeriv v 1 = 0`: a derivation annihilates the unit). -/
 @[denote] theorem toPolyG_radDeriv_radOne (n : ℕ) (f : α) :
-    CPolyG.toPolyG (radDeriv n f (radOne : RadElem α)) = 0 := by
+    CPoly.toPolyG (radDeriv n f (radOne : RadElem α)) = 0 := by
   rw [toPolyG_radDeriv]
-  have h1 : CPolyG.toPolyG (radOne : RadElem α) = 1 := by
-    show CPolyG.toPolyG [CField.one] = 1
+  have h1 : CPoly.toPolyG (radOne : RadElem α) = 1 := by
+    show CPoly.toPolyG [CField.one] = 1
     simp only [denote, mul_zero, add_zero, map_one]
   rw [h1, Derivation.map_one_eq_zero]
 

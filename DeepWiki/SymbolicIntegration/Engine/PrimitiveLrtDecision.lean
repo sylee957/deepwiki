@@ -9,20 +9,20 @@ primitive case: `IsElementaryIntegrableGenuineLrtG Dt a d ↔ cResidueConstantGu
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The primitive LRT guard characterizes genuine elementary integrability. -/
-theorem primitiveLrtDecides [LrtLiouvilleFrontier α] (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+theorem primitiveLrtDecides [LrtLiouvilleFrontier α] (Dt a d : CPoly α) (hd0 : toPolyG d ≠ 0)
     (hsuff : cResidueConstantGuardG Dt a d = true → IsElementaryIntegrableGenuineLrtG Dt a d) :
     IsElementaryIntegrableGenuineLrtG Dt a d ↔ cResidueConstantGuardG Dt a d = true :=
   ⟨LrtLiouvilleFrontier.descendGenuineLrt Dt a d hd0, hsuff⟩
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- A passing primitive LRT guard gives a genuine antiderivative from soundness and residue constancy. -/
-theorem isElementaryIntegrableGenuineLrt_of_guard (Dt a d : CPolyG α)
+theorem isElementaryIntegrableGenuineLrt_of_guard (Dt a d : CPoly α)
     (hsound : IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d))
     (hbridge : cResidueConstantGuardG Dt a d = true →
       allResiduesConstantLrtG (cIntegrateReducedLrtG Dt a d) = true)
@@ -33,7 +33,7 @@ theorem isElementaryIntegrableGenuineLrt_of_guard (Dt a d : CPolyG α)
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- A passing primitive LRT guard gives a genuine antiderivative with residue constancy discharged. -/
 theorem isElementaryIntegrableGenuineLrt_of_guard_of_setup [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
     (hR0 : toPolyG (cResidueResultantTowerG Dt (cHermiteReduceTowerG Dt a d).2.1
       (cHermiteReduceTowerG Dt a d).2.2) ≠ 0)
     (hsound : IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d))
@@ -44,7 +44,7 @@ theorem isElementaryIntegrableGenuineLrt_of_guard_of_setup [CharZero (CFieldSpec
 
 /-- The fully assembled primitive LRT guard criterion for genuine elementary integrability. -/
 theorem primitiveLrtDecides_of_setup [CharZero (CFieldSpec.K α)] [LrtLiouvilleFrontier α]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α) (hd0 : toPolyG d ≠ 0)
     (hR0 : toPolyG (cResidueResultantTowerG Dt (cHermiteReduceTowerG Dt a d).2.1
       (cHermiteReduceTowerG Dt a d).2.2) ≠ 0)
     (hsound : IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d)) :

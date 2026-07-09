@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -21,7 +21,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The cross-multiplied fraction-add reads as a field sum through `amG`:
 `amG(gAcc.1·gloc.2 + gloc.1·gAcc.2)/amG(gAcc.2·gloc.2) = amG gAcc.1/amG gAcc.2 + amG gloc.1/amG gloc.2`. -/
-theorem amG_toPolyG_fracAddG (gAcc gloc : CPolyG α × CPolyG α)
+theorem amG_toPolyG_fracAddG (gAcc gloc : CPoly α × CPoly α)
     (hAcc : toPolyG gAcc.2 ≠ 0) (hloc : toPolyG gloc.2 ≠ 0) :
     amG α (toPolyG (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2)))
         / amG α (toPolyG (cmulG gAcc.2 gloc.2))
@@ -37,10 +37,10 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The Hermite `g`-fold reads as `amG s.1/amG s.2 + ∑ amG glocⱼ.1/amG glocⱼ.2` through `amG`, with the
 running denominator staying nonzero, given a nonzero-denominator seed and contributions. -/
 theorem amG_toPolyG_foldl_fracAddG :
-    ∀ (glocs : List (CPolyG α × CPolyG α)) (s : CPolyG α × CPolyG α), toPolyG s.2 ≠ 0 →
+    ∀ (glocs : List (CPoly α × CPoly α)) (s : CPoly α × CPoly α), toPolyG s.2 ≠ 0 →
       (∀ g ∈ glocs, toPolyG g.2 ≠ 0) →
       let res := glocs.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+        (fun (gAcc : CPoly α × CPoly α) gloc =>
           (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)) s
       toPolyG res.2 ≠ 0 ∧
         amG α (toPolyG res.1) / amG α (toPolyG res.2)
@@ -52,7 +52,7 @@ theorem amG_toPolyG_foldl_fracAddG :
   | cons gloc rest ih =>
     intro s hs hmem
     have hgloc : toPolyG gloc.2 ≠ 0 := hmem gloc List.mem_cons_self
-    set snew : CPolyG α × CPolyG α :=
+    set snew : CPoly α × CPoly α :=
       (caddG (cmulG s.1 gloc.2) (cmulG gloc.1 s.2), cmulG s.2 gloc.2) with hsnew
     have hsnew_ne : toPolyG snew.2 ≠ 0 := by
       rw [hsnew]; show toPolyG (cmulG s.2 gloc.2) ≠ 0
@@ -70,11 +70,11 @@ theorem amG_toPolyG_foldl_fracAddG :
 
 /-- `towerFractionFieldDerivG Dt` distributes over the Hermite `g`-fold:
 `D(amG(fold).1/amG(fold).2) = D(amG s.1/amG s.2) + ∑ⱼ D(amG glocⱼ.1/amG glocⱼ.2)`. -/
-theorem towerFractionFieldDerivG_amG_fracAccG (Dt : CPolyG α) (s : CPolyG α × CPolyG α)
-    (glocs : List (CPolyG α × CPolyG α)) (hs : toPolyG s.2 ≠ 0)
+theorem towerFractionFieldDerivG_amG_fracAccG (Dt : CPoly α) (s : CPoly α × CPoly α)
+    (glocs : List (CPoly α × CPoly α)) (hs : toPolyG s.2 ≠ 0)
     (hmem : ∀ g ∈ glocs, toPolyG g.2 ≠ 0) :
     let res := glocs.foldl
-      (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+      (fun (gAcc : CPoly α × CPoly α) gloc =>
         (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)) s
     towerFractionFieldDerivG Dt (amG α (toPolyG res.1) / amG α (toPolyG res.2))
       = towerFractionFieldDerivG Dt (amG α (toPolyG s.1) / amG α (toPolyG s.2))
@@ -93,8 +93,8 @@ theorem towerFractionFieldDerivG_amG_fracAccG (Dt : CPolyG α) (s : CPolyG α ×
 /-- The per-step contributions telescope: if each `glocⱼ` satisfies the per-power identity
 `D(amG g.1/amG g.2) = amG p.1.1/amG p.1.2 − amG p.2.1/amG p.2.2` against `(L₀ :: rest).zip rest`, then
 `∑ⱼ D(amG glocⱼ) = amG L₀.1/amG L₀.2 − amG (rest.getLastD L₀).1/amG (rest.getLastD L₀).2`. -/
-theorem sum_towerFractionFieldDerivG_telescope (Dt : CPolyG α) :
-    ∀ (L₀ : CPolyG α × CPolyG α) (rest glocs : List (CPolyG α × CPolyG α)),
+theorem sum_towerFractionFieldDerivG_telescope (Dt : CPoly α) :
+    ∀ (L₀ : CPoly α × CPoly α) (rest glocs : List (CPoly α × CPoly α)),
       List.Forall₂ (fun g p =>
           towerFractionFieldDerivG Dt (amG α (toPolyG g.1) / amG α (toPolyG g.2))
             = amG α (toPolyG (Prod.fst p).1) / amG α (toPolyG (Prod.fst p).2)
@@ -127,8 +127,8 @@ theorem sum_towerFractionFieldDerivG_telescope (Dt : CPolyG α) :
 chain `L₀ :: rest` (`L₀ = a/d`, `rest.getLastD L₀ = h`), and each contribution's per-power identity
 `D(amG glocⱼ) = amG Lⱼ − amG Lⱼ₊₁`, the assembled `g = glocs.foldl (fraction-add) s` satisfies
 `D(g) + h = a/d`. -/
-theorem cHermiteReduceTowerG_telescope (Dt : CPolyG α) (s : CPolyG α × CPolyG α)
-    (L₀ : CPolyG α × CPolyG α) (rest glocs : List (CPolyG α × CPolyG α))
+theorem cHermiteReduceTowerG_telescope (Dt : CPoly α) (s : CPoly α × CPoly α)
+    (L₀ : CPoly α × CPoly α) (rest glocs : List (CPoly α × CPoly α))
     (hs : toPolyG s.2 ≠ 0) (hmem : ∀ g ∈ glocs, toPolyG g.2 ≠ 0)
     (hseed : towerFractionFieldDerivG Dt (amG α (toPolyG s.1) / amG α (toPolyG s.2)) = 0)
     (hstep : List.Forall₂ (fun g p =>
@@ -138,10 +138,10 @@ theorem cHermiteReduceTowerG_telescope (Dt : CPolyG α) (s : CPolyG α × CPolyG
         glocs ((L₀ :: rest).zip rest)) :
     towerFractionFieldDerivG Dt
         (amG α (toPolyG (glocs.foldl
-            (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+            (fun (gAcc : CPoly α × CPoly α) gloc =>
               (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)) s).1)
           / amG α (toPolyG (glocs.foldl
-            (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+            (fun (gAcc : CPoly α × CPoly α) gloc =>
               (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)) s).2))
         + amG α (toPolyG (rest.getLastD L₀).1) / amG α (toPolyG (rest.getLastD L₀).2)
       = amG α (toPolyG L₀.1) / amG α (toPolyG L₀.2) := by
@@ -155,10 +155,10 @@ theorem cHermiteReduceTowerG_telescope (Dt : CPolyG α) (s : CPolyG α × CPolyG
 
 /-- The Hermite seed `([CField.zero], [CField.one])` reads as `0/1 = 0`, so its field derivative
 vanishes: `towerFractionFieldDerivG Dt (amG 0 / amG 1) = 0`. -/
-theorem towerFractionFieldDerivG_amG_seed (Dt : CPolyG α) :
+theorem towerFractionFieldDerivG_amG_seed (Dt : CPoly α) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG ([CField.zero] : CPolyG α)) / amG α (toPolyG ([CField.one] : CPolyG α))) = 0 := by
-  have hzero : amG α (toPolyG ([CField.zero] : CPolyG α)) = 0 := by
+        (amG α (toPolyG ([CField.zero] : CPoly α)) / amG α (toPolyG ([CField.one] : CPoly α))) = 0 := by
+  have hzero : amG α (toPolyG ([CField.zero] : CPoly α)) = 0 := by
     simp only [denote, map_zero, mul_zero, add_zero]
   rw [hzero, zero_div, map_zero]
 
@@ -166,8 +166,8 @@ theorem towerFractionFieldDerivG_amG_seed (Dt : CPolyG α) :
 
 /-- The Hermite telescoping at the seed `([CField.zero], [CField.one])`: `D(g) + h = a/d` for the `g`
 accumulated by the `g`-fold, given the per-power identities `hstep` and the leftover chain `L₀ :: rest`. -/
-theorem cHermiteReduceTowerG_telescope_seed (Dt : CPolyG α)
-    (L₀ : CPolyG α × CPolyG α) (rest glocs : List (CPolyG α × CPolyG α))
+theorem cHermiteReduceTowerG_telescope_seed (Dt : CPoly α)
+    (L₀ : CPoly α × CPoly α) (rest glocs : List (CPoly α × CPoly α))
     (hmem : ∀ g ∈ glocs, toPolyG g.2 ≠ 0)
     (hstep : List.Forall₂ (fun g p =>
         towerFractionFieldDerivG Dt (amG α (toPolyG g.1) / amG α (toPolyG g.2))
@@ -176,16 +176,16 @@ theorem cHermiteReduceTowerG_telescope_seed (Dt : CPolyG α)
         glocs ((L₀ :: rest).zip rest)) :
     towerFractionFieldDerivG Dt
         (amG α (toPolyG (glocs.foldl
-            (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+            (fun (gAcc : CPoly α × CPoly α) gloc =>
               (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
-            (([CField.zero] : CPolyG α), ([CField.one] : CPolyG α))).1)
+            (([CField.zero] : CPoly α), ([CField.one] : CPoly α))).1)
           / amG α (toPolyG (glocs.foldl
-            (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+            (fun (gAcc : CPoly α × CPoly α) gloc =>
               (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
-            (([CField.zero] : CPolyG α), ([CField.one] : CPolyG α))).2))
+            (([CField.zero] : CPoly α), ([CField.one] : CPoly α))).2))
         + amG α (toPolyG (rest.getLastD L₀).1) / amG α (toPolyG (rest.getLastD L₀).2)
       = amG α (toPolyG L₀.1) / amG α (toPolyG L₀.2) :=
-  cHermiteReduceTowerG_telescope Dt (([CField.zero] : CPolyG α), ([CField.one] : CPolyG α))
-    L₀ rest glocs CPolyG.toPolyG_one_singleton_ne_zero hmem (towerFractionFieldDerivG_amG_seed Dt) hstep
+  cHermiteReduceTowerG_telescope Dt (([CField.zero] : CPoly α), ([CField.one] : CPoly α))
+    L₀ rest glocs CPoly.toPolyG_one_singleton_ne_zero hmem (towerFractionFieldDerivG_amG_seed Dt) hstep
 
 end DeepWiki.SymbolicIntegration

@@ -9,7 +9,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open Compute CPoly QFunNZG
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
@@ -17,7 +17,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `b / ds` has a nonzero proper special denominator. -/
-structure IsProperSpecialPart (b ds : CPolyG α) : Prop where
+structure IsProperSpecialPart (b ds : CPoly α) : Prop where
   /-- `ds` is nonzero according to `cisZeroG`. -/
   nz : cisZeroG ds = false
   /-- The special denominator has positive degree. -/
@@ -29,7 +29,7 @@ structure IsProperSpecialPart (b ds : CPolyG α) : Prop where
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `ds` is the monomial denominator of a proper special part `b / ds`. -/
-structure IsSpecialDenominator (b ds : CPolyG α) : Prop extends IsProperSpecialPart b ds where
+structure IsSpecialDenominator (b ds : CPoly α) : Prop extends IsProperSpecialPart b ds where
   /-- `ds` denotes its leading coefficient times `X ^ cdegG ds`. -/
   mono : toPolyG ds = Polynomial.C (CFieldSpec.toK (cleadG ds)) * Polynomial.X ^ cdegG ds
 
@@ -37,7 +37,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **`cHyperexpSpecialNegG` correctness (polynomial identity).** For a special denominator `dₛ = c·tᵐ`
 (read via `cleadG`/`cdegG`) with `c ≠ 0` and a proper numerator `b` (degree `< m`),
 `C(c) · toPolyG (cHyperexpSpecialNegG b dₛ).reverse = toPolyG b`. -/
-theorem cHyperexpSpecialNegG_reverse_smul [CRischField α] (b ds : CPolyG α)
+theorem cHyperexpSpecialNegG_reverse_smul [CRischField α] (b ds : CPoly α)
     (hsp : IsProperSpecialPart b ds) :
     Polynomial.C (CFieldSpec.toK (cleadG ds)) * toPolyG (cHyperexpSpecialNegG b ds).reverse
       = toPolyG b := by
@@ -71,16 +71,16 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The special-part connector.** For a monomial special denominator `dₛ = c·tᵐ` with `c ≠ 0` and a
 proper `b`, `⟦(cHyperexpSpecialNegG b dₛ).reverse⟧/⟦tᵐ⟧ = ⟦b/dₛ⟧` — the negative Laurent coefficients read
 the special part `b/dₛ` faithfully. Cross-multiplies the polynomial identity through `amG`. -/
-theorem cHyperexpSpecialNegG_frac [CRischField α] (b ds : CPolyG α)
+theorem cHyperexpSpecialNegG_frac [CRischField α] (b ds : CPoly α)
     (hds : IsSpecialDenominator b ds) :
     amG α (toPolyG (cHyperexpSpecialNegG b ds).reverse)
-        / amG α (toPolyG (cshiftG (cHyperexpSpecialNegG b ds).length ([CField.one] : CPolyG α)))
+        / amG α (toPolyG (cshiftG (cHyperexpSpecialNegG b ds).length ([CField.one] : CPoly α)))
       = amG α (toPolyG b) / amG α (toPolyG ds) := by
   have hlen : (cHyperexpSpecialNegG b ds).length = cdegG ds := by
     rw [cHyperexpSpecialNegG, if_neg (by simp [hds.nz]), if_neg (Nat.ne_of_gt hds.mpos),
       List.length_map, List.length_range]
   have hpoly := cHyperexpSpecialNegG_reverse_smul b ds hds.toIsProperSpecialPart
-  have hdenpow : toPolyG (cshiftG (cHyperexpSpecialNegG b ds).length ([CField.one] : CPolyG α))
+  have hdenpow : toPolyG (cshiftG (cHyperexpSpecialNegG b ds).length ([CField.one] : CPoly α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ cdegG ds := by
     rw [hlen]
     simp only [denote, mul_zero, add_zero, map_one, mul_one]
@@ -100,7 +100,7 @@ b dₛ) = some (lnum, lden)` then `D_tower(⟦lnum/lden⟧) = ⟦fp⟧ + ⟦b/d�
 antiderivative of the full special+polynomial part `fp + b/dₛ`. Composes the general Laurent soundness with
 the special-part connector. -/
 theorem cIntegrateHyperexpLaurentG_special_sound [CRischField α] [CRischFieldSpec α]
-    (Dt : CPolyG α) (η : α) (fp b ds lnum lden : CPolyG α)
+    (Dt : CPoly α) (η : α) (fp b ds lnum lden : CPoly α)
     (hDt : IsHyperexpMonomial Dt η) (hds : IsSpecialDenominator b ds)
     (hsome : cIntegrateHyperexpLaurentG η fp (cHyperexpSpecialNegG b ds) = some (lnum, lden)) :
     towerFractionFieldDerivG Dt (amG α (toPolyG lnum) / amG α (toPolyG lden))

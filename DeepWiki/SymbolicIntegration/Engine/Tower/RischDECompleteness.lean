@@ -12,7 +12,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 /-! ## The uniform field-level RDE solvability and per-level completeness predicates -/
 
@@ -100,8 +100,8 @@ coefficient. This residual bundles leading-coefficient solvability plus that agr
 every degree-matched abstract solution `q'` (`IsNoCancelSolK Dt b c' q'`, `deg q' = deg c'`), the base RDE
 `Ds + (cleadG b)·s = cleadG c'` over `β` is solvable **and** any oracle solution agrees with `q'`'s leading
 coefficient (`crischDESolve (cleadG b) (cleadG c') = some s → toK s = lc q'`). -/
-def CancelOracleAgreementPrim (Dt b : CPolyG β) : Prop :=
-  ∀ (c' : CPolyG β) (q' : (CFieldSpec.K β)[X]),
+def CancelOracleAgreementPrim (Dt b : CPoly β) : Prop :=
+  ∀ (c' : CPoly β) (q' : (CFieldSpec.K β)[X]),
     IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' →
       CFieldRDESolvable (cleadG b) (cleadG c') ∧
       (∀ s : β, CRischField.crischDESolve (cleadG b) (cleadG c') = some s →
@@ -110,7 +110,7 @@ def CancelOracleAgreementPrim (Dt b : CPolyG β) : Prop :=
 /-- `CancelPrimOracleComplete` from the IH plus the agreement residual: the level-`β` completeness
 `CRischFieldComplete β` and the per-level residual `CancelOracleAgreementPrim Dt b` together give the
 uniform primitive base-oracle completeness `CancelPrimOracleComplete Dt b`. -/
-theorem cancelPrimOracleComplete_of_complete (Dt b : CPolyG β) (hβ : CRischFieldComplete β)
+theorem cancelPrimOracleComplete_of_complete (Dt b : CPoly β) (hβ : CRischFieldComplete β)
     (hagree : CancelOracleAgreementPrim Dt b) :
     CancelPrimOracleComplete Dt b := by
   intro c' q' hsol hdeg
@@ -123,8 +123,8 @@ hyperexponential analogue of `CancelOracleAgreementPrim`, threading the shift co
 `expCoeff Dt c' b = (cleadG b) + (deg c')·η`. For every degree-matched abstract solution `q'`, the base RDE
 `Ds + (expCoeff Dt c' b)·s = cleadG c'` over `β` is solvable and any oracle solution agrees with `q'`'s
 leading coefficient. -/
-def CancelOracleAgreementExp (Dt b : CPolyG β) : Prop :=
-  ∀ (c' : CPolyG β) (q' : (CFieldSpec.K β)[X]),
+def CancelOracleAgreementExp (Dt b : CPoly β) : Prop :=
+  ∀ (c' : CPoly β) (q' : (CFieldSpec.K β)[X]),
     IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' →
       CFieldRDESolvable (expCoeff Dt c' b) (cleadG c') ∧
       (∀ s : β, CRischField.crischDESolve (expCoeff Dt c' b) (cleadG c') = some s →
@@ -132,7 +132,7 @@ def CancelOracleAgreementExp (Dt b : CPolyG β) : Prop :=
 
 /-- `CancelExpOracleComplete` from the IH plus the hyperexp agreement residual
 `CancelOracleAgreementExp Dt b`: the hyperexp analogue of `cancelPrimOracleComplete_of_complete`. -/
-theorem cancelExpOracleComplete_of_complete (Dt b : CPolyG β) (hβ : CRischFieldComplete β)
+theorem cancelExpOracleComplete_of_complete (Dt b : CPoly β) (hβ : CRischFieldComplete β)
     (hagree : CancelOracleAgreementExp Dt b) :
     CancelExpOracleComplete Dt b := by
   intro c' q' hsol hdeg
@@ -166,31 +166,31 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
-    CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
+    CPoly.cisZeroG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     IsCanonNormalizedWf f
-      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     ∃ ynum yden,
-      IsCRischDEGPolySol ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
+      IsCRischDEGPolySol ([CField.one] : CPoly β) ftildeR.1.1 ftildeR.1.2
         gtilde.1.1 gtilde.1.2 ynum yden
   /-- The consolidated inner residual-tip frontier, threaded through the IH. -/
   hinnerFront : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
-    RischDEInnerDecisionFrontierWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
+    RischDEInnerDecisionFrontierWf ([CField.one] : CPoly β) ftildeR.1.1 ftildeR.1.2
       gtilde.1.1 gtilde.1.2
   /-- The returned denominator of a successful inner solve is nonzero. -/
-  hden : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g → ∀ ynum yden : CPolyG β,
+  hden : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g → ∀ ynum yden : CPoly β,
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
-    cRischDEG ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+    cRischDEG ([CField.one] : CPoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
         = some (ynum, yden) →
-      CPolyG.cisZeroG yden = false
+      CPoly.cisZeroG yden = false
   /-- The direct soundness certificate for each solvable next-level RDE. -/
   hsound : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     RischDESoundnessWf f g

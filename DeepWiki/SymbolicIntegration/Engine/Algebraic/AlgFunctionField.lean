@@ -13,7 +13,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
@@ -21,42 +21,42 @@ variable {α : Type*} [CField α]
 
 /-- Reduce `p` modulo `f` in `α[y]/(f)`: the Euclidean remainder `cmodWf p f`, the canonical
 coset representative. -/
-def afReduce (f p : CPolyG α) : CPolyG α := cmodWf p f
+def afReduce (f p : CPoly α) : CPoly α := cmodWf p f
 
 /-- Multiplication in `α[y]/(f)`: `cmulG` then reduce `mod f` (`afReduce`). -/
-def afMul (f a b : CPolyG α) : CPolyG α := afReduce f (cmulG a b)
+def afMul (f a b : CPoly α) : CPoly α := afReduce f (cmulG a b)
 
 /-- The `i`-th power-basis element `yⁱ` of `α[y]/(f)` (`cshiftG i [1]`). -/
-def afBasisElem (i : ℕ) : CPolyG α := cshiftG i [CField.one]
+def afBasisElem (i : ℕ) : CPoly α := cshiftG i [CField.one]
 
 /-- `toPolyG (afBasisElem 1) = X`: the carrier generator `y` reads as the formal variable `X`. -/
-theorem toPolyG_afBasisElem_one [CFieldSpec α] : toPolyG (afBasisElem 1 : CPolyG α) = X := by
+theorem toPolyG_afBasisElem_one [CFieldSpec α] : toPolyG (afBasisElem 1 : CPoly α) = X := by
   rw [afBasisElem]
   simp only [denote]
   rw [pow_one]
   simp
 
 /-- Power in `α[y]/(f)`: `afPow f a k = aᵏ mod f` by `ℕ`-recursion, each step an `afMul`. -/
-def afPow (f a : CPolyG α) : ℕ → CPolyG α
+def afPow (f a : CPoly α) : ℕ → CPoly α
   | 0 => [CField.one]
   | k + 1 => afMul f a (afPow f a k)
 
 /-! ### The multiplication matrix `M_w` and the trace `Tr(w)` -/
 
-/-- The coefficient of `yⁱ` in `p : CPolyG α` (the `α`-entry at index `i`, `CField.zero` past the
+/-- The coefficient of `yⁱ` in `p : CPoly α` (the `α`-entry at index `i`, `CField.zero` past the
 end). -/
-def afCoeff (p : CPolyG α) (i : ℕ) : α := (p : List α).getD i CField.zero
+def afCoeff (p : CPoly α) (i : ℕ) : α := (p : List α).getD i CField.zero
 
 /-- The multiplication-by-`w` matrix `M_w` of `α[y]/(f)`, `n×n` over `α` (`n = deg f`): entry
 `(r, c)` is the coefficient of `yʳ` in `w·y^c mod f`. Represented as `List (List α)`. -/
-def multMatrix (f w : CPolyG α) : List (List α) :=
+def multMatrix (f w : CPoly α) : List (List α) :=
   let n := cdegG f
   (List.range n).map (fun r =>
     (List.range n).map (fun c => afCoeff (afMul f w (afBasisElem c)) r))
 
 /-- The field trace `Tr_{K(x,y)/K(x)}(w) = Σᵢ (M_w)ᵢᵢ`, the diagonal sum of the
 multiplication-by-`w` matrix. -/
-def trace (f w : CPolyG α) : α :=
+def trace (f w : CPoly α) : α :=
   let n := cdegG f
   (List.range n).foldl (fun acc i =>
     CField.add acc (afCoeff (afMul f w (afBasisElem i)) i)) CField.zero
@@ -65,11 +65,11 @@ def trace (f w : CPolyG α) : α :=
 
 /-- The trace matrix `[Tr(ωᵢ·ωⱼ)]` of a `basis` for `α[y]/(f)`: the symmetric matrix over `α`
 with `(i, j)` entry `trace f (afMul f ωᵢ ωⱼ)`, the Gram matrix of the trace form. -/
-def traceMatrix (f : CPolyG α) (basis : List (CPolyG α)) : List (List α) :=
+def traceMatrix (f : CPoly α) (basis : List (CPoly α)) : List (List α) :=
   basis.map (fun ωi => basis.map (fun ωj => trace f (afMul f ωi ωj)))
 
 /-- The power basis `[1, y, …, yⁿ⁻¹]` (`n = deg f`) of `α[y]/(f)`. -/
-def powerBasis (f : CPolyG α) : List (CPolyG α) := (List.range (cdegG f)).map afBasisElem
+def powerBasis (f : CPoly α) : List (CPoly α) := (List.range (cdegG f)).map afBasisElem
 
 /-- Drop column `j` from a row (the `α`-list with index `j` removed), the minor-extraction
 helper for `fieldDet`. -/
@@ -96,25 +96,25 @@ def fieldDet (M : List (List α)) : α := fieldDetSized M.length M
 /-- The discriminant of the monic curve `f` over `ℚ(x) = QFunNZG ℚ`: `det[Tr(ωᵢ·ωⱼ)]` for the
 power basis, computed fraction-free via `qfDet` (Bareiss over a common `ℚ[x]` denominator).
 Equal to `fieldDet (traceMatrix f (powerBasis f))`, hence to `± Resultant(f, f')`. -/
-def discriminant (f : CPolyG (QFunNZG ℚ)) : QFunNZG ℚ :=
+def discriminant (f : CPoly (QFunNZG ℚ)) : QFunNZG ℚ :=
   qfDet (traceMatrix f (powerBasis f))
 
 /-- `Resultant(f, f')` for the curve `f`: `cresultantWf` of `f` against its `y`-derivative
 `cderivG f`. Equal to `± discriminant f`. -/
-def discResultant (f : CPolyG α) : α := cresultantWf f (cderivG f)
+def discResultant (f : CPoly α) : α := cresultantWf f (cderivG f)
 
-end CPolyG
+end CPoly
 
 /-! ### The non-radical curve `f = y² − x·y − x³` over `ℚ(x)` -/
 
-open CPolyG
+open CPoly
 
-/-- The non-radical curve `f = y² − x·y − x³ ∈ ℚ(x)[y]` as a `CPolyG (QFunNZG ℚ)` `[−x³, −x, 1]`. -/
-def afNonRadF : CPolyG (QFunNZG ℚ) :=
+/-- The non-radical curve `f = y² − x·y − x³ ∈ ℚ(x)[y]` as a `CPoly (QFunNZG ℚ)` `[−x³, −x, 1]`. -/
+def afNonRadF : CPoly (QFunNZG ℚ) :=
   [qxOfNum [0, 0, 0, -1], qxOfNum [0, -1], CField.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(f)` (`afBasisElem 1 = [0, 1]`). -/
-def afNonRadY : CPolyG (QFunNZG ℚ) := afBasisElem 1
+def afNonRadY : CPoly (QFunNZG ℚ) := afBasisElem 1
 
 /-- `Tr(y) = x` on the non-radical curve `y² − xy − x³`: the field trace of the generator `y` is the
 `ℚ(x)` value `x`, nonzero unlike a radical curve. -/
@@ -154,8 +154,8 @@ theorem afNonRad_discriminant_eq_neg_resultant :
 
 /-! ### The trigonal curve `f = y³ + x·y + x` over `ℚ(x)` (`n = 3`) -/
 
-/-- The trigonal curve `f = y³ + x·y + x ∈ ℚ(x)[y]` as the `CPolyG (QFunNZG ℚ)` `[x, x, 0, 1]`. -/
-def afTrigF : CPolyG (QFunNZG ℚ) :=
+/-- The trigonal curve `f = y³ + x·y + x ∈ ℚ(x)[y]` as the `CPoly (QFunNZG ℚ)` `[x, x, 0, 1]`. -/
+def afTrigF : CPoly (QFunNZG ℚ) :=
   [qxOfNum [0, 1], qxOfNum [0, 1], CField.zero, CField.one]
 
 /-- `Tr(1) = 3` on the trigonal curve: the trace of `1` is `n = 3`, the `ℚ(x)` constant `3`. -/
@@ -179,9 +179,9 @@ theorem afTrig_discriminant_eq_resultant :
 
 /-! ### Conservativity: on a radical curve `f = y² − ρ`, `Tr(y) = 0` -/
 
-/-- The radical curve `f = y² − (x³ + 1) ∈ ℚ(x)[y]` as the `CPolyG (QFunNZG ℚ)` `[−(x³+1), 0, 1]`,
+/-- The radical curve `f = y² − (x³ + 1) ∈ ℚ(x)[y]` as the `CPoly (QFunNZG ℚ)` `[−(x³+1), 0, 1]`,
 i.e. `y = √(x³+1)` on the general carrier. -/
-def afRadF : CPolyG (QFunNZG ℚ) :=
+def afRadF : CPoly (QFunNZG ℚ) :=
   [qxOfNum [-1, 0, 0, -1], CField.zero, CField.one]
 
 /-- `Tr(y) = 0` on the radical curve `y² − (x³+1)`: a radical generator is traceless, agreeing with

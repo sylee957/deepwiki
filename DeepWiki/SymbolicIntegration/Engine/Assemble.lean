@@ -12,7 +12,7 @@ per-case `MonomialCase` instances, the reduced-stage realizations, and the end-t
 namespace DeepWiki.SymbolicIntegration
 
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -20,27 +20,27 @@ variable {α : Type*} [CField α] [CDiffField α]
 polynomial/special part as a fraction, `reducedCorrect Dt` post-processes the reduced normal part. -/
 structure MonomialCase (α : Type*) [CField α] [CDiffField α] where
   /-- Integrate the special/polynomial part `fₚ + b/dₛ` to a fraction `(snum, sden)`, or `none`. -/
-  integrateSpecial : CPolyG α → CPolyG α → CPolyG α → CPolyG α → Option (CPolyG α × CPolyG α)
+  integrateSpecial : CPoly α → CPoly α → CPoly α → CPoly α → Option (CPoly α × CPoly α)
   /-- Post-process the reduced normal result (identity for primitive; residual subtraction for hyperexp). -/
-  reducedCorrect : CPolyG α → IntegralResultG α → Option (IntegralResultG α)
+  reducedCorrect : CPoly α → IntegralResultG α → Option (IntegralResultG α)
 
 /-- Combine a special-part fraction `snum/sden` with the corrected normal result `nrm = gnum/gden + logs`:
 `(snum·gden + gnum·sden)/(sden·gden) + logs`. -/
-def combineSN (snum sden : CPolyG α) (nrm : IntegralResultG α) : IntegralResultG α :=
+def combineSN (snum sden : CPoly α) (nrm : IntegralResultG α) : IntegralResultG α :=
   let gnum := nrm.rational.1
   let gden := nrm.rational.2
   ⟨(caddG (cmulG snum gden) (cmulG gnum sden), cmulG sden gden), nrm.logs⟩
 
-end CPolyG
+end CPoly
 
-open CPolyG QFunNZG Polynomial
+open CPoly QFunNZG Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The tower fraction-field element `⟦num/den⟧ = amG(toPolyG num) / amG(toPolyG den)`. -/
-noncomputable abbrev fieldFrac (num den : CPolyG α) : RatFunc (CFieldSpec.K α) :=
+noncomputable abbrev fieldFrac (num den : CPoly α) : RatFunc (CFieldSpec.K α) :=
   amG α (toPolyG num) / amG α (toPolyG den)
 
 /-- **The abstract assembler soundness core (no concrete algorithm).** Purely from the abstract stage
@@ -49,7 +49,7 @@ that is an antiderivative of `cn/dn` (`hNrmField`), and the canonical reconstruc
 ⟦a/d⟧` (`hrecon`) — the combined result `combineSN snum sden nrm` is an antiderivative of `a/d`. This is the
 soundness proven *against the interface data*; the concrete assembler (`IntegratorAssembly.lean`) is a
 wrapper that supplies these from `canonicalRepresentationFastG` / the reduced stage. -/
-theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : CPolyG α) (nrm : IntegralResultG α)
+theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : CPoly α) (nrm : IntegralResultG α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPolyG sden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
     (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
@@ -86,13 +86,13 @@ the decidable completeness certificate lives in `LrtLiouvilleFrontier` (`LrtComp
 /-- **`a/d` is formally elementary integrable over the tower**: there is an `IntegralResultG` satisfying the
 formal identity `IsIntegralResultG`. Too weak to complete against (residues need not be constant); the genuine
 target is `IsElementaryIntegrableGenuineG`. -/
-def IsElementaryIntegrableG (Dt a d : CPolyG α) : Prop :=
+def IsElementaryIntegrableG (Dt a d : CPoly α) : Prop :=
   ∃ res : IntegralResultG α, IsIntegralResultG Dt a d res
 
 /-- **The soundness→completeness bridge.** Any `IsIntegralResultG` witness makes `a/d` elementary
 integrable. So every concrete solver's soundness realization is, verbatim, a constructive-completeness
 witness for `IsElementaryIntegrableG`. -/
-theorem IsElementaryIntegrableG.of_isIntegralResult {Dt a d : CPolyG α} {res : IntegralResultG α}
+theorem IsElementaryIntegrableG.of_isIntegralResult {Dt a d : CPoly α} {res : IntegralResultG α}
     (h : IsIntegralResultG Dt a d res) : IsElementaryIntegrableG Dt a d :=
   ⟨res, h⟩
 
@@ -101,17 +101,17 @@ coefficients (`IsGenuineIntegralResultG`). The well-posed completeness target: u
 (the formal ∃, which holds whenever the poles are rational over `K` regardless of residue-constancy), this
 requires the residues to be genuine constants, so `¬IsElementaryIntegrableGenuineG` is a meaningful
 non-integrability statement. -/
-def IsElementaryIntegrableGenuineG (Dt a d : CPolyG α) : Prop :=
+def IsElementaryIntegrableGenuineG (Dt a d : CPoly α) : Prop :=
   ∃ res : IntegralResultG α, IsGenuineIntegralResultG Dt a d res
 
 /-- Any genuine witness makes `a/d` genuinely elementary integrable. -/
-theorem IsElementaryIntegrableGenuineG.of_isGenuineIntegralResult {Dt a d : CPolyG α}
+theorem IsElementaryIntegrableGenuineG.of_isGenuineIntegralResult {Dt a d : CPoly α}
     {res : IntegralResultG α} (h : IsGenuineIntegralResultG Dt a d res) :
     IsElementaryIntegrableGenuineG Dt a d :=
   ⟨res, h⟩
 
 /-- Genuine integrability implies the formal `IsElementaryIntegrableG` (drop the residue-constancy). -/
-theorem IsElementaryIntegrableGenuineG.toIsElementaryIntegrableG {Dt a d : CPolyG α}
+theorem IsElementaryIntegrableGenuineG.toIsElementaryIntegrableG {Dt a d : CPoly α}
     (h : IsElementaryIntegrableGenuineG Dt a d) : IsElementaryIntegrableG Dt a d :=
   let ⟨res, hres⟩ := h; ⟨res, hres.1⟩
 

@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 /-! ### The `CRischFieldSpec` class
 
@@ -74,7 +74,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 omit [CRischField α] [CRischFieldSpec α] in
 /-- `towerFractionFieldDerivG Dt (amG α (C k)) = amG α (C k′)`: the tower fraction-field derivation
 of a constant is the constant of its `CDiffFieldSpec` derivative. -/
-theorem towerFractionFieldDerivG_amG_C (Dt : CPolyG α) (k : CFieldSpec.K α) :
+theorem towerFractionFieldDerivG_amG_C (Dt : CPoly α) (k : CFieldSpec.K α) :
     towerFractionFieldDerivG Dt (amG α (Polynomial.C k))
       = amG α (Polynomial.C (@Differential.deriv _ _ CDiffFieldSpec.diffK k)) := by
   rw [towerFractionFieldDerivG, amG, extendDeriv_algebraMap, Differential.implicitDeriv_C]
@@ -83,7 +83,7 @@ theorem towerFractionFieldDerivG_amG_C (Dt : CPolyG α) (k : CFieldSpec.K α) :
 `intR` embedded into the tower fraction field as `amG (C (toK intR))` differentiates back to
 `amG (C (toK R))`. Discharges the base-oracle hypothesis `hintR` of
 `ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound`. -/
-theorem crischDESolve_zero_intDeriv (Dt : CPolyG α) (R intR : α)
+theorem crischDESolve_zero_intDeriv (Dt : CPoly α) (R intR : α)
     (hsolve : CRischField.crischDESolve (CField.zero : α) R = some intR) :
     towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
       = amG α (Polynomial.C (CFieldSpec.toK R)) := by
@@ -106,14 +106,14 @@ section ClearedToField
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-open CPolyG
+open CPoly
 
 /-- Cleared-to-field layer bridge for the RDE oracle: given the cleared polynomial identity of
 `cRischDEG_rdeCleared_gen` (with `D = implicitDeriv (toPolyG Dt)`) and the denominators `fden`,
 `gden`, `yden` nonzero, the field-level Risch-DE identity
 `towerFractionFieldDerivG Dt (amG ynum/amG yden) + (amG fnum/amG fden)·(amG ynum/amG yden)
 = amG gnum/amG gden` holds over `RatFunc (CFieldSpec.K α)`. -/
-theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : CPolyG α)
+theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : CPoly α)
     (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
     (hcleared : amG α (toPolyG gden) * amG α (toPolyG fden)
           * (amG α (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum)) * amG α (toPolyG yden)

@@ -12,7 +12,7 @@ for the Hermite half). -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG Polynomial
+open CPoly QFunNZG Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
@@ -21,7 +21,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- Combine a special-part fraction `snum/sden` with a reduced LRT result `r = gnum/gden + symbolic logs`:
 `(snum·gden + gnum·sden)/(sden·gden) + logs`. The LRT analogue of `combineSN` (same rational combine, symbolic
 log list carried through). -/
-def combineSNLrt (snum sden : CPolyG α) (r : LrtResultG α) : LrtResultG α :=
+def combineSNLrt (snum sden : CPoly α) (r : LrtResultG α) : LrtResultG α :=
   ⟨(caddG (cmulG snum r.rational.2) (cmulG r.rational.1 sden), cmulG sden r.rational.2), r.logs⟩
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -38,7 +38,7 @@ supplies), plus the reduced LRT soundness `IsIntegralResultLrtG Dt cn dn r` (`hN
 result `combineSNLrt snum sden r` is an antiderivative of `a/d` over **every** algebraically-closed
 differential extension `E`. The base-change of `hspecK` to `E` (`ratFuncBaseChange`) is the only step beyond
 `combineSN_isIntegralResult`. -/
-theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : CPolyG α)
+theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : CPoly α)
     (r : LrtResultG α) (hsden : toPolyG sden ≠ 0) (hgden : toPolyG r.rational.2 ≠ 0)
     (hspecK : towerFractionFieldDerivG Dt (fieldFrac snum sden) + fieldFrac cn dn = fieldFrac a d)
     (hNrmField : IsIntegralResultLrtG Dt cn dn r) :
@@ -72,7 +72,7 @@ special part via the case hook `C.integrateSpecial` (rational, shared with the r
 normal part via the root-free `cIntegrateReducedLrtG` → combined with `combineSNLrt`. The LRT analogue of
 `cIntegrateCase` (no candidate sweep, no `reducedCorrect` post-processing: the primitive LRT reduced
 integrator is direct). -/
-def cIntegrateCaseLrt [CFracGcdCoreWf α] (C : MonomialCase α) (Dt a d : CPolyG α) :
+def cIntegrateCaseLrt [CFracGcdCoreWf α] (C : MonomialCase α) (Dt a d : CPoly α) :
     Option (LrtResultG α) :=
   -- **Primitive-case runtime guard** (`Dθ ∈ k`, i.e. `deg Dt = 0`): the LRT reduced integrator is
   -- primitive-specific, so a successful run *decides* `deg Dt = 0` — discharging `hDt0` from the branch
@@ -92,7 +92,7 @@ The LRT analogue of `cIntegrateCase_sound`; the reduced-denominator nonvanishing
 (`toPolyG_cHermiteReduceTowerG_den_ne_zero` from `dₙ ≠ 0`). -/
 theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
     (hgcd : GcdFFCorrect (α := α))
-    (C : MonomialCase α) (Dt a d : CPolyG α) (res : LrtResultG α) (snum sden : CPolyG α)
+    (C : MonomialCase α) (Dt a d : CPoly α) (res : LrtResultG α) (snum sden : CPoly α)
     (specialVal : RatFunc (CFieldSpec.K α)) (hd0 : toPolyG d ≠ 0)
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden))
     (hsome : cIntegrateCaseLrt C Dt a d = some res) (hsden : toPolyG sden ≠ 0)

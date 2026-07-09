@@ -66,14 +66,14 @@ instance and the general structure theorem; the rational + transcendental-log ca
 latter conditional on the new-monomial condition, in `Sources.Doi_10_1007_b138171.Liouville`), the full
 hyperexponential/hypertangent integration (§5.9–§5.10), and the structural §5.7/§5.11/§5.12 results. -/
 
-open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPolyG
+open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPoly
 
 namespace DeepWiki.Si
 
 /-! ### Generic-carrier input builders (catalog-local)
 
 The §5 smoke examples over the generic ℚ(x) = `QFunNZG ℚ` carrier read their ℚ(x) coefficients as
-num/den lists over `CPolyG ℚ = List ℚ`. These builders (`qConst5`/`qFrac5`) wrap a num/den pair as a
+num/den lists over `CPoly ℚ = List ℚ`. These builders (`qConst5`/`qFrac5`) wrap a num/den pair as a
 `QFunNZG ℚ` element (the `ComputableTowerRefoundProbe` construction). They are catalog infrastructure, not
 book items. -/
 
@@ -82,7 +82,7 @@ book items. -/
 def qConst5 (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element, with `den ≠ 0` discharged by `native_decide`. -/
-def qFrac5 (num den : List ℚ) (h : CPolyG.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
+def qFrac5 (num den : List ℚ) (h : CPoly.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 
 /-! ## §5.3 The Hermite Reduction (transcendental) — computable + validated -/
@@ -98,21 +98,21 @@ noncomputable abbrev alg_5_3_hermiteReduce := cHermiteReduceTowerG (α := QFunNZ
 satisfies the Hermite identity `D(g) + h = f` over the generic ℚ(x)[t] (cleared form, `native_decide`);
 the multiplicity-`2` factor `t` is lowered to the squarefree residual denominator `t`. -/
 theorem ex_5_3_1 :
-    (let Dt : CPolyG (QFunNZG ℚ) := [qConst5 1, qConst5 0, qConst5 1]      -- `Dt = t²+1`
-     let a : CPolyG (QFunNZG ℚ) := [qConst5 1]                           -- `a = 1`
-     let d : CPolyG (QFunNZG ℚ) := [qConst5 0, qConst5 0, qConst5 1]       -- `d = t²`
-     let res := CPolyG.cHermiteReduceTowerG Dt a d
+    (let Dt : CPoly (QFunNZG ℚ) := [qConst5 1, qConst5 0, qConst5 1]      -- `Dt = t²+1`
+     let a : CPoly (QFunNZG ℚ) := [qConst5 1]                           -- `a = 1`
+     let d : CPoly (QFunNZG ℚ) := [qConst5 0, qConst5 0, qConst5 1]       -- `d = t²`
+     let res := CPoly.cHermiteReduceTowerG Dt a d
      let gnum := res.1.1; let gden := res.1.2
      let hNum := res.2.1; let hDen := res.2.2
-     let Dgnum := CPolyG.cmonomialDeriv Dt gnum
-     let Dgden := CPolyG.cmonomialDeriv Dt gden
-     let gprimeNum := CPolyG.csubG (CPolyG.cmulG Dgnum gden) (CPolyG.cmulG gnum Dgden)
-     let gden2 := CPolyG.cmulG gden gden
+     let Dgnum := CPoly.cmonomialDeriv Dt gnum
+     let Dgden := CPoly.cmonomialDeriv Dt gden
+     let gprimeNum := CPoly.csubG (CPoly.cmulG Dgnum gden) (CPoly.cmulG gnum Dgden)
+     let gden2 := CPoly.cmulG gden gden
      -- `D(g) + h − f = 0` ⟺ `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`
-     let lhs := CPolyG.cmulG
-       (CPolyG.caddG (CPolyG.cmulG gprimeNum hDen) (CPolyG.cmulG hNum gden2)) d
-     let rhs := CPolyG.cmulG a (CPolyG.cmulG gden2 hDen)
-     CPolyG.cisZeroG (CPolyG.csubG lhs rhs)) = true := by native_decide
+     let lhs := CPoly.cmulG
+       (CPoly.caddG (CPoly.cmulG gprimeNum hDen) (CPoly.cmulG hNum gden2)) d
+     let rhs := CPoly.cmulG a (CPoly.cmulG gden2 hDen)
+     CPoly.cisZeroG (CPoly.csubG lhs rhs)) = true := by native_decide
 
 /-! ## §5.4 The Polynomial Reduction — computable + validated -/
 
@@ -129,14 +129,14 @@ noncomputable abbrev alg_5_4_polynomialReduce := @cPolyReduceTower (QFunNZG ℚ)
 `δ = 2`) to `(q, r) = ((1/2)t², −t)` satisfying the §5.4 reduction identity `D(q) + r = p` with the
 remainder `t`-degree `deg(r) = 1 < δ = 2` over the generic ℚ(x)[t] (`native_decide`). -/
 theorem ex_5_4_1 :
-    (let Dt : CPolyG (QFunNZG ℚ) := [qConst5 1, qConst5 0, qConst5 1]       -- `Dt = t²+1`
-     let p : CPolyG (QFunNZG ℚ) := [qConst5 0, qConst5 0, qConst5 0, qConst5 1]  -- `p = t³`
-     let res := CPolyG.cPolyReduceTower Dt 8 p
+    (let Dt : CPoly (QFunNZG ℚ) := [qConst5 1, qConst5 0, qConst5 1]       -- `Dt = t²+1`
+     let p : CPoly (QFunNZG ℚ) := [qConst5 0, qConst5 0, qConst5 0, qConst5 1]  -- `p = t³`
+     let res := CPoly.cPolyReduceTower Dt 8 p
      let q := res.1; let r := res.2
-     let Dq := CPolyG.cmonomialDeriv Dt q
+     let Dq := CPoly.cmonomialDeriv Dt q
      -- `D(q) + r − p = 0` and the reduced remainder has `t`-degree `1 < δ(t) = 2`
-     CPolyG.cisZeroG (CPolyG.csubG (CPolyG.caddG Dq r) p) = true
-       ∧ CPolyG.cdegG r = 1) := by native_decide
+     CPoly.cisZeroG (CPoly.csubG (CPoly.caddG Dq r) p) = true
+       ∧ CPoly.cdegG r = 1) := by native_decide
 
 /-! ## §5.6 The Residue Criterion — computable + validated -/
 
@@ -159,17 +159,17 @@ residue resultant `cResidueResultantTowerG` has monic part `z³−xz²−z/4+x/4
 ℚ(x) scalar) and the log arguments `cLogArgTowerG … (±1/2) = t ± x` (the residues `±1/2`), all checked
 over the generic ℚ(x)[t] (`native_decide`). -/
 theorem ex_5_6_2 :
-    (let Dt : CPolyG (QFunNZG ℚ) := [qFrac5 [1] [0, 1]]                       -- `Dt = 1/x`
-     let a : CPolyG (QFunNZG ℚ) := [qFrac5 [0, 0, -1] [1], qConst5 (-1), qConst5 2]  -- `a = 2t²−t−x²`
-     let d : CPolyG (QFunNZG ℚ) := [qConst5 0, qFrac5 [0, 0, -1] [1], qConst5 0, qConst5 1]  -- `d = t³−x²t`
-     let resMonic : CPolyG (QFunNZG ℚ) :=                                    -- `z³−xz²−z/4+x/4`
+    (let Dt : CPoly (QFunNZG ℚ) := [qFrac5 [1] [0, 1]]                       -- `Dt = 1/x`
+     let a : CPoly (QFunNZG ℚ) := [qFrac5 [0, 0, -1] [1], qConst5 (-1), qConst5 2]  -- `a = 2t²−t−x²`
+     let d : CPoly (QFunNZG ℚ) := [qConst5 0, qFrac5 [0, 0, -1] [1], qConst5 0, qConst5 1]  -- `d = t³−x²t`
+     let resMonic : CPoly (QFunNZG ℚ) :=                                    -- `z³−xz²−z/4+x/4`
        [qFrac5 [0, 1] [4], qConst5 (-1/4), qFrac5 [0, -1] [1], qConst5 1]
-     let argPlus : CPolyG (QFunNZG ℚ) := [qFrac5 [0, 1] [1], qConst5 1]        -- `t + x`
-     let argMinus : CPolyG (QFunNZG ℚ) := [qFrac5 [0, -1] [1], qConst5 1]      -- `t − x`
-     CPolyG.cisZeroG (CPolyG.csubG
-         (CPolyG.cmonicG (CPolyG.cResidueResultantTowerG Dt a d)) resMonic)
-     ∧ CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cLogArgTowerG Dt a d (qConst5 (1/2))) argPlus)
-     ∧ CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cLogArgTowerG Dt a d (qConst5 (-1/2))) argMinus))
+     let argPlus : CPoly (QFunNZG ℚ) := [qFrac5 [0, 1] [1], qConst5 1]        -- `t + x`
+     let argMinus : CPoly (QFunNZG ℚ) := [qFrac5 [0, -1] [1], qConst5 1]      -- `t − x`
+     CPoly.cisZeroG (CPoly.csubG
+         (CPoly.cmonicG (CPoly.cResidueResultantTowerG Dt a d)) resMonic)
+     ∧ CPoly.cisZeroG (CPoly.csubG (CPoly.cLogArgTowerG Dt a d (qConst5 (1/2))) argPlus)
+     ∧ CPoly.cisZeroG (CPoly.csubG (CPoly.cLogArgTowerG Dt a d (qConst5 (-1/2))) argMinus))
     := by native_decide
 
 /-! ## §5.8 The Primitive Case — computable + validated (constant-coefficient sub-case) -/
@@ -188,11 +188,11 @@ noncomputable abbrev alg_5_8_primitivePolyIntegrate := @cPrimitivePolyIntegrate 
 (`t = log x`, `Dt = 1/x`) returns `q = (1/3)t³` with `rem = 0`, satisfying `D(q) + rem = p` over the
 generic ℚ(x)[t] (`native_decide`) — i.e. `∫ (log x)²/x dx = (log x)³/3`. -/
 theorem ex_5_8_primitive :
-    (let Dt : CPolyG (QFunNZG ℚ) := [qFrac5 [1] [0, 1]]                       -- `Dt = 1/x`
-     let p : CPolyG (QFunNZG ℚ) := [qConst5 0, qConst5 0, qFrac5 [1] [0, 1]]  -- `p = (1/x)·t²`
-     let res := CPolyG.cPrimitivePolyIntegrate Dt 8 p
+    (let Dt : CPoly (QFunNZG ℚ) := [qFrac5 [1] [0, 1]]                       -- `Dt = 1/x`
+     let p : CPoly (QFunNZG ℚ) := [qConst5 0, qConst5 0, qFrac5 [1] [0, 1]]  -- `p = (1/x)·t²`
+     let res := CPoly.cPrimitivePolyIntegrate Dt 8 p
      let q := res.1; let rem := res.2
-     let Dq := CPolyG.cmonomialDeriv Dt q
-     CPolyG.cisZeroG (CPolyG.csubG (CPolyG.caddG Dq rem) p)) = true := by native_decide
+     let Dq := CPoly.cmonomialDeriv Dt q
+     CPoly.cisZeroG (CPoly.csubG (CPoly.caddG Dq rem) p)) = true := by native_decide
 
 end DeepWiki.Si

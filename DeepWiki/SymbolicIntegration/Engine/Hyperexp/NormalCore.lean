@@ -12,7 +12,7 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 
-namespace CPolyG
+namespace CPoly
 
 /-! ### The hyperexponential residual `R = η · ∑ᵢ cᵢ`
 
@@ -23,7 +23,7 @@ variable {α : Type*} [CField α]
 
 /-- Hyperexponential normal-part residual `cHyperexpResidualG η logs = η · ∑ᵢ cᵢ ∈ α`, the amount by which
 the log part overshoots the normal integrand (`cᵢ` the `logs` coefficients). -/
-def cHyperexpResidualG (η : α) (logs : List (α × CPolyG α)) : α :=
+def cHyperexpResidualG (η : α) (logs : List (α × CPoly α)) : α :=
   CField.mul η (logs.foldl (fun acc cv => CField.add acc cv.1) CField.zero)
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
@@ -36,7 +36,7 @@ base, and subtracts it. -/
 /-- Hyperexponential normal-part integral `cIntegrateHyperexpNormalG Dt a d cands`: run
 `cIntegrateReducedG`, read `R = η·∑ᵢ cᵢ`, integrate `∫R` by `crischDESolve 0 R`, and subtract it from the
 rational part (same logs); `none` if `∫R` is non-elementary. -/
-def cIntegrateHyperexpNormalG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+def cIntegrateHyperexpNormalG (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
     Option (IntegralResultG α) :=
   let red := cIntegrateReducedG Dt a d cands
   let η : α := cExpEtaG Dt
@@ -51,7 +51,7 @@ def cIntegrateHyperexpNormalG (Dt : CPolyG α) (a d : CPolyG α) (cands : List �
 /-- Full hyperexponential integral `cIntegrateHyperexpFullG Dt a d cands`: canonical-split
 `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrate the Laurent part by `cIntegrateHyperexpLaurentG` and the normal part
 by `cIntegrateHyperexpNormalG`, and combine the rational parts; `none` if either is non-elementary. -/
-def cIntegrateHyperexpFullG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+def cIntegrateHyperexpFullG (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
     Option (IntegralResultG α) :=
   let η : α := cExpEtaG Dt
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt a d
@@ -67,6 +67,6 @@ def cIntegrateHyperexpFullG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
       let den := cmulG lden gden
       some ⟨(num, den), nrm.logs⟩
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

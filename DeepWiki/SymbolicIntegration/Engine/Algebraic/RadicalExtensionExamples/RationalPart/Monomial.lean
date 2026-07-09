@@ -10,7 +10,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-! #### `θ = log v` validates: degree-lowering `∫ C/y` over `ℚ(x)[log x]`, `y = √(log x)`
 
@@ -27,25 +27,25 @@ def logDt : QFunNZG ℚ := qxOfFrac [1] [0, 1] (by decide)
 def logGlead : QFunNZG ℚ := qxOfFrac [1] [0, 2] (by decide)
 
 /-- The radicand `f = θ = log x ∈ ℚ(x)[θ]` (`y² = log x`), the `θ`-polynomial `[0, 1]`. -/
-def logF : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one]
+def logF : CPoly (QFunNZG ℚ) := [CField.zero, CField.one]
 
 /-- `g = 1/(2x)` as a degree-`0`-in-θ element of `ℚ(x)[θ]` (`(f/y)' = g/y`), `[1/(2x)]`. -/
-def logG : CPolyG (QFunNZG ℚ) := [logGlead]
+def logG : CPoly (QFunNZG ℚ) := [logGlead]
 
 /-- The numerator `C = (5/(2x))θ² + θ ∈ ℚ(x)[θ]` (`deg_θ C = 2 ≥ m`), with leading coefficient
 `5/(2x) = (j+1)θ' + lcf(g)` chosen so the constant `b = 1` solves eq. 5. -/
-def logC : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one, qxOfFrac [5] [0, 2] (by decide)]
+def logC : CPoly (QFunNZG ℚ) := [CField.zero, CField.one, qxOfFrac [5] [0, 2] (by decide)]
 
 /-- The `θ`-derivative as a polynomial `[θ'] = [1/x] ∈ ℚ(x)[θ]`, the `Dt` for `cmonomialDeriv`. -/
-def logDtPoly : CPolyG (QFunNZG ℚ) := [logDt]
+def logDtPoly : CPoly (QFunNZG ℚ) := [logDt]
 
 /-- The solved `θ = log v` leading-coefficient cofactor `B = b·θ² = 1·θ²` (`b = lcf(C)/bracket =
 (5/(2x))/(5/(2x)) = 1`, a constant). -/
-def logB : CPolyG (QFunNZG ℚ) := radCase3CofactorGen logDt logF logG logC
+def logB : CPoly (QFunNZG ℚ) := radCase3CofactorGen logDt logF logG logC
 
 /-- The `θ = log v` residual `D = B'f + Bg − C`, with `B' = cmonomialDeriv [θ'] B` the full log-monomial
 derivative — expected `−θ` (degree `1 < deg_θ C = 2`). -/
-def logD : CPolyG (QFunNZG ℚ) :=
+def logD : CPoly (QFunNZG ℚ) :=
   radCase3Residual logF logG logB logC (cmonomialDeriv logDtPoly logB)
 
 /-- The `log` cofactor is the constant monomial `B = θ²`: `b = (5/(2x))/((2)(1/x) + 1/(2x)) = 1` at
@@ -75,28 +75,28 @@ A 2-level exponential tower: base `ℚ(x)`, monomial `θ = exp x` (`θ' = θ`), 
 `B = [−1]`, residual `D = −1/2`, dropping `k = 1 → 0`. -/
 
 /-- The radicand `f = θ + 1 = eˣ + 1 ∈ ℚ(x)[θ]` (`y² = eˣ + 1`, `θ ∤ f`, `f₀ = 1`), `[1, 1]`. -/
-def expF : CPolyG (QFunNZG ℚ) := [CField.one, CField.one]
+def expF : CPoly (QFunNZG ℚ) := [CField.one, CField.one]
 
 /-- `g = (1/2)θ ∈ ℚ(x)[θ]` for `f = θ+1`, `θ = exp x` (`(f/y)' = g/y`, `g₀ = 0`), `[0, 1/2]`. -/
-def expG : CPolyG (QFunNZG ℚ) := [CField.zero, qxOfNum [1/2]]
+def expG : CPoly (QFunNZG ℚ) := [CField.zero, qxOfNum [1/2]]
 
 /-- The numerator `C = θ + 1 ∈ ℚ(x)[θ]` (`c₀ = 1`), `[1, 1]`. -/
-def expC : CPolyG (QFunNZG ℚ) := [CField.one, CField.one]
+def expC : CPoly (QFunNZG ℚ) := [CField.one, CField.one]
 
 /-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CField.one` of `QFunNZG ℚ`. -/
 def expVder : QFunNZG ℚ := CField.one
 
 /-- `θ' = v'·θ = θ` as the `Dt` polynomial `[0, 1] ∈ ℚ(x)[θ]` for `cmonomialDeriv` (`θ = exp x` is a
 factor of its own derivative). -/
-def expDtPoly : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one]
+def expDtPoly : CPoly (QFunNZG ℚ) := [CField.zero, CField.one]
 
 /-- The solved `θ = exp v` `C/(θy)` cofactor `B = [b₀] = [−1]` (`b₀ = c₀/(g₀ − kv'f₀) = 1/(0−1) = −1`,
 a constant). -/
-def expB : CPolyG (QFunNZG ℚ) := radExpCofactor 1 expVder expF expG expC
+def expB : CPoly (QFunNZG ℚ) := radExpCofactor 1 expVder expF expG expC
 
 /-- The `θ = exp v` `C/(θy)` residual `D = ((B'f + Bg − kv'Bf) − C)/θ`, `B' = cmonomialDeriv [θ] B` —
 expected `−1/2` (the multiplicity dropped `k = 1 → 0`). -/
-def expD : CPolyG (QFunNZG ℚ) :=
+def expD : CPoly (QFunNZG ℚ) :=
   radExpResidual 1 expVder expF expG expB expC (cmonomialDeriv expDtPoly expB)
 
 /-- The `exp` cofactor is the constant `B = [−1]`: `b₀ = 1/(0 − 1·1·1) = −1` over `ℚ(x)[eˣ]`. -/

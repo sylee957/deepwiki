@@ -12,24 +12,24 @@ carriers; correctness is proved through `toPolyG` over `K[X]`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
 /-- Bézout cofactors `cbezoutOneWf a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`. -/
-def cbezoutOneWf (a b : CPolyG α) : CPolyG α × CPolyG α :=
+def cbezoutOneWf (a b : CPoly α) : CPoly α × CPoly α :=
   let (g, s, t) := cgcdWf a b
   let ginv := CField.inv (cleadG g)
   (cscaleG ginv s, cscaleG ginv t)
 
 /-- Bézout split `cextendedEuclideanSplitWf dₙ dₛ r u w = (b, c)` along `dₛ`. -/
-def cextendedEuclideanSplitWf (dn ds r u w : CPolyG α) : CPolyG α × CPolyG α :=
+def cextendedEuclideanSplitWf (dn ds r u w : CPoly α) : CPoly α × CPoly α :=
   let ur := cmulG u r
   let (quo, rem) := cdivmodWf ur ds
   (rem, caddG (cmulG w r) (cmulG quo dn))
 
 /-- Generic Diophantine solver `cdiophantineG p q rhs = (b, c)` for `b·p + c·q = rhs`. -/
-def cdiophantineG (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
+def cdiophantineG (p q rhs : CPoly α) : CPoly α × CPoly α :=
   let (g, s, t) := cgcdWf p q
   let ginv := CField.inv (cleadG g)
   let S := cscaleG ginv (cmulG rhs s)
@@ -43,7 +43,7 @@ variable [CFieldSpec α]
 /-! ### Correctness of the Bézout/Diophantine leaves -/
 
 /-- `cbezoutOneWf` solves the normalized Bézout identity over `K[X]` in the coprime case. -/
-theorem toPolyG_cbezoutOneWf (a b : CPolyG α)
+theorem toPolyG_cbezoutOneWf (a b : CPoly α)
     (hgdeg : (toPolyG (cgcdWf a b).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf a b).1 ≠ 0) :
     toPolyG (cbezoutOneWf a b).1 * toPolyG a
@@ -75,7 +75,7 @@ theorem toPolyG_cbezoutOneWf (a b : CPolyG α)
   rw [hcombine, hgC, ← Polynomial.C_mul, inv_mul_cancel₀ hlead_ne, Polynomial.C_1]
 
 /-- `cextendedEuclideanSplitWf` solves the split Bézout equation over `K[X]`. -/
-theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
+theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPoly α)
     (hds0 : cnormG ds ≠ [])
     (hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1) :
     toPolyG (cextendedEuclideanSplitWf dn ds r u w).1 * toPolyG dn
@@ -104,7 +104,7 @@ theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
   rw [hkey, hbez, one_mul]
 
 /-- `cextendedEuclideanSplitWf`'s first cofactor is proper: `deg b < deg dₛ`. -/
-theorem cextendedEuclideanSplitWf_fst_degree_lt (dn ds r u w : CPolyG α)
+theorem cextendedEuclideanSplitWf_fst_degree_lt (dn ds r u w : CPoly α)
     (hds : cnormG ds ≠ []) :
     (toPolyG (cextendedEuclideanSplitWf dn ds r u w).1).degree < (toPolyG ds).degree := by
   have hfst : (cextendedEuclideanSplitWf dn ds r u w).1 = cmodWf (cmulG u r) ds := by
@@ -115,7 +115,7 @@ theorem cextendedEuclideanSplitWf_fst_degree_lt (dn ds r u w : CPolyG α)
   exact cmodWf_length_lt (cmulG u r) ds hds
 
 /-- `cextendedEuclideanSplitWf`'s second cofactor is proper: `deg c < deg dₙ`. -/
-theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : CPolyG α)
+theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : CPoly α)
     (hds : cnormG ds ≠ []) (hdn : cnormG dn ≠ [])
     (hsplit : toPolyG d = toPolyG ds * toPolyG dn)
     (hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1)
@@ -144,7 +144,7 @@ theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : CPolyG α)
   exact (WithBot.add_lt_add_iff_right hdsdeg).mp hcdsdeg
 
 /-- `cdiophantineG` solves the generic Diophantine equation over `K[X]` for coprime inputs. -/
-theorem toPolyG_cdiophantineG (p q rhs : CPolyG α)
+theorem toPolyG_cdiophantineG (p q rhs : CPoly α)
     (hq0 : cnormG q ≠ [])
     (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf p q).1 ≠ 0) :
@@ -198,7 +198,7 @@ theorem toPolyG_cdiophantineG (p q rhs : CPolyG α)
     _ = toPolyG rhs := by rw [hCcancel, one_mul]
 
 /-- `cdiophantineG`'s first cofactor is proper: `deg (cdiophantineG p q rhs).1 < deg q` for nonzero `q`. -/
-theorem cdiophantineG_fst_degree_lt (p q rhs : CPolyG α) (hq : cnormG q ≠ []) :
+theorem cdiophantineG_fst_degree_lt (p q rhs : CPoly α) (hq : cnormG q ≠ []) :
     (toPolyG (cdiophantineG p q rhs).1).degree < (toPolyG q).degree := by
   set g := (cgcdWf p q).1 with hg
   set s := (cgcdWf p q).2.1 with hs
@@ -211,15 +211,15 @@ theorem cdiophantineG_fst_degree_lt (p q rhs : CPolyG α) (hq : cnormG q ≠ [])
   rw [cnormG_idem]
   exact cmodWf_length_lt S q hq
 
-end CPolyG
+end CPoly
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
 /-- Inner Hermite loop over a squarefree factor `v`, driven by a downward multiplicity counter. -/
-def cHermiteReduceTowerInnerWf (Dt : CPolyG α) (v u : CPolyG α) :
-    ℕ → CPolyG α → CPolyG α × CPolyG α → (CPolyG α × CPolyG α) × CPolyG α
+def cHermiteReduceTowerInnerWf (Dt : CPoly α) (v u : CPoly α) :
+    ℕ → CPoly α → CPoly α × CPoly α → (CPoly α × CPoly α) × CPoly α
   | 0, a, g => (g, a)
   | j + 1, a, g =>
     let jval : α := cnatCastG (j + 1)                                 -- `j` as a field element
@@ -232,6 +232,6 @@ def cHermiteReduceTowerInnerWf (Dt : CPolyG α) (v u : CPolyG α) :
     let a' := csubG (cscaleG (CField.neg jval) c) (cmulG u (cmonomialDeriv Dt b))  -- `−j·c − u·Db`
     cHermiteReduceTowerInnerWf Dt v u j a' g'
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

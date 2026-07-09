@@ -8,7 +8,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-- The `3×3` Cauchy matrix over `ℚ(x)` `H[i][j] = 1/(x + i + j + 1)`, with denominators `x+1, …, x+5`;
 `fieldDet` over it carries an unreduced `ℚ(x)` value whose denominator balloons. -/
@@ -20,8 +20,8 @@ def bareissCauchyQ : List (List (QFunNZG ℚ)) :=
 /-- The Cauchy matrix cleared to `ℚ[x]` `H[i][j] = D/(x + i + j + 1)` with common denominator
 `D = (x+1)(x+2)(x+3)(x+4)(x+5)`; each entry is a degree-`4` polynomial, so `bareissDet` runs over
 `ℚ[x]`. -/
-def bareissCauchyCleared : List (List (CPolyG ℚ)) :=
-  let D : CPolyG ℚ := cmulG (cmulG (cmulG (cmulG [1, 1] [2, 1]) [3, 1]) [4, 1]) [5, 1]
+def bareissCauchyCleared : List (List (CPoly ℚ)) :=
+  let D : CPoly ℚ := cmulG (cmulG (cmulG (cmulG [1, 1] [2, 1]) [3, 1]) [4, 1]) [5, 1]
   [[cdivWf D [1, 1], cdivWf D [2, 1], cdivWf D [3, 1]],
    [cdivWf D [2, 1], cdivWf D [3, 1], cdivWf D [4, 1]],
    [cdivWf D [3, 1], cdivWf D [4, 1], cdivWf D [5, 1]]]

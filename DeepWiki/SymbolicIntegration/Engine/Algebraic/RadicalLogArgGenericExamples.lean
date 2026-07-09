@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-! ### Generic solver over the rational base
 
@@ -59,9 +59,9 @@ theorem genArg_arcsinh_matches_closed_form :
 ((θ+2) − 2y)/θ`, so `N = (θ+2) − 2y`, `D = θ`. The whole solve runs over `β = ℚ(x)`, and the computed
 `u = N/θ` passes the log-derivative certificate. -/
 
-/-- The fixed denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as a `CPolyG β` (`β = ℚ(x)`): the polynomial `θ = t₁`,
+/-- The fixed denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as a `CPoly β` (`β = ℚ(x)`): the polynomial `θ = t₁`,
 i.e. `[0, 1]`. -/
-def expDenTheta : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one]
+def expDenTheta : CPoly (QFunNZG ℚ) := [CField.zero, CField.one]
 
 /-- The radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)(eˣ)` for the generic solve (the carrier value `expRadicand`). -/
 def expArgRho : Lvl2 := expRadicand

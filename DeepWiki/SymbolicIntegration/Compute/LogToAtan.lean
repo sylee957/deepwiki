@@ -11,34 +11,34 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-- Dense coefficient list over `ℚ` (index = degree, low to high): `CPolyQ := CPolyG ℚ`, the
+/-- Dense coefficient list over `ℚ` (index = degree, low to high): `CPolyQ := CPoly ℚ`, the
 computable polynomial carrier (defeq to `List ℚ`). -/
-abbrev CPolyQ := CPolyG ℚ
+abbrev CPolyQ := CPoly ℚ
 
 /-- Normalize a `CPolyQ` by stripping trailing (high-degree) zero coefficients (zero polynomial
 becomes `[]`). -/
-def cnorm : CPolyQ → CPolyQ := CPolyG.cnormG
+def cnorm : CPolyQ → CPolyQ := CPoly.cnormG
 
 /-- Coefficientwise addition of two `CPolyQ`s (the shorter is zero-extended implicitly). -/
-def cadd : CPolyQ → CPolyQ → CPolyQ := CPolyG.caddG
+def cadd : CPolyQ → CPolyQ → CPolyQ := CPoly.caddG
 
 /-- Negation of a `CPolyQ`, coefficientwise. -/
-def cneg (p : CPolyQ) : CPolyQ := CPolyG.cnegG p
+def cneg (p : CPolyQ) : CPolyQ := CPoly.cnegG p
 
 /-- Subtraction of `CPolyQ`s, `p − q := p + (−q)`. -/
 def csub (p q : CPolyQ) : CPolyQ := cadd p (cneg q)
 
 /-- Scalar multiplication of a `CPolyQ` by `c : ℚ`, coefficientwise. -/
-def cscale (c : ℚ) (p : CPolyQ) : CPolyQ := CPolyG.cscaleG c p
+def cscale (c : ℚ) (p : CPolyQ) : CPolyQ := CPoly.cscaleG c p
 
 /-- Degree shift `cshift k p = x^k · p`: prepend `k` zero coefficients. -/
-def cshift : ℕ → CPolyQ → CPolyQ := CPolyG.cshiftG
+def cshift : ℕ → CPolyQ → CPolyQ := CPoly.cshiftG
 
 /-- Polynomial multiplication of `CPolyQ`s (schoolbook convolution via `cshift`/`cscale`). -/
-def cmul : CPolyQ → CPolyQ → CPolyQ := CPolyG.cmulG
+def cmul : CPolyQ → CPolyQ → CPolyQ := CPoly.cmulG
 
 /-- Leading coefficient of a `CPolyQ` (top nonzero coefficient; `0` for the zero polynomial). -/
-def clead (p : CPolyQ) : ℚ := CPolyG.cleadG p
+def clead (p : CPolyQ) : ℚ := CPoly.cleadG p
 
 /-- Zero test for a `CPolyQ`: `true` iff it normalizes to `[]`. -/
 def cisZero (p : CPolyQ) : Bool := cnorm p == []
@@ -133,10 +133,10 @@ noncomputable def toPoly : CPolyQ → ℚ[X]
 /-- `toPoly` is additive: `toPoly (cadd p q) = toPoly p + toPoly q`. -/
 theorem toPoly_cadd (p q : CPolyQ) : toPoly (cadd p q) = toPoly p + toPoly q := by
   induction p generalizing q with
-  | nil => simp [cadd, CPolyG.caddG]
+  | nil => simp [cadd, CPoly.caddG]
   | cons a as ih =>
     cases q with
-    | nil => simp [cadd, CPolyG.caddG]
+    | nil => simp [cadd, CPoly.caddG]
     | cons b bs =>
       show toPoly (CField.add a b :: cadd as bs) = _
       rw [toPoly_cons, ih bs, toPoly_cons, toPoly_cons]
@@ -146,7 +146,7 @@ theorem toPoly_cadd (p q : CPolyQ) : toPoly (cadd p q) = toPoly p + toPoly q := 
 /-- `toPoly` commutes with negation: `toPoly (cneg p) = − toPoly p`. -/
 theorem toPoly_cneg (p : CPolyQ) : toPoly (cneg p) = - toPoly p := by
   induction p with
-  | nil => simp [cneg, CPolyG.cnegG]
+  | nil => simp [cneg, CPoly.cnegG]
   | cons a as ih =>
     show toPoly (-a :: cneg as) = -toPoly (a :: as)
     rw [toPoly_cons, toPoly_cons, ih, map_neg]; ring
@@ -158,7 +158,7 @@ theorem toPoly_csub (p q : CPolyQ) : toPoly (csub p q) = toPoly p - toPoly q := 
 /-- `toPoly` realizes scalar multiplication: `toPoly (cscale c p) = C c · toPoly p`. -/
 theorem toPoly_cscale (c : ℚ) (p : CPolyQ) : toPoly (cscale c p) = Polynomial.C c * toPoly p := by
   induction p with
-  | nil => simp [cscale, CPolyG.cscaleG]
+  | nil => simp [cscale, CPoly.cscaleG]
   | cons a as ih =>
     show toPoly (c * a :: cscale c as) = Polynomial.C c * toPoly (a :: as)
     rw [toPoly_cons, toPoly_cons, ih, map_mul]; ring
@@ -166,7 +166,7 @@ theorem toPoly_cscale (c : ℚ) (p : CPolyQ) : toPoly (cscale c p) = Polynomial.
 /-- `toPoly` realizes the degree shift: `toPoly (cshift k p) = X^k · toPoly p`. -/
 theorem toPoly_cshift (k : ℕ) (p : CPolyQ) : toPoly (cshift k p) = X ^ k * toPoly p := by
   induction k with
-  | zero => simp [cshift, CPolyG.cshiftG]
+  | zero => simp [cshift, CPoly.cshiftG]
   | succ n ih =>
     show toPoly (0 :: cshift n p) = X ^ (n + 1) * toPoly p
     rw [toPoly_cons, ih, map_zero]; ring
@@ -174,7 +174,7 @@ theorem toPoly_cshift (k : ℕ) (p : CPolyQ) : toPoly (cshift k p) = X ^ k * toP
 /-- `toPoly` is multiplicative: `toPoly (cmul p q) = toPoly p · toPoly q`. -/
 theorem toPoly_cmul (p q : CPolyQ) : toPoly (cmul p q) = toPoly p * toPoly q := by
   induction p with
-  | nil => simp [cmul, CPolyG.cmulG]
+  | nil => simp [cmul, CPoly.cmulG]
   | cons a as ih =>
     show toPoly (cadd (cscale a q) (0 :: cmul as q)) = toPoly (a :: as) * toPoly q
     rw [toPoly_cadd, toPoly_cscale, toPoly_cons, toPoly_cons, ih, map_zero]; ring

@@ -9,7 +9,7 @@ by downstream matrix proofs.
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 /-- `crref rows ncols` computes the RREF and pivot columns of a dense rational matrix. -/
 def crref (rows : List (List ℚ)) (ncols : ℕ) : List (List ℚ) × List ℕ :=
@@ -65,6 +65,6 @@ theorem getD_lt_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : n < l.le
     l.getD n d = l[n] := by
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hn]; rfl
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

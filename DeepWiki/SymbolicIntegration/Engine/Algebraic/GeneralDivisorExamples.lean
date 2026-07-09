@@ -6,7 +6,7 @@ Executable checks for `GenDivisor` on `y³ = x²` with integral basis `[1, y, y�
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-! ### `div(y)` and `div(y²)` as fractional `O`-ideals -/
 

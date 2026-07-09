@@ -13,7 +13,7 @@ the `K`-level result used by the reduced LRT integrator soundness theorem. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Polynomial CPolyG QFunNZG Classical
+open Polynomial CPoly QFunNZG Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
@@ -24,7 +24,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 as in `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`; `hB_deg` is automatic from monic `Dstar` +
 `hDt0`; then `toPolyG_cResidueResultantTowerG_map` + `rtResultantGen_ne_zero` + `map` injectivity close it. -/
 theorem residueResultant_ne_zero_of_hnormAlgClosure [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α) (hd0 : toPolyG d ≠ 0)
     (hpp : (toPolyG d).primPart ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG (cHermiteReduceTowerG Dt a d).2.1).natDegree
         < (toPolyG (cHermiteReduceTowerG Dt a d).2.2).natDegree)
@@ -68,7 +68,7 @@ theorem residueResultant_ne_zero_of_hnormAlgClosure [CharZero (CFieldSpec.K α)]
 `isIntegralResultLrtG_algebraicClosure`) and feeds `residueResultant_ne_zero_of_hnormAlgClosure`. This is what
 lets `hR0` be *dropped* as a field of `LrtReducedGenuineData`. -/
 theorem hR0_of_normalityData [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (Dt a d : CPoly α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
     (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG (cHermiteReduceTowerG Dt a d).2.1).natDegree
         < (toPolyG (cHermiteReduceTowerG Dt a d).2.2).natDegree)
@@ -83,7 +83,7 @@ set_option maxHeartbeats 800000 in
 constant squarefree denominator there are no residues, the log part is empty, and the leftover numerator
 vanishes by properness, leaving the pure Hermite identity. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles [CharZero (CFieldSpec.K α)]
-    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
     (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0) (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
     (haProper : (toPolyG a).degree < (toPolyG d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt)
     (hDstar0 : (toPolyG (cHermiteReduceTowerG Dt a d).2.2).natDegree = 0) :
@@ -111,7 +111,7 @@ sound. Case-splits on `deg Dstar`: **no poles** (`deg Dstar = 0`) is the trivial
 discharge (`hAD_degree_of_genuineMonomial` + `natDegree_lt_natDegree`, `deg Dstar ≥ 1`) and fed to `…_of_setup`
 alongside the derived `hR0`/`hm`/`hnorm`/`hcopgcd`. Every side condition flows from `hE`. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldSpec.K α)]
-    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
     (hd0 : toPolyG d ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0)
     (haProper : (toPolyG a).degree < (toPolyG d).degree) (hgen : LrtReducedGenuineData Dt a d) :
     IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d) := by

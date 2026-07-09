@@ -13,7 +13,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-! ### Generic Gaussian elimination over `[CField β]`: a nonzero kernel vector of a `β`-matrix
 
@@ -87,24 +87,24 @@ variable {β : Type*} [CField β] [CFieldDomain β] [CDiffField (QFunNZG β)]
 
 /-- A `β(x)` value from a numerator: `qOfNumG num = num/1 ∈ QFunNZG β`. The generic analogue of
 `qxOfNum`. -/
-def qOfNumG (num : CPolyG β) : QFunNZG β :=
+def qOfNumG (num : CPoly β) : QFunNZG β :=
   ⟨(num, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. The generic analogue of
 `qxMonomial`. -/
 def qMonomialG (k : ℕ) : QFunNZG β := qOfNumG (cshiftG k [(CField.one : β)])
 
-/-- The numerator coefficient list of a `β(x)` element: `qNumG z = z.1.1 ∈ CPolyG β`. -/
-def qNumG (z : QFunNZG β) : CPolyG β := z.1.1
+/-- The numerator coefficient list of a `β(x)` element: `qNumG z = z.1.1 ∈ CPoly β`. -/
+def qNumG (z : QFunNZG β) : CPoly β := z.1.1
 
-/-- The denominator coefficient list of a `β(x)` element: `qDenG z = z.1.2 ∈ CPolyG β`. -/
-def qDenG (z : QFunNZG β) : CPolyG β := z.1.2
+/-- The denominator coefficient list of a `β(x)` element: `qDenG z = z.1.2 ∈ CPoly β`. -/
+def qDenG (z : QFunNZG β) : CPoly β := z.1.2
 
 /-- The cleared log-derivative residual over `α = QFunNZG β`:
 `radLogResidualG ρ integrand D N = radDeriv(N)·D − N·D' − radMul(N, integrand)·D`, where
 `D' = CDiffField.cderiv (qOfNumG D)` is the actual base-field derivation (essential over a tower where
 `θ' ≠ 1`, unlike the formal `cderivG`). `β`-linear in `N`; the generic analogue of `radLogResidual`. -/
-def radLogResidualG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPolyG β)
+def radLogResidualG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPoly β)
     (N : RadElem (QFunNZG β)) : RadElem (QFunNZG β) :=
   let Dq : QFunNZG β := qOfNumG D
   let Dpq : QFunNZG β := CDiffField.cderiv Dq
@@ -122,16 +122,16 @@ def radLogBasisG (degBound : ℕ) : List (RadElem (QFunNZG β)) :=
 /-- The `β`-matrix of the cleared log-derivative system over `α = QFunNZG β`: for each basis column, the
 residual's cleared numerators (common denominator across columns), one row per `x`-power per component, one
 column per basis index; a kernel vector gives a solving `N`. The generic analogue of `radLogMatrix`. -/
-def radLogMatrixG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPolyG β)
+def radLogMatrixG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPoly β)
     (degBound : ℕ) : List (List β) × ℕ :=
   let basis := radLogBasisG (β := β) degBound
   let nCols := basis.length
   let resids : List (RadElem (QFunNZG β)) := basis.map (radLogResidualG ρ integrand D)
   let rowsForComp : ℕ → List (List β) := fun i =>
     let entryOf : ℕ → QFunNZG β := fun j => (resids[j]!).getD i CField.zero
-    let nums : List (CPolyG β) := (List.range nCols).map (fun j => cnormG (qNumG (entryOf j)))
-    let dens : List (CPolyG β) := (List.range nCols).map (fun j => cnormG (qDenG (entryOf j)))
-    let cleared : List (CPolyG β) := (List.range nCols).map (fun j =>
+    let nums : List (CPoly β) := (List.range nCols).map (fun j => cnormG (qNumG (entryOf j)))
+    let dens : List (CPoly β) := (List.range nCols).map (fun j => cnormG (qDenG (entryOf j)))
+    let cleared : List (CPoly β) := (List.range nCols).map (fun j =>
       let prod := (List.range nCols).foldl (fun acc k =>
         if k = j then acc else cmulG acc (dens[k]!)) [(CField.one : β)]
       cnormG (cmulG (nums[j]!) prod))
@@ -146,7 +146,7 @@ def radLogMatrixG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPol
 with `N = a₀ + a₁·y` (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel
 vector of the `β`-matrix `radLogMatrixG` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. The
 generic analogue of `radLogArgSolve` — the whole solve runs over any tower base `β`. -/
-def radLogArgSolveG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPolyG β)
+def radLogArgSolveG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CPoly β)
     (degBound : ℕ) : Option (RadElem (QFunNZG β)) :=
   let (rows, nCols) := radLogMatrixG ρ integrand D degBound
   match kernelVectorG nCols rows with

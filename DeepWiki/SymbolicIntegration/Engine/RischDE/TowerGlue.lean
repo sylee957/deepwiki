@@ -84,16 +84,16 @@ theorem specialDenominatorSubst_cleared {R : Type*} [CommRing R] (D : Derivation
     a * D (q * p ^ k) + b * (q * p ^ k) = c * p ^ k := by
   rw [specialDenominatorSubst_expand D a b p E q k hDp, hreduced]
 
-namespace CPolyG
+namespace CPoly
 
 /-- Restatement: the fuel-free divisibility check reads as honest divisibility. -/
-example {α : Type*} [CField α] [CFieldSpec α] (q p : CPolyG α)
+example {α : Type*} [CField α] [CFieldSpec α] (q p : CPoly α)
     (hq : cnormG q ≠ []) (hdvd : cdvdG q p = true) :
     toPolyG q ∣ toPolyG p :=
   dvd_of_cdvdG q p hq hdvd
 
 /-- Restatement: the fuel-free generic Diophantine solver satisfies the Bézout identity. -/
-example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : CPolyG α)
+example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : CPoly α)
     (hq0 : cnormG q ≠ [])
     (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf p q).1 ≠ 0) :
@@ -101,7 +101,7 @@ example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : CPolyG α)
         + toPolyG (cdiophantineG p q rhs).2 * toPolyG q = toPolyG rhs :=
   toPolyG_cdiophantineG p q rhs hq0 hgdeg hgne
 
-end CPolyG
+end CPoly
 
 /-! ### Restatement + axiom audit for the §6.2 special-denominator substitution glue -/
 

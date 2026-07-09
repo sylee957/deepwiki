@@ -177,7 +177,7 @@ With `logDerivs = []`, `cLogIsNewMonomial` decides only `w ≠ 0` — necessary 
 
 section ComputableEmptyBase
 
-open CPolyG
+open CPoly
 
 /-- `crref.go` halts once the working column reaches `ncols = 1`, returning the accumulated pivot
 rows/columns reversed. -/
@@ -227,15 +227,15 @@ private lemma nullspace_single_col (M : List (List ℚ)) :
 /-- `cLogIsNewMonomial [] w = true` iff the cleared coefficient column `(cLinearDepData [] w).1`
 has a nonzero entry — the empty-base test decides `w ≠ 0`. -/
 theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : QFunNZG ℚ) :
-    CPolyG.cLogIsNewMonomial [] w =
-      ((CPolyG.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
-  have hbridge : CPolyG.cLogIsNewMonomial [] w =
-      !((cNullspaceBasisQ (CPolyG.cLinearDepData [] w).1
-          ((CPolyG.cLinearDepData [] w).2 + 1)).any
-        (fun rel => rel.getD (CPolyG.cLinearDepData [] w).2 0 ≠ 0)) := rfl
-  have h2 : (CPolyG.cLinearDepData [] w).2 = 0 := rfl
+    CPoly.cLogIsNewMonomial [] w =
+      ((CPoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
+  have hbridge : CPoly.cLogIsNewMonomial [] w =
+      !((cNullspaceBasisQ (CPoly.cLinearDepData [] w).1
+          ((CPoly.cLinearDepData [] w).2 + 1)).any
+        (fun rel => rel.getD (CPoly.cLinearDepData [] w).2 0 ≠ 0)) := rfl
+  have h2 : (CPoly.cLinearDepData [] w).2 = 0 := rfl
   rw [hbridge, h2, show (0 : ℕ) + 1 = 1 from rfl]
-  set M := (CPolyG.cLinearDepData [] w).1 with hM
+  set M := (CPoly.cLinearDepData [] w).1 with hM
   rw [nullspace_single_col M, crref_single_col_pivots M]
   cases hfind : M.find? (fun r => (r.getD 0 0) ≠ 0) with
   | none => simp
@@ -244,7 +244,7 @@ theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : QFunNZG ℚ) :
 /-- `cExpIsNewMonomial ws b = cLogIsNewMonomial ws b`: the exponential structure test is
 definitionally the logarithmic one. -/
 theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (ws : List (QFunNZG ℚ)) (b : QFunNZG ℚ) :
-    CPolyG.cExpIsNewMonomial ws b = CPolyG.cLogIsNewMonomial ws b := rfl
+    CPoly.cExpIsNewMonomial ws b = CPoly.cLogIsNewMonomial ws b := rfl
 
 end ComputableEmptyBase
 
@@ -267,8 +267,8 @@ example (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv u) :
 
 -- The empty-base computable test decides only "cleared column nonzero" (≈ `w ≠ 0`).
 example (w : QFunNZG ℚ) :
-    CPolyG.cLogIsNewMonomial [] w =
-      ((CPolyG.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
+    CPoly.cLogIsNewMonomial [] w =
+      ((CPoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
   cLogIsNewMonomial_nil_eq_col_nonzero w
 
 end Restatements

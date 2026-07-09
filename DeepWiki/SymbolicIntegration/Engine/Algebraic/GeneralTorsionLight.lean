@@ -13,7 +13,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 /-! ## Bivariate evaluation over `𝔽_p` (`ZMod p` ring arithmetic)
 
@@ -36,14 +36,14 @@ def curveEval2 (f : List (List R)) (x0 y0 : R) : R :=
 def onCurve2 [DecidableEq R] (f : List (List R)) (x0 y0 : R) : Bool :=
   decide (curveEval2 f x0 y0 = 0)
 
-end CPolyG
+end CPoly
 
 /-! ## Affine point counting over `𝔽_p`
 
 `countAffinePoints p f = #{(x, y) ∈ 𝔽_p² : f(x, y) = 0}`, by scanning the `p × p` grid of `𝔽_p`-points
 and counting the on-curve ones. -/
 
-open CPolyG
+open CPoly
 
 /-- The `𝔽_p` grid `zmodGrid p = [0, 1, …, p−1] : List (ZMod p)`, the scan domain for the point count. -/
 def zmodGrid (p : ℕ) : List (ZMod p) := (List.range p).map (fun k => (k : ZMod p))
@@ -95,7 +95,7 @@ to `3` in pure `ZMod p` arithmetic. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-- The non-hyperelliptic Fermat cubic `f(x, y) = x³ + y³ − 1` over `𝔽_p`, as the `y`-coefficient list
 `[x³ − 1, 0, 0, 1]`. Genus 1, rational torsion `ℤ/3`. -/

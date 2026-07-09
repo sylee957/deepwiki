@@ -10,24 +10,24 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `v` is a nonzero Hermite factor whose Diophantine cofactors are proper. -/
-structure IsHermiteInnerFactor (Dt v u : CPolyG α) : Prop where
+structure IsHermiteInnerFactor (Dt v u : CPoly α) : Prop where
   /-- The Hermite factor denotes a nonzero polynomial. -/
   nonzero : toPolyG v ≠ 0
   /-- Every Diophantine cofactor against `u * D(v)` is proper modulo `v`. -/
-  cofactor_proper : ∀ (rhs : CPolyG α),
+  cofactor_proper : ∀ (rhs : CPoly α),
     (toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v rhs).1).degree
       < (toPolyG v).degree
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The non-skipped outer Hermite factors carry the inner-factor properness data. -/
-abbrev IsHermiteFactorData (Dt d : CPolyG α) (factors : List (CPolyG α)) : Prop :=
+abbrev IsHermiteFactorData (Dt d : CPoly α) (factors : List (CPoly α)) : Prop :=
   ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) →
     IsHermiteInnerFactor Dt p.1 (cdivWf d (cpowG p.1 (p.2 + 1)))
 
@@ -65,16 +65,16 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 projections `hnum`/`hden`, the exact-division divisibility `resDen ∣ resNum·Dstar`, nonzero radical,
 and residual-fraction properness `deg resNum < deg resDen`. -/
 theorem cHermiteReduceTowerG_leftover_proper_of_residual [CFracGcdCoreWf α]
-    (Dt : CPolyG α) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
-    (hnum : toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.1
+    (Dt : CPoly α) (a d : CPoly α) (resNum resDen Dstar : CPoly α)
+    (hnum : toPolyG (CPoly.cHermiteReduceTowerG Dt a d).2.1
       = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-    (hden : toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.2 = toPolyG Dstar)
+    (hden : toPolyG (CPoly.cHermiteReduceTowerG Dt a d).2.2 = toPolyG Dstar)
     (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
     (hresDen : cnormG resDen ≠ [])
     (hDstar : toPolyG Dstar ≠ 0)
     (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
-    (toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.1).degree
-      < (toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.2).degree := by
+    (toPolyG (CPoly.cHermiteReduceTowerG Dt a d).2.1).degree
+      < (toPolyG (CPoly.cHermiteReduceTowerG Dt a d).2.2).degree := by
   rw [hnum, hden]
   -- exact division: `h_num · resDen = resNum·Dstar = resNum · Dstar`
   have hexact : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
@@ -157,7 +157,7 @@ theorem degree_implicitDeriv_frac_lt_of_margin {K : Type*} [Field K] [Differenti
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- One Hermite `g`-fold step preserves properness: the cross-multiplied fraction-add of two proper
 fractions `gAcc`, `gloc` is proper (`toPolyG` form of `degree_fracAdd_lt_of_proper`). -/
-theorem toPolyG_fracAddG_proper {gAcc gloc : CPolyG α × CPolyG α}
+theorem toPolyG_fracAddG_proper {gAcc gloc : CPoly α × CPoly α}
     (h1 : (toPolyG gAcc.1).degree < (toPolyG gAcc.2).degree)
     (h2 : (toPolyG gloc.1).degree < (toPolyG gloc.2).degree) :
     (toPolyG (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2))).degree
@@ -168,11 +168,11 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The Hermite `g`-fold stays proper: folding the fraction-add combiner from a proper seed over proper
 contributions yields a proper running fraction `deg res.1 < deg res.2`. -/
 theorem foldl_fracAddG_proper :
-    ∀ (glocs : List (CPolyG α × CPolyG α)) (s : CPolyG α × CPolyG α),
+    ∀ (glocs : List (CPoly α × CPoly α)) (s : CPoly α × CPoly α),
       (toPolyG s.1).degree < (toPolyG s.2).degree →
       (∀ g ∈ glocs, (toPolyG g.1).degree < (toPolyG g.2).degree) →
       let res := glocs.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+        (fun (gAcc : CPoly α × CPoly α) gloc =>
           (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)) s
       (toPolyG res.1).degree < (toPolyG res.2).degree := by
   intro glocs
@@ -183,7 +183,7 @@ theorem foldl_fracAddG_proper :
     have hgloc : (toPolyG gloc.1).degree < (toPolyG gloc.2).degree := hmem gloc List.mem_cons_self
     have hrest : ∀ g ∈ rest, (toPolyG g.1).degree < (toPolyG g.2).degree :=
       fun g hg => hmem g (List.mem_cons_of_mem _ hg)
-    set snew : CPolyG α × CPolyG α :=
+    set snew : CPoly α × CPoly α :=
       (caddG (cmulG s.1 gloc.2) (cmulG gloc.1 s.2), cmulG s.2 gloc.2) with hsnew
     have hsnew_proper : (toPolyG snew.1).degree < (toPolyG snew.2).degree := by
       rw [hsnew]; exact toPolyG_fracAddG_proper hs hgloc
@@ -192,13 +192,13 @@ theorem foldl_fracAddG_proper :
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The guarded Hermite `g`-fold stays proper: for the fold `if skip b then gAcc else gAcc + glocOf b`,
 a proper seed and each non-skipped `glocOf b` proper give a proper running fraction. -/
-theorem foldl_guarded_fracAddG_proper {β : Type*} (glocOf : β → CPolyG α × CPolyG α)
+theorem foldl_guarded_fracAddG_proper {β : Type*} (glocOf : β → CPoly α × CPoly α)
     (skip : β → Prop) [DecidablePred skip] :
-    ∀ (xs : List β) (s : CPolyG α × CPolyG α),
+    ∀ (xs : List β) (s : CPoly α × CPoly α),
       (toPolyG s.1).degree < (toPolyG s.2).degree →
       (∀ b ∈ xs, ¬ skip b → (toPolyG (glocOf b).1).degree < (toPolyG (glocOf b).2).degree) →
       let res := xs.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+        (fun (gAcc : CPoly α × CPoly α) (b : β) =>
           if skip b then gAcc
           else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
                 cmulG gAcc.2 (glocOf b).2)) s
@@ -217,7 +217,7 @@ theorem foldl_guarded_fracAddG_proper {β : Type*} (glocOf : β → CPolyG α ×
           else (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2),
                 cmulG s.2 (glocOf b).2)) = s from if_pos hsk]
       exact ih s hs hrest
-    · set snew : CPolyG α × CPolyG α :=
+    · set snew : CPoly α × CPoly α :=
         (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2), cmulG s.2 (glocOf b).2) with hsnew
       rw [show (if skip b then s
           else (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2),
@@ -232,7 +232,7 @@ omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- `D(g)`'s numerator is proper for `gden²` (margin form): `cmonomialDeriv Dt gnum · gden −
 gnum · cmonomialDeriv Dt gden` is proper for `gden·gden`, given `gden ≠ 0` and the margin
 `deg gnum + max(0, deg Dt − 1) < deg gden`. -/
-theorem toPolyG_gprimeNum_proper_of_margin (Dt gnum gden : CPolyG α) (hM : toPolyG gden ≠ 0)
+theorem toPolyG_gprimeNum_proper_of_margin (Dt gnum gden : CPoly α) (hM : toPolyG gden ≠ 0)
     (hmargin :
       (toPolyG gnum).degree + (max 0 ((toPolyG Dt).natDegree - 1) : ℕ) < (toPolyG gden).degree) :
     (toPolyG (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
@@ -244,7 +244,7 @@ omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- `D(g)` proper from `g` proper when `deg Dt ≤ 1`: a proper `g = gnum/gden` has proper derivative
 numerator `cmonomialDeriv Dt gnum · gden − gnum · cmonomialDeriv Dt gden` for `gden²`, the margin
 collapsing to plain properness. -/
-theorem toPolyG_gprimeNum_proper_of_degree_le_one (Dt gnum gden : CPolyG α) (hM : toPolyG gden ≠ 0)
+theorem toPolyG_gprimeNum_proper_of_degree_le_one (Dt gnum gden : CPoly α) (hM : toPolyG gden ≠ 0)
     (hDt : (toPolyG Dt).natDegree ≤ 1)
     (hgproper : (toPolyG gnum).degree < (toPolyG gden).degree) :
     (toPolyG (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
@@ -258,7 +258,7 @@ theorem toPolyG_gprimeNum_proper_of_degree_le_one (Dt gnum gden : CPolyG α) (hM
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The residual numerator `resNum = a·gden² − d·gprimeNum` is proper for `resDen = d·gden²`, given
 `deg a < deg d` and `gprimeNum` proper for `gden²`. -/
-theorem toPolyG_resNum_proper (a d gden gprimeNum : CPolyG α)
+theorem toPolyG_resNum_proper (a d gden gprimeNum : CPoly α)
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hgprime : (toPolyG gprimeNum).degree < (toPolyG (cmulG gden gden)).degree) :
     (toPolyG (csubG (cmulG a (cmulG gden gden)) (cmulG d gprimeNum))).degree
@@ -271,7 +271,7 @@ omit [Algebra ℚ (CFieldSpec.K α)] in
 d·(cmonomialDeriv Dt gnum · gden − gnum · cmonomialDeriv Dt gden)`, `resDen = d·gden²`,
 `deg resNum < deg resDen`, given `g = gnum/gden` proper, `a/d` proper, and `deg Dt ≤ 1`. -/
 theorem toPolyG_residualFraction_proper_of_degree_le_one
-    (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
+    (Dt a d gnum gden : CPoly α) (hden : toPolyG gden ≠ 0)
     (hDt : (toPolyG Dt).natDegree ≤ 1)
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hgproper : (toPolyG gnum).degree < (toPolyG gden).degree) :
@@ -313,7 +313,7 @@ theorem degree_fracAdd_lt_of_margin {K : Type*} [Field K] {p1 q1 p2 q2 : K[X]} (
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- One Hermite `g`-fold step preserves the `m`-margin: the cross-multiplied fraction-add of two
 margin-proper fractions `gAcc`, `gloc` (each `deg .1 + m < deg .2`) is margin-proper. -/
-theorem toPolyG_fracAddG_margin {gAcc gloc : CPolyG α × CPolyG α} (m : ℕ)
+theorem toPolyG_fracAddG_margin {gAcc gloc : CPoly α × CPoly α} (m : ℕ)
     (h1 : (toPolyG gAcc.1).degree + (m : ℕ) < (toPolyG gAcc.2).degree)
     (h2 : (toPolyG gloc.1).degree + (m : ℕ) < (toPolyG gloc.2).degree) :
     (toPolyG (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2))).degree + (m : ℕ)
@@ -324,14 +324,14 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The guarded Hermite `g`-fold preserves the `m`-margin: for the fold `if skip b then gAcc else
 gAcc + glocOf b`, a margin-proper seed and each non-skipped `glocOf b` margin-proper give a
 margin-proper running fraction. The `m = 0` case is `foldl_guarded_fracAddG_proper`. -/
-theorem foldl_guarded_fracAddG_margin {β : Type*} (glocOf : β → CPolyG α × CPolyG α)
+theorem foldl_guarded_fracAddG_margin {β : Type*} (glocOf : β → CPoly α × CPoly α)
     (skip : β → Prop) [DecidablePred skip] (m : ℕ) :
-    ∀ (xs : List β) (s : CPolyG α × CPolyG α),
+    ∀ (xs : List β) (s : CPoly α × CPoly α),
       (toPolyG s.1).degree + (m : ℕ) < (toPolyG s.2).degree →
       (∀ b ∈ xs, ¬ skip b →
         (toPolyG (glocOf b).1).degree + (m : ℕ) < (toPolyG (glocOf b).2).degree) →
       let res := xs.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+        (fun (gAcc : CPoly α × CPoly α) (b : β) =>
           if skip b then gAcc
           else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
                 cmulG gAcc.2 (glocOf b).2)) s
@@ -350,7 +350,7 @@ theorem foldl_guarded_fracAddG_margin {β : Type*} (glocOf : β → CPolyG α ×
           else (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2),
                 cmulG s.2 (glocOf b).2)) = s from if_pos hsk]
       exact ih s hs hrest
-    · set snew : CPolyG α × CPolyG α :=
+    · set snew : CPoly α × CPoly α :=
         (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2), cmulG s.2 (glocOf b).2) with hsnew
       rw [show (if skip b then s
           else (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2),
@@ -366,7 +366,7 @@ omit [Algebra ℚ (CFieldSpec.K α)] in
 for `resNum = a·gden² − d·(cmonomialDeriv Dt gnum · gden − gnum · cmonomialDeriv Dt gden)`, `resDen =
 d·gden²`, `deg resNum < deg resDen`, given `a/d` proper and the margin
 `deg gnum + max(0, deg Dt − 1) < deg gden`. -/
-theorem toPolyG_residualFraction_proper_of_margin (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
+theorem toPolyG_residualFraction_proper_of_margin (Dt a d gnum gden : CPoly α) (hden : toPolyG gden ≠ 0)
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hmargin :
       (toPolyG gnum).degree + (max 0 ((toPolyG Dt).natDegree - 1) : ℕ) < (toPolyG gden).degree) :
@@ -394,16 +394,16 @@ theorem degree_lt_pow_succ_of_degree_lt {K : Type*} [Field K] {b v : K[X]} (n : 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- One inner-Hermite summand `b/vʲ` is proper: the per-power contribution `(b, cpowG v (j+1))` satisfies
 `deg b < deg(v^(j+1))`, given the cofactor bound `deg b < deg v` and `v ≠ 0`. -/
-theorem toPolyG_inner_summand_proper (b v : CPolyG α) (j : ℕ)
+theorem toPolyG_inner_summand_proper (b v : CPoly α) (j : ℕ)
     (hbv : (toPolyG b).degree < (toPolyG v).degree) (hv : toPolyG v ≠ 0) :
     (toPolyG b).degree < (toPolyG (cpowG v (j + 1))).degree := by
   simpa using degree_lt_pow_succ_of_degree_lt j hbv hv
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The inner Hermite loop's accumulated `g` is proper from inner-factor data. -/
-theorem cHermiteReduceTowerInner_g_proper (Dt : CPolyG α) (v u : CPolyG α)
+theorem cHermiteReduceTowerInner_g_proper (Dt : CPoly α) (v u : CPoly α)
     (hfac : IsHermiteInnerFactor Dt v u) :
-    ∀ (j : ℕ) (a : CPolyG α) (g : CPolyG α × CPolyG α),
+    ∀ (j : ℕ) (a : CPoly α) (g : CPoly α × CPoly α),
       (toPolyG g.1).degree < (toPolyG g.2).degree →
       (toPolyG (cHermiteReduceTowerInnerWf Dt v u j a g).1.1).degree
         < (toPolyG (cHermiteReduceTowerInnerWf Dt v u j a g).1.2).degree := by
@@ -428,18 +428,18 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The Hermite seed pair `([CField.zero], [CField.one])` is proper under `toPolyG`:
 `deg (toPolyG [CField.zero]) < deg (toPolyG [CField.one])` (`⊥ < 0`). -/
 theorem toPolyG_seedPair_proper :
-    (toPolyG ([CField.zero] : CPolyG α)).degree < (toPolyG ([CField.one] : CPolyG α)).degree := by
-  have hzero : toPolyG ([CField.zero] : CPolyG α) = 0 := by
+    (toPolyG ([CField.zero] : CPoly α)).degree < (toPolyG ([CField.one] : CPoly α)).degree := by
+  have hzero : toPolyG ([CField.zero] : CPoly α) = 0 := by
     simp only [denote, map_zero, mul_zero, add_zero]
-  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+  have hone : toPolyG ([CField.one] : CPoly α) = 1 := by
     simp only [denote, map_one, mul_zero, add_zero]
   rw [hzero, hone, Polynomial.degree_zero, Polynomial.degree_one]
   exact bot_lt_iff_ne_bot.mpr (by simp)
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Each per-factor `gloc` contribution is proper from inner-factor data. -/
-theorem cHermiteReduceTowerInner_gloc_proper (Dt : CPolyG α) (vi u : CPolyG α) (j : ℕ)
-    (a : CPolyG α) (hfac : IsHermiteInnerFactor Dt vi u) :
+theorem cHermiteReduceTowerInner_gloc_proper (Dt : CPoly α) (vi u : CPoly α) (j : ℕ)
+    (a : CPoly α) (hfac : IsHermiteInnerFactor Dt vi u) :
     (toPolyG (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.1).degree
       < (toPolyG (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.2).degree :=
   cHermiteReduceTowerInner_g_proper Dt vi u hfac j a ([CField.zero], [CField.one])
@@ -449,11 +449,11 @@ theorem cHermiteReduceTowerInner_gloc_proper (Dt : CPolyG α) (vi u : CPolyG α)
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The assembled Hermite rational part `g` is proper from outer factor data. -/
-theorem cHermiteReduceTowerG_g_proper (Dt : CPolyG α) (a d : CPolyG α)
-    (factors : List (CPolyG α))
+theorem cHermiteReduceTowerG_g_proper (Dt : CPoly α) (a d : CPoly α)
+    (factors : List (CPoly α))
     (hfac : IsHermiteFactorData Dt d factors) :
     (toPolyG (factors.zipIdx.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
@@ -464,7 +464,7 @@ theorem cHermiteReduceTowerG_g_proper (Dt : CPolyG α) (a d : CPolyG α)
             (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
         ([CField.zero], [CField.one])).1).degree
       < (toPolyG (factors.zipIdx.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
@@ -475,10 +475,10 @@ theorem cHermiteReduceTowerG_g_proper (Dt : CPolyG α) (a d : CPolyG α)
             (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
         ([CField.zero], [CField.one])).2).degree :=
   foldl_guarded_fracAddG_proper
-    (glocOf := fun (p : CPolyG α × ℕ) =>
+    (glocOf := fun (p : CPoly α × ℕ) =>
       (cHermiteReduceTowerInnerWf Dt p.1 (cdivWf d (cpowG p.1 (p.2 + 1))) (p.2 + 1 - 1) a
         ([CField.zero], [CField.one])).1)
-    (skip := fun (p : CPolyG α × ℕ) => p.2 + 1 ≤ 1)
+    (skip := fun (p : CPoly α × ℕ) => p.2 + 1 ≤ 1)
     factors.zipIdx ([CField.zero], [CField.one]) toPolyG_seedPair_proper
     (fun p hp hskip => cHermiteReduceTowerInner_gloc_proper Dt p.1
       (cdivWf d (cpowG p.1 (p.2 + 1))) (p.2 + 1 - 1) a (hfac p hp hskip))
@@ -487,12 +487,12 @@ theorem cHermiteReduceTowerG_g_proper (Dt : CPolyG α) (a d : CPolyG α)
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- The residual `a/d − D(g)` is proper for `deg Dt ≤ 1` from outer factor data. -/
-theorem cHermiteReduceTowerG_residual_proper_of_degree_le_one (Dt : CPolyG α) (a d : CPolyG α)
-    (factors : List (CPolyG α)) (hDt : (toPolyG Dt).natDegree ≤ 1)
+theorem cHermiteReduceTowerG_residual_proper_of_degree_le_one (Dt : CPoly α) (a d : CPoly α)
+    (factors : List (CPoly α)) (hDt : (toPolyG Dt).natDegree ≤ 1)
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hfac : IsHermiteFactorData Dt d factors) :
     let g := factors.zipIdx.foldl
-      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+      (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
         let i := idx + 1
         if i ≤ 1 then gAcc
         else
@@ -514,13 +514,13 @@ theorem cHermiteReduceTowerG_residual_proper_of_degree_le_one (Dt : CPolyG α) (
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- The residual `a/d − D(g)` is proper for `deg Dt ≥ 2`, gated on the assembled `g` margin. -/
-theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : CPolyG α) (a d : CPolyG α)
-    (factors : List (CPolyG α))
+theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : CPoly α) (a d : CPoly α)
+    (factors : List (CPoly α))
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hfac : IsHermiteFactorData Dt d factors)
     (hmargin :
       (toPolyG (factors.zipIdx.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
@@ -532,7 +532,7 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : CPolyG 
         ([CField.zero], [CField.one])).1).degree
           + (max 0 ((toPolyG Dt).natDegree - 1) : ℕ)
         < (toPolyG (factors.zipIdx.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
@@ -543,7 +543,7 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : CPolyG 
             (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
         ([CField.zero], [CField.one])).2).degree) :
     let g := factors.zipIdx.foldl
-      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+      (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
         let i := idx + 1
         if i ≤ 1 then gAcc
         else
@@ -571,13 +571,13 @@ splitting): `deg (…).2.1 < deg (…).2.2`. Assembles the residual-fraction pro
 (`cHermiteReduceTowerG_leftover_proper_of_residual`, via the `.2.1`/`.2.2` projections + the residual
 divisibility `hdvd`). The generic core of `hAD` (the `QFunNZG ℚ` `_numer_degree_lt` reads off `s.card` from
 this by splitting; this stops at the split-free `degree` comparison). -/
-theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α] (Dt a d : CPolyG α)
+theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α] (Dt a d : CPoly α)
     (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hfac : IsHermiteFactorData Dt d (cSqfreeYunFFG d))
-    (g : CPolyG α × CPolyG α)
+    (g : CPoly α × CPoly α)
     (hgeq : g = (cSqfreeYunFFG d).zipIdx.foldl
-      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+      (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
@@ -590,7 +590,7 @@ theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α
       ∣ toPolyG (cmulG (csubG (cmulG a (cmulG g.2 g.2))
           (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
         ((cSqfreeYunFFG d).foldl (fun acc vi => cmulG acc vi) [CField.one])))
-    (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPolyG α))
+    (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPoly α))
     (hDstar : toPolyG ((cSqfreeYunFFG d).foldl (fun acc vi => cmulG acc vi) [CField.one]) ≠ 0) :
     (toPolyG (cHermiteReduceTowerG Dt a d).2.1).degree
       < (toPolyG (cHermiteReduceTowerG Dt a d).2.2).degree := by

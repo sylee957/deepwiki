@@ -17,7 +17,7 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
 
-This is the headline. We run `cHermiteReduceTowerG` over `CPolyG (QFunNZG (QFunNZG ℚ)) =
+This is the headline. We run `cHermiteReduceTowerG` over `CPoly (QFunNZG (QFunNZG ℚ)) =
 ℚ(x)(t₁)[t₂]` (tower level 2, the new monomial `t₂`) on a concrete proper fraction whose
 denominator has a repeated `t₂`-factor, and certify `D(g) + h = f`. The setting is Bronstein's
 Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt₂ = t₂² + 1`), and
@@ -27,7 +27,7 @@ Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt�
 `D(g) + h = (t₂²+1)/t₂² − 1 = 1/t₂² = f`.
 
 All coefficients are level-2 *constants* (elements of ℚ ⊂ ℚ(x)(t₁) = `Lvl2`), so the engine genuinely
-runs the level-2 `CField`/`CDiffField` instances over `CPolyG Lvl2`. The `CField (QFunNZG (QFunNZG ℚ))`
+runs the level-2 `CField`/`CDiffField` instances over `CPoly Lvl2`. The `CField (QFunNZG (QFunNZG ℚ))`
 and `CDiffField (QFunNZG (QFunNZG ℚ))` instances are `[CField …]`-computable with `Prop`-erased subtype
 proofs, so nothing noncomputable reaches the native compiler — `native_decide` reduces. The load-bearing
 check is the cleared-denominator form of `D(gnum/gden) + h_num/h_den = a/d`, equating numerators over the
@@ -38,16 +38,16 @@ open QFunNZG
 /-- Level-2 scalar `2 = 1 + 1 ∈ Lvl2 = ℚ(x)(t₁)`. -/
 def lvl2Two : Lvl2 := CField.add CField.one CField.one
 
-/-- Level-2 monomial derivative `Dt₂ = t₂² + 1` over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]` (so `t₂ = tan`,
+/-- Level-2 monomial derivative `Dt₂ = t₂² + 1` over `CPoly Lvl2 = ℚ(x)(t₁)[t₂]` (so `t₂ = tan`,
 Bronstein Example 5.3.1 lifted to level 2; constant coefficients in ℚ ⊂ ℚ(x)(t₁)). -/
-def towerHermiteLvl2Dt : CPolyG Lvl2 := [CField.one, CField.zero, CField.one]
+def towerHermiteLvl2Dt : CPoly Lvl2 := [CField.one, CField.zero, CField.one]
 
-/-- Level-2 numerator `a = 1` over `CPolyG Lvl2` (constant coefficient `1 ∈ ℚ(x)(t₁)`). -/
-def towerHermiteLvl2A : CPolyG Lvl2 := [CField.one]
+/-- Level-2 numerator `a = 1` over `CPoly Lvl2` (constant coefficient `1 ∈ ℚ(x)(t₁)`). -/
+def towerHermiteLvl2A : CPoly Lvl2 := [CField.one]
 
-/-- Level-2 denominator `d = t₂²` over `CPolyG Lvl2` — the normal factor `t₂` of multiplicity 2 (under
+/-- Level-2 denominator `d = t₂²` over `CPoly Lvl2` — the normal factor `t₂` of multiplicity 2 (under
 `Dt₂ = t₂² + 1`, `t₂` is normal and `t₂²` its square), so Hermite lowers the power. -/
-def towerHermiteLvl2D : CPolyG Lvl2 := [CField.zero, CField.zero, CField.one]
+def towerHermiteLvl2D : CPoly Lvl2 := [CField.zero, CField.zero, CField.one]
 
 /-! ### Level-2 canonical-representation test data
 
@@ -69,13 +69,13 @@ def lvl2NegTwo : Lvl2 := CField.neg (CField.add CField.one CField.one)
 def lvl2NegThree : Lvl2 := CField.neg (CField.add CField.one (CField.add CField.one CField.one))
 
 /-- Level-2 canonical-rep numerator `a = t₂³` over `ℚ(x)(t₁)[t₂]` (constant coefficients in ℚ). -/
-def towerCanRepLvl2A : CPolyG Lvl2 := [CField.zero, CField.zero, CField.zero, CField.one]
+def towerCanRepLvl2A : CPoly Lvl2 := [CField.zero, CField.zero, CField.zero, CField.one]
 
 /-- Level-2 canonical-rep denominator `d = (t₂−1)(t₂−2) = t₂² − 3t₂ + 2` over `ℚ(x)(t₁)[t₂]` (monic). -/
-def towerCanRepLvl2D : CPolyG Lvl2 := [lvl2Two, lvl2NegThree, CField.one]
+def towerCanRepLvl2D : CPoly Lvl2 := [lvl2Two, lvl2NegThree, CField.one]
 
 /-- Level-2 monomial derivative `Dt₂ = t₂ − 1` (root `t₂ = 1` special, `t₂ = 2` normal). -/
-def towerCanRepLvl2Dt : CPolyG Lvl2 := [lvl2NegOne, CField.one]
+def towerCanRepLvl2Dt : CPoly Lvl2 := [lvl2NegOne, CField.one]
 
 /-! ## The logarithmic part (Rothstein-Trager §5.6) and the reduced-case capstone `cIntegrateReducedG`
 
@@ -91,7 +91,7 @@ nodes through the existing `cnatCastG : ℕ → α` (`[CField α]`-only), and ta
 `α` elements (the natural generic form) — so the whole log part generalizes. `cratCastG` additionally
 gives the `ℚ → α` embedding for convenience. -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
@@ -107,12 +107,12 @@ def cratCastG (q : ℚ) : α :=
 (index = degree, low→high) at `c ∈ α` by Horner's rule. The generic mirror of `cevalG`
 (`ComputableIntegrate`), redefined here to avoid that heavy import. Used to test whether a candidate
 residue `c` is a root of the residue resultant `R(c) = 0`. Needs only `[CField α]`. -/
-def cHornerG (p : CPolyG α) (c : α) : α :=
+def cHornerG (p : CPoly α) (c : α) : α :=
   (p : List α).foldr (fun coeff acc => CField.add coeff (CField.mul c acc)) CField.zero
 
-end CPolyG
+end CPoly
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -124,28 +124,28 @@ residue `c` — the shared building block of the fuel-free residue resultant / l
 
 /-- Generic `a − c·Dd` `cAmcDdG Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
 the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
-def cAmcDdG (Dt a d : CPolyG α) (c : α) : CPolyG α :=
+def cAmcDdG (Dt a d : CPoly α) (c : α) : CPoly α :=
   csubG a (cscaleG c (cmonomialDeriv Dt d))
 
-end CPolyG
+end CPoly
 
 /-! ### The generic integral result and the cleared antiderivative identity
 
 `IntegralResultG α` is the generic mirror of `IntegralResult`: the rational part `g = num/den ∈ α(t)`
-plus the logarithmic part `[(cᵢ, vᵢ)]` (coefficients `cᵢ : α`, arguments `vᵢ : CPolyG α`).
+plus the logarithmic part `[(cᵢ, vᵢ)]` (coefficients `cᵢ : α`, arguments `vᵢ : CPoly α`).
 `checkIdentityG` verifies the antiderivative identity `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f`, cleared of
 denominators — the generic mirror of `IntegralResult.checkIdentity`. -/
 
 /-- The generic integral result: `∫ f = rational + ∑ᵢ coeff·log(arg)` over the tower, with
 `rational = (num, den)` the rational part `g = num/den ∈ α(t)` and `logs = [(cᵢ, vᵢ)]` the logarithmic
-part (each `cᵢ : α`, each `vᵢ : CPolyG α`). The generic mirror of `IntegralResult`. -/
+part (each `cᵢ : α`, each `vᵢ : CPoly α`). The generic mirror of `IntegralResult`. -/
 structure IntegralResultG (α : Type*) [CField α] where
   /-- The rational part `g = num/den ∈ α(t)` of `∫ f`. -/
-  rational : CPolyG α × CPolyG α
-  /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f` (`α`-coefficients, `CPolyG α` arguments). -/
-  logs : List (α × CPolyG α)
+  rational : CPoly α × CPoly α
+  /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f` (`α`-coefficients, `CPoly α` arguments). -/
+  logs : List (α × CPoly α)
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -156,14 +156,14 @@ add `D(g) = (D(gnum)·gden − gnum·D(gden))/gden²`, and equate with `f` over 
 `(gprimeNum·Lden + Lnum·gden²)·aden = anum·(gden²·Lden)`, by `cisZeroG` of the cleared difference. The
 generic mirror of `IntegralResult.checkIdentity` (`α` has no `DecidableEq`, hence the `cisZeroG∘csubG`
 form). -/
-def checkIdentityG (Dt : CPolyG α) (res : IntegralResultG α) (anum aden : CPolyG α) : Bool :=
+def checkIdentityG (Dt : CPoly α) (res : IntegralResultG α) (anum aden : CPoly α) : Bool :=
   let gnum := res.rational.1
   let gden := res.rational.2
   let gprimeNum := csubG (cmulG (cmonomialDeriv Dt gnum) gden) (cmulG gnum (cmonomialDeriv Dt gden))
   let gden2 := cmulG gden gden
-  let Lstart : CPolyG α × CPolyG α := ([CField.zero], [CField.one])
+  let Lstart : CPoly α × CPoly α := ([CField.zero], [CField.one])
   let (Lnum, Lden) := res.logs.foldl
-    (fun (acc : CPolyG α × CPolyG α) (cv : α × CPolyG α) =>
+    (fun (acc : CPoly α × CPoly α) (cv : α × CPoly α) =>
       let c := cv.1
       let v := cv.2
       let Dv := cmonomialDeriv Dt v
@@ -174,11 +174,11 @@ def checkIdentityG (Dt : CPolyG α) (res : IntegralResultG α) (anum aden : CPol
   let rhs := cmulG anum (cmulG gden2 Lden)
   cisZeroG (csubG lhs rhs)
 
-end CPolyG
+end CPoly
 
 /-! ### Level-2 reduced integration test data
 
-Bronstein's Example 5.6.2 construction lifted to tower level 2. Over `CPolyG Lvl2 =
+Bronstein's Example 5.6.2 construction lifted to tower level 2. Over `CPoly Lvl2 =
 ℚ(x)(t₁)[t₂]` the monomial `t₂` is independent (`Dt₂ = 1`), and the simple integrand
 `f = (1/2)·D(t₂+1)/(t₂+1) − (1/2)·D(t₂−1)/(t₂−1)` over ℚ(x)(t₁)(t₂) has the known elementary
 antiderivative `(1/2)log(t₂+1) − (1/2)log(t₂−1)`. Since `D(t₂±1) = Dt₂ = 1`, the integrand is
@@ -186,39 +186,39 @@ antiderivative `(1/2)log(t₂+1) − (1/2)log(t₂−1)`. Since `D(t₂±1) = Dt
 t₂² − 1`. The residues of `R(z) = res_t(d, a − z·Dd)` are `±1/2` with log arguments `t₂ ± 1`.
 
 The generic reduced-case capstone `cIntegrateReducedG` (Hermite rational part + Rothstein–Trager
-residue logs) runs over `CPolyG Lvl2` and recovers the integral: `g = 0`, residues `±1/2` from the
+residue logs) runs over `CPoly Lvl2` and recovers the integral: `g = 0`, residues `±1/2` from the
 candidate set, logs `t₂ ± 1`. The headline check is the antiderivative identity `D(∫f) = f`
 (`checkIdentityG`, cleared of denominators, by `cisZeroG`) — the whole elementary tower integral
 executing and differentiating back to `f`, at level 2. All coefficients are ℚ-constants lifted into
 `Lvl2` (via `cratCastG`), so the engine genuinely runs the level-2 `CField`/`CDiffField` instances. The
 fuel-free validations are in `ComputableTowerWellFounded`. -/
 
-open CPolyG
+open CPoly
 
-/-- Level-2 monomial derivative `Dt₂ = 1` over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]` (`t₂` independent). -/
-def towerIntLvl2Dt : CPolyG Lvl2 := [CField.one]
+/-- Level-2 monomial derivative `Dt₂ = 1` over `CPoly Lvl2 = ℚ(x)(t₁)[t₂]` (`t₂` independent). -/
+def towerIntLvl2Dt : CPoly Lvl2 := [CField.one]
 
-/-- Level-2 log argument `v₊ = t₂ + 1` over `CPolyG Lvl2` (low→high in `t₂`). -/
-def towerIntLvl2VPlus : CPolyG Lvl2 := [CField.one, CField.one]
+/-- Level-2 log argument `v₊ = t₂ + 1` over `CPoly Lvl2` (low→high in `t₂`). -/
+def towerIntLvl2VPlus : CPoly Lvl2 := [CField.one, CField.one]
 
-/-- Level-2 log argument `v₋ = t₂ − 1` over `CPolyG Lvl2`. -/
-def towerIntLvl2VMinus : CPolyG Lvl2 := [CField.neg CField.one, CField.one]
+/-- Level-2 log argument `v₋ = t₂ − 1` over `CPoly Lvl2`. -/
+def towerIntLvl2VMinus : CPoly Lvl2 := [CField.neg CField.one, CField.one]
 
 /-- Level-2 scalar `1/2 ∈ Lvl2` (the residue coefficient), via the generic `cratCastG`. -/
 def towerIntLvl2Half : Lvl2 := cratCastG (1/2)
 
-/-- The level-2 integrand numerator `a = (1/2)·D(v₊)·v₋ − (1/2)·D(v₋)·v₊` over `CPolyG Lvl2`, so
+/-- The level-2 integrand numerator `a = (1/2)·D(v₊)·v₋ − (1/2)·D(v₋)·v₊` over `CPoly Lvl2`, so
 `a/d = (1/2)·D(v₊)/v₊ − (1/2)·D(v₋)/v₋` with `d = v₊·v₋`. Its elementary antiderivative is
 `(1/2)log(v₊) − (1/2)log(v₋)`. -/
-def towerIntLvl2Num : CPolyG Lvl2 :=
+def towerIntLvl2Num : CPoly Lvl2 :=
   csubG
     (cscaleG towerIntLvl2Half
       (cmulG (cmonomialDeriv towerIntLvl2Dt towerIntLvl2VPlus) towerIntLvl2VMinus))
     (cscaleG towerIntLvl2Half
       (cmulG (cmonomialDeriv towerIntLvl2Dt towerIntLvl2VMinus) towerIntLvl2VPlus))
 
-/-- The level-2 integrand denominator `d = v₊·v₋ = (t₂+1)(t₂−1) = t₂² − 1` over `CPolyG Lvl2`. -/
-def towerIntLvl2Den : CPolyG Lvl2 := cmulG towerIntLvl2VPlus towerIntLvl2VMinus
+/-- The level-2 integrand denominator `d = v₊·v₋ = (t₂+1)(t₂−1) = t₂² − 1` over `CPoly Lvl2`. -/
+def towerIntLvl2Den : CPoly Lvl2 := cmulG towerIntLvl2VPlus towerIntLvl2VMinus
 
 /-- The level-2 residue candidate set `{1/2, −1/2, 1, −1, 0}` as `Lvl2` constants (the residues `±1/2`
 are inside; the rest are rejected by `R(c) ≠ 0`). -/

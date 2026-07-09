@@ -11,13 +11,13 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- Interface law for a Hermite reduction output `(gnum, gden, hNum, Dstar)` of `a/d`. -/
-structure LawfulHermiteReduction (Dt a d gnum gden hNum Dstar : CPolyG α) : Prop where
+structure LawfulHermiteReduction (Dt a d gnum gden hNum Dstar : CPoly α) : Prop where
   /-- The cleared Hermite identity `D⟦gnum/gden⟧ + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
   field_identity : towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden))
       + amG α (toPolyG hNum) / amG α (toPolyG Dstar) = amG α (toPolyG a) / amG α (toPolyG d)

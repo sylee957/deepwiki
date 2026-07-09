@@ -9,7 +9,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-- `Associated a b → a.natDegree = b.natDegree` in `K[X]`: degree is associate-invariant. -/
 theorem natDegree_eq_of_associated {K : Type*} [Field K] {a b : K[X]} (h : Associated a b) :

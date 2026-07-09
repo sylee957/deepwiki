@@ -11,26 +11,26 @@ namespace DeepWiki.SymbolicIntegration
 
 open scoped Differential
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
 /-- Carrier-form idempotency `IsAfIdempotent T e`: `mk(toPolyG(afMul T e e)) = mk(toPolyG e)` in
 `Q = K[X] ⧸ afIdeal T`, i.e. `e² = e` in `K(x)[y]/(T)`. -/
-def IsAfIdempotent (f e : CPolyG α) : Prop :=
+def IsAfIdempotent (f e : CPoly α) : Prop :=
   Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f e e))
     = Ideal.Quotient.mk (afIdeal f) (toPolyG e)
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `IsAfIdempotent T e` gives `IsIdempotentElem (mk(toPolyG e))` in `Q = K[X] ⧸ afIdeal T`. -/
-theorem IsAfIdempotent.isIdempotentElem {f e : CPolyG α} (hf : cnormG f ≠ [])
+theorem IsAfIdempotent.isIdempotentElem {f e : CPoly α} (hf : cnormG f ≠ [])
     (he : IsAfIdempotent f e) :
     IsIdempotentElem (Ideal.Quotient.mk (afIdeal f) (toPolyG e)) := by
   rw [IsIdempotentElem, ← mk_toPolyG_afMul f e e hf, he]
 
 /-- The engine's `afDerivWf` kills a carrier idempotent: for a separable curve `T` and idempotent
 `e` (`IsAfIdempotent T e`), `mk(toPolyG(afDerivWf T e)) = 0` in `Q = K[X] ⧸ afIdeal T`. -/
-theorem idempotent_isConstant (f e : CPolyG α) (hf : cnormG f ≠ [])
+theorem idempotent_isConstant (f e : CPoly α) (hf : cnormG f ≠ [])
     (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0)
     (he : IsAfIdempotent f e) :
@@ -59,16 +59,16 @@ theorem idempotent_isConstant (f e : CPolyG α) (hf : cnormG f ≠ [])
 
 /-- The recombination integrator `afIntegrateFunctionAlgebra T es Fs = Σᵢ eᵢ·Fᵢ`: the `caddG`-fold
 of the products `afMul T eᵢ Fᵢ` over the zipped indicators `es` and component integrals `Fs`. -/
-def afIntegrateFunctionAlgebra (f : CPolyG α) (es Fs : List (CPolyG α)) : CPolyG α :=
-  ((es.zip Fs).map (fun p => afMul f p.1 p.2)).foldl caddG ([] : CPolyG α)
+def afIntegrateFunctionAlgebra (f : CPoly α) (es Fs : List (CPoly α)) : CPoly α :=
+  ((es.zip Fs).map (fun p => afMul f p.1 p.2)).foldl caddG ([] : CPoly α)
 
 /-- Function-algebra soundness `D(F) = integrand` over a reducible curve: for a separable curve `T`,
 CRT indicators `es` each idempotent (`hidem`), per-component integrals `Fs` with
 `eᵢ·D(Fᵢ) = eᵢ·integrand` (`hcomp`), and partition of unity `Σ eᵢ = 1` (`hsum`), the recombined
 integral `afIntegrateFunctionAlgebra T es Fs` satisfies
 `mk(toPolyG(afDerivWf T F)) = mk(toPolyG integrand)` in `Q = K[X] ⧸ afIdeal T`. -/
-theorem afIntegrateFunctionAlgebra_sound (f integrand : CPolyG α)
-    (es Fs : List (CPolyG α)) (hf : cnormG f ≠ [])
+theorem afIntegrateFunctionAlgebra_sound (f integrand : CPoly α)
+    (es Fs : List (CPoly α)) (hf : cnormG f ≠ [])
     (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0)
     (hidem : ∀ p ∈ es.zip Fs, IsAfIdempotent f p.1)
@@ -95,14 +95,14 @@ theorem afIntegrateFunctionAlgebra_sound (f integrand : CPolyG α)
       idempotent_isConstant f p.1 hf hgdeg hgne (hidem p hp), zero_mul, zero_add]
     exact hcomp p hp)]
   -- `Σ ēᵢ·integrand = (Σ ēᵢ)·integrand = 1·integrand = integrand`
-  rw [show (fun p : CPolyG α × CPolyG α =>
+  rw [show (fun p : CPoly α × CPoly α =>
         Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)
           * Ideal.Quotient.mk (afIdeal f) (toPolyG integrand))
-      = (fun p : CPolyG α × CPolyG α =>
-        (fun p : CPolyG α × CPolyG α => Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)) p
+      = (fun p : CPoly α × CPoly α =>
+        (fun p : CPoly α × CPoly α => Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)) p
           * Ideal.Quotient.mk (afIdeal f) (toPolyG integrand)) from rfl,
     List.sum_map_mul_right, hsum, one_mul]
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

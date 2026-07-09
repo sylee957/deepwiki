@@ -13,7 +13,7 @@ frontier, so the recursive solver reuses it. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG Polynomial Classical
+open CPoly QFunNZG Polynomial Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
@@ -27,11 +27,11 @@ identity `hid : D_tower(⟦qp/1⟧) = ⟦fₚ/1⟧` and the vanishing special nu
 Agnostic to HOW `hid` was obtained — the base proves it via `cPolyRischDEG_nil_field_identity`, the tower via
 the `implicitDeriv`/`towerFractionFieldDerivG_div` bridge — so both `*_specialSound` proofs reduce to this. -/
 theorem primitiveSpecialSoundCore [Fact (GcdFFCorrect (α := α))]
-    (Dt a d qp : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (Dt a d qp : CPoly α) (hd0 : toPolyG d ≠ 0)
     (hb : cisZeroG (crSpecNum Dt a d) = true)
     (hid : towerFractionFieldDerivG Dt (fieldFrac qp [CField.one])
       = fieldFrac (crPoly Dt a d) [CField.one]) :
-    toPolyG ([CField.one] : CPolyG α) ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
+    toPolyG ([CField.one] : CPoly α) ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
       towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
   refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], hid, ?_⟩
@@ -48,7 +48,7 @@ the polynomial RDE and the reconstruction (`canonicalReconstruction_of_charZero`
 vanishing; off the guard the hook returns `none`. Independent of any reduced frontier, so the recursive solver
 reuses it. -/
 theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
-    (Dt a d snum sden : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (Dt a d snum sden : CPoly α) (hd0 : toPolyG d ≠ 0)
     (hhook : primitiveGuardedCase.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
       (crSpecDen Dt a d) = some (snum, sden)) :
     toPolyG sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),

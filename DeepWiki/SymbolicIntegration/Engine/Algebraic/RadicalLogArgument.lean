@@ -13,7 +13,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-! ### Gaussian elimination over ℚ: a nonzero kernel vector of a ℚ-matrix
 
@@ -44,15 +44,15 @@ def qxMonomial (k : ℕ) : QFunNZG ℚ := qMonomialG k
 radMul(N, integrand)·D` in `(QFunNZG ℚ)[y]/(y² − ρ)`, whose vanishing says `∫(integrand) dx = log(N/D)`;
 `ℚ`-linear in `N`. The `ℚ`-base specialization of `radLogResidualG` (which uses the actual base-field
 derivation `CDiffField.cderiv`, agreeing with the formal `cderivG` on the untowered base `ℚ(x)`). -/
-def radLogResidual (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPolyG ℚ)
+def radLogResidual (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPoly ℚ)
     (N : RadElem (QFunNZG ℚ)) : RadElem (QFunNZG ℚ) :=
   radLogResidualG ρ integrand D N
 
 /-- The numerator coefficient list `qxNum z = z.1.1 ∈ ℚ[x]` of a ℚ(x) element — specialization of `qNumG`. -/
-def qxNum (z : QFunNZG ℚ) : CPolyG ℚ := qNumG z
+def qxNum (z : QFunNZG ℚ) : CPoly ℚ := qNumG z
 
 /-- The denominator coefficient list `qxDen z = z.1.2 ∈ ℚ[x]` of a ℚ(x) element — specialization of `qDenG`. -/
-def qxDen (z : QFunNZG ℚ) : CPolyG ℚ := qDenG z
+def qxDen (z : QFunNZG ℚ) : CPoly ℚ := qDenG z
 
 /-- The monomial basis `radLogBasis degBound` for the ansatz `N = a₀ + a₁·y`: the `2·(degBound+1)`
 elements `[xᵏ, 0]` then `[0, xᵏ]`, giving the matrix columns — specialization of `radLogBasisG`. -/
@@ -62,7 +62,7 @@ def radLogBasis (degBound : ℕ) : List (RadElem (QFunNZG ℚ)) :=
 /-- The `ℚ`-matrix of the cleared log-derivative system: for each basis column `Nⱼ`, the residual's
 cleared numerators `Pᵢⱼ` (common denominator across columns), one row per `x`-power per component, one
 column per basis index; a kernel vector gives the coefficients of a solving `N`. -/
-def radLogMatrix (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPolyG ℚ)
+def radLogMatrix (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPoly ℚ)
     (degBound : ℕ) : List (List ℚ) × ℕ :=
   radLogMatrixG ρ integrand D degBound
 
@@ -71,7 +71,7 @@ def radLogMatrix (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPo
 /-- Solve for the log argument: `radLogArgSolve ρ integrand D degBound = some N` with `N = a₀ + a₁·y`
 (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel vector of the
 `ℚ`-matrix `radLogMatrix` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. -/
-def radLogArgSolve (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPolyG ℚ)
+def radLogArgSolve (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPoly ℚ)
     (degBound : ℕ) : Option (RadElem (QFunNZG ℚ)) :=
   radLogArgSolveG ρ integrand D degBound
 

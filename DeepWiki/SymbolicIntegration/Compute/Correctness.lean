@@ -18,10 +18,10 @@ namespace DeepWiki.SymbolicIntegration.Compute
 theorem cnorm_cons_eq (a : ℚ) (as : CPolyQ) :
     cnorm (a :: as)
       = (match cnorm as with | [] => if a = 0 then [] else [a] | r => a :: r) := by
-  show CPolyG.cnormG (a :: as)
-      = (match CPolyG.cnormG as with | [] => if a = 0 then [] else [a] | r => a :: r)
-  rw [CPolyG.cnormG_cons_eq]
-  cases CPolyG.cnormG as with
+  show CPoly.cnormG (a :: as)
+      = (match CPoly.cnormG as with | [] => if a = 0 then [] else [a] | r => a :: r)
+  rw [CPoly.cnormG_cons_eq]
+  cases CPoly.cnormG as with
   | nil => show (if (decide (a = 0) = true) then _ else _) = _; by_cases ha : a = 0 <;> simp [ha]
   | cons b bs => rfl
 
@@ -456,17 +456,17 @@ theorem cnorm_getLast?_ne_some_zero (p : CPolyQ) : (cnorm p).getLast? ≠ some 0
 
 /-- For a normalized nonzero `CPolyQ`, the leading coefficient `clead` is nonzero. -/
 theorem clead_ne_zero {p : CPolyQ} (h : cnorm p ≠ []) : clead p ≠ 0 := by
-  show CPolyG.cleadG p ≠ 0
-  rcases hl : (CPolyG.cnormG p).getLast? with _ | v
+  show CPoly.cleadG p ≠ 0
+  rcases hl : (CPoly.cnormG p).getLast? with _ | v
   · exact absurd (List.getLast?_eq_none_iff.mp hl) h
-  · simp only [CPolyG.cleadG, hl, Option.getD_some]
+  · simp only [CPoly.cleadG, hl, Option.getD_some]
     rintro rfl
     exact cnorm_getLast?_ne_some_zero p hl
 
 /-- `clead p = (toPoly p).coeff (cdeg p)`: the leading coefficient sits at the top index. -/
 theorem clead_eq_coeff (p : CPolyQ) : clead p = (toPoly p).coeff (cdeg p) := by
-  show CPolyG.cleadG p = _
-  rw [CPolyG.cleadG, cdeg, ← toPoly_cnorm, toPoly_coeff, List.getD_eq_getElem?_getD,
+  show CPoly.cleadG p = _
+  rw [CPoly.cleadG, cdeg, ← toPoly_cnorm, toPoly_coeff, List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
   rfl
 
@@ -585,8 +585,8 @@ theorem step_length_lt (p q : CPolyQ) (hp : cnorm p ≠ []) (hq : cnorm q ≠ []
 
 /-- `clead` is invariant under `cnorm`: `clead (cnorm p) = clead p`. -/
 theorem clead_cnorm (p : CPolyQ) : clead (cnorm p) = clead p := by
-  show CPolyG.cleadG (CPolyG.cnormG p) = CPolyG.cleadG p
-  simp only [CPolyG.cleadG, CPolyG.cnormG_idem]
+  show CPoly.cleadG (CPoly.cnormG p) = CPoly.cleadG p
+  simp only [CPoly.cleadG, CPoly.cnormG_idem]
 
 /-- `cisZero` is invariant under `cnorm`. -/
 theorem cisZero_cnorm (q : CPolyQ) : cisZero (cnorm q) = cisZero q := by

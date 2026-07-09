@@ -41,23 +41,23 @@ variable {B : Type*} [CField B]
     rw [gbnormCore]
     cases hr : gbnormCore as with
     | nil =>
-      by_cases ha : CPolyG.cisZeroG (CPolyG.cnormG a)
+      by_cases ha : CPoly.cisZeroG (CPoly.cnormG a)
       · simp only [ha, if_true]; rfl
       · simp only [ha, Bool.false_eq_true, if_false]
-        show gbnormCore [CPolyG.cnormG a] = [CPolyG.cnormG a]
+        show gbnormCore [CPoly.cnormG a] = [CPoly.cnormG a]
         rw [gbnormCore, show gbnormCore ([] : GBPolyCore B) = [] from rfl]
-        simp only [CPolyG.cnormG_idem, ha, Bool.false_eq_true, if_false]
+        simp only [CPoly.cnormG_idem, ha, Bool.false_eq_true, if_false]
     | cons r rs =>
       have hih : gbnormCore (r :: rs) = r :: rs := by rw [← hr]; exact ih
-      rw [gbnormCore, hih, CPolyG.cnormG_idem]
+      rw [gbnormCore, hih, CPoly.cnormG_idem]
 
 /-- Generic primitive polynomial-remainder-sequence gcd `cprimPRSgcdGenCoreWf cgcdB P Q ∈ GBPolyCore B`:
-the gcd of `P, Q` in `t` (over the coefficient ring `CPolyG B = B[s]`), up to a `B[s]`-content factor.
+the gcd of `P, Q` in `t` (over the coefficient ring `CPoly B = B[s]`), up to a `B[s]`-content factor.
 Normalize `P, Q`; if `Q = 0` return the primitive part of `P`, else take the next PRS node
 `r = gbprimitivePartCore cgcdB (gbpsremainderCore 60 P Q)` and recurse on `(Q, r)` under the structural
 guard `(gbnormCore r).length < (gbnormCore Q).length`. `[CField B]`-only. The content-gcd `cgcdB` is passed
 in. -/
-def cprimPRSgcdGenCoreWf (cgcdB : CPolyG B → CPolyG B → CPolyG B) (P Q : GBPolyCore B) :
+def cprimPRSgcdGenCoreWf (cgcdB : CPoly B → CPoly B → CPoly B) (P Q : GBPolyCore B) :
     GBPolyCore B :=
   let P := gbnormCore P
   let Q := gbnormCore Q
@@ -74,7 +74,7 @@ end GBPolyCore
 
 /-! ### Primitive-PRS termination predicate
 
-There is no abstract `gbpsremainderCore` length-drop lemma over the generic GCD-domain `CPolyG B = B[s]`,
+There is no abstract `gbpsremainderCore` length-drop lemma over the generic GCD-domain `CPoly B = B[s]`,
 so the correctness layer uses a fuel-regularity predicate `CPrimPRSGenRegular` mirroring the fuel-recursive
 `cprimPRSgcdGenCore` with the per-step length-drop guard built in. -/
 
@@ -84,7 +84,7 @@ so the correctness layer uses a fuel-regularity predicate `CPrimPRSGenRegular` m
 is nonzero, the next PRS node `r = gbprimitivePartCore cgcdB (gbpsremainderCore 60 (gbnormCore P)
 (gbnormCore Q))` strictly drops the normalized `t`-length, and the same holds recursively on
 `(gbnormCore Q, r)` at one less fuel. -/
-inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : CPolyG B → CPolyG B → CPolyG B) :
+inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : CPoly B → CPoly B → CPoly B) :
     ℕ → GBPolyCore B → GBPolyCore B → Prop
   /-- terminal node: the next divisor is zero, the loop stops (any fuel). -/
   | stop {fuel : ℕ} {P Q : GBPolyCore B} (hz : GBPolyCore.gbisZeroCore (GBPolyCore.gbnormCore Q) = true) :
@@ -113,11 +113,11 @@ The public monic gcd is `cgcdFFCoreWf := cmonicG ∘ cgcdFFRawCoreWf`. Every met
 `native_decide`s over the noncomputable tower. -/
 
 /-- Recursive fraction-free gcd over a tower level: the *raw* (content-normalized, non-monic) gcd
-`cgcdFFRawCoreWf p q` of `p, q ∈ CPolyG α = α[t]`. Monic normalization is applied only at the top, by
+`cgcdFFRawCoreWf p q` of `p, q ∈ CPoly α = α[t]`. Monic normalization is applied only at the top, by
 `cgcdFFCoreWf`. Bottoms at `CFracGcdCoreWf ℚ`. -/
 class CFracGcdCoreWf (α : Type*) [CField α] where
   /-- The *raw* (content-normalized, non-monic) FUEL-FREE fraction-free gcd over `α[t]`. -/
-  cgcdFFRawCoreWf : CPolyG α → CPolyG α → CPolyG α
+  cgcdFFRawCoreWf : CPoly α → CPoly α → CPoly α
 
 namespace CFracGcdCoreWf
 
@@ -125,30 +125,30 @@ variable {α : Type*} [CField α] [CFracGcdCoreWf α]
 
 /-- The public monic fraction-free gcd `cgcdFFCoreWf p q := cmonicG (cgcdFFRawCoreWf p q)` over `α[t]`:
 monic-normalize the raw recursive gcd, once at the top, never inside the recursion. -/
-def cgcdFFCoreWf (p q : CPolyG α) : CPolyG α := CPolyG.cmonicG (cgcdFFRawCoreWf p q)
+def cgcdFFCoreWf (p q : CPoly α) : CPoly α := CPoly.cmonicG (cgcdFFRawCoreWf p q)
 
 end CFracGcdCoreWf
 
 /-- Base `CFracGcdCoreWf ℚ` — the bottom of the tower. `ℚ[t]`'s raw fraction-free gcd is the generic
-Euclidean gcd `(CPolyG.cgcdWf p q).1`. -/
+Euclidean gcd `(CPoly.cgcdWf p q).1`. -/
 instance instCFracGcdCoreWfQ : CFracGcdCoreWf ℚ where
-  cgcdFFRawCoreWf p q := (CPolyG.cgcdWf p q).1
+  cgcdFFRawCoreWf p q := (CPoly.cgcdWf p q).1
 
 section
 variable {β : Type*} [CField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
 /-- `CFracGcdCoreWf (QFunNZG β)` — the *raw* fraction-free gcd over `β(s)[t]`, built by running the kernel
-`cprimPRSgcdGenCoreWf` over the GCD-domain `CPolyG β = β[s]` with the level-`β` `cgcdFFRawCoreWf` as
+`cprimPRSgcdGenCoreWf` over the GCD-domain `CPoly β = β[s]` with the level-`β` `cgcdFFRawCoreWf` as
 content-gcd. Clear denominators of both inputs into `GBPolyCore β = (β[s])[t]`, order them by `t`-degree
 (the PRS needs the larger first), run the primitive PRS with `cgcdB := CFracGcdCoreWf.cgcdFFRawCoreWf`
 recursing one level down, and lift back to `β(s)[t]` — no `cmonicG` (this is the raw method). Recurses
 strictly one level down, bottoming at `CFracGcdCoreWf ℚ`. -/
 instance instCFracGcdCoreWfQFunNZG : CFracGcdCoreWf (QFunNZG β) where
   cgcdFFRawCoreWf p q :=
-    let P := CPolyG.cclearDenomsCoreG p
-    let Q := CPolyG.cclearDenomsCoreG q
+    let P := CPoly.cclearDenomsCoreG p
+    let Q := CPoly.cclearDenomsCoreG q
     let (P, Q) := if GBPolyCore.gbdegCore P < GBPolyCore.gbdegCore Q then (Q, P) else (P, Q)
-    CPolyG.liftGBPolyCoreG (GBPolyCore.cprimPRSgcdGenCoreWf CFracGcdCoreWf.cgcdFFRawCoreWf P Q)
+    CPoly.liftGBPolyCoreG (GBPolyCore.cprimPRSgcdGenCoreWf CFracGcdCoreWf.cgcdFFRawCoreWf P Q)
 
 end
 
@@ -157,13 +157,13 @@ end
 The §3.5 split loop `cSplitFactorFastG` (`t`-degree drop) and Yun's main loop `cSqfreeYunFFGgoWf`
 (multiplicity counter), generic and `[CField α]`-only. -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- The generic `SplitFactor` step `cstepG Dt p = cdivWf (cgcdFFCoreWf p (cmonomialDeriv Dt p))
 (cgcdFFCoreWf p (cderivG p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)`. -/
-def cstepG (Dt : CPolyG α) (p : CPolyG α) : CPolyG α :=
+def cstepG (Dt : CPoly α) (p : CPoly α) : CPoly α :=
   cdivWf (CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p))
     (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p))
 
@@ -171,7 +171,7 @@ def cstepG (Dt : CPolyG α) (p : CPolyG α) : CPolyG α :=
 `S = cstepG Dt p`; a constant `S` (`cdegG S = 0`) ⇒ `p` is normal, else recurse on the exact quotient
 `p/S = cdivWf p S` and accumulate `S` into the special part. Well-founded on `(cnormG p).length`.
 `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
-def cSplitFactorFastG (Dt : CPolyG α) (p : CPolyG α) : CPolyG α × CPolyG α :=
+def cSplitFactorFastG (Dt : CPoly α) (p : CPoly α) : CPoly α × CPoly α :=
   let S := cstepG Dt p
   if cdegG S = 0 then (p, [CField.one])
   else
@@ -183,9 +183,9 @@ def cSplitFactorFastG (Dt : CPolyG α) (p : CPolyG α) : CPolyG α × CPolyG α 
 termination_by (cnormG p).length
 decreasing_by assumption
 
-end CPolyG
+end CPoly
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CFracGcdCoreWf α]
 
@@ -195,7 +195,7 @@ at skipped multiplicities). Stops when `b` is constant (`cdegG b = 0`) or the co
 emits `p = cmonicG (cgcdFFCoreWf b d)`, recurses on `b' = cdivWf b p`, `d' = cdivWf d p − b'` with `fo`
 decremented. The counter `fo` is supplied once by the entry `cSqfreeYunFFG` as `cyunBoundG`.
 `[CField α] [CFracGcdCoreWf α]`-generic. -/
-def cSqfreeYunFFGgoWf : ℕ → CPolyG α → CPolyG α → List (CPolyG α)
+def cSqfreeYunFFGgoWf : ℕ → CPoly α → CPoly α → List (CPoly α)
   | 0, _, _ => []
   | fo + 1, b, d =>
     if cdegG b = 0 then []
@@ -208,13 +208,13 @@ def cSqfreeYunFFGgoWf : ℕ → CPolyG α → CPolyG α → List (CPolyG α)
 /-- Sufficient internal multiplicity-counter bound `cyunBoundG p := (cnormG p).length`: Yun's outer loop
 runs one step per multiplicity slot, and the max multiplicity is `≤ deg p < (cnormG p).length`. Computed
 once from the input. The generic analogue of `yunBound`. -/
-def cyunBoundG (p : CPolyG α) : ℕ := (cnormG p : List α).length
+def cyunBoundG (p : CPoly α) : ℕ := (cnormG p : List α).length
 
 /-- Generic Yun squarefree factorization in `t` `cSqfreeYunFFG p = [p₁, …, pₘ]`: with
 `g = cgcdFFCoreWf p (cderivG p)`, `b₁ = cdivWf p g`, `d₁ = cderivG p/g − b₁'`, runs the Yun loop
 `cSqfreeYunFFGgoWf (cyunBoundG p) b₁ d₁` with the internally-computed counter `cyunBoundG p`. `p` is
 associate to `∏ᵢ pᵢ^i`. Correct even at skipped multiplicities. `[CField α] [CFracGcdCoreWf α]`-generic. -/
-def cSqfreeYunFFG (p : CPolyG α) : List (CPolyG α) :=
+def cSqfreeYunFFG (p : CPoly α) : List (CPoly α) :=
   let g := CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
   let b1 := cdivWf p g
   let d1 := csubG (cdivWf (cderivG p) g) (cderivG b1)
@@ -223,8 +223,8 @@ def cSqfreeYunFFG (p : CPolyG α) : List (CPolyG α) :=
 /-- Generic split-squarefree-factor over the tower `cSplitSquarefreeFactorFastG Dt p =
 ((N₁,…,Nₘ), (S₁,…,Sₘ))`. Yun-factor `p` in `t` (`cSqfreeYunFFG`); per factor `pᵢ`,
 `Sᵢ = cgcdFFCoreWf pᵢ (cmonomialDeriv Dt pᵢ)` (the special part) and `Nᵢ = cdivWf pᵢ Sᵢ` (normal part). -/
-def cSplitSquarefreeFactorFastG [CDiffField α] (Dt : CPolyG α) (p : CPolyG α) :
-    List (CPolyG α) × List (CPolyG α) :=
+def cSplitSquarefreeFactorFastG [CDiffField α] (Dt : CPoly α) (p : CPoly α) :
+    List (CPoly α) × List (CPoly α) :=
   let ps := cSqfreeYunFFG p
   let parts := ps.map (fun pf =>
     let si := CFracGcdCoreWf.cgcdFFCoreWf pf (cmonomialDeriv Dt pf)
@@ -232,7 +232,7 @@ def cSplitSquarefreeFactorFastG [CDiffField α] (Dt : CPolyG α) (p : CPolyG α)
     (ni, si))
   (parts.map Prod.fst, parts.map Prod.snd)
 
-end CPolyG
+end CPoly
 
 /-! ## The flat-composition pipeline
 
@@ -240,7 +240,7 @@ Everything past the three recursive bottoms is a flat composition over the leave
 `cbezoutOneWf`, `cextendedEuclideanSplitWf`, `cdiophantineG`, `cHermiteReduceTowerInnerWf`,
 `cPrimitivePolyIntegrateWf`, `cdivWf`, and the §5.6 `cresultantWf`/`cinterpolateG`/`cHornerG`. -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
@@ -249,8 +249,8 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 Divide `a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ` (`cSplitFactorFastG`); Bézout-split
 `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplitWf` with `cbezoutOneWf`). Stated with `.1`/`.2`
 projections. -/
-def canonicalRepresentationFastG (Dt : CPolyG α) (a d : CPolyG α) :
-    CPolyG α × (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
+def canonicalRepresentationFastG (Dt : CPoly α) (a d : CPoly α) :
+    CPoly α × (CPoly α × CPoly α) × (CPoly α × CPoly α) :=
   let qr := cdivmodWf a d
   let dnds := cSplitFactorFastG Dt d
   let uw := cbezoutOneWf dnds.1 dnds.2
@@ -261,12 +261,12 @@ def canonicalRepresentationFastG (Dt : CPolyG α) (a d : CPolyG α) :
 (h_num, h_den))` over the tower: squarefree-factor `d` with `cSqfreeYunFFG`; for each factor `(v, i)` of
 multiplicity `i ≥ 2`, run the inner loop `cHermiteReduceTowerInnerWf` (with `u = d/vⁱ` via `cdivWf`); recover
 `h_num` over the squarefree radical `Dstar` via `cdivWf`. Stated with `.1`/`.2` projections. -/
-def cHermiteReduceTowerG (Dt : CPolyG α) (a d : CPolyG α) :
-    (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
+def cHermiteReduceTowerG (Dt : CPoly α) (a d : CPoly α) :
+    (CPoly α × CPoly α) × (CPoly α × CPoly α) :=
   let factors := cSqfreeYunFFG d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
   let Dstar := factors.foldl (fun acc vi => cmulG acc vi) [CField.one]   -- squarefree radical ∏ᵢ vᵢ
-  let g : CPolyG α × CPolyG α := factors.zipIdx.foldl
-    (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+  let g : CPoly α × CPoly α := factors.zipIdx.foldl
+    (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
       let i := idx + 1
       if i ≤ 1 then gAcc
       else
@@ -291,7 +291,7 @@ candidates as `α` elements; the resultant runs through `cresultantWf`, the log 
 /-- Generic residue resultant `cResidueResultantTowerG Dt a d = R(z) = res_t(d, a − z·Dd)`. Sample
 `R(zₖ) = res_t(d, a − zₖ·Dd)` at the natural nodes `zₖ = cnatCastG k` (`k = 0…deg_t d`) with the
 Euclidean-PRS resultant `cresultantWf`, then Lagrange-interpolate (`cinterpolateG`). -/
-def cResidueResultantTowerG (Dt : CPolyG α) (a d : CPolyG α) : CPolyG α :=
+def cResidueResultantTowerG (Dt : CPoly α) (a d : CPoly α) : CPoly α :=
   let n := cdegG d
   let pts : List (α × α) := (List.range (n + 1)).map (fun k =>
     let zk : α := cnatCastG k
@@ -300,19 +300,19 @@ def cResidueResultantTowerG (Dt : CPolyG α) (a d : CPolyG α) : CPolyG α :=
 
 /-- Generic log argument `cLogArgTowerG Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`: the
 fraction-free gcd `cgcdFFCoreWf` of `d` and `a − c·Dd`. -/
-def cLogArgTowerG (Dt : CPolyG α) (a d : CPolyG α) (c : α) : CPolyG α :=
+def cLogArgTowerG (Dt : CPoly α) (a d : CPoly α) (c : α) : CPoly α :=
   CFracGcdCoreWf.cgcdFFCoreWf d (cAmcDdG Dt a d c)
 
 /-- Generic rational/field residues `cRationalResiduesG Dt a d cands`: keep the candidates
 `c ∈ cands : List α` that are roots of the residue resultant `R(z) = cResidueResultantTowerG Dt a d`,
 i.e. `R(c) = 0` (tested by `CField.isZero (cHornerG R c)`). -/
-def cRationalResiduesG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) : List α :=
+def cRationalResiduesG (Dt : CPoly α) (a d : CPoly α) (cands : List α) : List α :=
   let R := cResidueResultantTowerG Dt a d
   cands.filter (fun c => CField.isZero (cHornerG R c))
 
 /-- Generic logarithmic part `cLogPartG Dt a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈ residues]`: pair
 each residue `c : α` (from `cRationalResiduesG`) with its log argument `cLogArgTowerG Dt a d c`. -/
-def cLogPartG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) : List (α × CPolyG α) :=
+def cLogPartG (Dt : CPoly α) (a d : CPoly α) (cands : List α) : List (α × CPoly α) :=
   (cRationalResiduesG Dt a d cands).map (fun c => (c, cLogArgTowerG Dt a d c))
 
 /-- The generic reduced-case integration capstone `cIntegrateReducedG Dt a d cands`: for `f = a/d`
@@ -320,17 +320,17 @@ reduced/normal, `∫ f = g + ∑ c·log(v)`. Hermite-reduce (`cHermiteReduceTowe
 `g = gnum/gden` and the simple residual `h = h_num/h_den`, then take the residue log part of `h`
 (`cLogPartG`, residues drawn from `cands : List α`). Returns the `IntegralResultG` `⟨(gnum, gden),
 [(c, v)]⟩`. -/
-def cIntegrateReducedG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+def cIntegrateReducedG (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
     IntegralResultG α :=
   let H := cHermiteReduceTowerG Dt a d
   let logs := cLogPartG Dt H.2.1 H.2.2 cands
   ⟨(H.1.1, H.1.2), logs⟩
 
-end CPolyG
+end CPoly
 
 /-! ### Validation — a full elementary tower integral at level 2
 
-Over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]` (`Dt₂ = 1`), the integrand `f = (1/2)/(t₂+1) − (1/2)/(t₂−1)` (as `a/d`,
+Over `CPoly Lvl2 = ℚ(x)(t₁)[t₂]` (`Dt₂ = 1`), the integrand `f = (1/2)/(t₂+1) − (1/2)/(t₂−1)` (as `a/d`,
 `d = t₂² − 1`) has antiderivative `(1/2)log(t₂+1) − (1/2)log(t₂−1)`; the residues `±1/2` have log arguments
 `t₂ ± 1`. The generic tower integrator — canonical split, Hermite rational part, Rothstein–Trager residue
 logs — computes over the tower at level 2 and the returned `g + ∑ cᵢ·log(vᵢ)` differentiates back to `f`. -/
@@ -338,45 +338,45 @@ logs — computes over the tower at level 2 and the returned `g + ∑ cᵢ·log(
 /-- The Hermite reducer computes the rational part at level 2: for `f = 1/t₂²` over `ℚ(x)(t₁)[t₂]` with
 `Dt₂ = t₂² + 1`, the returned rational part and residual satisfy the cleared Hermite identity. -/
 theorem towerHermiteLvl2_rationalPartWf :
-    (let res := CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt
+    (let res := CPoly.cHermiteReduceTowerG towerHermiteLvl2Dt
         towerHermiteLvl2A towerHermiteLvl2D
       let gnum := res.1.1
       let gden := res.1.2
       let hNum := res.2.1
       let hDen := res.2.2
-      let Dgnum := CPolyG.cmonomialDeriv towerHermiteLvl2Dt gnum
-      let Dgden := CPolyG.cmonomialDeriv towerHermiteLvl2Dt gden
-      let gprimeNum := CPolyG.csubG (CPolyG.cmulG Dgnum gden) (CPolyG.cmulG gnum Dgden)
-      let gden2 := CPolyG.cmulG gden gden
-      let lhs := CPolyG.cmulG
-        (CPolyG.caddG (CPolyG.cmulG gprimeNum hDen) (CPolyG.cmulG hNum gden2)) towerHermiteLvl2D
-      let rhs := CPolyG.cmulG towerHermiteLvl2A (CPolyG.cmulG gden2 hDen)
-      CPolyG.cisZeroG (CPolyG.csubG lhs rhs)) = true := by native_decide
+      let Dgnum := CPoly.cmonomialDeriv towerHermiteLvl2Dt gnum
+      let Dgden := CPoly.cmonomialDeriv towerHermiteLvl2Dt gden
+      let gprimeNum := CPoly.csubG (CPoly.cmulG Dgnum gden) (CPoly.cmulG gnum Dgden)
+      let gden2 := CPoly.cmulG gden gden
+      let lhs := CPoly.cmulG
+        (CPoly.caddG (CPoly.cmulG gprimeNum hDen) (CPoly.cmulG hNum gden2)) towerHermiteLvl2D
+      let rhs := CPoly.cmulG towerHermiteLvl2A (CPoly.cmulG gden2 hDen)
+      CPoly.cisZeroG (CPoly.csubG lhs rhs)) = true := by native_decide
 
 /-- The level-2 residual denominator has degree 1. -/
 theorem towerHermiteLvl2_residual_degreeWf :
-    CPolyG.cdegG (CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt
+    CPoly.cdegG (CPoly.cHermiteReduceTowerG towerHermiteLvl2Dt
       towerHermiteLvl2A towerHermiteLvl2D).2.2 = 1 := by native_decide
 
 /-- The canonical representation recombines to `f` at level 2. -/
 theorem towerCanRepLvl2_recombinesWf :
-    (let res := CPolyG.canonicalRepresentationFastG towerCanRepLvl2Dt
+    (let res := CPoly.canonicalRepresentationFastG towerCanRepLvl2Dt
         towerCanRepLvl2A towerCanRepLvl2D
       let q := res.1
       let b := res.2.1.1
       let ds := res.2.1.2
       let c := res.2.2.1
       let dn := res.2.2.2
-      let dsdn := CPolyG.cmulG ds dn
-      let num := CPolyG.caddG (CPolyG.caddG (CPolyG.cmulG q dsdn) (CPolyG.cmulG b dn))
-        (CPolyG.cmulG c ds)
-      CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cmulG num towerCanRepLvl2D)
-        (CPolyG.cmulG towerCanRepLvl2A dsdn))) = true := by native_decide
+      let dsdn := CPoly.cmulG ds dn
+      let num := CPoly.caddG (CPoly.caddG (CPoly.cmulG q dsdn) (CPoly.cmulG b dn))
+        (CPoly.cmulG c ds)
+      CPoly.cisZeroG (CPoly.csubG (CPoly.cmulG num towerCanRepLvl2D)
+        (CPoly.cmulG towerCanRepLvl2A dsdn))) = true := by native_decide
 
 /-- The recovered level-2 logarithmic part has length 2: the residue scan over `ℚ(x)(t₁)[t₂]` finds
 exactly the two rational residues `±1/2` (log arguments `t₂ ± 1`). -/
 theorem towerIntLvl2_logs_lengthWf :
-    (CPolyG.cIntegrateReducedG towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
+    (CPoly.cIntegrateReducedG towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
       towerIntLvl2Cands).logs.length = 2 := by native_decide
 
 /-- A full elementary tower integral at level 2 with `D(∫f) = f`. For
@@ -384,8 +384,8 @@ theorem towerIntLvl2_logs_lengthWf :
 `IntegralResultG` whose antiderivative identity `D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds exactly
 (`checkIdentityG`). -/
 theorem towerIntLvl2_fullIntegralWf :
-    CPolyG.checkIdentityG towerIntLvl2Dt
-      (CPolyG.cIntegrateReducedG towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
+    CPoly.checkIdentityG towerIntLvl2Dt
+      (CPoly.cIntegrateReducedG towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
         towerIntLvl2Cands)
       towerIntLvl2Num towerIntLvl2Den = true := by native_decide
 
@@ -395,7 +395,7 @@ Two more `[CField α]`-generic degree-recursion bottoms of the RDE pipeline — 
 `cPolyRischDENoCancelG` and the SPDE `cSPDEG`. The cancellation cases and the top driver `cRischDEG`
 continue in `Tower/RischDEWellFounded`. -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -403,8 +403,8 @@ variable {α : Type*} [CField α] [CDiffField α]
 `q ∈ α[t]` with `deg(q) ≤ n` (`n : ℤ`), top-down — `p = (lc(c)/lc(b))·tᵐ` (`m = deg(c) − deg(b)`), recurse on
 `c' = c − D(p) − b·p` (`D = cmonomialDeriv Dt`). Returns `none` or `some q`. Well-founded on
 `(cnormG c).length`. `[CField α] [CDiffField α]`-generic. -/
-def cPolyRischDENoCancelG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
-    Option (CPolyG α) :=
+def cPolyRischDENoCancelG (Dt : CPoly α) (b c : CPoly α) (n : ℤ) :
+    Option (CPoly α) :=
   if cisZeroG c then some []
   else
     let m : ℤ := (cdegG c : ℤ) - (cdegG b : ℤ)
@@ -421,9 +421,9 @@ def cPolyRischDENoCancelG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
 termination_by (cnormG c).length
 decreasing_by assumption
 
-end CPolyG
+end CPoly
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
@@ -433,8 +433,8 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 `a/g` base case returns the identity reconstruction, else solves the Bézout `cdiophantineG b̄ ā c̄` and
 recurses on `ā = a/g` at `n − deg(ā)`. Well-founded on `(n+1).toNat`. `[CField α] [CDiffField α]
 [CFracGcdCoreWf α]`-generic. -/
-def cSPDEG (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ) :
-    Option (CPolyG α × CPolyG α × ℤ × CPolyG α × CPolyG α) :=
+def cSPDEG (Dt : CPoly α) (a b c : CPoly α) (n : ℤ) :
+    Option (CPoly α × CPoly α × ℤ × CPoly α × CPoly α) :=
   if n < 0 then
     if cisZeroG c then some ([], [], 0, [], []) else none
   else
@@ -460,6 +460,6 @@ def cSPDEG (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ) :
 termination_by (n + 1).toNat
 decreasing_by assumption
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

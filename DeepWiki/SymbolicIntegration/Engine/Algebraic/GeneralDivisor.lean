@@ -12,9 +12,9 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
-open CPolyG
+open CPoly
 
 /-! ### The representation: a fractional `O`-ideal as a `K(x)`-matrix in `[w]`-coordinates (`GenDivisor`) -/
 
@@ -34,16 +34,16 @@ def qReduceMat (I : GenDivisor) : GenDivisor :=
 
 /-- Reconstruct a `K(x, y)` element from `[w]`-coordinates: `wToAf basis row = Σⱼ rowⱼ·wⱼ` (inverse
 of `toOCoords`). -/
-def wToAf (basis : List (CPolyG (QFunNZG ℚ))) (row : List (QFunNZG ℚ)) : CPolyG (QFunNZG ℚ) :=
+def wToAf (basis : List (CPoly (QFunNZG ℚ))) (row : List (QFunNZG ℚ)) : CPoly (QFunNZG ℚ) :=
   (List.range basis.length).foldl (fun acc i =>
-    caddG acc (cscaleG (row.getD i CField.zero) (basis.getD i []))) ([] : CPolyG (QFunNZG ℚ))
+    caddG acc (cscaleG (row.getD i CField.zero) (basis.getD i []))) ([] : CPoly (QFunNZG ℚ))
 
 /-! ### `div(g) = g·O`: the principal divisor (`principalDivisor`) -/
 
 /-- The principal divisor `principalDivisor f basis g = div(g) = g·O`: row `i` is the `[w]`-coordinates
 of `g·wᵢ = afMul f g wᵢ` (via `B⁻¹`); empty matrix if `B` is singular. -/
-def principalDivisor (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
-    (g : CPolyG (QFunNZG ℚ)) : GenDivisor :=
+def principalDivisor (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
+    (g : CPoly (QFunNZG ℚ)) : GenDivisor :=
   let n := cdegG f
   let B := orderToPowerMatrix n basis
   match matInvG n B with
@@ -55,8 +55,8 @@ def principalDivisor (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
 
 /-- Clear a fractional ideal to `(δ, N)` with `δ = commonDenomG I` and `Nᵢⱼ = δ·Iᵢⱼ` over `K[x]`, so
 `I = (1/δ)·N`. -/
-def idealClear (I : GenDivisor) : CPolyG ℚ × PolyMatrix ℚ :=
-  let δ : CPolyG ℚ := commonDenomG I
+def idealClear (I : GenDivisor) : CPoly ℚ × PolyMatrix ℚ :=
+  let δ : CPoly ℚ := commonDenomG I
   (δ, I.map (clearRowExact δ))
 
 /-! ### The ideal product `I·J` (the Pic group law) (`idealProduct`) -/
@@ -64,7 +64,7 @@ def idealClear (I : GenDivisor) : CPolyG ℚ × PolyMatrix ℚ :=
 /-- The ideal product `idealProduct f basis I J` (the Pic group law): the fractional `O`-ideal from
 the `n²` cross-products `genᵢ·genₖ`, cleared to a common denominator and `hermiteRowReduce`d to `n`
 generators; `[]` if `B` is singular. -/
-def idealProduct (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
+def idealProduct (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
     (I J : GenDivisor) : GenDivisor :=
   let n := cdegG f
   let B := orderToPowerMatrix n basis
@@ -78,7 +78,7 @@ def idealProduct (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))
         J.map (fun gk =>
           toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk)))))
     -- clear to K[x] at a common denom δ, Hermite-reduce, take the n nonzero rows
-    let δ : CPolyG ℚ := commonDenomG cross
+    let δ : CPoly ℚ := commonDenomG cross
     let N : PolyMatrix ℚ := cross.map (clearRowExact δ)
     let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZeroG)
     -- read back the first n rows as the fractional ideal (1/δ)·Nhat, then put every entry in lowest terms
@@ -93,7 +93,7 @@ def idealProduct (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))
 
 /-- The Hermite normal form `idealHNF I = (δ, H)`: clear `I` to `(δ, N)`, `hermiteRowReduce` over
 `K[x]`, keep the nonzero rows normalized by `cnormG`; the presentation `(1/δ)·H`. -/
-def idealHNF (I : GenDivisor) : CPolyG ℚ × PolyMatrix ℚ :=
+def idealHNF (I : GenDivisor) : CPoly ℚ × PolyMatrix ℚ :=
   let (δ, N) := idealClear I
   let H := (hermiteRowReduce N).filter (fun row => !row.all cisZeroG)
   (cnormG δ, H.map (fun row => row.map cnormG))
@@ -104,7 +104,7 @@ def idealEq (I J : GenDivisor) : Bool :=
   let (δI, _) := idealClear I
   let (δJ, _) := idealClear J
   -- scale both ideals to the common denom δI·δJ, then compare cleared HNFs
-  let scale : CPolyG ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
+  let scale : CPoly ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
     let cc := cnormG c
     K.map (fun row => row.map (fun z =>
       let zz := qReduceNZG z
@@ -128,6 +128,6 @@ def idealIsIntegral (I : GenDivisor) : Bool :=
     let zz := qReduceNZG z
     cisZeroG (csubG (cnormG zz.1.2) [CField.one])))
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

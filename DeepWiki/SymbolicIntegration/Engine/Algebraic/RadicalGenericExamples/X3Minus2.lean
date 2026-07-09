@@ -10,7 +10,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-! ### Radicand 1 — `f₁ = x³ − 2` (degree 3, odd)
 
@@ -21,8 +21,8 @@ open RadElem CPolyG
 def radicandX3m2 : QFunNZG ℚ := qxOfNum [-2, 0, 0, 1]
 
 /-- **`toPolyG [-2,0,0,1] = −2 + x³` has `natDegree 3`** in `ℚ[X]`. -/
-theorem natDeg_toPolyG_X3m2 : (toPolyG ([-2, 0, 0, 1] : CPolyG ℚ)).natDegree = 3 := by
-  have h : toPolyG ([-2, 0, 0, 1] : CPolyG ℚ) = C (-2) + X ^ 3 := by
+theorem natDeg_toPolyG_X3m2 : (toPolyG ([-2, 0, 0, 1] : CPoly ℚ)).natDegree = 3 := by
+  have h : toPolyG ([-2, 0, 0, 1] : CPoly ℚ) = C (-2) + X ^ 3 := by
     simp only [denote]
     show C (-2 : ℚ) + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
@@ -69,13 +69,13 @@ def radX3m2Gen : RadX3m2 := RadExt.gen
 def radX3m2LogDer : QFunNZG ℚ := logDerRadicand 2 radicandX3m2
 
 /-- The `RadX3m2[t]`-polynomial `t² = [0,0,1]` (transcendental square over `√(x³−2)`). -/
-def radX3m2T2sq : CPolyG RadX3m2 := [CField.zero, CField.zero, CField.one]
+def radX3m2T2sq : CPoly RadX3m2 := [CField.zero, CField.zero, CField.one]
 
 /-- The `RadX3m2[t]`-polynomial `2·t² = [0,0,2]`, the expected `D(t²)` for `t = eˣ`. -/
-def radX3m2TwoT2sq : CPolyG RadX3m2 := [CField.zero, CField.zero, CField.add CField.one CField.one]
+def radX3m2TwoT2sq : CPoly RadX3m2 := [CField.zero, CField.zero, CField.add CField.one CField.one]
 
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX3m2` (`t = eˣ`). -/
-def radX3m2DtExp : CPolyG RadX3m2 := [CField.zero, CField.one]
+def radX3m2DtExp : CPoly RadX3m2 := [CField.zero, CField.one]
 
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x³−2)][eˣ]`: `cmonomialDeriv` (`t = eˣ`, `Dt = t`, coefficient derivation
 `radDeriv 2 (x³−2)`) gives `2t·t = 2t²`. -/
@@ -84,11 +84,11 @@ theorem radX3m2_monomialDeriv_t2sq :
   native_decide
 
 /-- The `RadX3m2[t]`-polynomial `y·t = [0, y]` (`y = √(x³−2)`, `t = eˣ`). -/
-def radX3m2GenT : CPolyG RadX3m2 := [CField.zero, radX3m2Gen]
+def radX3m2GenT : CPoly RadX3m2 := [CField.zero, radX3m2Gen]
 
 /-- The `RadX3m2[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected mixed `D(y·t)`
 (`ℓ = f'/(2f)`). -/
-def radX3m2GenTDeriv : CPolyG RadX3m2 :=
+def radX3m2GenTDeriv : CPoly RadX3m2 :=
   [CField.zero, CField.mul (⟨[CField.zero, CField.add radX3m2LogDer CField.one]⟩ : RadX3m2) CField.one]
 
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³−2)][eˣ]`: both `D(y) = ℓ·y` (`ℓ = 3x²/(2(x³−2))`) and `D(t) = t`

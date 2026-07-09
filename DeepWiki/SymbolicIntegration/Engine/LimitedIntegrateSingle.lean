@@ -8,13 +8,13 @@ Limited integration solves `a = D(b) + c·η` for a primitive generator derivati
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG Polynomial
+open CPoly Polynomial
 
-namespace CPolyG
+namespace CPoly
 
 /-- **Base polynomial antiderivative over ℚ** `cAntiderivBaseQ p = ∫ p dt`: for `p = Σ aᵢ tⁱ`, returns
 `Σ aᵢ/(i+1)·t^(i+1)` (constant of integration `0`). The `D = d/dt` inverse on `ℚ[t]`. -/
-def cAntiderivBaseQ (p : CPolyG ℚ) : CPolyG ℚ :=
+def cAntiderivBaseQ (p : CPoly ℚ) : CPoly ℚ :=
   (0 : ℚ) :: ((p : List ℚ).zipIdx.map (fun ai => ai.1 / (ai.2 + 1)))
 
 /-- **Base single-`w` limited integration** `cLimitedIntegrateSingleBase a η` (Bronstein §5.8's
@@ -39,10 +39,10 @@ def cLimitedIntegrateSingleBase (a η : QFunNZG ℚ) : Option (QFunNZG ℚ × �
 /-- **`cLimitedIntegrateSingleBase` in the num/den signature** of `LawfulRischLevelLrt.limitedIntegrateSingle`
 (`anum aden ηnum ηden ↦ ((bnum, bden), c)`) — the base ℚ instance's field for Phase 3-wire-2. Guards the
 denominators nonzero (`QFunNZG` needs `cisZeroG den = false`), then wraps `cLimitedIntegrateSingleBase`. -/
-def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : CPolyG ℚ) :
-    Option ((CPolyG ℚ × CPolyG ℚ) × ℚ) :=
-  if hA : CPolyG.cisZeroG aden = false then
-    if hη : CPolyG.cisZeroG ηden = false then
+def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : CPoly ℚ) :
+    Option ((CPoly ℚ × CPoly ℚ) × ℚ) :=
+  if hA : CPoly.cisZeroG aden = false then
+    if hη : CPoly.cisZeroG ηden = false then
       (cLimitedIntegrateSingleBase ⟨(anum, aden), hA⟩ ⟨(ηnum, ηden), hη⟩).map
         fun bc => ((bc.1.1.1, bc.1.1.2), bc.2)
     else none
@@ -55,7 +55,7 @@ and `p ∈ α[t]`, returns `q` with `D_tower(q) = p` and `deg q ≤ deg p + 1`. 
 `a·tᵐ`: `LimitedIntegrate(a, η) = (b, c)` gives `q₀ = c/(m+1)·t^(m+1) + b·tᵐ` (the **degree-raising** term),
 whose derivative matches `a·tᵐ`, then recurses on `p − D_tower(q₀)` (degree `< m`). -/
 def cIntegratePrimPolyDegRaiseG {α : Type*} [CField α] [CDiffField α]
-    (η : α) (limInt : α → Option (α × α)) : ℕ → CPolyG α → Option (CPolyG α)
+    (η : α) (limInt : α → Option (α × α)) : ℕ → CPoly α → Option (CPoly α)
   | 0, p => if cisZeroG p then some [] else none
   | fuel + 1, p =>
     if cisZeroG p then some []
@@ -73,9 +73,9 @@ D_tower(q₀) = p` — holding for **any** `limInt` (no correctness hypothesis o
 insight as the cancellation-case poly-RDE soundness. -/
 theorem cIntegratePrimPolyDegRaiseG_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
     [CDiffFieldSpec α] (η : α) (limInt : α → Option (α × α)) :
-    ∀ (fuel : ℕ) (p q : CPolyG α), cIntegratePrimPolyDegRaiseG η limInt fuel p = some q →
+    ∀ (fuel : ℕ) (p q : CPoly α), cIntegratePrimPolyDegRaiseG η limInt fuel p = some q →
       Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPolyG q) = toPolyG p := by
-  have hη : toPolyG ([η] : CPolyG α) = Polynomial.C (CFieldSpec.toK η) := by
+  have hη : toPolyG ([η] : CPoly α) = Polynomial.C (CFieldSpec.toK η) := by
     simp only [denote, mul_zero, add_zero]
   intro fuel
   induction fuel with
@@ -101,6 +101,6 @@ theorem cIntegratePrimPolyDegRaiseG_sound {α : Type*} [CField α] [CFieldSpec �
       simp only [denote, map_add, ih _ _ hrec, hη]
       ring
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

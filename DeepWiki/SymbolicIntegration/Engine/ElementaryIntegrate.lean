@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-! ### `cIntegrateElementaryG` — the driver over a tower base `α = QFunNZG β` -/
 
@@ -20,7 +20,7 @@ open RadElem CPolyG
 On `some N` packs the log term `(c, N/D)`; on `none` returns `⟨v, []⟩`. -/
 def cIntegrateElementaryG {β : Type*} [CField β] [CFieldDomain β] [CDiffField (QFunNZG β)]
     (ρ : QFunNZG β) (v : RadElem (QFunNZG β)) (residual : RadElem (QFunNZG β)) (c : QFunNZG β)
-    (D : CPolyG β) (degBound : ℕ) : AlgIntegralResultG (QFunNZG β) :=
+    (D : CPoly β) (degBound : ℕ) : AlgIntegralResultG (QFunNZG β) :=
   match radLogArgSolveG ρ residual D degBound with
   | none => ⟨v, []⟩
   | some N =>

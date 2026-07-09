@@ -17,12 +17,12 @@ def lvl2T1scalar : Lvl2 :=
 
 open BenchG in
 /-- The `t₂`-polynomial `(t₂ − t₁)·(t₂ + 1)` over `Lvl2 = ℚ(x)(t₁)` (low→high in `t₂`). -/
-def lvl2P : CPolyG Lvl2 :=
-  CPolyG.cmulG [CField.neg lvl2T1scalar, lvl2One] [lvl2One, lvl2One]
+def lvl2P : CPoly Lvl2 :=
+  CPoly.cmulG [CField.neg lvl2T1scalar, lvl2One] [lvl2One, lvl2One]
 
 open BenchG in
 /-- The `t₂`-polynomial `(t₂ − t₁)·(t₂ − 1)` over `Lvl2`, sharing `(t₂ − t₁)` with `lvl2P`. -/
-def lvl2Q : CPolyG Lvl2 :=
-  CPolyG.cmulG [CField.neg lvl2T1scalar, lvl2One] [CField.neg lvl2One, lvl2One]
+def lvl2Q : CPoly Lvl2 :=
+  CPoly.cmulG [CField.neg lvl2T1scalar, lvl2One] [CField.neg lvl2One, lvl2One]
 
 end DeepWiki.SymbolicIntegration

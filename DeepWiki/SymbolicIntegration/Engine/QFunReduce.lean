@@ -12,7 +12,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-! ### The reducer `qReduce`
 
@@ -24,7 +24,7 @@ namespace QFunNZG
 variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-- The common factor `reduceGcd a = cgcdMonicWf num den` cancelled by `qReduce`. -/
-def reduceGcd (a : QFunNZG α) : CPolyG α :=
+def reduceGcd (a : QFunNZG α) : CPoly α :=
   cgcdMonicWf a.1.1 a.1.2
 
 /-! #### The denominator-nonzero discharge (`Prop`-erased) -/
@@ -42,20 +42,20 @@ theorem reduceGcd_ne_nil (a : QFunNZG α) : cnormG (reduceGcd a) ≠ [] := by
   exact hden (eq_zero_of_zero_dvd (hg0 ▸ (toPolyG_reduceGcd_dvd a).2))
 
 /-- The cancelled numerator `num/g`. -/
-def reduceNum (a : QFunNZG α) : CPolyG α := cdivWf a.1.1 (reduceGcd a)
+def reduceNum (a : QFunNZG α) : CPoly α := cdivWf a.1.1 (reduceGcd a)
 
 /-- The cancelled denominator `den/g`. -/
-def reduceDen (a : QFunNZG α) : CPolyG α := cdivWf a.1.2 (reduceGcd a)
+def reduceDen (a : QFunNZG α) : CPoly α := cdivWf a.1.2 (reduceGcd a)
 
 /-- Exact division of the numerator by `reduceGcd a`. -/
 theorem toPolyG_reduceNum_mul (a : QFunNZG α) :
     toPolyG (reduceNum a) * toPolyG (reduceGcd a) = toPolyG a.1.1 :=
-  CPolyG.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).1
+  CPoly.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).1
 
 /-- Exact division of the denominator by `reduceGcd a`. -/
 theorem toPolyG_reduceDen_mul (a : QFunNZG α) :
     toPolyG (reduceDen a) * toPolyG (reduceGcd a) = toPolyG a.1.2 :=
-  CPolyG.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).2
+  CPoly.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).2
 
 /-- The reduced denominator satisfies `cisZeroG (reduceDen a) = false`. -/
 theorem cisZeroG_reduceDen (a : QFunNZG α) : cisZeroG (reduceDen a) = false := by

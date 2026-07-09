@@ -10,8 +10,8 @@ verifies the telescoping in the Gaussian extension `S = AdjoinRoot (X²+1)` over
 (`iU = √−1`), proving the assembled `(q₁, q₂)` solve the coupled system over `ℚ[x][t]` and so
 discharge `cancelTanClearedCheck`. -/
 
-namespace DeepWiki.SymbolicIntegration.CPolyG
-open Polynomial CPolyG
+namespace DeepWiki.SymbolicIntegration.CPoly
+open Polynomial CPoly
 
 abbrev SGauss := AdjoinRoot (X ^ 2 + 1 : (Polynomial ℚ)[X])
 noncomputable def iU : SGauss := AdjoinRoot.root _
@@ -23,31 +23,31 @@ theorem iU_sq : (iU : SGauss)^2 = -1 := by
   simp only [eval₂_add, eval₂_pow, eval₂_X, eval₂_one] at h
   linear_combination h
 
-noncomputable def toS (p : CPolyG ℚ) : SGauss := AdjoinRoot.of _ (toPolyG p)
-noncomputable def pairToS (x : CPolyG ℚ × CPolyG ℚ) : SGauss := toS x.1 + toS x.2 * iU
-noncomputable def toPoly2S (p : List (CPolyG ℚ)) : SGauss[X] := (toPoly2 p).map (AdjoinRoot.of _)
-noncomputable def pairListToS : List (CPolyG ℚ × CPolyG ℚ) → SGauss[X]
+noncomputable def toS (p : CPoly ℚ) : SGauss := AdjoinRoot.of _ (toPolyG p)
+noncomputable def pairToS (x : CPoly ℚ × CPoly ℚ) : SGauss := toS x.1 + toS x.2 * iU
+noncomputable def toPoly2S (p : List (CPoly ℚ)) : SGauss[X] := (toPoly2 p).map (AdjoinRoot.of _)
+noncomputable def pairListToS : List (CPoly ℚ × CPoly ℚ) → SGauss[X]
   | [] => 0
   | a :: as => C (pairToS a) + X * pairListToS as
 
-theorem toS_add (p q : CPolyG ℚ) : toS (caddG p q) = toS p + toS q := by
+theorem toS_add (p q : CPoly ℚ) : toS (caddG p q) = toS p + toS q := by
   simp only [toS, denote, map_add]
-theorem toS_sub (p q : CPolyG ℚ) : toS (csubG p q) = toS p - toS q := by
+theorem toS_sub (p q : CPoly ℚ) : toS (csubG p q) = toS p - toS q := by
   simp only [toS, denote, map_sub]
-theorem toS_scale (c : ℚ) (p : CPolyG ℚ) : toS (cscaleG c p) = AdjoinRoot.of _ (C c) * toS p := by
+theorem toS_scale (c : ℚ) (p : CPoly ℚ) : toS (cscaleG c p) = AdjoinRoot.of _ (C c) * toS p := by
   simp only [toS, denote, map_mul]
   rfl
-theorem toS_nil : toS ([] : CPolyG ℚ) = 0 := by unfold toS; rw [toPolyG_nil, map_zero]
-theorem toS_scale_neg_one (p : CPolyG ℚ) : toS (cscaleG (-1) p) = - toS p := by
+theorem toS_nil : toS ([] : CPoly ℚ) = 0 := by unfold toS; rw [toPolyG_nil, map_zero]
+theorem toS_scale_neg_one (p : CPoly ℚ) : toS (cscaleG (-1) p) = - toS p := by
   rw [toS_scale]; simp [map_neg, map_one]
 
 theorem toPoly2S_nil : toPoly2S [] = 0 := by simp [toPoly2S]
-theorem toPoly2S_cons (a : CPolyG ℚ) (as : List (CPolyG ℚ)) :
+theorem toPoly2S_cons (a : CPoly ℚ) (as : List (CPoly ℚ)) :
     toPoly2S (a :: as) = C (toS a) + X * toPoly2S as := by
   unfold toPoly2S toS
   rw [toPoly2_cons, Polynomial.map_add, Polynomial.map_mul, map_C, Polynomial.map_X]
 
-theorem evalAtI_spec (p : List (CPolyG ℚ)) :
+theorem evalAtI_spec (p : List (CPoly ℚ)) :
     (toPoly2S p).eval iU = pairToS (evalAtI p) := by
   induction p with
   | nil => simp [toPoly2S_nil, evalAtI, pairToS, toS_nil]
@@ -62,15 +62,15 @@ theorem evalAtI_spec (p : List (CPolyG ℚ)) :
       rw [show iU * (toS (evalAtI as).2 * iU) = toS (evalAtI as).2 * iU^2 from by ring, iU_sq]; ring
     rw [mul_add, hsq]; ring
 
-theorem pairListToS_append_singleton (Q : List (CPolyG ℚ × CPolyG ℚ)) (c : CPolyG ℚ × CPolyG ℚ) :
+theorem pairListToS_append_singleton (Q : List (CPoly ℚ × CPoly ℚ)) (c : CPoly ℚ × CPoly ℚ) :
     pairListToS (Q ++ [c]) = pairListToS Q + C (pairToS c) * X ^ Q.length := by
   induction Q with
   | nil => simp [pairListToS]
   | cons a as ih =>
     simp only [List.cons_append, pairListToS, ih, List.length_cons]; ring
 
-theorem go_append (L : List (CPolyG ℚ × CPolyG ℚ)) (carry : CPolyG ℚ × CPolyG ℚ)
-    (acc : List (CPolyG ℚ × CPolyG ℚ)) :
+theorem go_append (L : List (CPoly ℚ × CPoly ℚ)) (carry : CPoly ℚ × CPoly ℚ)
+    (acc : List (CPoly ℚ × CPoly ℚ)) :
     divByTminusI.go ([], [CField.one]) L carry acc
       = divByTminusI.go ([], [CField.one]) L carry [] ++ acc := by
   induction L generalizing carry acc with
@@ -82,44 +82,44 @@ theorem go_append (L : List (CPolyG ℚ × CPolyG ℚ)) (carry : CPolyG ℚ × C
     conv_rhs => rw [ih (divByTminusI.caddG' a (cmulI ([], [CField.one]) carry)) [carry]]
     simp
 
-theorem pairToS_caddG' (x y : CPolyG ℚ × CPolyG ℚ) :
+theorem pairToS_caddG' (x y : CPoly ℚ × CPoly ℚ) :
     pairToS (divByTminusI.caddG' x y) = pairToS x + pairToS y := by
   unfold divByTminusI.caddG' pairToS
   simp only [toS_add]; ring
-theorem pairToS_cmulI (x y : CPolyG ℚ × CPolyG ℚ) :
+theorem pairToS_cmulI (x y : CPoly ℚ × CPoly ℚ) :
     pairToS (cmulI x y) = pairToS x * pairToS y := by
   unfold cmulI pairToS
   simp only [toS_sub, toS_add]
-  have hmul : ∀ a b : CPolyG ℚ, toS (cmulG a b) = toS a * toS b := by
+  have hmul : ∀ a b : CPoly ℚ, toS (cmulG a b) = toS a * toS b := by
     intro a b
     simp only [toS, denote, map_mul]
   rw [hmul, hmul, hmul, hmul]
   linear_combination (- (toS x.2 * toS y.2)) * iU_sq
-theorem pairToS_I : pairToS (([], [CField.one]) : CPolyG ℚ × CPolyG ℚ) = iU := by
+theorem pairToS_I : pairToS (([], [CField.one]) : CPoly ℚ × CPoly ℚ) = iU := by
   unfold pairToS
   simp only [toS_nil, zero_add]
-  rw [show toS ([CField.one] : CPolyG ℚ) = 1 from by
+  rw [show toS ([CField.one] : CPoly ℚ) = 1 from by
     unfold toS
-    rw [show ([CField.one] : CPolyG ℚ) = (CField.one : ℚ) :: ([] : CPolyG ℚ) from rfl,
+    rw [show ([CField.one] : CPoly ℚ) = (CField.one : ℚ) :: ([] : CPoly ℚ) from rfl,
       toPolyG_cons, toPolyG_nil]
     rw [show CFieldSpec.toK (CField.one : ℚ) = 1 from rfl]
     simp]
   ring
 
-theorem quotOf_cons (a : CPolyG ℚ × CPolyG ℚ) (L : List (CPolyG ℚ × CPolyG ℚ))
-    (carry : CPolyG ℚ × CPolyG ℚ) :
+theorem quotOf_cons (a : CPoly ℚ × CPoly ℚ) (L : List (CPoly ℚ × CPoly ℚ))
+    (carry : CPoly ℚ × CPoly ℚ) :
     divByTminusI.go ([], [CField.one]) (a :: L) carry []
       = divByTminusI.go ([], [CField.one]) L
           (divByTminusI.caddG' a (cmulI ([], [CField.one]) carry)) [] ++ [carry] := by
   rw [divByTminusI.go, go_append]
-theorem quotOf_length (L : List (CPolyG ℚ × CPolyG ℚ)) (carry : CPolyG ℚ × CPolyG ℚ) :
+theorem quotOf_length (L : List (CPoly ℚ × CPoly ℚ)) (carry : CPoly ℚ × CPoly ℚ) :
     (divByTminusI.go ([], [CField.one]) L carry []).length = L.length := by
   induction L generalizing carry with
   | nil => simp [divByTminusI.go]
   | cons a L ih => rw [quotOf_cons]; simp [ih]
 
 -- Master existential division invariant.
-theorem go_div_master (L : List (CPolyG ℚ × CPolyG ℚ)) (carry : CPolyG ℚ × CPolyG ℚ) :
+theorem go_div_master (L : List (CPoly ℚ × CPoly ℚ)) (carry : CPoly ℚ × CPoly ℚ) :
     ∃ r : SGauss, pairListToS L.reverse + C (pairToS carry) * X ^ L.length
       = (X - C iU) * pairListToS (divByTminusI.go ([], [CField.one]) L carry []) + C r := by
   induction L generalizing carry with
@@ -144,12 +144,12 @@ theorem go_div_master (L : List (CPolyG ℚ × CPolyG ℚ)) (carry : CPolyG ℚ 
     rw [map_add, map_mul]
     ring
 
-theorem divByTminusI_spec (p : List (CPolyG ℚ × CPolyG ℚ)) :
+theorem divByTminusI_spec (p : List (CPoly ℚ × CPoly ℚ)) :
     pairListToS p
       = (X - C iU) * pairListToS (divByTminusI p) + C ((pairListToS p).eval iU) := by
   obtain ⟨r, hr⟩ := go_div_master p.reverse ([], [])
   rw [List.reverse_reverse, List.length_reverse] at hr
-  have hpair0 : pairToS (([], []) : CPolyG ℚ × CPolyG ℚ) = 0 := by
+  have hpair0 : pairToS (([], []) : CPoly ℚ × CPoly ℚ) = 0 := by
     unfold pairToS; simp [toS_nil]
   rw [hpair0, map_zero, zero_mul, add_zero] at hr
   -- divByTminusI p = go I p.reverse ([],[]) []
@@ -165,17 +165,17 @@ theorem divByTminusI_spec (p : List (CPolyG ℚ × CPolyG ℚ)) :
 
 /-! ### `toPoly2S` as a ring hom: operations lifted to `S[t]` -/
 
-theorem toPoly2S_eq_map (p : List (CPolyG ℚ)) :
+theorem toPoly2S_eq_map (p : List (CPoly ℚ)) :
     toPoly2S p = (toPoly2 p).map (AdjoinRoot.of (X ^ 2 + 1 : (Polynomial ℚ)[X])) := rfl
 
-theorem toPoly2S_tadd (p q : List (CPolyG ℚ)) :
+theorem toPoly2S_tadd (p q : List (CPoly ℚ)) :
     toPoly2S (tadd p q) = toPoly2S p + toPoly2S q := by
   rw [toPoly2S_eq_map, toPoly2_tadd, Polynomial.map_add]; rfl
-theorem toPoly2S_tsub (p q : List (CPolyG ℚ)) :
+theorem toPoly2S_tsub (p q : List (CPoly ℚ)) :
     toPoly2S (tsub p q) = toPoly2S p - toPoly2S q := by
   rw [toPoly2S_eq_map, toPoly2_tsub, Polynomial.map_sub]; rfl
 /-- `toPoly2` of `cscaleListQ` (scale every ℚ[x]-coeff by `s : ℚ`) is mult by `C (C s)`. -/
-theorem toPoly2_cscaleListQ (s : ℚ) (p : List (CPolyG ℚ)) :
+theorem toPoly2_cscaleListQ (s : ℚ) (p : List (CPoly ℚ)) :
     toPoly2 (cscaleListQ s p) = C (C s) * toPoly2 p := by
   apply Polynomial.ext; intro k
   rw [cscaleListQ, toPoly2_coeff]
@@ -193,13 +193,13 @@ theorem toPoly2_cscaleListQ (s : ℚ) (p : List (CPolyG ℚ)) :
     rw [Polynomial.coeff_C_mul, toPoly2_coeff,
       List.getD_eq_getElem?_getD, show p[k]? = none from List.getElem?_eq_none (by omega)]
     simp
-theorem toPoly2S_cscaleListQ (s : ℚ) (p : List (CPolyG ℚ)) :
+theorem toPoly2S_cscaleListQ (s : ℚ) (p : List (CPoly ℚ)) :
     toPoly2S (cscaleListQ s p) = C (AdjoinRoot.of _ (C s)) * toPoly2S p := by
   rw [toPoly2S_eq_map, toPoly2_cscaleListQ, Polynomial.map_mul, map_C, toPoly2S_eq_map]
 
 /-! ### tanDeriv lifted to S[t]; the complex/real bridges -/
 
-theorem toPoly2S_tanDeriv (p : List (CPolyG ℚ)) :
+theorem toPoly2S_tanDeriv (p : List (CPoly ℚ)) :
     toPoly2S (tanDeriv p)
       = toPoly2S (p.map cderivQ) + (X ^ 2 + 1) * Polynomial.derivative (toPoly2S p) := by
   rw [toPoly2S_eq_map, toPoly2_tanDeriv, Polynomial.map_add, Polynomial.map_mul,
@@ -208,7 +208,7 @@ theorem toPoly2S_tanDeriv (p : List (CPolyG ℚ)) :
   rfl
 
 /-- `pairListToS` coefficient reader. -/
-theorem pairListToS_coeff (L : List (CPolyG ℚ × CPolyG ℚ)) (k : ℕ) :
+theorem pairListToS_coeff (L : List (CPoly ℚ × CPoly ℚ)) (k : ℕ) :
     (pairListToS L).coeff k = pairToS (L.getD k ([], [])) := by
   induction L generalizing k with
   | nil => simp [pairListToS, pairToS, toS_nil]
@@ -219,12 +219,12 @@ theorem pairListToS_coeff (L : List (CPolyG ℚ × CPolyG ℚ)) (k : ℕ) :
     | succ m => rw [List.getD_cons_succ, Polynomial.coeff_X_mul, ih m]; simp
 
 /-- `toPoly2S` coefficient reader. -/
-theorem toPoly2S_coeff (p : List (CPolyG ℚ)) (k : ℕ) :
+theorem toPoly2S_coeff (p : List (CPoly ℚ)) (k : ℕ) :
     (toPoly2S p).coeff k = toS (p.getD k []) := by
   rw [toPoly2S_eq_map, Polynomial.coeff_map, toPoly2_coeff]; rfl
 
 /-- The zipped real/imag pair-list reads as the complexification. -/
-theorem pairListToS_zip (a b : List (CPolyG ℚ)) (N : ℕ) (ha : a.length ≤ N) (hb : b.length ≤ N) :
+theorem pairListToS_zip (a b : List (CPoly ℚ)) (N : ℕ) (ha : a.length ≤ N) (hb : b.length ≤ N) :
     pairListToS ((List.range N).map (fun k => (a.getD k [], b.getD k [])))
       = toPoly2S a + C iU * toPoly2S b := by
   apply Polynomial.ext; intro k
@@ -241,7 +241,7 @@ theorem pairListToS_zip (a b : List (CPolyG ℚ)) (N : ℕ) (ha : a.length ≤ N
     simp only [Option.getD_none, pairToS, toS_nil, mul_zero, zero_mul, add_zero]
 
 /-- A quotient pair-list splits as the complexification of its real/imag parts. -/
-theorem cplx_quot (quot : List (CPolyG ℚ × CPolyG ℚ)) :
+theorem cplx_quot (quot : List (CPoly ℚ × CPoly ℚ)) :
     toPoly2S (quot.map Prod.fst) + C iU * toPoly2S (quot.map Prod.snd) = pairListToS quot := by
   apply Polynomial.ext; intro k
   rw [Polynomial.coeff_add, Polynomial.coeff_C_mul, toPoly2S_coeff, toPoly2S_coeff,
@@ -265,21 +265,21 @@ theorem cplx_quot (quot : List (CPolyG ℚ × CPolyG ℚ)) :
 /-! ### The complexification `cplx` and the tangent derivation on S[t] -/
 
 /-- Complexify a real pair `(q₁,q₂)` of `t`-polys into `S[t]`: `Q₁ + i·Q₂`. -/
-noncomputable def cplx (q1 q2 : List (CPolyG ℚ)) : SGauss[X] :=
+noncomputable def cplx (q1 q2 : List (CPoly ℚ)) : SGauss[X] :=
   toPoly2S q1 + C iU * toPoly2S q2
 
-theorem cplx_tadd (p q r s : List (CPolyG ℚ)) :
+theorem cplx_tadd (p q r s : List (CPoly ℚ)) :
     cplx (tadd p r) (tadd q s) = cplx p q + cplx r s := by
   unfold cplx; rw [toPoly2S_tadd, toPoly2S_tadd]; ring
-theorem cplx_tsub (p q r s : List (CPolyG ℚ)) :
+theorem cplx_tsub (p q r s : List (CPoly ℚ)) :
     cplx (tsub p r) (tsub q s) = cplx p q - cplx r s := by
   unfold cplx; rw [toPoly2S_tsub, toPoly2S_tsub]; ring
 
 /-- The tangent derivation on the complexification. -/
-noncomputable def Dtan (q1 q2 : List (CPolyG ℚ)) : SGauss[X] :=
+noncomputable def Dtan (q1 q2 : List (CPoly ℚ)) : SGauss[X] :=
   cplx (q1.map cderivQ) (q2.map cderivQ) + (X ^ 2 + 1) * derivative (cplx q1 q2)
 
-theorem Dtan_eq (q1 q2 : List (CPolyG ℚ)) :
+theorem Dtan_eq (q1 q2 : List (CPoly ℚ)) :
     Dtan q1 q2 = toPoly2S (tanDeriv q1) + C iU * toPoly2S (tanDeriv q2) := by
   unfold Dtan cplx
   rw [toPoly2S_tanDeriv, toPoly2S_tanDeriv, derivative_add, derivative_C_mul]
@@ -328,7 +328,7 @@ theorem map_of_injective : Function.Injective
   decide
 
 /-- An `S[t]`-equality of complexifications gives both real `ℚ[x][t]` parts. -/
-theorem cplx_eq_imp (p q r s : List (CPolyG ℚ)) (h : cplx p q = cplx r s) :
+theorem cplx_eq_imp (p q r s : List (CPoly ℚ)) (h : cplx p q = cplx r s) :
     toPoly2 p = toPoly2 r ∧ toPoly2 q = toPoly2 s := by
   -- map_of (toPoly2 p − toPoly2 r) + C iU * map_of (toPoly2 q − toPoly2 s) = 0
   have hz : Polynomial.map (AdjoinRoot.of _) (toPoly2 p - toPoly2 r)
@@ -354,7 +354,7 @@ theorem cplx_eq_imp (p q r s : List (CPolyG ℚ)) (h : cplx p q = cplx r s) :
 /-! ### Coefficient-`∂x` part: `toPoly2 (·.map cderivQ)` -/
 
 /-- The κ (coefficient-`d/dx`) part reads coefficientwise as `derivative` on `ℚ[x]`. -/
-theorem mapDeriv_coeff (p : List (CPolyG ℚ)) (k : ℕ) :
+theorem mapDeriv_coeff (p : List (CPoly ℚ)) (k : ℕ) :
     (toPoly2 (p.map cderivQ)).coeff k = derivative ((toPoly2 p).coeff k) := by
   rw [toPoly2_coeff, toPoly2_coeff]
   by_cases hk : k < p.length
@@ -369,14 +369,14 @@ theorem mapDeriv_coeff (p : List (CPolyG ℚ)) (k : ℕ) :
     simp only [Option.map_none, Option.getD_none, toPolyG_nil, derivative_zero]
 
 /-- κ-part additive over `tadd`. -/
-theorem mapDeriv_tadd (a b : List (CPolyG ℚ)) :
+theorem mapDeriv_tadd (a b : List (CPoly ℚ)) :
     toPoly2 ((tadd a b).map cderivQ)
       = toPoly2 (a.map cderivQ) + toPoly2 (b.map cderivQ) := by
   apply Polynomial.ext; intro k
   rw [mapDeriv_coeff, toPoly2_tadd, Polynomial.coeff_add, derivative_add,
     Polynomial.coeff_add, mapDeriv_coeff, mapDeriv_coeff]
 /-- κ-part subtractive over `tsub`. -/
-theorem mapDeriv_tsub (a b : List (CPolyG ℚ)) :
+theorem mapDeriv_tsub (a b : List (CPoly ℚ)) :
     toPoly2 ((tsub a b).map cderivQ)
       = toPoly2 (a.map cderivQ) - toPoly2 (b.map cderivQ) := by
   apply Polynomial.ext; intro k
@@ -384,13 +384,13 @@ theorem mapDeriv_tsub (a b : List (CPolyG ℚ)) :
     Polynomial.coeff_sub, mapDeriv_coeff, mapDeriv_coeff]
 
 /-- `tanDeriv` additive over `tadd` (at the `toPoly2` level). -/
-theorem toPoly2_tanDeriv_tadd (a b : List (CPolyG ℚ)) :
+theorem toPoly2_tanDeriv_tadd (a b : List (CPoly ℚ)) :
     toPoly2 (tanDeriv (tadd a b)) = toPoly2 (tanDeriv a) + toPoly2 (tanDeriv b) := by
   rw [toPoly2_tanDeriv, toPoly2_tanDeriv, toPoly2_tanDeriv, mapDeriv_tadd, toPoly2_tadd,
     derivative_add]
   ring
 /-- `tanDeriv` subtractive over `tsub`. -/
-theorem toPoly2_tanDeriv_tsub (a b : List (CPolyG ℚ)) :
+theorem toPoly2_tanDeriv_tsub (a b : List (CPoly ℚ)) :
     toPoly2 (tanDeriv (tsub a b)) = toPoly2 (tanDeriv a) - toPoly2 (tanDeriv b) := by
   rw [toPoly2_tanDeriv, toPoly2_tanDeriv, toPoly2_tanDeriv, mapDeriv_tsub, toPoly2_tsub,
     derivative_sub]
@@ -398,46 +398,46 @@ theorem toPoly2_tanDeriv_tsub (a b : List (CPolyG ℚ)) :
 
 /-! ### Building-block `toPoly2` values: shift `[]::h` and singleton `[s]` -/
 
-theorem toPoly2_shift (h : List (CPolyG ℚ)) : toPoly2 ([] :: h) = X * toPoly2 h := by
+theorem toPoly2_shift (h : List (CPoly ℚ)) : toPoly2 ([] :: h) = X * toPoly2 h := by
   rw [toPoly2_cons, toPolyG_nil, map_zero, zero_add]
-theorem toPoly2_singleton (s : CPolyG ℚ) : toPoly2 [s] = C (toPolyG s) := by
-  rw [show ([s] : List (CPolyG ℚ)) = s :: [] from rfl, toPoly2_cons, toPoly2_nil, mul_zero, add_zero]
+theorem toPoly2_singleton (s : CPoly ℚ) : toPoly2 [s] = C (toPolyG s) := by
+  rw [show ([s] : List (CPoly ℚ)) = s :: [] from rfl, toPoly2_cons, toPoly2_nil, mul_zero, add_zero]
 
 /-- κ of a shift: `toPoly2 (([]::h).map cderivQ) = X * toPoly2 (h.map cderivQ)`. -/
-theorem mapDeriv_shift (h : List (CPolyG ℚ)) :
+theorem mapDeriv_shift (h : List (CPoly ℚ)) :
     toPoly2 (([] :: h).map cderivQ) = X * toPoly2 (h.map cderivQ) := by
   rw [List.map_cons, toPoly2_cons]
-  rw [show toPolyG (cderivQ ([] : CPolyG ℚ)) = 0 from by
+  rw [show toPolyG (cderivQ ([] : CPoly ℚ)) = 0 from by
     simp only [cderivQ, denote, toPolyG_nil, derivative_zero]]
   rw [map_zero, zero_add]
 
-theorem toPoly2_tanDeriv_shift (h : List (CPolyG ℚ)) :
+theorem toPoly2_tanDeriv_shift (h : List (CPoly ℚ)) :
     toPoly2 (tanDeriv ([] :: h)) = X * toPoly2 (tanDeriv h) + (X ^ 2 + 1) * toPoly2 h := by
   rw [toPoly2_tanDeriv, mapDeriv_shift, toPoly2_shift, derivative_mul, derivative_X, one_mul,
     toPoly2_tanDeriv]
   ring
 
-theorem toPoly2_tanDeriv_singleton (s : CPolyG ℚ) :
+theorem toPoly2_tanDeriv_singleton (s : CPoly ℚ) :
     toPoly2 (tanDeriv [s]) = C (toPolyG (cderivQ s)) := by
   rw [toPoly2_tanDeriv, toPoly2_singleton, derivative_C, mul_zero, add_zero,
-    show ([s] : List (CPolyG ℚ)) = s :: [] from rfl, List.map_cons, List.map_nil,
+    show ([s] : List (CPoly ℚ)) = s :: [] from rfl, List.map_cons, List.map_nil,
     toPoly2_singleton]
 
 /-! ### The numerator vanishes at `t = i` -/
 
-theorem eval_toPoly2S (p : List (CPolyG ℚ)) :
+theorem eval_toPoly2S (p : List (CPoly ℚ)) :
     (toPoly2S p).eval iU = pairToS (evalAtI p) := evalAtI_spec p
 
-theorem eval_toPoly2S_singleton (s : CPolyG ℚ) : (toPoly2S [s]).eval iU = toS s := by
+theorem eval_toPoly2S_singleton (s : CPoly ℚ) : (toPoly2S [s]).eval iU = toS s := by
   rw [show toPoly2S [s] = C (toS s) from by
     rw [toPoly2S_eq_map, toPoly2_singleton, map_C]; rfl, eval_C]
-theorem eval_toPoly2S_shift (h : List (CPolyG ℚ)) :
+theorem eval_toPoly2S_shift (h : List (CPoly ℚ)) :
     (toPoly2S ([] :: h)).eval iU = iU * (toPoly2S h).eval iU := by
   rw [toPoly2S_eq_map, toPoly2_shift, Polynomial.map_mul, Polynomial.map_X, eval_mul, eval_X]
   rfl
 
 /-- The numerator `realNum + i·imagNum` vanishes at `t = i` (since `z = c(i)`). -/
-theorem numerator_eval_zero (c1 c2 : List (CPolyG ℚ)) (s1 s2 : CPolyG ℚ) (nN : ℚ) :
+theorem numerator_eval_zero (c1 c2 : List (CPoly ℚ)) (s1 s2 : CPoly ℚ) (nN : ℚ) :
     (cplx
         (tadd (tsub c1 [csubG (evalAtI c1).1 (evalAtI c2).2])
           (cscaleListQ nN (tadd [[], s1] [s2])))
@@ -457,11 +457,11 @@ theorem numerator_eval_zero (c1 c2 : List (CPolyG ℚ)) (s1 s2 : CPolyG ℚ) (nN
   linear_combination ((evalAtI c2).2.toS + (AdjoinRoot.of (X ^ 2 + 1 : (Polynomial ℚ)[X]) (C nN)) * s2.toS) * iU_sq
 /-! ### The `divByTminusI` reduction, projected to two real `ℚ[x][t]` identities -/
 
-theorem toPoly2S_shift (h : List (CPolyG ℚ)) : toPoly2S ([] :: h) = X * toPoly2S h := by
+theorem toPoly2S_shift (h : List (CPoly ℚ)) : toPoly2S ([] :: h) = X * toPoly2S h := by
   rw [toPoly2S_eq_map, toPoly2_shift, Polynomial.map_mul, Polynomial.map_X]; rfl
 
 /-- `(t − i)·(D₁ + i·D₂) = cplx (t·D₁ + D₂) (t·D₂ − D₁)`. -/
-theorem mul_X_sub_iU_cplx (d1 d2 : List (CPolyG ℚ)) :
+theorem mul_X_sub_iU_cplx (d1 d2 : List (CPoly ℚ)) :
     (X - C iU) * cplx d1 d2 = cplx (tadd ([] :: d1) d2) (tsub ([] :: d2) d1) := by
   unfold cplx
   rw [toPoly2S_tadd, toPoly2S_tsub, toPoly2S_shift, toPoly2S_shift]
@@ -471,16 +471,16 @@ theorem mul_X_sub_iU_cplx (d1 d2 : List (CPolyG ℚ)) :
 
 /-- The reduction step, real form: for `quot = divByTminusI (zip realNum imagNum)`, the two
 `ℚ[x][t]` identities relating `realNum`/`imagNum` to `quot` hold. -/
-theorem reduction_real (c1 c2 : List (CPolyG ℚ)) (s1 s2 : CPolyG ℚ) (nN : ℚ)
-    (realNum imagNum : List (CPolyG ℚ))
+theorem reduction_real (c1 c2 : List (CPoly ℚ)) (s1 s2 : CPoly ℚ) (nN : ℚ)
+    (realNum imagNum : List (CPoly ℚ))
     (hr : realNum = tadd (tsub c1 [csubG (evalAtI c1).1 (evalAtI c2).2])
       (cscaleListQ nN (tadd [[], s1] [s2])))
     (hi : imagNum = tadd (tsub c2 [caddG (evalAtI c1).2 (evalAtI c2).1])
       (cscaleListQ nN (tsub [[], s2] [s1])))
-    (cpairs : List (CPolyG ℚ × CPolyG ℚ))
+    (cpairs : List (CPoly ℚ × CPoly ℚ))
     (hcp : cpairs = (List.range (max realNum.length imagNum.length)).map
       (fun k => (realNum.getD k [], imagNum.getD k [])))
-    (quot : List (CPolyG ℚ × CPolyG ℚ)) (hq : quot = divByTminusI cpairs) :
+    (quot : List (CPoly ℚ × CPoly ℚ)) (hq : quot = divByTminusI cpairs) :
     toPoly2 realNum = toPoly2 (tadd ([] :: quot.map Prod.fst) (quot.map Prod.snd)) ∧
       toPoly2 imagNum = toPoly2 (tsub ([] :: quot.map Prod.snd) (quot.map Prod.fst)) := by
   have hzip : pairListToS cpairs = cplx realNum imagNum := by
@@ -518,7 +518,7 @@ theorem le_foldl_max (l : List ℕ) (init x : ℕ) (hx : x ∈ l) : x ≤ l.fold
     · exact ih _ hmem
 
 /-- A nonzero coefficient at index `j` forces `j ≤ tdeg p`. -/
-theorem le_tdeg_of_ne_zero (p : List (CPolyG ℚ)) (j : ℕ) (hj : j < p.length)
+theorem le_tdeg_of_ne_zero (p : List (CPoly ℚ)) (j : ℕ) (hj : j < p.length)
     (hne : ¬ cisZeroG (p.getD j [])) : j ≤ tdeg p := by
   rw [tdeg]
   apply le_foldl_max _ 0 j
@@ -532,7 +532,7 @@ theorem le_tdeg_of_ne_zero (p : List (CPolyG ℚ)) (j : ℕ) (hj : j < p.length)
   simp [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hj]
 
 /-- `tdeg p = 0 ⟹ toPoly2 p = C (toPolyG (tcoeff p 0))` (only the `t⁰`-coefficient survives). -/
-theorem tdeg_zero_toPoly2 (p : List (CPolyG ℚ)) (h : tdeg p = 0) :
+theorem tdeg_zero_toPoly2 (p : List (CPoly ℚ)) (h : tdeg p = 0) :
     toPoly2 p = C (toPolyG (tcoeff p 0)) := by
   apply Polynomial.ext; intro k
   rw [toPoly2_coeff]
@@ -553,7 +553,7 @@ theorem tdeg_zero_toPoly2 (p : List (CPolyG ℚ)) (h : tdeg p = 0) :
 
 /-- The coupled `t`-polynomial system at level `n` over `ℚ[x][t]` (`a = −1`, `η = 1`):
 `D q₁ + (b₀ − n·t)·q₁ − b₂·q₂ = c₁` and `D q₂ + b₂·q₁ + (b₀ − n·t)·q₂ = c₂`. -/
-def TanSolves (b0 b2 : CPolyG ℚ) (n : ℕ) (c1 c2 q1 q2 : List (CPolyG ℚ)) : Prop :=
+def TanSolves (b0 b2 : CPoly ℚ) (n : ℕ) (c1 c2 q1 q2 : List (CPoly ℚ)) : Prop :=
   toPoly2 (tanDeriv q1)
       + (C (toPolyG b0) - C (C ((n : ℚ))) * X) * toPoly2 q1
       - C (toPolyG b2) * toPoly2 q2 = toPoly2 c1
@@ -567,8 +567,8 @@ theorem toPolyG_scale_one (nN : ℚ) : toPolyG (cscaleG nN [CField.one]) = C nN 
     show CFieldSpec.toK nN = nN from rfl]
 
 /-- Base case (`n = 0`, `q = [s]`): the singleton solution solves the level-0 coupled `t`-system. -/
-theorem reconstruct_base (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List (CPolyG ℚ))
-    (s1 s2 : CPolyG ℚ) (hd1 : tdeg c1 = 0) (hd2 : tdeg c2 = 0)
+theorem reconstruct_base (dbound : ℕ) (b0 b2 : CPoly ℚ) (c1 c2 : List (CPoly ℚ))
+    (s1 s2 : CPoly ℚ) (hd1 : tdeg c1 = 0) (hd2 : tdeg c2 = 0)
     (hsolve : cCoupledDESystem (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound = some (s1, s2)) :
     TanSolves b0 b2 0 c1 c2 [s1] [s2] := by
   obtain ⟨hb1, hb2⟩ := cCoupledDESystem_sound (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0)
@@ -592,8 +592,8 @@ theorem reconstruct_base (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List (CPol
 
 /-- Telescoping reconstruction: a returned `cCoupledDECancelTan` solution solves the coupled system
 at the `ℚ[x][t]` level (`D = ∂x + (t²+1)∂t`), by induction on `n`. -/
-theorem reconstruct (dbound : ℕ) (b0 : CPolyG ℚ) :
-    ∀ (n : ℕ) (b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)),
+theorem reconstruct (dbound : ℕ) (b0 : CPoly ℚ) :
+    ∀ (n : ℕ) (b2 : CPoly ℚ) (c1 c2 q1 q2 : List (CPoly ℚ)),
       cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2) →
       TanSolves b0 b2 n c1 c2 q1 q2 := by
   intro n
@@ -670,8 +670,8 @@ theorem reconstruct (dbound : ℕ) (b0 : CPolyG ℚ) :
         have hCB1 := congrArg (Polynomial.C (R := Polynomial ℚ)) hb1
         have hCB2 := congrArg (Polynomial.C (R := Polynomial ℚ)) hb2
         simp only [map_add, map_sub, map_mul, map_neg, map_one] at hCB1 hCB2
-        have hsh1 : ([[]] ++ h1 : List (CPolyG ℚ)) = [] :: h1 := rfl
-        have hsh2 : ([[]] ++ h2 : List (CPolyG ℚ)) = [] :: h2 := rfl
+        have hsh1 : ([[]] ++ h1 : List (CPoly ℚ)) = [] :: h1 := rfl
+        have hsh2 : ([[]] ++ h2 : List (CPoly ℚ)) = [] :: h2 := rfl
         -- expand toPoly2 / toPoly2∘tanDeriv of the assembled q1, q2.
         have hQ1 : toPoly2 (tadd (tadd ([[]] ++ h1) h2) [s1]) = X * H1 + H2 + C (toPolyG s1) := by
           rw [hsh1, toPoly2_tadd, toPoly2_tadd, toPoly2_shift, toPoly2_singleton]
@@ -695,7 +695,7 @@ theorem reconstruct (dbound : ℕ) (b0 : CPolyG ℚ) :
         · linear_combination X * hI2 - hI1 + hCB2 - hR2
 
 /-- `toPoly2 p = 0 ⟹ tisZero p = true` (every coefficient vanishes). -/
-theorem tisZero_of_toPoly2_zero (p : List (CPolyG ℚ)) (h : toPoly2 p = 0) : tisZero p = true := by
+theorem tisZero_of_toPoly2_zero (p : List (CPoly ℚ)) (h : toPoly2 p = 0) : tisZero p = true := by
   rw [tisZero, List.all_eq_true]
   intro a ha
   obtain ⟨k, hk, rfl⟩ := List.getElem_of_mem ha
@@ -707,8 +707,8 @@ theorem tisZero_of_toPoly2_zero (p : List (CPolyG ℚ)) (h : toPoly2 p = 0) : ti
 
 /-- A successful `cCoupledDECancelTan … 2` solve satisfies `cancelTanClearedCheck … = true`,
 since `reconstruct` makes the residual `t`-polynomials `toPoly2 = 0` at level `n = 2`. -/
-theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : CPolyG ℚ)
-    (c1 c2 q1 q2 : List (CPolyG ℚ))
+theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : CPoly ℚ)
+    (c1 c2 q1 q2 : List (CPoly ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true := by
   obtain ⟨hG1, hG2⟩ := reconstruct dbound b0 2 b2 c1 c2 q1 q2 hsome
@@ -730,16 +730,16 @@ theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : CPolyG ℚ)
     simp only [Nat.cast_ofNat] at hG2
     linear_combination hG2
 
-end DeepWiki.SymbolicIntegration.CPolyG
+end DeepWiki.SymbolicIntegration.CPoly
 
 namespace DeepWiki.SymbolicIntegration
-open CPolyG Polynomial
+open CPoly Polynomial
 
 /-- Tangent RDE cancellation soundness: a successful `cCoupledDECancelTan dbound b0 b2 c1 c2 2` solve
 `(q₁, q₂)` solves the tangent coupled `t`-polynomial system at the `ℚ[x][t]` level
 (`D = ∂x + (t²+1)∂t`, diagonal shift `−2t`). -/
-theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : CPolyG ℚ)
-    (c1 c2 q1 q2 : List (CPolyG ℚ))
+theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : CPoly ℚ)
+    (c1 c2 q1 q2 : List (CPoly ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
         + (Polynomial.C (toPolyG b0) * toPoly2 q1
@@ -752,10 +752,10 @@ theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : CPolyG ℚ)
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
       = toPoly2 c2 :=
   cancelTanClearedCheck_sound b0 b2 c1 c2 q1 q2
-    (CPolyG.cancelTanClearedCheck_of_reconstruct dbound b0 b2 c1 c2 q1 q2 hsome)
+    (CPoly.cancelTanClearedCheck_of_reconstruct dbound b0 b2 c1 c2 q1 q2 hsome)
 
 -- ★ Restatement against the intended wording.
-example (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ))
+example (dbound : ℕ) (b0 b2 : CPoly ℚ) (c1 c2 q1 q2 : List (CPoly ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
         + (Polynomial.C (toPolyG b0) * toPoly2 q1

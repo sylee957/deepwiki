@@ -12,7 +12,7 @@ coprimality (`hsplit`/`hdn`/`hds`/`hgdeg`/`hgne` of `canonicalReconstruction`) a
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG Polynomial Classical
+open CPoly QFunNZG Polynomial Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
@@ -24,7 +24,7 @@ correctness `GcdFFCorrect`, and `d ≠ 0`, the split is a genuine coprime factor
 `cSplitFactorFastG_isSplittingFactorizationGen` + `isCoprime_of_isSpecial_isNormalSqfree`), so the
 canonical pieces recombine to `⟦a/d⟧`. -/
 theorem canonicalReconstruction_of_charZero (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPolyG α) (hd : toPolyG d ≠ 0) :
+    (Dt a d : CPoly α) (hd : toPolyG d ≠ 0) :
     fieldFrac (crPoly Dt a d) [CField.one]
         + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
         + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
@@ -67,7 +67,7 @@ theorem canonicalReconstruction_of_charZero (hgcd : GcdFFCorrect (α := α))
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The canonical normal denominator is nonzero when `d ≠ 0`** (`[CharZero]` + `GcdFFCorrect`): `dₙ` is a
 factor of the split `d = dₛ·dₙ`, so `d ≠ 0 ⇒ dₙ ≠ 0`. -/
-theorem crNormDen_ne_zero_of_charZero (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+theorem crNormDen_ne_zero_of_charZero (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
     (hd : toPolyG d ≠ 0) : toPolyG (crNormDen Dt a d) ≠ 0 := by
   have hnd : crNormDen Dt a d = (cSplitFactorFastG Dt d).1 := by
     simp only [crNormDen, canonicalRepresentationFastG]
@@ -84,7 +84,7 @@ deg crNormDen`. `crNormNum` is the second cofactor of `cextendedEuclideanSplitWf
 deg d` (`cmodWf_length_lt`). The `degree` form holds unconditionally on `d ≠ 0` (incl. the trivial `crNormNum =
 0` case, `⊥ < deg dₙ`); it is the never-done crNorm-properness cleanup target, the foundation of the Hermite
 properness `hAD`. -/
-theorem crNormNum_degree_lt_crNormDen (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+theorem crNormNum_degree_lt_crNormDen (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
     (hd : toPolyG d ≠ 0) :
     (toPolyG (crNormNum Dt a d)).degree < (toPolyG (crNormDen Dt a d)).degree := by
   letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPolyG Dt)⟩

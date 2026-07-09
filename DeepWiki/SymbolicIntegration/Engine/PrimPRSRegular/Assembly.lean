@@ -10,7 +10,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG GBPolyCore
+open CPoly GBPolyCore
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
@@ -19,22 +19,22 @@ variable {β : Type*} [CField β] [CFieldSpec β]
 /-- **Per-step content-strip bookkeeping** `CPrimPRSGenFuelOk fuel P Q`: at each primitive-PRS node, every
 `t`-coefficient entering `gbprimitivePartCore` has `cnormG`-length at most `30`, mirroring the
 `cprimPRSgcdGenCore` recursion so it threads alongside `CPrimPRSGenRegular`. -/
-def CPrimPRSGenFuelOk (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
+def CPrimPRSGenFuelOk (cgcdB : CPoly β → CPoly β → CPoly β) :
     ℕ → GBPolyCore β → GBPolyCore β → Prop
-  | 0, P, _ => ∀ a ∈ gbnormCore P, (CPolyG.cnormG a : List β).length ≤ 30
+  | 0, P, _ => ∀ a ∈ gbnormCore P, (CPoly.cnormG a : List β).length ≤ 30
   | fuel + 1, P, Q =>
     if gbisZeroCore (gbnormCore Q) = true then
-      ∀ a ∈ gbnormCore (gbnormCore P), (CPolyG.cnormG a : List β).length ≤ 30
+      ∀ a ∈ gbnormCore (gbnormCore P), (CPoly.cnormG a : List β).length ≤ 30
     else
       (∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
-          (CPolyG.cnormG a : List β).length ≤ 30)
+          (CPoly.cnormG a : List β).length ≤ 30)
         ∧ CPrimPRSGenFuelOk cgcdB fuel (gbnormCore Q)
             (gbprimitivePartCore cgcdB (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))
 
 /-- **The reduction theorem** `CPrimPRSGenAssocReg` from PRS termination and gcd-correctness: given
 `CPrimPRSGenRegular cgcdB fuel P Q`, `CgcdBCorrect cgcdB`, and `CPrimPRSGenFuelOk cgcdB fuel P Q`, the
 per-step regularity bundle `CPrimPRSGenAssocReg cgcdB fuel P Q` holds. -/
-theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : CPolyG β → CPolyG β → CPolyG β)
+theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : CPoly β → CPoly β → CPoly β)
     (hcorr : CgcdBCorrect cgcdB) :
     ∀ (fuel : ℕ) (P Q : GBPolyCore β), CPrimPRSGenRegular cgcdB fuel P Q →
       CPrimPRSGenFuelOk cgcdB fuel P Q → CPrimPRSGenAssocReg cgcdB fuel P Q := by
@@ -79,7 +79,7 @@ theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : CPolyG β → CPolyG 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- The per-step regularity gate follows from PRS termination, level-β gcd-correctness, and transparent fuel.
-example (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB)
+example (cgcdB : CPoly β → CPoly β → CPoly β) (hcorr : CgcdBCorrect cgcdB)
     (fuel : ℕ) (P Q : GBPolyCore β) (hreg : CPrimPRSGenRegular cgcdB fuel P Q)
     (hfuel : CPrimPRSGenFuelOk cgcdB fuel P Q) : CPrimPRSGenAssocReg cgcdB fuel P Q :=
   cPrimPRSGenAssocReg_of_regular_of_correct cgcdB hcorr fuel P Q hreg hfuel
@@ -89,10 +89,10 @@ example (p : GBPolyCore β) : gbdegCore p = (toGBCoeffPoly p).natDegree := gbdeg
 
 -- Clause (ii) with the β(s)-unit multiplier is unconditional given the non-terminal loop guard.
 example (fuel : ℕ) (p q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false) :
-    ∃ (s : GBPolyCore β) (c : CPolyG β),
-      Polynomial.C (QFunNZG.amG β (CPolyG.toPolyG c)) * toGBPolyG p
+    ∃ (s : GBPolyCore β) (c : CPoly β),
+      Polynomial.C (QFunNZG.amG β (CPoly.toPolyG c)) * toGBPolyG p
           = toGBPolyG s * toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)
-        ∧ QFunNZG.amG β (CPolyG.toPolyG c) ≠ 0 :=
+        ∧ QFunNZG.amG β (CPoly.toPolyG c) ≠ 0 :=
   toGBPolyG_gbpsremainderCore_ne_zero fuel p q hq
 
 -- The single pseudo-division step strictly drops the `t`-degree by leading-term cancellation.

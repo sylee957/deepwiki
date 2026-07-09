@@ -33,12 +33,12 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpe
 element `v` integrates `g` over `α[y]/(yⁿ − f)` (rational part), i.e. the genuine-field identity
 `toPolyG (radDeriv n f v) = toPolyG g` in `K[X]`. -/
 def IsRadicalRationalIntegral (n : ℕ) (f g v : RadElem α) : Prop :=
-  CPolyG.toPolyG (radDeriv n (f.headD CField.zero) v) = CPolyG.toPolyG g
+  CPoly.toPolyG (radDeriv n (f.headD CField.zero) v) = CPoly.toPolyG g
 
 /-- `radGen` is a radical rational integral for its logarithmic-derivative integrand. -/
 theorem isRadicalRationalIntegral_radGen (n : ℕ) (f : α) :
     IsRadicalRationalIntegral n [f] ([CField.zero, logDerRadicand n f]) (radGen : RadElem α) := by
-  show CPolyG.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) radGen) = _
+  show CPoly.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) radGen) = _
   rw [List.headD_cons, toPolyG_radDeriv_radGen]
 
 /-- A two-term radical element integrates its computed diagonal derivative. -/
@@ -47,7 +47,7 @@ theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
       ([CDiffField.cderiv a₀,
         CField.add (CDiffField.cderiv a₁) (CField.mul a₁ (logDerRadicand n f))])
       ([a₀, a₁] : RadElem α) := by
-  show CPolyG.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) [a₀, a₁]) = _
+  show CPoly.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) [a₀, a₁]) = _
   rw [List.headD_cons, toPolyG_radDeriv_linear]
 
 /-! ### The fuel-recursion telescoping invariant
@@ -63,11 +63,11 @@ omit [CDiffFieldSpec α] in
 /-- Contributions whose derivatives are consecutive leftover differences telescope. -/
 theorem sum_radDeriv_telescope (n : ℕ) (f : α) :
     ∀ (L₀ : RadElem α) (rest : List (RadElem α)) (cs : List (RadElem α)),
-      List.Forall₂ (fun c p => CPolyG.toPolyG (radDeriv n f c)
-            = CPolyG.toPolyG p.1 - CPolyG.toPolyG p.2)
+      List.Forall₂ (fun c p => CPoly.toPolyG (radDeriv n f c)
+            = CPoly.toPolyG p.1 - CPoly.toPolyG p.2)
           cs ((L₀ :: rest).zip rest) →
-      (cs.map (fun c => CPolyG.toPolyG (radDeriv n f c))).sum
-        = CPolyG.toPolyG L₀ - CPolyG.toPolyG (rest.getLastD L₀) := by
+      (cs.map (fun c => CPoly.toPolyG (radDeriv n f c))).sum
+        = CPoly.toPolyG L₀ - CPoly.toPolyG (rest.getLastD L₀) := by
   intro L₀ rest
   induction rest generalizing L₀ with
   | nil =>
@@ -95,12 +95,12 @@ leftovers, then `v = cs.foldl radAdd radZero` satisfies
 `toPolyG (radDeriv n f v) + toPolyG (final leftover) = toPolyG (original integrand)` in `K[X]`. Composes
 `toPolyG_radDeriv_foldlRadAdd` and `sum_radDeriv_telescope`. -/
 theorem radReduceRationalTelescope (n : ℕ) (f : α) (L₀ : RadElem α) (rest cs : List (RadElem α))
-    (hstep : List.Forall₂ (fun c p => CPolyG.toPolyG (radDeriv n f c)
-          = CPolyG.toPolyG p.1 - CPolyG.toPolyG p.2)
+    (hstep : List.Forall₂ (fun c p => CPoly.toPolyG (radDeriv n f c)
+          = CPoly.toPolyG p.1 - CPoly.toPolyG p.2)
         cs ((L₀ :: rest).zip rest)) :
-    CPolyG.toPolyG (radDeriv n f (cs.foldl radAdd radZero))
-        + CPolyG.toPolyG (rest.getLastD L₀)
-      = CPolyG.toPolyG L₀ := by
+    CPoly.toPolyG (radDeriv n f (cs.foldl radAdd radZero))
+        + CPoly.toPolyG (rest.getLastD L₀)
+      = CPoly.toPolyG L₀ := by
   rw [toPolyG_radDeriv_foldlRadAdd, toPolyG_radDeriv_radZero, zero_add,
     sum_radDeriv_telescope n f L₀ rest cs hstep]
   ring
@@ -154,9 +154,9 @@ capstone in its telescoping shape: each cleared single-step Case identity, lifte
 fuel-telescoping `radReduceRationalTelescope` consumes. Proven from `toPolyG_radDeriv_zero_cons` +
 `toPolyG_zero_cons` + `C(·)·X` injectivity (`C` injective, `X` a nonzerodivisor). -/
 theorem toPolyG_radDeriv_zero_cons_sub_iff (n : ℕ) (f cB cC cD : α) :
-    CPolyG.toPolyG (radDeriv n f ([CField.zero, cB] : RadElem α))
-        = CPolyG.toPolyG ([CField.zero, cC] : RadElem α)
-          - CPolyG.toPolyG ([CField.zero, cD] : RadElem α)
+    CPoly.toPolyG (radDeriv n f ([CField.zero, cB] : RadElem α))
+        = CPoly.toPolyG ([CField.zero, cC] : RadElem α)
+          - CPoly.toPolyG ([CField.zero, cD] : RadElem α)
       ↔ CFieldSpec.toK (CField.add (CDiffField.cderiv cB) (CField.mul cB (logDerRadicand n f)))
           = CFieldSpec.toK cC - CFieldSpec.toK cD := by
   rw [toPolyG_radDeriv_zero_cons, toPolyG_zero_cons, toPolyG_zero_cons, ← sub_mul, ← map_sub]
@@ -194,18 +194,18 @@ theorem radDeriv_foldlRadAdd_zero_cons_telescope (n : ℕ) (f : α)
       CFieldSpec.toK (CField.add (CDiffField.cderiv (cBs.get ⟨i, hi⟩))
             (CField.mul (cBs.get ⟨i, hi⟩) (logDerRadicand n f)))
         = CFieldSpec.toK (cCs.get ⟨i, by omega⟩) - CFieldSpec.toK (cCs.get ⟨i + 1, by omega⟩)) :
-    CPolyG.toPolyG (radDeriv n f
+    CPoly.toPolyG (radDeriv n f
           ((cBs.map (fun cB => ([CField.zero, cB] : RadElem α))).foldl radAdd radZero))
-        + CPolyG.toPolyG ([CField.zero, cCs.getLastD CField.zero] : RadElem α)
-      = CPolyG.toPolyG ([CField.zero, cCs.headD CField.zero] : RadElem α) := by
+        + CPoly.toPolyG ([CField.zero, cCs.getLastD CField.zero] : RadElem α)
+      = CPoly.toPolyG ([CField.zero, cCs.headD CField.zero] : RadElem α) := by
   -- peel `cCs = cC₀ :: rest`; the contributions are `cs = cBs.map (fun cB => [0, cB])`
   match cCs, hlen with
   | cC₀ :: rest, hlen =>
     have hlen' : cBs.length = rest.length := by simpa using hlen
     -- assemble the `Forall₂` per-step hypothesis from the `K`-equations, via the per-step lift
     have hforall : List.Forall₂
-        (fun c p => CPolyG.toPolyG (radDeriv n f c)
-            = CPolyG.toPolyG p.1 - CPolyG.toPolyG p.2)
+        (fun c p => CPoly.toPolyG (radDeriv n f c)
+            = CPoly.toPolyG p.1 - CPoly.toPolyG p.2)
         (cBs.map (fun cB => ([CField.zero, cB] : RadElem α)))
         (((cC₀ :: rest).map (fun cC => ([CField.zero, cC] : RadElem α))).zip
           (rest.map (fun cC => ([CField.zero, cC] : RadElem α)))) := by
@@ -256,8 +256,8 @@ open RadElem
 `native_decide`). The radicand `radicandX3p1 = x³+1` and the integrand coefficient `logDerRadicand 2
 radicandX3p1 = radicandLogDer = 3x²/(2(x³+1))` are the engine's own definitions. -/
 theorem radDeriv_radGen_sound_qx :
-    CPolyG.toPolyG (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)))
-      = CPolyG.toPolyG ([CField.zero, radicandLogDer] : RadElem (QFunNZG ℚ)) := by
+    CPoly.toPolyG (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)))
+      = CPoly.toPolyG ([CField.zero, radicandLogDer] : RadElem (QFunNZG ℚ)) := by
   rw [toPolyG_radDeriv_radGen]
   rfl
 
@@ -265,16 +265,16 @@ theorem radDeriv_radGen_sound_qx :
 theorem radIsZero_radDeriv_radGen_qx :
     radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)))
         [CField.zero, radicandLogDer]) = true := by
-  rw [radIsZero, radSub, CPolyG.cisZeroG_iff]
+  rw [radIsZero, radSub, CPoly.cisZeroG_iff]
   simp only [denote, radDeriv_radGen_sound_qx]
   ring
 
-/-! ### Bridge (i): the `qxOfNum : CPolyG ℚ → QFunNZG ℚ` lift commutes with the derivation
+/-! ### Bridge (i): the `qxOfNum : CPoly ℚ → QFunNZG ℚ` lift commutes with the derivation
 
 The literal `radIntegrateRational` over `α = QFunNZG ℚ` builds its base-field coefficients by
-`qxOfNum : CPolyG ℚ → QFunNZG ℚ` (`p ↦ ⟨(p, [1]), _⟩`, a polynomial over denominator `1`). Discharging
+`qxOfNum : CPoly ℚ → QFunNZG ℚ` (`p ↦ ⟨(p, [1]), _⟩`, a polynomial over denominator `1`). Discharging
 the per-step `K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` for a *concrete* driver run needs to push the
-engine's polynomial derivative `cderivG : CPolyG ℚ → CPolyG ℚ` (formal `d/dX` on coefficient lists)
+engine's polynomial derivative `cderivG : CPoly ℚ → CPoly ℚ` (formal `d/dX` on coefficient lists)
 through `qxOfNum` and `cderiv` (the tower derivation `towerDerivQFunNZG [1]`). This is the substantive
 noncomputable bridge — it lives in the genuine field `RatFunc ℚ` (`= CFieldSpec.K (QFunNZG ℚ)`), read
 through `toQFunNZG = CFieldSpec.toK`.
@@ -290,10 +290,10 @@ is `⟨0⟩`, so `mapCoeffs = 0`), which matches `toPolyG (cderivG p)` (`toPolyG
 polynomial-over-`1` element `qxOfNum p = ⟨(p, [1]), _⟩` is `amG (toPolyG p)` (denominator `[1]` reads as
 `1`, so the quotient `amG (toPolyG p) / 1` collapses). The reading that turns the derivation-commutation
 bridge into an `extendDeriv ∘ algebraMap` computation. -/
-theorem toQFunNZG_qxOfNum (p : CPolyG ℚ) :
-    QFunNZG.toQFunNZG (qxOfNum p) = QFunNZG.amG ℚ (CPolyG.toPolyG p) := by
-  show QFunNZG.amG ℚ (CPolyG.toPolyG p) / QFunNZG.amG ℚ (CPolyG.toPolyG ([CField.one] : CPolyG ℚ)) = _
-  have h1 : CPolyG.toPolyG ([CField.one] : CPolyG ℚ) = 1 := by
+theorem toQFunNZG_qxOfNum (p : CPoly ℚ) :
+    QFunNZG.toQFunNZG (qxOfNum p) = QFunNZG.amG ℚ (CPoly.toPolyG p) := by
+  show QFunNZG.amG ℚ (CPoly.toPolyG p) / QFunNZG.amG ℚ (CPoly.toPolyG ([CField.one] : CPoly ℚ)) = _
+  have h1 : CPoly.toPolyG ([CField.one] : CPoly ℚ) = 1 := by
     simp only [denote]
     simp
   rw [h1, map_one, div_one]
@@ -304,7 +304,7 @@ and over `ℚ` the base `Differential ℚ` is the zero derivation (`instDifferen
 0` and only `derivative'` survives. The base-derivation half of bridge (i). -/
 theorem baseDerivQ_apply (q : (CFieldSpec.K ℚ)[X]) :
     baseDerivQ q = Polynomial.derivative q := by
-  have h1 : CPolyG.toPolyG ([CField.one] : CPolyG ℚ) = 1 := by
+  have h1 : CPoly.toPolyG ([CField.one] : CPoly ℚ) = 1 := by
     simp only [denote]
     simp
   rw [baseDerivQ, h1, Differential.implicitDeriv]
@@ -319,22 +319,22 @@ theorem baseDerivQ_apply (q : (CFieldSpec.K ℚ)[X]) :
 
 /-- **★ Bridge (i) — the derivation commutes with `qxOfNum`** — `toQFunNZG (cderiv (qxOfNum p)) =
 toQFunNZG (qxOfNum (cderivG p))` in `RatFunc ℚ` (`= CFieldSpec.K (QFunNZG ℚ)`): the polynomial-into-ℚ(x)
-embedding `qxOfNum : CPolyG ℚ → QFunNZG ℚ` is a derivation morphism, i.e. `cderiv ∘ qxOfNum = qxOfNum ∘
+embedding `qxOfNum : CPoly ℚ → QFunNZG ℚ` is a derivation morphism, i.e. `cderiv ∘ qxOfNum = qxOfNum ∘
 cderivG` read through the genuine field. The substantive noncomputable bridge of the literal-radical
 soundness: `cderiv = towerDerivQFunNZG [1]` realizes `extendDeriv (implicitDeriv (toPolyG [1]))`
 (`toQFunNZG_towerDerivQFunNZG`); on the algebra-map image `qxOfNum p ↦ amG (toPolyG p)`
 (`toQFunNZG_qxOfNum`) this is `algebraMap (baseDerivQ (toPolyG p))` (`extendDeriv_algebraMap`); and
 `baseDerivQ` is the plain `derivative` (`baseDerivQ_apply`), matching `toPolyG (cderivG p)`
 (`toPolyG_cderivG`). -/
-theorem toQFunNZG_cderiv_qxOfNum (p : CPolyG ℚ) :
+theorem toQFunNZG_cderiv_qxOfNum (p : CPoly ℚ) :
     QFunNZG.toQFunNZG (CDiffField.cderiv (qxOfNum p))
-      = QFunNZG.toQFunNZG (qxOfNum (CPolyG.cderivG p)) := by
+      = QFunNZG.toQFunNZG (qxOfNum (CPoly.cderivG p)) := by
   -- `cderiv = towerDerivQFunNZG [1]`; realize it as `extendDeriv (implicitDeriv (toPolyG [1]))`
   show QFunNZG.toQFunNZG (QFunNZG.towerDerivQFunNZG [CField.one] (qxOfNum p)) = _
   rw [QFunNZG.toQFunNZG_towerDerivQFunNZG, toQFunNZG_qxOfNum, toQFunNZG_qxOfNum, QFunNZG.amG]
   -- `extendDeriv (implicitDeriv (toPolyG [1])) (algebraMap (toPolyG p)) = algebraMap (baseDerivQ (toPolyG p))`
-  rw [show Differential.implicitDeriv (CPolyG.toPolyG ([CField.one] : CPolyG ℚ)) = baseDerivQ from rfl,
-    extendDeriv_algebraMap, baseDerivQ_apply, CPolyG.toPolyG_cderivG]
+  rw [show Differential.implicitDeriv (CPoly.toPolyG ([CField.one] : CPoly ℚ)) = baseDerivQ from rfl,
+    extendDeriv_algebraMap, baseDerivQ_apply, CPoly.toPolyG_cderivG]
 
 /-! ### Bridge (ii): `g = ℓ·f` in `K` — the integrand IS the diagonal multiplier times the radicand
 
@@ -374,7 +374,7 @@ expression `csubG (caddG (cmulG Bder f) (cmulG B g)) C`. The engine's per-step c
 polynomial equation `B'·f + B·g − C = D` in `K[X]` — a `rfl`/`cisZeroG` fact, no `radDeriv` reasoning.
 This is the trivial bridge: it just unfolds the definition. -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -383,12 +383,12 @@ omit [CDiffField α] in
 Bder = csubG (caddG (cmulG Bder f) (cmulG B g)) C`. The per-step polynomial cleared identity is `rfl`: the
 residual the Case-3 iterate negates and recurses on is literally `B'·f + B·g − C` (with `Bder = B'`
 supplied by the caller). No content beyond unfolding — the bridge is definitional. -/
-theorem radCase3Residual_eq (f g B C Bder : CPolyG α) :
+theorem radCase3Residual_eq (f g B C Bder : CPoly α) :
     radCase3Residual f g B C Bder
       = csubG (caddG (cmulG Bder f) (cmulG B g)) C :=
   rfl
 
-end CPolyG
+end CPoly
 
 /-! ### ★ Composition (i)+(ii)+(iii): the literal `radDeriv(assembled v) = integrand − leftover` over `ℚ(x)`
 
@@ -408,33 +408,33 @@ open scoped Polynomial
 /-- **`toK (qxOfNum p) = amG (toPolyG p)`** (`CFieldSpec.toK`-flavoured) — the same content as
 `toQFunNZG_qxOfNum`, restated against `CFieldSpec.toK` (definitionally `QFunNZG.toQFunNZG` for `QFunNZG ℚ`)
 so it `rw`s directly in `toK`-expressed goals. -/
-theorem toK_qxOfNum (p : CPolyG ℚ) :
-    CFieldSpec.toK (qxOfNum p) = QFunNZG.amG ℚ (CPolyG.toPolyG p) :=
+theorem toK_qxOfNum (p : CPoly ℚ) :
+    CFieldSpec.toK (qxOfNum p) = QFunNZG.amG ℚ (CPoly.toPolyG p) :=
   toQFunNZG_qxOfNum p
 
 /-- **`toK (cderiv (qxOfNum p)) = amG (derivative (toPolyG p))`** (`CFieldSpec.toK`-flavoured bridge (i)) —
 the genuine-field reading of `cderiv ∘ qxOfNum`: bridge (i) (`toQFunNZG_cderiv_qxOfNum`) composed with the
 `qxOfNum`-reading and `toPolyG_cderivG`. The `toK`-side form used in the per-step composition. -/
-theorem toK_cderiv_qxOfNum (p : CPolyG ℚ) :
+theorem toK_cderiv_qxOfNum (p : CPoly ℚ) :
     CFieldSpec.toK (CDiffField.cderiv (qxOfNum p))
-      = QFunNZG.amG ℚ (derivative (CPolyG.toPolyG p)) := by
+      = QFunNZG.amG ℚ (derivative (CPoly.toPolyG p)) := by
   rw [show CFieldSpec.toK (CDiffField.cderiv (qxOfNum p))
         = QFunNZG.toQFunNZG (CDiffField.cderiv (qxOfNum p)) from rfl,
-    toQFunNZG_cderiv_qxOfNum, toQFunNZG_qxOfNum, CPolyG.toPolyG_cderivG]
+    toQFunNZG_cderiv_qxOfNum, toQFunNZG_qxOfNum, CPoly.toPolyG_cderivG]
 
 /-- **`toK (logDerRadicand n (qxOfNum ρ)) = amG(ρ') / ((n:K)·amG(ρ))`** — the diagonal multiplier of the
 literal radical derivation, read in `RatFunc ℚ`: `ℓ = ρ'/(nρ)` reads as `amG(derivative ρ̄)/((n:K)·amG ρ̄)`
 (`ρ̄ = toPolyG ρ`). Routes `logDerRadicand`'s `div`/`mul`/`cnatCastG` through the `toK` homomorphism laws
 and the bridge-(i) reading `toK_cderiv_qxOfNum`. -/
-theorem toK_logDerRadicand_qxOfNum (n : ℕ) (ρ : CPolyG ℚ) :
+theorem toK_logDerRadicand_qxOfNum (n : ℕ) (ρ : CPoly ℚ) :
     CFieldSpec.toK (logDerRadicand n (qxOfNum ρ))
-      = QFunNZG.amG ℚ (derivative (CPolyG.toPolyG ρ))
-        / ((n : RatFunc (CFieldSpec.K ℚ)) * QFunNZG.amG ℚ (CPolyG.toPolyG ρ)) := by
-  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, CPolyG.toK_cnatCastG, toK_cderiv_qxOfNum,
+      = QFunNZG.amG ℚ (derivative (CPoly.toPolyG ρ))
+        / ((n : RatFunc (CFieldSpec.K ℚ)) * QFunNZG.amG ℚ (CPoly.toPolyG ρ)) := by
+  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, CPoly.toK_cnatCastG, toK_cderiv_qxOfNum,
     toK_qxOfNum]
 
 /-- **★ The literal per-step `K`-equation reduces to the cleared polynomial identity** — for `qxOfNum`-of-
-polynomial step coefficient `B` and consecutive leftovers `C`, `C'` over the radicand `ρ` (all `CPolyG ℚ`),
+polynomial step coefficient `B` and consecutive leftovers `C`, `C'` over the radicand `ρ` (all `CPoly ℚ`),
 the telescope's per-step base-field equation
 `toK (cderiv (qxOfNum B) + qxOfNum B · logDerRadicand n (qxOfNum ρ)) = toK (qxOfNum C) − toK (qxOfNum C')`
 holds in `RatFunc ℚ` **iff** the cleared polynomial identity
@@ -442,19 +442,19 @@ holds in `RatFunc ℚ` **iff** the cleared polynomial identity
 and `ρ̄ ≠ 0`. This is the (i)+(ii)+(iii) composition at one step: bridge (i) reads `cderiv∘qxOfNum`, bridge
 (ii) clears `ℓ = ρ'/(nρ)`, and `amG` injectivity descends the `RatFunc` equation to the `K[X]` identity.
 The genuine-field form of `radCase3Residual = 0`. -/
-theorem toK_step_qxOfNum_iff (n : ℕ) (ρ B C C' : CPolyG ℚ)
-    (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : CPolyG.toPolyG ρ ≠ 0) :
+theorem toK_step_qxOfNum_iff (n : ℕ) (ρ B C C' : CPoly ℚ)
+    (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : CPoly.toPolyG ρ ≠ 0) :
     CFieldSpec.toK (CField.add (CDiffField.cderiv (qxOfNum B))
           (CField.mul (qxOfNum B) (logDerRadicand n (qxOfNum ρ))))
         = CFieldSpec.toK (qxOfNum C) - CFieldSpec.toK (qxOfNum C')
-      ↔ (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ * derivative (CPolyG.toPolyG B)
-            + CPolyG.toPolyG B * derivative (CPolyG.toPolyG ρ)
-          = (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ
-              * (CPolyG.toPolyG C - CPolyG.toPolyG C') := by
+      ↔ (n : (CFieldSpec.K ℚ)[X]) * CPoly.toPolyG ρ * derivative (CPoly.toPolyG B)
+            + CPoly.toPolyG B * derivative (CPoly.toPolyG ρ)
+          = (n : (CFieldSpec.K ℚ)[X]) * CPoly.toPolyG ρ
+              * (CPoly.toPolyG C - CPoly.toPolyG C') := by
   -- read every `toK` through `amG` (bridge (i) for `cderiv`, the `ℓ` reading for the multiplier)
   rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, toK_cderiv_qxOfNum, toK_qxOfNum, toK_qxOfNum,
     toK_qxOfNum, toK_logDerRadicand_qxOfNum]
-  have hρK : QFunNZG.amG ℚ (CPolyG.toPolyG ρ) ≠ 0 := QFunNZG.amG_toPolyG_ne_zero hρ
+  have hρK : QFunNZG.amG ℚ (CPoly.toPolyG ρ) ≠ 0 := QFunNZG.amG_toPolyG_ne_zero hρ
   have hinj := RatFunc.algebraMap_injective (CFieldSpec.K ℚ)
   -- the `K[X]` identity, pushed through the ring hom `amG`, with the denominator `(n:K)·amG ρ̄ ≠ 0`
   -- cleared, is exactly the `RatFunc` equation; `amG` injectivity gives the converse.
@@ -471,7 +471,7 @@ theorem toK_step_qxOfNum_iff (n : ℕ) (ρ B C C' : CPolyG ℚ)
     linear_combination h'
 
 /-- **★ The LITERAL rational-part soundness over `ℚ(x)`** — for a radicand `ρ`, a list of step-contribution
-polynomials `Bpolys` and a one-longer list of leftover polynomials `Cpolys` (all `CPolyG ℚ`), **if** every
+polynomials `Bpolys` and a one-longer list of leftover polynomials `Cpolys` (all `CPoly ℚ`), **if** every
 step's cleared polynomial identity `(n:K[X])·ρ̄·Bᵢ' + Bᵢ·ρ̄' = (n:K[X])·ρ̄·(Cᵢ − Cᵢ₊₁)` holds in `K[X]`
 (`ρ̄ = toPolyG ρ` etc. — the genuine-field reading of each engine step's `radCase3Residual = 0`, bridge
 (iii)), **then** the assembled pure-`y` antiderivative `v = (Bpolys.map (qxOfNum · ↦ [0, ·])).foldl radAdd
@@ -481,21 +481,21 @@ for the LITERAL `qxOfNum`-coefficient lifts the `radIntegrateRational` driver pr
 turns each cleared polynomial identity into the telescope's per-step `K`-equation, then
 `radDeriv_foldlRadAdd_zero_cons_telescope` assembles. Precondition: `n ≠ 0` (in `RatFunc ℚ`), `ρ ≠ 0`
 (`toPolyG ρ ≠ 0`), and the per-step polynomial identities. -/
-theorem radDeriv_foldlRadAdd_qxOfNum_telescope (n : ℕ) (ρ : CPolyG ℚ) (Bpolys Cpolys : List (CPolyG ℚ))
+theorem radDeriv_foldlRadAdd_qxOfNum_telescope (n : ℕ) (ρ : CPoly ℚ) (Bpolys Cpolys : List (CPoly ℚ))
     (hlen : Bpolys.length + 1 = Cpolys.length)
-    (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : CPolyG.toPolyG ρ ≠ 0)
+    (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : CPoly.toPolyG ρ ≠ 0)
     (hpoly : ∀ i : ℕ, (hi : i < Bpolys.length) →
-      (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ * derivative (CPolyG.toPolyG (Bpolys.get ⟨i, hi⟩))
-          + CPolyG.toPolyG (Bpolys.get ⟨i, hi⟩) * derivative (CPolyG.toPolyG ρ)
-        = (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ
-            * (CPolyG.toPolyG (Cpolys.get ⟨i, by omega⟩)
-              - CPolyG.toPolyG (Cpolys.get ⟨i + 1, by omega⟩))) :
-    CPolyG.toPolyG (radDeriv n (qxOfNum ρ)
+      (n : (CFieldSpec.K ℚ)[X]) * CPoly.toPolyG ρ * derivative (CPoly.toPolyG (Bpolys.get ⟨i, hi⟩))
+          + CPoly.toPolyG (Bpolys.get ⟨i, hi⟩) * derivative (CPoly.toPolyG ρ)
+        = (n : (CFieldSpec.K ℚ)[X]) * CPoly.toPolyG ρ
+            * (CPoly.toPolyG (Cpolys.get ⟨i, by omega⟩)
+              - CPoly.toPolyG (Cpolys.get ⟨i + 1, by omega⟩))) :
+    CPoly.toPolyG (radDeriv n (qxOfNum ρ)
           (((Bpolys.map qxOfNum).map (fun cB => ([CField.zero, cB] : RadElem (QFunNZG ℚ)))).foldl
             radAdd radZero))
-        + CPolyG.toPolyG
+        + CPoly.toPolyG
             ([CField.zero, (Cpolys.map qxOfNum).getLastD CField.zero] : RadElem (QFunNZG ℚ))
-      = CPolyG.toPolyG ([CField.zero, (Cpolys.map qxOfNum).headD CField.zero] : RadElem (QFunNZG ℚ)) := by
+      = CPoly.toPolyG ([CField.zero, (Cpolys.map qxOfNum).headD CField.zero] : RadElem (QFunNZG ℚ)) := by
   -- the radicand exposed to `radDeriv` is `(qxOfNum ρ).headD = qxOfNum ρ`? no — `radDeriv` takes the
   -- radicand directly here. Apply the abstract telescope at the `qxOfNum`-lifted coefficient lists.
   have hlen' : (Bpolys.map qxOfNum).length + 1 = (Cpolys.map qxOfNum).length := by
@@ -539,15 +539,15 @@ on the algebra-map image of a `K[X]`-polynomial is the algebra-map of its `deriv
 the `deriv`/`amG` direction): `toK (cderiv (qxOfNum N)) = deriv (toK (qxOfNum N)) = deriv (amG (toPolyG N))`
 (`toK_cderiv`) and `= amG (derivative (toPolyG N))` (`toK_cderiv_qxOfNum`), so the two readings agree on every
 `toPolyG`. The `deriv`-side restatement of bridge (i), used to expand the quotient rule on `c = N̄/ρ̄`. -/
-theorem deriv_amG_toPolyG (N : CPolyG ℚ) :
+theorem deriv_amG_toPolyG (N : CPoly ℚ) :
     @Differential.deriv _ _ (CDiffFieldSpec.diffK (α := QFunNZG ℚ))
-        (QFunNZG.amG ℚ (CPolyG.toPolyG N))
-      = QFunNZG.amG ℚ (derivative (CPolyG.toPolyG N)) := by
-  rw [show QFunNZG.amG ℚ (CPolyG.toPolyG N) = CFieldSpec.toK (qxOfNum N) from (toK_qxOfNum N).symm,
+        (QFunNZG.amG ℚ (CPoly.toPolyG N))
+      = QFunNZG.amG ℚ (derivative (CPoly.toPolyG N)) := by
+  rw [show QFunNZG.amG ℚ (CPoly.toPolyG N) = CFieldSpec.toK (qxOfNum N) from (toK_qxOfNum N).symm,
     ← CDiffFieldSpec.toK_cderiv, toK_cderiv_qxOfNum]
 
 /-- **★ The FRACTION-coefficient single-step iff** — for `qxOfNum`-of-polynomial numerator `N`, integrand
-numerator `M`, and the common denominator `ρ` (all `CPolyG ℚ`), the `C/y`-form soundness with the fraction
+numerator `M`, and the common denominator `ρ` (all `CPoly ℚ`), the `C/y`-form soundness with the fraction
 coefficient `c = qxOfNum N / qxOfNum ρ` and integrand `γ = qxOfNum M / qxOfNum ρ`,
 `IsRadicalRationalIntegral n [qxOfNum ρ] [0, γ] [0, c]` (i.e. `radDeriv n (qxOfNum ρ) [0, c] = [0, γ]` in
 `K[X]`), holds **iff** the single cleared **polynomial** identity
@@ -558,18 +558,18 @@ of the driver is the `n = 2` case `M = C − Crem`. This is the named-run lift's
 accumulator `vNum/ρ·y` is a *single* `C/y` fraction, not a fold), composing `isRadicalRationalIntegral_
 zero_cons_iff` (the `C/y`-form `K`-equation), bridge (i) (`deriv_amG_toPolyG`), and the `logDerRadicand`
 reading. -/
-theorem isRadicalRationalIntegral_div_qxOfNum_iff (n : ℕ) (N M ρ : CPolyG ℚ)
-    (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : CPolyG.toPolyG ρ ≠ 0) :
+theorem isRadicalRationalIntegral_div_qxOfNum_iff (n : ℕ) (N M ρ : CPoly ℚ)
+    (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : CPoly.toPolyG ρ ≠ 0) :
     IsRadicalRationalIntegral n [qxOfNum ρ]
         ([CField.zero, CField.div (qxOfNum M) (qxOfNum ρ)])
         ([CField.zero, CField.div (qxOfNum N) (qxOfNum ρ)] : RadElem (QFunNZG ℚ))
-      ↔ (n : (CFieldSpec.K ℚ)[X]) * (CPolyG.toPolyG ρ * derivative (CPolyG.toPolyG N)
-              - CPolyG.toPolyG N * derivative (CPolyG.toPolyG ρ))
-            + CPolyG.toPolyG N * derivative (CPolyG.toPolyG ρ)
-          = (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ * CPolyG.toPolyG M := by
+      ↔ (n : (CFieldSpec.K ℚ)[X]) * (CPoly.toPolyG ρ * derivative (CPoly.toPolyG N)
+              - CPoly.toPolyG N * derivative (CPoly.toPolyG ρ))
+            + CPoly.toPolyG N * derivative (CPoly.toPolyG ρ)
+          = (n : (CFieldSpec.K ℚ)[X]) * CPoly.toPolyG ρ * CPoly.toPolyG M := by
   rw [isRadicalRationalIntegral_zero_cons_iff]
   -- abbreviations for the `amG`-images and the denominator nonzero facts
-  have hρK : QFunNZG.amG ℚ (CPolyG.toPolyG ρ) ≠ 0 := QFunNZG.amG_toPolyG_ne_zero hρ
+  have hρK : QFunNZG.amG ℚ (CPoly.toPolyG ρ) ≠ 0 := QFunNZG.amG_toPolyG_ne_zero hρ
   have hinj := RatFunc.algebraMap_injective (CFieldSpec.K ℚ)
   -- expand the `K`-equation `toK(cderiv c + c·ℓ) = toK γ` through `toK_div`, bridge (i), and `ℓ = ρ'/(nρ)`
   rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_div, CFieldSpec.toK_div, toK_qxOfNum,
@@ -577,14 +577,14 @@ theorem isRadicalRationalIntegral_div_qxOfNum_iff (n : ℕ) (N M ρ : CPolyG ℚ
   -- `toK (cderiv (div (qxOfNum N) (qxOfNum ρ))) = deriv (amG N̄ / amG ρ̄)` (the quotient rule)
   rw [show CFieldSpec.toK (CDiffField.cderiv (CField.div (qxOfNum N) (qxOfNum ρ)))
         = @Differential.deriv _ _ (CDiffFieldSpec.diffK (α := QFunNZG ℚ))
-            (QFunNZG.amG ℚ (CPolyG.toPolyG N) / QFunNZG.amG ℚ (CPolyG.toPolyG ρ)) by
+            (QFunNZG.amG ℚ (CPoly.toPolyG N) / QFunNZG.amG ℚ (CPoly.toPolyG ρ)) by
       rw [CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_div, toK_qxOfNum, toK_qxOfNum]]
   rw [Derivation.leibniz_div, smul_eq_mul, smul_eq_mul, smul_eq_mul, deriv_amG_toPolyG,
     deriv_amG_toPolyG]
   -- now a pure `RatFunc` equation in `amG`-images; clear denominators and descend by `amG` injectivity
   -- the cleared `K[X]` identity, transported through the ring hom `amG` (`map_*` + `map_natCast`),
   -- is exactly the `RatFunc` equation after clearing the denominator `(n:K)·amG ρ̄ ≠ 0`.
-  have hden : (n : RatFunc (CFieldSpec.K ℚ)) * QFunNZG.amG ℚ (CPolyG.toPolyG ρ) ≠ 0 :=
+  have hden : (n : RatFunc (CFieldSpec.K ℚ)) * QFunNZG.amG ℚ (CPoly.toPolyG ρ) ≠ 0 :=
     mul_ne_zero hn hρK
   constructor
   · intro h
@@ -602,22 +602,22 @@ theorem isRadicalRationalIntegral_div_qxOfNum_iff (n : ℕ) (N M ρ : CPolyG ℚ
 
 /-- **★ Reading the engine's cleared `cisZeroG` check into the fraction-iff `K[X]` identity** (the `n = 2`
 named-run form) — given the engine-side polynomial check `cisZeroG (2·ρ·N' − N·ρ' − 2·ρ·M) = true` (the
-whole-accumulator cleared identity over `CPolyG ℚ`, `2·_ = cscaleG 2`, `_' = cderivG`), reading it abstractly
+whole-accumulator cleared identity over `CPoly ℚ`, `2·_ = cscaleG 2`, `_' = cderivG`), reading it abstractly
 through `cisZeroG_iff` + `toPolyG_csubG` (+ `toPolyG_cmulG`/`toPolyG_cscaleG`/`toPolyG_cderivG`) yields the
 `K[X] = ℚ[X]` identity `(2:K[X])·(ρ̄·N̄' − N̄·ρ̄') + N̄·ρ̄' = (2:K[X])·ρ̄·M̄` — exactly the hypothesis of
 `isRadicalRationalIntegral_div_qxOfNum_iff` at `n = 2` (`2(ρ̄N̄' − N̄ρ̄') + N̄ρ̄' = 2ρ̄N̄' − N̄ρ̄'`). The bridge
 that turns a named driver run's own `cisZeroG` check (its cleared polynomial identity) into the fraction
 iff's precondition, with no `radDeriv`/`RatFunc` reasoning — only the `toPolyG` polynomial readings. -/
-theorem clearedKX2_of_cisZeroG (N M ρ : CPolyG ℚ)
-    (hcheck : CPolyG.cisZeroG
-        (CPolyG.csubG (CPolyG.csubG (CPolyG.cmulG (CPolyG.cscaleG (2 : ℚ) ρ) (CPolyG.cderivG N))
-          (CPolyG.cmulG N (CPolyG.cderivG ρ)))
-          (CPolyG.cmulG (CPolyG.cscaleG (2 : ℚ) ρ) M)) = true) :
-    (2 : (CFieldSpec.K ℚ)[X]) * (CPolyG.toPolyG ρ * derivative (CPolyG.toPolyG N)
-            - CPolyG.toPolyG N * derivative (CPolyG.toPolyG ρ))
-          + CPolyG.toPolyG N * derivative (CPolyG.toPolyG ρ)
-      = (2 : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ * CPolyG.toPolyG M := by
-  rw [CPolyG.cisZeroG_iff] at hcheck
+theorem clearedKX2_of_cisZeroG (N M ρ : CPoly ℚ)
+    (hcheck : CPoly.cisZeroG
+        (CPoly.csubG (CPoly.csubG (CPoly.cmulG (CPoly.cscaleG (2 : ℚ) ρ) (CPoly.cderivG N))
+          (CPoly.cmulG N (CPoly.cderivG ρ)))
+          (CPoly.cmulG (CPoly.cscaleG (2 : ℚ) ρ) M)) = true) :
+    (2 : (CFieldSpec.K ℚ)[X]) * (CPoly.toPolyG ρ * derivative (CPoly.toPolyG N)
+            - CPoly.toPolyG N * derivative (CPoly.toPolyG ρ))
+          + CPoly.toPolyG N * derivative (CPoly.toPolyG ρ)
+      = (2 : (CFieldSpec.K ℚ)[X]) * CPoly.toPolyG ρ * CPoly.toPolyG M := by
+  rw [CPoly.cisZeroG_iff] at hcheck
   simp only [denote] at hcheck
   rw [sub_eq_zero] at hcheck
   -- `C (toK (2:ℚ)) = (2 : K[X])` (the scalar `2`)
@@ -642,16 +642,16 @@ sum, which the kernel cannot reduce for `ℚ`, hence stated rather than discharg
 `clearedKX2_of_cisZeroG` reads the engine check into it. The remaining precondition is exactly `hcheck` — the
 engine's own polynomial cleared identity for the run. -/
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-- **`toPolyG c3itRho ≠ 0`** — the named run's radicand `ρ = x³+1` (`c3itRho = [1,0,0,1]`) has nonzero
 `K[X]`-image: its constant coefficient is `toK 1 = 1 ≠ 0`. The `ρ̄ ≠ 0` side-condition of the fraction iff
 for the `c3itRun` instantiation. -/
-theorem toPolyG_c3itRho_ne_zero : CPolyG.toPolyG (c3itRho : CPolyG ℚ) ≠ 0 := by
+theorem toPolyG_c3itRho_ne_zero : CPoly.toPolyG (c3itRho : CPoly ℚ) ≠ 0 := by
   intro h
-  have hc : (CPolyG.toPolyG (c3itRho : CPolyG ℚ)).coeff 0 = 0 := by rw [h, Polynomial.coeff_zero]
-  rw [show (c3itRho : CPolyG ℚ) = [1, 0, 0, 1] from rfl] at hc
-  simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, Polynomial.coeff_add, Polynomial.coeff_C_zero,
+  have hc : (CPoly.toPolyG (c3itRho : CPoly ℚ)).coeff 0 = 0 := by rw [h, Polynomial.coeff_zero]
+  rw [show (c3itRho : CPoly ℚ) = [1, 0, 0, 1] from rfl] at hc
+  simp only [CPoly.toPolyG_cons, CPoly.toPolyG_nil, Polynomial.coeff_add, Polynomial.coeff_C_zero,
     Polynomial.coeff_X_mul_zero, add_zero] at hc
   exact one_ne_zero hc
 
@@ -675,10 +675,10 @@ reads it into the fraction iff's `K[X]` identity, then `isRadicalRationalIntegra
 `native_decide` fact `c3itDriver_integrates`, here a corollary of the abstract derivation **modulo the one
 polynomial check** `hcheck`. -/
 theorem isRadicalRationalIntegral_c3itRun
-    (hcheck : CPolyG.cisZeroG
-        (CPolyG.csubG (CPolyG.csubG (CPolyG.cmulG (CPolyG.cscaleG (2 : ℚ) c3itRho) (CPolyG.cderivG c3itRun.2))
-          (CPolyG.cmulG c3itRun.2 (CPolyG.cderivG c3itRho)))
-          (CPolyG.cmulG (CPolyG.cscaleG (2 : ℚ) c3itRho) (CPolyG.csubG c3itC c3itRun.1))) = true) :
+    (hcheck : CPoly.cisZeroG
+        (CPoly.csubG (CPoly.csubG (CPoly.cmulG (CPoly.cscaleG (2 : ℚ) c3itRho) (CPoly.cderivG c3itRun.2))
+          (CPoly.cmulG c3itRun.2 (CPoly.cderivG c3itRho)))
+          (CPoly.cmulG (CPoly.cscaleG (2 : ℚ) c3itRho) (CPoly.csubG c3itC c3itRun.1))) = true) :
     IsRadicalRationalIntegral 2 [qxOfNum c3itRho] c3itRatLift c3itVlift :=
   (isRadicalRationalIntegral_div_qxOfNum_iff 2 c3itRun.2 (csubG c3itC c3itRun.1) c3itRho
     two_ne_zero_ratFunc toPolyG_c3itRho_ne_zero).mpr
@@ -691,12 +691,12 @@ through `cisZeroG_iff` / `toPolyG_csubG` (so it carries **no** `native_decide` a
 polynomial cleared check `hcheck`). The same proposition the kernel checks numerically, here a theorem of the
 abstract derivation. `c3itRhoQx = qxOfNum c3itRho` is the run's radicand. -/
 theorem radIsZero_radDeriv_c3itVlift
-    (hcheck : CPolyG.cisZeroG
-        (CPolyG.csubG (CPolyG.csubG (CPolyG.cmulG (CPolyG.cscaleG (2 : ℚ) c3itRho) (CPolyG.cderivG c3itRun.2))
-          (CPolyG.cmulG c3itRun.2 (CPolyG.cderivG c3itRho)))
-          (CPolyG.cmulG (CPolyG.cscaleG (2 : ℚ) c3itRho) (CPolyG.csubG c3itC c3itRun.1))) = true) :
+    (hcheck : CPoly.cisZeroG
+        (CPoly.csubG (CPoly.csubG (CPoly.cmulG (CPoly.cscaleG (2 : ℚ) c3itRho) (CPoly.cderivG c3itRun.2))
+          (CPoly.cmulG c3itRun.2 (CPoly.cderivG c3itRho)))
+          (CPoly.cmulG (CPoly.cscaleG (2 : ℚ) c3itRho) (CPoly.csubG c3itC c3itRun.1))) = true) :
     radIsZero (radSub (radDeriv 2 c3itRhoQx c3itVlift) c3itRatLift) = true := by
-  rw [radIsZero, radSub, CPolyG.cisZeroG_iff]
+  rw [radIsZero, radSub, CPoly.cisZeroG_iff]
   simp only [denote]
   rw [sub_eq_zero]
   simpa only [IsRadicalRationalIntegral, c3itRhoQx, c3itRho, List.headD_cons, denote]
@@ -736,7 +736,7 @@ iterate step's *polynomial* cleared identity `B'f + Bg − C = D` lifted to the 
 axiom-clean** (none of them `radDeriv`-arithmetic):
 
 * (i) **`toQFunNZG_cderiv_qxOfNum`** — `cderiv (qxOfNum P) = qxOfNum (cderivG P)` read in `RatFunc ℚ`: the
-  polynomial embedding `qxOfNum : CPolyG ℚ → QFunNZG ℚ` commutes with the derivation. The substantive
+  polynomial embedding `qxOfNum : CPoly ℚ → QFunNZG ℚ` commutes with the derivation. The substantive
   bridge: `cderiv = towerDerivQFunNZG [1]` realizes `extendDeriv (implicitDeriv (toPolyG [1]))`, which on
   the algebra-map image `qxOfNum P ↦ amG (toPolyG P)` is `algebraMap (baseDerivQ (toPolyG P))`, and
   `baseDerivQ` is the plain `derivative` over `ℚ` (`baseDerivQ_apply`).
@@ -814,7 +814,7 @@ headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 #print axioms RadElem.toK_logDerRadicand_mul_radicand
 
 -- ★ Bridge (iii): the per-step polynomial cleared identity `B'f + Bg − C` is definitional:
-#print axioms CPolyG.radCase3Residual_eq
+#print axioms CPoly.radCase3Residual_eq
 
 -- ★ The LITERAL per-step `K`-equation ⟺ cleared polynomial identity (i+ii+iii composed at one step):
 #print axioms RadElem.toK_step_qxOfNum_iff

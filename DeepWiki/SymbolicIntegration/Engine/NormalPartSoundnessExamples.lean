@@ -10,7 +10,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -25,9 +25,9 @@ noncomputable local instance normalPartSoundnessExamplesAlgebraRatKQFunNZG :
 
 /-- The Hermite half over `ℚ(x)(t)`: the master Hermite telescoping `D(g) + h = a/d` (seed
 `([CField.zero], [CField.one])`) at the carrier `α = QFunNZG ℚ`, over `RatFunc ℚ`. -/
-theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
-    (L₀ : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
-    (rest glocs : List (CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)))
+theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : CPoly (QFunNZG ℚ))
+    (L₀ : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ))
+    (rest glocs : List (CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)))
     (hmem : ∀ g ∈ glocs, toPolyG g.2 ≠ 0)
     (hstep : List.Forall₂ (fun g p =>
         towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (toPolyG g.1) / amG (QFunNZG ℚ) (toPolyG g.2))
@@ -36,13 +36,13 @@ theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
         glocs ((L₀ :: rest).zip rest)) :
     towerFractionFieldDerivG Dt
         (amG (QFunNZG ℚ) (toPolyG (glocs.foldl
-            (fun (gAcc : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) gloc =>
+            (fun (gAcc : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) gloc =>
               (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
-            (([CField.zero] : CPolyG (QFunNZG ℚ)), ([CField.one] : CPolyG (QFunNZG ℚ)))).1)
+            (([CField.zero] : CPoly (QFunNZG ℚ)), ([CField.one] : CPoly (QFunNZG ℚ)))).1)
           / amG (QFunNZG ℚ) (toPolyG (glocs.foldl
-            (fun (gAcc : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) gloc =>
+            (fun (gAcc : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) gloc =>
               (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
-            (([CField.zero] : CPolyG (QFunNZG ℚ)), ([CField.one] : CPolyG (QFunNZG ℚ)))).2))
+            (([CField.zero] : CPoly (QFunNZG ℚ)), ([CField.one] : CPoly (QFunNZG ℚ)))).2))
         + amG (QFunNZG ℚ) (toPolyG (rest.getLastD L₀).1)
           / amG (QFunNZG ℚ) (toPolyG (rest.getLastD L₀).2)
       = amG (QFunNZG ℚ) (toPolyG L₀.1) / amG (QFunNZG ℚ) (toPolyG L₀.2) :=
@@ -55,59 +55,59 @@ example {K : Type*} [Field K] {H D2 N S : K[X]}
     H.degree < S.degree :=
   degree_lt_of_exact_div hid hND hS
 
-example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
-    (hnum : toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.1
+example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (resNum resDen Dstar : CPoly α)
+    (hnum : toPolyG (CPoly.cHermiteReduceTowerG Dt a d).2.1
       = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-    (hden : toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.2 = toPolyG Dstar)
+    (hden : toPolyG (CPoly.cHermiteReduceTowerG Dt a d).2.2 = toPolyG Dstar)
     (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
     (hresDen : cnormG resDen ≠ []) (hDstar : toPolyG Dstar ≠ 0)
     (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
-    (toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.1).degree
-      < (toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.2).degree :=
+    (toPolyG (CPoly.cHermiteReduceTowerG Dt a d).2.1).degree
+      < (toPolyG (CPoly.cHermiteReduceTowerG Dt a d).2.2).degree :=
   cHermiteReduceTowerG_leftover_proper_of_residual Dt a d resNum resDen Dstar
     hnum hden hdvd hresDen hDstar hresProper
 
-example {β : Type*} (glocOf : β → CPolyG α × CPolyG α) (skip : β → Prop) [DecidablePred skip]
-    (xs : List β) (s : CPolyG α × CPolyG α) (hs : (toPolyG s.1).degree < (toPolyG s.2).degree)
+example {β : Type*} (glocOf : β → CPoly α × CPoly α) (skip : β → Prop) [DecidablePred skip]
+    (xs : List β) (s : CPoly α × CPoly α) (hs : (toPolyG s.1).degree < (toPolyG s.2).degree)
     (hmem : ∀ b ∈ xs, ¬ skip b → (toPolyG (glocOf b).1).degree < (toPolyG (glocOf b).2).degree) :
     (toPolyG (xs.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+        (fun (gAcc : CPoly α × CPoly α) (b : β) =>
           if skip b then gAcc
           else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
                 cmulG gAcc.2 (glocOf b).2)) s).1).degree
       < (toPolyG (xs.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+        (fun (gAcc : CPoly α × CPoly α) (b : β) =>
           if skip b then gAcc
           else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
                 cmulG gAcc.2 (glocOf b).2)) s).2).degree :=
   foldl_guarded_fracAddG_proper glocOf skip xs s hs hmem
 
-example (Dt : CPolyG α) (v u : CPolyG α) (hv : toPolyG v ≠ 0)
-    (hb : ∀ (rhs : CPolyG α),
+example (Dt : CPoly α) (v u : CPoly α) (hv : toPolyG v ≠ 0)
+    (hb : ∀ (rhs : CPoly α),
       (toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v rhs).1).degree
         < (toPolyG v).degree)
-    (j : ℕ) (a : CPolyG α) (g : CPolyG α × CPolyG α)
+    (j : ℕ) (a : CPoly α) (g : CPoly α × CPoly α)
     (hg : (toPolyG g.1).degree < (toPolyG g.2).degree) :
     (toPolyG (cHermiteReduceTowerInnerWf Dt v u j a g).1.1).degree
       < (toPolyG (cHermiteReduceTowerInnerWf Dt v u j a g).1.2).degree :=
   cHermiteReduceTowerInner_g_proper Dt v u ⟨hv, hb⟩ j a g hg
 
-example (Dt : CPolyG α) (vi u : CPolyG α) (j : ℕ) (a : CPolyG α) (hv : toPolyG vi ≠ 0)
-    (hb : ∀ (rhs : CPolyG α),
+example (Dt : CPoly α) (vi u : CPoly α) (j : ℕ) (a : CPoly α) (hv : toPolyG vi ≠ 0)
+    (hb : ∀ (rhs : CPoly α),
       (toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt vi)) vi rhs).1).degree
         < (toPolyG vi).degree) :
     (toPolyG (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.1).degree
       < (toPolyG (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.2).degree :=
   cHermiteReduceTowerInner_gloc_proper Dt vi u j a ⟨hv, hb⟩
 
-example (Dt : CPolyG α) (a d : CPolyG α) (factors : List (CPolyG α))
+example (Dt : CPoly α) (a d : CPoly α) (factors : List (CPoly α))
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
-    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
+    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPoly α),
       (toPolyG (cdiophantineG
           (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPolyG p.1).degree) :
     (toPolyG (factors.zipIdx.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
@@ -118,7 +118,7 @@ example (Dt : CPolyG α) (a d : CPolyG α) (factors : List (CPolyG α))
             (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
         ([CField.zero], [CField.one])).1).degree
       < (toPolyG (factors.zipIdx.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
           else
@@ -130,15 +130,15 @@ example (Dt : CPolyG α) (a d : CPolyG α) (factors : List (CPolyG α))
         ([CField.zero], [CField.one])).2).degree :=
   cHermiteReduceTowerG_g_proper Dt a d factors (fun p hp hskip => ⟨hv p hp hskip, hb p hp hskip⟩)
 
-example (Dt : CPolyG α) (a d : CPolyG α) (factors : List (CPolyG α))
+example (Dt : CPoly α) (a d : CPoly α) (factors : List (CPoly α))
     (hDt : (toPolyG Dt).natDegree ≤ 1) (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
-    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
+    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPoly α),
       (toPolyG (cdiophantineG
           (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPolyG p.1).degree) :
     let g := factors.zipIdx.foldl
-      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+      (fun (gAcc : CPoly α × CPoly α) (vi, idx) =>
         let i := idx + 1
         if i ≤ 1 then gAcc
         else
@@ -155,7 +155,7 @@ example (Dt : CPolyG α) (a d : CPolyG α) (factors : List (CPolyG α))
   cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d factors hDt haProper
     (fun p hp hskip => ⟨hv p hp hskip, hb p hp hskip⟩)
 
-example (Dt gnum gden : CPolyG α) (hM : toPolyG gden ≠ 0) (hDt : (toPolyG Dt).natDegree ≤ 1)
+example (Dt gnum gden : CPoly α) (hM : toPolyG gden ≠ 0) (hDt : (toPolyG Dt).natDegree ≤ 1)
     (hgproper : (toPolyG gnum).degree < (toPolyG gden).degree) :
     (toPolyG (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
         (cmulG gnum (cmonomialDeriv Dt gden)))).degree
@@ -167,24 +167,24 @@ example {K : Type*} [Field K] {p1 q1 p2 q2 : K[X]} (m : ℕ)
     (p1 * q2 + p2 * q1).degree + (m : ℕ) < (q1 * q2).degree :=
   degree_fracAdd_lt_of_margin m h1 h2
 
-example {β : Type*} (glocOf : β → CPolyG α × CPolyG α) (skip : β → Prop) [DecidablePred skip] (m : ℕ)
-    (xs : List β) (s : CPolyG α × CPolyG α)
+example {β : Type*} (glocOf : β → CPoly α × CPoly α) (skip : β → Prop) [DecidablePred skip] (m : ℕ)
+    (xs : List β) (s : CPoly α × CPoly α)
     (hs : (toPolyG s.1).degree + (m : ℕ) < (toPolyG s.2).degree)
     (hmem : ∀ b ∈ xs, ¬ skip b →
       (toPolyG (glocOf b).1).degree + (m : ℕ) < (toPolyG (glocOf b).2).degree) :
     (toPolyG (xs.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+        (fun (gAcc : CPoly α × CPoly α) (b : β) =>
           if skip b then gAcc
           else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
                 cmulG gAcc.2 (glocOf b).2)) s).1).degree + (m : ℕ)
       < (toPolyG (xs.foldl
-        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+        (fun (gAcc : CPoly α × CPoly α) (b : β) =>
           if skip b then gAcc
           else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
                 cmulG gAcc.2 (glocOf b).2)) s).2).degree :=
   foldl_guarded_fracAddG_margin glocOf skip m xs s hs hmem
 
-example (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
+example (Dt a d gnum gden : CPoly α) (hden : toPolyG gden ≠ 0)
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hmargin :
       (toPolyG gnum).degree + (max 0 ((toPolyG Dt).natDegree - 1) : ℕ) < (toPolyG gden).degree) :
@@ -194,7 +194,7 @@ example (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
       < (toPolyG (cmulG d (cmulG gden gden))).degree :=
   toPolyG_residualFraction_proper_of_margin Dt a d gnum gden hden haProper hmargin
 
-example (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
+example (Dt a d gnum gden : CPoly α) (hden : toPolyG gden ≠ 0)
     (hDt : (toPolyG Dt).natDegree ≤ 1)
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hgproper : (toPolyG gnum).degree < (toPolyG gden).degree) :
@@ -204,7 +204,7 @@ example (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
       < (toPolyG (cmulG d (cmulG gden gden))).degree :=
   toPolyG_residualFraction_proper_of_degree_le_one Dt a d gnum gden hden hDt haProper hgproper
 
-example (Dt : CPolyG α) (s L₀ : CPolyG α × CPolyG α) (rest glocs : List (CPolyG α × CPolyG α))
+example (Dt : CPoly α) (s L₀ : CPoly α × CPoly α) (rest glocs : List (CPoly α × CPoly α))
     (hs : toPolyG s.2 ≠ 0) (hmem : ∀ g ∈ glocs, toPolyG g.2 ≠ 0)
     (hseed : towerFractionFieldDerivG Dt (amG α (toPolyG s.1) / amG α (toPolyG s.2)) = 0)
     (hstep : List.Forall₂ (fun g p =>
@@ -214,24 +214,24 @@ example (Dt : CPolyG α) (s L₀ : CPolyG α × CPolyG α) (rest glocs : List (C
         glocs ((L₀ :: rest).zip rest)) :
     towerFractionFieldDerivG Dt
         (amG α (toPolyG (glocs.foldl
-            (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+            (fun (gAcc : CPoly α × CPoly α) gloc =>
               (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)) s).1)
           / amG α (toPolyG (glocs.foldl
-            (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+            (fun (gAcc : CPoly α × CPoly α) gloc =>
               (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)) s).2))
         + amG α (toPolyG (rest.getLastD L₀).1) / amG α (toPolyG (rest.getLastD L₀).2)
       = amG α (toPolyG L₀.1) / amG α (toPolyG L₀.2) :=
   cHermiteReduceTowerG_telescope Dt s L₀ rest glocs hs hmem hseed hstep
 
-example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
-    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
+example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
+    (hgden : toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
     (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedG Dt a d cands).logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt a d cands) a d = true) :
+    (hlogs : ∀ cv ∈ (CPoly.cIntegrateReducedG Dt a d cands).logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPoly.checkIdentityG Dt (CPoly.cIntegrateReducedG Dt a d cands) a d = true) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt a d cands).logs
+        (amG α (toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.1)
+          / amG α (toPolyG (CPoly.cIntegrateReducedG Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPoly.cIntegrateReducedG Dt a d cands).logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   field_identity_of_cIntegrateReducedG_of_checkIdentityG Dt a d cands hgden haden hlogs hcheck
 

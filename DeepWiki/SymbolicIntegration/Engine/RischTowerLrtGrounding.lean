@@ -22,7 +22,7 @@ certificate) is the separate `LrtLiouvilleFrontier` (Liouville criterion). See `
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 /-- **★ The re-based recursive LRT solver is sound on the concrete ℚ(x)-tower, from the honest frontiers alone.**
 At carrier `QFunNZG ℚ` (so `a/d ∈ (QFunNZG ℚ)(t)`, a genuine two-level tower), a successful run of the
@@ -32,7 +32,7 @@ honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this l
 undischargeable `PrimitiveFrontier`. -/
 theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
     [Fact (GcdFFCorrect (α := QFunNZG ℚ))] [PrimitiveFrontierLrt (QFunNZG ℚ)]
-    (Dt a d : CPolyG (QFunNZG ℚ)) (res : LrtResultG (QFunNZG ℚ))
+    (Dt a d : CPoly (QFunNZG ℚ)) (res : LrtResultG (QFunNZG ℚ))
     (h : LawfulRischLevelLrt.integrate Dt a d = some res) :
     IsIntegralResultLrtG Dt a d res :=
   LawfulRischLevelLrt.soundFormalLrt Dt a d res h
@@ -43,8 +43,8 @@ input at each level *constructs* the `PrimitiveFrontierLrt` instances, hence (wi
 recursive LRT solver at that depth. This is the honest closure — the solver's soundness rests on genuine
 integrability conditions, nothing opaque. -/
 noncomputable example [Fact (GcdFFCorrect (α := QFunNZG ℚ))]
-    (hgenℚ : ∀ (Dt a d : CPolyG ℚ), toPolyG d ≠ 0 → LrtReducedGenuineData Dt a d)
-    (hgenℚx : ∀ (Dt a d : CPolyG (QFunNZG ℚ)), toPolyG d ≠ 0 → LrtReducedGenuineData Dt a d) :
+    (hgenℚ : ∀ (Dt a d : CPoly ℚ), toPolyG d ≠ 0 → LrtReducedGenuineData Dt a d)
+    (hgenℚx : ∀ (Dt a d : CPoly (QFunNZG ℚ)), toPolyG d ≠ 0 → LrtReducedGenuineData Dt a d) :
     LawfulRischLevelLrt (QFunNZG ℚ) :=
   letI : PrimitiveFrontierLrt ℚ := ⟨hreducedLrt_of_genuineAll gcdFFCorrect_Q hgenℚ⟩
   letI : PrimitiveFrontierLrt (QFunNZG ℚ) :=

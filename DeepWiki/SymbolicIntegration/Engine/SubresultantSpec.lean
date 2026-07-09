@@ -14,7 +14,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open Polynomial Matrix
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
@@ -56,7 +56,7 @@ theorem cSubColIdx_getD (n m j i : ℕ) (s : Fin (m + n - 2 * j)) :
 
 /-- `cBSylvesterRows` reads as the abstract `bSylvester`. Entry `(RR, CC)` of the computable Sylvester
 matrix, read through `toK`, equals the abstract `bSylvester (toPolyG p) (toPolyG q) n m` entry. -/
-theorem toK_cBSylvesterRows_getD (p q : CPolyG α) (n m : ℕ) {RR CC : ℕ}
+theorem toK_cBSylvesterRows_getD (p q : CPoly α) (n m : ℕ) {RR CC : ℕ}
     (hR : RR < m + n) (hC : CC < m + n) :
     toK (((cBSylvesterRows p q n m).getD RR []).getD CC CField.zero)
       = bSylvester (toPolyG p) (toPolyG q) n m ⟨RR, hR⟩ ⟨CC, hC⟩ := by
@@ -86,7 +86,7 @@ theorem toK_cBSylvesterRows_getD (p q : CPolyG α) (n m : ℕ) {RR CC : ℕ}
 
 /-- The computable Sylvester submatrix maps to the abstract one. After `toK`, `matrixOfList` of the
 computable submatrix equals `(bSylvester …).submatrix (subRow …) (subCol …)`. -/
-theorem matrixOfList_cSubmatrix (p q : CPolyG α) (n m j i : ℕ) :
+theorem matrixOfList_cSubmatrix (p q : CPoly α) (n m j i : ℕ) :
     matrixOfList ((cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)).map
         (fun row => row.map toK)) (m + n - 2 * j)
       = (bSylvester (toPolyG p) (toPolyG q) n m).submatrix (subRow n m j) (subCol n m j i) := by
@@ -105,7 +105,7 @@ theorem matrixOfList_cSubmatrix (p q : CPolyG α) (n m j i : ℕ) :
 /-- The subresultant certification. `toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p)
 (toPolyG q) n m j`: the computable Sylvester-submatrix subresultant computes Mathlib's abstract
 subresultant. -/
-@[denote] theorem toPolyG_cSubresultantG (p q : CPolyG α) (n m j : ℕ) :
+@[denote] theorem toPolyG_cSubresultantG (p q : CPoly α) (n m j : ℕ) :
     toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p) (toPolyG q) n m j := by
   rw [toPolyG_eq_sum_range, subresultant, cSubresultantG, List.length_map, List.length_range]
   apply Finset.sum_congr rfl
@@ -123,6 +123,6 @@ subresultant. -/
         rw [List.length_map, cSubColIdx_length]),
     matrixOfList_cSubmatrix]
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

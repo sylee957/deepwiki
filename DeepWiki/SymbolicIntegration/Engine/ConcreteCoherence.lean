@@ -12,14 +12,14 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
 /-! ### Coherence with the concrete `CPolyQ` engine at `α = ℚ` -/
 
 /-- `caddG` at `ℚ` is the concrete `cadd` (both add coefficientwise with `ℚ`'s `+`). -/
-theorem caddG_eq_cadd : (caddG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cadd := by
+theorem caddG_eq_cadd : (caddG : CPoly ℚ → CPoly ℚ → CPoly ℚ) = Compute.cadd := by
   funext p q
   induction p generalizing q with
   | nil => rfl
@@ -28,25 +28,25 @@ theorem caddG_eq_cadd : (caddG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Com
     | cons b bs => show CField.add a b :: caddG as bs = _; rw [ih]; rfl
 
 /-- `cnegG` at `ℚ` is the concrete `cneg`. -/
-theorem cnegG_eq_cneg : (cnegG : CPolyG ℚ → CPolyG ℚ) = Compute.cneg := rfl
+theorem cnegG_eq_cneg : (cnegG : CPoly ℚ → CPoly ℚ) = Compute.cneg := rfl
 
 /-- `csubG` at `ℚ` is the concrete `csub`. -/
-theorem csubG_eq_csub : (csubG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.csub := by
+theorem csubG_eq_csub : (csubG : CPoly ℚ → CPoly ℚ → CPoly ℚ) = Compute.csub := by
   funext p q
   rw [csubG, Compute.csub, cnegG_eq_cneg, congrFun (congrFun caddG_eq_cadd _) _]
 
 /-- `cscaleG` at `ℚ` is the concrete `cscale`. -/
-theorem cscaleG_eq_cscale (c : ℚ) : (cscaleG c : CPolyG ℚ → CPolyG ℚ) = Compute.cscale c := rfl
+theorem cscaleG_eq_cscale (c : ℚ) : (cscaleG c : CPoly ℚ → CPoly ℚ) = Compute.cscale c := rfl
 
 /-- `cshiftG` at `ℚ` is the concrete `cshift`. -/
-theorem cshiftG_eq_cshift (k : ℕ) : (cshiftG k : CPolyG ℚ → CPolyG ℚ) = Compute.cshift k := by
+theorem cshiftG_eq_cshift (k : ℕ) : (cshiftG k : CPoly ℚ → CPoly ℚ) = Compute.cshift k := by
   funext p
   induction k generalizing p with
   | zero => rfl
   | succ n ih => show CField.zero :: cshiftG n p = _; rw [ih]; rfl
 
 /-- `cmulG` at `ℚ` is the concrete `cmul`. -/
-theorem cmulG_eq_cmul : (cmulG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cmul := by
+theorem cmulG_eq_cmul : (cmulG : CPoly ℚ → CPoly ℚ → CPoly ℚ) = Compute.cmul := by
   funext p q
   induction p generalizing q with
   | nil => rfl
@@ -55,7 +55,7 @@ theorem cmulG_eq_cmul : (cmulG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Com
     rw [cscaleG_eq_cscale, ih, congrFun (congrFun caddG_eq_cadd _) _]; rfl
 
 /-- `cnormG` at `ℚ` is the concrete `cnorm`. -/
-theorem cnormG_eq_cnorm : (cnormG : CPolyG ℚ → CPolyG ℚ) = Compute.cnorm := by
+theorem cnormG_eq_cnorm : (cnormG : CPoly ℚ → CPoly ℚ) = Compute.cnorm := by
   funext p
   induction p with
   | nil => rfl
@@ -63,24 +63,24 @@ theorem cnormG_eq_cnorm : (cnormG : CPolyG ℚ → CPolyG ℚ) = Compute.cnorm :
     rw [cnormG_cons_eq, Compute.cnorm_cons_eq, ih]
     cases Compute.cnorm as with
     | nil =>
-      show (if (decide (a = 0) = true) then ([] : CPolyG ℚ) else [a]) = (if a = 0 then [] else [a])
+      show (if (decide (a = 0) = true) then ([] : CPoly ℚ) else [a]) = (if a = 0 then [] else [a])
       by_cases ha : a = 0 <;> simp [ha]
     | cons b bs => rfl
 
 /-- `cisZeroG` at `ℚ` is the concrete `cisZero`. -/
-theorem cisZeroG_eq_cisZero : (cisZeroG : CPolyG ℚ → Bool) = Compute.cisZero := by
+theorem cisZeroG_eq_cisZero : (cisZeroG : CPoly ℚ → Bool) = Compute.cisZero := by
   funext p
   rw [cisZeroG, cnormG_eq_cnorm, Compute.cisZero]
   cases h : Compute.cnorm p <;> simp
 
 /-- `cleadG` at `ℚ` is the concrete `clead`. -/
-theorem cleadG_eq_clead : (cleadG : CPolyG ℚ → ℚ) = Compute.clead := by
+theorem cleadG_eq_clead : (cleadG : CPoly ℚ → ℚ) = Compute.clead := by
   funext p
   rw [cleadG, Compute.clead, cnormG_eq_cnorm]
   rfl
 
 /-- `toPolyG` at `ℚ` is the concrete `toPoly` (`toK = id`, `CFieldSpec.K ℚ = ℚ`). -/
-theorem toPolyG_eq_toPoly : (toPolyG : CPolyG ℚ → ℚ[X]) = Compute.toPoly := by
+theorem toPolyG_eq_toPoly : (toPolyG : CPoly ℚ → ℚ[X]) = Compute.toPoly := by
   funext p
   induction p with
   | nil => rfl
@@ -93,8 +93,8 @@ theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : �
   | succ n ih => rw [nsmulG]; show a + nsmulG n a = _; rw [ih]; push_cast; ring
 
 /-- `cderivG` at `ℚ` is the concrete `cderiv`. -/
-theorem cderivG_eq_cderiv : (cderivG : CPolyG ℚ → CPolyG ℚ) = Compute.cderiv := by
-  have hgo : ∀ (k : ℕ) (as : CPolyG ℚ), cderivG.go k as = Compute.cderiv.go k as := by
+theorem cderivG_eq_cderiv : (cderivG : CPoly ℚ → CPoly ℚ) = Compute.cderiv := by
+  have hgo : ∀ (k : ℕ) (as : CPoly ℚ), cderivG.go k as = Compute.cderiv.go k as := by
     intro k as
     induction as generalizing k with
     | nil => rfl
@@ -106,6 +106,6 @@ theorem cderivG_eq_cderiv : (cderivG : CPolyG ℚ → CPolyG ℚ) = Compute.cder
   | nil => rfl
   | cons a as => show cderivG.go 1 as = Compute.cderiv.go 1 as; rw [hgo]
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

@@ -12,7 +12,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
@@ -21,7 +21,7 @@ variable {α : Type*} [CField α]
 /-- Cantor composition `cantorCompose ρ D₁ D₂ = D₁ ⊕ D₂`, the group law on Mumford pairs producing a
 semi-reduced divisor. Two extended gcds give cofactors `s₁, s₂, s₃` of `d = gcd(u₁, u₂, v₁ + v₂)`; then
 `u = monic(u₁u₂/d²)` and `v = (s₁u₁v₂ + s₂u₂v₁ + s₃(v₁v₂ + ρ))/d mod u`. Generic over `[CField α]`. -/
-def cantorCompose (ρ : CPolyG α) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
+def cantorCompose (ρ : CPoly α) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
   let u₁ := D₁.u; let v₁ := D₁.v
   let u₂ := D₂.u; let v₂ := D₂.v
   -- first extended gcd: d₁ = gcd(u₁,u₂) = e₁·u₁ + e₂·u₂
@@ -48,7 +48,7 @@ def cantorCompose (ρ : CPolyG α) (D₁ D₂ : MumfordDivisor α) : MumfordDivi
 
 /-- One Cantor reduction step `cantorReduceStep ρ (u, v) = (monic((ρ − v²)/u), (−v) mod u)`, lowering
 `deg u`. Generic over `[CField α]`. -/
-def cantorReduceStep (ρ : CPolyG α) (D : MumfordDivisor α) : MumfordDivisor α :=
+def cantorReduceStep (ρ : CPoly α) (D : MumfordDivisor α) : MumfordDivisor α :=
   let u := D.u; let v := D.v
   let unew := cmonicG (cdivWf (csubG ρ (cmulG v v)) u)
   let vnew := cmodWf (cnegG v) unew
@@ -56,7 +56,7 @@ def cantorReduceStep (ρ : CPolyG α) (D : MumfordDivisor α) : MumfordDivisor �
 
 /-- Cantor reduction driver `cantorReduceAux fuel g ρ (u, v)`: apply `cantorReduceStep` until
 `deg u ≤ g`, at most `fuel` times. Generic over `[CField α]`. -/
-def cantorReduceAux : ℕ → ℕ → CPolyG α → MumfordDivisor α → MumfordDivisor α
+def cantorReduceAux : ℕ → ℕ → CPoly α → MumfordDivisor α → MumfordDivisor α
   | 0, _, _, D => D
   | fuel + 1, g, ρ, D =>
     if cdegG D.u ≤ g then D
@@ -64,7 +64,7 @@ def cantorReduceAux : ℕ → ℕ → CPolyG α → MumfordDivisor α → Mumfor
 
 /-- Cantor reduction `cantorReduce ρ g D`: bring a semi-reduced Mumford pair to the unique reduced form
 `deg u ≤ g` by repeating `cantorReduceStep`. Generic over `[CField α]`. -/
-def cantorReduce (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : MumfordDivisor α :=
+def cantorReduce (ρ : CPoly α) (g : ℕ) (D : MumfordDivisor α) : MumfordDivisor α :=
   cantorReduceAux (cdegG D.u + 1) g ρ D
 
 /-! ### The group law `cantorAdd = reduce ∘ compose` -/
@@ -72,7 +72,7 @@ def cantorReduce (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : MumfordDiv
 /-- The Jacobian group law `cantorAdd ρ g D₁ D₂ = cantorReduce ρ g (cantorCompose ρ D₁ D₂)`: the sum
 `D₁ ⊕ D₂` of two reduced divisors on `y² = ρ`, as the unique reduced representative. Generic over
 `[CField α]`. -/
-def cantorAdd (ρ : CPolyG α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
+def cantorAdd (ρ : CPoly α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
   cantorReduce ρ g (cantorCompose ρ D₁ D₂)
 
 /-! ### Normalized equality of Mumford pairs -/
@@ -87,17 +87,17 @@ def mumfordNormEq [DecidableEq α] (D₁ D₂ : MumfordDivisor α) : Bool :=
 
 /-- The scalar multiple `cantorMul ρ g n D = n·D`, the `n`-fold Cantor sum with `0·D = mumfordIdentity`;
 `(n+1)·D = D ⊕ (n·D)`. Generic over `[CField α]`. -/
-def cantorMul (ρ : CPolyG α) (g : ℕ) : ℕ → MumfordDivisor α → MumfordDivisor α
+def cantorMul (ρ : CPoly α) (g : ℕ) : ℕ → MumfordDivisor α → MumfordDivisor α
   | 0, _ => mumfordIdentity
   | n + 1, D => cantorAdd ρ g D (cantorMul ρ g n D)
 
-end CPolyG
+end CPoly
 
 /-! ## Validation over `ℚ[x]`
 
 `α = ℚ`, on the elliptic curve `y² = x³ + 1` (genus 1), whose Jacobian is the elliptic group. -/
 
-open CPolyG
+open CPoly
 
 /-! ### The elliptic curve `y² = x³ + 1` and its points -/
 
@@ -168,7 +168,7 @@ theorem cantorMul_pt01_order3 :
 A genuinely hyperelliptic example (`g = 2`), beyond the elliptic case. -/
 
 /-- The radicand `ρ = x⁵ + 1 ∈ ℚ[x]`: the genus-2 hyperelliptic curve `y² = x⁵ + 1`. -/
-def hypRhoX5p1 : CPolyG ℚ := [1, 0, 0, 0, 0, 1]
+def hypRhoX5p1 : CPoly ℚ := [1, 0, 0, 0, 0, 1]
 
 /-- `radGenus (x⁵+1) = 2`: `y² = x⁵ + 1` is a genus-2 hyperelliptic curve. -/
 theorem cantorGenusX5p1_eq : radGenus hypRhoX5p1 = 2 := by native_decide
@@ -199,7 +199,7 @@ theorem cantorG2Sum_valid_reduced :
 /-- The genus-2 sum `(0,1) ⊕ (−1,0)` has `u = x² + x` (support `{0, −1}`), a genus-2 reduced divisor of
 degree `2`. -/
 theorem cantorG2Sum_u :
-    cantorG2Sum.u = ([0, 1, 1] : CPolyG ℚ) := by native_decide
+    cantorG2Sum.u = ([0, 1, 1] : CPoly ℚ) := by native_decide
 
 /-! ## The Cantor-group-law milestone -/
 
@@ -223,7 +223,7 @@ theorem cantor_group_law_validates :
     -- genus-2 composition on y² = x⁵+1
     ∧ (mumfordValid hypRhoX5p1 cantorG2Sum = true
       ∧ mumfordIsReduced 2 cantorG2Sum = true
-      ∧ cantorG2Sum.u = ([0, 1, 1] : CPolyG ℚ)) := by native_decide
+      ∧ cantorG2Sum.u = ([0, 1, 1] : CPoly ℚ)) := by native_decide
 
 /-! ### `#print axioms` for the Cantor group-law validations -/
 

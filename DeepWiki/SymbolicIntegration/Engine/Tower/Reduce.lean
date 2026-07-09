@@ -32,22 +32,22 @@ def swellB : QFunNZG ℚ := ⟨([(-1 : ℚ), 1], [(0 : ℚ), 1]), by native_deci
 def swellProd : QFunNZG ℚ := qmulNZG swellA swellB
 
 /-- The unreduced product `swellProd` has numerator length 3. -/
-theorem swellProd_num_length : (CPolyG.cnormG swellProd.1.1 : List ℚ).length = 3 := by native_decide
+theorem swellProd_num_length : (CPoly.cnormG swellProd.1.1 : List ℚ).length = 3 := by native_decide
 
 /-- The unreduced product `swellProd` has denominator length 3. -/
-theorem swellProd_den_length : (CPolyG.cnormG swellProd.1.2 : List ℚ).length = 3 := by native_decide
+theorem swellProd_den_length : (CPoly.cnormG swellProd.1.2 : List ℚ).length = 3 := by native_decide
 
 /-- `qReduce` shrinks the swollen product's numerator to length 1. -/
 theorem swellProd_reduced_num_length :
-    (CPolyG.cnormG (qReduce swellProd).1.1 : List ℚ).length = 1 := by native_decide
+    (CPoly.cnormG (qReduce swellProd).1.1 : List ℚ).length = 1 := by native_decide
 
 /-- `qReduce` shrinks the swollen product's denominator to length 1. -/
 theorem swellProd_reduced_den_length :
-    (CPolyG.cnormG (qReduce swellProd).1.2 : List ℚ).length = 1 := by native_decide
+    (CPoly.cnormG (qReduce swellProd).1.2 : List ℚ).length = 1 := by native_decide
 
 /-- The reduced product `qReduce swellProd` has nonzero numerator (`cisZeroG` is `false`). -/
 theorem swellProd_reduced_num_nonzero :
-    CPolyG.cisZeroG (qReduce swellProd).1.1 = false := by native_decide
+    CPoly.cisZeroG (qReduce swellProd).1.1 = false := by native_decide
 
 /-- `qReduce` preserves the field value: `toQFunNZG (qReduce swellProd) = toQFunNZG swellProd`. -/
 theorem swellProd_value_preserved :
@@ -72,7 +72,7 @@ recovering `∫1 = x` (`Rstuck_reduced_solves`). The obstruction is representati
 
 namespace QFunNZG
 
-open CPolyG
+open CPoly
 
 /-! #### The unreduced and reduced residual cases -/
 
@@ -86,7 +86,7 @@ theorem Rstuck_eq_one : CField.isZero (CField.sub Rstuck (CField.one : QFunNZG �
   native_decide
 
 /-- `Rstuck`'s stored denominator is swollen: length 2 (`2x`, not the reduced `1`). -/
-theorem Rstuck_den_swollen : (CPolyG.cnormG Rstuck.1.2 : List ℚ).length = 2 := by native_decide
+theorem Rstuck_den_swollen : (CPoly.cnormG Rstuck.1.2 : List ℚ).length = 2 := by native_decide
 
 /-- The unreduced residual makes `crischDESolve 0 Rstuck` return `none` even though `Rstuck = 1`,
 because the stored denominator is the spurious factor `2x`. -/

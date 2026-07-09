@@ -8,7 +8,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 section CoreWf
 
@@ -20,8 +20,8 @@ def cisCanonNormalizedCoreG (a : QFunNZG β) : Bool :=
 
 /-- The fuel-free wrapper canonical-normality check on the reduced denominator. -/
 def cisCanonNormalizedG (ftilde : QFunNZG β) : Bool :=
-  CPolyG.cisZeroG (CPolyG.csubG
-    (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β)
+  CPoly.cisZeroG (CPoly.csubG
+    (CPoly.cSplitFactorFastG ([CField.one] : CPoly β)
       (QFunNZG.reduceDen ftilde)).1
     (QFunNZG.reduceDen ftilde))
 
@@ -49,7 +49,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 
 /-- The fuel-free weak-normalization guarantee for a rational function denominator. -/
 def IsWeaklyNormalizedNormWf (h : QFunNZG β) : Prop :=
-  toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) h.1.2).1
+  toPolyG (CPoly.cSplitFactorFastG ([CField.one] : CPoly β) h.1.2).1
     = toPolyG h.1.2
 
 /-- The fuel-free canonicalized weak-normalization guarantee. -/
@@ -60,7 +60,7 @@ def IsCanonNormalizedWf (f q' : QFunNZG β) : Prop :=
 theorem cisCanonNormalizedG_iff (f q' : QFunNZG β) :
     cisCanonNormalizedG (weakNormalizedF f q') = true ↔ IsCanonNormalizedWf f q' := by
   unfold cisCanonNormalizedG IsCanonNormalizedWf IsWeaklyNormalizedNormWf
-  rw [CPolyG.cisZeroG_iff]
+  rw [CPoly.cisZeroG_iff]
   simp only [denote, sub_eq_zero]
   rfl
 
@@ -76,19 +76,19 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreW
 core check on the reduced input equals the wrapper check on the pre-reduce input. -/
 theorem cisCanonNormalizedCoreG_qReduce_weakNormalized (f : QFunNZG β) :
     cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2))))
       = cisCanonNormalizedG (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreG_qReduce
     (weakNormalizedF f
-      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2)))
 
 /-- The core check on the reduced weak-normalized input passes iff `IsCanonNormalizedWf` holds. -/
 theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f : QFunNZG β) :
     cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)))) = true
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2)))) = true
       ↔ IsCanonNormalizedWf f
-        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)) := by
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2)) := by
   rw [cisCanonNormalizedCoreG_qReduce_weakNormalized]
   exact cisCanonNormalizedG_iff f _
 
@@ -97,9 +97,9 @@ theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f 
 -- The same re-pin reconciliation stated entirely on the Wf gate.
 example (f : QFunNZG β) :
     cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2))))
       = cisCanonNormalizedG (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPoly β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreG_qReduce_weakNormalized f
 
 end Repin

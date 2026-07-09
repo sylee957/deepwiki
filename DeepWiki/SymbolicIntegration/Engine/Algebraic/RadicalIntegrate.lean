@@ -10,9 +10,9 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open RadElem CPolyG
+open RadElem CPoly
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
@@ -24,8 +24,8 @@ rational part over the common denominator `V^{k₀−1}`. -/
 /-- Iterated Case-1 reduction: one Hermite step per unit of `fuel`, accumulating the cofactor
 contribution `B·f·V^{k0−k}` into `vNum` and recursing on `−radCase1Residual` at `k−1`; returns the
 leftover `k = 1` numerator and the assembled rational-part numerator `vNum`. -/
-def radReduceCase1Iterate (der : CPolyG α → CPolyG α) (V Df f g : CPolyG α) (k0 : ℕ) :
-    ℕ → ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
+def radReduceCase1Iterate (der : CPoly α → CPoly α) (V Df f g : CPoly α) (k0 : ℕ) :
+    ℕ → ℕ → CPoly α → CPoly α → CPoly α × CPoly α
   | 0, _, C, vNum => (C, vNum)
   | fuel + 1, k, C, vNum =>
     if k ≤ 1 then (C, vNum)
@@ -40,34 +40,34 @@ def radReduceCase1Iterate (der : CPolyG α → CPolyG α) (V Df f g : CPolyG α)
 /-- The simple-radical rational-part driver: `∫ C/(V^{k0}y)` over `yⁿ = f` with `V` squarefree coprime
 to `f`. Computes `Df = V'` and runs `radReduceCase1Iterate` from `k0` down to `1`, returning the leftover
 `k = 1` numerator `Crem` and the accumulated rational-part numerator `vNum` over `V^{k0−1}·y`. -/
-def radIntegrateCase1 (der : CPolyG α → CPolyG α) (V f g : CPolyG α) (k0 : ℕ) (C : CPolyG α) :
-    CPolyG α × CPolyG α :=
+def radIntegrateCase1 (der : CPoly α → CPoly α) (V f g : CPoly α) (k0 : ℕ) (C : CPoly α) :
+    CPoly α × CPoly α :=
   radReduceCase1Iterate der V (der V) f g k0 k0 k0 C []
 
-end CPolyG
+end CPoly
 
 /-! ### The driver integrates `∫ 1/((x−1)³√x)` end-to-end
 
 Over `y² = x`, `V = x − 1`, `k₀ = 3`, `C₀ = 1`, the driver runs two Hermite steps and its accumulated
 rational part `v`, lifted to `(QFunNZG ℚ)[y]/(y² − x)`, satisfies `radDeriv 2 x v = C₀/(V³y) − Crem/(Vy)`. -/
 
-open RadElem CPolyG
+open RadElem CPoly
 
 /-- Driver example radicand `f = x` (`y² = x`, `y = √x`), as `ℚ[x]` `[0, 1]`. -/
-def sqrtxF : CPolyG ℚ := [0, 1]
+def sqrtxF : CPoly ℚ := [0, 1]
 
 /-- Driver example denominator factor `V = x − 1` (squarefree, coprime to `f = x`), `[−1, 1]`. -/
-def sqrtxV : CPolyG ℚ := [-1, 1]
+def sqrtxV : CPoly ℚ := [-1, 1]
 
 /-- Driver example Case-1 helper `g = ((n−1)/n)·f' = (1/2)·1 = 1/2` (`n = 2`, `(f/y)' = g/y`), `[1/2]`. -/
-def sqrtxG : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG sqrtxF)
+def sqrtxG : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG sqrtxF)
 
 /-- Driver example numerator `C₀ = 1` (integrand `1/((x−1)³√x)`), `[1]`. -/
-def sqrtxC : CPolyG ℚ := [1]
+def sqrtxC : CPoly ℚ := [1]
 
 /-- The driver run on `∫ 1/((x−1)³√x)`: two Hermite steps, returning `(Crem, vNum)` with `vNum` over
 `V² = (x−1)²`. -/
-def sqrtxRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase1 cderivG sqrtxV sqrtxF sqrtxG 3 sqrtxC
+def sqrtxRun : CPoly ℚ × CPoly ℚ := radIntegrateCase1 cderivG sqrtxV sqrtxF sqrtxG 3 sqrtxC
 
 /-- The accumulated rational-part numerator is `vNum = (3/4)x² − (5/4)x` over `V² = (x−1)²`. -/
 theorem sqrtxRun_vNum_eq :
@@ -81,10 +81,10 @@ theorem sqrtxRun_remainder_eq :
 def sqrtxFqx : QFunNZG ℚ := qxOfNum [0, 1]
 
 /-- The common-denominator power `V² = (x−1)²` as a `ℚ[x]` polynomial (the denominator of `vNum`). -/
-def sqrtxV2 : CPolyG ℚ := cpowG sqrtxV 2
+def sqrtxV2 : CPoly ℚ := cpowG sqrtxV 2
 
 /-- The initial denominator power `V³ = (x−1)³` as a `ℚ[x]` polynomial (the integrand's denominator). -/
-def sqrtxV3 : CPolyG ℚ := cpowG sqrtxV 3
+def sqrtxV3 : CPoly ℚ := cpowG sqrtxV 3
 
 /-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (QFunNZG ℚ)` as `[0, vNum/(V²·f)]`. -/
 def sqrtxVlift : RadElem (QFunNZG ℚ) :=
@@ -108,20 +108,20 @@ The same driver on the elliptic radicand `y² = x³ + 1`, `V = x − 1`, `k₀ =
 rational part `v` satisfies `radDeriv 2 (x³+1) (lift v) = lift(C₀/(V³√(x³+1)) − Crem/(V√(x³+1)))`. -/
 
 /-- Headline-radicand example `f = x³ + 1` (`y² = x³+1`, `y = √(x³+1)`), as `ℚ[x]` `[1,0,0,1]`. -/
-def cubeF : CPolyG ℚ := [1, 0, 0, 1]
+def cubeF : CPoly ℚ := [1, 0, 0, 1]
 
 /-- Headline-radicand denominator factor `V = x − 1` (coprime to `f = x³+1`: `f(1) = 2 ≠ 0`), `[−1, 1]`. -/
-def cubeV : CPolyG ℚ := [-1, 1]
+def cubeV : CPoly ℚ := [-1, 1]
 
 /-- Headline-radicand Case-1 helper `g = ((n−1)/n)·f' = (1/2)·3x² = (3/2)x²` (`n = 2`, `(f/y)' = g/y`). -/
-def cubeG : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG cubeF)
+def cubeG : CPoly ℚ := cscaleG (1/2 : ℚ) (cderivG cubeF)
 
 /-- Headline-radicand numerator `C₀ = 1` (integrand `1/((x−1)³√(x³+1))`), `[1]`. -/
-def cubeC : CPolyG ℚ := [1]
+def cubeC : CPoly ℚ := [1]
 
 /-- The driver run on `∫ 1/((x−1)³√(x³+1))`: two Hermite steps, returning `(Crem, vNum)` with `vNum`
 over `V² = (x−1)²`. -/
-def cubeRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase1 cderivG cubeV cubeF cubeG 3 cubeC
+def cubeRun : CPoly ℚ × CPoly ℚ := radIntegrateCase1 cderivG cubeV cubeF cubeG 3 cubeC
 
 /-- The headline radicand `f = x³ + 1` lifted to `ℚ(x)` (`QFunNZG ℚ`), the Picture-B radicand. -/
 def cubeFqx : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]

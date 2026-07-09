@@ -51,7 +51,7 @@ instance : Fact (Nat.Prime 7) := ⟨by norm_num⟩
 /-- `Nat.Prime 11` as a `Fact` instance, so `CField (ZMod 11)` resolves. -/
 instance : Fact (Nat.Prime 11) := ⟨by norm_num⟩
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [DecidableEq α]
 
@@ -64,7 +64,7 @@ variable {α : Type*} [CField α] [DecidableEq α]
 /-- Order-search loop `cantorOrderAux fuel ρ g D acc n`: with `acc = n·D` already computed, test
 `(n+1)·D = D ⊕ acc` against `mumfordIdentity` (`mumfordNormEq`); on a hit return `some (n+1)`, else
 recurse with the new accumulator. `fuel` bounds the remaining multiples to try. -/
-def cantorOrderAux (fuel : ℕ) (ρ : CPolyG α) (g : ℕ)
+def cantorOrderAux (fuel : ℕ) (ρ : CPoly α) (g : ℕ)
     (D acc : MumfordDivisor α) (n : ℕ) : Option ℕ :=
   match fuel with
   | 0 => none
@@ -78,10 +78,10 @@ def cantorOrderAux (fuel : ℕ) (ρ : CPolyG α) (g : ℕ)
 `none` if the order exceeds `fuel` (a candidate infinite-order point). `some m` says `D` is
 `m`-torsion, so the simple-radical integral is elementary with a `(1/m)·log` term. Run over
 `α = ZMod p` it computes the order in the finite group `Jac(𝔽_p)`. -/
-def cantorOrder (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : Option ℕ :=
+def cantorOrder (fuel : ℕ) (ρ : CPoly α) (g : ℕ) (D : MumfordDivisor α) : Option ℕ :=
   cantorOrderAux fuel ρ g D mumfordIdentity 0
 
-end CPolyG
+end CPoly
 
 /-! ## Reduction modulo `p` on Mumford coefficients
 
@@ -89,7 +89,7 @@ For a good prime (`p` dividing neither the discriminant of `ρ` nor a coefficien
 reduction map on the Jacobian is injective on prime-to-`p` torsion, so the order of `D mod p` in the
 finite `Jac(𝔽_p)` is a multiple of — hence bounds — the ℚ-order of `D`. -/
 
-open CPolyG
+open CPoly
 
 /-- Coefficient reduction `ratToZMod p q = (q.num : 𝔽_p)·(q.den : 𝔽_p)⁻¹` — the field map
 `ℚ → ZMod p` on a single coefficient; a field homomorphism when `p ∤ q.den` (the good-reduction
@@ -97,8 +97,8 @@ condition for this coefficient). -/
 def ratToZMod (p : ℕ) (q : ℚ) : ZMod p := (q.num : ZMod p) * ((q.den : ZMod p))⁻¹
 
 /-- Polynomial reduction `polyToZMod p u` — apply `ratToZMod p` coefficientwise, mapping `u ∈ ℚ[x]`
-to `(u mod p) ∈ 𝔽_p[x]` as `CPolyG` coefficient lists. -/
-def polyToZMod (p : ℕ) (u : CPolyG ℚ) : CPolyG (ZMod p) := u.map (ratToZMod p)
+to `(u mod p) ∈ 𝔽_p[x]` as `CPoly` coefficient lists. -/
+def polyToZMod (p : ℕ) (u : CPoly ℚ) : CPoly (ZMod p) := u.map (ratToZMod p)
 
 /-- Divisor reduction `mumfordReduceModP p D = (u mod p, v mod p)` — reduce both Mumford coefficient
 polynomials `ℚ → 𝔽_p`. For a good prime the result is a valid divisor on `y² = (ρ mod p)`. -/
@@ -109,7 +109,7 @@ def mumfordReduceModP (p : ℕ) (D : MumfordDivisor ℚ) : MumfordDivisor (ZMod 
 (`cantorOrder` over `α = ZMod p`). For a good prime `p`, a multiple of the ℚ-order of `D`; used as
 the terminating ceiling for the ℚ-order search in `isTorsionDivisor`. `none` if even the
 finite-group order exceeds `fuel`. -/
-def orderModP (p fuel : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+def orderModP (p fuel : ℕ) [Fact p.Prime] (ρ : CPoly ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Option ℕ :=
   cantorOrder fuel (polyToZMod p ρ) g (mumfordReduceModP p D)
 
@@ -123,7 +123,7 @@ order `c` in the finite `Jac(𝔽_p)` (`orderModP`, with fuel `p² + 4 > |Jac(�
 elliptic cases), then search the ℚ-order only up to `c`. Returns `some m` (`D` is `m`-torsion, the
 integral is elementary with a `(1/m)·log` term) or `none` (the ℚ-search hit the 𝔽_p ceiling without
 `O`, so `D` is non-torsion and the integral is not elementary). -/
-def isTorsionDivisor (p : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+def isTorsionDivisor (p : ℕ) [Fact p.Prime] (ρ : CPoly ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Option ℕ :=
   match orderModP p (p ^ 2 + 4) ρ g D with
   | none => none
@@ -132,7 +132,7 @@ def isTorsionDivisor (p : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : M
 /-- Elementarity decision `elementarityViaTorsion p ρ g D`: `true` iff the residue divisor `D` is
 torsion (`isTorsionDivisor = some m`) — i.e. the simple-radical integral is elementary with a
 `(1/m)·log` term; `false` means `D` has infinite order and the integral is not elementary. -/
-def elementarityViaTorsion (p : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+def elementarityViaTorsion (p : ℕ) [Fact p.Prime] (ρ : CPoly ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Bool :=
   (isTorsionDivisor p ρ g D).isSome
 
@@ -141,7 +141,7 @@ def elementarityViaTorsion (p : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) 
 The torsion case is the elliptic `y² = x³ + 1` (`(0,1)` is 3-torsion); the non-torsion case is
 `(3, 5)` on the rank-1 curve `y² = x³ − 2`. -/
 
-open CPolyG
+open CPoly
 
 /-- The order of `(0,1)` on `y² = x³+1` is 3: the inflection point is 3-torsion
 (`3·(0,1) = O`, `2·(0,1) ≠ O`). -/
@@ -166,7 +166,7 @@ theorem cantorOrder_pt23_lowfuel_none :
     cantorOrder 4 hypRhoX3p1 1 hypPt23 = none := by native_decide
 
 /-- The reduction of `y² = x³+1` mod `p = 5`: the curve over 𝔽₅. -/
-def rhoX3p1Mod5 : CPolyG (ZMod 5) := polyToZMod 5 hypRhoX3p1
+def rhoX3p1Mod5 : CPoly (ZMod 5) := polyToZMod 5 hypRhoX3p1
 
 /-- The reduction of `(0,1)` mod `p = 5`: a divisor on `y² = x³+1` over 𝔽₅. -/
 def pt01Mod5 : MumfordDivisor (ZMod 5) := mumfordReduceModP 5 hypPt01
@@ -205,7 +205,7 @@ orders of `(3,5)` mod `5, 7, 11` are the distinct `2, 7, 12` — a torsion point
 same order at every good prime — the classic reduction-mod-`p` non-torsion certificate. -/
 
 /-- The radicand `ρ = x³ − 2 ∈ ℚ[x]` (`[-2,0,0,1]`): the rank-1 elliptic curve `y² = x³ − 2`. -/
-def hypRhoX3m2 : CPolyG ℚ := [-2, 0, 0, 1]
+def hypRhoX3m2 : CPoly ℚ := [-2, 0, 0, 1]
 
 /-- The point `(3, 5)` on `y² = x³ − 2` (`5² = 25 = 3³ − 2`): an infinite-order point (the curve
 has rank 1 and trivial torsion). Mumford `(x − 3, 5)`. -/
@@ -268,7 +268,7 @@ of order `m` (`isTorsionDivisor = some m`), the simple-radical log part contribu
 term — return `some m` (the log-coefficient denominator) for the integrator's non-principal branch,
 or `none` (non-torsion, no elementary log term). The generator `g` with `div(g) = m·D` (the actual
 argument of `(1/m)·log g`) is the principal-divisor reconstruction, handled downstream. -/
-def radTorsionLogTerm (p : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+def radTorsionLogTerm (p : ℕ) [Fact p.Prime] (ρ : CPoly ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Option ℕ :=
   isTorsionDivisor p ρ g D
 

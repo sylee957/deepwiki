@@ -8,7 +8,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
 /-- `M · adj M = det M · I` on the `2×2` trace matrix: the fraction-free adjugate satisfies the
 defining identity over `ℚ[x]`. -/
@@ -38,7 +38,7 @@ theorem bareiss_adjugate_trig :
 `M` by the returned solution vector recovers `det M · b`. -/
 theorem bareiss_solve_nonRad :
     let M := bareissNonRadT
-    let b : List (CPolyG ℚ) := [[1], [0, 1]]
+    let b : List (CPoly ℚ) := [[1], [0, 1]]
     let ds := bareissSolve M b
     let d := ds.1
     let sol := ds.2

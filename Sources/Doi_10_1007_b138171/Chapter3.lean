@@ -522,42 +522,42 @@ abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_root_const_coeffs
 /-! ### Generic-carrier input builders for the §3.5 split examples (catalog-local)
 
 The §3.5 split examples over the generic ℚ(x) = `QFunNZG ℚ` carrier read their ℚ(x) coefficients as
-num/den lists over `CPolyG ℚ = List ℚ`, mirroring `qConst5`/`qFrac5` of the §5 catalog (the
+num/den lists over `CPoly ℚ = List ℚ`, mirroring `qConst5`/`qFrac5` of the §5 catalog (the
 `ComputableTowerRefoundProbe` construction one tower level down). Catalog infrastructure, not book
 items. -/
 
 /-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element, `den ≠ 0` discharged by `native_decide`. -/
-def qFrac3 (num den : List ℚ) (h : CPolyG.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
+def qFrac3 (num den : List ℚ) (h : CPoly.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 
 /-- Example 3.5.1's `Dt = −t²−(3/(2x))t+1/(2x)` over the generic ℚ(x)[t] (low→high in `t`). -/
-def ex351Dt : CPolyG (QFunNZG ℚ) := [qFrac3 [1] [0, 2], qFrac3 [-3] [0, 2], qFrac3 [-1] [1]]
+def ex351Dt : CPoly (QFunNZG ℚ) := [qFrac3 [1] [0, 2], qFrac3 [-3] [0, 2], qFrac3 [-1] [1]]
 
 /-- Example 3.5.1's degree-5 `p = 4x⁴t⁵−4x³(x+1)t⁴+x²(2x−3)t³+x(2x²+7x+2)t²−(4x²+4x−1)t+2x−1` over the
 generic ℚ(x)[t] (low→high in `t`; ℚ[x] coefficients, denominator `1`). -/
-def ex351P : CPolyG (QFunNZG ℚ) :=
+def ex351P : CPoly (QFunNZG ℚ) :=
   [qFrac3 [-1, 2] [1], qFrac3 [1, -4, -4] [1], qFrac3 [0, 2, 7, 2] [1],
    qFrac3 [0, 0, -3, 2] [1], qFrac3 [0, 0, 0, -4, -4] [1], qFrac3 [0, 0, 0, 0, 4] [1]]
 
 /-- Example 3.5.1's expected normal part `pₙ = 4x⁴t³−4x³(x+2)t²+4x²(2x+1)t−4x²` (book p.101). -/
-def ex351Pn : CPolyG (QFunNZG ℚ) :=
+def ex351Pn : CPoly (QFunNZG ℚ) :=
   [qFrac3 [0, 0, -4] [1], qFrac3 [0, 0, 4, 8] [1], qFrac3 [0, 0, 0, -8, -4] [1], qFrac3 [0, 0, 0, 0, 4] [1]]
 
 /-- Example 3.5.1's expected special part `pₛ = t²+(1/x)t−(2x−1)/(4x²)` (book p.101). -/
-def ex351Ps : CPolyG (QFunNZG ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
+def ex351Ps : CPoly (QFunNZG ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
 
 /-- Recombine a positional-by-multiplicity factor list `[q₁, q₂, …]` into `∏ᵢ qᵢ^i` over ℚ(x)[t]. -/
-def ex352Recombine (qs : List (CPolyG (QFunNZG ℚ))) : CPolyG (QFunNZG ℚ) :=
-  qs.zipIdx.foldl (fun acc (qi, i) => CPolyG.cmulG acc (CPolyG.cpowG qi (i + 1))) [CField.one]
+def ex352Recombine (qs : List (CPoly (QFunNZG ℚ))) : CPoly (QFunNZG ℚ) :=
+  qs.zipIdx.foldl (fun acc (qi, i) => CPoly.cmulG acc (CPoly.cpowG qi (i + 1))) [CField.one]
 
 /-- Example 3.5.2's expected normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` (book p.102), as `4x²·(t−1)·(xt−1)²`. -/
-def ex352Pn : CPolyG (QFunNZG ℚ) :=
-  CPolyG.cmulG [qFrac3 [0, 0, 4] [1]]
-    (CPolyG.cmulG [qFrac3 [-1] [1], qFrac3 [1] [1]]
-      (CPolyG.cmulG [qFrac3 [-1] [1], qFrac3 [0, 1] [1]] [qFrac3 [-1] [1], qFrac3 [0, 1] [1]]))
+def ex352Pn : CPoly (QFunNZG ℚ) :=
+  CPoly.cmulG [qFrac3 [0, 0, 4] [1]]
+    (CPoly.cmulG [qFrac3 [-1] [1], qFrac3 [1] [1]]
+      (CPoly.cmulG [qFrac3 [-1] [1], qFrac3 [0, 1] [1]] [qFrac3 [-1] [1], qFrac3 [0, 1] [1]]))
 
 /-- Example 3.5.2's expected special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)` (book p.102). -/
-def ex352Ps : CPolyG (QFunNZG ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
+def ex352Ps : CPoly (QFunNZG ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
 
 /-- **Example 3.5.1** (§3.5, p.101): the COMPUTABLE fraction-free `cSplitFactorFastG` (the canonical
 generic engine at the generic ℚ(x) = `QFunNZG ℚ`) splits the degree-5 `p` over ℚ(x)[t]
@@ -565,12 +565,12 @@ generic engine at the generic ℚ(x) = `QFunNZG ℚ`) splits the degree-5 `p` ov
 2), monic-normalized, by `native_decide` — where the naive ℚ(x)-Euclidean kernel did not finish
 (coefficient swell). -/
 theorem ex_3_5_1 :
-    (CPolyG.cdegG (CPolyG.cSplitFactorFastG ex351Dt ex351P).1,
-       CPolyG.cdegG (CPolyG.cSplitFactorFastG ex351Dt ex351P).2) = (3, 2)
-    ∧ CPolyG.cisZeroG (CPolyG.csubG
-        (CPolyG.cmonicG (CPolyG.cSplitFactorFastG ex351Dt ex351P).1) (CPolyG.cmonicG ex351Pn)) = true
-    ∧ CPolyG.cisZeroG (CPolyG.csubG
-        (CPolyG.cmonicG (CPolyG.cSplitFactorFastG ex351Dt ex351P).2) (CPolyG.cmonicG ex351Ps)) = true := by
+    (CPoly.cdegG (CPoly.cSplitFactorFastG ex351Dt ex351P).1,
+       CPoly.cdegG (CPoly.cSplitFactorFastG ex351Dt ex351P).2) = (3, 2)
+    ∧ CPoly.cisZeroG (CPoly.csubG
+        (CPoly.cmonicG (CPoly.cSplitFactorFastG ex351Dt ex351P).1) (CPoly.cmonicG ex351Pn)) = true
+    ∧ CPoly.cisZeroG (CPoly.csubG
+        (CPoly.cmonicG (CPoly.cSplitFactorFastG ex351Dt ex351P).2) (CPoly.cmonicG ex351Ps)) = true := by
   native_decide
 
 /-- **Example 3.5.2** (§3.5, p.102): the COMPUTABLE fraction-free `cSplitSquarefreeFactorFastG` (Yun in
@@ -579,14 +579,14 @@ theorem ex_3_5_1 :
 `[2, 0]`, recombining (by multiplicity) to Bronstein's normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` and
 special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)`, all monic-normalized, by `native_decide`. -/
 theorem ex_3_5_2 :
-    (((CPolyG.cSplitSquarefreeFactorFastG ex351Dt ex351P).1).map CPolyG.cdegG,
-       ((CPolyG.cSplitSquarefreeFactorFastG ex351Dt ex351P).2).map CPolyG.cdegG) = ([1, 1], [2, 0])
-    ∧ CPolyG.cisZeroG (CPolyG.csubG
-        (CPolyG.cmonicG (ex352Recombine (CPolyG.cSplitSquarefreeFactorFastG ex351Dt ex351P).1))
-        (CPolyG.cmonicG ex352Pn)) = true
-    ∧ CPolyG.cisZeroG (CPolyG.csubG
-        (CPolyG.cmonicG (ex352Recombine (CPolyG.cSplitSquarefreeFactorFastG ex351Dt ex351P).2))
-        (CPolyG.cmonicG ex352Ps)) = true := by
+    (((CPoly.cSplitSquarefreeFactorFastG ex351Dt ex351P).1).map CPoly.cdegG,
+       ((CPoly.cSplitSquarefreeFactorFastG ex351Dt ex351P).2).map CPoly.cdegG) = ([1, 1], [2, 0])
+    ∧ CPoly.cisZeroG (CPoly.csubG
+        (CPoly.cmonicG (ex352Recombine (CPoly.cSplitSquarefreeFactorFastG ex351Dt ex351P).1))
+        (CPoly.cmonicG ex352Pn)) = true
+    ∧ CPoly.cisZeroG (CPoly.csubG
+        (CPoly.cmonicG (ex352Recombine (CPoly.cSplitSquarefreeFactorFastG ex351Dt ex351P).2))
+        (CPoly.cmonicG ex352Ps)) = true := by
   native_decide
 
 /-! ## Chapter 3 Exercises -/

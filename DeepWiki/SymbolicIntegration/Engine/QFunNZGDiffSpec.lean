@@ -9,13 +9,13 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 /-! ### The differential-spec bridge `CDiffFieldSpec (QFunNZG ℚ)` -/
 
 /-- The base derivation `implicitDeriv (toPolyG 1)` whose fraction-field extension realizes `towerDerivQFunNZG [1]`. -/
 noncomputable def baseDerivQ : Derivation ℤ (CFieldSpec.K ℚ)[X] (CFieldSpec.K ℚ)[X] :=
-  Differential.implicitDeriv (CPolyG.toPolyG ([CField.one] : CPolyG ℚ))
+  Differential.implicitDeriv (CPoly.toPolyG ([CField.one] : CPoly ℚ))
 
 /-- `CDiffFieldSpec (QFunNZG ℚ)` using `fractionFieldDifferential baseDerivQ` and `toQFunNZG_towerDerivQFunNZG [1]`. -/
 noncomputable instance instCDiffFieldSpecQFunNZG : CDiffFieldSpec (QFunNZG ℚ) where

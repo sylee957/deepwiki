@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG RadElem
+open CPoly RadElem
 
 /-! ## `torsionLogTerm` — the non-principal branch as a usable function -/
 
@@ -23,7 +23,7 @@ returns `some (1/m, principalGenerator ρ ρq g m D)` when `D` is torsion of ord
 `(1/m)·log g` with `div(g) = m·D`), else `none` (infinite order, not elementary). `ρ`/`ρq` are the
 radicand as `ℚ(x)`/`ℚ[x]`, `g` the genus. -/
 def torsionLogTerm (p : ℕ) [Fact p.Prime]
-    (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+    (ρ : QFunNZG ℚ) (ρq : CPoly ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Option (QFunNZG ℚ × RadElem (QFunNZG ℚ)) :=
   match isTorsionDivisor p ρq g D with
   | none => none
@@ -76,7 +76,7 @@ theorem tltTerm01_logderiv :
 /-- Assemble `∫ = v + (1/m)·log g` as an `AlgIntegralResult` `torsionAlgResult p ρ ρq g v D`: rational
 part `v` plus the `torsionLogTerm` in `logTerms` (empty if `D` is non-torsion). -/
 def torsionAlgResult (p : ℕ) [Fact p.Prime]
-    (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (v : RadElem (QFunNZG ℚ)) (D : MumfordDivisor ℚ) :
+    (ρ : QFunNZG ℚ) (ρq : CPoly ℚ) (g : ℕ) (v : RadElem (QFunNZG ℚ)) (D : MumfordDivisor ℚ) :
     AlgIntegralResult :=
   match torsionLogTerm p ρ ρq g D with
   | none => ⟨v, []⟩

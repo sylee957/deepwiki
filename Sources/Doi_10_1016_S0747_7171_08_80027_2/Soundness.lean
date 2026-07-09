@@ -32,6 +32,6 @@ abbrev bie_algebraicCapstone := @RadElem.isAlgebraicIntegral_of_parts
 general-curve integrator's output differentiates back to `g` over `K(x)[y]/(f)` — the correctness of the
 algebraic step for an arbitrary (non-radical) curve beneath the elementary tower. Cataloged primarily as
 `DeepWiki.Tiaf.sound_genCapstone` (`Sources.Hdl_1721_1_15391.Soundness`). -/
-abbrev bie_generalAlgebraicCapstone := @CPolyG.isGeneralAlgebraicIntegralWf_of_parts
+abbrev bie_generalAlgebraicCapstone := @CPoly.isGeneralAlgebraicIntegralWf_of_parts
 
 end DeepWiki.Bie

@@ -52,7 +52,7 @@ p.305, which may need to be larger to absorb cancellations — the heuristic's f
 
 We realize `ParallelIntegrate` over the **base monomial case** `k = ℚ`, `t` a single monomial with
 derivative `Dt ∈ ℚ[t]` and the derivation `D = Dt·d/dt` (`Const(k) = ℚ`, `κ_D = 0`) — the worked
-Examples 10.3.1/10.3.3 setting and the field `ℚ(t)` the engine `native_decide`s over (`CPolyG ℚ`,
+Examples 10.3.1/10.3.3 setting and the field `ℚ(t)` the engine `native_decide`s over (`CPoly ℚ`,
 exactly as §7.1 in `ComputableParametric`). The transcendental monomials reachable this way include
 `t = exp(x)` (`Dt = t`), `t = tan(x)` (`Dt = 1 + t²`) and `t = x` (`Dt = 1`, ordinary rational
 integration). The candidate **log arguments** are taken to be the **squarefree factors** of `d` (the
@@ -73,7 +73,7 @@ default educated guess; an integrand whose denominator factors into squarefree-b
 
 ## What is documented / deferred
 
-The genuine **multivariate tower** `ℚ(x)[t]` (`a d : CPolyG (QFunNZG ℚ)`, the `cParallelIntegrateTower`
+The genuine **multivariate tower** `ℚ(x)[t]` (`a d : CPoly (QFunNZG ℚ)`, the `cParallelIntegrateTower`
 signature stub) needs the special-polynomial list `S^irr_{K:F}` and irreducible factorization over `F̄`
 (Theorems 10.2.1/10.2.2, Examples 10.3.2/10.3.4) — the documented continuation; the §10.1 multivariate
 `SplitFactor`/`SplitSquarefreeFactor` and the §10.4 simple-differential-field exponent bounds
@@ -83,9 +83,9 @@ its **cleared antiderivative identity** `D(∫f) = f` over `ℚ(t)`. No `sorry`.
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG
+open CPoly
 
-namespace CPolyG
+namespace CPoly
 
 /-! ### Squarefree factorization over `ℚ[t]` (Yun's algorithm) — the `(d₁,…,dₑ)` of §10.3 step 2 -/
 
@@ -94,11 +94,11 @@ list of monic squarefree factors `dⱼ` of `p` paired with their multiplicities 
 `p ~ ∏ⱼ dⱼ^j` and the `dⱼ` are pairwise coprime and squarefree (Bronstein §1.7 `Squarefree`). Computed
 by Yun: `c ← gcd(p, p′)`, `w ← p/c` (product of the distinct factors), then peel `dⱼ = w/gcd(w,c)`,
 `w ← gcd(w,c)`, `c ← c/gcd(w,c)`. Euclidean leaves are fuel-free; constant factors are dropped. -/
-def cSquarefreeFactorsQ (p : CPolyG ℚ) : List (CPolyG ℚ × ℕ) :=
+def cSquarefreeFactorsQ (p : CPoly ℚ) : List (CPoly ℚ × ℕ) :=
   let p := cmonicG p
   let c0 := cmonicG (cgcdWf p (cderivG p)).1
   let w0 := cdivWf p c0
-  let rec go : ℕ → CPolyG ℚ → CPolyG ℚ → ℕ → List (CPolyG ℚ × ℕ)
+  let rec go : ℕ → CPoly ℚ → CPoly ℚ → ℕ → List (CPoly ℚ × ℕ)
     | 0, _, _, _ => []
     | f + 1, w, c, i =>
       if cdegG c = 0 then
@@ -113,17 +113,17 @@ def cSquarefreeFactorsQ (p : CPolyG ℚ) : List (CPolyG ℚ × ℕ) :=
 
 /-! ### The base monomial derivation and small helpers -/
 
-/-- **Base monomial derivation** `cDerivMonomialQ Dt p = (dp/dt)·Dt` on `CPolyG ℚ` (the derivation
+/-- **Base monomial derivation** `cDerivMonomialQ Dt p = (dp/dt)·Dt` on `CPoly ℚ` (the derivation
 `D = Dt·d/dt`, `κ_D = 0` since the coefficient field `ℚ` is constants under `D`). For `Dt = [1]` this is
 `d/dt` (ordinary rational integration, `t = x`); `Dt = [0,1]` gives the exponential monomial
 `t = exp(x)` (`Dt = t`); `Dt = [1,0,1]` the hypertangent `t = tan(x)` (`Dt = 1 + t²`). -/
-def cDerivMonomialQ (Dt p : CPolyG ℚ) : CPolyG ℚ := cmulG (cderivG p) Dt
+def cDerivMonomialQ (Dt p : CPoly ℚ) : CPoly ℚ := cmulG (cderivG p) Dt
 
-/-- **Product of a list of `CPolyG ℚ`** `cProductQ [p₁,…,pₙ] = p₁⋯pₙ` (`[1]` for the empty list). -/
-def cProductQ (ps : List (CPolyG ℚ)) : CPolyG ℚ := ps.foldl cmulG [(1 : ℚ)]
+/-- **Product of a list of `CPoly ℚ`** `cProductQ [p₁,…,pₙ] = p₁⋯pₙ` (`[1]` for the empty list). -/
+def cProductQ (ps : List (CPoly ℚ)) : CPoly ℚ := ps.foldl cmulG [(1 : ℚ)]
 
-/-- **`tⁱ`-coefficient of a `CPolyG ℚ`** `cParCoeffQ p i = coefficient(p, tⁱ)` (`0` out of range). -/
-def cParCoeffQ (p : CPolyG ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
+/-- **`tⁱ`-coefficient of a `CPoly ℚ`** `cParCoeffQ p i = coefficient(p, tⁱ)` (`0` out of range). -/
+def cParCoeffQ (p : CPoly ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
 
 /-! ### A *particular*-solution linear solver over ℚ (the §10.3 step-5 solve)
 
@@ -159,8 +159,8 @@ from `f = a/d` (over `ℚ(t)`, `D = Dt·d/dt`) build the candidate `∫f = b/s +
   widened to absorb a polynomial part of `f`: `nU = max(deg s, deg a − deg d + deg s) + 2`).
 
 `d` need not be monic; the caller's `a` is rescaled by `1/lc(d)` in `cParallelSystemQ`. -/
-def cParallelAnsatzQ (d : CPolyG ℚ) (degA : ℤ) :
-    List (CPolyG ℚ) × CPolyG ℚ × ℕ :=
+def cParallelAnsatzQ (d : CPoly ℚ) (degA : ℤ) :
+    List (CPoly ℚ) × CPoly ℚ × ℕ :=
   let sf := cSquarefreeFactorsQ d
   let ps := sf.map Prod.fst
   let s := cProductQ (sf.map (fun (p, e) => cpowG p (e - 1)))
@@ -179,7 +179,7 @@ the common denominator `M = s²·∏pⱼ` (which `monic(d)` divides, `M/d = s`) 
 (with `a` first rescaled to make `d` monic, `D = Dt·d/dt`). Equating `tⁱ`-coefficients gives the dense
 matrix `rows` and right-hand side `rhs = coeffs(a·s)` over the unknowns `(u₀,…,u_{nU-1}, c₁,…,c_m)`
 (`nU` numerator coefficients then `m = #squarefree factors` log coefficients). Fed to `cConstSolveAnyQ`. -/
-def cParallelSystemQ (Dt a d : CPolyG ℚ) :
+def cParallelSystemQ (Dt a d : CPoly ℚ) :
     List (List ℚ) × List ℚ × ℕ × ℕ :=
   let lcd := cleadG d
   let a := cscaleG (1 / lcd) a                                   -- make `d` monic: `f = a/d` unchanged
@@ -190,11 +190,11 @@ def cParallelSystemQ (Dt a d : CPolyG ℚ) :
   let Ds := cDerivMonomialQ Dt s
   let target := cmulG a s                                        -- rhs `a·s`
   -- `uᵢ`-column: `b = tⁱ` contributes `(D(tⁱ)·s − tⁱ·Ds)·∏pⱼ` to the lhs of (10.6).
-  let uPolys : List (CPolyG ℚ) := (List.range nU).map (fun i =>
-    let bi : CPolyG ℚ := cshiftG i [(1 : ℚ)]
+  let uPolys : List (CPoly ℚ) := (List.range nU).map (fun i =>
+    let bi : CPoly ℚ := cshiftG i [(1 : ℚ)]
     cmulG (csubG (cmulG (cDerivMonomialQ Dt bi) s) (cmulG bi Ds)) prodPs)
   -- `cⱼ`-column: `Dpⱼ·s²·∏_{k≠j}pₖ`.
-  let cPolys : List (CPolyG ℚ) := (List.range m).map (fun j =>
+  let cPolys : List (CPoly ℚ) := (List.range m).map (fun j =>
     let pj := ps.getD j [(1 : ℚ)]
     let others := cProductQ (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
     cmulG (cmulG (cDerivMonomialQ Dt pj) s2) others)
@@ -220,16 +220,16 @@ undetermined numerator), forms the eq. 10.6 linear system (`cParallelSystemQ`), 
 
 Validated on transcendental integrands (`t = exp x`, `t = tan x`) and rational ones via the cleared
 identity `D(∫f) = f`. -/
-def cParallelIntegrate (Dt a d : CPolyG ℚ) :
-    Option ((CPolyG ℚ × CPolyG ℚ) × List (ℚ × CPolyG ℚ)) :=
+def cParallelIntegrate (Dt a d : CPoly ℚ) :
+    Option ((CPoly ℚ × CPoly ℚ) × List (ℚ × CPoly ℚ)) :=
   let (rows, rhs, nU, m) := cParallelSystemQ Dt a d
   let (ps, s, _) := cParallelAnsatzQ d (cdegG (cscaleG (1 / cleadG d) a) : ℤ)
   match cConstSolveAnyQ rows rhs (nU + m) with
   | none => none
   | some sol =>
-    let b : CPolyG ℚ := (List.range nU).map (fun i => sol.getD i 0)   -- numerator coefficients
+    let b : CPoly ℚ := (List.range nU).map (fun i => sol.getD i 0)   -- numerator coefficients
     let cs : List ℚ := (List.range m).map (fun j => sol.getD (nU + j) 0)
-    let logs : List (ℚ × CPolyG ℚ) := (List.zip cs ps).filter (fun (c, _) => c ≠ 0)
+    let logs : List (ℚ × CPoly ℚ) := (List.zip cs ps).filter (fun (c, _) => c ≠ 0)
     some ((cnormG b, s), logs)
 
 /-! ### The cleared antiderivative identity `D(∫f) = f` — the validation predicate
@@ -243,8 +243,8 @@ check `D(∫f) = a/d` by the *cleared* identity `num·d − a·den = 0` (`cisZer
 ((b,s), logs) = (num, den)` with `num/den = D(b/s + Σ cⱼ log pⱼ) = (Db·s − b·Ds)/s² + Σ cⱼ·Dpⱼ/pⱼ`. The
 common denominator is `s²·∏pⱼ`; the numerator is assembled over it. Used by the cleared `D(∫f) = f`
 check. -/
-def cParallelResultDerivQ (Dt : CPolyG ℚ)
-    (res : (CPolyG ℚ × CPolyG ℚ) × List (ℚ × CPolyG ℚ)) : CPolyG ℚ × CPolyG ℚ :=
+def cParallelResultDerivQ (Dt : CPoly ℚ)
+    (res : (CPoly ℚ × CPoly ℚ) × List (ℚ × CPoly ℚ)) : CPoly ℚ × CPoly ℚ :=
   let ((b, s), logs) := res
   let ps := logs.map Prod.snd
   let prodPs := cProductQ ps
@@ -254,7 +254,7 @@ def cParallelResultDerivQ (Dt : CPolyG ℚ)
   let Ds := cDerivMonomialQ Dt s
   let ratNum := cmulG (csubG (cmulG (cDerivMonomialQ Dt b) s) (cmulG b Ds)) prodPs
   -- log part `Σ cⱼ·Dpⱼ/pⱼ`, over `den`: `Σ cⱼ·Dpⱼ·s²·∏_{k≠j}pₖ`.
-  let logNum : CPolyG ℚ := (logs.zipIdx).foldl (fun acc ((c, pj), j) =>
+  let logNum : CPoly ℚ := (logs.zipIdx).foldl (fun acc ((c, pj), j) =>
     let others := cProductQ (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
     caddG acc (cscaleG c (cmulG (cmulG (cDerivMonomialQ Dt pj) s2) others))) []
   (caddG ratNum logNum, den)
@@ -264,37 +264,37 @@ parallel-integration result `res = ((b,s), logs)` satisfies `D(b/s + Σ cⱼ log
 functions over `ℚ(t)`, decided by `cisZeroG (num·d − a·den)` where `(num, den) =
 cParallelResultDerivQ … res`. This is the faithful `D(∫f) = f` certificate (no equality decision on
 `QFunNZG ℚ` needed — the polynomial cross-difference is `cisZeroG`-tested over `ℚ`). -/
-def cParallelCheckQ (Dt a d : CPolyG ℚ)
-    (res : (CPolyG ℚ × CPolyG ℚ) × List (ℚ × CPolyG ℚ)) : Bool :=
+def cParallelCheckQ (Dt a d : CPoly ℚ)
+    (res : (CPoly ℚ × CPoly ℚ) × List (ℚ × CPoly ℚ)) : Bool :=
   let (num, den) := cParallelResultDerivQ Dt res
   cisZeroG (csubG (cmulG num d) (cmulG a den))
 
-end CPolyG
+end CPoly
 
 /-! ### The genuine tower `ℚ(x)[t]` — documented signature stub
 
-The prompt's `cParallelIntegrate Dt fuel (a d : CPolyG (QFunNZG ℚ))` over the genuine differential tower
+The prompt's `cParallelIntegrate Dt fuel (a d : CPoly (QFunNZG ℚ))` over the genuine differential tower
 `k(t) = ℚ(x)(t)` needs the special-polynomial list `S^irr_{K:F}` (Theorem 10.2.2) and the irreducible
 factorization of `dₙ` over `F̄ = ℚ̄(x)` (Theorem 10.2.1, Examples 10.3.2/10.3.4) before the eq. 10.6 solve
 — the matrix entries then lie in `F = ℚ(x)`, not `Const(k) = ℚ`, so Lemma 7.1.2's row-differentiation
 reduction to a `ℚ`-system precedes `crref` (cf. `ComputableParametric` §7.1). We expose the signature
 (over the **generic** ℚ(x) = `QFunNZG ℚ` carrier) and route the base-field case `Dt, a, d ∈ ℚ[t]` (every
-coefficient a `ℚ`-constant `QFunNZG ℚ`) through the landed `CPolyG.cParallelIntegrate`; a coefficient with
+coefficient a `ℚ`-constant `QFunNZG ℚ`) through the landed `CPoly.cParallelIntegrate`; a coefficient with
 a genuine `x`-dependence returns `none` ("deferred to the tower construction"). -/
 
-namespace CPolyG
+namespace CPoly
 
 /-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the tower-coefficient builder, the `ℚ → QFunNZG ℚ`
 constant embedding; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
 def qConstTowerG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
 
-/-- **`QFunNZG ℚ`-coefficient `CPolyG` to a `ℚ`-coefficient one, when every coefficient is a
-`ℚ`-constant.** `cToRatCoeffsQ p = some q` with `q : CPolyG ℚ` iff each coefficient of
-`p : CPolyG (QFunNZG ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
+/-- **`QFunNZG ℚ`-coefficient `CPoly` to a `ℚ`-coefficient one, when every coefficient is a
+`ℚ`-constant.** `cToRatCoeffsQ p = some q` with `q : CPoly ℚ` iff each coefficient of
+`p : CPoly (QFunNZG ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
 numerator and denominator), else `none`. The base-field guard for the tower wrapper: the lowest-terms
 reduction divides `(num, den)` by their gcd (`cgcdWf`/`cdivWf`), and a `ℚ`-constant is exactly a
 degree-0 quotient over a degree-0 (nonzero) remainder denominator. -/
-def cToRatCoeffsQ (p : CPolyG (QFunNZG ℚ)) : Option (CPolyG ℚ) :=
+def cToRatCoeffsQ (p : CPoly (QFunNZG ℚ)) : Option (CPoly ℚ) :=
   (p : List (QFunNZG ℚ)).foldr (fun (z : QFunNZG ℚ) acc =>
     match acc with
     | none => none
@@ -309,24 +309,24 @@ def cToRatCoeffsQ (p : CPolyG (QFunNZG ℚ)) : Option (CPolyG ℚ) :=
       else none) (some [])
 
 /-- **Parallel integration over the tower `ℚ(x)[t]`** `cParallelIntegrateTower fuel Dt a d` (Bronstein
-§10.3, `a d : CPolyG (QFunNZG ℚ)`): the genuine-tower signature over the generic ℚ(x) = `QFunNZG ℚ`
+§10.3, `a d : CPoly (QFunNZG ℚ)`): the genuine-tower signature over the generic ℚ(x) = `QFunNZG ℚ`
 carrier. The base-field case — `Dt, a, d` all with `ℚ`-constant coefficients (so `k = ℚ`, the field
 `ℚ(t)`) — is routed through `cParallelIntegrate` and the result lifted back to `QFunNZG ℚ` coefficients
 (rational part `(b, s)` and log arguments `pⱼ`, with the `ℚ`-constants `cⱼ`). A genuine `x`-dependent
 coefficient (the full tower, needing the §10.2 special-poly list + `F̄`-factorization) returns `none` —
 the documented continuation. -/
-def cParallelIntegrateTower (Dt a d : CPolyG (QFunNZG ℚ)) :
-    Option ((CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) × List (ℚ × CPolyG (QFunNZG ℚ))) :=
+def cParallelIntegrateTower (Dt a d : CPoly (QFunNZG ℚ)) :
+    Option ((CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) × List (ℚ × CPoly (QFunNZG ℚ))) :=
   match cToRatCoeffsQ Dt, cToRatCoeffsQ a, cToRatCoeffsQ d with
   | some DtQ, some aQ, some dQ =>
     match cParallelIntegrate DtQ aQ dQ with
     | none => none
     | some ((b, s), logs) =>
-      let lift : CPolyG ℚ → CPolyG (QFunNZG ℚ) := fun p => (p : List ℚ).map qConstTowerG
+      let lift : CPoly ℚ → CPoly (QFunNZG ℚ) := fun p => (p : List ℚ).map qConstTowerG
       some ((lift b, lift s), logs.map (fun (c, p) => (c, lift p)))
   | _, _, _ => none
 
-end CPolyG
+end CPoly
 
 /-! ### Examples — `native_decide`, the cleared antiderivative identity `D(∫f) = f`
 
@@ -334,16 +334,16 @@ Each example feeds an integrand `f = a/d` over `ℚ(t)` with a known elementary 
 `cParallelIntegrate`, then verifies the returned `∫f = b/s + Σ cⱼ log pⱼ` actually satisfies
 `D(∫f) = f` via `cParallelCheckQ` (the cleared polynomial identity `num·d − a·den = 0`). -/
 
-open CPolyG
+open CPoly
 
 /-! #### (1) Pure log, `t = x` (`Dt = 1`): `∫ 2t/(t²+1) dt = log(t²+1)`.
 The squarefree factor `t²+1` is irreducible over ℚ, `s = 1`, the candidate log argument is `t²+1`, and
 the solve gives `c₁ = 1` (and zero numerator). -/
 
 /-- Example: `f = 2t/(t²+1)`, `t = x` (`Dt = [1]`), antiderivative `log(t²+1)`. -/
-def parallelExampleLogA : CPolyG ℚ := [0, 2]
+def parallelExampleLogA : CPoly ℚ := [0, 2]
 /-- The denominator `t²+1`. -/
-def parallelExampleLogD : CPolyG ℚ := [1, 0, 1]
+def parallelExampleLogD : CPoly ℚ := [1, 0, 1]
 
 /-- **Pure-log parallel integration computes** (`native_decide`, Bronstein §10.3, book p.309). For
 `∫ 2t/(t²+1) dt` over `ℚ(t)` (`D = d/dt`), `cParallelIntegrate` returns `some res` whose reconstructed
@@ -360,11 +360,11 @@ A genuine element of `ℚ(exp x)`: `D(−1/(t+1)) = Dt·1/(t+1)² = t/(t+1)²`. 
 multiplicity 2, so `s = t+1` (rational part) and the candidate log `t+1` gets coefficient `0`. -/
 
 /-- Example: `f = t/(t+1)²`, `t = exp x` (`Dt = [0,1]`), antiderivative `−1/(t+1)`. -/
-def parallelExampleExpA : CPolyG ℚ := [0, 1]
+def parallelExampleExpA : CPoly ℚ := [0, 1]
 /-- The denominator `(t+1)² = t² + 2t + 1`. -/
-def parallelExampleExpD : CPolyG ℚ := [1, 2, 1]
+def parallelExampleExpD : CPoly ℚ := [1, 2, 1]
 /-- The exponential monomial derivative `Dt = t` (`t = exp x`, `Dexp = exp`). -/
-def parallelExampleExpDt : CPolyG ℚ := [0, 1]
+def parallelExampleExpDt : CPoly ℚ := [0, 1]
 
 /-- **Transcendental parallel integration computes** (`native_decide`, Bronstein §10.3, book p.309). For
 `∫ exp(x)/(exp(x)+1)² dx` — `f = t/(t+1)²` over the genuine transcendental field `ℚ(exp x)` with the
@@ -383,7 +383,7 @@ log simultaneously — the full Risch–Norman shape. `D(−1/(t+1) + log(t+1)) 
 (t²+2t)/(t+1)²`. -/
 
 /-- Example: `f = (t²+2t)/(t+1)²`, `t = exp x` (`Dt = [0,1]`), antiderivative `−1/(t+1) + log(t+1)`. -/
-def parallelExampleMixA : CPolyG ℚ := [0, 2, 1]
+def parallelExampleMixA : CPoly ℚ := [0, 2, 1]
 
 /-- **Mixed rational + log parallel integration computes** (`native_decide`, Bronstein §10.3, book
 p.309). For `∫ (exp(x)²+2exp(x))/(exp(x)+1)² dx` — `f = (t²+2t)/(t+1)²` over `ℚ(exp x)`, `Dt = t` — the
@@ -404,9 +404,9 @@ cannot produce the `1/(t+1)` shape (the integral `∫dx/(eˣ+1) = x − log(eˣ+
 that the guess was too small). -/
 
 /-- Example: `f = 1/(exp x + 1)`, whose antiderivative `x − log(exp x + 1)` lies outside `ℚ(exp x)`. -/
-def parallelExampleFailA : CPolyG ℚ := [1]
+def parallelExampleFailA : CPoly ℚ := [1]
 /-- The denominator `exp x + 1 = t + 1`. -/
-def parallelExampleFailD : CPolyG ℚ := [1, 1]
+def parallelExampleFailD : CPoly ℚ := [1, 1]
 
 /-- **The parallel heuristic fails on a non-(ansatz-)elementary integrand** (`native_decide`, Bronstein
 §10.3, book p.298). `∫ 1/(exp(x)+1) dx` has antiderivative `x − log(exp x+1)`, which is **not** in the

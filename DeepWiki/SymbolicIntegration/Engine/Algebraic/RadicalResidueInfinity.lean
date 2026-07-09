@@ -11,27 +11,27 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
 /-! ### Common-`t`-power cancellation after reverse-coefficient substitution -/
 
-/-- **Count leading-zero coefficients** of a `CPolyG` (initial `isZero` run length) — the order of
+/-- **Count leading-zero coefficients** of a `CPoly` (initial `isZero` run length) — the order of
 vanishing at `t = 0`, i.e. the `t`-power dividing `p`. -/
-def cleadingZerosG (p : CPolyG α) : ℕ := (p.takeWhile (fun a => CField.isZero a)).length
+def cleadingZerosG (p : CPoly α) : ℕ := (p.takeWhile (fun a => CField.isZero a)).length
 
-/-- **Common `t`-power** `commonTPow ps` shared by every `CPolyG` in `ps`: the `min` of their
+/-- **Common `t`-power** `commonTPow ps` shared by every `CPoly` in `ps`: the `min` of their
 leading-zero counts (`0` for the empty list). The maximal `t^k` dividing all of `ps` simultaneously. -/
-def commonTPow (ps : List (CPolyG α)) : ℕ :=
+def commonTPow (ps : List (CPoly α)) : ℕ :=
   match ps.map cleadingZerosG with
   | [] => 0
   | n :: ns => ns.foldl Nat.min n
 
-/-- **Divide a `CPolyG` by `t^k`** by dropping `k` low coefficients (`p.drop k`). Sound only when the
+/-- **Divide a `CPoly` by `t^k`** by dropping `k` low coefficients (`p.drop k`). Sound only when the
 first `k` coefficients are zero (the caller guarantees this via `commonTPow`); realizes division by the
 monomial `t^k`. -/
-def cdropTPowG (k : ℕ) (p : CPolyG α) : CPolyG α := (p : List α).drop k
+def cdropTPowG (k : ℕ) (p : CPoly α) : CPoly α := (p : List α).drop k
 
 /-! ### The coordinate transform at infinity -/
 
@@ -39,8 +39,8 @@ def cdropTPowG (k : ℕ) (p : CPolyG α) : CPolyG α := (p : List α).drop k
 for `f dx = (g₀ + g₁·y)/D dx` on `y² = ρ`. With `m = ⌈deg ρ/2⌉`, `N = max(deg g₀, deg g₁, deg D)`, and
 `revₖ p := t^k·p(1/t)`: `ρ̃ = rev_{2m} ρ`, `g̃₀ = −t^m·rev_N g₀`, `g̃₁ = −rev_N g₁`, `D̃ = t^{m+2}·rev_N D`,
 with the common `t`-power cancelled so `∞` stays a simple pole. Generic over `[CField α]`. -/
-def radTransformAtInfinity (rho g0 g1 D : CPolyG α) :
-    CPolyG α × CPolyG α × CPolyG α × CPolyG α :=
+def radTransformAtInfinity (rho g0 g1 D : CPoly α) :
+    CPoly α × CPoly α × CPoly α × CPoly α :=
   let d := cdegG rho
   let m := (d + 1) / 2                                            -- ⌈d/2⌉
   let N := max (max (cdegG g0) (cdegG g1)) (cdegG D)
@@ -56,24 +56,24 @@ def radTransformAtInfinity (rho g0 g1 D : CPolyG α) :
 /-- Full residue-at-infinity resultant `cAlgResidueAtInfinity ρ g₀ g₁ D = R̃(Z) ∈ K[Z]`: the residue
 resultant `cAlgResidueResultant` on the `x = 1/t`-transformed data. `R̃(Z) = res_t((Z·D̃' − g̃₀)² −
 g̃₁²·ρ̃, D̃)` factors over the roots of `D̃`; the residue at infinity is the `t = 0` factor. -/
-def cAlgResidueAtInfinity (rho g0 g1 D : CPolyG α) : CPolyG α :=
+def cAlgResidueAtInfinity (rho g0 g1 D : CPoly α) : CPoly α :=
   let (rhoT, g0T, g1T, DT) := radTransformAtInfinity rho g0 g1 D
   cAlgResidueResultant DT rhoT g0T g1T
 
 /-- Isolated residue at the place `t = 0` (the residue at infinity) `cResidueAtInfinityPlace fuel ρ g₀ g₁ D
 = (Z·D̃'(0) − g̃₀(0))² − g̃₁(0)²·ρ̃(0) ∈ K[Z]`, built from the constants `D̃'(0), g̃₀(0), g̃₁(0), ρ̃(0)`.
 Isolates the single place `t = 0`, staying correct (residue `0`) even when `∞` is not a pole. -/
-def cResidueAtInfinityPlace (fuel : ℕ) (rho g0 g1 D : CPolyG α) : CPolyG α :=
+def cResidueAtInfinityPlace (fuel : ℕ) (rho g0 g1 D : CPoly α) : CPoly α :=
   let (rhoT, g0T, g1T, DT) := radTransformAtInfinity rho g0 g1 D
   let Dp0 := cevalG (cderivG DT) CField.zero                     -- D̃'(0)
   let a0 := cevalG g0T CField.zero                               -- g̃₀(0)
   let b0 := cevalG g1T CField.zero                               -- g̃₁(0)
   let r0 := cevalG rhoT CField.zero                              -- ρ̃(0)
-  let lin : CPolyG α := [CField.neg a0, Dp0]                     -- D̃'(0)·Z − g̃₀(0)
+  let lin : CPoly α := [CField.neg a0, Dp0]                     -- D̃'(0)·Z − g̃₀(0)
   let _ := fuel
   csubG (cmulG lin lin) [CField.mul (CField.mul b0 b0) r0]       -- (·)² − g̃₁(0)²·ρ̃(0)
 
-end CPolyG
+end CPoly
 
 /-! ### Validation: `∫ dx/√(x²+1)` (arcsinh) and `∫ dx/√(x²−1)` (arccosh) — residues at ∞
 
@@ -81,24 +81,24 @@ For `∫ dx/√(x² + 1)` on `y² = x² + 1`: `g = y` (`g₀ = 0, g₁ = 1`), `D
 `(ρ̃, g̃₀, g̃₁, D̃) = (1 + t², 0, −1, t(1 + t²))`, `t = 0` place residue resultant `Z² − 1`, residues `±1`.
 The arccosh case is identical with `ρ = x² − 1`. -/
 
-open CPolyG
+open CPoly
 
 /-- arcsinh radicand `ρ = x² + 1` (curve `y² = x² + 1`), `ℚ[x]` `[1, 0, 1]`. -/
-def arcsinhInf_rho : CPolyG ℚ := [1, 0, 1]
+def arcsinhInf_rho : CPoly ℚ := [1, 0, 1]
 /-- arcsinh numerator low part `g₀ = 0` (`g = y`). -/
-def arcsinhInf_g0 : CPolyG ℚ := []
+def arcsinhInf_g0 : CPoly ℚ := []
 /-- arcsinh numerator `y`-coefficient `g₁ = 1` (`g = y`), `ℚ[x]` `[1]`. -/
-def arcsinhInf_g1 : CPolyG ℚ := [1]
+def arcsinhInf_g1 : CPoly ℚ := [1]
 /-- arcsinh denominator `D = ρ = x² + 1` (`f = 1/y = y/ρ`), `ℚ[x]` `[1, 0, 1]`. -/
-def arcsinhInf_D : CPolyG ℚ := [1, 0, 1]
+def arcsinhInf_D : CPoly ℚ := [1, 0, 1]
 
 /-- arccosh radicand `ρ = x² − 1` (curve `y² = x² − 1`), `ℚ[x]` `[−1, 0, 1]`. -/
-def arccoshInf_rho : CPolyG ℚ := [-1, 0, 1]
+def arccoshInf_rho : CPoly ℚ := [-1, 0, 1]
 /-- arccosh denominator `D = ρ = x² − 1`, `ℚ[x]` `[−1, 0, 1]`. -/
-def arccoshInf_D : CPolyG ℚ := [-1, 0, 1]
+def arccoshInf_D : CPoly ℚ := [-1, 0, 1]
 
 -- Sanity print: `(ρ̃, g̃₀, g̃₁, D̃) = (1+t², 0, −1, t(1+t²))`, then the `t=0` place residue `Z²−1`.
-#eval (radTransformAtInfinity arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ)
+#eval (radTransformAtInfinity arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D : CPoly ℚ × CPoly ℚ × CPoly ℚ × CPoly ℚ)
 #eval (cnormG (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) : List ℚ)
 
 /-- The `x = 1/t` transform of `(x² + 1, 0, 1, x² + 1)` is `(1 + t², 0, −1, t(1 + t²))`, the common `t²`
@@ -161,13 +161,13 @@ theorem arcsinhInf_residue_theorem :
 (residues `±1, ±√2`), the residue at ∞ is `Z² − 1` (residues `±1`); both sum to `0`. -/
 
 /-- both-nonzero radicand `ρ = x² + 1`, `ℚ[x]` `[1, 0, 1]`. -/
-def bothInf_rho : CPolyG ℚ := [1, 0, 1]
+def bothInf_rho : CPoly ℚ := [1, 0, 1]
 /-- both-nonzero numerator `g = y` (`g₀ = 0`). -/
-def bothInf_g0 : CPolyG ℚ := []
+def bothInf_g0 : CPoly ℚ := []
 /-- both-nonzero numerator `y`-coefficient `g₁ = 1`. -/
-def bothInf_g1 : CPolyG ℚ := [1]
+def bothInf_g1 : CPoly ℚ := [1]
 /-- both-nonzero denominator `D = x² − x = x(x − 1)`, `ℚ[x]` `[0, −1, 1]`. -/
-def bothInf_D : CPolyG ℚ := [0, -1, 1]
+def bothInf_D : CPoly ℚ := [0, -1, 1]
 
 -- Sanity: finite `(Z²−1)(Z²−2) = Z⁴−3Z²+2`, then the ∞ place `Z²−1`.
 #eval (cnormG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ)
@@ -202,12 +202,12 @@ When `deg ρ` is odd, `∞` is a single branch place and the transform degenerat
 on `∫ dx/√(x³)`, where the transform yields `ρ̃ = t`. -/
 
 /-- Odd-degree probe radicand `ρ = x³`, `ℚ[x]` `[0, 0, 0, 1]` (branch place at ∞). -/
-def oddInf_rho : CPolyG ℚ := [0, 0, 0, 1]
+def oddInf_rho : CPoly ℚ := [0, 0, 0, 1]
 /-- Odd-degree probe denominator `D = x³` (`f = 1/y = y/ρ`), `ℚ[x]` `[0, 0, 0, 1]`. -/
-def oddInf_D : CPolyG ℚ := [0, 0, 0, 1]
+def oddInf_D : CPoly ℚ := [0, 0, 0, 1]
 
 -- Probe: `ρ̃ = t` (deg 1, odd ⇒ ramified — `ỹ = √t` Puiseux), place computation degenerates to `−Z²`.
-#eval (radTransformAtInfinity oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ)
+#eval (radTransformAtInfinity oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D : CPoly ℚ × CPoly ℚ × CPoly ℚ × CPoly ℚ)
 #eval (cnormG (cResidueAtInfinityPlace 30 oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D) : List ℚ)
 
 /-- The odd-degree transform leaves a ramified radicand: `∫ dx/√(x³)` transforms to `ρ̃ = t = [0, 1]`

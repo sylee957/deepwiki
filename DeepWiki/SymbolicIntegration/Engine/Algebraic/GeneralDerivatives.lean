@@ -7,19 +7,19 @@ with their denotation bridges. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
 /-- The formal `y`-derivative `∂f/∂y` of a general curve polynomial. -/
-def afFy (f : CPolyG α) : CPolyG α := cderivG f
+def afFy (f : CPoly α) : CPoly α := cderivG f
 
 section AfFyDenote
 
 variable [CFieldSpec α]
 
 /-- `afFy` reads as the formal derivative through `toPolyG`. -/
-theorem derivative_toPolyG_eq_afFy (f : CPolyG α) :
+theorem derivative_toPolyG_eq_afFy (f : CPoly α) :
     Polynomial.derivative (toPolyG f) = toPolyG (afFy f) := by
   simp only [afFy, denote]
 
@@ -28,8 +28,8 @@ end AfFyDenote
 variable [CDiffField α]
 
 /-- The coefficientwise base derivative `∂f/∂x` of a general curve polynomial. -/
-def afFx (f : CPolyG α) : CPolyG α := (f : List α).map CDiffField.cderiv
+def afFx (f : CPoly α) : CPoly α := (f : List α).map CDiffField.cderiv
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

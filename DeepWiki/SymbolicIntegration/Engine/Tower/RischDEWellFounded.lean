@@ -21,7 +21,7 @@ namespace DeepWiki.SymbolicIntegration
 `(cnormG c).length`, carrying `[CRischField α]`) and `cValuationG` (trial-division own-loop on
 `(cnormG x).length`), each well-founded with a structural runtime guard. -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
 
@@ -30,8 +30,8 @@ monomial derivation `D` (`Dt ∈ α`), scalar `b ∈ α*` (`b₀ = lc(b)`) and `
 solves `Dq + b·q = c` degree-by-degree, recursing at degree `m = deg(c)` into the base RDE
 `CRischField.crischDESolve b₀ (lc c)`, leading monomial `s·tᵐ`, remainder `c' = c − b·(s·tᵐ) − D(s·tᵐ)`.
 Returns `none` or `some q`. Well-founded on `(cnormG c).length`. `[CRischField α]`-generic. -/
-def cPolyRischDECancelPrimG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
-    Option (CPolyG α) :=
+def cPolyRischDECancelPrimG (Dt : CPoly α) (b c : CPoly α) (n : ℤ) :
+    Option (CPoly α) :=
   let b0 : α := cleadG b
   if cisZeroG c then some []
   else if n < (cdegG c : ℤ) then none
@@ -40,7 +40,7 @@ def cPolyRischDECancelPrimG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
     match CRischField.crischDESolve b0 (cleadG c) with
     | none => none
     | some s =>
-      let stm : CPolyG α := cshiftG m [s]               -- `s·tᵐ`
+      let stm : CPoly α := cshiftG m [s]               -- `s·tᵐ`
       let c' := csubG (csubG c (cmulG b stm)) (cmonomialDeriv Dt stm)
       if (cnormG c' : List α).length < (cnormG c : List α).length then
         match cPolyRischDECancelPrimG Dt b c' ((m : ℤ) - 1) with
@@ -56,8 +56,8 @@ hyperexponential monomial derivation `D` (`η = Dt/t ∈ α`, `δ = 1`), scalar 
 `m = deg(c)` into the base RDE `crischDESolve (b₀ + m·η) (lc c)` (`η = cExpEtaG Dt`), leading monomial
 `s·tᵐ`, remainder `c' = c − b·(s·tᵐ) − D(s·tᵐ)`. Returns `none` or `some q`. Well-founded on
 `(cnormG c).length`. `[CRischField α]`-generic. -/
-def cPolyRischDECancelExpG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
-    Option (CPolyG α) :=
+def cPolyRischDECancelExpG (Dt : CPoly α) (b c : CPoly α) (n : ℤ) :
+    Option (CPoly α) :=
   let b0 : α := cleadG b
   let η : α := cExpEtaG Dt
   if cisZeroG c then some []
@@ -69,7 +69,7 @@ def cPolyRischDECancelExpG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
     match CRischField.crischDESolve coeff (cleadG c) with
     | none => none
     | some s =>
-      let stm : CPolyG α := cshiftG m [s]               -- `s·tᵐ`
+      let stm : CPoly α := cshiftG m [s]               -- `s·tᵐ`
       let c' := csubG (csubG c (cmulG b stm)) (cmonomialDeriv Dt stm)
       if (cnormG c' : List α).length < (cnormG c : List α).length then
         match cPolyRischDECancelExpG Dt b c' ((m : ℤ) - 1) with
@@ -79,9 +79,9 @@ def cPolyRischDECancelExpG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
 termination_by (cnormG c).length
 decreasing_by assumption
 
-end CPolyG
+end CPoly
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
@@ -89,7 +89,7 @@ variable {α : Type*} [CField α]
 dividing `x` (largest `k` with `pᵏ ∣ x`), by trial division. Stops at the zero polynomial, a constant/unit
 `p` (`cdegG p = 0`), or a non-dividing step, else recurses on `x/p` (`cdivWf`) and adds one. Well-founded on
 `(cnormG x).length`. `[CField α]`-generic. -/
-def cValuationG (p x : CPolyG α) : ℕ :=
+def cValuationG (p x : CPoly α) : ℕ :=
   if cisZeroG x then 0
   else if cdegG p = 0 then 0
   else if cdvdG p x then
@@ -105,7 +105,7 @@ variable [CFieldSpec α]
 
 /-- `cValuationG` divides: `toPolyG p ^ cValuationG p x ∣ toPolyG x`. Each recursive step peels one
 exact `p` factor using the exact-division theorem; terminal branches return the unit power. -/
-theorem toPolyG_pow_cValuationG_dvd (p x : CPolyG α) :
+theorem toPolyG_pow_cValuationG_dvd (p x : CPoly α) :
     toPolyG p ^ cValuationG p x ∣ toPolyG x := by
   induction x using cValuationG.induct p with
   | case1 x hx =>
@@ -132,7 +132,7 @@ theorem toPolyG_pow_cValuationG_dvd (p x : CPolyG α) :
 /-- `cValuationG` is sharp: for nonconstant `p` and nonzero `x`, one more `p` factor than
 `cValuationG p x` does not divide `x`. Uses `cdvdG`'s false-case converse at the terminal
 non-dividing branch. -/
-theorem cValuationG_sharp (p x : CPolyG α)
+theorem cValuationG_sharp (p x : CPoly α)
     (hp : cdegG p ≠ 0) (hx0 : toPolyG x ≠ 0) :
     ¬ toPolyG p ^ (cValuationG p x + 1) ∣ toPolyG x := by
   have hpne : cnormG p ≠ [] := fun hpe => hp (by rw [cdegG, hpe]; rfl)
@@ -189,7 +189,7 @@ theorem cValuationG_sharp (p x : CPolyG α)
       rw [cValuationG.eq_def, if_neg hx, if_neg hdeg, if_neg hdvd, zero_add, pow_one]
       exact not_dvd_of_cdvdG_false p x hpne hfalse
 
-end CPolyG
+end CPoly
 
 /-! ## The flat-composition §6 pipeline
 
@@ -197,7 +197,7 @@ Everything past the five recursive bottoms is a flat composition over the leaves
 `cdivWf`, `cdivmodWf`, `cdiophantineG`, `cdvdG`, `cgcdWf`, and the §5.6
 `cResidueResultantTowerG`/`cinterpolateG`/`cHornerG`. -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
@@ -206,7 +206,7 @@ normal part `dₙ` (`cSplitFactorFastG`), form `d₁ = (dₙ/g)/gcd(dₙ/g, g)` 
 residue numerator `a` via `cdiophantineG`, build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
 (`cResidueResultantTowerG`), and return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the positive integer roots `nᵢ`
 of `r`. For an already-weakly-normalized `f`, `q = 1`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
-def cWeakNormalizerG (Dt : CPolyG α) (fnum fden : CPolyG α) (boundRoots : ℕ := 16) : CPolyG α :=
+def cWeakNormalizerG (Dt : CPoly α) (fnum fden : CPoly α) (boundRoots : ℕ := 16) : CPoly α :=
   let dn := (cSplitFactorFastG Dt fden).1
   let g := CFracGcdCoreWf.cgcdFFCoreWf dn (cderivG dn)
   let dstar := cdivWf dn g
@@ -216,7 +216,7 @@ def cWeakNormalizerG (Dt : CPolyG α) (fnum fden : CPolyG α) (boundRoots : ℕ 
   let Dd1 := cmonomialDeriv Dt d1
   let r := cResidueResultantTowerG Dt a d1
   let roots := cPosIntRootsG r boundRoots
-  roots.foldl (fun (acc : CPolyG α) (n : ℕ) =>
+  roots.foldl (fun (acc : CPoly α) (n : ℕ) =>
     let gi := CFracGcdCoreWf.cgcdFFCoreWf (csubG a (cscaleG (cnatCastG n) Dd1)) d1
     cmulG acc (cpowG gi n)) [CField.one]
 
@@ -225,8 +225,8 @@ normalized `f = fnum/fden`, `g = gnum/gden`. Returns `none` or `some (a, b, c, h
 `a·Dq + b·q = c` with `q = y·h`. Split the denominators into normal parts `dₙ, eₙ`; `p = gcd(dₙ, eₙ)`,
 `h = gcd(eₙ, eₙ')/gcd(p, p')`; if `eₙ ∤ dₙh²` then `none`; else `a = dₙh`, `b = (dₙh·fnum − dₙ·Dh·fden)/fden`,
 `c = dₙh²·gnum/gden`. -/
-def cRdeNormalDenominatorG (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
-    Option (CPolyG α × CPolyG α × CPolyG α × CPolyG α) :=
+def cRdeNormalDenominatorG (Dt : CPoly α) (fnum fden gnum gden : CPoly α) :
+    Option (CPoly α × CPoly α × CPoly α × CPoly α) :=
   let dn := (cSplitFactorFastG Dt fden).1
   let en := (cSplitFactorFastG Dt gden).1
   let p := CFracGcdCoreWf.cgcdFFCoreWf dn en
@@ -244,7 +244,7 @@ def cRdeNormalDenominatorG (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
 /-- Generic special monic irreducible of the monomial `cSpecialPolyG Dt = p`: the monic special part of
 the monomial derivative `Dt` (`t²+1` hypertangent, `t` hyperexponential, `1` primitive) via the
 splitting-factorization `cSplitFactorFastG`. -/
-def cSpecialPolyG (Dt : CPolyG α) : CPolyG α :=
+def cSpecialPolyG (Dt : CPoly α) : CPoly α :=
   cmonicG (cSplitFactorFastG Dt Dt).2
 
 /-- Generic special-denominator reduction `cRdeSpecialDenominatorG Dt a b c`. Given `a·Dq + b·q = c` with
@@ -252,8 +252,8 @@ def cSpecialPolyG (Dt : CPolyG α) : CPolyG α :=
 `r = q·h ∈ α[t]` solves `ā·Dr + b̄·r = c̄`. Steps: `p ← cSpecialPolyG Dt` (constant ⇒ trivial);
 `n_b = ν_p(b)`, `n_c = ν_p(c)`, `n = min(0, n_c − min(0, n_b))`, `N = max(0, −n_b, n − n_c)`; return
 `(a·pᴺ, (b + n·a·Dp/p)·pᴺ, c·p^{N−n}, p^{−n})`. -/
-def cRdeSpecialDenominatorG (Dt : CPolyG α) (a b c : CPolyG α) :
-    CPolyG α × CPolyG α × CPolyG α × CPolyG α :=
+def cRdeSpecialDenominatorG (Dt : CPoly α) (a b c : CPoly α) :
+    CPoly α × CPoly α × CPoly α × CPoly α :=
   let p := cSpecialPolyG Dt
   if cdegG p = 0 then (a, b, c, [CField.one])
   else
@@ -275,7 +275,7 @@ def cRdeSpecialDenominatorG (Dt : CPolyG α) (a b c : CPolyG α) :
 
 /-- The special-denominator stage is the identity in the primitive regime: when the special polynomial is
 constant, `cRdeSpecialDenominatorG Dt a b c = (a, b, c, [1])`. -/
-theorem cRdeSpecialDenominatorG_primitive_eq (Dt : CPolyG α) (a b c : CPolyG α)
+theorem cRdeSpecialDenominatorG_primitive_eq (Dt : CPoly α) (a b c : CPoly α)
     (hp : cdegG (cSpecialPolyG Dt) = 0) :
     cRdeSpecialDenominatorG Dt a b c = (a, b, c, [CField.one]) := by
   rw [cRdeSpecialDenominatorG]
@@ -284,13 +284,13 @@ theorem cRdeSpecialDenominatorG_primitive_eq (Dt : CPolyG α) (a b c : CPolyG α
 /-- Special-denominator no-clear predicate: the special-denominator shift
 `n = min(0, ν_p(c) - min(0, ν_p(b)))` is zero, equivalently the reconstruction power `p^{-n}` is
 trivial. -/
-def CSpecialDenomNoClearG (Dt : CPolyG α) (b c : CPolyG α) : Prop :=
+def CSpecialDenomNoClearG (Dt : CPoly α) (b c : CPoly α) : Prop :=
   let p := cSpecialPolyG Dt
   min (0 : ℤ) ((cValuationG p c : ℤ) - min 0 (cValuationG p b : ℤ)) = 0
 
 /-- The special-denominator no-clear predicate holds for all inputs: `cValuationG` is natural-valued,
 so both valuations are nonnegative after casting to `ℤ`. -/
-theorem cSpecialDenomNoClearG_always (Dt : CPolyG α) (b c : CPolyG α) :
+theorem cSpecialDenomNoClearG_always (Dt : CPoly α) (b c : CPoly α) :
     CSpecialDenomNoClearG Dt b c := by
   rw [CSpecialDenomNoClearG]
   have hnb : (0 : ℤ) ≤ (cValuationG (cSpecialPolyG Dt) b : ℤ) := Int.natCast_nonneg _
@@ -300,7 +300,7 @@ theorem cSpecialDenomNoClearG_always (Dt : CPolyG α) (b c : CPolyG α) :
 /-- The special-denominator reconstruction power is trivial under no-clear: if
 `CSpecialDenomNoClearG Dt b c` and the special polynomial is nonconstant, then
 `cRdeSpecialDenominatorG` returns `h = [1]`. -/
-theorem cRdeSpecialDenominatorG_h1_eq_one_of_noClear (Dt : CPolyG α) (a b c : CPolyG α)
+theorem cRdeSpecialDenominatorG_h1_eq_one_of_noClear (Dt : CPoly α) (a b c : CPoly α)
     (hp : cdegG (cSpecialPolyG Dt) ≠ 0) (hn : CSpecialDenomNoClearG Dt b c) :
     (cRdeSpecialDenominatorG Dt a b c).2.2.2 = [CField.one] := by
   rw [cRdeSpecialDenominatorG]
@@ -314,7 +314,7 @@ theorem cRdeSpecialDenominatorG_h1_eq_one_of_noClear (Dt : CPolyG α) (a b c : C
 
 /-- The special-denominator reconstruction power is always trivial in the nonconstant special-polynomial
 regime. -/
-theorem cRdeSpecialDenominatorG_h1_eq_one_always (Dt : CPolyG α) (a b c : CPolyG α)
+theorem cRdeSpecialDenominatorG_h1_eq_one_always (Dt : CPoly α) (a b c : CPoly α)
     (hp : cdegG (cSpecialPolyG Dt) ≠ 0) :
     (cRdeSpecialDenominatorG Dt a b c).2.2.2 = [CField.one] :=
   cRdeSpecialDenominatorG_h1_eq_one_of_noClear Dt a b c hp
@@ -322,10 +322,10 @@ theorem cRdeSpecialDenominatorG_h1_eq_one_always (Dt : CPolyG α) (a b c : CPoly
 
 /-- The special-denominator coefficients factor as `(·)·pᴺ` in the no-clear regime: under
 `CSpecialDenomNoClearG`, the cleared coefficients are `a·pᴺ`, `b·pᴺ`, and `c·pᴺ` through `toPolyG`. -/
-theorem toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear [CFieldSpec α] (Dt : CPolyG α)
-    (a b c : CPolyG α) (hp : cdegG (cSpecialPolyG Dt) ≠ 0)
+theorem toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear [CFieldSpec α] (Dt : CPoly α)
+    (a b c : CPoly α) (hp : cdegG (cSpecialPolyG Dt) ≠ 0)
     (hn : CSpecialDenomNoClearG Dt b c) :
-    let pN : CPolyG α := cpowG (cSpecialPolyG Dt)
+    let pN : CPoly α := cpowG (cSpecialPolyG Dt)
       (max (max 0 (-(cValuationG (cSpecialPolyG Dt) b : ℤ)))
         (-(cValuationG (cSpecialPolyG Dt) c : ℤ))).toNat
     toPolyG (cRdeSpecialDenominatorG Dt a b c).1 = toPolyG a * toPolyG pN
@@ -350,9 +350,9 @@ theorem toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear [CFieldSpec α] (Dt : 
     dsimp only [pN]
     simp only [denote]
 
-end CPolyG
+end CPoly
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -364,7 +364,7 @@ the `deg(c)+1 ≤ n` check); `deg(b) > max(0, δ−1)` ⇒ non-cancellation (`cP
 `δ = 0, deg(b) = 0` ⇒ primitive cancellation (`cPolyRischDECancelPrimG`); `δ = 1, deg(b) = 0` ⇒
 hyperexponential cancellation (`cPolyRischDECancelExpG`); else (`δ ≥ 2`) ⇒ non-cancellation.
 `[CRischField α]`-generic. -/
-def cPolyRischDEG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) : Option (CPolyG α) :=
+def cPolyRischDEG (Dt : CPoly α) (b c : CPoly α) (n : ℤ) : Option (CPoly α) :=
   let δ : ℤ := (cdegG Dt : ℤ)
   let db : ℤ := (cdegG b : ℤ)
   if cisZeroG b then
@@ -380,7 +380,7 @@ def cPolyRischDEG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) : Option (CPolyG 
   else
     cPolyRischDENoCancelG Dt b c n
 
-end CPolyG
+end CPoly
 
 /-! ## The generic Risch-DE oracle `cRischDEG`
 
@@ -388,7 +388,7 @@ For `f = fnum/fden`, `g = gnum/gden ∈ α(t)`, `cRischDEG` returns `some (ynum,
 solving `Dy + f·y = g`, or `none`. The base solve inside the cancellation cases is `crischDESolve`, so a
 level-`n+1` call recurses into the level-`n` `crischDESolve`. -/
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
@@ -400,8 +400,8 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischFie
 unknown `Q = α'·v + β` reassembled to `y = Q·h₁ / h₀`. The cancellation cases recurse into
 `CRischField.crischDESolve` over `α`. `[CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]`-generic;
 `f` is assumed weakly normalized. -/
-def cRischDEG (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
-    Option (CPolyG α × CPolyG α) :=
+def cRischDEG (Dt : CPoly α) (fnum fden gnum gden : CPoly α) :
+    Option (CPoly α × CPoly α) :=
   match cRdeNormalDenominatorG Dt fnum fden gnum gden with
   | none => none
   | some (a0, b0, c0, h0) =>
@@ -419,9 +419,9 @@ def cRischDEG (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
 /-- `cRischDEG = some _` structurally forces the stage `some`-results: a successful §6 RDE run exposes
 the normal-denominator output, the SPDE output on the special-cleared coefficients, the Poly-Risch-DE
 dispatcher output, and the final numerator/denominator reassembly. -/
-theorem cRischDEG_some_imp_stages (Dt : CPolyG α) (fnum fden gnum gden ynum yden : CPolyG α)
+theorem cRischDEG_some_imp_stages (Dt : CPoly α) (fnum fden gnum gden ynum yden : CPoly α)
     (hsucc : cRischDEG Dt fnum fden gnum gden = some (ynum, yden)) :
-    ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+    ∃ (a0 b0 c0 h0 bbar cbar : CPoly α) (m : ℤ) (α' β v : CPoly α),
       cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0)
       ∧ cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
@@ -454,7 +454,7 @@ theorem cRischDEG_some_imp_stages (Dt : CPolyG α) (fnum fden gnum gden ynum yde
         · rw [hspecial]
           exact hynum.symm
 
-end CPolyG
+end CPoly
 
 section Gate
 
@@ -462,8 +462,8 @@ variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCoreWf β]
 
 /-- The denominator-direct normality gate for tower RDE inputs. -/
 def cdenomNormalGateG (a : QFunNZG β) : Bool :=
-  CPolyG.cisZeroG (CPolyG.csubG
-    (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) a.1.2).1
+  CPoly.cisZeroG (CPoly.csubG
+    (CPoly.cSplitFactorFastG ([CField.one] : CPoly β) a.1.2).1
     a.1.2)
 
 end Gate

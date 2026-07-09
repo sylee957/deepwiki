@@ -11,11 +11,11 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace BenchG
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 /-- Build a `QFunNZG ℚ` ℚ(x)-coefficient `num/den` (coefficient lists low→high in `x`), denominator
 nonzero by `decide`. Falls back to `0/1` if the denominator degenerates. -/
-def gqc (num den : CPolyG ℚ) (h : CPolyG.cisZeroG den = false := by decide) : QFunNZG ℚ :=
+def gqc (num den : CPoly ℚ) (h : CPoly.cisZeroG den = false := by decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 
 /-- The ℚ(x) coefficient `x` as a `QFunNZG ℚ`. -/
@@ -34,12 +34,12 @@ def gOne : QFunNZG ℚ := qoneNZG
 /-- Negate a `QFunNZG ℚ` coefficient (denominator unchanged). -/
 def gNeg (z : QFunNZG ℚ) : QFunNZG ℚ := qnegNZG z
 
-/-- A linear `t`-polynomial `a0 + a1·t` as a `CPolyG (QFunNZG ℚ)` (low→high in `t`). -/
-def glin (a0 a1 : QFunNZG ℚ) : CPolyG (QFunNZG ℚ) := [a0, a1]
+/-- A linear `t`-polynomial `a0 + a1·t` as a `CPoly (QFunNZG ℚ)` (low→high in `t`). -/
+def glin (a0 a1 : QFunNZG ℚ) : CPoly (QFunNZG ℚ) := [a0, a1]
 
 /-- The fixed gcd target `(t + x)·(t − 1/x)` over `QFunNZG ℚ` — degree 2 in `t`, ℚ(x) coefficients with
 genuine denominators. -/
-def gCommonFactor : CPolyG (QFunNZG ℚ) :=
+def gCommonFactor : CPoly (QFunNZG ℚ) :=
   cmulG (glin gcX gOne) (glin (gNeg gcInvX) gOne)
 
 /-- The cofactor-coefficient cycle for `p` (period 5: `x`, `1/x`, `x+1`, `1/(x+1)`, `x−1`). -/
@@ -51,22 +51,22 @@ def gcycCoefB : ℕ → QFunNZG ℚ
   | 0 => gcInvXp1 | 1 => gcXm1 | 2 => gcX | 3 => gcInvX | 4 => gcXp1 | n + 5 => gcycCoefB n
 
 /-- The `p`-cofactor `∏_{i<k} (t + gcycCoefA i)`, a `t`-polynomial of degree `k`. -/
-def glinProdA : ℕ → CPolyG (QFunNZG ℚ)
+def glinProdA : ℕ → CPoly (QFunNZG ℚ)
   | 0 => [gOne]
   | n + 1 => cmulG (glin (gcycCoefA n) gOne) (glinProdA n)
 
 /-- The `q`-cofactor `∏_{i<k} (t − gcycCoefB i)`, a `t`-polynomial of degree `k` coprime to
 `glinProdA k`. -/
-def glinProdB : ℕ → CPolyG (QFunNZG ℚ)
+def glinProdB : ℕ → CPoly (QFunNZG ℚ)
   | 0 => [gOne]
   | n + 1 => cmulG (glin (gNeg (gcycCoefB n)) gOne) (glinProdB n)
 
 /-- The benchmark dividend `p = gCommonFactor · glinProdA k` over `QFunNZG ℚ`, total `t`-degree `k + 2`. -/
-def gBenchP (k : ℕ) : CPolyG (QFunNZG ℚ) := cmulG gCommonFactor (glinProdA k)
+def gBenchP (k : ℕ) : CPoly (QFunNZG ℚ) := cmulG gCommonFactor (glinProdA k)
 
 /-- The benchmark divisor `q = gCommonFactor · glinProdB k` over `QFunNZG ℚ`, total `t`-degree `k + 2`;
 `gcd(gBenchP k, gBenchQ k) = gCommonFactor` (degree 2). -/
-def gBenchQ (k : ℕ) : CPolyG (QFunNZG ℚ) := cmulG gCommonFactor (glinProdB k)
+def gBenchQ (k : ℕ) : CPoly (QFunNZG ℚ) := cmulG gCommonFactor (glinProdB k)
 
 /-! #### The swell measure over `QFunNZG ℚ` (mirror of `Bench.gcdSizeRaw`) -/
 
@@ -77,9 +77,9 @@ def gCoeffSizeRaw (z : QFunNZG ℚ) : ℕ :=
     (z.1.1.foldl (fun a c => a + c.num.natAbs + c.den) 0) +
     (z.1.2.foldl (fun a c => a + c.num.natAbs + c.den) 0)
 
-/-- The raw stored size of a whole `CPolyG (QFunNZG ℚ)`: `gCoeffSizeRaw` summed over coefficients plus
+/-- The raw stored size of a whole `CPoly (QFunNZG ℚ)`: `gCoeffSizeRaw` summed over coefficients plus
 the `t`-length. -/
-def gGcdSizeRaw (g : CPolyG (QFunNZG ℚ)) : ℕ :=
+def gGcdSizeRaw (g : CPoly (QFunNZG ℚ)) : ℕ :=
   (g : List (QFunNZG ℚ)).foldl (fun a z => a + gCoeffSizeRaw z) g.length
 
 end BenchG

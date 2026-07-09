@@ -9,15 +9,15 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α]
 
 /-! ### Denominator-combining helpers over `ℚ[x]` (`qfLcm`/`qfRowDen`/`qfMatDen`) -/
 
-/-- The monic lcm of two `CPolyG` polynomials over a field `qfLcm a b = a·b / gcd(a, b)` (gcd via
+/-- The monic lcm of two `CPoly` polynomials over a field `qfLcm a b = a·b / gcd(a, b)` (gcd via
 `cgcdWf`); the `0` polynomial on either side returns the other. -/
-def qfLcm (a b : CPolyG α) : CPolyG α :=
+def qfLcm (a b : CPoly α) : CPoly α :=
   if cisZeroG a then b
   else if cisZeroG b then a
   else
@@ -26,30 +26,30 @@ def qfLcm (a b : CPolyG α) : CPolyG α :=
 
 /-- The common denominator of a `ℚ(x)`-row `qfRowDen row`, the monic lcm of the entry denominators;
 scaling the row by this `D ∈ ℚ[x]` lands every entry in `ℚ[x]`. -/
-def qfRowDen (row : List (QFunNZG ℚ)) : CPolyG ℚ :=
-  row.foldl (fun acc z => qfLcm acc (cmonicG (z.1.2 : CPolyG ℚ))) [CField.one]
+def qfRowDen (row : List (QFunNZG ℚ)) : CPoly ℚ :=
+  row.foldl (fun acc z => qfLcm acc (cmonicG (z.1.2 : CPoly ℚ))) [CField.one]
 
 /-- The common denominator of a whole `ℚ(x)`-matrix `qfMatDen M`, the lcm over all rows of `qfRowDen`;
 the single `D ∈ ℚ[x]` with `D·M ∈ ℚ[x]ⁿˣⁿ` and `det(D·M) = Dⁿ·det M`. -/
-def qfMatDen (M : List (List (QFunNZG ℚ))) : CPolyG ℚ :=
+def qfMatDen (M : List (List (QFunNZG ℚ))) : CPoly ℚ :=
   M.foldl (fun acc row => qfLcm acc (qfRowDen row)) [CField.one]
 
 /-! ### Clearing a `ℚ(x)`-row / matrix into `ℚ[x]` (`qfClearRow`/`qfClearMatrix`) -/
 
 /-- Clear a single `ℚ(x)` entry by a common denominator `D` `qfClearEntry D z = num(z)·(D/den(z))`, the
 `ℚ[x]` polynomial `D·z` (exact since `den(z) | D`). -/
-def qfClearEntry (D : CPolyG ℚ) (z : QFunNZG ℚ) : CPolyG ℚ :=
-  cmulG (z.1.1 : CPolyG ℚ) (cdivWf D (z.1.2 : CPolyG ℚ))
+def qfClearEntry (D : CPoly ℚ) (z : QFunNZG ℚ) : CPoly ℚ :=
+  cmulG (z.1.1 : CPoly ℚ) (cdivWf D (z.1.2 : CPoly ℚ))
 
 /-- Clear a single `ℚ(x)`-row to `ℚ[x]` `qfClearRow row = ([D·zᵢ], D)` where `D = qfRowDen row`;
 returns the cleared `ℚ[x]`-row paired with the clearing factor `D`. -/
-def qfClearRow (row : List (QFunNZG ℚ)) : List (CPolyG ℚ) × CPolyG ℚ :=
+def qfClearRow (row : List (QFunNZG ℚ)) : List (CPoly ℚ) × CPoly ℚ :=
   let D := qfRowDen row
   (row.map (qfClearEntry D), D)
 
 /-- Clear a whole `ℚ(x)`-matrix to `ℚ[x]` by a single common denominator `qfClearMatrix M = (D·M, D)`
 where `D = qfMatDen M`; the scalar factor `D` tracks the determinant scale `det(D·M) = Dⁿ·det M`. -/
-def qfClearMatrix (M : List (List (QFunNZG ℚ))) : List (List (CPolyG ℚ)) × CPolyG ℚ :=
+def qfClearMatrix (M : List (List (QFunNZG ℚ))) : List (List (CPoly ℚ)) × CPoly ℚ :=
   let D := qfMatDen M
   (M.map (fun row => row.map (qfClearEntry D)), D)
 
@@ -67,14 +67,14 @@ def qfDet (M : List (List (QFunNZG ℚ))) : QFunNZG ℚ :=
 /-- The fraction-free adjugate `(adj(D·M), D)` of a `ℚ(x)`-matrix `qfAdjugate M`: clear `M` to
 `M' = D·M ∈ ℚ[x]` and return the `ℚ[x]` adjugate `bareissAdjugate M'` paired with `D`; the genuine
 `ℚ(x)`-adjugate is `adj(M') / Dⁿ⁻¹`. -/
-def qfAdjugate (M : List (List (QFunNZG ℚ))) : List (List (CPolyG ℚ)) × CPolyG ℚ :=
+def qfAdjugate (M : List (List (QFunNZG ℚ))) : List (List (CPoly ℚ)) × CPoly ℚ :=
   let (M', D) := qfClearMatrix M
   (bareissAdjugate M', D)
 
 /-- The fraction-free inverse representation of a `ℚ(x)`-matrix `qfInv M = (det(M'), D·adj(M'))` with
 `M' = D·M ∈ ℚ[x]`: a pair of flat `ℚ[x]` polynomials with `M⁻¹[i][j] = (D·adj(M'))[i][j] / det(M')`,
 one shared denominator `det(M')`. -/
-def qfInv (M : List (List (QFunNZG ℚ))) : CPolyG ℚ × List (List (CPolyG ℚ)) :=
+def qfInv (M : List (List (QFunNZG ℚ))) : CPoly ℚ × List (List (CPoly ℚ)) :=
   let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
   let adjPoly := bareissAdjugate M'
@@ -90,11 +90,11 @@ def qfInvEntry (M : List (List (QFunNZG ℚ))) (i j : ℕ) : QFunNZG ℚ :=
 the rhs to `D·b`, then run `bareissSolve M' (D·b)`, giving `x = (det M'·x)/det M'` with one shared
 denominator. -/
 def qfSolve (M : List (List (QFunNZG ℚ))) (b : List (QFunNZG ℚ)) :
-    CPolyG ℚ × List (CPolyG ℚ) :=
+    CPoly ℚ × List (CPoly ℚ) :=
   let (M', D) := qfClearMatrix M
   let b' := b.map (qfClearEntry D)
   bareissSolve M' b'
 
-end CPolyG
+end CPoly
 
 end DeepWiki.SymbolicIntegration

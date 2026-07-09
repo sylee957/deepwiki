@@ -12,14 +12,14 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The tower derivation on a polynomial image: `D_tower(amG p) = amG (D p)` for
 `D = implicitDeriv (toPolyG Dt)` (the `den = 1` case of the quotient rule). -/
-theorem towerFractionFieldDerivG_amG (Dt : CPolyG α) (p : (CFieldSpec.K α)[X]) :
+theorem towerFractionFieldDerivG_amG (Dt : CPoly α) (p : (CFieldSpec.K α)[X]) :
     towerFractionFieldDerivG Dt (amG α p)
       = amG α (Differential.implicitDeriv (toPolyG Dt) p) := by
   have h := towerFractionFieldDerivG_div Dt p 1
@@ -29,7 +29,7 @@ theorem towerFractionFieldDerivG_amG (Dt : CPolyG α) (p : (CFieldSpec.K α)[X])
 `D = implicitDeriv (toPolyG Dt)`, `U, V ≠ 0`, and the Diophantine relation
 `B·(U·DV) + C·V = -A·C((j+1)⁻¹)`, one step drops the `V`-power by one and emits `B/V^(j+1)`:
 `amG A/(amG U · amG V^(j+2)) = D_tower(amG B/amG V^(j+1)) + amG(-(C(j+1))·C - U·DB)/(amG U·amG V^(j+1))`. -/
-theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt : CPolyG α)
+theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt : CPoly α)
     (A B C U V : (CFieldSpec.K α)[X]) (hU : U ≠ 0) (hV : V ≠ 0) (j : ℕ)
     (hrel : B * (U * Differential.implicitDeriv (toPolyG Dt) V) + C * V
         = -A * Polynomial.C (((j : CFieldSpec.K α) + 1)⁻¹)) :
@@ -91,7 +91,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 open QFunNZG in
 /-- The inner-loop accumulator update reads as a fraction sum:
 `⟦(g₁·Vpow + b·g₂) / (g₂·Vpow)⟧ = ⟦g₁/g₂⟧ + ⟦b/Vpow⟧`. -/
-theorem fieldFrac_step_add (g1 g2 b Vpow : CPolyG α)
+theorem fieldFrac_step_add (g1 g2 b Vpow : CPoly α)
     (hg2 : toPolyG g2 ≠ 0) (hVpow : toPolyG Vpow ≠ 0) :
     amG α (toPolyG (caddG (cmulG g1 Vpow) (cmulG b g2))) / amG α (toPolyG (cmulG g2 Vpow))
       = amG α (toPolyG g1) / amG α (toPolyG g2) + amG α (toPolyG b) / amG α (toPolyG Vpow) := by
@@ -104,16 +104,16 @@ open QFunNZG in
 derivation `D = implicitDeriv (toPolyG Dt)`, and every step's `cdiophantineG` cofactors satisfying
 the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` telescopes M1:
 `⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧) = D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧`. -/
-theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : CPolyG α)
+theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : CPoly α)
     (hu : toPolyG u ≠ 0) (hv : toPolyG v ≠ 0)
-    (hbez : ∀ (j' : ℕ) (A' : CPolyG α),
+    (hbez : ∀ (j' : ℕ) (A' : CPoly α),
       toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v
             (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).1
           * (toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG v))
         + toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v
             (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).2 * toPolyG v
       = -toPolyG A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
-    ∀ (j : ℕ) (A : CPolyG α) (g : CPolyG α × CPolyG α), toPolyG g.2 ≠ 0 →
+    ∀ (j : ℕ) (A : CPoly α) (g : CPoly α × CPoly α), toPolyG g.2 ≠ 0 →
       amG α (toPolyG A) / (amG α (toPolyG u) * amG α (toPolyG v) ^ (j + 1))
           + towerFractionFieldDerivG Dt (amG α (toPolyG g.1) / amG α (toPolyG g.2))
         = towerFractionFieldDerivG Dt
@@ -167,7 +167,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
         = -(Polynomial.C ((j : CFieldSpec.K α) + 1)) * toPolyG C
           - toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG B) := by
       rw [hA']
-      simp only [denote, CFieldSpec.toK_neg, hjval, CPolyG.toK_cnatCastG, Nat.cast_add_one, map_neg]
+      simp only [denote, CFieldSpec.toK_neg, hjval, CPoly.toK_cnatCastG, Nat.cast_add_one, map_neg]
     rw [hstepadd, hVpoweq] at ihA
     rw [map_add] at ihA
     rw [hA'eq] at ihA
@@ -187,7 +187,7 @@ M1/M2 + Yun discharge). Mirrors `canonicalReconstruction`. -/
 and the exact-division relation `⟦hNum⟧·⟦d·gden²⟧ = ⟦resNum⟧·⟦Dstar⟧` (with `resNum = a·gden² - d·gp`,
 `gp = D(gnum)·gden - gnum·D(gden)`), the reduced part telescopes:
 `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
-theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPolyG α)
+theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPoly α)
     (hd : amG α (toPolyG d) ≠ 0) (hgden : amG α (toPolyG gden) ≠ 0)
     (hDstar : amG α (toPolyG Dstar) ≠ 0)
     (hexact : amG α (toPolyG hNum)
@@ -227,7 +227,7 @@ open QFunNZG in
 /-- The whole-step Hermite field identity from the radical split. With `hNum` the exact quotient
 `cdivWf (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
 reduced part telescopes: `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
-theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : CPolyG α)
+theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : CPoly α)
     (hd : amG α (toPolyG d) ≠ 0) (hgden : amG α (toPolyG gden) ≠ 0)
     (hDstar : amG α (toPolyG Dstar) ≠ 0)
     (hresDen : cnormG (cmulG d (cmulG gden gden)) ≠ [])

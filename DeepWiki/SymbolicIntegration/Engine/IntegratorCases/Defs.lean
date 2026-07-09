@@ -9,7 +9,7 @@ The primitive and hyperexponential `MonomialCase` realizations, plus concrete
 namespace DeepWiki.SymbolicIntegration
 
 
-namespace CPolyG
+namespace CPoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -44,23 +44,23 @@ def hyperexpCase : MonomialCase α where
       some ⟨(csubG gnum (cmulG [intR] gden), gden), nrm.logs⟩
 
 /-- **Bridge (hyperexp): the hyperexponential driver is definitionally the hyperexp case.** -/
-theorem cIntegrateHyperexpFullG_eq_case (Dt a d : CPolyG α) (cands : List α) :
+theorem cIntegrateHyperexpFullG_eq_case (Dt a d : CPoly α) (cands : List α) :
     cIntegrateHyperexpFullG Dt a d cands = cIntegrateCase hyperexpCase Dt a d cands := rfl
 
-end CPolyG
+end CPoly
 
-open CPolyG
+open CPoly
 
 /-! ### Validation — one assembler reproduces the antiderivative identity on both cases (`native_decide`) -/
 
-open CPolyG
+open CPoly
 
 /-- Primitive case: `∫ 1/t² = −1/t` over `ℚ(x)[t]` with `Dt = 1` — `cIntegrateCase primitiveCase` returns a
 result satisfying `checkIdentityG`. -/
 theorem cIntegrateCase_primitive_invSq :
-    (match cIntegrateCase (primitiveCase) ([CField.one] : CPolyG Lvl1)
+    (match cIntegrateCase (primitiveCase) ([CField.one] : CPoly Lvl1)
         [CField.one] [CField.zero, CField.zero, CField.one] [CField.zero] with
-      | some res => checkIdentityG ([CField.one] : CPolyG Lvl1) res [CField.one]
+      | some res => checkIdentityG ([CField.one] : CPoly Lvl1) res [CField.one]
           [CField.zero, CField.zero, CField.one]
       | none => false) = true := by native_decide
 

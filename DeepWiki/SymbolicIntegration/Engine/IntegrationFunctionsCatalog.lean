@@ -22,7 +22,7 @@ or removed. Documentation only — no new mathematics. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPolyG QFunNZG
+open CPoly QFunNZG
 
 /-! ## Verified references — transcendental engines -/
 

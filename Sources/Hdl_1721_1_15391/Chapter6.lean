@@ -83,7 +83,7 @@ Ch. 6 `n ≥ 3` radicals and odd-degree Puiseux: the Cantor/Mumford layer is gen
   `[research]`. -/
 
 open DeepWiki.SymbolicIntegration
-open DeepWiki.SymbolicIntegration.CPolyG
+open DeepWiki.SymbolicIntegration.CPoly
 
 namespace DeepWiki.Tiaf
 
@@ -163,25 +163,25 @@ abbrev ch6_mumford_representation := @mumford_representation_validates
 /-! ## Cantor's Jacobian group law (`ComputableCantorComposition`, Trager Ch. 6 §2-3)
 
 The hyperelliptic group law on Mumford pairs `(u, v)`. `cantor*` live in `namespace
-DeepWiki.SymbolicIntegration.CPolyG`, referenced here as `CPolyG.<name>`. -/
+DeepWiki.SymbolicIntegration.CPoly`, referenced here as `CPoly.<name>`. -/
 
-/-- **Cantor composition** `CPolyG.cantorCompose ρ D₁ D₂` (Trager, Chapter 6 §2-3): the Jacobian
+/-- **Cantor composition** `CPoly.cantorCompose ρ D₁ D₂` (Trager, Chapter 6 §2-3): the Jacobian
 semi-reduced sum of two Mumford divisors — the three-gcd composite `d = gcd(u₁, u₂, v₁ + v₂)`,
 `u = u₁u₂/d²`, `v = (s₁u₁v₂ + s₂u₂v₁ + s₃(v₁v₂ + ρ))/d mod u`. The "addition" half of the group law. -/
-abbrev ch6_cantor_compose := @CPolyG.cantorCompose
+abbrev ch6_cantor_compose := @CPoly.cantorCompose
 
-/-- **Cantor reduction** `CPolyG.cantorReduce ρ g D` (Trager, Chapter 6 §2-3): brings a semi-reduced
+/-- **Cantor reduction** `CPoly.cantorReduce ρ g D` (Trager, Chapter 6 §2-3): brings a semi-reduced
 `(u, v)` to the unique reduced representative `deg u ≤ g` by iterating `u' = (ρ − v²)/u` monic-normalized,
 `v' = (−v) mod u'`. The "reduce to canonical form" half. -/
-abbrev ch6_cantor_reduce := @CPolyG.cantorReduce
+abbrev ch6_cantor_reduce := @CPoly.cantorReduce
 
-/-- **The Jacobian sum** `CPolyG.cantorAdd ρ g D₁ D₂ = cantorReduce (cantorCompose D₁ D₂)` (Trager,
+/-- **The Jacobian sum** `CPoly.cantorAdd ρ g D₁ D₂ = cantorReduce (cantorCompose D₁ D₂)` (Trager,
 Chapter 6 §2-3): the full group law `D₁ ⊕ D₂` on Mumford divisors (compose then reduce). -/
-abbrev ch6_cantor_add := @CPolyG.cantorAdd
+abbrev ch6_cantor_add := @CPoly.cantorAdd
 
-/-- **The scalar multiple** `CPolyG.cantorMul ρ g n D = n·D` (Trager, Chapter 6 §2-3): `n`-fold Jacobian
+/-- **The scalar multiple** `CPoly.cantorMul ρ g n D = n·D` (Trager, Chapter 6 §2-3): `n`-fold Jacobian
 addition `D ⊕ ⋯ ⊕ D`. The iterate whose first identity hit gives the **order** (points of finite order). -/
-abbrev ch6_cantor_mul := @CPolyG.cantorMul
+abbrev ch6_cantor_mul := @CPoly.cantorMul
 
 /-- **★★ The hyperelliptic Jacobian group law (Cantor's algorithm) computes and validates** (Trager,
 Chapter 6 §2-3, `native_decide`): on `y² = x³+1` the chord law `(0,1) ⊕ (2,3) = (−1,0)`, the inverse law
@@ -198,12 +198,12 @@ abbrev ch6_cantor_order3 := @cantorMul_pt01_order3
 /-! ## The elementarity DECISION (`ComputableDivisorOrder`, Trager Ch. 6 §2-3)
 
 The order of a divisor and the good-reduction torsion test — deciding whether the simple-radical integral
-is elementary. `cantorOrder` lives in `namespace …CPolyG`; the rest in `namespace …SymbolicIntegration`. -/
+is elementary. `cantorOrder` lives in `namespace …CPoly`; the rest in `namespace …SymbolicIntegration`. -/
 
-/-- **The divisor order** `CPolyG.cantorOrder fuel ρ g D` (Trager, Chapter 6 §2-3, "Points of Finite
+/-- **The divisor order** `CPoly.cantorOrder fuel ρ g D` (Trager, Chapter 6 §2-3, "Points of Finite
 Order"): the smallest `m ≥ 1` with `m·D = O` (identity after reduction), found by iterating `cantorMul` —
 `some m` if a torsion order `≤ fuel` exists, else `none`. The order whose existence is the torsion test. -/
-abbrev ch6_divisor_order := @CPolyG.cantorOrder
+abbrev ch6_divisor_order := @CPoly.cantorOrder
 
 /-- **Reduction of a divisor mod `p`** `mumfordReduceModP p D` (Trager, Chapter 6 §2-3): pushes a Mumford
 divisor over `ℚ` to one over `ZMod p` (coefficient-wise `ℚ → 𝔽_p`), so Cantor runs in the finite Jacobian
@@ -237,7 +237,7 @@ abbrev ch6_divisor_order_decision := @divisor_order_torsion_decision_validates
 /-! ## The principal-generator CONSTRUCTION (`ComputablePrincipalGenerator`, Trager Ch. 6 §1)
 
 For a torsion divisor `D` of order `m`, the function `g` with `div(g) = m·D` (the `(1/m)·log g` argument).
-`cantorReduceTracked`/`cantorMulTracked` live in `namespace …CPolyG`; `principalGenerator` and the
+`cantorReduceTracked`/`cantorMulTracked` live in `namespace …CPoly`; `principalGenerator` and the
 `(0,1)` validations in `namespace …SymbolicIntegration`. -/
 
 /-- **The principal generator** `principalGenerator ρ ρq g m D` (Trager, Chapter 6 §1, the
