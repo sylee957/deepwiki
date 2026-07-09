@@ -65,21 +65,21 @@ reduces. Risk: the `CRingSpec (CPoly α)` `R = (R α)[X]` bridge must be a genui
 the real proof work is (bounded: it is the `toPoly` homomorphism already proven, re-typed over `CommRing`).
 Gate: `CPoly (CPoly ℚ)` typechecks + reduces.
 
-> **P3 spike finding (2026-07-09, reverted):** generalizing `toPoly` to `(CRingSpec.R α)[X]` cascades
-> through the **R/K instance boundary** — GenericPolyEngine needs only ~2 fixes (a `Field (CRingSpec.R α)`
-> instance + `CRingSpec.toR_*` in `denote`), but every downstream derivation/tower file breaks because
-> `am`/`implicitDeriv`/`mapCoeffs` want `Field`/`Differential`/`Algebra ℚ` on `CFieldSpec.K α` and `toPoly`
-> now yields `CRingSpec.R α` (defeq, but Lean won't unfold R→K for *instance* search). **Do first:** make
-> `CFieldSpec.K` reducibly `= CRingSpec.R` (CFieldSpec *inherits* R from CRingSpec, not a separate K field)
-> — kills the per-instance tax. Squares with `toK` in their result (`cons`/`cscale`) are the cascade drivers.
+**P3 — DONE (commits `6e1d7f75` P3a + `548f7c03` P3 substance).** Two sub-steps landed:
+- **P3a** retargeted the denotation `toPoly : CPoly α → (CRingSpec.R α)[X]` over `[CCommRing]/[CRingSpec]`
+  and fixed the bounded R/K instance-boundary cascade (a `Field (CRingSpec.R α)` + `Differential
+  (CRingSpec.R α)` instance; `erw`/`rfl`/`CRingSpec.toR` closes the `am(K)=algebraMap(R)` defeq goals).
+- **P3 substance** weakened the `toPoly` homomorphism squares (nil/cons/one/caddG/cnegG/csubG/cscaleG/
+  cshiftG/cmulG/cpowG and the `cnorm`/`cdeg`/`clead`/`cisZero`↔`toPoly=0` chain) to `[CCommRing]/[CRingSpec]`,
+  and added the **denotational keystone** `instance CRingSpec (CPoly α)` (`R := (CRingSpec.R α)[X]`,
+  `toR := toPoly`). Validated: `CRingSpec (CPoly (CPoly ℚ))` resolves, bivariate `cmul` reduces under
+  `native_decide`, `R (CPoly ℚ) = (R ℚ)[X]` by `rfl`.
 
-**P3 — weaken the 20 ring-level `c*` ops + their squares to `[CCommRing]`/`[CRingSpec]`.** Mechanical,
-**batch by op family** (arith: `cadd`/`cmul`/`cneg`/`csub`/`cscale`/`cshift`; read: `clead`/`cdeg`/
-`cnorm`/`cisZero`; `cpow`/`cprod`/`ceval`/`cderiv`/`cnsmul`/`cMonomial`/`cfpow`). For each op, change
-`[CField α]→[CCommRing α]`, `[CFieldSpec α]→[CRingSpec α]`, and its denotation square's
-`(CFieldSpec.K α)[X]→(CRingSpec.R α)[X]`. `cmonic` + the field ops stay `[CField]`. *Verify:* gate per
-batch; the field call sites are unaffected (they supply `[CField]⊇[CCommRing]`). Risk: an op assumed
-ring-level actually calls a field op transitively — the build catches it; leave that op `[CField]`.
+The predicted R/K cascade was REAL but **bounded** (contradicting the earlier "do the CFieldSpec-extends-
+CRingSpec redesign first" fear): the fix was `@[simp]` normalizers `toR_eq_toK` + `ccrZero/One/Add/Mul/Neg`
+that collapse `toR→toK`/`CCommRing→CField` on the field path automatically, plus `simp only [toR_eq_toK]`
+inserts at ~15 explicit-`rw` field-path sites across 10 files, plus `toK_cleadG_*`/`toK_cnormG_getD` field
+aliases of the now-`toR` chain lemmas. The full redesign was NOT needed. `cmonic` + field ops stay `[CField]`.
 
 **P4 — collapse `BPoly`.** Replace `BPoly` with `CPoly CPolyQ` (defeq), and each `b*` op with `c* @ CPolyQ`
 (`badd`→`cadd`, `bmul`→`cmul`, …); the pseudo-division subresultant (`bpsremainder`/`bsubresultantGcd`) →
