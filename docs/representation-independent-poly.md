@@ -145,17 +145,20 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   building blocks of a division step.
 - **`cderiv`** (formal derivative) — `toPoly_cderiv : toPoly (cderiv p) = (toPoly p).derivative`, via a
   ring `ℕ`-multiple `natMul` (`CCommRing` has no `SMul ℕ`) and `toR_natMul`.
-- **`cdivmod fuel p q = (Q, R)`** (Euclidean division over a computable field) — the **division
-  identity** `toPoly p = toPoly q · toPoly Q + toPoly R` at *every* fuel, by pure algebra + induction (no
-  degree/termination argument needed).
+- **`cdivmod p q = (Q, R)`** — **fuel-less** Euclidean division over a computable field
+  (`:= cdivmodCore (cdeg p + 1) p q`; the fuel-threaded core `cdivmodCore` is internal, no well-founded
+  recursion — see `docs/fuelless-cdivmod-migration.md`). The **division identity**
+  `toPoly p = toPoly q · toPoly Q + toPoly R` holds at *every* fuel on the core (pure algebra + induction,
+  no degree argument) and specialises to `toPoly_cdivmod`.
 - **Termination** (`PolyReprDivisionDegree.lean`) — `degree_reduce_step_lt` (one cancellation step
   strictly lowers `degree`, via `Polynomial.degree_sub_lt` leading-coefficient cancellation), and
-  `cdivmod_remainder_reduced` (with `fuel > cdeg p` the remainder is zero or of degree `< cdeg q` — the
-  Euclidean remainder property).
-- **`cgcd` — a genuine gcd, both directions proven**: `dvd_cgcd` (every common divisor of `a,b` divides
-  `cgcd a b`, from the division identity) *and* `cgcd_dvd` (with `cdeg b < fuel`, `cgcd a b` divides both
-  `a` and `b`, by fuel induction on the remainder-reduced measure). The inner division uses a `cdeg a + 1`
-  fuel (always fully reduced), decoupled from the gcd-step fuel.
+  `cdivmod_remainder_reduced` (**hypothesis-free**: the `cdivmod` remainder is zero or of degree
+  `< cdeg q` — the Euclidean remainder property; the `cdeg p + 1` fuel discharges the old `> cdeg p`
+  bound internally).
+- **`cgcd` — a genuine gcd, both directions proven, fuel-less**: `dvd_cgcd` (every common divisor of
+  `a,b` divides `cgcd a b`, from the division identity) *and* `cgcd_dvd` (`cgcd a b` divides both `a` and
+  `b`, by fuel induction on the remainder-reduced measure — hypothesis-free). `cgcd a b :=
+  cgcdCore (cdeg b + 1) a b`.
 
 - **Downstream of the gcd** (`PolyReprDivisionDegree.lean`): `cgcd_isGCD` (the greatest-common-divisor
   universal property, instance-free), `cdivmod_exact` (`q ∣ p ⇒` zero remainder), `toPoly_mul_cdiv_of_dvd`
@@ -164,9 +167,10 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   factorization `toPoly_squarefree_factor : p = gcd(p, p') · squarefreePart p` (the Risch/integration
   entry point; genuine squarefree-ness of the quotient is the remaining frontier), and the degree API
   `cdeg_cmul`/`cdeg_cpow`.
-- **Extended Euclidean & coprimality** (`PolyReprDivision.lean`): `cgcdExt fuel a b = (g, s, t)` with the
-  **Bézout identity** `toPoly_cgcdExt : s·a + t·b = g` (at every fuel, from the division identity), and
-  `isCoprime_of_cgcdExt_isUnit` (unit gcd ⇒ Mathlib `IsCoprime`) — the partial-fractions entry point.
+- **Extended Euclidean & coprimality** (`PolyReprDivision.lean`): fuel-less `cgcdExt a b = (g, s, t)`
+  (`:= cgcdExtCore (cdeg b + 1) a b`) with the **Bézout identity** `toPoly_cgcdExt : s·a + t·b = g` (at
+  every fuel on the core, from the division identity), and `isCoprime_of_cgcdExt_isUnit` (unit gcd ⇒
+  Mathlib `IsCoprime`) — the partial-fractions entry point.
 - **Evaluation** (`PolyReprDenote.lean`): `ceval` with `toR_ceval` (= Mathlib `eval`), the ring-hom
   squares `toR_ceval_add`/`toR_ceval_mul`, and the factor theorem `ceval_eq_zero_iff_dvd`.
 - **Resultant** (`PolyReprResultant.lean`, COMPLETE): `clistDetn` (computable cofactor determinant over

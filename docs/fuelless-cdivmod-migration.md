@@ -1,6 +1,12 @@
 # Fuel-less `cdivmod` / `cgcd` / `cgcdExt` migration plan
 
-**Status:** PLAN ONLY (no implementation yet). Scope: the representation-independent division/gcd layer in
+**Status: DONE (2026-07-09).** Executed as planned via the self-fueled-wrapper approach — commits: Phase 1
+rename `…Core` (`b7e3deef`), Phases 2–6 wrappers + hypothesis-free corollaries + showcases + consumers
+(`a1752d60`), Phase 7 docs/memory. All gate-green; every `native_decide` showcase reduces unchanged; no
+`termination_by`/`WellFounded`; `[CField]`-only signatures preserved. The plan below is retained as the
+executed design record.
+
+Scope: the representation-independent division/gcd layer in
 `DeepWiki/ComputableAlgebra/PolyReprDivision.lean` + `PolyReprDivisionDegree.lean`. Goal: expose a
 **fuel-less API** for Euclidean division, gcd, and extended gcd — dropping the explicit `fuel : ℕ`
 argument and, with it, every `cdeg _ < fuel` side-hypothesis on the correctness theorems — **without

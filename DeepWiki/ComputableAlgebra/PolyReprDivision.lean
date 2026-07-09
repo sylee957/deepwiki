@@ -3,12 +3,14 @@ import DeepWiki.ComputableAlgebra.PolyReprSparse
 
 /-! # Generic Euclidean division on `CPolyRepr`
 
-`cdivmodCore fuel p q = (Q, R)` is Euclidean division of `p` by `q` over a computable field: repeatedly
-cancel `p`'s leading term with the monomial `(clead p / clead q)·X^(cdeg p − cdeg q)·q`. The **division
-identity** `toPoly p = toPoly q · toPoly Q + toPoly R` holds for *every* `fuel` by pure algebra and
-induction — each cancellation step preserves it and the base case `(0, p)` satisfies it trivially — so it
-needs no degree/termination argument. Representation-generic: it runs on any `CPolyRepr` (dense or sparse)
-and reduces under `native_decide`. See `docs/representation-independent-poly.md`. -/
+`cdivmod p q = (Q, R)` is fuel-less Euclidean division of `p` by `q` over a computable field: repeatedly
+cancel `p`'s leading term with the monomial `(clead p / clead q)·X^(cdeg p − cdeg q)·q`. The public op is
+a thin wrapper `cdivmod p q := cdivmodCore (cdeg p + 1) p q` over the fuel-threaded core `cdivmodCore`
+(the `cdeg p + 1` fuel is always sufficient — each step strictly drops the degree — so it is hidden). The
+**division identity** `toPoly p = toPoly q · toPoly Q + toPoly R` holds for *every* `fuel` on the core (by
+pure algebra + induction, no degree argument) and specialises to the fuel-less `cdivmod`.
+Representation-generic: runs on any `CPolyRepr` (dense or sparse), reduces under `native_decide` (the core
+is structural recursion — no well-founded recursion). See `docs/representation-independent-poly.md`. -/
 
 open Polynomial
 
@@ -85,7 +87,7 @@ example : cdeg (cdivmod (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
 
 /-! ### Computable divisibility test
 
-A zero remainder witnesses divisibility — the soundness of deciding `q ∣ p` by `cdivmodCore`. -/
+A zero remainder witnesses divisibility — the soundness of deciding `q ∣ p` by `cdivmod`. -/
 
 /-- **Divisibility from a zero remainder:** if `cdivmod p q` leaves remainder zero, then
 `toPoly q ∣ toPoly p`. From the division identity. Representation-generic. -/
@@ -97,13 +99,12 @@ theorem dvd_of_cisZero_cdivmod_snd [CField α] [CRingSpec α] (p q : P α)
 
 /-! ### Euclidean GCD and the common-divisor property
 
-`cgcdCore` is the Euclidean algorithm on `cdivmodCore` remainders. Its **common-divisor direction** — every
-common divisor of `a` and `b` divides `cgcdCore a b` — holds at *every* `fuel` from the division identity
-alone (each remainder step preserves common divisors, and the fuel-exhausted result is still one of the
-running arguments). The converse (`cgcdCore` itself divides `a` and `b`) is `cgcdCore_dvd` (needs the
-remainder-degree termination argument), in `PolyReprDivisionDegree.lean`. The inner division uses a
-`cdeg a + 1` fuel (always past `cdeg a`, so the remainder is fully reduced), decoupled from the gcd-step
-fuel that bounds the number of Euclidean steps. -/
+`cgcd a b` (fuel-less, `:= cgcdCore (cdeg b + 1) a b`) is the Euclidean algorithm on `cdivmod`
+remainders. Its **common-divisor direction** `dvd_cgcd` — every common divisor of `a` and `b` divides
+`cgcd a b` — holds from the division identity alone (each remainder step preserves common divisors). The
+converse (`cgcd` itself divides `a` and `b`) is `cgcd_dvd` (needs the remainder-degree termination
+argument), in `PolyReprDivisionDegree.lean`. The core carries a `fuel`; `cgcd` fixes it to the always-
+sufficient `cdeg b + 1`. -/
 
 /-- Euclidean GCD via `cdivmodCore` remainders (inner division fuel `cdeg a + 1` is always sufficient). -/
 def cgcdCore [CField α] : ℕ → P α → P α → P α
@@ -140,9 +141,9 @@ example : cnorm (cgcd ([-1, 0, 1] : List ℚ) [-1, 1]) = ([-1, 1] : List ℚ) :=
 
 /-! ### Extended Euclidean algorithm (Bézout coefficients)
 
-`cgcdExtCore fuel a b = (g, s, t)` with the **Bézout identity** `s·a + t·b = g`, holding at *every* fuel by
-pure algebra + the division identity (no degree argument). The basis for partial fractions and coprime
-combination. -/
+`cgcdExt a b = (g, s, t)` (fuel-less, `:= cgcdExtCore (cdeg b + 1) a b`) with the **Bézout identity**
+`s·a + t·b = g`, holding at *every* fuel on the core (pure algebra + the division identity, no degree
+argument) and specialising to `cgcdExt`. The basis for partial fractions and coprime combination. -/
 
 /-- Extended Euclidean: `cgcdExtCore fuel a b = (gcd, s, t)` with `s·a + t·b = gcd`. -/
 def cgcdExtCore [CField α] : ℕ → P α → P α → P α × P α × P α
