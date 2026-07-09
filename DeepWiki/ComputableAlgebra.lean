@@ -1,3 +1,5 @@
+import DeepWiki.ComputableAlgebra.CommRing
+import DeepWiki.ComputableAlgebra.Field
 import DeepWiki.ComputableAlgebra.Polynomial
 import DeepWiki.ComputableAlgebra.PolyRepr
 import DeepWiki.ComputableAlgebra.PolyReprDenote
