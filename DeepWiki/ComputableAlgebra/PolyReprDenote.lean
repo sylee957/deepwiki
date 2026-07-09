@@ -68,4 +68,35 @@ theorem toPoly_mul (p q : P α) : toPoly (mul p q) = toPoly p * toPoly q := by
     · rw [coeff_ge p x h, CRingSpec.toR_zero, zero_mul]
     · rw [coeff_ge q (k - x) (by omega), CRingSpec.toR_zero, mul_zero]
 
+/-! ### A first generic *algorithm* on the interface: polynomial power
+
+`cpow p n = pⁿ`, built from the generic `mul`, with `toPoly_cpow : toPoly (cpow p n) = (toPoly p)^n`.
+It runs on any `CPolyRepr` (dense or sparse) and is correct by the multiplicative square — the pattern
+every higher algorithm (division, gcd, …) follows when built bottom-up on the interface. -/
+
+/-- The multiplicative unit `1` as a length-1 representation. -/
+def one : P α := ofFn 1 (fun _ => CCommRing.one)
+
+/-- Generic polynomial power `cpow p n = pⁿ` by `ℕ`-recursion on the generic `mul`. -/
+def cpow (p : P α) : ℕ → P α
+  | 0 => one
+  | n + 1 => mul p (cpow p n)
+
+/-- `toPoly one = 1`. -/
+theorem toPoly_one : (toPoly (one : P α)) = 1 := by
+  apply Polynomial.ext; intro k
+  rw [coeff_toPoly, one, coeff_ofFn]
+  rcases Nat.eq_zero_or_pos k with rfl | hk
+  · simp [CRingSpec.toR_one]
+  · rw [if_neg (by omega), CRingSpec.toR_zero, Polynomial.coeff_one, if_neg (by omega)]
+
+/-- **`cpow` correctness:** `toPoly (cpow p n) = (toPoly p) ^ n` — representation-generic. -/
+theorem toPoly_cpow (p : P α) (n : ℕ) : toPoly (cpow p n) = (toPoly p) ^ n := by
+  induction n with
+  | zero => rw [cpow, toPoly_one, pow_zero]
+  | succ n ih => rw [cpow, toPoly_mul, ih, pow_succ, mul_comm]
+
+/-- The generic `cpow` reduces under `native_decide`: `(1 + x)² = 1 + 2x + x²` on the dense carrier. -/
+example : cpow ([1, 1] : List ℚ) 2 = [1, 2, 1, 0, 0] := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr

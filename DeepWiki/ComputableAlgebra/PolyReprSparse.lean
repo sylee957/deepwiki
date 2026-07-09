@@ -69,5 +69,10 @@ example : cisZero (SparsePoly.ofList [(0, 0), (5, 0)] : SparsePoly ℚ) = true :
 example : cdeg (SparsePoly.ofList [(0, 1), (5, 7)] : SparsePoly ℚ) = 5 := by native_decide
 /-- Sparse `clead` reduces: the leading coefficient of `1 + 7x⁵` is `7`. -/
 example : clead (SparsePoly.ofList [(0, 1), (5, 7)] : SparsePoly ℚ) = 7 := by native_decide
+/-- The generic `cpow` algorithm runs on the **sparse** carrier too: `(1 + x)²` has honest degree `2`
+and leading coefficient `1` — the same algorithm, a different representation. -/
+example : cdeg (cpow (SparsePoly.ofList [(0, 1), (1, 1)] : SparsePoly ℚ) 2) = 2 := by native_decide
+/-- Sparse `(1 + x)²` has leading coefficient `1`. -/
+example : clead (cpow (SparsePoly.ofList [(0, 1), (1, 1)] : SparsePoly ℚ) 2) = 1 := by native_decide
 
 end DeepWiki.SymbolicIntegration.CPolyRepr
