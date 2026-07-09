@@ -125,4 +125,28 @@ theorem cgcd_isGCD (fuel : ℕ) (a b : P α) (h : cdeg b < fuel) :
       ∀ e, e ∣ toPoly a → e ∣ toPoly b → e ∣ toPoly (cgcd fuel a b) :=
   ⟨(cgcd_dvd fuel a b h).1, (cgcd_dvd fuel a b h).2, fun e hea heb => dvd_cgcd fuel a b e hea heb⟩
 
+/-! ### Monic normalization (the canonical associate) -/
+
+/-- Scale a polynomial to monic by its inverse leading coefficient. -/
+def cmonic (p : P α) : P α := scale (CField.inv (clead p)) p
+
+/-- `toPoly (cmonic p) = C (leadingCoeff⁻¹) · toPoly p` — the associate scaled to be monic. -/
+theorem toPoly_cmonic (p : P α) :
+    toPoly (cmonic p) = Polynomial.C ((toPoly p).leadingCoeff)⁻¹ * toPoly p := by
+  rw [cmonic, toPoly_scale]
+  congr 2
+  show CFieldSpec.toK (CField.inv (clead p)) = _
+  rw [CFieldSpec.toK_inv, show CFieldSpec.toK (clead p) = CRingSpec.toR (clead p) from rfl,
+    toR_clead_eq_leadingCoeff]
+
+/-- `cmonic p` is monic for nonzero `p` (its leading coefficient is `1`). -/
+theorem cmonic_monic (p : P α) (hp : ¬ cisZero (P := P) p = true) : (toPoly (cmonic p)).Monic := by
+  have hP : toPoly p ≠ 0 := fun h => hp ((cisZero_iff p).mpr h)
+  have hlcP : (toPoly p).leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hP
+  rw [Polynomial.Monic, toPoly_cmonic, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C,
+    inv_mul_cancel₀ hlcP]
+
+/-- `cmonic` reduces (dense): `2 + 4x` scales to the monic `1/2 + x`. -/
+example : cmonic ([2, 4] : List ℚ) = ([1/2, 1] : List ℚ) := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
