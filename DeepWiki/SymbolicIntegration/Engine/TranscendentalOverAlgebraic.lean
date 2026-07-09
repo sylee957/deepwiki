@@ -348,7 +348,7 @@ theorem cnormG_length_le (p : CPoly α) : (CPoly.cnorm p : List α).length ≤ (
   | cons a as ih =>
     rw [CPoly.cnorm]
     cases h : CPoly.cnorm as with
-    | nil => by_cases ha : CField.isZero a <;> simp [ha, List.length_cons]
+    | nil => by_cases ha : CCommRing.isZero a <;> simp [ha, List.length_cons]
     | cons b bs =>
       simp only [List.length_cons]
       have : (b :: bs : List α).length ≤ (as : List α).length := h ▸ ih

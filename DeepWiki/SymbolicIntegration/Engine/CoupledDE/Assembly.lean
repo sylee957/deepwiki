@@ -24,7 +24,7 @@ theorem cnormG_length_le (p : CPoly ℚ) : (cnorm p : List ℚ).length ≤ p.len
     rw [cnorm]
     cases h : cnorm as with
     | nil =>
-      by_cases ha : CField.isZero a <;> simp [ha, List.length_cons]
+      by_cases ha : CCommRing.isZero a <;> simp [ha, List.length_cons]
     | cons b bs =>
       rw [h] at ih; simp only [List.length_cons] at ih ⊢; omega
 

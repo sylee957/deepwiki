@@ -53,7 +53,7 @@ CFieldSpec α extends CRingSpec α    -- adds [Field R] + toK_inv;  K := R  (kee
 the `CField ℚ` instance. Risk: **instance diamond** if any type gets both a direct `CCommRing` and a
 `CField`-derived one — none should yet. Gate: full build + native_decide showcase unchanged.
 
-**P2 — the keystone `CCommRing (CPoly α)` / `CRingSpec (CPoly α)`.** Define them from `c*` ops; prove the
+**P2 — DONE (commit below).** the keystone `CCommRing (CPoly α)` / `CRingSpec (CPoly α)`.** Define them from `c*` ops; prove the
 `CRingSpec` hom laws (`toPoly` is a ring hom — reuse the existing `@[denote]` squares). *Verify (spike):*
 `#check (inferInstance : CCommRing (CPoly ℚ))` and a `native_decide` on `cmul (X:CPoly (CPoly ℚ)) …`
 reduces. Risk: the `CRingSpec (CPoly α)` `R = (R α)[X]` bridge must be a genuine ring hom — this is where

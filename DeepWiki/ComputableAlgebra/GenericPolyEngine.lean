@@ -171,6 +171,21 @@ instance (priority := 100) instCRingSpecOfCFieldSpec {α : Type*} [CField α] [C
 attribute [denote] CFieldSpec.toK_zero CFieldSpec.toK_one CFieldSpec.toK_add
   CFieldSpec.toK_mul CFieldSpec.toK_neg CFieldSpec.toK_inv
 
+/-! ### `toK` homomorphism laws through the `CField ⇒ CCommRing` bridge
+Ring-generic engine ops (`cadd`/`cmul`/… weakened to `[CCommRing]`) put `CCommRing.add`/… in goals; on a
+field coefficient that is defeq to `CField.add`/…, so these `@[denote]` lemmas let the denotation squares
+fire on the ring-op head. -/
+@[denote] theorem toK_ccrZero {α : Type*} [CField α] [CFieldSpec α] :
+    CFieldSpec.toK (CCommRing.zero : α) = 0 := CFieldSpec.toK_zero
+@[denote] theorem toK_ccrOne {α : Type*} [CField α] [CFieldSpec α] :
+    CFieldSpec.toK (CCommRing.one : α) = 1 := CFieldSpec.toK_one
+@[denote] theorem toK_ccrAdd {α : Type*} [CField α] [CFieldSpec α] (a b : α) :
+    CFieldSpec.toK (CCommRing.add a b) = CFieldSpec.toK a + CFieldSpec.toK b := CFieldSpec.toK_add a b
+@[denote] theorem toK_ccrMul {α : Type*} [CField α] [CFieldSpec α] (a b : α) :
+    CFieldSpec.toK (CCommRing.mul a b) = CFieldSpec.toK a * CFieldSpec.toK b := CFieldSpec.toK_mul a b
+@[denote] theorem toK_ccrNeg {α : Type*} [CField α] [CFieldSpec α] (a : α) :
+    CFieldSpec.toK (CCommRing.neg a) = - CFieldSpec.toK a := CFieldSpec.toK_neg a
+
 namespace CFieldSpec
 
 /-- `toK` intertwines derived `sub` with `-`. -/
@@ -296,31 +311,31 @@ theorem prodG_sub_ne_zero {α : Type*} [CField α] [CFieldSpec α] {zk : α} {ot
 
 /-- Normalize a `CPoly` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnorm` is a canonical form (the zero polynomial becomes `[]`). -/
-def cnorm {α : Type*} [CField α] : CPoly α → CPoly α
+def cnorm {α : Type*} [CCommRing α] : CPoly α → CPoly α
   | [] => []
   | a :: as => match cnorm as with
-    | [] => if CField.isZero a then [] else [a]
+    | [] => if CCommRing.isZero a then [] else [a]
     | r => a :: r
 
 /-- Coefficientwise addition of two `CPoly`s (the shorter is zero-extended implicitly). -/
-def cadd {α : Type*} [CField α] : CPoly α → CPoly α → CPoly α
+def cadd {α : Type*} [CCommRing α] : CPoly α → CPoly α → CPoly α
   | [], q => q
   | p, [] => p
-  | a :: as, b :: bs => CField.add a b :: cadd as bs
+  | a :: as, b :: bs => CCommRing.add a b :: cadd as bs
 
 /-- Negation of a `CPoly`, coefficientwise. -/
-def cneg {α : Type*} [CField α] (p : CPoly α) : CPoly α := (p : List α).map CField.neg
+def cneg {α : Type*} [CCommRing α] (p : CPoly α) : CPoly α := (p : List α).map CCommRing.neg
 
 /-- Subtraction of `CPoly`s, `p − q := p + (−q)`. -/
-def csub {α : Type*} [CField α] (p q : CPoly α) : CPoly α := cadd p (cneg q)
+def csub {α : Type*} [CCommRing α] (p q : CPoly α) : CPoly α := cadd p (cneg q)
 
 /-- Scalar multiplication of a `CPoly` by `c : α`, coefficientwise. -/
-def cscale {α : Type*} [CField α] (c : α) (p : CPoly α) : CPoly α := (p : List α).map (CField.mul c)
+def cscale {α : Type*} [CCommRing α] (c : α) (p : CPoly α) : CPoly α := (p : List α).map (CCommRing.mul c)
 
 /-- Degree shift `cshift k p = x^k · p`: prepend `k` zero coefficients. -/
-def cshift {α : Type*} [CField α] : ℕ → CPoly α → CPoly α
+def cshift {α : Type*} [CCommRing α] : ℕ → CPoly α → CPoly α
   | 0, p => p
-  | n + 1, p => CField.zero :: cshift n p
+  | n + 1, p => CCommRing.zero :: cshift n p
 
 /-- `(cshift k p).length = k + p.length`. -/
 theorem cshiftG_length {α : Type*} [CField α] (k : ℕ) (p : CPoly α) :
@@ -330,27 +345,39 @@ theorem cshiftG_length {α : Type*} [CField α] (k : ℕ) (p : CPoly α) :
   | succ m ih => rw [cshift]; simp only [List.length_cons, ih]; omega
 
 /-- Polynomial multiplication of `CPoly`s (schoolbook convolution via `cshift`/`cscale`). -/
-def cmul {α : Type*} [CField α] : CPoly α → CPoly α → CPoly α
+def cmul {α : Type*} [CCommRing α] : CPoly α → CPoly α → CPoly α
   | [], _ => []
-  | a :: as, q => cadd (cscale a q) (CField.zero :: cmul as q)
+  | a :: as, q => cadd (cscale a q) (CCommRing.zero :: cmul as q)
 
 /-- Product of a list of `CPoly`s, folding `cmul` from `[1]`. -/
-def cprod {α : Type*} [CField α] (ps : List (CPoly α)) : CPoly α :=
-  ps.foldl (fun acc p => cmul acc p) [CField.one]
+def cprod {α : Type*} [CCommRing α] (ps : List (CPoly α)) : CPoly α :=
+  ps.foldl (fun acc p => cmul acc p) [CCommRing.one]
 
 /-- Power of a `CPoly` by `ℕ`-recursion (`[1]` at `0`). -/
-def cpow {α : Type*} [CField α] (p : CPoly α) : ℕ → CPoly α
-  | 0 => [CField.one]
+def cpow {α : Type*} [CCommRing α] (p : CPoly α) : ℕ → CPoly α
+  | 0 => [CCommRing.one]
   | n + 1 => cmul p (cpow p n)
 
 /-- Leading coefficient of a `CPoly` (top nonzero coefficient; `zero` for the zero polynomial). -/
 def clead {α : Type*} [CField α] (p : CPoly α) : α := ((cnorm p : List α).getLast?.getD CField.zero)
 
 /-- Degree of a `CPoly` as a `ℕ`: `(length of normalized p) − 1`, with `cdeg 0 = 0`. -/
-def cdeg {α : Type*} [CField α] (p : CPoly α) : ℕ := (cnorm p : List α).length - 1
+def cdeg {α : Type*} [CCommRing α] (p : CPoly α) : ℕ := (cnorm p : List α).length - 1
 
 /-- Zero test for a `CPoly`: `true` iff it normalizes to `[]`. -/
-def cisZero {α : Type*} [CField α] (p : CPoly α) : Bool := (cnorm p : List α).isEmpty
+def cisZero {α : Type*} [CCommRing α] (p : CPoly α) : Bool := (cnorm p : List α).isEmpty
+
+/-- **Keystone instance.** A `CPoly` over a computable commutative ring is itself a computable commutative
+ring (`add := cadd`, `mul := cmul`, `neg := cneg`, `zero := []`, `one := [one]`, `isZero := cisZero`) — so
+`CPoly (CPoly _)` is a valid coefficient tower and bivariate polynomials need no separate definition. All
+ops reduce, so the tower stays `native_decide`-executable. See `docs/ring-generalization-plan.md`. -/
+instance instCCommRingCPoly {α : Type*} [CCommRing α] : CCommRing (CPoly α) where
+  zero := []
+  one := [CCommRing.one]
+  add := cadd
+  mul := cmul
+  neg := cneg
+  isZero := cisZero
 
 /-- Make a `CPoly` monic (lead coefficient `1`) by scaling by `(clead)⁻¹`; the zero polynomial
 stays `[]`. -/
