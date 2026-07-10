@@ -12,16 +12,6 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac GBPolyCore
 
-section Lift
-
-variable {β : Type*} [CField β] [CFieldDomain β]
-
-/-- `qOfPolyNZ q`: lift a polynomial `q : DensePoly β` to `CFrac β` as `q/1`. -/
-def qOfPolyNZ (q : DensePoly β) : CFrac β :=
-  ⟨(q, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
-
-end Lift
-
 section Helpers
 
 variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]

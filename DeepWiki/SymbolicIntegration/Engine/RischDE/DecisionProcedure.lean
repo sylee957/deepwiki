@@ -61,7 +61,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 paired with `q * g`, as `crischDESolveSoundWf` forms it before calling `crischDERawSolveWf`. -/
 def rischDEInnerInputWf (f g : CFrac β) : CFrac β × CFrac β :=
   let q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2
-  let q' : CFrac β := qOfPolyNZ q
+  let q' : CFrac β := CFrac.ofPoly q
   (qReduce (weakNormalizedF f q'), qmulNZ q' g)
 
 end InnerInputWf
@@ -83,7 +83,7 @@ structure RischDEDecisionProcedureFrontierWf (f g : CFrac β) : Prop where
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
     IsCanonNormalizedWf f
-      (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
@@ -111,7 +111,7 @@ theorem decisionProcedureFrontierWf_of_innerFrontier (f g : CFrac β)
       DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false)
     (hck : FieldRDESolvable f g →
       IsCanonNormalizedWf f
-        (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
     (hpolysol : FieldRDESolvable f g →
       let ftildeR := (rischDEInnerInputWf f g).1
       let gtilde := (rischDEInnerInputWf f g).2

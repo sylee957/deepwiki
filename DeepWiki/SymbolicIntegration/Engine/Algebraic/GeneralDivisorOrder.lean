@@ -82,7 +82,7 @@ def idealReduce (_f : DensePoly (CFrac ℚ)) (_basis : List (DensePoly (CFrac �
   -- read back as the fractional ideal (1/δ)·Ĥ, then reduce every entry to lowest terms (`qReduceMat`,
   -- value-preserving via `toCFracG_qReduce`) so the reduced representative carries no swollen factors
   qReduceMat (H.map (fun row => row.map (fun p =>
-    if h : cisZero dd = false then qReduceNZ (qxOfFrac p dd h) else qxOfNum p)))
+    if h : cisZero dd = false then qReduceNZ (qxOfFrac p dd h) else CFrac.ofPoly p)))
 
 /-! ### Principality: is the ideal `g·O`? (`genCandidates`, `isPrincipalIdeal`) -/
 
@@ -91,7 +91,7 @@ integral matrix reconstructed as a `K(x, y)` element (`wToAf basis`). For a prin
 generator `g` is among these up to a unit. -/
 def genCandidates (basis : List (DensePoly (CFrac ℚ))) (I : GenDivisor) : List (DensePoly (CFrac ℚ)) :=
   let H := canonHNF ((hermiteRowReduce (idealClear I).2).filter (fun row => !row.all cisZero))
-  H.map (fun row => wToAf basis (row.map qxOfNum))
+  H.map (fun row => wToAf basis (row.map CFrac.ofPoly))
 
 /-- `true` iff `I` is principal `isPrincipalIdeal f basis I`: `canonHNFEq I (principalDivisor f basis
 g)` for some candidate generator `g ∈ genCandidates basis I`. Sound — a `true` means `[I] = 0` in
@@ -144,7 +144,7 @@ On `y² = x³ + 1` (integral basis `[1, y]`), the inflection point `(0, 1)` give
 `P³ = div(y − 1)` is principal, so `order = 3`. -/
 
 /-- The curve `f = y² − (x³ + 1)` (`[−(x³+1), 0, 1]`) over `DensePoly (CFrac ℚ)`. -/
-def hcubeF : DensePoly (CFrac ℚ) := [qxOfNum [-1, 0, 0, -1], CCommRing.zero, CCommRing.one]
+def hcubeF : DensePoly (CFrac ℚ) := [CFrac.ofPoly [-1, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The integral basis `[1, y]` of `y² = x³ + 1` (no finite poles — the power basis, since `x³ + 1` is
 squarefree). -/
@@ -154,10 +154,10 @@ def hcubeBasis : List (DensePoly (CFrac ℚ)) := integralBasis hcubeF
 to a `2×2` ideal matrix by one `idealProduct` with the identity. -/
 def hcubeTorsionDiv : GenDivisor :=
   idealProduct hcubeF hcubeBasis
-    [ [qxOfNum [0, 1], CCommRing.zero],
-      [CCommRing.zero, qxOfNum [0, 1]],
-      [qxOfNum [-1], qxOfNum [1]],
-      [qxOfNum [1, 0, 0, 1], qxOfNum [-1]] ]
+    [ [CFrac.ofPoly [0, 1], CCommRing.zero],
+      [CCommRing.zero, CFrac.ofPoly [0, 1]],
+      [CFrac.ofPoly [-1], CFrac.ofPoly [1]],
+      [CFrac.ofPoly [1, 0, 0, 1], CFrac.ofPoly [-1]] ]
     (idealIdentity 2)
 
 -- Sanity print: δ = P = (x, y−1) as a [w]=[1,y] ideal matrix (Hermite-reduced).

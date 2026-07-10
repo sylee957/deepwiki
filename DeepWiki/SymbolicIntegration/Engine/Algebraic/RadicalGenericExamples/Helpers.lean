@@ -38,21 +38,4 @@ theorem irreducible_radDeg2_of_not_isSquare {f : CFrac ℚ}
     Irreducible (X ^ 2 - C (CFieldSpec.toK f)) :=
   X_pow_sub_C_irreducible_of_prime Nat.prime_two h
 
-/-! ### Reading a `qxOfNum` radicand into `ℚ(x)` and its `natDegree`
-
-`CFieldSpec.toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPoly num)` (generic in `num`), plus a
-per-radicand `natDegree` computation. -/
-
-/-- `toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPoly num)`: a denominator-`1` ℚ(x)-value reads
-through the tower bridge as the algebra-map image of its numerator (denominator `toPoly [1] = 1`). -/
-theorem toK_qxOfNum (num : DensePoly ℚ) :
-    CFieldSpec.toK (qxOfNum num : CFrac ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (toPoly num) := by
-  show CFrac.toCFrac (qxOfNum num) = _
-  rw [CFrac.toCFrac]
-  show CFrac.am ℚ (toPoly num) / CFrac.am ℚ (toPoly ([CCommRing.one] : DensePoly ℚ)) = _
-  have h2 : toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
-    show C (CFieldSpec.toK (CCommRing.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
-  rw [h2, map_one, div_one]
-  rfl
-
 end DeepWiki.SymbolicIntegration

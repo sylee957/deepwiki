@@ -34,7 +34,7 @@ def cLimitedIntegrateSingleBase (a η : CFrac ℚ) : Option (CFrac ℚ × ℚ) :
     let c1 := (v.getD 1 0) / c0                                   -- normalized `c₁` (`c₀ = 1`)
     let integrand := cadd (qs.getD 0 []) (cscale c1 (qs.getD 1 []))
     let bpoly := cAntiderivBaseQ integrand
-    some (⟨(bpoly, [(1 : ℚ)]), CFrac.cisZeroG_one_singleton⟩, -c1)
+    some (CFrac.ofPoly bpoly, -c1)
 
 /-- **`cLimitedIntegrateSingleBase` in the num/den signature** of `LawfulRischLevelLrt.limitedIntegrateSingle`
 (`anum aden ηnum ηden ↦ ((bnum, bden), c)`) — the base ℚ instance's field for Phase 3-wire-2. Guards the

@@ -12,9 +12,9 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
-/-- Embed a `ℚ[x]`-matrix into `ℚ(x)`: `fromQ M` replaces each entry `p` by `qxOfNum p = p/1`. -/
+/-- Embed a `ℚ[x]`-matrix into `ℚ(x)`: `fromQ M` replaces each entry `p` by `CFrac.ofPoly p = p/1`. -/
 def fromQ (M : List (List (DensePoly ℚ))) : List (List (CFrac ℚ)) :=
-  M.map (fun row => row.map qxOfNum)
+  M.map (fun row => row.map CFrac.ofPoly)
 
 /-- A `2×2` `ℚ[x]`-matrix `[[2, x], [x, x² + 2x³]]`, the trace matrix of the curve `y² − xy − x³`;
 its determinant is the discriminant `x² + 4x³`. -/
@@ -24,7 +24,7 @@ def bareissNonRadT : List (List (DensePoly ℚ)) :=
 /-- `bareissDet = fieldDet ∘ fromQ` on the `2×2` trace matrix, both the discriminant `x² + 4x³`. -/
 theorem bareiss_eq_fieldDet_nonRad :
     CCommRing.isZero (CField.sub (fieldDet (fromQ bareissNonRadT))
-      (qxOfNum (bareissDet bareissNonRadT))) = true := by native_decide
+      (CFrac.ofPoly (bareissDet bareissNonRadT))) = true := by native_decide
 
 /-- `bareissDet` of the `2×2` trace matrix is the discriminant `x² + 4x³`. -/
 theorem bareissDet_nonRad_eq :
@@ -40,7 +40,7 @@ def bareissTrigT : List (List (DensePoly ℚ)) :=
 /-- `bareissDet = fieldDet ∘ fromQ` on the `3×3` trigonal trace matrix, both `−4x³ − 27x²`. -/
 theorem bareiss_eq_fieldDet_trig :
     CCommRing.isZero (CField.sub (fieldDet (fromQ bareissTrigT))
-      (qxOfNum (bareissDet bareissTrigT))) = true := by native_decide
+      (CFrac.ofPoly (bareissDet bareissTrigT))) = true := by native_decide
 
 /-- `bareissDet` of the `3×3` trigonal trace matrix is the discriminant `−4x³ − 27x²`. -/
 theorem bareissDet_trig_eq :
@@ -62,6 +62,6 @@ theorem bareissDet_vander4_eq :
 /-- `bareissDet = fieldDet` on the `4×4` Vandermonde, both the constant `12`. -/
 theorem bareiss_eq_fieldDet_vander4 :
     CCommRing.isZero (CField.sub (fieldDet (fromQ bareissVander4))
-      (qxOfNum (bareissDet bareissVander4))) = true := by native_decide
+      (CFrac.ofPoly (bareissDet bareissVander4))) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

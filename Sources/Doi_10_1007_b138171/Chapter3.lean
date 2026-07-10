@@ -522,9 +522,8 @@ abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_root_const_coeffs
 /-! ### Generic-carrier input builders for the §3.5 split examples (catalog-local)
 
 The §3.5 split examples over the generic ℚ(x) = `CFrac ℚ` carrier read their ℚ(x) coefficients as
-num/den lists over `DensePoly ℚ = List ℚ`, mirroring `qConst5`/`qFrac5` of the §5 catalog (the
-`ComputableTowerRefoundProbe` construction one tower level down). Catalog infrastructure, not book
-items. -/
+num/den lists over `DensePoly ℚ = List ℚ`, using `CFrac.ofScalar` for constants and `qFrac3` for
+arbitrary fractions. Catalog infrastructure, not book items. -/
 
 /-- A ℚ(x) fraction `num/den` as a `CFrac ℚ` element, `den ≠ 0` discharged by `native_decide`. -/
 def qFrac3 (num den : List ℚ) (h : DensePoly.cisZero den = false := by native_decide) : CFrac ℚ :=

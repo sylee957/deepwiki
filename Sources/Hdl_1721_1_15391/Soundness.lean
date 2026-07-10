@@ -46,7 +46,7 @@ The root↔residue `resultant_eq_prod_eval` product-form hypothesis: the engine-
 Per-step eq.-11 quotient identity for the GENERAL curve: `generalReduceRationalTelescopeWf` is proven GIVEN
   each step's coupled eq.-11 congruence `mk(afDerivWf cⱼ) = mk Lⱼ − mk Lⱼ₊₁` (Trager Ch. 4); discharging it
   for a concrete general (non-radical) eq.-11 run is the residual `[deferred]`. (The radical per-step
-  `K`-equation IS discharged for the literal `qxOfNum`-coefficient lifts — catalog
+  `K`-equation IS discharged for the literal `CFrac.ofPoly`-coefficient lifts — catalog
   `Sources.Hdl_1721_1_15391.IntegrateFull` / `AppendixA`.) -/
 
 open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.RadElem

@@ -33,10 +33,6 @@ def qnormPair (num den : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
     let s := (clead den')⁻¹
     (cscale s num', cscale s den')
 
-/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `CFrac ℚ` element (denominator `[1]` nonzero by
-`cisZeroG_one_singleton`). -/
-def qConstParam (n : ℚ) : CFrac ℚ := ⟨([n], [(1 : ℚ)]), CFrac.cisZeroG_one_singleton⟩
-
 /-- `cBaseIsProper b`: `true` iff the lowest-terms `CFrac ℚ` value `b = a/d ∈ ℚ(x)` is proper
 (`deg a < deg d`, nonzero numerator). -/
 def cBaseIsProper (b : CFrac ℚ) : Bool :=
@@ -87,8 +83,8 @@ def cParamLogDeriv (fval θlogderiv : CFrac ℚ) :
     -- `c = M/N` in lowest terms, `N > 0`. Test `N·f − M·(Dθ/θ) = Dv/v` (radical log-derivative).
     let N : ℤ := (c.den : ℤ)
     let M : ℤ := c.num
-    let Nf := CCommRing.mul (qConstParam ((N : ℚ))) fval
-    let Mw := CCommRing.mul (qConstParam ((M : ℚ))) θlogderiv
+    let Nf := CCommRing.mul (CFrac.ofScalar ((N : ℚ))) fval
+    let Mw := CCommRing.mul (CFrac.ofScalar ((M : ℚ))) θlogderiv
     let resid := CField.sub Nf Mw
     -- the residue `N·f − M·w`: a logarithmic derivative of a radical. The exactly-decidable witness is
     -- `resid = 0` (then `v = 1`, `N·f = M·w`, so `n = N, m = M`); nonzero radical witnesses are
@@ -179,9 +175,9 @@ For `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1` over `k = ℚ`, `cParamLogDeriv` r
 open DensePoly
 
 /-- `f = 11 ∈ ℚ ⊂ ℚ(x)`. -/
-def paramLogDerivExampleF : CFrac ℚ := DensePoly.qConstParam 11
+def paramLogDerivExampleF : CFrac ℚ := CFrac.ofScalar 11
 /-- `Dθ/θ = 1` (exponential `θ`, `Dθ = θ`). -/
-def paramLogDerivExampleW : CFrac ℚ := DensePoly.qConstParam 1
+def paramLogDerivExampleW : CFrac ℚ := CFrac.ofScalar 1
 
 -- **Sanity print.** `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
 #eval (DensePoly.cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map
@@ -194,8 +190,8 @@ theorem paramLogDeriv_example :
     (match cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW with
       | some (n, m, v) =>
           -- `n·f − m·(Dθ/θ) − Dv/v` cleared: with `v = 1`, `Dv/v = 0`, so check `n·f − m·w = 0`.
-          let nf := CCommRing.mul (DensePoly.qConstParam ((n : ℚ))) paramLogDerivExampleF
-          let mw := CCommRing.mul (DensePoly.qConstParam ((m : ℚ))) paramLogDerivExampleW
+          let nf := CCommRing.mul (CFrac.ofScalar ((n : ℚ))) paramLogDerivExampleF
+          let mw := CCommRing.mul (CFrac.ofScalar ((m : ℚ))) paramLogDerivExampleW
           CCommRing.isZero (CField.sub nf mw) && CCommRing.isZero (CField.sub v CCommRing.one)
             && decide (n ≠ 0)
       | none => false) = true := by native_decide

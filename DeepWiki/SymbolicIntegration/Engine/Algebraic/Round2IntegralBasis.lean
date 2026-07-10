@@ -72,7 +72,7 @@ def badPrimes (f : DensePoly (CFrac ℚ)) : List (DensePoly ℚ) :=
 /-- The cusp curve `f = y² − x³ ∈ ℚ(x)[y]` (`a₀ = −x³`, monic), `DensePoly (CFrac ℚ)` `[−x³, 0, 1]`. The
 equation order `[1, y]` is non-maximal at `x`. -/
 def cuspF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, 0, -1], CCommRing.zero, CCommRing.one]
+  [CFrac.ofPoly [0, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(y² − x³)` (`afBasisElem 1 = [0, 1]`). -/
 def cuspY : DensePoly (CFrac ℚ) := afBasisElem 1
@@ -200,16 +200,16 @@ def matInv {β : Type*} [CField β] (n : ℕ) (M : List (List β)) : Option (Lis
 
 /-! #### `K(x) ↔ K[x]` denominator clearing and lifts -/
 
-/-- Lift a `K[x]` coordinate row to a `K(x, y)` element `rowToAf row = Σᵢ qxOfNum(rowᵢ)·yⁱ`, turning an
+/-- Lift a `K[x]` coordinate row to a `K(x, y)` element `rowToAf row = Σᵢ CFrac.ofPoly(rowᵢ)·yⁱ`, turning an
 `I_p`-basis row into the order element it represents. -/
-def rowToAf (row : List (DensePoly ℚ)) : DensePoly (CFrac ℚ) := row.map qxOfNum
+def rowToAf (row : List (DensePoly ℚ)) : DensePoly (CFrac ℚ) := row.map CFrac.ofPoly
 
 /-- The `I_p`-basis matrix `B` over `K(x)` `ipBasisMatrix n ipRows`: the `n×n` `CFrac ℚ`-matrix whose
-column `k` is the `k`-th `I_p`-basis row, `B[r][k] = qxOfNum (ipRows[k][r])` — the change of basis from the
+column `k` is the `k`-th `I_p`-basis row, `B[r][k] = CFrac.ofPoly (ipRows[k][r])` — the change of basis from the
 `I_p` basis to the power basis. -/
 def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix ℚ) : List (List (CFrac ℚ)) :=
   (List.range n).map (fun r =>
-    (List.range n).map (fun k => qxOfNum ((ipRows.getD k []).getD r [])))
+    (List.range n).map (fun k => CFrac.ofPoly ((ipRows.getD k []).getD r [])))
 
 /-- The common denominator of a `K(x)`-matrix `commonDenomQ M`: the product over all entries of their
 normalized denominators (`z.1.2`), a coarse common multiple used to clear `M` to `K[x]`. -/
@@ -223,7 +223,7 @@ def commonDenomQ (M : List (List (CFrac ℚ))) : DensePoly ℚ :=
 /-- Clear a `K(x)`-row to a `K[x]`-row at denominator `δ` `clearRow δ row = [num(δ·zᵢ)]`: multiply each
 entry by `δ` and take the numerator; the integral row `δ·row` when `δ` is a common denominator. -/
 def clearRow (δ : DensePoly ℚ) (row : List (CFrac ℚ)) : List (DensePoly ℚ) :=
-  row.map (fun z => (CCommRing.mul (qxOfNum δ) z).1.1)
+  row.map (fun z => (CCommRing.mul (CFrac.ofPoly δ) z).1.1)
 
 /-! #### The idealizer of `I_p`, given an order basis (`idealizerBasis`) -/
 
@@ -251,12 +251,12 @@ def idealizerBasis (f : DensePoly (CFrac ℚ)) (orderBasis : List (DensePoly (CF
     -- Hermite-reduce N over K[x]; the first n rows are the upper-triangular invertible part
     let reduced := hermiteRowReduce N
     let Nhat : List (List (CFrac ℚ)) :=
-      (List.range n).map (fun i => (List.range n).map (fun j => qxOfNum ((reduced.getD i []).getD j [])))
+      (List.range n).map (fun i => (List.range n).map (fun j => CFrac.ofPoly ((reduced.getD i []).getD j [])))
     match matInv n Nhat with
     | none => orderBasis
     | some NhatInv =>
       -- columns of δ·N̂⁻¹ are the new basis vectors (in the [1,y,…] order/power basis)
-      let δq : CFrac ℚ := qxOfNum δ
+      let δq : CFrac ℚ := CFrac.ofPoly δ
       (List.range n).map (fun col =>
         (List.range n).map (fun row => CCommRing.mul δq ((NhatInv.getD row []).getD col CCommRing.zero)))
 
@@ -317,7 +317,7 @@ theorem cusp_round2_newGen_eq :
 /-- The enlarged generator `y/x` is integral: `afMul f (y/x) (y/x) = x` in `ℚ(x)[y]/(y² − x³)`, checked by
 `cisZero (afMul f (y/x) (y/x) − x)`. -/
 theorem cusp_newGen_integral :
-    cisZero (csub (afMul cuspF cuspNewGen cuspNewGen) [qxOfNum [0, 1]]) = true := by native_decide
+    cisZero (csub (afMul cuspF cuspNewGen cuspNewGen) [CFrac.ofPoly [0, 1]]) = true := by native_decide
 
 /-- `[1, y/x]` is the maximal order — a second `round2Step` does not grow it: the idealizer against the
 enlarged basis `[1, y/x]` returns `[1, y/x]` again, a fixed point. -/
@@ -336,7 +336,7 @@ The node `f = y² − x³ − x²`: discriminant `4x²(x + 1)`, bad prime `x`; `
 /-- The node curve `f = y² − x²(x + 1) = y² − x³ − x² ∈ ℚ(x)[y]` (`a₀ = −(x³ + x²)`, monic), `DensePoly
 (CFrac ℚ)` `[−(x³ + x²), 0, 1]`. An ordinary double point; `[1, y]` is non-maximal at `x`. -/
 def nodeF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, -1, -1], CCommRing.zero, CCommRing.one]
+  [CFrac.ofPoly [0, 0, -1, -1], CCommRing.zero, CCommRing.one]
 
 /-- The enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x²(x+1))`, the second basis vector of `round2Step nodeF`
 (`[0, 1/x]`). -/
@@ -354,7 +354,7 @@ theorem node_round2_newGen_eq :
 /-- The node's enlarged generator is integral with relation `(y/x)² = x + 1`: `afMul f (y/x) (y/x) = x + 1`
 in `ℚ(x)[y]/(y² − x²(x+1))`, checked by `cisZero (afMul f (y/x) (y/x) − (x + 1))`. -/
 theorem node_newGen_integral :
-    cisZero (csub (afMul nodeF nodeNewGen nodeNewGen) [qxOfNum [1, 1]]) = true := by native_decide
+    cisZero (csub (afMul nodeF nodeNewGen nodeNewGen) [CFrac.ofPoly [1, 1]]) = true := by native_decide
 
 /-- `[1, y/x]` is the maximal order of the node — a second `round2Step` does not grow it: the idealizer
 against `[1, y/x]` returns `[1, y/x]` again. -/

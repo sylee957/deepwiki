@@ -110,20 +110,20 @@ the residual and the numerator over `W³ = x³`. -/
 def c2itRun : DensePoly ℚ × DensePoly ℚ := radIntegrateCase2 c2itW c2itRho 3 c2itC
 
 /-- The radicand `ρ = x³ − x` lifted to `ℚ(x)` (`CFrac ℚ`), the radicand for `radDeriv 2`. -/
-def c2itRhoQx : CFrac ℚ := qxOfNum [0, -1, 0, 1]
+def c2itRhoQx : CFrac ℚ := CFrac.ofPoly [0, -1, 0, 1]
 
 /-- The common-denominator power `W³ = x³` as a `ℚ[x]` polynomial. -/
 def c2itW3 : DensePoly ℚ := cpow c2itW 3
 
 /-- The rational part `v = vNum/(W³·y)` lifted to `RadElem (CFrac ℚ)` as `[0, vNum/(W³·ρ)]`. -/
 def c2itVlift : RadElem (CFrac ℚ) :=
-  [CCommRing.zero, CField.div (qxOfNum c2itRun.2) (qxOfNum (cmul c2itW3 c2itRho))]
+  [CCommRing.zero, CField.div (CFrac.ofPoly c2itRun.2) (CFrac.ofPoly (cmul c2itW3 c2itRho))]
 
 /-- The integrand's rational part `C₀/(W³y) − Crem/(Wy)` lifted to `RadElem (CFrac ℚ)`. -/
 def c2itRatLift : RadElem (CFrac ℚ) :=
   [CCommRing.zero,
-    CField.sub (CField.div (qxOfNum c2itC) (qxOfNum (cmul c2itW3 c2itRho)))
-      (CField.div (qxOfNum c2itRun.1) (qxOfNum (cmul c2itW c2itRho)))]
+    CField.sub (CField.div (CFrac.ofPoly c2itC) (CFrac.ofPoly (cmul c2itW3 c2itRho)))
+      (CField.div (CFrac.ofPoly c2itRun.1) (CFrac.ofPoly (cmul c2itW c2itRho)))]
 
 /-- The Case-2 iterate integrates `∫ 1/(x³·√(x³−x))`: `radDeriv 2 (x³−x)` of the rational part
 `v = vNum/(W³√(x³−x))` equals `C₀/(W³√(x³−x)) − Crem/(W√(x³−x))`, the rational part of the integrand. -/
@@ -149,15 +149,15 @@ irreducible residual and the numerator over `y`. -/
 def c3itRun : DensePoly ℚ × DensePoly ℚ := radIntegrateCase3 cderiv c3itRho c3it c3itC
 
 /-- The radicand `ρ = x³ + 1` lifted to `ℚ(x)` (`CFrac ℚ`), the radicand for `radDeriv 2`. -/
-def c3itRhoQx : CFrac ℚ := qxOfNum [1, 0, 0, 1]
+def c3itRhoQx : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 
 /-- The rational part `v = vNum/y` lifted to `RadElem (CFrac ℚ)` as `[0, vNum/ρ]`. -/
 def c3itVlift : RadElem (CFrac ℚ) :=
-  [CCommRing.zero, CField.div (qxOfNum c3itRun.2) (qxOfNum c3itRho)]
+  [CCommRing.zero, CField.div (CFrac.ofPoly c3itRun.2) (CFrac.ofPoly c3itRho)]
 
 /-- The integrand's rational part `C/y − Crem/y` lifted to `RadElem (CFrac ℚ)` as `[0, (C − Crem)/ρ]`. -/
 def c3itRatLift : RadElem (CFrac ℚ) :=
-  [CCommRing.zero, CField.div (qxOfNum (csub c3itC c3itRun.1)) (qxOfNum c3itRho)]
+  [CCommRing.zero, CField.div (CFrac.ofPoly (csub c3itC c3itRun.1)) (CFrac.ofPoly c3itRho)]
 
 /-- The Case-3 iterate integrates `∫ x⁴/√(x³+1)`: `radDeriv 2 (x³+1)` of the rational part `v = vNum/√(x³+1)`
 equals `x⁴/√(x³+1) − Crem/√(x³+1)`, the rational part of the integrand. -/
@@ -181,4 +181,4 @@ def mcB : DensePoly ℚ := cmul (cpow [-1, 1] 2) (cpow [0, 1] 2)
 
 /-- The radicand `ρ = x` as `CFrac ℚ`, the base of the `RadElem` lift for the multi-case
 `∫ 1/((x−1)²x²·√x)` validation. -/
-def mcRhoQx : CFrac ℚ := qxOfNum [0, 1]
+def mcRhoQx : CFrac ℚ := CFrac.ofPoly [0, 1]

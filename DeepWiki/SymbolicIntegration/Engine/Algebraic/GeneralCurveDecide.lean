@@ -40,8 +40,8 @@ structure GeneralCurveTorsionInputs where
 
 /-! ### The torsion log term `genCurveTorsionLogTerm` -/
 
-/-- The coefficient `genOneOverM m = 1/m ∈ ℚ(x)`, i.e. `qxOfNum [1] / qxOfNum [m]`. -/
-def genOneOverM (m : ℕ) : CFrac ℚ := CField.div (qxOfNum [1]) (qxOfNum [(m : ℚ)])
+/-- The coefficient `genOneOverM m = 1/m ∈ ℚ(x)`, i.e. `CFrac.ofPoly [1] / CFrac.ofPoly [m]`. -/
+def genOneOverM (m : ℕ) : CFrac ℚ := CField.div (CFrac.ofPoly [1]) (CFrac.ofPoly [(m : ℚ)])
 
 /-- The torsion log term: `genDivisorOrder fuel f basis tin.divisor` yields `some m` ⟹
 `some (1/m, tin.genGen m)` (the `(1/m)·log g` term for the `m`-torsion residue divisor); `none`

@@ -26,10 +26,6 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
   [CharZero (CFieldSpec.K β)] [Fact (GcdFFCorrect (α := β))] [LawfulRischLevelLrt β]
 
-/-- Embed a polynomial as a fraction `num/1 ∈ CFrac β`. -/
-def qEmbedNum {β : Type*} [CField β] [CFieldDomain β] (num : DensePoly β) : CFrac β :=
-  ⟨(num, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
-
 /-- Integrate a coefficient `c ∈ CFrac β = β(s)` by recursing into
 `LawfulRischLevelLrt β.integrateRationalLrt` (the log-free LRT integrator, whose soundness is descent-free
 `K`-level via the ∀E ⇒ K bridge) with the carrier derivation `Ds = [1]`, reassembling via `CFrac β` field
@@ -37,7 +33,7 @@ division. The coefficient integrator the LRT tower step feeds (wrapped) to `cInt
 staying on the LRT track. -/
 def towerCoeffIntegrateLrt (c : CFrac β) : Option (CFrac β) :=
   (LawfulRischLevelLrt.integrateRationalLrt [CCommRing.one] (CFrac.num c) (CFrac.den c)).map fun bd =>
-    CField.div (qEmbedNum bd.1) (qEmbedNum bd.2)
+    CField.div (CFrac.ofPoly bd.1) (CFrac.ofPoly bd.2)
 
 omit [CRischField β] in
 /-- LRT coefficient-recursion soundness: `toK (cderiv b) = toK c` in
@@ -50,12 +46,12 @@ theorem towerCoeffIntegrateLrt_sound (c b : CFrac β) (h : towerCoeffIntegrateLr
   obtain ⟨⟨bn, bd⟩, hint, rfl⟩ := h
   have hsound := LawfulRischLevelLrt.integrateRationalLrt_sound [CCommRing.one]
     (CFrac.num c) (CFrac.den c) bn bd hint
-  have hcd : CFieldSpec.toK (CDiffField.cderiv (CField.div (qEmbedNum bn) (qEmbedNum bd)))
+  have hcd : CFieldSpec.toK (CDiffField.cderiv (CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd)))
       = towerFractionFieldDeriv [CCommRing.one]
-          (CFieldSpec.toK (CField.div (qEmbedNum bn) (qEmbedNum bd))) := by
+          (CFieldSpec.toK (CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd))) := by
     rw [CDiffFieldSpec.toK_cderiv]
     rfl
-  have htoK_embed : ∀ num : DensePoly β, CFieldSpec.toK (qEmbedNum num) = CFrac.am β (toPoly num) := by
+  have htoK_embed : ∀ num : DensePoly β, CFieldSpec.toK (CFrac.ofPoly num) = CFrac.am β (toPoly num) := by
     intro num
     show CFrac.am β (toPoly num) / CFrac.am β (toPoly ([CCommRing.one] : DensePoly β))
       = CFrac.am β (toPoly num)
@@ -73,7 +69,7 @@ once a base `(b,c)` integrator (`cLimitedIntegrateSingleBase`) is present. -/
 def towerCoeffIntegrateSingleLrt (η c : CFrac β) : Option (CFrac β × CFrac β) :=
   match LawfulRischLevelLrt.limitedIntegrateSingle (CFrac.num c) (CFrac.den c)
       (CFrac.num η) (CFrac.den η) with
-  | some ((bn, bd), cc) => some (CField.div (qEmbedNum bn) (qEmbedNum bd), qEmbedNum [cc])
+  | some ((bn, bd), cc) => some (CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd), CFrac.ofPoly [cc])
   | none => (towerCoeffIntegrateLrt c).map fun b => (b, CCommRing.zero)
 
 /-- The LRT tower step's polynomial-part integrator: the degree-raising primitive-polynomial recursion

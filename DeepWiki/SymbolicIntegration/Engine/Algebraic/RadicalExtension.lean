@@ -88,19 +88,15 @@ def radDeriv (n : ℕ) (f : α) (p : RadElem α) : RadElem α :=
 
 end RadElem
 
-/-- A `ℚ(x)` value (`CFrac ℚ`) from a numerator `DensePoly ℚ = List ℚ` over denominator `1`. -/
-def qxOfNum (num : DensePoly ℚ) : CFrac ℚ :=
-  ⟨(num, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
-
 /-- A `ℚ(x)` value `num/den` from a numerator and a nonzero denominator `DensePoly ℚ`. -/
 def qxOfFrac (num den : DensePoly ℚ) (h : DensePoly.cisZero den = false) : CFrac ℚ :=
   ⟨(num, den), h⟩
 
 /-- The radicand `f = x³ + 1 ∈ ℚ(x)` (numerator `[1,0,0,1]` = `1 + x³`). -/
-def radicandX3p1 : CFrac ℚ := qxOfNum [1, 0, 0, 1]
+def radicandX3p1 : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 
 /-- The ℚ(x) value `3x² = (x³+1)' ∈ ℚ(x)`, the derivative of the radicand. -/
-def radicandDeriv : CFrac ℚ := qxOfNum [0, 0, 3]
+def radicandDeriv : CFrac ℚ := CFrac.ofPoly [0, 0, 3]
 
 /-- The diagonal multiplier `ℓ = f'/(2f) = 3x²/(2(x³+1)) ∈ ℚ(x)` for `D(y) = ℓ·y`. -/
 def radicandLogDer : CFrac ℚ := RadElem.logDerRadicand 2 radicandX3p1

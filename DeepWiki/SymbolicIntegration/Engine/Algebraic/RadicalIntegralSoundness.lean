@@ -13,9 +13,9 @@ The predicate is `IsRadicalRationalIntegral n f g v` (`toPoly (radDeriv n f v) =
 instances are `isRadicalRationalIntegral_radGen` (`∫ (f'/(nf))·√f = √f`) and
 `isRadicalRationalIntegral_linear` (two-term antiderivatives). The general soundness is the telescoping
 invariant `radReduceRationalTelescope` and `radDeriv_foldl_cadd_zero_cons_telescope`, whose per-step
-`K`-equation precondition is discharged for the literal `qxOfNum`-coefficient lifts via three
-`CFrac ℚ`-specific bridges (`toCFracG_cderiv_qxOfNum`, `toK_logDerRadicand_mul_radicand`,
-`radCase3Residual_eq`), composed by `toK_step_qxOfNum_iff` and `radDeriv_foldl_cadd_qxOfNum_telescope`. -/
+`K`-equation precondition is discharged for the literal `CFrac.ofPoly`-coefficient lifts via three
+`CFrac ℚ`-specific bridges (`toCFracG_cderiv_ofPoly`, `toK_logDerRadicand_mul_radicand`,
+`radCase3Residual_eq`), composed by `toK_step_ofPoly_iff` and `radDeriv_foldl_cadd_ofPoly_telescope`. -/
 
 open Polynomial
 
@@ -269,34 +269,22 @@ theorem cisZero_radDeriv_radGen_qx :
   simp only [denote, radDeriv_radGen_sound_qx]
   ring
 
-/-! ### Bridge (i): the `qxOfNum : DensePoly ℚ → CFrac ℚ` lift commutes with the derivation
+/-! ### Bridge (i): the `CFrac.ofPoly : DensePoly ℚ → CFrac ℚ` lift commutes with the derivation
 
 The literal `radIntegrateRational` over `α = CFrac ℚ` builds its base-field coefficients by
-`qxOfNum : DensePoly ℚ → CFrac ℚ` (`p ↦ ⟨(p, [1]), _⟩`, a polynomial over denominator `1`). Discharging
+`CFrac.ofPoly : DensePoly ℚ → CFrac ℚ` (`p ↦ ⟨(p, [1]), _⟩`, a polynomial over denominator `1`). Discharging
 the per-step `K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` for a *concrete* driver run needs to push the
 engine's polynomial derivative `cderiv : DensePoly ℚ → DensePoly ℚ` (formal `d/dX` on coefficient lists)
-through `qxOfNum` and `cderiv` (the tower derivation `towerDerivCFrac [1]`). This is the substantive
+through `CFrac.ofPoly` and `cderiv` (the tower derivation `towerDerivCFrac [1]`). This is the substantive
 noncomputable bridge — it lives in the genuine field `RatFunc ℚ` (`= CFieldSpec.K (CFrac ℚ)`), read
 through `toCFrac = CFieldSpec.toK`.
 
-The chain: `qxOfNum p` reads as the algebra-map image `am (toPoly p) = algebraMap ℚ[X] (RatFunc ℚ)
+The chain: `CFrac.ofPoly p` reads as the algebra-map image `am (toPoly p) = algebraMap ℚ[X] (RatFunc ℚ)
 (toPoly p)` (denominator `1`); the tower derivation `towerDerivCFrac [1]` realizes Mathlib's
 `extendDeriv (implicitDeriv (toPoly [1]))` (`toCFracG_towerDerivCFracG`), which on an algebra-map image
 is `algebraMap (baseDerivQ (toPoly p))` (`extendDeriv_algebraMap`); and `baseDerivQ = implicitDeriv
 (toPoly [1]) = implicitDeriv 1` is the plain polynomial `derivative` over `ℚ` (the base `Differential ℚ`
 is `⟨0⟩`, so `mapCoeffs = 0`), which matches `toPoly (cderiv p)` (`toPolyG_cderivG`). -/
-
-/-- **`qxOfNum p` reads as `algebraMap ℚ[X] (RatFunc ℚ) (toPoly p)`** — the genuine-field image of the
-polynomial-over-`1` element `qxOfNum p = ⟨(p, [1]), _⟩` is `am (toPoly p)` (denominator `[1]` reads as
-`1`, so the quotient `am (toPoly p) / 1` collapses). The reading that turns the derivation-commutation
-bridge into an `extendDeriv ∘ algebraMap` computation. -/
-theorem toCFracG_qxOfNum (p : DensePoly ℚ) :
-    CFrac.toCFrac (qxOfNum p) = CFrac.am ℚ (DensePoly.toPoly p) := by
-  show CFrac.am ℚ (DensePoly.toPoly p) / CFrac.am ℚ (DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ)) = _
-  have h1 : DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
-    simp only [denote]
-    simp
-  rw [h1, map_one, div_one]
 
 /-- **`baseDerivQ` is the plain polynomial derivative over `ℚ`** — `baseDerivQ q = Polynomial.derivative
 q` in `ℚ[X]`. `baseDerivQ = implicitDeriv (toPoly [1]) = implicitDeriv 1 = mapCoeffs + 1 · derivative'`,
@@ -317,21 +305,21 @@ theorem baseDerivQ_apply (q : (CFieldSpec.K ℚ)[X]) :
   simp only [Derivation.add_apply, hmc, Derivation.restrictScalars_apply, one_smul, zero_add]
   rfl
 
-/-- **★ Bridge (i) — the derivation commutes with `qxOfNum`** — `toCFrac (cderiv (qxOfNum p)) =
-toCFrac (qxOfNum (cderiv p))` in `RatFunc ℚ` (`= CFieldSpec.K (CFrac ℚ)`): the polynomial-into-ℚ(x)
-embedding `qxOfNum : DensePoly ℚ → CFrac ℚ` is a derivation morphism, i.e. `cderiv ∘ qxOfNum = qxOfNum ∘
+/-- **★ Bridge (i) — the derivation commutes with `CFrac.ofPoly`** — `toCFrac (cderiv (CFrac.ofPoly p)) =
+toCFrac (CFrac.ofPoly (cderiv p))` in `RatFunc ℚ` (`= CFieldSpec.K (CFrac ℚ)`): the polynomial-into-ℚ(x)
+embedding `CFrac.ofPoly : DensePoly ℚ → CFrac ℚ` is a derivation morphism, i.e. `cderiv ∘ CFrac.ofPoly = CFrac.ofPoly ∘
 cderiv` read through the genuine field. The substantive noncomputable bridge of the literal-radical
 soundness: `cderiv = towerDerivCFrac [1]` realizes `extendDeriv (implicitDeriv (toPoly [1]))`
-(`toCFracG_towerDerivCFracG`); on the algebra-map image `qxOfNum p ↦ am (toPoly p)`
-(`toCFracG_qxOfNum`) this is `algebraMap (baseDerivQ (toPoly p))` (`extendDeriv_algebraMap`); and
+(`toCFracG_towerDerivCFracG`); on the algebra-map image `CFrac.ofPoly p ↦ am (toPoly p)`
+(`CFrac.toCFrac_ofPoly`) this is `algebraMap (baseDerivQ (toPoly p))` (`extendDeriv_algebraMap`); and
 `baseDerivQ` is the plain `derivative` (`baseDerivQ_apply`), matching `toPoly (cderiv p)`
 (`toPolyG_cderivG`). -/
-theorem toCFracG_cderiv_qxOfNum (p : DensePoly ℚ) :
-    CFrac.toCFrac (CDiffField.cderiv (qxOfNum p))
-      = CFrac.toCFrac (qxOfNum (DensePoly.cderiv p)) := by
+theorem toCFracG_cderiv_ofPoly (p : DensePoly ℚ) :
+    CFrac.toCFrac (CDiffField.cderiv (CFrac.ofPoly p))
+      = CFrac.toCFrac (CFrac.ofPoly (DensePoly.cderiv p)) := by
   -- `cderiv = towerDerivCFrac [1]`; realize it as `extendDeriv (implicitDeriv (toPoly [1]))`
-  show CFrac.toCFrac (CFrac.towerDerivCFrac [CCommRing.one] (qxOfNum p)) = _
-  rw [CFrac.toCFracG_towerDerivCFracG, toCFracG_qxOfNum, toCFracG_qxOfNum, CFrac.am]
+  show CFrac.toCFrac (CFrac.towerDerivCFrac [CCommRing.one] (CFrac.ofPoly p)) = _
+  rw [CFrac.toCFracG_towerDerivCFracG, CFrac.toCFrac_ofPoly, CFrac.toCFrac_ofPoly, CFrac.am]
   -- `extendDeriv (implicitDeriv (toPoly [1])) (algebraMap (toPoly p)) = algebraMap (baseDerivQ (toPoly p))`
   rw [show Differential.implicitDeriv (DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ)) = baseDerivQ from rfl]
   erw [extendDeriv_algebraMap]
@@ -396,9 +384,9 @@ end DensePoly
 
 With the three `CFrac ℚ` bridges in hand, the per-step `K`-equation precondition of
 `radDeriv_foldl_cadd_zero_cons_telescope` is discharged for the **literal** `radIntegrateRational`
-coefficients — pure-`y` lifts of `qxOfNum`-of-polynomials over the radicand `qxOfNum ρ`. The genuine-field
-`K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` (with `cBᵢ = qxOfNum Bᵢ`, `cCᵢ = qxOfNum Cᵢ`, `ℓ =
-logDerRadicand n (qxOfNum ρ) = ρ'/(nρ)`) clears, via bridges (i) (`cderiv∘qxOfNum = qxOfNum∘cderiv`) and
+coefficients — pure-`y` lifts of `CFrac.ofPoly`-of-polynomials over the radicand `CFrac.ofPoly ρ`. The genuine-field
+`K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` (with `cBᵢ = CFrac.ofPoly Bᵢ`, `cCᵢ = CFrac.ofPoly Cᵢ`, `ℓ =
+logDerRadicand n (CFrac.ofPoly ρ) = ρ'/(nρ)`) clears, via bridges (i) (`cderiv∘CFrac.ofPoly = CFrac.ofPoly∘cderiv`) and
 (ii) (`ℓ·ρ = (1/n)ρ'`), to the polynomial cleared identity `n·ρ·Bᵢ' + Bᵢ·ρ' = n·ρ·(Cᵢ − Cᵢ₊₁)` in
 `K[X]` — the genuine-field reading of each engine step's `radCase3Residual = 0` (bridge (iii)). Feeding
 the polynomial identities into the telescope yields the literal rational-part soundness over `ℚ(x)`. -/
@@ -407,55 +395,48 @@ namespace RadElem
 
 open scoped Polynomial
 
-/-- **`toK (qxOfNum p) = am (toPoly p)`** (`CFieldSpec.toK`-flavoured) — the same content as
-`toCFracG_qxOfNum`, restated against `CFieldSpec.toK` (definitionally `CFrac.toCFrac` for `CFrac ℚ`)
-so it `rw`s directly in `toK`-expressed goals. -/
-theorem toK_qxOfNum (p : DensePoly ℚ) :
-    CFieldSpec.toK (qxOfNum p) = CFrac.am ℚ (DensePoly.toPoly p) :=
-  toCFracG_qxOfNum p
-
-/-- **`toK (cderiv (qxOfNum p)) = am (derivative (toPoly p))`** (`CFieldSpec.toK`-flavoured bridge (i)) —
-the genuine-field reading of `cderiv ∘ qxOfNum`: bridge (i) (`toCFracG_cderiv_qxOfNum`) composed with the
-`qxOfNum`-reading and `toPolyG_cderivG`. The `toK`-side form used in the per-step composition. -/
-theorem toK_cderiv_qxOfNum (p : DensePoly ℚ) :
-    CFieldSpec.toK (CDiffField.cderiv (qxOfNum p))
+/-- **`toK (cderiv (CFrac.ofPoly p)) = am (derivative (toPoly p))`** (`CFieldSpec.toK`-flavoured bridge (i)) —
+the genuine-field reading of `cderiv ∘ CFrac.ofPoly`: bridge (i) (`toCFracG_cderiv_ofPoly`) composed with the
+`CFrac.ofPoly`-reading and `toPolyG_cderivG`. The `toK`-side form used in the per-step composition. -/
+theorem toK_cderiv_ofPoly (p : DensePoly ℚ) :
+    CFieldSpec.toK (CDiffField.cderiv (CFrac.ofPoly p))
       = CFrac.am ℚ (derivative (DensePoly.toPoly p)) := by
-  rw [show CFieldSpec.toK (CDiffField.cderiv (qxOfNum p))
-        = CFrac.toCFrac (CDiffField.cderiv (qxOfNum p)) from rfl,
-    toCFracG_cderiv_qxOfNum, toCFracG_qxOfNum, DensePoly.toPolyG_cderivG]
+  rw [show CFieldSpec.toK (CDiffField.cderiv (CFrac.ofPoly p))
+        = CFrac.toCFrac (CDiffField.cderiv (CFrac.ofPoly p)) from rfl,
+    toCFracG_cderiv_ofPoly, CFrac.toCFrac_ofPoly, DensePoly.toPolyG_cderivG]
 
-/-- **`toK (logDerRadicand n (qxOfNum ρ)) = am(ρ') / ((n:K)·am(ρ))`** — the diagonal multiplier of the
+/-- **`toK (logDerRadicand n (CFrac.ofPoly ρ)) = am(ρ') / ((n:K)·am(ρ))`** — the diagonal multiplier of the
 literal radical derivation, read in `RatFunc ℚ`: `ℓ = ρ'/(nρ)` reads as `am(derivative ρ̄)/((n:K)·am ρ̄)`
 (`ρ̄ = toPoly ρ`). Routes `logDerRadicand`'s `div`/`mul`/`cnatCast` through the `toK` homomorphism laws
-and the bridge-(i) reading `toK_cderiv_qxOfNum`. -/
-theorem toK_logDerRadicand_qxOfNum (n : ℕ) (ρ : DensePoly ℚ) :
-    CFieldSpec.toK (logDerRadicand n (qxOfNum ρ))
+and the bridge-(i) reading `toK_cderiv_ofPoly`. -/
+theorem toK_logDerRadicand_ofPoly (n : ℕ) (ρ : DensePoly ℚ) :
+    CFieldSpec.toK (logDerRadicand n (CFrac.ofPoly ρ))
       = CFrac.am ℚ (derivative (DensePoly.toPoly ρ))
         / ((n : RatFunc (CFieldSpec.K ℚ)) * CFrac.am ℚ (DensePoly.toPoly ρ)) := by
-  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, DensePoly.toK_cnatCastG, toK_cderiv_qxOfNum,
-    toK_qxOfNum]
+  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, DensePoly.toK_cnatCastG, toK_cderiv_ofPoly,
+    CFrac.toK_ofPoly]
 
-/-- **★ The literal per-step `K`-equation reduces to the cleared polynomial identity** — for `qxOfNum`-of-
+/-- **★ The literal per-step `K`-equation reduces to the cleared polynomial identity** — for `CFrac.ofPoly`-of-
 polynomial step coefficient `B` and consecutive leftovers `C`, `C'` over the radicand `ρ` (all `DensePoly ℚ`),
 the telescope's per-step base-field equation
-`toK (cderiv (qxOfNum B) + qxOfNum B · logDerRadicand n (qxOfNum ρ)) = toK (qxOfNum C) − toK (qxOfNum C')`
+`toK (cderiv (CFrac.ofPoly B) + CFrac.ofPoly B · logDerRadicand n (CFrac.ofPoly ρ)) = toK (CFrac.ofPoly C) − toK (CFrac.ofPoly C')`
 holds in `RatFunc ℚ` **iff** the cleared polynomial identity
 `(n:K[X])·ρ̄·B̄' + B̄·ρ̄' = (n:K[X])·ρ̄·(C̄ − C̄')` holds in `K[X]` (`ρ̄ = toPoly ρ` etc.), provided `n ≠ 0`
-and `ρ̄ ≠ 0`. This is the (i)+(ii)+(iii) composition at one step: bridge (i) reads `cderiv∘qxOfNum`, bridge
+and `ρ̄ ≠ 0`. This is the (i)+(ii)+(iii) composition at one step: bridge (i) reads `cderiv∘CFrac.ofPoly`, bridge
 (ii) clears `ℓ = ρ'/(nρ)`, and `am` injectivity descends the `RatFunc` equation to the `K[X]` identity.
 The genuine-field form of `radCase3Residual = 0`. -/
-theorem toK_step_qxOfNum_iff (n : ℕ) (ρ B C C' : DensePoly ℚ)
+theorem toK_step_ofPoly_iff (n : ℕ) (ρ B C C' : DensePoly ℚ)
     (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : DensePoly.toPoly ρ ≠ 0) :
-    CFieldSpec.toK (CCommRing.add (CDiffField.cderiv (qxOfNum B))
-          (CCommRing.mul (qxOfNum B) (logDerRadicand n (qxOfNum ρ))))
-        = CFieldSpec.toK (qxOfNum C) - CFieldSpec.toK (qxOfNum C')
+    CFieldSpec.toK (CCommRing.add (CDiffField.cderiv (CFrac.ofPoly B))
+          (CCommRing.mul (CFrac.ofPoly B) (logDerRadicand n (CFrac.ofPoly ρ))))
+        = CFieldSpec.toK (CFrac.ofPoly C) - CFieldSpec.toK (CFrac.ofPoly C')
       ↔ (n : (CFieldSpec.K ℚ)[X]) * DensePoly.toPoly ρ * derivative (DensePoly.toPoly B)
             + DensePoly.toPoly B * derivative (DensePoly.toPoly ρ)
           = (n : (CFieldSpec.K ℚ)[X]) * DensePoly.toPoly ρ
               * (DensePoly.toPoly C - DensePoly.toPoly C') := by
   -- read every `toK` through `am` (bridge (i) for `cderiv`, the `ℓ` reading for the multiplier)
-  rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, toK_cderiv_qxOfNum, toK_qxOfNum, toK_qxOfNum,
-    toK_qxOfNum, toK_logDerRadicand_qxOfNum]
+  rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, toK_cderiv_ofPoly, CFrac.toK_ofPoly, CFrac.toK_ofPoly,
+    CFrac.toK_ofPoly, toK_logDerRadicand_ofPoly]
   have hρK : CFrac.am ℚ (DensePoly.toPoly ρ) ≠ 0 := CFrac.amG_toPolyG_ne_zero hρ
   have hinj := RatFunc.algebraMap_injective (CFieldSpec.K ℚ)
   -- the `K[X]` identity, pushed through the ring hom `am`, with the denominator `(n:K)·am ρ̄ ≠ 0`
@@ -476,14 +457,14 @@ theorem toK_step_qxOfNum_iff (n : ℕ) (ρ B C C' : DensePoly ℚ)
 polynomials `Bpolys` and a one-longer list of leftover polynomials `Cpolys` (all `DensePoly ℚ`), **if** every
 step's cleared polynomial identity `(n:K[X])·ρ̄·Bᵢ' + Bᵢ·ρ̄' = (n:K[X])·ρ̄·(Cᵢ − Cᵢ₊₁)` holds in `K[X]`
 (`ρ̄ = toPoly ρ` etc. — the genuine-field reading of each engine step's `radCase3Residual = 0`, bridge
-(iii)), **then** the assembled pure-`y` antiderivative `v = (Bpolys.map (qxOfNum · ↦ [0, ·])).foldl DensePoly.cadd
-radZero` satisfies the soundness identity `radDeriv n (qxOfNum ρ) v + [0, qxOfNum Cpolys.last] = [0,
-qxOfNum Cpolys.head]` in `K[X]` (`radDeriv(v) = integrand − final-leftover`). The (i)+(ii)+(iii) composition
-for the LITERAL `qxOfNum`-coefficient lifts the `radIntegrateRational` driver produces: `toK_step_qxOfNum_iff`
+(iii)), **then** the assembled pure-`y` antiderivative `v = (Bpolys.map (CFrac.ofPoly · ↦ [0, ·])).foldl DensePoly.cadd
+radZero` satisfies the soundness identity `radDeriv n (CFrac.ofPoly ρ) v + [0, CFrac.ofPoly Cpolys.last] = [0,
+CFrac.ofPoly Cpolys.head]` in `K[X]` (`radDeriv(v) = integrand − final-leftover`). The (i)+(ii)+(iii) composition
+for the LITERAL `CFrac.ofPoly`-coefficient lifts the `radIntegrateRational` driver produces: `toK_step_ofPoly_iff`
 turns each cleared polynomial identity into the telescope's per-step `K`-equation, then
 `radDeriv_foldl_cadd_zero_cons_telescope` assembles. Precondition: `n ≠ 0` (in `RatFunc ℚ`), `ρ ≠ 0`
 (`toPoly ρ ≠ 0`), and the per-step polynomial identities. -/
-theorem radDeriv_foldl_cadd_qxOfNum_telescope (n : ℕ) (ρ : DensePoly ℚ) (Bpolys Cpolys : List (DensePoly ℚ))
+theorem radDeriv_foldl_cadd_ofPoly_telescope (n : ℕ) (ρ : DensePoly ℚ) (Bpolys Cpolys : List (DensePoly ℚ))
     (hlen : Bpolys.length + 1 = Cpolys.length)
     (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : DensePoly.toPoly ρ ≠ 0)
     (hpoly : ∀ i : ℕ, (hi : i < Bpolys.length) →
@@ -492,66 +473,66 @@ theorem radDeriv_foldl_cadd_qxOfNum_telescope (n : ℕ) (ρ : DensePoly ℚ) (Bp
         = (n : (CFieldSpec.K ℚ)[X]) * DensePoly.toPoly ρ
             * (DensePoly.toPoly (Cpolys.get ⟨i, by omega⟩)
               - DensePoly.toPoly (Cpolys.get ⟨i + 1, by omega⟩))) :
-    DensePoly.toPoly (radDeriv n (qxOfNum ρ)
-          (((Bpolys.map qxOfNum).map (fun cB => ([CCommRing.zero, cB] : RadElem (CFrac ℚ)))).foldl
+    DensePoly.toPoly (radDeriv n (CFrac.ofPoly ρ)
+          (((Bpolys.map CFrac.ofPoly).map (fun cB => ([CCommRing.zero, cB] : RadElem (CFrac ℚ)))).foldl
             DensePoly.cadd radZero))
         + DensePoly.toPoly
-            ([CCommRing.zero, (Cpolys.map qxOfNum).getLastD CCommRing.zero] : RadElem (CFrac ℚ))
-      = DensePoly.toPoly ([CCommRing.zero, (Cpolys.map qxOfNum).headD CCommRing.zero] : RadElem (CFrac ℚ)) := by
-  -- the radicand exposed to `radDeriv` is `(qxOfNum ρ).headD = qxOfNum ρ`? no — `radDeriv` takes the
-  -- radicand directly here. Apply the abstract telescope at the `qxOfNum`-lifted coefficient lists.
-  have hlen' : (Bpolys.map qxOfNum).length + 1 = (Cpolys.map qxOfNum).length := by
+            ([CCommRing.zero, (Cpolys.map CFrac.ofPoly).getLastD CCommRing.zero] : RadElem (CFrac ℚ))
+      = DensePoly.toPoly ([CCommRing.zero, (Cpolys.map CFrac.ofPoly).headD CCommRing.zero] : RadElem (CFrac ℚ)) := by
+  -- the radicand exposed to `radDeriv` is `(CFrac.ofPoly ρ).headD = CFrac.ofPoly ρ`? no — `radDeriv` takes the
+  -- radicand directly here. Apply the abstract telescope at the `CFrac.ofPoly`-lifted coefficient lists.
+  have hlen' : (Bpolys.map CFrac.ofPoly).length + 1 = (Cpolys.map CFrac.ofPoly).length := by
     rw [List.length_map, List.length_map]; omega
-  have hkey := radDeriv_foldl_cadd_zero_cons_telescope (α := CFrac ℚ) n (qxOfNum ρ)
-    (Bpolys.map qxOfNum) (Cpolys.map qxOfNum) hlen' ?_
+  have hkey := radDeriv_foldl_cadd_zero_cons_telescope (α := CFrac ℚ) n (CFrac.ofPoly ρ)
+    (Bpolys.map CFrac.ofPoly) (Cpolys.map CFrac.ofPoly) hlen' ?_
   · simpa using hkey
-  · -- each step's `K`-equation from the cleared polynomial identity, via `toK_step_qxOfNum_iff`
+  · -- each step's `K`-equation from the cleared polynomial identity, via `toK_step_ofPoly_iff`
     intro i hi
     have hiB : i < Bpolys.length := by simpa using hi
     have hiC : i < Cpolys.length := by omega
     have hiC1 : i + 1 < Cpolys.length := by omega
-    -- rewrite the lifted `get`s back to `qxOfNum` of the polynomial `get`s
-    rw [show (Bpolys.map qxOfNum).get ⟨i, hi⟩ = qxOfNum (Bpolys.get ⟨i, hiB⟩) from by
+    -- rewrite the lifted `get`s back to `CFrac.ofPoly` of the polynomial `get`s
+    rw [show (Bpolys.map CFrac.ofPoly).get ⟨i, hi⟩ = CFrac.ofPoly (Bpolys.get ⟨i, hiB⟩) from by
         simp [List.get_eq_getElem, List.getElem_map],
-      show (Cpolys.map qxOfNum).get ⟨i, by omega⟩ = qxOfNum (Cpolys.get ⟨i, hiC⟩) from by
+      show (Cpolys.map CFrac.ofPoly).get ⟨i, by omega⟩ = CFrac.ofPoly (Cpolys.get ⟨i, hiC⟩) from by
         simp [List.get_eq_getElem, List.getElem_map],
-      show (Cpolys.map qxOfNum).get ⟨i + 1, by omega⟩ = qxOfNum (Cpolys.get ⟨i + 1, hiC1⟩) from by
+      show (Cpolys.map CFrac.ofPoly).get ⟨i + 1, by omega⟩ = CFrac.ofPoly (Cpolys.get ⟨i + 1, hiC1⟩) from by
         simp [List.get_eq_getElem, List.getElem_map]]
-    exact (toK_step_qxOfNum_iff n ρ (Bpolys.get ⟨i, hiB⟩) (Cpolys.get ⟨i, hiC⟩)
+    exact (toK_step_ofPoly_iff n ρ (Bpolys.get ⟨i, hiB⟩) (Cpolys.get ⟨i, hiC⟩)
       (Cpolys.get ⟨i + 1, hiC1⟩) hn hρ).mpr (hpoly i hiB)
 
-/-! ### ★ The FRACTION-coefficient single-step iff: the named-run lift `[0, qxOfNum N / qxOfNum ρ]`
+/-! ### ★ The FRACTION-coefficient single-step iff: the named-run lift `[0, CFrac.ofPoly N / CFrac.ofPoly ρ]`
 
 The `radIntegrateRational` *named runs* (`c3itRun`/`gcuspYRun`/`mcRun`, `ComputableRadicalRationalDriver`)
-do not lift their accumulated antiderivative as a `DensePoly.cadd`-fold of pure-`y` step contributions `[0, qxOfNum
+do not lift their accumulated antiderivative as a `DensePoly.cadd`-fold of pure-`y` step contributions `[0, CFrac.ofPoly
 Bᵢ]`; they lift the **whole accumulator** `vNum` over the common denominator `ρ` as the *single* fraction
-element `c3itVlift = [0, qxOfNum vNum / qxOfNum ρ]` (`= vNum/ρ·y`, the `R/y ↦ (R/ρ)·y` reading), and the
-integrand-minus-leftover as `[0, qxOfNum (C − Crem) / qxOfNum ρ]`. So the `qxOfNum`-coefficient telescope
+element `c3itVlift = [0, CFrac.ofPoly vNum / CFrac.ofPoly ρ]` (`= vNum/ρ·y`, the `R/y ↦ (R/ρ)·y` reading), and the
+integrand-minus-leftover as `[0, CFrac.ofPoly (C − Crem) / CFrac.ofPoly ρ]`. So the `CFrac.ofPoly`-coefficient telescope
 above (whose contributions carry *no* division) does not directly apply to a named run.
 
-The bridge is a **fraction-coefficient** variant of `toK_step_qxOfNum_iff`: for a single `C/y`-form with
-coefficient `c = qxOfNum N / qxOfNum ρ` and integrand coefficient `γ = qxOfNum M / qxOfNum ρ` (the same
-denominator `ρ`), `radDeriv n (qxOfNum ρ) [0, c] = [0, γ]` (read in `K[X]`) collapses — clearing the common
+The bridge is a **fraction-coefficient** variant of `toK_step_ofPoly_iff`: for a single `C/y`-form with
+coefficient `c = CFrac.ofPoly N / CFrac.ofPoly ρ` and integrand coefficient `γ = CFrac.ofPoly M / CFrac.ofPoly ρ` (the same
+denominator `ρ`), `radDeriv n (CFrac.ofPoly ρ) [0, c] = [0, γ]` (read in `K[X]`) collapses — clearing the common
 denominator `ρ̄` and the power index `n` — to one cleared **polynomial** identity in `K[X] = ℚ[X]`. This is
 the literal shape of the engine's whole-accumulator check `radDeriv(vNum/ρ·y) = (C−Crem)/ρ·y`, and turns it
 into a single `K[X]` equation between `toPoly`s. -/
 
 /-- **`deriv (am p) = am (derivative p)`** in `RatFunc ℚ` — the Mathlib field derivation `Differential.deriv`
 on the algebra-map image of a `K[X]`-polynomial is the algebra-map of its `derivative` (bridge (i) read in
-the `deriv`/`am` direction): `toK (cderiv (qxOfNum N)) = deriv (toK (qxOfNum N)) = deriv (am (toPoly N))`
-(`toK_cderiv`) and `= am (derivative (toPoly N))` (`toK_cderiv_qxOfNum`), so the two readings agree on every
+the `deriv`/`am` direction): `toK (cderiv (CFrac.ofPoly N)) = deriv (toK (CFrac.ofPoly N)) = deriv (am (toPoly N))`
+(`toK_cderiv`) and `= am (derivative (toPoly N))` (`toK_cderiv_ofPoly`), so the two readings agree on every
 `toPoly`. The `deriv`-side restatement of bridge (i), used to expand the quotient rule on `c = N̄/ρ̄`. -/
 theorem deriv_amG_toPolyG (N : DensePoly ℚ) :
     @Differential.deriv _ _ (CDiffFieldSpec.diffK (α := CFrac ℚ))
         (CFrac.am ℚ (DensePoly.toPoly N))
       = CFrac.am ℚ (derivative (DensePoly.toPoly N)) := by
-  rw [show CFrac.am ℚ (DensePoly.toPoly N) = CFieldSpec.toK (qxOfNum N) from (toK_qxOfNum N).symm,
-    ← CDiffFieldSpec.toK_cderiv, toK_cderiv_qxOfNum]
+  rw [show CFrac.am ℚ (DensePoly.toPoly N) = CFieldSpec.toK (CFrac.ofPoly N) from (CFrac.toK_ofPoly N).symm,
+    ← CDiffFieldSpec.toK_cderiv, toK_cderiv_ofPoly]
 
-/-- **★ The FRACTION-coefficient single-step iff** — for `qxOfNum`-of-polynomial numerator `N`, integrand
+/-- **★ The FRACTION-coefficient single-step iff** — for `CFrac.ofPoly`-of-polynomial numerator `N`, integrand
 numerator `M`, and the common denominator `ρ` (all `DensePoly ℚ`), the `C/y`-form soundness with the fraction
-coefficient `c = qxOfNum N / qxOfNum ρ` and integrand `γ = qxOfNum M / qxOfNum ρ`,
-`IsRadicalRationalIntegral n [qxOfNum ρ] [0, γ] [0, c]` (i.e. `radDeriv n (qxOfNum ρ) [0, c] = [0, γ]` in
+coefficient `c = CFrac.ofPoly N / CFrac.ofPoly ρ` and integrand `γ = CFrac.ofPoly M / CFrac.ofPoly ρ`,
+`IsRadicalRationalIntegral n [CFrac.ofPoly ρ] [0, γ] [0, c]` (i.e. `radDeriv n (CFrac.ofPoly ρ) [0, c] = [0, γ]` in
 `K[X]`), holds **iff** the single cleared **polynomial** identity
 `(n:K[X])·(ρ̄·N̄' − N̄·ρ̄') + N̄·ρ̄' = (n:K[X])·ρ̄·M̄` holds in `K[X] = ℚ[X]` (`N̄ = toPoly N`, `ρ̄ = toPoly ρ`,
 `M̄ = toPoly M`), provided `n ≠ 0` and `ρ̄ ≠ 0`. The denominator `ρ` and the index `n` are cleared through
@@ -560,11 +541,11 @@ of the driver is the `n = 2` case `M = C − Crem`. This is the named-run lift's
 accumulator `vNum/ρ·y` is a *single* `C/y` fraction, not a fold), composing `isRadicalRationalIntegral_
 zero_cons_iff` (the `C/y`-form `K`-equation), bridge (i) (`deriv_amG_toPolyG`), and the `logDerRadicand`
 reading. -/
-theorem isRadicalRationalIntegral_div_qxOfNum_iff (n : ℕ) (N M ρ : DensePoly ℚ)
+theorem isRadicalRationalIntegral_div_ofPoly_iff (n : ℕ) (N M ρ : DensePoly ℚ)
     (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : DensePoly.toPoly ρ ≠ 0) :
-    IsRadicalRationalIntegral n [qxOfNum ρ]
-        ([CCommRing.zero, CField.div (qxOfNum M) (qxOfNum ρ)])
-        ([CCommRing.zero, CField.div (qxOfNum N) (qxOfNum ρ)] : RadElem (CFrac ℚ))
+    IsRadicalRationalIntegral n [CFrac.ofPoly ρ]
+        ([CCommRing.zero, CField.div (CFrac.ofPoly M) (CFrac.ofPoly ρ)])
+        ([CCommRing.zero, CField.div (CFrac.ofPoly N) (CFrac.ofPoly ρ)] : RadElem (CFrac ℚ))
       ↔ (n : (CFieldSpec.K ℚ)[X]) * (DensePoly.toPoly ρ * derivative (DensePoly.toPoly N)
               - DensePoly.toPoly N * derivative (DensePoly.toPoly ρ))
             + DensePoly.toPoly N * derivative (DensePoly.toPoly ρ)
@@ -574,13 +555,13 @@ theorem isRadicalRationalIntegral_div_qxOfNum_iff (n : ℕ) (N M ρ : DensePoly 
   have hρK : CFrac.am ℚ (DensePoly.toPoly ρ) ≠ 0 := CFrac.amG_toPolyG_ne_zero hρ
   have hinj := RatFunc.algebraMap_injective (CFieldSpec.K ℚ)
   -- expand the `K`-equation `toK(cderiv c + c·ℓ) = toK γ` through `toK_div`, bridge (i), and `ℓ = ρ'/(nρ)`
-  rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_div, CFieldSpec.toK_div, toK_qxOfNum,
-    toK_qxOfNum, toK_qxOfNum, toK_logDerRadicand_qxOfNum]
-  -- `toK (cderiv (div (qxOfNum N) (qxOfNum ρ))) = deriv (am N̄ / am ρ̄)` (the quotient rule)
-  rw [show CFieldSpec.toK (CDiffField.cderiv (CField.div (qxOfNum N) (qxOfNum ρ)))
+  rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_div, CFieldSpec.toK_div, CFrac.toK_ofPoly,
+    CFrac.toK_ofPoly, CFrac.toK_ofPoly, toK_logDerRadicand_ofPoly]
+  -- `toK (cderiv (div (CFrac.ofPoly N) (CFrac.ofPoly ρ))) = deriv (am N̄ / am ρ̄)` (the quotient rule)
+  rw [show CFieldSpec.toK (CDiffField.cderiv (CField.div (CFrac.ofPoly N) (CFrac.ofPoly ρ)))
         = @Differential.deriv _ _ (CDiffFieldSpec.diffK (α := CFrac ℚ))
             (CFrac.am ℚ (DensePoly.toPoly N) / CFrac.am ℚ (DensePoly.toPoly ρ)) by
-      rw [CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_div, toK_qxOfNum, toK_qxOfNum]]
+      rw [CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_div, CFrac.toK_ofPoly, CFrac.toK_ofPoly]]
   rw [Derivation.leibniz_div, smul_eq_mul, smul_eq_mul, smul_eq_mul, deriv_amG_toPolyG,
     deriv_amG_toPolyG]
   -- now a pure `RatFunc` equation in `am`-images; clear denominators and descend by `am` injectivity
@@ -607,7 +588,7 @@ named-run form) — given the engine-side polynomial check `cisZero (2·ρ·N' �
 whole-accumulator cleared identity over `DensePoly ℚ`, `2·_ = cscale 2`, `_' = cderiv`), reading it abstractly
 through `cisZeroG_iff` + `toPolyG_csubG` (+ `toPolyG_cmulG`/`toPolyG_cscaleG`/`toPolyG_cderivG`) yields the
 `K[X] = ℚ[X]` identity `(2:K[X])·(ρ̄·N̄' − N̄·ρ̄') + N̄·ρ̄' = (2:K[X])·ρ̄·M̄` — exactly the hypothesis of
-`isRadicalRationalIntegral_div_qxOfNum_iff` at `n = 2` (`2(ρ̄N̄' − N̄ρ̄') + N̄ρ̄' = 2ρ̄N̄' − N̄ρ̄'`). The bridge
+`isRadicalRationalIntegral_div_ofPoly_iff` at `n = 2` (`2(ρ̄N̄' − N̄ρ̄') + N̄ρ̄' = 2ρ̄N̄' − N̄ρ̄'`). The bridge
 that turns a named driver run's own `cisZero` check (its cleared polynomial identity) into the fraction
 iff's precondition, with no `radDeriv`/`RatFunc` reasoning — only the `toPoly` polynomial readings. -/
 theorem clearedKX2_of_cisZeroG (N M ρ : DensePoly ℚ)
@@ -633,14 +614,14 @@ end RadElem
 
 The `radIntegrateCase3` named run `c3itRun = (Crem, vNum)` on `∫ x⁴/√(x³+1)`
 (`ComputableRadicalRationalDriver`, `c3itRho = x³+1`, `c3itC = x⁴`, `n = 2`) lifts its accumulated rational
-part as the single fraction element `c3itVlift = [0, qxOfNum vNum / qxOfNum ρ]` and the integrand-minus-
-leftover as `c3itRatLift = [0, qxOfNum (C − Crem) / qxOfNum ρ]` (`R/y = (R/ρ)·y`). The engine validates
+part as the single fraction element `c3itVlift = [0, CFrac.ofPoly vNum / CFrac.ofPoly ρ]` and the integrand-minus-
+leftover as `c3itRatLift = [0, CFrac.ofPoly (C − Crem) / CFrac.ofPoly ρ]` (`R/y = (R/ρ)·y`). The engine validates
 `radDeriv 2 ρ c3itVlift = c3itRatLift` by `native_decide` (`c3itDriver_integrates`). Here that soundness is
 proven **abstractly** (`[propext, Classical.choice, Quot.sound]`, no `native_decide`) **from the engine's own
 cleared `cisZero` check** of the whole-accumulator polynomial identity `2·ρ·vNum' − vNum·ρ' = 2·ρ·(C − Crem)`
 (supplied as the explicit hypothesis `hcheck` — the genuine-field reading of the run's `radCase3Residual`
 sum, which the kernel cannot reduce for `ℚ`, hence stated rather than discharged): the fraction iff
-`isRadicalRationalIntegral_div_qxOfNum_iff` collapses the radical derivation to that one `K[X]` identity, and
+`isRadicalRationalIntegral_div_ofPoly_iff` collapses the radical derivation to that one `K[X]` identity, and
 `clearedKX2_of_cisZeroG` reads the engine check into it. The remaining precondition is exactly `hcheck` — the
 engine's own polynomial cleared identity for the run. -/
 
@@ -666,13 +647,13 @@ theorem two_ne_zero_ratFunc : (2 : RatFunc (CFieldSpec.K ℚ)) ≠ 0 := by
   exact (map_ne_zero_iff _ (RatFunc.algebraMap_injective (CFieldSpec.K ℚ))).mpr
     (by show (2 : ℚ[X]) ≠ 0; exact two_ne_zero)
 
-/-- **★ The named run `c3itRun` is sound, abstractly** — `IsRadicalRationalIntegral 2 [qxOfNum c3itRho]
-c3itRatLift c3itVlift`, i.e. `toPoly (radDeriv 2 (qxOfNum c3itRho) c3itVlift) = toPoly c3itRatLift` in
-`K[X]`: the actual diagonal radical derivation of the run's lifted rational part `c3itVlift = [0, qxOfNum
-vNum / qxOfNum ρ]` equals the integrand-minus-leftover `c3itRatLift = [0, qxOfNum (C − Crem) / qxOfNum ρ]`.
+/-- **★ The named run `c3itRun` is sound, abstractly** — `IsRadicalRationalIntegral 2 [CFrac.ofPoly c3itRho]
+c3itRatLift c3itVlift`, i.e. `toPoly (radDeriv 2 (CFrac.ofPoly c3itRho) c3itVlift) = toPoly c3itRatLift` in
+`K[X]`: the actual diagonal radical derivation of the run's lifted rational part `c3itVlift = [0, CFrac.ofPoly
+vNum / CFrac.ofPoly ρ]` equals the integrand-minus-leftover `c3itRatLift = [0, CFrac.ofPoly (C − Crem) / CFrac.ofPoly ρ]`.
 Proven abstractly (no `native_decide`) **from the engine's own cleared `cisZero` check** `hcheck` (the
 whole-accumulator polynomial identity `2·ρ·vNum' − vNum·ρ' = 2·ρ·(C − Crem)`): `clearedKX2_of_cisZeroG`
-reads it into the fraction iff's `K[X]` identity, then `isRadicalRationalIntegral_div_qxOfNum_iff` (at
+reads it into the fraction iff's `K[X]` identity, then `isRadicalRationalIntegral_div_ofPoly_iff` (at
 `n = 2`, `ρ̄ ≠ 0` by `toPolyG_c3itRho_ne_zero`, `2 ≠ 0` by `two_ne_zero_ratFunc`) closes it. The engine's
 `native_decide` fact `c3itDriver_integrates`, here a corollary of the abstract derivation **modulo the one
 polynomial check** `hcheck`. -/
@@ -681,8 +662,8 @@ theorem isRadicalRationalIntegral_c3itRun
         (DensePoly.csub (DensePoly.csub (DensePoly.cmul (DensePoly.cscale (2 : ℚ) c3itRho) (DensePoly.cderiv c3itRun.2))
           (DensePoly.cmul c3itRun.2 (DensePoly.cderiv c3itRho)))
           (DensePoly.cmul (DensePoly.cscale (2 : ℚ) c3itRho) (DensePoly.csub c3itC c3itRun.1))) = true) :
-    IsRadicalRationalIntegral 2 [qxOfNum c3itRho] c3itRatLift c3itVlift :=
-  (isRadicalRationalIntegral_div_qxOfNum_iff 2 c3itRun.2 (csub c3itC c3itRun.1) c3itRho
+    IsRadicalRationalIntegral 2 [CFrac.ofPoly c3itRho] c3itRatLift c3itVlift :=
+  (isRadicalRationalIntegral_div_ofPoly_iff 2 c3itRun.2 (csub c3itC c3itRun.1) c3itRho
     two_ne_zero_ratFunc toPolyG_c3itRho_ne_zero).mpr
     (clearedKX2_of_cisZeroG c3itRun.2 (csub c3itC c3itRun.1) c3itRho hcheck)
 
@@ -691,7 +672,7 @@ theorem isRadicalRationalIntegral_c3itRun
 `c3itDriver_integrates`, here derived from the abstract `K[X]` identity `isRadicalRationalIntegral_c3itRun`
 through `cisZeroG_iff` / `toPolyG_csubG` (so it carries **no** `native_decide` axiom — only the engine's
 polynomial cleared check `hcheck`). The same proposition the kernel checks numerically, here a theorem of the
-abstract derivation. `c3itRhoQx = qxOfNum c3itRho` is the run's radicand. -/
+abstract derivation. `c3itRhoQx = CFrac.ofPoly c3itRho` is the run's radicand. -/
 theorem cisZero_radDeriv_c3itVlift
     (hcheck : DensePoly.cisZero
         (DensePoly.csub (DensePoly.csub (DensePoly.cmul (DensePoly.cscale (2 : ℚ) c3itRho) (DensePoly.cderiv c3itRun.2))
@@ -730,17 +711,17 @@ It composes the two pieces named in the prior plan, both now landed and axiom-cl
    accumulation invariant; with the seed `radDeriv radZero = 0` it gives
    `radDeriv(accumulated v) + final-leftover = original integrand`. (Done here — the hard new lemma.)
 
-**★ The precondition is now discharged for the LITERAL `qxOfNum`-coefficient lifts** — what
+**★ The precondition is now discharged for the LITERAL `CFrac.ofPoly`-coefficient lifts** — what
 `radDeriv_foldl_cadd_zero_cons_telescope` takes as its **precondition**, the list of per-step `K`-equations
 `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁`, is, for the literal `radIntegrateRational` over `α = CFrac ℚ`, each
 iterate step's *polynomial* cleared identity `B'f + Bg − C = D` lifted to the field equation on the `R/y ↦
 (R/ρ)·y` coefficients. That lift is now a theorem via three `CFrac ℚ`-specific bridges, **all landed and
 axiom-clean** (none of them `radDeriv`-arithmetic):
 
-* (i) **`toCFracG_cderiv_qxOfNum`** — `cderiv (qxOfNum P) = qxOfNum (cderiv P)` read in `RatFunc ℚ`: the
-  polynomial embedding `qxOfNum : DensePoly ℚ → CFrac ℚ` commutes with the derivation. The substantive
+* (i) **`toCFracG_cderiv_ofPoly`** — `cderiv (CFrac.ofPoly P) = CFrac.ofPoly (cderiv P)` read in `RatFunc ℚ`: the
+  polynomial embedding `CFrac.ofPoly : DensePoly ℚ → CFrac ℚ` commutes with the derivation. The substantive
   bridge: `cderiv = towerDerivCFrac [1]` realizes `extendDeriv (implicitDeriv (toPoly [1]))`, which on
-  the algebra-map image `qxOfNum P ↦ am (toPoly P)` is `algebraMap (baseDerivQ (toPoly P))`, and
+  the algebra-map image `CFrac.ofPoly P ↦ am (toPoly P)` is `algebraMap (baseDerivQ (toPoly P))`, and
   `baseDerivQ` is the plain `derivative` over `ℚ` (`baseDerivQ_apply`).
 * (ii) **`toK_logDerRadicand_mul_radicand`** — `ℓ·f = (1/n)·f'` in `K` (`toK (logDerRadicand n f · f) =
   n⁻¹·toK f'`): the integrand-helper `g = (1/n)f'` IS the diagonal multiplier `ℓ = f'/(nf)` times the
@@ -748,21 +729,21 @@ axiom-clean** (none of them `radDeriv`-arithmetic):
 * (iii) **`radCase3Residual_eq`** — the per-step polynomial cleared identity `B'f + Bg − C` is definitional
   (`rfl`).
 
-Composed: **`toK_step_qxOfNum_iff`** turns each step's cleared polynomial identity
+Composed: **`toK_step_ofPoly_iff`** turns each step's cleared polynomial identity
 `(n:K[X])·ρ̄·Bᵢ' + Bᵢ·ρ̄' = (n:K[X])·ρ̄·(Cᵢ − Cᵢ₊₁)` into the telescope's per-step `K`-equation (bridges (i)
 +(ii) read the `toK`s through `am`, `am`-injectivity descends the cleared `RatFunc` equation), and
-**`radDeriv_foldl_cadd_qxOfNum_telescope`** assembles them into the **LITERAL** rational-part soundness over
-`ℚ(x)`: for `qxOfNum`-of-polynomial step/leftover lists, `radDeriv n (qxOfNum ρ) (assembled v) + [0,
-qxOfNum Cpolys.last] = [0, qxOfNum Cpolys.head]` in `K[X]`, under `n ≠ 0`, `ρ ≠ 0`, and the per-step
+**`radDeriv_foldl_cadd_ofPoly_telescope`** assembles them into the **LITERAL** rational-part soundness over
+`ℚ(x)`: for `CFrac.ofPoly`-of-polynomial step/leftover lists, `radDeriv n (CFrac.ofPoly ρ) (assembled v) + [0,
+CFrac.ofPoly Cpolys.last] = [0, CFrac.ofPoly Cpolys.head]` in `K[X]`, under `n ≠ 0`, `ρ ≠ 0`, and the per-step
 polynomial cleared identities.
 
 **★ The NAMED-run gap is now closed (via the whole-accumulator FRACTION route).** The named runs
 (`c3itRun`/`gcuspYRun`/`mcRun`) do *not* lift their antiderivative as the telescope's `DensePoly.cadd`-fold of pure-`y`
-contributions `[0, qxOfNum Bᵢ]` — they lift the **whole accumulator** `vNum` over the common denominator `ρ`
-as the *single* fraction element `[0, qxOfNum vNum / qxOfNum ρ]`. So rather than extract the per-step
+contributions `[0, CFrac.ofPoly Bᵢ]` — they lift the **whole accumulator** `vNum` over the common denominator `ρ`
+as the *single* fraction element `[0, CFrac.ofPoly vNum / CFrac.ofPoly ρ]`. So rather than extract the per-step
 `Bpolys`/`Cpolys` (the fuel recursion's accumulator chain, genuinely fiddly), the named run is handled as one
-`C/y` *fraction*: **`isRadicalRationalIntegral_div_qxOfNum_iff`** (the fraction-coefficient variant of
-`toK_step_qxOfNum_iff`) collapses `radDeriv n (qxOfNum ρ) [0, qxOfNum N / qxOfNum ρ] = [0, qxOfNum M / qxOfNum
+`C/y` *fraction*: **`isRadicalRationalIntegral_div_ofPoly_iff`** (the fraction-coefficient variant of
+`toK_step_ofPoly_iff`) collapses `radDeriv n (CFrac.ofPoly ρ) [0, CFrac.ofPoly N / CFrac.ofPoly ρ] = [0, CFrac.ofPoly M / CFrac.ofPoly
 ρ]` — clearing the denominator `ρ` (quotient rule `Derivation.leibniz_div` + `deriv_amG_toPolyG`) and the index
 `n` — to the single cleared `K[X]` identity `(n:K[X])·(ρ̄·N̄' − N̄·ρ̄') + N̄·ρ̄' = (n:K[X])·ρ̄·M̄`. At `n = 2`
 (every named run is `radDeriv 2`) this is `2·ρ̄·N̄' − N̄·ρ̄' = 2·ρ̄·M̄`, and **`clearedKX2_of_cisZeroG`** reads it
@@ -789,7 +770,7 @@ Each soundness theorem and each of the three literal-radical bridges carries **o
 `native_decide` compiler axiom, no `sorry`. The simple-radical integral `∫ (f'/(nf))·√f = √f`, its two-term
 generalization, the `C/y`-form reduction, the **telescoping invariant**, the **general rational-part
 soundness** `radDeriv(assembled v) = integrand − final-leftover`, the three `CFrac ℚ` bridges
-(i)/(ii)/(iii), and the **LITERAL `qxOfNum`-coefficient soundness** `radDeriv_foldl_cadd_qxOfNum_telescope`
+(i)/(ii)/(iii), and the **LITERAL `CFrac.ofPoly`-coefficient soundness** `radDeriv_foldl_cadd_ofPoly_telescope`
 are all general theorems (specialized to the concrete elliptic radicand `x³+1` over `ℚ(x)` for the
 headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 
@@ -809,8 +790,8 @@ headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 -- ★ The general rational-part soundness: assembled `v` integrates the integrand modulo the final leftover:
 #print axioms RadElem.radDeriv_foldl_cadd_zero_cons_telescope
 
--- ★ Bridge (i): the derivation commutes with `qxOfNum` (the substantive `RatFunc ℚ` bridge):
-#print axioms toCFracG_cderiv_qxOfNum
+-- ★ Bridge (i): the derivation commutes with `CFrac.ofPoly` (the substantive `RatFunc ℚ` bridge):
+#print axioms toCFracG_cderiv_ofPoly
 
 -- ★ Bridge (ii): `g = ℓ·f` in `K` (the diagonal multiplier times the radicand is `(1/n)f'`):
 #print axioms RadElem.toK_logDerRadicand_mul_radicand
@@ -819,17 +800,17 @@ headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 #print axioms DensePoly.radCase3Residual_eq
 
 -- ★ The LITERAL per-step `K`-equation ⟺ cleared polynomial identity (i+ii+iii composed at one step):
-#print axioms RadElem.toK_step_qxOfNum_iff
+#print axioms RadElem.toK_step_ofPoly_iff
 
--- ★★ The LITERAL rational-part soundness over ℚ(x): `radDeriv(assembled qxOfNum-v) = integrand − leftover`:
-#print axioms RadElem.radDeriv_foldl_cadd_qxOfNum_telescope
+-- ★★ The LITERAL rational-part soundness over ℚ(x): `radDeriv(assembled CFrac.ofPoly-v) = integrand − leftover`:
+#print axioms RadElem.radDeriv_foldl_cadd_ofPoly_telescope
 
 -- ★ The concrete elliptic-radicand integral over ℚ(x), abstractly (the engine's native_decide fact):
 #print axioms radDeriv_radGen_sound_qx
 #print axioms cisZero_radDeriv_radGen_qx
 
--- ★ The FRACTION-coefficient single-step iff (the named-run lift `[0, qxOfNum N / qxOfNum ρ]`):
-#print axioms RadElem.isRadicalRationalIntegral_div_qxOfNum_iff
+-- ★ The FRACTION-coefficient single-step iff (the named-run lift `[0, CFrac.ofPoly N / CFrac.ofPoly ρ]`):
+#print axioms RadElem.isRadicalRationalIntegral_div_ofPoly_iff
 
 -- ★ Reading the engine's cleared `cisZero` check into the fraction-iff `K[X]` identity (n = 2):
 #print axioms RadElem.clearedKX2_of_cisZeroG

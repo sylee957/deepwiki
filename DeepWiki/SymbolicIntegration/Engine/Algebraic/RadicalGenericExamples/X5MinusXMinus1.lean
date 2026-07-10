@@ -17,7 +17,7 @@ open RadElem DensePoly
 A higher-degree radicand `√(x⁵ − x − 1)`. Degree 5 (odd) ⟹ not a square ⟹ the full carrier fires. -/
 
 /-- The radicand `f₂ = x⁵ − x − 1 ∈ ℚ(x)` (numerator `[-1,-1,0,0,0,1]`) for `√(x⁵−x−1)`. -/
-def radicandX5mXm1 : CFrac ℚ := qxOfNum [-1, -1, 0, 0, 0, 1]
+def radicandX5mXm1 : CFrac ℚ := CFrac.ofPoly [-1, -1, 0, 0, 0, 1]
 
 /-- **`toPoly [-1,-1,0,0,0,1] = −1 − x + x⁵` has `natDegree 5`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X5mXm1 : (toPoly ([-1, -1, 0, 0, 0, 1] : DensePoly ℚ)).natDegree = 5 := by
@@ -30,7 +30,7 @@ theorem natDeg_toPolyG_X5mXm1 : (toPoly ([-1, -1, 0, 0, 0, 1] : DensePoly ℚ)).
 /-- **`x⁵ − x − 1` is not a square in `ℚ(x)`** — odd-degree helper (`natDegree 5`). -/
 theorem not_isSquare_radicandX5mXm1 :
     ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX5mXm1 : CFrac ℚ) := by
-  rw [radicandX5mXm1, toK_qxOfNum]
+  rw [radicandX5mXm1, CFrac.toK_ofPoly]
   exact not_isSquare_algebraMap_of_odd_natDegree (by rw [natDeg_toPolyG_X5mXm1]; decide)
 
 /-- **`y² − (x⁵−x−1)` is irreducible over `ℚ(x)`** — generic helper on the non-square `x⁵−x−1`. -/

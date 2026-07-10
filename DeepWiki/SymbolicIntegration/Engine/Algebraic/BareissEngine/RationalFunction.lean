@@ -56,13 +56,13 @@ def qfClearMatrix (M : List (List (CFrac ℚ))) : List (List (DensePoly ℚ)) ×
 /-! ### The fraction-free determinant / adjugate / inverse / solve over `ℚ(x)` (`qfDet`/`qfAdjugate`/…) -/
 
 /-- The fraction-free determinant of a `ℚ(x)`-matrix `qfDet M`: clear `M` to `M' = D·M ∈ ℚ[x]`, run
-`bareissDet M'`, and divide back by `Dⁿ`, returning `qxOfNum(bareissDet M') / qxOfNum(Dⁿ)`. -/
+`bareissDet M'`, and divide back by `Dⁿ`, returning `CFrac.ofPoly(bareissDet M') / CFrac.ofPoly(Dⁿ)`. -/
 def qfDet (M : List (List (CFrac ℚ))) : CFrac ℚ :=
   let n := M.length
   let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
   let Dn := cpow D n
-  CCommRing.mul (qxOfNum detPoly) (CField.inv (qxOfNum Dn))
+  CCommRing.mul (CFrac.ofPoly detPoly) (CField.inv (CFrac.ofPoly Dn))
 
 /-- The fraction-free adjugate `(adj(D·M), D)` of a `ℚ(x)`-matrix `qfAdjugate M`: clear `M` to
 `M' = D·M ∈ ℚ[x]` and return the `ℚ[x]` adjugate `bareissAdjugate M'` paired with `D`; the genuine
@@ -84,7 +84,7 @@ def qfInv (M : List (List (CFrac ℚ))) : DensePoly ℚ × List (List (DensePoly
 det(M') : CFrac ℚ`, reading the `(i, j)` entry of `qfInv` back into `ℚ(x)`. -/
 def qfInvEntry (M : List (List (CFrac ℚ))) (i j : ℕ) : CFrac ℚ :=
   let dn := qfInv M
-  CCommRing.mul (qxOfNum (getEntry dn.2 i j)) (CField.inv (qxOfNum dn.1))
+  CCommRing.mul (CFrac.ofPoly (getEntry dn.2 i j)) (CField.inv (CFrac.ofPoly dn.1))
 
 /-- The fraction-free Cramer solve of `M·x = b` over `ℚ(x)` `qfSolve M b`: clear `M` to `M' = D·M` and
 the rhs to `D·b`, then run `bareissSolve M' (D·b)`, giving `x = (det M'·x)/det M'` with one shared

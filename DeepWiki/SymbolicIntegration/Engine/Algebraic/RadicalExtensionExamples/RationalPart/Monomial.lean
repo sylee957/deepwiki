@@ -78,7 +78,7 @@ A 2-level exponential tower: base `ℚ(x)`, monomial `θ = exp x` (`θ' = θ`), 
 def expF : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
 
 /-- `g = (1/2)θ ∈ ℚ(x)[θ]` for `f = θ+1`, `θ = exp x` (`(f/y)' = g/y`, `g₀ = 0`), `[0, 1/2]`. -/
-def cexp : DensePoly (CFrac ℚ) := [CCommRing.zero, qxOfNum [1/2]]
+def cexp : DensePoly (CFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [1/2]]
 
 /-- The numerator `C = θ + 1 ∈ ℚ(x)[θ]` (`c₀ = 1`), `[1, 1]`. -/
 def expC : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
@@ -122,6 +122,6 @@ theorem expCase_cleared_identity :
 /-- The `exp` residual `D = −1/2` (a `θ`-constant): the `C/(θᵏy)` step lowered the `θ`-power multiplicity
 `k = 1 → 0`. -/
 theorem expCase_residual_eq :
-    cisZero (csub expD [qxOfNum [-1/2]]) = true := by native_decide
+    cisZero (csub expD [CFrac.ofPoly [-1/2]]) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

@@ -84,21 +84,16 @@ Over `α = CFrac β = β(x)`, the residual `radDeriv(N)·D − N·D' − radMul(
 section
 variable {β : Type*} [CField β] [CFieldDomain β] [CDiffField (CFrac β)]
 
-/-- A `β(x)` value from a numerator: `qOfNum num = num/1 ∈ CFrac β`. The generic analogue of
-`qxOfNum`. -/
-def qOfNum (num : DensePoly β) : CFrac β :=
-  ⟨(num, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
-
 /-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. -/
-def qMonomial (k : ℕ) : CFrac β := qOfNum (cshift k [(CCommRing.one : β)])
+def qMonomial (k : ℕ) : CFrac β := CFrac.ofPoly (cshift k [(CCommRing.one : β)])
 
 /-- The cleared log-derivative residual over `α = CFrac β`:
 `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' − radMul(N, integrand)·D`, where
-`D' = CDiffField.cderiv (qOfNum D)` is the actual base-field derivation (essential over a tower where
+`D' = CDiffField.cderiv (CFrac.ofPoly D)` is the actual base-field derivation (essential over a tower where
 `θ' ≠ 1`, unlike the formal `cderiv`). `β`-linear in `N`. -/
 def radLogResidual (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly β)
     (N : RadElem (CFrac β)) : RadElem (CFrac β) :=
-  let Dq : CFrac β := qOfNum D
+  let Dq : CFrac β := CFrac.ofPoly D
   let Dpq : CFrac β := CDiffField.cderiv Dq
   DensePoly.csub (DensePoly.csub (DensePoly.cscale Dq (radDeriv 2 ρ N)) (DensePoly.cscale Dpq N))
     (DensePoly.cscale Dq (radMul 2 ρ N integrand))
@@ -145,9 +140,9 @@ def radLogArgSolve (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePo
   | none => none
   | some c =>
     let a0 : CFrac β := (List.range (degBound + 1)).foldl (fun acc k =>
-      CCommRing.add acc (CCommRing.mul (qOfNum [c.getD k CCommRing.zero]) (qMonomial k))) CCommRing.zero
+      CCommRing.add acc (CCommRing.mul (CFrac.ofPoly [c.getD k CCommRing.zero]) (qMonomial k))) CCommRing.zero
     let a1 : CFrac β := (List.range (degBound + 1)).foldl (fun acc k =>
-      CCommRing.add acc (CCommRing.mul (qOfNum [c.getD (degBound + 1 + k) CCommRing.zero]) (qMonomial k)))
+      CCommRing.add acc (CCommRing.mul (CFrac.ofPoly [c.getD (degBound + 1 + k) CCommRing.zero]) (qMonomial k)))
       CCommRing.zero
     some [a0, a1]
 

@@ -223,7 +223,7 @@ def afRationalSolveWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFra
     let v : DensePoly (CFrac ℚ) :=
       (List.range monos.length).foldl (fun acc idx =>
         let coeff : ℚ := c.getD idx 0 / rhs
-        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : DensePoly (CFrac ℚ))
+        cadd acc (cscale (CFrac.ofPoly [coeff]) (monos.getD idx []))) ([] : DensePoly (CFrac ℚ))
     some v
 
 /-- Log-derivative residual `afLogResidualWf f integrand u = afDerivWf f u − afMul f u integrand`. -/
@@ -273,7 +273,7 @@ def afLogArgSolveWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac 
     let u : DensePoly (CFrac ℚ) :=
       (List.range monos.length).foldl (fun acc idx =>
         let coeff : ℚ := c.getD idx 0
-        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : DensePoly (CFrac ℚ))
+        cadd acc (cscale (CFrac.ofPoly [coeff]) (monos.getD idx []))) ([] : DensePoly (CFrac ℚ))
     some u
 
 /-! ## The top-level `afIntegrateAlgebraicWf` -/
@@ -318,7 +318,7 @@ theorem afIntegrateAlgebraicWf_cuspCubic_combine :
       let v := p.1
       let u := p.2
       cisZero (csub (afDerivWf gcuspCubicF v) gcCombineRatIntegrandWf)
-      && cisZero (csub v [CCommRing.zero, qxOfNum [0, 3/5]])
+      && cisZero (csub v [CCommRing.zero, CFrac.ofPoly [0, 3/5]])
       && cisZero (afLogResidualWf gcuspCubicF gcCombineLogIntegrandWf u)
       && cisZero [u.getD 0 CCommRing.zero]
       && !cisZero [u.getD 1 CCommRing.zero])) = some true := by native_decide

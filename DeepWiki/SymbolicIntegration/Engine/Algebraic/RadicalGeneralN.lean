@@ -128,7 +128,7 @@ instance instCDiffFieldRadExtN {α : Type*} [CField α] [CDiffField α] {n : ℕ
 not a perfect cube, so `RadX3root = RadExtN (CFrac ℚ) 3 (x²+1)` is an honest field. -/
 
 /-- The cube radicand `f = x² + 1 ∈ ℚ(x)` (numerator `[1, 0, 1]`), `y = ∛(x²+1)`. -/
-def cubeRadicand : CFrac ℚ := qxOfNum [1, 0, 1]
+def cubeRadicand : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The cube-root field `ℚ(x)[∛(x²+1)] = RadExtN (CFrac ℚ) 3 (x²+1)`. -/
 abbrev RadX3root : Type := RadExtN (CFrac ℚ) 3 cubeRadicand
@@ -218,8 +218,8 @@ theorem cube_cderiv_gen_eq :
 /-- `u · u⁻¹ = 1` in `RadX3root` through `CCommRing.mul`/`CField.inv`: for `u = x + y`, the inverse
 `radInvN 3 (x²+1)` satisfies `u · u⁻¹ = 1`. -/
 theorem cube_mul_inv_eq_one :
-    CCommRing.isZero (CField.sub (CCommRing.mul (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root)
-      (CField.inv (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root))) CCommRing.one) = true := by
+    CCommRing.isZero (CField.sub (CCommRing.mul (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3root)
+      (CField.inv (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3root))) CCommRing.one) = true := by
   native_decide
 
 /-- A cube-root inverse with a genuine `y²`-component: for `u = 1 + y + y²`, `radInvN 3 (x²+1)` inverts,
@@ -253,7 +253,7 @@ end RadElem
 /-- A cube-root log integrand `u'/u` for `u = x + ∛(x²+1)`: `radLogDerivN 3 (x²+1) u` is a nonzero element
 of `ℚ(x)[∛(x²+1)]`, the integrand whose antiderivative is `log u`. -/
 theorem cube_radLogDerivN_nonzero :
-    DensePoly.cisZero (radLogDerivN 3 cubeRadicand (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root).toRadN)
+    DensePoly.cisZero (radLogDerivN 3 cubeRadicand (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3root).toRadN)
       = false := by native_decide
 
 /-- `D(log u) · u = D(u)` over the cube root: for `u = x + ∛(x²+1)`, `(radLogDerivN 3 f u)·u = D(u)`, i.e.
@@ -261,8 +261,8 @@ theorem cube_radLogDerivN_nonzero :
 theorem cube_radLogDerivN_mul_eq_deriv :
     DensePoly.cisZero (DensePoly.csub
         (radMul 3 cubeRadicand (radLogDerivN 3 cubeRadicand
-          (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root).toRadN) [qxOfNum [0, 1], CCommRing.one])
-        (radDeriv 3 cubeRadicand [qxOfNum [0, 1], CCommRing.one])) = true := by native_decide
+          (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3root).toRadN) [CFrac.ofPoly [0, 1], CCommRing.one])
+        (radDeriv 3 cubeRadicand [CFrac.ofPoly [0, 1], CCommRing.one])) = true := by native_decide
 
 /-! ### A transcendental monomial over the cube-root base
 

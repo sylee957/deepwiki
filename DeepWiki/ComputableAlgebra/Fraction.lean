@@ -124,6 +124,21 @@ theorem cmulG_ne_zero_of {α : Type*} [CField α] [CFieldDomain α] {b d : Dense
     (hd : DensePoly.cisZero d = false) : DensePoly.cisZero (DensePoly.cmul b d) = false :=
   CFieldDomain.nz_mul hb hd
 
+/-- Embed a computable polynomial as the fraction `p/1`. -/
+def ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) : CFrac α :=
+  ⟨(p, [CCommRing.one]), cisZeroG_one_singleton⟩
+
+/-- Embed a coefficient as the constant fraction `a/1`. -/
+def ofScalar {α : Type*} [CField α] [CFieldDomain α] (a : α) : CFrac α := ofPoly [a]
+
+/-- The numerator of the polynomial embedding is the original polynomial. -/
+@[simp] theorem num_ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) :
+    num (ofPoly p) = p := rfl
+
+/-- The denominator of the polynomial embedding is `1`. -/
+@[simp] theorem den_ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) :
+    den (ofPoly p) = [CCommRing.one] := rfl
+
 /-- `qzeroNZ`: the zero fraction `0/1` as a `CFrac` (denominator `[1]` is nonzero). -/
 def qzeroNZ {α : Type*} [CField α] [CFieldDomain α] : CFrac α :=
   ⟨QFun.qzero, cisZeroG_one_singleton⟩
@@ -218,6 +233,19 @@ noncomputable def toCFrac {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α
 /-- A computable fraction denotes its numerator divided by its denominator. -/
 theorem toCFrac_eq_div {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
     toCFrac x = am α (DensePoly.toPoly (num x)) / am α (DensePoly.toPoly (den x)) := rfl
+
+/-- The polynomial embedding denotes the natural map from polynomials to rational functions. -/
+@[denote] theorem toCFrac_ofPoly {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
+    (p : DensePoly α) :
+    toCFrac (ofPoly p) = am α (DensePoly.toPoly p) := by
+  rw [toCFrac_eq_div, num_ofPoly, den_ofPoly]
+  simp only [denote, mul_zero, add_zero, map_one, div_one]
+
+/-- A polynomial embedding has nonzero denotation when its polynomial zero test is false. -/
+theorem toCFrac_ofPoly_ne_zero {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
+    {p : DensePoly α} (hp : DensePoly.cisZero p = false) : toCFrac (ofPoly p) ≠ 0 := by
+  rw [toCFrac_ofPoly]
+  exact amG_toPolyG_ne_zero (toPolyG_ne_zero_of_cisZeroG_false hp)
 
 /-- `toCFrac qzeroNZ = 0`. -/
 theorem toCFracG_qzeroNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] :
@@ -325,5 +353,15 @@ noncomputable instance instCFieldSpecCFrac {α : Type*} [CField α] [CFieldSpec 
   toK_neg := CFrac.toCFracG_qnegNZG
   toK_inv := CFrac.toCFracG_qinvNZG
   isZero_iff := CFrac.isZeroNZG_iff
+
+namespace CFrac
+
+/-- The field bridge sends the polynomial embedding to the natural rational-function embedding. -/
+@[denote] theorem toK_ofPoly {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
+    (p : DensePoly α) :
+    CFieldSpec.toK (ofPoly p : CFrac α) = am α (DensePoly.toPoly p) :=
+  toCFrac_ofPoly p
+
+end CFrac
 
 end DeepWiki.SymbolicIntegration

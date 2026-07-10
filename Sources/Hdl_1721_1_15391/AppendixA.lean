@@ -164,13 +164,13 @@ def appA_sqrtxRun : DensePoly ℚ × DensePoly ℚ :=
 
 /-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_sqrtxVlift : RadElem (CFrac ℚ) :=
-  [CCommRing.zero, CField.div (qxOfNum appA_sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
+  [CCommRing.zero, CField.div (CFrac.ofPoly appA_sqrtxRun.2) (CFrac.ofPoly (cmul sqrtxV2 sqrtxF))]
 
 /-- The rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_sqrtxRatLift : RadElem (CFrac ℚ) :=
   [CCommRing.zero,
-    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmul sqrtxV3 sqrtxF)))
-      (CField.div (qxOfNum appA_sqrtxRun.1) (qxOfNum (cmul sqrtxV sqrtxF)))]
+    CField.sub (CField.div (CFrac.ofPoly sqrtxC) (CFrac.ofPoly (cmul sqrtxV3 sqrtxF)))
+      (CField.div (CFrac.ofPoly appA_sqrtxRun.1) (CFrac.ofPoly (cmul sqrtxV sqrtxF)))]
 
 /-- **Appendix A §2** (the driver capstone, `native_decide`): for `y² = x`, `V = x−1`, `k₀ = 3`,
 `C₀ = 1` (the integrand `1/((x−1)³√x)`), the driver's accumulated rational part `v` satisfies
@@ -187,13 +187,13 @@ def appA_cubeRun : DensePoly ℚ × DensePoly ℚ :=
 
 /-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_cubeVlift : RadElem (CFrac ℚ) :=
-  [CCommRing.zero, CField.div (qxOfNum appA_cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
+  [CCommRing.zero, CField.div (CFrac.ofPoly appA_cubeRun.2) (CFrac.ofPoly (cmul (cpow cubeV 2) cubeF))]
 
 /-- The rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_cubeRatLift : RadElem (CFrac ℚ) :=
   [CCommRing.zero,
-    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmul (cpow cubeV 3) cubeF)))
-      (CField.div (qxOfNum appA_cubeRun.1) (qxOfNum (cmul cubeV cubeF)))]
+    CField.sub (CField.div (CFrac.ofPoly cubeC) (CFrac.ofPoly (cmul (cpow cubeV 3) cubeF)))
+      (CField.div (CFrac.ofPoly appA_cubeRun.1) (CFrac.ofPoly (cmul cubeV cubeF)))]
 
 /-- **Appendix A §2** (the driver capstone on a second curve, `native_decide`): for `y² = x³+1`,
 `V = x−1`, the driver's accumulated `v` satisfies the analogous `D(v) = rational-part` identity
@@ -234,20 +234,20 @@ def appA_mcW : DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePo
 /-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_mcVlift : RadElem (CFrac ℚ) :=
   DensePoly.cadd
-    [CCommRing.zero, CField.div (qxOfNum appA_mcV.2.2.2.1)
-      (qxOfNum (cmul (cpow appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
-    [CCommRing.zero, CField.div (qxOfNum appA_mcW.2.2.2.1)
-      (qxOfNum (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho))]
+    [CCommRing.zero, CField.div (CFrac.ofPoly appA_mcV.2.2.2.1)
+      (CFrac.ofPoly (cmul (cpow appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
+    [CCommRing.zero, CField.div (CFrac.ofPoly appA_mcW.2.2.2.1)
+      (CFrac.ofPoly (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho))]
 
 /-- The integrand's total rational part after subtracting the two `k = 1` leftovers. -/
 def appA_mcRatLift : RadElem (CFrac ℚ) :=
   DensePoly.cadd
     [CCommRing.zero, CField.sub
-      (CField.div (qxOfNum appA_mcV.2.2.1) (qxOfNum (cmul (cpow appA_mcV.1 appA_mcV.2.1) mcRho)))
-      (CField.div (qxOfNum appA_mcV.2.2.2.2) (qxOfNum (cmul appA_mcV.1 mcRho)))]
+      (CField.div (CFrac.ofPoly appA_mcV.2.2.1) (CFrac.ofPoly (cmul (cpow appA_mcV.1 appA_mcV.2.1) mcRho)))
+      (CField.div (CFrac.ofPoly appA_mcV.2.2.2.2) (CFrac.ofPoly (cmul appA_mcV.1 mcRho)))]
     [CCommRing.zero, CField.sub
-      (CField.div (qxOfNum appA_mcW.2.2.1) (qxOfNum (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho)))
-      (CField.div (qxOfNum appA_mcW.2.2.2.2) (qxOfNum (cmul appA_mcW.1 mcRho)))]
+      (CField.div (CFrac.ofPoly appA_mcW.2.2.1) (CFrac.ofPoly (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho)))
+      (CField.div (CFrac.ofPoly appA_mcW.2.2.2.2) (CFrac.ofPoly (cmul appA_mcW.1 mcRho)))]
 
 /-- **Appendix A §2** (multi-case capstone, `native_decide`): on `∫ 1/((x−1)²x²√x)`, the dispatcher
 classifies the mixed denominator into one `V` factor and one `W` factor, assembles the rational part,

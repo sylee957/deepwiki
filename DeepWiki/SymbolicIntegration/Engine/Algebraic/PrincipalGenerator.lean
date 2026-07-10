@@ -79,9 +79,9 @@ open DensePoly RadElem
 
 /-- Lift a base `v` to a `y − v` factor over `ℚ(x)`: `genFactorOfV v = [−(v as ℚ(x)), 1]`, the
 `RadElem (CFrac ℚ)` `y − v(x)` of one Cantor reduction step, with the (genus-1) constant `v = [c]`
-embedded into `ℚ(x)` via `qxOfNum`. For the empty `v = []` (the factor `y`) this is `[0, 1]`. -/
+embedded into `ℚ(x)` via `CFrac.ofPoly`. For the empty `v = []` (the factor `y`) this is `[0, 1]`. -/
 def genFactorOfV (v : DensePoly ℚ) : RadElem (CFrac ℚ) :=
-  [CCommRing.neg (qxOfNum v), CCommRing.one]
+  [CCommRing.neg (CFrac.ofPoly v), CCommRing.one]
 
 /-- The principal generator from tracked `v`s: `principalGeneratorOfVs ρ vs = ∏ᵢ (y − vᵢ)`, the
 product of the `y − vᵢ` step-functions (`genFactorOfV`) of a `cantorMulTracked` run, taken in the
@@ -105,7 +105,7 @@ def principalGenerator (ρ : CFrac ℚ) (ρq : DensePoly ℚ) (g m : ℕ) (D : M
 open RadElem
 
 /-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`CFrac ℚ`), for the radical-extension product. -/
-def pgRhoX3p1 : CFrac ℚ := qxOfNum [1, 0, 0, 1]
+def pgRhoX3p1 : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 
 /-- The recovered generator `gen = principalGenerator … (0, 1) 3` for `y² = x³ + 1` — expected `y − 1`. -/
 def pgGen01 : RadElem (CFrac ℚ) := principalGenerator pgRhoX3p1 hypRhoX3p1 1 3 hypPt01
@@ -131,13 +131,13 @@ The log term is `(1/3)·log g` with `g = y − 1`, so its differential is `ι = 
 
 /-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1`. -/
 def pgDiff01 : RadElem (CFrac ℚ) :=
-  DensePoly.cscale (CField.div CCommRing.one (qxOfNum [3])) (radLogDeriv pgRhoX3p1 pgYm1)
+  DensePoly.cscale (CField.div CCommRing.one (CFrac.ofPoly [3])) (radLogDeriv pgRhoX3p1 pgYm1)
 
 /-- The `(1/3)·log(y − 1)` differential passes the log-derivative certificate
 `radDeriv g = radMul g (3·ι)`, confirming `(1/3)·log(y − 1)` is the torsion log term of the
 `(0, 1)` residue divisor. -/
 theorem principalGenerator_pt01_logderiv :
-    radIsLogIntegral 2 pgRhoX3p1 pgYm1 (DensePoly.cscale (qxOfNum [3]) pgDiff01) = true := by native_decide
+    radIsLogIntegral 2 pgRhoX3p1 pgYm1 (DensePoly.cscale (CFrac.ofPoly [3]) pgDiff01) = true := by native_decide
 
 /-- The unscaled certificate `radDeriv(y − 1) = radMul (y − 1) (radLogDeriv ρ (y − 1))` holds
 directly, so `radLogDeriv ρ (y − 1) = (y − 1)'/(y − 1)` (the differential rationalizing to
@@ -159,7 +159,7 @@ theorem principal_generator_validates :
     -- the order of D = (0,1) is 3 (the torsion decision feeding the construction)
     ∧ cantorOrder 8 hypRhoX3p1 1 hypPt01 = some 3
     -- the (1/3)·log(y − 1) differential passes the log-derivative certificate
-    ∧ (radIsLogIntegral 2 pgRhoX3p1 pgYm1 (DensePoly.cscale (qxOfNum [3]) pgDiff01) = true
+    ∧ (radIsLogIntegral 2 pgRhoX3p1 pgYm1 (DensePoly.cscale (CFrac.ofPoly [3]) pgDiff01) = true
       ∧ DensePoly.cisZero (DensePoly.csub (radDeriv 2 pgRhoX3p1 pgYm1)
           (radMul 2 pgRhoX3p1 pgYm1 (radLogDeriv pgRhoX3p1 pgYm1))) = true) := by native_decide
 

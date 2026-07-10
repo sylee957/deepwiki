@@ -98,7 +98,7 @@ Over `(CFrac ℚ)[y]/(y² − (x³−x))`, the rational part `v = Bf/(Wᵏy)`, i
 `D/(W^{k−1}y)` lift to pure-`y` elements, and `radDeriv 2 (x³−x)` confirms `D(v) = C/(Wᵏy) + D/(W^{k−1}y)`. -/
 
 /-- The radicand `f = x³ − x` lifted to `ℚ(x)` (`CFrac ℚ`) for `radDeriv 2`. -/
-def case2cFqx : CFrac ℚ := qxOfNum [0, -1, 0, 1]
+def case2cFqx : CFrac ℚ := CFrac.ofPoly [0, -1, 0, 1]
 
 /-- `Wᵏ = x²` as a `ℚ[x]` polynomial (`k = 2`). -/
 def case2cWk : DensePoly ℚ := cpow case2cW 2
@@ -106,16 +106,16 @@ def case2cWk : DensePoly ℚ := cpow case2cW 2
 /-- The rational part `v = Bf/(Wᵏy)` lifted to the pure-`y` element `[0, (Bf/Wᵏ)/f] ∈ RadElem (CFrac ℚ)`. -/
 def case2cVlift : RadElem (CFrac ℚ) :=
   [CCommRing.zero,
-    CField.div (qxOfNum (cmul case2cB case2cF))
-      (qxOfNum (cmul case2cWk case2cF))]
+    CField.div (CFrac.ofPoly (cmul case2cB case2cF))
+      (CFrac.ofPoly (cmul case2cWk case2cF))]
 
 /-- The integrand rational part `C/(Wᵏy) + D/(W^{k−1}y)` lifted to the pure-`y` element
 `[0, (C/Wᵏ)/f + (D/W^{k−1})/f] ∈ RadElem (CFrac ℚ)` (what `radDeriv(v)` equals). -/
 def case2cRatLift : RadElem (CFrac ℚ) :=
   [CCommRing.zero,
     CCommRing.add
-      (CField.div (qxOfNum case2cC) (qxOfNum (cmul case2cWk case2cF)))
-      (CField.div (qxOfNum case2cD) (qxOfNum (cmul case2cW case2cF)))]
+      (CField.div (CFrac.ofPoly case2cC) (CFrac.ofPoly (cmul case2cWk case2cF)))
+      (CField.div (CFrac.ofPoly case2cD) (CFrac.ofPoly (cmul case2cW case2cF)))]
 
 /-- Case 2 integrates `∫ 1/(x²·√(x³−x))`: over `(CFrac ℚ)[y]/(y² − (x³−x))`, `radDeriv 2 (x³−x)` of the
 rational part `v = Bf/(W²√(x³−x))` equals `C/(W²√(x³−x)) + D/(W·√(x³−x))`. -/

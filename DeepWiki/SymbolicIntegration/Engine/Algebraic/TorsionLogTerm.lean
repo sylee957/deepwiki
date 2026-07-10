@@ -15,8 +15,8 @@ open DensePoly RadElem
 
 /-! ## `torsionLogTerm` — the non-principal branch as a usable function -/
 
-/-- The torsion log-term coefficient `oneOverMQ m = 1/m ∈ ℚ(x)`, i.e. `qxOfNum [1] / qxOfNum [m]`. -/
-def oneOverMQ (m : ℕ) : CFrac ℚ := CField.div (qxOfNum [1]) (qxOfNum [(m : ℚ)])
+/-- The torsion log-term coefficient `oneOverMQ m = 1/m ∈ ℚ(x)`, i.e. `CFrac.ofPoly [1] / CFrac.ofPoly [m]`. -/
+def oneOverMQ (m : ℕ) : CFrac ℚ := CField.div (CFrac.ofPoly [1]) (CFrac.ofPoly [(m : ℚ)])
 
 /-- The non-principal `(1/m)·log` branch `torsionLogTerm p ρ ρq g D`: via `isTorsionDivisor p ρq g D`,
 returns `some (1/m, principalGenerator ρ ρq g m D)` when `D` is torsion of order `m` (log term
@@ -34,7 +34,7 @@ def torsionLogTerm (p : ℕ) [Fact p.Prime]
 open RadElem
 
 /-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`CFrac ℚ`), for the radical-extension generator. -/
-def tltRhoX3p1 : CFrac ℚ := qxOfNum [1, 0, 0, 1]
+def tltRhoX3p1 : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 
 /-- The torsion log term `torsionLogTerm 5 ρ … (0, 1)` on `y² = x³ + 1` — expected `(1/3, y − 1)`. -/
 def tltTerm01 : Option (CFrac ℚ × RadElem (CFrac ℚ)) :=
@@ -67,9 +67,9 @@ def tltDiff01 : RadElem (CFrac ℚ) :=
   DensePoly.cscale (oneOverMQ 3) (radLogDeriv tltRhoX3p1 tltYm1)
 
 /-- The `(1/3)·log(y − 1)` differential passes the cleared log-derivative certificate
-`radIsLogIntegral 2 tltRhoX3p1 tltYm1 (DensePoly.cscale (qxOfNum [3]) tltDiff01)`. -/
+`radIsLogIntegral 2 tltRhoX3p1 tltYm1 (DensePoly.cscale (CFrac.ofPoly [3]) tltDiff01)`. -/
 theorem tltTerm01_logderiv :
-    radIsLogIntegral 2 tltRhoX3p1 tltYm1 (DensePoly.cscale (qxOfNum [3]) tltDiff01) = true := by native_decide
+    radIsLogIntegral 2 tltRhoX3p1 tltYm1 (DensePoly.cscale (CFrac.ofPoly [3]) tltDiff01) = true := by native_decide
 
 /-! ## Assembling the torsion term into an `AlgIntegralResult (CFrac ℚ)` -/
 
@@ -103,7 +103,7 @@ theorem tltResult01_algDeriv :
 /-! ## Non-torsion propagates to `none` on `y² = x³ − 2` -/
 
 /-- The radicand `ρ = x³ − 2` as a `ℚ(x)` element, for the non-torsion witness. -/
-def tltRhoX3m2 : CFrac ℚ := qxOfNum [-2, 0, 0, 1]
+def tltRhoX3m2 : CFrac ℚ := CFrac.ofPoly [-2, 0, 0, 1]
 
 /-- `torsionLogTerm` on the infinite-order `(3, 5)` returns `none` (not elementary). -/
 theorem tltTerm35_none :
@@ -127,7 +127,7 @@ infinite-order `(3, 5)` of `y² = x³ − 2` it returns `none` with an empty log
 theorem torsion_log_branch_validates :
     -- the non-principal branch fires on the order-3 flex (0,1), returning (1/3, y − 1)
     (tltTerm01.map tltTermCheck = some true
-      ∧ radIsLogIntegral 2 tltRhoX3p1 tltYm1 (DensePoly.cscale (qxOfNum [3]) tltDiff01) = true)
+      ∧ radIsLogIntegral 2 tltRhoX3p1 tltYm1 (DensePoly.cscale (CFrac.ofPoly [3]) tltDiff01) = true)
     -- the term assembles into the integrator's AlgIntegralResult (CFrac ℚ) and algDerivQ round-trips
     ∧ ((DensePoly.cisZero tltResult01.ratPart,
         tltResult01.logTerms.length,

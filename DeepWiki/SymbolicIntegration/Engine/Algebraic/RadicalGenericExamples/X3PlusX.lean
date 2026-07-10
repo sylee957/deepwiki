@@ -17,7 +17,7 @@ open RadElem DensePoly
 A third radicand `√(x³ + x) = √(x(x²+1))`. Odd degree ⟹ the full carrier fires. -/
 
 /-- The radicand `f₃ = x³ + x ∈ ℚ(x)` (numerator `[0,1,0,1] = x + x³`) for `√(x³+x)`. -/
-def radicandX3pX : CFrac ℚ := qxOfNum [0, 1, 0, 1]
+def radicandX3pX : CFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
 
 /-- **`toPoly [0,1,0,1] = x + x³` has `natDegree 3`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X3pX : (toPoly ([0, 1, 0, 1] : DensePoly ℚ)).natDegree = 3 := by
@@ -30,7 +30,7 @@ theorem natDeg_toPolyG_X3pX : (toPoly ([0, 1, 0, 1] : DensePoly ℚ)).natDegree 
 /-- **`x³ + x` is not a square in `ℚ(x)`** — odd-degree helper (`natDegree 3`). -/
 theorem not_isSquare_radicandX3pX :
     ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX3pX : CFrac ℚ) := by
-  rw [radicandX3pX, toK_qxOfNum]
+  rw [radicandX3pX, CFrac.toK_ofPoly]
   exact not_isSquare_algebraMap_of_odd_natDegree (by rw [natDeg_toPolyG_X3pX]; decide)
 
 /-- **`y² − (x³+x)` is irreducible over `ℚ(x)`** — generic helper on the non-square `x³+x`. -/

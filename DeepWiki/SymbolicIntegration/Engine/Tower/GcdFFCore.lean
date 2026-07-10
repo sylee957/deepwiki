@@ -108,7 +108,7 @@ def cclearDenomsCore (p : DensePoly (CFrac β)) : GBPolyCore β :=
 /-- Lift back `liftGBPolyCore p ∈ DensePoly (CFrac β)`: read each `DensePoly β` coefficient `c` as the
 fraction `c/1`. -/
 def liftGBPolyCore (p : GBPolyCore β) : DensePoly (CFrac β) :=
-  p.map (fun c => (⟨(c, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩ : CFrac β))
+  p.map CFrac.ofPoly
 
 end DensePoly
 

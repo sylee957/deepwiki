@@ -21,16 +21,11 @@ open RadElem
 `Lvl2 = CFrac (CFrac ℚ)` is the field `ℚ(x)(t₁)`. To make `t₁ = eˣ` its `CDiffField` derivation
 becomes `towerDerivCFrac [t₁]` (so `t₁' = t₁`) instead of the default `t₁' = 1`. -/
 
-/-- A level-2 scalar `c ∈ Lvl2 = ℚ(x)(t₁)` from a numerator `DensePoly (CFrac ℚ)` over denominator `1`;
-the level-2 analogue of `qxOfNum`. -/
-def lvl2OfNum (num : DensePoly (CFrac ℚ)) : Lvl2 :=
-  ⟨(num, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
-
 /-- The exponential monomial `θ = t₁ = eˣ ∈ ℚ(x)(t₁)` (numerator `[0, 1]`, denominator `[1]`). -/
-def expTheta : Lvl2 := lvl2OfNum [(CCommRing.zero : CFrac ℚ), CCommRing.one]
+def expTheta : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one]
 
 /-- The radicand `ρ = θ + 1 = eˣ + 1 ∈ ℚ(x)(t₁)` (numerator `[1, 1]`), the element with `y² = ρ`. -/
-def expRadicand : Lvl2 := lvl2OfNum [(CCommRing.one : CFrac ℚ), CCommRing.one]
+def expRadicand : Lvl2 := CFrac.ofPoly [(CCommRing.one : CFrac ℚ), CCommRing.one]
 
 /-- The new-monomial derivative `Dt₁ = t₁ = [0, 1] ∈ DensePoly (CFrac ℚ)` making `t₁` exponential
 (`t₁' = t₁`), fed to `towerDerivCFrac`. -/
@@ -95,13 +90,13 @@ The same arc with a logarithmic monomial `θ = log x` (`θ' = 1/x`), radicand `�
 
 /-- The level-2 element `1/x ∈ ℚ(x) ⊂ ℚ(x)(log x)` as a `Lvl2` value (numerator `[1/x]`, denominator `[1]`). -/
 def lvl2OneOverX : Lvl2 :=
-  lvl2OfNum [qxOfFrac [1] [0, 1] (by decide)]
+  CFrac.ofPoly [qxOfFrac [1] [0, 1] (by decide)]
 
 /-- The logarithmic monomial `θ = t₁ = log x ∈ ℚ(x)(log x)` (numerator `[0, 1]`, denominator `[1]`). -/
-def logTheta : Lvl2 := lvl2OfNum [(CCommRing.zero : CFrac ℚ), CCommRing.one]
+def logTheta : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one]
 
 /-- The radicand `ρ = θ = log x ∈ ℚ(x)(log x)` (`y² = log x`), numerator `[0, 1]`, denominator `[1]`. -/
-def logRadicandT : Lvl2 := lvl2OfNum [(CCommRing.zero : CFrac ℚ), CCommRing.one]
+def logRadicandT : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one]
 
 /-- The new-monomial derivative `Dt₁ = θ' = 1/x ∈ DensePoly (CFrac ℚ)` making `t₁` logarithmic (`t₁' = 1/x`). -/
 def logDt1 : DensePoly (CFrac ℚ) := [qxOfFrac [1] [0, 1] (by decide)]
@@ -148,7 +143,7 @@ The multi-case rational-part drivers (`radIntegrateCase2Wf` / `radIntegrateRatio
 open DensePoly
 
 /-- Radicand `ρ = θ³ − θ = θ(θ−1)(θ+1) ∈ ℚ(x)[θ]` (`y² = ρ`, squarefree), `[0, −1, 0, 1]`. -/
-def drvRho : DensePoly (CFrac ℚ) := [CCommRing.zero, qxOfNum [-1], CCommRing.zero, qxOfNum [1]]
+def drvRho : DensePoly (CFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [-1], CCommRing.zero, CFrac.ofPoly [1]]
 
 /-- Squarefree factor `W = θ ∈ ℚ(x)[θ]` (a branch place, `W ∣ ρ`), `[0, 1]`. -/
 def drvW : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
@@ -161,20 +156,20 @@ def drvC : DensePoly (CFrac ℚ) := [CCommRing.one]
 def drvRun : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ) := radIntegrateCase2Wf drvW drvRho 2 drvC
 
 /-- The radicand `ρ = θ³ − θ` lifted to a level-2 scalar `ρ ∈ ℚ(x)(t₁) = Lvl2`. -/
-def drvRhoLvl2 : Lvl2 := lvl2OfNum drvRho
+def drvRhoLvl2 : Lvl2 := CFrac.ofPoly drvRho
 
 /-- The common-denominator power `W² = θ²` over `ℚ(x)[θ]`, `cpow W 2`. -/
 def drvW2 : DensePoly (CFrac ℚ) := cpow drvW 2
 
 /-- The rational part `v = vNum/(W²·y)` lifted to `RadElem Lvl2` as `[0, vNum/(W²·ρ)]`. -/
 def drvVlift : RadElem Lvl2 :=
-  [CCommRing.zero, CField.div (lvl2OfNum drvRun.2) (lvl2OfNum (cmul drvW2 drvRho))]
+  [CCommRing.zero, CField.div (CFrac.ofPoly drvRun.2) (CFrac.ofPoly (cmul drvW2 drvRho))]
 
 /-- The integrand's rational part `C₀/(W²y) − Crem/(Wy)` lifted to `RadElem Lvl2`. -/
 def drvRatLift : RadElem Lvl2 :=
   [CCommRing.zero,
-    CField.sub (CField.div (lvl2OfNum drvC) (lvl2OfNum (cmul drvW2 drvRho)))
-      (CField.div (lvl2OfNum drvRun.1) (lvl2OfNum (cmul drvW drvRho)))]
+    CField.sub (CField.div (CFrac.ofPoly drvC) (CFrac.ofPoly (cmul drvW2 drvRho)))
+      (CField.div (CFrac.ofPoly drvRun.1) (CFrac.ofPoly (cmul drvW drvRho)))]
 
 /-- The Case-2 driver integrates over the tower base: `radDeriv 2` of the rational part `v = vNum/(θ²√ρ)`
 equals `1/(θ²√ρ) − Crem/(θ√ρ)`, the rational part of `1/(θ²·√(θ³−θ))`, at level 2. -/

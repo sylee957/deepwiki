@@ -107,7 +107,7 @@ open DensePoly
 
 /-- The non-radical curve `f = y² − x·y − x³ ∈ ℚ(x)[y]` as a `DensePoly (CFrac ℚ)` `[−x³, −x, 1]`. -/
 def afNonRadF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, 0, -1], qxOfNum [0, -1], CCommRing.one]
+  [CFrac.ofPoly [0, 0, 0, -1], CFrac.ofPoly [0, -1], CCommRing.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(f)` (`afBasisElem 1 = [0, 1]`). -/
 def afNonRadY : DensePoly (CFrac ℚ) := afBasisElem 1
@@ -115,31 +115,31 @@ def afNonRadY : DensePoly (CFrac ℚ) := afBasisElem 1
 /-- `Tr(y) = x` on the non-radical curve `y² − xy − x³`: the field trace of the generator `y` is the
 `ℚ(x)` value `x`, nonzero unlike a radical curve. -/
 theorem afNonRad_trace_y_eq_x :
-    CCommRing.isZero (CField.sub (trace afNonRadF afNonRadY) (qxOfNum [0, 1])) = true := by native_decide
+    CCommRing.isZero (CField.sub (trace afNonRadF afNonRadY) (CFrac.ofPoly [0, 1])) = true := by native_decide
 
 /-- `Tr(1) = 2` on the non-radical curve: the trace of `1` is `n = 2`, the `ℚ(x)` constant `2`. -/
 theorem afNonRad_trace_one_eq_two :
-    CCommRing.isZero (CField.sub (trace afNonRadF [CCommRing.one]) (qxOfNum [2])) = true := by native_decide
+    CCommRing.isZero (CField.sub (trace afNonRadF [CCommRing.one]) (CFrac.ofPoly [2])) = true := by native_decide
 
 /-- `Tr(y²) = x² + 2x³` on the non-radical curve: reducing `y² ≡ xy + x³` and tracing gives the
 `ℚ(x)` value `x² + 2x³`. -/
 theorem afNonRad_trace_ysq :
     CCommRing.isZero (CField.sub (trace afNonRadF (afMul afNonRadF afNonRadY afNonRadY))
-      (qxOfNum [0, 0, 1, 2])) = true := by native_decide
+      (CFrac.ofPoly [0, 0, 1, 2])) = true := by native_decide
 
 /-- The trace matrix on `[1, y]` for the non-radical curve is `[[2, x], [x, x² + 2x³]]`, checked
 entrywise. -/
 theorem afNonRad_traceMatrix_entries :
     let T := traceMatrix afNonRadF (powerBasis afNonRadF)
-    (CCommRing.isZero (CField.sub ((T.getD 0 []).getD 0 CCommRing.zero) (qxOfNum [2]))
-      && CCommRing.isZero (CField.sub ((T.getD 0 []).getD 1 CCommRing.zero) (qxOfNum [0, 1]))
-      && CCommRing.isZero (CField.sub ((T.getD 1 []).getD 0 CCommRing.zero) (qxOfNum [0, 1]))
-      && CCommRing.isZero (CField.sub ((T.getD 1 []).getD 1 CCommRing.zero) (qxOfNum [0, 0, 1, 2])))
+    (CCommRing.isZero (CField.sub ((T.getD 0 []).getD 0 CCommRing.zero) (CFrac.ofPoly [2]))
+      && CCommRing.isZero (CField.sub ((T.getD 0 []).getD 1 CCommRing.zero) (CFrac.ofPoly [0, 1]))
+      && CCommRing.isZero (CField.sub ((T.getD 1 []).getD 0 CCommRing.zero) (CFrac.ofPoly [0, 1]))
+      && CCommRing.isZero (CField.sub ((T.getD 1 []).getD 1 CCommRing.zero) (CFrac.ofPoly [0, 0, 1, 2])))
       = true := by native_decide
 
 /-- The discriminant of `y² − xy − x³` is `det[Tr(ωᵢωⱼ)] = x² + 4x³`. -/
 theorem afNonRad_discriminant_eq :
-    CCommRing.isZero (CField.sub (discriminant afNonRadF) (qxOfNum [0, 0, 1, 4])) = true := by
+    CCommRing.isZero (CField.sub (discriminant afNonRadF) (CFrac.ofPoly [0, 0, 1, 4])) = true := by
   native_decide
 
 /-- The discriminant equals `± Resultant(f, f')` for the non-radical curve: `discriminant f +
@@ -152,20 +152,20 @@ theorem afNonRad_discriminant_eq_neg_resultant :
 
 /-- The trigonal curve `f = y³ + x·y + x ∈ ℚ(x)[y]` as the `DensePoly (CFrac ℚ)` `[x, x, 0, 1]`. -/
 def afTrigF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 1], qxOfNum [0, 1], CCommRing.zero, CCommRing.one]
+  [CFrac.ofPoly [0, 1], CFrac.ofPoly [0, 1], CCommRing.zero, CCommRing.one]
 
 /-- `Tr(1) = 3` on the trigonal curve: the trace of `1` is `n = 3`, the `ℚ(x)` constant `3`. -/
 theorem afTrig_trace_one_eq_three :
-    CCommRing.isZero (CField.sub (trace afTrigF [CCommRing.one]) (qxOfNum [3])) = true := by native_decide
+    CCommRing.isZero (CField.sub (trace afTrigF [CCommRing.one]) (CFrac.ofPoly [3])) = true := by native_decide
 
 /-- `Tr(y²) = −2x` on the trigonal curve: the Newton power-sum trace, the `ℚ(x)` value `−2x`. -/
 theorem afTrig_trace_ysq :
     CCommRing.isZero (CField.sub (trace afTrigF (afMul afTrigF (afBasisElem 1) (afBasisElem 1)))
-      (qxOfNum [0, -2])) = true := by native_decide
+      (CFrac.ofPoly [0, -2])) = true := by native_decide
 
 /-- The trigonal discriminant of `y³ + xy + x` is the depressed-cubic value `−4x³ − 27x²`. -/
 theorem afTrig_discriminant_eq :
-    CCommRing.isZero (CField.sub (discriminant afTrigF) (qxOfNum [0, 0, -27, -4])) = true := by
+    CCommRing.isZero (CField.sub (discriminant afTrigF) (CFrac.ofPoly [0, 0, -27, -4])) = true := by
   native_decide
 
 /-- The trigonal discriminant equals `± Resultant(f, f')`: `discriminant f + discResultant f = 0`. -/
@@ -178,7 +178,7 @@ theorem afTrig_discriminant_eq_resultant :
 /-- The radical curve `f = y² − (x³ + 1) ∈ ℚ(x)[y]` as the `DensePoly (CFrac ℚ)` `[−(x³+1), 0, 1]`,
 i.e. `y = √(x³+1)` on the general carrier. -/
 def afRadF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [-1, 0, 0, -1], CCommRing.zero, CCommRing.one]
+  [CFrac.ofPoly [-1, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- `Tr(y) = 0` on the radical curve `y² − (x³+1)`: a radical generator is traceless, agreeing with
 the radical carrier. -/
@@ -187,7 +187,7 @@ theorem afRad_trace_y_eq_zero :
 
 /-- `afMul` agrees with the radical relation `y² = ρ`: `afMul f y y = ρ = x³ + 1` for `f = y² − ρ`. -/
 theorem afRad_y_sq_eq_radicand :
-    cisZero (csub (afMul afRadF (afBasisElem 1) (afBasisElem 1)) [qxOfNum [1, 0, 0, 1]])
+    cisZero (csub (afMul afRadF (afBasisElem 1) (afBasisElem 1)) [CFrac.ofPoly [1, 0, 0, 1]])
       = true := by native_decide
 
 /-! ### Ring sanity on the general carrier -/

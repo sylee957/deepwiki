@@ -153,7 +153,7 @@ def cIntegrateAlgebraicWf (ρ : CFrac ℚ) (R B : DensePoly ℚ)
   match radLogArgSolve ρ residual D degBound with
   | none => ⟨v, []⟩
   | some N =>
-    let Dq : CFrac ℚ := qxOfNum D
+    let Dq : CFrac ℚ := CFrac.ofPoly D
     let u : RadElem (CFrac ℚ) := N.map (fun z => CField.div z Dq)
     ⟨v, [(c, u)]⟩
 

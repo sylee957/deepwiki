@@ -78,7 +78,7 @@ theorem sqrtxRun_remainder_eq :
     cisZero (csub sqrtxRun.1 [(3/8 : ℚ)]) = true := by native_decide
 
 /-- The radicand `f = x` lifted to `ℚ(x)` (`CFrac ℚ`), the Picture-B radicand for `radDeriv 2`. -/
-def sqrtxFqx : CFrac ℚ := qxOfNum [0, 1]
+def sqrtxFqx : CFrac ℚ := CFrac.ofPoly [0, 1]
 
 /-- The common-denominator power `V² = (x−1)²` as a `ℚ[x]` polynomial (the denominator of `vNum`). -/
 def sqrtxV2 : DensePoly ℚ := cpow sqrtxV 2
@@ -88,14 +88,14 @@ def sqrtxV3 : DensePoly ℚ := cpow sqrtxV 3
 
 /-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (CFrac ℚ)` as `[0, vNum/(V²·f)]`. -/
 def sqrtxVlift : RadElem (CFrac ℚ) :=
-  [CCommRing.zero, CField.div (qxOfNum sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
+  [CCommRing.zero, CField.div (CFrac.ofPoly sqrtxRun.2) (CFrac.ofPoly (cmul sqrtxV2 sqrtxF))]
 
 /-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (CFrac ℚ)` as
 `[0, C₀/(V³·f) − Crem/(V·f)]`. -/
 def sqrtxRatLift : RadElem (CFrac ℚ) :=
   [CCommRing.zero,
-    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmul sqrtxV3 sqrtxF)))
-      (CField.div (qxOfNum sqrtxRun.1) (qxOfNum (cmul sqrtxV sqrtxF)))]
+    CField.sub (CField.div (CFrac.ofPoly sqrtxC) (CFrac.ofPoly (cmul sqrtxV3 sqrtxF)))
+      (CField.div (CFrac.ofPoly sqrtxRun.1) (CFrac.ofPoly (cmul sqrtxV sqrtxF)))]
 
 /-- The driver integrates `∫ 1/((x−1)³√x)`: `radDeriv 2 x (lift v) = lift(C₀/(V³√x) − Crem/(V√x))` over
 `ℚ(x)`, checked by `DensePoly.cisZero` of the difference. -/
@@ -124,19 +124,19 @@ over `V² = (x−1)²`. -/
 def cubeRun : DensePoly ℚ × DensePoly ℚ := radIntegrateCase1 cderiv cubeV cubeF cube 3 cubeC
 
 /-- The headline radicand `f = x³ + 1` lifted to `ℚ(x)` (`CFrac ℚ`), the Picture-B radicand. -/
-def cubeFqx : CFrac ℚ := qxOfNum [1, 0, 0, 1]
+def cubeFqx : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 
 /-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (CFrac ℚ)` — the pure-`y` element
 `[0, vNum/(V²·f)]` over `ℚ(x)`. -/
 def cubeVlift : RadElem (CFrac ℚ) :=
-  [CCommRing.zero, CField.div (qxOfNum cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
+  [CCommRing.zero, CField.div (CFrac.ofPoly cubeRun.2) (CFrac.ofPoly (cmul (cpow cubeV 2) cubeF))]
 
 /-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (CFrac ℚ)` — the pure-`y`
 element `[0, C₀/(V³·f) − Crem/(V·f)]` over `ℚ(x)`. -/
 def cubeRatLift : RadElem (CFrac ℚ) :=
   [CCommRing.zero,
-    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmul (cpow cubeV 3) cubeF)))
-      (CField.div (qxOfNum cubeRun.1) (qxOfNum (cmul cubeV cubeF)))]
+    CField.sub (CField.div (CFrac.ofPoly cubeC) (CFrac.ofPoly (cmul (cpow cubeV 3) cubeF)))
+      (CField.div (CFrac.ofPoly cubeRun.1) (CFrac.ofPoly (cmul cubeV cubeF)))]
 
 /-- The driver integrates `∫ 1/((x−1)³√(x³+1))` on the elliptic curve `y² = x³ + 1`:
 `radDeriv 2 (x³+1) (lift v) = lift(C₀/(V³√(x³+1)) − Crem/(V√(x³+1)))`, checked by `DensePoly.cisZero`. -/

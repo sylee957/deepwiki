@@ -24,7 +24,7 @@ def cIntegrateElementary {β : Type*} [CField β] [CFieldDomain β] [CDiffField 
   match radLogArgSolve ρ residual D degBound with
   | none => ⟨v, []⟩
   | some N =>
-    let Dq : CFrac β := qOfNum D
+    let Dq : CFrac β := CFrac.ofPoly D
     let u : RadElem (CFrac β) := N.map (fun z => CField.div z Dq)   -- u = N/D
     ⟨v, [(c, u)]⟩
 

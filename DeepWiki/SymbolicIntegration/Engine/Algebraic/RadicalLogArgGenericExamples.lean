@@ -19,13 +19,13 @@ At `β = ℚ`, `radLogArgSolve` reproduces the arcsinh solve `∫ dx/√(x²+1) 
 generalization is conservative. -/
 
 /-- The radicand `ρ = x²+1 ∈ ℚ(x)` (`y = √(x²+1)`), `[1,0,1]` — the arcsinh case at `β = ℚ`. -/
-def genArgRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
+def genArgRhoArcsinh : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over ℚ(x). -/
 def genArgIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift genArgRhoArcsinh CCommRing.one
 
 /-- The field element `x ∈ ℚ(x)`, `[0,1]` — for matching `N = c·(x + y)`. -/
-def genArgX : CFrac ℚ := qxOfNum [0, 1]
+def genArgX : CFrac ℚ := CFrac.ofPoly [0, 1]
 
 /-- The computed arcsinh log argument under the generic solver: `radLogArgSolve` at `β = ℚ`, `ρ = x²+1`,
 `D = 1`, ansatz degree `1` (expected `N = x + y`). -/

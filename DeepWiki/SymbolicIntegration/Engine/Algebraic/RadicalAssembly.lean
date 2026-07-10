@@ -46,10 +46,10 @@ open RadElem
 /-! ### Shared example data for `radInv2` and `radLogDeriv` -/
 
 /-- The radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`). -/
-def fullRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
+def fullRhoArcsinh : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The element `u = x + y = [x, 1]` over `ℚ(x)`, `y² = x²+1`. -/
-def fullUxPlusY : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CCommRing.one]
+def fullUxPlusY : RadElem (CFrac ℚ) := [CFrac.ofPoly [0, 1], CCommRing.one]
 
 /-- **`u · u⁻¹ = 1` in `(CFrac ℚ)[y]/(y² − (x²+1))`** (`native_decide`). -/
 theorem radInv2_mul_self_eq_one :
@@ -98,13 +98,13 @@ def radAssembleRatPart (ρ : CFrac ℚ)
     (fun acc (isV, fi, e, _, vNum, _) =>
       let denomPow := if isV then cpow fi (e - 1) else cpow fi e
       DensePoly.cadd acc
-        [CCommRing.zero, CField.div (qxOfNum vNum) (CCommRing.mul (qxOfNum denomPow) ρ)])
+        [CCommRing.zero, CField.div (CFrac.ofPoly vNum) (CCommRing.mul (CFrac.ofPoly denomPow) ρ)])
     radZero
 
 /-! ### Shared round-trip inputs for algebraic integrators -/
 
 /-- Rational-only round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtRatRho : CFrac ℚ := qxOfNum [1, 0, 1]
+def rtRatRho : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- Rational-only round-trip numerator `R = 1`. -/
 def rtRatR : DensePoly ℚ := [1]
@@ -113,13 +113,13 @@ def rtRatR : DensePoly ℚ := [1]
 def rtRatB : DensePoly ℚ := cpow [-1, 1] 2
 
 /-- A non-principal residual for the rational-only log solve. -/
-def rtRatNonPrincipalResidual : RadElem (CFrac ℚ) := radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CCommRing.one
+def rtRatNonPrincipalResidual : RadElem (CFrac ℚ) := radInvYLift (CFrac.ofPoly [0, 0, 1, 0, 1]) CCommRing.one
 
 /-- Log-only round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtLogRho : CFrac ℚ := qxOfNum [1, 0, 1]
+def rtLogRho : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The field element `x·ρ = x·(x²+1) = x + x³ ∈ ℚ(x)`. -/
-def rtLogXRho : CFrac ℚ := qxOfNum [0, 1, 0, 1]
+def rtLogXRho : CFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`. -/
 def rtLogIntegrand : RadElem (CFrac ℚ) := radInvYLift rtLogXRho CCommRing.one
@@ -128,7 +128,7 @@ def rtLogIntegrand : RadElem (CFrac ℚ) := radInvYLift rtLogXRho CCommRing.one
 def rtLogD : DensePoly ℚ := [0, 1]
 
 /-- Combined round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtCombRho : CFrac ℚ := qxOfNum [1, 0, 1]
+def rtCombRho : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- Combined round-trip rational numerator `R = 1`. -/
 def rtCombR : DensePoly ℚ := [1]
@@ -137,7 +137,7 @@ def rtCombR : DensePoly ℚ := [1]
 def rtCombB : DensePoly ℚ := cpow [-1, 1] 2
 
 /-- The combined round-trip's log argument `u = x + y = [x, 1]`. -/
-def rtCombU : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CCommRing.one]
+def rtCombU : RadElem (CFrac ℚ) := [CFrac.ofPoly [0, 1], CCommRing.one]
 
 /-- The log residual `[0, 1/(x²+1)]` absorbed by the combined log solve. -/
 def rtCombLogResidual : RadElem (CFrac ℚ) := radInvYLift rtCombRho CCommRing.one

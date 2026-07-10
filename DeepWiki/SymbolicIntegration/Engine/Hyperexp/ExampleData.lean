@@ -12,7 +12,7 @@ namespace DeepWiki.SymbolicIntegration
 abbrev NLvl1 : Type := CFrac ℚ
 
 /-- The base variable `x ∈ NLvl1 = ℚ(x)`, represented as the fraction `x/1`. -/
-def nLvl1X : NLvl1 := ⟨([CCommRing.zero, CCommRing.one], [CCommRing.one]), by native_decide⟩
+def nLvl1X : NLvl1 := CFrac.ofPoly [CCommRing.zero, CCommRing.one]
 
 /-- The base value `x² ∈ NLvl1 = ℚ(x)`, represented as `x * x`. -/
 def nLvl1XSq : NLvl1 := CCommRing.mul nLvl1X nLvl1X

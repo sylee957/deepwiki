@@ -101,12 +101,12 @@ theorem expC3_vNum_eq_two_rho :
 
 /-- The exp-tower radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)(eˣ) = Lvl2` lifted to a level-2 scalar, the radicand for
 `radDeriv 2` (the same value as `expRadicand`). -/
-def expC3RhoLvl2 : Lvl2 := lvl2OfNum expC3Rho
+def expC3RhoLvl2 : Lvl2 := CFrac.ofPoly expC3Rho
 
 /-- The computed rational part `v = vNum/y = 2y` lifted to `RadElem Lvl2` as `[0, vNum/ρ]`; with
 `vNum = 2ρ` this is `[0, 2] = 2y`, the engine's output `expC3Run.2`. -/
 def expC3Vlift : RadElem Lvl2 :=
-  [CCommRing.zero, CField.div (lvl2OfNum expC3Run.2) (lvl2OfNum expC3Rho)]
+  [CCommRing.zero, CField.div (CFrac.ofPoly expC3Run.2) (CFrac.ofPoly expC3Rho)]
 
 /-- The expected `eˣ/√(eˣ+1)` piece `[0, θ/(θ+1)]` over `ℚ(x)(eˣ)`, which `radDeriv(2y)` should equal
 (the same value as `expIntegrand`). -/

@@ -26,7 +26,7 @@ theorem cLimitedIntegrateSingleBase_example :
       | some (b, c) =>
           CCommRing.isZero (CField.sub limIntSingleExampleA
             (CCommRing.add (CDiffField.cderiv b)
-              (CCommRing.mul (DensePoly.qConstParam c) limIntSingleExampleEta)))
+              (CCommRing.mul (CFrac.ofScalar c) limIntSingleExampleEta)))
             && decide (c ≠ 0)
       | none => false) = true := by native_decide
 
@@ -43,10 +43,10 @@ theorem limitedIntegrateSingleBaseNumDen_example :
 
 /-- The base single-`w` limited integrator wrapped with constants embedded in `ℚ(x)`. -/
 def limIntBaseWrap (η a : CFrac ℚ) : Option (CFrac ℚ × CFrac ℚ) :=
-  (cLimitedIntegrateSingleBase a η).map (fun bc => (bc.1, DensePoly.qConstParam bc.2))
+  (cLimitedIntegrateSingleBase a η).map (fun bc => (bc.1, CFrac.ofScalar bc.2))
 
 /-- `p = 1 + (1 + 1/x)·t ∈ ℚ(x)[t]`. -/
-def prim2ExampleP : DensePoly (CFrac ℚ) := [qConstParam 1, limIntSingleExampleA]
+def prim2ExampleP : DensePoly (CFrac ℚ) := [CFrac.ofScalar 1, limIntSingleExampleA]
 
 -- Sanity print: `∫p = x·t + (1/2)·t²`.
 #eval (cIntegratePrimPolyDegRaise limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3

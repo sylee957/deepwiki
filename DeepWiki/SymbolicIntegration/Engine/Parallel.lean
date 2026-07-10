@@ -255,10 +255,6 @@ a genuine `x`-dependence returns `none` ("deferred to the tower construction"). 
 
 namespace DensePoly
 
-/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `CFrac ℚ` element (the tower-coefficient builder, the `ℚ → CFrac ℚ`
-constant embedding; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
-def qConstTower (n : ℚ) : CFrac ℚ := ⟨([n], [(1 : ℚ)]), CFrac.cisZeroG_one_singleton⟩
-
 /-- **`CFrac ℚ`-coefficient `DensePoly` to a `ℚ`-coefficient one, when every coefficient is a
 `ℚ`-constant.** `cToRatCoeffsQ p = some q` with `q : DensePoly ℚ` iff each coefficient of
 `p : DensePoly (CFrac ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
@@ -293,7 +289,7 @@ def cParallelIntegrateTower (Dt a d : DensePoly (CFrac ℚ)) :
     match cParallelIntegrate DtQ aQ dQ with
     | none => none
     | some ((b, s), logs) =>
-      let lift : DensePoly ℚ → DensePoly (CFrac ℚ) := fun p => (p : List ℚ).map qConstTower
+      let lift : DensePoly ℚ → DensePoly (CFrac ℚ) := fun p => (p : List ℚ).map CFrac.ofScalar
       some ((lift b, lift s), logs.map (fun (c, p) => (c, lift p)))
   | _, _, _ => none
 

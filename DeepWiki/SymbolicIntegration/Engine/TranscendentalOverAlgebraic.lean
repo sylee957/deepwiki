@@ -156,8 +156,8 @@ theorem radX3_cderiv_gen_eq :
 /-- `u · u⁻¹ = 1` in `RadX3` through `CCommRing.mul`/`CField.inv`: for `u = x + y` the conjugate-norm
 inverse is genuine, so `RadExt` is a field, not just a ring. -/
 theorem radX3_mul_inv_eq_one :
-    CCommRing.isZero (CField.sub (CCommRing.mul (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3)
-      (CField.inv (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3))) CCommRing.one) = true := by native_decide
+    CCommRing.isZero (CField.sub (CCommRing.mul (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3)
+      (CField.inv (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3))) CCommRing.one) = true := by native_decide
 
 /-- `D(1) = 0` and `D(0) = 0` in `RadX3`: the derivation annihilates the unit and zero. -/
 theorem radX3_cderiv_one_zero :
@@ -175,7 +175,7 @@ carries a genuine `y`-component), the solve decouples into two base RDEs over �
 def radX3RischB : RadX3 := CCommRing.one
 
 /-- The target solution `z = x + 2·y ∈ RadX3`, from which the right-hand side `C` is built. -/
-def radX3RischZ : RadX3 := ⟨[qxOfNum [0, 1], qxOfNum [2]]⟩
+def radX3RischZ : RadX3 := ⟨[CFrac.ofPoly [0, 1], CFrac.ofPoly [2]]⟩
 
 /-- The right-hand side `C = radDeriv z + B·z ∈ RadX3` of the algebraic RDE, built from
 `radX3RischZ`/`radX3RischB`; carries a genuine `y`-component. -/
@@ -621,7 +621,7 @@ theorem cdiffField_qfunNZG_radX3_unconditional : Nonempty (CDiffField (CFrac Rad
 
 /-- The transcendental monomial `t ∈ CFrac RadX3 = ℚ(x)[√(x³+1)](t)` (numerator `[0, 1]`, denominator
 `[1]`). -/
-def tOverRadX3 : CFrac RadX3 := ⟨([CCommRing.zero, CCommRing.one], [CCommRing.one]), by native_decide⟩
+def tOverRadX3 : CFrac RadX3 := CFrac.ofPoly [CCommRing.zero, CCommRing.one]
 
 /-- `D(t) = 1` over `ℚ(x)[√(x³+1)](t)` — the typeclass derivation `CDiffField.cderiv` on `CFrac RadX3`
 sends the transcendental monomial `t` to `1` over the algebraic base. -/

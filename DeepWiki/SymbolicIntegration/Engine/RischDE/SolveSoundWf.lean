@@ -56,7 +56,7 @@ def crischDESolveSoundWf (f g : CFrac β) : Option (CFrac β) :=
   let q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2
   if DensePoly.cisZero q then none
   else
-    let q' : CFrac β := qOfPolyNZ q
+    let q' : CFrac β := CFrac.ofPoly q
     let ftilde : CFrac β := weakNormalizedF f q'
     if cisCanonNormalized ftilde then
       match reduceSoundOpt ftilde with
@@ -85,7 +85,7 @@ theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false := by
   set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 with hq
-  set q' : CFrac β := qOfPolyNZ q with hq'
+  set q' : CFrac β := CFrac.ofPoly q with hq'
   set ftilde : CFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if DensePoly.cisZero q then none
@@ -109,9 +109,9 @@ omit [CFieldSpec β] in
 theorem crischDESolveSoundWf_check (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     cisCanonNormalized (weakNormalizedF f
-      (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) = true := by
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) = true := by
   set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 with hq
-  set q' : CFrac β := qOfPolyNZ q with hq'
+  set q' : CFrac β := CFrac.ofPoly q with hq'
   set ftilde : CFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if DensePoly.cisZero q then none
@@ -136,7 +136,7 @@ theorem crischDESolveSoundWf_check (f g y : CFrac β)
 theorem crischDESolveSoundWf_isCanonNormalized (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     IsCanonNormalizedWf f
-      (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) :=
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) :=
   (cisCanonNormalizedG_iff f _).mp (crischDESolveSoundWf_check f g y hsolve)
 
 end Reductions

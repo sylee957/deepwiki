@@ -116,7 +116,7 @@ def idealizerOCoords (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ
   | some Binv =>
     let ipElems : List (DensePoly (CFrac ℚ)) := ipO.map (fun row =>
       (List.range n).foldl (fun acc i =>
-        cadd acc (cscale (qxOfNum (row.getD i [])) (O.getD i []))) ([] : DensePoly (CFrac ℚ)))
+        cadd acc (cscale (CFrac.ofPoly (row.getD i [])) (O.getD i []))) ([] : DensePoly (CFrac ℚ)))
     let Bip : List (List (CFrac ℚ)) := (List.range n).map (fun r =>
       (List.range n).map (fun k => (toOCoords Binv n (ipElems.getD k [])).getD r CCommRing.zero))
     match matInv n Bip with
@@ -133,11 +133,11 @@ def idealizerOCoords (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ
       let N : PolyMatrix ℚ := M.map (clearRowExact δ)
       let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZero)
       let Nhat : List (List (CFrac ℚ)) := (List.range n).map (fun i =>
-        (List.range n).map (fun j => qxOfNum ((nz.getD i []).getD j [])))
+        (List.range n).map (fun j => CFrac.ofPoly ((nz.getD i []).getD j [])))
       match matInv n Nhat with
       | none => O
       | some NhatInv =>
-        let δq : CFrac ℚ := qxOfNum δ
+        let δq : CFrac ℚ := CFrac.ofPoly δ
         (List.range n).map (fun col =>
           let uO : List (CFrac ℚ) := (List.range n).map (fun row =>
             CCommRing.mul δq ((NhatInv.getD row []).getD col CCommRing.zero))
@@ -231,7 +231,7 @@ def cuspIBGen : DensePoly (CFrac ℚ) := (integralBasis cuspF).getD 1 []
 theorem cusp_integralBasis_eq :
     (cisZero (csub cuspIBGen [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
       && cisZero (csub ((integralBasis cuspF).getD 0 []) [CCommRing.one])
-      && cisZero (csub (afMul cuspF cuspIBGen cuspIBGen) [qxOfNum [0, 1]])
+      && cisZero (csub (afMul cuspF cuspIBGen cuspIBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
 
 -- Sanity print: the node integral basis (expected `[1,0]`, `[0,1/x]`).
@@ -244,7 +244,7 @@ def nodeIBGen : DensePoly (CFrac ℚ) := (integralBasis nodeF).getD 1 []
 theorem node_integralBasis_eq :
     (cisZero (csub nodeIBGen [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
       && cisZero (csub ((integralBasis nodeF).getD 0 []) [CCommRing.one])
-      && cisZero (csub (afMul nodeF nodeIBGen nodeIBGen) [qxOfNum [1, 1]])
+      && cisZero (csub (afMul nodeF nodeIBGen nodeIBGen) [CFrac.ofPoly [1, 1]])
       && isMaximalOrder nodeF (integralBasis nodeF)) = true := by native_decide
 
 /-! ### A multi-step curve: the worse cusp `y² − x⁵`, integral basis `[1, y/x²]` (`native_decide`)
@@ -254,7 +254,7 @@ step, so a single step is not enough. -/
 
 /-- The worse cusp curve `f = y² − x⁵ ∈ ℚ(x)[y]`, the `DensePoly (CFrac ℚ)` `[−x⁵, 0, 1]`. -/
 def cusp5F : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, 0, 0, 0, -1], CCommRing.zero, CCommRing.one]
+  [CFrac.ofPoly [0, 0, 0, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The computed worse-cusp integral-basis generator `y/x²` = the second basis vector of
 `integralBasis cusp5F`. -/
@@ -284,7 +284,7 @@ theorem cusp5_integralBasis_eq :
 
 /-- The worse-cusp generator `y/x²` is integral (`(y/x²)² = x`) and `[1, y/x²]` is maximal. -/
 theorem cusp5_integralBasis_integral_maximal :
-    (cisZero (csub (afMul cusp5F cusp5IBGen cusp5IBGen) [qxOfNum [0, 1]])
+    (cisZero (csub (afMul cusp5F cusp5IBGen cusp5IBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder cusp5F (integralBasis cusp5F)) = true := by native_decide
 
 /-! ### A multi-prime curve: `y² − x³(x−1)²`, bad at both `x` and `x − 1` (`native_decide`)
@@ -295,7 +295,7 @@ reaching `[1, y/(x(x − 1))]`. -/
 /-- The two-bad-prime curve `f = y² − x³(x − 1)² ∈ ℚ(x)[y]`, the `DensePoly (CFrac ℚ)`
 `[−(x⁵−2x⁴+x³), 0, 1]`. -/
 def biCuspF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, 0, -1, 2, -1], CCommRing.zero, CCommRing.one]
+  [CFrac.ofPoly [0, 0, 0, -1, 2, -1], CCommRing.zero, CCommRing.one]
 
 /-- The computed integral-basis generator `y/(x(x−1)) = y/(x² − x)` = the second basis vector of
 `integralBasis biCuspF`. -/
@@ -326,7 +326,7 @@ single combined denominator `x(x − 1)` carries the enlargement at both primes 
 theorem biCusp_integralBasis_eq :
     (cisZero (csub biCuspIBGen [CCommRing.zero, qxOfFrac [1] [0, -1, 1] (by decide)])
       && cisZero (csub ((integralBasis biCuspF).getD 0 []) [CCommRing.one])
-      && cisZero (csub (afMul biCuspF biCuspIBGen biCuspIBGen) [qxOfNum [0, 1]])
+      && cisZero (csub (afMul biCuspF biCuspIBGen biCuspIBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder biCuspF (integralBasis biCuspF)) = true := by native_decide
 
 /-! ### The NEXT piece: higher-degree (non-linear) bad primes, and the genus

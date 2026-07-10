@@ -48,13 +48,13 @@ by the log-derivative certificate. -/
 open RadElem
 
 /-- The radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`), numerator `[1, 0, 1]`. -/
-def radLogRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
+def radLogRhoArcsinh : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The radicand `ρ = x² − 1 ∈ ℚ(x)` (`y = √(x²−1)`), numerator `[−1, 0, 1]`. -/
-def radLogRhoArccosh : CFrac ℚ := qxOfNum [-1, 0, 1]
+def radLogRhoArccosh : CFrac ℚ := CFrac.ofPoly [-1, 0, 1]
 
 /-- The field element `x ∈ ℚ(x)`, numerator `[0, 1]`. -/
-def radLogX : CFrac ℚ := qxOfNum [0, 1]
+def radLogX : CFrac ℚ := CFrac.ofPoly [0, 1]
 
 /-- The claimed log argument `u = x + y = [x, 1]` for both `arcsinh`/`arccosh` (`∫ dx/√(x²±1) =
 log(x + y)`). -/
@@ -91,7 +91,7 @@ log argument `u = (y − 1)/x = [−1/x, 1/x]` passes the certificate (the wrong
 
 /-- The field element `x·ρ = x·(x²+1) = x + x³ ∈ ℚ(x)`, numerator `[0, 1, 0, 1]` — the denominator of the
 lifted integrand `1/(x·y)`. -/
-def radLogXRho : CFrac ℚ := qxOfNum [0, 1, 0, 1]
+def radLogXRho : CFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
 
 /-- The field element `1/x ∈ ℚ(x)`. -/
 def radLogInvX : CFrac ℚ := CField.div CCommRing.one radLogX
@@ -179,10 +179,10 @@ def radQuadraticLogArg (b : α) : RadElem α :=
 end RadElem
 
 /-- The shifted radicand `ρ = x² + 2x + 2 = (x+1)² + 1 ∈ ℚ(x)`, numerator `[2, 2, 1]`. -/
-def radLogRhoShift : CFrac ℚ := qxOfNum [2, 2, 1]
+def radLogRhoShift : CFrac ℚ := CFrac.ofPoly [2, 2, 1]
 
 /-- The field element `x + 1 ∈ ℚ(x)`, numerator `[1, 1]`. -/
-def radLogXPlusOne : CFrac ℚ := qxOfNum [1, 1]
+def radLogXPlusOne : CFrac ℚ := CFrac.ofPoly [1, 1]
 
 /-- The heuristic-computed log argument `u = (x + 1) + y = [x + 1, 1]` for `∫ dx/√(x² + 2x + 2)`. -/
 def radLogUShift : RadElem (CFrac ℚ) := [radLogXPlusOne, CCommRing.one]

@@ -21,10 +21,10 @@ For each target `radLogArgSolve` computes `N`; the computed `u = N/D` is fed to 
 certificate `radIsLogIntegral` and compared against the closed form. -/
 
 /-- The radicand `ρ = x²+1 ∈ ℚ(x)` (`y = √(x²+1)`), `[1,0,1]`. -/
-def radArgRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
+def radArgRhoArcsinh : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The radicand `ρ = x²−1 ∈ ℚ(x)` (`y = √(x²−1)`), `[−1,0,1]`. -/
-def radArgRhoArccosh : CFrac ℚ := qxOfNum [-1, 0, 1]
+def radArgRhoArccosh : CFrac ℚ := CFrac.ofPoly [-1, 0, 1]
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over ℚ(x) (`ρ = x²+1`). -/
 def radArgIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift radArgRhoArcsinh CCommRing.one
@@ -63,13 +63,13 @@ theorem radArg_arccosh_compute_verify :
 
 /-- The field element `x·ρ = x·(x²+1) = x + x³ ∈ ℚ(x)`, `[0,1,0,1]` — denominator of the lifted integrand
 `1/(x·y)`. -/
-def radArgXRho : CFrac ℚ := qxOfNum [0, 1, 0, 1]
+def radArgXRho : CFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`, lifted to `[0, 1/(x·ρ)]` over ℚ(x). -/
 def radArgIntegrandFinite : RadElem (CFrac ℚ) := radInvYLift radArgXRho CCommRing.one
 
 /-- The field element `x ∈ ℚ(x)`, `[0,1]` — the fixed denominator `D = x` of the finite-pole case. -/
-def radArgXBaseX : CFrac ℚ := qxOfNum [0, 1]
+def radArgXBaseX : CFrac ℚ := CFrac.ofPoly [0, 1]
 
 /-- The computed log argument for `∫ dx/(x√(x²+1))`: `radLogArgSolve` with `ρ = x²+1`, `D = x`, ansatz
 degree `0` (expected `N = y − 1`, so `u = (y − 1)/x`). -/
@@ -109,7 +109,7 @@ is no bounded `N/D`, so `radLogArgSolve` returns `none`. -/
 
 /-- The field element `x²·ρ = x²·(x²+1) = x² + x⁴ ∈ ℚ(x)`, `[0,0,1,0,1]` — denominator of the lifted
 integrand `1/(x²·y)`. -/
-def radArgX2Rho : CFrac ℚ := qxOfNum [0, 0, 1, 0, 1]
+def radArgX2Rho : CFrac ℚ := CFrac.ofPoly [0, 0, 1, 0, 1]
 
 /-- The integrand `1/(x² y)` of `∫ dx/(x²√(x²+1))`, lifted to `[0, 1/(x²·ρ)]` over `ℚ(x)` (a double
 pole at `x = 0`). -/

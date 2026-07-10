@@ -37,7 +37,7 @@ def cIntegrateAlgebraicDecide (p : ℕ) [Fact p.Prime]
   else
     match radLogArgSolve ρ residual D degBound with
     | some N =>
-      let Dq : CFrac ℚ := qxOfNum D
+      let Dq : CFrac ℚ := CFrac.ofPoly D
       let u : RadElem (CFrac ℚ) := N.map (fun z => CField.div z Dq)
       some ⟨v, [(c, u)]⟩
     | none =>
@@ -115,7 +115,7 @@ theorem cIntegrateAlgebraicDecide_sound
       rw [← hsome]
       -- the literal output equals `cIntegrateAlgebraicWf …` (same parts, same log term)
       have heq : (⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (CFrac.num ρ) R B),
-          [(c, N.map (fun z => CField.div z (qxOfNum D)))]⟩ : AlgIntegralResult (CFrac ℚ))
+          [(c, N.map (fun z => CField.div z (CFrac.ofPoly D)))]⟩ : AlgIntegralResult (CFrac ℚ))
           = cIntegrateAlgebraicWf ρ R B residual c D degBound := by
         unfold cIntegrateAlgebraicWf
         rw [hN]
@@ -225,7 +225,7 @@ end Decides
 `[0, 1/(x²·(x²+1))]` for which `radLogArgSolve … [0,0,1] 1 = none`, forcing the torsion decision to
 govern the verdict. -/
 def decideNonPrincipalResidual : RadElem (CFrac ℚ) :=
-  radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CCommRing.one
+  radInvYLift (CFrac.ofPoly [0, 0, 1, 0, 1]) CCommRing.one
 
 /-- `cIntegrateAlgebraicDecide` on the non-torsion `(3,5)` of `y² = x³ − 2`: a log-part input whose
 principal solve fails and whose residue divisor is non-torsion, expected to return `none`. -/
