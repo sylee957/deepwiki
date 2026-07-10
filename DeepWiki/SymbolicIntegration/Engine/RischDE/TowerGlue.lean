@@ -96,9 +96,9 @@ example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : DensePoly α)
     (hq0 : cnorm q ≠ [])
     (hgdeg : (toPoly (cgcdWf p q).1).natDegree = 0)
     (hgne : toPoly (cgcdWf p q).1 ≠ 0) :
-    toPoly (cdiophantine p q rhs).1 * toPoly p
-        + toPoly (cdiophantine p q rhs).2 * toPoly q = toPoly rhs :=
-  toPolyG_cdiophantineG p q rhs hq0 hgdeg hgne
+    toPoly (CPoly.diophantineReduced p q rhs).1 * toPoly p
+        + toPoly (CPoly.diophantineReduced p q rhs).2 * toPoly q = toPoly rhs :=
+  toPolyG_diophantineReduced p q rhs hq0 hgdeg hgne
 
 end DensePoly
 

@@ -28,6 +28,13 @@ def extendedEuclideanSplit {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CP
   let rem := CPolyEuclidean.mod ur ds
   (rem, CPolyEngine.add (CPolyEngine.mul w r) (CPolyEngine.mul quo dn))
 
+/-- Solve `b * p + c * q = rhs` with the first cofactor reduced modulo `q`. -/
+def diophantineReduced {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (p q rhs : P α) : P α × P α :=
+  let uw := bezoutOne p q
+  let bc := extendedEuclideanSplit p q rhs uw.1 uw.2
+  (CPolyEngine.cnorm bc.1, CPolyEngine.cnorm bc.2)
+
 /-- `bezoutOne` denotes a normalized Bezout identity when the selected gcd is a nonzero constant. -/
 theorem toPoly_bezoutOne {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     [LawfulCPolyEngine.{u,v} P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
@@ -105,9 +112,25 @@ theorem toPoly_extendedEuclideanSplit {P : Type u → Type u} [CPoly P] [CPolyEn
         CPoly.toPoly r := by ring
     _ = CPoly.toPoly r := by rw [hbez, one_mul]
 
+/-- `diophantineReduced` denotes a solution when the selected gcd is a nonzero constant. -/
+theorem toPoly_diophantineReduced {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (p q rhs : P α)
+    (hq : CPoly.toPoly q ≠ 0)
+    (hgdeg : (CPoly.toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0)
+    (hgne : CPoly.toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0) :
+    CPoly.toPoly (diophantineReduced p q rhs).1 * CPoly.toPoly p
+        + CPoly.toPoly (diophantineReduced p q rhs).2 * CPoly.toPoly q =
+      CPoly.toPoly rhs := by
+  let uw := bezoutOne p q
+  have hbez : CPoly.toPoly uw.1 * CPoly.toPoly p + CPoly.toPoly uw.2 * CPoly.toPoly q = 1 := by
+    simpa only [uw] using toPoly_bezoutOne (P := P) p q hgdeg hgne
+  have hsplit := toPoly_extendedEuclideanSplit (P := P) p q rhs uw.1 uw.2 hq hbez
+  simpa only [diophantineReduced, uw, LawfulCPolyEngine.toPoly_cnorm] using hsplit
+
 /-- Reduce a represented fraction pair to a monic-denominator form through selected gcd and division. -/
-def normalizeFracPair {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type} [CField α]
+def normalizeFracPair {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α]
     (num den : P α) : P α × P α :=
   if CPolyEngine.cisZero num then (CPoly.czero, CPoly.one)
   else
@@ -118,47 +141,40 @@ def normalizeFracPair {P : Type → Type} [CPoly P] [CPolyEngine P]
     (CPolyEngine.scale s num', CPolyEngine.scale s den')
 
 /-- A zero numerator normalizes to the represented fraction `0/1`. -/
-@[simp] theorem normalizeFracPair_of_cisZero {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type} [CField α] (num den : P α)
-    (h : CPolyEngine.cisZero num = true) :
-    normalizeFracPair num den = (CPoly.czero, CPoly.one) := by
-  simp [normalizeFracPair, h]
-
-/-- A numerator recognized as zero normalizes to `0/1`. -/
-@[simp] theorem normalizeFracPair_of_isZero {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] (num den : P ℚ)
+@[simp] theorem normalizeFracPair_of_cisZero {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] (num den : P α)
     (h : CPolyEngine.cisZero num = true) :
     normalizeFracPair num den = (CPoly.czero, CPoly.one) := by
   simp [normalizeFracPair, h]
 
 /-- Compute a monic polynomial lcm through the selected gcd and Euclidean-division capabilities. -/
-def lcm {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type} [CField α] (p q : P α) : P α :=
+def lcm {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] (p q : P α) : P α :=
   if CPolyEngine.cisZero p || CPolyEngine.cisZero q then CPoly.czero
   else CPolyEngine.cmonic
     (CPolyEuclidean.div (CPolyEngine.mul p q) (CPolyGcd.compute p q))
 
 /-- The selected polynomial lcm is zero when its left input is zero. -/
-@[simp] theorem lcm_eq_zero_of_left {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type} [CField α] (p q : P α)
+@[simp] theorem lcm_eq_zero_of_left {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] (p q : P α)
     (h : CPolyEngine.cisZero p = true) : lcm p q = CPoly.czero := by
   simp [lcm, h]
 
 /-- The selected polynomial lcm is zero when its right input is zero. -/
-@[simp] theorem lcm_eq_zero_of_right {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type} [CField α] (p q : P α)
+@[simp] theorem lcm_eq_zero_of_right {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] (p q : P α)
     (h : CPolyEngine.cisZero q = true) : lcm p q = CPoly.czero := by
   simp [lcm, h]
 
 /-- A left input recognized as zero makes the selected lcm zero. -/
-@[simp] theorem lcm_of_left_isZero {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type} [CField α] (p q : P α)
+@[simp] theorem lcm_of_left_isZero {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] (p q : P α)
     (h : CPolyEngine.cisZero p = true) : lcm p q = CPoly.czero := by
   simp [lcm, h]
 
 /-- A right input recognized as zero makes the selected lcm zero. -/
-@[simp] theorem lcm_of_right_isZero {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type} [CField α] (p q : P α)
+@[simp] theorem lcm_of_right_isZero {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] (p q : P α)
     (h : CPolyEngine.cisZero q = true) : lcm p q = CPoly.czero := by
   simp [lcm, h]
 

@@ -189,7 +189,7 @@ open scoped Differential in
 /-- **The Hermite properness `hAD` (`degree` form) discharged from the genuine monomial property.** For
 `deg Dt ≤ 1` and a proper input `deg a < deg d`, `deg (…).2.1 < deg (…).2.2`, resting only on
 `(hgcd, hd0, hpp, hgen)`. Discharges every hypothesis of `cHermiteReduceTowerG_leftover_proper_of_degree_le_one`:
-`hv`/`hb` from Yun `get_ne_zero` + `cdiophantineG_fst_degree_lt`; `hDstar`/`hresDen` from the radical/denominator
+`hv`/`hb` from Yun `get_ne_zero` + `diophantineReduced_fst_degree_lt`; `hDstar`/`hresDen` from the radical/denominator
 nonvanishing; and the residual divisibility `hdvd` from `hWgd_of_multiplicity` (the Yun coprimality `hcopgcd`
 *derived* from `hgen` via `hcopgcd_of_genuineMonomial`) via the `d = W·Dstar` cancellation, bridging the raw
 fold `g` to the `cnorm`-projections through `toPoly`. -/
@@ -232,7 +232,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
         (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hp))
       rw [← hget]; exact cSqfreeYunFFG_get_ne_zero hgcd d hd0 hpp p.2 hidx
     · intro rhs
-      refine cdiophantineG_fst_degree_lt _ p.1 rhs ?_
+      refine diophantineReduced_fst_degree_lt _ p.1 rhs ?_
       intro h
       obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
         (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hp))

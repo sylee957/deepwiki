@@ -194,7 +194,7 @@ end DensePoly
 /-! ## The flat-composition §6 pipeline
 
 Everything past the five recursive bottoms is a flat composition over the leaves above plus the generic
-`cdivWf`, `cdivmodWf`, `cdiophantine`, `cdvd`, `cgcdWf`, and the §5.6
+`cdivWf`, `cdivmodWf`, `CPoly.diophantineReduced`, `cdvd`, `cgcdWf`, and the §5.6
 `cResidueResultantTower`/`cinterpolate`/`ceval`. -/
 
 namespace DensePoly
@@ -203,7 +203,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- Generic weak normalizer `cWeakNormalizer Dt fnum fden = q ∈ α[t]`: split the denominator into its
 normal part `dₙ` (`cSplitFactorFast`), form `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve the
-residue numerator `a` via `cdiophantine`, build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
+residue numerator `a` via `CPoly.diophantineReduced`, build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
 (`cResidueResultantTower`), and return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the positive integer roots `nᵢ`
 of `r`. For an already-weakly-normalized `f`, `q = 1`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
 def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots : ℕ := 16) : DensePoly α :=
@@ -212,7 +212,7 @@ def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots :
   let dstar := cdivWf dn g
   let d1 := cdivWf dstar (CFracGcdCoreWf.cgcdFFCoreWf dstar g)
   let fdenOverD1 := cdivWf fden d1
-  let a := (cdiophantine fdenOverD1 d1 fnum).1
+  let a := (CPoly.diophantineReduced fdenOverD1 d1 fnum).1
   let Dd1 := cmonomialDeriv Dt d1
   let r := cResidueResultantTower Dt a d1
   let roots := cPosIntRoots r boundRoots

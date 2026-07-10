@@ -130,11 +130,11 @@ namespace DensePoly
 variable {α : Type*} [CField α]
 
 /-- Case-1 cofactor `radCase1Cofactor k V Df f C = B`: the degree-`< deg V` polynomial solving
-`(1−k)·V'·f·B ≡ C (mod V)` via `cdiophantine ((1−k)·V'·f) V C`. `Df = V'` is passed in. -/
+`(1−k)·V'·f·B ≡ C (mod V)` via `CPoly.diophantineReduced ((1−k)·V'·f) V C`. `Df = V'` is passed in. -/
 def radCase1Cofactor (k : ℕ) (V Df f C : DensePoly α) : DensePoly α :=
   let oneMinusK := cneg [cnatCast (k - 1)]                    -- the constant `(1 − k) = −(k−1)`
   let coeff := cmul oneMinusK (cmul Df f)                     -- `(1−k)·V'·f`
-  (cdiophantine coeff V C).1
+  (CPoly.diophantineReduced coeff V C).1
 
 /-- Case-1 residual `radCase1Residual k V Df f g B C Bder = D`: the lowered-`k` numerator
 `D = ((1−k)V'fB − C)/V + B'f + Bg`. `Df = V'`, `Bder = B'`, `g` from `(f/y)' = g/y` passed in; division
@@ -153,11 +153,11 @@ The piece `C/(Wᵏy)` where `W` is a squarefree factor of the radicand `f` (not 
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`, cleared identity `B·(½−k)W'h − C + W·(B'h + ½Bh') = W·D`. -/
 
 /-- Case-2 cofactor (`n = 2`) `radCase2Cofactor k W h C = B`: the degree-`< deg W` polynomial solving
-`B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantine ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderiv W`. -/
+`B·(½−k)·W'·h ≡ C (mod W)` via `CPoly.diophantineReduced ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderiv W`. -/
 def radCase2Cofactor (k : ℕ) (W h C : DensePoly α) : DensePoly α :=
   let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- `½`
   let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- `(½ − k)·W'·h`
-  (cdiophantine coef W C).1
+  (CPoly.diophantineReduced coef W C).1
 
 /-- Case-2 residual (`n = 2`) `radCase2Residual k W h C B = D`: the lowered-`k` numerator
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderiv B`, `h'` is `cderiv h`, division by `W` is

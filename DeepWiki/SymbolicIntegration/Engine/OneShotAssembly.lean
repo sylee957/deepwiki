@@ -1460,7 +1460,7 @@ exponential / log regimes) it is no longer free: the §5.3 chain
 `deg a < deg d`, `deg Dt ≤ 1`, the per-factor keystone `hb`/`hv`) →
 `cHermiteReduceTowerG_leftover_proper_of_residual` (exact-division degree cancellation) →
 `cHermiteReduceTowerG_numer_degree_lt` (squarefree-spelling rewrite) proves it. The remaining inputs are
-the per-factor keystone `hb` (`= cdiophantineG_fst_degree_lt`), nonzero `hv`, and the **exact-division
+the per-factor keystone `hb` (`= diophantineReduced_fst_degree_lt`), nonzero `hv`, and the **exact-division
 connectors** `hdvd`/`hresDen` (the residual·radical exactly divides `resDen`, and `resDen ≠ 0`) — engine
 regularity facts, **not** free side conditions. The fold accumulator is exposed as `g`/`hgeq` so the residual
 `resNum/resDen` projections reduce by `rfl` (`simp [cHermiteReduceTower, toPolyG_cnormG]`). -/
@@ -1473,7 +1473,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
     (haProper : (toPoly a).degree < (toPoly d).degree)
     (hv : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (DenseFrac ℚ)),
-        (toPoly (cdiophantine
+        (toPoly (CPoly.diophantineReduced
             (cmul (cdivWf d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
@@ -1567,7 +1567,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : DensePoly 
         ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hbk : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (DenseFrac ℚ)),
-        (toPoly (cdiophantine
+        (toPoly (CPoly.diophantineReduced
             (cmul (cdivWf (canonicalRepresentationFast Dt a d).2.2.2
               (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
@@ -1669,7 +1669,7 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
     (hbk : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast
           ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (DenseFrac ℚ)),
-        (toPoly (cdiophantine
+        (toPoly (CPoly.diophantineReduced
             (cmul (cdivWf (canonicalRepresentationFast
               ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.2 (cpow p.1 (p.2 + 1)))
               (cmonomialDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ)) p.1)) p.1 rhs).1).degree

@@ -242,7 +242,7 @@ end DensePoly
 /-! ## The flat-composition pipeline
 
 Everything past the three recursive bottoms is a flat composition over the leaves above plus the generic
-`CPoly.bezoutOne`, `CPoly.extendedEuclideanSplit`, `cdiophantine`, `cHermiteReduceTowerInnerWf`,
+`CPoly.bezoutOne`, `CPoly.extendedEuclideanSplit`, `CPoly.diophantineReduced`, `cHermiteReduceTowerInnerWf`,
 `cPrimitivePolyIntegrateWf`, `cdivWf`, the selected resultant, and interpolation/evaluation routines. -/
 
 namespace DensePoly
@@ -446,7 +446,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 /-- Generic SPDE `cSPDE Dt a b c n`: the `g = gcd(a, b)`-peel reducing the degree-bounded
 `a·Dq + b·q = c` to one with `a = 1`. Returns `none` or `some (b̄, c̄, m, α', β)` so any solution is
 `q = α'·h + β` with `h` solving `Dh + b̄·h = c̄`, `deg(h) ≤ m`. Peels `g = cgcdFFCoreWf a b`; the constant
-`a/g` base case returns the identity reconstruction, else solves the Bézout `cdiophantine b̄ ā c̄` and
+`a/g` base case returns the identity reconstruction, else solves the Bézout `CPoly.diophantineReduced b̄ ā c̄` and
 recurses on `ā = a/g` at `n − deg(ā)`. Well-founded on `(n+1).toNat`. `[CField α] [CDiffField α]
 [CFracGcdCoreWf α]`-generic. -/
 def cSPDE (Dt : DensePoly α) (a b c : DensePoly α) (n : ℤ) :
@@ -463,7 +463,7 @@ def cSPDE (Dt : DensePoly α) (a b c : DensePoly α) (n : ℤ) :
         let ainv := CField.inv (clead a')
         some (cscale ainv b', cscale ainv c', n, [CCommRing.one], [])
       else
-        let (r, z) := cdiophantine b' a' c'
+        let (r, z) := CPoly.diophantineReduced b' a' c'
         let Da := cmonomialDeriv Dt a'
         let Dr := cmonomialDeriv Dt r
         if (n - (cdeg a' : ℤ) + 1).toNat < (n + 1).toNat then

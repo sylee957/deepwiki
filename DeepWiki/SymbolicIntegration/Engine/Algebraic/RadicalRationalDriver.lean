@@ -79,12 +79,12 @@ partial-fractioned across them before the resulting pieces are handled by the ca
 
 /-- Partial fraction across coprime prime-powers `radPartialFractionCoprime R Gs = [N₁,…,Nₘ]`: for
 pairwise-coprime `Gs` with `B = ∏Gᵢ` and proper `R`, returns `Nᵢ` with `R/B = Σᵢ Nᵢ/Gᵢ`,
-`deg Nᵢ < deg Gᵢ`, by iterating the Bézout split `cdiophantine`. Generic over `[CField α]`. -/
+`deg Nᵢ < deg Gᵢ`, by iterating the Bézout split `CPoly.diophantineReduced`. Generic over `[CField α]`. -/
 def radPartialFractionCoprime : DensePoly α → List (DensePoly α) → List (DensePoly α)
   | _, [] => []
   | R, G :: rest =>
     let P := cprod rest
-    let (Ni, c) := cdiophantine P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
+    let (Ni, c) := CPoly.diophantineReduced P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
     Ni :: radPartialFractionCoprime c rest
 
 end DensePoly

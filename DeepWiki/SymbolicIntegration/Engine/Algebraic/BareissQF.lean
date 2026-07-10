@@ -21,18 +21,18 @@ open DensePoly
 `x² + 4x³`. -/
 theorem qfDet_eq_fieldDet_afNonRad :
     let T := traceMatrix afNonRadF (powerBasis afNonRadF)
-    CCommRing.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
+    CCommRing.isZero (CField.sub (CFrac.qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- `qfDet = fieldDet` on the `3×3` trigonal trace matrix of `y³ + xy + x`, both the discriminant
 `−4x³ − 27x²`. -/
 theorem qfDet_eq_fieldDet_afTrig :
     let T := traceMatrix afTrigF (powerBasis afTrigF)
-    CCommRing.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
+    CCommRing.isZero (CField.sub (CFrac.qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- `qfDet = fieldDet` on the cusp trace matrix of `y² − x³`, both the discriminant `4x³`. -/
 theorem qfDet_eq_fieldDet_cusp :
     let T := traceMatrix cuspF (powerBasis cuspF)
-    CCommRing.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
+    CCommRing.isZero (CField.sub (CFrac.qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- A `3×3` `ℚ(x)`-matrix with genuine fraction entries (denominators `x+1, …, x+5`, a permuted
 Cauchy-style matrix), where `fieldDet` carries a ballooning denominator. -/
@@ -44,7 +44,7 @@ def qfFracMat3 : List (List (DenseFrac ℚ)) :=
 /-- `qfDet = fieldDet` on the `3×3` fraction matrix `qfFracMat3` as a `ℚ(x)` value, though `fieldDet`
 carries an unreduced fraction of total degree `24` and `qfDet` a flat polynomial. -/
 theorem qfDet_eq_fieldDet_fracMat3 :
-    CCommRing.isZero (CField.sub (qfDet qfFracMat3) (fieldDet qfFracMat3)) = true := by native_decide
+    CCommRing.isZero (CField.sub (CFrac.qfDet qfFracMat3) (fieldDet qfFracMat3)) = true := by native_decide
 
 /-! ### The fraction-free inverse agrees with `matInv` -/
 
@@ -54,7 +54,7 @@ theorem qfInv_eq_matInvG_cuspBasis :
     let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
     let Binv := (matInv 2 B).getD []
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
-      CCommRing.isZero (CField.sub (qfInvEntry B i j) ((Binv.getD i []).getD j CCommRing.zero)))) = true := by
+      CCommRing.isZero (CField.sub (CFrac.qfInvEntry B i j) ((Binv.getD i []).getD j CCommRing.zero)))) = true := by
   native_decide
 
 /-- `qfInv` agrees with `matInv` entrywise on the `3×3` fraction matrix `qfFracMat3` as `ℚ(x)` values,
@@ -62,7 +62,7 @@ though `matInv` carries each entry as an unreduced fraction of total degree up t
 theorem qfInv_eq_matInvG_fracMat3 :
     let Minv := (matInv 3 qfFracMat3).getD []
     (List.range 3).all (fun i => (List.range 3).all (fun j =>
-      CCommRing.isZero (CField.sub (qfInvEntry qfFracMat3 i j)
+      CCommRing.isZero (CField.sub (CFrac.qfInvEntry qfFracMat3 i j)
         ((Minv.getD i []).getD j CCommRing.zero)))) = true := by
   native_decide
 
@@ -72,8 +72,8 @@ theorem qfInv_eq_matInvG_fracMat3 :
 the cleared `ℚ[x]`-matrix. -/
 theorem qfAdjugate_mul_cuspBasis :
     let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
-    let M' := (qfClearMatrix B).1
-    let A := (qfAdjugate B).1
+    let M' := (CFrac.qfClearMatrix B).1
+    let A := (CFrac.qfAdjugate B).1
     let d := CPoly.bareissDet M'
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
       cisZero (csub
@@ -84,7 +84,7 @@ theorem qfAdjugate_mul_cuspBasis :
 reading back `x` and multiplying `M·x` recovers `b`. -/
 theorem qfSolve_fracMat3 :
     let b : List (DenseFrac ℚ) := [CFrac.ofPoly [1], CFrac.ofPoly [1], CFrac.ofPoly [1]]
-    let ds := qfSolve qfFracMat3 b
+    let ds := CFrac.qfSolve qfFracMat3 b
     let xq : List (DenseFrac ℚ) := ds.2.map (fun s => CCommRing.mul (CFrac.ofPoly s) (CField.inv (CFrac.ofPoly ds.1)))
     let lhs : List (DenseFrac ℚ) := (List.range 3).map (fun i =>
       (List.range 3).foldl (fun acc j =>
@@ -110,7 +110,7 @@ def qfDetFracTotalDeg : ℕ :=
 
 /-- The fraction-free determinant flat degree `cdeg num` of `qfDet qfFracMat3`, the degree of the single
 `ℚ[x]` determinant numerator over the single denominator `D³`. -/
-def qfDetFlatDeg : ℕ := cdeg (qfDet qfFracMat3).num
+def qfDetFlatDeg : ℕ := cdeg (CFrac.qfDet qfFracMat3).num
 
 /-- The fraction-path inverse max total degree `max over entries of (cdeg num + cdeg den)` of
 `matInv 3 qfFracMat3`, the largest numerator+denominator degree among the unreduced `ℚ(x)` inverse
@@ -125,7 +125,7 @@ def qfInvFracMaxTotalDeg : ℕ :=
 `(qfInv qfFracMat3).2`, the largest degree among the flat inverse-numerator entries over the single
 shared determinant. -/
 def qfInvFlatMaxDeg : ℕ :=
-  ((((qfInv qfFracMat3).2).map (fun row => row.map cdeg)).flatten).foldl max 0
+  ((((CFrac.qfInv qfFracMat3).2).map (fun row => row.map cdeg)).flatten).foldl max 0
 
 /-- The measured swell win: `qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvFracMaxTotalDeg`
 — the fraction-free degrees are strictly below the fraction-path degrees on the `3×3` fraction matrix. -/

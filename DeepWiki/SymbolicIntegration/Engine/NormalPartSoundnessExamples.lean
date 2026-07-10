@@ -84,7 +84,7 @@ example {β : Type*} (glocOf : β → DensePoly α × DensePoly α) (skip : β �
 
 example (Dt : DensePoly α) (v u : DensePoly α) (hv : toPoly v ≠ 0)
     (hb : ∀ (rhs : DensePoly α),
-      (toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v rhs).1).degree
+      (toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v rhs).1).degree
         < (toPoly v).degree)
     (j : ℕ) (a : DensePoly α) (g : DensePoly α × DensePoly α)
     (hg : (toPoly g.1).degree < (toPoly g.2).degree) :
@@ -94,7 +94,7 @@ example (Dt : DensePoly α) (v u : DensePoly α) (hv : toPoly v ≠ 0)
 
 example (Dt : DensePoly α) (vi u : DensePoly α) (j : ℕ) (a : DensePoly α) (hv : toPoly vi ≠ 0)
     (hb : ∀ (rhs : DensePoly α),
-      (toPoly (cdiophantine (cmul u (cmonomialDeriv Dt vi)) vi rhs).1).degree
+      (toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt vi)) vi rhs).1).degree
         < (toPoly vi).degree) :
     (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CCommRing.zero], [CCommRing.one])).1.1).degree
       < (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CCommRing.zero], [CCommRing.one])).1.2).degree :=
@@ -103,7 +103,7 @@ example (Dt : DensePoly α) (vi u : DensePoly α) (j : ℕ) (a : DensePoly α) (
 example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly α),
-      (toPoly (cdiophantine
+      (toPoly (CPoly.diophantineReduced
           (cmul (cdivWf d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPoly p.1).degree) :
     (toPoly (factors.zipIdx.foldl
@@ -134,7 +134,7 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
     (hDt : (toPoly Dt).natDegree ≤ 1) (haProper : (toPoly a).degree < (toPoly d).degree)
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly α),
-      (toPoly (cdiophantine
+      (toPoly (CPoly.diophantineReduced
           (cmul (cdivWf d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPoly p.1).degree) :
     let g := factors.zipIdx.foldl

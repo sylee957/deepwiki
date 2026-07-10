@@ -100,16 +100,16 @@ theorem fracPair_add (a1 a2 b1 b2 : DensePoly α)
 
 open CFrac in
 /-- The inner Hermite loop invariant with a general accumulator. For `u, v ≠ 0`, the tower
-derivation `D = implicitDeriv (toPoly Dt)`, and every step's `cdiophantine` cofactors satisfying
+derivation `D = implicitDeriv (toPoly Dt)`, and every step's `CPoly.diophantineReduced` cofactors satisfying
 the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` telescopes M1:
 `⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧) = D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧`. -/
 theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : DensePoly α)
     (hu : toPoly u ≠ 0) (hv : toPoly v ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : DensePoly α),
-      toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
+      toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).1
           * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
-        + toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
+        + toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).2 * toPoly v
       = -toPoly A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
     ∀ (j : ℕ) (A : DensePoly α) (g : DensePoly α × DensePoly α), toPoly g.2 ≠ 0 →
@@ -133,7 +133,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
     set Dv := cmonomialDeriv Dt v with hDv
     set p := cmul u Dv with hp
     set rhs := cscale (CCommRing.neg (CField.inv jval)) A with hrhs
-    rcases hBC : cdiophantine p v rhs with ⟨B, C⟩
+    rcases hBC : CPoly.diophantineReduced p v rhs with ⟨B, C⟩
     simp only []
     set Vpow := cpow v (j + 1) with hVpow
     set A' := csub (cscale (CCommRing.neg jval) C) (cmul u (cmonomialDeriv Dt B)) with hA'

@@ -58,9 +58,9 @@ runs the same fraction algorithm.
     exact-division bridge consumes only the capability. Concrete dense and generic implementations become
     instances. Gcd-derived fraction normalization and polynomial lcm are now representation-independent
     `CPoly` algorithms selecting both gcd and exact division through those capabilities; normalized Bezout
-    cofactors and extended-Euclidean splitting likewise select `gcdExt`, quotient, and remainder through
-    `CPolyEuclidean`. The former dense-only `qnormPair`, `cLcmQ`, `cbezoutOneWf`, and
-    `cextendedEuclideanSplitWf` helpers are retired. The third slice adds
+    cofactors, extended-Euclidean splitting, and the reduced Diophantine solver likewise select `gcdExt`,
+    quotient, and remainder through `CPolyEuclidean`. The former dense-only `qnormPair`, `cLcmQ`,
+    `cbezoutOneWf`, `cextendedEuclideanSplitWf`, and `cdiophantine` helpers are retired. The third slice adds
     `CPolyResultant`/`LawfulCPolyResultant`: dense polynomials select the
    well-founded PRS resultant, sparse polynomials select the generic Sylvester determinant, and tower,
    radical, general-curve, and discriminant consumers request the capability. The tower residue-resultant
@@ -69,8 +69,10 @@ runs the same fraction algorithm.
    `LawfulCPolySubresultant`; dense and sparse LRT paths share the implementation, with correctness proved
    once through `CPoly.toPoly`. The fraction-free Bareiss determinant, adjugate, and Cramer solve are also
    representation-independent over `CPoly P`, selecting exact division through `CPolyEuclidean P`; dense
-   consumers and a sparse execution witness share that core. SymbolicIntegration consumers request the
-   weakest capability they need.
+   consumers and a sparse execution witness share that core. Its rational-function denominator clearing,
+   determinant, adjugate, inverse, and solve wrappers are likewise generic over `CFrac F P`; `DenseFrac`
+   consumers and a `SparseFrac` determinant witness use the same definitions. SymbolicIntegration consumers
+   request the weakest capability they need.
 7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;

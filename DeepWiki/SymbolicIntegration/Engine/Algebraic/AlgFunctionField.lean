@@ -93,7 +93,7 @@ def fieldDet (M : List (List α)) : α := fieldDetSized M.length M
 power basis, computed fraction-free via `qfDet` (Bareiss over a common `ℚ[x]` denominator).
 Equal to `fieldDet (traceMatrix f (powerBasis f))`, hence to `± Resultant(f, f')`. -/
 def discriminant (f : DensePoly (DenseFrac ℚ)) : DenseFrac ℚ :=
-  qfDet (traceMatrix f (powerBasis f))
+  CFrac.qfDet (traceMatrix f (powerBasis f))
 
 /-- `Resultant(f, f')` for the curve `f`, computed by the selected polynomial-resultant capability.
 Equal to `± discriminant f`. -/

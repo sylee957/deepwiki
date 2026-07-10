@@ -108,7 +108,7 @@ def cSPDEGClearedGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
         ∧ (toPoly ad ≠ 0)
         ∧ (if cdeg ad = 0 then True
            else
-             let rz := cdiophantine bd ad cd
+             let rz := CPoly.diophantineReduced bd ad cd
              (toPoly bd * toPoly rz.1 + toPoly ad * toPoly rz.2 = toPoly cd)
                ∧ (if (n - (cdeg ad : ℤ) + 1).toNat < (n + 1).toNat then
                     cSPDEGClearedGenWf Dt ad (cadd bd (cmonomialDeriv Dt ad))
@@ -185,7 +185,8 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
     rw [if_neg hdeg] at hcertrest
     obtain ⟨hbez'0, hcertrecOpt⟩ := hcertrest
     rw [if_pos hguard'] at hcertrecOpt
-    have hdioph' : (b.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b)).cdiophantine
+    have hdioph' : CPoly.diophantineReduced
+        (b.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b))
         (a.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b)) (c.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b))
         = (r, z) := hdioph
     rw [hdioph'] at hbez'0 hcertrecOpt
@@ -222,7 +223,7 @@ def CSPDEGClearedInputsGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
         ∧ (if cdeg ad = 0 then True
            else
              let bd := cdivWf b g
-             let rz := cdiophantine bd ad (cdivWf c g)
+             let rz := CPoly.diophantineReduced bd ad (cdivWf c g)
              (if (n - (cdeg ad : ℤ) + 1).toNat < (n + 1).toNat then
                 CSPDEGClearedInputsGenWf Dt ad (cadd bd (cmonomialDeriv Dt ad))
                   (csub rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdeg ad : ℤ))
@@ -263,7 +264,7 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
       have hgdegWf : (toPoly (cgcdWf bd ad).1).natDegree = 0 :=
         Polynomial.natDegree_eq_zero_of_isUnit hunitWf
       have hgneWf : toPoly (cgcdWf bd ad).1 ≠ 0 := hunitWf.ne_zero
-      have hbez := toPolyG_cdiophantineG bd ad (cdivWf c g) hadnil hgdegWf hgneWf
+      have hbez := toPolyG_diophantineReduced bd ad (cdivWf c g) hadnil hgdegWf hgneWf
       by_cases hguard : (n - (cdeg ad : ℤ) + 1).toNat < (n + 1).toNat
       · rw [if_pos hguard] at hrest ⊢
         refine ⟨?_, ih1 hguard hrest⟩

@@ -63,7 +63,7 @@ theorem toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow (Dt v u : DensePoly α) :
   | succ j ih =>
     intro a g
     rw [cHermiteReduceTowerInnerWf]
-    rcases hBC : cdiophantine (cmul u (cmonomialDeriv Dt v)) v
+    rcases hBC : CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
       (cscale (CCommRing.neg (CField.inv (cnatCast (j + 1)))) a) with ⟨b, c⟩
     obtain ⟨M, hM⟩ := ih _ (cadd (cmul g.1 (cpow v (j + 1))) (cmul b g.2),
       cmul g.2 (cpow v (j + 1)))
@@ -307,22 +307,22 @@ theorem dvd_R_of_factor {vk R residNum_k : (CFieldSpec.K α)[X]}
 
 omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
 /-- **Discharge of M2's Bézout hypothesis** from the gcd coprimality of `(u·Dv, v)`: for every step
-`(j', A')`, `cdiophantine`'s cofactors satisfy `b·(u·Dv) + c·v = −A'·C((j'+1)⁻¹)`. Uses
-`toPolyG_cdiophantineG`; the coprimality `gcd(u·Dv, v)` degree-0/nonzero is the input (from `v`
+`(j', A')`, `CPoly.diophantineReduced`'s cofactors satisfy `b·(u·Dv) + c·v = −A'·C((j'+1)⁻¹)`. Uses
+`toPolyG_diophantineReduced`; the coprimality `gcd(u·Dv, v)` degree-0/nonzero is the input (from `v`
 squarefree + coprime to `u`). -/
 theorem cHermiteInner_hbez_of_gcd (Dt v u : DensePoly α)
     (hqn : cnorm v ≠ [])
     (hgdeg : (toPoly (cgcdWf (cmul u (cmonomialDeriv Dt v)) v).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (cmul u (cmonomialDeriv Dt v)) v).1 ≠ 0) :
     ∀ (j' : ℕ) (A' : DensePoly α),
-      toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
+      toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).1
           * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
-        + toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v
+        + toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).2 * toPoly v
       = -toPoly A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹) := by
   intro j' A'
-  have h := toPolyG_cdiophantineG (cmul u (cmonomialDeriv Dt v)) v
+  have h := toPolyG_diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
     (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A') hqn hgdeg hgne
   rw [toPolyG_cmulG, toPolyG_cmonomialDeriv] at h
   rw [h, toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_neg, CFieldSpec.toK_inv, DensePoly.toK_cnatCastG,

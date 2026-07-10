@@ -64,4 +64,11 @@ theorem bareiss_eq_fieldDet_vander4 :
     CCommRing.isZero (CField.sub (fieldDet (fromQ bareissVander4))
       (CFrac.ofPoly (CPoly.bareissDet bareissVander4))) = true := by native_decide
 
+/-- The fraction-free determinant wrapper executes over `SparseFrac` as well as `DenseFrac`. -/
+theorem qfDet_sparse_one :
+    CCommRing.isZero (CField.sub
+      (CFrac.qfDet [[(CFrac.ofPoly (F := SparseFrac) (CPoly.one : CPoly.SparsePoly ℚ))]])
+      (CFrac.ofPoly (F := SparseFrac) (CPoly.one : CPoly.SparsePoly ℚ))) = true := by
+  native_decide
+
 end DeepWiki.SymbolicIntegration

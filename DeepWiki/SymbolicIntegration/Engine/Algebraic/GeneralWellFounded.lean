@@ -21,12 +21,12 @@ variable {α : Type*} [CField α]
 /-! ## The general derivation `afDerivWf`
 
 `afReduce`/`afMul` already carry a self-computed bound; the one recursive dependency, `f_y⁻¹ mod f`, is
-computed by the well-founded `cdiophantine`. -/
+computed by the well-founded `CPoly.diophantineReduced`. -/
 
-/-- `f_y⁻¹ mod f` — `afFyInvWf f = (cdiophantine (cderiv f) f [1]).1`, the first Bézout cofactor `s` of
+/-- `f_y⁻¹ mod f` — `afFyInvWf f = (CPoly.diophantineReduced (cderiv f) f [1]).1`, the first Bézout cofactor `s` of
 `s·f_y + t·f = 1`. The inverse of `∂f/∂y` in `K(x)[y]/(f)` (valid for separable `f`), degree `< deg f`. -/
 def afFyInvWf (f : DensePoly α) : DensePoly α :=
-  (cdiophantine (cderiv f) f [CCommRing.one]).1
+  (CPoly.diophantineReduced (cderiv f) f [CCommRing.one]).1
 
 variable [CDiffField α]
 
@@ -78,16 +78,16 @@ theorem mk_toPolyG_afFyInvWf_mul_afFy (f : DensePoly α) (hf : cnorm f ≠ [])
     (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f)
         (toPoly (afFyInvWf f) * toPoly (cderiv f)) = 1 := by
-  have hbez := toPolyG_cdiophantineG (cderiv f) f [CCommRing.one] hf hgdeg hgne
+  have hbez := toPolyG_diophantineReduced (cderiv f) f [CCommRing.one] hf hgdeg hgne
   have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote]
     simp
   rw [hone] at hbez
   rw [show toPoly (afFyInvWf f) * toPoly (cderiv f)
-      = 1 - toPoly (cdiophantine (cderiv f) f [CCommRing.one]).2 * toPoly f from by
+      = 1 - toPoly (CPoly.diophantineReduced (cderiv f) f [CCommRing.one]).2 * toPoly f from by
         rw [afFyInvWf]; linear_combination hbez]
   have hmem : Ideal.Quotient.mk (afIdeal f)
-      (toPoly (cdiophantine (cderiv f) f [CCommRing.one]).2 * toPoly f) = 0 :=
+      (toPoly (CPoly.diophantineReduced (cderiv f) f [CCommRing.one]).2 * toPoly f) = 0 :=
     Ideal.Quotient.eq_zero_iff_mem.mpr (mul_curve_mem f _)
   rw [map_sub, hmem, map_one, sub_zero]
 

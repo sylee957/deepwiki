@@ -27,6 +27,16 @@ theorem sparse_bezoutOne_one_zero :
       (CPoly.one, CPoly.czero) := by
   native_decide
 
+/-- Sparse reduced Diophantine solving satisfies its represented Bezout equation. -/
+theorem sparse_diophantineReduced_sound (p q rhs : CPoly.SparsePoly ℚ)
+    (hq : CPoly.toPoly q ≠ 0)
+    (hgdeg : (CPoly.toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0)
+    (hgne : CPoly.toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0) :
+    CPoly.toPoly (CPoly.diophantineReduced p q rhs).1 * CPoly.toPoly p
+        + CPoly.toPoly (CPoly.diophantineReduced p q rhs).2 * CPoly.toPoly q =
+      CPoly.toPoly rhs :=
+  CPoly.toPoly_diophantineReduced p q rhs hq hgdeg hgne
+
 namespace DensePoly
 
 /-! ### `cParametricLogDeriv` over the base field `k = ℚ(x)`

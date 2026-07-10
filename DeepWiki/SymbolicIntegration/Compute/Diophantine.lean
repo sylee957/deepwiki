@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Compute.Hermite
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 
 /-! # Computable Diophantine solver correctness
-Connects the concrete `DensePoly.cdiophantine` solver on `DensePoly ℚ` with the abstract reduced Bezout solver
+Connects the representation-selected `CPoly.diophantineReduced` solver on `DensePoly ℚ` with the abstract reduced Bezout solver
 `diophantineSolveReduced` over `ℚ[X]`. -/
 
 open Polynomial
@@ -35,10 +35,10 @@ theorem reduced_bezout_snd_unique {p q B C₁ C₂ rhs : ℚ[X]} (hq : q ≠ 0)
   have : C₁ * q = C₂ * q := by linear_combination h₁ - h₂
   exact mul_right_cancel₀ hq this
 
-/-! ### `DensePoly.cdiophantine` realizes `diophantineSolveReduced` -/
+/-! ### `CPoly.diophantineReduced` realizes `diophantineSolveReduced` -/
 
-/-- Input certificates for comparing `DensePoly.cdiophantine` with `diophantineSolveReduced`. -/
-structure IsCDiophantineInput (p q rhs : DensePoly ℚ) : Prop where
+/-- Input certificates for comparing `CPoly.diophantineReduced` with `diophantineSolveReduced`. -/
+structure IsDiophantineReducedInput (p q rhs : DensePoly ℚ) : Prop where
   /-- The computable denominator is nonzero. -/
   q_ne : cnorm q ≠ []
   /-- The abstract inputs are coprime. -/
@@ -49,43 +49,43 @@ structure IsCDiophantineInput (p q rhs : DensePoly ℚ) : Prop where
   gcd_ne : toPoly (DensePoly.cgcdWf p q).1 ≠ 0
 
 open Classical in
-/-- First-cofactor agreement: `DensePoly.cdiophantine` realizes `diophantineSolveReduced` through `toPoly`. -/
-theorem toPoly_cdiophantine_fst_eq (p q rhs : DensePoly ℚ)
-    (hinput : IsCDiophantineInput p q rhs) :
-    toPoly (DensePoly.cdiophantine p q rhs).1
+/-- First-cofactor agreement: `CPoly.diophantineReduced` realizes `diophantineSolveReduced` through `toPoly`. -/
+theorem toPoly_diophantineReduced_fst_eq (p q rhs : DensePoly ℚ)
+    (hinput : IsDiophantineReducedInput p q rhs) :
+    toPoly (CPoly.diophantineReduced p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 := by
   obtain ⟨hq, hcop, hgdeg, hgne⟩ := hinput
   have hq0 : toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
-  have hc_eq : toPoly (DensePoly.cdiophantine p q rhs).1 * toPoly p
-      + toPoly (DensePoly.cdiophantine p q rhs).2 * toPoly q = toPoly rhs := by
+  have hc_eq : toPoly (CPoly.diophantineReduced p q rhs).1 * toPoly p
+      + toPoly (CPoly.diophantineReduced p q rhs).2 * toPoly q = toPoly rhs := by
     exact
-      DensePoly.toPolyG_cdiophantineG p q rhs hq hgdeg hgne
-  have hc_deg : (toPoly (DensePoly.cdiophantine p q rhs).1).degree < (toPoly q).degree := by
-    exact DensePoly.cdiophantineG_fst_degree_lt p q rhs hq
+      DensePoly.toPolyG_diophantineReduced p q rhs hq hgdeg hgne
+  have hc_deg : (toPoly (CPoly.diophantineReduced p q rhs).1).degree < (toPoly q).degree := by
+    exact DensePoly.diophantineReduced_fst_degree_lt p q rhs hq
   have ha_eq := diophantineSolveReduced_spec hcop (toPoly rhs)
   have ha_deg := diophantineSolveReduced_fst_degree_lt (a := toPoly p) hq0 (toPoly rhs)
-  refine reduced_bezout_fst_unique (C₁ := toPoly (DensePoly.cdiophantine p q rhs).2)
+  refine reduced_bezout_fst_unique (C₁ := toPoly (CPoly.diophantineReduced p q rhs).2)
     (C₂ := (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).2)
     (rhs := toPoly rhs) hcop ?_ ?_ hc_deg ha_deg
   · linear_combination hc_eq
   · linear_combination ha_eq
 
 open Classical in
-/-- Second-cofactor agreement: the second `DensePoly.cdiophantine` cofactor matches the abstract one. -/
-theorem toPoly_cdiophantine_snd_eq (p q rhs : DensePoly ℚ)
-    (hinput : IsCDiophantineInput p q rhs) :
-    toPoly (DensePoly.cdiophantine p q rhs).2
+/-- Second-cofactor agreement: the second `CPoly.diophantineReduced` cofactor matches the abstract one. -/
+theorem toPoly_diophantineReduced_snd_eq (p q rhs : DensePoly ℚ)
+    (hinput : IsDiophantineReducedInput p q rhs) :
+    toPoly (CPoly.diophantineReduced p q rhs).2
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).2 := by
   have hq := hinput.q_ne
   have hcop := hinput.coprime
   have hgdeg := hinput.gcd_degree_zero
   have hgne := hinput.gcd_ne
   have hq0 : toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
-  have hfst := toPoly_cdiophantine_fst_eq p q rhs hinput
-  have hc_eq : toPoly (DensePoly.cdiophantine p q rhs).1 * toPoly p
-      + toPoly (DensePoly.cdiophantine p q rhs).2 * toPoly q = toPoly rhs := by
+  have hfst := toPoly_diophantineReduced_fst_eq p q rhs hinput
+  have hc_eq : toPoly (CPoly.diophantineReduced p q rhs).1 * toPoly p
+      + toPoly (CPoly.diophantineReduced p q rhs).2 * toPoly q = toPoly rhs := by
     exact
-      DensePoly.toPolyG_cdiophantineG p q rhs hq hgdeg hgne
+      DensePoly.toPolyG_diophantineReduced p q rhs hq hgdeg hgne
   have ha_eq := diophantineSolveReduced_spec hcop (toPoly rhs)
   refine reduced_bezout_snd_unique (p := toPoly p)
     (B := (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1)
@@ -94,20 +94,20 @@ theorem toPoly_cdiophantine_snd_eq (p q rhs : DensePoly ℚ)
   · linear_combination ha_eq
 
 open Classical in
-/-- Full cofactor agreement: `DensePoly.cdiophantine` realizes `diophantineSolveReduced` as a pair. -/
-theorem toPoly_cdiophantine_eq (p q rhs : DensePoly ℚ)
-    (hinput : IsCDiophantineInput p q rhs) :
-    (toPoly (DensePoly.cdiophantine p q rhs).1, toPoly (DensePoly.cdiophantine p q rhs).2)
+/-- Full cofactor agreement: `CPoly.diophantineReduced` realizes `diophantineSolveReduced` as a pair. -/
+theorem toPoly_diophantineReduced_eq (p q rhs : DensePoly ℚ)
+    (hinput : IsDiophantineReducedInput p q rhs) :
+    (toPoly (CPoly.diophantineReduced p q rhs).1, toPoly (CPoly.diophantineReduced p q rhs).2)
       = diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs) :=
-  Prod.ext (toPoly_cdiophantine_fst_eq p q rhs hinput)
-    (toPoly_cdiophantine_snd_eq p q rhs hinput)
+  Prod.ext (toPoly_diophantineReduced_fst_eq p q rhs hinput)
+    (toPoly_diophantineReduced_snd_eq p q rhs hinput)
 
 example (p q rhs : DensePoly ℚ)
     (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
     (hgdeg : (toPoly (DensePoly.cgcdWf p q).1).natDegree = 0)
     (hgne : toPoly (DensePoly.cgcdWf p q).1 ≠ 0) :
-    toPoly (DensePoly.cdiophantine p q rhs).1
+    toPoly (CPoly.diophantineReduced p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 :=
-  toPoly_cdiophantine_fst_eq p q rhs ⟨hq, hcop, hgdeg, hgne⟩
+  toPoly_diophantineReduced_fst_eq p q rhs ⟨hq, hcop, hgdeg, hgne⟩
 
 end DeepWiki.SymbolicIntegration.Compute

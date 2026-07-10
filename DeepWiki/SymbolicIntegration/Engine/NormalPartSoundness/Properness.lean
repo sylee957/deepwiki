@@ -22,7 +22,7 @@ structure IsHermiteInnerFactor (Dt v u : DensePoly α) : Prop where
   nonzero : toPoly v ≠ 0
   /-- Every Diophantine cofactor against `u * D(v)` is proper modulo `v`. -/
   cofactor_proper : ∀ (rhs : DensePoly α),
-    (toPoly (cdiophantine (cmul u (cmonomialDeriv Dt v)) v rhs).1).degree
+    (toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v rhs).1).degree
       < (toPoly v).degree
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -415,7 +415,7 @@ theorem cHermiteReduceTowerInner_g_proper (Dt : DensePoly α) (v u : DensePoly �
     rw [cHermiteReduceTowerInnerWf]
     -- the step's summand `(b, cpow v (j+1))` is proper, so the `fracAddG` step preserves properness.
     set rhs := cscale (CCommRing.neg (CField.inv (cnatCast (j + 1)))) a with hrhs
-    set b := (cdiophantine (cmul u (cmonomialDeriv Dt v)) v rhs).1 with hbdef
+    set b := (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v rhs).1 with hbdef
     have hbproper : (toPoly b).degree
         < (toPoly (cpow v (j + 1))).degree :=
       toPolyG_inner_summand_proper b v j (hfac.cofactor_proper rhs) hfac.nonzero
