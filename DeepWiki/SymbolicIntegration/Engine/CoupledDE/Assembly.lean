@@ -87,11 +87,11 @@ degree-`≤ d` polynomial `y` is the `r`-th coefficient of `D y` (`Polynomial.de
 theorem dotQ_derivMatrixQ_row (y : DensePoly ℚ) (d nrows r : ℕ) (hr : r < nrows)
     (hyd : y.length ≤ d + 1) :
     dotQ ((derivMatrixQ d nrows).getD r []) ((List.range (d + 1)).map (fun i => y.getD i 0))
-      = (toPoly (cderivQ y)).coeff r := by
+      = (toPoly (cderiv y)).coeff r := by
   rw [derivMatrixQ, getD_lt_gen _ r [] (by rw [List.length_map, List.length_range]; exact hr),
     List.getElem_map, List.getElem_range]
   rw [dotQ_range_maps]
-  rw [cderivQ, toPolyG_cderivG, Polynomial.coeff_derivative, toPolyG_coeff,
+  rw [toPolyG_cderivG, Polynomial.coeff_derivative, toPolyG_coeff,
     toR_eq_toK, CFieldSpec.toK_rat, show CCommRing.zero = (0 : ℚ) from rfl]
   -- LHS: Σ_{i<d+1} (if i=r+1 then i else 0)·y[i].
   by_cases hrd : r + 1 < d + 1
@@ -141,7 +141,7 @@ theorem dotQ_hcatRow (b1 ab2 y1 y2 : DensePoly ℚ) (d nrows r : ℕ) (hr : r < 
           (mulMatrixQ ab2 d nrows)).getD r [])
         (((List.range (d + 1)).map (fun i => y1.getD i 0))
           ++ ((List.range (d + 1)).map (fun i => y2.getD i 0)))
-      = (toPoly (cderivQ y1)).coeff r + (toPoly (cmul b1 y1)).coeff r
+      = (toPoly (cderiv y1)).coeff r + (toPoly (cmul b1 y1)).coeff r
           + (toPoly (cmul ab2 y2)).coeff r := by
   have hDlen : (derivMatrixQ d nrows).length = nrows := derivMatrixQ_len d nrows
   have hB1len : (mulMatrixQ b1 d nrows).length = nrows := mulMatrixQ_len b1 d nrows
@@ -171,7 +171,7 @@ theorem dotQ_hcatRow2 (b1 b2 y1 y2 : DensePoly ℚ) (d nrows r : ℕ) (hr : r < 
         (((List.range (d + 1)).map (fun i => y1.getD i 0))
           ++ ((List.range (d + 1)).map (fun i => y2.getD i 0)))
       = (toPoly (cmul b2 y1)).coeff r
-          + ((toPoly (cderivQ y2)).coeff r + (toPoly (cmul b1 y2)).coeff r) := by
+          + ((toPoly (cderiv y2)).coeff r + (toPoly (cmul b1 y2)).coeff r) := by
   have hDlen : (derivMatrixQ d nrows).length = nrows := derivMatrixQ_len d nrows
   have hB1len : (mulMatrixQ b1 d nrows).length = nrows := mulMatrixQ_len b1 d nrows
   have hmatAdd_len : (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows)).length = nrows := by
@@ -194,10 +194,10 @@ theorem coeff_residual_zero_of_ge (b1 ab2 y1 y2 : DensePoly ℚ) (d nrows r : �
     (hb1 : (toPoly b1).natDegree + d + 2 ≤ nrows)
     (hab2 : (toPoly ab2).natDegree + d + 2 ≤ nrows) (hd : d + 2 ≤ nrows)
     (hr : nrows ≤ r) :
-    (toPoly (cderivQ y1)).coeff r + (toPoly (cmul b1 y1)).coeff r
+    (toPoly (cderiv y1)).coeff r + (toPoly (cmul b1 y1)).coeff r
         + (toPoly (cmul ab2 y2)).coeff r = 0 := by
-  have hderiv : (toPoly (cderivQ y1)).coeff r = 0 := by
-    simp only [cderivQ, denote]
+  have hderiv : (toPoly (cderiv y1)).coeff r = 0 := by
+    simp only [denote]
     apply Polynomial.coeff_eq_zero_of_natDegree_lt
     exact lt_of_le_of_lt (Polynomial.natDegree_derivative_le _) (by omega)
   have hb1y1 : (toPoly (cmul b1 y1)).coeff r = 0 := by
@@ -253,7 +253,7 @@ theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
           (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))).getD k [] ) sol
         = (padCoeffsQ z1 nrows ++ padCoeffsQ z2 nrows).getD k 0)
     (r : ℕ) (hr : r < nrows) :
-    (toPoly (cderivQ ((List.range (d + 1)).map (fun i => sol.getD i 0)))).coeff r
+    (toPoly (cderiv ((List.range (d + 1)).map (fun i => sol.getD i 0)))).coeff r
         + (toPoly (cmul b1 ((List.range (d + 1)).map (fun i => sol.getD i 0)))).coeff r
         + (toPoly (cmul (cscale a b2)
             ((List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)))).coeff r
@@ -297,7 +297,7 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
         = (padCoeffsQ z1 nrows ++ padCoeffsQ z2 nrows).getD k 0)
     (r : ℕ) (hr : r < nrows) :
     (toPoly (cmul b2 ((List.range (d + 1)).map (fun i => sol.getD i 0)))).coeff r
-        + ((toPoly (cderivQ ((List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)))).coeff r
+        + ((toPoly (cderiv ((List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)))).coeff r
           + (toPoly (cmul b1
               ((List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)))).coeff r)
       = (toPoly z2).coeff r := by
@@ -435,12 +435,12 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
     · -- toPoly R1 = 0.
       rw [cisZeroG_iff]
       apply Polynomial.ext; intro r
-      simp only [denote, cderivQ, Polynomial.coeff_sub, Polynomial.coeff_add, Polynomial.coeff_zero,
+      simp only [denote, Polynomial.coeff_sub, Polynomial.coeff_add, Polynomial.coeff_zero,
         CFieldSpec.toK, id_eq, htoP_y1, htoP_y2]
       by_cases hr : r < nrows
       · have hrow := coupledRow1_coeff_eq a b1 b2 z1 z2 d sol nrows hsollen hsolve' r hr
         rw [← hu1def, ← hu2def] at hrow
-        simp only [denote, cderivQ, CFieldSpec.toK, id_eq] at hrow
+        simp only [denote, CFieldSpec.toK, id_eq] at hrow
         rw [show (Polynomial.C a * toPoly b2 * toPoly u2)
             = Polynomial.C a * (toPoly b2 * toPoly u2) from by ring] at hrow
         linear_combination hrow
@@ -450,19 +450,19 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
         have hres := coeff_residual_zero_of_ge b1 (cscale a b2) y1 y2 d nrows r
           (by rw [htoP_y1]; exact hu1deg) (by rw [htoP_y2]; exact hu2deg)
           (by omega) (by omega) (by omega) hr
-        simp only [denote, cderivQ, CFieldSpec.toK, id_eq, htoP_y1, htoP_y2] at hres
+        simp only [denote, CFieldSpec.toK, id_eq, htoP_y1, htoP_y2] at hres
         rw [show (Polynomial.C a * toPoly b2 * toPoly u2)
             = Polynomial.C a * (toPoly b2 * toPoly u2) from by ring] at hres
         linear_combination hres - hz1z
     · -- toPoly R2 = 0.
       rw [cisZeroG_iff]
       apply Polynomial.ext; intro r
-      simp only [denote, cderivQ, Polynomial.coeff_sub, Polynomial.coeff_add, Polynomial.coeff_zero,
+      simp only [denote, Polynomial.coeff_sub, Polynomial.coeff_add, Polynomial.coeff_zero,
         htoP_y1, htoP_y2]
       by_cases hr : r < nrows
       · have hrow := coupledRow2_coeff_eq a b1 b2 z1 z2 d sol nrows hsollen hsolve' r hr
         rw [← hu1def, ← hu2def] at hrow
-        simp only [cderivQ, denote] at hrow
+        simp only [denote] at hrow
         linear_combination hrow
       · rw [not_lt] at hr
         have hz2z : (toPoly z2).coeff r = 0 :=
@@ -472,7 +472,7 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
           have := Polynomial.natDegree_mul_le (p := toPoly b2) (q := toPoly u1); omega
         have hres := coeff_residual_zero_of_ge b1 (cscale a b2) u2 u1 d nrows r hu2deg hu1deg
           (by omega) (by omega) (by omega) hr
-        simp only [denote, cderivQ, CFieldSpec.toK, id_eq] at hres
+        simp only [denote, CFieldSpec.toK, id_eq] at hres
         have hab2u1 : (Polynomial.C a * toPoly b2 * toPoly u1).coeff r = 0 := by
           apply Polynomial.coeff_eq_zero_of_natDegree_lt
           have h := Polynomial.natDegree_mul_le (p := Polynomial.C a * toPoly b2) (q := toPoly u1)

@@ -43,16 +43,6 @@ theorem getD_out (p : List (DensePoly ℚ)) (k : ℕ) (hk : p.length ≤ k) : p.
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none hk]; rfl
 
 open DensePoly in
-/-- `toPolyG_eq_zero_of_tisZero`: `tisZero p = true ⟹ DensePoly.toPoly p = 0`. -/
-theorem toPolyG_eq_zero_of_tisZero (p : List (DensePoly ℚ)) (h : tisZero p = true) :
-    DensePoly.toPoly p = 0 := by
-  induction p with
-  | nil => rfl
-  | cons c cs ih =>
-    rw [tisZero, List.all_cons, Bool.and_eq_true] at h
-    rw [DensePoly.toPolyG_cons_dense, (cisZeroG_iff c).mp h.1, map_zero, ih h.2, mul_zero, add_zero]
-
-open DensePoly in
 /-- `toPolyG_map_cmulG`: `DensePoly.toPoly (p.map (cmul s)) = C(toPoly s) · DensePoly.toPoly p`. -/
 theorem toPolyG_map_cmulG (s : DensePoly ℚ) (p : List (DensePoly ℚ)) :
     DensePoly.toPoly (p.map (cmul s)) = Polynomial.C (toPoly s) * DensePoly.toPoly p := by
@@ -160,12 +150,12 @@ theorem toPolyG_mulDt (dpdt : List (DensePoly ℚ)) :
 
 open DensePoly in
 /-- `toPolyG_tanDeriv`: the tangent derivation is bivariate `D = ∂/∂x + (t²+1)·∂/∂t`,
-`DensePoly.toPoly (tanDeriv p) = DensePoly.toPoly (p.map cderivQ) + (X²+1)·D_t(DensePoly.toPoly p)` over `ℚ[x][t]`. -/
+`DensePoly.toPoly (tanDeriv p) = DensePoly.toPoly (p.map cderiv) + (X²+1)·D_t(DensePoly.toPoly p)` over `ℚ[x][t]`. -/
 theorem toPolyG_tanDeriv (p : List (DensePoly ℚ)) :
     DensePoly.toPoly (tanDeriv p)
-      = DensePoly.toPoly (p.map cderivQ)
+      = DensePoly.toPoly (p.map cderiv)
         + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly p) := by
-  show DensePoly.toPoly (DensePoly.cadd (p.map cderivQ)
+  show DensePoly.toPoly (DensePoly.cadd (p.map cderiv)
       ((List.range (((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).length + 2)).map
         (fun k => cadd
           (if k ≥ 2 then ((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).getD (k - 2) []
@@ -182,7 +172,7 @@ def cancelTanC2 : List (DensePoly ℚ) := [[2, -4]]
 
 /-- `cancelTanClearedCheck b0 b2 c1 c2 q1 q2`: `true` iff `(q₁, q₂)` solves the tangent `t`-polynomial
 system `(Dq₁; Dq₂) + [[b₀−2t, −b₂],[b₂, b₀−2t]](q₁; q₂) = (c₁; c₂)` (`a = −1`, `n = 2`, `D = tanDeriv`),
-checked as both cleared residuals being `tisZero`. -/
+checked by the generic nested `DensePoly.cisZero` test. -/
 def cancelTanClearedCheck (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ)) : Bool :=
   -- diagonal shift `±2t`: as a t-polynomial, `2t = [0, 2]` (ℚ[x]-coefficients [0] then [2]).
   let twoT : List (DensePoly ℚ) := [[], [2]]
@@ -197,7 +187,7 @@ def cancelTanClearedCheck (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly
   let row2 := DensePoly.cadd (mulConst b2 q1) (DensePoly.csub (mulConst b0 q2) (mulT twoT q2))
   let r1 := DensePoly.csub (DensePoly.cadd (tanDeriv q1) row1) c1
   let r2 := DensePoly.csub (DensePoly.cadd (tanDeriv q2) row2) c2
-  tisZero r1 && tisZero r2
+  DensePoly.cisZero r1 && DensePoly.cisZero r2
 
 open DensePoly in
 /-- `toPolyG_twoT`: `DensePoly.toPoly [[],[2]] = C(C 2)·X` (the diagonal `2t` as a `ℚ[x][t]` polynomial). -/
@@ -217,20 +207,20 @@ solves the tangent `t`-polynomial system at the `ℚ[x][t]` level — both rows 
 `(Dq; …) + [[b₀−2t, −b₂],[b₂, b₀−2t]]·q = c`, `D = ∂/∂x + (t²+1)·∂/∂t`. -/
 theorem cancelTanClearedCheck_sound (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
-    (DensePoly.toPoly (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
+    (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q1)
         + Polynomial.C (toPoly (cscale (-1) b2)) * DensePoly.toPoly q2
       = DensePoly.toPoly c1 ∧
-      (DensePoly.toPoly (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
+      (DensePoly.toPoly (q2.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
         + Polynomial.C (toPoly b2) * DensePoly.toPoly q1
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q2)
       = DensePoly.toPoly c2 := by
   rw [cancelTanClearedCheck, Bool.and_eq_true] at hcheck
   obtain ⟨h1, h2⟩ := hcheck
-  have e1 := toPolyG_eq_zero_of_tisZero _ h1
-  have e2 := toPolyG_eq_zero_of_tisZero _ h2
+  have e1 := (DensePoly.cisZeroG_iff _).mp h1
+  have e2 := (DensePoly.cisZeroG_iff _).mp h2
   simp only [DensePoly.toPolyG_csubG, DensePoly.toPolyG_caddG, toPolyG_tanDeriv, toPolyG_map_cmulG, toPolyG_mulT,
     toPolyG_twoT, sub_eq_zero] at e1 e2
   exact ⟨by linear_combination e1, by linear_combination e2⟩
@@ -242,12 +232,12 @@ theorem cCoupledDECancelTan_sound_of_check (dbound : ℕ) (b0 b2 : DensePoly ℚ
     (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ)
     (_hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
-    (DensePoly.toPoly (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
+    (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q1)
         + Polynomial.C (toPoly (cscale (-1) b2)) * DensePoly.toPoly q2
       = DensePoly.toPoly c1 ∧
-      (DensePoly.toPoly (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
+      (DensePoly.toPoly (q2.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
         + Polynomial.C (toPoly b2) * DensePoly.toPoly q1
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q2)
@@ -272,12 +262,12 @@ theorem rischDE_cancelTan_example :
 example (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ)
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
-    (DensePoly.toPoly (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
+    (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q1)
         + Polynomial.C (toPoly (cscale (-1) b2)) * DensePoly.toPoly q2
       = DensePoly.toPoly c1 ∧
-      (DensePoly.toPoly (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
+      (DensePoly.toPoly (q2.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
         + Polynomial.C (toPoly b2) * DensePoly.toPoly q1
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q2)

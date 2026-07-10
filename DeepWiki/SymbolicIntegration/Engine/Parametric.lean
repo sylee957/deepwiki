@@ -20,10 +20,6 @@ Decide whether `n·b = Dz/z` for a nonzero `n ∈ ℤ` and `z ∈ k*` (a logarit
 with `b ∈ k = ℚ(x)`, `D = d/dx`. A logarithmic derivative `Dz/z` is always proper (`deg num < deg den`),
 so a non-proper `b` (in particular every nonzero constant) is provably not one. -/
 
-/-- **`d/dx` on `DensePoly ℚ`** `cderivQ p = cderiv p`: the plain formal derivative (the generic `cderiv`
-specialized at the constant field `ℚ`, the base monomial derivation `D` with `Dx = 1`, `κ_D = 0`). -/
-abbrev cderivQ (p : DensePoly ℚ) : DensePoly ℚ := cderiv p
-
 /-- **Lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPair num den =
 (num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdWf`); the zero
 numerator gives `([], [1])`. Used to read the polynomial part and denominator of a `CFrac ℚ`-valued
@@ -170,7 +166,7 @@ def cLimitedIntegrate (fnum fden : DensePoly ℚ) (wnums wdens : List (DensePoly
   -- generator `g₀ = f`, then `gᵢ = Dwᵢ/wᵢ` (logarithmic derivative of `wᵢ`).
   let logDerivs : List (DensePoly ℚ × DensePoly ℚ) :=
     (List.zip wnums wdens).map (fun (wn, wd) =>
-      let num := csub (cmul (cderivQ wn) wd) (cmul wn (cderivQ wd))
+      let num := csub (cmul (cderiv wn) wd) (cmul wn (cderiv wd))
       let den := cmul wn wd
       (num, den))
   let gnums := fnum :: logDerivs.map Prod.fst
@@ -321,7 +317,7 @@ theorem limitedIntegrate_example :
      -- the generators `cLimitedIntegrate` builds: `g₀ = f`, `gᵢ = Dwᵢ/wᵢ`.
      let logDerivs : List (DensePoly ℚ × DensePoly ℚ) :=
        (List.zip wnums wdens).map (fun (wn, wd) =>
-         (csub (cmul (cderivQ wn) wd) (cmul wn (cderivQ wd)), cmul wn wd))
+         (csub (cmul (cderiv wn) wd) (cmul wn (cderiv wd)), cmul wn wd))
      let gnums := limitedIntExampleFnum :: logDerivs.map Prod.fst
      let gdens := limitedIntExampleFden :: logDerivs.map Prod.snd
      let basis := cLimitedIntegrate limitedIntExampleFnum limitedIntExampleFden wnums wdens

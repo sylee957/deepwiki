@@ -17,7 +17,7 @@ namespace DensePoly
 `ℚ[x]` (`Dt = t²+1`). -/
 def tanDeriv (p : List (DensePoly ℚ)) : List (DensePoly ℚ) :=
   -- κ_D: coefficientwise d/dx
-  let kappa : List (DensePoly ℚ) := p.map cderivQ
+  let kappa : List (DensePoly ℚ) := p.map cderiv
   -- (t²+1)·dp/dt : shift the formal t-derivative by t² and by t⁰.
   let dpdt : List (DensePoly ℚ) := (p.drop 1).zipIdx.map (fun (c, i) => cscale ((i : ℚ) + 1) c)
   -- multiply dpdt by (t²+1): result_k = dpdt_{k-2} + dpdt_k
@@ -28,20 +28,6 @@ def tanDeriv (p : List (DensePoly ℚ)) : List (DensePoly ℚ) :=
       cadd lo hi)
   -- add κ_D and (t²+1)dp/dt coefficientwise (over the t-degree).
   DensePoly.cadd kappa mulDt
-
-/-- `tcoeff p m`: the `tᵐ`-coefficient (in `ℚ(x)`) of a `t`-polynomial, `[]` (zero) past the end. -/
-def tcoeff (p : List (DensePoly ℚ)) (m : ℕ) : DensePoly ℚ := p.getD m []
-
-/-- `tdeg p`: the `t`-degree (highest index with a nonzero coefficient), `0` for the zero polynomial. -/
-def tdeg (p : List (DensePoly ℚ)) : ℕ :=
-  ((p.zipIdx.filter (fun (c, _) => ¬ cisZero c)).map (fun (_, i) => i)).foldl max 0
-
-/-- `t`-polynomial zero test `tisZero p`: every `ℚ(x)`-coefficient is zero. -/
-def tisZero (p : List (DensePoly ℚ)) : Bool := p.all cisZero
-
-/-- `tshiftScale s m = s·tᵐ`: the single-term `t`-polynomial `[0,…,0,s]` with `m` leading zeros. -/
-def tshiftScale (s : DensePoly ℚ) (m : ℕ) : List (DensePoly ℚ) :=
-  (List.replicate m ([] : DensePoly ℚ)) ++ [s]
 
 /-- `cscaleListQ s p`: scale every `ℚ[x]`-coefficient of the `t`-polynomial `p` by `s ∈ ℚ`. -/
 def cscaleListQ (s : ℚ) (p : List (DensePoly ℚ)) : List (DensePoly ℚ) := p.map (cscale s)
@@ -94,8 +80,8 @@ def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : DensePoly ℚ) :
     (c1 c2 : List (DensePoly ℚ)) → (n : ℕ) → Option (List (DensePoly ℚ) × List (DensePoly ℚ))
   | c1, c2, 0 =>
     -- n = 0: c₁, c₂ must be in k (degree-0 in t); solve the base coupled system directly.
-    if tdeg c1 = 0 && tdeg c2 = 0 then
-      match cCoupledDESystem (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound with
+    if cdeg c1 = 0 && cdeg c2 = 0 then
+      match cCoupledDESystem (-1) b0 b2 (c1.getD 0 []) (c2.getD 0 []) dbound with
       | none => none
       | some (s1, s2) => some ([s1], [s2])
     else none

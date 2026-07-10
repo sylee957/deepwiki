@@ -201,7 +201,7 @@ theorem toGBCoeffPolyS_cscaleListQ (s : ℚ) (p : List (DensePoly ℚ)) :
 
 theorem toGBCoeffPolyS_tanDeriv (p : List (DensePoly ℚ)) :
     toGBCoeffPolyS (tanDeriv p)
-      = toGBCoeffPolyS (p.map cderivQ) + (X ^ 2 + 1) * Polynomial.derivative (toGBCoeffPolyS p) := by
+      = toGBCoeffPolyS (p.map cderiv) + (X ^ 2 + 1) * Polynomial.derivative (toGBCoeffPolyS p) := by
   rw [toGBCoeffPolyS_eq_map, toPolyG_tanDeriv, Polynomial.map_add, Polynomial.map_mul,
     Polynomial.map_add, Polynomial.map_pow, Polynomial.map_X, Polynomial.map_one,
     ← derivative_map]
@@ -277,7 +277,7 @@ theorem cplx_csub (p q r s : List (DensePoly ℚ)) :
 
 /-- The tangent derivation on the complexification. -/
 noncomputable def Dtan (q1 q2 : List (DensePoly ℚ)) : SGauss[X] :=
-  cplx (q1.map cderivQ) (q2.map cderivQ) + (X ^ 2 + 1) * derivative (cplx q1 q2)
+  cplx (q1.map cderiv) (q2.map cderiv) + (X ^ 2 + 1) * derivative (cplx q1 q2)
 
 theorem Dtan_eq (q1 q2 : List (DensePoly ℚ)) :
     Dtan q1 q2 = toGBCoeffPolyS (tanDeriv q1) + C iU * toGBCoeffPolyS (tanDeriv q2) := by
@@ -351,18 +351,18 @@ theorem cplx_eq_imp (p q r s : List (DensePoly ℚ)) (h : cplx p q = cplx r s) :
       apply Polynomial.ext; intro k; rw [Polynomial.coeff_zero]; exact (hcoeff k).2
     exact sub_eq_zero.mp this
 
-/-! ### Coefficient-`∂x` part: `DensePoly.toPoly (·.map cderivQ)` -/
+/-! ### Coefficient-`∂x` part: `DensePoly.toPoly (·.map cderiv)` -/
 
 /-- The κ (coefficient-`d/dx`) part reads coefficientwise as `derivative` on `ℚ[x]`. -/
 theorem mapDeriv_coeff (p : List (DensePoly ℚ)) (k : ℕ) :
-    (DensePoly.toPoly (p.map cderivQ)).coeff k = derivative ((DensePoly.toPoly p).coeff k) := by
+    (DensePoly.toPoly (p.map cderiv)).coeff k = derivative ((DensePoly.toPoly p).coeff k) := by
   rw [DensePoly.toPolyG_coeff_dense, DensePoly.toPolyG_coeff_dense]
   by_cases hk : k < p.length
   · rw [List.getD_eq_getElem?_getD, List.getElem?_map,
       show p[k]? = some p[k] from List.getElem?_eq_getElem hk]
     rw [List.getD_eq_getElem?_getD, show p[k]? = some p[k] from List.getElem?_eq_getElem hk]
     simp only [Option.map_some, Option.getD_some]
-    simp only [cderivQ, denote]
+    simp only [denote]
   · rw [List.getD_eq_getElem?_getD, List.getElem?_map,
       show p[k]? = none from List.getElem?_eq_none (by omega)]
     rw [List.getD_eq_getElem?_getD, show p[k]? = none from List.getElem?_eq_none (by omega)]
@@ -370,15 +370,15 @@ theorem mapDeriv_coeff (p : List (DensePoly ℚ)) (k : ℕ) :
 
 /-- κ-part additive over `DensePoly.cadd`. -/
 theorem mapDeriv_cadd (a b : List (DensePoly ℚ)) :
-    DensePoly.toPoly ((DensePoly.cadd a b).map cderivQ)
-      = DensePoly.toPoly (a.map cderivQ) + DensePoly.toPoly (b.map cderivQ) := by
+    DensePoly.toPoly ((DensePoly.cadd a b).map cderiv)
+      = DensePoly.toPoly (a.map cderiv) + DensePoly.toPoly (b.map cderiv) := by
   apply Polynomial.ext; intro k
   rw [mapDeriv_coeff, DensePoly.toPolyG_caddG, Polynomial.coeff_add, derivative_add,
     Polynomial.coeff_add, mapDeriv_coeff, mapDeriv_coeff]
 /-- κ-part subtractive over `DensePoly.csub`. -/
 theorem mapDeriv_csub (a b : List (DensePoly ℚ)) :
-    DensePoly.toPoly ((DensePoly.csub a b).map cderivQ)
-      = DensePoly.toPoly (a.map cderivQ) - DensePoly.toPoly (b.map cderivQ) := by
+    DensePoly.toPoly ((DensePoly.csub a b).map cderiv)
+      = DensePoly.toPoly (a.map cderiv) - DensePoly.toPoly (b.map cderiv) := by
   apply Polynomial.ext; intro k
   rw [mapDeriv_coeff, DensePoly.toPolyG_csubG, Polynomial.coeff_sub, derivative_sub,
     Polynomial.coeff_sub, mapDeriv_coeff, mapDeriv_coeff]
@@ -396,32 +396,27 @@ theorem toPolyG_tanDeriv_csub (a b : List (DensePoly ℚ)) :
     derivative_sub]
   ring
 
-/-! ### Building-block `DensePoly.toPoly` values: shift `[]::h` and singleton `[s]` -/
-
-theorem toPolyG_shift (h : List (DensePoly ℚ)) : DensePoly.toPoly ([] :: h) = X * DensePoly.toPoly h := by
-  rw [DensePoly.toPolyG_cons_dense, toPolyG_nil, map_zero, zero_add]
-theorem toPolyG_singleton (s : DensePoly ℚ) : DensePoly.toPoly [s] = C (toPoly s) := by
-  rw [show ([s] : List (DensePoly ℚ)) = s :: [] from rfl, DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil, mul_zero, add_zero]
-
-/-- κ of a shift: `DensePoly.toPoly (([]::h).map cderivQ) = X * DensePoly.toPoly (h.map cderivQ)`. -/
+/-- κ of a shift: `DensePoly.toPoly (([]::h).map cderiv) = X * DensePoly.toPoly (h.map cderiv)`. -/
 theorem mapDeriv_shift (h : List (DensePoly ℚ)) :
-    DensePoly.toPoly (([] :: h).map cderivQ) = X * DensePoly.toPoly (h.map cderivQ) := by
+    DensePoly.toPoly (([] :: h).map cderiv) = X * DensePoly.toPoly (h.map cderiv) := by
   rw [List.map_cons, DensePoly.toPolyG_cons_dense]
-  rw [show toPoly (cderivQ ([] : DensePoly ℚ)) = 0 from by
-    simp only [cderivQ, denote, toPolyG_nil, derivative_zero]]
+  rw [show toPoly (cderiv ([] : DensePoly ℚ)) = 0 from by
+    simp only [denote, toPolyG_nil, derivative_zero]]
   rw [map_zero, zero_add]
 
 theorem toPolyG_tanDeriv_shift (h : List (DensePoly ℚ)) :
     DensePoly.toPoly (tanDeriv ([] :: h)) = X * DensePoly.toPoly (tanDeriv h) + (X ^ 2 + 1) * DensePoly.toPoly h := by
-  rw [toPolyG_tanDeriv, mapDeriv_shift, toPolyG_shift, derivative_mul, derivative_X, one_mul,
-    toPolyG_tanDeriv]
+  rw [toPolyG_tanDeriv, mapDeriv_shift, DensePoly.toPolyG_cons_dense, toPolyG_nil,
+    map_zero, zero_add, derivative_mul, derivative_X, one_mul, toPolyG_tanDeriv]
   ring
 
 theorem toPolyG_tanDeriv_singleton (s : DensePoly ℚ) :
-    DensePoly.toPoly (tanDeriv [s]) = C (toPoly (cderivQ s)) := by
-  rw [toPolyG_tanDeriv, toPolyG_singleton, derivative_C, mul_zero, add_zero,
-    show ([s] : List (DensePoly ℚ)) = s :: [] from rfl, List.map_cons, List.map_nil,
-    toPolyG_singleton]
+    DensePoly.toPoly (tanDeriv [s]) = C (toPoly (cderiv s)) := by
+  rw [toPolyG_tanDeriv, show ([s] : List (DensePoly ℚ)) = s :: [] from rfl,
+    DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil, mul_zero, add_zero, derivative_C,
+    List.map_cons, List.map_nil, DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil, mul_zero,
+    add_zero]
+  ring
 
 /-! ### The numerator vanishes at `t = i` -/
 
@@ -430,10 +425,12 @@ theorem eval_toGBCoeffPolyS (p : List (DensePoly ℚ)) :
 
 theorem eval_toGBCoeffPolyS_singleton (s : DensePoly ℚ) : (toGBCoeffPolyS [s]).eval iU = toS s := by
   rw [show toGBCoeffPolyS [s] = C (toS s) from by
-    rw [toGBCoeffPolyS_eq_map, toPolyG_singleton, map_C]; rfl, eval_C]
+    rw [toGBCoeffPolyS_eq_map, DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil,
+      mul_zero, add_zero, map_C]; rfl, eval_C]
 theorem eval_toGBCoeffPolyS_shift (h : List (DensePoly ℚ)) :
     (toGBCoeffPolyS ([] :: h)).eval iU = iU * (toGBCoeffPolyS h).eval iU := by
-  rw [toGBCoeffPolyS_eq_map, toPolyG_shift, Polynomial.map_mul, Polynomial.map_X, eval_mul, eval_X]
+  rw [toGBCoeffPolyS_eq_map, DensePoly.toPolyG_cons_dense, toPolyG_nil, map_zero,
+    zero_add, Polynomial.map_mul, Polynomial.map_X, eval_mul, eval_X]
   rfl
 
 /-- The numerator `realNum + i·imagNum` vanishes at `t = i` (since `z = c(i)`). -/
@@ -458,7 +455,8 @@ theorem numerator_eval_zero (c1 c2 : List (DensePoly ℚ)) (s1 s2 : DensePoly �
 /-! ### The `divByTminusI` reduction, projected to two real `ℚ[x][t]` identities -/
 
 theorem toGBCoeffPolyS_shift (h : List (DensePoly ℚ)) : toGBCoeffPolyS ([] :: h) = X * toGBCoeffPolyS h := by
-  rw [toGBCoeffPolyS_eq_map, toPolyG_shift, Polynomial.map_mul, Polynomial.map_X]; rfl
+  rw [toGBCoeffPolyS_eq_map, DensePoly.toPolyG_cons_dense, toPolyG_nil, map_zero,
+    zero_add, Polynomial.map_mul, Polynomial.map_X]; rfl
 
 /-- `(t − i)·(D₁ + i·D₂) = cplx (t·D₁ + D₂) (t·D₂ − D₁)`. -/
 theorem mul_X_sub_iU_cplx (d1 d2 : List (DensePoly ℚ)) :
@@ -494,61 +492,6 @@ theorem reduction_real (c1 c2 : List (DensePoly ℚ)) (s1 s2 : DensePoly ℚ) (n
   rw [hquot, mul_X_sub_iU_cplx] at hspec
   exact cplx_eq_imp _ _ _ _ hspec
 
-/-! ### The telescoping induction predicate and base case -/
-
-/-- `init ≤ l.foldl max init` and it is monotone in `init`. -/
-theorem foldl_max_init_le (l : List ℕ) : ∀ a b : ℕ, a ≤ b → l.foldl max a ≤ l.foldl max b := by
-  induction l with
-  | nil => intro a b h; simpa using h
-  | cons x xs ih => intro a b h; exact ih _ _ (by omega)
-
-theorem le_foldl_max_init (l : List ℕ) (init : ℕ) : init ≤ l.foldl max init := by
-  induction l generalizing init with
-  | nil => simp
-  | cons x xs ih => exact le_trans (le_max_left init x) (ih (max init x))
-
-/-- `x ∈ l → x ≤ l.foldl max init` (over `ℕ`). -/
-theorem le_foldl_max (l : List ℕ) (init x : ℕ) (hx : x ∈ l) : x ≤ l.foldl max init := by
-  induction l generalizing init with
-  | nil => simp at hx
-  | cons a as ih =>
-    rw [List.foldl_cons]
-    rcases List.mem_cons.mp hx with rfl | hmem
-    · exact le_trans (le_max_right init x) (le_foldl_max_init as (max init x))
-    · exact ih _ hmem
-
-/-- A nonzero coefficient at index `j` forces `j ≤ tdeg p`. -/
-theorem le_tdeg_of_ne_zero (p : List (DensePoly ℚ)) (j : ℕ) (hj : j < p.length)
-    (hne : ¬ cisZero (p.getD j [])) : j ≤ tdeg p := by
-  rw [tdeg]
-  apply le_foldl_max _ 0 j
-  apply List.mem_map.mpr
-  refine ⟨(p.getD j [], j), ?_, rfl⟩
-  rw [List.mem_filter]
-  refine ⟨?_, by simpa using hne⟩
-  rw [List.mem_iff_getElem]
-  refine ⟨j, by rw [List.length_zipIdx]; exact hj, ?_⟩
-  rw [List.getElem_zipIdx]
-  simp [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hj]
-
-/-- `tdeg p = 0 ⟹ DensePoly.toPoly p = C (toPoly (tcoeff p 0))` (only the `t⁰`-coefficient survives). -/
-theorem tdeg_zero_toPoly2 (p : List (DensePoly ℚ)) (h : tdeg p = 0) :
-    DensePoly.toPoly p = C (toPoly (tcoeff p 0)) := by
-  apply Polynomial.ext; intro k
-  rw [DensePoly.toPolyG_coeff_dense]
-  cases k with
-  | zero => rw [tcoeff]; simp
-  | succ m =>
-    rw [Polynomial.coeff_C]
-    simp only [Nat.succ_ne_zero, if_false]
-    by_cases hk : m + 1 < p.length
-    · have : cisZero (p.getD (m + 1) []) := by
-        by_contra hne
-        have := le_tdeg_of_ne_zero p (m + 1) hk hne
-        omega
-      rw [(cisZeroG_iff _).mp this]
-    · rw [getD_out p (m + 1) (by omega), toPolyG_nil]
-
 /-! ### The telescoping induction -/
 
 /-- The coupled `t`-polynomial system at level `n` over `ℚ[x][t]` (`a = −1`, `η = 1`):
@@ -561,31 +504,32 @@ def TanSolves (b0 b2 : DensePoly ℚ) (n : ℕ) (c1 c2 q1 q2 : List (DensePoly �
       + C (toPoly b2) * DensePoly.toPoly q1
       + (C (toPoly b0) - C (C ((n : ℚ))) * X) * DensePoly.toPoly q2 = DensePoly.toPoly c2
 
-/-- `toPoly (cscale nN [1]) = C nN`. -/
-theorem toPolyG_scale_one (nN : ℚ) : toPoly (cscale nN [CCommRing.one]) = C nN := by
-  simp [show CFieldSpec.toK (CCommRing.one : ℚ) = 1 from rfl,
-    show CFieldSpec.toK nN = nN from rfl]
-
 /-- Base case (`n = 0`, `q = [s]`): the singleton solution solves the level-0 coupled `t`-system. -/
 theorem reconstruct_base (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 : List (DensePoly ℚ))
-    (s1 s2 : DensePoly ℚ) (hd1 : tdeg c1 = 0) (hd2 : tdeg c2 = 0)
-    (hsolve : cCoupledDESystem (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound = some (s1, s2)) :
+    (s1 s2 : DensePoly ℚ) (hd1 : cdeg c1 = 0) (hd2 : cdeg c2 = 0)
+    (hsolve : cCoupledDESystem (-1) b0 b2 (c1.getD 0 []) (c2.getD 0 []) dbound = some (s1, s2)) :
     TanSolves b0 b2 0 c1 c2 [s1] [s2] := by
-  obtain ⟨hb1, hb2⟩ := cCoupledDESystem_sound (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0)
+  obtain ⟨hb1, hb2⟩ := cCoupledDESystem_sound (-1) b0 b2 (c1.getD 0 []) (c2.getD 0 [])
     dbound s1 s2 hsolve
   refine ⟨?_, ?_⟩
-  · rw [toPolyG_tanDeriv_singleton, toPolyG_singleton, toPolyG_singleton, tdeg_zero_toPoly2 c1 hd1]
+  · rw [toPolyG_tanDeriv_singleton, DensePoly.toPolyG_cons_dense,
+      DensePoly.toPolyG_nil, mul_zero, add_zero, DensePoly.toPolyG_cons_dense,
+      DensePoly.toPolyG_nil, mul_zero, add_zero,
+      DensePoly.toPolyG_eq_C_of_cdeg_eq_zero c1 hd1, DensePoly.toR_densePoly]
     simp only [Nat.cast_zero, map_zero, zero_mul, sub_zero]
-    rw [show C (toPoly (cderivQ s1)) = C (derivative (toPoly s1)) from by
-        simp only [cderivQ, denote]]
+    rw [show C (toPoly (cderiv s1)) = C (derivative (toPoly s1)) from by
+        simp only [denote]]
     have h := congrArg (Polynomial.C (R := Polynomial ℚ)) hb1
     rw [map_add, map_add, map_mul, map_mul, map_mul] at h
     simp only [map_neg, map_one] at h
     linear_combination h
-  · rw [toPolyG_tanDeriv_singleton, toPolyG_singleton, toPolyG_singleton, tdeg_zero_toPoly2 c2 hd2]
+  · rw [toPolyG_tanDeriv_singleton, DensePoly.toPolyG_cons_dense,
+      DensePoly.toPolyG_nil, mul_zero, add_zero, DensePoly.toPolyG_cons_dense,
+      DensePoly.toPolyG_nil, mul_zero, add_zero,
+      DensePoly.toPolyG_eq_C_of_cdeg_eq_zero c2 hd2, DensePoly.toR_densePoly]
     simp only [Nat.cast_zero, map_zero, zero_mul, sub_zero]
-    rw [show C (toPoly (cderivQ s2)) = C (derivative (toPoly s2)) from by
-        simp only [cderivQ, denote]]
+    rw [show C (toPoly (cderiv s2)) = C (derivative (toPoly s2)) from by
+        simp only [denote]]
     have h := congrArg (Polynomial.C (R := Polynomial ℚ)) hb2
     rw [map_add, map_add, map_mul, map_mul] at h
     linear_combination h
@@ -601,10 +545,10 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
   | zero =>
     intro b2 c1 c2 q1 q2 hsome
     rw [cCoupledDECancelTan] at hsome
-    by_cases hd : (decide (tdeg c1 = 0) && decide (tdeg c2 = 0)) = true
+    by_cases hd : (decide (cdeg c1 = 0) && decide (cdeg c2 = 0)) = true
     · rw [hd, if_pos rfl] at hsome
       rw [Bool.and_eq_true, decide_eq_true_eq, decide_eq_true_eq] at hd
-      rcases hm : cCoupledDESystem (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound
+      rcases hm : cCoupledDESystem (-1) b0 b2 (c1.getD 0 []) (c2.getD 0 []) dbound
         with _ | ⟨s1, s2⟩
       · rw [hm] at hsome; simp at hsome
       · rw [hm, Option.some.injEq, Prod.mk.injEq] at hsome
@@ -648,24 +592,35 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
         obtain ⟨hI1, hI2⟩ := hih
         -- reduction: DensePoly.toPoly realNum = X*D1 + D2 ; DensePoly.toPoly imagNum = X*D2 - D1.
         rw [show DensePoly.toPoly (DensePoly.cadd ([] :: quot.map Prod.fst) (quot.map Prod.snd)) = X * D1 + D2 from by
-              rw [DensePoly.toPolyG_caddG, toPolyG_shift],
+              rw [DensePoly.toPolyG_caddG, DensePoly.toPolyG_cons_dense, toPolyG_nil,
+                map_zero, zero_add],
             show DensePoly.toPoly (DensePoly.csub ([] :: quot.map Prod.snd) (quot.map Prod.fst)) = X * D2 - D1 from by
-              rw [DensePoly.toPolyG_csubG, toPolyG_shift]] at hred
+              rw [DensePoly.toPolyG_csubG, DensePoly.toPolyG_cons_dense, toPolyG_nil,
+                map_zero, zero_add]] at hred
         obtain ⟨hR1, hR2⟩ := hred
         -- expand DensePoly.toPoly of realNum / imagNum (as ℚ[x][t]).
         have hRexp : DensePoly.toPoly realNum
             = (DensePoly.toPoly c1 - C (toPoly z1)) + C (C nN) * (X * C (toPoly s1) + C (toPoly s2)) := by
-          rw [hrN, DensePoly.toPolyG_caddG, DensePoly.toPolyG_csubG, toPolyG_singleton, toPolyG_cscaleListQ, DensePoly.toPolyG_caddG,
-            toPolyG_shift, toPolyG_singleton, toPolyG_singleton]
+          rw [hrN, DensePoly.toPolyG_caddG, DensePoly.toPolyG_csubG,
+            DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil, mul_zero, add_zero,
+            toPolyG_cscaleListQ, DensePoly.toPolyG_caddG, DensePoly.toPolyG_cons_dense,
+            toPolyG_nil, map_zero, zero_add, DensePoly.toPolyG_cons_dense,
+            DensePoly.toPolyG_nil, mul_zero, add_zero, DensePoly.toPolyG_cons_dense,
+            DensePoly.toPolyG_nil, mul_zero, add_zero]
         have hIexp : DensePoly.toPoly imagNum
             = (DensePoly.toPoly c2 - C (toPoly z2)) + C (C nN) * (X * C (toPoly s2) - C (toPoly s1)) := by
-          rw [hiN, DensePoly.toPolyG_caddG, DensePoly.toPolyG_csubG, toPolyG_singleton, toPolyG_cscaleListQ, DensePoly.toPolyG_csubG,
-            toPolyG_shift, toPolyG_singleton, toPolyG_singleton]
+          rw [hiN, DensePoly.toPolyG_caddG, DensePoly.toPolyG_csubG,
+            DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil, mul_zero, add_zero,
+            toPolyG_cscaleListQ, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cons_dense,
+            toPolyG_nil, map_zero, zero_add, DensePoly.toPolyG_cons_dense,
+            DensePoly.toPolyG_nil, mul_zero, add_zero, DensePoly.toPolyG_cons_dense,
+            DensePoly.toPolyG_nil, mul_zero, add_zero]
         rw [hRexp] at hR1; rw [hIexp] at hR2
         -- base solve identities, mapped C : ℚ[x] → ℚ[x][t].
         have hB2shift : toPoly b2shift = toPoly b2 - C nN := by
           rw [hb2shift]
-          simp only [denote, toPolyG_scale_one]
+          simp only [denote, CFieldSpec.toK, id_eq, mul_zero, add_zero]
+          rw [show (CCommRing.one : ℚ) = 1 from rfl, map_one, mul_one]
         rw [hB2shift] at hb1 hb2
         have hCB1 := congrArg (Polynomial.C (R := Polynomial ℚ)) hb1
         have hCB2 := congrArg (Polynomial.C (R := Polynomial ℚ)) hb2
@@ -674,17 +629,21 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
         have hsh2 : ([[]] ++ h2 : List (DensePoly ℚ)) = [] :: h2 := rfl
         -- expand DensePoly.toPoly / DensePoly.toPoly∘tanDeriv of the assembled q1, q2.
         have hQ1 : DensePoly.toPoly (DensePoly.cadd (DensePoly.cadd ([[]] ++ h1) h2) [s1]) = X * H1 + H2 + C (toPoly s1) := by
-          rw [hsh1, DensePoly.toPolyG_caddG, DensePoly.toPolyG_caddG, toPolyG_shift, toPolyG_singleton]
+          rw [hsh1, DensePoly.toPolyG_caddG, DensePoly.toPolyG_caddG,
+            DensePoly.toPolyG_cons_dense, toPolyG_nil, map_zero, zero_add,
+            DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil, mul_zero, add_zero]
         have hQ2 : DensePoly.toPoly (DensePoly.csub (DensePoly.cadd ([[]] ++ h2) [s2]) h1) = X * H2 + C (toPoly s2) - H1 := by
-          rw [hsh2, DensePoly.toPolyG_csubG, DensePoly.toPolyG_caddG, toPolyG_shift, toPolyG_singleton]
+          rw [hsh2, DensePoly.toPolyG_csubG, DensePoly.toPolyG_caddG,
+            DensePoly.toPolyG_cons_dense, toPolyG_nil, map_zero, zero_add,
+            DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil, mul_zero, add_zero]
         have hDQ1 : DensePoly.toPoly (tanDeriv (DensePoly.cadd (DensePoly.cadd ([[]] ++ h1) h2) [s1]))
             = (X * DH1 + (X ^ 2 + 1) * H1) + DH2 + C (derivative (toPoly s1)) := by
           rw [hsh1, toPolyG_tanDeriv_cadd, toPolyG_tanDeriv_cadd, toPolyG_tanDeriv_shift,
-            toPolyG_tanDeriv_singleton, cderivQ, toPolyG_cderivG]
+            toPolyG_tanDeriv_singleton, toPolyG_cderivG]
         have hDQ2 : DensePoly.toPoly (tanDeriv (DensePoly.csub (DensePoly.cadd ([[]] ++ h2) [s2]) h1))
             = (X * DH2 + (X ^ 2 + 1) * H2) + C (derivative (toPoly s2)) - DH1 := by
           rw [hsh2, toPolyG_tanDeriv_csub, toPolyG_tanDeriv_cadd, toPolyG_tanDeriv_shift,
-            toPolyG_tanDeriv_singleton, cderivQ, toPolyG_cderivG]
+            toPolyG_tanDeriv_singleton, toPolyG_cderivG]
         rw [hnN] at hR1 hR2 hCB1 hCB2
         simp only [map_add, map_one] at hI1 hI2 hR1 hR2 hCB1 hCB2
         rw [TanSolves, hQ1, hQ2, hDQ1, hDQ2]
@@ -693,18 +652,6 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
         constructor
         · linear_combination X * hI1 + hI2 + hCB1 - hR1
         · linear_combination X * hI2 - hI1 + hCB2 - hR2
-
-/-- `DensePoly.toPoly p = 0 ⟹ tisZero p = true` (every coefficient vanishes). -/
-theorem tisZero_of_toPolyG_zero (p : List (DensePoly ℚ))
-    (h : DensePoly.toPoly p = 0) : tisZero p = true := by
-  rw [tisZero, List.all_eq_true]
-  intro a ha
-  obtain ⟨k, hk, rfl⟩ := List.getElem_of_mem ha
-  rw [cisZeroG_iff]
-  have hc := DensePoly.toPolyG_coeff_dense p k
-  rw [h, Polynomial.coeff_zero] at hc
-  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hk] at hc
-  exact hc.symm
 
 /-- A successful `cCoupledDECancelTan … 2` solve satisfies `cancelTanClearedCheck … = true`,
 since `reconstruct` makes the residual `t`-polynomials `DensePoly.toPoly = 0` at level `n = 2`. -/
@@ -715,7 +662,7 @@ theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : DensePoly �
   obtain ⟨hG1, hG2⟩ := reconstruct dbound b0 2 b2 c1 c2 q1 q2 hsome
   rw [cancelTanClearedCheck, Bool.and_eq_true]
   constructor
-  · apply tisZero_of_toPolyG_zero
+  · rw [DensePoly.cisZeroG_iff]
     -- residual r1 = DensePoly.csub (DensePoly.cadd (tanDeriv q1) row1) c1, row1 = (b0 - 2t)q1 - b2 q2.
     rw [DensePoly.toPolyG_csubG, DensePoly.toPolyG_caddG, toPolyG_tanDeriv, DensePoly.toPolyG_caddG, DensePoly.toPolyG_csubG,
       toPolyG_map_cmulG, toPolyG_map_cmulG, toPolyG_mulT, toPolyG_twoT]
@@ -724,7 +671,7 @@ theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : DensePoly �
     simp only [Nat.cast_ofNat] at hG1
     simp only [denote, CFieldSpec.toK, id_eq, map_mul, map_neg, map_one]
     linear_combination hG1
-  · apply tisZero_of_toPolyG_zero
+  · rw [DensePoly.cisZeroG_iff]
     rw [DensePoly.toPolyG_csubG, DensePoly.toPolyG_caddG, toPolyG_tanDeriv, DensePoly.toPolyG_caddG, toPolyG_map_cmulG, DensePoly.toPolyG_csubG,
       toPolyG_map_cmulG, toPolyG_mulT, toPolyG_twoT]
     rw [toPolyG_tanDeriv] at hG2
@@ -742,12 +689,12 @@ open DensePoly Polynomial
 theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : DensePoly ℚ)
     (c1 c2 q1 q2 : List (DensePoly ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
-    (DensePoly.toPoly (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
+    (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q1)
         + Polynomial.C (toPoly (cscale (-1) b2)) * DensePoly.toPoly q2
       = DensePoly.toPoly c1 ∧
-      (DensePoly.toPoly (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
+      (DensePoly.toPoly (q2.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
         + Polynomial.C (toPoly b2) * DensePoly.toPoly q1
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q2)
@@ -758,12 +705,12 @@ theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : DensePoly ℚ)
 -- ★ Restatement against the intended wording.
 example (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
-    (DensePoly.toPoly (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
+    (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q1)
         + Polynomial.C (toPoly (cscale (-1) b2)) * DensePoly.toPoly q2
       = DensePoly.toPoly c1 ∧
-      (DensePoly.toPoly (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
+      (DensePoly.toPoly (q2.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
         + Polynomial.C (toPoly b2) * DensePoly.toPoly q1
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q2)

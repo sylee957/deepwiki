@@ -127,8 +127,8 @@ def coupledExZ2 : DensePoly ℚ := [4, -4]          -- 4 − 4x
 /-- `coupledClearedCheck a b1 b2 z1 z2 y1 y2`: `true` iff `(y₁, y₂)` solves the base coupled system over
 ℚ(x), i.e. both cleared residuals `Dyᵢ + … − zᵢ` are `cisZero`. -/
 def coupledClearedCheck (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) : Bool :=
-  let r1 := csub (cadd (cadd (cderivQ y1) (cmul b1 y1)) (cscale a (cmul b2 y2))) z1
-  let r2 := csub (cadd (cadd (cderivQ y2) (cmul b2 y1)) (cmul b1 y2)) z2
+  let r1 := csub (cadd (cadd (cderiv y1) (cmul b1 y1)) (cscale a (cmul b2 y2))) z1
+  let r2 := csub (cadd (cadd (cderiv y2) (cmul b2 y1)) (cmul b1 y2)) z2
   cisZero r1 && cisZero r2
 
 /-! ### Base coupled-system soundness from the cleared check

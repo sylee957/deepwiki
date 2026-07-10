@@ -533,10 +533,26 @@ theorem cdegG_eq_natDegree {α : Type*} [CCommRing α] [CRingSpec α] (p : Dense
   rcases eq_or_ne (cnorm p) [] with h | h
   · have h0 : toPoly p = 0 := by rw [← toPolyG_cnormG, h, toPolyG_nil]
     rw [cdeg, h, h0]; simp
+
   · refine le_antisymm ?_ (natDegree_toPolyG_le p)
     apply Polynomial.le_natDegree_of_ne_zero
     rw [← toR_cleadG_eq_coeff]
     exact toR_cleadG_ne_zero h
+
+/-- A dense polynomial of degree zero is the constant given by its coefficient at index zero. -/
+theorem toPolyG_eq_C_of_cdeg_eq_zero {α : Type*} [CCommRing α] [CRingSpec α]
+    (p : DensePoly α) (h : cdeg p = 0) :
+    toPoly p = Polynomial.C (CRingSpec.toR ((p : List α).getD 0 CCommRing.zero)) := by
+  have hdeg : (toPoly p).natDegree = 0 := by rwa [← cdegG_eq_natDegree]
+  calc
+    toPoly p = Polynomial.C ((toPoly p).coeff 0) :=
+      Polynomial.eq_C_of_natDegree_eq_zero hdeg
+    _ = Polynomial.C (CRingSpec.toR ((p : List α).getD 0 CCommRing.zero)) := by
+      rw [toPolyG_coeff]
+
+example {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) (h : cdeg p = 0) :
+    toPoly p = Polynomial.C (CRingSpec.toR ((p : List α).getD 0 CCommRing.zero)) :=
+  toPolyG_eq_C_of_cdeg_eq_zero p h
 
 /-- For a nonzero generic polynomial, the normalized list length is `natDegree + 1`. -/
 theorem length_cnormG_of_ne {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α)
