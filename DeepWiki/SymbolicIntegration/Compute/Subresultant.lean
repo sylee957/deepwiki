@@ -27,27 +27,6 @@ def bnorm : BPoly → BPoly
     | [] => if cisZero a then [] else [a]
     | r => a :: r
 
-/-! The `BPoly` arithmetic is the ring-generalized generic engine at coefficient `DensePoly ℚ`
-(`BPoly = DensePoly (DensePoly ℚ)`, keystone `CCommRing (DensePoly ℚ)`): each `b*` is the corresponding `c*`. -/
-
-/-- Coefficientwise addition of two `BPoly`s in `x` — the generic `cadd` at coefficient `DensePoly ℚ`. -/
-def badd : BPoly → BPoly → BPoly := DensePoly.cadd
-
-/-- Negation of a `BPoly` — the generic `cneg` at coefficient `DensePoly ℚ`. -/
-def bneg (p : BPoly) : BPoly := DensePoly.cneg p
-
-/-- Subtraction of `BPoly`s — the generic `csub` at coefficient `DensePoly ℚ`. -/
-def bsub (p q : BPoly) : BPoly := DensePoly.csub p q
-
-/-- Scale by a `DensePoly ℚ` (a `ℚ[t]` scalar) — the generic `cscale` at coefficient `DensePoly ℚ`. -/
-def bscaleC (c : DensePoly ℚ) (p : BPoly) : BPoly := DensePoly.cscale c p
-
-/-- Shift in `x` `bshift k p = xᵏ · p` — the generic `cshift` at coefficient `DensePoly ℚ`. -/
-def bshift (k : ℕ) (p : BPoly) : BPoly := DensePoly.cshift k p
-
-/-- Polynomial multiplication of `BPoly`s in `x` — the generic `cmul` at coefficient `DensePoly ℚ`. -/
-def bmul : BPoly → BPoly → BPoly := DensePoly.cmul
-
 /-- Zero test for a `BPoly`: `true` iff it normalizes to `[]`. -/
 def bisZero (p : BPoly) : Bool := bnorm p == []
 
@@ -74,7 +53,8 @@ def bpsremainder : ℕ → BPoly → BPoly → BPoly
       let lcq := blc q
       let lcp := blc p
       -- `lc(q)·p − lc(p)·xᵏ·q`: kills the leading term, stays in `ℚ[t][x]`.
-      let p' := bnorm (bsub (bscaleC lcq p) (bscaleC lcp (bshift k q)))
+      let p' := bnorm (DensePoly.csub (DensePoly.cscale lcq p)
+        (DensePoly.cscale lcp (DensePoly.cshift k q)))
       bpsremainder fuel p' q
 
 /-! ### `ℚ[t]`-content management (so the LRT gcd comes out clean) -/
@@ -117,17 +97,12 @@ def bmonicXmodR (R : DensePoly ℚ) (p : BPoly) : BPoly :=
     let inv := cinvMod R (blc p)
     bnorm (p.map (fun c => credR R (cmul c inv)))
 
-/-! ### Exact `ℚ[t]`-division of a `BPoly` by a `DensePoly ℚ`, and `ℚ[t]` powers -/
+/-! ### Exact `ℚ[t]`-division of a `BPoly` by a `DensePoly ℚ` -/
 
 /-- Exact `ℚ[t]`-scalar division `bdivC p c = p / c`: divide every `x`-coefficient of `p` by the
 `DensePoly ℚ` scalar `c`. -/
 def bdivC (p : BPoly) (c : DensePoly ℚ) : BPoly :=
   bnorm (p.map (fun a => DensePoly.cdivWf a c))
-
-/-- `ℚ[t]`-power `cpowP c n = cⁿ` (`DensePoly ℚ` power, by `ℕ`-recursion). -/
-def cpowP (c : DensePoly ℚ) : ℕ → DensePoly ℚ
-  | 0 => [1]
-  | n + 1 => cmul c (cpowP c n)
 
 /-! ### The subresultant PRS (Collins–Brown)
 The subresultant polynomial-remainder sequence computes the whole gcd chain with exact `ℚ[t]`
@@ -148,9 +123,10 @@ def subresPRS (fuel : ℕ) (P Q : BPoly) : List BPoly :=
         let negLc : DensePoly ℚ := cneg lcRi_1
         let psi' : DensePoly ℚ :=
           if deltaPrev = 0 then psi
-          else DensePoly.cdivWf (cpowP negLc deltaPrev) (cpowP psi (deltaPrev - 1))
+          else DensePoly.cdivWf (DensePoly.cpow negLc deltaPrev)
+            (DensePoly.cpow psi (deltaPrev - 1))
         -- β = −lc(Ri_1) · ψ'^δ
-        let beta : DensePoly ℚ := cmul negLc (cpowP psi' deltaPrev)
+        let beta : DensePoly ℚ := cmul negLc (DensePoly.cpow psi' deltaPrev)
         let pr : BPoly := bpsremainder fuel Ri_1 Ri
         let Ri1 : BPoly := bdivC pr beta
         let deltaNew : ℕ := bdeg Ri - bdeg Ri1
@@ -174,7 +150,7 @@ def ctVar : DensePoly ℚ := [0, 1]
 /-- The log argument's second operand `bArgAmtD' A D = A − t·D'` as a `BPoly`: `A` lifted with
 constant `t`-coefficients, minus `t · D'`. -/
 def bArgAmtD' (A D : DensePoly ℚ) : BPoly :=
-  bsub (liftCtoBPoly A) (bscaleC ctVar (liftCtoBPoly (cderiv D)))
+  DensePoly.csub (liftCtoBPoly A) (DensePoly.cscale ctVar (liftCtoBPoly (cderiv D)))
 
 /-- The raw degree-`j` subresultant `lrtSubresultantCompute fuel j A D = Sⱼ(D, A − t·D')`: the
 bivariate subresultant of `D` (lifted) and `A − t·D'` at `x`-degree `j`, `ℚ[t]`-primitive in `x`. -/

@@ -38,7 +38,7 @@ theorem toBPoly_bArgAmtD' (A D : DensePoly ℚ) :
     toBPoly (bArgAmtD' A D)
       = (toPoly A).map (Polynomial.C : ℚ →+* ℚ[X])
         - Polynomial.C Polynomial.X * (derivative (toPoly D)).map (Polynomial.C : ℚ →+* ℚ[X]) := by
-  rw [bArgAmtD', toBPoly_bsub, toBPoly_liftCtoBPoly, toBPoly_bscaleC, toBPoly_liftCtoBPoly,
+  rw [bArgAmtD', toBPoly_csub, toBPoly_liftCtoBPoly, toBPoly_cscale, toBPoly_liftCtoBPoly,
     toPoly_ctVar]
   simp only [toPoly_eq_dense]
   rw [DensePoly.toPolyG_cderivG]

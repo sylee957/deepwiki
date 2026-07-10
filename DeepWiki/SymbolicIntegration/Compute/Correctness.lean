@@ -37,11 +37,8 @@ noncomputable def toBPoly : BPoly → Polynomial (Polynomial ℚ)
 @[simp] theorem toBPoly_cons (a : DensePoly ℚ) (p : BPoly) :
     toBPoly (a :: p) = Polynomial.C (toPoly a) + Polynomial.X * toBPoly p := rfl
 
-/-! ### Bridges to the generic keystone engine (`DensePoly.toPoly` / `c*` at coefficient `DensePoly ℚ`)
-`BPoly = DensePoly (DensePoly ℚ)` and the ring-generalized engine makes `DensePoly.toPoly`/`cadd`/… valid at the
-`DensePoly ℚ` coefficient (keystone `CRingSpec (DensePoly ℚ)`). These identify the hand-written `ℚ`-bivariate
-layer with the generic one, so the `b*` homomorphism satellites reduce to the generic `toPolyG_*`
-squares instead of re-proving the recursions. -/
+/-! ### Bridge to the generic keystone engine
+`BPoly = DensePoly (DensePoly ℚ)`, so its arithmetic and denotation use the generic dense API. -/
 
 /-- The bivariate denotation IS the generic keystone denotation: `toBPoly = DensePoly.toPoly` at `DensePoly (DensePoly ℚ)`. -/
 theorem toBPoly_eq_toPolyG (p : BPoly) : toBPoly p = DensePoly.toPoly p := by
@@ -52,50 +49,26 @@ theorem toBPoly_eq_toPolyG (p : BPoly) : toBPoly p = DensePoly.toPoly p := by
       show toPoly a = DensePoly.toPoly a from rfl,
       show CRingSpec.toR a = DensePoly.toPoly a from rfl]
 
-/-- `badd = cadd` at coefficient `DensePoly ℚ` (definitional). -/
-theorem badd_eq (p q : BPoly) : badd p q = DensePoly.cadd p q := rfl
+/-- `DensePoly.cadd` realizes addition through the bivariate denotation. -/
+theorem toBPoly_cadd (p q : BPoly) :
+    toBPoly (DensePoly.cadd p q) = toBPoly p + toBPoly q := by
+  simp only [toBPoly_eq_toPolyG, DensePoly.toPolyG_caddG]
 
-/-- `bmul = cmul` at coefficient `DensePoly ℚ` (definitional). -/
-theorem bmul_eq (p q : BPoly) : bmul p q = DensePoly.cmul p q := rfl
+/-- `DensePoly.csub` realizes subtraction through the bivariate denotation. -/
+theorem toBPoly_csub (p q : BPoly) :
+    toBPoly (DensePoly.csub p q) = toBPoly p - toBPoly q := by
+  simp only [toBPoly_eq_toPolyG, DensePoly.toPolyG_csubG]
 
-/-- `bshift = cshift` at coefficient `DensePoly ℚ` (definitional). -/
-theorem bshift_eq (k : ℕ) (p : BPoly) : bshift k p = DensePoly.cshift k p := rfl
+/-- `DensePoly.cscale` realizes scalar multiplication through the bivariate denotation. -/
+theorem toBPoly_cscale (c : DensePoly ℚ) (p : BPoly) :
+    toBPoly (DensePoly.cscale c p) = Polynomial.C (toPoly c) * toBPoly p := by
+  simp only [toBPoly_eq_toPolyG, DensePoly.toPolyG_cscaleG, toPoly_eq_dense,
+    show ∀ a : DensePoly ℚ, CRingSpec.toR a = DensePoly.toPoly a from fun _ => rfl]
 
-/-- `bneg = cneg` at coefficient `DensePoly ℚ` (definitional). -/
-theorem bneg_eq (p : BPoly) : bneg p = DensePoly.cneg p := rfl
-
-/-- `bscaleC = cscale` at coefficient `DensePoly ℚ` (definitional). -/
-theorem bscaleC_eq (c : DensePoly ℚ) (p : BPoly) : bscaleC c p = DensePoly.cscale c p := rfl
-
-/-- `bsub = csub` at coefficient `DensePoly ℚ` (definitional). -/
-theorem bsub_eq (p q : BPoly) : bsub p q = DensePoly.csub p q := rfl
-
-/-- `toBPoly` is additive: `badd` realizes `(ℚ[X])[X]` addition. -/
-theorem toBPoly_badd (p q : BPoly) : toBPoly (badd p q) = toBPoly p + toBPoly q := by
-  simp only [toBPoly_eq_toPolyG, badd_eq, DensePoly.toPolyG_caddG]
-
-/-- `bneg` realizes `(ℚ[X])[X]` negation through `toBPoly`. -/
-theorem toBPoly_bneg (p : BPoly) : toBPoly (bneg p) = - toBPoly p := by
-  simp only [toBPoly_eq_toPolyG, bneg_eq, DensePoly.toPolyG_cnegG]
-
-/-- `bsub` realizes `(ℚ[X])[X]` subtraction through `toBPoly`. -/
-theorem toBPoly_bsub (p q : BPoly) : toBPoly (bsub p q) = toBPoly p - toBPoly q := by
-  simp only [toBPoly_eq_toPolyG, bsub_eq, DensePoly.toPolyG_csubG]
-
-/-- `bscaleC c p` realizes scaling by a `ℚ[t]` coefficient: `C (toPoly c) · toBPoly p`. -/
-theorem toBPoly_bscaleC (c : DensePoly ℚ) (p : BPoly) :
-    toBPoly (bscaleC c p) = Polynomial.C (toPoly c) * toBPoly p := by
-  simp only [toBPoly_eq_toPolyG, bscaleC_eq, DensePoly.toPolyG_cscaleG, toPoly_eq_dense,
-    show ∀ c : DensePoly ℚ, CRingSpec.toR c = DensePoly.toPoly c from fun _ => rfl]
-
-/-- `bshift k p` realizes the `x`-shift: `Xᵏ · toBPoly p`. -/
-theorem toBPoly_bshift (k : ℕ) (p : BPoly) :
-    toBPoly (bshift k p) = Polynomial.X ^ k * toBPoly p := by
-  simp only [toBPoly_eq_toPolyG, bshift_eq, DensePoly.toPolyG_cshiftG]
-
-/-- `toBPoly` is multiplicative: `bmul` realizes `(ℚ[X])[X]` multiplication. -/
-theorem toBPoly_bmul (p q : BPoly) : toBPoly (bmul p q) = toBPoly p * toBPoly q := by
-  simp only [toBPoly_eq_toPolyG, bmul_eq, DensePoly.toPolyG_cmulG]
+/-- `DensePoly.cshift` realizes multiplication by a power of `X` through the bivariate denotation. -/
+theorem toBPoly_cshift (k : ℕ) (p : BPoly) :
+    toBPoly (DensePoly.cshift k p) = Polynomial.X ^ k * toBPoly p := by
+  simp only [toBPoly_eq_toPolyG, DensePoly.toPolyG_cshiftG]
 
 /-- `bnorm [] = []`. -/
 @[simp] theorem bnorm_nil : bnorm ([] : BPoly) = [] := rfl
@@ -166,21 +139,25 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
     split_ifs with hq hlen
     · exact ⟨[], [1], by simp [toBPoly_bnorm, DensePoly.toPolyG_cons]⟩
     · exact ⟨[], [1], by simp [toBPoly_bnorm, DensePoly.toPolyG_cons]⟩
-    · obtain ⟨s', c', hsc⟩ := ih (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
-        (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
-      have hp' : toBPoly (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
-          (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
+    · obtain ⟨s', c', hsc⟩ := ih (bnorm (DensePoly.csub
+        (DensePoly.cscale (blc (bnorm q)) (bnorm p))
+        (DensePoly.cscale (blc (bnorm p))
+          (DensePoly.cshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
+      have hp' : toBPoly (bnorm (DensePoly.csub
+          (DensePoly.cscale (blc (bnorm q)) (bnorm p))
+          (DensePoly.cscale (blc (bnorm p))
+            (DensePoly.cshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
           = Polynomial.C (toPoly (blc (bnorm q))) * toBPoly p
             - Polynomial.C (toPoly (blc (bnorm p)))
               * Polynomial.X ^ ((bnorm p).length - (bnorm q).length) * toBPoly q := by
-        rw [toBPoly_bnorm, toBPoly_bsub, toBPoly_bscaleC, toBPoly_bscaleC, toBPoly_bshift,
-          toBPoly_bnorm, toBPoly_bnorm]
+        rw [toBPoly_bnorm, toBPoly_csub, toBPoly_cscale, toBPoly_cscale,
+          toBPoly_cshift, toBPoly_bnorm, toBPoly_bnorm]
         ring
       rw [hp', bpsremainder_bnorm_right] at hsc
-      refine ⟨badd s' (bscaleC (cmul c' (blc (bnorm p)))
-          (bshift ((bnorm p).length - (bnorm q).length) [[1]])),
+      refine ⟨DensePoly.cadd s' (DensePoly.cscale (cmul c' (blc (bnorm p)))
+          (DensePoly.cshift ((bnorm p).length - (bnorm q).length) [[1]])),
           cmul c' (blc (bnorm q)), ?_⟩
-      rw [toBPoly_badd, toBPoly_bscaleC, toBPoly_bshift, toBPoly_one]
+      rw [toBPoly_cadd, toBPoly_cscale, toBPoly_cshift, toBPoly_one]
       simp only [toPoly_eq_dense] at hsc ⊢
       rw [
         DensePoly.toPolyG_cmulG, map_mul,

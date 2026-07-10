@@ -239,11 +239,12 @@ chain data `G`/`bt`/`s`/`c` and its side-conditions can be supplied from the rea
 
 /-- ψ-accumulator update of one `subresPRS.go` step: `ψ' = (−lc Ri₋₁)^δ / ψ^(δ−1)` (`ψ' = ψ` when `δ = 0`). -/
 def goPsi' (Ri_1 : BPoly) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
-  if dp = 0 then psi else DensePoly.cdivWf (cpowP (cneg (blc Ri_1)) dp) (cpowP psi (dp - 1))
+  if dp = 0 then psi else DensePoly.cdivWf (DensePoly.cpow (cneg (blc Ri_1)) dp)
+    (DensePoly.cpow psi (dp - 1))
 
 /-- β-divisor of one `subresPRS.go` step: `β = −lc(Ri₋₁) · ψ'^δ` with `ψ'` from `goPsi'`. -/
 def goBeta (Ri_1 : BPoly) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
-  cmul (cneg (blc Ri_1)) (cpowP (goPsi' Ri_1 psi dp) dp)
+  cmul (cneg (blc Ri_1)) (DensePoly.cpow (goPsi' Ri_1 psi dp) dp)
 
 /-- One `subresPRS.go` step on the state `(Ri₋₁, Ri, ψ, δ) ↦ (Ri, Ri₊₁, ψ', δ')` with
 `Ri₊₁ = bdivC (prem Ri₋₁ Ri) β`, `ψ' = goPsi'`, `β = goBeta`, `δ' = bdeg Ri − bdeg Ri₊₁`. -/
