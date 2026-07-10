@@ -27,8 +27,7 @@ def tanDeriv (p : List (DensePoly ℚ)) : List (DensePoly ℚ) :=
       let hi : DensePoly ℚ := dpdt.getD k []
       cadd lo hi)
   -- add κ_D and (t²+1)dp/dt coefficientwise (over the t-degree).
-  let n := max kappa.length mulDt.length
-  (List.range n).map (fun k => cadd (kappa.getD k []) (mulDt.getD k []))
+  DensePoly.cadd kappa mulDt
 
 /-- `tcoeff p m`: the `tᵐ`-coefficient (in `ℚ(x)`) of a `t`-polynomial, `[]` (zero) past the end. -/
 def tcoeff (p : List (DensePoly ℚ)) (m : ℕ) : DensePoly ℚ := p.getD m []
@@ -43,16 +42,6 @@ def tisZero (p : List (DensePoly ℚ)) : Bool := p.all cisZero
 /-- `tshiftScale s m = s·tᵐ`: the single-term `t`-polynomial `[0,…,0,s]` with `m` leading zeros. -/
 def tshiftScale (s : DensePoly ℚ) (m : ℕ) : List (DensePoly ℚ) :=
   (List.replicate m ([] : DensePoly ℚ)) ++ [s]
-
-/-- `tsub p q`: coefficientwise subtraction `pₖ − qₖ` of `t`-polynomials over `ℚ(x)`. -/
-def tsub (p q : List (DensePoly ℚ)) : List (DensePoly ℚ) :=
-  let n := max p.length q.length
-  (List.range n).map (fun k => csub (p.getD k []) (q.getD k []))
-
-/-- `tadd p q`: coefficientwise addition `pₖ + qₖ` of `t`-polynomials over `ℚ(x)`. -/
-def tadd (p q : List (DensePoly ℚ)) : List (DensePoly ℚ) :=
-  let n := max p.length q.length
-  (List.range n).map (fun k => cadd (p.getD k []) (q.getD k []))
 
 /-- `cscaleListQ s p`: scale every `ℚ[x]`-coefficient of the `t`-polynomial `p` by `s ∈ ℚ`. -/
 def cscaleListQ (s : ℚ) (p : List (DensePoly ℚ)) : List (DensePoly ℚ) := p.map (cscale s)
@@ -127,8 +116,8 @@ def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : DensePoly ℚ) :
       -- s₁t = [0, s₁], s₂t = [0, s₂] as t-polynomials.
       let s1t : List (DensePoly ℚ) := [[], s1]
       let s2t : List (DensePoly ℚ) := [[], s2]
-      let realNum := tadd (tsub c1 [z1]) (cscaleListQ nN (tadd s1t [s2]))
-      let imagNum := tadd (tsub c2 [z2]) (cscaleListQ nN (tsub s2t [s1]))
+      let realNum := DensePoly.cadd (DensePoly.csub c1 [z1]) (cscaleListQ nN (DensePoly.cadd s1t [s2]))
+      let imagNum := DensePoly.cadd (DensePoly.csub c2 [z2]) (cscaleListQ nN (DensePoly.csub s2t [s1]))
       -- assemble the k(√−1)[t]-polynomial (pairs) and divide by t − √−1.
       let len := max realNum.length imagNum.length
       let cpairs : List (DensePoly ℚ × DensePoly ℚ) :=
@@ -142,8 +131,8 @@ def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : DensePoly ℚ) :
         -- return (h₁t + h₂ + s₁, h₂t − h₁ + s₂).
         let h1t : List (DensePoly ℚ) := [[]] ++ h1     -- h₁·t (shift up by one t-degree)
         let h2t : List (DensePoly ℚ) := [[]] ++ h2
-        let q1 := tadd (tadd h1t h2) [s1]
-        let q2 := tsub (tadd h2t [s2]) h1
+        let q1 := DensePoly.cadd (DensePoly.cadd h1t h2) [s1]
+        let q2 := DensePoly.csub (DensePoly.cadd h2t [s2]) h1
         some (q1, q2)
 
 end DensePoly

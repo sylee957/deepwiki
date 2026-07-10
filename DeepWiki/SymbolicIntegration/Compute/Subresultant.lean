@@ -17,18 +17,16 @@ The degree-`j` subresultant reduced mod `R` and made monic in `x` over `ℚ[t]/(
 log argument `S(t,x)`; the leading `x`-coefficient is a unit there, so monic normalization is exact
 via the extended-Euclidean inverse. -/
 
-/-- Reduce a `DensePoly ℚ` modulo `R`: `credR R c = c mod R`, the representative in `ℚ[t]/(R)`. -/
-def credR (R c : DensePoly ℚ) : DensePoly ℚ := DensePoly.cmodWf c R
-
 /-- Reduce every `x`-coefficient of a `GBPolyCore ℚ` modulo `R`: `bredR R p`, the image of `p` in
 `(ℚ[t]/(R))[x]`. -/
-def bredR (R : DensePoly ℚ) (p : GBPolyCore ℚ) : GBPolyCore ℚ := GBPolyCore.gbnormCore (p.map (credR R))
+def bredR (R : DensePoly ℚ) (p : GBPolyCore ℚ) : GBPolyCore ℚ :=
+  GBPolyCore.gbnormCore (p.map (fun c => DensePoly.cmodWf c R))
 
 /-- Inverse of a `DensePoly ℚ` modulo `R`: `cinvMod R c = c⁻¹` in `ℚ[t]/(R)` (assumes `c` a unit mod
 `R`), via `c⁻¹ ≡ s/g (mod R)` from the Bézout relation `s·c + ·R = g`. -/
 def cinvMod (R c : DensePoly ℚ) : DensePoly ℚ :=
   let (g, s, _) := DensePoly.cgcdWf c R
-  credR R (cscale (clead g)⁻¹ s)
+  DensePoly.cmodWf (cscale (clead g)⁻¹ s) R
 
 /-- Make a `GBPolyCore ℚ` monic in `x` over `ℚ[t]/(R)`: `bmonicXmodR R p` reduces mod `R` and scales by
 the mod-`R` inverse of the leading `x`-coefficient. -/
@@ -37,7 +35,7 @@ def bmonicXmodR (R : DensePoly ℚ) (p : GBPolyCore ℚ) : GBPolyCore ℚ :=
   if GBPolyCore.gbisZeroCore p then []
   else
     let inv := cinvMod R (GBPolyCore.gblcCore p)
-    GBPolyCore.gbnormCore (p.map (fun c => credR R (cmul c inv)))
+    GBPolyCore.gbnormCore (p.map (fun c => DensePoly.cmodWf (cmul c inv) R))
 
 /-! ### Exact `ℚ[t]`-division of a `GBPolyCore ℚ` by a `DensePoly ℚ` -/
 
@@ -92,8 +90,8 @@ def ctVar : DensePoly ℚ := [0, 1]
 /-- The log argument's second operand `bArgAmtD' A D = A − t·D'` as a `GBPolyCore ℚ`: `A` lifted with
 constant `t`-coefficients, minus `t · D'`. -/
 def bArgAmtD' (A D : DensePoly ℚ) : GBPolyCore ℚ :=
-  GBPolyCore.gbsubCore (liftCtoBPoly A)
-    (GBPolyCore.gbscaleCCore ctVar (liftCtoBPoly (cderiv D)))
+  DensePoly.csub (liftCtoBPoly A)
+    (DensePoly.cscale ctVar (liftCtoBPoly (cderiv D)))
 
 /-- The raw degree-`j` subresultant `lrtSubresultantCompute fuel j A D = Sⱼ(D, A − t·D')`: the
 bivariate subresultant of `D` (lifted) and `A − t·D'` at `x`-degree `j`, `ℚ[t]`-primitive in `x`. -/

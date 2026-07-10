@@ -114,30 +114,30 @@ theorem toGBCoeffPoly_eq_toPolyG (p : GBPolyCore β) : toGBCoeffPoly p = DensePo
   | cons a as ih =>
     rw [toGBCoeffPoly, ih, DensePoly.toPolyG_cons, show CRingSpec.toR a = DensePoly.toPoly a from rfl]
 
-/-- `toGBCoeffPoly` is additive: `gbaddCore` realizes `R[t]` addition. -/
-theorem toGBCoeffPoly_gbaddCore (p q : GBPolyCore β) :
-    toGBCoeffPoly (gbaddCore p q) = toGBCoeffPoly p + toGBCoeffPoly q := by
+/-- `toGBCoeffPoly` is additive: `DensePoly.cadd` realizes `R[t]` addition. -/
+theorem toGBCoeffPoly_cadd (p q : GBPolyCore β) :
+    toGBCoeffPoly (DensePoly.cadd p q) = toGBCoeffPoly p + toGBCoeffPoly q := by
   simp only [toGBCoeffPoly_eq_toPolyG]; exact DensePoly.toPolyG_caddG p q
 
-/-- `toGBCoeffPoly` is negation-compatible: `gbnegCore` realizes `R[t]` negation. -/
-theorem toGBCoeffPoly_gbnegCore (p : GBPolyCore β) :
-    toGBCoeffPoly (gbnegCore p) = - toGBCoeffPoly p := by
+/-- `toGBCoeffPoly` is negation-compatible: `DensePoly.cneg` realizes `R[t]` negation. -/
+theorem toGBCoeffPoly_cneg (p : GBPolyCore β) :
+    toGBCoeffPoly (DensePoly.cneg p) = - toGBCoeffPoly p := by
   simp only [toGBCoeffPoly_eq_toPolyG]; exact DensePoly.toPolyG_cnegG p
 
-/-- `toGBCoeffPoly` is subtraction-compatible: `gbsubCore` realizes `R[t]` subtraction. -/
-theorem toGBCoeffPoly_gbsubCore (p q : GBPolyCore β) :
-    toGBCoeffPoly (gbsubCore p q) = toGBCoeffPoly p - toGBCoeffPoly q := by
+/-- `toGBCoeffPoly` is subtraction-compatible: `DensePoly.csub` realizes `R[t]` subtraction. -/
+theorem toGBCoeffPoly_csub (p q : GBPolyCore β) :
+    toGBCoeffPoly (DensePoly.csub p q) = toGBCoeffPoly p - toGBCoeffPoly q := by
   simp only [toGBCoeffPoly_eq_toPolyG]; exact DensePoly.toPolyG_csubG p q
 
-/-- `toGBCoeffPoly` realizes scaling by a `β[s]` coefficient: `gbscaleCCore c p` is
+/-- `toGBCoeffPoly` realizes scaling by a `β[s]` coefficient: `DensePoly.cscale c p` is
 `C (toPoly c) · toGBCoeffPoly p`. -/
-theorem toGBCoeffPoly_gbscaleCCore (c : DensePoly β) (p : GBPolyCore β) :
-    toGBCoeffPoly (gbscaleCCore c p) = Polynomial.C (DensePoly.toPoly c) * toGBCoeffPoly p := by
+theorem toGBCoeffPoly_cscale (c : DensePoly β) (p : GBPolyCore β) :
+    toGBCoeffPoly (DensePoly.cscale c p) = Polynomial.C (DensePoly.toPoly c) * toGBCoeffPoly p := by
   simp only [toGBCoeffPoly_eq_toPolyG]; exact DensePoly.toPolyG_cscaleG c p
 
-/-- `toGBCoeffPoly` realizes the `t`-shift: `gbshiftCore k p` is `tᵏ · toGBCoeffPoly p`. -/
-theorem toGBCoeffPoly_gbshiftCore (k : ℕ) (p : GBPolyCore β) :
-    toGBCoeffPoly (gbshiftCore k p) = Polynomial.X ^ k * toGBCoeffPoly p := by
+/-- `toGBCoeffPoly` realizes the `t`-shift: `DensePoly.cshift k p` is `tᵏ · toGBCoeffPoly p`. -/
+theorem toGBCoeffPoly_cshift (k : ℕ) (p : GBPolyCore β) :
+    toGBCoeffPoly (DensePoly.cshift k p) = Polynomial.X ^ k * toGBCoeffPoly p := by
   simp only [toGBCoeffPoly_eq_toPolyG]; exact DensePoly.toPolyG_cshiftG k p
 
 omit [CFieldSpec β] in
@@ -477,24 +477,24 @@ theorem toGBCoeffPoly_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
     split_ifs with hq hlen
     · exact ⟨[], [CCommRing.one], by simp [toGBCoeffPoly_gbnormCore, hone]⟩
     · exact ⟨[], [CCommRing.one], by simp [toGBCoeffPoly_gbnormCore, hone]⟩
-    · obtain ⟨s', c', hsc⟩ := ih (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q)) (gbnormCore p))
-        (gbscaleCCore (gblcCore (gbnormCore p))
-          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
-      have hp' : toGBCoeffPoly (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q)) (gbnormCore p))
-          (gbscaleCCore (gblcCore (gbnormCore p))
-            (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
+    · obtain ⟨s', c', hsc⟩ := ih (gbnormCore (DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q)) (gbnormCore p))
+        (DensePoly.cscale (gblcCore (gbnormCore p))
+          (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
+      have hp' : toGBCoeffPoly (gbnormCore (DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q)) (gbnormCore p))
+          (DensePoly.cscale (gblcCore (gbnormCore p))
+            (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
           = Polynomial.C (DensePoly.toPoly (gblcCore (gbnormCore q))) * toGBCoeffPoly p
             - Polynomial.C (DensePoly.toPoly (gblcCore (gbnormCore p)))
               * Polynomial.X ^ ((gbnormCore p).length - (gbnormCore q).length) * toGBCoeffPoly q := by
-        rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_gbsubCore, toGBCoeffPoly_gbscaleCCore,
-          toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore, toGBCoeffPoly_gbnormCore,
+        rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_csub, toGBCoeffPoly_cscale,
+          toGBCoeffPoly_cscale, toGBCoeffPoly_cshift, toGBCoeffPoly_gbnormCore,
           toGBCoeffPoly_gbnormCore]
         ring
       rw [hp', gbpsremainderCore_gbnormCore_right] at hsc
-      refine ⟨gbaddCore s' (gbscaleCCore (DensePoly.cmul c' (gblcCore (gbnormCore p)))
-          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CCommRing.one]])),
+      refine ⟨DensePoly.cadd s' (DensePoly.cscale (DensePoly.cmul c' (gblcCore (gbnormCore p)))
+          (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) [[CCommRing.one]])),
           DensePoly.cmul c' (gblcCore (gbnormCore q)), ?_⟩
-      simp only [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
+      simp only [toGBCoeffPoly_cadd, toGBCoeffPoly_cscale, toGBCoeffPoly_cshift,
         toGBCoeffPoly_one, denote, map_mul]
       linear_combination hsc
 

@@ -133,6 +133,16 @@ def cadd {α : Type*} [CCommRing α] : DensePoly α → DensePoly α → DensePo
   | p, [] => p
   | a :: as, b :: bs => CCommRing.add a b :: cadd as bs
 
+/-- `(cadd p q).length = max p.length q.length`: addition zero-extends the shorter input. -/
+theorem caddG_length {α : Type*} [CCommRing α] (p q : DensePoly α) :
+    (cadd p q : List α).length = max (p : List α).length (q : List α).length := by
+  induction p generalizing q with
+  | nil => simp [cadd]
+  | cons a as ih =>
+    cases q with
+    | nil => simp [cadd]
+    | cons b bs => simp only [cadd, List.length_cons, ih bs]; omega
+
 /-- Negation of a `DensePoly`, coefficientwise. -/
 def cneg {α : Type*} [CCommRing α] (p : DensePoly α) : DensePoly α := (p : List α).map CCommRing.neg
 

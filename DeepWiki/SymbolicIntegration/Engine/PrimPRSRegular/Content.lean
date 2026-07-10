@@ -61,26 +61,26 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
         by rw [hone]; exact one_ne_zero⟩
     · exact ⟨[], [CCommRing.one], by simp [toGBCoeffPoly_gbnormCore, hone],
         by rw [hone]; exact one_ne_zero⟩
-    · obtain ⟨s', c', hsc, hc'⟩ := ih (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q))
+    · obtain ⟨s', c', hsc, hc'⟩ := ih (gbnormCore (DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q))
         (gbnormCore p))
-        (gbscaleCCore (gblcCore (gbnormCore p))
-          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
-      have hp' : toGBCoeffPoly (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q))
+        (DensePoly.cscale (gblcCore (gbnormCore p))
+          (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
+      have hp' : toGBCoeffPoly (gbnormCore (DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q))
           (gbnormCore p))
-          (gbscaleCCore (gblcCore (gbnormCore p))
-            (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
+          (DensePoly.cscale (gblcCore (gbnormCore p))
+            (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
           = Polynomial.C (DensePoly.toPoly (gblcCore (gbnormCore q))) * toGBCoeffPoly p
             - Polynomial.C (DensePoly.toPoly (gblcCore (gbnormCore p)))
               * Polynomial.X ^ ((gbnormCore p).length - (gbnormCore q).length) * toGBCoeffPoly q := by
-        rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_gbsubCore, toGBCoeffPoly_gbscaleCCore,
-          toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore, toGBCoeffPoly_gbnormCore,
+        rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_csub, toGBCoeffPoly_cscale,
+          toGBCoeffPoly_cscale, toGBCoeffPoly_cshift, toGBCoeffPoly_gbnormCore,
           toGBCoeffPoly_gbnormCore]
         ring
       rw [hp', gbpsremainderCore_gbnormCore_right] at hsc
-      refine ⟨gbaddCore s' (gbscaleCCore (DensePoly.cmul c' (gblcCore (gbnormCore p)))
-          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CCommRing.one]])),
+      refine ⟨DensePoly.cadd s' (DensePoly.cscale (DensePoly.cmul c' (gblcCore (gbnormCore p)))
+          (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) [[CCommRing.one]])),
           DensePoly.cmul c' (gblcCore (gbnormCore q)), ?_, ?_⟩
-      · rw [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
+      · rw [toGBCoeffPoly_cadd, toGBCoeffPoly_cscale, toGBCoeffPoly_cshift,
           toGBCoeffPoly_one]
         simp only [denote, map_mul]
         linear_combination hsc

@@ -34,8 +34,8 @@ theorem toBPoly_bArgAmtD' (A D : DensePoly ℚ) :
     GBPolyCore.toGBCoeffPoly (bArgAmtD' A D)
       = (toPoly A).map (Polynomial.C : ℚ →+* ℚ[X])
         - Polynomial.C Polynomial.X * (derivative (toPoly D)).map (Polynomial.C : ℚ →+* ℚ[X]) := by
-  rw [bArgAmtD', GBPolyCore.toGBCoeffPoly_gbsubCore, toBPoly_liftCtoBPoly,
-    GBPolyCore.toGBCoeffPoly_gbscaleCCore, toBPoly_liftCtoBPoly]
+  rw [bArgAmtD', GBPolyCore.toGBCoeffPoly_csub, toBPoly_liftCtoBPoly,
+    GBPolyCore.toGBCoeffPoly_cscale, toBPoly_liftCtoBPoly]
   change _ - Polynomial.C (toPoly ctVar) * _ = _
   rw [toPoly_ctVar]
   rw [DensePoly.toPolyG_cderivG]

@@ -30,23 +30,8 @@ def gbnormCore : GBPolyCore B → GBPolyCore B
     | [] => if DensePoly.cisZero a then [] else [a]
     | r => a :: r
 
-/-! The `GBPolyCore` arithmetic is the ring-generalized generic engine at coefficient `DensePoly B`
-(`GBPolyCore B = DensePoly (DensePoly B)`, keystone `CCommRing (DensePoly B)`): each `gb*Core` is the generic `c*`. -/
-
-/-- Coefficientwise addition of two `GBPolyCore`s in `t` — the generic `cadd` at coefficient `DensePoly B`. -/
-def gbaddCore (p q : GBPolyCore B) : GBPolyCore B := DensePoly.cadd p q
-
-/-- Negation of a `GBPolyCore` — the generic `cneg` at coefficient `DensePoly B`. -/
-def gbnegCore (p : GBPolyCore B) : GBPolyCore B := DensePoly.cneg p
-
-/-- Subtraction of `GBPolyCore`s — the generic `csub` at coefficient `DensePoly B`. -/
-def gbsubCore (p q : GBPolyCore B) : GBPolyCore B := DensePoly.csub p q
-
-/-- Scale `gbscaleCCore c p` — the generic `cscale` at coefficient `DensePoly B`. -/
-def gbscaleCCore (c : DensePoly B) (p : GBPolyCore B) : GBPolyCore B := DensePoly.cscale c p
-
-/-- Shift in `t` `gbshiftCore k p = tᵏ · p` — the generic `cshift` at coefficient `DensePoly B`. -/
-def gbshiftCore (k : ℕ) (p : GBPolyCore B) : GBPolyCore B := DensePoly.cshift k p
+/-! `GBPolyCore B = DensePoly (DensePoly B)`, so its ring operations are the generic `DensePoly.c*`
+operations at coefficient type `DensePoly B`; no bivariate aliases are needed. -/
 
 /-- Zero test for a `GBPolyCore`: `true` iff it normalizes to `[]` (via `List.isEmpty`). -/
 def gbisZeroCore (p : GBPolyCore B) : Bool := (gbnormCore p).isEmpty
@@ -73,7 +58,9 @@ def gbpsremainderCore : ℕ → GBPolyCore B → GBPolyCore B → GBPolyCore B
       let lcq := gblcCore q
       let lcp := gblcCore p
       -- `lc(q)·p − lc(p)·tᵏ·q`: kills the leading term, stays in `B[s][t]`.
-      let p' := gbnormCore (gbsubCore (gbscaleCCore lcq p) (gbscaleCCore lcp (gbshiftCore k q)))
+      let p' := gbnormCore
+        (DensePoly.csub (DensePoly.cscale lcq p)
+          (DensePoly.cscale lcp (DensePoly.cshift k q)))
       gbpsremainderCore fuel p' q
 
 /-! ### `B[s]`-content management (`cgcdB` = the content-gcd, passed in) -/

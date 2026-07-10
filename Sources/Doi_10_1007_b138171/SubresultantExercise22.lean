@@ -426,7 +426,7 @@ theorem lrtGcdCompute_ex22_isSimilar_lrtSubresultant
   have hMne : (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute 60
       (GBPolyCore.toGBCoeffPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)) ≠ 0 := by
     obtain ⟨u, hu, hgu⟩ := hgu_ex22
-    obtain ⟨hbridge, _⟩ := mapRingHom_toBPoly_bmonicXmodR φ (cmonic cR22)
+    obtain ⟨hbridge, _⟩ := mapRingHom_toGBCoeffPoly_bmonicXmodR φ (cmonic cR22)
       (lrtSubresultantCompute 60 (GBPolyCore.toGBCoeffPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)
       cnorm_cmonic_cR22_ne hφR hu hgu hpz_ex22
     intro h
@@ -441,7 +441,7 @@ theorem lrtGcdCompute_ex22_isSimilar_lrtSubresultant
       isSimilar_lrtSubresultant_lrtSubresultantCompute_ex22 hLne hMne
   -- Φ M ∼ Φ M_gcd via the bmonicXmodR unit bridge
   obtain ⟨u, hu, hgu⟩ := hgu_ex22
-  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ (cmonic cR22)
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toGBCoeffPoly_bmonicXmodR φ (cmonic cR22)
     (lrtSubresultantCompute 60 (GBPolyCore.toGBCoeffPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)
     cnorm_cmonic_cR22_ne hφR hu hgu hpz_ex22
   have hMMgcd : IsSimilar

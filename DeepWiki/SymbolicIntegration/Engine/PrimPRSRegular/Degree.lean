@@ -78,9 +78,9 @@ theorem toPolyG_gblcCore_eq_leadingCoeff (p : GBPolyCore β) :
 (`k = (gbnormCore p).length − (gbnormCore q).length`): one leading-term elimination of
 `gbpsremainderCore`. -/
 noncomputable def gbStepReduce (p q : GBPolyCore β) : GBPolyCore β :=
-  gbsubCore (gbscaleCCore (gblcCore (gbnormCore q)) p)
-    (gbscaleCCore (gblcCore (gbnormCore p))
-      (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) q))
+  DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q)) p)
+    (DensePoly.cscale (gblcCore (gbnormCore p))
+      (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) q))
 
 /-- **The `R[t]` reading of a step body** `toGBCoeffPoly (gbStepReduce p q) = C(lc q)·toGBCoeffPoly p −
 C(lc p)·tᵏ·toGBCoeffPoly q` (`R = (CFieldSpec.K β)[X]`, `k = deg_t p − deg_t q`). -/
@@ -89,8 +89,8 @@ theorem toGBCoeffPoly_gbStepReduce (p q : GBPolyCore β) :
       = Polynomial.C ((toGBCoeffPoly q).leadingCoeff) * toGBCoeffPoly p
         - Polynomial.C ((toGBCoeffPoly p).leadingCoeff)
           * Polynomial.X ^ ((gbnormCore p).length - (gbnormCore q).length) * toGBCoeffPoly q := by
-  rw [gbStepReduce, toGBCoeffPoly_gbsubCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbscaleCCore,
-    toGBCoeffPoly_gbshiftCore, toPolyG_gblcCore_eq_leadingCoeff, toPolyG_gblcCore_eq_leadingCoeff]
+  rw [gbStepReduce, toGBCoeffPoly_csub, toGBCoeffPoly_cscale, toGBCoeffPoly_cscale,
+    toGBCoeffPoly_cshift, toPolyG_gblcCore_eq_leadingCoeff, toPolyG_gblcCore_eq_leadingCoeff]
   ring
 
 /-- **The single pseudo-division step strictly drops the `t`-degree** (the leading-term cancellation):
@@ -219,14 +219,14 @@ theorem gbpsremainderCore_degree_lt (q : GBPolyCore β) (hq : gbisZeroCore (gbno
       have hpl := gbnormCore_length_eq_natDegree_succ hpnz
       have hdle : (toGBCoeffPoly (gbnormCore q)).natDegree ≤ (toGBCoeffPoly (gbnormCore p)).natDegree := by
         rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_gbnormCore]; omega
-      set p' := gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q)) (gbnormCore p))
-        (gbscaleCCore (gblcCore (gbnormCore p))
-          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))) with hp'def
+      set p' := gbnormCore (DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q)) (gbnormCore p))
+        (DensePoly.cscale (gblcCore (gbnormCore p))
+          (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))) with hp'def
       have hp'read : toGBCoeffPoly p' = toGBCoeffPoly (gbStepReduce (gbnormCore p) (gbnormCore q)) := by
-        rw [hp'def, toGBCoeffPoly_gbnormCore, gbStepReduce, toGBCoeffPoly_gbsubCore,
-          toGBCoeffPoly_gbsubCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbscaleCCore,
-          toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
-          toGBCoeffPoly_gbshiftCore, gbnormCore_idemp, gbnormCore_idemp]
+        rw [hp'def, toGBCoeffPoly_gbnormCore, gbStepReduce, toGBCoeffPoly_csub,
+          toGBCoeffPoly_csub, toGBCoeffPoly_cscale, toGBCoeffPoly_cscale,
+          toGBCoeffPoly_cscale, toGBCoeffPoly_cscale, toGBCoeffPoly_cshift,
+          toGBCoeffPoly_cshift, gbnormCore_idemp, gbnormCore_idemp]
       by_cases hp'z : toGBCoeffPoly p' = 0
       · right; rw [toGBCoeffPoly_gbpsremainderCore_eq_zero_of_zero fuel p' q hp'z]
       · have hpnn : gbisZeroCore (gbnormCore (gbnormCore p)) = false := by

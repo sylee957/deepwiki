@@ -578,7 +578,7 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241 :
 /-! ### The headline closure: `Φ (lrtSubresultant) ∼ Φ (GBPolyCore.toGBCoeffPoly lrtGcdCompute)` over `ℚ[t]/(4t²+1)`
 Pushing the `ℚ[t]`-similarity `isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241` through the residue
 map `φ241` via the *correct* bridge `isSimilar_mapRingHom_of_irreducible` (`4t²+1` irreducible), and chaining
-the `bmonicXmodR` unit bridge (`mapRingHom_toBPoly_bmonicXmodR`, `u = 1`), lands the residue-ring similarity
+the `bmonicXmodR` unit bridge (`mapRingHom_toGBCoeffPoly_bmonicXmodR`, `u = 1`), lands the residue-ring similarity
 between the abstract `lrtSubresultant` and the computable `lrtGcdCompute` for Example 2.4.1.
 
 The **only** remaining hypothesis is `Φ (lrtSubresultant …) ≠ 0` — the nonvanishing of the residue
@@ -596,7 +596,7 @@ subresultant is nonzero. From `Φ (GBPolyCore.toGBCoeffPoly lrtGcdCompute) ≠ 0
 theorem mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero :
     (Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
       (lrtSubresultantCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) ≠ 0 := by
-  obtain ⟨hbridge, _⟩ := mapRingHom_toBPoly_bmonicXmodR φ241 cR241
+  obtain ⟨hbridge, _⟩ := mapRingHom_toGBCoeffPoly_bmonicXmodR φ241 cR241
     (lrtSubresultantCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)
     (by decide) φ241_toPoly_cR241 (u := 1) one_ne_zero hgu_ex241 hpz_ex241
   intro h
@@ -656,7 +656,7 @@ theorem lrtGcdCompute_ex241_isSimilar_lrtSubresultant
       φ241_eq_zero_iff isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241
       hLne mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero
   -- Φ M ∼ Φ M_gcd via the bmonicXmodR unit bridge
-  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ241 cR241
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toGBCoeffPoly_bmonicXmodR φ241 cR241
     (lrtSubresultantCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)
     (by decide) φ241_toPoly_cR241 (u := 1) one_ne_zero hgu_ex241 hpz_ex241
   have hMMgcd : IsSimilar

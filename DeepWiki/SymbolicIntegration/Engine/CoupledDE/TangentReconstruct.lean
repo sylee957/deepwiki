@@ -168,12 +168,12 @@ theorem divByTminusI_spec (p : List (DensePoly ℚ × DensePoly ℚ)) :
 theorem toGBCoeffPolyS_eq_map (p : List (DensePoly ℚ)) :
     toGBCoeffPolyS p = (GBPolyCore.toGBCoeffPoly p).map (AdjoinRoot.of (X ^ 2 + 1 : (Polynomial ℚ)[X])) := rfl
 
-theorem toGBCoeffPolyS_tadd (p q : List (DensePoly ℚ)) :
-    toGBCoeffPolyS (tadd p q) = toGBCoeffPolyS p + toGBCoeffPolyS q := by
-  rw [toGBCoeffPolyS_eq_map, toGBCoeffPoly_tadd, Polynomial.map_add]; rfl
-theorem toGBCoeffPolyS_tsub (p q : List (DensePoly ℚ)) :
-    toGBCoeffPolyS (tsub p q) = toGBCoeffPolyS p - toGBCoeffPolyS q := by
-  rw [toGBCoeffPolyS_eq_map, toGBCoeffPoly_tsub, Polynomial.map_sub]; rfl
+theorem toGBCoeffPolyS_cadd (p q : List (DensePoly ℚ)) :
+    toGBCoeffPolyS (DensePoly.cadd p q) = toGBCoeffPolyS p + toGBCoeffPolyS q := by
+  rw [toGBCoeffPolyS_eq_map, GBPolyCore.toGBCoeffPoly_cadd, Polynomial.map_add]; rfl
+theorem toGBCoeffPolyS_csub (p q : List (DensePoly ℚ)) :
+    toGBCoeffPolyS (DensePoly.csub p q) = toGBCoeffPolyS p - toGBCoeffPolyS q := by
+  rw [toGBCoeffPolyS_eq_map, GBPolyCore.toGBCoeffPoly_csub, Polynomial.map_sub]; rfl
 /-- `GBPolyCore.toGBCoeffPoly` of `cscaleListQ` (scale every ℚ[x]-coeff by `s : ℚ`) is mult by `C (C s)`. -/
 theorem toGBCoeffPoly_cscaleListQ (s : ℚ) (p : List (DensePoly ℚ)) :
     GBPolyCore.toGBCoeffPoly (cscaleListQ s p) = C (C s) * GBPolyCore.toGBCoeffPoly p := by
@@ -268,12 +268,12 @@ theorem cplx_quot (quot : List (DensePoly ℚ × DensePoly ℚ)) :
 noncomputable def cplx (q1 q2 : List (DensePoly ℚ)) : SGauss[X] :=
   toGBCoeffPolyS q1 + C iU * toGBCoeffPolyS q2
 
-theorem cplx_tadd (p q r s : List (DensePoly ℚ)) :
-    cplx (tadd p r) (tadd q s) = cplx p q + cplx r s := by
-  unfold cplx; rw [toGBCoeffPolyS_tadd, toGBCoeffPolyS_tadd]; ring
-theorem cplx_tsub (p q r s : List (DensePoly ℚ)) :
-    cplx (tsub p r) (tsub q s) = cplx p q - cplx r s := by
-  unfold cplx; rw [toGBCoeffPolyS_tsub, toGBCoeffPolyS_tsub]; ring
+theorem cplx_cadd (p q r s : List (DensePoly ℚ)) :
+    cplx (DensePoly.cadd p r) (DensePoly.cadd q s) = cplx p q + cplx r s := by
+  unfold cplx; rw [toGBCoeffPolyS_cadd, toGBCoeffPolyS_cadd]; ring
+theorem cplx_csub (p q r s : List (DensePoly ℚ)) :
+    cplx (DensePoly.csub p r) (DensePoly.csub q s) = cplx p q - cplx r s := by
+  unfold cplx; rw [toGBCoeffPolyS_csub, toGBCoeffPolyS_csub]; ring
 
 /-- The tangent derivation on the complexification. -/
 noncomputable def Dtan (q1 q2 : List (DensePoly ℚ)) : SGauss[X] :=
@@ -368,31 +368,31 @@ theorem mapDeriv_coeff (p : List (DensePoly ℚ)) (k : ℕ) :
     rw [List.getD_eq_getElem?_getD, show p[k]? = none from List.getElem?_eq_none (by omega)]
     simp only [Option.map_none, Option.getD_none, toPolyG_nil, derivative_zero]
 
-/-- κ-part additive over `tadd`. -/
-theorem mapDeriv_tadd (a b : List (DensePoly ℚ)) :
-    GBPolyCore.toGBCoeffPoly ((tadd a b).map cderivQ)
+/-- κ-part additive over `DensePoly.cadd`. -/
+theorem mapDeriv_cadd (a b : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly ((DensePoly.cadd a b).map cderivQ)
       = GBPolyCore.toGBCoeffPoly (a.map cderivQ) + GBPolyCore.toGBCoeffPoly (b.map cderivQ) := by
   apply Polynomial.ext; intro k
-  rw [mapDeriv_coeff, toGBCoeffPoly_tadd, Polynomial.coeff_add, derivative_add,
+  rw [mapDeriv_coeff, GBPolyCore.toGBCoeffPoly_cadd, Polynomial.coeff_add, derivative_add,
     Polynomial.coeff_add, mapDeriv_coeff, mapDeriv_coeff]
-/-- κ-part subtractive over `tsub`. -/
-theorem mapDeriv_tsub (a b : List (DensePoly ℚ)) :
-    GBPolyCore.toGBCoeffPoly ((tsub a b).map cderivQ)
+/-- κ-part subtractive over `DensePoly.csub`. -/
+theorem mapDeriv_csub (a b : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly ((DensePoly.csub a b).map cderivQ)
       = GBPolyCore.toGBCoeffPoly (a.map cderivQ) - GBPolyCore.toGBCoeffPoly (b.map cderivQ) := by
   apply Polynomial.ext; intro k
-  rw [mapDeriv_coeff, toGBCoeffPoly_tsub, Polynomial.coeff_sub, derivative_sub,
+  rw [mapDeriv_coeff, GBPolyCore.toGBCoeffPoly_csub, Polynomial.coeff_sub, derivative_sub,
     Polynomial.coeff_sub, mapDeriv_coeff, mapDeriv_coeff]
 
-/-- `tanDeriv` additive over `tadd` (at the `GBPolyCore.toGBCoeffPoly` level). -/
-theorem toGBCoeffPoly_tanDeriv_tadd (a b : List (DensePoly ℚ)) :
-    GBPolyCore.toGBCoeffPoly (tanDeriv (tadd a b)) = GBPolyCore.toGBCoeffPoly (tanDeriv a) + GBPolyCore.toGBCoeffPoly (tanDeriv b) := by
-  rw [toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tanDeriv, mapDeriv_tadd, toGBCoeffPoly_tadd,
+/-- `tanDeriv` additive over `DensePoly.cadd` (at the `GBPolyCore.toGBCoeffPoly` level). -/
+theorem toGBCoeffPoly_tanDeriv_cadd (a b : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly (tanDeriv (DensePoly.cadd a b)) = GBPolyCore.toGBCoeffPoly (tanDeriv a) + GBPolyCore.toGBCoeffPoly (tanDeriv b) := by
+  rw [toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tanDeriv, mapDeriv_cadd, GBPolyCore.toGBCoeffPoly_cadd,
     derivative_add]
   ring
-/-- `tanDeriv` subtractive over `tsub`. -/
-theorem toGBCoeffPoly_tanDeriv_tsub (a b : List (DensePoly ℚ)) :
-    GBPolyCore.toGBCoeffPoly (tanDeriv (tsub a b)) = GBPolyCore.toGBCoeffPoly (tanDeriv a) - GBPolyCore.toGBCoeffPoly (tanDeriv b) := by
-  rw [toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tanDeriv, mapDeriv_tsub, toGBCoeffPoly_tsub,
+/-- `tanDeriv` subtractive over `DensePoly.csub`. -/
+theorem toGBCoeffPoly_tanDeriv_csub (a b : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly (tanDeriv (DensePoly.csub a b)) = GBPolyCore.toGBCoeffPoly (tanDeriv a) - GBPolyCore.toGBCoeffPoly (tanDeriv b) := by
+  rw [toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tanDeriv, mapDeriv_csub, GBPolyCore.toGBCoeffPoly_csub,
     derivative_sub]
   ring
 
@@ -439,14 +439,14 @@ theorem eval_toGBCoeffPolyS_shift (h : List (DensePoly ℚ)) :
 /-- The numerator `realNum + i·imagNum` vanishes at `t = i` (since `z = c(i)`). -/
 theorem numerator_eval_zero (c1 c2 : List (DensePoly ℚ)) (s1 s2 : DensePoly ℚ) (nN : ℚ) :
     (cplx
-        (tadd (tsub c1 [csub (evalAtI c1).1 (evalAtI c2).2])
-          (cscaleListQ nN (tadd [[], s1] [s2])))
-        (tadd (tsub c2 [cadd (evalAtI c1).2 (evalAtI c2).1])
-          (cscaleListQ nN (tsub [[], s2] [s1])))).eval iU = 0 := by
+        (DensePoly.cadd (DensePoly.csub c1 [csub (evalAtI c1).1 (evalAtI c2).2])
+          (cscaleListQ nN (DensePoly.cadd [[], s1] [s2])))
+        (DensePoly.cadd (DensePoly.csub c2 [cadd (evalAtI c1).2 (evalAtI c2).1])
+          (cscaleListQ nN (DensePoly.csub [[], s2] [s1])))).eval iU = 0 := by
   unfold cplx
   rw [eval_add, eval_mul, eval_C]
-  rw [toGBCoeffPolyS_tadd, toGBCoeffPolyS_tadd, toGBCoeffPolyS_tsub, toGBCoeffPolyS_tsub, toGBCoeffPolyS_cscaleListQ,
-    toGBCoeffPolyS_cscaleListQ, toGBCoeffPolyS_tadd, toGBCoeffPolyS_tsub]
+  rw [toGBCoeffPolyS_cadd, toGBCoeffPolyS_cadd, toGBCoeffPolyS_csub, toGBCoeffPolyS_csub, toGBCoeffPolyS_cscaleListQ,
+    toGBCoeffPolyS_cscaleListQ, toGBCoeffPolyS_cadd, toGBCoeffPolyS_csub]
   simp only [eval_add, eval_sub, eval_mul, eval_C]
   rw [eval_toGBCoeffPolyS c1, eval_toGBCoeffPolyS c2, eval_toGBCoeffPolyS_singleton, eval_toGBCoeffPolyS_singleton,
     eval_toGBCoeffPolyS_singleton, eval_toGBCoeffPolyS_singleton, eval_toGBCoeffPolyS_shift, eval_toGBCoeffPolyS_shift,
@@ -462,9 +462,9 @@ theorem toGBCoeffPolyS_shift (h : List (DensePoly ℚ)) : toGBCoeffPolyS ([] :: 
 
 /-- `(t − i)·(D₁ + i·D₂) = cplx (t·D₁ + D₂) (t·D₂ − D₁)`. -/
 theorem mul_X_sub_iU_cplx (d1 d2 : List (DensePoly ℚ)) :
-    (X - C iU) * cplx d1 d2 = cplx (tadd ([] :: d1) d2) (tsub ([] :: d2) d1) := by
+    (X - C iU) * cplx d1 d2 = cplx (DensePoly.cadd ([] :: d1) d2) (DensePoly.csub ([] :: d2) d1) := by
   unfold cplx
-  rw [toGBCoeffPolyS_tadd, toGBCoeffPolyS_tsub, toGBCoeffPolyS_shift, toGBCoeffPolyS_shift]
+  rw [toGBCoeffPolyS_cadd, toGBCoeffPolyS_csub, toGBCoeffPolyS_shift, toGBCoeffPolyS_shift]
   have hii : (C iU : SGauss[X]) ^ 2 = -1 := by
     rw [← map_pow, iU_sq, map_neg, map_one]
   linear_combination (-(toGBCoeffPolyS d2)) * hii
@@ -473,16 +473,16 @@ theorem mul_X_sub_iU_cplx (d1 d2 : List (DensePoly ℚ)) :
 `ℚ[x][t]` identities relating `realNum`/`imagNum` to `quot` hold. -/
 theorem reduction_real (c1 c2 : List (DensePoly ℚ)) (s1 s2 : DensePoly ℚ) (nN : ℚ)
     (realNum imagNum : List (DensePoly ℚ))
-    (hr : realNum = tadd (tsub c1 [csub (evalAtI c1).1 (evalAtI c2).2])
-      (cscaleListQ nN (tadd [[], s1] [s2])))
-    (hi : imagNum = tadd (tsub c2 [cadd (evalAtI c1).2 (evalAtI c2).1])
-      (cscaleListQ nN (tsub [[], s2] [s1])))
+    (hr : realNum = DensePoly.cadd (DensePoly.csub c1 [csub (evalAtI c1).1 (evalAtI c2).2])
+      (cscaleListQ nN (DensePoly.cadd [[], s1] [s2])))
+    (hi : imagNum = DensePoly.cadd (DensePoly.csub c2 [cadd (evalAtI c1).2 (evalAtI c2).1])
+      (cscaleListQ nN (DensePoly.csub [[], s2] [s1])))
     (cpairs : List (DensePoly ℚ × DensePoly ℚ))
     (hcp : cpairs = (List.range (max realNum.length imagNum.length)).map
       (fun k => (realNum.getD k [], imagNum.getD k [])))
     (quot : List (DensePoly ℚ × DensePoly ℚ)) (hq : quot = divByTminusI cpairs) :
-    GBPolyCore.toGBCoeffPoly realNum = GBPolyCore.toGBCoeffPoly (tadd ([] :: quot.map Prod.fst) (quot.map Prod.snd)) ∧
-      GBPolyCore.toGBCoeffPoly imagNum = GBPolyCore.toGBCoeffPoly (tsub ([] :: quot.map Prod.snd) (quot.map Prod.fst)) := by
+    GBPolyCore.toGBCoeffPoly realNum = GBPolyCore.toGBCoeffPoly (DensePoly.cadd ([] :: quot.map Prod.fst) (quot.map Prod.snd)) ∧
+      GBPolyCore.toGBCoeffPoly imagNum = GBPolyCore.toGBCoeffPoly (DensePoly.csub ([] :: quot.map Prod.snd) (quot.map Prod.fst)) := by
   have hzip : pairListToS cpairs = cplx realNum imagNum := by
     rw [hcp, pairListToS_zip realNum imagNum _ (le_max_left _ _) (le_max_right _ _)]; rfl
   have hspec := divByTminusI_spec cpairs
@@ -622,8 +622,8 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
     · rw [hbase] at hsome; simp at hsome
     · rw [hbase] at hsome
       simp only at hsome
-      set realNum := tadd (tsub c1 [z1]) (cscaleListQ nN (tadd [[], s1] [s2])) with hrN
-      set imagNum := tadd (tsub c2 [z2]) (cscaleListQ nN (tsub [[], s2] [s1])) with hiN
+      set realNum := DensePoly.cadd (DensePoly.csub c1 [z1]) (cscaleListQ nN (DensePoly.cadd [[], s1] [s2])) with hrN
+      set imagNum := DensePoly.cadd (DensePoly.csub c2 [z2]) (cscaleListQ nN (DensePoly.csub [[], s2] [s1])) with hiN
       set cpairs := (List.range (max realNum.length imagNum.length)).map
         (fun k => (realNum.getD k [], imagNum.getD k [])) with hcp
       set quot := divByTminusI cpairs with hquot
@@ -647,19 +647,19 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
         rw [TanSolves, hb2p1] at hih
         obtain ⟨hI1, hI2⟩ := hih
         -- reduction: GBPolyCore.toGBCoeffPoly realNum = X*D1 + D2 ; GBPolyCore.toGBCoeffPoly imagNum = X*D2 - D1.
-        rw [show GBPolyCore.toGBCoeffPoly (tadd ([] :: quot.map Prod.fst) (quot.map Prod.snd)) = X * D1 + D2 from by
-              rw [toGBCoeffPoly_tadd, toGBCoeffPoly_shift],
-            show GBPolyCore.toGBCoeffPoly (tsub ([] :: quot.map Prod.snd) (quot.map Prod.fst)) = X * D2 - D1 from by
-              rw [toGBCoeffPoly_tsub, toGBCoeffPoly_shift]] at hred
+        rw [show GBPolyCore.toGBCoeffPoly (DensePoly.cadd ([] :: quot.map Prod.fst) (quot.map Prod.snd)) = X * D1 + D2 from by
+              rw [GBPolyCore.toGBCoeffPoly_cadd, toGBCoeffPoly_shift],
+            show GBPolyCore.toGBCoeffPoly (DensePoly.csub ([] :: quot.map Prod.snd) (quot.map Prod.fst)) = X * D2 - D1 from by
+              rw [GBPolyCore.toGBCoeffPoly_csub, toGBCoeffPoly_shift]] at hred
         obtain ⟨hR1, hR2⟩ := hred
         -- expand GBPolyCore.toGBCoeffPoly of realNum / imagNum (as ℚ[x][t]).
         have hRexp : GBPolyCore.toGBCoeffPoly realNum
             = (GBPolyCore.toGBCoeffPoly c1 - C (toPoly z1)) + C (C nN) * (X * C (toPoly s1) + C (toPoly s2)) := by
-          rw [hrN, toGBCoeffPoly_tadd, toGBCoeffPoly_tsub, toGBCoeffPoly_singleton, toGBCoeffPoly_cscaleListQ, toGBCoeffPoly_tadd,
+          rw [hrN, GBPolyCore.toGBCoeffPoly_cadd, GBPolyCore.toGBCoeffPoly_csub, toGBCoeffPoly_singleton, toGBCoeffPoly_cscaleListQ, GBPolyCore.toGBCoeffPoly_cadd,
             toGBCoeffPoly_shift, toGBCoeffPoly_singleton, toGBCoeffPoly_singleton]
         have hIexp : GBPolyCore.toGBCoeffPoly imagNum
             = (GBPolyCore.toGBCoeffPoly c2 - C (toPoly z2)) + C (C nN) * (X * C (toPoly s2) - C (toPoly s1)) := by
-          rw [hiN, toGBCoeffPoly_tadd, toGBCoeffPoly_tsub, toGBCoeffPoly_singleton, toGBCoeffPoly_cscaleListQ, toGBCoeffPoly_tsub,
+          rw [hiN, GBPolyCore.toGBCoeffPoly_cadd, GBPolyCore.toGBCoeffPoly_csub, toGBCoeffPoly_singleton, toGBCoeffPoly_cscaleListQ, GBPolyCore.toGBCoeffPoly_csub,
             toGBCoeffPoly_shift, toGBCoeffPoly_singleton, toGBCoeffPoly_singleton]
         rw [hRexp] at hR1; rw [hIexp] at hR2
         -- base solve identities, mapped C : ℚ[x] → ℚ[x][t].
@@ -673,17 +673,17 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
         have hsh1 : ([[]] ++ h1 : List (DensePoly ℚ)) = [] :: h1 := rfl
         have hsh2 : ([[]] ++ h2 : List (DensePoly ℚ)) = [] :: h2 := rfl
         -- expand GBPolyCore.toGBCoeffPoly / GBPolyCore.toGBCoeffPoly∘tanDeriv of the assembled q1, q2.
-        have hQ1 : GBPolyCore.toGBCoeffPoly (tadd (tadd ([[]] ++ h1) h2) [s1]) = X * H1 + H2 + C (toPoly s1) := by
-          rw [hsh1, toGBCoeffPoly_tadd, toGBCoeffPoly_tadd, toGBCoeffPoly_shift, toGBCoeffPoly_singleton]
-        have hQ2 : GBPolyCore.toGBCoeffPoly (tsub (tadd ([[]] ++ h2) [s2]) h1) = X * H2 + C (toPoly s2) - H1 := by
-          rw [hsh2, toGBCoeffPoly_tsub, toGBCoeffPoly_tadd, toGBCoeffPoly_shift, toGBCoeffPoly_singleton]
-        have hDQ1 : GBPolyCore.toGBCoeffPoly (tanDeriv (tadd (tadd ([[]] ++ h1) h2) [s1]))
+        have hQ1 : GBPolyCore.toGBCoeffPoly (DensePoly.cadd (DensePoly.cadd ([[]] ++ h1) h2) [s1]) = X * H1 + H2 + C (toPoly s1) := by
+          rw [hsh1, GBPolyCore.toGBCoeffPoly_cadd, GBPolyCore.toGBCoeffPoly_cadd, toGBCoeffPoly_shift, toGBCoeffPoly_singleton]
+        have hQ2 : GBPolyCore.toGBCoeffPoly (DensePoly.csub (DensePoly.cadd ([[]] ++ h2) [s2]) h1) = X * H2 + C (toPoly s2) - H1 := by
+          rw [hsh2, GBPolyCore.toGBCoeffPoly_csub, GBPolyCore.toGBCoeffPoly_cadd, toGBCoeffPoly_shift, toGBCoeffPoly_singleton]
+        have hDQ1 : GBPolyCore.toGBCoeffPoly (tanDeriv (DensePoly.cadd (DensePoly.cadd ([[]] ++ h1) h2) [s1]))
             = (X * DH1 + (X ^ 2 + 1) * H1) + DH2 + C (derivative (toPoly s1)) := by
-          rw [hsh1, toGBCoeffPoly_tanDeriv_tadd, toGBCoeffPoly_tanDeriv_tadd, toGBCoeffPoly_tanDeriv_shift,
+          rw [hsh1, toGBCoeffPoly_tanDeriv_cadd, toGBCoeffPoly_tanDeriv_cadd, toGBCoeffPoly_tanDeriv_shift,
             toGBCoeffPoly_tanDeriv_singleton, cderivQ, toPolyG_cderivG]
-        have hDQ2 : GBPolyCore.toGBCoeffPoly (tanDeriv (tsub (tadd ([[]] ++ h2) [s2]) h1))
+        have hDQ2 : GBPolyCore.toGBCoeffPoly (tanDeriv (DensePoly.csub (DensePoly.cadd ([[]] ++ h2) [s2]) h1))
             = (X * DH2 + (X ^ 2 + 1) * H2) + C (derivative (toPoly s2)) - DH1 := by
-          rw [hsh2, toGBCoeffPoly_tanDeriv_tsub, toGBCoeffPoly_tanDeriv_tadd, toGBCoeffPoly_tanDeriv_shift,
+          rw [hsh2, toGBCoeffPoly_tanDeriv_csub, toGBCoeffPoly_tanDeriv_cadd, toGBCoeffPoly_tanDeriv_shift,
             toGBCoeffPoly_tanDeriv_singleton, cderivQ, toPolyG_cderivG]
         rw [hnN] at hR1 hR2 hCB1 hCB2
         simp only [map_add, map_one] at hI1 hI2 hR1 hR2 hCB1 hCB2
@@ -716,8 +716,8 @@ theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : DensePoly �
   rw [cancelTanClearedCheck, Bool.and_eq_true]
   constructor
   · apply tisZero_of_toGBCoeffPoly_zero
-    -- residual r1 = tsub (tadd (tanDeriv q1) row1) c1, row1 = (b0 - 2t)q1 - b2 q2.
-    rw [toGBCoeffPoly_tsub, toGBCoeffPoly_tadd, toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tadd, toGBCoeffPoly_tsub,
+    -- residual r1 = DensePoly.csub (DensePoly.cadd (tanDeriv q1) row1) c1, row1 = (b0 - 2t)q1 - b2 q2.
+    rw [GBPolyCore.toGBCoeffPoly_csub, GBPolyCore.toGBCoeffPoly_cadd, toGBCoeffPoly_tanDeriv, GBPolyCore.toGBCoeffPoly_cadd, GBPolyCore.toGBCoeffPoly_csub,
       toGBCoeffPoly_map_cmulG, toGBCoeffPoly_map_cmulG, toGBCoeffPoly_mulT, toGBCoeffPoly_twoT]
     -- hG1 (n=2): tanDeriv-part + (C b0 - C(C 2) X) Q1 - C b2 Q2 = C1.
     rw [toGBCoeffPoly_tanDeriv] at hG1
@@ -725,7 +725,7 @@ theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : DensePoly �
     simp only [denote, CFieldSpec.toK, id_eq, map_mul, map_neg, map_one]
     linear_combination hG1
   · apply tisZero_of_toGBCoeffPoly_zero
-    rw [toGBCoeffPoly_tsub, toGBCoeffPoly_tadd, toGBCoeffPoly_tanDeriv, toGBCoeffPoly_tadd, toGBCoeffPoly_map_cmulG, toGBCoeffPoly_tsub,
+    rw [GBPolyCore.toGBCoeffPoly_csub, GBPolyCore.toGBCoeffPoly_cadd, toGBCoeffPoly_tanDeriv, GBPolyCore.toGBCoeffPoly_cadd, toGBCoeffPoly_map_cmulG, GBPolyCore.toGBCoeffPoly_csub,
       toGBCoeffPoly_map_cmulG, toGBCoeffPoly_mulT, toGBCoeffPoly_twoT]
     rw [toGBCoeffPoly_tanDeriv] at hG2
     simp only [Nat.cast_ofNat] at hG2

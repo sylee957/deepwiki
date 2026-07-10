@@ -22,20 +22,22 @@ namespace DeepWiki.SymbolicIntegration.Compute
 Modeling the residue ring `ℚ[t]/(R)` by an arbitrary ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, the
 monic-in-`x` normalization `bmonicXmodR` is multiplication by a residue-ring unit. -/
 
-/-- For `φ` killing `toPoly R`, `φ (toPoly (credR R c)) = φ (toPoly c)`. -/
-theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R c : DensePoly ℚ)
+/-- For `φ` killing `toPoly R`, reducing `c` modulo `R` does not change its image under `φ`. -/
+theorem map_toPoly_cmodWf {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (c R : DensePoly ℚ)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
-    φ (toPoly (credR R c)) = φ (toPoly c) := by
+    φ (toPoly (DensePoly.cmodWf c R)) = φ (toPoly c) := by
   have hdiv : toPoly c = toPoly (DensePoly.cdivWf c R) * toPoly R
       + toPoly (DensePoly.cmodWf c R) := by
     exact DensePoly.toPolyG_cmodWf c R hR
-  rw [credR, hdiv, map_add, map_mul, hφR, mul_zero, zero_add]
+  rw [hdiv, map_add, map_mul, hφR, mul_zero, zero_add]
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
-`Φ (GBPolyCore.toGBCoeffPoly (p.map (credR R))) = Φ (GBPolyCore.toGBCoeffPoly p)`. -/
-theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
+mapping coefficientwise remainder modulo `R` does not change `Φ (GBPolyCore.toGBCoeffPoly p)`. -/
+theorem mapRingHom_toGBCoeffPoly_map_cmodWf {S : Type*} [CommRing S]
+    (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
     (p : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
-    (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (p.map (credR R)))
+    (Polynomial.mapRingHom φ)
+        (GBPolyCore.toGBCoeffPoly (p.map (fun c => DensePoly.cmodWf c R)))
       = (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly p) := by
   induction p with
   | nil => simp
@@ -43,14 +45,15 @@ theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+*
     rw [List.map_cons, GBPolyCore.toGBCoeffPoly_cons, GBPolyCore.toGBCoeffPoly_cons, map_add, map_add, map_mul, map_mul, ih]
     congr 1
     rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C]
-    change Polynomial.C (φ (toPoly (credR R a))) = Polynomial.C (φ (toPoly a))
-    rw [map_toPoly_credR φ R a hR hφR]
+    change Polynomial.C (φ (toPoly (DensePoly.cmodWf a R))) = Polynomial.C (φ (toPoly a))
+    rw [map_toPoly_cmodWf φ a R hR hφR]
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, `Φ (GBPolyCore.toGBCoeffPoly (bredR R p)) = Φ (GBPolyCore.toGBCoeffPoly p)`. -/
-theorem mapRingHom_toBPoly_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
+theorem mapRingHom_toGBCoeffPoly_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
     (p : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (bredR R p)) = (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly p) := by
-  rw [bredR, GBPolyCore.toGBCoeffPoly_gbnormCore, mapRingHom_toBPoly_map_credR φ R p hR hφR]
+  rw [bredR, GBPolyCore.toGBCoeffPoly_gbnormCore,
+    mapRingHom_toGBCoeffPoly_map_cmodWf φ R p hR hφR]
 
 /-- `cinvMod` is the mod-`R` inverse: for `φ` killing `toPoly R`, when the extended-Euclidean gcd of `c, R`
 reduces to a nonzero constant `C u`, `φ (toPoly (cinvMod R c)) · φ (toPoly c) = 1`. -/
@@ -67,10 +70,10 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R
   have hlead : clead (DensePoly.cgcdWf c R).1 = u := by
     change CRingSpec.toR (clead (DensePoly.cgcdWf c R).1) = u
     rw [DensePoly.toR_cleadG_eq_leadingCoeff, hg, Polynomial.leadingCoeff_C]
-  -- φ image of the inverse: drop the credR, expand the cscale
+  -- φ image of the inverse: drop the remainder, expand the cscale
   rw [cinvMod]
-  -- cinvMod R c = credR R (cscale (clead g)⁻¹ s), with s from `cgcdWf c R`.
-  rw [map_toPoly_credR φ R _ hR hφR, DensePoly.toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_rat,
+  -- cinvMod R c = cmodWf (cscale (clead g)⁻¹ s) R, with s from `cgcdWf c R`.
+  rw [map_toPoly_cmodWf φ _ R hR hφR, DensePoly.toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_rat,
     map_mul, hlead]
   -- now: φ (C u⁻¹) * φ (toPoly s) * φ (toPoly c) = 1
   -- from Bézout image: φ(toPoly s)·φ(toPoly c) = φ (C u)
@@ -82,10 +85,12 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R
   rw [mul_assoc, himg, ← map_mul, ← Polynomial.C_mul, inv_mul_cancel₀ hu, Polynomial.C_1, map_one]
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
-`Φ (GBPolyCore.toGBCoeffPoly (q.map (fun c => credR R (cmul c inv)))) = C (φ (toPoly inv)) · Φ (GBPolyCore.toGBCoeffPoly q)`. -/
-theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S)
+mapping `c * inv` coefficientwise modulo `R` scales `Φ (GBPolyCore.toGBCoeffPoly q)` by `φ (toPoly inv)`. -/
+theorem mapRingHom_toGBCoeffPoly_map_cmodWf_cmul {S : Type*} [CommRing S]
+    (φ : ℚ[X] →+* S)
     (R inv : DensePoly ℚ) (q : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
-    (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (q.map (fun c => credR R (cmul c inv))))
+    (Polynomial.mapRingHom φ)
+        (GBPolyCore.toGBCoeffPoly (q.map (fun c => DensePoly.cmodWf (cmul c inv) R)))
       = Polynomial.C (φ (toPoly inv)) * (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly q) := by
   induction q with
   | nil => simp
@@ -93,16 +98,17 @@ theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] 
     rw [List.map_cons, GBPolyCore.toGBCoeffPoly_cons, GBPolyCore.toGBCoeffPoly_cons, map_add, map_add, map_mul, map_mul, ih, mul_add]
     congr 1
     · rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C]
-      change Polynomial.C (φ (toPoly (credR R (cmul a inv))))
+      change Polynomial.C (φ (toPoly (DensePoly.cmodWf (cmul a inv) R)))
           = Polynomial.C (φ (toPoly inv)) * Polynomial.C (φ (toPoly a))
-      rw [map_toPoly_credR φ R _ hR hφR]
+      rw [map_toPoly_cmodWf φ _ R hR hφR]
       rw [DensePoly.toPolyG_cmulG, map_mul, Polynomial.C_mul, mul_comm]
     · rw [Polynomial.coe_mapRingHom (f := φ), Polynomial.map_X]; ring
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, when the leading coefficient's mod-`R` gcd reduces
 to a nonzero constant `C u`, `Φ (GBPolyCore.toGBCoeffPoly (bmonicXmodR R p)) = C (φ (toPoly inv)) · Φ (GBPolyCore.toGBCoeffPoly p)` with
 `φ (toPoly inv)` a unit in `S`. -/
-theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
+theorem mapRingHom_toGBCoeffPoly_bmonicXmodR {S : Type*} [CommRing S]
+    (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
     (p : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
     (hg : toPoly (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR R p)) R).1 = Polynomial.C u)
     (hpz : ¬ GBPolyCore.gbisZeroCore (bredR R p) = true) :
@@ -115,9 +121,10 @@ theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →
   rw [bmonicXmodR]
   simp only [hpz, Bool.false_eq_true, if_false]
   rw [GBPolyCore.toGBCoeffPoly_gbnormCore,
-    mapRingHom_toBPoly_map_credR_cmul φ R (cinvMod R (GBPolyCore.gblcCore (bredR R p)))
+    mapRingHom_toGBCoeffPoly_map_cmodWf_cmul φ R
+      (cinvMod R (GBPolyCore.gblcCore (bredR R p)))
       (bredR R p) hR hφR,
-    mapRingHom_toBPoly_bredR φ R p hR hφR]
+    mapRingHom_toGBCoeffPoly_bredR φ R p hR hφR]
 
 /-! ### The full `lrtGcdCompute ↔ lrtSubresultant` agreement over the residue ring `ℚ[t]/(R)` -/
 
@@ -154,7 +161,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDoma
     hchain hfilt hprim
   have hmap := isSimilar_mapRingHom φ habs hne
   -- the bmonicXmodR unit bridge: lrtGcdCompute = bmonicXmodR R lrtSubresultantCompute
-  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ R
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toGBCoeffPoly_bmonicXmodR φ R
     (lrtSubresultantCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree A D) hRcn hφR hu hgu hpz
   have hsimUnit := isSimilar_of_unit_mul
     (A := (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly
@@ -234,7 +241,7 @@ example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ) (p : 
           * (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly p)
       ∧ φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p))))
           * φ (toPoly (GBPolyCore.gblcCore (bredR R p))) = 1 :=
-  mapRingHom_toBPoly_bmonicXmodR φ R p hR hφR hu hg hpz
+  mapRingHom_toGBCoeffPoly_bmonicXmodR φ R p hR hφR hu hg hpz
 
 /-! ### Instantiating the abstract chain from the concrete `subresPRS.go`
 Mirrors the internal `subresPRS.go` recurrence as a top-level state machine `goState`, so the abstract

@@ -341,17 +341,6 @@ identity); restricted to `n = 2`. -/
 namespace RadElem
 variable {α : Type*} [CField α] {n : ℕ} {f : α}
 
-/-- `cadd` length is the `max` — `(cadd p q).length = max p.length q.length` (the shorter is
-zero-extended). -/
-theorem caddG_length (p q : DensePoly α) :
-    (DensePoly.cadd p q : List α).length = max (p : List α).length (q : List α).length := by
-  induction p generalizing q with
-  | nil => simp [DensePoly.cadd]
-  | cons a as ih =>
-    cases q with
-    | nil => simp [DensePoly.cadd]
-    | cons b bs => simp only [DensePoly.cadd, List.length_cons, ih bs]; omega
-
 /-- The inner `radReduce` reaches `cnorm`-length `≤ n` (`n ≥ 1`, `fuel ≥ cnorm`-length) — each fold
 strictly drops the normalized length, so the loop hits the `length ≤ n` exit. -/
 theorem cnormG_radReduce_length_le (hn : 1 ≤ n) : ∀ (fuel : ℕ) (u : DensePoly α),
@@ -372,7 +361,7 @@ theorem cnormG_radReduce_length_le (hn : 1 ≤ n) : ∀ (fuel : ℕ) (u : DenseP
         (DensePoly.cshift ((q : List α).length - 1 - n)
             [CCommRing.mul ((q : List α).getLast?.getD CCommRing.zero) f]) : List α).length
           < (q : List α).length := by
-        rw [caddG_length, DensePoly.cshiftG_length]
+        rw [DensePoly.caddG_length, DensePoly.cshiftG_length]
         simp only [List.length_singleton, List.length_dropLast]; omega
       have := (DensePoly.cnormG_length_le _).trans_lt hstep; omega
 
