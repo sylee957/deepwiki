@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.CantorComposition
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.PrimeFacts
 
 /-! # Divisor order and the good-reduction torsion decision
 
@@ -41,15 +42,6 @@ instance instCFieldSpecZMod (p : ℕ) [Fact p.Prime] : CFieldSpec (ZMod p) where
   toK_neg _ := rfl
   toK_inv _ := rfl
   isZero_iff a := by show decide (a = 0) = true ↔ id a = 0; simp
-
-/-- `Nat.Prime 5` as a `Fact` instance, so `CField (ZMod 5)` resolves. -/
-instance : Fact (Nat.Prime 5) := ⟨by norm_num⟩
-
-/-- `Nat.Prime 7` as a `Fact` instance, so `CField (ZMod 7)` resolves. -/
-instance : Fact (Nat.Prime 7) := ⟨by norm_num⟩
-
-/-- `Nat.Prime 11` as a `Fact` instance, so `CField (ZMod 11)` resolves. -/
-instance : Fact (Nat.Prime 11) := ⟨by norm_num⟩
 
 namespace DensePoly
 

@@ -5,6 +5,7 @@ import Mathlib.Algebra.Polynomial.PartialFractions
 import Mathlib.Tactic
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
 import DeepWiki.Algebra.RatFuncEmbedding
+import DeepWiki.SymbolicIntegration.LiouvilleRatFuncData
 
 /-! # The transcendental logarithmic Liouville extension
 
@@ -1403,27 +1404,6 @@ theorem singleLogPole_of_multiLogPole (u : F) (hmlp : MultiLogPoleObligation u) 
     hmlp a (Fin 1) (fun _ => c) (fun _ => hc) (fun _ => w) v (by simpa using h)
   exact ⟨w₀ 0, v₀, by simpa using h₀, hv₀⟩
 
-omit [CharZero F] in
-/-- Given `F`-data for a single representation, `IsLiouville`'s existential conclusion
-`a = ∑ c₀ · logDeriv u₀ + v₀'′` holds. -/
-theorem isLiouville_conclusion_of_fData [Differential (RatFunc F)]
-    [DifferentialAlgebra F (RatFunc F)]
-    (a : F) (ι : Type) [Fintype ι] (c : ι → F) (hc : ∀ x, (c x)′ = 0)
-    (w₀ : ι → F) (v₀ : F)
-    (h : algebraMap F (RatFunc F) a
-          = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x))
-              + (algebraMap F (RatFunc F) v₀)′) :
-    ∃ (ι₀ : Type) (_ : Fintype ι₀) (c₀ : ι₀ → F) (_ : ∀ x, (c₀ x)′ = 0)
-      (u₀ : ι₀ → F) (v₀' : F), a = ∑ x, c₀ x * logDeriv (u₀ x) + v₀'′ := by
-  refine ⟨ι, inferInstance, c, hc, w₀, v₀, ?_⟩
-  apply FaithfulSMul.algebraMap_injective F (RatFunc F)
-  rw [map_add, map_sum, ← deriv_algebraMap]
-  have hsum : ∀ x, (algebraMap F (RatFunc F)) (c x * logDeriv (w₀ x))
-      = algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x)) := by
-    intro x; rw [map_mul, ← logDeriv_algebraMap]
-  simp_rw [hsum]
-  exact h
-
 /-- The `IsLiouville` reduction condition: `IsLiouville F (RatFunc F)` on the log extension. -/
 def IsLiouvilleReductionObligation (u : F) : Prop :=
   letI := logDifferential u
@@ -1438,7 +1418,7 @@ theorem isLiouvilleReduction_of_fDataReduction (u : F)
   letI := logDifferentialAlgebra u
   refine ⟨fun a ι _ c hc w v h => ?_⟩
   obtain ⟨w₀, v₀, h₀⟩ := hred a ι c hc w v h
-  exact isLiouville_conclusion_of_fData a ι c hc w₀ v₀ h₀
+  exact isLiouville_conclusion_of_ratFuncData a ι c hc w₀ v₀ h₀
 
 omit [CharZero F] in
 /-- `LiouvilleFDataReduction u` gives `IsLiouville F (RatFunc F)` on the log extension. -/

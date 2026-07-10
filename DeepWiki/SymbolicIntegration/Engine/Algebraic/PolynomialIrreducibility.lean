@@ -6,6 +6,7 @@ import Mathlib.Data.ZMod.Basic
 import Mathlib.Data.List.OfFn
 import Mathlib.Data.List.GetD
 import Mathlib.RingTheory.Polynomial.Cyclotomic.Roots
+import DeepWiki.SymbolicIntegration.Engine.Algebraic.PrimeFacts
 
 /-! # A computable, sound irreducibility test for `ℤ[X]` via mod-`p` reduction
 
@@ -377,13 +378,6 @@ theorem isMonicOfDegree_toPolyZ_append_one (lower : List ℤ) :
 
 Each certificate represents `f` by its `ℤ`-coefficient list `lower ++ [1]`, checks
 `irreducibleByModP p (lower ++ [1]) n = true`, and concludes irreducibility over `ℤ`. -/
-
-/-- `Fact (Nat.Prime 3)` for the mod-3 certificates. -/
-instance factPrime3_polyIrred : Fact (Nat.Prime 3) := ⟨by decide⟩
-/-- `Fact (Nat.Prime 5)` for the mod-5 certificates. -/
-instance factPrime5_polyIrred : Fact (Nat.Prime 5) := ⟨by decide⟩
-/-- `Fact (Nat.Prime 7)` for the mod-7 certificates. -/
-instance factPrime7_polyIrred : Fact (Nat.Prime 7) := ⟨by decide⟩
 
 /-- `x² + 1 = toPolyZ [1,0,1]` is irreducible over `ℤ` (irreducible mod `3`: no root in 𝔽₃). -/
 theorem irreducible_toPolyZ_X_sq_add_one :

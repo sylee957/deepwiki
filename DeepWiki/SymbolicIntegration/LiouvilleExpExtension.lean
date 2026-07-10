@@ -5,6 +5,7 @@ import Mathlib.Algebra.Polynomial.PartialFractions
 import Mathlib.Tactic
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
 import DeepWiki.Algebra.RatFuncEmbedding
+import DeepWiki.SymbolicIntegration.LiouvilleRatFuncData
 
 /-! # The transcendental exponential Liouville extension
 
@@ -561,26 +562,6 @@ variable {F : Type*} [Field F] [Differential F] [CharZero F]
 
 open RatFunc
 
-omit [CharZero F] in
-/-- Given `F`-data for a representation, `IsLiouville`'s existential conclusion holds. -/
-theorem isLiouville_conclusion_of_fData [Differential (RatFunc F)]
-    [DifferentialAlgebra F (RatFunc F)]
-    (a : F) (ι : Type) [Fintype ι] (c : ι → F) (hc : ∀ x, (c x)′ = 0)
-    (w₀ : ι → F) (v₀ : F)
-    (h : algebraMap F (RatFunc F) a
-          = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x))
-              + (algebraMap F (RatFunc F) v₀)′) :
-    ∃ (ι₀ : Type) (_ : Fintype ι₀) (c₀ : ι₀ → F) (_ : ∀ x, (c₀ x)′ = 0)
-      (u₀ : ι₀ → F) (v₀' : F), a = ∑ x, c₀ x * logDeriv (u₀ x) + v₀'′ := by
-  refine ⟨ι, inferInstance, c, hc, w₀, v₀, ?_⟩
-  apply FaithfulSMul.algebraMap_injective F (RatFunc F)
-  rw [map_add, map_sum, ← deriv_algebraMap]
-  have hsum : ∀ x, (algebraMap F (RatFunc F)) (c x * logDeriv (w₀ x))
-      = algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x)) := by
-    intro x; rw [map_mul, ← logDeriv_algebraMap]
-  simp_rw [hsum]
-  exact h
-
 /-- The exp F-data reduction: any representation `a = ∑ cᵢ logDeriv wᵢ + v′` of `a ∈ F` can be
 re-expressed with the logarithms' arguments and the `v`-term already in `F`. -/
 def ExpFDataReduction (u : F) : Prop :=
@@ -627,7 +608,7 @@ theorem isLiouville_of_expFDataReduction (u : F) (hred : ExpFDataReduction u) :
   letI := expDifferentialAlgebra u
   refine ⟨fun a ι _ c hc w v h => ?_⟩
   obtain ⟨w₀, v₀, h₀⟩ := hred a ι c hc w v h
-  exact isLiouville_conclusion_of_fData a ι c hc w₀ v₀ h₀
+  exact isLiouville_conclusion_of_ratFuncData a ι c hc w₀ v₀ h₀
 
 /-- `ExpPoleMatching u` (with `NondegenerateExp u`) yields `IsLiouville F (RatFunc F)`. -/
 theorem isLiouville_of_expPoleMatching (u : F) (hnd : NondegenerateExp u)
