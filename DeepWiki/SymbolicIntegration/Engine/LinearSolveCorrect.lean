@@ -673,6 +673,77 @@ theorem back_read_solves_rref (R : List (List ℚ)) (PC : List ℕ) (ncols : ℕ
       exfalso; apply hi'; rw [Finset.mem_range]; rw [hRPClen] at hi; omega
   rw [hmain]; ring
 
+/-- The zero-free-variable back-read of a consistent RREF solves every RREF row. -/
+theorem back_read_solves_rref_any (R : List (List ℚ)) (PC : List ℕ) (ncols : ℕ)
+    (hid : isIdentitySubmatrix R PC) (hnd : PC.Nodup) (hpcb : ∀ c ∈ PC, c < ncols)
+    (hrlen : ∀ r ∈ R, ncols + 1 ≤ r.length) :
+    let x : List ℚ := (List.range ncols).map (fun j =>
+      match PC.idxOf? j with | some pr => (R.getD pr []).getD ncols 0 | none => 0)
+    solvesAll R (x ++ [(-1 : ℚ)]) := by
+  obtain ⟨hRPClen, hidval⟩ := hid
+  intro x r hr
+  obtain ⟨i, hi, hri⟩ := List.getElem_of_mem hr
+  rw [show r = R.getD i [] by rw [getD_lt_gen R i [] hi, hri]]
+  have hiPC : i < PC.length := by rw [← hRPClen]; exact hi
+  have hPCimem : PC.getD i 0 ∈ PC := getD_mem_lt PC i 0 hiPC
+  have hPCi : PC.getD i 0 < ncols := hpcb _ hPCimem
+  have hRlen_i : ncols + 1 ≤ (R.getD i []).length := hrlen _ (getD_mem_lt R i [] hi)
+  have hxlen : x.length = ncols := by simp [x]
+  have hvlen : (x ++ [(-1 : ℚ)]).length = ncols + 1 := by simp [hxlen]
+  unfold solvesRow
+  rw [dotQ_eq_sum (R.getD i []) (x ++ [(-1 : ℚ)]) (by rw [hvlen]; omega)]
+  rw [hvlen, Finset.sum_range_succ]
+  have hvncols : (x ++ [(-1 : ℚ)]).getD ncols 0 = -1 := by
+    rw [getD_append_right _ _ _ _ (by rw [hxlen]), hxlen]
+    simp
+  rw [hvncols]
+  have hmain :
+      (∑ c ∈ Finset.range ncols,
+          (R.getD i []).getD c 0 * (x ++ [(-1 : ℚ)]).getD c 0) =
+        (R.getD i []).getD ncols 0 := by
+    rw [Finset.sum_eq_single (PC.getD i 0)]
+    · rw [hidval i i hi hiPC, if_pos rfl, one_mul]
+      rw [getD_append_left x [(-1 : ℚ)] 0 (PC.getD i 0) (by rw [hxlen]; exact hPCi)]
+      rw [show x = (List.range ncols).map (fun j =>
+        match PC.idxOf? j with | some pr => (R.getD pr []).getD ncols 0 | none => 0) from rfl]
+      rw [getD_lt_gen _ _ 0 (by rw [List.length_map, List.length_range]; exact hPCi)]
+      rw [List.getElem_map, List.getElem_range]
+      rw [idxOf?_of_mem PC (PC.getD i 0) hPCimem]
+      rw [getD_lt_gen PC i 0 hiPC]
+      rw [List.Nodup.idxOf_getElem hnd i hiPC]
+    · intro c hc hci
+      rw [Finset.mem_range] at hc
+      by_cases hcmem : c ∈ PC
+      · let j := PC.idxOf c
+        have hj : j < PC.length := List.idxOf_lt_length_of_mem hcmem
+        have hPCj : PC.getD j 0 = c := by
+          rw [getD_lt_gen PC j 0 hj]
+          exact List.getElem_idxOf hj
+        have hij : i ≠ j := by
+          intro hij
+          apply hci
+          rw [← hPCj, hij]
+        rw [← hPCj, hidval i j hi hj, if_neg hij, zero_mul]
+      · have hidx : PC.idxOf? c = none := by
+          rw [List.idxOf?, List.findIdx?_eq_none_iff]
+          intro a ha
+          simp only [beq_eq_false_iff_ne]
+          intro hac
+          apply hcmem
+          simpa [hac] using ha
+        have hxget : (x ++ [(-1 : ℚ)]).getD c 0 = x.getD c 0 :=
+          getD_append_left x [(-1 : ℚ)] 0 c (by rw [hxlen]; exact hc)
+        have hxzero : x.getD c 0 = 0 := by
+          simp [x, List.getD_eq_getElem?_getD, hc, hidx]
+        rw [hxget, hxzero, mul_zero]
+    · intro hnot
+      exfalso
+      apply hnot
+      rw [Finset.mem_range]
+      exact hPCi
+  rw [hmain]
+  ring
+
 /-- Output rows of `crref.go` are at least `ncols` wide. -/
 theorem crref_go_rowlen (ncols : ℕ) :
     ∀ (fuel col : ℕ) (rest pivRows : List (List ℚ)) (pivCols : List ℕ),
@@ -748,6 +819,18 @@ theorem cConstSolveUniqueQ_length (Arows : List (List ℚ)) (urhs : List ℚ) (n
     · simp only [hc2, if_true] at hsome; exact absurd hsome (by simp)
     · simp only [hc2, if_false, Option.some.injEq] at hsome
       rw [← hsome, List.length_map, List.length_range]
+
+/-- A returned particular rational solution has exactly `ncols` entries. -/
+theorem cConstSolveAnyQ_length (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ)
+    (x : List ℚ) (hsome : cConstSolveAnyQ Arows urhs ncols = some x) :
+    x.length = ncols := by
+  rw [cConstSolveAnyQ] at hsome
+  set RPC := crref (List.zipWith (fun r u => r ++ [u]) Arows urhs) (ncols + 1)
+  by_cases hc : RPC.2.contains ncols
+  · simp only [hc, if_true] at hsome
+    exact absurd hsome (by simp)
+  · simp only [hc, Bool.false_eq_true, if_false, Option.some.injEq] at hsome
+    rw [← hsome, List.length_map, List.length_range]
 
 /-- Soundness of `cConstSolveUniqueQ`: if it returns `some x`, then `x` solves `A·x = b` rowwise,
 `dotQ (Arows.getD i []) x = urhs.getD i 0` for each `i < Arows.length`. -/
@@ -829,6 +912,78 @@ theorem cConstSolveUniqueQ_sound (Arows : List (List ℚ)) (urhs : List ℚ) (nc
       rw [hcompute] at hsolvei
       linarith [hsolvei]
 
+/-- Soundness of `cConstSolveAnyQ`: every returned vector solves the well-formed rational system. -/
+theorem cConstSolveAnyQ_sound (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
+    (hwidth : ∀ r ∈ Arows, r.length = ncols) (hlen : Arows.length = urhs.length)
+    (hsome : cConstSolveAnyQ Arows urhs ncols = some x) :
+    ∀ i, i < Arows.length → dotQ (Arows.getD i []) x = urhs.getD i 0 := by
+  set aug : List (List ℚ) := List.zipWith (fun r u => r ++ [u]) Arows urhs with haugdef
+  set RPC := crref aug (ncols + 1) with hRPCdef
+  have haug_len : aug.length = Arows.length := by
+    rw [haugdef, List.length_zipWith]
+    omega
+  have haug_width : ∀ r ∈ aug, r.length = ncols + 1 := by
+    intro r hr
+    rw [haugdef, List.mem_iff_getElem] at hr
+    obtain ⟨k, hk, rfl⟩ := hr
+    rw [List.length_zipWith] at hk
+    rw [List.getElem_zipWith, List.length_append, List.length_singleton,
+      hwidth _ (List.getElem_mem _)]
+  have haug_width_ge : ∀ r ∈ aug, ncols + 1 ≤ r.length :=
+    fun r hr => le_of_eq (haug_width r hr).symm
+  rw [cConstSolveAnyQ] at hsome
+  simp only [← haugdef, ← hRPCdef] at hsome
+  by_cases hc : RPC.2.contains ncols
+  · rw [if_pos hc] at hsome
+    exact absurd hsome (by simp)
+  · rw [if_neg hc, Option.some.injEq] at hsome
+    obtain ⟨hid, hnd, hpcb⟩ := crref_rref aug (ncols + 1) haug_width_ge
+    have hrlen : ∀ r ∈ RPC.1, ncols + 1 ≤ r.length :=
+      crref_rowlen aug (ncols + 1) haug_width_ge
+    have hncols_not_mem : ncols ∉ RPC.2 := by simpa using hc
+    have hpcb' : ∀ c ∈ RPC.2, c < ncols := by
+      intro c hcmem
+      have hlt : c < ncols + 1 := hpcb c hcmem
+      rcases Nat.lt_succ_iff_lt_or_eq.mp hlt with h | h
+      · exact h
+      · exact absurd (h ▸ hcmem) hncols_not_mem
+    set xvec : List ℚ := (List.range ncols).map (fun j =>
+      match RPC.2.idxOf? j with
+      | some pr => (RPC.1.getD pr []).getD ncols 0
+      | none => 0) with hxvecdef
+    have hxeq : x = xvec := hsome.symm
+    have hP1 := back_read_solves_rref_any RPC.1 RPC.2 ncols hid hnd hpcb' hrlen
+    have hvlen : (xvec ++ [(-1 : ℚ)]).length = ncols + 1 := by
+      rw [List.length_append, hxvecdef]
+      simp
+    have hsolveAug : solvesAll aug (xvec ++ [(-1 : ℚ)]) := by
+      apply crref_solves aug (ncols + 1) (xvec ++ [(-1 : ℚ)]) (by rw [hvlen])
+        (fun r hr => by rw [hvlen]; exact haug_width_ge r hr)
+      rw [← hRPCdef]
+      exact hP1
+    intro i hi
+    have haugi : aug.getD i [] = Arows.getD i [] ++ [urhs.getD i 0] := by
+      rw [haugdef, getD_lt_gen _ i [] (by rw [List.length_zipWith]; omega),
+        List.getElem_zipWith, getD_lt_gen Arows i [] hi,
+        getD_lt_gen urhs i 0 (by omega)]
+    have hsolvei : solvesRow (aug.getD i []) (xvec ++ [(-1 : ℚ)]) :=
+      hsolveAug _ (getD_mem_lt aug i [] (by rw [haug_len]; exact hi))
+    rw [haugi] at hsolvei
+    rw [hxeq]
+    have hcompute : dotQ (Arows.getD i [] ++ [urhs.getD i 0]) (xvec ++ [(-1 : ℚ)])
+        = dotQ (Arows.getD i []) xvec - urhs.getD i 0 := by
+      have hAlen : (Arows.getD i []).length = ncols :=
+        hwidth _ (getD_mem_lt Arows i [] hi)
+      have hxveclen : xvec.length = ncols := by rw [hxvecdef]; simp
+      unfold dotQ
+      rw [List.zipWith_append (by rw [hAlen, hxveclen])]
+      simp only [List.zipWith_cons_cons, List.zipWith_nil_left, List.sum_append,
+        List.sum_cons, List.sum_nil, add_zero]
+      ring
+    unfold solvesRow at hsolvei
+    rw [hcompute] at hsolvei
+    linarith [hsolvei]
+
 
 end DeepWiki.SymbolicIntegration.DensePoly
 
@@ -857,5 +1012,13 @@ instance instLawfulCLinearSolveRat : LawfulCLinearSolve ℚ where
     change linearDot (rows.getD i []) x = rhs.getD i CCommRing.zero
     rw [linearDot_rat_eq_dotQ]
     exact DensePoly.cConstSolveUniqueQ_sound rows rhs ncols x hwidth hlen hsome i hi
+  solveAny_length := by
+    intro rows rhs ncols x hsome
+    exact DensePoly.cConstSolveAnyQ_length rows rhs ncols x hsome
+  solveAny_sound := by
+    intro rows rhs ncols x hwidth hlen hsome i hi
+    change linearDot (rows.getD i []) x = rhs.getD i CCommRing.zero
+    rw [linearDot_rat_eq_dotQ]
+    exact DensePoly.cConstSolveAnyQ_sound rows rhs ncols x hwidth hlen hsome i hi
 
 end DeepWiki.SymbolicIntegration

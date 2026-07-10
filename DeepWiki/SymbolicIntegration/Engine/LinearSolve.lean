@@ -3,9 +3,9 @@ import DeepWiki.ComputableAlgebra.LinearAlgebra
 
 /-! # Executable dense linear solving over `ℚ`
 
-List-based reduced row echelon form, nullspace bases, and unique-solution
-reading for dense rational matrices, plus the small generic `getD` helper used
-by downstream matrix proofs.
+List-based reduced row echelon form, nullspace bases, and unique or particular
+solution reading for dense rational matrices, plus the small generic `getD`
+helper used by downstream matrix proofs.
 -/
 
 namespace DeepWiki.SymbolicIntegration
@@ -61,6 +61,17 @@ def cConstSolveUniqueQ (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ)
       | some pr => (R.getD pr []).getD ncols 0
       | none => 0))
 
+/-- Return a particular solution of a consistent rational system, setting free variables to zero. -/
+def cConstSolveAnyQ (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) : Option (List ℚ) :=
+  let aug := List.zipWith (fun r u => r ++ [u]) Arows urhs
+  let (R, pivCols) := crref aug (ncols + 1)
+  if pivCols.contains ncols then none
+  else
+    some ((List.range ncols).map (fun j =>
+      match pivCols.idxOf? j with
+      | some pr => (R.getD pr []).getD ncols 0
+      | none => 0))
+
 /-- `getD` within range reads the element. -/
 theorem getD_lt_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : n < l.length) :
     l.getD n d = l[n] := by
@@ -76,5 +87,6 @@ end DensePoly
 /-- The existing rational RREF implementation supplies the abstract linear-solver capability. -/
 instance instCLinearSolveRat : CLinearSolve ℚ where
   solveUnique := DensePoly.cConstSolveUniqueQ
+  solveAny := DensePoly.cConstSolveAnyQ
 
 end DeepWiki.SymbolicIntegration

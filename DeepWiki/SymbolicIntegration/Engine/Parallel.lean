@@ -68,7 +68,7 @@ default educated guess; an integrand whose denominator factors into squarefree-b
   ansatz `b` (coefficients `u₀…u_β`), the log atoms `{dⱼ}` (coefficients `c₁…c_m`), clears
   `f = D(b/s) + Σ cⱼ·Dpⱼ/pⱼ` by the common denominator `s²·∏pⱼ` (which `d` divides) to the polynomial
   identity `a·s = (Db·s − b·Ds)·∏pⱼ + Σ cⱼ·Dpⱼ·s²·∏_{k≠j}pₖ`, and reads off the matrix.
-* **`cConstSolveAnyQ`** — a *particular* solution of the (typically underdetermined: the arbitrary
+* **`CLinearSolve.solveAny`** — a *particular* solution of the (typically underdetermined: the arbitrary
   constant of integration leaves free variables) inhomogeneous system, complementing the unique-solution
   `cConstSolveUniqueQ`.
 * **`cParallelIntegrate`** — the `ParallelIntegrate(f, D)` box: returns `some (rational part (b,s),
@@ -107,27 +107,6 @@ example :
 
 namespace DensePoly
 
-/-! ### A *particular*-solution linear solver over ℚ (the §10.3 step-5 solve)
-
-The eq. 10.6 system is generally **underdetermined** — the arbitrary constant of integration (and any
-ansatz over-provisioning) leaves free columns. `cConstSolveAnyQ` returns *a* solution (free variables
-set to `0`), complementing `cConstSolveUniqueQ` (`ComputableParametric`) which insists on uniqueness. -/
-
-/-- **A particular solution over ℚ** `cConstSolveAnyQ Arows urhs ncols`: solve `A·x⃗ = u⃗` for *some*
-`x⃗ ∈ ℚ^ncols`, returning `some x⃗` (free variables set to `0`) when the system is consistent, else
-`none` (a pivot in the augmented column ⟹ inconsistent). Used for §10.3 step 5, where the ansatz system
-typically has a solution *space* (the `+ constant` freedom). Row-reduces `[A | u]` and reads each pivot
-variable off its row's augmented entry; non-pivot (free) variables are `0`. -/
-def cConstSolveAnyQ (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) : Option (List ℚ) :=
-  let aug := List.zipWith (fun r u => r ++ [u]) Arows urhs
-  let (R, pivCols) := crref aug (ncols + 1)
-  if pivCols.contains ncols then none           -- pivot in the rhs column: inconsistent
-  else
-    some ((List.range ncols).map (fun j =>
-      match pivCols.idxOf? j with
-      | some pr => (R.getD pr []).getD ncols 0
-      | none => 0))                             -- free variable ⇒ 0 (particular solution)
-
 /-! ### The eq. 10.6 linear system of the Risch–Norman ansatz -/
 
 /-- **The Risch–Norman ansatz data** `cParallelAnsatzQ fuel Dt a d` (Bronstein §10.3 steps 2–4):
@@ -160,7 +139,8 @@ the common denominator `M = s²·∏pⱼ` (which `monic(d)` divides, `M/d = s`) 
 ```
 (with `a` first rescaled to make `d` monic, `D = Dt·d/dt`). Equating `tⁱ`-coefficients gives the dense
 matrix `rows` and right-hand side `rhs = coeffs(a·s)` over the unknowns `(u₀,…,u_{nU-1}, c₁,…,c_m)`
-(`nU` numerator coefficients then `m = #squarefree factors` log coefficients). Fed to `cConstSolveAnyQ`. -/
+(`nU` numerator coefficients then `m = #squarefree factors` log coefficients). Fed to the abstract
+`CLinearSolve.solveAny` operation. -/
 def cParallelSystemQ (Dt a d : DensePoly ℚ) :
     List (List ℚ) × List ℚ × ℕ × ℕ :=
   let lcd := clead d
@@ -192,7 +172,7 @@ def cParallelSystemQ (Dt a d : DensePoly ℚ) :
 `Dt ∈ ℚ[t]`, `D = Dt·d/dt`. For the integrand `f = a/d ∈ ℚ(t)` it builds the ansatz
 `∫f = b/s + Σⱼ cⱼ·log(pⱼ)` (`{pⱼ}` = squarefree factors of `d`, `s = ∏ dⱼ^{j-1}`, `b` the bounded-degree
 undetermined numerator), forms the eq. 10.6 linear system (`cParallelSystemQ`), and solves it
-(`cConstSolveAnyQ`). Returns:
+(`CLinearSolve.solveAny`). Returns:
 
 * `some ((b, s), [(c₁, p₁), …, (c_m, p_m)])` — the rational part `b/s` and the log terms `Σ cⱼ log(pⱼ)`
   of the elementary antiderivative; or
@@ -206,7 +186,7 @@ def cParallelIntegrate (Dt a d : DensePoly ℚ) :
     Option ((DensePoly ℚ × DensePoly ℚ) × List (ℚ × DensePoly ℚ)) :=
   let (rows, rhs, nU, m) := cParallelSystemQ Dt a d
   let (ps, s, _) := cParallelAnsatzQ d (cdeg (cscale (1 / clead d) a) : ℤ)
-  match cConstSolveAnyQ rows rhs (nU + m) with
+  match CLinearSolve.solveAny rows rhs (nU + m) with
   | none => none
   | some sol =>
     let b : DensePoly ℚ := (List.range nU).map (fun i => sol.getD i 0)   -- numerator coefficients
