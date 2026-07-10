@@ -29,45 +29,63 @@ def tanDeriv (p : List (DensePoly ℚ)) : List (DensePoly ℚ) :=
   -- add κ_D and (t²+1)dp/dt coefficientwise (over the t-degree).
   DensePoly.cadd kappa mulDt
 
-/-- `cscaleListQ s p`: scale every `ℚ[x]`-coefficient of the `t`-polynomial `p` by `s ∈ ℚ`. -/
-def cscaleListQ (s : ℚ) (p : List (DensePoly ℚ)) : List (DensePoly ℚ) := p.map (cscale s)
+end DensePoly
+
+/-- `cscaleListQ s p`: scale every represented coefficient of `p` by `s ∈ ℚ`. -/
+def cscaleListQ {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (s : ℚ) (p : List (P ℚ)) : List (P ℚ) :=
+  p.map (CPolyEngine.scale s)
 
 /-! ## Gaussian evaluation and exact division -/
 
-/-- `evalAtI p = (re, im)`: evaluate a `k[t]`-polynomial at `t = √−1`, `p(√−1) = re + im·√−1`
-(Horner mod `t²+1`). -/
-def evalAtI (p : List (DensePoly ℚ)) : DensePoly ℚ × DensePoly ℚ :=
-  p.foldr (fun (a : DensePoly ℚ) (acc : DensePoly ℚ × DensePoly ℚ) =>
+/-- `evalAtI p = (re, im)`: evaluate a represented-coefficient polynomial at `t = √−1`. -/
+def evalAtI {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (p : List (P ℚ)) : P ℚ × P ℚ :=
+  p.foldr (fun (a : P ℚ) (acc : P ℚ × P ℚ) =>
     -- acc = (u, v) standing for u + v√−1; new = a + √−1·acc = a + (u + v√−1)√−1 = (a − v) + u√−1.
-    (cadd a (cscale (-1) acc.2), acc.1)) ([], [])
+    (CPolyEngine.add a (CPolyEngine.scale (-1) acc.2), acc.1)) (CPoly.czero, CPoly.czero)
 
 /-- `cmulI (a,b) (c,d) = (ac − bd, ad + bc)`: `k(√−1)`-multiplication on pairs (`√−1² = −1`). -/
-def cmulI (x y : DensePoly ℚ × DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
-  (csub (cmul x.1 y.1) (cmul x.2 y.2), cadd (cmul x.1 y.2) (cmul x.2 y.1))
+def cmulI {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (x y : P ℚ × P ℚ) : P ℚ × P ℚ :=
+  (CPolyEngine.sub (CPolyEngine.mul x.1 y.1) (CPolyEngine.mul x.2 y.2),
+    CPolyEngine.add (CPolyEngine.mul x.1 y.2) (CPolyEngine.mul x.2 y.1))
 
 /-- `csubI (a,b) (c,d) = (a−c, b−d)`: `k(√−1)`-subtraction on pairs. -/
-def csubI (x y : DensePoly ℚ × DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
-  (csub x.1 y.1, csub x.2 y.2)
+def csubI {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (x y : P ℚ × P ℚ) : P ℚ × P ℚ :=
+  (CPolyEngine.sub x.1 y.1, CPolyEngine.sub x.2 y.2)
 
 /-- `cisZeroI (a,b)`: `k(√−1)`-zero test on a pair (both parts vanish). -/
-def cisZeroI (x : DensePoly ℚ × DensePoly ℚ) : Bool := cisZero x.1 && cisZero x.2
+def cisZeroI {P : Type → Type} [CPoly P] [CPolyEngine P] (x : P ℚ × P ℚ) : Bool :=
+  CPolyEngine.cisZero x.1 && CPolyEngine.cisZero x.2
 
 /-- `divByTminusI p = q` with `p = (t − √−1)·q`: synthetic (Ruffini) division of a `k(√−1)[t]`-poly
 by `t − √−1`, exact when `p(√−1) = 0`; the remainder is dropped. -/
-def divByTminusI (p : List (DensePoly ℚ × DensePoly ℚ)) : List (DensePoly ℚ × DensePoly ℚ) :=
-  let I : DensePoly ℚ × DensePoly ℚ := ([], [CCommRing.one])     -- √−1
+def divByTminusI {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (p : List (P ℚ × P ℚ)) : List (P ℚ × P ℚ) :=
+  let I : P ℚ × P ℚ := (CPoly.czero, CPoly.one)     -- √−1
   -- Horner from the top: coefficients of the quotient, high→low, then reverse.
-  let rec go : List (DensePoly ℚ × DensePoly ℚ) → DensePoly ℚ × DensePoly ℚ →
-      List (DensePoly ℚ × DensePoly ℚ) → List (DensePoly ℚ × DensePoly ℚ)
+  let rec go : List (P ℚ × P ℚ) → P ℚ × P ℚ →
+      List (P ℚ × P ℚ) → List (P ℚ × P ℚ)
     | [], _, acc => acc                                   -- last (lowest) coeff is the remainder, dropped
     | a :: rest, carry, acc =>
         -- current quotient coefficient = carry; next carry = a + √−1·carry.
         go rest (cadd' a (cmulI I carry)) (carry :: acc)
   -- `cadd'` on pairs:
-  go (p.reverse) ([], []) [] |>.drop 0
+  go (p.reverse) (CPoly.czero, CPoly.czero) [] |>.drop 0
 where
   /-- pair addition for the synthetic-division carry. -/
-  cadd' (x y : DensePoly ℚ × DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ := (cadd x.1 y.1, cadd x.2 y.2)
+  cadd' (x y : P ℚ × P ℚ) : P ℚ × P ℚ :=
+    (CPolyEngine.add x.1 y.1, CPolyEngine.add x.2 y.2)
+
+example :
+    CPolyEngine.cisZero (cmulI
+      ((CPoly.czero, CPoly.one) : CPoly.SparsePoly ℚ × CPoly.SparsePoly ℚ)
+      (CPoly.czero, CPoly.one)).2 = true := by
+  native_decide
+
+namespace DensePoly
 
 /-! ## Tangent cancellation solver -/
 

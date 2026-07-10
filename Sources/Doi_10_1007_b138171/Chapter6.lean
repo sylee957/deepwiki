@@ -152,7 +152,9 @@ p.198–201): the computable `cRdeBoundDegree Dt a b c = n ∈ ℕ` (the generic
 over the tower, an explicit upper bound on `deg_t(q)` for any polynomial solution `q` of
 `a·Dq + b·q = c`, case-split by `δ = deg(Dt)`. Computable + `native_decide`-validated; abstract
 correctness deferred. -/
-noncomputable abbrev alg_6_3_boundDegree := cRdeBoundDegree (α := CFrac ℚ)
+noncomputable abbrev alg_6_3_boundDegree
+    (Dt a b c : DensePoly (CFrac ℚ)) : ℕ :=
+  cRdeBoundDegree (P := List) (α := CFrac ℚ) Dt a b c
 
 /-- **Example 6.3.4** (§6.3, the `RdeBoundDegreeNonLinear` box, p.202): continuing Ex 6.1.2/6.2.2,
 `cRdeBoundDegree` on `(a, b, c) = (t, (t−1)(t²+1), 1)` with `δ = 2` returns the degree bound `0`

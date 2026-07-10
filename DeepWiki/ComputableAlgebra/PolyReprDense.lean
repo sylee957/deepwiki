@@ -99,7 +99,7 @@ def cIntegratePoly {α : Type*} [CField α] (c : DensePoly α) : DensePoly α :=
   CCommRing.zero :: ((c : List α).zipIdx.map (fun (a, i) => CField.div a (cnatCast (i + 1))))
 
 /-- Horner evaluation `ceval p c = p(c)` for a dense coefficient list, low degree first. -/
-def ceval {α : Type*} [CField α] (p : DensePoly α) (c : α) : α :=
+def ceval {α : Type*} [CCommRing α] (p : DensePoly α) (c : α) : α :=
   (p : List α).foldr (fun coeff acc => CCommRing.add coeff (CCommRing.mul c acc)) CCommRing.zero
 
 /-- `toK (cfpow c n) = (toK c) ^ n`: generic constant power realizes the `K`-power. -/

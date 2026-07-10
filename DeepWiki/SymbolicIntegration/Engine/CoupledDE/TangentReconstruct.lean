@@ -50,7 +50,7 @@ theorem toGBCoeffPolyS_cons (a : DensePoly ℚ) (as : List (DensePoly ℚ)) :
 theorem evalAtI_spec (p : List (DensePoly ℚ)) :
     (toGBCoeffPolyS p).eval iU = pairToS (evalAtI p) := by
   induction p with
-  | nil => simp [toGBCoeffPolyS_nil, evalAtI, pairToS, toS_nil]
+  | nil => simp [toGBCoeffPolyS_nil, evalAtI, pairToS, CPolyEngine.czero_dense_eq, toS_nil]
   | cons a as ih =>
     rw [toGBCoeffPolyS_cons, eval_add, eval_C, eval_mul, eval_X, ih]
     rw [show evalAtI (a :: as)
@@ -83,13 +83,15 @@ theorem go_append (L : List (DensePoly ℚ × DensePoly ℚ)) (carry : DensePoly
     simp
 
 theorem pairToS_caddG' (x y : DensePoly ℚ × DensePoly ℚ) :
-    pairToS (divByTminusI.cadd' x y) = pairToS x + pairToS y := by
+  pairToS (divByTminusI.cadd' x y) = pairToS x + pairToS y := by
   unfold divByTminusI.cadd' pairToS
-  simp only [toS_add]; ring
+  simp only [CPolyEngine.add_dense_eq, toS_add]
+  ring
 theorem pairToS_cmulI (x y : DensePoly ℚ × DensePoly ℚ) :
-    pairToS (cmulI x y) = pairToS x * pairToS y := by
+  pairToS (cmulI x y) = pairToS x * pairToS y := by
   unfold cmulI pairToS
-  simp only [toS_sub, toS_add]
+  simp only [CPolyEngine.sub_dense_eq, CPolyEngine.mul_dense_eq,
+    CPolyEngine.add_dense_eq, toS_sub, toS_add]
   have hmul : ∀ a b : DensePoly ℚ, toS (cmul a b) = toS a * toS b := by
     intro a b
     simp only [toS, denote, map_mul]
@@ -183,7 +185,7 @@ theorem toPolyG_cscaleListQ (s : ℚ) (p : List (DensePoly ℚ)) :
   · rw [List.getD_eq_getElem?_getD, List.getElem?_map]
     rw [show p[k]? = some p[k] from List.getElem?_eq_getElem hk]
     simp only [Option.map_some, Option.getD_some]
-    simp only [denote]
+    simp only [CPolyEngine.scale_dense_eq, denote]
     rw [Polynomial.coeff_C_mul, DensePoly.toPolyG_coeff_dense,
       List.getD_eq_getElem?_getD, show p[k]? = some p[k] from List.getElem?_eq_getElem hk]
     simp only [Option.getD_some, CFieldSpec.toK, id_eq]

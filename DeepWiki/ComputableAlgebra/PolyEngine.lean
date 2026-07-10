@@ -39,6 +39,8 @@ class CPolyEngine (P : Type u → Type u) where
   cdeg : {α : Type u} → [CCommRing α] → P α → ℕ
   /-- Leading coefficient. -/
   clead : {α : Type u} → [CCommRing α] → P α → α
+  /-- Evaluation at a coefficient-ring value. -/
+  eval : {α : Type u} → [CCommRing α] → P α → α → α
 
 /-- Denotation laws for a `CPolyEngine`, separated from its computable operations. -/
 class LawfulCPolyEngine (P : Type u → Type u) [CPoly P] [CPolyEngine P] : Prop where
@@ -60,6 +62,8 @@ class LawfulCPolyEngine (P : Type u → Type u) [CPoly P] [CPolyEngine P] : Prop
     CPolyEngine.cdeg p = (CPoly.toPoly p).natDegree
   toR_clead_eq_leadingCoeff : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
     CRingSpec.toR (CPolyEngine.clead p) = (CPoly.toPoly p).leadingCoeff
+  toR_eval : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α) (x : α),
+    CRingSpec.toR (CPolyEngine.eval p x) = (CPoly.toPoly p).eval (CRingSpec.toR x)
 
 namespace CPolyEngine
 
@@ -108,6 +112,7 @@ instance instEngineList : CPolyEngine List where
   cisZero := DensePoly.cisZero
   cdeg := DensePoly.cdeg
   clead := DensePoly.clead
+  eval := DensePoly.ceval
 
 /-- The concrete dense engine operations satisfy the generic denotation laws. -/
 instance instLawfulEngineList : LawfulCPolyEngine List where
@@ -138,8 +143,32 @@ instance instLawfulEngineList : LawfulCPolyEngine List where
   toR_clead_eq_leadingCoeff p := by
     change CRingSpec.toR (DensePoly.clead p) = _
     rw [toPoly_list_eq]; exact DensePoly.toR_cleadG_eq_leadingCoeff p
+  toR_eval p x := by
+    change CRingSpec.toR (DensePoly.ceval p x) = (CPoly.toPoly p).eval (CRingSpec.toR x)
+    rw [toPoly_list_eq]
+    induction p with
+    | nil => simp [DensePoly.ceval, CRingSpec.toR_zero]
+    | cons a p ih =>
+      simp only [DensePoly.ceval, List.foldr_cons]
+      rw [CRingSpec.toR_add, CRingSpec.toR_mul,
+        DensePoly.toPolyG_cons, Polynomial.eval_add, Polynomial.eval_C,
+        Polynomial.eval_mul, Polynomial.eval_X]
+      change CRingSpec.toR a + CRingSpec.toR x * CRingSpec.toR (DensePoly.ceval p x) = _
+      rw [ih]
 
 namespace CPolyEngine
+
+/-- Engine addition on the dense representation is concrete dense addition. -/
+@[simp] theorem add_dense_eq {α : Type u} [CCommRing α] (p q : DensePoly α) :
+    CPolyEngine.add p q = DensePoly.cadd p q := rfl
+
+/-- Engine multiplication on the dense representation is concrete dense multiplication. -/
+@[simp] theorem mul_dense_eq {α : Type u} [CCommRing α] (p q : DensePoly α) :
+    CPolyEngine.mul p q = DensePoly.cmul p q := rfl
+
+/-- Engine negation on the dense representation is concrete dense negation. -/
+@[simp] theorem neg_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
+    CPolyEngine.neg p = DensePoly.cneg p := rfl
 
 /-- The engine degree on the dense representation is the concrete dense degree. -/
 @[simp] theorem cdeg_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
@@ -161,9 +190,25 @@ namespace CPolyEngine
 @[simp] theorem sub_dense_eq {α : Type u} [CCommRing α] (p q : DensePoly α) :
     CPolyEngine.sub p q = DensePoly.csub p q := rfl
 
+/-- Engine zero testing on the dense representation is concrete dense zero testing. -/
+@[simp] theorem cisZero_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
+    CPolyEngine.cisZero p = DensePoly.cisZero p := rfl
+
+/-- Generic zero specializes to the empty dense coefficient list. -/
+@[simp] theorem czero_dense_eq {α : Type u} [CCommRing α] :
+    (CPoly.czero : DensePoly α) = [] := rfl
+
+/-- Generic one specializes to the dense singleton coefficient list. -/
+@[simp] theorem one_dense_eq {α : Type u} [CCommRing α] :
+    (CPoly.one : DensePoly α) = [CCommRing.one] := rfl
+
 /-- Engine list products on the dense representation are concrete dense products. -/
 @[simp] theorem prod_dense_eq {α : Type u} [CCommRing α] (ps : List (DensePoly α)) :
     CPolyEngine.prod ps = DensePoly.cprod ps := rfl
+
+/-- Engine evaluation on the dense representation is concrete Horner evaluation. -/
+@[simp] theorem eval_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) (x : α) :
+    CPolyEngine.eval p x = DensePoly.ceval p x := rfl
 
 end CPolyEngine
 
@@ -179,6 +224,7 @@ instance instEngineSparse : CPolyEngine CPoly.SparsePoly where
   cisZero := CPoly.cisZero
   cdeg := CPoly.cdeg
   clead := CPoly.clead
+  eval p x := CPoly.ceval x p
 
 /-- The generic sparse engine operations satisfy the generic denotation laws. -/
 instance instLawfulEngineSparse : LawfulCPolyEngine CPoly.SparsePoly where
@@ -195,6 +241,9 @@ instance instLawfulEngineSparse : LawfulCPolyEngine CPoly.SparsePoly where
   toR_clead_eq_leadingCoeff p := by
     change CRingSpec.toR (CPoly.clead p) = _
     exact CPoly.toR_clead_eq_leadingCoeff p
+  toR_eval p x := by
+    change CRingSpec.toR (CPoly.ceval x p) = (CPoly.toPoly p).eval (CRingSpec.toR x)
+    exact CPoly.toR_ceval x p
 
 /-! ### The engine ops are the `List`-instance ops (defeq), so `native_decide` is preserved -/
 

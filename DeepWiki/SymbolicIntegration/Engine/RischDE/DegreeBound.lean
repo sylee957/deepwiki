@@ -219,7 +219,8 @@ over `(CFieldSpec.K α)[X]`. -/
 theorem cRdeBoundDegreeG_eq_abstract (Dt : DensePoly α) (a b c : DensePoly α) :
     cRdeBoundDegree Dt a b c
       = rdeBoundDegreeAbstract (toPoly Dt) (toPoly a) (toPoly b) (toPoly c) := by
-  simp only [cRdeBoundDegree, rdeBoundDegreeAbstract, cdegG_eq_natDegree]
+  simp only [cRdeBoundDegree, rdeBoundDegreeAbstract, CPolyEngine.cdeg_dense_eq,
+    cdegG_eq_natDegree]
 
 end Bridge
 

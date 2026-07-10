@@ -153,6 +153,17 @@ own multiplication from the existing generic `CPoly.one`, while `cParallelResult
 that constructor and its denotation theorem were moved from the division module into
 `PolyReprDenote.lean` instead of introducing a duplicate engine-zero API.
 
+The Risch-DE helper layer now uses representation-generic evaluation and degree queries.
+`CPolyEngine.eval` retains the dense engine's Horner evaluator definitionally, supplies the generic
+evaluator for `SparsePoly`, and carries the corresponding `Polynomial.eval` denotation law.
+`cisRootNat`, `cPosIntRoots`, and `cRdeBoundDegree` are generic over the representation, with sparse
+`native_decide` checks; the existing dense weak normalizer continues to infer the `List` instance.
+
+The representation-independent coupled-DE surface now also includes the Gaussian-pair helpers used by
+tangent cancellation: coefficient scaling, evaluation at `i`, pair multiplication/subtraction/zero-test,
+and synthetic division by `t-i`. Dense reconstruction proofs cross explicit definitional-specialization
+lemmas, while a sparse `native_decide` example validates the same pair arithmetic on `SparsePoly`.
+
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 
 Since the *existing* engine can't be migrated isolated-module-at-a-time, the constructive path is to
