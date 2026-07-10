@@ -229,8 +229,8 @@ end LogResidue
 namespace DensePoly
 
 /-- The interpolation-uniqueness characterization of `genResidueResultant`: if `R : ℚ[X]` has
-`degree < cdeg f * cdeg D + 2` and each node agrees with the selected resultant
-at each node `k`, then `toPoly (genResidueResultant f g Dder D) = R`. -/
+`degree < cdeg f * cdeg D + 2` and agrees with the selected resultant at each node `k`, then
+`toPoly (genResidueResultant f g Dder D) = R`. -/
 theorem toPolyG_genResidueResultant_eq_of_eval [CPolyResultant DensePoly]
     (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ) (D : DensePoly ℚ)
     (R : ℚ[X])

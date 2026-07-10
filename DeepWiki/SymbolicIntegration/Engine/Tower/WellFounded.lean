@@ -243,7 +243,7 @@ end DensePoly
 
 Everything past the three recursive bottoms is a flat composition over the leaves above plus the generic
 `cbezoutOneWf`, `cextendedEuclideanSplitWf`, `cdiophantine`, `cHermiteReduceTowerInnerWf`,
-`cPrimitivePolyIntegrateWf`, `cdivWf`, and the abstract resultant/interpolation/evaluation capabilities. -/
+`cPrimitivePolyIntegrateWf`, `cdivWf`, the selected resultant, and interpolation/evaluation routines. -/
 
 namespace DensePoly
 
