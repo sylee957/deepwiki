@@ -243,7 +243,7 @@ end DensePoly
 
 Everything past the three recursive bottoms is a flat composition over the leaves above plus the generic
 `cbezoutOneWf`, `cextendedEuclideanSplitWf`, `cdiophantine`, `cHermiteReduceTowerInnerWf`,
-`cPrimitivePolyIntegrateWf`, `cdivWf`, and the §5.6 `cresultantWf`/`cinterpolate`/`cHorner`. -/
+`cPrimitivePolyIntegrateWf`, `cdivWf`, and the §5.6 `cresultantWf`/`cinterpolate`/`ceval`. -/
 
 namespace DensePoly
 
@@ -310,10 +310,10 @@ def cLogArgTower (Dt : DensePoly α) (a d : DensePoly α) (c : α) : DensePoly �
 
 /-- Generic rational/field residues `cRationalResidues Dt a d cands`: keep the candidates
 `c ∈ cands : List α` that are roots of the residue resultant `R(z) = cResidueResultantTower Dt a d`,
-i.e. `R(c) = 0` (tested by `CCommRing.isZero (cHorner R c)`). -/
+i.e. `R(c) = 0` (tested by `CCommRing.isZero (ceval R c)`). -/
 def cRationalResidues (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) : List α :=
   let R := cResidueResultantTower Dt a d
-  cands.filter (fun c => CCommRing.isZero (cHorner R c))
+  cands.filter (fun c => CCommRing.isZero (ceval R c))
 
 /-- Generic logarithmic part `cLogPart Dt a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈ residues]`: pair
 each residue `c : α` (from `cRationalResidues`) with its log argument `cLogArgTower Dt a d c`. -/

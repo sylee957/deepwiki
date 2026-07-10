@@ -220,17 +220,13 @@ For `θ = exp v`, `θ` divides its own derivative (`θ' = v'·θ`); the new piec
 `c₀ = b₀g₀ − k·v'·b₀·f₀` on the constant-`b₀` slice gives `b₀ = c₀/(g₀ − k·v'·f₀)`, residual
 `D = ((B'f + Bg − kv'Bf) − C)/θ`, cleared identity `(B'f + Bg − kv'Bf) − C = θ·D`. -/
 
-/-- `radConstCoeff p`: the `θ⁰` (head) coefficient of `p` (`CCommRing.zero` for the empty list), the
-residue of `p` modulo `θ`. -/
-def radConstCoeff (p : DensePoly α) : α := (p : List α).headD CCommRing.zero
-
 /-- `θ = exp v` `C/(θᵏy)` cofactor `radExpCofactor k vder f g C = B`: the constant `B = [b₀]` with
 `b₀ = c₀ / (g₀ − k·v'·f₀)` (`f₀, g₀, c₀` the `θ⁰`-coefficients of `f, g, C`, `vder = v'`), solving the
 constant-term match `c₀ = b₀g₀ − k·v'·b₀·f₀`. -/
 def radExpCofactor (k : ℕ) (vder : α) (f g C : DensePoly α) : DensePoly α :=
-  let f0 := radConstCoeff f
-  let g0 := radConstCoeff g
-  let c0 := radConstCoeff C
+  let f0 := CPoly.coeff f 0
+  let g0 := CPoly.coeff g 0
+  let c0 := CPoly.coeff C 0
   let denom := CField.sub g0 (CCommRing.mul (CCommRing.mul (cnatCast k) vder) f0)  -- `g₀ − k·v'·f₀`
   [CField.div c0 denom]                                                       -- `[b₀]`
 

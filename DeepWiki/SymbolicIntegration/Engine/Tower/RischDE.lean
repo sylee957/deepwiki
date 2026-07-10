@@ -25,10 +25,10 @@ namespace DensePoly
 
 variable {α : Type*} [CField α]
 
-/-- `cisRootNat r n = true` iff `r(cnatCast n) = 0` in `α` (Horner via `cHorner`): whether the
+/-- `cisRootNat r n = true` iff `r(cnatCast n) = 0` in `α` (Horner via `ceval`): whether the
 natural number `n`, lifted to `α`, is a root of `r`. -/
 def cisRootNat (r : DensePoly α) (n : ℕ) : Bool :=
-  CCommRing.isZero (cHorner r (cnatCast n))
+  CCommRing.isZero (ceval r (cnatCast n))
 
 /-- `cPosIntRoots r bound = [n ∈ {1,…,bound} : r(cnatCast n) = 0]`: the positive integer roots of
 `r` up to `bound`; empty for an already-weakly-normalized input. -/

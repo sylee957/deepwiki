@@ -195,7 +195,7 @@ end DensePoly
 
 Everything past the five recursive bottoms is a flat composition over the leaves above plus the generic
 `cdivWf`, `cdivmodWf`, `cdiophantine`, `cdvd`, `cgcdWf`, and the §5.6
-`cResidueResultantTower`/`cinterpolate`/`cHorner`. -/
+`cResidueResultantTower`/`cinterpolate`/`ceval`. -/
 
 namespace DensePoly
 

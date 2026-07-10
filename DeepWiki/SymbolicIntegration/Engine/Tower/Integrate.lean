@@ -103,13 +103,6 @@ def cratCast (q : ℚ) : α :=
   let nsigned : α := if q.num < 0 then CCommRing.neg n else n
   CCommRing.mul nsigned (CField.inv (cnatCast q.den))
 
-/-- Generic Horner evaluation `cHorner p c = p(c) ∈ α`: evaluate the dense coefficient list `p`
-(index = degree, low→high) at `c ∈ α` by Horner's rule. The generic mirror of `ceval`
-(`ComputableIntegrate`), redefined here to avoid that heavy import. Used to test whether a candidate
-residue `c` is a root of the residue resultant `R(c) = 0`. Needs only `[CField α]`. -/
-def cHorner (p : DensePoly α) (c : α) : α :=
-  (p : List α).foldr (fun coeff acc => CCommRing.add coeff (CCommRing.mul c acc)) CCommRing.zero
-
 end DensePoly
 
 namespace DensePoly

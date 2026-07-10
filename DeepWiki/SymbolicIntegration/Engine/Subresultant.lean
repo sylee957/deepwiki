@@ -176,7 +176,7 @@ theorem cSubresultantG_one :
 exact at the sample nodes — validating the root-free parametric log-argument. -/
 theorem cSubresultantParam_eval :
     (cSubresultantParam ([-1, 0, 1] : DensePoly ℚ) ([0, 1] : DensePoly ℚ) ([0, 2] : DensePoly ℚ) 2 1 1).map
-        (fun zp => cHorner zp (2 : ℚ))
+        (fun zp => ceval zp (2 : ℚ))
       = (cnorm (cSubresultant ([-1, 0, 1] : DensePoly ℚ)
           (csub ([0, 1] : DensePoly ℚ) (cscale (2 : ℚ) ([0, 2] : DensePoly ℚ))) 2 1 1) : List ℚ) := by
   native_decide
