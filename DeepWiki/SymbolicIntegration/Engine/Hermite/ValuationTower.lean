@@ -90,16 +90,6 @@ theorem gloc_isRatFuncRegular (Dt v u : DensePoly α) {Q : (CFieldSpec.K α)[X]}
   exact ⟨_, _, by rw [hden]; exact pow_ne_zero N hv, by rw [hden]; exact hcop.pow_right, rfl⟩
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- Cross-multiplied fraction-pair addition reads as the fraction sum:
-`⟦(a₁·b₂ + b₁·a₂) / (a₂·b₂)⟧ = ⟦a₁/a₂⟧ + ⟦b₁/b₂⟧` (denominators nonzero). -/
-theorem fracPair_add (a1 a2 b1 b2 : DensePoly α) (ha2 : toPoly a2 ≠ 0) (hb2 : toPoly b2 ≠ 0) :
-    am α (toPoly (cadd (cmul a1 b2) (cmul b1 a2))) / am α (toPoly (cmul a2 b2))
-      = am α (toPoly a1) / am α (toPoly a2) + am α (toPoly b1) / am α (toPoly b2) := by
-  simp only [denote, map_add, map_mul]
-  rw [div_add_div _ _ (amG_toPolyG_ne_zero ha2) (amG_toPolyG_ne_zero hb2)]
-  ring
-
-omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The guarded `gloc`-fold reads as a fraction sum.** The `cHermiteReduceTower` `g`-fold
 (`foldl` with `if skip then acc else acc + gloc`) denotes `⟦init⟧ + Σ_{non-skipped} ⟦gloc⟧`, given the
 seed and each non-skipped `gloc` have nonzero denominator. -/

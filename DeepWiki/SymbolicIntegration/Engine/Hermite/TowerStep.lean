@@ -89,14 +89,13 @@ theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt :
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 open CFrac in
-/-- The inner-loop accumulator update reads as a fraction sum:
-`⟦(g₁·Vpow + b·g₂) / (g₂·Vpow)⟧ = ⟦g₁/g₂⟧ + ⟦b/Vpow⟧`. -/
-theorem fieldFrac_step_add (g1 g2 b Vpow : DensePoly α)
-    (hg2 : toPoly g2 ≠ 0) (hVpow : toPoly Vpow ≠ 0) :
-    am α (toPoly (cadd (cmul g1 Vpow) (cmul b g2))) / am α (toPoly (cmul g2 Vpow))
-      = am α (toPoly g1) / am α (toPoly g2) + am α (toPoly b) / am α (toPoly Vpow) := by
+/-- Cross-multiplied fraction-pair addition reads as the sum of the represented fractions. -/
+theorem fracPair_add (a1 a2 b1 b2 : DensePoly α)
+    (ha2 : toPoly a2 ≠ 0) (hb2 : toPoly b2 ≠ 0) :
+    am α (toPoly (cadd (cmul a1 b2) (cmul b1 a2))) / am α (toPoly (cmul a2 b2))
+      = am α (toPoly a1) / am α (toPoly a2) + am α (toPoly b1) / am α (toPoly b2) := by
   simp only [denote, map_add, map_mul]
-  rw [div_add_div _ _ (amG_toPolyG_ne_zero hg2) (amG_toPolyG_ne_zero hVpow)]
+  rw [div_add_div _ _ (amG_toPolyG_ne_zero ha2) (amG_toPolyG_ne_zero hb2)]
   ring
 
 open CFrac in
@@ -146,7 +145,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
       simp only [denote]
       exact mul_ne_zero hg hVpow0
     -- the accumulator update reads as `⟦g⟧ + ⟦B/Vpow⟧`.
-    have hstepadd := fieldFrac_step_add g.1 g.2 B Vpow hg hVpow0
+    have hstepadd := fracPair_add g.1 g.2 B Vpow hg hVpow0
     -- `Vpow = v^(j+1)`, `B/Vpow = am B / (am v)^(j+1)`.
     have hVpoweq : am α (toPoly Vpow) = am α (toPoly v) ^ (j + 1) := by
       rw [hVpow]
