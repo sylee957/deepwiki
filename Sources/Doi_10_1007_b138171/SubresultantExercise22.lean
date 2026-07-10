@@ -79,7 +79,7 @@ of the pseudo-remainder `prem (chain l) (chain (l+1))` exactly (`cmod` reads to 
 `DensePoly.cnormG_eq_nil_iff`. The decidable per-coefficient `cmod`-zero certificate, `native_decide`'d. -/
 theorem hdiv_ex22 :
     ∀ l ≤ 7, ∀ a ∈ GBPolyCore.gbpsremainderCore 60 (chain 60 hP hQ l) (chain 60 hP hQ (l + 1)),
-      toPoly (DensePoly.cmodWf a (chainBt 60 hP hQ l)) = 0 := by
+      toPoly (CPolyEuclidean.mod a (chainBt 60 hP hQ l)) = 0 := by
   intro l hl a ha
   rw [← DensePoly.cnormG_eq_nil_iff]
   revert a ha
@@ -143,22 +143,22 @@ theorem hfilt_ex22 :
     subresPRS_filter_singleton_ex22
 
 /-- **`hg` for Ex 2.2**: the `ℚ[t]`-content of the degree-1 raw subresultant is nonzero
-(`¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 60 1 hP hQ))`). -/
+(`¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 60 1 hP hQ))`). -/
 theorem hg_ex22 :
-    ¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 60
+    ¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 60
       (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ)) = true := by
   rw [natDegree_toBPoly_chainG9_ex22]; native_decide
 
 /-- **`hgcn` for Ex 2.2**: the `ℚ[t]`-content of the degree-1 raw subresultant has nonempty `cnorm`. -/
 theorem hgcn_ex22 :
-    cnorm (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 60
+    cnorm (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 60
       (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ)) ≠ [] := by
   rw [natDegree_toBPoly_chainG9_ex22]; native_decide
 
 /-- **`hg0` for Ex 2.2**: the `ℚ[t]`-content reads to a nonzero `ℚ[t]` polynomial (`toPoly ≠ 0`), via
 `DensePoly.cnormG_eq_nil_iff`. -/
 theorem hg0_ex22 :
-    toPoly (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 60
+    toPoly (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 60
       (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ)) ≠ 0 := by
   intro h; exact hgcn_ex22 ((DensePoly.cnormG_eq_nil_iff _).mpr h)
 
@@ -167,7 +167,7 @@ subresultant exactly (`cmod` reads to 0), via `DensePoly.cnormG_eq_nil_iff`. -/
 theorem hrem_ex22 :
     ∀ a ∈ GBPolyCore.gbnormCore (bsubresultantGcd 60
         (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ),
-      toPoly (DensePoly.cmodWf a (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 60
+      toPoly (CPolyEuclidean.mod a (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 60
         (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ))) = 0 := by
   intro a ha
   rw [← DensePoly.cnormG_eq_nil_iff]
@@ -335,12 +335,12 @@ one-element list `[u₂₂]` (a nonzero constant in `ℚ[t]`), so the leading co
 The list and its head's nonvanishing are `native_decide` facts. -/
 theorem cgcdWf_blc_bredR_singleton_ex22 :
     ∃ u : ℚ, u ≠ 0 ∧
-      (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR (cmonic cR22)
+      (CPolyEuclidean.gcdExt (GBPolyCore.gblcCore (bredR (cmonic cR22)
         (lrtSubresultantCompute 60 (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
         (cmonic cR22)).1
       = [u] := by
   rw [natDegree_toBPoly_chainG9_ex22]
-  refine ⟨(DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR (cmonic cR22)
+  refine ⟨(CPolyEuclidean.gcdExt (GBPolyCore.gblcCore (bredR (cmonic cR22)
       (lrtSubresultantCompute 60 1 cA22 cD22))) (cmonic cR22)).1.headI, ?_, ?_⟩
   · native_decide
   · native_decide
@@ -350,7 +350,7 @@ nonzero constant `C u₂₂` — so the leading coefficient is a unit mod `R = c
 `cgcdWf_blc_bredR_singleton_ex22` (`gcd = [u₂₂]`) and `toPoly [u₂₂] = C u₂₂`. -/
 theorem hgu_ex22 :
     ∃ u : ℚ, u ≠ 0 ∧
-      toPoly (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR (cmonic cR22)
+      toPoly (CPolyEuclidean.gcdExt (GBPolyCore.gblcCore (bredR (cmonic cR22)
         (lrtSubresultantCompute 60 (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
         (cmonic cR22)).1
       = Polynomial.C u := by

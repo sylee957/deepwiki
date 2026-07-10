@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
+import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 
 /-! # Computable bivariate subresultant gcd / log argument over `ℚ[t]`
 The logarithmic part puts `S(t,x) = gcd_x(D(x), A(x) − t·D'(x))` inside the logarithms of
@@ -20,13 +21,13 @@ via the extended-Euclidean inverse. -/
 /-- Reduce every `x`-coefficient of a `GBPolyCore ℚ` modulo `R`: `bredR R p`, the image of `p` in
 `(ℚ[t]/(R))[x]`. -/
 def bredR (R : DensePoly ℚ) (p : GBPolyCore ℚ) : GBPolyCore ℚ :=
-  GBPolyCore.gbnormCore (p.map (fun c => DensePoly.cmodWf c R))
+  GBPolyCore.gbnormCore (p.map (fun c => CPolyEuclidean.mod c R))
 
 /-- Inverse of a `DensePoly ℚ` modulo `R`: `cinvMod R c = c⁻¹` in `ℚ[t]/(R)` (assumes `c` a unit mod
 `R`), via `c⁻¹ ≡ s/g (mod R)` from the Bézout relation `s·c + ·R = g`. -/
 def cinvMod (R c : DensePoly ℚ) : DensePoly ℚ :=
-  let (g, s, _) := DensePoly.cgcdWf c R
-  DensePoly.cmodWf (cscale (clead g)⁻¹ s) R
+  let (g, s, _) := CPolyEuclidean.gcdExt c R
+  CPolyEuclidean.mod (cscale (clead g)⁻¹ s) R
 
 /-- Make a `GBPolyCore ℚ` monic in `x` over `ℚ[t]/(R)`: `bmonicXmodR R p` reduces mod `R` and scales by
 the mod-`R` inverse of the leading `x`-coefficient. -/
@@ -35,14 +36,14 @@ def bmonicXmodR (R : DensePoly ℚ) (p : GBPolyCore ℚ) : GBPolyCore ℚ :=
   if DensePoly.cisZero p then []
   else
     let inv := cinvMod R (GBPolyCore.gblcCore p)
-    GBPolyCore.gbnormCore (p.map (fun c => DensePoly.cmodWf (cmul c inv) R))
+    GBPolyCore.gbnormCore (p.map (fun c => CPolyEuclidean.mod (cmul c inv) R))
 
 /-! ### Exact `ℚ[t]`-division of a `GBPolyCore ℚ` by a `DensePoly ℚ` -/
 
 /-- Exact `ℚ[t]`-scalar division `bdivC p c = p / c`: divide every `x`-coefficient of `p` by the
 `DensePoly ℚ` scalar `c`. -/
 def bdivC (p : GBPolyCore ℚ) (c : DensePoly ℚ) : GBPolyCore ℚ :=
-  GBPolyCore.gbnormCore (p.map (fun a => DensePoly.cdivWf a c))
+  GBPolyCore.gbnormCore (p.map (fun a => CPolyEuclidean.div a c))
 
 /-! ### The subresultant PRS (Collins–Brown)
 The subresultant polynomial-remainder sequence computes the whole gcd chain with exact `ℚ[t]`
@@ -63,7 +64,7 @@ def subresPRS (fuel : ℕ) (P Q : GBPolyCore ℚ) : List (GBPolyCore ℚ) :=
         let negLc : DensePoly ℚ := cneg lcRi_1
         let psi' : DensePoly ℚ :=
           if deltaPrev = 0 then psi
-          else DensePoly.cdivWf (DensePoly.cpow negLc deltaPrev)
+          else CPolyEuclidean.div (DensePoly.cpow negLc deltaPrev)
             (DensePoly.cpow psi (deltaPrev - 1))
         -- β = −lc(Ri_1) · ψ'^δ
         let beta : DensePoly ℚ := cmul negLc (DensePoly.cpow psi' deltaPrev)
@@ -96,7 +97,7 @@ def bArgAmtD' (A D : DensePoly ℚ) : GBPolyCore ℚ :=
 /-- The raw degree-`j` subresultant `lrtSubresultantCompute fuel j A D = Sⱼ(D, A − t·D')`: the
 bivariate subresultant of `D` (lifted) and `A − t·D'` at `x`-degree `j`, `ℚ[t]`-primitive in `x`. -/
 def lrtSubresultantCompute (fuel : ℕ) (j : ℕ) (A D : DensePoly ℚ) : GBPolyCore ℚ :=
-  GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd
+  GBPolyCore.gbprimitivePartCore CPolyGcd.compute
     (bsubresultantGcd fuel j (liftCtoBPoly D) (bArgAmtD' A D))
 
 /-- The computable log argument `lrtGcdCompute fuel j R A D = S(t,x)`: the degree-`j` subresultant

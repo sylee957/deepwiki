@@ -25,9 +25,9 @@ monic-in-`x` normalization `bmonicXmodR` is multiplication by a residue-ring uni
 /-- For `φ` killing `toPoly R`, reducing `c` modulo `R` does not change its image under `φ`. -/
 theorem map_toPoly_cmodWf {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (c R : DensePoly ℚ)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
-    φ (toPoly (DensePoly.cmodWf c R)) = φ (toPoly c) := by
-  have hdiv : toPoly c = toPoly (DensePoly.cdivWf c R) * toPoly R
-      + toPoly (DensePoly.cmodWf c R) := by
+    φ (toPoly (CPolyEuclidean.mod c R)) = φ (toPoly c) := by
+  have hdiv : toPoly c = toPoly (CPolyEuclidean.div c R) * toPoly R
+      + toPoly (CPolyEuclidean.mod c R) := by
     exact DensePoly.toPolyG_cmodWf c R hR
   rw [hdiv, map_add, map_mul, hφR, mul_zero, zero_add]
 
@@ -37,7 +37,7 @@ theorem mapRingHom_toPolyG_map_cmodWf {S : Type*} [CommRing S]
     (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
     (p : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ)
-        (DensePoly.toPoly (p.map (fun c => DensePoly.cmodWf c R)))
+        (DensePoly.toPoly (p.map (fun c => CPolyEuclidean.mod c R)))
       = (Polynomial.mapRingHom φ) (DensePoly.toPoly p) := by
   induction p with
   | nil => simp
@@ -45,7 +45,7 @@ theorem mapRingHom_toPolyG_map_cmodWf {S : Type*} [CommRing S]
     rw [List.map_cons, DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_cons_dense, map_add, map_add, map_mul, map_mul, ih]
     congr 1
     rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C]
-    change Polynomial.C (φ (toPoly (DensePoly.cmodWf a R))) = Polynomial.C (φ (toPoly a))
+    change Polynomial.C (φ (toPoly (CPolyEuclidean.mod a R))) = Polynomial.C (φ (toPoly a))
     rw [map_toPoly_cmodWf φ a R hR hφR]
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, `Φ (DensePoly.toPoly (bredR R p)) = Φ (DensePoly.toPoly p)`. -/
@@ -59,16 +59,17 @@ theorem mapRingHom_toPolyG_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) 
 reduces to a nonzero constant `C u`, `φ (toPoly (cinvMod R c)) · φ (toPoly c) = 1`. -/
 theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R c : DensePoly ℚ)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
-    (hg : toPoly (DensePoly.cgcdWf c R).1 = Polynomial.C u) :
+    (hg : toPoly (CPolyEuclidean.gcdExt c R).1 = Polynomial.C u) :
     φ (toPoly (cinvMod R c)) * φ (toPoly c) = 1 := by
   -- Bézout: toPoly s · toPoly c + toPoly t · toPoly R = toPoly g = C u
-  have hbez : toPoly (DensePoly.cgcdWf c R).2.1 * toPoly c
-      + toPoly (DensePoly.cgcdWf c R).2.2 * toPoly R
-      = toPoly (DensePoly.cgcdWf c R).1 := by
-    simpa only [CFieldSpec.toK_rat] using DensePoly.toPolyG_cgcdWf c R
+  have hbez : toPoly (CPolyEuclidean.gcdExt c R).2.1 * toPoly c
+      + toPoly (CPolyEuclidean.gcdExt c R).2.2 * toPoly R
+      = toPoly (CPolyEuclidean.gcdExt c R).1 := by
+    simpa only [CPolyEuclidean.gcdExt_dense_eq, CFieldSpec.toK_rat] using
+      DensePoly.toPolyG_cgcdWf c R
   -- clead g = u (leading coeff of the constant C u)
-  have hlead : clead (DensePoly.cgcdWf c R).1 = u := by
-    change CRingSpec.toR (clead (DensePoly.cgcdWf c R).1) = u
+  have hlead : clead (CPolyEuclidean.gcdExt c R).1 = u := by
+    change CRingSpec.toR (clead (CPolyEuclidean.gcdExt c R).1) = u
     rw [DensePoly.toR_cleadG_eq_leadingCoeff, hg, Polynomial.leadingCoeff_C]
   -- φ image of the inverse: drop the remainder, expand the cscale
   rw [cinvMod]
@@ -77,7 +78,7 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R
     map_mul, hlead]
   -- now: φ (C u⁻¹) * φ (toPoly s) * φ (toPoly c) = 1
   -- from Bézout image: φ(toPoly s)·φ(toPoly c) = φ (C u)
-  have himg : φ (toPoly (DensePoly.cgcdWf c R).2.1) * φ (toPoly c)
+  have himg : φ (toPoly (CPolyEuclidean.gcdExt c R).2.1) * φ (toPoly c)
       = φ (Polynomial.C u) := by
     have := congrArg φ hbez
     rw [map_add, map_mul, map_mul, hφR, mul_zero, add_zero, hg] at this
@@ -90,7 +91,7 @@ theorem mapRingHom_toPolyG_map_cmodWf_cmul {S : Type*} [CommRing S]
     (φ : ℚ[X] →+* S)
     (R inv : DensePoly ℚ) (q : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ)
-        (DensePoly.toPoly (q.map (fun c => DensePoly.cmodWf (cmul c inv) R)))
+        (DensePoly.toPoly (q.map (fun c => CPolyEuclidean.mod (cmul c inv) R)))
       = Polynomial.C (φ (toPoly inv)) * (Polynomial.mapRingHom φ) (DensePoly.toPoly q) := by
   induction q with
   | nil => simp
@@ -98,7 +99,7 @@ theorem mapRingHom_toPolyG_map_cmodWf_cmul {S : Type*} [CommRing S]
     rw [List.map_cons, DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_cons_dense, map_add, map_add, map_mul, map_mul, ih, mul_add]
     congr 1
     · rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C]
-      change Polynomial.C (φ (toPoly (DensePoly.cmodWf (cmul a inv) R)))
+      change Polynomial.C (φ (toPoly (CPolyEuclidean.mod (cmul a inv) R)))
           = Polynomial.C (φ (toPoly inv)) * Polynomial.C (φ (toPoly a))
       rw [map_toPoly_cmodWf φ _ R hR hφR]
       rw [DensePoly.toPolyG_cmulG, map_mul, Polynomial.C_mul, mul_comm]
@@ -110,7 +111,7 @@ to a nonzero constant `C u`, `Φ (DensePoly.toPoly (bmonicXmodR R p)) = C (φ (t
 theorem mapRingHom_toPolyG_bmonicXmodR {S : Type*} [CommRing S]
     (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
     (p : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
-    (hg : toPoly (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR R p)) R).1 = Polynomial.C u)
+    (hg : toPoly (CPolyEuclidean.gcdExt (GBPolyCore.gblcCore (bredR R p)) R).1 = Polynomial.C u)
     (hpz : ¬ DensePoly.cisZero (bredR R p) = true) :
     (Polynomial.mapRingHom φ) (DensePoly.toPoly (bmonicXmodR R p))
         = Polynomial.C (φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p)))))
@@ -147,7 +148,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDoma
           = Polynomial.C b * DensePoly.toPoly (lrtSubresultantCompute fuel (DensePoly.toPoly (G (m + 2))).natDegree A D)
         → φ a ≠ 0 ∧ φ b ≠ 0)
     {u : ℚ} (hu : u ≠ 0)
-    (hgu : toPoly (DensePoly.cgcdWf
+    (hgu : toPoly (CPolyEuclidean.gcdExt
         (GBPolyCore.gblcCore (bredR R (lrtSubresultantCompute fuel (DensePoly.toPoly (G (m + 2))).natDegree A D))) R).1
       = Polynomial.C u)
     (hpz : ¬ DensePoly.cisZero (bredR R
@@ -180,7 +181,7 @@ below. -/
 -- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·DensePoly.toPoly(bdivC p c) = DensePoly.toPoly p`
 -- when every x-coefficient divides exactly.
 example (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
-    (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
+    (hrem : ∀ a ∈ p, toPoly (CPolyEuclidean.mod a c) = 0) :
     Polynomial.C (toPoly c) * DensePoly.toPoly (bdivC p c) = DensePoly.toPoly p :=
   toBPoly_bdivC_exact p c hc hrem
 
@@ -190,7 +191,7 @@ example (fuel : ℕ) (A D β : DensePoly ℚ) (j : ℕ) (s : GBPolyCore ℚ) (c 
         = DensePoly.toPoly s * DensePoly.toPoly (bArgAmtD' A D)
           + DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)))
     (hβ : cnorm β ≠ [])
-    (hdiv : ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (DensePoly.cmodWf a β) = 0)
+    (hdiv : ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (CPolyEuclidean.mod a β) = 0)
     (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
     (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
     (hB : (DensePoly.toPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
@@ -207,7 +208,7 @@ example (fuel : ℕ) (G : ℕ → GBPolyCore ℚ) (bt : ℕ → DensePoly ℚ) (
     (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * DensePoly.toPoly (G l)
         = DensePoly.toPoly (s l) * DensePoly.toPoly (G (l + 1)) + DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1))))
     (hβcn : ∀ l < m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l < m, ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1)), toPoly (DensePoly.cmodWf a (bt l)) = 0)
+    (hdiv : ∀ l < m, ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1)), toPoly (CPolyEuclidean.mod a (bt l)) = 0)
     (hG2 : ∀ l < m, G (l + 2) = bdivC (GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1))) (bt l))
     (hc0 : ∀ l < m, toPoly (c l) ≠ 0) (hβ0 : ∀ l < m, toPoly (bt l) ≠ 0)
     (hlc : ∀ l < m, (DensePoly.toPoly (G (l + 1))).coeff (DensePoly.toPoly (G (l + 1))).natDegree ≠ 0)
@@ -234,7 +235,7 @@ example (fuel : ℕ) (P Q : GBPolyCore ℚ) (G : ℕ → GBPolyCore ℚ) (m : �
 -- `toPoly R`, `bmonicXmodR`'s `Φ`-image is a residue-ring UNIT (`η · η' = 1`) times `DensePoly.toPoly p`'s.
 example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ) (p : GBPolyCore ℚ)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
-    (hg : toPoly (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR R p)) R).1 = Polynomial.C u)
+    (hg : toPoly (CPolyEuclidean.gcdExt (GBPolyCore.gblcCore (bredR R p)) R).1 = Polynomial.C u)
     (hpz : ¬ DensePoly.cisZero (bredR R p) = true) :
     (Polynomial.mapRingHom φ) (DensePoly.toPoly (bmonicXmodR R p))
         = Polynomial.C (φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p)))))
@@ -249,7 +250,7 @@ chain data `G`/`bt`/`s`/`c` and its side-conditions can be supplied from the rea
 
 /-- ψ-accumulator update of one `subresPRS.go` step: `ψ' = (−lc Ri₋₁)^δ / ψ^(δ−1)` (`ψ' = ψ` when `δ = 0`). -/
 def goPsi' (Ri_1 : GBPolyCore ℚ) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
-  if dp = 0 then psi else DensePoly.cdivWf (DensePoly.cpow (cneg (GBPolyCore.gblcCore Ri_1)) dp)
+  if dp = 0 then psi else CPolyEuclidean.div (DensePoly.cpow (cneg (GBPolyCore.gblcCore Ri_1)) dp)
     (DensePoly.cpow psi (dp - 1))
 
 /-- β-divisor of one `subresPRS.go` step: `β = −lc(Ri₋₁) · ψ'^δ` with `ψ'` from `goPsi'`. -/
@@ -551,7 +552,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
     (hβcn : ∀ l ≤ m, cnorm (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ [])
     (hdiv : ∀ l ≤ m, ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
         (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1)),
-      toPoly (DensePoly.cmodWf a (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l)) = 0)
+      toPoly (CPolyEuclidean.mod a (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l)) = 0)
     (hc0 : ∀ l ≤ m, toPoly (chainC fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ 0)
     (hβ0 : ∀ l ≤ m, toPoly (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ 0)
     (hlc : ∀ l ≤ m, (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).coeff
@@ -564,7 +565,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
         + (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree
       ≤ (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree)
     (hCne : DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2)) ≠ 0)
-    -- GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd content-exactness on the degree-j element
+    -- GBPolyCore.gbprimitivePartCore CPolyGcd.compute content-exactness on the degree-j element
     (hprim : IsPrimitivePartXInput
       (bsubresultantGcd fuel
         (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
@@ -576,7 +577,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
             (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)
         → φ a ≠ 0 ∧ φ b ≠ 0)
     {u : ℚ} (hu : u ≠ 0)
-    (hgu : toPoly (DensePoly.cgcdWf
+    (hgu : toPoly (CPolyEuclidean.gcdExt
         (GBPolyCore.gblcCore (bredR R (lrtSubresultantCompute fuel
           (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D))) R).1
       = Polynomial.C u)

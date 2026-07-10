@@ -64,13 +64,13 @@ def gbpsremainderCore : ℕ → GBPolyCore B → GBPolyCore B → GBPolyCore B
 def gbcontentCore (cgcdB : DensePoly B → DensePoly B → DensePoly B) (p : GBPolyCore B) : DensePoly B :=
   (gbnormCore p).foldl (fun g c => cgcdB g c) []
 
-/-- Primitive part `gbprimitivePartCore cgcdB p = p / content_t(p)`: divide every `t`-coefficient by the
-content via `cdivWf`. Leaves `[]` unchanged. -/
+/-- Primitive part `gbprimitivePartCore cgcdB p = p / content_t(p)`: divide every `t`-coefficient through
+the selected Euclidean capability. Leaves `[]` unchanged. -/
 def gbprimitivePartCore (cgcdB : DensePoly B → DensePoly B → DensePoly B) (p : GBPolyCore B) :
     GBPolyCore B :=
   let p := gbnormCore p
   let g := gbcontentCore cgcdB p
-  if DensePoly.cisZero g then p else gbnormCore (p.map (fun c => DensePoly.cdivWf c g))
+  if DensePoly.cisZero g then p else gbnormCore (p.map (fun c => CPolyEuclidean.div c g))
 
 end GBPolyCore
 

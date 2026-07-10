@@ -618,8 +618,10 @@ theorem toPolyG_gbprimitivePartCore_exact (fuel : ℕ)
       = DensePoly.toPoly p := by
   rw [gbprimitivePartCore]
   simp only [gbcontentCore_gbnormCore, hg, Bool.false_eq_true, if_false]
-  rw [toPolyG_gbnormCore, toPolyG_map_cdivWf_exact (gbnormCore p)
-    (gbcontentCore cgcdB p) hgcn hdvd, toPolyG_gbnormCore]
+  rw [toPolyG_gbnormCore]
+  have hexact := toPolyG_map_cdivWf_exact (gbnormCore p)
+    (gbcontentCore cgcdB p) hgcn hdvd
+  simpa only [CPolyEuclidean.div_dense_eq, toPolyG_gbnormCore] using hexact
 
 omit [CFieldDomain β] in
 /-- Clause (iii): under the content-nonzero and content-divides-each-coefficient hypotheses, `Associated

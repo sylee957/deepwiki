@@ -11,23 +11,26 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-! ### `bdivC` realizes exact `ℚ[t]`-division -/
 
 /-- If every `x`-coefficient of `p` divides exactly by `c`, then
-`C(toPoly c) · DensePoly.toPoly (p.map (DensePoly.cdivWf · c)) = DensePoly.toPoly p`. -/
+`C(toPoly c) · DensePoly.toPoly (p.map (CPolyEuclidean.div · c)) = DensePoly.toPoly p`. -/
 theorem toBPoly_map_cdiv_exact (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
-    (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
-    Polynomial.C (toPoly c) * DensePoly.toPoly (p.map (fun a => DensePoly.cdivWf a c)) = DensePoly.toPoly p := by
+    (hrem : ∀ a ∈ p, toPoly (CPolyEuclidean.mod a c) = 0) :
+    Polynomial.C (toPoly c) * DensePoly.toPoly (p.map (fun a => CPolyEuclidean.div a c)) = DensePoly.toPoly p := by
   apply GBPolyCore.toPolyG_map_cdivWf_exact p c hc
   intro a ha
-  have hdiv := DensePoly.toPolyG_cmodWf a c hc
-  have hrem' : DensePoly.toPoly (DensePoly.cmodWf a c) = 0 := by
+  have hdiv : toPoly a = toPoly (CPolyEuclidean.div a c) * toPoly c +
+      toPoly (CPolyEuclidean.mod a c) := by
+    simpa only [CPolyEuclidean.div_dense_eq, CPolyEuclidean.mod_dense_eq] using
+      DensePoly.toPolyG_cmodWf a c hc
+  have hrem' : DensePoly.toPoly (CPolyEuclidean.mod a c) = 0 := by
     exact hrem a ha
   rw [hrem', add_zero] at hdiv
-  refine ⟨DensePoly.toPoly (DensePoly.cdivWf a c), ?_⟩
+  refine ⟨DensePoly.toPoly (CPolyEuclidean.div a c), ?_⟩
   simpa only [mul_comm] using hdiv
 
 /-- `C(toPoly c) · DensePoly.toPoly (bdivC p c) = DensePoly.toPoly p` when every `x`-coefficient of `p` divides
 exactly by `c`: `bdivC` is exact scalar `ℚ[t]`-division. -/
 theorem toBPoly_bdivC_exact (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
-    (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
+    (hrem : ∀ a ∈ p, toPoly (CPolyEuclidean.mod a c) = 0) :
     Polynomial.C (toPoly c) * DensePoly.toPoly (bdivC p c) = DensePoly.toPoly p := by
   rw [bdivC, GBPolyCore.toPolyG_gbnormCore]
   exact toBPoly_map_cdiv_exact p c hc hrem
@@ -46,19 +49,19 @@ theorem toBPoly_bdivC_exact_of_dvd (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc 
 
 /-- The `cgcdWfGcd` primitive part preserves denotation when content division is exact. -/
 theorem toPolyG_gbprimitivePartCore_cgcdWfGcd_exact (p : GBPolyCore ℚ)
-    (hg : ¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) = true)
-    (hgcn : cnorm (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) ≠ [])
+    (hg : ¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.compute p) = true)
+    (hgcn : cnorm (GBPolyCore.gbcontentCore CPolyGcd.compute p) ≠ [])
     (hrem : ∀ a ∈ GBPolyCore.gbnormCore p,
-      toPoly (DensePoly.cmodWf a (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p)) = 0) :
-    Polynomial.C (toPoly (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p))
+      toPoly (CPolyEuclidean.mod a (GBPolyCore.gbcontentCore CPolyGcd.compute p)) = 0) :
+    Polynomial.C (toPoly (GBPolyCore.gbcontentCore CPolyGcd.compute p))
         * DensePoly.toPoly
-          (GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd p)
+          (GBPolyCore.gbprimitivePartCore CPolyGcd.compute p)
       = DensePoly.toPoly p := by
   rw [GBPolyCore.gbprimitivePartCore]
   simp only [GBPolyCore.gbcontentCore_gbnormCore, hg, Bool.false_eq_true, if_false]
   rw [GBPolyCore.toPolyG_gbnormCore,
     toBPoly_map_cdiv_exact (GBPolyCore.gbnormCore p)
-      (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) hgcn hrem,
+      (GBPolyCore.gbcontentCore CPolyGcd.compute p) hgcn hrem,
     GBPolyCore.toPolyG_gbnormCore]
 
 /-! ### One subresultant-PRS step on the β-divided remainder -/
@@ -71,7 +74,7 @@ structure IsBdivCExactStep (fuel : ℕ) (p q : GBPolyCore ℚ) (β : DensePoly �
   /-- The β divisor is nonzero after normalization. -/
   beta_cnorm_ne : cnorm β ≠ []
   /-- β divides every coefficient of the pseudo-remainder exactly. -/
-  exact_division : ∀ a ∈ GBPolyCore.gbpsremainderCore fuel p q, toPoly (DensePoly.cmodWf a β) = 0
+  exact_division : ∀ a ∈ GBPolyCore.gbpsremainderCore fuel p q, toPoly (CPolyEuclidean.mod a β) = 0
 
 /-- One subresultant-PRS step on the β-divided remainder `r = bdivC (GBPolyCore.gbpsremainderCore fuel p q) β`:
 `C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(B, DensePoly.toPoly r; m,n)`. -/

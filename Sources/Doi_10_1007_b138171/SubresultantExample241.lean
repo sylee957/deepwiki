@@ -73,7 +73,7 @@ def cR241 : DensePoly ℚ := [1, 0, 4]
 
 -- **Example 2.4.1, the degree-3 subresultant** `S₃`, `ℚ[t]`-primitive in `x`: the LRT log argument up
 -- to a `ℚ[t]` cofactor. Its raw (pre-primitive) form `[[-16,0,792],[0,32,0,-2440],[7,0,-400],
--- [0,-14,0,800]]` satisfies `S₃ ≡ −214t·(x³+2tx²−3x−4t) mod 4t²+1`; `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd` strips a constant.
+-- [0,-14,0,800]]` satisfies `S₃ ≡ −214t·(x³+2tx²−3x−4t) mod 4t²+1`; `GBPolyCore.gbprimitivePartCore CPolyGcd.compute` strips a constant.
 #eval lrtSubresultantCompute 30 3 cA241 cD241
 
 -- **Example 2.4.1, the normalized LRT log argument** `S(t,x)` = `S₃` mod `4t²+1`, monic in `x`:
@@ -255,7 +255,7 @@ of the pseudo-remainder `prem (chain l) (chain (l+1))` exactly (`cmod` reads to 
 `DensePoly.cnormG_eq_nil_iff`. The decidable per-coefficient `cmod`-zero certificate, `native_decide`'d. -/
 theorem hdiv_ex241 :
     ∀ l ≤ 1, ∀ a ∈ GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)),
-      toPoly (DensePoly.cmodWf a (chainBt 30 gP gQ l)) = 0 := by
+      toPoly (CPolyEuclidean.mod a (chainBt 30 gP gQ l)) = 0 := by
   intro l hl a ha
   rw [← DensePoly.cnormG_eq_nil_iff]
   revert a ha
@@ -319,29 +319,29 @@ theorem hfilt_ex241 :
   toBPoly_bsubresultantGcd_eq_of_filter_singleton 30 gP gQ (chain 30 gP gQ) 1
     subresPRS_filter_singleton_ex241
 
-/-! ### `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd` content-exactness on the degree-3 element (Ex 2.4.1, `native_decide`)
+/-! ### `GBPolyCore.gbprimitivePartCore CPolyGcd.compute` content-exactness on the degree-3 element (Ex 2.4.1, `native_decide`)
 The raw degree-3 subresultant `bsubresultantGcd 30 3 gP gQ = S₃ = [[-16,0,792],[0,32,0,-2440],[7,0,-400],
-[0,-14,0,800]]` carries a `ℚ[t]`-content; `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd` strips it. The content `GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd` is a
+[0,-14,0,800]]` carries a `ℚ[t]`-content; `GBPolyCore.gbprimitivePartCore CPolyGcd.compute` strips it. The content `GBPolyCore.gbcontentCore CPolyGcd.compute` is a
 nonzero `ℚ[t]` polynomial dividing every `x`-coefficient exactly — all decidable `cisZero`/`cmod`-zero
 facts, `native_decide`'d. -/
 
 /-- **`hg` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant is nonzero
-(`¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30 3 gP gQ))`). -/
+(`¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 30 3 gP gQ))`). -/
 theorem hg_ex241 :
-    ¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
+    ¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 30
       (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) = true := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hgcn` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant has nonempty `cnorm`. -/
 theorem hgcn_ex241 :
-    cnorm (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
+    cnorm (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 30
       (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ [] := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hg0` for Ex 2.4.1**: the `ℚ[t]`-content reads to a nonzero `ℚ[t]` polynomial (`toPoly ≠ 0`), via
 `DensePoly.cnormG_eq_nil_iff`. -/
 theorem hg0_ex241 :
-    toPoly (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
+    toPoly (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 30
       (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ 0 := by
   intro h; exact hgcn_ex241 ((DensePoly.cnormG_eq_nil_iff _).mpr h)
 
@@ -350,7 +350,7 @@ subresultant exactly (`cmod` reads to 0), via `DensePoly.cnormG_eq_nil_iff`. -/
 theorem hrem_ex241 :
     ∀ a ∈ GBPolyCore.gbnormCore (bsubresultantGcd 30
         (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ),
-      toPoly (DensePoly.cmodWf a (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
+      toPoly (CPolyEuclidean.mod a (GBPolyCore.gbcontentCore CPolyGcd.compute (bsubresultantGcd 30
         (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ))) = 0 := by
   intro a ha
   rw [← DensePoly.cnormG_eq_nil_iff]
@@ -375,7 +375,7 @@ gcd `.1` literally evaluates to `[1]` (`native_decide`), and `toPoly [1] = C 1`.
 reduced primitive subresultant's leading `x`-coefficient (`(107/8)·t`) with `R = 4t²+1` is the constant
 `1` (the leading coefficient is a unit mod `R`). `native_decide`. -/
 theorem cgcdWf_blc_bredR_ex241 :
-    (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR cR241 (lrtSubresultantCompute 30
+    (CPolyEuclidean.gcdExt (GBPolyCore.gblcCore (bredR cR241 (lrtSubresultantCompute 30
       (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1 = [1] := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
@@ -383,7 +383,7 @@ theorem cgcdWf_blc_bredR_ex241 :
 reduces to the nonzero constant `C 1` — so the leading coefficient is a unit mod `R = 4t²+1`. From
 `cgcdWf_blc_bredR_ex241` (`gcd = [1]`) and `toPoly [1] = C 1`. -/
 theorem hgu_ex241 :
-    toPoly (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR cR241 (lrtSubresultantCompute 30
+    toPoly (CPolyEuclidean.gcdExt (GBPolyCore.gblcCore (bredR cR241 (lrtSubresultantCompute 30
       (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1
       = Polynomial.C (1 : ℚ) := by
   rw [cgcdWf_blc_bredR_ex241]
@@ -699,11 +699,11 @@ open scoped Classical in
 theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241 : ℚ[X]).Separable := by
   rw [separable_def']
   have hbez :
-      Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).2.1
+      Compute.toPoly (CPolyEuclidean.gcdExt Compute.cD241 (Compute.cderiv Compute.cD241)).2.1
           * Compute.toPoly Compute.cD241
-        + Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).2.2
+        + Compute.toPoly (CPolyEuclidean.gcdExt Compute.cD241 (Compute.cderiv Compute.cD241)).2.2
           * Compute.toPoly (Compute.cderiv Compute.cD241)
-      = Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1 := by
+      = Compute.toPoly (CPolyEuclidean.gcdExt Compute.cD241 (Compute.cderiv Compute.cD241)).1 := by
     exact
       DensePoly.toPolyG_cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)
   have hderiv : Compute.toPoly (Compute.cderiv Compute.cD241) =
@@ -711,16 +711,16 @@ theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241 : ℚ[X]).Separab
     exact
       DensePoly.toPolyG_cderivG Compute.cD241
   rw [hderiv] at hbez
-  have hg : Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1
+  have hg : Compute.toPoly (CPolyEuclidean.gcdExt Compute.cD241 (Compute.cderiv Compute.cD241)).1
       = C 4 := by
-    have : (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1 = [4] := by
+    have : (CPolyEuclidean.gcdExt Compute.cD241 (Compute.cderiv Compute.cD241)).1 = [4] := by
       native_decide
     rw [this]
     simp [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
   rw [hg] at hbez
-  refine ⟨C (4:ℚ)⁻¹ * Compute.toPoly (DensePoly.cgcdWf Compute.cD241
+  refine ⟨C (4:ℚ)⁻¹ * Compute.toPoly (CPolyEuclidean.gcdExt Compute.cD241
             (Compute.cderiv Compute.cD241)).2.1,
-          C (4:ℚ)⁻¹ * Compute.toPoly (DensePoly.cgcdWf Compute.cD241
+          C (4:ℚ)⁻¹ * Compute.toPoly (CPolyEuclidean.gcdExt Compute.cD241
             (Compute.cderiv Compute.cD241)).2.2, ?_⟩
   rw [mul_assoc, mul_assoc, ← mul_add, hbez, ← C_mul]
   norm_num
