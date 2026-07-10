@@ -74,16 +74,6 @@ the `CField` operations and a Horner bridge `toPoly` into `(CFieldSpec.K α)[X]`
 
 namespace DensePoly
 
-/-- Pad a `DensePoly` on the high-degree end with zeros up to length `n`; no-op if length is already
-at least `n`. -/
-def cpad {α : Type*} [CField α] (n : ℕ) (p : DensePoly α) : DensePoly α :=
-  (p : List α) ++ List.replicate (n - (p : List α).length) CCommRing.zero
-
-/-- Reverse coefficients after zero-padding to degree bound `k`: `creverseDeg k p` represents
-`X^k * p(X⁻¹)` when `k` bounds the degree of `p`. -/
-def creverseDeg {α : Type*} [CField α] (k : ℕ) (p : DensePoly α) : DensePoly α :=
-  (cpad (k + 1) p).reverse
-
 /-- Monomial `c * X^n` as a `DensePoly`: `n` low-degree zeros followed by coefficient `c`. -/
 def cMonomial {α : Type*} [CCommRing α] (c : α) (n : ℕ) : DensePoly α :=
   (List.replicate n CCommRing.zero ++ [c] : List α)

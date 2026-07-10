@@ -252,6 +252,11 @@ coefficientwise derivation it already abbreviates; `wToAf` folds the selected re
 operations over a supplied basis; and `polyToZMod` reconstructs the same representation coefficientwise.
 Each executes on `SparsePoly`. Their quotient, Cantor, and resultant consumers remain dense at the actual
 Euclidean-algorithm boundary, and there was no parallel implementation body to retain or deduplicate here.
+The residue-at-infinity preprocessing is representation-independent too. Generic coefficient reversal,
+leading-zero counting, and division by a common `t`-power feed a generic `radTransformAtInfinity`; the
+isolated `t = 0` residue computation then uses only engine derivative, evaluation, and arithmetic and runs
+on `SparsePoly`. The full residue resultant remains dense at its resultant/interpolation boundary. The old
+dense-only `cpad`/`creverseDeg` body was removed rather than kept beside the generic reversal.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

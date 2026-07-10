@@ -11,27 +11,46 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 namespace DensePoly
 
-variable {α : Type*} [CField α]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+variable {α : Type u} [CField α]
 
 /-! ### Common-`t`-power cancellation after reverse-coefficient substitution -/
 
-/-- **Count leading-zero coefficients** of a `DensePoly` (initial `isZero` run length) — the order of
+/-- **Count leading-zero coefficients** of a represented polynomial — the order of
 vanishing at `t = 0`, i.e. the `t`-power dividing `p`. -/
-def cleadingZeros (p : DensePoly α) : ℕ := (p.takeWhile (fun a => CCommRing.isZero a)).length
+def cleadingZeros (p : P α) : ℕ :=
+  ((List.range (CPoly.degBound p)).takeWhile
+    (fun i => CCommRing.isZero (CPoly.coeff p i))).length
 
-/-- **Common `t`-power** `commonTPow ps` shared by every `DensePoly` in `ps`: the `min` of their
+/-- **Common `t`-power** `commonTPow ps` shared by every represented polynomial in `ps`: the `min` of their
 leading-zero counts (`0` for the empty list). The maximal `t^k` dividing all of `ps` simultaneously. -/
-def commonTPow (ps : List (DensePoly α)) : ℕ :=
+def commonTPow (ps : List (P α)) : ℕ :=
   match ps.map cleadingZeros with
   | [] => 0
   | n :: ns => ns.foldl Nat.min n
 
-/-- **Divide a `DensePoly` by `t^k`** by dropping `k` low coefficients (`p.drop k`). Sound only when the
+/-- **Divide by `t^k`** by dropping `k` low coefficients. Sound only when the
 first `k` coefficients are zero (the caller guarantees this via `commonTPow`); realizes division by the
 monomial `t^k`. -/
-def cdropTPow (k : ℕ) (p : DensePoly α) : DensePoly α := (p : List α).drop k
+def cdropTPow (k : ℕ) (p : P α) : P α :=
+  CPoly.ofFn (CPoly.degBound p - k) (fun i => CPoly.coeff p (i + k))
+
+omit [CPolyEngine P] in
+/-- Coefficient reading for division by a represented `t^k`. -/
+theorem coeff_cdropTPow (k i : ℕ) (p : P α) :
+    CPoly.coeff (cdropTPow k p) i =
+      if i < CPoly.degBound p - k then CPoly.coeff p (i + k) else CCommRing.zero := by
+  rw [cdropTPow, CPoly.coeff_ofFn]
+
+example :
+    let p : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(2, 3), (4, 5)]
+    cleadingZeros p = 2 ∧ CPoly.coeff (cdropTPow 2 p) 0 = 3
+      ∧ CPoly.coeff (cdropTPow 2 p) 2 = 5 := by
+  native_decide
 
 /-! ### The coordinate transform at infinity -/
 
@@ -39,17 +58,17 @@ def cdropTPow (k : ℕ) (p : DensePoly α) : DensePoly α := (p : List α).drop 
 for `f dx = (g₀ + g₁·y)/D dx` on `y² = ρ`. With `m = ⌈deg ρ/2⌉`, `N = max(deg g₀, deg g₁, deg D)`, and
 `revₖ p := t^k·p(1/t)`: `ρ̃ = rev_{2m} ρ`, `g̃₀ = −t^m·rev_N g₀`, `g̃₁ = −rev_N g₁`, `D̃ = t^{m+2}·rev_N D`,
 with the common `t`-power cancelled so `∞` stays a simple pole. Generic over `[CField α]`. -/
-def radTransformAtInfinity (rho g0 g1 D : DensePoly α) :
-    DensePoly α × DensePoly α × DensePoly α × DensePoly α :=
-  let d := cdeg rho
+def radTransformAtInfinity (rho g0 g1 D : P α) : P α × P α × P α × P α :=
+  let d := CPolyEngine.cdeg rho
   let m := (d + 1) / 2                                            -- ⌈d/2⌉
-  let N := max (max (cdeg g0) (cdeg g1)) (cdeg D)
-  let rhoT := creverseDeg (2 * m) rho                           -- t^{2m}·ρ(1/t)
-  let g0raw := cneg (cshift m (creverseDeg N g0))             -- −t^m·rev_N g₀
-  let g1raw := cneg (creverseDeg N g1)                         -- −rev_N g₁
-  let Draw := cshift (m + 2) (creverseDeg N D)                 -- t^{m+2}·rev_N D
+  let N := max (max (CPolyEngine.cdeg g0) (CPolyEngine.cdeg g1)) (CPolyEngine.cdeg D)
+  let rhoT := CPoly.creverseDeg (2 * m) rho                    -- t^{2m}·ρ(1/t)
+  let g0raw := CPolyEngine.neg (CPoly.cshift m (CPoly.creverseDeg N g0)) -- −t^m·rev_N g₀
+  let g1raw := CPolyEngine.neg (CPoly.creverseDeg N g1)        -- −rev_N g₁
+  let Draw := CPoly.cshift (m + 2) (CPoly.creverseDeg N D)     -- t^{m+2}·rev_N D
   let k := commonTPow [g0raw, g1raw, Draw]
-  (cnorm rhoT, cnorm (cdropTPow k g0raw), cnorm (cdropTPow k g1raw), cnorm (cdropTPow k Draw))
+  (CPolyEngine.cnorm rhoT, CPolyEngine.cnorm (cdropTPow k g0raw),
+    CPolyEngine.cnorm (cdropTPow k g1raw), CPolyEngine.cnorm (cdropTPow k Draw))
 
 /-! ### The residue-at-infinity resultant (full + isolated-place) -/
 
@@ -63,15 +82,24 @@ def cAlgResidueAtInfinity (rho g0 g1 D : DensePoly α) : DensePoly α :=
 /-- Isolated residue at the place `t = 0` (the residue at infinity) `cResidueAtInfinityPlace fuel ρ g₀ g₁ D
 = (Z·D̃'(0) − g̃₀(0))² − g̃₁(0)²·ρ̃(0) ∈ K[Z]`, built from the constants `D̃'(0), g̃₀(0), g̃₁(0), ρ̃(0)`.
 Isolates the single place `t = 0`, staying correct (residue `0`) even when `∞` is not a pole. -/
-def cResidueAtInfinityPlace (fuel : ℕ) (rho g0 g1 D : DensePoly α) : DensePoly α :=
+def cResidueAtInfinityPlace (fuel : ℕ) (rho g0 g1 D : P α) : P α :=
   let (rhoT, g0T, g1T, DT) := radTransformAtInfinity rho g0 g1 D
-  let Dp0 := ceval (cderiv DT) CCommRing.zero                     -- D̃'(0)
-  let a0 := ceval g0T CCommRing.zero                               -- g̃₀(0)
-  let b0 := ceval g1T CCommRing.zero                               -- g̃₁(0)
-  let r0 := ceval rhoT CCommRing.zero                              -- ρ̃(0)
-  let lin : DensePoly α := [CCommRing.neg a0, Dp0]                     -- D̃'(0)·Z − g̃₀(0)
+  let Dp0 := CPolyEngine.eval (CPolyEngine.deriv DT) CCommRing.zero -- D̃'(0)
+  let a0 := CPolyEngine.eval g0T CCommRing.zero                     -- g̃₀(0)
+  let b0 := CPolyEngine.eval g1T CCommRing.zero                     -- g̃₁(0)
+  let r0 := CPolyEngine.eval rhoT CCommRing.zero                    -- ρ̃(0)
+  let lin : P α := CPolyEngine.ofCoeffList [CCommRing.neg a0, Dp0] -- D̃'(0)·Z − g̃₀(0)
   let _ := fuel
-  csub (cmul lin lin) [CCommRing.mul (CCommRing.mul b0 b0) r0]       -- (·)² − g̃₁(0)²·ρ̃(0)
+  CPolyEngine.sub (CPolyEngine.mul lin lin)
+    (CPolyEngine.ofCoeffList [CCommRing.mul (CCommRing.mul b0 b0) r0]) -- (·)² − g̃₁(0)²·ρ̃(0)
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    CPolyEngine.cisZero
+      (CPolyEngine.sub (cResidueAtInfinityPlace 30
+        (ofList [1, 0, 1]) (ofList []) (ofList [1]) (ofList [1, 0, 1]))
+        (ofList [-1, 0, 1])) = true := by
+  native_decide
 
 end DensePoly
 

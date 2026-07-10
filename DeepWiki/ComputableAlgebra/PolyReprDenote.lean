@@ -140,6 +140,20 @@ theorem toPoly_cmonomial (c : α) (k : ℕ) :
 def cshift (k : ℕ) (p : P α) : P α :=
   ofFn (degBound p + k) (fun i => if k ≤ i then coeff p (i - k) else CCommRing.zero)
 
+/-- Reverse coefficients after padding through degree `k`, retaining a larger representation bound. -/
+def creverseDeg (k : ℕ) (p : P α) : P α :=
+  let n := max (k + 1) (degBound p)
+  ofFn n (fun i => coeff p (n - 1 - i))
+
+omit [CRingSpec α] in
+/-- Coefficient reading for `creverseDeg`. -/
+theorem coeff_creverseDeg (k i : ℕ) (p : P α) :
+    coeff (creverseDeg k p) i =
+      if i < max (k + 1) (degBound p) then
+        coeff p (max (k + 1) (degBound p) - 1 - i)
+      else CCommRing.zero := by
+  rw [creverseDeg, coeff_ofFn]
+
 /-- `toPoly (cshift k p) = Xᵏ · toPoly p`. -/
 theorem toPoly_cshift (k : ℕ) (p : P α) : toPoly (cshift k p) = X ^ k * toPoly p := by
   rw [mul_comm]
@@ -158,6 +172,8 @@ example : csub ([3, 4] : List ℚ) [1, 1] = [2, 3] := by native_decide
 example : cmonomial (5 : ℚ) 3 = ([0, 0, 0, 5] : List ℚ) := by native_decide
 /-- `cshift` reduces (dense): `x²·(1 + x) = [0,0,1,1]`. -/
 example : cshift 2 ([1, 1] : List ℚ) = ([0, 0, 1, 1] : List ℚ) := by native_decide
+/-- `creverseDeg` reduces (dense): padding and reversing `1 + 2x` through degree three. -/
+example : creverseDeg 3 ([1, 2] : List ℚ) = ([0, 0, 2, 1] : List ℚ) := by native_decide
 
 /-! ### Formal derivative (generic)
 
