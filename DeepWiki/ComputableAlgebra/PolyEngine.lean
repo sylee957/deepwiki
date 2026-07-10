@@ -96,6 +96,11 @@ def sub (p q : P α) : P α := add p (neg q)
 def prod (ps : List (P α)) : P α :=
   ps.foldl (fun acc p => mul acc p) CPoly.one
 
+/-- Monic normalization derived from the representation's engine operations. -/
+def cmonic {β : Type u} [CField β] (p : P β) : P β :=
+  let q := cnorm p
+  if cisZero q then CPoly.czero else scale (CField.inv (clead q)) q
+
 /-- Bundle engine operations as a local computable ring; use with `letI` to avoid global instance overlap. -/
 @[reducible] def toCCommRing : CCommRing (P α) where
   zero := CPoly.czero
@@ -125,6 +130,31 @@ theorem toPoly_prod [LawfulCPolyEngine.{u,v} P] [CRingSpec.{u,v} α] (ps : List 
       simp only [List.map_cons, List.prod_cons]
       ring
   rw [prod, hfold, CPoly.toPoly_one, one_mul]
+
+/-- Engine monic normalization denotes zero on a zero polynomial. -/
+theorem toPoly_cmonic_of_eq_zero [LawfulCPolyEngine.{u,v} P]
+    {β : Type u} [CField β] [CFieldSpec.{u,v} β] (p : P β) (hp : CPoly.toPoly p = 0) :
+    CPoly.toPoly (cmonic p) = 0 := by
+  rw [cmonic]
+  have hzero : CPolyEngine.cisZero (CPolyEngine.cnorm p) = true ↔ CPoly.toPoly p = 0 := by
+    rw [LawfulCPolyEngine.cisZero_iff, LawfulCPolyEngine.toPoly_cnorm]
+  rw [if_pos (hzero.mpr hp), CPoly.toPoly_czero]
+
+/-- Engine monic normalization denotes inverse-leading-coefficient scaling on a nonzero polynomial. -/
+theorem toPoly_cmonic_of_ne_zero [LawfulCPolyEngine.{u,v} P]
+    {β : Type u} [CField β] [CFieldSpec.{u,v} β] (p : P β) (hp : CPoly.toPoly p ≠ 0) :
+    CPoly.toPoly (cmonic p) =
+      Polynomial.C (CPoly.toPoly p).leadingCoeff⁻¹ * CPoly.toPoly p := by
+  rw [cmonic]
+  have hzero : CPolyEngine.cisZero (CPolyEngine.cnorm p) = true ↔ CPoly.toPoly p = 0 := by
+    rw [LawfulCPolyEngine.cisZero_iff, LawfulCPolyEngine.toPoly_cnorm]
+  have hz : ¬ CPolyEngine.cisZero (CPolyEngine.cnorm p) = true := fun h => hp (hzero.mp h)
+  rw [if_neg hz, LawfulCPolyEngine.toPoly_scale, LawfulCPolyEngine.toPoly_cnorm]
+  congr 2
+  change CFieldSpec.toK (CField.inv (CPolyEngine.clead (CPolyEngine.cnorm p))) = _
+  rw [CFieldSpec.toK_inv]
+  change (CRingSpec.toR (CPolyEngine.clead (CPolyEngine.cnorm p)))⁻¹ = _
+  rw [LawfulCPolyEngine.toR_clead_eq_leadingCoeff, LawfulCPolyEngine.toPoly_cnorm]
 
 end CPolyEngine
 
@@ -267,6 +297,10 @@ namespace CPolyEngine
 /-- Engine list products on the dense representation are concrete dense products. -/
 @[simp] theorem prod_dense_eq {α : Type u} [CCommRing α] (ps : List (DensePoly α)) :
     CPolyEngine.prod ps = DensePoly.cprod ps := rfl
+
+/-- Engine monic normalization on the dense representation is concrete dense normalization. -/
+@[simp] theorem cmonic_dense_eq {α : Type u} [CField α] (p : DensePoly α) :
+    CPolyEngine.cmonic p = DensePoly.cmonic p := rfl
 
 /-- Engine evaluation on the dense representation is concrete Horner evaluation. -/
 @[simp] theorem eval_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) (x : α) :

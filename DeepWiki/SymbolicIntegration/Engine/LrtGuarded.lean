@@ -15,6 +15,7 @@ This file adds that guard, turning the integrator into an `Option` that declines
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
 
 namespace DensePoly
 
@@ -72,17 +73,19 @@ theorem cIntegrateReducedLrtGuardedG_sound {α : Type*} [CField α] [CFieldSpec 
     IsIntegralResultLrt Dt a d res :=
   (cIntegrateReducedLrtGuardedG_some Dt a d res hguarded).2 ▸ hsound
 
-open DensePoly in
 /-- **All LRT residues are constant** (result-level, `Bool`). Every residue minimal polynomial `Rᵢ` in
 `res.logs` has constant coefficients after monic normalization (`D(monic Rᵢ) = 0`, coefficient-wise
 `cmapDeriv`) — i.e. its roots, the algebraic residues, are constants. Monic normalization strips the
 resultant-scaling artifact (as in `cResidueConstantGuard`). The `Bool` guard the genuine integrator checks. -/
-def allResiduesConstantLrt {α : Type*} [CField α] [CDiffField α] (res : LrtResult α) : Bool :=
-  res.logs.all (fun RS => cisZero (cmapDeriv (cmonic RS.1)))
+def allResiduesConstantLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CDiffField α] (res : LrtResult α P) : Bool :=
+  res.logs.all (fun RS =>
+    CPolyEngine.cisZero (DensePoly.cmapDeriv (CPolyEngine.cmonic RS.1)))
 
 /-- **All LRT residues are constant** (`Prop`). The LRT analogue of `AllResiduesConstant`; the residues here
 are **roots of `Rᵢ`** (not explicit `α`), so constancy is `D(monic Rᵢ) = 0` rather than `D(cᵢ) = 0`. -/
-def AllResiduesConstantLrt {α : Type*} [CField α] [CDiffField α] (res : LrtResult α) : Prop :=
+def AllResiduesConstantLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CDiffField α] (res : LrtResult α P) : Prop :=
   allResiduesConstantLrt res = true
 
 /-- **Genuine LRT integral result**: the formal LRT identity `IsIntegralResultLrt` **and** all residues
@@ -111,6 +114,13 @@ theorem IsElementaryIntegrableGenuineLrt.of_genuine {α : Type*} [CField α] [CF
 /-! ### Validation (`native_decide`) -/
 
 namespace DensePoly
+
+/-- The result-level constant-residue guard executes on sparse symbolic residue polynomials. -/
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let res : LrtResult ℚ CPoly.SparsePoly := ⟨(ofList [0], ofList [1]), [(ofList [2, 4], [])]⟩
+    allResiduesConstantLrt res = true := by
+  native_decide
 
 /-- Over `ℚ` (a field of constants, `D ≡ 0`) every reduced part is integrable, so the guard passes:
 `∫1/(t²−1)` is accepted (residues `±1/2` are constants). -/

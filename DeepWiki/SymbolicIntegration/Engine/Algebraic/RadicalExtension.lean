@@ -19,6 +19,8 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 /-! ### The simple-radical-extension carrier `RadExt α n f`
 
 `F(y)` with `yⁿ = f ∈ F` (`F = α` a tower-level `[CField α]`), represented as a length-`n` dense
@@ -177,21 +179,24 @@ gives `b = lcf(C) / ((j+1) + lcf(g))` and residual `D = B'f + Bg − C` with `de
 /-- Case-3 leading-coefficient cofactor `radCase3Cofactor f g C = B`: the constant-coefficient monomial
 `B = b·θ^{j+1}` (`j+1 = deg C − deg f + 1`) with `b = lcf(C) / ((j+1) + lcf(g))`, cancelling the leading
 term of `C` in the `C/y` degree-lowering (`[]` when `deg C < deg f`). -/
-def radCase3Cofactor (f g C : DensePoly α) : DensePoly α :=
-  let dC := cdeg C
-  let dF := cdeg f
-  if cisZero C || dC < dF then []
+def radCase3Cofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (f g C : P α) : P α :=
+  let dC := CPolyEngine.cdeg C
+  let dF := CPolyEngine.cdeg f
+  if CPolyEngine.cisZero C || dC < dF then CPolyEngine.ofCoeffList []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CCommRing.add (cnatCast jp1) (clead g)            -- `(j+1) + lcf(g)`
-    let b := CField.div (clead C) denom                          -- `b = lcf(C)/((j+1)+lcf(g))`
-    cshift jp1 [b]                                                -- `b·θ^{j+1}`
+    let denom := CCommRing.add (cnatCast jp1) (CPolyEngine.clead g) -- `(j+1) + lcf(g)`
+    let b := CField.div (CPolyEngine.clead C) denom                -- `b = lcf(C)/((j+1)+lcf(g))`
+    CPolyEngine.monomial b jp1                                     -- `b·θ^{j+1}`
 
 /-- Case-3 residual `radCase3Residual f g B C Bder = D`: the lowered-degree numerator `D = B'f + Bg − C`
 of the `C/y` step. `Bder = B'`, `g` from `(f/y)' = g/y` passed in; with `B` from `radCase3Cofactor`,
 `deg D < deg C`. -/
-def radCase3Residual (f g B C Bder : DensePoly α) : DensePoly α :=
-  csub (cadd (cmul Bder f) (cmul B g)) C                       -- `B'f + Bg − C`
+def radCase3Residual {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (f g B C Bder : P α) : P α :=
+  CPolyEngine.sub
+    (CPolyEngine.add (CPolyEngine.mul Bder f) (CPolyEngine.mul B g)) C -- `B'f + Bg − C`
 
 /-! ### `θ = log v` rational-part reduction
 
@@ -203,15 +208,27 @@ Case 3. -/
 /-- Generalized Case-3 cofactor `radCase3CofactorGen Dt f g C = B`: the monomial `B = b·θ^{j+1}` with
 `b = lcf(C) / ((j+1)·θ' + lcf(g))` for any `θ` of derivative `Dt = θ'` (`[]` when `deg C < deg f`);
 `Dt = 1` recovers Case 3. -/
-def radCase3CofactorGen (Dt : α) (f g C : DensePoly α) : DensePoly α :=
-  let dC := cdeg C
-  let dF := cdeg f
-  if cisZero C || dC < dF then []
+def radCase3CofactorGen {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (Dt : α) (f g C : P α) : P α :=
+  let dC := CPolyEngine.cdeg C
+  let dF := CPolyEngine.cdeg f
+  if CPolyEngine.cisZero C || dC < dF then CPolyEngine.ofCoeffList []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CCommRing.add (CCommRing.mul (cnatCast jp1) Dt) (clead g)  -- `(j+1)·θ' + lcf(g)`
-    let b := CField.div (clead C) denom                          -- `b = lcf(C)/((j+1)θ' + lcf(g))`
-    cshift jp1 [b]                                                -- `b·θ^{j+1}`
+    let denom := CCommRing.add (CCommRing.mul (cnatCast jp1) Dt) (CPolyEngine.clead g)
+    let b := CField.div (CPolyEngine.clead C) denom                 -- `b = lcf(C)/((j+1)θ' + lcf(g))`
+    CPolyEngine.monomial b jp1                                      -- `b·θ^{j+1}`
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let f := ofList [0, 1]
+    let g := ofList [1 / 2]
+    let C := ofList [0, 1, 1]
+    let B := radCase3Cofactor f g C
+    let D := radCase3Residual f g B C (CPolyEngine.deriv B)
+    CPoly.coeff B 2 = 2 / 5 ∧ CPoly.coeff D 1 = -1 ∧
+      CPoly.coeff (radCase3CofactorGen (1 : ℚ) f g C) 2 = 2 / 5 := by
+  native_decide
 
 /-! ### `θ = exp v` rational-part reduction
 
@@ -223,12 +240,21 @@ For `θ = exp v`, `θ` divides its own derivative (`θ' = v'·θ`); the new piec
 /-- `θ = exp v` `C/(θᵏy)` cofactor `radExpCofactor k vder f g C = B`: the constant `B = [b₀]` with
 `b₀ = c₀ / (g₀ − k·v'·f₀)` (`f₀, g₀, c₀` the `θ⁰`-coefficients of `f, g, C`, `vder = v'`), solving the
 constant-term match `c₀ = b₀g₀ − k·v'·b₀·f₀`. -/
-def radExpCofactor (k : ℕ) (vder : α) (f g C : DensePoly α) : DensePoly α :=
+def radExpCofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (k : ℕ) (vder : α) (f g C : P α) : P α :=
   let f0 := CPoly.coeff f 0
   let g0 := CPoly.coeff g 0
   let c0 := CPoly.coeff C 0
   let denom := CField.sub g0 (CCommRing.mul (CCommRing.mul (cnatCast k) vder) f0)  -- `g₀ − k·v'·f₀`
-  [CField.div c0 denom]                                                       -- `[b₀]`
+  CPolyEngine.ofCoeffList [CField.div c0 denom]                               -- `[b₀]`
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let f := ofList [1, 1]
+    let g := ofList [0, 1 / 2]
+    let C := ofList [1, 1]
+    CPoly.coeff (radExpCofactor 1 (1 : ℚ) f g C) 0 = -1 := by
+  native_decide
 
 /-- `θ = exp v` `C/(θᵏy)` residual `radExpResidual k vder f g B C Bder = D`: the lowered-`k` numerator
 `D = ((B'f + Bg − k·v'·B·f) − C)/θ`. `vder = v'`, `Bder = B'`, `g` passed in; division by `θ` is

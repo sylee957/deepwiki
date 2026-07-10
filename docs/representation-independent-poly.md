@@ -224,6 +224,15 @@ The symbolic LRT result container now follows the same pattern: `LrtResult α P`
 residue polynomials, and parametric log arguments in `P`, defaulting to `DensePoly`. `combineSNLrt` is
 representation-generic and has sparse execution coverage, while the established LRT integrator and
 soundness predicates continue to use the default dense specialization.
+The result-level residue-constancy check is generic too. `CPolyEngine.cmonic` derives monic normalization
+from the representation's normalization, zero test, leading coefficient, and scaling operations; it is
+definitionally the established dense `cmonic` and runs through the sparse engine. Consequently
+`allResiduesConstantLrt` and `AllResiduesConstantLrt` inspect `LrtResult α P` directly, without a second
+sparse guard implementation.
+The radical-extension degree-lowering leaves are split at their real representation boundary. The Case-3
+cofactor/residual, generalized log-monomial cofactor, and exponential constant cofactor are generic over
+`CPolyEngine` and execute on sparse polynomials. Case 1/2 and the exponential residual remain dense because
+they still consume the dense Euclidean/Diophantine algorithms; no generic wrapper hides that dependency.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 
