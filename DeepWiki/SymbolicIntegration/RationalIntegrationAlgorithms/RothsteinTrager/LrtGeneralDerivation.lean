@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrage
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.RiobooCoprimalityLrt
+import DeepWiki.Algebra.PolynomialMatrixDegree
 import Mathlib.LinearAlgebra.Lagrange
 
 /-! # General-derivation Rothstein–Trager / Lazard–Rioboo–Trager
@@ -317,20 +318,6 @@ theorem lazardRiobooTrager_output_isSimilar_gcd_gen {K : Type*} [Field K] [IsAlg
 to any field `K` and arbitrary `B`; the same determinant estimate also bounds the bivariate
 subresultant coefficients used by interpolation uniqueness. -/
 
-/-- Column-degree bound for a matrix determinant (general field). -/
-theorem natDegree_det_le_sum_col_gen {ι : Type*} [DecidableEq ι] [Fintype ι]
-    (M : Matrix ι ι K[X]) (b : ι → ℕ) (hb : ∀ i j, (M i j).natDegree ≤ b j) :
-    (M.det).natDegree ≤ ∑ j, b j := by
-  rw [Matrix.det_apply]
-  refine (Polynomial.natDegree_sum_le _ _).trans ?_
-  rw [Finset.fold_max_le]
-  refine ⟨Nat.zero_le _, ?_⟩
-  intro σ _
-  rw [Function.comp_apply]
-  refine (natDegree_smul_le _ _).trans ?_
-  refine (Polynomial.natDegree_prod_le _ _).trans ?_
-  exact Finset.sum_le_sum (fun i _ => hb (σ i) i)
-
 /-- Each `z`-coefficient of `A.map C − C z · B.map C` has `natDegree ≤ 1` (linear in `z`). -/
 theorem natDegree_coeff_rtResultantGen_g_le (A B : K[X]) (k : ℕ) :
     ((A.map (C : K →+* K[X]) - C Polynomial.X * B.map (C : K →+* K[X])).coeff k).natDegree ≤ 1 := by
@@ -345,7 +332,7 @@ theorem natDegree_coeff_rtResultantGen_g_le (A B : K[X]) (k : ℕ) :
 theorem natDegree_rtResultantGen_le (A D B : K[X]) :
     (rtResultantGen A D B).natDegree ≤ D.natDegree := by
   rw [rtResultantGen, resultant]
-  refine le_trans (natDegree_det_le_sum_col_gen _
+  refine le_trans (natDegree_det_le_sum_col _
     (fun j => j.addCases (fun _ => 1) (fun _ => 0)) ?_) ?_
   · intro i j
     rw [Polynomial.sylvester, Matrix.of_apply]
@@ -422,7 +409,7 @@ open scoped Classical in
 /-- **`z`-degree bound on the bivariate subresultant coefficient.** Each `t`-coefficient of
 `lrtSubresultantGen A D B j` (a polynomial in the residue variable `z`) has degree `≤ deg D + (deg D − 1)`,
 hence is determined by interpolation at `deg D + (deg D − 1) + 1` nodes. Proved by
-`natDegree_det_le_sum_col_gen`: every Sylvester entry is a coefficient of `D.map C` (`z`-constant) or of
+`natDegree_det_le_sum_col`: every Sylvester entry is a coefficient of `D.map C` (`z`-constant) or of
 `A.map C − z·B.map C` (`z`-linear), so each is `z`-degree `≤ 1`, and the submatrix has
 `≤ deg D + (deg D − 1)` columns. -/
 theorem natDegree_coeff_lrtSubresultantGen_le (A D B : K[X]) (j k : ℕ) :
@@ -449,7 +436,7 @@ theorem natDegree_coeff_lrtSubresultantGen_le (A D B : K[X]) (j k : ℕ) :
       simp only [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow, mul_ite, mul_one, mul_zero,
         Finset.sum_ite_eq, Finset.mem_range, hk, if_true]
     rw [hcoeff]
-    refine (natDegree_det_le_sum_col_gen _ (fun _ => 1) (fun i l => ?_)).trans ?_
+    refine (natDegree_det_le_sum_col _ (fun _ => 1) (fun i l => ?_)).trans ?_
     · rw [Matrix.submatrix_apply]; exact hentry _ _
     · simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul, mul_one]
       omega

@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.PolyReprDense
+import DeepWiki.Algebra.PolynomialMatrixDegree
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Generic Bézout cofactors, resultant, and Lagrange interpolation
@@ -261,22 +262,6 @@ example (A D Dd : K[X]) (c : K) :
     (rtResultantSeed A D Dd).eval c
       = Polynomial.resultant D (A - C c * Dd) D.natDegree D.natDegree :=
   rtResultantSeed_eval A D Dd c
-
-open Polynomial in
-/-- If every entry of column `j` of `M : Matrix ι ι K[X]` has `natDegree ≤ b j`, then
-`natDegree (det M) ≤ ∑ j, b j`. -/
-theorem natDegree_det_le_sum_col {ι : Type*} [DecidableEq ι] [Fintype ι]
-    (M : Matrix ι ι K[X]) (b : ι → ℕ) (hb : ∀ i j, (M i j).natDegree ≤ b j) :
-    (M.det).natDegree ≤ ∑ j, b j := by
-  rw [Matrix.det_apply]
-  refine (Polynomial.natDegree_sum_le _ _).trans ?_
-  rw [Finset.fold_max_le]
-  refine ⟨Nat.zero_le _, ?_⟩
-  intro σ _
-  rw [Function.comp_apply]
-  refine (natDegree_smul_le _ _).trans ?_
-  refine (Polynomial.natDegree_prod_le _ _).trans ?_
-  exact Finset.sum_le_sum (fun i _ => hb (σ i) i)
 
 open Polynomial in
 /-- Each `t`-coefficient of `A.map C - C z * Dd.map C` has `z`-degree `≤ 1`. -/
