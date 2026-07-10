@@ -13,6 +13,29 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.Compute
 
+/-- Local bridge from a vanishing well-founded remainder to exact quotient multiplication. -/
+private theorem toPoly_cdivWf_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
+    (hrem : toPoly (DensePoly.cmodWf p q) = 0) :
+    toPoly p = toPoly (DensePoly.cdivWf p q) * toPoly q := by
+  have hrem' : DensePoly.toPoly (DensePoly.cmodWf p q) = 0 := by
+    simpa only [toPoly_eq_dense] using hrem
+  have h := DensePoly.toPolyG_cmodWf p q hq
+  rw [hrem', add_zero] at h
+  simpa only [toPoly_eq_dense] using h
+
+/-- Local divisibility bridge from a vanishing well-founded remainder. -/
+private theorem toPoly_dvd_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
+    (hrem : toPoly (DensePoly.cmodWf p q) = 0) : toPoly q ∣ toPoly p :=
+  ⟨toPoly (DensePoly.cdivWf p q), by
+    rw [toPoly_cdivWf_of_cmodWf_zero p q hq hrem, mul_comm]⟩
+
+/-- Local bridge from mathematical divisibility to a vanishing well-founded remainder. -/
+private theorem cmodWf_eq_zero_of_dvd (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
+    (hdvd : toPoly q ∣ toPoly p) : toPoly (DensePoly.cmodWf p q) = 0 := by
+  have hdvd' : DensePoly.toPoly q ∣ DensePoly.toPoly p := by
+    simpa only [toPoly_eq_dense] using hdvd
+  simpa only [toPoly_eq_dense] using DensePoly.toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd'
+
 /-! ### The residual-recovery identity -/
 
 /-- The denominators of a Hermite residual wrapper are nonzero. -/
@@ -51,17 +74,17 @@ theorem residual_numerator_ratFunc (A D gnum gden : ℚ[X]) (hD : D ≠ 0) (hgde
 
 open scoped Differential in
 /-- Full `hermiteReduce` residual correctness in `RatFunc ℚ` from an exact-division certificate. -/
-theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : DensePoly ℚ)
+theorem hermiteReduce_residual_correct (_fuel : ℕ) (A D : DensePoly ℚ)
     (gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
-    (hexact : toPoly (cmod fuel
+    (hexact : toPoly (DensePoly.cmodWf
         (cmul (csub (cmul A (cmul gden gden))
             (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
         (cmul D (cmul gden gden))) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = (toQFun (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv fuel
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
@@ -83,7 +106,7 @@ theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : DensePoly ℚ)
   have hdstar : am (toPoly Dstar) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hDstar0
   have htoQ : toQFun (gnum, gden) = am (toPoly gnum) / am (toPoly gden) := rfl
   have hresid := residual_numerator_ratFunc (toPoly A) (toPoly D) (toPoly gnum) (toPoly gden) hD hgden
-  have hcdiv := am_cdiv_of_cmod_zero fuel resNum resDen hresDen0 hexact
+  have hcdiv := am_cdivWf_of_cmodWf_zero resNum resDen hresDen0 hexact
   have hresNumPoly : toPoly resNum
       = (toPoly A * (toPoly gden * toPoly gden)
           - toPoly D * (derivative (toPoly gnum) * toPoly gden
@@ -94,7 +117,7 @@ theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : DensePoly ℚ)
   have hresDenPoly : toPoly resDen = toPoly D * (toPoly gden * toPoly gden) := by
     simp only [toPoly_eq_dense]
     rw [hresDen, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
-  have hkey : am (toPoly (cdiv fuel resNum resDen)) / am (toPoly Dstar)
+  have hkey : am (toPoly (DensePoly.cdivWf resNum resDen)) / am (toPoly Dstar)
       = am (toPoly A * (toPoly gden * toPoly gden)
             - toPoly D * (derivative (toPoly gnum) * toPoly gden - toPoly gnum * derivative (toPoly gden)))
           / (am (toPoly D) * (am (toPoly gden) * am (toPoly gden))) := by
@@ -113,14 +136,14 @@ open scoped Differential in
 /-- `hermiteReduce` residual correctness with the `cnorm`-wrapped residual numerator. -/
 theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
-    (hexact : toPoly (cmod fuel
+    (hexact : toPoly (DensePoly.cmodWf
         (cmul (csub (cmul A (cmul gden gden))
             (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
         (cmul D (cmul gden gden))) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = (toQFun (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cnorm (cdiv fuel
+            (toPoly (cnorm (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden)))))
@@ -133,7 +156,7 @@ open scoped Differential in
 /-- `hermiteReduce` residual correctness from an algebraic divisibility certificate. -/
 theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
-    (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
+    (_hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
     (hdvd : toPoly (cmul D (cmul gden gden))
       ∣ toPoly (cmul (csub (cmul A (cmul gden gden))
@@ -141,7 +164,7 @@ theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar 
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = (toQFun (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv fuel
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
@@ -155,7 +178,7 @@ theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar 
   have hresDen : cnorm (cmul D (cmul gden gden)) ≠ [] :=
     fun h => hresDenP ((cnorm_eq_nil_iff _).mp h)
   exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hden
-    (cmod_eq_zero_of_dvd fuel _ _ hresDen hfuel hdvd)
+    (cmodWf_eq_zero_of_dvd _ _ hresDen hdvd)
 
 /-! ### Split and radical residual certificates -/
 
@@ -165,18 +188,18 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
     (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
-    (hresD : toPoly (cmod fuel
+    (hresD : toPoly (DensePoly.cmodWf
         (csub (cmul A (cmul gden gden))
           (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) D) = 0)
-    (hg2 : toPoly (cmod fuel
-        (cmul (cdiv fuel
+    (hg2 : toPoly (DensePoly.cmodWf
+        (cmul (DensePoly.cdivWf
             (csub (cmul A (cmul gden gden))
               (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) D) Dstar)
         (cmul gden gden)) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = (toQFun (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv fuel
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
@@ -191,11 +214,11 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
     rw [DensePoly.toPolyG_cmulG]
     exact mul_ne_zero hgden hgden
   have hgden2ne : cnorm (cmul gden gden) ≠ [] := fun h => hgden2 ((cnorm_eq_nil_iff _).mp h)
-  have hDR : toPoly D ∣ toPoly resNum' := toPoly_dvd_of_cmod_zero fuel resNum' D hDne hresD
-  have hMeq : toPoly (cdiv fuel resNum' D) = toPoly resNum' / toPoly D := by
-    rw [toPoly_cdiv_of_cmod_zero fuel resNum' D hDne hresD, mul_div_cancel_right₀ _ hD]
-  have hg2dvd : toPoly (cmul gden gden) ∣ toPoly (cmul (cdiv fuel resNum' D) Dstar) :=
-    toPoly_dvd_of_cmod_zero fuel _ _ hgden2ne hg2
+  have hDR : toPoly D ∣ toPoly resNum' := toPoly_dvd_of_cmodWf_zero resNum' D hDne hresD
+  have hMeq : toPoly (DensePoly.cdivWf resNum' D) = toPoly resNum' / toPoly D := by
+    rw [toPoly_cdivWf_of_cmodWf_zero resNum' D hDne hresD, mul_div_cancel_right₀ _ hD]
+  have hg2dvd : toPoly (cmul gden gden) ∣ toPoly (cmul (DensePoly.cdivWf resNum' D) Dstar) :=
+    toPoly_dvd_of_cmodWf_zero _ _ hgden2ne hg2
   simp only [toPoly_eq_dense] at hMeq hg2dvd
   rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, hMeq] at hg2dvd
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
@@ -210,16 +233,16 @@ theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Ds
     (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
-    (hfuelD : (cnorm D).length ≤ fuel)
+    (_hfuelD : (cnorm D).length ≤ fuel)
     (hDstarD : toPoly Dstar ∣ toPoly D)
-    (hWgd : toPoly (cmod fuel
+    (hWgd : toPoly (DensePoly.cmodWf
         (csub (cmul A (cmul gden gden))
           (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))))
-        (cmul (cdiv fuel D Dstar) (cmul gden gden))) = 0) :
+        (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden))) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = (toQFun (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv fuel
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
@@ -229,37 +252,38 @@ theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Ds
   have hDstar := hden.radical_ne
   set resNum' := csub (cmul A (cmul gden gden))
     (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))) with hresNum'
-  have hWeq : toPoly D = toPoly Dstar * toPoly (cdiv fuel D Dstar) := by
-    have hrem : toPoly (cmod fuel D Dstar) = 0 := cmod_eq_zero_of_dvd fuel D Dstar hDstar hfuelD hDstarD
-    rw [toPoly_cdiv_of_cmod_zero fuel D Dstar hDstar hrem, mul_comm]
-  have hWgdne : cnorm (cmul (cdiv fuel D Dstar) (cmul gden gden)) ≠ [] := by
+  have hWeq : toPoly D = toPoly Dstar * toPoly (DensePoly.cdivWf D Dstar) := by
+    have hrem : toPoly (DensePoly.cmodWf D Dstar) = 0 :=
+      cmodWf_eq_zero_of_dvd D Dstar hDstar hDstarD
+    rw [toPoly_cdivWf_of_cmodWf_zero D Dstar hDstar hrem, mul_comm]
+  have hWgdne : cnorm (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) ≠ [] := by
     simp only [toPoly_eq_dense] at hD hgden hWeq
     intro h
-    have h0 : toPoly (cmul (cdiv fuel D Dstar) (cmul gden gden)) = 0 := (cnorm_eq_nil_iff _).mp h
+    have h0 : toPoly (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) = 0 := (cnorm_eq_nil_iff _).mp h
     simp only [toPoly_eq_dense] at h0
     rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG] at h0
     rcases mul_eq_zero.mp h0 with h1 | h2
     · rw [hWeq, h1, mul_zero] at hD; exact hD rfl
     · rcases mul_eq_zero.mp h2 with hh | hh <;> exact hgden hh
-  have hWgddvd : toPoly (cmul (cdiv fuel D Dstar) (cmul gden gden)) ∣ toPoly resNum' :=
-    toPoly_dvd_of_cmod_zero fuel _ _ hWgdne hWgd
+  have hWgddvd : toPoly (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) ∣ toPoly resNum' :=
+    toPoly_dvd_of_cmodWf_zero _ _ hWgdne hWgd
   simp only [toPoly_eq_dense] at hWgddvd
   rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG] at hWgddvd
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
     simp only [toPoly_eq_dense] at hWeq hWgddvd ⊢
     rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
     exact DeepWiki.polynomial_dvd_cleared_identity_of_radical
-      (W := toPoly (cdiv fuel D Dstar)) hWeq hWgddvd
+      (W := toPoly (DensePoly.cdivWf D Dstar)) hWeq hWgddvd
   exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hden hfuel hdvd
 
 /-! ### Decidable residual-honesty bundle -/
 
 /-- Decidable residual-recovery honesty bundle for `hermiteReduce`'s computed rational part and radical. -/
-def HermiteResComp (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ) : Prop :=
+def HermiteResComp (_fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ) : Prop :=
   let resNum' := csub (cmul A (cmul gden gden))
     (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))
-  cnorm (cmod fuel resNum' D) = [] ∧
-    cnorm (cmod fuel (cmul (cdiv fuel resNum' D) Dstar) (cmul gden gden)) = []
+  cnorm (DensePoly.cmodWf resNum' D) = [] ∧
+    cnorm (DensePoly.cmodWf (cmul (DensePoly.cdivWf resNum' D) Dstar) (cmul gden gden)) = []
 
 /-- `HermiteResComp` is decidable. -/
 instance decHermiteResComp (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ) :
@@ -276,7 +300,7 @@ theorem hermiteReduce_residual_correct_uncond (fuel : ℕ) (A D gnum gden Dstar 
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = (toQFun (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv fuel
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
@@ -295,7 +319,7 @@ example (fuel : ℕ) (A D gnum gden Dstar : DensePoly ℚ)
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = (toQFun (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv fuel
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))

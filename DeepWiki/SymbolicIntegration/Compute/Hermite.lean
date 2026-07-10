@@ -27,12 +27,12 @@ def qadd (x y : QFun) : QFun :=
 
 /-- Diophantine/Bézout solver `cdiophantine fuel p q rhs = (B, C)` solving `B·p + C·q = rhs` with
 `deg B < deg q`, for coprime `p, q`. -/
-def cdiophantine (fuel : ℕ) (p q rhs : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
-  let (g, s, t) := cgcdExt fuel p q
+def cdiophantine (_fuel : ℕ) (p q rhs : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
+  let (g, s, t) := DensePoly.cgcdWf p q
   let gc : ℚ := clead g
   let S := cscale gc⁻¹ (cmul rhs s)
   let T := cscale gc⁻¹ (cmul rhs t)
-  let (quo, B) := cdivmod fuel S q
+  let (quo, B) := DensePoly.cdivmodWf S q
   let C := cadd T (cmul quo p)
   (cnorm B, cnorm C)
 
@@ -69,7 +69,7 @@ def hermiteReduce (fuel : ℕ) (A D : DensePoly ℚ) : QFun × QFun :=
       if i ≤ 1 then gAcc
       else
         let Vi_pow := (List.range i).foldl (fun acc _ => cmul acc Vi) [1]
-        let U := cdiv fuel D Vi_pow
+        let U := DensePoly.cdivWf D Vi_pow
         let (gloc, _) := hermiteInner fuel Vi U (i - 1) A qzero
         qadd gAcc gloc)
     qzero
@@ -80,7 +80,7 @@ def hermiteReduce (fuel : ℕ) (A D : DensePoly ℚ) : QFun × QFun :=
   let gden2 := cmul gden gden
   let resNum := csub (cmul A gden2) (cmul D gprimeNum)
   let resDen := cmul D gden2
-  let Bres := cdiv fuel (cmul resNum Dstar) resDen
+  let Bres := DensePoly.cdivWf (cmul resNum Dstar) resDen
   ((cnorm gnum, cnorm gden), (cnorm Bres, cnorm Dstar))
 
 /-! ### Full rational integrator: Hermite rational part + LRT log part -/

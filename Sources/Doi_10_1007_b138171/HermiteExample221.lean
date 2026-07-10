@@ -80,18 +80,18 @@ theorem hermite_ex221_g_eq_book :
 
 /-! ### Example 2.2.1: the certificate is real
 
-The exact-division certificate `hexact` is not vacuous: on Example 2.2.1 the residual `cdiv`
+The exact-division certificate `hexact` is not vacuous: on Example 2.2.1 the residual `cdivWf`
 divides exactly (`hermite_ex221_exact_division`, `native_decide`). Feeding it to
 `hermiteReduce_residual_correct` gives the *rational-function* correctness identity
 `am A/am D = (toQFun g)′ + am Bres/am Dstar` for the concrete computed reduction — upgrading the
 `native_decide` polynomial cleared identity to an honest `RatFunc ℚ` equality. -/
 
 /-- **Example 2.2.1: the residual division is exact** — the remainder of `(resNum·Dstar)` by
-`(D·gden²)` reads to `0` (`cnorm … = []`), so `Bres = cdiv …` is honest `ℚ[X]` division. The
+`(D·gden²)` reads to `0` (`cnorm … = []`), so `Bres = cdivWf …` is honest `ℚ[X]` division. The
 computed rational part is `gnum = [8,12,20,12,8,3]`, `gden = [0,8,0,12,0,6,0,1]`, and the squarefree
 radical `Dstar = [0,2,0,1] = x³+2x`. Proved by `native_decide`. -/
 theorem hermite_ex221_exact_division :
-    cnorm (cmod 40
+    cnorm (DensePoly.cmodWf
       (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
           (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
             (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
@@ -101,7 +101,7 @@ theorem hermite_ex221_exact_division :
 open scoped Differential in
 /-- **Example 2.2.1: the Hermite reduction is correct as a `RatFunc ℚ` identity** (§2.2, p.41):
 `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` for the concrete computed `gnum, gden, Dstar`
-of Example 2.2.1, with `Bres = cdiv … (resNum·Dstar) (D·gden²)`. Honest `ℚ(x)` equality (not just the
+of Example 2.2.1, with `Bres = cdivWf … (resNum·Dstar) (D·gden²)`. Honest `ℚ(x)` equality (not just the
 cleared polynomial certificate), obtained from `hermiteReduce_residual_correct` with the exact-division
 certificate discharged by `hermite_ex221_exact_division`. The nonzero hypotheses (`D, gden, Dstar`)
 hold since their `toPoly`/`cnorm` are nonzero (checked by `native_decide`/`decide`). -/
@@ -109,7 +109,7 @@ example :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
       = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv 40
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
                   (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
@@ -122,7 +122,7 @@ example :
     have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
   have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
-  have hexact : toPoly (cmod 40
+  have hexact : toPoly (DensePoly.cmodWf
       (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
           (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
             (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
@@ -171,7 +171,7 @@ example :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
       = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv 40
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
                   (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
@@ -218,7 +218,7 @@ example :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
       = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cdiv 40
+            (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
                   (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
@@ -236,11 +236,12 @@ example :
         (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by
     native_decide
   have hfuelD : (cnorm cD221).length ≤ 40 := by decide
-  have hWgd : toPoly (cmod 40
+  have hWgd : toPoly (DensePoly.cmodWf
       (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
         (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
           (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1])))))
-      (cmul (cdiv 40 cD221 [0, 2, 0, 1]) (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
+      (cmul (DensePoly.cdivWf cD221 [0, 2, 0, 1])
+        (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
     rw [← cnorm_eq_nil_iff]; native_decide
   exact hermiteReduce_residual_correct_of_radical 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
     [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hfuel hfuelD

@@ -45,7 +45,7 @@ def cD22 : DensePoly ℚ := [-2, -4, 3, 10, 7, 0, -4, -2, 0, -2, 1]
 factor and `∫A/D` is purely the LRT logarithmic part (no Hermite/rational part). Proved by
 `native_decide`. -/
 theorem ex_2_2_D_squarefree :
-    cmonic (cgcdExt 60 cD22 (cderiv cD22)).1 = [1] := by native_decide
+    cmonic (DensePoly.cgcdWf cD22 (cderiv cD22)).1 = [1] := by native_decide
 
 /-! ### The Rothstein–Trager resultant `R(t)` and its squarefree factorization -/
 

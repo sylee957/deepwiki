@@ -44,11 +44,11 @@ other irreducible factor. -/
 theorem glocIncr_den_eq_pow (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ × ℕ) :
     ∃ m : ℕ, toPoly (glocIncr fuel A D Vi).2 = toPoly Vi.1 ^ m := by
   obtain ⟨m, hm⟩ := hermiteInner_den_eq_pow fuel Vi.1
-    (cdiv fuel D ((List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]))
+    (DensePoly.cdivWf D ((List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]))
     (Vi.2 - 1) A qzero
   refine ⟨m, ?_⟩
   rw [show (glocIncr fuel A D Vi).2
-      = (hermiteInner fuel Vi.1 (cdiv fuel D
+      = (hermiteInner fuel Vi.1 (DensePoly.cdivWf D
           ((List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1])) (Vi.2 - 1) A qzero).1.2 from rfl,
     hm]
   simp [qzero, toPoly_eq_dense, DensePoly.toPolyG_cons]

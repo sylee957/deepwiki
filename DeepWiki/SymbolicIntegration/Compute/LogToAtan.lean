@@ -1,5 +1,7 @@
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.ComputableAlgebra.PolyReprDense
+import DeepWiki.ComputableAlgebra.PolyReprDivision
+import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 
 /-! # Computable `LogToAtan` over `ℚ`
 An executable rendering of the `LogToAtan` algorithm on the dense coefficient carrier
@@ -45,9 +47,6 @@ def cdiv (fuel : ℕ) (p q : DensePoly ℚ) : DensePoly ℚ := (cdivmod fuel p q
 /-- Remainder of `DensePoly ℚ` Euclidean division (`cdivmod`'s second component). -/
 def cmod (fuel : ℕ) (p q : DensePoly ℚ) : DensePoly ℚ := (cdivmod fuel p q).2
 
-/-- Divisibility test `cdvd fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is zero). -/
-def cdvd (fuel : ℕ) (q p : DensePoly ℚ) : Bool := cisZero (cmod fuel p q)
-
 /-- Extended Euclidean algorithm on `DensePoly ℚ`s, fuel-bounded: `cgcdExt fuel a b = (g, s, t)` with
 `s · a + t · b = g` and `g = gcd(a, b)`. -/
 def cgcdExt : ℕ → DensePoly ℚ → DensePoly ℚ → DensePoly ℚ × DensePoly ℚ × DensePoly ℚ
@@ -67,16 +66,18 @@ def logToAtanCompute : ℕ → DensePoly ℚ → DensePoly ℚ → List (DensePo
   | fuel + 1, A, B =>
     let A := cnorm A
     let B := cnorm B
-    if cdvd (fuel + 1) B A then
-      [(cdiv (fuel + 1) A B, [1])]
+    let divmod := CPoly.cdivmod A B
+    if CPoly.cisZero divmod.2 then
+      [(cnorm divmod.1, [1])]
     else if A.length < B.length then
       logToAtanCompute fuel (cneg B) A
     else
-      -- `cgcdExt B (−A) = (G, D, C)` gives `D·B + C·(−A) = G`, i.e. `B·D − A·C = G`.
-      let (g, s, t) := cgcdExt (fuel + 1) B (cneg A)
-      let D := s
-      let C := t
-      let G := g
+      -- `CPoly.cgcdExt B (−A) = (G, D, C)` gives `D·B + C·(−A) = G`; normalize the
+      -- generic representation at the concrete list-valued boundary.
+      let (g, s, t) := CPoly.cgcdExt B (cneg A)
+      let D := cnorm s
+      let C := cnorm t
+      let G := cnorm g
       (cadd (cmul A D) (cmul B C), G) :: logToAtanCompute fuel D C
 
 /-- `x³ − 3x` as a `DensePoly ℚ`: coefficients `[0, −3, 0, 1]`. -/

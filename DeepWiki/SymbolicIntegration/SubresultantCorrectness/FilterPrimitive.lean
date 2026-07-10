@@ -78,7 +78,7 @@ structure IsPrimitivePartXInput (fuel : ℕ) (p : BPoly) : Prop where
   /-- The computed content reads to a nonzero polynomial. -/
   content_toPoly_ne : toPoly (bcontentX fuel p) ≠ 0
   /-- The content divides every normalized `x`-coefficient exactly. -/
-  exact_division : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0
+  exact_division : ∀ a ∈ bnorm p, toPoly (DensePoly.cmodWf a (bcontentX fuel p)) = 0
 
 /-- `IsSimilar (toBPoly p) (toBPoly (bprimitivePartX fuel p))` under the content-exactness hypotheses. -/
 theorem isSimilar_toBPoly_bprimitivePartX (fuel : ℕ) (p : BPoly)

@@ -39,33 +39,35 @@ theorem reduced_bezout_snd_unique {p q B C₁ C₂ rhs : ℚ[X]} (hq : q ≠ 0)
 /-- The first computable cofactor is the normalized remainder of the scaled Bezout cofactor. -/
 theorem cdiophantine_fst_eq (fuel : ℕ) (p q rhs : DensePoly ℚ) :
     (cdiophantine fuel p q rhs).1
-      = cnorm (cmod fuel
-          (cscale (clead (cgcdExt fuel p q).1)⁻¹ (cmul rhs (cgcdExt fuel p q).2.1)) q) := by
-  rcases hgst : cgcdExt fuel p q with ⟨g, s, t⟩
-  simp only [cdiophantine, hgst, cmod]
+      = cnorm (DensePoly.cmodWf
+          (cscale (clead (DensePoly.cgcdWf p q).1)⁻¹
+            (cmul rhs (DensePoly.cgcdWf p q).2.1)) q) := by
+  rcases hgst : DensePoly.cgcdWf p q with ⟨g, s, t⟩
+  simp only [cdiophantine, hgst, DensePoly.cmodWf]
 
 /-- The first computable cofactor has degree below `q` when the remainder computation has enough fuel. -/
-theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hfuel : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
-        (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel) :
+theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : DensePoly ℚ) (hq : cnorm q ≠ []) :
     (toPoly (cdiophantine fuel p q rhs).1).degree < (toPoly q).degree := by
-  set S := cscale (clead (cgcdExt fuel p q).1)⁻¹ (cmul rhs (cgcdExt fuel p q).2.1) with hS
+  set S := cscale (clead (DensePoly.cgcdWf p q).1)⁻¹
+    (cmul rhs (DensePoly.cgcdWf p q).2.1) with hS
   rw [cdiophantine_fst_eq, ← hS]
-  have hlen : (cnorm (cmod fuel S q)).length < (cnorm q).length :=
-    cmod_length_lt fuel S q hq hfuel
+  have hlen : (cnorm (DensePoly.cmodWf S q)).length < (cnorm q).length :=
+    DensePoly.cmodWf_length_lt S q hq
   rw [toPoly_eq_dense, DensePoly.toPolyG_cnormG]
   have hqne0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
-  rcases eq_or_ne (cnorm (cmod fuel S q)) [] with h0 | h0
-  · have hz : toPoly (cmod fuel S q) = 0 := by
+  rcases eq_or_ne (cnorm (DensePoly.cmodWf S q)) [] with h0 | h0
+  · have hz : toPoly (DensePoly.cmodWf S q) = 0 := by
       rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, h0, DensePoly.toPolyG_nil]
     simp only [toPoly_eq_dense] at hqne0 hz ⊢
     rw [hz, Polynomial.degree_zero]
     exact bot_lt_iff_ne_bot.mpr (fun h => hqne0 (Polynomial.degree_eq_bot.mp h))
-  · have e1 : (cnorm (cmod fuel S q)).length = (toPoly (cmod fuel S q)).natDegree + 1 :=
+  · have e1 : (cnorm (DensePoly.cmodWf S q)).length =
+        (toPoly (DensePoly.cmodWf S q)).natDegree + 1 :=
       length_cnorm_of_ne _ h0
     have e2 : (cnorm q).length = (toPoly q).natDegree + 1 := length_cnorm_of_ne q hq
-    have hndlt : (toPoly (cmod fuel S q)).natDegree < (toPoly q).natDegree := by omega
-    have hne1 : toPoly (cmod fuel S q) ≠ 0 := fun h => h0 ((cnorm_eq_nil_iff _).mpr h)
+    have hndlt : (toPoly (DensePoly.cmodWf S q)).natDegree < (toPoly q).natDegree := by omega
+    have hne1 : toPoly (DensePoly.cmodWf S q) ≠ 0 :=
+      fun h => h0 ((cnorm_eq_nil_iff _).mpr h)
     simp only [toPoly_eq_dense] at hqne0 hndlt hne1 ⊢
     rw [Polynomial.degree_eq_natDegree hne1, Polynomial.degree_eq_natDegree hqne0, Nat.cast_lt]
     exact hndlt
@@ -77,12 +79,9 @@ structure IsCDiophantineInput (fuel : ℕ) (p q rhs : DensePoly ℚ) : Prop wher
   /-- The abstract inputs are coprime. -/
   coprime : IsCoprime (toPoly p) (toPoly q)
   /-- The computable gcd reads as its leading constant. -/
-  gcd_const : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1)
+  gcd_const : toPoly (DensePoly.cgcdWf p q).1 = Polynomial.C (clead (DensePoly.cgcdWf p q).1)
   /-- The leading coefficient of the computed gcd is nonzero. -/
-  gcd_lead_ne : clead (cgcdExt fuel p q).1 ≠ 0
-  /-- The modulus fuel bound is large enough for the scaled right-hand side. -/
-  fuel_bound : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
-    (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel
+  gcd_lead_ne : clead (DensePoly.cgcdWf p q).1 ≠ 0
 
 open Classical in
 /-- First-cofactor agreement: `cdiophantine` realizes `diophantineSolveReduced` through `toPoly`. -/
@@ -90,10 +89,10 @@ theorem toPoly_cdiophantine_fst_eq (fuel : ℕ) (p q rhs : DensePoly ℚ)
     (hinput : IsCDiophantineInput fuel p q rhs) :
     toPoly (cdiophantine fuel p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 := by
-  obtain ⟨hq, hcop, hg, hgc, hfuel⟩ := hinput
+  obtain ⟨hq, hcop, hg, hgc⟩ := hinput
   have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
   have hc_eq := toPoly_cdiophantine fuel p q rhs hq hg hgc
-  have hc_deg := cdiophantine_fst_degree_lt fuel p q rhs hq hfuel
+  have hc_deg := cdiophantine_fst_degree_lt fuel p q rhs hq
   have ha_eq := diophantineSolveReduced_spec hcop (toPoly rhs)
   have ha_deg := diophantineSolveReduced_fst_degree_lt (a := toPoly p) hq0 (toPoly rhs)
   refine reduced_bezout_fst_unique (C₁ := toPoly (cdiophantine fuel p q rhs).2)
@@ -133,12 +132,10 @@ theorem toPoly_cdiophantine_eq (fuel : ℕ) (p q rhs : DensePoly ℚ)
 
 example (fuel : ℕ) (p q rhs : DensePoly ℚ)
     (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
-    (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
-    (hgc : clead (cgcdExt fuel p q).1 ≠ 0)
-    (hfuel : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
-        (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel) :
+    (hg : toPoly (DensePoly.cgcdWf p q).1 = Polynomial.C (clead (DensePoly.cgcdWf p q).1))
+    (hgc : clead (DensePoly.cgcdWf p q).1 ≠ 0) :
     toPoly (cdiophantine fuel p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 :=
-  toPoly_cdiophantine_fst_eq fuel p q rhs ⟨hq, hcop, hg, hgc, hfuel⟩
+  toPoly_cdiophantine_fst_eq fuel p q rhs ⟨hq, hcop, hg, hgc⟩
 
 end DeepWiki.SymbolicIntegration.Compute

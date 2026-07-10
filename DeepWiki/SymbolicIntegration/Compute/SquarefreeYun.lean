@@ -13,18 +13,37 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-! ### Bridging the concrete `csqfreeFactor` monic gcd to the abstract `gcd` -/
 
-/-- The concrete monic gcd realizes the abstract `gcd` under gcd termination. -/
-theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : DensePoly ℚ) (hterm : cgcdTerminates fuel b d) :
-    toPoly (cmonic (cgcdExt fuel b d).1) = gcd (toPoly b) (toPoly d) := by
-  obtain ⟨hgb, hgd⟩ := toPoly_cgcdExt_dvd fuel b d hterm
-  have hassoc : Associated (toPoly (cgcdExt fuel b d).1) (gcd (toPoly b) (toPoly d)) :=
-    associated_of_dvd_dvd (dvd_gcd hgb hgd) (toPoly_dvd_cgcdExt fuel b d (gcd_dvd_left _ _)
-      (gcd_dvd_right _ _))
-  have hcmassoc := DensePoly.associated_toPolyG_cmonicG (cgcdExt fuel b d).1
+/-- The fuel-free concrete monic gcd realizes the abstract `gcd`. -/
+theorem toPoly_cmonic_cgcdWf (b d : DensePoly ℚ) :
+    toPoly (cmonic (DensePoly.cgcdWf b d).1) = gcd (toPoly b) (toPoly d) := by
+  obtain ⟨hgb', hgd'⟩ := DensePoly.toPolyG_cgcdWf_dvd b d
+  have hgb : toPoly (DensePoly.cgcdWf b d).1 ∣ toPoly b := by
+    simpa only [toPoly_eq_dense] using hgb'
+  have hgd : toPoly (DensePoly.cgcdWf b d).1 ∣ toPoly d := by
+    simpa only [toPoly_eq_dense] using hgd'
+  have hback : gcd (toPoly b) (toPoly d) ∣ toPoly (DensePoly.cgcdWf b d).1 := by
+    have hbez' := DensePoly.toPolyG_cgcdWf b d
+    have hbez : toPoly (DensePoly.cgcdWf b d).2.1 * toPoly b
+        + toPoly (DensePoly.cgcdWf b d).2.2 * toPoly d
+        = toPoly (DensePoly.cgcdWf b d).1 := by
+      simpa only [toPoly_eq_dense] using hbez'
+    rw [← hbez]
+    exact dvd_add (Dvd.dvd.mul_left (gcd_dvd_left _ _) _)
+      (Dvd.dvd.mul_left (gcd_dvd_right _ _) _)
+  have hassoc : Associated (toPoly (DensePoly.cgcdWf b d).1)
+      (gcd (toPoly b) (toPoly d)) := associated_of_dvd_dvd (dvd_gcd hgb hgd) hback
+  have hcmassoc : Associated (toPoly (cmonic (DensePoly.cgcdWf b d).1))
+      (toPoly (DensePoly.cgcdWf b d).1) := by
+    simpa only [toPoly_eq_dense] using
+      DensePoly.associated_toPolyG_cmonicG (DensePoly.cgcdWf b d).1
   have htotal := hcmassoc.trans hassoc
-  by_cases hraw : toPoly (cgcdExt fuel b d).1 = 0
+  by_cases hraw : toPoly (DensePoly.cgcdWf b d).1 = 0
   · exact (hcmassoc.eq_zero_iff.mpr hraw).trans (hassoc.eq_zero_iff.mp hraw).symm
-  · have hleft := DensePoly.monic_toPolyG_cmonicG (cgcdExt fuel b d).1 hraw
+  · have hleft : (toPoly (cmonic (DensePoly.cgcdWf b d).1)).Monic := by
+      have hraw' : DensePoly.toPoly (DensePoly.cgcdWf b d).1 ≠ 0 := by
+        simpa only [toPoly_eq_dense] using hraw
+      simpa only [toPoly_eq_dense] using
+        DensePoly.monic_toPolyG_cmonicG (DensePoly.cgcdWf b d).1 hraw'
     have hright0 : gcd (toPoly b) (toPoly d) ≠ 0 := hassoc.ne_zero_iff.mp hraw
     have hright : (gcd (toPoly b) (toPoly d)).Monic :=
       (Polynomial.normalize_eq_self_iff_monic hright0).mp (normalize_gcd _ _)
@@ -33,18 +52,17 @@ theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : DensePoly ℚ) (hterm : cgcdTe
 /-! ### The concrete `csqfreeFactor.go` carries the abstract `YunInv` -/
 
 /-- Per-step honesty bundle for `csqfreeFactor.go` to realize the abstract Yun step. -/
-def GoYun (fuel : ℕ) : ℕ → DensePoly ℚ → DensePoly ℚ → Prop
+def GoYun : ℕ → DensePoly ℚ → DensePoly ℚ → Prop
   | 0, _, _ => True
   | fo + 1, b, d =>
     if b.length ≤ 1 then True
     else
-      let q := cmonic (cgcdExt fuel b d).1
-      let b' := cdiv fuel b q
-      let d' := csub (cdiv fuel d q) (cderiv b')
-      cgcdTerminates fuel b d ∧
-        toPoly b = toPoly q * toPoly b' ∧
-        toPoly d = toPoly q * toPoly (cdiv fuel d q) ∧
-        GoYun fuel fo b' d'
+      let q := cmonic (DensePoly.cgcdWf b d).1
+      let b' := DensePoly.cdivWf b q
+      let d' := csub (DensePoly.cdivWf d q) (cderiv b')
+      toPoly b = toPoly q * toPoly b' ∧
+        toPoly d = toPoly q * toPoly (DensePoly.cdivWf d q) ∧
+        GoYun fo b' d'
 
 /-! ### Crossing the `ℚ`-instance diamond by `convert` -/
 
@@ -190,10 +208,10 @@ private theorem eq_div_of_eq_mul {a b c : ℚ[X]} (hc : c ≠ 0) (h : a = c * b)
   rw [h, mul_div_cancel_left₀ _ hc]
 
 /-- The concrete Yun loop's kept factors are associated to the squarefree parts. -/
-theorem go_factor_assoc (fuel : ℕ) (A : DensePoly ℚ) :
-    ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ), 1 ≤ i → GoYun fuel fo b d →
+theorem go_factor_assoc (A : DensePoly ℚ) :
+    ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ), 1 ≤ i → GoYun fo b d →
       YunInv (toPoly A) i (toPoly b) (toPoly d) →
-      ∀ (Vm : DensePoly ℚ × ℕ), Vm ∈ csqfreeFactor.go fuel fo b d i →
+      ∀ (Vm : DensePoly ℚ × ℕ), Vm ∈ csqfreeFactor.go fo b d i →
         Associated (toPoly Vm.1) (sqfreeFactPart (toPoly A) Vm.2) ∧ i ≤ Vm.2 := by
   intro fo
   induction fo with
@@ -208,16 +226,17 @@ theorem go_factor_assoc (fuel : ℕ) (A : DensePoly ℚ) :
     · simp only [hb, if_false] at hVm
       rw [GoYun] at hgo
       simp only [hb, if_false] at hgo
-      obtain ⟨hterm, hexb, hexd, hgorest⟩ := hgo
-      set q := cmonic (cgcdExt fuel b d).1 with hqdef
-      set b' := cdiv fuel b q with hb'def
-      set d' := csub (cdiv fuel d q) (cderiv b') with hd'def
-      have hgcd : toPoly q = gcd (toPoly b) (toPoly d) := toPoly_cmonic_cgcdExt fuel b d hterm
+      obtain ⟨hexb, hexd, hgorest⟩ := hgo
+      set q := cmonic (DensePoly.cgcdWf b d).1 with hqdef
+      set b' := DensePoly.cdivWf b q with hb'def
+      set d' := csub (DensePoly.cdivWf d q) (cderiv b') with hd'def
+      have hgcd : toPoly q = gcd (toPoly b) (toPoly d) := toPoly_cmonic_cgcdWf b d
       have hbne : toPoly b ≠ 0 := ne_zero_of_yunInv_rat (toPoly A) i (toPoly b) (toPoly d) hinv
       have hgcd0 : gcd (toPoly b) (toPoly d) ≠ 0 :=
         fun h => hbne (eq_zero_of_zero_dvd (h ▸ gcd_dvd_left _ _))
       have hbfact : toPoly b = gcd (toPoly b) (toPoly d) * toPoly b' := hgcd ▸ hexb
-      have hdfact : toPoly d = gcd (toPoly b) (toPoly d) * toPoly (cdiv fuel d q) := hgcd ▸ hexd
+      have hdfact : toPoly d = gcd (toPoly b) (toPoly d) * toPoly (DensePoly.cdivWf d q) :=
+        hgcd ▸ hexd
       have hb'eq : toPoly b' = toPoly b / gcd (toPoly b) (toPoly d) := eq_div_of_eq_mul hgcd0 hbfact
       have hd'eq : toPoly d' = toPoly d / gcd (toPoly b) (toPoly d) - derivative (toPoly b') := by
         simp only [toPoly_eq_dense] at hdfact ⊢
@@ -256,10 +275,10 @@ theorem isRelPrime_of_associated_sqfreeFactPart_rat (A : ℚ[X]) (V W : ℚ[X]) 
 /-- Engine-honesty bundle for `csqfreeFactor fuel D`. -/
 def SqfreeYun (fuel : ℕ) (D : DensePoly ℚ) : Prop :=
   let p := cnorm D
-  let g := (cgcdExt fuel p (cderiv p)).1
-  let b1 := cdiv fuel p g
-  let d1 := csub (cdiv fuel (cderiv p) g) (cderiv b1)
-  YunInv (toPoly D) 1 (toPoly b1) (toPoly d1) ∧ GoYun fuel fuel b1 d1
+  let g := (DensePoly.cgcdWf p (cderiv p)).1
+  let b1 := DensePoly.cdivWf p g
+  let d1 := csub (DensePoly.cdivWf (cderiv p) g) (cderiv b1)
+  YunInv (toPoly D) 1 (toPoly b1) (toPoly d1) ∧ GoYun fuel b1 d1
 
 /-- Every `csqfreeFactor` factor is associated to a squarefree part. -/
 theorem csqfreeFactor_factor_assoc (fuel : ℕ) (D : DensePoly ℚ) (hex : SqfreeYun fuel D)
@@ -268,7 +287,7 @@ theorem csqfreeFactor_factor_assoc (fuel : ℕ) (D : DensePoly ℚ) (hex : Sqfre
   rw [SqfreeYun] at hex
   obtain ⟨hinv, hgo⟩ := hex
   rw [csqfreeFactor.eq_def] at hVm
-  exact go_factor_assoc fuel D fuel _ _ 1 (le_refl 1) hgo hinv Vm hVm
+  exact go_factor_assoc D fuel _ _ 1 (le_refl 1) hgo hinv Vm hVm
 
 /-- Every `csqfreeFactor` factor is squarefree under `SqfreeYun`. -/
 theorem csqfreeFactor_squarefree (fuel : ℕ) (D : DensePoly ℚ) (hex : SqfreeYun fuel D)
@@ -278,8 +297,8 @@ theorem csqfreeFactor_squarefree (fuel : ℕ) (D : DensePoly ℚ) (hex : SqfreeY
     (csqfreeFactor_factor_assoc fuel D hex Vm hVm).1
 
 /-- Every recorded multiplicity emitted by `csqfreeFactor.go fuel fo b d i` is at least `i`. -/
-theorem go_mult_ge (fuel : ℕ) : ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ) (Vm : DensePoly ℚ × ℕ),
-    Vm ∈ csqfreeFactor.go fuel fo b d i → i ≤ Vm.2 := by
+theorem go_mult_ge : ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ) (Vm : DensePoly ℚ × ℕ),
+    Vm ∈ csqfreeFactor.go fo b d i → i ≤ Vm.2 := by
   intro fo
   induction fo with
   | zero => intro b d i Vm hVm; rw [csqfreeFactor.go.eq_def] at hVm; simp at hVm
@@ -289,9 +308,9 @@ theorem go_mult_ge (fuel : ℕ) : ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ)
     by_cases hb : b.length ≤ 1
     · simp only [hb, if_true] at hVm; simp at hVm
     · simp only [hb, if_false] at hVm
-      set q := cmonic (cgcdExt fuel b d).1
-      set b' := cdiv fuel b q
-      set d' := csub (cdiv fuel d q) (cderiv b')
+      set q := cmonic (DensePoly.cgcdWf b d).1
+      set b' := DensePoly.cdivWf b q
+      set d' := csub (DensePoly.cdivWf d q) (cderiv b')
       by_cases hq : q.length ≤ 1
       · simp only [hq, if_true] at hVm
         exact le_trans (Nat.le_succ i) (ih b' d' (i + 1) Vm hVm)
@@ -301,8 +320,8 @@ theorem go_mult_ge (fuel : ℕ) : ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ)
         · exact le_trans (Nat.le_succ i) (ih b' d' (i + 1) Vm hVm)
 
 /-- The recorded multiplicities are pairwise distinct across `csqfreeFactor.go`. -/
-theorem go_mult_pairwise (fuel : ℕ) : ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ),
-    List.Pairwise (fun x y : DensePoly ℚ × ℕ => x.2 ≠ y.2) (csqfreeFactor.go fuel fo b d i) := by
+theorem go_mult_pairwise : ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ),
+    List.Pairwise (fun x y : DensePoly ℚ × ℕ => x.2 ≠ y.2) (csqfreeFactor.go fo b d i) := by
   intro fo
   induction fo with
   | zero => intro b d i; rw [csqfreeFactor.go.eq_def]; simp
@@ -312,20 +331,20 @@ theorem go_mult_pairwise (fuel : ℕ) : ∀ (fo : ℕ) (b d : DensePoly ℚ) (i 
     by_cases hb : b.length ≤ 1
     · simp only [hb, if_true]; simp
     · simp only [hb, if_false]
-      set q := cmonic (cgcdExt fuel b d).1
-      set b' := cdiv fuel b q
-      set d' := csub (cdiv fuel d q) (cderiv b')
+      set q := cmonic (DensePoly.cgcdWf b d).1
+      set b' := DensePoly.cdivWf b q
+      set d' := csub (DensePoly.cdivWf d q) (cderiv b')
       by_cases hq : q.length ≤ 1
       · simp only [hq, if_true]; exact ih b' d' (i + 1)
       · simp only [hq, if_false, List.pairwise_cons]
         refine ⟨fun Vm hVm => ?_, ih b' d' (i + 1)⟩
-        have := go_mult_ge fuel fo b' d' (i + 1) Vm hVm
+        have := go_mult_ge fo b' d' (i + 1) Vm hVm
         omega
 
 /-- The `csqfreeFactor` factors have pairwise-distinct multiplicities. -/
 theorem csqfreeFactor_mult_pairwise (fuel : ℕ) (D : DensePoly ℚ) :
     List.Pairwise (fun x y : DensePoly ℚ × ℕ => x.2 ≠ y.2) (csqfreeFactor fuel D) := by
-  rw [csqfreeFactor.eq_def]; exact go_mult_pairwise fuel fuel _ _ 1
+  rw [csqfreeFactor.eq_def]; exact go_mult_pairwise fuel _ _ 1
 
 /-- The `csqfreeFactor` factors are pairwise relatively prime under `SqfreeYun`. -/
 theorem csqfreeFactor_pairwise_isRelPrime (fuel : ℕ) (D : DensePoly ℚ) (hex : SqfreeYun fuel D)

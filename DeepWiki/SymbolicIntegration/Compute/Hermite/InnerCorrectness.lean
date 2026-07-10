@@ -75,10 +75,10 @@ structure IsHermiteInnerBezoutInput (fuel : ℕ) (V U : DensePoly ℚ) : Prop wh
   /-- The inner denominator is nonzero. -/
   den_ne : cnorm V ≠ []
   /-- The computed gcd reads as its leading constant. -/
-  gcd_const : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
-    = Polynomial.C (clead (cgcdExt fuel (cmul U (cderiv V)) V).1)
+  gcd_const : toPoly (DensePoly.cgcdWf (cmul U (cderiv V)) V).1
+    = Polynomial.C (clead (DensePoly.cgcdWf (cmul U (cderiv V)) V).1)
   /-- The leading coefficient of the computed gcd is nonzero. -/
-  gcd_lead_ne : clead (cgcdExt fuel (cmul U (cderiv V)) V).1 ≠ 0
+  gcd_lead_ne : clead (DensePoly.cgcdWf (cmul U (cderiv V)) V).1 ≠ 0
 
 open scoped Differential in
 /-- `hermiteInner` loop invariant, generalized over an accumulator. -/
@@ -179,9 +179,9 @@ theorem hermiteInner_spec_of (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U �
 
 open scoped Differential in
 example (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (hq : cnorm V ≠ [])
-    (hg : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
-      = Polynomial.C (clead (cgcdExt fuel (cmul U (cderiv V)) V).1))
-    (hgc : clead (cgcdExt fuel (cmul U (cderiv V)) V).1 ≠ 0) (j : ℕ) (A : DensePoly ℚ) :
+    (hg : toPoly (DensePoly.cgcdWf (cmul U (cderiv V)) V).1
+      = Polynomial.C (clead (DensePoly.cgcdWf (cmul U (cderiv V)) V).1))
+    (hgc : clead (DensePoly.cgcdWf (cmul U (cderiv V)) V).1 ≠ 0) (j : ℕ) (A : DensePoly ℚ) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
         / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
             * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))

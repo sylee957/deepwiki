@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultant
+import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 
 /-! # Computable Rothstein–Trager resultant over `ℚ`
 A `#eval`-able rendering of the resultant `R(t) = res_x(D, A − t·D')` on the carrier
@@ -17,26 +18,7 @@ namespace Compute
 /-- Computable univariate resultant `cresultant fuel p q = res_x(p, q) ∈ ℚ`, fuel-bounded, via the
 Euclidean polynomial-remainder-sequence identity
 `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q, r)` with `r = p mod q`. -/
-def cresultant : ℕ → DensePoly ℚ → DensePoly ℚ → ℚ
-  | 0, _, _ => 0
-  | fuel + 1, p, q =>
-    let p := cnorm p
-    let q := cnorm q
-    if cisZero q then
-      -- `res(p, 0)`: `1` if `p` is also constant (degree 0), else `0`.
-      if p.length ≤ 1 then 1 else 0
-    else if q.length ≤ 1 then
-      -- `q = c` constant: `res(p, c) = c^(deg p)`.
-      DensePoly.cfpow (clead q) (cdeg p)
-    else if p.length < q.length then
-      -- `deg p < deg q`: swap, picking up the sign `(−1)^(deg p · deg q)`.
-      let s := DensePoly.cfpow (-1) (cdeg p * cdeg q)
-      s * cresultant fuel q p
-    else
-      let r := cnorm (cmod (fuel + 1) p q)
-      let sign := DensePoly.cfpow (-1) (cdeg p * cdeg q)
-      let lcpow := DensePoly.cfpow (clead q) (cdeg p - cdeg r)
-      sign * lcpow * cresultant fuel q r
+def cresultant (_fuel : ℕ) (p q : DensePoly ℚ) : ℚ := DensePoly.cresultantWf p q
 
 /-! ### Computable Lagrange interpolation on `DensePoly ℚ` -/
 
@@ -76,10 +58,10 @@ def rtResultantCompute (fuel : ℕ) (A D : DensePoly ℚ) : DensePoly ℚ :=
 
 /-- Squarefree part of a `DensePoly ℚ` over `ℚ`, made monic: `csqfreePart fuel p = monic(p / gcd(p, p'))`,
 the radical of `p`. -/
-def csqfreePart (fuel : ℕ) (p : DensePoly ℚ) : DensePoly ℚ :=
+def csqfreePart (_fuel : ℕ) (p : DensePoly ℚ) : DensePoly ℚ :=
   let p := cnorm p
-  let (g, _, _) := cgcdExt fuel p (cderiv p)
-  cmonic (cdiv fuel p g)
+  let (g, _, _) := DensePoly.cgcdWf p (cderiv p)
+  cmonic (DensePoly.cdivWf p g)
 
 /-! ### Bridge back to `ℚ[X]`
 

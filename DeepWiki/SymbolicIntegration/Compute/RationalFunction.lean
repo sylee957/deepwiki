@@ -20,23 +20,35 @@ theorem am_toPoly_ne_zero {p : DensePoly ℚ} (hp : toPoly p ≠ 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) ≠ 0 :=
   (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hp
 
-/-- Exact computable division becomes division in `RatFunc ℚ`. -/
-theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hrem : toPoly (cmod fuel p q) = 0) :
+/-- Exact fuel-free computable division becomes division in `RatFunc ℚ`. -/
+theorem am_cdivWf_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
+    (hrem : toPoly (DensePoly.cmodWf p q) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly q)
-      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel p q)) := by
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf p q)) := by
   have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
   have hqm : algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) ≠ 0 := am_toPoly_ne_zero hq0
-  rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, map_mul, mul_div_assoc,
+  have hrem' : DensePoly.toPoly (DensePoly.cmodWf p q) = 0 := by
+    simpa only [toPoly_eq_dense] using hrem
+  have hdiv' := DensePoly.toPolyG_cmodWf p q hq
+  rw [hrem', add_zero] at hdiv'
+  have hdiv : toPoly p = toPoly (DensePoly.cdivWf p q) * toPoly q := by
+    simpa only [toPoly_eq_dense] using hdiv'
+  rw [hdiv, map_mul, mul_div_assoc,
     div_self hqm, mul_one]
 
-/-- Exact computable division gives a multiplicative factorization in `RatFunc ℚ`. -/
-theorem am_eq_cdiv_mul_of_cmod_zero (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hrem : toPoly (cmod fuel p q) = 0) :
+/-- Exact fuel-free computable division gives a multiplicative factorization in `RatFunc ℚ`. -/
+theorem am_eq_cdivWf_mul_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
+    (hrem : toPoly (DensePoly.cmodWf p q) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p)
-      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel p q))
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf p q))
         * algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) := by
-  rw [← map_mul, toPoly_cdiv_of_cmod_zero fuel p q hq hrem]
+  have hrem' : DensePoly.toPoly (DensePoly.cmodWf p q) = 0 := by
+    simpa only [toPoly_eq_dense] using hrem
+  have hdiv' := DensePoly.toPolyG_cmodWf p q hq
+  rw [hrem', add_zero] at hdiv'
+  have hdiv : toPoly p = toPoly (DensePoly.cdivWf p q) * toPoly q := by
+    simpa only [toPoly_eq_dense] using hdiv'
+  rw [← map_mul, ← hdiv]
 
 /-- `cisZero p = true ↔ toPoly p = 0`: the `DensePoly ℚ` zero test agrees with vanishing in `ℚ[X]`. -/
 theorem cisZero_iff_toPoly_eq_zero (p : DensePoly ℚ) : cisZero p = true ↔ toPoly p = 0 := by
@@ -161,26 +173,36 @@ theorem toQFun_cscale_cscale (s : ℚ) (hs : s ≠ 0) (a b : DensePoly ℚ) :
     CFieldSpec.toK_rat, map_mul]
   rw [mul_div_mul_left _ _ (am_C_ne_zero hs)]
 
-/-- Dividing numerator and denominator by an exact common divisor `q` preserves the value:
-`toQFun (cdiv fuel a q, cdiv fuel b q) = toQFun (a, b)`. -/
-theorem toQFun_cdiv_cdiv (fuel : ℕ) (a b q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hra : toPoly (cmod fuel a q) = 0) (hrb : toPoly (cmod fuel b q) = 0) :
-    toQFun (cdiv fuel a q, cdiv fuel b q) = toQFun (a, b) := by
+/-- Dividing numerator and denominator by an exact common divisor with `cdivWf` preserves the value. -/
+theorem toQFun_cdivWf_cdivWf (a b q : DensePoly ℚ) (hq : cnorm q ≠ [])
+    (hra : toPoly (DensePoly.cmodWf a q) = 0)
+    (hrb : toPoly (DensePoly.cmodWf b q) = 0) :
+    toQFun (DensePoly.cdivWf a q, DensePoly.cdivWf b q) = toQFun (a, b) := by
   set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
   have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
   have hqm : am (toPoly q) ≠ 0 := am_toPoly_ne_zero hq0
   -- exact divisions: `toPoly a = toPoly (cdiv a q)·toPoly q`, same for `b`.
-  have ha := toPoly_cdiv_of_cmod_zero fuel a q hq hra
-  have hbe := toPoly_cdiv_of_cmod_zero fuel b q hq hrb
+  have hra' : DensePoly.toPoly (DensePoly.cmodWf a q) = 0 := by
+    simpa only [toPoly_eq_dense] using hra
+  have hrb' : DensePoly.toPoly (DensePoly.cmodWf b q) = 0 := by
+    simpa only [toPoly_eq_dense] using hrb
+  have ha' := DensePoly.toPolyG_cmodWf a q hq
+  have hbe' := DensePoly.toPolyG_cmodWf b q hq
+  rw [hra', add_zero] at ha'
+  rw [hrb', add_zero] at hbe'
+  have ha : toPoly a = toPoly (DensePoly.cdivWf a q) * toPoly q := by
+    simpa only [toPoly_eq_dense] using ha'
+  have hbe : toPoly b = toPoly (DensePoly.cdivWf b q) * toPoly q := by
+    simpa only [toPoly_eq_dense] using hbe'
   simp only [toQFun]
   rw [ha, hbe, map_mul, map_mul, mul_div_mul_right _ _ hqm]
 
 /-- `qnorm` preserves the value: `toQFun (qnorm fuel x) = toQFun x` in `RatFunc ℚ`. -/
 theorem toQFun_qnorm (fuel : ℕ) (x : QFun) (hb : toPoly x.2 ≠ 0)
-    (hq : cnorm (cgcdExt fuel x.1 x.2).1 ≠ [])
-    (hra : toPoly (cmod fuel x.1 (cgcdExt fuel x.1 x.2).1) = 0)
-    (hrb : toPoly (cmod fuel x.2 (cgcdExt fuel x.1 x.2).1) = 0)
-    (hbq : cnorm (cdiv fuel x.2 (cgcdExt fuel x.1 x.2).1) ≠ []) :
+    (hq : cnorm (DensePoly.cgcdWf x.1 x.2).1 ≠ [])
+    (hra : toPoly (DensePoly.cmodWf x.1 (DensePoly.cgcdWf x.1 x.2).1) = 0)
+    (hrb : toPoly (DensePoly.cmodWf x.2 (DensePoly.cgcdWf x.1 x.2).1) = 0)
+    (hbq : cnorm (DensePoly.cdivWf x.2 (DensePoly.cgcdWf x.1 x.2).1) ≠ []) :
     toQFun (qnorm fuel x) = toQFun x := by
   obtain ⟨a, b⟩ := x
   simp only at hb hq hra hrb hbq
@@ -192,10 +214,10 @@ theorem toQFun_qnorm (fuel : ℕ) (x : QFun) (hb : toPoly x.2 ≠ 0)
     rw [toQFun_qzero, toQFun, ha0, map_zero, zero_div]
   · -- general case: divide by gcd, then scale by `(clead (b/q))⁻¹`.
     rw [if_neg ha]
-    have hbq0 : toPoly (cdiv fuel b (cgcdExt fuel a b).1) ≠ 0 :=
+    have hbq0 : toPoly (DensePoly.cdivWf b (DensePoly.cgcdWf a b).1) ≠ 0 :=
       fun h => hbq ((cnorm_eq_nil_iff _).mpr h)
-    have hs : (clead (cdiv fuel b (cgcdExt fuel a b).1))⁻¹ ≠ 0 :=
+    have hs : (clead (DensePoly.cdivWf b (DensePoly.cgcdWf a b).1))⁻¹ ≠ 0 :=
       inv_ne_zero (clead_ne_zero hbq)
-    rw [toQFun_cscale_cscale _ hs, toQFun_cdiv_cdiv fuel a b _ hq hra hrb]
+    rw [toQFun_cscale_cscale _ hs, toQFun_cdivWf_cdivWf a b _ hq hra hrb]
 
 end DeepWiki.SymbolicIntegration.Compute

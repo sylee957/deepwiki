@@ -80,15 +80,15 @@ def bpsremainder : ℕ → BPoly → BPoly → BPoly
 /-! ### `ℚ[t]`-content management (so the LRT gcd comes out clean) -/
 
 /-- `ℚ[t]`-content of a `BPoly`: the `DensePoly ℚ`-gcd of all its `x`-coefficients. -/
-def bcontentX (fuel : ℕ) (p : BPoly) : DensePoly ℚ :=
-  (bnorm p).foldl (fun g c => (cgcdExt fuel g c).1) []
+def bcontentX (_fuel : ℕ) (p : BPoly) : DensePoly ℚ :=
+  (bnorm p).foldl (fun g c => (DensePoly.cgcdWf g c).1) []
 
 /-- Strip the `ℚ[t]`-content in `x`: `bprimitivePartX fuel p = p / content_x(p)`, the
 `ℚ[t]`-primitive part. -/
 def bprimitivePartX (fuel : ℕ) (p : BPoly) : BPoly :=
   let p := bnorm p
   let g := bcontentX fuel p
-  if cisZero g then p else bnorm (p.map (fun c => cdiv fuel c g))
+  if cisZero g then p else bnorm (p.map (fun c => DensePoly.cdivWf c g))
 
 /-! ### Reduction and inversion modulo a `ℚ[t]` factor `R(t)` (the residue ring `ℚ[t]/(R)`)
 The degree-`j` subresultant reduced mod `R` and made monic in `x` over `ℚ[t]/(R)` is the normalized
@@ -96,7 +96,7 @@ log argument `S(t,x)`; the leading `x`-coefficient is a unit there, so monic nor
 via the extended-Euclidean inverse. -/
 
 /-- Reduce a `DensePoly ℚ` modulo `R`: `credR fuel R c = c mod R`, the representative in `ℚ[t]/(R)`. -/
-def credR (fuel : ℕ) (R c : DensePoly ℚ) : DensePoly ℚ := cmod fuel c R
+def credR (_fuel : ℕ) (R c : DensePoly ℚ) : DensePoly ℚ := DensePoly.cmodWf c R
 
 /-- Reduce every `x`-coefficient of a `BPoly` modulo `R`: `bredR fuel R p`, the image of `p` in
 `(ℚ[t]/(R))[x]`. -/
@@ -105,7 +105,7 @@ def bredR (fuel : ℕ) (R : DensePoly ℚ) (p : BPoly) : BPoly := bnorm (p.map (
 /-- Inverse of a `DensePoly ℚ` modulo `R`: `cinvMod fuel R c = c⁻¹` in `ℚ[t]/(R)` (assumes `c` a unit mod
 `R`), via `c⁻¹ ≡ s/g (mod R)` from the Bézout relation `s·c + ·R = g`. -/
 def cinvMod (fuel : ℕ) (R c : DensePoly ℚ) : DensePoly ℚ :=
-  let (g, s, _) := cgcdExt fuel c R
+  let (g, s, _) := DensePoly.cgcdWf c R
   credR fuel R (cscale (clead g)⁻¹ s)
 
 /-- Make a `BPoly` monic in `x` over `ℚ[t]/(R)`: `bmonicXmodR fuel R p` reduces mod `R` and scales by
@@ -121,7 +121,8 @@ def bmonicXmodR (fuel : ℕ) (R : DensePoly ℚ) (p : BPoly) : BPoly :=
 
 /-- Exact `ℚ[t]`-scalar division `bdivC fuel p c = p / c`: divide every `x`-coefficient of `p` by the
 `DensePoly ℚ` scalar `c`. -/
-def bdivC (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) : BPoly := bnorm (p.map (fun a => cdiv fuel a c))
+def bdivC (_fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) : BPoly :=
+  bnorm (p.map (fun a => DensePoly.cdivWf a c))
 
 /-- `ℚ[t]`-power `cpowP c n = cⁿ` (`DensePoly ℚ` power, by `ℕ`-recursion). -/
 def cpowP (c : DensePoly ℚ) : ℕ → DensePoly ℚ
@@ -147,7 +148,7 @@ def subresPRS (fuel : ℕ) (P Q : BPoly) : List BPoly :=
         let negLc : DensePoly ℚ := cneg lcRi_1
         let psi' : DensePoly ℚ :=
           if deltaPrev = 0 then psi
-          else cdiv fuel (cpowP negLc deltaPrev) (cpowP psi (deltaPrev - 1))
+          else DensePoly.cdivWf (cpowP negLc deltaPrev) (cpowP psi (deltaPrev - 1))
         -- β = −lc(Ri_1) · ψ'^δ
         let beta : DensePoly ℚ := cmul negLc (cpowP psi' deltaPrev)
         let pr : BPoly := bpsremainder fuel Ri_1 Ri

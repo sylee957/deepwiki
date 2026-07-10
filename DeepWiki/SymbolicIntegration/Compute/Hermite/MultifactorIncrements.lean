@@ -13,7 +13,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-- The per-factor `gloc` increment of `hermiteReduce`'s `g`-fold. -/
 def glocIncr (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ × ℕ) : QFun :=
   let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
-  let U := cdiv fuel D Vi_pow
+  let U := DensePoly.cdivWf D Vi_pow
   (hermiteInner fuel Vi.1 U (Vi.2 - 1) A qzero).1
 
 /-- The list of `gloc` increments for the kept factors (`i ≥ 2`). -/
@@ -28,7 +28,7 @@ theorem foldl_cond_eq_foldl_glocList (fuel : ℕ) (A D : DensePoly ℚ) (factors
           if Vi.2 ≤ 1 then gAcc
           else
             let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
-            let U := cdiv fuel D Vi_pow
+            let U := DensePoly.cdivWf D Vi_pow
             let gloc := (hermiteInner fuel Vi.1 U (Vi.2 - 1) A qzero).1
             qadd gAcc gloc)
         init
@@ -43,7 +43,7 @@ theorem foldl_cond_eq_foldl_glocList (fuel : ℕ) (A D : DensePoly ℚ) (factors
       rw [if_neg hcond]
       have := ih (qadd init (glocIncr fuel A D hd))
       rw [glocList] at this
-      rw [show (hermiteInner fuel hd.1 (cdiv fuel D
+      rw [show (hermiteInner fuel hd.1 (DensePoly.cdivWf D
             ((List.range hd.2).foldl (fun acc _ => cmul acc hd.1) [1])) (hd.2 - 1) A qzero).1
           = glocIncr fuel A D hd from rfl]
       exact this

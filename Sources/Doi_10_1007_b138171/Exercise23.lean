@@ -62,7 +62,7 @@ def cD23 : DensePoly ℚ := [9, -108, 288, 468, -78, -252, -32, 36, 9]
 factor and `∫A/D` is purely the LRT logarithmic part (no Hermite/rational part). Proved by
 `native_decide`. -/
 theorem ex_2_3_D_squarefree :
-    cmonic (cgcdExt 80 cD23 (cderiv cD23)).1 = [1] := by native_decide
+    cmonic (DensePoly.cgcdWf cD23 (cderiv cD23)).1 = [1] := by native_decide
 
 /-! ### The Rothstein–Trager resultant `R(t)` and its squarefree factorization -/
 

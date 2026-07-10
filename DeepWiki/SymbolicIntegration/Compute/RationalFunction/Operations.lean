@@ -46,13 +46,13 @@ def qeq (x y : QFun) : Bool :=
 
 /-- Lowest-terms reduction `qnorm fuel (a, b) = (a/q, b/q)` (`q = gcd(a, b)`) scaled so the
 denominator is monic; the zero fraction stays `qzero`. -/
-def qnorm (fuel : ℕ) (x : QFun) : QFun :=
+def qnorm (_fuel : ℕ) (x : QFun) : QFun :=
   let (a, b) := x
   if cisZero a then qzero
   else
-    let q := (cgcdExt fuel a b).1
-    let a' := cdiv fuel a q
-    let b' := cdiv fuel b q
+    let q := (DensePoly.cgcdWf a b).1
+    let a' := DensePoly.cdivWf a q
+    let b' := DensePoly.cdivWf b q
     let s := (clead b')⁻¹
     (cscale s a', cscale s b')
 

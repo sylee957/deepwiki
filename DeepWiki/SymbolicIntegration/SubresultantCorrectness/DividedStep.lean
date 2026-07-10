@@ -11,16 +11,20 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-! ### `bdivC` realizes exact `ℚ[t]`-division -/
 
 /-- If every `x`-coefficient of `p` divides exactly by `c`, then
-`C(toPoly c) · toBPoly (p.map (cdiv fuel · c)) = toBPoly p`. -/
-theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
-    (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
-    Polynomial.C (toPoly c) * toBPoly (p.map (fun a => cdiv fuel a c)) = toBPoly p := by
+`C(toPoly c) · toBPoly (p.map (DensePoly.cdivWf · c)) = toBPoly p`. -/
+theorem toBPoly_map_cdiv_exact (_fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
+    (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
+    Polynomial.C (toPoly c) * toBPoly (p.map (fun a => DensePoly.cdivWf a c)) = toBPoly p := by
   induction p with
   | nil => simp
   | cons a as ih =>
     have has := ih (fun b hb => hrem b (by simp [hb]))
-    have ha : toPoly a = toPoly (cdiv fuel a c) * toPoly c :=
-      toPoly_cdiv_of_cmod_zero fuel a c hc (hrem a (by simp))
+    have hrem' : DensePoly.toPoly (DensePoly.cmodWf a c) = 0 := by
+      simpa only [toPoly_eq_dense] using hrem a (by simp)
+    have ha' := DensePoly.toPolyG_cmodWf a c hc
+    rw [hrem', add_zero] at ha'
+    have ha : toPoly a = toPoly (DensePoly.cdivWf a c) * toPoly c := by
+      simpa only [toPoly_eq_dense] using ha'
     rw [List.map_cons, toBPoly_cons, toBPoly_cons]
     rw [ha, map_mul]
     linear_combination Polynomial.X * has
@@ -28,7 +32,7 @@ theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc 
 /-- `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p` when every `x`-coefficient of `p` divides
 exactly by `c`: `bdivC` is exact scalar `ℚ[t]`-division. -/
 theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
-    (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
+    (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p := by
   rw [bdivC, toBPoly_bnorm]
   exact toBPoly_map_cdiv_exact fuel p c hc hrem
@@ -36,16 +40,20 @@ theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : c
 /-- `bdivC` exact division from divisibility: if `toPoly c ∣ toPoly a` for every `x`-coefficient `a`,
 then `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. -/
 theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
-    (hfuel : ∀ a ∈ p, (cnorm a).length ≤ fuel) (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
+    (_hfuel : ∀ a ∈ p, (cnorm a).length ≤ fuel) (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
   toBPoly_bdivC_exact fuel p c hc
-    (fun a ha => cmod_eq_zero_of_dvd fuel a c hc (hfuel a ha) (hdvd a ha))
+    (fun a ha => by
+      have hdvd' : DensePoly.toPoly c ∣ DensePoly.toPoly a := by
+        simpa only [toPoly_eq_dense] using hdvd a ha
+      simpa only [toPoly_eq_dense] using
+        DensePoly.toPolyG_cmodWf_eq_zero_of_dvd a c hc hdvd')
 
 /-- `C(toPoly g) · toBPoly (bprimitivePartX fuel p) = toBPoly p` with `g = bcontentX fuel p` nonzero
 and dividing each `x`-coefficient exactly: `bprimitivePartX` strips a `ℚ[t]` content factor. -/
 theorem toBPoly_bprimitivePartX_exact (fuel : ℕ) (p : BPoly)
     (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
-    (hrem : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0) :
+    (hrem : ∀ a ∈ bnorm p, toPoly (DensePoly.cmodWf a (bcontentX fuel p)) = 0) :
     Polynomial.C (toPoly (bcontentX fuel p)) * toBPoly (bprimitivePartX fuel p) = toBPoly p := by
   have hbc : bcontentX fuel (bnorm p) = bcontentX fuel p := by
     rw [bcontentX, bcontentX, bnorm_idem]
@@ -64,7 +72,7 @@ structure IsBdivCExactStep (fuel : ℕ) (p q : BPoly) (β : DensePoly ℚ) (s : 
   /-- The β divisor is nonzero after normalization. -/
   beta_cnorm_ne : cnorm β ≠ []
   /-- β divides every coefficient of the pseudo-remainder exactly. -/
-  exact_division : ∀ a ∈ bpsremainder fuel p q, toPoly (cmod fuel a β) = 0
+  exact_division : ∀ a ∈ bpsremainder fuel p q, toPoly (DensePoly.cmodWf a β) = 0
 
 /-- One subresultant-PRS step on the β-divided remainder `r = bdivC fuel (bpsremainder fuel p q) β`:
 `C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(B, toBPoly r; m,n)`. -/

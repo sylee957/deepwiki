@@ -79,7 +79,7 @@ of the pseudo-remainder `prem (chain l) (chain (l+1))` exactly (`cmod` reads to 
 `cnorm_eq_nil_iff`. The decidable per-coefficient `cmod`-zero certificate, `native_decide`'d. -/
 theorem hdiv_ex22 :
     ∀ l ≤ 7, ∀ a ∈ bpsremainder 60 (chain 60 hP hQ l) (chain 60 hP hQ (l + 1)),
-      toPoly (cmod 60 a (chainBt 60 hP hQ l)) = 0 := by
+      toPoly (DensePoly.cmodWf a (chainBt 60 hP hQ l)) = 0 := by
   intro l hl a ha
   rw [← cnorm_eq_nil_iff]
   revert a ha
@@ -167,7 +167,7 @@ subresultant exactly (`cmod` reads to 0), via `cnorm_eq_nil_iff`. -/
 theorem hrem_ex22 :
     ∀ a ∈ bnorm (bsubresultantGcd 60
         (toBPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ),
-      toPoly (cmod 60 a (bcontentX 60 (bsubresultantGcd 60
+      toPoly (DensePoly.cmodWf a (bcontentX 60 (bsubresultantGcd 60
         (toBPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ))) = 0 := by
   intro a ha
   rw [← cnorm_eq_nil_iff]
@@ -333,28 +333,28 @@ theorem cnorm_cmonic_cR22_ne : cnorm (cmonic cR22) ≠ [] := by native_decide
 gcd `.1` of the reduced primitive subresultant's leading `x`-coefficient with `R = cmonic cR22` is a
 one-element list `[u₂₂]` (a nonzero constant in `ℚ[t]`), so the leading coefficient is a unit mod `R`.
 The list and its head's nonvanishing are `native_decide` facts. -/
-theorem cgcdExt_blc_bredR_singleton_ex22 :
+theorem cgcdWf_blc_bredR_singleton_ex22 :
     ∃ u : ℚ, u ≠ 0 ∧
-      (cgcdExt 60 (blc (bredR 60 (cmonic cR22)
+      (DensePoly.cgcdWf (blc (bredR 60 (cmonic cR22)
         (lrtSubresultantCompute 60 (toBPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
         (cmonic cR22)).1
       = [u] := by
   rw [natDegree_toBPoly_chainG9_ex22]
-  refine ⟨(cgcdExt 60 (blc (bredR 60 (cmonic cR22)
+  refine ⟨(DensePoly.cgcdWf (blc (bredR 60 (cmonic cR22)
       (lrtSubresultantCompute 60 1 cA22 cD22))) (cmonic cR22)).1.headI, ?_, ?_⟩
   · native_decide
   · native_decide
 
 /-- **`hgu` for Ex 2.2** (`bmonicXmodR` regularity): the leading-`x`-coefficient mod-`R` gcd reads to a
 nonzero constant `C u₂₂` — so the leading coefficient is a unit mod `R = cmonic cR22`. From
-`cgcdExt_blc_bredR_singleton_ex22` (`gcd = [u₂₂]`) and `toPoly [u₂₂] = C u₂₂`. -/
+`cgcdWf_blc_bredR_singleton_ex22` (`gcd = [u₂₂]`) and `toPoly [u₂₂] = C u₂₂`. -/
 theorem hgu_ex22 :
     ∃ u : ℚ, u ≠ 0 ∧
-      toPoly (cgcdExt 60 (blc (bredR 60 (cmonic cR22)
+      toPoly (DensePoly.cgcdWf (blc (bredR 60 (cmonic cR22)
         (lrtSubresultantCompute 60 (toBPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
         (cmonic cR22)).1
       = Polynomial.C u := by
-  obtain ⟨u, hu, hgcd⟩ := cgcdExt_blc_bredR_singleton_ex22
+  obtain ⟨u, hu, hgcd⟩ := cgcdWf_blc_bredR_singleton_ex22
   exact ⟨u, hu, by
     rw [hgcd]
     simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]⟩

@@ -244,7 +244,7 @@ of the pseudo-remainder `prem (chain l) (chain (l+1))` exactly (`cmod` reads to 
 `cnorm_eq_nil_iff`. The decidable per-coefficient `cmod`-zero certificate, `native_decide`'d. -/
 theorem hdiv_ex241 :
     ∀ l ≤ 1, ∀ a ∈ bpsremainder 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)),
-      toPoly (cmod 30 a (chainBt 30 gP gQ l)) = 0 := by
+      toPoly (DensePoly.cmodWf a (chainBt 30 gP gQ l)) = 0 := by
   intro l hl a ha
   rw [← cnorm_eq_nil_iff]
   revert a ha
@@ -339,7 +339,7 @@ subresultant exactly (`cmod` reads to 0), via `cnorm_eq_nil_iff`. -/
 theorem hrem_ex241 :
     ∀ a ∈ bnorm (bsubresultantGcd 30
         (toBPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ),
-      toPoly (cmod 30 a (bcontentX 30 (bsubresultantGcd 30
+      toPoly (DensePoly.cmodWf a (bcontentX 30 (bsubresultantGcd 30
         (toBPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ))) = 0 := by
   intro a ha
   rw [← cnorm_eq_nil_iff]
@@ -363,19 +363,19 @@ gcd `.1` literally evaluates to `[1]` (`native_decide`), and `toPoly [1] = C 1`.
 /-- **The leading-`x`-coefficient mod-`R` gcd is `[1]`** (Ex 2.4.1): the extended-Euclidean gcd of the
 reduced primitive subresultant's leading `x`-coefficient (`(107/8)·t`) with `R = 4t²+1` is the constant
 `1` (the leading coefficient is a unit mod `R`). `native_decide`. -/
-theorem cgcdExt_blc_bredR_ex241 :
-    (cgcdExt 30 (blc (bredR 30 cR241 (lrtSubresultantCompute 30
+theorem cgcdWf_blc_bredR_ex241 :
+    (DensePoly.cgcdWf (blc (bredR 30 cR241 (lrtSubresultantCompute 30
       (toBPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1 = [1] := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hgu` for Ex 2.4.1** (Exercise 2.7 regularity, `u = 1`): the leading-`x`-coefficient mod-`R` gcd
 reduces to the nonzero constant `C 1` — so the leading coefficient is a unit mod `R = 4t²+1`. From
-`cgcdExt_blc_bredR_ex241` (`gcd = [1]`) and `toPoly [1] = C 1`. -/
+`cgcdWf_blc_bredR_ex241` (`gcd = [1]`) and `toPoly [1] = C 1`. -/
 theorem hgu_ex241 :
-    toPoly (cgcdExt 30 (blc (bredR 30 cR241 (lrtSubresultantCompute 30
+    toPoly (DensePoly.cgcdWf (blc (bredR 30 cR241 (lrtSubresultantCompute 30
       (toBPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1
       = Polynomial.C (1 : ℚ) := by
-  rw [cgcdExt_blc_bredR_ex241]
+  rw [cgcdWf_blc_bredR_ex241]
   show toPoly [(1 : ℚ)] = _
   simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
 
@@ -686,22 +686,29 @@ open scoped Classical in
 `a·D + b·D' = 1` (`separable_def'`). -/
 theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241).Separable := by
   rw [separable_def']
-  have hbez := Compute.toPoly_cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)
+  have hbez :
+      Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).2.1
+          * Compute.toPoly Compute.cD241
+        + Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).2.2
+          * Compute.toPoly (Compute.cderiv Compute.cD241)
+      = Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1 := by
+    simpa only [Compute.toPoly_eq_dense] using
+      DensePoly.toPolyG_cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)
   have hderiv : Compute.toPoly (Compute.cderiv Compute.cD241) =
       derivative (Compute.toPoly Compute.cD241) := by
     simpa only [Compute.toPoly_eq_dense] using
       DensePoly.toPolyG_cderivG Compute.cD241
   rw [hderiv] at hbez
-  have hg : Compute.toPoly (Compute.cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)).1
+  have hg : Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1
       = C 4 := by
-    have : (Compute.cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)).1 = [4] := by
+    have : (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1 = [4] := by
       native_decide
     rw [this]
     simp [Compute.toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
   rw [hg] at hbez
-  refine ⟨C (4:ℚ)⁻¹ * Compute.toPoly (Compute.cgcdExt 30 Compute.cD241
+  refine ⟨C (4:ℚ)⁻¹ * Compute.toPoly (DensePoly.cgcdWf Compute.cD241
             (Compute.cderiv Compute.cD241)).2.1,
-          C (4:ℚ)⁻¹ * Compute.toPoly (Compute.cgcdExt 30 Compute.cD241
+          C (4:ℚ)⁻¹ * Compute.toPoly (DensePoly.cgcdWf Compute.cD241
             (Compute.cderiv Compute.cD241)).2.2, ?_⟩
   rw [mul_assoc, mul_assoc, ← mul_add, hbez, ← C_mul]
   norm_num
