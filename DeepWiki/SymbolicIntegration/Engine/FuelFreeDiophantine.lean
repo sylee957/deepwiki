@@ -52,13 +52,10 @@ theorem toPolyG_extendedEuclideanSplit (dn ds r u w : DensePoly α)
 theorem extendedEuclideanSplit_fst_degree_lt (dn ds r u w : DensePoly α)
     (hds : cnorm ds ≠ []) :
     (toPoly (CPoly.extendedEuclideanSplit dn ds r u w).1).degree < (toPoly ds).degree := by
-  have hfst : (CPoly.extendedEuclideanSplit dn ds r u w).1 = cmodWf (cmul u r) ds := by
-    change CPolyEuclidean.mod (CPolyEngine.mul u r) ds = _
-    rw [CPolyEuclidean.mod_dense_eq, CPolyEngine.mul_dense_eq]
-  rw [hfst]
-  refine toPolyG_degree_lt_of_length_lt _ _ hds ?_
-  show (cnorm (cmodWf (cmul u r) ds) : List α).length < _
-  exact cmodWf_length_lt (cmul u r) ds hds
+  have hds' : CPoly.toPoly ds ≠ 0 := fun h =>
+    hds ((cnormG_eq_nil_iff ds).mpr (by simpa only [toPoly_list_eq] using h))
+  simpa only [toPoly_list_eq] using
+    CPoly.toPoly_extendedEuclideanSplit_fst_degree_lt dn ds r u w hds'
 
 /-- `CPoly.extendedEuclideanSplit`'s second cofactor is proper: `deg c < deg dₙ`. -/
 theorem extendedEuclideanSplit_snd_degree_lt (dn ds r u w d : DensePoly α)
@@ -108,19 +105,10 @@ theorem toPolyG_diophantineReduced (p q rhs : DensePoly α)
 /-- `CPoly.diophantineReduced`'s first cofactor is proper for nonzero `q`. -/
 theorem diophantineReduced_fst_degree_lt (p q rhs : DensePoly α) (hq : cnorm q ≠ []) :
     (toPoly (CPoly.diophantineReduced p q rhs).1).degree < (toPoly q).degree := by
-  set g := (cgcdWf p q).1 with hg
-  set s := (cgcdWf p q).2.1 with hs
-  set S := cmul (cscale (CField.inv (clead g)) s) rhs with hS
-  have hfst : (CPoly.diophantineReduced p q rhs).1 = cnorm (cmodWf S q) := by
-    rw [CPoly.diophantineReduced, CPoly.bezoutOne, CPoly.extendedEuclideanSplit]
-    simp only [CPolyEuclidean.gcdExt_dense_eq, CPolyEuclidean.mod_dense_eq,
-      CPolyEngine.mul_dense_eq, CPolyEngine.scale_dense_eq, CPolyEngine.cnorm_dense_eq,
-      CPolyEngine.clead_dense_eq,
-      ← hg, ← hs, ← hS]
-  rw [hfst]
-  refine toPolyG_degree_lt_of_length_lt _ _ hq ?_
-  rw [cnormG_idem]
-  exact cmodWf_length_lt S q hq
+  have hq' : CPoly.toPoly q ≠ 0 := fun h =>
+    hq ((cnormG_eq_nil_iff q).mpr (by simpa only [toPoly_list_eq] using h))
+  simpa only [toPoly_list_eq] using
+    CPoly.toPoly_diophantineReduced_fst_degree_lt p q rhs hq'
 
 end DensePoly
 

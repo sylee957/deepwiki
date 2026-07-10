@@ -112,6 +112,18 @@ theorem toPoly_extendedEuclideanSplit {P : Type u → Type u} [CPoly P] [CPolyEn
         CPoly.toPoly r := by ring
     _ = CPoly.toPoly r := by rw [hbez, one_mul]
 
+/-- The first split cofactor has degree below the selected nonzero modulus. -/
+theorem toPoly_extendedEuclideanSplit_fst_degree_lt
+    {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (dn ds r u w : P α)
+    (hds : CPoly.toPoly ds ≠ 0) :
+    (CPoly.toPoly (extendedEuclideanSplit dn ds r u w).1).degree <
+      (CPoly.toPoly ds).degree := by
+  change (CPoly.toPoly (CPolyEuclidean.mod (CPolyEngine.mul u r) ds)).degree <
+    (CPoly.toPoly ds).degree
+  exact LawfulCPolyEuclidean.mod_degree_lt (P := P) _ _ hds
+
 /-- `diophantineReduced` denotes a solution when the selected gcd is a nonzero constant. -/
 theorem toPoly_diophantineReduced {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     [LawfulCPolyEngine.{u,v} P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
@@ -127,6 +139,18 @@ theorem toPoly_diophantineReduced {P : Type u → Type u} [CPoly P] [CPolyEngine
     simpa only [uw] using toPoly_bezoutOne (P := P) p q hgdeg hgne
   have hsplit := toPoly_extendedEuclideanSplit (P := P) p q rhs uw.1 uw.2 hq hbez
   simpa only [diophantineReduced, uw, LawfulCPolyEngine.toPoly_cnorm] using hsplit
+
+/-- The reduced Diophantine solution's first cofactor has degree below a nonzero second input. -/
+theorem toPoly_diophantineReduced_fst_degree_lt
+    {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (p q rhs : P α)
+    (hq : CPoly.toPoly q ≠ 0) :
+    (CPoly.toPoly (diophantineReduced p q rhs).1).degree < (CPoly.toPoly q).degree := by
+  let uw := bezoutOne p q
+  have hproper := toPoly_extendedEuclideanSplit_fst_degree_lt
+    (P := P) p q rhs uw.1 uw.2 hq
+  simpa only [diophantineReduced, uw, LawfulCPolyEngine.toPoly_cnorm] using hproper
 
 /-- Reduce a represented fraction pair to a monic-denominator form through selected gcd and division. -/
 def normalizeFracPair {P : Type u → Type u} [CPoly P] [CPolyEngine P]

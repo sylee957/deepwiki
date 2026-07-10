@@ -698,35 +698,23 @@ theorem cSqfreeYunFFGgoWf_eq_nil_of_cdegG_zero (fo : ℕ) (b d : DensePoly α) (
   | succ n => rw [cSqfreeYunFFGgoWf]; exact if_pos hb
 
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
-/-- Dividing a constant stays a constant: `cdeg p = 0 ⟹ cdeg (CPolyEuclidean.div p q) = 0`. The polynomial quotient
-of a degree-`0` dividend has degree `0` (`p = q̂·q + r` with `deg r < deg q`; a positive-degree `q̂` would push
-`deg p` positive). -/
-theorem cdegG_cdivWf_eq_zero_of_cdegG_zero (p q : DensePoly α) (hp : cdeg p = 0) :
+/-- Dividing a constant stays a constant under the selected Euclidean implementation. -/
+theorem cdegG_div_eq_zero_of_cdegG_zero (p q : DensePoly α) (hp : cdeg p = 0) :
     cdeg (CPolyEuclidean.div p q) = 0 := by
-  by_cases hq : cnorm q = []
+  by_cases hq : toPoly q = 0
   · -- zero divisor: `CPolyEuclidean.div p q = []` (the `cisZero` branch of `cdivmodWf`)
     have hcz : cisZero (cnorm q) = true := by
-      rw [cisZeroG_cnormG]; exact (cisZeroG_iff q).mpr ((cnormG_eq_nil_iff q).mp hq)
+      rw [cisZeroG_cnormG]
+      exact (cisZeroG_iff q).mpr hq
     have hnil : CPolyEuclidean.div p q = ([] : DensePoly α) := by
       show (cdivmodWf p q).1 = []
       simp [cdivmodWf.eq_def, hcz]
     rw [hnil]; rfl
   rw [cdegG_eq_natDegree] at hp ⊢
-  have hdiv := toPolyG_cmodWf p q hq
-  have hq' : toPoly q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
-  by_contra hquot
-  have hquot0 : toPoly (CPolyEuclidean.div p q) ≠ 0 := fun h => hquot (by rw [h, Polynomial.natDegree_zero])
-  have hrem : (toPoly (cmodWf p q)).degree < (toPoly q).degree :=
-    toPolyG_degree_lt_of_length_lt (cmodWf p q) q hq (cmodWf_length_lt p q hq)
-  have hmuldeg : (toPoly q).degree ≤ (toPoly (CPolyEuclidean.div p q) * toPoly q).degree := by
-    rw [Polynomial.degree_mul]
-    exact le_add_of_nonneg_left (Polynomial.zero_le_degree_iff.mpr hquot0)
-  have hpdeg : (toPoly p).degree = (toPoly (CPolyEuclidean.div p q) * toPoly q).degree := by
-    rw [hdiv, add_comm]
-    exact Polynomial.degree_add_eq_right_of_degree_lt (lt_of_lt_of_le hrem hmuldeg)
-  have hnat := Polynomial.natDegree_eq_of_degree_eq hpdeg
-  rw [Polynomial.natDegree_mul hquot0 hq'] at hnat
-  omega
+  simpa only [toPoly_list_eq] using
+    CPolyEuclidean.div_natDegree_eq_zero_of_natDegree_eq_zero p q
+      (by simpa only [toPoly_list_eq] using hp)
+      (by simpa only [toPoly_list_eq] using hq)
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The Yun factorization of a constant is empty (`cdeg p = 0 ⟹ cSqfreeYunFF p = []`). -/
@@ -734,6 +722,6 @@ theorem cSqfreeYunFFG_eq_nil_of_cdegG_zero (p : DensePoly α) (hp : cdeg p = 0) 
     cSqfreeYunFF p = [] := by
   rw [cSqfreeYunFF]
   exact cSqfreeYunFFGgoWf_eq_nil_of_cdegG_zero _ _ _
-    (cdegG_cdivWf_eq_zero_of_cdegG_zero p _ hp)
+    (cdegG_div_eq_zero_of_cdegG_zero p _ hp)
 
 end DeepWiki.SymbolicIntegration
