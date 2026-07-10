@@ -74,8 +74,11 @@ runs the same fraction algorithm.
    consumers and a `SparseFrac` determinant witness use the same definitions. Hermite row reduction and its
    polynomial-matrix operations are representation-independent as well: `PolyMatrix P α` carries the
    representation explicitly, Euclidean sweeps select `CPolyEuclidean.div`, and dense algebraic-function
-   consumers plus a sparse triangularization witness share the implementation. SymbolicIntegration
-   consumers request the weakest capability they need.
+   consumers plus a sparse triangularization witness share the implementation. The bivariate
+   subresultant PRS and tower primitive-part consumers now select gcd, extended gcd, quotient, and
+   remainder through `CPolyGcd` and `CPolyEuclidean`; dense correctness proofs cross the selection boundary
+   with the instance equality lemmas. SymbolicIntegration consumers request the weakest capability they
+   need.
 7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;
