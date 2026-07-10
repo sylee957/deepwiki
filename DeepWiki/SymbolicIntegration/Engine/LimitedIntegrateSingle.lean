@@ -20,7 +20,7 @@ namespace DensePoly
 (`b ∈ ℚ[x] ⊂ ℚ(x)`, `c ∈ ℚ`), or `none` if no such pair exists in this regime. Builds the two-generator
 constraint system `[a, η]` (`cLinearConstraintsQ`), takes the `c₀ ≠ 0` kernel vector (`cNullspaceBasisQ`),
 normalizes `c₀ = 1`, and recovers `b` by antidifferentiating the cleared polynomial residual `q₀ + c₁·q₁`. -/
-def cLimitedIntegrateSingleBase (a η : CFrac ℚ) : Option (CFrac ℚ × ℚ) :=
+def cLimitedIntegrateSingleBase (a η : DenseFrac ℚ) : Option (DenseFrac ℚ × ℚ) :=
   let gnums := [a.num, η.num]
   let gdens := [a.den, η.den]
   let (qs, M) := cLinearConstraintsQ gnums gdens

@@ -2,8 +2,8 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
 
-/-! # A computable derivation on the tower carrier `CFrac α`
-`towerDerivCFrac Dt` is the fraction-field quotient-rule derivation on `CFrac α`, and
+/-! # A computable derivation on the tower carrier `DenseFrac α`
+`towerDerivCFrac Dt` is the fraction-field quotient-rule derivation on `DenseFrac α`, and
 `instCDiffFieldCFrac` makes `CDiffField` iterate up the tower with the new monomial as an independent
 variable (`Dt = [1]`). Both are computable (no `CFieldSpec`), and `toCFracG_towerDerivCFracG` bridges to
 Mathlib's abstract `extendDeriv` on `RatFunc (CFieldSpec.K α)`. -/
@@ -20,9 +20,9 @@ namespace CFrac
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldDomain α]
 
-/-- The tower derivation `towerDerivCFrac Dt (n/d) = (D n · d − n · D d)/(d·d)` on `CFrac α`, with
+/-- The tower derivation `towerDerivCFrac Dt (n/d) = (D n · d − n · D d)/(d·d)` on `DenseFrac α`, with
 `D = cmonomialDeriv Dt`; the fraction-field quotient rule, computable (no `CFieldSpec`). -/
-def towerDerivCFrac (Dt : DensePoly α) (x : CFrac α) : CFrac α :=
+def towerDerivCFrac (Dt : DensePoly α) (x : DenseFrac α) : DenseFrac α :=
   CFrac.ofFraction
     (DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.num) x.den)
       (DensePoly.cmul x.num (DensePoly.cmonomialDeriv Dt x.den)))
@@ -30,41 +30,41 @@ def towerDerivCFrac (Dt : DensePoly α) (x : CFrac α) : CFrac α :=
     (cmulG_ne_zero_of (cisZeroG_den x) (cisZeroG_den x))
 
 /-- The numerator of `towerDerivCFrac Dt x` is `D n · d − n · D d` (with `D = cmonomialDeriv Dt`). -/
-theorem towerDerivCFracG_num (Dt : DensePoly α) (x : CFrac α) :
+theorem towerDerivCFracG_num (Dt : DensePoly α) (x : DenseFrac α) :
     (towerDerivCFrac Dt x).num
       = DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.num) x.den)
           (DensePoly.cmul x.num (DensePoly.cmonomialDeriv Dt x.den)) := rfl
 
 /-- The denominator of `towerDerivCFrac Dt x` is `d·d`. -/
-theorem towerDerivCFracG_den (Dt : DensePoly α) (x : CFrac α) :
+theorem towerDerivCFracG_den (Dt : DensePoly α) (x : DenseFrac α) :
     (towerDerivCFrac Dt x).den = DensePoly.cmul x.den x.den := rfl
 
 end CFrac
 
-/-! ### The iterating instance `CDiffField (CFrac α)` -/
+/-! ### The iterating instance `CDiffField (DenseFrac α)` -/
 
 section
 variable {α : Type*} [CField α] [CDiffField α] [CFieldDomain α]
 
-/-- `CDiffField (CFrac α)` with `cderiv := towerDerivCFrac [CCommRing.one]`: the new monomial is an
+/-- `CDiffField (DenseFrac α)` with `cderiv := towerDerivCFrac [CCommRing.one]`: the new monomial is an
 independent variable (`Dt = 1`), so `CDiffField` iterates up the tower. Computable (no `CFieldSpec`). -/
-instance instCDiffFieldCFrac : CDiffField (CFrac α) where
+instance instCDiffFieldCFrac : CDiffField (DenseFrac α) where
   cderiv := CFrac.towerDerivCFrac [CCommRing.one]
 
 end
 
 /-! ### The level-2 derivation computes (`native_decide`) -/
 
-/-- A level-2 scalar `c ∈ Lvl2 = CFrac (CFrac ℚ) = ℚ(x)(t₁)` from a numerator/denominator pair of
-`DensePoly (CFrac ℚ)`s, with denominator a nonzero singleton `[d]`. -/
-def lvl2OfList (num : DensePoly (CFrac ℚ)) (d : CFrac ℚ)
-    (h : DensePoly.cisZero ([d] : DensePoly (CFrac ℚ)) = false) : Lvl2 :=
+/-- A level-2 scalar `c ∈ Lvl2 = DenseFrac (DenseFrac ℚ) = ℚ(x)(t₁)` from a numerator/denominator pair of
+`DensePoly (DenseFrac ℚ)`s, with denominator a nonzero singleton `[d]`. -/
+def lvl2OfList (num : DensePoly (DenseFrac ℚ)) (d : DenseFrac ℚ)
+    (h : DensePoly.cisZero ([d] : DensePoly (DenseFrac ℚ)) = false) : Lvl2 :=
   CFrac.ofFraction num [d] h
 
 /-- The level-2 scalar `t₁ ∈ ℚ(x)(t₁)` (numerator `[0, 1]` over ℚ(x): `t₁ = 0 + 1·t₁`, denominator
 `[1]`). -/
 def lvl2T1 : Lvl2 :=
-  lvl2OfList [(CCommRing.zero : CFrac ℚ), CCommRing.one] (CCommRing.one : CFrac ℚ) (by native_decide)
+  lvl2OfList [(CCommRing.zero : DenseFrac ℚ), CCommRing.one] (CCommRing.one : DenseFrac ℚ) (by native_decide)
 
 /-! #### The level-2 scalar derivation `towerDerivCFrac` reduces -/
 
@@ -128,15 +128,15 @@ variable [Algebra ℚ (CFieldSpec.K α)]
 
 /-- `toCFrac (towerDerivCFrac Dt x) = extendDeriv (implicitDeriv (toPoly Dt)) (toCFrac x)` in
 `RatFunc (CFieldSpec.K α)`: the computable tower derivation realizes Mathlib's `extendDeriv`. -/
-theorem toCFracG_towerDerivCFracG (Dt : DensePoly α) (x : CFrac α) :
+theorem toCFracG_towerDerivCFracG (Dt : DensePoly α) (x : DenseFrac α) :
     toCFrac (towerDerivCFrac Dt x)
       = extendDeriv (Differential.implicitDeriv (DensePoly.toPoly Dt)) (toCFrac x) := by
-  obtain ⟨⟨n, d⟩, hd⟩ := x
+  obtain ⟨n, d, hd⟩ := x
   change toCFrac (towerDerivCFrac Dt (ofFraction n d hd))
       = extendDeriv (Differential.implicitDeriv (DensePoly.toPoly Dt))
           (toCFrac (ofFraction n d hd))
   -- read `toCFrac x` as `RatFunc.mk (toPoly n) (toPoly d)`, apply the quotient rule `extendDeriv_mk`.
-  have hxmk : toCFrac (ofFraction n d hd : CFrac α)
+  have hxmk : toCFrac (ofFraction n d hd : DenseFrac α)
       = RatFunc.mk (DensePoly.toPoly n) (DensePoly.toPoly d) := by
     rw [toCFrac, RatFunc.mk_eq_div]; rfl
   rw [hxmk, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul, map_mul, map_pow]

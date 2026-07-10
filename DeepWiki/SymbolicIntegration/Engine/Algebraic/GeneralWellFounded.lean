@@ -178,23 +178,23 @@ end DensePoly
 
 /-! ## The flat rational and log-argument solvers
 
-Build a `ℚ`-matrix from `afDerivWf` and solve it with `kernelBasis`; specialized to `CFrac ℚ`. -/
+Build a `ℚ`-matrix from `afDerivWf` and solve it with `kernelBasis`; specialized to `DenseFrac ℚ`. -/
 
 /-- Rational-part residual columns `afRatColumnsWf f basis degBound integrand`: the per-monomial
 derivatives `afDerivWf f (xʲ wᵢ)` followed by the forced `−integrand` column. -/
-def afRatColumnsWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : List (DensePoly (CFrac ℚ)) :=
+def afRatColumnsWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : List (DensePoly (DenseFrac ℚ)) :=
   (afRatMonomials basis degBound).map (afDerivWf f) ++ [cneg integrand]
 
 /-- `ℚ`-matrix of the rational-part system `afRatMatrixWf f basis degBound integrand`: clear each `K(x)`
 coordinate of `afRatColumnsWf` to numerators over a common denominator, read off `x`-power coefficients. -/
-def afRatMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : List (List ℚ) × ℕ :=
+def afRatMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : List (List ℚ) × ℕ :=
   let cols := afRatColumnsWf f basis degBound integrand
   let nCols := cols.length
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
-    let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
+    let entryOf : ℕ → DenseFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
     let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).num)
     let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).den)
     let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
@@ -211,8 +211,8 @@ def afRatMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac �
 /-- General rational-part solve `afRationalSolveWf f basis degBound integrand = some v`: the rational part
 `v = Σ c_{ij} xʲ wᵢ` with `afDeriv f v = integrand`, by a `K`-linear solve over the integral basis (build
 `afRatMatrixWf`, find a kernel vector with nonzero RHS coordinate, normalize, reassemble `v`). -/
-def afRationalSolveWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : Option (DensePoly (CFrac ℚ)) :=
+def afRationalSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : Option (DensePoly (DenseFrac ℚ)) :=
   let (rows, nCols) := afRatMatrixWf f basis degBound integrand
   let kers := kernelBasis nCols rows
   match kers.find? (fun c => c.getD (nCols - 1) 0 ≠ 0) with
@@ -220,32 +220,32 @@ def afRationalSolveWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFra
   | some c =>
     let rhs := c.getD (nCols - 1) 0
     let monos := afRatMonomials basis degBound
-    let v : DensePoly (CFrac ℚ) :=
+    let v : DensePoly (DenseFrac ℚ) :=
       (List.range monos.length).foldl (fun acc idx =>
         let coeff : ℚ := c.getD idx 0 / rhs
-        cadd acc (cscale (CFrac.ofPoly [coeff]) (monos.getD idx []))) ([] : DensePoly (CFrac ℚ))
+        cadd acc (cscale (CFrac.ofPoly [coeff]) (monos.getD idx []))) ([] : DensePoly (DenseFrac ℚ))
     some v
 
 /-- Log-derivative residual `afLogResidualWf f integrand u = afDerivWf f u − afMul f u integrand`. -/
-def afLogResidualWf (f integrand u : DensePoly (CFrac ℚ)) : DensePoly (CFrac ℚ) :=
+def afLogResidualWf (f integrand u : DensePoly (DenseFrac ℚ)) : DensePoly (DenseFrac ℚ) :=
   csub (afDerivWf f u) (afMul f u integrand)
 
 /-- Log-argument residual columns `afLogColumnsWf f basis degBound integrand`: the per-monomial
 log-derivative residuals `afLogResidualWf f integrand (xʲ wᵢ)` (no forced `−integrand` column — the log
 system is homogeneous in `u`). -/
-def afLogColumnsWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : List (DensePoly (CFrac ℚ)) :=
+def afLogColumnsWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : List (DensePoly (DenseFrac ℚ)) :=
   (afRatMonomials basis degBound).map (afLogResidualWf f integrand)
 
 /-- `ℚ`-matrix of the log-argument system `afLogMatrixWf f basis degBound integrand`: identical extraction
 on the homogeneous columns `afLogColumnsWf`. -/
-def afLogMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : List (List ℚ) × ℕ :=
+def afLogMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : List (List ℚ) × ℕ :=
   let cols := afLogColumnsWf f basis degBound integrand
   let nCols := cols.length
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
-    let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
+    let entryOf : ℕ → DenseFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
     let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).num)
     let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).den)
     let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
@@ -262,18 +262,18 @@ def afLogMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac �
 /-- General log-argument solve `afLogArgSolveWf f basis degBound integrand = some u`: the log argument
 `u = Σ c_{ij} xʲ wᵢ` with `afDeriv f u = afMul f u integrand` (`∫ integrand = log u`), by the homogeneous
 `K`-linear solve (build `afLogMatrixWf`, find the first nonzero kernel vector, reassemble `u`). -/
-def afLogArgSolveWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (degBound : ℕ) (integrand : DensePoly (CFrac ℚ)) : Option (DensePoly (CFrac ℚ)) :=
+def afLogArgSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : Option (DensePoly (DenseFrac ℚ)) :=
   let (rows, nCols) := afLogMatrixWf f basis degBound integrand
   let kers := kernelBasis nCols rows
   match kers.find? (fun c => c.any (fun a => a ≠ 0)) with
   | none => none
   | some c =>
     let monos := afRatMonomials basis degBound
-    let u : DensePoly (CFrac ℚ) :=
+    let u : DensePoly (DenseFrac ℚ) :=
       (List.range monos.length).foldl (fun acc idx =>
         let coeff : ℚ := c.getD idx 0
-        cadd acc (cscale (CFrac.ofPoly [coeff]) (monos.getD idx []))) ([] : DensePoly (CFrac ℚ))
+        cadd acc (cscale (CFrac.ofPoly [coeff]) (monos.getD idx []))) ([] : DensePoly (DenseFrac ℚ))
     some u
 
 /-! ## The top-level `afIntegrateAlgebraicWf` -/
@@ -283,9 +283,9 @@ some (v, u)`: `∫ (ratIntegrand + logIntegrand) dx = v + log u` (principal case
 `afRationalSolveWf` (`afDeriv f v = ratIntegrand`) and the log argument `u` by `afLogArgSolveWf`
 (`afDeriv f u = afMul f u logIntegrand`), both `K`-linear solves through `afDerivWf`. `none` if either
 solve fails. The general analogue of `cIntegrateAlgebraicWf`. -/
-def afIntegrateAlgebraicWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) :
-    Option (DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) :=
+def afIntegrateAlgebraicWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) :
+    Option (DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ)) :=
   match afRationalSolveWf f basis degBound ratIntegrand,
         afLogArgSolveWf f basis degBound logIntegrand with
   | some v, some u => some (v, u)
@@ -296,13 +296,13 @@ def afIntegrateAlgebraicWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly 
 `∫ (y + afDerivWf(y)/y) dx = (3/5)xy + log y` on `y³ = x²`, checked by `afDerivWf` (`native_decide`). -/
 
 /-- The log-derivative input for the cuspidal-cubic combined validation. -/
-def gcCombineLogIntegrandWf : DensePoly (CFrac ℚ) :=
+def gcCombineLogIntegrandWf : DensePoly (DenseFrac ℚ) :=
   afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
     [CCommRing.zero, CCommRing.zero, CFrac.ofFraction [1] [0, 0, 1] (by decide)]
 
 /-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
 `∫ (y + afDerivWf(y)/y) dx`. -/
-def gcCombineSolvedWf : Option (DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) :=
+def gcCombineSolvedWf : Option (DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ)) :=
   afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcuspCubicY gcCombineLogIntegrandWf
 
 /-- The general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y`:

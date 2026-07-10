@@ -46,18 +46,18 @@ open RadElem
 /-! ### Shared example data for `radInv2` and `radLogDeriv` -/
 
 /-- The radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`). -/
-def fullRhoArcsinh : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
+def fullRhoArcsinh : DenseFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The element `u = x + y = [x, 1]` over `ℚ(x)`, `y² = x²+1`. -/
-def fullUxPlusY : RadElem (CFrac ℚ) := [CFrac.ofPoly [0, 1], CCommRing.one]
+def fullUxPlusY : RadElem (DenseFrac ℚ) := [CFrac.ofPoly [0, 1], CCommRing.one]
 
-/-- **`u · u⁻¹ = 1` in `(CFrac ℚ)[y]/(y² − (x²+1))`** (`native_decide`). -/
+/-- **`u · u⁻¹ = 1` in `(DenseFrac ℚ)[y]/(y² − (x²+1))`** (`native_decide`). -/
 theorem radInv2_mul_self_eq_one :
     DensePoly.cisZero (DensePoly.csub (radMul 2 fullRhoArcsinh fullUxPlusY (radInv2 fullRhoArcsinh fullUxPlusY))
       [CCommRing.one]) = true := by native_decide
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over `ℚ(x)`. -/
-def fullIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift fullRhoArcsinh CCommRing.one
+def fullIntegrandArcsinh : RadElem (DenseFrac ℚ) := radInvYLift fullRhoArcsinh CCommRing.one
 
 /-- **`radLogDeriv` agrees with the arcsinh log-derivative certificate** (`native_decide`). -/
 theorem radLogDeriv_eq_integrand_arcsinh :
@@ -82,8 +82,8 @@ def algDeriv {α : Type*} [CField α] [CDiffField α] (ρ : α) (F : AlgIntegral
     (radDeriv 2 ρ F.ratPart)
 
 /-- **Assemble the rational part `v` from a multi-case dispatch run**. -/
-def radAssembleRatPart (ρ : CFrac ℚ)
-    (runs : List (Bool × DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePoly ℚ)) : RadElem (CFrac ℚ) :=
+def radAssembleRatPart (ρ : DenseFrac ℚ)
+    (runs : List (Bool × DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePoly ℚ)) : RadElem (DenseFrac ℚ) :=
   runs.foldl
     (fun acc (isV, fi, e, _, vNum, _) =>
       let denomPow := if isV then cpow fi (e - 1) else cpow fi e
@@ -94,7 +94,7 @@ def radAssembleRatPart (ρ : CFrac ℚ)
 /-! ### Shared round-trip inputs for algebraic integrators -/
 
 /-- Rational-only round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtRatRho : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
+def rtRatRho : DenseFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- Rational-only round-trip numerator `R = 1`. -/
 def rtRatR : DensePoly ℚ := [1]
@@ -103,22 +103,22 @@ def rtRatR : DensePoly ℚ := [1]
 def rtRatB : DensePoly ℚ := cpow [-1, 1] 2
 
 /-- A non-principal residual for the rational-only log solve. -/
-def rtRatNonPrincipalResidual : RadElem (CFrac ℚ) := radInvYLift (CFrac.ofPoly [0, 0, 1, 0, 1]) CCommRing.one
+def rtRatNonPrincipalResidual : RadElem (DenseFrac ℚ) := radInvYLift (CFrac.ofPoly [0, 0, 1, 0, 1]) CCommRing.one
 
 /-- Log-only round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtLogRho : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
+def rtLogRho : DenseFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The field element `x·ρ = x·(x²+1) = x + x³ ∈ ℚ(x)`. -/
-def rtLogXRho : CFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
+def rtLogXRho : DenseFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`. -/
-def rtLogIntegrand : RadElem (CFrac ℚ) := radInvYLift rtLogXRho CCommRing.one
+def rtLogIntegrand : RadElem (DenseFrac ℚ) := radInvYLift rtLogXRho CCommRing.one
 
 /-- The fixed log-solve denominator `D = x`. -/
 def rtLogD : DensePoly ℚ := [0, 1]
 
 /-- Combined round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
-def rtCombRho : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
+def rtCombRho : DenseFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- Combined round-trip rational numerator `R = 1`. -/
 def rtCombR : DensePoly ℚ := [1]
@@ -127,9 +127,9 @@ def rtCombR : DensePoly ℚ := [1]
 def rtCombB : DensePoly ℚ := cpow [-1, 1] 2
 
 /-- The combined round-trip's log argument `u = x + y = [x, 1]`. -/
-def rtCombU : RadElem (CFrac ℚ) := [CFrac.ofPoly [0, 1], CCommRing.one]
+def rtCombU : RadElem (DenseFrac ℚ) := [CFrac.ofPoly [0, 1], CCommRing.one]
 
 /-- The log residual `[0, 1/(x²+1)]` absorbed by the combined log solve. -/
-def rtCombLogResidual : RadElem (CFrac ℚ) := radInvYLift rtCombRho CCommRing.one
+def rtCombLogResidual : RadElem (DenseFrac ℚ) := radInvYLift rtCombRho CCommRing.one
 
 end DeepWiki.SymbolicIntegration

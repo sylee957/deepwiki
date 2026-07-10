@@ -46,14 +46,14 @@ Over `ℚ(x)`, `n = 2`, `f = x²+1`: `radInvN` produces a genuine inverse matchi
 
 open RadElem
 
-/-- `radInvN` inverts at `n = 2`: over `(CFrac ℚ)[y]/(y² − (x²+1))`, `radMul 2 (x²+1) u (radInvN 2 …) = 1`
+/-- `radInvN` inverts at `n = 2`: over `(DenseFrac ℚ)[y]/(y² − (x²+1))`, `radMul 2 (x²+1) u (radInvN 2 …) = 1`
 for `u = x + y`. -/
 theorem radInvN_mul_self_eq_one_at_two :
     DensePoly.cisZero (DensePoly.csub (radMul 2 fullRhoArcsinh fullUxPlusY
         (radInvN 2 fullRhoArcsinh fullUxPlusY)) radOne) = true := by native_decide
 
 /-- `radInvN` agrees with `radInv2` at `n = 2`: `radInvN 2 ρ u = radInv2 ρ u` in
-`(CFrac ℚ)[y]/(y² − (x²+1))` for `u = x + y`. -/
+`(DenseFrac ℚ)[y]/(y² − (x²+1))` for `u = x + y`. -/
 theorem radInvN_eq_radInv2_at_two :
     DensePoly.cisZero (DensePoly.csub (radInvN 2 fullRhoArcsinh fullUxPlusY)
         (radInv2 fullRhoArcsinh fullUxPlusY)) = true := by native_decide
@@ -125,16 +125,16 @@ instance instCDiffFieldRadExtN {α : Type*} [CField α] [CDiffField α] {n : ℕ
 /-! ### The concrete cube root `∛(x²+1)` over `ℚ(x)` and its irreducibility
 
 `α = ℚ(x)`, `n = 3`, `f = x²+1`: `y³ − (x²+1)` is irreducible over `ℚ(x)` since `x²+1` (intDegree `2`) is
-not a perfect cube, so `RadX3root = RadExtN (CFrac ℚ) 3 (x²+1)` is an honest field. -/
+not a perfect cube, so `RadX3root = RadExtN (DenseFrac ℚ) 3 (x²+1)` is an honest field. -/
 
 /-- The cube radicand `f = x² + 1 ∈ ℚ(x)` (numerator `[1, 0, 1]`), `y = ∛(x²+1)`. -/
-def cubeRadicand : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
+def cubeRadicand : DenseFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
-/-- The cube-root field `ℚ(x)[∛(x²+1)] = RadExtN (CFrac ℚ) 3 (x²+1)`. -/
-abbrev RadX3root : Type := RadExtN (CFrac ℚ) 3 cubeRadicand
+/-- The cube-root field `ℚ(x)[∛(x²+1)] = RadExtN (DenseFrac ℚ) 3 (x²+1)`. -/
+abbrev RadX3root : Type := RadExtN (DenseFrac ℚ) 3 cubeRadicand
 
 /-- The diagonal multiplier `ℓ = f'/(3f) = 2x/(3(x²+1)) ∈ ℚ(x)` for `D(y) = ℓ·y`, `y = ∛(x²+1)`. -/
-def cubeLogDer : CFrac ℚ := logDerRadicand 3 cubeRadicand
+def cubeLogDer : DenseFrac ℚ := logDerRadicand 3 cubeRadicand
 
 /-- **`1 + x² ≠ 0` in `ℚ[X]`** (it has `natDegree 2`). -/
 theorem X2p1_ne_zero : (1 + X ^ 2 : ℚ[X]) ≠ 0 := by
@@ -151,7 +151,7 @@ open DensePoly in
 /-- `toK cubeRadicand = algebraMap ℚ[X] (RatFunc ℚ) (1 + x²)`: the radicand reads through the tower bridge
 as the algebra-map image of `1 + x²`. -/
 theorem toK_cubeRadicand :
-    CFieldSpec.toK (cubeRadicand : CFrac ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 2) := by
+    CFieldSpec.toK (cubeRadicand : DenseFrac ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 2) := by
   show CFrac.toCFrac cubeRadicand = _
   rw [CFrac.toCFrac]
   show CFrac.am ℚ (toPoly ([1, 0, 1] : DensePoly ℚ))
@@ -181,19 +181,19 @@ theorem not_cube_X2p1 :
 /-- `y³ − (x²+1)` is irreducible over `ℚ(x)`: `Irreducible (X³ − C(toK cubeRadicand))`, from
 `X_pow_sub_C_irreducible_of_prime` (prime `3`) and `not_cube_X2p1`. -/
 theorem irreducible_cubeRad :
-    Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : CFrac ℚ))) := by
+    Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : DenseFrac ℚ))) := by
   rw [toK_cubeRadicand]
   exact X_pow_sub_C_irreducible_of_prime (by norm_num) not_cube_X2p1
 
 /-- The cube-root irreducibility as a `Fact`, so `AdjoinRoot.instField` resolves the field
 `ℚ(x)[∛(x²+1)]`. -/
 instance fact_irreducible_cubeRad :
-    Fact (Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : CFrac ℚ)))) :=
+    Fact (Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : DenseFrac ℚ)))) :=
   ⟨irreducible_cubeRad⟩
 
 /-- `ℚ(x)[∛(x²+1)]` is a field: `Field (AdjoinRoot (X³ − C(toK cubeRadicand)))`, from the irreducibility
 `Fact`. -/
-noncomputable example : Field (AdjoinRoot (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : CFrac ℚ)))) :=
+noncomputable example : Field (AdjoinRoot (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : DenseFrac ℚ)))) :=
   inferInstance
 
 /-! ### The engine differentiates/multiplies/inverts a cube root

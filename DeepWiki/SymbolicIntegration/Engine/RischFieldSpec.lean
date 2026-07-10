@@ -138,9 +138,9 @@ theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : DensePoly �
 
 end ClearedToField
 
-/-! ### Recursive `CRischFieldSpec (CFrac β)` layer boundary
+/-! ### Recursive `CRischFieldSpec (DenseFrac β)` layer boundary
 
 The cleared → field half is supplied by `rischDE_field_of_cleared`; a recursive instance over
-`CFrac β` also needs a structural decomposition theorem for the generic RDE pipeline. -/
+`DenseFrac β` also needs a structural decomposition theorem for the generic RDE pipeline. -/
 
 end DeepWiki.SymbolicIntegration

@@ -11,10 +11,10 @@ open DensePoly Polynomial
 /-! ### Base limited integration -/
 
 /-- `a = 1 + 1/x = (x+1)/x ∈ ℚ(x)`. -/
-def limIntSingleExampleA : CFrac ℚ := CFrac.ofFraction [1, 1] [0, 1]
+def limIntSingleExampleA : DenseFrac ℚ := CFrac.ofFraction [1, 1] [0, 1]
 
 /-- `η = 1/x ∈ ℚ(x)` (the primitive derivative `Dt = 1/x`). -/
-def limIntSingleExampleEta : CFrac ℚ := CFrac.ofFraction [1] [0, 1]
+def limIntSingleExampleEta : DenseFrac ℚ := CFrac.ofFraction [1] [0, 1]
 
 -- Sanity print: `cLimitedIntegrateSingleBase (1+1/x) (1/x)` returns `b = x`, `c = 1`.
 #eval (cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta).map
@@ -42,11 +42,11 @@ theorem limitedIntegrateSingleBaseNumDen_example :
 /-! ### Degree-raising primitive polynomial integration -/
 
 /-- The base single-`w` limited integrator wrapped with constants embedded in `ℚ(x)`. -/
-def limIntBaseWrap (η a : CFrac ℚ) : Option (CFrac ℚ × CFrac ℚ) :=
+def limIntBaseWrap (η a : DenseFrac ℚ) : Option (DenseFrac ℚ × DenseFrac ℚ) :=
   (cLimitedIntegrateSingleBase a η).map (fun bc => (bc.1, CFrac.ofScalar bc.2))
 
 /-- `p = 1 + (1 + 1/x)·t ∈ ℚ(x)[t]`. -/
-def prim2ExampleP : DensePoly (CFrac ℚ) := [CFrac.ofScalar 1, limIntSingleExampleA]
+def prim2ExampleP : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 1, limIntSingleExampleA]
 
 -- Sanity print: `∫p = x·t + (1/2)·t²`.
 #eval (cIntegratePrimPolyDegRaise limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3

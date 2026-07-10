@@ -95,17 +95,17 @@ theorem field_identity_of_cIntegrateReducedG_of_residueMatch (Dt : DensePoly α)
     (cHermiteReduceTower Dt a d).2.1 (cHermiteReduceTower Dt a d).2.2
     a d (DensePoly.cIntegrateReduced Dt a d cands).logs hherm hmatch
 
-/-! ### The deliverables at the level-1 carrier `α = CFrac ℚ` -/
+/-! ### The deliverables at the level-1 carrier `α = DenseFrac ℚ` -/
 
-/-- `Algebra ℚ (CFieldSpec.K (CFrac ℚ))` via `CFieldSpec.K (CFrac ℚ) = RatFunc ℚ`. -/
-noncomputable local instance : Algebra ℚ (CFieldSpec.K (CFrac ℚ)) :=
+/-- `Algebra ℚ (CFieldSpec.K (DenseFrac ℚ))` via `CFieldSpec.K (DenseFrac ℚ) = RatFunc ℚ`. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (DenseFrac ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
 /-- The tower residue resultant's roots are the residues over `ℚ(x)`
 (`roots_residueResultantTowerG_eq_residues` at `K = RatFunc ℚ`). -/
-theorem roots_residueResultantTowerG_eq_residues_qfunNZG (lc : CFieldSpec.K (CFrac ℚ)) (N : ℕ)
-    (droots : Multiset (CFieldSpec.K (CFrac ℚ))) (aval ddval : CFieldSpec.K (CFrac ℚ) → CFieldSpec.K (CFrac ℚ))
-    (hlc : lc ≠ 0) (hDd : ∀ α ∈ droots, ddval α ≠ 0) (R : (CFieldSpec.K (CFrac ℚ))[X])
+theorem roots_residueResultantTowerG_eq_residues_qfunNZG (lc : CFieldSpec.K (DenseFrac ℚ)) (N : ℕ)
+    (droots : Multiset (CFieldSpec.K (DenseFrac ℚ))) (aval ddval : CFieldSpec.K (DenseFrac ℚ) → CFieldSpec.K (DenseFrac ℚ))
+    (hlc : lc ≠ 0) (hDd : ∀ α ∈ droots, ddval α ≠ 0) (R : (CFieldSpec.K (DenseFrac ℚ))[X])
     (hR : R = Polynomial.C lc ^ N
       * (droots.map (fun α =>
           Polynomial.C (aval α) - Polynomial.X * Polynomial.C (ddval α))).prod) :
@@ -114,25 +114,25 @@ theorem roots_residueResultantTowerG_eq_residues_qfunNZG (lc : CFieldSpec.K (CFr
 
 /-- The fuel-free reduced-case RT one-shot over `ℚ(x)(t)`: for `res = cIntegrateReduced Dt a d
 cands`, given the Hermite half and the RT residue match, `D(g) + logResidueSum Dt res.logs = am a/am d`. -/
-theorem field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG (Dt : DensePoly (CFrac ℚ))
-    (a d : DensePoly (CFrac ℚ)) (cands : List (CFrac ℚ))
+theorem field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG (Dt : DensePoly (DenseFrac ℚ))
+    (a d : DensePoly (DenseFrac ℚ)) (cands : List (DenseFrac ℚ))
     (hherm : towerFractionFieldDeriv Dt
-            (am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
-              / am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
-          + am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d))
+            (am (DenseFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am (DenseFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am (DenseFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am (DenseFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am (DenseFrac ℚ) (toPoly a) / am (DenseFrac ℚ) (toPoly d))
     (hmatch : ((DensePoly.cIntegrateReduced Dt a d cands).logs.map (fun cv =>
-          am (CFrac ℚ) (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDeriv Dt (am (CFrac ℚ) (toPoly cv.2))
-                / am (CFrac ℚ) (toPoly cv.2)))).sum
-        = am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
-          / am (CFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)) :
+          am (DenseFrac ℚ) (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am (DenseFrac ℚ) (toPoly cv.2))
+                / am (DenseFrac ℚ) (toPoly cv.2)))).sum
+        = am (DenseFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
+          / am (DenseFrac ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)) :
     towerFractionFieldDeriv Dt
-        (am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
-          / am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
+        (am (DenseFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am (DenseFrac ℚ) (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))
         + logResidueSum Dt (DensePoly.cIntegrateReduced Dt a d cands).logs
-      = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d) :=
+      = am (DenseFrac ℚ) (toPoly a) / am (DenseFrac ℚ) (toPoly d) :=
   field_identity_of_cIntegrateReducedG_of_residueMatch Dt a d cands hherm hmatch
 
 /-! ### Restatements -/

@@ -74,7 +74,7 @@ namespace DensePoly
 /-- The canonical reduced representative `idealReduce f basis I`: clear `I` to `(δ, N)`,
 `hermiteRowReduce` and `canonHNF` over `K[x]`, read back as `(1/δ)·Ĥ` in lowest terms. `f`/`basis`
 are unused (kept for the uniform divisor-API signature). -/
-def idealReduce (_f : DensePoly (CFrac ℚ)) (_basis : List (DensePoly (CFrac ℚ)))
+def idealReduce (_f : DensePoly (DenseFrac ℚ)) (_basis : List (DensePoly (DenseFrac ℚ)))
     (I : GenDivisor) : GenDivisor :=
   let (δ, N) := idealClear I
   let H := canonHNF ((hermiteRowReduce N).filter (fun row => !row.all cisZero))
@@ -89,14 +89,14 @@ def idealReduce (_f : DensePoly (CFrac ℚ)) (_basis : List (DensePoly (CFrac �
 /-- The candidate single generators `genCandidates basis I`: each canonical-HNF row of `I`'s cleared
 integral matrix reconstructed as a `K(x, y)` element (`wToAf basis`). For a principal ideal `g·O` the
 generator `g` is among these up to a unit. -/
-def genCandidates (basis : List (DensePoly (CFrac ℚ))) (I : GenDivisor) : List (DensePoly (CFrac ℚ)) :=
+def genCandidates (basis : List (DensePoly (DenseFrac ℚ))) (I : GenDivisor) : List (DensePoly (DenseFrac ℚ)) :=
   let H := canonHNF ((hermiteRowReduce (idealClear I).2).filter (fun row => !row.all cisZero))
   H.map (fun row => wToAf basis (row.map CFrac.ofPoly))
 
 /-- `true` iff `I` is principal `isPrincipalIdeal f basis I`: `canonHNFEq I (principalDivisor f basis
 g)` for some candidate generator `g ∈ genCandidates basis I`. Sound — a `true` means `[I] = 0` in
 `Pic⁰(C)`. -/
-def isPrincipalIdeal (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+def isPrincipalIdeal (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (I : GenDivisor) : Bool :=
   (genCandidates basis I).any (fun g => canonHNFEq I (principalDivisor f basis g))
 
@@ -105,7 +105,7 @@ def isPrincipalIdeal (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac
 /-- Order-search loop `genDivisorOrderAux f basis δ fuel acc n`: with `acc = n·δ`, test
 `(n+1)·δ = idealProduct δ acc` for principality; on a hit return `some (n+1)`, else recurse.
 `fuel` bounds the remaining multiples. -/
-def genDivisorOrderAux (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (δ : GenDivisor) :
+def genDivisorOrderAux (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (δ : GenDivisor) :
     ℕ → GenDivisor → ℕ → Option ℕ
   | 0, _, _ => none
   | fuel + 1, acc, n =>
@@ -115,7 +115,7 @@ def genDivisorOrderAux (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFr
 
 /-- The divisor order `genDivisorOrder fuel f basis δ`: `some m` = the smallest `m ≥ 1` with `m·δ`
 principal (⟹ `δ` is `m`-torsion), searching up to `fuel` multiples; `none` if no `m ≤ fuel` works. -/
-def genDivisorOrder (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+def genDivisorOrder (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (δ : GenDivisor) : Option ℕ :=
   genDivisorOrderAux f basis δ fuel (idealIdentity (cdeg f)) 0
 
@@ -143,12 +143,12 @@ On `y² = x³ + 1` (integral basis `[1, y]`), the inflection point `(0, 1)` give
 `[(0,1) − ∞]`, represented by the place ideal `P = (x, y − 1)·O`: `P` and `P²` are non-principal but
 `P³ = div(y − 1)` is principal, so `order = 3`. -/
 
-/-- The curve `f = y² − (x³ + 1)` (`[−(x³+1), 0, 1]`) over `DensePoly (CFrac ℚ)`. -/
-def hcubeF : DensePoly (CFrac ℚ) := [CFrac.ofPoly [-1, 0, 0, -1], CCommRing.zero, CCommRing.one]
+/-- The curve `f = y² − (x³ + 1)` (`[−(x³+1), 0, 1]`) over `DensePoly (DenseFrac ℚ)`. -/
+def hcubeF : DensePoly (DenseFrac ℚ) := [CFrac.ofPoly [-1, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The integral basis `[1, y]` of `y² = x³ + 1` (no finite poles — the power basis, since `x³ + 1` is
 squarefree). -/
-def hcubeBasis : List (DensePoly (CFrac ℚ)) := integralBasis hcubeF
+def hcubeBasis : List (DensePoly (DenseFrac ℚ)) := integralBasis hcubeF
 
 /-- The 3-torsion divisor `δ = P = (x, y − 1)·O` on `y² = x³ + 1`, built from its `O`-generators reduced
 to a `2×2` ideal matrix by one `idealProduct` with the identity. -/

@@ -28,7 +28,7 @@ integrates `f = a/d ∈ K(x)(…)(t)` when `t` is primitive.
   the computable half reduces; the abstract soundness lives in the lawful half.
 * **The recursion** is two instances: `instLawfulRischLevelLrtPrimitive` (the base — constant-coefficient
   polynomials over `ℚ(x)`) and `instLawfulRischLevelLrtTower` (the step — given a solver for the
-  coefficient field `β`, build one for `(CFrac β)(t)`). Together they resolve the solver at every tower
+  coefficient field `β`, build one for `(DenseFrac β)(t)`). Together they resolve the solver at every tower
   depth by instance search.
 
 ## The algorithm, one level (`cIntegrateCaseLrt`, `LrtAssembly`)

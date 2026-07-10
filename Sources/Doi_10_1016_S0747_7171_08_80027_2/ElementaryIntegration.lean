@@ -99,7 +99,7 @@ abbrev bie_driver_over_tower := @drvDriver_integrates
 
 /-- **★ The full fuel-free multi-case driver `radIntegrateRationalWf` computes over the tower base**
 (Bronstein 1990, concrete case; `native_decide`): the squarefree-decomposition + partial-fraction +
-V/W-classification + dispatch pipeline runs over `α = ℚ(x)` (`CFracGcdCoreWf (CFrac ℚ)` resolving
+V/W-classification + dispatch pipeline runs over `α = ℚ(x)` (`CFracGcdCoreWf (DenseFrac ℚ)` resolving
 recursively), producing exactly one per-factor record for the single `W`-factor `θ` of `B = θ²`. The entire
 generic rational-part driver instantiates at a tower-level base field with no top-level fuel. -/
 abbrev bie_full_driver_over_tower := @drvFullRun_length

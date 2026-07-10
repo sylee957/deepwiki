@@ -569,7 +569,7 @@ splitting): `deg (…).2.1 < deg (…).2.2`. Assembles the residual-fraction pro
 (`cHermiteReduceTowerG_residual_proper_of_degree_le_one`, from input properness `deg a < deg d` + `deg Dt ≤ 1`
 + the per-factor nonzero/Bézout hypotheses) with the exact-division degree cancellation
 (`cHermiteReduceTowerG_leftover_proper_of_residual`, via the `.2.1`/`.2.2` projections + the residual
-divisibility `hdvd`). The generic core of `hAD` (the `CFrac ℚ` `_numer_degree_lt` reads off `s.card` from
+divisibility `hdvd`). The generic core of `hAD` (the `DenseFrac ℚ` `_numer_degree_lt` reads off `s.card` from
 this by splitting; this stops at the split-free `degree` comparison). -/
 theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α] (Dt a d : DensePoly α)
     (hDtdeg : (toPoly Dt).natDegree ≤ 1)

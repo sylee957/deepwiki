@@ -22,7 +22,9 @@ omit [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFracGcdCoreWf β] [CR
   [Algebra ℚ (CFieldSpec.K β)] in
 /-- `cdeg [CCommRing.one] = 0` over a `CFieldDomain`: the constant `[1]` has degree `0` (primitive regime). -/
 theorem cdegG_one_eq_zero_wf : cdeg ([CCommRing.one] : DensePoly β) = 0 := by
-  have hnz : DensePoly.cisZero ([CCommRing.one] : DensePoly β) = false := CFieldDomain.nz_one
+  have hnz : DensePoly.cisZero ([CCommRing.one] : DensePoly β) = false := by
+    simpa only [CPolyEngine.one_dense_eq, CPolyEngine.cisZero_dense_eq] using
+      (CFieldDomain.nz_one (α := β) (P := DensePoly))
   rw [DensePoly.cisZero, List.isEmpty_eq_false_iff_exists_mem] at hnz
   have hcn : DensePoly.cnorm ([CCommRing.one] : DensePoly β) = [CCommRing.one] := by
     show (if CCommRing.isZero (CCommRing.one : β) then ([] : DensePoly β) else [CCommRing.one]) = [CCommRing.one]
@@ -38,7 +40,7 @@ theorem cdegG_one_eq_zero_wf : cdeg ([CCommRing.one] : DensePoly β) = 0 := by
 
 /-- Residual hypotheses for `crischDERawSolveWf` field soundness: the structural residual, the
 positive-`deg(bbar)` dispatcher side-condition, and the two input-denominator nonzero facts. -/
-structure RawSolveResidualWf (ftilde gtilde : CFrac β) : Prop where
+structure RawSolveResidualWf (ftilde gtilde : DenseFrac β) : Prop where
   /-- The structural residual on the base solve, for the matching normal-denominator output. -/
   hres : ∀ a0 b0 c0 h0 : DensePoly β,
     cRdeNormalDenominator ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den
@@ -63,7 +65,7 @@ structure RawSolveResidualWf (ftilde gtilde : CFrac β) : Prop where
 
 /-- If `crischDERawSolveWf ftilde gtilde = some y` and `RawSolveResidualWf ftilde gtilde` holds, then
 `y = ynum/yden` solves the field-level Risch DE `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. -/
-theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : CFrac β)
+theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : DenseFrac β)
     (hsolve : crischDERawSolveWf ftilde gtilde = some y)
     (hres : RawSolveResidualWf ftilde gtilde) :
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly β)
@@ -86,9 +88,11 @@ theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : CFrac β)
     by_cases hyz : DensePoly.cisZero yden = false
     · rw [dif_pos hyz, Option.some.injEq] at hsolve
       have hy1 : y.num = ynum := by
-        simpa using congrArg CFrac.num hsolve.symm
+        rw [← hsolve]
+        rfl
       have hy2 : y.den = yden := by
-        simpa using congrArg CFrac.den hsolve.symm
+        rw [← hsolve]
+        rfl
       have hydenne : toPoly yden ≠ 0 := by
         intro h; exact absurd ((cisZeroG_iff yden).mpr h) (by simpa using hyz)
       rw [hy1, hy2]

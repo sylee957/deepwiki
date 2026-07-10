@@ -14,6 +14,9 @@ import DeepWiki.ComputableAlgebra.PolyReprResultant
 import DeepWiki.ComputableAlgebra.PolyReprResultantCoprime
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet
+import DeepWiki.ComputableAlgebra.FracRepr
+import DeepWiki.ComputableAlgebra.FracReprDense
+import DeepWiki.ComputableAlgebra.FracReprSparse
 import DeepWiki.ComputableAlgebra.Fraction
 
 /-! # Computable algebra — the generic executable field & polynomial layer

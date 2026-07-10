@@ -27,9 +27,9 @@ proven `hrat` (rational-part telescoping), `hlog` (log-part residue match), and 
 `hsplit`, `IsAlgebraicIntegral 2 ρ f F.ratPart commonDenomQ F.logTerms cofs` holds for the literal
 output `F`. -/
 theorem cIntegrateAlgebraicWf_isAlgebraicIntegral
-    (ρ : CFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (CFrac ℚ))
-    (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
-    (f ratPart logPart commonDenomQ : RadElem (CFrac ℚ)) (cofs : List (RadElem (CFrac ℚ)))
+    (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ))
+    (c : DenseFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
+    (f ratPart logPart commonDenomQ : RadElem (DenseFrac ℚ)) (cofs : List (RadElem (DenseFrac ℚ)))
     (hrat : Ideal.Quotient.mk (radIdeal 2 ρ)
           (DensePoly.toPoly (radMul 2 ρ
             (radDeriv 2 ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound).ratPart) commonDenomQ))
@@ -48,8 +48,8 @@ theorem cIntegrateAlgebraicWf_isAlgebraicIntegral
 `DensePoly.cisZero (DensePoly.csub (algDeriv ρ F) integrand) = true` alone, `toPoly (algDeriv ρ F) = toPoly
 integrand` — the un-cross-multiplied `D(v + Σ cᵢ log uᵢ) = f`. -/
 theorem cIntegrateAlgebraicWf_sound
-    (ρ : CFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (CFrac ℚ))
-    (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) (integrand : RadElem (CFrac ℚ))
+    (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ))
+    (c : DenseFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) (integrand : RadElem (DenseFrac ℚ))
     (hrt : DensePoly.cisZero
       (DensePoly.csub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
       = true) :
@@ -63,10 +63,10 @@ theorem cIntegrateAlgebraicWf_sound
 `IsGeneralAlgebraicIntegralWf`: given the proven `hrat`, `hlog`, and the round-trip `hsplit`,
 `IsGeneralAlgebraicIntegralWf f g v commonDenomQ [(c, u)] cofs` holds for the literal output. -/
 theorem afIntegrateAlgebraicWf_isGeneralAlgebraicIntegralWf
-    (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) (p : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ))
-    (g ratPart logPart commonDenomQ : DensePoly (CFrac ℚ)) (c : CFrac ℚ)
-    (cofs : List (DensePoly (CFrac ℚ)))
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (p : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
+    (g ratPart logPart commonDenomQ : DensePoly (DenseFrac ℚ)) (c : DenseFrac ℚ)
+    (cofs : List (DensePoly (DenseFrac ℚ)))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hrat : Ideal.Quotient.mk (afIdeal f)
           (DensePoly.toPoly (afMul f (afDerivWf f p.1) commonDenomQ))
@@ -92,9 +92,9 @@ theorem afIntegrateAlgebraicWf_isGeneralAlgebraicIntegralWf
 (csub (afDerivWf f v) ratIntegrand) = true` alone, `toPoly (afDerivWf f v) = toPoly ratIntegrand` —
 the faithful `D(v) = ratIntegrand` for the general rational part. -/
 theorem afIntegrateAlgebraicWf_sound
-    (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (CFrac ℚ))
-    (p : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ))
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ))
+    (p : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hcheck : DensePoly.cisZero (DensePoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
     DensePoly.toPoly (afDerivWf f
@@ -109,9 +109,9 @@ theorem afIntegrateAlgebraicWf_sound
 
 /-- The fuel-free general driver output satisfies `IsGeneralRationalIntegralWf`. -/
 theorem afIntegrateAlgebraicWf_isGeneralRationalIntegralWf
-    (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (CFrac ℚ))
-    (p : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ))
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ))
+    (p : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hcheck : DensePoly.cisZero (DensePoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
     DensePoly.IsGeneralRationalIntegralWf f ratIntegrand
@@ -128,8 +128,8 @@ theorem afIntegrateAlgebraicWf_isGeneralRationalIntegralWf
 
 -- ★ RADICAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free radical integrator's output
 -- differentiates to the integrand — `D(F) = integrand` in `K[X]`, from the engine round-trip certificate.
-example (ρ : CFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (CFrac ℚ))
-    (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) (integrand : RadElem (CFrac ℚ))
+example (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ))
+    (c : DenseFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) (integrand : RadElem (DenseFrac ℚ))
     (hrt : DensePoly.cisZero
       (DensePoly.csub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
       = true) :
@@ -139,9 +139,9 @@ example (ρ : CFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (CFrac ℚ))
 
 -- ★ GENERAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free general integrator's
 -- rational part differentiates to the rational integrand — `D(v) = ratIntegrand`, from the engine check.
-example (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (CFrac ℚ))
-    (p : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ))
+example (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ))
+    (p : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hcheck : DensePoly.cisZero (DensePoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
     DensePoly.toPoly (afDerivWf f
@@ -152,9 +152,9 @@ example (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degB
 
 -- ★ GENERAL CAPSTONE predicate form: the fuel-free general integrator's rational part is an
 -- `IsGeneralRationalIntegralWf` witness.
-example (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (CFrac ℚ))
-    (p : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ))
+example (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ))
+    (p : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hcheck : DensePoly.cisZero (DensePoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
     DensePoly.IsGeneralRationalIntegralWf f ratIntegrand
@@ -164,9 +164,9 @@ example (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degB
 
 -- The cross-multiplied radical `IsAlgebraicIntegral` for the literal output (Form A): the proven
 -- telescoping + partial fraction, the split from the round-trip.
-example (ρ : CFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (CFrac ℚ))
-    (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
-    (f ratPart logPart commonDenomQ : RadElem (CFrac ℚ)) (cofs : List (RadElem (CFrac ℚ)))
+example (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ))
+    (c : DenseFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
+    (f ratPart logPart commonDenomQ : RadElem (DenseFrac ℚ)) (cofs : List (RadElem (DenseFrac ℚ)))
     (hrat : Ideal.Quotient.mk (radIdeal 2 ρ)
           (DensePoly.toPoly (radMul 2 ρ
             (radDeriv 2 ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound).ratPart) commonDenomQ))

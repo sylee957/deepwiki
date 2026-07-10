@@ -53,8 +53,8 @@ end DensePoly
 
 open DensePoly
 
-/-- Base field `Lvl1 = CFrac ℚ = ℚ(x)` over which the hyperexponential monomial `t = exp x` sits. -/
-abbrev Lvl1 : Type := CFrac ℚ
+/-- Base field `Lvl1 = DenseFrac ℚ = ℚ(x)` over which the hyperexponential monomial `t = exp x` sits. -/
+abbrev Lvl1 : Type := DenseFrac ℚ
 
 /-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `DensePoly Lvl1 = ℚ(x)[t]` (`t = exp x`,
 `η = 1`). -/

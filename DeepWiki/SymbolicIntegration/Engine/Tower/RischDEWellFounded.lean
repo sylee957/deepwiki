@@ -461,14 +461,14 @@ section Gate
 variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCoreWf β]
 
 /-- The denominator-direct normality gate for tower RDE inputs. -/
-def cdenomNormalGate (a : CFrac β) : Bool :=
+def cdenomNormalGate (a : DenseFrac β) : Bool :=
   DensePoly.cisZero (DensePoly.csub
     (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) a.den).1
     a.den)
 
 end Gate
 
-/-! The validations of `cRischDE` at `CFrac ℚ` live in `Tower/RischDEInstance.lean`, which supplies
-the `CRischField (CFrac ℚ)` instance. -/
+/-! The validations of `cRischDE` at `DenseFrac ℚ` live in `Tower/RischDEInstance.lean`, which supplies
+the `CRischField (DenseFrac ℚ)` instance. -/
 
 end DeepWiki.SymbolicIntegration

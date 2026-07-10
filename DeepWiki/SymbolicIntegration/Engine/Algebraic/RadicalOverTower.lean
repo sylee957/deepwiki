@@ -16,20 +16,20 @@ namespace DeepWiki.SymbolicIntegration
 
 open RadElem
 
-/-! ### The exponential tower base `α = ℚ(x)(eˣ) = CFrac (CFrac ℚ)`
+/-! ### The exponential tower base `α = ℚ(x)(eˣ) = DenseFrac (DenseFrac ℚ)`
 
-`Lvl2 = CFrac (CFrac ℚ)` is the field `ℚ(x)(t₁)`. To make `t₁ = eˣ` its `CDiffField` derivation
+`Lvl2 = DenseFrac (DenseFrac ℚ)` is the field `ℚ(x)(t₁)`. To make `t₁ = eˣ` its `CDiffField` derivation
 becomes `towerDerivCFrac [t₁]` (so `t₁' = t₁`) instead of the default `t₁' = 1`. -/
 
 /-- The exponential monomial `θ = t₁ = eˣ ∈ ℚ(x)(t₁)` (numerator `[0, 1]`, denominator `[1]`). -/
-def expTheta : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one]
+def expTheta : Lvl2 := CFrac.ofPoly [(CCommRing.zero : DenseFrac ℚ), CCommRing.one]
 
 /-- The radicand `ρ = θ + 1 = eˣ + 1 ∈ ℚ(x)(t₁)` (numerator `[1, 1]`), the element with `y² = ρ`. -/
-def expRadicand : Lvl2 := CFrac.ofPoly [(CCommRing.one : CFrac ℚ), CCommRing.one]
+def expRadicand : Lvl2 := CFrac.ofPoly [(CCommRing.one : DenseFrac ℚ), CCommRing.one]
 
-/-- The new-monomial derivative `Dt₁ = t₁ = [0, 1] ∈ DensePoly (CFrac ℚ)` making `t₁` exponential
+/-- The new-monomial derivative `Dt₁ = t₁ = [0, 1] ∈ DensePoly (DenseFrac ℚ)` making `t₁` exponential
 (`t₁' = t₁`), fed to `towerDerivCFrac`. -/
-def expDt1 : DensePoly (CFrac ℚ) := [(CCommRing.zero : CFrac ℚ), CCommRing.one]
+def expDt1 : DensePoly (DenseFrac ℚ) := [(CCommRing.zero : DenseFrac ℚ), CCommRing.one]
 
 /-- The exponential `CDiffField Lvl2` instance `cderiv := towerDerivCFrac [t₁]` (so `t₁' = t₁`, `t₁ = eˣ`).
 A local `def` passed to the radical ops via `@`, leaving the default `t₁' = 1` derivation untouched. -/
@@ -93,13 +93,13 @@ def lvl2OneOverX : Lvl2 :=
   CFrac.ofPoly [CFrac.ofFraction [1] [0, 1] (by decide)]
 
 /-- The logarithmic monomial `θ = t₁ = log x ∈ ℚ(x)(log x)` (numerator `[0, 1]`, denominator `[1]`). -/
-def logTheta : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one]
+def logTheta : Lvl2 := CFrac.ofPoly [(CCommRing.zero : DenseFrac ℚ), CCommRing.one]
 
 /-- The radicand `ρ = θ = log x ∈ ℚ(x)(log x)` (`y² = log x`), numerator `[0, 1]`, denominator `[1]`. -/
-def logRadicandT : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one]
+def logRadicandT : Lvl2 := CFrac.ofPoly [(CCommRing.zero : DenseFrac ℚ), CCommRing.one]
 
-/-- The new-monomial derivative `Dt₁ = θ' = 1/x ∈ DensePoly (CFrac ℚ)` making `t₁` logarithmic (`t₁' = 1/x`). -/
-def logDt1 : DensePoly (CFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by decide)]
+/-- The new-monomial derivative `Dt₁ = θ' = 1/x ∈ DensePoly (DenseFrac ℚ)` making `t₁` logarithmic (`t₁' = 1/x`). -/
+def logDt1 : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by decide)]
 
 /-- The logarithmic `CDiffField Lvl2` instance `cderiv := towerDerivCFrac [1/x]` (so `t₁' = 1/x`,
 `t₁ = log x`). A local `def` supplied via `@`. -/
@@ -137,29 +137,29 @@ theorem logIntegral_eq :
 /-! ### The generic rational-part driver over a tower base
 
 The multi-case rational-part drivers (`radIntegrateCase2Wf` / `radIntegrateRationalWf`) instantiate at
-`α = CFrac ℚ ≅ ℚ(x)`, giving the stacked extension `(ℚ(x)(t₁))[y]/(y² − ρ)`. Example: radicand
+`α = DenseFrac ℚ ≅ ℚ(x)`, giving the stacked extension `(ℚ(x)(t₁))[y]/(y² − ρ)`. Example: radicand
 `ρ = θ³ − θ`, `W = θ`, integrand `1/(θ²·√(θ³−θ))`, validated through `radDeriv 2` at level 2. -/
 
 open DensePoly
 
 /-- Radicand `ρ = θ³ − θ = θ(θ−1)(θ+1) ∈ ℚ(x)[θ]` (`y² = ρ`, squarefree), `[0, −1, 0, 1]`. -/
-def drvRho : DensePoly (CFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [-1], CCommRing.zero, CFrac.ofPoly [1]]
+def drvRho : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [-1], CCommRing.zero, CFrac.ofPoly [1]]
 
 /-- Squarefree factor `W = θ ∈ ℚ(x)[θ]` (a branch place, `W ∣ ρ`), `[0, 1]`. -/
-def drvW : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
+def drvW : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- Numerator `C₀ = 1 ∈ ℚ(x)[θ]` (integrand `1/(θ²·√(θ³−θ))`), `[1]`. -/
-def drvC : DensePoly (CFrac ℚ) := [CCommRing.one]
+def drvC : DensePoly (DenseFrac ℚ) := [CCommRing.one]
 
 /-- The Case-2 driver run `radIntegrateCase2Wf W ρ 2 C = (Crem, vNum)` on `∫ 1/(θ²·√(θ³−θ))` over
 `α = ℚ(x)`, returning the `k = 1` residual and the rational-part numerator over `W² = θ²`. -/
-def drvRun : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ) := radIntegrateCase2Wf drvW drvRho 2 drvC
+def drvRun : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ) := radIntegrateCase2Wf drvW drvRho 2 drvC
 
 /-- The radicand `ρ = θ³ − θ` lifted to a level-2 scalar `ρ ∈ ℚ(x)(t₁) = Lvl2`. -/
 def drvRhoLvl2 : Lvl2 := CFrac.ofPoly drvRho
 
 /-- The common-denominator power `W² = θ²` over `ℚ(x)[θ]`, `cpow W 2`. -/
-def drvW2 : DensePoly (CFrac ℚ) := cpow drvW 2
+def drvW2 : DensePoly (DenseFrac ℚ) := cpow drvW 2
 
 /-- The rational part `v = vNum/(W²·y)` lifted to `RadElem Lvl2` as `[0, vNum/(W²·ρ)]`. -/
 def drvVlift : RadElem Lvl2 :=
@@ -177,13 +177,13 @@ theorem drvDriver_integrates :
     DensePoly.cisZero (DensePoly.csub (radDeriv 2 drvRhoLvl2 drvVlift) drvRatLift) = true := by native_decide
 
 /-- Full-driver denominator `B = θ² ∈ ℚ(x)[θ]`, `[0, 0, 1]`. -/
-def drvB : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.zero, CCommRing.one]
+def drvB : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The full multi-case driver run `radIntegrateRationalWf ρ R B` on `∫ 1/(θ²·√(θ³−θ))` over `α = ℚ(x)`:
 squarefree-decomposes `B = θ²`, classifies `θ` as a `W`-factor, dispatches to Case-2. Returns one
 per-factor record. -/
 def drvFullRun :
-    List (Bool × DensePoly (CFrac ℚ) × ℕ × DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) :=
+    List (Bool × DensePoly (DenseFrac ℚ) × ℕ × DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ)) :=
   radIntegrateRationalWf drvRho drvC drvB
 
 /-- The full multi-case driver computes over the tower base, producing one per-factor record. -/

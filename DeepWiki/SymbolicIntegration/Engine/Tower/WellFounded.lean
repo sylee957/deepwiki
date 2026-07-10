@@ -104,7 +104,7 @@ inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : DensePoly B → Den
 * `class CFracGcdCoreWf α` (one method `cgcdFFRawCoreWf`, the *raw* content-normalized gcd).
 * Base `instance CFracGcdCoreWf ℚ` — `ℚ[t]`'s raw fraction-free gcd is the generic Euclidean gcd
   `(cgcdWf p q).1`.
-* Recursive `instance CFracGcdCoreWf (CFrac β) [CFracGcdCoreWf β]` — clear denominators into
+* Recursive `instance CFracGcdCoreWf (DenseFrac β) [CFracGcdCoreWf β]` — clear denominators into
   `GBPolyCore β`, run the kernel `cprimPRSgcdGenCoreWf` with the level-`β` `cgcdFFRawCoreWf` as
   content-gcd, lift back. Bottoms at `CFracGcdCoreWf ℚ`.
 
@@ -137,13 +137,13 @@ instance instCFracGcdCoreWfQ : CFracGcdCoreWf ℚ where
 section
 variable {β : Type*} [CField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
-/-- `CFracGcdCoreWf (CFrac β)` — the *raw* fraction-free gcd over `β(s)[t]`, built by running the kernel
+/-- `CFracGcdCoreWf (DenseFrac β)` — the *raw* fraction-free gcd over `β(s)[t]`, built by running the kernel
 `cprimPRSgcdGenCoreWf` over the GCD-domain `DensePoly β = β[s]` with the level-`β` `cgcdFFRawCoreWf` as
 content-gcd. Clear denominators of both inputs into `GBPolyCore β = (β[s])[t]`, order them by `t`-degree
 (the PRS needs the larger first), run the primitive PRS with `cgcdB := CFracGcdCoreWf.cgcdFFRawCoreWf`
 recursing one level down, and lift back to `β(s)[t]` — no `cmonic` (this is the raw method). Recurses
 strictly one level down, bottoming at `CFracGcdCoreWf ℚ`. -/
-instance instCFracGcdCoreWfCFrac : CFracGcdCoreWf (CFrac β) where
+instance instCFracGcdCoreWfCFrac : CFracGcdCoreWf (DenseFrac β) where
   cgcdFFRawCoreWf p q :=
     let P := DensePoly.cclearDenomsCore p
     let Q := DensePoly.cclearDenomsCore q

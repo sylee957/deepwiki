@@ -73,28 +73,28 @@ end DensePoly
 `cantorMulTracked` collects the step `v`s (degree-`< g` polynomials over the base). For the elliptic case
 (`g = 1`) each step `v` is a **constant** `c`, and the factor `y − v` is the `RadElem` `[−c, 1]` over the
 base field. `principalGenerator` lifts the constant `v`s to `ℚ(x)` and multiplies the factors `y − vᵢ`
-together (in `(CFrac ℚ)[y]/(y² − ρ)`) into the generator `g`. -/
+together (in `(DenseFrac ℚ)[y]/(y² − ρ)`) into the generator `g`. -/
 
 open DensePoly RadElem
 
 /-- Lift a base `v` to a `y − v` factor over `ℚ(x)`: `genFactorOfV v = [−(v as ℚ(x)), 1]`, the
-`RadElem (CFrac ℚ)` `y − v(x)` of one Cantor reduction step, with the (genus-1) constant `v = [c]`
+`RadElem (DenseFrac ℚ)` `y − v(x)` of one Cantor reduction step, with the (genus-1) constant `v = [c]`
 embedded into `ℚ(x)` via `CFrac.ofPoly`. For the empty `v = []` (the factor `y`) this is `[0, 1]`. -/
-def genFactorOfV (v : DensePoly ℚ) : RadElem (CFrac ℚ) :=
+def genFactorOfV (v : DensePoly ℚ) : RadElem (DenseFrac ℚ) :=
   [CCommRing.neg (CFrac.ofPoly v), CCommRing.one]
 
 /-- The principal generator from tracked `v`s: `principalGeneratorOfVs ρ vs = ∏ᵢ (y − vᵢ)`, the
 product of the `y − vᵢ` step-functions (`genFactorOfV`) of a `cantorMulTracked` run, taken in the
 radical extension (`radMul 2 ρ`) starting from `radOne`. -/
-def principalGeneratorOfVs (ρ : CFrac ℚ) (vs : List (DensePoly ℚ)) : RadElem (CFrac ℚ) :=
+def principalGeneratorOfVs (ρ : DenseFrac ℚ) (vs : List (DensePoly ℚ)) : RadElem (DenseFrac ℚ) :=
   vs.foldl (fun acc v => radMul 2 ρ acc (genFactorOfV v)) radOne
 
 /-- The principal generator of a torsion divisor `principalGenerator ρ ρq g m D` — for `D` of
 order `m` on `y² = ρ`, the function `g` with `div(g) = m·D`: runs `cantorMulTracked ρq g m D`
 and multiplies the tracked `y − v` factors (`principalGeneratorOfVs`). `ρq` is the radicand as
 a `ℚ[x]` polynomial, `ρ` the same radicand as a `ℚ(x)` element. -/
-def principalGenerator (ρ : CFrac ℚ) (ρq : DensePoly ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
-    RadElem (CFrac ℚ) :=
+def principalGenerator (ρ : DenseFrac ℚ) (ρq : DensePoly ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
+    RadElem (DenseFrac ℚ) :=
   principalGeneratorOfVs ρ (cantorMulTracked ρq g m D).2
 
 /-! ## Recovering `g = y − 1` for `(0, 1)` on `y² = x³ + 1`
@@ -104,14 +104,14 @@ def principalGenerator (ρ : CFrac ℚ) (ρq : DensePoly ℚ) (g m : ℕ) (D : M
 
 open RadElem
 
-/-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`CFrac ℚ`), for the radical-extension product. -/
-def pgRhoX3p1 : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
+/-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`DenseFrac ℚ`), for the radical-extension product. -/
+def pgRhoX3p1 : DenseFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 
 /-- The recovered generator `gen = principalGenerator … (0, 1) 3` for `y² = x³ + 1` — expected `y − 1`. -/
-def pgGen01 : RadElem (CFrac ℚ) := principalGenerator pgRhoX3p1 hypRhoX3p1 1 3 hypPt01
+def pgGen01 : RadElem (DenseFrac ℚ) := principalGenerator pgRhoX3p1 hypRhoX3p1 1 3 hypPt01
 
 /-- The target generator `y − 1 = [−1, 1]` over `ℚ(x)` (the constant `v = 1` flex tangent line). -/
-def pgYm1 : RadElem (CFrac ℚ) := [CCommRing.neg CCommRing.one, CCommRing.one]
+def pgYm1 : RadElem (DenseFrac ℚ) := [CCommRing.neg CCommRing.one, CCommRing.one]
 
 /-- The principal generator of `3·(0, 1)` on `y² = x³ + 1` is `y − 1` (`= [−1, 1]`): so
 `div(y − 1) = 3·(0, 1) − 3·∞ = 3·D` and the log term is `(1/3)·log(y − 1)`. -/
@@ -120,7 +120,7 @@ theorem principalGenerator_pt01_eq :
 
 /-- The recovered generator is the raw `RadElem` `[−1, 1]` (`= y − 1`). -/
 theorem pgGen01_raw :
-    DensePoly.cisZero (DensePoly.csub pgGen01 [CCommRing.neg (CCommRing.one : CFrac ℚ), CCommRing.one]) = true := by
+    DensePoly.cisZero (DensePoly.csub pgGen01 [CCommRing.neg (CCommRing.one : DenseFrac ℚ), CCommRing.one]) = true := by
   native_decide
 
 /-! ### The `(1/3)·log(y − 1)` differential check
@@ -130,7 +130,7 @@ The log term is `(1/3)·log g` with `g = y − 1`, so its differential is `ι = 
 `radDeriv g = radMul g (DensePoly.cscale 3 ι)` confirms `g` is the `(1/3)`-log argument. -/
 
 /-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1`. -/
-def pgDiff01 : RadElem (CFrac ℚ) :=
+def pgDiff01 : RadElem (DenseFrac ℚ) :=
   DensePoly.cscale (CField.div CCommRing.one (CFrac.ofPoly [3])) (radLogDeriv pgRhoX3p1 pgYm1)
 
 /-- The `(1/3)·log(y − 1)` differential passes the log-derivative certificate
@@ -155,7 +155,7 @@ passes the log-derivative certificate `radDeriv g = radMul g (3·ι)`. -/
 theorem principal_generator_validates :
     -- the recovered generator is y − 1
     (DensePoly.cisZero (DensePoly.csub pgGen01 pgYm1) = true
-      ∧ DensePoly.cisZero (DensePoly.csub pgGen01 [CCommRing.neg (CCommRing.one : CFrac ℚ), CCommRing.one]) = true)
+      ∧ DensePoly.cisZero (DensePoly.csub pgGen01 [CCommRing.neg (CCommRing.one : DenseFrac ℚ), CCommRing.one]) = true)
     -- the order of D = (0,1) is 3 (the torsion decision feeding the construction)
     ∧ cantorOrder 8 hypRhoX3p1 1 hypPt01 = some 3
     -- the (1/3)·log(y − 1) differential passes the log-derivative certificate

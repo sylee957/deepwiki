@@ -19,17 +19,17 @@ At `β = ℚ`, `radLogArgSolve` reproduces the arcsinh solve `∫ dx/√(x²+1) 
 generalization is conservative. -/
 
 /-- The radicand `ρ = x²+1 ∈ ℚ(x)` (`y = √(x²+1)`), `[1,0,1]` — the arcsinh case at `β = ℚ`. -/
-def genArgRhoArcsinh : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
+def genArgRhoArcsinh : DenseFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over ℚ(x). -/
-def genArgIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift genArgRhoArcsinh CCommRing.one
+def genArgIntegrandArcsinh : RadElem (DenseFrac ℚ) := radInvYLift genArgRhoArcsinh CCommRing.one
 
 /-- The field element `x ∈ ℚ(x)`, `[0,1]` — for matching `N = c·(x + y)`. -/
-def genArgX : CFrac ℚ := CFrac.ofPoly [0, 1]
+def genArgX : DenseFrac ℚ := CFrac.ofPoly [0, 1]
 
 /-- The computed arcsinh log argument under the generic solver: `radLogArgSolve` at `β = ℚ`, `ρ = x²+1`,
 `D = 1`, ansatz degree `1` (expected `N = x + y`). -/
-def genArgSolvedArcsinh : Option (RadElem (CFrac ℚ)) :=
+def genArgSolvedArcsinh : Option (RadElem (DenseFrac ℚ)) :=
   radLogArgSolve genArgRhoArcsinh genArgIntegrandArcsinh [1] 1
 
 -- Computed numerator `N` for arcsinh under the generic solver, a multiple of `x + y`.
@@ -61,7 +61,7 @@ theorem genArg_arcsinh_matches_closed_form :
 
 /-- The fixed denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as a `DensePoly β` (`β = ℚ(x)`): the polynomial `θ = t₁`,
 i.e. `[0, 1]`. -/
-def expDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
+def expDenTheta : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The integrand `1/√(eˣ+1) = 1/y` lifted to `[0, 1/ρ]` over `α = ℚ(x)(eˣ)` (`ρ = eˣ+1`), the `R/y` form
 for the log-derivative system. -/

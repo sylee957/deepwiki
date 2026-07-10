@@ -48,23 +48,23 @@ by the log-derivative certificate. -/
 open RadElem
 
 /-- The radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`), numerator `[1, 0, 1]`. -/
-def radLogRhoArcsinh : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
+def radLogRhoArcsinh : DenseFrac ℚ := CFrac.ofPoly [1, 0, 1]
 
 /-- The radicand `ρ = x² − 1 ∈ ℚ(x)` (`y = √(x²−1)`), numerator `[−1, 0, 1]`. -/
-def radLogRhoArccosh : CFrac ℚ := CFrac.ofPoly [-1, 0, 1]
+def radLogRhoArccosh : DenseFrac ℚ := CFrac.ofPoly [-1, 0, 1]
 
 /-- The field element `x ∈ ℚ(x)`, numerator `[0, 1]`. -/
-def radLogX : CFrac ℚ := CFrac.ofPoly [0, 1]
+def radLogX : DenseFrac ℚ := CFrac.ofPoly [0, 1]
 
 /-- The claimed log argument `u = x + y = [x, 1]` for both `arcsinh`/`arccosh` (`∫ dx/√(x²±1) =
 log(x + y)`). -/
-def radLogUxPlusY : RadElem (CFrac ℚ) := [radLogX, CCommRing.one]
+def radLogUxPlusY : RadElem (DenseFrac ℚ) := [radLogX, CCommRing.one]
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over `ℚ(x)` (`ρ = x²+1`). -/
-def radLogIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift radLogRhoArcsinh CCommRing.one
+def radLogIntegrandArcsinh : RadElem (DenseFrac ℚ) := radInvYLift radLogRhoArcsinh CCommRing.one
 
 /-- The integrand `1/y` of `∫ dx/√(x²−1)`, lifted to `[0, 1/ρ]` over `ℚ(x)` (`ρ = x²−1`). -/
-def radLogIntegrandArccosh : RadElem (CFrac ℚ) := radInvYLift radLogRhoArccosh CCommRing.one
+def radLogIntegrandArccosh : RadElem (DenseFrac ℚ) := radInvYLift radLogRhoArccosh CCommRing.one
 
 /-- `∫ dx/√(x²+1) = log(x + √(x²+1))`: the log-derivative certificate holds for `u = x + y`,
 `integrand = [0, 1/(x²+1)]`, `y² = x²+1`. -/
@@ -91,19 +91,19 @@ log argument `u = (y − 1)/x = [−1/x, 1/x]` passes the certificate (the wrong
 
 /-- The field element `x·ρ = x·(x²+1) = x + x³ ∈ ℚ(x)`, numerator `[0, 1, 0, 1]` — the denominator of the
 lifted integrand `1/(x·y)`. -/
-def radLogXRho : CFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
+def radLogXRho : DenseFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
 
 /-- The field element `1/x ∈ ℚ(x)`. -/
-def radLogInvX : CFrac ℚ := CField.div CCommRing.one radLogX
+def radLogInvX : DenseFrac ℚ := CField.div CCommRing.one radLogX
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`, lifted to `[0, 1/(x·ρ)]` over `ℚ(x)` (`R = 1/x`). -/
-def radLogIntegrandFinite : RadElem (CFrac ℚ) := radInvYLift radLogXRho CCommRing.one
+def radLogIntegrandFinite : RadElem (DenseFrac ℚ) := radInvYLift radLogXRho CCommRing.one
 
 /-- The finite-pole log argument `u = (y − 1)/x = [−1/x, 1/x]` for `∫ dx/(x√(x²+1))`. -/
-def radLogUFinite : RadElem (CFrac ℚ) := [CCommRing.neg radLogInvX, radLogInvX]
+def radLogUFinite : RadElem (DenseFrac ℚ) := [CCommRing.neg radLogInvX, radLogInvX]
 
 /-- The wrong-sign candidate `u = (y + 1)/x = [1/x, 1/x]`, which fails the certificate. -/
-def radLogUFiniteWrong : RadElem (CFrac ℚ) := [radLogInvX, radLogInvX]
+def radLogUFiniteWrong : RadElem (DenseFrac ℚ) := [radLogInvX, radLogInvX]
 
 /-- `∫ dx/(x√(x²+1)) = log((√(x²+1) − 1)/x)`: the log-derivative certificate holds for `u = (y − 1)/x`,
 `integrand = [0, 1/(x(x²+1))]`, `y² = x²+1`. -/
@@ -179,16 +179,16 @@ def radQuadraticLogArg (b : α) : RadElem α :=
 end RadElem
 
 /-- The shifted radicand `ρ = x² + 2x + 2 = (x+1)² + 1 ∈ ℚ(x)`, numerator `[2, 2, 1]`. -/
-def radLogRhoShift : CFrac ℚ := CFrac.ofPoly [2, 2, 1]
+def radLogRhoShift : DenseFrac ℚ := CFrac.ofPoly [2, 2, 1]
 
 /-- The field element `x + 1 ∈ ℚ(x)`, numerator `[1, 1]`. -/
-def radLogXPlusOne : CFrac ℚ := CFrac.ofPoly [1, 1]
+def radLogXPlusOne : DenseFrac ℚ := CFrac.ofPoly [1, 1]
 
 /-- The heuristic-computed log argument `u = (x + 1) + y = [x + 1, 1]` for `∫ dx/√(x² + 2x + 2)`. -/
-def radLogUShift : RadElem (CFrac ℚ) := [radLogXPlusOne, CCommRing.one]
+def radLogUShift : RadElem (DenseFrac ℚ) := [radLogXPlusOne, CCommRing.one]
 
 /-- The integrand `1/y` of `∫ dx/√(x² + 2x + 2)`, lifted to `[0, 1/ρ]` over `ℚ(x)` (`ρ = x²+2x+2`). -/
-def radLogIntegrandShift : RadElem (CFrac ℚ) := radInvYLift radLogRhoShift CCommRing.one
+def radLogIntegrandShift : RadElem (DenseFrac ℚ) := radInvYLift radLogRhoShift CCommRing.one
 
 /-- The quadratic heuristic computes a valid log argument: for `∫ dx/√(x² + 2x + 2)` the heuristic
 `u = (x + 1) + y` satisfies the log-derivative certificate over `ℚ(x)`, `y² = x²+2x+2`. -/

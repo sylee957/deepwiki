@@ -74,7 +74,7 @@ default educated guess; an integrand whose denominator factors into squarefree-b
 
 ## What is documented / deferred
 
-The genuine **multivariate tower** `ℚ(x)[t]` (`a d : DensePoly (CFrac ℚ)`, the `cParallelIntegrateTower`
+The genuine **multivariate tower** `ℚ(x)[t]` (`a d : DensePoly (DenseFrac ℚ)`, the `cParallelIntegrateTower`
 signature stub) needs the special-polynomial list `S^irr_{K:F}` and irreducible factorization over `F̄`
 (Theorems 10.2.1/10.2.2, Examples 10.3.2/10.3.4) — the documented continuation; the §10.1 multivariate
 `SplitFactor`/`SplitSquarefreeFactor` and the §10.4 simple-differential-field exponent bounds
@@ -248,7 +248,7 @@ def cParallelResultDerivQ {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt : P 
 parallel-integration result `res = ((b,s), logs)` satisfies `D(b/s + Σ cⱼ log pⱼ) = a/d` as rational
 functions over `ℚ(t)`, decided by `cisZero (num·d − a·den)` where `(num, den) =
 cParallelResultDerivQ … res`. This is the faithful `D(∫f) = f` certificate (no equality decision on
-`CFrac ℚ` needed — the polynomial cross-difference is zero-tested in the engine representation). -/
+`DenseFrac ℚ` needed — the polynomial cross-difference is zero-tested in the engine representation). -/
 def cParallelCheckQ {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt a d : P ℚ)
     (res : (P ℚ × P ℚ) × List (ℚ × P ℚ)) : Bool :=
   let (num, den) := cParallelResultDerivQ Dt res
@@ -264,26 +264,26 @@ example :
 
 /-! ### The genuine tower `ℚ(x)[t]` — documented signature stub
 
-The prompt's `cParallelIntegrate Dt fuel (a d : DensePoly (CFrac ℚ))` over the genuine differential tower
+The prompt's `cParallelIntegrate Dt fuel (a d : DensePoly (DenseFrac ℚ))` over the genuine differential tower
 `k(t) = ℚ(x)(t)` needs the special-polynomial list `S^irr_{K:F}` (Theorem 10.2.2) and the irreducible
 factorization of `dₙ` over `F̄ = ℚ̄(x)` (Theorem 10.2.1, Examples 10.3.2/10.3.4) before the eq. 10.6 solve
 — the matrix entries then lie in `F = ℚ(x)`, not `Const(k) = ℚ`, so Lemma 7.1.2's row-differentiation
 reduction to a `ℚ`-system precedes `crref` (cf. `ComputableParametric` §7.1). We expose the signature
-(over the **generic** ℚ(x) = `CFrac ℚ` carrier) and route the base-field case `Dt, a, d ∈ ℚ[t]` (every
-coefficient a `ℚ`-constant `CFrac ℚ`) through the landed `DensePoly.cParallelIntegrate`; a coefficient with
+(over the **generic** ℚ(x) = `DenseFrac ℚ` carrier) and route the base-field case `Dt, a, d ∈ ℚ[t]` (every
+coefficient a `ℚ`-constant `DenseFrac ℚ`) through the landed `DensePoly.cParallelIntegrate`; a coefficient with
 a genuine `x`-dependence returns `none` ("deferred to the tower construction"). -/
 
 namespace DensePoly
 
-/-- **A `CFrac ℚ`-coefficient polynomial to a dense `ℚ`-coefficient one, when every coefficient is a
+/-- **A `DenseFrac ℚ`-coefficient polynomial to a dense `ℚ`-coefficient one, when every coefficient is a
 `ℚ`-constant.** `cToRatCoeffsQ p = some q` with `q : DensePoly ℚ` iff each coefficient of
-`p : P (CFrac ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
+`p : P (DenseFrac ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
 numerator and denominator), else `none`. The base-field guard for the tower wrapper: the lowest-terms
 reduction divides `(num, den)` by their gcd (`cgcdWf`/`cdivWf`), and a `ℚ`-constant is exactly a
 degree-0 quotient over a degree-0 (nonzero) remainder denominator. -/
 def cToRatCoeffsQ {P : Type → Type} [CPoly P] [CPolyEngine P]
-    (p : P (CFrac ℚ)) : Option (DensePoly ℚ) :=
-  (CPolyEngine.coeffList p).foldr (fun (z : CFrac ℚ) acc =>
+    (p : P (DenseFrac ℚ)) : Option (DensePoly ℚ) :=
+  (CPolyEngine.coeffList p).foldr (fun (z : DenseFrac ℚ) acc =>
     match acc with
     | none => none
     | some qs =>
@@ -297,21 +297,21 @@ def cToRatCoeffsQ {P : Type → Type} [CPoly P] [CPolyEngine P]
       else none) (some [])
 
 /-- **Parallel integration over the tower `ℚ(x)[t]`** `cParallelIntegrateTower Dt a d` (Bronstein
-§10.3, `a d : P (CFrac ℚ)`): the genuine-tower signature over the generic ℚ(x) = `CFrac ℚ`
+§10.3, `a d : P (DenseFrac ℚ)`): the genuine-tower signature over the generic ℚ(x) = `DenseFrac ℚ`
 coefficient carrier and any polynomial representation `P`. The base-field case — `Dt, a, d` all with
 `ℚ`-constant coefficients (so `k = ℚ`, the field
-`ℚ(t)`) — is routed through `cParallelIntegrate` and the result lifted back to `CFrac ℚ` coefficients
+`ℚ(t)`) — is routed through `cParallelIntegrate` and the result lifted back to `DenseFrac ℚ` coefficients
 (rational part `(b, s)` and log arguments `pⱼ`, with the `ℚ`-constants `cⱼ`). A genuine `x`-dependent
 coefficient (the full tower, needing the §10.2 special-poly list + `F̄`-factorization) returns `none` —
 the documented continuation. -/
-def cParallelIntegrateTower {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt a d : P (CFrac ℚ)) :
-    Option ((P (CFrac ℚ) × P (CFrac ℚ)) × List (ℚ × P (CFrac ℚ))) :=
+def cParallelIntegrateTower {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt a d : P (DenseFrac ℚ)) :
+    Option ((P (DenseFrac ℚ) × P (DenseFrac ℚ)) × List (ℚ × P (DenseFrac ℚ))) :=
   match cToRatCoeffsQ Dt, cToRatCoeffsQ a, cToRatCoeffsQ d with
   | some DtQ, some aQ, some dQ =>
     match cParallelIntegrate DtQ aQ dQ with
     | none => none
     | some ((b, s), logs) =>
-      let lift : DensePoly ℚ → P (CFrac ℚ) := fun p =>
+      let lift : DensePoly ℚ → P (DenseFrac ℚ) := fun p =>
         CPolyEngine.ofCoeffList ((p : List ℚ).map CFrac.ofScalar)
       some ((lift b, lift s), logs.map (fun (c, p) => (c, lift p)))
   | _, _, _ => none

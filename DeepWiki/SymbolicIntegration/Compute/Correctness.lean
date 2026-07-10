@@ -27,7 +27,8 @@ theorem toQFun_qadd (x y : QFun ℚ) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 �
     (map_ne_zero_iff _ hinj).mpr hb
   have hd' : algebraMap ℚ[X] (RatFunc ℚ) (toPoly d) ≠ 0 :=
     (map_ne_zero_iff _ hinj).mpr hd
-  simp only [toQFun, QFun.qadd, DensePoly.toPolyG_caddG,
+  simp only [toQFun, QFun.qadd, CPolyEngine.add_dense_eq, CPolyEngine.mul_dense_eq,
+    DensePoly.toPolyG_caddG,
     DensePoly.toPolyG_cmulG, map_add, map_mul]
   rw [div_add_div _ _ hb' hd']
   ring
@@ -41,6 +42,7 @@ theorem toPoly_qadd_den_ne_zero {x y : QFun ℚ} (hx : toPoly x.2 ≠ 0) (hy : t
     toPoly (QFun.qadd x y).2 ≠ 0 := by
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
+  simp only [QFun.qadd, CPolyEngine.mul_dense_eq]
   show toPoly (cmul b d) ≠ 0
   rw [DensePoly.toPolyG_cmulG]
   exact mul_ne_zero hx hy

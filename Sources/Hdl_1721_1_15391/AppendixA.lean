@@ -7,7 +7,7 @@ import Sources.Hdl_1721_1_15391.Source
 Trager's practical reductions for a simple radical extension `F(y)` with `yⁿ = f ∈ F` (`F` a
 differential field, char 0) — the most common algebraic case. The `DeepWiki.SymbolicIntegration`
 library renders the appendix's **rational part** as computable algorithms over the generic
-ℚ(x) = `CFrac ℚ` carrier (`ComputableRadicalExtension` / `ComputableRadicalCase2` /
+ℚ(x) = `DenseFrac ℚ` carrier (`ComputableRadicalExtension` / `ComputableRadicalCase2` /
 `ComputableRadicalWellFounded`), each `native_decide`-validated on its cleared Hermite identity, and
 proves the end-to-end driver capstone `D(v) = (rational part of the integrand)` with the actual
 diagonal derivation `radDeriv`.
@@ -162,12 +162,12 @@ abbrev appA_radIntegrateCase1 := @DensePoly.radIntegrateCase1Wf
 def appA_sqrtxRun : DensePoly ℚ × DensePoly ℚ :=
   radIntegrateCase1Wf cderiv sqrtxV sqrtxF sqrtx 3 sqrtxC
 
-/-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (CFrac ℚ)`. -/
-def appA_sqrtxVlift : RadElem (CFrac ℚ) :=
+/-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (DenseFrac ℚ)`. -/
+def appA_sqrtxVlift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero, CField.div (CFrac.ofPoly appA_sqrtxRun.2) (CFrac.ofPoly (cmul sqrtxV2 sqrtxF))]
 
-/-- The rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (CFrac ℚ)`. -/
-def appA_sqrtxRatLift : RadElem (CFrac ℚ) :=
+/-- The rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (DenseFrac ℚ)`. -/
+def appA_sqrtxRatLift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero,
     CField.sub (CField.div (CFrac.ofPoly sqrtxC) (CFrac.ofPoly (cmul sqrtxV3 sqrtxF)))
       (CField.div (CFrac.ofPoly appA_sqrtxRun.1) (CFrac.ofPoly (cmul sqrtxV sqrtxF)))]
@@ -185,12 +185,12 @@ theorem appA_sqrtxDriver_integrates :
 def appA_cubeRun : DensePoly ℚ × DensePoly ℚ :=
   radIntegrateCase1Wf cderiv cubeV cubeF cube 3 cubeC
 
-/-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (CFrac ℚ)`. -/
-def appA_cubeVlift : RadElem (CFrac ℚ) :=
+/-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (DenseFrac ℚ)`. -/
+def appA_cubeVlift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero, CField.div (CFrac.ofPoly appA_cubeRun.2) (CFrac.ofPoly (cmul (cpow cubeV 2) cubeF))]
 
-/-- The rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (CFrac ℚ)`. -/
-def appA_cubeRatLift : RadElem (CFrac ℚ) :=
+/-- The rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (DenseFrac ℚ)`. -/
+def appA_cubeRatLift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero,
     CField.sub (CField.div (CFrac.ofPoly cubeC) (CFrac.ofPoly (cmul (cpow cubeV 3) cubeF)))
       (CField.div (CFrac.ofPoly appA_cubeRun.1) (CFrac.ofPoly (cmul cubeV cubeF)))]
@@ -231,8 +231,8 @@ def appA_mcV : DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePo
 def appA_mcW : DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePoly ℚ :=
   (appA_mcRun.getD 1 (false, [], 0, [], [], [])).2
 
-/-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (CFrac ℚ)`. -/
-def appA_mcVlift : RadElem (CFrac ℚ) :=
+/-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (DenseFrac ℚ)`. -/
+def appA_mcVlift : RadElem (DenseFrac ℚ) :=
   DensePoly.cadd
     [CCommRing.zero, CField.div (CFrac.ofPoly appA_mcV.2.2.2.1)
       (CFrac.ofPoly (cmul (cpow appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
@@ -240,7 +240,7 @@ def appA_mcVlift : RadElem (CFrac ℚ) :=
       (CFrac.ofPoly (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho))]
 
 /-- The integrand's total rational part after subtracting the two `k = 1` leftovers. -/
-def appA_mcRatLift : RadElem (CFrac ℚ) :=
+def appA_mcRatLift : RadElem (DenseFrac ℚ) :=
   DensePoly.cadd
     [CCommRing.zero, CField.sub
       (CField.div (CFrac.ofPoly appA_mcV.2.2.1) (CFrac.ofPoly (cmul (cpow appA_mcV.1 appA_mcV.2.1) mcRho)))

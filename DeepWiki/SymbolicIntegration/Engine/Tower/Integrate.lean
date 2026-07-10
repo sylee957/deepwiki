@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers
 The integration pipeline (special/normal split, canonical representation, transcendental Hermite
-reduction, Rothstein–Trager logarithmic part) over the generic tower carrier `CFrac α`. Pipeline defs
+reduction, Rothstein–Trager logarithmic part) over the generic tower carrier `DenseFrac α`. Pipeline defs
 carry the suffix `G`, run on the generic engine ops, and take every `t`-gcd from the flat fraction-free
 `CFracGcdCore.cgcdFFCore` to avoid fraction-field coefficient swell. This file keeps the fueled engine and
 the shared level-2 example data; the fuel-free `native_decide` validations live downstream. -/
@@ -18,7 +18,7 @@ universe u v
 
 /-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
 
-This is the headline. We run `cHermiteReduceTower` over `DensePoly (CFrac (CFrac ℚ)) =
+This is the headline. We run `cHermiteReduceTower` over `DensePoly (DenseFrac (DenseFrac ℚ)) =
 ℚ(x)(t₁)[t₂]` (tower level 2, the new monomial `t₂`) on a concrete proper fraction whose
 denominator has a repeated `t₂`-factor, and certify `D(g) + h = f`. The setting is Bronstein's
 Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt₂ = t₂² + 1`), and
@@ -28,8 +28,8 @@ Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt�
 `D(g) + h = (t₂²+1)/t₂² − 1 = 1/t₂² = f`.
 
 All coefficients are level-2 *constants* (elements of ℚ ⊂ ℚ(x)(t₁) = `Lvl2`), so the engine genuinely
-runs the level-2 `CField`/`CDiffField` instances over `DensePoly Lvl2`. The `CField (CFrac (CFrac ℚ))`
-and `CDiffField (CFrac (CFrac ℚ))` instances are `[CField …]`-computable with `Prop`-erased subtype
+runs the level-2 `CField`/`CDiffField` instances over `DensePoly Lvl2`. The `CField (DenseFrac (DenseFrac ℚ))`
+and `CDiffField (DenseFrac (DenseFrac ℚ))` instances are `[CField …]`-computable with `Prop`-erased subtype
 proofs, so nothing noncomputable reaches the native compiler — `native_decide` reduces. The load-bearing
 check is the cleared-denominator form of `D(gnum/gden) + h_num/h_den = a/d`, equating numerators over the
 common denominator `gden²·h_den·d`: `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`. -/

@@ -44,8 +44,8 @@ theorem elemLogResidual_eq_integrand_sub_ratDeriv :
       (DensePoly.csub elemIntegrand (@radDeriv _ _ expTowerDiff 2 expRadicand elemRatPart))) = true := by
   native_decide
 
-/-- The log-solve denominator `D = θ = eˣ` as the `DensePoly (CFrac ℚ)` `[0, 1]`. -/
-def elemDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
+/-- The log-solve denominator `D = θ = eˣ` as the `DensePoly (DenseFrac ℚ)` `[0, 1]`. -/
+def elemDenTheta : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The recovered result `F' = cIntegrateElementary ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
 def elemRecovered : AlgIntegralResult Lvl2 :=

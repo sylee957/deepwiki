@@ -20,12 +20,12 @@ open DensePoly
 
 /-- A fractional `O`-ideal: an `n×n` matrix over `K(x)` whose row `i` is a generator
 `genᵢ = Σⱼ Mᵢⱼ wⱼ` in integral-basis `[w]`-coordinates. -/
-abbrev GenDivisor := List (List (CFrac ℚ))
+abbrev GenDivisor := List (List (DenseFrac ℚ))
 
 /-- The identity divisor `idealIdentity n = Iₙ` — the order `O`, the Pic neutral element. -/
 def idealIdentity (n : ℕ) : GenDivisor :=
   (List.range n).map (fun i =>
-    (List.range n).map (fun j => if i = j then (CCommRing.one : CFrac ℚ) else CCommRing.zero))
+    (List.range n).map (fun j => if i = j then (CCommRing.one : DenseFrac ℚ) else CCommRing.zero))
 
 /-- Entrywise lowest-terms reduction `qReduceMat I = I.map (List.map qReduce)`, value-preserving on
 each `ℚ(x)` entry (cancels common polynomial factors only). -/
@@ -35,14 +35,14 @@ def qReduceMat (I : GenDivisor) : GenDivisor :=
 /-- Reconstruct a `K(x, y)` element from `[w]`-coordinates: `wToAf basis row = Σⱼ rowⱼ·wⱼ` (inverse
 of `toOCoords`). -/
 def wToAf {P : Type → Type} [CPoly P] [CPolyEngine P]
-    (basis : List (P (CFrac ℚ))) (row : List (CFrac ℚ)) : P (CFrac ℚ) :=
+    (basis : List (P (DenseFrac ℚ))) (row : List (DenseFrac ℚ)) : P (DenseFrac ℚ) :=
   (List.range basis.length).foldl (fun acc i =>
     CPolyEngine.add acc
       (CPolyEngine.scale (row.getD i CCommRing.zero) (basis.getD i CPoly.czero))) CPoly.czero
 
 example :
-    let ofList : List (CFrac ℚ) → CPoly.SparsePoly (CFrac ℚ) := CPolyEngine.ofCoeffList
-    let one : CFrac ℚ := CCommRing.one
+    let ofList : List (DenseFrac ℚ) → CPoly.SparsePoly (DenseFrac ℚ) := CPolyEngine.ofCoeffList
+    let one : DenseFrac ℚ := CCommRing.one
     CPolyEngine.cisZero
       (CPolyEngine.sub (wToAf [ofList [one], ofList [CCommRing.zero, one]] [one, one])
         (ofList [one, one])) = true := by
@@ -52,8 +52,8 @@ example :
 
 /-- The principal divisor `principalDivisor f basis g = div(g) = g·O`: row `i` is the `[w]`-coordinates
 of `g·wᵢ = afMul f g wᵢ` (via `B⁻¹`); empty matrix if `B` is singular. -/
-def principalDivisor (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (g : DensePoly (CFrac ℚ)) : GenDivisor :=
+def principalDivisor (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (g : DensePoly (DenseFrac ℚ)) : GenDivisor :=
   let n := cdeg f
   let B := orderToPowerMatrix n basis
   match matInv n B with
@@ -74,7 +74,7 @@ def idealClear (I : GenDivisor) : DensePoly ℚ × PolyMatrix ℚ :=
 /-- The ideal product `idealProduct f basis I J` (the Pic group law): the fractional `O`-ideal from
 the `n²` cross-products `genᵢ·genₖ`, cleared to a common denominator and `hermiteRowReduce`d to `n`
 generators; `[]` if `B` is singular. -/
-def idealProduct (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+def idealProduct (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (I J : GenDivisor) : GenDivisor :=
   let n := cdeg f
   let B := orderToPowerMatrix n basis
@@ -83,7 +83,7 @@ def idealProduct (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ
   | some Binv =>
     -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry put in lowest terms (`qReduceMat`,
     -- value-preserving) before the common-denominator clearing below
-    let cross : List (List (CFrac ℚ)) :=
+    let cross : List (List (DenseFrac ℚ)) :=
       qReduceMat (I.flatMap (fun gi =>
         J.map (fun gk =>
           toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk)))))

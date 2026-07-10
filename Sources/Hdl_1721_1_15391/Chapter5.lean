@@ -198,8 +198,8 @@ abbrev ch5_ratKernelVector (nCols : ℕ) (rows : List (List ℚ)) : Option (List
 /-- **The cleared log-derivative residual** `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' −
 radMul(N, integrand)·D` (Trager, Chapter 5 §1, the cleared `df/f` relation): the `RadElem` whose vanishing
 (both ℚ(x)-coefficients zero) says `∫(integrand) dx = log(N/D)`. ℚ-linear in `N`. -/
-abbrev ch5_logResidual (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
-    (N : RadElem (CFrac ℚ)) : RadElem (CFrac ℚ) :=
+abbrev ch5_logResidual (ρ : DenseFrac ℚ) (integrand : RadElem (DenseFrac ℚ)) (D : DensePoly ℚ)
+    (N : RadElem (DenseFrac ℚ)) : RadElem (DenseFrac ℚ) :=
   radLogResidual ρ integrand D N
 
 /-- **The ℚ-matrix of the cleared log-derivative system** `radLogMatrix ρ integrand D degBound` (Trager,
@@ -207,7 +207,7 @@ Chapter 5 §2): evaluate the residual on the monomial basis `Nⱼ ∈ {[xᵏ,0],
 ℚ-linear), clear each rational-function entry to a polynomial numerator over a common denominator, and read
 off the `x`-power coefficients — one row per `x`-power per component, one column per basis index. A kernel
 vector solves for `N`. -/
-abbrev ch5_logMatrix (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
+abbrev ch5_logMatrix (ρ : DenseFrac ℚ) (integrand : RadElem (DenseFrac ℚ)) (D : DensePoly ℚ)
     (degBound : ℕ) : List (List ℚ) × ℕ :=
   radLogMatrix ρ integrand D degBound
 
@@ -217,8 +217,8 @@ log(N/D)`, COMPUTED by building the ℚ-matrix `radLogMatrix` (undetermined coef
 nonzero kernel vector (`kernelVector`). Returns `none` on the non-principal / torsion boundary (trivial
 kernel at the degree bound, OUT OF SCOPE — Ch. 5 §3 / Ch. 6). The OUTPUT is `u = N/D`: `u` is computed, not
 supplied. -/
-abbrev ch5_logArgSolve (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
-    (degBound : ℕ) : Option (RadElem (CFrac ℚ)) :=
+abbrev ch5_logArgSolve (ρ : DenseFrac ℚ) (integrand : RadElem (DenseFrac ℚ)) (D : DensePoly ℚ)
+    (degBound : ℕ) : Option (RadElem (DenseFrac ℚ)) :=
   radLogArgSolve ρ integrand D degBound
 
 /-- **★ `radLogArgSolve` COMPUTES `u = x + y` for `∫ dx/√(x²+1)` (arcsinh)** (Trager, Chapter 5 §1–§2,

@@ -18,36 +18,36 @@ open DensePoly
 
 /-! ## Result type and decision statement -/
 
-/-- The general-curve integral `∫ = v + Σ cᵢ log uᵢ`: rational part `ratPart : DensePoly (CFrac ℚ)`
+/-- The general-curve integral `∫ = v + Σ cᵢ log uᵢ`: rational part `ratPart : DensePoly (DenseFrac ℚ)`
 over `K(x)[y]/(f)` plus `logTerms` of `(cᵢ ∈ ℚ(x), uᵢ ∈ K(x)[y]/(f))`; the output of
 `cIntegrateGeneralCurveDecide`. -/
 structure GeneralCurveIntegralResult where
   /-- The rational part `v` of `∫ = v + Σ cᵢ log uᵢ` (a carrier element of `K(x)[y]/(f)`). -/
-  ratPart : DensePoly (CFrac ℚ)
+  ratPart : DensePoly (DenseFrac ℚ)
   /-- The log terms `[(c₁, u₁), …]`: each a coefficient `cᵢ ∈ ℚ(x)` and an argument `uᵢ ∈ K(x)[y]/(f)`. -/
-  logTerms : List (CFrac ℚ × DensePoly (CFrac ℚ))
+  logTerms : List (DenseFrac ℚ × DensePoly (DenseFrac ℚ))
 
 /-! ### The residual data: the torsion-branch inputs `GeneralCurveTorsionInputs` -/
 
 /-- The torsion-branch inputs: the residue `divisor : GenDivisor` of the integrand, and the
-principal-generator oracle `genGen : ℕ → DensePoly (CFrac ℚ)` giving, for order `m`, a `g` with
+principal-generator oracle `genGen : ℕ → DensePoly (DenseFrac ℚ)` giving, for order `m`, a `g` with
 `div(g) = m·δ`. The data side of `GeneralPicTorsionFrontier`. -/
 structure GeneralCurveTorsionInputs where
   /-- The residue divisor `δ : GenDivisor` of the integrand (a fractional `O`-ideal over the integral basis). -/
   divisor : GenDivisor
   /-- The principal-generator oracle: given the torsion order `m`, the function `g` with `div(g) = m·δ`. -/
-  genGen : ℕ → DensePoly (CFrac ℚ)
+  genGen : ℕ → DensePoly (DenseFrac ℚ)
 
 /-! ### The torsion log term `genCurveTorsionLogTerm` -/
 
 /-- The torsion log term: `genDivisorOrder fuel f basis tin.divisor` yields `some m` ⟹
 `some (1/m, tin.genGen m)` (the `(1/m)·log g` term for the `m`-torsion residue divisor); `none`
 (non-torsion within fuel) ⟹ `none`. -/
-def genCurveTorsionLogTerm (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (tin : GeneralCurveTorsionInputs) : Option (CFrac ℚ × DensePoly (CFrac ℚ)) :=
+def genCurveTorsionLogTerm (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (tin : GeneralCurveTorsionInputs) : Option (DenseFrac ℚ × DensePoly (DenseFrac ℚ)) :=
   match genDivisorOrder fuel f basis tin.divisor with
   | none => none
-  | some m => some (CField.div (CCommRing.one : CFrac ℚ) (CFrac.ofScalar (m : ℚ)), tin.genGen m)
+  | some m => some (CField.div (CCommRing.one : DenseFrac ℚ) (CFrac.ofScalar (m : ℚ)), tin.genGen m)
 
 /-! ### The decision integrator `cIntegrateGeneralCurveDecide` -/
 
@@ -55,8 +55,8 @@ def genCurveTorsionLogTerm (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : Lis
 compute the rational part `v = afRationalSolveWf …` (fail ⟹ `none`); if `hasLogPart = false` ⟹
 `some ⟨v, []⟩`; else principal `afLogArgSolveWf … = some u` ⟹ `some ⟨v, [(1, u)]⟩`; else the torsion
 decision `genCurveTorsionLogTerm` ⟹ `some ⟨v, [(1/m, g)]⟩` (torsion) or `none` (non-torsion). -/
-def cIntegrateGeneralCurveDecide (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
-    (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (CFrac ℚ))
+def cIntegrateGeneralCurveDecide (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+    (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ))
     (tin : GeneralCurveTorsionInputs) (hasLogPart : Bool) :
     Option GeneralCurveIntegralResult :=
   match afRationalSolveWf f basis degBound ratIntegrand with
@@ -77,8 +77,8 @@ def cIntegrateGeneralCurveDecide (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis
 /-- A `none` output means the rational solve failed, or (log part present, principal solve failed,
 and) the torsion decision returned `none`: `afRationalSolveWf … = none ∨ (afLogArgSolveWf …
 isNone ∧ genCurveTorsionLogTerm … isNone)`. -/
-theorem genCurveTorsionLogTerm_none_of_decide_none (fuel : ℕ) (f : DensePoly (CFrac ℚ))
-    (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (CFrac ℚ))
+theorem genCurveTorsionLogTerm_none_of_decide_none (fuel : ℕ) (f : DensePoly (DenseFrac ℚ))
+    (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ))
     (tin : GeneralCurveTorsionInputs) (hasLogPart : Bool)
     (hnone : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
       = none) :
@@ -105,10 +105,10 @@ theorem genCurveTorsionLogTerm_none_of_decide_none (fuel : ℕ) (f : DensePoly (
 
 section Soundness
 
-variable (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-variable (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) (tin : GeneralCurveTorsionInputs)
-variable (hasLogPart : Bool) (integrand commonDenomQ : DensePoly (CFrac ℚ))
-variable (cofs : List (DensePoly (CFrac ℚ)))
+variable (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+variable (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
+variable (hasLogPart : Bool) (integrand commonDenomQ : DensePoly (DenseFrac ℚ))
+variable (cofs : List (DensePoly (DenseFrac ℚ)))
 
 /-- The soundness residual: the per-branch instances turning each `some F` branch into
 `IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenomQ F.logTerms cofs` (the cross-multiplied
@@ -179,7 +179,7 @@ end Soundness
 
 section PicTorsion
 
-variable (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ)))
+variable (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
 variable (tin : GeneralCurveTorsionInputs)
 
 /-- The torsion term fires iff the order test succeeds: `(genCurveTorsionLogTerm fuel f basis
@@ -214,12 +214,12 @@ end PicTorsion
 
 section Completeness
 
-variable (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-variable (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) (tin : GeneralCurveTorsionInputs)
+variable (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+variable (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
 
 /-- Completeness: on the non-principal log path (`afRationalSolveWf = some v`, `hasLogPart = true`,
 `afLogArgSolveWf = none`), under `GeneralPicTorsionFrontier`, a `none` output gives `¬ elem`. -/
-theorem cIntegrateGeneralCurveDecide_complete {isTorsion elem : Prop} (v : DensePoly (CFrac ℚ))
+theorem cIntegrateGeneralCurveDecide_complete {isTorsion elem : Prop} (v : DensePoly (DenseFrac ℚ))
     (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
     (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
     (_hlog : afLogArgSolveWf f basis degBound logIntegrand = none)
@@ -247,12 +247,12 @@ end Completeness
 
 section Decides
 
-variable (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-variable (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) (tin : GeneralCurveTorsionInputs)
+variable (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+variable (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
 
 /-- On the non-principal log path (`afRationalSolveWf = some v`, `hasLogPart = true`, `afLogArgSolveWf
 = none`), `cIntegrateGeneralCurveDecide … isSome ↔ genCurveTorsionLogTerm … isSome`. -/
-theorem decide_isSome_iff_genTorsion_isSome (v : DensePoly (CFrac ℚ))
+theorem decide_isSome_iff_genTorsion_isSome (v : DensePoly (DenseFrac ℚ))
     (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
     (hlog : afLogArgSolveWf f basis degBound logIntegrand = none) :
     (cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true).isSome = true
@@ -265,7 +265,7 @@ theorem decide_isSome_iff_genTorsion_isSome (v : DensePoly (CFrac ℚ))
 
 /-- The decision-procedure capstone: on the non-principal log path, under `GeneralPicTorsionFrontier`,
 `(∃ F, cIntegrateGeneralCurveDecide … true = some F) ↔ elem`. -/
-theorem cIntegrateGeneralCurveDecide_decides {isTorsion elem : Prop} (v : DensePoly (CFrac ℚ))
+theorem cIntegrateGeneralCurveDecide_decides {isTorsion elem : Prop} (v : DensePoly (DenseFrac ℚ))
     (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
     (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
     (hlog : afLogArgSolveWf f basis degBound logIntegrand = none) :
@@ -292,7 +292,7 @@ def genCurveWitnessTorsionInputs : GeneralCurveTorsionInputs :=
 `logIntegrand = 1`, fuel `8`; expected `some ⟨v, [(1/1, y)]⟩`. -/
 def genCurveWitnessTorsion : Option GeneralCurveIntegralResult :=
   cIntegrateGeneralCurveDecide 8 gcuspCubicF gcuspCubicBasis 2
-    ([] : DensePoly (CFrac ℚ)) ([CCommRing.one] : DensePoly (CFrac ℚ)) genCurveWitnessTorsionInputs true
+    ([] : DensePoly (DenseFrac ℚ)) ([CCommRing.one] : DensePoly (DenseFrac ℚ)) genCurveWitnessTorsionInputs true
 
 /-- The decision returns `some` with one `(1/1)·log` term on `y³ = x²`: `(isSome, logTerms.length,
 coefficient = 1/1) = (true, some 1, some true)`. -/
@@ -315,7 +315,7 @@ def genCurveWitnessNonTorsionInputs : GeneralCurveTorsionInputs :=
 0`, `logIntegrand = 1`; expected `none`. -/
 def genCurveWitnessNonTorsion : Option GeneralCurveIntegralResult :=
   cIntegrateGeneralCurveDecide 2 hcubeF hcubeBasis 2
-    ([] : DensePoly (CFrac ℚ)) ([CCommRing.one] : DensePoly (CFrac ℚ)) genCurveWitnessNonTorsionInputs true
+    ([] : DensePoly (DenseFrac ℚ)) ([CCommRing.one] : DensePoly (DenseFrac ℚ)) genCurveWitnessNonTorsionInputs true
 
 /-- The decision returns `none` on the order-3 divisor with fuel `2 < 3`: `genCurveWitnessNonTorsion =
 none`. -/
@@ -339,9 +339,9 @@ theorem self_determining_general_curve_decision_validates :
 section Restatements
 
 -- SOUNDNESS (modulo the named frontier): `some F → D(F) = integrand`.
-example (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) (tin : GeneralCurveTorsionInputs)
-    (hasLogPart : Bool) (integrand commonDenomQ : DensePoly (CFrac ℚ)) (cofs : List (DensePoly (CFrac ℚ)))
+example (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
+    (hasLogPart : Bool) (integrand commonDenomQ : DensePoly (DenseFrac ℚ)) (cofs : List (DensePoly (DenseFrac ℚ)))
     (hres : GeneralCurveDecideSoundnessResidual fuel f basis degBound ratIntegrand logIntegrand tin
       integrand commonDenomQ cofs)
     (F : GeneralCurveIntegralResult)
@@ -352,9 +352,9 @@ example (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac
     integrand commonDenomQ cofs hres F hsome
 
 -- COMPLETENESS (modulo the named frontier): `none → ¬ elementary` (non-principal path).
-example (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) (tin : GeneralCurveTorsionInputs)
-    {isTorsion elem : Prop} (v : DensePoly (CFrac ℚ))
+example (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
+    {isTorsion elem : Prop} (v : DensePoly (DenseFrac ℚ))
     (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
     (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
     (hlog : afLogArgSolveWf f basis degBound logIntegrand = none)
@@ -365,9 +365,9 @@ example (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac
     hlog hnone
 
 -- DECISION PROCEDURE (modulo the named frontier): `(∃ F, … = some F) ⟺ elementary`.
-example (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (CFrac ℚ)) (tin : GeneralCurveTorsionInputs)
-    {isTorsion elem : Prop} (v : DensePoly (CFrac ℚ))
+example (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
+    {isTorsion elem : Prop} (v : DensePoly (DenseFrac ℚ))
     (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
     (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
     (hlog : afLogArgSolveWf f basis degBound logIntegrand = none) :

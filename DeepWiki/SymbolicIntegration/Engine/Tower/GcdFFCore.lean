@@ -89,25 +89,25 @@ def cprimPRSgcdGenCore (cgcdB : DensePoly B → DensePoly B → DensePoly B) :
       let r := GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q)
       cprimPRSgcdGenCore cgcdB fuel Q r
 
-/-! ### Clear denominators `DensePoly (CFrac β) ↔ GBPolyCore β` (`β(s)[t] ↔ (β[s])[t]`) -/
+/-! ### Clear denominators `DensePoly (DenseFrac β) ↔ GBPolyCore β` (`β(s)[t] ↔ (β[s])[t]`) -/
 
 namespace DensePoly
 
 variable {β : Type*} [CField β] [CFieldDomain β]
 
-/-- Clear denominators `cclearDenomsCore p ∈ GBPolyCore β`: multiply `p` over `α = CFrac β` by the
+/-- Clear denominators `cclearDenomsCore p ∈ GBPolyCore β`: multiply `p` over `α = DenseFrac β` by the
 product of its coefficient denominators, so coefficient `i` becomes `numᵢ · ∏_{j≠i} denⱼ ∈ DensePoly β`. -/
-def cclearDenomsCore (p : DensePoly (CFrac β)) : GBPolyCore β :=
-  let cs : List (CFrac β) := p
+def cclearDenomsCore (p : DensePoly (DenseFrac β)) : GBPolyCore β :=
+  let cs : List (DenseFrac β) := p
   let dens : List (DensePoly β) := cs.map CFrac.den
   cs.zipIdx.map (fun (ci, i) =>
     let prodOthers := (dens.zipIdx.filter (fun (_, j) => j ≠ i)).foldl
       (fun acc (d, _) => DensePoly.cmul acc d) [CCommRing.one]
     DensePoly.cmul (CFrac.num ci) prodOthers)
 
-/-- Lift back `liftGBPolyCore p ∈ DensePoly (CFrac β)`: read each `DensePoly β` coefficient `c` as the
+/-- Lift back `liftGBPolyCore p ∈ DensePoly (DenseFrac β)`: read each `DensePoly β` coefficient `c` as the
 fraction `c/1`. -/
-def liftGBPolyCore (p : GBPolyCore β) : DensePoly (CFrac β) :=
+def liftGBPolyCore (p : GBPolyCore β) : DensePoly (DenseFrac β) :=
   p.map CFrac.ofPoly
 
 end DensePoly

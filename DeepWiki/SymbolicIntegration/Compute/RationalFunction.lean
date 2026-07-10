@@ -37,19 +37,22 @@ Each computable operation realizes the corresponding `RatFunc ℚ` field operati
 
 /-- `toQFun QFun.qone = 1` in `RatFunc ℚ`. -/
 theorem toQFun_qone : toQFun QFun.qone = 1 := by
-  simp only [toQFun, QFun.qone, DensePoly.toPolyG_one_singleton,
-    map_one, div_one]
+  have hone : DensePoly.toPoly (CPoly.one : DensePoly ℚ) = 1 := by
+    rw [← toPoly_list_eq, CPoly.toPoly_one]
+  simp only [toQFun, QFun.qone, hone, map_one, div_one]
 
 /-- `toQFun (QFun.qneg x) = -toQFun x` in `RatFunc ℚ`. -/
 theorem toQFun_qneg (x : QFun ℚ) : toQFun (QFun.qneg x) = -toQFun x := by
   obtain ⟨a, b⟩ := x
-  simp only [toQFun, QFun.qneg, DensePoly.toPolyG_cnegG, map_neg, neg_div]
+  simp only [toQFun, QFun.qneg, CPolyEngine.neg_dense_eq,
+    DensePoly.toPolyG_cnegG, map_neg, neg_div]
 
 /-- `toQFun (QFun.qmul x y) = toQFun x * toQFun y` in `RatFunc ℚ`. -/
 theorem toQFun_qmul (x y : QFun ℚ) : toQFun (QFun.qmul x y) = toQFun x * toQFun y := by
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
-  simp only [toQFun, QFun.qmul, DensePoly.toPolyG_cmulG, map_mul]
+  simp only [toQFun, QFun.qmul, CPolyEngine.mul_dense_eq,
+    DensePoly.toPolyG_cmulG, map_mul]
   rw [div_mul_div_comm]
 
 /-- `toQFun (QFun.qsub x y) = toQFun x - toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
@@ -62,9 +65,10 @@ theorem toQFun_qsub (x y : QFun ℚ) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 �
 theorem toQFun_qinv (x : QFun ℚ) : toQFun (QFun.qinv x) = (toQFun x)⁻¹ := by
   obtain ⟨a, b⟩ := x
   rw [QFun.qinv]
-  by_cases ha : cisZero (a, b).1 = true
+  by_cases ha : CPolyEngine.cisZero (a, b).1 = true
   · -- numerator is zero: `toQFun (0/b) = 0`, and `0⁻¹ = 0`.
-    have ha0 : toPoly a = 0 := (DensePoly.cisZeroG_iff a).mp ha
+    have ha' : DensePoly.cisZero a = true := by simpa only [CPolyEngine.cisZero_dense_eq] using ha
+    have ha0 : toPoly a = 0 := (DensePoly.cisZeroG_iff a).mp ha'
     simp only [ha, if_true]
     rw [toQFun_qzero, toQFun, ha0, map_zero, zero_div, inv_zero]
   · -- numerator nonzero: `QFun.qinv (a,b) = (b,a)`, `am(b)/am(a) = (am(a)/am(b))⁻¹`.
@@ -96,8 +100,10 @@ theorem toQFun_qderiv (x : QFun ℚ) (hb : toPoly x.2 ≠ 0) : toQFun (QFun.qder
           - am (toPoly a) * am (derivative (toPoly b))) / (am (toPoly b) ^ 2) := by
     rw [deriv_div, hda, hdb]
   -- compute `toQFun (QFun.qderiv (a,b))`: numerator `cderiv a · b − a · cderiv b`, denom `b · b`.
-  simp only [toQFun, QFun.qderiv, DensePoly.toPolyG_csubG,
-    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, map_sub, map_mul]
+  simp only [toQFun, QFun.qderiv, CPolyEngine.sub, CPolyEngine.add_dense_eq,
+    CPolyEngine.neg_dense_eq, CPolyEngine.mul_dense_eq, CPolyEngine.deriv_dense_eq,
+    DensePoly.toPolyG_caddG, DensePoly.toPolyG_cnegG,
+    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, map_add, map_neg, map_mul]
   rw [hderiv, pow_two]
   ring
 
@@ -131,8 +137,12 @@ theorem qeq_iff (x y : QFun ℚ) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0)
   have hbm : am (toPoly b) ≠ 0 := CFrac.amG_toPolyG_ne_zero hb
   have hdm : am (toPoly d) ≠ 0 := CFrac.amG_toPolyG_ne_zero hd
   -- LHS: the cross-multiplication zero test in `ℚ[X]`.
-  rw [QFun.qeq, DensePoly.cisZeroG_iff, DensePoly.toPolyG_csubG,
-    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, sub_eq_zero]
+  simp only [QFun.qeq, CPolyEngine.cisZero_dense_eq, CPolyEngine.sub,
+    CPolyEngine.add_dense_eq, CPolyEngine.neg_dense_eq,
+    CPolyEngine.mul_dense_eq]
+  rw [
+    DensePoly.cisZeroG_iff, DensePoly.toPolyG_caddG, DensePoly.toPolyG_cnegG,
+    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, add_neg_eq_zero]
   -- RHS: the field equality, cleared to the cross-multiplication.
   rw [toQFun, toQFun, div_eq_div_iff hbm hdm]
   -- bridge through `am` injectivity (`map_mul` + injectivity).

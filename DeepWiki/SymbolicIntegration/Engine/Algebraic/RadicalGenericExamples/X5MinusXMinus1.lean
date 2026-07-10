@@ -17,7 +17,7 @@ open RadElem DensePoly
 A higher-degree radicand `√(x⁵ − x − 1)`. Degree 5 (odd) ⟹ not a square ⟹ the full carrier fires. -/
 
 /-- The radicand `f₂ = x⁵ − x − 1 ∈ ℚ(x)` (numerator `[-1,-1,0,0,0,1]`) for `√(x⁵−x−1)`. -/
-def radicandX5mXm1 : CFrac ℚ := CFrac.ofPoly [-1, -1, 0, 0, 0, 1]
+def radicandX5mXm1 : DenseFrac ℚ := CFrac.ofPoly [-1, -1, 0, 0, 0, 1]
 
 /-- **`toPoly [-1,-1,0,0,0,1] = −1 − x + x⁵` has `natDegree 5`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X5mXm1 : (toPoly ([-1, -1, 0, 0, 0, 1] : DensePoly ℚ)).natDegree = 5 := by
@@ -29,36 +29,36 @@ theorem natDeg_toPolyG_X5mXm1 : (toPoly ([-1, -1, 0, 0, 0, 1] : DensePoly ℚ)).
 
 /-- **`x⁵ − x − 1` is not a square in `ℚ(x)`** — odd-degree helper (`natDegree 5`). -/
 theorem not_isSquare_radicandX5mXm1 :
-    ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX5mXm1 : CFrac ℚ) := by
+    ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX5mXm1 : DenseFrac ℚ) := by
   rw [radicandX5mXm1, CFrac.toK_ofPoly]
   exact not_isSquare_algebraMap_of_odd_natDegree (by rw [natDeg_toPolyG_X5mXm1]; decide)
 
 /-- **`y² − (x⁵−x−1)` is irreducible over `ℚ(x)`** — generic helper on the non-square `x⁵−x−1`. -/
 theorem irreducible_radX5mXm1 :
-    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX5mXm1 : CFrac ℚ))) :=
+    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX5mXm1 : DenseFrac ℚ))) :=
   irreducible_radDeg2_of_not_isSquare not_isSquare_radicandX5mXm1
 
 /-- The irreducibility `Fact` for `√(x⁵−x−1)`. -/
 instance fact_irreducible_radX5mXm1 :
-    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX5mXm1 : CFrac ℚ)))) :=
+    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX5mXm1 : DenseFrac ℚ)))) :=
   ⟨irreducible_radX5mXm1⟩
 
-/-- The radical field `ℚ(x)[√(x⁵−x−1)] = RadExt (CFrac ℚ) 2 (x⁵−x−1)`. -/
-abbrev RadX5 : Type := RadExt (CFrac ℚ) 2 radicandX5mXm1
+/-- The radical field `ℚ(x)[√(x⁵−x−1)] = RadExt (DenseFrac ℚ) 2 (x⁵−x−1)`. -/
+abbrev RadX5 : Type := RadExt (DenseFrac ℚ) 2 radicandX5mXm1
 
 /-- **`CFieldDomain RadX5` — discharged generically.** -/
 noncomputable example : CFieldDomain RadX5 := inferInstance
 
 /-- **The mixed tower over `√(x⁵−x−1)` is a `CField`** — resolves automatically from the generic radical
 base. -/
-theorem cfield_qfunNZG_radX5 : Nonempty (CField (CFrac RadX5)) := ⟨inferInstance⟩
+theorem cfield_qfunNZG_radX5 : Nonempty (CField (DenseFrac RadX5)) := ⟨inferInstance⟩
 
 /-- **The mixed tower over `√(x⁵−x−1)` is a `CDiffField`**. -/
-theorem cdiffField_qfunNZG_radX5 : Nonempty (CDiffField (CFrac RadX5)) := ⟨inferInstance⟩
+theorem cdiffField_qfunNZG_radX5 : Nonempty (CDiffField (DenseFrac RadX5)) := ⟨inferInstance⟩
 
 /-- The diagonal multiplier `ℓ = f'/(2f) = (5x⁴−1)/(2(x⁵−x−1)) ∈ ℚ(x)` for `D(y) = ℓ·y` over
 `√(x⁵−x−1)`. -/
-def radX5LogDer : CFrac ℚ := logDerRadicand 2 radicandX5mXm1
+def radX5LogDer : DenseFrac ℚ := logDerRadicand 2 radicandX5mXm1
 
 /-- The `RadX5[t]`-polynomial `t² = [0,0,1]`. -/
 def radX5T2sq : DensePoly RadX5 := [CCommRing.zero, CCommRing.zero, CCommRing.one]

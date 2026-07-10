@@ -226,7 +226,7 @@ private lemma nullspace_single_col (M : List (List ℚ)) :
 
 /-- `cLogIsNewMonomial [] w = true` iff the cleared coefficient column `(cLinearDepData [] w).1`
 has a nonzero entry — the empty-base test decides `w ≠ 0`. -/
-theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : CFrac ℚ) :
+theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : DenseFrac ℚ) :
     DensePoly.cLogIsNewMonomial [] w =
       ((DensePoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
   have hbridge : DensePoly.cLogIsNewMonomial [] w =
@@ -261,7 +261,7 @@ example (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv u) :
   isLiouville_of_no_antideriv u hno
 
 -- The empty-base computable test decides only "cleared column nonzero" (≈ `w ≠ 0`).
-example (w : CFrac ℚ) :
+example (w : DenseFrac ℚ) :
     DensePoly.cLogIsNewMonomial [] w =
       ((DensePoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
   cLogIsNewMonomial_nil_eq_col_nonzero w

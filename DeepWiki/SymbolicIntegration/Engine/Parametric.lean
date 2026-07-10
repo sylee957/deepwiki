@@ -22,7 +22,7 @@ so a non-proper `b` (in particular every nonzero constant) is provably not one. 
 
 /-- **Lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPair num den =
 (num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdWf`); the zero
-numerator gives `([], [1])`. Used to read the polynomial part and denominator of a `CFrac ℚ`-valued
+numerator gives `([], [1])`. Used to read the polynomial part and denominator of a `DenseFrac ℚ`-valued
 base-field element. -/
 def qnormPair (num den : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
   if cisZero num then ([], [(1 : ℚ)])
@@ -33,9 +33,9 @@ def qnormPair (num den : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
     let s := (clead den')⁻¹
     (cscale s num', cscale s den')
 
-/-- `cBaseIsProper b`: `true` iff the lowest-terms `CFrac ℚ` value `b = a/d ∈ ℚ(x)` is proper
+/-- `cBaseIsProper b`: `true` iff the lowest-terms `DenseFrac ℚ` value `b = a/d ∈ ℚ(x)` is proper
 (`deg a < deg d`, nonzero numerator). -/
-def cBaseIsProper (b : CFrac ℚ) : Bool :=
+def cBaseIsProper (b : DenseFrac ℚ) : Bool :=
   let bn := qnormPair b.num b.den
   cdeg bn.1 < cdeg bn.2 && !cisZero bn.1
 
@@ -43,7 +43,7 @@ def cBaseIsProper (b : CFrac ℚ) : Bool :=
 `b ∈ k = ℚ(x)`: `true` iff `b` could be a logarithmic derivative of a `ℚ(x)`-radical (`n·b = Dz/z` for
 nonzero `n ∈ ℤ`, `z ∈ ℚ(x)*`), `false` iff provably not. A non-proper `b` (in particular every nonzero
 constant) is ruled out; a proper `b` is conservatively accepted. -/
-def cParametricLogDeriv (b : CFrac ℚ) : Bool :=
+def cParametricLogDeriv (b : DenseFrac ℚ) : Bool :=
   -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
   CCommRing.isZero b || cBaseIsProper b
 
@@ -51,11 +51,11 @@ def cParametricLogDeriv (b : CFrac ℚ) : Bool :=
 
 Decide `n·f = Dv/v + m·Dθ/θ` for integers `n ≠ 0, m` and `v ∈ ℚ(x)*`: solve for the candidate constant
 `c = m/n` from `c·(Dθ/θ) = f`, then test whether `N·f − M·(Dθ/θ)` is a logarithmic derivative of a
-radical. `f` and `Dθ/θ` are passed as reduced `CFrac ℚ` values. -/
+radical. `f` and `Dθ/θ` are passed as reduced `DenseFrac ℚ` values. -/
 
 /-- `cParamLogDerivCandidate fval wval`: the candidate constant `c = m/n ∈ ℚ` from `c·wval = fval` over
 `ℚ(x)`, returned when `fval/wval` is a `ℚ`-constant (and `wval ≠ 0`), else `none`. -/
-def cParamLogDerivCandidate (fval wval : CFrac ℚ) : Option ℚ :=
+def cParamLogDerivCandidate (fval wval : DenseFrac ℚ) : Option ℚ :=
   -- `c·wval = fval` over ℚ(x); a constant candidate `c ∈ ℚ` exists iff `fval/wval ∈ ℚ`.
   if CCommRing.isZero wval then none
   else
@@ -71,8 +71,8 @@ def cParamLogDerivCandidate (fval wval : CFrac ℚ) : Option ℚ :=
 solves for the candidate constant `c = m/n` (`cParamLogDerivCandidate`), then tests whether the residue
 `N·f − M·(Dθ/θ)` is a logarithmic derivative of a radical (`cParametricLogDeriv`), reporting the residue as
 the witness `v` (`v = 1` when it vanishes). -/
-def cParamLogDeriv (fval θlogderiv : CFrac ℚ) :
-    Option (ℤ × ℤ × CFrac ℚ) :=
+def cParamLogDeriv (fval θlogderiv : DenseFrac ℚ) :
+    Option (ℤ × ℤ × DenseFrac ℚ) :=
   match cParamLogDerivCandidate fval θlogderiv with
   | none =>
     -- no constant candidate `c`: fall back to the pure logarithmic-derivative test `n·f = Dv/v`
@@ -175,9 +175,9 @@ For `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1` over `k = ℚ`, `cParamLogDeriv` r
 open DensePoly
 
 /-- `f = 11 ∈ ℚ ⊂ ℚ(x)`. -/
-def paramLogDerivExampleF : CFrac ℚ := CFrac.ofScalar 11
+def paramLogDerivExampleF : DenseFrac ℚ := CFrac.ofScalar 11
 /-- `Dθ/θ = 1` (exponential `θ`, `Dθ = θ`). -/
-def paramLogDerivExampleW : CFrac ℚ := CFrac.ofScalar 1
+def paramLogDerivExampleW : DenseFrac ℚ := CFrac.ofScalar 1
 
 -- **Sanity print.** `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
 #eval (DensePoly.cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map

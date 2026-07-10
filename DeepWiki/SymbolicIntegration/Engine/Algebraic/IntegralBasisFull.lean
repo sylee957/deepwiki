@@ -18,15 +18,15 @@ namespace DensePoly
 
 variable {α : Type*} [CField α]
 
-/-! ### Reducing `CFrac ℚ` fractions to monic-denominator lowest terms (`qReduceNZ`)
+/-! ### Reducing `DenseFrac ℚ` fractions to monic-denominator lowest terms (`qReduceNZ`)
 
-`CFrac ℚ ≅ ℚ(x)` is an unreduced fraction `num/den`; `qReduceNZ` cancels the common factor
+`DenseFrac ℚ ≅ ℚ(x)` is an unreduced fraction `num/den`; `qReduceNZ` cancels the common factor
 (via the shared fuel-free reducer) and normalizes the denominator to monic — the canonical form
 the iteration applies after each enlargement. -/
 
 /-- Reduce a `ℚ(x)` element to lowest terms with a monic denominator: `qReduceNZ z = (num/g)/(den/g)`
 scaled so the denominator is monic (`g = gcd(num, den)`; a zero denominator falls back to the input). -/
-def qReduceNZ (z : CFrac ℚ) : CFrac ℚ :=
+def qReduceNZ (z : DenseFrac ℚ) : DenseFrac ℚ :=
   let num1 := CFrac.reduceNum z
   let den1 := cnorm (CFrac.reduceDen z)
   if cisZero den1 then z
@@ -37,7 +37,7 @@ def qReduceNZ (z : CFrac ℚ) : CFrac ℚ :=
     if h : cisZero den2 = false then CFrac.ofFraction num2 den2 h else z
 
 /-- Reduce every `ℚ(x)` entry of an order basis to lowest terms (`qReduceNZ` entrywise). -/
-def reduceOrder (O : List (DensePoly (CFrac ℚ))) : List (DensePoly (CFrac ℚ)) :=
+def reduceOrder (O : List (DensePoly (DenseFrac ℚ))) : List (DensePoly (DenseFrac ℚ)) :=
   O.map (fun row => row.map qReduceNZ)
 
 /-! ### The p-trace-radical of an order, in the order's coordinates (`ipOCoords`)
@@ -48,14 +48,14 @@ is an integral `K[x]`-lattice (no denominators), Hermite-reduced. -/
 
 /-- The trace matrix of an order `O` evaluated at a linear prime root `a`: the `n×n` `ℚ`-matrix
 `traceMatrix f O` with every entry evaluated at `x = a` (`qEvalAtRoot`). -/
-def traceMatrixOrderAtRoot (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) (a : ℚ) :
+def traceMatrixOrderAtRoot (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (a : ℚ) :
     List (List ℚ) :=
   (traceMatrix f O).map (fun row => row.map (fun e => qEvalAtRoot e a))
 
 /-- The p-trace-radical `I_p` of an order `O` in `O`-coordinates: a `K[x]`-basis of
 `I_p = { z ∈ O : p | Tr(z·ωⱼ) ∀j }` as a `PolyMatrix ℚ`, from the kernel of `traceMatrixOrderAtRoot`
 together with the `p·O` generators, Hermite-reduced to the nonzero rows. -/
-def ipOCoords (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) (p : DensePoly ℚ) (a : ℚ) :
+def ipOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (p : DensePoly ℚ) (a : ℚ) :
     PolyMatrix ℚ :=
   let n := cdeg f
   let kers : List (List ℚ) := kernelBasis n (traceMatrixOrderAtRoot f O a)
@@ -74,11 +74,11 @@ back to power coordinates. -/
 
 /-- The `O`-to-power change-of-basis matrix `orderToPowerMatrix n O`: column `k` is `ωₖ` in power
 coordinates (`B[r][k] = coeff_r(ωₖ)`). Its inverse maps power coordinates to `O`-coordinates. -/
-def orderToPowerMatrix (n : ℕ) (O : List (DensePoly (CFrac ℚ))) : List (List (CFrac ℚ)) :=
+def orderToPowerMatrix (n : ℕ) (O : List (DensePoly (DenseFrac ℚ))) : List (List (DenseFrac ℚ)) :=
   (List.range n).map (fun r => (List.range n).map (fun k => (O.getD k []).getD r CCommRing.zero))
 
 /-- The `O`-coordinates of a `K(x, y)` element `toOCoords Binv n z = Binv · (z in power coords)`. -/
-def toOCoords (Binv : List (List (CFrac ℚ))) (n : ℕ) (z : DensePoly (CFrac ℚ)) : List (CFrac ℚ) :=
+def toOCoords (Binv : List (List (DenseFrac ℚ))) (n : ℕ) (z : DensePoly (DenseFrac ℚ)) : List (DenseFrac ℚ) :=
   (List.range n).map (fun r =>
     (List.range n).foldl (fun acc c =>
       CCommRing.add acc (CCommRing.mul ((Binv.getD r []).getD c CCommRing.zero) (z.getD c CCommRing.zero)))
@@ -86,7 +86,7 @@ def toOCoords (Binv : List (List (CFrac ℚ))) (n : ℕ) (z : DensePoly (CFrac �
 
 /-- The common denominator of a `K(x)`-matrix `commonDenom M`: the product of the distinct reduced
 entry denominators (each `qReduceNZ`-reduced, monic, skipping `1`). -/
-def commonDenom (M : List (List (CFrac ℚ))) : DensePoly ℚ :=
+def commonDenom (M : List (List (DenseFrac ℚ))) : DensePoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
       let den := cnorm (qReduceNZ z).den
@@ -95,7 +95,7 @@ def commonDenom (M : List (List (CFrac ℚ))) : DensePoly ℚ :=
 
 /-- Clear a `K(x)`-row to a `K[x]`-row at `δ` by exact division: `clearRowExact δ row = [(δ·numᵢ)/denᵢ]`
 via exact polynomial division (`cdivWf`, valid since `denᵢ | δ`), giving the integral row `δ·row`. -/
-def clearRowExact (δ : DensePoly ℚ) (row : List (CFrac ℚ)) : List (DensePoly ℚ) :=
+def clearRowExact (δ : DensePoly ℚ) (row : List (DenseFrac ℚ)) : List (DensePoly ℚ) :=
   row.map (fun z =>
     let zz := qReduceNZ z
     let num := zz.num
@@ -107,42 +107,42 @@ coordinates) and `ipO` (`I_p` in `O`-coordinates), build the multiply-by-`ιⱼ`
 basis, stack, clear to `K[x]` via `commonDenom`/`clearRowExact`, Hermite-reduce, invert, and scale
 by `δ` to get the idealizer basis, mapped back to power coordinates. Returns `O` if any inverse is
 singular. -/
-def idealizerOCoords (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) (ipO : PolyMatrix ℚ) :
-    List (DensePoly (CFrac ℚ)) :=
+def idealizerOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (ipO : PolyMatrix ℚ) :
+    List (DensePoly (DenseFrac ℚ)) :=
   let n := cdeg f
   let B := orderToPowerMatrix n O
   match matInv n B with
   | none => O
   | some Binv =>
-    let ipElems : List (DensePoly (CFrac ℚ)) := ipO.map (fun row =>
+    let ipElems : List (DensePoly (DenseFrac ℚ)) := ipO.map (fun row =>
       (List.range n).foldl (fun acc i =>
-        cadd acc (cscale (CFrac.ofPoly (row.getD i [])) (O.getD i []))) ([] : DensePoly (CFrac ℚ)))
-    let Bip : List (List (CFrac ℚ)) := (List.range n).map (fun r =>
+        cadd acc (cscale (CFrac.ofPoly (row.getD i [])) (O.getD i []))) ([] : DensePoly (DenseFrac ℚ)))
+    let Bip : List (List (DenseFrac ℚ)) := (List.range n).map (fun r =>
       (List.range n).map (fun k => (toOCoords Binv n (ipElems.getD k [])).getD r CCommRing.zero))
     match matInv n Bip with
     | none => O
     | some BipInv =>
-      let M : List (List (CFrac ℚ)) :=
+      let M : List (List (DenseFrac ℚ)) :=
         (List.range n).foldr (fun j acc =>
           let ιj := ipElems.getD j []
-          let multO : List (List (CFrac ℚ)) := (List.range n).map (fun r =>
+          let multO : List (List (DenseFrac ℚ)) := (List.range n).map (fun r =>
             (List.range n).map (fun i =>
               (toOCoords Binv n (afMul f ιj (O.getD i []))).getD r CCommRing.zero))
           (matMul BipInv multO) ++ acc) []
       let δ : DensePoly ℚ := commonDenom M
       let N : PolyMatrix ℚ := M.map (clearRowExact δ)
       let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZero)
-      let Nhat : List (List (CFrac ℚ)) := (List.range n).map (fun i =>
+      let Nhat : List (List (DenseFrac ℚ)) := (List.range n).map (fun i =>
         (List.range n).map (fun j => CFrac.ofPoly ((nz.getD i []).getD j [])))
       match matInv n Nhat with
       | none => O
       | some NhatInv =>
-        let δq : CFrac ℚ := CFrac.ofPoly δ
+        let δq : DenseFrac ℚ := CFrac.ofPoly δ
         (List.range n).map (fun col =>
-          let uO : List (CFrac ℚ) := (List.range n).map (fun row =>
+          let uO : List (DenseFrac ℚ) := (List.range n).map (fun row =>
             CCommRing.mul δq ((NhatInv.getD row []).getD col CCommRing.zero))
           (List.range n).foldl (fun acc i =>
-            cadd acc (cscale (uO.getD i CCommRing.zero) (O.getD i []))) ([] : DensePoly (CFrac ℚ)))
+            cadd acc (cscale (uO.getD i CCommRing.zero) (O.getD i []))) ([] : DensePoly (DenseFrac ℚ)))
 
 end DensePoly
 
@@ -159,13 +159,13 @@ namespace DensePoly
 /-- The discriminant of an order `O`, numerator reduced to lowest terms: the numerator of
 `det(traceMatrix f O) ∈ K(x)` after cancelling `gcd(num, den)`. Shrinks by a square each genuine
 enlargement — the termination measure. -/
-def discNumOrder (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) : DensePoly ℚ :=
+def discNumOrder (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) : DensePoly ℚ :=
   let z := fieldDet (traceMatrix f O)
   cnorm (CFrac.reduceNum z)
 
 /-- The bad primes of an order `O`: the distinct monic squarefree factors `p` of the reduced
 discriminant numerator with `p² | d` — where `O` may still be non-maximal. -/
-def badPrimesOrder (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) :
+def badPrimesOrder (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) :
     List (DensePoly ℚ) :=
   let d := discNumOrder f O
   let distinct := ((cSqfreeYunFF d).map cmonic).filter (fun p => 0 < cdeg p)
@@ -173,29 +173,29 @@ def badPrimesOrder (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))
 
 /-- `true` iff two order bases agree: each `O1ᵢ` is `cisZero`-equal to `O2ᵢ` over the `n`
 coordinates. The iteration's fixed-point test. -/
-def orderEq (n : ℕ) (O1 O2 : List (DensePoly (CFrac ℚ))) : Bool :=
+def orderEq (n : ℕ) (O1 O2 : List (DensePoly (DenseFrac ℚ))) : Bool :=
   (List.range n).all (fun i => cisZero (csub (O1.getD i []) (O2.getD i [])))
 
 /-- One Round-2 enlargement of an order `O` at a linear prime `p`: compute the p-trace-radical
 `ipOCoords` and its idealizer `idealizerOCoords`, reduced to canonical form. -/
-def round2StepOrderAt (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) (p : DensePoly ℚ) :
-    List (DensePoly (CFrac ℚ)) :=
+def round2StepOrderAt (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (p : DensePoly ℚ) :
+    List (DensePoly (DenseFrac ℚ)) :=
   let pm := cmonic p
   let a : ℚ := CCommRing.neg (pm.getD 0 CCommRing.zero)
   reduceOrder (idealizerOCoords f O (ipOCoords f O pm a))
 
 /-- One full pass of Round-2 over all bad primes of `O`: `round2Pass f O = (O', grew)` folds
 `round2StepOrderAt` over every bad prime, reporting whether the order grew (`grew = ¬ orderEq O O'`). -/
-def round2Pass (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) :
-    List (DensePoly (CFrac ℚ)) × Bool :=
+def round2Pass (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) :
+    List (DensePoly (DenseFrac ℚ)) × Bool :=
   let n := cdeg f
   let O' := (badPrimesOrder f O).foldl (fun acc p => round2StepOrderAt f acc p) O
   (O', !orderEq n O O')
 
 /-- The Round-2 iteration loop `integralBasisLoop fuel f O`: run `round2Pass` repeatedly until a pass
 leaves `O` unchanged — the maximal order. `fuel` bounds the iteration count by the discriminant degree. -/
-def integralBasisLoop (fuel : ℕ) (f : DensePoly (CFrac ℚ)) :
-    List (DensePoly (CFrac ℚ)) → List (DensePoly (CFrac ℚ))
+def integralBasisLoop (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) :
+    List (DensePoly (DenseFrac ℚ)) → List (DensePoly (DenseFrac ℚ))
   | O =>
     match fuel with
     | 0 => O
@@ -206,13 +206,13 @@ def integralBasisLoop (fuel : ℕ) (f : DensePoly (CFrac ℚ)) :
 /-- The general-curve integral basis `integralBasis f`: iterate the Round-2 step from the equation
 order `[1, y, …, yⁿ⁻¹]` to the maximal order, whose `K[x]`-basis is the integral basis of
 `K(x, y) = K(x)[y]/(f)` (the functions with no finite poles). -/
-def integralBasis (f : DensePoly (CFrac ℚ)) : List (DensePoly (CFrac ℚ)) :=
+def integralBasis (f : DensePoly (DenseFrac ℚ)) : List (DensePoly (DenseFrac ℚ)) :=
   let fuel := cdeg (discNum f) + 1
   reduceOrder (integralBasisLoop fuel f (powerBasis f))
 
 /-- `true` iff `O` is the maximal order: a Round-2 pass over `O` does not grow it
 (`¬ (round2Pass f O).2`). -/
-def isMaximalOrder (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) : Bool :=
+def isMaximalOrder (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) : Bool :=
   !(round2Pass f O).2
 
 end DensePoly
@@ -225,7 +225,7 @@ open DensePoly
 #eval (integralBasis cuspF).map (fun b => b.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
 
 /-- The computed cusp integral-basis generator `y/x` = the second basis vector of `integralBasis cuspF`. -/
-def cuspIBGen : DensePoly (CFrac ℚ) := (integralBasis cuspF).getD 1 []
+def cuspIBGen : DensePoly (DenseFrac ℚ) := (integralBasis cuspF).getD 1 []
 
 /-- The cusp integral basis is `[1, y/x]`, integral (`(y/x)² = x`) and maximal. -/
 theorem cusp_integralBasis_eq :
@@ -238,7 +238,7 @@ theorem cusp_integralBasis_eq :
 #eval (integralBasis nodeF).map (fun b => b.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
 
 /-- The computed node integral-basis generator `y/x` = the second basis vector of `integralBasis nodeF`. -/
-def nodeIBGen : DensePoly (CFrac ℚ) := (integralBasis nodeF).getD 1 []
+def nodeIBGen : DensePoly (DenseFrac ℚ) := (integralBasis nodeF).getD 1 []
 
 /-- The node integral basis is `[1, y/x]`, integral (`(y/x)² = x + 1`) and maximal. -/
 theorem node_integralBasis_eq :
@@ -252,13 +252,13 @@ theorem node_integralBasis_eq :
 `y² − x⁵` needs two Round-2 steps: `[1, y] → [1, y/x] → [1, y/x²]`, the `x`-power dropping one per
 step, so a single step is not enough. -/
 
-/-- The worse cusp curve `f = y² − x⁵ ∈ ℚ(x)[y]`, the `DensePoly (CFrac ℚ)` `[−x⁵, 0, 1]`. -/
-def cusp5F : DensePoly (CFrac ℚ) :=
+/-- The worse cusp curve `f = y² − x⁵ ∈ ℚ(x)[y]`, the `DensePoly (DenseFrac ℚ)` `[−x⁵, 0, 1]`. -/
+def cusp5F : DensePoly (DenseFrac ℚ) :=
   [CFrac.ofPoly [0, 0, 0, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The computed worse-cusp integral-basis generator `y/x²` = the second basis vector of
 `integralBasis cusp5F`. -/
-def cusp5IBGen : DensePoly (CFrac ℚ) := (integralBasis cusp5F).getD 1 []
+def cusp5IBGen : DensePoly (DenseFrac ℚ) := (integralBasis cusp5F).getD 1 []
 
 -- Sanity print: the worse-cusp discriminant numerator (expected `4x⁵ = [0,0,0,0,0,4]`).
 #eval (discNum cusp5F : List ℚ)
@@ -292,14 +292,14 @@ theorem cusp5_integralBasis_integral_maximal :
 `y² − x³(x−1)²` has two bad primes `x` and `x − 1`; `integralBasis` enlarges at both in one pass,
 reaching `[1, y/(x(x − 1))]`. -/
 
-/-- The two-bad-prime curve `f = y² − x³(x − 1)² ∈ ℚ(x)[y]`, the `DensePoly (CFrac ℚ)`
+/-- The two-bad-prime curve `f = y² − x³(x − 1)² ∈ ℚ(x)[y]`, the `DensePoly (DenseFrac ℚ)`
 `[−(x⁵−2x⁴+x³), 0, 1]`. -/
-def biCuspF : DensePoly (CFrac ℚ) :=
+def biCuspF : DensePoly (DenseFrac ℚ) :=
   [CFrac.ofPoly [0, 0, 0, -1, 2, -1], CCommRing.zero, CCommRing.one]
 
 /-- The computed integral-basis generator `y/(x(x−1)) = y/(x² − x)` = the second basis vector of
 `integralBasis biCuspF`. -/
-def biCuspIBGen : DensePoly (CFrac ℚ) := (integralBasis biCuspF).getD 1 []
+def biCuspIBGen : DensePoly (DenseFrac ℚ) := (integralBasis biCuspF).getD 1 []
 
 -- Sanity print: the two-bad-prime discriminant numerator (expected `4x³(x−1)² = 4x³−8x⁴+4x⁵ = [0,0,0,4,-8,4]`).
 #eval (discNum biCuspF : List ℚ)

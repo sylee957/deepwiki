@@ -1,10 +1,11 @@
-import DeepWiki.ComputableAlgebra.PolyReprDense
+import DeepWiki.ComputableAlgebra.FracReprDense
+import DeepWiki.ComputableAlgebra.FracReprSparse
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 
-/-! # The generic fraction field `CFrac α` (differential-tower carrier)
-For a level `[CField α]`, `CFrac α` is the fraction field of `DensePoly α = α[t]` (denominator-nonzero
-fraction pairs) with a computable `CField (CFrac α)` instance; `[CFieldSpec α]` adds a noncomputable
+/-! # The generic fraction field `DenseFrac α` (differential-tower carrier)
+For a level `[CField α]`, `DenseFrac α` is the fraction field of `DensePoly α = α[t]` (denominator-nonzero
+fraction pairs) with a computable `CField (DenseFrac α)` instance; `[CFieldSpec α]` adds a noncomputable
 bridge into `RatFunc (CFieldSpec.K α)`. Iterating builds the tower `ℚ ⊂ ℚ(x) ⊂ ℚ(x)(t₁) ⊂ …`. The
 carrier and its `CField` instance need only `[CField α]` (denominator-nonzero via `cisZero`, not the
 `CFieldSpec`-valued `toPoly`), so the engine reduces in the native compiler at every tower level.
@@ -16,194 +17,192 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ### The generic fraction pair `QFun α` and its computable arithmetic -/
+universe u v
 
-/-- Generic fraction pair `(numerator, denominator)` over `α[t] = DensePoly α`. -/
-abbrev QFun (α : Type*) [CField α] := DensePoly α × DensePoly α
+/-! ### The representation-independent fraction pair `QFun α P` and its computable arithmetic -/
+
+/-- Raw fraction pair `(numerator, denominator)` in polynomial representation `P`. -/
+abbrev QFun (α : Type u) (P : Type u → Type u := DensePoly) := P α × P α
 
 namespace QFun
 
-/-- Generic zero fraction `0/1` (numerator `[]`, denominator `[1]`). -/
-def qzero {α : Type*} [CField α] : QFun α := ([], [CCommRing.one])
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
 
-/-- Generic one fraction `1/1` (numerator `[1]`, denominator `[1]`). -/
-def qone {α : Type*} [CField α] : QFun α := ([CCommRing.one], [CCommRing.one])
+/-- Generic zero fraction `0/1`. -/
+def qzero {α : Type u} [CField α] : QFun α P := (CPoly.czero, CPoly.one)
+
+/-- Generic one fraction `1/1`. -/
+def qone {α : Type u} [CField α] : QFun α P := (CPoly.one, CPoly.one)
 
 /-- Generic fraction addition `a/b + c/d = (a·d + c·b)/(b·d)` (cross-multiply, no gcd reduction). -/
-def qadd {α : Type*} [CField α] (x y : QFun α) : QFun α :=
+def qadd {α : Type u} [CField α] (x y : QFun α P) : QFun α P :=
   let (a, b) := x
   let (c, d) := y
-  (DensePoly.cadd (DensePoly.cmul a d) (DensePoly.cmul c b), DensePoly.cmul b d)
+  (CPolyEngine.add (CPolyEngine.mul a d) (CPolyEngine.mul c b), CPolyEngine.mul b d)
 
 /-- Generic fraction multiplication `(a/b)·(c/d) = (a·c)/(b·d)`. -/
-def qmul {α : Type*} [CField α] (x y : QFun α) : QFun α :=
-  (DensePoly.cmul x.1 y.1, DensePoly.cmul x.2 y.2)
+def qmul {α : Type u} [CField α] (x y : QFun α P) : QFun α P :=
+  (CPolyEngine.mul x.1 y.1, CPolyEngine.mul x.2 y.2)
 
 /-- Generic fraction negation `−(a/b) = (−a)/b` (denominator unchanged). -/
-def qneg {α : Type*} [CField α] (x : QFun α) : QFun α := (DensePoly.cneg x.1, x.2)
+def qneg {α : Type u} [CField α] (x : QFun α P) : QFun α P := (CPolyEngine.neg x.1, x.2)
 
 /-- Generic fraction inverse `(a/b)⁻¹ = b/a`; `qzero` if the numerator is zero (`0⁻¹ = 0`). -/
-def qinv {α : Type*} [CField α] (x : QFun α) : QFun α :=
-  if DensePoly.cisZero x.1 then qzero else (x.2, x.1)
+def qinv {α : Type u} [CField α] (x : QFun α P) : QFun α P :=
+  if CPolyEngine.cisZero x.1 then qzero else (x.2, x.1)
 
 /-- Generic fraction subtraction `a/b − c/d := a/b + (−(c/d))`. -/
-def qsub {α : Type*} [CField α] (x y : QFun α) : QFun α := qadd x (qneg y)
+def qsub {α : Type u} [CField α] (x y : QFun α P) : QFun α P := qadd x (qneg y)
 
 /-- Generic fraction division `x / y := x * y⁻¹`. -/
-def qdiv {α : Type*} [CField α] (x y : QFun α) : QFun α := qmul x (qinv y)
+def qdiv {α : Type u} [CField α] (x y : QFun α P) : QFun α P := qmul x (qinv y)
 
 /-- Generic natural power of a fraction pair. -/
-def qpow {α : Type*} [CField α] (x : QFun α) : ℕ → QFun α
+def qpow {α : Type u} [CField α] (x : QFun α P) : ℕ → QFun α P
   | 0 => qone
   | n + 1 => qmul x (qpow x n)
 
 /-- Generic formal derivative of a fraction pair by the quotient rule. -/
-def qderiv {α : Type*} [CField α] (x : QFun α) : QFun α :=
+def qderiv {α : Type u} [CField α] (x : QFun α P) : QFun α P :=
   let (a, b) := x
-  (DensePoly.csub (DensePoly.cmul (DensePoly.cderiv a) b)
-    (DensePoly.cmul a (DensePoly.cderiv b)), DensePoly.cmul b b)
+  (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv a) b)
+    (CPolyEngine.mul a (CPolyEngine.deriv b)), CPolyEngine.mul b b)
 
 /-- Generic decidable equality test for fraction pairs by cross-multiplication. -/
-def qeq {α : Type*} [CField α] (x y : QFun α) : Bool :=
-  DensePoly.cisZero (DensePoly.csub (DensePoly.cmul x.1 y.2) (DensePoly.cmul y.1 x.2))
+def qeq {α : Type u} [CField α] (x y : QFun α P) : Bool :=
+  CPolyEngine.cisZero
+    (CPolyEngine.sub (CPolyEngine.mul x.1 y.2) (CPolyEngine.mul y.1 x.2))
 
 end QFun
 
-/-! ### The denominator-nonzero subtype `CFrac α` (the tower-level carrier) -/
-
-/-- Denominator-nonzero generic fractions: the subtype of `QFun α` with `cisZero den = false`. The
-carrier of the next tower level (`CFrac ℚ ≅ ℚ(x)`, `CFrac (CFrac ℚ) ≅ ℚ(x)(t₁)`, …); needs only
-`[CField α]`. -/
-def CFrac (α : Type*) [CField α] : Type _ :=
-  { x : QFun α // DensePoly.cisZero x.2 = false }
-
 /-! #### The pure-`CField` domain class `CFieldDomain` -/
 
-/-- Polynomial-domain facts in pure `CField`/`DensePoly` terms: `[1]` is `cisZero`-nonzero, and the product
-of two `cisZero`-nonzero `DensePoly`s is `cisZero`-nonzero. Carries no `CFieldSpec` data, so it can gate
-the computable `CField (CFrac α)` instance. -/
-class CFieldDomain (α : Type*) [CField α] where
-  /-- The constant `[1]` is `cisZero`-nonzero. -/
-  nz_one : DensePoly.cisZero ([CCommRing.one] : DensePoly α) = false
-  /-- The product of two `cisZero`-nonzero `DensePoly`s is `cisZero`-nonzero (no zero divisors). -/
-  nz_mul : ∀ {b d : DensePoly α}, DensePoly.cisZero b = false → DensePoly.cisZero d = false →
-    DensePoly.cisZero (DensePoly.cmul b d) = false
+/-- Polynomial-domain facts for representation `P`: `1` is nonzero and products of nonzero
+polynomials are nonzero. The dense representation is the default for existing tower signatures. -/
+class CFieldDomain (α : Type u) [CField α]
+    (P : Type u → Type u := DensePoly) [CPoly P] [CPolyEngine P] where
+  /-- The represented constant `1` is nonzero. -/
+  nz_one : CPolyEngine.cisZero (CPoly.one : P α) = false
+  /-- A product of represented nonzero polynomials is nonzero. -/
+  nz_mul : ∀ {b d : P α}, CPolyEngine.cisZero b = false → CPolyEngine.cisZero d = false →
+    CPolyEngine.cisZero (CPolyEngine.mul b d) = false
 
 /-- Every `[CFieldSpec α]` level is a `CFieldDomain`, since `(CFieldSpec.K α)[X]` is an integral domain;
 provides only `Prop` fields (erased at runtime). -/
-noncomputable instance instCFieldDomainOfCFieldSpec {α : Type*} [CField α] [CFieldSpec α] :
-    CFieldDomain α where
+noncomputable instance instCFieldDomainOfCFieldSpec {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] {α : Type u} [CField α] [CFieldSpec.{u,v} α] :
+    CFieldDomain α P where
   nz_one := by
-    rw [Bool.eq_false_iff, Ne, DensePoly.cisZeroG_iff]
-    simp only [denote, mul_zero, add_zero, map_one]
-    show (1 : (CFieldSpec.K α)[X]) ≠ 0
-    exact one_ne_zero
+    rw [Bool.eq_false_iff]
+    intro h
+    have hz := (LawfulCPolyEngine.cisZero_iff (P := P) (CPoly.one : P α)).mp h
+    rw [CPoly.toPoly_one] at hz
+    exact one_ne_zero hz
   nz_mul := by
     intro b d hb hd
-    rw [Bool.eq_false_iff] at hb hd ⊢
-    rw [Ne, DensePoly.cisZeroG_iff] at hb hd ⊢
-    simp only [denote]
-    exact mul_ne_zero hb hd
+    rw [Bool.eq_false_iff]
+    intro h
+    have hprod := (LawfulCPolyEngine.cisZero_iff (P := P) (CPolyEngine.mul b d)).mp h
+    rw [LawfulCPolyEngine.toPoly_mul] at hprod
+    have hb' : CPoly.toPoly b ≠ 0 := fun hzero =>
+      (Bool.eq_false_iff.mp hb) ((LawfulCPolyEngine.cisZero_iff (P := P) b).mpr hzero)
+    have hd' : CPoly.toPoly d ≠ 0 := fun hzero =>
+      (Bool.eq_false_iff.mp hd) ((LawfulCPolyEngine.cisZero_iff (P := P) d).mpr hzero)
+    exact (mul_ne_zero hb' hd') hprod
 
 namespace CFrac
 
-/-- The numerator polynomial stored by a computable fraction. -/
-def num {α : Type*} [CField α] (x : CFrac α) : DensePoly α := x.1.1
-
-/-- The denominator polynomial stored by a computable fraction. -/
-def den {α : Type*} [CField α] (x : CFrac α) : DensePoly α := x.1.2
+variable {F : (α : Type u) → [CField α] → Type u}
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P]
 
 /-- A computable fraction's stored denominator passes the polynomial nonzero test. -/
-theorem cisZeroG_den {α : Type*} [CField α] (x : CFrac α) :
-    DensePoly.cisZero (den x) = false :=
-  x.2
+theorem cisZeroG_den {α : Type u} [CField α] (x : F α) :
+    CPolyEngine.cisZero (den x) = false :=
+  CFrac.den_nonzero x
 
-/-- The constant `[1]` is `cisZero`-nonzero (from `CFieldDomain`). -/
-theorem cisZeroG_one_singleton {α : Type*} [CField α] [CFieldDomain α] :
-    DensePoly.cisZero ([CCommRing.one] : DensePoly α) = false :=
+/-- The represented constant `1` is nonzero (from `CFieldDomain`). -/
+theorem cisZeroG_one_singleton {α : Type u} [CField α] [CFieldDomain α P] :
+    CPolyEngine.cisZero (CPoly.one : P α) = false :=
   CFieldDomain.nz_one
 
-/-- The product of two `cisZero`-nonzero `DensePoly`s is `cisZero`-nonzero (from `CFieldDomain`). -/
-theorem cmulG_ne_zero_of {α : Type*} [CField α] [CFieldDomain α] {b d : DensePoly α}
-    (hb : DensePoly.cisZero b = false)
-    (hd : DensePoly.cisZero d = false) : DensePoly.cisZero (DensePoly.cmul b d) = false :=
+/-- The product of two represented nonzero polynomials is nonzero (from `CFieldDomain`). -/
+theorem cmulG_ne_zero_of {α : Type u} [CField α] [CFieldDomain α P] {b d : P α}
+    (hb : CPolyEngine.cisZero b = false)
+    (hd : CPolyEngine.cisZero d = false) :
+    CPolyEngine.cisZero (CPolyEngine.mul b d) = false :=
   CFieldDomain.nz_mul hb hd
 
-/-- Build a computable fraction from numerator and denominator polynomials. -/
-def ofFraction {α : Type*} [CField α] (num den : DensePoly α)
-    (h : DensePoly.cisZero den = false := by native_decide) : CFrac α :=
-  ⟨(num, den), h⟩
-
 /-- Embed a computable polynomial as the fraction `p/1`. -/
-def ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) : CFrac α :=
-  ofFraction p [CCommRing.one] cisZeroG_one_singleton
+def ofPoly {α : Type u} [CField α] [CFieldDomain α P] (p : P α) : F α :=
+  ofFraction p CPoly.one cisZeroG_one_singleton
 
 /-- Embed a coefficient as the constant fraction `a/1`. -/
-def ofScalar {α : Type*} [CField α] [CFieldDomain α] (a : α) : CFrac α := ofPoly [a]
-
-/-- The numerator of a constructed fraction is the supplied numerator. -/
-@[simp] theorem num_ofFraction {α : Type*} [CField α] (a b : DensePoly α)
-    (h : DensePoly.cisZero b = false) : num (ofFraction a b h) = a := rfl
-
-/-- The denominator of a constructed fraction is the supplied denominator. -/
-@[simp] theorem den_ofFraction {α : Type*} [CField α] (a b : DensePoly α)
-    (h : DensePoly.cisZero b = false) : den (ofFraction a b h) = b := rfl
+def ofScalar {α : Type u} [CField α] [CFieldDomain α P] (a : α) : F α :=
+  ofPoly (CPolyEngine.ofCoeffList [a])
 
 /-- The numerator of the polynomial embedding is the original polynomial. -/
-@[simp] theorem num_ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) :
-    num (ofPoly p) = p := rfl
+@[simp] theorem num_ofPoly {α : Type u} [CField α] [CFieldDomain α P] (p : P α) :
+    num (ofPoly (F := F) p) = p := by simp [ofPoly]
 
 /-- The denominator of the polynomial embedding is `1`. -/
-@[simp] theorem den_ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) :
-    den (ofPoly p) = [CCommRing.one] := rfl
+@[simp] theorem den_ofPoly {α : Type u} [CField α] [CFieldDomain α P] (p : P α) :
+    den (ofPoly (F := F) p) = CPoly.one := by simp [ofPoly]
 
 /-- `qaddNZ`: addition on `CFrac` (the product denominator `b·d` is nonzero). -/
-def qaddNZ {α : Type*} [CField α] [CFieldDomain α] (x y : CFrac α) : CFrac α :=
-  ⟨QFun.qadd x.1 y.1, by
-    obtain ⟨⟨a, b⟩, hb⟩ := x
-    obtain ⟨⟨c, d⟩, hd⟩ := y
-    exact cmulG_ne_zero_of hb hd⟩
+def qaddNZ {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
+  ofFraction
+    (CPolyEngine.add (CPolyEngine.mul (num x) (den y))
+      (CPolyEngine.mul (num y) (den x)))
+    (CPolyEngine.mul (den x) (den y))
+    (cmulG_ne_zero_of (cisZeroG_den x) (cisZeroG_den y))
 
 /-- `qmulNZ`: multiplication on `CFrac` (the product denominator `b·d` is nonzero). -/
-def qmulNZ {α : Type*} [CField α] [CFieldDomain α] (x y : CFrac α) : CFrac α :=
-  ⟨QFun.qmul x.1 y.1, by
-    obtain ⟨⟨a, b⟩, hb⟩ := x
-    obtain ⟨⟨c, d⟩, hd⟩ := y
-    exact cmulG_ne_zero_of hb hd⟩
+def qmulNZ {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
+  ofFraction (CPolyEngine.mul (num x) (num y))
+    (CPolyEngine.mul (den x) (den y))
+    (cmulG_ne_zero_of (cisZeroG_den x) (cisZeroG_den y))
 
 /-- `qnegNZ`: negation on `CFrac` (denominator unchanged). -/
-def qnegNZ {α : Type*} [CField α] (x : CFrac α) : CFrac α :=
-  ofFraction (DensePoly.cneg (num x)) (den x) (cisZeroG_den x)
+def qnegNZ {α : Type u} [CField α] (x : F α) : F α :=
+  ofFraction (CPolyEngine.neg (num x)) (den x) (cisZeroG_den x)
 
 /-- `qinvNZ`: inverse on `CFrac`. If the numerator's zero test holds, the result is `ofPoly []` (the
 `0⁻¹ = 0` convention); otherwise swap numerator and denominator (the new denominator is the old
 numerator, nonzero exactly by `¬ cisZero`). -/
-def qinvNZ {α : Type*} [CField α] [CFieldDomain α] (x : CFrac α) : CFrac α :=
-  if h : DensePoly.cisZero (num x) then ofPoly []
+def qinvNZ {α : Type u} [CField α] [CFieldDomain α P] (x : F α) : F α :=
+  if h : CPolyEngine.cisZero (num x) then ofPoly CPoly.czero
   else ofFraction (den x) (num x) (Bool.not_eq_true _ ▸ h)
 
 /-- `qsubNZ`: subtraction on `CFrac`, `x − y := x + (−y)`. -/
-def qsubNZ {α : Type*} [CField α] [CFieldDomain α] (x y : CFrac α) : CFrac α :=
+def qsubNZ {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
   qaddNZ x (qnegNZ y)
 
 /-- `isZeroNZ`: the zero test on `CFrac`, reading `cisZero` off the **numerator** (the denominator
 is nonzero by membership, so `x = 0` iff its numerator vanishes). -/
-def isZeroNZ {α : Type*} [CField α] (x : CFrac α) : Bool := DensePoly.cisZero (num x)
+def isZeroNZ {α : Type u} [CField α] (x : F α) : Bool := CPolyEngine.cisZero (num x)
 
 end CFrac
 
-/-! ### The computable `CField (CFrac α)` instance -/
+/-! ### The computable `CField (DenseFrac α)` instance -/
 
-/-- `CField (CFrac α)`: the next tower level (fraction field of `α[t]`) as a computable field (over
-`[CField α] [CFieldDomain α]`, no `CFieldSpec`), so the engine reduces over `DensePoly (CFrac α)`. -/
-instance instCFieldCFrac {α : Type*} [CField α] [CFieldDomain α] : CField (CFrac α) where
-  zero := CFrac.ofPoly []
-  one := CFrac.ofPoly [CCommRing.one]
+/-- Every `CFrac F P` with polynomial-domain evidence is a computable field representation. -/
+instance instCFieldCFrac {F : (α : Type u) → [CField α] → Type u}
+    {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P]
+    {α : Type u} [CField α] [CFieldDomain α P] : CField (F α) where
+  zero := CFrac.ofPoly (CPoly.czero : P α)
+  one := CFrac.ofPoly (CPoly.one : P α)
   add := CFrac.qaddNZ
   mul := CFrac.qmulNZ
   neg := CFrac.qnegNZ
   inv := CFrac.qinvNZ
   isZero := CFrac.isZeroNZ
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let one : SparseFrac ℚ := CFrac.ofFraction (ofList [1]) (ofList [1])
+    let sum := CCommRing.add one one
+    CPoly.coeff (CFrac.num sum) 0 = 2 ∧ CPoly.coeff (CFrac.den sum) 0 = 1 := by
+  native_decide
 
 /-! ### The bridge `toCFrac` into `RatFunc (CFieldSpec.K α)` and its homomorphism laws -/
 
@@ -230,19 +229,19 @@ theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CField α] [CFieldSpec �
   rw [Bool.eq_false_iff, Ne, DensePoly.cisZeroG_iff] at hb; exact hb
 
 /-- A computable fraction's stored denominator denotes a nonzero polynomial. -/
-theorem toPoly_den_ne_zero {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
+theorem toPoly_den_ne_zero {α : Type*} [CField α] [CFieldSpec α] (x : DenseFrac α) :
     DensePoly.toPoly (den x) ≠ 0 := by
-  obtain ⟨⟨a, b⟩, hb⟩ := x
+  obtain ⟨a, b, hb⟩ := x
   exact toPolyG_ne_zero_of_cisZeroG_false hb
 
 /-- `toCFrac (num, den) = am (toPoly num) / am (toPoly den)` in `RatFunc (CFieldSpec.K α)`; the
 bridge `toK` of the next tower level. -/
-noncomputable def toCFrac {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
+noncomputable def toCFrac {α : Type*} [CField α] [CFieldSpec α] (x : DenseFrac α) :
     RatFunc (CFieldSpec.K α) :=
   am α (DensePoly.toPoly (num x)) / am α (DensePoly.toPoly (den x))
 
 /-- A computable fraction denotes its numerator divided by its denominator. -/
-theorem toCFrac_eq_div {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
+theorem toCFrac_eq_div {α : Type*} [CField α] [CFieldSpec α] (x : DenseFrac α) :
     toCFrac x = am α (DensePoly.toPoly (num x)) / am α (DensePoly.toPoly (den x)) := rfl
 
 /-- A constructed computable fraction denotes its numerator divided by its denominator. -/
@@ -256,7 +255,9 @@ theorem toCFrac_eq_div {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
     (p : DensePoly α) :
     toCFrac (ofPoly p) = am α (DensePoly.toPoly p) := by
   rw [toCFrac_eq_div, num_ofPoly, den_ofPoly]
-  simp only [denote, mul_zero, add_zero, map_one, div_one]
+  have hone : DensePoly.toPoly (CPoly.one : DensePoly α) = 1 := by
+    rw [← toPoly_list_eq, CPoly.toPoly_one]
+  rw [hone, map_one, div_one]
 
 /-- A polynomial embedding has nonzero denotation when its polynomial zero test is false. -/
 theorem toCFrac_ofPoly_ne_zero {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
@@ -265,10 +266,10 @@ theorem toCFrac_ofPoly_ne_zero {α : Type*} [CField α] [CFieldSpec α] [CFieldD
   exact amG_toPolyG_ne_zero (toPolyG_ne_zero_of_cisZeroG_false hp)
 
 /-- `toCFrac (qaddNZ x y) = toCFrac x + toCFrac y`: `qaddNZ` realizes `+`. -/
-theorem toCFracG_qaddNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : CFrac α) :
+theorem toCFracG_qaddNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : DenseFrac α) :
     toCFrac (qaddNZ x y) = toCFrac x + toCFrac y := by
-  obtain ⟨⟨a, b⟩, hb⟩ := x
-  obtain ⟨⟨c, d⟩, hd⟩ := y
+  obtain ⟨a, b, hb⟩ := x
+  obtain ⟨c, d, hd⟩ := y
   have hb' : am α (DensePoly.toPoly b) ≠ 0 :=
     amG_toPolyG_ne_zero (toPolyG_ne_zero_of_cisZeroG_false hb)
   have hd' : am α (DensePoly.toPoly d) ≠ 0 :=
@@ -282,10 +283,10 @@ theorem toCFracG_qaddNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain 
   ring
 
 /-- `toCFrac (qmulNZ x y) = toCFrac x * toCFrac y`: `qmulNZ` realizes `*`. -/
-theorem toCFracG_qmulNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : CFrac α) :
+theorem toCFracG_qmulNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : DenseFrac α) :
     toCFrac (qmulNZ x y) = toCFrac x * toCFrac y := by
-  obtain ⟨⟨a, b⟩, hb⟩ := x
-  obtain ⟨⟨c, d⟩, hd⟩ := y
+  obtain ⟨a, b, hb⟩ := x
+  obtain ⟨c, d, hd⟩ := y
   show am α (DensePoly.toPoly (DensePoly.cmul a c)) / am α (DensePoly.toPoly (DensePoly.cmul b d))
     = am α (DensePoly.toPoly a) / am α (DensePoly.toPoly b)
       * (am α (DensePoly.toPoly c) / am α (DensePoly.toPoly d))
@@ -293,40 +294,45 @@ theorem toCFracG_qmulNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain 
   rw [div_mul_div_comm]
 
 /-- `toCFrac (qnegNZ x) = - toCFrac x`: `qnegNZ` realizes negation. -/
-theorem toCFracG_qnegNZG {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
+theorem toCFracG_qnegNZG {α : Type*} [CField α] [CFieldSpec α] (x : DenseFrac α) :
     toCFrac (qnegNZ x) = - toCFrac x := by
-  obtain ⟨⟨a, b⟩, hb⟩ := x
+  obtain ⟨a, b, hb⟩ := x
   show am α (DensePoly.toPoly (DensePoly.cneg a)) / am α (DensePoly.toPoly b)
     = - (am α (DensePoly.toPoly a) / am α (DensePoly.toPoly b))
   simp only [denote, map_neg]
   rw [neg_div]
 
 /-- `toCFrac (qinvNZ x) = (toCFrac x)⁻¹`: `qinvNZ` realizes `⁻¹` (`0⁻¹ = 0`). -/
-theorem toCFracG_qinvNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x : CFrac α) :
+theorem toCFracG_qinvNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x : DenseFrac α) :
     toCFrac (qinvNZ x) = (toCFrac x)⁻¹ := by
-  rw [qinvNZ]
-  by_cases h : DensePoly.cisZero (num x)
-  · rw [dif_pos h, toCFrac_ofPoly, DensePoly.toPolyG_nil, map_zero]
+  unfold qinvNZ
+  split
+  next h =>
+    simp only [CPolyEngine.cisZero_dense_eq] at h
+    rw [toCFrac_ofPoly]
+    have hczero : DensePoly.toPoly (CPoly.czero : DensePoly α) = 0 := by
+      rw [← toPoly_list_eq, CPoly.toPoly_czero]
+    rw [hczero, map_zero]
     have hx0 : DensePoly.toPoly (num x) = 0 := (DensePoly.cisZeroG_iff (num x)).mp h
     have : toCFrac x = 0 := by
       rw [toCFrac, hx0, map_zero, zero_div]
     rw [this, inv_zero]
-  · rw [dif_neg h]
+  next h =>
     show am α (DensePoly.toPoly (den x)) / am α (DensePoly.toPoly (num x))
       = (am α (DensePoly.toPoly (num x)) / am α (DensePoly.toPoly (den x)))⁻¹
     rw [inv_div]
 
 /-- `toCFrac (qsubNZ x y) = toCFrac x - toCFrac y`: `qsubNZ` realizes subtraction. -/
-theorem toCFracG_qsubNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : CFrac α) :
+theorem toCFracG_qsubNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : DenseFrac α) :
     toCFrac (qsubNZ x y) = toCFrac x - toCFrac y := by
   rw [qsubNZ, toCFracG_qaddNZG, toCFracG_qnegNZG, sub_eq_add_neg]
 
 /-- `isZeroNZ x = true ↔ toCFrac x = 0`: the numerator zero test agrees with vanishing in
 `RatFunc (CFieldSpec.K α)`. -/
-theorem isZeroNZG_iff {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
+theorem isZeroNZG_iff {α : Type*} [CField α] [CFieldSpec α] (x : DenseFrac α) :
     isZeroNZ x = true ↔ toCFrac x = 0 := by
-  rw [isZeroNZ, DensePoly.cisZeroG_iff]
-  obtain ⟨⟨a, b⟩, hb⟩ := x
+  rw [isZeroNZ, CPolyEngine.cisZero_dense_eq, DensePoly.cisZeroG_iff]
+  obtain ⟨a, b, hb⟩ := x
   have hbm : am α (DensePoly.toPoly b) ≠ 0 :=
     amG_toPolyG_ne_zero (toPolyG_ne_zero_of_cisZeroG_false hb)
   show DensePoly.toPoly a = 0 ↔ am α (DensePoly.toPoly a) / am α (DensePoly.toPoly b) = 0
@@ -340,10 +346,10 @@ theorem isZeroNZG_iff {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
 
 end CFrac
 
-/-- `CFieldSpec (CFrac α)`: the field-homomorphism bridge over `K = RatFunc (CFieldSpec.K α)` with
+/-- `CFieldSpec (DenseFrac α)`: the field-homomorphism bridge over `K = RatFunc (CFieldSpec.K α)` with
 `toK = toCFrac`. Noncomputable; only the correctness layer depends on it. -/
 noncomputable instance instCFieldSpecCFrac {α : Type*} [CField α] [CFieldSpec α] :
-    CFieldSpec (CFrac α) where
+    CFieldSpec (DenseFrac α) where
   K := RatFunc (CFieldSpec.K α)
   toK := CFrac.toCFrac
   toK_zero := by
@@ -364,13 +370,13 @@ namespace CFrac
 /-- The field bridge sends the polynomial embedding to the natural rational-function embedding. -/
 @[denote] theorem toK_ofPoly {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
     (p : DensePoly α) :
-    CFieldSpec.toK (ofPoly p : CFrac α) = am α (DensePoly.toPoly p) :=
+    CFieldSpec.toK (ofPoly p : DenseFrac α) = am α (DensePoly.toPoly p) :=
   toCFrac_ofPoly p
 
 /-- The field bridge sends a packaged fraction to the quotient of its polynomial denotations. -/
 @[denote] theorem toK_ofFraction {α : Type*} [CField α] [CFieldSpec α]
     (num den : DensePoly α) (h : DensePoly.cisZero den = false) :
-    CFieldSpec.toK (ofFraction num den h : CFrac α) =
+    CFieldSpec.toK (ofFraction num den h : DenseFrac α) =
       am α (DensePoly.toPoly num) / am α (DensePoly.toPoly den) :=
   toCFrac_ofFraction num den h
 

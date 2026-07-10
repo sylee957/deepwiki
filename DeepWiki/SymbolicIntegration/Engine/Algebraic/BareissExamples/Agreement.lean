@@ -13,7 +13,7 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly
 
 /-- Embed a `ℚ[x]`-matrix into `ℚ(x)`: `fromQ M` replaces each entry `p` by `CFrac.ofPoly p = p/1`. -/
-def fromQ (M : List (List (DensePoly ℚ))) : List (List (CFrac ℚ)) :=
+def fromQ (M : List (List (DensePoly ℚ))) : List (List (DenseFrac ℚ)) :=
   M.map (fun row => row.map CFrac.ofPoly)
 
 /-- A `2×2` `ℚ[x]`-matrix `[[2, x], [x, x² + 2x³]]`, the trace matrix of the curve `y² − xy − x³`;

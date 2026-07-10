@@ -548,10 +548,10 @@ round-trip certificate `algDeriv ρ F = integrand` (in `DensePoly.cisZero`-teste
 split un-cross-multiplied, since `algDeriv ρ F = radDeriv(v) + Σ cᵢ·radLogDeriv(uᵢ)`. -/
 
 /-- The engine round-trip certificate is the integrand split (un-cross-multiplied): for output
-`F : AlgIntegralResult (CFrac ℚ)` over `y² = ρ`, `DensePoly.cisZero (DensePoly.csub (algDeriv ρ F) integrand) = true`
+`F : AlgIntegralResult (DenseFrac ℚ)` over `y² = ρ`, `DensePoly.cisZero (DensePoly.csub (algDeriv ρ F) integrand) = true`
 yields `toPoly (algDeriv ρ F) = toPoly integrand` in `K[X]`. -/
-theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : CFrac ℚ) (F : AlgIntegralResult (CFrac ℚ))
-    (integrand : RadElem (CFrac ℚ))
+theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : DenseFrac ℚ) (F : AlgIntegralResult (DenseFrac ℚ))
+    (integrand : RadElem (DenseFrac ℚ))
     (hrt : DensePoly.cisZero (DensePoly.csub (algDeriv ρ F) integrand) = true) :
     DensePoly.toPoly (algDeriv ρ F) = DensePoly.toPoly integrand := by
   rw [DensePoly.cisZero, DensePoly.csub] at hrt

@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import Mathlib.RingTheory.Polynomial.Content
 
 /-! # Abstract correctness of the generic fraction-free gcd `cgcdFFRawCore` over a tower level
-The tower kernel fraction-free gcd `cgcdFFRawCore` over `α = CFrac β = Frac(β[s])` computes the
+The tower kernel fraction-free gcd `cgcdFFRawCore` over `α = DenseFrac β = Frac(β[s])` computes the
 polynomial gcd up to associates. The `gb*Core` engine reads through the bridges `DensePoly.toPoly` (into
 `R[X]`, `R = (CFieldSpec.K β)[X]`) and `toGBPoly` (into `(RatFunc K)[X]`), and each clear-denominators /
 Euclidean-step / primitive-part lemma is derived over `GBPolyCore β`. The content recursion is the tower
@@ -265,12 +265,12 @@ variable [CFieldDomain β]
 
 /-- The common-denominator scalar `commonDen p ∈ R`: the product of all the `β[s]`-denominators of `p`'s
 coefficients, the unit by which `cclearDenomsCore` scales `toPoly p`. -/
-noncomputable def commonDen (p : DensePoly (CFrac β)) : (CFieldSpec.K β)[X] :=
+noncomputable def commonDen (p : DensePoly (DenseFrac β)) : (CFieldSpec.K β)[X] :=
   ((p.map CFrac.den).map DensePoly.toPoly).prod
 
 omit [CFieldDomain β] in
 /-- `commonDen p ≠ 0`: a product of nonzero denominators. -/
-theorem commonDenG_ne_zero (p : DensePoly (CFrac β)) : commonDen p ≠ 0 := by
+theorem commonDenG_ne_zero (p : DensePoly (DenseFrac β)) : commonDen p ≠ 0 := by
   rw [commonDen]
   refine List.prod_ne_zero ?_
   intro hmem
@@ -282,7 +282,7 @@ theorem commonDenG_ne_zero (p : DensePoly (CFrac β)) : commonDen p ≠ 0 := by
 
 omit [CFieldDomain β] in
 /-- `am (commonDen p) ≠ 0` (the field embedding of a nonzero product). -/
-theorem amG_commonDenG_ne_zero (p : DensePoly (CFrac β)) : CFrac.am β (commonDen p) ≠ 0 :=
+theorem amG_commonDenG_ne_zero (p : DensePoly (DenseFrac β)) : CFrac.am β (commonDen p) ≠ 0 :=
   (map_ne_zero_iff _ (RatFunc.algebraMap_injective (CFieldSpec.K β))).mpr (commonDenG_ne_zero p)
 
 omit [CFieldDomain β] in
@@ -298,7 +298,7 @@ list. -/
 
 omit [CFieldSpec β] in
 /-- The `i`-th cleared coefficient of `cclearDenomsCore p` (in range) is `numᵢ · (∏_{j≠i} denⱼ)`. -/
-theorem cclearDenomsCoreG_getElem (p : DensePoly (CFrac β)) (i : ℕ) (hi : i < p.length) :
+theorem cclearDenomsCoreG_getElem (p : DensePoly (DenseFrac β)) (i : ℕ) (hi : i < p.length) :
     (DensePoly.cclearDenomsCore p)[i]? = some (DensePoly.cmul (CFrac.num (p.getD i CCommRing.zero))
       ((((p.map CFrac.den).zipIdx).filter (fun de => decide (de.2 ≠ i))).foldl
         (fun acc de => DensePoly.cmul acc de.1) [CCommRing.one])) := by
@@ -309,19 +309,19 @@ theorem cclearDenomsCoreG_getElem (p : DensePoly (CFrac β)) (i : ℕ) (hi : i <
 
 omit [CFieldSpec β] [CFieldDomain β] in
 /-- `cclearDenomsCore` preserves the `t`-length: `(cclearDenomsCore p).length = p.length`. -/
-theorem cclearDenomsCoreG_length (p : DensePoly (CFrac β)) :
+theorem cclearDenomsCoreG_length (p : DensePoly (DenseFrac β)) :
     (DensePoly.cclearDenomsCore p).length = p.length := by
   unfold DensePoly.cclearDenomsCore; simp
 
 /-- `toPoly p` vanishes past the list length (the out-of-range coefficient is `CCommRing.zero = 0`). -/
-theorem toPolyG_coeff_eq_zero_of_length_leG (p : DensePoly (CFrac β)) {i : ℕ} (hi : p.length ≤ i) :
+theorem toPolyG_coeff_eq_zero_of_length_leG (p : DensePoly (DenseFrac β)) {i : ℕ} (hi : p.length ≤ i) :
     (toPoly p).coeff i = 0 := by
   rw [toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none hi]
-  show CFieldSpec.toK (CCommRing.zero : CFrac β) = 0
+  show CFieldSpec.toK (CCommRing.zero : DenseFrac β) = 0
   rw [CFieldSpec.toK_zero]
 
 /-- `(toGBPoly (cclearDenomsCore p)).coeff i = am (commonDen p) · (toPoly p).coeff i`. -/
-theorem toGBPolyG_cclearDenomsCoreG_coeff (p : DensePoly (CFrac β)) (i : ℕ) :
+theorem toGBPolyG_cclearDenomsCoreG_coeff (p : DensePoly (DenseFrac β)) (i : ℕ) :
     (toGBPoly (DensePoly.cclearDenomsCore p)).coeff i
       = CFrac.am β (commonDen p) * (toPoly p).coeff i := by
   rcases lt_or_ge i p.length with hi | hi
@@ -364,14 +364,14 @@ theorem toGBPolyG_cclearDenomsCoreG_coeff (p : DensePoly (CFrac β)) (i : ℕ) :
       toPolyG_coeff_eq_zero_of_length_leG p hi, mul_zero]
 
 /-- `toGBPoly (cclearDenomsCore p) = C (am (commonDen p)) * toPoly p` over β(s). -/
-theorem toGBPolyG_cclearDenomsCoreG (p : DensePoly (CFrac β)) :
+theorem toGBPolyG_cclearDenomsCoreG (p : DensePoly (DenseFrac β)) :
     toGBPoly (DensePoly.cclearDenomsCore p) = Polynomial.C (CFrac.am β (commonDen p)) * toPoly p := by
   ext i
   rw [toGBPolyG_cclearDenomsCoreG_coeff, Polynomial.coeff_C_mul]
 
 /-- `Associated (toGBPoly (cclearDenomsCore p)) (toPoly p)`: fraction-clearing is a β(s)-unit
 scaling, preserving the gcd up to associates. -/
-theorem associated_toGBPolyG_cclearDenomsCoreG (p : DensePoly (CFrac β)) :
+theorem associated_toGBPolyG_cclearDenomsCoreG (p : DensePoly (DenseFrac β)) :
     Associated (toGBPoly (DensePoly.cclearDenomsCore p)) (toPoly p) := by
   rw [toGBPolyG_cclearDenomsCoreG]
   exact (associated_unit_mul_left _ _

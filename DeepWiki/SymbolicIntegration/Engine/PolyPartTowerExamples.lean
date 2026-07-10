@@ -11,11 +11,11 @@ open DensePoly
 /-! ### Primitive case `t = log x`, `Dt = 1/x` -/
 
 /-- Example monomial derivative for the primitive case: `Dt = 1/x`. -/
-def primitivePolyIntegrateExampleDt : DensePoly (CFrac ℚ) :=
+def primitivePolyIntegrateExampleDt : DensePoly (DenseFrac ℚ) :=
   [CFrac.ofFraction [1] [0, 1]]
 
 /-- The polynomial part `p = (1/x)·t²` over `ℚ(x)[t]`. -/
-def primitivePolyIntegrateExampleP : DensePoly (CFrac ℚ) :=
+def primitivePolyIntegrateExampleP : DensePoly (DenseFrac ℚ) :=
   [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofFraction [1] [0, 1]]
 
 /-- `cPrimitivePolyIntegrate` satisfies `D(q) + rem = p` for the primitive monomial `t = log x`. -/
@@ -31,10 +31,10 @@ theorem primitivePolyIntegrate_example :
 /-! ### Nonlinear case `t = tan x`, `Dt = t² + 1` -/
 
 /-- Example monomial derivative for the nonlinear case: `Dt = t² + 1`. -/
-def polyReduceTowerExampleDt : DensePoly (CFrac ℚ) := [CFrac.ofScalar 1, CFrac.ofScalar 0, CFrac.ofScalar 1]
+def polyReduceTowerExampleDt : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 1, CFrac.ofScalar 0, CFrac.ofScalar 1]
 
 /-- The polynomial part `p = t³` over `ℚ(x)[t]`. -/
-def polyReduceTowerExampleP : DensePoly (CFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofScalar 1]
+def polyReduceTowerExampleP : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofScalar 1]
 
 /-- `cPolyReduceTower` satisfies `D(q) + r = p` for the nonlinear monomial `t = tan x`. -/
 theorem polyReduceTower_example :

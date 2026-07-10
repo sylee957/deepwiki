@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Engine.RischSolverTowerLrt
 
 The re-based recursive solver `LawfulRischLevelLrt` resolves at every tower depth (`instLawfulRischLevelLrtPrimitive`
 + `instLawfulRischLevelLrtTower`), and its assembled soundness `soundFormalLrt` produces a genuine `∀E`
-antiderivative. This file crystallizes what the solver **depends on**, on the concrete carrier `CFrac ℚ`
+antiderivative. This file crystallizes what the solver **depends on**, on the concrete carrier `DenseFrac ℚ`
 (the ℚ(x)-tower the whole engine runs over): the recursion bottoms out at exactly two **honest** frontiers per
 level, and no others:
 
@@ -25,14 +25,14 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly CFrac
 
 /-- **★ The re-based recursive LRT solver is sound on the concrete ℚ(x)-tower, from the honest frontiers alone.**
-At carrier `CFrac ℚ` (so `a/d ∈ (CFrac ℚ)(t)`, a genuine two-level tower), a successful run of the
+At carrier `DenseFrac ℚ` (so `a/d ∈ (DenseFrac ℚ)(t)`, a genuine two-level tower), a successful run of the
 assembled integrator `LawfulRischLevelLrt.integrate` is a true `∀E` antiderivative — depending only on the two
 honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this level) and the tower-level gcd
 `Fact` (the base `Fact (CgcdBCorrect cgcdFFCoreWf)` is a resolved instance). No rational-residue restriction, no
 undischargeable `PrimitiveFrontier`. -/
 theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
-    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac ℚ)))] [PrimitiveFrontierLrt (CFrac ℚ)]
-    (Dt a d : DensePoly (CFrac ℚ)) (res : LrtResult (CFrac ℚ))
+    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))] [PrimitiveFrontierLrt (DenseFrac ℚ)]
+    (Dt a d : DensePoly (DenseFrac ℚ)) (res : LrtResult (DenseFrac ℚ))
     (h : LawfulRischLevelLrt.integrate Dt a d = some res) :
     IsIntegralResultLrt Dt a d res :=
   LawfulRischLevelLrt.soundFormalLrt Dt a d res h
@@ -42,13 +42,13 @@ Threading `hreducedLrt_of_genuineAll`: supplying Bronstein's genuine residue/nor
 input at each level *constructs* the `PrimitiveFrontierLrt` instances, hence (with the gcd `Fact`s) the whole
 recursive LRT solver at that depth. This is the honest closure — the solver's soundness rests on genuine
 integrability conditions, nothing opaque. -/
-noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac ℚ)))]
+noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))]
     (hgenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
-    (hgenℚx : ∀ (Dt a d : DensePoly (CFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
-    LawfulRischLevelLrt (CFrac ℚ) :=
+    (hgenℚx : ∀ (Dt a d : DensePoly (DenseFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
+    LawfulRischLevelLrt (DenseFrac ℚ) :=
   letI : PrimitiveFrontierLrt ℚ := ⟨hreducedLrt_of_genuineAll cgcdFFCoreWf_correct_Q hgenℚ⟩
-  letI : PrimitiveFrontierLrt (CFrac ℚ) :=
-    ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac ℚ)))) hgenℚx⟩
+  letI : PrimitiveFrontierLrt (DenseFrac ℚ) :=
+    ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))) hgenℚx⟩
   inferInstance
 
 end DeepWiki.SymbolicIntegration

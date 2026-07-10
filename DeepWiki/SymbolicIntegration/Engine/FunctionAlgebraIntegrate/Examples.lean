@@ -14,19 +14,19 @@ open scoped Differential
 namespace DensePoly
 
 /-- The square-root component curve `T₁ = y² − x ∈ ℚ(x)[y]`. -/
-def sqrtComponentCurve : DensePoly (CFrac ℚ) := [CFrac.ofPoly [0, -1], CCommRing.zero, CCommRing.one]
+def sqrtComponentCurve : DensePoly (DenseFrac ℚ) := [CFrac.ofPoly [0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The square-root component integral `F₁ = (2/3)·x·y`. -/
-def sqrtComponentIntegral : DensePoly (CFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [0, 2/3]]
+def sqrtComponentIntegral : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [0, 2/3]]
 
 /-- The cube-root component curve `T₂ = y³ − x ∈ ℚ(x)[y]`. -/
-def cubeRootComponentCurve : DensePoly (CFrac ℚ) := [CFrac.ofPoly [0, -1], CCommRing.zero, CCommRing.zero, CCommRing.one]
+def cubeRootComponentCurve : DensePoly (DenseFrac ℚ) := [CFrac.ofPoly [0, -1], CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The cube-root component integral `F₂ = (3/4)·x·y`. -/
-def cubeRootComponentIntegral : DensePoly (CFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [0, 3/4]]
+def cubeRootComponentIntegral : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [0, 3/4]]
 
 /-- The integrand `y = [0, 1]` (`afBasisElem 1`) of `∫y dx`. -/
-def componentIntegrandY : DensePoly (CFrac ℚ) := afBasisElem 1
+def componentIntegrandY : DensePoly (DenseFrac ℚ) := afBasisElem 1
 
 /-- Component 1 (`native_decide`): `∫y dx = (2/3)·x·y` on `y² − x = 0`, checked by
 `cisZero (afDerivWf (y²−x) F₁ − y)`. -/

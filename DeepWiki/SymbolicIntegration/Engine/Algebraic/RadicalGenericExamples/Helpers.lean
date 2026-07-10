@@ -31,9 +31,9 @@ theorem not_isSquare_algebraMap_of_odd_natDegree {p : ℚ[X]} (hodd : Odd p.natD
   rw [sq, RatFunc.intDegree_mul hb_ne hb_ne, RatFunc.intDegree_polynomial, hk] at hdeg
   omega
 
-/-- For `f : CFrac ℚ` with `∀ b, b² ≠ toK f`, `Irreducible (X² − C(toK f))` over `ℚ(x)` — the
+/-- For `f : DenseFrac ℚ` with `∀ b, b² ≠ toK f`, `Irreducible (X² − C(toK f))` over `ℚ(x)` — the
 `X_pow_sub_C_irreducible_of_prime Nat.prime_two` instance abstracted over the radicand. -/
-theorem irreducible_radDeg2_of_not_isSquare {f : CFrac ℚ}
+theorem irreducible_radDeg2_of_not_isSquare {f : DenseFrac ℚ}
     (h : ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK f) :
     Irreducible (X ^ 2 - C (CFieldSpec.toK f)) :=
   X_pow_sub_C_irreducible_of_prime Nat.prime_two h

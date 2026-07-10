@@ -86,26 +86,26 @@ gives `C = ρ`, and `radIntegrateCase3G` computes `vNum = 2ρ`, so `v = 2y`. -/
 
 open RadElem DensePoly
 
-/-- The exp-tower radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)[θ]` (`y² = ρ`) as `DensePoly (CFrac ℚ)` `[1,1]`. -/
-def expC3Rho : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
+/-- The exp-tower radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)[θ]` (`y² = ρ`) as `DensePoly (DenseFrac ℚ)` `[1,1]`. -/
+def expC3Rho : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
 
 /-- The exp-tower Case-3 helper `g = ½ρ'` over `ℚ(x)[θ]` with the `θ' = θ` derivation: `ρ' = θ`, so
 `g = θ/2 = [0, 1/2]` (degree `1`, matching `deg f`). -/
-def expC3 : DensePoly (CFrac ℚ) :=
+def expC3 : DensePoly (DenseFrac ℚ) :=
   cscale (CField.div CCommRing.one (cnatCast 2)) (cmonomialDeriv expDt1 expC3Rho)
 
 /-- The exp-tower Case-3 numerator `C = ρ = θ+1 ∈ ℚ(x)[θ]` (integrand `√(eˣ+1) = ρ/y`), `[1,1]`. -/
-def expC3C : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
+def expC3C : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
 
 /-- The Case-3-G run `radIntegrateCase3G (cmonomialDeriv expDt1) ρ (½ρ') C = (Crem, vNum)` on `∫√(eˣ+1) dx`
 with the `θ' = θ` derivation: the cofactor `B = [2]` gives `vNum = 2ρ`. -/
-def expC3Run : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ) :=
+def expC3Run : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ) :=
   radIntegrateCase3G (cmonomialDeriv expDt1) expC3Rho expC3 expC3C
 
 -- Sanity print: the COMPUTED rational-part numerator `vNum` (should be `2ρ = 2θ+2 = [2,2]`) and the
 -- residual `Crem`, as ℚ(x)-coefficient lists.
-#eval (expC3Run.2.map (fun (z : CFrac ℚ) => (z.num : List ℚ)),
-       expC3Run.1.map (fun (z : CFrac ℚ) => (z.num : List ℚ)))
+#eval (expC3Run.2.map (fun (z : DenseFrac ℚ) => (z.num : List ℚ)),
+       expC3Run.1.map (fun (z : DenseFrac ℚ) => (z.num : List ℚ)))
 
 /-- Case-3-G computes `vNum = 2ρ` (so `v = 2y`) over the exp tower: the reduction with `θ' = θ` produces
 `vNum = 2(θ+1) = 2ρ`, checked by `cisZero (vNum − 2ρ)`. -/
@@ -151,9 +151,9 @@ theorem rtFull_split_exact :
       (DensePoly.csub rtFullIntegrand (@radDeriv _ _ expTowerDiff 2 expC3RhoLvl2 expC3Vlift))) = true := by
   native_decide
 
-/-- The fixed log-solve denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as `DensePoly (CFrac ℚ)` `[0, 1]`; the
+/-- The fixed log-solve denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as `DensePoly (DenseFrac ℚ)` `[0, 1]`; the
 denominator of `u = (y−1)/(y+1) = ((θ+2)−2y)/θ`. -/
-def rtFullDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
+def rtFullDenTheta : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The fully-computed recovered result `F'`: `cIntegrateElementary` over `ℚ(x)(eˣ)` with the computed
 rational part `expC3Vlift` (`v = 2y`) and the log argument computed from the residual by `radLogArgSolve`,
@@ -164,9 +164,9 @@ def rtFullRecovered : AlgIntegralResult Lvl2 :=
 
 -- Sanity print: the recovered rational part `v` (should be `2y = [0,2]`, i.e. coefficient `2` on `y`) and
 -- the recovered log argument `u` (a constant multiple of `(y−1)/(y+1) = ((θ+2)−2y)/θ`).
-#eval (rtFullRecovered.ratPart.map (fun (z : Lvl2) => (z.num.map (fun (w : CFrac ℚ) => (w.num : List ℚ)))),
+#eval (rtFullRecovered.ratPart.map (fun (z : Lvl2) => (z.num.map (fun (w : DenseFrac ℚ) => (w.num : List ℚ)))),
        rtFullRecovered.logTerms.map (fun (_, u) =>
-         u.map (fun (z : Lvl2) => (z.num.map (fun (w : CFrac ℚ) => (w.num : List ℚ))))))
+         u.map (fun (z : Lvl2) => (z.num.map (fun (w : DenseFrac ℚ) => (w.num : List ℚ))))))
 
 /-- The fully-computed round-trip `algDeriv F' = √(eˣ+1)` with both halves computed: the elementary integral
 `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over `ℚ(x)(eˣ)`, `v = 2y` from `radIntegrateCase3G` and

@@ -63,7 +63,7 @@ abbrev full_radLogDeriv_eq_integrand := @radLogDeriv_eq_integrand_arcsinh
 the bundle of a rational part `v` (a `RadElem`) and a list of log terms `[(cᵢ, uᵢ)]` (residue coefficient
 `cᵢ ∈ ℚ(x)`, argument `uᵢ` a `RadElem`) — the output of `cIntegrateAlgebraicWf`, differentiated by
 `algDeriv`. -/
-abbrev full_integralResult := @AlgIntegralResult (CFrac ℚ)
+abbrev full_integralResult := @AlgIntegralResult (DenseFrac ℚ)
 
 /-- **The derivative of a full algebraic integral** `algDeriv ρ F = radDeriv v + Σ cᵢ · radLogDeriv uᵢ`
 (Trager, Appendix A + Ch. 5): the genuine `RadElem` `D(v + Σ cᵢ log uᵢ)` in `(ℚ(x))[y]/(y² − ρ)`, each log
@@ -88,15 +88,15 @@ abbrev full_integrate := @cIntegrateAlgebraicWf
 
 /-- The dispatch's reconstructed rational part for `∫ 1/((x−1)²√(x²+1))`, built from
 `radIntegrateRationalWf`. -/
-def full_rtRatV : RadElem (CFrac ℚ) :=
+def full_rtRatV : RadElem (DenseFrac ℚ) :=
   radAssembleRatPart rtRatRho (DensePoly.radIntegrateRationalWf (CFrac.num rtRatRho) rtRatR rtRatB)
 
 /-- The rational-only benchmark integrand: `algDeriv ⟨full_rtRatV, []⟩`. -/
-def full_rtRatIntegrand : RadElem (CFrac ℚ) := algDeriv rtRatRho ⟨full_rtRatV, []⟩
+def full_rtRatIntegrand : RadElem (DenseFrac ℚ) := algDeriv rtRatRho ⟨full_rtRatV, []⟩
 
 /-- The recovered rational-only result for `∫ 1/((x−1)²√(x²+1))`: the rational part is reconstructed
 by `radIntegrateRationalWf`, and the non-principal residual gives an empty log list. -/
-def full_rtRatRecovered : AlgIntegralResult (CFrac ℚ) :=
+def full_rtRatRecovered : AlgIntegralResult (DenseFrac ℚ) :=
   cIntegrateAlgebraicWf rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual CCommRing.one [0, 0, 1] 1
 
 /-- **★ Round-trip (rational-only): `∫ 1/((x−1)²√(x²+1))`** (Trager, Appendix A §2, `native_decide`): start
@@ -116,7 +116,7 @@ theorem full_roundtrip_rational_shape :
 
 /-- The recovered log-only result for `∫ dx/(x√(x²+1))`: empty rational part and one computed
 principal log term. -/
-def full_rtLogRecovered : AlgIntegralResult (CFrac ℚ) :=
+def full_rtLogRecovered : AlgIntegralResult (DenseFrac ℚ) :=
   cIntegrateAlgebraicWf rtLogRho [1] [1] rtLogIntegrand CCommRing.one rtLogD 0
 
 /-- **★ Round-trip (log-only): `∫ dx/(x√(x²+1)) = log((y − 1)/x)`** (Trager, Ch. 5 §1, `native_decide`):
@@ -134,18 +134,18 @@ theorem full_roundtrip_log_shape :
 
 /-- The dispatch's reconstructed rational part for the combined round-trip, built from
 `radIntegrateRationalWf`. -/
-def full_rtCombVdispatch : RadElem (CFrac ℚ) :=
+def full_rtCombVdispatch : RadElem (DenseFrac ℚ) :=
   radAssembleRatPart rtCombRho (DensePoly.radIntegrateRationalWf (CFrac.num rtCombRho) rtCombR rtCombB)
 
 /-- The combined starting antiderivative `F = full_rtCombVdispatch + log(rtCombU)`. -/
-def full_rtCombF : AlgIntegralResult (CFrac ℚ) := ⟨full_rtCombVdispatch, [(CCommRing.one, rtCombU)]⟩
+def full_rtCombF : AlgIntegralResult (DenseFrac ℚ) := ⟨full_rtCombVdispatch, [(CCommRing.one, rtCombU)]⟩
 
 /-- The combined benchmark integrand: `algDeriv full_rtCombF`. -/
-def full_rtCombIntegrand : RadElem (CFrac ℚ) := algDeriv rtCombRho full_rtCombF
+def full_rtCombIntegrand : RadElem (DenseFrac ℚ) := algDeriv rtCombRho full_rtCombF
 
 /-- The recovered combined result for `F = v + log(x + y)`: both the rational part and the log
 argument are reconstructed by `cIntegrateAlgebraicWf`. -/
-def full_rtCombRecovered : AlgIntegralResult (CFrac ℚ) :=
+def full_rtCombRecovered : AlgIntegralResult (DenseFrac ℚ) :=
   cIntegrateAlgebraicWf rtCombRho rtCombR rtCombB rtCombLogResidual CCommRing.one [1] 1
 
 /-- **★★ Round-trip (COMBINED): `F = v + c·log u`, BOTH parts nonzero** (Trager, Appendix A + Ch. 5,

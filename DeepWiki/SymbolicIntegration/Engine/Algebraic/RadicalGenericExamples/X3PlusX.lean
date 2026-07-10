@@ -17,7 +17,7 @@ open RadElem DensePoly
 A third radicand `√(x³ + x) = √(x(x²+1))`. Odd degree ⟹ the full carrier fires. -/
 
 /-- The radicand `f₃ = x³ + x ∈ ℚ(x)` (numerator `[0,1,0,1] = x + x³`) for `√(x³+x)`. -/
-def radicandX3pX : CFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
+def radicandX3pX : DenseFrac ℚ := CFrac.ofPoly [0, 1, 0, 1]
 
 /-- **`toPoly [0,1,0,1] = x + x³` has `natDegree 3`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X3pX : (toPoly ([0, 1, 0, 1] : DensePoly ℚ)).natDegree = 3 := by
@@ -29,34 +29,34 @@ theorem natDeg_toPolyG_X3pX : (toPoly ([0, 1, 0, 1] : DensePoly ℚ)).natDegree 
 
 /-- **`x³ + x` is not a square in `ℚ(x)`** — odd-degree helper (`natDegree 3`). -/
 theorem not_isSquare_radicandX3pX :
-    ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX3pX : CFrac ℚ) := by
+    ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX3pX : DenseFrac ℚ) := by
   rw [radicandX3pX, CFrac.toK_ofPoly]
   exact not_isSquare_algebraMap_of_odd_natDegree (by rw [natDeg_toPolyG_X3pX]; decide)
 
 /-- **`y² − (x³+x)` is irreducible over `ℚ(x)`** — generic helper on the non-square `x³+x`. -/
 theorem irreducible_radX3pX :
-    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3pX : CFrac ℚ))) :=
+    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3pX : DenseFrac ℚ))) :=
   irreducible_radDeg2_of_not_isSquare not_isSquare_radicandX3pX
 
 /-- The irreducibility `Fact` for `√(x³+x)`. -/
 instance fact_irreducible_radX3pX :
-    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3pX : CFrac ℚ)))) :=
+    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3pX : DenseFrac ℚ)))) :=
   ⟨irreducible_radX3pX⟩
 
-/-- The radical field `ℚ(x)[√(x³+x)] = RadExt (CFrac ℚ) 2 (x³+x)`. -/
-abbrev RadX3pX : Type := RadExt (CFrac ℚ) 2 radicandX3pX
+/-- The radical field `ℚ(x)[√(x³+x)] = RadExt (DenseFrac ℚ) 2 (x³+x)`. -/
+abbrev RadX3pX : Type := RadExt (DenseFrac ℚ) 2 radicandX3pX
 
 /-- **`CFieldDomain RadX3pX` — discharged generically.** -/
 noncomputable example : CFieldDomain RadX3pX := inferInstance
 
 /-- **The mixed tower over `√(x³+x)` is a `CField`**. -/
-theorem cfield_qfunNZG_radX3pX : Nonempty (CField (CFrac RadX3pX)) := ⟨inferInstance⟩
+theorem cfield_qfunNZG_radX3pX : Nonempty (CField (DenseFrac RadX3pX)) := ⟨inferInstance⟩
 
 /-- **The mixed tower over `√(x³+x)` is a `CDiffField`**. -/
-theorem cdiffField_qfunNZG_radX3pX : Nonempty (CDiffField (CFrac RadX3pX)) := ⟨inferInstance⟩
+theorem cdiffField_qfunNZG_radX3pX : Nonempty (CDiffField (DenseFrac RadX3pX)) := ⟨inferInstance⟩
 
 /-- The diagonal multiplier `ℓ = f'/(2f) = (3x²+1)/(2(x³+x)) ∈ ℚ(x)` for `D(y) = ℓ·y` over `√(x³+x)`. -/
-def radX3pXLogDer : CFrac ℚ := logDerRadicand 2 radicandX3pX
+def radX3pXLogDer : DenseFrac ℚ := logDerRadicand 2 radicandX3pX
 
 /-- The `RadX3pX[t]`-polynomial `t² = [0,0,1]`. -/
 def radX3pXT2sq : DensePoly RadX3pX := [CCommRing.zero, CCommRing.zero, CCommRing.one]

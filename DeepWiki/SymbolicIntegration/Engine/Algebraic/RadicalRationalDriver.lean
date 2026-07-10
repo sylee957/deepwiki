@@ -109,18 +109,18 @@ def c2itC : DensePoly ℚ := [1]
 the residual and the numerator over `W³ = x³`. -/
 def c2itRun : DensePoly ℚ × DensePoly ℚ := radIntegrateCase2 c2itW c2itRho 3 c2itC
 
-/-- The radicand `ρ = x³ − x` lifted to `ℚ(x)` (`CFrac ℚ`), the radicand for `radDeriv 2`. -/
-def c2itRhoQx : CFrac ℚ := CFrac.ofPoly [0, -1, 0, 1]
+/-- The radicand `ρ = x³ − x` lifted to `ℚ(x)` (`DenseFrac ℚ`), the radicand for `radDeriv 2`. -/
+def c2itRhoQx : DenseFrac ℚ := CFrac.ofPoly [0, -1, 0, 1]
 
 /-- The common-denominator power `W³ = x³` as a `ℚ[x]` polynomial. -/
 def c2itW3 : DensePoly ℚ := cpow c2itW 3
 
-/-- The rational part `v = vNum/(W³·y)` lifted to `RadElem (CFrac ℚ)` as `[0, vNum/(W³·ρ)]`. -/
-def c2itVlift : RadElem (CFrac ℚ) :=
+/-- The rational part `v = vNum/(W³·y)` lifted to `RadElem (DenseFrac ℚ)` as `[0, vNum/(W³·ρ)]`. -/
+def c2itVlift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero, CField.div (CFrac.ofPoly c2itRun.2) (CFrac.ofPoly (cmul c2itW3 c2itRho))]
 
-/-- The integrand's rational part `C₀/(W³y) − Crem/(Wy)` lifted to `RadElem (CFrac ℚ)`. -/
-def c2itRatLift : RadElem (CFrac ℚ) :=
+/-- The integrand's rational part `C₀/(W³y) − Crem/(Wy)` lifted to `RadElem (DenseFrac ℚ)`. -/
+def c2itRatLift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero,
     CField.sub (CField.div (CFrac.ofPoly c2itC) (CFrac.ofPoly (cmul c2itW3 c2itRho)))
       (CField.div (CFrac.ofPoly c2itRun.1) (CFrac.ofPoly (cmul c2itW c2itRho)))]
@@ -148,15 +148,15 @@ def c3itC : DensePoly ℚ := [0, 0, 0, 0, 1]
 irreducible residual and the numerator over `y`. -/
 def c3itRun : DensePoly ℚ × DensePoly ℚ := radIntegrateCase3 cderiv c3itRho c3it c3itC
 
-/-- The radicand `ρ = x³ + 1` lifted to `ℚ(x)` (`CFrac ℚ`), the radicand for `radDeriv 2`. -/
-def c3itRhoQx : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
+/-- The radicand `ρ = x³ + 1` lifted to `ℚ(x)` (`DenseFrac ℚ`), the radicand for `radDeriv 2`. -/
+def c3itRhoQx : DenseFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 
-/-- The rational part `v = vNum/y` lifted to `RadElem (CFrac ℚ)` as `[0, vNum/ρ]`. -/
-def c3itVlift : RadElem (CFrac ℚ) :=
+/-- The rational part `v = vNum/y` lifted to `RadElem (DenseFrac ℚ)` as `[0, vNum/ρ]`. -/
+def c3itVlift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero, CField.div (CFrac.ofPoly c3itRun.2) (CFrac.ofPoly c3itRho)]
 
-/-- The integrand's rational part `C/y − Crem/y` lifted to `RadElem (CFrac ℚ)` as `[0, (C − Crem)/ρ]`. -/
-def c3itRatLift : RadElem (CFrac ℚ) :=
+/-- The integrand's rational part `C/y − Crem/y` lifted to `RadElem (DenseFrac ℚ)` as `[0, (C − Crem)/ρ]`. -/
+def c3itRatLift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero, CField.div (CFrac.ofPoly (csub c3itC c3itRun.1)) (CFrac.ofPoly c3itRho)]
 
 /-- The Case-3 iterate integrates `∫ x⁴/√(x³+1)`: `radDeriv 2 (x³+1)` of the rational part `v = vNum/√(x³+1)`
@@ -179,6 +179,6 @@ def mcR : DensePoly ℚ := [1]
 /-- Denominator `B = (x−1)²·x² = x⁴ − 2x³ + x²`, presented unfactored `[0,0,1,−2,1]`. -/
 def mcB : DensePoly ℚ := cmul (cpow [-1, 1] 2) (cpow [0, 1] 2)
 
-/-- The radicand `ρ = x` as `CFrac ℚ`, the base of the `RadElem` lift for the multi-case
+/-- The radicand `ρ = x` as `DenseFrac ℚ`, the base of the `RadElem` lift for the multi-case
 `∫ 1/((x−1)²x²·√x)` validation. -/
-def mcRhoQx : CFrac ℚ := CFrac.ofPoly [0, 1]
+def mcRhoQx : DenseFrac ℚ := CFrac.ofPoly [0, 1]

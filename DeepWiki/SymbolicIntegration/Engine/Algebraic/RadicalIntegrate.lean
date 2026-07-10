@@ -49,7 +49,7 @@ end DensePoly
 /-! ### The driver integrates `∫ 1/((x−1)³√x)` end-to-end
 
 Over `y² = x`, `V = x − 1`, `k₀ = 3`, `C₀ = 1`, the driver runs two Hermite steps and its accumulated
-rational part `v`, lifted to `(CFrac ℚ)[y]/(y² − x)`, satisfies `radDeriv 2 x v = C₀/(V³y) − Crem/(Vy)`. -/
+rational part `v`, lifted to `(DenseFrac ℚ)[y]/(y² − x)`, satisfies `radDeriv 2 x v = C₀/(V³y) − Crem/(Vy)`. -/
 
 open RadElem DensePoly
 
@@ -77,8 +77,8 @@ theorem sqrtxRun_vNum_eq :
 theorem sqrtxRun_remainder_eq :
     cisZero (csub sqrtxRun.1 [(3/8 : ℚ)]) = true := by native_decide
 
-/-- The radicand `f = x` lifted to `ℚ(x)` (`CFrac ℚ`), the Picture-B radicand for `radDeriv 2`. -/
-def sqrtxFqx : CFrac ℚ := CFrac.ofPoly [0, 1]
+/-- The radicand `f = x` lifted to `ℚ(x)` (`DenseFrac ℚ`), the Picture-B radicand for `radDeriv 2`. -/
+def sqrtxFqx : DenseFrac ℚ := CFrac.ofPoly [0, 1]
 
 /-- The common-denominator power `V² = (x−1)²` as a `ℚ[x]` polynomial (the denominator of `vNum`). -/
 def sqrtxV2 : DensePoly ℚ := cpow sqrtxV 2
@@ -86,13 +86,13 @@ def sqrtxV2 : DensePoly ℚ := cpow sqrtxV 2
 /-- The initial denominator power `V³ = (x−1)³` as a `ℚ[x]` polynomial (the integrand's denominator). -/
 def sqrtxV3 : DensePoly ℚ := cpow sqrtxV 3
 
-/-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (CFrac ℚ)` as `[0, vNum/(V²·f)]`. -/
-def sqrtxVlift : RadElem (CFrac ℚ) :=
+/-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (DenseFrac ℚ)` as `[0, vNum/(V²·f)]`. -/
+def sqrtxVlift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero, CField.div (CFrac.ofPoly sqrtxRun.2) (CFrac.ofPoly (cmul sqrtxV2 sqrtxF))]
 
-/-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (CFrac ℚ)` as
+/-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (DenseFrac ℚ)` as
 `[0, C₀/(V³·f) − Crem/(V·f)]`. -/
-def sqrtxRatLift : RadElem (CFrac ℚ) :=
+def sqrtxRatLift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero,
     CField.sub (CField.div (CFrac.ofPoly sqrtxC) (CFrac.ofPoly (cmul sqrtxV3 sqrtxF)))
       (CField.div (CFrac.ofPoly sqrtxRun.1) (CFrac.ofPoly (cmul sqrtxV sqrtxF)))]
@@ -123,17 +123,17 @@ def cubeC : DensePoly ℚ := [1]
 over `V² = (x−1)²`. -/
 def cubeRun : DensePoly ℚ × DensePoly ℚ := radIntegrateCase1 cderiv cubeV cubeF cube 3 cubeC
 
-/-- The headline radicand `f = x³ + 1` lifted to `ℚ(x)` (`CFrac ℚ`), the Picture-B radicand. -/
-def cubeFqx : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
+/-- The headline radicand `f = x³ + 1` lifted to `ℚ(x)` (`DenseFrac ℚ`), the Picture-B radicand. -/
+def cubeFqx : DenseFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 
-/-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (CFrac ℚ)` — the pure-`y` element
+/-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (DenseFrac ℚ)` — the pure-`y` element
 `[0, vNum/(V²·f)]` over `ℚ(x)`. -/
-def cubeVlift : RadElem (CFrac ℚ) :=
+def cubeVlift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero, CField.div (CFrac.ofPoly cubeRun.2) (CFrac.ofPoly (cmul (cpow cubeV 2) cubeF))]
 
-/-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (CFrac ℚ)` — the pure-`y`
+/-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (DenseFrac ℚ)` — the pure-`y`
 element `[0, C₀/(V³·f) − Crem/(V·f)]` over `ℚ(x)`. -/
-def cubeRatLift : RadElem (CFrac ℚ) :=
+def cubeRatLift : RadElem (DenseFrac ℚ) :=
   [CCommRing.zero,
     CField.sub (CField.div (CFrac.ofPoly cubeC) (CFrac.ofPoly (cmul (cpow cubeV 3) cubeF)))
       (CField.div (CFrac.ofPoly cubeRun.1) (CFrac.ofPoly (cmul cubeV cubeF)))]

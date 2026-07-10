@@ -20,38 +20,38 @@ For `C` with leading term `(5/(2x))θ²` the bracket `(j+1)·θ' + lcf(g) = 5/(2
 
 /-- `θ' = (log x)' = v'/v = 1/x ∈ ℚ(x)` (numerator `[1]`, denominator `[0,1] = x`), the derivative of
 the monomial `θ = log x`. -/
-def logDt : CFrac ℚ := CFrac.ofFraction [1] [0, 1] (by decide)
+def logDt : DenseFrac ℚ := CFrac.ofFraction [1] [0, 1] (by decide)
 
 /-- The ℚ(x) leading coefficient `lcf(g) = g = 1/(2x)` for `f = θ`, `g = (1/2)f'/f·f = 1/(2x)`
 (numerator `[1]`, denominator `[0,2] = 2x`). -/
-def clogLead : CFrac ℚ := CFrac.ofFraction [1] [0, 2] (by decide)
+def clogLead : DenseFrac ℚ := CFrac.ofFraction [1] [0, 2] (by decide)
 
 /-- The radicand `f = θ = log x ∈ ℚ(x)[θ]` (`y² = log x`), the `θ`-polynomial `[0, 1]`. -/
-def logF : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
+def logF : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- `g = 1/(2x)` as a degree-`0`-in-θ element of `ℚ(x)[θ]` (`(f/y)' = g/y`), `[1/(2x)]`. -/
-def clog : DensePoly (CFrac ℚ) := [clogLead]
+def clog : DensePoly (DenseFrac ℚ) := [clogLead]
 
 /-- The numerator `C = (5/(2x))θ² + θ ∈ ℚ(x)[θ]` (`deg_θ C = 2 ≥ m`), with leading coefficient
 `5/(2x) = (j+1)θ' + lcf(g)` chosen so the constant `b = 1` solves eq. 5. -/
-def logC : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one, CFrac.ofFraction [5] [0, 2] (by decide)]
+def logC : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one, CFrac.ofFraction [5] [0, 2] (by decide)]
 
 /-- The `θ`-derivative as a polynomial `[θ'] = [1/x] ∈ ℚ(x)[θ]`, the `Dt` for `cmonomialDeriv`. -/
-def logDtPoly : DensePoly (CFrac ℚ) := [logDt]
+def logDtPoly : DensePoly (DenseFrac ℚ) := [logDt]
 
 /-- The solved `θ = log v` leading-coefficient cofactor `B = b·θ² = 1·θ²` (`b = lcf(C)/bracket =
 (5/(2x))/(5/(2x)) = 1`, a constant). -/
-def logB : DensePoly (CFrac ℚ) := radCase3CofactorGen logDt logF clog logC
+def logB : DensePoly (DenseFrac ℚ) := radCase3CofactorGen logDt logF clog logC
 
 /-- The `θ = log v` residual `D = B'f + Bg − C`, with `B' = cmonomialDeriv [θ'] B` the full log-monomial
 derivative — expected `−θ` (degree `1 < deg_θ C = 2`). -/
-def logD : DensePoly (CFrac ℚ) :=
+def logD : DensePoly (DenseFrac ℚ) :=
   radCase3Residual logF clog logB logC (cmonomialDeriv logDtPoly logB)
 
 /-- The `log` cofactor is the constant monomial `B = θ²`: `b = (5/(2x))/((2)(1/x) + 1/(2x)) = 1` at
 degree `j+1 = 2`. -/
 theorem logCase_cofactor_eq :
-    cisZero (csub logB [CCommRing.zero, CCommRing.zero, (CCommRing.one : CFrac ℚ)]) = true := by
+    cisZero (csub logB [CCommRing.zero, CCommRing.zero, (CCommRing.one : DenseFrac ℚ)]) = true := by
   native_decide
 
 /-- The `θ = log v` cleared identity `B'f + Bg − C = D` in `ℚ(x)[log x]` (`B = θ²`, `B' = cmonomialDeriv
@@ -63,7 +63,7 @@ theorem logCase_cleared_identity :
 
 /-- The `log` residual `D = −θ` has `θ`-degree `1`, strictly below `deg_θ C = 2`. -/
 theorem logCase_residual_eq :
-    cisZero (csub logD [CCommRing.zero, (CCommRing.neg CCommRing.one : CFrac ℚ)]) = true := by native_decide
+    cisZero (csub logD [CCommRing.zero, (CCommRing.neg CCommRing.one : DenseFrac ℚ)]) = true := by native_decide
 
 /-- The `θ = log v` step strictly lowers `deg_θ C`: `deg D = 1 < deg C = 2` over `ℚ(x)[log x]`. -/
 theorem logCase_degree_drop : cdeg logD < cdeg logC := by native_decide
@@ -75,33 +75,33 @@ A 2-level exponential tower: base `ℚ(x)`, monomial `θ = exp x` (`θ' = θ`), 
 `B = [−1]`, residual `D = −1/2`, dropping `k = 1 → 0`. -/
 
 /-- The radicand `f = θ + 1 = eˣ + 1 ∈ ℚ(x)[θ]` (`y² = eˣ + 1`, `θ ∤ f`, `f₀ = 1`), `[1, 1]`. -/
-def expF : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
+def expF : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
 
 /-- `g = (1/2)θ ∈ ℚ(x)[θ]` for `f = θ+1`, `θ = exp x` (`(f/y)' = g/y`, `g₀ = 0`), `[0, 1/2]`. -/
-def cexp : DensePoly (CFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [1/2]]
+def cexp : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [1/2]]
 
 /-- The numerator `C = θ + 1 ∈ ℚ(x)[θ]` (`c₀ = 1`), `[1, 1]`. -/
-def expC : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
+def expC : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
 
-/-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CCommRing.one` of `CFrac ℚ`. -/
-def expVder : CFrac ℚ := CCommRing.one
+/-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CCommRing.one` of `DenseFrac ℚ`. -/
+def expVder : DenseFrac ℚ := CCommRing.one
 
 /-- `θ' = v'·θ = θ` as the `Dt` polynomial `[0, 1] ∈ ℚ(x)[θ]` for `cmonomialDeriv` (`θ = exp x` is a
 factor of its own derivative). -/
-def expDtPoly : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
+def expDtPoly : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The solved `θ = exp v` `C/(θy)` cofactor `B = [b₀] = [−1]` (`b₀ = c₀/(g₀ − kv'f₀) = 1/(0−1) = −1`,
 a constant). -/
-def expB : DensePoly (CFrac ℚ) := radExpCofactor 1 expVder expF cexp expC
+def expB : DensePoly (DenseFrac ℚ) := radExpCofactor 1 expVder expF cexp expC
 
 /-- The `θ = exp v` `C/(θy)` residual `D = ((B'f + Bg − kv'Bf) − C)/θ`, `B' = cmonomialDeriv [θ] B` —
 expected `−1/2` (the multiplicity dropped `k = 1 → 0`). -/
-def expD : DensePoly (CFrac ℚ) :=
+def expD : DensePoly (DenseFrac ℚ) :=
   radExpResidual 1 expVder expF cexp expB expC (cmonomialDeriv expDtPoly expB)
 
 /-- The `exp` cofactor is the constant `B = [−1]`: `b₀ = 1/(0 − 1·1·1) = −1` over `ℚ(x)[eˣ]`. -/
 theorem expCase_cofactor_eq :
-    cisZero (csub expB [(CCommRing.neg CCommRing.one : CFrac ℚ)]) = true := by native_decide
+    cisZero (csub expB [(CCommRing.neg CCommRing.one : DenseFrac ℚ)]) = true := by native_decide
 
 /-- The `θ = exp v` constant-term congruence `(B'f + Bg − kv'Bf) − C ≡ 0 (mod θ)`: the numerator `(−1/2)θ`
 is divisible by `θ`. -/

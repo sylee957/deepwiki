@@ -36,7 +36,7 @@ theorem qfDet_eq_fieldDet_cusp :
 
 /-- A `3×3` `ℚ(x)`-matrix with genuine fraction entries (denominators `x+1, …, x+5`, a permuted
 Cauchy-style matrix), where `fieldDet` carries a ballooning denominator. -/
-def qfFracMat3 : List (List (CFrac ℚ)) :=
+def qfFracMat3 : List (List (DenseFrac ℚ)) :=
   [[CFrac.ofFraction [1] [1, 1] (by decide), CFrac.ofFraction [1] [2, 1] (by decide), CFrac.ofFraction [1] [3, 1] (by decide)],
    [CFrac.ofFraction [1] [2, 1] (by decide), CFrac.ofFraction [1] [3, 1] (by decide), CFrac.ofFraction [1] [4, 1] (by decide)],
    [CFrac.ofFraction [1] [4, 1] (by decide), CFrac.ofFraction [1] [1, 1] (by decide), CFrac.ofFraction [1] [5, 1] (by decide)]]
@@ -83,10 +83,10 @@ theorem qfAdjugate_mul_cuspBasis :
 /-- `qfSolve` solves `M·x = b` over `ℚ(x)` on the `3×3` fraction matrix `qfFracMat3` with `b = [1, 1, 1]`:
 reading back `x` and multiplying `M·x` recovers `b`. -/
 theorem qfSolve_fracMat3 :
-    let b : List (CFrac ℚ) := [CFrac.ofPoly [1], CFrac.ofPoly [1], CFrac.ofPoly [1]]
+    let b : List (DenseFrac ℚ) := [CFrac.ofPoly [1], CFrac.ofPoly [1], CFrac.ofPoly [1]]
     let ds := qfSolve qfFracMat3 b
-    let xq : List (CFrac ℚ) := ds.2.map (fun s => CCommRing.mul (CFrac.ofPoly s) (CField.inv (CFrac.ofPoly ds.1)))
-    let lhs : List (CFrac ℚ) := (List.range 3).map (fun i =>
+    let xq : List (DenseFrac ℚ) := ds.2.map (fun s => CCommRing.mul (CFrac.ofPoly s) (CField.inv (CFrac.ofPoly ds.1)))
+    let lhs : List (DenseFrac ℚ) := (List.range 3).map (fun i =>
       (List.range 3).foldl (fun acc j =>
         CCommRing.add acc (CCommRing.mul ((qfFracMat3.getD i []).getD j CCommRing.zero) (xq.getD j CCommRing.zero)))
         CCommRing.zero)

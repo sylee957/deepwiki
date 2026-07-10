@@ -144,7 +144,7 @@ end Step
 
 /-! ### The per-level step
 
-The next-level solver over `CFrac β` is `crischDESolveSoundWf`; the induction hypothesis remains
+The next-level solver over `DenseFrac β` is `crischDESolveSoundWf`; the induction hypothesis remains
 `CRischFieldComplete β` (the cancellation subroutines recurse into `CRischField.crischDESolve` one level
 down). -/
 
@@ -154,45 +154,45 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- Next-level RDE completeness `CRischFieldCompleteWf β`: the public solver returns `some` on every
-solvable field-level RDE over `CFrac β`. -/
+solvable field-level RDE over `DenseFrac β`. -/
 def CRischFieldCompleteWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
-  ∀ f g : CFrac β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
+  ∀ f g : DenseFrac β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
 
 /-- The per-level step frontier `RischDEStepFrontierWf β`: given the base-oracle IH one level down, every
-solvable `CFrac β` RDE satisfies the weak-normalizer clauses, the inner residual-tip frontier, the
+solvable `DenseFrac β` RDE satisfies the weak-normalizer clauses, the inner residual-tip frontier, the
 polynomial solution/denominator guards, and the direct soundness certificate. -/
 structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
-  hwn : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
+  hwn : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g →
     DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
-  hck : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
+  hck : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g →
     IsCanonNormalized f
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
-  hpolysol : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
+  hpolysol : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     ∃ ynum yden,
       IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftildeR.num ftildeR.den
         gtilde.num gtilde.den ynum yden
   /-- The consolidated inner residual-tip frontier, threaded through the IH. -/
-  hinnerFront : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
+  hinnerFront : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     RischDEInnerDecisionFrontierWf ([CCommRing.one] : DensePoly β) ftildeR.num ftildeR.den
       gtilde.num gtilde.den
   /-- The returned denominator of a successful inner solve is nonzero. -/
-  hden : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g → ∀ ynum yden : DensePoly β,
+  hden : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g → ∀ ynum yden : DensePoly β,
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     cRischDE ([CCommRing.one] : DensePoly β) ftildeR.num ftildeR.den gtilde.num gtilde.den
         = some (ynum, yden) →
       DensePoly.cisZero yden = false
   /-- The direct soundness certificate for each solvable next-level RDE. -/
-  hsound : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
+  hsound : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g →
     RischDESoundnessWf f g
 
 /-- Step: a complete base oracle one level down plus the per-level frontier makes the public RDE solver
