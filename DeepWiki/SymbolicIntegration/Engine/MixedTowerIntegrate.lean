@@ -17,7 +17,7 @@ open DensePoly
 
 /-- `CFracGcdCoreWf RadX3`: the fuel-free raw fraction-free gcd over `RadX3[t]` is `(cgcdWf p q).1`. -/
 instance instCFracGcdCoreWfRadX3 : CFracGcdCoreWf RadX3 where
-  cgcdFFRawCoreWf p q := (DensePoly.cgcdWf p q).1
+  cgcdFFRawCoreWf p q := (CPolyEuclidean.gcdExt p q).1
 
 /-! ### Shared integrand data over `RadX3[t]` -/
 

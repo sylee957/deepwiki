@@ -32,10 +32,10 @@ Some polynomial algorithms return a numerator and denominator before their nonze
 discharged. Keep that boundary as a pair-valued denotation, rather than making it a second fraction API.
 -/
 
-/-- Read an unchecked dense numerator/denominator pair in `RatFunc ℚ`. -/
-noncomputable def ratFuncOfPair (x : DensePoly ℚ × DensePoly ℚ) : RatFunc ℚ :=
-  algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly x.1) /
-    algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly x.2)
+/-- Read an unchecked represented numerator/denominator pair in `RatFunc ℚ`. -/
+noncomputable def ratFuncOfPair {P : Type → Type} [CPoly P] (x : P ℚ × P ℚ) : RatFunc ℚ :=
+  algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly x.1) /
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly x.2)
 
 /-! ### Field-operation readings -/
 

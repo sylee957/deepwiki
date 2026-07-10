@@ -24,7 +24,7 @@ def rdeNormHWf (Dt : DensePoly α) (fden gden : DensePoly α) : DensePoly α :=
   let en := (DensePoly.cSplitFactorFast Dt gden).1
   let dn := (DensePoly.cSplitFactorFast Dt fden).1
   let p := CFracGcdCoreWf.cgcdFFCoreWf dn en
-  DensePoly.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf en (DensePoly.cderiv en))
+  CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf en (DensePoly.cderiv en))
     (CFracGcdCoreWf.cgcdFFCoreWf p (DensePoly.cderiv p))
 
 /-- The dividend `dₙ·h²`. -/

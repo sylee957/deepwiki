@@ -504,6 +504,14 @@ instance instLawfulCPolyEuclideanDense : LawfulCPolyEuclidean DensePoly where
       hq ((DensePoly.cnormG_eq_nil_iff q).mp h)
     simpa only [CPolyEuclidean.div, CPolyEuclidean.mod, CPolyEuclidean.divmod_dense_eq,
       toPoly_list_eq] using DensePoly.toPolyG_cdivmodWf p q hqnorm
+  mod_degree_lt := by
+    intro α _ _ p q hq
+    rw [toPoly_list_eq] at hq ⊢
+    have hqnorm : DensePoly.cnorm q ≠ [] := fun h =>
+      hq ((DensePoly.cnormG_eq_nil_iff q).mp h)
+    simpa only [CPolyEuclidean.mod_dense_eq, toPoly_list_eq] using
+      DensePoly.toPolyG_degree_lt_of_length_lt (DensePoly.cmodWf p q) q hqnorm
+        (DensePoly.cmodWf_length_lt p q hqnorm)
   div_exact := by
     intro α _ _ p q hq hdvd
     simp only [toPoly_list_eq] at hq hdvd

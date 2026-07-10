@@ -39,33 +39,17 @@ theorem cgcdFFCoreWf_one_isUnit (z : DensePoly β) :
   exact associated_one_iff_isUnit.mp hc
 
 omit [CDiffField β] [CFracGcdCoreWf β] [CTowerGcdWitnessWf β] in
-/-- Division by a nonzero degree-0 divisor keeps degree 0: if `cdeg c = 0`, `cnorm d ≠ []`, and
-`cdeg d = 0`, then `cdeg (cdivWf c d) = 0`. -/
-theorem cdegG_cdivWf_zero_of_unit_divisor_wf (c d : DensePoly β)
-    (hc : cdeg c = 0) (hd0 : DensePoly.cnorm d ≠ []) (hd : cdeg d = 0) :
-    cdeg (DensePoly.cdivWf c d) = 0 := by
-  have hdlen : (DensePoly.cnorm d : List β).length = 1 := by
-    rw [cdeg] at hd
-    have : 0 < (DensePoly.cnorm d : List β).length := List.length_pos_iff.mpr hd0
-    omega
-  have hrem := DensePoly.cmodWf_length_lt c d hd0
-  rw [hdlen] at hrem
-  have hremnil : DensePoly.cnorm (DensePoly.cmodWf c d) = [] := List.length_eq_zero_iff.mp (by omega)
-  have hrem0 : toPoly (DensePoly.cdivmodWf c d).2 = 0 := by
-    rw [show ((DensePoly.cdivmodWf c d).2) = DensePoly.cmodWf c d from rfl]
-    exact (DensePoly.cnormG_eq_nil_iff _).mp hremnil
-  have hid := DensePoly.toPolyG_cdivmodWf c d hd0
-  rw [show DensePoly.cdivWf c d = (DensePoly.cdivmodWf c d).1 from rfl]
-  rw [hrem0, add_zero] at hid
+/-- Dividing a degree-0 polynomial by a nonzero polynomial keeps degree 0. -/
+theorem cdegG_div_eq_zero_of_cdegG_zero (c d : DensePoly β)
+    (hc : cdeg c = 0) (hd0 : DensePoly.cnorm d ≠ []) :
+    cdeg (CPolyEuclidean.div c d) = 0 := by
   have hdne : toPoly d ≠ 0 := fun h => hd0 ((DensePoly.cnormG_eq_nil_iff d).mpr h)
-  have hdnd0 : (toPoly d).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hd
   have hcnd0 : (toPoly c).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hc
   rw [cdegG_eq_natDegree]
-  by_cases hquo0 : toPoly (DensePoly.cdivmodWf c d).1 = 0
-  · rw [hquo0]; simp
-  · have hnd := congrArg Polynomial.natDegree hid
-    rw [Polynomial.natDegree_mul hquo0 hdne, hdnd0, hcnd0, add_zero] at hnd
-    omega
+  simpa only [toPoly_list_eq] using
+    CPolyEuclidean.div_natDegree_eq_zero_of_natDegree_eq_zero c d
+      (by simpa only [toPoly_list_eq] using hcnd0)
+      (by simpa only [toPoly_list_eq] using hdne)
 
 /-- The split step `cstep [1] [1]` on the unit input `[1]` has degree `0` (a unit-by-unit division). -/
 theorem cdegG_cstepG_one : cdeg (DensePoly.cstep ([CCommRing.one] : DensePoly β) [CCommRing.one]) = 0 := by
@@ -75,13 +59,11 @@ theorem cdegG_cstepG_one : cdeg (DensePoly.cstep ([CCommRing.one] : DensePoly β
   set g2 := CFracGcdCoreWf.cgcdFFCoreWf ([CCommRing.one] : DensePoly β) (DensePoly.cderiv [CCommRing.one]) with hg2
   have hd1 : cdeg g1 = 0 := by
     rw [hg1, cdegG_eq_natDegree]; exact natDegree_eq_zero_of_isUnit (cgcdFFCoreWf_one_isUnit _)
-  have hd2 : cdeg g2 = 0 := by
-    rw [hg2, cdegG_eq_natDegree]; exact natDegree_eq_zero_of_isUnit (cgcdFFCoreWf_one_isUnit _)
   have hg2u : IsUnit (toPoly g2) := by rw [hg2]; exact cgcdFFCoreWf_one_isUnit _
   have hg20 : DensePoly.cnorm g2 ≠ [] := by
     intro he; have hz : toPoly g2 = 0 := (DensePoly.cnormG_eq_nil_iff g2).mp he
     rw [hz] at hg2u; exact not_isUnit_zero hg2u
-  exact cdegG_cdivWf_zero_of_unit_divisor_wf g1 g2 hd1 hg20 hd2
+  exact cdegG_div_eq_zero_of_cdegG_zero g1 g2 hd1 hg20
 
 /-- `cSplitFactorFast [1] [1] = ([1], [1])`: the split factorization of the unit `[1]` is trivial. -/
 theorem cSplitFactorFastG_one_eq :

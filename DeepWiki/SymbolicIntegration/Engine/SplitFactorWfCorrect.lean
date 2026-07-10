@@ -42,14 +42,15 @@ theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
   have hBnorm : cnorm B ≠ [] := fun h => hB0 ((cisZeroG_iff B).mp (by simp [cisZero, h]))
   have hBA : toPoly B ∣ toPoly A :=
     hB.dvd.trans ((gcd_derivative_dvd_gcd_implicitDeriv (toPoly Dt) hp).trans hA.symm.dvd)
-  have hexact : toPoly (cdivWf A B) * toPoly B = toPoly A := toPolyG_cdivWf_exact A B hBnorm hBA
+  have hexact : toPoly (CPolyEuclidean.div A B) * toPoly B = toPoly A := by
+    simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_cdivWf_exact A B hBnorm hBA
   have hstepB : Associated (splitFactorStep (toPoly Dt) (toPoly p) * toPoly B) (toPoly A) := by
     refine (Associated.mul_left _ hB).trans ?_
     rw [splitFactorStep, mul_comm,
       EuclideanDomain.mul_div_cancel' hgcdBne (gcd_derivative_dvd_gcd_implicitDeriv (toPoly Dt) hp)]
     exact hA.symm
-  show Associated (toPoly (cdivWf A B)) (splitFactorStep (toPoly Dt) (toPoly p))
-  have key : Associated (toPoly (cdivWf A B) * toPoly B)
+  show Associated (toPoly (CPolyEuclidean.div A B)) (splitFactorStep (toPoly Dt) (toPoly p))
+  have key : Associated (toPoly (CPolyEuclidean.div A B) * toPoly B)
       (splitFactorStep (toPoly Dt) (toPoly p) * toPoly B) := by
     rw [hexact]; exact hstepB.symm
   exact key.of_mul_right (Associated.refl _) hB0
@@ -98,19 +99,19 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
           rw [← cdegG_eq_natDegree]; omega
         have hSdvd : toPoly S ∣ toPoly p :=
           hAstep.dvd.trans (splitFactorStep_dvd (toPoly Dt) hp)
-        have hexact : toPoly (cdivWf p S) * toPoly S = toPoly p :=
-          toPolyG_cdivWf_exact p S hSnorm hSdvd
-        have hpqne : toPoly (cdivWf p S) ≠ 0 := by
+        have hexact : toPoly (CPolyEuclidean.div p S) * toPoly S = toPoly p := by
+          simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_cdivWf_exact p S hSnorm hSdvd
+        have hpqne : toPoly (CPolyEuclidean.div p S) ≠ 0 := by
           intro h; rw [h, zero_mul] at hexact; exact hp hexact.symm
-        have hdegsum : (toPoly (cdivWf p S)).natDegree + (toPoly S).natDegree
+        have hdegsum : (toPoly (CPolyEuclidean.div p S)).natDegree + (toPoly S).natDegree
             = (toPoly p).natDegree := by rw [← natDegree_mul hpqne hSne, hexact]
-        have hlendrop : (cnorm (cdivWf p S) : List α).length < (cnorm p : List α).length := by
+        have hlendrop : (cnorm (CPolyEuclidean.div p S) : List α).length < (cnorm p : List α).length := by
           rw [length_cnormG_of_ne _ (fun h => hpqne ((cnormG_eq_nil_iff _).mp h)),
             length_cnormG_of_ne _ (fun h => hp ((cnormG_eq_nil_iff _).mp h))]
           omega
         rw [if_pos hlendrop]
-        rcases hres : cSplitFactorFast Dt (cdivWf p S) with ⟨qn, qs⟩
-        have hih := ih (cdivWf p S) (by omega) hpqne
+        rcases hres : cSplitFactorFast Dt (CPolyEuclidean.div p S) with ⟨qn, qs⟩
+        have hih := ih (CPolyEuclidean.div p S) (by omega) hpqne
         rw [hres] at hih
         obtain ⟨heq, hqspec, hqnorm⟩ := hih
         refine ⟨?_, ?_, hqnorm⟩

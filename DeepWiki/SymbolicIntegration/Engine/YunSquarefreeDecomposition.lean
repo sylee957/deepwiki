@@ -115,10 +115,10 @@ theorem eq_ediv_of_mul_eq {K : Type*} [Field K] {X g b : K[X]} (hg : g ≠ 0) (h
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The deflated first component denotes `b / gcd(b,d)` in the `yunLoopAbs` recursion:
-`toPoly (cdivWf b (cmonic (cgcdFFCoreWf b d))) = toPoly b / gcd (toPoly b) (toPoly d)`. -/
+`toPoly (CPolyEuclidean.div b (cmonic (cgcdFFCoreWf b d))) = toPoly b / gcd (toPoly b) (toPoly d)`. -/
 theorem toPolyG_yunDeflate_fst (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (b d : DensePoly α)
     (hb : toPoly b ≠ 0) :
-    toPoly (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+    toPoly (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
       = toPoly b / gcd (toPoly b) (toPoly d) := by
   set p := cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d) with hpdef
   have hp : toPoly p = gcd (toPoly b) (toPoly d) := toPolyG_yunEmit_eq_gcd hgcd b d
@@ -127,7 +127,7 @@ theorem toPolyG_yunDeflate_fst (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf
   have hpn : cnorm p ≠ [] := by
     intro h; apply hgne; rw [← hp]; exact (cisZeroG_iff p).mp (by simp [cisZero, h])
   have hdvd : toPoly p ∣ toPoly b := by rw [hp]; exact gcd_dvd_left _ _
-  have hex : toPoly (cdivWf b p) * toPoly p = toPoly b := toPolyG_cdivWf_exact b p hpn hdvd
+  have hex : toPoly (CPolyEuclidean.div b p) * toPoly p = toPoly b := toPolyG_cdivWf_exact b p hpn hdvd
   rw [hp] at hex
   exact eq_ediv_of_mul_eq hgne hex
 
@@ -136,8 +136,8 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 `yunLoopAbs` recursion. -/
 theorem toPolyG_yunDeflate_snd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (b d : DensePoly α)
     (hb : toPoly b ≠ 0) :
-    toPoly (csub (cdivWf d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
-        (cderiv (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))
+    toPoly (csub (CPolyEuclidean.div d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+        (cderiv (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))
       = toPoly d / gcd (toPoly b) (toPoly d)
         - derivative (toPoly b / gcd (toPoly b) (toPoly d)) := by
   set p := cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d) with hpdef
@@ -147,9 +147,9 @@ theorem toPolyG_yunDeflate_snd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf
   have hpn : cnorm p ≠ [] := by
     intro h; apply hgne; rw [← hp]; exact (cisZeroG_iff p).mp (by simp [cisZero, h])
   have hdvdd : toPoly p ∣ toPoly d := by rw [hp]; exact gcd_dvd_right _ _
-  have hexd : toPoly (cdivWf d p) * toPoly p = toPoly d := toPolyG_cdivWf_exact d p hpn hdvdd
+  have hexd : toPoly (CPolyEuclidean.div d p) * toPoly p = toPoly d := toPolyG_cdivWf_exact d p hpn hdvdd
   rw [hp] at hexd
-  have hd' : toPoly (cdivWf d p) = toPoly d / gcd (toPoly b) (toPoly d) :=
+  have hd' : toPoly (CPolyEuclidean.div d p) = toPoly d / gcd (toPoly b) (toPoly d) :=
     eq_ediv_of_mul_eq hgne hexd
   simp only [denote]
   rw [hd', toPolyG_yunDeflate_fst hgcd b d hb]
@@ -176,14 +176,14 @@ theorem prod_map_cSqfreeYunFFGgoWf_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcd
         fun h => hbne (zero_dvd_iff.mp (h ▸ gcd_dvd_left (toPoly b) (toPoly d)))
       rw [List.map_cons, List.prod_cons,
         toPolyG_yunEmit_eq_gcd hgcd b d]
-      have hih := ih (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
-        (csub (cdivWf d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
-          (cderiv (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))
+      have hih := ih (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+        (csub (CPolyEuclidean.div d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+          (cderiv (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))
       rw [toPolyG_yunDeflate_fst hgcd b d hbne] at hih
       calc gcd (toPoly b) (toPoly d)
-              * ((cSqfreeYunFFGgoWf fo (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
-                  (csub (cdivWf d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
-                    (cderiv (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))).map
+              * ((cSqfreeYunFFGgoWf fo (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+                  (csub (CPolyEuclidean.div d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+                    (cderiv (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))).map
                   toPoly).prod
             ∣ gcd (toPoly b) (toPoly d) * (toPoly b / gcd (toPoly b) (toPoly d)) :=
               mul_dvd_mul_left _ hih
@@ -215,9 +215,9 @@ theorem prod_map_cSqfreeYunFFG_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCo
     intro h
     have hg0 : toPoly g = 0 := (cisZeroG_iff g).mp (by simp [cisZero, h])
     exact hp (zero_dvd_iff.mp (hg0 ▸ hgp))
-  -- `b₁ = cdivWf p g` divides `p` (exact division).
-  have hb1 : toPoly (cdivWf p g) * toPoly g = toPoly p := toPolyG_cdivWf_exact p g hgn hgp
-  have hb1dvd : toPoly (cdivWf p g) ∣ toPoly p := ⟨toPoly g, hb1.symm⟩
+  -- `b₁ = CPolyEuclidean.div p g` divides `p` (exact division).
+  have hb1 : toPoly (CPolyEuclidean.div p g) * toPoly g = toPoly p := toPolyG_cdivWf_exact p g hgn hgp
+  have hb1dvd : toPoly (CPolyEuclidean.div p g) ∣ toPoly p := ⟨toPoly g, hb1.symm⟩
   exact (prod_map_cSqfreeYunFFGgoWf_dvd hgcd _ _ _).trans hb1dvd
 
 omit [CDiffFieldSpec α] in
@@ -235,14 +235,14 @@ omit [CDiffFieldSpec α] in
 theorem toPolyG_yunRadical_split (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0) :
     toPoly d = toPoly (cHermiteReduceTower Dt a d).2.2
-      * toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2) := by
+      * toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2) := by
   set Dstar := (cHermiteReduceTower Dt a d).2.2 with hDstar
   have hdvd : toPoly Dstar ∣ toPoly d :=
     toPolyG_cHermiteReduceTowerG_Dstar_dvd hgcd Dt a d hd
   have hDstar0 : toPoly Dstar ≠ 0 := fun h => hd (zero_dvd_iff.mp (h ▸ hdvd))
   have hDn : cnorm Dstar ≠ [] :=
     fun h => hDstar0 ((cisZeroG_iff Dstar).mp (by simp [cisZero, h]))
-  have hex : toPoly (cdivWf d Dstar) * toPoly Dstar = toPoly d :=
+  have hex : toPoly (CPolyEuclidean.div d Dstar) * toPoly Dstar = toPoly d :=
     toPolyG_cdivWf_exact d Dstar hDn hdvd
   rw [← hex, mul_comm]
 
@@ -270,9 +270,9 @@ part `≠ 0`, the entry pair `(p/g, p′/g − (p/g)′)` (`g = cgcdFFCoreWf p p
 theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0) :
     YunInv (toPoly p) 1
-      (toPoly (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))))
-      (toPoly (csub (cdivWf (cderiv p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))
-        (cderiv (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))))) := by
+      (toPoly (CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))))
+      (toPoly (csub (CPolyEuclidean.div (cderiv p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))
+        (cderiv (CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))))) := by
   set A := toPoly p with hAdef
   set g := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p) with hgdef
   have hA'poly : toPoly (cderiv p) = derivative A := by
@@ -298,24 +298,24 @@ theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
   have hkinv : Polynomial.C k⁻¹ * Polynomial.C k = 1 := by
     rw [← Polynomial.C_mul, inv_mul_cancel₀ hk0, Polynomial.C_1]
   -- from `q · toPoly g = x`: `x/G = q · C k`.
-  have hb1ex : toPoly (cdivWf p g) * toPoly g = A := toPolyG_cdivWf_exact p g hgn hgA
-  have hq'ex : toPoly (cdivWf (cderiv p) g) * toPoly g = derivative A := by
+  have hb1ex : toPoly (CPolyEuclidean.div p g) * toPoly g = A := toPolyG_cdivWf_exact p g hgn hgA
+  have hq'ex : toPoly (CPolyEuclidean.div (cderiv p) g) * toPoly g = derivative A := by
     have h := toPolyG_cdivWf_exact (cderiv p) g hgn (by rw [hA'poly]; exact hgA')
     rwa [hA'poly] at h
-  have hAG : A / G = toPoly (cdivWf p g) * Polynomial.C k :=
+  have hAG : A / G = toPoly (CPolyEuclidean.div p g) * Polynomial.C k :=
     (eq_ediv_of_mul_eq hG0 (by rw [← hb1ex, hgval]; ring)).symm
-  have hA'G : derivative A / G = toPoly (cdivWf (cderiv p) g) * Polynomial.C k :=
+  have hA'G : derivative A / G = toPoly (CPolyEuclidean.div (cderiv p) g) * Polynomial.C k :=
     (eq_ediv_of_mul_eq hG0 (by rw [← hq'ex, hgval]; ring)).symm
-  have heqb : toPoly (cdivWf p g) = Polynomial.C k⁻¹ * (A / G) := by
-    rw [hAG, show Polynomial.C k⁻¹ * (toPoly (cdivWf p g) * Polynomial.C k)
-        = toPoly (cdivWf p g) * (Polynomial.C k⁻¹ * Polynomial.C k) from by ring, hkinv, mul_one]
+  have heqb : toPoly (CPolyEuclidean.div p g) = Polynomial.C k⁻¹ * (A / G) := by
+    rw [hAG, show Polynomial.C k⁻¹ * (toPoly (CPolyEuclidean.div p g) * Polynomial.C k)
+        = toPoly (CPolyEuclidean.div p g) * (Polynomial.C k⁻¹ * Polynomial.C k) from by ring, hkinv, mul_one]
   -- assemble `d₁`.
-  have heqd : toPoly (csub (cdivWf (cderiv p) g) (cderiv (cdivWf p g)))
+  have heqd : toPoly (csub (CPolyEuclidean.div (cderiv p) g) (cderiv (CPolyEuclidean.div p g)))
       = Polynomial.C k⁻¹ * (derivative A / G - derivative (A / G)) := by
     simp only [denote]
     rw [heqb, derivative_C_mul, mul_sub, hA'G,
-      show Polynomial.C k⁻¹ * (toPoly (cdivWf (cderiv p) g) * Polynomial.C k)
-        = toPoly (cdivWf (cderiv p) g) * (Polynomial.C k⁻¹ * Polynomial.C k) from by ring,
+      show Polynomial.C k⁻¹ * (toPoly (CPolyEuclidean.div (cderiv p) g) * Polynomial.C k)
+        = toPoly (CPolyEuclidean.div (cderiv p) g) * (Polynomial.C k⁻¹ * Polynomial.C k) from by ring,
       hkinv, mul_one]
   rw [heqb, heqd]
   exact YunInv_smul A 1 (yunInv_base A hp0 hpp) (inv_ne_zero hk0)
@@ -353,9 +353,9 @@ theorem map_toPolyG_cSqfreeYunFFGgoWf_eq (hgcd : CgcdBCorrect (CFracGcdCoreWf.cg
       simp only [yunLoopAbs]
       -- head gcds agree; tails via the deflate bridges + IH + `i`-irrelevance.
       congr 1
-      rw [ih (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
-            (csub (cdivWf d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
-              (cderiv (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d))))),
+      rw [ih (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+            (csub (CPolyEuclidean.div d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+              (cderiv (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d))))),
         toPolyG_yunDeflate_fst hgcd b d hbne, toPolyG_yunDeflate_snd hgcd b d hbne]
       exact yunLoopAbs_irrelevant _ _ _ _ _ _
 
@@ -369,9 +369,9 @@ theorem cSqfreeYunFFG_forall₂ [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
       ((List.range (cSqfreeYunFF p).length).map
         (fun j => sqfreeFactPart (toPoly p) (1 + j))) := by
   rw [cSqfreeYunFF]
-  set b₁ := cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)) with hb1
-  set d₁ := csub (cdivWf (cderiv p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))
-    (cderiv (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))) with hd1
+  set b₁ := CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)) with hb1
+  set d₁ := csub (CPolyEuclidean.div (cderiv p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))
+    (cderiv (CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))) with hd1
   set L := (cSqfreeYunFFGgoWf (cyunBound p) b₁ d₁).length with hL
   have hinv : YunInv (toPoly p) 1 (toPoly b₁) (toPoly d₁) :=
     toPolyG_yunEntry_YunInv hgcd p hp0 hpp
@@ -510,9 +510,9 @@ theorem length_cSqfreeYunFFGgoWf_ge [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCo
           squarefreePart_deflation_natDegree_eq_zero_iff_maxmult (toPoly p) (i - 1) hpp, ← hM]
         omega
       have hinv' : YunInv (toPoly p) (i + 1)
-          (toPoly (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d))))
-          (toPoly (csub (cdivWf d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
-            (cderiv (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))) := by
+          (toPoly (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d))))
+          (toPoly (csub (CPolyEuclidean.div d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+            (cderiv (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))) := by
         rw [toPolyG_yunDeflate_fst hgcd b d hbne, toPolyG_yunDeflate_snd hgcd b d hbne]
         exact (yunStep_preserves (toPoly p) i hi hpp hinv).2
       have hih := ih (i + 1) _ _ (by omega) hinv' (by omega)
@@ -530,9 +530,9 @@ theorem length_cSqfreeYunFFG_ge [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
         (fun P => (normalizedFactors (toPoly p).primPart).count P) ≤ (cSqfreeYunFF p).length := by
   rw [cSqfreeYunFF]
   have hinv : YunInv (toPoly p) 1
-      (toPoly (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))))
-      (toPoly (csub (cdivWf (cderiv p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))
-        (cderiv (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))))) :=
+      (toPoly (CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))))
+      (toPoly (csub (CPolyEuclidean.div (cderiv p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))
+        (cderiv (CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))))) :=
     toPolyG_yunEntry_YunInv hgcd p hp0 hpp
   have hfuel : (normalizedFactors (toPoly p).primPart).toFinset.sup
       (fun P => (normalizedFactors (toPoly p).primPart).count P) ≤ cyunBound p := by
@@ -601,7 +601,7 @@ theorem cSqfreeYunFFGgoWf_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreW
         fun h => hgne ((hgcd b d).eq_zero_iff.mp h)
       rcases hp with rfl | hp
       · exact monic_toPolyG_cmonicG _ hcg
-      · have hb' : toPoly (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d))) ≠ 0 := by
+      · have hb' : toPoly (CPolyEuclidean.div b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d))) ≠ 0 := by
           rw [toPolyG_yunDeflate_fst hgcd b d hb]
           intro h
           apply hb
@@ -640,7 +640,8 @@ theorem cSqfreeYunFFG_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (�
     (hgcd d (cderiv d)).dvd.trans (gcd_dvd_left (toPoly d) (toPoly (cderiv d)))
   have hgn : cnorm g ≠ [] := fun h =>
     hd0 (zero_dvd_iff.mp (((cisZeroG_iff g).mp (by simp [cisZero, h])) ▸ hgp))
-  have hex := toPolyG_cdivWf_exact d g hgn hgp
+  have hex : toPoly (CPolyEuclidean.div d g) * toPoly g = toPoly d := by
+    simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_cdivWf_exact d g hgn hgp
   intro h; apply hd0; rw [← hex, h, zero_mul]
 
 omit [CDiffFieldSpec α] in
@@ -697,16 +698,16 @@ theorem cSqfreeYunFFGgoWf_eq_nil_of_cdegG_zero (fo : ℕ) (b d : DensePoly α) (
   | succ n => rw [cSqfreeYunFFGgoWf]; exact if_pos hb
 
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
-/-- Dividing a constant stays a constant: `cdeg p = 0 ⟹ cdeg (cdivWf p q) = 0`. The polynomial quotient
+/-- Dividing a constant stays a constant: `cdeg p = 0 ⟹ cdeg (CPolyEuclidean.div p q) = 0`. The polynomial quotient
 of a degree-`0` dividend has degree `0` (`p = q̂·q + r` with `deg r < deg q`; a positive-degree `q̂` would push
 `deg p` positive). -/
 theorem cdegG_cdivWf_eq_zero_of_cdegG_zero (p q : DensePoly α) (hp : cdeg p = 0) :
-    cdeg (cdivWf p q) = 0 := by
+    cdeg (CPolyEuclidean.div p q) = 0 := by
   by_cases hq : cnorm q = []
-  · -- zero divisor: `cdivWf p q = []` (the `cisZero` branch of `cdivmodWf`)
+  · -- zero divisor: `CPolyEuclidean.div p q = []` (the `cisZero` branch of `cdivmodWf`)
     have hcz : cisZero (cnorm q) = true := by
       rw [cisZeroG_cnormG]; exact (cisZeroG_iff q).mpr ((cnormG_eq_nil_iff q).mp hq)
-    have hnil : cdivWf p q = ([] : DensePoly α) := by
+    have hnil : CPolyEuclidean.div p q = ([] : DensePoly α) := by
       show (cdivmodWf p q).1 = []
       simp [cdivmodWf.eq_def, hcz]
     rw [hnil]; rfl
@@ -714,13 +715,13 @@ theorem cdegG_cdivWf_eq_zero_of_cdegG_zero (p q : DensePoly α) (hp : cdeg p = 0
   have hdiv := toPolyG_cmodWf p q hq
   have hq' : toPoly q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
   by_contra hquot
-  have hquot0 : toPoly (cdivWf p q) ≠ 0 := fun h => hquot (by rw [h, Polynomial.natDegree_zero])
+  have hquot0 : toPoly (CPolyEuclidean.div p q) ≠ 0 := fun h => hquot (by rw [h, Polynomial.natDegree_zero])
   have hrem : (toPoly (cmodWf p q)).degree < (toPoly q).degree :=
     toPolyG_degree_lt_of_length_lt (cmodWf p q) q hq (cmodWf_length_lt p q hq)
-  have hmuldeg : (toPoly q).degree ≤ (toPoly (cdivWf p q) * toPoly q).degree := by
+  have hmuldeg : (toPoly q).degree ≤ (toPoly (CPolyEuclidean.div p q) * toPoly q).degree := by
     rw [Polynomial.degree_mul]
     exact le_add_of_nonneg_left (Polynomial.zero_le_degree_iff.mpr hquot0)
-  have hpdeg : (toPoly p).degree = (toPoly (cdivWf p q) * toPoly q).degree := by
+  have hpdeg : (toPoly p).degree = (toPoly (CPolyEuclidean.div p q) * toPoly q).degree := by
     rw [hdiv, add_comm]
     exact Polynomial.degree_add_eq_right_of_degree_lt (lt_of_lt_of_le hrem hmuldeg)
   have hnat := Polynomial.natDegree_eq_of_degree_eq hpdeg

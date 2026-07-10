@@ -77,8 +77,13 @@ runs the same fraction algorithm.
    consumers plus a sparse triangularization witness share the implementation. The bivariate
    subresultant PRS and tower primitive-part consumers now select gcd, extended gcd, quotient, and
    remainder through `CPolyGcd` and `CPolyEuclidean`; dense correctness proofs cross the selection boundary
-   with the instance equality lemmas. SymbolicIntegration consumers request the weakest capability they
-   need.
+   with the instance equality lemmas. The tower split-factor, Yun squarefree, Hermite reduction, and SPDE
+   paths now select all quotient and extended-gcd operations through `CPolyEuclidean`; their correctness
+   stacks use the lawful Euclidean identity, remainder-degree, exact-division, and divisibility bridges
+   rather than unfolding the dense implementation. Hermite residual recovery is representation-independent
+   over `CPoly P`: its raw-pair denotation, split and radical certificates, and decidable honesty bundle use
+   `CPolyEngine P` and `CPolyEuclidean P`, so dense source witnesses are only specialization boundaries.
+   SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;

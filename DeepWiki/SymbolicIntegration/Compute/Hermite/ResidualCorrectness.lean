@@ -13,39 +13,19 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.Compute
 
-/-- Local bridge from a vanishing well-founded remainder to exact quotient multiplication. -/
-private theorem toPoly_cdivWf_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hrem : toPoly (DensePoly.cmodWf p q) = 0) :
-    toPoly p = toPoly (DensePoly.cdivWf p q) * toPoly q := by
-  have hrem' : DensePoly.toPoly (DensePoly.cmodWf p q) = 0 := by
-    exact hrem
-  have h := DensePoly.toPolyG_cmodWf p q hq
-  rw [hrem', add_zero] at h
-  exact h
-
-/-- Local divisibility bridge from a vanishing well-founded remainder. -/
-private theorem toPoly_dvd_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hrem : toPoly (DensePoly.cmodWf p q) = 0) : toPoly q ∣ toPoly p :=
-  ⟨toPoly (DensePoly.cdivWf p q), by
-    rw [toPoly_cdivWf_of_cmodWf_zero p q hq hrem, mul_comm]⟩
-
-/-- Local bridge from mathematical divisibility to a vanishing well-founded remainder. -/
-private theorem cmodWf_eq_zero_of_dvd (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hdvd : toPoly q ∣ toPoly p) : toPoly (DensePoly.cmodWf p q) = 0 := by
-  have hdvd' : DensePoly.toPoly q ∣ DensePoly.toPoly p := by
-    exact hdvd
-  exact DensePoly.toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd'
+variable {P : Type → Type} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{0,0} P]
+  [CPolyEuclidean P] [LawfulCPolyEuclidean.{0,0} P]
 
 /-! ### The residual-recovery identity -/
 
 /-- The denominators of a Hermite residual wrapper are nonzero. -/
-structure IsHermiteResidualInput (D gden Dstar : DensePoly ℚ) : Prop where
+structure IsHermiteResidualInput (D gden Dstar : P ℚ) : Prop where
   /-- The original denominator reads nonzero. -/
-  den_ne : toPoly D ≠ 0
+  den_ne : CPoly.toPoly D ≠ 0
   /-- The rational-part denominator reads nonzero. -/
-  gden_ne : toPoly gden ≠ 0
+  gden_ne : CPoly.toPoly gden ≠ 0
   /-- The squarefree residual denominator is nonzero. -/
-  radical_ne : cnorm Dstar ≠ []
+  radical_ne : CPoly.toPoly Dstar ≠ 0
 
 open scoped Differential in
 /-- The residual-recovery numerator identity in `RatFunc ℚ`. -/
@@ -74,239 +54,240 @@ theorem residual_numerator_ratFunc (A D gnum gden : ℚ[X]) (hD : D ≠ 0) (hgde
 
 open scoped Differential in
 /-- Full `hermiteReduce` residual correctness in `RatFunc ℚ` from an exact-division certificate. -/
-theorem hermiteReduce_residual_correct (A D : DensePoly ℚ)
-    (gnum gden Dstar : DensePoly ℚ)
+theorem hermiteReduce_residual_correct (A D : P ℚ)
+    (gnum gden Dstar : P ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
-    (hexact : toPoly (DensePoly.cmodWf
-        (cmul (csub (cmul A (cmul gden gden))
-            (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-        (cmul D (cmul gden gden))) = 0) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+    (hexact : CPoly.toPoly (CPolyEuclidean.mod
+        (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+            (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+        (CPolyEngine.mul D (CPolyEngine.mul gden gden))) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly D)
       = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (DensePoly.cdivWf
-              (cmul (csub (cmul A (cmul gden gden))
-                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-              (cmul D (cmul gden gden))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+            (CPoly.toPoly (CPolyEuclidean.div
+              (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+                  (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+              (CPolyEngine.mul D (CPolyEngine.mul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly Dstar) := by
   have hD := hden.den_ne
   have hgden := hden.gden_ne
   have hDstar := hden.radical_ne
   have hinj := RatFunc.algebraMap_injective (K := ℚ)
   set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
-  set resNum := cmul (csub (cmul A (cmul gden gden))
-      (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar with hresNum
-  set resDen := cmul D (cmul gden gden) with hresDen
-  have hDstar0 : toPoly Dstar ≠ 0 := fun h => hDstar ((DensePoly.cnormG_eq_nil_iff Dstar).mpr h)
-  have hresDenPoly0 : toPoly resDen ≠ 0 := by
-    rw [hresDen, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
+  set resNum := CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+      (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar with hresNum
+  set resDen := CPolyEngine.mul D (CPolyEngine.mul gden gden) with hresDen
+  have hDstar0 : CPoly.toPoly Dstar ≠ 0 := hDstar
+  have hresDenPoly0 : CPoly.toPoly resDen ≠ 0 := by
+    rw [hresDen, LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul]
     exact mul_ne_zero hD (mul_ne_zero hgden hgden)
-  have hresDen0 : cnorm resDen ≠ [] := fun h => hresDenPoly0 ((DensePoly.cnormG_eq_nil_iff resDen).mp h)
-  have hdstar : am (toPoly Dstar) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hDstar0
-  have htoQ : ratFuncOfPair (gnum, gden) = am (toPoly gnum) / am (toPoly gden) := rfl
-  have hresid := residual_numerator_ratFunc (toPoly A) (toPoly D) (toPoly gnum) (toPoly gden) hD hgden
-  have hcdiv : am (toPoly resNum) / am (toPoly resDen) =
-      am (toPoly (DensePoly.cdivWf resNum resDen)) := by
-    have h := am_div_of_mod_zero resNum resDen (by
-        simpa only [toPoly_list_eq] using hresDenPoly0) (by
-        simpa only [CPolyEuclidean.mod_dense_eq, toPoly_list_eq] using hexact)
-    simpa only [CPolyEuclidean.div_dense_eq, toPoly_list_eq] using h
-  have hresNumPoly : toPoly resNum
-      = (toPoly A * (toPoly gden * toPoly gden)
-          - toPoly D * (derivative (toPoly gnum) * toPoly gden
-              - toPoly gnum * derivative (toPoly gden))) * toPoly Dstar := by
-    rw [hresNum, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_csubG,
-      DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, DensePoly.toPolyG_cderivG]
-  have hresDenPoly : toPoly resDen = toPoly D * (toPoly gden * toPoly gden) := by
-    rw [hresDen, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
-  have hkey : am (toPoly (DensePoly.cdivWf resNum resDen)) / am (toPoly Dstar)
-      = am (toPoly A * (toPoly gden * toPoly gden)
-            - toPoly D * (derivative (toPoly gnum) * toPoly gden - toPoly gnum * derivative (toPoly gden)))
-          / (am (toPoly D) * (am (toPoly gden) * am (toPoly gden))) := by
+  have hdstar : am (CPoly.toPoly Dstar) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hDstar0
+  have htoQ : ratFuncOfPair (gnum, gden) = am (CPoly.toPoly gnum) / am (CPoly.toPoly gden) := rfl
+  have hresid := residual_numerator_ratFunc (CPoly.toPoly A) (CPoly.toPoly D) (CPoly.toPoly gnum) (CPoly.toPoly gden) hD hgden
+  have hcdiv : am (CPoly.toPoly resNum) / am (CPoly.toPoly resDen) =
+      am (CPoly.toPoly (CPolyEuclidean.div resNum resDen)) := by
+    exact am_div_of_mod_zero resNum resDen hresDenPoly0 hexact
+  have hresNumPoly : CPoly.toPoly resNum
+      = (CPoly.toPoly A * (CPoly.toPoly gden * CPoly.toPoly gden)
+          - CPoly.toPoly D * (derivative (CPoly.toPoly gnum) * CPoly.toPoly gden
+              - CPoly.toPoly gnum * derivative (CPoly.toPoly gden))) * CPoly.toPoly Dstar := by
+    rw [hresNum, LawfulCPolyEngine.toPoly_mul, CPolyEngine.toPoly_sub,
+      LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul,
+      LawfulCPolyEngine.toPoly_mul, CPolyEngine.toPoly_sub,
+      LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul,
+      LawfulCPolyEngine.toPoly_deriv, LawfulCPolyEngine.toPoly_deriv]
+  have hresDenPoly : CPoly.toPoly resDen = CPoly.toPoly D * (CPoly.toPoly gden * CPoly.toPoly gden) := by
+    rw [hresDen, LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul]
+  have hkey : am (CPoly.toPoly (CPolyEuclidean.div resNum resDen)) / am (CPoly.toPoly Dstar)
+      = am (CPoly.toPoly A * (CPoly.toPoly gden * CPoly.toPoly gden)
+            - CPoly.toPoly D * (derivative (CPoly.toPoly gnum) * CPoly.toPoly gden - CPoly.toPoly gnum * derivative (CPoly.toPoly gden)))
+          / (am (CPoly.toPoly D) * (am (CPoly.toPoly gden) * am (CPoly.toPoly gden))) := by
     rw [← hcdiv, hresNumPoly, hresDenPoly, map_mul, map_mul, map_mul, div_div,
-      mul_comm (am (toPoly D) * (am (toPoly gden) * am (toPoly gden))) (am (toPoly Dstar)),
-      mul_comm (am _) (am (toPoly Dstar)), mul_div_mul_left _ _ hdstar]
+      mul_comm (am (CPoly.toPoly D) * (am (CPoly.toPoly gden) * am (CPoly.toPoly gden))) (am (CPoly.toPoly Dstar)),
+      mul_comm (am _) (am (CPoly.toPoly Dstar)), mul_div_mul_left _ _ hdstar]
   rw [htoQ, hkey]
   linear_combination hresid
 
-/-- `ratFuncOfPair` is invariant under `cnorm` of both components. -/
-theorem ratFuncOfPair_cnorm (gnum gden : DensePoly ℚ) :
-    ratFuncOfPair (cnorm gnum, cnorm gden) = ratFuncOfPair (gnum, gden) := by
-  simp only [ratFuncOfPair, DensePoly.toPolyG_cnormG]
+omit [CPolyEuclidean P] [LawfulCPolyEuclidean P] in
+/-- `ratFuncOfPair` is invariant under `CPolyEngine.cnorm` of both components. -/
+theorem ratFuncOfPair_cnorm (gnum gden : P ℚ) :
+    ratFuncOfPair (CPolyEngine.cnorm gnum, CPolyEngine.cnorm gden) = ratFuncOfPair (gnum, gden) := by
+  simp only [ratFuncOfPair, LawfulCPolyEngine.toPoly_cnorm]
 
 open scoped Differential in
-/-- `hermiteReduce` residual correctness with the `cnorm`-wrapped residual numerator. -/
-theorem hermiteReduce_spec_cnorm (A D gnum gden Dstar : DensePoly ℚ)
+/-- `hermiteReduce` residual correctness with the `CPolyEngine.cnorm`-wrapped residual numerator. -/
+theorem hermiteReduce_spec_cnorm (A D gnum gden Dstar : P ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
-    (hexact : toPoly (DensePoly.cmodWf
-        (cmul (csub (cmul A (cmul gden gden))
-            (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-        (cmul D (cmul gden gden))) = 0) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+    (hexact : CPoly.toPoly (CPolyEuclidean.mod
+        (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+            (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+        (CPolyEngine.mul D (CPolyEngine.mul gden gden))) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly D)
       = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (cnorm (DensePoly.cdivWf
-              (cmul (csub (cmul A (cmul gden gden))
-                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-              (cmul D (cmul gden gden)))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
-  simp only [DensePoly.toPolyG_cnormG]
+            (CPoly.toPoly (CPolyEngine.cnorm (CPolyEuclidean.div
+              (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+                  (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+              (CPolyEngine.mul D (CPolyEngine.mul gden gden)))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly Dstar) := by
+  simp only [LawfulCPolyEngine.toPoly_cnorm]
   exact
     hermiteReduce_residual_correct A D gnum gden Dstar hden hexact
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness from an algebraic divisibility certificate. -/
-theorem hermiteReduce_residual_correct_of_dvd (A D gnum gden Dstar : DensePoly ℚ)
+theorem hermiteReduce_residual_correct_of_dvd (A D gnum gden Dstar : P ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
-    (hdvd : toPoly (cmul D (cmul gden gden))
-      ∣ toPoly (cmul (csub (cmul A (cmul gden gden))
-          (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+    (hdvd : CPoly.toPoly (CPolyEngine.mul D (CPolyEngine.mul gden gden))
+      ∣ CPoly.toPoly (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+          (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)) :
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly D)
       = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (DensePoly.cdivWf
-              (cmul (csub (cmul A (cmul gden gden))
-                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-              (cmul D (cmul gden gden))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+            (CPoly.toPoly (CPolyEuclidean.div
+              (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+                  (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+              (CPolyEngine.mul D (CPolyEngine.mul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly Dstar) := by
   have hD := hden.den_ne
   have hgden := hden.gden_ne
-  have hresDenP : toPoly (cmul D (cmul gden gden)) ≠ 0 := by
-    rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
+  have hresDenP : CPoly.toPoly (CPolyEngine.mul D (CPolyEngine.mul gden gden)) ≠ 0 := by
+    rw [LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul]
     exact mul_ne_zero hD (mul_ne_zero hgden hgden)
-  have hresDen : cnorm (cmul D (cmul gden gden)) ≠ [] :=
-    fun h => hresDenP ((DensePoly.cnormG_eq_nil_iff _).mp h)
   exact hermiteReduce_residual_correct A D gnum gden Dstar hden
-    (cmodWf_eq_zero_of_dvd _ _ hresDen hdvd)
+    (CPolyEuclidean.toPoly_mod_eq_zero_of_dvd _ _ hresDenP hdvd)
 
 /-! ### Split and radical residual certificates -/
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness from two split divisibility certificates. -/
-theorem hermiteReduce_residual_correct_of_split (A D gnum gden Dstar : DensePoly ℚ)
+theorem hermiteReduce_residual_correct_of_split (A D gnum gden Dstar : P ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
-    (hresD : toPoly (DensePoly.cmodWf
-        (csub (cmul A (cmul gden gden))
-          (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) D) = 0)
-    (hg2 : toPoly (DensePoly.cmodWf
-        (cmul (DensePoly.cdivWf
-            (csub (cmul A (cmul gden gden))
-              (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) D) Dstar)
-        (cmul gden gden)) = 0) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+    (hresD : CPoly.toPoly (CPolyEuclidean.mod
+        (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+          (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) D) = 0)
+    (hg2 : CPoly.toPoly (CPolyEuclidean.mod
+        (CPolyEngine.mul (CPolyEuclidean.div
+            (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+              (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) D) Dstar)
+        (CPolyEngine.mul gden gden)) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly D)
       = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (DensePoly.cdivWf
-              (cmul (csub (cmul A (cmul gden gden))
-                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-              (cmul D (cmul gden gden))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+            (CPoly.toPoly (CPolyEuclidean.div
+              (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+                  (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+              (CPolyEngine.mul D (CPolyEngine.mul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly Dstar) := by
   have hD := hden.den_ne
   have hgden := hden.gden_ne
-  set resNum' := csub (cmul A (cmul gden gden))
-    (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))) with hresNum'
-  have hDne : cnorm D ≠ [] := fun h => hD ((DensePoly.cnormG_eq_nil_iff D).mp h)
-  have hgden2 : toPoly (cmul gden gden) ≠ 0 := by
-    rw [DensePoly.toPolyG_cmulG]
+  set resNum' := CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+    (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden)))) with hresNum'
+  have hgden2 : CPoly.toPoly (CPolyEngine.mul gden gden) ≠ 0 := by
+    rw [LawfulCPolyEngine.toPoly_mul]
     exact mul_ne_zero hgden hgden
-  have hgden2ne : cnorm (cmul gden gden) ≠ [] := fun h => hgden2 ((DensePoly.cnormG_eq_nil_iff _).mp h)
-  have hDR : toPoly D ∣ toPoly resNum' := toPoly_dvd_of_cmodWf_zero resNum' D hDne hresD
-  have hMeq : toPoly (DensePoly.cdivWf resNum' D) = toPoly resNum' / toPoly D := by
-    rw [toPoly_cdivWf_of_cmodWf_zero resNum' D hDne hresD, mul_div_cancel_right₀ _ hD]
-  have hg2dvd : toPoly (cmul gden gden) ∣ toPoly (cmul (DensePoly.cdivWf resNum' D) Dstar) :=
-    toPoly_dvd_of_cmodWf_zero _ _ hgden2ne hg2
-  rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, hMeq] at hg2dvd
-  have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
-    rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
+  have hDR : CPoly.toPoly D ∣ CPoly.toPoly resNum' :=
+    CPolyEuclidean.toPoly_dvd_of_mod_eq_zero resNum' D hD hresD
+  have hMeq : CPoly.toPoly (CPolyEuclidean.div resNum' D) = CPoly.toPoly resNum' / CPoly.toPoly D := by
+    rw [CPolyEuclidean.toPoly_eq_div_mul_of_mod_eq_zero resNum' D hD hresD,
+      mul_div_cancel_right₀ _ hD]
+  have hg2dvd : CPoly.toPoly (CPolyEngine.mul gden gden) ∣ CPoly.toPoly (CPolyEngine.mul (CPolyEuclidean.div resNum' D) Dstar) :=
+    CPolyEuclidean.toPoly_dvd_of_mod_eq_zero _ _ hgden2 hg2
+  rw [LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul, hMeq] at hg2dvd
+  have hdvd : CPoly.toPoly (CPolyEngine.mul D (CPolyEngine.mul gden gden)) ∣ CPoly.toPoly (CPolyEngine.mul resNum' Dstar) := by
+    rw [LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul,
+      LawfulCPolyEngine.toPoly_mul]
     exact DeepWiki.polynomial_dvd_cleared_identity_of_split hD hDR hg2dvd
   exact hermiteReduce_residual_correct_of_dvd A D gnum gden Dstar hden hdvd
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness from the radical clause plus one residual certificate. -/
-theorem hermiteReduce_residual_correct_of_radical (A D gnum gden Dstar : DensePoly ℚ)
+theorem hermiteReduce_residual_correct_of_radical (A D gnum gden Dstar : P ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
-    (hDstarD : toPoly Dstar ∣ toPoly D)
-    (hWgd : toPoly (DensePoly.cmodWf
-        (csub (cmul A (cmul gden gden))
-          (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))))
-        (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden))) = 0) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+    (hDstarD : CPoly.toPoly Dstar ∣ CPoly.toPoly D)
+    (hWgd : CPoly.toPoly (CPolyEuclidean.mod
+        (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+          (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden)))))
+        (CPolyEngine.mul (CPolyEuclidean.div D Dstar) (CPolyEngine.mul gden gden))) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly D)
       = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (DensePoly.cdivWf
-              (cmul (csub (cmul A (cmul gden gden))
-                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-              (cmul D (cmul gden gden))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+            (CPoly.toPoly (CPolyEuclidean.div
+              (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+                  (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+              (CPolyEngine.mul D (CPolyEngine.mul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly Dstar) := by
   have hD := hden.den_ne
   have hgden := hden.gden_ne
   have hDstar := hden.radical_ne
-  set resNum' := csub (cmul A (cmul gden gden))
-    (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))) with hresNum'
-  have hWeq : toPoly D = toPoly Dstar * toPoly (DensePoly.cdivWf D Dstar) := by
-    have hrem : toPoly (DensePoly.cmodWf D Dstar) = 0 :=
-      cmodWf_eq_zero_of_dvd D Dstar hDstar hDstarD
-    rw [toPoly_cdivWf_of_cmodWf_zero D Dstar hDstar hrem, mul_comm]
-  have hWgdne : cnorm (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) ≠ [] := by
-    intro h
-    have h0 : toPoly (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) = 0 := (DensePoly.cnormG_eq_nil_iff _).mp h
-    rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG] at h0
+  set resNum' := CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+    (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden)))) with hresNum'
+  have hWeq : CPoly.toPoly D = CPoly.toPoly Dstar * CPoly.toPoly (CPolyEuclidean.div D Dstar) := by
+    exact LawfulCPolyEuclidean.div_exact D Dstar hDstar hDstarD
+  have hWgdne : CPoly.toPoly
+      (CPolyEngine.mul (CPolyEuclidean.div D Dstar) (CPolyEngine.mul gden gden)) ≠ 0 := by
+    rw [LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul]
+    intro h0
     rcases mul_eq_zero.mp h0 with h1 | h2
     · rw [hWeq, h1, mul_zero] at hD; exact hD rfl
     · rcases mul_eq_zero.mp h2 with hh | hh <;> exact hgden hh
-  have hWgddvd : toPoly (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) ∣ toPoly resNum' :=
-    toPoly_dvd_of_cmodWf_zero _ _ hWgdne hWgd
-  rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG] at hWgddvd
-  have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
-    rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
+  have hWgddvd : CPoly.toPoly (CPolyEngine.mul (CPolyEuclidean.div D Dstar) (CPolyEngine.mul gden gden)) ∣ CPoly.toPoly resNum' :=
+    CPolyEuclidean.toPoly_dvd_of_mod_eq_zero _ _ hWgdne hWgd
+  rw [LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul] at hWgddvd
+  have hdvd : CPoly.toPoly (CPolyEngine.mul D (CPolyEngine.mul gden gden)) ∣ CPoly.toPoly (CPolyEngine.mul resNum' Dstar) := by
+    rw [LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul,
+      LawfulCPolyEngine.toPoly_mul]
     exact DeepWiki.polynomial_dvd_cleared_identity_of_radical
-      (W := toPoly (DensePoly.cdivWf D Dstar)) hWeq hWgddvd
+      (W := CPoly.toPoly (CPolyEuclidean.div D Dstar)) hWeq hWgddvd
   exact hermiteReduce_residual_correct_of_dvd A D gnum gden Dstar hden hdvd
 
 /-! ### Decidable residual-honesty bundle -/
 
 /-- Decidable residual-recovery honesty bundle for `hermiteReduce`'s computed rational part and radical. -/
-def HermiteResComp (A D gnum gden Dstar : DensePoly ℚ) : Prop :=
-  let resNum' := csub (cmul A (cmul gden gden))
-    (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))
-  cnorm (DensePoly.cmodWf resNum' D) = [] ∧
-    cnorm (DensePoly.cmodWf (cmul (DensePoly.cdivWf resNum' D) Dstar) (cmul gden gden)) = []
+def HermiteResComp (A D gnum gden Dstar : P ℚ) : Prop :=
+  let resNum' := CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+    (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))
+  CPolyEngine.cisZero (CPolyEuclidean.mod resNum' D) = true ∧
+    CPolyEngine.cisZero
+      (CPolyEuclidean.mod (CPolyEngine.mul (CPolyEuclidean.div resNum' D) Dstar)
+        (CPolyEngine.mul gden gden)) = true
 
 /-- `HermiteResComp` is decidable. -/
-instance decHermiteResComp (A D gnum gden Dstar : DensePoly ℚ) :
+instance decHermiteResComp (A D gnum gden Dstar : P ℚ) :
     Decidable (HermiteResComp A D gnum gden Dstar) := by
   unfold HermiteResComp; infer_instance
 
 open scoped Differential in
 /-- Unconditional `hermiteReduce` residual correctness from the decidable residual-honesty bundle. -/
-theorem hermiteReduce_residual_correct_uncond (A D gnum gden Dstar : DensePoly ℚ)
+theorem hermiteReduce_residual_correct_uncond (A D gnum gden Dstar : P ℚ)
     (hden : IsHermiteResidualInput D gden Dstar)
     (hcomp : HermiteResComp A D gnum gden Dstar) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly D)
       = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (DensePoly.cdivWf
-              (cmul (csub (cmul A (cmul gden gden))
-                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-              (cmul D (cmul gden gden))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+            (CPoly.toPoly (CPolyEuclidean.div
+              (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+                  (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+              (CPolyEngine.mul D (CPolyEngine.mul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly Dstar) := by
   obtain ⟨hresD, hg2⟩ := hcomp
-  rw [DensePoly.cnormG_eq_nil_iff] at hresD hg2
+  rw [LawfulCPolyEngine.cisZero_iff] at hresD hg2
   exact hermiteReduce_residual_correct_of_split A D gnum gden Dstar hden
     hresD hg2
 
 open scoped Differential in
-example (A D gnum gden Dstar : DensePoly ℚ)
-    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+example (A D gnum gden Dstar : P ℚ)
+    (hD : CPoly.toPoly D ≠ 0) (hgden : CPoly.toPoly gden ≠ 0)
+    (hDstar : CPoly.toPoly Dstar ≠ 0)
     (hcomp : HermiteResComp A D gnum gden Dstar) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly D)
       = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
-            (toPoly (DensePoly.cdivWf
-              (cmul (csub (cmul A (cmul gden gden))
-                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
-              (cmul D (cmul gden gden))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) :=
+            (CPoly.toPoly (CPolyEuclidean.div
+              (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
+                  (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
+              (CPolyEngine.mul D (CPolyEngine.mul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly Dstar) :=
   hermiteReduce_residual_correct_uncond A D gnum gden Dstar ⟨hD, hgden, hDstar⟩ hcomp
 
 end DeepWiki.SymbolicIntegration.Compute

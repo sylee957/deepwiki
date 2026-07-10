@@ -74,14 +74,14 @@ theorem isCoprime_implicitDeriv_of_genuineMonomial [CharZero (CFieldSpec.K α)] 
     (fun β _ => hgen (AlgebraicClosure (CFieldSpec.K α)) β)
 
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
-/-- **The `cgcdWf`-unit bridge.** `IsCoprime (toPoly a) (toPoly b)` makes the fraction-free gcd a unit
+/-- **The `CPolyEuclidean.gcdExt`-unit bridge.** `IsCoprime (toPoly a) (toPoly b)` makes the fraction-free gcd a unit
 (`IsCoprime.isUnit_of_dvd'` with `toPolyG_cgcdWf_dvd`), hence degree `0` and nonzero — the computable
 `hcopgcd`-shape conclusion from the abstract coprimality. -/
 theorem natDegree_cgcdWf_eq_zero_of_isCoprime (a b : DensePoly α)
     (h : IsCoprime (toPoly a) (toPoly b)) :
-    (toPoly (cgcdWf a b).1).natDegree = 0 ∧ toPoly (cgcdWf a b).1 ≠ 0 := by
+    (toPoly (CPolyEuclidean.gcdExt a b).1).natDegree = 0 ∧ toPoly (CPolyEuclidean.gcdExt a b).1 ≠ 0 := by
   obtain ⟨hda, hdb⟩ := toPolyG_cgcdWf_dvd a b
-  have hunit : IsUnit (toPoly (cgcdWf a b).1) := h.isUnit_of_dvd' hda hdb
+  have hunit : IsUnit (toPoly (CPolyEuclidean.gcdExt a b).1) := h.isUnit_of_dvd' hda hdb
   exact ⟨Polynomial.natDegree_eq_zero_of_isUnit hunit, hunit.ne_zero⟩
 
 omit [CDiffField α] [CDiffFieldSpec α] in
@@ -93,11 +93,11 @@ forcing `rootMult β u = 0` — `β` is not a root of `u`. -/
 theorem isCoprime_cofactor_yunFactor [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (idx : ℕ) (hidx : idx < (cSqfreeYunFF d).length) :
-    IsCoprime (toPoly (cdivWf d (cpow ((cSqfreeYunFF d).get ⟨idx, hidx⟩) (idx + 1))))
+    IsCoprime (toPoly (CPolyEuclidean.div d (cpow ((cSqfreeYunFF d).get ⟨idx, hidx⟩) (idx + 1))))
       (toPoly ((cSqfreeYunFF d).get ⟨idx, hidx⟩)) := by
   classical
   set v := (cSqfreeYunFF d).get ⟨idx, hidx⟩ with hvdef
-  set u := cdivWf d (cpow v (idx + 1)) with hudef
+  set u := CPolyEuclidean.div d (cpow v (idx + 1)) with hudef
   have hφinj : Function.Injective (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))) :=
     (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))).injective
   have hv0 : toPoly v ≠ 0 := cSqfreeYunFFG_get_ne_zero hgcd d hd0 hpp idx hidx
@@ -164,9 +164,9 @@ theorem hcopgcd_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCor
     (Dt d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hgen : GenuinePrimitiveMonomialLrt Dt) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0 := by
   intro x hx
   have hxzip : x ∈ (cSqfreeYunFF d).zipIdx := List.mem_of_mem_filter hx
@@ -208,7 +208,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
       ([CCommRing.zero], [CCommRing.one]) with hg_def
@@ -242,7 +242,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     have hWgd := hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd
     have hHermDsNe : toPoly (cHermiteReduceTower Dt a d).2.2 ≠ 0 :=
       (toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0).ne_zero
-    have hWD : toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2)
+    have hWD : toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2)
         * toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) = toPoly d := by
       rw [← hDsF]
       exact toPolyG_cdivWf_exact d (cHermiteReduceTower Dt a d).2.2
@@ -266,7 +266,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     rw [toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
     rw [show toPoly d * (toPoly g.2 * toPoly g.2)
           = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
-            * (toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2) * (toPoly g.2 * toPoly g.2))
+            * (toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2) * (toPoly g.2 * toPoly g.2))
         from by rw [← hWD]; ring,
       mul_comm (toPoly (csub (cmul a (cmul g.2 g.2))
         (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2))))))]

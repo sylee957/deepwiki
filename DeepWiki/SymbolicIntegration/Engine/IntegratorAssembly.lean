@@ -91,13 +91,13 @@ theorem canonicalReconstruction (Dt a d : DensePoly α)
     (hdn : toPoly (crNormDen Dt a d) ≠ 0)
     (hds : toPoly (crSpecDen Dt a d) ≠ 0)
     (hsplit : toPoly d = toPoly (crSpecDen Dt a d) * toPoly (crNormDen Dt a d))
-    (hgdeg : (toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0) :
     fieldFrac (crPoly Dt a d) [CCommRing.one]
         + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
         + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
       = fieldFrac a d := by
-  set qr := cdivmodWf a d with hqr
+  set qr := CPolyEuclidean.divmod a d with hqr
   set sn := cSplitFactorFast Dt d with hsn
   set uw := CPoly.bezoutOne sn.1 sn.2 with huw
   set bc := CPoly.extendedEuclideanSplit sn.1 sn.2 qr.2 uw.1 uw.2 with hbc

@@ -29,7 +29,7 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The non-skipped outer Hermite factors carry the inner-factor properness data. -/
 abbrev IsHermiteFactorData (Dt d : DensePoly α) (factors : List (DensePoly α)) : Prop :=
   ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) →
-    IsHermiteInnerFactor Dt p.1 (cdivWf d (cpow p.1 (p.2 + 1)))
+    IsHermiteInnerFactor Dt p.1 (CPolyEuclidean.div d (cpow p.1 (p.2 + 1)))
 
 /-! ### The exact-division degree bound -/
 
@@ -67,7 +67,7 @@ and residual-fraction properness `deg resNum < deg resDen`. -/
 theorem cHermiteReduceTowerG_leftover_proper_of_residual [CFracGcdCoreWf α]
     (Dt : DensePoly α) (a d : DensePoly α) (resNum resDen Dstar : DensePoly α)
     (hnum : toPoly (DensePoly.cHermiteReduceTower Dt a d).2.1
-      = toPoly (cdivWf (cmul resNum Dstar) resDen))
+      = toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen))
     (hden : toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2 = toPoly Dstar)
     (hdvd : toPoly resDen ∣ toPoly (cmul resNum Dstar))
     (hresDen : cnorm resDen ≠ [])
@@ -77,10 +77,20 @@ theorem cHermiteReduceTowerG_leftover_proper_of_residual [CFracGcdCoreWf α]
       < (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2).degree := by
   rw [hnum, hden]
   -- exact division: `h_num · resDen = resNum·Dstar = resNum · Dstar`
-  have hexact : toPoly (cdivWf (cmul resNum Dstar) resDen) * toPoly resDen
+  have hexact : toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen) * toPoly resDen
       = toPoly resNum * toPoly Dstar := by
-    rw [toPolyG_cdivWf_exact (cmul resNum Dstar) resDen hresDen hdvd]
-    simp only [denote]
+    have hresDen0 : CPoly.toPoly resDen ≠ 0 := by
+      simpa only [toPoly_list_eq] using
+        (fun h => hresDen ((DensePoly.cnormG_eq_nil_iff resDen).mpr h) : toPoly resDen ≠ 0)
+    have hdvd' : CPoly.toPoly resDen ∣ CPoly.toPoly (cmul resNum Dstar) := by
+      simpa only [toPoly_list_eq] using hdvd
+    calc
+      toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen) * toPoly resDen =
+          toPoly resDen * toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen) := mul_comm _ _
+      _ = toPoly (cmul resNum Dstar) := by
+        simpa only [toPoly_list_eq] using
+          (LawfulCPolyEuclidean.div_exact (cmul resNum Dstar) resDen hresDen0 hdvd').symm
+      _ = toPoly resNum * toPoly Dstar := by simp only [denote]
   exact degree_lt_of_exact_div hexact hresProper hDstar
 
 /-! ### The residual-fraction properness `deg resNum < deg resDen` for `δ(t) ≤ 1`
@@ -458,7 +468,7 @@ theorem cHermiteReduceTowerG_g_proper (Dt : DensePoly α) (a d : DensePoly α)
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
               ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
@@ -469,19 +479,19 @@ theorem cHermiteReduceTowerG_g_proper (Dt : DensePoly α) (a d : DensePoly α)
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
               ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
         ([CCommRing.zero], [CCommRing.one])).2).degree :=
   foldl_guarded_fracAddG_proper
     (glocOf := fun (p : DensePoly α × ℕ) =>
-      (cHermiteReduceTowerInnerWf Dt p.1 (cdivWf d (cpow p.1 (p.2 + 1))) (p.2 + 1 - 1) a
+      (cHermiteReduceTowerInnerWf Dt p.1 (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (p.2 + 1 - 1) a
         ([CCommRing.zero], [CCommRing.one])).1)
     (skip := fun (p : DensePoly α × ℕ) => p.2 + 1 ≤ 1)
     factors.zipIdx ([CCommRing.zero], [CCommRing.one]) toPolyG_seedPair_proper
     (fun p hp hskip => cHermiteReduceTowerInner_gloc_proper Dt p.1
-      (cdivWf d (cpow p.1 (p.2 + 1))) (p.2 + 1 - 1) a (hfac p hp hskip))
+      (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (p.2 + 1 - 1) a (hfac p hp hskip))
 
 /-! ### The residual is proper for `deg Dt ≤ 1` from input properness alone -/
 
@@ -497,7 +507,7 @@ theorem cHermiteReduceTowerG_residual_proper_of_degree_le_one (Dt : DensePoly α
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpow vi i
-          let u := cdivWf d Vi_pow
+          let u := CPolyEuclidean.div d Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
             ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
@@ -525,7 +535,7 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : DensePo
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
               ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
@@ -537,7 +547,7 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : DensePo
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
               ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
@@ -548,7 +558,7 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : DensePo
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpow vi i
-          let u := cdivWf d Vi_pow
+          let u := CPolyEuclidean.div d Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
             ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
@@ -582,7 +592,7 @@ theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
       ([CCommRing.zero], [CCommRing.one]))

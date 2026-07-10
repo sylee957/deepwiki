@@ -120,21 +120,40 @@ example :
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
               (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly ([0, 2, 0, 1] : DensePoly ℚ)) := by
-  have hD : toPoly cD221 ≠ 0 := fun h => by
-    have : cnorm cD221 = [] := (DensePoly.cnormG_eq_nil_iff cD221).mpr h
-    revert this; decide
-  have hgden : toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (DensePoly.cnormG_eq_nil_iff _).mpr h
-    revert this; decide
-  have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
+  have hD : CPoly.toPoly cD221 ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p := cD221) (by decide)
+  have hgden : CPoly.toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p :=
+      ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ)) (by decide)
+  have hDstar : CPoly.toPoly ([0, 2, 0, 1] : DensePoly ℚ) ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p :=
+      ([0, 2, 0, 1] : DensePoly ℚ)) (by decide)
   have hexact : toPoly (DensePoly.cmodWf
       (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
           (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
             (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
       (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
     rw [← DensePoly.cnormG_eq_nil_iff, hermite_ex221_exact_division]
-  exact hermiteReduce_residual_correct cA221 cD221 [8, 12, 20, 12, 8, 3]
-    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hexact
+  have hexact' : CPoly.toPoly (CPolyEuclidean.mod
+      (CPolyEngine.mul
+        (CPolyEngine.sub
+          (CPolyEngine.mul cA221
+            (CPolyEngine.mul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+          (CPolyEngine.mul cD221
+            (CPolyEngine.sub
+              (CPolyEngine.mul (CPolyEngine.deriv [8, 12, 20, 12, 8, 3])
+                [0, 8, 0, 12, 0, 6, 0, 1])
+              (CPolyEngine.mul [8, 12, 20, 12, 8, 3]
+                (CPolyEngine.deriv [0, 8, 0, 12, 0, 6, 0, 1])))))
+        [0, 2, 0, 1])
+      (CPolyEngine.mul cD221
+        (CPolyEngine.mul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
+    simpa only [CPolyEuclidean.mod_dense_eq, CPolyEngine.mul_dense_eq,
+      CPolyEngine.sub_dense_eq, CPolyEngine.deriv_dense_eq, toPoly_list_eq] using hexact
+  simpa only [CPolyEuclidean.div_dense_eq, CPolyEngine.mul_dense_eq,
+    CPolyEngine.sub_dense_eq, CPolyEngine.deriv_dense_eq, toPoly_list_eq] using
+    (hermiteReduce_residual_correct cA221 cD221 [8, 12, 20, 12, 8, 3]
+      [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hexact')
 
 /-! ### Example 2.2.1: the unconditional wrapper, certificate `native_decide`d
 
@@ -167,15 +186,19 @@ example :
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
               (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly ([0, 2, 0, 1] : DensePoly ℚ)) := by
-  have hD : toPoly cD221 ≠ 0 := fun h => by
-    have : cnorm cD221 = [] := (DensePoly.cnormG_eq_nil_iff cD221).mpr h
-    revert this; decide
-  have hgden : toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (DensePoly.cnormG_eq_nil_iff _).mpr h
-    revert this; decide
-  have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
-  exact hermiteReduce_residual_correct_uncond cA221 cD221 [8, 12, 20, 12, 8, 3]
-    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hermite_ex221_resComp
+  have hD : CPoly.toPoly cD221 ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p := cD221) (by decide)
+  have hgden : CPoly.toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p :=
+      ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ)) (by decide)
+  have hDstar : CPoly.toPoly ([0, 2, 0, 1] : DensePoly ℚ) ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p :=
+      ([0, 2, 0, 1] : DensePoly ℚ)) (by decide)
+  simpa only [CPolyEuclidean.div_dense_eq, CPolyEngine.mul_dense_eq,
+    CPolyEngine.sub_dense_eq, CPolyEngine.deriv_dense_eq, toPoly_list_eq] using
+    (hermiteReduce_residual_correct_uncond cA221 cD221 [8, 12, 20, 12, 8, 3]
+      [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1]
+      ⟨hD, hgden, hDstar⟩ hermite_ex221_resComp)
 
 /-! ### Example 2.2.1 via the radical wrapper: `Dstar ∣ D` from the proven Yun radical clause
 
@@ -219,13 +242,14 @@ example :
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
               (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly ([0, 2, 0, 1] : DensePoly ℚ)) := by
-  have hD : toPoly cD221 ≠ 0 := fun h => by
-    have : cnorm cD221 = [] := (DensePoly.cnormG_eq_nil_iff cD221).mpr h
-    revert this; decide
-  have hgden : toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (DensePoly.cnormG_eq_nil_iff _).mpr h
-    revert this; decide
-  have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
+  have hD : CPoly.toPoly cD221 ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p := cD221) (by decide)
+  have hgden : CPoly.toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p :=
+      ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ)) (by decide)
+  have hDstar : CPoly.toPoly ([0, 2, 0, 1] : DensePoly ℚ) ≠ 0 :=
+    CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (p :=
+      ([0, 2, 0, 1] : DensePoly ℚ)) (by decide)
   have hWgd : toPoly (DensePoly.cmodWf
       (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
         (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
@@ -233,8 +257,13 @@ example :
       (cmul (DensePoly.cdivWf cD221 [0, 2, 0, 1])
         (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
     rw [← DensePoly.cnormG_eq_nil_iff]; native_decide
-  exact hermiteReduce_residual_correct_of_radical cA221 cD221 [8, 12, 20, 12, 8, 3]
-    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩
-    hermite_ex221_Dstar_dvd hWgd
+  simpa only [CPolyEuclidean.div_dense_eq, CPolyEngine.mul_dense_eq,
+    CPolyEngine.sub_dense_eq, CPolyEngine.deriv_dense_eq, toPoly_list_eq] using
+    (hermiteReduce_residual_correct_of_radical cA221 cD221 [8, 12, 20, 12, 8, 3]
+      [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩
+      (by simpa only [toPoly_list_eq] using hermite_ex221_Dstar_dvd)
+      (by simpa only [CPolyEuclidean.mod_dense_eq, CPolyEuclidean.div_dense_eq,
+        CPolyEngine.mul_dense_eq, CPolyEngine.sub_dense_eq, CPolyEngine.deriv_dense_eq,
+        toPoly_list_eq] using hWgd))
 
 end DeepWiki.SymbolicIntegration.Compute

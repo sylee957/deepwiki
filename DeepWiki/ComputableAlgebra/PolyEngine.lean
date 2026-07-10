@@ -115,6 +115,12 @@ theorem toPoly_sub [LawfulCPolyEngine.{u,v} P] [CRingSpec.{u,v} α] (p q : P α)
     CPoly.toPoly (sub p q) = CPoly.toPoly p - CPoly.toPoly q := by
   rw [sub, LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_neg, sub_eq_add_neg]
 
+/-- A false engine zero test certifies that the represented polynomial denotes a nonzero polynomial. -/
+theorem toPoly_ne_zero_of_cisZero_eq_false [LawfulCPolyEngine.{u,v} P] [CRingSpec.{u,v} α]
+    {p : P α} (h : cisZero p = false) : CPoly.toPoly p ≠ 0 := by
+  rw [Bool.eq_false_iff, Ne, LawfulCPolyEngine.cisZero_iff] at h
+  exact h
+
 /-- An engine polynomial product denotes the product of the denoted factors. -/
 theorem toPoly_prod [LawfulCPolyEngine.{u,v} P] [CRingSpec.{u,v} α] (ps : List (P α)) :
     CPoly.toPoly (prod ps) = (ps.map CPoly.toPoly).prod := by

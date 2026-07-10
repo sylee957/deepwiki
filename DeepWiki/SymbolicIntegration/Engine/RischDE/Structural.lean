@@ -94,15 +94,15 @@ section WfSPDECleared
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
 /-- `cSPDEGClearedGenWf`: the per-level certificate for `cSPDE`, with `g = cgcdFFCoreWf a b` and
-divided coefficients via `cdivWf`. -/
+divided coefficients via `CPolyEuclidean.div`. -/
 def cSPDEGClearedGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
     if cdvd g c then
-      let ad := cdivWf a g
-      let bd := cdivWf b g
-      let cd := cdivWf c g
+      let ad := CPolyEuclidean.div a g
+      let bd := CPolyEuclidean.div b g
+      let cd := CPolyEuclidean.div c g
       (toPoly ad * toPoly g = toPoly a) ∧ (toPoly bd * toPoly g = toPoly b)
         ∧ (toPoly cd * toPoly g = toPoly c)
         ∧ (toPoly ad ≠ 0)
@@ -177,7 +177,7 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
     obtain ⟨hbbar, hcbar, hm, hα, hβ⟩ := hspde
     rw [← hbbar] at hh; rw [← hcbar] at hh
     have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvd c = true := hdvd
-    have hguard' : (n - ((a.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b)).cdeg : ℤ) + 1).toNat
+    have hguard' : (n - ((CPolyEuclidean.div a (CFracGcdCoreWf.cgcdFFCoreWf a b)).cdeg : ℤ) + 1).toNat
         < (n + 1).toNat := hguard
     rw [cSPDEGClearedGenWf] at hcert
     simp only [hn, hdvd'] at hcert
@@ -186,8 +186,8 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
     obtain ⟨hbez'0, hcertrecOpt⟩ := hcertrest
     rw [if_pos hguard'] at hcertrecOpt
     have hdioph' : CPoly.diophantineReduced
-        (b.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b))
-        (a.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b)) (c.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b))
+        (CPolyEuclidean.div b (CFracGcdCoreWf.cgcdFFCoreWf a b))
+        (CPolyEuclidean.div a (CFracGcdCoreWf.cgcdFFCoreWf a b)) (CPolyEuclidean.div c (CFracGcdCoreWf.cgcdFFCoreWf a b))
         = (r, z) := hdioph
     rw [hdioph'] at hbez'0 hcertrecOpt
     have hbez' : toPoly b' * toPoly r + toPoly a' * toPoly z = toPoly c' := hbez'0
@@ -217,13 +217,13 @@ def CSPDEGClearedInputsGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
     if cdvd g c then
-      let ad := cdivWf a g
+      let ad := CPolyEuclidean.div a g
       (cnorm g ≠ []) ∧ Associated (toPoly g) (gcd (toPoly a) (toPoly b))
         ∧ (cnorm a ≠ [])
         ∧ (if cdeg ad = 0 then True
            else
-             let bd := cdivWf b g
-             let rz := CPoly.diophantineReduced bd ad (cdivWf c g)
+             let bd := CPolyEuclidean.div b g
+             let rz := CPoly.diophantineReduced bd ad (CPolyEuclidean.div c g)
              (if (n - (cdeg ad : ℤ) + 1).toNat < (n + 1).toNat then
                 CSPDEGClearedInputsGenWf Dt ad (cadd bd (cmonomialDeriv Dt ad))
                   (csub rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdeg ad : ℤ))
@@ -243,13 +243,14 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
     trivial
   | case2 a b c n hn g hdvd ad ih1 =>
     have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvd c = true := hdvd
+    have hadef : ad = CPolyEuclidean.div a g := rfl
     rw [cSPDEGClearedGenWf]
     simp only [hn, hdvd'] at hin ⊢
     obtain ⟨hg0, hgassoc, ha0, hrest⟩ := hin
-    set bd := cdivWf b g with hbd
+    set bd := CPolyEuclidean.div b g with hbd
     have hdiva : toPoly ad * toPoly g = toPoly a := cdivWf_a_exact_of_gcd a b g hg0 hgassoc
     have hdivb : toPoly bd * toPoly g = toPoly b := cdivWf_b_exact_of_gcd a b g hg0 hgassoc
-    have hdivc : toPoly (cdivWf c g) * toPoly g = toPoly c :=
+    have hdivc : toPoly (CPolyEuclidean.div c g) * toPoly g = toPoly c :=
       cdivWf_c_exact_of_cdvdG c g hg0 hdvd'
     have hane : toPoly a ≠ 0 := fun h => ha0 ((cnormG_eq_nil_iff a).mpr h)
     have hadne : toPoly ad ≠ 0 := by
@@ -261,16 +262,16 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
     · rw [if_neg hdeg] at hrest ⊢
       have hadnil : cnorm ad ≠ [] := fun h => hadne ((cnormG_eq_nil_iff ad).mp h)
       have hunitWf := cgcdWf_isUnit_of_divided_gen a b ad bd g hgne hgassoc hdiva hdivb
-      have hgdegWf : (toPoly (cgcdWf bd ad).1).natDegree = 0 :=
+      have hgdegWf : (toPoly (CPolyEuclidean.gcdExt bd ad).1).natDegree = 0 :=
         Polynomial.natDegree_eq_zero_of_isUnit hunitWf
-      have hgneWf : toPoly (cgcdWf bd ad).1 ≠ 0 := hunitWf.ne_zero
-      have hbez := toPolyG_diophantineReduced bd ad (cdivWf c g) hadnil hgdegWf hgneWf
+      have hgneWf : toPoly (CPolyEuclidean.gcdExt bd ad).1 ≠ 0 := hunitWf.ne_zero
+      have hbez := toPolyG_diophantineReduced bd ad (CPolyEuclidean.div c g) hadnil hgdegWf hgneWf
       by_cases hguard : (n - (cdeg ad : ℤ) + 1).toNat < (n + 1).toNat
       · rw [if_pos hguard] at hrest ⊢
         refine ⟨?_, ih1 hguard hrest⟩
-        simpa [mul_comm] using hbez
+        simpa [hadef, mul_comm] using hbez
       · rw [if_neg hguard] at hrest ⊢
-        exact ⟨by simpa [mul_comm] using hbez, trivial⟩
+        exact ⟨by simpa [hadef, mul_comm] using hbez, trivial⟩
   | case3 a b c n hn g hdvd =>
     have hdvd' : ¬ (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvd c = true := hdvd
     rw [cSPDEGClearedGenWf]
@@ -445,10 +446,10 @@ structure RischDEStructuralResidualWf (Dt : DensePoly α) (fnum fden gnum gden a
   hfden0 : cnorm fden ≠ []
   /-- The input denominator `gden` is nonzero. -/
   hgden0 : cnorm gden ≠ []
-  /-- `fden` divides the `B`-numerator (the `cdivWf` clearing is exact). -/
+  /-- `fden` divides the `B`-numerator (the `CPolyEuclidean.div` clearing is exact). -/
   hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (cSplitFactorFast Dt fden).1 h0) fnum)
       (cmul (cmul (cSplitFactorFast Dt fden).1 (cmonomialDeriv Dt h0)) fden))
-  /-- `gden` divides the `C`-numerator (the `cdivWf` clearing is exact). -/
+  /-- `gden` divides the `C`-numerator (the `CPolyEuclidean.div` clearing is exact). -/
   hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (cSplitFactorFast Dt fden).1 h0) h0) gnum)
   /-- The transparent-input chain `CSPDEGClearedInputsGenWf` on the special-cleared coefficients at
   the bound degree. -/

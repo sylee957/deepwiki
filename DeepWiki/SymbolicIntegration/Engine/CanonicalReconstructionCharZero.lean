@@ -51,17 +51,17 @@ theorem canonicalReconstruction_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf
   -- gcd of the split parts is a unit ⇒ the computable gcd is a nonzero constant
   have hgu : IsUnit (gcd (toPoly (crNormDen Dt a d)) (toPoly (crSpecDen Dt a d))) :=
     gcd_isUnit_iff_isRelPrime.mpr (hcop.symm.isRelPrime)
-  have hassoc : Associated (toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1)
+  have hassoc : Associated (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1)
       (gcd (toPoly (crNormDen Dt a d)) (toPoly (crSpecDen Dt a d))) := by
     have h1 : Associated (toPoly (cgcdMonicWf (crNormDen Dt a d) (crSpecDen Dt a d)))
-        (toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1) := by
+        (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1) := by
       rw [cgcdMonicWf]; exact associated_toPolyG_cmonicG _
     exact h1.symm.trans (associated_toPolyG_cgcdMonicWf _ _)
-  have hgu' : IsUnit (toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1) :=
+  have hgu' : IsUnit (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1) :=
     (Associated.isUnit_iff hassoc).mpr hgu
-  have hgdeg : (toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0 :=
+  have hgdeg : (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0 :=
     natDegree_eq_zero_of_isUnit hgu'
-  have hgne : toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0 := hgu'.ne_zero
+  have hgne : toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0 := hgu'.ne_zero
   exact canonicalReconstruction Dt a d hd hdn hds hsplit hgdeg hgne
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -94,34 +94,34 @@ theorem crNormNum_degree_lt_crNormDen (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdF
   have hdn0 : toPoly (cSplitFactorFast Dt d).1 ≠ 0 := fun h => hd (by rw [hfac, h, mul_zero])
   have hds : cnorm (cSplitFactorFast Dt d).2 ≠ [] := fun h => hds0 ((cnormG_eq_nil_iff _).mp h)
   have hdn : cnorm (cSplitFactorFast Dt d).1 ≠ [] := fun h => hdn0 ((cnormG_eq_nil_iff _).mp h)
-  have hcnd : cnorm d ≠ [] := fun h => hd ((cnormG_eq_nil_iff d).mp h)
   -- special ⊥ normal ⇒ the split parts are coprime ⇒ the computable gcd is a nonzero constant ⇒ Bézout
   have hcop : IsCoprime (toPoly (cSplitFactorFast Dt d).2) (toPoly (cSplitFactorFast Dt d).1) :=
     isCoprime_of_isSpecial_isNormalSqfree hds0 hspec hnorm
   have hgu : IsUnit (gcd (toPoly (cSplitFactorFast Dt d).1) (toPoly (cSplitFactorFast Dt d).2)) :=
     gcd_isUnit_iff_isRelPrime.mpr (hcop.symm.isRelPrime)
-  have hassoc : Associated (toPoly (cgcdWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1)
+  have hassoc : Associated (toPoly (CPolyEuclidean.gcdExt (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1)
       (gcd (toPoly (cSplitFactorFast Dt d).1) (toPoly (cSplitFactorFast Dt d).2)) := by
     have h1 : Associated (toPoly (cgcdMonicWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2))
-        (toPoly (cgcdWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1) := by
+        (toPoly (CPolyEuclidean.gcdExt (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1) := by
       rw [cgcdMonicWf]; exact associated_toPolyG_cmonicG _
     exact h1.symm.trans (associated_toPolyG_cgcdMonicWf _ _)
-  have hgu' : IsUnit (toPoly (cgcdWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1) :=
+  have hgu' : IsUnit (toPoly (CPolyEuclidean.gcdExt (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1) :=
     (Associated.isUnit_iff hassoc).mpr hgu
-  have hgdeg : (toPoly (cgcdWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1).natDegree = 0 :=
+  have hgdeg : (toPoly (CPolyEuclidean.gcdExt (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1).natDegree = 0 :=
     natDegree_eq_zero_of_isUnit hgu'
-  have hgne : toPoly (cgcdWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1 ≠ 0 := hgu'.ne_zero
+  have hgne : toPoly (CPolyEuclidean.gcdExt (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1 ≠ 0 := hgu'.ne_zero
   have hbez : toPoly (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
         * toPoly (cSplitFactorFast Dt d).1
       + toPoly (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2
         * toPoly (cSplitFactorFast Dt d).2 = 1 :=
     toPolyG_bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2 hgdeg hgne
   -- the remainder `a mod d` is proper over `d`
-  have hr : (toPoly (cdivmodWf a d).2).degree < (toPoly d).degree :=
-    toPolyG_degree_lt_of_length_lt (cmodWf a d) d hcnd (cmodWf_length_lt a d hcnd)
+  have hr : (toPoly (CPolyEuclidean.divmod a d).2).degree < (toPoly d).degree := by
+    simpa only [CPolyEuclidean.mod, toPoly_list_eq] using
+      (LawfulCPolyEuclidean.mod_degree_lt a d (by simpa only [toPoly_list_eq] using hd))
   -- `crNormNum = (CPoly.extendedEuclideanSplit dₙ dₛ (a mod d) u w).2`, `crNormDen = dₙ`
   have hnn : crNormNum Dt a d = (CPoly.extendedEuclideanSplit (cSplitFactorFast Dt d).1
-      (cSplitFactorFast Dt d).2 (cdivmodWf a d).2
+      (cSplitFactorFast Dt d).2 (CPolyEuclidean.divmod a d).2
       (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
       (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2).2 := by
     simp only [crNormNum, canonicalRepresentationFast]
@@ -129,7 +129,7 @@ theorem crNormNum_degree_lt_crNormDen (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdF
     simp only [crNormDen, canonicalRepresentationFast]
   rw [hnn, hnd]
   exact extendedEuclideanSplit_snd_degree_lt (cSplitFactorFast Dt d).1
-    (cSplitFactorFast Dt d).2 (cdivmodWf a d).2
+    (cSplitFactorFast Dt d).2 (CPolyEuclidean.divmod a d).2
     (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
     (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2 d hds hdn hfac hbez hr
 

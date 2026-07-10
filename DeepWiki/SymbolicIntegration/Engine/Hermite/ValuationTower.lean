@@ -23,18 +23,24 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **Exact division respects `toPoly`**: `cdivWf P Q` denotes `toPoly P / toPoly Q` whenever the
+/-- **Exact division respects `toPoly`**: `CPolyEuclidean.div P Q` denotes `toPoly P / toPoly Q` whenever the
 division is exact, so `toPoly`-equal (and exactly-divisible) numerator/denominator pairs give the same
-`cdivWf` denotation — the bridge for matching a radical-form numerator to the `cnorm`'d def field. -/
+`CPolyEuclidean.div` denotation — the bridge for matching a radical-form numerator to the `cnorm`'d def field. -/
 theorem toPolyG_cdivWf_congr [CFracGcdCoreWf α] (P1 Q1 P2 Q2 : DensePoly α)
     (hP : toPoly P1 = toPoly P2) (hQ : toPoly Q1 = toPoly Q2)
     (hQ1 : toPoly Q1 ≠ 0) (hdvd1 : toPoly Q1 ∣ toPoly P1) :
-    toPoly (cdivWf P1 Q1) = toPoly (cdivWf P2 Q2) := by
-  have hn1 : cnorm Q1 ≠ [] := fun hnil => hQ1 ((cisZeroG_iff Q1).mp (by simp [cisZero, hnil]))
-  have hn2 : cnorm Q2 ≠ [] := fun hnil => (hQ ▸ hQ1) ((cisZeroG_iff Q2).mp (by simp [cisZero, hnil]))
-  have h1 := toPolyG_cdivWf_exact P1 Q1 hn1 hdvd1
+    toPoly (CPolyEuclidean.div P1 Q1) = toPoly (CPolyEuclidean.div P2 Q2) := by
   have hdvd2 : toPoly Q2 ∣ toPoly P2 := by rw [← hQ, ← hP]; exact hdvd1
-  have h2 := toPolyG_cdivWf_exact P2 Q2 hn2 hdvd2
+  have h1 : toPoly (CPolyEuclidean.div P1 Q1) * toPoly Q1 = toPoly P1 := by
+    simpa only [toPoly_list_eq, mul_comm] using
+      (LawfulCPolyEuclidean.div_exact P1 Q1
+        (by simpa only [toPoly_list_eq] using hQ1)
+        (by simpa only [toPoly_list_eq] using hdvd1)).symm
+  have h2 : toPoly (CPolyEuclidean.div P2 Q2) * toPoly Q2 = toPoly P2 := by
+    simpa only [toPoly_list_eq, mul_comm] using
+      (LawfulCPolyEuclidean.div_exact P2 Q2
+        (by simpa only [toPoly_list_eq, ← hQ] using hQ1)
+        (by simpa only [toPoly_list_eq] using hdvd2)).symm
   apply mul_right_cancel₀ hQ1
   rw [h1, hP, ← h2, hQ]
 
@@ -158,14 +164,14 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 guarded fold over `(cSqfreeYunFF d).zipIdx` instantiating `fracPair_foldl_sum`. -/
 theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : DensePoly α)
     (hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
-      toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+      toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CCommRing.zero], [CCommRing.one])).1.2 ≠ 0) :
     am α (toPoly (cHermiteReduceTower Dt a d).1.1)
         / am α (toPoly (cHermiteReduceTower Dt a d).1.2)
       = (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
           (fun x => am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1
-                (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).1.1)
-            / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+                (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).1.1)
+            / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
                 (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).1.2))).sum := by
   have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
@@ -174,7 +180,7 @@ theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : DensePoly α)
   rw [cHermiteReduceTower]
   simp only [toPolyG_cnormG]
   rw [fracPair_foldl_sum
-    (fun x => (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+    (fun x => (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
       ([CCommRing.zero], [CCommRing.one])).1)
     (fun x => x.2 + 1 ≤ 1) (cSqfreeYunFF d).zipIdx ([CCommRing.zero], [CCommRing.one])
     (by rw [hone]; exact one_ne_zero) hden]
@@ -182,9 +188,9 @@ theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : DensePoly α)
 
 /-- The `gloc` fraction of a Hermite-fold factor `x = (v, idx)` (multiplicity `idx+1`). -/
 noncomputable def glocFrac (Dt a d : DensePoly α) (x : DensePoly α × ℕ) : RatFunc (CFieldSpec.K α) :=
-  am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+  am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
       ([CCommRing.zero], [CCommRing.one])).1.1)
-    / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+    / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
       ([CCommRing.zero], [CCommRing.one])).1.2)
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
@@ -192,7 +198,7 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
 theorem glocFrac_isRatFuncRegular (Dt a d : DensePoly α) {Q : (CFieldSpec.K α)[X]} (x : DensePoly α × ℕ)
     (hv : toPoly x.1 ≠ 0) (hcop : IsRelPrime Q (toPoly x.1)) :
     IsRatFuncRegular Q (glocFrac Dt a d x) :=
-  gloc_isRatFuncRegular Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) hv hcop (x.2 + 1 - 1) a
+  gloc_isRatFuncRegular Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) hv hcop (x.2 + 1 - 1) a
 
 /-- **`D(⟦g⟧) − D(⟦gloc_k⟧)` is `Vk`-regular** — the pole-cancellation valuation core. `⟦g⟧ = Σ⟦gloc⟧`,
 so its tower derivative splits (`map_list_sum`); permuting `kelem` to the front and cancelling leaves
@@ -214,20 +220,20 @@ theorem deriv_fold_sub_isRatFuncRegular (Dt a d : DensePoly α) (kelem : DensePo
   have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, toR_eq_toK, CFieldSpec.toK_one, map_one]
   have hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
-      toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+      toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CCommRing.zero], [CCommRing.one])).1.2 ≠ 0 := by
     intro x hx _
     obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt x.1
-      (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])
+      (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])
     rw [hN, hone, one_mul]; exact pow_ne_zero N (hV x hx)
   -- `⟦g⟧ = Σ_{kept} glocFrac`, so `D⟦g⟧ = Σ D(glocFrac)`.
   rw [cHermiteReduceTowerG_frac_eq_sum Dt a d hden,
     map_list_sum (towerFractionFieldDeriv Dt), List.map_map, ← hkeptdef,
     (List.perm_cons_erase hkmem).map _ |>.sum_eq, List.map_cons, List.sum_cons,
     show (⇑(towerFractionFieldDeriv Dt) ∘ fun x =>
-        am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+        am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
             (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).1.1)
-          / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+          / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
             (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).1.2)) kelem
       = towerFractionFieldDeriv Dt (glocFrac Dt a d kelem) from rfl,
     add_sub_cancel_left]
@@ -245,7 +251,7 @@ factor's `hstep : D⟦gloc x⟧ = ⟦a/d⟧ − ⟦residNum x /d⟧`. Tower anal
 theorem total_fold_residual_tower (Dt a d : DensePoly α)
     (residNum : DensePoly α × ℕ → (CFieldSpec.K α)[X]) (hd : toPoly d ≠ 0)
     (hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
-      toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+      toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CCommRing.zero], [CCommRing.one])).1.2 ≠ 0)
     (hstep : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       towerFractionFieldDeriv Dt (glocFrac Dt a d x)
@@ -264,9 +270,9 @@ theorem total_fold_residual_tower (Dt a d : DensePoly α)
     List.map_map, ← hkeptdef]
   -- rewrite each `D⟦gloc⟧` via `hstep`, so the summed function is `a/d − residNum/d`.
   have heq : (kept.map (⇑(towerFractionFieldDeriv Dt) ∘ fun x =>
-        am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+        am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
             (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).1.1)
-          / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+          / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
             (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).1.2)))
       = kept.map (fun x => am α (toPoly a) / am α (toPoly d)
           - am α (residNum x) / am α (toPoly d)) := by
@@ -312,8 +318,8 @@ omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
 squarefree + coprime to `u`). -/
 theorem cHermiteInner_hbez_of_gcd (Dt v u : DensePoly α)
     (hqn : cnorm v ≠ [])
-    (hgdeg : (toPoly (cgcdWf (cmul u (cmonomialDeriv Dt v)) v).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cmul u (cmonomialDeriv Dt v)) v).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cmul u (cmonomialDeriv Dt v)) v).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cmul u (cmonomialDeriv Dt v)) v).1 ≠ 0) :
     ∀ (j' : ℕ) (A' : DensePoly α),
       toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).1
@@ -335,17 +341,17 @@ inputs: `d ≠ 0`, the gcd coprimality of `(u·Dv, v)` (`hgdeg`/`hgne`), and `u�
 `v^i ∣ d`). Here `residNum = afin · v^(i−1)` (`afin` the inner-loop residual). -/
 theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : DensePoly α) (x : DensePoly α × ℕ)
     (hd : toPoly d ≠ 0) (hv : toPoly x.1 ≠ 0)
-    (hgdeg : (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
         (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
         (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
-    (hud : toPoly (cdivWf d (cpow x.1 (x.2 + 1))) * toPoly x.1 ^ (x.2 + 1) = toPoly d) :
+    (hud : toPoly (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) * toPoly x.1 ^ (x.2 + 1) = toPoly d) :
     towerFractionFieldDeriv Dt (glocFrac Dt a d x)
       = am α (toPoly a) / am α (toPoly d)
-        - am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+        - am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
               (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).2 * toPoly x.1 ^ x.2)
           / am α (toPoly d) := by
-  set u := cdivWf d (cpow x.1 (x.2 + 1)) with hudef
+  set u := CPolyEuclidean.div d (cpow x.1 (x.2 + 1)) with hudef
   have hu : toPoly u ≠ 0 := fun h0 => hd (by rw [← hud, h0, zero_mul])
   have hqn : cnorm x.1 ≠ [] := fun h => hv ((cisZeroG_iff x.1).mp (by simp [cisZero, h]))
   have hone : toPoly ([CCommRing.one] : DensePoly α) ≠ 0 := by
@@ -380,7 +386,7 @@ theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : DensePoly
 
 /-- The per-factor residual numerator `residNum x = afin · v^(i−1)` (`afin` the inner-loop residual). -/
 noncomputable def residNum (Dt a d : DensePoly α) (x : DensePoly α × ℕ) : (CFieldSpec.K α)[X] :=
-  toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+  toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
     ([CCommRing.zero], [CCommRing.one])).2 * toPoly x.1 ^ x.2
 
 /-- **All per-factor `hstep` identities** hold, given the per-factor gcd coprimality (`hcopgcd`, the
@@ -389,9 +395,9 @@ Yun structural facts (`get_ne_zero`, `pow_dvd`, `cdivWf_pow_mul`) via the zipIdx
 theorem all_hstep [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       towerFractionFieldDeriv Dt (glocFrac Dt a d x)
@@ -414,7 +420,7 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 theorem hden_of [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
-      toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+      toPoly (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CCommRing.zero], [CCommRing.one])).1.2 ≠ 0 := by
   intro x hx _
   obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
@@ -422,7 +428,7 @@ theorem hden_of [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreW
   have hv : toPoly x.1 ≠ 0 := by
     rw [← hget]; exact cSqfreeYunFFG_get_ne_zero hgcd d hd0 hpp x.2 hidx
   obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt x.1
-    (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])
+    (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])
   rw [hN, show toPoly ([CCommRing.one] : DensePoly α) = 1 from by
     simp only [denote, mul_zero, add_zero, map_one], one_mul]
   exact pow_ne_zero N hv
@@ -440,7 +446,7 @@ theorem toPolyG_cHermiteReduceTowerG_den_ne_zero [CharZero (CFieldSpec.K α)]
   rw [cHermiteReduceTower]
   simp only [toPolyG_cnormG]
   exact foldl_den_ne_zero
-    (fun x => (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+    (fun x => (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
       ([CCommRing.zero], [CCommRing.one])).1)
     (fun x => x.2 + 1 ≤ 1) (cSqfreeYunFF d).zipIdx ([CCommRing.zero], [CCommRing.one])
     (by rw [hone]; exact one_ne_zero) (hden_of hgcd Dt a d hd0 hpp)
@@ -450,9 +456,9 @@ theorem toPolyG_cHermiteReduceTowerG_den_ne_zero [CharZero (CFieldSpec.K α)]
 theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     am α (toPoly a) / am α (toPoly d)
         - towerFractionFieldDeriv Dt
@@ -472,9 +478,9 @@ inputs to `deriv_fold_sub` are the Yun structural facts. Modulo the per-factor g
 theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       toPoly x.1 ^ x.2 ∣ (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
@@ -538,9 +544,9 @@ Modulo the per-factor gcd coprimality. -/
 theorem prod_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
         (fun x => toPoly x.1 ^ x.2)).prod
@@ -561,9 +567,9 @@ theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     toPoly (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
           (cHermiteReduceTower Dt a d).1.2))
@@ -603,7 +609,7 @@ factorization reconstructs its input up to associates. -/
 theorem hWdvd_of_reconstruction (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0)
     (hrecon : Associated (toPoly d) (prodPow 1 ((cSqfreeYunFF d).map toPoly))) :
-    toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2)
+    toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2)
       ∣ (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
           (fun x => toPoly x.1 ^ x.2)).prod := by
   have hLprod : toPoly (cHermiteReduceTower Dt a d).2.2
@@ -624,11 +630,11 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
-    toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2)
+    toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2)
         * (toPoly (cHermiteReduceTower Dt a d).1.2 * toPoly (cHermiteReduceTower Dt a d).1.2)
       ∣ toPoly (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
             (cHermiteReduceTower Dt a d).1.2))
@@ -647,11 +653,11 @@ nonzero/divisibility side-goals stay projection-based and reuse `den_ne_zero`/`h
 theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
-    toPoly (cdivWf (cmul (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
+    toPoly (CPolyEuclidean.div (cmul (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
             (cHermiteReduceTower Dt a d).1.2))
           (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
               (cHermiteReduceTower Dt a d).1.2)
@@ -672,9 +678,9 @@ theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (
   · simp only [toPolyG_cmulG]
     rw [toPolyG_yunRadical_split hgcd Dt a d hd0]
     have h := hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd
-    calc toPoly (cHermiteReduceTower Dt a d).2.2 * toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2)
+    calc toPoly (cHermiteReduceTower Dt a d).2.2 * toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2)
             * (toPoly (cHermiteReduceTower Dt a d).1.2 * toPoly (cHermiteReduceTower Dt a d).1.2)
-          = toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2)
+          = toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2)
               * (toPoly (cHermiteReduceTower Dt a d).1.2 * toPoly (cHermiteReduceTower Dt a d).1.2)
             * toPoly (cHermiteReduceTower Dt a d).2.2 := by ring
       _ ∣ _ := mul_dvd_mul_right h _
@@ -689,14 +695,14 @@ hyperexponential `D`), which is correctly a hypothesis (matching Bronstein's `hn
 theorem cHermiteReduceTowerG_field_identity [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     towerFractionFieldDeriv Dt
         (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
           / am α (toPoly (cHermiteReduceTower Dt a d).1.2))
-      + am α (toPoly (cdivWf (cmul (csub
+      + am α (toPoly (CPolyEuclidean.div (cmul (csub
             (cmul a (cmul (cHermiteReduceTower Dt a d).1.2 (cHermiteReduceTower Dt a d).1.2))
             (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
                 (cHermiteReduceTower Dt a d).1.2)
@@ -720,7 +726,7 @@ theorem cHermiteReduceTowerG_field_identity [CharZero (CFieldSpec.K α)] (hgcd :
     exact (mul_ne_zero hd0 (mul_ne_zero hgd0 hgd0)) this
   exact hermiteTowerStep_field_identity_of_radical Dt (cHermiteReduceTower Dt a d).1.1
     (cHermiteReduceTower Dt a d).1.2 a d (cHermiteReduceTower Dt a d).2.2
-    (cdivWf d (cHermiteReduceTower Dt a d).2.2) (am_ne_zero hd0)
+    (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2) (am_ne_zero hd0)
     (am_ne_zero hgd0) (am_ne_zero hDstar0) hresDen
     (toPolyG_yunRadical_split hgcd Dt a d hd0)
     (hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd)

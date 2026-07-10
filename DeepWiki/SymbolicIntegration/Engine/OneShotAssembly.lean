@@ -533,7 +533,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_residual [CFracGcdCoreWf α]
     (Dt : DensePoly α) (a d : DensePoly α) (s : Finset (CFieldSpec.K α))
     (resNum resDen Dstar : DensePoly α)
     (hnumeq : toPoly (cHermiteReduceTower Dt a d).2.1
-      = toPoly (cdivWf (cmul resNum Dstar) resDen))
+      = toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen))
     (hdeneq : toPoly (cHermiteReduceTower Dt a d).2.2 = toPoly Dstar)
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hdvd : toPoly resDen ∣ toPoly (cmul resNum Dstar))
@@ -1474,7 +1474,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
     (hv : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (DenseFrac ℚ)),
         (toPoly (CPoly.diophantineReduced
-            (cmul (cdivWf d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+            (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (g : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
@@ -1484,7 +1484,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
       ([CCommRing.zero], [CCommRing.one]))
@@ -1568,7 +1568,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : DensePoly 
     (hbk : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (DenseFrac ℚ)),
         (toPoly (CPoly.diophantineReduced
-            (cmul (cdivWf (canonicalRepresentationFast Dt a d).2.2.2
+            (cmul (CPolyEuclidean.div (canonicalRepresentationFast Dt a d).2.2.2
               (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
     (g : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
@@ -1578,7 +1578,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : DensePoly 
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpow vi i
-          let u := cdivWf (canonicalRepresentationFast Dt a d).2.2.2 Vi_pow
+          let u := CPolyEuclidean.div (canonicalRepresentationFast Dt a d).2.2.2 Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1)
             (canonicalRepresentationFast Dt a d).2.2.1 ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
@@ -1670,7 +1670,7 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
           ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (DenseFrac ℚ)),
         (toPoly (CPoly.diophantineReduced
-            (cmul (cdivWf (canonicalRepresentationFast
+            (cmul (CPolyEuclidean.div (canonicalRepresentationFast
               ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.2 (cpow p.1 (p.2 + 1)))
               (cmonomialDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ)) p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
@@ -1682,7 +1682,7 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpow vi i
-          let u := cdivWf (canonicalRepresentationFast
+          let u := CPolyEuclidean.div (canonicalRepresentationFast
             ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.2 Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf ([CCommRing.one] : DensePoly (DenseFrac ℚ)) vi u (i - 1)
             (canonicalRepresentationFast ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.1

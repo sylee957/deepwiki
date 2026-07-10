@@ -130,9 +130,9 @@ def cgcdFFCoreWf (p q : DensePoly α) : DensePoly α := DensePoly.cmonic (cgcdFF
 end CFracGcdCoreWf
 
 /-- Base `CFracGcdCoreWf ℚ` — the bottom of the tower. `ℚ[t]`'s raw fraction-free gcd is the generic
-Euclidean gcd `(DensePoly.cgcdWf p q).1`. -/
+Euclidean gcd `(CPolyEuclidean.gcdExt p q).1`. -/
 instance instCFracGcdCoreWfQ : CFracGcdCoreWf ℚ where
-  cgcdFFRawCoreWf p q := (DensePoly.cgcdWf p q).1
+  cgcdFFRawCoreWf p q := (CPolyEuclidean.gcdExt p q).1
 
 section
 variable {β : Type*} [CField β] [CFieldDomain β] [CFracGcdCoreWf β]
@@ -161,21 +161,21 @@ namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
-/-- The generic `SplitFactor` step `cstep Dt p = cdivWf (cgcdFFCoreWf p (cmonomialDeriv Dt p))
+/-- The generic `SplitFactor` step `cstep Dt p = CPolyEuclidean.div (cgcdFFCoreWf p (cmonomialDeriv Dt p))
 (cgcdFFCoreWf p (cderiv p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)`. -/
 def cstep (Dt : DensePoly α) (p : DensePoly α) : DensePoly α :=
-  cdivWf (CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p))
+  CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p))
     (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))
 
 /-- Generic splitting-factorization loop `cSplitFactorFast Dt p = (pₙ, pₛ)`: one step extracts
 `S = cstep Dt p`; a constant `S` (`cdeg S = 0`) ⇒ `p` is normal, else recurse on the exact quotient
-`p/S = cdivWf p S` and accumulate `S` into the special part. Well-founded on `(cnorm p).length`.
+`p/S = CPolyEuclidean.div p S` and accumulate `S` into the special part. Well-founded on `(cnorm p).length`.
 `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
 def cSplitFactorFast (Dt : DensePoly α) (p : DensePoly α) : DensePoly α × DensePoly α :=
   let S := cstep Dt p
   if cdeg S = 0 then (p, [CCommRing.one])
   else
-    let pq := cdivWf p S
+    let pq := CPolyEuclidean.div p S
     if (cnorm pq : List α).length < (cnorm p : List α).length then
       let (qn, qs) := cSplitFactorFast Dt pq
       (qn, cmul S qs)
@@ -192,7 +192,7 @@ variable {α : Type*} [CField α] [CFracGcdCoreWf α]
 /-- Generic Yun main loop (fraction-free) `cSqfreeYunFFGgoWf fo b d`: recurses structurally on the outer
 multiplicity counter `fo` (so the loop never stops early — unlike a degree-guarded loop, which truncates
 at skipped multiplicities). Stops when `b` is constant (`cdeg b = 0`) or the counter is exhausted, else
-emits `p = cmonic (cgcdFFCoreWf b d)`, recurses on `b' = cdivWf b p`, `d' = cdivWf d p − b'` with `fo`
+emits `p = cmonic (cgcdFFCoreWf b d)`, recurses on `b' = CPolyEuclidean.div b p`, `d' = CPolyEuclidean.div d p − b'` with `fo`
 decremented. The counter `fo` is supplied once by the entry `cSqfreeYunFF` as `cyunBound`.
 `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def cSqfreeYunFFGgoWf : ℕ → DensePoly α → DensePoly α → List (DensePoly α)
@@ -201,8 +201,8 @@ def cSqfreeYunFFGgoWf : ℕ → DensePoly α → DensePoly α → List (DensePol
     if cdeg b = 0 then []
     else
       let p := cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)
-      let b' := cdivWf b p
-      let d' := csub (cdivWf d p) (cderiv b')
+      let b' := CPolyEuclidean.div b p
+      let d' := csub (CPolyEuclidean.div d p) (cderiv b')
       p :: cSqfreeYunFFGgoWf fo b' d'
 
 /-- Sufficient internal multiplicity-counter bound `cyunBound p := (cnorm p).length`: Yun's outer loop
@@ -211,13 +211,13 @@ once from the input. The generic analogue of `yunBound`. -/
 def cyunBound (p : DensePoly α) : ℕ := (cnorm p : List α).length
 
 /-- Generic Yun squarefree factorization in `t` `cSqfreeYunFF p = [p₁, …, pₘ]`: with
-`g = cgcdFFCoreWf p (cderiv p)`, `b₁ = cdivWf p g`, `d₁ = cderiv p/g − b₁'`, runs the Yun loop
+`g = cgcdFFCoreWf p (cderiv p)`, `b₁ = CPolyEuclidean.div p g`, `d₁ = cderiv p/g − b₁'`, runs the Yun loop
 `cSqfreeYunFFGgoWf (cyunBound p) b₁ d₁` with the internally-computed counter `cyunBound p`. `p` is
 associate to `∏ᵢ pᵢ^i`. Correct even at skipped multiplicities. `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def cSqfreeYunFF (p : DensePoly α) : List (DensePoly α) :=
   let g := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)
-  let b1 := cdivWf p g
-  let d1 := csub (cdivWf (cderiv p) g) (cderiv b1)
+  let b1 := CPolyEuclidean.div p g
+  let d1 := csub (CPolyEuclidean.div (cderiv p) g) (cderiv b1)
   cSqfreeYunFFGgoWf (cyunBound p) b1 d1
 
 /-- Nonconstant Yun factors paired with their one-based multiplicities. -/
@@ -227,13 +227,13 @@ def cSqfreeYunFactors (p : DensePoly α) : List (DensePoly α × ℕ) :=
 
 /-- Generic split-squarefree-factor over the tower `cSplitSquarefreeFactorFast Dt p =
 ((N₁,…,Nₘ), (S₁,…,Sₘ))`. Yun-factor `p` in `t` (`cSqfreeYunFF`); per factor `pᵢ`,
-`Sᵢ = cgcdFFCoreWf pᵢ (cmonomialDeriv Dt pᵢ)` (the special part) and `Nᵢ = cdivWf pᵢ Sᵢ` (normal part). -/
+`Sᵢ = cgcdFFCoreWf pᵢ (cmonomialDeriv Dt pᵢ)` (the special part) and `Nᵢ = CPolyEuclidean.div pᵢ Sᵢ` (normal part). -/
 def cSplitSquarefreeFactorFast [CDiffField α] (Dt : DensePoly α) (p : DensePoly α) :
     List (DensePoly α) × List (DensePoly α) :=
   let ps := cSqfreeYunFF p
   let parts := ps.map (fun pf =>
     let si := CFracGcdCoreWf.cgcdFFCoreWf pf (cmonomialDeriv Dt pf)
-    let ni := cdivWf pf si
+    let ni := CPolyEuclidean.div pf si
     (ni, si))
   (parts.map Prod.fst, parts.map Prod.snd)
 
@@ -243,7 +243,7 @@ end DensePoly
 
 Everything past the three recursive bottoms is a flat composition over the leaves above plus the generic
 `CPoly.bezoutOne`, `CPoly.extendedEuclideanSplit`, `CPoly.diophantineReduced`, `cHermiteReduceTowerInnerWf`,
-`cPrimitivePolyIntegrateWf`, `cdivWf`, the selected resultant, and interpolation/evaluation routines. -/
+`cPrimitivePolyIntegrateWf`, `CPolyEuclidean.div`, the selected resultant, and interpolation/evaluation routines. -/
 
 namespace DensePoly
 
@@ -251,12 +251,12 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- Generic canonical representation over the tower:
 `canonicalRepresentationFast Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d` (`d` monic).
-Divide `a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ` (`cSplitFactorFast`); Bézout-split
+Divide `a = q·d + r` (`CPolyEuclidean.divmod`); split the denominator `d = dₛ·dₙ` (`cSplitFactorFast`); Bézout-split
 `r` over the coprime `(dₙ, dₛ)` (`CPoly.extendedEuclideanSplit` with `CPoly.bezoutOne`). Stated with `.1`/`.2`
 projections. -/
 def canonicalRepresentationFast (Dt : DensePoly α) (a d : DensePoly α) :
     DensePoly α × (DensePoly α × DensePoly α) × (DensePoly α × DensePoly α) :=
-  let qr := cdivmodWf a d
+  let qr := CPolyEuclidean.divmod a d
   let dnds := cSplitFactorFast Dt d
   let uw := CPoly.bezoutOne dnds.1 dnds.2
   let bc := CPoly.extendedEuclideanSplit dnds.1 dnds.2 qr.2 uw.1 uw.2
@@ -264,8 +264,8 @@ def canonicalRepresentationFast (Dt : DensePoly α) (a d : DensePoly α) :
 
 /-- Generic transcendental Hermite reduction `cHermiteReduceTower Dt a d = ((gnum, gden),
 (h_num, h_den))` over the tower: squarefree-factor `d` with `cSqfreeYunFF`; for each factor `(v, i)` of
-multiplicity `i ≥ 2`, run the inner loop `cHermiteReduceTowerInnerWf` (with `u = d/vⁱ` via `cdivWf`); recover
-`h_num` over the squarefree radical `Dstar` via `cdivWf`. Stated with `.1`/`.2` projections. -/
+multiplicity `i ≥ 2`, run the inner loop `cHermiteReduceTowerInnerWf` (with `u = d/vⁱ` via `CPolyEuclidean.div`); recover
+`h_num` over the squarefree radical `Dstar` via `CPolyEuclidean.div`. Stated with `.1`/`.2` projections. -/
 def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
     (DensePoly α × DensePoly α) × (DensePoly α × DensePoly α) :=
   let factors := cSqfreeYunFF d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
@@ -276,7 +276,7 @@ def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
       if i ≤ 1 then gAcc
       else
         let Vi_pow := cpow vi i
-        let u := cdivWf d Vi_pow
+        let u := CPolyEuclidean.div d Vi_pow
         let (gloc, _) := cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])
         (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))  -- gAcc + gloc
     ([CCommRing.zero], [CCommRing.one])
@@ -284,7 +284,7 @@ def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
   let gden2 := cmul g.2 g.2
   let resNum := csub (cmul a gden2) (cmul d gprimeNum)
   let resDen := cmul d gden2
-  let hNum := cdivWf (cmul resNum Dstar) resDen
+  let hNum := CPolyEuclidean.div (cmul resNum Dstar) resDen
   ((cnorm g.1, cnorm g.2), (cnorm hNum, cnorm Dstar))
 
 /-! ### The generic logarithmic part (Rothstein–Trager)
@@ -456,9 +456,9 @@ def cSPDE (Dt : DensePoly α) (a b c : DensePoly α) (n : ℤ) :
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
     if cdvd g c then
-      let a' := cdivWf a g
-      let b' := cdivWf b g
-      let c' := cdivWf c g
+      let a' := CPolyEuclidean.div a g
+      let b' := CPolyEuclidean.div b g
+      let c' := CPolyEuclidean.div c g
       if cdeg a' = 0 then
         let ainv := CField.inv (clead a')
         some (cscale ainv b', cscale ainv c', n, [CCommRing.one], [])

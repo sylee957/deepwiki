@@ -44,9 +44,9 @@ structure IsDiophantineReducedInput (p q rhs : DensePoly ℚ) : Prop where
   /-- The abstract inputs are coprime. -/
   coprime : IsCoprime (toPoly p) (toPoly q)
   /-- The computed gcd has degree zero. -/
-  gcd_degree_zero : (toPoly (DensePoly.cgcdWf p q).1).natDegree = 0
+  gcd_degree_zero : (toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0
   /-- The computed gcd is nonzero. -/
-  gcd_ne : toPoly (DensePoly.cgcdWf p q).1 ≠ 0
+  gcd_ne : toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0
 
 open Classical in
 /-- First-cofactor agreement: `CPoly.diophantineReduced` realizes `diophantineSolveReduced` through `toPoly`. -/
@@ -104,8 +104,8 @@ theorem toPoly_diophantineReduced_eq (p q rhs : DensePoly ℚ)
 
 example (p q rhs : DensePoly ℚ)
     (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
-    (hgdeg : (toPoly (DensePoly.cgcdWf p q).1).natDegree = 0)
-    (hgne : toPoly (DensePoly.cgcdWf p q).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0) :
     toPoly (CPoly.diophantineReduced p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 :=
   toPoly_diophantineReduced_fst_eq p q rhs ⟨hq, hcop, hgdeg, hgne⟩

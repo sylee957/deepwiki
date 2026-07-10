@@ -63,9 +63,9 @@ theorem cIntegrateReducedG_primitive_isIntegralResult_via_interfaces [CharZero (
     (w : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (DensePoly.cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (DensePoly.cgcdWf (DensePoly.cmul (DensePoly.cdivWf d (DensePoly.cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (DensePoly.cmul (CPolyEuclidean.div d (DensePoly.cpow x.1 (x.2 + 1)))
           (DensePoly.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (DensePoly.cgcdWf (DensePoly.cmul (DensePoly.cdivWf d (DensePoly.cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (DensePoly.cmul (CPolyEuclidean.div d (DensePoly.cpow x.1 (x.2 + 1)))
           (DensePoly.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hproper : (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2).degree)
@@ -107,9 +107,9 @@ theorem cIntegrateReducedG_hyperexp_isIntegralResult_via_interfaces [CharZero (C
     (b : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (DensePoly.cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPoly (DensePoly.cgcdWf (DensePoly.cmul (DensePoly.cdivWf d (DensePoly.cpow x.1 (x.2 + 1)))
+      (toPoly (CPolyEuclidean.gcdExt (DensePoly.cmul (CPolyEuclidean.div d (DensePoly.cpow x.1 (x.2 + 1)))
           (DensePoly.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPoly (DensePoly.cgcdWf (DensePoly.cmul (DensePoly.cdivWf d (DensePoly.cpow x.1 (x.2 + 1)))
+      ∧ toPoly (CPolyEuclidean.gcdExt (DensePoly.cmul (CPolyEuclidean.div d (DensePoly.cpow x.1 (x.2 + 1)))
           (DensePoly.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hproper : (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2).degree)
