@@ -14,6 +14,8 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 namespace DensePoly
 
 variable {α : Type*} [CField α]
@@ -22,9 +24,17 @@ variable {α : Type*} [CField α]
 
 /-- Inner residue norm at a node: `cAlgResidueNorm Dprime rho g0 g1 c = (c·D' − g₀)² − g₁²·ρ ∈ K[X]`,
 the `resultant_Y(Z·D' − g, y² − ρ)` for `g = g₀ + g₁·y`, evaluated at `Z = c`. -/
-def cAlgResidueNorm (Dprime rho g0 g1 : DensePoly α) (c : α) : DensePoly α :=
-  let zg0 := csub (cscale c Dprime) g0                  -- `c·D' − g₀`
-  csub (cmul zg0 zg0) (cmul (cmul g1 g1) rho)         -- `(c·D' − g₀)² − g₁²·ρ`
+def cAlgResidueNorm {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (Dprime rho g0 g1 : P α) (c : α) : P α :=
+  let zg0 := CPolyEngine.sub (CPolyEngine.scale c Dprime) g0       -- `c·D' − g₀`
+  CPolyEngine.sub (CPolyEngine.mul zg0 zg0)
+    (CPolyEngine.mul (CPolyEngine.mul g1 g1) rho)                  -- `(c·D' − g₀)² − g₁²·ρ`
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let N := cAlgResidueNorm (ofList [1]) (ofList [0, 1]) (ofList [0]) (ofList [1]) 2
+    CPoly.coeff N 0 = 4 ∧ CPoly.coeff N 1 = -1 := by
+  native_decide
 
 /-- The `n = 2` algebraic-residue resultant `cAlgResidueResultant D rho g0 g1 = R(Z) ∈ K[Z]`,
 `R(Z) = res_X((Z·D' − g₀)² − g₁²·ρ, D)` for `y² = ρ` and numerator `g = g₀ + g₁·y`. Computed by

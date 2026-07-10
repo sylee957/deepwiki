@@ -20,6 +20,8 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u v
+
 open scoped Differential
 
 namespace RadElem
@@ -322,11 +324,16 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpe
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The residue-norm reads through `toPoly` as the abstract norm: `toPoly (cAlgResidueNorm D'
 ρ g₀ g₁ c) = (C(toK c)·toPoly D' − toPoly g₀)² − toPoly g₁²·toPoly ρ` in `K[X]`. -/
-theorem toPolyG_cAlgResidueNorm (Dprime rho g0 g1 : DensePoly α) (c : α) :
-    DensePoly.toPoly (DensePoly.cAlgResidueNorm Dprime rho g0 g1 c)
-      = (Polynomial.C (CFieldSpec.toK c) * DensePoly.toPoly Dprime - DensePoly.toPoly g0) ^ 2
-        - DensePoly.toPoly g1 ^ 2 * DensePoly.toPoly rho := by
-  simp only [cAlgResidueNorm, denote]
+theorem toPolyG_cAlgResidueNorm {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+    (Dprime rho g0 g1 : P α) (c : α) :
+    CPoly.toPoly (DensePoly.cAlgResidueNorm Dprime rho g0 g1 c)
+      = (Polynomial.C (CFieldSpec.toK c) * CPoly.toPoly Dprime - CPoly.toPoly g0) ^ 2
+        - CPoly.toPoly g1 ^ 2 * CPoly.toPoly rho := by
+  simp only [cAlgResidueNorm, CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_scale,
+    LawfulCPolyEngine.toPoly_mul]
+  have hc : CRingSpec.toR c = CFieldSpec.toK c := rfl
+  rw [hc]
   ring
 
 omit [CDiffField α] [CDiffFieldSpec α] in

@@ -233,6 +233,9 @@ The radical-extension degree-lowering leaves are split at their real representat
 cofactor/residual, generalized log-monomial cofactor, and exponential constant cofactor are generic over
 `CPolyEngine` and execute on sparse polynomials. Case 1/2 and the exponential residual remain dense because
 they still consume the dense Euclidean/Diophantine algorithms; no generic wrapper hides that dependency.
+The algebraic residue norm `(cD' − g₀)² − g₁²ρ` and its denotation theorem are representation-independent
+as well, with sparse execution coverage. The surrounding resultant/interpolation and residue-division
+checks remain dense at their actual solver dependencies instead of duplicating those algorithms.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 
