@@ -71,8 +71,11 @@ runs the same fraction algorithm.
    representation-independent over `CPoly P`, selecting exact division through `CPolyEuclidean P`; dense
    consumers and a sparse execution witness share that core. Its rational-function denominator clearing,
    determinant, adjugate, inverse, and solve wrappers are likewise generic over `CFrac F P`; `DenseFrac`
-   consumers and a `SparseFrac` determinant witness use the same definitions. SymbolicIntegration consumers
-   request the weakest capability they need.
+   consumers and a `SparseFrac` determinant witness use the same definitions. Hermite row reduction and its
+   polynomial-matrix operations are representation-independent as well: `PolyMatrix P α` carries the
+   representation explicitly, Euclidean sweeps select `CPolyEuclidean.div`, and dense algebraic-function
+   consumers plus a sparse triangularization witness share the implementation. SymbolicIntegration
+   consumers request the weakest capability they need.
 7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;

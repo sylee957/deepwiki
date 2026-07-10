@@ -101,19 +101,20 @@ def traceMatrixAtRoot (f : DensePoly (DenseFrac ℚ)) (a : ℚ) : List (List ℚ
   (traceMatrix f (powerBasis f)).map (fun row => row.map (fun e => qEvalAtRoot e a))
 
 /-- The p-trace-radical `I_p` at a linear prime `p = x − a` `pTraceRadical f p a`: a `K[x]`-basis of
-`I_p = { z ∈ O : p ∣ Tr(z·ωⱼ) ∀j }` as a `PolyMatrix ℚ` (rows = basis vectors in power-basis coordinates).
+`I_p = { z ∈ O : p ∣ Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ` (rows = basis vectors in power coordinates).
 The kernel of `traceMatrixAtRoot f a` (`kernelBasis`) lifts to constant coordinate rows which, with the
 `p·ωᵢ` rows, generate `I_p ⊇ p·O`; `hermiteRowReduce` triangularizes to the basis. -/
-def pTraceRadical (f : DensePoly (DenseFrac ℚ)) (p : DensePoly ℚ) (a : ℚ) : PolyMatrix ℚ :=
+def pTraceRadical (f : DensePoly (DenseFrac ℚ)) (p : DensePoly ℚ) (a : ℚ) :
+    PolyMatrix DensePoly ℚ :=
   let n := cdeg f
   let kers : List (List ℚ) := kernelBasis n (traceMatrixAtRoot f a)
   -- lift each kernel vector to a constant `ℚ[x]` coordinate row (the residue generators)
-  let kerRows : PolyMatrix ℚ := kers.map (fun v => (List.range n).map (fun i => [v.getD i 0]))
+  let kerRows : PolyMatrix DensePoly ℚ := kers.map (fun v => (List.range n).map (fun i => [v.getD i 0]))
   -- the `p·ωᵢ` rows: `p` in column `i`, zero elsewhere
-  let pRows : PolyMatrix ℚ := (List.range n).map (fun i =>
+  let pRows : PolyMatrix DensePoly ℚ := (List.range n).map (fun i =>
     (List.range n).map (fun j => if i = j then p else ([] : DensePoly ℚ)))
-  let gens : PolyMatrix ℚ := kerRows ++ pRows
-  let reduced := hermiteRowReduce gens
+  let gens : PolyMatrix DensePoly ℚ := kerRows ++ pRows
+  let reduced := CPoly.hermiteRowReduce gens
   reduced.filter (fun row => !row.all cisZero)
 
 end DensePoly
@@ -207,7 +208,7 @@ def rowToAf (row : List (DensePoly ℚ)) : DensePoly (DenseFrac ℚ) := row.map 
 /-- The `I_p`-basis matrix `B` over `K(x)` `ipBasisMatrix n ipRows`: the `n×n` `DenseFrac ℚ`-matrix whose
 column `k` is the `k`-th `I_p`-basis row, `B[r][k] = CFrac.ofPoly (ipRows[k][r])` — the change of basis from the
 `I_p` basis to the power basis. -/
-def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix ℚ) : List (List (DenseFrac ℚ)) :=
+def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix DensePoly ℚ) : List (List (DenseFrac ℚ)) :=
   (List.range n).map (fun r =>
     (List.range n).map (fun k => CFrac.ofPoly ((ipRows.getD k []).getD r [])))
 
@@ -233,7 +234,7 @@ the current order basis and the `I_p` `K[x]`-basis (`pTraceRadical` output). For
 inverts the first `n` rows, and scales by `δ`: the columns of `δ·N̂⁻¹` are the idealizer basis. Returns
 `orderBasis` unchanged if any inverse is singular. -/
 def idealizerBasis (f : DensePoly (DenseFrac ℚ)) (orderBasis : List (DensePoly (DenseFrac ℚ)))
-    (ipRows : PolyMatrix ℚ) : List (DensePoly (DenseFrac ℚ)) :=
+    (ipRows : PolyMatrix DensePoly ℚ) : List (DensePoly (DenseFrac ℚ)) :=
   let n := cdeg f
   let B : List (List (DenseFrac ℚ)) := ipBasisMatrix n ipRows
   match matInv n B with
@@ -247,9 +248,9 @@ def idealizerBasis (f : DensePoly (DenseFrac ℚ)) (orderBasis : List (DensePoly
         Mj ++ acc) []
     -- clear to K[x] by a common denominator δ
     let δ : DensePoly ℚ := commonDenomQ M
-    let N : PolyMatrix ℚ := M.map (clearRow δ)
+    let N : PolyMatrix DensePoly ℚ := M.map (clearRow δ)
     -- Hermite-reduce N over K[x]; the first n rows are the upper-triangular invertible part
-    let reduced := hermiteRowReduce N
+    let reduced := CPoly.hermiteRowReduce N
     let Nhat : List (List (DenseFrac ℚ)) :=
       (List.range n).map (fun i => (List.range n).map (fun j => CFrac.ofPoly ((reduced.getD i []).getD j [])))
     match matInv n Nhat with

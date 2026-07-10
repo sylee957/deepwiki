@@ -69,7 +69,7 @@ def qfInv (M : List (List (F α))) : P α × List (List (P α)) :=
 /-- Read one entry of the fraction-free inverse representation back into the fraction carrier. -/
 def qfInvEntry (M : List (List (F α))) (i j : ℕ) : F α :=
   let dn := qfInv M
-  CCommRing.mul (CFrac.ofPoly (F := F) (CPoly.matrixGet dn.2 i j))
+  CCommRing.mul (CFrac.ofPoly (F := F) (CPoly.polyMatGet dn.2 i j))
     (CField.inv (CFrac.ofPoly (F := F) dn.1))
 
 /-- Clear a represented-fraction system and run the representation-independent Bareiss Cramer solve. -/

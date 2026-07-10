@@ -18,26 +18,24 @@ open DensePoly
 
 /-! ### A canonical (unique) Hermite normal form over `K[x]` (`canonHNF`) -/
 
-/-- Canonicalize a triangular `PolyMatrix ℚ` `canonHNF M`: scale each row so its diagonal pivot is
-monic, then reduce each above-pivot entry modulo the pivot — the unique `K[x]`-row-lattice normal form
-(matrices with the same row span have identical `canonHNF`). -/
-def canonHNF (M : PolyMatrix ℚ) : PolyMatrix ℚ :=
+/-- Canonicalize a triangular `PolyMatrix DensePoly ℚ`: make pivots monic and reduce above them. -/
+def canonHNF (M : PolyMatrix DensePoly ℚ) : PolyMatrix DensePoly ℚ :=
   let n := M.length
   -- 1. scale each row so its diagonal pivot is monic
-  let M1 : PolyMatrix ℚ := (List.range n).foldl (fun acc i =>
-    let piv := polyMatGet acc i i
+  let M1 : PolyMatrix DensePoly ℚ := (List.range n).foldl (fun acc i =>
+    let piv := CPoly.polyMatGet acc i i
     if cisZero piv then acc
-    else rowScale acc i [CField.inv (clead piv)]) M
+    else CPoly.rowScale acc i [CField.inv (clead piv)]) M
   -- 2. reduce each above-pivot entry M[k][i] (k < i) mod the monic pivot M[i][i]
   (List.range n).foldl (fun acc i =>
-    let piv := polyMatGet acc i i
+    let piv := CPoly.polyMatGet acc i i
     if cisZero piv then acc
     else
       (List.range n).foldl (fun a k =>
         if k < i then
-          let e := polyMatGet a k i
-          let q := cdivWf e piv
-          if cisZero q then a else rowSub a k i q
+          let e := CPoly.polyMatGet a k i
+          let q := CPolyEuclidean.div e piv
+          if cisZero q then a else CPoly.rowSub a k i q
         else a) acc) M1
 
 /-- `true` iff two fractional ideals have the same canonical HNF `canonHNFEq I J`: scale both to the
@@ -46,7 +44,7 @@ normal forms entrywise — a sound ideal-equality test. -/
 def canonHNFEq (I J : GenDivisor) : Bool :=
   let (δI, _) := idealClear I
   let (δJ, _) := idealClear J
-  let scale : DensePoly ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
+  let scale : DensePoly ℚ → GenDivisor → PolyMatrix DensePoly ℚ := fun c K =>
     let cc := cnorm c
     K.map (fun row => row.map (fun z =>
       let zz := qReduceNZ z
@@ -55,8 +53,8 @@ def canonHNFEq (I J : GenDivisor) : Bool :=
       cdivWf (cmul cc num) den))
   let NI := scale (cmul δI δJ) I
   let NJ := scale (cmul δI δJ) J
-  let HI := canonHNF ((hermiteRowReduce NI).filter (fun row => !row.all cisZero))
-  let HJ := canonHNF ((hermiteRowReduce NJ).filter (fun row => !row.all cisZero))
+  let HI := canonHNF ((CPoly.hermiteRowReduce NI).filter (fun row => !row.all cisZero))
+  let HJ := canonHNF ((CPoly.hermiteRowReduce NJ).filter (fun row => !row.all cisZero))
   let n := max HI.length HJ.length
   let w := max (HI.headD []).length (HJ.headD []).length
   (List.range n).all (fun i =>
@@ -77,7 +75,7 @@ are unused (kept for the uniform divisor-API signature). -/
 def idealReduce (_f : DensePoly (DenseFrac ℚ)) (_basis : List (DensePoly (DenseFrac ℚ)))
     (I : GenDivisor) : GenDivisor :=
   let (δ, N) := idealClear I
-  let H := canonHNF ((hermiteRowReduce N).filter (fun row => !row.all cisZero))
+  let H := canonHNF ((CPoly.hermiteRowReduce N).filter (fun row => !row.all cisZero))
   let dd := cnorm δ
   -- read back as the fractional ideal (1/δ)·Ĥ, then reduce every entry to lowest terms (`qReduceMat`,
   -- value-preserving via `toRatFunc_qReduce`) so the reduced representative carries no swollen factors
@@ -90,7 +88,7 @@ def idealReduce (_f : DensePoly (DenseFrac ℚ)) (_basis : List (DensePoly (Dens
 integral matrix reconstructed as a `K(x, y)` element (`wToAf basis`). For a principal ideal `g·O` the
 generator `g` is among these up to a unit. -/
 def genCandidates (basis : List (DensePoly (DenseFrac ℚ))) (I : GenDivisor) : List (DensePoly (DenseFrac ℚ)) :=
-  let H := canonHNF ((hermiteRowReduce (idealClear I).2).filter (fun row => !row.all cisZero))
+  let H := canonHNF ((CPoly.hermiteRowReduce (idealClear I).2).filter (fun row => !row.all cisZero))
   H.map (fun row => wToAf basis (row.map CFrac.ofPoly))
 
 /-- `true` iff `I` is principal `isPrincipalIdeal f basis I`: `canonHNFEq I (principalDivisor f basis

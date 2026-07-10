@@ -65,7 +65,7 @@ def principalDivisor (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (D
 
 /-- Clear a fractional ideal to `(δ, N)` with `δ = commonDenom I` and `Nᵢⱼ = δ·Iᵢⱼ` over `K[x]`, so
 `I = (1/δ)·N`. -/
-def idealClear (I : GenDivisor) : DensePoly ℚ × PolyMatrix ℚ :=
+def idealClear (I : GenDivisor) : DensePoly ℚ × PolyMatrix DensePoly ℚ :=
   let δ : DensePoly ℚ := commonDenom I
   (δ, I.map (clearRowExact δ))
 
@@ -89,8 +89,8 @@ def idealProduct (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dense
           toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk)))))
     -- clear to K[x] at a common denom δ, Hermite-reduce, take the n nonzero rows
     let δ : DensePoly ℚ := commonDenom cross
-    let N : PolyMatrix ℚ := cross.map (clearRowExact δ)
-    let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZero)
+    let N : PolyMatrix DensePoly ℚ := cross.map (clearRowExact δ)
+    let nz := (CPoly.hermiteRowReduce N).filter (fun row => !row.all cisZero)
     -- read back the first n rows as the fractional ideal (1/δ)·Nhat, then put every entry in lowest terms
     -- (`qReduceMat`, value-preserving) so the product fed back into the next `idealProduct` is canonical
     qReduceMat ((List.range n).map (fun i =>
@@ -103,9 +103,9 @@ def idealProduct (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dense
 
 /-- The Hermite normal form `idealHNF I = (δ, H)`: clear `I` to `(δ, N)`, `hermiteRowReduce` over
 `K[x]`, keep the nonzero rows normalized by `cnorm`; the presentation `(1/δ)·H`. -/
-def idealHNF (I : GenDivisor) : DensePoly ℚ × PolyMatrix ℚ :=
+def idealHNF (I : GenDivisor) : DensePoly ℚ × PolyMatrix DensePoly ℚ :=
   let (δ, N) := idealClear I
-  let H := (hermiteRowReduce N).filter (fun row => !row.all cisZero)
+  let H := (CPoly.hermiteRowReduce N).filter (fun row => !row.all cisZero)
   (cnorm δ, H.map (fun row => row.map cnorm))
 
 /-- `true` iff two fractional ideals are equal `idealEq I J`: scale both to the common denominator
@@ -114,7 +114,7 @@ def idealEq (I J : GenDivisor) : Bool :=
   let (δI, _) := idealClear I
   let (δJ, _) := idealClear J
   -- scale both ideals to the common denom δI·δJ, then compare cleared HNFs
-  let scale : DensePoly ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
+  let scale : DensePoly ℚ → GenDivisor → PolyMatrix DensePoly ℚ := fun c K =>
     let cc := cnorm c
     K.map (fun row => row.map (fun z =>
       let zz := qReduceNZ z
@@ -123,8 +123,8 @@ def idealEq (I J : GenDivisor) : Bool :=
       cdivWf (cmul cc num) den))
   let NI := scale (cmul δI δJ) I
   let NJ := scale (cmul δI δJ) J
-  let HI := (hermiteRowReduce NI).filter (fun row => !row.all cisZero)
-  let HJ := (hermiteRowReduce NJ).filter (fun row => !row.all cisZero)
+  let HI := (CPoly.hermiteRowReduce NI).filter (fun row => !row.all cisZero)
+  let HJ := (CPoly.hermiteRowReduce NJ).filter (fun row => !row.all cisZero)
   let n := max HI.length HJ.length
   let w := max (HI.headD []).length (HJ.headD []).length
   (List.range n).all (fun i =>

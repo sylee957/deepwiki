@@ -53,16 +53,16 @@ def traceMatrixOrderAtRoot (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly 
   (traceMatrix f O).map (fun row => row.map (fun e => qEvalAtRoot e a))
 
 /-- The p-trace-radical `I_p` of an order `O` in `O`-coordinates: a `K[x]`-basis of
-`I_p = { z ∈ O : p | Tr(z·ωⱼ) ∀j }` as a `PolyMatrix ℚ`, from the kernel of `traceMatrixOrderAtRoot`
+`I_p = { z ∈ O : p | Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ`, from the kernel of `traceMatrixOrderAtRoot`
 together with the `p·O` generators, Hermite-reduced to the nonzero rows. -/
 def ipOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (p : DensePoly ℚ) (a : ℚ) :
-    PolyMatrix ℚ :=
+    PolyMatrix DensePoly ℚ :=
   let n := cdeg f
   let kers : List (List ℚ) := kernelBasis n (traceMatrixOrderAtRoot f O a)
-  let kerRows : PolyMatrix ℚ := kers.map (fun v => (List.range n).map (fun i => [v.getD i 0]))
-  let pRows : PolyMatrix ℚ := (List.range n).map (fun i =>
+  let kerRows : PolyMatrix DensePoly ℚ := kers.map (fun v => (List.range n).map (fun i => [v.getD i 0]))
+  let pRows : PolyMatrix DensePoly ℚ := (List.range n).map (fun i =>
     (List.range n).map (fun j => if i = j then p else ([] : DensePoly ℚ)))
-  let reduced := hermiteRowReduce (kerRows ++ pRows)
+  let reduced := CPoly.hermiteRowReduce (kerRows ++ pRows)
   reduced.filter (fun row => !row.all cisZero)
 
 /-! ### The idealizer of an arbitrary order, in `O`-coordinates (`idealizerOCoords`)
@@ -107,7 +107,8 @@ coordinates) and `ipO` (`I_p` in `O`-coordinates), build the multiply-by-`ιⱼ`
 basis, stack, clear to `K[x]` via `commonDenom`/`clearRowExact`, Hermite-reduce, invert, and scale
 by `δ` to get the idealizer basis, mapped back to power coordinates. Returns `O` if any inverse is
 singular. -/
-def idealizerOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (ipO : PolyMatrix ℚ) :
+def idealizerOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ)))
+    (ipO : PolyMatrix DensePoly ℚ) :
     List (DensePoly (DenseFrac ℚ)) :=
   let n := cdeg f
   let B := orderToPowerMatrix n O
@@ -130,8 +131,8 @@ def idealizerOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (Dense
               (toOCoords Binv n (afMul f ιj (O.getD i []))).getD r CCommRing.zero))
           (matMul BipInv multO) ++ acc) []
       let δ : DensePoly ℚ := commonDenom M
-      let N : PolyMatrix ℚ := M.map (clearRowExact δ)
-      let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZero)
+      let N : PolyMatrix DensePoly ℚ := M.map (clearRowExact δ)
+      let nz := (CPoly.hermiteRowReduce N).filter (fun row => !row.all cisZero)
       let Nhat : List (List (DenseFrac ℚ)) := (List.range n).map (fun i =>
         (List.range n).map (fun j => CFrac.ofPoly ((nz.getD i []).getD j [])))
       match matInv n Nhat with

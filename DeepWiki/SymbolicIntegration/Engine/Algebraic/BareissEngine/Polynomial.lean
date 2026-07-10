@@ -20,22 +20,18 @@ variable {α : Type u} [CField α]
 
 /-! ### The Bareiss single-step -/
 
-/-- Entry `M[i][j]` of a represented-polynomial matrix, using the represented zero out of range. -/
-def matrixGet (M : List (List (P α))) (i j : ℕ) : P α :=
-  (M.getD i []).getD j CPoly.czero
-
 /-- One representation-independent Bareiss step with pivot index `k` and previous pivot `prevPiv`: each
 entry `[i][j]` with `i, j > k` becomes `(M[k][k]·M[i][j] − M[i][k]·M[k][j]) / prevPiv` (an exact
 division); other entries are unchanged. -/
 def bareissStep (prevPiv : P α) (k : ℕ) (M : List (List (P α))) : List (List (P α)) :=
-  let mkk := matrixGet M k k
+  let mkk := polyMatGet M k k
   (List.range M.length).map (fun i =>
     (List.range (M.getD i []).length).map (fun j =>
       if k < i ∧ k < j then
-        let num := CPolyEngine.sub (CPolyEngine.mul mkk (matrixGet M i j))
-          (CPolyEngine.mul (matrixGet M i k) (matrixGet M k j))
+        let num := CPolyEngine.sub (CPolyEngine.mul mkk (polyMatGet M i j))
+          (CPolyEngine.mul (polyMatGet M i k) (polyMatGet M k j))
         CPolyEuclidean.div num prevPiv
-      else matrixGet M i j))
+      else polyMatGet M i j))
 
 /-- Bareiss elimination driver: run `bareissStep` for pivot indices `k = 0, 1, …` carrying the previous
 pivot, one step per pivot; returns the reduced matrix whose `[n-1][n-1]` entry is `det M`. -/
@@ -43,7 +39,7 @@ def bareissDrive : ℕ → P α → ℕ → List (List (P α)) → List (List (P
   | 0, _, _, M => M
   | fuel + 1, prevPiv, k, M =>
     let M' := bareissStep prevPiv k M
-    bareissDrive fuel (matrixGet M' k k) (k + 1) M'
+    bareissDrive fuel (polyMatGet M' k k) (k + 1) M'
 
 /-- The represented-polynomial Bareiss determinant `bareissDet M`: run `bareissDrive` for `n =
 M.length` pivots and read the final pivot `M⁽ⁿ⁾[n-1][n-1]`; the empty matrix has determinant `1`. -/
@@ -52,7 +48,7 @@ def bareissDet (M : List (List (P α))) : P α :=
   if n = 0 then CPoly.one
   else
     let M' := bareissDrive n CPoly.one 0 M
-    matrixGet M' (n - 1) (n - 1)
+    polyMatGet M' (n - 1) (n - 1)
 
 /-! ### Fraction-free solve and adjugate (the inverse representation `(det, adjugate)`) -/
 
@@ -77,7 +73,7 @@ def bareissSolve (M : List (List (P α))) (b : List (P α)) : P α × List (P α
   let sol := (List.range n).map (fun i =>
     (List.range n).foldl (fun acc j =>
       CPolyEngine.add acc
-        (CPolyEngine.mul (matrixGet adj i j) (b.getD j CPoly.czero))) CPoly.czero)
+        (CPolyEngine.mul (polyMatGet adj i j) (b.getD j CPoly.czero))) CPoly.czero)
   (bareissDet M, sol)
 
 -- The same Bareiss core executes over the sparse polynomial representation.
