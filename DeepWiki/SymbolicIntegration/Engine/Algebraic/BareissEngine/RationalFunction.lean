@@ -84,7 +84,7 @@ def qfInv (M : List (List (CFrac ℚ))) : DensePoly ℚ × List (List (DensePoly
 det(M') : CFrac ℚ`, reading the `(i, j)` entry of `qfInv` back into `ℚ(x)`. -/
 def qfInvEntry (M : List (List (CFrac ℚ))) (i j : ℕ) : CFrac ℚ :=
   let dn := qfInv M
-  CCommRing.mul (CFrac.ofPoly (getEntry dn.2 i j)) (CField.inv (CFrac.ofPoly dn.1))
+  CCommRing.mul (CFrac.ofPoly (polyMatGet dn.2 i j)) (CField.inv (CFrac.ofPoly dn.1))
 
 /-- The fraction-free Cramer solve of `M·x = b` over `ℚ(x)` `qfSolve M b`: clear `M` to `M' = D·M` and
 the rhs to `D·b`, then run `bareissSolve M' (D·b)`, giving `x = (det M'·x)/det M'` with one shared

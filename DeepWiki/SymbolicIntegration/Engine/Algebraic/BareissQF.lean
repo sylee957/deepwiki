@@ -77,7 +77,7 @@ theorem qfAdjugate_mul_cuspBasis :
     let d := bareissDet M'
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
       cisZero (csub
-        ((List.range 2).foldl (fun acc k => cadd acc (cmul (getEntry M' i k) (getEntry A k j))) [])
+        ((List.range 2).foldl (fun acc k => cadd acc (cmul (polyMatGet M' i k) (polyMatGet A k j))) [])
         (if i = j then d else [])))) = true := by native_decide
 
 /-- `qfSolve` solves `M·x = b` over `ℚ(x)` on the `3×3` fraction matrix `qfFracMat3` with `b = [1, 1, 1]`:
