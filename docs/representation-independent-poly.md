@@ -243,6 +243,10 @@ callback. Each runs sparsely; their downstream resultant, linear-solve, and recu
 The rational candidate sweep had no polynomial dependency at all: `cRat` and
 `defaultResidueCandidates` now live in the symbolic-integration namespace instead of under `DensePoly`.
 The misleading qualified declarations were removed rather than retained as compatibility duplicates.
+The ordinary result-level residue-constancy predicate now mirrors the LRT one:
+`AllResiduesConstant` accepts `IntegralResult α P` and checks only its scalar coefficients, with a sparse
+result example. The dense semantic `IsIntegralResult` predicate remains dense because its field denotation
+still consumes the dense tower implementation.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

@@ -9,6 +9,8 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 open DensePoly CFrac
 
 namespace DensePoly
@@ -30,8 +32,16 @@ def IsIntegralResult (Dt anum aden : DensePoly α) (res : IntegralResult α) : P
 `cisZero [cderiv cᵢ]`). This is what upgrades the formal `IsIntegralResult` identity to a genuine
 antiderivative: `D(⟦g⟧ + Σ cᵢ·log vᵢ) = D(g) + Σ (D(cᵢ)·log vᵢ + cᵢ·Δvᵢ/vᵢ)`, and the spurious `D(cᵢ)·log vᵢ`
 vanishes exactly when each `D cᵢ = 0`. Established by the primitive integrability guard. -/
-def AllResiduesConstant (res : IntegralResult α) : Prop :=
+def AllResiduesConstant {P : Type u → Type u} {α : Type u} [CField α] [CDiffField α]
+    (res : IntegralResult α P) : Prop :=
   res.logs.all (fun cv => cisZero [CDiffField.cderiv cv.1]) = true
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let res : IntegralResult ℚ CPoly.SparsePoly :=
+      ⟨(ofList [0], ofList [1]), [((1 : ℚ), ofList [1, 1])]⟩
+    AllResiduesConstant res := by
+  rfl
 
 /-- **The genuine integral-result certificate**: the formal identity `IsIntegralResult` **and** all residues
 constant (`AllResiduesConstant`). The conjunction is what genuinely certifies `⟦g⟧ + Σ cᵢ·log vᵢ` is an
