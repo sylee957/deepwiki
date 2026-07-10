@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.IntegralBasisFull
+import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 
 /-! # Base partial derivatives for general algebraic-function curves
 
@@ -14,7 +15,7 @@ variable {α : Type*} [CField α]
 variable [CDiffField α]
 
 /-- The coefficientwise base derivative `∂f/∂x` of a general curve polynomial. -/
-def afFx (f : DensePoly α) : DensePoly α := (f : List α).map CDiffField.cderiv
+abbrev afFx (f : DensePoly α) : DensePoly α := cmapDeriv f
 
 end DensePoly
 

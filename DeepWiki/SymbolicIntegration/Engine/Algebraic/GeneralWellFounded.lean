@@ -38,7 +38,7 @@ def afYprimeWf (f : DensePoly α) : DensePoly α :=
 /-- The general derivation `afDerivWf f u = afReduce f (u.map cderiv + cderiv u · afYprimeWf f)`: the
 product rule `D(u) = Σᵢ aᵢ'·yⁱ + (Σᵢ aᵢ·i·yⁱ⁻¹)·y'`. `[CField α] [CDiffField α]`-generic. -/
 def afDerivWf (f u : DensePoly α) : DensePoly α :=
-  afReduce f (cadd ((u : List α).map CDiffField.cderiv) (cmul (cderiv u) (afYprimeWf f)))
+  afReduce f (cadd (cmapDeriv u) (cmul (cderiv u) (afYprimeWf f)))
 
 section WfInvariant
 

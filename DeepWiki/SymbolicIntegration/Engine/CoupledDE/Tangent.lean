@@ -13,21 +13,32 @@ namespace DensePoly
 
 /-! ## Tangent `t`-polynomial operations -/
 
-/-- `tanDeriv p`: tangent monomial derivation `D = ∂/∂x + (t²+1)·∂/∂t` on a `t`-polynomial over
-`ℚ[x]` (`Dt = t²+1`). -/
-def tanDeriv (p : List (DensePoly ℚ)) : List (DensePoly ℚ) :=
+/-- `tanDeriv p`: tangent monomial derivation `D = ∂/∂x + (t²+1)·∂/∂t` on a represented-coefficient
+`t`-polynomial (`Dt = t²+1`). -/
+def tanDeriv {P : Type → Type} [CPoly P] [CPolyEngine P] (p : List (P ℚ)) : List (P ℚ) :=
+  letI : CCommRing (P ℚ) := CPolyEngine.toCCommRing
   -- κ_D: coefficientwise d/dx
-  let kappa : List (DensePoly ℚ) := p.map cderiv
+  let kappa : List (P ℚ) := p.map CPolyEngine.deriv
   -- (t²+1)·dp/dt : shift the formal t-derivative by t² and by t⁰.
-  let dpdt : List (DensePoly ℚ) := (p.drop 1).zipIdx.map (fun (c, i) => cscale ((i : ℚ) + 1) c)
+  let dpdt : List (P ℚ) :=
+    (p.drop 1).zipIdx.map (fun (c, i) => CPolyEngine.scale ((i : ℚ) + 1) c)
   -- multiply dpdt by (t²+1): result_k = dpdt_{k-2} + dpdt_k
-  let mulDt : List (DensePoly ℚ) :=
+  let mulDt : List (P ℚ) :=
     (List.range (dpdt.length + 2)).map (fun k =>
-      let lo : DensePoly ℚ := if k ≥ 2 then dpdt.getD (k - 2) [] else []
-      let hi : DensePoly ℚ := dpdt.getD k []
-      cadd lo hi)
+      let lo : P ℚ := if k ≥ 2 then dpdt.getD (k - 2) CPoly.czero else CPoly.czero
+      let hi : P ℚ := dpdt.getD k CPoly.czero
+      CPolyEngine.add lo hi)
   -- add κ_D and (t²+1)dp/dt coefficientwise (over the t-degree).
   DensePoly.cadd kappa mulDt
+
+example :
+    let x : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(1, 1)]
+    let out := tanDeriv [x]
+    out.length = 2 ∧
+      CPolyEngine.cdeg (out.getD 0 CPoly.czero) = 0 ∧
+      CPolyEngine.cisZero (out.getD 0 CPoly.czero) = false ∧
+      CPolyEngine.cisZero (out.getD 1 CPoly.czero) = true := by
+  native_decide
 
 end DensePoly
 

@@ -27,6 +27,8 @@ class CPolyEngine (P : Type u → Type u) where
   mul : {α : Type u} → [CCommRing α] → P α → P α → P α
   /-- Negation. -/
   neg : {α : Type u} → [CCommRing α] → P α → P α
+  /-- Apply a coefficient function without changing the represented degree bound. -/
+  mapCoeffs : {α : Type u} → [CCommRing α] → (α → α) → P α → P α
   /-- Formal derivative. -/
   deriv : {α : Type u} → [CField α] → P α → P α
   /-- Scalar multiplication. -/
@@ -50,6 +52,10 @@ class LawfulCPolyEngine (P : Type u → Type u) [CPoly P] [CPolyEngine P] : Prop
     CPoly.toPoly (CPolyEngine.mul p q) = CPoly.toPoly p * CPoly.toPoly q
   toPoly_neg : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
     CPoly.toPoly (CPolyEngine.neg p) = - CPoly.toPoly p
+  toR_coeff_mapCoeffs : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α]
+      (f : α → α) (_hzero : CRingSpec.toR (f CCommRing.zero) = 0) (p : P α) (i : ℕ),
+    CRingSpec.toR (CPoly.coeff (CPolyEngine.mapCoeffs f p) i) =
+      CRingSpec.toR (f (CPoly.coeff p i))
   toPoly_deriv : ∀ {α : Type u} [CField α] [CFieldSpec.{u,u} α] (p : P α),
     CPoly.toPoly (CPolyEngine.deriv p) = (CPoly.toPoly p).derivative
   toPoly_scale : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (c : α) (p : P α),
@@ -76,6 +82,15 @@ def sub (p q : P α) : P α := add p (neg q)
 /-- Product of a list of engine polynomials, folded from `1`. -/
 def prod (ps : List (P α)) : P α :=
   ps.foldl (fun acc p => mul acc p) CPoly.one
+
+/-- Bundle engine operations as a local computable ring; use with `letI` to avoid global instance overlap. -/
+@[reducible] def toCCommRing : CCommRing (P α) where
+  zero := CPoly.czero
+  one := CPoly.one
+  add := add
+  mul := mul
+  neg := neg
+  isZero := cisZero
 
 /-- Engine subtraction denotes polynomial subtraction. -/
 theorem toPoly_sub [LawfulCPolyEngine P] [CRingSpec.{u,u} α] (p q : P α) :
@@ -106,6 +121,7 @@ instance instEngineList : CPolyEngine List where
   add := DensePoly.cadd
   mul := DensePoly.cmul
   neg := DensePoly.cneg
+  mapCoeffs f p := (p : List _).map f
   deriv := DensePoly.cderiv
   scale := DensePoly.cscale
   cnorm := DensePoly.cnorm
@@ -125,6 +141,11 @@ instance instLawfulEngineList : LawfulCPolyEngine List where
   toPoly_neg p := by
     change CPoly.toPoly (DensePoly.cneg p) = _
     rw [toPoly_list_eq, DensePoly.toPolyG_cnegG, ← toPoly_list_eq]
+  toR_coeff_mapCoeffs f hzero p i := by
+    change CRingSpec.toR (((p : List _).map f).getD i CCommRing.zero) =
+      CRingSpec.toR (f ((p : List _).getD i CCommRing.zero))
+    simp only [List.getD_eq_getElem?_getD, List.getElem?_map]
+    cases (p : List _)[i]? <;> simp [hzero, CRingSpec.toR_zero]
   toPoly_deriv p := by
     change CPoly.toPoly (DensePoly.cderiv p) = _
     rw [toPoly_list_eq, DensePoly.toPolyG_cderivG, ← toPoly_list_eq]
@@ -169,6 +190,10 @@ namespace CPolyEngine
 /-- Engine negation on the dense representation is concrete dense negation. -/
 @[simp] theorem neg_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
     CPolyEngine.neg p = DensePoly.cneg p := rfl
+
+/-- Engine coefficient mapping on the dense representation is concrete list mapping. -/
+@[simp] theorem mapCoeffs_dense_eq {α : Type u} [CCommRing α] (f : α → α) (p : DensePoly α) :
+    CPolyEngine.mapCoeffs f p = (p : List α).map f := rfl
 
 /-- The engine degree on the dense representation is the concrete dense degree. -/
 @[simp] theorem cdeg_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
@@ -218,6 +243,7 @@ instance instEngineSparse : CPolyEngine CPoly.SparsePoly where
   add := CPoly.add
   mul := CPoly.mul
   neg := CPoly.neg
+  mapCoeffs f p := CPoly.ofFn (CPoly.degBound p) (fun i => f (CPoly.coeff p i))
   deriv := CPoly.cderiv
   scale := CPoly.scale
   cnorm := CPoly.cnorm
@@ -231,6 +257,15 @@ instance instLawfulEngineSparse : LawfulCPolyEngine CPoly.SparsePoly where
   toPoly_add p q := by change CPoly.toPoly (CPoly.add p q) = _; exact CPoly.toPoly_add p q
   toPoly_mul p q := by change CPoly.toPoly (CPoly.mul p q) = _; exact CPoly.toPoly_mul p q
   toPoly_neg p := by change CPoly.toPoly (CPoly.neg p) = _; exact CPoly.toPoly_neg p
+  toR_coeff_mapCoeffs f hzero p i := by
+    change CRingSpec.toR
+        (CPoly.coeff
+          (CPoly.ofFn (CPoly.degBound p) (fun j => f (CPoly.coeff p j))) i) = _
+    rw [CPoly.coeff_ofFn]
+    split
+    · rfl
+    · rename_i hi
+      rw [CPoly.coeff_ge p i (Nat.le_of_not_gt hi), CRingSpec.toR_zero, hzero]
   toPoly_deriv p := by
     change CPoly.toPoly (CPoly.cderiv p) = (CPoly.toPoly p).derivative
     exact CPoly.toPoly_cderiv p

@@ -14,6 +14,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
 
 /-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
 
@@ -107,7 +108,8 @@ end DensePoly
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+  {α : Type u} [CField α] [CDiffField α]
 
 /-! ### The generic Rothstein–Trager numerator `a − c·Dd`
 
@@ -117,8 +119,40 @@ residue `c` — the shared building block of the fuel-free residue resultant / l
 
 /-- Generic `a − c·Dd` `cAmcDd Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
 the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
-def cAmcDd (Dt a d : DensePoly α) (c : α) : DensePoly α :=
-  csub a (cscale c (cmonomialDeriv Dt d))
+def cAmcDd (Dt a d : P α) (c : α) : P α :=
+  CPolyEngine.sub a (CPolyEngine.scale c (cmonomialDeriv Dt d))
+
+/-- Generic `cAmcDd` specializes to the concrete dense engine operations. -/
+theorem cAmcDd_dense_eq (Dt a d : DensePoly α) (c : α) :
+    cAmcDd Dt a d c = csub a (cscale c (cmonomialDeriv Dt d)) := rfl
+
+end DensePoly
+
+namespace CPolyEngine
+
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine P]
+  {α : Type u} [CField α] [CFieldSpec.{u,u} α] [CDiffField α] [CDiffFieldSpec.{u,u} α]
+
+/-- Generic `cAmcDd` denotes the Rothstein–Trager numerator `a - c·Dd`. -/
+@[denote] theorem toPoly_cAmcDd (Dt a d : P α) (c : α) :
+    CPoly.toPoly (DensePoly.cAmcDd Dt a d c) =
+      CPoly.toPoly a - Polynomial.C (CFieldSpec.toK c) *
+        Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly d) := by
+  rw [DensePoly.cAmcDd, toPoly_sub, LawfulCPolyEngine.toPoly_scale,
+    toPoly_cmonomialDeriv]
+  simp only [toR_eq_toK]
+
+end CPolyEngine
+
+namespace DensePoly
+
+example :
+    CPolyEngine.cisZero
+      (cAmcDd
+        (CPoly.SparsePoly.ofList [(0, (1 : ℚ))])
+        (CPoly.SparsePoly.ofList [(1, 2)])
+        (CPoly.SparsePoly.ofList [(2, 1)]) 1) = true := by
+  native_decide
 
 end DensePoly
 

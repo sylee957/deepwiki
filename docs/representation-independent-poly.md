@@ -162,7 +162,16 @@ evaluator for `SparsePoly`, and carries the corresponding `Polynomial.eval` deno
 The representation-independent coupled-DE surface now also includes the Gaussian-pair helpers used by
 tangent cancellation: coefficient scaling, evaluation at `i`, pair multiplication/subtraction/zero-test,
 and synthetic division by `t-i`. Dense reconstruction proofs cross explicit definitional-specialization
-lemmas, while a sparse `native_decide` example validates the same pair arithmetic on `SparsePoly`.
+lemmas. The tangent derivation is generic too and has a sparse `native_decide` check; the recursive
+`cCoupledDECancelTan` driver and its reconstruction theorem remain on the dense frontier.
+
+Coefficientwise and monomial differentiation now cross the representation boundary as well.
+`CPolyEngine.mapCoeffs` preserves the dense engine's exact `List.map` computation and has a lawful
+coefficient square for zero-preserving maps; `cmapDeriv` and `cmonomialDeriv` use that operation and have
+generic denotation theorems plus sparse execution coverage. The shared Rothstein–Trager numerator
+`cAmcDd` is generic on top of them. The duplicate dense implementation `afFx` is now a semantic
+abbreviation of `cmapDeriv`, and `afDerivWf` reuses the same canonical operation instead of re-spelling
+the coefficient map.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

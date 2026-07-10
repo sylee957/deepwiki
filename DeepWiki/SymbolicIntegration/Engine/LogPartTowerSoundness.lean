@@ -28,7 +28,7 @@ omit [Algebra ℚ (CFieldSpec.K α)] in
     toPoly (cAmcDd Dt a d c)
       = toPoly a - Polynomial.C (CFieldSpec.toK c)
           * Differential.implicitDeriv (toPoly Dt) (toPoly d) := by
-  rw [cAmcDd]
+  rw [DensePoly.cAmcDd_dense_eq]
   simp only [denote]
 
 /-! ### The RT residue identity: `logResidueSum = a/d` from the residue match -/

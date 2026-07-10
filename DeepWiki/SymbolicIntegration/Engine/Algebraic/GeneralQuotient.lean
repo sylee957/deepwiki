@@ -51,8 +51,7 @@ variable [CDiffField α] [CDiffFieldSpec α]
 /-- `afFx` reads as coefficientwise base derivation through `toPoly`. -/
 theorem mapCoeffs_toPolyG_eq_afFx (f : DensePoly α) :
     Differential.mapCoeffs (toPoly f) = toPoly (afFx f) := by
-  rw [afFx, ← cmapDeriv]
-  simp only [denote]
+  exact (toPolyG_cmapDeriv f).symm
 
 end DensePoly
 
