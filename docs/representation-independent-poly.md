@@ -138,7 +138,7 @@ what makes *either* route safe. It does not make the aggregate small: the engine
 re-derivation effort, correctly scoped here rather than faked by breaking the 120 `native_decide` suites.
 
 The first consumer migration has landed: `cCoupledDESystem` is generic over `[CPoly P]
-`[CPolyEngine P]`, preserves the dense-list computation definitionally, and runs the same worked solve
+[CPolyEngine P]`, preserves the dense-list computation definitionally, and runs the same worked solve
 on `SparsePoly`. Its dense soundness proof crosses a named specialization lemma, so existing downstream
 theorems remain unchanged while the executable solver itself is representation-independent.
 
@@ -146,6 +146,12 @@ The next component has also landed: `CPolyEngine` now exposes formal differentia
 subtraction with their `LawfulCPolyEngine` denotation laws. `coupledClearedCheck` and its soundness theorem
 are representation-generic (and execute on `SparsePoly`), while `cDerivMonomialQ` is the first generic
 parallel-integration helper; both retain the original dense computation definitionally.
+
+The parallel-result validation path is now generic as well: `CPolyEngine.prod` folds the representation's
+own multiplication from the existing generic `CPoly.one`, while `cParallelResultDerivQ` and
+`cParallelCheckQ` run unchanged on dense and sparse polynomials. The accumulator reuses `CPoly.czero`;
+that constructor and its denotation theorem were moved from the division module into
+`PolyReprDenote.lean` instead of introducing a duplicate engine-zero API.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

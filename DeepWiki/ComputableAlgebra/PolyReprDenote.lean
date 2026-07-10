@@ -76,6 +76,10 @@ theorem toPoly_mul (p q : P α) : toPoly (mul p q) = toPoly p * toPoly q := by
 It runs on any `CPoly` (dense or sparse) and is correct by the multiplicative square — the pattern
 every higher algorithm (division, gcd, …) follows when built bottom-up on the interface. -/
 
+omit [CRingSpec α] in
+/-- The zero polynomial as a length-0 representation. -/
+def czero : P α := ofFn 0 (fun _ => CCommRing.zero)
+
 /-- The multiplicative unit `1` as a length-1 representation. -/
 def one : P α := ofFn 1 (fun _ => CCommRing.one)
 
@@ -91,6 +95,13 @@ theorem toPoly_one : (toPoly (one : P α)) = 1 := by
   rcases Nat.eq_zero_or_pos k with rfl | hk
   · simp [CRingSpec.toR_one]
   · rw [if_neg (by omega), CRingSpec.toR_zero, Polynomial.coeff_one, if_neg (by omega)]
+
+/-- `toPoly czero = 0`. -/
+theorem toPoly_czero : (toPoly (czero : P α)) = 0 := by
+  apply Polynomial.ext
+  intro k
+  rw [coeff_toPoly, czero, coeff_ofFn, if_neg (by omega), CRingSpec.toR_zero,
+    Polynomial.coeff_zero]
 
 /-- **`cpow` correctness:** `toPoly (cpow p n) = (toPoly p) ^ n` — representation-generic. -/
 theorem toPoly_cpow (p : P α) (n : ℕ) : toPoly (cpow p n) = (toPoly p) ^ n := by

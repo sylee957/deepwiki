@@ -22,19 +22,6 @@ namespace DeepWiki.SymbolicIntegration.CPoly
 -- the ambient binder off them avoids an overlapping-instance diamond.
 variable {P : Type u → Type u} [CPoly P] {α : Type u}
 
-/-- The zero polynomial as a length-0 representation. -/
-def czero [CCommRing α] : P α := ofFn 0 (fun _ => CCommRing.zero)
-
-section Spec
-variable [CCommRing α] [CRingSpec α]
-
-/-- `toPoly czero = 0`. -/
-theorem toPoly_czero : (toPoly (czero : P α)) = 0 := by
-  apply Polynomial.ext; intro k
-  rw [coeff_toPoly, czero, coeff_ofFn, if_neg (by omega), CRingSpec.toR_zero, Polynomial.coeff_zero]
-
-end Spec
-
 /-- Euclidean division `cdivmodCore fuel p q = (quotient, remainder)` over a computable field: each step
 cancels `p`'s leading term against `q`. -/
 def cdivmodCore [CField α] : ℕ → P α → P α → P α × P α

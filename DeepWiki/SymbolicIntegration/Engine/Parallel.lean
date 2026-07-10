@@ -212,6 +212,8 @@ def cParallelIntegrate (Dt a d : DensePoly ℚ) :
     let logs : List (ℚ × DensePoly ℚ) := (List.zip cs ps).filter (fun (c, _) => c ≠ 0)
     some ((cnorm b, s), logs)
 
+end DensePoly
+
 /-! ### The cleared antiderivative identity `D(∫f) = f` — the validation predicate
 
 The returned `((b, s), [(cⱼ, pⱼ)])` reconstructs `∫f = b/s + Σⱼ cⱼ·log(pⱼ)`, whose derivative is the
@@ -221,35 +223,44 @@ check `D(∫f) = a/d` by the *cleared* identity `num·d − a·den = 0` (`cisZer
 
 /-- **Derivative of a parallel-integration result, as a single fraction** `cParallelResultDerivQ Dt
 ((b,s), logs) = (num, den)` with `num/den = D(b/s + Σ cⱼ log pⱼ) = (Db·s − b·Ds)/s² + Σ cⱼ·Dpⱼ/pⱼ`. The
-common denominator is `s²·∏pⱼ`; the numerator is assembled over it. Used by the cleared `D(∫f) = f`
-check. -/
-def cParallelResultDerivQ (Dt : DensePoly ℚ)
-    (res : (DensePoly ℚ × DensePoly ℚ) × List (ℚ × DensePoly ℚ)) : DensePoly ℚ × DensePoly ℚ :=
+common denominator is `s²·∏pⱼ`; the numerator is assembled in any polynomial-engine representation. -/
+def cParallelResultDerivQ {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt : P ℚ)
+    (res : (P ℚ × P ℚ) × List (ℚ × P ℚ)) : P ℚ × P ℚ :=
   let ((b, s), logs) := res
   let ps := logs.map Prod.snd
-  let prodPs := cprod ps
-  let s2 := cmul s s
-  let den := cmul s2 prodPs                                        -- `s²·∏pⱼ`
+  let prodPs := CPolyEngine.prod ps
+  let s2 := CPolyEngine.mul s s
+  let den := CPolyEngine.mul s2 prodPs                              -- `s²·∏pⱼ`
   -- rational part `D(b/s) = (Db·s − b·Ds)/s²`, over `den`: numerator `(Db·s − b·Ds)·∏pⱼ`.
   let Ds := cDerivMonomialQ Dt s
-  let ratNum := cmul (csub (cmul (cDerivMonomialQ Dt b) s) (cmul b Ds)) prodPs
+  let ratNum := CPolyEngine.mul
+    (CPolyEngine.sub (CPolyEngine.mul (cDerivMonomialQ Dt b) s) (CPolyEngine.mul b Ds)) prodPs
   -- log part `Σ cⱼ·Dpⱼ/pⱼ`, over `den`: `Σ cⱼ·Dpⱼ·s²·∏_{k≠j}pₖ`.
-  let logNum : DensePoly ℚ := (logs.zipIdx).foldl (fun acc ((c, pj), j) =>
-    let others := cprod (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
-    cadd acc (cscale c (cmul (cmul (cDerivMonomialQ Dt pj) s2) others))) []
-  (cadd ratNum logNum, den)
+  let logNum : P ℚ := (logs.zipIdx).foldl (fun acc ((c, pj), j) =>
+    let others := CPolyEngine.prod
+      (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
+    CPolyEngine.add acc (CPolyEngine.scale c
+      (CPolyEngine.mul (CPolyEngine.mul (cDerivMonomialQ Dt pj) s2) others)))
+    CPoly.czero
+  (CPolyEngine.add ratNum logNum, den)
 
-/-- **The cleared antiderivative check** `cParallelCheckQ fuel Dt a d res`: `true` iff the
+/-- **The cleared antiderivative check** `cParallelCheckQ Dt a d res`: `true` iff the
 parallel-integration result `res = ((b,s), logs)` satisfies `D(b/s + Σ cⱼ log pⱼ) = a/d` as rational
 functions over `ℚ(t)`, decided by `cisZero (num·d − a·den)` where `(num, den) =
 cParallelResultDerivQ … res`. This is the faithful `D(∫f) = f` certificate (no equality decision on
-`CFrac ℚ` needed — the polynomial cross-difference is `cisZero`-tested over `ℚ`). -/
-def cParallelCheckQ (Dt a d : DensePoly ℚ)
-    (res : (DensePoly ℚ × DensePoly ℚ) × List (ℚ × DensePoly ℚ)) : Bool :=
+`CFrac ℚ` needed — the polynomial cross-difference is zero-tested in the engine representation). -/
+def cParallelCheckQ {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt a d : P ℚ)
+    (res : (P ℚ × P ℚ) × List (ℚ × P ℚ)) : Bool :=
   let (num, den) := cParallelResultDerivQ Dt res
-  cisZero (csub (cmul num d) (cmul a den))
+  CPolyEngine.cisZero (CPolyEngine.sub (CPolyEngine.mul num d) (CPolyEngine.mul a den))
 
-end DensePoly
+example :
+    cParallelCheckQ
+      (CPoly.SparsePoly.ofList [(0, 1)] : CPoly.SparsePoly ℚ)
+      (CPoly.SparsePoly.ofList [(0, 1)])
+      (CPoly.SparsePoly.ofList [(0, 1)])
+      ((CPoly.SparsePoly.ofList [(1, 1)], CPoly.SparsePoly.ofList [(0, 1)]), []) = true := by
+  native_decide
 
 /-! ### The genuine tower `ℚ(x)[t]` — documented signature stub
 

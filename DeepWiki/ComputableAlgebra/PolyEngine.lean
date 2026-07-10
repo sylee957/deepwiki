@@ -69,10 +69,30 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
 /-- Subtraction derived from the engine's addition and negation. -/
 def sub (p q : P α) : P α := add p (neg q)
 
+/-- Product of a list of engine polynomials, folded from `1`. -/
+def prod (ps : List (P α)) : P α :=
+  ps.foldl (fun acc p => mul acc p) CPoly.one
+
 /-- Engine subtraction denotes polynomial subtraction. -/
 theorem toPoly_sub [LawfulCPolyEngine P] [CRingSpec.{u,u} α] (p q : P α) :
     CPoly.toPoly (sub p q) = CPoly.toPoly p - CPoly.toPoly q := by
   rw [sub, LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_neg, sub_eq_add_neg]
+
+/-- An engine polynomial product denotes the product of the denoted factors. -/
+theorem toPoly_prod [LawfulCPolyEngine P] [CRingSpec.{u,u} α] (ps : List (P α)) :
+    CPoly.toPoly (prod ps) = (ps.map CPoly.toPoly).prod := by
+  have hfold : ∀ (xs : List (P α)) (init : P α),
+      CPoly.toPoly (xs.foldl (fun acc p => mul acc p) init) =
+        CPoly.toPoly init * (xs.map CPoly.toPoly).prod := by
+    intro xs
+    induction xs with
+    | nil => intro init; simp
+    | cons p ps ih =>
+      intro init
+      rw [List.foldl_cons, ih, LawfulCPolyEngine.toPoly_mul]
+      simp only [List.map_cons, List.prod_cons]
+      ring
+  rw [prod, hfold, CPoly.toPoly_one, one_mul]
 
 end CPolyEngine
 
@@ -140,6 +160,10 @@ namespace CPolyEngine
 /-- Engine subtraction on the dense representation is concrete dense subtraction. -/
 @[simp] theorem sub_dense_eq {α : Type u} [CCommRing α] (p q : DensePoly α) :
     CPolyEngine.sub p q = DensePoly.csub p q := rfl
+
+/-- Engine list products on the dense representation are concrete dense products. -/
+@[simp] theorem prod_dense_eq {α : Type u} [CCommRing α] (ps : List (DensePoly α)) :
+    CPolyEngine.prod ps = DensePoly.cprod ps := rfl
 
 end CPolyEngine
 
