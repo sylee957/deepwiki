@@ -12,6 +12,8 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 open RadElem DensePoly
 
 namespace DensePoly
@@ -27,14 +29,25 @@ rather than baked to the formal `θ' = 1`. -/
 leading term of `C` for any derivation `der` (with `B' = der B`). Degree `m = deg C − deg g`, leading
 coefficient `b = lcf(C)/κ` with `κ = lcf(der(θ^m)·f + θ^m·g)`. Returns `[]` when `deg C < deg f`. Generic
 over `[CField α]`. -/
-def radCase3CofactorTower (der : DensePoly α → DensePoly α) (f g C : DensePoly α) : DensePoly α :=
-  if cisZero C || cdeg C < cdeg f then []
+def radCase3CofactorTower {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (der : P α → P α) (f g C : P α) : P α :=
+  if CPolyEngine.cisZero C || CPolyEngine.cdeg C < CPolyEngine.cdeg f then
+    CPolyEngine.ofCoeffList []
   else
-    let m := cdeg C - cdeg g                                      -- `deg B`, so `deg(B·g) = deg C`
-    let trial := cshift m [CCommRing.one]                            -- the unit cofactor `θ^m`
-    let κ := clead (cadd (cmul (der trial) f) (cmul trial g))  -- per-unit-`b` leading contribution
-    let b := CField.div (clead C) κ                               -- `b = lcf(C)/κ`
-    cshift m [b]                                                   -- `b·θ^m`
+    let m := CPolyEngine.cdeg C - CPolyEngine.cdeg g               -- `deg B`, so `deg(B·g) = deg C`
+    let trial := CPolyEngine.monomial CCommRing.one m               -- the unit cofactor `θ^m`
+    let κ := CPolyEngine.clead (CPolyEngine.add
+      (CPolyEngine.mul (der trial) f) (CPolyEngine.mul trial g))    -- per-unit-`b` contribution
+    let b := CField.div (CPolyEngine.clead C) κ                     -- `b = lcf(C)/κ`
+    CPolyEngine.monomial b m                                       -- `b·θ^m`
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let f := ofList [0, 1]
+    let g := ofList [1 / 2]
+    let C := ofList [0, 1, 1]
+    CPoly.coeff (radCase3CofactorTower CPolyEngine.deriv f g C) 2 = 2 / 5 := by
+  native_decide
 
 /-! ### The iterated Case-3 reduction with the actual derivation
 

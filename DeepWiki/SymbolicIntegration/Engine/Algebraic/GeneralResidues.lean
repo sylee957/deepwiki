@@ -38,8 +38,19 @@ def qToPolyQ (v : CFrac ℚ) : DensePoly ℚ :=
 constant-in-`y` term `z·D'(x)` (`CFrac.ofPoly [z] · Dder`, a singleton `DensePoly`) minus `g`. Its only
 `Z`-dependent coefficient is the `y⁰` one, so `res_Y` of this against `F` has `Z`-degree
 `≤ deg_y F = n`. `Dder = D'(x) ∈ K(x)` is supplied by the caller. -/
-def zDderMinus (g : DensePoly (CFrac ℚ)) (Dder : CFrac ℚ) (z : ℚ) : DensePoly (CFrac ℚ) :=
-  csub [CCommRing.mul (CFrac.ofPoly [z]) Dder] g
+def zDderMinus {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (g : P (CFrac ℚ)) (Dder : CFrac ℚ) (z : ℚ) : P (CFrac ℚ) :=
+  CPolyEngine.sub
+    (CPolyEngine.ofCoeffList [CCommRing.mul (CFrac.ofPoly [z]) Dder]) g
+
+example :
+    let ofList : List (CFrac ℚ) → CPoly.SparsePoly (CFrac ℚ) := CPolyEngine.ofCoeffList
+    let g := ofList [CFrac.ofPoly [1], CCommRing.one]
+    let r := zDderMinus g (CFrac.ofPoly [2]) (3 : ℚ)
+    CCommRing.isZero (CField.sub (CPoly.coeff r 0) (CFrac.ofPoly [5])) = true ∧
+      CCommRing.isZero (CField.sub (CPoly.coeff r 1)
+        (CCommRing.neg (CCommRing.one : CFrac ℚ))) = true := by
+  native_decide
 
 /-- `resYAtNode f g Dder z = res_Y(z·D'(X) − g(X, Y), F(X, Y))` at the rational node `Z = z`,
 read as a `ℚ[X]`-polynomial: the resultant in `y` (`cresultantG fuelY` over the field

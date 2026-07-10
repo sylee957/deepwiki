@@ -23,10 +23,17 @@ def gcuspCubicYsq : DensePoly (CFrac ℚ) := afBasisElem 2
 def qxMon (k : ℕ) : CFrac ℚ := CFrac.ofPoly (cshift k [(1 : ℚ)])
 
 /-- The ansatz monomials `xʲ * wᵢ` over an integral basis. -/
-def afRatMonomials (basis : List (DensePoly (CFrac ℚ))) (degBound : ℕ) :
-    List (DensePoly (CFrac ℚ)) :=
+def afRatMonomials {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (basis : List (P (CFrac ℚ))) (degBound : ℕ) : List (P (CFrac ℚ)) :=
   basis.flatMap (fun wi =>
-    (List.range (degBound + 1)).map (fun j => cscale (qxMon j) wi))
+    (List.range (degBound + 1)).map (fun j => CPolyEngine.scale (qxMon j) wi))
+
+example :
+    let ofList : List (CFrac ℚ) → CPoly.SparsePoly (CFrac ℚ) := CPolyEngine.ofCoeffList
+    let basis := [ofList [CCommRing.one]]
+    let ms := afRatMonomials basis 1
+    CCommRing.isZero (CField.sub (CPoly.coeff (ms.getD 1 (ofList [])) 0) (qxMon 1)) = true := by
+  native_decide
 
 /-- The integral basis of the cuspidal cubic `y³ = x²`. -/
 def gcuspCubicBasis : List (DensePoly (CFrac ℚ)) := integralBasis gcuspCubicF

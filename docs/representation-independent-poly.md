@@ -236,6 +236,10 @@ they still consume the dense Euclidean/Diophantine algorithms; no generic wrappe
 The algebraic residue norm `(cD' − g₀)² − g₁²ρ` and its denotation theorem are representation-independent
 as well, with sparse execution coverage. The surrounding resultant/interpolation and residue-division
 checks remain dense at their actual solver dependencies instead of duplicating those algorithms.
+Three more algebraic construction leaves now share the engine interface: `zDderMinus` injects the
+node-dependent constant before the dense double-resultant stage, `afRatMonomials` scales a supplied basis,
+and `radCase3CofactorTower` computes the leading cofactor through a representation-generic derivative
+callback. Each runs sparsely; their downstream resultant, linear-solve, and recursive drivers stay dense.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 
