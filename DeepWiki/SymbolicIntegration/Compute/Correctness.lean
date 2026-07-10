@@ -165,12 +165,12 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
       linear_combination hsc
 
 /-- Rational-function read of a `QFun` into `RatFunc ℚ`: `(num, den) ↦ toPoly num / toPoly den`. -/
-noncomputable def toQFun (x : QFun) : RatFunc ℚ :=
+noncomputable def toQFun (x : QFun ℚ) : RatFunc ℚ :=
   algebraMap ℚ[X] (RatFunc ℚ) (toPoly x.1) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly x.2)
 
 /-- `QFun.qadd` realizes rational-function addition (for nonzero denominators):
 `toQFun (QFun.qadd x y) = toQFun x + toQFun y`. -/
-theorem toQFun_qadd (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
+theorem toQFun_qadd (x y : QFun ℚ) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
     toQFun (QFun.qadd x y) = toQFun x + toQFun y := by
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
@@ -190,7 +190,7 @@ theorem toQFun_qzero : toQFun QFun.qzero = 0 := by
   simp [toQFun, QFun.qzero, DensePoly.toPolyG_nil]
 
 /-- `QFun.qadd x y` has nonzero denominator when both `x` and `y` do. -/
-theorem toPoly_qadd_den_ne_zero {x y : QFun} (hx : toPoly x.2 ≠ 0) (hy : toPoly y.2 ≠ 0) :
+theorem toPoly_qadd_den_ne_zero {x y : QFun ℚ} (hx : toPoly x.2 ≠ 0) (hy : toPoly y.2 ≠ 0) :
     toPoly (QFun.qadd x y).2 ≠ 0 := by
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
@@ -199,7 +199,7 @@ theorem toPoly_qadd_den_ne_zero {x y : QFun} (hx : toPoly x.2 ≠ 0) (hy : toPol
   exact mul_ne_zero hx hy
 
 /-- A `QFun.qadd` fold denotes the seed plus the sum of the entries. -/
-theorem toQFun_foldl_qadd (gs : List QFun) (init : QFun) (hinit : toPoly init.2 ≠ 0)
+theorem toQFun_foldl_qadd (gs : List (QFun ℚ)) (init : QFun ℚ) (hinit : toPoly init.2 ≠ 0)
     (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
     toQFun (gs.foldl QFun.qadd init) = toQFun init + (gs.map toQFun).sum := by
   induction gs generalizing init with

@@ -201,7 +201,7 @@ and `A ← C − B'·D*/D⁻*` (book `(B,C) = (8x²+4, x⁴−2x²+16x+4)` then 
 abbrev ex_2_2_3 := @DeepWiki.SymbolicIntegration.hermiteMack_trace_octic
 
 /-- **Example 2.2.1, the computable Hermite reduction** (§2.2, p.40–41): the genuinely `#eval`-able
-quadratic-Hermite engine `hermiteReduce` over `DensePoly ℚ := List ℚ` runs on
+generic tower-Hermite engine `cHermiteReduceTower [1]` specialized to `DensePoly ℚ := List ℚ` runs on
 `(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)` and returns the rational part `g = gnum/gden` plus the residual
 `B/Dstar` with `Dstar` squarefree. The squarefree factorization `D = x²·(x²+2)³` comes out as
 `[(x,2),(x²+2,3)]` (`hermite_ex221_factors`); the residual is `(x²+2)/(x³+2x) = 1/x` — the book's
@@ -209,18 +209,18 @@ quadratic-Hermite engine `hermiteReduce` over `DensePoly ℚ := List ℚ` runs o
 abbrev ex_2_2_1_compute_factors := @DeepWiki.SymbolicIntegration.Compute.hermite_ex221_factors
 
 /-- **Example 2.2.1, the computable Hermite residual** (§2.2, p.41): the residual log integrand of
-`hermiteReduce` on the octic is `B/Dstar = (x²+2)/(x³+2x) = 1/x`, matching the book's remaining
+`cHermiteReduceTower [1]` on the octic is `B/Dstar = (x²+2)/(x³+2x) = 1/x`, matching the book's remaining
 `∫ dx/x`. The library's `Compute.hermite_ex221_residual` (`native_decide`). -/
 abbrev ex_2_2_1_compute_residual := @DeepWiki.SymbolicIntegration.Compute.hermite_ex221_residual
 
 /-- **Example 2.2.1, the computable Hermite rational part matches the book** (§2.2, p.41): the rational
-part `g = gnum/gden` computed by `hermiteReduce` equals — as a rational function — the book's explicit
+part `g = gnum/gden` computed by `cHermiteReduceTower [1]` equals — as a rational function — the book's explicit
 `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)`. The library's `Compute.hermite_ex221_g_eq_book` (`native_decide`,
 cross-multiplied). -/
 abbrev ex_2_2_1_compute_g := @DeepWiki.SymbolicIntegration.Compute.hermite_ex221_g_eq_book
 
 /-- **Example 2.2.1, the computable Hermite correctness certificate** (§2.2, p.41): the cleared
-polynomial identity certifying `(gnum/gden)' + B/Dstar = A/D` for the computed `hermiteReduce` output —
+polynomial identity certifying `(gnum/gden)' + B/Dstar = A/D` for the computed tower-Hermite output —
 independent of the exact spelling of `g`. The library's `Compute.hermite_ex221_cleared_identity`
 (`native_decide`). -/
 abbrev ex_2_2_1_compute_identity :=

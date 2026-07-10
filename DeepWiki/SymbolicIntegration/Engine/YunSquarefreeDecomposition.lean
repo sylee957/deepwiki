@@ -5,7 +5,6 @@ import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Engine.SquarefreeDecomposition
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYunLoop
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
-import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
 /-! # Correctness of the fuel-free Yun factorization `cSqfreeYunFF`
 

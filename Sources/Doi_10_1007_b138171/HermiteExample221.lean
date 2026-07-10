@@ -1,13 +1,13 @@
-import DeepWiki.SymbolicIntegration.HermiteCorrectness
+import DeepWiki.SymbolicIntegration.Compute.Hermite.ResidualCorrectness
 import DeepWiki.SymbolicIntegration.Engine.YunSquarefreeDecomposition
 
 /-! # Bronstein Example 2.2.1 — Hermite reduction worked example
 
-The `native_decide`-validated run of the computable Hermite engine (`HermiteCompute`) on
+The `native_decide`-validated run of the generic tower Hermite engine specialized to `ℚ[x]` on
 Bronstein §2.2, Example 2.2.1 (p.40–41):
 `f = (x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)`, `D = x²(x²+2)³`,
 `∫ f = 1/x + 6x/(x²+2)² − (x−3)/(x²+2) + ∫ dx/x`. The general algorithm and its abstract
-correctness live in `DeepWiki/SymbolicIntegration/` (`HermiteCompute`, `HermiteCorrectness`);
+correctness lives in the generic `Engine/Hermite` development;
 this catalog file carries the book-specific concrete witnesses (the pinned output, the cleared
 polynomial certificate, and the upgraded `RatFunc ℚ` correctness identities). -/
 
@@ -33,7 +33,7 @@ def cD221 : DensePoly ℚ := [0, 0, 8, 0, 12, 0, 6, 0, 1]
 -- **Example 2.2.1, the computed Hermite reduction** `((gnum, gden), (B, Dstar))`. Book answer:
 -- `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)`, residual `B/Dstar = 1/x` (so `∫ dx/x`),
 -- `Dstar = x·(x²+2) = x³+2x`.
-#eval hermiteReduce 40 cA221 cD221
+#eval DensePoly.cHermiteReduceTower ([1] : DensePoly ℚ) cA221 cD221
 
 /-- **Example 2.2.1: `D` factors as `x²·(x²+2)³`** (§2.2, p.40): the Yun squarefree factorization of
 `D = x⁸+6x⁶+12x⁴+8x²` is `[(x, 2), (x²+2, 3)]` — the factor `x` of multiplicity `2` and `x²+2` of
@@ -46,7 +46,8 @@ radical computed is `Dstar = x³ + 2x = x·(x²+2)` (`[0, 2, 0, 1]`) and the res
 `B = x² + 2` (`[2, 0, 1]`), so `B/Dstar = (x²+2)/(x(x²+2)) = 1/x` — exactly the book's remaining
 `∫ dx/x`. Proved by `native_decide`. -/
 theorem hermite_ex221_residual :
-    (hermiteReduce 40 cA221 cD221).2 = ([2, 0, 1], [0, 2, 0, 1]) := by native_decide
+    (DensePoly.cHermiteReduceTower ([1] : DensePoly ℚ) cA221 cD221).2 =
+      ([2, 0, 1], [0, 2, 0, 1]) := by native_decide
 
 /-- **Example 2.2.1: the Hermite reduction is correct** (§2.2, p.41) — the polynomial **correctness
 certificate** for `∫ A/D = (gnum/gden) + ∫ B/Dstar`. As rational functions `(gnum/gden)' + B/Dstar =
@@ -55,7 +56,8 @@ A/D`; clearing the common denominator `D·gden²` (using `Dstar ∣ D`) gives th
 exact spelling of `g`**, that the computed `g = gnum/gden` is the rational part of `∫A/D` and `B/Dstar`
 the residual purely-logarithmic part. Proved by `native_decide`. -/
 theorem hermite_ex221_cleared_identity :
-    let ((gnum, gden), (B, Dstar)) := hermiteReduce 40 cA221 cD221
+    let ((gnum, gden), (B, Dstar)) :=
+      DensePoly.cHermiteReduceTower ([1] : DensePoly ℚ) cA221 cD221
     let gprimeNum := csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))
     let gden2 := cmul gden gden
     cnorm (cmul (csub (cmul cA221 gden2) (cmul cD221 gprimeNum)) Dstar)
@@ -63,14 +65,15 @@ theorem hermite_ex221_cleared_identity :
 
 /-- **The book's rational part `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)`** over the common denominator
 `x·(x²+2)² = x⁵+4x³+4x`: numerator `3x³+8x²+6x+4` (`[4, 6, 8, 3]`), denominator `[0, 4, 0, 4, 0, 1]`. -/
-def cBookG221 : QFun := ([4, 6, 8, 3], [0, 4, 0, 4, 0, 1])
+def cBookG221 : QFun ℚ := ([4, 6, 8, 3], [0, 4, 0, 4, 0, 1])
 
 /-- **Example 2.2.1: the computed rational part equals the book's `g`** (§2.2, p.41): the computed
-`g = gnum/gden` from `hermiteReduce` equals — *as a rational function* — the book's explicit
+`g = gnum/gden` from `cHermiteReduceTower [1]` equals — *as a rational function* — the book's explicit
 `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)` (`cBookG221`). Cross-multiplied: `gnum·(book den) = (book num)·gden`.
 Proved by `native_decide` — the computed Hermite rational part matches the book exactly. -/
 theorem hermite_ex221_g_eq_book :
-    let ((gnum, gden), _) := hermiteReduce 40 cA221 cD221
+    let ((gnum, gden), _) :=
+      DensePoly.cHermiteReduceTower ([1] : DensePoly ℚ) cA221 cD221
     let (bn, bd) := cBookG221
     cnorm (cmul gnum bd) = cnorm (cmul bn gden) := by native_decide
 

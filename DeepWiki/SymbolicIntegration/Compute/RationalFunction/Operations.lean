@@ -13,7 +13,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-- Lowest-terms reduction `qnorm (a, b) = (a/q, b/q)` (`q = gcd(a, b)`) scaled so the
 denominator is monic; the zero fraction stays `QFun.qzero`. -/
-def qnorm (x : QFun) : QFun :=
+def qnorm (x : QFun ℚ) : QFun ℚ :=
   let (a, b) := x
   if cisZero a then QFun.qzero
   else

@@ -1,6 +1,6 @@
 import DeepWiki.Algebra.ListProducts
 import DeepWiki.ComputableAlgebra.PolyReprDense
-import DeepWiki.SymbolicIntegration.HermiteCorrectness
+import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 /-! # Interface: `LawfulSquarefreeDecomposition`
 

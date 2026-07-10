@@ -7,7 +7,7 @@ import Mathlib.Data.List.Sigma
 
 /-! # `Q`-regularity over the tower fraction field
 
-The valuation notion behind Hermite pole-cancellation, ported from `HermiteCorrectness.IsQRegular`
+The valuation notion behind Hermite pole-cancellation
 (over `ℚ`, `d/dx`) to the tower carrier `RatFunc (CFieldSpec.K α)` with the monomial derivation
 `towerFractionFieldDeriv Dt`. `IsQRegular Q f` says `f` has a representation with denominator coprime
 to `Q` — i.e. no `Q`-pole. The pure lemmas (`add`, `dvd_num_of_isQRegularG`) copy the abstract proofs;
