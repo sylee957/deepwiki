@@ -43,12 +43,12 @@ runs the same fraction algorithm.
 6. **Abstract algorithm capabilities — IN PROGRESS.** Introduce Prop-free/lawful pairs for polynomial
    gcd/division, resultant/subresultant, and linear solve. The first slice is `CLinearSolve`/
    `LawfulCLinearSolve`, with the rational RREF implementation as its instance and the coupled-DE
-   consumer now requesting the capability rather than `cConstSolveUniqueQ` directly. The second slice is
-   `CPolyGcd`/`LawfulCPolyGcd` now selects gcd for raw-fraction reduction, while
+   consumer now requesting the capability rather than `cConstSolveUniqueQ` directly. In the second slice,
+   `CPolyGcd`/`LawfulCPolyGcd` selects gcd for raw-fraction reduction, while
    `CPolyEuclidean`/`LawfulCPolyEuclidean` selects division and extended Bézout: dense polynomials use the
    well-founded engine, sparse polynomials use the generic `CPoly` engine, and the rational-function
-   exact-division bridge consumes only the capability. Concrete dense and generic implementations become instances;
-   SymbolicIntegration consumers request the weakest capability they need.
+   exact-division bridge consumes only the capability. Concrete dense and generic implementations become
+   instances; SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;
