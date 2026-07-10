@@ -243,15 +243,14 @@ The engine's `native_decide` fact `radDeriv_radGen_eq` (`ComputableRadicalExtens
 (3x²/(2(x³+1)))·√(x³+1)` over `α = CFrac ℚ ≅ ℚ(x)`, `n = 2`, `f = x³+1` — now follows from the **general
 theorem** `RadElem.toPolyG_radDeriv_radGen` specialized to that base, *without* `native_decide`. The
 abstract `toPoly`-equality in `K[X]` (`K = CFieldSpec.K (CFrac ℚ)`) is the faithful field-level
-statement; `DensePoly.cisZero (DensePoly.csub …) = true` is its `cisZero`-test form, here a corollary of the abstract
-identity rather than a separate kernel computation. -/
+statement and subsumes the separate native zero-test example. -/
 
 open RadElem
 
 /-- **★ `∫ (3x²/(2(x³+1)))·√(x³+1) dx = √(x³+1)` over `ℚ(x)`, abstractly** — `D(√(x³+1)) =
 (3x²/(2(x³+1)))·√(x³+1)` as the genuine-field identity `toPoly (radDeriv 2 (x³+1) radGen) = toPoly [0,
-3x²/(2(x³+1))]` in `K[X]`, `K = CFieldSpec.K (CFrac ℚ)`. The engine's `native_decide` carrier check
-`radDeriv_radGen_eq` proven as a corollary of the general `toPolyG_radDeriv_radGen` — the first concrete
+3x²/(2(x³+1))]` in `K[X]`, `K = CFieldSpec.K (CFrac ℚ)`. This strengthens the engine's
+`native_decide` carrier check `radDeriv_radGen_eq` via the general `toPolyG_radDeriv_radGen` — the first concrete
 **algebraic** integral verified abstractly (`[propext, Classical.choice, Quot.sound]`, no
 `native_decide`). The radicand `radicandX3p1 = x³+1` and the integrand coefficient `logDerRadicand 2
 radicandX3p1 = radicandLogDer = 3x²/(2(x³+1))` are the engine's own definitions. -/
@@ -260,14 +259,6 @@ theorem radDeriv_radGen_sound_qx :
       = DensePoly.toPoly ([CCommRing.zero, radicandLogDer] : RadElem (CFrac ℚ)) := by
   rw [toPolyG_radDeriv_radGen]
   rfl
-
-/-- The abstract zero-test form of the `√(x³+1)` radical-generator derivative. -/
-theorem cisZero_radDeriv_radGen_qx :
-    DensePoly.cisZero (DensePoly.csub (radDeriv 2 radicandX3p1 (radGen : RadElem (CFrac ℚ)))
-        [CCommRing.zero, radicandLogDer]) = true := by
-  rw [DensePoly.cisZeroG_iff, DensePoly.toPolyG_csubG]
-  simp only [denote, radDeriv_radGen_sound_qx]
-  ring
 
 /-! ### Bridge (i): the `CFrac.ofPoly : DensePoly ℚ → CFrac ℚ` lift commutes with the derivation
 
@@ -807,7 +798,6 @@ headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 
 -- ★ The concrete elliptic-radicand integral over ℚ(x), abstractly (the engine's native_decide fact):
 #print axioms radDeriv_radGen_sound_qx
-#print axioms cisZero_radDeriv_radGen_qx
 
 -- ★ The FRACTION-coefficient single-step iff (the named-run lift `[0, CFrac.ofPoly N / CFrac.ofPoly ρ]`):
 #print axioms RadElem.isRadicalRationalIntegral_div_ofPoly_iff

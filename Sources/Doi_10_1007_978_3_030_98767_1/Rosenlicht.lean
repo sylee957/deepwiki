@@ -34,8 +34,9 @@ abbrev liouville_theorem_algebraic := @weakLiouville_finiteDimensional
 
 /-- **Liouville's theorem as the algebraic-completeness frontier — a THEOREM** (§p.963, the structural
 content): the `AlgebraicLiouvilleFrontier` (base non-elementarity propagates up a Liouville extension)
-holds, proved by the Liouville-form descent. The library's `algebraicLiouvilleFrontier_proved`. -/
-abbrev algebraicLiouvilleFrontier := @algebraicLiouvilleFrontier_proved
+holds, proved by the Liouville-form descent. The library's `algebraicLiouville_single_extension`. -/
+abbrev algebraicLiouvilleFrontier :=
+  @DeepWiki.SymbolicIntegration.AlgebraicCompleteness.algebraicLiouville_single_extension
 
 /-- **Liouville's theorem, unconditional finite-algebraic discharge** (§pp.966–969): with the
 `[IsLiouville]` hypothesis dropped, base non-elementarity propagates up any finite-dimensional extension —

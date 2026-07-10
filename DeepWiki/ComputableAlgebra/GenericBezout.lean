@@ -264,17 +264,6 @@ example (A D Dd : K[X]) (c : K) :
   rtResultantSeed_eval A D Dd c
 
 open Polynomial in
-/-- Each `t`-coefficient of `A.map C - C z * Dd.map C` has `z`-degree `≤ 1`. -/
-theorem natDegree_coeff_rtResultantSeed_g_le (A Dd : K[X]) (k : ℕ) :
-    ((A.map (C : K →+* K[X]) - C Polynomial.X * Dd.map (C : K →+* K[X])).coeff k).natDegree ≤ 1 := by
-  rw [Polynomial.coeff_sub, Polynomial.coeff_map, Polynomial.coeff_C_mul, Polynomial.coeff_map]
-  refine (natDegree_sub_le _ _).trans (max_le ?_ ?_)
-  · rw [Polynomial.natDegree_C]; exact Nat.zero_le 1
-  · refine (Polynomial.natDegree_mul_le (p := (Polynomial.X : K[X]))
-      (q := Polynomial.C (Dd.coeff k))).trans ?_
-    rw [Polynomial.natDegree_X, Polynomial.natDegree_C]
-
-open Polynomial in
 /-- `(rtResultantSeed A D Dd).natDegree ≤ D.natDegree`: degree in `z` bounded by `deg D`. -/
 theorem natDegree_rtResultantSeed_le (A D Dd : K[X]) :
     (rtResultantSeed A D Dd).natDegree ≤ D.natDegree := by
@@ -286,7 +275,7 @@ theorem natDegree_rtResultantSeed_le (A D Dd : K[X]) :
     refine j.addCases (fun j₁ => ?_) (fun j₁ => ?_)
     · simp only [Fin.addCases_left]
       split_ifs with h
-      · exact natDegree_coeff_rtResultantSeed_g_le A Dd _
+      · exact natDegree_coeff_map_sub_C_X_mul_map_le_one A Dd _
       · simp
     · simp only [Fin.addCases_right]
       split_ifs with h

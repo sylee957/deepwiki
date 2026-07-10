@@ -318,16 +318,6 @@ theorem lazardRiobooTrager_output_isSimilar_gcd_gen {K : Type*} [Field K] [IsAlg
 to any field `K` and arbitrary `B`; the same determinant estimate also bounds the bivariate
 subresultant coefficients used by interpolation uniqueness. -/
 
-/-- Each `z`-coefficient of `A.map C − C z · B.map C` has `natDegree ≤ 1` (linear in `z`). -/
-theorem natDegree_coeff_rtResultantGen_g_le (A B : K[X]) (k : ℕ) :
-    ((A.map (C : K →+* K[X]) - C Polynomial.X * B.map (C : K →+* K[X])).coeff k).natDegree ≤ 1 := by
-  rw [Polynomial.coeff_sub, Polynomial.coeff_map, Polynomial.coeff_C_mul, Polynomial.coeff_map]
-  refine (natDegree_sub_le _ _).trans (max_le ?_ ?_)
-  · rw [Polynomial.natDegree_C]; exact Nat.zero_le 1
-  · refine (Polynomial.natDegree_mul_le (p := (Polynomial.X : K[X]))
-      (q := Polynomial.C (B.coeff k))).trans ?_
-    rw [Polynomial.natDegree_X, Polynomial.natDegree_C]
-
 /-- `rtResultantGen A D B` has `z`-degree `≤ deg D`. -/
 theorem natDegree_rtResultantGen_le (A D B : K[X]) :
     (rtResultantGen A D B).natDegree ≤ D.natDegree := by
@@ -339,7 +329,7 @@ theorem natDegree_rtResultantGen_le (A D B : K[X]) :
     refine j.addCases (fun j₁ => ?_) (fun j₁ => ?_)
     · simp only [Fin.addCases_left]
       split_ifs with h
-      · exact natDegree_coeff_rtResultantGen_g_le A B _
+      · exact natDegree_coeff_map_sub_C_X_mul_map_le_one A B _
       · simp
     · simp only [Fin.addCases_right]
       split_ifs with h
@@ -423,7 +413,7 @@ theorem natDegree_coeff_lrtSubresultantGen_le (A D B : K[X]) (j k : ℕ) :
     split_ifs
     · rw [Polynomial.coeff_map, Polynomial.natDegree_C]; omega
     · simp
-    · exact natDegree_coeff_rtResultantGen_g_le A B _
+    · exact natDegree_coeff_map_sub_C_X_mul_map_le_one A B _
     · simp
   by_cases hk : k < j + 1
   · have hcoeff : (lrtSubresultantGen A D B j).coeff k

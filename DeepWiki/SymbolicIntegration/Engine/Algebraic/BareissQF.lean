@@ -147,9 +147,7 @@ theorem qfInvFlatMaxDeg_lt : qfInvFlatMaxDeg < 41 := by native_decide
 /-! #### A `maxHeartbeats` witness that the fraction-free path is cheap -/
 
 set_option maxHeartbeats 400000 in
-/-- The swell win `qfSwellWin` evaluates within a tight `maxHeartbeats 400000` budget, evidencing that
-the fraction-free `qfDet`/`qfInv` path is the cheap one. -/
-theorem qfHeavyHeartbeats :
+example :
     qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvFracMaxTotalDeg := by native_decide
 
 /-! ### `#print axioms` for the `ℚ(x)` Bareiss validations -/
@@ -173,6 +171,5 @@ theorem qfHeavyHeartbeats :
 #print axioms qfDetFracTotalDeg_eq
 #print axioms qfInvFracMaxTotalDeg_eq
 #print axioms qfInvFlatMaxDeg_lt
-#print axioms qfHeavyHeartbeats
 
 end DeepWiki.SymbolicIntegration

@@ -56,15 +56,6 @@ theorem hasWeakLiouvilleForm_iff_isAlgebraicElementary
     (K : Type*) [Field K] [Differential K] [Algebra F K] (g : F) :
     HasWeakLiouvilleForm F K g ↔ IsAlgebraicElementary F K g := Iff.rfl
 
-omit [CharZero F] in
-/-- `AlgebraicLiouvilleFrontier F` follows from the
-`HasWeakLiouvilleForm ↔ IsAlgebraicElementary` bridge and Liouville descent. -/
-theorem algebraicLiouvilleFrontier_proved : AlgebraicLiouvilleFrontier F := by
-  intro K _ _ _ _ _ f h hK
-  rw [← hasWeakLiouvilleForm_iff_isAlgebraicElementary] at hK
-  rw [← hasWeakLiouvilleForm_iff_isAlgebraicElementary] at h
-  exact weakLiouville_propagates F K f h hK
-
 /-- The actual `AlgebraicLiouvilleFrontier` for the finite-dimensional case, `[IsLiouville F K]`
 dropped: base non-elementarity propagates up every finite-dimensional `K / F`. -/
 theorem isAlgebraicElementary_finiteDimensional_discharge
@@ -83,7 +74,7 @@ section Restatements
 -- The algebraic-completeness frontier follows from Liouville descent.
 example (F : Type*) [Field F] [Differential F] [CharZero F] :
     DeepWiki.SymbolicIntegration.AlgebraicCompleteness.AlgebraicLiouvilleFrontier F :=
-  algebraicLiouvilleFrontier_proved F
+  DeepWiki.SymbolicIntegration.AlgebraicCompleteness.algebraicLiouville_single_extension F
 
 -- Finite-dimensional extensions preserve non-elementarity in the Weak Liouville form.
 example (F : Type*) [Field F] [Differential F] [CharZero F]
