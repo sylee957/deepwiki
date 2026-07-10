@@ -16,7 +16,8 @@ import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
-import DeepWiki.SymbolicIntegration.Compute.RtResultant
+import DeepWiki.SymbolicIntegration.Engine.ResidueResultantTowerSpec
+import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
 import Sources.Doi_10_1007_b138171.Exercise22
 import DeepWiki.SymbolicIntegration.Compute.Hermite
@@ -1121,21 +1122,21 @@ rendering of `R(t) = res_x(D, A − t·D')` over the dense coefficient carrier `
 Euclidean-PRS identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q,r)`; the bivariate RT
 resultant is recovered, staying univariate, by evaluation + Lagrange interpolation
 (`DensePoly.cinterpolate`).
-The library's `rtResultantCompute`, with `cderiv` (computable derivative, `DensePoly.toPolyG_cderivG` bridge) and
+The library's `cResidueResultantTower [1]`, with the computable monomial derivative and
 the generic `CPoly.csquarefreePart`, agrees with `rtResultant` by
-`toPoly_rtResultantCompute_eq_rtResultant`. -/
-def rtResultant_compute := @DeepWiki.SymbolicIntegration.Compute.rtResultantCompute
+`toPolyG_cResidueResultantTower_one_eq_rtResultant`. -/
+def rtResultant_compute (A D : DensePoly ℚ) :=
+  DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) A D
 
-/-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `rtResultantCompute` on
+/-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `cResidueResultantTower [1]` on
 `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4` evaluates (by `native_decide`) to
 `[45796, 0, 549552, 0, 2198208, 0, 2930944]` = the book's `res_x(D, A−t·D') = 45796·(4t²+1)³` (eq 2.7),
 whose normalized `CPoly.csquarefreePart` is `[1/4, 0, 1]`, the book's primitive `R(t) = 4t²+1`. The
 library's `rtResultant_ex241` / `rtResultant_ex241_sqfree` — the RT resultant engine actually *runs* and
 returns the book's answer. -/
 theorem ex_2_4_1_compute :
-    DeepWiki.SymbolicIntegration.Compute.rtResultantCompute
-        DeepWiki.SymbolicIntegration.Compute.cA241
-        DeepWiki.SymbolicIntegration.Compute.cD241
+    DensePoly.cResidueResultantTower ([1] : DensePoly ℚ)
+        DeepWiki.SymbolicIntegration.Compute.cA241 DeepWiki.SymbolicIntegration.Compute.cD241
       = [45796, 0, 549552, 0, 2198208, 0, 2930944] :=
   DeepWiki.SymbolicIntegration.Compute.rtResultant_ex241
 

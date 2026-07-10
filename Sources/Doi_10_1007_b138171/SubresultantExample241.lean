@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultantCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
+import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
 
 /-! # Example 2.4.1 worked example (Bronstein §2.4, p.48): the honest ℚ[t] LRT closure
 
@@ -29,26 +30,29 @@ def cD241 : DensePoly ℚ := [4, 0, 5, 0, -5, 0, 1]
 -- **Example 2.4.1, the computed RT resultant** `R(t) = res_x(D, A − t·D')`. The book (p.48) states
 -- this is exactly `45796·(4t²+1)³ = [45796, 0, 549552, 0, 2198208, 0, 2930944]`; its primitive
 -- squarefree part is the book's `R = 4t²+1`.
-#eval rtResultantCompute cA241 cD241
+#eval DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA241 cD241
 
 -- **Example 2.4.1, the squarefree part** `R / gcd(R, R')`, normalized: the book's `4t²+1` (up to scalar).
-#eval cmonic (CPoly.csquarefreePart (rtResultantCompute cA241 cD241))
+#eval cmonic (CPoly.csquarefreePart
+  (DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA241 cD241))
 
-/-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `rtResultantCompute` on
+/-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `cResidueResultantTower [1]` on
 `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4` evaluates (by `native_decide`; kernel `decide` stalls on the
 GMP-backed `ℚ` arithmetic) to `[45796, 0, 549552, 0, 2198208, 0, 2930944]`, which is **exactly the
 book's** `res_x(D, A−t·D') = 45796·(4t²+1)³` (eq 2.7, p.48): `(4t²+1)³ = 64t⁶+48t⁴+12t²+1`, and
 `45796·[1,12,48,64] = [45796, 549552, 2198208, 2930944]` in the even-degree slots. This demonstrates
 the computable Rothstein–Trager resultant engine actually runs and returns the book's resultant. -/
 theorem rtResultant_ex241 :
-    rtResultantCompute cA241 cD241 = [45796, 0, 549552, 0, 2198208, 0, 2930944] := by
+    DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA241 cD241 =
+      [45796, 0, 549552, 0, 2198208, 0, 2930944] := by
   native_decide
 
 /-- **Example 2.4.1, the primitive part is the book's `R = 4t²+1`** (§2.4, p.48): the squarefree
 (monic radical) part of the resultant `45796·(4t²+1)³` is `t² + 1/4` = `[1/4, 0, 1]` (monic `4t²+1`),
 exactly the book's `R(t) = 4t²+1` up to the leading-coefficient scalar. Proved by `native_decide`. -/
 theorem rtResultant_ex241_sqfree :
-    cmonic (CPoly.csquarefreePart (rtResultantCompute cA241 cD241)) = [1/4, 0, 1] := by
+    cmonic (CPoly.csquarefreePart
+      (DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA241 cD241)) = [1/4, 0, 1] := by
   native_decide
 
 /-! ### Example 2.4.1 (§2.4/§2.6, p.48/54): `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4`,
@@ -114,13 +118,18 @@ open Polynomial in
 /-- **Example 2.4.1, the honest `ℚ[t]` Rothstein–Trager resultant** (§2.4, p.48, eq 2.7): the
 *noncomputable* `rtResultant (toPoly cA241) (toPoly cD241)` equals `45796·(4t²+1)³` as an honest
 polynomial in `ℚ[t]`. Routes the `native_decide`-validated computation (`rtResultant_ex241`) through the
-proven agreement `toPoly_rtResultantCompute_eq_rtResultant` (monic `D`, `deg A < deg D`) and the
+proven agreement `toPolyG_cResidueResultantTower_one_eq_rtResultant` (monic `D`, `deg A < deg D`) and the
 closed-form read `toPoly_ex241_value`. This is the honest equation behind the residue multiplicities. -/
 theorem rtResultant_ex241_eq :
     rtResultant (toPoly cA241) (toPoly cD241)
       = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
-  rw [← toPoly_rtResultantCompute_eq_rtResultant cA241 cD241 monic_toPoly_cD241
-    natDegree_cA241_lt_cD241, rtResultant_ex241, toPoly_ex241_value]
+  have hresult := toPolyG_cResidueResultantTower_one_eq_rtResultant cA241 cD241
+    (by simpa only [toPoly_eq_dense] using monic_toPoly_cD241)
+    (by simpa only [toPoly_eq_dense] using natDegree_cA241_lt_cD241)
+  rw [← show toPoly (DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA241 cD241)
+      = rtResultant (toPoly cA241) (toPoly cD241) from by
+        simpa only [toPoly_eq_dense] using hresult,
+    rtResultant_ex241, toPoly_ex241_value]
 
 /-! ### Closing Example 2.4.1: the residue ring `ℚ[t]/(4t²+1)` and `IsDomain`
 The concrete agreement `lrtGcdCompute_isSimilar_lrtSubresultant_concrete` needs a residue map

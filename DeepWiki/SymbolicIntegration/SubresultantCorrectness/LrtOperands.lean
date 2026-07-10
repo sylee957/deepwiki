@@ -11,22 +11,17 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-! ### Identifying the LRT operands: the computable lifts realize `D.map C`, `A - t*D'` -/
 
-/-- `toPoly (cC c) = C c`: the constant-`DensePoly ℚ` lift realizes the `ℚ[X]` constant. -/
-@[simp] theorem toPoly_cC (c : ℚ) : toPoly (cC c) = Polynomial.C c := by
-  simp [cC, toPoly_eq_dense, DensePoly.toPolyG_cnormG, DensePoly.toPolyG_cons,
-    toR_eq_toK, CFieldSpec.toK_rat]
-
 /-- `toBPoly (liftCtoBPoly p) = (toPoly p).map C`: `liftCtoBPoly` realizes the coefficient embedding. -/
 theorem toBPoly_liftCtoBPoly (p : DensePoly ℚ) :
     toBPoly (liftCtoBPoly p) = (toPoly p).map (Polynomial.C : ℚ →+* ℚ[X]) := by
   induction p with
   | nil => simp [liftCtoBPoly]
   | cons a as ih =>
-    show toBPoly (cC a :: liftCtoBPoly as) = _
-    rw [toBPoly_cons, ih, toPoly_cC]
-    simp only [toPoly_eq_dense]
-    rw [DensePoly.toPolyG_cons, toR_eq_toK, CFieldSpec.toK_rat, Polynomial.map_add, Polynomial.map_mul,
-      Polynomial.map_X, Polynomial.map_C]
+    show toBPoly (cnorm [a] :: liftCtoBPoly as) = _
+    rw [toBPoly_cons, ih]
+    simp only [toPoly_eq_dense, DensePoly.toPolyG_cnormG, DensePoly.toPolyG_cons,
+      DensePoly.toPolyG_nil, mul_zero, add_zero, toR_eq_toK, CFieldSpec.toK_rat]
+    rw [Polynomial.map_add, Polynomial.map_mul, Polynomial.map_X, Polynomial.map_C]
 
 /-- `toPoly ctVar = X`: the computable `t`-variable lifts to the indeterminate `X ∈ ℚ[t]`. -/
 @[simp] theorem toPoly_ctVar : toPoly ctVar = (Polynomial.X : ℚ[X]) := by

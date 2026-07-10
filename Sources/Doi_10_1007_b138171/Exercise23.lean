@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
+import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
 
 /-! # Computing Bronstein Exercise 2.3 with the executable LRT engine (§2.9, p.72)
 **Exercise 2.3** asks to compute, by Rothstein–Trager or Lazard–Rioboo–Trager,
@@ -74,15 +75,18 @@ def cR23full : DensePoly ℚ :=
    -13214217409385836237364920320, 15556524718983817104036200448, -11892577979384454690876948480,
    5766090564628913275243855872, -1621712378874467003179991040, 202714028968345223804485632]
 
-/-- **Exercise 2.3: the engine computes `R(t)`** — `rtResultantCompute` on `A, D`, scaled by `35` to
+/-- **Exercise 2.3: the engine computes `R(t)`** — `cResidueResultantTower [1]` on `A, D`, scaled by `35` to
 clear interpolation denominators, returns the degree-8 integer resultant `cR23full`. Proved by
 `native_decide`. -/
-theorem ex_2_3_resultant : cscale 35 (rtResultantCompute cA23 cD23) = cR23full := by native_decide
+theorem ex_2_3_resultant :
+    cscale 35 (DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA23 cD23) = cR23full := by
+  native_decide
 
 /-- **The monic squarefree Rothstein–Trager resultant `R(t)`** of Exercise 2.3 (the radical of the
 degree-8 resultant, made monic over `ℚ`): the polynomial `ℚ[t]/(R)` over which the LRT log argument is
 normalized. The residues are its roots. -/
-def cR23 : DensePoly ℚ := cmonic (CPoly.csquarefreePart (rtResultantCompute cA23 cD23))
+def cR23 : DensePoly ℚ := cmonic (CPoly.csquarefreePart
+  (DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA23 cD23))
 
 /-- **Exercise 2.3: `R(t)` is degree 8** (eight distinct residues): the monic squarefree resultant has
 `9` coefficients. Proved by `native_decide`. -/

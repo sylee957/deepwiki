@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Compute.RtResultant
+import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
 /-! # Computable bivariate subresultant gcd / log argument over `ℚ[t]`
@@ -143,7 +143,7 @@ def bsubresultantGcd (fuel : ℕ) (j : ℕ) (P Q : BPoly) : BPoly :=
 
 /-- Lift a `DensePoly ℚ` (`= ℚ[x]`) into `BPoly`: `liftCtoBPoly p` makes each `x`-coefficient `aᵢ` the
 constant `ℚ[t]` polynomial `[aᵢ]`. -/
-def liftCtoBPoly (p : DensePoly ℚ) : BPoly := p.map cC
+def liftCtoBPoly (p : DensePoly ℚ) : BPoly := p.map (fun c => cnorm [c])
 
 /-- The variable `t` as a `DensePoly ℚ`: `ctVar = [0, 1]`. -/
 def ctVar : DensePoly ℚ := [0, 1]
@@ -169,7 +169,7 @@ def lrtGcdCompute (fuel : ℕ) (j : ℕ) (R A D : DensePoly ℚ) : BPoly :=
 /-- Logarithmic part of `∫A/D`: `lrtLogPart fuel A D` returns the `(Qᵢ, Sᵢ)` pairs meaning
 `∫A/D = ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`, for squarefree `D`. -/
 def lrtLogPart (fuel : ℕ) (A D : DensePoly ℚ) : List (DensePoly ℚ × BPoly) :=
-  let R := rtResultantCompute A D
+  let R := DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) A D
   (DensePoly.cSqfreeYunFactors R).map (fun (Qi, i) => (Qi, lrtGcdCompute fuel i Qi A D))
 
 

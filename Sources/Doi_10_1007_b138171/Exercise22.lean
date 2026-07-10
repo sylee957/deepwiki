@@ -56,9 +56,10 @@ def cR22 : DensePoly ℚ :=
    3496864403205884928, -3396064845300158976, 3917651441502789888, -3496048353394587648,
    1973139744286936320, -665922498162245632, 83240312270280704]
 
-/-- **Exercise 2.2: the engine computes `R(t) = cR22`** — `rtResultantCompute` on `A, D` returns the
+/-- **Exercise 2.2: the engine computes `R(t) = cR22`** — `cResidueResultantTower [1]` on `A, D` returns the
 degree-10 integer resultant `cR22`. Proved by `native_decide`. -/
-theorem ex_2_2_resultant : rtResultantCompute cA22 cD22 = cR22 := by native_decide
+theorem ex_2_2_resultant :
+    DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA22 cD22 = cR22 := by native_decide
 
 /-- **Exercise 2.2: `R(t)` is squarefree** — its Yun factorization is the single pair `(monic R, 1)`,
 i.e. one squarefree factor of multiplicity one (all ten residues distinct). So no nontrivial
