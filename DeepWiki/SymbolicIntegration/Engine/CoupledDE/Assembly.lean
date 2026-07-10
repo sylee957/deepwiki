@@ -12,22 +12,6 @@ namespace DeepWiki.SymbolicIntegration.DensePoly
 
 open Polynomial
 
-/-- Over ℚ, `toPoly` coefficient = list getD (toK = id). -/
-theorem toPolyG_coeff_q (p : DensePoly ℚ) (i : ℕ) : (toPoly p).coeff i = p.getD i 0 := by
-  rw [toPolyG_coeff]; rfl
-
-/-- `cnorm` never grows the length: `(cnorm p).length ≤ p.length`. -/
-theorem cnormG_length_le (p : DensePoly ℚ) : (cnorm p : List ℚ).length ≤ p.length := by
-  induction p with
-  | nil => simp [cnorm]
-  | cons a as ih =>
-    rw [cnorm]
-    cases h : cnorm as with
-    | nil =>
-      by_cases ha : CCommRing.isZero a <;> simp [ha, List.length_cons]
-    | cons b bs =>
-      rw [h] at ih; simp only [List.length_cons] at ih ⊢; omega
-
 /-- `dotQ` of two `range`-maps is the `Finset.range` sum of the products. -/
 theorem dotQ_range_maps (n : ℕ) (f g : ℕ → ℚ) :
     dotQ ((List.range n).map f) ((List.range n).map g)
@@ -68,7 +52,8 @@ theorem dotQ_mulMatrixQ_row (b y : DensePoly ℚ) (d nrows r : ℕ) (hr : r < nr
     · intro i hi; rw [Finset.mem_range] at hi; omega
     · intro k hk; rw [Finset.mem_range] at hk
       rw [show r - (r - k) = k from by omega]]
-  simp only [toPolyG_coeff_q]
+  simp only [toPolyG_coeff, toR_eq_toK, CFieldSpec.toK_rat,
+    show CCommRing.zero = (0 : ℚ) from rfl]
   -- LHS: Σ_{i<d+1} (if r≥i then b[r-i] else 0)·y[i]; RHS: Σ_{x<r+1} b[r-x]·y[x].
   -- Reduce both to the sum over the common nonzero index set.
   have hLHS : (∑ i ∈ Finset.range (d + 1), (if r ≥ i then (b:List ℚ).getD (r - i) 0 else 0)
@@ -106,7 +91,8 @@ theorem dotQ_derivMatrixQ_row (y : DensePoly ℚ) (d nrows r : ℕ) (hr : r < nr
   rw [derivMatrixQ, getD_lt_gen _ r [] (by rw [List.length_map, List.length_range]; exact hr),
     List.getElem_map, List.getElem_range]
   rw [dotQ_range_maps]
-  rw [cderivQ, toPolyG_cderivG, Polynomial.coeff_derivative, toPolyG_coeff_q]
+  rw [cderivQ, toPolyG_cderivG, Polynomial.coeff_derivative, toPolyG_coeff,
+    toR_eq_toK, CFieldSpec.toK_rat, show CCommRing.zero = (0 : ℚ) from rfl]
   -- LHS: Σ_{i<d+1} (if i=r+1 then i else 0)·y[i].
   by_cases hrd : r + 1 < d + 1
   · rw [Finset.sum_eq_single (r + 1)]
@@ -251,7 +237,8 @@ theorem sol_split (sol : List ℚ) (d : ℕ) (hsol : sol.length = 2 * (d + 1)) :
 `(toPoly z).coeff k`. -/
 theorem padCoeffsQ_getD (z : DensePoly ℚ) (nrows k : ℕ) (hk : k < nrows) :
     (padCoeffsQ z nrows).getD k 0 = (toPoly z).coeff k := by
-  rw [padCoeffsQ, getD_range_map_q _ nrows k hk, toPolyG_coeff_q]
+  rw [padCoeffsQ, getD_range_map_q _ nrows k hk, toPolyG_coeff, toR_eq_toK,
+    CFieldSpec.toK_rat, show CCommRing.zero = (0 : ℚ) from rfl]
 
 /-- First-row identity `coeff_r(D u1 + b1 u1 + a•(b2 u2)) = coeff_r(z1)` (`r < nrows`) from a solve. -/
 theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (sol : List ℚ)

@@ -386,6 +386,21 @@ theorem cnormG_cons_eq {α : Type*} [CCommRing α] (a : α) (as : DensePoly α) 
       rw [h] at ih
       simp only [cnormG_cons_eq, ih]
 
+/-- `cnorm` does not increase the coefficient-list length. -/
+theorem cnormG_length_le {α : Type*} [CCommRing α] (p : DensePoly α) :
+    (cnorm p : List α).length ≤ (p : List α).length := by
+  induction p with
+  | nil => simp [cnorm]
+  | cons a as ih =>
+    rw [cnorm]
+    cases h : cnorm as with
+    | nil => by_cases ha : CCommRing.isZero a <;> simp [ha, List.length_cons]
+    | cons b bs =>
+      simp only [List.length_cons]
+      have : (b :: bs : List α).length ≤ (as : List α).length := h ▸ ih
+      simp only [List.length_cons] at this
+      omega
+
 /-- `clead` is invariant under `cnorm`: `clead (cnorm p) = clead p`. -/
 theorem cleadG_cnormG {α : Type*} [CCommRing α] (p : DensePoly α) : clead (cnorm p) = clead p := by
   simp only [clead, cnormG_idem]

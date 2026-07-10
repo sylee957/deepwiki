@@ -205,10 +205,10 @@ private abbrev gP : GBPolyCore ℚ := liftCtoBPoly cD241
 private abbrev gQ : GBPolyCore ℚ := bArgAmtD' cA241 cD241
 
 /-- **The degree-3 element's `x`-degree is 3**: `(GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 3)).natDegree = 3` (the regular
-LRT index `j = m+2 = 3`). Via `bdeg_eq_natDegree` and `native_decide` on `GBPolyCore.gbdegCore (chain … 3)`. -/
+LRT index `j = m+2 = 3`). Via `gbdegCore_eq_natDegree` and `native_decide` on `GBPolyCore.gbdegCore (chain … 3)`. -/
 theorem natDegree_toBPoly_chainG3_ex241 :
     (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 3)).natDegree = 3 := by
-  rw [← bdeg_eq_natDegree]
+  rw [← gbdegCore_eq_natDegree]
   show GBPolyCore.gbdegCore (goState 30 (gP, gQ, [-1], GBPolyCore.gbdegCore gP - GBPolyCore.gbdegCore gQ) 3).1 = 3
   native_decide
 
@@ -219,7 +219,7 @@ theorem natDegree_toPoly_cD241 : (toPoly cD241).natDegree = 6 := by
 /-- **`hd0` for Ex 2.4.1**: `(GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree` (both 6). -/
 theorem hd0_ex241 :
     (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree := by
-  rw [← bdeg_eq_natDegree, natDegree_toPoly_cD241]
+  rw [← gbdegCore_eq_natDegree, natDegree_toPoly_cD241]
   show GBPolyCore.gbdegCore (goState 30 (gP, gQ, [-1], GBPolyCore.gbdegCore gP - GBPolyCore.gbdegCore gQ) 0).1 = 6
   native_decide
 
@@ -227,7 +227,7 @@ theorem hd0_ex241 :
 (5 = 6−1). -/
 theorem hd1_ex241 :
     (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree - 1 := by
-  rw [← bdeg_eq_natDegree, natDegree_toPoly_cD241]
+  rw [← gbdegCore_eq_natDegree, natDegree_toPoly_cD241]
   show GBPolyCore.gbdegCore (goState 30 (gP, gQ, [-1], GBPolyCore.gbdegCore gP - GBPolyCore.gbdegCore gQ) 1).1 = 6 - 1
   native_decide
 
@@ -262,32 +262,32 @@ theorem hdiv_ex241 :
   interval_cases l <;>
     · simp only [chainBt, chain]; native_decide
 
-/-- **`hlc` for Ex 2.4.1**: the leading `x`-coefficient of `chain (l+1)` (`l ≤ 1`) is nonzero — via
-`toPoly_blc_eq_coeff` + `toPoly_blc_ne_zero` (the element is nonzero). -/
+/-- **`hlc` for Ex 2.4.1**: the leading `x`-coefficient of `chain (l+1)` (`l ≤ 1`) is nonzero. -/
 theorem hlc_ex241 :
     ∀ l ≤ 1, (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).coeff
       (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree ≠ 0 := by
   intro l hl
-  rw [← bdeg_eq_natDegree, ← toPoly_blc_eq_coeff]
-  exact toPoly_blc_ne_zero _ (chainG_ne_zero_ex241 (l + 1) (by omega))
+  rw [← gbdegCore_eq_natDegree, ← GBPolyCore.toPolyG_gblcCore_eq_coeff]
+  exact toPolyG_gblcCore_ne_zero
+    (Bool.eq_false_iff.mpr (chainG_ne_zero_ex241 (l + 1) (by omega)))
 
 /-- **`hcb` for Ex 2.4.1**: the `x`-degrees strictly decrease (`chain (l+2)` below `chain (l+1)`,
-`l ≤ 1`: `4<5`, `3<4`), via `bdeg_eq_natDegree`. -/
+`l ≤ 1`: `4<5`, `3<4`), via `gbdegCore_eq_natDegree`. -/
 theorem hcb_ex241 :
     ∀ l ≤ 1, (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 2))).natDegree
       < (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree := by
   intro l hl
-  rw [← bdeg_eq_natDegree, ← bdeg_eq_natDegree]
+  rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
   interval_cases l <;>
     · simp only [chain]; native_decide
 
 /-- **`hjlt` for Ex 2.4.1**: the degree-3 element `chain 3` is strictly below `chain (l+2)` for `l<1`
-(only `l=0`: `3<4`), via `bdeg_eq_natDegree`. -/
+(only `l=0`: `3<4`), via `gbdegCore_eq_natDegree`. -/
 theorem hjlt_ex241 :
     ∀ l < 1, (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree
       < (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 2))).natDegree := by
   intro l hl
-  rw [← bdeg_eq_natDegree, ← bdeg_eq_natDegree]
+  rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
   interval_cases l
   simp only [chain]; native_decide
 
@@ -466,10 +466,10 @@ theorem hc0_ex241 : ∀ l ≤ 1, toPoly (chainC 30 gP gQ l) ≠ 0 := by
     omega
 
 /-- **The `x`-degree of `chain (l+1)` is strictly below that of `chain l`** (Ex 2.4.1, `l ≤ 1`):
-`deg (chain (l+1)) < deg (chain l)` (`5<6`, `4<5`), via `bdeg_eq_natDegree`. -/
+`deg (chain (l+1)) < deg (chain l)` (`5<6`, `4<5`), via `gbdegCore_eq_natDegree`. -/
 theorem natDegree_toBPoly_chainG_strictAnti_ex241 (l : ℕ) (hl : l ≤ 1) :
     (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree < (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ l)).natDegree := by
-  rw [← bdeg_eq_natDegree, ← bdeg_eq_natDegree]
+  rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
   interval_cases l <;>
     · simp only [chain]; native_decide
 
@@ -530,7 +530,7 @@ theorem mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero :
   intro h
   have hcoeff : ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
       (lrtGcdCompute 30 3 cR241 cA241 cD241))).coeff 3 = 0 := by rw [h]; simp
-  rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, lrtGcd_ex241, toBPoly_coeff] at hcoeff
+  rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, lrtGcd_ex241, GBPolyCore.toGBCoeffPoly_coeff] at hcoeff
   -- (GBPolyCore.toGBCoeffPoly [[0,-4],[-3],[0,2],[1]]).coeff 3 = toPoly [1] = 1, φ241 1 = 1 ≠ 0
   rw [show ([[0, -4], [-3], [0, 2], [1]] : GBPolyCore ℚ).getD 3 [] = [1] from rfl] at hcoeff
   rw [show toPoly ([1] : DensePoly ℚ) = 1 by

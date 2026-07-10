@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.SubresultantCorrectness.DividedStep
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.FilterPrimitive
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.LrtOperands
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.PseudoRemainderStep
-import DeepWiki.SymbolicIntegration.SubresultantCorrectness.ToBPolyDegree
+import DeepWiki.SymbolicIntegration.Engine.PrimPRSRegular.Degree
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.Algebra.Polynomial.SpecificDegree
@@ -517,7 +517,7 @@ theorem chain_hfilt (fuel : ℕ) (P Q : GBPolyCore ℚ) (m : ℕ) (hfo : m + 2 +
     GBPolyCore.toGBCoeffPoly (bsubresultantGcd fuel (GBPolyCore.toGBCoeffPoly (chain fuel P Q (m + 2))).natDegree P Q)
       = GBPolyCore.toGBCoeffPoly (chain fuel P Q (m + 2)) := by
   have hfil := subresPRS_filter_singleton fuel P Q (m + 2) hfo hnz hzN hstrict
-  rw [bdeg_eq_natDegree] at hfil
+  rw [gbdegCore_eq_natDegree] at hfil
   exact toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel P Q (chain fuel P Q) m hfil
 
 /-! ### The clean concrete agreement: `lrtGcdCompute ↔ lrtSubresultant` for the real `subresPRS` -/

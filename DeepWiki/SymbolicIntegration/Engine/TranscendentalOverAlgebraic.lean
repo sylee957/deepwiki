@@ -341,19 +341,6 @@ identity); restricted to `n = 2`. -/
 namespace RadElem
 variable {α : Type*} [CField α] {n : ℕ} {f : α}
 
-/-- `cnorm` does not grow length — `(cnorm p).length ≤ p.length` (stripping trailing zeros). -/
-theorem cnormG_length_le (p : DensePoly α) : (DensePoly.cnorm p : List α).length ≤ (p : List α).length := by
-  induction p with
-  | nil => simp [DensePoly.cnorm]
-  | cons a as ih =>
-    rw [DensePoly.cnorm]
-    cases h : DensePoly.cnorm as with
-    | nil => by_cases ha : CCommRing.isZero a <;> simp [ha, List.length_cons]
-    | cons b bs =>
-      simp only [List.length_cons]
-      have : (b :: bs : List α).length ≤ (as : List α).length := h ▸ ih
-      simp only [List.length_cons] at this; omega
-
 /-- `cadd` length is the `max` — `(cadd p q).length = max p.length q.length` (the shorter is
 zero-extended). -/
 theorem caddG_length (p q : DensePoly α) :
@@ -387,7 +374,7 @@ theorem cnormG_radReduce_length_le (hn : 1 ≤ n) : ∀ (fuel : ℕ) (u : DenseP
           < (q : List α).length := by
         rw [caddG_length, DensePoly.cshiftG_length]
         simp only [List.length_singleton, List.length_dropLast]; omega
-      have := (cnormG_length_le _).trans_lt hstep; omega
+      have := (DensePoly.cnormG_length_le _).trans_lt hstep; omega
 
 /-- `RadExt.radCanon` has length `≤ n` (`n ≥ 1`), from `cnormG_radReduce_length_le` — the bound that
 makes `isZero_iff` and `toK_inv` faithful. -/
@@ -395,14 +382,14 @@ theorem radCanon_length_le (hn : 1 ≤ n) (u : DensePoly α) :
     (RadExt.radCanon n f u : List α).length ≤ n := by
   rw [RadExt.radCanon]
   have := cnormG_radReduce_length_le (f := f) hn ((u : List α).length + 1) u (by
-    have := cnormG_length_le u; omega)
+    have := DensePoly.cnormG_length_le u; omega)
   exact this
 
 /-- `cnorm (RadExt.radCanon u)` has length `≤ n` — immediate from `radCanon_length_le` and
-`cnormG_length_le` (the outer `cnorm` of `radCanon` is idempotent). -/
+`DensePoly.cnormG_length_le` (the outer `cnorm` of `radCanon` is idempotent). -/
 theorem cnormG_radCanon_length_le (hn : 1 ≤ n) (u : DensePoly α) :
     (DensePoly.cnorm (RadExt.radCanon n f u) : List α).length ≤ n :=
-  (cnormG_length_le _).trans (radCanon_length_le hn u)
+  (DensePoly.cnormG_length_le _).trans (radCanon_length_le hn u)
 
 variable [CFieldSpec α]
 
@@ -556,7 +543,7 @@ theorem toPolyG_eq_zero_of_mk_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK
   by_contra h0
   have hdeg : (DensePoly.toPoly q).natDegree < 2 := by
     have := DensePoly.natDegree_toPolyG_le q
-    have hcn := cnormG_length_le q
+    have hcn := DensePoly.cnormG_length_le q
     omega
   have hmono : (X ^ 2 - C (CFieldSpec.toK f)).Monic := monic_X_pow_sub_C _ (by norm_num)
   exact AdjoinRoot.mk_ne_zero_of_natDegree_lt hmono h0 (by rw [natDegree_X_pow_sub_C]; exact hdeg) h
