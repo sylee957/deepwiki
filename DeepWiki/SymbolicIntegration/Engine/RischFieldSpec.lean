@@ -125,9 +125,9 @@ theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : DensePoly �
           * (am α (toPoly ynum) / am α (toPoly yden))
       = am α (toPoly gnum) / am α (toPoly gden) := by
   -- nonzero readings
-  have hFDne : am α (toPoly fden) ≠ 0 := amG_toPolyG_ne_zero hfden
-  have hGDne : am α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgden
-  have hYDne : am α (toPoly yden) ≠ 0 := amG_toPolyG_ne_zero hyden
+  have hFDne : am α (toPoly fden) ≠ 0 := am_ne_zero hfden
+  have hGDne : am α (toPoly gden) ≠ 0 := am_ne_zero hgden
+  have hYDne : am α (toPoly yden) ≠ 0 := am_ne_zero hyden
   -- the quotient rule reads `D(YN/YD) = (am(D ynum)·YD − YN·am(D yden))/YD²`
   rw [towerFractionFieldDerivG_div, div_mul_div_comm,
     div_add_div _ _ (pow_ne_zero 2 hYDne) (mul_ne_zero hFDne hYDne),

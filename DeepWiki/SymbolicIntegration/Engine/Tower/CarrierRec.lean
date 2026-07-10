@@ -1,44 +1,49 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
 
-/-! # Global-recursive tower-carrier instances
+/-! # Global-recursive represented-fraction tower instances
 
-Since `CFieldSpec.K (DenseFrac α) = RatFunc (CFieldSpec.K α)` (Tower/Field), the base-field structure the Risch
-tower needs on `CFieldSpec.K` — `CharZero`, `Algebra ℚ` — is **preserved by `RatFunc`**, so it iterates by one
-global recursive instance each (base + step). This replaces the `noncomputable local instance … :=
-inferInstanceAs (… (RatFunc ℚ))` copies that pinned the tower to the concrete `ℚ` base and blocked a single
-recursive tower solver. With these, `CharZero (CFieldSpec.K (CFracGⁿ ℚ))` / `Algebra ℚ (…)` resolve at every
-depth automatically. -/
+For every lawful `CFrac F P`, `CFieldSpec.K (F α) = RatFunc (CFieldSpec.K α)`. The abstract structures
+needed by the Risch tower therefore iterate uniformly through dense and sparse fraction representations. -/
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u v
 
-/-- **`CharZero` iterates up the tower.** `CFieldSpec.K (DenseFrac α) = RatFunc (CFieldSpec.K α)` is `CharZero`
-whenever `CFieldSpec.K α` is — one recursive instance for the whole tower. -/
-noncomputable instance instCharZeroKCFrac {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
-    [CharZero (CFieldSpec.K α)] : CharZero (CFieldSpec.K (DenseFrac α)) :=
+/-- `CharZero` iterates through every lawful represented-fraction tower. -/
+noncomputable instance instCharZeroKCFrac
+    {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P]
+    [CharZero (CFieldSpec.K α)] : CharZero (CFieldSpec.K (F α)) :=
   inferInstanceAs (CharZero (RatFunc (CFieldSpec.K α)))
 
-/-- **`Algebra ℚ` iterates up the tower.** `RatFunc (CFieldSpec.K α)` is a `ℚ`-algebra whenever
-`CFieldSpec.K α` is — one recursive instance for the whole tower. -/
-noncomputable instance instAlgebraQKCFrac {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
-    [Algebra ℚ (CFieldSpec.K α)] : Algebra ℚ (CFieldSpec.K (DenseFrac α)) :=
+/-- `Algebra ℚ` iterates through every lawful represented-fraction tower. -/
+noncomputable instance instAlgebraQKCFrac
+    {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P]
+    [Algebra ℚ (CFieldSpec.K α)] : Algebra ℚ (CFieldSpec.K (F α)) :=
   inferInstanceAs (Algebra ℚ (RatFunc (CFieldSpec.K α)))
 
-/-- **`CDiffFieldSpec` iterates up the tower.** The carrier's `cderiv` is `towerDerivCFrac [1]` (the new
-monomial as an independent variable); its abstract realization on `RatFunc (CFieldSpec.K α)` is
-`fractionFieldDifferential (implicitDeriv (toPoly [1]))` — the base derivation of `CDiffFieldSpec α` lifted to
-the fraction field — and the intertwining `toK_cderiv` is the generic `toCFracG_towerDerivCFracG [1]`. One
-recursive instance for the whole tower, generalizing the ℚ-specific base `instCDiffFieldSpecCFrac`. -/
-noncomputable instance instCDiffFieldSpecCFracGRec {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
-    [CDiffFieldSpec α] [CFieldDomain α] [Algebra ℚ (CFieldSpec.K α)] : CDiffFieldSpec (DenseFrac α) where
+/-- `CDiffFieldSpec` iterates through every lawful represented-fraction tower. -/
+noncomputable instance instCDiffFieldSpecCFracRec
+    {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
+    [CFieldDomain α P] [Algebra ℚ (CFieldSpec.K α)] : CDiffFieldSpec (F α) where
   diffK := fractionFieldDifferential
-    (Differential.implicitDeriv (DensePoly.toPoly ([CCommRing.one] : DensePoly α)))
+    (Differential.implicitDeriv (CPoly.toPoly (CPoly.one : P α)))
   toK_cderiv a := by
-    show CFrac.toCFrac (CFrac.towerDerivCFrac [CCommRing.one] a)
+    show CFrac.toRatFunc (CFrac.towerDerivCFracWith (CPoly.one : P α) a)
       = @Differential.deriv _ _ (fractionFieldDifferential
-          (Differential.implicitDeriv (DensePoly.toPoly ([CCommRing.one] : DensePoly α)))) (CFrac.toCFrac a)
-    rw [CFrac.toCFracG_towerDerivCFracG [CCommRing.one] a]
+          (Differential.implicitDeriv (CPoly.toPoly (CPoly.one : P α)))) (CFrac.toRatFunc a)
+    rw [CFrac.toRatFunc_towerDerivCFracWith (CPoly.one : P α) a]
     rfl
+
+/-- The generic differential-denotation square resolves recursively at depth two for sparse fractions. -/
+theorem sparseFrac_recursive_toK_cderiv (x : SparseFrac (SparseFrac ℚ)) :
+    CFieldSpec.toK (CDiffField.cderiv x) = Differential.deriv (CFieldSpec.toK x) :=
+  CDiffFieldSpec.toK_cderiv x
 
 end DeepWiki.SymbolicIntegration

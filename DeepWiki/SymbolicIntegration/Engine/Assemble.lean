@@ -72,8 +72,8 @@ theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : DensePoly α) (nrm 
   show towerFractionFieldDeriv Dt
       (am α (toPoly (cadd (cmul snum nrm.rational.2) (cmul nrm.rational.1 sden)))
         / am α (toPoly (cmul sden nrm.rational.2))) + logResidueSum Dt nrm.logs = _
-  have hAsden : am α (toPoly sden) ≠ 0 := amG_toPolyG_ne_zero hsden
-  have hAgden : am α (toPoly nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hAsden : am α (toPoly sden) ≠ 0 := am_ne_zero hsden
+  have hAgden : am α (toPoly nrm.rational.2) ≠ 0 := am_ne_zero hgden
   have hcombine : am α (toPoly (cadd (cmul snum nrm.rational.2) (cmul nrm.rational.1 sden)))
         / am α (toPoly (cmul sden nrm.rational.2))
       = am α (toPoly snum) / am α (toPoly sden)

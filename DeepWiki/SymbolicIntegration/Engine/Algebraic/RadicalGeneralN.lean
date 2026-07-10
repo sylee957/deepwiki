@@ -152,19 +152,14 @@ open DensePoly in
 as the algebra-map image of `1 + x²`. -/
 theorem toK_cubeRadicand :
     CFieldSpec.toK (cubeRadicand : DenseFrac ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 2) := by
-  show CFrac.toCFrac cubeRadicand = _
-  rw [CFrac.toCFrac]
-  show CFrac.am ℚ (toPoly ([1, 0, 1] : DensePoly ℚ))
-      / CFrac.am ℚ (toPoly ([CCommRing.one] : DensePoly ℚ)) = _
+  show CFrac.toRatFunc cubeRadicand = _
+  rw [cubeRadicand, CFrac.toRatFunc_ofPoly, toPoly_list_eq]
   have h1 : toPoly ([1, 0, 1] : DensePoly ℚ) = 1 + X ^ 2 := by
     simp only [denote]
     show C (1 : ℚ) + X * (C 0 + X * (C 1 + X * 0)) = _
     simp; ring
-  have h2 : toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
-    show C (CFieldSpec.toK (CCommRing.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
-  rw [h1, h2]
-  show CFrac.am ℚ (1 + X ^ 2) / CFrac.am ℚ 1 = _
-  rw [map_one, div_one]; rfl
+  rw [h1]
+  rfl
 
 /-- `x²+1` is not a cube in `ℚ(x)`: `∀ b, b³ ≠ algebraMap (1 + x²)`, since a cube has `intDegree` divisible
 by `3` but `1 + x²` has `intDegree 2`. -/

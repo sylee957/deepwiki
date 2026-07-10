@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.ExampleData
 
 /-! # Tower-level demos for the `CFrac` gcd-cancel reducer `qReduce`
 `qReduce` divides a fraction's numerator and denominator by their monic gcd, preserving the field value
-(`toCFracG_qReduce`). These examples show it shrinks a swollen product and lets a hyperexponential
+(`toRatFunc_qReduce`). These examples show it shrinks a swollen product and lets a hyperexponential
 residual solver see a reduced constant residual. -/
 
 open Polynomial
@@ -49,10 +49,10 @@ theorem swellProd_reduced_den_length :
 theorem swellProd_reduced_num_nonzero :
     DensePoly.cisZero (qReduce swellProd).num = false := by native_decide
 
-/-- `qReduce` preserves the field value: `toCFrac (qReduce swellProd) = toCFrac swellProd`. -/
+/-- `qReduce` preserves the field value: `toRatFunc (qReduce swellProd) = toRatFunc swellProd`. -/
 theorem swellProd_value_preserved :
-    toCFrac (qReduce swellProd) = toCFrac swellProd :=
-  toCFracG_qReduce swellProd
+    toRatFunc (qReduce swellProd) = toRatFunc swellProd :=
+  toRatFunc_qReduce swellProd
 
 /-! #### `qReduce` preserves the zero test
 

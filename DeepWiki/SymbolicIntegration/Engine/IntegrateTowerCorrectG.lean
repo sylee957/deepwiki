@@ -128,8 +128,8 @@ theorem checkIdentityG_fold_eq (Dt : DensePoly α) :
     simp only [List.foldl_cons]
     rw [heq, logResidueSumG_cons]
     -- the field algebra: `snum/sden + C(c)·(Δv)/v = newnum/newden`
-    have hAsden : am α (toPoly sden) ≠ 0 := amG_toPolyG_ne_zero hsden
-    have hAv : am α (toPoly cv.2) ≠ 0 := amG_toPolyG_ne_zero hvne
+    have hAsden : am α (toPoly sden) ≠ 0 := am_ne_zero hsden
+    have hAv : am α (toPoly cv.2) ≠ 0 := am_ne_zero hvne
     have hstep : am α (toPoly newnum) / am α (toPoly newden)
         = am α (toPoly snum) / am α (toPoly sden)
           + am α (Polynomial.C (CFieldSpec.toK cv.1))
@@ -187,9 +187,9 @@ theorem field_identity_of_checkIdentityG (Dt : DensePoly α) (res : IntegralResu
   set AD := am α (toPoly aden) with hAD
   set GD := am α (toPoly gden) with hGD
   -- nonzero readings
-  have hGDne : GD ≠ 0 := by rw [hGD]; exact amG_toPolyG_ne_zero hgden
-  have hLDne : LD ≠ 0 := by rw [hLD]; exact amG_toPolyG_ne_zero hLden_ne
-  have hADne : AD ≠ 0 := by rw [hAD]; exact amG_toPolyG_ne_zero haden
+  have hGDne : GD ≠ 0 := by rw [hGD]; exact am_ne_zero hgden
+  have hLDne : LD ≠ 0 := by rw [hLD]; exact am_ne_zero hLden_ne
+  have hADne : AD ≠ 0 := by rw [hAD]; exact am_ne_zero haden
   -- `D(gnum/gden) = GP/GD²` (quotient rule); `logResidueSum = LN/LD` (fold bridge)
   have hquot : towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
       = GP / GD ^ 2 := by

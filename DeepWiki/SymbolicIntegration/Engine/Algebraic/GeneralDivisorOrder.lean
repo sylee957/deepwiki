@@ -80,7 +80,7 @@ def idealReduce (_f : DensePoly (DenseFrac ℚ)) (_basis : List (DensePoly (Dens
   let H := canonHNF ((hermiteRowReduce N).filter (fun row => !row.all cisZero))
   let dd := cnorm δ
   -- read back as the fractional ideal (1/δ)·Ĥ, then reduce every entry to lowest terms (`qReduceMat`,
-  -- value-preserving via `toCFracG_qReduce`) so the reduced representative carries no swollen factors
+  -- value-preserving via `toRatFunc_qReduce`) so the reduced representative carries no swollen factors
   qReduceMat (H.map (fun row => row.map (fun p =>
     if h : cisZero dd = false then qReduceNZ (CFrac.ofFraction p dd h) else CFrac.ofPoly p)))
 

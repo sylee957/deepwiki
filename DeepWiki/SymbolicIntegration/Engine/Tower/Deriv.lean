@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
 /-! # A computable derivation on represented fraction towers
 `towerDerivCFracWith Dt` is the quotient-rule derivation for any `CFrac F P`, and
 `instCDiffFieldCFrac` makes `CDiffField` iterate up the tower with the new monomial as an independent
-variable (`Dt = [1]`). Both are computable (no `CFieldSpec`), and `toCFracG_towerDerivCFracG` bridges to
+variable (`Dt = [1]`). Both are computable (no `CFieldSpec`), and `toRatFunc_towerDerivCFracWith` bridges to
 Mathlib's abstract `extendDeriv` on `RatFunc (CFieldSpec.K α)`. -/
 
 open Polynomial
@@ -154,7 +154,7 @@ theorem sparseTowerT_deriv_eq_one :
       (CField.sub (CDiffField.cderiv sparseTowerT) (CCommRing.one : SparseFrac ℚ)) = true := by
   native_decide
 
-/-! ### The abstract bridge `toCFrac (towerDerivCFrac Dt x) = extendDeriv …` -/
+/-! ### The abstract bridge `toRatFunc (towerDerivCFrac Dt x) = extendDeriv …` -/
 
 namespace CFrac
 
@@ -181,30 +181,6 @@ theorem toRatFunc_towerDerivCFracWith (Dt : P α) (x : F α) :
   cases ‹CFieldSpec α›
   rfl
 
-variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α] [CFieldDomain α]
-variable [Algebra ℚ (CFieldSpec.K α)]
-
-/-- `toCFrac (towerDerivCFrac Dt x) = extendDeriv (implicitDeriv (toPoly Dt)) (toCFrac x)` in
-`RatFunc (CFieldSpec.K α)`: the computable tower derivation realizes Mathlib's `extendDeriv`. -/
-theorem toCFracG_towerDerivCFracG (Dt : DensePoly α) (x : DenseFrac α) :
-    toCFrac (towerDerivCFrac Dt x)
-      = extendDeriv (Differential.implicitDeriv (DensePoly.toPoly Dt)) (toCFrac x) := by
-  obtain ⟨n, d, hd⟩ := x
-  change toCFrac (towerDerivCFrac Dt (ofFraction n d hd))
-      = extendDeriv (Differential.implicitDeriv (DensePoly.toPoly Dt))
-          (toCFrac (ofFraction n d hd))
-  -- read `toCFrac x` as `RatFunc.mk (toPoly n) (toPoly d)`, apply the quotient rule `extendDeriv_mk`.
-  have hxmk : toCFrac (ofFraction n d hd : DenseFrac α)
-      = RatFunc.mk (DensePoly.toPoly n) (DensePoly.toPoly d) := by
-    rw [toCFrac, RatFunc.mk_eq_div]; rfl
-  rw [hxmk, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul, map_mul, map_pow]
-  -- the LHS numerator/denominator, read through `toPoly`, with `toPolyG_cmonomialDeriv` identifying
-  -- the computable monomial derivation as `implicitDeriv (toPoly Dt)`.
-  show am α (DensePoly.toPoly (DensePoly.csub
-        (DensePoly.cmul (DensePoly.cmonomialDeriv Dt n) d) (DensePoly.cmul n (DensePoly.cmonomialDeriv Dt d))))
-      / am α (DensePoly.toPoly (DensePoly.cmul d d)) = _
-  simp [DensePoly.toPolyG_cmonomialDeriv, map_sub, map_mul, pow_two]
-  rfl
 
 end CFrac
 
@@ -220,6 +196,6 @@ end CFrac
 
 -- The abstract bridge (computable tower derivation vs `extendDeriv`):
 -- `[propext, Classical.choice, Quot.sound]` (no native axiom — it is a proof, not a computation).
-#print axioms CFrac.toCFracG_towerDerivCFracG
+#print axioms CFrac.toRatFunc_towerDerivCFracWith
 
 end DeepWiki.SymbolicIntegration

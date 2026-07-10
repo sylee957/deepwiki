@@ -31,7 +31,7 @@ theorem natDeg_toPolyG_X3m2 : (toPoly ([-2, 0, 0, 1] : DensePoly ℚ)).natDegree
 /-- **`x³ − 2` is not a square in `ℚ(x)`** — from the odd-degree helper (`natDegree 3`). -/
 theorem not_isSquare_radicandX3m2 :
     ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX3m2 : DenseFrac ℚ) := by
-  rw [radicandX3m2, CFrac.toK_ofPoly]
+  rw [radicandX3m2, CFrac.toK_ofPoly, toPoly_list_eq]
   exact not_isSquare_algebraMap_of_odd_natDegree (by rw [natDeg_toPolyG_X3m2]; decide)
 
 /-- **`y² − (x³−2)` is irreducible over `ℚ(x)`** — generic helper on the non-square `x³−2`. -/

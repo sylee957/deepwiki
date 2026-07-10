@@ -98,7 +98,7 @@ theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
           = toGBPoly s * toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)
         ∧ CFrac.am β (DensePoly.toPoly c) ≠ 0 := by
   obtain ⟨s, c, hsc, hc⟩ := toPolyG_gbpsremainderCore_ne_zero fuel p q hq
-  refine ⟨s, c, ?_, CFrac.amG_toPolyG_ne_zero hc⟩
+  refine ⟨s, c, ?_, CFrac.am_ne_zero hc⟩
   have hl := congrArg (liftK β) hsc
   simp only [map_add, map_mul] at hl
   rw [liftKG_C] at hl

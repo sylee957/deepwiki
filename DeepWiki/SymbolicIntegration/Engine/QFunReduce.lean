@@ -6,7 +6,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 `qReduce a` cancels `g = gcd(num, den)` in the unreduced fraction `DenseFrac α ≅ Frac(α[t])`, returning
 `(num/g)/(den/g)` via the fuel-free monic gcd `cgcdMonicWf` and exact division `cdivWf`. It is
 computable (the den-nonzero proof `Prop`-erased), and the abstract invariant
-`toCFrac (qReduce a) = toCFrac a` proves reduction preserves the field value. -/
+`toRatFunc (qReduce a) = toRatFunc a` proves reduction preserves the field value. -/
 
 open Polynomial
 
@@ -73,7 +73,7 @@ def qReduce {α : Type*} [CField α] [CFieldSpec α] (a : DenseFrac α) : DenseF
 
 /-! ### The invariant: `qReduce` preserves the field value
 
-`toCFrac (qReduce a) = toCFrac a` over every `a`, through the `RatFunc (CFieldSpec.K α)` bridge. -/
+`toRatFunc (qReduce a) = toRatFunc a` over every `a`, through the `RatFunc (CFieldSpec.K α)` bridge. -/
 
 namespace CFrac
 
@@ -82,13 +82,13 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 /-- `am (toPoly (reduceGcd a)) ≠ 0`. -/
 theorem amG_toPolyG_reduceGcd_ne_zero (a : DenseFrac α) :
     am α (toPoly (reduceGcd a)) ≠ 0 :=
-  amG_toPolyG_ne_zero (fun h => reduceGcd_ne_nil a ((cnormG_eq_nil_iff _).mpr h))
+  am_ne_zero (fun h => reduceGcd_ne_nil a ((cnormG_eq_nil_iff _).mpr h))
 
 end CFrac
 
 /-- `qReduce` preserves the field value in `RatFunc (CFieldSpec.K α)`. -/
-theorem toCFracG_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : DenseFrac α) :
-    CFrac.toCFrac (qReduce a) = CFrac.toCFrac a := by
+theorem toRatFunc_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : DenseFrac α) :
+    CFrac.toRatFunc (qReduce a) = CFrac.toRatFunc a := by
   -- abbreviations in RatFunc (CFieldSpec.K α)
   set G : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly (CFrac.reduceGcd a)) with hG
   set Nq : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly (CFrac.reduceNum a)) with hNq
@@ -102,11 +102,13 @@ theorem toCFracG_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : DenseFrac
     rw [hDq, hG, hD, ← map_mul]; exact congrArg _ (CFrac.toPolyG_reduceDen_mul a)
   -- the cancellable / nonvanishing denominators
   have hGne : G ≠ 0 := CFrac.amG_toPolyG_reduceGcd_ne_zero a
-  have hDne : D ≠ 0 := CFrac.amG_toPolyG_ne_zero
-    (CFrac.toPolyG_ne_zero_of_cisZeroG_false (CFrac.cisZeroG_den a))
+  have hDne : D ≠ 0 := CFrac.am_ne_zero
+    (DensePoly.toPolyG_ne_zero_of_cisZeroG_false (CFrac.cisZeroG_den a))
   have hDqne : Dq ≠ 0 := by
     intro h; rw [h, zero_mul] at hden; exact hDne hden.symm
   -- unfold both sides of the goal to Nq/Dq = N/D and cross-multiply
+  rw [CFrac.toRatFunc_eq_div, CFrac.toRatFunc_eq_div]
+  simp only [qReduce, CFrac.num_ofFraction, CFrac.den_ofFraction, toPoly_list_eq]
   show Nq / Dq = N / D
   rw [div_eq_div_iff hDqne hDne, ← hnum, ← hden]
   ring
@@ -118,11 +120,11 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 /-- `qReduce` preserves the Boolean zero test. -/
 theorem isZeroNZG_qReduce (x : DenseFrac α) :
     isZeroNZ (qReduce x) = isZeroNZ x := by
-  have hval : toCFrac (qReduce x) = toCFrac x := toCFracG_qReduce x
-  have h1 := isZeroNZG_iff (qReduce x)
-  have h2 := isZeroNZG_iff x
+  have hval : toRatFunc (qReduce x) = toRatFunc x := toRatFunc_qReduce x
+  have h1 := isZeroNZ_iff_toRatFunc (qReduce x)
+  have h2 := isZeroNZ_iff_toRatFunc x
   rw [hval] at h1
-  by_cases hz : toCFrac x = 0
+  by_cases hz : toRatFunc x = 0
   · rw [h1.mpr hz, h2.mpr hz]
   · rw [Bool.eq_false_iff.mpr (fun h => hz (h1.mp h)),
       Bool.eq_false_iff.mpr (fun h => hz (h2.mp h))]

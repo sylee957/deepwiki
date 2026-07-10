@@ -28,7 +28,7 @@ theorem amG_toPolyG_fracAddG (gAcc gloc : DensePoly α × DensePoly α)
       = am α (toPoly gAcc.1) / am α (toPoly gAcc.2)
         + am α (toPoly gloc.1) / am α (toPoly gloc.2) := by
   simp only [denote, map_add, map_mul]
-  rw [div_add_div _ _ (amG_toPolyG_ne_zero hAcc) (amG_toPolyG_ne_zero hloc)]
+  rw [div_add_div _ _ (am_ne_zero hAcc) (am_ne_zero hloc)]
   ring
 
 /-! ### `D` distributes over the Hermite `g`-accumulator fold -/

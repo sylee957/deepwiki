@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 /-! # Computable rational functions `ℚ(x)`
 
 The validated carrier is `DenseFrac ℚ`. Its field operations and formal polynomial-variable
-derivative are read through `CFrac.toCFrac` into `RatFunc ℚ`; unchecked pairs occur only in the explicit
+derivative are read through `CFrac.toRatFunc` into `RatFunc ℚ`; unchecked pairs occur only in the explicit
 `ratFuncOfPair` boundary used by residual certificates.
 -/
 
@@ -40,7 +40,7 @@ noncomputable def ratFuncOfPair (x : DensePoly ℚ × DensePoly ℚ) : RatFunc �
 /-! ### Field-operation readings -/
 
 /-- Read a validated dense fraction in `RatFunc ℚ`. -/
-noncomputable def toRatFuncDense (x : DenseFrac ℚ) : RatFunc ℚ := CFrac.toCFrac x
+noncomputable def toRatFuncDense (x : DenseFrac ℚ) : RatFunc ℚ := CFrac.toRatFunc x
 
 /-- `DenseFrac` zero reads as `0`. -/
 theorem toRatFuncDense_zero : toRatFuncDense (CCommRing.zero : DenseFrac ℚ) = 0 := by
@@ -93,30 +93,29 @@ theorem toRatFuncDense_qderiv (x : DenseFrac ℚ) :
     intro h
     have hz := (DensePoly.cisZeroG_iff b).mpr h
     exact (Bool.eq_false_iff.mp hb) hz
-  have hbm : CFrac.am ℚ (DensePoly.toPoly b) ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hb0
-  have hda : (CFrac.am ℚ (DensePoly.toPoly a))′ =
-      CFrac.am ℚ (derivative (DensePoly.toPoly a)) :=
-    ratFuncDeriv_algebraMap (DensePoly.toPoly a)
-  have hdb : (CFrac.am ℚ (DensePoly.toPoly b))′ =
-      CFrac.am ℚ (derivative (DensePoly.toPoly b)) :=
-    ratFuncDeriv_algebraMap (DensePoly.toPoly b)
-  have hderiv : (CFrac.am ℚ (DensePoly.toPoly a) /
-        CFrac.am ℚ (DensePoly.toPoly b))′
-      = (CFrac.am ℚ (DensePoly.toPoly b) *
-          CFrac.am ℚ (derivative (DensePoly.toPoly a))
-          - CFrac.am ℚ (DensePoly.toPoly a) *
-            CFrac.am ℚ (derivative (DensePoly.toPoly b))) /
-        (CFrac.am ℚ (DensePoly.toPoly b) ^ 2) := by
+  have hb0' : CPoly.toPoly b ≠ 0 := by simpa only [toPoly_list_eq] using hb0
+  have hbm : CFrac.am ℚ (CPoly.toPoly b) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hb0'
+  have hda : (CFrac.am ℚ (CPoly.toPoly a))′ =
+      CFrac.am ℚ (derivative (CPoly.toPoly a)) :=
+    ratFuncDeriv_algebraMap (CPoly.toPoly a)
+  have hdb : (CFrac.am ℚ (CPoly.toPoly b))′ =
+      CFrac.am ℚ (derivative (CPoly.toPoly b)) :=
+    ratFuncDeriv_algebraMap (CPoly.toPoly b)
+  have hderiv : (CFrac.am ℚ (CPoly.toPoly a) /
+        CFrac.am ℚ (CPoly.toPoly b))′
+      = (CFrac.am ℚ (CPoly.toPoly b) *
+          CFrac.am ℚ (derivative (CPoly.toPoly a))
+          - CFrac.am ℚ (CPoly.toPoly a) *
+            CFrac.am ℚ (derivative (CPoly.toPoly b))) /
+        (CFrac.am ℚ (CPoly.toPoly b) ^ 2) := by
     rw [deriv_div, hda, hdb]
-  simp only [toRatFuncDense, CFrac.toCFrac, CFrac.qderiv, CFrac.ofFraction, CFrac.num,
-    CFrac.den, CFrac.toPair, instCFracPolyFrac, CPolyEngine.sub,
-    CPolyEngine.add_dense_eq, CPolyEngine.neg_dense_eq, CPolyEngine.mul_dense_eq,
-    CPolyEngine.deriv_dense_eq, DensePoly.toPolyG_caddG, DensePoly.toPolyG_cnegG,
-    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, map_add, map_neg, map_mul]
+  rw [toRatFuncDense, CFrac.qderiv, CFrac.toRatFunc_ofFraction]
+  simp only [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul,
+    LawfulCPolyEngine.toPoly_deriv, map_sub, map_mul, CFrac.num, CFrac.den,
+    CFrac.toPair, toRatFuncDense, CFrac.toRatFunc_eq_div]
   rw [hderiv, pow_two]
   field_simp [hbm]
-  ring
 
 /-! ### Folded derivatives -/
 

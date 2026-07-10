@@ -275,19 +275,14 @@ open DensePoly in
 rational function `algebraMap ℚ[X] (RatFunc ℚ) (1 + x³)`. -/
 theorem toK_radicandX3p1 :
     CFieldSpec.toK (radicandX3p1 : DenseFrac ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 3) := by
-  show CFrac.toCFrac radicandX3p1 = _
-  rw [CFrac.toCFrac]
-  show CFrac.am ℚ (toPoly ([1, 0, 0, 1] : DensePoly ℚ))
-      / CFrac.am ℚ (toPoly ([CCommRing.one] : DensePoly ℚ)) = _
+  show CFrac.toRatFunc radicandX3p1 = _
+  rw [radicandX3p1, CFrac.toRatFunc_ofPoly, toPoly_list_eq]
   have h1 : toPoly ([1, 0, 0, 1] : DensePoly ℚ) = 1 + X ^ 3 := by
     simp only [denote]
     show C (1 : ℚ) + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
-  have h2 : toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
-    show C (CFieldSpec.toK (CCommRing.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
-  rw [h1, h2]
-  show CFrac.am ℚ (1 + X ^ 3) / CFrac.am ℚ 1 = _
-  rw [map_one, div_one]; rfl
+  rw [h1]
+  rfl
 
 /-- `1 + x³ ≠ 0` in `ℚ[X]` (it has `natDegree 3`). -/
 theorem X3p1_ne_zero : (1 + X ^ 3 : ℚ[X]) ≠ 0 := by

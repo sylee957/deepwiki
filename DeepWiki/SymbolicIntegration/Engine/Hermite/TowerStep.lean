@@ -95,7 +95,7 @@ theorem fracPair_add (a1 a2 b1 b2 : DensePoly α)
     am α (toPoly (cadd (cmul a1 b2) (cmul b1 a2))) / am α (toPoly (cmul a2 b2))
       = am α (toPoly a1) / am α (toPoly a2) + am α (toPoly b1) / am α (toPoly b2) := by
   simp only [denote, map_add, map_mul]
-  rw [div_add_div _ _ (amG_toPolyG_ne_zero ha2) (amG_toPolyG_ne_zero hb2)]
+  rw [div_add_div _ _ (am_ne_zero ha2) (am_ne_zero hb2)]
   ring
 
 open CFrac in

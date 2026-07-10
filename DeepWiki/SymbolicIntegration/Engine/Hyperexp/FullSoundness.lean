@@ -229,7 +229,7 @@ theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : DensePoly α) 
   rw [cIntegrateHyperexpNormalG_shape Dt a d cands res intR hintRsome hsome]
   set gnum := (DensePoly.cIntegrateReduced Dt a d cands).rational.1 with hgnum
   set gden := (DensePoly.cIntegrateReduced Dt a d cands).rational.2 with hgdenE
-  have hAgden : am α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hAgden : am α (toPoly gden) ≠ 0 := am_ne_zero hgden
   have hnewrat : am α (toPoly (csub gnum (cmul [intR] gden))) / am α (toPoly gden)
       = am α (toPoly gnum) / am α (toPoly gden) - am α (Polynomial.C (CFieldSpec.toK intR)) := by
     simp only [denote, map_sub, map_mul, mul_zero, add_zero]
@@ -356,8 +356,8 @@ theorem cIntegrateHyperexpFullG_sound [CFracGcdCoreWf α] (Dt : DensePoly α) (a
         + logResidueSum Dt res.logs
       = am α (toPoly a) / am α (toPoly d) := by
   rw [cIntegrateHyperexpFullG_shape Dt a d cands res lnum lden nrm hLaur hNrm hsome]
-  have hAlden : am α (toPoly lden) ≠ 0 := amG_toPolyG_ne_zero hlden
-  have hAgden : am α (toPoly nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hAlden : am α (toPoly lden) ≠ 0 := am_ne_zero hlden
+  have hAgden : am α (toPoly nrm.rational.2) ≠ 0 := am_ne_zero hgden
   have hcombine : am α (toPoly (cadd (cmul lnum nrm.rational.2) (cmul nrm.rational.1 lden)))
         / am α (toPoly (cmul lden nrm.rational.2))
       = am α (toPoly lnum) / am α (toPoly lden)

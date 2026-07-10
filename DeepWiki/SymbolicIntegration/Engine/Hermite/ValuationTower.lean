@@ -259,7 +259,7 @@ theorem total_fold_residual_tower (Dt a d : DensePoly α)
             + (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map residNum).sum)
         / am α (toPoly d) := by
   set kept := (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)) with hkeptdef
-  have had : am α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd
+  have had : am α (toPoly d) ≠ 0 := am_ne_zero hd
   rw [cHermiteReduceTowerG_frac_eq_sum Dt a d hden, map_list_sum (towerFractionFieldDeriv Dt),
     List.map_map, ← hkeptdef]
   -- rewrite each `D⟦gloc⟧` via `hstep`, so the summed function is `a/d − residNum/d`.
@@ -364,9 +364,9 @@ theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : DensePoly
   -- `am u · am v^(i) = am d`.
   have hamud : am α (toPoly u) * am α (toPoly x.1) ^ (x.2 + 1) = am α (toPoly d) := by
     rw [← map_pow, ← map_mul, hud]
-  have had : am α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd
-  have hav : am α (toPoly x.1) ≠ 0 := amG_toPolyG_ne_zero hv
-  have hau : am α (toPoly u) ≠ 0 := amG_toPolyG_ne_zero hu
+  have had : am α (toPoly d) ≠ 0 := am_ne_zero hd
+  have hav : am α (toPoly x.1) ≠ 0 := am_ne_zero hv
+  have hau : am α (toPoly u) ≠ 0 := am_ne_zero hu
   -- rearrange M2 to `D⟦gloc⟧ = am a/(am u·am v^i) − am afin/(am u·am v)`.
   rw [show towerFractionFieldDeriv Dt (glocFrac Dt a d x)
       = am α (toPoly a) / (am α (toPoly u) * am α (toPoly x.1) ^ (x.2 + 1))
@@ -582,8 +582,8 @@ theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
   have hRid := R_residual_identity hgcd Dt a d hd0 hpp hcopgcd
   rw [← hgnum, ← hgden] at hRid
   have hinj := RatFunc.algebraMap_injective (CFieldSpec.K α)
-  have had : am α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd0
-  have hgd : am α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgd0
+  have had : am α (toPoly d) ≠ 0 := am_ne_zero hd0
+  have hgd : am α (toPoly gden) ≠ 0 := am_ne_zero hgd0
   have hDg : towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
       = (am α (D (toPoly gnum)) * am α (toPoly gden)
           - am α (toPoly gnum) * am α (D (toPoly gden))) / am α (toPoly gden) ^ 2 := by
@@ -720,8 +720,8 @@ theorem cHermiteReduceTowerG_field_identity [CharZero (CFieldSpec.K α)] (hgcd :
     exact (mul_ne_zero hd0 (mul_ne_zero hgd0 hgd0)) this
   exact hermiteTowerStep_field_identity_of_radical Dt (cHermiteReduceTower Dt a d).1.1
     (cHermiteReduceTower Dt a d).1.2 a d (cHermiteReduceTower Dt a d).2.2
-    (cdivWf d (cHermiteReduceTower Dt a d).2.2) (amG_toPolyG_ne_zero hd0)
-    (amG_toPolyG_ne_zero hgd0) (amG_toPolyG_ne_zero hDstar0) hresDen
+    (cdivWf d (cHermiteReduceTower Dt a d).2.2) (am_ne_zero hd0)
+    (am_ne_zero hgd0) (am_ne_zero hDstar0) hresDen
     (toPolyG_yunRadical_split hgcd Dt a d hd0)
     (hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd)
 

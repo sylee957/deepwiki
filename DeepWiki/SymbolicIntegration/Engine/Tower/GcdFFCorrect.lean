@@ -249,13 +249,8 @@ agrees with the coefficient-ring embedding. -/
     rw [CRingSpec.toR_zero, CRingSpec.toR_zero, map_zero]
   | some c =>
     simp only [Option.map_some, Option.getD_some]
-    show CFrac.toCFrac _ = CFrac.am β (DensePoly.toPoly c)
-    rw [CFrac.toCFrac]
-    have h1 : DensePoly.toPoly ([CCommRing.one] : DensePoly β) = 1 := by
-      simp only [denote, mul_zero, add_zero, map_one]
-    show CFrac.am β (DensePoly.toPoly c) / CFrac.am β (DensePoly.toPoly ([CCommRing.one] : DensePoly β))
-      = CFrac.am β (DensePoly.toPoly c)
-    rw [h1, map_one, div_one]
+    show CFrac.toRatFunc _ = CFrac.am β (DensePoly.toPoly c)
+    rw [CFrac.toRatFunc_ofPoly, toPoly_list_eq]
 
 /-! ### The `cclearDenomsCore` bridge `β(s)[t] ↔ (β[s])[t]`
 Read back over `β(s)`, the cleared polynomial equals `C s · toPoly p` for the common-denominator unit
@@ -278,7 +273,9 @@ theorem commonDenG_ne_zero (p : DensePoly (DenseFrac β)) : commonDen p ≠ 0 :=
   obtain ⟨d, hd, hd0⟩ := hmem
   rw [List.mem_map] at hd
   obtain ⟨c, hc, rfl⟩ := hd
-  exact CFrac.toPoly_den_ne_zero c hd0
+  have hne : DensePoly.toPoly (CFrac.den c) ≠ 0 := by
+    simpa only [toPoly_list_eq] using CFrac.toPoly_den_ne_zero_generic c
+  exact hne hd0
 
 omit [CFieldDomain β] in
 /-- `am (commonDen p) ≠ 0` (the field embedding of a nonzero product). -/
@@ -344,10 +341,13 @@ theorem toGBPolyG_cclearDenomsCoreG_coeff (p : DensePoly (DenseFrac β)) (i : �
     have hcoeff : (CFieldSpec.toK (p.getD i CCommRing.zero) : RatFunc (CFieldSpec.K β))
         = CFrac.am β (DensePoly.toPoly (CFrac.num (p.getD i CCommRing.zero)))
           / CFrac.am β (DensePoly.toPoly (CFrac.den (p.getD i CCommRing.zero))) := by
-      show CFrac.toCFrac (p.getD i CCommRing.zero) = _
-      rw [CFrac.toCFrac_eq_div]
-    have hden0 : CFrac.am β (DensePoly.toPoly (CFrac.den (p.getD i CCommRing.zero))) ≠ 0 :=
-      CFrac.amG_toPolyG_ne_zero (CFrac.toPoly_den_ne_zero _)
+      show CFrac.toRatFunc (p.getD i CCommRing.zero) = _
+      rw [CFrac.toRatFunc_eq_div]
+      simp only [toPoly_list_eq]
+    have hden0 : CFrac.am β (DensePoly.toPoly (CFrac.den (p.getD i CCommRing.zero))) ≠ 0 := by
+      simpa only [toPoly_list_eq] using
+        CFrac.am_ne_zero
+          (CFrac.toPoly_den_ne_zero_generic (p.getD i CCommRing.zero))
     rw [toR_eq_toK, hcoeff, hcd]
     have hpushP : CFrac.am β (((dens.zipIdx.filter (fun de => decide (de.2 ≠ i))).map
         (fun de => DensePoly.toPoly de.1)).prod)
@@ -640,7 +640,9 @@ theorem associated_toGBPolyG_gbprimitivePartCore (fuel : ℕ)
   have hl' : Polynomial.C (CFrac.am β (DensePoly.toPoly (gbcontentCore cgcdB p)))
       * toGBPoly (gbprimitivePartCore cgcdB p) = toGBPoly p := by
     simpa [toGBPoly] using hl
-  refine ⟨(Polynomial.isUnit_C.mpr (CFrac.amG_toPolyG_ne_zero hg0).isUnit).unit, ?_⟩
+  have hamg : CFrac.am β (DensePoly.toPoly (gbcontentCore cgcdB p)) ≠ 0 := by
+    exact CFrac.am_ne_zero hg0
+  refine ⟨(Polynomial.isUnit_C.mpr hamg.isUnit).unit, ?_⟩
   rw [← hl']
   show toGBPoly (gbprimitivePartCore cgcdB p)
       * Polynomial.C (CFrac.am β (DensePoly.toPoly (gbcontentCore cgcdB p)))

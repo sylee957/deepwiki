@@ -54,15 +54,25 @@ theorem towerCoeffIntegrateLrt_sound (c b : DenseFrac β) (h : towerCoeffIntegra
           (CFieldSpec.toK
             (CField.div (CFrac.ofPoly (F := DenseFrac) bn) (CFrac.ofPoly (F := DenseFrac) bd))) := by
     rw [CDiffFieldSpec.toK_cderiv]
-    rfl
+    change extendDeriv (Differential.implicitDeriv
+        (CPoly.toPoly (CPoly.one : DensePoly β))) _ =
+      towerFractionFieldDeriv [CCommRing.one] _
+    rw [towerFractionFieldDeriv]
+    rw [CPoly.toPoly_one]
+    have hone : DensePoly.toPoly ([CCommRing.one] : DensePoly β) = 1 := by
+      simp only [denote]
+      simp
+    rw [hone]
   have htoK_embed : ∀ num : DensePoly β,
       CFieldSpec.toK (CFrac.ofPoly (F := DenseFrac) num) = CFrac.am β (toPoly num) := by
     intro num
-    show CFrac.am β (toPoly num) / CFrac.am β (toPoly ([CCommRing.one] : DensePoly β))
-      = CFrac.am β (toPoly num)
-    simp only [denote, map_one, mul_zero, add_zero, div_one]
+    simpa only [toPoly_list_eq] using
+      (CFrac.toK_ofPoly (F := DenseFrac) (P := DensePoly) num)
   have htoK_c : CFieldSpec.toK c
-      = CFrac.am β (toPoly (CFrac.num c)) / CFrac.am β (toPoly (CFrac.den c)) := rfl
+      = CFrac.am β (toPoly (CFrac.num c)) / CFrac.am β (toPoly (CFrac.den c)) := by
+    change CFrac.toRatFunc c = _
+    rw [CFrac.toRatFunc_eq_div]
+    simp only [toPoly_list_eq]
   rw [hcd, CFieldSpec.toK_div, htoK_embed bn, htoK_embed bd, htoK_c]
   exact hsound
 

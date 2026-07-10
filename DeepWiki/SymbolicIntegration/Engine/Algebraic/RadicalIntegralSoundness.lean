@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalDerivationInvariant
-import DeepWiki.SymbolicIntegration.Engine.Tower.CFracDiffSpec
+import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalRationalDriver
 
 /-! # Abstract soundness of the radical rational-part integrator: `radDeriv v = g` in `K[X]`
@@ -14,7 +14,7 @@ instances are `isRadicalRationalIntegral_radGen` (`∫ (f'/(nf))·√f = √f`) 
 `isRadicalRationalIntegral_linear` (two-term antiderivatives). The general soundness is the telescoping
 invariant `radReduceRationalTelescope` and `radDeriv_foldl_cadd_zero_cons_telescope`, whose per-step
 `K`-equation precondition is discharged for the literal `CFrac.ofPoly`-coefficient lifts via three
-`DenseFrac ℚ`-specific bridges (`toCFracG_cderiv_ofPoly`, `toK_logDerRadicand_mul_radicand`,
+`DenseFrac ℚ`-specific bridges (`toRatFunc_cderiv_ofPoly`, `toK_logDerRadicand_mul_radicand`,
 `radCase3Residual_eq`), composed by `toK_step_ofPoly_iff` and `radDeriv_foldl_cadd_ofPoly_telescope`. -/
 
 open Polynomial
@@ -268,19 +268,20 @@ the per-step `K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` for a 
 engine's polynomial derivative `cderiv : DensePoly ℚ → DensePoly ℚ` (formal `d/dX` on coefficient lists)
 through `CFrac.ofPoly` and `cderiv` (the tower derivation `towerDerivCFrac [1]`). This is the substantive
 noncomputable bridge — it lives in the genuine field `RatFunc ℚ` (`= CFieldSpec.K (DenseFrac ℚ)`), read
-through `toCFrac = CFieldSpec.toK`.
+through `toRatFunc = CFieldSpec.toK`.
 
 The chain: `CFrac.ofPoly p` reads as the algebra-map image `am (toPoly p) = algebraMap ℚ[X] (RatFunc ℚ)
 (toPoly p)` (denominator `1`); the tower derivation `towerDerivCFrac [1]` realizes Mathlib's
-`extendDeriv (implicitDeriv (toPoly [1]))` (`toCFracG_towerDerivCFracG`), which on an algebra-map image
+`extendDeriv (implicitDeriv (toPoly [1]))` (`toRatFunc_towerDerivCFracWith`), which on an algebra-map image
 is `algebraMap (baseDerivQ (toPoly p))` (`extendDeriv_algebraMap`); and `baseDerivQ = implicitDeriv
 (toPoly [1]) = implicitDeriv 1` is the plain polynomial `derivative` over `ℚ` (the base `Differential ℚ`
 is `⟨0⟩`, so `mapCoeffs = 0`), which matches `toPoly (cderiv p)` (`toPolyG_cderivG`). -/
 
-/-- **`baseDerivQ` is the plain polynomial derivative over `ℚ`** — `baseDerivQ q = Polynomial.derivative
-q` in `ℚ[X]`. `baseDerivQ = implicitDeriv (toPoly [1]) = implicitDeriv 1 = mapCoeffs + 1 · derivative'`,
-and over `ℚ` the base `Differential ℚ` is the zero derivation (`instDifferentialQ = ⟨0⟩`), so `mapCoeffs =
-0` and only `derivative'` survives. The base-derivation half of bridge (i). -/
+/-- The polynomial derivation whose fraction-field extension realizes the dense `ℚ(x)` derivative. -/
+noncomputable def baseDerivQ : Derivation ℤ (CFieldSpec.K ℚ)[X] (CFieldSpec.K ℚ)[X] :=
+  Differential.implicitDeriv (DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ))
+
+/-- The base derivation on `ℚ[X]` is the ordinary polynomial derivative. -/
 theorem baseDerivQ_apply (q : (CFieldSpec.K ℚ)[X]) :
     baseDerivQ q = Polynomial.derivative q := by
   have h1 : DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
@@ -296,25 +297,31 @@ theorem baseDerivQ_apply (q : (CFieldSpec.K ℚ)[X]) :
   simp only [Derivation.add_apply, hmc, Derivation.restrictScalars_apply, one_smul, zero_add]
   rfl
 
-/-- **★ Bridge (i) — the derivation commutes with `CFrac.ofPoly`** — `toCFrac (cderiv (CFrac.ofPoly p)) =
-toCFrac (CFrac.ofPoly (cderiv p))` in `RatFunc ℚ` (`= CFieldSpec.K (DenseFrac ℚ)`): the polynomial-into-ℚ(x)
+/-- **★ Bridge (i) — the derivation commutes with `CFrac.ofPoly`** — `toRatFunc (cderiv (CFrac.ofPoly p)) =
+toRatFunc (CFrac.ofPoly (cderiv p))` in `RatFunc ℚ` (`= CFieldSpec.K (DenseFrac ℚ)`): the polynomial-into-ℚ(x)
 embedding `CFrac.ofPoly : DensePoly ℚ → DenseFrac ℚ` is a derivation morphism, i.e. `cderiv ∘ CFrac.ofPoly = CFrac.ofPoly ∘
 cderiv` read through the genuine field. The substantive noncomputable bridge of the literal-radical
 soundness: `cderiv = towerDerivCFrac [1]` realizes `extendDeriv (implicitDeriv (toPoly [1]))`
-(`toCFracG_towerDerivCFracG`); on the algebra-map image `CFrac.ofPoly p ↦ am (toPoly p)`
-(`CFrac.toCFrac_ofPoly`) this is `algebraMap (baseDerivQ (toPoly p))` (`extendDeriv_algebraMap`); and
+(`toRatFunc_towerDerivCFracWith`); on the algebra-map image `CFrac.ofPoly p ↦ am (toPoly p)`
+(`CFrac.toRatFunc_ofPoly`) this is `algebraMap (baseDerivQ (toPoly p))` (`extendDeriv_algebraMap`); and
 `baseDerivQ` is the plain `derivative` (`baseDerivQ_apply`), matching `toPoly (cderiv p)`
 (`toPolyG_cderivG`). -/
-theorem toCFracG_cderiv_ofPoly (p : DensePoly ℚ) :
-    CFrac.toCFrac (CDiffField.cderiv (CFrac.ofPoly p))
-      = CFrac.toCFrac (CFrac.ofPoly (DensePoly.cderiv p)) := by
+theorem toRatFunc_cderiv_ofPoly (p : DensePoly ℚ) :
+    CFrac.toRatFunc (CDiffField.cderiv (CFrac.ofPoly (F := DenseFrac) p))
+      = CFrac.toRatFunc (CFrac.ofPoly (F := DenseFrac) (DensePoly.cderiv p)) := by
   -- `cderiv = towerDerivCFrac [1]`; realize it as `extendDeriv (implicitDeriv (toPoly [1]))`
-  show CFrac.toCFrac (CFrac.towerDerivCFrac [CCommRing.one] (CFrac.ofPoly p)) = _
-  rw [CFrac.toCFracG_towerDerivCFracG, CFrac.toCFrac_ofPoly, CFrac.toCFrac_ofPoly, CFrac.am]
+  show CFrac.toRatFunc
+      (CFrac.towerDerivCFrac [CCommRing.one] (CFrac.ofPoly (F := DenseFrac) p)) = _
+  unfold CFrac.towerDerivCFrac
+  rw [CFrac.toRatFunc_towerDerivCFracWith (F := DenseFrac) (P := DensePoly),
+    CFrac.toRatFunc_ofPoly (F := DenseFrac) (P := DensePoly),
+    CFrac.toRatFunc_ofPoly (F := DenseFrac) (P := DensePoly), toPoly_list_eq, CFrac.am]
   -- `extendDeriv (implicitDeriv (toPoly [1])) (algebraMap (toPoly p)) = algebraMap (baseDerivQ (toPoly p))`
   rw [show Differential.implicitDeriv (DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ)) = baseDerivQ from rfl]
   erw [extendDeriv_algebraMap]
-  rw [baseDerivQ_apply, DensePoly.toPolyG_cderivG]
+  rw [baseDerivQ_apply]
+  simp only [toPoly_list_eq]
+  rw [DensePoly.toPolyG_cderivG]
   rfl
 
 /-! ### Bridge (ii): `g = ℓ·f` in `K` — the integrand IS the diagonal multiplier times the radicand
@@ -387,14 +394,16 @@ namespace RadElem
 open scoped Polynomial
 
 /-- **`toK (cderiv (CFrac.ofPoly p)) = am (derivative (toPoly p))`** (`CFieldSpec.toK`-flavoured bridge (i)) —
-the genuine-field reading of `cderiv ∘ CFrac.ofPoly`: bridge (i) (`toCFracG_cderiv_ofPoly`) composed with the
+the genuine-field reading of `cderiv ∘ CFrac.ofPoly`: bridge (i) (`toRatFunc_cderiv_ofPoly`) composed with the
 `CFrac.ofPoly`-reading and `toPolyG_cderivG`. The `toK`-side form used in the per-step composition. -/
 theorem toK_cderiv_ofPoly (p : DensePoly ℚ) :
     CFieldSpec.toK (CDiffField.cderiv (CFrac.ofPoly (F := DenseFrac) p))
       = CFrac.am ℚ (derivative (DensePoly.toPoly p)) := by
   rw [show CFieldSpec.toK (CDiffField.cderiv (CFrac.ofPoly (F := DenseFrac) p))
-        = CFrac.toCFrac (CDiffField.cderiv (CFrac.ofPoly (F := DenseFrac) p)) from rfl,
-    toCFracG_cderiv_ofPoly, CFrac.toCFrac_ofPoly, DensePoly.toPolyG_cderivG]
+        = CFrac.toRatFunc (CDiffField.cderiv (CFrac.ofPoly (F := DenseFrac) p)) from rfl,
+    toRatFunc_cderiv_ofPoly, CFrac.toRatFunc_ofPoly]
+  simp only [toPoly_list_eq]
+  rw [DensePoly.toPolyG_cderivG]
 
 /-- **`toK (logDerRadicand n (CFrac.ofPoly ρ)) = am(ρ') / ((n:K)·am(ρ))`** — the diagonal multiplier of the
 literal radical derivation, read in `RatFunc ℚ`: `ℓ = ρ'/(nρ)` reads as `am(derivative ρ̄)/((n:K)·am ρ̄)`
@@ -406,6 +415,7 @@ theorem toK_logDerRadicand_ofPoly (n : ℕ) (ρ : DensePoly ℚ) :
         / ((n : RatFunc (CFieldSpec.K ℚ)) * CFrac.am ℚ (DensePoly.toPoly ρ)) := by
   rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, DensePoly.toK_cnatCastG, toK_cderiv_ofPoly,
     CFrac.toK_ofPoly]
+  simp only [toPoly_list_eq]
 
 /-- **★ The literal per-step `K`-equation reduces to the cleared polynomial identity** — for `CFrac.ofPoly`-of-
 polynomial step coefficient `B` and consecutive leftovers `C`, `C'` over the radicand `ρ` (all `DensePoly ℚ`),
@@ -430,7 +440,8 @@ theorem toK_step_ofPoly_iff (n : ℕ) (ρ B C C' : DensePoly ℚ)
   -- read every `toK` through `am` (bridge (i) for `cderiv`, the `ℓ` reading for the multiplier)
   rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, toK_cderiv_ofPoly, CFrac.toK_ofPoly, CFrac.toK_ofPoly,
     CFrac.toK_ofPoly, toK_logDerRadicand_ofPoly]
-  have hρK : CFrac.am ℚ (DensePoly.toPoly ρ) ≠ 0 := CFrac.amG_toPolyG_ne_zero hρ
+  simp only [toPoly_list_eq]
+  have hρK : CFrac.am ℚ (DensePoly.toPoly ρ) ≠ 0 := CFrac.am_ne_zero hρ
   have hinj := RatFunc.algebraMap_injective (CFieldSpec.K ℚ)
   -- the `K[X]` identity, pushed through the ring hom `am`, with the denominator `(n:K)·am ρ̄ ≠ 0`
   -- cleared, is exactly the `RatFunc` equation; `am` injectivity gives the converse.
@@ -526,7 +537,8 @@ theorem deriv_amG_toPolyG (N : DensePoly ℚ) :
         (CFrac.am ℚ (DensePoly.toPoly N))
       = CFrac.am ℚ (derivative (DensePoly.toPoly N)) := by
   rw [show CFrac.am ℚ (DensePoly.toPoly N) =
-      CFieldSpec.toK (CFrac.ofPoly N : DenseFrac ℚ) from (CFrac.toK_ofPoly N).symm,
+      CFieldSpec.toK (CFrac.ofPoly N : DenseFrac ℚ) from
+        (by simpa only [toPoly_list_eq] using (CFrac.toK_ofPoly N).symm),
     ← CDiffFieldSpec.toK_cderiv, toK_cderiv_ofPoly]
 
 /-- **★ The FRACTION-coefficient single-step iff** — for `CFrac.ofPoly`-of-polynomial numerator `N`, integrand
@@ -552,16 +564,18 @@ theorem isRadicalRationalIntegral_div_ofPoly_iff (n : ℕ) (N M ρ : DensePoly �
           = (n : (CFieldSpec.K ℚ)[X]) * DensePoly.toPoly ρ * DensePoly.toPoly M := by
   rw [isRadicalRationalIntegral_zero_cons_iff]
   -- abbreviations for the `am`-images and the denominator nonzero facts
-  have hρK : CFrac.am ℚ (DensePoly.toPoly ρ) ≠ 0 := CFrac.amG_toPolyG_ne_zero hρ
+  have hρK : CFrac.am ℚ (DensePoly.toPoly ρ) ≠ 0 := CFrac.am_ne_zero hρ
   have hinj := RatFunc.algebraMap_injective (CFieldSpec.K ℚ)
   -- expand the `K`-equation `toK(cderiv c + c·ℓ) = toK γ` through `toK_div`, bridge (i), and `ℓ = ρ'/(nρ)`
   rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_div, CFieldSpec.toK_div, CFrac.toK_ofPoly,
     CFrac.toK_ofPoly, CFrac.toK_ofPoly, toK_logDerRadicand_ofPoly]
+  simp only [toPoly_list_eq]
   -- `toK (cderiv (div (CFrac.ofPoly N) (CFrac.ofPoly ρ))) = deriv (am N̄ / am ρ̄)` (the quotient rule)
   rw [show CFieldSpec.toK (CDiffField.cderiv (CField.div (CFrac.ofPoly N) (CFrac.ofPoly ρ)))
         = @Differential.deriv _ _ (CDiffFieldSpec.diffK (α := DenseFrac ℚ))
             (CFrac.am ℚ (DensePoly.toPoly N) / CFrac.am ℚ (DensePoly.toPoly ρ)) by
-      rw [CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_div, CFrac.toK_ofPoly, CFrac.toK_ofPoly]]
+      rw [CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_div, CFrac.toK_ofPoly, CFrac.toK_ofPoly]
+      simp only [toPoly_list_eq]]
   rw [Derivation.leibniz_div, smul_eq_mul, smul_eq_mul, smul_eq_mul, deriv_amG_toPolyG,
     deriv_amG_toPolyG]
   -- now a pure `RatFunc` equation in `am`-images; clear denominators and descend by `am` injectivity
@@ -718,7 +732,7 @@ iterate step's *polynomial* cleared identity `B'f + Bg − C = D` lifted to the 
 (R/ρ)·y` coefficients. That lift is now a theorem via three `DenseFrac ℚ`-specific bridges, **all landed and
 axiom-clean** (none of them `radDeriv`-arithmetic):
 
-* (i) **`toCFracG_cderiv_ofPoly`** — `cderiv (CFrac.ofPoly P) = CFrac.ofPoly (cderiv P)` read in `RatFunc ℚ`: the
+* (i) **`toRatFunc_cderiv_ofPoly`** — `cderiv (CFrac.ofPoly P) = CFrac.ofPoly (cderiv P)` read in `RatFunc ℚ`: the
   polynomial embedding `CFrac.ofPoly : DensePoly ℚ → DenseFrac ℚ` commutes with the derivation. The substantive
   bridge: `cderiv = towerDerivCFrac [1]` realizes `extendDeriv (implicitDeriv (toPoly [1]))`, which on
   the algebra-map image `CFrac.ofPoly P ↦ am (toPoly P)` is `algebraMap (baseDerivQ (toPoly P))`, and
@@ -791,7 +805,7 @@ headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 #print axioms RadElem.radDeriv_foldl_cadd_zero_cons_telescope
 
 -- ★ Bridge (i): the derivation commutes with `CFrac.ofPoly` (the substantive `RatFunc ℚ` bridge):
-#print axioms toCFracG_cderiv_ofPoly
+#print axioms toRatFunc_cderiv_ofPoly
 
 -- ★ Bridge (ii): `g = ℓ·f` in `K` (the diagonal multiplier times the radicand is `(1/n)f'`):
 #print axioms RadElem.toK_logDerRadicand_mul_radicand
