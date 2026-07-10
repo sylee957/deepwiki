@@ -108,9 +108,6 @@ def cLcmQ (p q : DensePoly ℚ) : DensePoly ℚ :=
   if cisZero p ∨ cisZero q then []
   else cmonic (cdivWf (cmul p q) (cgcdWf p q).1)
 
-/-- `tⁱ`-coefficient of a `DensePoly ℚ` `cCoeffQ p i = coefficient(p, tⁱ)` (`0` out of range). -/
-def cCoeffQ (p : DensePoly ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
-
 /-- Linear constraints over ℚ `cLinearConstraintsQ gnums gdens` (`D = d/dt`, `k = ℚ`): from the reduced
 equation `Dp = Σᵢ cᵢ·gᵢ` with `gᵢ = gnumsᵢ/gdensᵢ`, clears the common denominator `d = lcm(gdensᵢ)`,
 splits each `d·gᵢ = qᵢ·d + rᵢ`, and returns the polynomial parts `qs = [q₁, …, qₘ]` together with the
@@ -128,7 +125,7 @@ def cLinearConstraintsQ (gnums gdens : List (DensePoly ℚ)) :
   let m := gnums.length
   let M : List (List ℚ) :=
     (List.range nrows).map (fun i =>
-      (List.range m).map (fun j => cCoeffQ (rs.getD j []) i))
+      (List.range m).map (fun j => CPoly.coeff (rs.getD j []) i))
   (qs, M)
 
 /-- **Parametric Risch DE over the base monomial ℚ[t]** `cParamRischDE gnums gdens`, specialized to

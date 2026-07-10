@@ -20,22 +20,16 @@ namespace RadElem
 
 variable {α : Type*} [CField α]
 
-/-- **The `α`-component (`y⁰`) of a `RadElem`** `radCoeff0 u = a` for `u = [a, b, …]`. -/
-def radCoeff0 (u : RadElem α) : α := (u : List α).headD CCommRing.zero
-
-/-- **The `y`-component (`y¹`) of a `RadElem`** `radCoeff1 u = b` for `u = [a, b, …]`. -/
-def radCoeff1 (u : RadElem α) : α := (u : List α).getD 1 CCommRing.zero
-
 /-- **The conjugate norm** `radNorm2 ρ u = a² − b²·ρ ∈ α` for `u = a + b·y`. -/
 def radNorm2 (ρ : α) (u : RadElem α) : α :=
-  let a := radCoeff0 u
-  let b := radCoeff1 u
+  let a := CPoly.coeff u 0
+  let b := CPoly.coeff u 1
   CField.sub (CCommRing.mul a a) (CCommRing.mul (CCommRing.mul b b) ρ)
 
 /-- **The reciprocal in `α[y]/(y² − ρ)`** `radInv2 ρ u = [a/N, −b/N]` for `u = a + b·y`. -/
 def radInv2 (ρ : α) (u : RadElem α) : RadElem α :=
-  let a := radCoeff0 u
-  let b := radCoeff1 u
+  let a := CPoly.coeff u 0
+  let b := CPoly.coeff u 1
   let N := radNorm2 ρ u
   [CField.div a N, CCommRing.neg (CField.div b N)]
 

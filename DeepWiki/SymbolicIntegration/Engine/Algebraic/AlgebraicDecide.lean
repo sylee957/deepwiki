@@ -29,7 +29,7 @@ def cIntegrateAlgebraicDecide (p : ℕ) [Fact p.Prime]
     (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
     (ρq : DensePoly ℚ) (gen : ℕ) (Dm : DensePoly.MumfordDivisor ℚ) (hasLogPart : Bool) :
     Option (AlgIntegralResult (CFrac ℚ)) :=
-  let ρpoly : DensePoly ℚ := qNum ρ
+  let ρpoly : DensePoly ℚ := CFrac.num ρ
   let runs := DensePoly.radIntegrateRationalWf ρpoly R B
   let v := radAssembleRatPart ρ runs
   if hasLogPart = false then
@@ -77,7 +77,7 @@ structure AlgebraicDecideSoundnessResidual : Prop where
   /-- No-log branch (rational-part exhaustiveness): `D(⟨v, []⟩) = integrand`. -/
   hnolog :
     DensePoly.toPoly (algDerivQ ρ
-        ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qNum ρ) R B), []⟩)
+        ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (CFrac.num ρ) R B), []⟩)
       = DensePoly.toPoly integrand
   /-- Principal branch (`cIntegrateAlgebraicWf_sound` discharge): `D(cIntegrateAlgebraicWf …) = integrand`. -/
   hprincipal :
@@ -88,7 +88,7 @@ structure AlgebraicDecideSoundnessResidual : Prop where
   htorsion : ∀ term,
     torsionLogTerm p ρ ρq gen Dm = some term →
     DensePoly.toPoly (algDerivQ ρ
-        ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qNum ρ) R B), [term]⟩)
+        ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (CFrac.num ρ) R B), [term]⟩)
       = DensePoly.toPoly integrand
 
 /-- Soundness of `cIntegrateAlgebraicDecide`: under the soundness residual, `… = some F` implies
@@ -114,7 +114,7 @@ theorem cIntegrateAlgebraicDecide_sound
       rw [hN, Option.some.injEq] at hsome
       rw [← hsome]
       -- the literal output equals `cIntegrateAlgebraicWf …` (same parts, same log term)
-      have heq : (⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qNum ρ) R B),
+      have heq : (⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (CFrac.num ρ) R B),
           [(c, N.map (fun z => CField.div z (qxOfNum D)))]⟩ : AlgIntegralResult (CFrac ℚ))
           = cIntegrateAlgebraicWf ρ R B residual c D degBound := by
         unfold cIntegrateAlgebraicWf
@@ -260,7 +260,7 @@ a principal `radLogArgSolve = some N`, expected to return `some` with a `1·log(
 def decideWitnessPrincipal : Option (AlgIntegralResult (CFrac ℚ)) :=
   cIntegrateAlgebraicDecide 5 rtRatRho [1] [1]
     (radInvYLift rtRatRho CCommRing.one) CCommRing.one [1] 1
-    (qNum rtRatRho) 1 hypPt35 true
+    (CFrac.num rtRatRho) 1 hypPt35 true
 
 /-- `cIntegrateAlgebraicDecide` returns `some F` with one principal log term on the `∫ 1/√(x²+1)`
 example: `(isSome, logTerms.length) = (true, some 1)`. -/

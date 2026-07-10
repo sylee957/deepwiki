@@ -107,6 +107,12 @@ noncomputable instance instCFieldDomainOfCFieldSpec {α : Type*} [CField α] [CF
 
 namespace CFrac
 
+/-- The numerator polynomial stored by a computable fraction. -/
+def num {α : Type*} [CField α] (x : CFrac α) : DensePoly α := x.1.1
+
+/-- The denominator polynomial stored by a computable fraction. -/
+def den {α : Type*} [CField α] (x : CFrac α) : DensePoly α := x.1.2
+
 /-- The constant `[1]` is `cisZero`-nonzero (from `CFieldDomain`). -/
 theorem cisZeroG_one_singleton {α : Type*} [CField α] [CFieldDomain α] :
     DensePoly.cisZero ([CCommRing.one] : DensePoly α) = false :=
@@ -197,11 +203,21 @@ theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CField α] [CFieldSpec �
     DensePoly.toPoly b ≠ 0 := by
   rw [Bool.eq_false_iff, Ne, DensePoly.cisZeroG_iff] at hb; exact hb
 
+/-- A computable fraction's stored denominator denotes a nonzero polynomial. -/
+theorem toPoly_den_ne_zero {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
+    DensePoly.toPoly (den x) ≠ 0 := by
+  obtain ⟨⟨a, b⟩, hb⟩ := x
+  exact toPolyG_ne_zero_of_cisZeroG_false hb
+
 /-- `toCFrac (num, den) = am (toPoly num) / am (toPoly den)` in `RatFunc (CFieldSpec.K α)`; the
 bridge `toK` of the next tower level. -/
 noncomputable def toCFrac {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
     RatFunc (CFieldSpec.K α) :=
-  am α (DensePoly.toPoly x.1.1) / am α (DensePoly.toPoly x.1.2)
+  am α (DensePoly.toPoly (num x)) / am α (DensePoly.toPoly (den x))
+
+/-- A computable fraction denotes its numerator divided by its denominator. -/
+theorem toCFrac_eq_div {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
+    toCFrac x = am α (DensePoly.toPoly (num x)) / am α (DensePoly.toPoly (den x)) := rfl
 
 /-- `toCFrac qzeroNZ = 0`. -/
 theorem toCFracG_qzeroNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] :
@@ -265,7 +281,7 @@ theorem toCFracG_qinvNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain 
   · rw [dif_pos h, toCFracG_qzeroNZG]
     have hx0 : DensePoly.toPoly x.1.1 = 0 := (DensePoly.cisZeroG_iff x.1.1).mp h
     have : toCFrac x = 0 := by
-      rw [toCFrac, hx0, map_zero, zero_div]
+      rw [toCFrac, num, hx0, map_zero, zero_div]
     rw [this, inv_zero]
   · rw [dif_neg h]
     show am α (DensePoly.toPoly x.1.2) / am α (DensePoly.toPoly x.1.1)

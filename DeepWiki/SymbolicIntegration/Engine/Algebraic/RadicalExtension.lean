@@ -21,13 +21,13 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The simple-radical-extension carrier `RadExt α n f`
 
-`F(y)` with `yⁿ = f ∈ F` (`F = α` a tower-level `[CField α]`), represented as a length-`n` coefficient
-list `RadElem α = List α` (index = power of `y`) with `yⁿ = f` baked into multiplication. -/
+`F(y)` with `yⁿ = f ∈ F` (`F = α` a tower-level `[CField α]`), represented as a length-`n` dense
+polynomial `RadElem α = DensePoly α` (index = power of `y`) with `yⁿ = f` baked into multiplication. -/
 
 /-- **A radical-extension element** over `α` — a coefficient list `[a₀,…,a_{n−1}]` for `Σ aᵢyⁱ` in
-`α[y]/(yⁿ − f)`. A reducible `abbrev` for `List α` so the `List` instances transfer (the degree `n` and
-radicand `f` are carried by the operations, not the type). -/
-abbrev RadElem (α : Type*) := List α
+`α[y]/(yⁿ − f)`. A reducible specialization of `DensePoly α`; the degree `n` and radicand `f` are
+carried by the operations, not the type. -/
+abbrev RadElem (α : Type*) := DensePoly α
 
 namespace RadElem
 

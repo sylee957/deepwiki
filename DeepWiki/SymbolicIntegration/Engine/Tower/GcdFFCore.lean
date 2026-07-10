@@ -13,11 +13,11 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {B : Type*} [CField B]
 
-/-! ### The generic bivariate carrier `GBPolyCore B = List (DensePoly B)` (`(B[s])[t]`) -/
+/-! ### The generic bivariate carrier `GBPolyCore B = DensePoly (DensePoly B)` (`(B[s])[t]`) -/
 
-/-- Generic bivariate dense carrier `GBPolyCore B := List (DensePoly B)`: a `t`-polynomial with coefficients
-in `DensePoly B = B[s]` (index = `t`-degree, low→high). -/
-abbrev GBPolyCore (B : Type*) [CField B] := List (DensePoly B)
+/-- Generic bivariate dense carrier `GBPolyCore B := DensePoly (DensePoly B)`: a `t`-polynomial with
+coefficients in `DensePoly B = B[s]` (index = `t`-degree, low→high). -/
+abbrev GBPolyCore (B : Type*) := DensePoly (DensePoly B)
 
 namespace GBPolyCore
 
@@ -95,21 +95,15 @@ namespace DensePoly
 
 variable {β : Type*} [CField β] [CFieldDomain β]
 
-/-- The numerator `DensePoly β` of a `CFrac β` coefficient. -/
-def qnumCoeffCore (c : CFrac β) : DensePoly β := c.1.1
-
-/-- The denominator `DensePoly β` of a `CFrac β` coefficient. -/
-def qdenCoeffCore (c : CFrac β) : DensePoly β := c.1.2
-
 /-- Clear denominators `cclearDenomsCore p ∈ GBPolyCore β`: multiply `p` over `α = CFrac β` by the
 product of its coefficient denominators, so coefficient `i` becomes `numᵢ · ∏_{j≠i} denⱼ ∈ DensePoly β`. -/
 def cclearDenomsCore (p : DensePoly (CFrac β)) : GBPolyCore β :=
   let cs : List (CFrac β) := p
-  let dens : List (DensePoly β) := cs.map qdenCoeffCore
+  let dens : List (DensePoly β) := cs.map CFrac.den
   cs.zipIdx.map (fun (ci, i) =>
     let prodOthers := (dens.zipIdx.filter (fun (_, j) => j ≠ i)).foldl
       (fun acc (d, _) => DensePoly.cmul acc d) [CCommRing.one]
-    DensePoly.cmul (qnumCoeffCore ci) prodOthers)
+    DensePoly.cmul (CFrac.num ci) prodOthers)
 
 /-- Lift back `liftGBPolyCore p ∈ DensePoly (CFrac β)`: read each `DensePoly β` coefficient `c` as the
 fraction `c/1`. -/

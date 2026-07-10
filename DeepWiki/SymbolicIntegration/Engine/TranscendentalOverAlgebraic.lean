@@ -456,31 +456,32 @@ theorem isZero_iff (hn : 1 ≤ n) (p : RadExt α n f) : RadExt.isZero p = true �
 For `q = a + b·y` with conjugate norm `N = a² − b²f`, `radInv2 f q = [a/N, −b/N]` is `q⁻¹` when `N ≠ 0`
 (both vanish when `q = 0`). -/
 
-/-- `toPoly (radInv2 f q) = C(toK(a/N)) − C(toK(b/N))·X` in `K[X]` (`a, b` the `radCoeff0/1`,
+/-- `toPoly (radInv2 f q) = C(toK(a/N)) − C(toK(b/N))·X` in `K[X]` (`a, b` coefficients zero and one,
 `N = radNorm2`). -/
 theorem toPolyG_radInv2 (q : RadElem α) :
     DensePoly.toPoly (radInv2 f q)
-      = C (CFieldSpec.toK (CField.div (radCoeff0 q) (radNorm2 f q)))
-        - C (CFieldSpec.toK (CField.div (radCoeff1 q) (radNorm2 f q))) * X := by
-  show DensePoly.toPoly [CField.div (radCoeff0 q) (radNorm2 f q),
-      CCommRing.neg (CField.div (radCoeff1 q) (radNorm2 f q))] = _
+      = C (CFieldSpec.toK (CField.div (CPoly.coeff q 0) (radNorm2 f q)))
+        - C (CFieldSpec.toK (CField.div (CPoly.coeff q 1) (radNorm2 f q))) * X := by
+  show DensePoly.toPoly [CField.div (CPoly.coeff q 0) (radNorm2 f q),
+      CCommRing.neg (CField.div (CPoly.coeff q 1) (radNorm2 f q))] = _
   simp only [denote, mul_zero, add_zero]
   rw [map_neg]; ring
 
-/-- `toPoly q = C(toK a) + C(toK b)·X` for a length-`≤ 2` `q` (`a, b` the `radCoeff0/1`). -/
+/-- `toPoly q = C(toK a) + C(toK b)·X` for a length-`≤ 2` `q` with coefficients `a` and `b`. -/
 theorem toPolyG_of_len_le_two (q : RadElem α) (hq : (q : List α).length ≤ 2) :
-    DensePoly.toPoly q = C (CFieldSpec.toK (radCoeff0 q)) + C (CFieldSpec.toK (radCoeff1 q)) * X := by
+    DensePoly.toPoly q = C (CFieldSpec.toK (CPoly.coeff q 0)) + C (CFieldSpec.toK (CPoly.coeff q 1)) * X := by
   match q, hq with
-  | [], _ => simp [radCoeff0, radCoeff1, CFieldSpec.toK_zero]
+  | [], _ => simp [CPoly.coeff_dense_eq, CFieldSpec.toK_zero]
   | [a], _ =>
     show DensePoly.toPoly [a] = _
-    rw [show radCoeff0 ([a] : RadElem α) = a from rfl,
-      show radCoeff1 ([a] : RadElem α) = CCommRing.zero from rfl]
+    rw [show CPoly.coeff ([a] : RadElem α) 0 = a from rfl,
+      show CPoly.coeff ([a] : RadElem α) 1 = CCommRing.zero from rfl]
     simp only [denote, mul_zero, add_zero]
     rw [map_zero, zero_mul, add_zero]
   | [a, b], _ =>
     show DensePoly.toPoly [a, b] = _
-    rw [show radCoeff0 ([a, b] : RadElem α) = a from rfl, show radCoeff1 ([a, b] : RadElem α) = b from rfl]
+    rw [show CPoly.coeff ([a, b] : RadElem α) 0 = a from rfl,
+      show CPoly.coeff ([a, b] : RadElem α) 1 = b from rfl]
     simp only [denote, mul_zero, add_zero]; ring
 
 /-- The conjugate-norm inverse identity (`n = 2`, length-`≤ 2` `q`, `N ≠ 0`): `mk (toPoly q) · mk
@@ -489,8 +490,8 @@ theorem inv_mul_gen (q : RadElem α) (hq : (q : List α).length ≤ 2)
     (hN : CFieldSpec.toK (radNorm2 f q) ≠ 0) :
     AdjoinRoot.mk (X ^ 2 - C (CFieldSpec.toK f)) (DensePoly.toPoly q)
       * AdjoinRoot.mk _ (DensePoly.toPoly (radInv2 f q)) = 1 := by
-  set A := CFieldSpec.toK (radCoeff0 q)
-  set B := CFieldSpec.toK (radCoeff1 q)
+  set A := CFieldSpec.toK (CPoly.coeff q 0)
+  set B := CFieldSpec.toK (CPoly.coeff q 1)
   set F := CFieldSpec.toK f
   set N := CFieldSpec.toK (radNorm2 f q) with hNdef
   have hNval : N = A * A - B * B * F := by
@@ -517,9 +518,9 @@ theorem inv_mul_gen (q : RadElem α) (hq : (q : List α).length ≤ 2)
 theorem toK_radNorm2_eq_zero_of_toPolyG_zero (q : RadElem α) (hq : (q : List α).length ≤ 2)
     (h0 : DensePoly.toPoly q = 0) : CFieldSpec.toK (radNorm2 f q) = 0 := by
   rw [toPolyG_of_len_le_two q hq] at h0
-  have hA : CFieldSpec.toK (radCoeff0 q) = 0 := by
+  have hA : CFieldSpec.toK (CPoly.coeff q 0) = 0 := by
     have := congrArg (Polynomial.coeff · 0) h0; simpa [coeff_C, coeff_X] using this
-  have hB : CFieldSpec.toK (radCoeff1 q) = 0 := by
+  have hB : CFieldSpec.toK (CPoly.coeff q 1) = 0 := by
     have := congrArg (Polynomial.coeff · 1) h0; simpa [coeff_C, coeff_X, coeff_C_mul] using this
   rw [radNorm2, CFieldSpec.toK_sub, CFieldSpec.toK_mul, CFieldSpec.toK_mul, CFieldSpec.toK_mul, hA, hB]
   ring
@@ -543,8 +544,8 @@ theorem toPolyG_eq_zero_of_mk_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK
 theorem toPolyG_eq_zero_of_N_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK f)))]
     (q : RadElem α) (hq : (q : List α).length ≤ 2)
     (hN : CFieldSpec.toK (radNorm2 f q) = 0) : DensePoly.toPoly q = 0 := by
-  set A := CFieldSpec.toK (radCoeff0 q)
-  set B := CFieldSpec.toK (radCoeff1 q)
+  set A := CFieldSpec.toK (CPoly.coeff q 0)
+  set B := CFieldSpec.toK (CPoly.coeff q 1)
   set F := CFieldSpec.toK f
   have hNval : A * A - B * B * F = 0 := by
     rw [← hN, radNorm2, CFieldSpec.toK_sub, CFieldSpec.toK_mul, CFieldSpec.toK_mul, CFieldSpec.toK_mul]
@@ -559,8 +560,8 @@ theorem toPolyG_eq_zero_of_N_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK 
   have hA : A = 0 := by
     have : A * A = 0 := by rw [hB] at hNval; linear_combination hNval
     rcases mul_eq_zero.mp this with h | h <;> exact h
-  rw [toPolyG_of_len_le_two q hq, show CFieldSpec.toK (radCoeff0 q) = A from rfl,
-    show CFieldSpec.toK (radCoeff1 q) = B from rfl, hA, hB]
+  rw [toPolyG_of_len_le_two q hq, show CFieldSpec.toK (CPoly.coeff q 0) = A from rfl,
+    show CFieldSpec.toK (CPoly.coeff q 1) = B from rfl, hA, hB]
   simp
 
 /-- `toAdj` intertwines `RadExt.inv` with `⁻¹` (`n = 2`): `toAdj (RadExt.inv p) = (toAdj p)⁻¹`, by

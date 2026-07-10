@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 The logarithmic part puts `S(t,x) = gcd_x(D(x), A(x) − t·D'(x))` inside the logarithms of
 `∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`. This bivariate `ℚ[t][x]` gcd is computed by the subresultant
 polynomial-remainder sequence over the non-field ring `ℚ[t]`, on an executable carrier
-`GBPolyCore ℚ := List (DensePoly ℚ)`. Agreement with the noncomputable `lrtSubresultant` is proven in
+`GBPolyCore ℚ := DensePoly (DensePoly ℚ)`. Agreement with the noncomputable `lrtSubresultant` is proven in
 `SubresultantCorrectness`. -/
 
 namespace DeepWiki.SymbolicIntegration

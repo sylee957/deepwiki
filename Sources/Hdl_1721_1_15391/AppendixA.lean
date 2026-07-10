@@ -40,7 +40,7 @@ namespace DeepWiki.Tiaf
 
 /-- **The simple-radical-extension carrier** (Trager, Appendix A §1, p.73): an element of
 `F(y)`, `yⁿ = f`, is a coefficient list `[a₀,…,a_{n−1}]` for `Σ aᵢyⁱ` in `α[y]/(yⁿ − f)`. The
-library's `RadElem α = List α` (the degree `n` and radicand `f` are carried by the operations).
+library's `RadElem α = DensePoly α` (the degree `n` and radicand `f` are carried by the operations).
 The thesis writes this carrier `RadExt α n f`; the realized type is `RadElem`. -/
 abbrev appA_radicalCarrier := @RadElem
 

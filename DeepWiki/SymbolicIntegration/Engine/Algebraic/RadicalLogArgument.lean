@@ -38,7 +38,7 @@ def radArgSolvedArcsinh : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolve radArgRhoArcsinh radArgIntegrandArcsinh [1] 1
 
 -- Computed numerator `N` for arcsinh, expected up to scalar as `x + y`.
-#eval (radArgSolvedArcsinh.map (fun N => N.map (fun z => ((qNum z : List ℚ), (qDen z : List ℚ)))))
+#eval (radArgSolvedArcsinh.map (fun N => N.map (fun z => ((CFrac.num z : List ℚ), (CFrac.den z : List ℚ)))))
 
 /-- `radLogArgSolve` computes `u = x + y` for `∫ dx/√(x²+1)`: the solved `N` passes the log-derivative
 certificate `radIsLogIntegral 2 ρ N integrand = true`. -/
@@ -77,7 +77,7 @@ def radArgSolvedFinite : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolve radArgRhoArcsinh radArgIntegrandFinite [0, 1] 0
 
 -- Computed numerator `N` for the finite-pole case, expected up to scalar as `y − 1`.
-#eval (radArgSolvedFinite.map (fun N => N.map (fun z => ((qNum z : List ℚ), (qDen z : List ℚ)))))
+#eval (radArgSolvedFinite.map (fun N => N.map (fun z => ((CFrac.num z : List ℚ), (CFrac.den z : List ℚ)))))
 
 /-- `radLogArgSolve` computes `u = (y − 1)/x` for `∫ dx/(x√(x²+1))` with fixed `D = x`: the solved `N`
 (a multiple of `y − 1`) gives `u = N/x` passing the log-derivative certificate; the solve picks the

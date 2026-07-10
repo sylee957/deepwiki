@@ -19,14 +19,14 @@ polynomial data, via a degree-`d` ansatz whose residual coefficients form one �
 
 /-- `padCoeffsQ p n`: low→high ℚ-coefficient list of `p`, truncated/zero-extended to `n` entries. -/
 def padCoeffsQ (p : DensePoly ℚ) (n : ℕ) : List ℚ :=
-  (List.range n).map (fun i => (p : List ℚ).getD i 0)
+  (List.range n).map (fun i => CPoly.coeff p i)
 
 /-- `mulMatrixQ m d nrows`: the `nrows × (d+1)` ℚ-matrix of multiplication by `m` on the degree-`d`
 ansatz; entry `(r,i) = coeff(m, r−i)`. -/
 def mulMatrixQ (m : DensePoly ℚ) (d nrows : ℕ) : List (List ℚ) :=
   (List.range nrows).map (fun r =>
     (List.range (d + 1)).map (fun i =>
-      if r ≥ i then (m : List ℚ).getD (r - i) 0 else 0))
+      if r ≥ i then CPoly.coeff m (r - i) else 0))
 
 /-- `derivMatrixQ d nrows`: the `nrows × (d+1)` ℚ-matrix of `D = d/dx` on the degree-`d` ansatz;
 entry `(r,i) = i` when `i = r+1`, else `0`. -/

@@ -54,6 +54,7 @@ theorem dotQ_mulMatrixQ_row (b y : DensePoly ℚ) (d nrows r : ℕ) (hr : r < nr
       rw [show r - (r - k) = k from by omega]]
   simp only [toPolyG_coeff, toR_eq_toK, CFieldSpec.toK_rat,
     show CCommRing.zero = (0 : ℚ) from rfl]
+  simp only [CPoly.coeff_dense_eq, show CCommRing.zero = (0 : ℚ) from rfl]
   -- LHS: Σ_{i<d+1} (if r≥i then b[r-i] else 0)·y[i]; RHS: Σ_{x<r+1} b[r-x]·y[x].
   -- Reduce both to the sum over the common nonzero index set.
   have hLHS : (∑ i ∈ Finset.range (d + 1), (if r ≥ i then (b:List ℚ).getD (r - i) 0 else 0)
@@ -237,7 +238,7 @@ theorem sol_split (sol : List ℚ) (d : ℕ) (hsol : sol.length = 2 * (d + 1)) :
 `(toPoly z).coeff k`. -/
 theorem padCoeffsQ_getD (z : DensePoly ℚ) (nrows k : ℕ) (hk : k < nrows) :
     (padCoeffsQ z nrows).getD k 0 = (toPoly z).coeff k := by
-  rw [padCoeffsQ, getD_range_map_q _ nrows k hk, toPolyG_coeff, toR_eq_toK,
+  rw [padCoeffsQ, getD_range_map_q _ nrows k hk, CPoly.coeff_dense_eq, toPolyG_coeff, toR_eq_toK,
     CFieldSpec.toK_rat, show CCommRing.zero = (0 : ℚ) from rfl]
 
 /-- First-row identity `coeff_r(D u1 + b1 u1 + a•(b2 u2)) = coeff_r(z1)` (`r < nrows`) from a solve. -/

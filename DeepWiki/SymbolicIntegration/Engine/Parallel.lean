@@ -96,9 +96,6 @@ namespace DensePoly
 `t = exp(x)` (`Dt = t`); `Dt = [1,0,1]` the hypertangent `t = tan(x)` (`Dt = 1 + t²`). -/
 def cDerivMonomialQ (Dt p : DensePoly ℚ) : DensePoly ℚ := cmul (cderiv p) Dt
 
-/-- **`tⁱ`-coefficient of a `DensePoly ℚ`** `cParCoeffQ p i = coefficient(p, tⁱ)` (`0` out of range). -/
-def cParCoeffQ (p : DensePoly ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
-
 /-! ### A *particular*-solution linear solver over ℚ (the §10.3 step-5 solve)
 
 The eq. 10.6 system is generally **underdetermined** — the arbitrary constant of integration (and any
@@ -175,8 +172,8 @@ def cParallelSystemQ (Dt a d : DensePoly ℚ) :
   let allPolys := uPolys ++ cPolys
   let nrows := (target :: allPolys).foldl (fun acc p => max acc (cnorm p).length) 0
   let rows : List (List ℚ) :=
-    (List.range nrows).map (fun i => allPolys.map (fun p => cParCoeffQ p i))
-  let rhs : List ℚ := (List.range nrows).map (fun i => cParCoeffQ target i)
+    (List.range nrows).map (fun i => allPolys.map (fun p => CPoly.coeff p i))
+  let rhs : List ℚ := (List.range nrows).map (fun i => CPoly.coeff target i)
   (rows, rhs, nU, m)
 
 /-- **Parallel (Risch–Norman) integration over `ℚ(t)`** `cParallelIntegrate fuel Dt a d` (Bronstein

@@ -263,27 +263,10 @@ Read back over `β(s)`, the cleared polynomial equals `C s · toPoly p` for the 
 
 variable [CFieldDomain β]
 
-omit [CFieldDomain β] in
-/-- A `CFrac β` coefficient reads as `am (toPoly num) / am (toPoly den)` in `RatFunc (CFieldSpec.K
-β)`. -/
-theorem toCFracG_eq_div (c : CFrac β) :
-    CFrac.toCFrac c
-      = CFrac.am β (DensePoly.toPoly (DensePoly.qnumCoeffCore c))
-        / CFrac.am β (DensePoly.toPoly (DensePoly.qdenCoeffCore c)) := by
-  obtain ⟨⟨a, b⟩, hb⟩ := c; rfl
-
-omit [CFieldDomain β] in
-/-- A `CFrac β` coefficient's denominator has nonzero `toPoly` (by subtype membership
-`cisZero _ = false`). -/
-theorem toPolyG_qdenCoeffCoreG_ne_zero (c : CFrac β) :
-    DensePoly.toPoly (DensePoly.qdenCoeffCore c) ≠ 0 := by
-  obtain ⟨⟨a, b⟩, hb⟩ := c
-  exact CFrac.toPolyG_ne_zero_of_cisZeroG_false hb
-
 /-- The common-denominator scalar `commonDen p ∈ R`: the product of all the `β[s]`-denominators of `p`'s
 coefficients, the unit by which `cclearDenomsCore` scales `toPoly p`. -/
 noncomputable def commonDen (p : DensePoly (CFrac β)) : (CFieldSpec.K β)[X] :=
-  ((p.map DensePoly.qdenCoeffCore).map DensePoly.toPoly).prod
+  ((p.map CFrac.den).map DensePoly.toPoly).prod
 
 omit [CFieldDomain β] in
 /-- `commonDen p ≠ 0`: a product of nonzero denominators. -/
@@ -295,7 +278,7 @@ theorem commonDenG_ne_zero (p : DensePoly (CFrac β)) : commonDen p ≠ 0 := by
   obtain ⟨d, hd, hd0⟩ := hmem
   rw [List.mem_map] at hd
   obtain ⟨c, hc, rfl⟩ := hd
-  exact toPolyG_qdenCoeffCoreG_ne_zero c hd0
+  exact CFrac.toPoly_den_ne_zero c hd0
 
 omit [CFieldDomain β] in
 /-- `am (commonDen p) ≠ 0` (the field embedding of a nonzero product). -/
@@ -316,8 +299,8 @@ list. -/
 omit [CFieldSpec β] in
 /-- The `i`-th cleared coefficient of `cclearDenomsCore p` (in range) is `numᵢ · (∏_{j≠i} denⱼ)`. -/
 theorem cclearDenomsCoreG_getElem (p : DensePoly (CFrac β)) (i : ℕ) (hi : i < p.length) :
-    (DensePoly.cclearDenomsCore p)[i]? = some (DensePoly.cmul (DensePoly.qnumCoeffCore (p.getD i CCommRing.zero))
-      ((((p.map DensePoly.qdenCoeffCore).zipIdx).filter (fun de => decide (de.2 ≠ i))).foldl
+    (DensePoly.cclearDenomsCore p)[i]? = some (DensePoly.cmul (CFrac.num (p.getD i CCommRing.zero))
+      ((((p.map CFrac.den).zipIdx).filter (fun de => decide (de.2 ≠ i))).foldl
         (fun acc de => DensePoly.cmul acc de.1) [CCommRing.one])) := by
   unfold DensePoly.cclearDenomsCore
   simp only
@@ -347,28 +330,28 @@ theorem toGBPolyG_cclearDenomsCoreG_coeff (p : DensePoly (CFrac β)) (i : ℕ) :
       List.getD_eq_getElem?_getD, cclearDenomsCoreG_getElem p i hi, Option.getD_some]
     rw [DensePoly.toR_densePoly, DensePoly.toPolyG_cmulG, toPolyG_foldl_cmulG,
       DensePoly.toPolyG_one_singleton, one_mul]
-    set dens := p.map DensePoly.qdenCoeffCore with hdens
+    set dens := p.map CFrac.den with hdens
     have hcd : commonDen p = (dens.map DensePoly.toPoly).prod := by rw [commonDen, hdens]
     have hlen : i < dens.length := by rw [hdens, List.length_map]; exact hi
     have hfilt := filter_prod_mul (DensePoly.toPoly) ([] : DensePoly β) dens 0 i (Nat.zero_le i)
       (by simpa using hlen)
     rw [Nat.sub_zero] at hfilt
-    have hdeni : DensePoly.toPoly (dens.getD i []) = DensePoly.toPoly (DensePoly.qdenCoeffCore (p.getD i CCommRing.zero)) := by
+    have hdeni : DensePoly.toPoly (dens.getD i []) = DensePoly.toPoly (CFrac.den (p.getD i CCommRing.zero)) := by
       congr 1
       rw [hdens, List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map,
         List.getElem?_eq_getElem hi]
       simp
     have hcoeff : (CFieldSpec.toK (p.getD i CCommRing.zero) : RatFunc (CFieldSpec.K β))
-        = CFrac.am β (DensePoly.toPoly (DensePoly.qnumCoeffCore (p.getD i CCommRing.zero)))
-          / CFrac.am β (DensePoly.toPoly (DensePoly.qdenCoeffCore (p.getD i CCommRing.zero))) := by
+        = CFrac.am β (DensePoly.toPoly (CFrac.num (p.getD i CCommRing.zero)))
+          / CFrac.am β (DensePoly.toPoly (CFrac.den (p.getD i CCommRing.zero))) := by
       show CFrac.toCFrac (p.getD i CCommRing.zero) = _
-      rw [toCFracG_eq_div]
-    have hden0 : CFrac.am β (DensePoly.toPoly (DensePoly.qdenCoeffCore (p.getD i CCommRing.zero))) ≠ 0 :=
-      CFrac.amG_toPolyG_ne_zero (toPolyG_qdenCoeffCoreG_ne_zero _)
+      rw [CFrac.toCFrac_eq_div]
+    have hden0 : CFrac.am β (DensePoly.toPoly (CFrac.den (p.getD i CCommRing.zero))) ≠ 0 :=
+      CFrac.amG_toPolyG_ne_zero (CFrac.toPoly_den_ne_zero _)
     rw [toR_eq_toK, hcoeff, hcd]
     have hpushP : CFrac.am β (((dens.zipIdx.filter (fun de => decide (de.2 ≠ i))).map
         (fun de => DensePoly.toPoly de.1)).prod)
-        * CFrac.am β (DensePoly.toPoly (DensePoly.qdenCoeffCore (p.getD i CCommRing.zero)))
+        * CFrac.am β (DensePoly.toPoly (CFrac.den (p.getD i CCommRing.zero)))
         = CFrac.am β ((dens.map DensePoly.toPoly).prod) := by
       rw [← map_mul, ← hdeni, hfilt]
     rw [map_mul,

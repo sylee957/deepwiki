@@ -1,0 +1,10 @@
+# `scripts/wiki` silently reports declarations removed by a recent refactor
+
+- **Date:** 2026-07-10
+- **Tool/step:** `scripts/wiki show` and `scripts/wiki rdeps`
+- **Expected:** Dependency queries reflect the current compiled library or clearly report that the graph is stale.
+- **Actual:** After commit `60417898`, the graph still listed removed declarations such as `gbdegCore`, `gbisZeroCore`, and the retired rational log-argument wrappers. Attempting `scripts/wiki build` then failed because `.lake/build/lib/lean/DeepWiki/SymbolicIntegration/Engine/CoupledDE/Assembly.olean` did not exist.
+- **Why it's a limitation:** The graph database is not invalidated when library source or build artifacts change, so structurally plausible but obsolete results are returned without a warning.
+- **Workaround used:** Confirm against current source, use `rg` for reverse-dependency checks, and defer graph queries until the affected library has rebuilt.
+- **Suggested fix:** Store the library/source fingerprint used to build the graph and make query commands warn or fail when it differs from the current checkout.
+- **Status:** open

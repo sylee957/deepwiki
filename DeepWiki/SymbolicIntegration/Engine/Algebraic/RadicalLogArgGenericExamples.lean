@@ -33,7 +33,7 @@ def genArgSolvedArcsinh : Option (RadElem (CFrac ℚ)) :=
   radLogArgSolve genArgRhoArcsinh genArgIntegrandArcsinh [1] 1
 
 -- Computed numerator `N` for arcsinh under the generic solver, a multiple of `x + y`.
-#eval (genArgSolvedArcsinh.map (fun N => N.map (fun z => ((qNum z : List ℚ), (qDen z : List ℚ)))))
+#eval (genArgSolvedArcsinh.map (fun N => N.map (fun z => ((CFrac.num z : List ℚ), (CFrac.den z : List ℚ)))))
 
 /-- `radLogArgSolve` computes `u = x + y` for `∫ dx/√(x²+1)` at `β = ℚ`: the solved `N` passes the
 log-derivative certificate, reproducing the `ℚ`-base solve. -/
@@ -78,8 +78,8 @@ def expArgSolved : Option (RadElem Lvl2) :=
 
 -- Computed numerator `N` for `∫ dx/√(eˣ+1)` over the tower, a multiple of `(θ+2) − 2y`.
 #eval (expArgSolved.map (fun N => N.map (fun z =>
-  ((qNum (β := CFrac ℚ) z).map (fun w => (w.1.1 : List ℚ)),
-   (qDen (β := CFrac ℚ) z).map (fun w => (w.1.1 : List ℚ))))))
+  ((CFrac.num z).map (fun w => (w.1.1 : List ℚ)),
+   (CFrac.den z).map (fun w => (w.1.1 : List ℚ))))))
 
 /-- `radLogArgSolve` computes the log argument for `∫ dx/√(eˣ+1)` over `ℚ(x)(eˣ)`: the generic solver,
 its Gaussian elimination running over `β = ℚ(x)`, returns `some N`. -/

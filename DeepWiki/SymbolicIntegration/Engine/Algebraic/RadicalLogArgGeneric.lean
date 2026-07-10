@@ -92,12 +92,6 @@ def qOfNum (num : DensePoly β) : CFrac β :=
 /-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. -/
 def qMonomial (k : ℕ) : CFrac β := qOfNum (cshift k [(CCommRing.one : β)])
 
-/-- The numerator coefficient list of a `β(x)` element: `qNum z = z.1.1 ∈ DensePoly β`. -/
-def qNum (z : CFrac β) : DensePoly β := z.1.1
-
-/-- The denominator coefficient list of a `β(x)` element: `qDen z = z.1.2 ∈ DensePoly β`. -/
-def qDen (z : CFrac β) : DensePoly β := z.1.2
-
 /-- The cleared log-derivative residual over `α = CFrac β`:
 `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' − radMul(N, integrand)·D`, where
 `D' = CDiffField.cderiv (qOfNum D)` is the actual base-field derivation (essential over a tower where
@@ -127,8 +121,8 @@ def radLogMatrix (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly
   let resids : List (RadElem (CFrac β)) := basis.map (radLogResidual ρ integrand D)
   let rowsForComp : ℕ → List (List β) := fun i =>
     let entryOf : ℕ → CFrac β := fun j => (resids[j]!).getD i CCommRing.zero
-    let nums : List (DensePoly β) := (List.range nCols).map (fun j => cnorm (qNum (entryOf j)))
-    let dens : List (DensePoly β) := (List.range nCols).map (fun j => cnorm (qDen (entryOf j)))
+    let nums : List (DensePoly β) := (List.range nCols).map (fun j => cnorm (CFrac.num (entryOf j)))
+    let dens : List (DensePoly β) := (List.range nCols).map (fun j => cnorm (CFrac.den (entryOf j)))
     let cleared : List (DensePoly β) := (List.range nCols).map (fun j =>
       let prod := (List.range nCols).foldl (fun acc k =>
         if k = j then acc else cmul acc (dens[k]!)) [(CCommRing.one : β)]

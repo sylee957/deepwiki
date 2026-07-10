@@ -43,23 +43,19 @@ def afPow (f a : DensePoly α) : ℕ → DensePoly α
 
 /-! ### The multiplication matrix `M_w` and the trace `Tr(w)` -/
 
-/-- The coefficient of `yⁱ` in `p : DensePoly α` (the `α`-entry at index `i`, `CCommRing.zero` past the
-end). -/
-def afCoeff (p : DensePoly α) (i : ℕ) : α := (p : List α).getD i CCommRing.zero
-
 /-- The multiplication-by-`w` matrix `M_w` of `α[y]/(f)`, `n×n` over `α` (`n = deg f`): entry
 `(r, c)` is the coefficient of `yʳ` in `w·y^c mod f`. Represented as `List (List α)`. -/
 def multMatrix (f w : DensePoly α) : List (List α) :=
   let n := cdeg f
   (List.range n).map (fun r =>
-    (List.range n).map (fun c => afCoeff (afMul f w (afBasisElem c)) r))
+    (List.range n).map (fun c => CPoly.coeff (afMul f w (afBasisElem c)) r))
 
 /-- The field trace `Tr_{K(x,y)/K(x)}(w) = Σᵢ (M_w)ᵢᵢ`, the diagonal sum of the
 multiplication-by-`w` matrix. -/
 def trace (f w : DensePoly α) : α :=
   let n := cdeg f
   (List.range n).foldl (fun acc i =>
-    CCommRing.add acc (afCoeff (afMul f w (afBasisElem i)) i)) CCommRing.zero
+    CCommRing.add acc (CPoly.coeff (afMul f w (afBasisElem i)) i)) CCommRing.zero
 
 /-! ### The trace matrix `[Tr(ωᵢωⱼ)]` and the discriminant `det[Tr(ωᵢωⱼ)]` -/
 

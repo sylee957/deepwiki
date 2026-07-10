@@ -43,6 +43,10 @@ instance instList : CPoly DensePoly where
     show (p : List _).getD i CCommRing.zero = CCommRing.zero
     rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none h, Option.getD_none]
 
+/-- Generic coefficient lookup on the dense representation is exactly list lookup with a zero default. -/
+@[simp] theorem coeff_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) (i : ℕ) :
+    CPoly.coeff p i = (p : List α).getD i CCommRing.zero := rfl
+
 /-! ### The generic arithmetic reduces on the dense representation -/
 
 /-- Generic `add` reduces under `native_decide` at the dense instance. -/
