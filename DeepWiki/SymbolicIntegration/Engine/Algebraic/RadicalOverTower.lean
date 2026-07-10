@@ -90,7 +90,7 @@ The same arc with a logarithmic monomial `θ = log x` (`θ' = 1/x`), radicand `�
 
 /-- The level-2 element `1/x ∈ ℚ(x) ⊂ ℚ(x)(log x)` as a `Lvl2` value (numerator `[1/x]`, denominator `[1]`). -/
 def lvl2OneOverX : Lvl2 :=
-  CFrac.ofPoly [qxOfFrac [1] [0, 1] (by decide)]
+  CFrac.ofPoly [CFrac.ofFraction [1] [0, 1] (by decide)]
 
 /-- The logarithmic monomial `θ = t₁ = log x ∈ ℚ(x)(log x)` (numerator `[0, 1]`, denominator `[1]`). -/
 def logTheta : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one]
@@ -99,7 +99,7 @@ def logTheta : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one
 def logRadicandT : Lvl2 := CFrac.ofPoly [(CCommRing.zero : CFrac ℚ), CCommRing.one]
 
 /-- The new-monomial derivative `Dt₁ = θ' = 1/x ∈ DensePoly (CFrac ℚ)` making `t₁` logarithmic (`t₁' = 1/x`). -/
-def logDt1 : DensePoly (CFrac ℚ) := [qxOfFrac [1] [0, 1] (by decide)]
+def logDt1 : DensePoly (CFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by decide)]
 
 /-- The logarithmic `CDiffField Lvl2` instance `cderiv := towerDerivCFrac [1/x]` (so `t₁' = 1/x`,
 `t₁ = log x`). A local `def` supplied via `@`. -/

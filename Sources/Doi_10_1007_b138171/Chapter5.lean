@@ -73,12 +73,9 @@ namespace DeepWiki.Si
 /-! ### Generic-carrier input builders (catalog-local)
 
 The §5 smoke examples over the generic ℚ(x) = `CFrac ℚ` carrier read their ℚ(x) coefficients as
-num/den lists over `DensePoly ℚ = List ℚ`. `CFrac.ofScalar` embeds constants, while `qFrac5` packages
-an arbitrary numerator and denominator. This is catalog infrastructure, not a book item. -/
-
-/-- A ℚ(x) fraction `num/den` as a `CFrac ℚ` element, with `den ≠ 0` discharged by `native_decide`. -/
-def qFrac5 (num den : List ℚ) (h : DensePoly.cisZero den = false := by native_decide) : CFrac ℚ :=
-  ⟨(num, den), h⟩
+num/den lists over `DensePoly ℚ = List ℚ`. `CFrac.ofScalar` embeds constants, while
+`CFrac.ofFraction` packages an arbitrary numerator and denominator. This is catalog infrastructure,
+not a book item. -/
 
 /-! ## §5.3 The Hermite Reduction (transcendental) — computable + validated -/
 
@@ -154,13 +151,13 @@ residue resultant `cResidueResultantTower` has monic part `z³−xz²−z/4+x/4`
 ℚ(x) scalar) and the log arguments `cLogArgTower … (±1/2) = t ± x` (the residues `±1/2`), all checked
 over the generic ℚ(x)[t] (`native_decide`). -/
 theorem ex_5_6_2 :
-    (let Dt : DensePoly (CFrac ℚ) := [qFrac5 [1] [0, 1]]                       -- `Dt = 1/x`
-     let a : DensePoly (CFrac ℚ) := [qFrac5 [0, 0, -1] [1], CFrac.ofScalar (-1), CFrac.ofScalar 2]  -- `a = 2t²−t−x²`
-     let d : DensePoly (CFrac ℚ) := [CFrac.ofScalar 0, qFrac5 [0, 0, -1] [1], CFrac.ofScalar 0, CFrac.ofScalar 1]  -- `d = t³−x²t`
+    (let Dt : DensePoly (CFrac ℚ) := [CFrac.ofFraction [1] [0, 1]]                       -- `Dt = 1/x`
+     let a : DensePoly (CFrac ℚ) := [CFrac.ofFraction [0, 0, -1] [1], CFrac.ofScalar (-1), CFrac.ofScalar 2]  -- `a = 2t²−t−x²`
+     let d : DensePoly (CFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofFraction [0, 0, -1] [1], CFrac.ofScalar 0, CFrac.ofScalar 1]  -- `d = t³−x²t`
      let resMonic : DensePoly (CFrac ℚ) :=                                    -- `z³−xz²−z/4+x/4`
-       [qFrac5 [0, 1] [4], CFrac.ofScalar (-1/4), qFrac5 [0, -1] [1], CFrac.ofScalar 1]
-     let argPlus : DensePoly (CFrac ℚ) := [qFrac5 [0, 1] [1], CFrac.ofScalar 1]        -- `t + x`
-     let argMinus : DensePoly (CFrac ℚ) := [qFrac5 [0, -1] [1], CFrac.ofScalar 1]      -- `t − x`
+       [CFrac.ofFraction [0, 1] [4], CFrac.ofScalar (-1/4), CFrac.ofFraction [0, -1] [1], CFrac.ofScalar 1]
+     let argPlus : DensePoly (CFrac ℚ) := [CFrac.ofFraction [0, 1] [1], CFrac.ofScalar 1]        -- `t + x`
+     let argMinus : DensePoly (CFrac ℚ) := [CFrac.ofFraction [0, -1] [1], CFrac.ofScalar 1]      -- `t − x`
      DensePoly.cisZero (DensePoly.csub
          (DensePoly.cmonic (DensePoly.cResidueResultantTower Dt a d)) resMonic)
      ∧ DensePoly.cisZero (DensePoly.csub (DensePoly.cLogArgTower Dt a d (CFrac.ofScalar (1/2))) argPlus)
@@ -183,8 +180,8 @@ noncomputable abbrev alg_5_8_primitivePolyIntegrate := @cPrimitivePolyIntegrate 
 (`t = log x`, `Dt = 1/x`) returns `q = (1/3)t³` with `rem = 0`, satisfying `D(q) + rem = p` over the
 generic ℚ(x)[t] (`native_decide`) — i.e. `∫ (log x)²/x dx = (log x)³/3`. -/
 theorem ex_5_8_primitive :
-    (let Dt : DensePoly (CFrac ℚ) := [qFrac5 [1] [0, 1]]                       -- `Dt = 1/x`
-     let p : DensePoly (CFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 0, qFrac5 [1] [0, 1]]  -- `p = (1/x)·t²`
+    (let Dt : DensePoly (CFrac ℚ) := [CFrac.ofFraction [1] [0, 1]]                       -- `Dt = 1/x`
+     let p : DensePoly (CFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofFraction [1] [0, 1]]  -- `p = (1/x)·t²`
      let res := DensePoly.cPrimitivePolyIntegrate Dt 8 p
      let q := res.1; let rem := res.2
      let Dq := DensePoly.cmonomialDeriv Dt q

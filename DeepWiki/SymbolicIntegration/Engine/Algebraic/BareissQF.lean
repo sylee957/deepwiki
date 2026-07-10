@@ -37,9 +37,9 @@ theorem qfDet_eq_fieldDet_cusp :
 /-- A `3×3` `ℚ(x)`-matrix with genuine fraction entries (denominators `x+1, …, x+5`, a permuted
 Cauchy-style matrix), where `fieldDet` carries a ballooning denominator. -/
 def qfFracMat3 : List (List (CFrac ℚ)) :=
-  [[qxOfFrac [1] [1, 1] (by decide), qxOfFrac [1] [2, 1] (by decide), qxOfFrac [1] [3, 1] (by decide)],
-   [qxOfFrac [1] [2, 1] (by decide), qxOfFrac [1] [3, 1] (by decide), qxOfFrac [1] [4, 1] (by decide)],
-   [qxOfFrac [1] [4, 1] (by decide), qxOfFrac [1] [1, 1] (by decide), qxOfFrac [1] [5, 1] (by decide)]]
+  [[CFrac.ofFraction [1] [1, 1] (by decide), CFrac.ofFraction [1] [2, 1] (by decide), CFrac.ofFraction [1] [3, 1] (by decide)],
+   [CFrac.ofFraction [1] [2, 1] (by decide), CFrac.ofFraction [1] [3, 1] (by decide), CFrac.ofFraction [1] [4, 1] (by decide)],
+   [CFrac.ofFraction [1] [4, 1] (by decide), CFrac.ofFraction [1] [1, 1] (by decide), CFrac.ofFraction [1] [5, 1] (by decide)]]
 
 /-- `qfDet = fieldDet` on the `3×3` fraction matrix `qfFracMat3` as a `ℚ(x)` value, though `fieldDet`
 carries an unreduced fraction of total degree `24` and `qfDet` a flat polynomial. -/

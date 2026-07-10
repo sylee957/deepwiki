@@ -20,11 +20,11 @@ For `C` with leading term `(5/(2x))θ²` the bracket `(j+1)·θ' + lcf(g) = 5/(2
 
 /-- `θ' = (log x)' = v'/v = 1/x ∈ ℚ(x)` (numerator `[1]`, denominator `[0,1] = x`), the derivative of
 the monomial `θ = log x`. -/
-def logDt : CFrac ℚ := qxOfFrac [1] [0, 1] (by decide)
+def logDt : CFrac ℚ := CFrac.ofFraction [1] [0, 1] (by decide)
 
 /-- The ℚ(x) leading coefficient `lcf(g) = g = 1/(2x)` for `f = θ`, `g = (1/2)f'/f·f = 1/(2x)`
 (numerator `[1]`, denominator `[0,2] = 2x`). -/
-def clogLead : CFrac ℚ := qxOfFrac [1] [0, 2] (by decide)
+def clogLead : CFrac ℚ := CFrac.ofFraction [1] [0, 2] (by decide)
 
 /-- The radicand `f = θ = log x ∈ ℚ(x)[θ]` (`y² = log x`), the `θ`-polynomial `[0, 1]`. -/
 def logF : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
@@ -34,7 +34,7 @@ def clog : DensePoly (CFrac ℚ) := [clogLead]
 
 /-- The numerator `C = (5/(2x))θ² + θ ∈ ℚ(x)[θ]` (`deg_θ C = 2 ≥ m`), with leading coefficient
 `5/(2x) = (j+1)θ' + lcf(g)` chosen so the constant `b = 1` solves eq. 5. -/
-def logC : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one, qxOfFrac [5] [0, 2] (by decide)]
+def logC : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one, CFrac.ofFraction [5] [0, 2] (by decide)]
 
 /-- The `θ`-derivative as a polynomial `[θ'] = [1/x] ∈ ℚ(x)[θ]`, the `Dt` for `cmonomialDeriv`. -/
 def logDtPoly : DensePoly (CFrac ℚ) := [logDt]

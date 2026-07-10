@@ -229,7 +229,7 @@ def cuspIBGen : DensePoly (CFrac ℚ) := (integralBasis cuspF).getD 1 []
 
 /-- The cusp integral basis is `[1, y/x]`, integral (`(y/x)² = x`) and maximal. -/
 theorem cusp_integralBasis_eq :
-    (cisZero (csub cuspIBGen [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+    (cisZero (csub cuspIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
       && cisZero (csub ((integralBasis cuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (afMul cuspF cuspIBGen cuspIBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
@@ -242,7 +242,7 @@ def nodeIBGen : DensePoly (CFrac ℚ) := (integralBasis nodeF).getD 1 []
 
 /-- The node integral basis is `[1, y/x]`, integral (`(y/x)² = x + 1`) and maximal. -/
 theorem node_integralBasis_eq :
-    (cisZero (csub nodeIBGen [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+    (cisZero (csub nodeIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
       && cisZero (csub ((integralBasis nodeF).getD 0 []) [CCommRing.one])
       && cisZero (csub (afMul nodeF nodeIBGen nodeIBGen) [CFrac.ofPoly [1, 1]])
       && isMaximalOrder nodeF (integralBasis nodeF)) = true := by native_decide
@@ -274,12 +274,12 @@ def cusp5IBGen : DensePoly (CFrac ℚ) := (integralBasis cusp5F).getD 1 []
 theorem cusp5_oneStep_not_maximal :
     (((round2Step cusp5F).2)
       && cisZero (csub ((round2Step cusp5F).1.getD 1 [])
-            [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+            [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
       && !isMaximalOrder cusp5F (reduceOrder (round2Step cusp5F).1)) = true := by native_decide
 
 /-- The full iteration reaches `[1, y/x²]` for `y² − x⁵` (two Round-2 steps). -/
 theorem cusp5_integralBasis_eq :
-    (cisZero (csub cusp5IBGen [CCommRing.zero, qxOfFrac [1] [0, 0, 1] (by decide)])
+    (cisZero (csub cusp5IBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 0, 1] (by decide)])
       && cisZero (csub ((integralBasis cusp5F).getD 0 []) [CCommRing.one])) = true := by native_decide
 
 /-- The worse-cusp generator `y/x²` is integral (`(y/x²)² = x`) and `[1, y/x²]` is maximal. -/
@@ -324,7 +324,7 @@ the generator `[0, 1/(x² − x)] = y/(x(x − 1))` and the first vector `1`; th
 (`afMul biCuspF g g = x`, i.e. `(y/(x(x−1)))² = x³(x−1)²/(x²(x−1)²) = x`); and `isMaximalOrder` is `true`. The
 single combined denominator `x(x − 1)` carries the enlargement at both primes at once. -/
 theorem biCusp_integralBasis_eq :
-    (cisZero (csub biCuspIBGen [CCommRing.zero, qxOfFrac [1] [0, -1, 1] (by decide)])
+    (cisZero (csub biCuspIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, -1, 1] (by decide)])
       && cisZero (csub ((integralBasis biCuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (afMul biCuspF biCuspIBGen biCuspIBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder biCuspF (integralBasis biCuspF)) = true := by native_decide

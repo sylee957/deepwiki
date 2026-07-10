@@ -124,12 +124,25 @@ theorem cmulG_ne_zero_of {α : Type*} [CField α] [CFieldDomain α] {b d : Dense
     (hd : DensePoly.cisZero d = false) : DensePoly.cisZero (DensePoly.cmul b d) = false :=
   CFieldDomain.nz_mul hb hd
 
+/-- Build a computable fraction from numerator and denominator polynomials. -/
+def ofFraction {α : Type*} [CField α] (num den : DensePoly α)
+    (h : DensePoly.cisZero den = false := by native_decide) : CFrac α :=
+  ⟨(num, den), h⟩
+
 /-- Embed a computable polynomial as the fraction `p/1`. -/
 def ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) : CFrac α :=
-  ⟨(p, [CCommRing.one]), cisZeroG_one_singleton⟩
+  ofFraction p [CCommRing.one] cisZeroG_one_singleton
 
 /-- Embed a coefficient as the constant fraction `a/1`. -/
 def ofScalar {α : Type*} [CField α] [CFieldDomain α] (a : α) : CFrac α := ofPoly [a]
+
+/-- The numerator of a constructed fraction is the supplied numerator. -/
+@[simp] theorem num_ofFraction {α : Type*} [CField α] (a b : DensePoly α)
+    (h : DensePoly.cisZero b = false) : num (ofFraction a b h) = a := rfl
+
+/-- The denominator of a constructed fraction is the supplied denominator. -/
+@[simp] theorem den_ofFraction {α : Type*} [CField α] (a b : DensePoly α)
+    (h : DensePoly.cisZero b = false) : den (ofFraction a b h) = b := rfl
 
 /-- The numerator of the polynomial embedding is the original polynomial. -/
 @[simp] theorem num_ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) :
@@ -233,6 +246,12 @@ noncomputable def toCFrac {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α
 /-- A computable fraction denotes its numerator divided by its denominator. -/
 theorem toCFrac_eq_div {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α) :
     toCFrac x = am α (DensePoly.toPoly (num x)) / am α (DensePoly.toPoly (den x)) := rfl
+
+/-- A constructed computable fraction denotes its numerator divided by its denominator. -/
+@[denote] theorem toCFrac_ofFraction {α : Type*} [CField α] [CFieldSpec α]
+    (num den : DensePoly α) (h : DensePoly.cisZero den = false) :
+    toCFrac (ofFraction num den h) =
+      am α (DensePoly.toPoly num) / am α (DensePoly.toPoly den) := rfl
 
 /-- The polynomial embedding denotes the natural map from polynomials to rational functions. -/
 @[denote] theorem toCFrac_ofPoly {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
@@ -361,6 +380,13 @@ namespace CFrac
     (p : DensePoly α) :
     CFieldSpec.toK (ofPoly p : CFrac α) = am α (DensePoly.toPoly p) :=
   toCFrac_ofPoly p
+
+/-- The field bridge sends a packaged fraction to the quotient of its polynomial denotations. -/
+@[denote] theorem toK_ofFraction {α : Type*} [CField α] [CFieldSpec α]
+    (num den : DensePoly α) (h : DensePoly.cisZero den = false) :
+    CFieldSpec.toK (ofFraction num den h : CFrac α) =
+      am α (DensePoly.toPoly num) / am α (DensePoly.toPoly den) :=
+  toCFrac_ofFraction num den h
 
 end CFrac
 

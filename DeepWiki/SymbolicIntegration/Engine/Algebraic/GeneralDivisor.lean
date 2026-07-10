@@ -87,7 +87,7 @@ def idealProduct (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ
       (List.range n).map (fun j =>
         let num := (nz.getD i []).getD j []
         let dd := cnorm δ
-        if h : cisZero dd = false then qReduceNZ (qxOfFrac num dd h) else CCommRing.zero)))
+        if h : cisZero dd = false then qReduceNZ (CFrac.ofFraction num dd h) else CCommRing.zero)))
 
 /-! ### Normalization / equality of fractional ideals (`idealHNF`, `idealEq`, `idealIsIntegral`) -/
 

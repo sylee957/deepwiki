@@ -301,7 +301,7 @@ def gcCombineRatIntegrandWf : DensePoly (CFrac ℚ) := gcuspCubicY
 /-- The log-derivative input for the cuspidal-cubic combined validation. -/
 def gcCombineLogIntegrandWf : DensePoly (CFrac ℚ) :=
   afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
-    [CCommRing.zero, CCommRing.zero, qxOfFrac [1] [0, 0, 1] (by decide)]
+    [CCommRing.zero, CCommRing.zero, CFrac.ofFraction [1] [0, 0, 1] (by decide)]
 
 /-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
 `∫ (y + afDerivWf(y)/y) dx`. -/

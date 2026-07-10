@@ -8,21 +8,15 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
-/-! ### Example helpers -/
-
-/-- A ℚ(x) fraction `num/den` as a `CFrac ℚ` element. -/
-def qFrac (num den : List ℚ) (h : DensePoly.cisZero den = false := by native_decide) : CFrac ℚ :=
-  ⟨(num, den), h⟩
-
 /-! ### Primitive case `t = log x`, `Dt = 1/x` -/
 
 /-- Example monomial derivative for the primitive case: `Dt = 1/x`. -/
 def primitivePolyIntegrateExampleDt : DensePoly (CFrac ℚ) :=
-  [qFrac [1] [0, 1]]
+  [CFrac.ofFraction [1] [0, 1]]
 
 /-- The polynomial part `p = (1/x)·t²` over `ℚ(x)[t]`. -/
 def primitivePolyIntegrateExampleP : DensePoly (CFrac ℚ) :=
-  [CFrac.ofScalar 0, CFrac.ofScalar 0, qFrac [1] [0, 1]]
+  [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofFraction [1] [0, 1]]
 
 /-- `cPrimitivePolyIntegrate` satisfies `D(q) + rem = p` for the primitive monomial `t = log x`. -/
 theorem primitivePolyIntegrate_example :

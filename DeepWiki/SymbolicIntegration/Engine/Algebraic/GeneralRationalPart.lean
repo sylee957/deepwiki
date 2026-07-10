@@ -29,7 +29,7 @@ def gcuspRho : CFrac ℚ := CFrac.ofPoly [0, 0, 0, 1]
 /-- The cusp integral basis is `[1, y/x]`, integral and maximal: `(y/x)² = x` and `isMaximalOrder` holds,
 the maximal-order datum the algebraic Hermite reduction consumes. -/
 theorem gcusp_integralBasis_eq :
-    (cisZero (csub ((integralBasis gcuspF).getD 1 []) [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+    (cisZero (csub ((integralBasis gcuspF).getD 1 []) [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
       && cisZero (csub ((integralBasis gcuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (afMul gcuspF ((integralBasis gcuspF).getD 1 [])
             ((integralBasis gcuspF).getD 1 [])) [CFrac.ofPoly [0, 1]])

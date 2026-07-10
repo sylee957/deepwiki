@@ -88,10 +88,6 @@ def radDeriv (n : ℕ) (f : α) (p : RadElem α) : RadElem α :=
 
 end RadElem
 
-/-- A `ℚ(x)` value `num/den` from a numerator and a nonzero denominator `DensePoly ℚ`. -/
-def qxOfFrac (num den : DensePoly ℚ) (h : DensePoly.cisZero den = false) : CFrac ℚ :=
-  ⟨(num, den), h⟩
-
 /-- The radicand `f = x³ + 1 ∈ ℚ(x)` (numerator `[1,0,0,1]` = `1 + x³`). -/
 def radicandX3p1 : CFrac ℚ := CFrac.ofPoly [1, 0, 0, 1]
 

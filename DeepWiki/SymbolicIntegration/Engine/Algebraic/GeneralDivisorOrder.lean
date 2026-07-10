@@ -82,7 +82,7 @@ def idealReduce (_f : DensePoly (CFrac ℚ)) (_basis : List (DensePoly (CFrac �
   -- read back as the fractional ideal (1/δ)·Ĥ, then reduce every entry to lowest terms (`qReduceMat`,
   -- value-preserving via `toCFracG_qReduce`) so the reduced representative carries no swollen factors
   qReduceMat (H.map (fun row => row.map (fun p =>
-    if h : cisZero dd = false then qReduceNZ (qxOfFrac p dd h) else CFrac.ofPoly p)))
+    if h : cisZero dd = false then qReduceNZ (CFrac.ofFraction p dd h) else CFrac.ofPoly p)))
 
 /-! ### Principality: is the ideal `g·O`? (`genCandidates`, `isPrincipalIdeal`) -/
 
