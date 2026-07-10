@@ -39,6 +39,10 @@ class LawfulCPolyEuclidean (P : Type u → Type u) [CPoly P] [CPolyEuclidean P] 
     CPoly.toPoly q ≠ 0 →
       CPoly.toPoly p = CPoly.toPoly (CPolyEuclidean.div p q) * CPoly.toPoly q +
         CPoly.toPoly (CPolyEuclidean.mod p q)
+  /-- Exact division reconstructs the dividend when the selected divisor divides it. -/
+  div_exact : ∀ {α : Type u} [CField α] [CFieldSpec.{u,v} α] (p q : P α),
+    CPoly.toPoly q ≠ 0 → CPoly.toPoly q ∣ CPoly.toPoly p →
+      CPoly.toPoly p = CPoly.toPoly q * CPoly.toPoly (CPolyEuclidean.div p q)
   /-- The selected extended gcd satisfies its Bézout identity. -/
   gcdExt_bezout : ∀ {α : Type u} [CField α] [CFieldSpec.{u,v} α] (p q : P α),
     CPoly.toPoly (CPolyEuclidean.gcdExt p q).2.1 * CPoly.toPoly p +
@@ -57,6 +61,11 @@ instance instLawfulCPolyEuclideanSparse : LawfulCPolyEuclidean CPoly.SparsePoly 
     change CPoly.toPoly p = CPoly.toPoly (CPoly.cdivmod p q).1 * CPoly.toPoly q +
       CPoly.toPoly (CPoly.cdivmod p q).2
     simpa [mul_comm] using CPoly.toPoly_cdivmod p q
+  div_exact := by
+    intro α _ _ p q hq hdvd
+    have hqz : ¬ CPoly.cisZero q = true := fun hz => hq ((CPoly.cisZero_iff q).mp hz)
+    change CPoly.toPoly p = CPoly.toPoly q * CPoly.toPoly (CPoly.cdivmod p q).1
+    exact CPoly.toPoly_mul_cdiv_of_dvd p q hqz hdvd
   gcdExt_bezout := CPoly.toPoly_cgcdExt
 
 end DeepWiki.SymbolicIntegration

@@ -18,7 +18,7 @@ def limIntSingleExampleEta : DenseFrac ℚ := CFrac.ofFraction [1] [0, 1] (by cc
 
 -- Sanity print: `cLimitedIntegrateSingleBase (1+1/x) (1/x)` returns `b = x`, `c = 1`.
 #eval (cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta).map
-  (fun bc => (DensePoly.qnormPair bc.1.num bc.1.den, bc.2))
+  (fun bc => (CPoly.normalizeFracPair bc.1.num bc.1.den, bc.2))
 
 /-- The base single-`w` limited integrator finds the degree-raising constant. -/
 theorem cLimitedIntegrateSingleBase_example :
@@ -32,12 +32,12 @@ theorem cLimitedIntegrateSingleBase_example :
 
 -- Sanity print: the num/den adapter on `(1+1/x, 1/x)`.
 #eval (limitedIntegrateSingleBaseNumDen [1, 1] [0, 1] [1] [0, 1]).map
-  (fun r => (DensePoly.qnormPair r.1.1 r.1.2, r.2))
+  (fun r => (CPoly.normalizeFracPair r.1.1 r.1.2, r.2))
 
 /-- The num/den adapter matches `cLimitedIntegrateSingleBase` on `1+1/x` and `1/x`. -/
 theorem limitedIntegrateSingleBaseNumDen_example :
     (limitedIntegrateSingleBaseNumDen [1, 1] [0, 1] [1] [0, 1]).map
-      (fun r => (DensePoly.qnormPair r.1.1 r.1.2, r.2)) = some (([0, 1], [1]), 1) := by native_decide
+      (fun r => (CPoly.normalizeFracPair r.1.1 r.1.2, r.2)) = some (([0, 1], [1]), 1) := by native_decide
 
 /-! ### Degree-raising primitive polynomial integration -/
 
@@ -50,7 +50,7 @@ def prim2ExampleP : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 1, limIntSingle
 
 -- Sanity print: `∫p = x·t + (1/2)·t²`.
 #eval (cIntegratePrimPolyDegRaise limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
-    prim2ExampleP).map (fun q => q.map (fun c => DensePoly.qnormPair c.num c.den))
+    prim2ExampleP).map (fun q => q.map (fun c => CPoly.normalizeFracPair c.num c.den))
 
 /-- The degree-raising primitive-polynomial integrator is correct on the two-level example. -/
 theorem cIntegratePrimPolyDegRaiseG_example :

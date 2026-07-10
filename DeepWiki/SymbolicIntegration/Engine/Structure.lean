@@ -17,9 +17,9 @@ namespace DensePoly
 /-! ### The ℚ-linear-dependence test among rational-function logarithmic derivatives -/
 
 /-- `cClearedNumCoeffs d w`: the dense `ℚ`-coefficient list of `w·d ∈ ℚ[x]` (well-defined because `d`
-is a common multiple of `w`'s denominator), via `qnormPair`-reducing `w` then `numerator·(d/denom)`. -/
+is a common multiple of `w`'s denominator), via `CPoly.normalizeFracPair` then `numerator·(d/denom)`. -/
 def cClearedNumCoeffs (d : DensePoly ℚ) (w : DenseFrac ℚ) : DensePoly ℚ :=
-  let wn := qnormPair w.num w.den            -- `w` in lowest terms `(a, b)`
+  let wn := CPoly.normalizeFracPair w.num w.den -- `w` in lowest terms `(a, b)`
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
   cmul wn.1 (cdivWf d wn.2)
 
@@ -30,8 +30,8 @@ def cLinearDepData (ws : List (DenseFrac ℚ)) (w : DenseFrac ℚ) :
     List (List ℚ) × ℕ :=
   let all := ws ++ [w]
   -- common denominator `d = lcm(denom wⱼ)` over the lowest-terms forms.
-  let dens := all.map (fun u => (qnormPair u.num u.den).2)
-  let d := dens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
+  let dens := all.map (fun u => (CPoly.normalizeFracPair u.num u.den).2)
+  let d := dens.foldl (fun acc den => CPoly.lcm acc den) [(1 : ℚ)]
   let cols : List (DensePoly ℚ) := all.map (fun u => cClearedNumCoeffs d u)
   let nrows := (cols.map cdeg).foldl Nat.max 0 + 1
   let M : List (List ℚ) :=

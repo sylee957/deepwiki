@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.LinearSolve
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 
 /-! # Computable parametric problems over the tower ℚ(x)[t]
 
@@ -12,6 +13,14 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
+/-- Sparse normalization cancels `x - 1` from `(x² - 1)/(x - 1)` through capability selection. -/
+theorem sparse_normalizeFracPair_cancels :
+    CPoly.normalizeFracPair
+        (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
+        (CPoly.SparsePoly.ofList [(0, -1), (1, 1)] : CPoly.SparsePoly ℚ) =
+      (CPoly.SparsePoly.ofList [(0, 1), (1, 1)], CPoly.SparsePoly.ofList [(0, 1)]) := by
+  native_decide
+
 namespace DensePoly
 
 /-! ### `cParametricLogDeriv` over the base field `k = ℚ(x)`
@@ -20,23 +29,10 @@ Decide whether `n·b = Dz/z` for a nonzero `n ∈ ℤ` and `z ∈ k*` (a logarit
 with `b ∈ k = ℚ(x)`, `D = d/dx`. A logarithmic derivative `Dz/z` is always proper (`deg num < deg den`),
 so a non-proper `b` (in particular every nonzero constant) is provably not one. -/
 
-/-- **Lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPair num den =
-(num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdWf`); the zero
-numerator gives `([], [1])`. Used to read the polynomial part and denominator of a `DenseFrac ℚ`-valued
-base-field element. -/
-def qnormPair (num den : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
-  if cisZero num then ([], [(1 : ℚ)])
-  else
-    let g := (cgcdWf num den).1
-    let num' := cdivWf num g
-    let den' := cdivWf den g
-    let s := (clead den')⁻¹
-    (cscale s num', cscale s den')
-
 /-- `cBaseIsProper b`: `true` iff the lowest-terms `DenseFrac ℚ` value `b = a/d ∈ ℚ(x)` is proper
 (`deg a < deg d`, nonzero numerator). -/
 def cBaseIsProper (b : DenseFrac ℚ) : Bool :=
-  let bn := qnormPair b.num b.den
+  let bn := CPoly.normalizeFracPair b.num b.den
   cdeg bn.1 < cdeg bn.2 && !cisZero bn.1
 
 /-- Parametric-logarithmic-derivative test over the base field `cParametricLogDeriv b`, for
@@ -61,7 +57,7 @@ def cParamLogDerivCandidate (fval wval : DenseFrac ℚ) : Option ℚ :=
   else
     let r := CField.div fval wval
     -- `r ∈ ℚ` iff its lowest-terms denominator is a (nonzero) constant and numerator degree 0.
-    let rn := qnormPair r.num r.den
+    let rn := CPoly.normalizeFracPair r.num r.den
     if cdeg rn.1 = 0 ∧ cdeg rn.2 = 0 then
       some (((rn.1 : List ℚ).headD 0) / ((rn.2 : List ℚ).headD 1))
     else none
@@ -99,18 +95,13 @@ Solve the parametric Risch differential equation for `y ∈ k(t)` and constants 
 basis of the constant solution subspace. Over the base monomial case `k = ℚ`, `D = d/dt`, the bounded-degree
 polynomial equation becomes a homogeneous linear system over `ℚ`, whose kernel is returned. -/
 
-/-- Polynomial lcm over ℚ `cLcmQ p q = p·q / gcd(p, q)` (monic). -/
-def cLcmQ (p q : DensePoly ℚ) : DensePoly ℚ :=
-  if cisZero p ∨ cisZero q then []
-  else cmonic (cdivWf (cmul p q) (cgcdWf p q).1)
-
 /-- Linear constraints over ℚ `cLinearConstraintsQ gnums gdens` (`D = d/dt`, `k = ℚ`): from the reduced
 equation `Dp = Σᵢ cᵢ·gᵢ` with `gᵢ = gnumsᵢ/gdensᵢ`, clears the common denominator `d = lcm(gdensᵢ)`,
 splits each `d·gᵢ = qᵢ·d + rᵢ`, and returns the polynomial parts `qs = [q₁, …, qₘ]` together with the
 homogeneous constraint matrix `Mᵢⱼ = coefficient(rⱼ, tⁱ)` (fed to `cNullspaceBasisQ`). -/
 def cLinearConstraintsQ (gnums gdens : List (DensePoly ℚ)) :
     List (DensePoly ℚ) × List (List ℚ) :=
-  let d := gdens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
+  let d := gdens.foldl (fun acc den => CPoly.lcm acc den) [(1 : ℚ)]
   let qrs : List (DensePoly ℚ × DensePoly ℚ) :=
     (List.zip gnums gdens).map (fun (gn, gd) =>
       let dgi := cmul gn (cdivWf d gd)             -- `d·gᵢ = gnumᵢ·(d/gdenᵢ)`
@@ -181,7 +172,7 @@ def paramLogDerivExampleW : DenseFrac ℚ := CFrac.ofScalar 1
 
 -- **Sanity print.** `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
 #eval (DensePoly.cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map
-  (fun (n, m, v) => (n, m, DensePoly.qnormPair v.num v.den))
+  (fun (n, m, v) => (n, m, CPoly.normalizeFracPair v.num v.den))
 
 /-- The parametric logarithmic derivative recognizer computes: for `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1`
 over `k = ℚ`, `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)`, verified to satisfy
@@ -233,7 +224,7 @@ constant tuple `cs = (c₁,…,cₘ)` satisfies the cleared constraint `Σᵢ c�
 `d·gᵢ` by `d = lcm(denominators)`), i.e. `Σᵢ cᵢ·(numᵢ·(d/denᵢ) mod d) = 0` — the polynomial identity
 certifying that `(c₁,…,cₘ)` is a genuine solution of the parametric Risch DE's linear constraints. -/
 def paramConstraintCheck (gnums gdens : List (DensePoly ℚ)) (cs : List ℚ) : Bool :=
-  let d := gdens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
+  let d := gdens.foldl (fun acc den => CPoly.lcm acc den) [(1 : ℚ)]
   let total : DensePoly ℚ :=
     ((List.zip gnums gdens).zip cs).foldl (fun acc ((gn, gd), c) =>
       let dgi := cmul gn (cdivWf d gd)

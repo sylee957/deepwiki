@@ -6,7 +6,8 @@
   `.olean` available to downstream jobs in the same gate run.
 - **Actual:** The gate built `Tower.Deriv`, then multiple downstream jobs failed with `failed to open
   file '.../Tower/Deriv.olean': No such file or directory`. The same disappearance previously hit
-  `RadicalCase2.olean` during a scoped gate.
+  `RadicalCase2.olean` during a scoped gate. It recurred while another commit landed: six downstream
+  targets simultaneously lost the freshly available `Engine/LinearSolve.olean`.
 - **Why it's a limitation:** A build artifact appears to be removed or replaced while the parallel
   Lake build still has downstream readers, so a source-correct worktree can fail nondeterministically.
 - **Workaround used:** Rebuild the missing module serially with a scoped `scripts/check.sh`, then rerun
