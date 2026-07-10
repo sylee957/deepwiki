@@ -95,10 +95,10 @@ theorem tltResult01_shape :
      (tltResult01.logTerms.head?.map fun t => qEq t.1 (oneOverMQ 3))) = (true, 1, some true) := by
   native_decide
 
-/-- `algDerivQ tltRhoX3p1 tltResult01` equals the differential `tltDiff01` (`DensePoly.cisZero` of the
+/-- `algDeriv tltRhoX3p1 tltResult01` equals the differential `tltDiff01` (`DensePoly.cisZero` of the
 difference). -/
 theorem tltResult01_algDeriv :
-    DensePoly.cisZero (DensePoly.csub (algDerivQ tltRhoX3p1 tltResult01) tltDiff01) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (algDeriv tltRhoX3p1 tltResult01) tltDiff01) = true := by native_decide
 
 /-! ## Non-torsion propagates to `none` on `y² = x³ − 2` -/
 
@@ -122,17 +122,17 @@ theorem tltResult35_shape :
 
 /-- The non-principal `(1/m)·log` branch computes and validates: on the order-3 point `(0, 1)` of
 `y² = x³ + 1`, `torsionLogTerm` returns `(1/3, y − 1)`, the differential passes the log-derivative
-certificate, and the term assembles into an `AlgIntegralResult (CFrac ℚ)` whose `algDerivQ` round-trips; on the
+certificate, and the term assembles into an `AlgIntegralResult (CFrac ℚ)` whose `algDeriv` round-trips; on the
 infinite-order `(3, 5)` of `y² = x³ − 2` it returns `none` with an empty log list. -/
 theorem torsion_log_branch_validates :
     -- the non-principal branch fires on the order-3 flex (0,1), returning (1/3, y − 1)
     (tltTerm01.map tltTermCheck = some true
       ∧ radIsLogIntegral 2 tltRhoX3p1 tltYm1 (DensePoly.cscale (CFrac.ofPoly [3]) tltDiff01) = true)
-    -- the term assembles into the integrator's AlgIntegralResult (CFrac ℚ) and algDerivQ round-trips
+    -- the term assembles into the integrator's AlgIntegralResult (CFrac ℚ) and algDeriv round-trips
     ∧ ((DensePoly.cisZero tltResult01.ratPart,
         tltResult01.logTerms.length,
         tltResult01.logTerms.head?.map fun t => qEq t.1 (oneOverMQ 3)) = (true, 1, some true)
-      ∧ DensePoly.cisZero (DensePoly.csub (algDerivQ tltRhoX3p1 tltResult01) tltDiff01) = true)
+      ∧ DensePoly.cisZero (DensePoly.csub (algDeriv tltRhoX3p1 tltResult01) tltDiff01) = true)
     -- non-torsion (3,5) propagates to none ⟹ NOT elementary
     ∧ ((torsionLogTerm 5 tltRhoX3m2 hypRhoX3m2 1 hypPt35).isNone = true
       ∧ (DensePoly.cisZero tltResult35.ratPart, tltResult35.logTerms.length) = (true, 0)) := by native_decide

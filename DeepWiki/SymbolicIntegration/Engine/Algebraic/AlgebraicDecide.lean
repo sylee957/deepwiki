@@ -72,33 +72,33 @@ variable (integrand : RadElem (CFrac ℚ))
 
 /-- The soundness residual `AlgebraicDecideSoundnessResidual …`: bundles the three branch
 hypotheses (`hnolog`, `hprincipal`, `htorsion`) turning each `some F` branch of
-`cIntegrateAlgebraicDecide` into `toPoly (algDerivQ ρ F) = toPoly integrand`. -/
+`cIntegrateAlgebraicDecide` into `toPoly (algDeriv ρ F) = toPoly integrand`. -/
 structure AlgebraicDecideSoundnessResidual : Prop where
   /-- No-log branch (rational-part exhaustiveness): `D(⟨v, []⟩) = integrand`. -/
   hnolog :
-    DensePoly.toPoly (algDerivQ ρ
+    DensePoly.toPoly (algDeriv ρ
         ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (CFrac.num ρ) R B), []⟩)
       = DensePoly.toPoly integrand
   /-- Principal branch (`cIntegrateAlgebraicWf_sound` discharge): `D(cIntegrateAlgebraicWf …) = integrand`. -/
   hprincipal :
-    DensePoly.toPoly (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
+    DensePoly.toPoly (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
       = DensePoly.toPoly integrand
   /-- Torsion branch (`radTorsionLogTerm`/`principalGenerator` correctness): for the constructed log term
   `term`, `D(⟨v, [term]⟩) = integrand`. -/
   htorsion : ∀ term,
     torsionLogTerm p ρ ρq gen Dm = some term →
-    DensePoly.toPoly (algDerivQ ρ
+    DensePoly.toPoly (algDeriv ρ
         ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (CFrac.num ρ) R B), [term]⟩)
       = DensePoly.toPoly integrand
 
 /-- Soundness of `cIntegrateAlgebraicDecide`: under the soundness residual, `… = some F` implies
-`toPoly (algDerivQ ρ F) = toPoly integrand`. Checker-free (no round-trip hypothesis). -/
+`toPoly (algDeriv ρ F) = toPoly integrand`. Checker-free (no round-trip hypothesis). -/
 theorem cIntegrateAlgebraicDecide_sound
     (hres : AlgebraicDecideSoundnessResidual p ρ R B residual c D degBound ρq gen Dm integrand)
     (F : AlgIntegralResult (CFrac ℚ))
     (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = some F) :
-    DensePoly.toPoly (algDerivQ ρ F) = DensePoly.toPoly integrand := by
+    DensePoly.toPoly (algDeriv ρ F) = DensePoly.toPoly integrand := by
   unfold cIntegrateAlgebraicDecide at hsome
   -- split the `hasLogPart` discriminator, then the principal log solve, then the torsion decision
   by_cases hlp : hasLogPart = false
@@ -295,7 +295,7 @@ example (p : ℕ) [Fact p.Prime]
     (F : AlgIntegralResult (CFrac ℚ))
     (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = some F) :
-    DensePoly.toPoly (algDerivQ ρ F) = DensePoly.toPoly integrand :=
+    DensePoly.toPoly (algDeriv ρ F) = DensePoly.toPoly integrand :=
   cIntegrateAlgebraicDecide_sound p ρ R B residual c D degBound ρq gen Dm hasLogPart integrand
     hres F hsome
 

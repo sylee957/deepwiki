@@ -81,16 +81,6 @@ def algDeriv {α : Type*} [CField α] [CDiffField α] (ρ : α) (F : AlgIntegral
     (fun acc (c, u) => DensePoly.cadd acc (DensePoly.cscale c (radLogDeriv ρ u)))
     (radDeriv 2 ρ F.ratPart)
 
-
-/-- **The derivative of a full algebraic integral** `algDerivQ ρ F = radDeriv v + Σ cᵢ·radLogDeriv uᵢ`,
-the `CFrac ℚ` specialization of `algDeriv`. -/
-def algDerivQ (ρ : CFrac ℚ) (F : AlgIntegralResult (CFrac ℚ)) : RadElem (CFrac ℚ) :=
-  algDeriv ρ F
-
--- The concrete result/derivative are exactly the generic ones at the `ℚ(x)` base (`base + abbrev`).
-example : AlgIntegralResult (CFrac ℚ) = AlgIntegralResult (CFrac ℚ) := rfl
-example (ρ : CFrac ℚ) (F : AlgIntegralResult (CFrac ℚ)) : algDerivQ ρ F = algDeriv ρ F := rfl
-
 /-- **Assemble the rational part `v` from a multi-case dispatch run**. -/
 def radAssembleRatPart (ρ : CFrac ℚ)
     (runs : List (Bool × DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePoly ℚ)) : RadElem (CFrac ℚ) :=

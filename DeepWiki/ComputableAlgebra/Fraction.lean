@@ -113,6 +113,11 @@ def num {α : Type*} [CField α] (x : CFrac α) : DensePoly α := x.1.1
 /-- The denominator polynomial stored by a computable fraction. -/
 def den {α : Type*} [CField α] (x : CFrac α) : DensePoly α := x.1.2
 
+/-- A computable fraction's stored denominator passes the polynomial nonzero test. -/
+theorem cisZeroG_den {α : Type*} [CField α] (x : CFrac α) :
+    DensePoly.cisZero (den x) = false :=
+  x.2
+
 /-- The constant `[1]` is `cisZero`-nonzero (from `CFieldDomain`). -/
 theorem cisZeroG_one_singleton {α : Type*} [CField α] [CFieldDomain α] :
     DensePoly.cisZero ([CCommRing.one] : DensePoly α) = false :=
@@ -167,14 +172,15 @@ def qmulNZ {α : Type*} [CField α] [CFieldDomain α] (x y : CFrac α) : CFrac �
     exact cmulG_ne_zero_of hb hd⟩
 
 /-- `qnegNZ`: negation on `CFrac` (denominator unchanged). -/
-def qnegNZ {α : Type*} [CField α] (x : CFrac α) : CFrac α := ⟨QFun.qneg x.1, x.2⟩
+def qnegNZ {α : Type*} [CField α] (x : CFrac α) : CFrac α :=
+  ofFraction (DensePoly.cneg (num x)) (den x) (cisZeroG_den x)
 
 /-- `qinvNZ`: inverse on `CFrac`. If the numerator's zero test holds, the result is `ofPoly []` (the
 `0⁻¹ = 0` convention); otherwise swap numerator and denominator (the new denominator is the old
 numerator, nonzero exactly by `¬ cisZero`). -/
 def qinvNZ {α : Type*} [CField α] [CFieldDomain α] (x : CFrac α) : CFrac α :=
-  if h : DensePoly.cisZero x.1.1 then ofPoly []
-  else ⟨(x.1.2, x.1.1), Bool.not_eq_true _ ▸ h⟩
+  if h : DensePoly.cisZero (num x) then ofPoly []
+  else ofFraction (den x) (num x) (Bool.not_eq_true _ ▸ h)
 
 /-- `qsubNZ`: subtraction on `CFrac`, `x − y := x + (−y)`. -/
 def qsubNZ {α : Type*} [CField α] [CFieldDomain α] (x y : CFrac α) : CFrac α :=
@@ -182,7 +188,7 @@ def qsubNZ {α : Type*} [CField α] [CFieldDomain α] (x y : CFrac α) : CFrac �
 
 /-- `isZeroNZ`: the zero test on `CFrac`, reading `cisZero` off the **numerator** (the denominator
 is nonzero by membership, so `x = 0` iff its numerator vanishes). -/
-def isZeroNZ {α : Type*} [CField α] (x : CFrac α) : Bool := DensePoly.cisZero x.1.1
+def isZeroNZ {α : Type*} [CField α] (x : CFrac α) : Bool := DensePoly.cisZero (num x)
 
 end CFrac
 
@@ -299,15 +305,15 @@ theorem toCFracG_qnegNZG {α : Type*} [CField α] [CFieldSpec α] (x : CFrac α)
 theorem toCFracG_qinvNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x : CFrac α) :
     toCFrac (qinvNZ x) = (toCFrac x)⁻¹ := by
   rw [qinvNZ]
-  by_cases h : DensePoly.cisZero x.1.1
+  by_cases h : DensePoly.cisZero (num x)
   · rw [dif_pos h, toCFrac_ofPoly, DensePoly.toPolyG_nil, map_zero]
-    have hx0 : DensePoly.toPoly x.1.1 = 0 := (DensePoly.cisZeroG_iff x.1.1).mp h
+    have hx0 : DensePoly.toPoly (num x) = 0 := (DensePoly.cisZeroG_iff (num x)).mp h
     have : toCFrac x = 0 := by
-      rw [toCFrac, num, hx0, map_zero, zero_div]
+      rw [toCFrac, hx0, map_zero, zero_div]
     rw [this, inv_zero]
   · rw [dif_neg h]
-    show am α (DensePoly.toPoly x.1.2) / am α (DensePoly.toPoly x.1.1)
-      = (am α (DensePoly.toPoly x.1.1) / am α (DensePoly.toPoly x.1.2))⁻¹
+    show am α (DensePoly.toPoly (den x)) / am α (DensePoly.toPoly (num x))
+      = (am α (DensePoly.toPoly (num x)) / am α (DensePoly.toPoly (den x)))⁻¹
     rw [inv_div]
 
 /-- `toCFrac (qsubNZ x y) = toCFrac x - toCFrac y`: `qsubNZ` realizes subtraction. -/

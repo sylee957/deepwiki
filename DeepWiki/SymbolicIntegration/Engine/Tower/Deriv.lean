@@ -24,20 +24,20 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldDomain α]
 `D = cmonomialDeriv Dt`; the fraction-field quotient rule, computable (no `CFieldSpec`). -/
 def towerDerivCFrac (Dt : DensePoly α) (x : CFrac α) : CFrac α :=
   CFrac.ofFraction
-    (DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.1.1) x.1.2)
-      (DensePoly.cmul x.1.1 (DensePoly.cmonomialDeriv Dt x.1.2)))
-    (DensePoly.cmul x.1.2 x.1.2)
-    (cmulG_ne_zero_of x.2 x.2)
+    (DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.num) x.den)
+      (DensePoly.cmul x.num (DensePoly.cmonomialDeriv Dt x.den)))
+    (DensePoly.cmul x.den x.den)
+    (cmulG_ne_zero_of (cisZeroG_den x) (cisZeroG_den x))
 
 /-- The numerator of `towerDerivCFrac Dt x` is `D n · d − n · D d` (with `D = cmonomialDeriv Dt`). -/
 theorem towerDerivCFracG_num (Dt : DensePoly α) (x : CFrac α) :
-    (towerDerivCFrac Dt x).1.1
-      = DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.1.1) x.1.2)
-          (DensePoly.cmul x.1.1 (DensePoly.cmonomialDeriv Dt x.1.2)) := rfl
+    (towerDerivCFrac Dt x).num
+      = DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.num) x.den)
+          (DensePoly.cmul x.num (DensePoly.cmonomialDeriv Dt x.den)) := rfl
 
 /-- The denominator of `towerDerivCFrac Dt x` is `d·d`. -/
 theorem towerDerivCFracG_den (Dt : DensePoly α) (x : CFrac α) :
-    (towerDerivCFrac Dt x).1.2 = DensePoly.cmul x.1.2 x.1.2 := rfl
+    (towerDerivCFrac Dt x).den = DensePoly.cmul x.den x.den := rfl
 
 end CFrac
 
@@ -132,8 +132,11 @@ theorem toCFracG_towerDerivCFracG (Dt : DensePoly α) (x : CFrac α) :
     toCFrac (towerDerivCFrac Dt x)
       = extendDeriv (Differential.implicitDeriv (DensePoly.toPoly Dt)) (toCFrac x) := by
   obtain ⟨⟨n, d⟩, hd⟩ := x
+  change toCFrac (towerDerivCFrac Dt (ofFraction n d hd))
+      = extendDeriv (Differential.implicitDeriv (DensePoly.toPoly Dt))
+          (toCFrac (ofFraction n d hd))
   -- read `toCFrac x` as `RatFunc.mk (toPoly n) (toPoly d)`, apply the quotient rule `extendDeriv_mk`.
-  have hxmk : toCFrac (⟨(n, d), hd⟩ : CFrac α)
+  have hxmk : toCFrac (ofFraction n d hd : CFrac α)
       = RatFunc.mk (DensePoly.toPoly n) (DensePoly.toPoly d) := by
     rw [toCFrac, RatFunc.mk_eq_div]; rfl
   rw [hxmk, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul, map_mul, map_pow]

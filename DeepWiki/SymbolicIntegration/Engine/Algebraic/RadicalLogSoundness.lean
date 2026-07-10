@@ -545,16 +545,16 @@ end RadElem
 /-! ### Input (b): discharging the integrand split for the `cIntegrateAlgebraic` driver
 
 For the actual driver, the `hsplit` hypothesis is not an extra assumption: the engine's own
-round-trip certificate `algDerivQ ρ F = integrand` (in `DensePoly.cisZero`-tested form) is the integrand
-split un-cross-multiplied, since `algDerivQ ρ F = radDeriv(v) + Σ cᵢ·radLogDeriv(uᵢ)`. -/
+round-trip certificate `algDeriv ρ F = integrand` (in `DensePoly.cisZero`-tested form) is the integrand
+split un-cross-multiplied, since `algDeriv ρ F = radDeriv(v) + Σ cᵢ·radLogDeriv(uᵢ)`. -/
 
 /-- The engine round-trip certificate is the integrand split (un-cross-multiplied): for output
-`F : AlgIntegralResult (CFrac ℚ)` over `y² = ρ`, `DensePoly.cisZero (DensePoly.csub (algDerivQ ρ F) integrand) = true`
-yields `toPoly (algDerivQ ρ F) = toPoly integrand` in `K[X]`. -/
+`F : AlgIntegralResult (CFrac ℚ)` over `y² = ρ`, `DensePoly.cisZero (DensePoly.csub (algDeriv ρ F) integrand) = true`
+yields `toPoly (algDeriv ρ F) = toPoly integrand` in `K[X]`. -/
 theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : CFrac ℚ) (F : AlgIntegralResult (CFrac ℚ))
     (integrand : RadElem (CFrac ℚ))
-    (hrt : DensePoly.cisZero (DensePoly.csub (algDerivQ ρ F) integrand) = true) :
-    DensePoly.toPoly (algDerivQ ρ F) = DensePoly.toPoly integrand := by
+    (hrt : DensePoly.cisZero (DensePoly.csub (algDeriv ρ F) integrand) = true) :
+    DensePoly.toPoly (algDeriv ρ F) = DensePoly.toPoly integrand := by
   rw [DensePoly.cisZero, DensePoly.csub] at hrt
   exact RefinesPoly.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) hrt
 

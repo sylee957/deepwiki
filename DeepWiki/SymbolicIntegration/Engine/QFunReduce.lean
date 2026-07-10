@@ -25,43 +25,43 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-- The common factor `reduceGcd a = cgcdMonicWf num den` cancelled by `qReduce`. -/
 def reduceGcd (a : CFrac α) : DensePoly α :=
-  cgcdMonicWf a.1.1 a.1.2
+  cgcdMonicWf a.num a.den
 
 /-! #### The denominator-nonzero discharge (`Prop`-erased) -/
 
 /-- `toPoly (reduceGcd a)` divides both numerator and denominator through the bridge. -/
 theorem toPolyG_reduceGcd_dvd (a : CFrac α) :
-    toPoly (reduceGcd a) ∣ toPoly a.1.1 ∧ toPoly (reduceGcd a) ∣ toPoly a.1.2 :=
-  toPolyG_cgcdMonicWf_dvd a.1.1 a.1.2
+    toPoly (reduceGcd a) ∣ toPoly a.num ∧ toPoly (reduceGcd a) ∣ toPoly a.den :=
+  toPolyG_cgcdMonicWf_dvd a.num a.den
 
 /-- `reduceGcd a` is nonzero when the denominator of `a` is nonzero. -/
 theorem reduceGcd_ne_nil (a : CFrac α) : cnorm (reduceGcd a) ≠ [] := by
-  have hden : toPoly a.1.2 ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false a.2
+  have hden : toPoly a.den ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false (cisZeroG_den a)
   intro hnil
   have hg0 : toPoly (reduceGcd a) = 0 := (cnormG_eq_nil_iff _).mp hnil
   exact hden (eq_zero_of_zero_dvd (hg0 ▸ (toPolyG_reduceGcd_dvd a).2))
 
 /-- The cancelled numerator `num/g`. -/
-def reduceNum (a : CFrac α) : DensePoly α := cdivWf a.1.1 (reduceGcd a)
+def reduceNum (a : CFrac α) : DensePoly α := cdivWf a.num (reduceGcd a)
 
 /-- The cancelled denominator `den/g`. -/
-def reduceDen (a : CFrac α) : DensePoly α := cdivWf a.1.2 (reduceGcd a)
+def reduceDen (a : CFrac α) : DensePoly α := cdivWf a.den (reduceGcd a)
 
 /-- Exact division of the numerator by `reduceGcd a`. -/
 theorem toPolyG_reduceNum_mul (a : CFrac α) :
-    toPoly (reduceNum a) * toPoly (reduceGcd a) = toPoly a.1.1 :=
+    toPoly (reduceNum a) * toPoly (reduceGcd a) = toPoly a.num :=
   DensePoly.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).1
 
 /-- Exact division of the denominator by `reduceGcd a`. -/
 theorem toPolyG_reduceDen_mul (a : CFrac α) :
-    toPoly (reduceDen a) * toPoly (reduceGcd a) = toPoly a.1.2 :=
+    toPoly (reduceDen a) * toPoly (reduceGcd a) = toPoly a.den :=
   DensePoly.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).2
 
 /-- The reduced denominator satisfies `cisZero (reduceDen a) = false`. -/
 theorem cisZeroG_reduceDen (a : CFrac α) : cisZero (reduceDen a) = false := by
   rw [Bool.eq_false_iff, Ne, cisZeroG_iff]
   intro hz
-  have hden : toPoly a.1.2 ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false a.2
+  have hden : toPoly a.den ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false (cisZeroG_den a)
   apply hden
   rw [← toPolyG_reduceDen_mul a, hz, zero_mul]
 
@@ -93,8 +93,8 @@ theorem toCFracG_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : CFrac α)
   set G : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly (CFrac.reduceGcd a)) with hG
   set Nq : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly (CFrac.reduceNum a)) with hNq
   set Dq : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly (CFrac.reduceDen a)) with hDq
-  set N : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly a.1.1) with hN
-  set D : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly a.1.2) with hD
+  set N : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly a.num) with hN
+  set D : RatFunc (CFieldSpec.K α) := CFrac.am α (toPoly a.den) with hD
   -- exact-division specs, pushed through the ring hom am
   have hnum : Nq * G = N := by
     rw [hNq, hG, hN, ← map_mul]; exact congrArg _ (CFrac.toPolyG_reduceNum_mul a)
@@ -102,7 +102,8 @@ theorem toCFracG_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : CFrac α)
     rw [hDq, hG, hD, ← map_mul]; exact congrArg _ (CFrac.toPolyG_reduceDen_mul a)
   -- the cancellable / nonvanishing denominators
   have hGne : G ≠ 0 := CFrac.amG_toPolyG_reduceGcd_ne_zero a
-  have hDne : D ≠ 0 := CFrac.amG_toPolyG_ne_zero (CFrac.toPolyG_ne_zero_of_cisZeroG_false a.2)
+  have hDne : D ≠ 0 := CFrac.amG_toPolyG_ne_zero
+    (CFrac.toPolyG_ne_zero_of_cisZeroG_false (CFrac.cisZeroG_den a))
   have hDqne : Dq ≠ 0 := by
     intro h; rw [h, zero_mul] at hden; exact hDne hden.symm
   -- unfold both sides of the goal to Nq/Dq = N/D and cross-multiply
@@ -139,18 +140,18 @@ def swellFrac : CFrac ℚ :=
   CFrac.ofFraction [(-1 : ℚ), 0, 1] [(-3 : ℚ), 2, 1]
 
 -- `qReduce` cancels the gcd `x − 1` in `swellFrac`, dropping the numerator to degree 1.
-example : cdeg (qReduce swellFrac).1.1 = 1 := by native_decide
+example : cdeg (qReduce swellFrac).num = 1 := by native_decide
 
 -- `qReduce` drops `swellFrac`'s denominator to degree 1, a scalar multiple of `x + 3`.
-example : cdeg (qReduce swellFrac).1.2 = 1 := by native_decide
+example : cdeg (qReduce swellFrac).den = 1 := by native_decide
 
 -- `qReduce` is value-preserving on `swellFrac` in the engine's field equality test.
 example : qReduceEq (qReduce swellFrac) swellFrac = true := by native_decide
 
 -- The total degree drops from `2 + 2 = 4` to `1 + 1 = 2`.
 example :
-    cdeg (qReduce swellFrac).1.1 + cdeg (qReduce swellFrac).1.2
-      < cdeg swellFrac.1.1 + cdeg swellFrac.1.2 := by native_decide
+    cdeg (qReduce swellFrac).num + cdeg (qReduce swellFrac).den
+      < cdeg swellFrac.num + cdeg swellFrac.den := by native_decide
 
 /-- A higher-degree reducible fraction over `ℚ(x)` for `qReduce` examples. -/
 def swellFrac2 : CFrac ℚ :=
@@ -161,7 +162,7 @@ example : qReduceEq (qReduce swellFrac2) swellFrac2 = true := by native_decide
 
 -- The bigger swell's total degree drops from `4 + 6 = 10` to `3 + 5 = 8`.
 example :
-    cdeg (qReduce swellFrac2).1.1 + cdeg (qReduce swellFrac2).1.2
-      < cdeg swellFrac2.1.1 + cdeg swellFrac2.1.2 := by native_decide
+    cdeg (qReduce swellFrac2).num + cdeg (qReduce swellFrac2).den
+      < cdeg swellFrac2.num + cdeg swellFrac2.den := by native_decide
 
 end DeepWiki.SymbolicIntegration

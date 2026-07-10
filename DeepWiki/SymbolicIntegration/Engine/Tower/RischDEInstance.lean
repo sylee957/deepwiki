@@ -21,7 +21,7 @@ variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCor
 instance instCRischFieldCFrac : CRischField (CFrac β) where
   crischDESolve f g :=
     if cdenomNormalGate f then
-      match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 g.1.1 g.1.2 with
+      match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
       | none => none
       | some (ynum, yden) =>
         if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
@@ -31,13 +31,13 @@ instance instCRischFieldCFrac : CRischField (CFrac β) where
 then `crischDESolve f g` is the bare `cRischDE [1]`-then-`cisZero`-guard match. -/
 theorem crischDESolveWf_eq_solve_of_normal (f g : CFrac β) (hgate : cdenomNormalGate f = true) :
     CRischField.crischDESolve f g
-      = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 g.1.1 g.1.2 with
+      = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
          | none => none
          | some (ynum, yden) =>
            if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none) := by
   rw [show CRischField.crischDESolve f g
       = (if cdenomNormalGate f then
-           match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 g.1.1 g.1.2 with
+           match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
            | none => none
            | some (ynum, yden) =>
              if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
@@ -51,7 +51,7 @@ theorem cdenomNormalGateG_of_crischDESolve_isSome (f g y : CFrac β)
   · exact hgate
   · rw [show CRischField.crischDESolve f g
         = (if cdenomNormalGate f then
-             match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 g.1.1 g.1.2 with
+             match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
              | none => none
              | some (ynum, yden) =>
                if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none

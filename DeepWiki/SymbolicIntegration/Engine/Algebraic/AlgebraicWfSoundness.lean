@@ -45,15 +45,15 @@ theorem cIntegrateAlgebraicWf_isAlgebraicIntegral
   RadElem.isAlgebraicIntegral_of_parts 2 ρ f _ ratPart logPart commonDenomQ _ cofs hrat hlog hsplit
 
 /-- The radical capstone `cIntegrateAlgebraicWf_sound`: from the engine round-trip certificate
-`DensePoly.cisZero (DensePoly.csub (algDerivQ ρ F) integrand) = true` alone, `toPoly (algDerivQ ρ F) = toPoly
+`DensePoly.cisZero (DensePoly.csub (algDeriv ρ F) integrand) = true` alone, `toPoly (algDeriv ρ F) = toPoly
 integrand` — the un-cross-multiplied `D(v + Σ cᵢ log uᵢ) = f`. -/
 theorem cIntegrateAlgebraicWf_sound
     (ρ : CFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (CFrac ℚ))
     (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) (integrand : RadElem (CFrac ℚ))
     (hrt : DensePoly.cisZero
-      (DensePoly.csub (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
+      (DensePoly.csub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
       = true) :
-    DensePoly.toPoly (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
+    DensePoly.toPoly (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
       = DensePoly.toPoly integrand :=
   toPolyG_algDeriv_eq_of_roundtrip ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound) integrand hrt
 
@@ -131,9 +131,9 @@ theorem afIntegrateAlgebraicWf_isGeneralRationalIntegralWf
 example (ρ : CFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (CFrac ℚ))
     (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) (integrand : RadElem (CFrac ℚ))
     (hrt : DensePoly.cisZero
-      (DensePoly.csub (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
+      (DensePoly.csub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
       = true) :
-    DensePoly.toPoly (algDerivQ ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
+    DensePoly.toPoly (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
       = DensePoly.toPoly integrand :=
   cIntegrateAlgebraicWf_sound ρ R B residual c D degBound integrand hrt
 
