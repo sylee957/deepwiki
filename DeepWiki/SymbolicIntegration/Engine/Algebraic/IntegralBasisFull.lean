@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.Round2IntegralBasis
-import DeepWiki.SymbolicIntegration.Engine.QFunReduce
+import DeepWiki.ComputableAlgebra.FracReduce
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
 /-! # The general-curve integral basis: iterating the Ford–Zassenhaus Round-2 step to the maximal order

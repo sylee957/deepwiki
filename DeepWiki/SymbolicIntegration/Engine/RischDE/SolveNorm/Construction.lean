@@ -33,8 +33,12 @@ def reduceSoundOpt (a : DenseFrac β) : Option (DenseFrac β) :=
 
 /-- `reduceSoundOpt a` is exactly `some (qReduce a)`. -/
 theorem reduceSoundOpt_eq (a : DenseFrac β) : reduceSoundOpt a = some (qReduce a) := by
-  unfold reduceSoundOpt qReduce
-  rw [dif_pos (CFrac.cisZeroG_reduceDen a)]
+  have hrd : DensePoly.cisZero (CFrac.reduceDen a) = false :=
+    CFrac.cisZero_reduceDen a
+  unfold reduceSoundOpt
+  dsimp only
+  rw [dif_pos hrd]
+  rfl
 
 end Reduce
 

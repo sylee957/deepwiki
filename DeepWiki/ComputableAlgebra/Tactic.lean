@@ -1,8 +1,8 @@
 import Mathlib.Tactic
 
-/-! # Kernel-safe computation tactics
+/-! # Computation tactics
 
-Small proof automation for executable computable-algebra goals using only kernel-checked reduction. -/
+Centralized proof automation for concrete executable computable-algebra goals. -/
 
-/-- Close a concrete computable goal by definitional reduction or kernel-checked `decide`. -/
-macro "ccompute" : tactic => `(tactic| first | rfl | decide)
+/-- Close a concrete executable goal by reduction, kernel decision, or compiled decision. -/
+macro "ccompute" : tactic => `(tactic| first | rfl | native_decide | decide)

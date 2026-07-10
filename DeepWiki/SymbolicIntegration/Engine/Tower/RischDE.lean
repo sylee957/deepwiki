@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
-import DeepWiki.SymbolicIntegration.Engine.QFunReduce
+import DeepWiki.ComputableAlgebra.FracReduce
 import DeepWiki.SymbolicIntegration.Engine.RischFieldCore
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Eta
 import DeepWiki.ComputableAlgebra.PolyEngine

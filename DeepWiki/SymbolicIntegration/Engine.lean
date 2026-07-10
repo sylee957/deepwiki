@@ -58,7 +58,6 @@ import DeepWiki.SymbolicIntegration.Engine.PrimitiveGuardedExamples
 import DeepWiki.SymbolicIntegration.Engine.PrimitiveLrtDecision
 import DeepWiki.SymbolicIntegration.Engine.PrimitiveCase
 import DeepWiki.SymbolicIntegration.Engine.PrimPRSRegular.Assembly
-import DeepWiki.SymbolicIntegration.Engine.QFunReduce
 import DeepWiki.SymbolicIntegration.Engine.RatFuncValuation
 import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec

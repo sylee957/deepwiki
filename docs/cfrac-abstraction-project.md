@@ -83,8 +83,11 @@ runs the same fraction algorithm.
    rather than unfolding the dense implementation. Hermite residual recovery is representation-independent
    over `CPoly P`: its raw-pair denotation, split and radical certificates, and decidable honesty bundle use
    `CPolyEngine P` and `CPolyEuclidean P`, so dense source witnesses are only specialization boundaries.
+   Fraction gcd cancellation now lives in `ComputableAlgebra/FracReduce.lean` and is generic over
+   `CFrac F P`, `CPolyGcd P`, and `CPolyEuclidean P`; the dense-only `Engine/QFunReduce.lean` module is
+   retired, and a sparse fraction computation plus denotation theorem exercise the shared reducer.
    SymbolicIntegration consumers request the weakest capability they need.
-7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
+7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;
    retain representation-selected optimized instances when their implementations intentionally differ.
@@ -95,10 +98,11 @@ runs the same fraction algorithm.
 ## Checkpoint discipline
 
 Land the phases in small gate-green commits. Each new representation-independent executable path gets a
-`SparseFrac` or `SparsePoly` consumer or correctness witness. `ComputableAlgebra` does not use
-`native_decide` proofs or executable showcase examples. Small concrete evidence goals may use the local
-`ccompute` tactic, which tries only `rfl` and kernel `decide`; unsupported computation must become an
-explicit lemma or an `Option`-returning API rather than silently switching to native evaluation. A generic
+`SparseFrac` or `SparsePoly` consumer or correctness witness. Computable declarations do not contain
+ad hoc `native_decide` proof scripts or executable showcase examples. Concrete evidence goals use the local
+`ccompute` tactic, which centralizes the policy: definitional reduction first, then compiled decision for
+opaque executable definitions, with kernel `decide` as the final fallback. Constructor APIs still require
+explicit evidence or expose an `Option`-returning checked boundary. A generic
 wrapper around a concrete dense algorithm does
 not count as migration: the algorithm itself must be supplied through an abstract capability or remain
 explicitly dense at the call site.
