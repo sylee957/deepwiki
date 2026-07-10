@@ -220,6 +220,11 @@ def cSqfreeYunFF (p : DensePoly α) : List (DensePoly α) :=
   let d1 := csub (cdivWf (cderiv p) g) (cderiv b1)
   cSqfreeYunFFGgoWf (cyunBound p) b1 d1
 
+/-- Nonconstant Yun factors paired with their one-based multiplicities. -/
+def cSqfreeYunFactors (p : DensePoly α) : List (DensePoly α × ℕ) :=
+  (cSqfreeYunFF p).zipIdx.filterMap fun (q, i) =>
+    if cdeg q = 0 then none else some (q, i + 1)
+
 /-- Generic split-squarefree-factor over the tower `cSplitSquarefreeFactorFast Dt p =
 ((N₁,…,Nₘ), (S₁,…,Sₘ))`. Yun-factor `p` in `t` (`cSqfreeYunFF`); per factor `pᵢ`,
 `Sᵢ = cgcdFFCoreWf pᵢ (cmonomialDeriv Dt pᵢ)` (the special part) and `Nᵢ = cdivWf pᵢ Sᵢ` (normal part). -/

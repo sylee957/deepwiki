@@ -13,8 +13,6 @@ import DeepWiki.SymbolicIntegration.Compute.Hermite.ResidualCorrectness
 import DeepWiki.SymbolicIntegration.Compute.Hermite.ResidualBridge
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
-import DeepWiki.SymbolicIntegration.Compute.SquarefreeExact
-import DeepWiki.SymbolicIntegration.Compute.SquarefreeYun
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization

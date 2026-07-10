@@ -92,7 +92,7 @@ theorem ex_2_3_resultant_deg : cR23.length = 9 := by native_decide
 one squarefree factor of multiplicity one (all eight residues distinct). So no nontrivial multiplicity
 splitting is needed; the LRT subresultant index is `j = 1`. Proved by `native_decide`. -/
 theorem ex_2_3_resultant_squarefree :
-    csqfreeFactor 80 cR23 = [(cmonic cR23, 1)] := by native_decide
+    DensePoly.cSqfreeYunFactors cR23 = [(cmonic cR23, 1)] := by native_decide
 
 /-! ### The LRT log argument `S₁(t,x)` and the assembled answer -/
 

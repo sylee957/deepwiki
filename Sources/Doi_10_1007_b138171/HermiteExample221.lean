@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
+import DeepWiki.SymbolicIntegration.Engine.YunSquarefreeDecomposition
 
 /-! # Bronstein Example 2.2.1 — Hermite reduction worked example
 
@@ -27,7 +28,7 @@ coefficients low→high: `[0, 0, 8, 0, 12, 0, 6, 0, 1]`. -/
 def cD221 : DensePoly ℚ := [0, 0, 8, 0, 12, 0, 6, 0, 1]
 
 -- **Example 2.2.1, the squarefree factorization** `D = x²·(x²+2)³`: Yun returns `[(x, 2), (x²+2, 3)]`.
-#eval csqfreeFactor 40 cD221
+#eval DensePoly.cSqfreeYunFactors cD221
 
 -- **Example 2.2.1, the computed Hermite reduction** `((gnum, gden), (B, Dstar))`. Book answer:
 -- `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)`, residual `B/Dstar = 1/x` (so `∫ dx/x`),
@@ -38,7 +39,7 @@ def cD221 : DensePoly ℚ := [0, 0, 8, 0, 12, 0, 6, 0, 1]
 `D = x⁸+6x⁶+12x⁴+8x²` is `[(x, 2), (x²+2, 3)]` — the factor `x` of multiplicity `2` and `x²+2` of
 multiplicity `3`. Proved by `native_decide`. -/
 theorem hermite_ex221_factors :
-    csqfreeFactor 40 cD221 = [([0, 1], 2), ([2, 0, 1], 3)] := by native_decide
+    DensePoly.cSqfreeYunFactors cD221 = [([0, 1], 2), ([2, 0, 1], 3)] := by native_decide
 
 /-- **Example 2.2.1: the residual log integrand is `(x²+2)/(x³+2x) = 1/x`** (§2.2, p.41): the squarefree
 radical computed is `Dstar = x³ + 2x = x·(x²+2)` (`[0, 2, 0, 1]`) and the residual numerator is
@@ -131,20 +132,6 @@ example :
   exact hermiteReduce_residual_correct cA221 cD221 [8, 12, 20, 12, 8, 3]
     [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hexact
 
-/-- **Example 2.2.1: the engine-honesty bundle holds** (`native_decide`): every `cmod`-remainder in the
-Yun factorization of `D = x²(x²+2)³` vanishes, so `SqfreeExactComp 40 cD221` — and hence (via
-`SqfreeExactComp_to_SqfreeExact`) the `toPoly` bundle `SqfreeExact 40 cD221` — holds. -/
-theorem hermite_ex221_sqfreeExactComp : SqfreeExactComp 40 cD221 := by native_decide
-
-/-- **Example 2.2.1: the Yun radical divides `D`** — the radical `Dstar = x(x²+2) = x³+2x` of
-`csqfreeFactor 40 cD221` divides `D = x²(x²+2)³` in `ℚ[X]`. A concrete, non-vacuous instance of
-`toPoly_Dstar_dvd_D`, discharged through the `native_decide`'d computable bundle
-`hermite_ex221_sqfreeExactComp`. -/
-example :
-    toPoly ((csqfreeFactor 40 cD221).foldl (fun acc (vi : DensePoly ℚ × ℕ) => cmul acc vi.1) [1])
-      ∣ toPoly cD221 :=
-  toPoly_Dstar_dvd_D 40 cD221 (SqfreeExactComp_to_SqfreeExact 40 cD221 hermite_ex221_sqfreeExactComp)
-
 /-! ### Example 2.2.1: the unconditional wrapper, certificate `native_decide`d
 
 The decidable residual-honesty bundle `HermiteResComp` holds on Example 2.2.1 (`native_decide`), so the
@@ -189,20 +176,29 @@ example :
 /-! ### Example 2.2.1 via the radical wrapper: `Dstar ∣ D` from the proven Yun radical clause
 
 The radical wrapper `hermiteReduce_residual_correct_of_radical` consumes `Dstar ∣ D` as a hypothesis,
-which for Example 2.2.1 is discharged not by `native_decide` but by the **proven** Yun radical-divides
-theorem `toPoly_Dstar_dvd_D` (through the `native_decide`'d honesty bundle `hermite_ex221_sqfreeExactComp`),
-transported to the literal radical `[0,2,0,1]` by the computed fold equality. Only the *single* residual
-cert remains `native_decide`'d — the abstract radical content is genuinely proven. -/
+which for Example 2.2.1 follows from the generic fuel-free Yun radical-divides theorem, transported to
+the literal radical `[0,2,0,1]` by the computed fold equality. -/
 
-/-- **Example 2.2.1: the radical `[0,2,0,1]` divides `D`** with the *proven* Yun radical clause: the
-computed radical `Dstar = x³+2x` (the `csqfreeFactor 40 cD221` fold) divides `D`, transported to the
-literal `[0,2,0,1]` (`native_decide` fold-equality + `toPoly_Dstar_dvd_D`). -/
+/-- **Example 2.2.1: the radical `[0,2,0,1]` divides `D`** by generic Yun correctness. -/
 theorem hermite_ex221_Dstar_dvd : toPoly [0, 2, 0, 1] ∣ toPoly cD221 := by
-  have hfold : ((csqfreeFactor 40 cD221).foldl (fun acc (vi : DensePoly ℚ × ℕ) => cmul acc vi.1) [1])
+  have hfold : (DensePoly.cSqfreeYunFF cD221).foldl (fun acc vi => cmul acc vi) [1]
       = [0, 2, 0, 1] := by native_decide
-  have := toPoly_Dstar_dvd_D 40 cD221
-    (SqfreeExactComp_to_SqfreeExact 40 cD221 hermite_ex221_sqfreeExactComp)
-  rwa [hfold] at this
+  have hD : toPoly cD221 ≠ 0 := by
+    intro h
+    have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
+    revert this
+    decide
+  have hdiv := prod_map_cSqfreeYunFFG_dvd gcdFFCorrect_Q cD221
+    (by simpa only [toPoly_eq_dense] using hD)
+  have hread := toPolyG_foldl_cmulG_plainList ([1] : DensePoly ℚ)
+    (DensePoly.cSqfreeYunFF cD221)
+  have hfoldDiv :
+      DensePoly.toPoly ((DensePoly.cSqfreeYunFF cD221).foldl (fun acc vi => cmul acc vi) [1])
+        ∣ DensePoly.toPoly cD221 := by
+    rw [hread]
+    simpa [DensePoly.toPolyG_cons] using hdiv
+  rw [hfold] at hfoldDiv
+  simpa only [toPoly_eq_dense] using hfoldDiv
 
 open scoped Differential in
 /-- **Example 2.2.1: the unconditional Hermite reduction via the radical wrapper** (§2.2, p.41):

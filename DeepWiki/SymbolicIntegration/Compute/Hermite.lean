@@ -47,7 +47,7 @@ def hermiteInner (fuel : ℕ) (V U : DensePoly ℚ) : ℕ → DensePoly ℚ → 
 rational part `g = gnum/gden` and the reduced integrand `B/Dstar` with `Dstar` squarefree, so
 `∫ A/D = g + ∫ B/Dstar`. -/
 def hermiteReduce (fuel : ℕ) (A D : DensePoly ℚ) : QFun × QFun :=
-  let factors := csqfreeFactor fuel D
+  let factors := DensePoly.cSqfreeYunFactors D
   let Dstar := factors.foldl (fun acc (Vi, _) => cmul acc Vi) [1]
   -- Accumulate the rational part `g`. Each factor of multiplicity `i ≥ 2` contributes via `hermiteInner`
   -- against the global numerator `A` over `D` (the inner solve uses `U = D/Vⁱ`, so `B/Vʲ` is correctly

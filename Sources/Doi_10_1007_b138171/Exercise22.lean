@@ -22,7 +22,7 @@ end to end and `native_decide`-pin every step:
 So the computed answer is
 `∫ A/D = ∑_{R(a)=0} a · log(x + c₀(a))`,
 with `R` the degree-10 RT resultant and `c₀` the residue polynomial — the LRT log part, computed.
-A small Yun `csqfreeFactor` is provided for the general assembly (`lrtLogPart`); for Exercise 2.2
+A fuel-free Yun factorization is provided for the general assembly (`lrtLogPart`); for Exercise 2.2
 it returns the single pair `(R, 1)`. -/
 
 namespace DeepWiki.SymbolicIntegration
@@ -64,7 +64,7 @@ theorem ex_2_2_resultant : rtResultantCompute cA22 cD22 = cR22 := by native_deci
 i.e. one squarefree factor of multiplicity one (all ten residues distinct). So no nontrivial
 multiplicity splitting is needed; the LRT subresultant index is `j = 1`. Proved by `native_decide`. -/
 theorem ex_2_2_resultant_squarefree :
-    csqfreeFactor 60 cR22 = [(cmonic cR22, 1)] := by native_decide
+    DensePoly.cSqfreeYunFactors cR22 = [(cmonic cR22, 1)] := by native_decide
 
 /-! ### The LRT log argument `S₁(t,x)` and the assembled answer -/
 

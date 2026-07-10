@@ -82,7 +82,7 @@ theorem dvd_residNum_factor (fuel : ℕ) (A D : DensePoly ℚ) (factors : List (
 /-! ### The product divisibility `W ∣ R` over the pairwise-coprime kept factors
 
 The interference numerator `R` is divisible by each `Vk^{ik−1}` (`dvd_residNum_factor`). Since the kept
-factors `Vk` are pairwise coprime (Yun's `csqfreeFactor_pairwise_isRelPrime`), so are the powers
+factors `Vk` are pairwise coprime (from the generic Yun factorization), so are the powers
 `Vk^{ik−1}`, hence their product `W = ∏_{kept} Vk^{ik−1} = D/Dstar` divides `R` — the single remaining
 interference divisibility follows from the per-factor order argument. -/
 
