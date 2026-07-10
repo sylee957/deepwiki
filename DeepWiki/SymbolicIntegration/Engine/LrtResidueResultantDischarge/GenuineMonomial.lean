@@ -34,7 +34,7 @@ open scoped Differential in
 `cdeg (cmonomialDeriv Dt Dstar) = cdeg Dstar − 1` is `natDegree_implicitDeriv_eq_of_monic_of_not_range`
 (monic `Dstar` from Hermite; `η ∉ range D` from `eta_not_range_der`) through the `cdeg`/`cmonomialDeriv`
 bridges. The degenerate `deg Dstar = 0` (`Dstar = 1`) case is handled separately (both sides `0`). -/
-theorem hm_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem hm_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hgen : GenuinePrimitiveMonomialLrt Dt)
     (hDt0 : (toPoly Dt).natDegree = 0) :
     cdeg (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).2.2)
@@ -90,7 +90,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 cofactor half of `hcopgcd`. Base-change to `K̄`, where `v` splits (monic squarefree); at each root `β` of `v`,
 `rootMult β d = idx+1` (`rootMult_R_map_eq_idx_succ`) equals `rootMult β (v^(idx+1))` (`β` a simple root),
 forcing `rootMult β u = 0` — `β` is not a root of `u`. -/
-theorem isCoprime_cofactor_yunFactor [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem isCoprime_cofactor_yunFactor [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (idx : ℕ) (hidx : idx < (cSqfreeYunFF d).length) :
     IsCoprime (toPoly (cdivWf d (cpow ((cSqfreeYunFF d).get ⟨idx, hidx⟩) (idx + 1))))
@@ -160,7 +160,7 @@ For each repeated Yun factor `v = x.1` (multiplicity `x.2 + 1 ≥ 2`) of `d`, th
 `IsCoprime.mul_left` of the cofactor coprimality (`isCoprime_cofactor_yunFactor`) and the tower-derivative
 normality (`isCoprime_implicitDeriv_of_genuineMonomial`, from `hgen`), and `natDegree_cgcdWf_eq_zero_of_isCoprime`
 reads off the `hcopgcd` shape. -/
-theorem hcopgcd_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem hcopgcd_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hgen : GenuinePrimitiveMonomialLrt Dt) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
@@ -194,7 +194,7 @@ nonvanishing; and the residual divisibility `hdvd` from `hWgd_of_multiplicity` (
 *derived* from `hgen` via `hcopgcd_of_genuineMonomial`) via the `d = W·Dstar` cancellation, bridging the raw
 fold `g` to the `cnorm`-projections through `toPoly`. -/
 theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hpp : (toPoly d).primPart ≠ 0) (hDtdeg : (toPoly Dt).natDegree ≤ 1)
     (haProper : (toPoly a).degree < (toPoly d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt) :
     (toPoly (cHermiteReduceTower Dt a d).2.1).degree

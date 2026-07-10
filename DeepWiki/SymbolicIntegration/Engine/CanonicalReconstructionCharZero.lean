@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SpecialNormalCoprime
 /-! # Canonical reconstruction with the split conditions discharged (`CharZero`)
 
 `canonicalReconstruction_of_charZero`: the canonical pieces recombine `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`
-needing only `[CharZero]` + `GcdFFCorrect` + `d ≠ 0` — the split identity, factor-nonvanishing, and
+needing only `[CharZero]` + `CgcdBCorrect cgcdFFCoreWf` + `d ≠ 0` — the split identity, factor-nonvanishing, and
 coprimality (`hsplit`/`hdn`/`hds`/`hgdeg`/`hgne` of `canonicalReconstruction`) are *derived* from
 `cSplitFactorFastG_isSplittingFactorizationGen` (the abstract split correctness) and
 `isCoprime_of_isSpecial_isNormalSqfree` (special ⊥ normal). No split hypothesis remains. -/
@@ -20,10 +20,10 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **Canonical reconstruction, split conditions discharged.** From `[CharZero]`, the fraction-free gcd
-correctness `GcdFFCorrect`, and `d ≠ 0`, the split is a genuine coprime factorization (via
+correctness `CgcdBCorrect cgcdFFCoreWf`, and `d ≠ 0`, the split is a genuine coprime factorization (via
 `cSplitFactorFastG_isSplittingFactorizationGen` + `isCoprime_of_isSpecial_isNormalSqfree`), so the
 canonical pieces recombine to `⟦a/d⟧`. -/
-theorem canonicalReconstruction_of_charZero (hgcd : GcdFFCorrect (α := α))
+theorem canonicalReconstruction_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd : toPoly d ≠ 0) :
     fieldFrac (crPoly Dt a d) [CCommRing.one]
         + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
@@ -65,9 +65,9 @@ theorem canonicalReconstruction_of_charZero (hgcd : GcdFFCorrect (α := α))
   exact canonicalReconstruction Dt a d hd hdn hds hsplit hgdeg hgne
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **The canonical normal denominator is nonzero when `d ≠ 0`** (`[CharZero]` + `GcdFFCorrect`): `dₙ` is a
+/-- **The canonical normal denominator is nonzero when `d ≠ 0`** (`[CharZero]` + `CgcdBCorrect cgcdFFCoreWf`): `dₙ` is a
 factor of the split `d = dₛ·dₙ`, so `d ≠ 0 ⇒ dₙ ≠ 0`. -/
-theorem crNormDen_ne_zero_of_charZero (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
+theorem crNormDen_ne_zero_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0) : toPoly (crNormDen Dt a d) ≠ 0 := by
   have hnd : crNormDen Dt a d = (cSplitFactorFast Dt d).1 := by
     simp only [crNormDen, canonicalRepresentationFast]
@@ -76,7 +76,7 @@ theorem crNormDen_ne_zero_of_charZero (hgcd : GcdFFCorrect (α := α)) (Dt a d :
   rw [hnd]; intro h; exact hd (by rw [hfac, h, mul_zero])
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **The canonical normal part is proper** (`[CharZero]` + `GcdFFCorrect`, `d ≠ 0`): `deg crNormNum <
+/-- **The canonical normal part is proper** (`[CharZero]` + `CgcdBCorrect cgcdFFCoreWf`, `d ≠ 0`): `deg crNormNum <
 deg crNormDen`. `crNormNum` is the second cofactor of `cextendedEuclideanSplitWf` over the normal denominator
 `crNormDen = dₙ`, so `cextendedEuclideanSplitWf_snd_degree_lt` gives properness — from the split `d = dₛ·dₙ`
 (`cSplitFactorFastG_isSplittingFactorizationGen`), the special⊥normal Bézout identity
@@ -84,7 +84,7 @@ deg crNormDen`. `crNormNum` is the second cofactor of `cextendedEuclideanSplitWf
 deg d` (`cmodWf_length_lt`). The `degree` form holds unconditionally on `d ≠ 0` (incl. the trivial `crNormNum =
 0` case, `⊥ < deg dₙ`); it is the never-done crNorm-properness cleanup target, the foundation of the Hermite
 properness `hAD`. -/
-theorem crNormNum_degree_lt_crNormDen (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
+theorem crNormNum_degree_lt_crNormDen (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0) :
     (toPoly (crNormNum Dt a d)).degree < (toPoly (crNormDen Dt a d)).degree := by
   letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPoly Dt)⟩

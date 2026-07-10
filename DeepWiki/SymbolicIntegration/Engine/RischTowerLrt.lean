@@ -25,7 +25,7 @@ open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
-  [Fact (GcdFFCorrect (α := α))]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
 
 /-- **The recursive LRT Risch solver as a class.** The computable data (`case`) plus the two soundness laws:
 `specialSound` (the special/polynomial part reconstructs `a/d`, a `K`-level identity — shared with the rational
@@ -35,7 +35,7 @@ residues, `IsIntegralResultLrt` over every alg-closed extension `E`). One `insta
 rational-residue restriction. -/
 class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
-    [Fact (GcdFFCorrect (α := α))] where
+    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] where
   /-- The per-monomial-case computable hooks for this level (the special/polynomial-part integrator). -/
   case : MonomialCase α
   /-- Special-part soundness + reconstruction (`K`-level, existential special value — identical to the rational
@@ -92,7 +92,7 @@ theorem soundFormalLrt [LawfulRischLevelLrt α] (Dt a d : DensePoly α) (res : L
         simp only [crPoly, crSpecNum, crSpecDen, hcrep]; exact hspec
       obtain ⟨hsden, v, hSpecField, hrecon⟩ := specialSound Dt a d snum sden hd0 hSpec
       have hNrm := reducedSoundLrt Dt a d hd0
-      exact cIntegrateCaseLrt_sound (Fact.out (p := GcdFFCorrect (α := α))) case Dt a d res snum sden v
+      exact cIntegrateCaseLrt_sound (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))) case Dt a d res snum sden v
         hd0 hSpec h0 hsden hSpecField hNrm hrecon
 
 /-- **Derived broad elementary integrability.** A successful LRT run certifies `a/d` is elementary integrable in
@@ -142,7 +142,7 @@ normal part `cₙ/dₙ`, once the Liouville completeness frontier `[LrtLiouville
 integrability **iff** the root-free residue guard passes. The `←` (sufficiency) draws on the instance's own
 `reducedSoundLrt`; the `→` (necessity/completeness) on the frontier. The completeness frontier is an *instance
 argument*, never a class field — so `soundFormalLrt` stays independent of it (the deliberate decoupling). -/
-theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd : GcdFFCorrect (α := α))
+theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0)
     (hR0 : toPoly (cResidueResultantTower Dt
         (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
@@ -156,7 +156,7 @@ theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd 
 reduced normal part is not genuinely elementary integrable — a decidable non-integrability certificate that the
 solver's class produces directly (given the Liouville frontier). -/
 theorem not_isElementaryIntegrable_reduced [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hDt0 : (toPoly Dt).natDegree = 0)
     (hR0 : toPoly (cResidueResultantTower Dt
         (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1

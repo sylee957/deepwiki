@@ -272,7 +272,7 @@ to `E` via `ratFuncBaseChange`. `D_E(g) + hNum/Dstar = a/d` over `RatFunc E`, wi
 identified via `toPolyG_hNum'_eq_2_1`), `Dstar = H.2.2`. `hcopgcd` is the genuine differential-normality side
 condition. This is the `hherm` input to `isIntegralResultLrtG_of_hherm_of_logMatch`. -/
 theorem hherm_lrt_E [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
-    [DifferentialAlgebra (CFieldSpec.K α) E] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
+    [DifferentialAlgebra (CFieldSpec.K α) E] [CFracGcdCoreWf α] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
@@ -848,7 +848,7 @@ variable [CFracGcdCoreWf α] in
 (`cSqfreeYunFFG_squarefree`), so over char-zero `K` it is separable, and its base change to `E` stays
 separable ⟹ `Nodup` roots. -/
 theorem nodup_roots_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt hNum Dstar : DensePoly α)
     (hR : IsYunFactorizationInput (cResidueResultantTower Dt hNum Dstar))
     (p : DensePoly α × List (DensePoly α)) (hp : p ∈ cLrtLogArg Dt hNum Dstar) :
     ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.Nodup := by
@@ -998,7 +998,7 @@ variable [CFracGcdCoreWf α] in
 /-- **Distinct Yun factors have disjoint roots over `E`.** `cSqfreeYunFFG_isRelPrime` (`IsRelPrime`) ⟹
 `IsCoprime` (PID) ⟹ `IsCoprime` over `E` (base change) ⟹ disjoint roots. -/
 theorem disjoint_yun_factors [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (R : DensePoly α)
     (hR : IsYunFactorizationInput R) {j k : ℕ} (hj : j < (cSqfreeYunFF R).length)
     (hk : k < (cSqfreeYunFF R).length) (hjk : j ≠ k) :
     Disjoint ((toPoly ((cSqfreeYunFF R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
@@ -1014,7 +1014,7 @@ variable [CFracGcdCoreWf α] in
 /-- **A Yun factor stays squarefree over `E`.** Squarefree over char-zero `K` ⟹ separable ⟹ separable over
 `E` (base change) ⟹ squarefree over `E`. -/
 theorem yun_factor_map_squarefree [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (R : DensePoly α)
     (hR : IsYunFactorizationInput R) {j : ℕ} (hj : j < (cSqfreeYunFF R).length) :
     Squarefree ((toPoly ((cSqfreeYunFF R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)) :=
   ((PerfectField.separable_iff_squarefree.mpr
@@ -1028,7 +1028,7 @@ variable [CFracGcdCoreWf α] in
 (reconstruction), and `c` is a simple root of only `R_idx` (squarefree ⟹ mult 1; coprimality ⟹ mult 0
 elsewhere), so `rootMult_prodPow_of_unique` gives `1 + idx`. -/
 theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : DensePoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (R : DensePoly α)
     (hR : IsYunFactorizationInput R) (idx : ℕ) (hidx : idx < (cSqfreeYunFF R).length) (c : E)
     (hc : c ∈ ((toPoly ((cSqfreeYunFF R).get ⟨idx, hidx⟩)).map (algebraMap (CFieldSpec.K α) E)).roots) :
     rootMultiplicity c ((toPoly R).map (algebraMap (CFieldSpec.K α) E)) = idx + 1 := by
@@ -1072,7 +1072,7 @@ entry structure (`mem_cLrtLogArgG`: `p.2 = cSubresultantParam … (idx+1)`), est
 `evalLrtArg_eq_fiber_prod`; the fiber `Dd_E = implicitDeriv Dt_E Dstar_E` alignment closes it. -/
 theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
-    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
     (hDmonic : (toPoly Dstar).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hsplit : (toPoly Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
@@ -1168,7 +1168,7 @@ variable [CFracGcdCoreWf α] in
 distinct Yun-factor position, and distinct Yun factors are coprime hence disjoint (`disjoint_yun_factors`).
 Via `List.pairwise_filterMap` over the `zipIdx`. -/
 theorem disjoint_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α)
+    [Algebra (CFieldSpec.K α) E] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt hNum Dstar : DensePoly α)
     (hR : IsYunFactorizationInput (cResidueResultantTower Dt hNum Dstar)) :
     (cLrtLogArg Dt hNum Dstar).Pairwise (fun p q =>
       Disjoint ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
@@ -1215,7 +1215,7 @@ variable [CFracGcdCoreWf α] in
 -/
 theorem residue_of_root_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
-    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
     (hDmonic : (toPoly Dstar).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hB : ∀ β ∈ ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
@@ -1273,7 +1273,7 @@ is a root of some Yun factor `Rᵢ_E`; that `Rᵢ` is non-constant (`not_len_le_
 entry (`mem_cLrtLogArgG_of_yun_factor`). -/
 theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
-    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt hNum Dstar : DensePoly α) (allpoles : Finset E)
     (hDmonic : (toPoly Dstar).Monic) (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hB : ∀ β ∈ ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
@@ -1322,7 +1322,7 @@ open Classical in
 `logResidueSumLrtG_eq_normalPart_of_yun` + the Yun facts). `hd0`/`hpp`/`hcopgcd` are the genuine Hermite-side
 conditions. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG.{u} [CharZero (CFieldSpec.K α)]
-    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
+    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
@@ -1350,7 +1350,7 @@ conditions are normality, properness, degree control, and polynomial-part cancel
 `logResidueSumLrt (cLrtLogArg …) = hNum/Dstar`, the capstone's `hlog`. -/
 theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E] [DifferentialAlgebra (CFieldSpec.K α) E]
-    [IsAlgClosed E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : DensePoly α)
+    [IsAlgClosed E] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt hNum Dstar : DensePoly α)
     (hDmonic : (toPoly Dstar).Monic) (hDsep : (toPoly Dstar).Separable)
     (hDt0 : (toPoly Dt).natDegree = 0) (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hR : IsYunFactorizationInput (cResidueResultantTower Dt hNum Dstar))
@@ -1447,7 +1447,7 @@ degree/properness conditions `hAnd`/`hAdeg`/`hB_deg` follow from the `K`-level `
 (`φ = algebraMap` preserves `natDegree` over a field; `Dstar` monic + separable ⟹ its root count is its degree).
 Unlike the rational `hreduced`, this is general: residues may be algebraic. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFieldSpec.K α)]
-    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))

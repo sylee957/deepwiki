@@ -33,7 +33,7 @@ theorem isElementaryIntegrableGenuineLrt_of_guard (Dt a d : DensePoly α)
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- A passing primitive LRT guard gives a genuine antiderivative with residue constancy discharged. -/
 theorem isElementaryIntegrableGenuineLrt_of_guard_of_setup [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hR0 : toPoly (cResidueResultantTower Dt (cHermiteReduceTower Dt a d).2.1
       (cHermiteReduceTower Dt a d).2.2) ≠ 0)
     (hsound : IsIntegralResultLrt Dt a d (cIntegrateReducedLrt Dt a d))
@@ -44,7 +44,7 @@ theorem isElementaryIntegrableGenuineLrt_of_guard_of_setup [CharZero (CFieldSpec
 
 /-- The fully assembled primitive LRT guard criterion for genuine elementary integrability. -/
 theorem primitiveLrtDecides_of_setup [CharZero (CFieldSpec.K α)] [LrtLiouvilleFrontier α]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hR0 : toPoly (cResidueResultantTower Dt (cHermiteReduceTower Dt a d).2.1
       (cHermiteReduceTower Dt a d).2.2) ≠ 0)
     (hsound : IsIntegralResultLrt Dt a d (cIntegrateReducedLrt Dt a d)) :

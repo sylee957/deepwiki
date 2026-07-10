@@ -11,7 +11,7 @@ import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 The computable Yun loop `cSqfreeYunFFGgoWf` mirrors the squarefree theory's abstract `yunLoopAbs`
 step for step: each emits the monic gcd of the working pair and
 recurses on the deflated pair `(b/gcd, d/gcd − (b/gcd)′)`. This file establishes the per-step bridges
-through `toPoly`, assuming `GcdFFCorrect`. -/
+through `toPoly`, assuming `CgcdBCorrect cgcdFFCoreWf`. -/
 
 open Polynomial Classical
 
@@ -101,7 +101,7 @@ The monic associate of `toPoly q` is its normalization. -/
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The emitted Yun factor denotes the exact monic gcd:
 `toPoly (cmonic (cgcdFFCoreWf b d)) = gcd (toPoly b) (toPoly d)`. -/
-theorem toPolyG_yunEmit_eq_gcd (hgcd : GcdFFCorrect (α := α)) (b d : DensePoly α) :
+theorem toPolyG_yunEmit_eq_gcd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (b d : DensePoly α) :
     toPoly (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)) = gcd (toPoly b) (toPoly d) := by
   rw [toPolyG_cmonicG_eq_normalize, normalize_eq_normalize_iff_associated.mpr (hgcd b d),
     normalize_gcd]
@@ -116,7 +116,7 @@ theorem eq_ediv_of_mul_eq {K : Type*} [Field K] {X g b : K[X]} (hg : g ≠ 0) (h
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The deflated first component denotes `b / gcd(b,d)` in the `yunLoopAbs` recursion:
 `toPoly (cdivWf b (cmonic (cgcdFFCoreWf b d))) = toPoly b / gcd (toPoly b) (toPoly d)`. -/
-theorem toPolyG_yunDeflate_fst (hgcd : GcdFFCorrect (α := α)) (b d : DensePoly α)
+theorem toPolyG_yunDeflate_fst (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (b d : DensePoly α)
     (hb : toPoly b ≠ 0) :
     toPoly (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
       = toPoly b / gcd (toPoly b) (toPoly d) := by
@@ -134,7 +134,7 @@ theorem toPolyG_yunDeflate_fst (hgcd : GcdFFCorrect (α := α)) (b d : DensePoly
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The deflated second component denotes `d / gcd(b,d) − (b / gcd(b,d))′` in the
 `yunLoopAbs` recursion. -/
-theorem toPolyG_yunDeflate_snd (hgcd : GcdFFCorrect (α := α)) (b d : DensePoly α)
+theorem toPolyG_yunDeflate_snd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (b d : DensePoly α)
     (hb : toPoly b ≠ 0) :
     toPoly (csub (cdivWf d (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))
         (cderiv (cdivWf b (cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)))))
@@ -158,7 +158,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The Yun radical divides the working polynomial. The product of all Yun factors emitted from
 `(b, d)` divides `toPoly b`: each factor is `gcd(bⱼ, dⱼ)` dividing `bⱼ`, and the product telescopes
 through the deflation. -/
-theorem prod_map_cSqfreeYunFFGgoWf_dvd (hgcd : GcdFFCorrect (α := α)) :
+theorem prod_map_cSqfreeYunFFGgoWf_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) :
     ∀ (fo : ℕ) (b d : DensePoly α),
       ((cSqfreeYunFFGgoWf fo b d).map toPoly).prod ∣ toPoly b := by
   intro fo
@@ -203,7 +203,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The Yun radical divides the input. The product of `cSqfreeYunFF p`'s factors divides
 `toPoly p`: the entry `b₁ = p / gcd(p, p′)` divides `p`, and the go-loop product divides `b₁`. -/
-theorem prod_map_cSqfreeYunFFG_dvd (hgcd : GcdFFCorrect (α := α)) (p : DensePoly α)
+theorem prod_map_cSqfreeYunFFG_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (p : DensePoly α)
     (hp : toPoly p ≠ 0) :
     ((cSqfreeYunFF p).map toPoly).prod ∣ toPoly p := by
   rw [cSqfreeYunFF]
@@ -222,7 +222,7 @@ theorem prod_map_cSqfreeYunFFG_dvd (hgcd : GcdFFCorrect (α := α)) (p : DensePo
 
 omit [CDiffFieldSpec α] in
 /-- The Yun radical `Dstar` divides `d`: the `foldl`-product of the Yun factors of `d` divides `d`. -/
-theorem toPolyG_cHermiteReduceTowerG_Dstar_dvd (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
+theorem toPolyG_cHermiteReduceTowerG_Dstar_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0) :
     toPoly (cHermiteReduceTower Dt a d).2.2 ∣ toPoly d := by
   rw [cHermiteReduceTower]
@@ -232,7 +232,7 @@ theorem toPolyG_cHermiteReduceTowerG_Dstar_dvd (hgcd : GcdFFCorrect (α := α)) 
 omit [CDiffFieldSpec α] in
 /-- The radical split `d = Dstar · W` with `W = d / Dstar` for the
 `cHermiteReduceTower` output. -/
-theorem toPolyG_yunRadical_split (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
+theorem toPolyG_yunRadical_split (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0) :
     toPoly d = toPoly (cHermiteReduceTower Dt a d).2.2
       * toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2) := by
@@ -250,7 +250,7 @@ theorem toPolyG_yunRadical_split (hgcd : GcdFFCorrect (α := α)) (Dt a d : Dens
 
 The tower entry `(toPoly b₁, toPoly d₁)` equals `C(u⁻¹) ·` the abstract `yunInv_base` pair (both
 components scaled by the *same* unit `u`, where `toPoly (cgcdFFCoreWf p p′) = C u · gcd(p, p′)` from
-`GcdFFCorrect`). Since `YunInv`'s witness has a free scalar, common-constant scaling preserves it —
+`CgcdBCorrect cgcdFFCoreWf`). Since `YunInv`'s witness has a free scalar, common-constant scaling preserves it —
 so the tower entry satisfies `YunInv`, launching the `yunLoopAbs_forall₂` correspondence. -/
 
 open Classical in
@@ -267,7 +267,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The tower Yun entry satisfies the abstract invariant. For `A = toPoly p ≠ 0` with primitive
 part `≠ 0`, the entry pair `(p/g, p′/g − (p/g)′)` (`g = cgcdFFCoreWf p p′`) satisfies
 `YunInv A 1`; it is `C(k⁻¹)·` the `yunInv_base` pair, where `toPoly g = C k·gcd(A, A′)`. -/
-theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0) :
     YunInv (toPoly p) 1
       (toPoly (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))))
@@ -333,7 +333,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The tower go-loop denotes the abstract `yunLoopAbs` run for its own length: the deflated
 state matches `yunLoopAbs`'s recursion (`yunDeflate_fst`/`_snd`) and the emitted factor is the monic
 gcd (`yunEmit_eq_gcd`). The `i` parameter is phantom, so any start index works. -/
-theorem map_toPolyG_cSqfreeYunFFGgoWf_eq (hgcd : GcdFFCorrect (α := α)) :
+theorem map_toPolyG_cSqfreeYunFFGgoWf_eq (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) :
     ∀ (fo : ℕ) (b d : DensePoly α),
       (cSqfreeYunFFGgoWf fo b d).map toPoly
         = yunLoopAbs (0 : (CFieldSpec.K α)[X]) (toPoly b, toPoly d) 1
@@ -363,7 +363,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The tower Yun factors correspond to `sqfreeFactPart`. The factors of
 `cSqfreeYunFF p` are `Forall₂ Associated` to `[sqfreeFactPart A 1, sqfreeFactPart A 2, …]`
 (`A = toPoly p`), so the tower Yun factorization denotes the abstract one. -/
-theorem cSqfreeYunFFG_forall₂ [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem cSqfreeYunFFG_forall₂ [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0) :
     List.Forall₂ Associated ((cSqfreeYunFF p).map toPoly)
       ((List.range (cSqfreeYunFF p).length).map
@@ -383,7 +383,7 @@ theorem cSqfreeYunFFG_forall₂ [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The `j`-th tower Yun factor is `Associated (sqfreeFactPart (toPoly p) (1 + j))` (per-index form of
 the correspondence). -/
-theorem cSqfreeYunFFG_get_assoc [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem cSqfreeYunFFG_get_assoc [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0)
     (j : ℕ) (hj : j < (cSqfreeYunFF p).length) :
     Associated (toPoly ((cSqfreeYunFF p).get ⟨j, hj⟩))
@@ -400,7 +400,7 @@ theorem cSqfreeYunFFG_get_assoc [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Distinct tower Yun factors are relatively prime. From the `sqfreeFactPart` correspondence and
 `sqfreeFactPart_isRelPrime` (distinct multiplicities are coprime). -/
-theorem cSqfreeYunFFG_isRelPrime [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem cSqfreeYunFFG_isRelPrime [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0)
     {j k : ℕ} (hj : j < (cSqfreeYunFF p).length) (hk : k < (cSqfreeYunFF p).length)
     (hjk : j ≠ k) :
@@ -431,7 +431,7 @@ theorem sqfreeFactPart_pow_self_dvd_primPart {K : Type*} [Field K] (A : K[X])
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Each tower Yun factor to its multiplicity divides `d`. For the factor at index `j` (multiplicity
 `1 + j`), `toPoly (factor) ^ (1 + j) ∣ toPoly p` — the `hpow` hypothesis of the pole-cancellation. -/
-theorem cSqfreeYunFFG_pow_dvd [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem cSqfreeYunFFG_pow_dvd [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0)
     (j : ℕ) (hj : j < (cSqfreeYunFF p).length) :
     toPoly ((cSqfreeYunFF p).get ⟨j, hj⟩) ^ (1 + j) ∣ toPoly p := by
@@ -442,7 +442,7 @@ theorem cSqfreeYunFFG_pow_dvd [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Each tower Yun factor is squarefree, from the `sqfreeFactPart` correspondence and squarefreeness
 of `sqfreeFactPart`, transferred across associates). -/
-theorem cSqfreeYunFFG_squarefree [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem cSqfreeYunFFG_squarefree [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0)
     (j : ℕ) (hj : j < (cSqfreeYunFF p).length) :
     Squarefree (toPoly ((cSqfreeYunFF p).get ⟨j, hj⟩)) := by
@@ -451,7 +451,7 @@ theorem cSqfreeYunFFG_squarefree [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorre
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Each tower Yun factor is nonzero, from the correspondence and `sqfreeFactPart_ne_zero`. -/
-theorem cSqfreeYunFFG_get_ne_zero [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem cSqfreeYunFFG_get_ne_zero [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0)
     (j : ℕ) (hj : j < (cSqfreeYunFF p).length) :
     toPoly ((cSqfreeYunFF p).get ⟨j, hj⟩) ≠ 0 := fun h0 =>
@@ -460,7 +460,7 @@ theorem cSqfreeYunFFG_get_ne_zero [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorr
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Each tower Yun factor is coprime to its derivative (squarefree gives coprime to `v'`, char `0`). -/
-theorem cSqfreeYunFFG_coprime_deriv [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem cSqfreeYunFFG_coprime_deriv [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0)
     (j : ℕ) (hj : j < (cSqfreeYunFF p).length) :
     IsCoprime (toPoly ((cSqfreeYunFF p).get ⟨j, hj⟩))
@@ -473,7 +473,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 `b` is `C c · squarefreePart (deflation (toPoly p) (i−1))`, so `cdeg b = 0 ⟺ maxmult ≤ i−1`
 (`squarefreePart_deflation_natDegree_eq_zero_iff_maxmult`); each non-terminal step deflates to `i+1`
 (`yunStep_preserves` + the deflate bridges), so the emitted list has length `≥ maxmult − (i−1)`. -/
-theorem length_cSqfreeYunFFGgoWf_ge [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem length_cSqfreeYunFFGgoWf_ge [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hpp : (toPoly p).primPart ≠ 0) :
     ∀ (fo i : ℕ) (b d : DensePoly α), 1 ≤ i →
       YunInv (toPoly p) i (toPoly b) (toPoly d) →
@@ -524,7 +524,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The Yun factorization has length `≥ maxmult`. The entry runs the go-loop from `i = 1` with
 fuel `cyunBound p ≥ maxmult` (`sup_count_le_natDegree_primPart` + `primPart_dvd` +
 `length_cnormG_of_ne`), so `length_cSqfreeYunFFGgoWf_ge` at `i = 1` gives `maxmult ≤ length`. -/
-theorem length_cSqfreeYunFFG_ge [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem length_cSqfreeYunFFG_ge [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (p : DensePoly α) (hp0 : toPoly p ≠ 0) (hpp : (toPoly p).primPart ≠ 0) :
     (normalizedFactors (toPoly p).primPart).toFinset.sup
         (fun P => (normalizedFactors (toPoly p).primPart).count P) ≤ (cSqfreeYunFF p).length := by
@@ -552,7 +552,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 (`cSqfreeYunFFG_forall₂` through `prodPow_associated`), the range reconstruction
 (`prodPow_one_sqfreeFactPart_range_associated`, discharged by `length_cSqfreeYunFFG_ge`), and
 `pp(d) ~ d`. -/
-theorem cSqfreeYunFFG_reconstruction [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+theorem cSqfreeYunFFG_reconstruction [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0) :
     Associated (toPoly d) (prodPow 1 ((cSqfreeYunFF d).map toPoly)) := by
   have h1 : Associated (prodPow 1 ((cSqfreeYunFF d).map toPoly))
@@ -583,7 +583,7 @@ theorem split_squarefree_eq_nodal {K : Type*} [Field K] [CharZero K] (p : K[X]) 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Every Yun go-loop factor is monic: each emitted factor is `cmonic (cgcdFFCoreWf b d)`, whose
 `toPoly` is monic (`monic_toPolyG_cmonicG`); the working `b` stays nonzero through the deflation. -/
-theorem cSqfreeYunFFGgoWf_monic (hgcd : GcdFFCorrect (α := α)) :
+theorem cSqfreeYunFFGgoWf_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) :
     ∀ (fo : ℕ) (b d : DensePoly α), toPoly b ≠ 0 →
       ∀ p ∈ cSqfreeYunFFGgoWf fo b d, (toPoly p).Monic := by
   intro fo
@@ -613,7 +613,7 @@ omit [CDiffFieldSpec α] in
 /-- The Yun radical `Dstar` is squarefree: a product of the pairwise-coprime, squarefree Yun
 factors (`squarefree_list_prod`). -/
 theorem toPolyG_cHermiteReduceTowerG_Dstar_squarefree [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hpp : (toPoly d).primPart ≠ 0) :
     Squarefree (toPoly (cHermiteReduceTower Dt a d).2.2) := by
   rw [cHermiteReduceTower]
@@ -631,7 +631,7 @@ theorem toPolyG_cHermiteReduceTowerG_Dstar_squarefree [CharZero (CFieldSpec.K α
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Every Yun factor is monic: the go-loop runs from `b₁ = d / gcd(d, d′) ≠ 0`. -/
-theorem cSqfreeYunFFG_monic (hgcd : GcdFFCorrect (α := α)) (d : DensePoly α) (hd0 : toPoly d ≠ 0) :
+theorem cSqfreeYunFFG_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (d : DensePoly α) (hd0 : toPoly d ≠ 0) :
     ∀ p ∈ cSqfreeYunFF d, (toPoly p).Monic := by
   rw [cSqfreeYunFF]
   apply cSqfreeYunFFGgoWf_monic hgcd
@@ -645,7 +645,7 @@ theorem cSqfreeYunFFG_monic (hgcd : GcdFFCorrect (α := α)) (d : DensePoly α) 
 
 omit [CDiffFieldSpec α] in
 /-- The Yun radical `Dstar` is monic: a product of the monic Yun factors (`monic_list_prod`). -/
-theorem toPolyG_cHermiteReduceTowerG_Dstar_monic (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α)
+theorem toPolyG_cHermiteReduceTowerG_Dstar_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) : (toPoly (cHermiteReduceTower Dt a d).2.2).Monic := by
   rw [cHermiteReduceTower]
   simp only [denote, map_one, mul_zero, add_zero, one_mul]
@@ -660,7 +660,7 @@ omit [CDiffFieldSpec α] in
 then `Dstar = nodal (its root set)` — the `hden` hypothesis of the RT residue-match assemblers. Monic
 and squarefree are supplied by the Yun structure; `hsplit` is the genuine rational-residue restriction. -/
 theorem toPolyG_cHermiteReduceTowerG_Dstar_eq_nodal [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hpp : (toPoly d).primPart ≠ 0)
     (hsplit : (toPoly (cHermiteReduceTower Dt a d).2.2).Splits) :
     toPoly (cHermiteReduceTower Dt a d).2.2
@@ -672,7 +672,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `cSqfreeYunFF` is a lawful squarefree decomposition, bundling reconstruction, monicity,
 squarefreeness, and pairwise coprimality. -/
 theorem cSqfreeYunFFG_lawfulSquarefreeDecomposition [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (d : DensePoly α) (hd0 : toPoly d ≠ 0)
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hpp : (toPoly d).primPart ≠ 0) :
     LawfulSquarefreeDecomposition d (cSqfreeYunFF d) :=
   { reconstruct := cSqfreeYunFFG_reconstruction hgcd d hd0 hpp

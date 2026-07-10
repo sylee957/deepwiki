@@ -59,7 +59,7 @@ end-to-end payoff of the two-stage discipline: `cHermiteReduceTowerG_lawfulHermi
 (Stage 1) — the reduced normal part integrates correctly with NO concrete algorithm re-derived in the
 composition, only the two realization theorems and the abstract law. -/
 theorem cIntegrateReducedG_primitive_isIntegralResult_via_interfaces [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (w : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (DensePoly.cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
@@ -103,7 +103,7 @@ omit [CRischField α] in
 hyperexponential analogue of `…primitive_isIntegralResult_via_interfaces` — same Stage-1 composition, with
 the hyperexp `ResidueLogPart` realization (integrability witness `hsum : ∑ c = 0`). -/
 theorem cIntegrateReducedG_hyperexp_isIntegralResult_via_interfaces [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (DensePoly.cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),

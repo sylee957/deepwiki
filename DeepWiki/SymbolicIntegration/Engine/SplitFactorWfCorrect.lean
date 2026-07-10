@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
+import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect
 import DeepWiki.SymbolicIntegration.Engine.SplitFactorHelpers
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
@@ -8,8 +8,8 @@ import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 The computable `cSplitFactorFast` mirrors the abstract `splitFactor`
 (`CanonicalRepresentation.splitFactor_isSplittingFactorizationGen`). This file reduces its correctness to
-the single fraction-free gcd frontier `GcdFFCorrect` — dischargeable at the `ℚ` base where the gcd is the
-plain Euclidean gcd. M1: the per-step bridge `toPoly (cstep Dt p) ~ splitFactorStep (toPoly Dt) (toPoly p)`.
+`CgcdBCorrect cgcdFFCoreWf` — dischargeable at the `ℚ` base where the gcd is the plain Euclidean gcd.
+M1: the per-step bridge `toPoly (cstep Dt p) ~ splitFactorStep (toPoly Dt) (toPoly p)`.
 -/
 
 open Polynomial Classical
@@ -21,17 +21,11 @@ open DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
-/-- The fraction-free gcd frontier: `cgcdFFCoreWf` is a genuine gcd through `toPoly`. Holds
-unconditionally at `ℚ` (the Euclidean gcd); the tower case is the engine's PRS-regularity frontier. -/
-def GcdFFCorrect : Prop :=
-  ∀ a b : DensePoly α,
-    Associated (toPoly (CFracGcdCoreWf.cgcdFFCoreWf a b)) (gcd (toPoly a) (toPoly b))
-
 /-- **M1 — the per-step bridge.** Under the gcd frontier, the computable split step
 `cstep Dt p = cdivWf (gcd_t(p, Dp)) (gcd_t(p, dp/dt))` denotes the abstract
 `splitFactorStep (toPoly Dt) (toPoly p) = gcd(P, D P)/gcd(P, dP)` up to associates. -/
 theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt p : DensePoly α) (hp : toPoly p ≠ 0) :
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt p : DensePoly α) (hp : toPoly p ≠ 0) :
     Associated (toPoly (cstep Dt p)) (splitFactorStep (toPoly Dt) (toPoly p)) := by
   set A := CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p) with hAdef
   set B := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p) with hBdef
@@ -60,13 +54,13 @@ theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
     rw [hexact]; exact hstepB.symm
   exact key.of_mul_right (Associated.refl _) hB0
 
-/-- **M2 — full abstract correctness of `cSplitFactorFast`.** Under the gcd frontier `GcdFFCorrect`,
+/-- **M2 — full abstract correctness of `cSplitFactorFast`.** Under `CgcdBCorrect cgcdFFCoreWf`,
 `cSplitFactorFast Dt p = (pₙ, pₛ)` denotes a general splitting factorization of `p` w.r.t. the monomial
 derivation `D = implicitDeriv (toPoly Dt)`: `toPoly p = toPoly pₛ · toPoly pₙ`, `pₛ` special, and every
 squarefree factor of `pₙ` normal. Well-founded induction mirroring the abstract `splitFactor`, with the
 per-step bridge (M1) transferring the `IsSpecial`/`IsNormalSqfree`/degree-drop facts through `toPoly`. -/
 theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α)]
-    (hgcd : GcdFFCorrect (α := α)) (Dt : DensePoly α) :
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt : DensePoly α) :
     ∀ (p : DensePoly α), toPoly p ≠ 0 →
       @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩ (toPoly p)
         (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) := by
@@ -132,11 +126,14 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
 
 /-- **The gcd frontier is unconditional at `ℚ`.** There `cgcdFFCoreWf = cmonic ∘ (cgcdWf ·).1 =
 cgcdMonicWf` (the plain monic Euclidean gcd), whose correctness is `associated_toPolyG_cgcdMonicWf`. -/
-theorem gcdFFCorrect_Q : GcdFFCorrect (α := ℚ) := fun a b => associated_toPolyG_cgcdMonicWf a b
+theorem cgcdFFCoreWf_correct_Q : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := ℚ)) :=
+  fun a b => associated_toPolyG_cgcdMonicWf a b
 
-/-- **The gcd frontier as a resolvable `Fact` at the `ℚ` base.** Lets `[Fact (GcdFFCorrect (α := ℚ))]`
+/-- **The gcd frontier as a resolvable `Fact` at the `ℚ` base.** Lets `[Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := ℚ)))]`
 resolve automatically (the tower case above `ℚ` is the PRS-regularity frontier — no such instance there). -/
-instance instFactGcdFFCorrectQ : Fact (GcdFFCorrect (α := ℚ)) := ⟨gcdFFCorrect_Q⟩
+instance instFactCgcdFFCoreWfCorrectQ :
+    Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := ℚ))) :=
+  ⟨cgcdFFCoreWf_correct_Q⟩
 
 /-- `CharZero (CFieldSpec.K ℚ) = CharZero ℚ`: local instance for the `ℚ`-base split correctness. -/
 instance : CharZero (CFieldSpec.K ℚ) := inferInstanceAs (CharZero ℚ)
@@ -146,6 +143,6 @@ instance : CharZero (CFieldSpec.K ℚ) := inferInstanceAs (CharZero ℚ)
 theorem cSplitFactorFastG_isSplittingFactorizationGen_Q (Dt p : DensePoly ℚ) (hp : toPoly p ≠ 0) :
     @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩ (toPoly p)
       (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) :=
-  cSplitFactorFastG_isSplittingFactorizationGen gcdFFCorrect_Q Dt p hp
+  cSplitFactorFastG_isSplittingFactorizationGen cgcdFFCoreWf_correct_Q Dt p hp
 
 end DeepWiki.SymbolicIntegration

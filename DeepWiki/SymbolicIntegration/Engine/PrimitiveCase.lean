@@ -69,7 +69,7 @@ properly-built tower satisfies, not provable from the computable data alone:
 
 * `PrimitiveFrontierLrt` — reduced-part soundness, closed down to the bundled `LrtReducedGenuineData`
   (Rothstein–Trager residue data + tower nondegeneracy) by `hreducedLrt_of_genuineAll`.
-* `GcdFFCorrect` — correctness of the fraction-free gcd at each tower level.
+* `CgcdBCorrect cgcdFFCoreWf` — correctness of the fraction-free gcd at each tower level.
 * `LrtLiouvilleFrontier` — the Liouville/completeness obligation.
 
 ## Decision procedure (`PrimitiveLrtDecision`)

@@ -26,7 +26,7 @@ identity `hid : D_tower(⟦qp/1⟧) = ⟦fₚ/1⟧` and the vanishing special nu
 `v + ⟦cₙ/dₙ⟧ = a/d` from `canonicalReconstruction_of_charZero` with the special term dropping (`b = 0`).
 Agnostic to HOW `hid` was obtained — the base proves it via `cPolyRischDEG_nil_field_identity`, the tower via
 the `implicitDeriv`/`towerFractionFieldDerivG_div` bridge — so both `*_specialSound` proofs reduce to this. -/
-theorem primitiveSpecialSoundCore [Fact (GcdFFCorrect (α := α))]
+theorem primitiveSpecialSoundCore [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
     (Dt a d qp : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hb : cisZero (crSpecNum Dt a d) = true)
     (hid : towerFractionFieldDeriv Dt (fieldFrac qp [CCommRing.one])
@@ -38,7 +38,7 @@ theorem primitiveSpecialSoundCore [Fact (GcdFFCorrect (α := α))]
   · simp only [denote, mul_zero, add_zero]; exact one_ne_zero
   · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
       simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
-    have hrec := canonicalReconstruction_of_charZero (Fact.out (p := GcdFFCorrect (α := α))) Dt a d hd0
+    have hrec := canonicalReconstruction_of_charZero (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))) Dt a d hd0
     rw [hvan, add_zero] at hrec
     exact hrec
 
@@ -47,7 +47,7 @@ part is `primitiveGuardedCase.integrateSpecial`: under the guard (`b = 0`, `Dθ 
 the polynomial RDE and the reconstruction (`canonicalReconstruction_of_charZero`) closes with the special term
 vanishing; off the guard the hook returns `none`. Independent of any reduced frontier, so the recursive solver
 reuses it. -/
-theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
+theorem primitiveGuardedCase_specialSound [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
     (Dt a d snum sden : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hhook : primitiveGuardedCase.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
       (crSpecDen Dt a d) = some (snum, sden)) :

@@ -13,8 +13,8 @@ level, and no others:
   properly-built tower satisfies but which are not derivable from the computable data. This **replaced** the
   rational `PrimitiveFrontier`, whose `IsIntegralResult` was not dischargeable at all (it forces the reduced
   denominator to split over `K`).
-* `Fact (GcdFFCorrect …)` — the fraction-free-gcd correctness. Proven unconditionally at `ℚ`
-  (`instFactGcdFFCorrectQ`); at tower levels it is the engine's PRS-regularity frontier.
+* `Fact (CgcdBCorrect cgcdFFCoreWf)` — the fraction-free-gcd correctness. Proven unconditionally at `ℚ`
+  (`instFactCgcdFFCoreWfCorrectQ`); at tower levels it is the engine's PRS-regularity frontier.
 
 So "no dangling frontier" is achieved in the honest sense: every remaining hypothesis is a **named genuine
 mathematical condition**, not an opaque assumed lemma. Completeness (the decidable non-integrability
@@ -28,10 +28,10 @@ open DensePoly CFrac
 At carrier `CFrac ℚ` (so `a/d ∈ (CFrac ℚ)(t)`, a genuine two-level tower), a successful run of the
 assembled integrator `LawfulRischLevelLrt.integrate` is a true `∀E` antiderivative — depending only on the two
 honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this level) and the tower-level gcd
-`Fact` (the base `Fact (GcdFFCorrect ℚ)` is a resolved instance). No rational-residue restriction, no
+`Fact` (the base `Fact (CgcdBCorrect cgcdFFCoreWf)` is a resolved instance). No rational-residue restriction, no
 undischargeable `PrimitiveFrontier`. -/
 theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
-    [Fact (GcdFFCorrect (α := CFrac ℚ))] [PrimitiveFrontierLrt (CFrac ℚ)]
+    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac ℚ)))] [PrimitiveFrontierLrt (CFrac ℚ)]
     (Dt a d : DensePoly (CFrac ℚ)) (res : LrtResult (CFrac ℚ))
     (h : LawfulRischLevelLrt.integrate Dt a d = some res) :
     IsIntegralResultLrt Dt a d res :=
@@ -42,13 +42,13 @@ Threading `hreducedLrt_of_genuineAll`: supplying Bronstein's genuine residue/nor
 input at each level *constructs* the `PrimitiveFrontierLrt` instances, hence (with the gcd `Fact`s) the whole
 recursive LRT solver at that depth. This is the honest closure — the solver's soundness rests on genuine
 integrability conditions, nothing opaque. -/
-noncomputable example [Fact (GcdFFCorrect (α := CFrac ℚ))]
+noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac ℚ)))]
     (hgenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
     (hgenℚx : ∀ (Dt a d : DensePoly (CFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
     LawfulRischLevelLrt (CFrac ℚ) :=
-  letI : PrimitiveFrontierLrt ℚ := ⟨hreducedLrt_of_genuineAll gcdFFCorrect_Q hgenℚ⟩
+  letI : PrimitiveFrontierLrt ℚ := ⟨hreducedLrt_of_genuineAll cgcdFFCoreWf_correct_Q hgenℚ⟩
   letI : PrimitiveFrontierLrt (CFrac ℚ) :=
-    ⟨hreducedLrt_of_genuineAll (Fact.out (p := GcdFFCorrect (α := CFrac ℚ))) hgenℚx⟩
+    ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac ℚ)))) hgenℚx⟩
   inferInstance
 
 end DeepWiki.SymbolicIntegration

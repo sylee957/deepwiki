@@ -91,7 +91,7 @@ reduced LRT part is sound (`hNrmField`), then `res` is an antiderivative of `a/d
 The LRT analogue of `cIntegrateCase_sound`; the reduced-denominator nonvanishing is *proven* here
 (`toPolyG_cHermiteReduceTowerG_den_ne_zero` from `dₙ ≠ 0`). -/
 theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
-    (hgcd : GcdFFCorrect (α := α))
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (C : MonomialCase α) (Dt a d : DensePoly α) (res : LrtResult α) (snum sden : DensePoly α)
     (specialVal : RatFunc (CFieldSpec.K α)) (hd0 : toPoly d ≠ 0)
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden))

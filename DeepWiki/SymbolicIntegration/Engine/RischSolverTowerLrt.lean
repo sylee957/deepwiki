@@ -24,7 +24,7 @@ open scoped Differential
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
   [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
-  [CharZero (CFieldSpec.K β)] [Fact (GcdFFCorrect (α := β))] [LawfulRischLevelLrt β]
+  [CharZero (CFieldSpec.K β)] [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))] [LawfulRischLevelLrt β]
 
 /-- Integrate a coefficient `c ∈ CFrac β = β(s)` by recursing into
 `LawfulRischLevelLrt β.integrateRationalLrt` (the log-free LRT integrator, whose soundness is descent-free
@@ -126,7 +126,7 @@ Under the guard (`b = 0`, `Dθ = 1`) the LRT polynomial recursion `towerPolyInte
 `D_tower(⟦qp⟧) = ⟦fp⟧` (`tower_special_identityLrt`), and `canonicalReconstruction_of_charZero` (special term
 vanishing, `b = 0`) closes; off the guard the hook returns `none`. This is the `specialSound` field of the LRT
 tower instance. -/
-theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := CFrac β))]
+theorem towerPrimitiveCaseLrt_specialSound [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac β)))]
     (Dt a d snum sden : DensePoly (CFrac β)) (hd0 : toPoly d ≠ 0)
     (hhook : (towerPrimitiveCaseLrt (β := β)).integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
       (crSpecDen Dt a d) = some (snum, sden)) :
@@ -155,7 +155,7 @@ theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := CFrac β))
 With the base (`instLawfulRischLevelLrtPrimitive`) the LRT solver resolves at every tower depth by recursion:
 the re-based recursion, now with a dischargeable frontier at every level. `specialSound` is the LRT coefficient
 recursion (`towerPrimitiveCaseLrt_specialSound`); `reducedSoundLrt` is `PrimitiveFrontierLrt.hreducedLrt`. -/
-instance instLawfulRischLevelLrtTower [Fact (GcdFFCorrect (α := CFrac β))]
+instance instLawfulRischLevelLrtTower [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac β)))]
     [PrimitiveFrontierLrt (CFrac β)] : LawfulRischLevelLrt (CFrac β) where
   case := towerPrimitiveCaseLrt
   specialSound := fun Dt a d snum sden hd0 hhook =>
@@ -163,8 +163,8 @@ instance instLawfulRischLevelLrtTower [Fact (GcdFFCorrect (α := CFrac β))]
   reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
 
 -- The LRT tower solver resolves at depth 2 by recursion; the step instance chains on itself.
-noncomputable example [Fact (GcdFFCorrect (α := CFrac β))] [PrimitiveFrontierLrt (CFrac β)]
-    [Fact (GcdFFCorrect (α := CFrac (CFrac β)))] [PrimitiveFrontierLrt (CFrac (CFrac β))] :
+noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac β)))] [PrimitiveFrontierLrt (CFrac β)]
+    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := CFrac (CFrac β))))] [PrimitiveFrontierLrt (CFrac (CFrac β))] :
     LawfulRischLevelLrt (CFrac (CFrac β)) := inferInstance
 
 end DeepWiki.SymbolicIntegration

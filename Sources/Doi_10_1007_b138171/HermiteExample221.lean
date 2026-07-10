@@ -191,7 +191,7 @@ theorem hermite_ex221_Dstar_dvd : toPoly ([0, 2, 0, 1] : DensePoly ℚ) ∣ toPo
     have : cnorm cD221 = [] := (DensePoly.cnormG_eq_nil_iff cD221).mpr h
     revert this
     decide
-  have hdiv := prod_map_cSqfreeYunFFG_dvd gcdFFCorrect_Q cD221
+  have hdiv := prod_map_cSqfreeYunFFG_dvd cgcdFFCoreWf_correct_Q cD221
     (by exact hD)
   have hread := toPolyG_foldl_cmulG_plainList ([1] : DensePoly ℚ)
     (DensePoly.cSqfreeYunFF cD221)
