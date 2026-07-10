@@ -64,23 +64,23 @@ section Repin
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
-/-- For `ftilde = weakNormalizedF f q'` (`q'` the lift of `cWeakNormalizer [1] f.1.1 f.1.2`), the
+/-- For `ftilde = weakNormalizedF f q'` (`q'` the lift of `cWeakNormalizer [1] f.num f.den`), the
 denominator gate on the reduced input equals the wrapper check on the pre-reduce input. -/
 theorem cdenomNormalGateG_qReduce_weakNormalized (f : CFrac β) :
     cdenomNormalGate (qReduce (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
       = cisCanonNormalized (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) :=
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))) :=
   cdenomNormalGateG_qReduce
     (weakNormalizedF f
-      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))
 
 /-- The denominator gate on the reduced weak-normalized input passes iff `IsCanonNormalized` holds. -/
 theorem cdenomNormalGateG_qReduce_weakNormalized_iff [CFieldDomain β] (f : CFrac β) :
     cdenomNormalGate (qReduce (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))) = true
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))) = true
       ↔ IsCanonNormalized f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) := by
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) := by
   rw [cdenomNormalGateG_qReduce_weakNormalized]
   exact cisCanonNormalizedG_iff f _
 
@@ -89,9 +89,9 @@ theorem cdenomNormalGateG_qReduce_weakNormalized_iff [CFieldDomain β] (f : CFra
 -- The same re-pin reconciliation stated entirely on the Wf gate.
 example (f : CFrac β) :
     cdenomNormalGate (qReduce (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
       = cisCanonNormalized (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) :=
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))) :=
   cdenomNormalGateG_qReduce_weakNormalized f
 
 end Repin

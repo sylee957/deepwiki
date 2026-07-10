@@ -166,29 +166,29 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
-    DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false
+    DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
     IsCanonNormalized f
-      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     ∃ ynum yden,
-      IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
-        gtilde.1.1 gtilde.1.2 ynum yden
+      IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftildeR.num ftildeR.den
+        gtilde.num gtilde.den ynum yden
   /-- The consolidated inner residual-tip frontier, threaded through the IH. -/
   hinnerFront : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
-    RischDEInnerDecisionFrontierWf ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
-      gtilde.1.1 gtilde.1.2
+    RischDEInnerDecisionFrontierWf ([CCommRing.one] : DensePoly β) ftildeR.num ftildeR.den
+      gtilde.num gtilde.den
   /-- The returned denominator of a successful inner solve is nonzero. -/
   hden : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g → ∀ ynum yden : DensePoly β,
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
-    cRischDE ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+    cRischDE ([CCommRing.one] : DensePoly β) ftildeR.num ftildeR.den gtilde.num gtilde.den
         = some (ynum, yden) →
       DensePoly.cisZero yden = false
   /-- The direct soundness certificate for each solvable next-level RDE. -/

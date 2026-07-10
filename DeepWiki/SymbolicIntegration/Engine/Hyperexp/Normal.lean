@@ -19,20 +19,20 @@ Over `ℚ(x)[t]` (`t = exp x`, `Dt = η·t`, `η = 1`), `f = 1/(t−1)` has log 
 
 open DensePoly
 
-/-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `DensePoly NLvl1 = ℚ(x)[t]` (`t = exp x`,
+/-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `DensePoly Lvl1 = ℚ(x)[t]` (`t = exp x`,
 `η = 1`). -/
-def nHyperexpDt : DensePoly NLvl1 := [CCommRing.zero, CCommRing.one]
+def nHyperexpDt : DensePoly Lvl1 := [CCommRing.zero, CCommRing.one]
 
-/-- The integrand numerator `a = 1` over `DensePoly NLvl1 = ℚ(x)[t]` for `f = 1/(t−1) = 1/(exp x − 1)`. -/
-def nNormInvA : DensePoly NLvl1 := [CCommRing.one]
+/-- The integrand numerator `a = 1` over `DensePoly Lvl1 = ℚ(x)[t]` for `f = 1/(t−1) = 1/(exp x − 1)`. -/
+def nNormInvA : DensePoly Lvl1 := [CCommRing.one]
 
-/-- The integrand denominator `d = t − 1 = [−1, 1]` over `DensePoly NLvl1 = ℚ(x)[t]` for
+/-- The integrand denominator `d = t − 1 = [−1, 1]` over `DensePoly Lvl1 = ℚ(x)[t]` for
 `f = 1/(t−1) = 1/(exp x − 1)` (a normal factor: `gcd(t−1, Dt) = 1`). -/
-def nNormInvD : DensePoly NLvl1 := [CCommRing.neg CCommRing.one, CCommRing.one]
+def nNormInvD : DensePoly Lvl1 := [CCommRing.neg CCommRing.one, CCommRing.one]
 
 /-- Residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for `1/(exp x − 1)` (genuine residue
 `1`). -/
-def nNormInvCands : List NLvl1 := [CCommRing.zero, CCommRing.one, CCommRing.neg CCommRing.one]
+def nNormInvCands : List Lvl1 := [CCommRing.zero, CCommRing.one, CCommRing.neg CCommRing.one]
 
 /-- The hyperexponential residual `R = 1` on `f = 1/(exp x − 1)`: `cHyperexpResidual` of the reduced
 capstone's logs equals `1`. -/
@@ -40,11 +40,11 @@ theorem nNormInv_residual_eq_one :
     CCommRing.isZero (CField.sub
       (cHyperexpResidual (cExpEta nHyperexpDt)
         (cIntegrateReduced nHyperexpDt nNormInvA nNormInvD nNormInvCands).logs)
-      (CCommRing.one : NLvl1)) = true := by native_decide
+      (CCommRing.one : Lvl1)) = true := by native_decide
 
 /-- The base residual integral `∫R = ∫1 = x`: `crischDESolve 0 1` over `ℚ(x)` recovers `y = x`. -/
 theorem nNormInv_baseIntegral_eq_x :
-    (match CRischField.crischDESolve (CCommRing.zero : NLvl1) (CCommRing.one : NLvl1) with
+    (match CRischField.crischDESolve (CCommRing.zero : Lvl1) (CCommRing.one : Lvl1) with
       | some y => CCommRing.isZero (CField.sub y nLvl1X)
       | none => false) = true := by native_decide
 
@@ -78,15 +78,15 @@ The combined driver on `f = 1/t + 1/(t−1) = (2t−1)/(t²−t)` over `ℚ(x)[t
 part lands `−1/t`, the normal part `log(t−1) − x`, so `∫f = −1/t + log(t−1) − x`, satisfying
 `D(∫f) = f`. -/
 
-/-- Integrand numerator `a = 2t − 1` for `f = (2t−1)/(t²−t) = 1/t + 1/(t−1)` over `DensePoly NLvl1`. -/
-def nSpecNormA : DensePoly NLvl1 := [CCommRing.neg CCommRing.one, CCommRing.add CCommRing.one CCommRing.one]
+/-- Integrand numerator `a = 2t − 1` for `f = (2t−1)/(t²−t) = 1/t + 1/(t−1)` over `DensePoly Lvl1`. -/
+def nSpecNormA : DensePoly Lvl1 := [CCommRing.neg CCommRing.one, CCommRing.add CCommRing.one CCommRing.one]
 
-/-- Integrand denominator `d = t² − t = t(t−1)` for `f = (2t−1)/(t²−t)` over `DensePoly NLvl1` (special factor
+/-- Integrand denominator `d = t² − t = t(t−1)` for `f = (2t−1)/(t²−t)` over `DensePoly Lvl1` (special factor
 `t`, normal factor `t−1`). -/
-def nSpecNormD : DensePoly NLvl1 := [CCommRing.zero, CCommRing.neg CCommRing.one, CCommRing.one]
+def nSpecNormD : DensePoly Lvl1 := [CCommRing.zero, CCommRing.neg CCommRing.one, CCommRing.one]
 
 /-- Residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for the special+normal mix. -/
-def nSpecNormCands : List NLvl1 := [CCommRing.zero, CCommRing.one, CCommRing.neg CCommRing.one]
+def nSpecNormCands : List Lvl1 := [CCommRing.zero, CCommRing.one, CCommRing.neg CCommRing.one]
 
 /-- The special-part-only driver still overshoots on the special+normal mix: `cIntegrateHyperexp` returns
 `some` but its normal log part overshoots by `R = 1`, so `checkIdentity = false`. -/
@@ -109,20 +109,20 @@ Take `t = exp(x²)`, so `Dt = η·t` with `η = 2x` non-constant, over `ℚ(x)[t
 residue is the constant `1`, the log part overshoots by `R = 2x` (non-constant), and the feedback
 integrates `∫R = x²`, landing `log(t−1) − x²`. -/
 
-/-- Hyperexponential monomial derivative `Dt = η·t = [0, 2x]` over `DensePoly NLvl1 = ℚ(x)[t]`
+/-- Hyperexponential monomial derivative `Dt = η·t = [0, 2x]` over `DensePoly Lvl1 = ℚ(x)[t]`
 (`t = exp(x²)`, non-constant `η = 2x ∈ ℚ(x)`). -/
-def nVarDt : DensePoly NLvl1 := [CCommRing.zero, nLvl1TwoX]
+def nVarDt : DensePoly Lvl1 := [CCommRing.zero, nLvl1TwoX]
 
-/-- Integrand numerator `a = 2x` over `DensePoly NLvl1` for `f = 2x/(t−1) = 2x/(exp(x²) − 1)`, so the residue
+/-- Integrand numerator `a = 2x` over `DensePoly Lvl1` for `f = 2x/(t−1) = 2x/(exp(x²) − 1)`, so the residue
 `2x/(η·1) = 1` is constant. -/
-def nVarNormA : DensePoly NLvl1 := [nLvl1TwoX]
+def nVarNormA : DensePoly Lvl1 := [nLvl1TwoX]
 
-/-- Integrand denominator `d = t − 1` over `DensePoly NLvl1` for `f = 2x/(t−1)` (normal: `gcd(t−1, Dt) =
+/-- Integrand denominator `d = t − 1` over `DensePoly Lvl1` for `f = 2x/(t−1)` (normal: `gcd(t−1, Dt) =
 1`). -/
-def nVarNormD : DensePoly NLvl1 := [CCommRing.neg CCommRing.one, CCommRing.one]
+def nVarNormD : DensePoly Lvl1 := [CCommRing.neg CCommRing.one, CCommRing.one]
 
 /-- Residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for `2x/(exp(x²) − 1)` (residue `1`). -/
-def nVarNormCands : List NLvl1 := [CCommRing.zero, CCommRing.one, CCommRing.neg CCommRing.one]
+def nVarNormCands : List Lvl1 := [CCommRing.zero, CCommRing.one, CCommRing.neg CCommRing.one]
 
 /-- The non-constant base residual `R = 2x` on `f = 2x/(exp(x²) − 1)`: `cHyperexpResidual` equals `2x`, a
 non-constant rational function of `x`. -/
@@ -135,7 +135,7 @@ theorem nVarNorm_residual_eq_twoX :
 /-- The non-constant base residual integral `∫R = ∫2x = x²`: `crischDESolve 0 (2x)` over `ℚ(x)` recovers
 `y = x²`. -/
 theorem nVarNorm_baseIntegral_eq_xSq :
-    (match CRischField.crischDESolve (CCommRing.zero : NLvl1) nLvl1TwoX with
+    (match CRischField.crischDESolve (CCommRing.zero : Lvl1) nLvl1TwoX with
       | some y => CCommRing.isZero (CField.sub y nLvl1XSq)
       | none => false) = true := by native_decide
 

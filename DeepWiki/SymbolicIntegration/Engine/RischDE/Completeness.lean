@@ -24,10 +24,10 @@ over `RatFunc (CFieldSpec.K β)`, read through `am ∘ toPoly`. -/
 def FieldRDESolvable (f g : CFrac β) : Prop :=
   ∃ y : CFrac β,
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly β)
-          (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-        + am β (toPoly f.1.1) / am β (toPoly f.1.2)
-          * (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-      = am β (toPoly g.1.1) / am β (toPoly g.1.2)
+          (am β (toPoly y.num) / am β (toPoly y.den))
+        + am β (toPoly f.num) / am β (toPoly f.den)
+          * (am β (toPoly y.num) / am β (toPoly y.den))
+      = am β (toPoly g.num) / am β (toPoly g.den)
 
 end Solvable
 
@@ -43,20 +43,20 @@ passes on the weak-normalized input, and `crischDERawSolveWf` succeeds on the re
 transformed back by `q⁻¹`). -/
 theorem crischDESolveSoundWf_some_iff (f g y : CFrac β) :
     crischDESolveSoundWf f g = some y ↔
-      (DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)
+      (DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)
           = false
         ∧ cisCanonNormalized (weakNormalizedF f
-            (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
+            (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))
           = true
         ∧ ∃ ytilde : CFrac β,
             crischDERawSolveWf
                 (qReduce (weakNormalizedF f
-                  (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
-                (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) g)
+                  (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
+                (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
               = some ytilde
               ∧ y = qmulNZ ytilde (qinvNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-                  f.1.1 f.1.2)))) := by
-  set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 with hq
+                  f.num f.den)))) := by
+  set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den with hq
   set q' : CFrac β := CFrac.ofPoly q with hq'
   set ftilde : CFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
@@ -94,37 +94,37 @@ theorem crischDESolveSoundWf_some_iff (f g y : CFrac β) :
 /-- If the weak normalizer is nonzero, the canon-normality gate passes, and `crischDERawSolveWf` returns
 `some ỹ`, then `crischDESolveSoundWf f g = some (ỹ/q')`. -/
 theorem crischDESolveSoundWf_some_of_stages (f g ytilde : CFrac β)
-    (hq : DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)
+    (hq : DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)
         = false)
     (hck : cisCanonNormalized (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))
         = true)
     (hinner : crischDERawSolveWf
         (qReduce (weakNormalizedF f
-          (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
-        (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) g)
+          (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
+        (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
         = some ytilde) :
     crischDESolveSoundWf f g
       = some (qmulNZ ytilde (qinvNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-          f.1.1 f.1.2)))) :=
+          f.num f.den)))) :=
   (crischDESolveSoundWf_some_iff f g _).mpr ⟨hq, hck, ytilde, hinner, rfl⟩
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 example (f g ytilde : CFrac β)
-    (hq : DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)
+    (hq : DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)
         = false)
     (hck : cisCanonNormalized (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
+        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))
         = true)
     (hinner : crischDERawSolveWf
         (qReduce (weakNormalizedF f
-          (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
-        (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) g)
+          (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
+        (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
         = some ytilde) :
     crischDESolveSoundWf f g
       = some (qmulNZ ytilde (qinvNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-          f.1.1 f.1.2)))) :=
+          f.num f.den)))) :=
   crischDESolveSoundWf_some_of_stages f g ytilde hq hck hinner
 
 end StructuralWf
@@ -242,9 +242,9 @@ omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
 /-- If `cRischDE [1]` succeeds and every returned denominator is nonzero, then `crischDERawSolveWf`
 returns `some`. -/
 theorem crischDERawSolveWf_isSome_of_cRischDEG_some_den (ftilde gtilde : CFrac β)
-    (hsome : (cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2).isSome = true)
+    (hsome : (cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den).isSome = true)
     (hden : ∀ ynum yden : DensePoly β,
-      cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den = some (ynum, yden) →
       DensePoly.cisZero yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde := by
   obtain ⟨⟨ynum, yden⟩, hp⟩ := Option.isSome_iff_exists.mp hsome
@@ -257,7 +257,7 @@ omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
 theorem crischDERawSolveWf_isSome_of_cRischDEG_stages_den (ftilde gtilde : CFrac β)
     (a0 b0 c0 h0 bbar cbar : DensePoly β) (m : ℤ) (α' β' v : DensePoly β)
     (hnorm : cRdeNormalDenominator ([CCommRing.one] : DensePoly β)
-      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0))
+      ftilde.num ftilde.den gtilde.num gtilde.den = some (a0, b0, c0, h0))
     (hspde : cSPDE ([CCommRing.one] : DensePoly β) (cRdeSpecialDenominator ([CCommRing.one] : DensePoly β)
         a0 b0 c0).1
         (cRdeSpecialDenominator ([CCommRing.one] : DensePoly β) a0 b0 c0).2.1
@@ -269,11 +269,11 @@ theorem crischDERawSolveWf_isSome_of_cRischDEG_stages_den (ftilde gtilde : CFrac
       = some (bbar, cbar, m, α', β'))
     (hpoly : cPolyRischDE ([CCommRing.one] : DensePoly β) bbar cbar m = some v)
     (hden : ∀ ynum yden : DensePoly β,
-      cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den = some (ynum, yden) →
       DensePoly.cisZero yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde := by
   have hsome : (cRischDE ([CCommRing.one] : DensePoly β)
-      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2).isSome = true := by
+      ftilde.num ftilde.den gtilde.num gtilde.den).isSome = true := by
     rw [cRischDE, hnorm]
     simp only [hspde, hpoly, Option.isSome_some]
   exact crischDERawSolveWf_isSome_of_cRischDEG_some_den ftilde gtilde hsome hden
@@ -283,27 +283,27 @@ omit [CFieldDomain β] in
 `crischDERawSolveWf` succeeds. -/
 theorem crischDERawSolveWf_isSome_of_innerCompletenessWf (ftilde gtilde : CFrac β)
     (hinner : RischDEInnerCompletenessWf ([CCommRing.one] : DensePoly β)
-      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2)
+      ftilde.num ftilde.den gtilde.num gtilde.den)
     (hsol : ∃ ynum yden,
-      IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 ynum yden)
+      IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den ynum yden)
     (hden : ∀ ynum yden : DensePoly β,
-      cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den = some (ynum, yden) →
       DensePoly.cisZero yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde :=
   crischDERawSolveWf_isSome_of_cRischDEG_some_den ftilde gtilde
     (cRischDEG_isSome_of_innerCompletenessWf ([CCommRing.one] : DensePoly β)
-      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 hinner hsol)
+      ftilde.num ftilde.den gtilde.num gtilde.den hinner hsol)
     hden
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 example (ftilde gtilde : CFrac β)
     (hinner : RischDEInnerCompletenessWf ([CCommRing.one] : DensePoly β)
-      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2)
+      ftilde.num ftilde.den gtilde.num gtilde.den)
     (hsol : ∃ ynum yden,
-      IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 ynum yden)
+      IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den ynum yden)
     (hden : ∀ ynum yden : DensePoly β,
-      cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den = some (ynum, yden) →
       DensePoly.cisZero yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde :=
   crischDERawSolveWf_isSome_of_innerCompletenessWf ftilde gtilde hinner hsol hden
@@ -333,18 +333,18 @@ inner solver success (`hinner`) on a solvable RDE. -/
 structure RischDECompletenessResidualWf (f g : CFrac β) : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : FieldRDESolvable f g →
-    DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false
+    DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
     IsCanonNormalized f
-      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))
   /-- A solvable RDE makes the inner solve succeed on the reduced pair. -/
   hinner : FieldRDESolvable f g →
     ∃ ytilde : CFrac β,
       crischDERawSolveWf
           (qReduce (weakNormalizedF f
-            (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
-          (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) g)
+            (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
+          (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
         = some ytilde
 
 /-- If the RDE is solvable and `RischDECompletenessResidualWf` holds, then `crischDESolveSoundWf`
@@ -354,7 +354,7 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : CFrac β)
     ∃ y, crischDESolveSoundWf f g = some y := by
   obtain ⟨ytilde, hinner⟩ := hres.hinner hsol
   have hck : cisCanonNormalized (weakNormalizedF f
-      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) = true :=
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))) = true :=
     (cisCanonNormalizedG_iff f _).mpr (hres.hck hsol)
   exact ⟨_, crischDESolveSoundWf_some_of_stages f g ytilde (hres.hwn hsol) hck hinner⟩
 
