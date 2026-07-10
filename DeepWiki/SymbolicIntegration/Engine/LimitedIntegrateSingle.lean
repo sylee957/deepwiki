@@ -12,11 +12,6 @@ open DensePoly Polynomial
 
 namespace DensePoly
 
-/-- **Base polynomial antiderivative over ℚ** `cAntiderivBaseQ p = ∫ p dt`: for `p = Σ aᵢ tⁱ`, returns
-`Σ aᵢ/(i+1)·t^(i+1)` (constant of integration `0`). The `D = d/dt` inverse on `ℚ[t]`. -/
-def cAntiderivBaseQ (p : DensePoly ℚ) : DensePoly ℚ :=
-  (0 : ℚ) :: ((p : List ℚ).zipIdx.map (fun ai => ai.1 / (ai.2 + 1)))
-
 /-- **Base single-`w` limited integration** `cLimitedIntegrateSingleBase a η` (Bronstein §5.8's
 `LimitedIntegrate(a, Dt)`, `k = ℚ(x)`, polynomial-`b` regime): returns `some (b, c)` with `a = D(b) + c·η`
 (`b ∈ ℚ[x] ⊂ ℚ(x)`, `c ∈ ℚ`), or `none` if no such pair exists in this regime. Builds the two-generator
@@ -33,7 +28,7 @@ def cLimitedIntegrateSingleBase (a η : CFrac ℚ) : Option (CFrac ℚ × ℚ) :
     let c0 := v.getD 0 0
     let c1 := (v.getD 1 0) / c0                                   -- normalized `c₁` (`c₀ = 1`)
     let integrand := cadd (qs.getD 0 []) (cscale c1 (qs.getD 1 []))
-    let bpoly := cAntiderivBaseQ integrand
+    let bpoly := cIntegratePoly integrand
     some (CFrac.ofPoly bpoly, -c1)
 
 /-- **`cLimitedIntegrateSingleBase` in the num/den signature** of `LawfulRischLevelLrt.limitedIntegrateSingle`

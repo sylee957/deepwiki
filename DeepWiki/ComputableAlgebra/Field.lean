@@ -7,8 +7,8 @@ import Mathlib.Algebra.Field.Rat
 `CField α`: computable field operations (`zero`/`one`/`add`/`mul`/`neg`/`inv`, zero test), bridge-free
 so instances stay computable; every `CField` is a `CCommRing` (bridge below). `CFieldSpec α`: the
 companion homomorphism `toK : α → K` into a Mathlib `Field K` (a `CRingSpec` with `R = K`). `ℚ` is the
-base instance. See `CommRing.lean` for the ring layer and `PolyReprDense.lean` for the `DensePoly`
-engine. -/
+base instance. The foundational `cnatCast` builds natural-number constants using only `CField`
+operations. See `CommRing.lean` for the ring layer and `PolyReprDense.lean` for the `DensePoly` engine. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -124,6 +124,25 @@ theorem getD_map_toK {α : Type*} [CField α] [CFieldSpec α] (l : List α) (j :
   | some a => simp
 
 end CFieldSpec
+
+/-! ### Natural-number constants -/
+
+namespace DensePoly
+
+/-- Natural number as a field element: `cnatCast k = 1 + 1 + … + 1` (`k` times), built from
+`CCommRing.add`/`CCommRing.one`; `[CField α]`-only. -/
+def cnatCast {α : Type*} [CField α] : ℕ → α
+  | 0 => CCommRing.zero
+  | k + 1 => CCommRing.add CCommRing.one (cnatCast k)
+
+/-- `toK (cnatCast k) = (k : K)`: the computable natural cast reads as the genuine one. -/
+@[denote] theorem toK_cnatCastG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) :
+    CFieldSpec.toK (cnatCast k : α) = (k : CFieldSpec.K α) := by
+  induction k with
+  | zero => rw [cnatCast, CFieldSpec.toK_zero, Nat.cast_zero]
+  | succ n ih => rw [cnatCast, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ, add_comm]
+
+end DensePoly
 
 /-! ### Instances: `CField ℚ` and `CFieldSpec ℚ`
 

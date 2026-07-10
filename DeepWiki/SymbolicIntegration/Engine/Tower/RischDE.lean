@@ -8,7 +8,7 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Eta
 /-! # Carrier-generic Risch-DE helper defs over the tower
 
 The carrier-generic building blocks of the Risch-DE pipeline: the residue positive-integer-root test,
-the degree bound, the primitive polynomial antiderivative, and a shared level-2 right-hand side. -/
+the degree bound, and a shared level-2 right-hand side. -/
 
 open Polynomial
 
@@ -66,17 +66,6 @@ def cRdeBoundDegree (Dt : DensePoly α) (a b c : DensePoly α) : ℕ :=
     else
       if da < db then max 0 (dc - db) else max 0 (dc - da + 1)
   n.toNat
-
-/-! ### The generic primitive `b = 0` integration branch
-
-When `b = 0` the equation `Dq + b·q = c` is the pure integration `Dq = c`; for the canonical primitive
-monomial (`Dt = 1`) with constant coefficients this is termwise `∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}`. -/
-
-/-- Generic polynomial antiderivative `cIntegratePoly c = q` with `Dq = c` and `q(0) = 0`, for the
-canonical primitive monomial (`Dt = 1`) and constant coefficients: termwise
-`∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}` (`cᵢ/(i+1) = CField.div cᵢ (cnatCast (i+1))`). -/
-def cIntegratePoly (c : DensePoly α) : DensePoly α :=
-  CCommRing.zero :: ((c : List α).zipIdx.map (fun (a, i) => CField.div a (cnatCast (i + 1))))
 
 end DensePoly
 

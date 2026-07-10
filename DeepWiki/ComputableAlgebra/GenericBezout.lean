@@ -3,9 +3,8 @@ import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Generic Bézout cofactors, resultant, and Lagrange interpolation
 
-Natural-number casts (`cnatCast`) and Lagrange interpolation
-(`clagNum`/`cinterpolate`), all generic over `[CField α]`, plus the
-`CFieldSpec` correctness layer for interpolation and seed resultants. -/
+Lagrange interpolation (`clagNum`/`cinterpolate`), generic over `[CField α]`, plus the `CFieldSpec`
+correctness layer for interpolation and seed resultants. -/
 
 open Polynomial
 
@@ -14,19 +13,6 @@ namespace DeepWiki.SymbolicIntegration
 namespace DensePoly
 
 variable {α : Type*} [CField α]
-
-/-- Natural number as a field element: `cnatCast k = 1 + 1 + … + 1` (`k` times), built from
-`CCommRing.add`/`CCommRing.one`; `[CField α]`-only. -/
-def cnatCast : ℕ → α
-  | 0 => CCommRing.zero
-  | k + 1 => CCommRing.add CCommRing.one (cnatCast k)
-
-/-- `toK (cnatCast k) = (k : K)`: the computable natural cast reads as the genuine one. -/
-@[denote] theorem toK_cnatCastG [CFieldSpec α] (k : ℕ) :
-    CFieldSpec.toK (cnatCast k : α) = (k : CFieldSpec.K α) := by
-  induction k with
-  | zero => rw [cnatCast, CFieldSpec.toK_zero, Nat.cast_zero]
-  | succ n ih => rw [cnatCast, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ, add_comm]
 
 /-- Generic Lagrange basis numerator `clagNum zs = ∏ⱼ (z − zⱼ)` over abscissas `zs`, built from the
 degree-1 factors `[−zⱼ, 1]` via `cmul`. -/

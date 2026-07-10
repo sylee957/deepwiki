@@ -9,10 +9,9 @@ import Mathlib.Data.List.Sigma
 
 The valuation notion behind Hermite pole-cancellation
 (over `ℚ`, `d/dx`) to the tower carrier `RatFunc (CFieldSpec.K α)` with the monomial derivation
-`towerFractionFieldDeriv Dt`. `IsQRegular Q f` says `f` has a representation with denominator coprime
-to `Q` — i.e. no `Q`-pole. The pure lemmas (`add`, `dvd_num_of_isQRegularG`) copy the abstract proofs;
-closure under the derivative (`IsQRegular.deriv`) uses the tower quotient rule
-`towerFractionFieldDerivG_div`. -/
+`towerFractionFieldDeriv Dt`. The representation-independent predicate `IsRatFuncRegular Q f` says
+`f` has a representation with denominator coprime to `Q` — i.e. no `Q`-pole. Its tower-specific
+closure under the derivative uses the quotient rule `towerFractionFieldDerivG_div`. -/
 
 open Polynomial Classical
 
@@ -39,33 +38,12 @@ theorem toPolyG_cdivWf_congr [CFracGcdCoreWf α] (P1 Q1 P2 Q2 : DensePoly α)
   apply mul_right_cancel₀ hQ1
   rw [h1, hP, ← h2, hQ]
 
-/-- `f` is `Q`-regular over the tower fraction field: it has a representation `am p / am q` with
-`q ≠ 0` coprime to `Q` (no `Q`-pole). -/
-def IsQRegular (Q : (CFieldSpec.K α)[X]) (f : RatFunc (CFieldSpec.K α)) : Prop :=
-  IsRatFuncRegular Q f
-
-omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- `0` is `Q`-regular (denominator `1`). -/
-theorem isQRegularG_zero (Q : (CFieldSpec.K α)[X]) : IsQRegular Q (0 : RatFunc (CFieldSpec.K α)) :=
-  isRatFuncRegular_zero Q
-
-omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- `Q`-regular is closed under `+` (common denominator `q₁·q₂`, coprime to `Q`). -/
-theorem IsQRegular.add {Q : (CFieldSpec.K α)[X]} {f g : RatFunc (CFieldSpec.K α)}
-    (hf : IsQRegular Q f) (hg : IsQRegular Q g) : IsQRegular Q (f + g) :=
-  IsRatFuncRegular.add hf hg
-
-omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **Order extraction**: if `am r/am D` is `Q`-regular, `D ≠ 0`, `Q^e ∣ D`, then `Q^e ∣ r`. -/
-theorem dvd_num_of_isQRegularG {Q r D : (CFieldSpec.K α)[X]} {e : ℕ} (hD : D ≠ 0) (hQe : Q ^ e ∣ D)
-    (hf : IsQRegular Q (am α r / am α D)) : Q ^ e ∣ r :=
-  dvd_num_of_isRatFuncRegular hD hQe hf
-
 /-- **`Q`-regular is closed under the tower derivative** `towerFractionFieldDeriv Dt`: if `f = am p/am q`
 with `q` coprime to `Q`, then `D_tower f` has denominator `q²`, still coprime to `Q`. Uses the tower
 quotient rule. -/
-theorem IsQRegular.deriv {Q : (CFieldSpec.K α)[X]} {f : RatFunc (CFieldSpec.K α)} (Dt : DensePoly α)
-    (hf : IsQRegular Q f) : IsQRegular Q (towerFractionFieldDeriv Dt f) := by
+theorem IsRatFuncRegular.towerDeriv {Q : (CFieldSpec.K α)[X]}
+    {f : RatFunc (CFieldSpec.K α)} (Dt : DensePoly α)
+    (hf : IsRatFuncRegular Q f) : IsRatFuncRegular Q (towerFractionFieldDeriv Dt f) := by
   obtain ⟨p, q, hq, hQ, hfeq⟩ := hf
   refine ⟨Differential.implicitDeriv (toPoly Dt) p * q - p * Differential.implicitDeriv (toPoly Dt) q,
     q ^ 2, pow_ne_zero 2 hq, hQ.pow_right, ?_⟩
@@ -96,9 +74,9 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **A factor's `gloc` fraction is `Q`-regular** whenever `Q` is coprime to `v`: the `gloc` denominator
 (from the `(0,1)` seed) is `(toPoly v)^N`, coprime to `Q`. This makes the *other* factors'
 contributions `Vk`-regular in the fold. -/
-theorem gloc_isQRegularG (Dt v u : DensePoly α) {Q : (CFieldSpec.K α)[X]} (hv : toPoly v ≠ 0)
+theorem gloc_isRatFuncRegular (Dt v u : DensePoly α) {Q : (CFieldSpec.K α)[X]} (hv : toPoly v ≠ 0)
     (hcop : IsRelPrime Q (toPoly v)) (j : ℕ) (a : DensePoly α) :
-    IsQRegular Q
+    IsRatFuncRegular Q
       (am α (toPoly (cHermiteReduceTowerInnerWf Dt v u j a
           ([CCommRing.zero], [CCommRing.one])).1.1)
         / am α (toPoly (cHermiteReduceTowerInnerWf Dt v u j a
@@ -110,12 +88,6 @@ theorem gloc_isQRegularG (Dt v u : DensePoly α) {Q : (CFieldSpec.K α)[X]} (hv 
     rw [hN, show toPoly ([CCommRing.one] : DensePoly α) = 1 from by
       simp only [denote, mul_zero, add_zero, map_one], one_mul]
   exact ⟨_, _, by rw [hden]; exact pow_ne_zero N hv, by rw [hden]; exact hcop.pow_right, rfl⟩
-
-omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- `Q`-regular is closed under list sums. -/
-theorem isQRegularG_list_sum {Q : (CFieldSpec.K α)[X]} (L : List (RatFunc (CFieldSpec.K α)))
-    (h : ∀ f ∈ L, IsQRegular Q f) : IsQRegular Q L.sum :=
-  isRatFuncRegular_list_sum_self L h
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Cross-multiplied fraction-pair addition reads as the fraction sum:
@@ -227,22 +199,22 @@ noncomputable def glocFrac (Dt a d : DensePoly α) (x : DensePoly α × ℕ) : R
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
 /-- A fold factor's `gloc` fraction is `Q`-regular for `Q` coprime to its `v`. -/
-theorem glocFracG_isQRegularG (Dt a d : DensePoly α) {Q : (CFieldSpec.K α)[X]} (x : DensePoly α × ℕ)
+theorem glocFrac_isRatFuncRegular (Dt a d : DensePoly α) {Q : (CFieldSpec.K α)[X]} (x : DensePoly α × ℕ)
     (hv : toPoly x.1 ≠ 0) (hcop : IsRelPrime Q (toPoly x.1)) :
-    IsQRegular Q (glocFrac Dt a d x) :=
-  gloc_isQRegularG Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) hv hcop (x.2 + 1 - 1) a
+    IsRatFuncRegular Q (glocFrac Dt a d x) :=
+  gloc_isRatFuncRegular Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) hv hcop (x.2 + 1 - 1) a
 
 /-- **`D(⟦g⟧) − D(⟦gloc_k⟧)` is `Vk`-regular** — the pole-cancellation valuation core. `⟦g⟧ = Σ⟦gloc⟧`,
 so its tower derivative splits (`map_list_sum`); permuting `kelem` to the front and cancelling leaves
-`Σ_{j≠k} D(⟦gloc_j⟧)`, each `Vk`-regular (`glocFracG_isQRegularG.deriv`, coprimality `hcop`). Tower analog
+`Σ_{j≠k} D(⟦gloc_j⟧)`, each `Vk`-regular (`glocFrac_isRatFuncRegular.towerDeriv`, coprimality `hcop`). Tower analog
 of `deriv_fold_sub_glocIncr_isQRegular`. -/
-theorem deriv_fold_sub_isQRegularG (Dt a d : DensePoly α) (kelem : DensePoly α × ℕ)
+theorem deriv_fold_sub_isRatFuncRegular (Dt a d : DensePoly α) (kelem : DensePoly α × ℕ)
     (hkmem : kelem ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)))
     (hnd : ((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).Nodup)
     (hV : ∀ x ∈ (cSqfreeYunFF d).zipIdx, toPoly x.1 ≠ 0)
     (hcop : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)), x ≠ kelem →
       IsRelPrime (toPoly kelem.1) (toPoly x.1)) :
-    IsQRegular (toPoly kelem.1)
+    IsRatFuncRegular (toPoly kelem.1)
       (towerFractionFieldDeriv Dt
           (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
             / am α (toPoly (cHermiteReduceTower Dt a d).1.2))
@@ -269,13 +241,13 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : DensePoly α) (kelem : DensePoly α
             (x.2 + 1 - 1) a ([CCommRing.zero], [CCommRing.one])).1.2)) kelem
       = towerFractionFieldDeriv Dt (glocFrac Dt a d kelem) from rfl,
     add_sub_cancel_left]
-  refine isQRegularG_list_sum _ (fun f hf => ?_)
+  refine isRatFuncRegular_list_sum_self _ (fun f hf => ?_)
   rw [List.mem_map] at hf
   obtain ⟨x, hx, rfl⟩ := hf
   rw [hnd.mem_erase_iff] at hx
   have hxmem : x ∈ (cSqfreeYunFF d).zipIdx := List.mem_of_mem_filter (hkeptdef ▸ hx.2)
-  exact (glocFracG_isQRegularG Dt a d x (hV x hxmem)
-    (hcop x (hkeptdef ▸ hx.2) hx.1)).deriv Dt
+  exact (glocFrac_isRatFuncRegular Dt a d x (hV x hxmem)
+    (hcop x (hkeptdef ▸ hx.2) hx.1)).towerDeriv Dt
 
 /-- **The total fold residual** (per-factor identities `hstep` given): `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` with
 `R = C(1−m)·a + Σ residNum`, `m` the number of kept factors. Sums `D⟦g⟧ = Σ D⟦gloc⟧` using each
@@ -331,14 +303,14 @@ theorem dvd_R_of_factor {vk R residNum_k : (CFieldSpec.K α)[X]}
     {af Dg Dgk : RatFunc (CFieldSpec.K α)} (e : ℕ) (D : DensePoly α) (hD : toPoly D ≠ 0)
     (hR : af - Dg = am α R / am α (toPoly D))
     (hstepk : Dgk = af - am α residNum_k / am α (toPoly D))
-    (hderiv : IsQRegular vk (Dg - Dgk))
+    (hderiv : IsRatFuncRegular vk (Dg - Dgk))
     (hpow : vk ^ (e + 1) ∣ toPoly D) (hresk : vk ^ e ∣ residNum_k) :
     vk ^ e ∣ R := by
   have hDg : Dg = af - am α R / am α (toPoly D) := by linear_combination -hR
   have heq : Dg - Dgk = am α (residNum_k - R) / am α (toPoly D) := by
     rw [hDg, hstepk, map_sub, sub_div]; ring
   rw [heq] at hderiv
-  have hdvd : vk ^ (e + 1) ∣ residNum_k - R := dvd_num_of_isQRegularG hD hpow hderiv
+  have hdvd : vk ^ (e + 1) ∣ residNum_k - R := dvd_num_of_isRatFuncRegular hD hpow hderiv
   have h1 : vk ^ e ∣ residNum_k - R := (pow_dvd_pow vk (Nat.le_succ e)).trans hdvd
   have h2 : vk ^ e ∣ residNum_k - (residNum_k - R) := dvd_sub hresk h1
   simpa using h2
@@ -541,7 +513,7 @@ theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α :=
       rw [← hyget, ← hxget]; exact getElem_congr rfl h.symm hyidx
     rw [← hxget, ← hyget]
     exact cSqfreeYunFFG_isRelPrime hgcd d hd0 hpp hxidx hyidx hne2
-  have hderiv := deriv_fold_sub_isQRegularG Dt a d x hx hnd hV hcop
+  have hderiv := deriv_fold_sub_isRatFuncRegular Dt a d x hx hnd hV hcop
   have hstepk := all_hstep hgcd Dt a d hd0 hpp hcopgcd x hx
   have hpow : toPoly x.1 ^ (x.2 + 1) ∣ toPoly d := by
     rw [← hxget, add_comm]; exact cSqfreeYunFFG_pow_dvd hgcd d hd0 hpp x.2 hxidx
