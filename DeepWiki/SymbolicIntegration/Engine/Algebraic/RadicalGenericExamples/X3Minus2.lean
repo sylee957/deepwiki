@@ -62,9 +62,6 @@ theorem cfield_qfunNZG_radX3m2 : Nonempty (CField (CFrac RadX3m2)) := ⟨inferIn
 generically. -/
 theorem cdiffField_qfunNZG_radX3m2 : Nonempty (CDiffField (CFrac RadX3m2)) := ⟨inferInstance⟩
 
-/-- The generator `y = √(x³−2)` as an element of `RadX3m2`. -/
-def radX3m2Gen : RadX3m2 := RadExt.gen
-
 /-- The diagonal multiplier `ℓ = f'/(2f) = 3x²/(2(x³−2)) ∈ ℚ(x)` for `D(y) = ℓ·y` over `√(x³−2)`. -/
 def radX3m2LogDer : CFrac ℚ := logDerRadicand 2 radicandX3m2
 
@@ -84,7 +81,7 @@ theorem radX3m2_monomialDeriv_t2sq :
   native_decide
 
 /-- The `RadX3m2[t]`-polynomial `y·t = [0, y]` (`y = √(x³−2)`, `t = eˣ`). -/
-def radX3m2GenT : DensePoly RadX3m2 := [CCommRing.zero, radX3m2Gen]
+def radX3m2GenT : DensePoly RadX3m2 := [CCommRing.zero, RadExt.gen]
 
 /-- The `RadX3m2[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected mixed `D(y·t)`
 (`ℓ = f'/(2f)`). -/

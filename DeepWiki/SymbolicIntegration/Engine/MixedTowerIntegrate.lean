@@ -80,8 +80,8 @@ theorem mixedRecip_integral_eq :
 `y = √(x³+1)` is not a `D`-constant (`D(y) = ℓ·y ≠ 0`), so the would-be antiderivative `y·t` is not a
 genuine antiderivative and `checkIdentity` is false. -/
 
-/-- The integrand `f = y = √(x³+1)` over `DensePoly RadX3` (`[radX3Gen]`; `y` is not a `D`-constant). -/
-def mixedYa : DensePoly RadX3 := [radX3Gen]
+/-- The integrand `f = y = √(x³+1)` over `DensePoly RadX3` (`[RadExt.gen]`; `y` is not a `D`-constant). -/
+def mixedYa : DensePoly RadX3 := [RadExt.gen]
 
 /-- `∫ y dt` does not satisfy `D(∫f) = f`: the driver returns `some (y·t)` but `checkIdentity` is
 false, since `y` is not a `D`-constant. -/

@@ -55,9 +55,6 @@ theorem cfield_qfunNZG_radX3pX : Nonempty (CField (CFrac RadX3pX)) := ⟨inferIn
 /-- **The mixed tower over `√(x³+x)` is a `CDiffField`**. -/
 theorem cdiffField_qfunNZG_radX3pX : Nonempty (CDiffField (CFrac RadX3pX)) := ⟨inferInstance⟩
 
-/-- The generator `y = √(x³+x)` as an element of `RadX3pX`. -/
-def radX3pXGen : RadX3pX := RadExt.gen
-
 /-- The diagonal multiplier `ℓ = f'/(2f) = (3x²+1)/(2(x³+x)) ∈ ℚ(x)` for `D(y) = ℓ·y` over `√(x³+x)`. -/
 def radX3pXLogDer : CFrac ℚ := logDerRadicand 2 radicandX3pX
 
@@ -75,7 +72,7 @@ theorem radX3pX_monomialDeriv_t2sq :
     cisZero (csub (cmonomialDeriv radX3pXDtExp radX3pXT2sq) radX3pXTwoT2sq) = true := by native_decide
 
 /-- The `RadX3pX[t]`-polynomial `y·t = [0, y]` (`y = √(x³+x)`, `t = eˣ`). -/
-def radX3pXGenT : DensePoly RadX3pX := [CCommRing.zero, radX3pXGen]
+def radX3pXGenT : DensePoly RadX3pX := [CCommRing.zero, RadExt.gen]
 
 /-- The `RadX3pX[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected mixed `D(y·t)`. -/
 def radX3pXGenTDeriv : DensePoly RadX3pX :=

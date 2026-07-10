@@ -139,18 +139,16 @@ exhibited through the typeclass projections. -/
 /-- The base radical field `ℚ(x)[√(x³+1)] = RadExt (CFrac ℚ) 2 (x³+1)`. -/
 abbrev RadX3 : Type := RadExt (CFrac ℚ) 2 radicandX3p1
 
-/-- The generator `y = √(x³+1)` as an element of `RadX3` (through the carrier `RadExt.gen`). -/
-def radX3Gen : RadX3 := RadExt.gen
-
 /-- `y·y = f` in `RadX3` through `CCommRing.mul`: squaring `y = √(x³+1)` reduces `y² → f = x³+1`. -/
 theorem radX3_gen_sq_eq_radicand :
-    CCommRing.isZero (CField.sub (CCommRing.mul radX3Gen radX3Gen) (⟨[radicandX3p1]⟩ : RadX3)) = true := by
+    CCommRing.isZero (CField.sub (CCommRing.mul (RadExt.gen : RadX3) RadExt.gen)
+      (⟨[radicandX3p1]⟩ : RadX3)) = true := by
   native_decide
 
 /-- `D(y) = (f'/(2f))·y` in `RadX3` through `CDiffField.cderiv`: the diagonal derivation sends
 `y = √(x³+1)` to `ℓ·y` with `ℓ = 3x²/(2(x³+1))`. -/
 theorem radX3_cderiv_gen_eq :
-    CCommRing.isZero (CField.sub (CDiffField.cderiv radX3Gen)
+    CCommRing.isZero (CField.sub (CDiffField.cderiv (RadExt.gen : RadX3))
       (⟨[CCommRing.zero, radicandLogDer]⟩ : RadX3)) = true := by native_decide
 
 /-- `u · u⁻¹ = 1` in `RadX3` through `CCommRing.mul`/`CField.inv`: for `u = x + y` the conjugate-norm
@@ -204,7 +202,7 @@ theorem radX3Risch_solves_rde :
 /-- A non-scalar coefficient `B` returns `none`: with `B = y`, `crischDESolve B C` does not attempt the
 coupled-system case, keeping the solver sound. -/
 theorem radX3Risch_nonscalar_none :
-    CRischField.crischDESolve (radX3Gen : RadX3) radX3RischC = none := by native_decide
+    CRischField.crischDESolve (RadExt.gen : RadX3) radX3RischC = none := by native_decide
 
 /-! ### A transcendental monomial over the algebraic base
 
@@ -228,8 +226,8 @@ theorem radX3_monomialDeriv_t2sq_eq_two_t2sq :
       (DensePoly.cmonomialDeriv radX3DtExp radX3T2sq) radX3TwoT2sq) = true := by native_decide
 
 /-- The `RadX3[t]`-polynomial `y·t = [0, y]` (the radical generator `y = √(x³+1)` times the monomial
-`t = eˣ`): constant `t`-coefficient `0`, linear `t`-coefficient `y = radX3Gen`. -/
-def radX3GenT : DensePoly RadX3 := [CCommRing.zero, radX3Gen]
+`t = eˣ`): constant `t`-coefficient `0`, linear `t`-coefficient `y = RadExt.gen`. -/
+def radX3GenT : DensePoly RadX3 := [CCommRing.zero, RadExt.gen]
 
 /-- The `RadX3[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected `D(y·t)` (`ℓ = f'/(2f)`). -/
 def radX3GenTDeriv : DensePoly RadX3 :=

@@ -56,9 +56,6 @@ theorem cfield_qfunNZG_radX5 : Nonempty (CField (CFrac RadX5)) := ⟨inferInstan
 /-- **The mixed tower over `√(x⁵−x−1)` is a `CDiffField`**. -/
 theorem cdiffField_qfunNZG_radX5 : Nonempty (CDiffField (CFrac RadX5)) := ⟨inferInstance⟩
 
-/-- The generator `y = √(x⁵−x−1)` as an element of `RadX5`. -/
-def radX5Gen : RadX5 := RadExt.gen
-
 /-- The diagonal multiplier `ℓ = f'/(2f) = (5x⁴−1)/(2(x⁵−x−1)) ∈ ℚ(x)` for `D(y) = ℓ·y` over
 `√(x⁵−x−1)`. -/
 def radX5LogDer : CFrac ℚ := logDerRadicand 2 radicandX5mXm1
@@ -78,7 +75,7 @@ theorem radX5_monomialDeriv_t2sq :
     cisZero (csub (cmonomialDeriv radX5DtExp radX5T2sq) radX5TwoT2sq) = true := by native_decide
 
 /-- The `RadX5[t]`-polynomial `y·t = [0, y]` (`y = √(x⁵−x−1)`, `t = eˣ`). -/
-def radX5GenT : DensePoly RadX5 := [CCommRing.zero, radX5Gen]
+def radX5GenT : DensePoly RadX5 := [CCommRing.zero, RadExt.gen]
 
 /-- The `RadX5[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected mixed `D(y·t)`. -/
 def radX5GenTDeriv : DensePoly RadX5 :=

@@ -133,9 +133,6 @@ def cubeRadicand : CFrac ℚ := CFrac.ofPoly [1, 0, 1]
 /-- The cube-root field `ℚ(x)[∛(x²+1)] = RadExtN (CFrac ℚ) 3 (x²+1)`. -/
 abbrev RadX3root : Type := RadExtN (CFrac ℚ) 3 cubeRadicand
 
-/-- The cube-root generator `y = ∛(x²+1)` as an element of `RadX3root` (through `RadExtN.gen`). -/
-def cubeGen : RadX3root := RadExtN.gen
-
 /-- The diagonal multiplier `ℓ = f'/(3f) = 2x/(3(x²+1)) ∈ ℚ(x)` for `D(y) = ℓ·y`, `y = ∛(x²+1)`. -/
 def cubeLogDer : CFrac ℚ := logDerRadicand 3 cubeRadicand
 
@@ -206,13 +203,14 @@ Over `RadX3root = ℚ(x)[∛(x²+1)]`, through the typeclass projections: `y·y�
 
 /-- `y·y·y = f` in `RadX3root` through `CCommRing.mul`: the cube of `y = ∛(x²+1)` folds `y³ → f = x²+1`. -/
 theorem cube_gen_cubed_eq_radicand :
-    CCommRing.isZero (CField.sub (CCommRing.mul (CCommRing.mul cubeGen cubeGen) cubeGen)
+    CCommRing.isZero (CField.sub
+      (CCommRing.mul (CCommRing.mul (RadExtN.gen : RadX3root) RadExtN.gen) RadExtN.gen)
       (⟨[cubeRadicand]⟩ : RadX3root)) = true := by native_decide
 
 /-- `D(y) = (f'/(3f))·y` in `RadX3root` through `CDiffField.cderiv`: sends `y = ∛(x²+1)` to `ℓ·y`,
 `ℓ = 2x/(3(x²+1))`. -/
 theorem cube_cderiv_gen_eq :
-    CCommRing.isZero (CField.sub (CDiffField.cderiv cubeGen)
+    CCommRing.isZero (CField.sub (CDiffField.cderiv (RadExtN.gen : RadX3root))
       (⟨[CCommRing.zero, cubeLogDer]⟩ : RadX3root)) = true := by native_decide
 
 /-- `u · u⁻¹ = 1` in `RadX3root` through `CCommRing.mul`/`CField.inv`: for `u = x + y`, the inverse
@@ -275,7 +273,7 @@ theorem cube_radLogDerivN_mul_eq_deriv :
 def cubeDtExp : DensePoly RadX3root := [CCommRing.zero, CCommRing.one]
 
 /-- The `RadX3root[t]`-polynomial `y·t = [0, y]` (cube-root generator `y = ∛(x²+1)` times `t = eˣ`). -/
-def cubeGenT : DensePoly RadX3root := [CCommRing.zero, cubeGen]
+def cubeGenT : DensePoly RadX3root := [CCommRing.zero, RadExtN.gen]
 
 /-- The `RadX3root[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected `D(y·t)`
 (`ℓ = f'/(3f) = 2x/(3(x²+1))`): `ℓ·y` the cube-root part `D(y)`, `y` the monomial part `y·Dt = y·t`. -/
