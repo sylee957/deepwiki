@@ -15,17 +15,13 @@ namespace DeepWiki.SymbolicIntegration.Compute
 theorem toBPoly_map_cdiv_exact (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (CPolyEuclidean.mod a c) = 0) :
     Polynomial.C (toPoly c) * DensePoly.toPoly (p.map (fun a => CPolyEuclidean.div a c)) = DensePoly.toPoly p := by
-  apply GBPolyCore.toPolyG_map_cdivWf_exact p c hc
+  apply GBPolyCore.toPoly_map_div_exact p c hc
   intro a ha
-  have hdiv : toPoly a = toPoly (CPolyEuclidean.div a c) * toPoly c +
-      toPoly (CPolyEuclidean.mod a c) := by
-    simpa only [CPolyEuclidean.div_dense_eq, CPolyEuclidean.mod_dense_eq] using
-      DensePoly.toPolyG_cmodWf a c hc
-  have hrem' : DensePoly.toPoly (CPolyEuclidean.mod a c) = 0 := by
-    exact hrem a ha
-  rw [hrem', add_zero] at hdiv
-  refine ⟨DensePoly.toPoly (CPolyEuclidean.div a c), ?_⟩
-  simpa only [mul_comm] using hdiv
+  have hcne : toPoly c ≠ 0 := fun h => hc ((DensePoly.cnormG_eq_nil_iff c).mpr h)
+  have hdvd := CPolyEuclidean.toPoly_dvd_of_mod_eq_zero a c
+    (by simpa only [toPoly_list_eq] using hcne)
+    (by simpa only [toPoly_list_eq] using hrem a ha)
+  simpa only [toPoly_list_eq] using hdvd
 
 /-- `C(toPoly c) · DensePoly.toPoly (bdivC p c) = DensePoly.toPoly p` when every `x`-coefficient of `p` divides
 exactly by `c`: `bdivC` is exact scalar `ℚ[t]`-division. -/

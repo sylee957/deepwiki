@@ -582,19 +582,24 @@ theorem gbcontentCore_gbnormCore (cgcdB : DensePoly β → DensePoly β → Dens
     gbcontentCore cgcdB (gbnormCore p) = gbcontentCore cgcdB p := by
   rw [gbcontentCore, gbcontentCore, gbnormCore_idemp]
 
-/-- If the content `g` divides every `t`-coefficient of `p` exactly, then `C(toPoly g) · DensePoly.toPoly
-(p.map (cdivWf · g)) = DensePoly.toPoly p`. -/
-theorem toPolyG_map_cdivWf_exact (p : GBPolyCore β) (g : DensePoly β)
+/-- If `g` divides every `t`-coefficient of `p`, selected exact division reconstructs `p`. -/
+theorem toPoly_map_div_exact (p : GBPolyCore β) (g : DensePoly β)
     (hg : DensePoly.cnorm g ≠ [])
     (hdvd : ∀ a ∈ p, DensePoly.toPoly g ∣ DensePoly.toPoly a) :
-    Polynomial.C (DensePoly.toPoly g) * DensePoly.toPoly (p.map (fun a => DensePoly.cdivWf a g))
+    Polynomial.C (DensePoly.toPoly g) *
+        DensePoly.toPoly (p.map (fun a => CPolyEuclidean.div a g))
       = DensePoly.toPoly p := by
+  have hgne : DensePoly.toPoly g ≠ 0 := fun h => hg ((cnormG_eq_nil_iff g).mpr h)
   induction p with
   | nil => simp
   | cons a as ih =>
     have has := ih (fun b hb => hdvd b (by simp [hb]))
-    have ha : DensePoly.toPoly a = DensePoly.toPoly (DensePoly.cdivWf a g) * DensePoly.toPoly g :=
-      (toPolyG_cdivWf_exact a g hg (hdvd a (by simp))).symm
+    have ha : DensePoly.toPoly a =
+        DensePoly.toPoly (CPolyEuclidean.div a g) * DensePoly.toPoly g := by
+      have hexact := LawfulCPolyEuclidean.div_exact a g
+        (by simpa only [toPoly_list_eq] using hgne)
+        (by simpa only [toPoly_list_eq] using hdvd a (by simp))
+      simpa only [toPoly_list_eq, mul_comm] using hexact
     rw [List.map_cons, DensePoly.toPolyG_cons, DensePoly.toPolyG_cons]
     simp only [DensePoly.toR_densePoly]
     rw [ha, map_mul]
@@ -619,9 +624,9 @@ theorem toPolyG_gbprimitivePartCore_exact (fuel : ℕ)
   rw [gbprimitivePartCore]
   simp only [gbcontentCore_gbnormCore, hg, Bool.false_eq_true, if_false]
   rw [toPolyG_gbnormCore]
-  have hexact := toPolyG_map_cdivWf_exact (gbnormCore p)
+  have hexact := toPoly_map_div_exact (gbnormCore p)
     (gbcontentCore cgcdB p) hgcn hdvd
-  simpa only [CPolyEuclidean.div_dense_eq, toPolyG_gbnormCore] using hexact
+  simpa only [toPolyG_gbnormCore] using hexact
 
 omit [CFieldDomain β] in
 /-- Clause (iii): under the content-nonzero and content-divides-each-coefficient hypotheses, `Associated
