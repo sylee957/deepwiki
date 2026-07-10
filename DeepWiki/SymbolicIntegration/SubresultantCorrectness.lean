@@ -28,7 +28,7 @@ theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R c : D
     φ (toPoly (credR R c)) = φ (toPoly c) := by
   have hdiv : toPoly c = toPoly (DensePoly.cdivWf c R) * toPoly R
       + toPoly (DensePoly.cmodWf c R) := by
-    simpa only [toPoly_eq_dense] using DensePoly.toPolyG_cmodWf c R hR
+    exact DensePoly.toPolyG_cmodWf c R hR
   rw [credR, hdiv, map_add, map_mul, hφR, mul_zero, zero_add]
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
@@ -62,15 +62,15 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R
   have hbez : toPoly (DensePoly.cgcdWf c R).2.1 * toPoly c
       + toPoly (DensePoly.cgcdWf c R).2.2 * toPoly R
       = toPoly (DensePoly.cgcdWf c R).1 := by
-    simpa only [CFieldSpec.toK_rat, toPoly_eq_dense] using DensePoly.toPolyG_cgcdWf c R
+    simpa only [CFieldSpec.toK_rat] using DensePoly.toPolyG_cgcdWf c R
   -- clead g = u (leading coeff of the constant C u)
   have hlead : clead (DensePoly.cgcdWf c R).1 = u := by
-    rw [clead_eq_leadingCoeff, hg, Polynomial.leadingCoeff_C]
+    change CRingSpec.toR (clead (DensePoly.cgcdWf c R).1) = u
+    rw [DensePoly.toR_cleadG_eq_leadingCoeff, hg, Polynomial.leadingCoeff_C]
   -- φ image of the inverse: drop the credR, expand the cscale
   rw [cinvMod]
   -- cinvMod R c = credR R (cscale (clead g)⁻¹ s), with s from `cgcdWf c R`.
-  rw [map_toPoly_credR φ R _ hR hφR, toPoly_eq_dense,
-    DensePoly.toPolyG_cscaleG, ← toPoly_eq_dense, toR_eq_toK, CFieldSpec.toK_rat,
+  rw [map_toPoly_credR φ R _ hR hφR, DensePoly.toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_rat,
     map_mul, hlead]
   -- now: φ (C u⁻¹) * φ (toPoly s) * φ (toPoly c) = 1
   -- from Bézout image: φ(toPoly s)·φ(toPoly c) = φ (C u)
@@ -96,7 +96,6 @@ theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] 
       change Polynomial.C (φ (toPoly (credR R (cmul a inv))))
           = Polynomial.C (φ (toPoly inv)) * Polynomial.C (φ (toPoly a))
       rw [map_toPoly_credR φ R _ hR hφR]
-      simp only [toPoly_eq_dense]
       rw [DensePoly.toPolyG_cmulG, map_mul, Polynomial.C_mul, mul_comm]
     · rw [Polynomial.coe_mapRingHom (f := φ), Polynomial.map_X]; ring
 
@@ -558,7 +557,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
         + (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree
       ≤ (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree)
     (hCne : GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2)) ≠ 0)
-    -- bprimitivePartX content-exactness on the degree-j element
+    -- GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd content-exactness on the degree-j element
     (hprim : IsPrimitivePartXInput
       (bsubresultantGcd fuel
         (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree

@@ -1,11 +1,11 @@
 import DeepWiki.Algebra.ListSums
-import DeepWiki.SymbolicIntegration.Compute.RationalFunction.Operations
+import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 
 /-! # Computable rational functions ℚ(x)
 Completes `QFun = DensePoly ℚ × DensePoly ℚ` into a computable field ℚ(x): the field operations, the
-lowest-terms reduction `qnorm`, the `d/dx` derivation `QFun.qderiv`, and decidable equality `QFun.qeq`, each
-proven through the field homomorphism `toQFun : QFun → RatFunc ℚ` to realize its `RatFunc ℚ`
-counterpart. -/
+`d/dx` derivation `QFun.qderiv`, and decidable equality `QFun.qeq`, each proven through the field
+homomorphism `toQFun : QFun → RatFunc ℚ` to realize its `RatFunc ℚ` counterpart. -/
 
 open Polynomial
 
@@ -25,14 +25,14 @@ theorem am_cdivWf_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hrem : toPoly (DensePoly.cmodWf p q) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly q)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf p q)) := by
-  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
   have hqm : algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) ≠ 0 := am_toPoly_ne_zero hq0
   have hrem' : DensePoly.toPoly (DensePoly.cmodWf p q) = 0 := by
-    simpa only [toPoly_eq_dense] using hrem
+    exact hrem
   have hdiv' := DensePoly.toPolyG_cmodWf p q hq
   rw [hrem', add_zero] at hdiv'
   have hdiv : toPoly p = toPoly (DensePoly.cdivWf p q) * toPoly q := by
-    simpa only [toPoly_eq_dense] using hdiv'
+    exact hdiv'
   rw [hdiv, map_mul, mul_div_assoc,
     div_self hqm, mul_one]
 
@@ -43,35 +43,35 @@ theorem am_eq_cdivWf_mul_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ 
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf p q))
         * algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) := by
   have hrem' : DensePoly.toPoly (DensePoly.cmodWf p q) = 0 := by
-    simpa only [toPoly_eq_dense] using hrem
+    exact hrem
   have hdiv' := DensePoly.toPolyG_cmodWf p q hq
   rw [hrem', add_zero] at hdiv'
   have hdiv : toPoly p = toPoly (DensePoly.cdivWf p q) * toPoly q := by
-    simpa only [toPoly_eq_dense] using hdiv'
+    exact hdiv'
   rw [← map_mul, ← hdiv]
 
 /-- `cisZero p = true ↔ toPoly p = 0`: the `DensePoly ℚ` zero test agrees with vanishing in `ℚ[X]`. -/
 theorem cisZero_iff_toPoly_eq_zero (p : DensePoly ℚ) : cisZero p = true ↔ toPoly p = 0 := by
-  simpa [cisZero] using cnorm_eq_nil_iff p
+  simpa [cisZero] using DensePoly.cnormG_eq_nil_iff p
 
 /-! ### Field-homomorphism lemmas
 Each computable operation realizes the corresponding `RatFunc ℚ` field operation through `toQFun`. -/
 
 /-- `toQFun QFun.qone = 1` in `RatFunc ℚ`. -/
 theorem toQFun_qone : toQFun QFun.qone = 1 := by
-  simp only [toQFun, QFun.qone, toPoly_eq_dense, DensePoly.toPolyG_one_singleton,
+  simp only [toQFun, QFun.qone, DensePoly.toPolyG_one_singleton,
     map_one, div_one]
 
 /-- `toQFun (QFun.qneg x) = -toQFun x` in `RatFunc ℚ`. -/
 theorem toQFun_qneg (x : QFun ℚ) : toQFun (QFun.qneg x) = -toQFun x := by
   obtain ⟨a, b⟩ := x
-  simp only [toQFun, QFun.qneg, toPoly_eq_dense, DensePoly.toPolyG_cnegG, map_neg, neg_div]
+  simp only [toQFun, QFun.qneg, DensePoly.toPolyG_cnegG, map_neg, neg_div]
 
 /-- `toQFun (QFun.qmul x y) = toQFun x * toQFun y` in `RatFunc ℚ`. -/
 theorem toQFun_qmul (x y : QFun ℚ) : toQFun (QFun.qmul x y) = toQFun x * toQFun y := by
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
-  simp only [toQFun, QFun.qmul, toPoly_eq_dense, DensePoly.toPolyG_cmulG, map_mul]
+  simp only [toQFun, QFun.qmul, DensePoly.toPolyG_cmulG, map_mul]
   rw [div_mul_div_comm]
 
 /-- `toQFun (QFun.qsub x y) = toQFun x - toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
@@ -117,9 +117,8 @@ theorem toQFun_qderiv (x : QFun ℚ) (hb : toPoly x.2 ≠ 0) : toQFun (QFun.qder
       = (am (toPoly b) * am (derivative (toPoly a))
           - am (toPoly a) * am (derivative (toPoly b))) / (am (toPoly b) ^ 2) := by
     rw [deriv_div, hda, hdb]
-  simp only [toPoly_eq_dense] at hderiv
   -- compute `toQFun (QFun.qderiv (a,b))`: numerator `cderiv a · b − a · cderiv b`, denom `b · b`.
-  simp only [toQFun, QFun.qderiv, toPoly_eq_dense, DensePoly.toPolyG_csubG,
+  simp only [toQFun, QFun.qderiv, DensePoly.toPolyG_csubG,
     DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, map_sub, map_mul]
   rw [hderiv, pow_two]
   ring
@@ -154,11 +153,10 @@ theorem qeq_iff (x y : QFun ℚ) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0)
   have hbm : am (toPoly b) ≠ 0 := am_toPoly_ne_zero hb
   have hdm : am (toPoly d) ≠ 0 := am_toPoly_ne_zero hd
   -- LHS: the cross-multiplication zero test in `ℚ[X]`.
-  rw [QFun.qeq, cisZero_iff_toPoly_eq_zero, toPoly_eq_dense, DensePoly.toPolyG_csubG,
+  rw [QFun.qeq, cisZero_iff_toPoly_eq_zero, DensePoly.toPolyG_csubG,
     DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, sub_eq_zero]
   -- RHS: the field equality, cleared to the cross-multiplication.
   rw [toQFun, toQFun, div_eq_div_iff hbm hdm]
-  simp only [toPoly_eq_dense] at hbm hdm ⊢
   -- bridge through `am` injectivity (`map_mul` + injectivity).
   rw [← map_mul, ← map_mul]
   exact ⟨fun h => by rw [h], fun h => RatFunc.algebraMap_injective ℚ h⟩
@@ -172,7 +170,7 @@ theorem am_C_ne_zero {s : ℚ} (hs : s ≠ 0) :
 `toQFun (cscale s a, cscale s b) = toQFun (a, b)` for `s ≠ 0`. -/
 theorem toQFun_cscale_cscale (s : ℚ) (hs : s ≠ 0) (a b : DensePoly ℚ) :
     toQFun (cscale s a, cscale s b) = toQFun (a, b) := by
-  simp only [toQFun, toPoly_eq_dense, DensePoly.toPolyG_cscaleG, toR_eq_toK,
+  simp only [toQFun, DensePoly.toPolyG_cscaleG, toR_eq_toK,
     CFieldSpec.toK_rat, map_mul]
   rw [mul_div_mul_left _ _ (am_C_ne_zero hs)]
 
@@ -182,45 +180,22 @@ theorem toQFun_cdivWf_cdivWf (a b q : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hrb : toPoly (DensePoly.cmodWf b q) = 0) :
     toQFun (DensePoly.cdivWf a q, DensePoly.cdivWf b q) = toQFun (a, b) := by
   set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
-  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
   have hqm : am (toPoly q) ≠ 0 := am_toPoly_ne_zero hq0
   -- exact divisions: `toPoly a = toPoly (cdiv a q)·toPoly q`, same for `b`.
   have hra' : DensePoly.toPoly (DensePoly.cmodWf a q) = 0 := by
-    simpa only [toPoly_eq_dense] using hra
+    exact hra
   have hrb' : DensePoly.toPoly (DensePoly.cmodWf b q) = 0 := by
-    simpa only [toPoly_eq_dense] using hrb
+    exact hrb
   have ha' := DensePoly.toPolyG_cmodWf a q hq
   have hbe' := DensePoly.toPolyG_cmodWf b q hq
   rw [hra', add_zero] at ha'
   rw [hrb', add_zero] at hbe'
   have ha : toPoly a = toPoly (DensePoly.cdivWf a q) * toPoly q := by
-    simpa only [toPoly_eq_dense] using ha'
+    exact ha'
   have hbe : toPoly b = toPoly (DensePoly.cdivWf b q) * toPoly q := by
-    simpa only [toPoly_eq_dense] using hbe'
+    exact hbe'
   simp only [toQFun]
   rw [ha, hbe, map_mul, map_mul, mul_div_mul_right _ _ hqm]
-
-/-- `qnorm` preserves the value: `toQFun (qnorm x) = toQFun x` in `RatFunc ℚ`. -/
-theorem toQFun_qnorm (x : QFun ℚ) (hb : toPoly x.2 ≠ 0)
-    (hq : cnorm (DensePoly.cgcdWf x.1 x.2).1 ≠ [])
-    (hra : toPoly (DensePoly.cmodWf x.1 (DensePoly.cgcdWf x.1 x.2).1) = 0)
-    (hrb : toPoly (DensePoly.cmodWf x.2 (DensePoly.cgcdWf x.1 x.2).1) = 0)
-    (hbq : cnorm (DensePoly.cdivWf x.2 (DensePoly.cgcdWf x.1 x.2).1) ≠ []) :
-    toQFun (qnorm x) = toQFun x := by
-  obtain ⟨a, b⟩ := x
-  simp only at hb hq hra hrb hbq
-  rw [qnorm]
-  by_cases ha : cisZero a = true
-  · -- numerator zero: `qnorm = QFun.qzero`, and `toQFun (0/b) = 0 = toQFun QFun.qzero`.
-    have ha0 : toPoly a = 0 := (cisZero_iff_toPoly_eq_zero a).mp ha
-    simp only [ha, if_true]
-    rw [toQFun_qzero, toQFun, ha0, map_zero, zero_div]
-  · -- general case: divide by gcd, then scale by `(clead (b/q))⁻¹`.
-    rw [if_neg ha]
-    have hbq0 : toPoly (DensePoly.cdivWf b (DensePoly.cgcdWf a b).1) ≠ 0 :=
-      fun h => hbq ((cnorm_eq_nil_iff _).mpr h)
-    have hs : (clead (DensePoly.cdivWf b (DensePoly.cgcdWf a b).1))⁻¹ ≠ 0 :=
-      inv_ne_zero (clead_ne_zero hbq)
-    rw [toQFun_cscale_cscale _ hs, toQFun_cdivWf_cdivWf a b _ hq hra hrb]
 
 end DeepWiki.SymbolicIntegration.Compute

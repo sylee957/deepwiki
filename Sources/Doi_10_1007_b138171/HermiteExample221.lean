@@ -118,12 +118,12 @@ example :
                   (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
               (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly [0, 2, 0, 1]) := by
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly ([0, 2, 0, 1] : DensePoly ℚ)) := by
   have hD : toPoly cD221 ≠ 0 := fun h => by
-    have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
+    have : cnorm cD221 = [] := (DensePoly.cnormG_eq_nil_iff cD221).mpr h
     revert this; decide
-  have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
+  have hgden : toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 := fun h => by
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (DensePoly.cnormG_eq_nil_iff _).mpr h
     revert this; decide
   have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
   have hexact : toPoly (DensePoly.cmodWf
@@ -131,7 +131,7 @@ example :
           (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
             (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
       (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
-    rw [← cnorm_eq_nil_iff, hermite_ex221_exact_division]
+    rw [← DensePoly.cnormG_eq_nil_iff, hermite_ex221_exact_division]
   exact hermiteReduce_residual_correct cA221 cD221 [8, 12, 20, 12, 8, 3]
     [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hexact
 
@@ -165,12 +165,12 @@ example :
                   (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
               (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly [0, 2, 0, 1]) := by
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly ([0, 2, 0, 1] : DensePoly ℚ)) := by
   have hD : toPoly cD221 ≠ 0 := fun h => by
-    have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
+    have : cnorm cD221 = [] := (DensePoly.cnormG_eq_nil_iff cD221).mpr h
     revert this; decide
-  have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
+  have hgden : toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 := fun h => by
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (DensePoly.cnormG_eq_nil_iff _).mpr h
     revert this; decide
   have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
   exact hermiteReduce_residual_correct_uncond cA221 cD221 [8, 12, 20, 12, 8, 3]
@@ -183,16 +183,16 @@ which for Example 2.2.1 follows from the generic fuel-free Yun radical-divides t
 the literal radical `[0,2,0,1]` by the computed fold equality. -/
 
 /-- **Example 2.2.1: the radical `[0,2,0,1]` divides `D`** by generic Yun correctness. -/
-theorem hermite_ex221_Dstar_dvd : toPoly [0, 2, 0, 1] ∣ toPoly cD221 := by
+theorem hermite_ex221_Dstar_dvd : toPoly ([0, 2, 0, 1] : DensePoly ℚ) ∣ toPoly cD221 := by
   have hfold : (DensePoly.cSqfreeYunFF cD221).foldl (fun acc vi => cmul acc vi) [1]
       = [0, 2, 0, 1] := by native_decide
   have hD : toPoly cD221 ≠ 0 := by
     intro h
-    have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
+    have : cnorm cD221 = [] := (DensePoly.cnormG_eq_nil_iff cD221).mpr h
     revert this
     decide
   have hdiv := prod_map_cSqfreeYunFFG_dvd gcdFFCorrect_Q cD221
-    (by simpa only [toPoly_eq_dense] using hD)
+    (by exact hD)
   have hread := toPolyG_foldl_cmulG_plainList ([1] : DensePoly ℚ)
     (DensePoly.cSqfreeYunFF cD221)
   have hfoldDiv :
@@ -201,7 +201,7 @@ theorem hermite_ex221_Dstar_dvd : toPoly [0, 2, 0, 1] ∣ toPoly cD221 := by
     rw [hread]
     simpa [DensePoly.toPolyG_cons] using hdiv
   rw [hfold] at hfoldDiv
-  simpa only [toPoly_eq_dense] using hfoldDiv
+  exact hfoldDiv
 
 open scoped Differential in
 /-- **Example 2.2.1: the unconditional Hermite reduction via the radical wrapper** (§2.2, p.41):
@@ -217,12 +217,12 @@ example :
                   (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
                     (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
               (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly [0, 2, 0, 1]) := by
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly ([0, 2, 0, 1] : DensePoly ℚ)) := by
   have hD : toPoly cD221 ≠ 0 := fun h => by
-    have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
+    have : cnorm cD221 = [] := (DensePoly.cnormG_eq_nil_iff cD221).mpr h
     revert this; decide
-  have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
-    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
+  have hgden : toPoly ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) ≠ 0 := fun h => by
+    have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (DensePoly.cnormG_eq_nil_iff _).mpr h
     revert this; decide
   have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
   have hWgd : toPoly (DensePoly.cmodWf
@@ -231,7 +231,7 @@ example :
           (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1])))))
       (cmul (DensePoly.cdivWf cD221 [0, 2, 0, 1])
         (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
-    rw [← cnorm_eq_nil_iff]; native_decide
+    rw [← DensePoly.cnormG_eq_nil_iff]; native_decide
   exact hermiteReduce_residual_correct_of_radical cA221 cD221 [8, 12, 20, 12, 8, 3]
     [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩
     hermite_ex221_Dstar_dvd hWgd

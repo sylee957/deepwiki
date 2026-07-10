@@ -73,7 +73,7 @@ def cR241 : DensePoly ℚ := [1, 0, 4]
 
 -- **Example 2.4.1, the degree-3 subresultant** `S₃`, `ℚ[t]`-primitive in `x`: the LRT log argument up
 -- to a `ℚ[t]` cofactor. Its raw (pre-primitive) form `[[-16,0,792],[0,32,0,-2440],[7,0,-400],
--- [0,-14,0,800]]` satisfies `S₃ ≡ −214t·(x³+2tx²−3x−4t) mod 4t²+1`; `bprimitivePartX` strips a constant.
+-- [0,-14,0,800]]` satisfies `S₃ ≡ −214t·(x³+2tx²−3x−4t) mod 4t²+1`; `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd` strips a constant.
 #eval lrtSubresultantCompute 30 3 cA241 cD241
 
 -- **Example 2.4.1, the normalized LRT log argument** `S(t,x)` = `S₃` mod `4t²+1`, monic in `x`:
@@ -97,20 +97,23 @@ theorem lrtGcd_ex241 :
 
 open Polynomial in
 /-- **`toPoly cD241` is monic** (`D = x⁶−5x⁴+5x²+4` has leading coefficient 1). -/
-theorem monic_toPoly_cD241 : (toPoly cD241).Monic := by
-  rw [Monic, ← clead_eq_leadingCoeff]; decide
+theorem monic_toPoly_cD241 : (toPoly cD241 : ℚ[X]).Monic := by
+  rw [Monic, ← DensePoly.toK_cleadG_eq_leadingCoeff]
+  change clead cD241 = (1 : ℚ)
+  native_decide
 
 open Polynomial in
 /-- **`deg A < deg D` for Example 2.4.1** (`deg A = 4 < 6 = deg D`). -/
-theorem natDegree_cA241_lt_cD241 : (toPoly cA241).natDegree < (toPoly cD241).natDegree := by
-  rw [← cdeg_eq_natDegree, ← cdeg_eq_natDegree]; decide
+theorem natDegree_cA241_lt_cD241 :
+    (toPoly cA241 : ℚ[X]).natDegree < (toPoly cD241 : ℚ[X]).natDegree := by
+  rw [← DensePoly.cdegG_eq_natDegree, ← DensePoly.cdegG_eq_natDegree]; decide
 
 open Polynomial in
 /-- **The dense `DensePoly ℚ` `[45796,0,549552,0,2198208,0,2930944]` reads as `45796·(4t²+1)³`** in `ℚ[t]`. -/
 theorem toPoly_ex241_value :
     toPoly ([45796, 0, 549552, 0, 2198208, 0, 2930944] : DensePoly ℚ)
       = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
-  simp only [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil,
+  simp only [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil,
     toR_eq_toK, CFieldSpec.toK_rat, map_ofNat, map_one, map_zero]
   ring
 
@@ -124,11 +127,11 @@ theorem rtResultant_ex241_eq :
     rtResultant (toPoly cA241) (toPoly cD241)
       = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
   have hresult := toPolyG_cResidueResultantTower_one_eq_rtResultant cA241 cD241
-    (by simpa only [toPoly_eq_dense] using monic_toPoly_cD241)
-    (by simpa only [toPoly_eq_dense] using natDegree_cA241_lt_cD241)
+    (by exact monic_toPoly_cD241)
+    (by exact natDegree_cA241_lt_cD241)
   rw [← show toPoly (DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA241 cD241)
       = rtResultant (toPoly cA241) (toPoly cD241) from by
-        simpa only [toPoly_eq_dense] using hresult,
+        exact hresult,
     rtResultant_ex241, toPoly_ex241_value]
 
 /-! ### Closing Example 2.4.1: the residue ring `ℚ[t]/(4t²+1)` and `IsDomain`
@@ -140,29 +143,28 @@ The concrete agreement `lrtGcdCompute_isSimilar_lrtSubresultant_concrete` needs 
 
 /-- **`toPoly cR241 = 1 + 4·X²`**: the Rothstein–Trager modulus `R = 4t²+1` read into `ℚ[X]`
 (here `X` is the `t`-indeterminate). -/
-theorem toPoly_cR241 : toPoly cR241 = 1 + 4 * X ^ 2 := by
+theorem toPoly_cR241 : (toPoly cR241 : ℚ[X]) = 1 + 4 * X ^ 2 := by
   show toPoly [(1 : ℚ), 0, 4] = _
-  simp only [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil,
+  simp only [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil,
     toR_eq_toK, CFieldSpec.toK_rat, map_zero, map_one, mul_zero, add_zero, map_ofNat]
   ring
 
 /-- **`toPoly cR241` has degree 2**: `(toPoly cR241).natDegree = 2`. -/
-theorem natDegree_toPoly_cR241 : (toPoly cR241).natDegree = 2 := by
-  rw [toPoly_cR241]
-  compute_degree!
+theorem natDegree_toPoly_cR241 : (toPoly cR241 : ℚ[X]).natDegree = 2 := by
+  rw [← DensePoly.cdegG_eq_natDegree]
+  native_decide
 
 /-- **`4X²+1` has no rational root**: `4x²+1 ≥ 1 > 0` for every `x : ℚ`, so it is never zero. -/
-theorem toPoly_cR241_not_isRoot (x : ℚ) : ¬ (toPoly cR241).IsRoot x := by
+theorem toPoly_cR241_not_isRoot (x : ℚ) : ¬ (toPoly cR241 : ℚ[X]).IsRoot x := by
   rw [Polynomial.IsRoot.def, toPoly_cR241]
   simp only [Polynomial.eval_add, Polynomial.eval_one, Polynomial.eval_mul, Polynomial.eval_ofNat,
     Polynomial.eval_pow, Polynomial.eval_X]
-  have : (0 : ℚ) ≤ 4 * x ^ 2 := by positivity
-  intro h
-  linarith
+  change ¬ (1 + 4 * x ^ 2 : ℚ) = 0
+  nlinarith [sq_nonneg x]
 
 /-- **`4X²+1` (i.e. `toPoly cR241`) is irreducible over `ℚ`**: degree 2 with no rational root
 (`irreducible_of_degree_le_three_of_not_isRoot`). -/
-theorem irreducible_toPoly_cR241 : Irreducible (toPoly cR241) := by
+theorem irreducible_toPoly_cR241 : Irreducible (toPoly cR241 : ℚ[X]) := by
   apply Polynomial.irreducible_of_degree_le_three_of_not_isRoot
   · rw [natDegree_toPoly_cR241]; decide
   · exact toPoly_cR241_not_isRoot
@@ -210,9 +212,9 @@ theorem natDegree_toBPoly_chainG3_ex241 :
   show GBPolyCore.gbdegCore (goState 30 (gP, gQ, [-1], GBPolyCore.gbdegCore gP - GBPolyCore.gbdegCore gQ) 3).1 = 3
   native_decide
 
-/-- `(toPoly cD241).natDegree = 6`: `D = x⁶−5x⁴+5x²+4` has degree 6 (via `cdeg_eq_natDegree`). -/
+/-- `(toPoly cD241).natDegree = 6`: `D = x⁶−5x⁴+5x²+4` has degree 6 (via `DensePoly.cdegG_eq_natDegree`). -/
 theorem natDegree_toPoly_cD241 : (toPoly cD241).natDegree = 6 := by
-  rw [← cdeg_eq_natDegree]; native_decide
+  rw [← DensePoly.cdegG_eq_natDegree]; native_decide
 
 /-- **`hd0` for Ex 2.4.1**: `(GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree` (both 6). -/
 theorem hd0_ex241 :
@@ -242,20 +244,20 @@ theorem hβcn_ex241 :
     · simp only [chainBt]; native_decide
 
 /-- **`hβ0` for Ex 2.4.1**: the β-divisors `chainBt 0`, `chainBt 1` read to nonzero `ℚ[t]` polynomials
-(`toPoly ≠ 0`), via `cnorm_eq_nil_iff`. -/
+(`toPoly ≠ 0`), via `DensePoly.cnormG_eq_nil_iff`. -/
 theorem hβ0_ex241 :
     ∀ l ≤ 1, toPoly (chainBt 30 gP gQ l) ≠ 0 := by
   intro l hl h
-  exact hβcn_ex241 l hl ((cnorm_eq_nil_iff _).mpr h)
+  exact hβcn_ex241 l hl ((DensePoly.cnormG_eq_nil_iff _).mpr h)
 
 /-- **`hdiv` for Ex 2.4.1** (Collins β-divisibility, concrete): `chainBt l` divides every `x`-coefficient
 of the pseudo-remainder `prem (chain l) (chain (l+1))` exactly (`cmod` reads to 0), via
-`cnorm_eq_nil_iff`. The decidable per-coefficient `cmod`-zero certificate, `native_decide`'d. -/
+`DensePoly.cnormG_eq_nil_iff`. The decidable per-coefficient `cmod`-zero certificate, `native_decide`'d. -/
 theorem hdiv_ex241 :
     ∀ l ≤ 1, ∀ a ∈ GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)),
       toPoly (DensePoly.cmodWf a (chainBt 30 gP gQ l)) = 0 := by
   intro l hl a ha
-  rw [← cnorm_eq_nil_iff]
+  rw [← DensePoly.cnormG_eq_nil_iff]
   revert a ha
   interval_cases l <;>
     · simp only [chainBt, chain]; native_decide
@@ -317,41 +319,41 @@ theorem hfilt_ex241 :
   toBPoly_bsubresultantGcd_eq_of_filter_singleton 30 gP gQ (chain 30 gP gQ) 1
     subresPRS_filter_singleton_ex241
 
-/-! ### `bprimitivePartX` content-exactness on the degree-3 element (Ex 2.4.1, `native_decide`)
+/-! ### `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd` content-exactness on the degree-3 element (Ex 2.4.1, `native_decide`)
 The raw degree-3 subresultant `bsubresultantGcd 30 3 gP gQ = S₃ = [[-16,0,792],[0,32,0,-2440],[7,0,-400],
-[0,-14,0,800]]` carries a `ℚ[t]`-content; `bprimitivePartX` strips it. The content `bcontentX` is a
+[0,-14,0,800]]` carries a `ℚ[t]`-content; `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd` strips it. The content `GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd` is a
 nonzero `ℚ[t]` polynomial dividing every `x`-coefficient exactly — all decidable `cisZero`/`cmod`-zero
 facts, `native_decide`'d. -/
 
 /-- **`hg` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant is nonzero
-(`¬ cisZero (bcontentX (bsubresultantGcd 30 3 gP gQ))`). -/
+(`¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30 3 gP gQ))`). -/
 theorem hg_ex241 :
-    ¬ cisZero (bcontentX (bsubresultantGcd 30
+    ¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
       (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) = true := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hgcn` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant has nonempty `cnorm`. -/
 theorem hgcn_ex241 :
-    cnorm (bcontentX (bsubresultantGcd 30
+    cnorm (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
       (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ [] := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hg0` for Ex 2.4.1**: the `ℚ[t]`-content reads to a nonzero `ℚ[t]` polynomial (`toPoly ≠ 0`), via
-`cnorm_eq_nil_iff`. -/
+`DensePoly.cnormG_eq_nil_iff`. -/
 theorem hg0_ex241 :
-    toPoly (bcontentX (bsubresultantGcd 30
+    toPoly (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
       (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ 0 := by
-  intro h; exact hgcn_ex241 ((cnorm_eq_nil_iff _).mpr h)
+  intro h; exact hgcn_ex241 ((DensePoly.cnormG_eq_nil_iff _).mpr h)
 
 /-- **`hrem` for Ex 2.4.1**: the `ℚ[t]`-content divides every `x`-coefficient of the degree-3 raw
-subresultant exactly (`cmod` reads to 0), via `cnorm_eq_nil_iff`. -/
+subresultant exactly (`cmod` reads to 0), via `DensePoly.cnormG_eq_nil_iff`. -/
 theorem hrem_ex241 :
     ∀ a ∈ GBPolyCore.gbnormCore (bsubresultantGcd 30
         (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ),
-      toPoly (DensePoly.cmodWf a (bcontentX (bsubresultantGcd 30
+      toPoly (DensePoly.cmodWf a (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
         (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ))) = 0 := by
   intro a ha
-  rw [← cnorm_eq_nil_iff]
+  rw [← DensePoly.cnormG_eq_nil_iff]
   revert a ha
   rw [natDegree_toBPoly_chainG3_ex241]
   native_decide
@@ -386,7 +388,7 @@ theorem hgu_ex241 :
       = Polynomial.C (1 : ℚ) := by
   rw [cgcdWf_blc_bredR_ex241]
   show toPoly [(1 : ℚ)] = _
-  simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
+  simp [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
 
 /-! ### The content nonzero `hc0` and quotient-degree bound `hQ`, derived from `chain_hsc`
 The two hypotheses of `_concrete` mentioning the `Classical.choose` witnesses `chainC`/`chainS` are *not*
@@ -446,7 +448,7 @@ theorem hc0_ex241 : ∀ l ≤ 1, toPoly (chainC 30 gP gQ l) ≠ 0 := by
   have hpremne : GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1))) ≠ 0 := by
     rw [hprem]
     have hβdense : DensePoly.toPoly (chainBt 30 gP gQ l) ≠ 0 := by
-      simpa only [toPoly_eq_dense] using hβne
+      exact hβne
     exact mul_ne_zero (Polynomial.C_ne_zero.mpr hβdense) hG2ne
   by_cases hSne : GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) = 0
   · rw [hSne, zero_mul, eq_comm, neg_eq_zero] at heq
@@ -532,7 +534,7 @@ theorem mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero :
   -- (GBPolyCore.toGBCoeffPoly [[0,-4],[-3],[0,2],[1]]).coeff 3 = toPoly [1] = 1, φ241 1 = 1 ≠ 0
   rw [show ([[0, -4], [-3], [0, 2], [1]] : GBPolyCore ℚ).getD 3 [] = [1] from rfl] at hcoeff
   rw [show toPoly ([1] : DensePoly ℚ) = 1 by
-    simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil], map_one] at hcoeff
+    simp [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil], map_one] at hcoeff
   exact one_ne_zero hcoeff
 
 /-! ### The ℚ[t]-similarity `lrtSubresultant ∼ lrtSubresultantCompute` for Ex 2.4.1 (all chain hyps discharged)
@@ -694,7 +696,7 @@ open scoped Classical in
 /-- **`cD241` is separable** (`x⁶−5x⁴+5x²+4` is squarefree): the computable extended gcd of `D` and
 `D'` is the constant `[4]` (`native_decide`), so the Bézout cofactors scaled by `1/4` witness
 `a·D + b·D' = 1` (`separable_def'`). -/
-theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241).Separable := by
+theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241 : ℚ[X]).Separable := by
   rw [separable_def']
   have hbez :
       Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).2.1
@@ -702,11 +704,11 @@ theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241).Separable := by
         + Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).2.2
           * Compute.toPoly (Compute.cderiv Compute.cD241)
       = Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1 := by
-    simpa only [Compute.toPoly_eq_dense] using
+    exact
       DensePoly.toPolyG_cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)
   have hderiv : Compute.toPoly (Compute.cderiv Compute.cD241) =
       derivative (Compute.toPoly Compute.cD241) := by
-    simpa only [Compute.toPoly_eq_dense] using
+    exact
       DensePoly.toPolyG_cderivG Compute.cD241
   rw [hderiv] at hbez
   have hg : Compute.toPoly (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1
@@ -714,7 +716,7 @@ theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241).Separable := by
     have : (DensePoly.cgcdWf Compute.cD241 (Compute.cderiv Compute.cD241)).1 = [4] := by
       native_decide
     rw [this]
-    simp [Compute.toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
+    simp [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
   rw [hg] at hbez
   refine ⟨C (4:ℚ)⁻¹ * Compute.toPoly (DensePoly.cgcdWf Compute.cD241
             (Compute.cderiv Compute.cD241)).2.1,
@@ -726,8 +728,13 @@ theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241).Separable := by
 /-- **`toPoly cR241 = 4t²+1` is separable** over `ℚ` (degree-2, distinct roots `±i/2`): it is
 irreducible over `ℚ` (`irreducible_toPoly_cR241`) and `ℚ` has characteristic zero
 (`Irreducible.separable`). -/
-theorem separable_toPoly_cR241 : (Compute.toPoly Compute.cR241).Separable :=
-  Compute.irreducible_toPoly_cR241.separable
+theorem separable_toPoly_cR241 : (Compute.toPoly Compute.cR241 : ℚ[X]).Separable :=
+  by
+    have h : Irreducible ((1 : ℚ[X]) + 4 * X ^ 2) := by
+      rw [← Compute.toPoly_cR241]
+      exact Compute.irreducible_toPoly_cR241
+    rw [Compute.toPoly_cR241]
+    exact h.separable
 
 /-! ### The multiplicity-3 nonvanishing of the LRT subresultant at the residue `α = i/2` -/
 
@@ -764,7 +771,7 @@ theorem rootMultiplicity_rtResultant_map_ex241 {L : Type*} [Field L] (τ : ℚ �
 open Compute in
 /-- **`(toPoly cD241).natDegree = 6`** (`D = x⁶−5x⁴+5x²+4`). -/
 theorem natDegree_toPoly_cD241 : (toPoly cD241).natDegree = 6 := by
-  rw [← cdeg_eq_natDegree]; decide
+  rw [← DensePoly.cdegG_eq_natDegree]; decide
 
 set_option maxHeartbeats 800000 in
 open Compute in

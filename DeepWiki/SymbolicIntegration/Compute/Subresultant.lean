@@ -12,19 +12,6 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-! ### `ℚ[t]`-content management (so the LRT gcd comes out clean) -/
-
-/-- `ℚ[t]`-content of a `GBPolyCore ℚ`: the `DensePoly ℚ`-gcd of all its `x`-coefficients. -/
-def bcontentX (p : GBPolyCore ℚ) : DensePoly ℚ :=
-  (GBPolyCore.gbnormCore p).foldl (fun g c => (DensePoly.cgcdWf g c).1) []
-
-/-- Strip the `ℚ[t]`-content in `x`: `bprimitivePartX p = p / content_x(p)`, the
-`ℚ[t]`-primitive part. -/
-def bprimitivePartX (p : GBPolyCore ℚ) : GBPolyCore ℚ :=
-  let p := GBPolyCore.gbnormCore p
-  let g := bcontentX p
-  if cisZero g then p else GBPolyCore.gbnormCore (p.map (fun c => DensePoly.cdivWf c g))
-
 /-! ### Reduction and inversion modulo a `ℚ[t]` factor `R(t)` (the residue ring `ℚ[t]/(R)`)
 The degree-`j` subresultant reduced mod `R` and made monic in `x` over `ℚ[t]/(R)` is the normalized
 log argument `S(t,x)`; the leading `x`-coefficient is a unit there, so monic normalization is exact
@@ -111,7 +98,8 @@ def bArgAmtD' (A D : DensePoly ℚ) : GBPolyCore ℚ :=
 /-- The raw degree-`j` subresultant `lrtSubresultantCompute fuel j A D = Sⱼ(D, A − t·D')`: the
 bivariate subresultant of `D` (lifted) and `A − t·D'` at `x`-degree `j`, `ℚ[t]`-primitive in `x`. -/
 def lrtSubresultantCompute (fuel : ℕ) (j : ℕ) (A D : DensePoly ℚ) : GBPolyCore ℚ :=
-  bprimitivePartX (bsubresultantGcd fuel j (liftCtoBPoly D) (bArgAmtD' A D))
+  GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd
+    (bsubresultantGcd fuel j (liftCtoBPoly D) (bArgAmtD' A D))
 
 /-- The computable log argument `lrtGcdCompute fuel j R A D = S(t,x)`: the degree-`j` subresultant
 reduced modulo `R(t)` and made monic in `x` over `ℚ[t]/(R)`, the `S(t,x)` inside the logarithms of

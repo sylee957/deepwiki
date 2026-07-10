@@ -18,10 +18,10 @@ private theorem toPoly_cdivWf_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q
     (hrem : toPoly (DensePoly.cmodWf p q) = 0) :
     toPoly p = toPoly (DensePoly.cdivWf p q) * toPoly q := by
   have hrem' : DensePoly.toPoly (DensePoly.cmodWf p q) = 0 := by
-    simpa only [toPoly_eq_dense] using hrem
+    exact hrem
   have h := DensePoly.toPolyG_cmodWf p q hq
   rw [hrem', add_zero] at h
-  simpa only [toPoly_eq_dense] using h
+  exact h
 
 /-- Local divisibility bridge from a vanishing well-founded remainder. -/
 private theorem toPoly_dvd_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
@@ -33,8 +33,8 @@ private theorem toPoly_dvd_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q �
 private theorem cmodWf_eq_zero_of_dvd (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hdvd : toPoly q ∣ toPoly p) : toPoly (DensePoly.cmodWf p q) = 0 := by
   have hdvd' : DensePoly.toPoly q ∣ DensePoly.toPoly p := by
-    simpa only [toPoly_eq_dense] using hdvd
-  simpa only [toPoly_eq_dense] using DensePoly.toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd'
+    exact hdvd
+  exact DensePoly.toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd'
 
 /-! ### The residual-recovery identity -/
 
@@ -97,12 +97,11 @@ theorem hermiteReduce_residual_correct (A D : DensePoly ℚ)
   set resNum := cmul (csub (cmul A (cmul gden gden))
       (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar with hresNum
   set resDen := cmul D (cmul gden gden) with hresDen
-  have hDstar0 : toPoly Dstar ≠ 0 := fun h => hDstar ((cnorm_eq_nil_iff Dstar).mpr h)
+  have hDstar0 : toPoly Dstar ≠ 0 := fun h => hDstar ((DensePoly.cnormG_eq_nil_iff Dstar).mpr h)
   have hresDenPoly0 : toPoly resDen ≠ 0 := by
-    simp only [toPoly_eq_dense] at hD hgden ⊢
     rw [hresDen, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
     exact mul_ne_zero hD (mul_ne_zero hgden hgden)
-  have hresDen0 : cnorm resDen ≠ [] := fun h => hresDenPoly0 ((cnorm_eq_nil_iff resDen).mp h)
+  have hresDen0 : cnorm resDen ≠ [] := fun h => hresDenPoly0 ((DensePoly.cnormG_eq_nil_iff resDen).mp h)
   have hdstar : am (toPoly Dstar) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hDstar0
   have htoQ : toQFun (gnum, gden) = am (toPoly gnum) / am (toPoly gden) := rfl
   have hresid := residual_numerator_ratFunc (toPoly A) (toPoly D) (toPoly gnum) (toPoly gden) hD hgden
@@ -111,11 +110,9 @@ theorem hermiteReduce_residual_correct (A D : DensePoly ℚ)
       = (toPoly A * (toPoly gden * toPoly gden)
           - toPoly D * (derivative (toPoly gnum) * toPoly gden
               - toPoly gnum * derivative (toPoly gden))) * toPoly Dstar := by
-    simp only [toPoly_eq_dense]
     rw [hresNum, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_csubG,
       DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, DensePoly.toPolyG_cderivG]
   have hresDenPoly : toPoly resDen = toPoly D * (toPoly gden * toPoly gden) := by
-    simp only [toPoly_eq_dense]
     rw [hresDen, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
   have hkey : am (toPoly (DensePoly.cdivWf resNum resDen)) / am (toPoly Dstar)
       = am (toPoly A * (toPoly gden * toPoly gden)
@@ -130,7 +127,7 @@ theorem hermiteReduce_residual_correct (A D : DensePoly ℚ)
 /-- `toQFun` is invariant under `cnorm` of both components. -/
 theorem toQFun_cnorm (gnum gden : DensePoly ℚ) :
     toQFun (cnorm gnum, cnorm gden) = toQFun (gnum, gden) := by
-  simp only [toQFun, toPoly_eq_dense, DensePoly.toPolyG_cnormG]
+  simp only [toQFun, DensePoly.toPolyG_cnormG]
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness with the `cnorm`-wrapped residual numerator. -/
@@ -148,8 +145,8 @@ theorem hermiteReduce_spec_cnorm (A D gnum gden Dstar : DensePoly ℚ)
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden)))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
-  simp only [toPoly_eq_dense, DensePoly.toPolyG_cnormG]
-  simpa only [toPoly_eq_dense] using
+  simp only [DensePoly.toPolyG_cnormG]
+  exact
     hermiteReduce_residual_correct A D gnum gden Dstar hden hexact
 
 open scoped Differential in
@@ -170,11 +167,10 @@ theorem hermiteReduce_residual_correct_of_dvd (A D gnum gden Dstar : DensePoly �
   have hD := hden.den_ne
   have hgden := hden.gden_ne
   have hresDenP : toPoly (cmul D (cmul gden gden)) ≠ 0 := by
-    simp only [toPoly_eq_dense] at hD hgden ⊢
     rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
     exact mul_ne_zero hD (mul_ne_zero hgden hgden)
   have hresDen : cnorm (cmul D (cmul gden gden)) ≠ [] :=
-    fun h => hresDenP ((cnorm_eq_nil_iff _).mp h)
+    fun h => hresDenP ((DensePoly.cnormG_eq_nil_iff _).mp h)
   exact hermiteReduce_residual_correct A D gnum gden Dstar hden
     (cmodWf_eq_zero_of_dvd _ _ hresDen hdvd)
 
@@ -204,21 +200,18 @@ theorem hermiteReduce_residual_correct_of_split (A D gnum gden Dstar : DensePoly
   have hgden := hden.gden_ne
   set resNum' := csub (cmul A (cmul gden gden))
     (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))) with hresNum'
-  have hDne : cnorm D ≠ [] := fun h => hD ((cnorm_eq_nil_iff D).mp h)
+  have hDne : cnorm D ≠ [] := fun h => hD ((DensePoly.cnormG_eq_nil_iff D).mp h)
   have hgden2 : toPoly (cmul gden gden) ≠ 0 := by
-    simp only [toPoly_eq_dense] at hgden ⊢
     rw [DensePoly.toPolyG_cmulG]
     exact mul_ne_zero hgden hgden
-  have hgden2ne : cnorm (cmul gden gden) ≠ [] := fun h => hgden2 ((cnorm_eq_nil_iff _).mp h)
+  have hgden2ne : cnorm (cmul gden gden) ≠ [] := fun h => hgden2 ((DensePoly.cnormG_eq_nil_iff _).mp h)
   have hDR : toPoly D ∣ toPoly resNum' := toPoly_dvd_of_cmodWf_zero resNum' D hDne hresD
   have hMeq : toPoly (DensePoly.cdivWf resNum' D) = toPoly resNum' / toPoly D := by
     rw [toPoly_cdivWf_of_cmodWf_zero resNum' D hDne hresD, mul_div_cancel_right₀ _ hD]
   have hg2dvd : toPoly (cmul gden gden) ∣ toPoly (cmul (DensePoly.cdivWf resNum' D) Dstar) :=
     toPoly_dvd_of_cmodWf_zero _ _ hgden2ne hg2
-  simp only [toPoly_eq_dense] at hMeq hg2dvd
   rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, hMeq] at hg2dvd
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
-    simp only [toPoly_eq_dense] at hD hDR ⊢
     rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
     exact DeepWiki.polynomial_dvd_cleared_identity_of_split hD hDR hg2dvd
   exact hermiteReduce_residual_correct_of_dvd A D gnum gden Dstar hden hdvd
@@ -250,20 +243,16 @@ theorem hermiteReduce_residual_correct_of_radical (A D gnum gden Dstar : DensePo
       cmodWf_eq_zero_of_dvd D Dstar hDstar hDstarD
     rw [toPoly_cdivWf_of_cmodWf_zero D Dstar hDstar hrem, mul_comm]
   have hWgdne : cnorm (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) ≠ [] := by
-    simp only [toPoly_eq_dense] at hD hgden hWeq
     intro h
-    have h0 : toPoly (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) = 0 := (cnorm_eq_nil_iff _).mp h
-    simp only [toPoly_eq_dense] at h0
+    have h0 : toPoly (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) = 0 := (DensePoly.cnormG_eq_nil_iff _).mp h
     rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG] at h0
     rcases mul_eq_zero.mp h0 with h1 | h2
     · rw [hWeq, h1, mul_zero] at hD; exact hD rfl
     · rcases mul_eq_zero.mp h2 with hh | hh <;> exact hgden hh
   have hWgddvd : toPoly (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden)) ∣ toPoly resNum' :=
     toPoly_dvd_of_cmodWf_zero _ _ hWgdne hWgd
-  simp only [toPoly_eq_dense] at hWgddvd
   rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG] at hWgddvd
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
-    simp only [toPoly_eq_dense] at hWeq hWgddvd ⊢
     rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG]
     exact DeepWiki.polynomial_dvd_cleared_identity_of_radical
       (W := toPoly (DensePoly.cdivWf D Dstar)) hWeq hWgddvd
@@ -297,7 +286,7 @@ theorem hermiteReduce_residual_correct_uncond (A D gnum gden Dstar : DensePoly �
               (cmul D (cmul gden gden))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
   obtain ⟨hresD, hg2⟩ := hcomp
-  rw [cnorm_eq_nil_iff] at hresD hg2
+  rw [DensePoly.cnormG_eq_nil_iff] at hresD hg2
   exact hermiteReduce_residual_correct_of_split A D gnum gden Dstar hden
     hresD hg2
 

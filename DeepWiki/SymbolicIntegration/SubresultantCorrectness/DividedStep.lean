@@ -15,21 +15,14 @@ namespace DeepWiki.SymbolicIntegration.Compute
 theorem toBPoly_map_cdiv_exact (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
     Polynomial.C (toPoly c) * GBPolyCore.toGBCoeffPoly (p.map (fun a => DensePoly.cdivWf a c)) = GBPolyCore.toGBCoeffPoly p := by
-  induction p with
-  | nil => simp
-  | cons a as ih =>
-    have has := ih (fun b hb => hrem b (by simp [hb]))
-    have hrem' : DensePoly.toPoly (DensePoly.cmodWf a c) = 0 := by
-      simpa only [toPoly_eq_dense] using hrem a (by simp)
-    have ha' := DensePoly.toPolyG_cmodWf a c hc
-    rw [hrem', add_zero] at ha'
-    have ha : toPoly a = toPoly (DensePoly.cdivWf a c) * toPoly c := by
-      simpa only [toPoly_eq_dense] using ha'
-    rw [List.map_cons, GBPolyCore.toGBCoeffPoly_cons, GBPolyCore.toGBCoeffPoly_cons]
-    change Polynomial.C (toPoly c) * (Polynomial.C (toPoly (DensePoly.cdivWf a c)) + _)
-      = Polynomial.C (toPoly a) + _
-    rw [ha, map_mul]
-    linear_combination Polynomial.X * has
+  apply GBPolyCore.toGBCoeffPoly_map_cdivWf_exact p c hc
+  intro a ha
+  have hdiv := DensePoly.toPolyG_cmodWf a c hc
+  have hrem' : DensePoly.toPoly (DensePoly.cmodWf a c) = 0 := by
+    exact hrem a ha
+  rw [hrem', add_zero] at hdiv
+  refine ⟨DensePoly.toPoly (DensePoly.cdivWf a c), ?_⟩
+  simpa only [mul_comm] using hdiv
 
 /-- `C(toPoly c) · GBPolyCore.toGBCoeffPoly (bdivC p c) = GBPolyCore.toGBCoeffPoly p` when every `x`-coefficient of `p` divides
 exactly by `c`: `bdivC` is exact scalar `ℚ[t]`-division. -/
@@ -47,21 +40,25 @@ theorem toBPoly_bdivC_exact_of_dvd (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc 
   toBPoly_bdivC_exact p c hc
     (fun a ha => by
       have hdvd' : DensePoly.toPoly c ∣ DensePoly.toPoly a := by
-        simpa only [toPoly_eq_dense] using hdvd a ha
-      simpa only [toPoly_eq_dense] using
+        exact hdvd a ha
+      exact
         DensePoly.toPolyG_cmodWf_eq_zero_of_dvd a c hc hdvd')
 
-/-- `C(toPoly g) · GBPolyCore.toGBCoeffPoly (bprimitivePartX p) = GBPolyCore.toGBCoeffPoly p` with `g = bcontentX p` nonzero
-and dividing each `x`-coefficient exactly: `bprimitivePartX` strips a `ℚ[t]` content factor. -/
-theorem toBPoly_bprimitivePartX_exact (p : GBPolyCore ℚ)
-    (hg : ¬ cisZero (bcontentX p) = true) (hgcn : cnorm (bcontentX p) ≠ [])
-    (hrem : ∀ a ∈ GBPolyCore.gbnormCore p, toPoly (DensePoly.cmodWf a (bcontentX p)) = 0) :
-    Polynomial.C (toPoly (bcontentX p)) * GBPolyCore.toGBCoeffPoly (bprimitivePartX p) = GBPolyCore.toGBCoeffPoly p := by
-  have hbc : bcontentX (GBPolyCore.gbnormCore p) = bcontentX p := by
-    rw [bcontentX, bcontentX, GBPolyCore.gbnormCore_idemp]
-  rw [bprimitivePartX]
-  simp only [hbc, hg, Bool.false_eq_true, if_false]
-  rw [GBPolyCore.toGBCoeffPoly_gbnormCore, toBPoly_map_cdiv_exact (GBPolyCore.gbnormCore p) (bcontentX p) hgcn hrem,
+/-- The `cgcdWfGcd` primitive part preserves denotation when content division is exact. -/
+theorem toGBCoeffPoly_gbprimitivePartCore_cgcdWfGcd_exact (p : GBPolyCore ℚ)
+    (hg : ¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) = true)
+    (hgcn : cnorm (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) ≠ [])
+    (hrem : ∀ a ∈ GBPolyCore.gbnormCore p,
+      toPoly (DensePoly.cmodWf a (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p)) = 0) :
+    Polynomial.C (toPoly (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p))
+        * GBPolyCore.toGBCoeffPoly
+          (GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd p)
+      = GBPolyCore.toGBCoeffPoly p := by
+  rw [GBPolyCore.gbprimitivePartCore]
+  simp only [GBPolyCore.gbcontentCore_gbnormCore, hg, Bool.false_eq_true, if_false]
+  rw [GBPolyCore.toGBCoeffPoly_gbnormCore,
+    toBPoly_map_cdiv_exact (GBPolyCore.gbnormCore p)
+      (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) hgcn hrem,
     GBPolyCore.toGBCoeffPoly_gbnormCore]
 
 /-! ### One subresultant-PRS step on the β-divided remainder -/

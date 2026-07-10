@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 
 /-! # Computable `LogToAtan` over `ℚ`
 An executable rendering of the `LogToAtan` algorithm on the dense coefficient carrier
-`DensePoly ℚ := List ℚ`, reusing its canonical operations and `toPoly` bridge to the `ℚ[X]` theory. -/
+`DensePoly ℚ := List ℚ`, reusing its canonical operations and denotation into `ℚ[X]`. -/
 
 open Polynomial
 
@@ -16,13 +16,7 @@ namespace Compute
 -- The concrete `ℚ` engine re-exports the canonical dense operations and denotation; polynomial
 -- division and extended gcd come from the representation-independent `CPoly` interface.
 export DensePoly
-  (cnorm cadd cneg csub cscale cshift cmul clead cisZero cdeg cderiv cmonic)
-
-/-- The canonical dense denotation with the concrete codomain fixed to `ℚ[X]`. -/
-noncomputable def toPoly (p : DensePoly ℚ) : ℚ[X] := DensePoly.toPoly p
-
-/-- The concrete-codomain denotation agrees with the canonical dense denotation. -/
-@[simp] theorem toPoly_eq_dense (p : DensePoly ℚ) : toPoly p = DensePoly.toPoly p := rfl
+  (cnorm cadd cneg csub cscale cshift cmul clead cisZero cdeg cderiv cmonic toPoly)
 
 /-- Computable `LogToAtan` over `DensePoly ℚ`, fuel-bounded: `logToAtanCompute fuel A B` returns the
 arctangent arguments as `(numerator, denominator)` pairs. -/

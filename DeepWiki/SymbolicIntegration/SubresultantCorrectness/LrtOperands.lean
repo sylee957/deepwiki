@@ -19,7 +19,7 @@ theorem toBPoly_liftCtoBPoly (p : DensePoly ℚ) :
   | cons a as ih =>
     show GBPolyCore.toGBCoeffPoly (cnorm [a] :: liftCtoBPoly as) = _
     rw [GBPolyCore.toGBCoeffPoly_cons, ih]
-    simp only [toPoly_eq_dense, DensePoly.toPolyG_cnormG, DensePoly.toPolyG_cons,
+    simp only [DensePoly.toPolyG_cnormG, DensePoly.toPolyG_cons,
       DensePoly.toPolyG_nil, mul_zero, add_zero, toR_eq_toK, CFieldSpec.toK_rat]
     rw [Polynomial.map_add, Polynomial.map_mul, Polynomial.map_X, Polynomial.map_C]
 
@@ -37,7 +37,6 @@ theorem toBPoly_bArgAmtD' (A D : DensePoly ℚ) :
     GBPolyCore.toGBCoeffPoly_gbscaleCCore, toBPoly_liftCtoBPoly]
   change _ - Polynomial.C (toPoly ctVar) * _ = _
   rw [toPoly_ctVar]
-  simp only [toPoly_eq_dense]
   rw [DensePoly.toPolyG_cderivG]
 
 /-- `lrtSubresultant A D j` is the abstract subresultant of the `GBPolyCore.toGBCoeffPoly` images of the computable

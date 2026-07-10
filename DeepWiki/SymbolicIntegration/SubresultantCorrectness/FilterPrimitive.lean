@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.SubresultantCorrectness.DividedStep
 /-! # Subresultant filter and primitive-part bridge
 
 Connects singleton-filter hypotheses for `bsubresultantGcd` to the abstract LRT
-subresultant endpoint, then strips bivariate content by `bprimitivePartX`. -/
+subresultant endpoint, then strips bivariate content by `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd`. -/
 
 open Polynomial
 
@@ -67,28 +67,28 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : Dens
     hchain
     (toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel (G 0) (G 1) G m hfil)
 
-/-! ### `bprimitivePartX` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute` -/
+/-! ### `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute` -/
 
-/-- The content stripped by `bprimitivePartX p` is nonzero and divides every coefficient exactly. -/
+/-- The content stripped by `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd p` is nonzero and divides every coefficient exactly. -/
 structure IsPrimitivePartXInput (p : GBPolyCore ℚ) : Prop where
   /-- The computed content is not boolean-zero. -/
-  content_not_zero : ¬ cisZero (bcontentX p) = true
+  content_not_zero : ¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) = true
   /-- The normalized content list is nonempty. -/
-  content_cnorm_ne : cnorm (bcontentX p) ≠ []
+  content_cnorm_ne : cnorm (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) ≠ []
   /-- The computed content reads to a nonzero polynomial. -/
-  content_toPoly_ne : toPoly (bcontentX p) ≠ 0
+  content_toPoly_ne : toPoly (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p) ≠ 0
   /-- The content divides every normalized `x`-coefficient exactly. -/
-  exact_division : ∀ a ∈ GBPolyCore.gbnormCore p, toPoly (DensePoly.cmodWf a (bcontentX p)) = 0
+  exact_division : ∀ a ∈ GBPolyCore.gbnormCore p, toPoly (DensePoly.cmodWf a (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p)) = 0
 
-/-- `IsSimilar (GBPolyCore.toGBCoeffPoly p) (GBPolyCore.toGBCoeffPoly (bprimitivePartX p))` under the content-exactness hypotheses. -/
-theorem isSimilar_toBPoly_bprimitivePartX (p : GBPolyCore ℚ)
+/-- The `cgcdWfGcd` primitive part is similar to its input under exact content division. -/
+theorem isSimilar_toGBCoeffPoly_gbprimitivePartCore_cgcdWfGcd (p : GBPolyCore ℚ)
     (hprim : IsPrimitivePartXInput p) :
-    IsSimilar (GBPolyCore.toGBCoeffPoly p) (GBPolyCore.toGBCoeffPoly (bprimitivePartX p)) :=
-  ⟨1, toPoly (bcontentX p), one_ne_zero, hprim.content_toPoly_ne, by
-    rw [map_one, one_mul, toBPoly_bprimitivePartX_exact p hprim.content_not_zero
+    IsSimilar (GBPolyCore.toGBCoeffPoly p) (GBPolyCore.toGBCoeffPoly (GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd p)) :=
+  ⟨1, toPoly (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd p), one_ne_zero, hprim.content_toPoly_ne, by
+    rw [map_one, one_mul, toGBCoeffPoly_gbprimitivePartCore_cgcdWfGcd_exact p hprim.content_not_zero
       hprim.content_cnorm_ne hprim.exact_division]⟩
 
-/-- Given the endpoint hypotheses, the filter identity `hfilt`, and content-exactness of `bprimitivePartX`,
+/-- Given the endpoint hypotheses, the filter identity `hfilt`, and content-exactness of `GBPolyCore.gbprimitivePartCore DensePoly.cgcdWfGcd`,
 `IsSimilar (lrtSubresultant A D j) (GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute fuel j A D))`. -/
 theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : DensePoly ℚ) (G : ℕ → GBPolyCore ℚ)
     (bt : ℕ → DensePoly ℚ) (s : ℕ → GBPolyCore ℚ) (c : ℕ → DensePoly ℚ) (m : ℕ)
@@ -104,7 +104,7 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : Den
       (GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree A D)) := by
   have hraw := isSimilar_lrtSubresultant_bsubresultantGcd fuel A D G bt s c m hG0 hG1 hd0 hd1
     hchain hfilt
-  have hprimSim := isSimilar_toBPoly_bprimitivePartX
+  have hprimSim := isSimilar_toGBCoeffPoly_gbprimitivePartCore_cgcdWfGcd
     (bsubresultantGcd fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree (G 0) (G 1)) hprim
   rw [lrtSubresultantCompute, ← hG0, ← hG1]
   exact hraw.trans hprimSim

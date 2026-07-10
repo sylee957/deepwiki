@@ -54,13 +54,13 @@ theorem toPoly_cdiophantine_fst_eq (p q rhs : DensePoly ℚ)
     toPoly (DensePoly.cdiophantine p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 := by
   obtain ⟨hq, hcop, hgdeg, hgne⟩ := hinput
-  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
   have hc_eq : toPoly (DensePoly.cdiophantine p q rhs).1 * toPoly p
       + toPoly (DensePoly.cdiophantine p q rhs).2 * toPoly q = toPoly rhs := by
-    simpa only [toPoly_eq_dense] using
+    exact
       DensePoly.toPolyG_cdiophantineG p q rhs hq hgdeg hgne
   have hc_deg : (toPoly (DensePoly.cdiophantine p q rhs).1).degree < (toPoly q).degree := by
-    simpa only [toPoly_eq_dense] using DensePoly.cdiophantineG_fst_degree_lt p q rhs hq
+    exact DensePoly.cdiophantineG_fst_degree_lt p q rhs hq
   have ha_eq := diophantineSolveReduced_spec hcop (toPoly rhs)
   have ha_deg := diophantineSolveReduced_fst_degree_lt (a := toPoly p) hq0 (toPoly rhs)
   refine reduced_bezout_fst_unique (C₁ := toPoly (DensePoly.cdiophantine p q rhs).2)
@@ -79,11 +79,11 @@ theorem toPoly_cdiophantine_snd_eq (p q rhs : DensePoly ℚ)
   have hcop := hinput.coprime
   have hgdeg := hinput.gcd_degree_zero
   have hgne := hinput.gcd_ne
-  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
   have hfst := toPoly_cdiophantine_fst_eq p q rhs hinput
   have hc_eq : toPoly (DensePoly.cdiophantine p q rhs).1 * toPoly p
       + toPoly (DensePoly.cdiophantine p q rhs).2 * toPoly q = toPoly rhs := by
-    simpa only [toPoly_eq_dense] using
+    exact
       DensePoly.toPolyG_cdiophantineG p q rhs hq hgdeg hgne
   have ha_eq := diophantineSolveReduced_spec hcop (toPoly rhs)
   refine reduced_bezout_snd_unique (p := toPoly p)

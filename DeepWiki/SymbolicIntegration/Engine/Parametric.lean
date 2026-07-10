@@ -24,10 +24,10 @@ so a non-proper `b` (in particular every nonzero constant) is provably not one. 
 specialized at the constant field `ℚ`, the base monomial derivation `D` with `Dx = 1`, `κ_D = 0`). -/
 abbrev cderivQ (p : DensePoly ℚ) : DensePoly ℚ := cderiv p
 
-/-- **Generic lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPair num den =
+/-- **Lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPair num den =
 (num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdWf`); the zero
-numerator gives `([], [1])`. The generic mirror of `Compute.qnorm` one tower level down, used to read the
-polynomial part / denominator of a `CFrac ℚ`-valued base-field element. -/
+numerator gives `([], [1])`. Used to read the polynomial part and denominator of a `CFrac ℚ`-valued
+base-field element. -/
 def qnormPair (num den : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
   if cisZero num then ([], [(1 : ℚ)])
   else
