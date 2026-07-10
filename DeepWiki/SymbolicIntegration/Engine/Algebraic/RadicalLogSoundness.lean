@@ -63,14 +63,6 @@ DensePoly.cscale c (radDeriv n ρ u)` — the numerator of `c · radDeriv(u)/u` 
 def radLogTermDeriv (n : ℕ) (ρ : α) (cu : α × RadElem α) : RadElem α :=
   DensePoly.cscale cu.1 (radDeriv n ρ cu.2)
 
-/-- `radDeriv` distributes over a scaled `DensePoly.cadd`-fold: `toPoly (radDeriv n ρ
-(cs.foldl DensePoly.cadd acc)) = toPoly (radDeriv n ρ acc) + Σ_{c∈cs} toPoly (radDeriv n ρ c)`. -/
-theorem toPolyG_radDeriv_logFold (n : ℕ) (ρ : α) (acc : RadElem α) (cs : List (RadElem α)) :
-    DensePoly.toPoly (radDeriv n ρ (cs.foldl DensePoly.cadd acc))
-      = DensePoly.toPoly (radDeriv n ρ acc)
-        + (cs.map (fun c => DensePoly.toPoly (radDeriv n ρ c))).sum :=
-  toPolyG_radDeriv_foldl_cadd n ρ acc cs
-
 /-! ### The two-term log-derivative sum over the common denominator `u₁ u₂`
 
 The numerator of `c₁·radDeriv(u₁)/u₁ + c₂·radDeriv(u₂)/u₂` over `u₁·u₂` is
@@ -568,7 +560,7 @@ no `sorry`. -/
 #print axioms RadElem.isRadicalLogTerm_of_radIsLogIntegral
 
 -- The additivity floor: `radDeriv` distributes over the log-numerator fold:
-#print axioms RadElem.toPolyG_radDeriv_logFold
+#print axioms RadElem.toPolyG_radDeriv_foldl_cadd
 
 -- Two log residues add (the structural core of the multi-term residue sum):
 #print axioms RadElem.mk_toPolyG_radLogSum2

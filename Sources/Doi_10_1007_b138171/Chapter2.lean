@@ -500,9 +500,9 @@ abbrev integrateRationalFunction_reduction_proper :=
 eq 2.4 — the `e = 1`, no-rational-part case): for a proper fraction `R/V` over a split squarefree
 `V = ∏_{α∈s}(X−α)` with `deg R < #s`, `R/V = ∑_a a·logDeriv(Gₐ)`, `Gₐ = ∏_{α∈s, res(α)=a}(X−α)` — i.e.
 `∫ R/V = ∑_a a·log(Gₐ)`, the §2.4/§2.5 logarithmic part with no rational/polynomial part. The library's
-`ratFunc_logForm_split_squarefree`. -/
+`ratFunc_eq_sum_residue_grouped`. -/
 abbrev integrateRationalFunction_logForm_squarefree :=
-  @DeepWiki.SymbolicIntegration.ratFunc_logForm_split_squarefree
+  @DeepWiki.SymbolicIntegration.ratFunc_eq_sum_residue_grouped
 
 /-- **`IntegrateRationalFunction` closed log-form** (§2.5, p.52, eq 2.4 — the culmination): for `A`
 over a denominator with split squarefree factors `Dᵢ = ∏_{α∈sset i}(X−α)` (nonempty disjoint root-sets,
@@ -1041,8 +1041,8 @@ abbrev eq_2_16_not_isSquare := @DeepWiki.SymbolicIntegration.not_isSquare_neg_on
 
 /-- **Constant `√−1`** (§2.8, p.60, behind eq 2.17): in a characteristic-`0` differential field, an
 element `i` with `i² = −1` is a constant (`i′ = 0`) — differentiate `i² = −1` to `2·i·i′ = 0` and
-cancel `2·i ≠ 0`. The library's `deriv_i_eq_zero`. -/
-abbrev lemma_2_8_1_const_i := @DeepWiki.SymbolicIntegration.deriv_i_eq_zero
+cancel `2·i ≠ 0`. The library's `deriv_eq_zero_of_sq_eq_neg_one`. -/
+abbrev lemma_2_8_1_const_i := @DeepWiki.SymbolicIntegration.deriv_eq_zero_of_sq_eq_neg_one
 
 /-- **Lemma 2.8.1** (§2.8, p.60), rewriting a complex logarithm as a real arctangent: for `u` with
 `u² ≠ −1`, `√−1 · d/dx log((u+√−1)/(u−√−1)) = 2 · d/dx arctan(u)` (eq 2.17). As a differential-field
@@ -1050,7 +1050,7 @@ identity (with `i = √−1`, `i² = −1` ⟹ `i` constant, and `arctan'(u) = u
 `i · logDeriv((u+i)/(u−i)) = 2·u'/(1+u²)`. The logarithmic derivative
 `logDeriv((u+i)/(u−i)) = u'/(u+i) − u'/(u−i) = −2i·u'/(u²+1)` (using `(u±i)' = u'`, `i` constant), and
 `i·(−2i) = −2i² = 2`. The library's `logDeriv_imagQuot_eq_arctanDeriv_of_sq` (the constant-`i`
-hypothesis `i′ = 0` discharged from `i² = −1` via `deriv_i_eq_zero`); the bare form taking `i′ = 0`
+hypothesis `i′ = 0` discharged from `i² = −1` via `deriv_eq_zero_of_sq_eq_neg_one`); the bare form taking `i′ = 0`
 as a hypothesis is `logDeriv_imagQuot_eq_arctanDeriv`. -/
 abbrev lemma_2_8_1 := @DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_arctanDeriv_of_sq
 

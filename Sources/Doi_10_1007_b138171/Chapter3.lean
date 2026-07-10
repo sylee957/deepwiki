@@ -517,7 +517,7 @@ abbrev ex_3_2_2 := @derivation_ext_fractionRing
 
 /-- **Example 3.2.3** (§3.2, p.83): an element algebraic over the constants (char `0`) is itself a
 constant. -/
-abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_root_const_coeffs
+abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_algebraic_const
 
 /-! ### Generic-carrier input builders for the §3.5 split examples (catalog-local)
 

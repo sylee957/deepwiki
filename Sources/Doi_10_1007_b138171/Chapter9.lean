@@ -84,7 +84,7 @@ the shared `cLogIsNewMonomial` relation test returns `false` for a candidate `ex
 the logarithmic derivative of the radical `x²`, `exp(b)` already in the field), relation `[2]` verified,
 and `true` for `Db = 1/(x+1) ∉ span_ℚ{1/x}` (a new transcendental exponential monomial), `native_decide`.
 The exponential decision shares the *same* ℚ-linear-dependence engine as the logarithm case. -/
-abbrev ex_9_3_1_exp := @expStructureTheorem_example
+abbrev ex_9_3_1_exp := @structureTheorem_example
 
 /-- **Example (§9.3, Corollary 9.3.1, book p.284/285)**, the multi-monomial decision: over the genuine
 2-element logarithmic tower `C(x)(log x, log(x+1))` (the ℚ-independent `1/x` and `1/(x+1)`),

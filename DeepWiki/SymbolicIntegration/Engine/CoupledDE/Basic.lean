@@ -17,9 +17,9 @@ namespace DensePoly
 Solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]](y₁; y₂) = (z₁; z₂)` over `k = ℚ(x)`, `D = d/dx`, for
 polynomial data, via a degree-`d` ansatz whose residual coefficients form one ℚ-linear solve. -/
 
-/-- `mulMatrixQ m d nrows`: the `nrows × (d+1)` ℚ-matrix of multiplication by `m` on the degree-`d`
-ansatz; entry `(r,i) = coeff(m, r−i)`. -/
-def mulMatrixQ (m : DensePoly ℚ) (d nrows : ℕ) : List (List ℚ) :=
+/-- `mulMatrixQ m d nrows`: the `nrows × (d+1)` ℚ-matrix of multiplication by a polynomial in any
+`CPoly` representation on the degree-`d` ansatz; entry `(r,i) = coeff(m, r−i)`. -/
+def mulMatrixQ {P : Type → Type} [CPoly P] (m : P ℚ) (d nrows : ℕ) : List (List ℚ) :=
   (List.range nrows).map (fun r =>
     (List.range (d + 1)).map (fun i =>
       if r ≥ i then CPoly.coeff m (r - i) else 0))
@@ -40,7 +40,8 @@ def hcatQ (A B : List (List ℚ)) : List (List ℚ) :=
   List.zipWith (· ++ ·) A B
 
 /-- A `mulMatrixQ` row within range is exactly `d + 1` entries wide. -/
-theorem mulMatrixQ_row_len (b : DensePoly ℚ) (d nrows r : ℕ) (hr : r < nrows) :
+theorem mulMatrixQ_row_len {P : Type → Type} [CPoly P] (b : P ℚ) (d nrows r : ℕ)
+    (hr : r < nrows) :
     ((mulMatrixQ b d nrows).getD r []).length = d + 1 := by
   rw [mulMatrixQ, getD_lt_gen _ r [] (by rw [List.length_map, List.length_range]; exact hr),
     List.getElem_map]
@@ -66,7 +67,8 @@ theorem hcatQ_getD_row (A B : List (List ℚ)) (r : ℕ) (hA : r < A.length) (hB
     getD_lt_gen A r [] hA, getD_lt_gen B r [] hB]
 
 /-- `mulMatrixQ b d nrows` has exactly `nrows` rows. -/
-theorem mulMatrixQ_len (b : DensePoly ℚ) (d nrows : ℕ) : (mulMatrixQ b d nrows).length = nrows := by
+theorem mulMatrixQ_len {P : Type → Type} [CPoly P] (b : P ℚ) (d nrows : ℕ) :
+    (mulMatrixQ b d nrows).length = nrows := by
   rw [mulMatrixQ, List.length_map, List.length_range]
 
 /-- `derivMatrixQ d nrows` has exactly `nrows` rows. -/

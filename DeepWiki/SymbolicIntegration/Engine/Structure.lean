@@ -95,9 +95,8 @@ def structRelationCheck (logDerivs : List (CFrac ℚ)) (w : CFrac ℚ) (rs : Lis
     (fun acc (wi, r) => CCommRing.add acc (CCommRing.mul (CFrac.ofFraction [r] [1]) wi)) CCommRing.zero
   CCommRing.isZero (CField.sub w combo)
 
-/-- The logarithmic-monomial structure decision computes over `C(x)(log x)`: `log(x²)` is not a new
-monomial (`cLogRelationCoeffs = some [2]`, verified by `structRelationCheck`) and `log(x+1)` is a new
-transcendental monomial. -/
+/-- The shared logarithmic-dependence test computes over `C(x)(log x)`: derivative `2/x` is dependent
+with relation `[2]`, while `1/(x+1)` is independent, for either logarithmic or exponential candidates. -/
 theorem structureTheorem_example :
     (-- (1) `log(x²)` is dependent on `log(x)` — relation detected and verified `D(x²)/x² = 2·D(x)/x`.
      (DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
@@ -109,24 +108,6 @@ theorem structureTheorem_example :
   native_decide
 
 #print axioms structureTheorem_example
-
-/-! ### Exponential-monomial examples
-
-Over `C(x)(log x)`: `exp(b)` with `Db = 2/x` is not new (`Db = 2·(1/x)`), while `Db = 1/(x+1)` gives a
-new exponential monomial. -/
-
-/-- The exponential-monomial structure decision computes over `C(x)(log x)`: `exp(b)` with `Db = 2/x`
-is not a new monomial (relation `[2]`, verified by `structRelationCheck`) and `Db = 1/(x+1)` gives a
-new transcendental monomial. -/
-theorem expStructureTheorem_example :
-    ((DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
-     && (match DensePoly.cLogRelationCoeffs [structLogDerivX] structLogDerivX2 with
-         | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
-         | none => false)
-     && (DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
-  native_decide
-
-#print axioms expStructureTheorem_example
 
 /-! ### Multi-generator logarithmic examples
 

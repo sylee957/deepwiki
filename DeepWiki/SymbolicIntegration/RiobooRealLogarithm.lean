@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
+import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import Mathlib.Algebra.Polynomial.SpecificDegree
 
 /-! # Foundations for real rational logarithms
@@ -65,27 +66,11 @@ end PolynomialSquares
 section ImaginaryLogDerivative
 variable {R : Type*} [Field R] [Differential R]
 
-/-- In a char-`0` differential field, `i² = −1` implies `i` is constant, `i′ = 0`. -/
-theorem deriv_i_eq_zero [CharZero R] {i : R} (hi : i ^ 2 = -1) : i′ = 0 := by
-  have hi0 : i ≠ 0 := by rintro rfl; simp at hi
-  -- Differentiate `i² = −1`: `(i²)′ = (−1)′`, i.e. `2·i·i′ = 0`.
-  have hd : (2 : R) * i ^ 1 * i′ = 0 := by
-    have hlhs : (i ^ 2)′ = (2 : R) * i ^ 1 * i′ := by
-      rw [deriv_pow]; norm_num
-    have hrhs : ((-1 : R))′ = 0 := by
-      rw [show (-1 : R) = -(1 : R) by ring, map_neg,
-        (Differential.deriv : Derivation ℤ R R).map_one_eq_zero, neg_zero]
-    rw [← hlhs, hi, hrhs]
-  rw [pow_one] at hd
-  -- Cancel the nonzero factor `2·i`.
-  have h2i : (2 : R) * i ≠ 0 := mul_ne_zero (by norm_num) hi0
-  exact (mul_eq_zero.mp hd).resolve_left h2i
-
 /-- With `i² = −1` in a char-`0` differential field, `i · logDeriv((u+i)/(u−i)) = 2·(u′/(1+u²))`. -/
 theorem logDeriv_imagQuot_eq_arctanDeriv_of_sq [CharZero R] {i u : R} (hi : i ^ 2 = -1)
     (h1 : u + i ≠ 0) (h2 : u - i ≠ 0) :
     i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) :=
-  logDeriv_imagQuot_eq_arctanDeriv hi (deriv_i_eq_zero hi) h1 h2
+  logDeriv_imagQuot_eq_arctanDeriv hi (deriv_eq_zero_of_sq_eq_neg_one hi) h1 h2
 
 example {K : Type*} [Field K] (h : Irreducible (X ^ 2 + 1 : K[X])) (P Q : K[X])
     (hPQ : P ^ 2 + Q ^ 2 = 0) : P = 0 ∧ Q = 0 :=

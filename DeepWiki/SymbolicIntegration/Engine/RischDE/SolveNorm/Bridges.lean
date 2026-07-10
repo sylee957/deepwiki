@@ -39,10 +39,4 @@ theorem toCFracG_solution (ytilde q' : CFrac β) :
       = toCFrac ytilde / toCFrac q' := by
   rw [toCFracG_qmulNZG, toCFracG_qinvNZG, div_eq_mul_inv]
 
-omit [CDiffField β] [CDiffFieldSpec β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
-/-- `toCFracG_scaledRHS`: `toCFrac (qmulNZ q' g) = toCFrac q' * toCFrac g`. -/
-theorem toCFracG_scaledRHS (q' g : CFrac β) :
-    toCFrac (qmulNZ q' g) = toCFrac q' * toCFrac g :=
-  toCFracG_qmulNZG q' g
-
 end DeepWiki.SymbolicIntegration

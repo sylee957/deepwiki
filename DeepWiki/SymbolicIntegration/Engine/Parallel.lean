@@ -173,7 +173,7 @@ def cParallelSystemQ (Dt a d : DensePoly ℚ) :
   let nrows := (target :: allPolys).foldl (fun acc p => max acc (cnorm p).length) 0
   let rows : List (List ℚ) :=
     (List.range nrows).map (fun i => allPolys.map (fun p => CPoly.coeff p i))
-  let rhs : List ℚ := (List.range nrows).map (fun i => CPoly.coeff target i)
+  let rhs : List ℚ := CPoly.coeffs target nrows
   (rows, rhs, nU, m)
 
 /-- **Parallel (Risch–Norman) integration over `ℚ(t)`** `cParallelIntegrate fuel Dt a d` (Bronstein

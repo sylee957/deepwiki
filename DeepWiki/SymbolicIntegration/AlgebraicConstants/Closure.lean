@@ -134,11 +134,6 @@ theorem isAlgebraicOverConst_of_deriv_eq_zero_of_integral {c : E} (hc : c′ = 0
     (hint : IsIntegral F c) : IsAlgebraicOverConst c :=
   isAlgebraicOverConst_map_of_deriv_eq_zero hc hint
 
-/-- A root of a separable (`q'(c) ≠ 0`) nonzero polynomial with constant coefficients is a constant. -/
-theorem deriv_eq_zero_of_isAlgebraicOverConst {c : E} (q : E[X]) (hq : ∀ i, (q.coeff i)′ = 0)
-    (hroot : q.eval c = 0) (hsep : q.derivative.eval c ≠ 0) : c′ = 0 :=
-  deriv_eq_zero_of_separable_algebraic_const q hq hroot hsep
-
 /-- A root of a separable base-constant polynomial is a constant. -/
 theorem deriv_eq_zero_of_base_constant_polynomial {c : E} (p : F[X])
     (hp : ∀ i, (p.coeff i)′ = 0) (hroot : Polynomial.aeval c p = 0)
@@ -193,22 +188,7 @@ theorem deriv_eq_zero_iff_isAlgebraicOverConst_separable [CharZero F] {c : E}
     · rw [Polynomial.derivative_map, Polynomial.eval_map, ← Polynomial.aeval_def]
       exact hsep
   · rintro ⟨q, _, hq, hroot, hsep⟩
-    exact deriv_eq_zero_of_isAlgebraicOverConst q hq hroot hsep
-
-/-- An element algebraic over the constants is itself a constant: if `α` is a root of a
-polynomial `q` with constant coefficients and `q'(α) ≠ 0` (separability), then `α′ = 0`. -/
-theorem deriv_eq_zero_of_separable_root_const_coeffs {α : E} (q : E[X])
-    (hq : ∀ i, (q.coeff i)′ = 0) (hroot : q.eval α = 0) (hsep : q.derivative.eval α ≠ 0) :
-    α′ = 0 :=
-  deriv_eq_zero_of_isAlgebraicOverConst q hq hroot hsep
-
-/-- Char-`0` characterisation: an element `α ∈ E` integral over `F` is a constant iff it is a
-root of a separable nonzero polynomial with constant coefficients. -/
-theorem deriv_eq_zero_iff_separable_root_const_coeffs [CharZero F] {α : E}
-    (hint : IsIntegral F α) :
-    α′ = 0 ↔ ∃ q : E[X], q ≠ 0 ∧ (∀ i, (q.coeff i)′ = 0) ∧ q.eval α = 0 ∧
-      q.derivative.eval α ≠ 0 :=
-  deriv_eq_zero_iff_isAlgebraicOverConst_separable hint
+    exact deriv_eq_zero_of_separable_algebraic_const q hq hroot hsep
 
 end AlgebraicClosureConstants
 

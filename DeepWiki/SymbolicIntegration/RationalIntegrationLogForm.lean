@@ -71,18 +71,6 @@ theorem integrateRationalFunction_logForm [CharZero K] {ι : Type*} (s : Finset 
 
 open scoped Differential in
 open Classical in
-/-- A proper fraction over one split squarefree denominator equals its grouped residue log-derivative sum. -/
-theorem ratFunc_logForm_split_squarefree (s : Finset K) (R : K[X]) (hR : R.degree < s.card) :
-    algebraMap K[X] (RatFunc K) R / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
-      = ∑ a ∈ s.image (fun α => R.eval α / eval α (derivative (Lagrange.nodal s id))),
-          algebraMap K[X] (RatFunc K) (C a)
-            * Differential.logDeriv (algebraMap K[X] (RatFunc K)
-                (∏ α ∈ s.filter (fun α => R.eval α / eval α (derivative (Lagrange.nodal s id)) = a),
-                  (X - C α))) :=
-  ratFunc_eq_sum_residue_grouped s R hR
-
-open scoped Differential in
-open Classical in
 -- Single split squarefree denominator: `R/V = ∑_a a * logDeriv(G_a)`.
 example (s : Finset K) (R : K[X]) (hR : R.degree < s.card) :
     algebraMap K[X] (RatFunc K) R / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
@@ -91,7 +79,7 @@ example (s : Finset K) (R : K[X]) (hR : R.degree < s.card) :
             * Differential.logDeriv (algebraMap K[X] (RatFunc K)
                 (∏ α ∈ s.filter (fun α => R.eval α / eval α (derivative (Lagrange.nodal s id)) = a),
                   (X - C α))) :=
-  ratFunc_logForm_split_squarefree s R hR
+  ratFunc_eq_sum_residue_grouped s R hR
 
 open scoped Differential in
 open Classical in
