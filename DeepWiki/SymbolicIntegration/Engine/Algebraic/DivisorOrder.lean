@@ -263,19 +263,4 @@ theorem divisor_order_torsion_decision_validates :
       ∧ isTorsionDivisor 5 hypRhoX3m2 1 hypPt35 = none
       ∧ elementarityViaTorsion 5 hypRhoX3m2 1 hypPt35 = false) := by native_decide
 
-/-- Torsion log-term decision `radTorsionLogTerm p ρ g D`: when the residue divisor `D` is torsion
-of order `m` (`isTorsionDivisor = some m`), the simple-radical log part contributes a `(1/m)·log`
-term — return `some m` (the log-coefficient denominator) for the integrator's non-principal branch,
-or `none` (non-torsion, no elementary log term). The generator `g` with `div(g) = m·D` (the actual
-argument of `(1/m)·log g`) is the principal-divisor reconstruction, handled downstream. -/
-def radTorsionLogTerm (p : ℕ) [Fact p.Prime] (ρ : DensePoly ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
-    Option ℕ :=
-  isTorsionDivisor p ρ g D
-
-/-- `radTorsionLogTerm` returns `some 3` on the 3-torsion `(0,1)` (a `(1/3)·log` term) and `none`
-on the non-torsion `(3,5)` (no elementary log term). -/
-theorem radTorsionLogTerm_examples :
-    radTorsionLogTerm 5 hypRhoX3p1 1 hypPt01 = some 3
-    ∧ radTorsionLogTerm 5 hypRhoX3m2 1 hypPt35 = none := by native_decide
-
 end DeepWiki.SymbolicIntegration

@@ -83,7 +83,7 @@ structure AlgebraicDecideSoundnessResidual : Prop where
   hprincipal :
     DensePoly.toPoly (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
       = DensePoly.toPoly integrand
-  /-- Torsion branch (`radTorsionLogTerm`/`principalGenerator` correctness): for the constructed log term
+  /-- Torsion branch (`isTorsionDivisor`/`principalGenerator` correctness): for the constructed log term
   `term`, `D(⟨v, [term]⟩) = integrand`. -/
   htorsion : ∀ term,
     torsionLogTerm p ρ ρq gen Dm = some term →
