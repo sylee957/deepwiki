@@ -17,10 +17,6 @@ namespace DensePoly
 Solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]](y₁; y₂) = (z₁; z₂)` over `k = ℚ(x)`, `D = d/dx`, for
 polynomial data, via a degree-`d` ansatz whose residual coefficients form one ℚ-linear solve. -/
 
-/-- `padCoeffsQ p n`: low→high ℚ-coefficient list of `p`, truncated/zero-extended to `n` entries. -/
-def padCoeffsQ (p : DensePoly ℚ) (n : ℕ) : List ℚ :=
-  (List.range n).map (fun i => CPoly.coeff p i)
-
 /-- `mulMatrixQ m d nrows`: the `nrows × (d+1)` ℚ-matrix of multiplication by `m` on the degree-`d`
 ansatz; entry `(r,i) = coeff(m, r−i)`. -/
 def mulMatrixQ (m : DensePoly ℚ) (d nrows : ℕ) : List (List ℚ) :=
@@ -101,7 +97,7 @@ def cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) :
   let row2v := matAddQ Dblk B1
   let M : List (List ℚ) := hcatQ row1u row1v ++ hcatQ row2u row2v
   -- right-hand side: the `z₁` then `z₂` coefficients (length `nrows` each).
-  let rhs : List ℚ := padCoeffsQ z1 nrows ++ padCoeffsQ z2 nrows
+  let rhs : List ℚ := CPoly.coeffs z1 nrows ++ CPoly.coeffs z2 nrows
   match cConstSolveUniqueQ M rhs (2 * (d + 1)) with
   | none => none
   | some sol =>

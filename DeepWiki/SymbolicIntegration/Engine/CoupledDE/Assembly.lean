@@ -234,11 +234,12 @@ theorem sol_split (sol : List ℚ) (d : ℕ) (hsol : sol.length = 2 * (d + 1)) :
   intro i _
   simp [Nat.add_comm]
 
-/-- The `cnorm`-padded coefficient list `padCoeffsQ z nrows` reads coefficient `k < nrows` as
+/-- The coefficient vector `CPoly.coeffs z nrows` reads coefficient `k < nrows` as
 `(toPoly z).coeff k`. -/
-theorem padCoeffsQ_getD (z : DensePoly ℚ) (nrows k : ℕ) (hk : k < nrows) :
-    (padCoeffsQ z nrows).getD k 0 = (toPoly z).coeff k := by
-  rw [padCoeffsQ, getD_range_map_q _ nrows k hk, CPoly.coeff_dense_eq, toPolyG_coeff, toR_eq_toK,
+theorem coeffs_getD_toPoly (z : DensePoly ℚ) (nrows k : ℕ) (hk : k < nrows) :
+    (CPoly.coeffs z nrows).getD k 0 = (toPoly z).coeff k := by
+  rw [show (0 : ℚ) = CCommRing.zero from rfl, CPoly.coeffs_getD z nrows k hk,
+    CPoly.coeff_dense_eq, toPolyG_coeff, toR_eq_toK,
     CFieldSpec.toK_rat, show CCommRing.zero = (0 : ℚ) from rfl]
 
 /-- First-row identity `coeff_r(D u1 + b1 u1 + a•(b2 u2)) = coeff_r(z1)` (`r < nrows`) from a solve. -/
@@ -252,7 +253,7 @@ theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
           (mulMatrixQ (cscale a b2) d nrows)
         ++ hcatQ (mulMatrixQ b2 d nrows)
           (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))).getD k [] ) sol
-        = (padCoeffsQ z1 nrows ++ padCoeffsQ z2 nrows).getD k 0)
+        = (CPoly.coeffs z1 nrows ++ CPoly.coeffs z2 nrows).getD k 0)
     (r : ℕ) (hr : r < nrows) :
     (toPoly (cderiv ((List.range (d + 1)).map (fun i => sol.getD i 0)))).coeff r
         + (toPoly (cmul b1 ((List.range (d + 1)).map (fun i => sol.getD i 0)))).coeff r
@@ -280,8 +281,7 @@ theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
       show u2.length = d + 1 from by rw [hu2def]; simp]] at heq
   rw [dotQ_hcatRow b1 (cscale a b2) u1 u2 d nrows r hr (by rw [hu1def]; simp) (by rw [hu2def]; simp)]
     at heq
-  rw [getD_append_left _ _ _ _ (by rw [padCoeffsQ, List.length_map, List.length_range]; exact hr),
-    padCoeffsQ_getD z1 nrows r hr] at heq
+  rw [getD_append_left _ _ _ _ (by simpa using hr), coeffs_getD_toPoly z1 nrows r hr] at heq
   exact heq
 
 /-- Second-row identity `coeff_r(b2 u1 + D u2 + b1 u2) = coeff_r(z2)` (`r < nrows`). -/
@@ -295,7 +295,7 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
           (mulMatrixQ (cscale a b2) d nrows)
         ++ hcatQ (mulMatrixQ b2 d nrows)
           (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))).getD k [] ) sol
-        = (padCoeffsQ z1 nrows ++ padCoeffsQ z2 nrows).getD k 0)
+        = (CPoly.coeffs z1 nrows ++ CPoly.coeffs z2 nrows).getD k 0)
     (r : ℕ) (hr : r < nrows) :
     (toPoly (cmul b2 ((List.range (d + 1)).map (fun i => sol.getD i 0)))).coeff r
         + ((toPoly (cderiv ((List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)))).coeff r
@@ -324,10 +324,9 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
     rw [show u1.length = d + 1 from by rw [hu1def]; simp,
       show u2.length = d + 1 from by rw [hu2def]; simp]] at heq
   rw [dotQ_hcatRow2 b1 b2 u1 u2 d nrows r hr (by rw [hu1def]; simp) (by rw [hu2def]; simp)] at heq
-  rw [getD_append_right _ _ _ _ (by rw [padCoeffsQ, List.length_map, List.length_range]; omega)] at heq
-  rw [show (padCoeffsQ z1 nrows).length = nrows from by
-    rw [padCoeffsQ, List.length_map, List.length_range],
-    show nrows + r - nrows = r from by omega, padCoeffsQ_getD z2 nrows r hr] at heq
+  rw [getD_append_right _ _ _ _ (by simp)] at heq
+  rw [CPoly.coeffs_length, show nrows + r - nrows = r from by omega,
+    coeffs_getD_toPoly z2 nrows r hr] at heq
   exact heq
 
 /-- A successful `cCoupledDESystem` solve satisfies `coupledClearedCheck … = true`, discharged from
@@ -341,7 +340,7 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
   set row1u := matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows) with hrow1u
   set M : List (List ℚ) := hcatQ row1u (mulMatrixQ (cscale a b2) d nrows)
     ++ hcatQ (mulMatrixQ b2 d nrows) row1u with hMdef
-  set rhs : List ℚ := padCoeffsQ z1 nrows ++ padCoeffsQ z2 nrows with hrhsdef
+  set rhs : List ℚ := CPoly.coeffs z1 nrows ++ CPoly.coeffs z2 nrows with hrhsdef
   rcases hmatch : cConstSolveUniqueQ M rhs (2 * (d + 1)) with _ | sol
   · rw [hmatch] at hsome; exact absurd hsome (by simp)
   · rw [hmatch] at hsome
@@ -376,8 +375,7 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
           hcatQ_getD_row _ _ k (by rw [mulMatrixQ_len]; exact hk) (by rw [hrow1u_len]; exact hk),
           List.length_append, mulMatrixQ_row_len _ d nrows k hk, hrow1u_width k hk]; omega
     have hMlen : M.length = nrows + nrows := by rw [hMdef, List.length_append, hR1len, hR2len]
-    have hrhslen : rhs.length = nrows + nrows := by
-      rw [hrhsdef, List.length_append, padCoeffsQ, padCoeffsQ]; simp
+    have hrhslen : rhs.length = nrows + nrows := by simp [hrhsdef]
     have hsollen : sol.length = 2 * (d + 1) := cConstSolveUniqueQ_length M rhs _ sol hmatch
     have hsolve := cConstSolveUniqueQ_sound M rhs (2 * (d + 1)) sol hM_width
       (by rw [hMlen, hrhslen]) hmatch
@@ -390,7 +388,7 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
             (mulMatrixQ (cscale a b2) d nrows)
           ++ hcatQ (mulMatrixQ b2 d nrows)
             (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))).getD k [] ) sol
-          = (padCoeffsQ z1 nrows ++ padCoeffsQ z2 nrows).getD k 0 := by
+          = (CPoly.coeffs z1 nrows ++ CPoly.coeffs z2 nrows).getD k 0 := by
       rw [← hrow1u, ← hMdef, ← hrhsdef]; exact hsolve
     -- toPoly agreement (cnorm).
     have htoP_y1 : toPoly y1 = toPoly u1 := by rw [← hy1]; simp only [denote]

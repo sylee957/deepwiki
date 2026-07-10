@@ -44,6 +44,19 @@ Each op is a coefficient formula through `ofFn`; its correctness is the `toR`-im
 
 variable {P : Type u → Type u} [CPoly P] {α : Type u} [CCommRing α]
 
+/-- The first `n` coefficients of `p`, low degree first and zero-extended through `CPoly.coeff`. -/
+def coeffs (p : P α) (n : ℕ) : List α := (List.range n).map (coeff p)
+
+/-- `CPoly.coeffs p n` contains exactly `n` coefficients. -/
+@[simp] theorem coeffs_length (p : P α) (n : ℕ) : (coeffs p n).length = n := by
+  simp [coeffs]
+
+/-- An in-range entry of `CPoly.coeffs p n` is the corresponding coefficient of `p`. -/
+theorem coeffs_getD (p : P α) (n i : ℕ) (hi : i < n) :
+    (coeffs p n).getD i CCommRing.zero = coeff p i := by
+  rw [coeffs, List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range hi,
+    Option.map_some, Option.getD_some]
+
 /-- Coefficientwise addition. -/
 def add (p q : P α) : P α :=
   ofFn (max (degBound p) (degBound q)) (fun i => CCommRing.add (coeff p i) (coeff q i))
