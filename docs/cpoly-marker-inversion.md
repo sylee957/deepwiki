@@ -42,7 +42,7 @@ gate-green commit (a rename must be atomic — the intermediate state doesn't co
 
 After the CPoly engine, the same safe de-`G` was extended to the **fraction-field-tower layer** (84 decl
 names, 4708 occ): `CFracG→CFrac`, `amG→am`, the fraction operations now live on `DenseFrac`, while
-unchecked numerator/denominator pairs use the explicit `RawFrac` boundary,
+certified numerator/denominator pairs use the `CFrac F P` interface,
 tower bridges (`toCFracG`/`towerFractionFieldDerivG`/`toGBPolyG`/`liftKG`), matrix ops
 (`matMulG`/`matInvG`/`gaussElimG`/`kernelBasisG`), Prop/result types (`IntegralResultG`/`IsIntegralResultG`/
 `LrtResultG`/`logResidueSumG`/…); plus the **6 radical generic/ℚ twin pairs** (`algDerivG`/`algDeriv`,

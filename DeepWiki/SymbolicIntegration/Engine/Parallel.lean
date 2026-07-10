@@ -20,8 +20,8 @@ generators at once*. By the strong Liouville Theorem (5.5.3), if `∫f` is eleme
 with `v ∈ K`, constants `cᵢ`, and `uᵢ` polynomials in `t₁,…,tₙ` (logarithmic-derivative identity). The
 method makes **educated guesses** for the `uᵢ` (the **log arguments**) and the denominator + degree of
 `v` (the **rational part**), turning the unknowns — the `cᵢ` and the numerator coefficients of `v` —
-into a **linear system over the constants** `Const(K)`, solved by ordinary linear algebra
-(`crref`/`cConstSolveUniqueQ` of `ComputableParametric`). It is **heuristic, not algorithmic**: a guess
+into a **linear system over the constants** `Const(K)`, solved through `CLinearSolve`. It is
+**heuristic, not algorithmic**: a guess
 may be too small (so a genuine elementary integral is missed) — turning it into a decision procedure for
 a class of integrands "remains an open problem" (book p.298). Its appeal is implementation ease and speed.
 
@@ -70,7 +70,7 @@ default educated guess; an integrand whose denominator factors into squarefree-b
   identity `a·s = (Db·s − b·Ds)·∏pⱼ + Σ cⱼ·Dpⱼ·s²·∏_{k≠j}pₖ`, and reads off the matrix.
 * **`CLinearSolve.solveAny`** — a *particular* solution of the (typically underdetermined: the arbitrary
   constant of integration leaves free variables) inhomogeneous system, complementing the unique-solution
-  `cConstSolveUniqueQ`.
+  `CLinearSolve.solveUnique`.
 * **`cParallelIntegrate`** — the `ParallelIntegrate(f, D)` box: returns `some (rational part (b,s),
   [(cⱼ, log arg pⱼ)])` or `none` ("failed" — ansatz infeasible / no elementary integral in the guess).
 

@@ -6,7 +6,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 
 Over a logarithmic tower `C(x)(log u₁,…,log uₘ)` with base `ℚ(x)`, a candidate `log(u)`/`exp(b)` is a
 new transcendental monomial iff its (logarithmic) derivative is not a ℚ-linear combination of the
-existing `Duᵢ/uᵢ ∈ ℚ(x)`, decided by the ℚ-nullspace solver `cNullspaceBasisQ`. -/
+existing `Duᵢ/uᵢ ∈ ℚ(x)`, decided through `CLinearSolve.nullspaceBasis`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -21,7 +21,7 @@ is a common multiple of `w`'s denominator), via `CPoly.normalizeFracPair` then `
 def cClearedNumCoeffs (d : DensePoly ℚ) (w : DenseFrac ℚ) : DensePoly ℚ :=
   let wn := CPoly.normalizeFracPair w.num w.den -- `w` in lowest terms `(a, b)`
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
-  cmul wn.1 (cdivWf d wn.2)
+  CPolyEngine.mul wn.1 (CPolyEuclidean.div d wn.2)
 
 /-- `cLinearDepData ws w = (M, m)`: clear `w₁,…,wₘ,w` to a common denominator and assemble the
 coefficient matrix `M` (`w` last) whose nullspace vectors are the ℚ-relations `Σ rⱼ wⱼ + r·w = 0`;
@@ -43,7 +43,7 @@ def cLinearDepData (ws : List (DenseFrac ℚ)) (w : DenseFrac ℚ) :
 new transcendental monomial, i.e. no `rᵢ ∈ ℚ` give `Du/u = Σ rᵢ (Duᵢ/uᵢ)`. -/
 def cLogIsNewMonomial (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) : Bool :=
   let (M, m) := cLinearDepData logDerivs w
-  let basis := cNullspaceBasisQ M (m + 1)
+  let basis := CLinearSolve.nullspaceBasis M (m + 1)
   -- `log(u)` is a *new* monomial iff NO nullspace relation involves the `w`-column (index `m`).
   !(basis.any (fun rel => rel.getD m 0 ≠ 0))
 
@@ -56,7 +56,7 @@ def cLogRelationExists (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) : 
 `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` (`w`-column normalized to `−1`); else `none`. -/
 def cLogRelationCoeffs (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) : Option (List ℚ) :=
   let (M, m) := cLinearDepData logDerivs w
-  let basis := cNullspaceBasisQ M (m + 1)
+  let basis := CLinearSolve.nullspaceBasis M (m + 1)
   match basis.find? (fun rel => rel.getD m 0 ≠ 0) with
   | none => none
   | some rel =>
@@ -106,7 +106,7 @@ theorem structureTheorem_example :
          | none => false)
      -- (2) `log(x+1)` is a new transcendental monomial over `C(x)(log x)`.
      && (DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
-  native_decide
+  ccompute
 
 #print axioms structureTheorem_example
 
@@ -137,7 +137,7 @@ theorem multiStructureTheorem_example :
      -- the two generators are independent of each other.
      && (DensePoly.cLogIsNewMonomial [structLogDerivX1] structLogDerivX == true)
      && (DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
-  native_decide
+  ccompute
 
 #print axioms multiStructureTheorem_example
 

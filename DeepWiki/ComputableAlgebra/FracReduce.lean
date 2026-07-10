@@ -138,23 +138,4 @@ theorem isZeroNZ_qReduce
 
 end CFrac
 
-/-! ### Sparse specialization witness -/
-
-/-- A reducible sparse fraction `(x² - 1)/(x² + 2x - 3)`. -/
-def sparseSwellFrac : SparseFrac ℚ :=
-  CFrac.ofFraction
-    (CPoly.SparsePoly.ofList [(0, -1), (2, 1)])
-    (CPoly.SparsePoly.ofList [(0, -3), (1, 2), (2, 1)])
-    (by ccompute)
-
-/-- Generic gcd cancellation reduces the sparse witness's numerator to degree one. -/
-theorem sparseSwellFrac_reduced_num_degree :
-    CPolyEngine.cdeg (CFrac.num (qReduce sparseSwellFrac)) = 1 := by
-  ccompute
-
-/-- Generic gcd cancellation preserves the sparse witness's rational-function value. -/
-theorem sparseSwellFrac_value_preserved :
-    CFrac.toRatFunc (qReduce sparseSwellFrac) = CFrac.toRatFunc sparseSwellFrac :=
-  toRatFunc_qReduce sparseSwellFrac
-
 end DeepWiki.SymbolicIntegration

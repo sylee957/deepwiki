@@ -18,13 +18,13 @@ namespace DensePoly
 /-- **Base single-`w` limited integration** `cLimitedIntegrateSingleBase a η` (Bronstein §5.8's
 `LimitedIntegrate(a, Dt)`, `k = ℚ(x)`, polynomial-`b` regime): returns `some (b, c)` with `a = D(b) + c·η`
 (`b ∈ ℚ[x] ⊂ ℚ(x)`, `c ∈ ℚ`), or `none` if no such pair exists in this regime. Builds the two-generator
-constraint system `[a, η]` (`cLinearConstraintsQ`), takes the `c₀ ≠ 0` kernel vector (`cNullspaceBasisQ`),
+constraint system `[a, η]` (`CPoly.linearConstraintsQ`), takes a selected `c₀ ≠ 0` kernel vector,
 normalizes `c₀ = 1`, and recovers `b` by antidifferentiating the cleared polynomial residual `q₀ + c₁·q₁`. -/
 def cLimitedIntegrateSingleBase (a η : DenseFrac ℚ) : Option (DenseFrac ℚ × ℚ) :=
   let gnums := [a.num, η.num]
   let gdens := [a.den, η.den]
-  let (qs, M) := cLinearConstraintsQ gnums gdens
-  let kernel := cNullspaceBasisQ M 2
+  let (qs, M) := CPoly.linearConstraintsQ gnums gdens
+  let kernel := CLinearSolve.nullspaceBasis M 2
   match kernel.find? (fun v => v.getD 0 0 ≠ 0) with
   | none => none
   | some v =>

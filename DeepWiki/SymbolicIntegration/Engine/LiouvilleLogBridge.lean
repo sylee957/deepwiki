@@ -230,12 +230,13 @@ theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : DenseFrac ℚ) :
     DensePoly.cLogIsNewMonomial [] w =
       ((DensePoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
   have hbridge : DensePoly.cLogIsNewMonomial [] w =
-      !((cNullspaceBasisQ (DensePoly.cLinearDepData [] w).1
+      !((CLinearSolve.nullspaceBasis (DensePoly.cLinearDepData [] w).1
           ((DensePoly.cLinearDepData [] w).2 + 1)).any
         (fun rel => rel.getD (DensePoly.cLinearDepData [] w).2 0 ≠ 0)) := rfl
   have h2 : (DensePoly.cLinearDepData [] w).2 = 0 := rfl
   rw [hbridge, h2, show (0 : ℕ) + 1 = 1 from rfl]
   set M := (DensePoly.cLinearDepData [] w).1 with hM
+  rw [CLinearSolve.nullspaceBasis_rat_eq]
   rw [nullspace_single_col M, crref_single_col_pivots M]
   cases hfind : M.find? (fun r => (r.getD 0 0) ≠ 0) with
   | none => simp

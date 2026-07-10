@@ -8,12 +8,12 @@ theorems — the algebraic-independence results deciding whether a candidate `lo
 (Corollary 9.3.1) is now rendered as a **computable** test over the reachable base `k = ℚ(x)`
 (`DeepWiki.SymbolicIntegration.Engine.Structure`): for a logarithmic tower, (9.8)/(9.9) collapse to a
 ℚ-linear-dependence test among the logarithmic derivatives `wᵢ = Duᵢ/uᵢ ∈ ℚ(x)`, decided by the §7.1
-nullspace solver `cNullspaceBasisQ` (`crref` over ℚ), with the detected relation verified against the
+nullspace solver `CLinearSolve.nullspaceBasis` (`crref` over ℚ), with the detected relation verified against the
 rational-function identity. Validated on `log(x²) = 2 log(x)` (dependent) vs `log(x), log(x+1)`
 (independent).
 
 **Computable-vs-abstract.** Each decision below is a computable function over the generic `DenseFrac ℚ`
-(= ℚ(x)) / `DensePoly ℚ` validated by `native_decide` on the worked relations (checking the detected ℚ-coefficients
+(= ℚ(x)) / `DensePoly ℚ` validated by `ccompute` on the worked relations (checking the detected ℚ-coefficients
 `rᵢ` *actually satisfy* `w = Σ rᵢ (Duᵢ/uᵢ)` over ℚ(x) via the cleared difference); the *abstract*
 correctness (the structure theorem `Dv = Du/u ↔ …`, Theorem 9.3.1) is **NOT** proved. The full nested
 tower (both index sets `E`, `L` over `C(x)(t₁,…,tₙ)` with level-by-level recursion), the §9.1 module of
@@ -30,7 +30,7 @@ differentials, §9.2 Rosenlicht, and §9.4 Rothstein–Caviness proof machinery 
   the new-monomial condition; the abstract Rosenlicht differential-form theorem itself stays deferred.)
 §9.3 The Risch Structure Theorems: Thm 9.3.1, Thm 9.3.2; Cor 9.3.2; Lemma 9.3.1, Lemma 9.3.2,
   Lemma 9.3.3 (abstract correctness; the decision criterion Corollary 9.3.1(i)/(ii) is now computable +
-  native_decide-validated over the reachable base `k = ℚ(x)`, the new-log / new-exp tests for a single
+  ccompute-validated over the reachable base `k = ℚ(x)`, the new-log / new-exp tests for a single
   level of logarithmic monomials over ℚ(x), see `alg_9_3_logIsNewMonomial`/`alg_9_3_expIsNewMonomial`/
   `alg_9_3_logRelationCoeffs`/`ex_9_3_1_log`/`ex_9_3_1_exp`/`ex_9_3_1_multi`). The general nested tower
   (matrix entries in the upper field `C(x)(t₁,…,t_{i-1})`, the level-by-level recursion threading the
@@ -52,7 +52,7 @@ computable `cLogIsNewMonomial fuel logDerivs w` over the logarithmic tower `C(x)
 `k = ℚ(x)`, `Const = ℚ`. Given the existing logarithmic derivatives `[Du₁/u₁,…,Duₘ/uₘ] ∈ ℚ(x)` and a
 candidate `log(u)`'s `w = Du/u`, returns `true` iff `log(u)` is a **new transcendental monomial** — iff
 `Du/u ∉ span_ℚ{Duᵢ/uᵢ}` (no `rᵢ ∈ ℚ` with `Du/u = Σ rᵢ Duᵢ/uᵢ`, eq. 9.8 with `E` empty), decided by the
-§7.1 ℚ-nullspace solver `cNullspaceBasisQ`. Computable + `native_decide`-validated; abstract correctness
+§7.1 ℚ-nullspace solver `CLinearSolve.nullspaceBasis`. Computable + `ccompute`-validated; abstract correctness
 (Thm 9.3.1) deferred. -/
 def alg_9_3_logIsNewMonomial := @cLogIsNewMonomial
 
@@ -61,13 +61,13 @@ shared computable `cLogIsNewMonomial logDerivs Db` test over `k = ℚ(x)`. Given
 derivative `Db ∈ ℚ(x)` and the existing logarithmic derivatives, returns `true` iff `exp(b)` is a **new
 transcendental monomial** — iff `Db` is not the logarithmic derivative of a `K`-radical, i.e. (at the
 base, `E`-part empty) `Db ∉ span_ℚ{Duᵢ/uᵢ}` — the *same* ℚ-linear-dependence engine as the logarithm
-case, applied to `Db`. Computable + `native_decide`-validated; abstract correctness deferred. -/
+case, applied to `Db`. Computable + `ccompute`-validated; abstract correctness deferred. -/
 def alg_9_3_expIsNewMonomial := @cLogIsNewMonomial
 
 /-- **The ℚ-relation coefficients** (§9.3, the explicit `rᵢ ∈ ℚ` of eq. 9.8): the computable
 `cLogRelationCoeffs fuel logDerivs w`, returning `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` when a
 single relation pins them (the kernel is one-dimensional with nonzero `w`-coordinate), else `none` —
-e.g. `[2]` for `log(x²) = 2 log(x)`. Computable + `native_decide`-validated; abstract correctness
+e.g. `[2]` for `log(x²) = 2 log(x)`. Computable + `ccompute`-validated; abstract correctness
 deferred. -/
 def alg_9_3_logRelationCoeffs := @cLogRelationCoeffs
 
@@ -75,14 +75,14 @@ def alg_9_3_logRelationCoeffs := @cLogRelationCoeffs
 tower `C(x)(log x)` (logarithmic derivative `D(x)/x = 1/x`), `cLogIsNewMonomial` returns `false` for the
 candidate `log(x²)` (`w = 2/x ∈ span_ℚ{1/x}`, the relation `log(x²) = 2 log(x)`) with detected
 `cLogRelationCoeffs = some [2]` verified to **actually satisfy** `D(x²)/x² = 2·D(x)/x` over ℚ(x), and
-`true` for `log(x+1)` (`1/(x+1) ∉ span_ℚ{1/x}`, a new transcendental monomial), `native_decide`. -/
+`true` for `log(x+1)` (`1/(x+1) ∉ span_ℚ{1/x}`, a new transcendental monomial), `ccompute`. -/
 abbrev ex_9_3_1_log := @structureTheorem_example
 
 /-- **Example (§9.3, Corollary 9.3.1(ii), book p.284/285)**, the exponential analogue: over `C(x)(log x)`,
 the shared `cLogIsNewMonomial` relation test returns `false` for a candidate `exp(b)` with
 `Db = 2/x ∈ span_ℚ{1/x}` (so `Db` is
 the logarithmic derivative of the radical `x²`, `exp(b)` already in the field), relation `[2]` verified,
-and `true` for `Db = 1/(x+1) ∉ span_ℚ{1/x}` (a new transcendental exponential monomial), `native_decide`.
+and `true` for `Db = 1/(x+1) ∉ span_ℚ{1/x}` (a new transcendental exponential monomial), `ccompute`.
 The exponential decision shares the *same* ℚ-linear-dependence engine as the logarithm case. -/
 abbrev ex_9_3_1_exp := @structureTheorem_example
 
@@ -90,7 +90,7 @@ abbrev ex_9_3_1_exp := @structureTheorem_example
 2-element logarithmic tower `C(x)(log x, log(x+1))` (the ℚ-independent `1/x` and `1/(x+1)`),
 `cLogIsNewMonomial` returns `false` for `log(x²+x) = log(x(x+1))` (`(2x+1)/(x²+x) = 1/x + 1/(x+1)`,
 relation `[1, 1]` verified) and `true` for each generator relative to the other (the tower is a genuine
-transcendence-degree-2 extension), `native_decide` — confirming the ℚ-linear-relation engine scales past
+transcendence-degree-2 extension), `ccompute` — confirming the ℚ-linear-relation engine scales past
 the single-generator base. -/
 abbrev ex_9_3_1_multi := @multiStructureTheorem_example
 

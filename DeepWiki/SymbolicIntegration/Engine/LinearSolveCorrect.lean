@@ -832,6 +832,14 @@ theorem cConstSolveAnyQ_length (Arows : List (List ℚ)) (urhs : List ℚ) (ncol
   · simp only [hc, Bool.false_eq_true, if_false, Option.some.injEq] at hsome
     rw [← hsome, List.length_map, List.length_range]
 
+/-- Every vector returned by `cNullspaceBasisQ` has exactly `ncols` entries. -/
+theorem cNullspaceBasisQ_mem_length (rows : List (List ℚ)) (ncols : ℕ) (x : List ℚ)
+    (hx : x ∈ cNullspaceBasisQ rows ncols) : x.length = ncols := by
+  unfold cNullspaceBasisQ at hx
+  rw [List.mem_map] at hx
+  obtain ⟨fc, _, rfl⟩ := hx
+  simp
+
 /-- Soundness of `cConstSolveUniqueQ`: if it returns `some x`, then `x` solves `A·x = b` rowwise,
 `dotQ (Arows.getD i []) x = urhs.getD i 0` for each `i < Arows.length`. -/
 theorem cConstSolveUniqueQ_sound (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
@@ -1020,5 +1028,8 @@ instance instLawfulCLinearSolveRat : LawfulCLinearSolve ℚ where
     change linearDot (rows.getD i []) x = rhs.getD i CCommRing.zero
     rw [linearDot_rat_eq_dotQ]
     exact DensePoly.cConstSolveAnyQ_sound rows rhs ncols x hwidth hlen hsome i hi
+  nullspaceBasis_length := by
+    intro rows ncols x hx
+    exact DensePoly.cNullspaceBasisQ_mem_length rows ncols x hx
 
 end DeepWiki.SymbolicIntegration

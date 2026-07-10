@@ -2,9 +2,9 @@ import DeepWiki.ComputableAlgebra.Field
 
 /-! # Abstract executable linear algebra
 
-`CLinearSolve` separates unique and particular linear-system solves from their implementation.
-`LawfulCLinearSolve` supplies the length and row-equation guarantees consumed by symbolic-integration
-proofs; concrete solvers remain responsible for providing the operations and their laws. -/
+`CLinearSolve` separates unique, particular, and homogeneous-kernel linear-system computations from
+their implementation. `LawfulCLinearSolve` supplies the shape and row-equation guarantees consumed by
+symbolic-integration proofs; concrete solvers remain responsible for providing the operations and laws. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -25,8 +25,10 @@ class CLinearSolve (α : Type u) [CField α] where
   solveUnique : List (List α) → List α → ℕ → Option (List α)
   /-- Return a particular solution of a consistent system, allowing free variables. -/
   solveAny : List (List α) → List α → ℕ → Option (List α)
+  /-- Return a basis of the nullspace of a homogeneous system with `ncols` unknowns. -/
+  nullspaceBasis : List (List α) → ℕ → List (List α)
 
-/-- Lawful interface for executable unique and particular linear-system solvers. -/
+/-- Lawful interface for executable system solves and homogeneous-kernel vector shape. -/
 class LawfulCLinearSolve (α : Type u) [CField α] [CLinearSolve α] where
   /-- A returned unique solution has exactly the requested number of columns. -/
   solveUnique_length : ∀ (rows : List (List α)) (rhs : List α) (ncols : ℕ) (x : List α),
@@ -44,5 +46,8 @@ class LawfulCLinearSolve (α : Type u) [CField α] [CLinearSolve α] where
     (∀ row ∈ rows, row.length = ncols) → rows.length = rhs.length →
       CLinearSolve.solveAny rows rhs ncols = some x →
         ∀ i, i < rows.length → linearSolveRow rows rhs x i
+  /-- Every returned nullspace vector has exactly the requested number of columns. -/
+  nullspaceBasis_length : ∀ (rows : List (List α)) (ncols : ℕ) (x : List α),
+    x ∈ CLinearSolve.nullspaceBasis rows ncols → x.length = ncols
 
 end DeepWiki.SymbolicIntegration

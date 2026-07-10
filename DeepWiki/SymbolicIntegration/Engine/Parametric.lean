@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.LinearSolve
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
+import DeepWiki.ComputableAlgebra.FracReduce
 
 /-! # Computable parametric problems over the tower ℚ(x)[t]
 
@@ -13,19 +14,36 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
+/-! ### Sparse capability witnesses -/
+
+/-- File-local reducible sparse fraction `(x² - 1)/(x² + 2x - 3)`. -/
+private def sparseSwellFrac : SparseFrac ℚ :=
+  CFrac.ofFraction
+    (CPoly.SparsePoly.ofList [(0, -1), (2, 1)])
+    (CPoly.SparsePoly.ofList [(0, -3), (1, 2), (2, 1)])
+    (by ccompute)
+
+example :
+    CPolyEngine.cdeg (CFrac.num (qReduce sparseSwellFrac)) = 1 := by
+  ccompute
+
+example :
+    CFrac.toRatFunc (qReduce sparseSwellFrac) = CFrac.toRatFunc sparseSwellFrac :=
+  toRatFunc_qReduce sparseSwellFrac
+
 /-- Sparse normalization cancels `x - 1` from `(x² - 1)/(x - 1)` through capability selection. -/
 theorem sparse_normalizeFracPair_cancels :
     CPoly.normalizeFracPair
         (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
         (CPoly.SparsePoly.ofList [(0, -1), (1, 1)] : CPoly.SparsePoly ℚ) =
       (CPoly.SparsePoly.ofList [(0, 1), (1, 1)], CPoly.SparsePoly.ofList [(0, 1)]) := by
-  native_decide
+  ccompute
 
 /-- Sparse selected extended gcd computes normalized Bezout cofactors for `(1, 0)`. -/
 theorem sparse_bezoutOne_one_zero :
     CPoly.bezoutOne (CPoly.one : CPoly.SparsePoly ℚ) CPoly.czero =
       (CPoly.one, CPoly.czero) := by
-  native_decide
+  ccompute
 
 /-- Sparse reduced Diophantine solving satisfies its represented Bezout equation. -/
 theorem sparse_diophantineReduced_sound (p q rhs : CPoly.SparsePoly ℚ)
@@ -105,75 +123,95 @@ def cParamLogDeriv (fval θlogderiv : DenseFrac ℚ) :
     else if !cParametricLogDeriv resid then none
     else some (N, M, resid)
 
-/-! ### `cParamRischDE` — the parametric Risch DE `Dy + f·y = Σᵢ cᵢ·gᵢ`
+end DensePoly
+
+namespace CPoly
+
+/-! ### `CPoly.paramRischDE` — the parametric Risch DE `Dy + f·y = Σᵢ cᵢ·gᵢ`
 
 Solve the parametric Risch differential equation for `y ∈ k(t)` and constants `c₁, …, cₘ`, returning a
 basis of the constant solution subspace. Over the base monomial case `k = ℚ`, `D = d/dt`, the bounded-degree
 polynomial equation becomes a homogeneous linear system over `ℚ`, whose kernel is returned. -/
 
-/-- Linear constraints over ℚ `cLinearConstraintsQ gnums gdens` (`D = d/dt`, `k = ℚ`): from the reduced
+/-- Linear constraints over ℚ `linearConstraintsQ gnums gdens` (`D = d/dt`, `k = ℚ`): from the reduced
 equation `Dp = Σᵢ cᵢ·gᵢ` with `gᵢ = gnumsᵢ/gdensᵢ`, clears the common denominator `d = lcm(gdensᵢ)`,
 splits each `d·gᵢ = qᵢ·d + rᵢ`, and returns the polynomial parts `qs = [q₁, …, qₘ]` together with the
-homogeneous constraint matrix `Mᵢⱼ = coefficient(rⱼ, tⁱ)` (fed to `cNullspaceBasisQ`). -/
-def cLinearConstraintsQ (gnums gdens : List (DensePoly ℚ)) :
-    List (DensePoly ℚ) × List (List ℚ) :=
-  let d := gdens.foldl (fun acc den => CPoly.lcm acc den) [(1 : ℚ)]
-  let qrs : List (DensePoly ℚ × DensePoly ℚ) :=
+homogeneous constraint matrix `Mᵢⱼ = coefficient(rⱼ, tⁱ)`. -/
+def linearConstraintsQ {P : Type → Type} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) :
+    List (P ℚ) × List (List ℚ) :=
+  let d := gdens.foldl (fun acc den => CPoly.lcm acc den) (CPoly.one : P ℚ)
+  let qrs : List (P ℚ × P ℚ) :=
     (List.zip gnums gdens).map (fun (gn, gd) =>
-      let dgi := cmul gn (cdivWf d gd)             -- `d·gᵢ = gnumᵢ·(d/gdenᵢ)`
-      cdivmodWf dgi d)                              -- `(qᵢ, rᵢ)`
+      let dgi := CPolyEngine.mul gn (CPolyEuclidean.div d gd)
+      CPolyEuclidean.divmod dgi d)
   let qs := qrs.map Prod.fst
   let rs := qrs.map Prod.snd
-  let nrows := cdeg d                              -- rows `i = 0 .. deg(d)−1`
+  let nrows := CPolyEngine.cdeg d
   let m := gnums.length
   let M : List (List ℚ) :=
     (List.range nrows).map (fun i =>
-      (List.range m).map (fun j => CPoly.coeff (rs.getD j []) i))
+      (List.range m).map (fun j => CPoly.coeff (rs.getD j CPoly.czero) i))
   (qs, M)
 
-/-- **Parametric Risch DE over the base monomial ℚ[t]** `cParamRischDE gnums gdens`, specialized to
+/-- **Parametric Risch DE over the base monomial ℚ[t]** `CPoly.paramRischDE gnums gdens`, specialized to
 `k = ℚ`, `D = d/dt`, the **reduced** equation `Dp = Σᵢ cᵢ·gᵢ` (`a = 1, b = 0`). Returns a **basis**
 `[c⃗₁, …, c⃗ᵣ]` of the `Const(k) = ℚ`-linear subspace of constant tuples
 `(c₁, …, cₘ)` for which the equation has a polynomial solution `p ∈ ℚ[t]`:
 
-1. `(qs, M) ← cLinearConstraintsQ gnums gdens`: the cleared homogeneous matrix
+1. `(qs, M) ← linearConstraintsQ gnums gdens`: the cleared homogeneous matrix
    `M·(c₁,…,cₘ)ᵀ = 0` (entries in `Const(k) = ℚ`).
-2. **return** `cNullspaceBasisQ M m` — a basis of `ker(M)`, the constant solution subspace.
+2. **return** `CLinearSolve.nullspaceBasis M m` — the selected basis of `ker(M)`.
 
 The empty kernel (`[]`) means the only solution is `c₁ = … = cₘ = 0`. For each basis tuple `c⃗`, a
 companion polynomial solution `p` is recoverable by integrating `Σ cᵢqᵢ` (`cIntegratePolyQ`). -/
-def cParamRischDE (gnums gdens : List (DensePoly ℚ)) : List (List ℚ) :=
-  let (_qs, M) := cLinearConstraintsQ gnums gdens
-  cNullspaceBasisQ M gnums.length
+def paramRischDE {P : Type → Type} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] [CLinearSolve ℚ]
+    (gnums gdens : List (P ℚ)) : List (List ℚ) :=
+  let (_qs, M) := linearConstraintsQ gnums gdens
+  CLinearSolve.nullspaceBasis M gnums.length
 
-/-! ### `cLimitedIntegrate`
+/-! ### `CPoly.limitedIntegrate`
 
 Decide `f = Dv + Σᵢ cᵢ·log(wᵢ)` for constants `cᵢ` and `v ∈ k(t)`. Equivalently `f − Σ cᵢ·(Dwᵢ/wᵢ) = Dv`,
 the parametric Risch DE `Dv + 0·v = f − Σ cᵢ·(Dwᵢ/wᵢ)` — i.e. (7.1) with `gᵢ = Dwᵢ/wᵢ` and the additional
-"`f` itself" generator. So it is the `gᵢ = Dwᵢ/wᵢ` specialization of `cParamRischDE`, with `f`
+"`f` itself" generator. So it is the `gᵢ = Dwᵢ/wᵢ` specialization of `CPoly.paramRischDE`, with `f`
 appended as the forced generator `c₀ = 1`. -/
 
-/-- **Limited integration over the base monomial ℚ[t]** `cLimitedIntegrate fnum fden wnums wdens`
+/-- **Limited integration over the base monomial ℚ[t]** `CPoly.limitedIntegrate fnum fden wnums wdens`
 over `k = ℚ`, `D = d/dt`. Decides `f = Dv + Σᵢ cᵢ·log(wᵢ)` for `cᵢ ∈ ℚ` and `v ∈ ℚ(t)`, returning the
 basis of admissible `(c₀, c₁, …, cₘ)` tuples (with `c₀` the coefficient of the forced generator `f`, so a
 genuine solution has `c₀ = 1`): the parametric Risch DE `Dv = c₀·f − Σᵢ cᵢ·(Dwᵢ/wᵢ)` (with generators
-`g₀ = f`, `gᵢ = Dwᵢ/wᵢ = wnumᵢ'/wnumᵢ`-style logarithmic derivatives). Built as `cParamRischDE` on the
+`g₀ = f`, `gᵢ = Dwᵢ/wᵢ = wnumᵢ'/wnumᵢ`-style logarithmic derivatives). Built as `CPoly.paramRischDE` on the
 generator list `[f, Dw₁/w₁, …, Dwₘ/wₘ]`. The `wᵢ` arrive as numerator/denominator pairs; `Dwᵢ/wᵢ` is
 `(D(wnumᵢ)·wdenᵢ − wnumᵢ·D(wdenᵢ)) / (wnumᵢ·wdenᵢ)`. Sharper denominator bounds and the
 `c₀ = 1` back-substitution to a nonparametric RDE are left to downstream specializations. -/
-def cLimitedIntegrate (fnum fden : DensePoly ℚ) (wnums wdens : List (DensePoly ℚ)) :
+def limitedIntegrate {P : Type → Type} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] [CLinearSolve ℚ]
+    (fnum fden : P ℚ) (wnums wdens : List (P ℚ)) :
     List (List ℚ) :=
   -- generator `g₀ = f`, then `gᵢ = Dwᵢ/wᵢ` (logarithmic derivative of `wᵢ`).
-  let logDerivs : List (DensePoly ℚ × DensePoly ℚ) :=
+  let logDerivs : List (P ℚ × P ℚ) :=
     (List.zip wnums wdens).map (fun (wn, wd) =>
-      let num := csub (cmul (cderiv wn) wd) (cmul wn (cderiv wd))
-      let den := cmul wn wd
+      let num := CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv wn) wd)
+        (CPolyEngine.mul wn (CPolyEngine.deriv wd))
+      let den := CPolyEngine.mul wn wd
       (num, den))
   let gnums := fnum :: logDerivs.map Prod.fst
   let gdens := fden :: logDerivs.map Prod.snd
-  cParamRischDE gnums gdens
+  paramRischDE gnums gdens
 
-end DensePoly
+end CPoly
+
+/-- Sparse polynomials run the generic parametric Risch-DE constraint and kernel algorithms unchanged. -/
+theorem sparse_paramRischDE_example :
+    let ofList : List (ℕ × ℚ) → CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList
+    CPoly.paramRischDE
+        [ofList [(0, 1), (1, 3), (3, 2)], ofList [(0, 1)], ofList [(0, 1)]]
+        [ofList [(0, -1), (2, 1)], ofList [(0, -1), (1, 1)],
+          ofList [(0, 1), (1, 1)]] =
+      [[(-1 : ℚ) / 2, 3 / 2, 1]] := by
+  ccompute
 
 /-! ### Validation — the parametric logarithmic derivative recognizer
 
@@ -201,7 +239,7 @@ theorem paramLogDeriv_example :
           let mw := CCommRing.mul (CFrac.ofScalar ((m : ℚ))) paramLogDerivExampleW
           CCommRing.isZero (CField.sub nf mw) && CCommRing.isZero (CField.sub v CCommRing.one)
             && decide (n ≠ 0)
-      | none => false) = true := by native_decide
+      | none => false) = true := by ccompute
 
 #print axioms paramLogDeriv_example
 
@@ -228,59 +266,60 @@ def paramRischExampleG3den : DensePoly ℚ := [1, 1]
 -- **Sanity prints.** `LinearConstraints` returns the cleared coefficient system (rows = coefficients
 -- of `t⁰, t¹`: `[[1,1,-1],[5,1,1]]`, up to equation order), and the
 -- kernel basis (one vector, proportional to `(1,-3,-2)`: here `(-1/2, 3/2, 1) = -½·(1,-3,-2)`).
-#eval (DensePoly.cLinearConstraintsQ
+#eval (CPoly.linearConstraintsQ
     [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
     [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]).2
-#eval DensePoly.cParamRischDE
+#eval CPoly.paramRischDE
     [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
     [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]
 
-/-- **Cleared parametric-constraint check** `paramConstraintCheck gnums gdens cs`: `true` iff the
+/-- **Cleared parametric-constraint check** `CPoly.paramConstraintCheck gnums gdens cs`: `true` iff the
 constant tuple `cs = (c₁,…,cₘ)` satisfies the cleared constraint `Σᵢ cᵢ·rᵢ = 0` (the remainders `rᵢ` of
 `d·gᵢ` by `d = lcm(denominators)`), i.e. `Σᵢ cᵢ·(numᵢ·(d/denᵢ) mod d) = 0` — the polynomial identity
 certifying that `(c₁,…,cₘ)` is a genuine solution of the parametric Risch DE's linear constraints. -/
-def paramConstraintCheck (gnums gdens : List (DensePoly ℚ)) (cs : List ℚ) : Bool :=
-  let d := gdens.foldl (fun acc den => CPoly.lcm acc den) [(1 : ℚ)]
-  let total : DensePoly ℚ :=
+def CPoly.paramConstraintCheck {P : Type → Type} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) (cs : List ℚ) : Bool :=
+  let d := gdens.foldl (fun acc den => CPoly.lcm acc den) (CPoly.one : P ℚ)
+  let total : P ℚ :=
     ((List.zip gnums gdens).zip cs).foldl (fun acc ((gn, gd), c) =>
-      let dgi := cmul gn (cdivWf d gd)
-      let ri := cmodWf dgi d
-      cadd acc (cscale c ri)) []
-  cisZero total
+      let dgi := CPolyEngine.mul gn (CPolyEuclidean.div d gd)
+      let ri := CPolyEuclidean.mod dgi d
+      CPolyEngine.add acc (CPolyEngine.scale c ri)) CPoly.czero
+  CPolyEngine.cisZero total
 
 /-- **The parametric Risch differential equation reduces to a constant linear system**
-(`native_decide`). For
+(`ccompute`). For
 `Dp = c₁·(2t³+3t+1)/(t²−1) + c₂/(t−1) + c₃/(t+1)` over `k = ℚ`, `t` a monomial with `Dt = 1`:
 
-1. **Linear constraints.** `cLinearConstraintsQ` returns the homogeneous matrix `[[5,1,1],[1,1,-1]]`
+1. **Linear constraints.** `CPoly.linearConstraintsQ` returns the homogeneous matrix `[[5,1,1],[1,1,-1]]`
    up to equation order, pinned componentwise against the expected values.
-2. **Constant solve.** `cParamRischDE` returns a **basis** of its kernel — a single vector `c⃗`
+2. **Constant solve.** `CPoly.paramRischDE` returns a **basis** of its kernel — a single vector `c⃗`
    (one-dimensional solution space), each verified to **actually satisfy** the cleared constraint
-   `Σᵢ cᵢ·rᵢ = 0` by `paramConstraintCheck` (the cleared polynomial identity), and confirmed nontrivial
+   `Σᵢ cᵢ·rᵢ = 0` by `CPoly.paramConstraintCheck` (the cleared polynomial identity), and confirmed nontrivial
    (not all-zero). The solution space is `(c₁,c₂,c₃) = (λ,−3λ,−2λ)`; the returned basis vector is
    proportional to `(1,−3,−2)`, so the parametric problem reduces to the one-parameter `Dp = 2λt`.
 
 This is the **parametric** Risch differential equation: the right-hand side `Σ cᵢgᵢ` carries
-undetermined constants and reduces, via `cLinearConstraintsQ` and the constant linear solve
-`cNullspaceBasisQ` (ordinary ℚ-Gaussian elimination
+undetermined constants and reduces, via `CPoly.linearConstraintsQ` and the constant linear solve
+`CLinearSolve.nullspaceBasis` (ordinary ℚ-Gaussian elimination
 since `Const(k) = ℚ`), to a basis of the constant solution subspace. -/
 theorem paramRischDE_example :
     -- (1) the cleared constraint matrix is the system `c₁(5t+1)+c₂(t+1)+c₃(t−1)=0`, i.e. (low→high in
     -- `t`) the rows `t⁰: [1,1,-1]` and `t¹: [5,1,1]`.
-    (decide ((cLinearConstraintsQ
+    (decide ((CPoly.linearConstraintsQ
         [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
         [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]).2
       = [[1,1,-1],[5,1,1]])
     -- (2) the kernel basis is one nontrivial vector, each satisfying the cleared constraint.
-    && (let basis := cParamRischDE
+    && (let basis := CPoly.paramRischDE
           [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
           [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]
         decide (basis.length = 1)
           && basis.all (fun cs =>
-              paramConstraintCheck
+              CPoly.paramConstraintCheck
                 [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
                 [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den] cs
-                && !(cs.all (· == 0))))) = true := by native_decide
+                && !(cs.all (· == 0))))) = true := by ccompute
 
 #print axioms paramRischDE_example
 
@@ -289,7 +328,7 @@ theorem paramRischDE_example :
 `k = ℚ`, `t` a monomial with `Dt = 1` (`D = d/dt`). The limited integration problem
 `f = Dv + Σᵢ cᵢ·log(wᵢ)` is the parametric Risch DE (7.1) with generators `g₀ = f`, `gᵢ = Dwᵢ/wᵢ`. For
 `f = 1/t`, `w₁ = t`, `w₂ = t+1` (`Dw₁/w₁ = 1/t`, `Dw₂/w₂ = 1/(t+1)`), the only constant relation among
-`{f, 1/t, 1/(t+1)}` is `f = 1/t = log(t)′`, so `cLimitedIntegrate` returns a one-dimensional kernel — the
+`{f, 1/t, 1/(t+1)}` is `f = 1/t = log(t)′`, so `CPoly.limitedIntegrate` returns a one-dimensional kernel — the
 basis vector witnessing `c₀·f = c₁·(Dw₁/w₁)` (i.e. `f = log(w₁)`, the limited-integral certificate). -/
 
 open DensePoly
@@ -299,32 +338,32 @@ def limitedIntExampleFnum : DensePoly ℚ := [1]
 /-- Limited-integration example denominator `t`. -/
 def limitedIntExampleFden : DensePoly ℚ := [0, 1]
 
--- **Sanity print.** `cLimitedIntegrate` finds the relation `f = Dw₁/w₁` (`f = log(t)`),
+-- **Sanity print.** `CPoly.limitedIntegrate` finds the relation `f = Dw₁/w₁` (`f = log(t)`),
 -- a one-dimensional kernel `[[-1, 1, 0]]` over generators `[f, Dw₁/w₁, Dw₂/w₂]`.
-#eval DensePoly.cLimitedIntegrate limitedIntExampleFnum limitedIntExampleFden [[0, 1], [1, 1]] [[1], [1]]
+#eval CPoly.limitedIntegrate limitedIntExampleFnum limitedIntExampleFden [[0, 1], [1, 1]] [[1], [1]]
 
-/-- **Limited integration reduces to the parametric Risch DE** (`native_decide`). For
+/-- **Limited integration reduces to the parametric Risch DE** (`ccompute`). For
 `f = Dv + c₁·log(t) + c₂·log(t+1)` with `f = 1/t` over `k = ℚ`,
-`cLimitedIntegrate` (the `gᵢ = Dwᵢ/wᵢ` specialization of `cParamRischDE`, with `f` the forced generator)
+`CPoly.limitedIntegrate` (the `gᵢ = Dwᵢ/wᵢ` specialization of `CPoly.paramRischDE`, with `f` the forced generator)
 returns a nonempty constant kernel basis, each vector verified to **actually satisfy** the cleared
-constraint `c₀·f + Σᵢ cᵢ·(Dwᵢ/wᵢ) ≡ 0 (mod lcm)` by `paramConstraintCheck`. The relation found is
+constraint `c₀·f + Σᵢ cᵢ·(Dwᵢ/wᵢ) ≡ 0 (mod lcm)` by `CPoly.paramConstraintCheck`. The relation found is
 `f = log(t)` (`c₀ = ±1`, `c₁ = ∓1`, `c₂ = 0`) — the limited-integral certificate that `∫ f = log(t)`.
 Sharper denominator bounds and the `c₀ = 1` back-substitution to a nonparametric RDE for `v` are left to
 downstream specializations. -/
 theorem limitedIntegrate_example :
     (let wnums : List (DensePoly ℚ) := [[0, 1], [1, 1]]
      let wdens : List (DensePoly ℚ) := [[1], [1]]
-     -- the generators `cLimitedIntegrate` builds: `g₀ = f`, `gᵢ = Dwᵢ/wᵢ`.
+     -- the generators `CPoly.limitedIntegrate` builds: `g₀ = f`, `gᵢ = Dwᵢ/wᵢ`.
      let logDerivs : List (DensePoly ℚ × DensePoly ℚ) :=
        (List.zip wnums wdens).map (fun (wn, wd) =>
          (csub (cmul (cderiv wn) wd) (cmul wn (cderiv wd)), cmul wn wd))
      let gnums := limitedIntExampleFnum :: logDerivs.map Prod.fst
      let gdens := limitedIntExampleFden :: logDerivs.map Prod.snd
-     let basis := cLimitedIntegrate limitedIntExampleFnum limitedIntExampleFden wnums wdens
+     let basis := CPoly.limitedIntegrate limitedIntExampleFnum limitedIntExampleFden wnums wdens
      decide (0 < basis.length)
        && basis.all (fun cs =>
-            paramConstraintCheck gnums gdens cs && !(cs.all (· == 0)))) = true := by
-  native_decide
+            CPoly.paramConstraintCheck gnums gdens cs && !(cs.all (· == 0)))) = true := by
+  ccompute
 
 #print axioms limitedIntegrate_example
 

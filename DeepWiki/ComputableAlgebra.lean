@@ -6,7 +6,6 @@ import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.ComputableAlgebra.PolyReprDenote
 import DeepWiki.ComputableAlgebra.PolyReprDegree
 import DeepWiki.ComputableAlgebra.PolyReprSparse
-import DeepWiki.ComputableAlgebra.PolyReprFrac
 import DeepWiki.ComputableAlgebra.PolyReprBridge
 import DeepWiki.ComputableAlgebra.PolyEngine
 import DeepWiki.ComputableAlgebra.PolyReprDivision

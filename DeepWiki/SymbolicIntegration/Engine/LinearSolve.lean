@@ -88,5 +88,14 @@ end DensePoly
 instance instCLinearSolveRat : CLinearSolve ℚ where
   solveUnique := DensePoly.cConstSolveUniqueQ
   solveAny := DensePoly.cConstSolveAnyQ
+  nullspaceBasis := DensePoly.cNullspaceBasisQ
+
+namespace CLinearSolve
+
+/-- Rational nullspace selection uses the dense RREF implementation. -/
+theorem nullspaceBasis_rat_eq (rows : List (List ℚ)) (ncols : ℕ) :
+    CLinearSolve.nullspaceBasis rows ncols = DensePoly.cNullspaceBasisQ rows ncols := rfl
+
+end CLinearSolve
 
 end DeepWiki.SymbolicIntegration

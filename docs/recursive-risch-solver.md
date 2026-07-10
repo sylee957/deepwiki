@@ -80,11 +80,11 @@ soundness.** Recursion reorganizes the tower; it does not remove the leaves.
   2026-07-04 (an ALGORITHM task, not just a proof):** the engine's primitive-polynomial integration is
   **constant-coefficient-only**. `cPolyRischDEG …[]… = cIntegratePolyG` is term-by-term
   `∫cᵢtⁱ = cᵢtⁱ⁺¹/(i+1)` (correct only when `D cᵢ = 0`); `cPrimitivePolyIntegrate`'s own docstring says
-  "constant-coefficient sub-case"; `cLimitedIntegrate` exists only over the base `k = ℚ`. For non-constant
+  "constant-coefficient sub-case"; `CPoly.limitedIntegrate` exists only over the base `k = ℚ`. For non-constant
   coefficients the algorithm returns a genuinely *wrong* `some`, so `specialSound` is *false* off-regime —
   a hypothesis-free primitive `RischSolver α` is impossible with today's engine. P2 must first **implement**
   the general primitive-polynomial integrator: the top-down recursion `qⱼ′ = cⱼ − (j+1)·qⱼ₊₁` solved by a
-  **tower** `cLimitedIntegrate`/`cRischDEG` recursing into the coefficient field (Bronstein
+  **tower** `CPoly.limitedIntegrate`/`cRischDEG` recursing into the coefficient field (Bronstein
   `IntegratePrimitivePolynomial`), then prove its soundness — which *is* the tower-step instance. See the
   memory note `leanproofs-primitive-poly-constant-coeff-only`.
 - **P3 status (2026-07-04).** Split **DONE** (below). Denominator **DONE**: `reducedSound`'s

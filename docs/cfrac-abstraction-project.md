@@ -29,8 +29,8 @@ runs the same fraction algorithm.
    symmetric representation modules. Migrate type occurrences from the old `CFrac α` carrier to
    `DenseFrac α`; keep `CFrac.*` as the generic API namespace, not a compatibility type alias.
 2. **Raw fraction boundary — DONE.** Retire the duplicate legacy pair arithmetic. Valid field operations now
-   use `DenseFrac`/`CFrac`; the only unchecked pair is the explicitly named `RawFrac` boundary for
-   algorithms that have not discharged denominator certificates yet.
+   use `DenseFrac`/`CFrac`; the unused `RawFrac` module was removed once reverse-dependency checks showed
+   that no algorithm boundary still consumed unchecked numerator/denominator pairs.
 3. **Generic field engine — DONE.** Generalize denominator-domain evidence, constructors, add/mul/neg/inv,
    zero test, and the `CField` instance over `[CFrac F P] [CPolyEngine P]`. Preserve the Prop-free runtime
    path; correctness assumptions remain in companion lawful classes. `CFrac.ofFraction` requires explicit
@@ -86,6 +86,10 @@ runs the same fraction algorithm.
    Fraction gcd cancellation now lives in `ComputableAlgebra/FracReduce.lean` and is generic over
    `CFrac F P`, `CPolyGcd P`, and `CPolyEuclidean P`; the dense-only `Engine/QFunReduce.lean` module is
    retired, and a sparse fraction computation plus denotation theorem exercise the shared reducer.
+   The parametric Risch-DE constraint builder, kernel solve, and limited-integration wrapper now live in
+   the `CPoly` namespace: gcd/lcm and quotient/remainder select `CPolyGcd` and `CPolyEuclidean`, while
+   homogeneous solving selects `CLinearSolve.nullspaceBasis`. Dense consumers and a sparse execution
+   witness share the same definitions.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
@@ -106,3 +110,8 @@ explicit evidence or expose an `Option`-returning checked boundary. A generic
 wrapper around a concrete dense algorithm does
 not count as migration: the algorithm itself must be supplied through an abstract capability or remain
 explicitly dense at the call site.
+
+Access modifiers follow dependency evidence rather than visibility minimization: delete dead APIs; use
+`private` only for file-local implementation or proof helpers; use `protected` only when dot notation is
+the intended reading; and keep interface operations, lawful bridges, and predictable satellite lemmas
+public so downstream algorithms can depend on them explicitly and searches remain effective.
