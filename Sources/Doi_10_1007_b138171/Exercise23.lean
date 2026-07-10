@@ -103,13 +103,13 @@ theorem ex_2_3_resultant_squarefree :
 /-- **The LRT log argument** `S₁(t,x) = lrtGcdCompute 80 1 (monic R) A D` for Exercise 2.3: the
 degree-1 (in `x`) per-residue gcd, monic in `x`, reduced over `ℚ[t]/(R)`. It has the shape
 `x + c₀(t)` with `c₀(t)` a degree-7 residue polynomial. -/
-def cS1_23 : BPoly := lrtGcdCompute 80 1 cR23 cA23 cD23
+def cS1_23 : GBPolyCore ℚ := lrtGcdCompute 80 1 cR23 cA23 cD23
 
 /-- **Exercise 2.3: `S₁` is monic and linear in `x`** — `S₁(t,x) = x + c₀(t)`: it has `x`-degree `1`
 (two `x`-coefficients) with leading `x`-coefficient `1`. So each residue gcd `gcd(D, A − a·D')` is
 linear, as expected for a squarefree degree-8 `D` with distinct residues. Proved by `native_decide`. -/
 theorem ex_2_3_S1_monic_linear :
-    cS1_23.length = 2 ∧ blc cS1_23 = [1] := by native_decide
+    cS1_23.length = 2 ∧ GBPolyCore.gblcCore cS1_23 = [1] := by native_decide
 
 /-- **Exercise 2.3, the computed LRT logarithmic part** (§2.9, p.72): the full assembly
 `lrtLogPart 80 A D` reduces to the **single** `(Qᵢ, Sᵢ)` pair `(monic R, S₁)`, where `R` is the
@@ -125,10 +125,10 @@ theorem ex_2_3_logpart :
 
 /-! ### Part a) — the symbolic definite integral over `[−2, −2/3]` -/
 
-/-- **Evaluate a `BPoly` in `x` at a rational bound** `bevalX a p = p(t, a) ∈ ℚ[t]` (Horner in `x`):
-collapses the `x`-variable of a `BPoly` (`= ℚ[t][x]`) at `x = a`, leaving a `DensePoly ℚ` (`= ℚ[t]`). Used to
+/-- **Evaluate a `GBPolyCore ℚ` in `x` at a rational bound** `bevalX a p = p(t, a) ∈ ℚ[t]` (Horner in `x`):
+collapses the `x`-variable of a `GBPolyCore ℚ` (`= ℚ[t][x]`) at `x = a`, leaving a `DensePoly ℚ` (`= ℚ[t]`). Used to
 read the LRT log argument `S(t, x)` at the integration bounds. -/
-def bevalX (a : ℚ) (p : BPoly) : DensePoly ℚ := p.foldr (fun c acc => cadd c (cscale a acc)) []
+def bevalX (a : ℚ) (p : GBPolyCore ℚ) : DensePoly ℚ := p.foldr (fun c acc => cadd c (cscale a acc)) []
 
 /-- **The log argument at the upper bound** `S₁(t, −2/3) = −2/3 + c₀(t) ∈ ℚ[t]/(R)`. -/
 def cS1_23_upper : DensePoly ℚ := cnorm (bevalX (-2/3) cS1_23)

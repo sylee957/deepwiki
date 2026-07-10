@@ -10,8 +10,8 @@ import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.Algebra.Polynomial.SpecificDegree
 
 /-! # Bridging the computable subresultant PRS to the abstract subresultant
-Connects the computable bivariate PRS engine (`BPoly = ℚ[t][x]`, `bpsremainder`, `subresPRS`) to the
-abstract Sylvester-submatrix `subresultant` through the `toBPoly : BPoly → (ℚ[X])[X]` homomorphism, up to
+Connects the computable bivariate PRS engine (`GBPolyCore ℚ = ℚ[t][x]`, `GBPolyCore.gbpsremainderCore`, `subresPRS`) to the
+abstract Sylvester-submatrix `subresultant` through the `GBPolyCore.toGBCoeffPoly : GBPolyCore ℚ → (ℚ[X])[X]` homomorphism, up to
 the full `lrtGcdCompute ↔ lrtSubresultant` agreement over a residue ring. -/
 
 open Polynomial
@@ -32,23 +32,25 @@ theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R c : D
   rw [credR, hdiv, map_add, map_mul, hφR, mul_zero, zero_add]
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
-`Φ (toBPoly (p.map (credR R))) = Φ (toBPoly p)`. -/
+`Φ (GBPolyCore.toGBCoeffPoly (p.map (credR R))) = Φ (GBPolyCore.toGBCoeffPoly p)`. -/
 theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
-    (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
-    (Polynomial.mapRingHom φ) (toBPoly (p.map (credR R)))
-      = (Polynomial.mapRingHom φ) (toBPoly p) := by
+    (p : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
+    (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (p.map (credR R)))
+      = (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly p) := by
   induction p with
   | nil => simp
   | cons a as ih =>
-    rw [List.map_cons, toBPoly_cons, toBPoly_cons, map_add, map_add, map_mul, map_mul, ih]
+    rw [List.map_cons, GBPolyCore.toGBCoeffPoly_cons, GBPolyCore.toGBCoeffPoly_cons, map_add, map_add, map_mul, map_mul, ih]
     congr 1
-    rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C, map_toPoly_credR φ R a hR hφR]
+    rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C]
+    change Polynomial.C (φ (toPoly (credR R a))) = Polynomial.C (φ (toPoly a))
+    rw [map_toPoly_credR φ R a hR hφR]
 
-/-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, `Φ (toBPoly (bredR R p)) = Φ (toBPoly p)`. -/
+/-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, `Φ (GBPolyCore.toGBCoeffPoly (bredR R p)) = Φ (GBPolyCore.toGBCoeffPoly p)`. -/
 theorem mapRingHom_toBPoly_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
-    (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
-    (Polynomial.mapRingHom φ) (toBPoly (bredR R p)) = (Polynomial.mapRingHom φ) (toBPoly p) := by
-  rw [bredR, toBPoly_bnorm, mapRingHom_toBPoly_map_credR φ R p hR hφR]
+    (p : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
+    (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (bredR R p)) = (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly p) := by
+  rw [bredR, GBPolyCore.toGBCoeffPoly_gbnormCore, mapRingHom_toBPoly_map_credR φ R p hR hφR]
 
 /-- `cinvMod` is the mod-`R` inverse: for `φ` killing `toPoly R`, when the extended-Euclidean gcd of `c, R`
 reduces to a nonzero constant `C u`, `φ (toPoly (cinvMod R c)) · φ (toPoly c) = 1`. -/
@@ -80,39 +82,41 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R
   rw [mul_assoc, himg, ← map_mul, ← Polynomial.C_mul, inv_mul_cancel₀ hu, Polynomial.C_1, map_one]
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
-`Φ (toBPoly (q.map (fun c => credR R (cmul c inv)))) = C (φ (toPoly inv)) · Φ (toBPoly q)`. -/
+`Φ (GBPolyCore.toGBCoeffPoly (q.map (fun c => credR R (cmul c inv)))) = C (φ (toPoly inv)) · Φ (GBPolyCore.toGBCoeffPoly q)`. -/
 theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S)
-    (R inv : DensePoly ℚ) (q : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
-    (Polynomial.mapRingHom φ) (toBPoly (q.map (fun c => credR R (cmul c inv))))
-      = Polynomial.C (φ (toPoly inv)) * (Polynomial.mapRingHom φ) (toBPoly q) := by
+    (R inv : DensePoly ℚ) (q : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
+    (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (q.map (fun c => credR R (cmul c inv))))
+      = Polynomial.C (φ (toPoly inv)) * (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly q) := by
   induction q with
   | nil => simp
   | cons a as ih =>
-    rw [List.map_cons, toBPoly_cons, toBPoly_cons, map_add, map_add, map_mul, map_mul, ih, mul_add]
+    rw [List.map_cons, GBPolyCore.toGBCoeffPoly_cons, GBPolyCore.toGBCoeffPoly_cons, map_add, map_add, map_mul, map_mul, ih, mul_add]
     congr 1
-    · rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C,
-        map_toPoly_credR φ R _ hR hφR]
+    · rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C]
+      change Polynomial.C (φ (toPoly (credR R (cmul a inv))))
+          = Polynomial.C (φ (toPoly inv)) * Polynomial.C (φ (toPoly a))
+      rw [map_toPoly_credR φ R _ hR hφR]
       simp only [toPoly_eq_dense]
       rw [DensePoly.toPolyG_cmulG, map_mul, Polynomial.C_mul, mul_comm]
     · rw [Polynomial.coe_mapRingHom (f := φ), Polynomial.map_X]; ring
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, when the leading coefficient's mod-`R` gcd reduces
-to a nonzero constant `C u`, `Φ (toBPoly (bmonicXmodR R p)) = C (φ (toPoly inv)) · Φ (toBPoly p)` with
+to a nonzero constant `C u`, `Φ (GBPolyCore.toGBCoeffPoly (bmonicXmodR R p)) = C (φ (toPoly inv)) · Φ (GBPolyCore.toGBCoeffPoly p)` with
 `φ (toPoly inv)` a unit in `S`. -/
 theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ)
-    (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
-    (hg : toPoly (DensePoly.cgcdWf (blc (bredR R p)) R).1 = Polynomial.C u)
-    (hpz : ¬ bisZero (bredR R p) = true) :
-    (Polynomial.mapRingHom φ) (toBPoly (bmonicXmodR R p))
-        = Polynomial.C (φ (toPoly (cinvMod R (blc (bredR R p)))))
-          * (Polynomial.mapRingHom φ) (toBPoly p)
-      ∧ φ (toPoly (cinvMod R (blc (bredR R p))))
-          * φ (toPoly (blc (bredR R p))) = 1 := by
-  refine ⟨?_, map_toPoly_cinvMod_mul φ R (blc (bredR R p)) hR hφR hu hg⟩
+    (p : GBPolyCore ℚ) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
+    (hg : toPoly (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR R p)) R).1 = Polynomial.C u)
+    (hpz : ¬ GBPolyCore.gbisZeroCore (bredR R p) = true) :
+    (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (bmonicXmodR R p))
+        = Polynomial.C (φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p)))))
+          * (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly p)
+      ∧ φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p))))
+          * φ (toPoly (GBPolyCore.gblcCore (bredR R p))) = 1 := by
+  refine ⟨?_, map_toPoly_cinvMod_mul φ R (GBPolyCore.gblcCore (bredR R p)) hR hφR hu hg⟩
   rw [bmonicXmodR]
   simp only [hpz, Bool.false_eq_true, if_false]
-  rw [toBPoly_bnorm,
-    mapRingHom_toBPoly_map_credR_cmul φ R (cinvMod R (blc (bredR R p)))
+  rw [GBPolyCore.toGBCoeffPoly_gbnormCore,
+    mapRingHom_toBPoly_map_credR_cmul φ R (cinvMod R (GBPolyCore.gblcCore (bredR R p)))
       (bredR R p) hR hφR,
     mapRingHom_toBPoly_bredR φ R p hR hφR]
 
@@ -120,44 +124,44 @@ theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →
 
 /-- The full `lrtGcdCompute ↔ lrtSubresultant` agreement over `S = ℚ[t]/(R)`: for a residue map
 `φ : ℚ[X] →+* S` killing `toPoly R`, under the whole-chain and regularity hypotheses,
-`IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`. -/
+`IsSimilar (Φ (lrtSubresultant A D j)) (Φ (GBPolyCore.toGBCoeffPoly (lrtGcdCompute fuel j R A D)))`. -/
 theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDomain S] (φ : ℚ[X] →+* S)
-    (fuel : ℕ) (R A D : DensePoly ℚ) (G : ℕ → BPoly) (bt : ℕ → DensePoly ℚ) (s : ℕ → BPoly) (c : ℕ → DensePoly ℚ) (m : ℕ)
+    (fuel : ℕ) (R A D : DensePoly ℚ) (G : ℕ → GBPolyCore ℚ) (bt : ℕ → DensePoly ℚ) (s : ℕ → GBPolyCore ℚ) (c : ℕ → DensePoly ℚ) (m : ℕ)
     (hRcn : cnorm R ≠ []) (hφR : φ (toPoly R) = 0)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
-    (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
-    (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
+    (hd0 : (GBPolyCore.toGBCoeffPoly (G 0)).natDegree = (toPoly D).natDegree)
+    (hd1 : (GBPolyCore.toGBCoeffPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
     (hchain : IsSubresPRSChainInput fuel G bt s c m)
-    (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
-      = toBPoly (G (m + 2)))
+    (hfilt : GBPolyCore.toGBCoeffPoly (bsubresultantGcd fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree (G 0) (G 1))
+      = GBPolyCore.toGBCoeffPoly (G (m + 2)))
     (hprim : IsPrimitivePartXInput
-      (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)))
+      (bsubresultantGcd fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree (G 0) (G 1)))
     (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 →
-        Polynomial.C a * lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree
-          = Polynomial.C b * toBPoly (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)
+        Polynomial.C a * lrtSubresultant (toPoly A) (toPoly D) (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree
+          = Polynomial.C b * GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree A D)
         → φ a ≠ 0 ∧ φ b ≠ 0)
     {u : ℚ} (hu : u ≠ 0)
     (hgu : toPoly (DensePoly.cgcdWf
-        (blc (bredR R (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D))) R).1
+        (GBPolyCore.gblcCore (bredR R (lrtSubresultantCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree A D))) R).1
       = Polynomial.C u)
-    (hpz : ¬ bisZero (bredR R
-        (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)) = true) :
+    (hpz : ¬ GBPolyCore.gbisZeroCore (bredR R
+        (lrtSubresultantCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree A D)) = true) :
     IsSimilar ((Polynomial.mapRingHom φ)
-        (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree))
-      ((Polynomial.mapRingHom φ) (toBPoly
-        (lrtGcdCompute fuel (toBPoly (G (m + 2))).natDegree R A D))) := by
+        (lrtSubresultant (toPoly A) (toPoly D) (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree))
+      ((Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly
+        (lrtGcdCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree R A D))) := by
   -- abstract ℚ[t]-similarity, mapped through φ to the residue ring
   have habs := isSimilar_lrtSubresultant_lrtSubresultantCompute fuel A D G bt s c m hG0 hG1 hd0 hd1
     hchain hfilt hprim
   have hmap := isSimilar_mapRingHom φ habs hne
   -- the bmonicXmodR unit bridge: lrtGcdCompute = bmonicXmodR R lrtSubresultantCompute
   obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ R
-    (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D) hRcn hφR hu hgu hpz
+    (lrtSubresultantCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree A D) hRcn hφR hu hgu hpz
   have hsimUnit := isSimilar_of_unit_mul
-    (A := (Polynomial.mapRingHom φ) (toBPoly
-      (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)))
-    (B := (Polynomial.mapRingHom φ) (toBPoly
-      (lrtGcdCompute fuel (toBPoly (G (m + 2))).natDegree R A D)))
+    (A := (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly
+      (lrtSubresultantCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree A D)))
+    (B := (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly
+      (lrtGcdCompute fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree R A D)))
     hunit (by rw [lrtGcdCompute]; exact hbridge)
   exact hmap.trans hsimUnit
 
@@ -167,70 +171,70 @@ The pieces above assemble the full multi-step subresultant-PRS chain agreement i
 bridge both discharged structurally, and the concrete `subresPRS` data supplied by the `goState` section
 below. -/
 
--- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·toBPoly(bdivC p c) = toBPoly p`
+-- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·GBPolyCore.toGBCoeffPoly(bdivC p c) = GBPolyCore.toGBCoeffPoly p`
 -- when every x-coefficient divides exactly.
-example (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
+example (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
-    Polynomial.C (toPoly c) * toBPoly (bdivC p c) = toBPoly p :=
+    Polynomial.C (toPoly c) * GBPolyCore.toGBCoeffPoly (bdivC p c) = GBPolyCore.toGBCoeffPoly p :=
   toBPoly_bdivC_exact p c hc hrem
 
 -- Restatement: the LRT subresultant is ℚ[t]-similar to the next divided PRS pair's subresultant.
-example (fuel : ℕ) (A D β : DensePoly ℚ) (j : ℕ) (s : BPoly) (c : DensePoly ℚ)
-    (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
-        = toBPoly s * toBPoly (bArgAmtD' A D)
-          + toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
+example (fuel : ℕ) (A D β : DensePoly ℚ) (j : ℕ) (s : GBPolyCore ℚ) (c : DensePoly ℚ)
+    (hsc : Polynomial.C (toPoly c) * GBPolyCore.toGBCoeffPoly (liftCtoBPoly D)
+        = GBPolyCore.toGBCoeffPoly s * GBPolyCore.toGBCoeffPoly (bArgAmtD' A D)
+          + GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)))
     (hβ : cnorm β ≠ [])
-    (hdiv : ∀ a ∈ bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (DensePoly.cmodWf a β) = 0)
+    (hdiv : ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (DensePoly.cmodWf a β) = 0)
     (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
     (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
-    (hB : (toBPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
-    (hQ : (toBPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
+    (hB : (GBPolyCore.toGBCoeffPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
+    (hQ : (GBPolyCore.toGBCoeffPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) j)
-      (subresultant (toBPoly (bArgAmtD' A D))
-        (toBPoly (bdivC (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
+      (subresultant (GBPolyCore.toGBCoeffPoly (bArgAmtD' A D))
+        (GBPolyCore.toGBCoeffPoly (bdivC (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
         ((toPoly D).natDegree - 1) (toPoly D).natDegree j) :=
   isSimilar_lrtSubresultant_subresultant_bdivC fuel A D β j s c ⟨hsc, hβ, hdiv⟩
     hc0 hβ0 hjm hjn hB hQ
 
 -- Restatement: the WHOLE computable PRS chain telescopes — `Sⱼ(G 0, G 1) ~ Sⱼ(G m, G (m+1))` for any `m`.
-example (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → DensePoly ℚ) (s : ℕ → BPoly) (c : ℕ → DensePoly ℚ) (j m : ℕ)
-    (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
-        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
+example (fuel : ℕ) (G : ℕ → GBPolyCore ℚ) (bt : ℕ → DensePoly ℚ) (s : ℕ → GBPolyCore ℚ) (c : ℕ → DensePoly ℚ) (j m : ℕ)
+    (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * GBPolyCore.toGBCoeffPoly (G l)
+        = GBPolyCore.toGBCoeffPoly (s l) * GBPolyCore.toGBCoeffPoly (G (l + 1)) + GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1))))
     (hβcn : ∀ l < m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l < m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (DensePoly.cmodWf a (bt l)) = 0)
-    (hG2 : ∀ l < m, G (l + 2) = bdivC (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hdiv : ∀ l < m, ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1)), toPoly (DensePoly.cmodWf a (bt l)) = 0)
+    (hG2 : ∀ l < m, G (l + 2) = bdivC (GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1))) (bt l))
     (hc0 : ∀ l < m, toPoly (c l) ≠ 0) (hβ0 : ∀ l < m, toPoly (bt l) ≠ 0)
-    (hlc : ∀ l < m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l < m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
-    (hj : ∀ l < m, j < (toBPoly (G (l + 2))).natDegree)
-    (hQ : ∀ l < m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
-      ≤ (toBPoly (G l)).natDegree) :
+    (hlc : ∀ l < m, (GBPolyCore.toGBCoeffPoly (G (l + 1))).coeff (GBPolyCore.toGBCoeffPoly (G (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l < m, (GBPolyCore.toGBCoeffPoly (G (l + 2))).natDegree < (GBPolyCore.toGBCoeffPoly (G (l + 1))).natDegree)
+    (hj : ∀ l < m, j < (GBPolyCore.toGBCoeffPoly (G (l + 2))).natDegree)
+    (hQ : ∀ l < m, (GBPolyCore.toGBCoeffPoly (s l)).natDegree + (GBPolyCore.toGBCoeffPoly (G (l + 1))).natDegree
+      ≤ (GBPolyCore.toGBCoeffPoly (G l)).natDegree) :
     IsSimilar
-      (subresultant (toBPoly (G 0)) (toBPoly (G 1))
-        (toBPoly (G 0)).natDegree (toBPoly (G 1)).natDegree j)
-      (subresultant (toBPoly (G m)) (toBPoly (G (m + 1)))
-        (toBPoly (G m)).natDegree (toBPoly (G (m + 1))).natDegree j) :=
+      (subresultant (GBPolyCore.toGBCoeffPoly (G 0)) (GBPolyCore.toGBCoeffPoly (G 1))
+        (GBPolyCore.toGBCoeffPoly (G 0)).natDegree (GBPolyCore.toGBCoeffPoly (G 1)).natDegree j)
+      (subresultant (GBPolyCore.toGBCoeffPoly (G m)) (GBPolyCore.toGBCoeffPoly (G (m + 1)))
+        (GBPolyCore.toGBCoeffPoly (G m)).natDegree (GBPolyCore.toGBCoeffPoly (G (m + 1))).natDegree j) :=
   isSimilar_subresPRS_telescope fuel G bt s c j m hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hj hQ
 
 -- Restatement: FACT 1 — the degree-`j` filter identity. A singleton degree-`j` filter of `subresPRS`
--- makes `bsubresultantGcd` read as that single chain element `G (m+2)` (under `toBPoly`).
-example (fuel : ℕ) (P Q : BPoly) (G : ℕ → BPoly) (m : ℕ)
+-- makes `bsubresultantGcd` read as that single chain element `G (m+2)` (under `GBPolyCore.toGBCoeffPoly`).
+example (fuel : ℕ) (P Q : GBPolyCore ℚ) (G : ℕ → GBPolyCore ℚ) (m : ℕ)
     (hfil : (subresPRS fuel P Q).filter
-        (fun R => decide (bdeg R = (toBPoly (G (m + 2))).natDegree ∧ ¬ bisZero R)) = [G (m + 2)]) :
-    toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree P Q) = toBPoly (G (m + 2)) :=
+        (fun R => decide (GBPolyCore.gbdegCore R = (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree ∧ ¬ GBPolyCore.gbisZeroCore R)) = [G (m + 2)]) :
+    GBPolyCore.toGBCoeffPoly (bsubresultantGcd fuel (GBPolyCore.toGBCoeffPoly (G (m + 2))).natDegree P Q) = GBPolyCore.toGBCoeffPoly (G (m + 2)) :=
   toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel P Q G m hfil
 
 -- Restatement: FACT 2 — the `bmonicXmodR` mod-`R` unit bridge. Over any `φ : ℚ[X] →+* S` killing
--- `toPoly R`, `bmonicXmodR`'s `Φ`-image is a residue-ring UNIT (`η · η' = 1`) times `toBPoly p`'s.
-example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ) (p : BPoly)
+-- `toPoly R`, `bmonicXmodR`'s `Φ`-image is a residue-ring UNIT (`η · η' = 1`) times `GBPolyCore.toGBCoeffPoly p`'s.
+example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ) (p : GBPolyCore ℚ)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
-    (hg : toPoly (DensePoly.cgcdWf (blc (bredR R p)) R).1 = Polynomial.C u)
-    (hpz : ¬ bisZero (bredR R p) = true) :
-    (Polynomial.mapRingHom φ) (toBPoly (bmonicXmodR R p))
-        = Polynomial.C (φ (toPoly (cinvMod R (blc (bredR R p)))))
-          * (Polynomial.mapRingHom φ) (toBPoly p)
-      ∧ φ (toPoly (cinvMod R (blc (bredR R p))))
-          * φ (toPoly (blc (bredR R p))) = 1 :=
+    (hg : toPoly (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR R p)) R).1 = Polynomial.C u)
+    (hpz : ¬ GBPolyCore.gbisZeroCore (bredR R p) = true) :
+    (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly (bmonicXmodR R p))
+        = Polynomial.C (φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p)))))
+          * (Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly p)
+      ∧ φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p))))
+          * φ (toPoly (GBPolyCore.gblcCore (bredR R p))) = 1 :=
   mapRingHom_toBPoly_bmonicXmodR φ R p hR hφR hu hg hpz
 
 /-! ### Instantiating the abstract chain from the concrete `subresPRS.go`
@@ -238,46 +242,46 @@ Mirrors the internal `subresPRS.go` recurrence as a top-level state machine `goS
 chain data `G`/`bt`/`s`/`c` and its side-conditions can be supplied from the real `subresPRS fuel P Q`. -/
 
 /-- ψ-accumulator update of one `subresPRS.go` step: `ψ' = (−lc Ri₋₁)^δ / ψ^(δ−1)` (`ψ' = ψ` when `δ = 0`). -/
-def goPsi' (Ri_1 : BPoly) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
-  if dp = 0 then psi else DensePoly.cdivWf (DensePoly.cpow (cneg (blc Ri_1)) dp)
+def goPsi' (Ri_1 : GBPolyCore ℚ) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
+  if dp = 0 then psi else DensePoly.cdivWf (DensePoly.cpow (cneg (GBPolyCore.gblcCore Ri_1)) dp)
     (DensePoly.cpow psi (dp - 1))
 
 /-- β-divisor of one `subresPRS.go` step: `β = −lc(Ri₋₁) · ψ'^δ` with `ψ'` from `goPsi'`. -/
-def goBeta (Ri_1 : BPoly) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
-  cmul (cneg (blc Ri_1)) (DensePoly.cpow (goPsi' Ri_1 psi dp) dp)
+def goBeta (Ri_1 : GBPolyCore ℚ) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
+  cmul (cneg (GBPolyCore.gblcCore Ri_1)) (DensePoly.cpow (goPsi' Ri_1 psi dp) dp)
 
 /-- One `subresPRS.go` step on the state `(Ri₋₁, Ri, ψ, δ) ↦ (Ri, Ri₊₁, ψ', δ')` with
-`Ri₊₁ = bdivC (prem Ri₋₁ Ri) β`, `ψ' = goPsi'`, `β = goBeta`, `δ' = bdeg Ri − bdeg Ri₊₁`. -/
-def goStep (fuel : ℕ) : BPoly × BPoly × DensePoly ℚ × ℕ → BPoly × BPoly × DensePoly ℚ × ℕ
+`Ri₊₁ = bdivC (prem Ri₋₁ Ri) β`, `ψ' = goPsi'`, `β = goBeta`, `δ' = GBPolyCore.gbdegCore Ri − GBPolyCore.gbdegCore Ri₊₁`. -/
+def goStep (fuel : ℕ) : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ → GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ
   | (Ri_1, Ri, psi, dp) =>
     let psi' := goPsi' Ri_1 psi dp
     let beta := goBeta Ri_1 psi dp
-    let Ri1 := bdivC (bpsremainder fuel Ri_1 Ri) beta
-    (Ri, Ri1, psi', bdeg Ri - bdeg Ri1)
+    let Ri1 := bdivC (GBPolyCore.gbpsremainderCore fuel Ri_1 Ri) beta
+    (Ri, Ri1, psi', GBPolyCore.gbdegCore Ri - GBPolyCore.gbdegCore Ri1)
 
 /-- The `subresPRS.go` state at index `i`: `goState fuel s₀ i = goStepⁱ s₀`. -/
-def goState (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ × ℕ) : ℕ → BPoly × BPoly × DensePoly ℚ × ℕ
+def goState (fuel : ℕ) (s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) : ℕ → GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ
   | 0 => s0
   | i + 1 => goStep fuel (goState fuel s0 i)
 
 /-- `goState fuel (goStep fuel s₀) k = goState fuel s₀ (k+1)`. -/
-theorem goState_goStep (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ × ℕ) (k : ℕ) :
+theorem goState_goStep (fuel : ℕ) (s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) (k : ℕ) :
     goState fuel (goStep fuel s0) k = goState fuel s0 (k + 1) := by
   induction k generalizing s0 with
   | zero => rfl
   | succ n ih => rw [goState, goState, ih]
 
 /-- `(goState fuel s₀ (l+1)).1 = (goState fuel s₀ l).2.1`. -/
-theorem goState_succ_fst (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ × ℕ) (l : ℕ) :
+theorem goState_succ_fst (fuel : ℕ) (s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) (l : ℕ) :
     (goState fuel s0 (l + 1)).1 = (goState fuel s0 l).2.1 := by
   show (goStep fuel (goState fuel s0 l)).1 = _
   rw [goStep]
 
 /-- The divided-PRS recurrence for `goState`: `(goState fuel s₀ (l+2)).1 = bdivC (prem …)
 (goBeta …)`, holding definitionally. -/
-theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ × ℕ) (l : ℕ) :
+theorem goState_fst_add_two (fuel : ℕ) (s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) (l : ℕ) :
     (goState fuel s0 (l + 2)).1
-      = bdivC (bpsremainder fuel (goState fuel s0 l).1 (goState fuel s0 (l + 1)).1)
+      = bdivC (GBPolyCore.gbpsremainderCore fuel (goState fuel s0 l).1 (goState fuel s0 (l + 1)).1)
           (goBeta (goState fuel s0 l).1 (goState fuel s0 l).2.2.1 (goState fuel s0 l).2.2.2) := by
   rw [goState_succ_fst fuel s0 (l + 1)]
   show (goStep fuel (goState fuel s0 l)).2.1 = _
@@ -287,7 +291,7 @@ theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × DensePoly ℚ �
 /-! #### The `go`-list ↔ `goState` bridge -/
 
 /-- While `s.2.1` is nonzero, `go fuel (fo+1) …` emits it and recurses on the `goStep`-advanced state. -/
-theorem go_step_state (fuel fo : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (hz : ¬ bisZero s.2.1 = true) :
+theorem go_step_state (fuel fo : ℕ) (s : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) (hz : ¬ GBPolyCore.gbisZeroCore s.2.1 = true) :
     subresPRS.go fuel (fo + 1) s.1 s.2.1 s.2.2.1 s.2.2.2
       = s.2.1 :: subresPRS.go fuel fo (goStep fuel s).1 (goStep fuel s).2.1
           (goStep fuel s).2.2.1 (goStep fuel s).2.2.2 := by
@@ -299,8 +303,8 @@ theorem go_step_state (fuel fo : ℕ) (s : BPoly × BPoly × DensePoly ℚ × �
 
 /-- While the chain stays nonzero through index `k` and `k < fo`, the `k`-th element of `go fuel fo …` is
 `(goState fuel s k).2.1`. -/
-theorem go_getD (fuel : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (k fo : ℕ) (hfo : k < fo)
-    (hnz : ∀ i ≤ k, ¬ bisZero (goState fuel s i).2.1 = true) :
+theorem go_getD (fuel : ℕ) (s : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) (k fo : ℕ) (hfo : k < fo)
+    (hnz : ∀ i ≤ k, ¬ GBPolyCore.gbisZeroCore (goState fuel s i).2.1 = true) :
     (subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2).getD k [] = (goState fuel s k).2.1 := by
   induction k generalizing s fo with
   | zero =>
@@ -316,21 +320,21 @@ theorem go_getD (fuel : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (k fo 
 
 /-- The `i`-th element of `subresPRS fuel P Q` is `(goState fuel (P,Q,[-1],…) i).1`, while the chain stays
 nonzero through `i−1` and `i ≤ fuel`. -/
-theorem subresPRS_getD (fuel : ℕ) (P Q : BPoly) (i : ℕ) (hfo : i ≤ fuel)
-    (hnz : ∀ k < i, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) k).2.1 = true) :
-    (subresPRS fuel P Q).getD i [] = (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 := by
+theorem subresPRS_getD (fuel : ℕ) (P Q : GBPolyCore ℚ) (i : ℕ) (hfo : i ≤ fuel)
+    (hnz : ∀ k < i, ¬ GBPolyCore.gbisZeroCore (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) k).2.1 = true) :
+    (subresPRS fuel P Q).getD i [] = (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) i).1 := by
   rw [subresPRS.eq_def]
   cases i with
   | zero => rfl
   | succ n =>
     rw [List.getD_cons_succ]
-    have h := go_getD fuel (P, Q, [-1], bdeg P - bdeg Q) n fuel (by omega)
+    have h := go_getD fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) n fuel (by omega)
       (fun k hk => hnz k (by omega))
     simp only at h
     rw [h, goState_succ_fst]
 
 /-- If `s.2.1` is zero, `go fuel fo … = []`. -/
-theorem go_zero (fuel fo : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (hz : bisZero s.2.1 = true) :
+theorem go_zero (fuel fo : ℕ) (s : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) (hz : GBPolyCore.gbisZeroCore s.2.1 = true) :
     subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2 = [] := by
   cases fo with
   | zero => rw [subresPRS.go.eq_1]
@@ -342,9 +346,9 @@ theorem go_zero (fuel fo : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (hz
 
 /-- When the chain is nonzero through `k`, zero at `k+1`, and fuel suffices,
 `go fuel fo … = (List.range (k+1)).map (fun i => (goState fuel s i).2.1)`. -/
-theorem go_eq_range (fuel : ℕ) (s : BPoly × BPoly × DensePoly ℚ × ℕ) (k fo : ℕ) (hfo : k + 1 < fo)
-    (hnz : ∀ i ≤ k, ¬ bisZero (goState fuel s i).2.1 = true)
-    (hz : bisZero (goState fuel s (k + 1)).2.1 = true) :
+theorem go_eq_range (fuel : ℕ) (s : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) (k fo : ℕ) (hfo : k + 1 < fo)
+    (hnz : ∀ i ≤ k, ¬ GBPolyCore.gbisZeroCore (goState fuel s i).2.1 = true)
+    (hz : GBPolyCore.gbisZeroCore (goState fuel s (k + 1)).2.1 = true) :
     subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2
       = (List.range (k + 1)).map (fun i => (goState fuel s i).2.1) := by
   induction k generalizing s fo with
@@ -395,16 +399,16 @@ theorem filter_range_unique {n N : ℕ} (q : ℕ → Bool) (hN : N < n) (hqN : q
 
 /-- When the chain `G i := (goState fuel (P,Q,[-1],…) i).1` is nonzero through `N`, zero at `N+1`, and
 `N+1 < fuel`, `subresPRS fuel P Q = (List.range (N+1)).map G`. -/
-theorem subresPRS_eq_range (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < fuel)
-    (hnz : ∀ i ≤ N, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 = true)
-    (hzN : bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (N + 1)).1 = true) :
+theorem subresPRS_eq_range (fuel : ℕ) (P Q : GBPolyCore ℚ) (N : ℕ) (hfo : N + 1 < fuel)
+    (hnz : ∀ i ≤ N, ¬ GBPolyCore.gbisZeroCore (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) i).1 = true)
+    (hzN : GBPolyCore.gbisZeroCore (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) (N + 1)).1 = true) :
     subresPRS fuel P Q
-      = (List.range (N + 1)).map (fun i => (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1) := by
-  set s0 : BPoly × BPoly × DensePoly ℚ × ℕ := (P, Q, [-1], bdeg P - bdeg Q) with hs0
+      = (List.range (N + 1)).map (fun i => (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) i).1) := by
+  set s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ := (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) with hs0
   rw [subresPRS.eq_def]
   cases N with
   | zero =>
-    have hQz : bisZero s0.2.1 = true := by
+    have hQz : GBPolyCore.gbisZeroCore s0.2.1 = true := by
       have := hzN; rw [goState_succ_fst] at this; exact this
     rw [go_zero fuel fuel s0 hQz]
     show [P] = [(goState fuel s0 0).1]
@@ -438,81 +442,81 @@ theorem unique_of_strictAnti (f : ℕ → ℕ) (N : ℕ) (hstrict : ∀ i < N, f
   have := mono N (le_refl N) i hiN
   omega
 
-/-- The degree-`bdeg (G N)` nonzero filter of `subresPRS fuel P Q` is `[G N]`, under nonzero-through-`N`,
-zero-at-`N+1`, strict `bdeg` decrease, and `N+1 < fuel`. -/
-theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < fuel)
-    (hnz : ∀ i ≤ N, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 = true)
-    (hzN : bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (N + 1)).1 = true)
-    (hstrict : ∀ i < N, bdeg (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (i + 1)).1
-        < bdeg (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1) :
+/-- The degree-`GBPolyCore.gbdegCore (G N)` nonzero filter of `subresPRS fuel P Q` is `[G N]`, under nonzero-through-`N`,
+zero-at-`N+1`, strict `GBPolyCore.gbdegCore` decrease, and `N+1 < fuel`. -/
+theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : GBPolyCore ℚ) (N : ℕ) (hfo : N + 1 < fuel)
+    (hnz : ∀ i ≤ N, ¬ GBPolyCore.gbisZeroCore (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) i).1 = true)
+    (hzN : GBPolyCore.gbisZeroCore (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) (N + 1)).1 = true)
+    (hstrict : ∀ i < N, GBPolyCore.gbdegCore (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) (i + 1)).1
+        < GBPolyCore.gbdegCore (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) i).1) :
     (subresPRS fuel P Q).filter
-        (fun R => decide (bdeg R = bdeg (goState fuel (P, Q, [-1], bdeg P - bdeg Q) N).1
-          ∧ ¬ bisZero R))
-      = [(goState fuel (P, Q, [-1], bdeg P - bdeg Q) N).1] := by
-  set s0 : BPoly × BPoly × DensePoly ℚ × ℕ := (P, Q, [-1], bdeg P - bdeg Q) with hs0
+        (fun R => decide (GBPolyCore.gbdegCore R = GBPolyCore.gbdegCore (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) N).1
+          ∧ ¬ GBPolyCore.gbisZeroCore R))
+      = [(goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) N).1] := by
+  set s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ := (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) with hs0
   set G := fun i => (goState fuel s0 i).1 with hG
   rw [subresPRS_eq_range fuel P Q N hfo hnz hzN, List.filter_map]
   have hfilt : (List.range (N + 1)).filter
-      ((fun R => decide (bdeg R = bdeg (G N) ∧ ¬ bisZero R)) ∘ G) = [N] := by
+      ((fun R => decide (GBPolyCore.gbdegCore R = GBPolyCore.gbdegCore (G N) ∧ ¬ GBPolyCore.gbisZeroCore R)) ∘ G) = [N] := by
     apply filter_range_unique
     · omega
     · simp only [Function.comp_apply, decide_eq_true_eq, true_and]
       exact hnz N (le_refl N)
     · intro i hi hqi
       simp only [Function.comp_apply, decide_eq_true_eq] at hqi
-      exact unique_of_strictAnti (fun i => bdeg (G i)) N hstrict i (by omega) hqi.1
+      exact unique_of_strictAnti (fun i => GBPolyCore.gbdegCore (G i)) N hstrict i (by omega) hqi.1
   rw [hfilt, List.map_singleton]
 
 /-! #### Concrete chain data from `subresPRS` -/
 
 /-- The concrete `subresPRS` chain element `chain fuel P Q i := (goState fuel (P,Q,[-1],…) i).1`. -/
-noncomputable def chain (fuel : ℕ) (P Q : BPoly) (i : ℕ) : BPoly :=
-  (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1
+noncomputable def chain (fuel : ℕ) (P Q : GBPolyCore ℚ) (i : ℕ) : GBPolyCore ℚ :=
+  (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) i).1
 
 /-- The concrete `subresPRS` β-divisor `chainBt fuel P Q l := goBeta …` at the `l`-th state. -/
-noncomputable def chainBt (fuel : ℕ) (P Q : BPoly) (l : ℕ) : DensePoly ℚ :=
-  goBeta (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).1
-    (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.1
-    (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.2
+noncomputable def chainBt (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) : DensePoly ℚ :=
+  goBeta (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) l).1
+    (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) l).2.2.1
+    (goState fuel (P, Q, [-1], GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q) l).2.2.2
 
 /-- The concrete pseudo-division quotient `chainS fuel P Q l` for the chain pair `(chain l, chain (l+1))`. -/
-noncomputable def chainS (fuel : ℕ) (P Q : BPoly) (l : ℕ) : BPoly :=
-  (toBPoly_bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose
+noncomputable def chainS (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) : GBPolyCore ℚ :=
+  (GBPolyCore.toGBCoeffPoly_gbpsremainderCore fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose
 
 /-- The concrete pseudo-division content `chainC fuel P Q l` for the chain pair `(chain l, chain (l+1))`. -/
-noncomputable def chainC (fuel : ℕ) (P Q : BPoly) (l : ℕ) : DensePoly ℚ :=
-  (toBPoly_bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose_spec.choose
+noncomputable def chainC (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) : DensePoly ℚ :=
+  (GBPolyCore.toGBCoeffPoly_gbpsremainderCore fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose_spec.choose
 
 /-- `chain fuel P Q 0 = P`. -/
-@[simp] theorem chainG_zero (fuel : ℕ) (P Q : BPoly) : chain fuel P Q 0 = P := rfl
+@[simp] theorem chainG_zero (fuel : ℕ) (P Q : GBPolyCore ℚ) : chain fuel P Q 0 = P := rfl
 
 /-- `chain fuel P Q 1 = Q`. -/
-@[simp] theorem chainG_one (fuel : ℕ) (P Q : BPoly) : chain fuel P Q 1 = Q := by
+@[simp] theorem chainG_one (fuel : ℕ) (P Q : GBPolyCore ℚ) : chain fuel P Q 1 = Q := by
   rw [chain, goState_succ_fst]; rfl
 
 /-- The pseudo-division identity holds for the concrete `chainS`/`chainC`. -/
-theorem chain_hsc (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
-    Polynomial.C (toPoly (chainC fuel P Q l)) * toBPoly (chain fuel P Q l)
-      = toBPoly (chainS fuel P Q l) * toBPoly (chain fuel P Q (l + 1))
-        + toBPoly (bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))) :=
-  (toBPoly_bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose_spec.choose_spec
+theorem chain_hsc (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) :
+    Polynomial.C (toPoly (chainC fuel P Q l)) * GBPolyCore.toGBCoeffPoly (chain fuel P Q l)
+      = GBPolyCore.toGBCoeffPoly (chainS fuel P Q l) * GBPolyCore.toGBCoeffPoly (chain fuel P Q (l + 1))
+        + GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel (chain fuel P Q l) (chain fuel P Q (l + 1))) :=
+  (GBPolyCore.toGBCoeffPoly_gbpsremainderCore fuel (chain fuel P Q l) (chain fuel P Q (l + 1))).choose_spec.choose_spec
 
 /-- The divided-PRS recurrence `chain (l+2) = bdivC (prem (chain l) (chain (l+1))) (chainBt l)`. -/
-theorem chain_hG2 (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
+theorem chain_hG2 (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) :
     chain fuel P Q (l + 2)
-      = bdivC (bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1)))
+      = bdivC (GBPolyCore.gbpsremainderCore fuel (chain fuel P Q l) (chain fuel P Q (l + 1)))
           (chainBt fuel P Q l) := by
   rw [chain, goState_fst_add_two, chainBt]
   rfl
 
 /-- The filter identity for the concrete chain:
-`toBPoly (bsubresultantGcd fuel (deg (chain (m+2))) P Q) = toBPoly (chain (m+2))`. -/
-theorem chain_hfilt (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel)
-    (hnz : ∀ i ≤ m + 2, ¬ bisZero (chain fuel P Q i) = true)
-    (hzN : bisZero (chain fuel P Q (m + 2 + 1)) = true)
-    (hstrict : ∀ i < m + 2, bdeg (chain fuel P Q (i + 1)) < bdeg (chain fuel P Q i)) :
-    toBPoly (bsubresultantGcd fuel (toBPoly (chain fuel P Q (m + 2))).natDegree P Q)
-      = toBPoly (chain fuel P Q (m + 2)) := by
+`GBPolyCore.toGBCoeffPoly (bsubresultantGcd fuel (deg (chain (m+2))) P Q) = GBPolyCore.toGBCoeffPoly (chain (m+2))`. -/
+theorem chain_hfilt (fuel : ℕ) (P Q : GBPolyCore ℚ) (m : ℕ) (hfo : m + 2 + 1 < fuel)
+    (hnz : ∀ i ≤ m + 2, ¬ GBPolyCore.gbisZeroCore (chain fuel P Q i) = true)
+    (hzN : GBPolyCore.gbisZeroCore (chain fuel P Q (m + 2 + 1)) = true)
+    (hstrict : ∀ i < m + 2, GBPolyCore.gbdegCore (chain fuel P Q (i + 1)) < GBPolyCore.gbdegCore (chain fuel P Q i)) :
+    GBPolyCore.toGBCoeffPoly (bsubresultantGcd fuel (GBPolyCore.toGBCoeffPoly (chain fuel P Q (m + 2))).natDegree P Q)
+      = GBPolyCore.toGBCoeffPoly (chain fuel P Q (m + 2)) := by
   have hfil := subresPRS_filter_singleton fuel P Q (m + 2) hfo hnz hzN hstrict
   rw [bdeg_eq_natDegree] at hfil
   exact toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel P Q (chain fuel P Q) m hfil
@@ -521,64 +525,64 @@ theorem chain_hfilt (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel
 
 /-- The clean concrete `lrtGcdCompute ↔ lrtSubresultant` agreement for the real
 `subresPRS fuel (liftCtoBPoly D) (bArgAmtD' A D)` chain: for a residue map `φ` killing `toPoly R`, under
-the regularity inputs, `IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`
-over `S = ℚ[t]/(R)` at `j = (toBPoly (chain (m+2))).natDegree`. -/
+the regularity inputs, `IsSimilar (Φ (lrtSubresultant A D j)) (Φ (GBPolyCore.toGBCoeffPoly (lrtGcdCompute fuel j R A D)))`
+over `S = ℚ[t]/(R)` at `j = (GBPolyCore.toGBCoeffPoly (chain (m+2))).natDegree`. -/
 theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S] [IsDomain S]
     (φ : ℚ[X] →+* S) (fuel : ℕ) (R A D : DensePoly ℚ) (m : ℕ)
     (hRcn : cnorm R ≠ []) (hφR : φ (toPoly R) = 0)
-    (hd0 : (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) 0)).natDegree
+    (hd0 : (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) 0)).natDegree
       = (toPoly D).natDegree)
-    (hd1 : (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) 1)).natDegree
+    (hd1 : (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) 1)).natDegree
       = (toPoly D).natDegree - 1)
-    -- singleton-filter inputs (chain nonzero through m+2, zero after, strict bdeg decrease, fuel)
+    -- singleton-filter inputs (chain nonzero through m+2, zero after, strict GBPolyCore.gbdegCore decrease, fuel)
     (hfoF : m + 2 + 1 < fuel)
-    (hnzF : ∀ i ≤ m + 2, ¬ bisZero (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) i) = true)
-    (hzNF : bisZero (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2 + 1)) = true)
+    (hnzF : ∀ i ≤ m + 2, ¬ GBPolyCore.gbisZeroCore (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) i) = true)
+    (hzNF : GBPolyCore.gbisZeroCore (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2 + 1)) = true)
     (hstrictF : ∀ i < m + 2,
-      bdeg (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (i + 1))
-        < bdeg (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) i))
+      GBPolyCore.gbdegCore (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (i + 1))
+        < GBPolyCore.gbdegCore (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) i))
     -- Collins β-divisibility + chain degree/nonzero regularity
     (hβcn : ∀ l ≤ m, cnorm (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ [])
-    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
+    (hdiv : ∀ l ≤ m, ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
         (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1)),
       toPoly (DensePoly.cmodWf a (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l)) = 0)
     (hc0 : ∀ l ≤ m, toPoly (chainC fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ 0)
     (hβ0 : ∀ l ≤ m, toPoly (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D) l) ≠ 0)
-    (hlc : ∀ l ≤ m, (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).coeff
-      (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l ≤ m, (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 2))).natDegree
-      < (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree)
-    (hjlt : ∀ l < m, (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
-      < (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 2))).natDegree)
-    (hQ : ∀ l ≤ m, (toBPoly (chainS fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree
-        + (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree
-      ≤ (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree)
-    (hCne : toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2)) ≠ 0)
+    (hlc : ∀ l ≤ m, (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).coeff
+      (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 2))).natDegree
+      < (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree)
+    (hjlt : ∀ l < m, (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
+      < (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 2))).natDegree)
+    (hQ : ∀ l ≤ m, (GBPolyCore.toGBCoeffPoly (chainS fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree
+        + (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree
+      ≤ (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree)
+    (hCne : GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2)) ≠ 0)
     -- bprimitivePartX content-exactness on the degree-j element
     (hprim : IsPrimitivePartXInput
       (bsubresultantGcd fuel
-        (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
+        (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
         (liftCtoBPoly D) (bArgAmtD' A D)))
     (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 →
         Polynomial.C a * lrtSubresultant (toPoly A) (toPoly D)
-            (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
-          = Polynomial.C b * toBPoly (lrtSubresultantCompute fuel
-            (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)
+            (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
+          = Polynomial.C b * GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute fuel
+            (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)
         → φ a ≠ 0 ∧ φ b ≠ 0)
     {u : ℚ} (hu : u ≠ 0)
     (hgu : toPoly (DensePoly.cgcdWf
-        (blc (bredR R (lrtSubresultantCompute fuel
-          (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D))) R).1
+        (GBPolyCore.gblcCore (bredR R (lrtSubresultantCompute fuel
+          (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D))) R).1
       = Polynomial.C u)
-    (hpz : ¬ bisZero (bredR R
+    (hpz : ¬ GBPolyCore.gbisZeroCore (bredR R
         (lrtSubresultantCompute fuel
-          (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)) = true) :
+          (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree A D)) = true) :
     IsSimilar ((Polynomial.mapRingHom φ)
         (lrtSubresultant (toPoly A) (toPoly D)
-          (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree))
-      ((Polynomial.mapRingHom φ) (toBPoly
+          (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree))
+      ((Polynomial.mapRingHom φ) (GBPolyCore.toGBCoeffPoly
         (lrtGcdCompute fuel
-          (toBPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree R A D))) := by
+          (GBPolyCore.toGBCoeffPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree R A D))) := by
   have hfilt := chain_hfilt fuel (liftCtoBPoly D) (bArgAmtD' A D) m hfoF hnzF hzNF hstrictF
   have hchain : IsSubresPRSChainInput fuel
       (chain fuel (liftCtoBPoly D) (bArgAmtD' A D))
@@ -606,20 +610,20 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
 
 -- Restatement: the divided-PRS recurrence `hG2` holds DEFINITIONALLY for the concrete `subresPRS`
 -- chain element `chain` and β-divisor `chainBt` (no list/recurrence plumbing).
-example (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
+example (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) :
     chain fuel P Q (l + 2)
-      = bdivC (bpsremainder fuel (chain fuel P Q l) (chain fuel P Q (l + 1)))
+      = bdivC (GBPolyCore.gbpsremainderCore fuel (chain fuel P Q l) (chain fuel P Q (l + 1)))
           (chainBt fuel P Q l) :=
   chain_hG2 fuel P Q l
 
 -- Restatement: the degree-`j` filter of the REAL `subresPRS` returns the chain's degree-`j` element —
--- the singleton-filter fact `hfilt` DISCHARGED from strict `bdeg` decrease (no hypothesis taken).
-example (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel)
-    (hnz : ∀ i ≤ m + 2, ¬ bisZero (chain fuel P Q i) = true)
-    (hzN : bisZero (chain fuel P Q (m + 2 + 1)) = true)
-    (hstrict : ∀ i < m + 2, bdeg (chain fuel P Q (i + 1)) < bdeg (chain fuel P Q i)) :
-    toBPoly (bsubresultantGcd fuel (toBPoly (chain fuel P Q (m + 2))).natDegree P Q)
-      = toBPoly (chain fuel P Q (m + 2)) :=
+-- the singleton-filter fact `hfilt` DISCHARGED from strict `GBPolyCore.gbdegCore` decrease (no hypothesis taken).
+example (fuel : ℕ) (P Q : GBPolyCore ℚ) (m : ℕ) (hfo : m + 2 + 1 < fuel)
+    (hnz : ∀ i ≤ m + 2, ¬ GBPolyCore.gbisZeroCore (chain fuel P Q i) = true)
+    (hzN : GBPolyCore.gbisZeroCore (chain fuel P Q (m + 2 + 1)) = true)
+    (hstrict : ∀ i < m + 2, GBPolyCore.gbdegCore (chain fuel P Q (i + 1)) < GBPolyCore.gbdegCore (chain fuel P Q i)) :
+    GBPolyCore.toGBCoeffPoly (bsubresultantGcd fuel (GBPolyCore.toGBCoeffPoly (chain fuel P Q (m + 2))).natDegree P Q)
+      = GBPolyCore.toGBCoeffPoly (chain fuel P Q (m + 2)) :=
   chain_hfilt fuel P Q m hfo hnz hzN hstrict
 
 

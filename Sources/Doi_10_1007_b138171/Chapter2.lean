@@ -1142,9 +1142,9 @@ theorem ex_2_4_1_compute :
 
 /-- **LRT log argument `S(t,x) = gcd_x(D, A − t·D')`, computable variant** (§2.5/§2.6, p.51/54): a
 genuinely `#eval`-able rendering of the bivariate polynomial that goes inside the logarithms of
-`∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`, over the bivariate carrier `BPoly := List (DensePoly ℚ)` (`= ℚ[t][x]`;
+`∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`, over the bivariate carrier `GBPolyCore ℚ := List (DensePoly ℚ)` (`= ℚ[t][x]`;
 Mathlib's `lrtSubresultant` is noncomputable). Built from the subresultant PRS (Collins–Brown,
-`subresPRS`) via pseudo-division `bpsremainder` over the non-field ring `ℚ[t]`, taking the `x`-degree-`j`
+`subresPRS`) via pseudo-division `GBPolyCore.gbpsremainderCore` over the non-field ring `ℚ[t]`, taking the `x`-degree-`j`
 subresultant, then reducing modulo the resultant factor `R(t)` and making it monic in `x` over
 `ℚ[t]/(R)` (Exercise 2.7's normalization). The library's `lrtGcdCompute`. Agreement with `lrtSubresultant`
 is deferred. -/

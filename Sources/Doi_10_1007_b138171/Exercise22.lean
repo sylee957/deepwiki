@@ -72,13 +72,13 @@ theorem ex_2_2_resultant_squarefree :
 /-- **The LRT log argument** `S₁(t,x) = lrtGcdCompute 60 1 (monic R) A D` for Exercise 2.2: the
 degree-1 (in `x`) per-residue gcd, monic in `x`, reduced over `ℚ[t]/(R)`. It has the shape
 `x + c₀(t)` with `c₀(t)` a degree-9 residue polynomial (`#eval`ed below). -/
-def cS1_22 : BPoly := lrtGcdCompute 60 1 (cmonic cR22) cA22 cD22
+def cS1_22 : GBPolyCore ℚ := lrtGcdCompute 60 1 (cmonic cR22) cA22 cD22
 
 /-- **Exercise 2.2: `S₁` is monic and linear in `x`** — `S₁(t,x) = x + c₀(t)`: it has `x`-degree `1`
 (two `x`-coefficients) with leading `x`-coefficient `1`. So each residue gcd `gcd(D, A − a·D')` is
 linear, as expected for a squarefree degree-10 `D` with distinct residues. Proved by `native_decide`. -/
 theorem ex_2_2_S1_monic_linear :
-    cS1_22.length = 2 ∧ blc cS1_22 = [1] := by native_decide
+    cS1_22.length = 2 ∧ GBPolyCore.gblcCore cS1_22 = [1] := by native_decide
 
 -- **Exercise 2.2, the assembled answer** `∫A/D = ∑_{R(a)=0} a·log(x + c₀(a))`: the single
 -- `(Q₁, S₁) = (monic R, x + c₀(t))` pair. The `#eval` prints `c₀(t)` (a degree-9 polynomial in `t`,

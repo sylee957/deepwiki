@@ -5,71 +5,25 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 The logarithmic part puts `S(t,x) = gcd_x(D(x), A(x) − t·D'(x))` inside the logarithms of
 `∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`. This bivariate `ℚ[t][x]` gcd is computed by the subresultant
 polynomial-remainder sequence over the non-field ring `ℚ[t]`, on an executable carrier
-`BPoly := List (DensePoly ℚ)`. Agreement with the noncomputable `lrtSubresultant` is proven in
+`GBPolyCore ℚ := List (DensePoly ℚ)`. Agreement with the noncomputable `lrtSubresultant` is proven in
 `SubresultantCorrectness`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-! ### The bivariate carrier `BPoly = List (DensePoly ℚ)` (`ℚ[t][x]`) -/
-
-/-- Bivariate dense carrier `BPoly := List (DensePoly ℚ)`: a polynomial in `x` whose coefficients are `DensePoly ℚ`
-(`= ℚ[t]`), index = `x`-degree low→high. -/
-abbrev BPoly := List (DensePoly ℚ)
-
-/-- Normalize a `BPoly`: normalize each `DensePoly ℚ` coefficient, then strip trailing (high-`x`-degree)
-zero coefficients. -/
-def bnorm : BPoly → BPoly
-  | [] => []
-  | a :: as =>
-    let a := cnorm a
-    match bnorm as with
-    | [] => if cisZero a then [] else [a]
-    | r => a :: r
-
-/-- Zero test for a `BPoly`: `true` iff it normalizes to `[]`. -/
-def bisZero (p : BPoly) : Bool := bnorm p == []
-
-/-- `x`-degree of a `BPoly` as a `ℕ`: `(length of bnorm p) − 1`, with `bdeg 0 = 0`. -/
-def bdeg (p : BPoly) : ℕ := (bnorm p).length - 1
-
-/-- Leading `x`-coefficient `blc p ∈ DensePoly ℚ` (`= ℚ[t]`): the top nonzero `x`-coefficient, `[]` for the
-zero polynomial. -/
-def blc (p : BPoly) : DensePoly ℚ := (bnorm p).getLast?.getD []
-
-/-! ### Pseudo-division over the coefficient ring `ℚ[t]` -/
-
-/-- Pseudo-remainder `bpsremainder fuel p q = prem(p, q)` over the non-field ring `ℚ[t]`: satisfies
-`lc(q)^(deg p − deg q + 1) · p = s·q + prem` with `deg prem < deg q`; fuel-bounded. -/
-def bpsremainder : ℕ → BPoly → BPoly → BPoly
-  | 0, p, _ => bnorm p
-  | fuel + 1, p, q =>
-    let p := bnorm p
-    let q := bnorm q
-    if bisZero q then bnorm p
-    else if p.length < q.length then p
-    else
-      let k := p.length - q.length
-      let lcq := blc q
-      let lcp := blc p
-      -- `lc(q)·p − lc(p)·xᵏ·q`: kills the leading term, stays in `ℚ[t][x]`.
-      let p' := bnorm (DensePoly.csub (DensePoly.cscale lcq p)
-        (DensePoly.cscale lcp (DensePoly.cshift k q)))
-      bpsremainder fuel p' q
-
 /-! ### `ℚ[t]`-content management (so the LRT gcd comes out clean) -/
 
-/-- `ℚ[t]`-content of a `BPoly`: the `DensePoly ℚ`-gcd of all its `x`-coefficients. -/
-def bcontentX (p : BPoly) : DensePoly ℚ :=
-  (bnorm p).foldl (fun g c => (DensePoly.cgcdWf g c).1) []
+/-- `ℚ[t]`-content of a `GBPolyCore ℚ`: the `DensePoly ℚ`-gcd of all its `x`-coefficients. -/
+def bcontentX (p : GBPolyCore ℚ) : DensePoly ℚ :=
+  (GBPolyCore.gbnormCore p).foldl (fun g c => (DensePoly.cgcdWf g c).1) []
 
 /-- Strip the `ℚ[t]`-content in `x`: `bprimitivePartX p = p / content_x(p)`, the
 `ℚ[t]`-primitive part. -/
-def bprimitivePartX (p : BPoly) : BPoly :=
-  let p := bnorm p
+def bprimitivePartX (p : GBPolyCore ℚ) : GBPolyCore ℚ :=
+  let p := GBPolyCore.gbnormCore p
   let g := bcontentX p
-  if cisZero g then p else bnorm (p.map (fun c => DensePoly.cdivWf c g))
+  if cisZero g then p else GBPolyCore.gbnormCore (p.map (fun c => DensePoly.cdivWf c g))
 
 /-! ### Reduction and inversion modulo a `ℚ[t]` factor `R(t)` (the residue ring `ℚ[t]/(R)`)
 The degree-`j` subresultant reduced mod `R` and made monic in `x` over `ℚ[t]/(R)` is the normalized
@@ -79,9 +33,9 @@ via the extended-Euclidean inverse. -/
 /-- Reduce a `DensePoly ℚ` modulo `R`: `credR R c = c mod R`, the representative in `ℚ[t]/(R)`. -/
 def credR (R c : DensePoly ℚ) : DensePoly ℚ := DensePoly.cmodWf c R
 
-/-- Reduce every `x`-coefficient of a `BPoly` modulo `R`: `bredR R p`, the image of `p` in
+/-- Reduce every `x`-coefficient of a `GBPolyCore ℚ` modulo `R`: `bredR R p`, the image of `p` in
 `(ℚ[t]/(R))[x]`. -/
-def bredR (R : DensePoly ℚ) (p : BPoly) : BPoly := bnorm (p.map (credR R))
+def bredR (R : DensePoly ℚ) (p : GBPolyCore ℚ) : GBPolyCore ℚ := GBPolyCore.gbnormCore (p.map (credR R))
 
 /-- Inverse of a `DensePoly ℚ` modulo `R`: `cinvMod R c = c⁻¹` in `ℚ[t]/(R)` (assumes `c` a unit mod
 `R`), via `c⁻¹ ≡ s/g (mod R)` from the Bézout relation `s·c + ·R = g`. -/
@@ -89,21 +43,21 @@ def cinvMod (R c : DensePoly ℚ) : DensePoly ℚ :=
   let (g, s, _) := DensePoly.cgcdWf c R
   credR R (cscale (clead g)⁻¹ s)
 
-/-- Make a `BPoly` monic in `x` over `ℚ[t]/(R)`: `bmonicXmodR R p` reduces mod `R` and scales by
+/-- Make a `GBPolyCore ℚ` monic in `x` over `ℚ[t]/(R)`: `bmonicXmodR R p` reduces mod `R` and scales by
 the mod-`R` inverse of the leading `x`-coefficient. -/
-def bmonicXmodR (R : DensePoly ℚ) (p : BPoly) : BPoly :=
+def bmonicXmodR (R : DensePoly ℚ) (p : GBPolyCore ℚ) : GBPolyCore ℚ :=
   let p := bredR R p
-  if bisZero p then []
+  if GBPolyCore.gbisZeroCore p then []
   else
-    let inv := cinvMod R (blc p)
-    bnorm (p.map (fun c => credR R (cmul c inv)))
+    let inv := cinvMod R (GBPolyCore.gblcCore p)
+    GBPolyCore.gbnormCore (p.map (fun c => credR R (cmul c inv)))
 
-/-! ### Exact `ℚ[t]`-division of a `BPoly` by a `DensePoly ℚ` -/
+/-! ### Exact `ℚ[t]`-division of a `GBPolyCore ℚ` by a `DensePoly ℚ` -/
 
 /-- Exact `ℚ[t]`-scalar division `bdivC p c = p / c`: divide every `x`-coefficient of `p` by the
 `DensePoly ℚ` scalar `c`. -/
-def bdivC (p : BPoly) (c : DensePoly ℚ) : BPoly :=
-  bnorm (p.map (fun a => DensePoly.cdivWf a c))
+def bdivC (p : GBPolyCore ℚ) (c : DensePoly ℚ) : GBPolyCore ℚ :=
+  GBPolyCore.gbnormCore (p.map (fun a => DensePoly.cdivWf a c))
 
 /-! ### The subresultant PRS (Collins–Brown)
 The subresultant polynomial-remainder sequence computes the whole gcd chain with exact `ℚ[t]`
@@ -112,14 +66,14 @@ subresultant. -/
 
 /-- Subresultant polynomial-remainder sequence `subresPRS fuel P Q = [R₁, R₂, …]` with `R₁ = P`,
 `R₂ = Q`; the degree-`j` element is the `j`-th subresultant up to sign. Fuel-bounded. -/
-def subresPRS (fuel : ℕ) (P Q : BPoly) : List BPoly :=
+def subresPRS (fuel : ℕ) (P Q : GBPolyCore ℚ) : List (GBPolyCore ℚ) :=
   -- `go Ri_1 Ri psi delta_prev fuelOuter`: `delta_prev = δ` of the step that produced `Ri` from `Ri_1`.
-  let rec go : ℕ → BPoly → BPoly → DensePoly ℚ → ℕ → List BPoly
+  let rec go : ℕ → GBPolyCore ℚ → GBPolyCore ℚ → DensePoly ℚ → ℕ → List (GBPolyCore ℚ)
     | 0, _, _, _, _ => []
     | fo + 1, Ri_1, Ri, psi, deltaPrev =>
-      if bisZero Ri then []
+      if GBPolyCore.gbisZeroCore Ri then []
       else
-        let lcRi_1 : DensePoly ℚ := blc Ri_1
+        let lcRi_1 : DensePoly ℚ := GBPolyCore.gblcCore Ri_1
         -- update ψ: ψ' = (−lc Ri_1)^δ / ψ^{δ−1}  (δ = deltaPrev ≥ 1)
         let negLc : DensePoly ℚ := cneg lcRi_1
         let psi' : DensePoly ℚ :=
@@ -128,47 +82,48 @@ def subresPRS (fuel : ℕ) (P Q : BPoly) : List BPoly :=
             (DensePoly.cpow psi (deltaPrev - 1))
         -- β = −lc(Ri_1) · ψ'^δ
         let beta : DensePoly ℚ := cmul negLc (DensePoly.cpow psi' deltaPrev)
-        let pr : BPoly := bpsremainder fuel Ri_1 Ri
-        let Ri1 : BPoly := bdivC pr beta
-        let deltaNew : ℕ := bdeg Ri - bdeg Ri1
+        let pr : GBPolyCore ℚ := GBPolyCore.gbpsremainderCore fuel Ri_1 Ri
+        let Ri1 : GBPolyCore ℚ := bdivC pr beta
+        let deltaNew : ℕ := GBPolyCore.gbdegCore Ri - GBPolyCore.gbdegCore Ri1
         Ri :: go fo Ri Ri1 psi' deltaNew
-  P :: go fuel P Q [-1] (bdeg P - bdeg Q)
+  P :: go fuel P Q [-1] (GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q)
 
 /-- The subresultant at `x`-degree `j` `bsubresultantGcd fuel j P Q`: the element of `subresPRS`
 whose `x`-degree is `j` (the subresultant `Sⱼ` up to sign), or `[]` if none. -/
-def bsubresultantGcd (fuel : ℕ) (j : ℕ) (P Q : BPoly) : BPoly :=
-  ((subresPRS fuel P Q).filter (fun R => decide (bdeg R = j ∧ ¬ bisZero R))).getLast?.getD []
+def bsubresultantGcd (fuel : ℕ) (j : ℕ) (P Q : GBPolyCore ℚ) : GBPolyCore ℚ :=
+  ((subresPRS fuel P Q).filter (fun R => decide (GBPolyCore.gbdegCore R = j ∧ ¬ GBPolyCore.gbisZeroCore R))).getLast?.getD []
 
-/-! ### Lifting `ℚ[x]` (a `DensePoly ℚ`) into `BPoly`, and building `A − t·D'` -/
+/-! ### Lifting `ℚ[x]` (a `DensePoly ℚ`) into `GBPolyCore ℚ`, and building `A − t·D'` -/
 
-/-- Lift a `DensePoly ℚ` (`= ℚ[x]`) into `BPoly`: `liftCtoBPoly p` makes each `x`-coefficient `aᵢ` the
+/-- Lift a `DensePoly ℚ` (`= ℚ[x]`) into `GBPolyCore ℚ`: `liftCtoBPoly p` makes each `x`-coefficient `aᵢ` the
 constant `ℚ[t]` polynomial `[aᵢ]`. -/
-def liftCtoBPoly (p : DensePoly ℚ) : BPoly := p.map (fun c => cnorm [c])
+def liftCtoBPoly (p : DensePoly ℚ) : GBPolyCore ℚ := p.map (fun c => cnorm [c])
 
 /-- The variable `t` as a `DensePoly ℚ`: `ctVar = [0, 1]`. -/
 def ctVar : DensePoly ℚ := [0, 1]
 
-/-- The log argument's second operand `bArgAmtD' A D = A − t·D'` as a `BPoly`: `A` lifted with
+/-- The log argument's second operand `bArgAmtD' A D = A − t·D'` as a `GBPolyCore ℚ`: `A` lifted with
 constant `t`-coefficients, minus `t · D'`. -/
-def bArgAmtD' (A D : DensePoly ℚ) : BPoly :=
-  DensePoly.csub (liftCtoBPoly A) (DensePoly.cscale ctVar (liftCtoBPoly (cderiv D)))
+def bArgAmtD' (A D : DensePoly ℚ) : GBPolyCore ℚ :=
+  GBPolyCore.gbsubCore (liftCtoBPoly A)
+    (GBPolyCore.gbscaleCCore ctVar (liftCtoBPoly (cderiv D)))
 
 /-- The raw degree-`j` subresultant `lrtSubresultantCompute fuel j A D = Sⱼ(D, A − t·D')`: the
 bivariate subresultant of `D` (lifted) and `A − t·D'` at `x`-degree `j`, `ℚ[t]`-primitive in `x`. -/
-def lrtSubresultantCompute (fuel : ℕ) (j : ℕ) (A D : DensePoly ℚ) : BPoly :=
+def lrtSubresultantCompute (fuel : ℕ) (j : ℕ) (A D : DensePoly ℚ) : GBPolyCore ℚ :=
   bprimitivePartX (bsubresultantGcd fuel j (liftCtoBPoly D) (bArgAmtD' A D))
 
 /-- The computable log argument `lrtGcdCompute fuel j R A D = S(t,x)`: the degree-`j` subresultant
 reduced modulo `R(t)` and made monic in `x` over `ℚ[t]/(R)`, the `S(t,x)` inside the logarithms of
 `∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`. -/
-def lrtGcdCompute (fuel : ℕ) (j : ℕ) (R A D : DensePoly ℚ) : BPoly :=
+def lrtGcdCompute (fuel : ℕ) (j : ℕ) (R A D : DensePoly ℚ) : GBPolyCore ℚ :=
   bmonicXmodR R (lrtSubresultantCompute fuel j A D)
 
 /-! ### Logarithmic-part assembly -/
 
 /-- Logarithmic part of `∫A/D`: `lrtLogPart fuel A D` returns the `(Qᵢ, Sᵢ)` pairs meaning
 `∫A/D = ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`, for squarefree `D`. -/
-def lrtLogPart (fuel : ℕ) (A D : DensePoly ℚ) : List (DensePoly ℚ × BPoly) :=
+def lrtLogPart (fuel : ℕ) (A D : DensePoly ℚ) : List (DensePoly ℚ × GBPolyCore ℚ) :=
   let R := DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) A D
   (DensePoly.cSqfreeYunFactors R).map (fun (Qi, i) => (Qi, lrtGcdCompute fuel i Qi A D))
 
