@@ -85,7 +85,7 @@ def creverseDeg {α : Type*} [CField α] (k : ℕ) (p : DensePoly α) : DensePol
   (cpad (k + 1) p).reverse
 
 /-- Monomial `c * X^n` as a `DensePoly`: `n` low-degree zeros followed by coefficient `c`. -/
-def cMonomial {α : Type*} [CField α] (c : α) (n : ℕ) : DensePoly α :=
+def cMonomial {α : Type*} [CCommRing α] (c : α) (n : ℕ) : DensePoly α :=
   (List.replicate n CCommRing.zero ++ [c] : List α)
 
 /-- Generic power of a field element: `cfpow c n = cⁿ` over `[CField α]` by `ℕ`-recursion. -/
@@ -245,6 +245,16 @@ noncomputable def toPoly {α : Type*} [CCommRing α] [CRingSpec α] : DensePoly 
 @[denote] theorem toPolyG_one_singleton {α : Type*} [CCommRing α] [CRingSpec α] :
     toPoly ([CCommRing.one] : DensePoly α) = 1 := by
   rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CRingSpec.toR_one, map_one]
+
+/-- `toPoly (cMonomial c k) = C(toR c) * X^k`: dense monomial construction has its expected reading. -/
+@[denote] theorem toPolyG_cMonomial {α : Type*} [CCommRing α] [CRingSpec α] (c : α) (k : ℕ) :
+    toPoly (cMonomial c k) = Polynomial.C (CRingSpec.toR c) * X ^ k := by
+  induction k with
+  | zero => simp [cMonomial, denote]
+  | succ k ih =>
+    change toPoly (CCommRing.zero :: cMonomial c k) = _
+    rw [toPolyG_cons, CRingSpec.toR_zero, map_zero, zero_add, ih, pow_succ']
+    ring
 
 /-- `toPoly [CCommRing.one] ≠ 0`: the singleton coefficient list `[1]` reads nontrivially. -/
 theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :

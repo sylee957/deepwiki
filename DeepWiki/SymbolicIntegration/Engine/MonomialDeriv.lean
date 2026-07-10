@@ -14,7 +14,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open scoped Differential
 
-universe u
+universe u v
 
 /-! ### Computable derivation on the coefficient field -/
 
@@ -79,11 +79,11 @@ end DensePoly
 
 namespace CPolyEngine
 
-variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine P]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
 
 /-- Generic coefficientwise derivation denotes `Differential.mapCoeffs`. -/
 @[denote] theorem toPoly_cmapDeriv {α : Type u} [CField α] [CDiffField α]
-    [CFieldSpec.{u,u} α] [CDiffFieldSpec.{u,u} α] (p : P α) :
+    [CFieldSpec.{u,v} α] [CDiffFieldSpec.{u,v} α] (p : P α) :
     CPoly.toPoly (DensePoly.cmapDeriv p) = Differential.mapCoeffs (CPoly.toPoly p) := by
   have hzero : CRingSpec.toR (CDiffField.cderiv (CCommRing.zero : α)) = 0 := by
     simp only [toR_eq_toK]
@@ -102,7 +102,7 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine P]
 
 /-- Generic monomial derivation denotes `Differential.implicitDeriv`. -/
 @[denote] theorem toPoly_cmonomialDeriv {α : Type u} [CField α] [CDiffField α]
-    [CFieldSpec.{u,u} α] [CDiffFieldSpec.{u,u} α] (Dt p : P α) :
+    [CFieldSpec.{u,v} α] [CDiffFieldSpec.{u,v} α] (Dt p : P α) :
     CPoly.toPoly (DensePoly.cmonomialDeriv Dt p) =
       Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly p) := by
   change CPoly.toPoly

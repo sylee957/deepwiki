@@ -14,7 +14,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u
+universe u v
 
 /-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
 
@@ -130,8 +130,8 @@ end DensePoly
 
 namespace CPolyEngine
 
-variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine P]
-  {α : Type u} [CField α] [CFieldSpec.{u,u} α] [CDiffField α] [CDiffFieldSpec.{u,u} α]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+  {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
 
 /-- Generic `cAmcDd` denotes the Rothstein–Trager numerator `a - c·Dd`. -/
 @[denote] theorem toPoly_cAmcDd (Dt a d : P α) (c : α) :

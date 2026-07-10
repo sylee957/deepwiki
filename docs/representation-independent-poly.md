@@ -173,6 +173,15 @@ generic denotation theorems plus sparse execution coverage. The shared Rothstein
 abbreviation of `cmapDeriv`, and `afDerivWf` reuses the same canonical operation instead of re-spelling
 the coefficient map.
 
+The degree-raising primitive polynomial integrator is representation-independent too.
+`CPolyEngine.monomial` selects the exact dense `replicate k 0 ++ [c]` implementation at `List` and the
+generic `ofFn` construction at `SparsePoly`; these are intentional representation specializations, not
+duplicate algorithms. Its lawful square is supported by the dense-local `toPolyG_cMonomial` satellite.
+`cIntegratePrimPolyDegRaise` and its telescoping soundness theorem are generic, execute on sparse input,
+and retain the existing dense worked output. The lawful engine laws are universe-polymorphic in their
+denotation carrier, so the same generic soundness theorem applies at tower coefficients such as
+`CFrac β`, whose denotation is `RatFunc (CFieldSpec.K β)`.
+
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 
 Since the *existing* engine can't be migrated isolated-module-at-a-time, the constructive path is to

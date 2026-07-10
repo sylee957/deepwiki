@@ -86,7 +86,9 @@ omit [CRischField β] in
 theorem towerPolyIntegrateLrt_sound (η : CFrac β) (p q : DensePoly (CFrac β))
     (h : towerPolyIntegrateLrt η p = some q) :
     Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPoly q) = toPoly p :=
-  cIntegratePrimPolyDegRaiseG_sound η _ (cdeg p + 2) p q h
+  by
+    simpa only [toPoly_list_eq] using
+      (cIntegratePrimPolyDegRaiseG_sound η _ (cdeg p + 2) p q h)
 
 omit [CRischField β] in
 /-- The LRT tower step's special-part field identity (`Dθ = 1`): from `towerPolyIntegrateLrt_sound`, the

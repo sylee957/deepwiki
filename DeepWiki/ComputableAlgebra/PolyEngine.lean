@@ -17,7 +17,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u
+universe u v
 
 /-- The Prop-free polynomial-engine operations supplied by a concrete representation. -/
 class CPolyEngine (P : Type u → Type u) where
@@ -27,6 +27,8 @@ class CPolyEngine (P : Type u → Type u) where
   mul : {α : Type u} → [CCommRing α] → P α → P α → P α
   /-- Negation. -/
   neg : {α : Type u} → [CCommRing α] → P α → P α
+  /-- Monomial construction. -/
+  monomial : {α : Type u} → [CCommRing α] → α → ℕ → P α
   /-- Apply a coefficient function without changing the represented degree bound. -/
   mapCoeffs : {α : Type u} → [CCommRing α] → (α → α) → P α → P α
   /-- Formal derivative. -/
@@ -46,29 +48,32 @@ class CPolyEngine (P : Type u → Type u) where
 
 /-- Denotation laws for a `CPolyEngine`, separated from its computable operations. -/
 class LawfulCPolyEngine (P : Type u → Type u) [CPoly P] [CPolyEngine P] : Prop where
-  toPoly_add : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p q : P α),
+  toPoly_add : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p q : P α),
     CPoly.toPoly (CPolyEngine.add p q) = CPoly.toPoly p + CPoly.toPoly q
-  toPoly_mul : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p q : P α),
+  toPoly_mul : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p q : P α),
     CPoly.toPoly (CPolyEngine.mul p q) = CPoly.toPoly p * CPoly.toPoly q
-  toPoly_neg : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
+  toPoly_neg : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p : P α),
     CPoly.toPoly (CPolyEngine.neg p) = - CPoly.toPoly p
-  toR_coeff_mapCoeffs : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α]
+  toPoly_monomial : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (c : α) (k : ℕ),
+    CPoly.toPoly (CPolyEngine.monomial (P := P) c k) =
+      Polynomial.C (CRingSpec.toR c) * Polynomial.X ^ k
+  toR_coeff_mapCoeffs : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α]
       (f : α → α) (_hzero : CRingSpec.toR (f CCommRing.zero) = 0) (p : P α) (i : ℕ),
     CRingSpec.toR (CPoly.coeff (CPolyEngine.mapCoeffs f p) i) =
       CRingSpec.toR (f (CPoly.coeff p i))
-  toPoly_deriv : ∀ {α : Type u} [CField α] [CFieldSpec.{u,u} α] (p : P α),
+  toPoly_deriv : ∀ {α : Type u} [CField α] [CFieldSpec.{u,v} α] (p : P α),
     CPoly.toPoly (CPolyEngine.deriv p) = (CPoly.toPoly p).derivative
-  toPoly_scale : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (c : α) (p : P α),
+  toPoly_scale : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (c : α) (p : P α),
     CPoly.toPoly (CPolyEngine.scale c p) = Polynomial.C (CRingSpec.toR c) * CPoly.toPoly p
-  toPoly_cnorm : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
+  toPoly_cnorm : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p : P α),
     CPoly.toPoly (CPolyEngine.cnorm p) = CPoly.toPoly p
-  cisZero_iff : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
+  cisZero_iff : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p : P α),
     CPolyEngine.cisZero p = true ↔ CPoly.toPoly p = 0
-  cdeg_eq_natDegree : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
+  cdeg_eq_natDegree : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p : P α),
     CPolyEngine.cdeg p = (CPoly.toPoly p).natDegree
-  toR_clead_eq_leadingCoeff : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α),
+  toR_clead_eq_leadingCoeff : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p : P α),
     CRingSpec.toR (CPolyEngine.clead p) = (CPoly.toPoly p).leadingCoeff
-  toR_eval : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,u} α] (p : P α) (x : α),
+  toR_eval : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p : P α) (x : α),
     CRingSpec.toR (CPolyEngine.eval p x) = (CPoly.toPoly p).eval (CRingSpec.toR x)
 
 namespace CPolyEngine
@@ -93,12 +98,12 @@ def prod (ps : List (P α)) : P α :=
   isZero := cisZero
 
 /-- Engine subtraction denotes polynomial subtraction. -/
-theorem toPoly_sub [LawfulCPolyEngine P] [CRingSpec.{u,u} α] (p q : P α) :
+theorem toPoly_sub [LawfulCPolyEngine.{u,v} P] [CRingSpec.{u,v} α] (p q : P α) :
     CPoly.toPoly (sub p q) = CPoly.toPoly p - CPoly.toPoly q := by
   rw [sub, LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_neg, sub_eq_add_neg]
 
 /-- An engine polynomial product denotes the product of the denoted factors. -/
-theorem toPoly_prod [LawfulCPolyEngine P] [CRingSpec.{u,u} α] (ps : List (P α)) :
+theorem toPoly_prod [LawfulCPolyEngine.{u,v} P] [CRingSpec.{u,v} α] (ps : List (P α)) :
     CPoly.toPoly (prod ps) = (ps.map CPoly.toPoly).prod := by
   have hfold : ∀ (xs : List (P α)) (init : P α),
       CPoly.toPoly (xs.foldl (fun acc p => mul acc p) init) =
@@ -121,6 +126,7 @@ instance instEngineList : CPolyEngine List where
   add := DensePoly.cadd
   mul := DensePoly.cmul
   neg := DensePoly.cneg
+  monomial := DensePoly.cMonomial
   mapCoeffs f p := (p : List _).map f
   deriv := DensePoly.cderiv
   scale := DensePoly.cscale
@@ -141,6 +147,9 @@ instance instLawfulEngineList : LawfulCPolyEngine List where
   toPoly_neg p := by
     change CPoly.toPoly (DensePoly.cneg p) = _
     rw [toPoly_list_eq, DensePoly.toPolyG_cnegG, ← toPoly_list_eq]
+  toPoly_monomial c k := by
+    change CPoly.toPoly (DensePoly.cMonomial c k) = _
+    rw [toPoly_list_eq, DensePoly.toPolyG_cMonomial]
   toR_coeff_mapCoeffs f hzero p i := by
     change CRingSpec.toR (((p : List _).map f).getD i CCommRing.zero) =
       CRingSpec.toR (f ((p : List _).getD i CCommRing.zero))
@@ -190,6 +199,10 @@ namespace CPolyEngine
 /-- Engine negation on the dense representation is concrete dense negation. -/
 @[simp] theorem neg_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
     CPolyEngine.neg p = DensePoly.cneg p := rfl
+
+/-- Engine monomial construction on the dense representation is concrete dense construction. -/
+@[simp] theorem monomial_dense_eq {α : Type u} [CCommRing α] (c : α) (k : ℕ) :
+    CPolyEngine.monomial (P := DensePoly) c k = DensePoly.cMonomial c k := rfl
 
 /-- Engine coefficient mapping on the dense representation is concrete list mapping. -/
 @[simp] theorem mapCoeffs_dense_eq {α : Type u} [CCommRing α] (f : α → α) (p : DensePoly α) :
@@ -243,6 +256,7 @@ instance instEngineSparse : CPolyEngine CPoly.SparsePoly where
   add := CPoly.add
   mul := CPoly.mul
   neg := CPoly.neg
+  monomial := CPoly.cmonomial
   mapCoeffs f p := CPoly.ofFn (CPoly.degBound p) (fun i => f (CPoly.coeff p i))
   deriv := CPoly.cderiv
   scale := CPoly.scale
@@ -257,6 +271,9 @@ instance instLawfulEngineSparse : LawfulCPolyEngine CPoly.SparsePoly where
   toPoly_add p q := by change CPoly.toPoly (CPoly.add p q) = _; exact CPoly.toPoly_add p q
   toPoly_mul p q := by change CPoly.toPoly (CPoly.mul p q) = _; exact CPoly.toPoly_mul p q
   toPoly_neg p := by change CPoly.toPoly (CPoly.neg p) = _; exact CPoly.toPoly_neg p
+  toPoly_monomial c k := by
+    change CPoly.toPoly (CPoly.cmonomial c k) = _
+    exact CPoly.toPoly_cmonomial c k
   toR_coeff_mapCoeffs f hzero p i := by
     change CRingSpec.toR
         (CPoly.coeff

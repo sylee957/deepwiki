@@ -185,7 +185,7 @@ through `cConstSolveUniqueQ_sound`, so the `*_of_check` lemmas here are the self
 
 /-- A passing generic `coupledClearedCheck` gives the two base-system identities under `CPoly.toPoly`. -/
 theorem coupledClearedCheck_sound {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [LawfulCPolyEngine P] (a : ℚ) (b1 b2 z1 z2 y1 y2 : P ℚ)
+    [LawfulCPolyEngine.{0,0} P] (a : ℚ) (b1 b2 z1 z2 y1 y2 : P ℚ)
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
     Polynomial.derivative (CPoly.toPoly y1) + CPoly.toPoly b1 * CPoly.toPoly y1
         + Polynomial.C a * (CPoly.toPoly b2 * CPoly.toPoly y2) = CPoly.toPoly z1 ∧
