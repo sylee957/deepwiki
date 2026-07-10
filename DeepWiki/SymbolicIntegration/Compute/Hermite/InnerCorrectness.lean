@@ -64,21 +64,20 @@ theorem hermiteInner_step_ratFunc (A B C U V : ℚ[X]) (hU : U ≠ 0) (hV : V �
 
 /-- The per-step Bezout relation of `hermiteInner` at counter `j'` with numerator `A'`. -/
 private def hbezPred (V U : DensePoly ℚ) (j' : ℕ) (A' : DensePoly ℚ) : Prop :=
-  toPoly (cdiophantine (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).1
+  toPoly (DensePoly.cdiophantine (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).1
       * (toPoly U * derivative (toPoly V))
-    + toPoly (cdiophantine (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).2
+    + toPoly (DensePoly.cdiophantine (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).2
       * toPoly V
     = -toPoly A' * Polynomial.C (((j' : ℚ) + 1)⁻¹)
 
-/-- The Hermite-inner Bezout call has a nonzero denominator and constant gcd. -/
+/-- The Hermite-inner Bezout call has a nonzero denominator and degree-zero gcd. -/
 structure IsHermiteInnerBezoutInput (V U : DensePoly ℚ) : Prop where
   /-- The inner denominator is nonzero. -/
   den_ne : cnorm V ≠ []
-  /-- The computed gcd reads as its leading constant. -/
-  gcd_const : toPoly (DensePoly.cgcdWf (cmul U (cderiv V)) V).1
-    = Polynomial.C (clead (DensePoly.cgcdWf (cmul U (cderiv V)) V).1)
-  /-- The leading coefficient of the computed gcd is nonzero. -/
-  gcd_lead_ne : clead (DensePoly.cgcdWf (cmul U (cderiv V)) V).1 ≠ 0
+  /-- The computed gcd has degree zero. -/
+  gcd_degree_zero : (toPoly (DensePoly.cgcdWf (cmul U (cderiv V)) V).1).natDegree = 0
+  /-- The computed gcd is nonzero. -/
+  gcd_ne : toPoly (DensePoly.cgcdWf (cmul U (cderiv V)) V).1 ≠ 0
 
 open scoped Differential in
 /-- `hermiteInner` loop invariant, generalized over an accumulator. -/
@@ -102,7 +101,7 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
   | succ j ih =>
     intro A g hg
     rw [hermiteInner]
-    rcases hBC : cdiophantine (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A)
+    rcases hBC : DensePoly.cdiophantine (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A)
       with ⟨B, C⟩
     simp only []
     set Vpow := (List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1] with hVpowdef
@@ -153,10 +152,12 @@ theorem hermiteInner_spec (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 
 theorem hermiteInner_bezout_of (V U : DensePoly ℚ) (j' : ℕ) (A' : DensePoly ℚ)
     (hbez : IsHermiteInnerBezoutInput V U) :
     hbezPred V U j' A' := by
-  obtain ⟨hq, hg, hgc⟩ := hbez
+  obtain ⟨hq, hgdeg, hgne⟩ := hbez
   rw [hbezPred]
-  have h := toPoly_cdiophantine (cmul U (cderiv V)) V
-    (cscale (-((j' : ℚ) + 1)⁻¹) A') hq hg hgc
+  have h := DensePoly.toPolyG_cdiophantineG (cmul U (cderiv V)) V
+    (cscale (-((j' : ℚ) + 1)⁻¹) A') hq
+    (by simpa only [toPoly_eq_dense] using hgdeg)
+    (by simpa only [toPoly_eq_dense] using hgne)
   simp only [toPoly_eq_dense] at h ⊢
   rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, DensePoly.toPolyG_cscaleG] at h
   simp only [toR_eq_toK, CFieldSpec.toK_rat] at h ⊢
@@ -179,15 +180,14 @@ theorem hermiteInner_spec_of (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U �
 
 open scoped Differential in
 example (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (hq : cnorm V ≠ [])
-    (hg : toPoly (DensePoly.cgcdWf (cmul U (cderiv V)) V).1
-      = Polynomial.C (clead (DensePoly.cgcdWf (cmul U (cderiv V)) V).1))
-    (hgc : clead (DensePoly.cgcdWf (cmul U (cderiv V)) V).1 ≠ 0) (j : ℕ) (A : DensePoly ℚ) :
+    (hgdeg : (toPoly (DensePoly.cgcdWf (cmul U (cderiv V)) V).1).natDegree = 0)
+    (hgne : toPoly (DensePoly.cgcdWf (cmul U (cderiv V)) V).1 ≠ 0) (j : ℕ) (A : DensePoly ℚ) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
         / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
             * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
       = (toQFun (hermiteInner fuel V U j A qzero).1)′
         + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
-  hermiteInner_spec_of fuel V U hU hV ⟨hq, hg, hgc⟩ j A
+  hermiteInner_spec_of fuel V U hU hV ⟨hq, hgdeg, hgne⟩ j A
 
 end DeepWiki.SymbolicIntegration.Compute

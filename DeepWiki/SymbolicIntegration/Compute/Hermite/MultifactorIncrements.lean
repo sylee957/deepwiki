@@ -65,7 +65,7 @@ theorem hermiteInner_den_ne_zero (fuel : ℕ) (V U : DensePoly ℚ) (hV : toPoly
   | succ j ih =>
     intro A g hg
     rw [hermiteInner]
-    rcases hBC : cdiophantine (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A) with ⟨B, C⟩
+    rcases hBC : DensePoly.cdiophantine (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A) with ⟨B, C⟩
     simp only []
     set Vpow := (List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1] with hVpowdef
     have hVpow0 : toPoly Vpow ≠ 0 := by

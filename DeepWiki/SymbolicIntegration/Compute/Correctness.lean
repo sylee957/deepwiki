@@ -187,36 +187,6 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
         DensePoly.toPolyG_cmulG, map_mul]
       linear_combination hsc
 
-/-- Diophantine/Bézout solver correctness through `toPoly`: when `gcd(p, q)` is a nonzero constant,
-`cdiophantine p q rhs = (B, C)` satisfies `toPoly B · toPoly p + toPoly C · toPoly q = toPoly rhs`. -/
-theorem toPoly_cdiophantine (p q rhs : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hg : toPoly (DensePoly.cgcdWf p q).1 = Polynomial.C (clead (DensePoly.cgcdWf p q).1))
-    (hgc : clead (DensePoly.cgcdWf p q).1 ≠ 0) :
-    toPoly (cdiophantine p q rhs).1 * toPoly p
-        + toPoly (cdiophantine p q rhs).2 * toPoly q
-      = toPoly rhs := by
-  rcases hgst : DensePoly.cgcdWf p q with ⟨g, s, t⟩
-  rw [hgst] at hg hgc
-  have hbez : toPoly s * toPoly p + toPoly t * toPoly q = toPoly g := by
-    have h := DensePoly.toPolyG_cgcdWf p q
-    rw [hgst] at h
-    simpa only [toPoly_eq_dense] using h
-  simp only [cdiophantine, hgst]
-  rcases hqB : DensePoly.cdivmodWf (cscale (clead g)⁻¹ (cmul rhs s)) q with ⟨quo, B⟩
-  have hdiv : toPoly (cscale (clead g)⁻¹ (cmul rhs s)) = toPoly quo * toPoly q + toPoly B := by
-    have h := DensePoly.toPolyG_cdivmodWf (cscale (clead g)⁻¹ (cmul rhs s)) q hq
-    rw [hqB] at h
-    simpa only [toPoly_eq_dense] using h
-  simp only [toPoly_eq_dense, DensePoly.toPolyG_cnormG, DensePoly.toPolyG_caddG,
-    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cscaleG, toR_eq_toK,
-    CFieldSpec.toK_rat] at hdiv ⊢
-  have hinv : Polynomial.C (clead g)⁻¹ * toPoly g = 1 := by
-    rw [hg, ← map_mul, inv_mul_cancel₀ hgc, map_one]
-  simp only [toPoly_eq_dense] at hbez hinv
-  linear_combination (-DensePoly.toPoly p) * hdiv
-    + (Polynomial.C ((clead g)⁻¹ : ℚ) * DensePoly.toPoly rhs) * hbez
-    + DensePoly.toPoly rhs * hinv
-
 /-- Rational-function read of a `QFun` into `RatFunc ℚ`: `(num, den) ↦ toPoly num / toPoly den`. -/
 noncomputable def toQFun (x : QFun) : RatFunc ℚ :=
   algebraMap ℚ[X] (RatFunc ℚ) (toPoly x.1) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly x.2)

@@ -23,7 +23,7 @@ theorem hermiteInner_den_eq_pow (fuel : ℕ) (V U : DensePoly ℚ) :
   | succ j ih =>
     intro A g
     rw [hermiteInner]
-    rcases hBC : cdiophantine (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A) with ⟨B, C⟩
+    rcases hBC : DensePoly.cdiophantine (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A) with ⟨B, C⟩
     simp only []
     set Vpow := (List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1] with hVpowdef
     obtain ⟨m, hm⟩ := ih (csub (cscale (-((j : ℚ) + 1)) C) (cmul U (cderiv B))) (qadd g (B, Vpow))
