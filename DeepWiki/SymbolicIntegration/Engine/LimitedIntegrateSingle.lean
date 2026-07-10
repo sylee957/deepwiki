@@ -43,7 +43,8 @@ def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly ℚ) :
     Option ((DensePoly ℚ × DensePoly ℚ) × ℚ) :=
   if hA : DensePoly.cisZero aden = false then
     if hη : DensePoly.cisZero ηden = false then
-      (cLimitedIntegrateSingleBase ⟨(anum, aden), hA⟩ ⟨(ηnum, ηden), hη⟩).map
+      (cLimitedIntegrateSingleBase (CFrac.ofFraction anum aden hA)
+        (CFrac.ofFraction ηnum ηden hη)).map
         fun bc => ((bc.1.1.1, bc.1.1.2), bc.2)
     else none
   else none

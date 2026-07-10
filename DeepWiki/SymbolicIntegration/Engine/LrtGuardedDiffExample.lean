@@ -13,7 +13,7 @@ open DensePoly
 
 /-- The ℚ(x) coefficient `1/x` (numerator `1`, denominator `x`) as a `CFrac ℚ`, the test coefficient
 for the guard checks below. -/
-def gcInvX : CFrac ℚ := ⟨([1], [(0 : ℚ), 1]), by decide⟩
+def gcInvX : CFrac ℚ := CFrac.ofFraction [1] [(0 : ℚ), 1]
 
 /-- The residue-constant guard declines the reduced part `1/t` over `ℚ(x)(log x)`. -/
 theorem cResidueConstantGuardG_declines_invLog :

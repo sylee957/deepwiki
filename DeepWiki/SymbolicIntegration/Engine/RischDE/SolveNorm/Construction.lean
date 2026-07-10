@@ -29,7 +29,7 @@ variable {β : Type*} [CField β] [CFieldSpec β]
 /-- A `[CField β]`-data lowest-terms reducer that rebuilds the `qReduce` representative. -/
 def reduceSoundOpt (a : CFrac β) : Option (CFrac β) :=
   let rd := CFrac.reduceDen a
-  if h : DensePoly.cisZero rd = false then some ⟨(CFrac.reduceNum a, rd), h⟩ else none
+  if h : DensePoly.cisZero rd = false then some (CFrac.ofFraction (CFrac.reduceNum a) rd h) else none
 
 /-- `reduceSoundOpt a` is exactly `some (qReduce a)`. -/
 theorem reduceSoundOpt_eq (a : CFrac β) : reduceSoundOpt a = some (qReduce a) := by

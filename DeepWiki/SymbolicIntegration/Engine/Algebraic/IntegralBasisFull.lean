@@ -34,7 +34,7 @@ def qReduceNZ (z : CFrac ℚ) : CFrac ℚ :=
     let c := CField.inv (clead den1)
     let num2 := cscale c num1
     let den2 := cscale c den1
-    if h : cisZero den2 = false then ⟨(num2, den2), h⟩ else z
+    if h : cisZero den2 = false then CFrac.ofFraction num2 den2 h else z
 
 /-- Reduce every `ℚ(x)` entry of an order basis to lowest terms (`qReduceNZ` entrywise). -/
 def reduceOrder (O : List (DensePoly (CFrac ℚ))) : List (DensePoly (CFrac ℚ)) :=

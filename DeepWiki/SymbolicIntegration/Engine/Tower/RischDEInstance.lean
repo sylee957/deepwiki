@@ -24,7 +24,7 @@ instance instCRischFieldCFrac : CRischField (CFrac β) where
       match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 g.1.1 g.1.2 with
       | none => none
       | some (ynum, yden) =>
-        if h : DensePoly.cisZero yden = false then some ⟨(ynum, yden), h⟩ else none
+        if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
     else none
 
 /-- The gated oracle reduces to the raw solve when the gate passes: if `cdenomNormalGate f = true`
@@ -34,13 +34,13 @@ theorem crischDESolveWf_eq_solve_of_normal (f g : CFrac β) (hgate : cdenomNorma
       = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 g.1.1 g.1.2 with
          | none => none
          | some (ynum, yden) =>
-           if h : DensePoly.cisZero yden = false then some ⟨(ynum, yden), h⟩ else none) := by
+           if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none) := by
   rw [show CRischField.crischDESolve f g
       = (if cdenomNormalGate f then
            match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 g.1.1 g.1.2 with
            | none => none
            | some (ynum, yden) =>
-             if h : DensePoly.cisZero yden = false then some ⟨(ynum, yden), h⟩ else none
+             if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
          else none) from rfl, if_pos hgate]
 
 /-- A successful gated solve passed the gate: if `crischDESolve f g = some y` then
@@ -54,7 +54,7 @@ theorem cdenomNormalGateG_of_crischDESolve_isSome (f g y : CFrac β)
              match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 g.1.1 g.1.2 with
              | none => none
              | some (ynum, yden) =>
-               if h : DensePoly.cisZero yden = false then some ⟨(ynum, yden), h⟩ else none
+               if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
            else none) from rfl, if_neg hgate] at hsolve
     exact absurd hsolve (by simp)
 

@@ -76,15 +76,21 @@ theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : CFrac β)
       = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
          | none => none
          | some (ynum, yden) =>
-           if h : DensePoly.cisZero yden = false then some ⟨(ynum, yden), h⟩ else none) from rfl] at hsolve
+           if h : DensePoly.cisZero yden = false then
+             some (CFrac.ofFraction ynum yden h)
+           else none) from rfl] at hsolve
   rcases hsucc : DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
     with _ | ⟨ynum, yden⟩ <;> rw [hsucc] at hsolve
   · exact absurd hsolve (by simp)
   · simp only at hsolve
     by_cases hyz : DensePoly.cisZero yden = false
     · rw [dif_pos hyz, Option.some.injEq] at hsolve
-      have hy1 : y.1.1 = ynum := by rw [← hsolve]
-      have hy2 : y.1.2 = yden := by rw [← hsolve]
+      have hy1 : y.1.1 = ynum := by
+        change CFrac.num y = ynum
+        simpa using congrArg CFrac.num hsolve.symm
+      have hy2 : y.1.2 = yden := by
+        change CFrac.den y = yden
+        simpa using congrArg CFrac.den hsolve.symm
       have hydenne : toPoly yden ≠ 0 := by
         intro h; exact absurd ((cisZeroG_iff yden).mpr h) (by simpa using hyz)
       rw [hy1, hy2]

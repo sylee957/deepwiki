@@ -29,7 +29,7 @@ def crischDERawSolveWf (ftilde gtilde : CFrac β) : Option (CFrac β) :=
   match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
   | none => none
   | some (ynum, yden) =>
-    if h : DensePoly.cisZero yden = false then some ⟨(ynum, yden), h⟩ else none
+    if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
 
 omit [CFieldSpec β] [CFieldDomain β] in
 /-- `crischDERawSolveWf` returns `some y` exactly when `cRischDE [1]` returns a pair with nonzero
@@ -39,7 +39,7 @@ theorem crischDERawSolveWf_some_iff (ftilde gtilde y : CFrac β) :
       ∃ ynum yden, ∃ hden : DensePoly.cisZero yden = false,
         DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
             = some (ynum, yden) ∧
-          ⟨(ynum, yden), hden⟩ = y := by
+          CFrac.ofFraction ynum yden hden = y := by
   cases h :
       DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
   | none =>

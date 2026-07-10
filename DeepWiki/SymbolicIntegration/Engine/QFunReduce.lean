@@ -69,7 +69,7 @@ end CFrac
 
 /-- Reduce a `CFrac α` fraction to `(num/g)/(den/g)` using the fuel-free monic gcd. -/
 def qReduce {α : Type*} [CField α] [CFieldSpec α] (a : CFrac α) : CFrac α :=
-  ⟨(CFrac.reduceNum a, CFrac.reduceDen a), CFrac.cisZeroG_reduceDen a⟩
+  CFrac.ofFraction (CFrac.reduceNum a) (CFrac.reduceDen a) (CFrac.cisZeroG_reduceDen a)
 
 /-! ### The invariant: `qReduce` preserves the field value
 
@@ -136,7 +136,7 @@ def qReduceEq {α : Type*} [CField α] [CFieldDomain α] (a b : CFrac α) : Bool
 
 /-- A reducible fraction over `ℚ(x)` whose lowest-terms form is `(x + 1)/(x + 3)`. -/
 def swellFrac : CFrac ℚ :=
-  ⟨([(-1 : ℚ), 0, 1], [(-3 : ℚ), 2, 1]), by native_decide⟩
+  CFrac.ofFraction [(-1 : ℚ), 0, 1] [(-3 : ℚ), 2, 1]
 
 -- `qReduce` cancels the gcd `x − 1` in `swellFrac`, dropping the numerator to degree 1.
 example : cdeg (qReduce swellFrac).1.1 = 1 := by native_decide
@@ -154,7 +154,7 @@ example :
 
 /-- A higher-degree reducible fraction over `ℚ(x)` for `qReduce` examples. -/
 def swellFrac2 : CFrac ℚ :=
-  ⟨([(-1 : ℚ), 0, 0, 0, 1], [(-1 : ℚ), 0, 0, 0, 0, 0, 1]), by native_decide⟩
+  CFrac.ofFraction [(-1 : ℚ), 0, 0, 0, 1] [(-1 : ℚ), 0, 0, 0, 0, 0, 1]
 
 -- `qReduce` is value-preserving on the bigger swell `(x⁴−1)/(x⁶−1)`.
 example : qReduceEq (qReduce swellFrac2) swellFrac2 = true := by native_decide

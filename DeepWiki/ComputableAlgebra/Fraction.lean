@@ -152,14 +152,6 @@ def ofScalar {α : Type*} [CField α] [CFieldDomain α] (a : α) : CFrac α := o
 @[simp] theorem den_ofPoly {α : Type*} [CField α] [CFieldDomain α] (p : DensePoly α) :
     den (ofPoly p) = [CCommRing.one] := rfl
 
-/-- `qzeroNZ`: the zero fraction `0/1` as a `CFrac` (denominator `[1]` is nonzero). -/
-def qzeroNZ {α : Type*} [CField α] [CFieldDomain α] : CFrac α :=
-  ⟨QFun.qzero, cisZeroG_one_singleton⟩
-
-/-- `qoneNZ`: the one fraction `1/1` as a `CFrac` (denominator `[1]` is nonzero). -/
-def qoneNZ {α : Type*} [CField α] [CFieldDomain α] : CFrac α :=
-  ⟨QFun.qone, cisZeroG_one_singleton⟩
-
 /-- `qaddNZ`: addition on `CFrac` (the product denominator `b·d` is nonzero). -/
 def qaddNZ {α : Type*} [CField α] [CFieldDomain α] (x y : CFrac α) : CFrac α :=
   ⟨QFun.qadd x.1 y.1, by
@@ -177,11 +169,11 @@ def qmulNZ {α : Type*} [CField α] [CFieldDomain α] (x y : CFrac α) : CFrac �
 /-- `qnegNZ`: negation on `CFrac` (denominator unchanged). -/
 def qnegNZ {α : Type*} [CField α] (x : CFrac α) : CFrac α := ⟨QFun.qneg x.1, x.2⟩
 
-/-- `qinvNZ`: inverse on `CFrac`. If the numerator's zero test holds, the result is `qzeroNZ` (the
+/-- `qinvNZ`: inverse on `CFrac`. If the numerator's zero test holds, the result is `ofPoly []` (the
 `0⁻¹ = 0` convention); otherwise swap numerator and denominator (the new denominator is the old
 numerator, nonzero exactly by `¬ cisZero`). -/
 def qinvNZ {α : Type*} [CField α] [CFieldDomain α] (x : CFrac α) : CFrac α :=
-  if h : DensePoly.cisZero x.1.1 then qzeroNZ
+  if h : DensePoly.cisZero x.1.1 then ofPoly []
   else ⟨(x.1.2, x.1.1), Bool.not_eq_true _ ▸ h⟩
 
 /-- `qsubNZ`: subtraction on `CFrac`, `x − y := x + (−y)`. -/
@@ -199,8 +191,8 @@ end CFrac
 /-- `CField (CFrac α)`: the next tower level (fraction field of `α[t]`) as a computable field (over
 `[CField α] [CFieldDomain α]`, no `CFieldSpec`), so the engine reduces over `DensePoly (CFrac α)`. -/
 instance instCFieldCFrac {α : Type*} [CField α] [CFieldDomain α] : CField (CFrac α) where
-  zero := CFrac.qzeroNZ
-  one := CFrac.qoneNZ
+  zero := CFrac.ofPoly []
+  one := CFrac.ofPoly [CCommRing.one]
   add := CFrac.qaddNZ
   mul := CFrac.qmulNZ
   neg := CFrac.qnegNZ
@@ -266,23 +258,6 @@ theorem toCFrac_ofPoly_ne_zero {α : Type*} [CField α] [CFieldSpec α] [CFieldD
   rw [toCFrac_ofPoly]
   exact amG_toPolyG_ne_zero (toPolyG_ne_zero_of_cisZeroG_false hp)
 
-/-- `toCFrac qzeroNZ = 0`. -/
-theorem toCFracG_qzeroNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] :
-    toCFrac (qzeroNZ : CFrac α) = 0 := by
-  rw [toCFrac]
-  show am α (DensePoly.toPoly ([] : DensePoly α)) / _ = 0
-  rw [DensePoly.toPolyG_nil, map_zero, zero_div]
-
-/-- `toCFrac qoneNZ = 1`. -/
-theorem toCFracG_qoneNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] :
-    toCFrac (qoneNZ : CFrac α) = 1 := by
-  rw [toCFrac]
-  show am α (DensePoly.toPoly ([CCommRing.one] : DensePoly α))
-      / am α (DensePoly.toPoly ([CCommRing.one] : DensePoly α)) = 1
-  have h1 : DensePoly.toPoly ([CCommRing.one] : DensePoly α) = 1 := by
-    simp only [denote, mul_zero, add_zero, map_one]
-  rw [h1, map_one, div_self one_ne_zero]
-
 /-- `toCFrac (qaddNZ x y) = toCFrac x + toCFrac y`: `qaddNZ` realizes `+`. -/
 theorem toCFracG_qaddNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : CFrac α) :
     toCFrac (qaddNZ x y) = toCFrac x + toCFrac y := by
@@ -325,7 +300,7 @@ theorem toCFracG_qinvNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain 
     toCFrac (qinvNZ x) = (toCFrac x)⁻¹ := by
   rw [qinvNZ]
   by_cases h : DensePoly.cisZero x.1.1
-  · rw [dif_pos h, toCFracG_qzeroNZG]
+  · rw [dif_pos h, toCFrac_ofPoly, DensePoly.toPolyG_nil, map_zero]
     have hx0 : DensePoly.toPoly x.1.1 = 0 := (DensePoly.cisZeroG_iff x.1.1).mp h
     have : toCFrac x = 0 := by
       rw [toCFrac, num, hx0, map_zero, zero_div]
@@ -365,8 +340,13 @@ noncomputable instance instCFieldSpecCFrac {α : Type*} [CField α] [CFieldSpec 
     CFieldSpec (CFrac α) where
   K := RatFunc (CFieldSpec.K α)
   toK := CFrac.toCFrac
-  toK_zero := CFrac.toCFracG_qzeroNZG
-  toK_one := CFrac.toCFracG_qoneNZG
+  toK_zero := by
+    change CFrac.toCFrac (CFrac.ofPoly ([] : DensePoly α)) = 0
+    rw [CFrac.toCFrac_ofPoly, DensePoly.toPolyG_nil, map_zero]
+  toK_one := by
+    change CFrac.toCFrac (CFrac.ofPoly ([CCommRing.one] : DensePoly α)) = 1
+    rw [CFrac.toCFrac_ofPoly]
+    simp only [denote, mul_zero, add_zero, map_one]
   toK_add := CFrac.toCFracG_qaddNZG
   toK_mul := CFrac.toCFracG_qmulNZG
   toK_neg := CFrac.toCFracG_qnegNZG

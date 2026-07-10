@@ -248,7 +248,7 @@ theorem crischDERawSolveWf_isSome_of_cRischDEG_some_den (ftilde gtilde : CFrac �
       DensePoly.cisZero yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde := by
   obtain ⟨⟨ynum, yden⟩, hp⟩ := Option.isSome_iff_exists.mp hsome
-  refine ⟨⟨(ynum, yden), hden ynum yden hp⟩, ?_⟩
+  refine ⟨CFrac.ofFraction ynum yden (hden ynum yden hp), ?_⟩
   exact (crischDERawSolveWf_some_iff ftilde gtilde _).mpr
     ⟨ynum, yden, hden ynum yden hp, hp, rfl⟩
 

@@ -23,10 +23,11 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldDomain α]
 /-- The tower derivation `towerDerivCFrac Dt (n/d) = (D n · d − n · D d)/(d·d)` on `CFrac α`, with
 `D = cmonomialDeriv Dt`; the fraction-field quotient rule, computable (no `CFieldSpec`). -/
 def towerDerivCFrac (Dt : DensePoly α) (x : CFrac α) : CFrac α :=
-  ⟨(DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.1.1) x.1.2)
-      (DensePoly.cmul x.1.1 (DensePoly.cmonomialDeriv Dt x.1.2)),
-    DensePoly.cmul x.1.2 x.1.2),
-    cmulG_ne_zero_of x.2 x.2⟩
+  CFrac.ofFraction
+    (DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.1.1) x.1.2)
+      (DensePoly.cmul x.1.1 (DensePoly.cmonomialDeriv Dt x.1.2)))
+    (DensePoly.cmul x.1.2 x.1.2)
+    (cmulG_ne_zero_of x.2 x.2)
 
 /-- The numerator of `towerDerivCFrac Dt x` is `D n · d − n · D d` (with `D = cmonomialDeriv Dt`). -/
 theorem towerDerivCFracG_num (Dt : DensePoly α) (x : CFrac α) :
@@ -57,7 +58,8 @@ end
 /-- A level-2 scalar `c ∈ Lvl2 = CFrac (CFrac ℚ) = ℚ(x)(t₁)` from a numerator/denominator pair of
 `DensePoly (CFrac ℚ)`s, with denominator a nonzero singleton `[d]`. -/
 def lvl2OfList (num : DensePoly (CFrac ℚ)) (d : CFrac ℚ)
-    (h : DensePoly.cisZero ([d] : DensePoly (CFrac ℚ)) = false) : Lvl2 := ⟨(num, [d]), h⟩
+    (h : DensePoly.cisZero ([d] : DensePoly (CFrac ℚ)) = false) : Lvl2 :=
+  CFrac.ofFraction num [d] h
 
 /-- The level-2 scalar `t₁ ∈ ℚ(x)(t₁)` (numerator `[0, 1]` over ℚ(x): `t₁ = 0 + 1·t₁`, denominator
 `[1]`). -/

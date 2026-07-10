@@ -21,11 +21,11 @@ namespace DeepWiki.SymbolicIntegration
 namespace CFrac
 
 /-- The fraction `t/(t−1) ∈ CFrac ℚ` (numerator `[0,1]`, denominator `[−1,1]`). -/
-def swellA : CFrac ℚ := ⟨([(0 : ℚ), 1], [(-1 : ℚ), 1]), by native_decide⟩
+def swellA : CFrac ℚ := CFrac.ofFraction [(0 : ℚ), 1] [(-1 : ℚ), 1]
 
 /-- The fraction `(t−1)/t ∈ CFrac ℚ` (numerator `[−1,1]`, denominator `[0,1]`), the reciprocal of
 `swellA`. -/
-def swellB : CFrac ℚ := ⟨([(-1 : ℚ), 1], [(0 : ℚ), 1]), by native_decide⟩
+def swellB : CFrac ℚ := CFrac.ofFraction [(-1 : ℚ), 1] [(0 : ℚ), 1]
 
 /-- The unreduced product `swellA · swellB = (t·(t−1))/((t−1)·t)` via `qmulNZ`: both num and den are
 `t²−t` (length 3) though the value is `1`. -/
@@ -79,7 +79,7 @@ open DensePoly
 /-- The residual `1 ∈ ℚ(x)` stored unreduced as `(2x)/(2x)` via `qmulNZ (2x/1) (1/(2x))` (num and den
 both length 2). -/
 def Rstuck : CFrac ℚ :=
-  qmulNZ nLvl1TwoX ⟨([CCommRing.one], [(0 : ℚ), (2 : ℚ)]), by native_decide⟩
+  qmulNZ nLvl1TwoX (CFrac.ofFraction [CCommRing.one] [(0 : ℚ), (2 : ℚ)])
 
 /-- `Rstuck` is the value `1`: `isZero (Rstuck − 1) = true`. -/
 theorem Rstuck_eq_one : CCommRing.isZero (CField.sub Rstuck (CCommRing.one : CFrac ℚ)) = true := by

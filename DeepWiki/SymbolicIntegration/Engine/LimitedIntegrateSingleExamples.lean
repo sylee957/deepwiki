@@ -11,10 +11,10 @@ open DensePoly Polynomial
 /-! ### Base limited integration -/
 
 /-- `a = 1 + 1/x = (x+1)/x ∈ ℚ(x)`. -/
-def limIntSingleExampleA : CFrac ℚ := ⟨([1, 1], [0, 1]), by decide⟩
+def limIntSingleExampleA : CFrac ℚ := CFrac.ofFraction [1, 1] [0, 1]
 
 /-- `η = 1/x ∈ ℚ(x)` (the primitive derivative `Dt = 1/x`). -/
-def limIntSingleExampleEta : CFrac ℚ := ⟨([1], [0, 1]), by decide⟩
+def limIntSingleExampleEta : CFrac ℚ := CFrac.ofFraction [1] [0, 1]
 
 -- Sanity print: `cLimitedIntegrateSingleBase (1+1/x) (1/x)` returns `b = x`, `c = 1`.
 #eval (cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta).map
