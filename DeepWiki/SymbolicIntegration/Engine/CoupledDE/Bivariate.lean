@@ -1,40 +1,30 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.Tangent
+import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect
 
-/-! # Bivariate bridge for tangent coupled systems
+/-! # Bivariate semantics for tangent coupled systems
 
-The `toPoly2` bridge reads `t`-polynomial lists into `ℚ[x][t]` and proves that tangent
-cleared checks imply genuine bivariate polynomial identities. -/
+The generic `GBPolyCore.toGBCoeffPoly` denotation reads `t`-polynomial lists into `ℚ[x][t]`;
+this file proves that tangent cleared checks imply genuine bivariate polynomial identities.
+-/
 
 namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
-/-! ## The `t`-polynomial bivariate bridge `toPoly2 : ℚ[x][t]` -/
+/-! ## The generic `t`-polynomial bivariate denotation -/
 
-open DensePoly in
-/-- `toPoly2 p`: bivariate bridge `List (DensePoly ℚ) → ℚ[x][t]`, Horner over `t`,
-`toPoly2 (c :: cs) = C(toPoly c) + X·toPoly2 cs`. -/
-noncomputable def toPoly2 : List (DensePoly ℚ) → Polynomial (Polynomial ℚ)
-  | [] => 0
-  | c :: cs => Polynomial.C (toPoly c) + Polynomial.X * toPoly2 cs
-
-@[simp] theorem toPoly2_nil : toPoly2 [] = 0 := rfl
-
-@[simp] theorem toPoly2_cons (c : DensePoly ℚ) (cs : List (DensePoly ℚ)) :
-    toPoly2 (c :: cs) = Polynomial.C (toPoly c) + Polynomial.X * toPoly2 cs := rfl
-
-/-- `toPoly2_eq_sum_getD`: `toPoly2 p = Σ_{k<N} C(toPoly (p.getD k []))·Xᵏ` for any `N ≥ p.length`. -/
-theorem toPoly2_eq_sum_getD (p : List (DensePoly ℚ)) (N : ℕ) (hN : p.length ≤ N) :
-    toPoly2 p = ∑ k ∈ Finset.range N,
+/-- `toGBCoeffPoly_eq_sum_getD`: `GBPolyCore.toGBCoeffPoly p = Σ_{k<N} C(toPoly (p.getD k []))·Xᵏ` for any `N ≥ p.length`. -/
+theorem toGBCoeffPoly_eq_sum_getD (p : List (DensePoly ℚ)) (N : ℕ) (hN : p.length ≤ N) :
+    GBPolyCore.toGBCoeffPoly p = ∑ k ∈ Finset.range N,
       Polynomial.C (toPoly (p.getD k [])) * Polynomial.X ^ k := by
   induction p generalizing N with
   | nil =>
-    simp only [toPoly2_nil, List.getD_nil, toPolyG_nil, map_zero, zero_mul, Finset.sum_const_zero]
+    simp only [GBPolyCore.toGBCoeffPoly_nil, List.getD_nil, toPolyG_nil, map_zero, zero_mul, Finset.sum_const_zero]
   | cons c cs ih =>
     cases N with
     | zero => simp at hN
     | succ M =>
-      rw [toPoly2_cons, Finset.sum_range_succ', ih M (by simpa using hN), Finset.mul_sum]
+      rw [GBPolyCore.toGBCoeffPoly_cons, Finset.sum_range_succ', ih M (by simpa using hN), Finset.mul_sum]
       simp only [List.getD_cons_succ, pow_succ, List.getD_cons_zero, pow_zero, mul_one]
       rw [add_comm]
       congr 1
@@ -53,22 +43,22 @@ theorem getD_out (p : List (DensePoly ℚ)) (k : ℕ) (hk : p.length ≤ k) : p.
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none hk]; rfl
 
 open DensePoly in
-/-- `toPoly2_eq_zero_of_tisZero`: `tisZero p = true ⟹ toPoly2 p = 0`. -/
-theorem toPoly2_eq_zero_of_tisZero (p : List (DensePoly ℚ)) (h : tisZero p = true) :
-    toPoly2 p = 0 := by
+/-- `toGBCoeffPoly_eq_zero_of_tisZero`: `tisZero p = true ⟹ GBPolyCore.toGBCoeffPoly p = 0`. -/
+theorem toGBCoeffPoly_eq_zero_of_tisZero (p : List (DensePoly ℚ)) (h : tisZero p = true) :
+    GBPolyCore.toGBCoeffPoly p = 0 := by
   induction p with
   | nil => rfl
   | cons c cs ih =>
     rw [tisZero, List.all_cons, Bool.and_eq_true] at h
-    rw [toPoly2_cons, (cisZeroG_iff c).mp h.1, map_zero, ih h.2, mul_zero, add_zero]
+    rw [GBPolyCore.toGBCoeffPoly_cons, (cisZeroG_iff c).mp h.1, map_zero, ih h.2, mul_zero, add_zero]
 
 open DensePoly in
-/-- `toPoly2_tadd`: `toPoly2 (tadd p q) = toPoly2 p + toPoly2 q`. -/
-theorem toPoly2_tadd (p q : List (DensePoly ℚ)) :
-    toPoly2 (tadd p q) = toPoly2 p + toPoly2 q := by
+/-- `toGBCoeffPoly_tadd`: `GBPolyCore.toGBCoeffPoly (tadd p q) = GBPolyCore.toGBCoeffPoly p + GBPolyCore.toGBCoeffPoly q`. -/
+theorem toGBCoeffPoly_tadd (p q : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly (tadd p q) = GBPolyCore.toGBCoeffPoly p + GBPolyCore.toGBCoeffPoly q := by
   set N := max p.length q.length with hN
-  rw [toPoly2_eq_sum_getD (tadd p q) N (by rw [tadd]; simp [hN]),
-    toPoly2_eq_sum_getD p N (le_max_left _ _), toPoly2_eq_sum_getD q N (le_max_right _ _),
+  rw [toGBCoeffPoly_eq_sum_getD (tadd p q) N (by rw [tadd]; simp [hN]),
+    toGBCoeffPoly_eq_sum_getD p N (le_max_left _ _), toGBCoeffPoly_eq_sum_getD q N (le_max_right _ _),
     ← Finset.sum_add_distrib]
   apply Finset.sum_congr rfl
   intro k hk
@@ -78,12 +68,12 @@ theorem toPoly2_tadd (p q : List (DensePoly ℚ)) :
   rw [add_mul]
 
 open DensePoly in
-/-- `toPoly2_tsub`: `toPoly2 (tsub p q) = toPoly2 p − toPoly2 q`. -/
-theorem toPoly2_tsub (p q : List (DensePoly ℚ)) :
-    toPoly2 (tsub p q) = toPoly2 p - toPoly2 q := by
+/-- `toGBCoeffPoly_tsub`: `GBPolyCore.toGBCoeffPoly (tsub p q) = GBPolyCore.toGBCoeffPoly p − GBPolyCore.toGBCoeffPoly q`. -/
+theorem toGBCoeffPoly_tsub (p q : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly (tsub p q) = GBPolyCore.toGBCoeffPoly p - GBPolyCore.toGBCoeffPoly q := by
   set N := max p.length q.length with hN
-  rw [toPoly2_eq_sum_getD (tsub p q) N (by rw [tsub]; simp [hN]),
-    toPoly2_eq_sum_getD p N (le_max_left _ _), toPoly2_eq_sum_getD q N (le_max_right _ _),
+  rw [toGBCoeffPoly_eq_sum_getD (tsub p q) N (by rw [tsub]; simp [hN]),
+    toGBCoeffPoly_eq_sum_getD p N (le_max_left _ _), toGBCoeffPoly_eq_sum_getD q N (le_max_right _ _),
     ← Finset.sum_sub_distrib]
   apply Finset.sum_congr rfl
   intro k hk
@@ -93,27 +83,13 @@ theorem toPoly2_tsub (p q : List (DensePoly ℚ)) :
   rw [sub_mul]
 
 open DensePoly in
-/-- `toPoly2_coeff`: `(toPoly2 p).coeff k = toPoly (p.getD k [])`. -/
-theorem toPoly2_coeff (p : List (DensePoly ℚ)) (k : ℕ) :
-    (toPoly2 p).coeff k = toPoly (p.getD k []) := by
-  induction p generalizing k with
-  | nil => simp
-  | cons c cs ih =>
-    rw [toPoly2_cons, Polynomial.coeff_add]
-    cases k with
-    | zero => simp
-    | succ m =>
-      rw [List.getD_cons_succ, Polynomial.coeff_X_mul, ih m]
-      simp
-
-open DensePoly in
-/-- `toPoly2_map_cmulG`: `toPoly2 (p.map (cmul s)) = C(toPoly s) · toPoly2 p`. -/
-theorem toPoly2_map_cmulG (s : DensePoly ℚ) (p : List (DensePoly ℚ)) :
-    toPoly2 (p.map (cmul s)) = Polynomial.C (toPoly s) * toPoly2 p := by
+/-- `toGBCoeffPoly_map_cmulG`: `GBPolyCore.toGBCoeffPoly (p.map (cmul s)) = C(toPoly s) · GBPolyCore.toGBCoeffPoly p`. -/
+theorem toGBCoeffPoly_map_cmulG (s : DensePoly ℚ) (p : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly (p.map (cmul s)) = Polynomial.C (toPoly s) * GBPolyCore.toGBCoeffPoly p := by
   induction p with
   | nil => simp
   | cons c cs ih =>
-    rw [List.map_cons, toPoly2_cons, toPoly2_cons, ih]
+    rw [List.map_cons, GBPolyCore.toGBCoeffPoly_cons, GBPolyCore.toGBCoeffPoly_cons, ih]
     simp only [denote, map_mul]
     ring
 
@@ -136,28 +112,28 @@ theorem toPolyG_foldl_caddG (g : ℕ → DensePoly ℚ) :
     ring
 
 open DensePoly in
-/-- `toPoly2_mulT`: `toPoly2 (mulT p q) = toPoly2 p · toPoly2 q`, where `mulT` is the Cauchy-product
+/-- `toGBCoeffPoly_mulT`: `GBPolyCore.toGBCoeffPoly (mulT p q) = GBPolyCore.toGBCoeffPoly p · GBPolyCore.toGBCoeffPoly q`, where `mulT` is the Cauchy-product
 `(mulT p q)_k = Σ_{i≤k} p_i·q_{k−i}`. -/
-theorem toPoly2_mulT (p q : List (DensePoly ℚ)) :
-    toPoly2 ((List.range (p.length + q.length)).map (fun k =>
+theorem toGBCoeffPoly_mulT (p q : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly ((List.range (p.length + q.length)).map (fun k =>
         (List.range (k + 1)).foldl (fun acc i =>
           cadd acc (cmul (p.getD i []) (q.getD (k - i) []))) []))
-      = toPoly2 p * toPoly2 q := by
+      = GBPolyCore.toGBCoeffPoly p * GBPolyCore.toGBCoeffPoly q := by
   apply Polynomial.ext
   intro k
-  rw [toPoly2_coeff, Polynomial.coeff_mul,
+  rw [GBPolyCore.toGBCoeffPoly_coeff, Polynomial.coeff_mul,
     Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
   by_cases hk : k < p.length + q.length
   · rw [getD_range_map _ _ _ hk, toPolyG_foldl_caddG, toPolyG_nil, zero_add]
     apply Finset.sum_congr rfl
     intro i _
-    simp only [denote, toPoly2_coeff]
+    simp only [denote, GBPolyCore.toGBCoeffPoly_coeff]
   · rw [getD_out _ _ (by rw [List.length_map, List.length_range]; omega), toPolyG_nil]
     symm
     apply Finset.sum_eq_zero
     intro i hi
     rw [Finset.mem_range] at hi
-    rw [toPoly2_coeff, toPoly2_coeff]
+    rw [GBPolyCore.toGBCoeffPoly_coeff, GBPolyCore.toGBCoeffPoly_coeff]
     rcases le_or_gt p.length i with hip | hip
     · rw [getD_out p _ hip, toPolyG_nil, zero_mul]
     · rw [getD_out q (k - i) (by omega), toPolyG_nil, mul_zero]
@@ -175,57 +151,57 @@ theorem tanDeriv_dpdt_getD (p : List (DensePoly ℚ)) (k : ℕ) :
   | some a => simp
 
 open DensePoly in
-/-- `toPoly2_dpdt`: `toPoly2 dpdt = D_t (toPoly2 p)` (`Polynomial.derivative`) for `dpdt` the formal
+/-- `toGBCoeffPoly_dpdt`: `GBPolyCore.toGBCoeffPoly dpdt = D_t (GBPolyCore.toGBCoeffPoly p)` (`Polynomial.derivative`) for `dpdt` the formal
 `dp/dt` list. -/
-theorem toPoly2_dpdt (p : List (DensePoly ℚ)) :
-    toPoly2 ((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1))
-      = Polynomial.derivative (toPoly2 p) := by
+theorem toGBCoeffPoly_dpdt (p : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly ((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1))
+      = Polynomial.derivative (GBPolyCore.toGBCoeffPoly p) := by
   apply Polynomial.ext
   intro k
-  rw [toPoly2_coeff, tanDeriv_dpdt_getD]
+  rw [GBPolyCore.toGBCoeffPoly_coeff, tanDeriv_dpdt_getD]
   simp only [denote]
-  rw [Polynomial.coeff_derivative, toPoly2_coeff]
+  rw [Polynomial.coeff_derivative, GBPolyCore.toGBCoeffPoly_coeff]
   simp only [CFieldSpec.toK, id_eq]
   rw [map_add, map_one, Polynomial.C_eq_natCast]
   ring
 
 open DensePoly in
-/-- `toPoly2_mulDt`: `toPoly2 mulDt = (X²+1)·toPoly2 dpdt` for `mulDt` the `(t²+1)·dpdt` list. -/
-theorem toPoly2_mulDt (dpdt : List (DensePoly ℚ)) :
-    toPoly2 ((List.range (dpdt.length + 2)).map (fun k =>
+/-- `toGBCoeffPoly_mulDt`: `GBPolyCore.toGBCoeffPoly mulDt = (X²+1)·GBPolyCore.toGBCoeffPoly dpdt` for `mulDt` the `(t²+1)·dpdt` list. -/
+theorem toGBCoeffPoly_mulDt (dpdt : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly ((List.range (dpdt.length + 2)).map (fun k =>
         cadd (if k ≥ 2 then dpdt.getD (k - 2) [] else []) (dpdt.getD k [])))
-      = (Polynomial.X ^ 2 + 1) * toPoly2 dpdt := by
+      = (Polynomial.X ^ 2 + 1) * GBPolyCore.toGBCoeffPoly dpdt := by
   apply Polynomial.ext
   intro k
-  rw [toPoly2_coeff, add_mul, one_mul, Polynomial.coeff_add, Polynomial.coeff_X_pow_mul']
+  rw [GBPolyCore.toGBCoeffPoly_coeff, add_mul, one_mul, Polynomial.coeff_add, Polynomial.coeff_X_pow_mul']
   by_cases hk : k < dpdt.length + 2
   · rw [getD_range_map _ _ _ hk]
     simp only [denote]
-    rw [toPoly2_coeff, apply_ite toPoly, toPolyG_nil]
+    rw [GBPolyCore.toGBCoeffPoly_coeff, apply_ite toPoly, toPolyG_nil]
     by_cases h2 : 2 ≤ k
-    · rw [if_pos h2, toPoly2_coeff]
-    · rw [if_neg h2, toPoly2_coeff]
-  · have hcoeffk : (toPoly2 dpdt).coeff k = 0 := by
-      rw [toPoly2_coeff, getD_out _ _ (by omega), toPolyG_nil]
+    · rw [if_pos h2, GBPolyCore.toGBCoeffPoly_coeff]
+    · rw [if_neg h2, GBPolyCore.toGBCoeffPoly_coeff]
+  · have hcoeffk : (GBPolyCore.toGBCoeffPoly dpdt).coeff k = 0 := by
+      rw [GBPolyCore.toGBCoeffPoly_coeff, getD_out _ _ (by omega), toPolyG_nil]
     rw [getD_out _ _ (by rw [List.length_map, List.length_range]; omega), toPolyG_nil, hcoeffk]
     by_cases h2 : 2 ≤ k
-    · rw [if_pos h2, toPoly2_coeff, getD_out _ _ (by omega), toPolyG_nil, add_zero]
+    · rw [if_pos h2, GBPolyCore.toGBCoeffPoly_coeff, getD_out _ _ (by omega), toPolyG_nil, add_zero]
     · rw [if_neg h2, add_zero]
 
 open DensePoly in
-/-- `toPoly2_tanDeriv`: the tangent derivation is bivariate `D = ∂/∂x + (t²+1)·∂/∂t`,
-`toPoly2 (tanDeriv p) = toPoly2 (p.map cderivQ) + (X²+1)·D_t(toPoly2 p)` over `ℚ[x][t]`. -/
-theorem toPoly2_tanDeriv (p : List (DensePoly ℚ)) :
-    toPoly2 (tanDeriv p)
-      = toPoly2 (p.map cderivQ)
-        + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 p) := by
-  show toPoly2 (tadd (p.map cderivQ)
+/-- `toGBCoeffPoly_tanDeriv`: the tangent derivation is bivariate `D = ∂/∂x + (t²+1)·∂/∂t`,
+`GBPolyCore.toGBCoeffPoly (tanDeriv p) = GBPolyCore.toGBCoeffPoly (p.map cderivQ) + (X²+1)·D_t(GBPolyCore.toGBCoeffPoly p)` over `ℚ[x][t]`. -/
+theorem toGBCoeffPoly_tanDeriv (p : List (DensePoly ℚ)) :
+    GBPolyCore.toGBCoeffPoly (tanDeriv p)
+      = GBPolyCore.toGBCoeffPoly (p.map cderivQ)
+        + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (GBPolyCore.toGBCoeffPoly p) := by
+  show GBPolyCore.toGBCoeffPoly (tadd (p.map cderivQ)
       ((List.range (((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).length + 2)).map
         (fun k => cadd
           (if k ≥ 2 then ((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).getD (k - 2) []
             else [])
           (((p.drop 1).zipIdx.map (fun x => cscale ((x.2 : ℚ) + 1) x.1)).getD k [])))) = _
-  rw [toPoly2_tadd, toPoly2_mulDt, toPoly2_dpdt]
+  rw [toGBCoeffPoly_tadd, toGBCoeffPoly_mulDt, toGBCoeffPoly_dpdt]
 
 /-! ## Tangent cleared checks -/
 
@@ -254,11 +230,11 @@ def cancelTanClearedCheck (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly
   tisZero r1 && tisZero r2
 
 open DensePoly in
-/-- `toPoly2_twoT`: `toPoly2 [[],[2]] = C(C 2)·X` (the diagonal `2t` as a `ℚ[x][t]` polynomial). -/
-theorem toPoly2_twoT :
-    toPoly2 ([[], [2]] : List (DensePoly ℚ)) = Polynomial.C (Polynomial.C 2) * Polynomial.X := by
-  show toPoly2 ([[], [2]] : List (DensePoly ℚ)) = _
-  rw [toPoly2_cons, toPoly2_cons, toPoly2_nil]
+/-- `toGBCoeffPoly_twoT`: `GBPolyCore.toGBCoeffPoly [[],[2]] = C(C 2)·X` (the diagonal `2t` as a `ℚ[x][t]` polynomial). -/
+theorem toGBCoeffPoly_twoT :
+    GBPolyCore.toGBCoeffPoly ([[], [2]] : List (DensePoly ℚ)) = Polynomial.C (Polynomial.C 2) * Polynomial.X := by
+  show GBPolyCore.toGBCoeffPoly ([[], [2]] : List (DensePoly ℚ)) = _
+  rw [GBPolyCore.toGBCoeffPoly_cons, GBPolyCore.toGBCoeffPoly_cons, GBPolyCore.toGBCoeffPoly_nil]
   simp only [toPolyG_nil, map_zero, mul_zero, add_zero, zero_add]
   rw [show toPoly ([2] : DensePoly ℚ) = Polynomial.C 2 by
     simp only [denote]
@@ -271,22 +247,22 @@ solves the tangent `t`-polynomial system at the `ℚ[x][t]` level — both rows 
 `(Dq; …) + [[b₀−2t, −b₂],[b₂, b₀−2t]]·q = c`, `D = ∂/∂x + (t²+1)·∂/∂t`. -/
 theorem cancelTanClearedCheck_sound (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
-    (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
-        + (Polynomial.C (toPoly b0) * toPoly2 q1
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
-        + Polynomial.C (toPoly (cscale (-1) b2)) * toPoly2 q2
-      = toPoly2 c1 ∧
-      (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
-        + Polynomial.C (toPoly b2) * toPoly2 q1
-        + (Polynomial.C (toPoly b0) * toPoly2 q2
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
-      = toPoly2 c2 := by
+    (GBPolyCore.toGBCoeffPoly (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (GBPolyCore.toGBCoeffPoly q1))
+        + (Polynomial.C (toPoly b0) * GBPolyCore.toGBCoeffPoly q1
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * GBPolyCore.toGBCoeffPoly q1)
+        + Polynomial.C (toPoly (cscale (-1) b2)) * GBPolyCore.toGBCoeffPoly q2
+      = GBPolyCore.toGBCoeffPoly c1 ∧
+      (GBPolyCore.toGBCoeffPoly (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (GBPolyCore.toGBCoeffPoly q2))
+        + Polynomial.C (toPoly b2) * GBPolyCore.toGBCoeffPoly q1
+        + (Polynomial.C (toPoly b0) * GBPolyCore.toGBCoeffPoly q2
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * GBPolyCore.toGBCoeffPoly q2)
+      = GBPolyCore.toGBCoeffPoly c2 := by
   rw [cancelTanClearedCheck, Bool.and_eq_true] at hcheck
   obtain ⟨h1, h2⟩ := hcheck
-  have e1 := toPoly2_eq_zero_of_tisZero _ h1
-  have e2 := toPoly2_eq_zero_of_tisZero _ h2
-  simp only [toPoly2_tsub, toPoly2_tadd, toPoly2_tanDeriv, toPoly2_map_cmulG, toPoly2_mulT,
-    toPoly2_twoT, sub_eq_zero] at e1 e2
+  have e1 := toGBCoeffPoly_eq_zero_of_tisZero _ h1
+  have e2 := toGBCoeffPoly_eq_zero_of_tisZero _ h2
+  simp only [toGBCoeffPoly_tsub, toGBCoeffPoly_tadd, toGBCoeffPoly_tanDeriv, toGBCoeffPoly_map_cmulG, toGBCoeffPoly_mulT,
+    toGBCoeffPoly_twoT, sub_eq_zero] at e1 e2
   exact ⟨by linear_combination e1, by linear_combination e2⟩
 
 /-- `cCoupledDECancelTan_sound_of_check`: if `cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2)`
@@ -296,16 +272,16 @@ theorem cCoupledDECancelTan_sound_of_check (dbound : ℕ) (b0 b2 : DensePoly ℚ
     (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ)
     (_hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
-    (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
-        + (Polynomial.C (toPoly b0) * toPoly2 q1
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
-        + Polynomial.C (toPoly (cscale (-1) b2)) * toPoly2 q2
-      = toPoly2 c1 ∧
-      (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
-        + Polynomial.C (toPoly b2) * toPoly2 q1
-        + (Polynomial.C (toPoly b0) * toPoly2 q2
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
-      = toPoly2 c2 :=
+    (GBPolyCore.toGBCoeffPoly (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (GBPolyCore.toGBCoeffPoly q1))
+        + (Polynomial.C (toPoly b0) * GBPolyCore.toGBCoeffPoly q1
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * GBPolyCore.toGBCoeffPoly q1)
+        + Polynomial.C (toPoly (cscale (-1) b2)) * GBPolyCore.toGBCoeffPoly q2
+      = GBPolyCore.toGBCoeffPoly c1 ∧
+      (GBPolyCore.toGBCoeffPoly (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (GBPolyCore.toGBCoeffPoly q2))
+        + Polynomial.C (toPoly b2) * GBPolyCore.toGBCoeffPoly q1
+        + (Polynomial.C (toPoly b0) * GBPolyCore.toGBCoeffPoly q2
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * GBPolyCore.toGBCoeffPoly q2)
+      = GBPolyCore.toGBCoeffPoly c2 :=
   cancelTanClearedCheck_sound b0 b2 c1 c2 q1 q2 hcheck
 
 /-! ## Examples -/
@@ -326,16 +302,16 @@ theorem rischDE_cancelTan_example :
 example (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ)
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
-    (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
-        + (Polynomial.C (toPoly b0) * toPoly2 q1
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
-        + Polynomial.C (toPoly (cscale (-1) b2)) * toPoly2 q2
-      = toPoly2 c1 ∧
-      (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
-        + Polynomial.C (toPoly b2) * toPoly2 q1
-        + (Polynomial.C (toPoly b0) * toPoly2 q2
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
-      = toPoly2 c2 :=
+    (GBPolyCore.toGBCoeffPoly (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (GBPolyCore.toGBCoeffPoly q1))
+        + (Polynomial.C (toPoly b0) * GBPolyCore.toGBCoeffPoly q1
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * GBPolyCore.toGBCoeffPoly q1)
+        + Polynomial.C (toPoly (cscale (-1) b2)) * GBPolyCore.toGBCoeffPoly q2
+      = GBPolyCore.toGBCoeffPoly c1 ∧
+      (GBPolyCore.toGBCoeffPoly (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (GBPolyCore.toGBCoeffPoly q2))
+        + Polynomial.C (toPoly b2) * GBPolyCore.toGBCoeffPoly q1
+        + (Polynomial.C (toPoly b0) * GBPolyCore.toGBCoeffPoly q2
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * GBPolyCore.toGBCoeffPoly q2)
+      = GBPolyCore.toGBCoeffPoly c2 :=
   cCoupledDECancelTan_sound_of_check dbound b0 b2 c1 c2 q1 q2 n hsome hcheck
 
 end DeepWiki.SymbolicIntegration
