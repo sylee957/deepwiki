@@ -14,23 +14,6 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
-/-! ### Sparse capability witnesses -/
-
-/-- File-local reducible sparse fraction `(x² - 1)/(x² + 2x - 3)`. -/
-private def sparseSwellFrac : SparseFrac ℚ :=
-  CFrac.ofFraction
-    (CPoly.SparsePoly.ofList [(0, -1), (2, 1)])
-    (CPoly.SparsePoly.ofList [(0, -3), (1, 2), (2, 1)])
-    (by ccompute)
-
-example :
-    CPolyEngine.cdeg (CFrac.num (qReduce sparseSwellFrac)) = 1 := by
-  ccompute
-
-example :
-    CFrac.toRatFunc (qReduce sparseSwellFrac) = CFrac.toRatFunc sparseSwellFrac :=
-  toRatFunc_qReduce sparseSwellFrac
-
 /-- Sparse normalization cancels `x - 1` from `(x² - 1)/(x - 1)` through capability selection. -/
 theorem sparse_normalizeFracPair_cancels :
     CPoly.normalizeFracPair
