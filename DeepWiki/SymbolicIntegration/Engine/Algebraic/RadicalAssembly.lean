@@ -59,7 +59,7 @@ def fullUxPlusY : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CCommRing.one]
 
 /-- **`u · u⁻¹ = 1` in `(CFrac ℚ)[y]/(y² − (x²+1))`** (`native_decide`). -/
 theorem radInv2_mul_self_eq_one :
-    radIsZero (radSub (radMul 2 fullRhoArcsinh fullUxPlusY (radInv2 fullRhoArcsinh fullUxPlusY))
+    DensePoly.cisZero (DensePoly.csub (radMul 2 fullRhoArcsinh fullUxPlusY (radInv2 fullRhoArcsinh fullUxPlusY))
       [CCommRing.one]) = true := by native_decide
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over `ℚ(x)`. -/
@@ -67,7 +67,7 @@ def fullIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift fullRhoArcsinh CCo
 
 /-- **`radLogDeriv` agrees with the arcsinh log-derivative certificate** (`native_decide`). -/
 theorem radLogDeriv_eq_integrand_arcsinh :
-    radIsZero (radSub (radLogDeriv fullRhoArcsinh fullUxPlusY) fullIntegrandArcsinh) = true := by
+    DensePoly.cisZero (DensePoly.csub (radLogDeriv fullRhoArcsinh fullUxPlusY) fullIntegrandArcsinh) = true := by
   native_decide
 
 /-! ### `AlgIntegralResult` and its derivative -/
@@ -84,7 +84,7 @@ structure AlgIntegralResult (α : Type*) [CField α] where
 tower's `CDiffField.cderiv` as base derivation. -/
 def algDeriv {α : Type*} [CField α] [CDiffField α] (ρ : α) (F : AlgIntegralResult α) : RadElem α :=
   F.logTerms.foldl
-    (fun acc (c, u) => radAdd acc (radScale c (radLogDeriv ρ u)))
+    (fun acc (c, u) => DensePoly.cadd acc (DensePoly.cscale c (radLogDeriv ρ u)))
     (radDeriv 2 ρ F.ratPart)
 
 
@@ -103,7 +103,7 @@ def radAssembleRatPart (ρ : CFrac ℚ)
   runs.foldl
     (fun acc (isV, fi, e, _, vNum, _) =>
       let denomPow := if isV then cpow fi (e - 1) else cpow fi e
-      radAdd acc
+      DensePoly.cadd acc
         [CCommRing.zero, CField.div (qxOfNum vNum) (CCommRing.mul (qxOfNum denomPow) ρ)])
     radZero
 

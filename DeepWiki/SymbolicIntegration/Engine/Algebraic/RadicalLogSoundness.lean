@@ -45,7 +45,7 @@ omit [CDiffFieldSpec α] in
 theorem isRadicalLogTerm_of_radIsLogIntegral (n : ℕ) (ρ : α) (u integrand : RadElem α)
     (h : radIsLogIntegral n ρ u integrand = true) :
     IsRadicalLogTerm n ρ u integrand := by
-  rw [radIsLogIntegral, radIsZero, radSub] at h
+  rw [radIsLogIntegral, DensePoly.cisZero, DensePoly.csub] at h
   have hderiv :
       DensePoly.toPoly (radDeriv n ρ u) = DensePoly.toPoly (radMul n ρ u integrand) :=
     RefinesPoly.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) h
@@ -56,20 +56,20 @@ theorem isRadicalLogTerm_of_radIsLogIntegral (n : ℕ) (ρ : α) (u integrand : 
 /-! ### The log-derivative sum is `radDeriv`-additive
 
 `D(Σ cᵢ log uᵢ) = Σ cᵢ · radDeriv(uᵢ)/uᵢ`. The numerator-sum `radDeriv` distributes over the
-`radAdd`-fold of the scaled contributions, the additivity floor for the multi-term log sum. -/
+`DensePoly.cadd`-fold of the scaled contributions, the additivity floor for the multi-term log sum. -/
 
 /-- The scaled `radDeriv`-contribution of one log term `radLogTermDeriv n ρ (c, u) =
-radScale c (radDeriv n ρ u)` — the numerator of `c · radDeriv(u)/u` before dividing by `u`. -/
+DensePoly.cscale c (radDeriv n ρ u)` — the numerator of `c · radDeriv(u)/u` before dividing by `u`. -/
 def radLogTermDeriv (n : ℕ) (ρ : α) (cu : α × RadElem α) : RadElem α :=
-  radScale cu.1 (radDeriv n ρ cu.2)
+  DensePoly.cscale cu.1 (radDeriv n ρ cu.2)
 
-/-- `radDeriv` distributes over a scaled `radAdd`-fold: `toPoly (radDeriv n ρ
-(cs.foldl radAdd acc)) = toPoly (radDeriv n ρ acc) + Σ_{c∈cs} toPoly (radDeriv n ρ c)`. -/
+/-- `radDeriv` distributes over a scaled `DensePoly.cadd`-fold: `toPoly (radDeriv n ρ
+(cs.foldl DensePoly.cadd acc)) = toPoly (radDeriv n ρ acc) + Σ_{c∈cs} toPoly (radDeriv n ρ c)`. -/
 theorem toPolyG_radDeriv_logFold (n : ℕ) (ρ : α) (acc : RadElem α) (cs : List (RadElem α)) :
-    DensePoly.toPoly (radDeriv n ρ (cs.foldl radAdd acc))
+    DensePoly.toPoly (radDeriv n ρ (cs.foldl DensePoly.cadd acc))
       = DensePoly.toPoly (radDeriv n ρ acc)
         + (cs.map (fun c => DensePoly.toPoly (radDeriv n ρ c))).sum :=
-  toPolyG_radDeriv_foldlRadAdd n ρ acc cs
+  toPolyG_radDeriv_foldl_cadd n ρ acc cs
 
 /-! ### The two-term log-derivative sum over the common denominator `u₁ u₂`
 
@@ -77,11 +77,11 @@ The numerator of `c₁·radDeriv(u₁)/u₁ + c₂·radDeriv(u₂)/u₂` over `u
 `c₁·radDeriv(u₁)·u₂ + c₂·u₁·radDeriv(u₂)`, the two-term head of the residue sum. -/
 
 /-- The two-term log-derivative numerator `radLogSum2 n ρ c₁ u₁ c₂ u₂ =
-radAdd (radMul (radScale c₁ (radDeriv u₁)) u₂) (radMul (radScale c₂ (radDeriv u₂)) u₁)`: the
+DensePoly.cadd (radMul (DensePoly.cscale c₁ (radDeriv u₁)) u₂) (radMul (DensePoly.cscale c₂ (radDeriv u₂)) u₁)`: the
 numerator of `c₁·D(log u₁) + c₂·D(log u₂)` over the common denominator `u₁·u₂`. -/
 def radLogSum2 (n : ℕ) (ρ : α) (c₁ : α) (u₁ : RadElem α) (c₂ : α) (u₂ : RadElem α) : RadElem α :=
-  radAdd (radMul n ρ (radScale c₁ (radDeriv n ρ u₁)) u₂)
-    (radMul n ρ (radScale c₂ (radDeriv n ρ u₂)) u₁)
+  DensePoly.cadd (radMul n ρ (DensePoly.cscale c₁ (radDeriv n ρ u₁)) u₂)
+    (radMul n ρ (DensePoly.cscale c₂ (radDeriv n ρ u₂)) u₁)
 
 omit [CDiffFieldSpec α] in
 /-- Two log residues add (quotient form): `mk(toPoly(radLogSum2 c₁ u₁ c₂ u₂)) =
@@ -95,7 +95,10 @@ theorem mk_toPolyG_radLogSum2 (n : ℕ) (ρ : α) (c₁ : α) (u₁ : RadElem α
         + Polynomial.C (CFieldSpec.toK c₂)
           * Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly (radDeriv n ρ u₂))
           * Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly u₁) := by
-  simp only [radLogSum2, radAdd, denote, map_add, mk_toPolyG_radMul, radScale, map_mul]
+  rw [radLogSum2, DensePoly.toPolyG_caddG, map_add, mk_toPolyG_radMul,
+    mk_toPolyG_radMul, DensePoly.toPolyG_cscaleG, DensePoly.toPolyG_cscaleG,
+    map_mul, map_mul]
+  simp only [toR_eq_toK]
 
 end RadElem
 
@@ -157,11 +160,11 @@ namespace RadElem
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
 /-- The residue-sum numerator over a cofactor list `radLogSumNum n ρ args cofs` — the numerator
-of `Σᵢ cᵢ·radDeriv(uᵢ)/uᵢ` over `∏ⱼ uⱼ`: the `radAdd`-fold of the per-term contributions
+of `Σᵢ cᵢ·radDeriv(uᵢ)/uᵢ` over `∏ⱼ uⱼ`: the `DensePoly.cadd`-fold of the per-term contributions
 `cᵢ·radDeriv(uᵢ)·cofᵢ` (`cofᵢ = ∏_{j≠i} uⱼ`). -/
 def radLogSumNum (n : ℕ) (ρ : α) (args : List (α × RadElem α)) (cofs : List (RadElem α)) : RadElem α :=
   ((args.zip cofs).map (fun p =>
-    radMul n ρ (radScale p.1.1 (radDeriv n ρ p.1.2)) p.2)).foldl radAdd radZero
+    radMul n ρ (DensePoly.cscale p.1.1 (radDeriv n ρ p.1.2)) p.2)).foldl DensePoly.cadd radZero
 
 /-- The multi-term log-soundness predicate `IsRadicalLogIntegral n ρ logpart args cofs` — the
 log-derivative sum `Σ cᵢ·radDeriv(uᵢ)/uᵢ` equals `logpart` over `α[y]/(yⁿ − ρ)`, cross-
@@ -426,7 +429,7 @@ fraction, with the `cᵢ` the partial-fraction coefficients. -/
 
 /-! ### Residue-sum telescoping over the pole list
 
-The structural half of obligation 3: the residue-sum numerator `radLogSumNum` is a `radAdd`-fold
+The structural half of obligation 3: the residue-sum numerator `radLogSumNum` is a `DensePoly.cadd`-fold
 of per-term contributions, so `mk(radLogSumNum)` distributes over the args list as a sum of the
 per-term `mk(cᵢ·radDeriv(uᵢ)·cofᵢ)`, leaving the per-term partial-fraction match as the isolated
 hypothesis. -/
@@ -444,14 +447,14 @@ theorem mk_toPolyG_radLogSumNum_eq_sum (n : ℕ) (ρ : α) (args : List (α × R
     Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly (radLogSumNum n ρ args cofs))
       = ((args.zip cofs).map (fun p =>
           Ideal.Quotient.mk (radIdeal n ρ)
-            (DensePoly.toPoly (radMul n ρ (radScale p.1.1 (radDeriv n ρ p.1.2)) p.2)))).sum := by
+            (DensePoly.toPoly (radMul n ρ (DensePoly.cscale p.1.1 (radDeriv n ρ p.1.2)) p.2)))).sum := by
   rw [radLogSumNum]
-  -- the fold of `radAdd` maps, under `mk ∘ toPoly`, to the sum of the per-term `mk(toPoly ·)`
+  -- the fold of `DensePoly.cadd` maps, under `mk ∘ toPoly`, to the sum of the per-term `mk(toPoly ·)`
   set terms := (args.zip cofs).map (fun p =>
-    radMul n ρ (radScale p.1.1 (radDeriv n ρ p.1.2)) p.2) with hterms
-  -- generalize: `mk(toPoly(terms.foldl radAdd acc)) = mk(toPoly acc) + Σ mk(toPoly ·)`
+    radMul n ρ (DensePoly.cscale p.1.1 (radDeriv n ρ p.1.2)) p.2) with hterms
+  -- generalize: `mk(toPoly(terms.foldl DensePoly.cadd acc)) = mk(toPoly acc) + Σ mk(toPoly ·)`
   have hfold : ∀ (ts : List (RadElem α)) (acc : RadElem α),
-      Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly (ts.foldl radAdd acc))
+      Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly (ts.foldl DensePoly.cadd acc))
         = Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly acc)
           + (ts.map (fun t => Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly t))).sum := by
     intro ts
@@ -459,8 +462,8 @@ theorem mk_toPolyG_radLogSumNum_eq_sum (n : ℕ) (ρ : α) (args : List (α × R
     | nil => intro acc; simp
     | cons t ts ih =>
       intro acc
-      rw [List.foldl_cons, ih (radAdd acc t), radAdd]
-      simp only [denote, map_add, List.map_cons, List.sum_cons]
+      rw [List.foldl_cons, ih (DensePoly.cadd acc t), DensePoly.toPolyG_caddG, map_add]
+      simp only [List.map_cons, List.sum_cons]
       ring
   rw [hfold terms radZero]
   show Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly (radZero : RadElem α)) + _ = _
@@ -482,7 +485,7 @@ theorem isRadicalLogIntegral_of_residue_match (n : ℕ) (ρ : α)
     (logpart commonDenomQ : RadElem α) (args : List (α × RadElem α)) (cofs : List (RadElem α))
     (hmatch : ((args.zip cofs).map (fun p =>
           Ideal.Quotient.mk (radIdeal n ρ)
-            (DensePoly.toPoly (radMul n ρ (radScale p.1.1 (radDeriv n ρ p.1.2)) p.2)))).sum
+            (DensePoly.toPoly (radMul n ρ (DensePoly.cscale p.1.1 (radDeriv n ρ p.1.2)) p.2)))).sum
         = Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly (radMul n ρ logpart commonDenomQ))) :
     IsRadicalLogIntegral n ρ logpart commonDenomQ args cofs := by
   rw [IsRadicalLogIntegral, mk_toPolyG_radLogSumNum_eq_sum, hmatch]
@@ -494,7 +497,7 @@ log-sound. -/
 theorem isRadicalLogIntegral_singleton (n : ℕ) (ρ : α)
     (logpart commonDenomQ : RadElem α) (c : α) (u cof : RadElem α)
     (hmatch : Ideal.Quotient.mk (radIdeal n ρ)
-          (DensePoly.toPoly (radMul n ρ (radScale c (radDeriv n ρ u)) cof))
+          (DensePoly.toPoly (radMul n ρ (DensePoly.cscale c (radDeriv n ρ u)) cof))
         = Ideal.Quotient.mk (radIdeal n ρ) (DensePoly.toPoly (radMul n ρ logpart commonDenomQ))) :
     IsRadicalLogIntegral n ρ logpart commonDenomQ [(c, u)] [cof] := by
   apply isRadicalLogIntegral_of_residue_match
@@ -542,17 +545,17 @@ end RadElem
 /-! ### Input (b): discharging the integrand split for the `cIntegrateAlgebraic` driver
 
 For the actual driver, the `hsplit` hypothesis is not an extra assumption: the engine's own
-round-trip certificate `algDerivQ ρ F = integrand` (in `radIsZero`-tested form) is the integrand
+round-trip certificate `algDerivQ ρ F = integrand` (in `DensePoly.cisZero`-tested form) is the integrand
 split un-cross-multiplied, since `algDerivQ ρ F = radDeriv(v) + Σ cᵢ·radLogDeriv(uᵢ)`. -/
 
 /-- The engine round-trip certificate is the integrand split (un-cross-multiplied): for output
-`F : AlgIntegralResult (CFrac ℚ)` over `y² = ρ`, `radIsZero (radSub (algDerivQ ρ F) integrand) = true`
+`F : AlgIntegralResult (CFrac ℚ)` over `y² = ρ`, `DensePoly.cisZero (DensePoly.csub (algDerivQ ρ F) integrand) = true`
 yields `toPoly (algDerivQ ρ F) = toPoly integrand` in `K[X]`. -/
 theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : CFrac ℚ) (F : AlgIntegralResult (CFrac ℚ))
     (integrand : RadElem (CFrac ℚ))
-    (hrt : RadElem.radIsZero (RadElem.radSub (algDerivQ ρ F) integrand) = true) :
+    (hrt : DensePoly.cisZero (DensePoly.csub (algDerivQ ρ F) integrand) = true) :
     DensePoly.toPoly (algDerivQ ρ F) = DensePoly.toPoly integrand := by
-  rw [RadElem.radIsZero, RadElem.radSub] at hrt
+  rw [DensePoly.cisZero, DensePoly.csub] at hrt
   exact RefinesPoly.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) hrt
 
 /-! ### Axiom audit

@@ -113,12 +113,12 @@ This delivers the actual log terms (when `u` is known/derived), complementing th
 /-- **The log-derivative certificate** `radIsLogIntegral n ρ u integrand` (Trager, Chapter 5 §1 / App. A):
 the boolean check that `∫(integrand) dx = log u` in `α[y]/(yⁿ − ρ)`, i.e. `D(log u) = (radDeriv u)/u =
 integrand`. Since `D(log u)·u = radDeriv u`, this is the division-free equality
-`radDeriv u = radMul u integrand`, read off by `radIsZero` of the difference. -/
+`radDeriv u = radMul u integrand`, read off by `DensePoly.cisZero` of the difference. -/
 abbrev ch5_isLogIntegral := @radIsLogIntegral
 
 /-- **The log-derivative certificate as a `Prop`** `RadIsLogIntegral n ρ u integrand` (Trager, Chapter 5
 §1 / App. A): the certificate `radIsLogIntegral … = true` read as a proposition — the faithful semantic
-(`radIsZero`, cross-multiplied) statement that `∫(integrand) dx = log u`, `Decidable`/`native_decide`-able. -/
+(`DensePoly.cisZero`, cross-multiplied) statement that `∫(integrand) dx = log u`, `Decidable`/`native_decide`-able. -/
 abbrev ch5_isLogIntegral_prop := @RadIsLogIntegral
 
 /-- **An `R/y` integrand lift** `radInvYLift ρ R = [0, R/ρ]` (Trager, Chapter 5 §1 / App. A): the pure-`y`

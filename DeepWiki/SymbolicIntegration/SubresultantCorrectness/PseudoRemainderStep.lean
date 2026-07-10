@@ -18,34 +18,34 @@ theorem subresultant_C_mul_right {R : Type*} [CommRing R] (c : R) (A B : R[X]) (
   rw [map_one, one_mul, one_pow, one_mul] at h
   rw [h]
 
-/-- One subresultant-PRS step through `GBPolyCore.toGBCoeffPoly`: from the pseudo-division identity for `(s, c)`,
+/-- One subresultant-PRS step through `DensePoly.toPoly`: from the pseudo-division identity for `(s, c)`,
 `C((DensePoly.toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · Sⱼ(B, Rem; m,n)` under the degree bounds. -/
 theorem subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : GBPolyCore ℚ) (n m j : ℕ)
     (s : GBPolyCore ℚ) (c : DensePoly ℚ)
-    (hsc : Polynomial.C (DensePoly.toPoly c) * GBPolyCore.toGBCoeffPoly p
-        = GBPolyCore.toGBCoeffPoly s * GBPolyCore.toGBCoeffPoly q + GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel p q))
+    (hsc : Polynomial.C (DensePoly.toPoly c) * DensePoly.toPoly p
+        = DensePoly.toPoly s * DensePoly.toPoly q + DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel p q))
     (hjm : j ≤ m) (hjn : j < n)
-    (hB : (GBPolyCore.toGBCoeffPoly q).natDegree ≤ m)
-    (hQ : (GBPolyCore.toGBCoeffPoly s).natDegree + m ≤ n) :
-    Polynomial.C ((DensePoly.toPoly c) ^ (m - j)) * subresultant (GBPolyCore.toGBCoeffPoly p) (GBPolyCore.toGBCoeffPoly q) n m j
+    (hB : (DensePoly.toPoly q).natDegree ≤ m)
+    (hQ : (DensePoly.toPoly s).natDegree + m ≤ n) :
+    Polynomial.C ((DensePoly.toPoly c) ^ (m - j)) * subresultant (DensePoly.toPoly p) (DensePoly.toPoly q) n m j
       = (-1 : (ℚ[X])[X]) ^ ((m - j) * (n - j))
-        * subresultant (GBPolyCore.toGBCoeffPoly q) (GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel p q)) m n j := by
-  rw [← subresultant_C_mul_left (DensePoly.toPoly c) (GBPolyCore.toGBCoeffPoly p) (GBPolyCore.toGBCoeffPoly q) n m j hjm (le_of_lt hjn)]
-  exact subresultant_rem (Polynomial.C (DensePoly.toPoly c) * GBPolyCore.toGBCoeffPoly p) (GBPolyCore.toGBCoeffPoly q) (GBPolyCore.toGBCoeffPoly s)
-    (GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel p q)) n m j hjm hjn hB hQ (by rw [hsc]; ring)
+        * subresultant (DensePoly.toPoly q) (DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel p q)) m n j := by
+  rw [← subresultant_C_mul_left (DensePoly.toPoly c) (DensePoly.toPoly p) (DensePoly.toPoly q) n m j hjm (le_of_lt hjn)]
+  exact subresultant_rem (Polynomial.C (DensePoly.toPoly c) * DensePoly.toPoly p) (DensePoly.toPoly q) (DensePoly.toPoly s)
+    (DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel p q)) n m j hjm hjn hB hQ (by rw [hsc]; ring)
 
 /-- Existence form: some quotient/content `(s, c)` realize the pseudo-division identity and, given the
 quotient-degree bound, the subresultant reduction. -/
 theorem exists_subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : GBPolyCore ℚ) (n m j : ℕ)
-    (hjm : j ≤ m) (hjn : j < n) (hB : (GBPolyCore.toGBCoeffPoly q).natDegree ≤ m) :
+    (hjm : j ≤ m) (hjn : j < n) (hB : (DensePoly.toPoly q).natDegree ≤ m) :
     ∃ (s : GBPolyCore ℚ) (c : DensePoly ℚ),
-      Polynomial.C (DensePoly.toPoly c) * GBPolyCore.toGBCoeffPoly p
-          = GBPolyCore.toGBCoeffPoly s * GBPolyCore.toGBCoeffPoly q + GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel p q)
-        ∧ ((GBPolyCore.toGBCoeffPoly s).natDegree + m ≤ n →
-          Polynomial.C ((DensePoly.toPoly c) ^ (m - j)) * subresultant (GBPolyCore.toGBCoeffPoly p) (GBPolyCore.toGBCoeffPoly q) n m j
+      Polynomial.C (DensePoly.toPoly c) * DensePoly.toPoly p
+          = DensePoly.toPoly s * DensePoly.toPoly q + DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel p q)
+        ∧ ((DensePoly.toPoly s).natDegree + m ≤ n →
+          Polynomial.C ((DensePoly.toPoly c) ^ (m - j)) * subresultant (DensePoly.toPoly p) (DensePoly.toPoly q) n m j
             = (-1 : (ℚ[X])[X]) ^ ((m - j) * (n - j))
-              * subresultant (GBPolyCore.toGBCoeffPoly q) (GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel p q)) m n j) := by
-  obtain ⟨s, c, hsc⟩ := GBPolyCore.toGBCoeffPoly_gbpsremainderCore fuel p q
+              * subresultant (DensePoly.toPoly q) (DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel p q)) m n j) := by
+  obtain ⟨s, c, hsc⟩ := GBPolyCore.toPolyG_gbpsremainderCore fuel p q
   exact ⟨s, c, hsc, fun hQs =>
     subresultant_C_mul_eq_rem_of_bpsremainder fuel p q n m j s c hsc hjm hjn hB hQs⟩
 

@@ -104,14 +104,14 @@ from `F = ⟨v, []⟩` (the dispatch's rational part, no log term), differentiat
 and `cIntegrateAlgebraicWf` reconstructs an antiderivative from `(R, B) = (1, (x−1)²)` with an EMPTY log
 list (the non-principal residual ⇒ no spurious log term), so `algDerivQ F' = integrand`. -/
 theorem full_roundtrip_rational :
-    radIsZero (radSub (algDerivQ rtRatRho full_rtRatRecovered) full_rtRatIntegrand) = true := by
+    DensePoly.cisZero (DensePoly.csub (algDerivQ rtRatRho full_rtRatRecovered) full_rtRatIntegrand) = true := by
   native_decide
 
 /-- **The rational-only result has nonzero rational part and empty log list** (`native_decide`): the
-structural signature `(radIsZero ratPart, logTerms.length) = (false, 0)` of a pure rational integral
+structural signature `(DensePoly.cisZero ratPart, logTerms.length) = (false, 0)` of a pure rational integral
 `∫ = v`. -/
 theorem full_roundtrip_rational_shape :
-    (radIsZero full_rtRatRecovered.ratPart, full_rtRatRecovered.logTerms.length) = (false, 0) := by
+    (DensePoly.cisZero full_rtRatRecovered.ratPart, full_rtRatRecovered.logTerms.length) = (false, 0) := by
   native_decide
 
 /-- The recovered log-only result for `∫ dx/(x√(x²+1))`: empty rational part and one computed
@@ -123,13 +123,13 @@ def full_rtLogRecovered : AlgIntegralResult (CFrac ℚ) :=
 `cIntegrateAlgebraicWf` computes an empty rational part and one log term `1·log u` with `u = N/x` the
 SOLVER'S output (`radLogArgSolveQ`, a constant multiple of `y − 1`); `algDerivQ F' = integrand`. -/
 theorem full_roundtrip_log :
-    radIsZero (radSub (algDerivQ rtLogRho full_rtLogRecovered) rtLogIntegrand) = true := by
+    DensePoly.cisZero (DensePoly.csub (algDerivQ rtLogRho full_rtLogRecovered) rtLogIntegrand) = true := by
   native_decide
 
 /-- **The log-only result has empty rational part and one log term** (`native_decide`): the structural
-signature `(radIsZero ratPart, logTerms.length) = (true, 1)` of a pure log integral `∫ = log u`. -/
+signature `(DensePoly.cisZero ratPart, logTerms.length) = (true, 1)` of a pure log integral `∫ = log u`. -/
 theorem full_roundtrip_log_shape :
-    (radIsZero full_rtLogRecovered.ratPart, full_rtLogRecovered.logTerms.length) = (true, 1) := by
+    (DensePoly.cisZero full_rtLogRecovered.ratPart, full_rtLogRecovered.logTerms.length) = (true, 1) := by
   native_decide
 
 /-- The dispatch's reconstructed rational part for the combined round-trip, built from
@@ -156,14 +156,14 @@ part `v` from `(R, B)` by the dispatch AND solves the log argument, and `algDeri
 engine produces the FULL `v + Σ cᵢ log uᵢ` (rational + log, principal case), both halves computed from
 polynomial / residual inputs, round-trip-validated through the real radical derivation. -/
 theorem full_roundtrip_combined :
-    radIsZero (radSub (algDerivQ rtCombRho full_rtCombRecovered) full_rtCombIntegrand) = true := by
+    DensePoly.cisZero (DensePoly.csub (algDerivQ rtCombRho full_rtCombRecovered) full_rtCombIntegrand) = true := by
   native_decide
 
 /-- **The combined result has nonzero rational part AND one log term** (`native_decide`): the structural
-signature `(radIsZero ratPart, logTerms.length) = (false, 1)` of a genuine combined integral
+signature `(DensePoly.cisZero ratPart, logTerms.length) = (false, 1)` of a genuine combined integral
 `∫ = v + c·log u` with both parts present. -/
 theorem full_roundtrip_combined_shape :
-    (radIsZero full_rtCombRecovered.ratPart, full_rtCombRecovered.logTerms.length) = (false, 1) := by
+    (DensePoly.cisZero full_rtCombRecovered.ratPart, full_rtCombRecovered.logTerms.length) = (false, 1) := by
   native_decide
 
 end DeepWiki.Tiaf

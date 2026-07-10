@@ -12,39 +12,41 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-! ### Identifying the LRT operands: the computable lifts realize `D.map C`, `A - t*D'` -/
 
-/-- `GBPolyCore.toGBCoeffPoly (liftCtoBPoly p) = (toPoly p).map C`: `liftCtoBPoly` realizes the coefficient embedding. -/
+/-- `DensePoly.toPoly (liftCtoBPoly p) = (toPoly p).map C`: `liftCtoBPoly` realizes the coefficient embedding. -/
 theorem toBPoly_liftCtoBPoly (p : DensePoly ℚ) :
-    GBPolyCore.toGBCoeffPoly (liftCtoBPoly p) = (toPoly p).map (Polynomial.C : ℚ →+* ℚ[X]) := by
+    DensePoly.toPoly (liftCtoBPoly p) = (toPoly p).map (Polynomial.C : ℚ →+* ℚ[X]) := by
   induction p with
   | nil => simp [liftCtoBPoly]
   | cons a as ih =>
-    show GBPolyCore.toGBCoeffPoly (cnorm [a] :: liftCtoBPoly as) = _
-    rw [GBPolyCore.toGBCoeffPoly_cons, ih]
-    simp only [DensePoly.toPolyG_cnormG, DensePoly.toPolyG_cons,
+    show DensePoly.toPoly (cnorm [a] :: liftCtoBPoly as) = _
+    rw [DensePoly.toPolyG_cons_dense, ih]
+    rw [DensePoly.toPolyG_cnormG, DensePoly.toPolyG_cons,
       DensePoly.toPolyG_nil, mul_zero, add_zero, toR_eq_toK, CFieldSpec.toK_rat]
-    rw [Polynomial.map_add, Polynomial.map_mul, Polynomial.map_X, Polynomial.map_C]
+    rw [DensePoly.toPolyG_cons, Polynomial.map_add, Polynomial.map_mul,
+      Polynomial.map_X, Polynomial.map_C, toR_eq_toK, CFieldSpec.toK_rat]
 
 /-- `toPoly ctVar = X`: the computable `t`-variable lifts to the indeterminate `X ∈ ℚ[t]`. -/
 @[simp] theorem toPoly_ctVar : toPoly ctVar = (Polynomial.X : ℚ[X]) := by
-  rw [ctVar]; simp [DensePoly.toPolyG_cons]
+  rw [ctVar]
+  simp
 
-/-- `GBPolyCore.toGBCoeffPoly (bArgAmtD' A D) = (toPoly A).map C - C X * (derivative (toPoly D)).map C`: the LRT second
+/-- `DensePoly.toPoly (bArgAmtD' A D) = (toPoly A).map C - C X * (derivative (toPoly D)).map C`: the LRT second
 operand `A - t*D'`. -/
 theorem toBPoly_bArgAmtD' (A D : DensePoly ℚ) :
-    GBPolyCore.toGBCoeffPoly (bArgAmtD' A D)
+    DensePoly.toPoly (bArgAmtD' A D)
       = (toPoly A).map (Polynomial.C : ℚ →+* ℚ[X])
         - Polynomial.C Polynomial.X * (derivative (toPoly D)).map (Polynomial.C : ℚ →+* ℚ[X]) := by
-  rw [bArgAmtD', GBPolyCore.toGBCoeffPoly_csub, toBPoly_liftCtoBPoly,
-    GBPolyCore.toGBCoeffPoly_cscale, toBPoly_liftCtoBPoly]
+  rw [bArgAmtD', DensePoly.toPolyG_csubG, toBPoly_liftCtoBPoly,
+    DensePoly.toPolyG_cscaleG, toBPoly_liftCtoBPoly]
   change _ - Polynomial.C (toPoly ctVar) * _ = _
   rw [toPoly_ctVar]
   rw [DensePoly.toPolyG_cderivG]
 
-/-- `lrtSubresultant A D j` is the abstract subresultant of the `GBPolyCore.toGBCoeffPoly` images of the computable
+/-- `lrtSubresultant A D j` is the abstract subresultant of the `DensePoly.toPoly` images of the computable
 operands at formal degrees `deg D`, `deg D - 1`. -/
 theorem lrtSubresultant_eq_subresultant_toBPoly (A D : DensePoly ℚ) (j : ℕ) :
     lrtSubresultant (toPoly A) (toPoly D) j
-      = subresultant (GBPolyCore.toGBCoeffPoly (liftCtoBPoly D)) (GBPolyCore.toGBCoeffPoly (bArgAmtD' A D))
+      = subresultant (DensePoly.toPoly (liftCtoBPoly D)) (DensePoly.toPoly (bArgAmtD' A D))
           (toPoly D).natDegree ((toPoly D).natDegree - 1) j := by
   rw [lrtSubresultant, toBPoly_liftCtoBPoly, toBPoly_bArgAmtD']
 
@@ -55,17 +57,17 @@ theorem lrtSubresultant_eq_subresultant_toBPoly (A D : DensePoly ℚ) (j : ℕ) 
 `n = deg D`, `m = deg D - 1`, `P = liftCtoBPoly D`, `Q = bArgAmtD' A D`. -/
 theorem lrtSubresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (A D : DensePoly ℚ) (j : ℕ)
     (s : GBPolyCore ℚ) (c : DensePoly ℚ)
-    (hsc : Polynomial.C (toPoly c) * GBPolyCore.toGBCoeffPoly (liftCtoBPoly D)
-        = GBPolyCore.toGBCoeffPoly s * GBPolyCore.toGBCoeffPoly (bArgAmtD' A D)
-          + GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)))
+    (hsc : Polynomial.C (toPoly c) * DensePoly.toPoly (liftCtoBPoly D)
+        = DensePoly.toPoly s * DensePoly.toPoly (bArgAmtD' A D)
+          + DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)))
     (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
-    (hB : (GBPolyCore.toGBCoeffPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
-    (hQ : (GBPolyCore.toGBCoeffPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
+    (hB : (DensePoly.toPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
+    (hQ : (DensePoly.toPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
     Polynomial.C ((toPoly c) ^ (((toPoly D).natDegree - 1) - j))
         * lrtSubresultant (toPoly A) (toPoly D) j
       = (-1 : (ℚ[X])[X]) ^ ((((toPoly D).natDegree - 1) - j) * ((toPoly D).natDegree - j))
-        * subresultant (GBPolyCore.toGBCoeffPoly (bArgAmtD' A D))
-            (GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)))
+        * subresultant (DensePoly.toPoly (bArgAmtD' A D))
+            (DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)))
             ((toPoly D).natDegree - 1) (toPoly D).natDegree j := by
   rw [lrtSubresultant_eq_subresultant_toBPoly]
   exact subresultant_C_mul_eq_rem_of_bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)

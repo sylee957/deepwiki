@@ -61,13 +61,13 @@ def expRadLogDer : Lvl2 := @logDerRadicand _ _ expTowerDiff 2 expRadicand
 
 /-- `y·y = eˣ+1`: the square of `y = √(eˣ+1)` reduces via the `y² → ρ` fold to `ρ = eˣ+1`. -/
 theorem expRadGen_sq_eq_radicand :
-    radIsZero (radSub (radMul 2 expRadicand (radGen : RadElem Lvl2) radGen) [expRadicand])
+    DensePoly.cisZero (DensePoly.csub (radMul 2 expRadicand (radGen : RadElem Lvl2) radGen) [expRadicand])
       = true := by native_decide
 
 /-- `D(y) = (θ/(2(θ+1)))·y`: the diagonal radical derivation of `y = √(eˣ+1)` with the exponential
 base derivation is `ℓ·y`, `ℓ = ρ'/(2ρ)`. -/
 theorem expRadDeriv_radGen_eq :
-    radIsZero (radSub (@radDeriv _ _ expTowerDiff 2 expRadicand (radGen : RadElem Lvl2))
+    DensePoly.cisZero (DensePoly.csub (@radDeriv _ _ expTowerDiff 2 expRadicand (radGen : RadElem Lvl2))
         [CCommRing.zero, expRadLogDer]) = true := by native_decide
 
 /-! ### `∫ eˣ/√(eˣ+1) dx = 2√(eˣ+1)` over ℚ(x)(eˣ)
@@ -86,7 +86,7 @@ def expAntideriv : RadElem Lvl2 :=
 /-- `∫ eˣ/√(eˣ+1) dx = 2√(eˣ+1)`: `radDeriv` of the antiderivative `2y = [0, 2]` equals the integrand
 `θ/y = [0, θ/(θ+1)]` over the transcendental tower. -/
 theorem expIntegral_eq :
-    radIsZero (radSub (@radDeriv _ _ expTowerDiff 2 expRadicand expAntideriv) expIntegrand)
+    DensePoly.cisZero (DensePoly.csub (@radDeriv _ _ expTowerDiff 2 expRadicand expAntideriv) expIntegrand)
       = true := by native_decide
 
 /-! ### The `log` companion: `∫ dx/(x√(log x)) = 2√(log x)` over ℚ(x)(log x)
@@ -122,7 +122,7 @@ def logRadLogDer : Lvl2 := @logDerRadicand _ _ logTowerDiff 2 logRadicandT
 
 /-- `y·y = log x`: the square of `y = √(log x)` reduces via the `y² → ρ` fold to `ρ = log x`. -/
 theorem logRadGen_sq_eq_radicand :
-    radIsZero (radSub (radMul 2 logRadicandT (radGen : RadElem Lvl2) radGen) [logRadicandT])
+    DensePoly.cisZero (DensePoly.csub (radMul 2 logRadicandT (radGen : RadElem Lvl2) radGen) [logRadicandT])
       = true := by native_decide
 
 /-- The integrand `1/(x√(log x)) = (1/x)/y` as the pure-`y` `RadElem` `[0, (1/x)/(log x)]` over ℚ(x)(log x). -/
@@ -136,7 +136,7 @@ def logAntideriv : RadElem Lvl2 :=
 /-- `∫ dx/(x√(log x)) = 2√(log x)`: `radDeriv` of `2y = [0, 2]` equals the integrand
 `(1/x)/y = [0, (1/x)/(log x)]` over the logarithmic tower. -/
 theorem logIntegral_eq :
-    radIsZero (radSub (@radDeriv _ _ logTowerDiff 2 logRadicandT logAntideriv) logIntegrand)
+    DensePoly.cisZero (DensePoly.csub (@radDeriv _ _ logTowerDiff 2 logRadicandT logAntideriv) logIntegrand)
       = true := by native_decide
 
 /-! ### The generic rational-part driver over a tower base
@@ -179,7 +179,7 @@ def drvRatLift : RadElem Lvl2 :=
 /-- The Case-2 driver integrates over the tower base: `radDeriv 2` of the rational part `v = vNum/(θ²√ρ)`
 equals `1/(θ²√ρ) − Crem/(θ√ρ)`, the rational part of `1/(θ²·√(θ³−θ))`, at level 2. -/
 theorem drvDriver_integrates :
-    radIsZero (radSub (radDeriv 2 drvRhoLvl2 drvVlift) drvRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 drvRhoLvl2 drvVlift) drvRatLift) = true := by native_decide
 
 /-- Full-driver denominator `B = θ² ∈ ℚ(x)[θ]`, `[0, 0, 1]`. -/
 def drvB : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.zero, CCommRing.one]

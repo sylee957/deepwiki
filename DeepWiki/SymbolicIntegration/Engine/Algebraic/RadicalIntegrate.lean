@@ -98,9 +98,9 @@ def sqrtxRatLift : RadElem (CFrac ℚ) :=
       (CField.div (qxOfNum sqrtxRun.1) (qxOfNum (cmul sqrtxV sqrtxF)))]
 
 /-- The driver integrates `∫ 1/((x−1)³√x)`: `radDeriv 2 x (lift v) = lift(C₀/(V³√x) − Crem/(V√x))` over
-`ℚ(x)`, checked by `radIsZero` of the difference. -/
+`ℚ(x)`, checked by `DensePoly.cisZero` of the difference. -/
 theorem sqrtxDriver_integrates :
-    radIsZero (radSub (radDeriv 2 sqrtxFqx sqrtxVlift) sqrtxRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 sqrtxFqx sqrtxVlift) sqrtxRatLift) = true := by native_decide
 
 /-! ### The driver integrates `∫ 1/((x−1)³√(x³+1))` end-to-end
 
@@ -139,8 +139,8 @@ def cubeRatLift : RadElem (CFrac ℚ) :=
       (CField.div (qxOfNum cubeRun.1) (qxOfNum (cmul cubeV cubeF)))]
 
 /-- The driver integrates `∫ 1/((x−1)³√(x³+1))` on the elliptic curve `y² = x³ + 1`:
-`radDeriv 2 (x³+1) (lift v) = lift(C₀/(V³√(x³+1)) − Crem/(V√(x³+1)))`, checked by `radIsZero`. -/
+`radDeriv 2 (x³+1) (lift v) = lift(C₀/(V³√(x³+1)) − Crem/(V√(x³+1)))`, checked by `DensePoly.cisZero`. -/
 theorem cubeDriver_integrates :
-    radIsZero (radSub (radDeriv 2 cubeFqx cubeVlift) cubeRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 cubeFqx cubeVlift) cubeRatLift) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

@@ -49,13 +49,13 @@ open RadElem
 /-- `radInvN` inverts at `n = 2`: over `(CFrac ℚ)[y]/(y² − (x²+1))`, `radMul 2 (x²+1) u (radInvN 2 …) = 1`
 for `u = x + y`. -/
 theorem radInvN_mul_self_eq_one_at_two :
-    radIsZero (radSub (radMul 2 fullRhoArcsinh fullUxPlusY
+    DensePoly.cisZero (DensePoly.csub (radMul 2 fullRhoArcsinh fullUxPlusY
         (radInvN 2 fullRhoArcsinh fullUxPlusY)) radOne) = true := by native_decide
 
 /-- `radInvN` agrees with `radInv2` at `n = 2`: `radInvN 2 ρ u = radInv2 ρ u` in
 `(CFrac ℚ)[y]/(y² − (x²+1))` for `u = x + y`. -/
 theorem radInvN_eq_radInv2_at_two :
-    radIsZero (radSub (radInvN 2 fullRhoArcsinh fullUxPlusY)
+    DensePoly.cisZero (DensePoly.csub (radInvN 2 fullRhoArcsinh fullUxPlusY)
         (radInv2 fullRhoArcsinh fullUxPlusY)) = true := by native_decide
 
 /-! ### The fresh carrier `RadExtN α n f` — a field for every `n` via `radInvN`
@@ -85,11 +85,11 @@ def one : RadExtN α n f := ⟨radOne⟩
 /-- **The generator `y`** of `RadExtN α n f` — the wrapped `radGen` (`[0, 1]`). -/
 def gen : RadExtN α n f := ⟨radGen⟩
 
-/-- **Addition** in `RadExtN α n f` — componentwise `radAdd`, canonicalized to degree `< n`. -/
-def add (p q : RadExtN α n f) : RadExtN α n f := ⟨RadExt.radCanon n f (radAdd p.toRadN q.toRadN)⟩
+/-- **Addition** in `RadExtN α n f` — componentwise `DensePoly.cadd`, canonicalized to degree `< n`. -/
+def add (p q : RadExtN α n f) : RadExtN α n f := ⟨RadExt.radCanon n f (DensePoly.cadd p.toRadN q.toRadN)⟩
 
-/-- **Negation** in `RadExtN α n f` — componentwise `radNeg`, canonicalized to degree `< n`. -/
-def neg (p : RadExtN α n f) : RadExtN α n f := ⟨RadExt.radCanon n f (radNeg p.toRadN)⟩
+/-- **Negation** in `RadExtN α n f` — componentwise `DensePoly.cneg`, canonicalized to degree `< n`. -/
+def neg (p : RadExtN α n f) : RadExtN α n f := ⟨RadExt.radCanon n f (DensePoly.cneg p.toRadN)⟩
 
 /-- **Multiplication** in `RadExtN α n f` — `radMul n f` (poly-multiply in `y`, reduce `yⁿ → f`),
 canonicalized. -/
@@ -100,8 +100,8 @@ to degree `< n`). -/
 def inv (p : RadExtN α n f) : RadExtN α n f :=
   ⟨RadExt.radCanon n f (radInvN n f (RadExt.radCanon n f p.toRadN))⟩
 
-/-- **Zero test** in `RadExtN α n f` — reduce `mod yⁿ = f` first, then `radIsZero`. -/
-def isZero (p : RadExtN α n f) : Bool := radIsZero (RadExt.radCanon n f p.toRadN)
+/-- **Zero test** in `RadExtN α n f` — reduce `mod yⁿ = f` first, then `DensePoly.cisZero`. -/
+def isZero (p : RadExtN α n f) : Bool := DensePoly.cisZero (RadExt.radCanon n f p.toRadN)
 
 end RadExtN
 
@@ -253,13 +253,13 @@ end RadElem
 /-- A cube-root log integrand `u'/u` for `u = x + ∛(x²+1)`: `radLogDerivN 3 (x²+1) u` is a nonzero element
 of `ℚ(x)[∛(x²+1)]`, the integrand whose antiderivative is `log u`. -/
 theorem cube_radLogDerivN_nonzero :
-    radIsZero (radLogDerivN 3 cubeRadicand (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root).toRadN)
+    DensePoly.cisZero (radLogDerivN 3 cubeRadicand (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root).toRadN)
       = false := by native_decide
 
 /-- `D(log u) · u = D(u)` over the cube root: for `u = x + ∛(x²+1)`, `(radLogDerivN 3 f u)·u = D(u)`, i.e.
 `(u'/u)·u = u'`, certifying `radLogDerivN` is the honest `u'/u`. -/
 theorem cube_radLogDerivN_mul_eq_deriv :
-    radIsZero (radSub
+    DensePoly.cisZero (DensePoly.csub
         (radMul 3 cubeRadicand (radLogDerivN 3 cubeRadicand
           (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root).toRadN) [qxOfNum [0, 1], CCommRing.one])
         (radDeriv 3 cubeRadicand [qxOfNum [0, 1], CCommRing.one])) = true := by native_decide

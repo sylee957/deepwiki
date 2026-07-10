@@ -116,7 +116,7 @@ def expC3RatContribution : RadElem Lvl2 :=
 /-- Case-3-G's computed rational part `v = 2y` has `radDeriv(v) = eˣ/√(eˣ+1)`: `radDeriv 2 ρ` (with the
 exponential derivation `expTowerDiff`) of `v = vNum/y` (`vNum = 2ρ`) equals `[0, θ/(θ+1)]`. -/
 theorem expC3_radDeriv_vlift_eq :
-    radIsZero (radSub (@radDeriv _ _ expTowerDiff 2 expC3RhoLvl2 expC3Vlift) expC3RatContribution)
+    DensePoly.cisZero (DensePoly.csub (@radDeriv _ _ expTowerDiff 2 expC3RhoLvl2 expC3Vlift) expC3RatContribution)
       = true := by native_decide
 
 /-! ### The fully-computed round-trip: both halves of `∫√(eˣ+1) dx` over ℚ(x)(eˣ)
@@ -134,8 +134,8 @@ def rtFullLogResidual : RadElem Lvl2 := radInvYLift expC3RhoLvl2 CCommRing.one
 /-- The integrand splits exactly into the computed rational + log halves: the log residual `[0, 1/ρ]` equals
 `y` minus the computed rational-part derivative `radDeriv(v)` (`v = expC3Vlift`). -/
 theorem rtFull_split_exact :
-    radIsZero (radSub rtFullLogResidual
-      (radSub rtFullIntegrand (@radDeriv _ _ expTowerDiff 2 expC3RhoLvl2 expC3Vlift))) = true := by
+    DensePoly.cisZero (DensePoly.csub rtFullLogResidual
+      (DensePoly.csub rtFullIntegrand (@radDeriv _ _ expTowerDiff 2 expC3RhoLvl2 expC3Vlift))) = true := by
   native_decide
 
 /-- The fixed log-solve denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as `DensePoly (CFrac ℚ)` `[0, 1]`; the
@@ -157,22 +157,22 @@ def rtFullRecovered : AlgIntegralResult Lvl2 :=
 
 /-- The fully-computed round-trip `algDeriv F' = √(eˣ+1)` with both halves computed: the elementary integral
 `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over `ℚ(x)(eˣ)`, `v = 2y` from `radIntegrateCase3G` and
-`u = (y−1)/(y+1)` from `radLogArgSolve`, with `algDeriv F' = y`. Checked by `radIsZero` of
+`u = (y−1)/(y+1)` from `radLogArgSolve`, with `algDeriv F' = y`. Checked by `DensePoly.cisZero` of
 `algDeriv F' − y`. -/
 theorem rtFull_both_halves_computed :
-    radIsZero (radSub (@algDeriv _ _ expTowerDiff expC3RhoLvl2 rtFullRecovered) rtFullIntegrand)
+    DensePoly.cisZero (DensePoly.csub (@algDeriv _ _ expTowerDiff expC3RhoLvl2 rtFullRecovered) rtFullIntegrand)
       = true := by native_decide
 
 /-- The fully-computed result has a nonzero rational part and one log term: `F'` carries a nonzero `ratPart`
-(`2y`) and exactly one log term, checked on `(radIsZero F'.ratPart, F'.logTerms.length) = (false, 1)`. -/
+(`2y`) and exactly one log term, checked on `(DensePoly.cisZero F'.ratPart, F'.logTerms.length) = (false, 1)`. -/
 theorem rtFull_shape :
-    (radIsZero rtFullRecovered.ratPart, rtFullRecovered.logTerms.length) = (false, 1) := by
+    (DensePoly.cisZero rtFullRecovered.ratPart, rtFullRecovered.logTerms.length) = (false, 1) := by
   native_decide
 
 /-- The computed rational part is `2y`: the recovered `F'.ratPart = v` equals `[0, 2]` over `ℚ(x)(eˣ)`,
-checked by `radIsZero` of `v − [0,2]`. -/
+checked by `DensePoly.cisZero` of `v − [0,2]`. -/
 theorem rtFull_ratPart_eq_two_y :
-    radIsZero (radSub rtFullRecovered.ratPart
+    DensePoly.cisZero (DensePoly.csub rtFullRecovered.ratPart
       [CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]) = true := by native_decide
 
 /-! ### `radIntegrateCase3G cderiv` reduces to the ℚ-base behavior at `α = ℚ(x)`

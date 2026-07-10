@@ -85,7 +85,7 @@ example (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBC
   cPrimPRSGenAssocReg_of_regular_of_correct cgcdB hcorr fuel P Q hreg hfuel
 
 -- The list-length WF guard is the polynomial `t`-degree.
-example (p : GBPolyCore β) : gbdegCore p = (toGBCoeffPoly p).natDegree := gbdegCore_eq_natDegree p
+example (p : GBPolyCore β) : gbdegCore p = (DensePoly.toPoly p).natDegree := gbdegCore_eq_natDegree p
 
 -- Clause (ii) with the β(s)-unit multiplier is unconditional given the non-terminal loop guard.
 example (fuel : ℕ) (p q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false) :
@@ -98,16 +98,16 @@ example (fuel : ℕ) (p q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = f
 -- The single pseudo-division step strictly drops the `t`-degree by leading-term cancellation.
 example (p q : GBPolyCore β) (hp : gbisZeroCore (gbnormCore p) = false)
     (hq : gbisZeroCore (gbnormCore q) = false)
-    (hdeg : (toGBCoeffPoly q).natDegree ≤ (toGBCoeffPoly p).natDegree)
-    (hstepne : toGBCoeffPoly (gbStepReduce p q) ≠ 0) :
-    (toGBCoeffPoly (gbStepReduce p q)).natDegree < (toGBCoeffPoly p).natDegree :=
+    (hdeg : (DensePoly.toPoly q).natDegree ≤ (DensePoly.toPoly p).natDegree)
+    (hstepne : DensePoly.toPoly (gbStepReduce p q) ≠ 0) :
+    (DensePoly.toPoly (gbStepReduce p q)).natDegree < (DensePoly.toPoly p).natDegree :=
   natDegree_gbStepReduce_lt p q hp hq hdeg hstepne
 
 -- The inner pseudo-division loop completes under the explicit fuel bound `deg_t p < fuel`.
 example (q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false)
-    (fuel : ℕ) (p : GBPolyCore β) (hlt : (toGBCoeffPoly p).natDegree < fuel) :
-    (toGBCoeffPoly (gbpsremainderCore fuel p q)).natDegree < (toGBCoeffPoly q).natDegree
-      ∨ toGBCoeffPoly (gbpsremainderCore fuel p q) = 0 :=
+    (fuel : ℕ) (p : GBPolyCore β) (hlt : (DensePoly.toPoly p).natDegree < fuel) :
+    (DensePoly.toPoly (gbpsremainderCore fuel p q)).natDegree < (DensePoly.toPoly q).natDegree
+      ∨ DensePoly.toPoly (gbpsremainderCore fuel p q) = 0 :=
   gbpsremainderCore_degree_lt q hq fuel p hlt
 
 /-! ## Summary

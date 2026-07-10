@@ -38,11 +38,11 @@ theorem toPolyG_gblcCore_ne_zero {q : GBPolyCore β} (hq : gbisZeroCore q = fals
 /-- **The multiplier of `gbpsremainderCore` is `toPoly`-nonzero when the divisor is nonzero.** Produces
 a pseudo-division witness `(s, c)` with the Euclidean identity and `toPoly c ≠ 0`, provided
 `gbisZeroCore (gbnormCore q) = false`. -/
-theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
+theorem toPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
     (hq : gbisZeroCore (gbnormCore q) = false) :
     ∃ (s : GBPolyCore β) (c : DensePoly β),
-      Polynomial.C (DensePoly.toPoly c) * toGBCoeffPoly p
-          = toGBCoeffPoly s * toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q)
+      Polynomial.C (DensePoly.toPoly c) * DensePoly.toPoly p
+          = DensePoly.toPoly s * DensePoly.toPoly q + DensePoly.toPoly (gbpsremainderCore fuel p q)
         ∧ DensePoly.toPoly c ≠ 0 := by
   have hone : DensePoly.toPoly ([CCommRing.one] : DensePoly β) = 1 := by
     simp only [denote]
@@ -52,37 +52,38 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
     toPolyG_gblcCore_ne_zero hq
   induction fuel generalizing p with
   | zero =>
-    exact ⟨[], [CCommRing.one], by simp [gbpsremainderCore, toGBCoeffPoly_gbnormCore, hone],
+    exact ⟨[], [CCommRing.one], by simp [gbpsremainderCore, toPolyG_gbnormCore, hone],
       by rw [hone]; exact one_ne_zero⟩
   | succ fuel ih =>
     simp only [gbpsremainderCore]
     split_ifs with hqz hlen
-    · exact ⟨[], [CCommRing.one], by simp [toGBCoeffPoly_gbnormCore, hone],
+    · exact ⟨[], [CCommRing.one], by simp [toPolyG_gbnormCore, hone],
         by rw [hone]; exact one_ne_zero⟩
-    · exact ⟨[], [CCommRing.one], by simp [toGBCoeffPoly_gbnormCore, hone],
+    · exact ⟨[], [CCommRing.one], by simp [toPolyG_gbnormCore, hone],
         by rw [hone]; exact one_ne_zero⟩
     · obtain ⟨s', c', hsc, hc'⟩ := ih (gbnormCore (DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q))
         (gbnormCore p))
         (DensePoly.cscale (gblcCore (gbnormCore p))
           (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
-      have hp' : toGBCoeffPoly (gbnormCore (DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q))
+      have hp' : DensePoly.toPoly (gbnormCore (DensePoly.csub (DensePoly.cscale (gblcCore (gbnormCore q))
           (gbnormCore p))
           (DensePoly.cscale (gblcCore (gbnormCore p))
             (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
-          = Polynomial.C (DensePoly.toPoly (gblcCore (gbnormCore q))) * toGBCoeffPoly p
+          = Polynomial.C (DensePoly.toPoly (gblcCore (gbnormCore q))) * DensePoly.toPoly p
             - Polynomial.C (DensePoly.toPoly (gblcCore (gbnormCore p)))
-              * Polynomial.X ^ ((gbnormCore p).length - (gbnormCore q).length) * toGBCoeffPoly q := by
-        rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_csub, toGBCoeffPoly_cscale,
-          toGBCoeffPoly_cscale, toGBCoeffPoly_cshift, toGBCoeffPoly_gbnormCore,
-          toGBCoeffPoly_gbnormCore]
+              * Polynomial.X ^ ((gbnormCore p).length - (gbnormCore q).length) * DensePoly.toPoly q := by
+        rw [toPolyG_gbnormCore, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cscaleG,
+          DensePoly.toPolyG_cscaleG, DensePoly.toPolyG_cshiftG, toPolyG_gbnormCore,
+          toPolyG_gbnormCore]
+        simp only [DensePoly.toR_densePoly]
         ring
       rw [hp', gbpsremainderCore_gbnormCore_right] at hsc
       refine ⟨DensePoly.cadd s' (DensePoly.cscale (DensePoly.cmul c' (gblcCore (gbnormCore p)))
           (DensePoly.cshift ((gbnormCore p).length - (gbnormCore q).length) [[CCommRing.one]])),
           DensePoly.cmul c' (gblcCore (gbnormCore q)), ?_, ?_⟩
-      · rw [toGBCoeffPoly_cadd, toGBCoeffPoly_cscale, toGBCoeffPoly_cshift,
-          toGBCoeffPoly_one]
-        simp only [denote, map_mul]
+      · rw [DensePoly.toPolyG_caddG, DensePoly.toPolyG_cscaleG, DensePoly.toPolyG_cshiftG,
+          toPolyG_one]
+        simp only [DensePoly.toR_densePoly, denote, map_mul]
         linear_combination hsc
       · simpa only [denote] using mul_ne_zero hc' hlcq
 
@@ -96,7 +97,7 @@ theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
       Polynomial.C (CFrac.am β (DensePoly.toPoly c)) * toGBPoly p
           = toGBPoly s * toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)
         ∧ CFrac.am β (DensePoly.toPoly c) ≠ 0 := by
-  obtain ⟨s, c, hsc, hc⟩ := toGBCoeffPoly_gbpsremainderCore_ne_zero fuel p q hq
+  obtain ⟨s, c, hsc, hc⟩ := toPolyG_gbpsremainderCore_ne_zero fuel p q hq
   refine ⟨s, c, ?_, CFrac.amG_toPolyG_ne_zero hc⟩
   have hl := congrArg (liftK β) hsc
   simp only [map_add, map_mul] at hl

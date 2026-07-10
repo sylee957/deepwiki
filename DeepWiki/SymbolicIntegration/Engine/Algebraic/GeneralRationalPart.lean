@@ -47,9 +47,9 @@ def gcuspVY : RadElem (CFrac ℚ) := [CCommRing.zero, qxOfNum [0, 2/5]]
 def gcuspY : RadElem (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- `∫ y dx = (2/5)·x·y` on `y² = x³`: the diagonal radical derivation `radDeriv 2 (x³)` of the rational
-part `v = (2/5)·x·y` equals the integrand `y`, via `radIsZero` of `radDeriv 2 ρ v − y`. -/
+part `v = (2/5)·x·y` equals the integrand `y`, via `DensePoly.cisZero` of `radDeriv 2 ρ v − y`. -/
 theorem cusp_intY_radDeriv :
-    radIsZero (radSub (radDeriv 2 gcuspRho gcuspVY) gcuspY) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 gcuspRho gcuspVY) gcuspY) = true := by native_decide
 
 /-! #### Target 1, derived from the integrand by the Case-3 `C/y` driver
 
@@ -84,10 +84,10 @@ def gcuspYRatLift : RadElem (CFrac ℚ) :=
   [CCommRing.zero, CField.div (qxOfNum (csub gcuspRhoP gcuspYRun.1)) gcuspRho]
 
 /-- The Case-3 driver integrates `∫ y dx` end-to-end: `radDeriv 2 (x³)` of the driver-produced rational
-part `v = (2/5)x·y` equals the integrand's rational part `(C − Crem)/y = y`, via `radIsZero` of the
+part `v = (2/5)x·y` equals the integrand's rational part `(C − Crem)/y = y`, via `DensePoly.cisZero` of the
 difference. -/
 theorem cusp_intY_driver_integrates :
-    radIsZero (radSub (radDeriv 2 gcuspRho gcuspVYlift) gcuspYRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 gcuspRho gcuspVYlift) gcuspYRatLift) = true := by native_decide
 
 /-- `∫ y dx` is fully rational: the Case-3 reduction leaves `Crem = 0`, so there is no simple-pole
 residual and no logarithmic part, via `cisZero gcuspYRun.1`. -/
@@ -105,9 +105,9 @@ def gcuspVXY : RadElem (CFrac ℚ) := [CCommRing.zero, qxOfNum [0, 0, 2/7]]
 def gcuspXY : RadElem (CFrac ℚ) := [CCommRing.zero, qxOfNum [0, 1]]
 
 /-- `∫ x·y dx = (2/7)·x²·y` on `y² = x³`: the diagonal radical derivation `radDeriv 2 (x³)` of
-`v = (2/7)·x²·y` equals `x·y`, via `radIsZero` of `radDeriv 2 ρ v − xy`. -/
+`v = (2/7)·x²·y` equals `x·y`, via `DensePoly.cisZero` of `radDeriv 2 ρ v − xy`. -/
 theorem cusp_intXY_radDeriv :
-    radIsZero (radSub (radDeriv 2 gcuspRho gcuspVXY) gcuspXY) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 gcuspRho gcuspVXY) gcuspXY) = true := by native_decide
 
 /-- The Case-3 driver run on `∫ x·y dx = ∫ x⁴/y` (`C = x⁴`): `radIntegrateCase3Wf cderiv ρ g (x⁴) =
 (Crem, vNum)`, expected `(0, (2/7)x⁵)`. -/
@@ -131,9 +131,9 @@ def gcuspXYRatLift : RadElem (CFrac ℚ) :=
   [CCommRing.zero, CField.div (qxOfNum (csub [0, 0, 0, 0, 1] gcuspXYRun.1)) gcuspRho]
 
 /-- The Case-3 driver integrates `∫ x·y dx` end-to-end: `radDeriv 2 (x³)` of the driver-produced
-`v = (2/7)x²·y` equals the integrand `x·y`, via `radIsZero` of the difference. -/
+`v = (2/7)x²·y` equals the integrand `x·y`, via `DensePoly.cisZero` of the difference. -/
 theorem cusp_intXY_driver_integrates :
-    radIsZero (radSub (radDeriv 2 gcuspRho gcuspVXYlift) gcuspXYRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 gcuspRho gcuspVXYlift) gcuspXYRatLift) = true := by native_decide
 
 /-! ### Related pieces
 

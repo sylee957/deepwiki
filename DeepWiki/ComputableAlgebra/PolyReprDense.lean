@@ -628,6 +628,27 @@ noncomputable instance instCRingSpecCPoly {α : Type*} [CCommRing α] [CRingSpec
   toR_neg := toPolyG_cnegG
   isZero_iff := cisZeroG_iff
 
+/-- The `CRingSpec` denotation of a nested `DensePoly` is its Horner polynomial `toPoly`. -/
+@[simp] theorem toR_densePoly {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) :
+    CRingSpec.toR p = toPoly p := rfl
+
+/-- Nested Horner recursion reads a `DensePoly α` coefficient through its own `toPoly`. -/
+@[simp] theorem toPolyG_cons_dense {α : Type*} [CCommRing α] [CRingSpec α]
+    (a : DensePoly α) (p : DensePoly (DensePoly α)) :
+    toPoly (a :: p) = Polynomial.C (toPoly a) + Polynomial.X * toPoly p := by
+  rw [toPolyG_cons, toR_densePoly]
+
+/-- A nested `DensePoly` coefficient is the inner `toPoly` of `getD i []`. -/
+theorem toPolyG_coeff_dense {α : Type*} [CCommRing α] [CRingSpec α]
+    (p : DensePoly (DensePoly α)) (i : ℕ) :
+    (toPoly p).coeff i = toPoly ((p : List (DensePoly α)).getD i []) := by
+  rw [toPolyG_coeff, toR_densePoly, show (CCommRing.zero : DensePoly α) = [] from rfl]
+
+/-- If the base denotation ring is a domain, so is the denotation ring of `DensePoly α`. -/
+instance instIsDomainRDensePoly {α : Type*} [CCommRing α] [CRingSpec α]
+    [IsDomain (CRingSpec.R α)] : IsDomain (CRingSpec.R (DensePoly α)) :=
+  inferInstanceAs (IsDomain ((CRingSpec.R α)[X]))
+
 /-- Monic-normalization is a unit-scaling: `toPoly (cmonic p)` is associated to `toPoly p` in `K[X]`. -/
 theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α) :
     Associated (toPoly (cmonic p)) (toPoly p) := by

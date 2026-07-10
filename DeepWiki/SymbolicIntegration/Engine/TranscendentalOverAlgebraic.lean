@@ -51,11 +51,11 @@ down by `yⁿ = f` and strip trailing zeros. A no-op on engine-produced values. 
 def radCanon (n : ℕ) (f : α) (u : RadElem α) : RadElem α :=
   DensePoly.cnorm (radReduce n f ((u : List α).length + 1) u)
 
-/-- Addition in `RadExt α n f` — componentwise `radAdd`, canonicalized to degree `< n`. -/
-def add (p q : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radAdd p.toRad q.toRad)⟩
+/-- Addition in `RadExt α n f` — componentwise `DensePoly.cadd`, canonicalized to degree `< n`. -/
+def add (p q : RadExt α n f) : RadExt α n f := ⟨radCanon n f (DensePoly.cadd p.toRad q.toRad)⟩
 
-/-- Negation in `RadExt α n f` — componentwise `radNeg`, canonicalized to degree `< n`. -/
-def neg (p : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radNeg p.toRad)⟩
+/-- Negation in `RadExt α n f` — componentwise `DensePoly.cneg`, canonicalized to degree `< n`. -/
+def neg (p : RadExt α n f) : RadExt α n f := ⟨radCanon n f (DensePoly.cneg p.toRad)⟩
 
 /-- Multiplication in `RadExt α n f` — `radMul n f` (poly-multiply in `y`, reduce `yⁿ → f`),
 canonicalized (`radMul` already folds, so this is idempotent). -/
@@ -65,16 +65,16 @@ def mul (p q : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radMul n f p.t
 `radCanon n f (radInv2 f (radCanon n f p))`; on the reduced rep `a + b·y`, `u⁻¹ = ū/(a² − b²f)`. -/
 def inv (p : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radInv2 f (radCanon n f p.toRad))⟩
 
-/-- Zero test in `RadExt α n f` — reduce `mod yⁿ = f` first (`radCanon`), then `radIsZero`, so the
+/-- Zero test in `RadExt α n f` — reduce `mod yⁿ = f` first (`radCanon`), then `DensePoly.cisZero`, so the
 test agrees with `AdjoinRoot (Xⁿ − f)` for every representative. -/
-def isZero (p : RadExt α n f) : Bool := radIsZero (radCanon n f p.toRad)
+def isZero (p : RadExt α n f) : Bool := DensePoly.cisZero (radCanon n f p.toRad)
 
 end RadExt
 
 /-! ### `CField (RadExt α n f)` — the algebraic Risch base -/
 
 /-- `CField (RadExt α n f)`: the radical extension `α[y]/(yⁿ − f)` as a computable field, with ops the
-radical-carrier computations (`radZero`/…/`radIsZero`, `inv` the conjugate-norm `radInv2`). -/
+radical-carrier computations (`radZero`/…/`DensePoly.cisZero`, `inv` the conjugate-norm `radInv2`). -/
 instance instCFieldRadExt {α : Type*} [CField α] [CFieldDomain α] {n : ℕ} {f : α} :
     CField (RadExt α n f) where
   zero := RadExt.zero
@@ -106,10 +106,10 @@ scalar coefficient `B = b₀` decouples the equation into the `n` base RDEs `Dz�
 over `α` (`ℓ = f'/(nf)`), each solved by the base `CRischField α`; a non-scalar `B` (coupled system)
 returns `none`. -/
 
-/-- `RadExt.isScalar p = true` iff every `y`-component of `p` vanishes (`radIsZero (p.toRad).tail`);
+/-- `RadExt.isScalar p = true` iff every `y`-component of `p` vanishes (`DensePoly.cisZero (p.toRad).tail`);
 the decoupling base solve handles scalar coefficients, a non-scalar one is the coupled-system case. -/
 def RadExt.isScalar {α : Type*} [CField α] {n : ℕ} {f : α} (p : RadExt α n f) : Bool :=
-  RadElem.radIsZero ((p.toRad : List α).tail)
+  DensePoly.cisZero ((p.toRad : List α).tail)
 
 /-- `radExtRischDESolve B C : Option (RadExt α n f)`: the scalar-decoupling base RDE solve for
 `Dz + B·z = C`. For scalar `B = b₀` it splits into the `n` base RDEs `Dzᵢ + (b₀ + (i:α)·ℓ)·zᵢ = Cᵢ`
@@ -180,12 +180,12 @@ def radX3RischZ : RadX3 := ⟨[qxOfNum [0, 1], qxOfNum [2]]⟩
 /-- The right-hand side `C = radDeriv z + B·z ∈ RadX3` of the algebraic RDE, built from
 `radX3RischZ`/`radX3RischB`; carries a genuine `y`-component. -/
 def radX3RischC : RadX3 :=
-  ⟨RadElem.radAdd (RadElem.radDeriv 2 radicandX3p1 radX3RischZ.toRad)
+  ⟨DensePoly.cadd (RadElem.radDeriv 2 radicandX3p1 radX3RischZ.toRad)
     (RadElem.radMul 2 radicandX3p1 radX3RischB.toRad radX3RischZ.toRad)⟩
 
-/-- The right-hand side `C` has a genuine `y`-component (`radIsZero (C.toRad.tail) = false`). -/
+/-- The right-hand side `C` has a genuine `y`-component (`DensePoly.cisZero (C.toRad.tail) = false`). -/
 theorem radX3Risch_C_has_y_component :
-    RadElem.radIsZero ((radX3RischC.toRad : List (CFrac ℚ)).tail) = false := by native_decide
+    DensePoly.cisZero ((radX3RischC.toRad : List (CFrac ℚ)).tail) = false := by native_decide
 
 /-- `CRischField.crischDESolve B C` returns `some` on the algebraic RDE over `RadX3` (`B = 1`, `C`
 with a `y`-component). -/
@@ -196,8 +196,8 @@ theorem radX3Risch_solve_isSome :
 `some z` satisfying `radDeriv z + B·z = C` exactly. -/
 theorem radX3Risch_solves_rde :
     (match CRischField.crischDESolve radX3RischB radX3RischC with
-      | some z => RadElem.radIsZero (RadElem.radSub
-          (RadElem.radAdd (RadElem.radDeriv 2 radicandX3p1 z.toRad)
+      | some z => DensePoly.cisZero (DensePoly.csub
+          (DensePoly.cadd (RadElem.radDeriv 2 radicandX3p1 z.toRad)
             (RadElem.radMul 2 radicandX3p1 radX3RischB.toRad z.toRad)) radX3RischC.toRad)
       | none => false) = true := by native_decide
 
@@ -410,7 +410,7 @@ theorem toAdj_one : toAdj (RadExt.one : RadExt α n f) = 1 := by
 
 /-- `toAdj` sends radical-extension addition to quotient-ring addition. -/
 theorem toAdj_add (p q : RadExt α n f) : toAdj (RadExt.add p q) = toAdj p + toAdj q := by
-  show AdjoinRoot.mk _ (DensePoly.toPoly (RadExt.radCanon n f (radAdd p.toRad q.toRad))) = _
+  show AdjoinRoot.mk _ (DensePoly.toPoly (RadExt.radCanon n f (DensePoly.cadd p.toRad q.toRad))) = _
   rw [mk_canon]
   show AdjoinRoot.mk _ (DensePoly.toPoly (DensePoly.cadd _ _)) = _
   simp only [denote, map_add]
@@ -418,7 +418,7 @@ theorem toAdj_add (p q : RadExt α n f) : toAdj (RadExt.add p q) = toAdj p + toA
 
 /-- `toAdj` sends radical-extension negation to quotient-ring negation. -/
 theorem toAdj_neg (p : RadExt α n f) : toAdj (RadExt.neg p) = - toAdj p := by
-  show AdjoinRoot.mk _ (DensePoly.toPoly (RadExt.radCanon n f (radNeg p.toRad))) = _
+  show AdjoinRoot.mk _ (DensePoly.toPoly (RadExt.radCanon n f (DensePoly.cneg p.toRad))) = _
   rw [mk_canon]
   show AdjoinRoot.mk _ (DensePoly.toPoly (DensePoly.cneg _)) = _
   simp only [denote, map_neg]

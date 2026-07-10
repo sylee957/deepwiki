@@ -34,17 +34,17 @@ def elemF : AlgIntegralResult Lvl2 := ⟨elemRatPart, [(CCommRing.one, elemLogAr
 `√(eˣ+1) = y`. -/
 def elemIntegrand : RadElem Lvl2 := @algDeriv _ _ expTowerDiff elemRho elemF
 
-/-- The combined integrand equals the radical generator `y`: `radIsZero (elemIntegrand − radGen)`. -/
+/-- The combined integrand equals the radical generator `y`: `DensePoly.cisZero (elemIntegrand − radGen)`. -/
 theorem elemIntegrand_eq_radGen :
-    radIsZero (radSub elemIntegrand (radGen : RadElem Lvl2)) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub elemIntegrand (radGen : RadElem Lvl2)) = true := by native_decide
 
 /-- The log residual `1/√(eˣ+1) = 1/y` lifted to `[0, 1/ρ]` over ℚ(x)(eˣ) (`ρ = eˣ+1`). -/
 def elemLogResidual : RadElem Lvl2 := radInvYLift elemRho CCommRing.one
 
 /-- The log residual equals `elemIntegrand − radDeriv(2y)` under the exp-tower derivation. -/
 theorem elemLogResidual_eq_integrand_sub_ratDeriv :
-    radIsZero (radSub elemLogResidual
-      (radSub elemIntegrand (@radDeriv _ _ expTowerDiff 2 elemRho elemRatPart))) = true := by
+    DensePoly.cisZero (DensePoly.csub elemLogResidual
+      (DensePoly.csub elemIntegrand (@radDeriv _ _ expTowerDiff 2 elemRho elemRatPart))) = true := by
   native_decide
 
 /-- The log-solve denominator `D = θ = eˣ` as the `DensePoly (CFrac ℚ)` `[0, 1]`. -/
@@ -54,15 +54,15 @@ def elemDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 def elemRecovered : AlgIntegralResult Lvl2 :=
   @cIntegrateElementary _ _ _ expTowerDiff elemRho elemRatPart elemLogResidual CCommRing.one elemDenTheta 1
 
-/-- Round-trip `algDeriv F' = elemIntegrand` over ℚ(x)(eˣ): `radIsZero (algDeriv F' − integrand)`. -/
+/-- Round-trip `algDeriv F' = elemIntegrand` over ℚ(x)(eˣ): `DensePoly.cisZero (algDeriv F' − integrand)`. -/
 theorem rt_elementary_combined :
-    radIsZero (radSub (@algDeriv _ _ expTowerDiff elemRho elemRecovered) elemIntegrand) = true := by
+    DensePoly.cisZero (DensePoly.csub (@algDeriv _ _ expTowerDiff elemRho elemRecovered) elemIntegrand) = true := by
   native_decide
 
 /-- The recovered result has nonzero rational part and exactly one log term:
-`(radIsZero F'.ratPart, F'.logTerms.length) = (false, 1)`. -/
+`(DensePoly.cisZero F'.ratPart, F'.logTerms.length) = (false, 1)`. -/
 theorem rt_elementary_combined_shape :
-    (radIsZero elemRecovered.ratPart, elemRecovered.logTerms.length) = (false, 1) := by native_decide
+    (DensePoly.cisZero elemRecovered.ratPart, elemRecovered.logTerms.length) = (false, 1) := by native_decide
 
 /-- The recovered log argument `u = [a₀, a₁]` has `a₁ ≠ 0` and `a₀·(−2) = a₁·(θ+2)`, i.e. it is a
 nonzero constant multiple of `(θ+2) − 2y`. -/

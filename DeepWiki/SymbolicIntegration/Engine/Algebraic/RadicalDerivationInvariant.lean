@@ -141,25 +141,27 @@ theorem toPolyG_radDeriv_zero_cons (n : ℕ) (f c : α) :
   rw [map_zero, map_zero, zero_add]
   ring
 
-/-! ### Additivity: `radDeriv` commutes with `radAdd` -/
+/-! ### Additivity: `radDeriv` commutes with `DensePoly.cadd` -/
 
-/-- `radDeriv` is additive: `toPoly (radDeriv n f (radAdd a b)) = toPoly (radDeriv n f a) +
+/-- `radDeriv` is additive: `toPoly (radDeriv n f (DensePoly.cadd a b)) = toPoly (radDeriv n f a) +
 toPoly (radDeriv n f b)` in `K[X]`. -/
-@[denote] theorem toPolyG_radDeriv_radAdd (n : ℕ) (f : α) (a b : RadElem α) :
-    DensePoly.toPoly (radDeriv n f (radAdd a b))
+@[denote] theorem toPolyG_radDeriv_cadd (n : ℕ) (f : α) (a b : RadElem α) :
+    DensePoly.toPoly (radDeriv n f (DensePoly.cadd a b))
       = DensePoly.toPoly (radDeriv n f a) + DensePoly.toPoly (radDeriv n f b) := by
-  rw [toPolyG_radDeriv, toPolyG_radDeriv, toPolyG_radDeriv, radAdd]
+  rw [toPolyG_radDeriv, toPolyG_radDeriv, toPolyG_radDeriv, DensePoly.toPolyG_caddG]
   simp only [denote, map_add]
 
-/-- `radDeriv` distributes over a `radAdd` accumulator fold. -/
-theorem toPolyG_radDeriv_foldlRadAdd (n : ℕ) (f : α) (acc : RadElem α) (cs : List (RadElem α)) :
-    DensePoly.toPoly (radDeriv n f (cs.foldl radAdd acc))
+/-- `radDeriv` distributes over a `DensePoly.cadd` accumulator fold. -/
+theorem toPolyG_radDeriv_foldl_cadd (n : ℕ) (f : α) (acc : RadElem α)
+    (cs : List (RadElem α)) :
+    DensePoly.toPoly (radDeriv n f (cs.foldl DensePoly.cadd acc))
       = DensePoly.toPoly (radDeriv n f acc)
         + (cs.map (fun c => DensePoly.toPoly (radDeriv n f c))).sum := by
   induction cs generalizing acc with
   | nil => simp
   | cons c cs ih =>
-    rw [List.foldl_cons, ih (radAdd acc c), toPolyG_radDeriv_radAdd, List.map_cons, List.sum_cons]
+    rw [List.foldl_cons, ih (DensePoly.cadd acc c), toPolyG_radDeriv_cadd,
+      List.map_cons, List.sum_cons]
     ring
 
 /-! ### Leibniz for `radMul`, modulo `Xⁿ − C(toK f)`
@@ -415,6 +417,6 @@ end RadElem
 /-! ### `#print axioms` -/
 
 #print axioms RadElem.toPolyG_radDeriv
-#print axioms RadElem.toPolyG_radDeriv_radAdd
+#print axioms RadElem.toPolyG_radDeriv_cadd
 #print axioms RadElem.implicitDeriv_radicand_mem
 #print axioms RadElem.mk_toPolyG_radDeriv_radMul

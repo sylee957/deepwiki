@@ -204,10 +204,10 @@ quotient-degree bound `hQ`) are derived separately (below). -/
 private abbrev gP : GBPolyCore ℚ := liftCtoBPoly cD241
 private abbrev gQ : GBPolyCore ℚ := bArgAmtD' cA241 cD241
 
-/-- **The degree-3 element's `x`-degree is 3**: `(GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 3)).natDegree = 3` (the regular
+/-- **The degree-3 element's `x`-degree is 3**: `(DensePoly.toPoly (chain 30 gP gQ 3)).natDegree = 3` (the regular
 LRT index `j = m+2 = 3`). Via `gbdegCore_eq_natDegree` and `native_decide` on `GBPolyCore.gbdegCore (chain … 3)`. -/
 theorem natDegree_toBPoly_chainG3_ex241 :
-    (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 3)).natDegree = 3 := by
+    (DensePoly.toPoly (chain 30 gP gQ 3)).natDegree = 3 := by
   rw [← gbdegCore_eq_natDegree]
   show GBPolyCore.gbdegCore (goState 30 (gP, gQ, [-1], GBPolyCore.gbdegCore gP - GBPolyCore.gbdegCore gQ) 3).1 = 3
   native_decide
@@ -216,17 +216,17 @@ theorem natDegree_toBPoly_chainG3_ex241 :
 theorem natDegree_toPoly_cD241 : (toPoly cD241).natDegree = 6 := by
   rw [← DensePoly.cdegG_eq_natDegree]; native_decide
 
-/-- **`hd0` for Ex 2.4.1**: `(GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree` (both 6). -/
+/-- **`hd0` for Ex 2.4.1**: `(DensePoly.toPoly (chain 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree` (both 6). -/
 theorem hd0_ex241 :
-    (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree := by
+    (DensePoly.toPoly (chain 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree := by
   rw [← gbdegCore_eq_natDegree, natDegree_toPoly_cD241]
   show GBPolyCore.gbdegCore (goState 30 (gP, gQ, [-1], GBPolyCore.gbdegCore gP - GBPolyCore.gbdegCore gQ) 0).1 = 6
   native_decide
 
-/-- **`hd1` for Ex 2.4.1**: `(GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree − 1`
+/-- **`hd1` for Ex 2.4.1**: `(DensePoly.toPoly (chain 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree − 1`
 (5 = 6−1). -/
 theorem hd1_ex241 :
-    (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree - 1 := by
+    (DensePoly.toPoly (chain 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree - 1 := by
   rw [← gbdegCore_eq_natDegree, natDegree_toPoly_cD241]
   show GBPolyCore.gbdegCore (goState 30 (gP, gQ, [-1], GBPolyCore.gbdegCore gP - GBPolyCore.gbdegCore gQ) 1).1 = 6 - 1
   native_decide
@@ -264,8 +264,8 @@ theorem hdiv_ex241 :
 
 /-- **`hlc` for Ex 2.4.1**: the leading `x`-coefficient of `chain (l+1)` (`l ≤ 1`) is nonzero. -/
 theorem hlc_ex241 :
-    ∀ l ≤ 1, (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).coeff
-      (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree ≠ 0 := by
+    ∀ l ≤ 1, (DensePoly.toPoly (chain 30 gP gQ (l + 1))).coeff
+      (DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree ≠ 0 := by
   intro l hl
   rw [← gbdegCore_eq_natDegree, ← GBPolyCore.toPolyG_gblcCore_eq_coeff]
   exact toPolyG_gblcCore_ne_zero
@@ -274,8 +274,8 @@ theorem hlc_ex241 :
 /-- **`hcb` for Ex 2.4.1**: the `x`-degrees strictly decrease (`chain (l+2)` below `chain (l+1)`,
 `l ≤ 1`: `4<5`, `3<4`), via `gbdegCore_eq_natDegree`. -/
 theorem hcb_ex241 :
-    ∀ l ≤ 1, (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 2))).natDegree
-      < (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree := by
+    ∀ l ≤ 1, (DensePoly.toPoly (chain 30 gP gQ (l + 2))).natDegree
+      < (DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree := by
   intro l hl
   rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
   interval_cases l <;>
@@ -284,17 +284,17 @@ theorem hcb_ex241 :
 /-- **`hjlt` for Ex 2.4.1**: the degree-3 element `chain 3` is strictly below `chain (l+2)` for `l<1`
 (only `l=0`: `3<4`), via `gbdegCore_eq_natDegree`. -/
 theorem hjlt_ex241 :
-    ∀ l < 1, (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree
-      < (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 2))).natDegree := by
+    ∀ l < 1, (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree
+      < (DensePoly.toPoly (chain 30 gP gQ (l + 2))).natDegree := by
   intro l hl
   rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
   interval_cases l
   simp only [chain]; native_decide
 
-/-- **`hCne` for Ex 2.4.1**: the degree-3 chain element `chain 3` is nonzero (`GBPolyCore.toGBCoeffPoly ≠ 0`), via
-`GBPolyCore.gbisZeroCore_iff_toGBCoeffPoly`. -/
-theorem hCne_ex241 : GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2)) ≠ 0 := by
-  rw [Ne, ← GBPolyCore.gbisZeroCore_iff_toGBCoeffPoly]
+/-- **`hCne` for Ex 2.4.1**: the degree-3 chain element `chain 3` is nonzero (`DensePoly.toPoly ≠ 0`), via
+`GBPolyCore.gbisZeroCore_iff_toPolyG`. -/
+theorem hCne_ex241 : DensePoly.toPoly (chain 30 gP gQ (1 + 2)) ≠ 0 := by
+  rw [Ne, ← GBPolyCore.gbisZeroCore_iff_toPolyG]
   exact chainG_ne_zero_ex241 3 (by omega)
 
 /-- **The degree-3 filter of `subresPRS` is `[chain 3]`** (the singleton-filter `hfil`, by
@@ -303,7 +303,7 @@ theorem hCne_ex241 : GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2)) ≠ 0 := 
 `unique_of_strictAnti` argument needed — both sides are computable). -/
 theorem subresPRS_filter_singleton_ex241 :
     (subresPRS 30 gP gQ).filter
-        (fun R => decide (GBPolyCore.gbdegCore R = (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree ∧ ¬ GBPolyCore.gbisZeroCore R))
+        (fun R => decide (GBPolyCore.gbdegCore R = (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree ∧ ¬ GBPolyCore.gbisZeroCore R))
       = [chain 30 gP gQ (1 + 2)] := by
   rw [natDegree_toBPoly_chainG3_ex241]
   show (subresPRS 30 gP gQ).filter (fun R => decide (GBPolyCore.gbdegCore R = 3 ∧ ¬ GBPolyCore.gbisZeroCore R))
@@ -311,11 +311,11 @@ theorem subresPRS_filter_singleton_ex241 :
   native_decide
 
 /-- **`hfilt` for Ex 2.4.1**: the degree-3 filter of `bsubresultantGcd 30 3 gP gQ` returns `chain 3`
-(under `GBPolyCore.toGBCoeffPoly`). From the singleton filter `subresPRS_filter_singleton_ex241` via
+(under `DensePoly.toPoly`). From the singleton filter `subresPRS_filter_singleton_ex241` via
 `toBPoly_bsubresultantGcd_eq_of_filter_singleton`. -/
 theorem hfilt_ex241 :
-    GBPolyCore.toGBCoeffPoly (bsubresultantGcd 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)
-      = GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2)) :=
+    DensePoly.toPoly (bsubresultantGcd 30 (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)
+      = DensePoly.toPoly (chain 30 gP gQ (1 + 2)) :=
   toBPoly_bsubresultantGcd_eq_of_filter_singleton 30 gP gQ (chain 30 gP gQ) 1
     subresPRS_filter_singleton_ex241
 
@@ -329,29 +329,29 @@ facts, `native_decide`'d. -/
 (`¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30 3 gP gQ))`). -/
 theorem hg_ex241 :
     ¬ cisZero (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
-      (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) = true := by
+      (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) = true := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hgcn` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant has nonempty `cnorm`. -/
 theorem hgcn_ex241 :
     cnorm (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
-      (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ [] := by
+      (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ [] := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hg0` for Ex 2.4.1**: the `ℚ[t]`-content reads to a nonzero `ℚ[t]` polynomial (`toPoly ≠ 0`), via
 `DensePoly.cnormG_eq_nil_iff`. -/
 theorem hg0_ex241 :
     toPoly (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
-      (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ 0 := by
+      (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ 0 := by
   intro h; exact hgcn_ex241 ((DensePoly.cnormG_eq_nil_iff _).mpr h)
 
 /-- **`hrem` for Ex 2.4.1**: the `ℚ[t]`-content divides every `x`-coefficient of the degree-3 raw
 subresultant exactly (`cmod` reads to 0), via `DensePoly.cnormG_eq_nil_iff`. -/
 theorem hrem_ex241 :
     ∀ a ∈ GBPolyCore.gbnormCore (bsubresultantGcd 30
-        (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ),
+        (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ),
       toPoly (DensePoly.cmodWf a (GBPolyCore.gbcontentCore DensePoly.cgcdWfGcd (bsubresultantGcd 30
-        (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ))) = 0 := by
+        (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ))) = 0 := by
   intro a ha
   rw [← DensePoly.cnormG_eq_nil_iff]
   revert a ha
@@ -362,7 +362,7 @@ theorem hrem_ex241 :
 (`¬ GBPolyCore.gbisZeroCore (bredR cR241 (lrtSubresultantCompute 30 3 cA241 cD241))`). -/
 theorem hpz_ex241 :
     ¬ GBPolyCore.gbisZeroCore (bredR cR241 (lrtSubresultantCompute 30
-      (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) = true := by
+      (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) = true := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-! ### The Exercise 2.7 residue-ring unit regularity (Ex 2.4.1, `native_decide`)
@@ -376,7 +376,7 @@ reduced primitive subresultant's leading `x`-coefficient (`(107/8)·t`) with `R 
 `1` (the leading coefficient is a unit mod `R`). `native_decide`. -/
 theorem cgcdWf_blc_bredR_ex241 :
     (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR cR241 (lrtSubresultantCompute 30
-      (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1 = [1] := by
+      (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1 = [1] := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hgu` for Ex 2.4.1** (Exercise 2.7 regularity, `u = 1`): the leading-`x`-coefficient mod-`R` gcd
@@ -384,7 +384,7 @@ reduces to the nonzero constant `C 1` — so the leading coefficient is a unit m
 `cgcdWf_blc_bredR_ex241` (`gcd = [1]`) and `toPoly [1] = C 1`. -/
 theorem hgu_ex241 :
     toPoly (DensePoly.cgcdWf (GBPolyCore.gblcCore (bredR cR241 (lrtSubresultantCompute 30
-      (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1
+      (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1
       = Polynomial.C (1 : ℚ) := by
   rw [cgcdWf_blc_bredR_ex241]
   show toPoly [(1 : ℚ)] = _
@@ -398,19 +398,19 @@ facts: the chain elements `chain (l+1)`, `chain (l+2)` are nonzero with known `x
 β-divisor exactly divides the pseudo-remainder (`hdiv_ex241`), so the pseudo-remainder has `x`-degree
 `deg (chain (l+2)) < deg (chain (l+1))`. -/
 
-/-- The chain elements `chain 1 … chain 3` are nonzero under `GBPolyCore.toGBCoeffPoly` (`l ≤ 1` ⟹ `l+1, l+2 ∈ {1,2,3}`),
-via `GBPolyCore.gbisZeroCore_iff_toGBCoeffPoly` and `chainG_ne_zero_ex241`. -/
-theorem toBPoly_chainG_ne_zero_ex241 (i : ℕ) (hi : i ≤ 3) : GBPolyCore.toGBCoeffPoly (chain 30 gP gQ i) ≠ 0 := by
-  rw [Ne, ← GBPolyCore.gbisZeroCore_iff_toGBCoeffPoly]
+/-- The chain elements `chain 1 … chain 3` are nonzero under `DensePoly.toPoly` (`l ≤ 1` ⟹ `l+1, l+2 ∈ {1,2,3}`),
+via `GBPolyCore.gbisZeroCore_iff_toPolyG` and `chainG_ne_zero_ex241`. -/
+theorem toBPoly_chainG_ne_zero_ex241 (i : ℕ) (hi : i ≤ 3) : DensePoly.toPoly (chain 30 gP gQ i) ≠ 0 := by
+  rw [Ne, ← GBPolyCore.gbisZeroCore_iff_toPolyG]
   exact chainG_ne_zero_ex241 i hi
 
 /-- **The pseudo-remainder is `C(toPoly βₗ)` times the next chain element** (Ex 2.4.1, `l ≤ 1`):
-`GBPolyCore.toGBCoeffPoly (prem (chain l) (chain (l+1))) = C(toPoly (chainBt l)) · GBPolyCore.toGBCoeffPoly (chain (l+2))`. From
+`DensePoly.toPoly (prem (chain l) (chain (l+1))) = C(toPoly (chainBt l)) · DensePoly.toPoly (chain (l+2))`. From
 `chain_hG2` (the divided-step recurrence) and the β-divisor exact division `toBPoly_bdivC_exact`
 (`hdiv_ex241`). -/
 theorem toBPoly_prem_ex241 (l : ℕ) (hl : l ≤ 1) :
-    GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))
-      = Polynomial.C (toPoly (chainBt 30 gP gQ l)) * GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 2)) := by
+    DensePoly.toPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))
+      = Polynomial.C (toPoly (chainBt 30 gP gQ l)) * DensePoly.toPoly (chain 30 gP gQ (l + 2)) := by
   have hexact := toBPoly_bdivC_exact
     (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1))) (chainBt 30 gP gQ l)
     (hβcn_ex241 l hl) (fun a ha => hdiv_ex241 l hl a ha)
@@ -421,13 +421,13 @@ theorem toBPoly_prem_ex241 (l : ℕ) (hl : l ≤ 1) :
 `deg (chain (l+2))` (`l ≤ 1`): the `C(toPoly βₗ)` constant factor does not change the `x`-degree
 (`toPoly βₗ ≠ 0`), via `toBPoly_prem_ex241` and `natDegree_C_mul`. -/
 theorem natDegree_toBPoly_prem_ex241 (l : ℕ) (hl : l ≤ 1) :
-    (GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))).natDegree
-      = (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 2))).natDegree := by
+    (DensePoly.toPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))).natDegree
+      = (DensePoly.toPoly (chain 30 gP gQ (l + 2))).natDegree := by
   rw [toBPoly_prem_ex241 l hl, Polynomial.natDegree_C_mul (hβ0_ex241 l hl)]
 
 /-- **`hc0` for Ex 2.4.1**: the pseudo-division content `chainC l` (`l ≤ 1`) reads to a nonzero `ℚ[t]`
 polynomial (`toPoly (chainC l) ≠ 0`). Degree argument over the domain `(ℚ[X])[X]`: if `toPoly (chainC l) =
-0`, then `chain_hsc` gives `GBPolyCore.toGBCoeffPoly (chainS l) · GBPolyCore.toGBCoeffPoly (chain (l+1)) = − GBPolyCore.toGBCoeffPoly (prem)`; the RHS has
+0`, then `chain_hsc` gives `DensePoly.toPoly (chainS l) · DensePoly.toPoly (chain (l+1)) = − DensePoly.toPoly (prem)`; the RHS has
 `x`-degree `deg (chain (l+2)) < deg (chain (l+1))` (`natDegree_toBPoly_prem_ex241` + `hcb_ex241`), while
 the LHS has `x`-degree `≥ deg (chain (l+1))` (if `chainS l ≠ 0`) or is `0` forcing `chain (l+2) = 0`
 (if `chainS l = 0`) — both contradictions. -/
@@ -435,30 +435,30 @@ theorem hc0_ex241 : ∀ l ≤ 1, toPoly (chainC 30 gP gQ l) ≠ 0 := by
   intro l hl hc0
   have hsc := chain_hsc 30 gP gQ l
   rw [hc0, map_zero, zero_mul] at hsc
-  -- 0 = GBPolyCore.toGBCoeffPoly(chainS l) · GBPolyCore.toGBCoeffPoly(G(l+1)) + GBPolyCore.toGBCoeffPoly(prem)
+  -- 0 = DensePoly.toPoly(chainS l) · DensePoly.toPoly(G(l+1)) + DensePoly.toPoly(prem)
   have hprem := toBPoly_prem_ex241 l hl
   have hG1ne := toBPoly_chainG_ne_zero_ex241 (l + 1) (by omega)
   have hG2ne := toBPoly_chainG_ne_zero_ex241 (l + 2) (by omega)
   have hβne := hβ0_ex241 l hl
-  -- rearrange: GBPolyCore.toGBCoeffPoly(chainS l)·GBPolyCore.toGBCoeffPoly(G(l+1)) = - GBPolyCore.toGBCoeffPoly(prem)
-  have heq : GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) * GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))
-      = - GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1))) := by
+  -- rearrange: DensePoly.toPoly(chainS l)·DensePoly.toPoly(G(l+1)) = - DensePoly.toPoly(prem)
+  have heq : DensePoly.toPoly (chainS 30 gP gQ l) * DensePoly.toPoly (chain 30 gP gQ (l + 1))
+      = - DensePoly.toPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1))) := by
     linear_combination -hsc
   -- degree of the RHS
-  have hpremne : GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1))) ≠ 0 := by
+  have hpremne : DensePoly.toPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1))) ≠ 0 := by
     rw [hprem]
     have hβdense : DensePoly.toPoly (chainBt 30 gP gQ l) ≠ 0 := by
       exact hβne
     exact mul_ne_zero (Polynomial.C_ne_zero.mpr hβdense) hG2ne
-  by_cases hSne : GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) = 0
+  by_cases hSne : DensePoly.toPoly (chainS 30 gP gQ l) = 0
   · rw [hSne, zero_mul, eq_comm, neg_eq_zero] at heq
     exact hpremne heq
   · -- both sides nonzero; compare degrees
-    have hdRHS : (- GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))).natDegree
-        = (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 2))).natDegree := by
+    have hdRHS : (- DensePoly.toPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))).natDegree
+        = (DensePoly.toPoly (chain 30 gP gQ (l + 2))).natDegree := by
       rw [Polynomial.natDegree_neg, natDegree_toBPoly_prem_ex241 l hl]
-    have hdLHS : (GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) * GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree
-        = (GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l)).natDegree + (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree :=
+    have hdLHS : (DensePoly.toPoly (chainS 30 gP gQ l) * DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree
+        = (DensePoly.toPoly (chainS 30 gP gQ l)).natDegree + (DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree :=
       Polynomial.natDegree_mul hSne hG1ne
     have hdeg := congrArg Polynomial.natDegree heq
     rw [hdLHS, hdRHS] at hdeg
@@ -468,21 +468,21 @@ theorem hc0_ex241 : ∀ l ≤ 1, toPoly (chainC 30 gP gQ l) ≠ 0 := by
 /-- **The `x`-degree of `chain (l+1)` is strictly below that of `chain l`** (Ex 2.4.1, `l ≤ 1`):
 `deg (chain (l+1)) < deg (chain l)` (`5<6`, `4<5`), via `gbdegCore_eq_natDegree`. -/
 theorem natDegree_toBPoly_chainG_strictAnti_ex241 (l : ℕ) (hl : l ≤ 1) :
-    (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree < (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ l)).natDegree := by
+    (DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree < (DensePoly.toPoly (chain 30 gP gQ l)).natDegree := by
   rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
   interval_cases l <;>
     · simp only [chain]; native_decide
 
 /-- **`hQ` for Ex 2.4.1**: the pseudo-division quotient degree bound
 `deg (chainS l) + deg (chain (l+1)) ≤ deg (chain l)` (`l ≤ 1`). Degree argument over `(ℚ[X])[X]` on
-`chain_hsc` (now with `hc0_ex241` giving the content nonzero): `C(toPoly cl)·GBPolyCore.toGBCoeffPoly(Gl)` has `x`-degree
-`deg (Gl)`; the RHS `GBPolyCore.toGBCoeffPoly(sl)·GBPolyCore.toGBCoeffPoly(G(l+1)) + GBPolyCore.toGBCoeffPoly(prem)` has `x`-degree `deg(sl)+deg(G(l+1))` when
+`chain_hsc` (now with `hc0_ex241` giving the content nonzero): `C(toPoly cl)·DensePoly.toPoly(Gl)` has `x`-degree
+`deg (Gl)`; the RHS `DensePoly.toPoly(sl)·DensePoly.toPoly(G(l+1)) + DensePoly.toPoly(prem)` has `x`-degree `deg(sl)+deg(G(l+1))` when
 `sl ≠ 0` (the `prem` term has the strictly-smaller degree `deg (G(l+2))`,
 `natDegree_add_eq_left_of_natDegree_lt`), so `deg(sl)+deg(G(l+1)) = deg(Gl)`; when `sl = 0` it is
 `deg(G(l+1)) < deg(Gl)` (`natDegree_toBPoly_chainG_strictAnti_ex241`). -/
 theorem hQ_ex241 : ∀ l ≤ 1,
-    (GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l)).natDegree + (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree
-      ≤ (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ l)).natDegree := by
+    (DensePoly.toPoly (chainS 30 gP gQ l)).natDegree + (DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree
+      ≤ (DensePoly.toPoly (chain 30 gP gQ l)).natDegree := by
   intro l hl
   have hsc := chain_hsc 30 gP gQ l
   have hGlne := toBPoly_chainG_ne_zero_ex241 l (by omega)
@@ -492,23 +492,23 @@ theorem hQ_ex241 : ∀ l ≤ 1,
   have hcb := hcb_ex241 l hl
   have hstrict := natDegree_toBPoly_chainG_strictAnti_ex241 l hl
   -- LHS degree = deg(Gl)
-  have hdLHS : (Polynomial.C (toPoly (chainC 30 gP gQ l)) * GBPolyCore.toGBCoeffPoly (chain 30 gP gQ l)).natDegree
-      = (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ l)).natDegree :=
+  have hdLHS : (Polynomial.C (toPoly (chainC 30 gP gQ l)) * DensePoly.toPoly (chain 30 gP gQ l)).natDegree
+      = (DensePoly.toPoly (chain 30 gP gQ l)).natDegree :=
     Polynomial.natDegree_C_mul hcl
-  by_cases hSne : GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) = 0
+  by_cases hSne : DensePoly.toPoly (chainS 30 gP gQ l) = 0
   · -- chainS l = 0: bound is deg(G(l+1)) < deg(Gl)
     rw [hSne, Polynomial.natDegree_zero]
     omega
   · -- chainS l ≠ 0: RHS top term is sl·G(l+1), degree deg(sl)+deg(G(l+1)) = deg(Gl)
-    have hmuldeg : (GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) * GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree
-        = (GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l)).natDegree + (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree :=
+    have hmuldeg : (DensePoly.toPoly (chainS 30 gP gQ l) * DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree
+        = (DensePoly.toPoly (chainS 30 gP gQ l)).natDegree + (DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree :=
       Polynomial.natDegree_mul hSne hG1ne
-    have hpremlt : (GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))).natDegree
-        < (GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) * GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree := by
+    have hpremlt : (DensePoly.toPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))).natDegree
+        < (DensePoly.toPoly (chainS 30 gP gQ l) * DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree := by
       rw [hmuldeg, hpremdeg]; omega
-    have hRHSdeg : (GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) * GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))
-          + GBPolyCore.toGBCoeffPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))).natDegree
-        = (GBPolyCore.toGBCoeffPoly (chainS 30 gP gQ l) * GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (l + 1))).natDegree :=
+    have hRHSdeg : (DensePoly.toPoly (chainS 30 gP gQ l) * DensePoly.toPoly (chain 30 gP gQ (l + 1))
+          + DensePoly.toPoly (GBPolyCore.gbpsremainderCore 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))).natDegree
+        = (DensePoly.toPoly (chainS 30 gP gQ l) * DensePoly.toPoly (chain 30 gP gQ (l + 1))).natDegree :=
       Polynomial.natDegree_add_eq_left_of_natDegree_lt hpremlt
     have hdeg := congrArg Polynomial.natDegree hsc
     rw [hdLHS, hRHSdeg, hmuldeg] at hdeg
@@ -520,18 +520,18 @@ output `lrtGcdCompute 30 3 cR241 cA241 cD241 = [[0,-4],[-3],[0,2],[1]]` (`lrtGcd
 (leading coefficient `[1]`), so its `φ`-image's degree-3 `x`-coefficient is `φ 1 = 1 ≠ 0`. From the unit
 relation `Φ M_gcd = C(unit)·Φ M` this also gives `Φ M ≠ 0`. -/
 
-/-- **`Φ (GBPolyCore.toGBCoeffPoly (lrtGcdCompute …)) ≠ 0`** (Ex 2.4.1): the `φ`-image of the computable LRT log argument is
+/-- **`Φ (DensePoly.toPoly (lrtGcdCompute …)) ≠ 0`** (Ex 2.4.1): the `φ`-image of the computable LRT log argument is
 nonzero — its degree-3 `x`-coefficient is `φ241 (toPoly [1]) = φ241 1 = 1 ≠ 0` (using `lrtGcd_ex241`,
 `[[0,-4],[-3],[0,2],[1]]`, leading coefficient `[1]`). -/
 theorem mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero :
-    (Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
-      (lrtGcdCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241)) ≠ 0 := by
+    (Polynomial.mapRingHom φ241) (DensePoly.toPoly
+      (lrtGcdCompute 30 (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241)) ≠ 0 := by
   rw [natDegree_toBPoly_chainG3_ex241]
   intro h
-  have hcoeff : ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
+  have hcoeff : ((Polynomial.mapRingHom φ241) (DensePoly.toPoly
       (lrtGcdCompute 30 3 cR241 cA241 cD241))).coeff 3 = 0 := by rw [h]; simp
-  rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, lrtGcd_ex241, GBPolyCore.toGBCoeffPoly_coeff] at hcoeff
-  -- (GBPolyCore.toGBCoeffPoly [[0,-4],[-3],[0,2],[1]]).coeff 3 = toPoly [1] = 1, φ241 1 = 1 ≠ 0
+  rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, lrtGcd_ex241, DensePoly.toPolyG_coeff_dense] at hcoeff
+  -- (DensePoly.toPoly [[0,-4],[-3],[0,2],[1]]).coeff 3 = toPoly [1] = 1, φ241 1 = 1 ≠ 0
   rw [show ([[0, -4], [-3], [0, 2], [1]] : GBPolyCore ℚ).getD 3 [] = [1] from rfl] at hcoeff
   rw [show toPoly ([1] : DensePoly ℚ) = 1 by
     simp [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil], map_one] at hcoeff
@@ -540,19 +540,19 @@ theorem mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero :
 /-! ### The ℚ[t]-similarity `lrtSubresultant ∼ lrtSubresultantCompute` for Ex 2.4.1 (all chain hyps discharged)
 Plugging every discharged chain regularity lemma into `isSimilar_lrtSubresultant_lrtSubresultantCompute`
 (at `m = 1`, the degree-3 index) gives the abstract `ℚ[t]`-similarity
-`lrtSubresultant A D 3 ∼ GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute 30 3 A D)` with **no** remaining chain hypotheses
+`lrtSubresultant A D 3 ∼ DensePoly.toPoly (lrtSubresultantCompute 30 3 A D)` with **no** remaining chain hypotheses
 — `hc0`/`hQ` are the derived `hc0_ex241`/`hQ_ex241`, the rest are `native_decide` facts. -/
 
 /-- **`lrtSubresultant ∼ lrtSubresultantCompute` for Ex 2.4.1** (`ℚ[t]`-similarity, all chain hypotheses
 discharged): the abstract LRT subresultant `lrtSubresultant (toPoly cA241) (toPoly cD241) 3` is `ℚ[t]`-similar
-to the computable primitive LRT subresultant `GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute 30 3 cA241 cD241)`. The full
+to the computable primitive LRT subresultant `DensePoly.toPoly (lrtSubresultantCompute 30 3 cA241 cD241)`. The full
 chain agreement `isSimilar_lrtSubresultant_lrtSubresultantCompute` with every regularity hypothesis
 discharged for the real `subresPRS` chain of Example 2.4.1. -/
 theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241 :
     IsSimilar (lrtSubresultant (toPoly cA241) (toPoly cD241)
-        (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree)
-      (GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute 30
-        (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) := by
+        (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree)
+      (DensePoly.toPoly (lrtSubresultantCompute 30
+        (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) := by
   let hchain : IsSubresPRSChainInput 30 (chain 30 gP gQ) (chainBt 30 gP gQ)
       (chainS 30 gP gQ) (chainC 30 gP gQ) 1 := {
     exact_step := fun l hl => ⟨chain_hsc 30 gP gQ l, hβcn_ex241 l hl, hdiv_ex241 l hl⟩
@@ -565,7 +565,7 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241 :
     quotient_degree_le := hQ_ex241
     endpoint_ne_zero := hCne_ex241 }
   let hprim : IsPrimitivePartXInput
-      (bsubresultantGcd 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ) := {
+      (bsubresultantGcd 30 (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ) := {
     content_not_zero := hg_ex241
     content_cnorm_ne := hgcn_ex241
     content_toPoly_ne := hg0_ex241
@@ -575,10 +575,10 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241 :
     (chainG_zero 30 gP gQ) (chainG_one 30 gP gQ) hd0_ex241 hd1_ex241 hchain
     hfilt_ex241 hprim
 
-/-! ### The headline closure: `Φ (lrtSubresultant) ∼ Φ (GBPolyCore.toGBCoeffPoly lrtGcdCompute)` over `ℚ[t]/(4t²+1)`
+/-! ### The headline closure: `Φ (lrtSubresultant) ∼ Φ (DensePoly.toPoly lrtGcdCompute)` over `ℚ[t]/(4t²+1)`
 Pushing the `ℚ[t]`-similarity `isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241` through the residue
 map `φ241` via the *correct* bridge `isSimilar_mapRingHom_of_irreducible` (`4t²+1` irreducible), and chaining
-the `bmonicXmodR` unit bridge (`mapRingHom_toGBCoeffPoly_bmonicXmodR`, `u = 1`), lands the residue-ring similarity
+the `bmonicXmodR` unit bridge (`mapRingHom_toPolyG_bmonicXmodR`, `u = 1`), lands the residue-ring similarity
 between the abstract `lrtSubresultant` and the computable `lrtGcdCompute` for Example 2.4.1.
 
 The **only** remaining hypothesis is `Φ (lrtSubresultant …) ≠ 0` — the nonvanishing of the residue
@@ -591,13 +591,13 @@ scalable by `4t²+1` ∈ ker φ) — is **discharged**: the correct bridge repla
 the derived `hc0_ex241`/`hQ_ex241`, and the residue-ring/content/monic facts are `native_decide`. -/
 
 /-- **`Φ (lrtSubresultantCompute) ≠ 0`** (Ex 2.4.1): the `φ241`-image of the computable *primitive* LRT
-subresultant is nonzero. From `Φ (GBPolyCore.toGBCoeffPoly lrtGcdCompute) ≠ 0` and the `bmonicXmodR` unit relation
-`Φ (GBPolyCore.toGBCoeffPoly lrtGcdCompute) = C(φ inv)·Φ (GBPolyCore.toGBCoeffPoly lrtSubrCompute)`. -/
+subresultant is nonzero. From `Φ (DensePoly.toPoly lrtGcdCompute) ≠ 0` and the `bmonicXmodR` unit relation
+`Φ (DensePoly.toPoly lrtGcdCompute) = C(φ inv)·Φ (DensePoly.toPoly lrtSubrCompute)`. -/
 theorem mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero :
-    (Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
-      (lrtSubresultantCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) ≠ 0 := by
-  obtain ⟨hbridge, _⟩ := mapRingHom_toGBCoeffPoly_bmonicXmodR φ241 cR241
-    (lrtSubresultantCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)
+    (Polynomial.mapRingHom φ241) (DensePoly.toPoly
+      (lrtSubresultantCompute 30 (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) ≠ 0 := by
+  obtain ⟨hbridge, _⟩ := mapRingHom_toPolyG_bmonicXmodR φ241 cR241
+    (lrtSubresultantCompute 30 (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)
     (by decide) φ241_toPoly_cR241 (u := 1) one_ne_zero hgu_ex241 hpz_ex241
   intro h
   apply mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero
@@ -630,7 +630,7 @@ theorem mapRingHom_φ241_lrtSubresultant_ex241_eq_eval :
 /-- **The closed residue-ring agreement for Example 2.4.1**: over the residue field
 `R241 = ℚ[t]/(4t²+1) = AdjoinRoot (toPoly cR241)`, the `φ241`-image of the abstract LRT subresultant
 `lrtSubresultant (toPoly cA241) (toPoly cD241) 3` is `IsSimilar` to the `φ241`-image of the computable LRT
-log argument `GBPolyCore.toGBCoeffPoly (lrtGcdCompute 30 3 cR241 cA241 cD241)` — i.e. the engine's degree-3 output **is** the
+log argument `DensePoly.toPoly (lrtGcdCompute 30 3 cR241 cA241 cD241)` — i.e. the engine's degree-3 output **is** the
 honest LRT subresultant of Example 2.4.1, up to a residue-ring unit. Everything is discharged except the
 single hypothesis `hLne` that the residue specialization of the (noncomputable) subresultant is nonzero
 (`(4t²+1) ∤ content(lrtSubresultant)`, mathematics-grade). The `ℚ[t]`-similarity
@@ -640,30 +640,30 @@ chained with the `bmonicXmodR` unit bridge. -/
 theorem lrtGcdCompute_ex241_isSimilar_lrtSubresultant
     (hLne : (Polynomial.mapRingHom φ241)
       (lrtSubresultant (toPoly cA241) (toPoly cD241)
-        (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree) ≠ 0) :
+        (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree) ≠ 0) :
     IsSimilar ((Polynomial.mapRingHom φ241)
         (lrtSubresultant (toPoly cA241) (toPoly cD241)
-          (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree))
-      ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
-        (lrtGcdCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241))) := by
+          (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree))
+      ((Polynomial.mapRingHom φ241) (DensePoly.toPoly
+        (lrtGcdCompute 30 (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241))) := by
   -- Φ L ∼ Φ M via the correct bridge (4t²+1 irreducible)
   have hLM : IsSimilar
       ((Polynomial.mapRingHom φ241) (lrtSubresultant (toPoly cA241) (toPoly cD241)
-        (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree))
-      ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute 30
-        (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) :=
+        (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree))
+      ((Polynomial.mapRingHom φ241) (DensePoly.toPoly (lrtSubresultantCompute 30
+        (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) :=
     isSimilar_mapRingHom_of_irreducible (toPoly cR241) irreducible_toPoly_cR241 φ241
       φ241_eq_zero_iff isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241
       hLne mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero
   -- Φ M ∼ Φ M_gcd via the bmonicXmodR unit bridge
-  obtain ⟨hbridge, hunit⟩ := mapRingHom_toGBCoeffPoly_bmonicXmodR φ241 cR241
-    (lrtSubresultantCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toPolyG_bmonicXmodR φ241 cR241
+    (lrtSubresultantCompute 30 (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)
     (by decide) φ241_toPoly_cR241 (u := 1) one_ne_zero hgu_ex241 hpz_ex241
   have hMMgcd : IsSimilar
-      ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly (lrtSubresultantCompute 30
-        (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)))
-      ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
-        (lrtGcdCompute 30 (GBPolyCore.toGBCoeffPoly (chain 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241))) :=
+      ((Polynomial.mapRingHom φ241) (DensePoly.toPoly (lrtSubresultantCompute 30
+        (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)))
+      ((Polynomial.mapRingHom φ241) (DensePoly.toPoly
+        (lrtGcdCompute 30 (DensePoly.toPoly (chain 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241))) :=
     isSimilar_of_unit_mul hunit (by rw [lrtGcdCompute]; exact hbridge)
   exact hLM.trans hMMgcd
 
@@ -678,7 +678,7 @@ example
       (lrtSubresultant (toPoly cA241) (toPoly cD241) 3) ≠ 0) :
     IsSimilar ((Polynomial.mapRingHom φ241)
         (lrtSubresultant (toPoly cA241) (toPoly cD241) 3))
-      ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
+      ((Polynomial.mapRingHom φ241) (DensePoly.toPoly
         ([[0, -4], [-3], [0, 2], [1]] : GBPolyCore ℚ))) := by
   have h := lrtGcdCompute_ex241_isSimilar_lrtSubresultant
     (by rw [natDegree_toBPoly_chainG3_ex241]; exact hLne)
@@ -852,7 +852,7 @@ open Compute in
 /-- **Example 2.4.1's LRT closure, hypothesis-free** (§2.4, p.48): over the residue ring
 `ℚ[t]/(4t²+1)`, the `φ241`-image of the abstract LRT subresultant `lrtSubresultant (toPoly cA241)
 (toPoly cD241) 3` is `IsSimilar` to the `φ241`-image of the computable LRT log argument
-`x³ + 2t·x² − 3x − 4t` (`= GBPolyCore.toGBCoeffPoly [[0,−4],[−3],[0,2],[1]]`, the book's `S(t,x)`). The single hypothesis
+`x³ + 2t·x² − 3x − 4t` (`= DensePoly.toPoly [[0,−4],[−3],[0,2],[1]]`, the book's `S(t,x)`). The single hypothesis
 `hLne` of `lrtGcdCompute_ex241_isSimilar_lrtSubresultant` is now discharged by the proven residue
 non-vanishing `mapRingHom_φ241_lrtSubresultant_ex241_ne_zero` (the multiplicity-3 regularity of the LRT
 subresultant at the residue `α = i/2`). So the computable engine's degree-3 output **is** the honest LRT
@@ -860,7 +860,7 @@ subresultant of Example 2.4.1, up to a residue-ring unit — unconditionally. -/
 theorem lrtGcdCompute_ex241_isSimilar_lrtSubresultant_closed :
     IsSimilar ((Polynomial.mapRingHom φ241)
         (lrtSubresultant (toPoly cA241) (toPoly cD241) 3))
-      ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
+      ((Polynomial.mapRingHom φ241) (DensePoly.toPoly
         ([[0, -4], [-3], [0, 2], [1]] : GBPolyCore ℚ))) := by
   have h := lrtGcdCompute_ex241_isSimilar_lrtSubresultant
     (by rw [natDegree_toBPoly_chainG3_ex241]; exact mapRingHom_φ241_lrtSubresultant_ex241_ne_zero)
@@ -872,7 +872,7 @@ open Compute in
 example :
     IsSimilar ((Polynomial.mapRingHom φ241)
         (lrtSubresultant (toPoly cA241) (toPoly cD241) 3))
-      ((Polynomial.mapRingHom φ241) (GBPolyCore.toGBCoeffPoly
+      ((Polynomial.mapRingHom φ241) (DensePoly.toPoly
         ([[0, -4], [-3], [0, 2], [1]] : GBPolyCore ℚ))) :=
   lrtGcdCompute_ex241_isSimilar_lrtSubresultant_closed
 

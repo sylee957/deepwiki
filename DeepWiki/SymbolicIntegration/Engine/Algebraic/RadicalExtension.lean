@@ -42,18 +42,6 @@ def radOne : RadElem α := [CCommRing.one]
 /-- **The generator `y`** of `α[y]/(yⁿ − f)` (`[0, 1]`, i.e. `0 + 1·y`). -/
 def radGen : RadElem α := [CCommRing.zero, CCommRing.one]
 
-/-- **Componentwise addition** in `α[y]/(yⁿ − f)` (the shorter list zero-extended). -/
-def radAdd (p q : RadElem α) : RadElem α := DensePoly.cadd p q
-
-/-- **Negation** in `α[y]/(yⁿ − f)`, componentwise. -/
-def radNeg (p : RadElem α) : RadElem α := DensePoly.cneg p
-
-/-- **Subtraction** in `α[y]/(yⁿ − f)`, `p − q := p + (−q)`. -/
-def radSub (p q : RadElem α) : RadElem α := DensePoly.csub p q
-
-/-- **Scalar multiplication** of a `RadElem` by a base element `c : α`, componentwise. -/
-def radScale (c : α) (p : RadElem α) : RadElem α := DensePoly.cscale c p
-
 /-- **Reduce a free `y`-polynomial modulo `yⁿ = f`**: fold every coefficient at index `≥ n` down by
 `y^{n+k} = f·yᵏ` (the coefficient `aₘ` at index `m = n + k` adds `aₘ·f` to index `k`). Implemented by a
 fuel-bounded pass that repeatedly folds the top overflow coefficient into the slot `n` below. Returns a
@@ -78,9 +66,6 @@ the reduction `yⁿ → f` (`radReduce`). Fuel for the reduction is the product 
 def radMul (n : ℕ) (f : α) (p q : RadElem α) : RadElem α :=
   let prod := DensePoly.cmul p q
   radReduce n f ((prod : List α).length + 1) prod
-
-/-- **Zero test** in `α[y]/(yⁿ − f)`: read `cisZero` off the coefficient list (all components vanish). -/
-def radIsZero (p : RadElem α) : Bool := DensePoly.cisZero p
 
 /-! ### The diagonal derivation `radDeriv`
 

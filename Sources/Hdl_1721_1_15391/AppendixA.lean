@@ -178,7 +178,7 @@ def appA_sqrtxRatLift : RadElem (CFrac ℚ) :=
 genuine radical extension `(ℚ(x))[y]/(y²−x)` — i.e. the driver actually integrates the rational
 part. -/
 theorem appA_sqrtxDriver_integrates :
-    radIsZero (radSub (radDeriv 2 sqrtxFqx appA_sqrtxVlift) appA_sqrtxRatLift) = true := by
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 sqrtxFqx appA_sqrtxVlift) appA_sqrtxRatLift) = true := by
   native_decide
 
 /-- The Case-1 driver run on `∫ 1/((x−1)³√(x³+1))`. -/
@@ -199,7 +199,7 @@ def appA_cubeRatLift : RadElem (CFrac ℚ) :=
 `V = x−1`, the driver's accumulated `v` satisfies the analogous `D(v) = rational-part` identity
 with `radDeriv 2 (x³+1)` over `(ℚ(x))[y]/(y²−(x³+1))`. -/
 theorem appA_cubeDriver_integrates :
-    radIsZero (radSub (radDeriv 2 cubeFqx appA_cubeVlift) appA_cubeRatLift) = true := by
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 cubeFqx appA_cubeVlift) appA_cubeRatLift) = true := by
   native_decide
 
 /-- **Appendix A §2.2** (the Case-2 driver capstone, `native_decide`): the `C/(Wᵏy)` Case-2
@@ -233,7 +233,7 @@ def appA_mcW : DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePo
 
 /-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_mcVlift : RadElem (CFrac ℚ) :=
-  radAdd
+  DensePoly.cadd
     [CCommRing.zero, CField.div (qxOfNum appA_mcV.2.2.2.1)
       (qxOfNum (cmul (cpow appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
     [CCommRing.zero, CField.div (qxOfNum appA_mcW.2.2.2.1)
@@ -241,7 +241,7 @@ def appA_mcVlift : RadElem (CFrac ℚ) :=
 
 /-- The integrand's total rational part after subtracting the two `k = 1` leftovers. -/
 def appA_mcRatLift : RadElem (CFrac ℚ) :=
-  radAdd
+  DensePoly.cadd
     [CCommRing.zero, CField.sub
       (CField.div (qxOfNum appA_mcV.2.2.1) (qxOfNum (cmul (cpow appA_mcV.1 appA_mcV.2.1) mcRho)))
       (CField.div (qxOfNum appA_mcV.2.2.2.2) (qxOfNum (cmul appA_mcV.1 mcRho)))]
@@ -254,6 +254,6 @@ classifies the mixed denominator into one `V` factor and one `W` factor, assembl
 and the actual radical derivation satisfies `D(v) = rational-part` after subtracting the two `k = 1`
 leftovers. -/
 theorem appA_multiCaseDriver_integrates :
-    radIsZero (radSub (radDeriv 2 mcRhoQx appA_mcVlift) appA_mcRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 mcRhoQx appA_mcVlift) appA_mcRatLift) = true := by native_decide
 
 end DeepWiki.Tiaf

@@ -12,10 +12,10 @@ the diagonal derivation `radDeriv n f` is `Differential.implicitDeriv (C (toK �
 The predicate is `IsRadicalRationalIntegral n f g v` (`toPoly (radDeriv n f v) = toPoly g`); concrete
 instances are `isRadicalRationalIntegral_radGen` (`∫ (f'/(nf))·√f = √f`) and
 `isRadicalRationalIntegral_linear` (two-term antiderivatives). The general soundness is the telescoping
-invariant `radReduceRationalTelescope` and `radDeriv_foldlRadAdd_zero_cons_telescope`, whose per-step
+invariant `radReduceRationalTelescope` and `radDeriv_foldl_cadd_zero_cons_telescope`, whose per-step
 `K`-equation precondition is discharged for the literal `qxOfNum`-coefficient lifts via three
 `CFrac ℚ`-specific bridges (`toCFracG_cderiv_qxOfNum`, `toK_logDerRadicand_mul_radicand`,
-`radCase3Residual_eq`), composed by `toK_step_qxOfNum_iff` and `radDeriv_foldlRadAdd_qxOfNum_telescope`. -/
+`radCase3Residual_eq`), composed by `toK_step_qxOfNum_iff` and `radDeriv_foldl_cadd_qxOfNum_telescope`. -/
 
 open Polynomial
 
@@ -53,7 +53,7 @@ theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
 /-! ### The fuel-recursion telescoping invariant
 
 The driver's accumulator `radDeriv(vNum) + leftover = original integrand` is a telescoping of `radDeriv`
-over the contribution list: `radDeriv` distributes over `foldl radAdd` (`toPolyG_radDeriv_foldlRadAdd`)
+over the contribution list: `radDeriv` distributes over `foldl DensePoly.cadd` (`toPolyG_radDeriv_foldl_cadd`)
 and the per-step contributions telescope to the endpoints (`sum_radDeriv_telescope`), giving
 `radReduceRationalTelescope`. -/
 
@@ -91,17 +91,17 @@ theorem sum_radDeriv_telescope (n : ℕ) (f : α) :
 
 /-- The master rational-part telescoping soundness: for contributions `cs` (accumulated from `radZero`)
 and leftovers `L₀ :: rest`, if each contribution's `radDeriv`-image is the difference of consecutive
-leftovers, then `v = cs.foldl radAdd radZero` satisfies
+leftovers, then `v = cs.foldl DensePoly.cadd radZero` satisfies
 `toPoly (radDeriv n f v) + toPoly (final leftover) = toPoly (original integrand)` in `K[X]`. Composes
-`toPolyG_radDeriv_foldlRadAdd` and `sum_radDeriv_telescope`. -/
+`toPolyG_radDeriv_foldl_cadd` and `sum_radDeriv_telescope`. -/
 theorem radReduceRationalTelescope (n : ℕ) (f : α) (L₀ : RadElem α) (rest cs : List (RadElem α))
     (hstep : List.Forall₂ (fun c p => DensePoly.toPoly (radDeriv n f c)
           = DensePoly.toPoly p.1 - DensePoly.toPoly p.2)
         cs ((L₀ :: rest).zip rest)) :
-    DensePoly.toPoly (radDeriv n f (cs.foldl radAdd radZero))
+    DensePoly.toPoly (radDeriv n f (cs.foldl DensePoly.cadd radZero))
         + DensePoly.toPoly (rest.getLastD L₀)
       = DensePoly.toPoly L₀ := by
-  rw [toPolyG_radDeriv_foldlRadAdd, toPolyG_radDeriv_radZero, zero_add,
+  rw [toPolyG_radDeriv_foldl_cadd, toPolyG_radDeriv_radZero, zero_add,
     sum_radDeriv_telescope n f L₀ rest cs hstep]
   ring
 
@@ -170,7 +170,7 @@ theorem toPolyG_radDeriv_zero_cons_sub_iff (n : ℕ) (f cB cC cD : α) :
 /-! ### ★ The general rational-part soundness for an assembled pure-`y` antiderivative (compose 1+2)
 
 Composing the telescoping invariant (piece 2) with the per-step lift (piece 1): the rational-part driver
-accumulates its antiderivative `v` as the `radAdd`-fold of pure-`y` step contributions `[0, cBᵢ]`, while
+accumulates its antiderivative `v` as the `DensePoly.cadd`-fold of pure-`y` step contributions `[0, cBᵢ]`, while
 the integrand and the running residuals are the pure-`y` leftovers `[0, cCᵢ]`. Given the per-step `K`-
 equations `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` — exactly the cleared single-step Case identities read in the
 genuine field (piece 1) — the assembled `v` is a correct antiderivative of the original integrand modulo
@@ -182,20 +182,20 @@ the final leftover: `radDeriv n f v + [0, finalLeftover] = [0, originalIntegrand
 coefficients `cBs = [cB₀,…,cB_{m−1}]` and a one-longer list of leftover coefficients `cCs = [cC₀,…,cC_m]`
 (`cC₀` the original integrand's `y`-coefficient, `cC_m` the final leftover's), if every step satisfies the
 base-field equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` in `K` (`ℓ = logDerRadicand n f`; the cleared
-single-step Case identity in the genuine field), then the antiderivative `v` assembled as the `radAdd`-fold
+single-step Case identity in the genuine field), then the antiderivative `v` assembled as the `DensePoly.cadd`-fold
 of the pure-`y` contributions `[0, cBᵢ]` integrates the original integrand modulo the final leftover:
 `toPoly (radDeriv n f v) + toPoly [0, cC_m] = toPoly [0, cC₀]` in `K[X]`. The capstone composition:
 `radReduceRationalTelescope` (telescoping, piece 2) fed by `toPolyG_radDeriv_zero_cons_sub_iff` (per-step
 lift, piece 1) on each cleared-step `K`-equation. General in `n`, `f`, `α` — the residual to a *specific*
 driver run is supplying its per-step `K`-equations (the lifted cleared identities). -/
-theorem radDeriv_foldlRadAdd_zero_cons_telescope (n : ℕ) (f : α)
+theorem radDeriv_foldl_cadd_zero_cons_telescope (n : ℕ) (f : α)
     (cBs : List α) (cCs : List α) (hlen : cBs.length + 1 = cCs.length)
     (hstep : ∀ i : ℕ, (hi : i < cBs.length) →
       CFieldSpec.toK (CCommRing.add (CDiffField.cderiv (cBs.get ⟨i, hi⟩))
             (CCommRing.mul (cBs.get ⟨i, hi⟩) (logDerRadicand n f)))
         = CFieldSpec.toK (cCs.get ⟨i, by omega⟩) - CFieldSpec.toK (cCs.get ⟨i + 1, by omega⟩)) :
     DensePoly.toPoly (radDeriv n f
-          ((cBs.map (fun cB => ([CCommRing.zero, cB] : RadElem α))).foldl radAdd radZero))
+          ((cBs.map (fun cB => ([CCommRing.zero, cB] : RadElem α))).foldl DensePoly.cadd radZero))
         + DensePoly.toPoly ([CCommRing.zero, cCs.getLastD CCommRing.zero] : RadElem α)
       = DensePoly.toPoly ([CCommRing.zero, cCs.headD CCommRing.zero] : RadElem α) := by
   -- peel `cCs = cC₀ :: rest`; the contributions are `cs = cBs.map (fun cB => [0, cB])`
@@ -243,7 +243,7 @@ The engine's `native_decide` fact `radDeriv_radGen_eq` (`ComputableRadicalExtens
 (3x²/(2(x³+1)))·√(x³+1)` over `α = CFrac ℚ ≅ ℚ(x)`, `n = 2`, `f = x³+1` — now follows from the **general
 theorem** `RadElem.toPolyG_radDeriv_radGen` specialized to that base, *without* `native_decide`. The
 abstract `toPoly`-equality in `K[X]` (`K = CFieldSpec.K (CFrac ℚ)`) is the faithful field-level
-statement; `radIsZero (radSub …) = true` is its `cisZero`-test form, here a corollary of the abstract
+statement; `DensePoly.cisZero (DensePoly.csub …) = true` is its `cisZero`-test form, here a corollary of the abstract
 identity rather than a separate kernel computation. -/
 
 open RadElem
@@ -262,10 +262,10 @@ theorem radDeriv_radGen_sound_qx :
   rfl
 
 /-- The abstract zero-test form of the `√(x³+1)` radical-generator derivative. -/
-theorem radIsZero_radDeriv_radGen_qx :
-    radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (CFrac ℚ)))
+theorem cisZero_radDeriv_radGen_qx :
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 radicandX3p1 (radGen : RadElem (CFrac ℚ)))
         [CCommRing.zero, radicandLogDer]) = true := by
-  rw [radIsZero, radSub, DensePoly.cisZeroG_iff]
+  rw [DensePoly.cisZeroG_iff, DensePoly.toPolyG_csubG]
   simp only [denote, radDeriv_radGen_sound_qx]
   ring
 
@@ -395,7 +395,7 @@ end DensePoly
 /-! ### ★ Composition (i)+(ii)+(iii): the literal `radDeriv(assembled v) = integrand − leftover` over `ℚ(x)`
 
 With the three `CFrac ℚ` bridges in hand, the per-step `K`-equation precondition of
-`radDeriv_foldlRadAdd_zero_cons_telescope` is discharged for the **literal** `radIntegrateRational`
+`radDeriv_foldl_cadd_zero_cons_telescope` is discharged for the **literal** `radIntegrateRational`
 coefficients — pure-`y` lifts of `qxOfNum`-of-polynomials over the radicand `qxOfNum ρ`. The genuine-field
 `K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` (with `cBᵢ = qxOfNum Bᵢ`, `cCᵢ = qxOfNum Cᵢ`, `ℓ =
 logDerRadicand n (qxOfNum ρ) = ρ'/(nρ)`) clears, via bridges (i) (`cderiv∘qxOfNum = qxOfNum∘cderiv`) and
@@ -476,14 +476,14 @@ theorem toK_step_qxOfNum_iff (n : ℕ) (ρ B C C' : DensePoly ℚ)
 polynomials `Bpolys` and a one-longer list of leftover polynomials `Cpolys` (all `DensePoly ℚ`), **if** every
 step's cleared polynomial identity `(n:K[X])·ρ̄·Bᵢ' + Bᵢ·ρ̄' = (n:K[X])·ρ̄·(Cᵢ − Cᵢ₊₁)` holds in `K[X]`
 (`ρ̄ = toPoly ρ` etc. — the genuine-field reading of each engine step's `radCase3Residual = 0`, bridge
-(iii)), **then** the assembled pure-`y` antiderivative `v = (Bpolys.map (qxOfNum · ↦ [0, ·])).foldl radAdd
+(iii)), **then** the assembled pure-`y` antiderivative `v = (Bpolys.map (qxOfNum · ↦ [0, ·])).foldl DensePoly.cadd
 radZero` satisfies the soundness identity `radDeriv n (qxOfNum ρ) v + [0, qxOfNum Cpolys.last] = [0,
 qxOfNum Cpolys.head]` in `K[X]` (`radDeriv(v) = integrand − final-leftover`). The (i)+(ii)+(iii) composition
 for the LITERAL `qxOfNum`-coefficient lifts the `radIntegrateRational` driver produces: `toK_step_qxOfNum_iff`
 turns each cleared polynomial identity into the telescope's per-step `K`-equation, then
-`radDeriv_foldlRadAdd_zero_cons_telescope` assembles. Precondition: `n ≠ 0` (in `RatFunc ℚ`), `ρ ≠ 0`
+`radDeriv_foldl_cadd_zero_cons_telescope` assembles. Precondition: `n ≠ 0` (in `RatFunc ℚ`), `ρ ≠ 0`
 (`toPoly ρ ≠ 0`), and the per-step polynomial identities. -/
-theorem radDeriv_foldlRadAdd_qxOfNum_telescope (n : ℕ) (ρ : DensePoly ℚ) (Bpolys Cpolys : List (DensePoly ℚ))
+theorem radDeriv_foldl_cadd_qxOfNum_telescope (n : ℕ) (ρ : DensePoly ℚ) (Bpolys Cpolys : List (DensePoly ℚ))
     (hlen : Bpolys.length + 1 = Cpolys.length)
     (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : DensePoly.toPoly ρ ≠ 0)
     (hpoly : ∀ i : ℕ, (hi : i < Bpolys.length) →
@@ -494,7 +494,7 @@ theorem radDeriv_foldlRadAdd_qxOfNum_telescope (n : ℕ) (ρ : DensePoly ℚ) (B
               - DensePoly.toPoly (Cpolys.get ⟨i + 1, by omega⟩))) :
     DensePoly.toPoly (radDeriv n (qxOfNum ρ)
           (((Bpolys.map qxOfNum).map (fun cB => ([CCommRing.zero, cB] : RadElem (CFrac ℚ)))).foldl
-            radAdd radZero))
+            DensePoly.cadd radZero))
         + DensePoly.toPoly
             ([CCommRing.zero, (Cpolys.map qxOfNum).getLastD CCommRing.zero] : RadElem (CFrac ℚ))
       = DensePoly.toPoly ([CCommRing.zero, (Cpolys.map qxOfNum).headD CCommRing.zero] : RadElem (CFrac ℚ)) := by
@@ -502,7 +502,7 @@ theorem radDeriv_foldlRadAdd_qxOfNum_telescope (n : ℕ) (ρ : DensePoly ℚ) (B
   -- radicand directly here. Apply the abstract telescope at the `qxOfNum`-lifted coefficient lists.
   have hlen' : (Bpolys.map qxOfNum).length + 1 = (Cpolys.map qxOfNum).length := by
     rw [List.length_map, List.length_map]; omega
-  have hkey := radDeriv_foldlRadAdd_zero_cons_telescope (α := CFrac ℚ) n (qxOfNum ρ)
+  have hkey := radDeriv_foldl_cadd_zero_cons_telescope (α := CFrac ℚ) n (qxOfNum ρ)
     (Bpolys.map qxOfNum) (Cpolys.map qxOfNum) hlen' ?_
   · simpa using hkey
   · -- each step's `K`-equation from the cleared polynomial identity, via `toK_step_qxOfNum_iff`
@@ -523,7 +523,7 @@ theorem radDeriv_foldlRadAdd_qxOfNum_telescope (n : ℕ) (ρ : DensePoly ℚ) (B
 /-! ### ★ The FRACTION-coefficient single-step iff: the named-run lift `[0, qxOfNum N / qxOfNum ρ]`
 
 The `radIntegrateRational` *named runs* (`c3itRun`/`gcuspYRun`/`mcRun`, `ComputableRadicalRationalDriver`)
-do not lift their accumulated antiderivative as a `radAdd`-fold of pure-`y` step contributions `[0, qxOfNum
+do not lift their accumulated antiderivative as a `DensePoly.cadd`-fold of pure-`y` step contributions `[0, qxOfNum
 Bᵢ]`; they lift the **whole accumulator** `vNum` over the common denominator `ρ` as the *single* fraction
 element `c3itVlift = [0, qxOfNum vNum / qxOfNum ρ]` (`= vNum/ρ·y`, the `R/y ↦ (R/ρ)·y` reading), and the
 integrand-minus-leftover as `[0, qxOfNum (C − Crem) / qxOfNum ρ]`. So the `qxOfNum`-coefficient telescope
@@ -686,19 +686,19 @@ theorem isRadicalRationalIntegral_c3itRun
     two_ne_zero_ratFunc toPolyG_c3itRho_ne_zero).mpr
     (clearedKX2_of_cisZeroG c3itRun.2 (csub c3itC c3itRun.1) c3itRho hcheck)
 
-/-- **★ The `radIsZero` engine-test form of the named run's soundness**, abstractly — `radIsZero (radSub
+/-- **★ The `DensePoly.cisZero` engine-test form of the named run's soundness**, abstractly — `DensePoly.cisZero (DensePoly.csub
 (radDeriv 2 c3itRhoQx c3itVlift) c3itRatLift) = true`: the engine's `native_decide` statement
 `c3itDriver_integrates`, here derived from the abstract `K[X]` identity `isRadicalRationalIntegral_c3itRun`
 through `cisZeroG_iff` / `toPolyG_csubG` (so it carries **no** `native_decide` axiom — only the engine's
 polynomial cleared check `hcheck`). The same proposition the kernel checks numerically, here a theorem of the
 abstract derivation. `c3itRhoQx = qxOfNum c3itRho` is the run's radicand. -/
-theorem radIsZero_radDeriv_c3itVlift
+theorem cisZero_radDeriv_c3itVlift
     (hcheck : DensePoly.cisZero
         (DensePoly.csub (DensePoly.csub (DensePoly.cmul (DensePoly.cscale (2 : ℚ) c3itRho) (DensePoly.cderiv c3itRun.2))
           (DensePoly.cmul c3itRun.2 (DensePoly.cderiv c3itRho)))
           (DensePoly.cmul (DensePoly.cscale (2 : ℚ) c3itRho) (DensePoly.csub c3itC c3itRun.1))) = true) :
-    radIsZero (radSub (radDeriv 2 c3itRhoQx c3itVlift) c3itRatLift) = true := by
-  rw [radIsZero, radSub, DensePoly.cisZeroG_iff]
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 c3itRhoQx c3itVlift) c3itRatLift) = true := by
+  rw [DensePoly.cisZeroG_iff, DensePoly.toPolyG_csubG]
   simp only [denote]
   rw [sub_eq_zero]
   simpa only [IsRadicalRationalIntegral, c3itRhoQx, c3itRho, List.headD_cons, denote]
@@ -707,12 +707,12 @@ theorem radIsZero_radDeriv_c3itVlift
 /-! ### The GENERAL rational-part soundness: what is now a theorem, and the precise residual
 
 This file proves the **general rational-part soundness as an abstract `K[X]` theorem** —
-`radDeriv_foldlRadAdd_zero_cons_telescope`:
+`radDeriv_foldl_cadd_zero_cons_telescope`:
 
 > For a list of step-contribution coefficients `cBs` and a one-longer list of leftover coefficients
 > `cCs` (head = the original integrand's `y`-coefficient, last = the final leftover's), **if** every step
 > satisfies the base-field equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` in `K`, **then** the assembled
-> antiderivative `v = (cBs.map (·↦[0,·])).foldl radAdd radZero` satisfies
+> antiderivative `v = (cBs.map (·↦[0,·])).foldl DensePoly.cadd radZero` satisfies
 > `toPoly (radDeriv n f v) + toPoly [0, cC_last] = toPoly [0, cC_head]`,
 
 i.e. `radDeriv(v) = integrand − final-leftover`, **general in `n`, the radicand `f`, and the base `α`**.
@@ -725,13 +725,13 @@ It composes the two pieces named in the prior plan, both now landed and axiom-cl
    the genuine field, *is* exactly this `K`-equation. (Done here.)
 
 2. **★ The fuel-recursion telescoping invariant** — `radReduceRationalTelescope` (built from
-   `toPolyG_radDeriv_foldlRadAdd` + `sum_radDeriv_telescope`): `radDeriv` distributes over the accumulator
-   `foldl radAdd` and the per-step contributions telescope to the endpoints. This is the genuinely-new
+   `toPolyG_radDeriv_foldl_cadd` + `sum_radDeriv_telescope`): `radDeriv` distributes over the accumulator
+   `foldl DensePoly.cadd` and the per-step contributions telescope to the endpoints. This is the genuinely-new
    accumulation invariant; with the seed `radDeriv radZero = 0` it gives
    `radDeriv(accumulated v) + final-leftover = original integrand`. (Done here — the hard new lemma.)
 
 **★ The precondition is now discharged for the LITERAL `qxOfNum`-coefficient lifts** — what
-`radDeriv_foldlRadAdd_zero_cons_telescope` takes as its **precondition**, the list of per-step `K`-equations
+`radDeriv_foldl_cadd_zero_cons_telescope` takes as its **precondition**, the list of per-step `K`-equations
 `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁`, is, for the literal `radIntegrateRational` over `α = CFrac ℚ`, each
 iterate step's *polynomial* cleared identity `B'f + Bg − C = D` lifted to the field equation on the `R/y ↦
 (R/ρ)·y` coefficients. That lift is now a theorem via three `CFrac ℚ`-specific bridges, **all landed and
@@ -751,13 +751,13 @@ axiom-clean** (none of them `radDeriv`-arithmetic):
 Composed: **`toK_step_qxOfNum_iff`** turns each step's cleared polynomial identity
 `(n:K[X])·ρ̄·Bᵢ' + Bᵢ·ρ̄' = (n:K[X])·ρ̄·(Cᵢ − Cᵢ₊₁)` into the telescope's per-step `K`-equation (bridges (i)
 +(ii) read the `toK`s through `am`, `am`-injectivity descends the cleared `RatFunc` equation), and
-**`radDeriv_foldlRadAdd_qxOfNum_telescope`** assembles them into the **LITERAL** rational-part soundness over
+**`radDeriv_foldl_cadd_qxOfNum_telescope`** assembles them into the **LITERAL** rational-part soundness over
 `ℚ(x)`: for `qxOfNum`-of-polynomial step/leftover lists, `radDeriv n (qxOfNum ρ) (assembled v) + [0,
 qxOfNum Cpolys.last] = [0, qxOfNum Cpolys.head]` in `K[X]`, under `n ≠ 0`, `ρ ≠ 0`, and the per-step
 polynomial cleared identities.
 
 **★ The NAMED-run gap is now closed (via the whole-accumulator FRACTION route).** The named runs
-(`c3itRun`/`gcuspYRun`/`mcRun`) do *not* lift their antiderivative as the telescope's `radAdd`-fold of pure-`y`
+(`c3itRun`/`gcuspYRun`/`mcRun`) do *not* lift their antiderivative as the telescope's `DensePoly.cadd`-fold of pure-`y`
 contributions `[0, qxOfNum Bᵢ]` — they lift the **whole accumulator** `vNum` over the common denominator `ρ`
 as the *single* fraction element `[0, qxOfNum vNum / qxOfNum ρ]`. So rather than extract the per-step
 `Bpolys`/`Cpolys` (the fuel recursion's accumulator chain, genuinely fiddly), the named run is handled as one
@@ -767,7 +767,7 @@ as the *single* fraction element `[0, qxOfNum vNum / qxOfNum ρ]`. So rather tha
 `n` — to the single cleared `K[X]` identity `(n:K[X])·(ρ̄·N̄' − N̄·ρ̄') + N̄·ρ̄' = (n:K[X])·ρ̄·M̄`. At `n = 2`
 (every named run is `radDeriv 2`) this is `2·ρ̄·N̄' − N̄·ρ̄' = 2·ρ̄·M̄`, and **`clearedKX2_of_cisZeroG`** reads it
 *off the engine's own polynomial `cisZero` check* through `cisZeroG_iff` + `toPolyG_csubG` (no `radDeriv`/
-`RatFunc` reasoning). Composed: **`isRadicalRationalIntegral_c3itRun`** / **`radIsZero_radDeriv_c3itVlift`**
+`RatFunc` reasoning). Composed: **`isRadicalRationalIntegral_c3itRun`** / **`cisZero_radDeriv_c3itVlift`**
 prove the literal `∫ x⁴/√(x³+1)` run `radDeriv 2 c3itRhoQx c3itVlift = c3itRatLift` — the engine's
 `native_decide` fact `c3itDriver_integrates`, here a **theorem of the abstract derivation**
 (`[propext, Classical.choice, Quot.sound]`, no `native_decide`).
@@ -789,7 +789,7 @@ Each soundness theorem and each of the three literal-radical bridges carries **o
 `native_decide` compiler axiom, no `sorry`. The simple-radical integral `∫ (f'/(nf))·√f = √f`, its two-term
 generalization, the `C/y`-form reduction, the **telescoping invariant**, the **general rational-part
 soundness** `radDeriv(assembled v) = integrand − final-leftover`, the three `CFrac ℚ` bridges
-(i)/(ii)/(iii), and the **LITERAL `qxOfNum`-coefficient soundness** `radDeriv_foldlRadAdd_qxOfNum_telescope`
+(i)/(ii)/(iii), and the **LITERAL `qxOfNum`-coefficient soundness** `radDeriv_foldl_cadd_qxOfNum_telescope`
 are all general theorems (specialized to the concrete elliptic radicand `x³+1` over `ℚ(x)` for the
 headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 
@@ -807,7 +807,7 @@ headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 #print axioms RadElem.radReduceRationalTelescope
 
 -- ★ The general rational-part soundness: assembled `v` integrates the integrand modulo the final leftover:
-#print axioms RadElem.radDeriv_foldlRadAdd_zero_cons_telescope
+#print axioms RadElem.radDeriv_foldl_cadd_zero_cons_telescope
 
 -- ★ Bridge (i): the derivation commutes with `qxOfNum` (the substantive `RatFunc ℚ` bridge):
 #print axioms toCFracG_cderiv_qxOfNum
@@ -822,11 +822,11 @@ headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 #print axioms RadElem.toK_step_qxOfNum_iff
 
 -- ★★ The LITERAL rational-part soundness over ℚ(x): `radDeriv(assembled qxOfNum-v) = integrand − leftover`:
-#print axioms RadElem.radDeriv_foldlRadAdd_qxOfNum_telescope
+#print axioms RadElem.radDeriv_foldl_cadd_qxOfNum_telescope
 
 -- ★ The concrete elliptic-radicand integral over ℚ(x), abstractly (the engine's native_decide fact):
 #print axioms radDeriv_radGen_sound_qx
-#print axioms radIsZero_radDeriv_radGen_qx
+#print axioms cisZero_radDeriv_radGen_qx
 
 -- ★ The FRACTION-coefficient single-step iff (the named-run lift `[0, qxOfNum N / qxOfNum ρ]`):
 #print axioms RadElem.isRadicalRationalIntegral_div_qxOfNum_iff
@@ -836,6 +836,6 @@ headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 
 -- ★ The NAMED driver run `c3itRun` (`∫ x⁴/√(x³+1)`) is sound, abstractly, from the engine's own check:
 #print axioms isRadicalRationalIntegral_c3itRun
-#print axioms radIsZero_radDeriv_c3itVlift
+#print axioms cisZero_radDeriv_c3itVlift
 
 end DeepWiki.SymbolicIntegration

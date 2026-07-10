@@ -128,7 +128,7 @@ def c2itRatLift : RadElem (CFrac ℚ) :=
 /-- The Case-2 iterate integrates `∫ 1/(x³·√(x³−x))`: `radDeriv 2 (x³−x)` of the rational part
 `v = vNum/(W³√(x³−x))` equals `C₀/(W³√(x³−x)) − Crem/(W√(x³−x))`, the rational part of the integrand. -/
 theorem c2itDriver_integrates :
-    radIsZero (radSub (radDeriv 2 c2itRhoQx c2itVlift) c2itRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 c2itRhoQx c2itVlift) c2itRatLift) = true := by native_decide
 
 /-! ### The iterated Case-3 reduction validates `∫ x⁴/√(x³+1)`
 
@@ -162,7 +162,7 @@ def c3itRatLift : RadElem (CFrac ℚ) :=
 /-- The Case-3 iterate integrates `∫ x⁴/√(x³+1)`: `radDeriv 2 (x³+1)` of the rational part `v = vNum/√(x³+1)`
 equals `x⁴/√(x³+1) − Crem/√(x³+1)`, the rational part of the integrand. -/
 theorem c3itDriver_integrates :
-    radIsZero (radSub (radDeriv 2 c3itRhoQx c3itVlift) c3itRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 c3itRhoQx c3itVlift) c3itRatLift) = true := by native_decide
 
 /-! ### The multi-case dispatch integrates `∫ 1/((x−1)²x²·√x)`
 

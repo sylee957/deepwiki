@@ -120,6 +120,6 @@ def case2cRatLift : RadElem (CFrac ℚ) :=
 /-- Case 2 integrates `∫ 1/(x²·√(x³−x))`: over `(CFrac ℚ)[y]/(y² − (x³−x))`, `radDeriv 2 (x³−x)` of the
 rational part `v = Bf/(W²√(x³−x))` equals `C/(W²√(x³−x)) + D/(W·√(x³−x))`. -/
 theorem case2cDriver_integrates :
-    radIsZero (radSub (radDeriv 2 case2cFqx case2cVlift) case2cRatLift) = true := by native_decide
+    DensePoly.cisZero (DensePoly.csub (radDeriv 2 case2cFqx case2cVlift) case2cRatLift) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

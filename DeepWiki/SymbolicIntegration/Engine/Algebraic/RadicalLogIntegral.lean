@@ -23,10 +23,10 @@ namespace RadElem
 variable {α : Type*} [CField α] [CDiffField α]
 
 /-- The log-derivative certificate `radIsLogIntegral n ρ u integrand`: the division-free boolean check
-`radDeriv u = radMul u integrand` (via `radIsZero` of the difference), i.e. `∫(integrand) dx = log u` in
+`radDeriv u = radMul u integrand` (via `DensePoly.cisZero` of the difference), i.e. `∫(integrand) dx = log u` in
 `α[y]/(yⁿ − ρ)`. -/
 def radIsLogIntegral (n : ℕ) (ρ : α) (u integrand : RadElem α) : Bool :=
-  radIsZero (radSub (radDeriv n ρ u) (radMul n ρ u integrand))
+  DensePoly.cisZero (DensePoly.csub (radDeriv n ρ u) (radMul n ρ u integrand))
 
 /-- The log-derivative certificate as a `Prop`: `RadIsLogIntegral n ρ u integrand` is
 `radIsLogIntegral … = true`, i.e. `radDeriv u − u·integrand` vanishes as field elements in

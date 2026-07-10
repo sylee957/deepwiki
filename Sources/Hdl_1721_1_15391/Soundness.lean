@@ -63,10 +63,10 @@ f'/(nf)`. Trager's `(f/y)'` insight as an honest `K[X]` identity — the source 
 Abstract (`[propext, Classical.choice, Quot.sound]`, no `native_decide`). -/
 abbrev sound_radDeriv_keystone := @RadElem.toPolyG_radDeriv
 
-/-- **★ `radDeriv` is additive** `toPolyG_radDeriv_radAdd` (Trager, Appendix A §1): the diagonal radical
-derivation commutes with `radAdd` exactly in `K[X]` (neither touches the `yⁿ = f` reduction) — the first
+/-- **★ `radDeriv` is additive** `toPolyG_radDeriv_cadd` (Trager, Appendix A §1): the diagonal radical
+derivation commutes with `DensePoly.cadd` exactly in `K[X]` (neither touches the `yⁿ = f` reduction) — the first
 derivation axiom, from the keystone + `implicitDeriv`'s ℤ-linearity. -/
-abbrev sound_radDeriv_add := @RadElem.toPolyG_radDeriv_radAdd
+abbrev sound_radDeriv_add := @RadElem.toPolyG_radDeriv_cadd
 
 /-- **★ `radDeriv` is Leibniz (modulo the radicand ideal)** `mk_toPolyG_radDeriv_radMul` (Trager, Appendix
 A §1): the product rule for `radMul` in the carrier quotient `K[X] ⧸ (Xⁿ − C(toK f))`, valid for a genuine
@@ -89,17 +89,17 @@ proven as a general theorem — the first algebraic integral verified abstractly
 abbrev sound_radGen := @RadElem.toPolyG_radDeriv_radGen
 
 /-- **★ The fuel-recursion telescoping invariant** `radReduceRationalTelescope` (Trager, Appendix A §2,
-iterated): `radDeriv` distributes over the rational-part driver's accumulator `foldl radAdd` and the per-step
+iterated): `radDeriv` distributes over the rational-part driver's accumulator `foldl DensePoly.cadd` and the per-step
 contributions telescope to the endpoints, giving `radDeriv(accumulated v) + final-leftover = original
 integrand` in `K[X]` — the genuinely-new accumulation invariant underwriting `radIntegrateCase{1,2,3}`'s
 assembled `v`. -/
 abbrev sound_radRationalTelescope := @RadElem.radReduceRationalTelescope
 
-/-- **★ The general rational-part soundness (assembled-`v` form)** `radDeriv_foldlRadAdd_zero_cons_telescope`
+/-- **★ The general rational-part soundness (assembled-`v` form)** `radDeriv_foldl_cadd_zero_cons_telescope`
 (Trager, Appendix A §2): given each step's cleared base-field equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁`, the
 assembled pure-`y` antiderivative `v` satisfies `radDeriv(v) = integrand − final-leftover` in `K[X]` — the
 rational-part soundness as an abstract identity, reduced to the per-step cleared Case identities. -/
-abbrev sound_radRationalSoundness := @RadElem.radDeriv_foldlRadAdd_zero_cons_telescope
+abbrev sound_radRationalSoundness := @RadElem.radDeriv_foldl_cadd_zero_cons_telescope
 
 /-! ## The simple-radical log-part soundness `D(Σ cᵢ log uᵢ) = logpart` (Ch. 5 §1–§2) -/
 

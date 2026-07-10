@@ -108,8 +108,8 @@ def radLogResidual (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePo
     (N : RadElem (CFrac β)) : RadElem (CFrac β) :=
   let Dq : CFrac β := qOfNum D
   let Dpq : CFrac β := CDiffField.cderiv Dq
-  radSub (radSub (radScale Dq (radDeriv 2 ρ N)) (radScale Dpq N))
-    (radScale Dq (radMul 2 ρ N integrand))
+  DensePoly.csub (DensePoly.csub (DensePoly.cscale Dq (radDeriv 2 ρ N)) (DensePoly.cscale Dpq N))
+    (DensePoly.cscale Dq (radMul 2 ρ N integrand))
 
 /-- The monomial basis of numerators over `α = CFrac β`: `radLogBasis degBound` gives the
 `2·(degBound+1)` elements `[xᵏ, 0]` then `[0, xᵏ]`. The generic analogue of `radLogBasisQ`. -/
