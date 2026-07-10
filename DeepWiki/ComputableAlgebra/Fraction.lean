@@ -49,6 +49,24 @@ def qinv {α : Type*} [CField α] (x : QFun α) : QFun α :=
 /-- Generic fraction subtraction `a/b − c/d := a/b + (−(c/d))`. -/
 def qsub {α : Type*} [CField α] (x y : QFun α) : QFun α := qadd x (qneg y)
 
+/-- Generic fraction division `x / y := x * y⁻¹`. -/
+def qdiv {α : Type*} [CField α] (x y : QFun α) : QFun α := qmul x (qinv y)
+
+/-- Generic natural power of a fraction pair. -/
+def qpow {α : Type*} [CField α] (x : QFun α) : ℕ → QFun α
+  | 0 => qone
+  | n + 1 => qmul x (qpow x n)
+
+/-- Generic formal derivative of a fraction pair by the quotient rule. -/
+def qderiv {α : Type*} [CField α] (x : QFun α) : QFun α :=
+  let (a, b) := x
+  (DensePoly.csub (DensePoly.cmul (DensePoly.cderiv a) b)
+    (DensePoly.cmul a (DensePoly.cderiv b)), DensePoly.cmul b b)
+
+/-- Generic decidable equality test for fraction pairs by cross-multiplication. -/
+def qeq {α : Type*} [CField α] (x y : QFun α) : Bool :=
+  DensePoly.cisZero (DensePoly.csub (DensePoly.cmul x.1 y.2) (DensePoly.cmul y.1 x.2))
+
 end QFun
 
 /-! ### The denominator-nonzero subtype `CFrac α` (the tower-level carrier) -/

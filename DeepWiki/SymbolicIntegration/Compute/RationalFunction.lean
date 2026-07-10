@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Compute.RationalFunction.Operations
 
 /-! # Computable rational functions ℚ(x)
 Completes `QFun = DensePoly ℚ × DensePoly ℚ` into a computable field ℚ(x): the field operations, the
-lowest-terms reduction `qnorm`, the `d/dx` derivation `qderiv`, and decidable equality `qeq`, each
+lowest-terms reduction `qnorm`, the `d/dx` derivation `QFun.qderiv`, and decidable equality `QFun.qeq`, each
 proven through the field homomorphism `toQFun : QFun → RatFunc ℚ` to realize its `RatFunc ℚ`
 counterpart. -/
 
@@ -57,54 +57,55 @@ theorem cisZero_iff_toPoly_eq_zero (p : DensePoly ℚ) : cisZero p = true ↔ to
 /-! ### Field-homomorphism lemmas
 Each computable operation realizes the corresponding `RatFunc ℚ` field operation through `toQFun`. -/
 
-/-- `toQFun qone = 1` in `RatFunc ℚ`. -/
-theorem toQFun_qone : toQFun qone = 1 := by
-  simp [toQFun, qone, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
+/-- `toQFun QFun.qone = 1` in `RatFunc ℚ`. -/
+theorem toQFun_qone : toQFun QFun.qone = 1 := by
+  simp only [toQFun, QFun.qone, toPoly_eq_dense, DensePoly.toPolyG_one_singleton,
+    map_one, div_one]
 
-/-- `toQFun (qneg x) = -toQFun x` in `RatFunc ℚ`. -/
-theorem toQFun_qneg (x : QFun) : toQFun (qneg x) = -toQFun x := by
+/-- `toQFun (QFun.qneg x) = -toQFun x` in `RatFunc ℚ`. -/
+theorem toQFun_qneg (x : QFun) : toQFun (QFun.qneg x) = -toQFun x := by
   obtain ⟨a, b⟩ := x
-  simp only [toQFun, qneg, toPoly_eq_dense, DensePoly.toPolyG_cnegG, map_neg, neg_div]
+  simp only [toQFun, QFun.qneg, toPoly_eq_dense, DensePoly.toPolyG_cnegG, map_neg, neg_div]
 
-/-- `toQFun (qmul x y) = toQFun x * toQFun y` in `RatFunc ℚ`. -/
-theorem toQFun_qmul (x y : QFun) : toQFun (qmul x y) = toQFun x * toQFun y := by
+/-- `toQFun (QFun.qmul x y) = toQFun x * toQFun y` in `RatFunc ℚ`. -/
+theorem toQFun_qmul (x y : QFun) : toQFun (QFun.qmul x y) = toQFun x * toQFun y := by
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
-  simp only [toQFun, qmul, toPoly_eq_dense, DensePoly.toPolyG_cmulG, map_mul]
+  simp only [toQFun, QFun.qmul, toPoly_eq_dense, DensePoly.toPolyG_cmulG, map_mul]
   rw [div_mul_div_comm]
 
-/-- `toQFun (qsub x y) = toQFun x - toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
+/-- `toQFun (QFun.qsub x y) = toQFun x - toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
 theorem toQFun_qsub (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
-    toQFun (qsub x y) = toQFun x - toQFun y := by
-  have hd' : toPoly (qneg y).2 ≠ 0 := hd
-  rw [qsub, toQFun_qadd x (qneg y) hb hd', toQFun_qneg, sub_eq_add_neg]
+    toQFun (QFun.qsub x y) = toQFun x - toQFun y := by
+  have hd' : toPoly (QFun.qneg y).2 ≠ 0 := hd
+  rw [QFun.qsub, toQFun_qadd x (QFun.qneg y) hb hd', toQFun_qneg, sub_eq_add_neg]
 
-/-- `toQFun (qinv x) = (toQFun x)⁻¹` in `RatFunc ℚ` (including `0⁻¹ = 0`). -/
-theorem toQFun_qinv (x : QFun) : toQFun (qinv x) = (toQFun x)⁻¹ := by
+/-- `toQFun (QFun.qinv x) = (toQFun x)⁻¹` in `RatFunc ℚ` (including `0⁻¹ = 0`). -/
+theorem toQFun_qinv (x : QFun) : toQFun (QFun.qinv x) = (toQFun x)⁻¹ := by
   obtain ⟨a, b⟩ := x
-  rw [qinv]
+  rw [QFun.qinv]
   by_cases ha : cisZero (a, b).1 = true
   · -- numerator is zero: `toQFun (0/b) = 0`, and `0⁻¹ = 0`.
     have ha0 : toPoly a = 0 := (cisZero_iff_toPoly_eq_zero a).mp ha
     simp only [ha, if_true]
     rw [toQFun_qzero, toQFun, ha0, map_zero, zero_div, inv_zero]
-  · -- numerator nonzero: `qinv (a,b) = (b,a)`, `am(b)/am(a) = (am(a)/am(b))⁻¹`.
+  · -- numerator nonzero: `QFun.qinv (a,b) = (b,a)`, `am(b)/am(a) = (am(a)/am(b))⁻¹`.
     rw [if_neg ha, toQFun, toQFun, inv_div]
 
-/-- `toQFun (qdiv x y) = toQFun x / toQFun y` in `RatFunc ℚ`. -/
-theorem toQFun_qdiv (x y : QFun) : toQFun (qdiv x y) = toQFun x / toQFun y := by
-  rw [qdiv, toQFun_qmul, toQFun_qinv, div_eq_mul_inv]
+/-- `toQFun (QFun.qdiv x y) = toQFun x / toQFun y` in `RatFunc ℚ`. -/
+theorem toQFun_qdiv (x y : QFun) : toQFun (QFun.qdiv x y) = toQFun x / toQFun y := by
+  rw [QFun.qdiv, toQFun_qmul, toQFun_qinv, div_eq_mul_inv]
 
-/-- `toQFun (qpow x n) = (toQFun x) ^ n` in `RatFunc ℚ`. -/
-theorem toQFun_qpow (x : QFun) (n : ℕ) : toQFun (qpow x n) = (toQFun x) ^ n := by
+/-- `toQFun (QFun.qpow x n) = (toQFun x) ^ n` in `RatFunc ℚ`. -/
+theorem toQFun_qpow (x : QFun) (n : ℕ) : toQFun (QFun.qpow x n) = (toQFun x) ^ n := by
   induction n with
-  | zero => rw [qpow, toQFun_qone, pow_zero]
-  | succ n ih => rw [qpow, toQFun_qmul, ih, pow_succ, mul_comm]
+  | zero => rw [QFun.qpow, toQFun_qone, pow_zero]
+  | succ n ih => rw [QFun.qpow, toQFun_qmul, ih, pow_succ, mul_comm]
 
 open scoped Differential in
-/-- `toQFun (qderiv x) = (toQFun x)′` in `RatFunc ℚ` (the `ratFuncDeriv` derivation), for nonzero
+/-- `toQFun (QFun.qderiv x) = (toQFun x)′` in `RatFunc ℚ` (the `ratFuncDeriv` derivation), for nonzero
 denominator. -/
-theorem toQFun_qderiv (x : QFun) (hb : toPoly x.2 ≠ 0) : toQFun (qderiv x) = (toQFun x)′ := by
+theorem toQFun_qderiv (x : QFun) (hb : toPoly x.2 ≠ 0) : toQFun (QFun.qderiv x) = (toQFun x)′ := by
   obtain ⟨a, b⟩ := x
   set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
   have hbm : am (toPoly b) ≠ 0 := am_toPoly_ne_zero hb
@@ -117,17 +118,19 @@ theorem toQFun_qderiv (x : QFun) (hb : toPoly x.2 ≠ 0) : toQFun (qderiv x) = (
           - am (toPoly a) * am (derivative (toPoly b))) / (am (toPoly b) ^ 2) := by
     rw [deriv_div, hda, hdb]
   simp only [toPoly_eq_dense] at hderiv
-  -- compute `toQFun (qderiv (a,b))`: numerator `cderiv a · b − a · cderiv b`, denom `b · b`.
-  simp only [toQFun, qderiv, toPoly_eq_dense, DensePoly.toPolyG_csubG,
+  -- compute `toQFun (QFun.qderiv (a,b))`: numerator `cderiv a · b − a · cderiv b`, denom `b · b`.
+  simp only [toQFun, QFun.qderiv, toPoly_eq_dense, DensePoly.toPolyG_csubG,
     DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, map_sub, map_mul]
   rw [hderiv, pow_two]
   ring
 
 open scoped Differential in
-/-- The `qadd`-fold derivative is the sum of the increment derivatives. -/
+/-- The `QFun.qadd`-fold derivative is the sum of the increment derivatives. -/
 theorem deriv_toQFun_foldl_qadd (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
-    (toQFun (gs.foldl qadd qzero))′ = (gs.map (fun g => (toQFun g)′)).sum := by
-  rw [toQFun_foldl_qadd gs qzero (by simp [qzero, DensePoly.toPolyG_cons]) hgs, toQFun_qzero, zero_add]
+    (toQFun (gs.foldl QFun.qadd QFun.qzero))′ = (gs.map (fun g => (toQFun g)′)).sum := by
+  rw [toQFun_foldl_qadd gs QFun.qzero
+    (by simpa [QFun.qzero] using
+      (DensePoly.toPolyG_one_singleton_ne_zero (α := ℚ))) hgs, toQFun_qzero, zero_add]
   rw [show ((gs.map toQFun).sum)′ = Differential.deriv (R := RatFunc ℚ) (gs.map toQFun).sum from rfl,
     map_list_sum (Differential.deriv (R := RatFunc ℚ)) (gs.map toQFun), List.map_map]
   rfl
@@ -137,21 +140,21 @@ open scoped Differential in
 theorem foldl_residual_eq (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0)
     (T : RatFunc ℚ) (resid : QFun → RatFunc ℚ)
     (hstep : ∀ g ∈ gs, (toQFun g)′ = T - resid g) :
-    T - (toQFun (gs.foldl qadd qzero))′
+    T - (toQFun (gs.foldl QFun.qadd QFun.qzero))′
       = T - gs.length • T + (gs.map resid).sum := by
   rw [deriv_toQFun_foldl_qadd gs hgs, List.map_congr_left hstep, list_sum_map_const_sub]
   abel
 
-/-- `qeq x y = true ↔ toQFun x = toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
+/-- `QFun.qeq x y = true ↔ toQFun x = toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
 theorem qeq_iff (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
-    qeq x y = true ↔ toQFun x = toQFun y := by
+    QFun.qeq x y = true ↔ toQFun x = toQFun y := by
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
   set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
   have hbm : am (toPoly b) ≠ 0 := am_toPoly_ne_zero hb
   have hdm : am (toPoly d) ≠ 0 := am_toPoly_ne_zero hd
   -- LHS: the cross-multiplication zero test in `ℚ[X]`.
-  rw [qeq, cisZero_iff_toPoly_eq_zero, toPoly_eq_dense, DensePoly.toPolyG_csubG,
+  rw [QFun.qeq, cisZero_iff_toPoly_eq_zero, toPoly_eq_dense, DensePoly.toPolyG_csubG,
     DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, sub_eq_zero]
   -- RHS: the field equality, cleared to the cross-multiplication.
   rw [toQFun, toQFun, div_eq_div_iff hbm hdm]
@@ -208,7 +211,7 @@ theorem toQFun_qnorm (x : QFun) (hb : toPoly x.2 ≠ 0)
   simp only at hb hq hra hrb hbq
   rw [qnorm]
   by_cases ha : cisZero a = true
-  · -- numerator zero: `qnorm = qzero`, and `toQFun (0/b) = 0 = toQFun qzero`.
+  · -- numerator zero: `qnorm = QFun.qzero`, and `toQFun (0/b) = 0 = toQFun QFun.qzero`.
     have ha0 : toPoly a = 0 := (cisZero_iff_toPoly_eq_zero a).mp ha
     simp only [ha, if_true]
     rw [toQFun_qzero, toQFun, ha0, map_zero, zero_div]

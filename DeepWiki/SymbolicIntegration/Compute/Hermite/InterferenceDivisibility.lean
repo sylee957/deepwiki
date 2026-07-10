@@ -57,7 +57,7 @@ theorem dvd_residNum_factor (fuel : ℕ) (A D : DensePoly ℚ) (factors : List (
   have hinj := RatFunc.algebraMap_injective (K := ℚ)
   have had : am (toPoly D) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hD
   have hdiff : (toQFun (glocIncr fuel A D kelem))′
-      - (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+      - (toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero))′
       = am (R - residNumIncr fuel A D kelem) / am (toPoly D) := by
     rw [map_sub, sub_div]
     linear_combination hk + hres

@@ -39,7 +39,7 @@ open scoped Differential in
 (so `i ≥ 2`), `Uᵢ = D/Vi^i` reconciled exactly (`hDrec : am D = am Uᵢ·am Vi^i`), and the Bézout/nonzero
 side conditions of `hermiteInner_spec_of`, the increment derivative reduces the global `T = am A/am D`:
 `(toQFun (glocIncr fuel A D (Vi, j+2)))′ = am A/am D − am Afinalᵢ/(am Uᵢ·am Vi)`, where `Afinalᵢ =
-(hermiteInner fuel Vi Uᵢ (j+1) A qzero).2`. The single `hermiteInner_spec_of` term cast onto the global
+(hermiteInner fuel Vi Uᵢ (j+1) A QFun.qzero).2`. The single `hermiteInner_spec_of` term cast onto the global
 denominator via the reconciliation. -/
 theorem glocIncr_residual (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ) (j : ℕ)
     (hU : toPoly (DensePoly.cdivWf D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
@@ -54,15 +54,15 @@ theorem glocIncr_residual (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
         - algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (hermiteInner fuel Vi (DensePoly.cdivWf D
-              ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A qzero).2)
+              ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A QFun.qzero).2)
           / glocResidDen D (Vi, j + 2) := by
   set U := DensePoly.cdivWf D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1]) with hUdef
   have hspec := hermiteInner_spec_of fuel Vi U hU hV hbez (j + 1) A
-  -- `glocIncr fuel A D (Vi, j+2) = (hermiteInner fuel Vi U (j+1) A qzero).1` (since `(j+2)-1 = j+1`).
+  -- `glocIncr fuel A D (Vi, j+2) = (hermiteInner fuel Vi U (j+1) A QFun.qzero).1` (since `(j+2)-1 = j+1`).
   have hgloc : glocIncr fuel A D (Vi, j + 2)
-      = (hermiteInner fuel Vi U (j + 1) A qzero).1 := by
-    show (hermiteInner fuel Vi U (j + 2 - 1) A qzero).1
-        = (hermiteInner fuel Vi U (j + 1) A qzero).1
+      = (hermiteInner fuel Vi U (j + 1) A QFun.qzero).1 := by
+    show (hermiteInner fuel Vi U (j + 2 - 1) A QFun.qzero).1
+        = (hermiteInner fuel Vi U (j + 1) A QFun.qzero).1
     rw [show j + 2 - 1 = j + 1 from rfl]
   rw [hgloc, glocResidDen]
   -- in `hspec`, `(j+1)+1 = j+2`; rewrite the global denominator via the reconciliation.
@@ -74,7 +74,7 @@ theorem glocIncr_residual (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ
 
 /-! ### The total fold residual: `(1−n)·T + Σᵢ residᵢ` over the kept-factor list
 
-Combining `foldl_cond_eq_foldl_glocList` (the conditional fold is a `qadd`-fold over `glocList`),
+Combining `foldl_cond_eq_foldl_glocList` (the conditional fold is a `QFun.qadd`-fold over `glocList`),
 `deriv_toQFun_foldl_qadd` (the fold derivative is the sum of the increment derivatives), and
 `glocIncr_residual` (each increment reduces the global `T`), the total residual `T − (toQFun g)′` of
 the whole `g`-fold is `(1 − n)·T + Σᵢ residᵢ`, with `n` the number of kept factors and `residᵢ =
@@ -86,7 +86,7 @@ open scoped Differential in
 /-- **The total `g`-fold residual** in `RatFunc ℚ`: with `T = am A/am D`, if every kept factor `(Vi, i)`
 of `factors` satisfies the per-factor residual identity `(toQFun (glocIncr fuel A D Vi))′ = T − resid Vi`
 (the conclusion of `glocIncr_residual`, supplied as `hstep`), then the residual of the conditional
-`g`-fold (`= (glocList fuel A D factors).foldl qadd qzero`) is
+`g`-fold (`= (glocList fuel A D factors).foldl QFun.qadd QFun.qzero`) is
 `T − (toQFun g)′ = T − (#kept)•T + Σ_{kept} resid Vi`. The exact overcounting skeleton: `#kept`
 increments each reduce the whole `T`, so the fold overcounts by `(#kept − 1)` copies of `T`, which the
 `Σ resid` interference must clear. -/
@@ -95,7 +95,7 @@ theorem total_fold_residual (fuel : ℕ) (A D : DensePoly ℚ) (factors : List (
     (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
     (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
       (toQFun (glocIncr fuel A D Vi))′ = T - resid Vi) :
-    T - (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+    T - (toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero))′
       = T - (factors.filter (fun Vi => decide (2 ≤ Vi.2))).length • T
         + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map resid).sum := by
   set kept := factors.filter (fun Vi => decide (2 ≤ Vi.2)) with hkept
@@ -172,11 +172,11 @@ sum is a single fraction `am (Σᵢ Afinalᵢ·Vi^{i−1})/am D`, and the `(1−
 to denominator `Dstar` precisely when `am (D/Dstar) ∣ am R`, the **named open divisibility** below. -/
 
 /-- **The per-factor `Afinal`** of `hermiteReduce`'s `g`-fold: the residual numerator
-`(hermiteInner fuel Vi Uᵢ (i−1) A qzero).2` left over the radical-reduced denominator after peeling. -/
+`(hermiteInner fuel Vi Uᵢ (i−1) A QFun.qzero).2` left over the radical-reduced denominator after peeling. -/
 def afinalIncr (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ × ℕ) : DensePoly ℚ :=
   let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
   let U := DensePoly.cdivWf D Vi_pow
-  (hermiteInner fuel Vi.1 U (Vi.2 - 1) A qzero).2
+  (hermiteInner fuel Vi.1 U (Vi.2 - 1) A QFun.qzero).2
 
 /-- **The per-factor residual numerator over `D`** `residNumIncr fuel A D (Vi, i) = Afinalᵢ·Vi^{i−1}`:
 the polynomial numerator the factor `(Vi, i)` contributes to the single-fraction-over-`D` residual
@@ -200,7 +200,7 @@ theorem total_fold_residual_over_D (fuel : ℕ) (A D : DensePoly ℚ) (factors :
           - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D Vi)
             / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-        - (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+        - (toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero))′
       = algebraMap ℚ[X] (RatFunc ℚ)
           (Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ)) * toPoly A
             + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum)
@@ -269,7 +269,7 @@ content (decidably true per example, abstractly the open piece). -/
 
 open scoped Differential in
 /-- **Multi-factor `hermiteReduce` wrapper, reduced to the interference divisibility** in `RatFunc ℚ`:
-for the actual `g`-fold `g = (glocList fuel A D factors).foldl qadd qzero`, given the per-factor residual
+for the actual `g`-fold `g = (glocList fuel A D factors).foldl QFun.qadd QFun.qzero`, given the per-factor residual
 identities (`hstep`, the `glocIncr_residual` conclusion over `D`), the radical decomposition
 `D = Dstar·W` (`Dstar ∣ D`, **proven** Yun radical clause), and the **single** interference divisibility
 `W ∣ R` with `R = C(1−n)·A + Σ residNumIncr` and `n = #kept`, the reduction is correct:
@@ -289,7 +289,7 @@ theorem hermiteReduce_residual_correct_multifactor (fuel : ℕ) (A D Dstar W : D
         * toPoly A
         + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+      = (toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             ((Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
                 * toPoly A
@@ -337,12 +337,12 @@ theorem glocIncr_hstep (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ) (
   -- recast the `glocResidDen` fraction over the global `D` numerator `residNumIncr`.
   rw [glocResidDen_eq_over_D D Vi j
     (hermiteInner fuel Vi (DensePoly.cdivWf D
-      ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A qzero).2
+      ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A QFun.qzero).2
     hD hV hU hDrec]
   -- `residNumIncr (Vi, j+2) = afinalIncr·Vi^{(j+2)-1} = Afinal·Vi^{j+1}`.
   rw [show residNumIncr fuel A D (Vi, j + 2)
       = toPoly (hermiteInner fuel Vi (DensePoly.cdivWf D
-          ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A qzero).2
+          ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A QFun.qzero).2
         * toPoly Vi ^ (j + 1) from rfl]
 
 end DeepWiki.SymbolicIntegration.Compute

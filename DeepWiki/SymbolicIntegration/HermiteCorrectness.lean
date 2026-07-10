@@ -32,7 +32,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 The multi-factor `hermiteReduce` `g`-fold correctness discharges the interference
 divisibility internally. The chain:
 
-* `foldl_cond_eq_foldl_glocList` — the conditional `g`-fold is a plain `qadd`-fold over the kept-factor
+* `foldl_cond_eq_foldl_glocList` — the conditional `g`-fold is a plain `QFun.qadd`-fold over the kept-factor
   increment list `glocList`.
 * `glocIncr_residual` / `glocIncr_hstep` — each kept factor's increment reduces the *global* `T = A/D`,
   leaving `residᵢ = am Afinalᵢ/(am Uᵢ·am Vi)` (over the global `D`: `am (Afinalᵢ·Vi^{i−1})/am D`), from
@@ -83,7 +83,7 @@ example (fuel : ℕ) (A D Dstar W : DensePoly ℚ) (factors : List (DensePoly �
         * toPoly A
         + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+      = (toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             ((Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
                 * toPoly A
@@ -127,7 +127,7 @@ theorem hermiteReduce_residual_correct_uncond' (fuel : ℕ) (A D Dstar : DensePo
       toPoly Vi.1 ^ Vi.2 ∣ toPoly D)
     (hWdec : toPoly D = toPoly Dstar * W) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+      = (toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             ((Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
                 * toPoly A
@@ -170,7 +170,7 @@ example (fuel : ℕ) (A D Dstar : DensePoly ℚ) (factors : List (DensePoly ℚ 
       toPoly Vi.1 ^ Vi.2 ∣ toPoly D)
     (hWdec : toPoly D = toPoly Dstar * W) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+      = (toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             ((Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
                 * toPoly A

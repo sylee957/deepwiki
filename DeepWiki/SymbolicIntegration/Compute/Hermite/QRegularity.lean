@@ -92,7 +92,7 @@ theorem deriv_fold_sub_glocIncr_isQRegular (fuel : ℕ) (A D : DensePoly ℚ)
     (hcop : ∀ Vi ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)), Vi ≠ kelem →
       IsRelPrime (toPoly kelem.1) (toPoly Vi.1)) :
     IsQRegular (toPoly kelem.1)
-      ((toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+      ((toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero))′
         - (toQFun (glocIncr fuel A D kelem))′) := by
   classical
   set kept := factors.filter (fun Vi => decide (2 ≤ Vi.2)) with hkept

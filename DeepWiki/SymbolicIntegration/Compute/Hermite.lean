@@ -13,16 +13,7 @@ namespace Compute
 /-! ### Rational-function arithmetic on `DensePoly ℚ × DensePoly ℚ` (numerator, denominator) -/
 
 /-- Rational function as a `(numerator, denominator)` pair of `DensePoly ℚ`s. -/
-abbrev QFun := DensePoly ℚ × DensePoly ℚ
-
-/-- Zero rational function `0/1`. -/
-def qzero : QFun := ([], [1])
-
-/-- Addition of rational functions `a/b + c/d = (a·d + c·b)/(b·d)` (no gcd reduction). -/
-def qadd (x y : QFun) : QFun :=
-  let (a, b) := x
-  let (c, d) := y
-  (cadd (cmul a d) (cmul c b), cmul b d)
+abbrev QFun := DeepWiki.SymbolicIntegration.QFun ℚ
 
 /-! ### The computable quadratic Hermite reduction (per squarefree factor) -/
 
@@ -39,7 +30,7 @@ def hermiteInner (fuel : ℕ) (V U : DensePoly ℚ) : ℕ → DensePoly ℚ → 
     let (B, C) := DensePoly.cdiophantine p V rhs
     -- summand `B/Vʲ`: denominator is `V` raised to power `j+1`.
     let Vpow := (List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1]
-    let g' := qadd g (B, Vpow)
+    let g' := QFun.qadd g (B, Vpow)
     let A' := csub (cscale (-jval) C) (cmul U (cderiv B))  -- `A ← −j·C − U·B'`
     hermiteInner fuel V U j A' g'
 
@@ -58,9 +49,9 @@ def hermiteReduce (fuel : ℕ) (A D : DensePoly ℚ) : QFun × QFun :=
       else
         let Vi_pow := (List.range i).foldl (fun acc _ => cmul acc Vi) [1]
         let U := DensePoly.cdivWf D Vi_pow
-        let (gloc, _) := hermiteInner fuel Vi U (i - 1) A qzero
-        qadd gAcc gloc)
-    qzero
+        let (gloc, _) := hermiteInner fuel Vi U (i - 1) A QFun.qzero
+        QFun.qadd gAcc gloc)
+    QFun.qzero
   let (gnum, gden) := g
   -- residual numerator `B` over `Dstar`, from `A/D − g' = B/Dstar`:
   -- `(A·gden² − D·(gnum'·gden − gnum·gden'))·Dstar / (D·gden²)` (exact division to a polynomial).

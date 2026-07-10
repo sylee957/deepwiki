@@ -29,7 +29,7 @@ denominators; cross-multiplying and `am`-injectivity pin the polynomial identity
 theorem residNum_eq_resNumPrime (fuel : ℕ) (A D gnum gden : DensePoly ℚ) (factors : List (DensePoly ℚ × ℕ))
     (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0)
     (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
-    (hg : toQFun ((glocList fuel A D factors).foldl qadd qzero) = toQFun (gnum, gden))
+    (hg : toQFun ((glocList fuel A D factors).foldl QFun.qadd QFun.qzero) = toQFun (gnum, gden))
     (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
       (toQFun (glocIncr fuel A D Vi))′
         = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)

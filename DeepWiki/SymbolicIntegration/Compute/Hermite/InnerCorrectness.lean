@@ -108,9 +108,9 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
     set A' := csub (cscale (-((j : ℚ) + 1)) C) (cmul U (cderiv B)) with hA'def
     have hVpow : toPoly Vpow = toPoly V ^ (j + 1) := toPoly_hermiteInner_Vpow V j
     have hVpow0 : toPoly Vpow ≠ 0 := by rw [hVpow]; exact pow_ne_zero _ hV
-    have hqadd : toQFun (qadd g (B, Vpow)) = toQFun g + toQFun (B, Vpow) :=
+    have hqadd : toQFun (QFun.qadd g (B, Vpow)) = toQFun g + toQFun (B, Vpow) :=
       toQFun_qadd g (B, Vpow) hg hVpow0
-    have hgnew : toPoly (qadd g (B, Vpow)).2 ≠ 0 := by
+    have hgnew : toPoly (QFun.qadd g (B, Vpow)).2 ≠ 0 := by
       show toPoly (cmul g.2 Vpow) ≠ 0
       simp only [toPoly_eq_dense] at hg hVpow0 ⊢
       rw [DensePoly.toPolyG_cmulG]; exact mul_ne_zero hg hVpow0
@@ -120,7 +120,7 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
     rw [hbezPred, hBC] at hb
     have hstep := hermiteInner_step_ratFunc (toPoly A) (toPoly B) (toPoly C) (toPoly U) (toPoly V)
       hU hV j ?_
-    · have ihA := ih A' (qadd g (B, Vpow)) hgnew
+    · have ihA := ih A' (QFun.qadd g (B, Vpow)) hgnew
       have hBVpow : toQFun (B, Vpow) = am (toPoly B) / am (toPoly V) ^ (j + 1) := by
         rw [toQFun, hVpow, map_pow]
       have hA'eq : toPoly A'
@@ -134,17 +134,18 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
     · exact hb
 
 open scoped Differential in
-/-- Public `qzero`-start correctness of the `hermiteInner` loop. -/
+/-- Public `QFun.qzero`-start correctness of the `hermiteInner` loop. -/
 theorem hermiteInner_spec (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : DensePoly ℚ), hbezPred V U j' A') (j : ℕ) (A : DensePoly ℚ) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
         / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
             * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
-      = (toQFun (hermiteInner fuel V U j A qzero).1)′
-        + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
+      = (toQFun (hermiteInner fuel V U j A QFun.qzero).1)′
+        + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A QFun.qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) := by
-  have h := hermiteInner_spec_acc fuel V U hU hV hbez j A qzero
-    (by simp [qzero, toPoly_eq_dense, DensePoly.toPolyG_cons])
+  have h := hermiteInner_spec_acc fuel V U hU hV hbez j A QFun.qzero
+    (by simpa [QFun.qzero] using
+      (DensePoly.toPolyG_one_singleton_ne_zero (α := ℚ)))
   rw [toQFun_qzero, map_zero, add_zero] at h
   simpa using h
 
@@ -172,8 +173,8 @@ theorem hermiteInner_spec_of (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U �
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
         / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
             * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
-      = (toQFun (hermiteInner fuel V U j A qzero).1)′
-        + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
+      = (toQFun (hermiteInner fuel V U j A QFun.qzero).1)′
+        + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A QFun.qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec fuel V U hU hV
     (fun j' A' => hermiteInner_bezout_of V U j' A' hbez) j A
@@ -185,8 +186,8 @@ example (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 0) (hV : toPoly V 
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
         / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
             * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
-      = (toQFun (hermiteInner fuel V U j A qzero).1)′
-        + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
+      = (toQFun (hermiteInner fuel V U j A QFun.qzero).1)′
+        + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A QFun.qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec_of fuel V U hU hV ⟨hq, hgdeg, hgne⟩ j A
 
