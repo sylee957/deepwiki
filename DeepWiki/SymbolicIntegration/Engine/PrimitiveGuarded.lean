@@ -22,7 +22,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- Rational `p/q ∈ α` (`p : ℤ`, `q : ℕ`) via the `[CField α]` casts — `p.natAbs` lifted, negated when
 `p < 0`, divided by `q`. -/
-def DensePoly.cRat (p : ℤ) (q : ℕ) : α :=
+def cRat (p : ℤ) (q : ℕ) : α :=
   CField.div (if p < 0 then CCommRing.neg (DensePoly.cnatCast p.natAbs) else DensePoly.cnatCast p.natAbs)
     (DensePoly.cnatCast q)
 
@@ -31,9 +31,9 @@ def DensePoly.cRat (p : ℤ) (q : ℕ) : α :=
 integrator needs *no externally supplied* candidate list for small-rational residues — `candidates` becomes
 a fixed computable function. Completeness is bounded (large / non-rational residues need a bigger sweep or
 root-finding); soundness is unaffected (any candidate list is filtered to genuine roots). -/
-def DensePoly.defaultResidueCandidates (bound : ℕ) : List α :=
+def defaultResidueCandidates (bound : ℕ) : List α :=
   (List.range (2 * bound + 1)).flatMap (fun i =>
-    (List.range bound).map (fun j => DensePoly.cRat ((i : ℤ) - (bound : ℤ)) (j + 1)))
+    (List.range bound).map (fun j => cRat ((i : ℤ) - (bound : ℤ)) (j + 1)))
 
 omit [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
 /-- `cisZero (cmapDeriv fp) = true` proves that `fp` has constant coefficients. -/

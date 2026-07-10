@@ -240,6 +240,9 @@ Three more algebraic construction leaves now share the engine interface: `zDderM
 node-dependent constant before the dense double-resultant stage, `afRatMonomials` scales a supplied basis,
 and `radCase3CofactorTower` computes the leading cofactor through a representation-generic derivative
 callback. Each runs sparsely; their downstream resultant, linear-solve, and recursive drivers stay dense.
+The rational candidate sweep had no polynomial dependency at all: `cRat` and
+`defaultResidueCandidates` now live in the symbolic-integration namespace instead of under `DensePoly`.
+The misleading qualified declarations were removed rather than retained as compatibility duplicates.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 
