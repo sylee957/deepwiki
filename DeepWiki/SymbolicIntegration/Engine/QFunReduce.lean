@@ -137,7 +137,7 @@ def qReduceEq {α : Type*} [CField α] [CFieldDomain α] (a b : DenseFrac α) : 
 
 /-- A reducible fraction over `ℚ(x)` whose lowest-terms form is `(x + 1)/(x + 3)`. -/
 def swellFrac : DenseFrac ℚ :=
-  CFrac.ofFraction [(-1 : ℚ), 0, 1] [(-3 : ℚ), 2, 1]
+  CFrac.ofFraction [(-1 : ℚ), 0, 1] [(-3 : ℚ), 2, 1] (by ccompute)
 
 -- `qReduce` cancels the gcd `x − 1` in `swellFrac`, dropping the numerator to degree 1.
 example : cdeg (qReduce swellFrac).num = 1 := by native_decide
@@ -155,7 +155,7 @@ example :
 
 /-- A higher-degree reducible fraction over `ℚ(x)` for `qReduce` examples. -/
 def swellFrac2 : DenseFrac ℚ :=
-  CFrac.ofFraction [(-1 : ℚ), 0, 0, 0, 1] [(-1 : ℚ), 0, 0, 0, 0, 0, 1]
+  CFrac.ofFraction [(-1 : ℚ), 0, 0, 0, 1] [(-1 : ℚ), 0, 0, 0, 0, 0, 1] (by ccompute)
 
 -- `qReduce` is value-preserving on the bigger swell `(x⁴−1)/(x⁶−1)`.
 example : qReduceEq (qReduce swellFrac2) swellFrac2 = true := by native_decide

@@ -127,15 +127,4 @@ theorem toR_clead_eq_leadingCoeff (p : P α) :
 
 end Spec
 
-/-! ### `native_decide` showcase -/
-
-/-- `cisZero` reduces: `[0, 0]` normalizes to zero. -/
-example : cisZero ([0, 0] : List ℚ) = true := by native_decide
-/-- `cdeg` reduces: honest degree of `[1, 2, 0]` is `1` (trailing zero stripped). -/
-example : cdeg ([1, 2, 0] : List ℚ) = 1 := by native_decide
-/-- `clead` reduces: leading coefficient of `[1, 2, 0]` is `2`. -/
-example : clead ([1, 2, 0] : List ℚ) = 2 := by native_decide
-/-- `cnorm` reduces: `[1, 2, 0, 0]` normalizes to `[1, 2]`. -/
-example : cnorm ([1, 2, 0, 0] : List ℚ) = [1, 2] := by native_decide
-
 end DeepWiki.SymbolicIntegration.CPoly

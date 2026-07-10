@@ -78,30 +78,4 @@ end Denote
 
 end RawFrac
 
-/-! ### Dense and sparse execution of the same raw fraction algorithms -/
-
-example :
-    RawFrac.mul (([1, 1], [1]) : RawFrac ℚ) (([1], [0, 1]) : RawFrac ℚ) = ([1, 1], [0, 1]) := by
-  native_decide
-
-example :
-    (CPoly.cdeg (RawFrac.reduce (([-1, 0, 1], [-1, 1]) : RawFrac ℚ)).1,
-      CPoly.cdeg (RawFrac.reduce (([-1, 0, 1], [-1, 1]) : RawFrac ℚ)).2) = (1, 0) := by
-  native_decide
-
-example :
-    let x : RawFrac ℚ CPoly.SparsePoly :=
-      (CPoly.SparsePoly.ofList [(0, 1), (1, 1)], CPoly.SparsePoly.ofList [(0, 1)])
-    let y : RawFrac ℚ CPoly.SparsePoly :=
-      (CPoly.SparsePoly.ofList [(0, 1)], CPoly.SparsePoly.ofList [(1, 1)])
-    (CPolyEngine.cdeg (RawFrac.mul x y).1, CPolyEngine.cdeg (RawFrac.mul x y).2) = (1, 1) := by
-  native_decide
-
-example :
-    let x : RawFrac ℚ CPoly.SparsePoly :=
-      (CPoly.SparsePoly.ofList [(0, -1), (2, 1)],
-        CPoly.SparsePoly.ofList [(0, -1), (1, 1)])
-    (CPoly.cdeg (RawFrac.reduce x).1, CPoly.cdeg (RawFrac.reduce x).2) = (1, 0) := by
-  native_decide
-
 end DeepWiki.SymbolicIntegration

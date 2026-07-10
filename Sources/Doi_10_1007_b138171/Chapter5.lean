@@ -152,13 +152,13 @@ residue resultant `cResidueResultantTower` has monic part `z³−xz²−z/4+x/4`
 ℚ(x) scalar) and the log arguments `cLogArgTower … (±1/2) = t ± x` (the residues `±1/2`), all checked
 over the generic ℚ(x)[t] (`native_decide`). -/
 theorem ex_5_6_2 :
-    (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1]]                       -- `Dt = 1/x`
-     let a : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [0, 0, -1] [1], CFrac.ofScalar (-1), CFrac.ofScalar 2]  -- `a = 2t²−t−x²`
-     let d : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofFraction [0, 0, -1] [1], CFrac.ofScalar 0, CFrac.ofScalar 1]  -- `d = t³−x²t`
+    (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by ccompute)]                       -- `Dt = 1/x`
+     let a : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [0, 0, -1] [1] (by ccompute), CFrac.ofScalar (-1), CFrac.ofScalar 2]  -- `a = 2t²−t−x²`
+     let d : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofFraction [0, 0, -1] [1] (by ccompute), CFrac.ofScalar 0, CFrac.ofScalar 1]  -- `d = t³−x²t`
      let resMonic : DensePoly (DenseFrac ℚ) :=                                    -- `z³−xz²−z/4+x/4`
-       [CFrac.ofFraction [0, 1] [4], CFrac.ofScalar (-1/4), CFrac.ofFraction [0, -1] [1], CFrac.ofScalar 1]
-     let argPlus : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [0, 1] [1], CFrac.ofScalar 1]        -- `t + x`
-     let argMinus : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [0, -1] [1], CFrac.ofScalar 1]      -- `t − x`
+       [CFrac.ofFraction [0, 1] [4] (by ccompute), CFrac.ofScalar (-1/4), CFrac.ofFraction [0, -1] [1] (by ccompute), CFrac.ofScalar 1]
+     let argPlus : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [0, 1] [1] (by ccompute), CFrac.ofScalar 1]        -- `t + x`
+     let argMinus : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [0, -1] [1] (by ccompute), CFrac.ofScalar 1]      -- `t − x`
      DensePoly.cisZero (DensePoly.csub
          (DensePoly.cmonic (DensePoly.cResidueResultantTower Dt a d)) resMonic)
      ∧ DensePoly.cisZero (DensePoly.csub (DensePoly.cLogArgTower Dt a d (CFrac.ofScalar (1/2))) argPlus)
@@ -182,8 +182,8 @@ noncomputable abbrev alg_5_8_primitivePolyIntegrate :=
 (`t = log x`, `Dt = 1/x`) returns `q = (1/3)t³` with `rem = 0`, satisfying `D(q) + rem = p` over the
 generic ℚ(x)[t] (`native_decide`) — i.e. `∫ (log x)²/x dx = (log x)³/3`. -/
 theorem ex_5_8_primitive :
-    (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1]]                       -- `Dt = 1/x`
-     let p : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofFraction [1] [0, 1]]  -- `p = (1/x)·t²`
+    (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by ccompute)]                       -- `Dt = 1/x`
+     let p : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofFraction [1] [0, 1] (by ccompute)]  -- `p = (1/x)·t²`
      let res := DensePoly.cPrimitivePolyIntegrate Dt 8 p
      let q := res.1; let rem := res.2
      let Dq := DensePoly.cmonomialDeriv Dt q

@@ -74,13 +74,13 @@ Logarithmic derivatives as `DenseFrac ℚ` values: `log(x) ⟹ 1/x`, `log(x²) �
 open DensePoly
 
 /-- `D(x)/x = 1/x`: the logarithmic derivative of `log(x)`. Numerator `[1]`, denominator `x = [0,1]`. -/
-def structLogDerivX : DenseFrac ℚ := CFrac.ofFraction [1] [0, 1]
+def structLogDerivX : DenseFrac ℚ := CFrac.ofFraction [1] [0, 1] (by ccompute)
 /-- `D(x²)/x² = 2/x`: the logarithmic derivative of `log(x²)`. Numerator `[2]`, denominator `x = [0,1]`
 (`2x/x² = 2/x`). Equal to `2·structLogDerivX`, so `log(x²) = 2 log(x)` is a ℚ-linear relation. -/
-def structLogDerivX2 : DenseFrac ℚ := CFrac.ofFraction [2] [0, 1]
+def structLogDerivX2 : DenseFrac ℚ := CFrac.ofFraction [2] [0, 1] (by ccompute)
 /-- `D(x+1)/(x+1) = 1/(x+1)`: the logarithmic derivative of `log(x+1)`. Numerator `[1]`, denominator
 `x+1 = [1,1]`. Independent of `1/x` over ℚ. -/
-def structLogDerivX1 : DenseFrac ℚ := CFrac.ofFraction [1] [1, 1]
+def structLogDerivX1 : DenseFrac ℚ := CFrac.ofFraction [1] [1, 1] (by ccompute)
 
 -- Computed decisions against the existing monomial `log(x)` (`logDerivs = [1/x]`):
 -- `log(x²)` is dependent with relation `2/x = 2·(1/x)`, while `log(x+1)` is new.
@@ -92,7 +92,8 @@ def structLogDerivX1 : DenseFrac ℚ := CFrac.ofFraction [1] [1, 1]
 over `ℚ(x)`, by `CCommRing.isZero` of `w − Σ rᵢ (logDerivsᵢ)`. -/
 def structRelationCheck (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) (rs : List ℚ) : Bool :=
   let combo := (List.zip logDerivs rs).foldl
-    (fun acc (wi, r) => CCommRing.add acc (CCommRing.mul (CFrac.ofFraction [r] [1]) wi)) CCommRing.zero
+    (fun acc (wi, r) =>
+      CCommRing.add acc (CCommRing.mul (CFrac.ofFraction [r] [1] (by ccompute)) wi)) CCommRing.zero
   CCommRing.isZero (CField.sub w combo)
 
 /-- The shared logarithmic-dependence test computes over `C(x)(log x)`: derivative `2/x` is dependent
@@ -116,7 +117,7 @@ dependent with relation `[1, 1]` (`1/x + 1/(x+1)`). -/
 
 /-- `D(x²+x)/(x²+x) = (2x+1)/(x²+x) = 1/x + 1/(x+1)`: the logarithmic derivative of `log(x²+x)`.
 Numerator `2x+1 = [1,2]`, denominator `x²+x = [0,1,1]`. Equals `1·(1/x) + 1·(1/(x+1))`. -/
-def structLogDerivX2pX : DenseFrac ℚ := CFrac.ofFraction [1, 2] [0, 1, 1]
+def structLogDerivX2pX : DenseFrac ℚ := CFrac.ofFraction [1, 2] [0, 1, 1] (by ccompute)
 
 -- Computed decisions against the two-generator tower `[1/x, 1/(x+1)]`.
 -- `log(x²+x)` is dependent with relation `[1, 1]`.

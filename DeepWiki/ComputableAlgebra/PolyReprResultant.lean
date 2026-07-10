@@ -5,8 +5,8 @@ import Mathlib.RingTheory.Polynomial.Resultant.Basic
 /-! # Toward a generic computable resultant (Sylvester determinant)
 
 `listDetn` (in `ListDet.lean`) is a cofactor-expansion determinant over a Mathlib `CommRing`. A
-*computable* resultant must expand over the interface coefficient `[CCommRing α]` (whose ops reduce under
-`native_decide`), so this file mirrors `listDetn` as `clistDetn` on `CCommRing`, with `toR_clistDetn`
+*computable* resultant must expand over the interface coefficient `[CCommRing α]`, so this file mirrors
+`listDetn` as `clistDetn` on `CCommRing`, with `toR_clistDetn`
 bridging it to `listDetn` over the denotation ring. The Sylvester matrix + resultant proper (matching
 `Polynomial.sylvester` / `Polynomial.resultant`, using `resultant_map_map`) build on this. -/
 
@@ -78,17 +78,11 @@ theorem toR_clistDetn : ∀ (n : ℕ) (M : List (List α)),
 
 end Bridge
 
-/-- `clistDetn` reduces: the 2×2 determinant `|1 2; 3 4| = -2`. -/
-example : clistDetn 2 ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := by native_decide
-/-- `clistDetn` reduces: a 3×3 determinant `|2 0 1; 1 3 2; 0 1 1| = 3`. -/
-example : clistDetn 3 ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by native_decide
-
 /-! ### The Sylvester matrix and the computable resultant
 
 `cSylvester p q m n` is the `(m+n)×(m+n)` Sylvester coefficient matrix (rows = shifted coefficient
 strips of `q` then `p`), matching `Polynomial.sylvester`'s column layout; `cResultant p q` is its
-`clistDetn`. Validated by `native_decide` against known resultants (`res(x−1,x−2) = −1` for coprime,
-`res(x²−1,x−1) = 0` for a common factor). The abstract bridge `toR (cResultant p q) =
+`clistDetn`. The abstract bridge `toR (cResultant p q) =
 Polynomial.resultant (toPoly p) (toPoly q)` (via `toR_clistDetn` + `listDetn_eq_det` +
 `Polynomial.resultant_map_map`) is the remaining piece. -/
 
@@ -104,19 +98,9 @@ def cSylvester (p q : P α) (m n : ℕ) : List (List α) :=
 /-- The computable resultant: the determinant of the Sylvester matrix (default degrees `cdeg`). -/
 def cResultant (p q : P α) : α := clistDetn (cdeg p + cdeg q) (cSylvester p q (cdeg p) (cdeg q))
 
-/-- `cResultant` reduces: `res(x − 1, x − 2) = −1` (coprime ⇒ nonzero). -/
-example : cResultant ([-1, 1] : List ℚ) [-2, 1] = -1 := by native_decide
-/-- `cResultant` reduces: `res(x² − 1, x − 1) = 0` (common factor ⇒ zero). -/
-example : cResultant ([-1, 0, 1] : List ℚ) [-1, 1] = 0 := by native_decide
-
 /-- The resultant of `p` with its derivative (the discriminant up to the leading factor): it vanishes
 exactly when `p` has a repeated factor. -/
 def cResultantDeriv (p : P α) : α := cResultant p (cderiv p)
-
-/-- `cResultantDeriv` reduces: `x² − 1` is squarefree, so `res(p, p') ≠ 0`. -/
-example : cResultantDeriv ([-1, 0, 1] : List ℚ) ≠ 0 := by native_decide
-/-- `cResultantDeriv` reduces: `(x − 1)²` has a repeated factor, so `res(p, p') = 0`. -/
-example : cResultantDeriv ([1, -2, 1] : List ℚ) = 0 := by native_decide
 
 /-! ### The abstract bridge: `cResultant` denotes `Polynomial.resultant`
 

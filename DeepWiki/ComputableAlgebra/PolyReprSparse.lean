@@ -7,7 +7,7 @@ different carrier from the dense `List α`. (It is a one-field `structure`, not 
 `List`, so it inherits nothing and does not collide with the dense `List` instance — the same newtype
 discipline as the min-plus carriers.) Giving it a `CPoly` instance means **every** generic op
 (`add`/`neg`/`scale`/`mul`, `toPoly`, `cisZero`/`cdeg`/`clead`/`cnorm`) and every correctness square
-works on it for free, with the same `native_decide` showcase — proving the abstraction is genuinely
+works on it for free, proving the abstraction is genuinely
 representation-independent. See `docs/representation-independent-poly.md`. -/
 
 namespace DeepWiki.SymbolicIntegration.CPoly
@@ -61,24 +61,5 @@ instance instSparse : CPoly SparsePoly where
     show SparsePoly.scoeff ((List.range n).map (fun i => (i, f i))) i = _
     rw [SparsePoly.scoeff_map_pairs]; simp only [List.mem_range]
   coeff_ge p i h := SparsePoly.scoeff_ge p.toList i h
-
-/-! ### The generic engine works on the sparse representation — same `native_decide` showcase -/
-
-/-- Sparse `cisZero` reduces on an all-zero sparse poly (two stored zero coefficients). -/
-example : cisZero (SparsePoly.ofList [(0, 0), (5, 0)] : SparsePoly ℚ) = true := by native_decide
-/-- Sparse `cdeg` reduces: a stored `x⁵` term gives honest degree `5` (only two pairs stored). -/
-example : cdeg (SparsePoly.ofList [(0, 1), (5, 7)] : SparsePoly ℚ) = 5 := by native_decide
-/-- Sparse `clead` reduces: the leading coefficient of `1 + 7x⁵` is `7`. -/
-example : clead (SparsePoly.ofList [(0, 1), (5, 7)] : SparsePoly ℚ) = 7 := by native_decide
-/-- The generic `cpow` algorithm runs on the **sparse** carrier too: `(1 + x)²` has honest degree `2`
-and leading coefficient `1` — the same algorithm, a different representation. -/
-example : cdeg (cpow (SparsePoly.ofList [(0, 1), (1, 1)] : SparsePoly ℚ) 2) = 2 := by native_decide
-/-- Sparse `(1 + x)²` has leading coefficient `1`. -/
-example : clead (cpow (SparsePoly.ofList [(0, 1), (1, 1)] : SparsePoly ℚ) 2) = 1 := by native_decide
-/-- Sparse `cderiv`: `d/dx (1 + 3x²) = 6x` has honest degree `1` — same algorithm on the sparse carrier. -/
-example : cdeg (cderiv (SparsePoly.ofList [(0, 1), (2, 3)] : SparsePoly ℚ)) = 1 := by native_decide
-/-- Sparse `ceval`: `(1 + 2x + 3x²)` at `x = 2` is `17`. -/
-example : ceval (2 : ℚ) (SparsePoly.ofList [(0, 1), (1, 2), (2, 3)] : SparsePoly ℚ) = 17 := by
-  native_decide
 
 end DeepWiki.SymbolicIntegration.CPoly

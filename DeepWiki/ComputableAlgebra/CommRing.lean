@@ -1,10 +1,11 @@
 import Mathlib.Algebra.Ring.Basic
 import DeepWiki.Transfer.Denote
+import DeepWiki.ComputableAlgebra.Tactic
 
 /-! # Computable commutative rings (`CCommRing`) and their denotation spec (`CRingSpec`)
 
 `CCommRing α`: computable commutative-ring operations (`zero`/`one`/`add`/`mul`/`neg`, zero test),
-bridge-free so instances reduce under `native_decide`. `CRingSpec α`: the companion homomorphism
+bridge-free so instances remain executable. `CRingSpec α`: the companion homomorphism
 `toR : α → R` into a Mathlib `CommRing R` with intertwining laws — the target of the ring-generic
 polynomial denotation. The field layer (`CField`/`CFieldSpec`) is built on top in `Field.lean`. -/
 
@@ -18,7 +19,7 @@ polynomial engine actually needs (20 of the 21 core `c*` ops use only these). Ev
 bivariate polynomials are just `DensePoly (DensePoly _)`. See `docs/ring-generalization-plan.md`. -/
 
 /-- Computable commutative-ring operations: `zero`/`one`/`add`/`mul`/`neg` and a zero test `isZero`;
-bridge-free, so instances reduce in the native compiler (`native_decide`). -/
+bridge-free, so concrete instances remain executable. -/
 class CCommRing (α : Type*) where
   /-- Computable zero. -/
   zero : α

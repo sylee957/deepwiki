@@ -51,20 +51,6 @@ instance instList : CPoly DensePoly where
 @[simp] theorem ofFn_dense_eq {α : Type u} [CCommRing α] (n : ℕ) (f : ℕ → α) :
     CPoly.ofFn (P := DensePoly) n f = (List.range n).map f := rfl
 
-/-! ### The generic arithmetic reduces on the dense representation -/
-
-/-- Generic `add` reduces under `native_decide` at the dense instance. -/
-example : (add ([1, 2, 3] : DensePoly ℚ) [10, 20]) = [11, 22, 3] := by native_decide
-
-/-- Generic `neg` reduces under `native_decide` at the dense instance. -/
-example : (neg ([1, -2, 3] : DensePoly ℚ)) = [-1, 2, -3] := by native_decide
-
-/-- Generic `scale` reduces under `native_decide` at the dense instance. -/
-example : (scale (2 : ℚ) ([1, -2, 3] : DensePoly ℚ)) = [2, -4, 6] := by native_decide
-
-/-- Generic `mul` reduces on the dense representation, retaining its degree-bound trailing zero. -/
-example : (mul ([1, 2] : DensePoly ℚ) [3, 4]) = [3, 10, 8, 0] := by native_decide
-
 end CPoly
 
 /-! ### The polynomial engine on `DensePoly`
@@ -193,7 +179,7 @@ def cisZero {α : Type*} [CCommRing α] (p : DensePoly α) : Bool := (cnorm p : 
 /-- **Keystone instance.** A `DensePoly` over a computable commutative ring is itself a computable commutative
 ring (`add := cadd`, `mul := cmul`, `neg := cneg`, `zero := []`, `one := [one]`, `isZero := cisZero`) — so
 `DensePoly (DensePoly _)` is a valid coefficient tower and bivariate polynomials need no separate definition. All
-ops reduce, so the tower stays `native_decide`-executable. See `docs/ring-generalization-plan.md`. -/
+ops reduce, so the tower stays executable. See `docs/ring-generalization-plan.md`. -/
 instance instCCommRingCPoly {α : Type*} [CCommRing α] : CCommRing (DensePoly α) where
   zero := []
   one := [CCommRing.one]

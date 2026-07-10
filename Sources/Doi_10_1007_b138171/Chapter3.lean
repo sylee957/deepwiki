@@ -526,20 +526,20 @@ num/den lists over `DensePoly ℚ = List ℚ`, using `CFrac.ofScalar` for consta
 `CFrac.ofFraction` for arbitrary fractions. Catalog infrastructure, not book items. -/
 
 /-- Example 3.5.1's `Dt = −t²−(3/(2x))t+1/(2x)` over the generic ℚ(x)[t] (low→high in `t`). -/
-def ex351Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 2], CFrac.ofFraction [-3] [0, 2], CFrac.ofFraction [-1] [1]]
+def ex351Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 2] (by ccompute), CFrac.ofFraction [-3] [0, 2] (by ccompute), CFrac.ofFraction [-1] [1] (by ccompute)]
 
 /-- Example 3.5.1's degree-5 `p = 4x⁴t⁵−4x³(x+1)t⁴+x²(2x−3)t³+x(2x²+7x+2)t²−(4x²+4x−1)t+2x−1` over the
 generic ℚ(x)[t] (low→high in `t`; ℚ[x] coefficients, denominator `1`). -/
 def ex351P : DensePoly (DenseFrac ℚ) :=
-  [CFrac.ofFraction [-1, 2] [1], CFrac.ofFraction [1, -4, -4] [1], CFrac.ofFraction [0, 2, 7, 2] [1],
-   CFrac.ofFraction [0, 0, -3, 2] [1], CFrac.ofFraction [0, 0, 0, -4, -4] [1], CFrac.ofFraction [0, 0, 0, 0, 4] [1]]
+  [CFrac.ofFraction [-1, 2] [1] (by ccompute), CFrac.ofFraction [1, -4, -4] [1] (by ccompute), CFrac.ofFraction [0, 2, 7, 2] [1] (by ccompute),
+   CFrac.ofFraction [0, 0, -3, 2] [1] (by ccompute), CFrac.ofFraction [0, 0, 0, -4, -4] [1] (by ccompute), CFrac.ofFraction [0, 0, 0, 0, 4] [1] (by ccompute)]
 
 /-- Example 3.5.1's expected normal part `pₙ = 4x⁴t³−4x³(x+2)t²+4x²(2x+1)t−4x²` (book p.101). -/
 def ex351Pn : DensePoly (DenseFrac ℚ) :=
-  [CFrac.ofFraction [0, 0, -4] [1], CFrac.ofFraction [0, 0, 4, 8] [1], CFrac.ofFraction [0, 0, 0, -8, -4] [1], CFrac.ofFraction [0, 0, 0, 0, 4] [1]]
+  [CFrac.ofFraction [0, 0, -4] [1] (by ccompute), CFrac.ofFraction [0, 0, 4, 8] [1] (by ccompute), CFrac.ofFraction [0, 0, 0, -8, -4] [1] (by ccompute), CFrac.ofFraction [0, 0, 0, 0, 4] [1] (by ccompute)]
 
 /-- Example 3.5.1's expected special part `pₛ = t²+(1/x)t−(2x−1)/(4x²)` (book p.101). -/
-def ex351Ps : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1, -2] [0, 0, 4], CFrac.ofFraction [1] [0, 1], CFrac.ofFraction [1] [1]]
+def ex351Ps : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1, -2] [0, 0, 4] (by ccompute), CFrac.ofFraction [1] [0, 1] (by ccompute), CFrac.ofFraction [1] [1] (by ccompute)]
 
 /-- Recombine a positional-by-multiplicity factor list `[q₁, q₂, …]` into `∏ᵢ qᵢ^i` over ℚ(x)[t]. -/
 def ex352Recombine (qs : List (DensePoly (DenseFrac ℚ))) : DensePoly (DenseFrac ℚ) :=
@@ -547,12 +547,12 @@ def ex352Recombine (qs : List (DensePoly (DenseFrac ℚ))) : DensePoly (DenseFra
 
 /-- Example 3.5.2's expected normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` (book p.102), as `4x²·(t−1)·(xt−1)²`. -/
 def ex352Pn : DensePoly (DenseFrac ℚ) :=
-  DensePoly.cmul [CFrac.ofFraction [0, 0, 4] [1]]
-    (DensePoly.cmul [CFrac.ofFraction [-1] [1], CFrac.ofFraction [1] [1]]
-      (DensePoly.cmul [CFrac.ofFraction [-1] [1], CFrac.ofFraction [0, 1] [1]] [CFrac.ofFraction [-1] [1], CFrac.ofFraction [0, 1] [1]]))
+  DensePoly.cmul [CFrac.ofFraction [0, 0, 4] [1] (by ccompute)]
+    (DensePoly.cmul [CFrac.ofFraction [-1] [1] (by ccompute), CFrac.ofFraction [1] [1] (by ccompute)]
+      (DensePoly.cmul [CFrac.ofFraction [-1] [1] (by ccompute), CFrac.ofFraction [0, 1] [1] (by ccompute)] [CFrac.ofFraction [-1] [1] (by ccompute), CFrac.ofFraction [0, 1] [1] (by ccompute)]))
 
 /-- Example 3.5.2's expected special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)` (book p.102). -/
-def ex352Ps : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1, -2] [0, 0, 4], CFrac.ofFraction [1] [0, 1], CFrac.ofFraction [1] [1]]
+def ex352Ps : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1, -2] [0, 0, 4] (by ccompute), CFrac.ofFraction [1] [0, 1] (by ccompute), CFrac.ofFraction [1] [1] (by ccompute)]
 
 /-- **Example 3.5.1** (§3.5, p.101): the COMPUTABLE fraction-free `cSplitFactorFast` (the canonical
 generic engine at the generic ℚ(x) = `DenseFrac ℚ`) splits the degree-5 `p` over ℚ(x)[t]

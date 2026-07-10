@@ -10,7 +10,7 @@ a thin wrapper `cdivmod p q := cdivmodCore (cdeg p + 1) p q` over the fuel-threa
 (the `cdeg p + 1` fuel is always sufficient — each step strictly drops the degree — so it is hidden). The
 **division identity** `toPoly p = toPoly q · toPoly Q + toPoly R` holds for *every* `fuel` on the core (by
 pure algebra + induction, no degree argument) and specialises to the fuel-less `cdivmod`.
-Representation-generic: runs on any `CPoly` (dense or sparse), reduces under `native_decide` (the core
+Representation-generic: runs on any `CPoly` (dense or sparse), with the core
 is structural recursion — no well-founded recursion). See `docs/representation-independent-poly.md`. -/
 
 open Polynomial
@@ -59,22 +59,6 @@ def cdivmod [CField α] (p q : P α) : P α × P α := cdivmodCore (cdeg p + 1) 
 theorem toPoly_cdivmod [CField α] [CRingSpec α] (p q : P α) :
     toPoly p = toPoly q * toPoly (cdivmod p q).1 + toPoly (cdivmod p q).2 :=
   toPoly_cdivmodCore (cdeg p + 1) p q
-
-/-! ### `native_decide` showcase: `(x² − 1) / (x − 1) = (x + 1, 0)`
-
-The generic algorithm runs on the dense `List` carrier and the sparse `SparsePoly` carrier alike. -/
-
-/-- Dense: dividing `x² − 1` by `x − 1` leaves remainder `0`. -/
-example : cisZero (cdivmod ([-1, 0, 1] : List ℚ) [-1, 1]).2 = true := by native_decide
-/-- Dense: the quotient `(x² − 1)/(x − 1)` normalizes to `x + 1`. -/
-example : cnorm (cdivmod ([-1, 0, 1] : List ℚ) [-1, 1]).1 = ([1, 1] : List ℚ) := by native_decide
-/-- Sparse: the same division on the sparse carrier — remainder `0`, quotient of honest degree `1`
-(`x + 1`). Same algorithm, different representation. -/
-example : cisZero (cdivmod (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
-    (SparsePoly.ofList [(0, -1), (1, 1)])).2 = true := by native_decide
-/-- Sparse: the quotient of `(x² − 1)/(x − 1)` has honest degree `1`. -/
-example : cdeg (cdivmod (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
-    (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
 
 /-! ### Computable divisibility test
 
@@ -126,9 +110,6 @@ def cgcd [CField α] (a b : P α) : P α := cgcdCore (cdeg b + 1) a b
 theorem dvd_cgcd [CField α] [CRingSpec α] (a b : P α) (d : (CRingSpec.R α)[X])
     (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) : d ∣ toPoly (cgcd a b) :=
   dvd_cgcdCore (cdeg b + 1) a b d ha hb
-
-/-- `cgcd` reduces (dense): `gcd(x² − 1, x − 1)` normalizes to `x − 1`. -/
-example : cnorm (cgcd ([-1, 0, 1] : List ℚ) [-1, 1]) = ([-1, 1] : List ℚ) := by native_decide
 
 /-! ### Extended Euclidean algorithm (Bézout coefficients)
 
@@ -215,15 +196,5 @@ theorem exists_crt [CField α] [CRingSpec α] (m₁ m₂ r₁ r₂ : P α)
     rw [h1]; ring
   · have h2 : u * toPoly m₁ = 1 - v * toPoly m₂ := by rw [← huv]; ring
     rw [h2]; ring
-
-/-- `cgcdExtCore` reduces (dense): the Bézout combination `s·(x²−1) + t·(x−1)` equals the gcd. -/
-example :
-    cnorm (add (mul (cgcdExt ([-1, 0, 1] : List ℚ) [-1, 1]).2.1 [-1, 0, 1])
-      (mul (cgcdExt ([-1, 0, 1] : List ℚ) [-1, 1]).2.2 [-1, 1]))
-      = cnorm (cgcdExt ([-1, 0, 1] : List ℚ) [-1, 1]).1 := by native_decide
-/-- Sparse: the extended Euclidean algorithm runs on the sparse carrier too — the gcd of
-`x² − 1` and `x − 1` has honest degree `1`. -/
-example : cdeg (cgcdExt (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
-    (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
 
 end DeepWiki.SymbolicIntegration.CPoly

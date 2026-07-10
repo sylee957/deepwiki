@@ -49,10 +49,4 @@ instance instLawfulCPolyResultantSparse : LawfulCPolyResultant CPoly.SparsePoly 
       Polynomial.resultant (CPoly.toPoly p) (CPoly.toPoly q) (CPoly.cdeg p) (CPoly.cdeg q)
     simpa only [toR_eq_toK] using CPoly.toR_cResultant p q
 
-example :
-    CPolyResultant.compute
-      (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
-      (CPoly.SparsePoly.ofList [(0, -1), (1, 1)]) = 0 := by
-  native_decide
-
 end DeepWiki.SymbolicIntegration

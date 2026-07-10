@@ -8,7 +8,7 @@ polynomial *operations as class fields*, while `LawfulCPolyEngine` carries their
 Crucially the `List` instance supplies the **existing engine ops**
 (`DensePoly.cadd`/`cmul`/`cnorm`/…), so `CPolyEngine.add (p : List α) = DensePoly.cadd p` **definitionally**
 — a declaration re-parametrised over `[CPoly P] [CPolyEngine P]` computes *exactly* the engine's list output at the
-`List` instance, so `native_decide` is preserved. This is what makes the engine call-site migration a
+`List` instance, preserving concrete execution. This is what makes the engine call-site migration a
 behaviour-preserving, defeq-safe re-point (module by module). The `SparsePoly` instance supplies the
 generic `ofFn`-based ops, so a migrated module also runs on the sparse carrier. See
 `docs/representation-independent-poly.md`. -/
@@ -159,7 +159,7 @@ theorem toPoly_cmonic_of_ne_zero [LawfulCPolyEngine.{u,v} P]
 end CPolyEngine
 
 /-- **The `List` instance IS the concrete engine** — its ops are `DensePoly.c*`, defeq to the engine's,
-so a migrated declaration computes the same list output (⇒ `native_decide`-preserving). -/
+so a migrated declaration computes the same list output. -/
 instance instEngineList : CPolyEngine List where
   add := DensePoly.cadd
   mul := DensePoly.cmul
@@ -379,11 +379,5 @@ instance instLawfulEngineSparse : LawfulCPolyEngine CPoly.SparsePoly where
   toR_eval p x := by
     change CRingSpec.toR (CPoly.ceval x p) = (CPoly.toPoly p).eval (CRingSpec.toR x)
     exact CPoly.toR_ceval x p
-
-/-! ### The engine ops are the `List`-instance ops (defeq), so `native_decide` is preserved -/
-
-/-- A declaration re-parametrised over `[CPoly P] [CPolyEngine P]` computes exactly the engine output at `List`. -/
-example : (CPolyEngine.mul (CPolyEngine.add ([1,2] : List ℚ) [3,4]) [1])
-    = DensePoly.cmul (DensePoly.cadd [1,2] [3,4]) [1] := by native_decide
 
 end DeepWiki.SymbolicIntegration

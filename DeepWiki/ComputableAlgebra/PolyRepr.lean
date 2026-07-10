@@ -10,7 +10,7 @@ so a new representation is a drop-in instance. Concrete dense and sparse instanc
 `PolyReprDense.lean` and `PolyReprSparse.lean` respectively.
 
 Feasibility: the concrete representation modules validate that derived ops reduce under
-`native_decide`, while the coefficient-correctness squares here are representation-generic — proven
+kernel computation, while the coefficient-correctness squares here are representation-generic — proven
 through the `CRingSpec` denotation `toR` (where the ring laws live; `CCommRing` itself is Prop-free). See
 `docs/representation-independent-poly.md` for the design and the phased migration plan. -/
 

@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.CommRing
+import DeepWiki.ComputableAlgebra.Tactic
 import DeepWiki.ComputableAlgebra.Field
 import DeepWiki.ComputableAlgebra.PolyRepr
 import DeepWiki.ComputableAlgebra.PolyReprDense

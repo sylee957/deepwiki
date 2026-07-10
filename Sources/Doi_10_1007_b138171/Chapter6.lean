@@ -66,7 +66,7 @@ num/den lists over `DensePoly ℚ = List ℚ`. `CFrac.ofScalar` embeds constants
 not a book item. -/
 
 /-- The variable `x ∈ ℚ(x)` as `DenseFrac ℚ` (numerator `[0,1]`, denominator `[1]`). -/
-def qX6 : DenseFrac ℚ := CFrac.ofFraction [0, 1] [1]
+def qX6 : DenseFrac ℚ := CFrac.ofFraction [0, 1] [1] (by ccompute)
 
 /-- **Cleared Risch-DE identity check over the generic ℚ(x)[t]** (the `DenseFrac ℚ` mirror of the engine's
 `rdeClearedCheck`): `true` iff `y = ynum/yden` solves `Dy + (fnum/fden)·y = gnum/gden`, verified as the
@@ -258,9 +258,9 @@ noncomputable abbrev alg_6_6_rationalRDE := @CRischField.crischDESolve (DenseFra
 solve* `Dq + b·q = c` by the cleared difference over the generic ℚ(x)[t] (`native_decide`); the
 dispatcher `cPolyRischDE` routes the same input to the cancellation solver. -/
 theorem ex_6_6_cancelPrim :
-    (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1]]                          -- `Dt = 1/x`
+    (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by ccompute)]                          -- `Dt = 1/x`
      let b : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 1]                                   -- `b = 1`
-     let c : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1], CFrac.ofScalar 1]                 -- `c = t + 1/x`
+     let c : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by ccompute), CFrac.ofScalar 1]                 -- `c = t + 1/x`
      (match DensePoly.cPolyRischDECancelPrim Dt b c 5 with
        | some q =>
            DensePoly.cisZero (DensePoly.csub
@@ -276,8 +276,8 @@ to *actually solve* `Dq + b·q = c` by the cleared difference over the generic �
 the dispatcher `cPolyRischDE` routes the same input to the hyperexponential cancellation solver. -/
 theorem ex_6_6_cancelExp :
     (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 1]                        -- `Dt = t`
-     let b : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1]]                           -- `b = 1/x`
-     let c : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofFraction [2, 1] [1]]                 -- `c = (2+x)t`
+     let b : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by ccompute)]                           -- `b = 1/x`
+     let c : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofFraction [2, 1] [1] (by ccompute)]                 -- `c = (2+x)t`
      (match DensePoly.cPolyRischDECancelExp Dt b c 5 with
        | some q =>
            DensePoly.cisZero (DensePoly.csub
@@ -293,15 +293,15 @@ non-constant base RDE `RischDE(1/x, 2) = x` over ℚ(x) to `y = x·log(x)`, veri
 identity over the generic ℚ(x)[t] (`native_decide`). The eq. 6.23 base solve target — `crischDESolve`
 at `DenseFrac ℚ` on `(1/x, 2)` — is checked to return `s = x`. -/
 theorem ex_6_6_baseRecursion :
-    (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1]]                          -- `Dt = 1/x`
-     let fnum : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1]]                        -- `f = 1/x`
+    (let Dt : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by ccompute)]                          -- `Dt = 1/x`
+     let fnum : DensePoly (DenseFrac ℚ) := [CFrac.ofFraction [1] [0, 1] (by ccompute)]                        -- `f = 1/x`
      let fden : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 1]
      let gnum : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 1, CFrac.ofScalar 2]                      -- `g = 2t + 1`
      let gden : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 1]
      (match DensePoly.cRischDE Dt fnum fden gnum gden with
        | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum gden ynum yden
        | none => false)
-     && (match CRischField.crischDESolve (CFrac.ofFraction [1] [0, 1]) (CFrac.ofScalar 2) with
+     && (match CRischField.crischDESolve (CFrac.ofFraction [1] [0, 1] (by ccompute)) (CFrac.ofScalar 2) with
          | some s => CCommRing.isZero (CField.sub s qX6)                            -- `s = x`
          | none => false)) = true := by native_decide
 
@@ -310,7 +310,7 @@ theorem ex_6_6_baseRecursion :
 pipeline at the base level over ℚ[x] (`instCRischFieldCFrac`, bottoming at `CRischField ℚ`), verified
 `s = x` directly over `DenseFrac ℚ` (`native_decide`). -/
 theorem ex_6_6_rationalRDE :
-    (match CRischField.crischDESolve (CFrac.ofFraction [1] [0, 1]) (CFrac.ofScalar 2) with
+    (match CRischField.crischDESolve (CFrac.ofFraction [1] [0, 1] (by ccompute)) (CFrac.ofScalar 2) with
       | some s => CCommRing.isZero (CField.sub s qX6)
       | none => false) = true := by native_decide
 

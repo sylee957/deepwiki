@@ -106,6 +106,7 @@ def witnessNegX : DenseFrac ℚ := CFrac.ofPoly [(0 : ℚ), -1]
 
 /-- The witness `f = 1/(t₁ − x) ∈ Lvl2 = ℚ(x)(t₁)`: a `D`-constant special pole with no
 positive-integer residue. -/
-def witnessF : Lvl2 := CFrac.ofFraction [CCommRing.one] [witnessNegX, CCommRing.one]
+def witnessF : Lvl2 :=
+  CFrac.ofFraction [CCommRing.one] [witnessNegX, CCommRing.one] (by ccompute)
 
 end DeepWiki.SymbolicIntegration

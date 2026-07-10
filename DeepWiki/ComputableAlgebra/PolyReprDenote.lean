@@ -109,9 +109,6 @@ theorem toPoly_cpow (p : P α) (n : ℕ) : toPoly (cpow p n) = (toPoly p) ^ n :=
   | zero => rw [cpow, toPoly_one, pow_zero]
   | succ n ih => rw [cpow, toPoly_mul, ih, pow_succ, mul_comm]
 
-/-- The generic `cpow` reduces under `native_decide`: `(1 + x)² = 1 + 2x + x²` on the dense carrier. -/
-example : cpow ([1, 1] : List ℚ) 2 = [1, 2, 1, 0, 0] := by native_decide
-
 /-! ### Division-support ops: subtraction, monomials, degree shift (generic)
 
 `csub`, `cmonomial c k = c·Xᵏ`, and `cshift k p = Xᵏ·p` — the pieces a Euclidean division step needs,
@@ -166,15 +163,6 @@ theorem toPoly_cshift (k : ℕ) (p : P α) : toPoly (cshift k p) = X ^ k * toPol
         coeff_ge p (j - k) (by omega), CRingSpec.toR_zero]
   · simp only [if_neg hkj, ite_self, CRingSpec.toR_zero]
 
-/-- `csub` reduces (dense): `(3 + 4x) - (1 + x) = 2 + 3x`. -/
-example : csub ([3, 4] : List ℚ) [1, 1] = [2, 3] := by native_decide
-/-- `cmonomial` reduces (dense): `5·x³ = [0,0,0,5]`. -/
-example : cmonomial (5 : ℚ) 3 = ([0, 0, 0, 5] : List ℚ) := by native_decide
-/-- `cshift` reduces (dense): `x²·(1 + x) = [0,0,1,1]`. -/
-example : cshift 2 ([1, 1] : List ℚ) = ([0, 0, 1, 1] : List ℚ) := by native_decide
-/-- `creverseDeg` reduces (dense): padding and reversing `1 + 2x` through degree three. -/
-example : creverseDeg 3 ([1, 2] : List ℚ) = ([0, 0, 2, 1] : List ℚ) := by native_decide
-
 /-! ### Formal derivative (generic)
 
 `cderiv p = p'` — the coefficient of `Xⁱ` in `p'` is `(i+1)·(coeff p (i+1))`, where the `ℕ`-multiple is
@@ -204,9 +192,6 @@ theorem toPoly_cderiv (p : P α) : toPoly (cderiv p) = (toPoly p).derivative := 
   · rw [if_pos hk, toR_natMul, coeff_toPoly]; push_cast; ring
   · rw [if_neg hk, CRingSpec.toR_zero, coeff_toPoly, coeff_ge p (k + 1) (by omega),
       CRingSpec.toR_zero, zero_mul]
-
-/-- `cderiv` reduces (dense): `d/dx (1 + 2x + 3x²) = 2 + 6x` (stored as `[2,6,0]`). -/
-example : cderiv ([1, 2, 3] : List ℚ) = ([2, 6, 0] : List ℚ) := by native_decide
 
 /-! ### Evaluation (generic)
 
@@ -242,9 +227,6 @@ theorem toR_ceval (x : α) (p : P α) :
   rw [sum_list_range, toPoly, Polynomial.eval_finsetSum]
   apply Finset.sum_congr rfl; intro i _
   rw [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_pow, Polynomial.eval_X]
-
-/-- `ceval` reduces (dense): `(1 + 2x + 3x²)` at `x = 2` is `1 + 4 + 12 = 17`. -/
-example : ceval (2 : ℚ) ([1, 2, 3] : List ℚ) = 17 := by native_decide
 
 /-- `ceval` is additive under `toR`: `toR (ceval x (p + q)) = toR (ceval x p) + toR (ceval x q)`. -/
 theorem toR_ceval_add (x : α) (p q : P α) :

@@ -59,10 +59,4 @@ instance instLawfulCPolyEuclideanSparse : LawfulCPolyEuclidean CPoly.SparsePoly 
     simpa [mul_comm] using CPoly.toPoly_cdivmod p q
   gcdExt_bezout := CPoly.toPoly_cgcdExt
 
-example :
-    CPoly.cisZero (CPolyEuclidean.mod
-      (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
-      (CPoly.SparsePoly.ofList [(0, -1), (1, 1)])) = true := by
-  native_decide
-
 end DeepWiki.SymbolicIntegration

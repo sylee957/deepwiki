@@ -56,8 +56,23 @@ def den {α : Type u} [CField α] (x : F α) : P α := (CFrac.toPair x).2
 
 /-- Build a represented fraction from numerator and certified-nonzero denominator polynomials. -/
 def ofFraction {α : Type u} [CField α] (num den : P α)
-    (h : CPolyEngine.cisZero den = false := by native_decide) : F α :=
+    (h : CPolyEngine.cisZero den = false) : F α :=
   CFrac.ofPair num den h
+
+/-- Build a represented fraction when the denominator passes the executable nonzero test. -/
+def ofFraction? {α : Type u} [CField α] (num den : P α) : Option (F α) :=
+  if h : CPolyEngine.cisZero den = false then some (CFrac.ofPair num den h) else none
+
+/-- `ofFraction?` returns the certified fraction when the denominator is nonzero. -/
+@[simp] theorem ofFraction?_eq_some {α : Type u} [CField α] (num den : P α)
+    (h : CPolyEngine.cisZero den = false) :
+    ofFraction? (F := F) num den = some (ofFraction num den h) := by
+  simp [ofFraction?, h, ofFraction]
+
+/-- `ofFraction?` rejects a denominator recognized as zero. -/
+@[simp] theorem ofFraction?_eq_none {α : Type u} [CField α] (num den : P α)
+    (h : CPolyEngine.cisZero den = true) : ofFraction? (F := F) num den = none := by
+  simp [ofFraction?, h]
 
 /-- The numerator of a constructed represented fraction is the supplied numerator. -/
 @[simp] theorem num_ofFraction {α : Type u} [CField α] (a b : P α)

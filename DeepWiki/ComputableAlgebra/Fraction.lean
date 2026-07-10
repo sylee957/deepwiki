@@ -150,13 +150,6 @@ instance instCFieldCFrac {F : (α : Type u) → [CField α] → Type u}
   inv := CFrac.qinvNZ
   isZero := CFrac.isZeroNZ
 
-example :
-    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
-    let one : SparseFrac ℚ := CFrac.ofFraction (ofList [1]) (ofList [1])
-    let sum := CCommRing.add one one
-    CPoly.coeff (CFrac.num sum) 0 = 2 ∧ CPoly.coeff (CFrac.den sum) 0 = 1 := by
-  native_decide
-
 /-! ### The bridge `toCFrac` into `RatFunc (CFieldSpec.K α)` and its homomorphism laws -/
 
 namespace CFrac

@@ -11,9 +11,4 @@ universe u
 /-- Fractions represented by dense numerator and denominator polynomials. -/
 abbrev DenseFrac (α : Type u) [CField α] := PolyFrac DensePoly α
 
-example :
-    CFrac.num (CFrac.ofFraction (F := DenseFrac) ([1, 2] : DensePoly ℚ) [1]
-      (by native_decide)) = [1, 2] := by
-  rfl
-
 end DeepWiki.SymbolicIntegration

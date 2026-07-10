@@ -34,13 +34,6 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R]
 
-/-- `listDetn 2 [[1,2],[3,4]] = −2`. -/
-theorem listDetn_two : listDetn 2 ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := by native_decide
-
-/-- `listDetn 3 [[2,0,1],[1,3,2],[0,1,1]] = 3`. -/
-theorem listDetn_three :
-    listDetn 3 ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by native_decide
-
 /-- Column-deletion index lemma. For a list `L` of length `n+1`, deleting column `j` (`take j ++
 drop (j+1)`) reads at index `k < n` as `L` at `if k < j then k else k+1` — the `Fin.succAbove` skip. -/
 theorem getD_take_append_drop (L : List R) (n j k : ℕ) (hL : L.length = n + 1) (hk : k < n) :

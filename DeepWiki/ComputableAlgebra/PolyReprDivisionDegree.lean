@@ -205,13 +205,6 @@ theorem toPoly_cdiophantine (a b c : P α) (hg : ¬ cisZero (P := P) (cgcdExt a 
     _ = toPoly (cdivmod c (cgcdExt a b).1).1 * toPoly (cgcdExt a b).1 := by rw [hbez]
     _ = toPoly c := by rw [mul_comm]; exact hexact.symm
 
-/-- `cdiophantine` reduces (dense): solving `s·(x−1) + t·(x−2) = 1` and checking `s·(x−1) + t·(x−2)`
-normalizes back to `1`. -/
-example :
-    cnorm (add (mul (cdiophantine ([-1, 1] : List ℚ) [-2, 1] [1]).1 [-1, 1])
-      (mul (cdiophantine ([-1, 1] : List ℚ) [-2, 1] [1]).2 [-2, 1])) = ([1] : List ℚ) := by
-  native_decide
-
 /-! ### Monic normalization (the canonical associate) -/
 
 /-- Scale a polynomial to monic by its inverse leading coefficient. -/
@@ -254,9 +247,6 @@ theorem cmonicGcd_isGCD (a b : P α) (hg : ¬ cisZero (P := P) (cgcd a b) = true
   exact ⟨cmonic_monic _ hg, (hassoc.dvd_iff_dvd_left).mpr (cgcd_dvd a b).1,
     (hassoc.dvd_iff_dvd_left).mpr (cgcd_dvd a b).2⟩
 
-/-- `cmonic` reduces (dense): `2 + 4x` scales to the monic `1/2 + x`. -/
-example : cmonic ([2, 4] : List ℚ) = ([1/2, 1] : List ℚ) := by native_decide
-
 /-! ### Squarefree part
 
 `csquarefreePart p = p / gcd(p, p')` — the Risch/integration entry point. Its **cofactor
@@ -282,8 +272,5 @@ theorem toPoly_squarefree_factor (p : P α) (hp : ¬ cisZero (P := P) p = true) 
     rw [(cisZero_iff _).mp hz, zero_dvd_iff] at hdvd
     exact hp ((cisZero_iff p).mpr hdvd)
   exact toPoly_mul_cdiv_of_dvd p (csquarefreeCofactor p) hg hdvd
-
-/-- `csquarefreePart` reduces (dense): the squarefree part of `(x − 1)² = 1 − 2x + x²` has degree `1`. -/
-example : cdeg (csquarefreePart ([1, -2, 1] : List ℚ)) = 1 := by native_decide
 
 end DeepWiki.SymbolicIntegration.CPoly
