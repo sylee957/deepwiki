@@ -25,9 +25,9 @@ def qadd (x y : QFun) : QFun :=
 
 /-! ### Computable Bézout / Diophantine solver on `DensePoly ℚ` -/
 
-/-- Diophantine/Bézout solver `cdiophantine fuel p q rhs = (B, C)` solving `B·p + C·q = rhs` with
+/-- Diophantine/Bézout solver `cdiophantine p q rhs = (B, C)` solving `B·p + C·q = rhs` with
 `deg B < deg q`, for coprime `p, q`. -/
-def cdiophantine (_fuel : ℕ) (p q rhs : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
+def cdiophantine (p q rhs : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
   let (g, s, t) := DensePoly.cgcdWf p q
   let gc : ℚ := clead g
   let S := cscale gc⁻¹ (cmul rhs s)
@@ -48,7 +48,7 @@ def hermiteInner (fuel : ℕ) (V U : DensePoly ℚ) : ℕ → DensePoly ℚ → 
     let Vderiv := cderiv V
     let p := cmul U Vderiv
     let rhs := cscale (-jval⁻¹) A                         -- `−A/j`
-    let (B, C) := cdiophantine fuel p V rhs
+    let (B, C) := cdiophantine p V rhs
     -- summand `B/Vʲ`: denominator is `V` raised to power `j+1`.
     let Vpow := (List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1]
     let g' := qadd g (B, Vpow)

@@ -29,10 +29,10 @@ def cD241 : DensePoly ℚ := [4, 0, 5, 0, -5, 0, 1]
 -- **Example 2.4.1, the computed RT resultant** `R(t) = res_x(D, A − t·D')`. The book (p.48) states
 -- this is exactly `45796·(4t²+1)³ = [45796, 0, 549552, 0, 2198208, 0, 2930944]`; its primitive
 -- squarefree part is the book's `R = 4t²+1`.
-#eval rtResultantCompute 30 cA241 cD241
+#eval rtResultantCompute cA241 cD241
 
 -- **Example 2.4.1, the squarefree part** `R / gcd(R, R')`, normalized: the book's `4t²+1` (up to scalar).
-#eval csqfreePart 30 (rtResultantCompute 30 cA241 cD241)
+#eval csqfreePart (rtResultantCompute cA241 cD241)
 
 /-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `rtResultantCompute` on
 `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4` evaluates (by `native_decide`; kernel `decide` stalls on the
@@ -41,14 +41,14 @@ book's** `res_x(D, A−t·D') = 45796·(4t²+1)³` (eq 2.7, p.48): `(4t²+1)³ =
 `45796·[1,12,48,64] = [45796, 549552, 2198208, 2930944]` in the even-degree slots. This demonstrates
 the computable Rothstein–Trager resultant engine actually runs and returns the book's resultant. -/
 theorem rtResultant_ex241 :
-    rtResultantCompute 30 cA241 cD241 = [45796, 0, 549552, 0, 2198208, 0, 2930944] := by
+    rtResultantCompute cA241 cD241 = [45796, 0, 549552, 0, 2198208, 0, 2930944] := by
   native_decide
 
 /-- **Example 2.4.1, the primitive part is the book's `R = 4t²+1`** (§2.4, p.48): the squarefree
 (monic radical) part of the resultant `45796·(4t²+1)³` is `t² + 1/4` = `[1/4, 0, 1]` (monic `4t²+1`),
 exactly the book's `R(t) = 4t²+1` up to the leading-coefficient scalar. Proved by `native_decide`. -/
 theorem rtResultant_ex241_sqfree :
-    csqfreePart 30 (rtResultantCompute 30 cA241 cD241) = [1/4, 0, 1] := by
+    csqfreePart (rtResultantCompute cA241 cD241) = [1/4, 0, 1] := by
   native_decide
 
 /-! ### Example 2.4.1 (§2.4/§2.6, p.48/54): `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4`,
@@ -114,13 +114,13 @@ open Polynomial in
 /-- **Example 2.4.1, the honest `ℚ[t]` Rothstein–Trager resultant** (§2.4, p.48, eq 2.7): the
 *noncomputable* `rtResultant (toPoly cA241) (toPoly cD241)` equals `45796·(4t²+1)³` as an honest
 polynomial in `ℚ[t]`. Routes the `native_decide`-validated computation (`rtResultant_ex241`) through the
-proven agreement `toPoly_rtResultantCompute_eq_rtResultant` (monic `D`, `deg A < deg D`, fuel 30) and the
+proven agreement `toPoly_rtResultantCompute_eq_rtResultant` (monic `D`, `deg A < deg D`) and the
 closed-form read `toPoly_ex241_value`. This is the honest equation behind the residue multiplicities. -/
 theorem rtResultant_ex241_eq :
     rtResultant (toPoly cA241) (toPoly cD241)
       = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
-  rw [← toPoly_rtResultantCompute_eq_rtResultant cA241 cD241 30 monic_toPoly_cD241
-    natDegree_cA241_lt_cD241 (by native_decide), rtResultant_ex241, toPoly_ex241_value]
+  rw [← toPoly_rtResultantCompute_eq_rtResultant cA241 cD241 monic_toPoly_cD241
+    natDegree_cA241_lt_cD241, rtResultant_ex241, toPoly_ex241_value]
 
 /-! ### Closing Example 2.4.1: the residue ring `ℚ[t]/(4t²+1)` and `IsDomain`
 The concrete agreement `lrtGcdCompute_isSimilar_lrtSubresultant_concrete` needs a residue map
@@ -315,22 +315,22 @@ nonzero `ℚ[t]` polynomial dividing every `x`-coefficient exactly — all decid
 facts, `native_decide`'d. -/
 
 /-- **`hg` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant is nonzero
-(`¬ cisZero (bcontentX 30 (bsubresultantGcd 30 3 gP gQ))`). -/
+(`¬ cisZero (bcontentX (bsubresultantGcd 30 3 gP gQ))`). -/
 theorem hg_ex241 :
-    ¬ cisZero (bcontentX 30 (bsubresultantGcd 30
+    ¬ cisZero (bcontentX (bsubresultantGcd 30
       (toBPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) = true := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hgcn` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant has nonempty `cnorm`. -/
 theorem hgcn_ex241 :
-    cnorm (bcontentX 30 (bsubresultantGcd 30
+    cnorm (bcontentX (bsubresultantGcd 30
       (toBPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ [] := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
 /-- **`hg0` for Ex 2.4.1**: the `ℚ[t]`-content reads to a nonzero `ℚ[t]` polynomial (`toPoly ≠ 0`), via
 `cnorm_eq_nil_iff`. -/
 theorem hg0_ex241 :
-    toPoly (bcontentX 30 (bsubresultantGcd 30
+    toPoly (bcontentX (bsubresultantGcd 30
       (toBPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ 0 := by
   intro h; exact hgcn_ex241 ((cnorm_eq_nil_iff _).mpr h)
 
@@ -339,7 +339,7 @@ subresultant exactly (`cmod` reads to 0), via `cnorm_eq_nil_iff`. -/
 theorem hrem_ex241 :
     ∀ a ∈ bnorm (bsubresultantGcd 30
         (toBPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ),
-      toPoly (DensePoly.cmodWf a (bcontentX 30 (bsubresultantGcd 30
+      toPoly (DensePoly.cmodWf a (bcontentX (bsubresultantGcd 30
         (toBPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ))) = 0 := by
   intro a ha
   rw [← cnorm_eq_nil_iff]
@@ -348,9 +348,9 @@ theorem hrem_ex241 :
   native_decide
 
 /-- **`hpz` for Ex 2.4.1**: the mod-`R` reduction of the primitive degree-3 subresultant is nonzero
-(`¬ bisZero (bredR 30 cR241 (lrtSubresultantCompute 30 3 cA241 cD241))`). -/
+(`¬ bisZero (bredR cR241 (lrtSubresultantCompute 30 3 cA241 cD241))`). -/
 theorem hpz_ex241 :
-    ¬ bisZero (bredR 30 cR241 (lrtSubresultantCompute 30
+    ¬ bisZero (bredR cR241 (lrtSubresultantCompute 30
       (toBPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) = true := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
@@ -364,7 +364,7 @@ gcd `.1` literally evaluates to `[1]` (`native_decide`), and `toPoly [1] = C 1`.
 reduced primitive subresultant's leading `x`-coefficient (`(107/8)·t`) with `R = 4t²+1` is the constant
 `1` (the leading coefficient is a unit mod `R`). `native_decide`. -/
 theorem cgcdWf_blc_bredR_ex241 :
-    (DensePoly.cgcdWf (blc (bredR 30 cR241 (lrtSubresultantCompute 30
+    (DensePoly.cgcdWf (blc (bredR cR241 (lrtSubresultantCompute 30
       (toBPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1 = [1] := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
@@ -372,7 +372,7 @@ theorem cgcdWf_blc_bredR_ex241 :
 reduces to the nonzero constant `C 1` — so the leading coefficient is a unit mod `R = 4t²+1`. From
 `cgcdWf_blc_bredR_ex241` (`gcd = [1]`) and `toPoly [1] = C 1`. -/
 theorem hgu_ex241 :
-    toPoly (DensePoly.cgcdWf (blc (bredR 30 cR241 (lrtSubresultantCompute 30
+    toPoly (DensePoly.cgcdWf (blc (bredR cR241 (lrtSubresultantCompute 30
       (toBPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1
       = Polynomial.C (1 : ℚ) := by
   rw [cgcdWf_blc_bredR_ex241]
@@ -400,7 +400,7 @@ theorem toBPoly_chainG_ne_zero_ex241 (i : ℕ) (hi : i ≤ 3) : toBPoly (chain 3
 theorem toBPoly_prem_ex241 (l : ℕ) (hl : l ≤ 1) :
     toBPoly (bpsremainder 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1)))
       = Polynomial.C (toPoly (chainBt 30 gP gQ l)) * toBPoly (chain 30 gP gQ (l + 2)) := by
-  have hexact := toBPoly_bdivC_exact 30
+  have hexact := toBPoly_bdivC_exact
     (bpsremainder 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1))) (chainBt 30 gP gQ l)
     (hβcn_ex241 l hl) (fun a ha => hdiv_ex241 l hl a ha)
   rw [chain_hG2]
@@ -553,7 +553,7 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241 :
     endpoint_degree_lt := hjlt_ex241
     quotient_degree_le := hQ_ex241
     endpoint_ne_zero := hCne_ex241 }
-  let hprim : IsPrimitivePartXInput 30
+  let hprim : IsPrimitivePartXInput
       (bsubresultantGcd 30 (toBPoly (chain 30 gP gQ (1 + 2))).natDegree gP gQ) := {
     content_not_zero := hg_ex241
     content_cnorm_ne := hgcn_ex241
@@ -585,7 +585,7 @@ subresultant is nonzero. From `Φ (toBPoly lrtGcdCompute) ≠ 0` and the `bmonic
 theorem mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero :
     (Polynomial.mapRingHom φ241) (toBPoly
       (lrtSubresultantCompute 30 (toBPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)) ≠ 0 := by
-  obtain ⟨hbridge, _⟩ := mapRingHom_toBPoly_bmonicXmodR φ241 30 cR241
+  obtain ⟨hbridge, _⟩ := mapRingHom_toBPoly_bmonicXmodR φ241 cR241
     (lrtSubresultantCompute 30 (toBPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)
     (by decide) φ241_toPoly_cR241 (u := 1) one_ne_zero hgu_ex241 hpz_ex241
   intro h
@@ -645,7 +645,7 @@ theorem lrtGcdCompute_ex241_isSimilar_lrtSubresultant
       φ241_eq_zero_iff isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241
       hLne mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero
   -- Φ M ∼ Φ M_gcd via the bmonicXmodR unit bridge
-  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ241 30 cR241
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ241 cR241
     (lrtSubresultantCompute 30 (toBPoly (chain 30 gP gQ (1 + 2))).natDegree cA241 cD241)
     (by decide) φ241_toPoly_cR241 (u := 1) one_ne_zero hgu_ex241 hpz_ex241
   have hMMgcd : IsSimilar

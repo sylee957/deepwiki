@@ -63,15 +63,15 @@ theorem hermiteInner_step_ratFunc (A B C U V : ℚ[X]) (hU : U ≠ 0) (hV : V �
   ring
 
 /-- The per-step Bezout relation of `hermiteInner` at counter `j'` with numerator `A'`. -/
-private def hbezPred (fuel : ℕ) (V U : DensePoly ℚ) (j' : ℕ) (A' : DensePoly ℚ) : Prop :=
-  toPoly (cdiophantine fuel (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).1
+private def hbezPred (V U : DensePoly ℚ) (j' : ℕ) (A' : DensePoly ℚ) : Prop :=
+  toPoly (cdiophantine (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).1
       * (toPoly U * derivative (toPoly V))
-    + toPoly (cdiophantine fuel (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).2
+    + toPoly (cdiophantine (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).2
       * toPoly V
     = -toPoly A' * Polynomial.C (((j' : ℚ) + 1)⁻¹)
 
 /-- The Hermite-inner Bezout call has a nonzero denominator and constant gcd. -/
-structure IsHermiteInnerBezoutInput (fuel : ℕ) (V U : DensePoly ℚ) : Prop where
+structure IsHermiteInnerBezoutInput (V U : DensePoly ℚ) : Prop where
   /-- The inner denominator is nonzero. -/
   den_ne : cnorm V ≠ []
   /-- The computed gcd reads as its leading constant. -/
@@ -83,7 +83,7 @@ structure IsHermiteInnerBezoutInput (fuel : ℕ) (V U : DensePoly ℚ) : Prop wh
 open scoped Differential in
 /-- `hermiteInner` loop invariant, generalized over an accumulator. -/
 theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
-    (hbez : ∀ (j' : ℕ) (A' : DensePoly ℚ), hbezPred fuel V U j' A') :
+    (hbez : ∀ (j' : ℕ) (A' : DensePoly ℚ), hbezPred V U j' A') :
     ∀ (j : ℕ) (A : DensePoly ℚ) (g : QFun), toPoly g.2 ≠ 0 →
       algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
@@ -102,7 +102,7 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
   | succ j ih =>
     intro A g hg
     rw [hermiteInner]
-    rcases hBC : cdiophantine fuel (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A)
+    rcases hBC : cdiophantine (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A)
       with ⟨B, C⟩
     simp only []
     set Vpow := (List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1] with hVpowdef
@@ -117,7 +117,7 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
       rw [DensePoly.toPolyG_cmulG]; exact mul_ne_zero hg hVpow0
     have hcdB : toPoly (cderiv B) = derivative (toPoly B) := by
       simpa only [toPoly_eq_dense] using DensePoly.toPolyG_cderivG B
-    have hb : hbezPred fuel V U j A := hbez j A
+    have hb : hbezPred V U j A := hbez j A
     rw [hbezPred, hBC] at hb
     have hstep := hermiteInner_step_ratFunc (toPoly A) (toPoly B) (toPoly C) (toPoly U) (toPoly V)
       hU hV j ?_
@@ -137,7 +137,7 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
 open scoped Differential in
 /-- Public `qzero`-start correctness of the `hermiteInner` loop. -/
 theorem hermiteInner_spec (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
-    (hbez : ∀ (j' : ℕ) (A' : DensePoly ℚ), hbezPred fuel V U j' A') (j : ℕ) (A : DensePoly ℚ) :
+    (hbez : ∀ (j' : ℕ) (A' : DensePoly ℚ), hbezPred V U j' A') (j : ℕ) (A : DensePoly ℚ) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
         / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
             * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
@@ -150,12 +150,12 @@ theorem hermiteInner_spec (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 
   simpa using h
 
 /-- The per-step Bezout relation follows from the computable constant-gcd certificate. -/
-theorem hermiteInner_bezout_of (fuel : ℕ) (V U : DensePoly ℚ) (j' : ℕ) (A' : DensePoly ℚ)
-    (hbez : IsHermiteInnerBezoutInput fuel V U) :
-    hbezPred fuel V U j' A' := by
+theorem hermiteInner_bezout_of (V U : DensePoly ℚ) (j' : ℕ) (A' : DensePoly ℚ)
+    (hbez : IsHermiteInnerBezoutInput V U) :
+    hbezPred V U j' A' := by
   obtain ⟨hq, hg, hgc⟩ := hbez
   rw [hbezPred]
-  have h := toPoly_cdiophantine fuel (cmul U (cderiv V)) V
+  have h := toPoly_cdiophantine (cmul U (cderiv V)) V
     (cscale (-((j' : ℚ) + 1)⁻¹) A') hq hg hgc
   simp only [toPoly_eq_dense] at h ⊢
   rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, DensePoly.toPolyG_cscaleG] at h
@@ -167,7 +167,7 @@ theorem hermiteInner_bezout_of (fuel : ℕ) (V U : DensePoly ℚ) (j' : ℕ) (A'
 open scoped Differential in
 /-- `hermiteInner` correctness from the computable engine, with the Bezout premise discharged. -/
 theorem hermiteInner_spec_of (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
-    (hbez : IsHermiteInnerBezoutInput fuel V U) (j : ℕ) (A : DensePoly ℚ) :
+    (hbez : IsHermiteInnerBezoutInput V U) (j : ℕ) (A : DensePoly ℚ) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
         / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
             * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
@@ -175,7 +175,7 @@ theorem hermiteInner_spec_of (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U �
         + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec fuel V U hU hV
-    (fun j' A' => hermiteInner_bezout_of fuel V U j' A' hbez) j A
+    (fun j' A' => hermiteInner_bezout_of V U j' A' hbez) j A
 
 open scoped Differential in
 example (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (hq : cnorm V ≠ [])

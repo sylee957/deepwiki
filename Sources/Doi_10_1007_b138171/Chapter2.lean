@@ -1117,11 +1117,12 @@ theorem ex_2_8_1_compute :
 
 /-- **Rothstein–Trager resultant, computable variant** (§2.4, eq 2.7, p.47): a genuinely `#eval`-able
 rendering of `R(t) = res_x(D, A − t·D')` over the dense coefficient carrier `DensePoly ℚ := List ℚ` (Mathlib's
-`ℚ[X]` resultant `rtResultant` is noncomputable). The univariate resultant `cresultant` uses the
+`ℚ[X]` resultant `rtResultant` is noncomputable). The univariate resultant `DensePoly.cresultantWf` uses the
 Euclidean-PRS identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q,r)`; the bivariate RT
 resultant is recovered, staying univariate, by evaluation + Lagrange interpolation (`cinterpolate`).
 The library's `rtResultantCompute`, with `cderiv` (computable derivative, `DensePoly.toPolyG_cderivG` bridge) and
-`csqfreePart` (primitive part). Agreement with `rtResultant` is deferred. -/
+`csqfreePart` (primitive part), agrees with `rtResultant` by
+`toPoly_rtResultantCompute_eq_rtResultant`. -/
 def rtResultant_compute := @DeepWiki.SymbolicIntegration.Compute.rtResultantCompute
 
 /-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `rtResultantCompute` on
@@ -1131,7 +1132,7 @@ whose monic squarefree part `csqfreePart … = [1/4, 0, 1]` is the book's primit
 library's `rtResultant_ex241` / `rtResultant_ex241_sqfree` — the RT resultant engine actually *runs* and
 returns the book's answer. -/
 theorem ex_2_4_1_compute :
-    DeepWiki.SymbolicIntegration.Compute.rtResultantCompute 30
+    DeepWiki.SymbolicIntegration.Compute.rtResultantCompute
         DeepWiki.SymbolicIntegration.Compute.cA241
         DeepWiki.SymbolicIntegration.Compute.cD241
       = [45796, 0, 549552, 0, 2198208, 0, 2930944] :=

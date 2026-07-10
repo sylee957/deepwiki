@@ -128,7 +128,7 @@ example :
             (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
       (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
     rw [← cnorm_eq_nil_iff, hermite_ex221_exact_division]
-  exact hermiteReduce_residual_correct 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
+  exact hermiteReduce_residual_correct cA221 cD221 [8, 12, 20, 12, 8, 3]
     [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hexact
 
 /-- **Example 2.2.1: the engine-honesty bundle holds** (`native_decide`): every `cmod`-remainder in the
@@ -155,9 +155,9 @@ fully internal. -/
 
 /-- **Example 2.2.1: the residual-honesty bundle holds** (`native_decide`): both split `cmod`-remainders
 of the computed `(gnum, gden, Dstar) = ([8,12,20,12,8,3], [0,8,0,12,0,6,0,1], [0,2,0,1])` vanish, so
-`HermiteResComp 40 cA221 cD221 gnum gden Dstar` — the engine certifies its own residual recovery. -/
+`HermiteResComp cA221 cD221 gnum gden Dstar` — the engine certifies its own residual recovery. -/
 theorem hermite_ex221_resComp :
-    HermiteResComp 40 cA221 cD221 [8, 12, 20, 12, 8, 3] [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] := by
+    HermiteResComp cA221 cD221 [8, 12, 20, 12, 8, 3] [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] := by
   native_decide
 
 open scoped Differential in
@@ -165,8 +165,7 @@ open scoped Differential in
 p.41): `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` for the computed `gnum, gden, Dstar` of
 Example 2.2.1, with **no** exact-division certificate as a hypothesis — the certificate is discharged by
 the `native_decide`'d residual-honesty bundle `hermite_ex221_resComp` through
-`hermiteReduce_residual_correct_uncond`. The nonzero hypotheses hold by `decide`; the fuel bound by
-`native_decide`. -/
+`hermiteReduce_residual_correct_uncond`. The nonzero hypotheses hold by `decide`. -/
 example :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
       = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
@@ -184,12 +183,8 @@ example :
     have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
   have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
-  have hfuel : (cnorm (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
-      (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
-        (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by
-    native_decide
-  exact hermiteReduce_residual_correct_uncond 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
-    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hfuel hermite_ex221_resComp
+  exact hermiteReduce_residual_correct_uncond cA221 cD221 [8, 12, 20, 12, 8, 3]
+    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hermite_ex221_resComp
 
 /-! ### Example 2.2.1 via the radical wrapper: `Dstar ∣ D` from the proven Yun radical clause
 
@@ -231,11 +226,6 @@ example :
     have : cnorm ([0, 8, 0, 12, 0, 6, 0, 1] : DensePoly ℚ) = [] := (cnorm_eq_nil_iff _).mpr h
     revert this; decide
   have hDstar : cnorm ([0, 2, 0, 1] : DensePoly ℚ) ≠ [] := by decide
-  have hfuel : (cnorm (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
-      (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
-        (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by
-    native_decide
-  have hfuelD : (cnorm cD221).length ≤ 40 := by decide
   have hWgd : toPoly (DensePoly.cmodWf
       (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
         (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
@@ -243,8 +233,8 @@ example :
       (cmul (DensePoly.cdivWf cD221 [0, 2, 0, 1])
         (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
     rw [← cnorm_eq_nil_iff]; native_decide
-  exact hermiteReduce_residual_correct_of_radical 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
-    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hfuel hfuelD
+  exact hermiteReduce_residual_correct_of_radical cA221 cD221 [8, 12, 20, 12, 8, 3]
+    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩
     hermite_ex221_Dstar_dvd hWgd
 
 end DeepWiki.SymbolicIntegration.Compute

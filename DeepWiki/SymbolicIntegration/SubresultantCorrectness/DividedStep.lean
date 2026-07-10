@@ -12,7 +12,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-- If every `x`-coefficient of `p` divides exactly by `c`, then
 `C(toPoly c) · toBPoly (p.map (DensePoly.cdivWf · c)) = toBPoly p`. -/
-theorem toBPoly_map_cdiv_exact (_fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
+theorem toBPoly_map_cdiv_exact (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
     Polynomial.C (toPoly c) * toBPoly (p.map (fun a => DensePoly.cdivWf a c)) = toBPoly p := by
   induction p with
@@ -29,37 +29,37 @@ theorem toBPoly_map_cdiv_exact (_fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc
     rw [ha, map_mul]
     linear_combination Polynomial.X * has
 
-/-- `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p` when every `x`-coefficient of `p` divides
+/-- `C(toPoly c) · toBPoly (bdivC p c) = toBPoly p` when every `x`-coefficient of `p` divides
 exactly by `c`: `bdivC` is exact scalar `ℚ[t]`-division. -/
-theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
+theorem toBPoly_bdivC_exact (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (DensePoly.cmodWf a c) = 0) :
-    Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p := by
+    Polynomial.C (toPoly c) * toBPoly (bdivC p c) = toBPoly p := by
   rw [bdivC, toBPoly_bnorm]
-  exact toBPoly_map_cdiv_exact fuel p c hc hrem
+  exact toBPoly_map_cdiv_exact p c hc hrem
 
 /-- `bdivC` exact division from divisibility: if `toPoly c ∣ toPoly a` for every `x`-coefficient `a`,
-then `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. -/
-theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
-    (_hfuel : ∀ a ∈ p, (cnorm a).length ≤ fuel) (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
-    Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
-  toBPoly_bdivC_exact fuel p c hc
+then `C(toPoly c) · toBPoly (bdivC p c) = toBPoly p`. -/
+theorem toBPoly_bdivC_exact_of_dvd (p : BPoly) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
+    (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
+    Polynomial.C (toPoly c) * toBPoly (bdivC p c) = toBPoly p :=
+  toBPoly_bdivC_exact p c hc
     (fun a ha => by
       have hdvd' : DensePoly.toPoly c ∣ DensePoly.toPoly a := by
         simpa only [toPoly_eq_dense] using hdvd a ha
       simpa only [toPoly_eq_dense] using
         DensePoly.toPolyG_cmodWf_eq_zero_of_dvd a c hc hdvd')
 
-/-- `C(toPoly g) · toBPoly (bprimitivePartX fuel p) = toBPoly p` with `g = bcontentX fuel p` nonzero
+/-- `C(toPoly g) · toBPoly (bprimitivePartX p) = toBPoly p` with `g = bcontentX p` nonzero
 and dividing each `x`-coefficient exactly: `bprimitivePartX` strips a `ℚ[t]` content factor. -/
-theorem toBPoly_bprimitivePartX_exact (fuel : ℕ) (p : BPoly)
-    (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
-    (hrem : ∀ a ∈ bnorm p, toPoly (DensePoly.cmodWf a (bcontentX fuel p)) = 0) :
-    Polynomial.C (toPoly (bcontentX fuel p)) * toBPoly (bprimitivePartX fuel p) = toBPoly p := by
-  have hbc : bcontentX fuel (bnorm p) = bcontentX fuel p := by
+theorem toBPoly_bprimitivePartX_exact (p : BPoly)
+    (hg : ¬ cisZero (bcontentX p) = true) (hgcn : cnorm (bcontentX p) ≠ [])
+    (hrem : ∀ a ∈ bnorm p, toPoly (DensePoly.cmodWf a (bcontentX p)) = 0) :
+    Polynomial.C (toPoly (bcontentX p)) * toBPoly (bprimitivePartX p) = toBPoly p := by
+  have hbc : bcontentX (bnorm p) = bcontentX p := by
     rw [bcontentX, bcontentX, bnorm_idem]
   rw [bprimitivePartX]
   simp only [hbc, hg, Bool.false_eq_true, if_false]
-  rw [toBPoly_bnorm, toBPoly_map_cdiv_exact fuel (bnorm p) (bcontentX fuel p) hgcn hrem,
+  rw [toBPoly_bnorm, toBPoly_map_cdiv_exact (bnorm p) (bcontentX p) hgcn hrem,
     toBPoly_bnorm]
 
 /-! ### One subresultant-PRS step on the β-divided remainder -/
@@ -74,7 +74,7 @@ structure IsBdivCExactStep (fuel : ℕ) (p q : BPoly) (β : DensePoly ℚ) (s : 
   /-- β divides every coefficient of the pseudo-remainder exactly. -/
   exact_division : ∀ a ∈ bpsremainder fuel p q, toPoly (DensePoly.cmodWf a β) = 0
 
-/-- One subresultant-PRS step on the β-divided remainder `r = bdivC fuel (bpsremainder fuel p q) β`:
+/-- One subresultant-PRS step on the β-divided remainder `r = bdivC (bpsremainder fuel p q) β`:
 `C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(B, toBPoly r; m,n)`. -/
 theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (β : DensePoly ℚ) (n m j : ℕ)
     (s : BPoly) (c : DensePoly ℚ)
@@ -85,17 +85,17 @@ theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (
     Polynomial.C ((toPoly c) ^ (m - j)) * subresultant (toBPoly p) (toBPoly q) n m j
       = (-1 : (ℚ[X])[X]) ^ ((m - j) * (n - j))
         * (Polynomial.C ((toPoly β) ^ (m - j))
-          * subresultant (toBPoly q) (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j) := by
+          * subresultant (toBPoly q) (toBPoly (bdivC (bpsremainder fuel p q) β)) m n j) := by
   have hremStep := subresultant_C_mul_eq_rem_of_bpsremainder fuel p q n m j s c
     hstep.relation hjm hjn hB hQ
   have hexact : toBPoly (bpsremainder fuel p q)
-      = Polynomial.C (toPoly β) * toBPoly (bdivC fuel (bpsremainder fuel p q) β) :=
-    (toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hstep.beta_cnorm_ne hstep.exact_division).symm
+      = Polynomial.C (toPoly β) * toBPoly (bdivC (bpsremainder fuel p q) β) :=
+    (toBPoly_bdivC_exact (bpsremainder fuel p q) β hstep.beta_cnorm_ne hstep.exact_division).symm
   rw [hremStep, hexact,
     subresultant_C_mul_right (toPoly β) (toBPoly q)
-      (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j (le_of_lt hjn) hjm]
+      (toBPoly (bdivC (bpsremainder fuel p q) β)) m n j (le_of_lt hjn) hjm]
 
-/-- LRT subresultant after one β-divided PRS step (next element `R₃ = bdivC fuel (bpsremainder fuel P Q) β`):
+/-- LRT subresultant after one β-divided PRS step (next element `R₃ = bdivC (bpsremainder fuel P Q) β`):
 `C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(Q, R₃; m,n)`. -/
 theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : DensePoly ℚ) (β : DensePoly ℚ) (j : ℕ)
     (s : BPoly) (c : DensePoly ℚ)
@@ -108,7 +108,7 @@ theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : Dense
       = (-1 : (ℚ[X])[X]) ^ ((((toPoly D).natDegree - 1) - j) * ((toPoly D).natDegree - j))
         * (Polynomial.C ((toPoly β) ^ (((toPoly D).natDegree - 1) - j))
           * subresultant (toBPoly (bArgAmtD' A D))
-              (toBPoly (bdivC fuel (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
+              (toBPoly (bdivC (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
               ((toPoly D).natDegree - 1) (toPoly D).natDegree j) := by
   rw [lrtSubresultant_eq_subresultant_toBPoly]
   exact subresultant_C_mul_eq_bdivC_of_bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D) β
@@ -127,7 +127,7 @@ theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : DensePo
     (hQ : (toBPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) j)
       (subresultant (toBPoly (bArgAmtD' A D))
-        (toBPoly (bdivC fuel (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
+        (toBPoly (bdivC (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
         ((toPoly D).natDegree - 1) (toPoly D).natDegree j) := by
   refine ⟨(toPoly c) ^ (((toPoly D).natDegree - 1) - j),
     (-1 : ℚ[X]) ^ ((((toPoly D).natDegree - 1) - j) * ((toPoly D).natDegree - j))
@@ -140,7 +140,7 @@ theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : DensePo
 
 /-! ### Telescoping the divided one-step similarity along the whole `subresPRS` -/
 
-/-- Generic divided one-step similarity over arbitrary `BPoly`s: with `r = bdivC fuel (bpsremainder fuel
+/-- Generic divided one-step similarity over arbitrary `BPoly`s: with `r = bdivC (bpsremainder fuel
 p q) β`, `IsSimilar (Sⱼ(toBPoly p, toBPoly q; n, m)) (Sⱼ(toBPoly q, toBPoly r; m, n))`. -/
 theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : DensePoly ℚ) (n m j : ℕ)
     (s : BPoly) (c : DensePoly ℚ)
@@ -150,7 +150,7 @@ theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : Dense
     (hB : (toBPoly q).natDegree ≤ m)
     (hQ : (toBPoly s).natDegree + m ≤ n) :
     IsSimilar (subresultant (toBPoly p) (toBPoly q) n m j)
-      (subresultant (toBPoly q) (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j) := by
+      (subresultant (toBPoly q) (toBPoly (bdivC (bpsremainder fuel p q) β)) m n j) := by
   refine ⟨(toPoly c) ^ (m - j),
     (-1 : ℚ[X]) ^ ((m - j) * (n - j)) * (toPoly β) ^ (m - j),
     pow_ne_zero _ hc0,
@@ -160,14 +160,14 @@ theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : Dense
   ring
 
 /-- The combined per-step PRS relation through `toBPoly`:
-`C(toPoly c)·toBPoly p = C(toPoly β)·toBPoly r + toBPoly q·toBPoly s` with `r = bdivC fuel (prem p q) β`. -/
+`C(toPoly c)·toBPoly p = C(toPoly β)·toBPoly r + toBPoly q·toBPoly s` with `r = bdivC (prem p q) β`. -/
 theorem toBPoly_prs_rel (fuel : ℕ) (p q : BPoly) (β : DensePoly ℚ) (s : BPoly) (c : DensePoly ℚ)
     (hstep : IsBdivCExactStep fuel p q β s c) :
     Polynomial.C (toPoly c) * toBPoly p
-      = Polynomial.C (toPoly β) * toBPoly (bdivC fuel (bpsremainder fuel p q) β)
+      = Polynomial.C (toPoly β) * toBPoly (bdivC (bpsremainder fuel p q) β)
         + toBPoly q * toBPoly s := by
   rw [hstep.relation,
-    toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hstep.beta_cnorm_ne hstep.exact_division]
+    toBPoly_bdivC_exact (bpsremainder fuel p q) β hstep.beta_cnorm_ne hstep.exact_division]
   ring
 
 end DeepWiki.SymbolicIntegration.Compute

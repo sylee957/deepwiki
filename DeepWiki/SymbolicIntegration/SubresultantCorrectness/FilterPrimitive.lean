@@ -69,23 +69,23 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : Dens
 
 /-! ### `bprimitivePartX` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute` -/
 
-/-- The content stripped by `bprimitivePartX fuel p` is nonzero and divides every coefficient exactly. -/
-structure IsPrimitivePartXInput (fuel : ℕ) (p : BPoly) : Prop where
+/-- The content stripped by `bprimitivePartX p` is nonzero and divides every coefficient exactly. -/
+structure IsPrimitivePartXInput (p : BPoly) : Prop where
   /-- The computed content is not boolean-zero. -/
-  content_not_zero : ¬ cisZero (bcontentX fuel p) = true
+  content_not_zero : ¬ cisZero (bcontentX p) = true
   /-- The normalized content list is nonempty. -/
-  content_cnorm_ne : cnorm (bcontentX fuel p) ≠ []
+  content_cnorm_ne : cnorm (bcontentX p) ≠ []
   /-- The computed content reads to a nonzero polynomial. -/
-  content_toPoly_ne : toPoly (bcontentX fuel p) ≠ 0
+  content_toPoly_ne : toPoly (bcontentX p) ≠ 0
   /-- The content divides every normalized `x`-coefficient exactly. -/
-  exact_division : ∀ a ∈ bnorm p, toPoly (DensePoly.cmodWf a (bcontentX fuel p)) = 0
+  exact_division : ∀ a ∈ bnorm p, toPoly (DensePoly.cmodWf a (bcontentX p)) = 0
 
-/-- `IsSimilar (toBPoly p) (toBPoly (bprimitivePartX fuel p))` under the content-exactness hypotheses. -/
-theorem isSimilar_toBPoly_bprimitivePartX (fuel : ℕ) (p : BPoly)
-    (hprim : IsPrimitivePartXInput fuel p) :
-    IsSimilar (toBPoly p) (toBPoly (bprimitivePartX fuel p)) :=
-  ⟨1, toPoly (bcontentX fuel p), one_ne_zero, hprim.content_toPoly_ne, by
-    rw [map_one, one_mul, toBPoly_bprimitivePartX_exact fuel p hprim.content_not_zero
+/-- `IsSimilar (toBPoly p) (toBPoly (bprimitivePartX p))` under the content-exactness hypotheses. -/
+theorem isSimilar_toBPoly_bprimitivePartX (p : BPoly)
+    (hprim : IsPrimitivePartXInput p) :
+    IsSimilar (toBPoly p) (toBPoly (bprimitivePartX p)) :=
+  ⟨1, toPoly (bcontentX p), one_ne_zero, hprim.content_toPoly_ne, by
+    rw [map_one, one_mul, toBPoly_bprimitivePartX_exact p hprim.content_not_zero
       hprim.content_cnorm_ne hprim.exact_division]⟩
 
 /-- Given the endpoint hypotheses, the filter identity `hfilt`, and content-exactness of `bprimitivePartX`,
@@ -98,13 +98,13 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : Den
     (hchain : IsSubresPRSChainInput fuel G bt s c m)
     (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
       = toBPoly (G (m + 2)))
-    (hprim : IsPrimitivePartXInput fuel
+    (hprim : IsPrimitivePartXInput
       (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) :
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
       (toBPoly (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)) := by
   have hraw := isSimilar_lrtSubresultant_bsubresultantGcd fuel A D G bt s c m hG0 hG1 hd0 hd1
     hchain hfilt
-  have hprimSim := isSimilar_toBPoly_bprimitivePartX fuel
+  have hprimSim := isSimilar_toBPoly_bprimitivePartX
     (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)) hprim
   rw [lrtSubresultantCompute, ← hG0, ← hG1]
   exact hraw.trans hprimSim

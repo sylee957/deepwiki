@@ -44,9 +44,9 @@ def qderiv (x : QFun) : QFun :=
 def qeq (x y : QFun) : Bool :=
   cisZero (csub (cmul x.1 y.2) (cmul y.1 x.2))
 
-/-- Lowest-terms reduction `qnorm fuel (a, b) = (a/q, b/q)` (`q = gcd(a, b)`) scaled so the
+/-- Lowest-terms reduction `qnorm (a, b) = (a/q, b/q)` (`q = gcd(a, b)`) scaled so the
 denominator is monic; the zero fraction stays `qzero`. -/
-def qnorm (_fuel : ℕ) (x : QFun) : QFun :=
+def qnorm (x : QFun) : QFun :=
   let (a, b) := x
   if cisZero a then qzero
   else

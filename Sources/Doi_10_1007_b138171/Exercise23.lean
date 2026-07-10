@@ -77,12 +77,12 @@ def cR23full : DensePoly ℚ :=
 /-- **Exercise 2.3: the engine computes `R(t)`** — `rtResultantCompute` on `A, D`, scaled by `35` to
 clear interpolation denominators, returns the degree-8 integer resultant `cR23full`. Proved by
 `native_decide`. -/
-theorem ex_2_3_resultant : cscale 35 (rtResultantCompute 80 cA23 cD23) = cR23full := by native_decide
+theorem ex_2_3_resultant : cscale 35 (rtResultantCompute cA23 cD23) = cR23full := by native_decide
 
 /-- **The monic squarefree Rothstein–Trager resultant `R(t)`** of Exercise 2.3 (the radical of the
 degree-8 resultant, made monic over `ℚ`): the polynomial `ℚ[t]/(R)` over which the LRT log argument is
 normalized. The residues are its roots. -/
-def cR23 : DensePoly ℚ := csqfreePart 80 (rtResultantCompute 80 cA23 cD23)
+def cR23 : DensePoly ℚ := csqfreePart (rtResultantCompute cA23 cD23)
 
 /-- **Exercise 2.3: `R(t)` is degree 8** (eight distinct residues): the monic squarefree resultant has
 `9` coefficients. Proved by `native_decide`. -/

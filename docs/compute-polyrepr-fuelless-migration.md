@@ -1,4 +1,4 @@
-# Retire the concrete `Compute` division and gcd layer
+# Retire the concrete `Compute` division and gcd layer — DONE
 
 ## Goal
 
@@ -26,14 +26,17 @@ The split is intentional:
 - Replace the old concrete correctness lemmas with the existing `CPoly` or `DensePoly.*Wf`
   theorems rather than restating another concrete family.
 
-## Phases
+## Completed phases
 
-1. Migrate `logToAtanCompute` to `CPoly.cdivmod` / `CPoly.cgcdExt`, normalize its concrete
-   outputs, and retire the local `cdvd` helper.
-2. Migrate dense executable consumers (`RtResultant`, `Squarefree`, `Subresultant`, `Hermite`,
+1. Migrated `logToAtanCompute` to `CPoly.cdivmod` / `CPoly.cgcdExt`, normalized its concrete
+   outputs, and retired the local `cdvd` helper.
+2. Migrated dense executable consumers (`RtResultant`, `Squarefree`, `Subresultant`, `Hermite`,
    and rational-function normalization) to the `DensePoly.*Wf` API.
-3. Migrate correctness modules and source certificates to the fuel-free theorem families,
+3. Migrated correctness modules and source certificates to the fuel-free theorem families,
    deleting fuel-bound hypotheses and the superseded concrete division/gcd theorem block.
-4. Delete the remaining five concrete definitions from `LogToAtan.lean`, audit that no
-   `Compute.cdivmod` / `cdiv` / `cmod` / `cdvd` / `cgcdExt` references remain, then run the
-   affected module gates and the full repository gate.
+4. Deleted the remaining concrete definitions from `LogToAtan.lean`, removed compatibility fuel
+   arguments from downstream helpers, and switched resultant sampling directly to
+   `DensePoly.cresultantWf`.
+
+Completion is verified by declaration/reference searches, affected module gates, and the full
+repository gate.

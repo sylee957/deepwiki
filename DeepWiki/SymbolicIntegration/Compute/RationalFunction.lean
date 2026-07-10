@@ -197,13 +197,13 @@ theorem toQFun_cdivWf_cdivWf (a b q : DensePoly ℚ) (hq : cnorm q ≠ [])
   simp only [toQFun]
   rw [ha, hbe, map_mul, map_mul, mul_div_mul_right _ _ hqm]
 
-/-- `qnorm` preserves the value: `toQFun (qnorm fuel x) = toQFun x` in `RatFunc ℚ`. -/
-theorem toQFun_qnorm (fuel : ℕ) (x : QFun) (hb : toPoly x.2 ≠ 0)
+/-- `qnorm` preserves the value: `toQFun (qnorm x) = toQFun x` in `RatFunc ℚ`. -/
+theorem toQFun_qnorm (x : QFun) (hb : toPoly x.2 ≠ 0)
     (hq : cnorm (DensePoly.cgcdWf x.1 x.2).1 ≠ [])
     (hra : toPoly (DensePoly.cmodWf x.1 (DensePoly.cgcdWf x.1 x.2).1) = 0)
     (hrb : toPoly (DensePoly.cmodWf x.2 (DensePoly.cgcdWf x.1 x.2).1) = 0)
     (hbq : cnorm (DensePoly.cdivWf x.2 (DensePoly.cgcdWf x.1 x.2).1) ≠ []) :
-    toQFun (qnorm fuel x) = toQFun x := by
+    toQFun (qnorm x) = toQFun x := by
   obtain ⟨a, b⟩ := x
   simp only at hb hq hra hrb hbq
   rw [qnorm]

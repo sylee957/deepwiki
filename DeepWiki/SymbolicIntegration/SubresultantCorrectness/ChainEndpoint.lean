@@ -21,7 +21,7 @@ theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
         = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
     (hβcn : ∀ l < m, cnorm (bt l) ≠ [])
     (hdiv : ∀ l < m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (DensePoly.cmodWf a (bt l)) = 0)
-    (hG2 : ∀ l < m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hG2 : ∀ l < m, G (l + 2) = bdivC (bpsremainder fuel (G l) (G (l + 1))) (bt l))
     (hc0 : ∀ l < m, toPoly (c l) ≠ 0) (hβ0 : ∀ l < m, toPoly (bt l) ≠ 0)
     (hlc : ∀ l < m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
     (hcb : ∀ l < m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
@@ -49,7 +49,7 @@ structure IsSubresPRSChainInput (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → D
   /-- Each pseudo-remainder step is exact after β-division. -/
   exact_step : ∀ l ≤ m, IsBdivCExactStep fuel (G l) (G (l + 1)) (bt l) (s l) (c l)
   /-- Each next chain element is the β-divided pseudo-remainder. -/
-  next_eq : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l)
+  next_eq : ∀ l ≤ m, G (l + 2) = bdivC (bpsremainder fuel (G l) (G (l + 1))) (bt l)
   /-- Each pseudo-division scalar reads to a nonzero polynomial. -/
   scale_toPoly_ne : ∀ l ≤ m, toPoly (c l) ≠ 0
   /-- Each β divisor reads to a nonzero polynomial. -/

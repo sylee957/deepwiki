@@ -23,12 +23,13 @@ denotation bridge.
 
 Only algorithms genuinely specific to the concrete computation remain:
 
-- fuel-bounded division and gcd: `cdivmod`, `cdiv`, `cmod`, `cdvd`, `cgcdExt`;
-- resultant and interpolation algorithms: `cresultant`, `cC`, `clagNum`, `cinterpolate`;
+- interpolation algorithms: `cC`, `clagNum`, `cinterpolate`;
 - composed entry points and example data such as `logToAtanCompute`, `rtResultantCompute`,
   `csqfreePart`, `cX3m3X`, and `cX2m2`.
 
 The local scalar-power helper was removed in favor of `DensePoly.cfpow`.
+Division, gcd, divisibility, and resultant consumers now call the `CPoly` or fuel-free
+`DensePoly` APIs directly; no concrete compatibility wrappers remain for those operations.
 
 ## Coherence layer
 

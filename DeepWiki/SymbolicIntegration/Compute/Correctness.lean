@@ -3,9 +3,9 @@ import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Correctness of the computable engine
-Through `DensePoly.toPoly`, the genuinely concrete operations (`cdivmod`/`cgcdExt`/`cresultant`/…)
-realize the corresponding `ℚ[X]` operations, culminating in
-`cresultant = Polynomial.resultant`. -/
+Through `DensePoly.toPoly`, the concrete bivariate, rational-function, and resultant operations
+realize the corresponding `ℚ[X]` operations. Polynomial division and gcd correctness come directly
+from the representation-independent and well-founded dense APIs. -/
 
 open Polynomial
 
@@ -21,96 +21,6 @@ theorem cnorm_cons_eq (a : ℚ) (as : DensePoly ℚ) :
   cases DensePoly.cnorm as with
   | nil => show (if (decide (a = 0) = true) then _ else _) = _; by_cases ha : a = 0 <;> simp [ha]
   | cons b bs => rfl
-
-/-- Euclidean-division identity through `toPoly` (for `q` normalized and nonzero):
-`toPoly p = toPoly (quotient) · toPoly q + toPoly (remainder)`. -/
-theorem toPoly_cdivmod (fuel : ℕ) (p q : DensePoly ℚ) (hqn : cnorm q = q) (hq0 : q ≠ []) :
-    toPoly p
-      = toPoly (cdivmod fuel p q).1 * toPoly q + toPoly (cdivmod fuel p q).2 := by
-  induction fuel generalizing p with
-  | zero => simp [cdivmod, DensePoly.toPolyG_cnormG]
-  | succ fuel ih =>
-    have hcz : cisZero q = false := by
-      simpa [cisZero, hqn] using hq0
-    rw [cdivmod]
-    simp only [hqn, hcz, Bool.false_eq_true, if_false]
-    by_cases hlen : (cnorm p).length < q.length
-    · simp [hlen, DensePoly.toPolyG_cnormG]
-    · simp only [hlen, if_false]
-      rcases hqr : cdivmod fuel (cnorm (csub (cnorm p)
-          (cmul (cshift ((cnorm p).length - q.length) [clead (cnorm p) / clead q]) q))) q
-        with ⟨quo, rem⟩
-      have hih := ih (cnorm (csub (cnorm p)
-          (cmul (cshift ((cnorm p).length - q.length) [clead (cnorm p) / clead q]) q)))
-      rw [hqr] at hih
-      simp only [toPoly_eq_dense, DensePoly.toPolyG_caddG, DensePoly.toPolyG_cnormG,
-        DensePoly.toPolyG_csubG, DensePoly.toPolyG_cmulG] at hih ⊢
-      linear_combination hih
-
-/-- `cdivmod fuel p q = cdivmod fuel p (cnorm q)`: `cdivmod` normalizes its divisor. -/
-theorem cdivmod_cnorm_right (fuel : ℕ) (p q : DensePoly ℚ) :
-    cdivmod fuel p q = cdivmod fuel p (cnorm q) := by
-  cases fuel with
-  | zero => rfl
-  | succ fuel => simp only [cdivmod, DensePoly.cnormG_idem]
-
-/-- Euclidean-division identity through `toPoly` for an arbitrary nonzero divisor (`cnorm q ≠ []`):
-`toPoly p = toPoly (quotient) · toPoly q + toPoly (remainder)`. -/
-theorem toPoly_cdivmod' (fuel : ℕ) (p q : DensePoly ℚ) (hq0 : cnorm q ≠ []) :
-    toPoly p
-      = toPoly (cdivmod fuel p q).1 * toPoly q + toPoly (cdivmod fuel p q).2 := by
-  rw [cdivmod_cnorm_right]
-  simpa [DensePoly.toPolyG_cnormG] using toPoly_cdivmod fuel p (cnorm q) (DensePoly.cnormG_idem q) hq0
-
-/-- Exact division through `toPoly`: zero `cmod` gives quotient times divisor. -/
-theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hrem : toPoly (cmod fuel p q) = 0) :
-    toPoly p = toPoly (cdiv fuel p q) * toPoly q := by
-  have h := toPoly_cdivmod' fuel p q hq
-  rw [show (cdivmod fuel p q).1 = cdiv fuel p q from rfl,
-      show (cdivmod fuel p q).2 = cmod fuel p q from rfl, hrem, add_zero] at h
-  exact h
-
-/-- A vanishing computable remainder gives divisibility through `toPoly`. -/
-theorem toPoly_dvd_of_cmod_zero (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hrem : toPoly (cmod fuel p q) = 0) :
-    toPoly q ∣ toPoly p :=
-  ⟨toPoly (cdiv fuel p q), by rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, mul_comm]⟩
-
-/-- Bézout identity through `toPoly` for `cgcdExt`: with `(g, s, t) = cgcdExt fuel a b`,
-`toPoly s · toPoly a + toPoly t · toPoly b = toPoly g`. -/
-theorem toPoly_cgcdExt (fuel : ℕ) (a b : DensePoly ℚ) :
-    toPoly (cgcdExt fuel a b).2.1 * toPoly a + toPoly (cgcdExt fuel a b).2.2 * toPoly b
-      = toPoly (cgcdExt fuel a b).1 := by
-  induction fuel generalizing a b with
-  | zero => simp [cgcdExt, DensePoly.toPolyG_cnormG]
-  | succ fuel ih =>
-    rw [cgcdExt]
-    cases hb : cisZero b with
-    | true => simp [DensePoly.toPolyG_cnormG]
-    | false =>
-      simp only [Bool.false_eq_true, if_false]
-      rcases hqr : cdivmod (fuel + 1) a b with ⟨q, r⟩
-      rcases hg : cgcdExt fuel b r with ⟨g, s, t⟩
-      have hdiv : toPoly a = toPoly q * toPoly b + toPoly r := by
-        have h := toPoly_cdivmod' (fuel + 1) a b (by simpa [cisZero] using hb)
-        rw [hqr] at h; exact h
-      have hih := ih b r
-      rw [hg] at hih
-      simp only [toPoly_eq_dense, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cmulG]
-      simp only [toPoly_eq_dense] at hdiv hih
-      linear_combination hih + DensePoly.toPoly t * hdiv
-
-/-- The `LogToAtan` cofactor invariant `B·D − A·C = G` in `ℚ[X]`: for
-`(G, D, C) = cgcdExt fuel B (−A)`, `toPoly B · toPoly D − toPoly A · toPoly C = toPoly G`. -/
-theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : DensePoly ℚ) :
-    toPoly B * toPoly (cgcdExt fuel B (cneg A)).2.1
-        - toPoly A * toPoly (cgcdExt fuel B (cneg A)).2.2
-      = toPoly (cgcdExt fuel B (cneg A)).1 := by
-  have h := toPoly_cgcdExt fuel B (cneg A)
-  simp only [toPoly_eq_dense] at h ⊢
-  rw [DensePoly.toPolyG_cnegG] at h
-  linear_combination h
 
 /-! ### The bivariate bridge `toBPoly : BPoly → ℚ[t][x]` and its homomorphism lemmas
 Reads a `BPoly = List (DensePoly ℚ)` as a `Polynomial (Polynomial ℚ)` in `x`, each `x`-coefficient via
@@ -278,12 +188,12 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
       linear_combination hsc
 
 /-- Diophantine/Bézout solver correctness through `toPoly`: when `gcd(p, q)` is a nonzero constant,
-`cdiophantine fuel p q rhs = (B, C)` satisfies `toPoly B · toPoly p + toPoly C · toPoly q = toPoly rhs`. -/
-theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : DensePoly ℚ) (hq : cnorm q ≠ [])
+`cdiophantine p q rhs = (B, C)` satisfies `toPoly B · toPoly p + toPoly C · toPoly q = toPoly rhs`. -/
+theorem toPoly_cdiophantine (p q rhs : DensePoly ℚ) (hq : cnorm q ≠ [])
     (hg : toPoly (DensePoly.cgcdWf p q).1 = Polynomial.C (clead (DensePoly.cgcdWf p q).1))
     (hgc : clead (DensePoly.cgcdWf p q).1 ≠ 0) :
-    toPoly (cdiophantine fuel p q rhs).1 * toPoly p
-        + toPoly (cdiophantine fuel p q rhs).2 * toPoly q
+    toPoly (cdiophantine p q rhs).1 * toPoly p
+        + toPoly (cdiophantine p q rhs).2 * toPoly q
       = toPoly rhs := by
   rcases hgst : DensePoly.cgcdWf p q with ⟨g, s, t⟩
   rw [hgst] at hg hgc
@@ -306,63 +216,6 @@ theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : DensePoly ℚ) (hq : cnorm q
   linear_combination (-DensePoly.toPoly p) * hdiv
     + (Polynomial.C ((clead g)⁻¹ : ℚ) * DensePoly.toPoly rhs) * hbez
     + DensePoly.toPoly rhs * hinv
-
-/-- `cgcdExt`'s gcd is greatest among common divisors: any `d` dividing both `toPoly a` and
-`toPoly b` divides `toPoly (cgcdExt fuel a b).1`. -/
-theorem toPoly_dvd_cgcdExt {d : ℚ[X]} (fuel : ℕ) (a b : DensePoly ℚ)
-    (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) :
-    d ∣ toPoly (cgcdExt fuel a b).1 := by
-  rw [← toPoly_cgcdExt fuel a b]
-  exact dvd_add (ha.mul_left _) (hb.mul_left _)
-
-/-- Termination predicate for `cgcdExt`: the remainder sequence reaches `0` within `fuel`. -/
-def cgcdTerminates : ℕ → DensePoly ℚ → DensePoly ℚ → Prop
-  | 0, _, b => cisZero b = true
-  | fuel + 1, a, b => cisZero b = true ∨ cgcdTerminates fuel b (cmod (fuel + 1) a b)
-
-/-- `cgcdExt`'s gcd divides both inputs when the algorithm terminates: under `cgcdTerminates`,
-`toPoly (cgcdExt fuel a b).1` divides `toPoly a` and `toPoly b`. -/
-theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : DensePoly ℚ), cgcdTerminates fuel a b →
-    toPoly (cgcdExt fuel a b).1 ∣ toPoly a ∧ toPoly (cgcdExt fuel a b).1 ∣ toPoly b := by
-  intro fuel
-  induction fuel with
-  | zero =>
-    intro a b hterm
-    simp only [cgcdTerminates] at hterm
-    rw [cgcdExt]
-    have hb0 : toPoly b = 0 := by
-      have hcb : cnorm b = [] := by simpa [cisZero] using hterm
-      rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hcb, DensePoly.toPolyG_nil]
-    simp only [toPoly_eq_dense] at hb0 ⊢
-    exact ⟨by simp [DensePoly.toPolyG_cnormG], by simp [hb0]⟩
-  | succ fuel ih =>
-    intro a b hterm
-    rw [cgcdExt]
-    cases hb : cisZero b with
-    | true =>
-      have hb0 : toPoly b = 0 := by
-        have hcb : cnorm b = [] := by simpa [cisZero] using hb
-        rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hcb, DensePoly.toPolyG_nil]
-      simp only [toPoly_eq_dense] at hb0 ⊢
-      exact ⟨by simp [DensePoly.toPolyG_cnormG], by simp [hb0]⟩
-    | false =>
-      simp only [Bool.false_eq_true, if_false]
-      rcases hqr : cdivmod (fuel + 1) a b with ⟨q, r⟩
-      rcases hg : cgcdExt fuel b r with ⟨g, s, t⟩
-      have hterm' : cgcdTerminates fuel b r := by
-        rw [cgcdTerminates] at hterm
-        rcases hterm with h | h
-        · rw [hb] at h; simp at h
-        · have hcm : cmod (fuel + 1) a b = r := by rw [cmod, hqr]
-          rwa [hcm] at h
-      obtain ⟨hgb, hgr⟩ := ih b r hterm'
-      rw [hg] at hgb hgr
-      have hdiv : toPoly a = toPoly q * toPoly b + toPoly r := by
-        have h := toPoly_cdivmod' (fuel + 1) a b (by simpa [cisZero] using hb)
-        rw [hqr] at h; exact h
-      refine ⟨?_, hgb⟩
-      rw [hdiv]
-      exact dvd_add (hgb.mul_left _) hgr
 
 /-- Rational-function read of a `QFun` into `RatFunc ℚ`: `(num, den) ↦ toPoly num / toPoly den`. -/
 noncomputable def toQFun (x : QFun) : RatFunc ℚ :=
@@ -481,31 +334,6 @@ theorem cdeg_eq_natDegree (p : DensePoly ℚ) : cdeg p = (toPoly p).natDegree :=
 theorem clead_eq_leadingCoeff (p : DensePoly ℚ) : clead p = (toPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← cdeg_eq_natDegree, ← clead_eq_coeff]
 
-/-- One Euclidean-division step strictly drops the degree in `ℚ[X]`:
-`(P - C (lcP/lcQ)·X^(degP−degQ)·Q).degree < P.degree`. -/
-theorem degree_reduce_step_lt {P Q : ℚ[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
-    (hpq : Q.natDegree ≤ P.natDegree) :
-    (P - C (P.leadingCoeff / Q.leadingCoeff)
-        * X ^ (P.natDegree - Q.natDegree) * Q).degree < P.degree := by
-  have hQlc : Q.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hQ
-  have hPlc : P.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hP
-  have hc0 : P.leadingCoeff / Q.leadingCoeff ≠ 0 := div_ne_zero hPlc hQlc
-  have hCc : (C (P.leadingCoeff / Q.leadingCoeff)) ≠ 0 := by
-    rwa [Ne, Polynomial.C_eq_zero]
-  have hXk : (X ^ (P.natDegree - Q.natDegree) : ℚ[X]) ≠ 0 := pow_ne_zero _ Polynomial.X_ne_zero
-  set T := C (P.leadingCoeff / Q.leadingCoeff) * X ^ (P.natDegree - Q.natDegree) * Q with hT
-  have hT0 : T ≠ 0 := mul_ne_zero (mul_ne_zero hCc hXk) hQ
-  have hTnd : T.natDegree = P.natDegree := by
-    rw [hT, Polynomial.natDegree_mul (mul_ne_zero hCc hXk) hQ,
-      Polynomial.natDegree_mul hCc hXk, Polynomial.natDegree_C, Polynomial.natDegree_X_pow]
-    omega
-  have hTlc : T.leadingCoeff = P.leadingCoeff := by
-    rw [hT, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C,
-      Polynomial.leadingCoeff_X_pow, mul_one, div_mul_cancel₀ _ hQlc]
-  exact Polynomial.degree_sub_lt
-    (by rw [Polynomial.degree_eq_natDegree hP, Polynomial.degree_eq_natDegree hT0, hTnd]) hP
-    hTlc.symm
-
 /-- `cnorm p = []` iff `toPoly p = 0` (the list normalizes to empty exactly for the zero polynomial). -/
 theorem cnorm_eq_nil_iff (p : DensePoly ℚ) : cnorm p = [] ↔ toPoly p = 0 := by
   constructor
@@ -523,218 +351,5 @@ theorem length_cnorm_of_ne (p : DensePoly ℚ) (h : cnorm p ≠ []) :
   rw [cdeg] at hd
   have hlen : 1 ≤ (cnorm p).length := List.length_pos_iff.mpr h
   omega
-
-/-- One `cdivmod` step strictly shortens the normalized list: the remainder-loop replacement has
-strictly smaller normalized length than `p`. -/
-theorem step_length_lt (p q : DensePoly ℚ) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
-    (hpq : (cnorm q).length ≤ (cnorm p).length) :
-    (cnorm (csub (cnorm p)
-        (cmul (cshift ((cnorm p).length - (cnorm q).length) [clead p / clead q])
-          (cnorm q)))).length < (cnorm p).length := by
-  have hP : toPoly p ≠ 0 := fun h => hp ((cnorm_eq_nil_iff p).mpr h)
-  have hQ : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
-  have hk : (cnorm p).length - (cnorm q).length
-      = (toPoly p).natDegree - (toPoly q).natDegree := by
-    rw [length_cnorm_of_ne p hp, length_cnorm_of_ne q hq]; omega
-  have hc : clead p / clead q = (toPoly p).leadingCoeff / (toPoly q).leadingCoeff := by
-    rw [clead_eq_leadingCoeff, clead_eq_leadingCoeff]
-  set step := csub (cnorm p)
-    (cmul (cshift ((cnorm p).length - (cnorm q).length) [clead p / clead q]) (cnorm q))
-    with hstepdef
-  have hstep : toPoly step
-      = toPoly p - C ((toPoly p).leadingCoeff / (toPoly q).leadingCoeff)
-          * X ^ ((toPoly p).natDegree - (toPoly q).natDegree) * toPoly q := by
-    rw [hstepdef, toPoly_eq_dense, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cnormG,
-      DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cshiftG, DensePoly.toPolyG_cnormG, hk, hc]
-    simp only [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil, toR_eq_toK,
-      CFieldSpec.toK_rat, mul_zero, add_zero]
-    ring
-  have hpq' : (toPoly q).natDegree ≤ (toPoly p).natDegree := by
-    have e1 := length_cnorm_of_ne p hp
-    have e2 := length_cnorm_of_ne q hq
-    omega
-  have hdeg : (toPoly step).degree < (toPoly p).degree := by
-    rw [hstep]; exact degree_reduce_step_lt hP hQ hpq'
-  by_cases hs0 : toPoly step = 0
-  · rw [(cnorm_eq_nil_iff _).mpr hs0, List.length_nil]
-    exact List.length_pos_iff.mpr hp
-  · have hne : cnorm step ≠ [] := fun h => hs0 ((cnorm_eq_nil_iff _).mp h)
-    have hlt := Polynomial.natDegree_lt_natDegree hs0 hdeg
-    rw [length_cnorm_of_ne _ hne, length_cnorm_of_ne p hp]
-    omega
-
-/-- `clead` is invariant under `cnorm`: `clead (cnorm p) = clead p`. -/
-theorem clead_cnorm (p : DensePoly ℚ) : clead (cnorm p) = clead p := by
-  show DensePoly.clead (DensePoly.cnorm p) = DensePoly.clead p
-  simp only [DensePoly.clead, DensePoly.cnormG_idem]
-
-/-- `cisZero` is invariant under `cnorm`. -/
-theorem cisZero_cnorm (q : DensePoly ℚ) : cisZero (cnorm q) = cisZero q := by
-  simp only [cisZero, DensePoly.cnormG_idem]
-
-/-- Remainder degree bound: with enough fuel and a nonzero divisor, `cmod fuel p q` has strictly
-smaller normalized length than `q`. -/
-theorem cmod_length_lt (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hfuel : (cnorm p).length ≤ fuel) :
-    (cnorm (cmod fuel p q)).length < (cnorm q).length := by
-  induction fuel generalizing p with
-  | zero =>
-    have hp0 : cnorm p = [] := List.length_eq_zero_iff.mp (by omega)
-    have h2 : cmod 0 p q = [] := by simp [cmod, cdivmod, hp0]
-    rw [h2]; simpa using List.length_pos_iff.mpr hq
-  | succ fuel ih =>
-    have hcz : cisZero (cnorm q) = false := by rw [cisZero_cnorm]; simpa [cisZero] using hq
-    by_cases hlen : (cnorm p).length < (cnorm q).length
-    · have h2 : cmod (fuel + 1) p q = cnorm p := by
-        rw [cmod, cdivmod]
-        simp only [hcz, Bool.false_eq_true, if_false, if_pos hlen]
-      rw [h2, DensePoly.cnormG_idem]; exact hlen
-    · have hp : cnorm p ≠ [] := by
-        rintro h
-        rw [h, List.length_nil] at hlen
-        exact hlen (List.length_pos_iff.mpr hq)
-      have hstep := step_length_lt p q hp hq (by omega)
-      have key : cmod (fuel + 1) p q
-          = cmod fuel (cnorm (csub (cnorm p)
-              (cmul (cshift ((cnorm p).length - (cnorm q).length) [clead p / clead q])
-                (cnorm q)))) q := by
-        rw [cmod, cdivmod]
-        simp only [hcz, Bool.false_eq_true, if_false, if_neg hlen, clead_cnorm, cmod,
-          ← cdivmod_cnorm_right]
-      rw [key]
-      apply ih
-      rw [DensePoly.cnormG_idem]
-      omega
-
-/-- Divisibility gives a vanishing computable remainder, assuming enough fuel. -/
-theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hfuel : (cnorm p).length ≤ fuel) (hdvd : toPoly q ∣ toPoly p) :
-    toPoly (cmod fuel p q) = 0 := by
-  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
-  have hdiv := toPoly_cdivmod' fuel p q hq
-  rw [show (cdivmod fuel p q).1 = cdiv fuel p q from rfl,
-      show (cdivmod fuel p q).2 = cmod fuel p q from rfl] at hdiv
-  have hqr : toPoly q ∣ toPoly (cmod fuel p q) := by
-    have hd2 : toPoly q ∣ toPoly (cdiv fuel p q) * toPoly q := Dvd.intro_left _ rfl
-    have hsub : toPoly (cmod fuel p q) = toPoly p - toPoly (cdiv fuel p q) * toPoly q := by
-      rw [hdiv]; ring
-    rw [hsub]; exact dvd_sub hdvd hd2
-  have hlen : (cnorm (cmod fuel p q)).length < (cnorm q).length :=
-    cmod_length_lt fuel p q hq hfuel
-  by_contra hne
-  have hrne : toPoly (cmod fuel p q) ≠ 0 := hne
-  have hdeg : (toPoly q).degree ≤ (toPoly (cmod fuel p q)).degree :=
-    Polynomial.degree_le_of_dvd hqr hrne
-  have e1 : (cnorm (cmod fuel p q)).length = (toPoly (cmod fuel p q)).natDegree + 1 :=
-    length_cnorm_of_ne _ (fun h => hrne ((cnorm_eq_nil_iff _).mp h))
-  have e2 : (cnorm q).length = (toPoly q).natDegree + 1 := length_cnorm_of_ne q hq
-  have hndlt : (toPoly (cmod fuel p q)).natDegree < (toPoly q).natDegree := by omega
-  rw [Polynomial.degree_eq_natDegree hrne, Polynomial.degree_eq_natDegree hq0, Nat.cast_le] at hdeg
-  omega
-
-/-- Euclidean-gcd descent terminates for sufficient fuel: when `fuel` bounds the first argument's
-normalized length and strictly bounds the second's, `cgcdTerminates fuel a b` holds. -/
-theorem cgcdTerminates_of_fuel :
-    ∀ (fuel : ℕ) (a b : DensePoly ℚ), (cnorm a).length ≤ fuel → (cnorm b).length < fuel →
-      cgcdTerminates fuel a b := by
-  intro fuel
-  induction fuel with
-  | zero => intro _ _ _ hb; omega
-  | succ fuel ih =>
-    intro a b ha hb
-    rw [cgcdTerminates]
-    by_cases hbz : cisZero b = true
-    · exact Or.inl hbz
-    · refine Or.inr ?_
-      have hbne : cnorm b ≠ [] := by simpa [cisZero] using hbz
-      -- the remainder strictly shortens below `(cnorm b).length`
-      have hlt : (cnorm (cmod (fuel + 1) a b)).length < (cnorm b).length :=
-        cmod_length_lt (fuel + 1) a b hbne ha
-      -- new pair `(b, cmod …)`: first slot `≤ fuel`, second slot `< fuel`
-      exact ih b (cmod (fuel + 1) a b) (by omega) (by omega)
-
-/-- Symmetric entry to `cgcdTerminates_of_fuel`: if `fuel` strictly bounds both normalized argument
-lengths, `cgcdTerminates fuel a b` holds. -/
-theorem cgcdTerminates_of_fuel_lt (fuel : ℕ) (a b : DensePoly ℚ)
-    (ha : (cnorm a).length < fuel) (hb : (cnorm b).length < fuel) :
-    cgcdTerminates fuel a b :=
-  cgcdTerminates_of_fuel fuel a b (le_of_lt ha) hb
-
-/-- The Euclidean remainder never exceeds the dividend's length:
-`(cnorm (cmod fuel a b)).length ≤ (cnorm a).length`. -/
-theorem cmod_length_le_left :
-    ∀ (fuel : ℕ) (a b : DensePoly ℚ), (cnorm (cmod fuel a b)).length ≤ (cnorm a).length := by
-  intro fuel
-  induction fuel with
-  | zero =>
-    intro a b
-    have : cmod 0 a b = cnorm a := by simp [cmod, cdivmod]
-    rw [this, DensePoly.cnormG_idem]
-  | succ fuel ih =>
-    intro a b
-    by_cases hbz : cisZero (cnorm b) = true
-    · have h2 : cmod (fuel + 1) a b = [] := by
-        rw [cmod, cdivmod]; simp only [hbz, if_true]
-      rw [h2]; simp
-    · by_cases hlen : (cnorm a).length < (cnorm b).length
-      · have h2 : cmod (fuel + 1) a b = cnorm a := by
-          rw [cmod, cdivmod]
-          simp only [hbz, Bool.false_eq_true, if_false, if_pos hlen]
-        rw [h2, DensePoly.cnormG_idem]
-      · have hbne : cnorm b ≠ [] := by simpa [cisZero_cnorm, cisZero] using hbz
-        have hane : cnorm a ≠ [] := by
-          rintro h; rw [h, List.length_nil] at hlen
-          exact hlen (List.length_pos_iff.mpr hbne)
-        have hstep := step_length_lt a b hane hbne (by omega)
-        have key : cmod (fuel + 1) a b
-            = cmod fuel (cnorm (csub (cnorm a)
-                (cmul (cshift ((cnorm a).length - (cnorm b).length) [clead a / clead b])
-                  (cnorm b)))) b := by
-          rw [cmod, cdivmod]
-          simp only [hbz, Bool.false_eq_true, if_false, if_neg hlen, clead_cnorm, cmod,
-            ← cdivmod_cnorm_right]
-        rw [key]
-        refine (ih _ b).trans ?_
-        rw [DensePoly.cnormG_idem]; omega
-
-/-- `cgcdExt`'s gcd is no longer than its larger input:
-`(cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length`. -/
-theorem cgcdExt_fst_length_le :
-    ∀ (fuel : ℕ) (a b : DensePoly ℚ),
-      (cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length := by
-  intro fuel
-  induction fuel with
-  | zero =>
-    intro a b
-    rw [cgcdExt]
-    simp
-  | succ fuel ih =>
-    intro a b
-    rw [cgcdExt]
-    by_cases hbz : cisZero b = true
-    · simp only [hbz, if_true, DensePoly.cnormG_idem]
-      exact le_max_left _ _
-    · simp only [hbz, Bool.false_eq_true, if_false]
-      rcases hqr : cdivmod (fuel + 1) a b with ⟨q, r⟩
-      have hr : r = cmod (fuel + 1) a b := by rw [cmod, hqr]
-      -- the remainder is bounded by the dividend `a`
-      have hra : (cnorm r).length ≤ (cnorm a).length := by
-        rw [hr]; exact cmod_length_le_left (fuel + 1) a b
-      have hih := ih b r
-      rcases hg : cgcdExt fuel b r with ⟨g, s, t⟩
-      rw [hg] at hih
-      simp only at hih ⊢
-      calc (cnorm g).length ≤ max (cnorm b).length (cnorm r).length := hih
-        _ ≤ max (cnorm a).length (cnorm b).length := by
-          rw [max_le_iff]
-          exact ⟨le_max_right _ _, le_trans hra (le_max_left _ _)⟩
-
-/-- `cresultant = Polynomial.resultant`; the legacy fuel parameter is ignored by the fuel-free engine. -/
-theorem cresultant_eq (fuel : ℕ) (p q : DensePoly ℚ)
-    (_hfuel : (cnorm p).length + (cnorm q).length + 2 ≤ fuel) :
-    cresultant fuel p q = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q) := by
-  rw [cresultant]
-  simpa only [CFieldSpec.toK_rat, toPoly_eq_dense] using
-    DensePoly.toPolyG_cresultantWf p q
 
 end DeepWiki.SymbolicIntegration.Compute

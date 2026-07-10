@@ -10,7 +10,7 @@ is genuinely over the **field extension** `ℚ(θ)`, not over `ℚ`: `θ² = √
 `θ⁴+2θ²−2 = 0`. So `θ` is a root of the (Eisenstein-at-2, irreducible) `q(y) = y⁴+2y²−2`, and
 `K := ℚ(θ) = ℚ[y]/(q)` is a degree-4 field. We therefore build a small **computable extension carrier**:
 `ECoeff := DensePoly ℚ` interpreted **mod `q`** (`ered`), with field arithmetic `eadd`/`emul`/`einv` (inverses
-via `cgcdExt`, since `ℚ[y]/(q)` is a field for irreducible `q`). On top of it we re-run the LRT engine of
+via `DensePoly.cgcdWf`, since `ℚ[y]/(q)` is a field for irreducible `q`). On top of it we re-run the LRT engine of
 `SubresultantCompute` one level up: `EPoly := List ECoeff = K[t]`, then `EBPoly := List EPoly = K[t][x]`,
 with the same pseudo-division / subresultant-PRS / mod-`R` monic-in-`x` normalization, now over `K[t]`.
 
@@ -44,15 +44,12 @@ namespace Compute
 `[-2, 0, 2, 0, 1]`. Eisenstein at `2`, so irreducible over `ℚ`; thus `K := ℚ[y]/(q)` is a field. -/
 def ex25_qmin : DensePoly ℚ := [-2, 0, 2, 0, 1]
 
-/-- **Fuel** for the inner `ℚ[y]` / `K`-arithmetic (`q` has degree 4; a generous bound). -/
-abbrev ex25EF : ℕ := 40
-
 /-- **The extension carrier** `ECoeff := DensePoly ℚ` — a `ℚ[y]`-representative of an element of `K = ℚ(θ)`. -/
 abbrev ECoeff := DensePoly ℚ
 
 /-- **Reduce a representative mod `q`** `ered c = c mod q`: the canonical degree-`< 4` representative of
 `c ∈ K`. -/
-def ered (c : ECoeff) : ECoeff := cmod ex25EF c ex25_qmin
+def ered (c : ECoeff) : ECoeff := DensePoly.cmodWf c ex25_qmin
 
 /-- **`K`-addition** `eadd a b = (a+b) mod q`. -/
 def eadd (a b : ECoeff) : ECoeff := ered (cadd a b)
@@ -72,7 +69,7 @@ def eisZero (a : ECoeff) : Bool := cisZero (ered a)
 /-- **`K`-inverse** `einv a = a⁻¹` in `K = ℚ[y]/(q)` (`q` irreducible ⇒ field): from the Bézout relation
 `s·a + ·q = g` (constant `g`), `a⁻¹ ≡ s/g (mod q)`. -/
 def einv (a : ECoeff) : ECoeff :=
-  let (g, s, _) := cgcdExt ex25EF a ex25_qmin
+  let (g, s, _) := DensePoly.cgcdWf a ex25_qmin
   ered (cscale (clead g)⁻¹ s)
 
 /-- **`K`-division** `ediv a b = a · b⁻¹` in `K`. -/

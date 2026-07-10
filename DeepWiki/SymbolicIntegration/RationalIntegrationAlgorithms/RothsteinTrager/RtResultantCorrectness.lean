@@ -274,7 +274,7 @@ theorem natDegree_rtResultant_le (A D : ℚ[X]) :
   · -- ∑ b j = deg D
     rw [Fin.sum_univ_add]; simp
 
-/-! ### Point-agreement: `cresultant` sample = `rtResultant` specialization -/
+/-! ### Point-agreement: `cresultantWf` sample = `rtResultant` specialization -/
 
 open Polynomial in
 /-- `toPoly (csub A (cscale a (cderiv D))) = toPoly A − C a · derivative (toPoly D)`. -/
@@ -286,12 +286,10 @@ theorem toPoly_sample (A D : DensePoly ℚ) (a : ℚ) :
   simp only [toR_eq_toK, CFieldSpec.toK_rat]
 
 open Polynomial in
-/-- Point-agreement (monic `D`): `cresultant fuel D (A − a·D') = (rtResultant (toPoly A) (toPoly D)).eval a`. -/
-theorem cresultant_sample_eq_eval (A D : DensePoly ℚ) (a : ℚ)
-    (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree)
-    (fuel : ℕ)
-    (hfuel : (cnorm D).length + (cnorm (csub A (cscale a (cderiv D)))).length + 2 ≤ fuel) :
-    cresultant fuel D (csub A (cscale a (cderiv D)))
+/-- Point-agreement (monic `D`): `cresultantWf D (A − a·D')` evaluates the RT resultant at `a`. -/
+theorem cresultantWf_sample_eq_eval (A D : DensePoly ℚ) (a : ℚ)
+    (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree) :
+    DensePoly.cresultantWf D (csub A (cscale a (cderiv D)))
       = (rtResultant (toPoly A) (toPoly D)).eval a := by
   set Aa := csub A (cscale a (cderiv D)) with hAa
   have hDpos : 0 < (toPoly D).natDegree := lt_of_le_of_lt (Nat.zero_le _) hAD
@@ -304,7 +302,10 @@ theorem cresultant_sample_eq_eval (A D : DensePoly ℚ) (a : ℚ)
     · omega
     · refine (natDegree_C_mul_le _ _).trans ?_
       exact (natDegree_derivative_le (toPoly D)).trans (by omega)
-  rw [cresultant_eq fuel D Aa hfuel, rtResultant_eval, cdeg_eq_natDegree D, cdeg_eq_natDegree Aa,
+  rw [show DensePoly.cresultantWf D Aa
+      = Polynomial.resultant (toPoly D) (toPoly Aa) (cdeg D) (cdeg Aa) from by
+        simpa only [CFieldSpec.toK_rat, toPoly_eq_dense] using DensePoly.toPolyG_cresultantWf D Aa,
+    rtResultant_eval, cdeg_eq_natDegree D, cdeg_eq_natDegree Aa,
     ← htAa]
   -- reconcile formal degree `deg D − 1` to actual `deg Aa` via `resultant_add_right_deg` (lc D = 1)
   obtain ⟨k, hk⟩ : ∃ k, (toPoly D).natDegree - 1 = (toPoly Aa).natDegree + k :=
@@ -317,19 +318,16 @@ theorem cresultant_sample_eq_eval (A D : DensePoly ℚ) (a : ℚ)
 /-! ### The agreement `toPoly (rtResultantCompute …) = rtResultant …` -/
 
 open Polynomial in
-/-- `rtResultantCompute` realizes `rtResultant` (monic `D`, `deg A < deg D`, sufficient fuel):
-`toPoly (rtResultantCompute fuel A D) = rtResultant (toPoly A) (toPoly D)`. -/
-theorem toPoly_rtResultantCompute_eq_rtResultant (A D : DensePoly ℚ) (fuel : ℕ)
-    (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree)
-    (hfuel : ∀ k ∈ Finset.range (cdeg D + 1),
-      (cnorm D).length + (cnorm (csub A (cscale (k : ℚ) (cderiv D)))).length + 2 ≤ fuel) :
-    toPoly (rtResultantCompute fuel A D) = rtResultant (toPoly A) (toPoly D) := by
+/-- `rtResultantCompute` realizes `rtResultant` when `D` is monic and `deg A < deg D`. -/
+theorem toPoly_rtResultantCompute_eq_rtResultant (A D : DensePoly ℚ)
+    (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree) :
+    toPoly (rtResultantCompute A D) = rtResultant (toPoly A) (toPoly D) := by
   classical
   -- the abscissa list `xs`, exactly as `rtResultantCompute`'s inner `do`-block builds it
   set xs : List ℚ := (do let a ← List.range (cdeg D + 1); pure (a : ℚ)) with hxs
   set pts : List (ℚ × ℚ) :=
-    xs.map (fun k : ℚ => (k, cresultant fuel D (csub A (cscale k (cderiv D))))) with hpts
-  have hcompute : rtResultantCompute fuel A D = cinterpolate pts := rfl
+    xs.map (fun k : ℚ => (k, DensePoly.cresultantWf D (csub A (cscale k (cderiv D))))) with hpts
+  have hcompute : rtResultantCompute A D = cinterpolate pts := rfl
   -- `xs = (range (n+1)).map (↑·)`, a clean cast-mapped range
   have hxsmap : xs = (List.range (cdeg D + 1)).map (fun a : ℕ => (a : ℚ)) := by
     rw [hxs]; exact List.flatMap_pure_eq_map _ _
@@ -375,13 +373,12 @@ theorem toPoly_rtResultantCompute_eq_rtResultant (A D : DensePoly ℚ) (fuel : �
     -- the node `(↑i, yᵢ) ∈ pts`
     have hixs : (i : ℚ) ∈ xs := by
       rw [hxsmap, List.mem_map]; exact ⟨i, List.mem_range.mpr hi, rfl⟩
-    have hmem : ((i : ℚ), cresultant fuel D (csub A (cscale (i : ℚ) (cderiv D)))) ∈ pts := by
+    have hmem : ((i : ℚ), DensePoly.cresultantWf D (csub A (cscale (i : ℚ) (cderiv D)))) ∈ pts := by
       rw [hpts, List.mem_map]
       exact ⟨(i : ℚ), hixs, rfl⟩
     rw [toPoly_cinterpolate_eval pts hnodup hmem]
-    -- `cresultant sample = rtResultant eval` by point-agreement
-    rw [cresultant_sample_eq_eval A D (i : ℚ) hDmonic hAD fuel
-      (hfuel i (Finset.mem_range.mpr hi))]
+    -- `cresultantWf sample = rtResultant eval` by point-agreement
+    rw [cresultantWf_sample_eq_eval A D (i : ℚ) hDmonic hAD]
 
 
 end DeepWiki.SymbolicIntegration.Compute

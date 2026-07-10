@@ -29,7 +29,7 @@ content `Vi^i ∣ D`, supplied here as a hypothesis. -/
 
 /-- The `glocIncr` denominator `Uᵢ·Vi` (the per-factor residual denominator): for the kept factor
 `(Vi, i)` with `Uᵢ = D/Vi^i`, the residual fraction `residᵢ` has denominator `am Uᵢ·am Vi`. -/
-noncomputable def glocResidDen (_fuel : ℕ) (D : DensePoly ℚ) (Vi : DensePoly ℚ × ℕ) : RatFunc ℚ :=
+noncomputable def glocResidDen (D : DensePoly ℚ) (Vi : DensePoly ℚ × ℕ) : RatFunc ℚ :=
   let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
   algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf D Vi_pow))
     * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vi.1)
@@ -44,7 +44,7 @@ denominator via the reconciliation. -/
 theorem glocIncr_residual (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ) (j : ℕ)
     (hU : toPoly (DensePoly.cdivWf D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
     (hV : toPoly Vi ≠ 0)
-    (hbez : IsHermiteInnerBezoutInput fuel Vi
+    (hbez : IsHermiteInnerBezoutInput Vi
       (DensePoly.cdivWf D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
     (hDrec : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf D
@@ -55,7 +55,7 @@ theorem glocIncr_residual (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ
         - algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (hermiteInner fuel Vi (DensePoly.cdivWf D
               ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A qzero).2)
-          / glocResidDen fuel D (Vi, j + 2) := by
+          / glocResidDen D (Vi, j + 2) := by
   set U := DensePoly.cdivWf D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1]) with hUdef
   have hspec := hermiteInner_spec_of fuel Vi U hU hV hbez (j + 1) A
   -- `glocIncr fuel A D (Vi, j+2) = (hermiteInner fuel Vi U (j+1) A qzero).1` (since `(j+2)-1 = j+1`).
@@ -136,14 +136,14 @@ open scoped Differential in
 global denominator, given the reconciliation `am D = am Uᵢ·am Vi^{i}` and `D, Vi ≠ 0`. The numerator is
 `Afinalᵢ` raised through the factor power `Vi^{j+1} = Vi^{i−1}` — the per-factor contribution to the
 single-fraction-over-`D` numerator. -/
-theorem glocResidDen_eq_over_D (fuel : ℕ) (D : DensePoly ℚ) (Vi : DensePoly ℚ) (j : ℕ)
+theorem glocResidDen_eq_over_D (D : DensePoly ℚ) (Vi : DensePoly ℚ) (j : ℕ)
     (Afinal : DensePoly ℚ) (hD : toPoly D ≠ 0) (hV : toPoly Vi ≠ 0)
     (hU : toPoly (DensePoly.cdivWf D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
     (hDrec : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf D
           ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
         * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vi) ^ (j + 2)) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly Afinal) / glocResidDen fuel D (Vi, j + 2)
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly Afinal) / glocResidDen D (Vi, j + 2)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly Afinal * toPoly Vi ^ (j + 1))
         / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D) := by
   have hinj := RatFunc.algebraMap_injective (K := ℚ)
@@ -153,7 +153,7 @@ theorem glocResidDen_eq_over_D (fuel : ℕ) (D : DensePoly ℚ) (Vi : DensePoly 
   have hv : am (toPoly Vi) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hV
   have hu : am (toPoly U) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hU
   -- the residual denominator `am U·am Vi`; `glocResidDen (Vi, j+2)` uses exactly this `U`.
-  have hresD : glocResidDen fuel D (Vi, j + 2) = am (toPoly U) * am (toPoly Vi) := by
+  have hresD : glocResidDen D (Vi, j + 2) = am (toPoly U) * am (toPoly Vi) := by
     rw [glocResidDen, hUdef]
   rw [hresD]
   -- `am D = am U · am Vi^(j+2) = (am U·am Vi)·am Vi^(j+1)`.
@@ -323,7 +323,7 @@ reconciliation `hDrec : am D = am Uᵢ·am Vi^{j+2}` (the exactness `Vi^{j+2} �
 theorem glocIncr_hstep (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ) (j : ℕ) (hD : toPoly D ≠ 0)
     (hU : toPoly (DensePoly.cdivWf D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
     (hV : toPoly Vi ≠ 0)
-    (hbez : IsHermiteInnerBezoutInput fuel Vi
+    (hbez : IsHermiteInnerBezoutInput Vi
       (DensePoly.cdivWf D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
     (hDrec : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf D
@@ -335,7 +335,7 @@ theorem glocIncr_hstep (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ) (
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D) := by
   rw [glocIncr_residual fuel A D Vi j hU hV hbez hDrec]
   -- recast the `glocResidDen` fraction over the global `D` numerator `residNumIncr`.
-  rw [glocResidDen_eq_over_D fuel D Vi j
+  rw [glocResidDen_eq_over_D D Vi j
     (hermiteInner fuel Vi (DensePoly.cdivWf D
       ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A qzero).2
     hD hV hU hDrec]

@@ -143,22 +143,22 @@ theorem hfilt_ex22 :
     subresPRS_filter_singleton_ex22
 
 /-- **`hg` for Ex 2.2**: the `ℚ[t]`-content of the degree-1 raw subresultant is nonzero
-(`¬ cisZero (bcontentX 60 (bsubresultantGcd 60 1 hP hQ))`). -/
+(`¬ cisZero (bcontentX (bsubresultantGcd 60 1 hP hQ))`). -/
 theorem hg_ex22 :
-    ¬ cisZero (bcontentX 60 (bsubresultantGcd 60
+    ¬ cisZero (bcontentX (bsubresultantGcd 60
       (toBPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ)) = true := by
   rw [natDegree_toBPoly_chainG9_ex22]; native_decide
 
 /-- **`hgcn` for Ex 2.2**: the `ℚ[t]`-content of the degree-1 raw subresultant has nonempty `cnorm`. -/
 theorem hgcn_ex22 :
-    cnorm (bcontentX 60 (bsubresultantGcd 60
+    cnorm (bcontentX (bsubresultantGcd 60
       (toBPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ)) ≠ [] := by
   rw [natDegree_toBPoly_chainG9_ex22]; native_decide
 
 /-- **`hg0` for Ex 2.2**: the `ℚ[t]`-content reads to a nonzero `ℚ[t]` polynomial (`toPoly ≠ 0`), via
 `cnorm_eq_nil_iff`. -/
 theorem hg0_ex22 :
-    toPoly (bcontentX 60 (bsubresultantGcd 60
+    toPoly (bcontentX (bsubresultantGcd 60
       (toBPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ)) ≠ 0 := by
   intro h; exact hgcn_ex22 ((cnorm_eq_nil_iff _).mpr h)
 
@@ -167,7 +167,7 @@ subresultant exactly (`cmod` reads to 0), via `cnorm_eq_nil_iff`. -/
 theorem hrem_ex22 :
     ∀ a ∈ bnorm (bsubresultantGcd 60
         (toBPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ),
-      toPoly (DensePoly.cmodWf a (bcontentX 60 (bsubresultantGcd 60
+      toPoly (DensePoly.cmodWf a (bcontentX (bsubresultantGcd 60
         (toBPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ))) = 0 := by
   intro a ha
   rw [← cnorm_eq_nil_iff]
@@ -195,7 +195,7 @@ theorem toBPoly_chainG_ne_zero_ex22 (i : ℕ) (hi : i ≤ 9) : toBPoly (chain 60
 theorem toBPoly_prem_ex22 (l : ℕ) (hl : l ≤ 7) :
     toBPoly (bpsremainder 60 (chain 60 hP hQ l) (chain 60 hP hQ (l + 1)))
       = Polynomial.C (toPoly (chainBt 60 hP hQ l)) * toBPoly (chain 60 hP hQ (l + 2)) := by
-  have hexact := toBPoly_bdivC_exact 60
+  have hexact := toBPoly_bdivC_exact
     (bpsremainder 60 (chain 60 hP hQ l) (chain 60 hP hQ (l + 1))) (chainBt 60 hP hQ l)
     (hβcn_ex22 l hl) (fun a ha => hdiv_ex22 l hl a ha)
   rw [chain_hG2]
@@ -309,7 +309,7 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex22 :
     endpoint_degree_lt := hjlt_ex22
     quotient_degree_le := hQ_ex22
     endpoint_ne_zero := hCne_ex22 }
-  let hprim : IsPrimitivePartXInput 60
+  let hprim : IsPrimitivePartXInput
       (bsubresultantGcd 60 (toBPoly (chain 60 hP hQ (7 + 2))).natDegree hP hQ) := {
     content_not_zero := hg_ex22
     content_cnorm_ne := hgcn_ex22
@@ -335,12 +335,12 @@ one-element list `[u₂₂]` (a nonzero constant in `ℚ[t]`), so the leading co
 The list and its head's nonvanishing are `native_decide` facts. -/
 theorem cgcdWf_blc_bredR_singleton_ex22 :
     ∃ u : ℚ, u ≠ 0 ∧
-      (DensePoly.cgcdWf (blc (bredR 60 (cmonic cR22)
+      (DensePoly.cgcdWf (blc (bredR (cmonic cR22)
         (lrtSubresultantCompute 60 (toBPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
         (cmonic cR22)).1
       = [u] := by
   rw [natDegree_toBPoly_chainG9_ex22]
-  refine ⟨(DensePoly.cgcdWf (blc (bredR 60 (cmonic cR22)
+  refine ⟨(DensePoly.cgcdWf (blc (bredR (cmonic cR22)
       (lrtSubresultantCompute 60 1 cA22 cD22))) (cmonic cR22)).1.headI, ?_, ?_⟩
   · native_decide
   · native_decide
@@ -350,7 +350,7 @@ nonzero constant `C u₂₂` — so the leading coefficient is a unit mod `R = c
 `cgcdWf_blc_bredR_singleton_ex22` (`gcd = [u₂₂]`) and `toPoly [u₂₂] = C u₂₂`. -/
 theorem hgu_ex22 :
     ∃ u : ℚ, u ≠ 0 ∧
-      toPoly (DensePoly.cgcdWf (blc (bredR 60 (cmonic cR22)
+      toPoly (DensePoly.cgcdWf (blc (bredR (cmonic cR22)
         (lrtSubresultantCompute 60 (toBPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
         (cmonic cR22)).1
       = Polynomial.C u := by
@@ -360,9 +360,9 @@ theorem hgu_ex22 :
     simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]⟩
 
 /-- **`hpz` for Ex 2.2**: the mod-`R` reduction of the primitive degree-1 subresultant is nonzero
-(`¬ bisZero (bredR 60 (cmonic cR22) (lrtSubresultantCompute 60 1 cA22 cD22))`). -/
+(`¬ bisZero (bredR (cmonic cR22) (lrtSubresultantCompute 60 1 cA22 cD22))`). -/
 theorem hpz_ex22 :
-    ¬ bisZero (bredR 60 (cmonic cR22)
+    ¬ bisZero (bredR (cmonic cR22)
         (lrtSubresultantCompute 60 (toBPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)) = true := by
   rw [natDegree_toBPoly_chainG9_ex22]; native_decide
 
@@ -426,7 +426,7 @@ theorem lrtGcdCompute_ex22_isSimilar_lrtSubresultant
   have hMne : (Polynomial.mapRingHom φ) (toBPoly (lrtSubresultantCompute 60
       (toBPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)) ≠ 0 := by
     obtain ⟨u, hu, hgu⟩ := hgu_ex22
-    obtain ⟨hbridge, _⟩ := mapRingHom_toBPoly_bmonicXmodR φ 60 (cmonic cR22)
+    obtain ⟨hbridge, _⟩ := mapRingHom_toBPoly_bmonicXmodR φ (cmonic cR22)
       (lrtSubresultantCompute 60 (toBPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)
       cnorm_cmonic_cR22_ne hφR hu hgu hpz_ex22
     intro h
@@ -441,7 +441,7 @@ theorem lrtGcdCompute_ex22_isSimilar_lrtSubresultant
       isSimilar_lrtSubresultant_lrtSubresultantCompute_ex22 hLne hMne
   -- Φ M ∼ Φ M_gcd via the bmonicXmodR unit bridge
   obtain ⟨u, hu, hgu⟩ := hgu_ex22
-  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ 60 (cmonic cR22)
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ (cmonic cR22)
     (lrtSubresultantCompute 60 (toBPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)
     cnorm_cmonic_cR22_ne hφR hu hgu hpz_ex22
   have hMMgcd : IsSimilar
