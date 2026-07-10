@@ -247,6 +247,11 @@ The ordinary result-level residue-constancy predicate now mirrors the LRT one:
 `AllResiduesConstant` accepts `IntegralResult α P` and checks only its scalar coefficients, with a sparse
 result example. The dense semantic `IsIntegralResult` predicate remains dense because its field denotation
 still consumes the dense tower implementation.
+Three algebraic edge helpers have shed false dense dependencies as well. `afFx` is the generic
+coefficientwise derivation it already abbreviates; `wToAf` folds the selected representation's add and scale
+operations over a supplied basis; and `polyToZMod` reconstructs the same representation coefficientwise.
+Each executes on `SparsePoly`. Their quotient, Cantor, and resultant consumers remain dense at the actual
+Euclidean-algorithm boundary, and there was no parallel implementation body to retain or deduplicate here.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

@@ -34,9 +34,19 @@ def qReduceMat (I : GenDivisor) : GenDivisor :=
 
 /-- Reconstruct a `K(x, y)` element from `[w]`-coordinates: `wToAf basis row = Σⱼ rowⱼ·wⱼ` (inverse
 of `toOCoords`). -/
-def wToAf (basis : List (DensePoly (CFrac ℚ))) (row : List (CFrac ℚ)) : DensePoly (CFrac ℚ) :=
+def wToAf {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (basis : List (P (CFrac ℚ))) (row : List (CFrac ℚ)) : P (CFrac ℚ) :=
   (List.range basis.length).foldl (fun acc i =>
-    cadd acc (cscale (row.getD i CCommRing.zero) (basis.getD i []))) ([] : DensePoly (CFrac ℚ))
+    CPolyEngine.add acc
+      (CPolyEngine.scale (row.getD i CCommRing.zero) (basis.getD i CPoly.czero))) CPoly.czero
+
+example :
+    let ofList : List (CFrac ℚ) → CPoly.SparsePoly (CFrac ℚ) := CPolyEngine.ofCoeffList
+    let one : CFrac ℚ := CCommRing.one
+    CPolyEngine.cisZero
+      (CPolyEngine.sub (wToAf [ofList [one], ofList [CCommRing.zero, one]] [one, one])
+        (ofList [one, one])) = true := by
+  native_decide
 
 /-! ### `div(g) = g·O`: the principal divisor (`principalDivisor`) -/
 

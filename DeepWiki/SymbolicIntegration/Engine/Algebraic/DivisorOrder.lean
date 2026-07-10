@@ -89,12 +89,19 @@ condition for this coefficient). -/
 def ratToZMod (p : ℕ) (q : ℚ) : ZMod p := (q.num : ZMod p) * ((q.den : ZMod p))⁻¹
 
 /-- Polynomial reduction `polyToZMod p u` — apply `ratToZMod p` coefficientwise, mapping `u ∈ ℚ[x]`
-to `(u mod p) ∈ 𝔽_p[x]` as `DensePoly` coefficient lists. -/
-def polyToZMod (p : ℕ) (u : DensePoly ℚ) : DensePoly (ZMod p) := u.map (ratToZMod p)
+to `(u mod p) ∈ 𝔽_p[x]` in the caller's polynomial representation. -/
+def polyToZMod {P : Type → Type} [CPoly P] (p : ℕ) [Fact p.Prime]
+    (u : P ℚ) : P (ZMod p) :=
+  CPoly.ofFn (CPoly.degBound u) (fun i => ratToZMod p (CPoly.coeff u i))
+
+example :
+    let u : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 7), (3, 12)]
+    CPoly.coeff (polyToZMod 5 u) 0 = 2 ∧ CPoly.coeff (polyToZMod 5 u) 3 = 2 := by
+  native_decide
 
 /-- Divisor reduction `mumfordReduceModP p D = (u mod p, v mod p)` — reduce both Mumford coefficient
 polynomials `ℚ → 𝔽_p`. For a good prime the result is a valid divisor on `y² = (ρ mod p)`. -/
-def mumfordReduceModP (p : ℕ) (D : MumfordDivisor ℚ) : MumfordDivisor (ZMod p) :=
+def mumfordReduceModP (p : ℕ) [Fact p.Prime] (D : MumfordDivisor ℚ) : MumfordDivisor (ZMod p) :=
   ⟨polyToZMod p D.u, polyToZMod p D.v⟩
 
 /-- 𝔽_p order ceiling `orderModP p fuel ρ g D` — the order of `D mod p` in `Jac(𝔽_p)`
