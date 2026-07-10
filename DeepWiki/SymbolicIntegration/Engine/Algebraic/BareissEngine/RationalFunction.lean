@@ -60,7 +60,7 @@ def qfClearMatrix (M : List (List (DenseFrac ℚ))) : List (List (DensePoly ℚ)
 def qfDet (M : List (List (DenseFrac ℚ))) : DenseFrac ℚ :=
   let n := M.length
   let (M', D) := qfClearMatrix M
-  let detPoly := bareissDet M'
+  let detPoly := CPoly.bareissDet M'
   let Dn := cpow D n
   CCommRing.mul (CFrac.ofPoly detPoly) (CField.inv (CFrac.ofPoly Dn))
 
@@ -69,15 +69,15 @@ def qfDet (M : List (List (DenseFrac ℚ))) : DenseFrac ℚ :=
 `ℚ(x)`-adjugate is `adj(M') / Dⁿ⁻¹`. -/
 def qfAdjugate (M : List (List (DenseFrac ℚ))) : List (List (DensePoly ℚ)) × DensePoly ℚ :=
   let (M', D) := qfClearMatrix M
-  (bareissAdjugate M', D)
+  (CPoly.bareissAdjugate M', D)
 
 /-- The fraction-free inverse representation of a `ℚ(x)`-matrix `qfInv M = (det(M'), D·adj(M'))` with
 `M' = D·M ∈ ℚ[x]`: a pair of flat `ℚ[x]` polynomials with `M⁻¹[i][j] = (D·adj(M'))[i][j] / det(M')`,
 one shared denominator `det(M')`. -/
 def qfInv (M : List (List (DenseFrac ℚ))) : DensePoly ℚ × List (List (DensePoly ℚ)) :=
   let (M', D) := qfClearMatrix M
-  let detPoly := bareissDet M'
-  let adjPoly := bareissAdjugate M'
+  let detPoly := CPoly.bareissDet M'
+  let adjPoly := CPoly.bareissAdjugate M'
   (detPoly, adjPoly.map (fun row => row.map (fun e => cmul D e)))
 
 /-- A single `ℚ(x)` entry of the fraction-free inverse `qfInvEntry M i j = (D·adj(M'))[i][j] /
@@ -93,7 +93,7 @@ def qfSolve (M : List (List (DenseFrac ℚ))) (b : List (DenseFrac ℚ)) :
     DensePoly ℚ × List (DensePoly ℚ) :=
   let (M', D) := qfClearMatrix M
   let b' := b.map (qfClearEntry D)
-  bareissSolve M' b'
+  CPoly.bareissSolve M' b'
 
 end DensePoly
 

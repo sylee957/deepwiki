@@ -34,7 +34,7 @@ def bareissCauchyFracTotalDeg : ℕ :=
 
 /-- The fraction-free flat degree `cdeg (bareissDet bareissCauchyCleared)`, the degree of the single
 `ℚ[x]` polynomial the Bareiss path produces for the cleared Cauchy matrix (degree `6`). -/
-def bareissCauchyFlatDeg : ℕ := cdeg (bareissDet bareissCauchyCleared)
+def bareissCauchyFlatDeg : ℕ := cdeg (CPoly.bareissDet bareissCauchyCleared)
 
 /-- The measured swell win: `bareissCauchyFlatDeg < bareissCauchyFracTotalDeg` — the fraction-free
 Bareiss flat degree is strictly smaller than the fraction-path total degree on the `3×3` Cauchy matrix. -/

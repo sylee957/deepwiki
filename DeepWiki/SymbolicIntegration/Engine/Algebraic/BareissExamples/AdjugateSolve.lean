@@ -14,8 +14,8 @@ open DensePoly
 defining identity over `ℚ[x]`. -/
 theorem bareiss_adjugate_nonRad :
     let M := bareissNonRadT
-    let A := bareissAdjugate M
-    let d := bareissDet M
+    let A := CPoly.bareissAdjugate M
+    let d := CPoly.bareissDet M
     let prod := (List.range 2).map (fun i => (List.range 2).map (fun j =>
       (List.range 2).foldl (fun acc k => cadd acc (cmul (polyMatGet M i k) (polyMatGet A k j))) []))
     (cisZero (csub (polyMatGet prod 0 0) d)
@@ -27,8 +27,8 @@ theorem bareiss_adjugate_nonRad :
 `det M = −4x³ − 27x²` and every off-diagonal entry vanishes. -/
 theorem bareiss_adjugate_trig :
     let M := bareissTrigT
-    let A := bareissAdjugate M
-    let d := bareissDet M
+    let A := CPoly.bareissAdjugate M
+    let d := CPoly.bareissDet M
     let prod := (List.range 3).map (fun i => (List.range 3).map (fun j =>
       (List.range 3).foldl (fun acc k => cadd acc (cmul (polyMatGet M i k) (polyMatGet A k j))) []))
     (List.range 3).all (fun i => (List.range 3).all (fun j =>
@@ -39,7 +39,7 @@ theorem bareiss_adjugate_trig :
 theorem bareiss_solve_nonRad :
     let M := bareissNonRadT
     let b : List (DensePoly ℚ) := [[1], [0, 1]]
-    let ds := bareissSolve M b
+    let ds := CPoly.bareissSolve M b
     let d := ds.1
     let sol := ds.2
     let lhs := (List.range 2).map (fun i =>

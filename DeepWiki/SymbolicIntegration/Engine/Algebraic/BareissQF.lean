@@ -74,7 +74,7 @@ theorem qfAdjugate_mul_cuspBasis :
     let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
     let M' := (qfClearMatrix B).1
     let A := (qfAdjugate B).1
-    let d := bareissDet M'
+    let d := CPoly.bareissDet M'
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
       cisZero (csub
         ((List.range 2).foldl (fun acc k => cadd acc (cmul (polyMatGet M' i k) (polyMatGet A k j))) [])
