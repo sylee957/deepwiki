@@ -22,7 +22,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 `(snum·gden + gnum·sden)/(sden·gden) + logs`. The LRT analogue of `combineSN` (same rational combine, symbolic
 log list carried through). -/
 def combineSNLrt (snum sden : DensePoly α) (r : LrtResult α) : LrtResult α :=
-  ⟨(cadd (cmul snum r.rational.2) (cmul r.rational.1 sden), cmul sden r.rational.2), r.logs⟩
+  ⟨combineRationalParts snum sden r.rational.1 r.rational.2, r.logs⟩
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `amGExt (toPoly p) ≠ 0` when `toPoly p ≠ 0`: base change (`φ` injective) and the fraction-field
@@ -51,7 +51,8 @@ theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : DensePoly α)
     ratFuncBaseChange_amG_div] at hspecE
   have hAsden : amGExt (E := F) (toPoly sden) ≠ 0 := amGExt_ne_zero hsden
   have hAgden : amGExt (E := F) (toPoly r.rational.2) ≠ 0 := amGExt_ne_zero hgden
-  simp only [combineSNLrt]
+  simp only [combineSNLrt, combineRationalParts, CPolyEngine.add_dense_eq,
+    CPolyEngine.mul_dense_eq]
   have e1 : amGExt (E := F) (toPoly (cadd (cmul snum r.rational.2) (cmul r.rational.1 sden)))
       = amGExt (E := F) (toPoly snum) * amGExt (E := F) (toPoly r.rational.2)
         + amGExt (E := F) (toPoly r.rational.1) * amGExt (E := F) (toPoly sden) := by

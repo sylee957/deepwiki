@@ -11,6 +11,7 @@ per-case `MonomialCase` instances, the reduced-stage realizations, and the end-t
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
 
 namespace DensePoly
 
@@ -24,12 +25,23 @@ structure MonomialCase (α : Type*) [CField α] [CDiffField α] where
   /-- Post-process the reduced normal result (identity for primitive; residual subtraction for hyperexp). -/
   reducedCorrect : DensePoly α → IntegralResult α → Option (IntegralResult α)
 
-/-- Combine a special-part fraction `snum/sden` with the corrected normal result `nrm = gnum/gden + logs`:
-`(snum·gden + gnum·sden)/(sden·gden) + logs`. -/
-def combineSN (snum sden : DensePoly α) (nrm : IntegralResult α) : IntegralResult α :=
-  let gnum := nrm.rational.1
-  let gden := nrm.rational.2
-  ⟨(cadd (cmul snum gden) (cmul gnum sden), cmul sden gden), nrm.logs⟩
+/-- Combine fractions `snum/sden + gnum/gden` in any polynomial representation. -/
+def combineRationalParts {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (snum sden gnum gden : P α) : P α × P α :=
+  (CPolyEngine.add (CPolyEngine.mul snum gden) (CPolyEngine.mul gnum sden),
+    CPolyEngine.mul sden gden)
+
+/-- Combine a special-part fraction with a corrected normal result in any polynomial representation. -/
+def combineSN {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (snum sden : P α) (nrm : IntegralResult α P) : IntegralResult α P :=
+  ⟨combineRationalParts snum sden nrm.rational.1 nrm.rational.2, nrm.logs⟩
+
+/-- Special/normal rational-part combination executes on sparse polynomial results. -/
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let nrm : IntegralResult ℚ CPoly.SparsePoly := ⟨(ofList [2], ofList [1]), []⟩
+    CPoly.coeff (combineSN (ofList [3]) (ofList [1]) nrm).rational.1 0 = 5 := by
+  native_decide
 
 end DensePoly
 
