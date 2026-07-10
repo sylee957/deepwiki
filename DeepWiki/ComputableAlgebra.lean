@@ -13,6 +13,7 @@ import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
 import DeepWiki.ComputableAlgebra.PolyReprGcd
 import DeepWiki.ComputableAlgebra.PolyReprResultant
 import DeepWiki.ComputableAlgebra.PolyReprResultantCoprime
+import DeepWiki.ComputableAlgebra.PolyResultant
 import DeepWiki.ComputableAlgebra.PolyEuclidean
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet

@@ -95,9 +95,10 @@ Equal to `fieldDet (traceMatrix f (powerBasis f))`, hence to `± Resultant(f, f'
 def discriminant (f : DensePoly (DenseFrac ℚ)) : DenseFrac ℚ :=
   qfDet (traceMatrix f (powerBasis f))
 
-/-- `Resultant(f, f')` for the curve `f`: `cresultantWf` of `f` against its `y`-derivative
-`cderiv f`. Equal to `± discriminant f`. -/
-def discResultant (f : DensePoly α) : α := cresultantWf f (cderiv f)
+/-- `Resultant(f, f')` for the curve `f`, computed by the selected polynomial-resultant capability.
+Equal to `± discriminant f`. -/
+def discResultant [CPolyResultant DensePoly] (f : DensePoly α) : α :=
+  CPolyResultant.compute f (cderiv f)
 
 end DensePoly
 

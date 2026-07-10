@@ -56,8 +56,9 @@ example :
 read as a `ℚ[X]`-polynomial: the resultant in `y` (`cresultantG fuelY` over the field
 `α = DenseFrac ℚ`) of `zDderMinus g Dder z` against the monic curve `f`, recovered as `DensePoly ℚ` by
 `qToPolyQ`. The general-curve replacement for the `n = 2` norm `(z·D' − g₀)² − g₁²·ρ`. -/
-def resYAtNode (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ) (z : ℚ) : DensePoly ℚ :=
-  qToPolyQ (cresultantWf (zDderMinus g Dder z) f)
+def resYAtNode [CPolyResultant DensePoly]
+    (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ) (z : ℚ) : DensePoly ℚ :=
+  qToPolyQ (CPolyResultant.compute (zDderMinus g Dder z) f)
 
 /-! ### The full general-`F` residue resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)`
 
@@ -79,12 +80,13 @@ D(X))`, in the residue indeterminate `Z`. Computed by evaluation + interpolation
 `z = 0, …, n·deg_X D`, the inner `res_Y` (`resYAtNode`) gives `res_Y(z·D' − g, F)`, then `res_X(·, D)`
 gives `R(z) ∈ ℚ`, and `cinterpolate` recovers `R(Z)`; `deg_Z R ≤ n·deg_X D` (`n = deg_y f`). Generalizes
 `cAlgResidueResultant`'s hyperelliptic norm shortcut. `Dder = D'(x) ∈ K(x)` supplied by the caller. -/
-def genResidueResultant (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ)
+def genResidueResultant [CPolyResultant DensePoly]
+    (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ)
     (D : DensePoly ℚ) : DensePoly ℚ :=
   let nNodes := cdeg f * cdeg D + 1                        -- `deg_Z R ≤ n · deg_X D`
   let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
     let z : ℚ := (k : ℚ)
-    (z, cresultantWf (resYAtNode f g Dder z) D))
+    (z, CPolyResultant.compute (resYAtNode f g Dder z) D))
   cinterpolate pts
 
 end DensePoly

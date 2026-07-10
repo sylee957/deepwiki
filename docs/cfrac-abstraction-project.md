@@ -48,7 +48,11 @@ runs the same fraction algorithm.
    `CPolyEuclidean`/`LawfulCPolyEuclidean` selects division and extended Bézout: dense polynomials use the
    well-founded engine, sparse polynomials use the generic `CPoly` engine, and the rational-function
    exact-division bridge consumes only the capability. Concrete dense and generic implementations become
-   instances; SymbolicIntegration consumers request the weakest capability they need.
+   instances. The third slice adds `CPolyResultant`/`LawfulCPolyResultant`: dense polynomials select the
+   well-founded PRS resultant, sparse polynomials select the generic Sylvester determinant, and tower,
+   radical, general-curve, and discriminant consumers request the capability. The tower residue-resultant
+   bridge now proves correctness from `LawfulCPolyResultant`. SymbolicIntegration consumers request the
+   weakest capability they need.
 7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;

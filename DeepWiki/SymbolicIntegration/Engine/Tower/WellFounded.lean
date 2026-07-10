@@ -243,7 +243,7 @@ end DensePoly
 
 Everything past the three recursive bottoms is a flat composition over the leaves above plus the generic
 `cbezoutOneWf`, `cextendedEuclideanSplitWf`, `cdiophantine`, `cHermiteReduceTowerInnerWf`,
-`cPrimitivePolyIntegrateWf`, `cdivWf`, and the §5.6 `cresultantWf`/`cinterpolate`/`ceval`. -/
+`cPrimitivePolyIntegrateWf`, `cdivWf`, and the abstract resultant/interpolation/evaluation capabilities. -/
 
 namespace DensePoly
 
@@ -290,18 +290,29 @@ def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
 /-! ### The generic logarithmic part (Rothstein–Trager)
 
 `cResidueResultantTower`/`cLogArgTower`/`cRationalResidues`/`cLogPart`, taking the residue
-candidates as `α` elements; the resultant runs through `cresultantWf`, the log argument through
+candidates as `α` elements; the resultant runs through `CPolyResultant`, the log argument through
 `cgcdFFCoreWf`. -/
 
-/-- Generic residue resultant `cResidueResultantTower Dt a d = R(z) = res_t(d, a − z·Dd)`. Sample
-`R(zₖ) = res_t(d, a − zₖ·Dd)` at the natural nodes `zₖ = cnatCast k` (`k = 0…deg_t d`) with the
-Euclidean-PRS resultant `cresultantWf`, then Lagrange-interpolate (`cinterpolate`). -/
-def cResidueResultantTower (Dt : DensePoly α) (a d : DensePoly α) : DensePoly α :=
-  let n := cdeg d
-  let pts : List (α × α) := (List.range (n + 1)).map (fun k =>
-    let zk : α := cnatCast k
-    (zk, cresultantWf d (cAmcDd Dt a d zk)))
+/-- Representation-independent inner-polynomial residue resultant, with dense interpolation in `z`. -/
+def cResidueResultantTowerWith {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyResultant P]
+    {β : Type u} [CField β] [CDiffField β] (Dt a d : P β) : DensePoly β :=
+  let n := CPolyEngine.cdeg d
+  let pts : List (β × β) := (List.range (n + 1)).map (fun k =>
+    let zk : β := cnatCast k
+    (zk, CPolyResultant.compute d (cAmcDd Dt a d zk)))
   cinterpolate pts
+
+/-- Dense residue resultant `R(z) = res_t(d, a − z·Dd)`, selected through `CPolyResultant`. -/
+def cResidueResultantTower [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) : DensePoly α :=
+  cResidueResultantTowerWith Dt a d
+
+example :
+    cResidueResultantTowerWith
+      (CPoly.SparsePoly.ofList [(0, 1)] : CPoly.SparsePoly ℚ)
+      (CPoly.SparsePoly.ofList [(0, 1)])
+      (CPoly.SparsePoly.ofList [(0, -1), (2, 1)]) = [1, 0, -4] := by
+  native_decide
 
 /-- Generic log argument `cLogArgTower Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`: the
 fraction-free gcd `cgcdFFCoreWf` of `d` and `a − c·Dd`. -/

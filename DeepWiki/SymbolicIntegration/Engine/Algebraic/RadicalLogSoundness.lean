@@ -319,7 +319,8 @@ the nodes then assembles the full bridge. -/
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
+variable {α : Type u} [CField α] [CDiffField α] [CFieldSpec.{u,v} α]
+  [CDiffFieldSpec.{u,v} α]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The residue-norm reads through `toPoly` as the abstract norm: `toPoly (cAlgResidueNorm D'
@@ -340,12 +341,17 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Compute-bridge, per node: at a node `Z = c`, the engine's univariate resultant of the
 residue-norm against `D` reads through `toK` as `Polynomial.resultant (toPoly (cAlgResidueNorm
 …)) (toPoly D) (cdeg (cAlgResidueNorm …)) (cdeg D)`. -/
-theorem toK_cresultantG_cAlgResidueNorm (Dprime rho g0 g1 D : DensePoly α) (c : α) :
-    CFieldSpec.toK (DensePoly.cresultantWf (DensePoly.cAlgResidueNorm Dprime rho g0 g1 c) D)
+theorem toK_cresultantG_cAlgResidueNorm [CPolyResultant DensePoly]
+    [LawfulCPolyResultant.{u,v} DensePoly] (Dprime rho g0 g1 D : DensePoly α) (c : α) :
+    CFieldSpec.toK (CPolyResultant.compute
+      (DensePoly.cAlgResidueNorm Dprime rho g0 g1 c) D)
       = Polynomial.resultant (DensePoly.toPoly (DensePoly.cAlgResidueNorm Dprime rho g0 g1 c))
           (DensePoly.toPoly D) (DensePoly.cdeg (DensePoly.cAlgResidueNorm Dprime rho g0 g1 c))
-          (DensePoly.cdeg D) :=
-  DensePoly.toPolyG_cresultantWf (DensePoly.cAlgResidueNorm Dprime rho g0 g1 c) D
+          (DensePoly.cdeg D) := by
+  have h := LawfulCPolyResultant.compute_spec'
+    (DensePoly.cAlgResidueNorm Dprime rho g0 g1 c) D
+  rw [toPoly_list_eq, toPoly_list_eq, cdeg_list_eq, cdeg_list_eq] at h
+  exact h
 
 /-! #### Input (a): the interpolation-uniqueness characterization of `cAlgResidueResultant`
 
@@ -357,14 +363,15 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- The interpolation-uniqueness characterization of `cAlgResidueResultant`: if `R : K[Z]` has
 `degree < 2·(toPoly D).natDegree + 2` and its value at each node `k` is the per-node abstract
 resultant, then `toPoly (cAlgResidueResultant fuel D ρ g₀ g₁) = R`. -/
-theorem toPolyG_cAlgResidueResultant_eq_of_eval (D rho g0 g1 : DensePoly α)
+theorem toPolyG_cAlgResidueResultant_eq_of_eval [CPolyResultant DensePoly]
+    [LawfulCPolyResultant.{u,v} DensePoly] (D rho g0 g1 : DensePoly α)
     (R : (CFieldSpec.K α)[X])
     (hRdeg : R.degree < (2 * (DensePoly.toPoly D).natDegree + 2 : ℕ))
     (hinj : Set.InjOn (fun k : ℕ => CFieldSpec.toK (DensePoly.cnatCast (α := α) k))
       (Finset.range (2 * DensePoly.cdeg D + 1 + 1)))
     (hnode : ∀ k ∈ Finset.range (2 * DensePoly.cdeg D + 1 + 1),
       R.eval (CFieldSpec.toK (DensePoly.cnatCast (α := α) k))
-        = CFieldSpec.toK (DensePoly.cresultantWf
+        = CFieldSpec.toK (CPolyResultant.compute
             (DensePoly.cAlgResidueNorm (DensePoly.cderiv D) rho g0 g1 (DensePoly.cnatCast k)) D)) :
     DensePoly.toPoly (DensePoly.cAlgResidueResultant D rho g0 g1) = R := by
   classical
@@ -373,7 +380,8 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval (D rho g0 g1 : DensePoly α)
   set pts : List (α × α) :=
     (List.range (2 * DensePoly.cdeg D + 1 + 1)).map (fun k =>
       (DensePoly.cnatCast (α := α) k,
-        DensePoly.cresultantWf (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (DensePoly.cnatCast k)) D))
+        CPolyResultant.compute
+          (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (DensePoly.cnatCast k)) D))
     with hpts
   have hcompute : DensePoly.cAlgResidueResultant D rho g0 g1 = DensePoly.cinterpolate pts := rfl
   -- node-image list and its distinctness
@@ -410,7 +418,8 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval (D rho g0 g1 : DensePoly α)
   · -- agree at the nodes: `toPoly(cinterpolate pts)(k) = node value = R(k)`
     intro k hk
     have hmem : (DensePoly.cnatCast (α := α) k,
-        DensePoly.cresultantWf (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (DensePoly.cnatCast k)) D)
+        CPolyResultant.compute
+          (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (DensePoly.cnatCast k)) D)
         ∈ pts := by
       rw [hpts, List.mem_map]; exact ⟨k, by simpa using hk, rfl⟩
     rw [DensePoly.eval_toPolyG_cinterpolateG pts hnodup hmem]

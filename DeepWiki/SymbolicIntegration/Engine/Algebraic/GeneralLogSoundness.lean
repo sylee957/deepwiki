@@ -229,15 +229,15 @@ end LogResidue
 namespace DensePoly
 
 /-- The interpolation-uniqueness characterization of `genResidueResultant`: if `R : ℚ[X]` has
-`degree < cdeg f * cdeg D + 2` and `R.eval (k : ℚ) = cresultantWf (resYAtNode f g Dder (k : ℚ)) D`
+`degree < cdeg f * cdeg D + 2` and each node agrees with the selected resultant
 at each node `k`, then `toPoly (genResidueResultant f g Dder D) = R`. -/
-theorem toPolyG_genResidueResultant_eq_of_eval
+theorem toPolyG_genResidueResultant_eq_of_eval [CPolyResultant DensePoly]
     (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ) (D : DensePoly ℚ)
     (R : ℚ[X])
     (hRdeg : R.degree < (cdeg f * cdeg D + 2 : ℕ))
     (hnode : ∀ k ∈ Finset.range (cdeg f * cdeg D + 1 + 1),
       R.eval ((k : ℚ))
-        = cresultantWf (resYAtNode f g Dder ((k : ℚ))) D) :
+        = CPolyResultant.compute (resYAtNode f g Dder ((k : ℚ))) D) :
     toPoly (genResidueResultant f g Dder D) = R := by
   classical
   -- Lean elaborates the engine's `(range n).map (fun k:ℕ => ((k:ℚ), …))` by lifting the tuple coercion to a
@@ -256,7 +256,7 @@ theorem toPolyG_genResidueResultant_eq_of_eval
   have hzs_mem : ∀ k, k ∈ List.range (cdeg f * cdeg D + 1 + 1) → ((k : ℚ)) ∈ zs := by
     intro k hk; rw [hzs, List.mem_map]; exact ⟨k, hk, rfl⟩
   set pts : List (ℚ × ℚ) :=
-    zs.map (fun z => (z, cresultantWf (resYAtNode f g Dder z) D))
+    zs.map (fun z => (z, CPolyResultant.compute (resYAtNode f g Dder z) D))
     with hpts
   -- bridge the engine's node list to `pts` STRUCTURALLY (no resultant evaluation): the engine's
   -- `(range).map (fun k:ℕ => let z:=↑k; (z, …))` and `pts = ((range).map ↑).map (fun z:ℚ => (z, …))` are the
@@ -273,12 +273,12 @@ theorem toPolyG_genResidueResultant_eq_of_eval
   have htoK : ∀ q : ℚ, CFieldSpec.toK q = q := fun _ => rfl
   -- node-abscissa images = `zs`; reusable membership/length/nodup facts over the double map
   have hmempts : ∀ z, z ∈ zs →
-      (z, cresultantWf (resYAtNode f g Dder z) D) ∈ pts := by
+      (z, CPolyResultant.compute (resYAtNode f g Dder z) D) ∈ pts := by
     intro z hz; rw [hpts, List.mem_map]; exact ⟨z, hz, rfl⟩
   have hfst : pts.map (fun p => CFieldSpec.toK p.1) = zs := by
     rw [hpts, List.map_map]
     simp only [htoK]
-    rw [show (fun p : ℚ × ℚ => p.1) ∘ (fun z => (z, cresultantWf
+    rw [show (fun p : ℚ × ℚ => p.1) ∘ (fun z => (z, CPolyResultant.compute
         (resYAtNode f g Dder z) D)) = id from rfl, List.map_id]
   have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by rw [hfst]; exact hzs_nodup
   have hne : pts ≠ [] := by

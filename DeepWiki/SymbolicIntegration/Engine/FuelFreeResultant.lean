@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.ComputableAlgebra.GenericBezout
+import DeepWiki.ComputableAlgebra.PolyResultant
 
 /-! # Well-founded generic resultant `cresultantWf`
 
@@ -231,5 +232,27 @@ theorem cdivWf_natDegree_add (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cn
     exact absurd (cresultantMeasure_reduce_lt p q hq hpqlen) hdec'
 
 end DensePoly
+
+/-! ### Dense capability instance -/
+
+/-- Dense polynomials select the well-founded Euclidean-PRS resultant. -/
+instance instCPolyResultantDense : CPolyResultant DensePoly where
+  compute := DensePoly.cresultantWf
+
+namespace CPolyResultant
+
+/-- Dense resultant selection is `DensePoly.cresultantWf`. -/
+@[simp] theorem compute_dense_eq {α : Type*} [CField α] (p q : DensePoly α) :
+    CPolyResultant.compute p q = DensePoly.cresultantWf p q := rfl
+
+end CPolyResultant
+
+/-- The dense well-founded resultant satisfies the abstract resultant law. -/
+instance instLawfulCPolyResultantDense : LawfulCPolyResultant DensePoly where
+  compute_spec := by
+    intro α _ _ p q
+    rw [CPolyResultant.compute_dense_eq, toPoly_list_eq, toPoly_list_eq,
+      cdeg_list_eq, cdeg_list_eq]
+    exact DensePoly.toPolyG_cresultantWf p q
 
 end DeepWiki.SymbolicIntegration
