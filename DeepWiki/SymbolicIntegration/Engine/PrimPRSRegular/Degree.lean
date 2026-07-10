@@ -14,9 +14,9 @@ open DensePoly GBPolyCore
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
-/-! ## The `t`-degree is the normalized list length
+/-! ## The normalized list length
 
-`gbdegCore p = (DensePoly.toPoly p).natDegree` turns the list-length loop guard into a polynomial
+The generic `DensePoly.cdegG_eq_natDegree` theorem turns the list-length loop guard into a polynomial
 `t`-degree statement over the integral domain `R = (CFieldSpec.K β)[X]`. -/
 
 /-- **`(DensePoly.toPoly p).natDegree` is bounded by the normalized `t`-length**:
@@ -30,34 +30,23 @@ theorem natDegree_toPolyG_le (p : GBPolyCore β) :
   rw [DensePoly.toPolyG_coeff_dense, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega),
     Option.getD_none, toPolyG_nil]
 
-/-- **The `t`-degree is the normalized list length** `gbdegCore p = (DensePoly.toPoly p).natDegree`, the
-`GBPolyCore` mirror of `cdegG_eq_natDegree`. -/
-theorem gbdegCore_eq_natDegree (p : GBPolyCore β) : gbdegCore p = (DensePoly.toPoly p).natDegree := by
-  rcases eq_or_ne (gbnormCore p) [] with h | h
-  · have h0 : DensePoly.toPoly p = 0 := by rw [← toPolyG_gbnormCore, h, DensePoly.toPolyG_nil]
-    rw [gbdegCore, h, h0]; simp
-  · refine le_antisymm ?_ (natDegree_toPolyG_le p)
-    apply Polynomial.le_natDegree_of_ne_zero
-    rw [← toPolyG_gblcCore_eq_coeff]
-    -- `gblcCore p` (the top normalized coefficient) reads nonzero
-    have hz : gbisZeroCore p = false := by
-      rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem]
-      obtain ⟨a, ha⟩ := List.exists_mem_of_ne_nil _ h
-      exact ⟨a, ha⟩
-    exact toPolyG_gblcCore_ne_zero hz
-
 /-- **The normalized `t`-length equals `natDegree + 1` for a nonzero `GBPolyCore`**: if
-`gbisZeroCore p = false`, then `(gbnormCore p).length = (DensePoly.toPoly p).natDegree + 1`. -/
-theorem gbnormCore_length_eq_natDegree_succ {p : GBPolyCore β} (hp : gbisZeroCore p = false) :
+`DensePoly.cisZero p = false`, then `(gbnormCore p).length = (DensePoly.toPoly p).natDegree + 1`. -/
+theorem gbnormCore_length_eq_natDegree_succ {p : GBPolyCore β} (hp : DensePoly.cisZero p = false) :
     (gbnormCore p).length = (DensePoly.toPoly p).natDegree + 1 := by
   have hne : gbnormCore p ≠ [] := by
-    rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem] at hp
-    obtain ⟨a, ha⟩ := hp
-    exact List.ne_nil_of_mem ha
-  have hpos : 1 ≤ (gbnormCore p).length := List.length_pos_iff.mpr hne
-  have := gbdegCore_eq_natDegree p
-  rw [gbdegCore] at this
-  omega
+    intro hnorm
+    exact DensePoly.toPolyG_ne_zero_of_cisZeroG_false hp
+      ((gbnormCore_eq_nil_iff_toPolyG p).mp hnorm)
+  have hnormne : DensePoly.cnorm (gbnormCore p) ≠ [] := by rwa [cnormG_gbnormCore]
+  have hlen := DensePoly.length_cnormG_of_ne (gbnormCore p) hnormne
+  rwa [cnormG_gbnormCore, toPolyG_gbnormCore] at hlen
+
+/-- Generic nested zero testing is invariant under `gbnormCore`. -/
+theorem cisZero_gbnormCore (p : GBPolyCore β) :
+    DensePoly.cisZero (gbnormCore p) = DensePoly.cisZero p := by
+  rw [Bool.eq_iff_iff, DensePoly.cisZeroG_iff, DensePoly.cisZeroG_iff,
+    toPolyG_gbnormCore]
 
 /-! ## Sharpening termination: the pseudo-division degree drop as a theorem
 
@@ -65,14 +54,12 @@ The content strip preserves the `t`-degree, and the single loop body `lc(q)·p �
 drops the `t`-degree over the integral domain `R = (CFieldSpec.K β)[X]`, so termination's only remaining
 conditional ingredient is the fuel-bounded loop completing. -/
 
-/-- **`toPoly (gblcCore (gbnormCore p))` is the leading coefficient of `DensePoly.toPoly p`**, via
-`toPolyG_gblcCore_eq_coeff` and `gbdegCore_eq_natDegree`. -/
+/-- **`toPoly (gblcCore (gbnormCore p))` is the leading coefficient of `DensePoly.toPoly p`**. -/
 theorem toPolyG_gblcCore_eq_leadingCoeff (p : GBPolyCore β) :
     DensePoly.toPoly (gblcCore (gbnormCore p)) = (DensePoly.toPoly p).leadingCoeff := by
-  rw [Polynomial.leadingCoeff, ← gbdegCore_eq_natDegree, toPolyG_gblcCore_eq_coeff,
-    toPolyG_gbnormCore]
+  rw [toPolyG_gblcCore_eq_coeff, toPolyG_gbnormCore, Polynomial.leadingCoeff]
   congr 1
-  rw [gbdegCore, gbdegCore, gbnormCore_idemp]
+  rw [DensePoly.cdegG_eq_natDegree, toPolyG_gbnormCore]
 
 /-- **The single pseudo-division step body** `gbStepReduce p q = lc(q)·p − lc(p)·tᵏ·q`
 (`k = (gbnormCore p).length − (gbnormCore q).length`): one leading-term elimination of
@@ -99,12 +86,12 @@ theorem toPolyG_gbStepReduce (p q : GBPolyCore β) :
 for nonzero `p, q` with `deg_t q ≤ deg_t p`, if `gbStepReduce p q` is nonzero then
 `(DensePoly.toPoly (gbStepReduce p q)).natDegree < (DensePoly.toPoly p).natDegree`. -/
 theorem natDegree_gbStepReduce_lt (p q : GBPolyCore β)
-    (hp : gbisZeroCore (gbnormCore p) = false) (hq : gbisZeroCore (gbnormCore q) = false)
+    (hp : DensePoly.cisZero (gbnormCore p) = false) (hq : DensePoly.cisZero (gbnormCore q) = false)
     (hdeg : (DensePoly.toPoly q).natDegree ≤ (DensePoly.toPoly p).natDegree)
     (hstepne : DensePoly.toPoly (gbStepReduce p q) ≠ 0) :
     (DensePoly.toPoly (gbStepReduce p q)).natDegree < (DensePoly.toPoly p).natDegree := by
-  have hp' : gbisZeroCore p = false := by rw [gbisZeroCore, ← gbnormCore_idemp, ← gbisZeroCore]; exact hp
-  have hq' : gbisZeroCore q = false := by rw [gbisZeroCore, ← gbnormCore_idemp, ← gbisZeroCore]; exact hq
+  have hp' : DensePoly.cisZero p = false := by rwa [cisZero_gbnormCore] at hp
+  have hq' : DensePoly.cisZero q = false := by rwa [cisZero_gbnormCore] at hq
   have hkp : (gbnormCore p).length = (DensePoly.toPoly p).natDegree + 1 :=
     gbnormCore_length_eq_natDegree_succ hp'
   have hkq : (gbnormCore q).length = (DensePoly.toPoly q).natDegree + 1 :=
@@ -153,19 +140,13 @@ theorem natDegree_gbStepReduce_lt (p q : GBPolyCore β)
 Iterating the dropping step, `gbpsremainderCore` reaches degree `< deg_t q` (or `0`) once the loop fuel
 exceeds `deg_t p` — an explicit, satisfiable numeric bound. -/
 
-omit [CFieldSpec β] in
-/-- **`gbisZeroCore` is `gbnormCore`-invariant**: `gbisZeroCore (gbnormCore p) = `gbisZeroCore p`. -/
-theorem gbisZeroCore_gbnormCore (p : GBPolyCore β) : gbisZeroCore (gbnormCore p) = gbisZeroCore p := by
-  rw [gbisZeroCore, gbisZeroCore, gbnormCore_idemp]
-
-omit [CFieldSpec β] in
 /-- **A nonzero `GBPolyCore` normalizes to a nonempty list**: `0 < (gbnormCore q).length` from
-`gbisZeroCore (gbnormCore q) = false`. -/
-theorem gbnormCore_length_pos {q : GBPolyCore β} (hq : gbisZeroCore (gbnormCore q) = false) :
+`DensePoly.cisZero (gbnormCore q) = false`. -/
+theorem gbnormCore_length_pos {q : GBPolyCore β} (hq : DensePoly.cisZero (gbnormCore q) = false) :
     0 < (gbnormCore q).length := by
   have hne : gbnormCore q ≠ [] := by
-    rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem, gbnormCore_idemp] at hq
-    obtain ⟨a, ha⟩ := hq; exact List.ne_nil_of_mem ha
+    intro hnorm
+    exact DensePoly.toPolyG_ne_zero_of_cisZeroG_false hq (by rw [hnorm, DensePoly.toPolyG_nil])
   exact List.length_pos_iff.mpr hne
 
 /-- **The pseudo-remainder of a zero dividend reads zero**: if `DensePoly.toPoly p = 0` then
@@ -175,10 +156,9 @@ theorem toPolyG_gbpsremainderCore_eq_zero_of_zero (fuel : ℕ) (p q : GBPolyCore
   cases fuel with
   | zero => rw [gbpsremainderCore, toPolyG_gbnormCore]; exact hp
   | succ fuel =>
-    have hpnil : gbnormCore p = [] := by
-      rw [← gbisZeroCore_iff_toPolyG, gbisZeroCore, List.isEmpty_iff] at hp; exact hp
+    have hpnil : gbnormCore p = [] := (gbnormCore_eq_nil_iff_toPolyG p).mpr hp
     rw [gbpsremainderCore]; simp only [hpnil, List.length_nil]
-    by_cases hqz : gbisZeroCore (gbnormCore q) = true
+    by_cases hqz : DensePoly.cisZero (gbnormCore q) = true
     · simp [hqz]
     · rw [Bool.not_eq_true] at hqz; simp [hqz, gbnormCore_length_pos hqz]
 
@@ -187,12 +167,11 @@ theorem toPolyG_gbpsremainderCore_eq_zero_of_zero (fuel : ℕ) (p q : GBPolyCore
 `(DensePoly.toPoly (gbpsremainderCore fuel p q)).natDegree < (DensePoly.toPoly q).natDegree ∨
 DensePoly.toPoly (gbpsremainderCore fuel p q) = 0`. By induction on `fuel`, iterating
 `natDegree_gbStepReduce_lt`. -/
-theorem gbpsremainderCore_degree_lt (q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false) :
+theorem gbpsremainderCore_degree_lt (q : GBPolyCore β) (hq : DensePoly.cisZero (gbnormCore q) = false) :
     ∀ (fuel : ℕ) (p : GBPolyCore β), (DensePoly.toPoly p).natDegree < fuel →
       (DensePoly.toPoly (gbpsremainderCore fuel p q)).natDegree < (DensePoly.toPoly q).natDegree
         ∨ DensePoly.toPoly (gbpsremainderCore fuel p q) = 0 := by
-  have hqnz : gbisZeroCore q = false := by
-    rw [gbisZeroCore, ← gbnormCore_idemp, ← gbisZeroCore]; exact hq
+  have hqnz : DensePoly.cisZero q = false := by rwa [cisZero_gbnormCore] at hq
   have hql : (gbnormCore q).length = (DensePoly.toPoly q).natDegree + 1 :=
     gbnormCore_length_eq_natDegree_succ hqnz
   have hqpos : 0 < (gbnormCore q).length := gbnormCore_length_pos hq
@@ -208,18 +187,17 @@ theorem gbpsremainderCore_degree_lt (q : GBPolyCore β) (hq : gbisZeroCore (gbno
       by_cases hpz : DensePoly.toPoly p = 0
       · right; exact hpz
       · left
-        have hpnz : gbisZeroCore p = false := by
-          rw [Bool.eq_false_iff, Ne, gbisZeroCore_iff_toPolyG]; exact hpz
+        have hpnz : DensePoly.cisZero p = false := by
+          rw [Bool.eq_false_iff, Ne, DensePoly.cisZeroG_iff]; exact hpz
         have hpl := gbnormCore_length_eq_natDegree_succ hpnz
         omega
     · -- the loop steps: recurse on the (strictly lower degree) step body `p'`
       -- the engine recurses with divisor `gbnormCore q`; normalize it back to `q` for the IH
       rw [if_neg hlen, ← gbpsremainderCore_gbnormCore_right]
-      have hpnz : gbisZeroCore p = false := by
-        rw [Bool.eq_false_iff, Ne, gbisZeroCore_iff_toPolyG]
+      have hpnz : DensePoly.cisZero p = false := by
+        rw [Bool.eq_false_iff, Ne, DensePoly.cisZeroG_iff]
         intro hh
-        have hpnil : gbnormCore p = [] := by
-          rw [← gbisZeroCore_iff_toPolyG, gbisZeroCore, List.isEmpty_iff] at hh; exact hh
+        have hpnil : gbnormCore p = [] := (gbnormCore_eq_nil_iff_toPolyG p).mpr hh
         rw [hpnil, List.length_nil] at hlen; omega
       have hpl := gbnormCore_length_eq_natDegree_succ hpnz
       have hdle : (DensePoly.toPoly (gbnormCore q)).natDegree ≤ (DensePoly.toPoly (gbnormCore p)).natDegree := by
@@ -234,10 +212,10 @@ theorem gbpsremainderCore_degree_lt (q : GBPolyCore β) (hq : gbisZeroCore (gbno
           DensePoly.toPolyG_cshiftG, gbnormCore_idemp, gbnormCore_idemp]
       by_cases hp'z : DensePoly.toPoly p' = 0
       · right; rw [toPolyG_gbpsremainderCore_eq_zero_of_zero fuel p' q hp'z]
-      · have hpnn : gbisZeroCore (gbnormCore (gbnormCore p)) = false := by
-          rw [gbisZeroCore_gbnormCore, gbisZeroCore_gbnormCore]; exact hpnz
-        have hqnn : gbisZeroCore (gbnormCore (gbnormCore q)) = false := by
-          rw [gbisZeroCore_gbnormCore]; exact hq
+      · have hpnn : DensePoly.cisZero (gbnormCore (gbnormCore p)) = false := by
+          rw [cisZero_gbnormCore, cisZero_gbnormCore]; exact hpnz
+        have hqnn : DensePoly.cisZero (gbnormCore (gbnormCore q)) = false := by
+          rw [cisZero_gbnormCore]; exact hq
         have hdegstep : (DensePoly.toPoly p').natDegree < (DensePoly.toPoly p).natDegree := by
           rw [hp'read]
           have h := natDegree_gbStepReduce_lt (gbnormCore p) (gbnormCore q) hpnn hqnn
@@ -270,17 +248,17 @@ cgcdB`, the retained size bound on `prem`, `Q` nonzero, and the stripped node no
 `(gbnormCore (gbprimitivePartCore cgcdB prem)).length < (gbnormCore Q).length`
 holds iff `(DensePoly.toPoly prem).natDegree < (DensePoly.toPoly Q).natDegree`. -/
 theorem gbnormGuard_iff_premDegree (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBCorrect cgcdB)
-    (P Q : GBPolyCore β) (hQ : gbisZeroCore (gbnormCore Q) = false)
+    (P Q : GBPolyCore β) (hQ : DensePoly.cisZero (gbnormCore Q) = false)
     (hfuel : ∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
       (DensePoly.cnorm a : List β).length ≤ 30)
-    (hrz : gbisZeroCore (gbprimitivePartCore cgcdB
+    (hrz : DensePoly.cisZero (gbprimitivePartCore cgcdB
       (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))) = false) :
     ((gbnormCore (gbprimitivePartCore cgcdB
         (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))).length < (gbnormCore Q).length)
       ↔ (DensePoly.toPoly (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))).natDegree
           < (DensePoly.toPoly (gbnormCore Q)).natDegree := by
-  -- `gbisZeroCore Q = false` (idempotence) to apply the length lemma on the outer `gbnormCore Q`
-  have hQ' : gbisZeroCore Q = false := by rw [gbisZeroCore, ← gbnormCore_idemp, ← gbisZeroCore]; exact hQ
+  -- `DensePoly.cisZero Q = false` (idempotence) to apply the length lemma on the outer `gbnormCore Q`
+  have hQ' : DensePoly.cisZero Q = false := by rwa [cisZero_gbnormCore] at hQ
   rw [gbnormCore_length_eq_natDegree_succ hrz, gbnormCore_length_eq_natDegree_succ hQ',
     Nat.add_lt_add_iff_right,
     natDegree_toPolyG_gbprimitivePartCore 30 cgcdB hcorr _ hfuel, toPolyG_gbnormCore]

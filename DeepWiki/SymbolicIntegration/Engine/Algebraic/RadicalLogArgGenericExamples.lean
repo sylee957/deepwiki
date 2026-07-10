@@ -109,7 +109,7 @@ theorem expArg_matches_closed_form :
 
 /-! ### Axiom audit for the generic log-argument solver -/
 
--- The generic solver reproduces `radLogArgSolveQ` at `β = ℚ`.
+-- The generic solver reproduces `radLogArgSolve` at `β = ℚ`.
 #print axioms genArg_arcsinh_isLogIntegral
 #print axioms genArg_arcsinh_matches_closed_form
 

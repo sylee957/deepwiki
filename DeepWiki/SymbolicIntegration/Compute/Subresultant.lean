@@ -32,7 +32,7 @@ def cinvMod (R c : DensePoly ℚ) : DensePoly ℚ :=
 the mod-`R` inverse of the leading `x`-coefficient. -/
 def bmonicXmodR (R : DensePoly ℚ) (p : GBPolyCore ℚ) : GBPolyCore ℚ :=
   let p := bredR R p
-  if GBPolyCore.gbisZeroCore p then []
+  if DensePoly.cisZero p then []
   else
     let inv := cinvMod R (GBPolyCore.gblcCore p)
     GBPolyCore.gbnormCore (p.map (fun c => DensePoly.cmodWf (cmul c inv) R))
@@ -56,7 +56,7 @@ def subresPRS (fuel : ℕ) (P Q : GBPolyCore ℚ) : List (GBPolyCore ℚ) :=
   let rec go : ℕ → GBPolyCore ℚ → GBPolyCore ℚ → DensePoly ℚ → ℕ → List (GBPolyCore ℚ)
     | 0, _, _, _, _ => []
     | fo + 1, Ri_1, Ri, psi, deltaPrev =>
-      if GBPolyCore.gbisZeroCore Ri then []
+      if DensePoly.cisZero Ri then []
       else
         let lcRi_1 : DensePoly ℚ := GBPolyCore.gblcCore Ri_1
         -- update ψ: ψ' = (−lc Ri_1)^δ / ψ^{δ−1}  (δ = deltaPrev ≥ 1)
@@ -69,14 +69,14 @@ def subresPRS (fuel : ℕ) (P Q : GBPolyCore ℚ) : List (GBPolyCore ℚ) :=
         let beta : DensePoly ℚ := cmul negLc (DensePoly.cpow psi' deltaPrev)
         let pr : GBPolyCore ℚ := GBPolyCore.gbpsremainderCore fuel Ri_1 Ri
         let Ri1 : GBPolyCore ℚ := bdivC pr beta
-        let deltaNew : ℕ := GBPolyCore.gbdegCore Ri - GBPolyCore.gbdegCore Ri1
+        let deltaNew : ℕ := DensePoly.cdeg Ri - DensePoly.cdeg Ri1
         Ri :: go fo Ri Ri1 psi' deltaNew
-  P :: go fuel P Q [-1] (GBPolyCore.gbdegCore P - GBPolyCore.gbdegCore Q)
+  P :: go fuel P Q [-1] (DensePoly.cdeg P - DensePoly.cdeg Q)
 
 /-- The subresultant at `x`-degree `j` `bsubresultantGcd fuel j P Q`: the element of `subresPRS`
 whose `x`-degree is `j` (the subresultant `Sⱼ` up to sign), or `[]` if none. -/
 def bsubresultantGcd (fuel : ℕ) (j : ℕ) (P Q : GBPolyCore ℚ) : GBPolyCore ℚ :=
-  ((subresPRS fuel P Q).filter (fun R => decide (GBPolyCore.gbdegCore R = j ∧ ¬ GBPolyCore.gbisZeroCore R))).getLast?.getD []
+  ((subresPRS fuel P Q).filter (fun R => decide (DensePoly.cdeg R = j ∧ ¬ DensePoly.cisZero R))).getLast?.getD []
 
 /-! ### Lifting `ℚ[x]` (a `DensePoly ℚ`) into `GBPolyCore ℚ`, and building `A − t·D'` -/
 

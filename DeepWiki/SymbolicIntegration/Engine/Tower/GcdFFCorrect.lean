@@ -117,6 +117,25 @@ omit [CFieldSpec β] in
       rw [h] at ih
       simp only [gbnormCore_cons_eq, cnormG_idem, ih]
 
+omit [CFieldSpec β] in
+/-- Outer dense normalization fixes `gbnormCore`, whose trailing coefficient is already nonzero. -/
+@[simp] theorem cnormG_gbnormCore (p : GBPolyCore β) :
+    DensePoly.cnorm (gbnormCore p) = gbnormCore p := by
+  induction p with
+  | nil => rfl
+  | cons a as ih =>
+    rw [gbnormCore_cons_eq]
+    cases h : gbnormCore as with
+    | nil =>
+      cases ha : DensePoly.cisZero (DensePoly.cnorm a) with
+      | true => simp
+      | false =>
+        have ha' : CCommRing.isZero (DensePoly.cnorm a) = false := ha
+        simp [DensePoly.cnormG_cons_eq, ha']
+    | cons b bs =>
+      rw [h] at ih
+      simp only [DensePoly.cnormG_cons_eq, ih]
+
 /-- `DensePoly.toPoly` ignores normalization: `DensePoly.toPoly (gbnormCore p) = DensePoly.toPoly p`. -/
 @[simp] theorem toPolyG_gbnormCore (p : GBPolyCore β) :
     DensePoly.toPoly (gbnormCore p) = DensePoly.toPoly p := by
@@ -140,6 +159,17 @@ omit [CFieldSpec β] in
       rw [h] at ih
       simp only [DensePoly.toPolyG_cons, DensePoly.toR_densePoly, denote, ih,
         DensePoly.toPolyG_cnormG]
+
+/-- `gbnormCore p` is empty exactly when the nested dense polynomial reads as zero. -/
+theorem gbnormCore_eq_nil_iff_toPolyG (p : GBPolyCore β) :
+    gbnormCore p = [] ↔ DensePoly.toPoly p = 0 := by
+  constructor
+  · intro h
+    rw [← toPolyG_gbnormCore, h, DensePoly.toPolyG_nil]
+  · intro h
+    have hnorm : DensePoly.cnorm (gbnormCore p) = [] :=
+      (DensePoly.cnormG_eq_nil_iff (gbnormCore p)).mpr (by rwa [toPolyG_gbnormCore])
+    rwa [cnormG_gbnormCore] at hnorm
 
 /-- The last coefficient of `gbnormCore p` reads to a nonzero `R = (CFieldSpec.K β)[X]`. -/
 theorem gbnormCore_getLast?_toPolyG_ne_zero (p : GBPolyCore β) :
@@ -168,32 +198,15 @@ theorem gbnormCore_getLast?_toPolyG_ne_zero (p : GBPolyCore β) :
       exact ih v hv
 
 /-- `gblcCore` is the `t`-coefficient at the top index: `toPoly (gblcCore p) =
-(DensePoly.toPoly p).coeff (gbdegCore p)`. -/
+(DensePoly.toPoly p).coeff (DensePoly.cdeg p)`. -/
 theorem toPolyG_gblcCore_eq_coeff (p : GBPolyCore β) :
-    DensePoly.toPoly (gblcCore p) = (DensePoly.toPoly p).coeff (gbdegCore p) := by
-  rw [gblcCore, gbdegCore, ← toPolyG_gbnormCore, DensePoly.toPolyG_coeff,
+    DensePoly.toPoly (gblcCore p) = (DensePoly.toPoly p).coeff (DensePoly.cdeg p) := by
+  have hdeg : DensePoly.cdeg p = DensePoly.cdeg (gbnormCore p) := by
+    rw [DensePoly.cdegG_eq_natDegree, DensePoly.cdegG_eq_natDegree, toPolyG_gbnormCore]
+  rw [gblcCore, hdeg, DensePoly.cdeg, cnormG_gbnormCore, ← toPolyG_gbnormCore,
+    DensePoly.toPolyG_coeff,
     DensePoly.toR_densePoly, show (CCommRing.zero : DensePoly β) = [] from rfl,
     List.getD_eq_getElem?_getD, ← List.getLast?_eq_getElem?]
-
-/-- `gbisZeroCore p = true ↔ DensePoly.toPoly p = 0`. -/
-theorem gbisZeroCore_iff_toPolyG (p : GBPolyCore β) :
-    gbisZeroCore p = true ↔ DensePoly.toPoly p = 0 := by
-  rw [gbisZeroCore, List.isEmpty_iff]
-  constructor
-  · intro h; rw [← toPolyG_gbnormCore, h, DensePoly.toPolyG_nil]
-  · intro h
-    rcases hb : gbnormCore p with _ | ⟨c, cs⟩
-    · rfl
-    · exfalso
-      have hne : (gbnormCore p).getLast? ≠ none := by rw [hb]; simp
-      rcases hg : (gbnormCore p).getLast? with _ | v
-      · exact hne hg
-      · have hv := gbnormCore_getLast?_toPolyG_ne_zero p v hg
-        have hlc : gblcCore p = v := by rw [gblcCore, hg, Option.getD_some]
-        have hcoeff0 : DensePoly.toPoly (gblcCore p) = 0 := by
-          rw [toPolyG_gblcCore_eq_coeff, h]; simp
-        rw [hlc] at hcoeff0
-        exact hv hcoeff0
 
 end GBPolyCore
 
@@ -475,10 +488,10 @@ theorem toGBPolyG_eq_zero_iff (p : GBPolyCore β) : toGBPoly p = 0 ↔ DensePoly
   exact Polynomial.map_injective (CFrac.am β) (RatFunc.algebraMap_injective (CFieldSpec.K β)) |>.eq_iff
 
 omit [CFieldDomain β] in
-/-- `toGBPoly p = 0 ↔ gbisZeroCore p = true`. -/
-theorem toGBPolyG_eq_zero_iff_gbisZeroCore (p : GBPolyCore β) :
-    toGBPoly p = 0 ↔ gbisZeroCore p = true := by
-  rw [toGBPolyG_eq_zero_iff, gbisZeroCore_iff_toPolyG]
+/-- `toGBPoly p = 0 ↔ DensePoly.cisZero p = true`. -/
+theorem toGBPolyG_eq_zero_iff_cisZero (p : GBPolyCore β) :
+    toGBPoly p = 0 ↔ DensePoly.cisZero p = true := by
+  rw [toGBPolyG_eq_zero_iff, DensePoly.cisZeroG_iff]
 
 /-! ### Step 2 — the primitive-PRS gcd invariant over β(s) -/
 
@@ -489,18 +502,18 @@ theorem associated_gcd_right_gbpolyG {A B B' : (RatFunc (CFieldSpec.K β))[X]} (
   associated_gcd_right_field h
 
 /-- Per-run regularity `CPrimPRSGenAssocReg cgcdB fuel P Q`: the inductive predicate collecting what each
-`cprimPRSgcdGenCore` step's gcd invariant needs — (i) termination `gbisZeroCore Q = true`, (ii) a
+`cprimPRSgcdGenCore` step's gcd invariant needs — (i) termination `DensePoly.cisZero Q = true`, (ii) a
 pseudo-division witness with β(s)-unit multiplier, and (iii) `gbprimitivePartCore` a β(s)-unit scaling. -/
 def CPrimPRSGenAssocReg (cgcdB : DensePoly β → DensePoly β → DensePoly β) :
     ℕ → GBPolyCore β → GBPolyCore β → Prop
   | 0, P, Q =>
-    gbisZeroCore Q = true ∧
+    DensePoly.cisZero Q = true ∧
       Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB P)) (toGBPoly P)
   | fuel + 1, P, Q =>
-    (gbisZeroCore (GBPolyCore.gbnormCore Q) = true ∧
+    (DensePoly.cisZero (GBPolyCore.gbnormCore Q) = true ∧
       Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbnormCore P)))
         (toGBPoly P)) ∨
-      (¬ gbisZeroCore (GBPolyCore.gbnormCore Q) = true ∧
+      (¬ DensePoly.cisZero (GBPolyCore.gbnormCore Q) = true ∧
         (∃ (s : GBPolyCore β) (c : DensePoly β),
           Polynomial.C (CFrac.am β (DensePoly.toPoly c)) * toGBPoly (GBPolyCore.gbnormCore P)
             = toGBPoly s * toGBPoly (GBPolyCore.gbnormCore Q)
@@ -527,7 +540,7 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : DensePoly β → DenseP
   | zero =>
     intro P Q hreg
     obtain ⟨hQ, hprim⟩ := hreg
-    have hQ0 : toGBPoly Q = 0 := (toGBPolyG_eq_zero_iff_gbisZeroCore Q).mpr hQ
+    have hQ0 : toGBPoly Q = 0 := (toGBPolyG_eq_zero_iff_cisZero Q).mpr hQ
     show Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB P))
       (gcd (toGBPoly P) (toGBPoly Q))
     rw [hQ0]
@@ -536,17 +549,17 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : DensePoly β → DenseP
     intro P Q hreg
     show Associated (toGBPoly (
         let P := GBPolyCore.gbnormCore P; let Q := GBPolyCore.gbnormCore Q;
-        if GBPolyCore.gbisZeroCore Q then GBPolyCore.gbprimitivePartCore cgcdB P
+        if DensePoly.cisZero Q then GBPolyCore.gbprimitivePartCore cgcdB P
         else cprimPRSgcdGenCore cgcdB fuel Q
           (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q))))
       (gcd (toGBPoly P) (toGBPoly Q))
     simp only
-    by_cases hQ : GBPolyCore.gbisZeroCore (GBPolyCore.gbnormCore Q) = true
+    by_cases hQ : DensePoly.cisZero (GBPolyCore.gbnormCore Q) = true
     · rw [if_pos hQ]
       rw [CPrimPRSGenAssocReg] at hreg
       rcases hreg with ⟨_, hprim⟩ | ⟨hne, _⟩
       · have hQ0 : toGBPoly Q = 0 := by
-          rw [← toGBPolyG_gbnormCore]; exact (toGBPolyG_eq_zero_iff_gbisZeroCore _).mpr hQ
+          rw [← toGBPolyG_gbnormCore]; exact (toGBPolyG_eq_zero_iff_cisZero _).mpr hQ
         rw [hQ0]
         exact hprim.trans (gcd_zero_right' (toGBPoly P)).symm
       · exact absurd hQ hne

@@ -22,7 +22,7 @@ theorem getLast?_getD_filter_eq_of_singleton {α : Type*} (L : List α) (pred : 
 
 /-- If the degree-`j` nonzero filter of `subresPRS fuel P Q` is `[w]`, then `bsubresultantGcd fuel j P Q = w`. -/
 theorem bsubresultantGcd_eq_of_filter_singleton (fuel j : ℕ) (P Q : GBPolyCore ℚ) (w : GBPolyCore ℚ)
-    (hfil : (subresPRS fuel P Q).filter (fun R => decide (GBPolyCore.gbdegCore R = j ∧ ¬ GBPolyCore.gbisZeroCore R)) = [w]) :
+    (hfil : (subresPRS fuel P Q).filter (fun R => decide (DensePoly.cdeg R = j ∧ ¬ DensePoly.cisZero R)) = [w]) :
     bsubresultantGcd fuel j P Q = w := by
   rw [bsubresultantGcd]
   exact getLast?_getD_filter_eq_of_singleton _ _ w [] hfil
@@ -31,7 +31,7 @@ theorem bsubresultantGcd_eq_of_filter_singleton (fuel j : ℕ) (P Q : GBPolyCore
 `DensePoly.toPoly (bsubresultantGcd fuel j P Q) = DensePoly.toPoly (G (m+2))`. -/
 theorem toBPoly_bsubresultantGcd_eq_of_filter_singleton (fuel : ℕ) (P Q : GBPolyCore ℚ) (G : ℕ → GBPolyCore ℚ) (m : ℕ)
     (hfil : (subresPRS fuel P Q).filter
-        (fun R => decide (GBPolyCore.gbdegCore R = (DensePoly.toPoly (G (m + 2))).natDegree ∧ ¬ GBPolyCore.gbisZeroCore R)) = [G (m + 2)]) :
+        (fun R => decide (DensePoly.cdeg R = (DensePoly.toPoly (G (m + 2))).natDegree ∧ ¬ DensePoly.cisZero R)) = [G (m + 2)]) :
     DensePoly.toPoly (bsubresultantGcd fuel (DensePoly.toPoly (G (m + 2))).natDegree P Q) = DensePoly.toPoly (G (m + 2)) := by
   rw [bsubresultantGcd_eq_of_filter_singleton fuel (DensePoly.toPoly (G (m + 2))).natDegree P Q (G (m + 2)) hfil]
 
@@ -60,7 +60,7 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : Dens
     (hd1 : (DensePoly.toPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
     (hchain : IsSubresPRSChainInput fuel G bt s c m)
     (hfil : (subresPRS fuel (G 0) (G 1)).filter
-        (fun R => decide (GBPolyCore.gbdegCore R = (DensePoly.toPoly (G (m + 2))).natDegree ∧ ¬ GBPolyCore.gbisZeroCore R)) = [G (m + 2)]) :
+        (fun R => decide (DensePoly.cdeg R = (DensePoly.toPoly (G (m + 2))).natDegree ∧ ¬ DensePoly.cisZero R)) = [G (m + 2)]) :
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (DensePoly.toPoly (G (m + 2))).natDegree)
       (DensePoly.toPoly (bsubresultantGcd fuel (DensePoly.toPoly (G (m + 2))).natDegree (G 0) (G 1))) :=
   isSimilar_lrtSubresultant_bsubresultantGcd fuel A D G bt s c m hG0 hG1 hd0 hd1

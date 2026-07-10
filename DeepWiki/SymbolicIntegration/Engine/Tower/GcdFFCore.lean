@@ -30,14 +30,8 @@ def gbnormCore : GBPolyCore B → GBPolyCore B
     | [] => if DensePoly.cisZero a then [] else [a]
     | r => a :: r
 
-/-! `GBPolyCore B = DensePoly (DensePoly B)`, so its ring operations are the generic `DensePoly.c*`
-operations at coefficient type `DensePoly B`; no bivariate aliases are needed. -/
-
-/-- Zero test for a `GBPolyCore`: `true` iff it normalizes to `[]` (via `List.isEmpty`). -/
-def gbisZeroCore (p : GBPolyCore B) : Bool := (gbnormCore p).isEmpty
-
-/-- `t`-degree of a `GBPolyCore`: `(gbnormCore p).length − 1`, with `gbdegCore 0 = 0`. -/
-def gbdegCore (p : GBPolyCore B) : ℕ := (gbnormCore p).length - 1
+/-! `GBPolyCore B = DensePoly (DensePoly B)`, so its ring operations, zero test, and degree are the
+generic `DensePoly.c*` operations at coefficient type `DensePoly B`; no bivariate aliases are needed. -/
 
 /-- Leading `t`-coefficient `gblcCore p ∈ DensePoly B`: the top nonzero `t`-coefficient, `[]` for zero. -/
 def gblcCore (p : GBPolyCore B) : DensePoly B := (gbnormCore p).getLast?.getD []
@@ -51,7 +45,7 @@ def gbpsremainderCore : ℕ → GBPolyCore B → GBPolyCore B → GBPolyCore B
   | fuel + 1, p, q =>
     let p := gbnormCore p
     let q := gbnormCore q
-    if gbisZeroCore q then gbnormCore p
+    if DensePoly.cisZero q then gbnormCore p
     else if p.length < q.length then p
     else
       let k := p.length - q.length
@@ -90,7 +84,7 @@ def cprimPRSgcdGenCore (cgcdB : DensePoly B → DensePoly B → DensePoly B) :
   | fuel + 1, P, Q =>
     let P := GBPolyCore.gbnormCore P
     let Q := GBPolyCore.gbnormCore Q
-    if GBPolyCore.gbisZeroCore Q then GBPolyCore.gbprimitivePartCore cgcdB P
+    if DensePoly.cisZero Q then GBPolyCore.gbprimitivePartCore cgcdB P
     else
       let r := GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q)
       cprimPRSgcdGenCore cgcdB fuel Q r

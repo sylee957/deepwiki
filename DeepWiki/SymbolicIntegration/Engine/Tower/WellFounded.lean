@@ -61,7 +61,7 @@ def cprimPRSgcdGenCoreWf (cgcdB : DensePoly B → DensePoly B → DensePoly B) (
     GBPolyCore B :=
   let P := gbnormCore P
   let Q := gbnormCore Q
-  if gbisZeroCore Q then gbprimitivePartCore cgcdB P
+  if DensePoly.cisZero Q then gbprimitivePartCore cgcdB P
   else
     let r := gbprimitivePartCore cgcdB (gbpsremainderCore 60 P Q)
     if (gbnormCore r).length < (gbnormCore Q).length then
@@ -80,17 +80,17 @@ so the correctness layer uses a fuel-regularity predicate `CPrimPRSGenRegular` m
 
 /-- Per-run primitive-PRS-kernel fuel-regularity `CPrimPRSGenRegular cgcdB fuel P Q`: mirrors the
 `cprimPRSgcdGenCore` fuel recursion as an inductive predicate over the structural fuel counter — `stop`
-(any fuel) when the next divisor is zero (`gbisZeroCore (gbnormCore Q)`), or `step` (fuel `n+1`) when `Q`
+(any fuel) when the next divisor is zero (`DensePoly.cisZero (gbnormCore Q)`), or `step` (fuel `n+1`) when `Q`
 is nonzero, the next PRS node `r = gbprimitivePartCore cgcdB (gbpsremainderCore 60 (gbnormCore P)
 (gbnormCore Q))` strictly drops the normalized `t`-length, and the same holds recursively on
 `(gbnormCore Q, r)` at one less fuel. -/
 inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : DensePoly B → DensePoly B → DensePoly B) :
     ℕ → GBPolyCore B → GBPolyCore B → Prop
   /-- terminal node: the next divisor is zero, the loop stops (any fuel). -/
-  | stop {fuel : ℕ} {P Q : GBPolyCore B} (hz : GBPolyCore.gbisZeroCore (GBPolyCore.gbnormCore Q) = true) :
+  | stop {fuel : ℕ} {P Q : GBPolyCore B} (hz : DensePoly.cisZero (GBPolyCore.gbnormCore Q) = true) :
       CPrimPRSGenRegular cgcdB fuel P Q
   /-- recursive node: `Q` nonzero, the next PRS node drops the `t`-length, recurse on `(gbnormCore Q, r)`. -/
-  | step {fuel : ℕ} {P Q : GBPolyCore B} (hz : GBPolyCore.gbisZeroCore (GBPolyCore.gbnormCore Q) = false)
+  | step {fuel : ℕ} {P Q : GBPolyCore B} (hz : DensePoly.cisZero (GBPolyCore.gbnormCore Q) = false)
       (hguard : (GBPolyCore.gbnormCore (GBPolyCore.gbprimitivePartCore cgcdB
           (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q)))).length
         < (GBPolyCore.gbnormCore Q).length)
@@ -147,7 +147,7 @@ instance instCFracGcdCoreWfCFrac : CFracGcdCoreWf (CFrac β) where
   cgcdFFRawCoreWf p q :=
     let P := DensePoly.cclearDenomsCore p
     let Q := DensePoly.cclearDenomsCore q
-    let (P, Q) := if GBPolyCore.gbdegCore P < GBPolyCore.gbdegCore Q then (Q, P) else (P, Q)
+    let (P, Q) := if DensePoly.cdeg P < DensePoly.cdeg Q then (Q, P) else (P, Q)
     DensePoly.liftGBPolyCore (GBPolyCore.cprimPRSgcdGenCoreWf CFracGcdCoreWf.cgcdFFRawCoreWf P Q)
 
 end

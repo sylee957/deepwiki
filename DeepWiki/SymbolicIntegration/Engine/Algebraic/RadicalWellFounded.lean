@@ -143,14 +143,14 @@ end DensePoly
 /-- Unified algebraic integrator `cIntegrateAlgebraicWf ρ R B residual c D degBound` over `y² = ρ`:
 `∫ R/(B·y) dx = v + c·log u` (principal case). Computes the rational part `v` by the multi-case
 dispatch (`radIntegrateRationalWf` + `radAssembleRatPart`), then solves the log argument on
-`residual` (`radLogArgSolveQ ρ residual D degBound`); on `none` returns just the rational part. -/
+`residual` (`radLogArgSolve ρ residual D degBound`); on `none` returns just the rational part. -/
 def cIntegrateAlgebraicWf (ρ : CFrac ℚ) (R B : DensePoly ℚ)
     (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) :
     AlgIntegralResult (CFrac ℚ) :=
-  let ρpoly : DensePoly ℚ := qxNum ρ
+  let ρpoly : DensePoly ℚ := qNum ρ
   let runs := DensePoly.radIntegrateRationalWf ρpoly R B
   let v := radAssembleRatPart ρ runs
-  match radLogArgSolveQ ρ residual D degBound with
+  match radLogArgSolve ρ residual D degBound with
   | none => ⟨v, []⟩
   | some N =>
     let Dq : CFrac ℚ := qxOfNum D

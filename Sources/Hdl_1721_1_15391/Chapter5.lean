@@ -182,49 +182,57 @@ system in the coefficients of `a₀, a₁` (bounded-degree ansatz). A nonzero ke
 right), so the engine SOLVES for `u`, rather than being handed it. The PRINCIPAL case (a bounded `N/D`
 ansatz exists); the non-principal / torsion case returns `none` (the boundary). -/
 
-/-- **Reduce a ℚ-matrix to reduced row-echelon form** `ratRref nCols rows = (rrefRows, pivotCols)`
+/-- **Reduce a ℚ-matrix to reduced row-echelon form** `gaussElim nCols rows = (rrefRows, pivotCols)`
 (Trager, Chapter 5 §2, the linear solve): standard Gauss–Jordan over ℚ — the inner step of solving the
 cleared log-derivative system for the log argument. Exact ℚ-arithmetic. -/
-abbrev ch5_ratRref := @ratRref
+abbrev ch5_ratRref (nCols : ℕ) (rows : List (List ℚ)) : List (List ℚ) × List ℕ :=
+  gaussElim nCols rows
 
-/-- **A nonzero kernel vector of a ℚ-matrix** `ratKernelVector nCols rows = some c` with `M · c = 0`,
-`c ≠ 0` (Trager, Chapter 5 §2, the linear solve): reads a kernel vector off a free column after `ratRref`,
+/-- **A nonzero kernel vector of a ℚ-matrix** `kernelVector nCols rows = some c` with `M · c = 0`,
+`c ≠ 0` (Trager, Chapter 5 §2, the linear solve): reads a kernel vector off a free column after `gaussElim`,
 or `none` if the kernel is trivial. The nonzero kernel vector assembles into the log-argument numerator
 `N`. -/
-abbrev ch5_ratKernelVector := @ratKernelVector
+abbrev ch5_ratKernelVector (nCols : ℕ) (rows : List (List ℚ)) : Option (List ℚ) :=
+  kernelVector nCols rows
 
-/-- **The cleared log-derivative residual** `radLogResidualQ ρ integrand D N = radDeriv(N)·D − N·D' −
+/-- **The cleared log-derivative residual** `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' −
 radMul(N, integrand)·D` (Trager, Chapter 5 §1, the cleared `df/f` relation): the `RadElem` whose vanishing
 (both ℚ(x)-coefficients zero) says `∫(integrand) dx = log(N/D)`. ℚ-linear in `N`. -/
-abbrev ch5_logResidual := @radLogResidualQ
+abbrev ch5_logResidual (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
+    (N : RadElem (CFrac ℚ)) : RadElem (CFrac ℚ) :=
+  radLogResidual ρ integrand D N
 
-/-- **The ℚ-matrix of the cleared log-derivative system** `radLogMatrixQ ρ integrand D degBound` (Trager,
+/-- **The ℚ-matrix of the cleared log-derivative system** `radLogMatrix ρ integrand D degBound` (Trager,
 Chapter 5 §2): evaluate the residual on the monomial basis `Nⱼ ∈ {[xᵏ,0], [0,xᵏ]}` (the residual is
 ℚ-linear), clear each rational-function entry to a polynomial numerator over a common denominator, and read
 off the `x`-power coefficients — one row per `x`-power per component, one column per basis index. A kernel
 vector solves for `N`. -/
-abbrev ch5_logMatrix := @radLogMatrixQ
+abbrev ch5_logMatrix (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
+    (degBound : ℕ) : List (List ℚ) × ℕ :=
+  radLogMatrix ρ integrand D degBound
 
-/-- **★ Solve for the log argument** `radLogArgSolveQ ρ integrand D degBound = some N` (Trager, Chapter 5
+/-- **★ Solve for the log argument** `radLogArgSolve ρ integrand D degBound = some N` (Trager, Chapter 5
 §1–§2, the principal case): the radical-extension numerator `N = a₀ + a₁·y` with `∫(integrand) dx =
-log(N/D)`, COMPUTED by building the ℚ-matrix `radLogMatrixQ` (undetermined coefficients) and finding a
-nonzero kernel vector (`ratKernelVector`). Returns `none` on the non-principal / torsion boundary (trivial
+log(N/D)`, COMPUTED by building the ℚ-matrix `radLogMatrix` (undetermined coefficients) and finding a
+nonzero kernel vector (`kernelVector`). Returns `none` on the non-principal / torsion boundary (trivial
 kernel at the degree bound, OUT OF SCOPE — Ch. 5 §3 / Ch. 6). The OUTPUT is `u = N/D`: `u` is computed, not
 supplied. -/
-abbrev ch5_logArgSolve := @radLogArgSolveQ
+abbrev ch5_logArgSolve (ρ : CFrac ℚ) (integrand : RadElem (CFrac ℚ)) (D : DensePoly ℚ)
+    (degBound : ℕ) : Option (RadElem (CFrac ℚ)) :=
+  radLogArgSolve ρ integrand D degBound
 
-/-- **★ `radLogArgSolveQ` COMPUTES `u = x + y` for `∫ dx/√(x²+1)` (arcsinh)** (Trager, Chapter 5 §1–§2,
+/-- **★ `radLogArgSolve` COMPUTES `u = x + y` for `∫ dx/√(x²+1)` (arcsinh)** (Trager, Chapter 5 §1–§2,
 `native_decide`): with `ρ = x²+1`, `D = 1`, ansatz degree `1`, the solver returns `some N` (a nonzero
 kernel vector of the cleared linear system), and the COMPUTED `u = N/1` passes the log-derivative
 certificate `radIsLogIntegral` — `∫ dx/√(x²+1) = log N`. The engine computes the algebraic-log argument. -/
 abbrev ch5_logArg_arcsinh := @radArg_arcsinh_compute_verify
 
-/-- **★ `radLogArgSolveQ` COMPUTES `u = x + y` for `∫ dx/√(x²−1)` (arccosh)** (Trager, Chapter 5 §1–§2,
+/-- **★ `radLogArgSolve` COMPUTES `u = x + y` for `∫ dx/√(x²−1)` (arccosh)** (Trager, Chapter 5 §1–§2,
 `native_decide`): the arccosh companion — the same linear solve recovers the log argument from `ρ = x²−1`,
 `D = 1`, and the computed `u` passes the log-derivative certificate. -/
 abbrev ch5_logArg_arccosh := @radArg_arccosh_compute_verify
 
-/-- **★ `radLogArgSolveQ` COMPUTES `u = (y − 1)/x` for `∫ dx/(x√(x²+1))`** (Trager, Chapter 5 §1–§2,
+/-- **★ `radLogArgSolve` COMPUTES `u = (y − 1)/x` for `∫ dx/(x√(x²+1))`** (Trager, Chapter 5 §1–§2,
 `native_decide`): the genuine FINITE-POLE case — with the FIXED denominator `D = x` (pole at `x = 0`), the
 solver returns `some N` (a constant multiple of `y − 1`, the correct sign), and the COMPUTED `u = N/x`
 passes the log-derivative certificate — `∫ dx/(x√(x²+1)) = log((y − 1)/x)`. The engine computes the
@@ -237,7 +245,7 @@ the known closed form `u = x + y` exactly up to the log argument's intrinsic sca
 abbrev ch5_logArg_arcsinh_matches := @radArg_arcsinh_matches_closed_form
 
 /-- **★ Negative control: the double-pole target has NO bounded log argument** (Trager, Chapter 5 §1–§2,
-the torsion boundary, `native_decide`): `radLogArgSolveQ (ρ = x²+1) (1/(x²y)) (D = x²) 1 = none` — the
+the torsion boundary, `native_decide`): `radLogArgSolve (ρ = x²+1) (1/(x²y)) (D = x²) 1 = none` — the
 cleared linear system has only the trivial kernel, so `∫ dx/(x²√(x²+1))` is non-principal at this degree
 bound: its log part needs the `(1/m)·log` divisor/torsion machinery (Ch. 5 §3 / Ch. 6). The boundary of the
 principal-case linear solve. -/

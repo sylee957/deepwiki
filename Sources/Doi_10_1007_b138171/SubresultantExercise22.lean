@@ -29,12 +29,12 @@ private abbrev hP : GBPolyCore ℚ := liftCtoBPoly cD22
 private abbrev hQ : GBPolyCore ℚ := bArgAmtD' cA22 cD22
 
 /-- **The degree-1 element's `x`-degree is 1**: `(DensePoly.toPoly (chain 60 hP hQ 9)).natDegree = 1` (the regular
-LRT index `j = m+2 = 9` ↦ degree `1`, the squarefree per-residue gcd `x + c₀(t)`). Via `gbdegCore_eq_natDegree`
-and `native_decide` on `GBPolyCore.gbdegCore (chain … 9)`. -/
+LRT index `j = m+2 = 9` ↦ degree `1`, the squarefree per-residue gcd `x + c₀(t)`). Via `DensePoly.cdegG_eq_natDegree`
+and `native_decide` on `DensePoly.cdeg (chain … 9)`. -/
 theorem natDegree_toBPoly_chainG9_ex22 :
     (DensePoly.toPoly (chain 60 hP hQ 9)).natDegree = 1 := by
-  rw [← gbdegCore_eq_natDegree]
-  show GBPolyCore.gbdegCore (goState 60 (hP, hQ, [-1], GBPolyCore.gbdegCore hP - GBPolyCore.gbdegCore hQ) 9).1 = 1
+  rw [← DensePoly.cdegG_eq_natDegree]
+  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], DensePoly.cdeg hP - DensePoly.cdeg hQ) 9).1 = 1
   native_decide
 
 /-- `(toPoly cD22).natDegree = 10`: `D = x¹⁰−2x⁸−…` has degree 10 (via `DensePoly.cdegG_eq_natDegree`). -/
@@ -44,21 +44,21 @@ theorem natDegree_toPoly_cD22 : (toPoly cD22).natDegree = 10 := by
 /-- **`hd0` for Ex 2.2**: `(DensePoly.toPoly (chain 60 hP hQ 0)).natDegree = (toPoly cD22).natDegree` (both 10). -/
 theorem hd0_ex22 :
     (DensePoly.toPoly (chain 60 hP hQ 0)).natDegree = (toPoly cD22).natDegree := by
-  rw [← gbdegCore_eq_natDegree, natDegree_toPoly_cD22]
-  show GBPolyCore.gbdegCore (goState 60 (hP, hQ, [-1], GBPolyCore.gbdegCore hP - GBPolyCore.gbdegCore hQ) 0).1 = 10
+  rw [← DensePoly.cdegG_eq_natDegree, natDegree_toPoly_cD22]
+  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], DensePoly.cdeg hP - DensePoly.cdeg hQ) 0).1 = 10
   native_decide
 
 /-- **`hd1` for Ex 2.2**: `(DensePoly.toPoly (chain 60 hP hQ 1)).natDegree = (toPoly cD22).natDegree − 1`
 (both 9). -/
 theorem hd1_ex22 :
     (DensePoly.toPoly (chain 60 hP hQ 1)).natDegree = (toPoly cD22).natDegree - 1 := by
-  rw [← gbdegCore_eq_natDegree, natDegree_toPoly_cD22]
-  show GBPolyCore.gbdegCore (goState 60 (hP, hQ, [-1], GBPolyCore.gbdegCore hP - GBPolyCore.gbdegCore hQ) 1).1 = 10 - 1
+  rw [← DensePoly.cdegG_eq_natDegree, natDegree_toPoly_cD22]
+  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], DensePoly.cdeg hP - DensePoly.cdeg hQ) 1).1 = 10 - 1
   native_decide
 
 /-- **Chain nonzero through index 9**: `chain 0 … chain 9` are all nonzero (degrees `10,…,1`). -/
 theorem chainG_ne_zero_ex22 :
-    ∀ i ≤ 9, ¬ GBPolyCore.gbisZeroCore (chain 60 hP hQ i) = true := by
+    ∀ i ≤ 9, ¬ DensePoly.cisZero (chain 60 hP hQ i) = true := by
   simp only [chain]; native_decide
 
 /-- **`hβcn` for Ex 2.2**: the β-divisors `chainBt 0 … chainBt 7` are nonzero `ℚ[t]` lists. -/
@@ -91,34 +91,34 @@ theorem hlc_ex22 :
     ∀ l ≤ 7, (DensePoly.toPoly (chain 60 hP hQ (l + 1))).coeff
       (DensePoly.toPoly (chain 60 hP hQ (l + 1))).natDegree ≠ 0 := by
   intro l hl
-  rw [← gbdegCore_eq_natDegree, ← GBPolyCore.toPolyG_gblcCore_eq_coeff]
+  rw [← DensePoly.cdegG_eq_natDegree, ← GBPolyCore.toPolyG_gblcCore_eq_coeff]
   exact toPolyG_gblcCore_ne_zero
     (Bool.eq_false_iff.mpr (chainG_ne_zero_ex22 (l + 1) (by omega)))
 
 /-- **`hcb` for Ex 2.2**: the `x`-degrees strictly decrease (`chain (l+2)` below `chain (l+1)`,
-`l ≤ 7`: `8<9, …, 1<2`), via `gbdegCore_eq_natDegree`. -/
+`l ≤ 7`: `8<9, …, 1<2`), via `DensePoly.cdegG_eq_natDegree`. -/
 theorem hcb_ex22 :
     ∀ l ≤ 7, (DensePoly.toPoly (chain 60 hP hQ (l + 2))).natDegree
       < (DensePoly.toPoly (chain 60 hP hQ (l + 1))).natDegree := by
   intro l hl
-  rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
+  rw [← DensePoly.cdegG_eq_natDegree, ← DensePoly.cdegG_eq_natDegree]
   interval_cases l <;>
     · simp only [chain]; native_decide
 
 /-- **`hjlt` for Ex 2.2**: the degree-1 element `chain 9` is strictly below `chain (l+2)` for `l<7`
-(`1 < 8,7,…,2`), via `gbdegCore_eq_natDegree`. -/
+(`1 < 8,7,…,2`), via `DensePoly.cdegG_eq_natDegree`. -/
 theorem hjlt_ex22 :
     ∀ l < 7, (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree
       < (DensePoly.toPoly (chain 60 hP hQ (l + 2))).natDegree := by
   intro l hl
-  rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
+  rw [← DensePoly.cdegG_eq_natDegree, ← DensePoly.cdegG_eq_natDegree]
   interval_cases l <;>
     · simp only [chain]; native_decide
 
 /-- **`hCne` for Ex 2.2**: the degree-1 chain element `chain 9` is nonzero (`DensePoly.toPoly ≠ 0`), via
-`GBPolyCore.gbisZeroCore_iff_toPolyG`. -/
+`DensePoly.cisZeroG_iff`. -/
 theorem hCne_ex22 : DensePoly.toPoly (chain 60 hP hQ (7 + 2)) ≠ 0 := by
-  rw [Ne, ← GBPolyCore.gbisZeroCore_iff_toPolyG]
+  rw [Ne, ← DensePoly.cisZeroG_iff]
   exact chainG_ne_zero_ex22 9 (by omega)
 
 /-- **The degree-1 filter of `subresPRS` is `[chain 9]`** (the singleton-filter, by `native_decide`):
@@ -126,11 +126,11 @@ the `[10,9,…,1,0]` chain degrees are all distinct, so the degree-1 nonzero fil
 is exactly the single element `chain 9`. Direct `native_decide` (both sides computable). -/
 theorem subresPRS_filter_singleton_ex22 :
     (subresPRS 60 hP hQ).filter
-        (fun R => decide (GBPolyCore.gbdegCore R = (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree ∧ ¬ GBPolyCore.gbisZeroCore R))
+        (fun R => decide (DensePoly.cdeg R = (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree ∧ ¬ DensePoly.cisZero R))
       = [chain 60 hP hQ (7 + 2)] := by
   rw [natDegree_toBPoly_chainG9_ex22]
-  show (subresPRS 60 hP hQ).filter (fun R => decide (GBPolyCore.gbdegCore R = 1 ∧ ¬ GBPolyCore.gbisZeroCore R))
-      = [(goState 60 (hP, hQ, [-1], GBPolyCore.gbdegCore hP - GBPolyCore.gbdegCore hQ) (7 + 2)).1]
+  show (subresPRS 60 hP hQ).filter (fun R => decide (DensePoly.cdeg R = 1 ∧ ¬ DensePoly.cisZero R))
+      = [(goState 60 (hP, hQ, [-1], DensePoly.cdeg hP - DensePoly.cdeg hQ) (7 + 2)).1]
   native_decide
 
 /-- **`hfilt` for Ex 2.2**: the degree-1 filter of `bsubresultantGcd 60 1 hP hQ` returns `chain 9`
@@ -183,9 +183,9 @@ theorem hrem_ex22 :
 pseudo-remainder). Here `l ≤ 7`, indices `l, l+1, l+2 ∈ {0,…,9}`. -/
 
 /-- The chain elements `chain 0 … chain 9` are nonzero under `DensePoly.toPoly` (`i ≤ 9`), via
-`GBPolyCore.gbisZeroCore_iff_toPolyG` and `chainG_ne_zero_ex22`. -/
+`DensePoly.cisZeroG_iff` and `chainG_ne_zero_ex22`. -/
 theorem toBPoly_chainG_ne_zero_ex22 (i : ℕ) (hi : i ≤ 9) : DensePoly.toPoly (chain 60 hP hQ i) ≠ 0 := by
-  rw [Ne, ← GBPolyCore.gbisZeroCore_iff_toPolyG]
+  rw [Ne, ← DensePoly.cisZeroG_iff]
   exact chainG_ne_zero_ex22 i hi
 
 /-- **The pseudo-remainder is `C(toPoly βₗ)` times the next chain element** (Ex 2.2, `l ≤ 7`):
@@ -245,10 +245,10 @@ theorem hc0_ex22 : ∀ l ≤ 7, toPoly (chainC 60 hP hQ l) ≠ 0 := by
     omega
 
 /-- **The `x`-degree of `chain (l+1)` is strictly below that of `chain l`** (Ex 2.2, `l ≤ 7`):
-`deg (chain (l+1)) < deg (chain l)` (`9<10, …, 2<3`), via `gbdegCore_eq_natDegree`. -/
+`deg (chain (l+1)) < deg (chain l)` (`9<10, …, 2<3`), via `DensePoly.cdegG_eq_natDegree`. -/
 theorem natDegree_toBPoly_chainG_strictAnti_ex22 (l : ℕ) (hl : l ≤ 7) :
     (DensePoly.toPoly (chain 60 hP hQ (l + 1))).natDegree < (DensePoly.toPoly (chain 60 hP hQ l)).natDegree := by
-  rw [← gbdegCore_eq_natDegree, ← gbdegCore_eq_natDegree]
+  rw [← DensePoly.cdegG_eq_natDegree, ← DensePoly.cdegG_eq_natDegree]
   interval_cases l <;>
     · simp only [chain]; native_decide
 
@@ -360,9 +360,9 @@ theorem hgu_ex22 :
     simp [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]⟩
 
 /-- **`hpz` for Ex 2.2**: the mod-`R` reduction of the primitive degree-1 subresultant is nonzero
-(`¬ GBPolyCore.gbisZeroCore (bredR (cmonic cR22) (lrtSubresultantCompute 60 1 cA22 cD22))`). -/
+(`¬ DensePoly.cisZero (bredR (cmonic cR22) (lrtSubresultantCompute 60 1 cA22 cD22))`). -/
 theorem hpz_ex22 :
-    ¬ GBPolyCore.gbisZeroCore (bredR (cmonic cR22)
+    ¬ DensePoly.cisZero (bredR (cmonic cR22)
         (lrtSubresultantCompute 60 (DensePoly.toPoly (chain 60 hP hQ (7 + 2))).natDegree cA22 cD22)) = true := by
   rw [natDegree_toBPoly_chainG9_ex22]; native_decide
 

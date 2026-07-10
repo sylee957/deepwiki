@@ -22,20 +22,20 @@ open DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 
 /-- The self-determining algebraic integrator `cIntegrateAlgebraicDecide` over `y² = ρ`, returning
 `Option (AlgIntegralResult (CFrac ℚ))`: computes the rational part `v`, then `some ⟨v, []⟩` if `hasLogPart =
-false`, `some ⟨v, [(c, N/D)]⟩` on a principal `radLogArgSolveQ = some N`, `some ⟨v, [(1/m, g)]⟩` when
+false`, `some ⟨v, [(c, N/D)]⟩` on a principal `radLogArgSolve = some N`, `some ⟨v, [(1/m, g)]⟩` when
 the residue divisor `Dm` is torsion, and `none` when it is non-torsion. -/
 def cIntegrateAlgebraicDecide (p : ℕ) [Fact p.Prime]
     (ρ : CFrac ℚ) (R B : DensePoly ℚ)
     (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
     (ρq : DensePoly ℚ) (gen : ℕ) (Dm : DensePoly.MumfordDivisor ℚ) (hasLogPart : Bool) :
     Option (AlgIntegralResult (CFrac ℚ)) :=
-  let ρpoly : DensePoly ℚ := qxNum ρ
+  let ρpoly : DensePoly ℚ := qNum ρ
   let runs := DensePoly.radIntegrateRationalWf ρpoly R B
   let v := radAssembleRatPart ρ runs
   if hasLogPart = false then
     some ⟨v, []⟩
   else
-    match radLogArgSolveQ ρ residual D degBound with
+    match radLogArgSolve ρ residual D degBound with
     | some N =>
       let Dq : CFrac ℚ := qxOfNum D
       let u : RadElem (CFrac ℚ) := N.map (fun z => CField.div z Dq)
@@ -51,12 +51,12 @@ theorem cIntegrateAlgebraicDecide_principal_eq (p : ℕ) [Fact p.Prime]
     (ρ : CFrac ℚ) (R B : DensePoly ℚ)
     (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
     (ρq : DensePoly ℚ) (gen : ℕ) (Dm : DensePoly.MumfordDivisor ℚ)
-    (hlog : (radLogArgSolveQ ρ residual D degBound).isSome = true) :
+    (hlog : (radLogArgSolve ρ residual D degBound).isSome = true) :
     cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true
       = some (cIntegrateAlgebraicWf ρ R B residual c D degBound) := by
   unfold cIntegrateAlgebraicDecide cIntegrateAlgebraicWf
   simp only [Bool.true_eq_false, if_false]
-  cases hN : radLogArgSolveQ ρ residual D degBound with
+  cases hN : radLogArgSolve ρ residual D degBound with
   | none => rw [hN] at hlog; simp at hlog
   | some N => rfl
 
@@ -77,7 +77,7 @@ structure AlgebraicDecideSoundnessResidual : Prop where
   /-- No-log branch (rational-part exhaustiveness): `D(⟨v, []⟩) = integrand`. -/
   hnolog :
     DensePoly.toPoly (algDerivQ ρ
-        ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qxNum ρ) R B), []⟩)
+        ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qNum ρ) R B), []⟩)
       = DensePoly.toPoly integrand
   /-- Principal branch (`cIntegrateAlgebraicWf_sound` discharge): `D(cIntegrateAlgebraicWf …) = integrand`. -/
   hprincipal :
@@ -88,7 +88,7 @@ structure AlgebraicDecideSoundnessResidual : Prop where
   htorsion : ∀ term,
     torsionLogTerm p ρ ρq gen Dm = some term →
     DensePoly.toPoly (algDerivQ ρ
-        ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qxNum ρ) R B), [term]⟩)
+        ⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qNum ρ) R B), [term]⟩)
       = DensePoly.toPoly integrand
 
 /-- Soundness of `cIntegrateAlgebraicDecide`: under the soundness residual, `… = some F` implies
@@ -108,13 +108,13 @@ theorem cIntegrateAlgebraicDecide_sound
     exact hres.hnolog
   · -- has-log branch
     rw [if_neg hlp] at hsome
-    cases hN : radLogArgSolveQ ρ residual D degBound with
+    cases hN : radLogArgSolve ρ residual D degBound with
     | some N =>
       -- principal branch: F = the `cIntegrateAlgebraicWf` output
       rw [hN, Option.some.injEq] at hsome
       rw [← hsome]
       -- the literal output equals `cIntegrateAlgebraicWf …` (same parts, same log term)
-      have heq : (⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qxNum ρ) R B),
+      have heq : (⟨radAssembleRatPart ρ (DensePoly.radIntegrateRationalWf (qNum ρ) R B),
           [(c, N.map (fun z => CField.div z (qxOfNum D)))]⟩ : AlgIntegralResult (CFrac ℚ))
           = cIntegrateAlgebraicWf ρ R B residual c D degBound := by
         unfold cIntegrateAlgebraicWf
@@ -154,7 +154,7 @@ theorem torsionLogTerm_none_of_decide_none
   by_cases hlp : hasLogPart = false
   · rw [hlp] at hnone; simp at hnone
   · rw [if_neg hlp] at hnone
-    cases hN : radLogArgSolveQ ρ residual D degBound with
+    cases hN : radLogArgSolve ρ residual D degBound with
     | some N => rw [hN] at hnone; simp at hnone
     | none =>
       rw [hN] at hnone
@@ -191,10 +191,10 @@ variable (ρ : CFrac ℚ) (R B : DensePoly ℚ)
 variable (residual : RadElem (CFrac ℚ)) (c : CFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
 variable (ρq : DensePoly ℚ) (gen : ℕ) (Dm : DensePoly.MumfordDivisor ℚ)
 
-/-- On the non-principal log path (`hasLogPart = true`, `radLogArgSolveQ = none`),
+/-- On the non-principal log path (`hasLogPart = true`, `radLogArgSolve = none`),
 `(cIntegrateAlgebraicDecide …).isSome ↔ (torsionLogTerm p ρ ρq gen Dm).isSome`. -/
 theorem decide_isSome_iff_torsion_isSome
-    (hlog : radLogArgSolveQ ρ residual D degBound = none) :
+    (hlog : radLogArgSolve ρ residual D degBound = none) :
     (cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true).isSome = true
       ↔ (torsionLogTerm p ρ ρq gen Dm).isSome = true := by
   unfold cIntegrateAlgebraicDecide
@@ -204,11 +204,11 @@ theorem decide_isSome_iff_torsion_isSome
   | some term => simp
 
 /-- The decision-procedure capstone: on the non-principal log path (`hasLogPart = true`,
-`radLogArgSolveQ = none`), under `AlgebraicCompletenessResidual`,
+`radLogArgSolve = none`), under `AlgebraicCompletenessResidual`,
 `(∃ F, cIntegrateAlgebraicDecide … true = some F) ↔ elem`. -/
 theorem cIntegrateAlgebraicDecide_decides {isTorsion : Prop} {elem : Prop}
     (hres : AlgebraicCompletenessResidual ρq gen Dm p isTorsion elem)
-    (hlog : radLogArgSolveQ ρ residual D degBound = none) :
+    (hlog : radLogArgSolve ρ residual D degBound = none) :
     (∃ F, cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true = some F)
       ↔ elem := by
   rw [← Option.isSome_iff_exists,
@@ -222,7 +222,7 @@ end Decides
 /-! ### Non-torsion witness -/
 
 /-- A non-principal log residual `decideNonPrincipalResidual`: the double-pole integrand
-`[0, 1/(x²·(x²+1))]` for which `radLogArgSolveQ … [0,0,1] 1 = none`, forcing the torsion decision to
+`[0, 1/(x²·(x²+1))]` for which `radLogArgSolve … [0,0,1] 1 = none`, forcing the torsion decision to
 govern the verdict. -/
 def decideNonPrincipalResidual : RadElem (CFrac ℚ) :=
   radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CCommRing.one
@@ -256,11 +256,11 @@ theorem decideWitnessTorsion_some :
 /-! ### Principal witness -/
 
 /-- `cIntegrateAlgebraicDecide` on a principal-log example (`y² = x² + 1`, the `arcsinh` solve): with
-a principal `radLogArgSolveQ = some N`, expected to return `some` with a `1·log(N/D)` term. -/
+a principal `radLogArgSolve = some N`, expected to return `some` with a `1·log(N/D)` term. -/
 def decideWitnessPrincipal : Option (AlgIntegralResult (CFrac ℚ)) :=
   cIntegrateAlgebraicDecide 5 rtRatRho [1] [1]
     (radInvYLift rtRatRho CCommRing.one) CCommRing.one [1] 1
-    (qxNum rtRatRho) 1 hypPt35 true
+    (qNum rtRatRho) 1 hypPt35 true
 
 /-- `cIntegrateAlgebraicDecide` returns `some F` with one principal log term on the `∫ 1/√(x²+1)`
 example: `(isSome, logTerms.length) = (true, some 1)`. -/
@@ -317,7 +317,7 @@ example (p : ℕ) [Fact p.Prime]
     (D : DensePoly ℚ) (degBound : ℕ) (ρq : DensePoly ℚ) (gen : ℕ) (Dm : DensePoly.MumfordDivisor ℚ)
     {isTorsion elem : Prop}
     (hres : AlgebraicCompletenessResidual ρq gen Dm p isTorsion elem)
-    (hlog : radLogArgSolveQ ρ residual D degBound = none) :
+    (hlog : radLogArgSolve ρ residual D degBound = none) :
     (∃ F, cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true = some F)
       ↔ elem :=
   cIntegrateAlgebraicDecide_decides p ρ R B residual c D degBound ρq gen Dm hres hlog

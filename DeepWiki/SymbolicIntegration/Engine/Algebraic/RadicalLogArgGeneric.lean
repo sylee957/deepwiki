@@ -4,8 +4,8 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtension
 
 The log-argument solve, generalized off `ℚ` to an arbitrary computable base `[CField β]`. When
 `α = CFrac β = β(x)`, the cleared log-derivative system is `β`-linear, so `gaussElim`/`kernelVector`
-(the `CField`-generic analogues of `ratRref`/`ratKernelVector`) and `radLogArgSolve` solve it over any
-`β`. Over `α = ℚ(x)(eˣ)`, `radLogArgSolve` computes `N = (θ+2) − 2y` for `∫ dx/√(eˣ+1)`,
+and `radLogArgSolve` solve it over any `β`. Over `α = ℚ(x)(eˣ)`, `radLogArgSolve` computes
+`N = (θ+2) − 2y` for `∫ dx/√(eˣ+1)`,
 whose `u = N/θ` passes the log-derivative certificate; the `ℚ`-base instance specializes
 to the classical arcsinh log argument. -/
 
@@ -22,7 +22,7 @@ open RadElem DensePoly
 of length `nCols`. -/
 
 /-- Reduce a `β`-matrix to reduced row-echelon form over `[CField β]`, returning `(rrefRows, pivotCols)`
-by Gauss–Jordan with the engine ops over `nCols` columns. The generic analogue of `ratRref`. -/
+by Gauss–Jordan with the engine ops over `nCols` columns. -/
 def gaussElim {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) :
     List (List β) × List ℕ :=
   let step : (List (List β) × ℕ × List ℕ) → ℕ → (List (List β) × ℕ × List ℕ) :=
@@ -59,8 +59,7 @@ def gaussElim {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) :
   (rs, pivRev.reverse)
 
 /-- A nonzero kernel vector of a `β`-matrix over `[CField β]`: `kernelVector nCols rows = some c` with
-`M·c = 0`, `c ≠ 0`, read off the first free column after `gaussElim`, or `none` for a trivial kernel.
-The generic analogue of `ratKernelVector`. -/
+`M·c = 0`, `c ≠ 0`, read off the first free column after `gaussElim`, or `none` for a trivial kernel. -/
 def kernelVector {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) :
     Option (List β) :=
   let (rs, pivots) := gaussElim nCols rows
@@ -80,7 +79,7 @@ def kernelVector {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) 
 
 Over `α = CFrac β = β(x)`, the residual `radDeriv(N)·D − N·D' − radMul(N, integrand)·D` is a pair of
 `β(x)` elements; clearing each to a numerator over `β` gives a `β`-matrix solved by
-`gaussElim`/`kernelVector`. The generic analogue of `radLogResidualQ`/`radLogMatrixQ`. -/
+`gaussElim`/`kernelVector`. -/
 
 section
 variable {β : Type*} [CField β] [CFieldDomain β] [CDiffField (CFrac β)]
@@ -90,8 +89,7 @@ variable {β : Type*} [CField β] [CFieldDomain β] [CDiffField (CFrac β)]
 def qOfNum (num : DensePoly β) : CFrac β :=
   ⟨(num, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
 
-/-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. The generic analogue of
-`qxMonomial`. -/
+/-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. -/
 def qMonomial (k : ℕ) : CFrac β := qOfNum (cshift k [(CCommRing.one : β)])
 
 /-- The numerator coefficient list of a `β(x)` element: `qNum z = z.1.1 ∈ DensePoly β`. -/
@@ -103,7 +101,7 @@ def qDen (z : CFrac β) : DensePoly β := z.1.2
 /-- The cleared log-derivative residual over `α = CFrac β`:
 `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' − radMul(N, integrand)·D`, where
 `D' = CDiffField.cderiv (qOfNum D)` is the actual base-field derivation (essential over a tower where
-`θ' ≠ 1`, unlike the formal `cderiv`). `β`-linear in `N`; the generic analogue of `radLogResidualQ`. -/
+`θ' ≠ 1`, unlike the formal `cderiv`). `β`-linear in `N`. -/
 def radLogResidual (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly β)
     (N : RadElem (CFrac β)) : RadElem (CFrac β) :=
   let Dq : CFrac β := qOfNum D
@@ -112,7 +110,7 @@ def radLogResidual (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePo
     (DensePoly.cscale Dq (radMul 2 ρ N integrand))
 
 /-- The monomial basis of numerators over `α = CFrac β`: `radLogBasis degBound` gives the
-`2·(degBound+1)` elements `[xᵏ, 0]` then `[0, xᵏ]`. The generic analogue of `radLogBasisQ`. -/
+`2·(degBound+1)` elements `[xᵏ, 0]` then `[0, xᵏ]`. -/
 def radLogBasis (degBound : ℕ) : List (RadElem (CFrac β)) :=
   ((List.range (degBound + 1)).map
     (fun k => ([qMonomial k, CCommRing.zero] : RadElem (CFrac β)))) ++
@@ -121,7 +119,7 @@ def radLogBasis (degBound : ℕ) : List (RadElem (CFrac β)) :=
 
 /-- The `β`-matrix of the cleared log-derivative system over `α = CFrac β`: for each basis column, the
 residual's cleared numerators (common denominator across columns), one row per `x`-power per component, one
-column per basis index; a kernel vector gives a solving `N`. The generic analogue of `radLogMatrixQ`. -/
+column per basis index; a kernel vector gives a solving `N`. -/
 def radLogMatrix (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly β)
     (degBound : ℕ) : List (List β) × ℕ :=
   let basis := radLogBasis (β := β) degBound
@@ -145,7 +143,7 @@ def radLogMatrix (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly
 /-- Solve for the log argument over `α = CFrac β`: `radLogArgSolve ρ integrand D degBound = some N`
 with `N = a₀ + a₁·y` (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel
 vector of the `β`-matrix `radLogMatrix` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. The
-generic analogue of `radLogArgSolveQ` — the whole solve runs over any tower base `β`. -/
+whole solve runs over any tower base `β`. -/
 def radLogArgSolve (ρ : CFrac β) (integrand : RadElem (CFrac β)) (D : DensePoly β)
     (degBound : ℕ) : Option (RadElem (CFrac β)) :=
   let (rows, nCols) := radLogMatrix ρ integrand D degBound

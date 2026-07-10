@@ -23,7 +23,7 @@ def CPrimPRSGenFuelOk (cgcdB : DensePoly β → DensePoly β → DensePoly β) :
     ℕ → GBPolyCore β → GBPolyCore β → Prop
   | 0, P, _ => ∀ a ∈ gbnormCore P, (DensePoly.cnorm a : List β).length ≤ 30
   | fuel + 1, P, Q =>
-    if gbisZeroCore (gbnormCore Q) = true then
+    if DensePoly.cisZero (gbnormCore Q) = true then
       ∀ a ∈ gbnormCore (gbnormCore P), (DensePoly.cnorm a : List β).length ≤ 30
     else
       (∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
@@ -45,9 +45,9 @@ theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : DensePoly β → Dens
     -- at fuel 0, CPrimPRSGenRegular must be a `stop` node (the `step` ctor needs `fuel+1`)
     rw [CPrimPRSGenAssocReg]
     refine ⟨?_, ?_⟩
-    · -- clause (i): the `stop`-node gives `gbisZeroCore (gbnormCore Q) = true`; reduce to `gbisZeroCore Q`
+    · -- clause (i): the `stop`-node gives `DensePoly.cisZero (gbnormCore Q) = true`; reduce to `DensePoly.cisZero Q`
       cases hreg with
-      | stop hz => rw [gbisZeroCore, ← gbnormCore_idemp, ← gbisZeroCore]; exact hz
+      | stop hz => rwa [cisZero_gbnormCore] at hz
     · -- clause (iii) on `P` (terminal strip): total content scaling
       rw [CPrimPRSGenFuelOk] at hfuel
       exact associated_toGBPolyG_gbprimitivePartCore_total 30 cgcdB hcorr P hfuel
@@ -85,10 +85,10 @@ example (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBC
   cPrimPRSGenAssocReg_of_regular_of_correct cgcdB hcorr fuel P Q hreg hfuel
 
 -- The list-length WF guard is the polynomial `t`-degree.
-example (p : GBPolyCore β) : gbdegCore p = (DensePoly.toPoly p).natDegree := gbdegCore_eq_natDegree p
+example (p : GBPolyCore β) : DensePoly.cdeg p = (DensePoly.toPoly p).natDegree := DensePoly.cdegG_eq_natDegree p
 
 -- Clause (ii) with the β(s)-unit multiplier is unconditional given the non-terminal loop guard.
-example (fuel : ℕ) (p q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false) :
+example (fuel : ℕ) (p q : GBPolyCore β) (hq : DensePoly.cisZero (gbnormCore q) = false) :
     ∃ (s : GBPolyCore β) (c : DensePoly β),
       Polynomial.C (CFrac.am β (DensePoly.toPoly c)) * toGBPoly p
           = toGBPoly s * toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)
@@ -96,15 +96,15 @@ example (fuel : ℕ) (p q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = f
   toGBPolyG_gbpsremainderCore_ne_zero fuel p q hq
 
 -- The single pseudo-division step strictly drops the `t`-degree by leading-term cancellation.
-example (p q : GBPolyCore β) (hp : gbisZeroCore (gbnormCore p) = false)
-    (hq : gbisZeroCore (gbnormCore q) = false)
+example (p q : GBPolyCore β) (hp : DensePoly.cisZero (gbnormCore p) = false)
+    (hq : DensePoly.cisZero (gbnormCore q) = false)
     (hdeg : (DensePoly.toPoly q).natDegree ≤ (DensePoly.toPoly p).natDegree)
     (hstepne : DensePoly.toPoly (gbStepReduce p q) ≠ 0) :
     (DensePoly.toPoly (gbStepReduce p q)).natDegree < (DensePoly.toPoly p).natDegree :=
   natDegree_gbStepReduce_lt p q hp hq hdeg hstepne
 
 -- The inner pseudo-division loop completes under the explicit fuel bound `deg_t p < fuel`.
-example (q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false)
+example (q : GBPolyCore β) (hq : DensePoly.cisZero (gbnormCore q) = false)
     (fuel : ℕ) (p : GBPolyCore β) (hlt : (DensePoly.toPoly p).natDegree < fuel) :
     (DensePoly.toPoly (gbpsremainderCore fuel p q)).natDegree < (DensePoly.toPoly q).natDegree
       ∨ DensePoly.toPoly (gbpsremainderCore fuel p q) = 0 :=

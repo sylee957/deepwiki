@@ -38,13 +38,13 @@ namespace DeepWiki.Bie
 /-- **Generic Gaussian elimination over `[CField β]`** (Bronstein 1990, Integration of Elementary Functions,
 JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower, log part): `gaussElim`
 row-reduces a `β`-matrix to reduced row-echelon form, the `[CField β]`-generic analogue of the ℚ-pinned
-`ratRref`. Pure `CField`-arithmetic (`CCommRing.isZero`/`CField.div`/`CField.sub`/`CCommRing.mul`), so the linear
+`gaussElim`. Pure `CField`-arithmetic (`CCommRing.isZero`/`CField.div`/`CField.sub`/`CCommRing.mul`), so the linear
 solve underlying log-argument computation runs over any computable tower level `β`, not just ℚ. -/
 abbrev bie_gaussElim_generic := @gaussElim
 
 /-- **A nonzero kernel vector over `[CField β]`** (Bronstein 1990, log part; the generic linear-solve core):
 `kernelVector` returns a nonzero solution of a homogeneous `β`-linear system (or `none` when only the
-trivial kernel exists), the `[CField β]`-generic analogue of `ratKernelVector`. This is what extracts the
+trivial kernel exists), the `[CField β]`-generic analogue of `kernelVector`. This is what extracts the
 log-argument numerator `N` from the cleared log-derivative system over a tower field. -/
 abbrev bie_kernelVector_generic := @kernelVector
 
@@ -68,7 +68,7 @@ abbrev bie_logarg_exp := @expArg_isLogIntegral
 
 /-- **`radLogArgSolve` reproduces the arcsinh log argument `u = x + y` at the ℚ base** (Bronstein 1990, log
 part; `native_decide`): at `β = ℚ` (`α ≅ ℚ(x)`) the generic solver computes the same `N` as the ℚ-specific
-`radLogArgSolveQ` for `∫ dx/√(x²+1) = log(x + y)` and the computed `u = N/1` passes the certificate — the
+`radLogArgSolve` for `∫ dx/√(x²+1) = log(x + y)` and the computed `u = N/1` passes the certificate — the
 ℚ → generic-`CField` generalization is conservative (it specializes back to the base level). -/
 abbrev bie_logarg_arcsinh_base := @genArg_arcsinh_isLogIntegral
 

@@ -19,16 +19,16 @@ variable {β : Type*} [CField β] [CFieldSpec β]
 The pseudo-division multiplier accumulated by `gbpsremainderCore fuel p q` is a power of `lc(q)`, hence
 nonzero exactly when `q ≠ 0` — so clause (ii)'s `β(s)`-unit multiplier is unconditional given `q ≠ 0`. -/
 
-/-- **The leading `t`-coefficient of a nonzero `GBPolyCore` reads nonzero**: if `gbisZeroCore q = false`
+/-- **The leading `t`-coefficient of a nonzero `GBPolyCore` reads nonzero**: if `DensePoly.cisZero q = false`
 (`q ≠ 0` in `t`), then `toPoly (gblcCore q) ≠ 0` in `R = (CFieldSpec.K β)[X]`. The top normalized
 `t`-coefficient is `cnorm`-nonempty, hence `toPoly`-nonzero (`gbnormCore_getLast?_toPolyG_ne_zero`). -/
-theorem toPolyG_gblcCore_ne_zero {q : GBPolyCore β} (hq : gbisZeroCore q = false) :
+theorem toPolyG_gblcCore_ne_zero {q : GBPolyCore β} (hq : DensePoly.cisZero q = false) :
     DensePoly.toPoly (gblcCore q) ≠ 0 := by
   -- `gbnormCore q ≠ []` (zero test is `false`), so `getLast?` is `some v` with `toPoly v ≠ 0`
   have hne : gbnormCore q ≠ [] := by
-    rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem] at hq
-    obtain ⟨a, ha⟩ := hq
-    exact List.ne_nil_of_mem ha
+    intro hnorm
+    apply DensePoly.toPolyG_ne_zero_of_cisZeroG_false hq
+    rw [← toPolyG_gbnormCore, hnorm, DensePoly.toPolyG_nil]
   rcases hg : (gbnormCore q).getLast? with _ | v
   · exact absurd (List.getLast?_eq_none_iff.mp hg) hne
   · have hlc : gblcCore q = v := by rw [gblcCore, hg, Option.getD_some]
@@ -37,9 +37,9 @@ theorem toPolyG_gblcCore_ne_zero {q : GBPolyCore β} (hq : gbisZeroCore q = fals
 
 /-- **The multiplier of `gbpsremainderCore` is `toPoly`-nonzero when the divisor is nonzero.** Produces
 a pseudo-division witness `(s, c)` with the Euclidean identity and `toPoly c ≠ 0`, provided
-`gbisZeroCore (gbnormCore q) = false`. -/
+`DensePoly.cisZero (gbnormCore q) = false`. -/
 theorem toPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
-    (hq : gbisZeroCore (gbnormCore q) = false) :
+    (hq : DensePoly.cisZero (gbnormCore q) = false) :
     ∃ (s : GBPolyCore β) (c : DensePoly β),
       Polynomial.C (DensePoly.toPoly c) * DensePoly.toPoly p
           = DensePoly.toPoly s * DensePoly.toPoly q + DensePoly.toPoly (gbpsremainderCore fuel p q)
@@ -88,11 +88,11 @@ theorem toPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
       · simpa only [denote] using mul_ne_zero hc' hlcq
 
 /-- **`gbpsremainderCore` lifts to a `β(s)[t]` Euclidean relation with a `β(s)`-unit multiplier**: if
-`gbisZeroCore (gbnormCore q) = false`, there is `(s, c)` with
+`DensePoly.cisZero (gbnormCore q) = false`, there is `(s, c)` with
 `C (am (toPoly c)) · toGBPoly p = toGBPoly s · toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)`
 and `am (toPoly c) ≠ 0` in `(RatFunc (CFieldSpec.K β))[X]`. -/
 theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
-    (hq : gbisZeroCore (gbnormCore q) = false) :
+    (hq : DensePoly.cisZero (gbnormCore q) = false) :
     ∃ (s : GBPolyCore β) (c : DensePoly β),
       Polynomial.C (CFrac.am β (DensePoly.toPoly c)) * toGBPoly p
           = toGBPoly s * toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)
