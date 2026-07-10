@@ -48,14 +48,17 @@ runs the same fraction algorithm.
    `CPolyEuclidean Q`; dense and sparse inner fractions both execute through the same wrapper. Keep dense
    specialization only where an actual downstream polynomial algorithm is still dense.
 6. **Abstract algorithm capabilities — IN PROGRESS.** Introduce Prop-free/lawful pairs for polynomial
-   gcd/division, resultant/subresultant, and linear solve. The first slice is `CLinearSolve`/
-   `LawfulCLinearSolve`, with the rational RREF implementation as its instance and the coupled-DE
-   consumer now requesting the capability rather than `cConstSolveUniqueQ` directly. In the second slice,
+    gcd/division, resultant/subresultant, and linear solve. `CLinearSolve`/`LawfulCLinearSolve` now expose
+    both unique and arbitrary consistent-system solves, with length and row-equation laws for each; coupled-DE
+    and parallel-integration consumers request the capability rather than `cConstSolveUniqueQ` or
+    `cConstSolveAnyQ` directly. In the second slice,
    `CPolyGcd`/`LawfulCPolyGcd` selects gcd for raw-fraction reduction, while
    `CPolyEuclidean`/`LawfulCPolyEuclidean` selects division and extended Bézout: dense polynomials use the
    well-founded engine, sparse polynomials use the generic `CPoly` engine, and the rational-function
-   exact-division bridge consumes only the capability. Concrete dense and generic implementations become
-   instances. The third slice adds `CPolyResultant`/`LawfulCPolyResultant`: dense polynomials select the
+    exact-division bridge consumes only the capability. Concrete dense and generic implementations become
+    instances. Gcd-derived fraction normalization and polynomial lcm are now representation-independent
+    `CPoly` algorithms selecting both gcd and exact division through those capabilities; the former dense-only
+    `qnormPair` and `cLcmQ` helpers are retired. The third slice adds `CPolyResultant`/`LawfulCPolyResultant`: dense polynomials select the
    well-founded PRS resultant, sparse polynomials select the generic Sylvester determinant, and tower,
    radical, general-curve, and discriminant consumers request the capability. The tower residue-resultant
    bridge now proves correctness from `LawfulCPolyResultant`. The fourth slice generalizes the
