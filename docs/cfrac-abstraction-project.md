@@ -41,8 +41,12 @@ runs the same fraction algorithm.
 5. **Tower rewiring — IN PROGRESS.** Generalize fraction derivation and tower constructors over a fraction
    representation where their bodies only use the interface. `towerDerivCFracWith` and the iterated
    `CDiffField` instance now work for any `CFrac F P`, with a generic `RatFunc` commuting square and a
-   `SparseFrac` computation witness. Keep dense specialization only where an actual downstream polynomial
-   algorithm is still dense.
+   `SparseFrac` computation witness. The lawful `CFieldSpec` instance is now generic over every `CFrac F P`,
+   rather than duplicated for dense and sparse carriers; recursive `CharZero`, `Algebra ℚ`, and
+   `CDiffFieldSpec` tower instances are representation-independent as well. The parallel tower coefficient
+   guard now works over any inner `CFrac F Q`, selecting gcd and division through `CPolyGcd Q` and
+   `CPolyEuclidean Q`; dense and sparse inner fractions both execute through the same wrapper. Keep dense
+   specialization only where an actual downstream polynomial algorithm is still dense.
 6. **Abstract algorithm capabilities — IN PROGRESS.** Introduce Prop-free/lawful pairs for polynomial
    gcd/division, resultant/subresultant, and linear solve. The first slice is `CLinearSolve`/
    `LawfulCLinearSolve`, with the rational RREF implementation as its instance and the coupled-DE

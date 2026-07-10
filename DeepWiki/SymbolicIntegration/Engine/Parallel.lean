@@ -3,6 +3,8 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.ComputableAlgebra.PolyEngine
+import DeepWiki.ComputableAlgebra.PolyEuclidean
+import DeepWiki.ComputableAlgebra.PolyReprGcd
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 
 /-! # Computable parallel (Risch–Norman) integration over ℚ(t) (Bronstein Chapter 10)
@@ -262,56 +264,48 @@ example :
       ((CPoly.SparsePoly.ofList [(1, 1)], CPoly.SparsePoly.ofList [(0, 1)]), []) = true := by
   native_decide
 
-/-! ### The genuine tower `ℚ(x)[t]` — documented signature stub
+/-! ### Represented rational-function towers — documented signature stub
 
-The prompt's `cParallelIntegrate Dt fuel (a d : DensePoly (DenseFrac ℚ))` over the genuine differential tower
-`k(t) = ℚ(x)(t)` needs the special-polynomial list `S^irr_{K:F}` (Theorem 10.2.2) and the irreducible
+The genuine differential tower `k(t) = ℚ(x)(t)` needs the special-polynomial list `S^irr_{K:F}`
+(Theorem 10.2.2) and the irreducible
 factorization of `dₙ` over `F̄ = ℚ̄(x)` (Theorem 10.2.1, Examples 10.3.2/10.3.4) before the eq. 10.6 solve
 — the matrix entries then lie in `F = ℚ(x)`, not `Const(k) = ℚ`, so Lemma 7.1.2's row-differentiation
 reduction to a `ℚ`-system precedes `crref` (cf. `ComputableParametric` §7.1). We expose the signature
-(over the **generic** ℚ(x) = `DenseFrac ℚ` carrier) and route the base-field case `Dt, a, d ∈ ℚ[t]` (every
-coefficient a `ℚ`-constant `DenseFrac ℚ`) through the landed `DensePoly.cParallelIntegrate`; a coefficient with
+(over any `CFrac F Q` representation of `ℚ(x)`) and route the base-field case `Dt, a, d ∈ ℚ[t]` (every
+coefficient a represented `ℚ`-constant) through the landed `DensePoly.cParallelIntegrate`; a coefficient with
 a genuine `x`-dependence returns `none` ("deferred to the tower construction"). -/
 
 namespace DensePoly
 
-/-- **A `DenseFrac ℚ`-coefficient polynomial to a dense `ℚ`-coefficient one, when every coefficient is a
-`ℚ`-constant.** `cToRatCoeffsQ p = some q` with `q : DensePoly ℚ` iff each coefficient of
-`p : P (DenseFrac ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
-numerator and denominator), else `none`. The base-field guard for the tower wrapper: the lowest-terms
-reduction divides `(num, den)` by their gcd (`cgcdWf`/`cdivWf`), and a `ℚ`-constant is exactly a
-degree-0 quotient over a degree-0 (nonzero) remainder denominator. -/
-def cToRatCoeffsQ {P : Type → Type} [CPoly P] [CPolyEngine P]
-    (p : P (DenseFrac ℚ)) : Option (DensePoly ℚ) :=
-  (CPolyEngine.coeffList p).foldr (fun (z : DenseFrac ℚ) acc =>
+/-- Convert a represented-fraction polynomial to dense rational coefficients when every coefficient is constant. -/
+def cToRatCoeffsQ {P Q : Type → Type} [CPoly P] [CPolyEngine P]
+    [CPoly Q] [CPolyEngine Q] [CPolyGcd Q] [CPolyEuclidean Q]
+    {F : (α : Type) → [CField α] → Type} [CFrac F Q] [CFieldDomain ℚ Q]
+    (p : P (F ℚ)) : Option (DensePoly ℚ) :=
+  (CPolyEngine.coeffList p).foldr (fun (z : F ℚ) acc =>
     match acc with
     | none => none
     | some qs =>
-      let num := z.num
-      let den := z.den
-      let g := (cgcdWf num den).1
-      let num' := cdivWf num g
-      let den' := cdivWf den g
-      if cdeg num' = 0 ∧ cdeg den' = 0 then
-        some ((((num' : List ℚ).headD 0) / ((den' : List ℚ).headD 1)) :: qs)
+      let num := CFrac.num z
+      let den := CFrac.den z
+      let g := CPolyGcd.compute num den
+      let num' := CPolyEuclidean.div num g
+      let den' := CPolyEuclidean.div den g
+      if CPoly.cdeg num' = 0 ∧ CPoly.cdeg den' = 0 then
+        some ((CPoly.coeff num' 0 / CPoly.coeff den' 0) :: qs)
       else none) (some [])
 
-/-- **Parallel integration over the tower `ℚ(x)[t]`** `cParallelIntegrateTower Dt a d` (Bronstein
-§10.3, `a d : P (DenseFrac ℚ)`): the genuine-tower signature over the generic ℚ(x) = `DenseFrac ℚ`
-coefficient carrier and any polynomial representation `P`. The base-field case — `Dt, a, d` all with
-`ℚ`-constant coefficients (so `k = ℚ`, the field
-`ℚ(t)`) — is routed through `cParallelIntegrate` and the result lifted back to `DenseFrac ℚ` coefficients
-(rational part `(b, s)` and log arguments `pⱼ`, with the `ℚ`-constants `cⱼ`). A genuine `x`-dependent
-coefficient (the full tower, needing the §10.2 special-poly list + `F̄`-factorization) returns `none` —
-the documented continuation. -/
-def cParallelIntegrateTower {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt a d : P (DenseFrac ℚ)) :
-    Option ((P (DenseFrac ℚ) × P (DenseFrac ℚ)) × List (ℚ × P (DenseFrac ℚ))) :=
+/-- Run the base-field parallel integrator through any represented-fraction coefficient carrier. -/
+def cParallelIntegrateTower {P Q : Type → Type} [CPoly P] [CPolyEngine P]
+    [CPoly Q] [CPolyEngine Q] [CPolyGcd Q] [CPolyEuclidean Q]
+    {F : (α : Type) → [CField α] → Type} [CFrac F Q] [CFieldDomain ℚ Q]
+    (Dt a d : P (F ℚ)) : Option ((P (F ℚ) × P (F ℚ)) × List (ℚ × P (F ℚ))) :=
   match cToRatCoeffsQ Dt, cToRatCoeffsQ a, cToRatCoeffsQ d with
   | some DtQ, some aQ, some dQ =>
     match cParallelIntegrate DtQ aQ dQ with
     | none => none
     | some ((b, s), logs) =>
-      let lift : DensePoly ℚ → P (DenseFrac ℚ) := fun p =>
+      let lift : DensePoly ℚ → P (F ℚ) := fun p =>
         CPolyEngine.ofCoeffList ((p : List ℚ).map CFrac.ofScalar)
       some ((lift b, lift s), logs.map (fun (c, p) => (c, lift p)))
   | _, _, _ => none
@@ -319,7 +313,15 @@ def cParallelIntegrateTower {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt a 
 /-- The parallel tower wrapper executes with a sparse outer polynomial representation. -/
 example :
     (cParallelIntegrateTower
-      (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1)])
+      (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1)] : CPoly.SparsePoly (DenseFrac ℚ))
+      (CPoly.SparsePoly.ofList [(1, CFrac.ofScalar 2)])
+      (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1), (2, CFrac.ofScalar 1)])).isSome = true := by
+  native_decide
+
+/-- The parallel tower wrapper also executes with sparse inner fractions and sparse outer polynomials. -/
+example :
+    (cParallelIntegrateTower
+      (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1)] : CPoly.SparsePoly (SparseFrac ℚ))
       (CPoly.SparsePoly.ofList [(1, CFrac.ofScalar 2)])
       (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1), (2, CFrac.ofScalar 1)])).isSome = true := by
   native_decide
