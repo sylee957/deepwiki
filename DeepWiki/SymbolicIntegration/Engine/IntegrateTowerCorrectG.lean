@@ -199,6 +199,9 @@ theorem field_identity_of_checkIdentityG (Dt : DensePoly α) (res : IntegralResu
   have hLfield' : logResidueSum Dt res.logs = LN / LD := by rw [← hLfield, hLN, hLD]
   -- ── the converse direction: extract the cleared polynomial identity from `checkIdentity = true` ──
   rw [DensePoly.checkIdentity] at hcheck
+  simp only [CPolyEngine.sub_dense_eq, CPolyEngine.mul_dense_eq, CPolyEngine.add_dense_eq,
+    CPolyEngine.scale_dense_eq, CPolyEngine.ofCoeffList_dense_eq,
+    CPolyEngine.cisZero_dense_eq] at hcheck
   simp only [← hgnum, ← hgdenE, ← hgp, ← hgden2, ← hfolded] at hcheck
   rw [cisZeroG_iff] at hcheck
   simp only [denote, sub_eq_zero] at hcheck

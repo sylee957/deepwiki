@@ -156,25 +156,26 @@ example :
 
 end DensePoly
 
-/-! ### The generic integral result and the cleared antiderivative identity
+/-! ### The representation-independent integral result and cleared antiderivative identity
 
-`IntegralResult α` is the generic mirror of `IntegralResult`: the rational part `g = num/den ∈ α(t)`
-plus the logarithmic part `[(cᵢ, vᵢ)]` (coefficients `cᵢ : α`, arguments `vᵢ : DensePoly α`).
+`IntegralResult α P` stores the rational part `g = num/den ∈ α(t)` and the logarithmic part
+`[(cᵢ, vᵢ)]` in any polynomial representation `P`; its default `P := DensePoly` preserves the existing
+`IntegralResult α` API.
 `checkIdentity` verifies the antiderivative identity `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f`, cleared of
-denominators — the generic mirror of `IntegralResult.checkIdentity`. -/
+denominators. -/
 
-/-- The generic integral result: `∫ f = rational + ∑ᵢ coeff·log(arg)` over the tower, with
-`rational = (num, den)` the rational part `g = num/den ∈ α(t)` and `logs = [(cᵢ, vᵢ)]` the logarithmic
-part (each `cᵢ : α`, each `vᵢ : DensePoly α`). The generic mirror of `IntegralResult`. -/
-structure IntegralResult (α : Type*) [CField α] where
+/-- A representation-independent integral result `∫ f = rational + ∑ᵢ coeff·log(arg)`, defaulting to
+the dense polynomial representation for compatibility. -/
+structure IntegralResult (α : Type u) [CField α] (P : Type u → Type u := DensePoly) where
   /-- The rational part `g = num/den ∈ α(t)` of `∫ f`. -/
-  rational : DensePoly α × DensePoly α
-  /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f` (`α`-coefficients, `DensePoly α` arguments). -/
-  logs : List (α × DensePoly α)
+  rational : P α × P α
+  /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f`. -/
+  logs : List (α × P α)
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+  {α : Type u} [CField α] [CDiffField α]
 
 /-- The generic antiderivative identity, cleared of denominators `checkIdentity Dt res anum aden`:
 `true` iff `res` is a genuine antiderivative of `f = anum/aden`, i.e. `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` for
@@ -183,23 +184,36 @@ add `D(g) = (D(gnum)·gden − gnum·D(gden))/gden²`, and equate with `f` over 
 `(gprimeNum·Lden + Lnum·gden²)·aden = anum·(gden²·Lden)`, by `cisZero` of the cleared difference. The
 generic mirror of `IntegralResult.checkIdentity` (`α` has no `DecidableEq`, hence the `cisZero∘csub`
 form). -/
-def checkIdentity (Dt : DensePoly α) (res : IntegralResult α) (anum aden : DensePoly α) : Bool :=
+def checkIdentity (Dt : P α) (res : IntegralResult α P) (anum aden : P α) : Bool :=
   let gnum := res.rational.1
   let gden := res.rational.2
-  let gprimeNum := csub (cmul (cmonomialDeriv Dt gnum) gden) (cmul gnum (cmonomialDeriv Dt gden))
-  let gden2 := cmul gden gden
-  let Lstart : DensePoly α × DensePoly α := ([CCommRing.zero], [CCommRing.one])
+  let gprimeNum := CPolyEngine.sub
+    (CPolyEngine.mul (cmonomialDeriv Dt gnum) gden)
+    (CPolyEngine.mul gnum (cmonomialDeriv Dt gden))
+  let gden2 := CPolyEngine.mul gden gden
+  let Lstart : P α × P α :=
+    (CPolyEngine.ofCoeffList [CCommRing.zero], CPolyEngine.ofCoeffList [CCommRing.one])
   let (Lnum, Lden) := res.logs.foldl
-    (fun (acc : DensePoly α × DensePoly α) (cv : α × DensePoly α) =>
+    (fun (acc : P α × P α) (cv : α × P α) =>
       let c := cv.1
       let v := cv.2
       let Dv := cmonomialDeriv Dt v
-      let termNum := cscale c Dv
-      (cadd (cmul acc.1 v) (cmul termNum acc.2), cmul acc.2 v))
+      let termNum := CPolyEngine.scale c Dv
+      (CPolyEngine.add (CPolyEngine.mul acc.1 v) (CPolyEngine.mul termNum acc.2),
+        CPolyEngine.mul acc.2 v))
     Lstart
-  let lhs := cmul (cadd (cmul gprimeNum Lden) (cmul Lnum gden2)) aden
-  let rhs := cmul anum (cmul gden2 Lden)
-  cisZero (csub lhs rhs)
+  let lhs := CPolyEngine.mul
+    (CPolyEngine.add (CPolyEngine.mul gprimeNum Lden) (CPolyEngine.mul Lnum gden2)) aden
+  let rhs := CPolyEngine.mul anum (CPolyEngine.mul gden2 Lden)
+  CPolyEngine.cisZero (CPolyEngine.sub lhs rhs)
+
+/-- The cleared antiderivative checker executes on sparse polynomial results. -/
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let res : IntegralResult ℚ CPoly.SparsePoly :=
+      ⟨(ofList [0, 0, 1 / 2], ofList [1]), []⟩
+    checkIdentity (ofList [1]) res (ofList [0, 1]) (ofList [1]) = true := by
+  native_decide
 
 end DensePoly
 

@@ -207,6 +207,19 @@ The same adapters remove the list boundary from `cIntegrateHyperexpLaurent`: its
 are enumerated through the engine, and its numerator and monomial denominator are reconstructed in the
 caller’s representation. The recursive Laurent algorithm now executes on sparse polynomials while the
 existing dense soundness theorems continue to specialize it definitionally.
+The result boundary is representation-independent now as well. `IntegralResult α P` stores both its
+rational fraction and log arguments in `P`, with `P := DensePoly` as the default so existing signatures
+remain unchanged. `checkIdentity` is generic over `CPolyEngine`, preserves the dense computation through
+the engine adapters, and validates sparse integral results directly; no parallel generic result structure
+was introduced.
+That result abstraction also removes a real duplicate. `cCorrectHyperexpNormal` is the single generic
+implementation of scalar-residual integration and subtraction; both `cIntegrateHyperexpNormal` and
+`hyperexpCase.reducedCorrect` now call it instead of carrying matching dense bodies. It executes on sparse
+results while preserving the dense engine operations definitionally.
+The special/normal recombination was duplicated too. `combineRationalParts` now owns the generic fraction
+addition formula; representation-generic `combineSN` and the dense LRT wrapper `combineSNLrt` both reuse
+it. The sparse result example exercises the shared combiner, while the existing dense soundness proofs
+specialize the same definition.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

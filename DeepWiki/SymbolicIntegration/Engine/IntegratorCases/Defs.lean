@@ -33,15 +33,7 @@ def primitiveCase : MonomialCase α where
 def hyperexpCase : MonomialCase α where
   integrateSpecial Dt fp b ds :=
     cIntegrateHyperexpLaurent (cExpEta Dt) fp (cHyperexpSpecialNeg b ds)
-  reducedCorrect Dt nrm :=
-    let η := cExpEta Dt
-    let R := cHyperexpResidual η nrm.logs
-    match CRischField.crischDESolve (CCommRing.zero : α) R with
-    | none => none
-    | some intR =>
-      let gnum := nrm.rational.1
-      let gden := nrm.rational.2
-      some ⟨(csub gnum (cmul [intR] gden), gden), nrm.logs⟩
+  reducedCorrect Dt nrm := cCorrectHyperexpNormal (cExpEta Dt) nrm
 
 /-- **Bridge (hyperexp): the hyperexponential driver is definitionally the hyperexp case.** -/
 theorem cIntegrateHyperexpFullG_eq_case (Dt a d : DensePoly α) (cands : List α) :

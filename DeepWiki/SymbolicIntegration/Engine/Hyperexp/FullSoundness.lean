@@ -182,8 +182,9 @@ theorem cIntegrateHyperexpNormalG_shape [CFracGcdCoreWf α] (Dt : DensePoly α)
               (cmul [intR] (DensePoly.cIntegrateReduced Dt a d cands).rational.2),
             (DensePoly.cIntegrateReduced Dt a d cands).rational.2),
           (DensePoly.cIntegrateReduced Dt a d cands).logs⟩ := by
-  rw [DensePoly.cIntegrateHyperexpNormal] at hsome
-  simp only [hintRsome] at hsome
+  rw [DensePoly.cIntegrateHyperexpNormal, DensePoly.cCorrectHyperexpNormal] at hsome
+  simp only [hintRsome, CPolyEngine.ofCoeffList_dense_eq, CPolyEngine.mul_dense_eq,
+    CPolyEngine.sub_dense_eq] at hsome
   exact (Option.some.injEq _ _ ▸ hsome).symm
 
 /-- Normal-part driver soundness `D(∫fₙ) = fₙ` for `cIntegrateHyperexpNormal`, unconditional in `∑c`,

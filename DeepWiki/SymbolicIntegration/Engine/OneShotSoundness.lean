@@ -140,6 +140,9 @@ theorem checkIdentityG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : D
       = true := by
   -- unfold the check; the empty-log fold is just the seed `([0], [1])`
   rw [DensePoly.checkIdentity]
+  simp only [CPolyEngine.sub_dense_eq, CPolyEngine.mul_dense_eq, CPolyEngine.add_dense_eq,
+    CPolyEngine.scale_dense_eq, CPolyEngine.ofCoeffList_dense_eq,
+    CPolyEngine.cisZero_dense_eq]
   simp only [List.foldl_nil]
   -- the check is `cisZero (csub lhs rhs)`; clear to the polynomial identity `toPoly lhs = toPoly rhs`
   rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero]
