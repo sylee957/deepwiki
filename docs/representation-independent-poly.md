@@ -217,9 +217,13 @@ implementation of scalar-residual integration and subtraction; both `cIntegrateH
 `hyperexpCase.reducedCorrect` now call it instead of carrying matching dense bodies. It executes on sparse
 results while preserving the dense engine operations definitionally.
 The special/normal recombination was duplicated too. `combineRationalParts` now owns the generic fraction
-addition formula; representation-generic `combineSN` and the dense LRT wrapper `combineSNLrt` both reuse
-it. The sparse result example exercises the shared combiner, while the existing dense soundness proofs
-specialize the same definition.
+addition formula; representation-generic `combineSN` and `combineSNLrt` both reuse it. Sparse result
+examples exercise the shared combiners, while the existing dense soundness proofs specialize the same
+definitions.
+The symbolic LRT result container now follows the same pattern: `LrtResult α P` stores its rational part,
+residue polynomials, and parametric log arguments in `P`, defaulting to `DensePoly`. `combineSNLrt` is
+representation-generic and has sparse execution coverage, while the established LRT integrator and
+soundness predicates continue to use the default dense specialization.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

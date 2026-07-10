@@ -10,15 +10,17 @@ integrator. See `docs/computable-lrt.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
 
 /-- A symbolic-residue reduced-integration result: a rational part `gnum/gden` plus symbolic log terms
-`[(Rᵢ, Sᵢ)]`, each denoting `Σ_{Rᵢ(c)=0} c·log(Sᵢ(c,t))`. -/
-structure LrtResult (α : Type*) [CField α] where
+`[(Rᵢ, Sᵢ)]`, each denoting `Σ_{Rᵢ(c)=0} c·log(Sᵢ(c,t))`, in polynomial representation `P` (dense by
+default). -/
+structure LrtResult (α : Type u) [CField α] (P : Type u → Type u := DensePoly) where
   /-- The Hermite rational part `(gnum, gden)`. -/
-  rational : DensePoly α × DensePoly α
+  rational : P α × P α
   /-- Symbolic log terms `[(Rᵢ, Sᵢ)]`: residue minimal polynomial `Rᵢ` and parametric log argument `Sᵢ(z,t)`
   (a `t`-polynomial with `z`-polynomial coefficients). -/
-  logs : List (DensePoly α × List (DensePoly α))
+  logs : List (P α × List (P α))
 
 namespace DensePoly
 
