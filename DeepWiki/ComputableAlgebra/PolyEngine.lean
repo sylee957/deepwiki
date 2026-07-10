@@ -212,6 +212,10 @@ namespace CPolyEngine
 @[simp] theorem cdeg_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
     CPolyEngine.cdeg p = DensePoly.cdeg p := rfl
 
+/-- The engine leading coefficient on the dense representation is the concrete dense leading coefficient. -/
+@[simp] theorem clead_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
+    CPolyEngine.clead p = DensePoly.clead p := rfl
+
 /-- Engine scaling on the dense representation is concrete dense scaling. -/
 @[simp] theorem scale_dense_eq {α : Type u} [CCommRing α] (c : α) (p : DensePoly α) :
     CPolyEngine.scale c p = DensePoly.cscale c p := rfl

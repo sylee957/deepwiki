@@ -193,6 +193,11 @@ polynomial representation as well; the dense special-part proof now crosses the 
 boundary where it consumes that theorem.
 The hyperexponential residual fold no longer carries a false dense-polynomial dependency either:
 `cHyperexpResidual` is generic in the log-argument payload and needs only `CCommRing` on its scalar field.
+Negative Laurent-coefficient extraction is representation-independent as well:
+`cHyperexpSpecialNeg` reads its numerator through `CPoly.coeff` and its special denominator through the
+engine's zero, degree, and leading-coefficient operations. It executes on sparse inputs, while the existing
+dense Laurent soundness proof crosses explicit dense-specialization lemmas. This replaces the last direct
+`List.getD` assumption in the helper rather than adding a parallel sparse implementation.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

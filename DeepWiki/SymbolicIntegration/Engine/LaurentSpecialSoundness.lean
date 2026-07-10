@@ -44,7 +44,10 @@ theorem cHyperexpSpecialNegG_reverse_smul [CRischField α] (b ds : DensePoly α)
   have hunfold : cHyperexpSpecialNeg b ds
       = (List.range (cdeg ds)).map (fun i =>
           CCommRing.mul ((b : List α).getD (cdeg ds - 1 - i) CCommRing.zero) (CField.inv (clead ds))) := by
-    rw [cHyperexpSpecialNeg, if_neg (by simp [hsp.nz]), if_neg (Nat.ne_of_gt hsp.mpos)]
+    rw [cHyperexpSpecialNeg, CPolyEngine.cisZero_dense_eq, CPolyEngine.cdeg_dense_eq,
+      CPolyEngine.clead_dense_eq,
+      if_neg (by simp [hsp.nz]), if_neg (Nat.ne_of_gt hsp.mpos)]
+    simp only [CPoly.coeff_dense_eq]
   have hlen : (cHyperexpSpecialNeg b ds).length = cdeg ds := by
     rw [hunfold, List.length_map, List.length_range]
   apply Polynomial.ext
@@ -78,8 +81,9 @@ theorem cHyperexpSpecialNegG_frac [CRischField α] (b ds : DensePoly α)
         / am α (toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CCommRing.one] : DensePoly α)))
       = am α (toPoly b) / am α (toPoly ds) := by
   have hlen : (cHyperexpSpecialNeg b ds).length = cdeg ds := by
-    rw [cHyperexpSpecialNeg, if_neg (by simp [hds.nz]), if_neg (Nat.ne_of_gt hds.mpos),
-      List.length_map, List.length_range]
+    rw [cHyperexpSpecialNeg, CPolyEngine.cisZero_dense_eq, CPolyEngine.cdeg_dense_eq,
+      CPolyEngine.clead_dense_eq,
+      if_neg (by simp [hds.nz]), if_neg (Nat.ne_of_gt hds.mpos), List.length_map, List.length_range]
   have hpoly := cHyperexpSpecialNegG_reverse_smul b ds hds.toIsProperSpecialPart
   have hdenpow : toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CCommRing.one] : DensePoly α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ cdeg ds := by

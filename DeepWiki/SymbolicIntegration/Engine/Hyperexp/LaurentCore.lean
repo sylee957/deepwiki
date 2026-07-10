@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.RischFieldCore
+import DeepWiki.ComputableAlgebra.PolyEngine
 
 /-! # Core hyperexponential Laurent integration helpers
 
@@ -10,6 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
 
 namespace DensePoly
 
@@ -75,17 +77,25 @@ For a hyperexponential `t`, `dₛ = c·tᵐ`, so `b/dₛ = ∑_{k=0}^{m-1} (b_k 
 /-- Negative Laurent coefficients `cHyperexpSpecialNeg b ds = [a₋₁, …, a₋ₘ]` of the special part `b/dₛ`
 with `dₛ = c·tᵐ` (`m = cdeg ds`, `c = clead ds`): `a_{-(i+1)} = b_{m-1-i} / c`; `[]` if `dₛ` is
 constant. -/
-def cHyperexpSpecialNeg (b ds : DensePoly α) : List α :=
-  let m : ℕ := cdeg ds
-  if cisZero ds then []
+def cHyperexpSpecialNeg {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (b ds : P α) : List α :=
+  let m : ℕ := CPolyEngine.cdeg ds
+  if CPolyEngine.cisZero ds then []
   else if m = 0 then []
   else
-    let c : α := clead ds
+    let c : α := CPolyEngine.clead ds
     let cinv : α := CField.inv c
     -- coefficient of `t^{-(i+1)}` is `b_{m-1-i}/c`, for `i = 0 … m-1`.
     (List.range m).map (fun i =>
       let k : ℕ := m - 1 - i
-      CCommRing.mul ((b : List α).getD k CCommRing.zero) cinv)
+      CCommRing.mul (CPoly.coeff b k) cinv)
+
+/-- Negative Laurent coefficient extraction executes on sparse numerator and denominator polynomials. -/
+example :
+    cHyperexpSpecialNeg
+      (CPoly.SparsePoly.ofList [(0, (2 : ℚ)), (1, 4)])
+      (CPoly.SparsePoly.ofList [(2, (2 : ℚ))]) = [2, 1] := by
+  native_decide
 
 end DensePoly
 
