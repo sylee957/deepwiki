@@ -241,11 +241,6 @@ theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : CFrac ℚ) :
   | none => simp
   | some pr => simp
 
-/-- `cExpIsNewMonomial ws b = cLogIsNewMonomial ws b`: the exponential structure test is
-definitionally the logarithmic one. -/
-theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (ws : List (CFrac ℚ)) (b : CFrac ℚ) :
-    DensePoly.cExpIsNewMonomial ws b = DensePoly.cLogIsNewMonomial ws b := rfl
-
 end ComputableEmptyBase
 
 /-! ### Restatements -/

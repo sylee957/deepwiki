@@ -1,29 +1,15 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.IntegralBasisFull
 
-/-! # Partial derivatives for general algebraic-function curves
+/-! # Base partial derivatives for general algebraic-function curves
 
-Formal `x`- and `y`-partial derivatives for a curve polynomial `f ∈ K(x)[y]`,
-with their denotation bridges. -/
+The coefficientwise `x`-partial derivative for a curve polynomial `f ∈ K(x)[y]`;
+the formal `y`-partial derivative is the canonical `DensePoly.cderiv`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 namespace DensePoly
 
 variable {α : Type*} [CField α]
-
-/-- The formal `y`-derivative `∂f/∂y` of a general curve polynomial. -/
-def afFy (f : DensePoly α) : DensePoly α := cderiv f
-
-section AfFyDenote
-
-variable [CFieldSpec α]
-
-/-- `afFy` reads as the formal derivative through `toPoly`. -/
-theorem derivative_toPolyG_eq_afFy (f : DensePoly α) :
-    Polynomial.derivative (toPoly f) = toPoly (afFy f) := by
-  simp only [afFy, denote]
-
-end AfFyDenote
 
 variable [CDiffField α]
 

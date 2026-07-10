@@ -31,8 +31,8 @@ theorem IsAfIdempotent.isIdempotentElem {f e : DensePoly α} (hf : cnorm f ≠ [
 /-- The engine's `afDerivWf` kills a carrier idempotent: for a separable curve `T` and idempotent
 `e` (`IsAfIdempotent T e`), `mk(toPoly(afDerivWf T e)) = 0` in `Q = K[X] ⧸ afIdeal T`. -/
 theorem idempotent_isConstant (f e : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0)
+    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0)
     (he : IsAfIdempotent f e) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f e)) = 0 := by
   set ē : (CFieldSpec.K α)[X] ⧸ afIdeal f :=
@@ -69,8 +69,8 @@ integral `afIntegrateFunctionAlgebra T es Fs` satisfies
 `mk(toPoly(afDerivWf T F)) = mk(toPoly integrand)` in `Q = K[X] ⧸ afIdeal T`. -/
 theorem afIntegrateFunctionAlgebra_sound (f integrand : DensePoly α)
     (es Fs : List (DensePoly α)) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0)
+    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0)
     (hidem : ∀ p ∈ es.zip Fs, IsAfIdempotent f p.1)
     (hcomp : ∀ p ∈ es.zip Fs,
       Ideal.Quotient.mk (afIdeal f) (toPoly p.1)

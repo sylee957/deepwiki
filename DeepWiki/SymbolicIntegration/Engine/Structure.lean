@@ -47,12 +47,6 @@ def cLogIsNewMonomial (logDerivs : List (CFrac ℚ)) (w : CFrac ℚ) : Bool :=
   -- `log(u)` is a *new* monomial iff NO nullspace relation involves the `w`-column (index `m`).
   !(basis.any (fun rel => rel.getD m 0 ≠ 0))
 
-/-- `cExpIsNewMonomial logDerivs b = true` iff `exp(b)` with exponent derivative `Db` is a new
-transcendental monomial, i.e. no `rᵢ ∈ ℚ` give `Db = Σ rᵢ (Duᵢ/uᵢ)` — the same ℚ-linear-dependence
-test as the logarithm case applied to `Db`. -/
-def cExpIsNewMonomial (logDerivs : List (CFrac ℚ)) (b : CFrac ℚ) : Bool :=
-  cLogIsNewMonomial logDerivs b
-
 /-- `cLogRelationExists logDerivs w = !cLogIsNewMonomial …`: `true` iff `w = Du/u` is a ℚ-linear
 combination of the existing logarithmic derivatives (`log(u)` is dependent). -/
 def cLogRelationExists (logDerivs : List (CFrac ℚ)) (w : CFrac ℚ) : Bool :=
@@ -125,11 +119,11 @@ new exponential monomial. -/
 is not a new monomial (relation `[2]`, verified by `structRelationCheck`) and `Db = 1/(x+1)` gives a
 new transcendental monomial. -/
 theorem expStructureTheorem_example :
-    ((DensePoly.cExpIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
+    ((DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
      && (match DensePoly.cLogRelationCoeffs [structLogDerivX] structLogDerivX2 with
          | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
          | none => false)
-     && (DensePoly.cExpIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
+     && (DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   native_decide
 
 #print axioms expStructureTheorem_example

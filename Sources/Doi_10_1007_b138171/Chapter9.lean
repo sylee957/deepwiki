@@ -57,12 +57,12 @@ candidate `log(u)`'s `w = Du/u`, returns `true` iff `log(u)` is a **new transcen
 def alg_9_3_logIsNewMonomial := @cLogIsNewMonomial
 
 /-- **The new-exponential structure decision** (§9.3, Corollary 9.3.1(ii), eq. 9.9, book p.284/285): the
-computable `cExpIsNewMonomial fuel logDerivs b` over `k = ℚ(x)`. Given a candidate `exp(b)`'s exponent
+shared computable `cLogIsNewMonomial logDerivs Db` test over `k = ℚ(x)`. Given a candidate `exp(b)`'s
 derivative `Db ∈ ℚ(x)` and the existing logarithmic derivatives, returns `true` iff `exp(b)` is a **new
 transcendental monomial** — iff `Db` is not the logarithmic derivative of a `K`-radical, i.e. (at the
 base, `E`-part empty) `Db ∉ span_ℚ{Duᵢ/uᵢ}` — the *same* ℚ-linear-dependence engine as the logarithm
 case, applied to `Db`. Computable + `native_decide`-validated; abstract correctness deferred. -/
-def alg_9_3_expIsNewMonomial := @cExpIsNewMonomial
+def alg_9_3_expIsNewMonomial := @cLogIsNewMonomial
 
 /-- **The ℚ-relation coefficients** (§9.3, the explicit `rᵢ ∈ ℚ` of eq. 9.8): the computable
 `cLogRelationCoeffs fuel logDerivs w`, returning `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` when a
@@ -79,7 +79,8 @@ candidate `log(x²)` (`w = 2/x ∈ span_ℚ{1/x}`, the relation `log(x²) = 2 lo
 abbrev ex_9_3_1_log := @structureTheorem_example
 
 /-- **Example (§9.3, Corollary 9.3.1(ii), book p.284/285)**, the exponential analogue: over `C(x)(log x)`,
-`cExpIsNewMonomial` returns `false` for a candidate `exp(b)` with `Db = 2/x ∈ span_ℚ{1/x}` (so `Db` is
+the shared `cLogIsNewMonomial` relation test returns `false` for a candidate `exp(b)` with
+`Db = 2/x ∈ span_ℚ{1/x}` (so `Db` is
 the logarithmic derivative of the radical `x²`, `exp(b)` already in the field), relation `[2]` verified,
 and `true` for `Db = 1/(x+1) ∉ span_ℚ{1/x}` (a new transcendental exponential monomial), `native_decide`.
 The exponential decision shares the *same* ℚ-linear-dependence engine as the logarithm case. -/

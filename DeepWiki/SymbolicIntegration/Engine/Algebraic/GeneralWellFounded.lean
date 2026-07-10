@@ -23,10 +23,10 @@ variable {α : Type*} [CField α]
 `afReduce`/`afMul` already carry a self-computed bound; the one recursive dependency, `f_y⁻¹ mod f`, is
 computed by the well-founded `cdiophantine`. -/
 
-/-- `f_y⁻¹ mod f` — `afFyInvWf f = (cdiophantine (afFy f) f [1]).1`, the first Bézout cofactor `s` of
+/-- `f_y⁻¹ mod f` — `afFyInvWf f = (cdiophantine (cderiv f) f [1]).1`, the first Bézout cofactor `s` of
 `s·f_y + t·f = 1`. The inverse of `∂f/∂y` in `K(x)[y]/(f)` (valid for separable `f`), degree `< deg f`. -/
 def afFyInvWf (f : DensePoly α) : DensePoly α :=
-  (cdiophantine (afFy f) f [CCommRing.one]).1
+  (cdiophantine (cderiv f) f [CCommRing.one]).1
 
 variable [CDiffField α]
 
@@ -47,7 +47,7 @@ variable [CFieldSpec α] [CDiffFieldSpec α]
 /-! ### The Wf derivation invariant
 
 The shared quotient API lives in `ComputableGeneralQuotient`; separability is phrased as the gcd
-`cgcdWf (afFy f) f` being a nonzero constant. -/
+`cgcdWf (cderiv f) f` being a nonzero constant. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 /-- `afDerivWf = afReduce f ∘ cmonomialDeriv (afYprimeWf f)` definitionally. -/
@@ -74,48 +74,48 @@ theorem mk_toPolyG_afDerivWf_add (f a b : DensePoly α) (hf : cnorm f ≠ []) :
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Bézout inverse of `f_y` in the quotient. -/
 theorem mk_toPolyG_afFyInvWf_mul_afFy (f : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0) :
+    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f)
-        (toPoly (afFyInvWf f) * toPoly (afFy f)) = 1 := by
-  have hbez := toPolyG_cdiophantineG (afFy f) f [CCommRing.one] hf hgdeg hgne
+        (toPoly (afFyInvWf f) * toPoly (cderiv f)) = 1 := by
+  have hbez := toPolyG_cdiophantineG (cderiv f) f [CCommRing.one] hf hgdeg hgne
   have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote]
     simp
   rw [hone] at hbez
-  rw [show toPoly (afFyInvWf f) * toPoly (afFy f)
-      = 1 - toPoly (cdiophantine (afFy f) f [CCommRing.one]).2 * toPoly f from by
+  rw [show toPoly (afFyInvWf f) * toPoly (cderiv f)
+      = 1 - toPoly (cdiophantine (cderiv f) f [CCommRing.one]).2 * toPoly f from by
         rw [afFyInvWf]; linear_combination hbez]
   have hmem : Ideal.Quotient.mk (afIdeal f)
-      (toPoly (cdiophantine (afFy f) f [CCommRing.one]).2 * toPoly f) = 0 :=
+      (toPoly (cdiophantine (cderiv f) f [CCommRing.one]).2 * toPoly f) = 0 :=
     Ideal.Quotient.eq_zero_iff_mem.mpr (mul_curve_mem f _)
   rw [map_sub, hmem, map_one, sub_zero]
 
 /-- The implicit derivation kills the curve generator modulo its ideal. -/
 theorem implicitDerivWf_curve_mem (f : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0) :
+    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0) :
     Differential.implicitDeriv (toPoly (afYprimeWf f)) (toPoly f) ∈ afIdeal f := by
   rw [← Ideal.Quotient.eq_zero_iff_mem]
   rw [show Differential.implicitDeriv (toPoly (afYprimeWf f)) (toPoly f)
       = Differential.mapCoeffs (toPoly f)
         + toPoly (afYprimeWf f) * Polynomial.derivative (toPoly f) from by
         simp [Differential.implicitDeriv, derivative']]
-  rw [mapCoeffs_toPolyG_eq_afFx, derivative_toPolyG_eq_afFy]
+  rw [mapCoeffs_toPolyG_eq_afFx, ← toPolyG_cderivG]
   have hyp : Ideal.Quotient.mk (afIdeal f) (toPoly (afYprimeWf f))
       = Ideal.Quotient.mk (afIdeal f) (- toPoly (afFx f) * toPoly (afFyInvWf f)) := by
     rw [afYprimeWf, mk_toPolyG_afReduce f _ hf]
     simp only [denote, map_mul, map_neg]
   rw [map_add, map_mul, hyp, ← map_mul]
   have hfyinv := mk_toPolyG_afFyInvWf_mul_afFy f hf hgdeg hgne
-  rw [show - toPoly (afFx f) * toPoly (afFyInvWf f) * toPoly (afFy f)
-      = - (toPoly (afFx f) * (toPoly (afFyInvWf f) * toPoly (afFy f))) from by ring,
+  rw [show - toPoly (afFx f) * toPoly (afFyInvWf f) * toPoly (cderiv f)
+      = - (toPoly (afFx f) * (toPoly (afFyInvWf f) * toPoly (cderiv f))) from by ring,
     map_neg, map_mul, hfyinv, mul_one, add_neg_cancel]
 
 /-- The implicit derivation maps `afIdeal f` into itself. -/
 theorem implicitDerivWf_mem_afIdeal (f : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0)
+    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0)
     {x : (CFieldSpec.K α)[X]} (hx : x ∈ afIdeal f) :
     Differential.implicitDeriv (toPoly (afYprimeWf f)) x ∈ afIdeal f := by
   rw [afIdeal, Ideal.mem_span_singleton'] at hx
@@ -127,8 +127,8 @@ theorem implicitDerivWf_mem_afIdeal (f : DensePoly α) (hf : cnorm f ≠ [])
 
 /-- The implicit derivation descends to the quotient by `afIdeal f`. -/
 theorem mk_implicitDerivWf_congr (f : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0)
+    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0)
     {p q : (CFieldSpec.K α)[X]}
     (hpq : Ideal.Quotient.mk (afIdeal f) p = Ideal.Quotient.mk (afIdeal f) q) :
     Ideal.Quotient.mk (afIdeal f)
@@ -141,8 +141,8 @@ theorem mk_implicitDerivWf_congr (f : DensePoly α) (hf : cnorm f ≠ [])
 
 /-- `afDerivWf` is Leibniz modulo the curve ideal. -/
 theorem mk_toPolyG_afDerivWf_afMul (f a b : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (afFy f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0) :
+    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (afMul f a b)))
       = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f (afDerivWf f a) b))
         + Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f a (afDerivWf f b))) := by
