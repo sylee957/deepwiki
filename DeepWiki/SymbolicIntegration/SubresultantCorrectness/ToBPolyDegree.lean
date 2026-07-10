@@ -44,7 +44,7 @@ theorem bnorm_getLast?_toPoly_ne_zero (p : BPoly) {v : DensePoly ℚ}
       · simp only [ha, Bool.false_eq_true, if_false] at h
         rw [List.getLast?_singleton, Option.some.injEq] at h
         subst h
-        rw [toPoly_cnorm]
+        rw [toPoly_eq_dense, DensePoly.toPolyG_cnormG, ← toPoly_eq_dense]
         intro hz
         exact ha (by simp [cisZero, (cnorm_eq_nil_iff a).mpr hz])
     | cons b bs =>

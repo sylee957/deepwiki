@@ -72,12 +72,14 @@ theorem hermiteInner_den_ne_zero (fuel : ℕ) (V U : DensePoly ℚ) (hV : toPoly
       rw [toPoly_hermiteInner_Vpow]; exact pow_ne_zero _ hV
     have hgnew : toPoly (qadd g (B, Vpow)).2 ≠ 0 := by
       show toPoly (cmul g.2 Vpow) ≠ 0
-      rw [toPoly_cmul]; exact mul_ne_zero hg hVpow0
+      simp only [toPoly_eq_dense] at hg hVpow0 ⊢
+      rw [DensePoly.toPolyG_cmulG]; exact mul_ne_zero hg hVpow0
     exact ih _ _ hgnew
 
 /-- The `glocIncr` increment has nonzero denominator when its factor is nonzero. -/
 theorem glocIncr_den_ne_zero (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly ℚ × ℕ) (hV : toPoly Vi.1 ≠ 0) :
     toPoly (glocIncr fuel A D Vi).2 ≠ 0 :=
-  hermiteInner_den_ne_zero fuel Vi.1 _ hV (Vi.2 - 1) A qzero (by simp [qzero, toPoly_cons])
+  hermiteInner_den_ne_zero fuel Vi.1 _ hV (Vi.2 - 1) A qzero
+    (by simp [qzero, toPoly_eq_dense, DensePoly.toPolyG_cons])
 
 end DeepWiki.SymbolicIntegration.Compute

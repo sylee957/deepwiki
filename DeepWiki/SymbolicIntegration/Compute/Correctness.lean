@@ -28,14 +28,14 @@ theorem toPoly_cdivmod (fuel : ℕ) (p q : DensePoly ℚ) (hqn : cnorm q = q) (h
     toPoly p
       = toPoly (cdivmod fuel p q).1 * toPoly q + toPoly (cdivmod fuel p q).2 := by
   induction fuel generalizing p with
-  | zero => simp [cdivmod, toPoly_cnorm]
+  | zero => simp [cdivmod, DensePoly.toPolyG_cnormG]
   | succ fuel ih =>
     have hcz : cisZero q = false := by
       simpa [cisZero, hqn] using hq0
     rw [cdivmod]
     simp only [hqn, hcz, Bool.false_eq_true, if_false]
     by_cases hlen : (cnorm p).length < q.length
-    · simp [hlen, toPoly_cnorm]
+    · simp [hlen, DensePoly.toPolyG_cnormG]
     · simp only [hlen, if_false]
       rcases hqr : cdivmod fuel (cnorm (csub (cnorm p)
           (cmul (cshift ((cnorm p).length - q.length) [clead (cnorm p) / clead q]) q))) q
@@ -43,7 +43,8 @@ theorem toPoly_cdivmod (fuel : ℕ) (p q : DensePoly ℚ) (hqn : cnorm q = q) (h
       have hih := ih (cnorm (csub (cnorm p)
           (cmul (cshift ((cnorm p).length - q.length) [clead (cnorm p) / clead q]) q)))
       rw [hqr] at hih
-      simp only [toPoly_cadd, toPoly_cnorm, toPoly_csub, toPoly_cmul] at hih ⊢
+      simp only [toPoly_eq_dense, DensePoly.toPolyG_caddG, DensePoly.toPolyG_cnormG,
+        DensePoly.toPolyG_csubG, DensePoly.toPolyG_cmulG] at hih ⊢
       linear_combination hih
 
 /-- `cdivmod fuel p q = cdivmod fuel p (cnorm q)`: `cdivmod` normalizes its divisor. -/
@@ -59,7 +60,7 @@ theorem toPoly_cdivmod' (fuel : ℕ) (p q : DensePoly ℚ) (hq0 : cnorm q ≠ []
     toPoly p
       = toPoly (cdivmod fuel p q).1 * toPoly q + toPoly (cdivmod fuel p q).2 := by
   rw [cdivmod_cnorm_right]
-  simpa [toPoly_cnorm] using toPoly_cdivmod fuel p (cnorm q) (DensePoly.cnormG_idem q) hq0
+  simpa [DensePoly.toPolyG_cnormG] using toPoly_cdivmod fuel p (cnorm q) (DensePoly.cnormG_idem q) hq0
 
 /-- Exact division through `toPoly`: zero `cmod` gives quotient times divisor. -/
 theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
@@ -82,11 +83,11 @@ theorem toPoly_cgcdExt (fuel : ℕ) (a b : DensePoly ℚ) :
     toPoly (cgcdExt fuel a b).2.1 * toPoly a + toPoly (cgcdExt fuel a b).2.2 * toPoly b
       = toPoly (cgcdExt fuel a b).1 := by
   induction fuel generalizing a b with
-  | zero => simp [cgcdExt, toPoly_cnorm]
+  | zero => simp [cgcdExt, DensePoly.toPolyG_cnormG]
   | succ fuel ih =>
     rw [cgcdExt]
     cases hb : cisZero b with
-    | true => simp [toPoly_cnorm]
+    | true => simp [DensePoly.toPolyG_cnormG]
     | false =>
       simp only [Bool.false_eq_true, if_false]
       rcases hqr : cdivmod (fuel + 1) a b with ⟨q, r⟩
@@ -96,8 +97,9 @@ theorem toPoly_cgcdExt (fuel : ℕ) (a b : DensePoly ℚ) :
         rw [hqr] at h; exact h
       have hih := ih b r
       rw [hg] at hih
-      simp only [toPoly_csub, toPoly_cmul]
-      linear_combination hih + toPoly t * hdiv
+      simp only [toPoly_eq_dense, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cmulG]
+      simp only [toPoly_eq_dense] at hdiv hih
+      linear_combination hih + DensePoly.toPoly t * hdiv
 
 /-- The `LogToAtan` cofactor invariant `B·D − A·C = G` in `ℚ[X]`: for
 `(G, D, C) = cgcdExt fuel B (−A)`, `toPoly B · toPoly D − toPoly A · toPoly C = toPoly G`. -/
@@ -106,7 +108,8 @@ theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : DensePoly ℚ) :
         - toPoly A * toPoly (cgcdExt fuel B (cneg A)).2.2
       = toPoly (cgcdExt fuel B (cneg A)).1 := by
   have h := toPoly_cgcdExt fuel B (cneg A)
-  rw [toPoly_cneg] at h
+  simp only [toPoly_eq_dense] at h ⊢
+  rw [DensePoly.toPolyG_cnegG] at h
   linear_combination h
 
 /-! ### The bivariate bridge `toBPoly : BPoly → ℚ[t][x]` and its homomorphism lemmas
@@ -172,9 +175,8 @@ theorem toBPoly_bsub (p q : BPoly) : toBPoly (bsub p q) = toBPoly p - toBPoly q 
 /-- `bscaleC c p` realizes scaling by a `ℚ[t]` coefficient: `C (toPoly c) · toBPoly p`. -/
 theorem toBPoly_bscaleC (c : DensePoly ℚ) (p : BPoly) :
     toBPoly (bscaleC c p) = Polynomial.C (toPoly c) * toBPoly p := by
-  simp only [toBPoly_eq_toPolyG, bscaleC_eq, DensePoly.toPolyG_cscaleG,
-    show ∀ c : DensePoly ℚ, CRingSpec.toR c = DensePoly.toPoly c from fun _ => rfl,
-    show ∀ c : DensePoly ℚ, toPoly c = DensePoly.toPoly c from fun _ => rfl]
+  simp only [toBPoly_eq_toPolyG, bscaleC_eq, DensePoly.toPolyG_cscaleG, toPoly_eq_dense,
+    show ∀ c : DensePoly ℚ, CRingSpec.toR c = DensePoly.toPoly c from fun _ => rfl]
 
 /-- `bshift k p` realizes the `x`-shift: `Xᵏ · toBPoly p`. -/
 theorem toBPoly_bshift (k : ℕ) (p : BPoly) :
@@ -229,16 +231,17 @@ theorem bpsremainder_bnorm_right (fuel : ℕ) (p q : BPoly) :
       | true =>
         have hpa : toPoly a = 0 := by
           have hca : cnorm a = [] := by simpa [cisZero, DensePoly.cnormG_idem] using ha
-          rw [← toPoly_cnorm, hca, toPoly_nil]
-        simp [toBPoly_cons, hpa, has]
-      | false => simp [toBPoly_cons, toPoly_cnorm, has]
+          rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hca, DensePoly.toPolyG_nil]
+        simp only [toPoly_eq_dense] at hpa
+        simp [toBPoly_cons, toPoly_eq_dense, hpa, has]
+      | false => simp [toBPoly_cons, toPoly_eq_dense, DensePoly.toPolyG_cnormG, has]
     | cons b bs =>
       rw [h] at ih
-      simp only [toBPoly_cons, toPoly_cnorm, ih]
+      simp only [toBPoly_cons, toPoly_eq_dense, DensePoly.toPolyG_cnormG, ih]
 
 /-- `toBPoly [[1]] = 1`: the `BPoly` constant `1`. -/
 @[simp] theorem toBPoly_one : toBPoly ([[1]] : BPoly) = 1 := by
-  simp [toBPoly_cons, toPoly_cons]
+  simp [toBPoly_cons, DensePoly.toPolyG_cons]
 
 /-- Pseudo-division identity through `toBPoly`: there exist a multiplier `c ∈ ℚ[t]` and quotient `s`
 with `C (toPoly c) · toBPoly p = toBPoly s · toBPoly q + toBPoly (bpsremainder fuel p q)`. -/
@@ -247,12 +250,12 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
       Polynomial.C (toPoly c) * toBPoly p
         = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q) := by
   induction fuel generalizing p with
-  | zero => exact ⟨[], [1], by simp [bpsremainder, toBPoly_bnorm, toPoly_cons]⟩
+  | zero => exact ⟨[], [1], by simp [bpsremainder, toBPoly_bnorm, DensePoly.toPolyG_cons]⟩
   | succ fuel ih =>
     simp only [bpsremainder]
     split_ifs with hq hlen
-    · exact ⟨[], [1], by simp [toBPoly_bnorm, toPoly_cons]⟩
-    · exact ⟨[], [1], by simp [toBPoly_bnorm, toPoly_cons]⟩
+    · exact ⟨[], [1], by simp [toBPoly_bnorm, DensePoly.toPolyG_cons]⟩
+    · exact ⟨[], [1], by simp [toBPoly_bnorm, DensePoly.toPolyG_cons]⟩
     · obtain ⟨s', c', hsc⟩ := ih (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
         (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
       have hp' : toBPoly (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
@@ -267,8 +270,11 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
       refine ⟨badd s' (bscaleC (cmul c' (blc (bnorm p)))
           (bshift ((bnorm p).length - (bnorm q).length) [[1]])),
           cmul c' (blc (bnorm q)), ?_⟩
-      rw [toBPoly_badd, toBPoly_bscaleC, toBPoly_bshift, toBPoly_one, toPoly_cmul, map_mul,
-        toPoly_cmul, map_mul]
+      rw [toBPoly_badd, toBPoly_bscaleC, toBPoly_bshift, toBPoly_one]
+      simp only [toPoly_eq_dense] at hsc ⊢
+      rw [
+        DensePoly.toPolyG_cmulG, map_mul,
+        DensePoly.toPolyG_cmulG, map_mul]
       linear_combination hsc
 
 /-- Diophantine/Bézout solver correctness through `toPoly`: when `gcd(p, q)` is a nonzero constant,
@@ -288,11 +294,15 @@ theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : DensePoly ℚ) (hq : cnorm q
   have hdiv : toPoly (cscale (clead g)⁻¹ (cmul rhs s)) = toPoly quo * toPoly q + toPoly B := by
     have h := toPoly_cdivmod' fuel (cscale (clead g)⁻¹ (cmul rhs s)) q hq
     rw [hqB] at h; exact h
-  simp only [toPoly_cnorm, toPoly_cadd, toPoly_cmul, toPoly_cscale] at hdiv ⊢
+  simp only [toPoly_eq_dense, DensePoly.toPolyG_cnormG, DensePoly.toPolyG_caddG,
+    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cscaleG, toR_eq_toK,
+    CFieldSpec.toK_rat] at hdiv ⊢
   have hinv : Polynomial.C (clead g)⁻¹ * toPoly g = 1 := by
     rw [hg, ← map_mul, inv_mul_cancel₀ hgc, map_one]
-  linear_combination (-toPoly p) * hdiv
-    + (Polynomial.C (clead g)⁻¹ * toPoly rhs) * hbez + toPoly rhs * hinv
+  simp only [toPoly_eq_dense] at hbez hinv
+  linear_combination (-DensePoly.toPoly p) * hdiv
+    + (Polynomial.C ((clead g)⁻¹ : ℚ) * DensePoly.toPoly rhs) * hbez
+    + DensePoly.toPoly rhs * hinv
 
 /-- `cgcdExt`'s gcd is greatest among common divisors: any `d` dividing both `toPoly a` and
 `toPoly b` divides `toPoly (cgcdExt fuel a b).1`. -/
@@ -319,8 +329,9 @@ theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : DensePoly ℚ), cgcdTermina
     rw [cgcdExt]
     have hb0 : toPoly b = 0 := by
       have hcb : cnorm b = [] := by simpa [cisZero] using hterm
-      rw [← toPoly_cnorm, hcb, toPoly_nil]
-    exact ⟨by simp [toPoly_cnorm], by simp [hb0]⟩
+      rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hcb, DensePoly.toPolyG_nil]
+    simp only [toPoly_eq_dense] at hb0 ⊢
+    exact ⟨by simp [DensePoly.toPolyG_cnormG], by simp [hb0]⟩
   | succ fuel ih =>
     intro a b hterm
     rw [cgcdExt]
@@ -328,8 +339,9 @@ theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : DensePoly ℚ), cgcdTermina
     | true =>
       have hb0 : toPoly b = 0 := by
         have hcb : cnorm b = [] := by simpa [cisZero] using hb
-        rw [← toPoly_cnorm, hcb, toPoly_nil]
-      exact ⟨by simp [toPoly_cnorm], by simp [hb0]⟩
+        rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hcb, DensePoly.toPolyG_nil]
+      simp only [toPoly_eq_dense] at hb0 ⊢
+      exact ⟨by simp [DensePoly.toPolyG_cnormG], by simp [hb0]⟩
     | false =>
       simp only [Bool.false_eq_true, if_false]
       rcases hqr : cdivmod (fuel + 1) a b with ⟨q, r⟩
@@ -364,13 +376,15 @@ theorem toQFun_qadd (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0)
     (map_ne_zero_iff _ hinj).mpr hb
   have hd' : algebraMap ℚ[X] (RatFunc ℚ) (toPoly d) ≠ 0 :=
     (map_ne_zero_iff _ hinj).mpr hd
-  simp only [toQFun, qadd, toPoly_cadd, toPoly_cmul, map_add, map_mul]
+  simp only [toPoly_eq_dense] at hb' hd'
+  simp only [toQFun, qadd, toPoly_eq_dense, DensePoly.toPolyG_caddG,
+    DensePoly.toPolyG_cmulG, map_add, map_mul]
   rw [div_add_div _ _ hb' hd']
   ring
 
 /-- `toQFun qzero = 0`. -/
 theorem toQFun_qzero : toQFun qzero = 0 := by
-  simp [toQFun, qzero, toPoly_nil]
+  simp [toQFun, qzero, DensePoly.toPolyG_nil]
 
 /-- `qadd x y` has nonzero denominator when both `x` and `y` do. -/
 theorem toPoly_qadd_den_ne_zero {x y : QFun} (hx : toPoly x.2 ≠ 0) (hy : toPoly y.2 ≠ 0) :
@@ -378,7 +392,7 @@ theorem toPoly_qadd_den_ne_zero {x y : QFun} (hx : toPoly x.2 ≠ 0) (hy : toPol
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
   show toPoly (cmul b d) ≠ 0
-  rw [toPoly_cmul]
+  rw [toPoly_eq_dense, DensePoly.toPolyG_cmulG]
   exact mul_ne_zero hx hy
 
 /-- A `qadd` fold denotes the seed plus the sum of the entries. -/
@@ -403,17 +417,19 @@ theorem toPoly_coeff (p : DensePoly ℚ) (i : ℕ) : (toPoly p).coeff i = p.getD
   induction p generalizing i with
   | nil => simp
   | cons a as ih =>
-    rw [toPoly_cons]
+    simp only [toPoly_eq_dense] at ih
+    rw [toPoly_eq_dense, DensePoly.toPolyG_cons]
     cases i with
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
 /-- Degree bound: `natDegree (toPoly p) ≤ (cnorm p).length − 1`. -/
 theorem natDegree_toPoly_le (p : DensePoly ℚ) : (toPoly p).natDegree ≤ (cnorm p).length - 1 := by
-  rw [← toPoly_cnorm]
+  rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG]
   apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
   intro m hm
-  rw [toPoly_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]
+  rw [DensePoly.toPolyG_coeff, toR_eq_toK, CFieldSpec.toK_rat,
+    List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]
   rfl
 
 /-- `cnorm` has no trailing zero: `(cnorm p).getLast? ≠ some 0`. -/
@@ -442,14 +458,16 @@ theorem clead_ne_zero {p : DensePoly ℚ} (h : cnorm p ≠ []) : clead p ≠ 0 :
 /-- `clead p = (toPoly p).coeff (cdeg p)`: the leading coefficient sits at the top index. -/
 theorem clead_eq_coeff (p : DensePoly ℚ) : clead p = (toPoly p).coeff (cdeg p) := by
   show DensePoly.clead p = _
-  rw [DensePoly.clead, cdeg, ← toPoly_cnorm, toPoly_coeff, List.getD_eq_getElem?_getD,
+  rw [DensePoly.clead, cdeg, toPoly_eq_dense, ← DensePoly.toPolyG_cnormG,
+    DensePoly.toPolyG_coeff, toR_eq_toK, CFieldSpec.toK_rat,
+    List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
-  rfl
 
 /-- `cdeg p = (toPoly p).natDegree`: `cdeg` is the honest `natDegree`. -/
 theorem cdeg_eq_natDegree (p : DensePoly ℚ) : cdeg p = (toPoly p).natDegree := by
   rcases eq_or_ne (cnorm p) [] with h | h
-  · have h0 : toPoly p = 0 := by rw [← toPoly_cnorm, h, toPoly_nil]
+  · have h0 : toPoly p = 0 := by
+      rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, h, DensePoly.toPolyG_nil]
     rw [cdeg, h, h0]; simp
   · refine le_antisymm ?_ (natDegree_toPoly_le p)
     apply Polynomial.le_natDegree_of_ne_zero
@@ -488,32 +506,12 @@ theorem degree_reduce_step_lt {P Q : ℚ[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
 /-- `cnorm p = []` iff `toPoly p = 0` (the list normalizes to empty exactly for the zero polynomial). -/
 theorem cnorm_eq_nil_iff (p : DensePoly ℚ) : cnorm p = [] ↔ toPoly p = 0 := by
   constructor
-  · intro h; rw [← toPoly_cnorm, h, toPoly_nil]
+  · intro h; rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, h, DensePoly.toPolyG_nil]
   · intro h
     by_contra hne
     have hcl := clead_ne_zero hne
     rw [clead_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
     exact hcl rfl
-
-/-- `cmonic` realizes `normalize` through `toPoly`: `toPoly (cmonic q) = normalize (toPoly q)`. -/
-theorem toPoly_cmonic_eq_normalize (q : DensePoly ℚ) :
-    toPoly (cmonic q) = normalize (toPoly q) := by
-  unfold cmonic
-  by_cases h : cisZero (cnorm q)
-  · simp only [h, if_true]
-    have hq0 : toPoly q = 0 := by
-      have : cnorm q = [] := by simpa [cisZero] using h
-      rw [← toPoly_cnorm, this, toPoly_nil]
-    rw [toPoly_nil, hq0, normalize_zero]
-  · simp only [h, Bool.false_eq_true, if_false]
-    have hqn : cnorm q ≠ [] := by simpa [cisZero] using h
-    have hq0 : toPoly q ≠ 0 := fun hh => hqn ((cnorm_eq_nil_iff q).mpr hh)
-    rw [toPoly_cscale, toPoly_cnorm, clead_eq_leadingCoeff, normalize_apply,
-      Polynomial.coe_normUnit]
-    have hlc : (toPoly q).leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hq0
-    rw [show ((normUnit (toPoly q).leadingCoeff : ℚ) : ℚ) = (toPoly q).leadingCoeff⁻¹ from by
-          simp [hlc], toPoly_cnorm, mul_comm]
-    rw [show CField.inv (toPoly q).leadingCoeff = (toPoly q).leadingCoeff⁻¹ from rfl]
 
 /-- For a nonzero polynomial, the normalized list length is `natDegree + 1`. -/
 theorem length_cnorm_of_ne (p : DensePoly ℚ) (h : cnorm p ≠ []) :
@@ -543,8 +541,10 @@ theorem step_length_lt (p q : DensePoly ℚ) (hp : cnorm p ≠ []) (hq : cnorm q
   have hstep : toPoly step
       = toPoly p - C ((toPoly p).leadingCoeff / (toPoly q).leadingCoeff)
           * X ^ ((toPoly p).natDegree - (toPoly q).natDegree) * toPoly q := by
-    rw [hstepdef, toPoly_csub, toPoly_cnorm, toPoly_cmul, toPoly_cshift, toPoly_cnorm, hk, hc]
-    simp only [toPoly_cons, toPoly_nil, mul_zero, add_zero]
+    rw [hstepdef, toPoly_eq_dense, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cnormG,
+      DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cshiftG, DensePoly.toPolyG_cnormG, hk, hc]
+    simp only [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil, toR_eq_toK,
+      CFieldSpec.toK_rat, mul_zero, add_zero]
     ring
   have hpq' : (toPoly q).natDegree ≤ (toPoly p).natDegree := by
     have e1 := length_cnorm_of_ne p hp
@@ -797,7 +797,8 @@ theorem cresultant_eq_of_ge : ∀ (fuel : ℕ) (p q : DensePoly ℚ),
     by_cases h0 : cisZero q = true
     · -- q = 0
       have hqnil : cnorm q = [] := by simpa [cisZero] using h0
-      have hq0 : toPoly q = 0 := by rw [← toPoly_cnorm, hqnil, toPoly_nil]
+      have hq0 : toPoly q = 0 := by
+        rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hqnil, DensePoly.toPolyG_nil]
       have hdq : cdeg q = 0 := by simp [cdeg, hqnil]
       have hval : cresultant (fuel + 1) p q = (if (cnorm p).length ≤ 1 then 1 else 0) := by
         rw [cresultant]; simp only [cisZero_cnorm, h0, if_true]
@@ -875,7 +876,8 @@ theorem cresultant_eq (fuel : ℕ) (p q : DensePoly ℚ)
     by_cases hqc : (cnorm q).length ≤ 1
     · -- q a nonzero constant, p = 0
       have hp0 : cnorm p = [] := List.length_eq_zero_iff.mp (by omega)
-      have hp0' : toPoly p = 0 := by rw [← toPoly_cnorm, hp0, toPoly_nil]
+      have hp0' : toPoly p = 0 := by
+        rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hp0, DensePoly.toPolyG_nil]
       have hdp : cdeg p = 0 := by simp only [cdeg, hp0, List.length_nil]
       have hdq : cdeg q = 0 := by simp only [cdeg]; omega
       have hval : cresultant fuel p q = DensePoly.cfpow (clead q) (cdeg p) := by

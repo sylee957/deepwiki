@@ -53,10 +53,12 @@ theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : DensePoly ℚ) (hq : 
   rw [cdiophantine_fst_eq, ← hS]
   have hlen : (cnorm (cmod fuel S q)).length < (cnorm q).length :=
     cmod_length_lt fuel S q hq hfuel
-  rw [toPoly_cnorm]
+  rw [toPoly_eq_dense, DensePoly.toPolyG_cnormG]
   have hqne0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
   rcases eq_or_ne (cnorm (cmod fuel S q)) [] with h0 | h0
-  · have hz : toPoly (cmod fuel S q) = 0 := by rw [← toPoly_cnorm, h0, toPoly_nil]
+  · have hz : toPoly (cmod fuel S q) = 0 := by
+      rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, h0, DensePoly.toPolyG_nil]
+    simp only [toPoly_eq_dense] at hqne0 hz ⊢
     rw [hz, Polynomial.degree_zero]
     exact bot_lt_iff_ne_bot.mpr (fun h => hqne0 (Polynomial.degree_eq_bot.mp h))
   · have e1 : (cnorm (cmod fuel S q)).length = (toPoly (cmod fuel S q)).natDegree + 1 :=
@@ -64,6 +66,7 @@ theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : DensePoly ℚ) (hq : 
     have e2 : (cnorm q).length = (toPoly q).natDegree + 1 := length_cnorm_of_ne q hq
     have hndlt : (toPoly (cmod fuel S q)).natDegree < (toPoly q).natDegree := by omega
     have hne1 : toPoly (cmod fuel S q) ≠ 0 := fun h => h0 ((cnorm_eq_nil_iff _).mpr h)
+    simp only [toPoly_eq_dense] at hqne0 hndlt hne1 ⊢
     rw [Polynomial.degree_eq_natDegree hne1, Polynomial.degree_eq_natDegree hqne0, Nat.cast_lt]
     exact hndlt
 

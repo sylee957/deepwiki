@@ -16,56 +16,11 @@ namespace Compute
 export DensePoly
   (cnorm cadd cneg csub cscale cshift cmul clead cisZero cdeg cderiv cmonic)
 
-/-- The canonical dense denotation specialized to the concrete codomain `ℚ[X]`. -/
+/-- The canonical dense denotation with the concrete codomain fixed to `ℚ[X]`. -/
 noncomputable def toPoly (p : DensePoly ℚ) : ℚ[X] := DensePoly.toPoly p
 
-/-! ### Pinned `ℚ[X]` denotation API -/
-
-/-- The pinned denotation sends the empty dense polynomial to zero. -/
-@[simp] theorem toPoly_nil : toPoly ([] : DensePoly ℚ) = 0 := rfl
-
-/-- The pinned denotation obeys the dense Horner recursion. -/
-@[simp] theorem toPoly_cons (a : ℚ) (p : DensePoly ℚ) :
-    toPoly (a :: p) = Polynomial.C a + X * toPoly p := rfl
-
-/-- The pinned denotation preserves dense addition. -/
-theorem toPoly_cadd (p q : DensePoly ℚ) : toPoly (cadd p q) = toPoly p + toPoly q := by
-  simpa only [toPoly] using DensePoly.toPolyG_caddG p q
-
-/-- The pinned denotation preserves dense negation. -/
-theorem toPoly_cneg (p : DensePoly ℚ) : toPoly (cneg p) = -toPoly p := by
-  simpa only [toPoly] using DensePoly.toPolyG_cnegG p
-
-/-- The pinned denotation preserves dense subtraction. -/
-theorem toPoly_csub (p q : DensePoly ℚ) : toPoly (csub p q) = toPoly p - toPoly q := by
-  simpa only [toPoly] using DensePoly.toPolyG_csubG p q
-
-/-- The pinned denotation preserves dense scalar multiplication. -/
-theorem toPoly_cscale (c : ℚ) (p : DensePoly ℚ) :
-    toPoly (cscale c p) = Polynomial.C c * toPoly p := by
-  simpa only [toPoly, show CRingSpec.toR c = c from rfl] using DensePoly.toPolyG_cscaleG c p
-
-/-- The pinned denotation preserves dense degree shifts. -/
-theorem toPoly_cshift (k : ℕ) (p : DensePoly ℚ) : toPoly (cshift k p) = X ^ k * toPoly p := by
-  simpa only [toPoly] using DensePoly.toPolyG_cshiftG k p
-
-/-- The pinned denotation preserves dense multiplication. -/
-theorem toPoly_cmul (p q : DensePoly ℚ) : toPoly (cmul p q) = toPoly p * toPoly q := by
-  simpa only [toPoly] using DensePoly.toPolyG_cmulG p q
-
-/-- The pinned denotation is unchanged by dense normalization. -/
-@[simp] theorem toPoly_cnorm (p : DensePoly ℚ) : toPoly (cnorm p) = toPoly p := by
-  simpa only [toPoly] using DensePoly.toPolyG_cnormG p
-
-/-- The pinned denotation preserves the dense formal derivative. -/
-theorem toPoly_cderiv (p : DensePoly ℚ) : toPoly (cderiv p) = derivative (toPoly p) := by
-  simpa only [toPoly] using DensePoly.toPolyG_cderivG p
-
-/-- Repeated dense multiplication denotes a power in the pinned codomain. -/
-theorem toPoly_foldl_cmul (V : DensePoly ℚ) (n : ℕ) (init : DensePoly ℚ) :
-    toPoly ((List.range n).foldl (fun acc _ => cmul acc V) init)
-      = toPoly init * toPoly V ^ n := by
-  simpa only [toPoly] using DensePoly.toPolyG_foldl_range_cmulG V n init
+/-- The concrete-codomain denotation agrees with the canonical dense denotation. -/
+@[simp] theorem toPoly_eq_dense (p : DensePoly ℚ) : toPoly p = DensePoly.toPoly p := rfl
 
 /-- Euclidean division of `DensePoly ℚ`s, fuel-bounded: `cdivmod fuel p q = (quotient, remainder)` with
 `p = quotient · q + remainder`, `deg remainder < deg q`. -/

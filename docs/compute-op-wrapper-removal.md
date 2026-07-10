@@ -11,11 +11,13 @@ without separate wrapper definitions.
 `Compute.toPoly` remains as a one-line specialization of `DensePoly.toPoly` to `ℚ[X]`. A
 bare export leaves the abstract `CRingSpec.R ℚ` codomain underconstrained at concrete call
 sites, while an `abbrev` exposes that ambiguity during simplification. The opaque wrapper
-pins the codomain, and its local `toPoly_*` API consists only of thin corollaries of the
-generic `DensePoly.toPolyG_*` theorems.
+pins the codomain. `Compute.toPoly_eq_dense` is the sole bridge back to the generic
+denotation; operation laws are used directly from the `DensePoly.toPolyG_*` family rather
+than repeated as concrete `Compute.toPoly_*` specializations.
 
 The fold-over-multiplication theorem was moved to `PolyReprDense.lean` as
-`DensePoly.toPolyG_foldl_range_cmulG`; the concrete theorem is its specialized corollary.
+`DensePoly.toPolyG_foldl_range_cmulG`, and concrete consumers use it through the same single
+denotation bridge.
 
 ## Remaining concrete definitions
 

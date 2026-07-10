@@ -17,11 +17,14 @@ namespace DeepWiki.SymbolicIntegration.Compute
 theorem toPoly_clagNum (xs : List ℚ) :
     toPoly (clagNum xs) = (xs.map (fun x => Polynomial.X - Polynomial.C x)).prod := by
   induction xs with
-  | nil => simp [clagNum, toPoly_cons]
+  | nil => simp [clagNum, toPoly_eq_dense, DensePoly.toPolyG_cons]
   | cons x xs ih =>
-    rw [clagNum, toPoly_cmul, ih, List.map_cons, List.prod_cons]
-    have : toPoly [(-x), 1] = Polynomial.X - Polynomial.C x := by
-      rw [toPoly_cons, toPoly_cons, toPoly_nil, map_neg, map_one]; ring
+    simp only [toPoly_eq_dense] at ih ⊢
+    rw [clagNum, DensePoly.toPolyG_cmulG, ih, List.map_cons, List.prod_cons]
+    have : DensePoly.toPoly [(-x), 1] = Polynomial.X - Polynomial.C x := by
+      rw [DensePoly.toPolyG_cons, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
+      simp only [toR_eq_toK, CFieldSpec.toK_rat, map_neg, map_one]
+      ring
     rw [this]
 
 /-- `toPoly` of the `cinterpolate` accumulator fold is the running sum: folding `cadd acc (f p)`
@@ -32,7 +35,8 @@ theorem toPoly_foldl_cadd (f : ℚ × ℚ → DensePoly ℚ) (pts : List (ℚ ×
   induction pts generalizing init with
   | nil => simp
   | cons p ps ih =>
-    rw [List.foldl_cons, ih, toPoly_cadd, List.map_cons, List.sum_cons]
+    simp only [toPoly_eq_dense] at ih ⊢
+    rw [List.foldl_cons, ih, DensePoly.toPolyG_caddG, List.map_cons, List.sum_cons]
     ring
 
 /-- The `cinterpolate` denominator fold `∏ acc·(xk − xⱼ)` equals the list product `∏ (xk − xⱼ)`,
@@ -66,7 +70,9 @@ theorem eval_term_poly (xk yk x : ℚ) (others : List ℚ) :
         (clagNum others))).eval x
       = (yk / (others.map (fun xj => xk - xj)).prod)
         * (others.map (fun xj => x - xj)).prod := by
-  rw [toPoly_cscale, toPoly_clagNum, eval_mul, eval_C, foldl_mul_sub_eq_prod]
+  rw [toPoly_eq_dense, DensePoly.toPolyG_cscaleG, ← toPoly_eq_dense,
+    toR_eq_toK, CFieldSpec.toK_rat, toPoly_clagNum, eval_mul, eval_C,
+    foldl_mul_sub_eq_prod]
   congr 1
   rw [eval_list_prod, List.map_map]
   congr 1
@@ -104,7 +110,8 @@ private def cinterpTermQ (xs : List ℚ) (p : ℚ × ℚ) : DensePoly ℚ :=
 theorem toPoly_cinterpolate (pts : List (ℚ × ℚ)) :
     toPoly (cinterpolate pts)
       = (pts.map (fun p => toPoly (cinterpTermQ (pts.map Prod.fst) p))).sum := by
-  rw [cinterpolate, toPoly_cnorm, toPoly_foldl_cadd]
+  rw [cinterpolate, toPoly_eq_dense, DensePoly.toPolyG_cnormG, ← toPoly_eq_dense,
+    toPoly_foldl_cadd]
   simp [cinterpTermQ]
 
 /-- Summing `if p.1 = xk then p.2 else 0` over a points list with distinct abscissas picks out the
@@ -174,7 +181,9 @@ theorem toPoly_cinterpolate_eval (pts : List (ℚ × ℚ)) (hnodup : (pts.map Pr
 theorem natDegree_cinterpTerm_le (xs : List ℚ) (p : ℚ × ℚ) :
     (toPoly (cinterpTermQ xs p)).natDegree ≤ (xs.filter (· != p.1)).length := by
   obtain ⟨a, b⟩ := p
-  simp only [cinterpTermQ, toPoly_cscale, toPoly_clagNum]
+  simp only [cinterpTermQ]
+  rw [toPoly_eq_dense, DensePoly.toPolyG_cscaleG, ← toPoly_eq_dense,
+    toR_eq_toK, CFieldSpec.toK_rat, toPoly_clagNum]
   refine (natDegree_C_mul_le _ _).trans ?_
   refine (natDegree_list_prod_le _).trans ?_
   rw [List.map_map]
@@ -272,7 +281,9 @@ open Polynomial in
 theorem toPoly_sample (A D : DensePoly ℚ) (a : ℚ) :
     toPoly (csub A (cscale a (cderiv D)))
       = toPoly A - Polynomial.C a * derivative (toPoly D) := by
-  rw [toPoly_csub, toPoly_cscale, toPoly_cderiv]
+  simp only [toPoly_eq_dense]
+  rw [DensePoly.toPolyG_csubG, DensePoly.toPolyG_cscaleG, DensePoly.toPolyG_cderivG]
+  simp only [toR_eq_toK, CFieldSpec.toK_rat]
 
 open Polynomial in
 /-- Point-agreement (monic `D`): `cresultant fuel D (A − a·D') = (rtResultant (toPoly A) (toPoly D)).eval a`. -/

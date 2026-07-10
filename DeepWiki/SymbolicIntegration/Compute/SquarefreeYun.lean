@@ -16,13 +16,19 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-- The concrete monic gcd realizes the abstract `gcd` under gcd termination. -/
 theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : DensePoly ℚ) (hterm : cgcdTerminates fuel b d) :
     toPoly (cmonic (cgcdExt fuel b d).1) = gcd (toPoly b) (toPoly d) := by
-  rw [toPoly_cmonic_eq_normalize]
   obtain ⟨hgb, hgd⟩ := toPoly_cgcdExt_dvd fuel b d hterm
   have hassoc : Associated (toPoly (cgcdExt fuel b d).1) (gcd (toPoly b) (toPoly d)) :=
     associated_of_dvd_dvd (dvd_gcd hgb hgd) (toPoly_dvd_cgcdExt fuel b d (gcd_dvd_left _ _)
       (gcd_dvd_right _ _))
-  rw [← normalize_gcd (toPoly b) (toPoly d)]
-  exact normalize_eq_normalize_iff.mpr (hassoc.dvd_dvd)
+  have hcmassoc := DensePoly.associated_toPolyG_cmonicG (cgcdExt fuel b d).1
+  have htotal := hcmassoc.trans hassoc
+  by_cases hraw : toPoly (cgcdExt fuel b d).1 = 0
+  · exact (hcmassoc.eq_zero_iff.mpr hraw).trans (hassoc.eq_zero_iff.mp hraw).symm
+  · have hleft := DensePoly.monic_toPolyG_cmonicG (cgcdExt fuel b d).1 hraw
+    have hright0 : gcd (toPoly b) (toPoly d) ≠ 0 := hassoc.ne_zero_iff.mp hraw
+    have hright : (gcd (toPoly b) (toPoly d)).Monic :=
+      (Polynomial.normalize_eq_self_iff_monic hright0).mp (normalize_gcd _ _)
+    exact Polynomial.eq_of_monic_of_associated hleft hright htotal
 
 /-! ### The concrete `csqfreeFactor.go` carries the abstract `YunInv` -/
 
@@ -214,7 +220,8 @@ theorem go_factor_assoc (fuel : ℕ) (A : DensePoly ℚ) :
       have hdfact : toPoly d = gcd (toPoly b) (toPoly d) * toPoly (cdiv fuel d q) := hgcd ▸ hexd
       have hb'eq : toPoly b' = toPoly b / gcd (toPoly b) (toPoly d) := eq_div_of_eq_mul hgcd0 hbfact
       have hd'eq : toPoly d' = toPoly d / gcd (toPoly b) (toPoly d) - derivative (toPoly b') := by
-        rw [hd'def, toPoly_csub, toPoly_cderiv]
+        simp only [toPoly_eq_dense] at hdfact ⊢
+        rw [hd'def, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cderivG]
         congr 1
         exact eq_div_of_eq_mul hgcd0 hdfact
       have hinv' : YunInv (toPoly A) (i + 1) (toPoly b') (toPoly d') := by

@@ -154,4 +154,7 @@ instance : CFieldSpec ℚ where
   toK_inv _ := rfl
   isZero_iff a := by show decide (a = 0) = true ↔ id a = 0; simp
 
+/-- The rational field denotation is the identity. -/
+@[simp] theorem CFieldSpec.toK_rat (a : ℚ) : CFieldSpec.toK a = a := rfl
+
 end DeepWiki.SymbolicIntegration

@@ -15,23 +15,26 @@ namespace Compute
 
 /-- `cmonic q` divides `q` through `toPoly`: `toPoly (cmonic q) ∣ toPoly q`. -/
 theorem toPoly_cmonic_dvd (q : DensePoly ℚ) : toPoly (cmonic q) ∣ toPoly q := by
+  simp only [toPoly_eq_dense]
   unfold cmonic
   by_cases h : cisZero (cnorm q)
   · simp only [h, if_true]
-    have hq0 : toPoly q = 0 := by
+    have hq0 : DensePoly.toPoly q = 0 := by
       have : cnorm q = [] := by simpa [cisZero] using h
-      rw [← toPoly_cnorm, this, toPoly_nil]
+      rw [← DensePoly.toPolyG_cnormG, this, DensePoly.toPolyG_nil]
     simp [hq0]
   · simp only [h, Bool.false_eq_true, if_false]
-    rw [toPoly_cscale, toPoly_cnorm]
+    rw [DensePoly.toPolyG_cscaleG, DensePoly.toPolyG_cnormG]
     have hc : clead (cnorm q) ≠ 0 := clead_ne_zero (by simpa [cisZero] using h)
-    refine ⟨Polynomial.C (clead (cnorm q)), ?_⟩
+    refine ⟨(Polynomial.C (clead (cnorm q)) : ℚ[X]), ?_⟩
     rw [show CField.inv (clead (cnorm q)) = (clead (cnorm q))⁻¹ from rfl]
-    rw [mul_comm (Polynomial.C (clead (cnorm q))⁻¹) (toPoly q), mul_assoc, ← map_mul,
+    rw [toR_eq_toK, CFieldSpec.toK_rat]
+    rw [mul_comm (Polynomial.C (clead (cnorm q))⁻¹) (DensePoly.toPoly q), mul_assoc, ← map_mul,
       inv_mul_cancel₀ hc, map_one, mul_one]
 
 /-- The `toPoly`-product of the first components of a factor list: `goProd l = ∏ⱼ toPoly Vⱼ`. -/
-noncomputable def goProd (l : List (DensePoly ℚ × ℕ)) : ℚ[X] := (l.map (fun vi => toPoly vi.1)).prod
+noncomputable def goProd (l : List (DensePoly ℚ × ℕ)) : ℚ[X] :=
+  (l.map (fun vi => DensePoly.toPoly vi.1)).prod
 
 /-- `GoExact fuel fo b d` records exact Yun-loop divisions through `toPoly`. -/
 def GoExact (fuel : ℕ) : ℕ → DensePoly ℚ → DensePoly ℚ → Prop
@@ -78,10 +81,11 @@ theorem goProd_dvd (fuel : ℕ) : ∀ (fo : ℕ) (b d : DensePoly ℚ) (i : ℕ)
 /-- `goProd` realizes the radical fold: `toPoly (l.foldl (cmul · vi.1) init) = toPoly init · goProd l`. -/
 theorem toPoly_foldl_cmul_fst (l : List (DensePoly ℚ × ℕ)) (init : DensePoly ℚ) :
     toPoly (l.foldl (fun acc vi => cmul acc vi.1) init) = toPoly init * goProd l := by
+  simp only [toPoly_eq_dense]
   induction l generalizing init with
   | nil => simp [goProd]
   | cons hd tl ih =>
-    rw [List.foldl_cons, ih, toPoly_cmul]
+    rw [List.foldl_cons, ih, DensePoly.toPolyG_cmulG]
     simp only [goProd, List.map_cons, List.prod_cons]
     ring
 
@@ -89,7 +93,7 @@ theorem toPoly_foldl_cmul_fst (l : List (DensePoly ℚ × ℕ)) (init : DensePol
 theorem toPoly_Dstar_eq (l : List (DensePoly ℚ × ℕ)) :
     toPoly (l.foldl (fun acc (vi : DensePoly ℚ × ℕ) => cmul acc vi.1) [1]) = goProd l := by
   rw [toPoly_foldl_cmul_fst]
-  simp [toPoly_cons, toPoly_nil]
+  simp [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
 
 /-- One Yun step is exact when the extended gcd terminates with enough fuel. -/
 theorem step_exact (fuel : ℕ) (b d : DensePoly ℚ) (hbne : cnorm b ≠ [])
@@ -127,7 +131,8 @@ theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : DensePoly ℚ) (hex : SqfreeExact f
       (cderiv (cdiv fuel (cnorm D) (cgcdExt fuel (cnorm D) (cderiv (cnorm D))).1))) 1 hgo
   have hb1D : toPoly (cdiv fuel (cnorm D) (cgcdExt fuel (cnorm D) (cderiv (cnorm D))).1)
       ∣ toPoly D := by
-    rw [← toPoly_cnorm D, hb1]; exact Dvd.intro_left _ rfl
+    simp only [toPoly_eq_dense] at hb1 ⊢
+    rw [← DensePoly.toPolyG_cnormG D, hb1]; exact Dvd.intro_left _ rfl
   exact hdvd.trans hb1D
 
 /-! ### Computable witnesses -/
@@ -173,7 +178,7 @@ theorem GoExactComp_to_GoExact (fuel : ℕ) : ∀ (fo : ℕ) (b d : DensePoly �
       obtain ⟨hrem, hqne, hrest⟩ := h
       refine ⟨?_, ih _ _ hrest⟩
       have hrem0 : toPoly (cmod fuel b (cmonic (cgcdExt fuel b d).1)) = 0 := by
-        rw [← toPoly_cnorm, hrem, toPoly_nil]
+        rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hrem, DensePoly.toPolyG_nil]
       exact (toPoly_cdiv_of_cmod_zero fuel b (cmonic (cgcdExt fuel b d).1) hqne hrem0).trans
         (mul_comm _ _)
 
@@ -198,7 +203,7 @@ theorem SqfreeExactComp_to_SqfreeExact (fuel : ℕ) (D : DensePoly ℚ) :
   obtain ⟨⟨hrem, hgne⟩, hgo⟩ := h
   refine ⟨?_, GoExactComp_to_GoExact fuel fuel _ _ hgo⟩
   have hrem0 : toPoly (cmod fuel (cnorm D) (cgcdExt fuel (cnorm D) (cderiv (cnorm D))).1) = 0 := by
-    rw [← toPoly_cnorm, hrem, toPoly_nil]
+    rw [toPoly_eq_dense, ← DensePoly.toPolyG_cnormG, hrem, DensePoly.toPolyG_nil]
   exact (toPoly_cdiv_of_cmod_zero fuel (cnorm D) (cgcdExt fuel (cnorm D) (cderiv (cnorm D))).1
     hgne hrem0).trans (mul_comm _ _)
 

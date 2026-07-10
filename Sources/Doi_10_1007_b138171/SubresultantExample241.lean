@@ -106,7 +106,8 @@ open Polynomial in
 theorem toPoly_ex241_value :
     toPoly ([45796, 0, 549552, 0, 2198208, 0, 2930944] : DensePoly ℚ)
       = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
-  simp only [toPoly_cons, toPoly_nil, map_ofNat, map_one, map_zero]
+  simp only [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil,
+    toR_eq_toK, CFieldSpec.toK_rat, map_ofNat, map_one, map_zero]
   ring
 
 open Polynomial in
@@ -132,8 +133,8 @@ The concrete agreement `lrtGcdCompute_isSimilar_lrtSubresultant_concrete` needs 
 (here `X` is the `t`-indeterminate). -/
 theorem toPoly_cR241 : toPoly cR241 = 1 + 4 * X ^ 2 := by
   show toPoly [(1 : ℚ), 0, 4] = _
-  rw [toPoly_cons, toPoly_cons, toPoly_cons, toPoly_nil]
-  simp only [map_zero, map_one, mul_zero, add_zero, map_ofNat]
+  simp only [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil,
+    toR_eq_toK, CFieldSpec.toK_rat, map_zero, map_one, mul_zero, add_zero, map_ofNat]
   ring
 
 /-- **`toPoly cR241` has degree 2**: `(toPoly cR241).natDegree = 2`. -/
@@ -376,7 +377,7 @@ theorem hgu_ex241 :
       = Polynomial.C (1 : ℚ) := by
   rw [cgcdExt_blc_bredR_ex241]
   show toPoly [(1 : ℚ)] = _
-  rw [toPoly_cons, toPoly_nil]; simp
+  simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
 
 /-! ### The content nonzero `hc0` and quotient-degree bound `hQ`, derived from `chain_hsc`
 The two hypotheses of `_concrete` mentioning the `Classical.choose` witnesses `chainC`/`chainS` are *not*
@@ -434,7 +435,10 @@ theorem hc0_ex241 : ∀ l ≤ 1, toPoly (chainC 30 gP gQ l) ≠ 0 := by
     linear_combination -hsc
   -- degree of the RHS
   have hpremne : toBPoly (bpsremainder 30 (chain 30 gP gQ l) (chain 30 gP gQ (l + 1))) ≠ 0 := by
-    rw [hprem]; exact mul_ne_zero (by simp [Polynomial.C_eq_zero, hβne]) hG2ne
+    rw [hprem]
+    have hβdense : DensePoly.toPoly (chainBt 30 gP gQ l) ≠ 0 := by
+      simpa only [toPoly_eq_dense] using hβne
+    exact mul_ne_zero (Polynomial.C_ne_zero.mpr hβdense) hG2ne
   by_cases hSne : toBPoly (chainS 30 gP gQ l) = 0
   · rw [hSne, zero_mul, eq_comm, neg_eq_zero] at heq
     exact hpremne heq
@@ -518,7 +522,8 @@ theorem mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero :
   rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, lrtGcd_ex241, toBPoly_coeff] at hcoeff
   -- (toBPoly [[0,-4],[-3],[0,2],[1]]).coeff 3 = toPoly [1] = 1, φ241 1 = 1 ≠ 0
   rw [show ([[0, -4], [-3], [0, 2], [1]] : BPoly).getD 3 [] = [1] from rfl] at hcoeff
-  rw [show toPoly ([1] : DensePoly ℚ) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
+  rw [show toPoly ([1] : DensePoly ℚ) = 1 by
+    simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil], map_one] at hcoeff
   exact one_ne_zero hcoeff
 
 /-! ### The ℚ[t]-similarity `lrtSubresultant ∼ lrtSubresultantCompute` for Ex 2.4.1 (all chain hyps discharged)
@@ -682,12 +687,17 @@ open scoped Classical in
 theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241).Separable := by
   rw [separable_def']
   have hbez := Compute.toPoly_cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)
-  rw [Compute.toPoly_cderiv] at hbez
+  have hderiv : Compute.toPoly (Compute.cderiv Compute.cD241) =
+      derivative (Compute.toPoly Compute.cD241) := by
+    simpa only [Compute.toPoly_eq_dense] using
+      DensePoly.toPolyG_cderivG Compute.cD241
+  rw [hderiv] at hbez
   have hg : Compute.toPoly (Compute.cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)).1
       = C 4 := by
     have : (Compute.cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)).1 = [4] := by
       native_decide
-    rw [this]; simp [Compute.toPoly_cons, Compute.toPoly_nil]
+    rw [this]
+    simp [Compute.toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
   rw [hg] at hbez
   refine ⟨C (4:ℚ)⁻¹ * Compute.toPoly (Compute.cgcdExt 30 Compute.cD241
             (Compute.cderiv Compute.cD241)).2.1,

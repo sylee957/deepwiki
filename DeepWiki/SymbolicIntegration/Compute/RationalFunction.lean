@@ -47,18 +47,18 @@ Each computable operation realizes the corresponding `RatFunc ℚ` field operati
 
 /-- `toQFun qone = 1` in `RatFunc ℚ`. -/
 theorem toQFun_qone : toQFun qone = 1 := by
-  simp [toQFun, qone, toPoly_cons, toPoly_nil]
+  simp [toQFun, qone, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
 
 /-- `toQFun (qneg x) = -toQFun x` in `RatFunc ℚ`. -/
 theorem toQFun_qneg (x : QFun) : toQFun (qneg x) = -toQFun x := by
   obtain ⟨a, b⟩ := x
-  simp only [toQFun, qneg, toPoly_cneg, map_neg, neg_div]
+  simp only [toQFun, qneg, toPoly_eq_dense, DensePoly.toPolyG_cnegG, map_neg, neg_div]
 
 /-- `toQFun (qmul x y) = toQFun x * toQFun y` in `RatFunc ℚ`. -/
 theorem toQFun_qmul (x y : QFun) : toQFun (qmul x y) = toQFun x * toQFun y := by
   obtain ⟨a, b⟩ := x
   obtain ⟨c, d⟩ := y
-  simp only [toQFun, qmul, toPoly_cmul, map_mul]
+  simp only [toQFun, qmul, toPoly_eq_dense, DensePoly.toPolyG_cmulG, map_mul]
   rw [div_mul_div_comm]
 
 /-- `toQFun (qsub x y) = toQFun x - toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
@@ -104,8 +104,10 @@ theorem toQFun_qderiv (x : QFun) (hb : toPoly x.2 ≠ 0) : toQFun (qderiv x) = (
       = (am (toPoly b) * am (derivative (toPoly a))
           - am (toPoly a) * am (derivative (toPoly b))) / (am (toPoly b) ^ 2) := by
     rw [deriv_div, hda, hdb]
+  simp only [toPoly_eq_dense] at hderiv
   -- compute `toQFun (qderiv (a,b))`: numerator `cderiv a · b − a · cderiv b`, denom `b · b`.
-  simp only [toQFun, qderiv, toPoly_csub, toPoly_cmul, toPoly_cderiv, map_sub, map_mul]
+  simp only [toQFun, qderiv, toPoly_eq_dense, DensePoly.toPolyG_csubG,
+    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, map_sub, map_mul]
   rw [hderiv, pow_two]
   ring
 
@@ -113,7 +115,7 @@ open scoped Differential in
 /-- The `qadd`-fold derivative is the sum of the increment derivatives. -/
 theorem deriv_toQFun_foldl_qadd (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
     (toQFun (gs.foldl qadd qzero))′ = (gs.map (fun g => (toQFun g)′)).sum := by
-  rw [toQFun_foldl_qadd gs qzero (by simp [qzero, toPoly_cons]) hgs, toQFun_qzero, zero_add]
+  rw [toQFun_foldl_qadd gs qzero (by simp [qzero, DensePoly.toPolyG_cons]) hgs, toQFun_qzero, zero_add]
   rw [show ((gs.map toQFun).sum)′ = Differential.deriv (R := RatFunc ℚ) (gs.map toQFun).sum from rfl,
     map_list_sum (Differential.deriv (R := RatFunc ℚ)) (gs.map toQFun), List.map_map]
   rfl
@@ -137,9 +139,11 @@ theorem qeq_iff (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
   have hbm : am (toPoly b) ≠ 0 := am_toPoly_ne_zero hb
   have hdm : am (toPoly d) ≠ 0 := am_toPoly_ne_zero hd
   -- LHS: the cross-multiplication zero test in `ℚ[X]`.
-  rw [qeq, cisZero_iff_toPoly_eq_zero, toPoly_csub, toPoly_cmul, toPoly_cmul, sub_eq_zero]
+  rw [qeq, cisZero_iff_toPoly_eq_zero, toPoly_eq_dense, DensePoly.toPolyG_csubG,
+    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, sub_eq_zero]
   -- RHS: the field equality, cleared to the cross-multiplication.
   rw [toQFun, toQFun, div_eq_div_iff hbm hdm]
+  simp only [toPoly_eq_dense] at hbm hdm ⊢
   -- bridge through `am` injectivity (`map_mul` + injectivity).
   rw [← map_mul, ← map_mul]
   exact ⟨fun h => by rw [h], fun h => RatFunc.algebraMap_injective ℚ h⟩
@@ -153,7 +157,8 @@ theorem am_C_ne_zero {s : ℚ} (hs : s ≠ 0) :
 `toQFun (cscale s a, cscale s b) = toQFun (a, b)` for `s ≠ 0`. -/
 theorem toQFun_cscale_cscale (s : ℚ) (hs : s ≠ 0) (a b : DensePoly ℚ) :
     toQFun (cscale s a, cscale s b) = toQFun (a, b) := by
-  simp only [toQFun, toPoly_cscale, map_mul]
+  simp only [toQFun, toPoly_eq_dense, DensePoly.toPolyG_cscaleG, toR_eq_toK,
+    CFieldSpec.toK_rat, map_mul]
   rw [mul_div_mul_left _ _ (am_C_ne_zero hs)]
 
 /-- Dividing numerator and denominator by an exact common divisor `q` preserves the value:

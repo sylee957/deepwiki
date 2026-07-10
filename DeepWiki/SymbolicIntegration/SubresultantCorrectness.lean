@@ -64,7 +64,9 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (f
   -- φ image of the inverse: drop the credR, expand the cscale
   rw [cinvMod]
   -- cinvMod fuel R c = credR fuel R (cscale (clead g)⁻¹ s), with s = (cgcdExt fuel c R).2.1
-  rw [map_toPoly_credR φ fuel R _ hR hφR, toPoly_cscale, map_mul, hlead]
+  rw [map_toPoly_credR φ fuel R _ hR hφR, toPoly_eq_dense,
+    DensePoly.toPolyG_cscaleG, ← toPoly_eq_dense, toR_eq_toK, CFieldSpec.toK_rat,
+    map_mul, hlead]
   -- now: φ (C u⁻¹) * φ (toPoly s) * φ (toPoly c) = 1
   -- from Bézout image: φ(toPoly s)·φ(toPoly c) = φ (C u)
   have himg : φ (toPoly (cgcdExt fuel c R).2.1) * φ (toPoly c) = φ (Polynomial.C u) := by
@@ -85,7 +87,9 @@ theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] 
     rw [List.map_cons, toBPoly_cons, toBPoly_cons, map_add, map_add, map_mul, map_mul, ih, mul_add]
     congr 1
     · rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C,
-        map_toPoly_credR φ fuel R _ hR hφR, toPoly_cmul, map_mul, Polynomial.C_mul, mul_comm]
+        map_toPoly_credR φ fuel R _ hR hφR]
+      simp only [toPoly_eq_dense]
+      rw [DensePoly.toPolyG_cmulG, map_mul, Polynomial.C_mul, mul_comm]
     · rw [Polynomial.coe_mapRingHom (f := φ), Polynomial.map_X]; ring
 
 /-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, when the leading coefficient's mod-`R` gcd reduces

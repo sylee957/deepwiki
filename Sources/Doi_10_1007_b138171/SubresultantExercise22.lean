@@ -226,7 +226,10 @@ theorem hc0_ex22 : ∀ l ≤ 7, toPoly (chainC 60 hP hQ l) ≠ 0 := by
       = - toBPoly (bpsremainder 60 (chain 60 hP hQ l) (chain 60 hP hQ (l + 1))) := by
     linear_combination -hsc
   have hpremne : toBPoly (bpsremainder 60 (chain 60 hP hQ l) (chain 60 hP hQ (l + 1))) ≠ 0 := by
-    rw [hprem]; exact mul_ne_zero (by simp [Polynomial.C_eq_zero, hβne]) hG2ne
+    rw [hprem]
+    have hβdense : DensePoly.toPoly (chainBt 60 hP hQ l) ≠ 0 := by
+      simpa only [toPoly_eq_dense] using hβne
+    exact mul_ne_zero (Polynomial.C_ne_zero.mpr hβdense) hG2ne
   by_cases hSne : toBPoly (chainS 60 hP hQ l) = 0
   · rw [hSne, zero_mul, eq_comm, neg_eq_zero] at heq
     exact hpremne heq
@@ -352,7 +355,9 @@ theorem hgu_ex22 :
         (cmonic cR22)).1
       = Polynomial.C u := by
   obtain ⟨u, hu, hgcd⟩ := cgcdExt_blc_bredR_singleton_ex22
-  exact ⟨u, hu, by rw [hgcd, toPoly_cons, toPoly_nil]; simp⟩
+  exact ⟨u, hu, by
+    rw [hgcd]
+    simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]⟩
 
 /-- **`hpz` for Ex 2.2**: the mod-`R` reduction of the primitive degree-1 subresultant is nonzero
 (`¬ bisZero (bredR 60 (cmonic cR22) (lrtSubresultantCompute 60 1 cA22 cD22))`). -/
@@ -376,7 +381,8 @@ theorem mapRingHom_φ_toBPoly_lrtGcdCompute_ne_zero_ex22 {S : Type*} [CommRing S
   rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, toBPoly_coeff] at hcoeff
   -- the degree-1 `x`-coefficient of `lrtGcdCompute … = [c₀, [1]]` is `toPoly [1] = 1`, `φ 1 = 1 ≠ 0`
   rw [show (lrtGcdCompute 60 1 (cmonic cR22) cA22 cD22).getD 1 [] = [1] by native_decide] at hcoeff
-  rw [show toPoly ([1] : DensePoly ℚ) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
+  rw [show toPoly ([1] : DensePoly ℚ) = 1 by
+    simp [toPoly_eq_dense, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil], map_one] at hcoeff
   exact one_ne_zero hcoeff
 
 /-! ### Closing Exercise 2.2: the residue ring `ℚ[t]/(R)`, `R = cmonic cR22` irreducible

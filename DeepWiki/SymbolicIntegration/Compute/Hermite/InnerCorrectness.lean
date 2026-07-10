@@ -16,7 +16,8 @@ namespace DeepWiki.SymbolicIntegration.Compute
 theorem toPoly_hermiteInner_Vpow (V : DensePoly ℚ) (j : ℕ) :
     toPoly ((List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1])
       = toPoly V ^ (j + 1) := by
-  rw [toPoly_foldl_cmul]; simp [toPoly_cons]
+  simp only [toPoly_eq_dense]
+  rw [DensePoly.toPolyG_foldl_range_cmulG]; simp [DensePoly.toPolyG_cons]
 
 open scoped Differential in
 /-- The `hermiteInner` step identity in `RatFunc ℚ`. -/
@@ -112,8 +113,10 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
       toQFun_qadd g (B, Vpow) hg hVpow0
     have hgnew : toPoly (qadd g (B, Vpow)).2 ≠ 0 := by
       show toPoly (cmul g.2 Vpow) ≠ 0
-      rw [toPoly_cmul]; exact mul_ne_zero hg hVpow0
-    have hcdB : toPoly (cderiv B) = derivative (toPoly B) := toPoly_cderiv B
+      simp only [toPoly_eq_dense] at hg hVpow0 ⊢
+      rw [DensePoly.toPolyG_cmulG]; exact mul_ne_zero hg hVpow0
+    have hcdB : toPoly (cderiv B) = derivative (toPoly B) := by
+      simpa only [toPoly_eq_dense] using DensePoly.toPolyG_cderivG B
     have hb : hbezPred fuel V U j A := hbez j A
     rw [hbezPred, hBC] at hb
     have hstep := hermiteInner_step_ratFunc (toPoly A) (toPoly B) (toPoly C) (toPoly U) (toPoly V)
@@ -123,7 +126,9 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U 
         rw [toQFun, hVpow, map_pow]
       have hA'eq : toPoly A'
           = -(Polynomial.C ((j : ℚ) + 1)) * toPoly C - toPoly U * derivative (toPoly B) := by
-        rw [hA'def, toPoly_csub, toPoly_cscale, toPoly_cmul, hcdB, map_neg]
+        simp only [toPoly_eq_dense] at hcdB ⊢
+        rw [hA'def, DensePoly.toPolyG_csubG, DensePoly.toPolyG_cscaleG, DensePoly.toPolyG_cmulG,
+          hcdB, toR_eq_toK, CFieldSpec.toK_rat, map_neg]
       rw [hqadd, map_add, hBVpow, hA'eq] at ihA
       rw [show (j + 1 + 1) = (j + 2) from rfl]
       linear_combination hstep + ihA
@@ -139,7 +144,8 @@ theorem hermiteInner_spec (fuel : ℕ) (V U : DensePoly ℚ) (hU : toPoly U ≠ 
       = (toQFun (hermiteInner fuel V U j A qzero).1)′
         + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) := by
-  have h := hermiteInner_spec_acc fuel V U hU hV hbez j A qzero (by simp [qzero, toPoly_cons])
+  have h := hermiteInner_spec_acc fuel V U hU hV hbez j A qzero
+    (by simp [qzero, toPoly_eq_dense, DensePoly.toPolyG_cons])
   rw [toQFun_qzero, map_zero, add_zero] at h
   simpa using h
 
@@ -151,7 +157,9 @@ theorem hermiteInner_bezout_of (fuel : ℕ) (V U : DensePoly ℚ) (j' : ℕ) (A'
   rw [hbezPred]
   have h := toPoly_cdiophantine fuel (cmul U (cderiv V)) V
     (cscale (-((j' : ℚ) + 1)⁻¹) A') hq hg hgc
-  rw [toPoly_cmul, toPoly_cderiv, toPoly_cscale] at h
+  simp only [toPoly_eq_dense] at h ⊢
+  rw [DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, DensePoly.toPolyG_cscaleG] at h
+  simp only [toR_eq_toK, CFieldSpec.toK_rat] at h ⊢
   rw [h]
   rw [show Polynomial.C (-((j' : ℚ) + 1)⁻¹) = -Polynomial.C (((j' : ℚ) + 1)⁻¹) from by rw [map_neg]]
   ring

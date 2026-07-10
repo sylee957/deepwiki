@@ -13,8 +13,8 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-- `toPoly (cC c) = C c`: the constant-`DensePoly ℚ` lift realizes the `ℚ[X]` constant. -/
 @[simp] theorem toPoly_cC (c : ℚ) : toPoly (cC c) = Polynomial.C c := by
-  rw [cC, toPoly_cnorm]
-  simp [toPoly_cons]
+  simp [cC, toPoly_eq_dense, DensePoly.toPolyG_cnormG, DensePoly.toPolyG_cons,
+    toR_eq_toK, CFieldSpec.toK_rat]
 
 /-- `toBPoly (liftCtoBPoly p) = (toPoly p).map C`: `liftCtoBPoly` realizes the coefficient embedding. -/
 theorem toBPoly_liftCtoBPoly (p : DensePoly ℚ) :
@@ -23,12 +23,14 @@ theorem toBPoly_liftCtoBPoly (p : DensePoly ℚ) :
   | nil => simp [liftCtoBPoly]
   | cons a as ih =>
     show toBPoly (cC a :: liftCtoBPoly as) = _
-    rw [toBPoly_cons, toPoly_cons, ih, toPoly_cC, Polynomial.map_add, Polynomial.map_mul,
+    rw [toBPoly_cons, ih, toPoly_cC]
+    simp only [toPoly_eq_dense]
+    rw [DensePoly.toPolyG_cons, toR_eq_toK, CFieldSpec.toK_rat, Polynomial.map_add, Polynomial.map_mul,
       Polynomial.map_X, Polynomial.map_C]
 
 /-- `toPoly ctVar = X`: the computable `t`-variable lifts to the indeterminate `X ∈ ℚ[t]`. -/
 @[simp] theorem toPoly_ctVar : toPoly ctVar = (Polynomial.X : ℚ[X]) := by
-  rw [ctVar]; simp [toPoly_cons]
+  rw [ctVar]; simp [DensePoly.toPolyG_cons]
 
 /-- `toBPoly (bArgAmtD' A D) = (toPoly A).map C - C X * (derivative (toPoly D)).map C`: the LRT second
 operand `A - t*D'`. -/
@@ -37,7 +39,9 @@ theorem toBPoly_bArgAmtD' (A D : DensePoly ℚ) :
       = (toPoly A).map (Polynomial.C : ℚ →+* ℚ[X])
         - Polynomial.C Polynomial.X * (derivative (toPoly D)).map (Polynomial.C : ℚ →+* ℚ[X]) := by
   rw [bArgAmtD', toBPoly_bsub, toBPoly_liftCtoBPoly, toBPoly_bscaleC, toBPoly_liftCtoBPoly,
-    toPoly_ctVar, toPoly_cderiv]
+    toPoly_ctVar]
+  simp only [toPoly_eq_dense]
+  rw [DensePoly.toPolyG_cderivG]
 
 /-- `lrtSubresultant A D j` is the abstract subresultant of the `toBPoly` images of the computable
 operands at formal degrees `deg D`, `deg D - 1`. -/

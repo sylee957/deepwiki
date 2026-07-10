@@ -1101,7 +1101,7 @@ noncomputable, so the abstract `logToAtanAux` cannot run). Branches mirror `logT
 (base `B ∣ A`, swap `deg A < deg B`, step with extended-Euclidean cofactors `B·D − A·C = G`), fuel-
 bounded for termination, returning the arctan arguments as `(numerator, denominator)` `DensePoly ℚ` pairs.
 The library's `logToAtanCompute`, with the `toPoly : DensePoly ℚ → ℚ[X]` bridge and its homomorphism lemmas
-(`toPoly_cadd`/`toPoly_cmul`/…). The full agreement with `logToAtanAux` is deferred. -/
+(`DensePoly.toPolyG_caddG`/`DensePoly.toPolyG_cmulG`/…). The full agreement with `logToAtanAux` is deferred. -/
 def logToAtan_compute := @DeepWiki.SymbolicIntegration.Compute.logToAtanCompute
 
 /-- **Example 2.8.1, the proved computation** (§2.8, p.63–64): `logToAtanCompute 20 (x³−3x) (x²−2)`
@@ -1120,7 +1120,7 @@ rendering of `R(t) = res_x(D, A − t·D')` over the dense coefficient carrier `
 `ℚ[X]` resultant `rtResultant` is noncomputable). The univariate resultant `cresultant` uses the
 Euclidean-PRS identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q,r)`; the bivariate RT
 resultant is recovered, staying univariate, by evaluation + Lagrange interpolation (`cinterpolate`).
-The library's `rtResultantCompute`, with `cderiv` (computable derivative, `toPoly_cderiv` bridge) and
+The library's `rtResultantCompute`, with `cderiv` (computable derivative, `DensePoly.toPolyG_cderivG` bridge) and
 `csqfreePart` (primitive part). Agreement with `rtResultant` is deferred. -/
 def rtResultant_compute := @DeepWiki.SymbolicIntegration.Compute.rtResultantCompute
 

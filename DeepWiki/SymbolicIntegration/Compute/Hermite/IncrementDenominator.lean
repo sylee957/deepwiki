@@ -31,7 +31,10 @@ theorem hermiteInner_den_eq_pow (fuel : ℕ) (V U : DensePoly ℚ) :
     rw [hm]
     show toPoly (qadd g (B, Vpow)).2 * toPoly V ^ m = toPoly g.2 * toPoly V ^ (m + (j + 1))
     show toPoly (cmul g.2 Vpow) * toPoly V ^ m = toPoly g.2 * toPoly V ^ (m + (j + 1))
-    rw [toPoly_cmul, toPoly_hermiteInner_Vpow, pow_add]
+    have hVpow : DensePoly.toPoly Vpow = DensePoly.toPoly V ^ (j + 1) := by
+      simpa only [toPoly_eq_dense] using toPoly_hermiteInner_Vpow V j
+    simp only [toPoly_eq_dense]
+    rw [DensePoly.toPolyG_cmulG, hVpow, pow_add]
     ring
 
 /-- **`glocIncr`'s denominator is a pure power of `Vi`**: there is `m` with
@@ -48,7 +51,7 @@ theorem glocIncr_den_eq_pow (fuel : ℕ) (A D : DensePoly ℚ) (Vi : DensePoly �
       = (hermiteInner fuel Vi.1 (cdiv fuel D
           ((List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1])) (Vi.2 - 1) A qzero).1.2 from rfl,
     hm]
-  simp [qzero, toPoly_cons]
+  simp [qzero, toPoly_eq_dense, DensePoly.toPolyG_cons]
 
 /-- **`glocIncr` is `Vk`-regular for `k ≠ i`**: if `P` is coprime to `Vi`, then `P` does not divide the
 denominator of `glocIncr fuel A D Vi` to any positive power beyond what `P ∣ Vi^m` allows — concretely,
