@@ -40,9 +40,6 @@ structure GeneralCurveTorsionInputs where
 
 /-! ### The torsion log term `genCurveTorsionLogTerm` -/
 
-/-- The coefficient `genOneOverM m = 1/m ∈ ℚ(x)`, i.e. `CFrac.ofPoly [1] / CFrac.ofPoly [m]`. -/
-def genOneOverM (m : ℕ) : CFrac ℚ := CField.div (CFrac.ofPoly [1]) (CFrac.ofPoly [(m : ℚ)])
-
 /-- The torsion log term: `genDivisorOrder fuel f basis tin.divisor` yields `some m` ⟹
 `some (1/m, tin.genGen m)` (the `(1/m)·log g` term for the `m`-torsion residue divisor); `none`
 (non-torsion within fuel) ⟹ `none`. -/
@@ -50,7 +47,7 @@ def genCurveTorsionLogTerm (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis : Lis
     (tin : GeneralCurveTorsionInputs) : Option (CFrac ℚ × DensePoly (CFrac ℚ)) :=
   match genDivisorOrder fuel f basis tin.divisor with
   | none => none
-  | some m => some (genOneOverM m, tin.genGen m)
+  | some m => some (CField.div (CCommRing.one : CFrac ℚ) (CFrac.ofScalar (m : ℚ)), tin.genGen m)
 
 /-! ### The decision integrator `cIntegrateGeneralCurveDecide` -/
 
@@ -303,7 +300,8 @@ theorem genCurveWitnessTorsion_some :
     (genCurveWitnessTorsion.isSome,
      (genCurveWitnessTorsion.map fun F => F.logTerms.length),
      (genCurveWitnessTorsion.bind fun F =>
-        F.logTerms.head?.map fun t => CCommRing.isZero (CField.sub t.1 (genOneOverM 1))))
+        F.logTerms.head?.map fun t => CCommRing.isZero
+          (CField.sub t.1 (CField.div CCommRing.one (CFrac.ofScalar (1 : ℚ))))))
       = (true, some 1, some true) := by native_decide
 
 /-! ### Witness B — the order-3 divisor on `y² = x³ + 1`, search starved to fuel 2 -/
@@ -331,7 +329,8 @@ theorem self_determining_general_curve_decision_validates :
     (genCurveWitnessTorsion.isSome,
      (genCurveWitnessTorsion.map fun F => F.logTerms.length),
      (genCurveWitnessTorsion.bind fun F =>
-        F.logTerms.head?.map fun t => CCommRing.isZero (CField.sub t.1 (genOneOverM 1))))
+        F.logTerms.head?.map fun t => CCommRing.isZero
+          (CField.sub t.1 (CField.div CCommRing.one (CFrac.ofScalar (1 : ℚ))))))
       = (true, some 1, some true)
     ∧ genCurveWitnessNonTorsion = none := by native_decide
 

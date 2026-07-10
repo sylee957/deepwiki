@@ -15,9 +15,6 @@ open DensePoly RadElem
 
 /-! ## `torsionLogTerm` — the non-principal branch as a usable function -/
 
-/-- The torsion log-term coefficient `oneOverMQ m = 1/m ∈ ℚ(x)`, i.e. `CFrac.ofPoly [1] / CFrac.ofPoly [m]`. -/
-def oneOverMQ (m : ℕ) : CFrac ℚ := CField.div (CFrac.ofPoly [1]) (CFrac.ofPoly [(m : ℚ)])
-
 /-- The non-principal `(1/m)·log` branch `torsionLogTerm p ρ ρq g D`: via `isTorsionDivisor p ρq g D`,
 returns `some (1/m, principalGenerator ρ ρq g m D)` when `D` is torsion of order `m` (log term
 `(1/m)·log g` with `div(g) = m·D`), else `none` (infinite order, not elementary). `ρ`/`ρq` are the
@@ -27,7 +24,9 @@ def torsionLogTerm (p : ℕ) [Fact p.Prime]
     Option (CFrac ℚ × RadElem (CFrac ℚ)) :=
   match isTorsionDivisor p ρq g D with
   | none => none
-  | some m => some (oneOverMQ m, principalGenerator ρ ρq g m D)
+  | some m => some
+      (CField.div (CCommRing.one : CFrac ℚ) (CFrac.ofScalar (m : ℚ)),
+        principalGenerator ρ ρq g m D)
 
 /-! ## Round-trip: `(0, 1)` → `(1/3)·log(y − 1)` from the divisor on `y² = x³ + 1` -/
 
@@ -46,14 +45,16 @@ def tltYm1 : RadElem (CFrac ℚ) := [CCommRing.neg CCommRing.one, CCommRing.one]
 /-- Field equality on `ℚ(x)`: `qEq a b = CCommRing.isZero (a − b)`, the `Bool` test `a = b` in `CFrac ℚ`. -/
 def qEq (a b : CFrac ℚ) : Bool := CCommRing.isZero (CField.sub a b)
 
-/-- The recovered-term check `tltTermCheck t`: `Bool` that a term `t = (c, g)` equals `(1/3, y − 1)`,
-i.e. `qEq c (oneOverMQ 3)` and `DensePoly.cisZero (DensePoly.csub g tltYm1)`. -/
+/-- The recovered-term check `tltTermCheck t`: `Bool` that a term `t = (c, g)` equals `(1/3, y − 1)`. -/
 def tltTermCheck (t : CFrac ℚ × RadElem (CFrac ℚ)) : Bool :=
-  qEq t.1 (oneOverMQ 3) && DensePoly.cisZero (DensePoly.csub t.2 tltYm1)
+  qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))
+    && DensePoly.cisZero (DensePoly.csub t.2 tltYm1)
 
 /-- `torsionLogTerm` on `(0, 1)` returns a term whose coefficient is field-equal to `1/3`. -/
 theorem tltTerm01_coeff :
-    (tltTerm01.map fun t => qEq t.1 (oneOverMQ 3)) = some true := by native_decide
+    (tltTerm01.map fun t =>
+      qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))) = some true := by
+  native_decide
 
 /-- `torsionLogTerm` on `(0, 1)` returns the log term `(1/3, y − 1)` (`tltTermCheck` holds). -/
 theorem tltTerm01_eq :
@@ -61,10 +62,10 @@ theorem tltTerm01_eq :
 
 /-! ### The `(1/3)·log(y − 1)` differential check -/
 
-/-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1`:
-`DensePoly.cscale (oneOverMQ 3) (radLogDeriv tltRhoX3p1 tltYm1)`. -/
+/-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1`. -/
 def tltDiff01 : RadElem (CFrac ℚ) :=
-  DensePoly.cscale (oneOverMQ 3) (radLogDeriv tltRhoX3p1 tltYm1)
+  DensePoly.cscale (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))
+    (radLogDeriv tltRhoX3p1 tltYm1)
 
 /-- The `(1/3)·log(y − 1)` differential passes the cleared log-derivative certificate
 `radIsLogIntegral 2 tltRhoX3p1 tltYm1 (DensePoly.cscale (CFrac.ofPoly [3]) tltDiff01)`. -/
@@ -92,7 +93,8 @@ to `1/3`. -/
 theorem tltResult01_shape :
     (DensePoly.cisZero tltResult01.ratPart,
      tltResult01.logTerms.length,
-     (tltResult01.logTerms.head?.map fun t => qEq t.1 (oneOverMQ 3))) = (true, 1, some true) := by
+     (tltResult01.logTerms.head?.map fun t =>
+       qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ))))) = (true, 1, some true) := by
   native_decide
 
 /-- `algDeriv tltRhoX3p1 tltResult01` equals the differential `tltDiff01` (`DensePoly.cisZero` of the
@@ -131,7 +133,8 @@ theorem torsion_log_branch_validates :
     -- the term assembles into the integrator's AlgIntegralResult (CFrac ℚ) and algDeriv round-trips
     ∧ ((DensePoly.cisZero tltResult01.ratPart,
         tltResult01.logTerms.length,
-        tltResult01.logTerms.head?.map fun t => qEq t.1 (oneOverMQ 3)) = (true, 1, some true)
+        tltResult01.logTerms.head?.map fun t =>
+          qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))) = (true, 1, some true)
       ∧ DensePoly.cisZero (DensePoly.csub (algDeriv tltRhoX3p1 tltResult01) tltDiff01) = true)
     -- non-torsion (3,5) propagates to none ⟹ NOT elementary
     ∧ ((torsionLogTerm 5 tltRhoX3m2 hypRhoX3m2 1 hypPt35).isNone = true
