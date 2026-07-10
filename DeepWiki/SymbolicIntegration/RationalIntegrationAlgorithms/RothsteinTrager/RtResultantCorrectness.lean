@@ -11,215 +11,6 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.Compute
 
-/-! ### `clagNum`: the Lagrange-basis numerator `∏ (x − xⱼ)` -/
-
-/-- `clagNum` realizes `∏ (X − C xⱼ)`: `toPoly (clagNum xs) = ∏_{x ∈ xs} (X − C x)`. -/
-theorem toPoly_clagNum (xs : List ℚ) :
-    toPoly (clagNum xs) = (xs.map (fun x => Polynomial.X - Polynomial.C x)).prod := by
-  induction xs with
-  | nil => simp [clagNum, toPoly_eq_dense, DensePoly.toPolyG_cons]
-  | cons x xs ih =>
-    simp only [toPoly_eq_dense] at ih ⊢
-    rw [clagNum, DensePoly.toPolyG_cmulG, ih, List.map_cons, List.prod_cons]
-    have : DensePoly.toPoly [(-x), 1] = Polynomial.X - Polynomial.C x := by
-      rw [DensePoly.toPolyG_cons, DensePoly.toPolyG_cons, DensePoly.toPolyG_nil]
-      simp only [toR_eq_toK, CFieldSpec.toK_rat, map_neg, map_one]
-      ring
-    rw [this]
-
-/-- `toPoly` of the `cinterpolate` accumulator fold is the running sum: folding `cadd acc (f p)`
-over `pts` maps under `toPoly` to `toPoly init + ∑ p, toPoly (f p)`. -/
-theorem toPoly_foldl_cadd (f : ℚ × ℚ → DensePoly ℚ) (pts : List (ℚ × ℚ)) (init : DensePoly ℚ) :
-    toPoly (pts.foldl (fun acc p => cadd acc (f p)) init)
-      = toPoly init + (pts.map (fun p => toPoly (f p))).sum := by
-  induction pts generalizing init with
-  | nil => simp
-  | cons p ps ih =>
-    simp only [toPoly_eq_dense] at ih ⊢
-    rw [List.foldl_cons, ih, DensePoly.toPolyG_caddG, List.map_cons, List.sum_cons]
-    ring
-
-/-- The `cinterpolate` denominator fold `∏ acc·(xk − xⱼ)` equals the list product `∏ (xk − xⱼ)`,
-threaded through an arbitrary starting accumulator. -/
-theorem foldl_mul_sub_eq_prod' (xk : ℚ) (others : List ℚ) (init : ℚ) :
-    others.foldl (fun acc xj => acc * (xk - xj)) init
-      = init * (others.map (fun xj => xk - xj)).prod := by
-  induction others generalizing init with
-  | nil => simp
-  | cons x xs ih => rw [List.foldl_cons, ih, List.map_cons, List.prod_cons]; ring
-
-/-- The `cinterpolate` denominator fold `∏ acc·(xk − xⱼ)` equals the list product `∏ (xk − xⱼ)`. -/
-theorem foldl_mul_sub_eq_prod (xk : ℚ) (others : List ℚ) :
-    others.foldl (fun acc xj => acc * (xk - xj)) 1
-      = (others.map (fun xj => xk - xj)).prod := by
-  rw [foldl_mul_sub_eq_prod', one_mul]
-
-/-- The product `∏_{xⱼ ∈ others} (xk − xⱼ)` is nonzero when every `xⱼ ≠ xk`. -/
-theorem prod_sub_ne_zero {xk : ℚ} {others : List ℚ} (hne : ∀ xj ∈ others, xj ≠ xk) :
-    (others.map (fun xj => xk - xj)).prod ≠ 0 := by
-  rw [Ne, List.prod_eq_zero_iff]
-  intro hy
-  rw [List.mem_map] at hy
-  obtain ⟨xj, hxj, hxeq⟩ := hy
-  exact hne xj hxj (sub_eq_zero.mp hxeq).symm
-
-/-- Eval of a Lagrange term polynomial at a node `x`: `(C (yk/denom) · ∏(X − C xⱼ)).eval x =
-(yk/denom)·∏(x − xⱼ)`. -/
-theorem eval_term_poly (xk yk x : ℚ) (others : List ℚ) :
-    (toPoly (cscale (yk / (others.foldl (fun acc xj => acc * (xk - xj)) 1))
-        (clagNum others))).eval x
-      = (yk / (others.map (fun xj => xk - xj)).prod)
-        * (others.map (fun xj => x - xj)).prod := by
-  rw [toPoly_eq_dense, DensePoly.toPolyG_cscaleG, ← toPoly_eq_dense,
-    toR_eq_toK, CFieldSpec.toK_rat, toPoly_clagNum, eval_mul, eval_C,
-    foldl_mul_sub_eq_prod]
-  congr 1
-  rw [eval_list_prod, List.map_map]
-  congr 1
-  apply List.map_congr_left
-  intro xj _
-  simp [Function.comp, eval_sub, eval_X, eval_C]
-
-/-- The `cinterpolate` term for `(xk, yk)` (with `others` the abscissas `≠ xk`) evaluates to `yk` at
-`xk`. -/
-theorem eval_term_at_self (xk yk : ℚ) (others : List ℚ) (hne : ∀ xj ∈ others, xj ≠ xk) :
-    (toPoly (cscale (yk / (others.foldl (fun acc xj => acc * (xk - xj)) 1))
-        (clagNum others))).eval xk = yk := by
-  rw [eval_term_poly, div_mul_cancel₀]
-  exact prod_sub_ne_zero hne
-
-/-- The `cinterpolate` term evaluates to `0` at another node `x ∈ others`. -/
-theorem eval_term_at_other (xk yk x : ℚ) (others : List ℚ) (hx : x ∈ others) :
-    (toPoly (cscale (yk / (others.foldl (fun acc xj => acc * (xk - xj)) 1))
-        (clagNum others))).eval x = 0 := by
-  rw [eval_term_poly]
-  have : (others.map (fun xj => x - xj)).prod = 0 := by
-    rw [List.prod_eq_zero_iff, List.mem_map]
-    exact ⟨x, hx, sub_self x⟩
-  rw [this, mul_zero]
-
-/-! ### `cinterpolate` evaluation and degree -/
-
-/-- The `cinterpolate` local `term` function for a points list with abscissas `xs`. -/
-private def cinterpTermQ (xs : List ℚ) (p : ℚ × ℚ) : DensePoly ℚ :=
-  cscale (p.2 / ((xs.filter (· != p.1)).foldl (fun acc xj => acc * (p.1 - xj)) 1))
-    (clagNum (xs.filter (· != p.1)))
-
-/-- `cinterpolate` as a normalized sum of terms: `toPoly (cinterpolate pts) =
-∑_{(xk,yk) ∈ pts} toPoly (term (xk,yk))`. -/
-theorem toPoly_cinterpolate (pts : List (ℚ × ℚ)) :
-    toPoly (cinterpolate pts)
-      = (pts.map (fun p => toPoly (cinterpTermQ (pts.map Prod.fst) p))).sum := by
-  rw [cinterpolate, toPoly_eq_dense, DensePoly.toPolyG_cnormG, ← toPoly_eq_dense,
-    toPoly_foldl_cadd]
-  simp [cinterpTermQ]
-
-/-- Summing `if p.1 = xk then p.2 else 0` over a points list with distinct abscissas picks out the
-unique entry `(xk, yk)`. -/
-theorem sum_ite_eq_of_nodup_fst (pts : List (ℚ × ℚ)) (hnodup : (pts.map Prod.fst).Nodup)
-    {xk yk : ℚ} (hmem : (xk, yk) ∈ pts) :
-    (pts.map (fun p => if p.1 = xk then p.2 else 0)).sum = yk := by
-  induction pts with
-  | nil => simp at hmem
-  | cons p ps ih =>
-    rw [List.map_cons, List.sum_cons]
-    rw [List.map_cons, List.nodup_cons] at hnodup
-    obtain ⟨hpnotin, hpsnodup⟩ := hnodup
-    rcases List.mem_cons.mp hmem with hpeq | hpps
-    · -- p = (xk, yk)
-      obtain rfl := hpeq
-      rw [if_pos rfl]
-      have hzero : (ps.map (fun q => if q.1 = xk then q.2 else 0)).sum = 0 := by
-        apply List.sum_eq_zero
-        intro z hz
-        rw [List.mem_map] at hz
-        obtain ⟨q, hq, rfl⟩ := hz
-        rw [if_neg]
-        intro hqxk
-        exact hpnotin (by rw [List.mem_map]; exact ⟨q, hq, hqxk⟩)
-      rw [hzero, add_zero]
-    · -- (xk, yk) ∈ ps, so p.1 ≠ xk (else p.1 = xk would be in (ps.map fst))
-      have hp1 : p.1 ≠ xk := by
-        intro h
-        exact hpnotin (by rw [h, List.mem_map]; exact ⟨(xk, yk), hpps, rfl⟩)
-      rw [if_neg hp1, zero_add]
-      exact ih hpsnodup hpps
-
-/-- `cinterpolate` correctness: with distinct abscissas, the interpolant evaluates to `yk` at each node
-`(xk, yk) ∈ pts`. -/
-theorem toPoly_cinterpolate_eval (pts : List (ℚ × ℚ)) (hnodup : (pts.map Prod.fst).Nodup)
-    {xk yk : ℚ} (hmem : (xk, yk) ∈ pts) :
-    (toPoly (cinterpolate pts)).eval xk = yk := by
-  rw [toPoly_cinterpolate]
-  rw [show (List.map (fun p => toPoly (cinterpTermQ (pts.map Prod.fst) p)) pts).sum.eval xk
-      = (Polynomial.evalRingHom xk)
-          (List.map (fun p => toPoly (cinterpTermQ (pts.map Prod.fst) p)) pts).sum from rfl,
-    map_list_sum, List.map_map]
-  set xs := pts.map Prod.fst with hxs
-  -- per-term evaluation at `xk`: `yk` on-node, `0` off-node
-  have key : ∀ p ∈ pts,
-      ((Polynomial.evalRingHom xk) ∘ fun p => toPoly (cinterpTermQ xs p)) p
-        = if p.1 = xk then p.2 else 0 := by
-    rintro ⟨a, b⟩ hp
-    simp only [Function.comp_apply, Polynomial.coe_evalRingHom, cinterpTermQ]
-    by_cases hak : a = xk
-    · subst hak
-      rw [if_pos rfl]
-      apply eval_term_at_self
-      intro xj hxj
-      rw [List.mem_filter] at hxj
-      simpa [bne, Bool.not_eq_true'] using hxj.2
-    · rw [if_neg hak]
-      apply eval_term_at_other
-      rw [List.mem_filter]
-      exact ⟨by rw [hxs, List.mem_map]; exact ⟨(xk, yk), hmem, rfl⟩,
-        by simp only [bne_iff_ne, ne_eq]; exact fun h => hak h.symm⟩
-  rw [List.map_congr_left key]
-  exact sum_ite_eq_of_nodup_fst pts hnodup hmem
-
-/-- Each `cinterpolate` term has `natDegree ≤ |others|`. -/
-theorem natDegree_cinterpTerm_le (xs : List ℚ) (p : ℚ × ℚ) :
-    (toPoly (cinterpTermQ xs p)).natDegree ≤ (xs.filter (· != p.1)).length := by
-  obtain ⟨a, b⟩ := p
-  simp only [cinterpTermQ]
-  rw [toPoly_eq_dense, DensePoly.toPolyG_cscaleG, ← toPoly_eq_dense,
-    toR_eq_toK, CFieldSpec.toK_rat, toPoly_clagNum]
-  refine (natDegree_C_mul_le _ _).trans ?_
-  refine (natDegree_list_prod_le _).trans ?_
-  rw [List.map_map]
-  refine (List.sum_le_card_nsmul _ 1 ?_).trans ?_
-  · intro x hx
-    rw [List.mem_map] at hx
-    obtain ⟨xj, _, rfl⟩ := hx
-    simp only [Function.comp_apply]
-    exact natDegree_X_sub_C_le xj
-  · simp
-
-/-- A filtered list is no longer than the original. -/
-theorem length_filter_le' (l : List ℚ) (q : ℚ → Bool) : (l.filter q).length ≤ l.length :=
-  List.length_filter_le q l
-
-/-- `cinterpolate` degree bound: the interpolant has degree `< |pts|`. -/
-theorem degree_toPoly_cinterpolate_lt (pts : List (ℚ × ℚ)) (hne : pts ≠ []) :
-    (toPoly (cinterpolate pts)).degree < (pts.length : WithBot ℕ) := by
-  rw [toPoly_cinterpolate]
-  have hlen : 1 ≤ pts.length := List.length_pos_iff.mpr hne
-  refine lt_of_le_of_lt (degree_list_sum_le_of_forall_degree_le _ ((pts.length : ℕ) - 1 : ℕ) ?_) ?_
-  · intro p hp
-    rw [List.mem_map] at hp
-    obtain ⟨q, hq, rfl⟩ := hp
-    apply Polynomial.degree_le_of_natDegree_le
-    refine le_trans (natDegree_cinterpTerm_le (pts.map Prod.fst) q) ?_
-    -- |xs.filter (≠ q.1)| ≤ |pts| − 1, since q.1 ∈ xs is removed
-    have hq1 : q.1 ∈ pts.map Prod.fst := List.mem_map.mpr ⟨q, hq, rfl⟩
-    have hfilt : ((pts.map Prod.fst).filter (· != q.1)).length
-        < (pts.map Prod.fst).length := by
-      apply List.length_filter_lt_length_iff_exists.mpr
-      exact ⟨q.1, hq1, by simp⟩
-    rw [List.length_map] at hfilt
-    omega
-  · rw [Nat.cast_lt]; omega
-
 /-! ### Degree bound for a determinant with column-degree bounds, and for `rtResultant` -/
 
 open Polynomial in
@@ -327,7 +118,7 @@ theorem toPoly_rtResultantCompute_eq_rtResultant (A D : DensePoly ℚ)
   set xs : List ℚ := (do let a ← List.range (cdeg D + 1); pure (a : ℚ)) with hxs
   set pts : List (ℚ × ℚ) :=
     xs.map (fun k : ℚ => (k, DensePoly.cresultantWf D (csub A (cscale k (cderiv D))))) with hpts
-  have hcompute : rtResultantCompute A D = cinterpolate pts := rfl
+  have hcompute : rtResultantCompute A D = DensePoly.cinterpolate pts := rfl
   -- `xs = (range (n+1)).map (↑·)`, a clean cast-mapped range
   have hxsmap : xs = (List.range (cdeg D + 1)).map (fun a : ℕ => (a : ℚ)) := by
     rw [hxs]; exact List.flatMap_pure_eq_map _ _
@@ -350,7 +141,7 @@ theorem toPoly_rtResultantCompute_eq_rtResultant (A D : DensePoly ℚ)
   refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := ℚ) (ι := ℕ)
     (s := Finset.range (cdeg D + 1)) (v := fun k => (k : ℚ))
     (f := rtResultant (toPoly A) (toPoly D))
-    (g := toPoly (cinterpolate pts)) ?_ ?_ ?_ ?_
+    (g := toPoly (DensePoly.cinterpolate pts)) ?_ ?_ ?_ ?_
   · -- `Set.InjOn (Nat.cast) (range (n+1))`
     intro a _ b _ h
     simp only at h
@@ -362,9 +153,11 @@ theorem toPoly_rtResultantCompute_eq_rtResultant (A D : DensePoly ℚ)
     have h1 := natDegree_rtResultant_le (toPoly A) (toPoly D)
     have h2 := cdeg_eq_natDegree D
     omega
-  · -- `degree (toPoly (cinterpolate pts)) < #(range (n+1))`
+  · -- `degree (toPoly (DensePoly.cinterpolate pts)) < #(range (n+1))`
     rw [Finset.card_range, Nat.cast_withBot]
-    have := degree_toPoly_cinterpolate_lt pts hne
+    have hdeg := DensePoly.degree_toPolyG_cinterpolateG_lt pts hne
+    have : (toPoly (DensePoly.cinterpolate pts)).degree < (pts.length : WithBot ℕ) := by
+      simpa only [toPoly_eq_dense] using hdeg
     rw [hlen] at this
     simpa [Nat.cast_withBot] using this
   · -- agree at the integer nodes
@@ -376,7 +169,12 @@ theorem toPoly_rtResultantCompute_eq_rtResultant (A D : DensePoly ℚ)
     have hmem : ((i : ℚ), DensePoly.cresultantWf D (csub A (cscale (i : ℚ) (cderiv D)))) ∈ pts := by
       rw [hpts, List.mem_map]
       exact ⟨(i : ℚ), hixs, rfl⟩
-    rw [toPoly_cinterpolate_eval pts hnodup hmem]
+    have hnodup' : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
+      simpa only [CFieldSpec.toK_rat] using hnodup
+    have heval := DensePoly.eval_toPolyG_cinterpolateG pts hnodup' hmem
+    rw [show (toPoly (DensePoly.cinterpolate pts)).eval (i : ℚ)
+        = DensePoly.cresultantWf D (csub A (cscale (i : ℚ) (cderiv D))) from by
+      simpa only [toPoly_eq_dense, CFieldSpec.toK_rat] using heval]
     -- `cresultantWf sample = rtResultant eval` by point-agreement
     rw [cresultantWf_sample_eq_eval A D (i : ℚ) hDmonic hAD]
 

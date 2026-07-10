@@ -32,7 +32,7 @@ def cD241 : DensePoly ℚ := [4, 0, 5, 0, -5, 0, 1]
 #eval rtResultantCompute cA241 cD241
 
 -- **Example 2.4.1, the squarefree part** `R / gcd(R, R')`, normalized: the book's `4t²+1` (up to scalar).
-#eval csqfreePart (rtResultantCompute cA241 cD241)
+#eval cmonic (CPoly.csquarefreePart (rtResultantCompute cA241 cD241))
 
 /-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `rtResultantCompute` on
 `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4` evaluates (by `native_decide`; kernel `decide` stalls on the
@@ -48,7 +48,7 @@ theorem rtResultant_ex241 :
 (monic radical) part of the resultant `45796·(4t²+1)³` is `t² + 1/4` = `[1/4, 0, 1]` (monic `4t²+1`),
 exactly the book's `R(t) = 4t²+1` up to the leading-coefficient scalar. Proved by `native_decide`. -/
 theorem rtResultant_ex241_sqfree :
-    csqfreePart (rtResultantCompute cA241 cD241) = [1/4, 0, 1] := by
+    cmonic (CPoly.csquarefreePart (rtResultantCompute cA241 cD241)) = [1/4, 0, 1] := by
   native_decide
 
 /-! ### Example 2.4.1 (§2.4/§2.6, p.48/54): `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4`,
@@ -56,8 +56,8 @@ LRT log argument `S(t,x) = x³ + 2t·x² − 3x − 4t` (Czichowski/Gröbner `B 
 
 /-- **The Rothstein–Trager resultant factor `R(t) = 4t²+1`** of Example 2.4.1 as a `DensePoly ℚ`
 (`[1, 0, 4]` = `1 + 4t²`); the residues are its roots, and `ℚ[t]/(R)` is the residue ring the LRT log
-argument is normalized over. (Up to the leading scalar this is the squarefree part `csqfreePart` of the
-full resultant `45796·(4t²+1)³`.) -/
+argument is normalized over. Up to the leading scalar this is the normalized
+`CPoly.csquarefreePart` of the full resultant `45796·(4t²+1)³`. -/
 def cR241 : DensePoly ℚ := [1, 0, 4]
 
 -- **Example 2.4.1, the lifted `A − t·D'`** (sanity print): `A − t·(6x⁵−20x³+10x)`.

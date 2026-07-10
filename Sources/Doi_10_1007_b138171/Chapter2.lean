@@ -1119,16 +1119,17 @@ theorem ex_2_8_1_compute :
 rendering of `R(t) = res_x(D, A − t·D')` over the dense coefficient carrier `DensePoly ℚ := List ℚ` (Mathlib's
 `ℚ[X]` resultant `rtResultant` is noncomputable). The univariate resultant `DensePoly.cresultantWf` uses the
 Euclidean-PRS identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q,r)`; the bivariate RT
-resultant is recovered, staying univariate, by evaluation + Lagrange interpolation (`cinterpolate`).
+resultant is recovered, staying univariate, by evaluation + Lagrange interpolation
+(`DensePoly.cinterpolate`).
 The library's `rtResultantCompute`, with `cderiv` (computable derivative, `DensePoly.toPolyG_cderivG` bridge) and
-`csqfreePart` (primitive part), agrees with `rtResultant` by
+the generic `CPoly.csquarefreePart`, agrees with `rtResultant` by
 `toPoly_rtResultantCompute_eq_rtResultant`. -/
 def rtResultant_compute := @DeepWiki.SymbolicIntegration.Compute.rtResultantCompute
 
 /-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `rtResultantCompute` on
 `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4` evaluates (by `native_decide`) to
 `[45796, 0, 549552, 0, 2198208, 0, 2930944]` = the book's `res_x(D, A−t·D') = 45796·(4t²+1)³` (eq 2.7),
-whose monic squarefree part `csqfreePart … = [1/4, 0, 1]` is the book's primitive `R(t) = 4t²+1`. The
+whose normalized `CPoly.csquarefreePart` is `[1/4, 0, 1]`, the book's primitive `R(t) = 4t²+1`. The
 library's `rtResultant_ex241` / `rtResultant_ex241_sqfree` — the RT resultant engine actually *runs* and
 returns the book's answer. -/
 theorem ex_2_4_1_compute :
