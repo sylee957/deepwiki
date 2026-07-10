@@ -1,12 +1,14 @@
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.ComputableAlgebra.GenericBezout
+import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 
 /-! # Generic Bézout/Diophantine helpers
 
-Bézout cofactors (`cbezoutOneWf`), the extended-Euclidean split (`cextendedEuclideanSplitWf`), the
-Diophantine solve (`cdiophantine`), and the inner Hermite loop over one squarefree factor
-(`cHermiteReduceTowerInnerWf`), built on `cgcdWf`/`cdivmodWf`. The defs are `[CField α]`-only (plus
+Bézout cofactors and the extended-Euclidean split are selected through the representation-independent
+`CPoly` capability layer. The dense Diophantine solve (`cdiophantine`) and the inner Hermite loop over
+one squarefree factor (`cHermiteReduceTowerInnerWf`) build on the same selected `cgcdWf`/`cdivmodWf`
+implementation. The defs are `[CField α]`-only (plus
 `[CDiffField α]` for the Hermite loop), so they `native_decide` over noncomputable-`CFieldSpec`
 carriers; correctness is proved through `toPoly` over `K[X]`. -/
 
@@ -15,18 +17,6 @@ namespace DeepWiki.SymbolicIntegration
 namespace DensePoly
 
 variable {α : Type*} [CField α]
-
-/-- Bézout cofactors `cbezoutOneWf a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`. -/
-def cbezoutOneWf (a b : DensePoly α) : DensePoly α × DensePoly α :=
-  let (g, s, t) := cgcdWf a b
-  let ginv := CField.inv (clead g)
-  (cscale ginv s, cscale ginv t)
-
-/-- Bézout split `cextendedEuclideanSplitWf dₙ dₛ r u w = (b, c)` along `dₛ`. -/
-def cextendedEuclideanSplitWf (dn ds r u w : DensePoly α) : DensePoly α × DensePoly α :=
-  let ur := cmul u r
-  let (quo, rem) := cdivmodWf ur ds
-  (rem, cadd (cmul w r) (cmul quo dn))
 
 /-- Generic Diophantine solver `cdiophantine p q rhs = (b, c)` for `b·p + c·q = rhs`. -/
 def cdiophantine (p q rhs : DensePoly α) : DensePoly α × DensePoly α :=
@@ -42,93 +32,60 @@ variable [CFieldSpec α]
 
 /-! ### Correctness of the Bézout/Diophantine leaves -/
 
-/-- `cbezoutOneWf` solves the normalized Bézout identity over `K[X]` in the coprime case. -/
-theorem toPolyG_cbezoutOneWf (a b : DensePoly α)
+/-- `CPoly.bezoutOne` solves the normalized Bézout identity over `K[X]` in the coprime case. -/
+theorem toPolyG_bezoutOne (a b : DensePoly α)
     (hgdeg : (toPoly (cgcdWf a b).1).natDegree = 0)
     (hgne : toPoly (cgcdWf a b).1 ≠ 0) :
-    toPoly (cbezoutOneWf a b).1 * toPoly a
-        + toPoly (cbezoutOneWf a b).2 * toPoly b = 1 := by
-  set g := (cgcdWf a b).1 with hg
-  set s := (cgcdWf a b).2.1 with hs
-  set t := (cgcdWf a b).2.2 with ht
-  have hbez : toPoly s * toPoly a + toPoly t * toPoly b = toPoly g :=
-    toPolyG_cgcdWf a b
-  set c := (toPoly g).leadingCoeff with hc
-  have hlead_ne : c ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hgne
-  have hgC : toPoly g = Polynomial.C c := by
-    conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero hgdeg]
-    rw [hc, Polynomial.leadingCoeff, hgdeg]
-  have hu : toPoly (cbezoutOneWf a b).1 = Polynomial.C c⁻¹ * toPoly s := by
-    rw [cbezoutOneWf]
-    show toPoly (cscale (CField.inv (clead g)) s) = _
-    simp only [denote]
-    rw [toK_cleadG_eq_leadingCoeff, ← hc]
-  have hw : toPoly (cbezoutOneWf a b).2 = Polynomial.C c⁻¹ * toPoly t := by
-    rw [cbezoutOneWf]
-    show toPoly (cscale (CField.inv (clead g)) t) = _
-    simp only [denote]
-    rw [toK_cleadG_eq_leadingCoeff, ← hc]
-  rw [hu, hw]
-  have hcombine : Polynomial.C c⁻¹ * toPoly s * toPoly a
-      + Polynomial.C c⁻¹ * toPoly t * toPoly b = Polynomial.C c⁻¹ * toPoly g := by
-    rw [← hbez]; ring
-  rw [hcombine, hgC, ← Polynomial.C_mul, inv_mul_cancel₀ hlead_ne, Polynomial.C_1]
+    toPoly (CPoly.bezoutOne a b).1 * toPoly a
+        + toPoly (CPoly.bezoutOne a b).2 * toPoly b = 1 := by
+  have hgdeg' : (CPoly.toPoly (CPolyEuclidean.gcdExt a b).1).natDegree = 0 := by
+    simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using hgdeg
+  have hgne' : CPoly.toPoly (CPolyEuclidean.gcdExt a b).1 ≠ 0 := by
+    simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using hgne
+  simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using
+    CPoly.toPoly_bezoutOne (P := DensePoly) a b hgdeg' hgne'
 
-/-- `cextendedEuclideanSplitWf` solves the split Bézout equation over `K[X]`. -/
-theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : DensePoly α)
+/-- `CPoly.extendedEuclideanSplit` solves the split Bézout equation over `K[X]`. -/
+theorem toPolyG_extendedEuclideanSplit (dn ds r u w : DensePoly α)
     (hds0 : cnorm ds ≠ [])
     (hbez : toPoly u * toPoly dn + toPoly w * toPoly ds = 1) :
-    toPoly (cextendedEuclideanSplitWf dn ds r u w).1 * toPoly dn
-        + toPoly (cextendedEuclideanSplitWf dn ds r u w).2 * toPoly ds
+    toPoly (CPoly.extendedEuclideanSplit dn ds r u w).1 * toPoly dn
+        + toPoly (CPoly.extendedEuclideanSplit dn ds r u w).2 * toPoly ds
       = toPoly r := by
-  set ur := cmul u r with hur
-  -- the fuel-free Euclidean identity `u·r = (u·r div ds)·ds + (u·r mod ds)`.
-  have hdivmod : toPoly ur
-      = toPoly (cdivWf ur ds) * toPoly ds + toPoly (cmodWf ur ds) :=
-    toPolyG_cmodWf ur ds hds0
-  have hb : (cextendedEuclideanSplitWf dn ds r u w).1 = cmodWf ur ds := by
-    rw [cextendedEuclideanSplitWf]; simp only [cmodWf, hur]
-  have hc : (cextendedEuclideanSplitWf dn ds r u w).2
-      = cadd (cmul w r) (cmul (cdivWf ur ds) dn) := by
-    rw [cextendedEuclideanSplitWf]; simp only [cdivWf, hur]
-  simp only [hb, hc, denote]
-  have hrem : toPoly (cmodWf ur ds)
-      = toPoly ur - toPoly (cdivWf ur ds) * toPoly ds := by
-    rw [hdivmod]; ring
-  rw [hrem, hur]
-  simp only [denote]
-  have hkey : (toPoly u * toPoly r - toPoly (cdivWf (cmul u r) ds) * toPoly ds) * toPoly dn
-      + (toPoly w * toPoly r + toPoly (cdivWf (cmul u r) ds) * toPoly dn) * toPoly ds
-      = (toPoly u * toPoly dn + toPoly w * toPoly ds) * toPoly r := by ring
-  rw [show cmul u r = ur from rfl] at hkey ⊢
-  rw [hkey, hbez, one_mul]
+  have hdsDense : toPoly ds ≠ 0 := fun h => hds0 ((cnormG_eq_nil_iff ds).mpr h)
+  have hds : CPoly.toPoly ds ≠ 0 := by simpa only [toPoly_list_eq] using hdsDense
+  have hbez' : CPoly.toPoly u * CPoly.toPoly dn + CPoly.toPoly w * CPoly.toPoly ds = 1 := by
+    simpa only [toPoly_list_eq] using hbez
+  simpa only [toPoly_list_eq] using
+    CPoly.toPoly_extendedEuclideanSplit (P := DensePoly) dn ds r u w hds hbez'
 
-/-- `cextendedEuclideanSplitWf`'s first cofactor is proper: `deg b < deg dₛ`. -/
-theorem cextendedEuclideanSplitWf_fst_degree_lt (dn ds r u w : DensePoly α)
+/-- `CPoly.extendedEuclideanSplit`'s first cofactor is proper: `deg b < deg dₛ`. -/
+theorem extendedEuclideanSplit_fst_degree_lt (dn ds r u w : DensePoly α)
     (hds : cnorm ds ≠ []) :
-    (toPoly (cextendedEuclideanSplitWf dn ds r u w).1).degree < (toPoly ds).degree := by
-  have hfst : (cextendedEuclideanSplitWf dn ds r u w).1 = cmodWf (cmul u r) ds := by
-    simp [cextendedEuclideanSplitWf, cmodWf]
+    (toPoly (CPoly.extendedEuclideanSplit dn ds r u w).1).degree < (toPoly ds).degree := by
+  have hfst : (CPoly.extendedEuclideanSplit dn ds r u w).1 = cmodWf (cmul u r) ds := by
+    change CPolyEuclidean.mod (CPolyEngine.mul u r) ds = _
+    rw [CPolyEuclidean.mod_dense_eq, CPolyEngine.mul_dense_eq]
   rw [hfst]
   refine toPolyG_degree_lt_of_length_lt _ _ hds ?_
   show (cnorm (cmodWf (cmul u r) ds) : List α).length < _
   exact cmodWf_length_lt (cmul u r) ds hds
 
-/-- `cextendedEuclideanSplitWf`'s second cofactor is proper: `deg c < deg dₙ`. -/
-theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : DensePoly α)
+/-- `CPoly.extendedEuclideanSplit`'s second cofactor is proper: `deg c < deg dₙ`. -/
+theorem extendedEuclideanSplit_snd_degree_lt (dn ds r u w d : DensePoly α)
     (hds : cnorm ds ≠ []) (hdn : cnorm dn ≠ [])
     (hsplit : toPoly d = toPoly ds * toPoly dn)
     (hbez : toPoly u * toPoly dn + toPoly w * toPoly ds = 1)
     (hr : (toPoly r).degree < (toPoly d).degree) :
-    (toPoly (cextendedEuclideanSplitWf dn ds r u w).2).degree < (toPoly dn).degree := by
-  set b := toPoly (cextendedEuclideanSplitWf dn ds r u w).1 with hbdef
-  set c := toPoly (cextendedEuclideanSplitWf dn ds r u w).2 with hcdef
+    (toPoly (CPoly.extendedEuclideanSplit dn ds r u w).2).degree < (toPoly dn).degree := by
+  set b := toPoly (CPoly.extendedEuclideanSplit dn ds r u w).1 with hbdef
+  set c := toPoly (CPoly.extendedEuclideanSplit dn ds r u w).2 with hcdef
   have hds0 : toPoly ds ≠ 0 := fun h => hds ((cnormG_eq_nil_iff ds).mpr h)
   have hdn0 : toPoly dn ≠ 0 := fun h => hdn ((cnormG_eq_nil_iff dn).mpr h)
   have hspec : b * toPoly dn + c * toPoly ds = toPoly r :=
-    toPolyG_cextendedEuclideanSplitWf dn ds r u w hds hbez
+    toPolyG_extendedEuclideanSplit dn ds r u w hds hbez
   have hbdeg : b.degree < (toPoly ds).degree :=
-    cextendedEuclideanSplitWf_fst_degree_lt dn ds r u w hds
+    extendedEuclideanSplit_fst_degree_lt dn ds r u w hds
   have hbdn : (b * toPoly dn).degree < (toPoly d).degree := by
     rw [hsplit, Polynomial.degree_mul, Polynomial.degree_mul]
     exact WithBot.add_lt_add_right (by rwa [Ne, Polynomial.degree_eq_bot]) hbdeg

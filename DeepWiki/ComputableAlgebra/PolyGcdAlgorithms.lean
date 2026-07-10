@@ -4,11 +4,106 @@ import DeepWiki.ComputableAlgebra.PolyReprGcd
 
 /-! # Representation-independent gcd-derived polynomial algorithms
 
-Fraction-pair normalization and polynomial lcm select gcd and division through capability classes. -/
+Fraction-pair normalization, polynomial lcm, and normalized Bezout splitting select gcd and division
+through capability classes. -/
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u v
+
 namespace CPoly
+
+/-- Normalize selected extended-gcd cofactors so their Bezout combination is `1`. -/
+def bezoutOne {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (a b : P α) : P α × P α :=
+  let (g, s, t) := CPolyEuclidean.gcdExt a b
+  let ginv := CField.inv (CPolyEngine.clead g)
+  (CPolyEngine.scale ginv s, CPolyEngine.scale ginv t)
+
+/-- Split `r` into proper cofactors along `dn` and `ds` using a supplied Bezout pair. -/
+def extendedEuclideanSplit {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (dn ds r u w : P α) : P α × P α :=
+  let ur := CPolyEngine.mul u r
+  let quo := CPolyEuclidean.div ur ds
+  let rem := CPolyEuclidean.mod ur ds
+  (rem, CPolyEngine.add (CPolyEngine.mul w r) (CPolyEngine.mul quo dn))
+
+/-- `bezoutOne` denotes a normalized Bezout identity when the selected gcd is a nonzero constant. -/
+theorem toPoly_bezoutOne {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a b : P α)
+    (hgdeg : (CPoly.toPoly (CPolyEuclidean.gcdExt a b).1).natDegree = 0)
+    (hgne : CPoly.toPoly (CPolyEuclidean.gcdExt a b).1 ≠ 0) :
+    CPoly.toPoly (bezoutOne a b).1 * CPoly.toPoly a
+        + CPoly.toPoly (bezoutOne a b).2 * CPoly.toPoly b = 1 := by
+  set g := (CPolyEuclidean.gcdExt a b).1 with hg
+  set s := (CPolyEuclidean.gcdExt a b).2.1 with hs
+  set t := (CPolyEuclidean.gcdExt a b).2.2 with ht
+  have hbez : CPoly.toPoly s * CPoly.toPoly a + CPoly.toPoly t * CPoly.toPoly b =
+      CPoly.toPoly g := by
+    simpa only [hg, hs, ht] using LawfulCPolyEuclidean.gcdExt_bezout (P := P) a b
+  set c := (CPoly.toPoly g).leadingCoeff with hc
+  have hlead_ne : c ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hgne
+  have hgC : CPoly.toPoly g = Polynomial.C c := by
+    conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero hgdeg]
+    rw [hc, Polynomial.leadingCoeff, hgdeg]
+  have hu : CPoly.toPoly (bezoutOne a b).1 = Polynomial.C c⁻¹ * CPoly.toPoly s := by
+    rw [bezoutOne]
+    change CPoly.toPoly (CPolyEngine.scale (CField.inv (CPolyEngine.clead g)) s) = _
+    rw [LawfulCPolyEngine.toPoly_scale]
+    congr 2
+    change CFieldSpec.toK (CField.inv (CPolyEngine.clead g)) = _
+    rw [CFieldSpec.toK_inv]
+    change (CRingSpec.toR (CPolyEngine.clead g))⁻¹ = _
+    rw [LawfulCPolyEngine.toR_clead_eq_leadingCoeff, ← hc]
+  have hw : CPoly.toPoly (bezoutOne a b).2 = Polynomial.C c⁻¹ * CPoly.toPoly t := by
+    rw [bezoutOne]
+    change CPoly.toPoly (CPolyEngine.scale (CField.inv (CPolyEngine.clead g)) t) = _
+    rw [LawfulCPolyEngine.toPoly_scale]
+    congr 2
+    change CFieldSpec.toK (CField.inv (CPolyEngine.clead g)) = _
+    rw [CFieldSpec.toK_inv]
+    change (CRingSpec.toR (CPolyEngine.clead g))⁻¹ = _
+    rw [LawfulCPolyEngine.toR_clead_eq_leadingCoeff, ← hc]
+  rw [hu, hw]
+  calc
+    Polynomial.C c⁻¹ * CPoly.toPoly s * CPoly.toPoly a
+          + Polynomial.C c⁻¹ * CPoly.toPoly t * CPoly.toPoly b =
+        Polynomial.C c⁻¹ * CPoly.toPoly g := by rw [← hbez]; ring
+    _ = Polynomial.C c⁻¹ * Polynomial.C c := by rw [hgC]
+    _ = 1 := by rw [← Polynomial.C_mul, inv_mul_cancel₀ hlead_ne, Polynomial.C_1]
+
+/-- `extendedEuclideanSplit` denotes the requested split identity for a nonzero `ds`. -/
+theorem toPoly_extendedEuclideanSplit {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (dn ds r u w : P α)
+    (hds : CPoly.toPoly ds ≠ 0)
+    (hbez : CPoly.toPoly u * CPoly.toPoly dn + CPoly.toPoly w * CPoly.toPoly ds = 1) :
+    CPoly.toPoly (extendedEuclideanSplit dn ds r u w).1 * CPoly.toPoly dn
+        + CPoly.toPoly (extendedEuclideanSplit dn ds r u w).2 * CPoly.toPoly ds =
+      CPoly.toPoly r := by
+  set ur := CPolyEngine.mul u r with hur
+  have hdivmod := LawfulCPolyEuclidean.divmod_spec (P := P) ur ds hds
+  have hb : (extendedEuclideanSplit dn ds r u w).1 = CPolyEuclidean.mod ur ds := by
+    simp [extendedEuclideanSplit, hur]
+  have hc : (extendedEuclideanSplit dn ds r u w).2 =
+      CPolyEngine.add (CPolyEngine.mul w r) (CPolyEngine.mul (CPolyEuclidean.div ur ds) dn) := by
+    simp [extendedEuclideanSplit, hur]
+  rw [hb, hc, LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_mul,
+    LawfulCPolyEngine.toPoly_mul]
+  have hrem : CPoly.toPoly (CPolyEuclidean.mod ur ds) = CPoly.toPoly ur -
+      CPoly.toPoly (CPolyEuclidean.div ur ds) * CPoly.toPoly ds := by
+    rw [hdivmod]
+    ring
+  rw [hrem, hur, LawfulCPolyEngine.toPoly_mul]
+  calc
+    (CPoly.toPoly u * CPoly.toPoly r -
+          CPoly.toPoly (CPolyEuclidean.div ur ds) * CPoly.toPoly ds) * CPoly.toPoly dn
+        + (CPoly.toPoly w * CPoly.toPoly r +
+          CPoly.toPoly (CPolyEuclidean.div ur ds) * CPoly.toPoly dn) * CPoly.toPoly ds =
+      (CPoly.toPoly u * CPoly.toPoly dn + CPoly.toPoly w * CPoly.toPoly ds) *
+        CPoly.toPoly r := by ring
+    _ = CPoly.toPoly r := by rw [hbez, one_mul]
 
 /-- Reduce a represented fraction pair to a monic-denominator form through selected gcd and division. -/
 def normalizeFracPair {P : Type → Type} [CPoly P] [CPolyEngine P]

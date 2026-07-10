@@ -77,10 +77,10 @@ theorem crNormDen_ne_zero_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdF
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The canonical normal part is proper** (`[CharZero]` + `CgcdBCorrect cgcdFFCoreWf`, `d ≠ 0`): `deg crNormNum <
-deg crNormDen`. `crNormNum` is the second cofactor of `cextendedEuclideanSplitWf` over the normal denominator
-`crNormDen = dₙ`, so `cextendedEuclideanSplitWf_snd_degree_lt` gives properness — from the split `d = dₛ·dₙ`
+deg crNormDen`. `crNormNum` is the second cofactor of `CPoly.extendedEuclideanSplit` over the normal denominator
+`crNormDen = dₙ`, so `extendedEuclideanSplit_snd_degree_lt` gives properness — from the split `d = dₛ·dₙ`
 (`cSplitFactorFastG_isSplittingFactorizationGen`), the special⊥normal Bézout identity
-(`isCoprime_of_isSpecial_isNormalSqfree`, `toPolyG_cbezoutOneWf`), and the remainder bound `deg (a mod d) <
+(`isCoprime_of_isSpecial_isNormalSqfree`, `toPolyG_bezoutOne`), and the remainder bound `deg (a mod d) <
 deg d` (`cmodWf_length_lt`). The `degree` form holds unconditionally on `d ≠ 0` (incl. the trivial `crNormNum =
 0` case, `⊥ < deg dₙ`); it is the never-done crNorm-properness cleanup target, the foundation of the Hermite
 properness `hAD`. -/
@@ -111,26 +111,26 @@ theorem crNormNum_degree_lt_crNormDen (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdF
   have hgdeg : (toPoly (cgcdWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1).natDegree = 0 :=
     natDegree_eq_zero_of_isUnit hgu'
   have hgne : toPoly (cgcdWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1 ≠ 0 := hgu'.ne_zero
-  have hbez : toPoly (cbezoutOneWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
+  have hbez : toPoly (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
         * toPoly (cSplitFactorFast Dt d).1
-      + toPoly (cbezoutOneWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2
+      + toPoly (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2
         * toPoly (cSplitFactorFast Dt d).2 = 1 :=
-    toPolyG_cbezoutOneWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2 hgdeg hgne
+    toPolyG_bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2 hgdeg hgne
   -- the remainder `a mod d` is proper over `d`
   have hr : (toPoly (cdivmodWf a d).2).degree < (toPoly d).degree :=
     toPolyG_degree_lt_of_length_lt (cmodWf a d) d hcnd (cmodWf_length_lt a d hcnd)
-  -- `crNormNum = (cextendedEuclideanSplitWf dₙ dₛ (a mod d) u w).2`, `crNormDen = dₙ`
-  have hnn : crNormNum Dt a d = (cextendedEuclideanSplitWf (cSplitFactorFast Dt d).1
+  -- `crNormNum = (CPoly.extendedEuclideanSplit dₙ dₛ (a mod d) u w).2`, `crNormDen = dₙ`
+  have hnn : crNormNum Dt a d = (CPoly.extendedEuclideanSplit (cSplitFactorFast Dt d).1
       (cSplitFactorFast Dt d).2 (cdivmodWf a d).2
-      (cbezoutOneWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
-      (cbezoutOneWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2).2 := by
+      (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
+      (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2).2 := by
     simp only [crNormNum, canonicalRepresentationFast]
   have hnd : crNormDen Dt a d = (cSplitFactorFast Dt d).1 := by
     simp only [crNormDen, canonicalRepresentationFast]
   rw [hnn, hnd]
-  exact cextendedEuclideanSplitWf_snd_degree_lt (cSplitFactorFast Dt d).1
+  exact extendedEuclideanSplit_snd_degree_lt (cSplitFactorFast Dt d).1
     (cSplitFactorFast Dt d).2 (cdivmodWf a d).2
-    (cbezoutOneWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
-    (cbezoutOneWf (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2 d hds hdn hfac hbez hr
+    (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).1
+    (CPoly.bezoutOne (cSplitFactorFast Dt d).1 (cSplitFactorFast Dt d).2).2 d hds hdn hfac hbez hr
 
 end DeepWiki.SymbolicIntegration

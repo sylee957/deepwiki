@@ -21,6 +21,12 @@ theorem sparse_normalizeFracPair_cancels :
       (CPoly.SparsePoly.ofList [(0, 1), (1, 1)], CPoly.SparsePoly.ofList [(0, 1)]) := by
   native_decide
 
+/-- Sparse selected extended gcd computes normalized Bezout cofactors for `(1, 0)`. -/
+theorem sparse_bezoutOne_one_zero :
+    CPoly.bezoutOne (CPoly.one : CPoly.SparsePoly ℚ) CPoly.czero =
+      (CPoly.one, CPoly.czero) := by
+  native_decide
+
 namespace DensePoly
 
 /-! ### `cParametricLogDeriv` over the base field `k = ℚ(x)`

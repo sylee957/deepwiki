@@ -31,11 +31,11 @@ def radModulus (n : ℕ) (f : α) : DensePoly α :=
   DensePoly.csub (DensePoly.cshift n [CCommRing.one]) [f]
 
 /-- The general-`n` inverse `radInvN n f g` of `g ∈ α[y]/(yⁿ − f)` via extended Euclid: from
-`cbezoutOneWf g (yⁿ − f) = (s, _)` with `s·g + t·(yⁿ − f) = 1`, the inverse is `s` reduced mod `yⁿ = f`.
+`CPoly.bezoutOne g (yⁿ − f) = (s, _)` with `s·g + t·(yⁿ − f) = 1`, the inverse is `s` reduced mod `yⁿ = f`.
 The honest field inverse whenever `yⁿ − f` is irreducible. -/
 def radInvN (n : ℕ) (f : α) (g : RadElem α) : RadElem α :=
   let fuel := 2 * (n + (g : List α).length) + 2
-  let (s, _) := DensePoly.cbezoutOneWf g (radModulus n f)
+  let (s, _) := CPoly.bezoutOne g (radModulus n f)
   radReduce n f fuel s
 
 end RadElem

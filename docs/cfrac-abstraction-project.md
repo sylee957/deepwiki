@@ -57,8 +57,11 @@ runs the same fraction algorithm.
    well-founded engine, sparse polynomials use the generic `CPoly` engine, and the rational-function
     exact-division bridge consumes only the capability. Concrete dense and generic implementations become
     instances. Gcd-derived fraction normalization and polynomial lcm are now representation-independent
-    `CPoly` algorithms selecting both gcd and exact division through those capabilities; the former dense-only
-    `qnormPair` and `cLcmQ` helpers are retired. The third slice adds `CPolyResultant`/`LawfulCPolyResultant`: dense polynomials select the
+    `CPoly` algorithms selecting both gcd and exact division through those capabilities; normalized Bezout
+    cofactors and extended-Euclidean splitting likewise select `gcdExt`, quotient, and remainder through
+    `CPolyEuclidean`. The former dense-only `qnormPair`, `cLcmQ`, `cbezoutOneWf`, and
+    `cextendedEuclideanSplitWf` helpers are retired. The third slice adds
+    `CPolyResultant`/`LawfulCPolyResultant`: dense polynomials select the
    well-founded PRS resultant, sparse polynomials select the generic Sylvester determinant, and tower,
    radical, general-curve, and discriminant consumers request the capability. The tower residue-resultant
    bridge now proves correctness from `LawfulCPolyResultant`. The fourth slice generalizes the

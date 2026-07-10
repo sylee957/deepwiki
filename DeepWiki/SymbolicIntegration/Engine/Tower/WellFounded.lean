@@ -242,7 +242,7 @@ end DensePoly
 /-! ## The flat-composition pipeline
 
 Everything past the three recursive bottoms is a flat composition over the leaves above plus the generic
-`cbezoutOneWf`, `cextendedEuclideanSplitWf`, `cdiophantine`, `cHermiteReduceTowerInnerWf`,
+`CPoly.bezoutOne`, `CPoly.extendedEuclideanSplit`, `cdiophantine`, `cHermiteReduceTowerInnerWf`,
 `cPrimitivePolyIntegrateWf`, `cdivWf`, the selected resultant, and interpolation/evaluation routines. -/
 
 namespace DensePoly
@@ -252,14 +252,14 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 /-- Generic canonical representation over the tower:
 `canonicalRepresentationFast Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d` (`d` monic).
 Divide `a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ` (`cSplitFactorFast`); Bézout-split
-`r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplitWf` with `cbezoutOneWf`). Stated with `.1`/`.2`
+`r` over the coprime `(dₙ, dₛ)` (`CPoly.extendedEuclideanSplit` with `CPoly.bezoutOne`). Stated with `.1`/`.2`
 projections. -/
 def canonicalRepresentationFast (Dt : DensePoly α) (a d : DensePoly α) :
     DensePoly α × (DensePoly α × DensePoly α) × (DensePoly α × DensePoly α) :=
   let qr := cdivmodWf a d
   let dnds := cSplitFactorFast Dt d
-  let uw := cbezoutOneWf dnds.1 dnds.2
-  let bc := cextendedEuclideanSplitWf dnds.1 dnds.2 qr.2 uw.1 uw.2
+  let uw := CPoly.bezoutOne dnds.1 dnds.2
+  let bc := CPoly.extendedEuclideanSplit dnds.1 dnds.2 qr.2 uw.1 uw.2
   (qr.1, (bc.1, dnds.2), (bc.2, dnds.1))
 
 /-- Generic transcendental Hermite reduction `cHermiteReduceTower Dt a d = ((gnum, gden),
