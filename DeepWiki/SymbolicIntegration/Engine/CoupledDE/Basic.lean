@@ -146,39 +146,60 @@ def coupledExZ1 : DensePoly ℚ := [2, 0, -8]       -- 2 − 8x²
 /-- Worked base system `coupledExZ2 = 4 − 4x` (low→high). -/
 def coupledExZ2 : DensePoly ℚ := [4, -4]          -- 4 − 4x
 
-/-- `coupledClearedCheck a b1 b2 z1 z2 y1 y2`: `true` iff `(y₁, y₂)` solves the base coupled system over
-ℚ(x), i.e. both cleared residuals `Dyᵢ + … − zᵢ` are `cisZero`. -/
-def coupledClearedCheck (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) : Bool :=
-  let r1 := csub (cadd (cadd (cderiv y1) (cmul b1 y1)) (cscale a (cmul b2 y2))) z1
-  let r2 := csub (cadd (cadd (cderiv y2) (cmul b2 y1)) (cmul b1 y2)) z2
-  cisZero r1 && cisZero r2
+/-- `coupledClearedCheck a b1 b2 z1 z2 y1 y2`: in any `CPolyEngine` representation, test whether
+`(y₁, y₂)` solves the base coupled system by checking both cleared residuals for zero. -/
+def coupledClearedCheck {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (a : ℚ) (b1 b2 z1 z2 y1 y2 : P ℚ) : Bool :=
+  let r1 := CPolyEngine.sub
+    (CPolyEngine.add
+      (CPolyEngine.add (CPolyEngine.deriv y1) (CPolyEngine.mul b1 y1))
+      (CPolyEngine.scale a (CPolyEngine.mul b2 y2))) z1
+  let r2 := CPolyEngine.sub
+    (CPolyEngine.add
+      (CPolyEngine.add (CPolyEngine.deriv y2) (CPolyEngine.mul b2 y1))
+      (CPolyEngine.mul b1 y2)) z2
+  CPolyEngine.cisZero r1 && CPolyEngine.cisZero r2
+
+/-- The generic cleared check specializes definitionally to the original dense-list computation. -/
+theorem coupledClearedCheck_dense_eq (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) :
+    coupledClearedCheck a b1 b2 z1 z2 y1 y2 =
+      let r1 := csub (cadd (cadd (cderiv y1) (cmul b1 y1)) (cscale a (cmul b2 y2))) z1
+      let r2 := csub (cadd (cadd (cderiv y2) (cmul b2 y1)) (cmul b1 y2)) z2
+      cisZero r1 && cisZero r2 := rfl
+
+example :
+    coupledClearedCheck (-1)
+      (CPoly.SparsePoly.ofList [] : CPoly.SparsePoly ℚ)
+      (CPoly.SparsePoly.ofList [(0, -2), (1, 4)])
+      (CPoly.SparsePoly.ofList [(0, 2), (2, -8)])
+      (CPoly.SparsePoly.ofList [(0, 4), (1, -4)])
+      (CPoly.SparsePoly.ofList [(0, -1)])
+      (CPoly.SparsePoly.ofList [(0, 1), (1, 2)]) = true := by
+  native_decide
 
 /-! ### Base coupled-system soundness from the cleared check
 
 The bridge `coupledClearedCheck = true ⟹ the two field identities over ℚ[X]`
-(`coupledClearedCheck_sound`), via `cisZeroG_iff` and the `toPoly` ring/derivation homs. The check is
-dischargeable through `cConstSolveUniqueQ_sound`, so the `*_of_check` lemmas here are the
-self-certifying intermediate. -/
+(`coupledClearedCheck_sound`) uses only `LawfulCPolyEngine` denotation laws. The check is dischargeable
+through `cConstSolveUniqueQ_sound`, so the `*_of_check` lemmas here are the self-certifying intermediate. -/
 
-/-- `coupledClearedCheck_sound`: if `coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true` then `(y₁, y₂)`
-solves the base coupled system at the `ℚ[X]` level — `D(y₁) + b₁·y₁ + C a·(b₂·y₂) = z₁` and
-`D(y₂) + b₂·y₁ + b₁·y₂ = z₂` (`D = Polynomial.derivative`). -/
-theorem coupledClearedCheck_sound (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ)
+/-- A passing generic `coupledClearedCheck` gives the two base-system identities under `CPoly.toPoly`. -/
+theorem coupledClearedCheck_sound {P : Type → Type} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine P] (a : ℚ) (b1 b2 z1 z2 y1 y2 : P ℚ)
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
-    Polynomial.derivative (toPoly y1) + toPoly b1 * toPoly y1
-        + Polynomial.C a * (toPoly b2 * toPoly y2) = toPoly z1 ∧
-      Polynomial.derivative (toPoly y2) + toPoly b2 * toPoly y1
-        + toPoly b1 * toPoly y2 = toPoly z2 := by
+    Polynomial.derivative (CPoly.toPoly y1) + CPoly.toPoly b1 * CPoly.toPoly y1
+        + Polynomial.C a * (CPoly.toPoly b2 * CPoly.toPoly y2) = CPoly.toPoly z1 ∧
+      Polynomial.derivative (CPoly.toPoly y2) + CPoly.toPoly b2 * CPoly.toPoly y1
+        + CPoly.toPoly b1 * CPoly.toPoly y2 = CPoly.toPoly z2 := by
   rw [coupledClearedCheck, Bool.and_eq_true] at hcheck
   obtain ⟨h1, h2⟩ := hcheck
-  rw [cisZeroG_iff] at h1 h2
+  rw [LawfulCPolyEngine.cisZero_iff] at h1 h2
+  simp only [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_add,
+    LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_scale,
+    LawfulCPolyEngine.toPoly_deriv, toR_eq_toK, CFieldSpec.toK_rat] at h1 h2
   refine ⟨?_, ?_⟩
-  · have := h1
-    simp only [denote, CFieldSpec.toK, id_eq, sub_eq_zero] at this
-    linear_combination this
-  · have := h2
-    simp only [denote, sub_eq_zero] at this
-    linear_combination this
+  · linear_combination h1
+  · linear_combination h2
 
 /-- `cCoupledDESystem_sound_of_check`: if `cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)` and the
 returned pair passes `coupledClearedCheck`, then `(y₁, y₂)` solves the base coupled system at the `ℚ[X]`
@@ -191,7 +212,9 @@ theorem cCoupledDESystem_sound_of_check (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) 
         + Polynomial.C a * (toPoly b2 * toPoly y2) = toPoly z1 ∧
       Polynomial.derivative (toPoly y2) + toPoly b2 * toPoly y1
         + toPoly b1 * toPoly y2 = toPoly z2 :=
-  coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2 hcheck
+  by
+    simpa only [toPoly_list_eq] using
+      (coupledClearedCheck_sound (P := DensePoly) a b1 b2 z1 z2 y1 y2 hcheck)
 
 -- **Sanity print.** The worked base solve returns `(−1, 2x+1)`.
 #eval (cCoupledDESystem (-1) ([] : DensePoly ℚ) coupledExB2 coupledExZ1 coupledExZ2 1).map

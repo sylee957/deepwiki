@@ -142,6 +142,11 @@ The first consumer migration has landed: `cCoupledDESystem` is generic over `[CP
 on `SparsePoly`. Its dense soundness proof crosses a named specialization lemma, so existing downstream
 theorems remain unchanged while the executable solver itself is representation-independent.
 
+The next component has also landed: `CPolyEngine` now exposes formal differentiation and derived
+subtraction with their `LawfulCPolyEngine` denotation laws. `coupledClearedCheck` and its soundness theorem
+are representation-generic (and execute on `SparsePoly`), while `cDerivMonomialQ` is the first generic
+parallel-integration helper; both retain the original dense computation definitionally.
+
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 
 Since the *existing* engine can't be migrated isolated-module-at-a-time, the constructive path is to

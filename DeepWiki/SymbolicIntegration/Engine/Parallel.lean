@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.Parametric
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
-import DeepWiki.ComputableAlgebra.PolyReprDense
+import DeepWiki.ComputableAlgebra.PolyEngine
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 
 /-! # Computable parallel (Risch–Norman) integration over ℚ(t) (Bronstein Chapter 10)
@@ -90,11 +90,20 @@ namespace DensePoly
 
 /-! ### The base monomial derivation and small helpers -/
 
-/-- **Base monomial derivation** `cDerivMonomialQ Dt p = (dp/dt)·Dt` on `DensePoly ℚ` (the derivation
-`D = Dt·d/dt`, `κ_D = 0` since the coefficient field `ℚ` is constants under `D`). For `Dt = [1]` this is
-`d/dt` (ordinary rational integration, `t = x`); `Dt = [0,1]` gives the exponential monomial
-`t = exp(x)` (`Dt = t`); `Dt = [1,0,1]` the hypertangent `t = tan(x)` (`Dt = 1 + t²`). -/
-def cDerivMonomialQ (Dt p : DensePoly ℚ) : DensePoly ℚ := cmul (cderiv p) Dt
+end DensePoly
+
+/-- **Base monomial derivation** `cDerivMonomialQ Dt p = (dp/dt)·Dt` in any polynomial-engine
+representation, where the coefficient field `ℚ` is constant under the derivation. -/
+def cDerivMonomialQ {P : Type → Type} [CPoly P] [CPolyEngine P] (Dt p : P ℚ) : P ℚ :=
+  CPolyEngine.mul (CPolyEngine.deriv p) Dt
+
+example :
+    CPoly.cdeg (cDerivMonomialQ
+      (CPoly.SparsePoly.ofList [(1, 1)] : CPoly.SparsePoly ℚ)
+      (CPoly.SparsePoly.ofList [(0, 1), (1, 2), (2, 3)])) = 2 := by
+  native_decide
+
+namespace DensePoly
 
 /-! ### A *particular*-solution linear solver over ℚ (the §10.3 step-5 solve)
 

@@ -433,7 +433,7 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
       rw [hnrowsdef]; have := hfold (cdeg z2) (by simp); omega
     have hD : d ≤ nrows - 2 := by rw [hnrowsdef]; have := hfold d (by simp); omega
     have hge2 : 2 ≤ nrows := by rw [hnrowsdef]; omega
-    rw [coupledClearedCheck, Bool.and_eq_true]
+    rw [coupledClearedCheck_dense_eq, Bool.and_eq_true]
     refine ⟨?_, ?_⟩
     · -- toPoly R1 = 0.
       rw [cisZeroG_iff]
@@ -497,7 +497,7 @@ theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ)
         + Polynomial.C a * (toPoly b2 * toPoly y2) = toPoly z1 ∧
       Polynomial.derivative (toPoly y2) + toPoly b2 * toPoly y1
         + toPoly b1 * toPoly y2 = toPoly z2 :=
-  coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2
+  cCoupledDESystem_sound_of_check a b1 b2 z1 z2 d y1 y2 hsome
     (DensePoly.coupledClearedCheck_of_cCoupledDESystem a b1 b2 z1 z2 y1 y2 d hsome)
 
 /-! ### Restatements against the intended wording -/
