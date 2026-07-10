@@ -25,8 +25,8 @@ For `W ∣ ρ` the Hermite step `k → k−1` accumulates `B·ρ·W^{k0−k}` in
 denominator `W^{k0}·y` and recurses on the negated residual `−D`. -/
 
 /-- Iterated Case-2 reduction `radReduceCase2Iterate W h ρ k0 fuel k C vNum = (Crem, vNumOut)`: at
-multiplicity `k ≥ 2` solve the cofactor `B = radCase2CofactorC` (`h = ρ/W`), form the residual
-`D = radCase2ResidualC`, accumulate `B·ρ·W^{k0−k}` into `vNum`, recurse on `−D` at `k−1`; bottom at
+multiplicity `k ≥ 2` solve the cofactor `B = radCase2Cofactor` (`h = ρ/W`), form the residual
+`D = radCase2Residual`, accumulate `B·ρ·W^{k0−k}` into `vNum`, recurse on `−D` at `k−1`; bottom at
 `k ≤ 1` returning `(C, vNum)`. One step per unit of `fuel`. Generic over `[CField α]`. -/
 def radReduceCase2Iterate (W h ρ : DensePoly α) (k0 : ℕ) :
     ℕ → ℕ → DensePoly α → DensePoly α → DensePoly α × DensePoly α
@@ -34,8 +34,8 @@ def radReduceCase2Iterate (W h ρ : DensePoly α) (k0 : ℕ) :
   | fuel + 1, k, C, vNum =>
     if k ≤ 1 then (C, vNum)
     else
-      let B := radCase2CofactorC k W h C
-      let D := radCase2ResidualC k W h C B
+      let B := radCase2Cofactor k W h C
+      let D := radCase2Residual k W h C B
       -- contribution `B·ρ/(Wᵏy)` over the common denominator `W^{k0}`: `B·ρ·W^{k0−k}`
       let contrib := cmul (cmul B ρ) (cpow W (k0 - k))
       radReduceCase2Iterate W h ρ k0 fuel (k - 1) (cneg D) (cadd vNum contrib)

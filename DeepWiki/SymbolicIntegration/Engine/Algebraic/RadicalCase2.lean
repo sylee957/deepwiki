@@ -15,30 +15,6 @@ namespace DeepWiki.SymbolicIntegration
 
 open RadElem DensePoly
 
-namespace DensePoly
-
-variable {α : Type*} [CField α]
-
-/-- Case-2 cofactor (`n = 2`) `radCase2CofactorC k W h C = B`: the degree-`< deg W` polynomial solving
-`B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantine ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderiv W`. -/
-def radCase2CofactorC (k : ℕ) (W h C : DensePoly α) : DensePoly α :=
-  let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- ½
-  let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- (½ − k)·W'·h
-  (cdiophantine coef W C).1
-
-/-- Case-2 residual (`n = 2`) `radCase2ResidualC k W h C B = D`: the lowered-`k` numerator
-`D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderiv B`, `h'` is `cderiv h`, division by `W` is
-`cdivWf`. -/
-def radCase2ResidualC (k : ℕ) (W h C B : DensePoly α) : DensePoly α :=
-  let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- ½
-  let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- (½ − k)·W'·h
-  let topNum := csub (cmul B coef) C                                      -- B·(½−k)W'h − C
-  let quotient := cdivWf topNum W                                           -- /W
-  cadd quotient (cadd (cmul (cderiv B) h)                              -- + B'h
-    (cmul half (cmul B (cderiv h))))                                     -- + ½Bh'
-
-end DensePoly
-
 /-! #### Case 2 validated through `radDeriv`: `y² = x³−x`, `W = x`, `k = 2`
 
 Radicand `y² = f = x³ − x`, squarefree factor `W = x`, `h = f/W = x² − 1`, `k = 2`, `C = 1`; the
@@ -59,10 +35,10 @@ def case2cH : DensePoly ℚ := [-1, 0, 1]
 def case2cC : DensePoly ℚ := [1]
 
 /-- The Case-2 cofactor `B` for `B·(½−2)·W'·h ≡ 1 (mod x)` — expected `B = 2/3`. -/
-def case2cB : DensePoly ℚ := radCase2CofactorC 2 case2cW case2cH case2cC
+def case2cB : DensePoly ℚ := radCase2Cofactor 2 case2cW case2cH case2cC
 
 /-- The Case-2 residual `D` — expected `−x/3` (multiplicity dropped `k = 2 → 1`). -/
-def case2cD : DensePoly ℚ := radCase2ResidualC 2 case2cW case2cH case2cC case2cB
+def case2cD : DensePoly ℚ := radCase2Residual 2 case2cW case2cH case2cC case2cB
 
 /-- The cofactor is `B = 2/3`: `cisZero (case2cB − 2/3)`. -/
 theorem case2c_cofactor_eq :

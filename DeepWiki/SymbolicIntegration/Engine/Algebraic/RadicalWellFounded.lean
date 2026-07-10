@@ -55,7 +55,7 @@ The branch-place (`W ∣ ρ`) Hermite step `k → k−1`; same multiplicity meas
 contribution scaled by `W^{k0−k}` over the common denominator `W^{k0}·y`. -/
 
 /-- Iterated Case-2 Hermite reduction `radReduceCase2IterateWf W h ρ k0 k C vNum = (Crem, vNumOut)`:
-at `k ≥ 2` solve the cofactor `B = radCase2CofactorC`, form the residual `D = radCase2ResidualC`,
+at `k ≥ 2` solve the cofactor `B = radCase2Cofactor`, form the residual `D = radCase2Residual`,
 accumulate `B·ρ·W^{k0−k}` into `vNum`, and recurse on `−D` at `k − 1`; bottom at `k ≤ 1` returning
 `(C, vNum)`. `W` a squarefree factor of the radicand `ρ`, `h = ρ/W`. Well-founded on `k`;
 `[CField α]`-only. -/
@@ -64,8 +64,8 @@ def radReduceCase2IterateWf (W h ρ : DensePoly α) (k0 : ℕ) :
   | k, C, vNum =>
     if hk : k ≤ 1 then (C, vNum)
     else
-      let B := radCase2CofactorC k W h C
-      let D := radCase2ResidualC k W h C B
+      let B := radCase2Cofactor k W h C
+      let D := radCase2Residual k W h C B
       let contrib := cmul (cmul B ρ) (cpow W (k0 - k))
       radReduceCase2IterateWf W h ρ k0 (k - 1) (cneg D) (cadd vNum contrib)
 termination_by k => k
