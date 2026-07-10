@@ -23,8 +23,8 @@ def cAntiderivBaseQ (p : DensePoly ℚ) : DensePoly ℚ :=
 constraint system `[a, η]` (`cLinearConstraintsQ`), takes the `c₀ ≠ 0` kernel vector (`cNullspaceBasisQ`),
 normalizes `c₀ = 1`, and recovers `b` by antidifferentiating the cleared polynomial residual `q₀ + c₁·q₁`. -/
 def cLimitedIntegrateSingleBase (a η : CFrac ℚ) : Option (CFrac ℚ × ℚ) :=
-  let gnums := [a.1.1, η.1.1]
-  let gdens := [a.1.2, η.1.2]
+  let gnums := [a.num, η.num]
+  let gdens := [a.den, η.den]
   let (qs, M) := cLinearConstraintsQ gnums gdens
   let kernel := cNullspaceBasisQ M 2
   match kernel.find? (fun v => v.getD 0 0 ≠ 0) with
@@ -45,7 +45,7 @@ def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly ℚ) :
     if hη : DensePoly.cisZero ηden = false then
       (cLimitedIntegrateSingleBase (CFrac.ofFraction anum aden hA)
         (CFrac.ofFraction ηnum ηden hη)).map
-        fun bc => ((bc.1.1.1, bc.1.1.2), bc.2)
+        fun bc => ((bc.1.num, bc.1.den), bc.2)
     else none
   else none
 

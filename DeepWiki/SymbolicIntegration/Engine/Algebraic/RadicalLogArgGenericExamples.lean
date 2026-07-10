@@ -63,23 +63,20 @@ theorem genArg_arcsinh_matches_closed_form :
 i.e. `[0, 1]`. -/
 def expDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
-/-- The radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)(eˣ)` for the generic solve (the carrier value `expRadicand`). -/
-def expArgRho : Lvl2 := expRadicand
-
 /-- The integrand `1/√(eˣ+1) = 1/y` lifted to `[0, 1/ρ]` over `α = ℚ(x)(eˣ)` (`ρ = eˣ+1`), the `R/y` form
 for the log-derivative system. -/
-def expArgIntegrand : RadElem Lvl2 := radInvYLift expArgRho CCommRing.one
+def expArgIntegrand : RadElem Lvl2 := radInvYLift expRadicand CCommRing.one
 
 /-- The computed log argument for `∫ dx/√(eˣ+1)` over the tower: `radLogArgSolve` at `β = ℚ(x)`,
 `α = ℚ(x)(eˣ)`, with `expTowerDiff`, `ρ = eˣ+1`, `D = θ`, ansatz degree `1` (expected `N = (θ+2) − 2y`,
 so `u = N/θ = (y−1)/(y+1)`). -/
 def expArgSolved : Option (RadElem Lvl2) :=
-  @radLogArgSolve _ _ _ expTowerDiff expArgRho expArgIntegrand expDenTheta 1
+  @radLogArgSolve _ _ _ expTowerDiff expRadicand expArgIntegrand expDenTheta 1
 
 -- Computed numerator `N` for `∫ dx/√(eˣ+1)` over the tower, a multiple of `(θ+2) − 2y`.
 #eval (expArgSolved.map (fun N => N.map (fun z =>
-  ((CFrac.num z).map (fun w => (w.1.1 : List ℚ)),
-   (CFrac.den z).map (fun w => (w.1.1 : List ℚ))))))
+  (z.num.map (fun w => (w.num : List ℚ)),
+   z.den.map (fun w => (w.num : List ℚ))))))
 
 /-- `radLogArgSolve` computes the log argument for `∫ dx/√(eˣ+1)` over `ℚ(x)(eˣ)`: the generic solver,
 its Gaussian elimination running over `β = ℚ(x)`, returns `some N`. -/
@@ -91,7 +88,7 @@ theorem expArg_solves :
 `expTowerDiff`, i.e. `∫ dx/√(eˣ+1) = log((y−1)/(y+1))`. -/
 theorem expArg_isLogIntegral :
     (expArgSolved.map (fun N =>
-      @radIsLogIntegral _ _ expTowerDiff 2 expArgRho
+      @radIsLogIntegral _ _ expTowerDiff 2 expRadicand
         [CField.div (N.getD 0 CCommRing.zero) expTheta,
          CField.div (N.getD 1 CCommRing.zero) expTheta]
         expArgIntegrand)) = some true := by native_decide

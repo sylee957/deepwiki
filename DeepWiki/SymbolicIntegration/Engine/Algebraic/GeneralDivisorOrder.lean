@@ -50,8 +50,8 @@ def canonHNFEq (I J : GenDivisor) : Bool :=
     let cc := cnorm c
     K.map (fun row => row.map (fun z =>
       let zz := qReduceNZ z
-      let num := zz.1.1
-      let den := cnorm zz.1.2
+      let num := zz.num
+      let den := cnorm zz.den
       cdivWf (cmul cc num) den))
   let NI := scale (cmul δI δJ) I
   let NJ := scale (cmul δI δJ) J
@@ -161,11 +161,11 @@ def hcubeTorsionDiv : GenDivisor :=
     (idealIdentity 2)
 
 -- Sanity print: δ = P = (x, y−1) as a [w]=[1,y] ideal matrix (Hermite-reduced).
-#eval hcubeTorsionDiv.map (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+#eval hcubeTorsionDiv.map (fun row => row.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
 
 -- Sanity print: the reduced canonical-HNF representative of δ = P (first row `1 − y`, second `x·y`; norm `x`).
 #eval (idealReduce hcubeF hcubeBasis hcubeTorsionDiv).map
-  (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+  (fun row => row.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
 
 /-- The order-3 ladder on `y² = x³+1`: `P` and `P²` are non-principal but `P³ = div(y − 1)` is
 principal, via `isPrincipalIdeal` on the repeated `idealProduct` powers. -/

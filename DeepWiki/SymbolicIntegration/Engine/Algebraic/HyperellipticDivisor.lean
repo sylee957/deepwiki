@@ -123,13 +123,11 @@ theorem mumfordIsReduced_pts :
     ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPt23 = true
     ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPtM10 = true := by native_decide
 
-/-- The identity `(1, 0)`, the reduced form of `D + (−D)` (a point plus its opposite). -/
-def hypIdentity : MumfordDivisor ℚ := mumfordIdentity
-
 /-- The identity `(1, 0)` is valid and reduced. -/
 theorem mumfordIdentity_valid_reduced :
-    mumfordValid hypRhoX3p1 hypIdentity = true
-    ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypIdentity = true := by native_decide
+    mumfordValid hypRhoX3p1 (mumfordIdentity : MumfordDivisor ℚ) = true
+    ∧ mumfordIsReduced (radGenus hypRhoX3p1) (mumfordIdentity : MumfordDivisor ℚ) = true := by
+  native_decide
 
 /-! ### A two-point divisor on `y² = x³+1` (`native_decide`)
 
@@ -186,7 +184,7 @@ theorem mumford_representation_validates :
       ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPt23 = true)
     -- opposite and identity
     ∧ (hypPt01opp = mumfordPoint (0 : ℚ) (-1)
-      ∧ mumfordValid hypRhoX3p1 hypIdentity = true)
+      ∧ mumfordValid hypRhoX3p1 (mumfordIdentity : MumfordDivisor ℚ) = true)
     -- two-point divisor (the Cantor-composition output shape)
     ∧ (hypSum0123 = (⟨[0, -2, 1], [1, 1]⟩ : MumfordDivisor ℚ)
       ∧ mumfordValid hypRhoX3p1 hypSum0123 = true)

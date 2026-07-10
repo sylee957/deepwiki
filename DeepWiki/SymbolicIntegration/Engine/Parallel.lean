@@ -266,8 +266,8 @@ def cToRatCoeffsQ (p : DensePoly (CFrac ℚ)) : Option (DensePoly ℚ) :=
     match acc with
     | none => none
     | some qs =>
-      let num := z.1.1
-      let den := z.1.2
+      let num := z.num
+      let den := z.den
       let g := (cgcdWf num den).1
       let num' := cdivWf num g
       let den' := cdivWf den g

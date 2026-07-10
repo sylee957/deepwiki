@@ -108,8 +108,8 @@ def idealEq (I J : GenDivisor) : Bool :=
     let cc := cnorm c
     K.map (fun row => row.map (fun z =>
       let zz := qReduceNZ z
-      let num := zz.1.1
-      let den := cnorm zz.1.2
+      let num := zz.num
+      let den := cnorm zz.den
       cdivWf (cmul cc num) den))
   let NI := scale (cmul δI δJ) I
   let NJ := scale (cmul δI δJ) J
@@ -126,7 +126,7 @@ denominator `1` (i.e. `I ⊆ O`). -/
 def idealIsIntegral (I : GenDivisor) : Bool :=
   I.all (fun row => row.all (fun z =>
     let zz := qReduceNZ z
-    cisZero (csub (cnorm zz.1.2) [CCommRing.one])))
+    cisZero (csub (cnorm zz.den) [CCommRing.one])))
 
 end DensePoly
 

@@ -32,22 +32,22 @@ def swellB : CFrac ℚ := CFrac.ofFraction [(-1 : ℚ), 1] [(0 : ℚ), 1]
 def swellProd : CFrac ℚ := qmulNZ swellA swellB
 
 /-- The unreduced product `swellProd` has numerator length 3. -/
-theorem swellProd_num_length : (DensePoly.cnorm swellProd.1.1 : List ℚ).length = 3 := by native_decide
+theorem swellProd_num_length : (DensePoly.cnorm swellProd.num : List ℚ).length = 3 := by native_decide
 
 /-- The unreduced product `swellProd` has denominator length 3. -/
-theorem swellProd_den_length : (DensePoly.cnorm swellProd.1.2 : List ℚ).length = 3 := by native_decide
+theorem swellProd_den_length : (DensePoly.cnorm swellProd.den : List ℚ).length = 3 := by native_decide
 
 /-- `qReduce` shrinks the swollen product's numerator to length 1. -/
 theorem swellProd_reduced_num_length :
-    (DensePoly.cnorm (qReduce swellProd).1.1 : List ℚ).length = 1 := by native_decide
+    (DensePoly.cnorm (qReduce swellProd).num : List ℚ).length = 1 := by native_decide
 
 /-- `qReduce` shrinks the swollen product's denominator to length 1. -/
 theorem swellProd_reduced_den_length :
-    (DensePoly.cnorm (qReduce swellProd).1.2 : List ℚ).length = 1 := by native_decide
+    (DensePoly.cnorm (qReduce swellProd).den : List ℚ).length = 1 := by native_decide
 
 /-- The reduced product `qReduce swellProd` has nonzero numerator (`cisZero` is `false`). -/
 theorem swellProd_reduced_num_nonzero :
-    DensePoly.cisZero (qReduce swellProd).1.1 = false := by native_decide
+    DensePoly.cisZero (qReduce swellProd).num = false := by native_decide
 
 /-- `qReduce` preserves the field value: `toCFrac (qReduce swellProd) = toCFrac swellProd`. -/
 theorem swellProd_value_preserved :
@@ -86,7 +86,7 @@ theorem Rstuck_eq_one : CCommRing.isZero (CField.sub Rstuck (CCommRing.one : CFr
   native_decide
 
 /-- `Rstuck`'s stored denominator is swollen: length 2 (`2x`, not the reduced `1`). -/
-theorem Rstuck_den_swollen : (DensePoly.cnorm Rstuck.1.2 : List ℚ).length = 2 := by native_decide
+theorem Rstuck_den_swollen : (DensePoly.cnorm Rstuck.den : List ℚ).length = 2 := by native_decide
 
 /-- The unreduced residual makes `crischDESolve 0 Rstuck` return `none` even though `Rstuck = 1`,
 because the stored denominator is the spurious factor `2x`. -/

@@ -27,7 +27,7 @@ def qfLcm (a b : DensePoly α) : DensePoly α :=
 /-- The common denominator of a `ℚ(x)`-row `qfRowDen row`, the monic lcm of the entry denominators;
 scaling the row by this `D ∈ ℚ[x]` lands every entry in `ℚ[x]`. -/
 def qfRowDen (row : List (CFrac ℚ)) : DensePoly ℚ :=
-  row.foldl (fun acc z => qfLcm acc (cmonic (z.1.2 : DensePoly ℚ))) [CCommRing.one]
+  row.foldl (fun acc z => qfLcm acc (cmonic z.den)) [CCommRing.one]
 
 /-- The common denominator of a whole `ℚ(x)`-matrix `qfMatDen M`, the lcm over all rows of `qfRowDen`;
 the single `D ∈ ℚ[x]` with `D·M ∈ ℚ[x]ⁿˣⁿ` and `det(D·M) = Dⁿ·det M`. -/
@@ -39,7 +39,7 @@ def qfMatDen (M : List (List (CFrac ℚ))) : DensePoly ℚ :=
 /-- Clear a single `ℚ(x)` entry by a common denominator `D` `qfClearEntry D z = num(z)·(D/den(z))`, the
 `ℚ[x]` polynomial `D·z` (exact since `den(z) | D`). -/
 def qfClearEntry (D : DensePoly ℚ) (z : CFrac ℚ) : DensePoly ℚ :=
-  cmul (z.1.1 : DensePoly ℚ) (cdivWf D (z.1.2 : DensePoly ℚ))
+  cmul z.num (cdivWf D z.den)
 
 /-- Clear a single `ℚ(x)`-row to `ℚ[x]` `qfClearRow row = ([D·zᵢ], D)` where `D = qfRowDen row`;
 returns the cleared `ℚ[x]`-row paired with the clearing factor `D`. -/

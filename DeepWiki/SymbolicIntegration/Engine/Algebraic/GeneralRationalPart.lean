@@ -20,20 +20,18 @@ open RadElem DensePoly
 coordinates over `[1, y/x]` are polynomials in `x`. Both `y` and `x·y` have polynomial coordinates, so
 with genus 0 their integrals are purely rational. -/
 
-/-- The cusp curve `f = y² − x³` over `ℚ(x)`, whose integral basis `[1, y/x]` bounds the finite poles. -/
-def gcuspF : DensePoly (CFrac ℚ) := cuspF
-
 /-- The cusp radicand `ρ = x³ ∈ ℚ(x)` (so `y² = ρ`), for the diagonal radical derivation `radDeriv 2 ρ`. -/
 def gcuspRho : CFrac ℚ := CFrac.ofPoly [0, 0, 0, 1]
 
 /-- The cusp integral basis is `[1, y/x]`, integral and maximal: `(y/x)² = x` and `isMaximalOrder` holds,
 the maximal-order datum the algebraic Hermite reduction consumes. -/
 theorem gcusp_integralBasis_eq :
-    (cisZero (csub ((integralBasis gcuspF).getD 1 []) [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
-      && cisZero (csub ((integralBasis gcuspF).getD 0 []) [CCommRing.one])
-      && cisZero (csub (afMul gcuspF ((integralBasis gcuspF).getD 1 [])
-            ((integralBasis gcuspF).getD 1 [])) [CFrac.ofPoly [0, 1]])
-      && isMaximalOrder gcuspF (integralBasis gcuspF)) = true := by native_decide
+    (cisZero (csub ((integralBasis cuspF).getD 1 [])
+          [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
+      && cisZero (csub ((integralBasis cuspF).getD 0 []) [CCommRing.one])
+      && cisZero (csub (afMul cuspF ((integralBasis cuspF).getD 1 [])
+            ((integralBasis cuspF).getD 1 [])) [CFrac.ofPoly [0, 1]])
+      && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
 
 /-! ### Target 1: `∫ y dx = (2/5)·x·y` on `y² = x³`
 

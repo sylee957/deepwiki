@@ -14,9 +14,6 @@ open RadElem DensePoly
 
 /-! ### Round-trip validation: `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over ℚ(x)(eˣ) -/
 
-/-- The round-trip radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)(eˣ)` (same value as `expRadicand`). -/
-def elemRho : Lvl2 := expRadicand
-
 /-- The rational part `v = 2√(eˣ+1) = 2y` as the `RadElem Lvl2` `[0, 2]` over ℚ(x)(eˣ). -/
 def elemRatPart : RadElem Lvl2 := [CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
@@ -32,19 +29,19 @@ def elemF : AlgIntegralResult Lvl2 := ⟨elemRatPart, [(CCommRing.one, elemLogAr
 
 /-- The combined integrand `algDeriv F` over ℚ(x)(eˣ) with the exp-tower derivation, equal to
 `√(eˣ+1) = y`. -/
-def elemIntegrand : RadElem Lvl2 := @algDeriv _ _ expTowerDiff elemRho elemF
+def elemIntegrand : RadElem Lvl2 := @algDeriv _ _ expTowerDiff expRadicand elemF
 
 /-- The combined integrand equals the radical generator `y`: `DensePoly.cisZero (elemIntegrand − radGen)`. -/
 theorem elemIntegrand_eq_radGen :
     DensePoly.cisZero (DensePoly.csub elemIntegrand (radGen : RadElem Lvl2)) = true := by native_decide
 
 /-- The log residual `1/√(eˣ+1) = 1/y` lifted to `[0, 1/ρ]` over ℚ(x)(eˣ) (`ρ = eˣ+1`). -/
-def elemLogResidual : RadElem Lvl2 := radInvYLift elemRho CCommRing.one
+def elemLogResidual : RadElem Lvl2 := radInvYLift expRadicand CCommRing.one
 
 /-- The log residual equals `elemIntegrand − radDeriv(2y)` under the exp-tower derivation. -/
 theorem elemLogResidual_eq_integrand_sub_ratDeriv :
     DensePoly.cisZero (DensePoly.csub elemLogResidual
-      (DensePoly.csub elemIntegrand (@radDeriv _ _ expTowerDiff 2 elemRho elemRatPart))) = true := by
+      (DensePoly.csub elemIntegrand (@radDeriv _ _ expTowerDiff 2 expRadicand elemRatPart))) = true := by
   native_decide
 
 /-- The log-solve denominator `D = θ = eˣ` as the `DensePoly (CFrac ℚ)` `[0, 1]`. -/
@@ -52,11 +49,12 @@ def elemDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The recovered result `F' = cIntegrateElementary ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
 def elemRecovered : AlgIntegralResult Lvl2 :=
-  @cIntegrateElementary _ _ _ expTowerDiff elemRho elemRatPart elemLogResidual CCommRing.one elemDenTheta 1
+  @cIntegrateElementary _ _ _ expTowerDiff expRadicand elemRatPart elemLogResidual CCommRing.one elemDenTheta 1
 
 /-- Round-trip `algDeriv F' = elemIntegrand` over ℚ(x)(eˣ): `DensePoly.cisZero (algDeriv F' − integrand)`. -/
 theorem rt_elementary_combined :
-    DensePoly.cisZero (DensePoly.csub (@algDeriv _ _ expTowerDiff elemRho elemRecovered) elemIntegrand) = true := by
+    DensePoly.cisZero
+      (DensePoly.csub (@algDeriv _ _ expTowerDiff expRadicand elemRecovered) elemIntegrand) = true := by
   native_decide
 
 /-- The recovered result has nonzero rational part and exactly one log term:

@@ -195,8 +195,8 @@ def afRatMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac �
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
     let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
-    let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
-    let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
+    let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).num)
+    let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).den)
     let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
       let prod := (List.range nCols).foldl (fun acc l =>
         if l = k then acc else cmul acc (dens[l]!)) [(1 : ℚ)]
@@ -246,8 +246,8 @@ def afLogMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac �
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
     let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
-    let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
-    let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
+    let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).num)
+    let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).den)
     let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
       let prod := (List.range nCols).foldl (fun acc l =>
         if l = k then acc else cmul acc (dens[l]!)) [(1 : ℚ)]
@@ -295,9 +295,6 @@ def afIntegrateAlgebraicWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly 
 
 `∫ (y + afDerivWf(y)/y) dx = (3/5)xy + log y` on `y³ = x²`, checked by `afDerivWf` (`native_decide`). -/
 
-/-- The rational summand input for the cuspidal-cubic combined validation. -/
-def gcCombineRatIntegrandWf : DensePoly (CFrac ℚ) := gcuspCubicY
-
 /-- The log-derivative input for the cuspidal-cubic combined validation. -/
 def gcCombineLogIntegrandWf : DensePoly (CFrac ℚ) :=
   afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
@@ -306,7 +303,7 @@ def gcCombineLogIntegrandWf : DensePoly (CFrac ℚ) :=
 /-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
 `∫ (y + afDerivWf(y)/y) dx`. -/
 def gcCombineSolvedWf : Option (DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) :=
-  afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcCombineRatIntegrandWf gcCombineLogIntegrandWf
+  afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcuspCubicY gcCombineLogIntegrandWf
 
 /-- The general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y`:
 derives the rational part `v = (3/5)x·y` (`afDerivWf f v = y`) and the log argument `u` a nonzero multiple
@@ -317,7 +314,7 @@ theorem afIntegrateAlgebraicWf_cuspCubic_combine :
     (gcCombineSolvedWf.map (fun p =>
       let v := p.1
       let u := p.2
-      cisZero (csub (afDerivWf gcuspCubicF v) gcCombineRatIntegrandWf)
+      cisZero (csub (afDerivWf gcuspCubicF v) gcuspCubicY)
       && cisZero (csub v [CCommRing.zero, CFrac.ofPoly [0, 3/5]])
       && cisZero (afLogResidualWf gcuspCubicF gcCombineLogIntegrandWf u)
       && cisZero [u.getD 0 CCommRing.zero]

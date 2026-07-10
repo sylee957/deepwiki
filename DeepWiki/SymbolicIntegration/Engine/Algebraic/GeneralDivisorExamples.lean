@@ -20,17 +20,17 @@ def gdDivYsq : GenDivisor := principalDivisor gcuspCubicF gcuspCubicBasis gcuspC
 def gdIdentity : GenDivisor := idealIdentity (cdeg gcuspCubicF)
 
 -- Sanity print: the integral basis `[1, y, y²/x]`.
-#eval gcuspCubicBasis.map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+#eval gcuspCubicBasis.map (fun b => b.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
 
 -- Sanity print: `div(y)` as a `[w]`-coordinate matrix over `ℚ(x)`.
-#eval gdDivY.map (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+#eval gdDivY.map (fun row => row.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
 
 -- Sanity print: `div(y²)` as a `[w]`-coordinate matrix over `ℚ(x)`.
-#eval gdDivYsq.map (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+#eval gdDivYsq.map (fun row => row.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
 
 -- Sanity print: `div(y) · div(y)`.
 #eval (idealProduct gcuspCubicF gcuspCubicBasis gdDivY gdDivY).map
-  (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+  (fun row => row.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
 
 /-! ### The integral basis is genuinely non-trivial (`native_decide`) -/
 

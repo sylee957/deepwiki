@@ -463,8 +463,8 @@ variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCoreWf β]
 /-- The denominator-direct normality gate for tower RDE inputs. -/
 def cdenomNormalGate (a : CFrac β) : Bool :=
   DensePoly.cisZero (DensePoly.csub
-    (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) a.1.2).1
-    a.1.2)
+    (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) a.den).1
+    a.den)
 
 end Gate
 

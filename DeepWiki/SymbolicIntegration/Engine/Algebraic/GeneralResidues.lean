@@ -30,7 +30,7 @@ literally `1`). `qToPolyQ` recovers the `ℚ[x]`-polynomial by the exact divisio
 `ℚ[x]`-polynomial. Faithful exactly when `denominator(v) ∣ numerator(v)` — true for the inner
 `res_Y` against a `y`-monic `F`, which is a polynomial in `x` with a constant denominator. -/
 def qToPolyQ (v : CFrac ℚ) : DensePoly ℚ :=
-  cdivWf v.1.1 v.1.2
+  cdivWf v.num v.den
 
 /-! ### The inner `res_Y(Z·D' − g, F)` at a rational `Z`-node -/
 

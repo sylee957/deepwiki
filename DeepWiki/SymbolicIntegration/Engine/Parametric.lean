@@ -36,7 +36,7 @@ def qnormPair (num den : DensePoly ℚ) : DensePoly ℚ × DensePoly ℚ :=
 /-- `cBaseIsProper b`: `true` iff the lowest-terms `CFrac ℚ` value `b = a/d ∈ ℚ(x)` is proper
 (`deg a < deg d`, nonzero numerator). -/
 def cBaseIsProper (b : CFrac ℚ) : Bool :=
-  let bn := qnormPair b.1.1 b.1.2
+  let bn := qnormPair b.num b.den
   cdeg bn.1 < cdeg bn.2 && !cisZero bn.1
 
 /-- Parametric-logarithmic-derivative test over the base field `cParametricLogDeriv b`, for
@@ -61,7 +61,7 @@ def cParamLogDerivCandidate (fval wval : CFrac ℚ) : Option ℚ :=
   else
     let r := CField.div fval wval
     -- `r ∈ ℚ` iff its lowest-terms denominator is a (nonzero) constant and numerator degree 0.
-    let rn := qnormPair r.1.1 r.1.2
+    let rn := qnormPair r.num r.den
     if cdeg rn.1 = 0 ∧ cdeg rn.2 = 0 then
       some (((rn.1 : List ℚ).headD 0) / ((rn.2 : List ℚ).headD 1))
     else none
@@ -181,7 +181,7 @@ def paramLogDerivExampleW : CFrac ℚ := CFrac.ofScalar 1
 
 -- **Sanity print.** `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
 #eval (DensePoly.cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map
-  (fun (n, m, v) => (n, m, DensePoly.qnormPair v.1.1 v.1.2))
+  (fun (n, m, v) => (n, m, DensePoly.qnormPair v.num v.den))
 
 /-- The parametric logarithmic derivative recognizer computes: for `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1`
 over `k = ℚ`, `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)`, verified to satisfy

@@ -19,7 +19,7 @@ namespace DensePoly
 /-- `cClearedNumCoeffs d w`: the dense `ℚ`-coefficient list of `w·d ∈ ℚ[x]` (well-defined because `d`
 is a common multiple of `w`'s denominator), via `qnormPair`-reducing `w` then `numerator·(d/denom)`. -/
 def cClearedNumCoeffs (d : DensePoly ℚ) (w : CFrac ℚ) : DensePoly ℚ :=
-  let wn := qnormPair w.1.1 w.1.2            -- `w` in lowest terms `(a, b)`
+  let wn := qnormPair w.num w.den            -- `w` in lowest terms `(a, b)`
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
   cmul wn.1 (cdivWf d wn.2)
 
@@ -30,7 +30,7 @@ def cLinearDepData (ws : List (CFrac ℚ)) (w : CFrac ℚ) :
     List (List ℚ) × ℕ :=
   let all := ws ++ [w]
   -- common denominator `d = lcm(denom wⱼ)` over the lowest-terms forms.
-  let dens := all.map (fun u => (qnormPair u.1.1 u.1.2).2)
+  let dens := all.map (fun u => (qnormPair u.num u.den).2)
   let d := dens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
   let cols : List (DensePoly ℚ) := all.map (fun u => cClearedNumCoeffs d u)
   let nrows := (cols.map cdeg).foldl Nat.max 0 + 1

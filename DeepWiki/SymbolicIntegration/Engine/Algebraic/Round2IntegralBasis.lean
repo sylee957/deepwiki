@@ -25,7 +25,7 @@ the root `a` (`qEvalAtRoot`). -/
 /-- Evaluate a `ℚ(x)` element at a root `a`: `qEvalAtRoot z a = num(a)/den(a) ∈ ℚ`, Horner-evaluating the
 numerator and denominator of `z : CFrac ℚ` and dividing. The reduction `z mod (x − a)`. -/
 def qEvalAtRoot (z : CFrac ℚ) (a : ℚ) : ℚ :=
-  CField.div (ceval (z.1.1 : DensePoly ℚ) a) (ceval (z.1.2 : DensePoly ℚ) a)
+  CField.div (ceval z.num a) (ceval z.den a)
 
 /-! ### A full kernel basis of a `β`-matrix (`kernelBasis`) -/
 
@@ -50,9 +50,9 @@ end DensePoly
 
 open DensePoly
 
-/-- The numerator of the discriminant as a `ℚ[x]` polynomial `discNum f = (discriminant f).1.1` (the
+/-- The numerator of the discriminant as a `ℚ[x]` polynomial `discNum f = (discriminant f).num` (the
 denominator is `1` for a monic `f`), whose squarefree part bounds the bad primes. -/
-def discNum (f : DensePoly (CFrac ℚ)) : DensePoly ℚ := (discriminant f).1.1
+def discNum (f : DensePoly (CFrac ℚ)) : DensePoly ℚ := (discriminant f).num
 
 /-- The bad primes of `f` `badPrimes f`: the distinct monic squarefree factors of the discriminant
 numerator (Yun factorization) with `p² ∣ d` (tested by `cisZero (cmodWf d (p·p))`) — the primes where the
@@ -92,7 +92,7 @@ namespace DensePoly
 /-- The power-basis coordinate row of an order element `afCoordRow n z = [num(c₀), …, num(c_{n−1})]`: the
 first `n` coefficients of `z : DensePoly (CFrac ℚ)` read as `ℚ[x]` numerators. -/
 def afCoordRow (n : ℕ) (z : DensePoly (CFrac ℚ)) : List (DensePoly ℚ) :=
-  (List.range n).map (fun i => ((z.getD i CCommRing.zero : CFrac ℚ).1.1 : DensePoly ℚ))
+  (List.range n).map (fun i => (z.getD i CCommRing.zero : CFrac ℚ).num)
 
 /-- The trace matrix reduced at a linear prime root `a` `traceMatrixAtRoot f a`: the `n×n` `ℚ`-matrix
 `traceMatrix f (powerBasis f)` with every entry evaluated at `x = a` (`qEvalAtRoot`), i.e. `T mod (x − a)`.
@@ -212,18 +212,18 @@ def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix ℚ) : List (List (CFrac ℚ)) 
     (List.range n).map (fun k => CFrac.ofPoly ((ipRows.getD k []).getD r [])))
 
 /-- The common denominator of a `K(x)`-matrix `commonDenomQ M`: the product over all entries of their
-normalized denominators (`z.1.2`), a coarse common multiple used to clear `M` to `K[x]`. -/
+normalized denominators (`z.den`), a coarse common multiple used to clear `M` to `K[x]`. -/
 def commonDenomQ (M : List (List (CFrac ℚ))) : DensePoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
-      let den := cnorm (z.1.2 : DensePoly ℚ)
+      let den := cnorm z.den
       if cisZero den || cisZero (csub den [CCommRing.one]) then a else cmul a den)
       acc) [CCommRing.one]
 
 /-- Clear a `K(x)`-row to a `K[x]`-row at denominator `δ` `clearRow δ row = [num(δ·zᵢ)]`: multiply each
 entry by `δ` and take the numerator; the integral row `δ·row` when `δ` is a common denominator. -/
 def clearRow (δ : DensePoly ℚ) (row : List (CFrac ℚ)) : List (DensePoly ℚ) :=
-  row.map (fun z => (CCommRing.mul (CFrac.ofPoly δ) z).1.1)
+  row.map (fun z => (CCommRing.mul (CFrac.ofPoly δ) z).num)
 
 /-! #### The idealizer of `I_p`, given an order basis (`idealizerBasis`) -/
 

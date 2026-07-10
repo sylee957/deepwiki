@@ -106,11 +106,11 @@ open DensePoly
 `fieldDet qfFracMat3` (numerator degree `9` plus denominator degree `15`, total `24`). -/
 def qfDetFracTotalDeg : ℕ :=
   let z := fieldDet qfFracMat3
-  cdeg z.1.1 + cdeg z.1.2
+  cdeg z.num + cdeg z.den
 
 /-- The fraction-free determinant flat degree `cdeg num` of `qfDet qfFracMat3`, the degree of the single
 `ℚ[x]` determinant numerator over the single denominator `D³`. -/
-def qfDetFlatDeg : ℕ := cdeg (qfDet qfFracMat3).1.1
+def qfDetFlatDeg : ℕ := cdeg (qfDet qfFracMat3).num
 
 /-- The fraction-path inverse max total degree `max over entries of (cdeg num + cdeg den)` of
 `matInv 3 qfFracMat3`, the largest numerator+denominator degree among the unreduced `ℚ(x)` inverse
@@ -119,7 +119,7 @@ def qfInvFracMaxTotalDeg : ℕ :=
   match matInv 3 qfFracMat3 with
   | none => 0
   | some Minv =>
-    ((Minv.map (fun row => row.map (fun z => cdeg z.1.1 + cdeg z.1.2))).flatten).foldl max 0
+    ((Minv.map (fun row => row.map (fun z => cdeg z.num + cdeg z.den))).flatten).foldl max 0
 
 /-- The fraction-free inverse max entry degree `max over entries of cdeg` of the `ℚ[x]` adjugate
 `(qfInv qfFracMat3).2`, the largest degree among the flat inverse-numerator entries over the single
