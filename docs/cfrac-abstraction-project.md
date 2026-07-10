@@ -33,13 +33,16 @@ runs the same fraction algorithm.
    algorithms that have not discharged denominator certificates yet.
 3. **Generic field engine — DONE.** Generalize denominator-domain evidence, constructors, add/mul/neg/inv,
    zero test, and the `CField` instance over `[CFrac F P] [CPolyEngine P]`. Preserve the Prop-free runtime
-   path; correctness assumptions remain in companion lawful classes.
+   path; correctness assumptions remain in companion lawful classes. `CFrac.ofFraction` requires explicit
+   nonzero evidence, while `CFrac.ofFraction?` exposes the executable checked `Option` boundary.
 4. **Generic denotation — DONE.** State the bridge into `RatFunc` through `CPoly.toPoly`, prove the fraction
    homomorphism laws with `LawfulCPolyEngine`, and expose `CFieldSpec (F α)`. Validate both
-   `DenseFrac` and `SparseFrac` with native computation and denotation examples.
-5. **Tower rewiring.** Generalize fraction derivation and tower constructors over a fraction
-   representation where their bodies only use the interface. Keep dense specialization only where an
-   actual downstream polynomial algorithm is still dense.
+   `DenseFrac` and `SparseFrac` through their representation-independent denotation laws.
+5. **Tower rewiring — IN PROGRESS.** Generalize fraction derivation and tower constructors over a fraction
+   representation where their bodies only use the interface. `towerDerivCFracWith` and the iterated
+   `CDiffField` instance now work for any `CFrac F P`, with a generic `RatFunc` commuting square and a
+   `SparseFrac` computation witness. Keep dense specialization only where an actual downstream polynomial
+   algorithm is still dense.
 6. **Abstract algorithm capabilities — IN PROGRESS.** Introduce Prop-free/lawful pairs for polynomial
    gcd/division, resultant/subresultant, and linear solve. The first slice is `CLinearSolve`/
    `LawfulCLinearSolve`, with the rational RREF implementation as its instance and the coupled-DE
@@ -66,6 +69,10 @@ runs the same fraction algorithm.
 ## Checkpoint discipline
 
 Land the phases in small gate-green commits. Each new representation-independent executable path gets a
-`SparseFrac` or `SparsePoly` computation witness. A generic wrapper around a concrete dense algorithm does
+`SparseFrac` or `SparsePoly` consumer or correctness witness. `ComputableAlgebra` does not use
+`native_decide` proofs or executable showcase examples. Small concrete evidence goals may use the local
+`ccompute` tactic, which tries only `rfl` and kernel `decide`; unsupported computation must become an
+explicit lemma or an `Option`-returning API rather than silently switching to native evaluation. A generic
+wrapper around a concrete dense algorithm does
 not count as migration: the algorithm itself must be supplied through an abstract capability or remain
 explicitly dense at the call site.
