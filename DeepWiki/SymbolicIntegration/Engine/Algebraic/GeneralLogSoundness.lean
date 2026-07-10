@@ -222,19 +222,6 @@ theorem roots_genResidueResultant_eq_residues (lc : K) (N : ℕ) (Droots : Multi
   refine Multiset.bind_congr (fun α₀ hα => ?_)
   exact roots_genNorm (Dprime α₀) (fiber α₀) (g α₀) (hDp α₀ hα)
 
-/-! #### The log-part per-term match is the algebraic partial fraction -/
-
-open scoped Differential in
-/-- The log-part per-term match is the algebraic partial fraction: for a squarefree split denominator
-`D = ∏_{α∈s}(X − α)` and `deg A < #s`, `A/D = Σ_{α∈s} residue(α)·logDeriv(X − α)` in `K(x)` with
-`residue(α) = A(α)/D'(α)`. -/
-theorem genRatLogPart_eq_residue_logDeriv_sum (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
-    algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
-      = ∑ α ∈ s, algebraMap K[X] (RatFunc K)
-          (Polynomial.C (A.eval α / eval α (derivative (Lagrange.nodal s id))))
-            * Differential.logDeriv (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) :=
-  ratFunc_eq_sum_residue_logDeriv s A hA
-
 end LogResidue
 
 /-! ### The compute-bridge: `genResidueResultant`'s interpolation-uniqueness characterization -/
@@ -375,9 +362,6 @@ Quot.sound]` — no `sorry`. -/
 
 -- ★★ The compute-bridge CLOSED: the interpolation-uniqueness characterization of the engine's `genResidueResultant`:
 #print axioms DensePoly.toPolyG_genResidueResultant_eq_of_eval
-
--- ★★ Obligation 3 (general framing): the general log-part per-term match IS the algebraic partial fraction:
-#print axioms LogResidue.genRatLogPart_eq_residue_logDeriv_sum
 
 -- The fuel-free log/capstone API, using `afDerivWf` and `afLogSumNumWf`:
 #print axioms DensePoly.isGeneralLogTermWf_of_logCert

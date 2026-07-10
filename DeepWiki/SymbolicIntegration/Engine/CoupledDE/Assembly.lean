@@ -80,7 +80,7 @@ theorem dotQ_mulMatrixQ_row (b y : DensePoly ℚ) (d nrows r : ℕ) (hr : r < nr
       -- x ≤ r (in range r+1) but x ∉ filter ⟹ x ≥ d+1 ⟹ y[x] = 0.
       have : ¬ x < d + 1 := by
         intro h; exact hxnot ⟨h, by omega⟩
-      rw [getD_long y x (by omega), mul_zero]
+      rw [getD_long_gen y x 0 (by omega), mul_zero]
   rw [hLHS, ← hRHS]
 
 /-- The dot of a `derivMatrixQ d nrows` row `r` (for `r < nrows`) with the coefficient vector of a
@@ -103,7 +103,7 @@ theorem dotQ_derivMatrixQ_row (y : DensePoly ℚ) (d nrows r : ℕ) (hr : r < nr
     · intro i _ hir; rw [if_neg hir, zero_mul]
     · intro h; exact absurd (Finset.mem_range.mpr hrd) h
   · -- r + 1 ≥ d + 1: y[r+1] = 0, and no i in range hits r+1.
-    rw [getD_long y (r + 1) (by omega)]
+    rw [getD_long_gen y (r + 1) 0 (by omega)]
     rw [Finset.sum_eq_zero]
     · simp
     · intro i hi

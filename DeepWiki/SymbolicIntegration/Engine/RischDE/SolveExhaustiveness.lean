@@ -55,7 +55,7 @@ theorem cRischDEG_isSome_iff_stages (Dt : DensePoly α) (fnum fden gnum gden : D
   · intro h
     obtain ⟨⟨ynum, yden⟩, hy⟩ := Option.isSome_iff_exists.mp h
     obtain ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly, _, _⟩ :=
-      cRischDEG_some_imp_stages_structural Dt fnum fden gnum gden ynum yden hy
+      DensePoly.cRischDEG_some_imp_stages Dt fnum fden gnum gden ynum yden hy
     exact ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly⟩
   · rintro ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly⟩
     exact cRischDEG_isSome_of_stages Dt fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v

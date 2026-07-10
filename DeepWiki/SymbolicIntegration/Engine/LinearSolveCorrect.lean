@@ -8,11 +8,6 @@ reduced-echelon structure, and the headline `cConstSolveUniqueQ_sound`. -/
 
 namespace DeepWiki.SymbolicIntegration.DensePoly
 
-/-- `getD` past the end is the default (generic). -/
-theorem getD_long_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : l.length ≤ n) :
-    l.getD n d = d := by
-  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none_iff.mpr hn]; rfl
-
 /-- `getD` of an append, left part (generic). -/
 theorem getD_append_left {α : Type*} (l l' : List α) (d : α) (n : ℕ) (hn : n < l.length) :
     (l ++ l').getD n d = l.getD n d := by
@@ -23,14 +18,6 @@ theorem getD_append_left {α : Type*} (l l' : List α) (d : α) (n : ℕ) (hn : 
 theorem getD_append_right {α : Type*} (l l' : List α) (d : α) (n : ℕ) (hn : l.length ≤ n) :
     (l ++ l').getD n d = l'.getD (n - l.length) d := by
   rw [List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_append_right hn]
-
-/-- `getD` past the end of a ℚ-list is the default `0`. -/
-theorem getD_long (l : List ℚ) (n : ℕ) (hn : l.length ≤ n) : l.getD n 0 = 0 :=
-  getD_long_gen l n 0 hn
-
-/-- `getD` within range reads the element. -/
-theorem getD_lt (l : List ℚ) (n : ℕ) (hn : n < l.length) : l.getD n 0 = l[n] :=
-  getD_lt_gen l n 0 hn
 
 /-- Dot product of a row with a vector (zipWith-mul then sum). Truncates to the shorter length. -/
 def dotQ (r x : List ℚ) : ℚ := (List.zipWith (· * ·) r x).sum
@@ -196,7 +183,7 @@ theorem crref_go_solves (ncols : ℕ) (v : List ℚ) (hv : v.length ≤ ncols) :
           -- col is within pr's length (else getD would be the default 0).
           have hcolpr : col < pr.length := by
             by_contra hc
-            exact hprnz (getD_long pr col (by omega))
+            exact hprnz (getD_long_gen pr col 0 (by omega))
           have hvpr : v.length ≤ pr.length := hlen pr (List.mem_append_left _ hprmem)
           -- the normalized pivot row and its key facts.
           set prn : List ℚ := pr.map (· / piv) with hprndef
@@ -206,7 +193,7 @@ theorem crref_go_solves (ncols : ℕ) (v : List ℚ) (hv : v.length ≤ ncols) :
             rw [hprndef, List.getD_eq_getElem?_getD, List.getElem?_map,
               List.getElem?_eq_getElem hcolpr]
             simp only [Option.map_some, Option.getD_some]
-            rw [← getD_lt pr col hcolpr]
+            rw [← getD_lt_gen pr col 0 hcolpr]
             rw [show pr.getD col 0 = piv from hpivdef.symm]
             field_simp
           -- the elimination function used by the def.
@@ -257,7 +244,7 @@ theorem crref_go_solves (ncols : ℕ) (v : List ℚ) (hv : v.length ≤ ncols) :
                     by_cases hcpr : c < pr.length
                     · rw [List.getElem?_eq_getElem hcpr]
                       simp only [Option.map_some, Option.getD_some]
-                      have : pr[c] = (0 : ℚ) := by rw [← getD_lt pr c hcpr]; exact hpr0
+                      have : pr[c] = (0 : ℚ) := by rw [← getD_lt_gen pr c 0 hcpr]; exact hpr0
                       rw [this]; simp
                     · rw [List.getElem?_eq_none_iff.mpr (by omega)]; simp
                   rw [hs0, hprn0]; ring
@@ -268,7 +255,7 @@ theorem crref_go_solves (ncols : ℕ) (v : List ℚ) (hv : v.length ≤ ncols) :
                 exfalso; rw [hprnlen] at hc_prn; omega
             · -- c ≥ s.length: elim s also short, getD default 0.
               rw [helimdef]
-              exact getD_long _ c (by simp only [List.length_zipWith]; omega)
+              exact getD_long_gen _ c 0 (by simp only [List.length_zipWith]; omega)
           -- apply the inductive hypothesis on the reduced system.
           have hrec := ih (col + 1) restElim (prn :: pivRowsElim) (col :: pivCols)
             (by omega) hlen' hcl' hsolveR
@@ -455,14 +442,14 @@ theorem crref_go_rref (ncols : ℕ) :
             have := List.find?_some hfind; simpa using this
           set piv : ℚ := pr.getD col 0 with hpivdef
           have hcolpr : col < pr.length := by
-            by_contra hc; exact hprnz (getD_long pr col (by omega))
+            by_contra hc; exact hprnz (getD_long_gen pr col 0 (by omega))
           set prn : List ℚ := pr.map (· / piv) with hprndef
           have hprnlen : prn.length = pr.length := by rw [hprndef, List.length_map]
           have hprn_col : prn.getD col 0 = 1 := by
             rw [hprndef, List.getD_eq_getElem?_getD, List.getElem?_map,
               List.getElem?_eq_getElem hcolpr]
             simp only [Option.map_some, Option.getD_some]
-            rw [← getD_lt pr col hcolpr, show pr.getD col 0 = piv from hpivdef.symm]
+            rw [← getD_lt_gen pr col 0 hcolpr, show pr.getD col 0 = piv from hpivdef.symm]
             field_simp
           -- prn is cleared below col (pr ∈ rest cleared, scaling preserves zeros).
           have hprn_cleared : ∀ c, c < col → prn.getD c 0 = 0 := by
@@ -472,7 +459,7 @@ theorem crref_go_rref (ncols : ℕ) :
             by_cases hcpr : c < pr.length
             · rw [List.getElem?_eq_getElem hcpr]
               simp only [Option.map_some, Option.getD_some]
-              have : pr[c] = (0 : ℚ) := by rw [← getD_lt pr c hcpr]; exact hpr0
+              have : pr[c] = (0 : ℚ) := by rw [← getD_lt_gen pr c 0 hcpr]; exact hpr0
               rw [this]; simp
             · rw [List.getElem?_eq_none_iff.mpr (by omega)]; simp
           set elim : List ℚ → List ℚ :=
@@ -512,7 +499,7 @@ theorem crref_go_rref (ncols : ℕ) :
               · rw [hcl s hsmem c hc', hprn_cleared c hc']; ring
               · rw [hprn_col]; ring
             · rw [helimdef]
-              exact getD_long _ c (by simp only [List.length_zipWith]; omega)
+              exact getD_long_gen _ c 0 (by simp only [List.length_zipWith]; omega)
           -- pivot-column bound for the new accumulator.
           have hpc' : ∀ j, j < (col :: pivCols).length → (col :: pivCols).getD j 0 < col + 1 := by
             intro j hj

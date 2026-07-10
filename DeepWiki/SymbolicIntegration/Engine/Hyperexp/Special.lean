@@ -124,14 +124,6 @@ theorem hyperexpSpecNorm_runs :
     (DensePoly.cIntegrateHyperexp hyperexpDt hyperexpSpecNormA hyperexpSpecNormD
       hyperexpSpecNormCands).isSome = true := by native_decide
 
-/-- The special part `1/t` of the special+normal integrand integrates exactly: its special part is exactly
-the inverse integrand (`a = 1`, `d = t`), so this is `hyperexpInv_landsSpecialPart` — `cIntegrateHyperexp`
-gives `−1/t` satisfying `checkIdentity`. -/
-theorem hyperexpSpecNorm_specialPart_exact :
-    (match DensePoly.cIntegrateHyperexp hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
-      | some res => DensePoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
-      | none => false) = true := hyperexpInv_landsSpecialPart
-
 #print axioms hyperexpSpecNorm_runs
 
 end DeepWiki.SymbolicIntegration

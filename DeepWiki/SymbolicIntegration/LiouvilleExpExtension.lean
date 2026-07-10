@@ -87,9 +87,6 @@ lemma coeff_natDegree_expDerivPoly (u : F) (p : F[X]) :
 lemma X_dvd_expDerivPoly_X (u : F) : (X : F[X]) ∣ expDerivPoly u X := by
   rw [expDerivPoly_X]; exact Dvd.intro_left (C (u′)) rfl
 
-/-- `expDerivPoly u X = C u' * X`: the logarithmic derivative of the exp monomial is `u'`. -/
-lemma expDerivPoly_X_eq (u : F) : expDerivPoly u X = C (u′) * X := expDerivPoly_X u
-
 end PolynomialSetup
 
 /-! ## The genuine field extension `F(t) = RatFunc F`. -/
@@ -640,14 +637,6 @@ theorem isLiouville_of_expPoleMatching (u : F) (hnd : NondegenerateExp u)
     IsLiouville F (RatFunc F) :=
   isLiouville_of_expFDataReduction u (expFDataReduction_of_poleMatching u hnd hpm)
 
-omit [CharZero F] in
-/-- The exp keystone: `ExpFDataReduction u` yields `IsLiouville F (RatFunc F)` for `F(exp u)`. -/
-theorem keystone (u : F) (hred : ExpFDataReduction u) :
-    letI := expDifferential u
-    letI := expDifferentialAlgebra u
-    IsLiouville F (RatFunc F) :=
-  isLiouville_of_expFDataReduction u hred
-
 end FieldObligations
 
 /-! ### Restatements pinning the exp-monomial setup and keystone. -/
@@ -735,7 +724,7 @@ example (u : F) (hred : ExpFDataReduction u) :
     letI := expDifferential u
     letI := expDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
-  keystone u hred
+  isLiouville_of_expFDataReduction u hred
 -- The sharper exp keystone: after the `v ∈ F` step, `π ≠ X` pole matching suffices.
 example (u : F) (hnd : NondegenerateExp u) (hpm : ExpPoleMatching u) :
     letI := expDifferential u

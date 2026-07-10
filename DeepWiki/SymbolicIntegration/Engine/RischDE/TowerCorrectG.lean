@@ -77,16 +77,4 @@ theorem cSPDE_peel_cleared_gen {α : Type*} [CField α] [CFieldSpec α] [CDiffFi
   exact spde_step_glue (Differential.implicitDeriv (toPoly Dt))
     (toPoly ad) (toPoly bd) (toPoly cd) (toPoly r) (toPoly z) (toPoly h) hbez hred
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-
-/-! ### Generic normal-denominator cleared lifting and special-denominator primitive case -/
-
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `toPoly (cdivWf p q) * toPoly q = toPoly p` from `toPoly q ∣ toPoly p` (nonzero divisor). -/
-theorem toPolyG_cdivWf_exact_mul_gen (p q : DensePoly α)
-    (hq0 : cnorm q ≠ [])
-    (hQdvd : toPoly q ∣ toPoly p) :
-    toPoly (cdivWf p q) * toPoly q = toPoly p :=
-  toPolyG_cdivWf_exact p q hq0 hQdvd
-
 end DeepWiki.SymbolicIntegration

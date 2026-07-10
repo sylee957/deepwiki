@@ -65,6 +65,11 @@ theorem getD_lt_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : n < l.le
     l.getD n d = l[n] := by
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hn]; rfl
 
+/-- `getD` past the end is the default. -/
+theorem getD_long_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : l.length ≤ n) :
+    l.getD n d = d := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none_iff.mpr hn]; rfl
+
 end DensePoly
 
 end DeepWiki.SymbolicIntegration

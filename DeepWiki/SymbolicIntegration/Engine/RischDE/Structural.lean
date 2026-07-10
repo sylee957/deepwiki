@@ -4,9 +4,8 @@ import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
 /-! # RDE structural decomposition
 
 A successful `cRischDE … = some (ynum, yden)` structurally forces each intermediate stage to have
-returned `some`. This file derives those stage results (`cRischDEG_some_imp_stages_structural`, the
-dispatcher → non-cancellation bridge) and isolates the residual regularity conditions the algorithm
-does not self-certify (`RischDEStructuralResidualWf`). -/
+returned `some`. This file derives the dispatcher → non-cancellation bridge and isolates the residual
+regularity conditions the algorithm does not self-certify (`RischDEStructuralResidualWf`). -/
 
 open Polynomial Classical
 open scoped Differential
@@ -16,28 +15,6 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly CFrac
 
 variable {α : Type*} [CField α] [CDiffField α]
-
-/-! ### Structural decomposition
-
-This wrapper exposes the `cRischDE` control-flow reading from the structural layer. -/
-
-/-- `cRischDE = some _` forces the stage `some`-results. -/
-theorem cRischDEG_some_imp_stages_structural [CFracGcdCoreWf α] [CRischField α] (Dt : DensePoly α)
-    (fnum fden gnum gden ynum yden : DensePoly α)
-    (hsucc : cRischDE Dt fnum fden gnum gden = some (ynum, yden)) :
-    ∃ (a0 b0 c0 h0 bbar cbar : DensePoly α) (m : ℤ) (α' β v : DensePoly α),
-      cRdeNormalDenominator Dt fnum fden gnum gden = some (a0, b0, c0, h0)
-      ∧ cSPDE Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
-          (cRdeSpecialDenominator Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1
-          (cRdeBoundDegree Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
-            (cRdeSpecialDenominator Dt a0 b0 c0).2.1
-            (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1 : ℤ)
-        = some (bbar, cbar, m, α', β)
-      ∧ cPolyRischDE Dt bbar cbar m = some v
-      ∧ ynum = cmul (cadd (cmul α' v) β) (cRdeSpecialDenominator Dt a0 b0 c0).2.2.2
-      ∧ yden = h0 :=
-  cRischDEG_some_imp_stages Dt fnum fden gnum gden ynum yden hsucc
 
 /-! ### The dispatcher → non-cancellation bridge
 
@@ -83,10 +60,6 @@ theorem cRischDEG_some_imp_noCancel_of_primitive [CFracGcdCoreWf α] [CRischFiel
   rw [← cPolyRischDEG_eq_noCancel_of_primitive Dt bbar cbar m hδ hdb]
   exact hdisp
 
-
-/-! ### Axiom audit -/
-
-#print axioms cRischDEG_some_imp_stages_structural
 
 /-! ## Cleared-identity ports -/
 
@@ -338,13 +311,13 @@ theorem cRdeNormalDenominatorG_cleared_lift (Dt : DensePoly α) (fnum fden gnum 
       rw [← ha, ← hdndef]
       simp only [denote]
     have hBexact : toPoly b * toPoly fden = toPoly bNum := by
-      rw [← hb]; exact toPolyG_cdivWf_exact_mul_gen bNum fden hfden0 hdvdB
+      rw [← hb]; exact DensePoly.toPolyG_cdivWf_exact bNum fden hfden0 hdvdB
     have hBeq : toPoly bNum = toPoly a * toPoly fnum
         - toPoly dn * Differential.implicitDeriv (toPoly Dt) (toPoly h) * toPoly fden := by
       simp only [hbNum, denote]
       rw [← hA]
     have hCexact : toPoly c * toPoly gden = toPoly cNum := by
-      rw [← hc]; exact toPolyG_cdivWf_exact_mul_gen cNum gden hgden0 hdvdC
+      rw [← hc]; exact DensePoly.toPolyG_cdivWf_exact cNum gden hgden0 hdvdC
     have hCeq : toPoly cNum = toPoly dn * toPoly h ^ 2 * toPoly gnum := by
       simp only [hcNum, denote]; ring
     have hBcert : toPoly b * toPoly fden = toPoly a * toPoly fnum

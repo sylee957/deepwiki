@@ -420,9 +420,6 @@ theorem toPolyG_tanDeriv_singleton (s : DensePoly ℚ) :
 
 /-! ### The numerator vanishes at `t = i` -/
 
-theorem eval_toGBCoeffPolyS (p : List (DensePoly ℚ)) :
-    (toGBCoeffPolyS p).eval iU = pairToS (evalAtI p) := evalAtI_spec p
-
 theorem eval_toGBCoeffPolyS_singleton (s : DensePoly ℚ) : (toGBCoeffPolyS [s]).eval iU = toS s := by
   rw [show toGBCoeffPolyS [s] = C (toS s) from by
     rw [toGBCoeffPolyS_eq_map, DensePoly.toPolyG_cons_dense, DensePoly.toPolyG_nil,
@@ -445,7 +442,7 @@ theorem numerator_eval_zero (c1 c2 : List (DensePoly ℚ)) (s1 s2 : DensePoly �
   rw [toGBCoeffPolyS_cadd, toGBCoeffPolyS_cadd, toGBCoeffPolyS_csub, toGBCoeffPolyS_csub, toGBCoeffPolyS_cscaleListQ,
     toGBCoeffPolyS_cscaleListQ, toGBCoeffPolyS_cadd, toGBCoeffPolyS_csub]
   simp only [eval_add, eval_sub, eval_mul, eval_C]
-  rw [eval_toGBCoeffPolyS c1, eval_toGBCoeffPolyS c2, eval_toGBCoeffPolyS_singleton, eval_toGBCoeffPolyS_singleton,
+  rw [evalAtI_spec c1, evalAtI_spec c2, eval_toGBCoeffPolyS_singleton, eval_toGBCoeffPolyS_singleton,
     eval_toGBCoeffPolyS_singleton, eval_toGBCoeffPolyS_singleton, eval_toGBCoeffPolyS_shift, eval_toGBCoeffPolyS_shift,
     eval_toGBCoeffPolyS_singleton, eval_toGBCoeffPolyS_singleton]
   -- now everything is in terms of toS of evalAtI parts and s1,s2
