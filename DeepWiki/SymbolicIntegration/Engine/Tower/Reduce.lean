@@ -64,6 +64,27 @@ Since `qReduce` preserves the field value, it preserves the zero test `isZeroNZ`
 
 end CFrac
 
+/-! ### Sparse specialization: the same reducer selects sparse polynomial capabilities -/
+
+namespace CFrac
+
+/-- File-local reducible sparse fraction `(x² - 1)/(x² + 2x - 3)`. -/
+private def sparseSwellFrac : SparseFrac ℚ :=
+  CFrac.ofFraction
+    (CPoly.SparsePoly.ofList [(0, -1), (2, 1)])
+    (CPoly.SparsePoly.ofList [(0, -3), (1, 2), (2, 1)])
+    (by ccompute)
+
+example :
+    CPolyEngine.cdeg (CFrac.num (qReduce sparseSwellFrac)) = 1 := by
+  ccompute
+
+example :
+    CFrac.toRatFunc (qReduce sparseSwellFrac) = CFrac.toRatFunc sparseSwellFrac :=
+  toRatFunc_qReduce sparseSwellFrac
+
+end CFrac
+
 /-! ### Residual-solver example: `qReduce` exposes a constant residual
 
 A residual that is the value `1` stored as `(2x)/(2x)` makes `crischDESolve 0 R` return `none`

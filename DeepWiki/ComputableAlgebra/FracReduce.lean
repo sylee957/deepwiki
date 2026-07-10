@@ -138,4 +138,10 @@ theorem isZeroNZ_qReduce
 
 end CFrac
 
+/-! The sparse specialization resolves the same reducer and denotation law without a dense adapter. -/
+
+example {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : SparseFrac α) :
+    CFrac.toRatFunc (qReduce a) = CFrac.toRatFunc a :=
+  toRatFunc_qReduce a
+
 end DeepWiki.SymbolicIntegration
