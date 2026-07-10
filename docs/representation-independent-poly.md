@@ -198,6 +198,15 @@ Negative Laurent-coefficient extraction is representation-independent as well:
 engine's zero, degree, and leading-coefficient operations. It executes on sparse inputs, while the existing
 dense Laurent soundness proof crosses explicit dense-specialization lemmas. This replaces the last direct
 `List.getD` assumption in the helper rather than adding a parallel sparse implementation.
+The parallel tower wrapper now abstracts its outer polynomial representation too. The engine's
+`coeffList`/`ofCoeffList` adapters are the identity at `DensePoly` and generic coefficient enumeration/
+construction at `SparsePoly`; `cToRatCoeffsQ` and `cParallelIntegrateTower` use them to share the single
+dense base-field solver. The wrapper therefore executes on sparse tower polynomials without duplicating
+the Risch–Norman algorithm. The Chapter 10 catalog alias remains explicitly pinned to `DensePoly`.
+The same adapters remove the list boundary from `cIntegrateHyperexpLaurent`: its positive coefficients
+are enumerated through the engine, and its numerator and monomial denominator are reconstructed in the
+caller’s representation. The recursive Laurent algorithm now executes on sparse polynomials while the
+existing dense soundness theorems continue to specialize it definitionally.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

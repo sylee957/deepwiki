@@ -40,8 +40,9 @@ def cLaurentIntCoeff (η : α) (j : ℤ) (aj : α) : Option α :=
 some (num, den)`: integrate `∑ⱼ aⱼ tʲ`, with `pos[k] = a_k` (`k ≥ 0`) and `neg[i] = a_{-(i+1)}`, returning
 `num/den` with `den = tᵐ` (`m = neg.length`) and `num[j+m] = qⱼ` from the per-term RDE; `none` if any term
 is non-elementary. -/
-def cIntegrateHyperexpLaurent (η : α) (pos : DensePoly α) (neg : List α) :
-    Option (DensePoly α × DensePoly α) :=
+def cIntegrateHyperexpLaurent {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CRischField α] (η : α) (pos : P α) (neg : List α) :
+    Option (P α × P α) :=
   let m : ℕ := (neg : List α).length
   -- the negative tail: index `−(i+1)` solved with shift `−(i+1)`, placed at `num`-index `m−1−i`.
   let negQ : Option (List α) :=
@@ -53,8 +54,9 @@ def cIntegrateHyperexpLaurent (η : α) (pos : DensePoly α) (neg : List α) :
         | none => none
         | some q => some (q :: tail)) (some [])
   -- the non-negative part: index `k` solved with shift `k`, placed at `num`-index `m+k`.
+  let posInput : List α := CPolyEngine.coeffList pos
   let posQ : Option (List α) :=
-    (pos.zipIdx).foldr (fun (ak, k) acc =>
+    (posInput.zipIdx).foldr (fun (ak, k) acc =>
       match acc with
       | none => none
       | some tail =>
@@ -65,10 +67,19 @@ def cIntegrateHyperexpLaurent (η : α) (pos : DensePoly α) (neg : List α) :
   | some negCoeffs, some posCoeffs =>
     -- `negCoeffs[i] = q_{−(i+1)}`; in `num` (index `j+m`) these go to indices `m-1, m-2, …, 0`,
     -- i.e. the reversed list is `num[0..m-1]`. `posCoeffs[k] = q_k` go to `num[m..]`.
-    let num : DensePoly α := negCoeffs.reverse ++ posCoeffs
-    let den : DensePoly α := cshift m [CCommRing.one]
+    let num : P α := CPolyEngine.ofCoeffList (negCoeffs.reverse ++ posCoeffs)
+    let den : P α := CPolyEngine.monomial (P := P) CCommRing.one m
     some (num, den)
   | _, _ => none
+
+/-- The Laurent integrator executes on sparse polynomials without a separate sparse algorithm. -/
+example :
+    (match cIntegrateHyperexpLaurent (P := CPoly.SparsePoly) (1 : ℚ)
+        (CPoly.SparsePoly.ofList []) [(1 : ℚ)] with
+      | some (num, den) =>
+          decide (CPoly.coeff num 0 = (-1 : ℚ)) && decide (CPolyEngine.cdeg den = 1)
+      | none => false) = true := by
+  native_decide
 
 /-! ### Reading the negative Laurent coefficients off the special part `b/dₛ`
 

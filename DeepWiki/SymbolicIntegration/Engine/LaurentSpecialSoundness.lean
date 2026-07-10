@@ -110,7 +110,13 @@ theorem cIntegrateHyperexpLaurentG_special_sound [CRischField α] [CRischFieldSp
     (hsome : cIntegrateHyperexpLaurent η fp (cHyperexpSpecialNeg b ds) = some (lnum, lden)) :
     towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))
       = am α (toPoly fp) + am α (toPoly b) / am α (toPoly ds) := by
-  rw [cIntegrateHyperexpLaurentG_sound Dt η fp (cHyperexpSpecialNeg b ds) lnum lden hDt hsome,
-    cHyperexpSpecialNegG_frac b ds hds]
+  have hLaur : towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))
+      = am α (toPoly fp)
+        + am α (toPoly (cHyperexpSpecialNeg b ds).reverse)
+          / am α (toPoly
+            (cshift (cHyperexpSpecialNeg b ds).length ([CCommRing.one] : DensePoly α))) := by
+    simpa only [toPoly_list_eq] using
+      cIntegrateHyperexpLaurentG_sound Dt η fp (cHyperexpSpecialNeg b ds) lnum lden hDt hsome
+  rw [hLaur, cHyperexpSpecialNegG_frac b ds hds]
 
 end DeepWiki.SymbolicIntegration

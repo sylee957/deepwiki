@@ -29,6 +29,10 @@ class CPolyEngine (P : Type u → Type u) where
   neg : {α : Type u} → [CCommRing α] → P α → P α
   /-- Monomial construction. -/
   monomial : {α : Type u} → [CCommRing α] → α → ℕ → P α
+  /-- Enumerate the represented coefficients from degree zero through the representation bound. -/
+  coeffList : {α : Type u} → [CCommRing α] → P α → List α
+  /-- Build a polynomial representation from a low-to-high coefficient list. -/
+  ofCoeffList : {α : Type u} → [CCommRing α] → List α → P α
   /-- Apply a coefficient function without changing the represented degree bound. -/
   mapCoeffs : {α : Type u} → [CCommRing α] → (α → α) → P α → P α
   /-- Formal derivative. -/
@@ -57,6 +61,10 @@ class LawfulCPolyEngine (P : Type u → Type u) [CPoly P] [CPolyEngine P] : Prop
   toPoly_monomial : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (c : α) (k : ℕ),
     CPoly.toPoly (CPolyEngine.monomial (P := P) c k) =
       Polynomial.C (CRingSpec.toR c) * Polynomial.X ^ k
+  toPoly_coeffList : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (p : P α),
+    DensePoly.toPoly (CPolyEngine.coeffList p) = CPoly.toPoly p
+  toPoly_ofCoeffList : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α] (xs : List α),
+    CPoly.toPoly (CPolyEngine.ofCoeffList (P := P) xs) = DensePoly.toPoly xs
   toR_coeff_mapCoeffs : ∀ {α : Type u} [CCommRing α] [CRingSpec.{u,v} α]
       (f : α → α) (_hzero : CRingSpec.toR (f CCommRing.zero) = 0) (p : P α) (i : ℕ),
     CRingSpec.toR (CPoly.coeff (CPolyEngine.mapCoeffs f p) i) =
@@ -127,6 +135,8 @@ instance instEngineList : CPolyEngine List where
   mul := DensePoly.cmul
   neg := DensePoly.cneg
   monomial := DensePoly.cMonomial
+  coeffList p := p
+  ofCoeffList xs := xs
   mapCoeffs f p := (p : List _).map f
   deriv := DensePoly.cderiv
   scale := DensePoly.cscale
@@ -150,6 +160,8 @@ instance instLawfulEngineList : LawfulCPolyEngine List where
   toPoly_monomial c k := by
     change CPoly.toPoly (DensePoly.cMonomial c k) = _
     rw [toPoly_list_eq, DensePoly.toPolyG_cMonomial]
+  toPoly_coeffList p := (toPoly_list_eq p).symm
+  toPoly_ofCoeffList xs := toPoly_list_eq xs
   toR_coeff_mapCoeffs f hzero p i := by
     change CRingSpec.toR (((p : List _).map f).getD i CCommRing.zero) =
       CRingSpec.toR (f ((p : List _).getD i CCommRing.zero))
@@ -203,6 +215,14 @@ namespace CPolyEngine
 /-- Engine monomial construction on the dense representation is concrete dense construction. -/
 @[simp] theorem monomial_dense_eq {α : Type u} [CCommRing α] (c : α) (k : ℕ) :
     CPolyEngine.monomial (P := DensePoly) c k = DensePoly.cMonomial c k := rfl
+
+/-- Engine coefficient enumeration on the dense representation is the coefficient list itself. -/
+@[simp] theorem coeffList_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) :
+    CPolyEngine.coeffList p = p := rfl
+
+/-- Engine coefficient-list construction on the dense representation is the identity. -/
+@[simp] theorem ofCoeffList_dense_eq {α : Type u} [CCommRing α] (xs : List α) :
+    CPolyEngine.ofCoeffList (P := DensePoly) xs = xs := rfl
 
 /-- Engine coefficient mapping on the dense representation is concrete list mapping. -/
 @[simp] theorem mapCoeffs_dense_eq {α : Type u} [CCommRing α] (f : α → α) (p : DensePoly α) :
@@ -261,6 +281,8 @@ instance instEngineSparse : CPolyEngine CPoly.SparsePoly where
   mul := CPoly.mul
   neg := CPoly.neg
   monomial := CPoly.cmonomial
+  coeffList p := (List.range (CPoly.degBound p)).map (CPoly.coeff p)
+  ofCoeffList xs := CPoly.ofFn xs.length (fun i => xs.getD i CCommRing.zero)
   mapCoeffs f p := CPoly.ofFn (CPoly.degBound p) (fun i => f (CPoly.coeff p i))
   deriv := CPoly.cderiv
   scale := CPoly.scale
@@ -278,6 +300,29 @@ instance instLawfulEngineSparse : LawfulCPolyEngine CPoly.SparsePoly where
   toPoly_monomial c k := by
     change CPoly.toPoly (CPoly.cmonomial c k) = _
     exact CPoly.toPoly_cmonomial c k
+  toPoly_coeffList p := by
+    change DensePoly.toPoly
+        ((List.range (CPoly.degBound p)).map (CPoly.coeff p)) = CPoly.toPoly p
+    apply Polynomial.ext
+    intro i
+    rw [DensePoly.toPolyG_coeff, CPoly.coeff_toPoly]
+    simp only [List.getD_eq_getElem?_getD, List.getElem?_map]
+    by_cases hi : i < CPoly.degBound p
+    · rw [List.getElem?_range hi, Option.map_some, Option.getD_some]
+    · rw [List.getElem?_eq_none (by simpa using hi), Option.map_none, Option.getD_none,
+        CPoly.coeff_ge p i (Nat.le_of_not_gt hi), CRingSpec.toR_zero]
+  toPoly_ofCoeffList xs := by
+    apply Polynomial.ext
+    intro i
+    rw [CPoly.coeff_toPoly, DensePoly.toPolyG_coeff]
+    change CRingSpec.toR
+        (CPoly.coeff
+          (CPoly.ofFn xs.length (fun j => xs.getD j CCommRing.zero)) i) = _
+    rw [CPoly.coeff_ofFn]
+    by_cases hi : i < xs.length
+    · rw [if_pos hi]
+    · rw [if_neg hi, List.getD_eq_getElem?_getD,
+        List.getElem?_eq_none (by simpa using Nat.le_of_not_gt hi), Option.getD_none]
   toR_coeff_mapCoeffs f hzero p i := by
     change CRingSpec.toR
         (CPoly.coeff

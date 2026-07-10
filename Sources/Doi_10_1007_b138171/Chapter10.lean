@@ -63,7 +63,8 @@ computable `cParallelIntegrateTower Dt a d` over `a d : DensePoly (CFrac ℚ)`. 
 d` all with `ℚ`-constant coefficients, so `k = ℚ`) is routed through `cParallelIntegrate` and lifted back
 to `CFrac ℚ` coefficients; a genuine `x`-dependent coefficient (the full tower, needing the §10.2
 special-polynomial list + `F̄`-factorization) returns `none` — the documented continuation. -/
-def alg_10_3_parallelIntegrateTower := @cParallelIntegrateTower
+def alg_10_3_parallelIntegrateTower :=
+  @cParallelIntegrateTower DensePoly CPoly.instList instEngineList
 
 /-- **Example (§10.3, book p.309)**, pure log, `t = x` (`Dt = 1`): `cParallelIntegrate` on
 `∫ 2t/(t²+1) dt` over `ℚ(t)` returns `some res` whose reconstructed `∫f = b/s + Σ cⱼ log pⱼ` is verified

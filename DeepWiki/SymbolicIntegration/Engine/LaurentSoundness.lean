@@ -14,6 +14,8 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly CFrac
 open scoped Differential
 
+universe u v
+
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
@@ -307,17 +309,25 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : DensePoly
 some (num, den)`, then `D_tower(⟦num/den⟧) = ⟦pos⟧ + ⟦neg.reverse⟧/⟦t^(neg.length)⟧` — the antiderivative
 identity for the full hyperexponential Laurent integrand (non-negative part `pos`, negative part
 `neg` read as `∑ᵢ neg[i]·t^{-(i+1)} = ⟦neg.reverse⟧/tᵐ`). -/
-theorem cIntegrateHyperexpLaurentG_sound [CRischField α] [CRischFieldSpec α]
-    (Dt : DensePoly α) (η : α) (pos : DensePoly α) (neg : List α) (num den : DensePoly α)
+theorem cIntegrateHyperexpLaurentG_sound {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+    [CDiffField α] [CDiffFieldSpec.{u,v} α] [Algebra ℚ (CFieldSpec.K α)]
+    [CRischField α] [CRischFieldSpec α]
+    (Dt : DensePoly α) (η : α) (pos : P α) (neg : List α) (num den : P α)
     (hDt : IsHyperexpMonomial Dt η)
     (hsome : cIntegrateHyperexpLaurent η pos neg = some (num, den)) :
-    towerFractionFieldDeriv Dt (am α (toPoly num) / am α (toPoly den))
-      = am α (toPoly pos)
+    towerFractionFieldDeriv Dt (am α (CPoly.toPoly num) / am α (CPoly.toPoly den))
+      = am α (CPoly.toPoly pos)
         + am α (toPoly neg.reverse)
           / am α (toPoly (cshift neg.length ([CCommRing.one] : DensePoly α))) := by
   have hXne : am α (Polynomial.X : (CFieldSpec.K α)[X]) ≠ 0 :=
     (map_ne_zero_iff (am α) (RatFunc.algebraMap_injective _)).mpr Polynomial.X_ne_zero
-  have hdenpow : toPoly (cshift neg.length ([CCommRing.one] : DensePoly α))
+  have hdenpow : CPoly.toPoly
+      (CPolyEngine.monomial (P := P) (CCommRing.one : α) neg.length)
+      = (Polynomial.X : (CFieldSpec.K α)[X]) ^ neg.length := by
+    rw [LawfulCPolyEngine.toPoly_monomial (P := P)]
+    simp only [toR_eq_toK, CFieldSpec.toK_one, map_one, one_mul]
+  have hdenpowDense : toPoly (cshift neg.length ([CCommRing.one] : DensePoly α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ neg.length := by
     simp only [denote, mul_zero, add_zero, map_one, mul_one]
   rw [cIntegrateHyperexpLaurent] at hsome
@@ -327,42 +337,40 @@ theorem cIntegrateHyperexpLaurentG_sound [CRischField α] [CRischFieldSpec α]
     obtain ⟨hnum, hden⟩ := hsome
     subst hnum; subst hden
     have hlen : negCoeffs.length = neg.length := laurentGo_length η _ neg negCoeffs 0 hnegeq
-    have hsplit : toPoly (negCoeffs.reverse ++ posCoeffs)
+    have hsplit : CPoly.toPoly
+          (CPolyEngine.ofCoeffList (P := P) (negCoeffs.reverse ++ posCoeffs))
         = toPoly negCoeffs.reverse
           + Polynomial.X ^ neg.length * toPoly posCoeffs := by
-      rw [toPolyG_append_laurent, List.length_reverse, hlen]
-    rw [hsplit, map_add, add_div, map_add, add_comm (am α (toPoly pos))]
+      rw [LawfulCPolyEngine.toPoly_ofCoeffList (P := P),
+        toPolyG_append_laurent, List.length_reverse, hlen]
+    rw [hsplit, map_add, add_div, map_add, add_comm (am α (CPoly.toPoly pos))]
     congr 1
     · have hneg := laurentNegGo_sound Dt η hDt neg negCoeffs 0 hnegeq
-      simpa using hneg
-    · have hpos := laurentPosGo_sound Dt η hDt pos posCoeffs 0 hposeq
+      rw [hdenpow, hdenpowDense]
+      simp only [zero_add] at hneg
+      rw [hdenpowDense] at hneg
+      exact hneg
+    · have hpos := laurentPosGo_sound Dt η hDt
+        (CPolyEngine.coeffList pos) posCoeffs 0 hposeq
       rw [hdenpow, map_mul, map_pow, mul_div_cancel_left₀ _ (pow_ne_zero neg.length hXne)]
+      simp only [DensePoly.cshift] at hpos
+      rw [LawfulCPolyEngine.toPoly_coeffList (P := P)] at hpos
       simpa using hpos
   all_goals simp at hsome
 
 /-- **Laurent soundness, polynomial case (`neg = []`).** For `Dt = η·t`, if
 `cIntegrateHyperexpLaurent η pos [] = some (num, den)`, then `D_tower(⟦num/den⟧) = ⟦pos⟧` — the antiderivative
 identity for a purely non-negative hyperexponential Laurent integrand (`den = 1`). -/
-theorem cIntegrateHyperexpLaurentG_pos_sound [CRischField α] [CRischFieldSpec α]
-    (Dt : DensePoly α) (η : α) (pos num den : DensePoly α)
+theorem cIntegrateHyperexpLaurentG_pos_sound {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+    [CDiffField α] [CDiffFieldSpec.{u,v} α] [Algebra ℚ (CFieldSpec.K α)]
+    [CRischField α] [CRischFieldSpec α]
+    (Dt : DensePoly α) (η : α) (pos num den : P α)
     (hDt : IsHyperexpMonomial Dt η)
     (hsome : cIntegrateHyperexpLaurent η pos [] = some (num, den)) :
-    towerFractionFieldDeriv Dt (am α (toPoly num) / am α (toPoly den))
-      = am α (toPoly pos) := by
-  rw [cIntegrateHyperexpLaurent] at hsome
-  simp only [List.length_nil, List.zipIdx_nil, List.foldr_nil] at hsome
-  split at hsome
-  · rename_i negC posCoeffs hnegeq hp
-    simp only [Option.some.injEq] at hnegeq
-    subst hnegeq
-    simp only [List.reverse_nil, List.nil_append, Option.some.injEq, Prod.mk.injEq] at hsome
-    obtain ⟨hnum, hden⟩ := hsome
-    subst hnum; subst hden
-    have hden1 : toPoly (cshift (0 : ℕ) ([CCommRing.one] : DensePoly α)) = 1 := by
-      show toPoly ([CCommRing.one] : DensePoly α) = 1
-      simp only [denote, mul_zero, add_zero, map_one]
-    rw [hden1, map_one, div_one]
-    simpa using laurentPosGo_sound Dt η hDt pos posCoeffs 0 hp
-  · simp at hsome
+    towerFractionFieldDeriv Dt (am α (CPoly.toPoly num) / am α (CPoly.toPoly den))
+      = am α (CPoly.toPoly pos) := by
+  simpa only [List.reverse_nil, toPolyG_nil, map_zero, zero_div, add_zero] using
+    cIntegrateHyperexpLaurentG_sound Dt η pos [] num den hDt hsome
 
 end DeepWiki.SymbolicIntegration
