@@ -334,7 +334,7 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
 theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ)
     (d : ℕ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true := by
-  rw [cCoupledDESystem] at hsome
+  rw [cCoupledDESystem_dense_eq, cCoupledDESystemWith] at hsome
   set nrows : ℕ :=
     ([cdeg b1 + d, cdeg b2 + d, cdeg z1, cdeg z2, d].foldl max 0) + 2 with hnrowsdef
   set row1u := matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows) with hrow1u
@@ -391,8 +391,12 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
           = (CPoly.coeffs z1 nrows ++ CPoly.coeffs z2 nrows).getD k 0 := by
       rw [← hrow1u, ← hMdef, ← hrhsdef]; exact hsolve
     -- toPoly agreement (cnorm).
-    have htoP_y1 : toPoly y1 = toPoly u1 := by rw [← hy1]; simp only [denote]
-    have htoP_y2 : toPoly y2 = toPoly u2 := by rw [← hy2]; simp only [denote]
+    have htoP_y1 : toPoly y1 = toPoly u1 := by
+      rw [← hy1, CPoly.ofFn_dense_eq, ← hu1def]
+      simp only [denote]
+    have htoP_y2 : toPoly y2 = toPoly u2 := by
+      rw [← hy2, CPoly.ofFn_dense_eq, ← hu2def]
+      simp only [denote]
     have hu1deg : (toPoly u1).natDegree ≤ d := by
       have h1 : (toPoly u1).natDegree ≤ (cnorm u1 : List ℚ).length - 1 := natDegree_toPolyG_le u1
       have h2 : (cnorm u1 : List ℚ).length ≤ d + 1 := by

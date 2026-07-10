@@ -18,6 +18,7 @@ structure SparsePoly (α : Type u) where
   ofList ::
   /-- The underlying `(degree, coefficient)` association list. -/
   toList : List (ℕ × α)
+deriving DecidableEq
 
 namespace SparsePoly
 

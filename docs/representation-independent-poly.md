@@ -107,15 +107,18 @@ behaviour-preserving mechanical sweep, for two hard reasons established empirica
 
 ## The `CPolyEngine` enabler — and why migration is connected-component-scale, not per-module
 
-`PolyEngine.lean` adds the **fat** interface `CPolyEngine extends CPoly`: the polynomial ops are
-**class fields**, and the `List` instance supplies the *concrete engine ops* — `CPolyEngine.add (p :
-List α) = DensePoly.cadd p` **definitionally**. So a declaration re-parametrised over `[CPolyEngine P]`
+`PolyEngine.lean` adds the Prop-free operations interface `CPolyEngine`, paired with
+`LawfulCPolyEngine` for its denotation laws. A migrated declaration takes `[CPoly P] [CPolyEngine P]`;
+the `List` instances supply the *concrete engine ops* — `CPolyEngine.add (p :
+List α) = DensePoly.cadd p` **definitionally**. So a declaration re-parametrised over
+`[CPoly P] [CPolyEngine P]`
 computes *exactly* the engine's list output at `List`: **`native_decide` is preserved** and the ops need
 no bridge. The `SparsePoly` instance supplies the generic `ofFn` ops, so a migrated declaration also runs
 sparse. This is the enabler that removes the *op* mismatch (blocker #1 above).
 
-**But there is a second, harder coupling — the denotation.** A generic declaration `foo {P} [CPolyEngine
-P] (p : P α)` must state its correctness through the *generic* `CPoly.toPoly` (the `List`-specific
+**But there is a second, harder coupling — the denotation.** A generic declaration `foo {P} [CPoly P]
+[CPolyEngine P] [LawfulCPolyEngine P] (p : P α)` must state its correctness through the *generic*
+`CPoly.toPoly` (the `List`-specific
 `DensePoly.toPoly` doesn't typecheck at generic `P`). And `CPoly.toPoly = DensePoly.toPoly` at `List` is a
 *proven bridge* (`toPoly_list_eq`), **not** definitional. So the moment a module's `toPoly`-stated theorem
 is migrated, every downstream consumer that pattern-matches on `DensePoly.toPoly` must migrate too. Migration
@@ -133,6 +136,11 @@ downstream consumer.
 The delivered foundation (`CPoly` + `CPolyEngine` + full correctness + bridge, all gate-green) is
 what makes *either* route safe. It does not make the aggregate small: the engine port is a genuine
 re-derivation effort, correctly scoped here rather than faked by breaking the 120 `native_decide` suites.
+
+The first consumer migration has landed: `cCoupledDESystem` is generic over `[CPoly P]
+`[CPolyEngine P]`, preserves the dense-list computation definitionally, and runs the same worked solve
+on `SparsePoly`. Its dense soundness proof crosses a named specialization lemma, so existing downstream
+theorems remain unchanged while the executable solver itself is representation-independent.
 
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 

@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Parametric
+import DeepWiki.ComputableAlgebra.PolyEngine
 
 /-! # The base coupled differential system
 
@@ -79,19 +80,19 @@ theorem derivMatrixQ_len (d nrows : ℕ) : (derivMatrixQ d nrows).length = nrows
 theorem matAddQ_len (A B : List (List ℚ)) : (matAddQ A B).length = min A.length B.length := by
   rw [matAddQ, List.length_zipWith]
 
-/-- `cCoupledDESystem a b1 b2 z1 z2 d` (`D = d/dx`): solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]]·(y₁; y₂)
-= (z₁; z₂)` for `y₁, y₂ ∈ ℚ[x]` of degree `≤ d`, via the ansatz residuals as one ℚ-linear solve
-(`cConstSolveUniqueQ`). Returns `some (y₁, y₂)` or `none`. -/
-def cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) :
-    Option (DensePoly ℚ × DensePoly ℚ) :=
+/-- Assemble and solve the coupled system using explicit degree, scaling, and normalization operations. -/
+def cCoupledDESystemWith {P : Type → Type} [CPoly P]
+    (polyDeg : P ℚ → ℕ) (polyScale : ℚ → P ℚ → P ℚ) (polyNorm : P ℚ → P ℚ)
+    (a : ℚ) (b1 b2 z1 z2 : P ℚ) (d : ℕ) :
+    Option (P ℚ × P ℚ) :=
   -- choose enough rows: any residual coefficient lives below this degree.
-  let degs : List ℕ := [cdeg b1 + d, cdeg b2 + d, cdeg z1, cdeg z2, d]
+  let degs : List ℕ := [polyDeg b1 + d, polyDeg b2 + d, polyDeg z1, polyDeg z2, d]
   let nrows : ℕ := (degs.foldl max 0) + 2
   -- the four polynomial-multiplication / derivation coefficient blocks, each `nrows × (d+1)`.
   let Dblk := derivMatrixQ d nrows
   let B1 := mulMatrixQ b1 d nrows
   let B2 := mulMatrixQ b2 d nrows
-  let aB2 := mulMatrixQ (cscale a b2) d nrows
+  let aB2 := mulMatrixQ (polyScale a b2) d nrows
   -- row 1: `(D + b₁)·u + (a·b₂)·v`; row 2: `b₂·u + (D + b₁)·v`.
   let row1u := matAddQ Dblk B1
   let row1v := aB2
@@ -103,9 +104,32 @@ def cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) :
   match cConstSolveUniqueQ M rhs (2 * (d + 1)) with
   | none => none
   | some sol =>
-    let y1 : DensePoly ℚ := (List.range (d + 1)).map (fun i => sol.getD i 0)
-    let y2 : DensePoly ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)
-    some (cnorm y1, cnorm y2)
+    let y1 : P ℚ := CPoly.ofFn (d + 1) (fun i => sol.getD i 0)
+    let y2 : P ℚ := CPoly.ofFn (d + 1) (fun i => sol.getD ((d + 1) + i) 0)
+    some (polyNorm y1, polyNorm y2)
+
+/-- `cCoupledDESystem a b1 b2 z1 z2 d` (`D = d/dx`): in any `CPolyEngine` representation, solve
+`(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]]·(y₁; y₂) = (z₁; z₂)` for degree-`≤ d` polynomials via one
+ℚ-linear solve (`cConstSolveUniqueQ`). Returns `some (y₁, y₂)` or `none`. -/
+def cCoupledDESystem {P : Type → Type} [CPoly P] [CPolyEngine P]
+    (a : ℚ) (b1 b2 z1 z2 : P ℚ) (d : ℕ) : Option (P ℚ × P ℚ) :=
+  cCoupledDESystemWith CPolyEngine.cdeg CPolyEngine.scale CPolyEngine.cnorm
+    a b1 b2 z1 z2 d
+
+/-- The generic coupled solver specializes definitionally to the original dense-list computation. -/
+theorem cCoupledDESystem_dense_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) :
+    cCoupledDESystem a b1 b2 z1 z2 d =
+      cCoupledDESystemWith cdeg cscale cnorm a b1 b2 z1 z2 d := rfl
+
+example :
+    cCoupledDESystem (-1)
+        (CPoly.SparsePoly.ofList [] : CPoly.SparsePoly ℚ)
+        (CPoly.SparsePoly.ofList [(0, -2), (1, 4)])
+        (CPoly.SparsePoly.ofList [(0, 2), (2, -8)])
+        (CPoly.SparsePoly.ofList [(0, 4), (1, -4)]) 1
+      = some (CPoly.SparsePoly.ofList [(0, -1)],
+          CPoly.SparsePoly.ofList [(0, 1), (1, 2)]) := by
+  native_decide
 
 end DensePoly
 

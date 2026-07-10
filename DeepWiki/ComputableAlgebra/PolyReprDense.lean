@@ -47,6 +47,10 @@ instance instList : CPoly DensePoly where
 @[simp] theorem coeff_dense_eq {α : Type u} [CCommRing α] (p : DensePoly α) (i : ℕ) :
     CPoly.coeff p i = (p : List α).getD i CCommRing.zero := rfl
 
+/-- Generic construction on the dense representation is the low-to-high `List.range` map. -/
+@[simp] theorem ofFn_dense_eq {α : Type u} [CCommRing α] (n : ℕ) (f : ℕ → α) :
+    CPoly.ofFn (P := DensePoly) n f = (List.range n).map f := rfl
+
 /-! ### The generic arithmetic reduces on the dense representation -/
 
 /-- Generic `add` reduces under `native_decide` at the dense instance. -/
