@@ -182,6 +182,18 @@ and retain the existing dense worked output. The lawful engine laws are universe
 denotation carrier, so the same generic soundness theorem applies at tower coefficients such as
 `CFrac β`, whose denotation is `RatFunc (CFieldSpec.K β)`.
 
+The earlier Chapter 5 polynomial-part recursions now use the same representation-independent layer.
+`cPolyReduceTower` and `cPrimitivePolyIntegrate` normalize through the engine and state their former
+dense-list stopping tests semantically as “zero or degree below the cutoff.” Their cancellation steps use
+engine monomials, subtraction, monomial derivation, and addition. Both execute on `SparsePoly`; the
+original dense `CFrac ℚ` examples and source-catalog aliases remain unchanged. There is one recursive
+implementation of each algorithm rather than parallel dense and generic bodies.
+The immediate LRT tower wrapper `towerPolyIntegrateLrt` and its soundness theorem are generic over the
+polynomial representation as well; the dense special-part proof now crosses the single `toPoly_list_eq`
+boundary where it consumes that theorem.
+The hyperexponential residual fold no longer carries a false dense-polynomial dependency either:
+`cHyperexpResidual` is generic in the log-argument payload and needs only `CCommRing` on its scalar field.
+
 ## The bottom-up generic algorithm layer (the constructive route, in progress)
 
 Since the *existing* engine can't be migrated isolated-module-at-a-time, the constructive path is to

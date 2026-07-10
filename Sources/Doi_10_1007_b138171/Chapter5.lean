@@ -115,7 +115,8 @@ derivative cancels the top. Computable (generic over `[CField α] [CDiffField α
 `native_decide`-validated (Thm 5.4.1); abstract correctness deferred. *(Already a generic decl — no
 `…G`-suffixed mirror is needed; here pinned at the generic ℚ(x) = `CFrac ℚ` like the rest of the
 engine.)* -/
-noncomputable abbrev alg_5_4_polynomialReduce := @cPolyReduceTower (CFrac ℚ)
+noncomputable abbrev alg_5_4_polynomialReduce :=
+  cPolyReduceTower (P := DensePoly) (α := CFrac ℚ)
 
 /-- **Example 5.4.1** (§5.4, p.141): `cPolyReduceTower` reduces `p = t³` (`Dt = t²+1`, `t = tan x`,
 `δ = 2`) to `(q, r) = ((1/2)t², −t)` satisfying the §5.4 reduction identity `D(q) + r = p` with the
@@ -174,7 +175,8 @@ antiderivatives is the deferred Chapter-7 oracle. Computable + `native_decide`-v
 correctness (Thm 5.8.1) deferred. *(Already a generic `[CField α] [CDiffField α]` decl — no
 `…G`-suffixed mirror is needed; here pinned at the generic ℚ(x) = `CFrac ℚ` like the rest of the
 engine.)* -/
-noncomputable abbrev alg_5_8_primitivePolyIntegrate := @cPrimitivePolyIntegrate (CFrac ℚ)
+noncomputable abbrev alg_5_8_primitivePolyIntegrate :=
+  cPrimitivePolyIntegrate (P := DensePoly) (α := CFrac ℚ)
 
 /-- **Example (§5.8, p.158)**, primitive case: `cPrimitivePolyIntegrate` on `p = (log x)²/x = (1/x)·t²`
 (`t = log x`, `Dt = 1/x`) returns `q = (1/3)t³` with `rem = 0`, satisfying `D(q) + rem = p` over the

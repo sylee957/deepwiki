@@ -19,11 +19,11 @@ namespace DensePoly
 For a hyperexponential `t` (`Dt = η·t`), the log part `∑ᵢ cᵢ·log(vᵢ)` of a normal part `fₙ` overshoots by
 `R = η · ∑ᵢ cᵢ ∈ α`. -/
 
-variable {α : Type*} [CField α]
+variable {α : Type*} [CCommRing α]
 
 /-- Hyperexponential normal-part residual `cHyperexpResidual η logs = η · ∑ᵢ cᵢ ∈ α`, the amount by which
 the log part overshoots the normal integrand (`cᵢ` the `logs` coefficients). -/
-def cHyperexpResidual (η : α) (logs : List (α × DensePoly α)) : α :=
+def cHyperexpResidual {γ : Type*} (η : α) (logs : List (α × γ)) : α :=
   CCommRing.mul η (logs.foldl (fun acc cv => CCommRing.add acc cv.1) CCommRing.zero)
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]

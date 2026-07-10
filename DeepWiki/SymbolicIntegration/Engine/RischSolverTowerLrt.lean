@@ -22,7 +22,9 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly CFrac Polynomial
 open scoped Differential
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+universe u v
+
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec.{u,v} β]
   [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
   [CharZero (CFieldSpec.K β)] [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))] [LawfulRischLevelLrt β]
 
@@ -76,19 +78,20 @@ def towerCoeffIntegrateSingleLrt (η c : CFrac β) : Option (CFrac β × CFrac �
 `cIntegratePrimPolyDegRaise` with `towerCoeffIntegrateSingleLrt` as the single-`w` `limInt` (real `(b,c)` when
 the class provides `limitedIntegrateSingle`, else log-free `c = 0`). Soundness `D_tower(q) = p` is the
 telescoping `cIntegratePrimPolyDegRaiseG_sound` with no `limInt` correctness hypothesis. -/
-def towerPolyIntegrateLrt (η : CFrac β) (p : DensePoly (CFrac β)) : Option (DensePoly (CFrac β)) :=
-  cIntegratePrimPolyDegRaise η (towerCoeffIntegrateSingleLrt η) (cdeg p + 2) p
+def towerPolyIntegrateLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    (η : CFrac β) (p : P (CFrac β)) : Option (P (CFrac β)) :=
+  cIntegratePrimPolyDegRaise η (towerCoeffIntegrateSingleLrt η) (CPolyEngine.cdeg p + 2) p
 
 omit [CRischField β] in
 /-- The LRT tower step's polynomial-part soundness: `D_tower(q) = p`, the telescoping
 `cIntegratePrimPolyDegRaiseG_sound` (each step's `q₀` is subtracted then added back, so the identity holds for
 *any* coefficient integrator — no `towerCoeffIntegrateLrt_sound` needed). -/
-theorem towerPolyIntegrateLrt_sound (η : CFrac β) (p q : DensePoly (CFrac β))
+theorem towerPolyIntegrateLrt_sound {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] (η : CFrac β) (p q : P (CFrac β))
     (h : towerPolyIntegrateLrt η p = some q) :
-    Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPoly q) = toPoly p :=
-  by
-    simpa only [toPoly_list_eq] using
-      (cIntegratePrimPolyDegRaiseG_sound η _ (cdeg p + 2) p q h)
+    Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (CPoly.toPoly q) =
+      CPoly.toPoly p :=
+  cIntegratePrimPolyDegRaiseG_sound η _ (CPolyEngine.cdeg p + 2) p q h
 
 omit [CRischField β] in
 /-- The LRT tower step's special-part field identity (`Dθ = 1`): from `towerPolyIntegrateLrt_sound`, the
@@ -97,7 +100,9 @@ special identity for the tower step, with GENERAL coefficients via the LRT recur
 theorem tower_special_identityLrt (Dt fp qp : DensePoly (CFrac β)) (hDt : toPoly Dt = 1)
     (h : towerPolyIntegrateLrt CCommRing.one fp = some qp) :
     towerFractionFieldDeriv Dt (fieldFrac qp [CCommRing.one]) = fieldFrac fp [CCommRing.one] := by
-  have hpoly := towerPolyIntegrateLrt_sound CCommRing.one fp qp h
+  have hpoly : Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK CCommRing.one))
+      (toPoly qp) = toPoly fp := by
+    simpa only [toPoly_list_eq] using towerPolyIntegrateLrt_sound CCommRing.one fp qp h
   rw [CFieldSpec.toK_one, Polynomial.C_1] at hpoly
   have hone : toPoly ([CCommRing.one] : DensePoly (CFrac β)) = 1 := by
     simp only [denote, map_one, mul_zero, add_zero]

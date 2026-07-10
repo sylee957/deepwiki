@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
+import DeepWiki.ComputableAlgebra.PolyEngine
 
 /-! # Computable polynomial reduction and primitive-case integration over ℚ(x)[t]
 
@@ -8,10 +9,12 @@ monomial in the constant-coefficient sub-case. Both generic over `[CField α] [C
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+  {α : Type u} [CField α] [CDiffField α]
 
 /-! ### The polynomial reduction
 
@@ -22,21 +25,22 @@ For a nonlinear monomial `t` (`δ(t) = deg(Dt) ≥ 2`, `λ(t) = lc(Dt)`), every 
 monomial `t` (`δ(t) = deg(Dt) ≥ 2`, `λ(t) = lc(Dt)`): `p = D(q) + r` with `deg(r) < δ(t)`, peeling
 `q₀ = (lc(p)/(m·λ(t)))·tᵐ` (`m = deg(p) − δ(t) + 1`) whose monomial derivative `D(q₀)`
 (`cmonomialDeriv Dt`) cancels the top of `p`, then recursing on `p − D(q₀)`. Fuel-bounded; generic. -/
-def cPolyReduceTower (Dt : DensePoly α) : ℕ → DensePoly α → DensePoly α × DensePoly α
-  | 0, p => ([], cnorm p)
+def cPolyReduceTower (Dt : P α) : ℕ → P α → P α × P α
+  | 0, p => (CPoly.czero, CPolyEngine.cnorm p)
   | fuel + 1, p =>
-    let p := cnorm p
-    let delta := cdeg Dt                                          -- `δ(t) = deg(Dt)`
-    if (p : List α).length ≤ delta then ([], p)                    -- `deg(p) < δ(t)` ⇒ done
+    let p := CPolyEngine.cnorm p
+    let delta := CPolyEngine.cdeg Dt                               -- `δ(t) = deg(Dt)`
+    if CPolyEngine.cisZero p || decide (CPolyEngine.cdeg p < delta) then
+      (CPoly.czero, p)                                             -- `deg(p) < δ(t)` ⇒ done
     else
-      let n := cdeg p
+      let n := CPolyEngine.cdeg p
       let m := n - delta + 1                                       -- `m = deg(p) − δ(t) + 1`
-      let lam := clead Dt                                         -- `λ(t) = lc(Dt)`
-      let c := CField.div (clead p) (CCommRing.mul (cnatCast m) lam) -- `lc(p)/(m·λ(t))`
-      let q0 := cshift m [c]                                      -- `c·tᵐ`
-      let p' := csub p (cmonomialDeriv Dt q0)                     -- `p − D(q₀)`
+      let lam := CPolyEngine.clead Dt                              -- `λ(t) = lc(Dt)`
+      let c := CField.div (CPolyEngine.clead p) (CCommRing.mul (cnatCast m) lam) -- `lc(p)/(m·λ(t))`
+      let q0 := CPolyEngine.monomial (P := P) c m                  -- `c·tᵐ`
+      let p' := CPolyEngine.sub p (cmonomialDeriv Dt q0)           -- `p − D(q₀)`
       let (q, r) := cPolyReduceTower Dt fuel p'
-      (cadd q0 q, r)
+      (CPolyEngine.add q0 q, r)
 
 /-! ### The primitive-case reduced-element integration
 
@@ -48,23 +52,47 @@ proceeds top-down. We implement the **constant-coefficient sub-case** `c = aₘ/
 top-down by peeling `q₀ = c·t^(m+1)/(m+1)` for each leading term `aₘ` with `c = aₘ/((m+1)·Dt)`
 (constant-coefficient sub-case `b = 0`). Returns `(q, rem)` with `D(q) + rem = p`, peeling all degrees
 `≥ 1` (the degree-`0` term stays in `rem`). Fuel-bounded; generic. -/
-def cPrimitivePolyIntegrate (Dt : DensePoly α) : ℕ → DensePoly α → DensePoly α × DensePoly α
-  | 0, p => ([], cnorm p)
+def cPrimitivePolyIntegrate (Dt : P α) : ℕ → P α → P α × P α
+  | 0, p => (CPoly.czero, CPolyEngine.cnorm p)
   | fuel + 1, p =>
-    let p := cnorm p
-    if (p : List α).length ≤ 1 then ([], p)                        -- only the `t⁰` term left ⇒ done
+    let p := CPolyEngine.cnorm p
+    if CPolyEngine.cisZero p || decide (CPolyEngine.cdeg p = 0) then
+      (CPoly.czero, p)                                             -- only the `t⁰` term left ⇒ done
     else
-      let m := cdeg p                                             -- current top degree `m ≥ 1`
-      let am := clead p                                           -- leading coefficient `aₘ`
+      let m := CPolyEngine.cdeg p                                  -- current top degree `m ≥ 1`
+      let am := CPolyEngine.clead p                                -- leading coefficient `aₘ`
       -- `q₀ = c·t^(m+1)/(m+1)` with `c = aₘ/((m+1)·Dt)` (constant-coeff `LimitedIntegrate`, `b = 0`).
       let mp1 : α := cnatCast (m + 1)
       -- `Dt ∈ k` is a constant `t`-polynomial; use its constant coefficient `Dt(0) = lc(Dt)`.
-      let dtConst := clead Dt
+      let dtConst := CPolyEngine.clead Dt
       let c := CField.div am (CCommRing.mul mp1 dtConst)
-      let q0 := cshift (m + 1) [c]                                -- `c·t^(m+1)`
-      let p' := csub p (cmonomialDeriv Dt q0)                     -- `p − D(q₀)`
+      let q0 := CPolyEngine.monomial (P := P) c (m + 1)            -- `c·t^(m+1)`
+      let p' := CPolyEngine.sub p (cmonomialDeriv Dt q0)           -- `p − D(q₀)`
       let (q, rem) := cPrimitivePolyIntegrate Dt fuel p'
-      (cadd q0 q, rem)
+      (CPolyEngine.add q0 q, rem)
+
+/-! ### Representation-independence validation -/
+
+/-- Nonlinear polynomial reduction executes on sparse polynomials with the same reduction identity. -/
+example :
+    (let Dt := CPoly.SparsePoly.ofList [(0, (1 : ℚ)), (2, 1)]
+     let p := CPoly.SparsePoly.ofList [(3, (1 : ℚ))]
+     let res := cPolyReduceTower Dt 8 p
+     CPolyEngine.cisZero
+          (CPolyEngine.sub
+            (CPolyEngine.add (cmonomialDeriv Dt res.1) res.2) p)
+       && decide (CPolyEngine.cdeg res.2 = 1)) = true := by
+  native_decide
+
+/-- Primitive polynomial integration executes on sparse polynomials with the same derivative identity. -/
+example :
+    (let Dt := CPoly.SparsePoly.ofList [(0, (1 : ℚ))]
+     let p := CPoly.SparsePoly.ofList [(2, (1 : ℚ))]
+     let res := cPrimitivePolyIntegrate Dt 8 p
+     CPolyEngine.cisZero
+       (CPolyEngine.sub
+         (CPolyEngine.add (cmonomialDeriv Dt res.1) res.2) p)) = true := by
+  native_decide
 
 end DensePoly
 
