@@ -4,18 +4,24 @@ import DeepWiki.ComputableAlgebra.ListDet
 
 /-! # Computable determinant + subresultant (L1 of the computable-LRT build)
 
-`cDetGn` is a generic `[CField α]` cofactor-expansion determinant on a row-list matrix; `cSubresultant`
-builds the subresultant of two `DensePoly α` polynomials as the Sylvester-submatrix determinant with one
-polynomial column (`Σ_i (scalar cofactor det)·tⁱ`), mirroring the abstract
+`cDetGn` is a generic `[CField α]` cofactor-expansion determinant on a row-list matrix. `CPolySubresultant`
+selects the representation-independent Sylvester-submatrix algorithm, which builds one polynomial column
+`Σ_i (scalar cofactor det)·tⁱ`, mirroring the abstract
 `DeepWiki.SymbolicIntegration.subresultant`. Foundation for the symbolic (root-free) LRT log part — see
 `docs/computable-lrt.md`. Validated by `native_decide`; abstract `toPoly` correctness layered later. -/
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
+/-- Executable subresultant polynomial selected by a computable polynomial representation. -/
+class CPolySubresultant (P : Type u → Type u) [CPoly P] where
+  /-- Compute the `j`-th subresultant at the supplied formal degrees `n` and `m`. -/
+  compute : {α : Type u} → [CField α] → P α → P α → ℕ → ℕ → ℕ → P α
 
 namespace DensePoly
 
-variable {α : Type*} [CField α]
+variable {α : Type u} [CField α]
 
 /-- **Generic cofactor-expansion determinant** on a row-list matrix, dimension-indexed for termination.
 `cDetGn n M` expands `M` (assumed `n × n`) along its first row: `Σ_j (−1)ʲ · M[0][j] · det(minorⱼ)`. -/
@@ -43,17 +49,16 @@ def cSylvesterRows (p q : DensePoly α) (n m : ℕ) : List (List α) :=
     (List.replicate k CCommRing.zero ++ coeffs ++ List.replicate width CCommRing.zero).take width
   (List.range m).map (fun i => shiftRow pc i) ++ (List.range n).map (fun i => shiftRow qc i)
 
-/-- The **exact `bSylvester` matrix** (matching `DeepWiki.SymbolicIntegration.bSylvester`): `m` `A`-rows then
+/-- The representation-independent **exact `bSylvester` matrix**: `m` `A`-rows then
 `n` `B`-rows, entry `(i,l) = A.coeff(n+i−l)` (`i≤l≤i+n`) resp. `B.coeff(i−l)` (`i−m≤l≤i`), coefficients
 high-to-low. -/
-def cBSylvesterRows (p q : DensePoly α) (n m : ℕ) : List (List α) :=
-  let pc : List α := cnorm p
-  let qc : List α := cnorm q
+def cBSylvesterRows {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
+    (p q : P α) (n m : ℕ) : List (List α) :=
   let width := m + n
   let arow (i : ℕ) : List α := (List.range width).map (fun l =>
-    if i ≤ l ∧ l ≤ i + n then pc.getD (n + i - l) CCommRing.zero else CCommRing.zero)
+    if i ≤ l ∧ l ≤ i + n then CPoly.coeff p (n + i - l) else CCommRing.zero)
   let brow (i : ℕ) : List α := (List.range width).map (fun l =>
-    if i - m ≤ l ∧ l ≤ i then qc.getD (i - l) CCommRing.zero else CCommRing.zero)
+    if i - m ≤ l ∧ l ≤ i then CPoly.coeff q (i - l) else CCommRing.zero)
   (List.range m).map (fun i => arow i) ++ (List.range n).map (fun jj => brow (m + jj))
 
 /-- Row-index selector `subRow n m j` (delete the last `j` rows of each Sylvester block). -/
@@ -71,21 +76,24 @@ def cSubmatrix (M : List (List α)) (rows cols : List ℕ) : List (List α) :=
 /-- **The `j`-th subresultant polynomial** `Sⱼ(p,q) = Σ_{i=0}^{j} det(ⱼSᵢ)·tⁱ` (coefficients low-to-high),
 mirroring `DeepWiki.SymbolicIntegration.subresultant p q n m j`. The symbolic (root-free) LRT log arguments
 are these. -/
-def cSubresultant (p q : DensePoly α) (n m j : ℕ) : DensePoly α :=
-  (List.range (j + 1)).map (fun i =>
+def cSubresultant {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
+    (p q : P α) (n m j : ℕ) : P α :=
+  CPoly.ofFn (j + 1) (fun i =>
     cDet (cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)))
 
 /-- **The parametric subresultant `Sⱼ(z,t)`** of `Dstar` and `A − z·Dd` — the symbolic RT log argument, a
 polynomial in `t` whose coefficients are polynomials in the residue `z`, **computed without roots** by
 interpolation in `z` (`cSubresultant` at `z = 0,1,…,n+m` per `t`-coefficient, then `cinterpolate`). Output:
 `List (DensePoly α)`, the `z`-polynomial coefficient of each `tᵏ` (`k = 0..j`). -/
-def cSubresultantParam (Dstar A Dd : DensePoly α) (n m j : ℕ) : List (DensePoly α) :=
+def cSubresultantParam {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
+    [CPolyEngine P] [CPolySubresultant P] (Dstar A Dd : P α) (n m j : ℕ) : List (DensePoly α) :=
   let N := n + m + 1
   (List.range (j + 1)).map (fun k =>
     cinterpolate ((List.range N).map (fun jj =>
       let c := cnatCast jj
-      (c, ((cSubresultant Dstar (csub A (cscale c Dd)) n m j : DensePoly α) : List α).getD k
-        CCommRing.zero))))
+      (c, CPoly.coeff
+        (CPolySubresultant.compute Dstar
+          (CPolyEngine.sub A (CPolyEngine.scale c Dd)) n m j) k))))
 
 /-! ### `toK`-determinant homomorphism (L4b): certifying `cDet` against `Matrix.det` -/
 
@@ -143,6 +151,27 @@ end Spec
 
 end DensePoly
 
+/-- Dense polynomials use the representation-independent Sylvester-submatrix implementation. -/
+instance instCPolySubresultantDense : CPolySubresultant DensePoly where
+  compute := DensePoly.cSubresultant
+
+/-- Sparse polynomials use the representation-independent Sylvester-submatrix implementation. -/
+instance instCPolySubresultantSparse : CPolySubresultant CPoly.SparsePoly where
+  compute := DensePoly.cSubresultant
+
+namespace CPolySubresultant
+
+/-- Dense subresultant selection unfolds to `DensePoly.cSubresultant`. -/
+@[simp] theorem compute_dense_eq {α : Type*} [CField α] (p q : DensePoly α) (n m j : ℕ) :
+    CPolySubresultant.compute p q n m j = DensePoly.cSubresultant p q n m j := rfl
+
+/-- Sparse subresultant selection unfolds to the generic implementation. -/
+@[simp] theorem compute_sparse_eq {α : Type*} [CField α]
+    (p q : CPoly.SparsePoly α) (n m j : ℕ) :
+    CPolySubresultant.compute p q n m j = DensePoly.cSubresultant p q n m j := rfl
+
+end CPolySubresultant
+
 /-! ### Validation (`native_decide`) -/
 
 open DensePoly
@@ -171,6 +200,14 @@ theorem cSubresultantG_zero :
 theorem cSubresultantG_one :
     cSubresultant ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1 1 = [2, 1] := by native_decide
 
+/-- The selected sparse implementation computes the same degree-one subresultant. -/
+theorem cSubresultant_sparse_one :
+    CPolySubresultant.compute
+      (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
+      (CPoly.SparsePoly.ofList [(0, 2), (1, 1)]) 2 1 1 =
+        CPoly.SparsePoly.ofList [(0, 2), (1, 1)] := by
+  native_decide
+
 /-- **L2a — parametric = scalar at a point.** `S₁(z,t)` of `(t²−1, t − z·2t)` is `(1−2z)·t`; evaluated at
 `z = 2` (a sample point) it equals the *scalar* subresultant `S₁(t²−1, −3t)` (`= −3t`). The interpolation is
 exact at the sample nodes — validating the root-free parametric log-argument. -/
@@ -179,6 +216,14 @@ theorem cSubresultantParam_eval :
         (fun zp => ceval zp (2 : ℚ))
       = (cnorm (cSubresultant ([-1, 0, 1] : DensePoly ℚ)
           (csub ([0, 1] : DensePoly ℚ) (cscale (2 : ℚ) ([0, 2] : DensePoly ℚ))) 2 1 1) : List ℚ) := by
+  native_decide
+
+/-- Parametric subresultants also run with sparse inner-polynomial storage. -/
+theorem cSubresultantParam_sparse :
+    cSubresultantParam
+      (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
+      (CPoly.SparsePoly.ofList [(1, 1)])
+      (CPoly.SparsePoly.ofList [(1, 2)]) 2 1 1 = [[], [1, -2]] := by
   native_decide
 
 end DeepWiki.SymbolicIntegration

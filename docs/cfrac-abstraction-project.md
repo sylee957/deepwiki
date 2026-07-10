@@ -51,8 +51,10 @@ runs the same fraction algorithm.
    instances. The third slice adds `CPolyResultant`/`LawfulCPolyResultant`: dense polynomials select the
    well-founded PRS resultant, sparse polynomials select the generic Sylvester determinant, and tower,
    radical, general-curve, and discriminant consumers request the capability. The tower residue-resultant
-   bridge now proves correctness from `LawfulCPolyResultant`. SymbolicIntegration consumers request the
-   weakest capability they need.
+   bridge now proves correctness from `LawfulCPolyResultant`. The fourth slice generalizes the
+   Sylvester-submatrix algorithm itself over `CPoly` and introduces `CPolySubresultant`/
+   `LawfulCPolySubresultant`; dense and sparse LRT paths share the implementation, with correctness proved
+   once through `CPoly.toPoly`. SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;
