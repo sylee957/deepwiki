@@ -14,10 +14,6 @@ section CoreWf
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
-/-- The fuel-free denominator-direct canonical-normality check. -/
-def cisCanonNormalizedCore (a : CFrac β) : Bool :=
-  cdenomNormalGate a
-
 /-- The fuel-free wrapper canonical-normality check on the reduced denominator. -/
 def cisCanonNormalized (ftilde : CFrac β) : Bool :=
   DensePoly.cisZero (DensePoly.csub
@@ -33,11 +29,11 @@ section Bridge
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
-/-- The fuel-free core check on `qReduce x` is the fuel-free wrapper check on `x`. -/
-theorem cisCanonNormalizedCoreG_qReduce (x : CFrac β) :
-    cisCanonNormalizedCore (qReduce x) = cisCanonNormalized x := rfl
+/-- The denominator-normality gate on `qReduce x` is the wrapper check on `x`. -/
+theorem cdenomNormalGateG_qReduce (x : CFrac β) :
+    cdenomNormalGate (qReduce x) = cisCanonNormalized x := rfl
 
-example (x : CFrac β) : cisCanonNormalizedCore (qReduce x) = cisCanonNormalized x := rfl
+example (x : CFrac β) : cdenomNormalGate (qReduce x) = cisCanonNormalized x := rfl
 
 end Bridge
 
@@ -47,19 +43,15 @@ section NormalityWf
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
-/-- The fuel-free weak-normalization guarantee for a rational function denominator. -/
-def IsWeaklyNormalizedNormWf (h : CFrac β) : Prop :=
-  toPoly (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) h.1.2).1
-    = toPoly h.1.2
+/-- `IsCanonNormalized f q'`: the canonicalized element `qReduce (weakNormalizedF f q')` is weakly
+normalized (`IsWeaklyNormalizedNorm`). -/
+def IsCanonNormalized (f q' : CFrac β) : Prop :=
+  IsWeaklyNormalizedNorm (qReduce (weakNormalizedF f q'))
 
-/-- The fuel-free canonicalized weak-normalization guarantee. -/
-def IsCanonNormalizedWf (f q' : CFrac β) : Prop :=
-  IsWeaklyNormalizedNormWf (qReduce (weakNormalizedF f q'))
-
-/-- The fuel-free Boolean check decides `IsCanonNormalizedWf`. -/
+/-- The fuel-free Boolean check decides `IsCanonNormalized`. -/
 theorem cisCanonNormalizedG_iff (f q' : CFrac β) :
-    cisCanonNormalized (weakNormalizedF f q') = true ↔ IsCanonNormalizedWf f q' := by
-  unfold cisCanonNormalized IsCanonNormalizedWf IsWeaklyNormalizedNormWf
+    cisCanonNormalized (weakNormalizedF f q') = true ↔ IsCanonNormalized f q' := by
+  unfold cisCanonNormalized IsCanonNormalized IsWeaklyNormalizedNorm
   rw [DensePoly.cisZeroG_iff]
   simp only [denote, sub_eq_zero]
   rfl
@@ -73,53 +65,41 @@ section Repin
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
 /-- For `ftilde = weakNormalizedF f q'` (`q'` the lift of `cWeakNormalizer [1] f.1.1 f.1.2`), the
-core check on the reduced input equals the wrapper check on the pre-reduce input. -/
-theorem cisCanonNormalizedCoreG_qReduce_weakNormalized (f : CFrac β) :
-    cisCanonNormalizedCore (qReduce (weakNormalizedF f
+denominator gate on the reduced input equals the wrapper check on the pre-reduce input. -/
+theorem cdenomNormalGateG_qReduce_weakNormalized (f : CFrac β) :
+    cdenomNormalGate (qReduce (weakNormalizedF f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
       = cisCanonNormalized (weakNormalizedF f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) :=
-  cisCanonNormalizedCoreG_qReduce
+  cdenomNormalGateG_qReduce
     (weakNormalizedF f
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
 
-/-- The core check on the reduced weak-normalized input passes iff `IsCanonNormalizedWf` holds. -/
-theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f : CFrac β) :
-    cisCanonNormalizedCore (qReduce (weakNormalizedF f
+/-- The denominator gate on the reduced weak-normalized input passes iff `IsCanonNormalized` holds. -/
+theorem cdenomNormalGateG_qReduce_weakNormalized_iff [CFieldDomain β] (f : CFrac β) :
+    cdenomNormalGate (qReduce (weakNormalizedF f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))) = true
-      ↔ IsCanonNormalizedWf f
+      ↔ IsCanonNormalized f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) := by
-  rw [cisCanonNormalizedCoreG_qReduce_weakNormalized]
+  rw [cdenomNormalGateG_qReduce_weakNormalized]
   exact cisCanonNormalizedG_iff f _
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 -- The same re-pin reconciliation stated entirely on the Wf gate.
 example (f : CFrac β) :
-    cisCanonNormalizedCore (qReduce (weakNormalizedF f
+    cdenomNormalGate (qReduce (weakNormalizedF f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
       = cisCanonNormalized (weakNormalizedF f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) :=
-  cisCanonNormalizedCoreG_qReduce_weakNormalized f
+  cdenomNormalGateG_qReduce_weakNormalized f
 
 end Repin
 
 /-! ### Axiom audit -/
 
-#print axioms cisCanonNormalizedCoreG_qReduce_weakNormalized
-#print axioms cisCanonNormalizedCoreG_qReduce_weakNormalized_iff
-
-/-! ### The canonical-normality predicate and soundness-gate witness -/
-
-section CanonNormalized
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
-
-/-- `IsCanonNormalized f q'`: the canonicalized element `qReduce (weakNormalizedF f q')` is weakly
-normalized (`IsWeaklyNormalizedNorm`). -/
-def IsCanonNormalized (f q' : CFrac β) : Prop :=
-  IsWeaklyNormalizedNorm (qReduce (weakNormalizedF f q'))
-
-end CanonNormalized
+#print axioms cdenomNormalGateG_qReduce_weakNormalized
+#print axioms cdenomNormalGateG_qReduce_weakNormalized_iff
 
 /-- The witness scalar `−x ∈ ℚ(x) = CFrac ℚ` (numerator `[0, -1] = −x`, denominator `[1]`). -/
 def witnessNegX : CFrac ℚ := CFrac.ofPoly [(0 : ℚ), -1]

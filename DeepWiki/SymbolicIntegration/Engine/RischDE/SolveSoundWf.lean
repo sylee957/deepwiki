@@ -26,7 +26,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 /-- `crischDERawSolveWf ftilde gtilde`: run `cRischDE [1]` on the num/den components, re-lifting
 the returned `(ynum, yden)` to `CFrac β` under a `cisZero` denominator guard. -/
 def crischDERawSolveWf (ftilde gtilde : CFrac β) : Option (CFrac β) :=
-  match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
+  match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den with
   | none => none
   | some (ynum, yden) =>
     if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
@@ -37,11 +37,11 @@ denominator and `y` is its `CFrac` lift. -/
 theorem crischDERawSolveWf_some_iff (ftilde gtilde y : CFrac β) :
     crischDERawSolveWf ftilde gtilde = some y ↔
       ∃ ynum yden, ∃ hden : DensePoly.cisZero yden = false,
-        DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+        DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den
             = some (ynum, yden) ∧
           CFrac.ofFraction ynum yden hden = y := by
   cases h :
-      DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
+      DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den with
   | none =>
       simp [crischDERawSolveWf, h]
   | some ypair =>
@@ -53,7 +53,7 @@ theorem crischDERawSolveWf_some_iff (ftilde gtilde y : CFrac β) :
 /-- `crischDESolveSoundWf f g`: weak-normalize `f`, gate on `cisCanonNormalized`, reduce to lowest
 terms, solve via `crischDERawSolveWf`, and transform back by `y = ỹ/q'`. -/
 def crischDESolveSoundWf (f g : CFrac β) : Option (CFrac β) :=
-  let q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2
+  let q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den
   if DensePoly.cisZero q then none
   else
     let q' : CFrac β := CFrac.ofPoly q
@@ -83,8 +83,8 @@ omit [CFieldSpec β] in
 /-- A successful Wf sound solve has a nonzero Wf weak normalizer. -/
 theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
-    DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false := by
-  set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 with hq
+    DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den) = false := by
+  set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den with hq
   set q' : CFrac β := CFrac.ofPoly q with hq'
   set ftilde : CFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
@@ -109,8 +109,8 @@ omit [CFieldSpec β] in
 theorem crischDESolveSoundWf_check (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     cisCanonNormalized (weakNormalizedF f
-      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) = true := by
-  set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2 with hq
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))) = true := by
+  set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den with hq
   set q' : CFrac β := CFrac.ofPoly q with hq'
   set ftilde : CFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
@@ -135,8 +135,8 @@ theorem crischDESolveSoundWf_check (f g y : CFrac β)
 /-- A successful Wf sound solve supplies the Wf canonical-normality proposition. -/
 theorem crischDESolveSoundWf_isCanonNormalized (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
-    IsCanonNormalizedWf f
-      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) :=
+    IsCanonNormalized f
+      (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) :=
   (cisCanonNormalizedG_iff f _).mp (crischDESolveSoundWf_check f g y hsolve)
 
 end Reductions
@@ -153,10 +153,10 @@ structure RischDESoundnessWf (f g : CFrac β) : Prop where
   /-- Every successful Wf solve returns a genuine field-level Risch-DE solution. -/
   sound : ∀ y : CFrac β, crischDESolveSoundWf f g = some y →
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly β)
-          (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-        + am β (toPoly f.1.1) / am β (toPoly f.1.2)
-          * (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-      = am β (toPoly g.1.1) / am β (toPoly g.1.2)
+          (am β (toPoly y.num) / am β (toPoly y.den))
+        + am β (toPoly f.num) / am β (toPoly f.den)
+          * (am β (toPoly y.num) / am β (toPoly y.den))
+      = am β (toPoly g.num) / am β (toPoly g.den)
 
 /-- `crischDESolveSoundWf_field`: under `RischDESoundnessWf f g`, a successful `y` solves
 `D(Y) + F·Y = G` for the original `f, g`. -/
@@ -164,10 +164,10 @@ theorem crischDESolveSoundWf_field (f g y : CFrac β)
     (hsolve : crischDESolveSoundWf f g = some y)
     (hsound : RischDESoundnessWf f g) :
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly β)
-          (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-        + am β (toPoly f.1.1) / am β (toPoly f.1.2)
-          * (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-      = am β (toPoly g.1.1) / am β (toPoly g.1.2) :=
+          (am β (toPoly y.num) / am β (toPoly y.den))
+        + am β (toPoly f.num) / am β (toPoly f.den)
+          * (am β (toPoly y.num) / am β (toPoly y.den))
+      = am β (toPoly g.num) / am β (toPoly g.den) :=
   hsound.sound y hsolve
 
 /-! ### Restatement example -/
@@ -177,10 +177,10 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
     (f g y : CFrac β) (hsolve : crischDESolveSoundWf f g = some y)
     (hsound : RischDESoundnessWf f g) :
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly β)
-          (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-        + am β (toPoly f.1.1) / am β (toPoly f.1.2)
-          * (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-      = am β (toPoly g.1.1) / am β (toPoly g.1.2) :=
+          (am β (toPoly y.num) / am β (toPoly y.den))
+        + am β (toPoly f.num) / am β (toPoly f.den)
+          * (am β (toPoly y.num) / am β (toPoly y.den))
+      = am β (toPoly g.num) / am β (toPoly g.den) :=
   crischDESolveSoundWf_field f g y hsolve hsound
 
 end Capstone

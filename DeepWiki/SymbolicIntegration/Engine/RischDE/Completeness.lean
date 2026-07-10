@@ -336,7 +336,7 @@ structure RischDECompletenessResidualWf (f g : CFrac β) : Prop where
     DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
-    IsCanonNormalizedWf f
+    IsCanonNormalized f
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))
   /-- A solvable RDE makes the inner solve succeed on the reduced pair. -/
   hinner : FieldRDESolvable f g →

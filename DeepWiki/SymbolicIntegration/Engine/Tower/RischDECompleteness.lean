@@ -169,7 +169,7 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
     DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →
-    IsCanonNormalizedWf f
+    IsCanonNormalized f
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : CRischFieldComplete β → ∀ f g : CFrac β, FieldRDESolvable f g →

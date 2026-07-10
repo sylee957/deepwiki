@@ -41,9 +41,9 @@ positive-`deg(bbar)` dispatcher side-condition, and the two input-denominator no
 structure RawSolveResidualWf (ftilde gtilde : CFrac β) : Prop where
   /-- The structural residual on the base solve, for the matching normal-denominator output. -/
   hres : ∀ a0 b0 c0 h0 : DensePoly β,
-    cRdeNormalDenominator ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+    cRdeNormalDenominator ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den
         = some (a0, b0, c0, h0) →
-      RischDEStructuralResidualWf ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+      RischDEStructuralResidualWf ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den
         a0 b0 c0 h0
   /-- The positive-`deg(bbar)` dispatcher side-condition (non-cancellation routing). -/
   hdb : ∀ a0 b0 c0 bbar cbar : DensePoly β, ∀ m : ℤ, ∀ α' β' : DensePoly β,
@@ -57,9 +57,9 @@ structure RawSolveResidualWf (ftilde gtilde : CFrac β) : Prop where
           (cRdeSpecialDenominator ([CCommRing.one] : DensePoly β) a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β') → 0 < cdeg bbar
   /-- The input `ftilde`'s denominator is nonzero. -/
-  hfden : toPoly ftilde.1.2 ≠ 0
+  hfden : toPoly ftilde.den ≠ 0
   /-- The input `gtilde`'s denominator is nonzero. -/
-  hgden : toPoly gtilde.1.2 ≠ 0
+  hgden : toPoly gtilde.den ≠ 0
 
 /-- If `crischDERawSolveWf ftilde gtilde = some y` and `RawSolveResidualWf ftilde gtilde` holds, then
 `y = ynum/yden` solves the field-level Risch DE `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. -/
@@ -67,35 +67,33 @@ theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : CFrac β)
     (hsolve : crischDERawSolveWf ftilde gtilde = some y)
     (hres : RawSolveResidualWf ftilde gtilde) :
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly β)
-          (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-        + am β (toPoly ftilde.1.1) / am β (toPoly ftilde.1.2)
-          * (am β (toPoly y.1.1) / am β (toPoly y.1.2))
-      = am β (toPoly gtilde.1.1) / am β (toPoly gtilde.1.2) := by
+          (am β (toPoly y.num) / am β (toPoly y.den))
+        + am β (toPoly ftilde.num) / am β (toPoly ftilde.den)
+          * (am β (toPoly y.num) / am β (toPoly y.den))
+      = am β (toPoly gtilde.num) / am β (toPoly gtilde.den) := by
   -- unfold the raw solve to the bare `cRischDE [1]` success
   rw [show crischDERawSolveWf ftilde gtilde
-      = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
+      = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den with
          | none => none
          | some (ynum, yden) =>
            if h : DensePoly.cisZero yden = false then
              some (CFrac.ofFraction ynum yden h)
            else none) from rfl] at hsolve
-  rcases hsucc : DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+  rcases hsucc : DensePoly.cRischDE ([CCommRing.one] : DensePoly β) ftilde.num ftilde.den gtilde.num gtilde.den
     with _ | ⟨ynum, yden⟩ <;> rw [hsucc] at hsolve
   · exact absurd hsolve (by simp)
   · simp only at hsolve
     by_cases hyz : DensePoly.cisZero yden = false
     · rw [dif_pos hyz, Option.some.injEq] at hsolve
-      have hy1 : y.1.1 = ynum := by
-        change CFrac.num y = ynum
+      have hy1 : y.num = ynum := by
         simpa using congrArg CFrac.num hsolve.symm
-      have hy2 : y.1.2 = yden := by
-        change CFrac.den y = yden
+      have hy2 : y.den = yden := by
         simpa using congrArg CFrac.den hsolve.symm
       have hydenne : toPoly yden ≠ 0 := by
         intro h; exact absurd ((cisZeroG_iff yden).mpr h) (by simpa using hyz)
       rw [hy1, hy2]
       exact crischDEWf_field_of_success_and_residual ([CCommRing.one] : DensePoly β)
-        ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 ynum yden cdegG_one_eq_zero_wf hsucc
+        ftilde.num ftilde.den gtilde.num gtilde.den ynum yden cdegG_one_eq_zero_wf hsucc
         hres.hres hres.hdb hres.hfden hres.hgden hydenne
     · rw [dif_neg hyz] at hsolve; exact absurd hsolve (by simp)
 
