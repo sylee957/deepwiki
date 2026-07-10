@@ -44,9 +44,9 @@ namespace DeepWiki.Si
 /-! ## §10.3 The Integration Method `ParallelIntegrate` — computable + validated -/
 
 /-- **Yun squarefree factorization over `ℚ[t]`** (§10.3 step 2, the `(d₁,…,dₑ)` of the candidate log
-arguments): the computable `cSquarefreeFactorsQ p = [(d₁,1),…,(dₑ,e)]`, the monic squarefree factors
+arguments): `cSqfreeYunFactors p = [(d₁,1),…,(dₑ,e)]`, the monic squarefree factors
 of `p` with their multiplicities, `p ~ ∏ⱼ dⱼ^j`, pairwise coprime and squarefree. -/
-def alg_10_3_squarefreeFactors := @cSquarefreeFactorsQ
+def alg_10_3_squarefreeFactors := @cSqfreeYunFactors
 
 /-- **Parallel (Risch–Norman) integration over `ℚ(t)`** (§10.3, the `ParallelIntegrate(f, D)` box, book
 p.309): the computable `cParallelIntegrate Dt a d` over `k = ℚ`, the monomial `t` with derivative

@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Parametric
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
+import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 
@@ -59,7 +60,7 @@ integration). The candidate **log arguments** are taken to be the **squarefree f
 default educated guess; an integrand whose denominator factors into squarefree-but-reducible pieces over
 ℚ would need the irreducible refinement of step 2 — the documented continuation). Concretely:
 
-* **`cSquarefreeFactorsQ`** — Yun's squarefree factorization over `ℚ[t]` (the `(d₁,…,dₑ)` of step 2).
+* **`cSqfreeYunFactors`** — Yun's squarefree factorization over `ℚ[t]` (the `(d₁,…,dₑ)` of step 2).
 * **`cParallelSystemQ`** — builds the eq. 10.6 inhomogeneous linear system: from the squarefree
   factorization it forms the rational-part denominator `s = ∏ dⱼ^{j-1}`, the bounded-degree numerator
   ansatz `b` (coefficients `u₀…u_β`), the log atoms `{dⱼ}` (coefficients `c₁…c_m`), clears
@@ -87,30 +88,6 @@ open DensePoly
 
 namespace DensePoly
 
-/-! ### Squarefree factorization over `ℚ[t]` (Yun's algorithm) — the `(d₁,…,dₑ)` of §10.3 step 2 -/
-
-/-- **Yun squarefree factorization over `ℚ[t]`** `cSquarefreeFactorsQ fuel p = [(d₁,1),…,(dₑ,e)]`: the
-list of monic squarefree factors `dⱼ` of `p` paired with their multiplicities `j`, so
-`p ~ ∏ⱼ dⱼ^j` and the `dⱼ` are pairwise coprime and squarefree (Bronstein §1.7 `Squarefree`). Computed
-by Yun: `c ← gcd(p, p′)`, `w ← p/c` (product of the distinct factors), then peel `dⱼ = w/gcd(w,c)`,
-`w ← gcd(w,c)`, `c ← c/gcd(w,c)`. Euclidean leaves are fuel-free; constant factors are dropped. -/
-def cSquarefreeFactorsQ (p : DensePoly ℚ) : List (DensePoly ℚ × ℕ) :=
-  let p := cmonic p
-  let c0 := cmonic (cgcdWf p (cderiv p)).1
-  let w0 := cdivWf p c0
-  let rec go : ℕ → DensePoly ℚ → DensePoly ℚ → ℕ → List (DensePoly ℚ × ℕ)
-    | 0, _, _, _ => []
-    | f + 1, w, c, i =>
-      if cdeg c = 0 then
-        (if cdeg w = 0 then [] else [(cmonic w, i)])
-      else
-        let y := cmonic (cgcdWf w c).1
-        let z := cdivWf w y
-        let cnext := cdivWf c y
-        let rest := go f y cnext (i + 1)
-        if cdeg z = 0 then rest else (cmonic z, i) :: rest
-  go (cdeg p + 1) w0 c0 1
-
 /-! ### The base monomial derivation and small helpers -/
 
 /-- **Base monomial derivation** `cDerivMonomialQ Dt p = (dp/dt)·Dt` on `DensePoly ℚ` (the derivation
@@ -118,9 +95,6 @@ def cSquarefreeFactorsQ (p : DensePoly ℚ) : List (DensePoly ℚ × ℕ) :=
 `d/dt` (ordinary rational integration, `t = x`); `Dt = [0,1]` gives the exponential monomial
 `t = exp(x)` (`Dt = t`); `Dt = [1,0,1]` the hypertangent `t = tan(x)` (`Dt = 1 + t²`). -/
 def cDerivMonomialQ (Dt p : DensePoly ℚ) : DensePoly ℚ := cmul (cderiv p) Dt
-
-/-- **Product of a list of `DensePoly ℚ`** `cProductQ [p₁,…,pₙ] = p₁⋯pₙ` (`[1]` for the empty list). -/
-def cProductQ (ps : List (DensePoly ℚ)) : DensePoly ℚ := ps.foldl cmul [(1 : ℚ)]
 
 /-- **`tⁱ`-coefficient of a `DensePoly ℚ`** `cParCoeffQ p i = coefficient(p, tⁱ)` (`0` out of range). -/
 def cParCoeffQ (p : DensePoly ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
@@ -161,9 +135,9 @@ from `f = a/d` (over `ℚ(t)`, `D = Dt·d/dt`) build the candidate `∫f = b/s +
 `d` need not be monic; the caller's `a` is rescaled by `1/lc(d)` in `cParallelSystemQ`. -/
 def cParallelAnsatzQ (d : DensePoly ℚ) (degA : ℤ) :
     List (DensePoly ℚ) × DensePoly ℚ × ℕ :=
-  let sf := cSquarefreeFactorsQ d
+  let sf := cSqfreeYunFactors d
   let ps := sf.map Prod.fst
-  let s := cProductQ (sf.map (fun (p, e) => cpow p (e - 1)))
+  let s := cprod (sf.map (fun (p, e) => cpow p (e - 1)))
   let degS : ℤ := (cdeg s : ℤ)
   let degD : ℤ := (cdeg d : ℤ)
   let bound : ℤ := max degS (degA - degD + degS) + 1
@@ -185,7 +159,7 @@ def cParallelSystemQ (Dt a d : DensePoly ℚ) :
   let a := cscale (1 / lcd) a                                   -- make `d` monic: `f = a/d` unchanged
   let (ps, s, nU) := cParallelAnsatzQ d (cdeg a : ℤ)
   let m := ps.length
-  let prodPs := cProductQ ps
+  let prodPs := cprod ps
   let s2 := cmul s s
   let Ds := cDerivMonomialQ Dt s
   let target := cmul a s                                        -- rhs `a·s`
@@ -196,7 +170,7 @@ def cParallelSystemQ (Dt a d : DensePoly ℚ) :
   -- `cⱼ`-column: `Dpⱼ·s²·∏_{k≠j}pₖ`.
   let cPolys : List (DensePoly ℚ) := (List.range m).map (fun j =>
     let pj := ps.getD j [(1 : ℚ)]
-    let others := cProductQ (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
+    let others := cprod (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
     cmul (cmul (cDerivMonomialQ Dt pj) s2) others)
   let allPolys := uPolys ++ cPolys
   let nrows := (target :: allPolys).foldl (fun acc p => max acc (cnorm p).length) 0
@@ -247,7 +221,7 @@ def cParallelResultDerivQ (Dt : DensePoly ℚ)
     (res : (DensePoly ℚ × DensePoly ℚ) × List (ℚ × DensePoly ℚ)) : DensePoly ℚ × DensePoly ℚ :=
   let ((b, s), logs) := res
   let ps := logs.map Prod.snd
-  let prodPs := cProductQ ps
+  let prodPs := cprod ps
   let s2 := cmul s s
   let den := cmul s2 prodPs                                        -- `s²·∏pⱼ`
   -- rational part `D(b/s) = (Db·s − b·Ds)/s²`, over `den`: numerator `(Db·s − b·Ds)·∏pⱼ`.
@@ -255,7 +229,7 @@ def cParallelResultDerivQ (Dt : DensePoly ℚ)
   let ratNum := cmul (csub (cmul (cDerivMonomialQ Dt b) s) (cmul b Ds)) prodPs
   -- log part `Σ cⱼ·Dpⱼ/pⱼ`, over `den`: `Σ cⱼ·Dpⱼ·s²·∏_{k≠j}pₖ`.
   let logNum : DensePoly ℚ := (logs.zipIdx).foldl (fun acc ((c, pj), j) =>
-    let others := cProductQ (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
+    let others := cprod (ps.zipIdx.filterMap (fun (p, k) => if k = j then none else some p))
     cadd acc (cscale c (cmul (cmul (cDerivMonomialQ Dt pj) s2) others))) []
   (cadd ratNum logNum, den)
 
