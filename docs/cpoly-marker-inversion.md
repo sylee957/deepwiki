@@ -38,10 +38,11 @@ gate-green commit (a rename must be atomic — the intermediate state doesn't co
   handle `cderiv`), then `\bcXG\b → cX` per op. Do in op-family batches; `amG`/`CFracG` are a *separate*
   decision (different concept — the fraction-field tower — not the `CPoly` op layer).
 
-## The rest of the generic engine (QFun tower + radical pairs) — DONE
+## The rest of the generic engine (DenseFrac tower + raw-pair boundaries) — DONE
 
 After the CPoly engine, the same safe de-`G` was extended to the **fraction-field-tower layer** (84 decl
-names, 4708 occ): `CFracG→CFrac`, `amG→am`, the QFun ops (`qmulG`/`qaddG`/`qinvG`/`qOfNumG`/…→`qmul`/…),
+names, 4708 occ): `CFracG→CFrac`, `amG→am`, the fraction operations now live on `DenseFrac`, while
+unchecked numerator/denominator pairs use the explicit `RawFrac` boundary,
 tower bridges (`toCFracG`/`towerFractionFieldDerivG`/`toGBPolyG`/`liftKG`), matrix ops
 (`matMulG`/`matInvG`/`gaussElimG`/`kernelBasisG`), Prop/result types (`IntegralResultG`/`IsIntegralResultG`/
 `LrtResultG`/`logResidueSumG`/…); plus the **6 radical generic/ℚ twin pairs** (`algDerivG`/`algDeriv`,

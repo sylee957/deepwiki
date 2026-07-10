@@ -82,7 +82,7 @@ theorem hermiteReduce_residual_correct (A D : DensePoly ℚ)
             (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
         (cmul D (cmul gden gden))) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun (gnum, gden))′
+      = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
@@ -103,7 +103,7 @@ theorem hermiteReduce_residual_correct (A D : DensePoly ℚ)
     exact mul_ne_zero hD (mul_ne_zero hgden hgden)
   have hresDen0 : cnorm resDen ≠ [] := fun h => hresDenPoly0 ((DensePoly.cnormG_eq_nil_iff resDen).mp h)
   have hdstar : am (toPoly Dstar) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hDstar0
-  have htoQ : toQFun (gnum, gden) = am (toPoly gnum) / am (toPoly gden) := rfl
+  have htoQ : ratFuncOfPair (gnum, gden) = am (toPoly gnum) / am (toPoly gden) := rfl
   have hresid := residual_numerator_ratFunc (toPoly A) (toPoly D) (toPoly gnum) (toPoly gden) hD hgden
   have hcdiv := am_cdivWf_of_cmodWf_zero resNum resDen hresDen0 hexact
   have hresNumPoly : toPoly resNum
@@ -124,10 +124,10 @@ theorem hermiteReduce_residual_correct (A D : DensePoly ℚ)
   rw [htoQ, hkey]
   linear_combination hresid
 
-/-- `toQFun` is invariant under `cnorm` of both components. -/
-theorem toQFun_cnorm (gnum gden : DensePoly ℚ) :
-    toQFun (cnorm gnum, cnorm gden) = toQFun (gnum, gden) := by
-  simp only [toQFun, DensePoly.toPolyG_cnormG]
+/-- `ratFuncOfPair` is invariant under `cnorm` of both components. -/
+theorem ratFuncOfPair_cnorm (gnum gden : DensePoly ℚ) :
+    ratFuncOfPair (cnorm gnum, cnorm gden) = ratFuncOfPair (gnum, gden) := by
+  simp only [ratFuncOfPair, DensePoly.toPolyG_cnormG]
 
 open scoped Differential in
 /-- `hermiteReduce` residual correctness with the `cnorm`-wrapped residual numerator. -/
@@ -138,7 +138,7 @@ theorem hermiteReduce_spec_cnorm (A D gnum gden Dstar : DensePoly ℚ)
             (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
         (cmul D (cmul gden gden))) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun (gnum, gden))′
+      = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (cnorm (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
@@ -157,7 +157,7 @@ theorem hermiteReduce_residual_correct_of_dvd (A D gnum gden Dstar : DensePoly �
       ∣ toPoly (cmul (csub (cmul A (cmul gden gden))
           (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun (gnum, gden))′
+      = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
@@ -189,7 +189,7 @@ theorem hermiteReduce_residual_correct_of_split (A D gnum gden Dstar : DensePoly
               (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) D) Dstar)
         (cmul gden gden)) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun (gnum, gden))′
+      = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
@@ -226,7 +226,7 @@ theorem hermiteReduce_residual_correct_of_radical (A D gnum gden Dstar : DensePo
           (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))))
         (cmul (DensePoly.cdivWf D Dstar) (cmul gden gden))) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun (gnum, gden))′
+      = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
@@ -278,7 +278,7 @@ theorem hermiteReduce_residual_correct_uncond (A D gnum gden Dstar : DensePoly �
     (hden : IsHermiteResidualInput D gden Dstar)
     (hcomp : HermiteResComp A D gnum gden Dstar) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun (gnum, gden))′
+      = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))
@@ -295,7 +295,7 @@ example (A D gnum gden Dstar : DensePoly ℚ)
     (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
     (hcomp : HermiteResComp A D gnum gden Dstar) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = (toQFun (gnum, gden))′
+      = (ratFuncOfPair (gnum, gden))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul A (cmul gden gden))

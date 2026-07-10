@@ -77,7 +77,7 @@ the coefficient stays a computable commutative ring (field a specialization). Th
 5. **Second representation — DONE** (`PolyReprSparse.lean`, commit `496c73f0`): a sparse `SparsePoly`
    (association-list) instance; the generic engine runs on it unchanged (`native_decide` on `cdeg`/`clead`
    of sparsely-stored polynomials). **This is the proof of representation-independence.**
-6. **Fractions — DONE** (`PolyReprFrac.lean`, commit `9f8018bf`): raw `QFun α P` pairs (num/den over any
+6. **Fractions — DONE** (`PolyReprFrac.lean`, commit `9f8018bf`): raw `RawFrac α P` pairs (num/den over any
    `CPoly`), fraction `mul`/`add`, `RatFunc` denotation + `toRatFunc_mul`; `native_decide` on **both**
    the dense and sparse carriers.
 
@@ -300,7 +300,7 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
 - **Adopting the fuel-less engine downstream** — new generic algorithms built *on* the fuel-less
   `cgcdExt`/`cdivmod`: `cdiophantine a b c` solves `s·a + t·b = c` when `gcd(a,b) ∣ c`
   (`toPoly_cdiophantine`, scaling the Bézout pair by the exact quotient `c/g`), and
-  `QFun.reduce` normalises a fraction to lowest terms (num/den ÷ their gcd) with
+  `RawFrac.reduce` normalises a fraction to lowest terms (num/den ÷ their gcd) with
   `toRatFunc_reduce` (value-preserving). Both `native_decide`-validated, purely additive.
 - **Evaluation** (`PolyReprDenote.lean`): `ceval` with `toR_ceval` (= Mathlib `eval`), the ring-hom
   squares `toR_ceval_add`/`toR_ceval_mul`, and the factor theorem `ceval_eq_zero_iff_dvd`.

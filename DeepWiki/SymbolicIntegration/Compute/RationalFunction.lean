@@ -1,152 +1,170 @@
-import DeepWiki.Algebra.ListSums
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 
-/-! # Computable rational functions ℚ(x)
-Completes `QFun = DensePoly ℚ × DensePoly ℚ` into a computable field ℚ(x): the field operations, the
-`d/dx` derivation `QFun.qderiv`, and decidable equality `QFun.qeq`, each proven through the field
-homomorphism `toQFun : QFun → RatFunc ℚ` to realize its `RatFunc ℚ` counterpart. -/
+/-! # Computable rational functions `ℚ(x)`
+
+The validated carrier is `DenseFrac ℚ`. Its field operations and formal polynomial-variable
+derivative are read through `CFrac.toCFrac` into `RatFunc ℚ`; unchecked pairs occur only in the explicit
+`ratFuncOfPair` boundary used by residual certificates.
+-/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.Compute
 
-/-! ### Basic `toQFun` readings
-`am = algebraMap ℚ[X] (RatFunc ℚ)` is the field embedding of polynomials, so
-`toQFun (a, b) = am (toPoly a) / am (toPoly b)`. -/
-
 /-- Exact fuel-free computable division becomes division in `RatFunc ℚ`. -/
-theorem am_cdivWf_of_cmodWf_zero (p q : DensePoly ℚ) (hq : cnorm q ≠ [])
-    (hrem : toPoly (DensePoly.cmodWf p q) = 0) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly q)
-      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (DensePoly.cdivWf p q)) := by
-  have hq0 : toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
-  have hqm : algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) ≠ 0 :=
+theorem am_cdivWf_of_cmodWf_zero (p q : DensePoly ℚ) (hq : DensePoly.cnorm q ≠ [])
+    (hrem : DensePoly.toPoly (DensePoly.cmodWf p q) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly p) /
+        algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly q) =
+      algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly (DensePoly.cdivWf p q)) := by
+  have hq0 : DensePoly.toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
+  have hqm : algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly q) ≠ 0 :=
     CFrac.amG_toPolyG_ne_zero hq0
-  have hrem' : DensePoly.toPoly (DensePoly.cmodWf p q) = 0 := by
-    exact hrem
-  have hdiv' := DensePoly.toPolyG_cmodWf p q hq
-  rw [hrem', add_zero] at hdiv'
-  have hdiv : toPoly p = toPoly (DensePoly.cdivWf p q) * toPoly q := by
-    exact hdiv'
-  rw [hdiv, map_mul, mul_div_assoc,
-    div_self hqm, mul_one]
+  have hdiv := DensePoly.toPolyG_cmodWf p q hq
+  rw [hrem, add_zero] at hdiv
+  rw [hdiv, map_mul, mul_div_assoc, div_self hqm, mul_one]
 
-/-! ### Field-homomorphism lemmas
-Each computable operation realizes the corresponding `RatFunc ℚ` field operation through `toQFun`. -/
+/-! ### Explicit raw-pair boundary
 
-/-- `toQFun QFun.qone = 1` in `RatFunc ℚ`. -/
-theorem toQFun_qone : toQFun QFun.qone = 1 := by
-  have hone : DensePoly.toPoly (CPoly.one : DensePoly ℚ) = 1 := by
-    rw [← toPoly_list_eq, CPoly.toPoly_one]
-  simp only [toQFun, QFun.qone, hone, map_one, div_one]
+Some polynomial algorithms return a numerator and denominator before their nonzero certificate has been
+discharged. Keep that boundary as a pair-valued denotation, rather than making it a second fraction API.
+-/
 
-/-- `toQFun (QFun.qneg x) = -toQFun x` in `RatFunc ℚ`. -/
-theorem toQFun_qneg (x : QFun ℚ) : toQFun (QFun.qneg x) = -toQFun x := by
-  obtain ⟨a, b⟩ := x
-  simp only [toQFun, QFun.qneg, CPolyEngine.neg_dense_eq,
-    DensePoly.toPolyG_cnegG, map_neg, neg_div]
+/-- Read an unchecked dense numerator/denominator pair in `RatFunc ℚ`. -/
+noncomputable def ratFuncOfPair (x : DensePoly ℚ × DensePoly ℚ) : RatFunc ℚ :=
+  algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly x.1) /
+    algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly x.2)
 
-/-- `toQFun (QFun.qmul x y) = toQFun x * toQFun y` in `RatFunc ℚ`. -/
-theorem toQFun_qmul (x y : QFun ℚ) : toQFun (QFun.qmul x y) = toQFun x * toQFun y := by
-  obtain ⟨a, b⟩ := x
-  obtain ⟨c, d⟩ := y
-  simp only [toQFun, QFun.qmul, CPolyEngine.mul_dense_eq,
-    DensePoly.toPolyG_cmulG, map_mul]
-  rw [div_mul_div_comm]
+/-! ### Field-operation readings -/
 
-/-- `toQFun (QFun.qsub x y) = toQFun x - toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
-theorem toQFun_qsub (x y : QFun ℚ) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
-    toQFun (QFun.qsub x y) = toQFun x - toQFun y := by
-  have hd' : toPoly (QFun.qneg y).2 ≠ 0 := hd
-  rw [QFun.qsub, toQFun_qadd x (QFun.qneg y) hb hd', toQFun_qneg, sub_eq_add_neg]
+/-- Read a validated dense fraction in `RatFunc ℚ`. -/
+noncomputable def toRatFuncDense (x : DenseFrac ℚ) : RatFunc ℚ := CFrac.toCFrac x
 
-/-- `toQFun (QFun.qinv x) = (toQFun x)⁻¹` in `RatFunc ℚ` (including `0⁻¹ = 0`). -/
-theorem toQFun_qinv (x : QFun ℚ) : toQFun (QFun.qinv x) = (toQFun x)⁻¹ := by
-  obtain ⟨a, b⟩ := x
-  rw [QFun.qinv]
-  by_cases ha : CPolyEngine.cisZero (a, b).1 = true
-  · -- numerator is zero: `toQFun (0/b) = 0`, and `0⁻¹ = 0`.
-    have ha' : DensePoly.cisZero a = true := by simpa only [CPolyEngine.cisZero_dense_eq] using ha
-    have ha0 : toPoly a = 0 := (DensePoly.cisZeroG_iff a).mp ha'
-    simp only [ha, if_true]
-    rw [toQFun_qzero, toQFun, ha0, map_zero, zero_div, inv_zero]
-  · -- numerator nonzero: `QFun.qinv (a,b) = (b,a)`, `am(b)/am(a) = (am(a)/am(b))⁻¹`.
-    rw [if_neg ha, toQFun, toQFun, inv_div]
+/-- `DenseFrac` zero reads as `0`. -/
+theorem toRatFuncDense_zero : toRatFuncDense (CCommRing.zero : DenseFrac ℚ) = 0 := by
+  change CFieldSpec.toK (CCommRing.zero : DenseFrac ℚ) = 0
+  exact CFieldSpec.toK_zero
 
-/-- `toQFun (QFun.qdiv x y) = toQFun x / toQFun y` in `RatFunc ℚ`. -/
-theorem toQFun_qdiv (x y : QFun ℚ) : toQFun (QFun.qdiv x y) = toQFun x / toQFun y := by
-  rw [QFun.qdiv, toQFun_qmul, toQFun_qinv, div_eq_mul_inv]
+/-- `DenseFrac` one reads as `1`. -/
+theorem toRatFuncDense_one : toRatFuncDense (CCommRing.one : DenseFrac ℚ) = 1 := by
+  change CFieldSpec.toK (CCommRing.one : DenseFrac ℚ) = 1
+  exact CFieldSpec.toK_one
 
-/-- `toQFun (QFun.qpow x n) = (toQFun x) ^ n` in `RatFunc ℚ`. -/
-theorem toQFun_qpow (x : QFun ℚ) (n : ℕ) : toQFun (QFun.qpow x n) = (toQFun x) ^ n := by
-  induction n with
-  | zero => rw [QFun.qpow, toQFun_qone, pow_zero]
-  | succ n ih => rw [QFun.qpow, toQFun_qmul, ih, pow_succ, mul_comm]
+/-- Dense-fraction addition reads as addition in `RatFunc`. -/
+theorem toRatFuncDense_add (x y : DenseFrac ℚ) :
+    toRatFuncDense (CCommRing.add x y) = toRatFuncDense x + toRatFuncDense y :=
+  CFieldSpec.toK_add x y
+
+/-- Dense-fraction multiplication reads as multiplication in `RatFunc`. -/
+theorem toRatFuncDense_mul (x y : DenseFrac ℚ) :
+    toRatFuncDense (CCommRing.mul x y) = toRatFuncDense x * toRatFuncDense y :=
+  CFieldSpec.toK_mul x y
+
+/-- Dense-fraction negation reads as negation in `RatFunc`. -/
+theorem toRatFuncDense_neg (x : DenseFrac ℚ) :
+    toRatFuncDense (CCommRing.neg x) = -toRatFuncDense x :=
+  CFieldSpec.toK_neg x
+
+/-- Dense-fraction inversion reads as inversion in `RatFunc`. -/
+theorem toRatFuncDense_inv (x : DenseFrac ℚ) :
+    toRatFuncDense (CField.inv x) = (toRatFuncDense x)⁻¹ :=
+  CFieldSpec.toK_inv x
+
+/-- Dense-fraction subtraction reads as subtraction in `RatFunc`. -/
+theorem toRatFuncDense_sub (x y : DenseFrac ℚ) :
+    toRatFuncDense (CField.sub x y) = toRatFuncDense x - toRatFuncDense y :=
+  CFieldSpec.toK_sub x y
+
+/-- Dense-fraction division reads as division in `RatFunc`. -/
+theorem toRatFuncDense_div (x y : DenseFrac ℚ) :
+    toRatFuncDense (CField.div x y) = toRatFuncDense x / toRatFuncDense y :=
+  CFieldSpec.toK_div x y
+
+/-! ### Formal derivative -/
 
 open scoped Differential in
-/-- `toQFun (QFun.qderiv x) = (toQFun x)′` in `RatFunc ℚ` (the `ratFuncDeriv` derivation), for nonzero
-denominator. -/
-theorem toQFun_qderiv (x : QFun ℚ) (hb : toPoly x.2 ≠ 0) : toQFun (QFun.qderiv x) = (toQFun x)′ := by
-  obtain ⟨a, b⟩ := x
-  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
-  have hbm : am (toPoly b) ≠ 0 := CFrac.amG_toPolyG_ne_zero hb
-  -- `am`-of-derivative rewrites.
-  have hda : (am (toPoly a))′ = am (derivative (toPoly a)) := ratFuncDeriv_algebraMap (toPoly a)
-  have hdb : (am (toPoly b))′ = am (derivative (toPoly b)) := ratFuncDeriv_algebraMap (toPoly b)
-  -- the quotient rule for `(am a / am b)′`.
-  have hderiv : (am (toPoly a) / am (toPoly b))′
-      = (am (toPoly b) * am (derivative (toPoly a))
-          - am (toPoly a) * am (derivative (toPoly b))) / (am (toPoly b) ^ 2) := by
+/-- The formal derivative of a validated dense fraction reads as the `RatFunc` derivative. -/
+theorem toRatFuncDense_qderiv (x : DenseFrac ℚ) :
+    toRatFuncDense (CFrac.qderiv x) = (toRatFuncDense x)′ := by
+  obtain ⟨a, b, hb⟩ := x
+  have hb0 : DensePoly.toPoly b ≠ 0 := by
+    intro h
+    have hz := (DensePoly.cisZeroG_iff b).mpr h
+    exact (Bool.eq_false_iff.mp hb) hz
+  have hbm : CFrac.am ℚ (DensePoly.toPoly b) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hb0
+  have hda : (CFrac.am ℚ (DensePoly.toPoly a))′ =
+      CFrac.am ℚ (derivative (DensePoly.toPoly a)) :=
+    ratFuncDeriv_algebraMap (DensePoly.toPoly a)
+  have hdb : (CFrac.am ℚ (DensePoly.toPoly b))′ =
+      CFrac.am ℚ (derivative (DensePoly.toPoly b)) :=
+    ratFuncDeriv_algebraMap (DensePoly.toPoly b)
+  have hderiv : (CFrac.am ℚ (DensePoly.toPoly a) /
+        CFrac.am ℚ (DensePoly.toPoly b))′
+      = (CFrac.am ℚ (DensePoly.toPoly b) *
+          CFrac.am ℚ (derivative (DensePoly.toPoly a))
+          - CFrac.am ℚ (DensePoly.toPoly a) *
+            CFrac.am ℚ (derivative (DensePoly.toPoly b))) /
+        (CFrac.am ℚ (DensePoly.toPoly b) ^ 2) := by
     rw [deriv_div, hda, hdb]
-  -- compute `toQFun (QFun.qderiv (a,b))`: numerator `cderiv a · b − a · cderiv b`, denom `b · b`.
-  simp only [toQFun, QFun.qderiv, CPolyEngine.sub, CPolyEngine.add_dense_eq,
-    CPolyEngine.neg_dense_eq, CPolyEngine.mul_dense_eq, CPolyEngine.deriv_dense_eq,
-    DensePoly.toPolyG_caddG, DensePoly.toPolyG_cnegG,
+  simp only [toRatFuncDense, CFrac.toCFrac, CFrac.qderiv, CFrac.ofFraction, CFrac.num,
+    CFrac.den, CFrac.toPair, instCFracPolyFrac, CPolyEngine.sub,
+    CPolyEngine.add_dense_eq, CPolyEngine.neg_dense_eq, CPolyEngine.mul_dense_eq,
+    CPolyEngine.deriv_dense_eq, DensePoly.toPolyG_caddG, DensePoly.toPolyG_cnegG,
     DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cderivG, map_add, map_neg, map_mul]
   rw [hderiv, pow_two]
+  field_simp [hbm]
   ring
 
+/-! ### Folded derivatives -/
+
 open scoped Differential in
-/-- The `QFun.qadd`-fold derivative is the sum of the increment derivatives. -/
-theorem deriv_toQFun_foldl_qadd (gs : List (QFun ℚ)) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
-    (toQFun (gs.foldl QFun.qadd QFun.qzero))′ = (gs.map (fun g => (toQFun g)′)).sum := by
-  rw [toQFun_foldl_qadd gs QFun.qzero
-    (by simpa [QFun.qzero] using
-      (DensePoly.toPolyG_one_singleton_ne_zero (α := ℚ))) hgs, toQFun_qzero, zero_add]
-  rw [show ((gs.map toQFun).sum)′ = Differential.deriv (R := RatFunc ℚ) (gs.map toQFun).sum from rfl,
-    map_list_sum (Differential.deriv (R := RatFunc ℚ)) (gs.map toQFun), List.map_map]
+/-- The derivative of a sum of validated dense fractions is the sum of the derivatives. -/
+theorem deriv_toRatFuncDense_foldl_add (gs : List (DenseFrac ℚ)) :
+    (toRatFuncDense (gs.foldl CCommRing.add (CCommRing.zero : DenseFrac ℚ)))′ =
+      (gs.map (fun g => (toRatFuncDense g)′)).sum := by
+  rw [show toRatFuncDense (gs.foldl CCommRing.add (CCommRing.zero : DenseFrac ℚ)) =
+      (gs.map toRatFuncDense).sum by
+        have hfold : ∀ (zs : List (DenseFrac ℚ)) (z : DenseFrac ℚ),
+            toRatFuncDense (zs.foldl CCommRing.add z) =
+              toRatFuncDense z + (zs.map toRatFuncDense).sum := by
+          intro zs
+          induction zs with
+          | nil => intro z; simp
+          | cons g zs ih =>
+            intro z
+            simp only [List.foldl_cons, List.map_cons, List.sum_cons]
+            rw [ih, toRatFuncDense_add]
+            abel
+        have h := hfold gs (CCommRing.zero : DenseFrac ℚ)
+        rw [toRatFuncDense_zero, zero_add] at h
+        exact h]
+  rw [show ((gs.map toRatFuncDense).sum)′ =
+      Differential.deriv (R := RatFunc ℚ) (gs.map toRatFuncDense).sum from rfl,
+    map_list_sum, List.map_map]
   rfl
 
 open scoped Differential in
-/-- If every increment satisfies `(toQFun gⱼ)′ = T - residⱼ`, the fold residual is `T - nT + ∑ residⱼ`. -/
-theorem foldl_residual_eq (gs : List (QFun ℚ)) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0)
-    (T : RatFunc ℚ) (resid : QFun ℚ → RatFunc ℚ)
-    (hstep : ∀ g ∈ gs, (toQFun g)′ = T - resid g) :
-    T - (toQFun (gs.foldl QFun.qadd QFun.qzero))′
+/-- A folded derivative with increments `T - resid g` has residual `T - nT + ∑ resid g`. -/
+theorem foldl_residual_eq (gs : List (DenseFrac ℚ))
+    (T : RatFunc ℚ) (resid : DenseFrac ℚ → RatFunc ℚ)
+    (hstep : ∀ g ∈ gs, (toRatFuncDense g)′ = T - resid g) :
+    T - (toRatFuncDense (gs.foldl CCommRing.add (CCommRing.zero : DenseFrac ℚ)))′
       = T - gs.length • T + (gs.map resid).sum := by
-  rw [deriv_toQFun_foldl_qadd gs hgs, List.map_congr_left hstep, list_sum_map_const_sub]
-  abel
-
-/-- `QFun.qeq x y = true ↔ toQFun x = toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
-theorem qeq_iff (x y : QFun ℚ) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
-    QFun.qeq x y = true ↔ toQFun x = toQFun y := by
-  obtain ⟨a, b⟩ := x
-  obtain ⟨c, d⟩ := y
-  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
-  have hbm : am (toPoly b) ≠ 0 := CFrac.amG_toPolyG_ne_zero hb
-  have hdm : am (toPoly d) ≠ 0 := CFrac.amG_toPolyG_ne_zero hd
-  -- LHS: the cross-multiplication zero test in `ℚ[X]`.
-  simp only [QFun.qeq, CPolyEngine.cisZero_dense_eq, CPolyEngine.sub,
-    CPolyEngine.add_dense_eq, CPolyEngine.neg_dense_eq,
-    CPolyEngine.mul_dense_eq]
-  rw [
-    DensePoly.cisZeroG_iff, DensePoly.toPolyG_caddG, DensePoly.toPolyG_cnegG,
-    DensePoly.toPolyG_cmulG, DensePoly.toPolyG_cmulG, add_neg_eq_zero]
-  -- RHS: the field equality, cleared to the cross-multiplication.
-  rw [toQFun, toQFun, div_eq_div_iff hbm hdm]
-  -- bridge through `am` injectivity (`map_mul` + injectivity).
-  rw [← map_mul, ← map_mul]
-  exact ⟨fun h => by rw [h], fun h => RatFunc.algebraMap_injective ℚ h⟩
+  rw [deriv_toRatFuncDense_foldl_add gs, List.map_congr_left hstep]
+  have hsum : ∀ (zs : List (DenseFrac ℚ)),
+      T - (zs.map (fun a => T - resid a)).sum =
+        T - zs.length • T + (zs.map resid).sum := by
+    intro zs
+    induction zs with
+    | nil => simp
+    | cons g zs ih =>
+      simp only [List.map_cons, List.sum_cons, List.length_cons, add_smul, one_smul]
+      have ih' : -(zs.map (fun a => T - resid a)).sum =
+          -(zs.length • T) + (zs.map resid).sum := by
+        linear_combination ih
+      linear_combination ih'
+  exact hsum gs
 
 end DeepWiki.SymbolicIntegration.Compute

@@ -65,7 +65,9 @@ theorem hermite_ex221_cleared_identity :
 
 /-- **The book's rational part `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)`** over the common denominator
 `x·(x²+2)² = x⁵+4x³+4x`: numerator `3x³+8x²+6x+4` (`[4, 6, 8, 3]`), denominator `[0, 4, 0, 4, 0, 1]`. -/
-def cBookG221 : QFun ℚ := ([4, 6, 8, 3], [0, 4, 0, 4, 0, 1])
+def cBookG221 : DenseFrac ℚ :=
+  CFrac.ofFraction ([4, 6, 8, 3] : DensePoly ℚ) ([0, 4, 0, 4, 0, 1] : DensePoly ℚ)
+    (by native_decide)
 
 /-- **Example 2.2.1: the computed rational part equals the book's `g`** (§2.2, p.41): the computed
 `g = gnum/gden` from `cHermiteReduceTower [1]` equals — *as a rational function* — the book's explicit
@@ -74,20 +76,19 @@ Proved by `native_decide` — the computed Hermite rational part matches the boo
 theorem hermite_ex221_g_eq_book :
     let ((gnum, gden), _) :=
       DensePoly.cHermiteReduceTower ([1] : DensePoly ℚ) cA221 cD221
-    let (bn, bd) := cBookG221
-    cnorm (cmul gnum bd) = cnorm (cmul bn gden) := by native_decide
+    cnorm (cmul gnum cBookG221.den) = cnorm (cmul cBookG221.num gden) := by native_decide
 
 -- **Example 2.2.1 via `ratIntegrate`**: the rational part `g = gnum/gden` plus the LRT log part of the
 -- residual `B/Dstar = 1/x`. The residual `∫ dx/x = log(x)` gives a single residue `1` with argument
 -- `x`. Prints the full integral data `((gnum, gden), logpart)`.
-#eval ratIntegrate 40 cA221 cD221
+#eval (ratIntegrate 40 cA221 cD221).1.isSome
 
 /-! ### Example 2.2.1: the certificate is real
 
 The exact-division certificate `hexact` is not vacuous: on Example 2.2.1 the residual `cdivWf`
 divides exactly (`hermite_ex221_exact_division`, `native_decide`). Feeding it to
 `hermiteReduce_residual_correct` gives the *rational-function* correctness identity
-`am A/am D = (toQFun g)′ + am Bres/am Dstar` for the concrete computed reduction — upgrading the
+`am A/am D = (ratFuncOfPair g)′ + am Bres/am Dstar` for the concrete computed reduction — upgrading the
 `native_decide` polynomial cleared identity to an honest `RatFunc ℚ` equality. -/
 
 /-- **Example 2.2.1: the residual division is exact** — the remainder of `(resNum·Dstar)` by
@@ -104,14 +105,14 @@ theorem hermite_ex221_exact_division :
 
 open scoped Differential in
 /-- **Example 2.2.1: the Hermite reduction is correct as a `RatFunc ℚ` identity** (§2.2, p.41):
-`am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` for the concrete computed `gnum, gden, Dstar`
+`am A/am D = (ratFuncOfPair (gnum,gden))′ + am Bres/am Dstar` for the concrete computed `gnum, gden, Dstar`
 of Example 2.2.1, with `Bres = cdivWf … (resNum·Dstar) (D·gden²)`. Honest `ℚ(x)` equality (not just the
 cleared polynomial certificate), obtained from `hermiteReduce_residual_correct` with the exact-division
 certificate discharged by `hermite_ex221_exact_division`. The nonzero hypotheses (`D, gden, Dstar`)
 hold since their `toPoly`/`cnorm` are nonzero (checked by `native_decide`/`decide`). -/
 example :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
-      = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
+      = (ratFuncOfPair ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
@@ -152,13 +153,13 @@ theorem hermite_ex221_resComp :
 
 open scoped Differential in
 /-- **Example 2.2.1: the unconditional Hermite reduction is correct as a `RatFunc ℚ` identity** (§2.2,
-p.41): `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` for the computed `gnum, gden, Dstar` of
+p.41): `am A/am D = (ratFuncOfPair (gnum,gden))′ + am Bres/am Dstar` for the computed `gnum, gden, Dstar` of
 Example 2.2.1, with **no** exact-division certificate as a hypothesis — the certificate is discharged by
 the `native_decide`'d residual-honesty bundle `hermite_ex221_resComp` through
 `hermiteReduce_residual_correct_uncond`. The nonzero hypotheses hold by `decide`. -/
 example :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
-      = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
+      = (ratFuncOfPair ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
@@ -205,12 +206,12 @@ theorem hermite_ex221_Dstar_dvd : toPoly ([0, 2, 0, 1] : DensePoly ℚ) ∣ toPo
 
 open scoped Differential in
 /-- **Example 2.2.1: the unconditional Hermite reduction via the radical wrapper** (§2.2, p.41):
-`am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` with the radical clause `Dstar ∣ D` discharged
+`am A/am D = (ratFuncOfPair (gnum,gden))′ + am Bres/am Dstar` with the radical clause `Dstar ∣ D` discharged
 by the *proven* `hermite_ex221_Dstar_dvd` (Yun radical-divides), and only the single residual cert
 `native_decide`'d. The cleanest split — abstract radical content proven, one residual cert checked. -/
 example :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
-      = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
+      = (ratFuncOfPair ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
         + algebraMap ℚ[X] (RatFunc ℚ)
             (toPoly (DensePoly.cdivWf
               (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))

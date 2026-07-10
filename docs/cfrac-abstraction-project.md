@@ -28,12 +28,13 @@ runs the same fraction algorithm.
 1. **Carrier/interface split — DONE.** Introduce `CFrac F P`, `PolyFrac P`, `DenseFrac`, and `SparseFrac` in
    symmetric representation modules. Migrate type occurrences from the old `CFrac α` carrier to
    `DenseFrac α`; keep `CFrac.*` as the generic API namespace, not a compatibility type alias.
-2. **Raw fraction consolidation — DONE.** Generalize `QFun` over `P` and retire the parallel `GFrac`
-   structure and arithmetic. There is one raw num/den algorithm body, exercised on dense and sparse inputs.
+2. **Raw fraction boundary — DONE.** Retire the duplicate legacy pair arithmetic. Valid field operations now
+   use `DenseFrac`/`CFrac`; the only unchecked pair is the explicitly named `RawFrac` boundary for
+   algorithms that have not discharged denominator certificates yet.
 3. **Generic field engine — DONE.** Generalize denominator-domain evidence, constructors, add/mul/neg/inv,
    zero test, and the `CField` instance over `[CFrac F P] [CPolyEngine P]`. Preserve the Prop-free runtime
    path; correctness assumptions remain in companion lawful classes.
-4. **Generic denotation.** State the bridge into `RatFunc` through `CPoly.toPoly`, prove the fraction
+4. **Generic denotation — DONE.** State the bridge into `RatFunc` through `CPoly.toPoly`, prove the fraction
    homomorphism laws with `LawfulCPolyEngine`, and expose `CFieldSpec (F α)`. Validate both
    `DenseFrac` and `SparseFrac` with native computation and denotation examples.
 5. **Tower rewiring.** Generalize fraction derivation and tower constructors over a fraction
