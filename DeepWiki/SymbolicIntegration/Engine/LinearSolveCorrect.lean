@@ -831,3 +831,31 @@ theorem cConstSolveUniqueQ_sound (Arows : List (List ℚ)) (urhs : List ℚ) (nc
 
 
 end DeepWiki.SymbolicIntegration.DensePoly
+
+namespace DeepWiki.SymbolicIntegration
+
+/-- The abstract coefficient-list dot product agrees with the rational solver's `dotQ`. -/
+theorem linearDot_rat_eq_dotQ (row x : List ℚ) :
+    linearDot row x = DensePoly.dotQ row x := by
+  unfold linearDot DensePoly.dotQ
+  induction row generalizing x with
+  | nil => rfl
+  | cons a row ih =>
+    cases x with
+    | nil => rfl
+    | cons b x =>
+      change a * b + (List.zipWith (fun x1 x2 => x1 * x2) row x).sum = _
+      simp [List.zipWith_cons_cons, List.sum_cons]
+
+/-- The rational RREF solver satisfies the abstract lawful linear-solver interface. -/
+instance instLawfulCLinearSolveRat : LawfulCLinearSolve ℚ where
+  solveUnique_length := by
+    intro rows rhs ncols x hsome
+    exact DensePoly.cConstSolveUniqueQ_length rows rhs ncols x hsome
+  solveUnique_sound := by
+    intro rows rhs ncols x hwidth hlen hsome i hi
+    change linearDot (rows.getD i []) x = rhs.getD i CCommRing.zero
+    rw [linearDot_rat_eq_dotQ]
+    exact DensePoly.cConstSolveUniqueQ_sound rows rhs ncols x hwidth hlen hsome i hi
+
+end DeepWiki.SymbolicIntegration

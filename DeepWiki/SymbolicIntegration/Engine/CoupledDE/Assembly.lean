@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.LinearSolveCorrect
 
 `cCoupledDESystem` reduces a coupled differential system to a ℚ-linear system via undetermined
 coefficients; this file proves the matrix assembly faithful and derives unconditional base
-soundness by discharging the cleared-check via `cConstSolveUniqueQ_sound`. -/
+soundness by discharging the cleared-check via the lawful abstract linear-solver capability. -/
 
 
 namespace DeepWiki.SymbolicIntegration.DensePoly
@@ -330,7 +330,7 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
   exact heq
 
 /-- A successful `cCoupledDESystem` solve satisfies `coupledClearedCheck … = true`, discharged from
-`cConstSolveUniqueQ_sound` via the row identities and the residual degree bound. -/
+the lawful linear-solver soundness law via the row identities and the residual degree bound. -/
 theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ)
     (d : ℕ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true := by
@@ -341,7 +341,7 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
   set M : List (List ℚ) := hcatQ row1u (mulMatrixQ (cscale a b2) d nrows)
     ++ hcatQ (mulMatrixQ b2 d nrows) row1u with hMdef
   set rhs : List ℚ := CPoly.coeffs z1 nrows ++ CPoly.coeffs z2 nrows with hrhsdef
-  rcases hmatch : cConstSolveUniqueQ M rhs (2 * (d + 1)) with _ | sol
+  rcases hmatch : CLinearSolve.solveUnique M rhs (2 * (d + 1)) with _ | sol
   · rw [hmatch] at hsome; exact absurd hsome (by simp)
   · rw [hmatch] at hsome
     rw [Option.some.injEq, Prod.mk.injEq] at hsome
@@ -376,9 +376,17 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : D
           List.length_append, mulMatrixQ_row_len _ d nrows k hk, hrow1u_width k hk]; omega
     have hMlen : M.length = nrows + nrows := by rw [hMdef, List.length_append, hR1len, hR2len]
     have hrhslen : rhs.length = nrows + nrows := by simp [hrhsdef]
-    have hsollen : sol.length = 2 * (d + 1) := cConstSolveUniqueQ_length M rhs _ sol hmatch
-    have hsolve := cConstSolveUniqueQ_sound M rhs (2 * (d + 1)) sol hM_width
+    have hsollen : sol.length = 2 * (d + 1) :=
+      LawfulCLinearSolve.solveUnique_length M rhs _ sol hmatch
+    have hsolveGeneric := LawfulCLinearSolve.solveUnique_sound M rhs (2 * (d + 1)) sol hM_width
       (by rw [hMlen, hrhslen]) hmatch
+    have hsolve : ∀ k, k < M.length →
+        DensePoly.dotQ (M.getD k []) sol = rhs.getD k 0 := by
+      intro k hk
+      have hk' := hsolveGeneric k hk
+      change linearDot (M.getD k []) sol = rhs.getD k CCommRing.zero at hk'
+      rw [linearDot_rat_eq_dotQ] at hk'
+      exact hk'
     -- repackage hsolve with the spelled-out matrix (defeq to M via the `set`s).
     have hsolve' : ∀ k, k < (hcatQ (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))
           (mulMatrixQ (cscale a b2) d nrows)
@@ -503,7 +511,7 @@ theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ)
 /-! ### Restatements against the intended wording -/
 
 -- The base coupled-system solve satisfies the two `ℚ[X]` row identities without a separate cleared-check
--- hypothesis; the check is discharged from `cConstSolveUniqueQ_sound`.
+-- hypothesis; the check is discharged from the lawful abstract linear-solver soundness law.
 example (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
     (hsome : DensePoly.cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     Polynomial.derivative (DensePoly.toPoly y1) + DensePoly.toPoly b1 * DensePoly.toPoly y1
@@ -512,11 +520,15 @@ example (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
         + DensePoly.toPoly b1 * DensePoly.toPoly y2 = DensePoly.toPoly z2 :=
   cCoupledDESystem_sound a b1 b2 z1 z2 d y1 y2 hsome
 
--- `cConstSolveUniqueQ` soundness: the returned solution solves `A·x = b` rowwise.
+-- The abstract linear-solver soundness law: a returned solution solves `A·x = b` rowwise.
 example (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
     (hwidth : ∀ r ∈ Arows, r.length = ncols) (hlen : Arows.length = urhs.length)
-    (hsome : DensePoly.cConstSolveUniqueQ Arows urhs ncols = some x) :
+    (hsome : CLinearSolve.solveUnique Arows urhs ncols = some x) :
     ∀ i, i < Arows.length → DensePoly.dotQ (Arows.getD i []) x = urhs.getD i 0 :=
-  DensePoly.cConstSolveUniqueQ_sound Arows urhs ncols x hwidth hlen hsome
+  fun i hi => by
+    have h := LawfulCLinearSolve.solveUnique_sound Arows urhs ncols x hwidth hlen hsome i hi
+    change linearDot (Arows.getD i []) x = urhs.getD i CCommRing.zero at h
+    rw [linearDot_rat_eq_dotQ] at h
+    exact h
 
 end DeepWiki.SymbolicIntegration

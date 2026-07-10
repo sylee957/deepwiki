@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.ComputableAlgebra.Fraction
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.ChainEndpoint
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.DividedStep
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.FilterPrimitive

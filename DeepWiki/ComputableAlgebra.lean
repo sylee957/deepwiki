@@ -10,14 +10,17 @@ import DeepWiki.ComputableAlgebra.PolyReprBridge
 import DeepWiki.ComputableAlgebra.PolyEngine
 import DeepWiki.ComputableAlgebra.PolyReprDivision
 import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
+import DeepWiki.ComputableAlgebra.PolyReprGcd
 import DeepWiki.ComputableAlgebra.PolyReprResultant
 import DeepWiki.ComputableAlgebra.PolyReprResultantCoprime
+import DeepWiki.ComputableAlgebra.PolyEuclidean
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.FracRepr
 import DeepWiki.ComputableAlgebra.FracReprDense
 import DeepWiki.ComputableAlgebra.FracReprSparse
 import DeepWiki.ComputableAlgebra.Fraction
+import DeepWiki.ComputableAlgebra.LinearAlgebra
 
 /-! # Computable algebra — the generic executable field & polynomial layer
 

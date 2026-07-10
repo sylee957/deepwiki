@@ -40,8 +40,14 @@ runs the same fraction algorithm.
 5. **Tower rewiring.** Generalize fraction derivation and tower constructors over a fraction
    representation where their bodies only use the interface. Keep dense specialization only where an
    actual downstream polynomial algorithm is still dense.
-6. **Abstract algorithm capabilities.** Introduce Prop-free/lawful pairs for polynomial gcd/division,
-   resultant/subresultant, and linear solve. Concrete dense and generic implementations become instances;
+6. **Abstract algorithm capabilities — IN PROGRESS.** Introduce Prop-free/lawful pairs for polynomial
+   gcd/division, resultant/subresultant, and linear solve. The first slice is `CLinearSolve`/
+   `LawfulCLinearSolve`, with the rational RREF implementation as its instance and the coupled-DE
+   consumer now requesting the capability rather than `cConstSolveUniqueQ` directly. The second slice is
+   `CPolyGcd`/`LawfulCPolyGcd` now selects gcd for raw-fraction reduction, while
+   `CPolyEuclidean`/`LawfulCPolyEuclidean` selects division and extended Bézout: dense polynomials use the
+   well-founded engine, sparse polynomials use the generic `CPoly` engine, and the rational-function
+   exact-division bridge consumes only the capability. Concrete dense and generic implementations become instances;
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

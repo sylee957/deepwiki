@@ -1,5 +1,5 @@
 import DeepWiki.Algebra.PolynomialDivisibility
-import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.SymbolicIntegration.Compute.Hermite
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
@@ -105,7 +105,12 @@ theorem hermiteReduce_residual_correct (A D : DensePoly ℚ)
   have hdstar : am (toPoly Dstar) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hDstar0
   have htoQ : ratFuncOfPair (gnum, gden) = am (toPoly gnum) / am (toPoly gden) := rfl
   have hresid := residual_numerator_ratFunc (toPoly A) (toPoly D) (toPoly gnum) (toPoly gden) hD hgden
-  have hcdiv := am_cdivWf_of_cmodWf_zero resNum resDen hresDen0 hexact
+  have hcdiv : am (toPoly resNum) / am (toPoly resDen) =
+      am (toPoly (DensePoly.cdivWf resNum resDen)) := by
+    have h := am_div_of_mod_zero resNum resDen (by
+        simpa only [toPoly_list_eq] using hresDenPoly0) (by
+        simpa only [CPolyEuclidean.mod_dense_eq, toPoly_list_eq] using hexact)
+    simpa only [CPolyEuclidean.div_dense_eq, toPoly_list_eq] using h
   have hresNumPoly : toPoly resNum
       = (toPoly A * (toPoly gden * toPoly gden)
           - toPoly D * (derivative (toPoly gnum) * toPoly gden

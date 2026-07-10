@@ -101,7 +101,7 @@ def cCoupledDESystemWith {P : Type → Type} [CPoly P]
   let M : List (List ℚ) := hcatQ row1u row1v ++ hcatQ row2u row2v
   -- right-hand side: the `z₁` then `z₂` coefficients (length `nrows` each).
   let rhs : List ℚ := CPoly.coeffs z1 nrows ++ CPoly.coeffs z2 nrows
-  match cConstSolveUniqueQ M rhs (2 * (d + 1)) with
+  match CLinearSolve.solveUnique M rhs (2 * (d + 1)) with
   | none => none
   | some sol =>
     let y1 : P ℚ := CPoly.ofFn (d + 1) (fun i => sol.getD i 0)
@@ -110,7 +110,7 @@ def cCoupledDESystemWith {P : Type → Type} [CPoly P]
 
 /-- `cCoupledDESystem a b1 b2 z1 z2 d` (`D = d/dx`): in any `CPolyEngine` representation, solve
 `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]]·(y₁; y₂) = (z₁; z₂)` for degree-`≤ d` polynomials via one
-ℚ-linear solve (`cConstSolveUniqueQ`). Returns `some (y₁, y₂)` or `none`. -/
+abstract unique linear solve (`CLinearSolve.solveUnique`). Returns `some (y₁, y₂)` or `none`. -/
 def cCoupledDESystem {P : Type → Type} [CPoly P] [CPolyEngine P]
     (a : ℚ) (b1 b2 z1 z2 : P ℚ) (d : ℕ) : Option (P ℚ × P ℚ) :=
   cCoupledDESystemWith CPolyEngine.cdeg CPolyEngine.scale CPolyEngine.cnorm
@@ -181,7 +181,8 @@ example :
 
 The bridge `coupledClearedCheck = true ⟹ the two field identities over ℚ[X]`
 (`coupledClearedCheck_sound`) uses only `LawfulCPolyEngine` denotation laws. The check is dischargeable
-through `cConstSolveUniqueQ_sound`, so the `*_of_check` lemmas here are the self-certifying intermediate. -/
+through the lawful abstract linear-solver soundness law, so the `*_of_check` lemmas here are the
+self-certifying intermediate. -/
 
 /-- A passing generic `coupledClearedCheck` gives the two base-system identities under `CPoly.toPoly`. -/
 theorem coupledClearedCheck_sound {P : Type → Type} [CPoly P] [CPolyEngine P]

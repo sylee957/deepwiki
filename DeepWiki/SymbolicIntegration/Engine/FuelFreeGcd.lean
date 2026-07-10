@@ -1,4 +1,5 @@
-import DeepWiki.ComputableAlgebra.PolyReprDense
+import DeepWiki.ComputableAlgebra.PolyEuclidean
+import DeepWiki.ComputableAlgebra.PolyReprBridge
 import Mathlib.RingTheory.Polynomial.Content
 import Mathlib.Tactic.LinearCombination
 
@@ -468,5 +469,44 @@ theorem not_dvd_of_cdvdG_false (q p : DensePoly α) (hq : cnorm q ≠ [])
   exact Bool.noConfusion h
 
 end DensePoly
+
+/-- Dense polynomials select the well-founded Euclidean implementation. -/
+instance instCPolyEuclideanDense : CPolyEuclidean DensePoly where
+  divmod := DensePoly.cdivmodWf
+  gcdExt := DensePoly.cgcdWf
+
+namespace CPolyEuclidean
+
+/-- Dense Euclidean division selects `DensePoly.cdivmodWf`. -/
+@[simp] theorem divmod_dense_eq {α : Type*} [CField α] (p q : DensePoly α) :
+    CPolyEuclidean.divmod p q = DensePoly.cdivmodWf p q := rfl
+
+/-- Dense quotient selection is `DensePoly.cdivWf`. -/
+@[simp] theorem div_dense_eq {α : Type*} [CField α] (p q : DensePoly α) :
+    CPolyEuclidean.div p q = DensePoly.cdivWf p q := rfl
+
+/-- Dense remainder selection is `DensePoly.cmodWf`. -/
+@[simp] theorem mod_dense_eq {α : Type*} [CField α] (p q : DensePoly α) :
+    CPolyEuclidean.mod p q = DensePoly.cmodWf p q := rfl
+
+/-- Dense extended gcd selects `DensePoly.cgcdWf`. -/
+@[simp] theorem gcdExt_dense_eq {α : Type*} [CField α] (p q : DensePoly α) :
+    CPolyEuclidean.gcdExt p q = DensePoly.cgcdWf p q := rfl
+
+end CPolyEuclidean
+
+/-- The dense well-founded Euclidean implementation satisfies the abstract laws. -/
+instance instLawfulCPolyEuclideanDense : LawfulCPolyEuclidean DensePoly where
+  divmod_spec := by
+    intro α _ _ p q hq
+    rw [toPoly_list_eq] at hq
+    have hqnorm : DensePoly.cnorm q ≠ [] := fun h =>
+      hq ((DensePoly.cnormG_eq_nil_iff q).mp h)
+    simpa only [CPolyEuclidean.div, CPolyEuclidean.mod, CPolyEuclidean.divmod_dense_eq,
+      toPoly_list_eq] using DensePoly.toPolyG_cdivmodWf p q hqnorm
+  gcdExt_bezout := by
+    intro α _ _ p q
+    simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using
+      DensePoly.toPolyG_cgcdWf p q
 
 end DeepWiki.SymbolicIntegration

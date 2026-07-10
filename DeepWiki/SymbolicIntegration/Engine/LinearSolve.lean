@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
+import DeepWiki.ComputableAlgebra.LinearAlgebra
 
 /-! # Executable dense linear solving over `ℚ`
 
@@ -71,5 +72,9 @@ theorem getD_long_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : l.leng
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none_iff.mpr hn]; rfl
 
 end DensePoly
+
+/-- The existing rational RREF implementation supplies the abstract linear-solver capability. -/
+instance instCLinearSolveRat : CLinearSolve ℚ where
+  solveUnique := DensePoly.cConstSolveUniqueQ
 
 end DeepWiki.SymbolicIntegration

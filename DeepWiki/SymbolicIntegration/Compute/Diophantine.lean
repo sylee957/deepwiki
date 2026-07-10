@@ -1,4 +1,5 @@
-import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.ComputableAlgebra.Fraction
+import DeepWiki.SymbolicIntegration.Compute.Hermite
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 
 /-! # Computable Diophantine solver correctness

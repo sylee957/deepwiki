@@ -1,4 +1,5 @@
-import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.ComputableAlgebra.Fraction
+import DeepWiki.SymbolicIntegration.Compute.Subresultant
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 
 /-! # Computable rational functions `ℚ(x)`
@@ -12,16 +13,16 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.Compute
 
-/-- Exact fuel-free computable division becomes division in `RatFunc ℚ`. -/
-theorem am_cdivWf_of_cmodWf_zero (p q : DensePoly ℚ) (hq : DensePoly.cnorm q ≠ [])
-    (hrem : DensePoly.toPoly (DensePoly.cmodWf p q) = 0) :
-    algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly p) /
-        algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly q) =
-      algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly (DensePoly.cdivWf p q)) := by
-  have hq0 : DensePoly.toPoly q ≠ 0 := fun h => hq ((DensePoly.cnormG_eq_nil_iff q).mpr h)
-  have hqm : algebraMap ℚ[X] (RatFunc ℚ) (DensePoly.toPoly q) ≠ 0 :=
-    CFrac.amG_toPolyG_ne_zero hq0
-  have hdiv := DensePoly.toPolyG_cmodWf p q hq
+/-- Exact division selected by a lawful polynomial Euclidean capability becomes division in `RatFunc ℚ`. -/
+theorem am_div_of_mod_zero {P : Type → Type} [CPoly P] [CPolyEuclidean P]
+    [LawfulCPolyEuclidean.{0,0} P] (p q : P ℚ) (hq : CPoly.toPoly q ≠ 0)
+    (hrem : CPoly.toPoly (CPolyEuclidean.mod p q) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly p) /
+        algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly q) =
+      algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly (CPolyEuclidean.div p q)) := by
+  have hqm : algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly q) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hq
+  have hdiv := LawfulCPolyEuclidean.divmod_spec (P := P) (α := ℚ) p q hq
   rw [hrem, add_zero] at hdiv
   rw [hdiv, map_mul, mul_div_assoc, div_self hqm, mul_one]
 
