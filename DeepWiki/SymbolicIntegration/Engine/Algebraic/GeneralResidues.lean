@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgebraicResiduesExamples
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgFunctionField
+import DeepWiki.ComputableAlgebra.FracReduce
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 
@@ -23,14 +24,8 @@ variable {α : Type*} [CField α]
 The inner `res_Y` lands in `α = K(x) = DenseFrac ℚ`. When `F` is monic in `y` the resultant is a genuine
 *polynomial* in `x`, so the `DenseFrac ℚ` value is `numerator/denominator` with the denominator a nonzero
 constant (the engine keeps fractions unreduced, so the constant may be any nonzero scalar `c`, not
-literally `1`). `qToPolyQ` recovers the `ℚ[x]`-polynomial by the exact division `numerator / denominator`
-(`cdivWf` over ℚ): when `denominator ∣ numerator` this is the polynomial quotient, here `cscale (c⁻¹)`. -/
-
-/-- `qToPolyQ v = numerator(v) / denominator(v)` (`cdivWf` over ℚ): read a `DenseFrac ℚ` value as a
-`ℚ[x]`-polynomial. Faithful exactly when `denominator(v) ∣ numerator(v)` — true for the inner
-`res_Y` against a `y`-monic `F`, which is a polynomial in `x` with a constant denominator. -/
-def qToPolyQ (v : DenseFrac ℚ) : DensePoly ℚ :=
-  cdivWf v.num v.den
+literally `1`). `CFrac.polynomialQuotient` recovers the `ℚ[x]`-polynomial through the selected Euclidean
+capability: when `denominator ∣ numerator` this is the exact polynomial quotient, here a scalar rescaling. -/
 
 /-! ### The inner `res_Y(Z·D' − g, F)` at a rational `Z`-node -/
 
@@ -53,12 +48,13 @@ example :
   native_decide
 
 /-- `resYAtNode f g Dder z = res_Y(z·D'(X) − g(X, Y), F(X, Y))` at the rational node `Z = z`,
-read as a `ℚ[X]`-polynomial: the resultant in `y` (`cresultantG fuelY` over the field
-`α = DenseFrac ℚ`) of `zDderMinus g Dder z` against the monic curve `f`, recovered as `DensePoly ℚ` by
-`qToPolyQ`. The general-curve replacement for the `n = 2` norm `(z·D' − g₀)² − g₁²·ρ`. -/
+read as a `ℚ[X]`-polynomial: the resultant in `y` over the field `α = DenseFrac ℚ` of
+`zDderMinus g Dder z` against the monic curve `f`, recovered through
+`CFrac.polynomialQuotient`. The general-curve replacement for the `n = 2` norm
+`(z·D' − g₀)² − g₁²·ρ`. -/
 def resYAtNode [CPolyResultant DensePoly]
     (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ) (z : ℚ) : DensePoly ℚ :=
-  qToPolyQ (CPolyResultant.compute (zDderMinus g Dder z) f)
+  CFrac.polynomialQuotient (CPolyResultant.compute (zDderMinus g Dder z) f)
 
 /-! ### The full general-`F` residue resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)`
 

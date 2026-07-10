@@ -50,6 +50,22 @@ def reduceDen [CPolyGcd P] [CPolyEuclidean P]
     {α : Type u} [CField α] (a : F α) : P α :=
   CPolyEuclidean.div (den a) (reduceGcd a)
 
+/-- Read a polynomial-valued represented fraction through selected Euclidean division. -/
+def polynomialQuotient [CPolyEuclidean P]
+    {α : Type u} [CField α] (a : F α) : P α :=
+  CPolyEuclidean.div (num a) (den a)
+
+/-- An exactly divisible represented fraction is reconstructed by its polynomial quotient. -/
+theorem toPoly_polynomialQuotient_mul [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : F α)
+    (hdvd : CPoly.toPoly (den a) ∣ CPoly.toPoly (num a)) :
+    CPoly.toPoly (polynomialQuotient a) * CPoly.toPoly (den a) =
+      CPoly.toPoly (num a) := by
+  simpa only [polynomialQuotient, mul_comm] using
+    (LawfulCPolyEuclidean.div_exact (num a) (den a)
+      (toPoly_den_ne_zero_generic a) hdvd).symm
+
 /-- Exact cancellation reconstructs the stored numerator. -/
 theorem toPoly_reduceNum_mul [LawfulCPolyEngine.{u,v} P]
     [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
@@ -143,5 +159,11 @@ end CFrac
 example {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : SparseFrac α) :
     CFrac.toRatFunc (qReduce a) = CFrac.toRatFunc a :=
   toRatFunc_qReduce a
+
+example {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : SparseFrac α)
+    (hdvd : CPoly.toPoly (CFrac.den a) ∣ CPoly.toPoly (CFrac.num a)) :
+    CPoly.toPoly (CFrac.polynomialQuotient a) * CPoly.toPoly (CFrac.den a) =
+      CPoly.toPoly (CFrac.num a) :=
+  CFrac.toPoly_polynomialQuotient_mul a hdvd
 
 end DeepWiki.SymbolicIntegration
