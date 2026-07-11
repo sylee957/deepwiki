@@ -21,15 +21,15 @@ variable {α : Type*} [CField α] [CDiffField α] [CPolyGcd DensePoly α]
 def cIntegrateCaseChecked (C : CMonomialCase DensePoly α) (cands : List α)
     (Dt a d : DensePoly α) : Option (IntegralResult α) :=
   let _ : CResidueSource DensePoly α := { candidates := fun _ => cands }
-  (oneLevelRisch C).integrate Dt a d
+  (oneLevelRisch C).integrate 0 Dt a d
 
 /-- Run the polynomial-aware generic Risch pipeline with an explicit reduction budget. -/
 def cIntegrateCaseCheckedWithPolynomial (kind : PolynomialReductionKind) (fuel : ℕ)
     (C : CMonomialCase DensePoly α) (cands : List α)
     (Dt a d : DensePoly α) : Option (IntegralResult α) :=
   let _ : CResidueSource DensePoly α := { candidates := fun _ => cands }
-  (oneLevelRischWithPolynomial (towerPolynomialReduction (P := DensePoly) (α := α)) kind fuel C).integrate
-    Dt a d
+  (oneLevelRischWithPolynomial (towerPolynomialReduction (P := DensePoly) (α := α)) kind C).integrate
+    fuel Dt a d
 
 end DensePoly
 

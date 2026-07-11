@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.RischTowerLrt
 import DeepWiki.SymbolicIntegration.Engine.LimitedIntegrateSingle
+import DeepWiki.SymbolicIntegration.Engine.RecursiveCoefficient
 
 /-! # Recursive LRT Risch tower step
 
@@ -39,6 +40,10 @@ def towerCoeffIntegrateLrt (c : DenseFrac β) : Option (DenseFrac β) :=
   (LawfulRischLevelLrt.integrateRationalLrt [CCommRing.one] (CFrac.num c) (CFrac.den c)).map fun bd =>
     CField.div (CFrac.ofPoly bd.1) (CFrac.ofPoly bd.2)
 
+/-- The LRT tower's recursive coefficient operation. -/
+def towerCoefficientIntegratorLrt : CRecursiveCoefficientIntegrator (DenseFrac β) where
+  integrate := towerCoeffIntegrateLrt
+
 /-- LRT coefficient-recursion soundness: `toK (cderiv b) = toK c` in
 `RatFunc (CFieldSpec.K β)`, reassembling `integrateRationalLrt_sound` (descent-free `K`-level) through the
 `DenseFrac β` field division that `towerCoeffIntegrateLrt` performs. -/
@@ -77,6 +82,11 @@ theorem towerCoeffIntegrateLrt_sound (c b : DenseFrac β) (h : towerCoeffIntegra
   rw [hcd, CFieldSpec.toK_div, htoK_embed bn, htoK_embed bd, htoK_c]
   exact hsound
 
+/-- The LRT recursive coefficient operation satisfies the generic soundness contract. -/
+instance instLawfulCRecursiveCoefficientIntegratorLrt :
+    LawfulCRecursiveCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β)) where
+  sound c b h := towerCoeffIntegrateLrt_sound c b h
+
 /-- The single-`w` LRT coefficient integrator `(b, c)` tries the optional
 `LawfulRischLevelLrt.limitedIntegrateSingle` (reconstructing `b = bnum/bden` and the constant `c` as
 `DenseFrac β` elements), falling back to the log-free `towerCoeffIntegrateLrt` (`c = 0`) when the class supplies no
@@ -86,7 +96,8 @@ def towerCoeffIntegrateSingleLrt (η c : DenseFrac β) : Option (DenseFrac β ×
   match LawfulRischLevelLrt.limitedIntegrateSingle (CFrac.num c) (CFrac.den c)
       (CFrac.num η) (CFrac.den η) with
   | some ((bn, bd), cc) => some (CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd), CFrac.ofPoly [cc])
-  | none => (towerCoeffIntegrateLrt c).map fun b => (b, CCommRing.zero)
+  | none => (towerCoefficientIntegratorLrt (β := β)).integrate c |>.map fun b =>
+    (b, CCommRing.zero)
 
 /-- The LRT tower step's polynomial-part integrator: the degree-raising primitive-polynomial recursion
 `cIntegratePrimPolyDegRaise` with `towerCoeffIntegrateSingleLrt` as the single-`w` `limInt` (real `(b,c)` when
