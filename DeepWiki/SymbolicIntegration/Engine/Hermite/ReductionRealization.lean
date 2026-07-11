@@ -38,6 +38,12 @@ theorem cHermiteReduceTowerG_lawfulHermiteReduction [CharZero (CFieldSpec.K α)]
       rw [cHermiteReduceTower]
       simp only [denote]
       simp]
+    have hmap : (cSqfreeYunFF d).map CPoly.toPoly =
+        (cSqfreeYunFF d).map DensePoly.toPoly := by
+      apply List.map_congr_left
+      intro p _
+      exact toPoly_list_eq p
+    rw [← hmap]
     exact (cSqfreeYunFFG_lawfulSquarefreeDecomposition hgcd d hd0 hpp).prod_squarefree
   proper := hproper
 

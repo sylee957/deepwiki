@@ -1,5 +1,5 @@
 import DeepWiki.Algebra.ListProducts
-import DeepWiki.ComputableAlgebra.PolyReprDense
+import DeepWiki.ComputableAlgebra.PolyReprDenote
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 /-! # Interface: `LawfulSquarefreeDecomposition`
@@ -14,7 +14,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open DensePoly
+universe u v
 
 /-- **The product of pairwise-coprime squarefree polynomials is squarefree** (list form). -/
 theorem squarefree_list_prod {K : Type*} [Field K] (L : List K[X])
@@ -37,38 +37,37 @@ theorem monic_list_prod {K : Type*} [Field K] (L : List K[X]) (h : ∀ p ∈ L, 
     rw [List.prod_cons]
     exact (h a (List.mem_cons_self ..)).mul (ih (fun p hp => h p (List.mem_cons_of_mem a hp)))
 
-open DensePoly
-
-variable {α : Type*} [CField α] [CFieldSpec α]
+variable {P : Type u → Type u} [CPoly P]
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α]
 
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
-structure LawfulSquarefreeDecomposition (d : DensePoly α) (decomp : List (DensePoly α)) : Prop where
+structure LawfulSquarefreeDecomposition (d : P α) (decomp : List (P α)) : Prop where
   /-- The powered product `∏ᵢ vᵢ^i` reconstructs `d` up to associates. -/
-  reconstruct : Associated (toPoly d) (prodPow 1 (decomp.map toPoly))
+  reconstruct : Associated (CPoly.toPoly d) (prodPow 1 (decomp.map CPoly.toPoly))
   /-- Each factor is monic. -/
-  monic : ∀ p ∈ decomp, (toPoly p).Monic
+  monic : ∀ p ∈ decomp, (CPoly.toPoly p).Monic
   /-- Each factor is squarefree. -/
-  squarefree : ∀ p ∈ decomp, Squarefree (toPoly p)
+  squarefree : ∀ p ∈ decomp, Squarefree (CPoly.toPoly p)
   /-- Distinct factors are relatively prime. -/
-  coprime : decomp.Pairwise (fun p q => IsRelPrime (toPoly p) (toPoly q))
+  coprime : decomp.Pairwise (fun p q => IsRelPrime (CPoly.toPoly p) (CPoly.toPoly q))
 
 namespace LawfulSquarefreeDecomposition
 
 /-- The radical `∏ᵢ vᵢ` (the plain product of the factors) is squarefree — the property the Hermite stage
 consumes abstractly (not from the concrete Yun loop). -/
-theorem prod_squarefree {d : DensePoly α} {decomp : List (DensePoly α)}
+theorem prod_squarefree {d : P α} {decomp : List (P α)}
     (h : LawfulSquarefreeDecomposition d decomp) :
-    Squarefree ((decomp.map toPoly).prod) := by
+    Squarefree ((decomp.map CPoly.toPoly).prod) := by
   refine squarefree_list_prod _ ?_ ?_
   · rw [List.pairwise_map]; exact h.coprime
   · intro p hp; rw [List.mem_map] at hp; obtain ⟨q, hq, rfl⟩ := hp; exact h.squarefree q hq
 
 /-- The radical `∏ᵢ vᵢ` is monic. -/
-theorem prod_monic {d : DensePoly α} {decomp : List (DensePoly α)}
+theorem prod_monic {d : P α} {decomp : List (P α)}
     (h : LawfulSquarefreeDecomposition d decomp) :
-    ((decomp.map toPoly).prod).Monic := by
+    ((decomp.map CPoly.toPoly).prod).Monic := by
   refine monic_list_prod _ ?_
   intro p hp; rw [List.mem_map] at hp; obtain ⟨q, hq, rfl⟩ := hp; exact h.monic q hq
 

@@ -676,15 +676,27 @@ theorem cSqfreeYunFFG_lawfulSquarefreeDecomposition [CharZero (CFieldSpec.K α)]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hpp : (toPoly d).primPart ≠ 0) :
     LawfulSquarefreeDecomposition d (cSqfreeYunFF d) :=
-  { reconstruct := cSqfreeYunFFG_reconstruction hgcd d hd0 hpp
-    monic := cSqfreeYunFFG_monic hgcd d hd0
+  { reconstruct := by
+      have hmap : (cSqfreeYunFF d).map CPoly.toPoly =
+          (cSqfreeYunFF d).map DensePoly.toPoly := by
+        apply List.map_congr_left
+        intro p _
+        exact toPoly_list_eq p
+      rw [toPoly_list_eq, hmap]
+      exact cSqfreeYunFFG_reconstruction hgcd d hd0 hpp
+    monic := by
+      intro p hp
+      simpa only [toPoly_list_eq] using cSqfreeYunFFG_monic hgcd d hd0 p hp
     squarefree := fun p hp => by
       obtain ⟨k, hk, hpk⟩ := List.mem_iff_getElem.mp hp
-      rw [← hpk]; exact cSqfreeYunFFG_squarefree hgcd d hd0 hpp k hk
+      rw [← hpk]
+      simpa only [List.get_eq_getElem, toPoly_list_eq] using
+        cSqfreeYunFFG_squarefree hgcd d hd0 hpp k hk
     coprime := by
       rw [List.pairwise_iff_getElem]
       intro i j hi hj hij
-      exact cSqfreeYunFFG_isRelPrime hgcd d hd0 hpp hi hj (Nat.ne_of_lt hij) }
+      simpa only [List.get_eq_getElem, toPoly_list_eq] using
+        cSqfreeYunFFG_isRelPrime hgcd d hd0 hpp hi hj (Nat.ne_of_lt hij) }
 
 /-! ### The Yun factorization of a constant is empty -/
 
