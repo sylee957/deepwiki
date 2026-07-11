@@ -76,8 +76,8 @@ def expArgSolved : Option (RadElem Lvl2) :=
 
 -- Computed numerator `N` for `∫ dx/√(eˣ+1)` over the tower, a multiple of `(θ+2) − 2y`.
 #eval (expArgSolved.map (fun N => N.map (fun z =>
-  (z.num.map (fun w => (w.num : List ℚ)),
-   z.den.map (fun w => (w.num : List ℚ))))))
+  ((CFrac.num z).map (fun w => (CFrac.num w : List ℚ)),
+   (CFrac.den z).map (fun w => (CFrac.num w : List ℚ))))))
 
 /-- `radLogArgSolve` computes the log argument for `∫ dx/√(eˣ+1)` over `ℚ(x)(eˣ)`: the generic solver,
 its Gaussian elimination running over `β = ℚ(x)`, returns `some N`. -/

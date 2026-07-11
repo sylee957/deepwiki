@@ -104,8 +104,8 @@ def expC3Run : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ) :=
 
 -- Sanity print: the COMPUTED rational-part numerator `vNum` (should be `2ρ = 2θ+2 = [2,2]`) and the
 -- residual `Crem`, as ℚ(x)-coefficient lists.
-#eval (expC3Run.2.map (fun (z : DenseFrac ℚ) => (z.num : List ℚ)),
-       expC3Run.1.map (fun (z : DenseFrac ℚ) => (z.num : List ℚ)))
+#eval (expC3Run.2.map (fun (z : DenseFrac ℚ) => (CFrac.num z : List ℚ)),
+       expC3Run.1.map (fun (z : DenseFrac ℚ) => (CFrac.num z : List ℚ)))
 
 /-- Case-3-G computes `vNum = 2ρ` (so `v = 2y`) over the exp tower: the reduction with `θ' = θ` produces
 `vNum = 2(θ+1) = 2ρ`, checked by `cisZero (vNum − 2ρ)`. -/
@@ -164,9 +164,11 @@ def rtFullRecovered : AlgIntegralResult Lvl2 :=
 
 -- Sanity print: the recovered rational part `v` (should be `2y = [0,2]`, i.e. coefficient `2` on `y`) and
 -- the recovered log argument `u` (a constant multiple of `(y−1)/(y+1) = ((θ+2)−2y)/θ`).
-#eval (rtFullRecovered.ratPart.map (fun (z : Lvl2) => (z.num.map (fun (w : DenseFrac ℚ) => (w.num : List ℚ)))),
+#eval (rtFullRecovered.ratPart.map (fun (z : Lvl2) =>
+         (CFrac.num z).map (fun (w : DenseFrac ℚ) => (CFrac.num w : List ℚ))),
        rtFullRecovered.logTerms.map (fun (_, u) =>
-         u.map (fun (z : Lvl2) => (z.num.map (fun (w : DenseFrac ℚ) => (w.num : List ℚ))))))
+         u.map (fun (z : Lvl2) =>
+           (CFrac.num z).map (fun (w : DenseFrac ℚ) => (CFrac.num w : List ℚ)))))
 
 /-- The fully-computed round-trip `algDeriv F' = √(eˣ+1)` with both halves computed: the elementary integral
 `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over `ℚ(x)(eˣ)`, `v = 2y` from `radIntegrateCase3G` and
