@@ -14,6 +14,8 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 /-! ### Residue-field reduction at a linear prime `p = x − a`
 
 For a linear prime `p = x − a`, the residue field `K[x]/(p) = K` and reduction mod `p` is
@@ -62,11 +64,6 @@ For a linear bad prime `p = x − a`, `I_p = { z ∈ O : p ∣ Tr(z·ωⱼ) ∀j
 matrix reduced mod `p` (evaluated at `a`), lifted and Hermite-reduced to a `K[x]`-basis. -/
 
 namespace DensePoly
-
-/-- The power-basis coordinate row of an order element `afCoordRow n z = [num(c₀), …, num(c_{n−1})]`: the
-first `n` coefficients of `z : DensePoly (DenseFrac ℚ)` read as `ℚ[x]` numerators. -/
-def afCoordRow (n : ℕ) (z : DensePoly (DenseFrac ℚ)) : List (DensePoly ℚ) :=
-  (List.range n).map (fun i => (z.getD i CCommRing.zero : DenseFrac ℚ).num)
 
 /-- The trace matrix reduced at a linear prime root `a` `traceMatrixAtRoot f a`: the `n×n` `ℚ`-matrix
 `CPoly.traceMatrix f (CPoly.powerBasis f)` with every entry evaluated at `x = a` (`CFrac.eval`), i.e. `T mod (x − a)`.
@@ -187,19 +184,37 @@ def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix DensePoly ℚ) : List (List (De
   (List.range n).map (fun r =>
     (List.range n).map (fun k => CFrac.ofPoly ((ipRows.getD k []).getD r [])))
 
-/-- The common denominator of a `K(x)`-matrix `commonDenomQ M`: the product over all entries of their
-normalized denominators (`z.den`), a coarse common multiple used to clear `M` to `K[x]`. -/
-def commonDenomQ (M : List (List (DenseFrac ℚ))) : DensePoly ℚ :=
+/-- Product of the nontrivial normalized denominators in a represented-fraction matrix. -/
+private def commonDenom {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+    {α : Type u} [CField α] (M : List (List (F α))) : P α :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
-      let den := cnorm z.den
-      if cisZero den || cisZero (csub den [CCommRing.one]) then a else cmul a den)
-      acc) [CCommRing.one]
+      let den := CPolyEngine.cnorm (CFrac.den z)
+      if CPolyEngine.cisZero den ||
+          CPolyEngine.cisZero (CPolyEngine.sub den CPoly.one) then a
+      else CPolyEngine.mul a den)
+      acc) CPoly.one
 
-/-- Clear a `K(x)`-row to a `K[x]`-row at denominator `δ` `clearRow δ row = [num(δ·zᵢ)]`: multiply each
-entry by `δ` and take the numerator; the integral row `δ·row` when `δ` is a common denominator. -/
-def clearRow (δ : DensePoly ℚ) (row : List (DenseFrac ℚ)) : List (DensePoly ℚ) :=
-  row.map (fun z => (CCommRing.mul (CFrac.ofPoly δ) z).num)
+/-- Clear a represented-fraction row by multiplying every stored numerator by `δ`. -/
+private def clearRow {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+    {α : Type u} [CField α] (δ : P α) (row : List (F α)) : List (P α) :=
+  row.map (fun z => CPolyEngine.mul δ (CFrac.num z))
+
+example :
+    let den := CPoly.SparsePoly.ofList [(0, 1), (1, 1)]
+    let z : SparseFrac ℚ := CFrac.ofFraction (CPoly.one : CPoly.SparsePoly ℚ) den
+      (by cfrac_nonzero)
+    CPolyEngine.cisZero (CPolyEngine.sub (commonDenom [[z]]) den) = true := by
+  ccompute
+
+example :
+    let δ := CPoly.SparsePoly.ofList [(0, 1), (1, 1)]
+    let z : SparseFrac ℚ := CFrac.ofPoly (CPoly.SparsePoly.ofList [(1, 1)])
+    CPolyEngine.cisZero (CPolyEngine.sub ((clearRow δ [z]).getD 0 CPoly.czero)
+      (CPoly.SparsePoly.ofList [(1, 1), (2, 1)])) = true := by
+  ccompute
 
 /-! #### The idealizer of `I_p`, given an order basis (`idealizerBasis`) -/
 
@@ -222,7 +237,7 @@ def idealizerBasis (f : DensePoly (DenseFrac ℚ)) (orderBasis : List (DensePoly
         let Mj := matMul Binv (CPoly.multMatrix f ιj)
         Mj ++ acc) []
     -- clear to K[x] by a common denominator δ
-    let δ : DensePoly ℚ := commonDenomQ M
+    let δ : DensePoly ℚ := commonDenom M
     let N : PolyMatrix DensePoly ℚ := M.map (clearRow δ)
     -- Hermite-reduce N over K[x]; the first n rows are the upper-triangular invertible part
     let reduced := CPoly.hermiteRowReduce N
