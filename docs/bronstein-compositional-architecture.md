@@ -81,6 +81,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   `oneLevelRischWithRecursiveCoefficient` installs an explicit lower coefficient stage;
   `oneLevelRischSoundDomain` and `oneLevelRischCompleteDomain` lift the selected normal reducer's
   domain through canonical decomposition and add explicit stage-decomposition witnesses for completeness.
+- `convertRischLevel` is a representation boundary rather than a second assembler: its lawful instance
+  transports a source level's denotation square to the pulled-back target domain, including converted
+  logarithmic terms.
 - `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
   obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only
@@ -122,8 +125,8 @@ monomial stage contracts.
    reduction. Soundness no longer depends on the low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
    bridge through the generic assembler. `sparseTangentRischLevel` transports the same composition through the
-   sparse representation boundary. `checkedTangentRischLevel` and its sparse counterpart additionally
-   certificate-check every reassembled special fraction, so they are sound without solver or bridge laws.
+   sparse representation boundary. Both canonical compositions certificate-check every reassembled special
+   fraction and are sound without solver or bridge laws; the former unchecked duplicate APIs have been retired.
    Relative completeness remains after the concrete bridge is available.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration

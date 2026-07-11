@@ -85,4 +85,33 @@ def convertRischLevel (L : CRischLevel P α) : CRischLevel Q α where
 def convertRischLevelDomain (domain : RischLevelDomain P α) : RischLevelDomain Q α :=
   fun Dt a d => domain (CPolyEngine.convert Dt) (CPolyEngine.convert a) (CPolyEngine.convert d)
 
+/-- Representation conversion transports a lawful one-level Risch solver to the pulled-back domain. -/
+instance instLawfulCRischLevelConvert (L : CRischLevel P α) (domain : RischLevelDomain P α)
+    [LawfulCRischLevel L domain] :
+    LawfulCRischLevel (convertRischLevel (Q := Q) L) (convertRischLevelDomain (Q := Q) domain) where
+  sound fuel Dt a d res hdomain hd hrun := by
+    change (L.integrate fuel (CPolyEngine.convert Dt) (CPolyEngine.convert a)
+      (CPolyEngine.convert d)).map (convertIntegralResult (Q := Q)) = some res at hrun
+    rw [Option.map_eq_some_iff] at hrun
+    obtain ⟨source, hsource, hresult⟩ := hrun
+    subst res
+    have hsourceSound := LawfulCRischLevel.sound fuel (CPolyEngine.convert Dt) (CPolyEngine.convert a)
+      (CPolyEngine.convert d) source hdomain (by simpa only [CPolyEngine.toPoly_convert] using hd) hsource
+    have hconverted := isIntegralResultP_convert (P := P) (Q := Q)
+      (CPolyEngine.convert Dt) (CPolyEngine.convert a) (CPolyEngine.convert d) source hsourceSound
+    have hlogs : logResidueSumP
+        (CPolyEngine.convert (CPolyEngine.convert Dt : P α) : Q α)
+        (source.logs.map fun cv => (cv.1, CPolyEngine.convert cv.2)) =
+        logResidueSumP Dt (source.logs.map fun cv => (cv.1, CPolyEngine.convert cv.2)) := by
+      rw [logResidueSumP, logResidueSumP]
+      apply congrArg List.sum
+      apply List.map_congr_left
+      intro cv _
+      simp only [CPolyEngine.toPoly_convert, CPolyEngine.toPoly_monomialDeriv]
+    rw [IsIntegralResultP] at hconverted
+    simp only [convertIntegralResult] at hconverted
+    rw [hlogs] at hconverted
+    simpa only [IsIntegralResultP, convertIntegralResult, CPolyEngine.toPoly_convert,
+      towerFractionFieldDerivP] using hconverted
+
 end DeepWiki.SymbolicIntegration
