@@ -4,5 +4,6 @@ import DeepWiki.SymbolicIntegration.Engine.CoupledDE.Tangent
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.Bivariate
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentReconstruct
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentCapability
+import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentSpecial
 
 /-! # Computable engine — coupled differential systems aggregator. -/
