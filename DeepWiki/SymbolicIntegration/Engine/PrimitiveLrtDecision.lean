@@ -12,7 +12,13 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+
+/-! ### Algorithm-selected decision API -/
+
+section Selected
+
+variable [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+  [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The primitive LRT guard characterizes genuine elementary integrability. -/
 theorem primitiveLrtDecides [LrtLiouvilleFrontier α] (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
@@ -29,6 +35,14 @@ theorem isElementaryIntegrableGenuineLrt_of_guard (Dt a d : DensePoly α)
     (hguard : cResidueConstantGuard Dt a d = true) :
     IsElementaryIntegrableGenuineLrt Dt a d :=
   ⟨cIntegrateReducedLrt Dt a d, hsound, hbridge hguard⟩
+
+end Selected
+
+/-! ### Concrete correction-proof boundary -/
+
+section Concrete
+
+variable [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- A passing primitive LRT guard gives a genuine antiderivative with residue constancy discharged. -/
@@ -51,5 +65,7 @@ theorem primitiveLrtDecides_of_setup [CharZero (CFieldSpec.K α)] [LrtLiouvilleF
     IsElementaryIntegrableGenuineLrt Dt a d ↔ cResidueConstantGuard Dt a d = true :=
   primitiveLrtDecides Dt a d hd0
     (isElementaryIntegrableGenuineLrt_of_guard_of_setup hgcd Dt a d hR0 hsound)
+
+end Concrete
 
 end DeepWiki.SymbolicIntegration

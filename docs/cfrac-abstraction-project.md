@@ -188,9 +188,10 @@ runs the same fraction algorithm.
    `CPoly.lrtLogArg` kernel is representation-independent and has both dense and sparse execution witnesses.
    The shared Rothstein–Trager numerator and residue interpolation now live at `CPoly.amcDd` and
    `CPoly.residueResultantTower`; dense names are specialization boundaries, while sparse inner and outer
-   polynomial representations execute the same kernels. The
-   primitive and guarded-primitive hooks no longer
-   carry a gcd-selection proxy. Canonical reconstruction and the shared primitive special-part soundness now
+   polynomial representations execute the same kernels. The primitive and guarded-primitive hooks no longer
+   carry a gcd-selection proxy; the primitive LRT decision API explicitly selects squarefree, resultant, and
+   subresultant operations, while its raw correction-proof setup remains concrete. Canonical reconstruction
+   and the shared primitive special-part soundness now
    likewise request the selected gcd together with its lawful interface. Outside its concrete correction-proof
    boundary, the hyperexponential hook's normal/full drivers, full-soundness API, and `hyperexpCase` hook now
    request selected gcd, split, squarefree, and resultant capabilities. The
