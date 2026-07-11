@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtension
-import DeepWiki.ComputableAlgebra.FracLinearAlgebraDense
+import DeepWiki.ComputableAlgebra.FracLinearAlgebra
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalWellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv

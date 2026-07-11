@@ -1,9 +1,11 @@
 import DeepWiki.ComputableAlgebra.Fraction
-import DeepWiki.ComputableAlgebra.FracLinearAlgebraSparse
+import DeepWiki.ComputableAlgebra.FracLinearAlgebra
+import DeepWiki.ComputableAlgebra.FracReprDense
+import DeepWiki.ComputableAlgebra.FracReprSparse
 
-/-! # Denotation validation for computable fractions
+/-! # Validation for computable fractions
 
-Sparse fraction validation through the representation-independent `CFrac` denotation bridge. -/
+Dense and sparse fraction validation through the representation-independent `CFrac` interfaces. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -12,5 +14,9 @@ example :
       (CPoly.SparsePoly.ofList [(0, 1), (1, 2)] : CPoly.SparsePoly ℚ))
       = CFrac.am ℚ (CPoly.toPoly (CPoly.SparsePoly.ofList [(0, 1), (1, 2)] : CPoly.SparsePoly ℚ)) := by
   exact CFrac.toRatFunc_ofPoly _
+
+example : Nonempty (CLinearSolve (DenseFrac ℚ)) := ⟨inferInstance⟩
+
+example : Nonempty (CLinearSolve (SparseFrac ℚ)) := ⟨inferInstance⟩
 
 end DeepWiki.SymbolicIntegration
