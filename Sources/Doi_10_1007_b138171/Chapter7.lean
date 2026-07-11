@@ -99,6 +99,6 @@ solver `cConstSolveUniqueQ Arows urhs ncols` (the `crref` Gauss–Jordan + back-
 correct** — if it returns `some x` then `x` solves the ℚ-linear system `A·x = b` rowwise. Proved
 `ccompute`-free via the solution-preserving and reduced-echelon `crref` invariants
 (`ComputableLinearSolveCorrect`). The solution-set correctness underlying the §7.1/§7.3 constant solve. -/
-abbrev alg_7_1_constSystem_solve_sound := @DensePoly.cConstSolveUniqueQ_sound
+abbrev alg_7_1_constSystem_solve_sound := @LawfulCLinearSolve.solveUnique_sound
 
 end DeepWiki.Si

@@ -10,7 +10,7 @@ is genuinely over the **field extension** `ℚ(θ)`, not over `ℚ`: `θ² = √
 `θ⁴+2θ²−2 = 0`. So `θ` is a root of the (Eisenstein-at-2, irreducible) `q(y) = y⁴+2y²−2`, and
 `K := ℚ(θ) = ℚ[y]/(q)` is a degree-4 field. We therefore build a small **computable extension carrier**:
 `ECoeff := DensePoly ℚ` interpreted **mod `q`** (`ered`), with field arithmetic `eadd`/`emul`/`einv` (inverses
-via `DensePoly.cgcdWf`, since `ℚ[y]/(q)` is a field for irreducible `q`). On top of it we re-run the LRT engine of
+via `CPolyEuclidean.gcdExt`, since `ℚ[y]/(q)` is a field for irreducible `q`). On top of it we re-run the LRT engine of
 `SubresultantCompute` one level up: `EPoly := List ECoeff = K[t]`, then `EBPoly := List EPoly = K[t][x]`,
 with the same pseudo-division / subresultant-PRS / mod-`R` monic-in-`x` normalization, now over `K[t]`.
 
@@ -31,8 +31,8 @@ argument is multiplied by `content(a)`, i.e. one gets `log(content(a)·S₁(a,x)
 a unit at every residue, so the argument is not even monic). Making the subresultant **primitive in `x`**
 (strip `content(t)`) and **monic in `x` over `K[t]/(R)`** removes this, giving the clean `x + c₀(t)`.
 
-All of this is `native_decide`-pinned (Mathlib `ℚ[X]` is noncomputable; kernel `decide` stalls on the
-GMP `ℚ`/`ℚ(θ)` arithmetic, so `native_decide` is used throughout). -/
+All of this is `ccompute`-pinned (Mathlib `ℚ[X]` is noncomputable; kernel `decide` stalls on the
+GMP `ℚ`/`ℚ(θ)` arithmetic, so `ccompute` is used throughout). -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -49,7 +49,7 @@ abbrev ECoeff := DensePoly ℚ
 
 /-- **Reduce a representative mod `q`** `ered c = c mod q`: the canonical degree-`< 4` representative of
 `c ∈ K`. -/
-def ered (c : ECoeff) : ECoeff := DensePoly.cmodWf c ex25_qmin
+def ered (c : ECoeff) : ECoeff := CPolyEuclidean.mod c ex25_qmin
 
 /-- **`K`-addition** `eadd a b = (a+b) mod q`. -/
 def eadd (a b : ECoeff) : ECoeff := ered (cadd a b)
@@ -69,7 +69,7 @@ def eisZero (a : ECoeff) : Bool := cisZero (ered a)
 /-- **`K`-inverse** `einv a = a⁻¹` in `K = ℚ[y]/(q)` (`q` irreducible ⇒ field): from the Bézout relation
 `s·a + ·q = g` (constant `g`), `a⁻¹ ≡ s/g (mod q)`. -/
 def einv (a : ECoeff) : ECoeff :=
-  let (g, s, _) := DensePoly.cgcdWf a ex25_qmin
+  let (g, s, _) := CPolyEuclidean.gcdExt a ex25_qmin
   ered (cscale (clead g)⁻¹ s)
 
 /-- **`K`-division** `ediv a b = a · b⁻¹` in `K`. -/
@@ -85,12 +85,12 @@ def etheta : ECoeff := [0, 1]
 def ecD0 : ECoeff := eadd (eFromQ (-2)) (emul (eFromQ 4) etheta)
 
 /-- **Exercise 2.5: `θ` satisfies `θ⁴ = 2 − 2θ²`** — `y⁴ mod q = 2 − 2y² = [2, 0, -2]`, the defining
-relation of `K = ℚ(θ)`. Proved by `native_decide`. -/
-theorem ex25_theta_pow4 : ered [0, 0, 0, 0, 1] = [2, 0, -2] := by native_decide
+relation of `K = ℚ(θ)`. Proved by `ccompute`. -/
+theorem ex25_theta_pow4 : ered [0, 0, 0, 0, 1] = [2, 0, -2] := by ccompute
 
 /-- **Exercise 2.5: `K` is a field** — `θ⁻¹ · θ = 1`, witnessing that the computable inverse `einv` is a
-genuine `K`-inverse (`q` irreducible). Proved by `native_decide`. -/
-theorem ex25_theta_inv : emul (einv etheta) etheta = [1] := by native_decide
+genuine `K`-inverse (`q` irreducible). Proved by `ccompute`. -/
+theorem ex25_theta_inv : emul (einv etheta) etheta = [1] := by ccompute
 
 /-! ### `EPoly := K[t]` — dense polynomials in `t` with coefficients in `K` -/
 
@@ -258,18 +258,18 @@ def ex25Rsqfree : EPoly :=
   epmonic (epquo 60 ex25Rt g)
 
 /-- **Exercise 2.5: `R(t)` is degree 5** (five residues): the RT resultant has `6` `t`-coefficients.
-Proved by `native_decide`. -/
-theorem ex25_resultant_deg : ex25Rt.length = 6 := by native_decide
+Proved by `ccompute`. -/
+theorem ex25_resultant_deg : ex25Rt.length = 6 := by ccompute
 
 /-- **Exercise 2.5: `R(t)` is squarefree** — the monic `gcd_t(R, R')` is `1`, so all five residues are
 distinct (multiplicity one). Hence no multiplicity splitting; the LRT subresultant index is `j = 1`
-(per-residue gcd linear in `x`). Proved by `native_decide`. -/
+(per-residue gcd linear in `x`). Proved by `ccompute`. -/
 theorem ex25_resultant_squarefree :
-    epmonic (epgcdExt 60 ex25Rt (epderiv ex25Rt)).1 = [[1]] := by native_decide
+    epmonic (epgcdExt 60 ex25Rt (epderiv ex25Rt)).1 = [[1]] := by ccompute
 
 /-- **Exercise 2.5: the squarefree resultant is degree 5** (monic, `6` coefficients) — confirms the
-five distinct residues survive as `K[t]/(R)`. Proved by `native_decide`. -/
-theorem ex25_resultant_sqfree_deg : ex25Rsqfree.length = 6 := by native_decide
+five distinct residues survive as `K[t]/(R)`. Proved by `ccompute`. -/
+theorem ex25_resultant_sqfree_deg : ex25Rsqfree.length = 6 := by ccompute
 
 /-! ### `EBPoly := K[t][x]` — the bivariate subresultant carrier (`x`-poly, `K[t]`-coefficients) -/
 
@@ -431,20 +431,20 @@ def ex25S1 : EBPoly := ebmonicXmodR 60 ex25Rsqfree ex25S1prim
 
 /-- **Exercise 2.5, the subresultant-PRS `x`-degree chain** is `[5, 4, 3, 1, 0]` — it **drops from `3` to
 `1`** (a defective / non-normal PRS, skipping `x`-degree `2`), so the degree-`1` element is the LRT log
-argument. Proved by `native_decide`. -/
+argument. Proved by `ccompute`. -/
 theorem ex25_prs_degrees :
-    (esubresPRS 60 (eliftToEB ex25D) ex25ArgAmtD').map ebdeg = [5, 4, 3, 1, 0] := by native_decide
+    (esubresPRS 60 (eliftToEB ex25D) ex25ArgAmtD').map ebdeg = [5, 4, 3, 1, 0] := by ccompute
 
 /-- **Exercise 2.5, the RAW degree-1 subresultant** (the "compute" output *before* normalization):
 `S₁ʳᵃʷ = c₁(t)·x + c₀ʳᵃʷ(t)` with, over `K = ℚ(θ)` (`θ = y`),
 `c₀ʳᵃʷ(t) = 1 + (−2−12θ)t + (−32+104θ)t² + (96−224θ)t³`,
 `c₁(t) = (3−4θ) + (−40+52θ)t + (184−224θ)t² + (−288+320θ)t³`.
-Small integer coefficients over `K`, pinned by `native_decide`. (Inner lists are `K`-elements as
+Small integer coefficients over `K`, pinned by `ccompute`. (Inner lists are `K`-elements as
 `DensePoly ℚ`-in-`θ`, low→high; outer two entries are the `x⁰`- and `x¹`-coefficients, low→high in `x`.) -/
 theorem ex25_raw_subresultant :
     ex25S1raw.map (·.map cnorm) =
       [[[1], [-2, -12], [-32, 104], [96, -224]],
-       [[3, -4], [-40, 52], [184, -224], [-288, 320]]] := by native_decide
+       [[3, -4], [-40, 52], [184, -224], [-288, 320]]] := by ccompute
 
 /-- **Exercise 2.5 — what happens if the subresultants are NOT made primitive (the crux).** The raw
 subresultant `S₁ʳᵃʷ` is **not monic in `x`**: its leading `x`-coefficient `c₁(t)` is a genuine **degree-3
@@ -453,30 +453,30 @@ residues `R(a)=0` *without first making it primitive* would put the non-constant
 `K[t]`-content factor, see `ex25_raw_eq_content_mul_primitive`) inside the logarithm — i.e. a wrong,
 non-monic log argument, contributing an extra `log(c₁(a)·…)` rather than the clean `log(x + c₀(a))`.
 Both `x`-coefficients are in fact degree-3 in `t`; the leading one `c₁(t) ≠ 1` is the obstruction.
-Proved by `native_decide`. -/
-theorem ex25_raw_not_monic_in_x : epdeg (eblc ex25S1raw) = 3 := by native_decide
+Proved by `ccompute`. -/
+theorem ex25_raw_not_monic_in_x : epdeg (eblc ex25S1raw) = 3 := by ccompute
 
 /-- **Exercise 2.5 — the spurious content is a non-unit.** The `K[t]`-content `content_x(S₁ʳᵃʷ)` the raw
 subresultant carries has `t`-degree `1` (`epdeg = 1`), i.e. it is a non-constant polynomial in `t` — the
-spurious factor that primitivity removes. Proved by `native_decide`. -/
-theorem ex25_content_nonunit : epdeg ex25content = 1 := by native_decide
+spurious factor that primitivity removes. Proved by `ccompute`. -/
+theorem ex25_content_nonunit : epdeg ex25content = 1 := by ccompute
 
 /-- **Exercise 2.5 — the primitivity factorization `S₁ʳᵃʷ = content(t) · primitive(t,x)`.** The raw
 subresultant equals its `K[t]`-content times its `x`-primitive part exactly. This **is** "what happens if
 not made primitive": the raw log argument is the clean primitive one multiplied by the spurious non-unit
 `content(t) ∈ K[t]` (`ex25_content_nonunit`), which would inject a stray `log(content(a))` term at each
-residue. Making the subresultant primitive in `x` strips `content(t)`. Proved by `native_decide`. -/
+residue. Making the subresultant primitive in `x` strips `content(t)`. Proved by `ccompute`. -/
 theorem ex25_raw_eq_content_mul_primitive :
-    ex25S1raw = ebscaleC ex25content ex25S1prim := by native_decide
+    ex25S1raw = ebscaleC ex25content ex25S1prim := by ccompute
 
 /-- **Exercise 2.5, the computed LRT log argument** `S₁(t,x) = x + c₀(t)` — the primitive subresultant made
 **monic in `x`** over `K[t]/(R)`: it is **linear in `x`** (two `x`-coefficients) with leading `x`-coefficient
 `1`. So the per-residue gcd `gcd(D, A − a·D')` is `x + c₀(a)`, and the integral is
 `∫ A/D = ∑_{R(a)=0} a · log(x + c₀(a))` (five complex-log terms, `a` over the degree-5 residue ring
 `K[t]/(R)`). The monic normalization is exactly what removes the raw subresultant's spurious leading
-coefficient and content. Proved by `native_decide`. -/
+coefficient and content. Proved by `ccompute`. -/
 theorem ex25_logpart_monic_linear :
-    ex25S1.length = 2 ∧ eblc ex25S1 = [[1]] := by native_decide
+    ex25S1.length = 2 ∧ eblc ex25S1 = [[1]] := by ccompute
 
 /-! ### `#eval` prints (the readable answer) -/
 

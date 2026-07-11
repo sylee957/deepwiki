@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
-import DeepWiki.SymbolicIntegration.Compute.Subresultant
 
 /-! # Computing Bronstein Exercise 2.2 with the executable LRT engine (§2.9, p.72)
 **Exercise 2.2** asks to compute, by the Lazard–Rioboo–Trager algorithm,
@@ -7,7 +6,7 @@ import DeepWiki.SymbolicIntegration.Compute.Subresultant
 `A = 8x⁹+x⁸−12x⁷−4x⁶−26x⁵−6x⁴+30x³+23x²−2x−7`,
 `D = x¹⁰−2x⁸−2x⁷−4x⁶+7x⁴+10x³+3x²−4x−2`.
 We run the computable engine of `LogToAtanCompute`/`RtResultantCompute`/`SubresultantCompute`
-end to end and `native_decide`-pin every step:
+end to end and `ccompute`-pin every step:
 
 * **`D` is squarefree** (`gcd(D, D')` is constant), so NO Hermite reduction is needed —
   `∫A/D` is purely the LRT logarithmic part.
@@ -43,9 +42,11 @@ def cD22 : DensePoly ℚ := [-2, -4, 3, 10, 7, 0, -4, -2, 0, -2, 1]
 
 /-- **Exercise 2.2: `D` is squarefree** — the monic `gcd(D, D')` is `1`, so `D` has no repeated
 factor and `∫A/D` is purely the LRT logarithmic part (no Hermite/rational part). Proved by
-`native_decide`. -/
+`ccompute`. -/
 theorem ex_2_2_D_squarefree :
-    cmonic (DensePoly.cgcdWf cD22 (cderiv cD22)).1 = [1] := by native_decide
+    CPolyEngine.cmonic
+      (CPolyEuclidean.gcdExt cD22 (CPolyEngine.deriv cD22)).1 = [1] := by
+  ccompute
 
 /-! ### The Rothstein–Trager resultant `R(t)` and its squarefree factorization -/
 
@@ -57,15 +58,15 @@ def cR22 : DensePoly ℚ :=
    1973139744286936320, -665922498162245632, 83240312270280704]
 
 /-- **Exercise 2.2: the engine computes `R(t) = cR22`** — `cResidueResultantTower [1]` on `A, D` returns the
-degree-10 integer resultant `cR22`. Proved by `native_decide`. -/
+degree-10 integer resultant `cR22`. Proved by `ccompute`. -/
 theorem ex_2_2_resultant :
-    DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA22 cD22 = cR22 := by native_decide
+    DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA22 cD22 = cR22 := by ccompute
 
 /-- **Exercise 2.2: `R(t)` is squarefree** — its Yun factorization is the single pair `(monic R, 1)`,
 i.e. one squarefree factor of multiplicity one (all ten residues distinct). So no nontrivial
-multiplicity splitting is needed; the LRT subresultant index is `j = 1`. Proved by `native_decide`. -/
+multiplicity splitting is needed; the LRT subresultant index is `j = 1`. Proved by `ccompute`. -/
 theorem ex_2_2_resultant_squarefree :
-    DensePoly.cSqfreeYunFactors cR22 = [(cmonic cR22, 1)] := by native_decide
+    DensePoly.cSqfreeYunFactors cR22 = [(cmonic cR22, 1)] := by ccompute
 
 /-! ### The LRT log argument `S₁(t,x)` and the assembled answer -/
 
@@ -76,9 +77,9 @@ def cS1_22 : GBPolyCore ℚ := lrtGcdCompute 60 1 (cmonic cR22) cA22 cD22
 
 /-- **Exercise 2.2: `S₁` is monic and linear in `x`** — `S₁(t,x) = x + c₀(t)`: it has `x`-degree `1`
 (two `x`-coefficients) with leading `x`-coefficient `1`. So each residue gcd `gcd(D, A − a·D')` is
-linear, as expected for a squarefree degree-10 `D` with distinct residues. Proved by `native_decide`. -/
+linear, as expected for a squarefree degree-10 `D` with distinct residues. Proved by `ccompute`. -/
 theorem ex_2_2_S1_monic_linear :
-    cS1_22.length = 2 ∧ GBPolyCore.gblcCore cS1_22 = [1] := by native_decide
+    cS1_22.length = 2 ∧ GBPolyCore.gblcCore cS1_22 = [1] := by ccompute
 
 -- **Exercise 2.2, the assembled answer** `∫A/D = ∑_{R(a)=0} a·log(x + c₀(a))`: the single
 -- `(Q₁, S₁) = (monic R, x + c₀(t))` pair. The `#eval` prints `c₀(t)` (a degree-9 polynomial in `t`,
@@ -92,10 +93,10 @@ degree-10 Rothstein–Trager resultant (squarefree, multiplicity 1) and
 exercise's answer:
 `∫ A/D = ∑_{R(a)=0} a · log(x + c₀(a))`,
 with `c₀(t)` the degree-9 residue polynomial of `cS1_22` (`#eval`ed above). The proved computation is
-the answer — `native_decide` runs the whole LRT pipeline (RT resultant, Yun factorization, subresultant
+the answer — `ccompute` runs the whole LRT pipeline (RT resultant, Yun factorization, subresultant
 PRS, mod-`R` monic normalization) and pins the result. -/
 theorem ex_2_2_logpart :
-    lrtLogPart 60 cA22 cD22 = [(cmonic cR22, cS1_22)] := by native_decide
+    lrtLogPart 60 cA22 cD22 = [(cmonic cR22, cS1_22)] := by ccompute
 
 end Compute
 

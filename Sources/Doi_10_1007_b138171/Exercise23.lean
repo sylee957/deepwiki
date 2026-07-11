@@ -10,7 +10,7 @@ then **a)** the symbolic definite integral over `[−2, −2/3]` (compared with 
 integration), and **b)** the same again via Rioboo's real-form (`LogToReal`/`LogToAtan`) algorithm.
 
 We run the computable engine of `LogToAtanCompute`/`RtResultantCompute`/`SubresultantCompute`
-end to end and `native_decide`-pin every **symbolic** step:
+end to end and `ccompute`-pin every **symbolic** step:
 
 * **`D` is squarefree** (`gcd(D, D')` is the constant `1`), so NO Hermite reduction is needed —
   `∫A/D` is purely the LRT logarithmic part.
@@ -39,7 +39,7 @@ logarithm, while computing the *same* definite integral.
 **The numerical comparison is the one non-symbolic residual.** "Compare with direct numerical
 integration" requires real-number quadrature (Simpson's rule over `[−2, −2/3]` gives `≈ 1.969223`),
 which is not a clean `ℚ`-symbolic computation in Lean — it is documented here, NOT a `sorry`: the
-symbolic value computed/proved by `native_decide` is the definite-integral data
+symbolic value computed/proved by `ccompute` is the definite-integral data
 (`ex_2_3_definite_integral_data`), and the numerical figure `≈ 1.969223` is the cross-check it agrees
 with. -/
 
@@ -61,9 +61,11 @@ def cD23 : DensePoly ℚ := [9, -108, 288, 468, -78, -252, -32, 36, 9]
 
 /-- **Exercise 2.3: `D` is squarefree** — the monic `gcd(D, D')` is `1`, so `D` has no repeated
 factor and `∫A/D` is purely the LRT logarithmic part (no Hermite/rational part). Proved by
-`native_decide`. -/
+`ccompute`. -/
 theorem ex_2_3_D_squarefree :
-    cmonic (DensePoly.cgcdWf cD23 (cderiv cD23)).1 = [1] := by native_decide
+    CPolyEngine.cmonic
+      (CPolyEuclidean.gcdExt cD23 (CPolyEngine.deriv cD23)).1 = [1] := by
+  ccompute
 
 /-! ### The Rothstein–Trager resultant `R(t)` and its squarefree factorization -/
 
@@ -77,10 +79,10 @@ def cR23full : DensePoly ℚ :=
 
 /-- **Exercise 2.3: the engine computes `R(t)`** — `cResidueResultantTower [1]` on `A, D`, scaled by `35` to
 clear interpolation denominators, returns the degree-8 integer resultant `cR23full`. Proved by
-`native_decide`. -/
+`ccompute`. -/
 theorem ex_2_3_resultant :
     cscale 35 (DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA23 cD23) = cR23full := by
-  native_decide
+  ccompute
 
 /-- **The monic squarefree Rothstein–Trager resultant `R(t)`** of Exercise 2.3 (the radical of the
 degree-8 resultant, made monic over `ℚ`): the polynomial `ℚ[t]/(R)` over which the LRT log argument is
@@ -89,14 +91,14 @@ def cR23 : DensePoly ℚ := cmonic (CPoly.csquarefreePart
   (DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) cA23 cD23))
 
 /-- **Exercise 2.3: `R(t)` is degree 8** (eight distinct residues): the monic squarefree resultant has
-`9` coefficients. Proved by `native_decide`. -/
-theorem ex_2_3_resultant_deg : cR23.length = 9 := by native_decide
+`9` coefficients. Proved by `ccompute`. -/
+theorem ex_2_3_resultant_deg : cR23.length = 9 := by ccompute
 
 /-- **Exercise 2.3: `R(t)` is squarefree** — its Yun factorization is the single pair `(monic R, 1)`,
 one squarefree factor of multiplicity one (all eight residues distinct). So no nontrivial multiplicity
-splitting is needed; the LRT subresultant index is `j = 1`. Proved by `native_decide`. -/
+splitting is needed; the LRT subresultant index is `j = 1`. Proved by `ccompute`. -/
 theorem ex_2_3_resultant_squarefree :
-    DensePoly.cSqfreeYunFactors cR23 = [(cmonic cR23, 1)] := by native_decide
+    DensePoly.cSqfreeYunFactors cR23 = [(cmonic cR23, 1)] := by ccompute
 
 /-! ### The LRT log argument `S₁(t,x)` and the assembled answer -/
 
@@ -107,9 +109,9 @@ def cS1_23 : GBPolyCore ℚ := lrtGcdCompute 80 1 cR23 cA23 cD23
 
 /-- **Exercise 2.3: `S₁` is monic and linear in `x`** — `S₁(t,x) = x + c₀(t)`: it has `x`-degree `1`
 (two `x`-coefficients) with leading `x`-coefficient `1`. So each residue gcd `gcd(D, A − a·D')` is
-linear, as expected for a squarefree degree-8 `D` with distinct residues. Proved by `native_decide`. -/
+linear, as expected for a squarefree degree-8 `D` with distinct residues. Proved by `ccompute`. -/
 theorem ex_2_3_S1_monic_linear :
-    cS1_23.length = 2 ∧ GBPolyCore.gblcCore cS1_23 = [1] := by native_decide
+    cS1_23.length = 2 ∧ GBPolyCore.gblcCore cS1_23 = [1] := by ccompute
 
 /-- **Exercise 2.3, the computed LRT logarithmic part** (§2.9, p.72): the full assembly
 `lrtLogPart 80 A D` reduces to the **single** `(Qᵢ, Sᵢ)` pair `(monic R, S₁)`, where `R` is the
@@ -118,10 +120,10 @@ degree-8 Rothstein–Trager resultant (squarefree, multiplicity 1) and
 exercise's part-a) answer:
 `∫ A/D = ∑_{R(a)=0} a · log(x + c₀(a))`,
 the LRT logarithmic part with eight complex-log terms (one per residue). The proved computation is the
-answer — `native_decide` runs the whole LRT pipeline (RT resultant, Yun factorization, subresultant
+answer — `ccompute` runs the whole LRT pipeline (RT resultant, Yun factorization, subresultant
 PRS, mod-`R` monic normalization) and pins the result. -/
 theorem ex_2_3_logpart :
-    lrtLogPart 80 cA23 cD23 = [(cmonic cR23, cS1_23)] := by native_decide
+    lrtLogPart 80 cA23 cD23 = [(cmonic cR23, cS1_23)] := by ccompute
 
 /-! ### Part a) — the symbolic definite integral over `[−2, −2/3]` -/
 
@@ -140,11 +142,11 @@ def cS1_23_lower : DensePoly ℚ := cnorm (bevalX (-2) cS1_23)
 `∫_{−2}^{−2/3} A/D = ∑_{R(a)=0} a · [log(S₁(a, −2/3)) − log(S₁(a, −2))]` is determined by the two log
 arguments `S₁(t, −2/3)` and `S₁(t, −2)` evaluated at the integration bounds. Their **difference is the
 constant `4/3`** (in `t`), because `S₁ = x + c₀(t)` so `S₁(t, −2/3) − S₁(t, −2) = (−2/3) − (−2) = 4/3`.
-This is the clean symbolic content of the definite-integral data, pinned by `native_decide`. The
+This is the clean symbolic content of the definite-integral data, pinned by `ccompute`. The
 numerical value of the integral is `≈ 1.969223` (Simpson's rule over `[−2, −2/3]`; the denominator `D`
 has no pole there, `D > 0` on the interval) — see `ex_2_3_numerical_comparison`. -/
 theorem ex_2_3_definite_integral_data :
-    cnorm (csub cS1_23_upper cS1_23_lower) = [4/3] := by native_decide
+    cnorm (csub cS1_23_upper cS1_23_lower) = [4/3] := by ccompute
 
 /-! ### Part b) — the Rioboo real form (`LogToReal`/`LogToAtan`) -/
 
@@ -169,7 +171,7 @@ real-form terms of Exercise 2.3. -/
 theorem ex_2_3_rioboo_realform :
     logToAtanCompute 20 cX3m3X cX2m2
       = [([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])] := by
-  native_decide
+  ccompute
 
 /-! ### The non-symbolic residual — direct numerical integration
 
@@ -180,7 +182,7 @@ is not a proof). It is therefore documented here as the explicitly non-symbolic 
 `∫_{−2}^{−2/3} A/D ≈ 1.969223` (`D > 0` throughout, no pole), and this is the numerical figure the
 symbolic definite-integral value (`ex_2_3_definite_integral_data`) is checked against. The symbolic
 value — the complex-log form (a) and the Rioboo real form (b), which agree symbolically — is what is
-computed and proved by `native_decide` above; the numerical agreement is the documented cross-check. -/
+computed and proved by `ccompute` above; the numerical agreement is the documented cross-check. -/
 
 /-- **Exercise 2.3 — the numerical-integration cross-check (documented, non-symbolic).** The definite
 integral `∫_{−2}^{−2/3} A/D` evaluates numerically to `≈ 1.969223` (Simpson's rule, `D > 0` on the
