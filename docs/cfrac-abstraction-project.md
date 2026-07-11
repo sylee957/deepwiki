@@ -52,7 +52,8 @@ runs the same fraction algorithm.
 6. **Abstract algorithm capabilities — IN PROGRESS.** Introduce Prop-free/lawful pairs for polynomial
     gcd/division, resultant/subresultant, and linear solve. `CLinearSolve`/`LawfulCLinearSolve` now expose
     unique and arbitrary consistent-system solves plus homogeneous-kernel selection, with length and row-equation
-    laws for each returned vector; coupled-DE
+    laws for each returned vector. Parametric Risch constraints, represented-fraction logarithmic-dependence
+    constraints, and the parallel Risch–Norman system now expose those lawful row equations; coupled-DE
     and parallel-integration consumers request the capability rather than `cConstSolveUniqueQ` or
     `cConstSolveAnyQ` directly. In the second slice,
    `CPolyGcd`/`LawfulCPolyGcd` selects gcd for raw-fraction reduction, while
