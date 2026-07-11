@@ -1,4 +1,5 @@
-import DeepWiki.SymbolicIntegration.Engine.Subresultant
+import DeepWiki.ComputableAlgebra.PolySubresultant
+import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 
