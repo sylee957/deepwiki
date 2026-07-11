@@ -145,6 +145,11 @@ runs the same fraction algorithm.
    derivative, normalization, quotient, subtraction, and extended gcd through polynomial capabilities. The
    simple-radical square/squarefree split, integral-basis checks, discriminant, and genus consequently live in
    `CPoly`; dense catalog examples and a sparse repeated-factor basis witness share the same implementation.
+   Differential normal/special splitting now runs as `CPoly.splitFactor`, composing the selected gcd and
+   Euclidean capabilities with the generic monomial derivative. Denominator and reduced canonical-normality
+   gates moved into the symmetric `CFrac.denomNormalGate` / `CFrac.canonNormalizedGate` API; the Risch-DE
+   instance, sound solver, and completeness stack specialize that API to dense towers, while sparse fractions
+   execute both gates through the same kernel.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

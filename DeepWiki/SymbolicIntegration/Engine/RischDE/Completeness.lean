@@ -45,7 +45,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : DenseFrac β) :
     crischDESolveSoundWf f g = some y ↔
       (DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)
           = false
-        ∧ cisCanonNormalized (weakNormalizedF f
+        ∧ CFrac.canonNormalizedGate (weakNormalizedF f
             (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))
           = true
         ∧ ∃ ytilde : DenseFrac β,
@@ -61,7 +61,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : DenseFrac β) :
   set ftilde : DenseFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if DensePoly.cisZero q then none
-         else if cisCanonNormalized ftilde then
+         else if CFrac.canonNormalizedGate ftilde then
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
@@ -75,7 +75,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : DenseFrac β) :
     intro h; exact absurd h (by simp)
   · rw [if_neg hqz]
     rw [Bool.not_eq_true] at hqz
-    by_cases hck : cisCanonNormalized ftilde = true
+    by_cases hck : CFrac.canonNormalizedGate ftilde = true
     · rw [if_pos hck, reduceSoundOpt_eq]
       rcases hinner : crischDERawSolveWf (qReduce ftilde) (mul q' g) with _ | ytilde
       · simp only [hinner, hqz, hck, true_and]
@@ -96,7 +96,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : DenseFrac β) :
 theorem crischDESolveSoundWf_some_of_stages (f g ytilde : DenseFrac β)
     (hq : DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)
         = false)
-    (hck : cisCanonNormalized (weakNormalizedF f
+    (hck : CFrac.canonNormalizedGate (weakNormalizedF f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))
         = true)
     (hinner : crischDERawSolveWf
@@ -114,7 +114,7 @@ theorem crischDESolveSoundWf_some_of_stages (f g ytilde : DenseFrac β)
 example (f g ytilde : DenseFrac β)
     (hq : DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)
         = false)
-    (hck : cisCanonNormalized (weakNormalizedF f
+    (hck : CFrac.canonNormalizedGate (weakNormalizedF f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))
         = true)
     (hinner : crischDERawSolveWf
@@ -353,9 +353,9 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : DenseFrac β)
     (hsol : FieldRDESolvable f g) (hres : RischDECompletenessResidualWf f g) :
     ∃ y, crischDESolveSoundWf f g = some y := by
   obtain ⟨ytilde, hinner⟩ := hres.hinner hsol
-  have hck : cisCanonNormalized (weakNormalizedF f
+  have hck : CFrac.canonNormalizedGate (weakNormalizedF f
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))) = true :=
-    (cisCanonNormalizedG_iff f _).mpr (hres.hck hsol)
+    (canonNormalizedGate_iff f _).mpr (hres.hck hsol)
   exact ⟨_, crischDESolveSoundWf_some_of_stages f g ytilde (hres.hwn hsol) hck hinner⟩
 
 /-- Modulo `RischDECompletenessResidualWf` and `RischDESoundnessWf`, `crischDESolveSoundWf f g` returns

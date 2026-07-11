@@ -44,13 +44,11 @@ end Reduce
 
 section Normality
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β]
 
-/-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its own normal part
-`toPoly (cSplitFactorFast [1] _ h.den).1 = toPoly h.den`. -/
+/-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its selected differential normal part. -/
 def IsWeaklyNormalizedNorm (h : DenseFrac β) : Prop :=
-  toPoly (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) h.den).1
-    = toPoly h.den
+  CPoly.toPoly (CPoly.splitFactor (CPoly.one : DensePoly β) h.den).1 = CPoly.toPoly h.den
 
 end Normality
 

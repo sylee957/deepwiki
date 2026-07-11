@@ -17,26 +17,27 @@ variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCor
 
 /-- `CRischField (DenseFrac β)` — the gated, sound RDE over `β(s) = DenseFrac β`, running `cRischDE` over
 `DensePoly β = β[s]` (`Ds = [1]`) with `[CRischField β]` for the base solve, behind the gate
-`cdenomNormalGate`. Bottoms at `CRischField ℚ`. -/
+`CFrac.denomNormalGate`. Bottoms at `CRischField ℚ`. -/
 instance instCRischFieldCFrac : CRischField (DenseFrac β) where
   crischDESolve f g :=
-    if cdenomNormalGate f then
+    if CFrac.denomNormalGate f then
       match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
       | none => none
       | some (ynum, yden) =>
         if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
     else none
 
-/-- The gated oracle reduces to the raw solve when the gate passes: if `cdenomNormalGate f = true`
+/-- The gated oracle reduces to the raw solve when the gate passes: if `CFrac.denomNormalGate f = true`
 then `crischDESolve f g` is the bare `cRischDE [1]`-then-`cisZero`-guard match. -/
-theorem crischDESolveWf_eq_solve_of_normal (f g : DenseFrac β) (hgate : cdenomNormalGate f = true) :
+theorem crischDESolveWf_eq_solve_of_normal (f g : DenseFrac β)
+    (hgate : CFrac.denomNormalGate f = true) :
     CRischField.crischDESolve f g
       = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
          | none => none
          | some (ynum, yden) =>
            if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none) := by
   rw [show CRischField.crischDESolve f g
-      = (if cdenomNormalGate f then
+      = (if CFrac.denomNormalGate f then
            match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
            | none => none
            | some (ynum, yden) =>
@@ -44,13 +45,13 @@ theorem crischDESolveWf_eq_solve_of_normal (f g : DenseFrac β) (hgate : cdenomN
          else none) from rfl, if_pos hgate]
 
 /-- A successful gated solve passed the gate: if `crischDESolve f g = some y` then
-`cdenomNormalGate f = true`. -/
-theorem cdenomNormalGateG_of_crischDESolve_isSome (f g y : DenseFrac β)
-    (hsolve : CRischField.crischDESolve f g = some y) : cdenomNormalGate f = true := by
-  by_cases hgate : cdenomNormalGate f = true
+`CFrac.denomNormalGate f = true`. -/
+theorem denomNormalGate_of_crischDESolve_isSome (f g y : DenseFrac β)
+    (hsolve : CRischField.crischDESolve f g = some y) : CFrac.denomNormalGate f = true := by
+  by_cases hgate : CFrac.denomNormalGate f = true
   · exact hgate
   · rw [show CRischField.crischDESolve f g
-        = (if cdenomNormalGate f then
+        = (if CFrac.denomNormalGate f then
              match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
              | none => none
              | some (ynum, yden) =>

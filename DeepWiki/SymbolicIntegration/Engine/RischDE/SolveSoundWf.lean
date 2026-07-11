@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.CanonNormalizedReduce
 
 /-! # The sound recursive Risch-DE solver `crischDESolveSoundWf`
 
-Weak-normalize, gate on `cisCanonNormalized`, and solve the inner RDE through `cRischDE`.
+Weak-normalize, gate on `CFrac.canonNormalizedGate`, and solve the inner RDE through `cRischDE`.
 `crischDESolveSoundWf_field` derives `D(Y) + F·Y = G` from the `RischDESoundnessWf` certificate. -/
 
 open Polynomial Classical
@@ -15,7 +15,7 @@ open DensePoly CFrac
 
 /-! ## The solver `crischDESolveSoundWf`
 
-Pipeline: weak-normalize, run the solvability check `cisCanonNormalized`, reduce to lowest
+Pipeline: weak-normalize, run the solvability check `CFrac.canonNormalizedGate`, reduce to lowest
 terms, solve the inner RDE via `cRischDE`, and transform back by `y = ỹ/q'`. -/
 
 section Solver
@@ -50,7 +50,7 @@ theorem crischDERawSolveWf_some_iff (ftilde gtilde y : DenseFrac β) :
       · simp [crischDERawSolveWf, h, hden]
       · simp [crischDERawSolveWf, h, hden]
 
-/-- `crischDESolveSoundWf f g`: weak-normalize `f`, gate on `cisCanonNormalized`, reduce to lowest
+/-- `crischDESolveSoundWf f g`: weak-normalize `f`, gate on `CFrac.canonNormalizedGate`, reduce to lowest
 terms, solve via `crischDERawSolveWf`, and transform back by `y = ỹ/q'`. -/
 def crischDESolveSoundWf (f g : DenseFrac β) : Option (DenseFrac β) :=
   let q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den
@@ -58,7 +58,7 @@ def crischDESolveSoundWf (f g : DenseFrac β) : Option (DenseFrac β) :=
   else
     let q' : DenseFrac β := CFrac.ofPoly q
     let ftilde : DenseFrac β := weakNormalizedF f q'
-    if cisCanonNormalized ftilde then
+    if CFrac.canonNormalizedGate ftilde then
       match reduceSoundOpt ftilde with
       | none => none
       | some ftildeR =>
@@ -89,7 +89,7 @@ theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : DenseFrac β)
   set ftilde : DenseFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if DensePoly.cisZero q then none
-         else if cisCanonNormalized ftilde then
+         else if CFrac.canonNormalizedGate ftilde then
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
@@ -108,14 +108,14 @@ omit [CFieldSpec β] in
 /-- A successful Wf sound solve passed the canonical-normality check. -/
 theorem crischDESolveSoundWf_check (f g y : DenseFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
-    cisCanonNormalized (weakNormalizedF f
+    CFrac.canonNormalizedGate (weakNormalizedF f
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))) = true := by
   set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den with hq
   set q' : DenseFrac β := CFrac.ofPoly q with hq'
   set ftilde : DenseFrac β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if DensePoly.cisZero q then none
-         else if cisCanonNormalized ftilde then
+         else if CFrac.canonNormalizedGate ftilde then
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
@@ -127,7 +127,7 @@ theorem crischDESolveSoundWf_check (f g y : DenseFrac β)
   · rw [if_pos hqz] at hsolve
     exact absurd hsolve (by simp)
   · rw [if_neg hqz] at hsolve
-    by_cases hck : cisCanonNormalized ftilde = true
+    by_cases hck : CFrac.canonNormalizedGate ftilde = true
     · simpa [hq, hq', hft] using hck
     · rw [if_neg hck] at hsolve
       exact absurd hsolve (by simp)
@@ -137,7 +137,7 @@ theorem crischDESolveSoundWf_isCanonNormalized (f g y : DenseFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     IsCanonNormalized f
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) :=
-  (cisCanonNormalizedG_iff f _).mp (crischDESolveSoundWf_check f g y hsolve)
+  (canonNormalizedGate_iff f _).mp (crischDESolveSoundWf_check f g y hsolve)
 
 end Reductions
 

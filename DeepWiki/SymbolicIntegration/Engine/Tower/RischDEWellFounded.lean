@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
+import DeepWiki.SymbolicIntegration.Engine.PolySplitFactor
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.ComputableAlgebra.PolyAntiderivative
 
@@ -15,6 +16,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
 
 /-! ## The three remaining recursive bottoms
 
@@ -469,17 +471,23 @@ theorem cRischDEG_some_imp_stages (Dt : DensePoly α) (fnum fden gnum gden ynum 
 
 end DensePoly
 
-section Gate
+namespace CFrac
 
-variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCoreWf β]
+/-- Test whether a represented fraction denominator equals its selected differential normal part. -/
+def denomNormalGate {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P]
+    {β : Type u} [CField β] [CDiffField β] (a : F β) : Bool :=
+  CPolyEngine.cisZero (CPolyEngine.sub
+    (CPoly.splitFactor (CPoly.one : P β) (CFrac.den a)).1 (CFrac.den a))
 
-/-- The denominator-direct normality gate for tower RDE inputs. -/
-def cdenomNormalGate (a : DenseFrac β) : Bool :=
-  DensePoly.cisZero (DensePoly.csub
-    (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) a.den).1
-    a.den)
+/-- Sparse polynomial denominators execute through the generic normality gate. -/
+example :
+    let den : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 1), (1, 1)]
+    let a : SparseFrac ℚ := CFrac.ofFraction CPoly.one den (by cfrac_nonzero)
+    CFrac.denomNormalGate a = true := by
+  ccompute
 
-end Gate
+end CFrac
 
 /-! The validations of `cRischDE` at `DenseFrac ℚ` live in `Tower/RischDEInstance.lean`, which supplies
 the `CRischField (DenseFrac ℚ)` instance. -/
