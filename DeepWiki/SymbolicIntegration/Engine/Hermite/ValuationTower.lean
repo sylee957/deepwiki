@@ -23,26 +23,17 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **Exact division respects `toPoly`**: `CPolyEuclidean.div P Q` denotes `toPoly P / toPoly Q` whenever the
-division is exact, so `toPoly`-equal (and exactly-divisible) numerator/denominator pairs give the same
-`CPolyEuclidean.div` denotation — the bridge for matching a radical-form numerator to the `cnorm`'d def field. -/
-theorem toPolyG_cdivWf_congr [CFracGcdCoreWf α] (P1 Q1 P2 Q2 : DensePoly α)
-    (hP : toPoly P1 = toPoly P2) (hQ : toPoly Q1 = toPoly Q2)
-    (hQ1 : toPoly Q1 ≠ 0) (hdvd1 : toPoly Q1 ∣ toPoly P1) :
-    toPoly (CPolyEuclidean.div P1 Q1) = toPoly (CPolyEuclidean.div P2 Q2) := by
-  have hdvd2 : toPoly Q2 ∣ toPoly P2 := by rw [← hQ, ← hP]; exact hdvd1
-  have h1 : toPoly (CPolyEuclidean.div P1 Q1) * toPoly Q1 = toPoly P1 := by
-    simpa only [toPoly_list_eq, mul_comm] using
-      (LawfulCPolyEuclidean.div_exact P1 Q1
-        (by simpa only [toPoly_list_eq] using hQ1)
-        (by simpa only [toPoly_list_eq] using hdvd1)).symm
-  have h2 : toPoly (CPolyEuclidean.div P2 Q2) * toPoly Q2 = toPoly P2 := by
-    simpa only [toPoly_list_eq, mul_comm] using
-      (LawfulCPolyEuclidean.div_exact P2 Q2
-        (by simpa only [toPoly_list_eq, ← hQ] using hQ1)
-        (by simpa only [toPoly_list_eq] using hdvd2)).symm
-  apply mul_right_cancel₀ hQ1
-  rw [h1, hP, ← h2, hQ]
+/-- Dense-reader adapter for generic exact-division congruence. -/
+private theorem toPoly_div_congr_dense (p₁ q₁ p₂ q₂ : DensePoly α)
+    (hp : toPoly p₁ = toPoly p₂) (hq : toPoly q₁ = toPoly q₂)
+    (hq₁ : toPoly q₁ ≠ 0) (hdvd₁ : toPoly q₁ ∣ toPoly p₁) :
+    toPoly (CPolyEuclidean.div p₁ q₁) = toPoly (CPolyEuclidean.div p₂ q₂) := by
+  simpa only [toPoly_list_eq] using
+    CPolyEuclidean.toPoly_div_congr p₁ q₁ p₂ q₂
+      (by simpa only [toPoly_list_eq] using hp)
+      (by simpa only [toPoly_list_eq] using hq)
+      (by simpa only [toPoly_list_eq] using hq₁)
+      (by simpa only [toPoly_list_eq] using hdvd₁)
 
 /-- **`Q`-regular is closed under the tower derivative** `towerFractionFieldDeriv Dt`: if `f = am p/am q`
 with `q` coprime to `Q`, then `D_tower f` has denominator `q²`, still coprime to `Q`. Uses the tower
@@ -648,7 +639,7 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (
   exact mul_dvd_mul_right (hWdvd.trans (prod_vkidx_dvd_R hgcd Dt a d hd0 hpp hcopgcd)) _
 
 /-- **Bridge: the capstone's radical numerator `hNum'` denotes the def field `.2.1`.** Both are exact
-division of `toPoly`-equal args, so `toPolyG_cdivWf_congr` (with the projection form as `P1/Q1` so the
+division of `toPoly`-equal args, so `CPolyEuclidean.toPoly_div_congr` (with the projection form as `P1/Q1` so the
 nonzero/divisibility side-goals stay projection-based and reuse `den_ne_zero`/`hWgd`) closes it. -/
 theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
@@ -670,7 +661,7 @@ theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (
     toPolyG_cHermiteReduceTowerG_den_ne_zero hgcd Dt a d hd0 hpp
   conv_rhs => rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
   simp only [toPolyG_cnormG]
-  apply toPolyG_cdivWf_congr
+  apply toPoly_div_congr_dense
   · simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote]
   · simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote]
   · rw [toPolyG_cmulG, toPolyG_cmulG]

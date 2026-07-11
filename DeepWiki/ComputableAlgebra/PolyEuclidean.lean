@@ -98,6 +98,25 @@ theorem toPoly_mod_eq_zero_of_dvd (p q : P α) (hq : CPoly.toPoly q ≠ 0)
       ring
     _ = 0 := by rw [hexact]; ring
 
+/-- Exact selected division respects equal dividend and divisor denotations. -/
+theorem toPoly_div_congr (p₁ q₁ p₂ q₂ : P α)
+    (hp : CPoly.toPoly p₁ = CPoly.toPoly p₂)
+    (hq : CPoly.toPoly q₁ = CPoly.toPoly q₂)
+    (hq₁ : CPoly.toPoly q₁ ≠ 0) (hdvd₁ : CPoly.toPoly q₁ ∣ CPoly.toPoly p₁) :
+    CPoly.toPoly (div p₁ q₁) = CPoly.toPoly (div p₂ q₂) := by
+  have hdvd₂ : CPoly.toPoly q₂ ∣ CPoly.toPoly p₂ := by
+    rw [← hq, ← hp]
+    exact hdvd₁
+  have h₁ : CPoly.toPoly (div p₁ q₁) * CPoly.toPoly q₁ = CPoly.toPoly p₁ := by
+    simpa only [mul_comm] using
+      (LawfulCPolyEuclidean.div_exact (P := P) p₁ q₁ hq₁ hdvd₁).symm
+  have h₂ : CPoly.toPoly (div p₂ q₂) * CPoly.toPoly q₂ = CPoly.toPoly p₂ := by
+    simpa only [mul_comm] using
+      (LawfulCPolyEuclidean.div_exact (P := P) p₂ q₂
+        (by simpa only [← hq] using hq₁) hdvd₂).symm
+  apply mul_right_cancel₀ hq₁
+  rw [h₁, hp, ← h₂, hq]
+
 section Dvd
 
 variable [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]

@@ -66,6 +66,9 @@ denotations does not make those terms definitionally equal.
 - `cHermiteReduceTowerG_leftover_proper_of_degree_le_one` now quantifies over `CPolySquarefree` and the
   selected `CPoly.squarefreeYun` output. Its Wf/LRT consumer resolves that selection at the concrete
   boundary instead of forcing the properness theorem itself to depend on `CFracGcdCoreWf`.
+- `CPolyEuclidean.toPoly_div_congr` now states exact-division congruence for every lawful polynomial
+  representation. Hermite's former public dense/Wf-named theorem is retired; only a private notation
+  adapter remains for the legacy dense `toPoly` reader at its single file-local call site.
 
 ## Verification
 

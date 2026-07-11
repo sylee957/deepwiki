@@ -247,15 +247,16 @@ The capstone `cHermiteReduceTowerG_field_identity` produces the whole-step ident
 numerator `hNum'` (radical form: `cdivWf (cmulG resNum' Dstar) resDen`, `resNum'`/`Dstar`/`resDen` in
 the *projections* `.1.1/.1.2/.2.2`). The consumer `field_identity_of_cIntegrateReducedG_of_residueMatch`
 (LogPartTowerSoundness) needs the middle numerator as `.2.1`. These are `toPolyG`-equal (both exact-div
-of `toPolyG`-equal args). The reusable bridge utility `toPolyG_cdivWf_congr` (HermiteValuationTower) is
-in place.
+of `toPolyG`-equal args). The reusable representation-independent bridge
+`CPolyEuclidean.toPoly_div_congr` is in place.
 
 Recipe to finish (verified via MCP goal inspection — `.2.1` unfolds to `cnormG(cdivWf (cmulG resNum_int
 Dstar_int) resDen_int)` over the internal fold `g = List.foldl (guarded-body) ([0],[1]) zipIdx`, which
 is the SAME fold the projections `.1.1=cnormG g.1` etc. denote): prove
 `toPolyG (cHermiteReduceTowerG Dt a d).2.1 = toPolyG hNum'` by `conv_rhs/lhs => rw
 [cHermiteReduceTowerG]`, `set g := List.foldl … zipIdx` and `set Dstar := List.foldl (·cmulG·) [1] …`
-to collapse the many fold occurrences, `simp only [toPolyG_cnormG]`, then `toPolyG_cdivWf_congr` with
+to collapse the many fold occurrences, `simp only [toPolyG_cnormG]`, then
+`CPolyEuclidean.toPoly_div_congr` with
 `hP`/`hQ` closed by `toPolyG_cmulG/csubG/cmonomialDeriv` normalization and `hdvd1` from the pole-
 cancellation (`hWgd_of_multiplicity` transported by `·Dstar` + the radical split `d=Dstar·W`). ~40–80L,
 mechanical. Then discharge the consumer `hherm` by rewriting its `.2.1` middle term. Left undone: the
@@ -268,18 +269,20 @@ Deeper inspection: `.2.1`'s internal `resNum`/`Dstar`/`resDen` are built from th
 (`List.foldl … zipIdx`), NOT the `cnormG`'d projections. The pole-cancellation support lemmas
 (`hWgd_of_multiplicity`, `toPolyG_cHermiteReduceTowerG_den_ne_zero`, the `hdvd1` divisibility) are all
 stated on the projections `.1.2`/`.2.2`. So after unfolding `.2.1` the goal is in raw-fold terms and
-cannot directly consume those lemmas — the `hQ1`/`hdvd1` subgoals of `toPolyG_cdivWf_congr` need raw-fold
+cannot directly consume those lemmas — the `hQ1`/`hdvd1` subgoals of
+`CPolyEuclidean.toPoly_div_congr` need raw-fold
 restatements (or a projection↔rawfold `toPolyG` bridge for each). This makes the wiring ~100L+, not the
 ~40–80L first estimated. It remains OPTIONAL bookkeeping: the pole-cancellation soundness itself is
 complete and gate-verified; this only connects it to the end-to-end assembly, which already works modulo
-`hexact`. `toPolyG_cdivWf_congr` is in place as the core utility whenever it's picked up.
+`hexact`. `CPolyEuclidean.toPoly_div_congr` is in place as the core utility whenever it's picked up.
 
 ## WIRING COMPLETE (2026-07-04)
 
 Done — the estimate was wrong, the wiring landed cleanly (~one build cycle) thanks to the right
-`toPolyG_cdivWf_congr` orientation:
+`CPolyEuclidean.toPoly_div_congr` orientation:
 - `toPolyG_hNum'_eq_2_1` (HermiteValuationTower) — the capstone's radical numerator `hNum'` denotes the
-  def field `.2.1`. Applied `toPolyG_cdivWf_congr` with **P1/Q1 = the projection form** (unfolding `.2.1`
+  def field `.2.1`. Applied `CPolyEuclidean.toPoly_div_congr` through a private dense-reader adapter,
+  with **P1/Q1 = the projection form** (unfolding `.2.1`
   on the RHS to the raw fold), so the nonzero (`hQ1`) and divisibility (`hdvd1`) side-goals stayed
   projection-based and reused `den_ne_zero` + `hWgd_of_multiplicity` (transported by the radical split);
   the symmetric `hP`/`hQ` raw=projection equalities closed by `simp [cHermiteReduceTowerG, toPolyG_*]`.
