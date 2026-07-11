@@ -1,5 +1,5 @@
 import DeepWiki.Algebra.ListProducts
-import DeepWiki.ComputableAlgebra.PolyReprDenote
+import DeepWiki.ComputableAlgebra.PolySquarefree
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 /-! # Interface: `LawfulSquarefreeDecomposition`
@@ -52,6 +52,29 @@ structure LawfulSquarefreeDecomposition (d : P α) (decomp : List (P α)) : Prop
   squarefree : ∀ p ∈ decomp, Squarefree (CPoly.toPoly p)
   /-- Distinct factors are relatively prime. -/
   coprime : decomp.Pairwise (fun p q => IsRelPrime (CPoly.toPoly p) (CPoly.toPoly q))
+
+/-- Denotation law for a representation-selected squarefree decomposition. The selected output is
+lawful whenever its input denotes a nonzero polynomial with nonzero primitive part. -/
+class LawfulCPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    (α : Type u) [CField α] [CFieldSpec.{u,v} α] [CharZero (CFieldSpec.K α)]
+    [CPolySquarefree P α] : Prop where
+  /-- The selected squarefree decomposition satisfies the semantic factorization contract. -/
+  compute_lawful : ∀ (d : P α), CPoly.toPoly d ≠ 0 → (CPoly.toPoly d).primPart ≠ 0 →
+      LawfulSquarefreeDecomposition d (CPoly.squarefreeYun d)
+
+namespace LawfulCPolySquarefree
+
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CharZero (CFieldSpec.K α)]
+  [CPolySquarefree P α] [LawfulCPolySquarefree.{u,v} P α]
+
+/-- The selected squarefree decomposition satisfies its semantic contract. -/
+theorem compute_lawful' (d : P α) (hd0 : CPoly.toPoly d ≠ 0)
+    (hpp : (CPoly.toPoly d).primPart ≠ 0) :
+    LawfulSquarefreeDecomposition d (CPoly.squarefreeYun d) :=
+  LawfulCPolySquarefree.compute_lawful d hd0 hpp
+
+end LawfulCPolySquarefree
 
 namespace LawfulSquarefreeDecomposition
 

@@ -706,6 +706,18 @@ theorem cSqfreeYunFFG_lawfulSquarefreeDecomposition [CharZero (CFieldSpec.K α)]
       simpa only [List.get_eq_getElem, toPoly_list_eq] using
         cSqfreeYunFFG_isRelPrime hgcd d hd0 hpp hi hj (Nat.ne_of_lt hij) }
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- The selected fraction-free Yun decomposition satisfies the representation-level squarefree contract. -/
+instance instLawfulCPolySquarefreeDenseWf [CharZero (CFieldSpec.K α)]
+    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] :
+    LawfulCPolySquarefree DensePoly α where
+  compute_lawful d hd0 hpp := by
+    have hd0' : toPoly d ≠ 0 := by simpa only [toPoly_list_eq] using hd0
+    have hpp' : (toPoly d).primPart ≠ 0 := by simpa only [toPoly_list_eq] using hpp
+    simpa only [squarefreeYun_dense_wf_eq] using
+      cSqfreeYunFFG_lawfulSquarefreeDecomposition (Fact.out (p :=
+        CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))) d hd0' hpp'
+
 /-! ### The Yun factorization of a constant is empty -/
 
 omit [CDiffField α] [CDiffFieldSpec α] [CFieldSpec α] in
