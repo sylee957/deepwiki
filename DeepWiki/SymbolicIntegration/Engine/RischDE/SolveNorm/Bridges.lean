@@ -34,6 +34,7 @@ theorem toRatFunc_weakNormalizedF (f q' : DenseFrac β) :
         - towerFractionFieldDeriv ([CCommRing.one] : DensePoly β) (toRatFunc q') / toRatFunc q' := by
   rw [weakNormalizedF, toRatFunc_sub, toRatFunc_mul, toRatFunc_inv,
     towerFractionFieldDeriv_toRatFunc, div_eq_mul_inv]
+  rfl
 
 omit [CDiffField β] [CDiffFieldSpec β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
 /-- `toRatFunc_solution`: `toRatFunc (mul ytilde (inv q')) = toRatFunc ytilde / toRatFunc q'`. -/

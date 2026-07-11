@@ -10,7 +10,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac
 
-universe u
+universe u v
 
 namespace CFrac
 
@@ -35,15 +35,18 @@ end CFrac
 
 section Bridge
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β]
-  [CPolySplitFactor DensePoly β]
+variable {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+variable [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+  [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
+  [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CPolySplitFactor P β]
 
 /-- The denominator-normality gate on `CFrac.reduce x` is the wrapper check on `x`. -/
-theorem denomNormalGate_reduce (x : DenseFrac β) :
+theorem denomNormalGate_reduce (x : F β) :
     CFrac.denomNormalGate (CFrac.reduce x) = CFrac.canonNormalizedGate x := by
   simp [CFrac.denomNormalGate, CFrac.canonNormalizedGate]
 
-example (x : DenseFrac β) :
+example (x : F β) :
     CFrac.denomNormalGate (CFrac.reduce x) = CFrac.canonNormalizedGate x :=
   denomNormalGate_reduce x
 
@@ -53,23 +56,30 @@ end Bridge
 
 section NormalityWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly]
-  [CPolySplitFactor DensePoly β]
+variable {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+variable [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+  [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
+  [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CFieldDomain β P]
+  [CPolySplitFactor P β]
 
 /-- `IsCanonNormalized f q'`: the canonicalized element `CFrac.reduce (weakNormalizedF f q')` is weakly
 normalized (`IsWeaklyNormalizedNorm`). -/
-def IsCanonNormalized (f q' : DenseFrac β) : Prop :=
+def IsCanonNormalized (f q' : F β) : Prop :=
   IsWeaklyNormalizedNorm (CFrac.reduce (weakNormalizedF f q'))
 
 /-- The fuel-free Boolean check decides `IsCanonNormalized`. -/
-theorem canonNormalizedGate_iff (f q' : DenseFrac β) :
+theorem canonNormalizedGate_iff (f q' : F β) :
     CFrac.canonNormalizedGate (weakNormalizedF f q') = true ↔ IsCanonNormalized f q' := by
   unfold CFrac.canonNormalizedGate IsCanonNormalized IsWeaklyNormalizedNorm
   rw [LawfulCPolyEngine.cisZero_iff, CPolyEngine.toPoly_sub, sub_eq_zero]
-  rw [CFrac.reduce, dif_pos (CFrac.cisZero_reduceDen (weakNormalizedF f q'))]
-  rfl
+  rw [CFrac.den_reduce]
 
 end NormalityWf
+
+example (f q' : SparseFrac ℚ) :
+    CFrac.canonNormalizedGate (weakNormalizedF f q') = true ↔ IsCanonNormalized f q' :=
+  canonNormalizedGate_iff f q'
 
 /-! ## The re-pin corollary -/
 

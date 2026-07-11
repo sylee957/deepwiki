@@ -12,25 +12,35 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac GBPolyCore
 
+universe u
+
 section Helpers
 
-variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β DensePoly]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {β : Type u} [CField β] [CDiffField β] [CFieldDomain β P]
 
-/-- `weakNormalizedF f q' = f − Dq'/q'` over `DenseFrac β`: the weakly-normalized field element. -/
-def weakNormalizedF (f q' : DenseFrac β) : DenseFrac β :=
-  sub f (mul (towerDerivCFrac ([CCommRing.one] : DensePoly β) q') (inv q'))
+/-- `weakNormalizedF f q' = f − Dq'/q'` for a represented fraction field. -/
+def weakNormalizedF (f q' : F β) : F β :=
+  sub f (mul (CFrac.towerDerivCFracWith (CPoly.one : P β) q') (inv q'))
 
 end Helpers
 
 section Normality
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β]
-  [CPolySplitFactor DensePoly β]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {β : Type u} [CField β] [CFieldSpec β] [CDiffField β] [CPolySplitFactor P β]
 
 /-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its selected differential normal part. -/
-def IsWeaklyNormalizedNorm (h : DenseFrac β) : Prop :=
-  CPoly.toPoly (CPoly.splitFactor (CPoly.one : DensePoly β) h.den).1 = CPoly.toPoly h.den
+def IsWeaklyNormalizedNorm (h : F β) : Prop :=
+  CPoly.toPoly (CPoly.splitFactor (CPoly.one : P β) (CFrac.den h)).1 = CPoly.toPoly (CFrac.den h)
 
 end Normality
+
+example :
+    let one : SparseFrac ℚ := CFrac.ofPoly (CPoly.one : CPoly.SparsePoly ℚ)
+    CCommRing.isZero (CField.sub (weakNormalizedF one one) one) = true := by
+  ccompute
 
 end DeepWiki.SymbolicIntegration

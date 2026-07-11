@@ -156,7 +156,9 @@ runs the same fraction algorithm.
    Euclidean capabilities with the generic monomial derivative. Denominator and reduced canonical-normality
    gates moved into the symmetric `CFrac.denomNormalGate` / `CFrac.canonNormalizedGate` API; the Risch-DE
    instance, sound solver, and completeness stack specialize that API to dense towers, while sparse fractions
-   execute both gates through the same kernel.
+   execute both gates through the same kernel. Weak normalization, its semantic normality predicate, reduction
+   bridge, and Boolean specification now quantify over arbitrary `CFrac F P`; only the re-pin corollary that calls
+   the dense tower weak normalizer remains specialized.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
