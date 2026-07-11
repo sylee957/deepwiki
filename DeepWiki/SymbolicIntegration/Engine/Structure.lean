@@ -70,6 +70,17 @@ def logRelationCoeffs
     -- `Du/u = Σ (−rⱼ/r) (Duⱼ/uⱼ)`: solve `r·w = −Σ rⱼ wⱼ` for `w`.
     some ((List.range m).map (fun j => - (rel.getD j 0) / wc))
 
+/-- Check that rational coefficients express one represented logarithmic derivative as a linear
+combination of the others. -/
+def logRelationCheck
+    {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+    [CPoly P] [CPolyEngine P] [CFrac F P] [CFieldDomain ℚ P]
+    (logDerivs : List (F ℚ)) (w : F ℚ) (rs : List ℚ) : Bool :=
+  let combo := (List.zip logDerivs rs).foldl
+    (fun acc (wi, r) =>
+      CCommRing.add acc (CCommRing.mul (CFrac.ofScalar (F := F) r) wi)) CCommRing.zero
+  CCommRing.isZero (CField.sub w combo)
+
 end CFrac
 
 /-- Sparse fractions use the same logarithmic-dependence decision and recover `2/x = 2 · (1/x)`. -/
@@ -80,7 +91,8 @@ theorem sparse_logRelation_example :
     let oneOverX : SparseFrac ℚ := CFrac.ofFraction one x (by cfrac_nonzero)
     let twoOverX : SparseFrac ℚ := CFrac.ofFraction two x (by cfrac_nonzero)
     CFrac.logIsNewMonomial [oneOverX] twoOverX = false ∧
-      CFrac.logRelationCoeffs [oneOverX] twoOverX = some [2] := by
+      CFrac.logRelationCoeffs [oneOverX] twoOverX = some [2] ∧
+      CFrac.logRelationCheck [oneOverX] twoOverX [2] = true := by
   ccompute
 
 /-! ### Logarithmic-monomial examples over `ℚ(x)`
@@ -105,21 +117,13 @@ def structLogDerivX1 : DenseFrac ℚ := CFrac.ofFraction [1] [1, 1] (by cfrac_no
 #eval CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX1   -- expect true
 #eval CFrac.logRelationCoeffs [structLogDerivX] structLogDerivX2  -- expect some [2]
 
-/-- `structRelationCheck logDerivs w rs = true` iff the ℚ-coefficients `rs` satisfy `w = Σ rᵢ (Duᵢ/uᵢ)`
-over `ℚ(x)`, by `CCommRing.isZero` of `w − Σ rᵢ (logDerivsᵢ)`. -/
-def structRelationCheck (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) (rs : List ℚ) : Bool :=
-  let combo := (List.zip logDerivs rs).foldl
-    (fun acc (wi, r) =>
-      CCommRing.add acc (CCommRing.mul (CFrac.ofFraction [r] [1] (by cfrac_nonzero)) wi)) CCommRing.zero
-  CCommRing.isZero (CField.sub w combo)
-
 /-- The shared logarithmic-dependence test computes over `C(x)(log x)`: derivative `2/x` is dependent
 with relation `[2]`, while `1/(x+1)` is independent, for either logarithmic or exponential candidates. -/
 theorem structureTheorem_example :
     (-- (1) `log(x²)` is dependent on `log(x)` — relation detected and verified `D(x²)/x² = 2·D(x)/x`.
      (CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
      && (match CFrac.logRelationCoeffs [structLogDerivX] structLogDerivX2 with
-         | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
+         | some rs => CFrac.logRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
          | none => false)
      -- (2) `log(x+1)` is a new transcendental monomial over `C(x)(log x)`.
      && (CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
@@ -142,13 +146,13 @@ def structLogDerivX2pX : DenseFrac ℚ := CFrac.ofFraction [1, 2] [0, 1, 1] (by 
 #eval CFrac.logRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX -- some [1,1]
 
 /-- The multi-generator structure decision computes over `C(x)(log x, log(x+1))`: `log(x²+x)` is not a
-new monomial (relation `[1, 1]`, verified by `structRelationCheck`) and the two generators are mutually
+new monomial (relation `[1, 1]`, verified by `CFrac.logRelationCheck`) and the two generators are mutually
 independent. -/
 theorem multiStructureTheorem_example :
     (-- `log(x²+x)` is dependent on `{log x, log(x+1)}` with the verified relation `[1,1]`.
      (CFrac.logIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX == false)
      && (match CFrac.logRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX with
-         | some rs => structRelationCheck [structLogDerivX, structLogDerivX1] structLogDerivX2pX rs
+         | some rs => CFrac.logRelationCheck [structLogDerivX, structLogDerivX1] structLogDerivX2pX rs
                         && (rs == [1, 1])
          | none => false)
      -- the two generators are independent of each other.

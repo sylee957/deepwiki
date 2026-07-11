@@ -131,6 +131,9 @@ runs the same fraction algorithm.
    Point evaluation now belongs to the symmetric fraction API as `CFrac.eval`, selecting polynomial evaluation
    for the stored representation; the dense-only `qEvalAtRoot` helper was retired and Round-2 trace reduction
    consumes the generic operation, with sparse evaluation evidence colocated in `Fraction.lean`.
+   Logarithmic-relation verification now runs as `CFrac.logRelationCheck`; the dense-only
+   `structRelationCheck` was retired, rational coefficients enter through `CFrac.ofScalar`, and the sparse
+   logarithmic-dependence witness verifies the recovered relation through the same generic fraction arithmetic.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
