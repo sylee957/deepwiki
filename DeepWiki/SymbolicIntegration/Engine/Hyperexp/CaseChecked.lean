@@ -85,35 +85,4 @@ instance instLawfulCMonomialCaseHyperexpChecked :
     subst after
     exact hden
 
-namespace DensePoly
-
-variable [CFracGcdCoreWf α] [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
-  [CPolyResultant DensePoly]
-
-/-- Run the checked hyperexponential case through the polynomial-aware Risch pipeline. -/
-def cIntegrateHyperexpChecked (cands : List α) (Dt a d : DensePoly α) :
-    Option (IntegralResult α) :=
-  cIntegrateCaseCheckedWithPolynomial .nonlinear 0 hyperexpCheckedCase cands Dt a d
-
-end DensePoly
-
-variable [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
-  [CPolyGcd DensePoly α]
-  [CPolySplitFactor DensePoly α] [LawfulCPolySplitFactor DensePoly α]
-  [CPolyResultant DensePoly]
-
-set_option maxHeartbeats 3000000 in
-/-- Every successful checked hyperexponential one-level run satisfies the generic integral specification. -/
-theorem DensePoly.cIntegrateHyperexpChecked_sound (cands : List α) (Dt a d : DensePoly α)
-    (res : IntegralResult α) (hd : CPoly.toPoly d ≠ 0)
-    (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
-    (hrun : DensePoly.cIntegrateHyperexpChecked cands Dt a d = some res) :
-    IsIntegralResultP Dt a d res := by
-  letI : CResidueSource DensePoly α := { candidates := fun _ => cands }
-  change assembleOneLevelWithPolynomial (towerPolynomialReduction (P := DensePoly) (α := α))
-    .nonlinear 0 DensePoly.hyperexpCheckedCase Dt a d = some res at hrun
-  exact assembleOneLevelWithPolynomial_sound (towerPolynomialReduction (P := DensePoly) (α := α))
-    .nonlinear 0 DensePoly.hyperexpCheckedCase Dt a d res hd hdegree hrun
-
 end DeepWiki.SymbolicIntegration

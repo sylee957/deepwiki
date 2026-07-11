@@ -112,25 +112,4 @@ instance instLawfulCMonomialCasePrimitiveGuarded :
     simp only [primitiveGuardedCase] at hpost
     split at hpost <;> simp_all
 
-/-- Run the guarded primitive case through the polynomial-aware checked Risch pipeline. -/
-def cIntegratePrimitiveGuardedChecked [CFracGcdCoreWf α] [CPolyGcd DensePoly α]
-    [CPolySplitFactor DensePoly α] [CPolyResultant DensePoly] (cands : List α)
-    (Dt a d : DensePoly α) : Option (IntegralResult α) :=
-  DensePoly.cIntegrateCaseCheckedWithPolynomial .primitive 0 primitiveGuardedCase cands Dt a d
-
-set_option maxHeartbeats 3000000 in
-/-- A successful checked guarded-primitive run is a certified integral result. -/
-theorem cIntegratePrimitiveGuardedChecked_sound [CFracGcdCoreWf α]
-    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
-    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [LawfulCPolySplitFactor DensePoly α]
-    [CPolyResultant DensePoly] (cands : List α) (Dt a d : DensePoly α) (res : IntegralResult α)
-    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
-    (hrun : cIntegratePrimitiveGuardedChecked cands Dt a d = some res) :
-    IsIntegralResultP Dt a d res := by
-  letI : CResidueSource DensePoly α := { candidates := fun _ => cands }
-  change assembleOneLevelWithPolynomial (towerPolynomialReduction (P := DensePoly) (α := α))
-    .primitive 0 primitiveGuardedCase Dt a d = some res at hrun
-  exact assembleOneLevelWithPolynomial_sound (towerPolynomialReduction (P := DensePoly) (α := α))
-    .primitive 0 primitiveGuardedCase Dt a d res hd hdegree hrun
-
 end DeepWiki.SymbolicIntegration
