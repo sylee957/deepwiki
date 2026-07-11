@@ -154,19 +154,22 @@ section StepAssemblyWf
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
   [CFieldDomain β DensePoly]
-  [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+  [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- Next-level RDE completeness `CRischFieldCompleteWf β`: the public solver returns `some` on every
 solvable field-level RDE over `DenseFrac β`. -/
 def CRischFieldCompleteWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
+    [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+    [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
   ∀ f g : DenseFrac β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
 
 /-- The per-level step frontier `RischDEStepFrontierWf β`: given the base-oracle IH one level down, every
 solvable `DenseFrac β` RDE satisfies the weak-normalizer clauses, the inner residual-tip frontier, the
 polynomial solution/denominator guards, and the direct soundness certificate. -/
 structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
+    [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+    [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g →
     DensePoly.cisZero
@@ -232,7 +235,8 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 
 -- Wf step: the IH and per-level frontier give fuel-free wrapper completeness at level `n+1`.
 example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [LawfulCPolyGcd.{u,v} DensePoly β]
+    [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+    [LawfulCPolyGcd.{u,v} DensePoly β]
     [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (hβ : CRischFieldComplete β) (hstep : RischDEStepFrontierWf β) :
     CRischFieldCompleteWf β :=

@@ -184,9 +184,17 @@ runs the same fraction algorithm.
    The reduced-integrator composition is now capability-specific as well: Hermite reduction requests
    `CPolySquarefree`, residue construction requests `CPolyResultant`, rational log arguments request
    `CPolyGcd`, and `cIntegrateCase` composes those with `CPolySplitFactor`. The root-free LRT log path selects
-   `CPolySquarefree`, `CPolyResultant`, and `CPolySubresultant` directly, without a fraction-gcd proxy. The
+   `CPolySquarefree`, `CPolyResultant`, and `CPolySubresultant` directly, without a fraction-gcd proxy; its
+   `CPoly.lrtLogArg` kernel is representation-independent and has both dense and sparse execution witnesses.
+   The shared Rothstein–Trager numerator and residue interpolation now live at `CPoly.amcDd` and
+   `CPoly.residueResultantTower`; dense names are specialization boundaries, while sparse inner and outer
+   polynomial representations execute the same kernels. The
    primitive and guarded-primitive hooks no longer
    carry a gcd-selection proxy; the hyperexponential hook retains it at the concrete correction boundary. The
+   tower Risch-DE completeness predicate/frontier now request selected gcd and differential-split
+   capabilities directly. The fuel-free top integrator likewise declares its actual composition inputs:
+   gcd, differential split, squarefree decomposition, and resultant, rather than using the recursive dense
+   fraction-gcd implementation as an umbrella constraint. The
    generic reconstruction field-identity helper is private after a direct-dependent
    audit showed that only `canonicalReconstruction` consumes it.
    The rational RREF implementation, its `CLinearSolve ℚ` instance, and the corresponding lawful proof

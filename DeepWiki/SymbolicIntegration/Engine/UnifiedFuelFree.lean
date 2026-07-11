@@ -16,7 +16,9 @@ open DensePoly RadElem
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+  [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CRischField α]
 
 /-- `cIntegrateGFullWf Dt a d cands`: the fuel-free full poly/special tower integral of `f = a/d ∈ α(t)`
 over `D = CPolyEngine.monomialDeriv Dt`, returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`
@@ -49,7 +51,9 @@ end DensePoly
 `res` satisfies the field-level identity `D(res) + logResidueSum Dt res.logs = a/d`. -/
 theorem field_identity_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
+    [Algebra ℚ (CFieldSpec.K α)] [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CRischField α]
     (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (res : IntegralResult α)
     (hsome : DensePoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)
@@ -67,7 +71,9 @@ by
 certificate. -/
 theorem isIntegralResultG_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
+    [Algebra ℚ (CFieldSpec.K α)] [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CRischField α]
     (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (res : IntegralResult α)
     (hsome : DensePoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)
@@ -80,7 +86,9 @@ theorem isIntegralResultG_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
 /-! ### Restatement against the intended wording -/
 
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
+    [Algebra ℚ (CFieldSpec.K α)] [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CRischField α]
     (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (res : IntegralResult α)
     (hsome : DensePoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)

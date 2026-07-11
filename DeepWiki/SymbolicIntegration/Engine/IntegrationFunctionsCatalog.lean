@@ -71,7 +71,8 @@ open DensePoly CFrac
 -- directly, modulo the Wf per-level frontier
 -- `RischDEStepFrontierWf` and direct Wf soundness certificates. The Wf per-level frontier now exposes the
 -- Wf inner residual-tip frontier and uses `decisionProcedureFrontierWf_of_innerFrontier` to assemble the
--- field-level decision frontier. The residual recursion layer that calls `CRischField.crischDESolve`
+-- field-level decision frontier through selected gcd and differential-split capabilities. The residual
+-- recursion layer that calls `CRischField.crischDESolve`
 -- one level down is represented by the base IH `CRischFieldComplete β`.
 #check @crischFieldComplete_Q
 #check @CRischFieldCompleteWf
