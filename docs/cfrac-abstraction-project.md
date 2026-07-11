@@ -148,7 +148,10 @@ runs the same fraction algorithm.
    Yun squarefree decomposition now has a representation-independent `CPoly.squarefreeYun` kernel selecting
    derivative, normalization, quotient, subtraction, and extended gcd through polynomial capabilities. The
    simple-radical square/squarefree split, integral-basis checks, discriminant, and genus consequently live in
-   `CPoly`; dense catalog examples and a sparse repeated-factor basis witness share the same implementation.
+   `CPoly`. Selection is coefficient-aware: sparse polynomials and ordinary dense coefficients use the generic
+   kernel, while dense tower coefficients with `CFracGcdCoreWf` select the established fraction-free Yun engine.
+   Tower Hermite reduction consumes `CPoly.squarefreeYun`, and its correctness stack crosses the selected dense
+   implementation through an explicit equality bridge.
    Differential normal/special splitting now runs as `CPoly.splitFactor`, composing the selected gcd and
    Euclidean capabilities with the generic monomial derivative. Denominator and reduced canonical-normality
    gates moved into the symmetric `CFrac.denomNormalGate` / `CFrac.canonNormalizedGate` API; the Risch-DE

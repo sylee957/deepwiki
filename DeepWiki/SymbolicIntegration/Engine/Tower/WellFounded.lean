@@ -237,6 +237,14 @@ def cSqfreeYunFF (p : DensePoly α) : List (DensePoly α) :=
   let d1 := csub (CPolyEuclidean.div (cderiv p) g) (cderiv b1)
   cSqfreeYunFFGgoWf (cyunBound p) b1 d1
 
+/-- Dense tower polynomials select the established fraction-free Yun decomposition. -/
+instance (priority := high) instCPolySquarefreeDenseWf : CPolySquarefree DensePoly α where
+  compute := cSqfreeYunFF
+
+/-- Dense tower squarefree selection is the established fraction-free Yun implementation. -/
+@[simp] theorem squarefreeYun_dense_wf_eq (p : DensePoly α) :
+    CPoly.squarefreeYun p = cSqfreeYunFF p := rfl
+
 /-- Nonconstant Yun factors paired with their one-based multiplicities. -/
 def cSqfreeYunFactors (p : DensePoly α) : List (DensePoly α × ℕ) :=
   (cSqfreeYunFF p).zipIdx.filterMap fun (q, i) =>
@@ -247,7 +255,7 @@ def cSqfreeYunFactors (p : DensePoly α) : List (DensePoly α × ℕ) :=
 `Sᵢ = cgcdFFCoreWf pᵢ (CPolyEngine.monomialDeriv Dt pᵢ)` (the special part) and `Nᵢ = CPolyEuclidean.div pᵢ Sᵢ` (normal part). -/
 def cSplitSquarefreeFactorFast [CDiffField α] (Dt : DensePoly α) (p : DensePoly α) :
     List (DensePoly α) × List (DensePoly α) :=
-  let ps := cSqfreeYunFF p
+  let ps := CPoly.squarefreeYun p
   let parts := ps.map (fun pf =>
     let si := CFracGcdCoreWf.cgcdFFCoreWf pf (CPolyEngine.monomialDeriv Dt pf)
     let ni := CPolyEuclidean.div pf si
@@ -281,12 +289,12 @@ def canonicalRepresentationFast (Dt : DensePoly α) (a d : DensePoly α) :
   (qr.1, (bc.1, dnds.2), (bc.2, dnds.1))
 
 /-- Generic transcendental Hermite reduction `cHermiteReduceTower Dt a d = ((gnum, gden),
-(h_num, h_den))` over the tower: squarefree-factor `d` with `cSqfreeYunFF`; for each factor `(v, i)` of
+(h_num, h_den))` over the tower: squarefree-factor `d` with `CPoly.squarefreeYun`; for each factor `(v, i)` of
 multiplicity `i ≥ 2`, run the inner loop `cHermiteReduceTowerInnerWf` (with `u = d/vⁱ` via `CPolyEuclidean.div`); recover
 `h_num` over the squarefree radical `Dstar` via `CPolyEuclidean.div`. Stated with `.1`/`.2` projections. -/
 def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
     (DensePoly α × DensePoly α) × (DensePoly α × DensePoly α) :=
-  let factors := cSqfreeYunFF d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
+  let factors := CPoly.squarefreeYun d                   -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
   let Dstar := factors.foldl (fun acc vi => cmul acc vi) [CCommRing.one]   -- squarefree radical ∏ᵢ vᵢ
   let g : DensePoly α × DensePoly α := factors.zipIdx.foldl
     (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>

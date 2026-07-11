@@ -214,12 +214,12 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
       ([CCommRing.zero], [CCommRing.one]) with hg_def
   -- raw-fold `g` ↔ `cnorm`-projection bridges (equal through `toPoly`)
   have hg1 : toPoly (cHermiteReduceTower Dt a d).1.1 = toPoly g.1 := by
-    rw [hg_def]; simp only [cHermiteReduceTower, denote]
+    rw [hg_def]; simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote]
   have hg2 : toPoly (cHermiteReduceTower Dt a d).1.2 = toPoly g.2 := by
-    rw [hg_def]; simp only [cHermiteReduceTower, denote]
+    rw [hg_def]; simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote]
   have hDsF : toPoly (cHermiteReduceTower Dt a d).2.2
       = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) := by
-    simp only [cHermiteReduceTower, denote]
+    simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote]
   have hDstar0 : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) ≠ 0 := by
     rw [← hDsF]; exact (toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0).ne_zero
   have hg2ne : toPoly g.2 ≠ 0 := by rw [← hg2]; exact hgd0

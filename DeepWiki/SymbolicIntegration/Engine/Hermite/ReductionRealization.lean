@@ -35,7 +35,7 @@ theorem cHermiteReduceTowerG_lawfulHermiteReduction [CharZero (CFieldSpec.K α)]
     rwa [toPolyG_hNum'_eq_2_1 hgcd Dt a d hd0 hpp hcopgcd] at hcap
   squarefree := by
     rw [show toPoly (cHermiteReduceTower Dt a d).2.2 = ((cSqfreeYunFF d).map toPoly).prod from by
-      rw [cHermiteReduceTower]
+      rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
       simp only [denote]
       simp]
     have hmap : (cSqfreeYunFF d).map CPoly.toPoly =

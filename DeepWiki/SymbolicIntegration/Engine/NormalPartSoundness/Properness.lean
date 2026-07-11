@@ -613,8 +613,8 @@ theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α
       (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt _) _) (cmul _ (CPolyEngine.monomialDeriv Dt _)))))
     (cmul d (cmul _ _))
     ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
-    (by simp only [cHermiteReduceTower, denote])
-    (by simp only [cHermiteReduceTower, denote])
+    (by simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote])
+    (by simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote])
     hdvd hresDen hDstar hresProper
 
 end DeepWiki.SymbolicIntegration

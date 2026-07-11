@@ -225,7 +225,7 @@ omit [CDiffFieldSpec α] in
 theorem toPolyG_cHermiteReduceTowerG_Dstar_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0) :
     toPoly (cHermiteReduceTower Dt a d).2.2 ∣ toPoly d := by
-  rw [cHermiteReduceTower]
+  rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
   simp only [denote, map_one, mul_zero, add_zero, one_mul]
   exact prod_map_cSqfreeYunFFG_dvd hgcd d hd
 
@@ -616,7 +616,7 @@ theorem toPolyG_cHermiteReduceTowerG_Dstar_squarefree [CharZero (CFieldSpec.K α
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hpp : (toPoly d).primPart ≠ 0) :
     Squarefree (toPoly (cHermiteReduceTower Dt a d).2.2) := by
-  rw [cHermiteReduceTower]
+  rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
   simp only [denote, map_one, mul_zero, add_zero, one_mul]
   apply squarefree_list_prod
   · rw [List.pairwise_map, List.pairwise_iff_getElem]
@@ -648,7 +648,7 @@ omit [CDiffFieldSpec α] in
 /-- The Yun radical `Dstar` is monic: a product of the monic Yun factors (`monic_list_prod`). -/
 theorem toPolyG_cHermiteReduceTowerG_Dstar_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
     (hd0 : toPoly d ≠ 0) : (toPoly (cHermiteReduceTower Dt a d).2.2).Monic := by
-  rw [cHermiteReduceTower]
+  rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
   simp only [denote, map_one, mul_zero, add_zero, one_mul]
   apply monic_list_prod
   intro p hp

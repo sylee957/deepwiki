@@ -440,14 +440,15 @@ instance instCPolyEuclideanDense : CPolyEuclidean DensePoly where
   divmod := DensePoly.cdivmodWf
   gcdExt := DensePoly.cgcdWf
 
-/-- Dense polynomials select the representation-generic Yun kernel over well-founded Euclidean operations. -/
-instance instCPolySquarefreeDense : CPolySquarefree DensePoly where
+/-- Dense polynomials default to the representation-generic Yun kernel over well-founded Euclidean operations. -/
+instance (priority := low) instCPolySquarefreeDense {α : Type*} [CField α] :
+    CPolySquarefree DensePoly α where
   compute := CPolySquarefree.default
 
 namespace CPoly
 
-/-- Dense selected Yun decomposition runs the generic kernel over the dense Euclidean engine. -/
-@[simp] theorem squarefreeYun_dense_eq {α : Type*} [CField α] (p : DensePoly α) :
+/-- The default dense Yun selection runs the generic kernel over the dense Euclidean engine. -/
+@[simp] theorem squarefreeYun_dense_default_eq {α : Type*} [CField α] (p : DensePoly α) :
     squarefreeYun p = CPolySquarefree.default p := rfl
 
 end CPoly

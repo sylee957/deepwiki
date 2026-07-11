@@ -177,7 +177,7 @@ theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : DensePoly α)
     simp only [denote, mul_zero, add_zero, map_one]
   have hz : toPoly ([CCommRing.zero] : DensePoly α) = 0 := by
     simp only [denote, mul_zero, add_zero, map_zero]
-  rw [cHermiteReduceTower]
+  rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
   simp only [toPolyG_cnormG]
   rw [fracPair_foldl_sum
     (fun x => (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
@@ -443,7 +443,7 @@ theorem toPolyG_cHermiteReduceTowerG_den_ne_zero [CharZero (CFieldSpec.K α)]
     toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0 := by
   have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
-  rw [cHermiteReduceTower]
+  rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
   simp only [toPolyG_cnormG]
   exact foldl_den_ne_zero
     (fun x => (cHermiteReduceTowerInnerWf Dt x.1 (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
@@ -614,7 +614,7 @@ theorem hWdvd_of_reconstruction (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreW
           (fun x => toPoly x.1 ^ x.2)).prod := by
   have hLprod : toPoly (cHermiteReduceTower Dt a d).2.2
       = ((cSqfreeYunFF d).map toPoly).prod := by
-    rw [cHermiteReduceTower]
+    rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
     simp only [denote, toPolyG_cnormG, map_one, mul_zero, add_zero, one_mul]
   have hsplit := toPolyG_yunRadical_split hgcd Dt a d hd0
   have hDstar0 : toPoly (cHermiteReduceTower Dt a d).2.2 ≠ 0 := by
@@ -668,11 +668,11 @@ theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (
       = toPoly (cHermiteReduceTower Dt a d).2.1 := by
   have hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0 :=
     toPolyG_cHermiteReduceTowerG_den_ne_zero hgcd Dt a d hd0 hpp
-  conv_rhs => rw [cHermiteReduceTower]
+  conv_rhs => rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
   simp only [toPolyG_cnormG]
   apply toPolyG_cdivWf_congr
-  · simp only [cHermiteReduceTower, denote]
-  · simp only [cHermiteReduceTower, denote]
+  · simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote]
+  · simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote]
   · rw [toPolyG_cmulG, toPolyG_cmulG]
     exact mul_ne_zero hd0 (mul_ne_zero hgd0 hgd0)
   · simp only [toPolyG_cmulG]

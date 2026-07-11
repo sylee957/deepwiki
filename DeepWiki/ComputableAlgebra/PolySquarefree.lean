@@ -10,10 +10,11 @@ namespace DeepWiki.SymbolicIntegration
 
 universe u
 
-/-- Executable squarefree decomposition selected by a computable polynomial representation. -/
-class CPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEuclidean P] where
+/-- Executable squarefree decomposition selected by a polynomial representation and coefficient field. -/
+class CPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    (α : Type u) [CField α] where
   /-- Return the multiplicity-indexed squarefree factors of a represented polynomial. -/
-  compute : {α : Type u} → [CField α] → P α → List (P α)
+  compute : P α → List (P α)
 
 namespace CPolySquarefree
 
@@ -42,14 +43,15 @@ def default {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
 end CPolySquarefree
 
 /-- Sparse polynomials select the representation-generic Yun kernel. -/
-instance instCPolySquarefreeSparse : CPolySquarefree CPoly.SparsePoly where
+instance instCPolySquarefreeSparse {α : Type u} [CField α] :
+    CPolySquarefree CPoly.SparsePoly α where
   compute := CPolySquarefree.default
 
 namespace CPoly
 
 /-- Yun squarefree decomposition selected for the polynomial representation, ordered by multiplicity. -/
 def squarefreeYun {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
-    [CPolySquarefree P] {α : Type u} [CField α] (p : P α) : List (P α) :=
+    {α : Type u} [CField α] [CPolySquarefree P α] (p : P α) : List (P α) :=
   CPolySquarefree.compute p
 
 /-- Sparse selected Yun decomposition unfolds to the representation-generic kernel. -/
@@ -58,8 +60,7 @@ def squarefreeYun {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclid
 
 /-- Nonconstant selected Yun factors paired with their one-based multiplicities. -/
 def squarefreeYunFactors {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
-    [CPolySquarefree P]
-    {α : Type u} [CField α] (p : P α) : List (P α × ℕ) :=
+    {α : Type u} [CField α] [CPolySquarefree P α] (p : P α) : List (P α × ℕ) :=
   (squarefreeYun p).zipIdx.filterMap fun (q, i) =>
     if CPolyEngine.cdeg q = 0 then none else some (q, i + 1)
 
