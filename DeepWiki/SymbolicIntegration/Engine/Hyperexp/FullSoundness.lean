@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.Engine.OneShotAssembly
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.NormalCore
 
 /-! # Soundness of the hyperexponential normal-part driver

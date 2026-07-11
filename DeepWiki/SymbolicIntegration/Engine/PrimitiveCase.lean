@@ -36,7 +36,7 @@ integrates `f = a/d ∈ K(x)(…)(t)` when `t` is primitive.
 
 Given `a/d`:
 
-1. **Canonical split** — `canonicalRepresentationFast` (`OneShotAssembly`) writes `a/d` as
+1. **Canonical split** — `canonicalRepresentationFast` (`Tower/WellFounded`) writes `a/d` as
    `polynomial part fₚ  +  special part b/ds  +  normal part cₙ/dₙ`.
 2. **Special / polynomial part** — the case hook `towerPrimitiveCaseLrt.integrateSpecial`
    (`RischSolverTowerLrt`). Under the computable guard `b = 0 ∧ Dt = 1`, it integrates the polynomial
