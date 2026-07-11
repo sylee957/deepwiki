@@ -55,7 +55,7 @@ example {K : Type*} [Field K] {H D2 N S : K[X]}
     H.degree < S.degree :=
   degree_lt_of_exact_div hid hND hS
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (resNum resDen Dstar : DensePoly α)
+example [CPolySquarefree DensePoly α] (Dt : DensePoly α) (a d : DensePoly α) (resNum resDen Dstar : DensePoly α)
     (hnum : toPoly (DensePoly.cHermiteReduceTower Dt a d).2.1
       = toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen))
     (hden : toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2 = toPoly Dstar)
@@ -223,7 +223,8 @@ example (Dt : DensePoly α) (s L₀ : DensePoly α × DensePoly α) (rest glocs 
       = am α (toPoly L₀.1) / am α (toPoly L₀.2) :=
   cHermiteReduceTowerG_telescope Dt s L₀ rest glocs hs hmem hseed hstep
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (hgden : toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
     (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ (DensePoly.cIntegrateReduced Dt a d cands).logs, toPoly cv.2 ≠ 0)
