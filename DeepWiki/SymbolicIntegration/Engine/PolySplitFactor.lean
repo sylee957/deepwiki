@@ -21,7 +21,7 @@ namespace CPolySplitFactor
 
 /-- Internal bounded driver for differential normal/special factorization. -/
 private def splitFactorAux {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] [CDiffField α]
+    {α : Type u} [CField α] [CPolyGcd P α] [CPolyEuclidean P] [CDiffField α]
     (Dt : P α) : ℕ → P α → P α × P α
   | 0, p => (p, CPoly.one)
   | fuel + 1, p =>
@@ -38,7 +38,7 @@ private def splitFactorAux {P : Type u → Type u} [CPoly P] [CPolyEngine P]
 
 /-- Generic bounded differential split factorization through selected gcd and Euclidean operations. -/
 def default {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] [CDiffField α]
+    {α : Type u} [CField α] [CPolyGcd P α] [CPolyEuclidean P] [CDiffField α]
     (Dt p : P α) : P α × P α :=
   splitFactorAux Dt (CPoly.degBound p) p
 

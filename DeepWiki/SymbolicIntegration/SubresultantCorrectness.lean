@@ -565,7 +565,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
         + (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (l + 1))).natDegree
       ≤ (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree)
     (hCne : DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2)) ≠ 0)
-    -- GBPolyCore.gbprimitivePartCore CPolyGcd.compute content-exactness on the degree-j element
+    -- GBPolyCore.gbprimitivePartCore CPolyGcd.computeFn content-exactness on the degree-j element
     (hprim : IsPrimitivePartXInput
       (bsubresultantGcd fuel
         (DensePoly.toPoly (chain fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree

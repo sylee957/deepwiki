@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.SubresultantCorrectness.DividedStep
 /-! # Subresultant filter and primitive-part bridge
 
 Connects singleton-filter hypotheses for `bsubresultantGcd` to the abstract LRT
-subresultant endpoint, then strips bivariate content by `GBPolyCore.gbprimitivePartCore CPolyGcd.compute`. -/
+subresultant endpoint, then strips bivariate content by `GBPolyCore.gbprimitivePartCore CPolyGcd.computeFn`. -/
 
 open Polynomial
 
@@ -67,28 +67,28 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : Dens
     hchain
     (toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel (G 0) (G 1) G m hfil)
 
-/-! ### `GBPolyCore.gbprimitivePartCore CPolyGcd.compute` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute` -/
+/-! ### `GBPolyCore.gbprimitivePartCore CPolyGcd.computeFn` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute` -/
 
-/-- The content stripped by `GBPolyCore.gbprimitivePartCore CPolyGcd.compute p` is nonzero and divides every coefficient exactly. -/
+/-- The content stripped by `GBPolyCore.gbprimitivePartCore CPolyGcd.computeFn p` is nonzero and divides every coefficient exactly. -/
 structure IsPrimitivePartXInput (p : GBPolyCore ℚ) : Prop where
   /-- The computed content is not boolean-zero. -/
-  content_not_zero : ¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.compute p) = true
+  content_not_zero : ¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.computeFn p) = true
   /-- The normalized content list is nonempty. -/
-  content_cnorm_ne : cnorm (GBPolyCore.gbcontentCore CPolyGcd.compute p) ≠ []
+  content_cnorm_ne : cnorm (GBPolyCore.gbcontentCore CPolyGcd.computeFn p) ≠ []
   /-- The computed content reads to a nonzero polynomial. -/
-  content_toPoly_ne : toPoly (GBPolyCore.gbcontentCore CPolyGcd.compute p) ≠ 0
+  content_toPoly_ne : toPoly (GBPolyCore.gbcontentCore CPolyGcd.computeFn p) ≠ 0
   /-- The content divides every normalized `x`-coefficient exactly. -/
-  exact_division : ∀ a ∈ GBPolyCore.gbnormCore p, toPoly (CPolyEuclidean.mod a (GBPolyCore.gbcontentCore CPolyGcd.compute p)) = 0
+  exact_division : ∀ a ∈ GBPolyCore.gbnormCore p, toPoly (CPolyEuclidean.mod a (GBPolyCore.gbcontentCore CPolyGcd.computeFn p)) = 0
 
 /-- The `cgcdWfGcd` primitive part is similar to its input under exact content division. -/
 theorem isSimilar_toPolyG_gbprimitivePartCore_cgcdWfGcd (p : GBPolyCore ℚ)
     (hprim : IsPrimitivePartXInput p) :
-    IsSimilar (DensePoly.toPoly p) (DensePoly.toPoly (GBPolyCore.gbprimitivePartCore CPolyGcd.compute p)) :=
-  ⟨1, toPoly (GBPolyCore.gbcontentCore CPolyGcd.compute p), one_ne_zero, hprim.content_toPoly_ne, by
+    IsSimilar (DensePoly.toPoly p) (DensePoly.toPoly (GBPolyCore.gbprimitivePartCore CPolyGcd.computeFn p)) :=
+  ⟨1, toPoly (GBPolyCore.gbcontentCore CPolyGcd.computeFn p), one_ne_zero, hprim.content_toPoly_ne, by
     rw [map_one, one_mul, toPolyG_gbprimitivePartCore_cgcdWfGcd_exact p hprim.content_not_zero
       hprim.content_cnorm_ne hprim.exact_division]⟩
 
-/-- Given the endpoint hypotheses, the filter identity `hfilt`, and content-exactness of `GBPolyCore.gbprimitivePartCore CPolyGcd.compute`,
+/-- Given the endpoint hypotheses, the filter identity `hfilt`, and content-exactness of `GBPolyCore.gbprimitivePartCore CPolyGcd.computeFn`,
 `IsSimilar (lrtSubresultant A D j) (DensePoly.toPoly (lrtSubresultantCompute fuel j A D))`. -/
 theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : DensePoly ℚ) (G : ℕ → GBPolyCore ℚ)
     (bt : ℕ → DensePoly ℚ) (s : ℕ → GBPolyCore ℚ) (c : ℕ → DensePoly ℚ) (m : ℕ)

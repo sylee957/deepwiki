@@ -16,8 +16,9 @@ namespace CFrac
 
 /-- The fuel-free wrapper canonical-normality check on the reduced denominator. -/
 def canonNormalizedGate {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P]
-    {β : Type u} [CField β] [CDiffField β] [CPolySplitFactor P β] (ftilde : F β) : Bool :=
+    [CPoly P] [CPolyEngine P] [CPolyEuclidean P] [CFrac F P]
+    {β : Type u} [CField β] [CPolyGcd P β] [CDiffField β] [CPolySplitFactor P β]
+    (ftilde : F β) : Bool :=
   CPolyEngine.cisZero (CPolyEngine.sub
     (CPoly.splitFactor (CPoly.one : P β) (CFrac.reduceDen ftilde)).1
     (CFrac.reduceDen ftilde))
@@ -37,9 +38,9 @@ section Bridge
 
 variable {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
 variable [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
-  [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
   [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
-variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CPolySplitFactor P β]
+variable {β : Type u} [CField β] [CPolyGcd P β] [LawfulCPolyGcd.{u,v} P β]
+  [CFieldSpec.{u,v} β] [CDiffField β] [CPolySplitFactor P β]
 
 /-- The denominator-normality gate on `CFrac.reduce x` is the wrapper check on `x`. -/
 theorem denomNormalGate_reduce (x : F β) :
@@ -58,10 +59,9 @@ section NormalityWf
 
 variable {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
 variable [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
-  [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
   [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
-variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CFieldDomain β P]
-  [CPolySplitFactor P β]
+variable {β : Type u} [CField β] [CPolyGcd P β] [LawfulCPolyGcd.{u,v} P β]
+  [CFieldSpec.{u,v} β] [CDiffField β] [CFieldDomain β P] [CPolySplitFactor P β]
 
 /-- `IsCanonNormalized f q'`: the canonicalized element `CFrac.reduce (weakNormalizedF f q')` is weakly
 normalized (`IsWeaklyNormalizedNorm`). -/

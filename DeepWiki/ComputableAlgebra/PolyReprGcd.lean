@@ -18,6 +18,20 @@ class CPolyGcd (P : Type u → Type u) [CPoly P] (α : Type u) [CField α] where
   /-- Compute a greatest common divisor of two represented polynomials. -/
   compute : P α → P α → P α
 
+namespace CPolyGcd
+
+/-- The selected gcd operation as a first-class binary function. -/
+def computeFn {P : Type u → Type u} [CPoly P] {α : Type u} [CField α] [CPolyGcd P α] :
+    P α → P α → P α :=
+  fun p q => CPolyGcd.compute p q
+
+/-- Applying the first-class selected gcd is `CPolyGcd.compute`. -/
+@[simp] theorem computeFn_apply {P : Type u → Type u} [CPoly P]
+    {α : Type u} [CField α] [CPolyGcd P α] (p q : P α) :
+    CPolyGcd.computeFn p q = CPolyGcd.compute p q := rfl
+
+end CPolyGcd
+
 /-- Denotation-level gcd law for an executable polynomial gcd. -/
 class LawfulCPolyGcd (P : Type u → Type u) [CPoly P] (α : Type u) [CField α]
     [CPolyGcd P α] : Prop where

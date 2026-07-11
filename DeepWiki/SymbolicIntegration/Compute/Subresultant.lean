@@ -98,7 +98,7 @@ def bArgAmtD' (A D : DensePoly ℚ) : GBPolyCore ℚ :=
 /-- The raw degree-`j` subresultant `lrtSubresultantCompute fuel j A D = Sⱼ(D, A − t·D')`: the
 bivariate subresultant of `D` (lifted) and `A − t·D'` at `x`-degree `j`, `ℚ[t]`-primitive in `x`. -/
 def lrtSubresultantCompute (fuel : ℕ) (j : ℕ) (A D : DensePoly ℚ) : GBPolyCore ℚ :=
-  GBPolyCore.gbprimitivePartCore CPolyGcd.compute
+  GBPolyCore.gbprimitivePartCore CPolyGcd.computeFn
     (bsubresultantGcd fuel j (liftCtoBPoly D) (bArgAmtD' A D))
 
 /-- The computable log argument `lrtGcdCompute fuel j R A D = S(t,x)`: the degree-`j` subresultant

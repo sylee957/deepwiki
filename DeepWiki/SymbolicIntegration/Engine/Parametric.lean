@@ -42,7 +42,7 @@ theorem sparse_diophantineReduced_sound (p q rhs : CPoly.SparsePoly ℚ)
 namespace CFrac
 
 variable {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-variable [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P]
+variable [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P]
 variable [CFrac F P] [CFieldDomain ℚ P]
 
 /-! ### `CFrac.parametricLogDeriv` over the base field `k = ℚ(x)`
@@ -125,7 +125,7 @@ equation `Dp = Σᵢ cᵢ·gᵢ` with `gᵢ = gnumsᵢ/gdensᵢ`, clears the com
 splits each `d·gᵢ = qᵢ·d + rᵢ`, and returns the polynomial parts `qs = [q₁, …, qₘ]` together with the
 homogeneous constraint matrix `Mᵢⱼ = coefficient(rⱼ, tⁱ)`. -/
 def linearConstraintsQ {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) :
+    [CPolyGcd P ℚ] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) :
     List (P ℚ) × List (List ℚ) :=
   let d := gdens.foldl (fun acc den => CPoly.lcm acc den) (CPoly.one : P ℚ)
   let qrs : List (P ℚ × P ℚ) :=
@@ -143,7 +143,7 @@ def linearConstraintsQ {P : Type → Type} [CPoly P] [CPolyEngine P]
 
 /-- Every row of `linearConstraintsQ` has one coefficient per input generator. -/
 theorem linearConstraintsQ_row_length {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) :
+    [CPolyGcd P ℚ] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) :
     ∀ row ∈ (linearConstraintsQ gnums gdens).2, row.length = gnums.length := by
   simp [linearConstraintsQ]
 
@@ -159,14 +159,14 @@ theorem linearConstraintsQ_row_length {P : Type → Type} [CPoly P] [CPolyEngine
 The empty kernel (`[]`) means the only solution is `c₁ = … = cₘ = 0`. For each basis tuple `c⃗`, a
 companion polynomial solution `p` is recoverable by integrating `Σ cᵢqᵢ` (`cIntegratePolyQ`). -/
 def paramRischDE {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] [CLinearSolve ℚ]
+    [CPolyGcd P ℚ] [CPolyEuclidean P] [CLinearSolve ℚ]
     (gnums gdens : List (P ℚ)) : List (List ℚ) :=
   let (_qs, M) := linearConstraintsQ gnums gdens
   CLinearSolve.nullspaceBasis M gnums.length
 
 /-- Every selected parametric-Risch vector satisfies each cleared linear constraint row. -/
 theorem paramRischDE_mem_row_sound {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    [CPolyGcd P ℚ] [CPolyEuclidean P] [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
     (gnums gdens : List (P ℚ)) (cs : List ℚ)
     (hcs : cs ∈ paramRischDE gnums gdens) :
     ∀ i, i < (linearConstraintsQ gnums gdens).2.length →
@@ -197,7 +197,7 @@ generator list `[f, Dw₁/w₁, …, Dwₘ/wₘ]`. The `wᵢ` arrive as numerato
 `(D(wnumᵢ)·wdenᵢ − wnumᵢ·D(wdenᵢ)) / (wnumᵢ·wdenᵢ)`. Sharper denominator bounds and the
 `c₀ = 1` back-substitution to a nonparametric RDE are left to downstream specializations. -/
 def limitedIntegrate {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] [CLinearSolve ℚ]
+    [CPolyGcd P ℚ] [CPolyEuclidean P] [CLinearSolve ℚ]
     (fnum fden : P ℚ) (wnums wdens : List (P ℚ)) :
     List (List ℚ) :=
   -- generator `g₀ = f`, then `gᵢ = Dwᵢ/wᵢ` (logarithmic derivative of `wᵢ`).
@@ -281,7 +281,7 @@ constant tuple `cs = (c₁,…,cₘ)` satisfies the cleared constraint `Σᵢ c�
 `d·gᵢ` by `d = lcm(denominators)`), i.e. `Σᵢ cᵢ·(numᵢ·(d/denᵢ) mod d) = 0` — the polynomial identity
 certifying that `(c₁,…,cₘ)` is a genuine solution of the parametric Risch DE's linear constraints. -/
 def CPoly.paramConstraintCheck {P : Type → Type} [CPoly P] [CPolyEngine P]
-    [CPolyGcd P] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) (cs : List ℚ) : Bool :=
+    [CPolyGcd P ℚ] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) (cs : List ℚ) : Bool :=
   let d := gdens.foldl (fun acc den => CPoly.lcm acc den) (CPoly.one : P ℚ)
   let total : P ℚ :=
     ((List.zip gnums gdens).zip cs).foldl (fun acc ((gn, gd), c) =>

@@ -23,7 +23,7 @@ constraint system `[a, η]` (`CPoly.linearConstraintsQ`), takes a selected `c₀
 normalizes `c₀ = 1`, and recovers `b` by antidifferentiating the cleared polynomial residual `q₀ + c₁·q₁`. -/
 def limitedIntegrateSingleBase
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P]
+    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P]
     [CFrac F P] [CFieldDomain ℚ P] [CLinearSolve ℚ]
     (a η : F ℚ) : Option (F ℚ × ℚ) :=
   let gnums := [CFrac.num a, CFrac.num η]

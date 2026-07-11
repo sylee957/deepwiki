@@ -45,19 +45,19 @@ theorem toBPoly_bdivC_exact_of_dvd (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc 
 
 /-- The `cgcdWfGcd` primitive part preserves denotation when content division is exact. -/
 theorem toPolyG_gbprimitivePartCore_cgcdWfGcd_exact (p : GBPolyCore ℚ)
-    (hg : ¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.compute p) = true)
-    (hgcn : cnorm (GBPolyCore.gbcontentCore CPolyGcd.compute p) ≠ [])
+    (hg : ¬ cisZero (GBPolyCore.gbcontentCore CPolyGcd.computeFn p) = true)
+    (hgcn : cnorm (GBPolyCore.gbcontentCore CPolyGcd.computeFn p) ≠ [])
     (hrem : ∀ a ∈ GBPolyCore.gbnormCore p,
-      toPoly (CPolyEuclidean.mod a (GBPolyCore.gbcontentCore CPolyGcd.compute p)) = 0) :
-    Polynomial.C (toPoly (GBPolyCore.gbcontentCore CPolyGcd.compute p))
+      toPoly (CPolyEuclidean.mod a (GBPolyCore.gbcontentCore CPolyGcd.computeFn p)) = 0) :
+    Polynomial.C (toPoly (GBPolyCore.gbcontentCore CPolyGcd.computeFn p))
         * DensePoly.toPoly
-          (GBPolyCore.gbprimitivePartCore CPolyGcd.compute p)
+          (GBPolyCore.gbprimitivePartCore CPolyGcd.computeFn p)
       = DensePoly.toPoly p := by
   rw [GBPolyCore.gbprimitivePartCore]
   simp only [GBPolyCore.gbcontentCore_gbnormCore, hg, Bool.false_eq_true, if_false]
   rw [GBPolyCore.toPolyG_gbnormCore,
     toBPoly_map_cdiv_exact (GBPolyCore.gbnormCore p)
-      (GBPolyCore.gbcontentCore CPolyGcd.compute p) hgcn hrem,
+      (GBPolyCore.gbcontentCore CPolyGcd.computeFn p) hgcn hrem,
     GBPolyCore.toPolyG_gbnormCore]
 
 /-! ### One subresultant-PRS step on the β-divided remainder -/
