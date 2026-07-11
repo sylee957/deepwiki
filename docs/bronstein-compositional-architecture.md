@@ -124,13 +124,20 @@ monomial stage contracts.
    complete residue-source theorem. `CompleteCResidueLogPart` and the composite Hermite-residue normal domain
    are now domain-parameterized; bounded candidate sweeps remain intentionally incomplete and must not acquire
    a universal-domain instance.
-2. Implement the concrete `CTangentSpecialBridge` and a relative-completeness contract for tangent normal
-   reduction. Soundness no longer depends on the low-degree Hermite theorem: `tangentNormalReduction`
+2. Implement the concrete recursive `CTangentSpecialIntegrator` and a relative-completeness contract for tangent
+   normal reduction. Bronstein's reduced hypertangent algorithm repeatedly strips a power of `t²+1`, calls the
+   coupled solver, subtracts the reconstructed derivative, and recurses; the former one-shot
+   `CTangentSpecialBridge` could not express this loop and has been retired. Soundness no longer depends on the
+   low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
-   bridge through the generic assembler. `sparseTangentRischLevel` transports the same composition through the
+   special integrator through the generic assembler. `sparseTangentRischLevel` transports the same composition through the
    sparse representation boundary. Both canonical compositions certificate-check every reassembled special
    fraction and are sound without solver or bridge laws; the former unchecked duplicate APIs have been retired.
-   Relative completeness remains after the concrete bridge is available.
+   The next prerequisite is to let the generic monomial special stage return a full `IntegralResult`: Bronstein's
+   hypertangent polynomial reduction may emit a constant multiple of `log(t²+1)`, which the current rational-pair
+   result cannot represent. The LRT primitive path should retain a separate rational-only special interface rather
+   than constraining the generic Figure-5.1 assembler. Relative completeness follows only after that result-shape
+   migration and the concrete recursive integrator are available.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and
