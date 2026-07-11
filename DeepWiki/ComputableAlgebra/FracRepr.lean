@@ -1,4 +1,4 @@
-import DeepWiki.ComputableAlgebra.PolyEngine
+import DeepWiki.ComputableAlgebra.PolyEngineCore
 
 /-! # Representation-independent computable fractions
 

@@ -1,3 +1,4 @@
+import DeepWiki.ComputableAlgebra.PolyEngineCore
 import DeepWiki.ComputableAlgebra.PolyReprBridge
 import DeepWiki.ComputableAlgebra.PolyReprSparse
 
@@ -18,37 +19,6 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 universe u v
-
-/-- The Prop-free polynomial-engine operations supplied by a concrete representation. -/
-class CPolyEngine (P : Type u → Type u) where
-  /-- Addition. -/
-  add : {α : Type u} → [CCommRing α] → P α → P α → P α
-  /-- Multiplication. -/
-  mul : {α : Type u} → [CCommRing α] → P α → P α → P α
-  /-- Negation. -/
-  neg : {α : Type u} → [CCommRing α] → P α → P α
-  /-- Monomial construction. -/
-  monomial : {α : Type u} → [CCommRing α] → α → ℕ → P α
-  /-- Enumerate the represented coefficients from degree zero through the representation bound. -/
-  coeffList : {α : Type u} → [CCommRing α] → P α → List α
-  /-- Build a polynomial representation from a low-to-high coefficient list. -/
-  ofCoeffList : {α : Type u} → [CCommRing α] → List α → P α
-  /-- Apply a coefficient function without changing the represented degree bound. -/
-  mapCoeffs : {α : Type u} → [CCommRing α] → (α → α) → P α → P α
-  /-- Formal derivative. -/
-  deriv : {α : Type u} → [CField α] → P α → P α
-  /-- Scalar multiplication. -/
-  scale : {α : Type u} → [CCommRing α] → α → P α → P α
-  /-- Trailing-zero-free canonical form. -/
-  cnorm : {α : Type u} → [CCommRing α] → P α → P α
-  /-- Zero test. -/
-  cisZero : {α : Type u} → [CCommRing α] → P α → Bool
-  /-- Honest degree. -/
-  cdeg : {α : Type u} → [CCommRing α] → P α → ℕ
-  /-- Leading coefficient. -/
-  clead : {α : Type u} → [CCommRing α] → P α → α
-  /-- Evaluation at a coefficient-ring value. -/
-  eval : {α : Type u} → [CCommRing α] → P α → α → α
 
 /-- Denotation laws for a `CPolyEngine`, separated from its computable operations. -/
 class LawfulCPolyEngine (P : Type u → Type u) [CPoly P] [CPolyEngine P] : Prop where

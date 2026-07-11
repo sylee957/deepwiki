@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.FracRepr
+import DeepWiki.ComputableAlgebra.PolyEngine
 
 /-! # Sparse computable-fraction representation
 
