@@ -4,6 +4,7 @@ import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.CheckIdentityCorrect
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.Assemble
+import DeepWiki.SymbolicIntegration.Engine.RecursiveCoefficient
 import DeepWiki.ComputableAlgebra.PolyAntiderivative
 
 /-! # Base single-`w` limited integration
@@ -196,6 +197,58 @@ def cIntegratePrimPolyDegRaise {P : Type u → Type u} [CPoly P] [CPolyEngine P]
           (CPolyEngine.sub p
             (CPolyEngine.monomialDeriv (CPolyEngine.monomial (P := P) η 0) q0))).map fun qr =>
           CPolyEngine.add qr q0
+
+/-- Explicit closure domain for degree-raising primitive-polynomial integration. -/
+def PrimitivePolynomialDomain {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
+    (η : α) (limitedDomain : LimitedCoefficientDomain (α := α)) : ℕ → P α → Prop
+  | 0, p => CPolyEngine.cisZero p = true
+  | fuel + 1, p => CPolyEngine.cisZero p = true ∨
+      (limitedDomain η (CPolyEngine.clead p) ∧
+        IsLimitedCoefficientIntegrable η (CPolyEngine.clead p) ∧
+        ∀ b r, IsLimitedCoefficientResult η (CPolyEngine.clead p) b r →
+          let q0 := CPolyEngine.add
+            (CPolyEngine.monomial (P := P)
+              (CField.div r (CField.natCast (CPolyEngine.cdeg p + 1))) (CPolyEngine.cdeg p + 1))
+            (CPolyEngine.monomial (P := P) b (CPolyEngine.cdeg p))
+          PrimitivePolynomialDomain η limitedDomain fuel
+            (CPolyEngine.sub p
+              (CPolyEngine.monomialDeriv (CPolyEngine.monomial (P := P) η 0) q0)))
+
+/-- Limited-coefficient completeness makes degree-raising integration complete on its closure domain. -/
+theorem cIntegratePrimPolyDegRaise_complete {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
+    (η : α) (I : CRecursiveCoefficientIntegrator α)
+    (limitedDomain : LimitedCoefficientDomain (α := α))
+    [LawfulCLimitedCoefficientIntegrator I]
+    [CompleteCLimitedCoefficientIntegrator I limitedDomain] :
+    ∀ (fuel : ℕ) (p : P α), PrimitivePolynomialDomain η limitedDomain fuel p →
+      ∃ q, cIntegratePrimPolyDegRaise η (fun c => I.limitedIntegrate η c) fuel p = some q := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro p hdomain
+      change CPolyEngine.cisZero p = true at hdomain
+      refine ⟨CPoly.czero, ?_⟩
+      simp only [cIntegratePrimPolyDegRaise, hdomain, if_true]
+  | succ fuel ih =>
+      intro p hdomain
+      by_cases hzero : CPolyEngine.cisZero p = true
+      · refine ⟨CPoly.czero, ?_⟩
+        simp only [cIntegratePrimPolyDegRaise, hzero, if_true]
+      · obtain ⟨hadmissible, hintegrable, hclosed⟩ := hdomain.resolve_left hzero
+        obtain ⟨b, r, hrun, hresult⟩ :=
+          CompleteCLimitedCoefficientIntegrator.limited_complete (C := I)
+            (domain := limitedDomain) η (CPolyEngine.clead p) hadmissible hintegrable
+        let q0 := CPolyEngine.add
+          (CPolyEngine.monomial (P := P)
+            (CField.div r (CField.natCast (CPolyEngine.cdeg p + 1))) (CPolyEngine.cdeg p + 1))
+          (CPolyEngine.monomial (P := P) b (CPolyEngine.cdeg p))
+        obtain ⟨qr, hrec⟩ := ih _ (hclosed b r hresult)
+        refine ⟨CPolyEngine.add qr q0, ?_⟩
+        simp only [cIntegratePrimPolyDegRaise, hzero, hrun, Option.bind_some,
+          q0, hrec, Option.map_some]
+        simp
 
 /-- **Soundness of the degree-raising primitive-polynomial integrator** — `D_tower(q) = p`. Denotationally,
 `implicitDeriv (C ⟦η⟧) (toPoly q) = toPoly p`. The identity **telescopes**: each step forms `q₀`, recurses on

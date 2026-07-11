@@ -378,6 +378,45 @@ instance instLawfulCRecursiveMonomialCaseTowerPrimitiveLrt :
       exact LawfulCMonomialCase.postprocessNormal_den_nonzero (C := primitiveGuardedCase) Dt
         before after hden hrun
 
+/-- Domain where the recursive primitive special stage's guards hold and degree raising is closed. -/
+def towerPrimitiveRecursiveSpecialDomainLrt
+    (limitedDomain : LimitedCoefficientDomain (α := DenseFrac β)) :
+    MonomialSpecialDomain DensePoly (DenseFrac β) :=
+  fun Dt fp b _ds => cisZero b = true ∧ cisZero (csub Dt [CCommRing.one]) = true ∧
+    PrimitivePolynomialDomain CCommRing.one limitedDomain (cdeg fp + 2) fp
+
+/-- The recursive primitive monomial stage is complete on its explicit degree-raising closure domain. -/
+instance instCompleteCRecursiveMonomialCaseTowerPrimitiveLrt
+    (recursiveDomain : RecursiveCoefficientDomain (α := DenseFrac β))
+    (limitedDomain : LimitedCoefficientDomain (α := DenseFrac β)) :
+    CompleteCRecursiveMonomialCase (towerPrimitiveRecursiveMonomialCaseLrt (β := β))
+      recursiveDomain limitedDomain (towerPrimitiveRecursiveSpecialDomainLrt limitedDomain) where
+  complete I := by
+    intro _ _ _
+    constructor
+    · intro Dt fp b ds snum sden hdomain _hsden _hderiv
+      obtain ⟨hb, hDt, hpoly⟩ := hdomain
+      obtain ⟨qp, hqp⟩ := cIntegratePrimPolyDegRaise_complete
+        CCommRing.one I limitedDomain (cdeg fp + 2) fp hpoly
+      refine ⟨(qp, [CCommRing.one]), ?_⟩
+      simp only [CRecursiveMonomialCase.withCoefficient, towerPrimitiveRecursiveMonomialCaseLrt]
+      rw [hb, hDt]
+      simp only [Bool.true_and, if_true]
+      change (match recursiveTowerPolyIntegrateLrt I CCommRing.one fp with
+        | none => none
+        | some qp => some (qp, [CCommRing.one])) = some (qp, [CCommRing.one])
+      rw [recursiveTowerPolyIntegrateLrt,
+        show CPolyEngine.cdeg fp = cdeg fp from rfl, hqp]
+    · intro Dt cn dn before hbefore
+      refine ⟨before, ?_⟩
+      simp only [CRecursiveMonomialCase.withCoefficient, towerPrimitiveRecursiveMonomialCaseLrt,
+        primitiveGuardedCase]
+      rw [if_pos]
+      exact List.all_eq_true.mpr fun cv hcv => by
+        rw [cisZeroG_iff]
+        simp only [denote, mul_zero, add_zero]
+        rw [hbefore.coefficients_constant cv hcv, map_zero]
+
 /-- The LRT tower step operation: `CRischLevelLrt (DenseFrac β)` from a below-level operation and contract
 and this level's reduced LRT frontier `[PrimitiveFrontierLrt (DenseFrac β)]`.
 With the base (`instCRischLevelLrtPrimitive`) the LRT solver resolves at every tower depth by recursion:

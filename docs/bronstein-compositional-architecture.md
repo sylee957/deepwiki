@@ -109,7 +109,7 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 | Euclidean division | `CPolyEuclidean` | `LawfulCPolyEuclidean` | `ComputableAlgebra/PolyEuclidean.lean` |
 | Squarefree Yun | `CPolySquarefree` | `LawfulCPolySquarefree` | `ComputableAlgebra/PolySquarefree.lean`, semantic law in `Engine/SquarefreeDecomposition.lean` |
 | Resultant | `CPolyResultant` | `LawfulCPolyResultant` | `ComputableAlgebra/PolyResultant.lean` |
-| Subresultant | `CPolySubresultant` | `LawfulCPolySubresultant` | `ComputableAlgebra/PolySubresultant*.lean`, certification still in `Engine/SubresultantSpec.lean` |
+| Subresultant | `CPolySubresultant` | `LawfulCPolySubresultant` | `ComputableAlgebra/PolySubresultant*.lean` |
 | Interpolation | `CPolyInterpolate` | `LawfulCPolyInterpolate` | `ComputableAlgebra/PolyInterpolate.lean` |
 | Linear solve | `CLinearSolve` | `LawfulCLinearSolve` | `ComputableAlgebra/LinearAlgebra.lean` |
 | Residue candidates | `CResidueSource` | `LawfulCResidueSource` | `Engine/ResidueSource.lean` |
@@ -144,13 +144,15 @@ monomial stage contracts.
    `lawfulDenseLrtTower` builder selects a `CRischLevelLrt` and its `LawfulCRischLevelLrt` contract by induction
    from a per-level leaf/frontier capability family, and its theorems give soundness and the explicit-domain
    success equivalence uniformly at every depth.
-   Full monomial completeness still requires proving that this domain covers every coefficient pair generated
-   by the stage; that mathematical constant-descent/search theorem remains open.
+   `PrimitivePolynomialDomain` now states closure of every generated degree-raising residual under the selected
+   limited domain; `cIntegratePrimPolyDegRaise_complete` and the recursive primitive monomial instance compose
+   that closure into executable success. Full semantic completeness still requires proving that every genuinely
+   integrable primitive polynomial satisfies this closure predicate; that mathematical constant-descent theorem
+   remains open.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
-5. Move the squarefree contract and the executable subresultant certification to the leaf boundary.
-   `PolySubresultantSpec.lean` now colocates the abstract Sylvester specification with the executable
-   subresultant; the remaining subresultant task is moving its `LawfulCPolySubresultant` certification out of
-   the engine. Sparse Yun is already a lawful squarefree-stage realization.
+5. Move the squarefree contract to the leaf boundary. The abstract Sylvester specification, determinant
+   bridge, and `LawfulCPolySubresultant` certification now all live with the executable subresultant;
+   sparse Yun is already a lawful squarefree-stage realization.
 
 ## Visibility policy
 
