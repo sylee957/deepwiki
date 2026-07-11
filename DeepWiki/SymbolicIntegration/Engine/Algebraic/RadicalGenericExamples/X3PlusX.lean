@@ -47,7 +47,7 @@ instance fact_irreducible_radX3pX :
 abbrev RadX3pX : Type := RadExt (DenseFrac ℚ) 2 radicandX3pX
 
 /-- **`CFieldDomain RadX3pX` — discharged generically.** -/
-noncomputable example : CFieldDomain RadX3pX := inferInstance
+noncomputable example : CFieldDomain RadX3pX DensePoly := inferInstance
 
 /-- **The mixed tower over `√(x³+x)` is a `CField`**. -/
 theorem cfield_qfunNZG_radX3pX : Nonempty (CField (DenseFrac RadX3pX)) := ⟨inferInstance⟩

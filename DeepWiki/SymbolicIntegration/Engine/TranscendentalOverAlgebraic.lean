@@ -603,7 +603,7 @@ noncomputable instance instCFieldSpecRadExt {α : Type*} [CField α] [CFieldDoma
 `CFieldDomain RadX3` resolves concretely (no hypothesis), so `DenseFrac RadX3 ≅ ℚ(x)[√(x³+1)](t)` is an
 unconditional `CField` and `CDiffField`. -/
 
-noncomputable example : CFieldDomain RadX3 := inferInstance
+noncomputable example : CFieldDomain RadX3 DensePoly := inferInstance
 
 /-- `DenseFrac RadX3` has an unconditional computable-field structure. -/
 theorem cfield_qfunNZG_radX3_unconditional : Nonempty (CField (DenseFrac RadX3)) := ⟨inferInstance⟩

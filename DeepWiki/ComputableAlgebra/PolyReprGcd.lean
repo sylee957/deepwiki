@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
+import DeepWiki.ComputableAlgebra.PolyReprDense
 
 /-! # Representation-independent polynomial gcd capability
 

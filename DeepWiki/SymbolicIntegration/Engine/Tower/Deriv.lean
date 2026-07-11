@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
+import DeepWiki.ComputableAlgebra.FracReprSparse
 
 /-! # A computable derivation on represented fraction towers
 `towerDerivCFracWith Dt` is the quotient-rule derivation for any `CFrac F P`, and

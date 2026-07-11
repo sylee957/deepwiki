@@ -47,7 +47,7 @@ instance fact_irreducible_radX5mXm1 :
 abbrev RadX5 : Type := RadExt (DenseFrac ℚ) 2 radicandX5mXm1
 
 /-- **`CFieldDomain RadX5` — discharged generically.** -/
-noncomputable example : CFieldDomain RadX5 := inferInstance
+noncomputable example : CFieldDomain RadX5 DensePoly := inferInstance
 
 /-- **The mixed tower over `√(x⁵−x−1)` is a `CField`** — resolves automatically from the generic radical
 base. -/

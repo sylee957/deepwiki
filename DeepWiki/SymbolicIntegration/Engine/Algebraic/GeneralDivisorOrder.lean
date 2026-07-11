@@ -47,7 +47,7 @@ def canonHNFEq (I J : GenDivisor) : Bool :=
   let scale : DensePoly ℚ → GenDivisor → PolyMatrix DensePoly ℚ := fun c K =>
     let cc := cnorm c
     K.map (fun row => row.map (fun z =>
-      let zz := qReduceNZ z
+      let zz := CFrac.reduceMonic z
       let num := zz.num
       let den := cnorm zz.den
       CPolyEuclidean.div (cmul cc num) den))
@@ -80,7 +80,8 @@ def idealReduce (_f : DensePoly (DenseFrac ℚ)) (_basis : List (DensePoly (Dens
   -- read back as the fractional ideal (1/δ)·Ĥ, then reduce every entry to lowest terms (`qReduceMat`,
   -- value-preserving via `toRatFunc_qReduce`) so the reduced representative carries no swollen factors
   qReduceMat (H.map (fun row => row.map (fun p =>
-    if h : cisZero dd = false then qReduceNZ (CFrac.ofFraction p dd h) else CFrac.ofPoly p)))
+    if h : cisZero dd = false then CFrac.reduceMonic (CFrac.ofFraction p dd h)
+    else CFrac.ofPoly p)))
 
 /-! ### Principality: is the ideal `g·O`? (`genCandidates`, `isPrincipalIdeal`) -/
 

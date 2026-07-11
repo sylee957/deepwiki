@@ -51,7 +51,7 @@ abbrev RadX3m2 : Type := RadExt (DenseFrac ℚ) 2 radicandX3m2
 /-- **`CFieldDomain RadX3m2` — discharged generically** (no bespoke work): from `instCFieldSpecRadExt`
 (with `fact_irreducible_radX3m2`) via the global `instCFieldDomainOfCFieldSpec`. The carrier
 `RadExt (DenseFrac ℚ) 2 (x³−2)` is a genuine field/domain. -/
-noncomputable example : CFieldDomain RadX3m2 := inferInstance
+noncomputable example : CFieldDomain RadX3m2 DensePoly := inferInstance
 
 /-- **The mixed tower over `√(x³−2)` is a `CField`** — `DenseFrac RadX3m2 ≅ ℚ(x)[√(x³−2)](t)` resolves its
 `CField` *automatically* (the keystone `instCFieldCFrac` over the generic `CField`/`CFieldDomain`

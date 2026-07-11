@@ -18,27 +18,11 @@ namespace DensePoly
 
 variable {α : Type*} [CField α]
 
-/-! ### Reducing `DenseFrac ℚ` fractions to monic-denominator lowest terms (`qReduceNZ`)
+/-! ### Reducing order entries to monic-denominator lowest terms -/
 
-`DenseFrac ℚ ≅ ℚ(x)` is an unreduced fraction `num/den`; `qReduceNZ` cancels the common factor
-(via the shared fuel-free reducer) and normalizes the denominator to monic — the canonical form
-the iteration applies after each enlargement. -/
-
-/-- Reduce a `ℚ(x)` element to lowest terms with a monic denominator: `qReduceNZ z = (num/g)/(den/g)`
-scaled so the denominator is monic (`g = gcd(num, den)`; a zero denominator falls back to the input). -/
-def qReduceNZ (z : DenseFrac ℚ) : DenseFrac ℚ :=
-  let num1 := CFrac.reduceNum z
-  let den1 := cnorm (CFrac.reduceDen z)
-  if cisZero den1 then z
-  else
-    let c := CField.inv (clead den1)
-    let num2 := cscale c num1
-    let den2 := cscale c den1
-    if h : cisZero den2 = false then CFrac.ofFraction num2 den2 h else z
-
-/-- Reduce every `ℚ(x)` entry of an order basis to lowest terms (`qReduceNZ` entrywise). -/
+/-- Reduce every `ℚ(x)` entry of an order basis to monic-denominator lowest terms. -/
 def reduceOrder (O : List (DensePoly (DenseFrac ℚ))) : List (DensePoly (DenseFrac ℚ)) :=
-  O.map (fun row => row.map qReduceNZ)
+  O.map (fun row => row.map CFrac.reduceMonic)
 
 /-! ### The p-trace-radical of an order, in the order's coordinates (`ipOCoords`)
 
@@ -84,12 +68,11 @@ def toOCoords (Binv : List (List (DenseFrac ℚ))) (n : ℕ) (z : DensePoly (Den
       CCommRing.add acc (CCommRing.mul ((Binv.getD r []).getD c CCommRing.zero) (z.getD c CCommRing.zero)))
       CCommRing.zero)
 
-/-- The common denominator of a `K(x)`-matrix `commonDenom M`: the product of the distinct reduced
-entry denominators (each `qReduceNZ`-reduced, monic, skipping `1`). -/
+/-- The common denominator of a `K(x)`-matrix: the product of its distinct reduced nonunit denominators. -/
 def commonDenom (M : List (List (DenseFrac ℚ))) : DensePoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
-      let den := cnorm (qReduceNZ z).den
+      let den := cnorm (CFrac.reduceMonic z).den
       if cisZero den || cisZero (csub den [CCommRing.one]) then a else cmul a den)
       acc) [CCommRing.one]
 
@@ -97,7 +80,7 @@ def commonDenom (M : List (List (DenseFrac ℚ))) : DensePoly ℚ :=
 via selected exact polynomial division (valid since `denᵢ | δ`), giving the integral row `δ·row`. -/
 def clearRowExact (δ : DensePoly ℚ) (row : List (DenseFrac ℚ)) : List (DensePoly ℚ) :=
   row.map (fun z =>
-    let zz := qReduceNZ z
+    let zz := CFrac.reduceMonic z
     let num := zz.num
     let den := cnorm zz.den
     CPolyEuclidean.div (cmul δ num) den)
@@ -363,7 +346,7 @@ Each validation carries the standard `[propext, Classical.choice, Quot.sound]` p
 compiler axiom — **no `sorry`, no `sorryAx`, no extra axiom** (the iteration `integralBasisLoop` is `ℕ`-fuel
 structural recursion; `round2Pass`/`round2StepOrderAt`/`ipOCoords`/`idealizerOCoords` are non-recursive
 compositions over finite-list kernels; `CLinearSolve.nullspaceBasis`/`matInv`/`hermiteRowReduce` fold over finite
-`List.range`s, while exact division and fraction cancellation use selected Euclidean division and `qReduceNZ`).
+`List.range`s, while exact division and fraction cancellation use the selected abstract algorithms).
 **The engine now computes the FULL general-curve integral basis** —
 iterating the Ford–Zassenhaus Round-2 step to the maximal order: for the cusp `y² − x³` and node
 `y² − x²(x+1)` it returns `[1, y/x]` in one step (`cusp_integralBasis_eq`, `node_integralBasis_eq`); for the

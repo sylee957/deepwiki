@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.Fraction
+import DeepWiki.ComputableAlgebra.FracReprDense
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 
 /-! # The level-2 tower carrier `Lvl2 = DenseFrac (DenseFrac ℚ) ≅ ℚ(x)(t₁)`

@@ -97,7 +97,8 @@ def idealProduct (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dense
       (List.range n).map (fun j =>
         let num := (nz.getD i []).getD j []
         let dd := cnorm δ
-        if h : cisZero dd = false then qReduceNZ (CFrac.ofFraction num dd h) else CCommRing.zero)))
+        if h : cisZero dd = false then CFrac.reduceMonic (CFrac.ofFraction num dd h)
+        else CCommRing.zero)))
 
 /-! ### Normalization / equality of fractional ideals (`idealHNF`, `idealEq`, `idealIsIntegral`) -/
 
@@ -117,7 +118,7 @@ def idealEq (I J : GenDivisor) : Bool :=
   let scale : DensePoly ℚ → GenDivisor → PolyMatrix DensePoly ℚ := fun c K =>
     let cc := cnorm c
     K.map (fun row => row.map (fun z =>
-      let zz := qReduceNZ z
+      let zz := CFrac.reduceMonic z
       let num := zz.num
       let den := cnorm zz.den
       CPolyEuclidean.div (cmul cc num) den))
@@ -135,7 +136,7 @@ def idealEq (I J : GenDivisor) : Bool :=
 denominator `1` (i.e. `I ⊆ O`). -/
 def idealIsIntegral (I : GenDivisor) : Bool :=
   I.all (fun row => row.all (fun z =>
-    let zz := qReduceNZ z
+    let zz := CFrac.reduceMonic z
     cisZero (csub (cnorm zz.den) [CCommRing.one])))
 
 end DensePoly
