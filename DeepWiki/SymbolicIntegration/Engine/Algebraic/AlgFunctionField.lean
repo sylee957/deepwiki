@@ -49,7 +49,7 @@ polynomial capabilities. -/
 def discriminant
     {F : (α : Type) → [CField α] → Type} {X Y : Type → Type}
     [CPoly X] [CPolyEngine X] [CPolyGcd X ℚ] [CPolyEuclidean X]
-    [CFrac F X] [CFieldDomain ℚ X]
+    [CFrac F X] [LawfulCFrac F X] [CFieldDomain ℚ X]
     [CPoly Y] [CPolyEngine Y] [CPolyEuclidean Y]
     (f : Y (F ℚ)) : F ℚ :=
   qfDet (CPoly.traceMatrix f (CPoly.powerBasis f))

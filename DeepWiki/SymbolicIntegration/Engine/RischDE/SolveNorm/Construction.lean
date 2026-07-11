@@ -17,7 +17,7 @@ universe u
 section Helpers
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 variable {β : Type u} [CField β] [CDiffField β] [CFieldDomain β P]
 
 /-- `weakNormalizedF f q' = f − Dq'/q'` for a represented fraction field. -/
@@ -29,7 +29,7 @@ end Helpers
 section Normality
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 variable {β : Type u} [CField β] [CFieldSpec β] [CDiffField β] [CPolySplitFactor P β]
 
 /-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its selected differential normal part. -/
