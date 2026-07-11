@@ -120,6 +120,19 @@ theorem cdeg_eq_natDegree (p : P α) : cdeg p = (toPoly p).natDegree := by
   · apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
     intro m hm; rw [coeff_toPoly]; exact toR_coeff_gt_cdeg p m hm
 
+/-- A nonzero represented polynomial's honest degree is strictly below its representation bound. -/
+theorem cdeg_lt_degBound_of_toPoly_ne_zero (p : P α) (hp : toPoly p ≠ 0) :
+    cdeg p < degBound p := by
+  have hsupport : support p ≠ [] := by
+    intro hnil
+    apply hp
+    rw [← cisZero_iff]
+    simp [cisZero, hnil]
+  have hmem : cdeg p ∈ support p := by
+    simpa only [cdeg] using foldr_max_mem (support p) hsupport
+  rw [support, List.mem_filter] at hmem
+  exact List.mem_range.mp hmem.1
+
 /-- **`clead` denotes the `leadingCoeff`:** `toR (clead p) = (toPoly p).leadingCoeff`. -/
 theorem toR_clead_eq_leadingCoeff (p : P α) :
     CRingSpec.toR (clead p) = (toPoly p).leadingCoeff := by
