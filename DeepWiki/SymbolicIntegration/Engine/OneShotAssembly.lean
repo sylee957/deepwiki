@@ -777,7 +777,8 @@ example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
 for a primitive monomial, if the fuel-free full driver returns `some res` on the pure-normal branch, then the
 reduced fuel-free primitive identity and the fuel-free canonical reconstruction prove
 `D(res) + logResidueSum Dt res.logs = a/d` with no engine `checkIdentity` certificate and no runtime fuel. -/
-theorem cIntegrateGFullWf_primitive_oneShot [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α)
+theorem cIntegrateGFullWf_primitive_oneShot [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] (Dt : DensePoly α) (a d : DensePoly α)
     (cands : List α) (res : IntegralResult α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (hDt : toPoly Dt = C w)
     (hbranch : IsPureNormalBranch Dt a d)
@@ -830,7 +831,8 @@ theorem cIntegrateGFullWf_primitive_oneShot [CFracGcdCoreWf α] (Dt : DensePoly 
     (canonicalRepresentationFast Dt a d).2.2.2 cands s w hDt hherm hden hA hnorm hform]
   exact hrecon
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (res : IntegralResult α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (hDt : toPoly Dt = C w)
     (hb : DensePoly.cisZero (canonicalRepresentationFast Dt a d).2.1.1 = true)
@@ -935,7 +937,8 @@ example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
 
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf`, a-priori soundness** — the `…Wf`
 one-shot using the fuel-free poly-RDE oracle, reduced capstone, and canonical split. -/
-theorem cIntegrateGFullWf_poly_oneShot [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α)
+theorem cIntegrateGFullWf_poly_oneShot [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] (Dt : DensePoly α) (a d : DensePoly α)
     (cands : List α) (res : IntegralResult α) (qp : DensePoly α)
     (hbranch : IsPolynomialBranch Dt a d)
     (hsome : DensePoly.cIntegrateGFullWf Dt a d cands = some res)
@@ -987,7 +990,8 @@ theorem cIntegrateGFullWf_poly_oneShot [CFracGcdCoreWf α] (Dt : DensePoly α) (
   rw [hnewrat, map_add, hpoly]
   rw [add_assoc, hnormal, hrecon]
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (res : IntegralResult α) (qp : DensePoly α)
     (hb : DensePoly.cisZero (canonicalRepresentationFast Dt a d).2.1.1 = true)
     (hfp : DensePoly.cisZero (canonicalRepresentationFast Dt a d).1 = false)
@@ -1029,7 +1033,8 @@ example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : Li
 
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf` with `hpoly` discharged
 (primitive base).** -/
-theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
+theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
     (a d : DensePoly α) (cands : List α) (res : IntegralResult α) (qp : DensePoly α)
     (hbranch : IsPolynomialBranch ([CCommRing.one] : DensePoly α) a d)
     (hsome : DensePoly.cIntegrateGFullWf ([CCommRing.one] : DensePoly α) a d cands = some res)
@@ -1101,7 +1106,8 @@ larger soundness task), whose success encodes `∫R` solvability, NOT `∑c = 0`
 GATED on `∑c = 0`** — it pins the fuel-free driver output to `cIntegrateReduced`, applies
 `field_identity_of_cIntegrateReducedG_hyperexp`, and closes
 with the fuel-free canonical reconstruction. -/
-theorem cIntegrateGFullWf_hyperexp_oneShot [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α)
+theorem cIntegrateGFullWf_hyperexp_oneShot [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] (Dt : DensePoly α) (a d : DensePoly α)
     (cands : List α) (res : IntegralResult α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
     (hb : b ≠ 0) (hDt : toPoly Dt = C b * X)
     (hbranch : IsPureNormalBranch Dt a d)
@@ -1158,7 +1164,8 @@ theorem cIntegrateGFullWf_hyperexp_oneShot [CFracGcdCoreWf α] (Dt : DensePoly �
     (canonicalRepresentationFast Dt a d).2.2.2 cands s b hb hDt hherm hden hA hnorm hsum hform]
   exact hrecon
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (res : IntegralResult α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
     (hb : b ≠ 0) (hDt : toPoly Dt = C b * X)
     (hbz : DensePoly.cisZero (canonicalRepresentationFast Dt a d).2.1.1 = true)

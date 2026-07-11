@@ -84,6 +84,9 @@ denotations does not make those terms definitionally equal.
   and the reduced residue-log/field-identity composition layer consequently require only the selected
   squarefree, gcd, and resultant capabilities; the full Wf driver theorems remain concrete because they
   certify that particular runtime output.
+- The primitive, polynomial, and hyperexponential one-shot theorems for `cIntegrateGFullWf` are likewise
+  selected-operation compositions. Their former `CFracGcdCoreWf` bounds were obsolete umbrellas and have
+  been replaced by the gcd, split-factor, squarefree, and resultant capabilities appearing in the driver.
 - The Round-2 integral-basis pipeline now threads `[CLinearSolve ℚ]` from `pTraceRadical` and
   `ipOCoords` through `round2Step`, the pass/iteration loop, and `integralBasis`. Fixed `ℚ` coefficients
   no longer cause Lean to hardcode the global nullspace implementation into these executable drivers.
