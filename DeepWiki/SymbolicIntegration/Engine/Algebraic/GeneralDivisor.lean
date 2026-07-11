@@ -51,7 +51,7 @@ example :
 /-! ### `div(g) = g·O`: the principal divisor (`principalDivisor`) -/
 
 /-- The principal divisor `principalDivisor f basis g = div(g) = g·O`: row `i` is the `[w]`-coordinates
-of `g·wᵢ = afMul f g wᵢ` (via `B⁻¹`); empty matrix if `B` is singular. -/
+of `g·wᵢ = CPoly.mulMod f g wᵢ` (via `B⁻¹`); empty matrix if `B` is singular. -/
 def principalDivisor (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (g : DensePoly (DenseFrac ℚ)) : GenDivisor :=
   let n := cdeg f
@@ -59,7 +59,7 @@ def principalDivisor (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (D
   match matInv n B with
   | none => []
   | some Binv =>
-    basis.map (fun wi => toOCoords Binv n (afMul f g wi))
+    basis.map (fun wi => toOCoords Binv n (CPoly.mulMod f g wi))
 
 /-! ### Clearing a fractional ideal to an integral `K[x]`-matrix at a common denominator (`idealClear`) -/
 
@@ -86,7 +86,7 @@ def idealProduct (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dense
     let cross : List (List (DenseFrac ℚ)) :=
       qReduceMat (I.flatMap (fun gi =>
         J.map (fun gk =>
-          toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk)))))
+          toOCoords Binv n (CPoly.mulMod f (wToAf basis gi) (wToAf basis gk)))))
     -- clear to K[x] at a common denom δ, Hermite-reduce, take the n nonzero rows
     let δ : DensePoly ℚ := commonDenom cross
     let N : PolyMatrix DensePoly ℚ := cross.map (clearRowExact δ)

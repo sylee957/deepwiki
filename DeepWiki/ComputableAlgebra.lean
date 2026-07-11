@@ -16,6 +16,7 @@ import DeepWiki.ComputableAlgebra.PolyReprResultantCoprime
 import DeepWiki.ComputableAlgebra.PolyResultant
 import DeepWiki.ComputableAlgebra.PolyEuclidean
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
+import DeepWiki.ComputableAlgebra.PolyQuotient
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.FracRepr

@@ -28,21 +28,24 @@ def IsGeneralRationalIntegralWf (f g v : DensePoly α) : Prop :=
 
 /-- The generator identity `D(y) = y'` in the quotient. -/
 theorem mk_toPolyG_afDerivWf_genGen (f : DensePoly α) (hf : cnorm f ≠ []) :
-    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (afBasisElem 1)))
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (CPoly.afBasisElem 1)))
       = Ideal.Quotient.mk (afIdeal f) (toPoly (afYprimeWf f)) := by
-  rw [mk_toPolyG_afDerivWf f _ hf, toPolyG_afBasisElem_one, Differential.implicitDeriv_X]
+  have hy : toPoly (CPoly.afBasisElem 1 : DensePoly α) = X := by
+    simpa only [toPoly_list_eq] using
+      (CPoly.toPoly_afBasisElem_one (P := DensePoly) (α := α))
+  rw [mk_toPolyG_afDerivWf f _ hf, hy, Differential.implicitDeriv_X]
 
 /-- The generator identity packaged as `IsGeneralRationalIntegralWf`. -/
 theorem isGeneralRationalIntegralWf_gen (f : DensePoly α) (hf : cnorm f ≠ []) :
-    IsGeneralRationalIntegralWf f (afYprimeWf f) (afBasisElem 1) :=
+    IsGeneralRationalIntegralWf f (afYprimeWf f) (CPoly.afBasisElem 1) :=
   mk_toPolyG_afDerivWf_genGen f hf
 
 omit [CDiffFieldSpec α] in
 /-- `afDerivWf` kills the seed `[]` modulo the curve ideal. -/
 theorem mk_toPolyG_afDerivWf_nil (f : DensePoly α) (hf : cnorm f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f ([] : DensePoly α))) = 0 := by
-  rw [show afDerivWf f ([] : DensePoly α) = afReduce f ([] : DensePoly α) from rfl,
-    mk_toPolyG_afReduce f _ hf, toPolyG_nil, map_zero]
+  rw [show afDerivWf f ([] : DensePoly α) = CPoly.reduceMod f ([] : DensePoly α) from rfl,
+    mk_toPoly_reduceMod f _ hf, toPolyG_nil, map_zero]
 
 /-- `afDerivWf` distributes over the accumulator fold in the quotient. -/
 theorem mk_toPolyG_afDerivWf_foldlCaddG (f : DensePoly α) (hf : cnorm f ≠ [])

@@ -25,8 +25,8 @@ def cubeRootComponentCurve : DensePoly (DenseFrac ℚ) := [CFrac.ofPoly [0, -1],
 /-- The cube-root component integral `F₂ = (3/4)·x·y`. -/
 def cubeRootComponentIntegral : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CFrac.ofPoly [0, 3/4]]
 
-/-- The integrand `y = [0, 1]` (`afBasisElem 1`) of `∫y dx`. -/
-def componentIntegrandY : DensePoly (DenseFrac ℚ) := afBasisElem 1
+/-- The integrand `y = [0, 1]` (`CPoly.afBasisElem 1`) of `∫y dx`. -/
+def componentIntegrandY : DensePoly (DenseFrac ℚ) := CPoly.afBasisElem 1
 
 /-- Component 1 (`native_decide`): `∫y dx = (2/3)·x·y` on `y² − x = 0`, checked by
 `cisZero (afDerivWf (y²−x) F₁ − y)`. -/

@@ -29,7 +29,7 @@ theorem gcusp_integralBasis_eq :
     (cisZero (csub ((integralBasis cuspF).getD 1 [])
           [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
       && cisZero (csub ((integralBasis cuspF).getD 0 []) [CCommRing.one])
-      && cisZero (csub (afMul cuspF ((integralBasis cuspF).getD 1 [])
+      && cisZero (csub (CPoly.mulMod cuspF ((integralBasis cuspF).getD 1 [])
             ((integralBasis cuspF).getD 1 [])) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
 
@@ -137,7 +137,7 @@ theorem cusp_intXY_driver_integrates :
 
 The reduction above is the decoupled (diagonal) hyperelliptic case, covering all `y² = ρ` curves. The
 non-diagonal general carrier (a coupled `n×n` congruence over `K(x)/(V)`, solved by Cramer's rule with
-the inputs `integralBasis f`, `afMul`/`trace`/`afReduce`, and the basis derivatives) and the simple-pole
+the inputs `integralBasis f`, `CPoly.mulMod`/`trace`/`CPoly.reduceMod`, and the basis derivatives) and the simple-pole
 residual feeding the logarithmic part for genus `> 0` (residues via `genResidueResultant` → divisors →
 torsion) are the continuations; the rational part here is complete for genus 0. -/
 

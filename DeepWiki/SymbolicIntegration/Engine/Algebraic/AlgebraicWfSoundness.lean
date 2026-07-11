@@ -69,12 +69,12 @@ theorem afIntegrateAlgebraicWf_isGeneralAlgebraicIntegralWf
     (cofs : List (DensePoly (DenseFrac ℚ)))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hrat : Ideal.Quotient.mk (afIdeal f)
-          (DensePoly.toPoly (afMul f (afDerivWf f p.1) commonDenomQ))
-        = Ideal.Quotient.mk (afIdeal f) (DensePoly.toPoly (afMul f ratPart commonDenomQ)))
+          (DensePoly.toPoly (CPoly.mulMod f (afDerivWf f p.1) commonDenomQ))
+        = Ideal.Quotient.mk (afIdeal f) (DensePoly.toPoly (CPoly.mulMod f ratPart commonDenomQ)))
     (hlog : DensePoly.IsGeneralLogIntegralWf f logPart commonDenomQ [(c, p.2)] cofs)
-    (hsplit : Ideal.Quotient.mk (afIdeal f) (DensePoly.toPoly (afMul f ratPart commonDenomQ))
-        + Ideal.Quotient.mk (afIdeal f) (DensePoly.toPoly (afMul f logPart commonDenomQ))
-      = Ideal.Quotient.mk (afIdeal f) (DensePoly.toPoly (afMul f g commonDenomQ))) :
+    (hsplit : Ideal.Quotient.mk (afIdeal f) (DensePoly.toPoly (CPoly.mulMod f ratPart commonDenomQ))
+        + Ideal.Quotient.mk (afIdeal f) (DensePoly.toPoly (CPoly.mulMod f logPart commonDenomQ))
+      = Ideal.Quotient.mk (afIdeal f) (DensePoly.toPoly (CPoly.mulMod f g commonDenomQ))) :
     DensePoly.IsGeneralAlgebraicIntegralWf f g
       ((afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand).get
         (by rw [hrun]; exact rfl)).1

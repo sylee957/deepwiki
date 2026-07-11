@@ -34,23 +34,23 @@ def IsGeneralLogTermWf (f u integrand : DensePoly α) : Prop :=
 omit [CDiffFieldSpec α] in
 /-- The engine log-derivative certificate as a `K[X]` equality. -/
 theorem toPolyG_afDerivWf_eq_of_logCert (f u integrand : DensePoly α)
-    (h : cisZero (csub (afDerivWf f u) (afMul f u integrand)) = true) :
-    toPoly (afDerivWf f u) = toPoly (afMul f u integrand) := by
+    (h : cisZero (csub (afDerivWf f u) (CPoly.mulMod f u integrand)) = true) :
+    toPoly (afDerivWf f u) = toPoly (CPoly.mulMod f u integrand) := by
   simpa [cisZeroG_iff, sub_eq_zero] using h
 
 omit [CDiffFieldSpec α] in
 /-- An engine log-derivative certificate implies the single-log predicate. -/
 theorem isGeneralLogTermWf_of_logCert (f u integrand : DensePoly α) (hf : cnorm f ≠ [])
-    (h : cisZero (csub (afDerivWf f u) (afMul f u integrand)) = true) :
+    (h : cisZero (csub (afDerivWf f u) (CPoly.mulMod f u integrand)) = true) :
     IsGeneralLogTermWf f u integrand := by
   rw [IsGeneralLogTermWf, toPolyG_afDerivWf_eq_of_logCert f u integrand h,
-    mk_toPolyG_afMul f u integrand hf]
+    mk_toPoly_mulMod f u integrand hf]
 
 /-- The two-term log-derivative numerator `c₁·D(u₁)·u₂ + c₂·D(u₂)·u₁`. -/
 def afLogSum2Wf (f : DensePoly α) (c₁ : α) (u₁ : DensePoly α) (c₂ : α) (u₂ : DensePoly α) :
     DensePoly α :=
-  cadd (afMul f (cscale c₁ (afDerivWf f u₁)) u₂)
-    (afMul f (cscale c₂ (afDerivWf f u₂)) u₁)
+  cadd (CPoly.mulMod f (cscale c₁ (afDerivWf f u₁)) u₂)
+    (CPoly.mulMod f (cscale c₂ (afDerivWf f u₂)) u₁)
 
 omit [CDiffFieldSpec α] in
 /-- Two log-derivative terms add in quotient form. -/
@@ -64,20 +64,20 @@ theorem mk_toPolyG_afLogSum2Wf (f : DensePoly α) (c₁ : α) (u₁ : DensePoly 
       * Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f u₂))
       * Ideal.Quotient.mk (afIdeal f) (toPoly u₁) := by
   rw [afLogSum2Wf]
-  simp only [denote, map_add, map_mul, mk_toPolyG_afMul _ _ _ hf]
+  simp only [denote, map_add, map_mul, mk_toPoly_mulMod _ _ _ hf]
 
 /-- The residue-sum numerator `Σ cᵢ·afDerivWf(uᵢ)·cofᵢ` over a cofactor list. -/
 def afLogSumNumWf (f : DensePoly α) (args : List (α × DensePoly α)) (cofs : List (DensePoly α)) :
     DensePoly α :=
   ((args.zip cofs).map (fun p =>
-    afMul f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)).foldl cadd ([] : DensePoly α)
+    CPoly.mulMod f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)).foldl cadd ([] : DensePoly α)
 
 /-- Multi-term log-soundness predicate: `Σ cᵢ·afDerivWf(uᵢ)/uᵢ = logpart` in the quotient,
 cross-multiplied by the common denominator. -/
 def IsGeneralLogIntegralWf (f logpart commonDenomQ : DensePoly α)
     (args : List (α × DensePoly α)) (cofs : List (DensePoly α)) : Prop :=
   Ideal.Quotient.mk (afIdeal f) (toPoly (afLogSumNumWf f args cofs))
-    = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f logpart commonDenomQ))
+    = Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f logpart commonDenomQ))
 
 omit [CDiffFieldSpec α] in
 /-- The residue-sum numerator of the empty log part is zero in the quotient. -/
@@ -93,10 +93,10 @@ theorem mk_toPolyG_afLogSumNumWf_eq_sum (f : DensePoly α) (args : List (α × D
     Ideal.Quotient.mk (afIdeal f) (toPoly (afLogSumNumWf f args cofs))
       = ((args.zip cofs).map (fun p =>
           Ideal.Quotient.mk (afIdeal f)
-            (toPoly (afMul f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)))).sum := by
+            (toPoly (CPoly.mulMod f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)))).sum := by
   rw [afLogSumNumWf]
   set terms := (args.zip cofs).map (fun p =>
-    afMul f (cscale p.1.1 (afDerivWf f p.1.2)) p.2) with hterms
+    CPoly.mulMod f (cscale p.1.1 (afDerivWf f p.1.2)) p.2) with hterms
   have hfold : ∀ (ts : List (DensePoly α)) (acc : DensePoly α),
       Ideal.Quotient.mk (afIdeal f) (toPoly (ts.foldl cadd acc))
         = Ideal.Quotient.mk (afIdeal f) (toPoly acc)
@@ -119,8 +119,8 @@ theorem isGeneralLogIntegralWf_of_residue_match (f logpart commonDenomQ : DenseP
     (args : List (α × DensePoly α)) (cofs : List (DensePoly α))
     (hmatch : ((args.zip cofs).map (fun p =>
           Ideal.Quotient.mk (afIdeal f)
-            (toPoly (afMul f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)))).sum
-        = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f logpart commonDenomQ))) :
+            (toPoly (CPoly.mulMod f (cscale p.1.1 (afDerivWf f p.1.2)) p.2)))).sum
+        = Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f logpart commonDenomQ))) :
     IsGeneralLogIntegralWf f logpart commonDenomQ args cofs := by
   rw [IsGeneralLogIntegralWf, mk_toPolyG_afLogSumNumWf_eq_sum, hmatch]
 
@@ -129,8 +129,8 @@ omit [CDiffFieldSpec α] in
 theorem isGeneralLogIntegralWf_singleton (f logpart commonDenomQ : DensePoly α)
     (c : α) (u cof : DensePoly α)
     (hmatch : Ideal.Quotient.mk (afIdeal f)
-          (toPoly (afMul f (cscale c (afDerivWf f u)) cof))
-        = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f logpart commonDenomQ))) :
+          (toPoly (CPoly.mulMod f (cscale c (afDerivWf f u)) cof))
+        = Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f logpart commonDenomQ))) :
     IsGeneralLogIntegralWf f logpart commonDenomQ [(c, u)] [cof] := by
   apply isGeneralLogIntegralWf_of_residue_match
   simpa using hmatch
@@ -328,21 +328,21 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- The fuel-free full general algebraic-integral soundness predicate. -/
 def IsGeneralAlgebraicIntegralWf (f g v commonDenomQ : DensePoly α)
     (args : List (α × DensePoly α)) (cofs : List (DensePoly α)) : Prop :=
-  Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f (afDerivWf f v) commonDenomQ))
+  Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f (afDerivWf f v) commonDenomQ))
     + Ideal.Quotient.mk (afIdeal f) (toPoly (afLogSumNumWf f args cofs))
-  = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f g commonDenomQ))
+  = Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f g commonDenomQ))
 
 omit [CDiffFieldSpec α] in
 /-- The fuel-free full general algebraic integral composes from Wf rational and log soundness. -/
 theorem isGeneralAlgebraicIntegralWf_of_parts (f g v ratPart logPart commonDenomQ : DensePoly α)
     (args : List (α × DensePoly α)) (cofs : List (DensePoly α))
     (hrat : Ideal.Quotient.mk (afIdeal f)
-          (toPoly (afMul f (afDerivWf f v) commonDenomQ))
-        = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f ratPart commonDenomQ)))
+          (toPoly (CPoly.mulMod f (afDerivWf f v) commonDenomQ))
+        = Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f ratPart commonDenomQ)))
     (hlog : IsGeneralLogIntegralWf f logPart commonDenomQ args cofs)
-    (hsplit : Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f ratPart commonDenomQ))
-        + Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f logPart commonDenomQ))
-      = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f g commonDenomQ))) :
+    (hsplit : Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f ratPart commonDenomQ))
+        + Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f logPart commonDenomQ))
+      = Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f g commonDenomQ))) :
     IsGeneralAlgebraicIntegralWf f g v commonDenomQ args cofs := by
   rw [IsGeneralAlgebraicIntegralWf, hrat, hlog, hsplit]
 

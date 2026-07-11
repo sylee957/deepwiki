@@ -20,7 +20,7 @@ variable {α : Type*} [CField α]
 
 /-! ## The general derivation `afDerivWf`
 
-`afReduce`/`afMul` already carry a self-computed bound; the one recursive dependency, `f_y⁻¹ mod f`, is
+`CPoly.reduceMod`/`CPoly.mulMod` already carry a self-computed bound; the one recursive dependency, `f_y⁻¹ mod f`, is
 computed by the well-founded `CPoly.diophantineReduced`. -/
 
 /-- `f_y⁻¹ mod f` — `afFyInvWf f = (CPoly.diophantineReduced (cderiv f) f [1]).1`, the first Bézout cofactor `s` of
@@ -30,15 +30,15 @@ def afFyInvWf (f : DensePoly α) : DensePoly α :=
 
 variable [CDiffField α]
 
-/-- The implicit derivative `afYprimeWf f = afReduce f (−f_x · afFyInvWf f)`:
+/-- The implicit derivative `afYprimeWf f = CPoly.reduceMod f (−f_x · afFyInvWf f)`:
 `y' = −(∂f/∂x)·(∂f/∂y)⁻¹ mod f`. -/
 def afYprimeWf (f : DensePoly α) : DensePoly α :=
-  afReduce f (cmul (cneg (afFx f)) (afFyInvWf f))
+  CPoly.reduceMod f (cmul (cneg (afFx f)) (afFyInvWf f))
 
-/-- The general derivation `afDerivWf f u = afReduce f (u.map cderiv + cderiv u · afYprimeWf f)`: the
+/-- The general derivation `afDerivWf f u = CPoly.reduceMod f (u.map cderiv + cderiv u · afYprimeWf f)`: the
 product rule `D(u) = Σᵢ aᵢ'·yⁱ + (Σᵢ aᵢ·i·yⁱ⁻¹)·y'`. `[CField α] [CDiffField α]`-generic. -/
 def afDerivWf (f u : DensePoly α) : DensePoly α :=
-  afReduce f (cadd (cmapDeriv u) (cmul (cderiv u) (afYprimeWf f)))
+  CPoly.reduceMod f (cadd (cmapDeriv u) (cmul (cderiv u) (afYprimeWf f)))
 
 section WfInvariant
 
@@ -50,16 +50,16 @@ The shared quotient API lives in `ComputableGeneralQuotient`; separability is ph
 `cgcdWf (cderiv f) f` being a nonzero constant. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
-/-- `afDerivWf = afReduce f ∘ cmonomialDeriv (afYprimeWf f)` definitionally. -/
-theorem afDerivWf_eq_afReduce_cmonomialDeriv (f u : DensePoly α) :
-    afDerivWf f u = afReduce f (cmonomialDeriv (afYprimeWf f) u) := rfl
+/-- `afDerivWf = CPoly.reduceMod f ∘ cmonomialDeriv (afYprimeWf f)` definitionally. -/
+theorem afDerivWf_eq_reduceMod_cmonomialDeriv (f u : DensePoly α) :
+    afDerivWf f u = CPoly.reduceMod f (cmonomialDeriv (afYprimeWf f) u) := rfl
 
 /-- The Wf keystone: `afDerivWf` realizes `implicitDeriv (toPoly (afYprimeWf f))` in the quotient. -/
 theorem mk_toPolyG_afDerivWf (f u : DensePoly α) (hf : cnorm f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f u))
       = Ideal.Quotient.mk (afIdeal f)
           (Differential.implicitDeriv (toPoly (afYprimeWf f)) (toPoly u)) := by
-  rw [afDerivWf_eq_afReduce_cmonomialDeriv, mk_toPolyG_afReduce f _ hf]
+  rw [afDerivWf_eq_reduceMod_cmonomialDeriv, mk_toPoly_reduceMod f _ hf]
   simp only [denote]
 
 /-- `afDerivWf` is additive modulo the curve ideal. -/
@@ -104,7 +104,7 @@ theorem implicitDerivWf_curve_mem (f : DensePoly α) (hf : cnorm f ≠ [])
   rw [mapCoeffs_toPolyG_eq_afFx, ← toPolyG_cderivG]
   have hyp : Ideal.Quotient.mk (afIdeal f) (toPoly (afYprimeWf f))
       = Ideal.Quotient.mk (afIdeal f) (- toPoly (afFx f) * toPoly (afFyInvWf f)) := by
-    rw [afYprimeWf, mk_toPolyG_afReduce f _ hf]
+    rw [afYprimeWf, mk_toPoly_reduceMod f _ hf]
     simp only [denote, map_mul, map_neg]
   rw [map_add, map_mul, hyp, ← map_mul]
   have hfyinv := mk_toPolyG_afFyInvWf_mul_afFy f hf hgdeg hgne
@@ -140,18 +140,18 @@ theorem mk_implicitDerivWf_congr (f : DensePoly α) (hf : cnorm f ≠ [])
   rw [← Ideal.Quotient.eq_zero_iff_mem, map_sub, hpq, sub_self]
 
 /-- `afDerivWf` is Leibniz modulo the curve ideal. -/
-theorem mk_toPolyG_afDerivWf_afMul (f a b : DensePoly α) (hf : cnorm f ≠ [])
+theorem mk_toPoly_afDerivWf_mulMod (f a b : DensePoly α) (hf : cnorm f ≠ [])
     (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0) :
-    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (afMul f a b)))
-      = Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f (afDerivWf f a) b))
-        + Ideal.Quotient.mk (afIdeal f) (toPoly (afMul f a (afDerivWf f b))) := by
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (CPoly.mulMod f a b)))
+      = Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f (afDerivWf f a) b))
+        + Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f a (afDerivWf f b))) := by
   set yp := toPoly (afYprimeWf f) with hyp
   set A := toPoly a with hA
   set B := toPoly b with hB
   rw [mk_toPolyG_afDerivWf f _ hf, ← hyp]
-  rw [mk_implicitDerivWf_congr f hf hgdeg hgne (mk_toPolyG_afMul f a b hf)]
-  rw [mk_toPolyG_afMul _ _ _ hf, mk_toPolyG_afMul _ _ _ hf, mk_toPolyG_afDerivWf f a hf,
+  rw [mk_implicitDerivWf_congr f hf hgdeg hgne (mk_toPoly_mulMod f a b hf)]
+  rw [mk_toPoly_mulMod _ _ _ hf, mk_toPoly_mulMod _ _ _ hf, mk_toPolyG_afDerivWf f a hf,
     mk_toPolyG_afDerivWf f b hf, ← hyp, ← hA, ← hB]
   rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, map_add, map_mul, map_mul]
   ring
@@ -226,9 +226,9 @@ def afRationalSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (
         cadd acc (cscale (CFrac.ofPoly [coeff]) (monos.getD idx []))) ([] : DensePoly (DenseFrac ℚ))
     some v
 
-/-- Log-derivative residual `afLogResidualWf f integrand u = afDerivWf f u − afMul f u integrand`. -/
+/-- Log-derivative residual `afLogResidualWf f integrand u = afDerivWf f u − CPoly.mulMod f u integrand`. -/
 def afLogResidualWf (f integrand u : DensePoly (DenseFrac ℚ)) : DensePoly (DenseFrac ℚ) :=
-  csub (afDerivWf f u) (afMul f u integrand)
+  csub (afDerivWf f u) (CPoly.mulMod f u integrand)
 
 /-- Log-argument residual columns `afLogColumnsWf f basis degBound integrand`: the per-monomial
 log-derivative residuals `afLogResidualWf f integrand (xʲ wᵢ)` (no forced `−integrand` column — the log
@@ -260,7 +260,7 @@ def afLogMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dens
   (nonzero, nCols)
 
 /-- General log-argument solve `afLogArgSolveWf f basis degBound integrand = some u`: the log argument
-`u = Σ c_{ij} xʲ wᵢ` with `afDeriv f u = afMul f u integrand` (`∫ integrand = log u`), by the homogeneous
+`u = Σ c_{ij} xʲ wᵢ` with `afDeriv f u = CPoly.mulMod f u integrand` (`∫ integrand = log u`), by the homogeneous
 `K`-linear solve (build `afLogMatrixWf`, find the first nonzero kernel vector, reassemble `u`). -/
 def afLogArgSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : Option (DensePoly (DenseFrac ℚ)) :=
@@ -281,7 +281,7 @@ def afLogArgSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (De
 /-- The general-curve integrator `afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand =
 some (v, u)`: `∫ (ratIntegrand + logIntegrand) dx = v + log u` (principal case) — the rational part `v` by
 `afRationalSolveWf` (`afDeriv f v = ratIntegrand`) and the log argument `u` by `afLogArgSolveWf`
-(`afDeriv f u = afMul f u logIntegrand`), both `K`-linear solves through `afDerivWf`. `none` if either
+(`afDeriv f u = CPoly.mulMod f u logIntegrand`), both `K`-linear solves through `afDerivWf`. `none` if either
 solve fails. The general analogue of `cIntegrateAlgebraicWf`. -/
 def afIntegrateAlgebraicWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) :
@@ -297,7 +297,7 @@ def afIntegrateAlgebraicWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DenseP
 
 /-- The log-derivative input for the cuspidal-cubic combined validation. -/
 def gcCombineLogIntegrandWf : DensePoly (DenseFrac ℚ) :=
-  afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
+  CPoly.mulMod gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
     [CCommRing.zero, CCommRing.zero, CFrac.ofFraction [1] [0, 0, 1] (by decide)]
 
 /-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
@@ -307,7 +307,7 @@ def gcCombineSolvedWf : Option (DensePoly (DenseFrac ℚ) × DensePoly (DenseFra
 
 /-- The general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y`:
 derives the rational part `v = (3/5)x·y` (`afDerivWf f v = y`) and the log argument `u` a nonzero multiple
-of `y` (`afDerivWf f u = afMul f u logIntegrand`, `∫ afDeriv(y)/y = log y`) on the cuspidal cubic `y³ = x²`,
+of `y` (`afDerivWf f u = CPoly.mulMod f u logIntegrand`, `∫ afDeriv(y)/y = log y`) on the cuspidal cubic `y³ = x²`,
 both by `K`-linear solves through `afDerivWf`. Checked by `afDerivWf f v − y` vanishing, `v = (3/5)xy`, the
 log-residual vanishing on `u`, and `u` a nonzero multiple of `y`. -/
 theorem afIntegrateAlgebraicWf_cuspCubic_combine :

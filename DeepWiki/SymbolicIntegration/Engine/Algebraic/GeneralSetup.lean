@@ -14,10 +14,10 @@ def gcuspCubicF : DensePoly (DenseFrac ℚ) :=
   [CFrac.ofPoly [0, 0, -1], CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(y³ - x²)`. -/
-def gcuspCubicY : DensePoly (DenseFrac ℚ) := afBasisElem 1
+def gcuspCubicY : DensePoly (DenseFrac ℚ) := CPoly.afBasisElem 1
 
 /-- The element `y²` of `ℚ(x)[y]/(y³ - x²)`. -/
-def gcuspCubicYsq : DensePoly (DenseFrac ℚ) := afBasisElem 2
+def gcuspCubicYsq : DensePoly (DenseFrac ℚ) := CPoly.afBasisElem 2
 
 /-- A `ℚ(x)` value `xᵏ`, used as an ansatz scalar. -/
 def qxMon (k : ℕ) : DenseFrac ℚ := CFrac.ofPoly (cshift k [(1 : ℚ)])

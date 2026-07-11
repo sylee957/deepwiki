@@ -92,7 +92,12 @@ runs the same fraction algorithm.
    witness share the same definitions. The logarithmic structure decision is generic over `CFrac F P` as
    well: denominator clearing selects the gcd and Euclidean capabilities, relation detection selects the
    linear solver, and dense and sparse fractions execute the same `CFrac.logIsNewMonomial` and
-   `CFrac.logRelationCoeffs` definitions.
+   `CFrac.logRelationCoeffs` definitions. Polynomial quotient arithmetic now lives in
+   `ComputableAlgebra/PolyQuotient.lean`: `reduceMod`, `mulMod`, power-basis construction,
+   multiplication matrices, and trace matrices are generic over `CPoly P`, select engine and Euclidean
+   capabilities, carry lawful denotation satellites, and execute on sparse polynomials. The algebraic
+   function-field and integral-basis stacks consume that API; only the `DenseFrac` Bareiss discriminant
+   wrapper remains a deliberate dense specialization.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

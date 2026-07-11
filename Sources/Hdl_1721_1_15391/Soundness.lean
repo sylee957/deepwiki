@@ -159,10 +159,10 @@ abbrev sound_afDeriv_keystone := @DensePoly.mk_toPolyG_afDerivWf
 derivation commutes with `cadd` in the quotient `K[X] ⧸ (toPoly f)`. -/
 abbrev sound_afDeriv_add := @DensePoly.mk_toPolyG_afDerivWf_add
 
-/-- **★ `afDerivWf` is Leibniz** `mk_toPolyG_afDerivWf_afMul` (Trager, Chapters 2–4): the product rule for
-`afMul` in the carrier `K[X] ⧸ (toPoly f)`, valid when the fuel-free gcd of `f_y` and `f` is a nonzero
+/-- **★ `afDerivWf` is Leibniz** `mk_toPoly_afDerivWf_mulMod` (Trager, Chapters 2–4): the product rule for
+`CPoly.mulMod` in the carrier `K[X] ⧸ (toPoly f)`, valid when the fuel-free gcd of `f_y` and `f` is a nonzero
 constant. -/
-abbrev sound_afDeriv_mul := @DensePoly.mk_toPolyG_afDerivWf_afMul
+abbrev sound_afDeriv_mul := @DensePoly.mk_toPoly_afDerivWf_mulMod
 
 /-! ## The general-curve rational-part soundness `D(v) = g` (Ch. 4, eq.-11 reduction) -/
 
@@ -195,8 +195,8 @@ abbrev sound_genLogPredicate := @DensePoly.IsGeneralLogTermWf
 
 /-- **★ The engine's general log certificate IS the single-log soundness** `isGeneralLogTermWf_of_logCert`
 (Trager, Chapter 5 §1): the `native_decide`-checkable
-`cisZero (csub (afDerivWf f u) (afMul f u integrand)) = true` (the division-free
-`afDerivWf f u = afMul f u integrand`) yields the abstract quotient identity `D(log u) =
+`cisZero (csub (afDerivWf f u) (CPoly.mulMod f u integrand)) = true` (the division-free
+`afDerivWf f u = CPoly.mulMod f u integrand`) yields the abstract quotient identity `D(log u) =
 integrand`. So every validated general log certificate — the non-hyperelliptic `y³ − x² − 1` arguments `u ∝
 y`, `u ∝ y² + x` — IS, abstractly, the single-log soundness. -/
 abbrev sound_genLogCertificate := @DensePoly.isGeneralLogTermWf_of_logCert

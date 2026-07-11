@@ -74,8 +74,8 @@ equation order `[1, y]` is non-maximal at `x`. -/
 def cuspF : DensePoly (DenseFrac ℚ) :=
   [CFrac.ofPoly [0, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
-/-- The generator `y` of `ℚ(x)[y]/(y² − x³)` (`afBasisElem 1 = [0, 1]`). -/
-def cuspY : DensePoly (DenseFrac ℚ) := afBasisElem 1
+/-- The generator `y` of `ℚ(x)[y]/(y² − x³)` (`CPoly.afBasisElem 1 = [0, 1]`). -/
+def cuspY : DensePoly (DenseFrac ℚ) := CPoly.afBasisElem 1
 
 /-- The bad prime of the cusp is `x`: `badPrimes cuspF = [x]` (the single monic factor `x = [0, 1]` with
 `x² ∣ 4x³`). -/
@@ -95,10 +95,10 @@ def afCoordRow (n : ℕ) (z : DensePoly (DenseFrac ℚ)) : List (DensePoly ℚ) 
   (List.range n).map (fun i => (z.getD i CCommRing.zero : DenseFrac ℚ).num)
 
 /-- The trace matrix reduced at a linear prime root `a` `traceMatrixAtRoot f a`: the `n×n` `ℚ`-matrix
-`traceMatrix f (powerBasis f)` with every entry evaluated at `x = a` (`qEvalAtRoot`), i.e. `T mod (x − a)`.
+`CPoly.traceMatrix f (CPoly.powerBasis f)` with every entry evaluated at `x = a` (`qEvalAtRoot`), i.e. `T mod (x − a)`.
 Its kernel is the p-trace-radical mod `p`. -/
 def traceMatrixAtRoot (f : DensePoly (DenseFrac ℚ)) (a : ℚ) : List (List ℚ) :=
-  (traceMatrix f (powerBasis f)).map (fun row => row.map (fun e => qEvalAtRoot e a))
+  (CPoly.traceMatrix f (CPoly.powerBasis f)).map (fun row => row.map (fun e => qEvalAtRoot e a))
 
 /-- The p-trace-radical `I_p` at a linear prime `p = x − a` `pTraceRadical f p a`: a `K[x]`-basis of
 `I_p = { z ∈ O : p ∣ Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ` (rows = basis vectors in power coordinates).
@@ -126,7 +126,7 @@ For `f = y² − x³`, `p = x`: the trace matrix `[[2, 0], [0, 2x³]]` at `x = 0
 
 open DensePoly
 
-/-- The cusp trace matrix mod `x` is `[[2, 0], [0, 0]]`: `traceMatrix (y² − x³) = [[2, 0], [0, 2x³]]`
+/-- The cusp trace matrix mod `x` is `[[2, 0], [0, 0]]`: `CPoly.traceMatrix (y² − x³) = [[2, 0], [0, 2x³]]`
 evaluated at `x = 0`, a rank-`1` matrix with kernel `{(0, 1)} = y`. -/
 theorem cusp_traceMatrixAtRoot_eq :
     traceMatrixAtRoot cuspF 0 = [[2, 0], [0, 0]] := by native_decide
@@ -230,7 +230,7 @@ def clearRow (δ : DensePoly ℚ) (row : List (DenseFrac ℚ)) : List (DensePoly
 
 /-- The idealizer `Î = (I_p : I_p)` as a new `K(x)` order basis `idealizerBasis f orderBasis ipRows`, given
 the current order basis and the `I_p` `K[x]`-basis (`pTraceRadical` output). Forms `B = ipBasisMatrix`,
-`Mⱼ = B⁻¹ · multMatrix f ιⱼ` for each `ιⱼ`, stacks into `M`, clears to `N = δ·M` over `K[x]`, Hermite-reduces,
+`Mⱼ = B⁻¹ · CPoly.multMatrix f ιⱼ` for each `ιⱼ`, stacks into `M`, clears to `N = δ·M` over `K[x]`, Hermite-reduces,
 inverts the first `n` rows, and scales by `δ`: the columns of `δ·N̂⁻¹` are the idealizer basis. Returns
 `orderBasis` unchanged if any inverse is singular. -/
 def idealizerBasis (f : DensePoly (DenseFrac ℚ)) (orderBasis : List (DensePoly (DenseFrac ℚ)))
@@ -240,11 +240,11 @@ def idealizerBasis (f : DensePoly (DenseFrac ℚ)) (orderBasis : List (DensePoly
   match matInv n B with
   | none => orderBasis
   | some Binv =>
-    -- stack the `Mⱼ = Binv · multMatrix f ιⱼ` (each `n×n` over K(x))
+    -- stack the `Mⱼ = Binv · CPoly.multMatrix f ιⱼ` (each `n×n` over K(x))
     let M : List (List (DenseFrac ℚ)) :=
       (List.range n).foldr (fun j acc =>
         let ιj : DensePoly (DenseFrac ℚ) := rowToAf ((ipRows.getD j []))
-        let Mj := matMul Binv (multMatrix f ιj)
+        let Mj := matMul Binv (CPoly.multMatrix f ιj)
         Mj ++ acc) []
     -- clear to K[x] by a common denominator δ
     let δ : DensePoly ℚ := commonDenomQ M
@@ -271,16 +271,16 @@ namespace DensePoly
 each `basisᵢ` is `cisZero`-equal to `yⁱ`. Tests whether `round2Step` grew the order. -/
 def isPowerBasis (n : ℕ) (basis : List (DensePoly (DenseFrac ℚ))) : Bool :=
   (List.range n).all (fun i =>
-    cisZero (csub (basis.getD i []) (afBasisElem i)))
+    cisZero (csub (basis.getD i []) (CPoly.afBasisElem i)))
 
 /-- One Ford–Zassenhaus Round-2 enlargement `round2Step f = (newBasis, grew)`. From the equation order
-`O = powerBasis f`, for the first bad prime `p = x − a`, computes the p-trace-radical `I_p` and the idealizer
+`O = CPoly.powerBasis f`, for the first bad prime `p = x − a`, computes the p-trace-radical `I_p` and the idealizer
 `Î = (I_p : I_p)`, returning `Î`'s basis and whether it strictly enlarged `O`. With no bad prime, returns the
 power basis with `grew = false`. -/
 def round2Step (f : DensePoly (DenseFrac ℚ)) :
     List (DensePoly (DenseFrac ℚ)) × Bool :=
   let n := cdeg f
-  let O := powerBasis f
+  let O := CPoly.powerBasis f
   match (badPrimes f) with
   | [] => (O, false)
   | p :: _ =>
@@ -315,10 +315,10 @@ theorem cusp_round2_newGen_eq :
     (cisZero (csub cuspNewGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
       && cisZero (csub ((round2Step cuspF).1.getD 0 []) [CCommRing.one])) = true := by native_decide
 
-/-- The enlarged generator `y/x` is integral: `afMul f (y/x) (y/x) = x` in `ℚ(x)[y]/(y² − x³)`, checked by
-`cisZero (afMul f (y/x) (y/x) − x)`. -/
+/-- The enlarged generator `y/x` is integral: `CPoly.mulMod f (y/x) (y/x) = x` in `ℚ(x)[y]/(y² − x³)`, checked by
+`cisZero (CPoly.mulMod f (y/x) (y/x) − x)`. -/
 theorem cusp_newGen_integral :
-    cisZero (csub (afMul cuspF cuspNewGen cuspNewGen) [CFrac.ofPoly [0, 1]]) = true := by native_decide
+    cisZero (csub (CPoly.mulMod cuspF cuspNewGen cuspNewGen) [CFrac.ofPoly [0, 1]]) = true := by native_decide
 
 /-- `[1, y/x]` is the maximal order — a second `round2Step` does not grow it: the idealizer against the
 enlarged basis `[1, y/x]` returns `[1, y/x]` again, a fixed point. -/
@@ -352,10 +352,10 @@ theorem node_round2_newGen_eq :
       && cisZero (csub ((round2Step nodeF).1.getD 0 []) [CCommRing.one])) = true := by
   native_decide
 
-/-- The node's enlarged generator is integral with relation `(y/x)² = x + 1`: `afMul f (y/x) (y/x) = x + 1`
-in `ℚ(x)[y]/(y² − x²(x+1))`, checked by `cisZero (afMul f (y/x) (y/x) − (x + 1))`. -/
+/-- The node's enlarged generator is integral with relation `(y/x)² = x + 1`: `CPoly.mulMod f (y/x) (y/x) = x + 1`
+in `ℚ(x)[y]/(y² − x²(x+1))`, checked by `cisZero (CPoly.mulMod f (y/x) (y/x) − (x + 1))`. -/
 theorem node_newGen_integral :
-    cisZero (csub (afMul nodeF nodeNewGen nodeNewGen) [CFrac.ofPoly [1, 1]]) = true := by native_decide
+    cisZero (csub (CPoly.mulMod nodeF nodeNewGen nodeNewGen) [CFrac.ofPoly [1, 1]]) = true := by native_decide
 
 /-- `[1, y/x]` is the maximal order of the node — a second `round2Step` does not grow it: the idealizer
 against `[1, y/x]` returns `[1, y/x]` again. -/

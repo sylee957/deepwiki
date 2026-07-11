@@ -43,14 +43,14 @@ def reduceOrder (O : List (DensePoly (DenseFrac ℚ))) : List (DensePoly (DenseF
 /-! ### The p-trace-radical of an order, in the order's coordinates (`ipOCoords`)
 
 For a linear bad prime `p = x − a` and an order `O`, the p-trace-radical `I_p` is, mod `p`, the
-kernel of the trace matrix `traceMatrix f O` evaluated at `a`, expressed in `O`-coordinates where it
+kernel of the trace matrix `CPoly.traceMatrix f O` evaluated at `a`, expressed in `O`-coordinates where it
 is an integral `K[x]`-lattice (no denominators), Hermite-reduced. -/
 
 /-- The trace matrix of an order `O` evaluated at a linear prime root `a`: the `n×n` `ℚ`-matrix
-`traceMatrix f O` with every entry evaluated at `x = a` (`qEvalAtRoot`). -/
+`CPoly.traceMatrix f O` with every entry evaluated at `x = a` (`qEvalAtRoot`). -/
 def traceMatrixOrderAtRoot (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (a : ℚ) :
     List (List ℚ) :=
-  (traceMatrix f O).map (fun row => row.map (fun e => qEvalAtRoot e a))
+  (CPoly.traceMatrix f O).map (fun row => row.map (fun e => qEvalAtRoot e a))
 
 /-- The p-trace-radical `I_p` of an order `O` in `O`-coordinates: a `K[x]`-basis of
 `I_p = { z ∈ O : p | Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ`, from the kernel of `traceMatrixOrderAtRoot`
@@ -128,7 +128,7 @@ def idealizerOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (Dense
           let ιj := ipElems.getD j []
           let multO : List (List (DenseFrac ℚ)) := (List.range n).map (fun r =>
             (List.range n).map (fun i =>
-              (toOCoords Binv n (afMul f ιj (O.getD i []))).getD r CCommRing.zero))
+              (toOCoords Binv n (CPoly.mulMod f ιj (O.getD i []))).getD r CCommRing.zero))
           (matMul BipInv multO) ++ acc) []
       let δ : DensePoly ℚ := commonDenom M
       let N : PolyMatrix DensePoly ℚ := M.map (clearRowExact δ)
@@ -158,10 +158,10 @@ open DensePoly
 namespace DensePoly
 
 /-- The discriminant of an order `O`, numerator reduced to lowest terms: the numerator of
-`det(traceMatrix f O) ∈ K(x)` after cancelling `gcd(num, den)`. Shrinks by a square each genuine
+`det(CPoly.traceMatrix f O) ∈ K(x)` after cancelling `gcd(num, den)`. Shrinks by a square each genuine
 enlargement — the termination measure. -/
 def discNumOrder (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) : DensePoly ℚ :=
-  let z := fieldDet (traceMatrix f O)
+  let z := fieldDet (CPoly.traceMatrix f O)
   cnorm (CFrac.reduceNum z)
 
 /-- The bad primes of an order `O`: the distinct monic squarefree factors `p` of the reduced
@@ -209,7 +209,7 @@ order `[1, y, …, yⁿ⁻¹]` to the maximal order, whose `K[x]`-basis is the i
 `K(x, y) = K(x)[y]/(f)` (the functions with no finite poles). -/
 def integralBasis (f : DensePoly (DenseFrac ℚ)) : List (DensePoly (DenseFrac ℚ)) :=
   let fuel := cdeg (discNum f) + 1
-  reduceOrder (integralBasisLoop fuel f (powerBasis f))
+  reduceOrder (integralBasisLoop fuel f (CPoly.powerBasis f))
 
 /-- `true` iff `O` is the maximal order: a Round-2 pass over `O` does not grow it
 (`¬ (round2Pass f O).2`). -/
@@ -232,7 +232,7 @@ def cuspIBGen : DensePoly (DenseFrac ℚ) := (integralBasis cuspF).getD 1 []
 theorem cusp_integralBasis_eq :
     (cisZero (csub cuspIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
       && cisZero (csub ((integralBasis cuspF).getD 0 []) [CCommRing.one])
-      && cisZero (csub (afMul cuspF cuspIBGen cuspIBGen) [CFrac.ofPoly [0, 1]])
+      && cisZero (csub (CPoly.mulMod cuspF cuspIBGen cuspIBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
 
 -- Sanity print: the node integral basis (expected `[1,0]`, `[0,1/x]`).
@@ -245,7 +245,7 @@ def nodeIBGen : DensePoly (DenseFrac ℚ) := (integralBasis nodeF).getD 1 []
 theorem node_integralBasis_eq :
     (cisZero (csub nodeIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
       && cisZero (csub ((integralBasis nodeF).getD 0 []) [CCommRing.one])
-      && cisZero (csub (afMul nodeF nodeIBGen nodeIBGen) [CFrac.ofPoly [1, 1]])
+      && cisZero (csub (CPoly.mulMod nodeF nodeIBGen nodeIBGen) [CFrac.ofPoly [1, 1]])
       && isMaximalOrder nodeF (integralBasis nodeF)) = true := by native_decide
 
 /-! ### A multi-step curve: the worse cusp `y² − x⁵`, integral basis `[1, y/x²]` (`native_decide`)
@@ -285,7 +285,7 @@ theorem cusp5_integralBasis_eq :
 
 /-- The worse-cusp generator `y/x²` is integral (`(y/x²)² = x`) and `[1, y/x²]` is maximal. -/
 theorem cusp5_integralBasis_integral_maximal :
-    (cisZero (csub (afMul cusp5F cusp5IBGen cusp5IBGen) [CFrac.ofPoly [0, 1]])
+    (cisZero (csub (CPoly.mulMod cusp5F cusp5IBGen cusp5IBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder cusp5F (integralBasis cusp5F)) = true := by native_decide
 
 /-! ### A multi-prime curve: `y² − x³(x−1)²`, bad at both `x` and `x − 1` (`native_decide`)
@@ -322,12 +322,12 @@ theorem biCusp_badPrimes_eq :
 /-- **★★ The multi-prime integral basis is `[1, y/(x(x−1))]`, integral (`(y/(x(x−1)))² = x`) and maximal**
 (`native_decide`): `integralBasis biCuspF` enlarges `[1, y]` at **both** bad primes `x` and `x − 1`, returning
 the generator `[0, 1/(x² − x)] = y/(x(x − 1))` and the first vector `1`; the generator is integral
-(`afMul biCuspF g g = x`, i.e. `(y/(x(x−1)))² = x³(x−1)²/(x²(x−1)²) = x`); and `isMaximalOrder` is `true`. The
+(`CPoly.mulMod biCuspF g g = x`, i.e. `(y/(x(x−1)))² = x³(x−1)²/(x²(x−1)²) = x`); and `isMaximalOrder` is `true`. The
 single combined denominator `x(x − 1)` carries the enlargement at both primes at once. -/
 theorem biCusp_integralBasis_eq :
     (cisZero (csub biCuspIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, -1, 1] (by decide)])
       && cisZero (csub ((integralBasis biCuspF).getD 0 []) [CCommRing.one])
-      && cisZero (csub (afMul biCuspF biCuspIBGen biCuspIBGen) [CFrac.ofPoly [0, 1]])
+      && cisZero (csub (CPoly.mulMod biCuspF biCuspIBGen biCuspIBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder biCuspF (integralBasis biCuspF)) = true := by native_decide
 
 /-! ### The NEXT piece: higher-degree (non-linear) bad primes, and the genus
@@ -370,7 +370,7 @@ iterating the Ford–Zassenhaus Round-2 step to the maximal order: for the cusp 
 **worse cusp** `y² − x⁵` it iterates **twice** to `[1, y/x²]` (`cusp5_integralBasis_eq`,
 `cusp5_oneStep_not_maximal` showing one step is insufficient and not maximal); for `y² − x³(x−1)²` it enlarges
 at **both** bad primes `x` and `x − 1` to `[1, y/(x(x−1))]` (`biCusp_badPrimes_eq`, `biCusp_integralBasis_eq`)
-— each final basis integral (`afMul` of the generator with itself in `K[x]`) and maximal (`isMaximalOrder`).
+— each final basis integral (`CPoly.mulMod` of the generator with itself in `K[x]`) and maximal (`isMaximalOrder`).
 Multi-step and multi-prime curves beyond the one-step cusp/node now compute. -/
 
 -- ★ The cusp/node: `integralBasis = [1, y/x]` in one step, integral and maximal:

@@ -20,18 +20,18 @@ open DensePoly
 /-- `qfDet = fieldDet` on the non-radical trace matrix of `y² − xy − x³`, both the discriminant
 `x² + 4x³`. -/
 theorem qfDet_eq_fieldDet_afNonRad :
-    let T := traceMatrix afNonRadF (powerBasis afNonRadF)
+    let T := CPoly.traceMatrix afNonRadF (CPoly.powerBasis afNonRadF)
     CCommRing.isZero (CField.sub (CFrac.qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- `qfDet = fieldDet` on the `3×3` trigonal trace matrix of `y³ + xy + x`, both the discriminant
 `−4x³ − 27x²`. -/
 theorem qfDet_eq_fieldDet_afTrig :
-    let T := traceMatrix afTrigF (powerBasis afTrigF)
+    let T := CPoly.traceMatrix afTrigF (CPoly.powerBasis afTrigF)
     CCommRing.isZero (CField.sub (CFrac.qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- `qfDet = fieldDet` on the cusp trace matrix of `y² − x³`, both the discriminant `4x³`. -/
 theorem qfDet_eq_fieldDet_cusp :
-    let T := traceMatrix cuspF (powerBasis cuspF)
+    let T := CPoly.traceMatrix cuspF (CPoly.powerBasis cuspF)
     CCommRing.isZero (CField.sub (CFrac.qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- A `3×3` `ℚ(x)`-matrix with genuine fraction entries (denominators `x+1, …, x+5`, a permuted
