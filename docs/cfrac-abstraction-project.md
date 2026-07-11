@@ -178,7 +178,8 @@ runs the same fraction algorithm.
    tower implementation or its implementation-specific correctness frontier is genuinely required.
    In particular, the recursive LRT frontier certifies the exact well-founded Hermite/LRT output; substituting
    an independently selected (though lawful) implementation there requires an explicit transport theorem,
-   not an instance-only migration.
+   not an instance-only migration. `docs/selected-operation-transport-project.md` records the staged
+   result-contract migration needed to cross that boundary.
    The entire `Engine/RischDE/` completeness stack now follows that boundary: normal-denominator and
    degree-bound residuals, inner exhaustiveness, wrapper completeness, and the decision-procedure frontier
    expose selected gcd/split capabilities and contain no `CFracGcdCoreWf` reference. Root-free LRT integration

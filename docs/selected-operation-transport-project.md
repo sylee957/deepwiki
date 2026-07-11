@@ -1,0 +1,64 @@
+# Selected-operation transport project
+
+## Purpose
+
+Finish the algorithm-interface migration at the remaining dense well-founded frontier without
+pretending that two lawful selected implementations compute definitionally equal output.
+
+`CPolyGcd DensePoly α` has a generic low-priority selection and the tower-specific high-priority
+`CFracGcdCoreWf` selection. Likewise, dense squarefree factorization has a generic Yun selection and
+the tower-specific fraction-free selection. Both selections are lawful, but `cHermiteReduceTower`,
+`cIntegrateReducedLrt`, and the recursive LRT frontier contain their selected outputs. Replacing the
+well-founded instances in their hypotheses therefore changes the terms being certified; a law about
+denotations does not make those terms definitionally equal.
+
+## Evidence and boundary
+
+- `Engine/Tower/WellFounded.lean` installs `instCPolyGcdDenseWf` and
+  `instCPolySquarefreeDenseWf`, with the latter feeding the exact
+  `DensePoly.cHermiteReduceTower` output.
+- `ComputableAlgebra/PolyReprGcd.lean` and `PolyEuclideanDense.lean` also provide lawful generic
+  dense selections. Their laws establish mathematical correctness, not equality with the
+  fraction-free runtime output.
+- `cHermiteReduceTowerG_lawfulHermiteReduction`, the LRT residue correction stack, and
+  `PrimitiveFrontierLrt.hreducedLrt` certify that exact well-founded output. They are intentional
+  `CFracGcdCoreWf` consumers, whereas composition-only clients should continue to depend only on
+  `CPolyGcd`, `CPolySquarefree`, `CPolyResultant`, and `CPolySubresultant`.
+
+## Work plan
+
+1. **Pin inventory.** For every remaining `CFracGcdCoreWf` reference, record whether it selects a
+   runtime algorithm, proves a fact about a particular selected output, or is an obsolete umbrella
+   constraint. Remove only the third category. Use `scripts/wiki rdeps` before changing each public
+   theorem or class.
+2. **Result contracts, not instance equality.** Where a theorem needs an algorithm's output, state the
+   smallest semantic result contract for that output (factorization, exact division, reconstruction,
+   or residue relation). Reuse `LawfulCPoly*` laws when they already provide it; add a result-level
+   interface only when the needed relation is genuinely absent. Do not add a global axiom that two
+   selected instances are equal.
+3. **Parameterize executable composition.** Move Hermite and LRT composition bodies to take the selected
+   gcd, squarefree, resultant, and subresultant capabilities explicitly, so their outputs are built from
+   the same operations their contracts describe. Keep fraction-free code as the dense selected
+   implementation rather than wrapping it behind a fake generic definition.
+4. **Prove generic soundness.** Reprove Hermite residual and LRT result contracts from the selected
+   capabilities. The well-founded correctness development then supplies the dense instance of those
+   contracts; it no longer needs to be smuggled through consumer signatures as `CFracGcdCoreWf`.
+5. **Migrate frontiers in dependency order.** Start with local Hermite realization lemmas, then reduced
+   LRT soundness, then `PrimitiveFrontierLrt` and `LawfulRischLevelLrt`. Change an
+   implementation-specific theorem only after its composition consumers use the new contract.
+6. **Audit the remainder.** The only surviving `CFracGcdCoreWf` references should be the recursive
+   fraction-free gcd/Yun implementation and proofs specifically about that implementation. Re-run the
+   direct-concrete-call search and classify every result in the project document.
+
+## Verification
+
+For each slice, run the touched module, its immediate consumer, and then `scripts/check.sh` serially.
+Build the wiki graph after a green full gate. Validate each new generic executable path on a sparse
+carrier where the algorithm is representation-independent; validate dense fraction-free paths by their
+semantic result contract, not by an unprovable equality with a different selected algorithm.
+
+## Visibility rule
+
+Keep selected capability operations and result contracts public. Mark only file-local adapters from the
+well-founded implementation to a result contract `private`; use `protected` only for carrier readers whose
+dot notation is part of the intended API.
