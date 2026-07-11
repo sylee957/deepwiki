@@ -15,7 +15,7 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   representation; the former `DensePoly` theorem is a specialization through `toPoly_list_eq`.
 - `CMonomialCase P` is now the representation-parameterized, Prop-free operation interface used by
   dense and recursive realizers; `LawfulCMonomialCase` separates its soundness, denominator preservation,
-  and special-part relative-completeness contract.
+  and normal-postprocessing laws, while `CompleteCMonomialCase` records relative completeness separately.
 - `CCanonicalRepresentation`/`LawfulCCanonicalRepresentation` now have a dense realization, and
   `assembleOneLevelP_sound` composes canonical, monomial, and normal-result contracts without a
   concrete polynomial implementation.
@@ -39,6 +39,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `assembleOneLevel` is the first executable representation-neutral Figure-5.1 spine: canonical split,
   special integration, `reduceNormal`, monomial-specific normal postprocessing, and recombination.
   `assembleOneLevel_sound` derives its full one-level identity solely from lawful capability instances.
+- The guarded primitive monomial operation now has a `LawfulCMonomialCase` instance and specializes the
+  generic dense level as `cIntegratePrimitiveGuardedChecked`; its successful runs inherit soundness entirely by
+  composition. Its intentionally narrow guard does not claim `CompleteCMonomialCase`.
 - `CRischLevel` packages a one-level executable solver, while `LawfulCRischLevel` states soundness and
   relative completeness over an explicit semantic domain. `oneLevelRisch` packages the generic assembler;
   its current domain records the low-derivation-degree Hermite boundary, and completeness targets genuine

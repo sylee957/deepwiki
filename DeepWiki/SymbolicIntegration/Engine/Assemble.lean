@@ -77,8 +77,7 @@ variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffF
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- Denotation-level contract for a `CMonomialCase`: successful special integration has the expected
-derivative, normal post-processing preserves certified integration results and nonzero denominators, and every
-valid special antiderivative is found. -/
+derivative, while normal post-processing preserves certified integration results and nonzero denominators. -/
 class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
   /-- A successful special integration has derivative `fₚ + b/dₛ`. -/
   special_sound : ∀ (Dt fp b ds snum sden : P α),
@@ -94,7 +93,10 @@ class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
   postprocessNormal_den_nonzero : ∀ (Dt : P α) (before after : IntegralResult α P),
     CPoly.toPoly before.rational.2 ≠ 0 → C.postprocessNormal Dt before = some after →
       CPoly.toPoly after.rational.2 ≠ 0
-  /-- Relative completeness for special-part integration. -/
+
+/-- Relative completeness contract for a monomial-case special solver. -/
+class CompleteCMonomialCase (C : CMonomialCase P α) : Prop where
+  /-- Every valid special antiderivative lies in the executable solver's domain. -/
   special_complete : ∀ (Dt fp b ds snum sden : P α),
     CPoly.toPoly sden ≠ 0 →
     towerFractionFieldDerivP Dt (fieldFracP snum sden)
