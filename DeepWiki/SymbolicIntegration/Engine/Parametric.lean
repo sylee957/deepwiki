@@ -43,7 +43,7 @@ namespace CFrac
 
 variable {F : (α : Type) → [CField α] → Type} {P : Type → Type}
 variable [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P]
-variable [CFrac F P] [CFieldDomain ℚ P]
+variable [CFrac F P] [LawfulCFrac F P] [CFieldDomain ℚ P]
 
 /-! ### `CFrac.parametricLogDeriv` over the base field `k = ℚ(x)`
 

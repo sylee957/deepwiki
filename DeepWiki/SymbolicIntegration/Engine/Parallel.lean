@@ -284,7 +284,7 @@ namespace DensePoly
 /-- Convert a represented-fraction polynomial to dense rational coefficients when every coefficient is constant. -/
 def cToRatCoeffsQ {P Q : Type → Type} [CPoly P] [CPolyEngine P]
     [CPoly Q] [CPolyEngine Q] [CPolyGcd Q ℚ] [CPolyEuclidean Q]
-    {F : (α : Type) → [CField α] → Type} [CFrac F Q] [CFieldDomain ℚ Q]
+    {F : (α : Type) → [CField α] → Type} [CFrac F Q] [LawfulCFrac F Q] [CFieldDomain ℚ Q]
     (p : P (F ℚ)) : Option (DensePoly ℚ) :=
   (CPolyEngine.coeffList p).foldr (fun (z : F ℚ) acc =>
     match acc with
@@ -302,7 +302,7 @@ def cToRatCoeffsQ {P Q : Type → Type} [CPoly P] [CPolyEngine P]
 /-- Run the base-field parallel integrator through any represented-fraction coefficient carrier. -/
 def cParallelIntegrateTower {P Q : Type → Type} [CPoly P] [CPolyEngine P]
     [CPoly Q] [CPolyEngine Q] [CPolyGcd Q ℚ] [CPolyEuclidean Q]
-    {F : (α : Type) → [CField α] → Type} [CFrac F Q] [CFieldDomain ℚ Q] [CLinearSolve ℚ]
+    {F : (α : Type) → [CField α] → Type} [CFrac F Q] [LawfulCFrac F Q] [CFieldDomain ℚ Q] [CLinearSolve ℚ]
     (Dt a d : P (F ℚ)) : Option ((P (F ℚ) × P (F ℚ)) × List (ℚ × P (F ℚ))) :=
   match cToRatCoeffsQ Dt, cToRatCoeffsQ a, cToRatCoeffsQ d with
   | some DtQ, some aQ, some dQ =>

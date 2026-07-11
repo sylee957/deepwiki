@@ -19,12 +19,13 @@ universe u v
 namespace CFrac
 
 variable {F : (α : Type u) → [CField α] → Type u}
-variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P] [LawfulCFrac F P]
 
 /-- The selected common factor of a represented fraction's numerator and denominator. -/
 def reduceGcd {α : Type u} [CField α] [CPolyGcd P α] (a : F α) : P α :=
   CPolyGcd.compute (num a) (den a)
 
+omit [LawfulCFrac F P] in
 /-- The selected common factor divides both stored fraction polynomials. -/
 theorem toPoly_reduceGcd_dvd [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α]
@@ -117,7 +118,7 @@ theorem cisZero_reduceDen [LawfulCPolyEngine.{u,v} P]
 /-- Cancel the selected polynomial gcd from a represented fraction. -/
 def reduce {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] {α : Type u} [CField α] [CPolyGcd P α]
-    [CPolyEuclidean P] [CFrac F P] (a : F α) : F α :=
+    [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P] (a : F α) : F α :=
   if h : CPolyEngine.cisZero (CFrac.reduceDen a) = false then
     CFrac.ofFraction (CFrac.reduceNum a) (CFrac.reduceDen a) h
   else a
@@ -127,7 +128,7 @@ def reduce {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α]
-    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     [CFieldSpec.{u,v} α] (a : F α) :
     CFrac.toRatFunc (CFrac.reduce a) = CFrac.toRatFunc a := by
   let G := CFrac.am α (CPoly.toPoly (CFrac.reduceGcd a))
@@ -158,7 +159,7 @@ def reduce {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α]
-    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     [CFieldSpec.{u,v} α] (a : F α) :
     num (reduce a) = reduceNum a := by
   rw [reduce, dif_pos (cisZero_reduceDen a), num_ofFraction]
@@ -168,7 +169,7 @@ def reduce {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α]
-    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     [CFieldSpec.{u,v} α] (a : F α) :
     den (reduce a) = reduceDen a := by
   rw [reduce, dif_pos (cisZero_reduceDen a), den_ofFraction]
@@ -178,7 +179,7 @@ theorem isZero_reduce
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α]
-    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     [CFieldSpec.{u,v} α] (a : F α) :
     isZero (reduce a) = isZero a := by
   apply Bool.eq_iff_iff.mpr
@@ -189,7 +190,7 @@ theorem isZero_reduce
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α]
-    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     [CFieldSpec.{u,v} α] (a : F α) :
     toRatFunc (reduceMonic a) = toRatFunc a := by
   rw [reduceMonic]
@@ -233,7 +234,7 @@ theorem isZero_reduceMonic
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α]
-    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     [CFieldSpec.{u,v} α] (a : F α) :
     isZero (reduceMonic a) = isZero a := by
   apply Bool.eq_iff_iff.mpr

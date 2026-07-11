@@ -22,6 +22,9 @@ structure DenseFrac (α : Type u) [CField α] where
 instance instCFracDenseFrac : CFrac DenseFrac DensePoly where
   toPair x := x.toPair
   ofPair num den h := ⟨(num, den), h⟩
+
+/-- `DenseFrac`'s private storage satisfies the represented-fraction laws. -/
+instance instLawfulCFracDenseFrac : LawfulCFrac DenseFrac DensePoly where
   toPair_ofPair _ _ _ := rfl
   den_nonzero_impl x := x.den_nonzero
   ofPair_toPair x := by

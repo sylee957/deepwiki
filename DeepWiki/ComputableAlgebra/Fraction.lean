@@ -51,7 +51,7 @@ noncomputable instance instCFieldDomainOfCFieldSpec {P : Type u → Type u} [CPo
 namespace CFrac
 
 variable {F : (α : Type u) → [CField α] → Type u}
-variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P] [LawfulCFrac F P]
 
 /-- A computable fraction's stored denominator passes the polynomial nonzero test. -/
 theorem cisZeroG_den {α : Type u} [CField α] (x : F α) :
@@ -136,6 +136,7 @@ and denominator. -/
 def eval {α : Type u} [CField α] (x : F α) (a : α) : α :=
   CField.div (CPolyEngine.eval (num x) a) (CPolyEngine.eval (den x) a)
 
+omit [LawfulCFrac F P] in
 /-- Fraction evaluation is the quotient of the selected polynomial evaluations of the stored pair. -/
 theorem eval_eq_div {α : Type u} [CField α] (x : F α) (a : α) :
     eval x a = CField.div (CPolyEngine.eval (num x) a) (CPolyEngine.eval (den x) a) := rfl
@@ -146,7 +147,7 @@ end CFrac
 
 /-- Every `CFrac F P` with polynomial-domain evidence is a computable field representation. -/
 instance instCFieldCFrac {F : (α : Type u) → [CField α] → Type u}
-    {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P]
+    {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldDomain α P] : CField (F α) where
   zero := CFrac.ofPoly (CPoly.czero : P α)
   one := CFrac.ofPoly (CPoly.one : P α)
@@ -167,7 +168,7 @@ noncomputable abbrev am (α : Type*) [CField α] [CFieldSpec α] :
   algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))
 
 variable {F : (α : Type u) → [CField α] → Type u}
-variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P] [LawfulCFrac F P]
 
 /-- The rational-function denotation of a represented fraction, valid for every lawful polynomial
 representation. -/
@@ -175,6 +176,7 @@ noncomputable def toRatFunc {α : Type u} [CField α] [CFieldSpec.{u,v} α] (x :
     RatFunc (CFieldSpec.K α) :=
   am α (CPoly.toPoly (num x)) / am α (CPoly.toPoly (den x))
 
+omit [LawfulCFrac F P] in
 /-- A represented fraction denotes the quotient of its polynomial numerator and denominator. -/
 theorem toRatFunc_eq_div {α : Type u} [CField α] [CFieldSpec.{u,v} α] (x : F α) :
     toRatFunc x = am α (CPoly.toPoly (num x)) / am α (CPoly.toPoly (den x)) := rfl
@@ -300,7 +302,7 @@ end CFrac
 /-- Every lawful represented fraction inherits the generic `RatFunc` field denotation. -/
 @[reducible] noncomputable instance instCFieldSpecCFrac
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] :
     CFieldSpec (F α) :=
   CFrac.fieldSpec (F := F) (P := P)
@@ -310,7 +312,7 @@ namespace CFrac
 /-- The field bridge sends the polynomial embedding to the natural rational-function embedding. -/
 @[denote] theorem toK_ofPoly
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (p : P α) :
     CFieldSpec.toK (ofPoly (F := F) p) = am α (CPoly.toPoly p) := by
   change toRatFunc (ofPoly (F := F) p) = am α (CPoly.toPoly p)
@@ -319,7 +321,7 @@ namespace CFrac
 /-- The field bridge sends a packaged fraction to the quotient of its polynomial denotations. -/
 @[denote] theorem toK_ofFraction
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α]
     (num den : P α) (h : CPolyEngine.cisZero den = false) :
     CFieldSpec.toK (ofFraction (F := F) num den h) =

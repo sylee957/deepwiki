@@ -21,7 +21,7 @@ open scoped Differential in
 /-- Formal differentiation of a lawful represented fraction realizes rational-function differentiation. -/
 theorem toRatFunc_deriv
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (x : F α) :
     toRatFunc (deriv x) = (toRatFunc x)′ := by
   have hbm : am α (CPoly.toPoly (den x)) ≠ 0 :=
@@ -47,7 +47,7 @@ open scoped Differential in
 /-- Rational-function differentiation commutes with a finite sum of lawful represented fractions. -/
 theorem deriv_toRatFunc_foldl_add
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (gs : List (F α)) :
     (toRatFunc (gs.foldl CCommRing.add (CCommRing.zero : F α)))′ =
       (gs.map (fun g => (toRatFunc g)′)).sum := by

@@ -22,6 +22,9 @@ structure SparseFrac (α : Type u) [CField α] where
 instance instCFracSparseFrac : CFrac SparseFrac CPoly.SparsePoly where
   toPair x := x.toPair
   ofPair num den h := ⟨(num, den), h⟩
+
+/-- `SparseFrac`'s private storage satisfies the represented-fraction laws. -/
+instance instLawfulCFracSparseFrac : LawfulCFrac SparseFrac CPoly.SparsePoly where
   toPair_ofPair _ _ _ := rfl
   den_nonzero_impl x := x.den_nonzero
   ofPair_toPair x := by

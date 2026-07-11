@@ -22,7 +22,7 @@ namespace CFrac
 /-! ### The computable tower derivation -/
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 
 /-- The quotient-rule tower derivation on any represented fraction `F` over polynomial representation `P`. -/
 def towerDerivCFracWith {α : Type u} [CField α] [CDiffField α] [CFieldDomain α P]
@@ -58,7 +58,7 @@ end CFrac
 
 section
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 variable {α : Type u} [CField α] [CDiffField α] [CFieldDomain α P]
 
 /-- Any `CFrac F P` inherits the quotient-rule derivation with the new monomial independent. -/
@@ -147,7 +147,7 @@ theorem sparseTowerT_deriv_eq_one :
 namespace CFrac
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
-variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 variable {α : Type u} [CField α] [CDiffField α] [CFieldSpec.{u,v} α]
   [CDiffFieldSpec.{u,v} α] [CFieldDomain α P]
 variable [Algebra ℚ (CFieldSpec.K α)]

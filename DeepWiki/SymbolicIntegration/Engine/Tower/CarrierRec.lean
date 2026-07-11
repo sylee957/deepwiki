@@ -13,7 +13,7 @@ universe u v
 /-- `CharZero` iterates through every lawful represented-fraction tower. -/
 noncomputable instance instCharZeroKCFrac
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P]
     [CharZero (CFieldSpec.K α)] : CharZero (CFieldSpec.K (F α)) :=
   inferInstanceAs (CharZero (RatFunc (CFieldSpec.K α)))
@@ -21,7 +21,7 @@ noncomputable instance instCharZeroKCFrac
 /-- `Algebra ℚ` iterates through every lawful represented-fraction tower. -/
 noncomputable instance instAlgebraQKCFrac
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P]
     [Algebra ℚ (CFieldSpec.K α)] : Algebra ℚ (CFieldSpec.K (F α)) :=
   inferInstanceAs (Algebra ℚ (RatFunc (CFieldSpec.K α)))
@@ -29,7 +29,7 @@ noncomputable instance instAlgebraQKCFrac
 /-- `CDiffFieldSpec` iterates through every lawful represented-fraction tower. -/
 noncomputable instance instCDiffFieldSpecCFracRec
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
     [CFieldDomain α P] [Algebra ℚ (CFieldSpec.K α)] : CDiffFieldSpec (F α) where
   diffK := fractionFieldDifferential

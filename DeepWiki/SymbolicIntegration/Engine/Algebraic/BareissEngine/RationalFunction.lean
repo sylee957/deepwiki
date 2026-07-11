@@ -15,7 +15,7 @@ namespace CFrac
 universe u
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
-variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 variable {α : Type u} [CField α] [CPolyGcd P α] [CFieldDomain α P]
 
 /-! ### Denominator-combining helpers -/

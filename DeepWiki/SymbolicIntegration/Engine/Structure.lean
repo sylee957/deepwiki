@@ -19,7 +19,7 @@ namespace CFrac
 /-- File-local cleared numerator representing `w * d`. -/
 private def clearedNumCoeffs
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P]
     (d : P ℚ) (w : F ℚ) : P ℚ :=
   let wn := CPoly.normalizeFracPair (CFrac.num w) (CFrac.den w)
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
@@ -30,7 +30,7 @@ coefficient matrix `M` (`w` last) whose nullspace vectors are the ℚ-relations 
 `m = ws.length`. -/
 def linearDepData
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P]
     (ws : List (F ℚ)) (w : F ℚ) :
     List (List ℚ) × ℕ :=
   let all := ws ++ [w]
@@ -47,7 +47,7 @@ def linearDepData
 /-- Every cleared logarithmic-dependence row has one column per input derivative. -/
 theorem linearDepData_row_length
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P]
     (ws : List (F ℚ)) (w : F ℚ) :
     ∀ row ∈ (linearDepData ws w).1, row.length = ws.length + 1 := by
   simp [linearDepData]
@@ -55,7 +55,7 @@ theorem linearDepData_row_length
 /-- Every selected logarithmic-dependence kernel vector satisfies each cleared relation row. -/
 theorem linearDepData_kernel_mem_row_sound
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P]
     [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
     (ws : List (F ℚ)) (w : F ℚ) (rel : List ℚ)
     (hrel : rel ∈ CLinearSolve.nullspaceBasis (linearDepData ws w).1
@@ -71,7 +71,7 @@ theorem linearDepData_kernel_mem_row_sound
 new transcendental monomial, i.e. no `rᵢ ∈ ℚ` give `Du/u = Σ rᵢ (Duᵢ/uᵢ)`. -/
 def logIsNewMonomial
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P] [CLinearSolve ℚ]
+    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P] [CLinearSolve ℚ]
     (logDerivs : List (F ℚ)) (w : F ℚ) : Bool :=
   let (M, m) := linearDepData logDerivs w
   let basis := CLinearSolve.nullspaceBasis M (m + 1)
@@ -82,7 +82,7 @@ def logIsNewMonomial
 `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` (`w`-column normalized to `−1`); else `none`. -/
 def logRelationCoeffs
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P] [CLinearSolve ℚ]
+    [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P] [CLinearSolve ℚ]
     (logDerivs : List (F ℚ)) (w : F ℚ) : Option (List ℚ) :=
   let (M, m) := linearDepData logDerivs w
   let basis := CLinearSolve.nullspaceBasis M (m + 1)
@@ -97,7 +97,7 @@ def logRelationCoeffs
 combination of the others. -/
 def logRelationCheck
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
-    [CPoly P] [CPolyEngine P] [CFrac F P] [CFieldDomain ℚ P]
+    [CPoly P] [CPolyEngine P] [CFrac F P] [LawfulCFrac F P] [CFieldDomain ℚ P]
     (logDerivs : List (F ℚ)) (w : F ℚ) (rs : List ℚ) : Bool :=
   let combo := (List.zip logDerivs rs).foldl
     (fun acc (wi, r) =>

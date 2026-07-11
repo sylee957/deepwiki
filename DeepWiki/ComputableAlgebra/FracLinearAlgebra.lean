@@ -12,7 +12,7 @@ universe u
 
 /-- Represented fractions select generic Gauss-Jordan linear solving through their `CFrac` field instance. -/
 instance instCLinearSolveCFrac {F : (α : Type u) → [CField α] → Type u}
-    {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P]
+    {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CFrac F P] [LawfulCFrac F P]
     {α : Type u} [CField α] [CFieldDomain α P] : CLinearSolve (F α) :=
   CLinearSolve.gauss
 
