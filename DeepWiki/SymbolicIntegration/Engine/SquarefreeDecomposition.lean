@@ -77,6 +77,91 @@ private theorem selectedDiv_associated_quotient [CPolyEngine P] [CPolyEuclidean 
     rw [← hexact]
   exact hquot.symm
 
+/-- A common nonzero constant rescaling preserves the abstract Yun state invariant. -/
+private theorem yunInv_smul {K : Type*} [Field K] (A : K[X]) (i : ℕ) {b d : K[X]}
+    (h : YunInv A i b d) {e : K} (he : e ≠ 0) :
+    YunInv A i (Polynomial.C e * b) (Polynomial.C e * d) := by
+  obtain ⟨c, hc, hb, hd⟩ := h
+  exact ⟨e * c, mul_ne_zero he hc, by rw [hb, ← mul_assoc, ← Polynomial.C_mul],
+    by rw [hd, ← mul_assoc, ← Polynomial.C_mul]⟩
+
+/-- An exact polynomial product reads as the corresponding Euclidean quotient. -/
+private theorem quotient_eq_of_mul_eq {K : Type*} [Field K] {X g b : K[X]}
+    (hg : g ≠ 0) (h : X * g = b) : X = b / g := by
+  have hdvd : g ∣ b := ⟨X, by rw [← h, mul_comm]⟩
+  have hcancel : g * (b / g) = b := EuclideanDomain.mul_div_cancel' hg hdvd
+  exact (mul_left_cancel₀ hg (by rw [hcancel, ← h, mul_comm])).symm
+
+/-- The selected gcd/division initialization of the generic Yun kernel denotes `YunInv A 1`. -/
+private theorem defaultInit_yunInv [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] [CharZero (CFieldSpec.K α)] (p : P α) (hp0 : CPoly.toPoly p ≠ 0)
+    (hpp : (CPoly.toPoly p).primPart ≠ 0) :
+    YunInv (CPoly.toPoly p) 1
+      (CPoly.toPoly (CPolyEuclidean.div p (CPolyGcd.compute p (CPolyEngine.deriv p))))
+      (CPoly.toPoly (CPolyEngine.sub
+        (CPolyEuclidean.div (CPolyEngine.deriv p) (CPolyGcd.compute p (CPolyEngine.deriv p)))
+        (CPolyEngine.deriv (CPolyEuclidean.div p (CPolyGcd.compute p (CPolyEngine.deriv p)))))) := by
+  set A := CPoly.toPoly p with hA
+  set g := CPolyGcd.compute p (CPolyEngine.deriv p) with hg
+  set G := gcd A (derivative A) with hG
+  have hA' : CPoly.toPoly (CPolyEngine.deriv p) = derivative A := by
+    rw [LawfulCPolyEngine.toPoly_deriv, hA]
+  have hG0 : G ≠ 0 := fun h => hp0 (zero_dvd_iff.mp (h ▸ gcd_dvd_left A (derivative A)))
+  have hassoc : Associated (CPoly.toPoly g) G := by
+    have h := selectedGcd_associated (P := P) p (CPolyEngine.deriv p)
+    rw [hA'] at h
+    exact h
+  obtain ⟨u, hu⟩ := hassoc.symm
+  obtain ⟨k, hkunit, hkC⟩ := Polynomial.isUnit_iff.mp u.isUnit
+  have hk0 : k ≠ 0 := isUnit_iff_ne_zero.mp hkunit
+  have hgval : CPoly.toPoly g = Polynomial.C k * G := by rw [← hu, ← hkC]; ring
+  have hg0 : CPoly.toPoly g ≠ 0 := fun h => hG0 (zero_dvd_iff.mp (h ▸ hassoc.dvd))
+  have hgA : CPoly.toPoly g ∣ A := hassoc.dvd.trans (gcd_dvd_left A (derivative A))
+  have hgA' : CPoly.toPoly g ∣ derivative A :=
+    hassoc.dvd.trans (gcd_dvd_right A (derivative A))
+  have hkinv : Polynomial.C k⁻¹ * Polynomial.C k = 1 := by
+    rw [← Polynomial.C_mul, inv_mul_cancel₀ hk0, Polynomial.C_1]
+  have hbex : CPoly.toPoly (CPolyEuclidean.div p g) * CPoly.toPoly g = A := by
+    simpa only [mul_comm] using
+      (LawfulCPolyEuclidean.div_exact (P := P) p g hg0 hgA).symm
+  have hdex : CPoly.toPoly (CPolyEuclidean.div (CPolyEngine.deriv p) g) * CPoly.toPoly g =
+      derivative A := by
+    have h := LawfulCPolyEuclidean.div_exact (P := P) (CPolyEngine.deriv p) g hg0 (by
+      rw [hA']
+      exact hgA')
+    rw [hA'] at h
+    simpa only [mul_comm] using h.symm
+  have hAG : A / G = CPoly.toPoly (CPolyEuclidean.div p g) * Polynomial.C k :=
+    (quotient_eq_of_mul_eq hG0 (by rw [← hbex, hgval]; ring)).symm
+  have hA'G : derivative A / G =
+      CPoly.toPoly (CPolyEuclidean.div (CPolyEngine.deriv p) g) * Polynomial.C k :=
+    (quotient_eq_of_mul_eq hG0 (by rw [← hdex, hgval]; ring)).symm
+  have heqb : CPoly.toPoly (CPolyEuclidean.div p g) = Polynomial.C k⁻¹ * (A / G) := by
+    rw [hAG, show Polynomial.C k⁻¹ *
+        (CPoly.toPoly (CPolyEuclidean.div p g) * Polynomial.C k) =
+        CPoly.toPoly (CPolyEuclidean.div p g) * (Polynomial.C k⁻¹ * Polynomial.C k) from by ring,
+      hkinv, mul_one]
+  have heqd : CPoly.toPoly (CPolyEngine.sub (CPolyEuclidean.div (CPolyEngine.deriv p) g)
+      (CPolyEngine.deriv (CPolyEuclidean.div p g))) =
+      Polynomial.C k⁻¹ * (derivative A / G - derivative (A / G)) := by
+    rw [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_deriv, heqb, derivative_C_mul,
+      mul_sub, hA'G,
+      show Polynomial.C k⁻¹ *
+          (CPoly.toPoly (CPolyEuclidean.div (CPolyEngine.deriv p) g) * Polynomial.C k) =
+          CPoly.toPoly (CPolyEuclidean.div (CPolyEngine.deriv p) g) *
+            (Polynomial.C k⁻¹ * Polynomial.C k) from by ring,
+      hkinv, mul_one]
+  change YunInv A 1 (CPoly.toPoly (CPolyEuclidean.div p g))
+    (CPoly.toPoly (CPolyEngine.sub (CPolyEuclidean.div (CPolyEngine.deriv p) g)
+      (CPolyEngine.deriv (CPolyEuclidean.div p g))))
+  rw [heqb, heqd]
+  letI : CharZero (CRingSpec.R α) := by
+    change CharZero (CFieldSpec.K α)
+    infer_instance
+  exact yunInv_smul A 1 (yunInv_base A (by simpa [hA] using hp0) (by simpa [hA] using hpp))
+    (inv_ne_zero hk0)
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
