@@ -38,58 +38,61 @@ theorem sparse_diophantineReduced_sound (p q rhs : CPoly.SparsePoly ℚ)
       CPoly.toPoly rhs :=
   CPoly.toPoly_diophantineReduced p q rhs hq hgdeg hgne
 
-namespace DensePoly
+namespace CFrac
 
-/-! ### `cParametricLogDeriv` over the base field `k = ℚ(x)`
+variable {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+variable [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P]
+variable [CFrac F P] [CFieldDomain ℚ P]
+
+/-! ### `CFrac.parametricLogDeriv` over the base field `k = ℚ(x)`
 
 Decide whether `n·b = Dz/z` for a nonzero `n ∈ ℤ` and `z ∈ k*` (a logarithmic derivative of a radical),
 with `b ∈ k = ℚ(x)`, `D = d/dx`. A logarithmic derivative `Dz/z` is always proper (`deg num < deg den`),
 so a non-proper `b` (in particular every nonzero constant) is provably not one. -/
 
-/-- `cBaseIsProper b`: `true` iff the lowest-terms `DenseFrac ℚ` value `b = a/d ∈ ℚ(x)` is proper
+/-- `baseIsProper b`: `true` iff the lowest-terms represented value `b = a/d ∈ ℚ(x)` is proper
 (`deg a < deg d`, nonzero numerator). -/
-def cBaseIsProper (b : DenseFrac ℚ) : Bool :=
-  let bn := CPoly.normalizeFracPair b.num b.den
-  cdeg bn.1 < cdeg bn.2 && !cisZero bn.1
+def baseIsProper (b : F ℚ) : Bool :=
+  let bn := CPoly.normalizeFracPair (CFrac.num b) (CFrac.den b)
+  CPolyEngine.cdeg bn.1 < CPolyEngine.cdeg bn.2 && !CPolyEngine.cisZero bn.1
 
-/-- Parametric-logarithmic-derivative test over the base field `cParametricLogDeriv b`, for
+/-- Parametric-logarithmic-derivative test over the base field `CFrac.parametricLogDeriv b`, for
 `b ∈ k = ℚ(x)`: `true` iff `b` could be a logarithmic derivative of a `ℚ(x)`-radical (`n·b = Dz/z` for
 nonzero `n ∈ ℤ`, `z ∈ ℚ(x)*`), `false` iff provably not. A non-proper `b` (in particular every nonzero
 constant) is ruled out; a proper `b` is conservatively accepted. -/
-def cParametricLogDeriv (b : DenseFrac ℚ) : Bool :=
+def parametricLogDeriv (b : F ℚ) : Bool :=
   -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
-  CCommRing.isZero b || cBaseIsProper b
+  CCommRing.isZero b || baseIsProper b
 
-/-! ### `cParamLogDeriv` — the parametric logarithmic derivative recognizer over `k = ℚ(x)`
+/-! ### `CFrac.paramLogDeriv` — the parametric logarithmic derivative recognizer over `k = ℚ(x)`
 
 Decide `n·f = Dv/v + m·Dθ/θ` for integers `n ≠ 0, m` and `v ∈ ℚ(x)*`: solve for the candidate constant
 `c = m/n` from `c·(Dθ/θ) = f`, then test whether `N·f − M·(Dθ/θ)` is a logarithmic derivative of a
 radical. `f` and `Dθ/θ` are passed as reduced `DenseFrac ℚ` values. -/
 
-/-- `cParamLogDerivCandidate fval wval`: the candidate constant `c = m/n ∈ ℚ` from `c·wval = fval` over
+/-- `CFrac.paramLogDerivCandidate fval wval`: the candidate constant `c = m/n ∈ ℚ` from `c·wval = fval` over
 `ℚ(x)`, returned when `fval/wval` is a `ℚ`-constant (and `wval ≠ 0`), else `none`. -/
-def cParamLogDerivCandidate (fval wval : DenseFrac ℚ) : Option ℚ :=
+def paramLogDerivCandidate (fval wval : F ℚ) : Option ℚ :=
   -- `c·wval = fval` over ℚ(x); a constant candidate `c ∈ ℚ` exists iff `fval/wval ∈ ℚ`.
   if CCommRing.isZero wval then none
   else
     let r := CField.div fval wval
     -- `r ∈ ℚ` iff its lowest-terms denominator is a (nonzero) constant and numerator degree 0.
-    let rn := CPoly.normalizeFracPair r.num r.den
-    if cdeg rn.1 = 0 ∧ cdeg rn.2 = 0 then
-      some (((rn.1 : List ℚ).headD 0) / ((rn.2 : List ℚ).headD 1))
+    let rn := CPoly.normalizeFracPair (CFrac.num r) (CFrac.den r)
+    if CPolyEngine.cdeg rn.1 = 0 ∧ CPolyEngine.cdeg rn.2 = 0 then
+      some (CPoly.coeff rn.1 0 / CPoly.coeff rn.2 0)
     else none
 
-/-- Parametric logarithmic derivative recognizer `cParamLogDeriv fval θlogderiv` over `k = ℚ(x)`: decides
+/-- Parametric logarithmic derivative recognizer `CFrac.paramLogDeriv fval θlogderiv` over `k = ℚ(x)`: decides
 `n·f = Dv/v + m·(Dθ/θ)` for integers `n ≠ 0, m` and `v ∈ ℚ(x)*`, returning `some (n, m, v)` or `none`. It
-solves for the candidate constant `c = m/n` (`cParamLogDerivCandidate`), then tests whether the residue
-`N·f − M·(Dθ/θ)` is a logarithmic derivative of a radical (`cParametricLogDeriv`), reporting the residue as
+solves for the candidate constant `c = m/n` (`CFrac.paramLogDerivCandidate`), then tests whether the residue
+`N·f − M·(Dθ/θ)` is a logarithmic derivative of a radical (`CFrac.parametricLogDeriv`), reporting the residue as
 the witness `v` (`v = 1` when it vanishes). -/
-def cParamLogDeriv (fval θlogderiv : DenseFrac ℚ) :
-    Option (ℤ × ℤ × DenseFrac ℚ) :=
-  match cParamLogDerivCandidate fval θlogderiv with
+def paramLogDeriv (fval θlogderiv : F ℚ) : Option (ℤ × ℤ × F ℚ) :=
+  match paramLogDerivCandidate fval θlogderiv with
   | none =>
     -- no constant candidate `c`: fall back to the pure logarithmic-derivative test `n·f = Dv/v`
-    -- (`m = 0`). `f` is a log-derivative of a radical iff `cParametricLogDeriv` cannot rule it out and
+    -- (`m = 0`). `f` is a log-derivative of a radical iff `CFrac.parametricLogDeriv` cannot rule it out and
     -- the residue obstruction is absent; report only the provable `f = 0` (trivial `v = 1`, `n` any).
     if CCommRing.isZero fval then some (1, 0, CCommRing.one) else none
   | some c =>
@@ -103,10 +106,10 @@ def cParamLogDeriv (fval θlogderiv : DenseFrac ℚ) :
     -- `resid = 0` (then `v = 1`, `N·f = M·w`, so `n = N, m = M`); nonzero radical witnesses are
     -- returned as residual data for downstream certification.
     if CCommRing.isZero resid then some (N, M, CCommRing.one)
-    else if !cParametricLogDeriv resid then none
+    else if !parametricLogDeriv resid then none
     else some (N, M, resid)
 
-end DensePoly
+end CFrac
 
 namespace CPoly
 
@@ -198,7 +201,7 @@ theorem sparse_paramRischDE_example :
 
 /-! ### Validation — the parametric logarithmic derivative recognizer
 
-For `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1` over `k = ℚ`, `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)`. -/
+For `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1` over `k = ℚ`, `CFrac.paramLogDeriv` returns `(n, m, v) = (1, 11, 1)`. -/
 
 open DensePoly
 
@@ -207,15 +210,15 @@ def paramLogDerivExampleF : DenseFrac ℚ := CFrac.ofScalar 11
 /-- `Dθ/θ = 1` (exponential `θ`, `Dθ = θ`). -/
 def paramLogDerivExampleW : DenseFrac ℚ := CFrac.ofScalar 1
 
--- **Sanity print.** `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
-#eval (DensePoly.cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map
+-- **Sanity print.** `CFrac.paramLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
+#eval (CFrac.paramLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map
   (fun (n, m, v) => (n, m, CPoly.normalizeFracPair v.num v.den))
 
 /-- The parametric logarithmic derivative recognizer computes: for `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1`
-over `k = ℚ`, `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)`, verified to satisfy
+over `k = ℚ`, `CFrac.paramLogDeriv` returns `(n, m, v) = (1, 11, 1)`, verified to satisfy
 `n·f = Dv/v + m·(Dθ/θ)` (with `v = 1`, `Dv/v = 0`). -/
 theorem paramLogDeriv_example :
-    (match cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW with
+    (match CFrac.paramLogDeriv paramLogDerivExampleF paramLogDerivExampleW with
       | some (n, m, v) =>
           -- `n·f − m·(Dθ/θ) − Dv/v` cleared: with `v = 1`, `Dv/v = 0`, so check `n·f − m·w = 0`.
           let nf := CCommRing.mul (CFrac.ofScalar ((n : ℚ))) paramLogDerivExampleF
@@ -223,6 +226,15 @@ theorem paramLogDeriv_example :
           CCommRing.isZero (CField.sub nf mw) && CCommRing.isZero (CField.sub v CCommRing.one)
             && decide (n ≠ 0)
       | none => false) = true := by ccompute
+
+/-- The parametric logarithmic-derivative recognizer executes unchanged on sparse fractions. -/
+example :
+    (CFrac.paramLogDeriv (F := SparseFrac) (P := CPoly.SparsePoly)
+      (CFrac.ofScalar 11 : SparseFrac ℚ) (CFrac.ofScalar 1 : SparseFrac ℚ)).map
+        (fun (n, m, v) =>
+          (n, m, CPoly.coeff (CFrac.num v) 0, CPoly.coeff (CFrac.den v) 0)) =
+      some (1, 11, 1, 1) := by
+  ccompute
 
 #print axioms paramLogDeriv_example
 

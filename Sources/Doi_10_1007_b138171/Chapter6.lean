@@ -51,7 +51,7 @@ Exercise 6.1.
 The remaining gaps are the **abstract correctness theorems** (the pipeline is computationally rendered
 and example-validated but not proved correct), the §6.6 hypertangent cancellation case (the Ch. 8
 coupled-system layer), the full §5.12/§7.3 logarithmic-derivative-of-a-radical recognizer (the
-`cParametricLogDeriv` constant stub decides only the reachable obstruction), and the cancellation
+`CFrac.parametricLogDeriv` constant stub decides only the reachable obstruction), and the cancellation
 refinements of `RdeSpecialDenominator`/`RdeBoundDegree` (which only *raise* the bound in that case). -/
 
 open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.DensePoly

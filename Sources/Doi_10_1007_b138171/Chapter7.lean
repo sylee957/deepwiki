@@ -78,15 +78,15 @@ abbrev ex_7_2_limitedIntegrate := @limitedIntegrate_example
 /-! ## §7.3 The Parametric Logarithmic Derivative Problem — computable + validated -/
 
 /-- **Algorithm `ParametricLogarithmicDerivative`** (§7.3, p.253): the computable
-`cParamLogDeriv fuel fval θlogderiv` over the base field — deciding `n·f = Dv/v + m·Dθ/θ` for integers
+`CFrac.paramLogDeriv fuel fval θlogderiv` over the base field — deciding `n·f = Dv/v + m·Dθ/θ` for integers
 `n ≠ 0, m` and `v ∈ k(t)*`, returning `(n, m, v)` data or `none` via Lemma 7.3.1's candidate-`c = m/n`
 heuristic. The reachable base-field/constant case is decided directly; the full radical witness `v`
 (the §5.12 construction) is the documented continuation. Computable + `ccompute`-validated;
 abstract correctness deferred. -/
-noncomputable abbrev alg_7_3_paramLogDeriv := @cParamLogDeriv
+noncomputable abbrev alg_7_3_paramLogDeriv := @CFrac.paramLogDeriv
 
 /-- **Example 7.3.2** (§7.3, the `ParametricLogarithmicDerivative` box, p.253/254): for
-`11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1` (`θ = eᵗ`) over `k = ℚ`, `cParamLogDeriv` returns `(n, m, v) =
+`11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1` (`θ = eᵗ`) over `k = ℚ`, `CFrac.paramLogDeriv` returns `(n, m, v) =
 (1, 11, 1)`, verified to actually satisfy `n·f = Dv/v + m·(Dθ/θ)` by the cleared difference
 (`ccompute`). -/
 abbrev ex_7_3_2 := @paramLogDeriv_example

@@ -107,5 +107,5 @@ Each phase is its own gate-green commit.
   (`RischTower.lean` deleted) — 0 uses.
 - `CPoly.limitedIntegrate` (log variant) is **not** on the fix path (needs raw `η`, polynomial-only), but it is a
   **cataloged §7.2 book item** (`Sources/Doi_10_1007_b138171/Chapter7.lean`) — keep for coverage.
-- `cParamLogDerivCandidate`, `cBaseIsProper` — 0 external uses but live internal deps of the cataloged
-  `cParamLogDeriv`/`cParametricLogDeriv`; not dead. Not redundant.
+- `CFrac.paramLogDerivCandidate`, `CFrac.baseIsProper` — 0 external uses but live internal deps of the cataloged
+  `CFrac.paramLogDeriv`/`CFrac.parametricLogDeriv`; not dead. Not redundant.
