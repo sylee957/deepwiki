@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Subresultants
+import DeepWiki.ComputableAlgebra.PolySubresultantSpec
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import Sources.Doi_10_1145_321371_321381.Source
 

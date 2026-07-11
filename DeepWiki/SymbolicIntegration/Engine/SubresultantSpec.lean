@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Subresultant
 import DeepWiki.ComputableAlgebra.LinearAlgebraRatCorrect
-import DeepWiki.SymbolicIntegration.Subresultants
+import DeepWiki.ComputableAlgebra.PolySubresultantSpec
 
 /-! # `toPoly (CPolySubresultant.default …) = subresultant …` (L4b, the subresultant certification)
 

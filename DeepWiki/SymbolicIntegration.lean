@@ -46,7 +46,7 @@ import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SpecialNormalCoprime
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantPRS
-import DeepWiki.SymbolicIntegration.Subresultants
+import DeepWiki.ComputableAlgebra.PolySubresultantSpec
 
 -- ## Concrete `Compute` layer + generic executable `Engine`
 import DeepWiki.SymbolicIntegration.Compute

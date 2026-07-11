@@ -1,7 +1,7 @@
 import DeepWiki.Algebra.GcdBasics
 import DeepWiki.Algebra.ResultantRoots
 import DeepWiki.SymbolicIntegration.PseudoDivision
-import DeepWiki.SymbolicIntegration.Subresultants
+import DeepWiki.ComputableAlgebra.PolySubresultantSpec
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
