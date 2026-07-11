@@ -72,6 +72,7 @@ import DeepWiki.SymbolicIntegration.Engine.NormalReduction
 import DeepWiki.SymbolicIntegration.Engine.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.Engine.RischDE
 import DeepWiki.SymbolicIntegration.Engine.RischLevel
+import DeepWiki.SymbolicIntegration.Engine.RischLevelConvert
 import DeepWiki.SymbolicIntegration.Engine.RischLevelDense
 import DeepWiki.SymbolicIntegration.Engine.RischFieldCore
 import DeepWiki.SymbolicIntegration.Engine.RischFieldSpec
