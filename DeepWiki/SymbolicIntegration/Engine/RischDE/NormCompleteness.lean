@@ -34,23 +34,23 @@ def rdeNormDnh2Wf (Dt : DensePoly α) (fden gden : DensePoly α) : DensePoly α 
   DensePoly.cmul (DensePoly.cmul dn h) h
 
 omit [CFieldSpec α] in
-/-- The normal-denominator step's `isSome` is exactly its `cdvd` divisibility guard. -/
+/-- The normal-denominator step's `isSome` is exactly its `CPolyEuclidean.dvd` divisibility guard. -/
 theorem cRdeNormalDenominatorG_isSome_iff (Dt : DensePoly α) (fnum fden gnum gden : DensePoly α) :
     (DensePoly.cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true ↔
-      DensePoly.cdvd (DensePoly.cSplitFactorFast Dt gden).1 (rdeNormDnh2Wf Dt fden gden) = true := by
+      CPolyEuclidean.dvd (DensePoly.cSplitFactorFast Dt gden).1 (rdeNormDnh2Wf Dt fden gden) = true := by
   rw [DensePoly.cRdeNormalDenominator]
   simp only [rdeNormDnh2Wf, rdeNormHWf]
   split <;> simp_all
 
 omit [CDiffField α] [CFracGcdCoreWf α] in
-/-- Mathematical divisibility `toPoly q ∣ toPoly p` forces `cdvd q p = true`. -/
-theorem cdvdG_of_dvd (q p : DensePoly α) (hq0 : DensePoly.cnorm q ≠ [])
+/-- Mathematical divisibility `toPoly q ∣ toPoly p` forces `CPolyEuclidean.dvd q p = true`. -/
+theorem dvd_eq_true_of_toPoly_dvd (q p : DensePoly α) (hq0 : DensePoly.cnorm q ≠ [])
     (hdvd : toPoly q ∣ toPoly p) :
-    DensePoly.cdvd q p = true := by
-  by_cases h : DensePoly.cdvd q p = true
+    CPolyEuclidean.dvd q p = true := by
+  by_cases h : CPolyEuclidean.dvd q p = true
   · exact h
-  · have hfalse : DensePoly.cdvd q p = false := Bool.eq_false_iff.mpr h
-    exact False.elim ((DensePoly.not_dvd_of_cdvdG_false q p hq0 hfalse) hdvd)
+  · have hfalse : CPolyEuclidean.dvd q p = false := Bool.eq_false_iff.mpr h
+    exact False.elim ((CPolyEuclidean.not_toPoly_dvd_of_dvd_eq_false q p hq0 hfalse) hdvd)
 
 /-- The normal-denominator step returns `some` from the mathematical divisibility `eₙ ∣ dₙh²`. -/
 theorem cRdeNormalDenominatorG_isSome_of_dvd (Dt : DensePoly α)
@@ -59,7 +59,7 @@ theorem cRdeNormalDenominatorG_isSome_of_dvd (Dt : DensePoly α)
     (hdvd : toPoly (DensePoly.cSplitFactorFast Dt gden).1 ∣ toPoly (rdeNormDnh2Wf Dt fden gden)) :
     (DensePoly.cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true :=
   (cRdeNormalDenominatorG_isSome_iff Dt fnum fden gnum gden).mpr
-    (cdvdG_of_dvd _ _ hen0 hdvd)
+    (dvd_eq_true_of_toPoly_dvd _ _ hen0 hdvd)
 
 end WfEngineLayer
 
@@ -205,7 +205,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
 /-! ### Axiom audit -/
 
 #print axioms cRdeNormalDenominatorG_isSome_iff
-#print axioms cdvdG_of_dvd
+#print axioms dvd_eq_true_of_toPoly_dvd
 #print axioms cRdeNormalDenominatorG_isSome_of_dvd
 #print axioms hnormWf_of_divisibilityResidualWf
 #print axioms rischDEInnerCompletenessWf_of_norm_bound_solve

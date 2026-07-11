@@ -99,7 +99,7 @@ def cSPDEGClearedGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
-    if cdvd g c then
+    if CPolyEuclidean.dvd g c then
       let ad := CPolyEuclidean.div a g
       let bd := CPolyEuclidean.div b g
       let cd := CPolyEuclidean.div c g
@@ -216,7 +216,7 @@ def CSPDEGClearedInputsGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
-    if cdvd g c then
+    if CPolyEuclidean.dvd g c then
       let ad := CPolyEuclidean.div a g
       (cnorm g ≠ []) ∧ Associated (toPoly g) (gcd (toPoly a) (toPoly b))
         ∧ (cnorm a ≠ [])
@@ -251,7 +251,7 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
     have hdiva : toPoly ad * toPoly g = toPoly a := div_a_exact_of_gcd a b g hg0 hgassoc
     have hdivb : toPoly bd * toPoly g = toPoly b := div_b_exact_of_gcd a b g hg0 hgassoc
     have hdivc : toPoly (CPolyEuclidean.div c g) * toPoly g = toPoly c :=
-      div_c_exact_of_cdvdG c g hg0 hdvd'
+      div_c_exact_of_dvd_eq_true c g hg0 hdvd'
     have hane : toPoly a ≠ 0 := fun h => ha0 ((cnormG_eq_nil_iff a).mpr h)
     have hadne : toPoly ad ≠ 0 := by
       intro h; apply hane; rw [← hdiva, h, zero_mul]

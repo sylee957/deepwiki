@@ -82,11 +82,11 @@ def radSquarefreePartIsSquarefree (ρ : DensePoly α) : Bool :=
 `T² − s/P²` over `ℚ[x]`, but `P² ∤ s` (since `s` is squarefree, no nonconstant square divides it), so
 `s/P²` is not a polynomial and `y/(d·P)` is not integral. Hence `y/d` is the maximal integral element of
 the form `y/q`. Returns `true` (= "not integral", `P² ∤ s`) for nonconstant `P`; `false` for constant `P`
-(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `cdvd`. `[CField α]
+(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `CPolyEuclidean.dvd`. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
 def radNotIntegralFactor (ρ P : DensePoly α) : Bool :=
   let s := radSquarefreePart ρ
-  if cdeg P = 0 then false else !(cdvd (cmul P P) s)
+  if cdeg P = 0 then false else !(CPolyEuclidean.dvd (cmul P P) s)
 
 /-! ### Discriminant and genus of the simple-radical basis
 

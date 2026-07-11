@@ -1,5 +1,6 @@
 import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
 import DeepWiki.ComputableAlgebra.PolyReprSparse
+import DeepWiki.ComputableAlgebra.PolyEngine
 
 /-! # Abstract executable polynomial Euclidean algorithms
 
@@ -30,6 +31,10 @@ def div {α : Type u} [CField α] (p q : P α) : P α := (CPolyEuclidean.divmod 
 /-- Polynomial remainder selected by `CPolyEuclidean`. -/
 def mod {α : Type u} [CField α] (p q : P α) : P α := (CPolyEuclidean.divmod p q).2
 
+/-- Test represented polynomial divisibility by checking whether the selected remainder is zero. -/
+def dvd [CPolyEngine P] {α : Type u} [CField α] (q p : P α) : Bool :=
+  CPolyEngine.cisZero (mod p q)
+
 end CPolyEuclidean
 
 /-- Denotation laws for representation-selected polynomial Euclidean algorithms. -/
@@ -59,8 +64,7 @@ class LawfulCPolyEuclidean (P : Type u → Type u) [CPoly P] [CPolyEuclidean P] 
 
 namespace CPolyEuclidean
 
-variable {P : Type u → Type u} [CPoly P] [CPolyEuclidean P]
-  [LawfulCPolyEuclidean.{u,v} P]
+variable {P : Type u → Type u} [CPoly P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
   {α : Type u} [CField α] [CFieldSpec.{u,v} α]
 
 /-- A zero selected remainder turns the Euclidean identity into exact quotient multiplication. -/
@@ -85,6 +89,32 @@ theorem toPoly_mod_eq_zero_of_dvd (p q : P α) (hq : CPoly.toPoly q ≠ 0)
       rw [hspec]
       ring
     _ = 0 := by rw [hexact]; ring
+
+section Dvd
+
+variable [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+
+omit [LawfulCPolyEuclidean.{u,v} P] in
+/-- The selected divisibility test is true exactly when the selected remainder denotes zero. -/
+theorem dvd_iff (q p : P α) :
+    dvd q p = true ↔ CPoly.toPoly (mod p q) = 0 := by
+  rw [dvd, LawfulCPolyEngine.cisZero_iff]
+
+/-- A true selected divisibility test certifies polynomial divisibility for a nonzero divisor. -/
+theorem toPoly_dvd_of_dvd_eq_true (q p : P α) (hq : CPoly.toPoly q ≠ 0)
+    (h : dvd q p = true) : CPoly.toPoly q ∣ CPoly.toPoly p :=
+  toPoly_dvd_of_mod_eq_zero p q hq ((dvd_iff q p).mp h)
+
+/-- A false selected divisibility test refutes polynomial divisibility for a nonzero divisor. -/
+theorem not_toPoly_dvd_of_dvd_eq_false (q p : P α) (hq : CPoly.toPoly q ≠ 0)
+    (h : dvd q p = false) : ¬ CPoly.toPoly q ∣ CPoly.toPoly p := by
+  intro hdvd
+  have htrue : dvd q p = true :=
+    (dvd_iff q p).mpr (toPoly_mod_eq_zero_of_dvd p q hq hdvd)
+  rw [htrue] at h
+  exact Bool.noConfusion h
+
+end Dvd
 
 /-- Dividing a constant polynomial by a nonzero polynomial produces a constant quotient. -/
 theorem div_natDegree_eq_zero_of_natDegree_eq_zero (p q : P α)

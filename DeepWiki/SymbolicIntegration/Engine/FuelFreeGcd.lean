@@ -434,42 +434,6 @@ theorem associated_toPolyG_cgcdMonicWf {α : Type*} [CField α] [CFieldSpec α] 
   · exact dvd_gcd hdvd_p hdvd_q
   · exact DensePoly.toPolyG_dvd_cgcdWf p q (gcd_dvd_left _ _) (gcd_dvd_right _ _)
 
-namespace DensePoly
-
-variable {α : Type*} [CField α] [CFieldSpec α]
-
-/-- Divisibility test `cdvd q p = cisZero (cmodWf p q)`: decides `q ∣ p` by remainder-is-zero.
-Generic over `[CField α]`. -/
-def cdvd (q p : DensePoly α) : Bool := cisZero (cmodWf p q)
-
-/-- `cdvd q p = true ↔ toPoly (cmodWf p q) = 0`: the divisibility test reads as
-remainder-zero through `toPoly`. -/
-theorem cdvdG_iff (q p : DensePoly α) :
-    cdvd q p = true ↔ toPoly (cmodWf p q) = 0 := by
-  rw [cdvd, cisZeroG_iff]
-
-/-- A true `cdvd q p` certifies polynomial divisibility `toPoly q ∣ toPoly p`
-(nonzero divisor `cnorm q ≠ []`). -/
-theorem dvd_of_cdvdG (q p : DensePoly α) (hq : cnorm q ≠ []) (h : cdvd q p = true) :
-    toPoly q ∣ toPoly p := by
-  have hrem : toPoly (cmodWf p q) = 0 := (cdvdG_iff q p).mp h
-  have heuclid : toPoly p = toPoly (cdivWf p q) * toPoly q + toPoly (cmodWf p q) :=
-    toPolyG_cmodWf p q hq
-  rw [hrem, add_zero] at heuclid
-  exact ⟨toPoly (cdivWf p q), by rw [heuclid]; ring⟩
-
-/-- A false `cdvd q p` refutes polynomial divisibility `¬ toPoly q ∣ toPoly p`
-(nonzero divisor `cnorm q ≠ []`). -/
-theorem not_dvd_of_cdvdG_false (q p : DensePoly α) (hq : cnorm q ≠ [])
-    (h : cdvd q p = false) : ¬ toPoly q ∣ toPoly p := by
-  intro hdvd
-  have hrem : toPoly (cmodWf p q) = 0 := toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd
-  have htrue : cdvd q p = true := (cdvdG_iff q p).mpr hrem
-  rw [htrue] at h
-  exact Bool.noConfusion h
-
-end DensePoly
-
 /-- Dense polynomials select the well-founded Euclidean implementation. -/
 instance instCPolyEuclideanDense : CPolyEuclidean DensePoly where
   divmod := DensePoly.cdivmodWf

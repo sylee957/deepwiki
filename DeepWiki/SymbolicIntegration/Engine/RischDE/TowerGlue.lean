@@ -87,9 +87,13 @@ namespace DensePoly
 
 /-- Restatement: the fuel-free divisibility check reads as honest divisibility. -/
 example {α : Type*} [CField α] [CFieldSpec α] (q p : DensePoly α)
-    (hq : cnorm q ≠ []) (hdvd : cdvd q p = true) :
-    toPoly q ∣ toPoly p :=
-  dvd_of_cdvdG q p hq hdvd
+    (hq : cnorm q ≠ []) (hdvd : CPolyEuclidean.dvd q p = true) :
+    toPoly q ∣ toPoly p := by
+  have hq0 : CPoly.toPoly q ≠ 0 := by
+    rw [toPoly_list_eq]
+    exact fun h => hq ((cnormG_eq_nil_iff _).mpr h)
+  simpa only [toPoly_list_eq] using
+    CPolyEuclidean.toPoly_dvd_of_dvd_eq_true q p hq0 hdvd
 
 /-- Restatement: the fuel-free generic Diophantine solver satisfies the Bézout identity. -/
 example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : DensePoly α)

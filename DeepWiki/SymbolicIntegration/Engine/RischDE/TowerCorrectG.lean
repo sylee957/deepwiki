@@ -59,12 +59,17 @@ theorem div_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : Den
   have hgdvd : toPoly g ∣ toPoly b := hgassoc.dvd.trans (gcd_dvd_right _ _)
   exact toPolyG_div_exact b g hg0 hgdvd
 
-/-- `toPoly (CPolyEuclidean.div c g) * toPoly g = toPoly c` from `cdvd g c = true` (`g ∣ c`). -/
-theorem div_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (c g : DensePoly α)
+/-- `toPoly (CPolyEuclidean.div c g) * toPoly g = toPoly c` from `CPolyEuclidean.dvd g c = true` (`g ∣ c`). -/
+theorem div_c_exact_of_dvd_eq_true {α : Type*} [CField α] [CFieldSpec α] (c g : DensePoly α)
     (hg0 : cnorm g ≠ [])
-    (hdvd : cdvd g c = true) :
+    (hdvd : CPolyEuclidean.dvd g c = true) :
     toPoly (CPolyEuclidean.div c g) * toPoly g = toPoly c := by
-  have hgdvd : toPoly g ∣ toPoly c := dvd_of_cdvdG g c hg0 hdvd
+  have hg0' : CPoly.toPoly g ≠ 0 := by
+    rw [toPoly_list_eq]
+    exact fun h => hg0 ((cnormG_eq_nil_iff _).mpr h)
+  have hgdvd : toPoly g ∣ toPoly c := by
+    simpa only [toPoly_list_eq] using
+      CPolyEuclidean.toPoly_dvd_of_dvd_eq_true g c hg0' hdvd
   exact toPolyG_div_exact c g hg0 hgdvd
 
 /-- One `cSPDE` peel's cleared lifting: with `D = implicitDeriv (toPoly Dt)`, Bézout certificate

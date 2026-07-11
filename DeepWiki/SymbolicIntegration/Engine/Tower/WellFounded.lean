@@ -467,7 +467,7 @@ def cSPDE (Dt : DensePoly α) (a b c : DensePoly α) (n : ℤ) :
     if cisZero c then some ([], [], 0, [], []) else none
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
-    if cdvd g c then
+    if CPolyEuclidean.dvd g c then
       let a' := CPolyEuclidean.div a g
       let b' := CPolyEuclidean.div b g
       let c' := CPolyEuclidean.div c g

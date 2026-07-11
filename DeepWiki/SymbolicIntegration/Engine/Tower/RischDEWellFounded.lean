@@ -93,7 +93,7 @@ dividing `x` (largest `k` with `pᵏ ∣ x`), by trial division. Stops at the ze
 def cValuation (p x : DensePoly α) : ℕ :=
   if cisZero x then 0
   else if cdeg p = 0 then 0
-  else if cdvd p x then
+  else if CPolyEuclidean.dvd p x then
     let xq := CPolyEuclidean.div x p
     if (cnorm xq : List α).length < (cnorm x : List α).length then
       1 + cValuation p xq
@@ -118,7 +118,11 @@ theorem toPolyG_pow_cValuationG_dvd (p x : DensePoly α) :
   | case3 x hx hp hdvd _xq hguard ih =>
       rw [cValuation.eq_def, if_neg hx, if_neg hp, if_pos hdvd, if_pos hguard]
       have hpne : cnorm p ≠ [] := fun hpe => hp (by rw [cdeg, hpe]; rfl)
-      have hpx : toPoly p ∣ toPoly x := dvd_of_cdvdG p x hpne hdvd
+      have hp0 : toPoly p ≠ 0 := fun h => hpne ((cnormG_eq_nil_iff _).mpr h)
+      have hp0G : CPoly.toPoly p ≠ 0 := by rwa [toPoly_list_eq]
+      have hpx : toPoly p ∣ toPoly x := by
+        simpa only [toPoly_list_eq] using
+          CPolyEuclidean.toPoly_dvd_of_dvd_eq_true p x hp0G hdvd
       have hid : toPoly x = toPoly (CPolyEuclidean.div x p) * toPoly p :=
         (toPolyG_div_exact x p hpne hpx).symm
       rw [add_comm, pow_add, pow_one, hid]
@@ -131,7 +135,7 @@ theorem toPolyG_pow_cValuationG_dvd (p x : DensePoly α) :
       exact one_dvd _
 
 /-- `cValuation` is sharp: for nonconstant `p` and nonzero `x`, one more `p` factor than
-`cValuation p x` does not divide `x`. Uses `cdvd`'s false-case converse at the terminal
+`cValuation p x` does not divide `x`. Uses `CPolyEuclidean.dvd`'s false-case converse at the terminal
 non-dividing branch. -/
 theorem cValuationG_sharp (p x : DensePoly α)
     (hp : cdeg p ≠ 0) (hx0 : toPoly x ≠ 0) :
@@ -152,7 +156,10 @@ theorem cValuationG_sharp (p x : DensePoly α)
   | case3 x hx hdeg hdvd _xq hguard ih =>
       intro hx0
       rw [cValuation.eq_def, if_neg hx, if_neg hdeg, if_pos hdvd, if_pos hguard]
-      have hpx : toPoly p ∣ toPoly x := dvd_of_cdvdG p x hpne hdvd
+      have hp0G : CPoly.toPoly p ≠ 0 := by rwa [toPoly_list_eq]
+      have hpx : toPoly p ∣ toPoly x := by
+        simpa only [toPoly_list_eq] using
+          CPolyEuclidean.toPoly_dvd_of_dvd_eq_true p x hp0G hdvd
       have hid : toPoly x = toPoly (CPolyEuclidean.div x p) * toPoly p :=
         (toPolyG_div_exact x p hpne hpx).symm
       have hq0 : toPoly (CPolyEuclidean.div x p) ≠ 0 := by
@@ -167,7 +174,10 @@ theorem cValuationG_sharp (p x : DensePoly α)
       exact (mul_dvd_mul_iff_right hp0).mp hcontra
   | case4 x hx hdeg hdvd _xq hguard =>
       intro hx0
-      have hpx : toPoly p ∣ toPoly x := dvd_of_cdvdG p x hpne hdvd
+      have hp0G : CPoly.toPoly p ≠ 0 := by rwa [toPoly_list_eq]
+      have hpx : toPoly p ∣ toPoly x := by
+        simpa only [toPoly_list_eq] using
+          CPolyEuclidean.toPoly_dvd_of_dvd_eq_true p x hp0G hdvd
       have hid : toPoly x = toPoly (CPolyEuclidean.div x p) * toPoly p :=
         (toPolyG_div_exact x p hpne hpx).symm
       have hq0 : toPoly (CPolyEuclidean.div x p) ≠ 0 := by
@@ -186,16 +196,18 @@ theorem cValuationG_sharp (p x : DensePoly α)
       exact False.elim (hguard hlen)
   | case5 x hx hdeg hdvd =>
       intro _hx0
-      have hfalse : cdvd p x = false := Bool.eq_false_iff.mpr hdvd
+      have hfalse : CPolyEuclidean.dvd p x = false := Bool.eq_false_iff.mpr hdvd
       rw [cValuation.eq_def, if_neg hx, if_neg hdeg, if_neg hdvd, zero_add, pow_one]
-      exact not_dvd_of_cdvdG_false p x hpne hfalse
+      have hp0G : CPoly.toPoly p ≠ 0 := by rwa [toPoly_list_eq]
+      simpa only [toPoly_list_eq] using
+        CPolyEuclidean.not_toPoly_dvd_of_dvd_eq_false p x hp0G hfalse
 
 end DensePoly
 
 /-! ## The flat-composition §6 pipeline
 
 Everything past the five recursive bottoms is a flat composition over the leaves above plus the generic
-`CPolyEuclidean.divmod`/`gcdExt`, `CPoly.diophantineReduced`, `cdvd`, and the §5.6
+`CPolyEuclidean.divmod`/`gcdExt`, `CPoly.diophantineReduced`, `CPolyEuclidean.dvd`, and the §5.6
 `cResidueResultantTower`/`cinterpolate`/`ceval`. -/
 
 namespace DensePoly
@@ -234,7 +246,7 @@ def cRdeNormalDenominator (Dt : DensePoly α) (fnum fden gnum gden : DensePoly �
   let h := CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf en (cderiv en))
     (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))
   let dnh2 := cmul (cmul dn h) h
-  if cdvd en dnh2 then
+  if CPolyEuclidean.dvd en dnh2 then
     let a := cmul dn h
     let Dh := cmonomialDeriv Dt h
     let b := CPolyEuclidean.div (csub (cmul a fnum) (cmul (cmul dn Dh) fden)) fden

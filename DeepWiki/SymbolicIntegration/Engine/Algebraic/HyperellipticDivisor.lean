@@ -31,7 +31,7 @@ structure MumfordDivisor (α : Type*) where
 def mumfordValid (ρ : DensePoly α) (D : MumfordDivisor α) : Bool :=
   cisMonic D.u
     && (cdeg D.v < cdeg D.u || cisZero D.v)
-    && cdvd D.u (csub (cmul D.v D.v) ρ)
+    && CPolyEuclidean.dvd D.u (csub (cmul D.v D.v) ρ)
 
 /-! ### The divisor of a single affine point, and the identity -/
 

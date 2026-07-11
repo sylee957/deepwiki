@@ -158,7 +158,7 @@ instance instCFieldCFrac {F : (α : Type u) → [CField α] → Type u}
 example :
     let p : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 1), (1, 1)]
     CFrac.eval (CFrac.ofPoly (F := SparseFrac) p) 2 = 3 := by
-  native_decide
+  ccompute
 
 /-! ### The bridge `toRatFunc` into `RatFunc (CFieldSpec.K α)` and its homomorphism laws -/
 
