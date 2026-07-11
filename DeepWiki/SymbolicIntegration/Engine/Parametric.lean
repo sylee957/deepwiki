@@ -140,6 +140,12 @@ def linearConstraintsQ {P : Type → Type} [CPoly P] [CPolyEngine P]
       (List.range m).map (fun j => CPoly.coeff (rs.getD j CPoly.czero) i))
   (qs, M)
 
+/-- Every row of `linearConstraintsQ` has one coefficient per input generator. -/
+theorem linearConstraintsQ_row_length {P : Type → Type} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] (gnums gdens : List (P ℚ)) :
+    ∀ row ∈ (linearConstraintsQ gnums gdens).2, row.length = gnums.length := by
+  simp [linearConstraintsQ]
+
 /-- **Parametric Risch DE over the base monomial ℚ[t]** `CPoly.paramRischDE gnums gdens`, specialized to
 `k = ℚ`, `D = d/dt`, the **reduced** equation `Dp = Σᵢ cᵢ·gᵢ` (`a = 1, b = 0`). Returns a **basis**
 `[c⃗₁, …, c⃗ᵣ]` of the `Const(k) = ℚ`-linear subspace of constant tuples
@@ -156,6 +162,23 @@ def paramRischDE {P : Type → Type} [CPoly P] [CPolyEngine P]
     (gnums gdens : List (P ℚ)) : List (List ℚ) :=
   let (_qs, M) := linearConstraintsQ gnums gdens
   CLinearSolve.nullspaceBasis M gnums.length
+
+/-- Every selected parametric-Risch vector satisfies each cleared linear constraint row. -/
+theorem paramRischDE_mem_row_sound {P : Type → Type} [CPoly P] [CPolyEngine P]
+    [CPolyGcd P] [CPolyEuclidean P] [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (gnums gdens : List (P ℚ)) (cs : List ℚ)
+    (hcs : cs ∈ paramRischDE gnums gdens) :
+    ∀ i, i < (linearConstraintsQ gnums gdens).2.length →
+      linearDot ((linearConstraintsQ gnums gdens).2.getD i []) cs = 0 := by
+  unfold paramRischDE at hcs
+  split at hcs
+  next qs M hconstraints =>
+    rw [hconstraints]
+    apply LawfulCLinearSolve.nullspaceBasis_sound M gnums.length cs ?_ hcs
+    intro row hrow
+    apply linearConstraintsQ_row_length gnums gdens row
+    rw [hconstraints]
+    exact hrow
 
 /-! ### `CPoly.limitedIntegrate`
 
@@ -210,10 +233,6 @@ def paramLogDerivExampleF : DenseFrac ℚ := CFrac.ofScalar 11
 /-- `Dθ/θ = 1` (exponential `θ`, `Dθ = θ`). -/
 def paramLogDerivExampleW : DenseFrac ℚ := CFrac.ofScalar 1
 
--- **Sanity print.** `CFrac.paramLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
-#eval (CFrac.paramLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map
-  (fun (n, m, v) => (n, m, CPoly.normalizeFracPair v.num v.den))
-
 /-- The parametric logarithmic derivative recognizer computes: for `11 = Dv/v + m·Dθ/θ` with `Dθ/θ = 1`
 over `k = ℚ`, `CFrac.paramLogDeriv` returns `(n, m, v) = (1, 11, 1)`, verified to satisfy
 `n·f = Dv/v + m·(Dθ/θ)` (with `v = 1`, `Dv/v = 0`). -/
@@ -236,8 +255,6 @@ example :
       some (1, 11, 1, 1) := by
   ccompute
 
-#print axioms paramLogDeriv_example
-
 /-! ### Validation — the parametric RDE reduces to a linear system
 
 For `Dp = c₁·(2t³+3t+1)/(t²−1) + c₂/(t−1) + c₃/(t+1)` over `k = ℚ`, `LinearConstraints` yields the
@@ -257,16 +274,6 @@ def paramRischExampleG2den : DensePoly ℚ := [-1, 1]
 def paramRischExampleG3num : DensePoly ℚ := [1]
 /-- `g₃`-denominator `t+1`. -/
 def paramRischExampleG3den : DensePoly ℚ := [1, 1]
-
--- **Sanity prints.** `LinearConstraints` returns the cleared coefficient system (rows = coefficients
--- of `t⁰, t¹`: `[[1,1,-1],[5,1,1]]`, up to equation order), and the
--- kernel basis (one vector, proportional to `(1,-3,-2)`: here `(-1/2, 3/2, 1) = -½·(1,-3,-2)`).
-#eval (CPoly.linearConstraintsQ
-    [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
-    [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]).2
-#eval CPoly.paramRischDE
-    [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
-    [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]
 
 /-- **Cleared parametric-constraint check** `CPoly.paramConstraintCheck gnums gdens cs`: `true` iff the
 constant tuple `cs = (c₁,…,cₘ)` satisfies the cleared constraint `Σᵢ cᵢ·rᵢ = 0` (the remainders `rᵢ` of
@@ -316,8 +323,6 @@ theorem paramRischDE_example :
                 [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den] cs
                 && !(cs.all (· == 0))))) = true := by ccompute
 
-#print axioms paramRischDE_example
-
 /-! ### Validation — the limited integration problem reduces to the parametric RDE
 
 `k = ℚ`, `t` a monomial with `Dt = 1` (`D = d/dt`). The limited integration problem
@@ -332,10 +337,6 @@ open DensePoly
 def limitedIntExampleFnum : DensePoly ℚ := [1]
 /-- Limited-integration example denominator `t`. -/
 def limitedIntExampleFden : DensePoly ℚ := [0, 1]
-
--- **Sanity print.** `CPoly.limitedIntegrate` finds the relation `f = Dw₁/w₁` (`f = log(t)`),
--- a one-dimensional kernel `[[-1, 1, 0]]` over generators `[f, Dw₁/w₁, Dw₂/w₂]`.
-#eval CPoly.limitedIntegrate limitedIntExampleFnum limitedIntExampleFden [[0, 1], [1, 1]] [[1], [1]]
 
 /-- **Limited integration reduces to the parametric Risch DE** (`ccompute`). For
 `f = Dv + c₁·log(t) + c₂·log(t+1)` with `f = 1/t` over `k = ℚ`,
@@ -359,7 +360,5 @@ theorem limitedIntegrate_example :
        && basis.all (fun cs =>
             CPoly.paramConstraintCheck gnums gdens cs && !(cs.all (· == 0)))) = true := by
   ccompute
-
-#print axioms limitedIntegrate_example
 
 end DeepWiki.SymbolicIntegration
