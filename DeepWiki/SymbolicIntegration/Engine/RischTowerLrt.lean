@@ -55,7 +55,7 @@ class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField �
   ((bnum, bden), c)` with `anum/aden = D(bnum/bden) + c·(ηnum/ηden)` over `α(s)`. Feeds the degree-raising
   coefficient recursion `cIntegratePrimPolyDegRaise` its `c` (the `c·tᵐ⁺¹/(m+1)` term). Defaults to `none` ⟹
   the tower recursion falls back to the log-free coefficient integrator (`c = 0`), so existing instances are
-  unaffected; a `(b,c)` instance (base = `cLimitedIntegrateSingleBase`) flips on degree-raising. Soundness is
+  unaffected; a `(b,c)` instance (base = `CFrac.limitedIntegrateSingleBase`) flips on degree-raising. Soundness is
   telescoping (`cIntegratePrimPolyDegRaiseG_sound` needs no correctness law on this). -/
   limitedIntegrateSingle : DensePoly α → DensePoly α → DensePoly α → DensePoly α → Option ((DensePoly α × DensePoly α) × α) :=
     fun _ _ _ _ => none

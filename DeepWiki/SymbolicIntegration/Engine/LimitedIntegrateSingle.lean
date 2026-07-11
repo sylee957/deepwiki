@@ -14,16 +14,20 @@ open DensePoly Polynomial
 
 universe u v
 
-namespace DensePoly
+namespace CFrac
 
-/-- **Base single-`w` limited integration** `cLimitedIntegrateSingleBase a η` (Bronstein §5.8's
+/-- **Base single-`w` limited integration** `limitedIntegrateSingleBase a η` (Bronstein §5.8's
 `LimitedIntegrate(a, Dt)`, `k = ℚ(x)`, polynomial-`b` regime): returns `some (b, c)` with `a = D(b) + c·η`
 (`b ∈ ℚ[x] ⊂ ℚ(x)`, `c ∈ ℚ`), or `none` if no such pair exists in this regime. Builds the two-generator
 constraint system `[a, η]` (`CPoly.linearConstraintsQ`), takes a selected `c₀ ≠ 0` kernel vector,
 normalizes `c₀ = 1`, and recovers `b` by antidifferentiating the cleared polynomial residual `q₀ + c₁·q₁`. -/
-def cLimitedIntegrateSingleBase (a η : DenseFrac ℚ) : Option (DenseFrac ℚ × ℚ) :=
-  let gnums := [a.num, η.num]
-  let gdens := [a.den, η.den]
+def limitedIntegrateSingleBase
+    {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P]
+    [CFrac F P] [CFieldDomain ℚ P] [CLinearSolve ℚ]
+    (a η : F ℚ) : Option (F ℚ × ℚ) :=
+  let gnums := [CFrac.num a, CFrac.num η]
+  let gdens := [CFrac.den a, CFrac.den η]
   let (qs, M) := CPoly.linearConstraintsQ gnums gdens
   let kernel := CLinearSolve.nullspaceBasis M 2
   match kernel.find? (fun v => v.getD 0 0 ≠ 0) with
@@ -31,20 +35,41 @@ def cLimitedIntegrateSingleBase (a η : DenseFrac ℚ) : Option (DenseFrac ℚ �
   | some v =>
     let c0 := v.getD 0 0
     let c1 := (v.getD 1 0) / c0                                   -- normalized `c₁` (`c₀ = 1`)
-    let integrand := cadd (qs.getD 0 []) (cscale c1 (qs.getD 1 []))
+    let integrand := CPolyEngine.add (qs.getD 0 CPoly.czero)
+      (CPolyEngine.scale c1 (qs.getD 1 CPoly.czero))
     let bpoly := CPoly.antiderivative integrand
     some (CFrac.ofPoly bpoly, -c1)
 
-/-- **`cLimitedIntegrateSingleBase` in the num/den signature** of `LawfulRischLevelLrt.limitedIntegrateSingle`
+end CFrac
+
+/-! ### Representation-independence validation -/
+
+/-- The base limited integrator runs unchanged on certified sparse fractions. -/
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let a : SparseFrac ℚ := CFrac.ofFraction (ofList [1, 1]) (ofList [0, 1]) (by cfrac_nonzero)
+    let η : SparseFrac ℚ := CFrac.ofFraction (ofList [1]) (ofList [0, 1]) (by cfrac_nonzero)
+    (match CFrac.limitedIntegrateSingleBase (F := SparseFrac) (P := CPoly.SparsePoly) a η with
+      | some (b, c) =>
+          CPoly.coeff (CFrac.num b) 0 == 0 && CPoly.coeff (CFrac.num b) 1 == 1 &&
+            CPoly.coeff (CFrac.den b) 0 == 1 && c == 1
+      | none => false) = true := by
+  ccompute
+
+namespace DensePoly
+
+/-- **`CFrac.limitedIntegrateSingleBase` in the num/den signature** of
+`LawfulRischLevelLrt.limitedIntegrateSingle`
 (`anum aden ηnum ηden ↦ ((bnum, bden), c)`) — the base ℚ instance's field for Phase 3-wire-2. Guards the
-denominators nonzero (`CFrac` needs `cisZero den = false`), then wraps `cLimitedIntegrateSingleBase`. -/
+denominators nonzero (`CFrac` needs `cisZero den = false`), then wraps the generic integrator. -/
 def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly ℚ) :
     Option ((DensePoly ℚ × DensePoly ℚ) × ℚ) :=
   if hA : DensePoly.cisZero aden = false then
     if hη : DensePoly.cisZero ηden = false then
-      (cLimitedIntegrateSingleBase (CFrac.ofFraction anum aden hA)
+      (CFrac.limitedIntegrateSingleBase (F := DenseFrac) (P := DensePoly)
+        (CFrac.ofFraction anum aden hA)
         (CFrac.ofFraction ηnum ηden hη)).map
-        fun bc => ((bc.1.num, bc.1.den), bc.2)
+        fun bc => ((CFrac.num bc.1, CFrac.den bc.1), bc.2)
     else none
   else none
 
@@ -129,7 +154,7 @@ example :
                 (CPoly.SparsePoly.ofList [(0, 1), (1, 2)]))
             && decide (CPolyEngine.cdeg q = 2)
       | none => false) = true := by
-  native_decide
+  ccompute
 
 end DensePoly
 

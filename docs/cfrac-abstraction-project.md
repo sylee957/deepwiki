@@ -119,7 +119,10 @@ runs the same fraction algorithm.
    their interpolation representation while retaining dense entry points for the existing soundness stack.
    The general-curve kernel independently selects the base-variable polynomial, curve-variable polynomial,
    fraction carrier, and residue-variable polynomial representations; an all-sparse double-resultant witness
-   exercises both selected resultant capabilities and selected Euclidean quotient recovery.
+   exercises both selected resultant capabilities and selected Euclidean quotient recovery. Base single-`w`
+   limited integration now runs as `CFrac.limitedIntegrateSingleBase`, selecting fraction access/construction,
+   polynomial gcd/division and antiderivation, and nullspace solving through their interfaces; dense and sparse
+   fraction witnesses execute the same definition, while the num/den callback remains an explicit dense boundary.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

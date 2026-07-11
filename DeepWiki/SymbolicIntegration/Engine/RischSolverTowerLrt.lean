@@ -80,7 +80,7 @@ theorem towerCoeffIntegrateLrt_sound (c b : DenseFrac β) (h : towerCoeffIntegra
 `LawfulRischLevelLrt.limitedIntegrateSingle` (reconstructing `b = bnum/bden` and the constant `c` as
 `DenseFrac β` elements), falling back to the log-free `towerCoeffIntegrateLrt` (`c = 0`) when the class supplies no
 single-`w` integrator (the default). This is the `limInt` that flips on the degree-raising `c·tᵐ⁺¹/(m+1)` term
-once a base `(b,c)` integrator (`cLimitedIntegrateSingleBase`) is present. -/
+once a base `(b,c)` integrator (`CFrac.limitedIntegrateSingleBase`) is present. -/
 def towerCoeffIntegrateSingleLrt (η c : DenseFrac β) : Option (DenseFrac β × DenseFrac β) :=
   match LawfulRischLevelLrt.limitedIntegrateSingle (CFrac.num c) (CFrac.den c)
       (CFrac.num η) (CFrac.den η) with

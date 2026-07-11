@@ -16,34 +16,34 @@ def limIntSingleExampleA : DenseFrac ℚ := CFrac.ofFraction [1, 1] [0, 1] (by c
 /-- `η = 1/x ∈ ℚ(x)` (the primitive derivative `Dt = 1/x`). -/
 def limIntSingleExampleEta : DenseFrac ℚ := CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)
 
--- Sanity print: `cLimitedIntegrateSingleBase (1+1/x) (1/x)` returns `b = x`, `c = 1`.
-#eval (cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta).map
+-- Sanity print: `CFrac.limitedIntegrateSingleBase (1+1/x) (1/x)` returns `b = x`, `c = 1`.
+#eval (CFrac.limitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta).map
   (fun bc => (CPoly.normalizeFracPair bc.1.num bc.1.den, bc.2))
 
 /-- The base single-`w` limited integrator finds the degree-raising constant. -/
-theorem cLimitedIntegrateSingleBase_example :
-    (match cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta with
+theorem limitedIntegrateSingleBase_example :
+    (match CFrac.limitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta with
       | some (b, c) =>
           CCommRing.isZero (CField.sub limIntSingleExampleA
             (CCommRing.add (CDiffField.cderiv b)
               (CCommRing.mul (CFrac.ofScalar c) limIntSingleExampleEta)))
             && decide (c ≠ 0)
-      | none => false) = true := by native_decide
+      | none => false) = true := by ccompute
 
 -- Sanity print: the num/den adapter on `(1+1/x, 1/x)`.
 #eval (limitedIntegrateSingleBaseNumDen [1, 1] [0, 1] [1] [0, 1]).map
   (fun r => (CPoly.normalizeFracPair r.1.1 r.1.2, r.2))
 
-/-- The num/den adapter matches `cLimitedIntegrateSingleBase` on `1+1/x` and `1/x`. -/
+/-- The num/den adapter matches `CFrac.limitedIntegrateSingleBase` on `1+1/x` and `1/x`. -/
 theorem limitedIntegrateSingleBaseNumDen_example :
     (limitedIntegrateSingleBaseNumDen [1, 1] [0, 1] [1] [0, 1]).map
-      (fun r => (CPoly.normalizeFracPair r.1.1 r.1.2, r.2)) = some (([0, 1], [1]), 1) := by native_decide
+      (fun r => (CPoly.normalizeFracPair r.1.1 r.1.2, r.2)) = some (([0, 1], [1]), 1) := by ccompute
 
 /-! ### Degree-raising primitive polynomial integration -/
 
 /-- The base single-`w` limited integrator wrapped with constants embedded in `ℚ(x)`. -/
 def limIntBaseWrap (η a : DenseFrac ℚ) : Option (DenseFrac ℚ × DenseFrac ℚ) :=
-  (cLimitedIntegrateSingleBase a η).map (fun bc => (bc.1, CFrac.ofScalar bc.2))
+  (CFrac.limitedIntegrateSingleBase a η).map (fun bc => (bc.1, CFrac.ofScalar bc.2))
 
 /-- `p = 1 + (1 + 1/x)·t ∈ ℚ(x)[t]`. -/
 def prim2ExampleP : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 1, limIntSingleExampleA]
@@ -59,6 +59,6 @@ theorem cIntegratePrimPolyDegRaiseG_example :
       | some q =>
           cisZero (csub (cmonomialDeriv [limIntSingleExampleEta] q) prim2ExampleP)
             && decide (cdeg q = 2)
-      | none => false) = true := by native_decide
+      | none => false) = true := by ccompute
 
 end DeepWiki.SymbolicIntegration

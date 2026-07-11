@@ -52,10 +52,12 @@ logarithmic derivative `Dw/w` — so the vehicle is `CPoly.paramRischDE [a, η]`
 Each phase is its own gate-green commit.
 
 - **Phase 1 — base single-`w` limited integration. ✅ DONE (`LimitedIntegrateSingle.lean`).**
-  `cLimitedIntegrateSingleBase (a η : CFracG ℚ) : Option (CFracG ℚ × ℚ)` returning `(b, c)` with
+  `CFrac.limitedIntegrateSingleBase (a η : F ℚ) : Option (F ℚ × ℚ)` is generic over
+  `[CFrac F P]`, polynomial gcd/division, and linear-solver capabilities. It returns `(b, c)` with
   `a = D(b) + c·η`, built from `CPoly.linearConstraintsQ [a,η]` + `CLinearSolve.nullspaceBasis` (find the `c₀ ≠ 0` kernel vector,
-  normalize `c₀ = 1`, `c = −c₁`) + base polynomial integration of the cleared residual for `b`. Native-`decide`
-  validated: `LimitedIntegrate(1+1/x, 1/x) = (x, 1)`. Scope: the **polynomial-`b`** regime; rational-`b` is 1b.
+  normalize `c₀ = 1`, `c = −c₁`) + `CPoly.antiderivative` on the cleared residual for `b`.
+  `DenseFrac` and `SparseFrac` both validate `LimitedIntegrate(1+1/x, 1/x) = (x, 1)` through `ccompute`.
+  Scope: the **polynomial-`b`** regime; rational-`b` is 1b.
 - **Phase 3-core — degree-raising recursion. ✅ DONE (`LimitedIntegrateSingle.lean`).**
   `cIntegratePrimPolyDegRaiseG η limInt fuel p` = Bronstein's `IntegratePrimitivePolynomial` (Thm 5.8.1):
   peel `a·tᵐ`, `limInt(a) = (b,c)`, `q₀ = c/(m+1)·t^(m+1) + b·tᵐ`, recurse on `p − D_tower(q₀)`. Native-`decide`
@@ -70,7 +72,7 @@ Each phase is its own gate-green commit.
   now = `cIntegratePrimPolyDegRaiseG η (towerCoeffIntegrateLrt wrapped b ↦ (b,0)) (deg p + 2)`, with
   `towerPolyIntegrateLrt_sound` via the telescoping `cIntegratePrimPolyDegRaiseG_sound` (no coefficient-soundness
   hypothesis). Behavior-identical for now (`c = 0` ⟹ same `q` as the old fixed-degree recursion); actually
-  *emitting* the degree-raising term needs the real `(b,c)` `limInt` (base = `cLimitedIntegrateSingleBase`,
+  *emitting* the degree-raising term needs the real `(b,c)` `limInt` (base = `CFrac.limitedIntegrateSingleBase`,
   Phase 3-wire-2; higher levels = Phase 2). **Retired** the fixed-degree `cLimitedIntegratePolyRatG` +
   `limIntTopFirst` + 3 soundness lemmas (~157 lines) — subsumed.
 - **Phase 3-wire-2 — supply the real `(b,c)` `limInt` (automatic, class-based).** The recursion + base single-`w`
@@ -84,7 +86,7 @@ Each phase is its own gate-green commit.
     Default `none` ⟹ every existing instance compiles unchanged and behaves identically (log-free); soundness is
     the telescoping `cIntegratePrimPolyDegRaiseG_sound` (holds for the `(b,c)` `limInt` too). Gate PASS.
   - **Flip on for the base (remaining).** A `LawfulRischLevelLrt` instance for the concrete base carrier
-    providing `limitedIntegrateSingle := cLimitedIntegrateSingleBase` (num/den-adapted, guarding `aden ≠ 0`).
+    providing `limitedIntegrateSingle := CFrac.limitedIntegrateSingleBase` (num/den-adapted, guarding `aden ≠ 0`).
     Validate a 2-level `integrate` run producing a degree-raising antiderivative through the solver.
 - **Phase 4-core — abstract soundness of the recursion. ✅ DONE (`LimitedIntegrateSingle.lean`).**
   `cIntegratePrimPolyDegRaiseG_sound`: `implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p`, axiom-clean
