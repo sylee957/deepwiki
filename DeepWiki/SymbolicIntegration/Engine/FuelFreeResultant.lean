@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.ComputableAlgebra.PolyResultant
 
 /-! # Well-founded generic resultant `cresultantWf`

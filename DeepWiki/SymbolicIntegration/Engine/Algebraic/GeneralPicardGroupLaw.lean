@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.GeneralTorsionLight
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 
 /-! # A light `𝔽_p` point-list Picard group law and individual-class order
 

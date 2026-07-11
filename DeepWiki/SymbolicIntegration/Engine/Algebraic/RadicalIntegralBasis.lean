@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgebraicResidues
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.ComputableAlgebra.PolySquarefree
 

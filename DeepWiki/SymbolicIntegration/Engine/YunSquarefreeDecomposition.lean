@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Engine.SquarefreeDecomposition

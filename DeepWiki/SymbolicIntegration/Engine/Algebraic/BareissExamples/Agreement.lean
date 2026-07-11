@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.BareissEngine
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgFunctionField
 
 /-! # Bareiss determinant agreement examples

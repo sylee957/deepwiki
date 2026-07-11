@@ -6,7 +6,7 @@ import DeepWiki.SymbolicIntegration.Engine.ElementaryIntegrate
 import DeepWiki.SymbolicIntegration.Engine.ElementaryIntegrateExamples
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Engine.FunctionAlgebraIntegrate
 import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure

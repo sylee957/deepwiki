@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtension
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.HermiteNormalForm
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 
 /-! # Representation-independent fraction-free polynomial Bareiss engine
 

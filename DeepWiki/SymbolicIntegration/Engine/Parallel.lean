@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Parametric
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.ComputableAlgebra.PolyEngine

@@ -4,7 +4,7 @@ import DeepWiki.ComputableAlgebra.PolySquarefree
 import Mathlib.RingTheory.Polynomial.Content
 import Mathlib.Tactic.LinearCombination
 
-/-! # Well-founded generic Euclidean division and gcd
+/-! # Dense well-founded Euclidean division and gcd
 
 Euclidean division, extended gcd, and divisibility testing on `DensePoly`, by well-founded recursion
 on the normalized list length. The defs are `[CField α]`-only (so they reduce under `native_decide`

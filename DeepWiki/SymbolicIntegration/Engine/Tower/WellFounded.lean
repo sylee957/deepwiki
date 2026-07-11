@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Engine.PolySplitFactor

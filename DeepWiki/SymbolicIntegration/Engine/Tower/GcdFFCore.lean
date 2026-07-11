@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 
 /-! # The generic fraction-free gcd, upstream of the integration pipeline
 An upstream copy of the flat recursive fraction-free gcd (names `gb*Core`, `cprimPRSgcdGenCore`,

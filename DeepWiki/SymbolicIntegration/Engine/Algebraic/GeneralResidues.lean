@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgebraicResiduesExamples
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgFunctionField
 import DeepWiki.ComputableAlgebra.FracReduce
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse

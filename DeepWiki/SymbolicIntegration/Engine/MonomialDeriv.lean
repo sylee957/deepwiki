@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.ComputableAlgebra.PolyEngine
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 
