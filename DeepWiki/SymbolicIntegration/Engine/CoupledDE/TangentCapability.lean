@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Engine.Assemble
 /-! # Tangent coupled-solver capability
 
 The hypertangent monomial case reduces special integration to a coupled differential system. This module
-exposes that executable subproblem behind an operation/law pair without claiming the missing recombination. -/
+isolates preparation and reconstruction behind explicit soundness and relative-completeness contracts. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -75,6 +75,16 @@ class LawfulCTangentSpecialBridge (B : CTangentSpecialBridge) : Prop where
       towerFractionFieldDerivP Dt (fieldFracP out.1 out.2) =
         fieldFracP fp CPoly.one + fieldFracP b ds
 
+/-- Relative-completeness contract connecting tangent preparation to a bounded coupled solver. -/
+class CompleteCTangentSpecialBridge (S : CTangentCoupledSolver) (B : CTangentSpecialBridge) : Prop where
+  /-- Every valid tangent special antiderivative prepares a problem at a successful solver bound. -/
+  complete : ∀ (Dt fp b ds snum sden : DensePoly (DenseFrac ℚ)),
+    CPoly.toPoly sden ≠ 0 →
+    towerFractionFieldDerivP Dt (fieldFracP snum sden) =
+      fieldFracP fp CPoly.one + fieldFracP b ds →
+    ∃ p q₁ q₂, B.prepare Dt fp b ds = some p ∧
+      S.solve p.degreeBound p.diagonal p.offDiagonal p.rhs₁ p.rhs₂ p.level = some (q₁, q₂)
+
 /-- Compose a tangent coupled solver and special bridge into a monomial-case operation. -/
 def tangentMonomialCase (S : CTangentCoupledSolver) (B : CTangentSpecialBridge) :
     CMonomialCase DensePoly (DenseFrac ℚ) where
@@ -115,5 +125,16 @@ instance instLawfulCMonomialCaseTangent (S : CTangentCoupledSolver) (B : CTangen
     have heq : before = after := Option.some.inj hrun
     subst after
     exact hden
+
+/-- Complete tangent preparation and bounded solving make the composed monomial case relatively complete. -/
+instance instCompleteCMonomialCaseTangent (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [CompleteCTangentSpecialBridge S B] : CompleteCMonomialCase (tangentMonomialCase S B) where
+  special_complete Dt fp b ds snum sden hsden hderiv := by
+    obtain ⟨p, q₁, q₂, hprepare, hsolve⟩ :=
+      CompleteCTangentSpecialBridge.complete (S := S) (B := B)
+        Dt fp b ds snum sden hsden hderiv
+    refine ⟨B.reassemble p q₁ q₂, ?_⟩
+    simp [tangentMonomialCase, hprepare, hsolve]
+  postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 
 end DeepWiki.SymbolicIntegration
