@@ -63,6 +63,9 @@ denotations does not make those terms definitionally equal.
 - `LawfulCPolySquarefree` is the companion law for a selected `CPolySquarefree` operation. The
   fraction-free dense Yun implementation supplies that law from its existing gcd-correctness frontier,
   and the Hermite realization consumes the law rather than naming the Yun implementation directly.
+- The LRT assembler now consumes the reduced result's field identity and a separate nonzero rational-denominator
+  contract. `PrimitiveFrontierLrt` exports both facts, so recursive LRT composition no longer reaches into the
+  well-founded Hermite denominator proof.
 - `cHermiteReduceTowerG_leftover_proper_of_degree_le_one` now quantifies over `CPolySquarefree` and the
   selected `CPoly.squarefreeYun` output. Its Wf/LRT consumer resolves that selection at the concrete
   boundary instead of forcing the properness theorem itself to depend on `CFracGcdCoreWf`.
@@ -74,7 +77,9 @@ denotations does not make those terms definitionally equal.
   Stage-2 theorems that realize those abstract Hermite and residue contracts for the dense Wf output.
 - `IsPureNormalBranch` and `IsPolynomialBranch` now depend on the selected gcd and differential
   split-factor capabilities used by `canonicalRepresentationFast`, rather than on the dense
-  `CFracGcdCoreWf` implementation that happens to supply those capabilities in Wf drivers.
+  `CFracGcdCoreWf` implementation that happens to supply those capabilities in Wf drivers. The
+  pure-normal and polynomial driver-shape theorems likewise quantify over the selected gcd, split,
+  squarefree, and resultant operations used by `cIntegrateGFullWf`.
 
 ## Verification
 

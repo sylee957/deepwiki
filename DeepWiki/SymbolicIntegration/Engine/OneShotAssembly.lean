@@ -738,7 +738,9 @@ omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **`cIntegrateGFullWf` pure-normal branch returns the fuel-free reduced capstone** — when the special
 part `b` and polynomial part `fₚ` of the fuel-free canonical split both vanish, the fuel-free full driver
 returns exactly `cIntegrateReduced` on the simple part `(cₙ, dₙ)`. -/
-theorem cIntegrateGFullWf_pureNormal_eq [CFracGcdCoreWf α] (Dt : DensePoly α)
+theorem cIntegrateGFullWf_pureNormal_eq [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] (Dt : DensePoly α)
     (a d : DensePoly α) (cands : List α)
     (hbranch : IsPureNormalBranch Dt a d) :
     DensePoly.cIntegrateGFullWf Dt a d cands
@@ -751,7 +753,9 @@ theorem cIntegrateGFullWf_pureNormal_eq [CFracGcdCoreWf α] (Dt : DensePoly α)
   rw [hcrep] at hspecial hpoly
   simp only [hspecial, hpoly, if_true]
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (hb : DensePoly.cisZero (canonicalRepresentationFast Dt a d).2.1.1 = true)
     (hfp : DensePoly.cisZero (canonicalRepresentationFast Dt a d).1 = true) :
     DensePoly.cIntegrateGFullWf Dt a d cands
@@ -876,7 +880,9 @@ one-shot (`hnormal`), and the canonical split (`hrecon`). -/
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **`cIntegrateGFullWf` polynomial branch returns the recombined result** — using
 `canonicalRepresentationFast`, `cIntegrateReduced`, and `cPolyRischDE`. -/
-theorem cIntegrateGFullWf_poly_eq [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α)
+theorem cIntegrateGFullWf_poly_eq [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] (Dt : DensePoly α) (a d : DensePoly α)
     (cands : List α) (qp : DensePoly α)
     (hbranch : IsPolynomialBranch Dt a d)
     (hqp : DensePoly.cPolyRischDE Dt [] (canonicalRepresentationFast Dt a d).1
@@ -898,7 +904,9 @@ theorem cIntegrateGFullWf_poly_eq [CFracGcdCoreWf α] (Dt : DensePoly α) (a d :
   rw [hcrep] at hspecial hpoly hqp
   simp only [hspecial, hpoly, hqp, if_true, if_neg (by decide : ¬ (false = true))]
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (qp : DensePoly α)
+example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (qp : DensePoly α)
     (hb : DensePoly.cisZero (canonicalRepresentationFast Dt a d).2.1.1 = true)
     (hfp : DensePoly.cisZero (canonicalRepresentationFast Dt a d).1 = false)
     (hqp : DensePoly.cPolyRischDE Dt [] (canonicalRepresentationFast Dt a d).1
