@@ -122,7 +122,9 @@ monomial stage contracts.
    reduction. Soundness no longer depends on the low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
    bridge through the generic assembler. `sparseTangentRischLevel` transports the same composition through the
-   sparse representation boundary. Relative completeness remains after the concrete bridge is available.
+   sparse representation boundary. `checkedTangentRischLevel` and its sparse counterpart additionally
+   certificate-check every reassembled special fraction, so they are sound without solver or bridge laws.
+   Relative completeness remains after the concrete bridge is available.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

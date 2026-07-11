@@ -244,6 +244,25 @@ instance instLawfulCRischLevelTangent (R : CPolynomialReduction DensePoly (Dense
   unfold tangentRischLevel
   infer_instance
 
+/-- Assemble a certificate-checked tangent Risch level from arbitrary coupled and bridge operations. -/
+def checkedTangentRischLevel (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+    (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : CRischLevel DensePoly (DenseFrac ℚ) :=
+  oneLevelRisch R kind (tangentNormalReduction raw) (checkedTangentMonomialCase S B)
+
+/-- Certificate checks make the dense tangent Risch level sound without solver or bridge laws. -/
+instance instLawfulCRischLevelCheckedTangent (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFrac ℚ)] :
+    LawfulCRischLevel (checkedTangentRischLevel R kind raw S B)
+      (oneLevelRischSoundDomain tangentNormalDomain) := by
+  unfold checkedTangentRischLevel
+  infer_instance
+
 /-- Assemble a sparse tangent Risch level using a sparse raw normal reducer and dense coupled bridge. -/
 def sparseTangentRischLevel (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
     (kind : PolynomialReductionKind) (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
@@ -266,6 +285,29 @@ instance instLawfulCRischLevelSparseTangent
       (oneLevelRischSoundDomain
         (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := DenseFrac ℚ))) := by
   unfold sparseTangentRischLevel
+  infer_instance
+
+/-- Assemble a sparse tangent Risch level whose dense special result is certificate-checked. -/
+def checkedSparseTangentRischLevel (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (kind : PolynomialReductionKind) (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
+    CRischLevel CPoly.SparsePoly (DenseFrac ℚ) :=
+  oneLevelRisch R kind (checkedNormalReduction raw)
+    (denseMonomialCaseAsSparse (checkedTangentMonomialCase S B))
+
+/-- Certificate checks preserve tangent soundness across the sparse representation boundary. -/
+instance instLawfulCRischLevelCheckedSparseTangent
+    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFrac ℚ)] :
+    LawfulCRischLevel (checkedSparseTangentRischLevel R kind raw S B)
+      (oneLevelRischSoundDomain
+        (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := DenseFrac ℚ))) := by
+  unfold checkedSparseTangentRischLevel
   infer_instance
 
 end DeepWiki.SymbolicIntegration
