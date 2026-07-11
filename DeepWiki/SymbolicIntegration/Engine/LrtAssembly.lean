@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.RischTowerPrimitiveLrt
 import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
+import DeepWiki.SymbolicIntegration.Engine.LrtMonomialCase
 
 /-! # The one-level LRT (root-free) assembler core
 
@@ -76,7 +77,7 @@ candidate-sweep assembler, it has no candidate sweep or `postprocessNormal` step
 integrator is direct). -/
 def cIntegrateCaseLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
     [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
-    (C : CMonomialCase DensePoly α) (Dt a d : DensePoly α) :
+    (C : CLrtMonomialCase DensePoly α) (Dt a d : DensePoly α) :
     Option (LrtResult α) :=
   -- **Primitive-case runtime guard** (`Dθ ∈ k`, i.e. `deg Dt = 0`): the LRT reduced integrator is
   -- primitive-specific, so a successful run *decides* `deg Dt = 0` — discharging `hDt0` from the branch
@@ -96,7 +97,8 @@ alg-closed `E`. The composition consumes this result-level contract; it does not
 theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)]
     [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
     [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
-    (C : CMonomialCase DensePoly α) (Dt a d : DensePoly α) (res : LrtResult α) (snum sden : DensePoly α)
+    (C : CLrtMonomialCase DensePoly α) (Dt a d : DensePoly α) (res : LrtResult α)
+    (snum sden : DensePoly α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden))
     (hsome : cIntegrateCaseLrt C Dt a d = some res) (hsden : toPoly sden ≠ 0)

@@ -59,7 +59,7 @@ theorem lrtSolver_succeeds_iff_integrable_on_tower [PrimitiveFrontierLrt ℚ]
 
 /-- The concrete `DenseFrac ℚ` primitive monomial case is complete on the checked recursive domains. -/
 theorem completePrimitiveMonomialCase_on_tower [PrimitiveFrontierLrt ℚ] :
-    CompleteCMonomialCase (towerPrimitiveCaseLrt (β := ℚ))
+    CompleteCLrtMonomialCase (towerPrimitiveCaseLrt (β := ℚ))
       (towerPrimitiveRecursiveSpecialDomainLrt
         (towerLimitedCoefficientDomain DensePoly.CheckedLimitedIntegrateSingleBaseDomain)) := by
   exact completeTowerPrimitiveCaseLrt

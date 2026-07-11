@@ -43,7 +43,7 @@ class CRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [C
     [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
     [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] where
   /-- The per-monomial-case computable hooks for this level (the special/polynomial-part integrator). -/
-  case : CMonomialCase DensePoly α
+  case : CLrtMonomialCase DensePoly α
 
 /-- Soundness contract for a single-generator limited-integration capability. -/
 class LawfulCLimitedIntegrateSingleLrt {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
@@ -412,7 +412,7 @@ instance instCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly α]
     [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
     [PrimitiveFrontierLrt α] :
     CRischLevelLrt α where
-  case := primitiveGuardedCase
+  case := { integrateSpecial := primitiveGuardedCase.integrateSpecial }
 
 /-- The primitive LRT operation satisfies its algebraic-residue soundness contract. -/
 instance instLawfulCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly α]

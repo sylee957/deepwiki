@@ -297,22 +297,22 @@ variable [CRischField (DenseFrac β)]
 
 /-- The primitive tower monomial stage parameterized by its recursive coefficient operation. -/
 def towerPrimitiveRecursiveMonomialCaseLrt :
-    CRecursiveMonomialCase DensePoly (DenseFrac β) where
+    CRecursiveLrtMonomialCase DensePoly (DenseFrac β) where
   integrateSpecial I Dt fp b _ds :=
     if cisZero b && cisZero (csub Dt [CCommRing.one]) then
       match recursiveTowerPolyIntegrateLrt I CCommRing.one fp with
       | none => none
       | some qp => some (qp, [CCommRing.one])
     else none
-  postprocessNormal := (primitiveGuardedCase (α := DenseFrac β)).postprocessNormal
 
 /-- The LRT tower primitive monomial case, supplied with its selected recursive coefficient operation. -/
 def towerPrimitiveCaseLrt [CLimitedIntegrateSingleLrt β] :
-    CMonomialCase DensePoly (DenseFrac β) :=
+    CLrtMonomialCase DensePoly (DenseFrac β) :=
   (towerPrimitiveRecursiveMonomialCaseLrt (β := β)).withCoefficient
     (towerCoefficientIntegratorLrt (β := β))
 
-omit [CPolyGcd DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)] in
+omit [CRischField (DenseFrac β)] [CPolyGcd DensePoly (DenseFrac β)]
+  [CPolySquarefree DensePoly (DenseFrac β)] in
 /-- LRT tower primitive special-part soundness, the tower-recursion analogue of `primitiveGuardedCase_specialSound`.
 Under the guard (`b = 0`, `Dθ = 1`) the LRT polynomial recursion `towerPolyIntegrateLrt` yields `qp` with
 `D_tower(⟦qp⟧) = ⟦fp⟧` (`tower_special_identityLrt`), and `canonicalReconstruction_of_charZero` (special term
@@ -326,7 +326,7 @@ theorem towerPrimitiveCaseLrt_specialSound
     toPoly sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K (DenseFrac β)),
       towerFractionFieldDeriv Dt (fieldFrac snum sden) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
-  simp only [towerPrimitiveCaseLrt, CRecursiveMonomialCase.withCoefficient,
+  simp only [towerPrimitiveCaseLrt, CRecursiveLrtMonomialCase.withCoefficient,
     towerPrimitiveRecursiveMonomialCaseLrt] at hhook
   by_cases hguard : (cisZero (crSpecNum Dt a d) && cisZero (csub Dt [CCommRing.one])) = true
   · rw [if_pos hguard] at hhook
@@ -352,7 +352,8 @@ theorem towerPrimitiveCaseLrt_specialSound
 omit [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CPolySquarefree DensePoly β]
   [CPolyResultant DensePoly] [CPolySubresultant DensePoly] [CharZero (CFieldSpec.K β)]
   [CRischLevelLrt β] [CPolyGcd DensePoly (DenseFrac β)] [CPolySplitFactor DensePoly (DenseFrac β)]
-  [LawfulCPolySplitFactor DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)] in
+  [CRischField (DenseFrac β)] [LawfulCPolySplitFactor DensePoly (DenseFrac β)]
+  [CPolySquarefree DensePoly (DenseFrac β)] in
 theorem towerPrimitiveRecursiveMonomialCaseLrt_special_sound
     (I : CRecursiveCoefficientIntegrator (DenseFrac β))
     (Dt fp b ds snum sden : DensePoly (DenseFrac β))
@@ -389,22 +390,14 @@ theorem towerPrimitiveRecursiveMonomialCaseLrt_special_sound
   · rw [if_neg hguard] at hhook
     simp at hhook
 
-/-- The primitive LRT tower case realizes the generic recursive monomial-stage contract. -/
-instance instLawfulCRecursiveMonomialCaseTowerPrimitiveLrt :
-    LawfulCRecursiveMonomialCase (towerPrimitiveRecursiveMonomialCaseLrt (β := β)) where
+/-- The primitive LRT tower case realizes the recursive rational special-stage contract. -/
+instance instLawfulCRecursiveLrtMonomialCaseTowerPrimitive :
+    LawfulCRecursiveLrtMonomialCase (towerPrimitiveRecursiveMonomialCaseLrt (β := β)) where
   lawful I _ := by
     constructor
-    · intro Dt fp b ds snum sden hrun
-      simpa only [toPoly_list_eq] using
-        towerPrimitiveRecursiveMonomialCaseLrt_special_sound I Dt fp b ds snum sden hrun
-    · intro Dt cn dn before after hbefore hrun
-      change (primitiveGuardedCase (α := DenseFrac β)).postprocessNormal Dt before = some after at hrun
-      exact LawfulCMonomialCase.postprocessNormal_sound (C := primitiveGuardedCase) Dt cn dn
-        before after hbefore hrun
-    · intro Dt before after hden hrun
-      change (primitiveGuardedCase (α := DenseFrac β)).postprocessNormal Dt before = some after at hrun
-      exact LawfulCMonomialCase.postprocessNormal_den_nonzero (C := primitiveGuardedCase) Dt
-        before after hden hrun
+    intro Dt fp b ds snum sden hrun
+    simpa only [toPoly_list_eq] using
+      towerPrimitiveRecursiveMonomialCaseLrt_special_sound I Dt fp b ds snum sden hrun
 
 /-- Domain where the recursive primitive special stage's guards hold and degree raising is closed. -/
 def towerPrimitiveRecursiveSpecialDomainLrt
@@ -414,38 +407,30 @@ def towerPrimitiveRecursiveSpecialDomainLrt
     PrimitivePolynomialDomain CCommRing.one limitedDomain (cdeg fp + 2) fp
 
 /-- The recursive primitive monomial stage is complete on its explicit degree-raising closure domain. -/
-instance instCompleteCRecursiveMonomialCaseTowerPrimitiveLrt
+instance instCompleteCRecursiveLrtMonomialCaseTowerPrimitive
     (recursiveDomain : RecursiveCoefficientDomain (α := DenseFrac β))
     (limitedDomain : LimitedCoefficientDomain (α := DenseFrac β)) :
-    CompleteCRecursiveMonomialCase (towerPrimitiveRecursiveMonomialCaseLrt (β := β))
+    CompleteCRecursiveLrtMonomialCase (towerPrimitiveRecursiveMonomialCaseLrt (β := β))
       recursiveDomain limitedDomain (towerPrimitiveRecursiveSpecialDomainLrt limitedDomain) where
   complete I := by
     intro _ _ _
     constructor
-    · intro Dt fp b ds snum sden hdomain _hsden _hderiv
-      obtain ⟨hb, hDt, hpoly⟩ := hdomain
-      obtain ⟨qp, hqp⟩ := cIntegratePrimPolyDegRaise_complete
-        CCommRing.one I limitedDomain (cdeg fp + 2) fp hpoly
-      refine ⟨(qp, [CCommRing.one]), ?_⟩
-      simp only [CRecursiveMonomialCase.withCoefficient, towerPrimitiveRecursiveMonomialCaseLrt]
-      rw [hb, hDt]
-      simp only [Bool.true_and, if_true]
-      change (match recursiveTowerPolyIntegrateLrt I CCommRing.one fp with
-        | none => none
-        | some qp => some (qp, [CCommRing.one])) = some (qp, [CCommRing.one])
-      rw [recursiveTowerPolyIntegrateLrt,
-        show CPolyEngine.cdeg fp = cdeg fp from rfl, hqp]
-    · intro Dt cn dn before hbefore
-      refine ⟨before, ?_⟩
-      simp only [CRecursiveMonomialCase.withCoefficient, towerPrimitiveRecursiveMonomialCaseLrt,
-        primitiveGuardedCase]
-      rw [if_pos]
-      exact List.all_eq_true.mpr fun cv hcv => by
-        rw [cisZeroG_iff]
-        simp only [denote, mul_zero, add_zero]
-        rw [hbefore.coefficients_constant cv hcv, map_zero]
+    intro Dt fp b ds snum sden hdomain _hsden _hderiv
+    obtain ⟨hb, hDt, hpoly⟩ := hdomain
+    obtain ⟨qp, hqp⟩ := cIntegratePrimPolyDegRaise_complete
+      CCommRing.one I limitedDomain (cdeg fp + 2) fp hpoly
+    refine ⟨(qp, [CCommRing.one]), ?_⟩
+    simp only [CRecursiveLrtMonomialCase.withCoefficient, towerPrimitiveRecursiveMonomialCaseLrt]
+    rw [hb, hDt]
+    simp only [Bool.true_and, if_true]
+    change (match recursiveTowerPolyIntegrateLrt I CCommRing.one fp with
+      | none => none
+      | some qp => some (qp, [CCommRing.one])) = some (qp, [CCommRing.one])
+    rw [recursiveTowerPolyIntegrateLrt,
+      show CPolyEngine.cdeg fp = cdeg fp from rfl, hqp]
 
-omit [CPolyGcd DensePoly (DenseFrac β)] [CPolySplitFactor DensePoly (DenseFrac β)]
+omit [CRischField (DenseFrac β)] [CPolyGcd DensePoly (DenseFrac β)]
+  [CPolySplitFactor DensePoly (DenseFrac β)]
   [LawfulCPolySplitFactor DensePoly (DenseFrac β)]
   [CPolySquarefree DensePoly (DenseFrac β)] in
 /-- Lower-level log-free and limited completeness compose into tower primitive monomial completeness. -/
@@ -456,13 +441,13 @@ theorem completeTowerPrimitiveCaseLrt
     [CompleteCRischLevelRationalLrt (inferInstance : CRischLevelLrt β) rationalDomain]
     (limitedSingleDomain : LimitedIntegrateSingleDomain β)
     [CompleteCLimitedIntegrateSingleLrt L limitedSingleDomain] :
-    CompleteCMonomialCase (towerPrimitiveCaseLrt (β := β))
+    CompleteCLrtMonomialCase (towerPrimitiveCaseLrt (β := β))
       (towerPrimitiveRecursiveSpecialDomainLrt
         (towerLimitedCoefficientDomain limitedSingleDomain)) := by
-  change CompleteCMonomialCase
+  change CompleteCLrtMonomialCase
     ((towerPrimitiveRecursiveMonomialCaseLrt (β := β)).withCoefficient
       (towerCoefficientIntegratorLrt (β := β))) _
-  exact completeCMonomialCaseWithRecursiveCoefficient
+  exact completeCLrtMonomialCaseWithRecursiveCoefficient
     (towerPrimitiveRecursiveMonomialCaseLrt (β := β))
     (towerRecursiveCoefficientDomain rationalDomain)
     (towerLimitedCoefficientDomain limitedSingleDomain)
