@@ -50,11 +50,16 @@ class LawfulCResidueLogPart [CPolyEngine P] [CResidueSource P α]
     CResidueLogPart.compute Dt hNum Dstar = some logs →
       LawfulResidueLogPart Dt hNum Dstar logs
 
-/-- Relative-completeness law for a sound residue-logarithm operation. -/
+/-- Semantic domain on which residue-logarithm extraction is required to be complete. -/
+abbrev ResidueLogPartDomain := P α → P α → P α → Prop
+
+/-- Domain-relative completeness law for a sound residue-logarithm operation. -/
 class CompleteCResidueLogPart [CPolyEngine P] [CResidueSource P α]
-    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)] : Prop where
-  /-- A complete residue source finds every genuinely integrable proper squarefree remainder. -/
+    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)]
+    (domain : ResidueLogPartDomain (P := P) (α := α)) : Prop where
+  /-- A complete residue source finds every domain-admissible genuine proper squarefree remainder. -/
   complete : LawfulCResidueSource P α → ∀ (Dt hNum Dstar : P α),
+    domain Dt hNum Dstar →
     CPoly.toPoly Dstar ≠ 0 → Squarefree (CPoly.toPoly Dstar) →
     (CPoly.toPoly hNum).degree < (CPoly.toPoly Dstar).degree →
     (∃ logs : List (α × P α), GenuineResidueLogPart Dt hNum Dstar logs) →

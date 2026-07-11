@@ -119,8 +119,10 @@ monomial stage contracts.
 
 ## Remaining work
 
-1. Realize `CompleteCResidueLogPart` for an actually complete residue source. Bounded candidate sweeps
-   remain intentionally incomplete and must not acquire a false lawful instance.
+1. Enlarge the explicit `ResidueLogPartDomain` beyond checked/known residue families by proving an actually
+   complete residue-source theorem. `CompleteCResidueLogPart` and the composite Hermite-residue normal domain
+   are now domain-parameterized; bounded candidate sweeps remain intentionally incomplete and must not acquire
+   a universal-domain instance.
 2. Implement the concrete `CTangentSpecialBridge` and a relative-completeness contract for tangent normal
    reduction. Soundness no longer depends on the low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
