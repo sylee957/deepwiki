@@ -41,6 +41,22 @@ theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
     IsIntegralResultLrt Dt a d res :=
   (inferInstance : CRischLevelLrt (DenseFrac ℚ)).soundFormalLrt Dt a d res h
 
+/-- On the explicit decomposition domain, the concrete recursive tower succeeds exactly when integrable. -/
+theorem lrtSolver_succeeds_iff_integrable_on_tower [PrimitiveFrontierLrt ℚ]
+    [CRischField (DenseFrac ℚ)] [CPolyGcd DensePoly (DenseFrac ℚ)]
+    [CPolySplitFactor DensePoly (DenseFrac ℚ)] [LawfulCPolySplitFactor DensePoly (DenseFrac ℚ)]
+    [CPolySquarefree DensePoly (DenseFrac ℚ)] [PrimitiveFrontierLrt (DenseFrac ℚ)]
+    (Dt a d : DensePoly (DenseFrac ℚ))
+    (hdomain : primitiveRischLevelLrtDomain
+      (inferInstance : CRischLevelLrt (DenseFrac ℚ)) Dt a d)
+    (hd : toPoly d ≠ 0) :
+    IsElementaryIntegrableLrt Dt a d ↔
+      ∃ res, (inferInstance : CRischLevelLrt (DenseFrac ℚ)).integrate Dt a d = some res :=
+  rischLevelLrt_succeeds_iff_integrable
+    (inferInstance : CRischLevelLrt (DenseFrac ℚ))
+    (primitiveRischLevelLrtDomain (inferInstance : CRischLevelLrt (DenseFrac ℚ)))
+    Dt a d hdomain hd
+
 /-- The selected tower operation and its soundness contract resolve together. -/
 example [PrimitiveFrontierLrt ℚ]
     [CRischField (DenseFrac ℚ)] [CPolyGcd DensePoly (DenseFrac ℚ)]

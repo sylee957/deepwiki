@@ -75,6 +75,22 @@ def integrate [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySqua
     (Dt a d : DensePoly α) : Option (LrtResult α) :=
   if cisZero d then none else cIntegrateCaseLrt C.case Dt a d
 
+end CRischLevelLrt
+
+/-- Semantic domain predicate for a recursive algebraic-residue Risch level. -/
+abbrev RischLevelLrtDomain (α : Type u) := DensePoly α → DensePoly α → DensePoly α → Prop
+
+/-- Primitive-level domain with an explicit special-stage decomposition witness. -/
+def primitiveRischLevelLrtDomain [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) : RischLevelLrtDomain α :=
+  fun Dt a d => (toPoly Dt).natDegree = 0 ∧
+    (IsElementaryIntegrableLrt Dt a d →
+      ∃ snum sden, C.case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
+        (crSpecDen Dt a d) = some (snum, sden))
+
+namespace CRischLevelLrt
+
 /-- **Formal LRT soundness.** Any successful run satisfies the algebraic-residue log-derivative identity
 `IsIntegralResultLrt` — over every alg-closed differential extension `E`, `D_E(rational) + Σ residue logs =
 a/d`. Composed from the instance's `specialSound` + `reducedSoundLrt` through the assembler soundness
@@ -104,6 +120,56 @@ theorem soundFormalLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
       have hredDen := LawfulCRischLevelLrt.reducedDenNonzero C Dt a d hd0
       exact cIntegrateCaseLrt_sound C.case Dt a d res snum sden v
         hSpec h0 hsden hSpecField hNrm hredDen hrecon
+
+end CRischLevelLrt
+
+/-- Relative-completeness contract for a lawful recursive algebraic-residue Risch level. -/
+class CompleteCRischLevelLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) (domain : RischLevelLrtDomain α) [LawfulCRischLevelLrt C] : Prop where
+  /-- Every genuinely integrable input in the explicit domain is accepted. -/
+  relative_complete : ∀ (Dt a d : DensePoly α),
+    domain Dt a d → toPoly d ≠ 0 → IsElementaryIntegrableLrt Dt a d →
+      ∃ res, C.integrate Dt a d = some res
+
+/-- The recursive LRT assembler is relatively complete from its special-stage decomposition witness. -/
+instance instCompleteCRischLevelLrtPrimitiveDomain
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) [LawfulCRischLevelLrt C] :
+    CompleteCRischLevelLrt C (primitiveRischLevelLrtDomain C) where
+  relative_complete Dt a d hdomain hd hintegrable := by
+    obtain ⟨snum, sden, hspecial⟩ := hdomain.2 hintegrable
+    refine ⟨combineSNLrt snum sden
+      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)), ?_⟩
+    have hdz : cisZero d = false := by
+      rw [Bool.eq_false_iff]
+      intro hzero
+      exact hd ((cisZeroG_iff d).mp hzero)
+    have hdegree : cdeg Dt = 0 := by
+      rw [cdegG_eq_natDegree]
+      exact hdomain.1
+    rw [CRischLevelLrt.integrate, hdz, cIntegrateCaseLrt, if_pos hdegree]
+    simp only [crPoly, crSpecNum, crSpecDen, crNormNum, crNormDen] at hspecial ⊢
+    rcases hcanonical : canonicalRepresentationFast Dt a d with
+      ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+    rw [hcanonical] at hspecial
+    simp [hspecial]
+
+/-- On the explicit decomposition domain, the lawful LRT assembler succeeds exactly on integrable inputs. -/
+theorem rischLevelLrt_succeeds_iff_integrable
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) [LawfulCRischLevelLrt C]
+    (domain : RischLevelLrtDomain α) [CompleteCRischLevelLrt C domain]
+    (Dt a d : DensePoly α) (hdomain : domain Dt a d) (hd : toPoly d ≠ 0) :
+    IsElementaryIntegrableLrt Dt a d ↔ ∃ res, C.integrate Dt a d = some res := by
+  constructor
+  · exact CompleteCRischLevelLrt.relative_complete Dt a d hdomain hd
+  · rintro ⟨res, hrun⟩
+    exact ⟨res, C.soundFormalLrt Dt a d res hrun⟩
+
+namespace CRischLevelLrt
 
 /-- **Derived broad elementary integrability.** A successful LRT run certifies `a/d` is elementary integrable in
 the broad (algebraic-residue) sense — `IsElementaryIntegrableLrt`, via `soundFormalLrt`. -/
