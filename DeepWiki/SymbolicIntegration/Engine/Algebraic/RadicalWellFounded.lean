@@ -113,9 +113,9 @@ def radIntegrateCase3Wf (der : DensePoly α → DensePoly α) (f g C : DensePoly
 denominator `B` monic, numerator `R` proper: squarefree-decompose `B` (`CPoly.squarefreeYun`), split each
 factor into its `V`-part / `W`-part (`CPolyEuclidean.gcdExt`/`CPolyEuclidean.div` against `ρ`), partial-fraction `R`
 (`radPartialFractionCoprime`), and dispatch each summand to the Case-1 / Case-2 Hermite descent.
-Returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`. `[CFracGcdCoreWf α]` supplies
-the squarefree factorization. -/
-def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : DensePoly α) :
+Returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`. Squarefree factorization is selected
+through `CPolySquarefree`. -/
+def radIntegrateRationalWf [CPolySquarefree DensePoly α] (ρ R B : DensePoly α) :
     List (Bool × DensePoly α × ℕ × DensePoly α × DensePoly α × DensePoly α) :=
   let g : DensePoly α := cscale (CField.div CCommRing.one (CField.natCast 2)) (cderiv ρ)   -- `½·ρ'` (n = 2)
   let factored : List (DensePoly α × ℕ) :=
