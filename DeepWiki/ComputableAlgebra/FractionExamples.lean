@@ -1,6 +1,5 @@
 import DeepWiki.ComputableAlgebra.Fraction
-import DeepWiki.ComputableAlgebra.FracReprSparse
-import DeepWiki.ComputableAlgebra.LinearAlgebra
+import DeepWiki.ComputableAlgebra.FracLinearAlgebraSparse
 
 /-! # Representation validation for computable fractions
 
@@ -8,9 +7,6 @@ Sparse fraction examples exercising the representation-independent `CFrac` opera
 bridges. -/
 
 namespace DeepWiki.SymbolicIntegration
-
-local instance instCLinearSolveSparseFracRatExamples : CLinearSolve (SparseFrac ℚ) :=
-  CLinearSolve.gauss
 
 example :
     let p : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 1), (1, 1)]

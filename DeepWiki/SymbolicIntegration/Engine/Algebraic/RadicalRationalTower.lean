@@ -16,9 +16,6 @@ universe u
 
 open RadElem DensePoly
 
-local instance instCLinearSolveDenseFracRatRationalTower : CLinearSolve (DenseFrac ℚ) :=
-  CLinearSolve.gauss
-
 namespace DensePoly
 
 variable {α : Type*} [CField α]

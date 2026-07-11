@@ -14,9 +14,6 @@ namespace DeepWiki.SymbolicIntegration
 
 open RadElem DensePoly
 
-local instance instCLinearSolveDenseFracRatLogArgExamples : CLinearSolve (DenseFrac ℚ) :=
-  CLinearSolve.gauss
-
 /-! ### Generic solver over the rational base
 
 At `β = ℚ`, `radLogArgSolve` reproduces the arcsinh solve `∫ dx/√(x²+1) = log(x + y)`, confirming the

@@ -12,9 +12,6 @@ namespace DeepWiki.SymbolicIntegration
 
 open RadElem DensePoly
 
-local instance instCLinearSolveDenseFracRatElementaryExamples : CLinearSolve (DenseFrac ℚ) :=
-  CLinearSolve.gauss
-
 /-! ### Round-trip validation: `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over ℚ(x)(eˣ) -/
 
 /-- The rational part `v = 2√(eˣ+1) = 2y` as the `RadElem Lvl2` `[0, 2]` over ℚ(x)(eˣ). -/

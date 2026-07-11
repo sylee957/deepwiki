@@ -35,6 +35,8 @@ import DeepWiki.ComputableAlgebra.Fraction
 import DeepWiki.ComputableAlgebra.FractionExamples
 import DeepWiki.ComputableAlgebra.FracReduce
 import DeepWiki.ComputableAlgebra.LinearAlgebra
+import DeepWiki.ComputableAlgebra.FracLinearAlgebraDense
+import DeepWiki.ComputableAlgebra.FracLinearAlgebraSparse
 
 /-! # Computable algebra — the generic executable field & polynomial layer
 
