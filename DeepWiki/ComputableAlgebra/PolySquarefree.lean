@@ -19,8 +19,8 @@ class CPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEu
 
 namespace CPolySquarefree
 
-/-- Bounded Yun loop producing the successive multiplicity factors; kept qualified as a kernel detail. -/
-protected def defaultGo {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+/-- Bounded Yun loop producing the successive multiplicity factors. -/
+def defaultGo {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     [CPolyEuclidean P] {α : Type u} [CField α] [CPolyGcd P α] : ℕ → P α → P α → List (P α)
   | 0, _, _ => []
   | fuel + 1, b, d =>

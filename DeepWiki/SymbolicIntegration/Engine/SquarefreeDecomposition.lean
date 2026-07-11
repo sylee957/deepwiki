@@ -162,6 +162,108 @@ private theorem defaultInit_yunInv [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
   exact yunInv_smul A 1 (yunInv_base A (by simpa [hA] using hp0) (by simpa [hA] using hpp))
     (inv_ne_zero hk0)
 
+/-- The selected monic gcd is exactly the mathematical monic gcd whenever the left input is nonzero. -/
+private theorem selectedMonicGcd_eq_gcd [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α] (b d : P α) (hb : CPoly.toPoly b ≠ 0) :
+    CPoly.toPoly (CPolyEngine.cmonic (CPolyGcd.compute b d)) =
+      gcd (CPoly.toPoly b) (CPoly.toPoly d) := by
+  set g := CPolyGcd.compute b d with hg
+  have hassoc : Associated (CPoly.toPoly g) (gcd (CPoly.toPoly b) (CPoly.toPoly d)) :=
+    selectedGcd_associated b d
+  have hg0 : CPoly.toPoly g ≠ 0 := fun h =>
+    hb (zero_dvd_iff.mp (h ▸ hassoc.dvd.trans (gcd_dvd_left _ _)))
+  have hlead : (CPoly.toPoly g).leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hg0
+  have hmonic : (CPoly.toPoly (CPolyEngine.cmonic g)).Monic := by
+    rw [CPolyEngine.toPoly_cmonic_of_ne_zero g hg0, Polynomial.Monic,
+      Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C, inv_mul_cancel₀ hlead]
+  have hfactor : Associated (CPoly.toPoly (CPolyEngine.cmonic g))
+      (gcd (CPoly.toPoly b) (CPoly.toPoly d)) :=
+    (cmonic_associated g hg0).trans hassoc
+  rw [← hmonic.normalize_eq_self,
+    normalize_eq_normalize_iff_associated.mpr hfactor, normalize_gcd]
+
+/-- One selected Yun deflation's first component denotes the abstract quotient state. -/
+private theorem defaultGo_deflate_fst_toPoly [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] (b d : P α) (hb : CPoly.toPoly b ≠ 0) :
+    CPoly.toPoly (CPolyEuclidean.div b (CPolyEngine.cmonic (CPolyGcd.compute b d))) =
+      CPoly.toPoly b / gcd (CPoly.toPoly b) (CPoly.toPoly d) := by
+  let factor := CPolyEngine.cmonic (CPolyGcd.compute b d)
+  have hfactor : CPoly.toPoly factor = gcd (CPoly.toPoly b) (CPoly.toPoly d) :=
+    selectedMonicGcd_eq_gcd b d hb
+  have hfactor0 : CPoly.toPoly factor ≠ 0 := by
+    rw [hfactor]
+    exact fun h => hb (zero_dvd_iff.mp (h ▸ gcd_dvd_left _ _))
+  calc
+    CPoly.toPoly (CPolyEuclidean.div b factor) = CPoly.toPoly b / CPoly.toPoly factor :=
+      CPolyEuclidean.toPoly_div_eq_div b factor hfactor0 (by
+        rw [hfactor]
+        exact gcd_dvd_left _ _)
+    _ = CPoly.toPoly b / gcd (CPoly.toPoly b) (CPoly.toPoly d) := by rw [hfactor]
+
+/-- One selected Yun deflation's second component denotes the abstract residual state. -/
+private theorem defaultGo_deflate_snd_toPoly [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] (b d : P α) (hb : CPoly.toPoly b ≠ 0) :
+    CPoly.toPoly (CPolyEngine.sub
+      (CPolyEuclidean.div d (CPolyEngine.cmonic (CPolyGcd.compute b d)))
+      (CPolyEngine.deriv (CPolyEuclidean.div b (CPolyEngine.cmonic (CPolyGcd.compute b d))))) =
+      CPoly.toPoly d / gcd (CPoly.toPoly b) (CPoly.toPoly d) -
+        derivative (CPoly.toPoly b / gcd (CPoly.toPoly b) (CPoly.toPoly d)) := by
+  let factor := CPolyEngine.cmonic (CPolyGcd.compute b d)
+  have hfactor : CPoly.toPoly factor = gcd (CPoly.toPoly b) (CPoly.toPoly d) :=
+    selectedMonicGcd_eq_gcd b d hb
+  have hfactor0 : CPoly.toPoly factor ≠ 0 := by
+    rw [hfactor]
+    exact fun h => hb (zero_dvd_iff.mp (h ▸ gcd_dvd_left _ _))
+  rw [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_deriv,
+    CPolyEuclidean.toPoly_div_eq_div d factor hfactor0 (by
+      rw [hfactor]
+      exact gcd_dvd_right _ _), defaultGo_deflate_fst_toPoly b d hb, hfactor]
+
+/-- The abstract Yun loop does not depend on its phantom polynomial or multiplicity parameters. -/
+private theorem yunLoopAbs_irrelevant {K : Type*} [Field K] (A A' : K[X]) :
+    ∀ (n : ℕ) (p : K[X] × K[X]) (i j : ℕ), yunLoopAbs A p i n = yunLoopAbs A' p j n := by
+  intro n
+  induction n with
+  | zero => intro p i j; rfl
+  | succ n ih =>
+    intro p i j
+    obtain ⟨b, d⟩ := p
+    simp only [yunLoopAbs]
+    rw [ih _ (i + 1) (j + 1)]
+
+/-- The selected bounded Yun loop denotes the abstract Yun loop for its actual output length. -/
+private theorem defaultGo_map_toPoly_eq_yunLoopAbs [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] :
+    ∀ (fuel : ℕ) (b d : P α),
+      (CPolySquarefree.defaultGo fuel b d).map CPoly.toPoly =
+        yunLoopAbs (0 : (CRingSpec.R α)[X]) (CPoly.toPoly b, CPoly.toPoly d) 1
+          (CPolySquarefree.defaultGo fuel b d).length := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro b d
+    simp [CPolySquarefree.defaultGo, yunLoopAbs]
+  | succ fuel ih =>
+    intro b d
+    rw [CPolySquarefree.defaultGo]
+    by_cases hdeg : CPolyEngine.cdeg b = 0
+    · rw [if_pos hdeg]
+      simp [yunLoopAbs]
+    · rw [if_neg hdeg]
+      have hb : CPoly.toPoly b ≠ 0 := fun h => hdeg (by
+        rw [LawfulCPolyEngine.cdeg_eq_natDegree, h, Polynomial.natDegree_zero])
+      rw [List.map_cons, List.length_cons, selectedMonicGcd_eq_gcd b d hb]
+      simp only [yunLoopAbs]
+      congr 1
+      rw [ih (CPolyEuclidean.div b (CPolyEngine.cmonic (CPolyGcd.compute b d)))
+        (CPolyEngine.sub (CPolyEuclidean.div d (CPolyEngine.cmonic (CPolyGcd.compute b d)))
+          (CPolyEngine.deriv (CPolyEuclidean.div b (CPolyEngine.cmonic (CPolyGcd.compute b d))))),
+        defaultGo_deflate_fst_toPoly b d hb, defaultGo_deflate_snd_toPoly b d hb]
+      exact yunLoopAbs_irrelevant _ _ _ _ _ _
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
