@@ -87,6 +87,7 @@ logarithmic antiderivative. -/
 theorem reduceNormal_complete [CHermiteReduction P α]
     [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
     [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)]
+    [CompleteCResidueLogPart (P := P) (α := α)]
     (hsource : LawfulCResidueSource P α) (Dt a d : P α)
     (hd : CPoly.toPoly d ≠ 0)
     (hnormal : @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
@@ -100,7 +101,7 @@ theorem reduceNormal_complete [CHermiteReduction P α]
       (∀ cv ∈ logs, CPoly.toPoly cv.2 ≠ 0)) :
     ∃ out, reduceNormal Dt a d = some out := by
   have hherm := LawfulCHermiteReduction.result_lawful Dt a d hd hnormal hproper hdegree
-  obtain ⟨logs, hlogs⟩ := LawfulCResidueLogPart.complete hsource Dt
+  obtain ⟨logs, hlogs⟩ := CompleteCResidueLogPart.complete hsource Dt
     (hermiteResult Dt a d).remainderNum (hermiteResult Dt a d).remainderDen
     (LawfulCHermiteReduction.remainderDen_nonzero Dt a d hd) hherm.squarefree hherm.proper hwitness
   refine ⟨⟨((hermiteResult Dt a d).rationalNum, (hermiteResult Dt a d).rationalDen), logs⟩, ?_⟩

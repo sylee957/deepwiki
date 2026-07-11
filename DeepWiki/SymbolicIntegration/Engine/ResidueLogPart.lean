@@ -33,13 +33,17 @@ class CResidueLogPart (P : Type u → Type u) [CPoly P] [CPolyEngine P]
   /-- Produce logarithmic terms for a proper squarefree-denominator remainder, or reject it. -/
   compute : P α → P α → P α → Option (List (α × P α))
 
-/-- Soundness and relative-completeness laws for a selected residue-logarithm operation. -/
+/-- Soundness law for a selected residue-logarithm operation. -/
 class LawfulCResidueLogPart [CPolyEngine P] [CResidueSource P α]
     [CResidueLogPart P α] : Prop where
   /-- Every successful residue-logarithm result reconstructs the input remainder. -/
   sound : ∀ (Dt hNum Dstar : P α) (logs : List (α × P α)),
     CResidueLogPart.compute Dt hNum Dstar = some logs →
       LawfulResidueLogPart Dt hNum Dstar logs
+
+/-- Relative-completeness law for a sound residue-logarithm operation. -/
+class CompleteCResidueLogPart [CPolyEngine P] [CResidueSource P α]
+    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)] : Prop where
   /-- A complete residue source finds every genuinely integrable proper squarefree remainder. -/
   complete : LawfulCResidueSource P α → ∀ (Dt hNum Dstar : P α),
     CPoly.toPoly Dstar ≠ 0 → Squarefree (CPoly.toPoly Dstar) →
