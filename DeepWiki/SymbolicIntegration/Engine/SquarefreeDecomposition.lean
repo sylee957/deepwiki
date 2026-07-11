@@ -383,6 +383,21 @@ private theorem default_forall₂_squarefreeParts [CPolyEngine P] [LawfulCPolyEn
   exact yunLoopAbs_forall₂ (CPoly.toPoly p) hpp L 1 (CPoly.toPoly b) (CPoly.toPoly d)
     (le_refl 1) hinv
 
+/-- The generic Yun factor list is exactly the corresponding abstract Yun loop under denotation. -/
+private theorem default_map_toPoly_eq_yunLoopAbs [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] (p : P α) :
+    (CPolySquarefree.default p).map CPoly.toPoly =
+      yunLoopAbs (0 : (CRingSpec.R α)[X])
+        (CPoly.toPoly (CPolyEuclidean.div p (CPolyGcd.compute p (CPolyEngine.deriv p))),
+          CPoly.toPoly (CPolyEngine.sub
+            (CPolyEuclidean.div (CPolyEngine.deriv p) (CPolyGcd.compute p (CPolyEngine.deriv p)))
+            (CPolyEngine.deriv
+              (CPolyEuclidean.div p (CPolyGcd.compute p (CPolyEngine.deriv p)))))) 1
+        (CPolySquarefree.default p).length := by
+  rw [CPolySquarefree.default]
+  exact defaultGo_map_toPoly_eq_yunLoopAbs (P := P) (α := α) _ _ _
+
 open UniqueFactorizationMonoid in
 /-- The generic Yun factors reconstruct their input polynomial up to associates. -/
 private theorem default_reconstruct [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
