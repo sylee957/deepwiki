@@ -13,6 +13,30 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac
 
+section Selected
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+  [CPolySquarefree DensePoly α]
+
+/-- A lawful selected squarefree decomposition makes the Hermite leftover denominator squarefree. -/
+theorem cHermiteReduceTower_squarefree_of_decomposition (Dt a d : DensePoly α)
+    (hdecomp : LawfulSquarefreeDecomposition d (CPoly.squarefreeYun d)) :
+    Squarefree (toPoly (cHermiteReduceTower Dt a d).2.2) := by
+  rw [show toPoly (cHermiteReduceTower Dt a d).2.2 =
+      ((CPoly.squarefreeYun d).map DensePoly.toPoly).prod from by
+    rw [cHermiteReduceTower]
+    simp only [denote]
+    simp]
+  have hmap : (CPoly.squarefreeYun d).map CPoly.toPoly =
+      (CPoly.squarefreeYun d).map DensePoly.toPoly := by
+    apply List.map_congr_left
+    intro p _
+    exact toPoly_list_eq p
+  rw [← hmap]
+  exact hdecomp.prod_squarefree
+
+end Selected
+
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α]
 
@@ -33,18 +57,9 @@ theorem cHermiteReduceTowerG_lawfulHermiteReduction [CharZero (CFieldSpec.K α)]
   field_identity := by
     have hcap := cHermiteReduceTowerG_field_identity hgcd Dt a d hd0 hpp hcopgcd
     rwa [toPolyG_hNum'_eq_2_1 hgcd Dt a d hd0 hpp hcopgcd] at hcap
-  squarefree := by
-    rw [show toPoly (cHermiteReduceTower Dt a d).2.2 = ((cSqfreeYunFF d).map toPoly).prod from by
-      rw [cHermiteReduceTower, squarefreeYun_dense_wf_eq]
-      simp only [denote]
-      simp]
-    have hmap : (cSqfreeYunFF d).map CPoly.toPoly =
-        (cSqfreeYunFF d).map DensePoly.toPoly := by
-      apply List.map_congr_left
-      intro p _
-      exact toPoly_list_eq p
-    rw [← hmap]
-    exact (cSqfreeYunFFG_lawfulSquarefreeDecomposition hgcd d hd0 hpp).prod_squarefree
+  squarefree := cHermiteReduceTower_squarefree_of_decomposition Dt a d
+    (by simpa only [squarefreeYun_dense_wf_eq] using
+      cSqfreeYunFFG_lawfulSquarefreeDecomposition hgcd d hd0 hpp)
   proper := hproper
 
 end DeepWiki.SymbolicIntegration

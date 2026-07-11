@@ -50,6 +50,14 @@ denotations does not make those terms definitionally equal.
    fraction-free gcd/Yun implementation and proofs specifically about that implementation. Re-run the
    direct-concrete-call search and classify every result in the project document.
 
+## Current checkpoint
+
+- The primitive fraction-free PRS recursion and its termination lemma are private behind the
+  `CFracGcdCoreWf` instance.
+- `cHermiteReduceTower_squarefree_of_decomposition` derives the Hermite leftover-denominator contract
+  from any lawful selected squarefree decomposition. The well-founded realization now supplies its Yun
+  proof to that generic bridge instead of re-proving the denominator property inside the concrete theorem.
+
 ## Verification
 
 For each slice, run the touched module, its immediate consumer, and then `scripts/check.sh` serially.
