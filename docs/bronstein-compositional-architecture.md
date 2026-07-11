@@ -27,13 +27,21 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   semantic nonzero, reconstruction, squarefree, and low-derivation-degree properness laws. The existing
   dense reducer is selected as the operation, while its full lawful instance remains gated on replacing
   implementation-frontier hypotheses by the semantic normal-squarefree premise.
-- `CResidueLogPart`/`LawfulCResidueLogPart` make residue-log extraction option-valued, with successful
-  reconstruction and completeness relative to a lawful residue source and a genuine logarithmic witness.
+- `CResidueLogPart` makes residue-log extraction option-valued. `LawfulCResidueLogPart` certifies every
+  successful reconstruction, while `CompleteCResidueLogPart` separately states completeness relative to
+  a lawful residue source and a genuine logarithmic witness.
+- The dense realization `checkedResidueLogPart` runs the existing Rothstein-Trager computation but exposes
+  its logs only after nonzero-denominator and full identity checks; it has a lawful soundness instance
+  without claiming completeness for a bounded source.
 - `reduceNormal` composes Hermite and residue-log operations; `reduceNormal_sound` and
   `reduceNormal_complete` prove the normal branch by contract composition only.
 - `assembleOneLevel` is the first executable representation-neutral Figure-5.1 spine: canonical split,
   special integration, `reduceNormal`, monomial-specific normal postprocessing, and recombination.
   `assembleOneLevel_sound` derives its full one-level identity solely from lawful capability instances.
+- `CRischLevel` packages a one-level executable solver, while `LawfulCRischLevel` states soundness and
+  relative completeness over an explicit semantic domain. `oneLevelRisch` packages the generic assembler;
+  its current domain records the low-derivation-degree Hermite boundary, and completeness targets genuine
+  constant-residue witnesses rather than the weaker formal identity.
 - `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
   obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only

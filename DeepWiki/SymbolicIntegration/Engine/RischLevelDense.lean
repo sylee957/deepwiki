@@ -2,8 +2,6 @@ import DeepWiki.SymbolicIntegration.Engine.RischLevel
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPartDense
 import DeepWiki.SymbolicIntegration.Engine.CanonicalReconstructionCharZero
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
-import DeepWiki.SymbolicIntegration.Engine.CanonicalReconstructionCharZero
-import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 
 /-! # Dense realization of the compositional Risch level
 
@@ -30,8 +28,8 @@ end DensePoly
 open Polynomial
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-  [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] [CRischField α]
-  [CPolyGcd DensePoly α] [LawfulCPolyGcd DensePoly α]
+  [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+  [CPolyGcd DensePoly α]
   [CPolySplitFactor DensePoly α] [LawfulCPolySplitFactor DensePoly α]
   [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
   [LawfulCHermiteReduction (P := DensePoly) (α := α)]
