@@ -37,7 +37,7 @@ variable {B : Type*} [CField B]
 
 /-- `gbnormCore` is idempotent: `gbnormCore (gbnormCore p) = gbnormCore p`. The bivariate analogue of
 `cnormG_idem`; discharges the `decreasing_by` of `cprimPRSgcdGenCoreWf`. -/
-@[simp] theorem gbnormCore_idem (p : GBPolyCore B) : gbnormCore (gbnormCore p) = gbnormCore p := by
+@[simp] private theorem gbnormCore_idem (p : GBPolyCore B) : gbnormCore (gbnormCore p) = gbnormCore p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
@@ -60,7 +60,7 @@ Normalize `P, Q`; if `Q = 0` return the primitive part of `P`, else take the nex
 `r = gbprimitivePartCore cgcdB (gbpsremainderCore 60 P Q)` and recurse on `(Q, r)` under the structural
 guard `(gbnormCore r).length < (gbnormCore Q).length`. `[CField B]`-only. The content-gcd `cgcdB` is passed
 in. -/
-def cprimPRSgcdGenCoreWf (cgcdB : DensePoly B → DensePoly B → DensePoly B) (P Q : GBPolyCore B) :
+private def cprimPRSgcdGenCoreWf (cgcdB : DensePoly B → DensePoly B → DensePoly B) (P Q : GBPolyCore B) :
     GBPolyCore B :=
   let P := gbnormCore P
   let Q := gbnormCore Q
