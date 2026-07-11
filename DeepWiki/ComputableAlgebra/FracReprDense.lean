@@ -24,5 +24,8 @@ instance instCFracDenseFrac : CFrac DenseFrac DensePoly where
   ofPair num den h := ⟨(num, den), h⟩
   toPair_ofPair _ _ _ := rfl
   den_nonzero_impl x := x.den_nonzero
+  ofPair_toPair x := by
+    cases x
+    rfl
 
 end DeepWiki.SymbolicIntegration

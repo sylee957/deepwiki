@@ -24,6 +24,9 @@ class CFrac (F : (α : Type u) → [CField α] → Type u)
   /-- Every represented fraction stores a denominator certified nonzero. -/
   den_nonzero_impl : ∀ {α : Type u} [CField α] (x : F α),
     CPolyEngine.cisZero (toPair x).2 = false
+  /-- Rebuilding a represented fraction from its stored pair returns that fraction. -/
+  ofPair_toPair : ∀ {α : Type u} [CField α] (x : F α),
+    ofPair (toPair x).1 (toPair x).2 (den_nonzero_impl x) = x
 
 namespace CFrac
 
@@ -70,6 +73,28 @@ def ofFraction? {α : Type u} [CField α] (num den : P α) : Option (F α) :=
 theorem den_nonzero {α : Type u} [CField α] (x : F α) :
     CPolyEngine.cisZero (CFrac.den x) = false :=
   CFrac.den_nonzero_impl x
+
+/-- Construction respects equality of certified numerator-denominator pairs. -/
+private theorem ofPair_pair_congr {α : Type u} [CField α] (p q : P α × P α)
+    (hp : CPolyEngine.cisZero p.2 = false) (hq : CPolyEngine.cisZero q.2 = false)
+    (h : p = q) : CFrac.ofPair (F := F) p.1 p.2 hp = CFrac.ofPair (F := F) q.1 q.2 hq := by
+  cases h
+  rfl
+
+/-- A represented fraction is determined by its stored numerator-denominator pair. -/
+@[ext] theorem ext {α : Type u} [CField α] {x y : F α}
+    (h : CFrac.toPair x = CFrac.toPair y) : x = y := by
+  calc
+    x = CFrac.ofPair (CFrac.toPair x).1 (CFrac.toPair x).2 (CFrac.den_nonzero_impl x) :=
+      (CFrac.ofPair_toPair x).symm
+    _ = CFrac.ofPair (CFrac.toPair y).1 (CFrac.toPair y).2 (CFrac.den_nonzero_impl y) := by
+      exact ofPair_pair_congr _ _ (CFrac.den_nonzero_impl x) (CFrac.den_nonzero_impl y) h
+    _ = y := CFrac.ofPair_toPair y
+
+/-- Rebuilding a fraction through the public readers is the identity. -/
+@[simp] theorem ofFraction_num_den {α : Type u} [CField α] (x : F α) :
+    ofFraction (F := F) (CFrac.num x) (CFrac.den x) (den_nonzero x) = x := by
+  exact CFrac.ofPair_toPair x
 
 end CFrac
 
