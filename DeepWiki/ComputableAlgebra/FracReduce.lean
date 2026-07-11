@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.Fraction
+import DeepWiki.ComputableAlgebra.FracReprSparse
 import DeepWiki.ComputableAlgebra.PolyEuclidean
 import DeepWiki.ComputableAlgebra.PolyReprGcd
 

@@ -1,5 +1,4 @@
-import DeepWiki.ComputableAlgebra.FracReprDense
-import DeepWiki.ComputableAlgebra.FracReprSparse
+import DeepWiki.ComputableAlgebra.FracRepr
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 
@@ -147,13 +146,6 @@ instance instCFieldCFrac {F : (α : Type u) → [CField α] → Type u}
   neg := CFrac.neg
   inv := CFrac.inv
   isZero := CFrac.isZero
-
-/-! The same evaluation API executes over sparse fraction and polynomial storage. -/
-
-example :
-    let p : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 1), (1, 1)]
-    CFrac.eval (CFrac.ofPoly (F := SparseFrac) p) 2 = 3 := by
-  ccompute
 
 /-! ### The bridge `toRatFunc` into `RatFunc (CFieldSpec.K α)` and its homomorphism laws -/
 
@@ -322,11 +314,5 @@ namespace CFrac
   exact toRatFunc_ofFraction num den h
 
 end CFrac
-
-example :
-    CFieldSpec.toK (CFrac.ofPoly (F := SparseFrac)
-      (CPoly.SparsePoly.ofList [(0, 1), (1, 2)] : CPoly.SparsePoly ℚ))
-      = CFrac.am ℚ (CPoly.toPoly (CPoly.SparsePoly.ofList [(0, 1), (1, 2)] : CPoly.SparsePoly ℚ)) := by
-  exact CFrac.toRatFunc_ofPoly _
 
 end DeepWiki.SymbolicIntegration

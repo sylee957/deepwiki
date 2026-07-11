@@ -26,6 +26,7 @@ import DeepWiki.ComputableAlgebra.FracRepr
 import DeepWiki.ComputableAlgebra.FracReprDense
 import DeepWiki.ComputableAlgebra.FracReprSparse
 import DeepWiki.ComputableAlgebra.Fraction
+import DeepWiki.ComputableAlgebra.FractionExamples
 import DeepWiki.ComputableAlgebra.FracReduce
 import DeepWiki.ComputableAlgebra.LinearAlgebra
 
