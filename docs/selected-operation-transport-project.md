@@ -122,6 +122,9 @@ denotations does not make those terms definitionally equal.
   abstract `CRischField`, selected tower-level operations, and the lawful split contract. Its soundness theorem
   no longer exposes `CFracGcdCoreWf` or the implementation-specific PRS `Fact`; those remain only in the
   explicit bridge that constructs `PrimitiveFrontierLrt` from concrete genuine-data proofs.
+- The primitive `LawfulRischLevelLrt` base instance now has the same selected-operation boundary: `CRischField`,
+  gcd, lawful split, squarefree, resultant, subresultant, and `PrimitiveFrontierLrt`. Its former
+  `CFracGcdCoreWf` and PRS-correctness section variables were unused composition umbrellas.
 
 ## Verification
 

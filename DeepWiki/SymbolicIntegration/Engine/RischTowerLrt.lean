@@ -197,13 +197,18 @@ theorem not_isElementaryIntegrable_reduced [LawfulRischLevelLrt α] [LrtLiouvill
 
 end LawfulRischLevelLrt
 
+omit [CFracGcdCoreWf α] [LawfulCPolyGcd DensePoly α]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **The primitive LRT base instance — assembled from `PrimitiveFrontierLrt` by resolution.** Materialize one
 `PrimitiveFrontierLrt α` and the whole LRT solver resolves. The `case` is `primitiveGuardedCase`, so
 `specialSound` is the proven `primitiveGuardedCase_specialSound` (the `Dθ = 1` special identity + the
 `canonicalReconstruction_of_charZero`, `b = 0` special term vanishing); `reducedSoundLrt` is the frontier field
 `PrimitiveFrontierLrt.hreducedLrt`. No coefficient recursion — the primitive base has constant-coefficient
 special parts. -/
-instance instLawfulRischLevelLrtPrimitive [CRischField α] [PrimitiveFrontierLrt α] :
+instance instLawfulRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [LawfulCPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [PrimitiveFrontierLrt α] :
     LawfulRischLevelLrt α where
   case := primitiveGuardedCase
   specialSound := fun Dt a d snum sden hd0 hhook =>
@@ -212,8 +217,12 @@ instance instLawfulRischLevelLrtPrimitive [CRischField α] [PrimitiveFrontierLrt
   reducedDenNonzero := fun Dt a d hd0 hDt0 =>
     PrimitiveFrontierLrt.hreducedDenNonzero Dt a d hd0 hDt0
 
-/-- **Validation: the base LRT solver resolves from the reduced frontier.** Given `[PrimitiveFrontierLrt α]`,
-`LawfulRischLevelLrt α` resolves parameter-free — the base of the recursive LRT tower. -/
-example [CRischField α] [PrimitiveFrontierLrt α] : LawfulRischLevelLrt α := inferInstance
+omit [CFracGcdCoreWf α] [LawfulCPolyGcd DensePoly α]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
+/-- **Validation: the base LRT solver resolves from selected operations and the reduced frontier.** -/
+example [CRischField α] [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [LawfulCPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [PrimitiveFrontierLrt α] : LawfulRischLevelLrt α := inferInstance
 
 end DeepWiki.SymbolicIntegration
