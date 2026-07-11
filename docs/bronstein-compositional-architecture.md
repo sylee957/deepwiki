@@ -56,7 +56,8 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `CResidueSource P α` is the Prop-free residue-candidate capability and
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
-- `LawfulRischLevelLrt` already packages the recursive LRT-level special and reduced contracts.
+- `CRischLevelLrt` is the Prop-free recursive algebraic-residue operation, while
+  `LawfulCRischLevelLrt` packages its special and reduced soundness contracts.
 
 ## Leaf inventory
 
@@ -99,7 +100,7 @@ monomial stage contracts.
    completeness parameterized by complete stage capabilities.
 5. Materialize primitive, hyperexponential, and tangent realizers. Move their concrete proofs next
    to their executable operations and make the old full drivers corollaries.
-6. Lift the same contract composition through `LawfulRischLevel` / `LawfulRischLevelLrt` for tower
+6. Lift the same contract composition through `CRischLevel` / `CRischLevelLrt` and their lawful contracts for tower
    recursion, then prove full soundness and relative completeness by depth induction.
 7. After each replacement, delete the superseded dense/Wf assembly path; retain no internal shim.
 

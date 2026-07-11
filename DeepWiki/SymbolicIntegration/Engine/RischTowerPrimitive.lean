@@ -8,7 +8,7 @@ import DeepWiki.SymbolicIntegration.Engine.PrimitiveGuarded
 integrates soundly. Under the `primitiveGuardedCase` guard (`b = 0`, `Dθ = 1`, constant `fₚ`) the polynomial
 RDE is solved and `canonicalReconstruction_of_charZero` closes the reconstruction with the special term
 vanishing; off the guard the hook returns `none`. This `K`-level identity is the `specialSound` field of the
-LRT primitive base `instLawfulRischLevelLrtPrimitive` (`RischTowerLrt.lean`) — independent of any reduced
+LRT primitive base `instCRischLevelLrtPrimitive` (`RischTowerLrt.lean`) — independent of any reduced
 frontier, so the recursive solver reuses it. -/
 
 namespace DeepWiki.SymbolicIntegration

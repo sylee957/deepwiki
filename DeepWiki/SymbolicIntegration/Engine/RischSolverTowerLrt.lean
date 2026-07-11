@@ -4,16 +4,16 @@ import DeepWiki.SymbolicIntegration.Engine.RecursiveCoefficient
 
 /-! # Recursive LRT Risch tower step
 
-The tower step of the recursive LRT Risch solver (`instLawfulRischLevelLrtTower`, paired with the base
-`instLawfulRischLevelLrtPrimitive`). Given an LRT solver for the coefficient field `[LawfulRischLevelLrt β]`, build one
-for `(DenseFrac β)(t)`. The polynomial part's coefficient integration recurses into `LawfulRischLevelLrt β`'s
+The tower step of the recursive LRT Risch solver (`instCRischLevelLrtTower`, paired with the base
+`instCRischLevelLrtPrimitive`). Given an LRT operation and contract for the coefficient field, build one
+for `(DenseFrac β)(t)`. The polynomial part's coefficient integration recurses into `CRischLevelLrt β`'s
 log-free integrator `integrateRationalLrt` (descent-free `K`-level, by the ∀E ⇒ K bridge
 `integrateRationalLrt_sound`) — so the whole tower stays on the LRT track (its reduced frontier
 is `PrimitiveFrontierLrt`, not the undischargeable rational `PrimitiveFrontier`).
 
 Everything reuses the *generic* degree-raising coefficient recursion (`cIntegratePrimPolyDegRaise`,
 `cIntegratePrimPolyDegRaiseG_sound` — result-type-agnostic, telescoping soundness): only the coefficient
-integrator `limInt` changes to `LawfulRischLevelLrt.integrateRationalLrt` (wrapped `b ↦ (b, 0)`; the
+integrator `limInt` changes to `CRischLevelLrt.integrateRationalLrt` (wrapped `b ↦ (b, 0)`; the
 degree-raising `c` is used when the base level supplies a `(b,c)` limited integrator). The special-part
 soundness `towerPrimitiveCaseLrt_specialSound` and the log-tower special identity `tower_special_identityLrt`
 close the polynomial part; the reduced part goes through the root-free assembler `cIntegrateCaseLrt`. -/
@@ -29,15 +29,16 @@ variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffF
   [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
   [CPolySquarefree DensePoly β] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
   [Algebra ℚ (CFieldSpec.K β)] [CharZero (CFieldSpec.K β)]
-  [LawfulRischLevelLrt β]
+  [CRischLevelLrt β]
 
 /-- Integrate a coefficient `c ∈ DenseFrac β = β(s)` by recursing into
-`LawfulRischLevelLrt β.integrateRationalLrt` (the log-free LRT integrator, whose soundness is descent-free
+`CRischLevelLrt β.integrateRationalLrt` (the log-free LRT integrator, whose soundness is descent-free
 `K`-level via the ∀E ⇒ K bridge) with the carrier derivation `Ds = [1]`, reassembling via `DenseFrac β` field
 division. The coefficient integrator the LRT tower step feeds (wrapped) to `cIntegratePrimPolyDegRaise`,
 staying on the LRT track. -/
 def towerCoeffIntegrateLrt (c : DenseFrac β) : Option (DenseFrac β) :=
-  (LawfulRischLevelLrt.integrateRationalLrt [CCommRing.one] (CFrac.num c) (CFrac.den c)).map fun bd =>
+  ((inferInstance : CRischLevelLrt β).integrateRationalLrt [CCommRing.one]
+    (CFrac.num c) (CFrac.den c)).map fun bd =>
     CField.div (CFrac.ofPoly bd.1) (CFrac.ofPoly bd.2)
 
 /-- The LRT tower's recursive coefficient operation. -/
@@ -47,12 +48,14 @@ def towerCoefficientIntegratorLrt : CRecursiveCoefficientIntegrator (DenseFrac �
 /-- LRT coefficient-recursion soundness: `toK (cderiv b) = toK c` in
 `RatFunc (CFieldSpec.K β)`, reassembling `integrateRationalLrt_sound` (descent-free `K`-level) through the
 `DenseFrac β` field division that `towerCoeffIntegrateLrt` performs. -/
-theorem towerCoeffIntegrateLrt_sound (c b : DenseFrac β) (h : towerCoeffIntegrateLrt c = some b) :
+theorem towerCoeffIntegrateLrt_sound [LawfulCRischLevelLrt (inferInstance : CRischLevelLrt β)]
+    (c b : DenseFrac β) (h : towerCoeffIntegrateLrt c = some b) :
     CFieldSpec.toK (CDiffField.cderiv b) = CFieldSpec.toK c := by
   unfold towerCoeffIntegrateLrt at h
   rw [Option.map_eq_some_iff] at h
   obtain ⟨⟨bn, bd⟩, hint, rfl⟩ := h
-  have hsound := LawfulRischLevelLrt.integrateRationalLrt_sound [CCommRing.one]
+  have hsound := CRischLevelLrt.integrateRationalLrt_sound
+    (inferInstance : CRischLevelLrt β) [CCommRing.one]
     (CFrac.num c) (CFrac.den c) bn bd hint
   have hcd : CFieldSpec.toK (CDiffField.cderiv
       (CField.div (CFrac.ofPoly (F := DenseFrac) bn) (CFrac.ofPoly (F := DenseFrac) bd)))
@@ -83,17 +86,18 @@ theorem towerCoeffIntegrateLrt_sound (c b : DenseFrac β) (h : towerCoeffIntegra
   exact hsound
 
 /-- The LRT recursive coefficient operation satisfies the generic soundness contract. -/
-instance instLawfulCRecursiveCoefficientIntegratorLrt :
+instance instLawfulCRecursiveCoefficientIntegratorLrt
+    [LawfulCRischLevelLrt (inferInstance : CRischLevelLrt β)] :
     LawfulCRecursiveCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β)) where
   sound c b h := towerCoeffIntegrateLrt_sound c b h
 
 /-- The single-`w` LRT coefficient integrator `(b, c)` tries the optional
-`LawfulRischLevelLrt.limitedIntegrateSingle` (reconstructing `b = bnum/bden` and the constant `c` as
+`CRischLevelLrt.limitedIntegrateSingle` (reconstructing `b = bnum/bden` and the constant `c` as
 `DenseFrac β` elements), falling back to the log-free `towerCoeffIntegrateLrt` (`c = 0`) when the class supplies no
 single-`w` integrator (the default). This is the `limInt` that flips on the degree-raising `c·tᵐ⁺¹/(m+1)` term
 once a base `(b,c)` integrator (`CFrac.limitedIntegrateSingleBase`) is present. -/
 def towerCoeffIntegrateSingleLrt (η c : DenseFrac β) : Option (DenseFrac β × DenseFrac β) :=
-  match LawfulRischLevelLrt.limitedIntegrateSingle (CFrac.num c) (CFrac.den c)
+  match (inferInstance : CRischLevelLrt β).limitedIntegrateSingle (CFrac.num c) (CFrac.den c)
       (CFrac.num η) (CFrac.den η) with
   | some ((bn, bd), cc) => some (CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd), CFrac.ofPoly [cc])
   | none => (towerCoefficientIntegratorLrt (β := β)).integrate c |>.map fun b =>
@@ -186,14 +190,19 @@ theorem towerPrimitiveCaseLrt_specialSound
         (tower_special_identityLrt Dt (crPoly Dt a d) qp hDt1 hqp)
   · rw [if_neg hguard] at hhook; simp at hhook
 
-/-- The LRT tower step instance: `LawfulRischLevelLrt (DenseFrac β)` from a below-level LRT solver
-`[LawfulRischLevelLrt β]` and this level's reduced LRT frontier `[PrimitiveFrontierLrt (DenseFrac β)]`.
-With the base (`instLawfulRischLevelLrtPrimitive`) the LRT solver resolves at every tower depth by recursion:
+/-- The LRT tower step operation: `CRischLevelLrt (DenseFrac β)` from a below-level operation and contract
+and this level's reduced LRT frontier `[PrimitiveFrontierLrt (DenseFrac β)]`.
+With the base (`instCRischLevelLrtPrimitive`) the LRT solver resolves at every tower depth by recursion:
 the re-based recursion, now with a dischargeable frontier at every level. `specialSound` is the LRT coefficient
 recursion (`towerPrimitiveCaseLrt_specialSound`); `reducedSoundLrt` is `PrimitiveFrontierLrt.hreducedLrt`. -/
-instance instLawfulRischLevelLrtTower [PrimitiveFrontierLrt (DenseFrac β)] :
-    LawfulRischLevelLrt (DenseFrac β) where
+instance instCRischLevelLrtTower [PrimitiveFrontierLrt (DenseFrac β)] :
+    CRischLevelLrt (DenseFrac β) where
   case := towerPrimitiveCaseLrt
+  limitedIntegrateSingle := fun _ _ _ _ => none
+
+/-- The recursive LRT tower operation satisfies its algebraic-residue contract. -/
+instance instLawfulCRischLevelLrtTower [PrimitiveFrontierLrt (DenseFrac β)] :
+    LawfulCRischLevelLrt (inferInstance : CRischLevelLrt (DenseFrac β)) where
   specialSound := fun Dt a d snum sden hd0 hhook =>
     towerPrimitiveCaseLrt_specialSound Dt a d snum sden hd0 hhook
   reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
@@ -208,6 +217,6 @@ noncomputable example [PrimitiveFrontierLrt (DenseFrac β)]
     [CPolySquarefree DensePoly (DenseFrac (DenseFrac β))]
     [CRischField (DenseFrac (DenseFrac β))]
     [PrimitiveFrontierLrt (DenseFrac (DenseFrac β))] :
-    LawfulRischLevelLrt (DenseFrac (DenseFrac β)) := inferInstance
+    LawfulCRischLevelLrt (inferInstance : CRischLevelLrt (DenseFrac (DenseFrac β))) := inferInstance
 
 end DeepWiki.SymbolicIntegration

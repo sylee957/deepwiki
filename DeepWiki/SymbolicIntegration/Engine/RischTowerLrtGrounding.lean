@@ -2,8 +2,8 @@ import DeepWiki.SymbolicIntegration.Engine.RischSolverTowerLrt
 
 /-! # Grounding the recursive LRT solver — the honest end state of the re-base
 
-The re-based recursive solver `LawfulRischLevelLrt` resolves at every tower depth (`instLawfulRischLevelLrtPrimitive`
-+ `instLawfulRischLevelLrtTower`), and its assembled soundness `soundFormalLrt` produces a genuine `∀E`
+The re-based recursive solver resolves at every tower depth (`instCRischLevelLrtPrimitive`
++ `instCRischLevelLrtTower`), and the contract-backed assembled soundness `CRischLevelLrt.soundFormalLrt` produces a genuine `∀E`
 antiderivative. This file crystallizes what the solver **depends on**, on the concrete carrier `DenseFrac ℚ`
 (the ℚ(x)-tower the whole engine runs over): the recursion bottoms out at exactly two **honest** frontiers per
 level, and no others:
@@ -27,7 +27,7 @@ open DensePoly CFrac
 
 /-- **★ The re-based recursive LRT solver is sound on the concrete ℚ(x)-tower, from the honest frontiers alone.**
 At carrier `DenseFrac ℚ` (so `a/d ∈ (DenseFrac ℚ)(t)`, a genuine two-level tower), a successful run of the
-assembled integrator `LawfulRischLevelLrt.integrate` is a true `∀E` antiderivative — depending on the two
+assembled integrator `CRischLevelLrt.integrate` is a true `∀E` antiderivative — depending on the two
 honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this level) and selected tower-level
 polynomial and field capabilities. No concrete fraction-gcd implementation, rational-residue restriction, or
 undischargeable `PrimitiveFrontier` appears in the solver theorem. -/
@@ -37,29 +37,16 @@ theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
     [CPolySquarefree DensePoly (DenseFrac ℚ)]
     [PrimitiveFrontierLrt (DenseFrac ℚ)]
     (Dt a d : DensePoly (DenseFrac ℚ)) (res : LrtResult (DenseFrac ℚ))
-    (h : LawfulRischLevelLrt.integrate Dt a d = some res) :
+    (h : (inferInstance : CRischLevelLrt (DenseFrac ℚ)).integrate Dt a d = some res) :
     IsIntegralResultLrt Dt a d res :=
-  LawfulRischLevelLrt.soundFormalLrt Dt a d res h
+  (inferInstance : CRischLevelLrt (DenseFrac ℚ)).soundFormalLrt Dt a d res h
 
-/-- **The reduced frontier reduces to the genuine data — the whole solver from `LrtReducedGenuineData`.**
-Threading `hreducedLrt_of_genuineAll`: supplying Bronstein's genuine residue/normality data and the selected
-reduced-output denominator contract at every level *constructs* the `PrimitiveFrontierLrt` instances, hence
-the whole recursive LRT solver at that depth. This concrete bridge still supplies the PRS associatedness
-evidence required by `hreducedLrt_of_genuineAll`; that implementation fact does not leak into the solver API. -/
-noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))]
-    [LawfulCPolyGcd DensePoly (DenseFrac ℚ)]
-    (hgenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
-    (hdenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
-      toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0)
-    (hgenℚx : ∀ (Dt a d : DensePoly (DenseFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
-    (hdenℚx : ∀ (Dt a d : DensePoly (DenseFrac ℚ)), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
-      toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0) :
-    LawfulRischLevelLrt (DenseFrac ℚ) :=
-  letI : PrimitiveFrontierLrt ℚ :=
-    ⟨hreducedLrt_of_genuineAll cgcdFFCoreWf_correct_Q hgenℚ, hdenℚ⟩
-  letI : PrimitiveFrontierLrt (DenseFrac ℚ) :=
-    ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect
-      (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))) hgenℚx, hdenℚx⟩
-  inferInstance
+/-- The selected tower operation and its soundness contract resolve together. -/
+example [PrimitiveFrontierLrt ℚ]
+    [CRischField (DenseFrac ℚ)] [CPolyGcd DensePoly (DenseFrac ℚ)]
+    [CPolySplitFactor DensePoly (DenseFrac ℚ)] [LawfulCPolySplitFactor DensePoly (DenseFrac ℚ)]
+    [CPolySquarefree DensePoly (DenseFrac ℚ)] [PrimitiveFrontierLrt (DenseFrac ℚ)] :
+    ∃ C : CRischLevelLrt (DenseFrac ℚ), LawfulCRischLevelLrt C :=
+  ⟨inferInstance, inferInstance⟩
 
 end DeepWiki.SymbolicIntegration

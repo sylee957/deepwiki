@@ -23,11 +23,12 @@ integrates `f = a/d ∈ K(x)(…)(t)` when `t` is primitive.
 * **Carrier.** The tower is the iterated computable fraction field `CFrac` over the computable field
   `CField` / polynomial `DensePoly` (see `ComputableAlgebra.PolyReprDense`). Level `n` is
   `DensePoly (CFracGⁿ K)`. Everything is `native_decide`-executable.
-* **The solver interface** is the class `LawfulRischLevelLrt` (`RischTowerLrt`). It bundles the
-  per-level computable case hook (`case : CMonomialCase DensePoly`) with its soundness fields. `LawfulX`/`X` idiom:
-  the computable half reduces; the abstract soundness lives in the lawful half.
-* **The recursion** is two instances: `instLawfulRischLevelLrtPrimitive` (the base — constant-coefficient
-  polynomials over `ℚ(x)`) and `instLawfulRischLevelLrtTower` (the step — given a solver for the
+* **The solver interface** is `CRischLevelLrt` with the companion `LawfulCRischLevelLrt` contract (`RischTowerLrt`):
+  the former contains the per-level computable case hook (`case : CMonomialCase DensePoly`), while the latter
+  contains its soundness fields. This is the `LawfulX`/`X` idiom: the computable half reduces; the abstract
+  soundness lives in the lawful half.
+* **The recursion** is two paired instances: `instCRischLevelLrtPrimitive` (the base — constant-coefficient
+  polynomials over `ℚ(x)`) and `instCRischLevelLrtTower` (the step — given a solver for the
   coefficient field `β`, build one for `(DenseFrac β)(t)`). Together they resolve the solver at every tower
   depth by instance search.
 
@@ -43,19 +44,19 @@ Given `a/d`:
    * `towerPolyIntegrateLrt` runs the degree-raising primitive-polynomial recursion
      `cIntegratePrimPolyDegRaise` (`LimitedIntegrateSingle`);
    * each coefficient is integrated by recursing into the level-below solver's **log-free** integrator
-     `LawfulRischLevelLrt.integrateRationalLrt` — this is where the tower recursion happens.
+     `CRischLevelLrt.integrateRationalLrt` — this is where the tower recursion happens.
 3. **Reduced / normal part** — `cIntegrateReducedLrt` (`LrtIntegrate`): the **root-free**
    Lazard–Rioboo–Trager reduced integrator. Hermite reduction gives the rational part; the LRT step
    emits **symbolic algebraic-residue logs** `Σ_{Rᵢ(c)=0} c · log Sᵢ(c,t)` — no root-finding, so residues
    that are algebraic over the constants are kept symbolic.
 4. **Assemble** — `combineSNLrt` (`Assemble`) combines the two into an `LrtResult`: a rational part plus
-   the symbolic log terms. The top entry is `LawfulRischLevelLrt.integrate`.
+   the symbolic log terms. The top entry is `CRischLevelLrt.integrate`.
 
 ## Soundness (proofs — behind the API docs)
 
-`LawfulRischLevelLrt.soundFormalLrt`: any successful run satisfies `IsIntegralResultLrt` — over **every**
+`CRischLevelLrt.soundFormalLrt`: any successful run satisfies `IsIntegralResultLrt` — over **every**
 algebraically-closed differential extension `E`, `D_E(rational) + Σ residue-logs = a/d`. It is assembled
-from the two `LawfulRischLevelLrt` soundness fields:
+from the two `LawfulCRischLevelLrt` soundness fields:
 
 * `specialSound` — the polynomial-part identity, proved once for base and tower by the shared
   `primitiveSpecialSoundCore` (`RischTowerPrimitive`), via `canonicalReconstruction_of_charZero`.

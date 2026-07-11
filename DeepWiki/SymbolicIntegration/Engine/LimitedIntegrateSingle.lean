@@ -59,7 +59,7 @@ example :
 namespace DensePoly
 
 /-- **`CFrac.limitedIntegrateSingleBase` in the num/den signature** of
-`LawfulRischLevelLrt.limitedIntegrateSingle`
+`CRischLevelLrt.limitedIntegrateSingle`
 (`anum aden ηnum ηden ↦ ((bnum, bden), c)`) — the base ℚ instance's field for Phase 3-wire-2. Guards the
 denominators nonzero (`CFrac` needs `cisZero den = false`), then wraps the generic integrator. -/
 def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly ℚ) :

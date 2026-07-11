@@ -61,20 +61,19 @@ stack.
 
 Phases (each its own gate-green commit):
 
-- **Phase 1 — `LawfulRischLevelLrt` class + base instance.** `RischTowerLrt.lean`: the recursive LRT class
-  (`case` + `specialSound` [K-level, shared] + `reducedSoundLrt` [LRT]), `integrate` via `cIntegrateCaseLrt`,
-  `soundFormalLrt` via `cIntegrateCaseLrt_sound`, and `instLawfulRischLevelLrtPrimitive` from
-  `[PrimitiveFrontierLrt α]` (reusing `primitiveGuardedCase_specialSound`). No coefficient recursion at the base.
-  **← current.**
-- **Phase 2 — the LRT tower step.** `towerCoeffIntegrateLrt` (log-free coefficient integrator recursing into
-  `LawfulRischLevelLrt β`) + its K-level soundness (∀E ⇒ K by injectivity of `ratFuncBaseChange` on log-free
-  results), fed to the shared `cLimitedIntegratePolyRatG`; then `instLawfulRischLevelLrtTower`. Validate depth-2.
+- **Phase 1 — paired LRT operation and contract.** `RischTowerLrt.lean` now defines the Prop-free
+  `CRischLevelLrt` (`case` + `limitedIntegrateSingle`) and `LawfulCRischLevelLrt` (K-level special and LRT
+  reduced soundness). Its `integrate` and `soundFormalLrt` compose the supplied operation and contract via
+  `cIntegrateCaseLrt_sound`; `instCRischLevelLrtPrimitive` and its lawful companion realize the primitive base.
+- **Phase 2 — the LRT tower step.** `towerCoeffIntegrateLrt` is a log-free coefficient integrator recursing
+  into a lower `CRischLevelLrt β`, with its lawful contract providing K-level soundness (∀E ⇒ K by injectivity
+  of `ratFuncBaseChange` on log-free results); `instCRischLevelLrtTower` and its lawful companion realize the step.
 - **Phase 3 — retire the redundant rational recursion.** Once the LRT tower resolves at every depth, delete the
   rational `LawfulRischLevel` reduced-log path + `PrimitiveFrontier` (the undischargeable frontier). Keep the
   generic coefficient recursion (`cLimitedIntegratePolyRatG`) — it is result-type-agnostic and reused.
 - **Phase 4 — grounding + the honest end state.** DONE. `RischTowerLrtGrounding.lean`:
   `lrtSolver_sound_on_tower` — on the concrete carrier `CFracG ℚ` (the real ℚ(x)-tower), the assembled
-  `LawfulRischLevelLrt.integrate` is sound (`IsIntegralResultLrtG`) depending on **only** the two honest
+  `CRischLevelLrt.integrate` is sound (`IsIntegralResultLrtG`) depending on **only** the two honest
   frontiers (`PrimitiveFrontierLrt` at the levels used + the tower-level gcd `Fact`; `Fact (GcdFFCorrect ℚ)` is
   a resolved instance). Plus an `example` deriving the whole solver from `LrtReducedGenuineData` via
   `hreducedLrt_of_genuineAll`.
@@ -139,9 +138,9 @@ So "no dangling frontier" is achieved *structurally* (the recursion resolves at 
 a **named** condition; the undischargeable-in-principle rational `PrimitiveFrontier` is deleted), but the three
 frontiers are **genuine remaining mathematics**, each a multi-session discharge — not proven-impossible.
 
-**Completeness now derivable at the class** (`b3fe0b3e`): `LawfulRischLevelLrt.reducedDecides` — the instance
-that gives `soundFormalLrt` also *decides* genuine integrability of the reduced part (`←` from the instance's
-`reducedSoundLrt`, `→` from `[LrtLiouvilleFrontier α]`), the frontier kept an instance arg (decoupling intact).
+**Completeness now derivable from the contract** (`b3fe0b3e`): `CRischLevelLrt.reducedDecides` — the lawful
+contract that gives `soundFormalLrt` also *decides* genuine integrability of the reduced part (`←` from
+`reducedSoundLrt`, `→` from `[LrtLiouvilleFrontier α]`), with the frontier kept separate.
 
 The one deferred *mechanical* item is the general connection `IsElementaryIntegrableGenuineG → …Lrt` (the
 `evalLrtArg` monic-normalization makes it ~150 intricate lines) — not needed for the re-base, since the rational
