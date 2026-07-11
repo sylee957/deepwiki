@@ -38,10 +38,4 @@ instance instLawfulCPolyInterpolateSparse : LawfulCPolyInterpolate CPoly.SparseP
     rw [CPoly.interpolate_sparse_eq]
     exact CPolyInterpolate.degree_toPoly_default_lt pts hne
 
-/-- Sparse selected interpolation computes `1 + 2X` through the abstract capability. -/
-theorem interpolate_sparse_linear :
-    CPoly.interpolate (P := CPoly.SparsePoly) ([(0, 1), (1, 3)] : List (ℚ × ℚ)) =
-      CPoly.SparsePoly.ofList [(0, 1), (1, 2)] := by
-  ccompute
-
 end DeepWiki.SymbolicIntegration

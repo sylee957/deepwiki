@@ -168,8 +168,8 @@ runs the same fraction algorithm.
 Land the phases in small gate-green commits. Each new representation-independent executable path gets a
 `SparseFrac` or `SparsePoly` consumer or correctness witness. Computable declarations do not contain
 ad hoc `native_decide` proof scripts or executable showcase examples. Concrete evidence goals use the local
-`ccompute` tactic, which centralizes the policy: definitional reduction first, then kernel `decide`,
-with compiled decision only when opaque executable definitions block kernel reduction.
+`cdecide` tactic, which permits only definitional reduction and kernel `decide`. Executable showcases that
+intentionally permit compiled decision use the separate `ccompute` tactic.
 Constructor APIs still require explicit evidence or expose an `Option`-returning checked boundary;
 concrete fraction literals use the intent-specific `cfrac_nonzero` tactic rather than a default proof.
 A generic

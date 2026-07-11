@@ -59,16 +59,4 @@ variable [CFieldSpec.{u,v} α]
 
 end CPoly
 
-/-! ### Representation-independence validation -/
-
-/-- Dense antiderivation returns the expected low-to-high coefficient list. -/
-example : CPoly.antiderivative ([2, 6] : DensePoly ℚ) = [0, 2, 3] := by
-  ccompute
-
-/-- Sparse antiderivation executes through the same representation-independent definition. -/
-example :
-    CPoly.antiderivative (CPoly.SparsePoly.ofList [(0, 2), (1, 6)] : CPoly.SparsePoly ℚ) =
-      CPoly.SparsePoly.ofList [(0, 0), (1, 2), (2, 3)] := by
-  ccompute
-
 end DeepWiki.SymbolicIntegration

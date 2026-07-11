@@ -90,15 +90,4 @@ theorem toPoly_mulMod_sub (modulus a b : P α) (hmod : CPoly.toPoly modulus ≠ 
 
 end CPoly
 
-/-! ### Representation check -/
-
-/-- Sparse modular multiplication and trace execute through the generic quotient definitions. -/
-example :
-    let modulus := CPoly.SparsePoly.ofList [(0, (-1 : ℚ)), (2, 1)]
-    let x := CPoly.SparsePoly.ofList [(1, (1 : ℚ))]
-    let one := CPoly.SparsePoly.ofList [(0, (1 : ℚ))]
-    CPolyEngine.cisZero (CPolyEngine.sub (CPoly.mulMod modulus x x) one) = true ∧
-      CPoly.trace modulus x = 0 := by
-  ccompute
-
 end DeepWiki.SymbolicIntegration
