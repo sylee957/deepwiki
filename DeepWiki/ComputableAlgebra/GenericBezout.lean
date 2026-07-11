@@ -18,12 +18,12 @@ variable {α : Type*} [CField α]
 
 /-- Generic Lagrange basis numerator `clagNum zs = ∏ⱼ (z − zⱼ)` over abscissas `zs`, built from the
 degree-1 factors `[−zⱼ, 1]` via `cmul`. -/
-def clagNum : List α → DensePoly α
+private def clagNum : List α → DensePoly α
   | [] => [CCommRing.one]
   | z :: zs => cmul [CCommRing.neg z, CCommRing.one] (clagNum zs)
 
 /-- `toPoly (clagNum zs) = ∏ (X − C (toK zⱼ))`: the basis numerator as a product of linear factors. -/
-@[denote] theorem toPolyG_clagNumG [CFieldSpec α] (zs : List α) :
+@[denote] private theorem toPolyG_clagNumG [CFieldSpec α] (zs : List α) :
     toPoly (clagNum zs) = (zs.map (fun z => Polynomial.X - Polynomial.C (CFieldSpec.toK z))).prod := by
   induction zs with
   | nil => simp [clagNum, toPolyG_cons, CFieldSpec.toK_one]
@@ -50,7 +50,7 @@ variable [CFieldSpec α]
 /-! ### Generic interpolation correctness -/
 
 /-- `toPoly` of a single Lagrange interpolation term `cscale (yk/denom) (clagNum others)`. -/
-theorem toPolyG_termG (zk yk : α) (others : List α) :
+private theorem toPolyG_termG (zk yk : α) (others : List α) :
     toPoly (cscale (CField.div yk
         (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one))
         (clagNum others))
@@ -61,7 +61,7 @@ theorem toPolyG_termG (zk yk : α) (others : List α) :
   rw [one_mul]
 
 /-- Evaluation of a generic Lagrange term at a value `x`. -/
-theorem eval_toPolyG_termG (zk yk : α) (others : List α) (x : CFieldSpec.K α) :
+private theorem eval_toPolyG_termG (zk yk : α) (others : List α) (x : CFieldSpec.K α) :
     (toPoly (cscale (CField.div yk
         (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one))
         (clagNum others))).eval x
@@ -76,7 +76,7 @@ theorem eval_toPolyG_termG (zk yk : α) (others : List α) (x : CFieldSpec.K α)
   simp [Function.comp, eval_sub, eval_X, eval_C]
 
 /-- A generic Lagrange term evaluated at its own node `toK zk` gives `toK yk`. -/
-theorem eval_toPolyG_termG_at_self (zk yk : α) (others : List α)
+private theorem eval_toPolyG_termG_at_self (zk yk : α) (others : List α)
     (hne : ∀ zj ∈ others, CFieldSpec.toK zj ≠ CFieldSpec.toK zk) :
     (toPoly (cscale (CField.div yk
         (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one))
@@ -85,7 +85,7 @@ theorem eval_toPolyG_termG_at_self (zk yk : α) (others : List α)
   exact prodG_sub_ne_zero hne
 
 /-- A generic Lagrange term evaluated at another node `toK x` with `x ∈ others` is `0`. -/
-theorem eval_toPolyG_termG_at_other (zk yk x : α) (others : List α) (hx : x ∈ others) :
+private theorem eval_toPolyG_termG_at_other (zk yk x : α) (others : List α) (hx : x ∈ others) :
     (toPoly (cscale (CField.div yk
         (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one))
         (clagNum others))).eval (CFieldSpec.toK x) = 0 := by
@@ -112,7 +112,7 @@ private def cinterpTerm (zs : List α) (p : α × α) : DensePoly α :=
 open scoped Classical in
 /-- Summing `if toK p.1 = toK zk then toK p.2 else 0` over a points list whose abscissa images
 `pts.map (toK ∘ fst)` are nodup picks out the unique entry `(zk, yk)` (`toK`-keyed). -/
-theorem sum_ite_eq_of_nodup_toK_fst (pts : List (α × α))
+private theorem sum_ite_eq_of_nodup_toK_fst (pts : List (α × α))
     (hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup)
     {zk yk : α} (hmem : (zk, yk) ∈ pts) :
     (pts.map (fun p => if CFieldSpec.toK p.1 = CFieldSpec.toK zk
@@ -183,7 +183,7 @@ theorem eval_toPolyG_cinterpolateG (pts : List (α × α))
   exact sum_ite_eq_of_nodup_toK_fst pts hnodup hmem
 
 /-- Each `cinterpolate` term has `natDegree ≤ |others|` (a product of `|others|` linear factors). -/
-theorem natDegree_toPolyG_cinterpTermG_le (zs : List α) (p : α × α) :
+private theorem natDegree_toPolyG_cinterpTermG_le (zs : List α) (p : α × α) :
     (toPoly (cinterpTerm zs p)).natDegree
       ≤ (zs.filter (fun zj => CCommRing.isZero (CField.sub zj p.1) = false)).length := by
   obtain ⟨a, b⟩ := p
