@@ -39,7 +39,7 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   representation boundary.
 - `reduceNormal` composes Hermite and residue-log operations; `reduceNormal_sound` and
   `reduceNormal_complete` prove the normal branch by contract composition only.
-- `assembleOneLevel` is the first executable representation-neutral Figure-5.1 spine: canonical split,
+- `assembleOneLevelWithPolynomial` is the executable representation-neutral Figure-5.1 spine: canonical split,
   special integration, `reduceNormal`, monomial-specific normal postprocessing, and recombination.
   `assembleOneLevel_sound` derives its full one-level identity solely from lawful capability instances.
 - The guarded primitive monomial operation has a `LawfulCMonomialCase` instance. Its intentionally narrow
@@ -53,8 +53,8 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   reduction stages into a sound sparse Figure-5.1 level.
 - `CRischLevel` packages a one-level executable solver, while `LawfulCRischLevel` states soundness and
   `CompleteCRischLevel` separately states relative completeness over an explicit semantic domain.
-  `oneLevelRischWithPolynomial` packages the generic assembler; its domain records the
-  low-derivation-degree Hermite boundary plus explicit stage-decomposition witnesses.
+  `oneLevelRischWithPolynomial` packages the generic assembler; `lowDerivDegreeRischLevelDomain` records
+  its `deg Dt ≤ 1` Hermite boundary plus explicit stage-decomposition witnesses.
 - `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
   obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only
@@ -90,8 +90,10 @@ monomial stage contracts.
 
 1. Realize `CompleteCResidueLogPart` for an actually complete residue source. Bounded candidate sweeps
    remain intentionally incomplete and must not acquire a false lawful instance.
-2. Upgrade the tangent coupled-DE capability to a full `CMonomialCase`, then obtain dense and sparse
-   one-level soundness from the existing assembler.
+2. Define a tangent-specific normal-reduction boundary before connecting the coupled-DE capability to a
+   full `CMonomialCase`: `deg Dt = 2` lies outside `lowDerivDegreeRischLevelDomain`, and the generic Hermite
+   properness proof is known to fail there. Then obtain dense and sparse tangent-level soundness by composing
+   that boundary with the existing recombination interface.
 3. Connect one-level relative completeness to the recursive tower path. Completeness remains relative to
    explicit stage-decomposition witnesses until the mathematical decomposition theorem is formalized.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.

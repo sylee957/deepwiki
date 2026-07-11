@@ -29,7 +29,7 @@ def sparseRischLevel (kind : PolynomialReductionKind) (C : CMonomialCase DensePo
 /-- Lawful stage contracts compose into soundness of the sparse Figure-5.1 level. -/
 instance instLawfulCRischLevelSparse (kind : PolynomialReductionKind)
     (C : CMonomialCase DensePoly α) [LawfulCMonomialCase C] :
-    LawfulCRischLevel (sparseRischLevel kind C) oneLevelRischDomain := by
+    LawfulCRischLevel (sparseRischLevel kind C) lowDerivDegreeRischLevelDomain := by
   unfold sparseRischLevel
   infer_instance
 

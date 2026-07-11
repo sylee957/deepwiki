@@ -50,8 +50,8 @@ def oneLevelRischWithPolynomial (R : CPolynomialReduction P α) (kind : Polynomi
     [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α] : CRischLevel P α where
   integrate fuel Dt a d := assembleOneLevelWithPolynomial R kind fuel C Dt a d
 
-/-- Low-derivation-degree domain of the generic Hermite-based one-level assembler. -/
-def oneLevelRischDomain : RischLevelDomain P α :=
+/-- Domain of the Hermite-based assembler: monomial derivatives of degree at most one. -/
+def lowDerivDegreeRischLevelDomain : RischLevelDomain P α :=
   fun Dt _ _ => (CPoly.toPoly Dt).natDegree ≤ 1
 
 /-- The polynomial-aware packaged level inherits contract-only one-level soundness. -/
@@ -62,7 +62,7 @@ theorem oneLevelRischWithPolynomial_sound (R : CPolynomialReduction P α)
     [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
     [CResidueSource P α] [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)]
     (Dt a d : P α) (res : IntegralResult α P)
-    (hd : CPoly.toPoly d ≠ 0) (hdomain : oneLevelRischDomain Dt a d)
+    (hd : CPoly.toPoly d ≠ 0) (hdomain : lowDerivDegreeRischLevelDomain Dt a d)
     (hrun : (oneLevelRischWithPolynomial R kind C).integrate fuel Dt a d = some res) :
     IsIntegralResultP Dt a d res :=
   assembleOneLevelWithPolynomial_sound R kind fuel C Dt a d res hd hdomain hrun
@@ -75,14 +75,14 @@ instance instLawfulCRischLevelOneLevelRischWithPolynomial (R : CPolynomialReduct
     [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
     [CResidueSource P α] [CResidueLogPart P α]
     [LawfulCResidueLogPart (P := P) (α := α)] :
-    LawfulCRischLevel (oneLevelRischWithPolynomial R kind C) oneLevelRischDomain where
+    LawfulCRischLevel (oneLevelRischWithPolynomial R kind C) lowDerivDegreeRischLevelDomain where
   sound fuel Dt a d res hdomain hd hrun :=
     oneLevelRischWithPolynomial_sound R kind fuel C Dt a d res hd hdomain hrun
 
 /-- Domain where genuine integrability decomposes into explicit Figure-5.1 stage witnesses. -/
 def polynomialRischLevelDomain (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
     [CCanonicalRepresentation P α] [CHermiteReduction P α] : RischLevelDomain P α :=
-  fun Dt a d => (CPoly.toPoly Dt).natDegree ≤ 1 ∧
+  fun Dt a d => lowDerivDegreeRischLevelDomain Dt a d ∧
     (IsRischLevelIntegrable Dt a d → PolynomialAssemblyWitness R kind Dt a d)
 
 /-- The polynomial-aware level is lawful on the explicit stage-decomposition domain. -/

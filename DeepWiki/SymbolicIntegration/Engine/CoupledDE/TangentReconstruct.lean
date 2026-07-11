@@ -721,6 +721,4 @@ example [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
       = DensePoly.toPoly c2 :=
   cCoupledDECancelTan_sound dbound b0 b2 c1 c2 q1 q2 hsome
 
-#print axioms cCoupledDECancelTan_sound
-
 end DeepWiki.SymbolicIntegration
