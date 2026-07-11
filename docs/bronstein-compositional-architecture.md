@@ -16,9 +16,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `CMonomialCase P` is now the representation-parameterized, Prop-free operation interface used by
   dense and recursive realizers; `LawfulCMonomialCase` separates its soundness, denominator preservation,
   and normal-postprocessing laws, while `CompleteCMonomialCase` records relative completeness separately.
-- `CCanonicalRepresentation`/`LawfulCCanonicalRepresentation` now have a dense realization, and
-  `assembleOneLevelP_sound` composes canonical, monomial, and normal-result contracts without a
-  concrete polynomial implementation.
+- `CCanonicalRepresentation`/`LawfulCCanonicalRepresentation` have dense and sparse-facing
+  realizations. The sparse realization transports the dense backend through denotation-preserving
+  polynomial conversion.
 - `CCanonicalRepresentation` and `LawfulCCanonicalRepresentation` expose canonical decomposition and its
   reconstruction/nonzero/properness laws; `canonicalRepresentationFast` is the dense realizer.
 - `LawfulHermiteReduction` and `LawfulResidueLogPart` are representation-neutral stage-result
@@ -34,20 +34,27 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - The dense realization `checkedResidueLogPart` runs the existing Rothstein-Trager computation but exposes
   its logs only after nonzero-denominator and full identity checks; it has a lawful soundness instance
   without claiming completeness for a bounded source.
+- Sparse-facing Hermite and checked residue-log realizations transport the dense backends explicitly.
+  Residue coefficients stay in `α`; only resultant inputs and logarithm arguments cross the polynomial
+  representation boundary.
 - `reduceNormal` composes Hermite and residue-log operations; `reduceNormal_sound` and
   `reduceNormal_complete` prove the normal branch by contract composition only.
 - `assembleOneLevel` is the first executable representation-neutral Figure-5.1 spine: canonical split,
   special integration, `reduceNormal`, monomial-specific normal postprocessing, and recombination.
   `assembleOneLevel_sound` derives its full one-level identity solely from lawful capability instances.
-- The guarded primitive monomial operation now has a `LawfulCMonomialCase` instance and specializes the
-  generic dense level as `cIntegratePrimitiveGuardedChecked`; its successful runs inherit soundness entirely by
-  composition. Its intentionally narrow guard does not claim `CompleteCMonomialCase`.
+- The guarded primitive monomial operation has a `LawfulCMonomialCase` instance. Its intentionally narrow
+  guard does not claim `CompleteCMonomialCase`; the former standalone dense driver and redundant wrapper
+  theorem have been retired.
 - The checked hyperexponential monomial operation validates its Laurent special result before exposing it,
-  uses exact normal-result passthrough, and inherits one-level soundness from the generic assembler.
+  uses exact normal-result passthrough, and supplies a lawful monomial capability. Its former standalone
+  dense driver and redundant wrapper theorem have been retired.
+- `denseMonomialCaseAsSparse` transports any lawful dense monomial specialization to a lawful sparse one.
+  `sparseRischLevel` composes that hook with sparse canonical, Hermite, residue-log, and generic polynomial
+  reduction stages into a sound sparse Figure-5.1 level.
 - `CRischLevel` packages a one-level executable solver, while `LawfulCRischLevel` states soundness and
-  relative completeness over an explicit semantic domain. `oneLevelRisch` packages the generic assembler;
-  its current domain records the low-derivation-degree Hermite boundary, and completeness targets genuine
-  constant-residue witnesses rather than the weaker formal identity.
+  `CompleteCRischLevel` separately states relative completeness over an explicit semantic domain.
+  `oneLevelRischWithPolynomial` packages the generic assembler; its domain records the
+  low-derivation-degree Hermite boundary plus explicit stage-decomposition witnesses.
 - `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
   obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only
@@ -57,7 +64,8 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
 - `CRischLevelLrt` is the Prop-free recursive algebraic-residue operation, while
-  `LawfulCRischLevelLrt` packages its special and reduced soundness contracts.
+  `LawfulCRischLevelLrt` packages its special and reduced soundness contracts. The primitive base and
+  `DenseFrac` tower-step instances provide the recursive induction path.
 
 ## Leaf inventory
 
@@ -78,31 +86,15 @@ Therefore the first architectural refactor is **not** another leaf abstraction. 
 existing leaf contracts the only dependencies of the canonical, Hermite, polynomial, residue, and
 monomial stage contracts.
 
-## Migration order
+## Remaining work
 
-1. Inventory every public assembler and proof that mentions a concrete dense/Wf operation; use
-   `scripts/wiki rdeps` before changing it. Classify each declaration as a stage contract,
-   a realization, or obsolete duplicated wiring.
-2. Generalize the Stage-1 result data and monomial case from `DensePoly` to a polynomial
-   representation parameter `P`. The representation-neutral recombination square and
-   `CMonomialCase`/`LawfulCMonomialCase` split are complete; next materialize lawful dense
-   realizations and make the generic assembler consume the contracts rather than dense hypotheses.
-3. Introduce paired executable/lawful interfaces for canonical representation and polynomial
-   reduction. Canonical representation is paired and densely realized. Polynomial reduction now has
-   its Prop-free interface, checked tower realizer, and its full lawful contract; prove the tower
-   realizer's normal-form and eventual-fuel laws next. Hermite and residue-log stages now have paired
-   operation/law interfaces and a generic normal-branch composition; dense Hermite is realized, with
-   sparse Hermite and the remaining residue realizations still pending.
-4. Define one generic Figure-5.1 one-level assembler and prove its soundness from only the stage
-   contracts. The executable assembler now calls `reduceNormal`, and its contract-only soundness theorem
-   is complete. Next separate polynomial reduction from `CMonomialCase.integrateSpecial` and add the
-   semantic completeness law for normal postprocessing; those two laws unblock one-level relative
-   completeness parameterized by complete stage capabilities.
-5. Materialize primitive, hyperexponential, and tangent realizers. Move their concrete proofs next
-   to their executable operations and make the old full drivers corollaries.
-6. Lift the same contract composition through `CRischLevel` / `CRischLevelLrt` and their lawful contracts for tower
-   recursion, then prove full soundness and relative completeness by depth induction.
-7. After each replacement, delete the superseded dense/Wf assembly path; retain no internal shim.
+1. Realize `CompleteCResidueLogPart` for an actually complete residue source. Bounded candidate sweeps
+   remain intentionally incomplete and must not acquire a false lawful instance.
+2. Upgrade the tangent coupled-DE capability to a full `CMonomialCase`, then obtain dense and sparse
+   one-level soundness from the existing assembler.
+3. Connect one-level relative completeness to the recursive tower path. Completeness remains relative to
+   explicit stage-decomposition witnesses until the mathematical decomposition theorem is formalized.
+4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
 
 ## Visibility policy
 
