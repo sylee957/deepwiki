@@ -56,7 +56,7 @@ structure LawfulSquarefreeDecomposition (d : P α) (decomp : List (P α)) : Prop
 /-- Denotation law for a representation-selected squarefree decomposition. The selected output is
 lawful whenever its input denotes a nonzero polynomial with nonzero primitive part. -/
 class LawfulCPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
-    (α : Type u) [CField α] [CFieldSpec.{u,v} α] [CharZero (CFieldSpec.K α)]
+    (α : Type u) [CField α] [CPolyGcd P α] [CFieldSpec.{u,v} α] [CharZero (CFieldSpec.K α)]
     [CPolySquarefree P α] : Prop where
   /-- The selected squarefree decomposition satisfies the semantic factorization contract. -/
   compute_lawful : ∀ (d : P α), CPoly.toPoly d ≠ 0 → (CPoly.toPoly d).primPart ≠ 0 →
@@ -66,7 +66,7 @@ namespace LawfulCPolySquarefree
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CharZero (CFieldSpec.K α)]
-  [CPolySquarefree P α] [LawfulCPolySquarefree.{u,v} P α]
+  [CPolyGcd P α] [CPolySquarefree P α] [LawfulCPolySquarefree.{u,v} P α]
 
 /-- The selected squarefree decomposition satisfies its semantic contract. -/
 theorem compute_lawful' (d : P α) (hd0 : CPoly.toPoly d ≠ 0)
