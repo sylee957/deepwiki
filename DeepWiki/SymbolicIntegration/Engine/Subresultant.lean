@@ -95,42 +95,6 @@ end Spec
 
 end CPolySubresultant
 
-/-- Dense polynomials use the representation-independent Sylvester-submatrix implementation. -/
-instance instCPolySubresultantDense : CPolySubresultant DensePoly where
-  compute := CPolySubresultant.default
-
-/-- Sparse polynomials use the representation-independent Sylvester-submatrix implementation. -/
-instance instCPolySubresultantSparse : CPolySubresultant CPoly.SparsePoly where
-  compute := CPolySubresultant.default
-
-namespace CPolySubresultant
-
-/-- **The parametric subresultant `Sⱼ(z,t)`** of `Dstar` and `A − z·Dd`: a polynomial in `t`
-whose coefficients are dense polynomials in the residue `z`, computed root-free by interpolation of
-the selected scalar subresultant at `z = 0,1,…,n+m`. -/
-def parametric {α : Type u} [CField α] {P Q : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [CPolySubresultant P] [CPoly Q] [CPolyEngine Q]
-    [CPolyInterpolate Q]
-    (Dstar A Dd : P α) (n m j : ℕ) : List (Q α) :=
-  let N := n + m + 1
-  (List.range (j + 1)).map (fun k =>
-    CPoly.interpolate ((List.range N).map (fun jj =>
-      let c := CField.natCast jj
-      (c, CPoly.coeff
-        (CPolySubresultant.compute Dstar
-          (CPolyEngine.sub A (CPolyEngine.scale c Dd)) n m j) k))))
-
-/-- Dense subresultant selection unfolds to the representation-independent default. -/
-@[simp] theorem compute_dense_eq {α : Type*} [CField α] (p q : DensePoly α) (n m j : ℕ) :
-    CPolySubresultant.compute p q n m j = CPolySubresultant.default p q n m j := rfl
-
-/-- Sparse subresultant selection unfolds to the generic implementation. -/
-@[simp] theorem compute_sparse_eq {α : Type*} [CField α]
-    (p q : CPoly.SparsePoly α) (n m j : ℕ) :
-    CPolySubresultant.compute p q n m j = CPolySubresultant.default p q n m j := rfl
-
-end CPolySubresultant
-
 /-! ### Validation (`ccompute`) -/
 
 open DensePoly
