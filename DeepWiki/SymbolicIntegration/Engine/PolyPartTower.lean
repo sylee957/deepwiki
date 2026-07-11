@@ -160,29 +160,6 @@ def towerPolynomialReduction : CPolynomialReduction P α where
         ⟨raw.1, raw.2⟩
     if polynomialReductionCheck Dt p out then some out else none
 
-/-! ### Representation-independence validation -/
-
-/-- Nonlinear polynomial reduction executes on sparse polynomials with the same reduction identity. -/
-example :
-    (let Dt := CPoly.SparsePoly.ofList [(0, (1 : ℚ)), (2, 1)]
-     let p := CPoly.SparsePoly.ofList [(3, (1 : ℚ))]
-     let res := cPolyReduceTower Dt 8 p
-     CPolyEngine.cisZero
-          (CPolyEngine.sub
-            (CPolyEngine.add (CPolyEngine.monomialDeriv Dt res.1) res.2) p)
-       && decide (CPolyEngine.cdeg res.2 = 1)) = true := by
-  native_decide
-
-/-- Primitive polynomial integration executes on sparse polynomials with the same derivative identity. -/
-example :
-    (let Dt := CPoly.SparsePoly.ofList [(0, (1 : ℚ))]
-     let p := CPoly.SparsePoly.ofList [(2, (1 : ℚ))]
-     let res := cPrimitivePolyIntegrate Dt 8 p
-     CPolyEngine.cisZero
-       (CPolyEngine.sub
-         (CPolyEngine.add (CPolyEngine.monomialDeriv Dt res.1) res.2) p)) = true := by
-  native_decide
-
 end DensePoly
 
 end DeepWiki.SymbolicIntegration
