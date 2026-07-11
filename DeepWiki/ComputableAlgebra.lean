@@ -27,7 +27,6 @@ import DeepWiki.ComputableAlgebra.PolyQuotient
 import DeepWiki.ComputableAlgebra.PolyInterpolate
 import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
-import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.FracRepr
 import DeepWiki.ComputableAlgebra.FracReprDense

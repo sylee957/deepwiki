@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
 
 /-! # Well-founded generic tower integration engine
 

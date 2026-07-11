@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgFunctionField
 import DeepWiki.ComputableAlgebra.FracReduce
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
 
 /-! # Algebraic-function residues for arbitrary curves: the full double resultant
 

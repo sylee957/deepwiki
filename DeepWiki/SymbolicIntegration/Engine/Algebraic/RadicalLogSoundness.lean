@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalIntegralSoundness
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogIntegral
 import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
-import DeepWiki.ComputableAlgebra.GenericBezout
+import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalAssembly
