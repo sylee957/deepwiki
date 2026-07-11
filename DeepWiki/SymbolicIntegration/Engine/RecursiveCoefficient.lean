@@ -33,4 +33,26 @@ class CompleteCRecursiveCoefficientIntegrator (C : CRecursiveCoefficientIntegrat
     (∃ b : α, CFieldSpec.toK (CDiffField.cderiv b) = CFieldSpec.toK c) →
       ∃ b, C.integrate c = some b
 
+/-- A pair `(b,r)` solves limited integration relative to `η` when `c = D b + r·η`. -/
+def IsLimitedCoefficientResult (η c b r : α) : Prop :=
+  CFieldSpec.toK c = CFieldSpec.toK (CDiffField.cderiv b) +
+    CFieldSpec.toK r * CFieldSpec.toK η
+
+/-- A coefficient has a limited antiderivative relative to `η`. -/
+def IsLimitedCoefficientIntegrable (η c : α) : Prop :=
+  ∃ b r : α, IsLimitedCoefficientResult η c b r
+
+/-- Denotation-level soundness contract for recursive limited integration. -/
+class LawfulCLimitedCoefficientIntegrator (C : CRecursiveCoefficientIntegrator α) : Prop where
+  /-- Every returned pair witnesses the limited-integration identity. -/
+  limited_sound : ∀ (η c b r : α), C.limitedIntegrate η c = some (b, r) →
+    IsLimitedCoefficientResult η c b r
+
+/-- Relative-completeness contract for recursive limited integration. -/
+class CompleteCLimitedCoefficientIntegrator (C : CRecursiveCoefficientIntegrator α)
+    [LawfulCLimitedCoefficientIntegrator C] : Prop where
+  /-- Every limited-integrable coefficient is accepted. -/
+  limited_complete : ∀ (η c : α), IsLimitedCoefficientIntegrable η c →
+    ∃ b r, C.limitedIntegrate η c = some (b, r) ∧ IsLimitedCoefficientResult η c b r
+
 end DeepWiki.SymbolicIntegration

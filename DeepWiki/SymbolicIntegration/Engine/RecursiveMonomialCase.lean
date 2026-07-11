@@ -46,14 +46,17 @@ instance instLawfulCMonomialCaseWithRecursiveCoefficient (C : CRecursiveMonomial
 
 /-- Relative-completeness contract for a recursive monomial case. -/
 class CompleteCRecursiveMonomialCase (C : CRecursiveMonomialCase P α) : Prop where
-  /-- Installing a complete recursive coefficient stage preserves monomial-case completeness. -/
-  complete : ∀ (I : CRecursiveCoefficientIntegrator α),
-    CompleteCRecursiveCoefficientIntegrator I → CompleteCMonomialCase (C.withCoefficient I)
+  /-- Installing ordinary and limited-complete recursive coefficient stages preserves monomial completeness. -/
+  complete (I : CRecursiveCoefficientIntegrator α)
+    [CompleteCRecursiveCoefficientIntegrator I]
+    [LawfulCLimitedCoefficientIntegrator I]
+    [CompleteCLimitedCoefficientIntegrator I] : CompleteCMonomialCase (C.withCoefficient I)
 
 /-- A complete recursive coefficient stage lifts to a complete ordinary monomial case. -/
 instance instCompleteCMonomialCaseWithRecursiveCoefficient (C : CRecursiveMonomialCase P α)
     (I : CRecursiveCoefficientIntegrator α) [CompleteCRecursiveMonomialCase C]
-    [CompleteCRecursiveCoefficientIntegrator I] : CompleteCMonomialCase (C.withCoefficient I) :=
-  CompleteCRecursiveMonomialCase.complete (C := C) I inferInstance
+    [CompleteCRecursiveCoefficientIntegrator I] [LawfulCLimitedCoefficientIntegrator I]
+    [CompleteCLimitedCoefficientIntegrator I] : CompleteCMonomialCase (C.withCoefficient I) :=
+  CompleteCRecursiveMonomialCase.complete (C := C) I
 
 end DeepWiki.SymbolicIntegration

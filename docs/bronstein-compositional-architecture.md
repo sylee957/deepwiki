@@ -114,9 +114,11 @@ monomial stage contracts.
    bridge is available.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
-   `a = D(b) + c·η`: ordinary recursive antiderivative completeness alone cannot justify the
-   degree-raising branch. Completeness remains relative to explicit stage-decomposition witnesses
-   until that mathematical decomposition theorem is formalized.
+   `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and
+   `CompleteCLimitedCoefficientIntegrator` now record that boundary explicitly, so ordinary
+   recursive antiderivative completeness alone cannot justify the degree-raising branch. The LRT
+   tower has not yet realized the limited-completeness contract; completeness remains relative to
+   explicit stage-decomposition witnesses until that mathematical decomposition theorem is formalized.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
 
 ## Visibility policy
