@@ -69,19 +69,25 @@ class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField �
 
 namespace LawfulRischLevelLrt
 
+omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **The assembled LRT integrator** — a function of `(Dt, a, d)` alone, via the root-free assembler
 `cIntegrateCaseLrt` (no candidate sweep). **Guards on `d ≠ 0`**, so a successful run supplies `d ≠ 0` to the
 soundness laws. -/
-def integrate [LawfulRischLevelLrt α] (Dt a d : DensePoly α) : Option (LrtResult α) :=
+def integrate [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly] [LawfulRischLevelLrt α]
+    (Dt a d : DensePoly α) : Option (LrtResult α) :=
   if cisZero d then none else cIntegrateCaseLrt case Dt a d
 
-omit [LawfulCPolyGcd.{u, v} DensePoly α]
+omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
   [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Formal LRT soundness.** Any successful run satisfies the algebraic-residue log-derivative identity
 `IsIntegralResultLrt` — over every alg-closed differential extension `E`, `D_E(rational) + Σ residue logs =
 a/d`. Composed from the instance's `specialSound` + `reducedSoundLrt` through the assembler soundness
 `cIntegrateCaseLrt_sound`. -/
-theorem soundFormalLrt [LawfulRischLevelLrt α] (Dt a d : DensePoly α) (res : LrtResult α)
+theorem soundFormalLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [LawfulRischLevelLrt α] (Dt a d : DensePoly α) (res : LrtResult α)
     (h : integrate Dt a d = some res) : IsIntegralResultLrt Dt a d res := by
   rw [integrate] at h
   by_cases hdz : cisZero d = true
@@ -105,21 +111,27 @@ theorem soundFormalLrt [LawfulRischLevelLrt α] (Dt a d : DensePoly α) (res : L
       exact cIntegrateCaseLrt_sound case Dt a d res snum sden v
         hSpec h0 hsden hSpecField hNrm hredDen hrecon
 
-omit [LawfulCPolyGcd.{u, v} DensePoly α]
+omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
   [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Derived broad elementary integrability.** A successful LRT run certifies `a/d` is elementary integrable in
 the broad (algebraic-residue) sense — `IsElementaryIntegrableLrt`, via `soundFormalLrt`. -/
-theorem isElementaryIntegrableLrt_of_run [LawfulRischLevelLrt α] (Dt a d : DensePoly α)
+theorem isElementaryIntegrableLrt_of_run [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [LawfulRischLevelLrt α] (Dt a d : DensePoly α)
     (res : LrtResult α) (h : integrate Dt a d = some res) : IsElementaryIntegrableLrt Dt a d :=
   ⟨res, soundFormalLrt Dt a d res h⟩
 
+omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Limited (log-free) LRT integration** — `integrate` restricted to results with **no** algebraic-residue
 logs. A log-free antiderivative is purely rational, so it needs no algebraic closure to state — making this the
 right coefficient integrator for the tower recursion (the LRT analogue of the rational `integrateRational`). -/
-def integrateRationalLrt [LawfulRischLevelLrt α] (Dt a d : DensePoly α) : Option (DensePoly α × DensePoly α) :=
+def integrateRationalLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [LawfulRischLevelLrt α] (Dt a d : DensePoly α) : Option (DensePoly α × DensePoly α) :=
   (integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
 
-omit [LawfulCPolyGcd.{u, v} DensePoly α]
+omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
   [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **★ K-level soundness of the log-free LRT integrator** — the ∀E ⇒ K descent for log-free results. A
 successful `integrateRationalLrt` run gives the **base-level** identity `D_tower(num/den) = a/d` in
@@ -129,7 +141,9 @@ the two sides are base-changes of the `K`-level fractions (`ratFuncBaseChange_to
 `ratFuncBaseChange_amG_div`), so the `K`-identity follows by **injectivity of the field hom `ratFuncBaseChange`**.
 This is the `intR`-soundness the tower coefficient recursion consumes — descent-free `K`-level, exactly like
 `integrateRational_sound` on the rational side. -/
-theorem integrateRationalLrt_sound [LawfulRischLevelLrt α] (Dt a d num den : DensePoly α)
+theorem integrateRationalLrt_sound [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [LawfulRischLevelLrt α] (Dt a d num den : DensePoly α)
     (h : integrateRationalLrt Dt a d = some (num, den)) :
     towerFractionFieldDeriv Dt (am α (toPoly num) / am α (toPoly den))
       = am α (toPoly a) / am α (toPoly d) := by
