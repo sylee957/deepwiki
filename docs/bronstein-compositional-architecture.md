@@ -53,6 +53,8 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `hyperexpCheckedNormalReduction` realizes the same soundness interface for dense residual-feedback
   hyperexponential normal integration. It validates the candidate-driven output by checking its denominator,
   logarithm arguments, and full identity; it intentionally has no completeness instance.
+- `hyperexpRischLevel` composes that normal stage with the checked Laurent special stage and an arbitrary
+  lawful polynomial reducer, yielding a dense sound hyperexponential one-level realization.
 - `assembleOneLevel` is the executable representation-neutral Figure-5.1 spine: canonical split,
   polynomial and special integration, an injected normal reducer, monomial-specific normal postprocessing,
   and recombination.
@@ -110,12 +112,13 @@ monomial stage contracts.
 2. Implement the concrete `CTangentSpecialBridge` and a relative-completeness contract for tangent normal
    reduction. Soundness no longer depends on the low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
-   bridge through the generic assembler. Sparse transport and relative completeness remain after the concrete
-   bridge is available.
+   bridge through the generic assembler. `sparseTangentRischLevel` transports the same composition through the
+   sparse representation boundary. Relative completeness remains after the concrete bridge is available.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and
-   `CompleteCLimitedCoefficientIntegrator` now record that boundary explicitly, so ordinary
+   `CompleteCLimitedCoefficientIntegrator` now tie returned pairs to that identity and record the boundary
+   explicitly, so ordinary
    recursive antiderivative completeness alone cannot justify the degree-raising branch. The LRT
    tower has not yet realized the limited-completeness contract; completeness remains relative to
    explicit stage-decomposition witnesses until that mathematical decomposition theorem is formalized.
