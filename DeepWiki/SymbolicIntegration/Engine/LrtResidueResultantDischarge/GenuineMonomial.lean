@@ -245,7 +245,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     have hWD : toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2)
         * toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) = toPoly d := by
       rw [← hDsF]
-      exact toPolyG_cdivWf_exact d (cHermiteReduceTower Dt a d).2.2
+      exact toPolyG_div_exact d (cHermiteReduceTower Dt a d).2.2
         (fun h => hHermDsNe ((cnormG_eq_nil_iff _).mp h))
         (toPolyG_cHermiteReduceTowerG_Dstar_dvd hgcd Dt a d hd0)
     -- push `hWgd` from the `cnorm`-projections to `g` (through `toPoly`)

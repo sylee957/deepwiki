@@ -108,7 +108,8 @@ theorem canonicalReconstruction (Dt a d : DensePoly α)
   have hcns : cnorm sn.2 ≠ [] := fun h => hds ((cisZeroG_iff sn.2).mp (by simp [cisZero, h]))
   have hbez : toPoly uw.1 * toPoly sn.1 + toPoly uw.2 * toPoly sn.2 = 1 :=
     toPolyG_bezoutOne sn.1 sn.2 hgdeg hgne
-  have hadiv : toPoly a = toPoly qr.1 * toPoly d + toPoly qr.2 := toPolyG_cdivmodWf a d hcnd
+  have hadiv : toPoly a = toPoly qr.1 * toPoly d + toPoly qr.2 :=
+    toPolyG_divmod a d hcnd
   have hbcr : toPoly bc.1 * toPoly sn.1 + toPoly bc.2 * toPoly sn.2 = toPoly qr.2 :=
     toPolyG_extendedEuclideanSplit sn.1 sn.2 qr.2 uw.1 uw.2 hcns hbez
   have hone : am α (toPoly ([CCommRing.one] : DensePoly α)) = 1 := by

@@ -30,10 +30,10 @@ theorem IsAfIdempotent.isIdempotentElem {f e : DensePoly α} (hf : cnorm f ≠ [
 
 /-- The engine's `afDerivWf` kills a carrier idempotent: for a separable curve `T` and idempotent
 `e` (`IsAfIdempotent T e`), `mk(toPoly(afDerivWf T e)) = 0` in `Q = K[X] ⧸ afIdeal T`. -/
-theorem idempotent_isConstant (f e : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0)
-    (he : IsAfIdempotent f e) :
+theorem IsAfIdempotent.isConstant {f e : DensePoly α} (he : IsAfIdempotent f e)
+    (hf : cnorm f ≠ [])
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f e)) = 0 := by
   set ē : (CFieldSpec.K α)[X] ⧸ afIdeal f :=
     Ideal.Quotient.mk (afIdeal f) (toPoly e) with hē
@@ -69,8 +69,8 @@ integral `afIntegrateFunctionAlgebra T es Fs` satisfies
 `mk(toPoly(afDerivWf T F)) = mk(toPoly integrand)` in `Q = K[X] ⧸ afIdeal T`. -/
 theorem afIntegrateFunctionAlgebra_sound (f integrand : DensePoly α)
     (es Fs : List (DensePoly α)) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0)
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1 ≠ 0)
     (hidem : ∀ p ∈ es.zip Fs, IsAfIdempotent f p.1)
     (hcomp : ∀ p ∈ es.zip Fs,
       Ideal.Quotient.mk (afIdeal f) (toPoly p.1)
@@ -92,7 +92,7 @@ theorem afIntegrateFunctionAlgebra_sound (f integrand : DensePoly α)
     simp only [Function.comp_apply]
     rw [mk_toPoly_afDerivWf_mulMod f p.1 p.2 hf hgdeg hgne,
       mk_toPoly_mulMod _ _ _ hf, mk_toPoly_mulMod _ _ _ hf,
-      idempotent_isConstant f p.1 hf hgdeg hgne (hidem p hp), zero_mul, zero_add]
+      (hidem p hp).isConstant hf hgdeg hgne, zero_mul, zero_add]
     exact hcomp p hp)]
   -- `Σ ēᵢ·integrand = (Σ ēᵢ)·integrand = 1·integrand = integrand`
   rw [show (fun p : DensePoly α × DensePoly α =>

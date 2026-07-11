@@ -224,7 +224,7 @@ pole-cancellation: the reduced residual's `W`-poles cancel). Tower analog of
 
 open CFrac in
 /-- The whole-step Hermite field identity from the radical split. With `hNum` the exact quotient
-`cdivWf (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
+`CPolyEuclidean.div (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
 reduced part telescopes: `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
 theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : DensePoly α)
     (hd : am α (toPoly d) ≠ 0) (hgden : am α (toPoly gden) ≠ 0)
@@ -236,7 +236,7 @@ theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : D
             (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
               (cmul gnum (cmonomialDeriv Dt gden)))))) :
     towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
-        + am α (toPoly (cdivWf (cmul (csub (cmul a (cmul gden gden))
+        + am α (toPoly (CPolyEuclidean.div (cmul (csub (cmul a (cmul gden gden))
             (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
               (cmul gnum (cmonomialDeriv Dt gden))))) Dstar) (cmul d (cmul gden gden))))
           / am α (toPoly Dstar)
@@ -251,14 +251,14 @@ theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : D
     simp only [denote]
     exact DeepWiki.polynomial_dvd_cleared_identity_of_radical hSD hWgd
   -- the exact-division equation, mapped into the fraction field.
-  have hexactP : toPoly (cdivWf (cmul resNum Dstar) resDen) * toPoly resDen
-      = toPoly (cmul resNum Dstar) := toPolyG_cdivWf_exact _ _ hresDen hdvd
-  have hexact : am α (toPoly (cdivWf (cmul resNum Dstar) resDen))
+  have hexactP : toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen) * toPoly resDen
+      = toPoly (cmul resNum Dstar) := toPolyG_div_exact _ _ hresDen hdvd
+  have hexact : am α (toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen))
         * am α (toPoly resDen)
       = am α (toPoly resNum) * am α (toPoly Dstar) := by
     rw [← map_mul, hexactP]
     simp only [denote, map_mul]
   exact hermiteTowerStep_field_identity Dt gnum gden a d
-    (cdivWf (cmul resNum Dstar) resDen) Dstar hd hgden hDstar hexact
+    (CPolyEuclidean.div (cmul resNum Dstar) resDen) Dstar hd hgden hDstar hexact
 
 end DeepWiki.SymbolicIntegration

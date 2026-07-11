@@ -81,7 +81,7 @@ deg crNormDen`. `crNormNum` is the second cofactor of `CPoly.extendedEuclideanSp
 `crNormDen = dₙ`, so `extendedEuclideanSplit_snd_degree_lt` gives properness — from the split `d = dₛ·dₙ`
 (`cSplitFactorFastG_isSplittingFactorizationGen`), the special⊥normal Bézout identity
 (`isCoprime_of_isSpecial_isNormalSqfree`, `toPolyG_bezoutOne`), and the remainder bound `deg (a mod d) <
-deg d` (`cmodWf_length_lt`). The `degree` form holds unconditionally on `d ≠ 0` (incl. the trivial `crNormNum =
+deg d` (selected-remainder shortening). The `degree` form holds unconditionally on `d ≠ 0` (incl. the trivial `crNormNum =
 0` case, `⊥ < deg dₙ`); it is the never-done crNorm-properness cleanup target, the foundation of the Hermite
 properness `hAD`. -/
 theorem crNormNum_degree_lt_crNormDen (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)

@@ -523,5 +523,34 @@ instance instLawfulCPolyEuclideanDense : LawfulCPolyEuclidean DensePoly where
     intro α _ _ p q
     simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using
       DensePoly.toPolyG_cgcdWf p q
+  gcdExt_dvd := by
+    intro α _ _ p q
+    simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using
+      DensePoly.toPolyG_cgcdWf_dvd p q
+
+namespace DensePoly
+
+/-- Selected dense quotient and remainder satisfy the Euclidean identity. -/
+theorem toPolyG_divmod {α : Type*} [CField α] [CFieldSpec α] (p q : DensePoly α)
+    (hq : cnorm q ≠ []) :
+    toPoly p = toPoly (CPolyEuclidean.divmod p q).1 * toPoly q +
+      toPoly (CPolyEuclidean.divmod p q).2 := by
+  have hq' : CPoly.toPoly q ≠ 0 := fun h =>
+    hq ((cnormG_eq_nil_iff q).mpr (by simpa only [toPoly_list_eq] using h))
+  simpa only [CPolyEuclidean.div, CPolyEuclidean.mod, toPoly_list_eq] using
+    LawfulCPolyEuclidean.divmod_spec (P := DensePoly) p q hq'
+
+/-- Selected exact division reconstructs a dense dividend through the dense denotation. -/
+theorem toPolyG_div_exact {α : Type*} [CField α] [CFieldSpec α] (p q : DensePoly α)
+    (hq : cnorm q ≠ []) (hdvd : toPoly q ∣ toPoly p) :
+    toPoly (CPolyEuclidean.div p q) * toPoly q = toPoly p := by
+  have hq' : CPoly.toPoly q ≠ 0 := fun h =>
+    hq ((cnormG_eq_nil_iff q).mpr (by simpa only [toPoly_list_eq] using h))
+  have hdvd' : CPoly.toPoly q ∣ CPoly.toPoly p := by
+    simpa only [toPoly_list_eq] using hdvd
+  have hexact := LawfulCPolyEuclidean.div_exact (P := DensePoly) p q hq' hdvd'
+  simpa only [toPoly_list_eq, mul_comm] using hexact.symm
+
+end DensePoly
 
 end DeepWiki.SymbolicIntegration

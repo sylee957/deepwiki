@@ -87,13 +87,13 @@ variable {α : Type*} [CField α]
 
 /-- Generic `p`-adic valuation `cValuation p x = ν_p(x)`: the multiplicity of the monic irreducible `p`
 dividing `x` (largest `k` with `pᵏ ∣ x`), by trial division. Stops at the zero polynomial, a constant/unit
-`p` (`cdeg p = 0`), or a non-dividing step, else recurses on `x/p` (`cdivWf`) and adds one. Well-founded on
+`p` (`cdeg p = 0`), or a non-dividing step, else recurses on `x/p` (`CPolyEuclidean.div`) and adds one. Well-founded on
 `(cnorm x).length`. `[CField α]`-generic. -/
 def cValuation (p x : DensePoly α) : ℕ :=
   if cisZero x then 0
   else if cdeg p = 0 then 0
   else if cdvd p x then
-    let xq := cdivWf x p
+    let xq := CPolyEuclidean.div x p
     if (cnorm xq : List α).length < (cnorm x : List α).length then
       1 + cValuation p xq
     else 0   -- unreachable on a real run (non-constant `p ∣ x` drops the degree)
@@ -118,8 +118,8 @@ theorem toPolyG_pow_cValuationG_dvd (p x : DensePoly α) :
       rw [cValuation.eq_def, if_neg hx, if_neg hp, if_pos hdvd, if_pos hguard]
       have hpne : cnorm p ≠ [] := fun hpe => hp (by rw [cdeg, hpe]; rfl)
       have hpx : toPoly p ∣ toPoly x := dvd_of_cdvdG p x hpne hdvd
-      have hid : toPoly x = toPoly (cdivWf x p) * toPoly p :=
-        (toPolyG_cdivWf_exact x p hpne hpx).symm
+      have hid : toPoly x = toPoly (CPolyEuclidean.div x p) * toPoly p :=
+        (toPolyG_div_exact x p hpne hpx).symm
       rw [add_comm, pow_add, pow_one, hid]
       exact mul_dvd_mul ih dvd_rfl
   | case4 x hx hp hdvd _xq hguard =>
@@ -152,34 +152,34 @@ theorem cValuationG_sharp (p x : DensePoly α)
       intro hx0
       rw [cValuation.eq_def, if_neg hx, if_neg hdeg, if_pos hdvd, if_pos hguard]
       have hpx : toPoly p ∣ toPoly x := dvd_of_cdvdG p x hpne hdvd
-      have hid : toPoly x = toPoly (cdivWf x p) * toPoly p :=
-        (toPolyG_cdivWf_exact x p hpne hpx).symm
-      have hq0 : toPoly (cdivWf x p) ≠ 0 := by
+      have hid : toPoly x = toPoly (CPolyEuclidean.div x p) * toPoly p :=
+        (toPolyG_div_exact x p hpne hpx).symm
+      have hq0 : toPoly (CPolyEuclidean.div x p) ≠ 0 := by
         intro h
         apply hx0
         rw [hid, h, zero_mul]
       have hihq := ih hq0
       intro hcontra
       apply hihq
-      rw [hid, show 1 + cValuation p (cdivWf x p) + 1 =
-          (cValuation p (cdivWf x p) + 1) + 1 by ring, pow_succ] at hcontra
+      rw [hid, show 1 + cValuation p (CPolyEuclidean.div x p) + 1 =
+          (cValuation p (CPolyEuclidean.div x p) + 1) + 1 by ring, pow_succ] at hcontra
       exact (mul_dvd_mul_iff_right hp0).mp hcontra
   | case4 x hx hdeg hdvd _xq hguard =>
       intro hx0
       have hpx : toPoly p ∣ toPoly x := dvd_of_cdvdG p x hpne hdvd
-      have hid : toPoly x = toPoly (cdivWf x p) * toPoly p :=
-        (toPolyG_cdivWf_exact x p hpne hpx).symm
-      have hq0 : toPoly (cdivWf x p) ≠ 0 := by
+      have hid : toPoly x = toPoly (CPolyEuclidean.div x p) * toPoly p :=
+        (toPolyG_div_exact x p hpne hpx).symm
+      have hq0 : toPoly (CPolyEuclidean.div x p) ≠ 0 := by
         intro h
         apply hx0
         rw [hid, h, zero_mul]
       have hxne : cnorm x ≠ [] := fun he => hx0 ((cnormG_eq_nil_iff _).mp he)
-      have hqne : cnorm (cdivWf x p) ≠ [] := fun he =>
+      have hqne : cnorm (CPolyEuclidean.div x p) ≠ [] := fun he =>
         hq0 (by rw [cnormG_eq_nil_iff] at he; exact he)
-      have hdegdrop : (toPoly (cdivWf x p)).natDegree < (toPoly x).natDegree := by
+      have hdegdrop : (toPoly (CPolyEuclidean.div x p)).natDegree < (toPoly x).natDegree := by
         rw [hid, Polynomial.natDegree_mul hq0 hp0]
         omega
-      have hlen : (cnorm (cdivWf x p) : List α).length < (cnorm x : List α).length := by
+      have hlen : (cnorm (CPolyEuclidean.div x p) : List α).length < (cnorm x : List α).length := by
         rw [length_cnormG_of_ne _ hqne, length_cnormG_of_ne _ hxne]
         omega
       exact False.elim (hguard hlen)
@@ -194,7 +194,7 @@ end DensePoly
 /-! ## The flat-composition §6 pipeline
 
 Everything past the five recursive bottoms is a flat composition over the leaves above plus the generic
-`cdivWf`, `cdivmodWf`, `CPoly.diophantineReduced`, `cdvd`, `cgcdWf`, and the §5.6
+`CPolyEuclidean.divmod`/`gcdExt`, `CPoly.diophantineReduced`, `cdvd`, and the §5.6
 `cResidueResultantTower`/`cinterpolate`/`ceval`. -/
 
 namespace DensePoly
@@ -209,9 +209,9 @@ of `r`. For an already-weakly-normalized `f`, `q = 1`. `[CField α] [CDiffField 
 def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots : ℕ := 16) : DensePoly α :=
   let dn := (cSplitFactorFast Dt fden).1
   let g := CFracGcdCoreWf.cgcdFFCoreWf dn (cderiv dn)
-  let dstar := cdivWf dn g
-  let d1 := cdivWf dstar (CFracGcdCoreWf.cgcdFFCoreWf dstar g)
-  let fdenOverD1 := cdivWf fden d1
+  let dstar := CPolyEuclidean.div dn g
+  let d1 := CPolyEuclidean.div dstar (CFracGcdCoreWf.cgcdFFCoreWf dstar g)
+  let fdenOverD1 := CPolyEuclidean.div fden d1
   let a := (CPoly.diophantineReduced fdenOverD1 d1 fnum).1
   let Dd1 := cmonomialDeriv Dt d1
   let r := cResidueResultantTower Dt a d1
@@ -230,14 +230,14 @@ def cRdeNormalDenominator (Dt : DensePoly α) (fnum fden gnum gden : DensePoly �
   let dn := (cSplitFactorFast Dt fden).1
   let en := (cSplitFactorFast Dt gden).1
   let p := CFracGcdCoreWf.cgcdFFCoreWf dn en
-  let h := cdivWf (CFracGcdCoreWf.cgcdFFCoreWf en (cderiv en))
+  let h := CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf en (cderiv en))
     (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))
   let dnh2 := cmul (cmul dn h) h
   if cdvd en dnh2 then
     let a := cmul dn h
     let Dh := cmonomialDeriv Dt h
-    let b := cdivWf (csub (cmul a fnum) (cmul (cmul dn Dh) fden)) fden
-    let c := cdivWf (cmul dnh2 gnum) gden
+    let b := CPolyEuclidean.div (csub (cmul a fnum) (cmul (cmul dn Dh) fden)) fden
+    let c := CPolyEuclidean.div (cmul dnh2 gnum) gden
     some (a, b, c, h)
   else none
 
@@ -266,7 +266,7 @@ def cRdeSpecialDenominator (Dt : DensePoly α) (a b c : DensePoly α) :
     let Nminusn : ℕ := (N - n).toNat
     let pN := cpow p Nnat
     let abar := cmul a pN
-    let DpOverp := cdivWf (cmonomialDeriv Dt p) p
+    let DpOverp := CPolyEuclidean.div (cmonomialDeriv Dt p) p
     let bterm := cscale (CCommRing.neg (cnatCast negn)) (cmul a DpOverp)
     let bbar := cmul (cadd b bterm) pN
     let cbar := cmul c (cpow p Nminusn)

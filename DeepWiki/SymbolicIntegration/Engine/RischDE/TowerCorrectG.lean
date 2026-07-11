@@ -21,14 +21,19 @@ Carrier-generic SPDE certificate helpers, stated over `{α} [CField α] [CFieldS
 gcd `g` taken abstractly. -/
 
 /-- After dividing `a, b` by a nonzero gcd `g`, the gcd of `bd, ad` is a unit. -/
-theorem cgcdWf_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α]
+theorem gcdExt_isUnit_of_divided {α : Type*} [CField α] [CFieldSpec α]
     (a b ad bd g : DensePoly α) (hgne : toPoly g ≠ 0)
     (hgassoc : Associated (toPoly g) (gcd (toPoly a) (toPoly b)))
     (hdiva : toPoly ad * toPoly g = toPoly a)
     (hdivb : toPoly bd * toPoly g = toPoly b) :
-    IsUnit (toPoly (cgcdWf bd ad).1) := by
-  obtain ⟨hGbd, hGad⟩ := toPolyG_cgcdWf_dvd bd ad
-  set G := toPoly (cgcdWf bd ad).1 with hGdef
+    IsUnit (toPoly (CPolyEuclidean.gcdExt bd ad).1) := by
+  have hdvd := LawfulCPolyEuclidean.gcdExt_dvd (P := DensePoly) bd ad
+  have hdvd' :
+      toPoly (CPolyEuclidean.gcdExt bd ad).1 ∣ toPoly bd ∧
+        toPoly (CPolyEuclidean.gcdExt bd ad).1 ∣ toPoly ad := by
+    simpa only [toPoly_list_eq] using hdvd
+  obtain ⟨hGbd, hGad⟩ := hdvd'
+  set G := toPoly (CPolyEuclidean.gcdExt bd ad).1 with hGdef
   have hGg_a : G * toPoly g ∣ toPoly a := by rw [← hdiva]; exact mul_dvd_mul_right hGad _
   have hGg_b : G * toPoly g ∣ toPoly b := by rw [← hdivb]; exact mul_dvd_mul_right hGbd _
   have hGg_gcd : G * toPoly g ∣ gcd (toPoly a) (toPoly b) := dvd_gcd hGg_a hGg_b
@@ -38,29 +43,29 @@ theorem cgcdWf_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α]
   have hG1 : G ∣ 1 := ⟨k, mul_left_cancel₀ hgne hcancel⟩
   exact isUnit_of_dvd_one hG1
 
-/-- `toPoly (cdivWf a g) * toPoly g = toPoly a` from `g ~ gcd(a, b)` (`g ∣ a`) and `g ≠ 0`. -/
-theorem cdivWf_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : DensePoly α)
+/-- `toPoly (CPolyEuclidean.div a g) * toPoly g = toPoly a` from `g ~ gcd(a, b)` (`g ∣ a`) and `g ≠ 0`. -/
+theorem div_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : DensePoly α)
     (hg0 : cnorm g ≠ [])
     (hgassoc : Associated (toPoly g) (gcd (toPoly a) (toPoly b))) :
-    toPoly (cdivWf a g) * toPoly g = toPoly a := by
+    toPoly (CPolyEuclidean.div a g) * toPoly g = toPoly a := by
   have hgdvd : toPoly g ∣ toPoly a := hgassoc.dvd.trans (gcd_dvd_left _ _)
-  exact toPolyG_cdivWf_exact a g hg0 hgdvd
+  exact toPolyG_div_exact a g hg0 hgdvd
 
-/-- `toPoly (cdivWf b g) * toPoly g = toPoly b` from `g ~ gcd(a, b)` (`g ∣ b`). -/
-theorem cdivWf_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : DensePoly α)
+/-- `toPoly (CPolyEuclidean.div b g) * toPoly g = toPoly b` from `g ~ gcd(a, b)` (`g ∣ b`). -/
+theorem div_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : DensePoly α)
     (hg0 : cnorm g ≠ [])
     (hgassoc : Associated (toPoly g) (gcd (toPoly a) (toPoly b))) :
-    toPoly (cdivWf b g) * toPoly g = toPoly b := by
+    toPoly (CPolyEuclidean.div b g) * toPoly g = toPoly b := by
   have hgdvd : toPoly g ∣ toPoly b := hgassoc.dvd.trans (gcd_dvd_right _ _)
-  exact toPolyG_cdivWf_exact b g hg0 hgdvd
+  exact toPolyG_div_exact b g hg0 hgdvd
 
-/-- `toPoly (cdivWf c g) * toPoly g = toPoly c` from `cdvd g c = true` (`g ∣ c`). -/
-theorem cdivWf_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (c g : DensePoly α)
+/-- `toPoly (CPolyEuclidean.div c g) * toPoly g = toPoly c` from `cdvd g c = true` (`g ∣ c`). -/
+theorem div_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (c g : DensePoly α)
     (hg0 : cnorm g ≠ [])
     (hdvd : cdvd g c = true) :
-    toPoly (cdivWf c g) * toPoly g = toPoly c := by
+    toPoly (CPolyEuclidean.div c g) * toPoly g = toPoly c := by
   have hgdvd : toPoly g ∣ toPoly c := dvd_of_cdvdG g c hg0 hdvd
-  exact toPolyG_cdivWf_exact c g hg0 hgdvd
+  exact toPolyG_div_exact c g hg0 hgdvd
 
 /-- One `cSPDE` peel's cleared lifting: with `D = implicitDeriv (toPoly Dt)`, Bézout certificate
 `bd·r + ad·z = cd`, and `h` solving the reduced equation, `q = ad·h + r` solves `ad·D(q) + bd·q = cd`. -/

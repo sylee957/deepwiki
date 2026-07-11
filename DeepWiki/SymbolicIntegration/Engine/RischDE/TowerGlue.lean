@@ -94,8 +94,8 @@ example {α : Type*} [CField α] [CFieldSpec α] (q p : DensePoly α)
 /-- Restatement: the fuel-free generic Diophantine solver satisfies the Bézout identity. -/
 example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : DensePoly α)
     (hq0 : cnorm q ≠ [])
-    (hgdeg : (toPoly (cgcdWf p q).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf p q).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0) :
     toPoly (CPoly.diophantineReduced p q rhs).1 * toPoly p
         + toPoly (CPoly.diophantineReduced p q rhs).2 * toPoly q = toPoly rhs :=
   toPolyG_diophantineReduced p q rhs hq0 hgdeg hgne

@@ -100,9 +100,9 @@ theorem cIntegrateCase_primitive_sound_full [CharZero (CFieldSpec.K α)]
     (hds : toPoly (crSpecDen ([CCommRing.one] : DensePoly α) a d) ≠ 0)
     (hsplit : toPoly d
       = toPoly (crSpecDen ([CCommRing.one] : DensePoly α) a d) * toPoly (crNormDen ([CCommRing.one] : DensePoly α) a d))
-    (hgdeg : (toPoly (cgcdWf (crNormDen ([CCommRing.one] : DensePoly α) a d)
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (crNormDen ([CCommRing.one] : DensePoly α) a d)
         (crSpecDen ([CCommRing.one] : DensePoly α) a d)).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (crNormDen ([CCommRing.one] : DensePoly α) a d)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (crNormDen ([CCommRing.one] : DensePoly α) a d)
         (crSpecDen ([CCommRing.one] : DensePoly α) a d)).1 ≠ 0) :
     IsIntegralResult ([CCommRing.one] : DensePoly α) a d res := by
   have hspec0 : fieldFrac (crSpecNum ([CCommRing.one] : DensePoly α) a d)

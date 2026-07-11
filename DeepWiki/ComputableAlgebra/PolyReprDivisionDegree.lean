@@ -128,6 +128,12 @@ theorem cgcd_dvd (a b : P α) :
     toPoly (cgcd a b) ∣ toPoly a ∧ toPoly (cgcd a b) ∣ toPoly b :=
   cgcdCore_dvd (cdeg b + 1) a b (by omega)
 
+/-- The gcd component of `cgcdExt` divides both inputs. -/
+theorem cgcdExt_dvd (a b : P α) :
+    toPoly (cgcdExt a b).1 ∣ toPoly a ∧ toPoly (cgcdExt a b).1 ∣ toPoly b := by
+  rw [cgcdExt_fst_eq_cgcd]
+  exact cgcd_dvd a b
+
 /-- **`cgcd` is a genuine gcd** (fuel-less): it divides both inputs and every common divisor divides it
 (the universal property), assembling `cgcd_dvd` and `dvd_cgcd`. Instance-free. -/
 theorem cgcd_isGCD (a b : P α) :

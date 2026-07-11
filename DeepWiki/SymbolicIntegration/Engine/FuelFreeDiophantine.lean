@@ -23,15 +23,15 @@ variable [CFieldSpec α]
 
 /-- `CPoly.bezoutOne` solves the normalized Bézout identity over `K[X]` in the coprime case. -/
 theorem toPolyG_bezoutOne (a b : DensePoly α)
-    (hgdeg : (toPoly (cgcdWf a b).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf a b).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt a b).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt a b).1 ≠ 0) :
     toPoly (CPoly.bezoutOne a b).1 * toPoly a
         + toPoly (CPoly.bezoutOne a b).2 * toPoly b = 1 := by
   have hgdeg' : (CPoly.toPoly (CPolyEuclidean.gcdExt a b).1).natDegree = 0 := by
-    simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using hgdeg
+    simpa only [toPoly_list_eq] using hgdeg
   have hgne' : CPoly.toPoly (CPolyEuclidean.gcdExt a b).1 ≠ 0 := by
-    simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using hgne
-  simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using
+    simpa only [toPoly_list_eq] using hgne
+  simpa only [toPoly_list_eq] using
     CPoly.toPoly_bezoutOne (P := DensePoly) a b hgdeg' hgne'
 
 /-- `CPoly.extendedEuclideanSplit` solves the split Bézout equation over `K[X]`. -/
@@ -89,16 +89,16 @@ theorem extendedEuclideanSplit_snd_degree_lt (dn ds r u w d : DensePoly α)
 /-- `CPoly.diophantineReduced` solves the Diophantine equation over `K[X]` for coprime inputs. -/
 theorem toPolyG_diophantineReduced (p q rhs : DensePoly α)
     (hq0 : cnorm q ≠ [])
-    (hgdeg : (toPoly (cgcdWf p q).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf p q).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0) :
     toPoly (CPoly.diophantineReduced p q rhs).1 * toPoly p
         + toPoly (CPoly.diophantineReduced p q rhs).2 * toPoly q = toPoly rhs := by
   have hqDense : toPoly q ≠ 0 := fun h => hq0 ((cnormG_eq_nil_iff q).mpr h)
   have hq : CPoly.toPoly q ≠ 0 := by simpa only [toPoly_list_eq] using hqDense
   have hgdeg' : (CPoly.toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0 := by
-    simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using hgdeg
+    simpa only [toPoly_list_eq] using hgdeg
   have hgne' : CPoly.toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0 := by
-    simpa only [CPolyEuclidean.gcdExt_dense_eq, toPoly_list_eq] using hgne
+    simpa only [toPoly_list_eq] using hgne
   simpa only [toPoly_list_eq] using
     CPoly.toPoly_diophantineReduced (P := DensePoly) p q rhs hq hgdeg' hgne'
 

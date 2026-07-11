@@ -127,7 +127,7 @@ theorem toPolyG_yunDeflate_fst (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf
   have hpn : cnorm p ≠ [] := by
     intro h; apply hgne; rw [← hp]; exact (cisZeroG_iff p).mp (by simp [cisZero, h])
   have hdvd : toPoly p ∣ toPoly b := by rw [hp]; exact gcd_dvd_left _ _
-  have hex : toPoly (CPolyEuclidean.div b p) * toPoly p = toPoly b := toPolyG_cdivWf_exact b p hpn hdvd
+  have hex : toPoly (CPolyEuclidean.div b p) * toPoly p = toPoly b := toPolyG_div_exact b p hpn hdvd
   rw [hp] at hex
   exact eq_ediv_of_mul_eq hgne hex
 
@@ -147,7 +147,7 @@ theorem toPolyG_yunDeflate_snd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf
   have hpn : cnorm p ≠ [] := by
     intro h; apply hgne; rw [← hp]; exact (cisZeroG_iff p).mp (by simp [cisZero, h])
   have hdvdd : toPoly p ∣ toPoly d := by rw [hp]; exact gcd_dvd_right _ _
-  have hexd : toPoly (CPolyEuclidean.div d p) * toPoly p = toPoly d := toPolyG_cdivWf_exact d p hpn hdvdd
+  have hexd : toPoly (CPolyEuclidean.div d p) * toPoly p = toPoly d := toPolyG_div_exact d p hpn hdvdd
   rw [hp] at hexd
   have hd' : toPoly (CPolyEuclidean.div d p) = toPoly d / gcd (toPoly b) (toPoly d) :=
     eq_ediv_of_mul_eq hgne hexd
@@ -216,7 +216,7 @@ theorem prod_map_cSqfreeYunFFG_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCo
     have hg0 : toPoly g = 0 := (cisZeroG_iff g).mp (by simp [cisZero, h])
     exact hp (zero_dvd_iff.mp (hg0 ▸ hgp))
   -- `b₁ = CPolyEuclidean.div p g` divides `p` (exact division).
-  have hb1 : toPoly (CPolyEuclidean.div p g) * toPoly g = toPoly p := toPolyG_cdivWf_exact p g hgn hgp
+  have hb1 : toPoly (CPolyEuclidean.div p g) * toPoly g = toPoly p := toPolyG_div_exact p g hgn hgp
   have hb1dvd : toPoly (CPolyEuclidean.div p g) ∣ toPoly p := ⟨toPoly g, hb1.symm⟩
   exact (prod_map_cSqfreeYunFFGgoWf_dvd hgcd _ _ _).trans hb1dvd
 
@@ -243,7 +243,7 @@ theorem toPolyG_yunRadical_split (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCore
   have hDn : cnorm Dstar ≠ [] :=
     fun h => hDstar0 ((cisZeroG_iff Dstar).mp (by simp [cisZero, h]))
   have hex : toPoly (CPolyEuclidean.div d Dstar) * toPoly Dstar = toPoly d :=
-    toPolyG_cdivWf_exact d Dstar hDn hdvd
+    toPolyG_div_exact d Dstar hDn hdvd
   rw [← hex, mul_comm]
 
 /-! ### `YunInv` under constant scaling
@@ -298,9 +298,9 @@ theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
   have hkinv : Polynomial.C k⁻¹ * Polynomial.C k = 1 := by
     rw [← Polynomial.C_mul, inv_mul_cancel₀ hk0, Polynomial.C_1]
   -- from `q · toPoly g = x`: `x/G = q · C k`.
-  have hb1ex : toPoly (CPolyEuclidean.div p g) * toPoly g = A := toPolyG_cdivWf_exact p g hgn hgA
+  have hb1ex : toPoly (CPolyEuclidean.div p g) * toPoly g = A := toPolyG_div_exact p g hgn hgA
   have hq'ex : toPoly (CPolyEuclidean.div (cderiv p) g) * toPoly g = derivative A := by
-    have h := toPolyG_cdivWf_exact (cderiv p) g hgn (by rw [hA'poly]; exact hgA')
+    have h := toPolyG_div_exact (cderiv p) g hgn (by rw [hA'poly]; exact hgA')
     rwa [hA'poly] at h
   have hAG : A / G = toPoly (CPolyEuclidean.div p g) * Polynomial.C k :=
     (eq_ediv_of_mul_eq hG0 (by rw [← hb1ex, hgval]; ring)).symm
@@ -641,7 +641,7 @@ theorem cSqfreeYunFFG_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (�
   have hgn : cnorm g ≠ [] := fun h =>
     hd0 (zero_dvd_iff.mp (((cisZeroG_iff g).mp (by simp [cisZero, h])) ▸ hgp))
   have hex : toPoly (CPolyEuclidean.div d g) * toPoly g = toPoly d := by
-    simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_cdivWf_exact d g hgn hgp
+    simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_div_exact d g hgn hgp
   intro h; apply hd0; rw [← hex, h, zero_mul]
 
 omit [CDiffFieldSpec α] in

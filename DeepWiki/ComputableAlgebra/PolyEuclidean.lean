@@ -52,6 +52,10 @@ class LawfulCPolyEuclidean (P : Type u → Type u) [CPoly P] [CPolyEuclidean P] 
     CPoly.toPoly (CPolyEuclidean.gcdExt p q).2.1 * CPoly.toPoly p +
         CPoly.toPoly (CPolyEuclidean.gcdExt p q).2.2 * CPoly.toPoly q =
       CPoly.toPoly (CPolyEuclidean.gcdExt p q).1
+  /-- The selected extended-gcd component divides both inputs. -/
+  gcdExt_dvd : ∀ {α : Type u} [CField α] [CFieldSpec.{u,v} α] (p q : P α),
+    CPoly.toPoly (CPolyEuclidean.gcdExt p q).1 ∣ CPoly.toPoly p ∧
+      CPoly.toPoly (CPolyEuclidean.gcdExt p q).1 ∣ CPoly.toPoly q
 
 namespace CPolyEuclidean
 
@@ -131,5 +135,6 @@ instance instLawfulCPolyEuclideanSparse : LawfulCPolyEuclidean CPoly.SparsePoly 
     change CPoly.toPoly p = CPoly.toPoly q * CPoly.toPoly (CPoly.cdivmod p q).1
     exact CPoly.toPoly_mul_cdiv_of_dvd p q hqz hdvd
   gcdExt_bezout := CPoly.toPoly_cgcdExt
+  gcdExt_dvd := CPoly.cgcdExt_dvd
 
 end DeepWiki.SymbolicIntegration

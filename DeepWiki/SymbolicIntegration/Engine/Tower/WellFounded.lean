@@ -103,7 +103,7 @@ inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : DensePoly B → Den
 
 * `class CFracGcdCoreWf α` (one method `cgcdFFRawCoreWf`, the *raw* content-normalized gcd).
 * Base `instance CFracGcdCoreWf ℚ` — `ℚ[t]`'s raw fraction-free gcd is the generic Euclidean gcd
-  `(cgcdWf p q).1`.
+  the gcd component selected by `CPolyEuclidean.gcdExt`.
 * Recursive `instance CFracGcdCoreWf (DenseFrac β) [CFracGcdCoreWf β]` — clear denominators into
   `GBPolyCore β`, run the kernel `cprimPRSgcdGenCoreWf` with the level-`β` `cgcdFFRawCoreWf` as
   content-gcd, lift back. Bottoms at `CFracGcdCoreWf ℚ`.

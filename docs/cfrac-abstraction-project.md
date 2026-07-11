@@ -102,7 +102,10 @@ runs the same fraction algorithm.
    witnesses; the surrounding `RadElem` iteration stays domain-specific while selecting quotient,
    remainder, and extended-gcd operations through `CPolyEuclidean`. Cantor/Mumford arithmetic,
    integral-basis and divisor utilities, Picard support extraction, and general-curve coprimality contracts
-   likewise select Euclidean operations rather than naming the dense well-founded implementations.
+   likewise select Euclidean operations rather than naming the dense well-founded implementations. The
+   tower Risch-DE normalizer, valuation, denominator stages, Hermite/LRT contracts, and function-algebra
+   soundness hypotheses now select `CPolyEuclidean.div`/`gcdExt`; only the dense Euclidean implementation
+   and its implementation-level correctness proofs name `cdivWf`/`cgcdWf` directly.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

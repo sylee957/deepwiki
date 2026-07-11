@@ -151,6 +151,19 @@ theorem toPoly_cgcdExtCore [CField α] [CRingSpec α] :
 Euclidean step count. -/
 def cgcdExt [CField α] (a b : P α) : P α × P α × P α := cgcdExtCore (cdeg b + 1) a b
 
+/-- The gcd component of `cgcdExt` agrees with the fuel-less Euclidean gcd. -/
+theorem cgcdExt_fst_eq_cgcd [CField α] (a b : P α) : (cgcdExt a b).1 = cgcd a b := by
+  unfold cgcdExt cgcd
+  generalize cdeg b + 1 = fuel
+  induction fuel generalizing a b with
+  | zero => rfl
+  | succ fuel ih =>
+      rw [cgcdExtCore, cgcdCore]
+      by_cases h : cisZero b = true
+      · simp [h]
+      · simp only [h, Bool.false_eq_true, ↓reduceIte]
+        exact ih b (cdivmodCore (cdeg a + 1) a b).2
+
 /-- **The Bézout identity** (fuel-less): `toPoly s · a + toPoly t · b = toPoly g`. -/
 theorem toPoly_cgcdExt [CField α] [CRingSpec α] (a b : P α) :
     toPoly (cgcdExt a b).2.1 * toPoly a + toPoly (cgcdExt a b).2.2 * toPoly b

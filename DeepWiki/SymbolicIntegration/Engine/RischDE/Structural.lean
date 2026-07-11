@@ -248,10 +248,10 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
     simp only [hn, hdvd'] at hin ⊢
     obtain ⟨hg0, hgassoc, ha0, hrest⟩ := hin
     set bd := CPolyEuclidean.div b g with hbd
-    have hdiva : toPoly ad * toPoly g = toPoly a := cdivWf_a_exact_of_gcd a b g hg0 hgassoc
-    have hdivb : toPoly bd * toPoly g = toPoly b := cdivWf_b_exact_of_gcd a b g hg0 hgassoc
+    have hdiva : toPoly ad * toPoly g = toPoly a := div_a_exact_of_gcd a b g hg0 hgassoc
+    have hdivb : toPoly bd * toPoly g = toPoly b := div_b_exact_of_gcd a b g hg0 hgassoc
     have hdivc : toPoly (CPolyEuclidean.div c g) * toPoly g = toPoly c :=
-      cdivWf_c_exact_of_cdvdG c g hg0 hdvd'
+      div_c_exact_of_cdvdG c g hg0 hdvd'
     have hane : toPoly a ≠ 0 := fun h => ha0 ((cnormG_eq_nil_iff a).mpr h)
     have hadne : toPoly ad ≠ 0 := by
       intro h; apply hane; rw [← hdiva, h, zero_mul]
@@ -261,7 +261,7 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
     · rw [if_pos hdeg] at hrest ⊢; trivial
     · rw [if_neg hdeg] at hrest ⊢
       have hadnil : cnorm ad ≠ [] := fun h => hadne ((cnormG_eq_nil_iff ad).mp h)
-      have hunitWf := cgcdWf_isUnit_of_divided_gen a b ad bd g hgne hgassoc hdiva hdivb
+      have hunitWf := gcdExt_isUnit_of_divided a b ad bd g hgne hgassoc hdiva hdivb
       have hgdegWf : (toPoly (CPolyEuclidean.gcdExt bd ad).1).natDegree = 0 :=
         Polynomial.natDegree_eq_zero_of_isUnit hunitWf
       have hgneWf : toPoly (CPolyEuclidean.gcdExt bd ad).1 ≠ 0 := hunitWf.ne_zero
@@ -313,13 +313,13 @@ theorem cRdeNormalDenominatorG_cleared_lift (Dt : DensePoly α) (fnum fden gnum 
       rw [← ha, ← hdndef]
       simp only [denote]
     have hBexact : toPoly b * toPoly fden = toPoly bNum := by
-      rw [← hb]; exact DensePoly.toPolyG_cdivWf_exact bNum fden hfden0 hdvdB
+      rw [← hb]; exact DensePoly.toPolyG_div_exact bNum fden hfden0 hdvdB
     have hBeq : toPoly bNum = toPoly a * toPoly fnum
         - toPoly dn * Differential.implicitDeriv (toPoly Dt) (toPoly h) * toPoly fden := by
       simp only [hbNum, denote]
       rw [← hA]
     have hCexact : toPoly c * toPoly gden = toPoly cNum := by
-      rw [← hc]; exact DensePoly.toPolyG_cdivWf_exact cNum gden hgden0 hdvdC
+      rw [← hc]; exact DensePoly.toPolyG_div_exact cNum gden hgden0 hdvdC
     have hCeq : toPoly cNum = toPoly dn * toPoly h ^ 2 * toPoly gnum := by
       simp only [hcNum, denote]; ring
     have hBcert : toPoly b * toPoly fden = toPoly a * toPoly fnum

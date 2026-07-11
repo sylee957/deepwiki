@@ -57,7 +57,7 @@ example {K : Type*} [Field K] {H D2 N S : K[X]}
 
 example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (resNum resDen Dstar : DensePoly α)
     (hnum : toPoly (DensePoly.cHermiteReduceTower Dt a d).2.1
-      = toPoly (cdivWf (cmul resNum Dstar) resDen))
+      = toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen))
     (hden : toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2 = toPoly Dstar)
     (hdvd : toPoly resDen ∣ toPoly (cmul resNum Dstar))
     (hresDen : cnorm resDen ≠ []) (hDstar : toPoly Dstar ≠ 0)
@@ -104,7 +104,7 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly α),
       (toPoly (CPoly.diophantineReduced
-          (cmul (cdivWf d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+          (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPoly p.1).degree) :
     (toPoly (factors.zipIdx.foldl
         (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
@@ -112,7 +112,7 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
               ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
@@ -123,7 +123,7 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
           if i ≤ 1 then gAcc
           else
             let Vi_pow := cpow vi i
-            let u := cdivWf d Vi_pow
+            let u := CPolyEuclidean.div d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
               ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
@@ -135,7 +135,7 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly α),
       (toPoly (CPoly.diophantineReduced
-          (cmul (cdivWf d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+          (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPoly p.1).degree) :
     let g := factors.zipIdx.foldl
       (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
@@ -143,7 +143,7 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpow vi i
-          let u := cdivWf d Vi_pow
+          let u := CPolyEuclidean.div d Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
             ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))

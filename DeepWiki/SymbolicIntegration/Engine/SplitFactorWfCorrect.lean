@@ -22,7 +22,7 @@ open DensePoly
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
 /-- **M1 — the per-step bridge.** Under the gcd frontier, the computable split step
-`cstep Dt p = cdivWf (gcd_t(p, Dp)) (gcd_t(p, dp/dt))` denotes the abstract
+`cstep Dt p = CPolyEuclidean.div (gcd_t(p, Dp)) (gcd_t(p, dp/dt))` denotes the abstract
 `splitFactorStep (toPoly Dt) (toPoly p) = gcd(P, D P)/gcd(P, dP)` up to associates. -/
 theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt p : DensePoly α) (hp : toPoly p ≠ 0) :
@@ -43,7 +43,7 @@ theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
   have hBA : toPoly B ∣ toPoly A :=
     hB.dvd.trans ((gcd_derivative_dvd_gcd_implicitDeriv (toPoly Dt) hp).trans hA.symm.dvd)
   have hexact : toPoly (CPolyEuclidean.div A B) * toPoly B = toPoly A := by
-    simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_cdivWf_exact A B hBnorm hBA
+    simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_div_exact A B hBnorm hBA
   have hstepB : Associated (splitFactorStep (toPoly Dt) (toPoly p) * toPoly B) (toPoly A) := by
     refine (Associated.mul_left _ hB).trans ?_
     rw [splitFactorStep, mul_comm,
@@ -100,7 +100,7 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
         have hSdvd : toPoly S ∣ toPoly p :=
           hAstep.dvd.trans (splitFactorStep_dvd (toPoly Dt) hp)
         have hexact : toPoly (CPolyEuclidean.div p S) * toPoly S = toPoly p := by
-          simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_cdivWf_exact p S hSnorm hSdvd
+          simpa only [CPolyEuclidean.div_dense_eq] using toPolyG_div_exact p S hSnorm hSdvd
         have hpqne : toPoly (CPolyEuclidean.div p S) ≠ 0 := by
           intro h; rw [h, zero_mul] at hexact; exact hp hexact.symm
         have hdegsum : (toPoly (CPolyEuclidean.div p S)).natDegree + (toPoly S).natDegree
@@ -125,8 +125,8 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
 
 /-! ### M3 — discharging the gcd frontier at the `ℚ` base -/
 
-/-- **The gcd frontier is unconditional at `ℚ`.** There `cgcdFFCoreWf = cmonic ∘ (cgcdWf ·).1 =
-cgcdMonicWf` (the plain monic Euclidean gcd), whose correctness is `associated_toPolyG_cgcdMonicWf`. -/
+/-- **The gcd frontier is unconditional at `ℚ`.** There `cgcdFFCoreWf` selects
+`DensePoly.cgcdMonicWf`, whose correctness is `associated_toPolyG_cgcdMonicWf`. -/
 theorem cgcdFFCoreWf_correct_Q : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := ℚ)) :=
   fun a b => associated_toPolyG_cgcdMonicWf a b
 

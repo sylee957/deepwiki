@@ -15,7 +15,7 @@ open DensePoly
 
 /-! ### Base typeclasses for the radical field `RadX3` -/
 
-/-- `CFracGcdCoreWf RadX3`: the fuel-free raw fraction-free gcd over `RadX3[t]` is `(cgcdWf p q).1`. -/
+/-- `CFracGcdCoreWf RadX3` selects the fuel-free extended-gcd component over `RadX3[t]`. -/
 instance instCFracGcdCoreWfRadX3 : CFracGcdCoreWf RadX3 where
   cgcdFFRawCoreWf p q := (CPolyEuclidean.gcdExt p q).1
 
