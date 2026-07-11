@@ -31,7 +31,7 @@ variable [CPoly P] [CPolyEngine P] [CFrac F P] [LawfulCFrac F P]
 variable [CFieldDomain β P] [CDiffField (F β)]
 
 /-- The represented fraction `xᵏ`: numerator the `k`-th monomial, denominator `1`. -/
-def qMonomial (k : ℕ) : F β :=
+private def qMonomial (k : ℕ) : F β :=
   CFrac.ofPoly (CPolyEngine.monomial (P := P) (CCommRing.one : β) k)
 
 /-- The cleared log-derivative residual over `α = F β`:
@@ -47,7 +47,7 @@ def radLogResidual (ρ : F β) (integrand : RadElem (F β)) (D : P β)
 
 /-- The monomial basis of numerators over `α = F β`: `radLogBasis degBound` gives the
 `2·(degBound+1)` elements `[xᵏ, 0]` then `[0, xᵏ]`. -/
-def radLogBasis (degBound : ℕ) : List (RadElem (F β)) :=
+private def radLogBasis (degBound : ℕ) : List (RadElem (F β)) :=
   ((List.range (degBound + 1)).map
     (fun k => ([qMonomial (F := F) (P := P) k, CCommRing.zero] : RadElem (F β)))) ++
   ((List.range (degBound + 1)).map

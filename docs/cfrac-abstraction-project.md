@@ -230,7 +230,9 @@ runs the same fraction algorithm.
    The radical log-argument solver and unified elementary-integration driver now quantify over `CFrac F P`:
    denominator clearing uses the representation-independent polynomial bound and coefficient readers, while
    nullspace selection remains abstract through `CLinearSolve β`. Dense tower callers infer their established
-   specialization and a sparse arcsinh witness runs the identical matrix-and-reassembly kernel.
+   specialization and a sparse arcsinh witness runs the identical matrix-and-reassembly kernel. Direct-dependent
+   evidence keeps the cataloged residual and matrix public, while the monomial and basis constructors are
+   file-private implementation details; none of these declarations is a dot-notation candidate for `protected`.
 
 ## Checkpoint discipline
 
