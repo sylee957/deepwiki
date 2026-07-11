@@ -119,7 +119,8 @@ Composing the Hermite half with the overshoot residue sum. -/
 /-- Reduced-case overshoot field identity: for `res = cIntegrateReduced Dt a d cands` and the Hermite
 half/per-root hypotheses, `D(g) + logResidueSum Dt res.logs = am a/am d + am(C(b·∑c))` over
 `RatFunc (CFieldSpec.K α)`, unconditional in `∑c`. -/
-theorem field_identity_of_cIntegrateReducedG_hyperexp_overshoot [CFracGcdCoreWf α]
+theorem field_identity_of_cIntegrateReducedG_hyperexp_overshoot [CPolyGcd DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
     (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
@@ -172,7 +173,8 @@ variable [CRischField α]
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Output shape of `cIntegrateHyperexpNormal`: when it returns `some res` and the base oracle succeeds
 on `R`, `res` has the same logs and rational part `g − ∫R`. -/
-theorem cIntegrateHyperexpNormalG_shape [CFracGcdCoreWf α] (Dt : DensePoly α)
+private theorem cIntegrateHyperexpNormalG_shape [CPolyGcd DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] (Dt : DensePoly α)
     (a d : DensePoly α) (cands : List α) (res : IntegralResult α) (intR : α)
     (hintRsome : CRischField.crischDESolve (CCommRing.zero : α)
         (cHyperexpResidual (cExpEta Dt) (DensePoly.cIntegrateReduced Dt a d cands).logs)
@@ -189,7 +191,9 @@ theorem cIntegrateHyperexpNormalG_shape [CFracGcdCoreWf α] (Dt : DensePoly α)
 
 /-- Normal-part driver soundness `D(∫fₙ) = fₙ` for `cIntegrateHyperexpNormal`, unconditional in `∑c`,
 given the base-oracle residual `hintR` and the residual-read bridge `hRval`. -/
-theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α)
+theorem cIntegrateHyperexpNormalG_sound [CPolyGcd DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α)
     (cands : List α) (res : IntegralResult α) (intR : α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
@@ -306,7 +310,8 @@ giving `D(res) + logResidueSum = a/d`, unconditional in `∑c`. -/
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Output shape of `cIntegrateHyperexpFull`: when it returns `some res` and both the Laurent and normal
 parts succeed, `res` is the combined rational part with the normal logs. -/
-theorem cIntegrateHyperexpFullG_shape [CFracGcdCoreWf α] (Dt : DensePoly α)
+private theorem cIntegrateHyperexpFullG_shape [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] (Dt : DensePoly α)
     (a d : DensePoly α) (cands : List α) (res : IntegralResult α) (lnum lden : DensePoly α)
     (nrm : IntegralResult α)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
@@ -329,7 +334,9 @@ theorem cIntegrateHyperexpFullG_shape [CFracGcdCoreWf α] (Dt : DensePoly α)
 /-- Full hyperexponential driver soundness `D(∫f) = f` for `cIntegrateHyperexpFull`, unconditional in
 `∑c` — composes the Laurent field identity, the normal-part field identity, and the canonical
 reconstruction. -/
-theorem cIntegrateHyperexpFullG_sound [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α)
+theorem cIntegrateHyperexpFullG_sound [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α)
     (cands : List α) (res : IntegralResult α) (lnum lden : DensePoly α) (nrm : IntegralResult α)
     (fpPart : DensePoly α) (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
@@ -387,7 +394,8 @@ example {K : Type*} [Field K] [Differential K] [Algebra ℚ K] (s : Finset K) (a
 
 -- The reduced-capstone overshoot identity: `cIntegrateReduced` has the same hyperexp overshoot
 -- statement.
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hDt : toPoly Dt = C b * X)
     (hherm : towerFractionFieldDeriv Dt
             (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
@@ -417,7 +425,8 @@ example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : Li
 
 -- The §5.9 normal-part driver soundness: `cIntegrateHyperexpNormal = some res ⟹ D(res) = a/d` under
 -- the same residual-oracle hypothesis.
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (res : IntegralResult α) (intR : α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
     (hgden : toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
@@ -458,7 +467,9 @@ example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : Li
 
 -- The full hyperexp driver soundness: `cIntegrateHyperexpFull = some res ⟹ D(res) = a/d`, combining
 -- the canonical and normal parts.
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (res : IntegralResult α) (lnum lden : DensePoly α) (nrm : IntegralResult α) (fpPart : DensePoly α)
     (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)

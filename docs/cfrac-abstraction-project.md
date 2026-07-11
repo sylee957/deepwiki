@@ -191,9 +191,9 @@ runs the same fraction algorithm.
    polynomial representations execute the same kernels. The
    primitive and guarded-primitive hooks no longer
    carry a gcd-selection proxy. Canonical reconstruction and the shared primitive special-part soundness now
-   likewise request the selected gcd together with its lawful interface; the hyperexponential hook retains
-   the recursive implementation bundle only in its concrete correction proof boundary: its normal/full drivers
-   and the `hyperexpCase` hook now request selected gcd, split, squarefree, and resultant capabilities. The
+   likewise request the selected gcd together with its lawful interface. Outside its concrete correction-proof
+   boundary, the hyperexponential hook's normal/full drivers, full-soundness API, and `hyperexpCase` hook now
+   request selected gcd, split, squarefree, and resultant capabilities. The
    tower Risch-DE completeness predicate/frontier now request selected gcd and differential-split
    capabilities directly. The fuel-free top integrator likewise declares its actual composition inputs:
    gcd, differential split, squarefree decomposition, and resultant, rather than using the recursive dense
