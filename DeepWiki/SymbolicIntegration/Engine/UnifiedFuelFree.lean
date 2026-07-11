@@ -19,7 +19,7 @@ namespace DensePoly
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
 /-- `cIntegrateGFullWf Dt a d cands`: the fuel-free full poly/special tower integral of `f = a/d ∈ α(t)`
-over `D = cmonomialDeriv Dt`, returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`
+over `D = CPolyEngine.monomialDeriv Dt`, returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`
 or `none` (nonzero special part). A leaf substitution of `cIntegrateGFull`. -/
 def cIntegrateGFullWf (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) :
     Option (IntegralResult α) :=

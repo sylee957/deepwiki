@@ -18,7 +18,7 @@ variable [CDiffField α]
 
 /-- The coefficientwise base derivative `∂f/∂x` of a general curve polynomial. -/
 abbrev afFx {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-    (f : P α) : P α := cmapDeriv f
+    (f : P α) : P α := CPolyEngine.mapDeriv f
 
 example :
     let p : CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList [1, 2, 3]

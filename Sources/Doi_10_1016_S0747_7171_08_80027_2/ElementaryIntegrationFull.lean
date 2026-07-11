@@ -127,7 +127,7 @@ abbrev bie_case3_iterate_tower := @DensePoly.radReduceCase3IterateG
 /-- **★ The `∫ C/y` rational-part driver COMPUTED over a transcendental tower** (Bronstein 1990, Integration
 of Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower,
 principal case, rational part COMPUTED): `radIntegrateCase3G der ρ g C` runs `radReduceCase3IterateG` with
-the ACTUAL derivation `der` (e.g. `cmonomialDeriv [θ]`, `θ' = θ` over the exp tower) and no runtime fuel to
+the ACTUAL derivation `der` (e.g. `CPolyEngine.monomialDeriv [θ]`, `θ' = θ` over the exp tower) and no runtime fuel to
 **compute** the rational-part numerator. Over `α = ℚ(x)(eˣ)` for `∫√(eˣ+1) dx` it computes `vNum = 2ρ`, so
 the rational part `v = 2y = 2√(eˣ+1)` — an OUTPUT, no longer a supplied constant. -/
 abbrev bie_rational_over_tower := @DensePoly.radIntegrateCase3G

@@ -259,7 +259,7 @@ theorem cube_radLogDerivN_mul_eq_deriv :
 
 /-! ### A transcendental monomial over the cube-root base
 
-`cmonomialDeriv` runs over `RadX3root[t]`, a transcendental monomial `t` over the cube-root base
+`CPolyEngine.monomialDeriv` runs over `RadX3root[t]`, a transcendental monomial `t` over the cube-root base
 `ℚ(x)[∛(x²+1)]`. With `y = ∛(x²+1)` (`D(y) = ℓ·y`, `ℓ = 2x/(3(x²+1))`) and `t = eˣ` (`Dt = t`),
 `D(y·t) = (ℓ+1)·y·t`. -/
 
@@ -275,18 +275,18 @@ def cubeGenT : DensePoly RadX3root := [CCommRing.zero, RadExtN.gen]
 def cubeGenTDeriv : DensePoly RadX3root :=
   [CCommRing.zero, CCommRing.mul (⟨[CCommRing.zero, CCommRing.add cubeLogDer CCommRing.one]⟩ : RadX3root) CCommRing.one]
 
-/-- `D(y·t) = (ℓ+1)·y·t` over `RadX3root[t] = ℚ(x)[∛(x²+1)][eˣ]`: `cmonomialDeriv` runs both the cube-root
+/-- `D(y·t) = (ℓ+1)·y·t` over `RadX3root[t] = ℚ(x)[∛(x²+1)][eˣ]`: `CPolyEngine.monomialDeriv` runs both the cube-root
 coefficient derivation (`ℓ·y`) and the `d/dt` part (`y`). -/
 theorem cube_monomialDeriv_genT_eq :
     DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv cubeDtExp cubeGenT) cubeGenTDeriv) = true := by native_decide
+      (CPolyEngine.monomialDeriv cubeDtExp cubeGenT) cubeGenTDeriv) = true := by native_decide
 
 /-- The mixed cube-root derivation runs the coefficient derivation: `D(y·t)` is neither zero nor equal to
 the pure-`d/dt` result `y·t`, confirming the cube-root-base `cderiv` contributed the `ℓ·y·t` term. -/
 theorem cube_monomialDeriv_genT_runs_coeff :
-    (DensePoly.cisZero (DensePoly.cmonomialDeriv cubeDtExp cubeGenT) = false) ∧
+    (DensePoly.cisZero (CPolyEngine.monomialDeriv cubeDtExp cubeGenT) = false) ∧
     (DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv cubeDtExp cubeGenT) cubeGenT) = false) := by
+      (CPolyEngine.monomialDeriv cubeDtExp cubeGenT) cubeGenT) = false) := by
   constructor <;> native_decide
 
 end DeepWiki.SymbolicIntegration

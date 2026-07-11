@@ -8,7 +8,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 /-! # The Rothstein–Trager residue-match identity over a monomial tower
 
 Builds the residue-match identity `∑ᵢ cᵢ·D(log vᵢ) = a/d` over `RatFunc (CFieldSpec.K α)` for the
-monomial derivation `D = cmonomialDeriv Dt` (where `D(t−α) = Dt − α′ ≠ 1`, so the residue must absorb
+monomial derivation `D = CPolyEngine.monomialDeriv Dt` (where `D(t−α) = Dt − α′ ≠ 1`, so the residue must absorb
 the `Dt − α′` factor). Proves the absorption identity at a simple root, the unconditional primitive-case
 match, and the general-monomial match modulo a polynomial-part cancellation hypothesis — toward
 discharging the `hmatch` hypothesis of `logResidueSumG_eq_of_residue_match`. -/

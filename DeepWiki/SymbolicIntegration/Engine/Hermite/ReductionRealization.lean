@@ -22,9 +22,9 @@ theorem cHermiteReduceTowerG_lawfulHermiteReduction [CharZero (CFieldSpec.K α)]
     (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hproper : (toPoly (cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (cHermiteReduceTower Dt a d).2.2).degree) :
     LawfulHermiteReduction Dt a d (cHermiteReduceTower Dt a d).1.1

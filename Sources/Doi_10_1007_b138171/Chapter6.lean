@@ -72,10 +72,10 @@ def qX6 : DenseFrac ℚ := CFrac.ofFraction [0, 1] [1] (by cfrac_nonzero)
 `rdeClearedCheck`): `true` iff `y = ynum/yden` solves `Dy + (fnum/fden)·y = gnum/gden`, verified as the
 polynomial identity obtained by clearing all denominators (`Dy = (D(ynum)·yden − ynum·D(yden))/yden²`):
 `gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²`, decided by `cisZero`
-of the cleared difference (`D = cmonomialDeriv Dt`). -/
+of the cleared difference (`D = CPolyEngine.monomialDeriv Dt`). -/
 def rdeClearedCheckG6 (Dt fnum fden gnum gden ynum yden : DensePoly (DenseFrac ℚ)) : Bool :=
-  let Dyn := DensePoly.cmonomialDeriv Dt ynum
-  let Dyd := DensePoly.cmonomialDeriv Dt yden
+  let Dyn := CPolyEngine.monomialDeriv Dt ynum
+  let Dyd := CPolyEngine.monomialDeriv Dt yden
   let lhs := DensePoly.cadd
     (DensePoly.cmul (DensePoly.cmul gden fden) (DensePoly.csub (DensePoly.cmul Dyn yden) (DensePoly.cmul ynum Dyd)))
     (DensePoly.cmul (DensePoly.cmul (DensePoly.cmul gden fnum) ynum) yden)
@@ -264,7 +264,7 @@ theorem ex_6_6_cancelPrim :
      (match DensePoly.cPolyRischDECancelPrim Dt b c 5 with
        | some q =>
            DensePoly.cisZero (DensePoly.csub
-             (DensePoly.cadd (DensePoly.cmonomialDeriv Dt q) (DensePoly.cmul b q)) c)
+             (DensePoly.cadd (CPolyEngine.monomialDeriv Dt q) (DensePoly.cmul b q)) c)
        | none => false)
      && (match DensePoly.cPolyRischDE Dt b c 5, DensePoly.cPolyRischDECancelPrim Dt b c 5 with
          | some q1, some q2 => DensePoly.cisZero (DensePoly.csub q1 q2)
@@ -281,7 +281,7 @@ theorem ex_6_6_cancelExp :
      (match DensePoly.cPolyRischDECancelExp Dt b c 5 with
        | some q =>
            DensePoly.cisZero (DensePoly.csub
-             (DensePoly.cadd (DensePoly.cmonomialDeriv Dt q) (DensePoly.cmul b q)) c)
+             (DensePoly.cadd (CPolyEngine.monomialDeriv Dt q) (DensePoly.cmul b q)) c)
        | none => false)
      && (match DensePoly.cPolyRischDE Dt b c 5, DensePoly.cPolyRischDECancelExp Dt b c 5 with
          | some q1, some q2 => DensePoly.cisZero (DensePoly.csub q1 q2)

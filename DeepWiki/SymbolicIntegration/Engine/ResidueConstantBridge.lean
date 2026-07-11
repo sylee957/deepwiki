@@ -223,12 +223,12 @@ theorem mapCoeffs_toPolyG_yunFactor_eq_zero (hgcd : CgcdBCorrect (CFracGcdCoreWf
 open Differential in
 /-- **Stage 3b (core).** Every log argument produced by `cLrtLogArg` has `D`-constant residues, given the
 residue resultant `R` is `D`-constant (the guard) and nonzero. Each log's `Rᵢ` is a Yun factor of `R`, so has
-`D`-constant coefficients (Stage 3a); since `Rᵢ` is monic, `⟦cmonic Rᵢ⟧ = ⟦Rᵢ⟧`, and `cisZero (cmapDeriv ·)`
+`D`-constant coefficients (Stage 3a); since `Rᵢ` is monic, `⟦cmonic Rᵢ⟧ = ⟦Rᵢ⟧`, and `cisZero (CPolyEngine.mapDeriv ·)`
 is the computable reading of `mapCoeffs ⟦·⟧ = 0`. -/
 theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt hNum Dstar : DensePoly α)
     (hR0 : toPoly (cResidueResultantTower Dt hNum Dstar) ≠ 0)
-    (hguard : cisZero (cmapDeriv (cmonic (cResidueResultantTower Dt hNum Dstar))) = true) :
-    (cLrtLogArg Dt hNum Dstar).all (fun RS => cisZero (cmapDeriv (cmonic RS.1))) = true := by
+    (hguard : cisZero (CPolyEngine.mapDeriv (cmonic (cResidueResultantTower Dt hNum Dstar))) = true) :
+    (cLrtLogArg Dt hNum Dstar).all (fun RS => cisZero (CPolyEngine.mapDeriv (cmonic RS.1))) = true := by
   set R := cResidueResultantTower Dt hNum Dstar with hRdef
   have hpp : (toPoly R).primPart ≠ 0 := Polynomial.primPart_ne_zero _
   have hguard' : mapCoeffs (toPoly (cmonic R)) = 0 := by

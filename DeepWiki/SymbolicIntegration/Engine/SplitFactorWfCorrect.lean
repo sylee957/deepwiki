@@ -27,11 +27,11 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt p : DensePoly α) (hp : toPoly p ≠ 0) :
     Associated (toPoly (cstep Dt p)) (splitFactorStep (toPoly Dt) (toPoly p)) := by
-  set A := CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p) with hAdef
+  set A := CFracGcdCoreWf.cgcdFFCoreWf p (CPolyEngine.monomialDeriv Dt p) with hAdef
   set B := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p) with hBdef
   have hA : Associated (toPoly A)
       (gcd (toPoly p) (Differential.implicitDeriv (toPoly Dt) (toPoly p))) := by
-    have := hgcd p (cmonomialDeriv Dt p)
+    have := hgcd p (CPolyEngine.monomialDeriv Dt p)
     rwa [toPolyG_cmonomialDeriv] at this
   have hB : Associated (toPoly B) (gcd (toPoly p) (derivative (toPoly p))) := by
     have := hgcd p (cderiv p)

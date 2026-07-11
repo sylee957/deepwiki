@@ -42,7 +42,7 @@ theorem cgcdFFCoreWf_one_isUnit (z : DensePoly β) :
 theorem cdegG_cstepG_one : cdeg (DensePoly.cstep ([CCommRing.one] : DensePoly β) [CCommRing.one]) = 0 := by
   rw [DensePoly.cstep]
   set g1 := CFracGcdCoreWf.cgcdFFCoreWf ([CCommRing.one] : DensePoly β)
-    (DensePoly.cmonomialDeriv [CCommRing.one] [CCommRing.one]) with hg1
+    (CPolyEngine.monomialDeriv [CCommRing.one] [CCommRing.one]) with hg1
   set g2 := CFracGcdCoreWf.cgcdFFCoreWf ([CCommRing.one] : DensePoly β) (DensePoly.cderiv [CCommRing.one]) with hg2
   have hd1 : cdeg g1 = 0 := by
     rw [hg1, cdegG_eq_natDegree]; exact natDegree_eq_zero_of_isUnit (cgcdFFCoreWf_one_isUnit _)

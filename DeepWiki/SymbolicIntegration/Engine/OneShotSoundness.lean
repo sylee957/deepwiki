@@ -18,7 +18,7 @@ open DensePoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
-/-! ### The `cmonomialDeriv [1]` (monomial-derivation) form over a constant base
+/-! ### The `CPolyEngine.monomialDeriv [1]` (monomial-derivation) form over a constant base
 
 For the primitive monomial `Dt = [CCommRing.one]`, `implicitDeriv 1 = mapCoeffs + derivative`, so the
 antiderivative differentiates back exactly when the coefficient-derivation term `mapCoeffs` vanishes;
@@ -26,10 +26,10 @@ that constant-base regime is carried as the explicit hypothesis `hconst`. -/
 
 /-- `CPoly.antiderivative` differentiates back under the primitive monomial derivation (`Dt = 1`): if
 `mapCoeffs (toPoly (CPoly.antiderivative c)) = 0` (constant base), then
-`toPoly (cmonomialDeriv [CCommRing.one] (CPoly.antiderivative c)) = toPoly c` over `(CFieldSpec.K α)[X]`. -/
+`toPoly (CPolyEngine.monomialDeriv [CCommRing.one] (CPoly.antiderivative c)) = toPoly c` over `(CFieldSpec.K α)[X]`. -/
 theorem toPolyG_cmonomialDeriv_antiderivative_const [CharZero (CFieldSpec.K α)] (c : DensePoly α)
     (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
-    toPoly (DensePoly.cmonomialDeriv ([CCommRing.one] : DensePoly α) (CPoly.antiderivative c))
+    toPoly (CPolyEngine.monomialDeriv ([CCommRing.one] : DensePoly α) (CPoly.antiderivative c))
       = toPoly c := by
   rw [toPolyG_cmonomialDeriv]
   -- `toPoly [CCommRing.one] = 1`, so `implicitDeriv 1 = mapCoeffs + derivative`
@@ -61,10 +61,10 @@ theorem towerFractionFieldDerivG_amG_antiderivative_const [CharZero (CFieldSpec.
 
 /-! ### The polynomial-branch output passes `checkIdentity` abstractly -/
 
-/-- `toPoly (cmonomialDeriv [CCommRing.one] [CCommRing.one]) = 0`: the primitive monomial derivation
+/-- `toPoly (CPolyEngine.monomialDeriv [CCommRing.one] [CCommRing.one]) = 0`: the primitive monomial derivation
 annihilates the constant `1`. -/
 theorem toPolyG_cmonomialDeriv_one : toPoly
-    (DensePoly.cmonomialDeriv ([CCommRing.one] : DensePoly α) ([CCommRing.one] : DensePoly α)) = 0 := by
+    (CPolyEngine.monomialDeriv ([CCommRing.one] : DensePoly α) ([CCommRing.one] : DensePoly α)) = 0 := by
   rw [toPolyG_cmonomialDeriv]
   have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote]
@@ -304,7 +304,7 @@ variable [CRischField α]
 then `q` solves `Dq + b·q = c` at the polynomial level. -/
 theorem toPolyG_cmonomialDeriv_cPolyRischDECancelPrimG (Dt b c q : DensePoly α) (n : ℤ)
     (hsolve : DensePoly.cPolyRischDECancelPrim Dt b c n = some q) :
-    toPoly (DensePoly.cmonomialDeriv Dt q) + toPoly b * toPoly q = toPoly c := by
+    toPoly (CPolyEngine.monomialDeriv Dt q) + toPoly b * toPoly q = toPoly c := by
   fun_induction DensePoly.cPolyRischDECancelPrim Dt b c n generalizing q with
   | case1 c _n hc =>
       rw [Option.some.injEq] at hsolve
@@ -329,7 +329,7 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelPrimG (Dt b c q : DensePoly α)
 some q`, then `q` solves `Dq + b·q = c` at the polynomial level. -/
 theorem toPolyG_cmonomialDeriv_cPolyRischDECancelExpG (Dt b c q : DensePoly α) (n : ℤ)
     (hsolve : DensePoly.cPolyRischDECancelExp Dt b c n = some q) :
-    toPoly (DensePoly.cmonomialDeriv Dt q) + toPoly b * toPoly q = toPoly c := by
+    toPoly (CPolyEngine.monomialDeriv Dt q) + toPoly b * toPoly q = toPoly c := by
   fun_induction DensePoly.cPolyRischDECancelExp Dt b c n generalizing q with
   | case1 c _n hc =>
       rw [Option.some.injEq] at hsolve
@@ -360,7 +360,7 @@ to `cPolyRischDECancelPrim`, the hyperexponential regime to `cPolyRischDECancelE
 theorem cPolyRischDEG_cancelPrim_sound (Dt b c q : DensePoly α) (m : ℤ)
     (hδ : DensePoly.cdeg Dt = 0) (hdb : DensePoly.cdeg b = 0) (hb : DensePoly.cisZero b = false)
     (hsome : DensePoly.cPolyRischDE Dt b c m = some q) :
-    toPoly (DensePoly.cmonomialDeriv Dt q) + toPoly b * toPoly q = toPoly c := by
+    toPoly (CPolyEngine.monomialDeriv Dt q) + toPoly b * toPoly q = toPoly c := by
   have hbranch : DensePoly.cPolyRischDECancelPrim Dt b c m = some q := by
     rw [DensePoly.cPolyRischDE] at hsome
     simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero] at hsome
@@ -374,7 +374,7 @@ polynomial level. -/
 theorem cPolyRischDEG_cancelExp_sound (Dt b c q : DensePoly α) (m : ℤ)
     (hδ : DensePoly.cdeg Dt = 1) (hdb : DensePoly.cdeg b = 0) (hb : DensePoly.cisZero b = false)
     (hsome : DensePoly.cPolyRischDE Dt b c m = some q) :
-    toPoly (DensePoly.cmonomialDeriv Dt q) + toPoly b * toPoly q = toPoly c := by
+    toPoly (CPolyEngine.monomialDeriv Dt q) + toPoly b * toPoly q = toPoly c := by
   have hbranch : DensePoly.cPolyRischDECancelExp Dt b c m = some q := by
     rw [DensePoly.cPolyRischDE] at hsome
     simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero, Nat.cast_one] at hsome
@@ -388,10 +388,10 @@ variable [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CRischField α] in
 /-- Field-level lift of a polynomial Risch-DE identity: from `Dq + b·q = c` over `(CFieldSpec.K α)[X]`
-(the `cmonomialDeriv`/`toPoly` form), `towerFractionFieldDeriv Dt (am q) + am b · am q = am c` over
+(the `CPolyEngine.monomialDeriv`/`toPoly` form), `towerFractionFieldDeriv Dt (am q) + am b · am q = am c` over
 `RatFunc (CFieldSpec.K α)`. -/
 theorem towerFractionFieldDerivG_amG_of_polyIdentity (Dt b c q : DensePoly α)
-    (hpoly : toPoly (DensePoly.cmonomialDeriv Dt q) + toPoly b * toPoly q = toPoly c) :
+    (hpoly : toPoly (CPolyEngine.monomialDeriv Dt q) + toPoly b * toPoly q = toPoly c) :
     towerFractionFieldDeriv Dt (am α (toPoly q))
         + am α (toPoly b) * am α (toPoly q)
       = am α (toPoly c) := by

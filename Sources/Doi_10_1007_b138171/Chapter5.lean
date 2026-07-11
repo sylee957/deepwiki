@@ -96,8 +96,8 @@ theorem ex_5_3_1 :
      let res := DensePoly.cHermiteReduceTower Dt a d
      let gnum := res.1.1; let gden := res.1.2
      let hNum := res.2.1; let hDen := res.2.2
-     let Dgnum := DensePoly.cmonomialDeriv Dt gnum
-     let Dgden := DensePoly.cmonomialDeriv Dt gden
+     let Dgnum := CPolyEngine.monomialDeriv Dt gnum
+     let Dgden := CPolyEngine.monomialDeriv Dt gden
      let gprimeNum := DensePoly.csub (DensePoly.cmul Dgnum gden) (DensePoly.cmul gnum Dgden)
      let gden2 := DensePoly.cmul gden gden
      -- `D(g) + h − f = 0` ⟺ `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`
@@ -126,7 +126,7 @@ theorem ex_5_4_1 :
      let p : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofScalar 1]  -- `p = t³`
      let res := DensePoly.cPolyReduceTower Dt 8 p
      let q := res.1; let r := res.2
-     let Dq := DensePoly.cmonomialDeriv Dt q
+     let Dq := CPolyEngine.monomialDeriv Dt q
      -- `D(q) + r − p = 0` and the reduced remainder has `t`-degree `1 < δ(t) = 2`
      DensePoly.cisZero (DensePoly.csub (DensePoly.cadd Dq r) p) = true
        ∧ DensePoly.cdeg r = 1) := by native_decide
@@ -186,7 +186,7 @@ theorem ex_5_8_primitive :
      let p : DensePoly (DenseFrac ℚ) := [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)]  -- `p = (1/x)·t²`
      let res := DensePoly.cPrimitivePolyIntegrate Dt 8 p
      let q := res.1; let rem := res.2
-     let Dq := DensePoly.cmonomialDeriv Dt q
+     let Dq := CPolyEngine.monomialDeriv Dt q
      DensePoly.cisZero (DensePoly.csub (DensePoly.cadd Dq rem) p)) = true := by native_decide
 
 end DeepWiki.Si

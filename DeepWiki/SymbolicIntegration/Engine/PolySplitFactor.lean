@@ -19,7 +19,7 @@ private def splitFactorAux {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     (Dt : P α) : ℕ → P α → P α × P α
   | 0, p => (p, CPoly.one)
   | fuel + 1, p =>
-    let implicitGcd := CPolyGcd.compute p (DensePoly.cmonomialDeriv Dt p)
+    let implicitGcd := CPolyGcd.compute p (CPolyEngine.monomialDeriv Dt p)
     let formalGcd := CPolyGcd.compute p (CPolyEngine.deriv p)
     let special := CPolyEuclidean.div implicitGcd formalGcd
     if CPolyEngine.cdeg special = 0 then (p, CPoly.one)

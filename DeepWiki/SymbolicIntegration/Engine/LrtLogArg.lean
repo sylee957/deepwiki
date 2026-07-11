@@ -23,7 +23,7 @@ argument `Sᵢ(z,t)`. When `i = deg Dstar` (the residue's fiber is *all* poles �
 the argument is `Dstar` itself; otherwise it is the parametric degree-`i` subresultant `Sᵢ(z,t)`.
 Root-free residues stay implicit as the roots of `Rᵢ`. -/
 def cLrtLogArg (Dt hNum Dstar : DensePoly α) : List (DensePoly α × List (DensePoly α)) :=
-  let Dd := cmonomialDeriv Dt Dstar
+  let Dd := CPolyEngine.monomialDeriv Dt Dstar
   let R := cResidueResultantTower Dt hNum Dstar
   let n := cdeg Dstar
   let m := cdeg Dd

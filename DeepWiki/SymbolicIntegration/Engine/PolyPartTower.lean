@@ -24,7 +24,7 @@ For a nonlinear monomial `t` (`δ(t) = deg(Dt) ≥ 2`, `λ(t) = lc(Dt)`), every 
 /-- **Computable polynomial reduction** `cPolyReduceTower Dt fuel p = (q, r)` for a **nonlinear**
 monomial `t` (`δ(t) = deg(Dt) ≥ 2`, `λ(t) = lc(Dt)`): `p = D(q) + r` with `deg(r) < δ(t)`, peeling
 `q₀ = (lc(p)/(m·λ(t)))·tᵐ` (`m = deg(p) − δ(t) + 1`) whose monomial derivative `D(q₀)`
-(`cmonomialDeriv Dt`) cancels the top of `p`, then recursing on `p − D(q₀)`. Fuel-bounded; generic. -/
+(`CPolyEngine.monomialDeriv Dt`) cancels the top of `p`, then recursing on `p − D(q₀)`. Fuel-bounded; generic. -/
 def cPolyReduceTower (Dt : P α) : ℕ → P α → P α × P α
   | 0, p => (CPoly.czero, CPolyEngine.cnorm p)
   | fuel + 1, p =>
@@ -38,7 +38,7 @@ def cPolyReduceTower (Dt : P α) : ℕ → P α → P α × P α
       let lam := CPolyEngine.clead Dt                              -- `λ(t) = lc(Dt)`
       let c := CField.div (CPolyEngine.clead p) (CCommRing.mul (CField.natCast m) lam) -- `lc(p)/(m·λ(t))`
       let q0 := CPolyEngine.monomial (P := P) c m                  -- `c·tᵐ`
-      let p' := CPolyEngine.sub p (cmonomialDeriv Dt q0)           -- `p − D(q₀)`
+      let p' := CPolyEngine.sub p (CPolyEngine.monomialDeriv Dt q0)           -- `p − D(q₀)`
       let (q, r) := cPolyReduceTower Dt fuel p'
       (CPolyEngine.add q0 q, r)
 
@@ -67,7 +67,7 @@ def cPrimitivePolyIntegrate (Dt : P α) : ℕ → P α → P α × P α
       let dtConst := CPolyEngine.clead Dt
       let c := CField.div am (CCommRing.mul mp1 dtConst)
       let q0 := CPolyEngine.monomial (P := P) c (m + 1)            -- `c·t^(m+1)`
-      let p' := CPolyEngine.sub p (cmonomialDeriv Dt q0)           -- `p − D(q₀)`
+      let p' := CPolyEngine.sub p (CPolyEngine.monomialDeriv Dt q0)           -- `p − D(q₀)`
       let (q, rem) := cPrimitivePolyIntegrate Dt fuel p'
       (CPolyEngine.add q0 q, rem)
 
@@ -80,7 +80,7 @@ example :
      let res := cPolyReduceTower Dt 8 p
      CPolyEngine.cisZero
           (CPolyEngine.sub
-            (CPolyEngine.add (cmonomialDeriv Dt res.1) res.2) p)
+            (CPolyEngine.add (CPolyEngine.monomialDeriv Dt res.1) res.2) p)
        && decide (CPolyEngine.cdeg res.2 = 1)) = true := by
   native_decide
 
@@ -91,7 +91,7 @@ example :
      let res := cPrimitivePolyIntegrate Dt 8 p
      CPolyEngine.cisZero
        (CPolyEngine.sub
-         (CPolyEngine.add (cmonomialDeriv Dt res.1) res.2) p)) = true := by
+         (CPolyEngine.add (CPolyEngine.monomialDeriv Dt res.1) res.2) p)) = true := by
   native_decide
 
 end DensePoly

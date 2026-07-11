@@ -24,12 +24,12 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 /-- **The primitive-case integrability guard** (Bronstein §5.6, root-free): the residues (**roots** of the
 Rothstein–Trager residue resultant `R = cResidueResultantTower Dt hNum Dstar`, `hNum/Dstar` the Hermite
 residual) are all **constants** iff the **monic** `R` has constant coefficients (its elementary symmetric
-functions in the roots are constant), i.e. `D(cmonic R) = 0` — checked coefficient-wise by `cmapDeriv`.
+functions in the roots are constant), i.e. `D(cmonic R) = 0` — checked coefficient-wise by `CPolyEngine.mapDeriv`.
 Monic-normalizing is essential: the raw `R` may carry a non-constant leading factor (e.g. `1/x`) that is a
 resultant-scaling artifact, not residue non-constancy. Decidable, no root-finding. -/
 def cResidueConstantGuard (Dt a d : DensePoly α) : Bool :=
   let H := cHermiteReduceTower Dt a d
-  cisZero (cmapDeriv (cmonic (cResidueResultantTower Dt H.2.1 H.2.2)))
+  cisZero (CPolyEngine.mapDeriv (cmonic (cResidueResultantTower Dt H.2.1 H.2.2)))
 
 /-- **The guarded root-free LRT reduced integrator.** Returns the LRT reduced result only when the
 integrability guard passes (residues are constants); `none` otherwise — correctly declining non-elementary
@@ -75,12 +75,12 @@ theorem cIntegrateReducedLrtGuardedG_sound {α : Type*} [CField α] [CFieldSpec 
 
 /-- **All LRT residues are constant** (result-level, `Bool`). Every residue minimal polynomial `Rᵢ` in
 `res.logs` has constant coefficients after monic normalization (`D(monic Rᵢ) = 0`, coefficient-wise
-`cmapDeriv`) — i.e. its roots, the algebraic residues, are constants. Monic normalization strips the
+`CPolyEngine.mapDeriv`) — i.e. its roots, the algebraic residues, are constants. Monic normalization strips the
 resultant-scaling artifact (as in `cResidueConstantGuard`). The `Bool` guard the genuine integrator checks. -/
 def allResiduesConstantLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] [CDiffField α] (res : LrtResult α P) : Bool :=
   res.logs.all (fun RS =>
-    CPolyEngine.cisZero (DensePoly.cmapDeriv (CPolyEngine.cmonic RS.1)))
+    CPolyEngine.cisZero (CPolyEngine.mapDeriv (CPolyEngine.cmonic RS.1)))
 
 /-- **All LRT residues are constant** (`Prop`). The LRT analogue of `AllResiduesConstant`; the residues here
 are **roots of `Rᵢ`** (not explicit `α`), so constancy is `D(monic Rᵢ) = 0` rather than `D(cᵢ) = 0`. -/

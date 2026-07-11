@@ -106,10 +106,10 @@ the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` 
 theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : DensePoly α)
     (hu : toPoly u ≠ 0) (hv : toPoly v ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : DensePoly α),
-      toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
+      toPoly (CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A')).1
           * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
-        + toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
+        + toPoly (CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A')).2 * toPoly v
       = -toPoly A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
     ∀ (j : ℕ) (A : DensePoly α) (g : DensePoly α × DensePoly α), toPoly g.2 ≠ 0 →
@@ -130,13 +130,13 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
     intro A g hg
     rw [cHermiteReduceTowerInnerWf]
     set jval : α := CField.natCast (j + 1) with hjval
-    set Dv := cmonomialDeriv Dt v with hDv
+    set Dv := CPolyEngine.monomialDeriv Dt v with hDv
     set p := cmul u Dv with hp
     set rhs := cscale (CCommRing.neg (CField.inv jval)) A with hrhs
     rcases hBC : CPoly.diophantineReduced p v rhs with ⟨B, C⟩
     simp only []
     set Vpow := cpow v (j + 1) with hVpow
-    set A' := csub (cscale (CCommRing.neg jval) C) (cmul u (cmonomialDeriv Dt B)) with hA'
+    set A' := csub (cscale (CCommRing.neg jval) C) (cmul u (CPolyEngine.monomialDeriv Dt B)) with hA'
     have hVpow0 : toPoly Vpow ≠ 0 := by
       rw [hVpow]
       simp only [denote]
@@ -192,8 +192,8 @@ theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : DensePoly
     (hexact : am α (toPoly hNum)
           * am α (toPoly (cmul d (cmul gden gden)))
         = am α (toPoly (csub (cmul a (cmul gden gden))
-            (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
-              (cmul gnum (cmonomialDeriv Dt gden))))))
+            (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+              (cmul gnum (CPolyEngine.monomialDeriv Dt gden))))))
           * am α (toPoly Dstar)) :
     towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
         + am α (toPoly hNum) / am α (toPoly Dstar)
@@ -233,17 +233,17 @@ theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : D
     (hSD : toPoly d = toPoly Dstar * toPoly W)
     (hWgd : toPoly W * (toPoly gden * toPoly gden)
         ∣ toPoly (csub (cmul a (cmul gden gden))
-            (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
-              (cmul gnum (cmonomialDeriv Dt gden)))))) :
+            (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+              (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))))) :
     towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
         + am α (toPoly (CPolyEuclidean.div (cmul (csub (cmul a (cmul gden gden))
-            (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
-              (cmul gnum (cmonomialDeriv Dt gden))))) Dstar) (cmul d (cmul gden gden))))
+            (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+              (cmul gnum (CPolyEngine.monomialDeriv Dt gden))))) Dstar) (cmul d (cmul gden gden))))
           / am α (toPoly Dstar)
       = am α (toPoly a) / am α (toPoly d) := by
   set resNum := csub (cmul a (cmul gden gden))
-    (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
-      (cmul gnum (cmonomialDeriv Dt gden)))) with hresNum
+    (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+      (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))) with hresNum
   set resDen := cmul d (cmul gden gden) with hresDen'
   -- the divisibility `resDen ∣ resNum·Dstar` from the radical split.
   have hdvd : toPoly resDen ∣ toPoly (cmul resNum Dstar) := by

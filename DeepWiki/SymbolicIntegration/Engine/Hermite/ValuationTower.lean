@@ -69,7 +69,7 @@ theorem toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow (Dt v u : DensePoly α) :
   | succ j ih =>
     intro a g
     rw [cHermiteReduceTowerInnerWf]
-    rcases hBC : CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
+    rcases hBC : CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v
       (cscale (CCommRing.neg (CField.inv (CField.natCast (j + 1)))) a) with ⟨b, c⟩
     obtain ⟨M, hM⟩ := ih _ (cadd (cmul g.1 (cpow v (j + 1))) (cmul b g.2),
       cmul g.2 (cpow v (j + 1)))
@@ -318,17 +318,17 @@ omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
 squarefree + coprime to `u`). -/
 theorem cHermiteInner_hbez_of_gcd (Dt v u : DensePoly α)
     (hqn : cnorm v ≠ [])
-    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cmul u (cmonomialDeriv Dt v)) v).1).natDegree = 0)
-    (hgne : toPoly (CPolyEuclidean.gcdExt (cmul u (cmonomialDeriv Dt v)) v).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cmul u (CPolyEngine.monomialDeriv Dt v)) v).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cmul u (CPolyEngine.monomialDeriv Dt v)) v).1 ≠ 0) :
     ∀ (j' : ℕ) (A' : DensePoly α),
-      toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
+      toPoly (CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A')).1
           * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
-        + toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
+        + toPoly (CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v
             (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A')).2 * toPoly v
       = -toPoly A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹) := by
   intro j' A'
-  have h := toPolyG_diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
+  have h := toPolyG_diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v
     (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A') hqn hgdeg hgne
   rw [toPolyG_cmulG, toPolyG_cmonomialDeriv] at h
   rw [h, toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_neg, CFieldSpec.toK_inv, CFieldSpec.toK_natCast,
@@ -342,9 +342,9 @@ inputs: `d ≠ 0`, the gcd coprimality of `(u·Dv, v)` (`hgdeg`/`hgne`), and `u�
 theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : DensePoly α) (x : DensePoly α × ℕ)
     (hd : toPoly d ≠ 0) (hv : toPoly x.1 ≠ 0)
     (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-        (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0)
+        (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0)
     (hgne : toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-        (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+        (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hud : toPoly (CPolyEuclidean.div d (cpow x.1 (x.2 + 1))) * toPoly x.1 ^ (x.2 + 1) = toPoly d) :
     towerFractionFieldDeriv Dt (glocFrac Dt a d x)
       = am α (toPoly a) / am α (toPoly d)
@@ -396,9 +396,9 @@ theorem all_hstep [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCor
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       towerFractionFieldDeriv Dt (glocFrac Dt a d x)
         = am α (toPoly a) / am α (toPoly d)
@@ -457,9 +457,9 @@ theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (C
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     am α (toPoly a) / am α (toPoly d)
         - towerFractionFieldDeriv Dt
             (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
@@ -479,9 +479,9 @@ theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFrac
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       toPoly x.1 ^ x.2 ∣ (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
               (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPoly a
@@ -545,9 +545,9 @@ theorem prod_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFra
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
         (fun x => toPoly x.1 ^ x.2)).prod
       ∣ (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
@@ -568,15 +568,15 @@ theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
     (hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     toPoly (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
           (cHermiteReduceTower Dt a d).1.2))
-        (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
             (cHermiteReduceTower Dt a d).1.2)
           (cmul (cHermiteReduceTower Dt a d).1.1
-            (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
+            (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
       = (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
               (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPoly a
             + (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
@@ -631,17 +631,17 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (
     (hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2)
         * (toPoly (cHermiteReduceTower Dt a d).1.2 * toPoly (cHermiteReduceTower Dt a d).1.2)
       ∣ toPoly (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
             (cHermiteReduceTower Dt a d).1.2))
-          (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
+          (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
               (cHermiteReduceTower Dt a d).1.2)
             (cmul (cHermiteReduceTower Dt a d).1.1
-              (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.2))))) := by
+              (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.2))))) := by
   have hWdvd := hWdvd_of_reconstruction hgcd Dt a d hd0
     (cSqfreeYunFFG_reconstruction hgcd d hd0 hpp)
   rw [resNum_eq_R_mul_gden_sq hgcd Dt a d hd0 hpp hgd0 hcopgcd, ← pow_two]
@@ -654,15 +654,15 @@ theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     toPoly (CPolyEuclidean.div (cmul (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
             (cHermiteReduceTower Dt a d).1.2))
-          (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
+          (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
               (cHermiteReduceTower Dt a d).1.2)
             (cmul (cHermiteReduceTower Dt a d).1.1
-              (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
+              (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
           (cHermiteReduceTower Dt a d).2.2)
         (cmul d (cmul (cHermiteReduceTower Dt a d).1.2 (cHermiteReduceTower Dt a d).1.2)))
       = toPoly (cHermiteReduceTower Dt a d).2.1 := by
@@ -696,18 +696,18 @@ theorem cHermiteReduceTowerG_field_identity [CharZero (CFieldSpec.K α)] (hgcd :
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     towerFractionFieldDeriv Dt
         (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
           / am α (toPoly (cHermiteReduceTower Dt a d).1.2))
       + am α (toPoly (CPolyEuclidean.div (cmul (csub
             (cmul a (cmul (cHermiteReduceTower Dt a d).1.2 (cHermiteReduceTower Dt a d).1.2))
-            (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
+            (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
                 (cHermiteReduceTower Dt a d).1.2)
               (cmul (cHermiteReduceTower Dt a d).1.1
-                (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
+                (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
             (cHermiteReduceTower Dt a d).2.2)
           (cmul d (cmul (cHermiteReduceTower Dt a d).1.2
             (cHermiteReduceTower Dt a d).1.2))))

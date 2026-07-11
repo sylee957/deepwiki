@@ -74,10 +74,10 @@ def radX3m2TwoT2sq : DensePoly RadX3m2 := [CCommRing.zero, CCommRing.zero, CComm
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX3m2` (`t = eˣ`). -/
 def radX3m2DtExp : DensePoly RadX3m2 := [CCommRing.zero, CCommRing.one]
 
-/-- `D(t²) = 2t²` over `ℚ(x)[√(x³−2)][eˣ]`: `cmonomialDeriv` (`t = eˣ`, `Dt = t`, coefficient derivation
+/-- `D(t²) = 2t²` over `ℚ(x)[√(x³−2)][eˣ]`: `CPolyEngine.monomialDeriv` (`t = eˣ`, `Dt = t`, coefficient derivation
 `radDeriv 2 (x³−2)`) gives `2t·t = 2t²`. -/
 theorem radX3m2_monomialDeriv_t2sq :
-    cisZero (csub (cmonomialDeriv radX3m2DtExp radX3m2T2sq) radX3m2TwoT2sq) = true := by
+    cisZero (csub (CPolyEngine.monomialDeriv radX3m2DtExp radX3m2T2sq) radX3m2TwoT2sq) = true := by
   native_decide
 
 /-- The `RadX3m2[t]`-polynomial `y·t = [0, y]` (`y = √(x³−2)`, `t = eˣ`). -/
@@ -91,7 +91,7 @@ def radX3m2GenTDeriv : DensePoly RadX3m2 :=
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³−2)][eˣ]`: both `D(y) = ℓ·y` (`ℓ = 3x²/(2(x³−2))`) and `D(t) = t`
 fire. -/
 theorem radX3m2_monomialDeriv_genT :
-    cisZero (csub (cmonomialDeriv radX3m2DtExp radX3m2GenT) radX3m2GenTDeriv) = true := by
+    cisZero (csub (CPolyEngine.monomialDeriv radX3m2DtExp radX3m2GenT) radX3m2GenTDeriv) = true := by
   native_decide
 
 end DeepWiki.SymbolicIntegration

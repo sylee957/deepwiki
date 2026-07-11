@@ -69,7 +69,7 @@ def radX3pXDtExp : DensePoly RadX3pX := [CCommRing.zero, CCommRing.one]
 
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed-tower `d/dt` computation over `√(x³+x)`. -/
 theorem radX3pX_monomialDeriv_t2sq :
-    cisZero (csub (cmonomialDeriv radX3pXDtExp radX3pXT2sq) radX3pXTwoT2sq) = true := by native_decide
+    cisZero (csub (CPolyEngine.monomialDeriv radX3pXDtExp radX3pXT2sq) radX3pXTwoT2sq) = true := by native_decide
 
 /-- The `RadX3pX[t]`-polynomial `y·t = [0, y]` (`y = √(x³+x)`, `t = eˣ`). -/
 def radX3pXGenT : DensePoly RadX3pX := [CCommRing.zero, RadExt.gen]
@@ -81,7 +81,7 @@ def radX3pXGenTDeriv : DensePoly RadX3pX :=
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed derivation over `√(x³+x)`
 (`ℓ = (3x²+1)/(2(x³+x))`). -/
 theorem radX3pX_monomialDeriv_genT :
-    cisZero (csub (cmonomialDeriv radX3pXDtExp radX3pXGenT) radX3pXGenTDeriv) = true := by
+    cisZero (csub (CPolyEngine.monomialDeriv radX3pXDtExp radX3pXGenT) radX3pXGenTDeriv) = true := by
   native_decide
 
 end DeepWiki.SymbolicIntegration

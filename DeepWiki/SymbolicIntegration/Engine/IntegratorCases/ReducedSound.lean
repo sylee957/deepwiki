@@ -64,9 +64,9 @@ theorem cIntegrateReducedG_primitive_isIntegralResult_via_interfaces [CharZero (
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (DensePoly.cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (DensePoly.cmul (CPolyEuclidean.div d (DensePoly.cpow x.1 (x.2 + 1)))
-          (DensePoly.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (DensePoly.cmul (CPolyEuclidean.div d (DensePoly.cpow x.1 (x.2 + 1)))
-          (DensePoly.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hproper : (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2).degree)
     (hDt : toPoly Dt = Polynomial.C w)
@@ -108,9 +108,9 @@ theorem cIntegrateReducedG_hyperexp_isIntegralResult_via_interfaces [CharZero (C
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (DensePoly.cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (DensePoly.cmul (CPolyEuclidean.div d (DensePoly.cpow x.1 (x.2 + 1)))
-          (DensePoly.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (DensePoly.cmul (CPolyEuclidean.div d (DensePoly.cpow x.1 (x.2 + 1)))
-          (DensePoly.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hproper : (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2).degree)
     (hb : b ≠ 0) (hDt : toPoly Dt = Polynomial.C b * X)
@@ -164,10 +164,10 @@ theorem field_identity_of_cIntegrateReducedG_of_residueMatch_of_exact (Dt a d : 
             (DensePoly.cmul a (DensePoly.cmul (DensePoly.cHermiteReduceTower Dt a d).1.2
               (DensePoly.cHermiteReduceTower Dt a d).1.2))
             (DensePoly.cmul d (DensePoly.csub
-              (DensePoly.cmul (DensePoly.cmonomialDeriv Dt (DensePoly.cHermiteReduceTower Dt a d).1.1)
+              (DensePoly.cmul (CPolyEngine.monomialDeriv Dt (DensePoly.cHermiteReduceTower Dt a d).1.1)
                 (DensePoly.cHermiteReduceTower Dt a d).1.2)
               (DensePoly.cmul (DensePoly.cHermiteReduceTower Dt a d).1.1
-                (DensePoly.cmonomialDeriv Dt (DensePoly.cHermiteReduceTower Dt a d).1.2))))))
+                (CPolyEngine.monomialDeriv Dt (DensePoly.cHermiteReduceTower Dt a d).1.2))))))
           * am α (toPoly (DensePoly.cHermiteReduceTower Dt a d).2.2))
     (hmatch : ((DensePoly.cIntegrateReduced Dt a d cands).logs.map (fun cv =>
           am α (Polynomial.C (CFieldSpec.toK cv.1))

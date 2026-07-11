@@ -28,8 +28,8 @@ variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
 def towerDerivCFracWith {α : Type u} [CField α] [CDiffField α] [CFieldDomain α P]
     (Dt : P α) (x : F α) : F α :=
   CFrac.ofFraction
-    (CPolyEngine.sub (CPolyEngine.mul (DensePoly.cmonomialDeriv Dt (CFrac.num x)) (CFrac.den x))
-      (CPolyEngine.mul (CFrac.num x) (DensePoly.cmonomialDeriv Dt (CFrac.den x))))
+    (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.monomialDeriv Dt (CFrac.num x)) (CFrac.den x))
+      (CPolyEngine.mul (CFrac.num x) (CPolyEngine.monomialDeriv Dt (CFrac.den x))))
     (CPolyEngine.mul (CFrac.den x) (CFrac.den x))
     (CFrac.cmulG_ne_zero_of (CFrac.cisZeroG_den x) (CFrac.cisZeroG_den x))
 
@@ -42,8 +42,8 @@ def towerDerivCFrac {α : Type u} [CField α] [CDiffField α] [CFieldDomain α D
 @[simp] theorem towerDerivCFracWith_num {α : Type u} [CField α] [CDiffField α]
     [CFieldDomain α P] (Dt : P α) (x : F α) :
     CFrac.num (towerDerivCFracWith Dt x) =
-      CPolyEngine.sub (CPolyEngine.mul (DensePoly.cmonomialDeriv Dt (CFrac.num x)) (CFrac.den x))
-        (CPolyEngine.mul (CFrac.num x) (DensePoly.cmonomialDeriv Dt (CFrac.den x))) := by
+      CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.monomialDeriv Dt (CFrac.num x)) (CFrac.den x))
+        (CPolyEngine.mul (CFrac.num x) (CPolyEngine.monomialDeriv Dt (CFrac.den x))) := by
   simp [towerDerivCFracWith]
 
 /-- The generic tower derivative denominator is the square of the input denominator. -/
@@ -52,12 +52,12 @@ def towerDerivCFrac {α : Type u} [CField α] [CDiffField α] [CFieldDomain α D
     CFrac.den (towerDerivCFracWith Dt x) = CPolyEngine.mul (CFrac.den x) (CFrac.den x) := by
   simp [towerDerivCFracWith]
 
-/-- The numerator of `towerDerivCFrac Dt x` is `D n · d − n · D d` (with `D = cmonomialDeriv Dt`). -/
+/-- The numerator of `towerDerivCFrac Dt x` is `D n · d − n · D d` (with `D = CPolyEngine.monomialDeriv Dt`). -/
 theorem towerDerivCFracG_num {α : Type u} [CField α] [CDiffField α] [CFieldDomain α DensePoly]
     (Dt : DensePoly α) (x : DenseFrac α) :
     (towerDerivCFrac Dt x).num
-      = DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.num) x.den)
-          (DensePoly.cmul x.num (DensePoly.cmonomialDeriv Dt x.den)) := rfl
+      = DensePoly.csub (DensePoly.cmul (CPolyEngine.monomialDeriv Dt x.num) x.den)
+          (DensePoly.cmul x.num (CPolyEngine.monomialDeriv Dt x.den)) := rfl
 
 /-- The denominator of `towerDerivCFrac Dt x` is `d·d`. -/
 theorem towerDerivCFracG_den {α : Type u} [CField α] [CDiffField α] [CFieldDomain α DensePoly]
@@ -108,7 +108,7 @@ example :
 example :
     CCommRing.isZero (CDiffField.cderiv (CCommRing.zero : Lvl2)) = true := by ccompute
 
-/-! #### The level-2 monomial derivation `cmonomialDeriv` reduces over `ℚ(x)(t₁)[t₂]` -/
+/-! #### The level-2 monomial derivation `CPolyEngine.monomialDeriv` reduces over `ℚ(x)(t₁)[t₂]` -/
 
 /-- `Dt₂ = [1]` over `DensePoly Lvl2`: the new level-2 monomial `t₂` is an independent variable
 (`Dt₂ = 1`). -/
@@ -120,29 +120,29 @@ def lvl2T2sq : DensePoly Lvl2 := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 /-- The level-2 polynomial `2·t₂ ∈ ℚ(x)(t₁)[t₂]` (`[0, 2]`, with `2 = 1 + 1`). -/
 def lvl2TwoT2 : DensePoly Lvl2 := [CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
-/-- `D(t₂²) = 2·t₂` over `ℚ(x)(t₁)[t₂]`: `cmonomialDeriv lvl2Dt2` computes the derivative of `t₂²` to
+/-- `D(t₂²) = 2·t₂` over `ℚ(x)(t₁)[t₂]`: `CPolyEngine.monomialDeriv lvl2Dt2` computes the derivative of `t₂²` to
 `2·t₂` (checked via `cisZero` of the difference). -/
 theorem lvl2_monomialDeriv_t2sq_eq_two_t2 :
-    DensePoly.cisZero (DensePoly.csub (DensePoly.cmonomialDeriv lvl2Dt2 lvl2T2sq) lvl2TwoT2) = true := by
+    DensePoly.cisZero (DensePoly.csub (CPolyEngine.monomialDeriv lvl2Dt2 lvl2T2sq) lvl2TwoT2) = true := by
   ccompute
 
--- `D(t₂) = 1` over `ℚ(x)(t₁)[t₂]`: `cmonomialDeriv` of the monomial `t₂` is the constant `1`.
+-- `D(t₂) = 1` over `ℚ(x)(t₁)[t₂]`: `CPolyEngine.monomialDeriv` of the monomial `t₂` is the constant `1`.
 example :
     DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), CCommRing.one]) [CCommRing.one]) = true := by
+      (CPolyEngine.monomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), CCommRing.one]) [CCommRing.one]) = true := by
   ccompute
 
--- `D(t₁·t₂)` over `ℚ(x)(t₁)[t₂]` is nonzero (`cisZero = false`): `cmonomialDeriv`
+-- `D(t₁·t₂)` over `ℚ(x)(t₁)[t₂]` is nonzero (`cisZero = false`): `CPolyEngine.monomialDeriv`
 -- differentiates the `t₂`-coefficients too, not just the `d/dt₂` part.
 example :
-    DensePoly.cisZero (DensePoly.cmonomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), lvl2T1]) = false := by
+    DensePoly.cisZero (CPolyEngine.monomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), lvl2T1]) = false := by
   ccompute
 
 -- `D(t₁·t₂) = t₁ + t₂` over `ℚ(x)(t₁)[t₂]` (checked via `cisZero` of the difference
 -- against `[t₁, 1]`).
 example :
     DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), lvl2T1])
+      (CPolyEngine.monomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), lvl2T1])
       [lvl2T1, (CCommRing.one : Lvl2)]) = true := by ccompute
 
 /-- The independent sparse tower monomial `t`. -/
@@ -173,8 +173,8 @@ theorem toRatFunc_towerDerivCFracWith (Dt : P α) (x : F α) :
     rfl
   rw [towerDerivCFracWith, toRatFunc_ofFraction, hxmk, extendDeriv_mk, RatFunc.mk_eq_div,
     CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul,
-    LawfulCPolyEngine.toPoly_mul, CPolyEngine.toPoly_cmonomialDeriv,
-    CPolyEngine.toPoly_cmonomialDeriv, map_sub, map_mul, map_mul, map_pow]
+    LawfulCPolyEngine.toPoly_mul, CPolyEngine.toPoly_monomialDeriv,
+    CPolyEngine.toPoly_monomialDeriv, map_sub, map_mul, map_mul, map_pow]
   conv_rhs =>
     rw [map_sub, map_mul, map_mul]
   simp only [map_mul, pow_two]

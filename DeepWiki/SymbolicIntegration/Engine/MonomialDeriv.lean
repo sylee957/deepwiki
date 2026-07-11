@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 /-! # Computable monomial derivation
 
 `CDiffField`/`CDiffFieldSpec` (the computable coefficient derivation and its bridge) and the monomial
-derivation `cmonomialDeriv Dt p = (coefficientwise cderiv of p) + (dp/dt)·Dt` realizing Mathlib's
+derivation `CPolyEngine.monomialDeriv Dt p = (coefficientwise cderiv of p) + (dp/dt)·Dt` realizing Mathlib's
 `Differential.implicitDeriv`. -/
 
 open Polynomial
@@ -60,31 +60,31 @@ noncomputable instance instCDiffFieldSpecQ : CDiffFieldSpec ℚ where
     show (0 : ℚ) = (0 : Derivation ℤ ℚ ℚ) a
     rw [Derivation.coe_zero]; rfl
 
-/-! ### The monomial derivation on `DensePoly α` -/
+/-! ### Representation-independent monomial derivation -/
 
-namespace DensePoly
+namespace CPolyEngine
 
 /-- Coefficientwise derivation: apply `CDiffField.cderiv` to every represented coefficient. -/
-def cmapDeriv {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+def mapDeriv {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] [CDiffField α] (p : P α) : P α :=
   CPolyEngine.mapCoeffs CDiffField.cderiv p
 
-/-- Monomial derivation `cmonomialDeriv Dt p = cmapDeriv p + (dp/dt)·Dt`: the derivation on `k[t]`
+/-- Monomial derivation `monomialDeriv Dt p = mapDeriv p + (dp/dt)·Dt`: the derivation on `k[t]`
 with `Dt` the derivative of the monomial `t`. Needs only `[CDiffField α]`, so it reduces. -/
-def cmonomialDeriv {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+def monomialDeriv {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] [CDiffField α] (Dt p : P α) : P α :=
-  CPolyEngine.add (cmapDeriv p) (CPolyEngine.mul (CPolyEngine.deriv p) Dt)
+  CPolyEngine.add (mapDeriv p) (CPolyEngine.mul (CPolyEngine.deriv p) Dt)
 
-end DensePoly
+end CPolyEngine
 
 namespace CPolyEngine
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
 
 /-- Generic coefficientwise derivation denotes `Differential.mapCoeffs`. -/
-@[denote] theorem toPoly_cmapDeriv {α : Type u} [CField α] [CDiffField α]
+@[denote] theorem toPoly_mapDeriv {α : Type u} [CField α] [CDiffField α]
     [CFieldSpec.{u,v} α] [CDiffFieldSpec.{u,v} α] (p : P α) :
-    CPoly.toPoly (DensePoly.cmapDeriv p) = Differential.mapCoeffs (CPoly.toPoly p) := by
+    CPoly.toPoly (CPolyEngine.mapDeriv p) = Differential.mapCoeffs (CPoly.toPoly p) := by
   have hzero : CRingSpec.toR (CDiffField.cderiv (CCommRing.zero : α)) = 0 := by
     simp only [toR_eq_toK]
     rw [CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_zero, map_zero]
@@ -101,9 +101,9 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u
       simpa only [toR_eq_toK] using CDiffFieldSpec.toK_cderiv (CPoly.coeff p i)
 
 /-- Generic monomial derivation denotes `Differential.implicitDeriv`. -/
-@[denote] theorem toPoly_cmonomialDeriv {α : Type u} [CField α] [CDiffField α]
+@[denote] theorem toPoly_monomialDeriv {α : Type u} [CField α] [CDiffField α]
     [CFieldSpec.{u,v} α] [CDiffFieldSpec.{u,v} α] (Dt p : P α) :
-    CPoly.toPoly (DensePoly.cmonomialDeriv Dt p) =
+    CPoly.toPoly (CPolyEngine.monomialDeriv Dt p) =
       Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly p) := by
   change CPoly.toPoly
       (CPolyEngine.add (CPolyEngine.mapCoeffs CDiffField.cderiv p)
@@ -111,9 +111,9 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u
   rw [LawfulCPolyEngine.toPoly_add (P := P)
       (CPolyEngine.mapCoeffs CDiffField.cderiv p)
       (CPolyEngine.mul (CPolyEngine.deriv p) Dt)]
-  change CPoly.toPoly (DensePoly.cmapDeriv p) +
+  change CPoly.toPoly (CPolyEngine.mapDeriv p) +
       CPoly.toPoly (CPolyEngine.mul (CPolyEngine.deriv p) Dt) = _
-  rw [toPoly_cmapDeriv]
+  rw [toPoly_mapDeriv]
   rw [LawfulCPolyEngine.toPoly_mul (P := P) (CPolyEngine.deriv p) Dt]
   rw [LawfulCPolyEngine.toPoly_deriv (P := P) p]
   rw [show Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly p) =
@@ -128,32 +128,35 @@ namespace DensePoly
 
 /-- Generic coefficientwise derivation specializes to concrete dense list mapping. -/
 theorem cmapDeriv_dense_eq {α : Type u} [CField α] [CDiffField α] (p : DensePoly α) :
-    cmapDeriv p = (p : List α).map CDiffField.cderiv := rfl
+    CPolyEngine.mapDeriv p = (p : List α).map CDiffField.cderiv := rfl
 
 /-- Generic monomial derivation specializes to the concrete dense engine operations. -/
 theorem cmonomialDeriv_dense_eq {α : Type u} [CField α] [CDiffField α]
     (Dt p : DensePoly α) :
-    cmonomialDeriv Dt p = cadd (cmapDeriv p) (cmul (cderiv p) Dt) := rfl
+    CPolyEngine.monomialDeriv Dt p =
+      cadd (CPolyEngine.mapDeriv p) (cmul (cderiv p) Dt) := rfl
 
-/-- `toPoly (cmapDeriv p) = Differential.mapCoeffs (toPoly p)`: the coefficientwise computable
+/-- `toPoly (CPolyEngine.mapDeriv p) = Differential.mapCoeffs (toPoly p)`: the coefficientwise computable
 derivation realizes Mathlib's polynomial coefficient-map derivation. -/
 @[denote] theorem toPolyG_cmapDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
     (p : DensePoly α) :
-    toPoly (cmapDeriv p) = Differential.mapCoeffs (toPoly p) := by
+    toPoly (CPolyEngine.mapDeriv p) = Differential.mapCoeffs (toPoly p) := by
   induction p with
-  | nil => simp [cmapDeriv]
+  | nil => simp [CPolyEngine.mapDeriv]
   | cons a as ih =>
-    show toPoly (CDiffField.cderiv a :: cmapDeriv as) = Differential.mapCoeffs (toPoly (a :: as))
+    show toPoly (CDiffField.cderiv a :: CPolyEngine.mapDeriv as) =
+      Differential.mapCoeffs (toPoly (a :: as))
     rw [toPolyG_cons, ih, toPolyG_cons]
     simp only [toR_eq_toK]
     rw [map_add, Differential.mapCoeffs_C, CDiffFieldSpec.toK_cderiv,
       Derivation.leibniz, Differential.mapCoeffs_X, smul_zero, add_zero, smul_eq_mul]
 
-/-- `toPoly (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPoly Dt) (toPoly p)`: the
+/-- `toPoly (CPolyEngine.monomialDeriv Dt p) = Differential.implicitDeriv (toPoly Dt) (toPoly p)`: the
 computable monomial derivation realizes Mathlib's `implicitDeriv`. -/
 @[denote] theorem toPolyG_cmonomialDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
     (Dt p : DensePoly α) :
-    toPoly (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPoly Dt) (toPoly p) := by
+    toPoly (CPolyEngine.monomialDeriv Dt p) =
+      Differential.implicitDeriv (toPoly Dt) (toPoly p) := by
   rw [cmonomialDeriv_dense_eq]
   simp only [denote]
   rw [show Differential.implicitDeriv (toPoly Dt) (toPoly p)
@@ -163,7 +166,7 @@ computable monomial derivation realizes Mathlib's `implicitDeriv`. -/
 
 example :
     CPolyEngine.cdeg
-      (cmonomialDeriv
+      (CPolyEngine.monomialDeriv
         (CPoly.SparsePoly.ofList [(0, (1 : ℚ))])
         (CPoly.SparsePoly.ofList [(0, 1), (2, 3)])) = 1 := by
   ccompute

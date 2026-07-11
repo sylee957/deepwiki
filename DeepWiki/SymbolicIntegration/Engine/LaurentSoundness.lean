@@ -24,11 +24,11 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 abbrev IsHyperexpMonomial (Dt : DensePoly α) (η : α) : Prop :=
   toPoly Dt = Polynomial.C (CFieldSpec.toK η) * Polynomial.X
 
-/-- **The tower derivative of a polynomial image is the image of `cmonomialDeriv`**:
-`D_tower(⟦p⟧) = ⟦cmonomialDeriv Dt p⟧`. Grounds every Laurent-term computation at the polynomial level
+/-- **The tower derivative of a polynomial image is the image of `CPolyEngine.monomialDeriv`**:
+`D_tower(⟦p⟧) = ⟦CPolyEngine.monomialDeriv Dt p⟧`. Grounds every Laurent-term computation at the polynomial level
 (`extendDeriv_algebraMap` + `toPolyG_cmonomialDeriv`). -/
 theorem towerFractionFieldDerivG_amG_poly (Dt p : DensePoly α) :
-    towerFractionFieldDeriv Dt (am α (toPoly p)) = am α (toPoly (cmonomialDeriv Dt p)) := by
+    towerFractionFieldDeriv Dt (am α (toPoly p)) = am α (toPoly (CPolyEngine.monomialDeriv Dt p)) := by
   rw [towerFractionFieldDeriv, extendDeriv_algebraMap]
   simp only [denote]
 

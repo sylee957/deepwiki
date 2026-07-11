@@ -57,7 +57,7 @@ theorem cIntegratePrimPolyDegRaiseG_example :
     (match cIntegratePrimPolyDegRaise limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
         prim2ExampleP with
       | some q =>
-          cisZero (csub (cmonomialDeriv [limIntSingleExampleEta] q) prim2ExampleP)
+          cisZero (csub (CPolyEngine.monomialDeriv [limIntSingleExampleEta] q) prim2ExampleP)
             && decide (cdeg q = 2)
       | none => false) = true := by ccompute
 

@@ -161,10 +161,10 @@ namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
-/-- The generic `SplitFactor` step `cstep Dt p = CPolyEuclidean.div (cgcdFFCoreWf p (cmonomialDeriv Dt p))
+/-- The generic `SplitFactor` step `cstep Dt p = CPolyEuclidean.div (cgcdFFCoreWf p (CPolyEngine.monomialDeriv Dt p))
 (cgcdFFCoreWf p (cderiv p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)`. -/
 def cstep (Dt : DensePoly α) (p : DensePoly α) : DensePoly α :=
-  CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p))
+  CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf p (CPolyEngine.monomialDeriv Dt p))
     (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))
 
 /-- Generic splitting-factorization loop `cSplitFactorFast Dt p = (pₙ, pₛ)`: one step extracts
@@ -227,12 +227,12 @@ def cSqfreeYunFactors (p : DensePoly α) : List (DensePoly α × ℕ) :=
 
 /-- Generic split-squarefree-factor over the tower `cSplitSquarefreeFactorFast Dt p =
 ((N₁,…,Nₘ), (S₁,…,Sₘ))`. Yun-factor `p` in `t` (`cSqfreeYunFF`); per factor `pᵢ`,
-`Sᵢ = cgcdFFCoreWf pᵢ (cmonomialDeriv Dt pᵢ)` (the special part) and `Nᵢ = CPolyEuclidean.div pᵢ Sᵢ` (normal part). -/
+`Sᵢ = cgcdFFCoreWf pᵢ (CPolyEngine.monomialDeriv Dt pᵢ)` (the special part) and `Nᵢ = CPolyEuclidean.div pᵢ Sᵢ` (normal part). -/
 def cSplitSquarefreeFactorFast [CDiffField α] (Dt : DensePoly α) (p : DensePoly α) :
     List (DensePoly α) × List (DensePoly α) :=
   let ps := cSqfreeYunFF p
   let parts := ps.map (fun pf =>
-    let si := CFracGcdCoreWf.cgcdFFCoreWf pf (cmonomialDeriv Dt pf)
+    let si := CFracGcdCoreWf.cgcdFFCoreWf pf (CPolyEngine.monomialDeriv Dt pf)
     let ni := CPolyEuclidean.div pf si
     (ni, si))
   (parts.map Prod.fst, parts.map Prod.snd)
@@ -281,7 +281,7 @@ def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
         let (gloc, _) := cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])
         (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))  -- gAcc + gloc
     ([CCommRing.zero], [CCommRing.one])
-  let gprimeNum := csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2))
+  let gprimeNum := csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2) (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2))
   let gden2 := cmul g.2 g.2
   let resNum := csub (cmul a gden2) (cmul d gprimeNum)
   let resDen := cmul d gden2
@@ -372,8 +372,8 @@ theorem towerHermiteLvl2_rationalPartWf :
       let gden := res.1.2
       let hNum := res.2.1
       let hDen := res.2.2
-      let Dgnum := DensePoly.cmonomialDeriv towerHermiteLvl2Dt gnum
-      let Dgden := DensePoly.cmonomialDeriv towerHermiteLvl2Dt gden
+      let Dgnum := CPolyEngine.monomialDeriv towerHermiteLvl2Dt gnum
+      let Dgden := CPolyEngine.monomialDeriv towerHermiteLvl2Dt gden
       let gprimeNum := DensePoly.csub (DensePoly.cmul Dgnum gden) (DensePoly.cmul gnum Dgden)
       let gden2 := DensePoly.cmul gden gden
       let lhs := DensePoly.cmul
@@ -429,7 +429,7 @@ variable {α : Type*} [CField α] [CDiffField α]
 
 /-- Generic non-cancellation Poly-Risch-DE `cPolyRischDENoCancel Dt b c n`: solves `Dq + b·q = c` for
 `q ∈ α[t]` with `deg(q) ≤ n` (`n : ℤ`), top-down — `p = (lc(c)/lc(b))·tᵐ` (`m = deg(c) − deg(b)`), recurse on
-`c' = c − D(p) − b·p` (`D = cmonomialDeriv Dt`). Returns `none` or `some q`. Well-founded on
+`c' = c − D(p) − b·p` (`D = CPolyEngine.monomialDeriv Dt`). Returns `none` or `some q`. Well-founded on
 `(cnorm c).length`. `[CField α] [CDiffField α]`-generic. -/
 def cPolyRischDENoCancel (Dt : DensePoly α) (b c : DensePoly α) (n : ℤ) :
     Option (DensePoly α) :=
@@ -440,7 +440,7 @@ def cPolyRischDENoCancel (Dt : DensePoly α) (b c : DensePoly α) (n : ℤ) :
     else
       let coeff := CField.div (clead c) (clead b)
       let p := cshift m.toNat [coeff]
-      let c' := csub (csub c (cmonomialDeriv Dt p)) (cmul b p)
+      let c' := csub (csub c (CPolyEngine.monomialDeriv Dt p)) (cmul b p)
       if (cnorm c' : List α).length < (cnorm c : List α).length then
         match cPolyRischDENoCancel Dt b c' (m - 1) with
         | none => none
@@ -476,8 +476,8 @@ def cSPDE (Dt : DensePoly α) (a b c : DensePoly α) (n : ℤ) :
         some (cscale ainv b', cscale ainv c', n, [CCommRing.one], [])
       else
         let (r, z) := CPoly.diophantineReduced b' a' c'
-        let Da := cmonomialDeriv Dt a'
-        let Dr := cmonomialDeriv Dt r
+        let Da := CPolyEngine.monomialDeriv Dt a'
+        let Dr := CPolyEngine.monomialDeriv Dt r
         if (n - (cdeg a' : ℤ) + 1).toNat < (n + 1).toNat then
           match cSPDE Dt a' (cadd b' Da) (csub z Dr) (n - (cdeg a' : ℤ)) with
           | none => none

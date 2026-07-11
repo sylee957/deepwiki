@@ -24,7 +24,7 @@ theorem primitivePolyIntegrate_example :
         primitivePolyIntegrateExampleP
       let q := res.1
       let rem := res.2
-      let Dq := DensePoly.cmonomialDeriv primitivePolyIntegrateExampleDt q
+      let Dq := CPolyEngine.monomialDeriv primitivePolyIntegrateExampleDt q
       DensePoly.cisZero (DensePoly.csub (DensePoly.cadd Dq rem) primitivePolyIntegrateExampleP)) = true := by
   native_decide
 
@@ -41,7 +41,7 @@ theorem polyReduceTower_example :
     (let res := DensePoly.cPolyReduceTower polyReduceTowerExampleDt 8 polyReduceTowerExampleP
       let q := res.1
       let r := res.2
-      let Dq := DensePoly.cmonomialDeriv polyReduceTowerExampleDt q
+      let Dq := CPolyEngine.monomialDeriv polyReduceTowerExampleDt q
       DensePoly.cisZero (DensePoly.csub (DensePoly.cadd Dq r) polyReduceTowerExampleP)) = true := by
   native_decide
 

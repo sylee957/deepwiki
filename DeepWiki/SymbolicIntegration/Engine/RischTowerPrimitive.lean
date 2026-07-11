@@ -56,7 +56,7 @@ theorem primitiveGuardedCase_specialSound [Fact (CgcdBCorrect (CFracGcdCoreWf.cg
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
   simp only [primitiveGuardedCase] at hhook
   by_cases hguard : (cisZero (crSpecNum Dt a d) && cisZero (csub Dt [CCommRing.one])
-      && cisZero (cmapDeriv (crPoly Dt a d))) = true
+      && cisZero (CPolyEngine.mapDeriv (crPoly Dt a d))) = true
   · rw [if_pos hguard] at hhook
     rw [Bool.and_eq_true, Bool.and_eq_true] at hguard
     obtain ⟨⟨hb, hDt1g⟩, hconstg⟩ := hguard

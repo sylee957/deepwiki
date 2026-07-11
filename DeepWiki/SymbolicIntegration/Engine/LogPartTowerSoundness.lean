@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrage
 /-! # The Rothstein–Trager residue identity over the transcendental tower
 
 Transports the algebraic Rothstein–Trager residue identity to the transcendental tower with the
-monomial derivation `D = cmonomialDeriv Dt`.  Delivers: the residue resultant's roots are the residues
+monomial derivation `D = CPolyEngine.monomialDeriv Dt`.  Delivers: the residue resultant's roots are the residues
 (`roots_residueResultantTowerG_eq_residues`); the log-argument gcd is the residue's linear factor
 (`residue_gcd_eq_linear_factor`); the `logResidueSum` reading as a monomial log-derivative sum; and,
 given the residue match, `logResidueSum = a/d`, assembled with the Hermite half into the fuel-free

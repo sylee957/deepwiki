@@ -1474,7 +1474,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
     (hv : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ (cSqfreeYunFF d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (DenseFrac ℚ)),
         (toPoly (CPoly.diophantineReduced
-            (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+            (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (CPolyEngine.monomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (g : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
@@ -1490,7 +1490,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
       ([CCommRing.zero], [CCommRing.one]))
     (hdvd : toPoly (cmul d (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul a (cmul g.2 g.2))
-          (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2)))))
+          (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2) (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2)))))
         ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul d (cmul g.2 g.2)) ≠ ([] : DensePoly (DenseFrac ℚ))) :
     (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card := by
@@ -1507,7 +1507,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
     rw [← hd2, hden]; exact Lagrange.nodal_ne_zero
   have hproper := cHermiteReduceTowerG_leftover_proper_of_residual Dt a d
     (csub (cmul a (cmul _ _))
-      (cmul d (csub (cmul (cmonomialDeriv Dt _) _) (cmul _ (cmonomialDeriv Dt _)))))
+      (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt _) _) (cmul _ (CPolyEngine.monomialDeriv Dt _)))))
     (cmul d (cmul _ _))
     ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
     (by simp only [cHermiteReduceTower, denote])
@@ -1569,7 +1569,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : DensePoly 
         ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (DenseFrac ℚ)),
         (toPoly (CPoly.diophantineReduced
             (cmul (CPolyEuclidean.div (canonicalRepresentationFast Dt a d).2.2.2
-              (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+              (cpow p.1 (p.2 + 1))) (CPolyEngine.monomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
     (g : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
     (hgeq : g = (cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).zipIdx.foldl
@@ -1586,7 +1586,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : DensePoly 
     (hdvd : toPoly (cmul (canonicalRepresentationFast Dt a d).2.2.2 (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul (canonicalRepresentationFast Dt a d).2.2.1 (cmul g.2 g.2))
           (cmul (canonicalRepresentationFast Dt a d).2.2.2
-            (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2)))))
+            (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2) (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2)))))
         ((cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).foldl
           (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul (canonicalRepresentationFast Dt a d).2.2.2 (cmul g.2 g.2))
@@ -1672,7 +1672,7 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
         (toPoly (CPoly.diophantineReduced
             (cmul (CPolyEuclidean.div (canonicalRepresentationFast
               ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.2 (cpow p.1 (p.2 + 1)))
-              (cmonomialDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ)) p.1)) p.1 rhs).1).degree
+              (CPolyEngine.monomialDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ)) p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
     (g : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
     (hgeq : g = (cSqfreeYunFF (canonicalRepresentationFast
@@ -1694,8 +1694,8 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
       ∣ toPoly (cmul (csub (cmul (canonicalRepresentationFast
             ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.1 (cmul g.2 g.2))
           (cmul (canonicalRepresentationFast ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.2
-            (csub (cmul (cmonomialDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ)) g.1) g.2)
-              (cmul g.1 (cmonomialDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ)) g.2)))))
+            (csub (cmul (CPolyEngine.monomialDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ)) g.1) g.2)
+              (cmul g.1 (CPolyEngine.monomialDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ)) g.2)))))
         ((cSqfreeYunFF (canonicalRepresentationFast
           ([CCommRing.one] : DensePoly (DenseFrac ℚ)) a d).2.2.2).foldl (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul (canonicalRepresentationFast

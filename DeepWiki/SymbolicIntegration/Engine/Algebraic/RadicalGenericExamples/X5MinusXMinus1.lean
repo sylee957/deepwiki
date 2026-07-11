@@ -72,7 +72,7 @@ def radX5DtExp : DensePoly RadX5 := [CCommRing.zero, CCommRing.one]
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x⁵−x−1)][eˣ]`: the mixed-tower `d/dt` computation over the degree-5 radical
 base. -/
 theorem radX5_monomialDeriv_t2sq :
-    cisZero (csub (cmonomialDeriv radX5DtExp radX5T2sq) radX5TwoT2sq) = true := by native_decide
+    cisZero (csub (CPolyEngine.monomialDeriv radX5DtExp radX5T2sq) radX5TwoT2sq) = true := by native_decide
 
 /-- The `RadX5[t]`-polynomial `y·t = [0, y]` (`y = √(x⁵−x−1)`, `t = eˣ`). -/
 def radX5GenT : DensePoly RadX5 := [CCommRing.zero, RadExt.gen]
@@ -84,6 +84,6 @@ def radX5GenTDeriv : DensePoly RadX5 :=
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x⁵−x−1)][eˣ]`: the mixed derivation over the degree-5 radical base
 (`ℓ = (5x⁴−1)/(2(x⁵−x−1))`). -/
 theorem radX5_monomialDeriv_genT :
-    cisZero (csub (cmonomialDeriv radX5DtExp radX5GenT) radX5GenTDeriv) = true := by native_decide
+    cisZero (csub (CPolyEngine.monomialDeriv radX5DtExp radX5GenT) radX5GenTDeriv) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

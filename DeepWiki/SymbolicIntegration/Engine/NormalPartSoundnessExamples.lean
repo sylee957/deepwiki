@@ -84,7 +84,7 @@ example {β : Type*} (glocOf : β → DensePoly α × DensePoly α) (skip : β �
 
 example (Dt : DensePoly α) (v u : DensePoly α) (hv : toPoly v ≠ 0)
     (hb : ∀ (rhs : DensePoly α),
-      (toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v rhs).1).degree
+      (toPoly (CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v rhs).1).degree
         < (toPoly v).degree)
     (j : ℕ) (a : DensePoly α) (g : DensePoly α × DensePoly α)
     (hg : (toPoly g.1).degree < (toPoly g.2).degree) :
@@ -94,7 +94,7 @@ example (Dt : DensePoly α) (v u : DensePoly α) (hv : toPoly v ≠ 0)
 
 example (Dt : DensePoly α) (vi u : DensePoly α) (j : ℕ) (a : DensePoly α) (hv : toPoly vi ≠ 0)
     (hb : ∀ (rhs : DensePoly α),
-      (toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt vi)) vi rhs).1).degree
+      (toPoly (CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt vi)) vi rhs).1).degree
         < (toPoly vi).degree) :
     (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CCommRing.zero], [CCommRing.one])).1.1).degree
       < (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CCommRing.zero], [CCommRing.one])).1.2).degree :=
@@ -104,7 +104,7 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly α),
       (toPoly (CPoly.diophantineReduced
-          (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+          (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (CPolyEngine.monomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPoly p.1).degree) :
     (toPoly (factors.zipIdx.foldl
         (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
@@ -135,7 +135,7 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly α),
       (toPoly (CPoly.diophantineReduced
-          (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+          (cmul (CPolyEuclidean.div d (cpow p.1 (p.2 + 1))) (CPolyEngine.monomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPoly p.1).degree) :
     let g := factors.zipIdx.foldl
       (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
@@ -149,16 +149,16 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
       ([CCommRing.zero], [CCommRing.one])
     (toPoly (csub (cmul a (cmul g.2 g.2))
-        (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2)
-          (cmul g.1 (cmonomialDeriv Dt g.2)))))).degree
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2)
+          (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2)))))).degree
       < (toPoly (cmul d (cmul g.2 g.2))).degree :=
   cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d factors hDt haProper
     (fun p hp hskip => ⟨hv p hp hskip, hb p hp hskip⟩)
 
 example (Dt gnum gden : DensePoly α) (hM : toPoly gden ≠ 0) (hDt : (toPoly Dt).natDegree ≤ 1)
     (hgproper : (toPoly gnum).degree < (toPoly gden).degree) :
-    (toPoly (csub (cmul (cmonomialDeriv Dt gnum) gden)
-        (cmul gnum (cmonomialDeriv Dt gden)))).degree
+    (toPoly (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+        (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))).degree
       < (toPoly (cmul gden gden)).degree :=
   toPolyG_gprimeNum_proper_of_degree_le_one Dt gnum gden hM hDt hgproper
 
@@ -189,8 +189,8 @@ example (Dt a d gnum gden : DensePoly α) (hden : toPoly gden ≠ 0)
     (hmargin :
       (toPoly gnum).degree + (max 0 ((toPoly Dt).natDegree - 1) : ℕ) < (toPoly gden).degree) :
     (toPoly (csub (cmul a (cmul gden gden))
-        (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
-          (cmul gnum (cmonomialDeriv Dt gden)))))).degree
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+          (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))))).degree
       < (toPoly (cmul d (cmul gden gden))).degree :=
   toPolyG_residualFraction_proper_of_margin Dt a d gnum gden hden haProper hmargin
 
@@ -199,8 +199,8 @@ example (Dt a d gnum gden : DensePoly α) (hden : toPoly gden ≠ 0)
     (haProper : (toPoly a).degree < (toPoly d).degree)
     (hgproper : (toPoly gnum).degree < (toPoly gden).degree) :
     (toPoly (csub (cmul a (cmul gden gden))
-        (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
-          (cmul gnum (cmonomialDeriv Dt gden)))))).degree
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+          (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))))).degree
       < (toPoly (cmul d (cmul gden gden))).degree :=
   toPolyG_residualFraction_proper_of_degree_le_one Dt a d gnum gden hden hDt haProper hgproper
 

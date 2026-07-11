@@ -120,7 +120,7 @@ abbrev appA_case3_cleared_identity := @case3_cleared_identity
 
 /-- **`θ = log v` cofactor** (Trager, Appendix A §2.3, eq. 5, p.78): `CPoly.radCase3CofactorGen` does
 the `C/y` degree-lowering with the `v'/v`-weighted bracket `(j+1)·θ' + lcf(g)` and the full
-monomial derivative `cmonomialDeriv [θ']` for `B'`, validated on a genuine 2-level tower
+monomial derivative `CPolyEngine.monomialDeriv [θ']` for `B'`, validated on a genuine 2-level tower
 `ℚ(x)[log x]`, `y = √(log x)`. -/
 abbrev appA_logTheta_cofactor := @CPoly.radCase3CofactorGen
 

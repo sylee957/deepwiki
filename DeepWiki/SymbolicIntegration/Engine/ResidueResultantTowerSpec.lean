@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
 /-! # Connecting the computable tower residue resultant to the general-derivation abstract theory (G4b)
 
 `cResidueResultantTower Dt a d` interpolates the resultant samples `res_t(d, a − zₖ·Dd)` (`Dd =
-cmonomialDeriv Dt d`). This file certifies it against the general-derivation abstract residue resultant
+CPolyEngine.monomialDeriv Dt d`). This file certifies it against the general-derivation abstract residue resultant
 `rtResultantGen (toPoly a) (toPoly d) B` with `B = implicitDeriv (toPoly Dt) (toPoly d)` (G1–G3), for
 the **primitive** reduced case (`Dt` constant, `Dstar` monic). Sample agreement is the core; the full
 interpolation certification (`toPoly … = rtResultantGen …`) follows by interpolation uniqueness. See

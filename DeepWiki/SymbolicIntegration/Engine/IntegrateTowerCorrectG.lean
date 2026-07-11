@@ -36,10 +36,10 @@ theorem towerFractionFieldDerivG_div (Dt : DensePoly α) (gnum gden : (CFieldSpe
     map_mul, map_mul, map_pow]
 
 /-- Per-term log-derivative reading:
-`towerFractionFieldDeriv Dt (am v)/am v = am (toPoly (cmonomialDeriv Dt v))/am (toPoly v)`. -/
+`towerFractionFieldDeriv Dt (am v)/am v = am (toPoly (CPolyEngine.monomialDeriv Dt v))/am (toPoly v)`. -/
 theorem towerFractionFieldDerivG_logDeriv (Dt v : DensePoly α) :
     towerFractionFieldDeriv Dt (am α (toPoly v)) / am α (toPoly v)
-      = am α (toPoly (cmonomialDeriv Dt v)) / am α (toPoly v) := by
+      = am α (toPoly (CPolyEngine.monomialDeriv Dt v)) / am α (toPoly v) := by
   rw [towerFractionFieldDeriv, extendDeriv_algebraMap]
   simp only [denote]
 
@@ -51,7 +51,7 @@ noncomputable def logResidueSum (Dt : DensePoly α) (logs : List (α × DensePol
     RatFunc (CFieldSpec.K α) :=
   (logs.map (fun cv =>
     am α (Polynomial.C (CFieldSpec.toK cv.1))
-      * (am α (toPoly (cmonomialDeriv Dt cv.2)) / am α (toPoly cv.2)))).sum
+      * (am α (toPoly (CPolyEngine.monomialDeriv Dt cv.2)) / am α (toPoly cv.2)))).sum
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `logResidueSum` of the empty list is `0`. -/
@@ -64,7 +64,7 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 theorem logResidueSumG_cons (Dt : DensePoly α) (cv : α × DensePoly α) (rest : List (α × DensePoly α)) :
     logResidueSum Dt (cv :: rest)
       = am α (Polynomial.C (CFieldSpec.toK cv.1))
-          * (am α (toPoly (cmonomialDeriv Dt cv.2)) / am α (toPoly cv.2))
+          * (am α (toPoly (CPolyEngine.monomialDeriv Dt cv.2)) / am α (toPoly cv.2))
         + logResidueSum Dt rest := by
   simp only [logResidueSum, List.map_cons, List.sum_cons]
 
@@ -93,7 +93,7 @@ theorem checkIdentityG_fold_eq (Dt : DensePoly α) :
         (fun (acc : DensePoly α × DensePoly α) (cv : α × DensePoly α) =>
           let c := cv.1
           let v := cv.2
-          let Dv := cmonomialDeriv Dt v
+          let Dv := CPolyEngine.monomialDeriv Dt v
           let termNum := cscale c Dv
           (cadd (cmul acc.1 v) (cmul termNum acc.2), cmul acc.2 v))
         (snum, sden)
@@ -111,7 +111,7 @@ theorem checkIdentityG_fold_eq (Dt : DensePoly α) :
     -- the head argument `v` is nonzero
     have hvne : toPoly cv.2 ≠ 0 := hv cv List.mem_cons_self
     -- one fold step: new accumulator
-    set newnum := cadd (cmul snum cv.2) (cmul (cscale cv.1 (cmonomialDeriv Dt cv.2)) sden)
+    set newnum := cadd (cmul snum cv.2) (cmul (cscale cv.1 (CPolyEngine.monomialDeriv Dt cv.2)) sden)
       with hnewnum
     set newden := cmul sden cv.2 with hnewden
     have hnewden_ne : toPoly newden ≠ 0 := by
@@ -133,7 +133,7 @@ theorem checkIdentityG_fold_eq (Dt : DensePoly α) :
     have hstep : am α (toPoly newnum) / am α (toPoly newden)
         = am α (toPoly snum) / am α (toPoly sden)
           + am α (Polynomial.C (CFieldSpec.toK cv.1))
-              * (am α (toPoly (cmonomialDeriv Dt cv.2)) / am α (toPoly cv.2)) := by
+              * (am α (toPoly (CPolyEngine.monomialDeriv Dt cv.2)) / am α (toPoly cv.2)) := by
       rw [hnewnum, hnewden]
       simp only [denote, map_add, map_mul]
       field_simp
@@ -155,7 +155,7 @@ theorem field_identity_of_checkIdentityG (Dt : DensePoly α) (res : IntegralResu
   -- names matching `checkIdentity`
   set gnum := res.rational.1 with hgnum
   set gden := res.rational.2 with hgdenE
-  set gprimeNum := csub (cmul (cmonomialDeriv Dt gnum) gden) (cmul gnum (cmonomialDeriv Dt gden))
+  set gprimeNum := csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden) (cmul gnum (CPolyEngine.monomialDeriv Dt gden))
     with hgp
   set gden2 := cmul gden gden with hgden2
   -- the fold result `(Lnum, Lden)`
@@ -163,7 +163,7 @@ theorem field_identity_of_checkIdentityG (Dt : DensePoly α) (res : IntegralResu
     (fun (acc : DensePoly α × DensePoly α) (cv : α × DensePoly α) =>
       let c := cv.1
       let v := cv.2
-      let Dv := cmonomialDeriv Dt v
+      let Dv := CPolyEngine.monomialDeriv Dt v
       let termNum := cscale c Dv
       (cadd (cmul acc.1 v) (cmul termNum acc.2), cmul acc.2 v))
     ([CCommRing.zero], [CCommRing.one]) with hfolded

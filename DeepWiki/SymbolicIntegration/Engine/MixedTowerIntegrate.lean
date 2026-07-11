@@ -120,7 +120,7 @@ theorem mixedRde_radx3_descends :
         mixedRdeF mixedRdeFden mixedRde mixedRdeGden with
       | some (ynum, yden) =>
           DensePoly.cisZero (DensePoly.csub
-            (DensePoly.cadd (DensePoly.cmonomialDeriv ([CCommRing.one] : DensePoly RadX3) ynum)
+            (DensePoly.cadd (CPolyEngine.monomialDeriv ([CCommRing.one] : DensePoly RadX3) ynum)
               (DensePoly.cmul mixedRdeF ynum))
             (DensePoly.cmul mixedRde yden))
       | none => false) = true := by native_decide

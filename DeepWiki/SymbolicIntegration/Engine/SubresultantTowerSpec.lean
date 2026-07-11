@@ -39,12 +39,12 @@ theorem toK_selectedSubresultant_getD_eq_coeff (Dstar A Dd : DensePoly α) (c : 
 
 variable [CDiffField α] [CDiffFieldSpec α]
 
-/-- The per-value subresultant agreement with the **tower derivation** `Dd = cmonomialDeriv Dt Dstar`, so
+/-- The per-value subresultant agreement with the **tower derivation** `Dd = CPolyEngine.monomialDeriv Dt Dstar`, so
 `B = implicitDeriv (toPoly Dt) (toPoly Dstar)` — the form used by `cLrtLogArg`. -/
 theorem toK_selectedSubresultant_getD_eq_coeff_monomial (Dt Dstar A : DensePoly α) (c : α) (n m j k : ℕ) :
     CFieldSpec.toK
         (((CPolySubresultant.compute Dstar
-            (csub A (cscale c (cmonomialDeriv Dt Dstar))) n m j : DensePoly α) :
+            (csub A (cscale c (CPolyEngine.monomialDeriv Dt Dstar))) n m j : DensePoly α) :
             List α).getD k CCommRing.zero)
       = (subresultant (toPoly Dstar)
           (toPoly A - C (CFieldSpec.toK c)

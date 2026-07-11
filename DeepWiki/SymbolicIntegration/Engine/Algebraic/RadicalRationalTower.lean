@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalOverTower
 /-! # Computing the rational half over a transcendental tower
 
 The Case-3 `C/y` degree-lowering generalized to run with the actual radicand-level derivation `der`
-(e.g. `cmonomialDeriv [θ]`, `θ' = θ`, over `α = ℚ(x)(eˣ)`), so the rational part `v` is an output
+(e.g. `CPolyEngine.monomialDeriv [θ]`, `θ' = θ`, over `α = ℚ(x)(eˣ)`), so the rational part `v` is an output
 rather than supplied. Combined with the computed log half, gives the fully-computed round-trip
 `algDeriv ⟨2y, [(1, (y−1)/(y+1))]⟩ = √(eˣ+1)` over the tower. -/
 
@@ -92,15 +92,15 @@ def expC3Rho : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
 /-- The exp-tower Case-3 helper `g = ½ρ'` over `ℚ(x)[θ]` with the `θ' = θ` derivation: `ρ' = θ`, so
 `g = θ/2 = [0, 1/2]` (degree `1`, matching `deg f`). -/
 def expC3 : DensePoly (DenseFrac ℚ) :=
-  cscale (CField.div CCommRing.one (CField.natCast 2)) (cmonomialDeriv expDt1 expC3Rho)
+  cscale (CField.div CCommRing.one (CField.natCast 2)) (CPolyEngine.monomialDeriv expDt1 expC3Rho)
 
 /-- The exp-tower Case-3 numerator `C = ρ = θ+1 ∈ ℚ(x)[θ]` (integrand `√(eˣ+1) = ρ/y`), `[1,1]`. -/
 def expC3C : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
 
-/-- The Case-3-G run `radIntegrateCase3G (cmonomialDeriv expDt1) ρ (½ρ') C = (Crem, vNum)` on `∫√(eˣ+1) dx`
+/-- The Case-3-G run `radIntegrateCase3G (CPolyEngine.monomialDeriv expDt1) ρ (½ρ') C = (Crem, vNum)` on `∫√(eˣ+1) dx`
 with the `θ' = θ` derivation: the cofactor `B = [2]` gives `vNum = 2ρ`. -/
 def expC3Run : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ) :=
-  radIntegrateCase3G (cmonomialDeriv expDt1) expC3Rho expC3 expC3C
+  radIntegrateCase3G (CPolyEngine.monomialDeriv expDt1) expC3Rho expC3 expC3C
 
 -- Sanity print: the COMPUTED rational-part numerator `vNum` (should be `2ρ = 2θ+2 = [2,2]`) and the
 -- residual `Crem`, as ℚ(x)-coefficient lists.

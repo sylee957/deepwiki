@@ -31,13 +31,13 @@ theorem eta_not_range_der [CharZero (CFieldSpec.K α)] (Dt : DensePoly α)
 
 open scoped Differential in
 /-- **`hm` from the genuine monomial property.** The monomial-derivative degree drop
-`cdeg (cmonomialDeriv Dt Dstar) = cdeg Dstar − 1` is `natDegree_implicitDeriv_eq_of_monic_of_not_range`
-(monic `Dstar` from Hermite; `η ∉ range D` from `eta_not_range_der`) through the `cdeg`/`cmonomialDeriv`
+`cdeg (CPolyEngine.monomialDeriv Dt Dstar) = cdeg Dstar − 1` is `natDegree_implicitDeriv_eq_of_monic_of_not_range`
+(monic `Dstar` from Hermite; `η ∉ range D` from `eta_not_range_der`) through the `cdeg`/`CPolyEngine.monomialDeriv`
 bridges. The degenerate `deg Dstar = 0` (`Dstar = 1`) case is handled separately (both sides `0`). -/
 theorem hm_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hgen : GenuinePrimitiveMonomialLrt Dt)
     (hDt0 : (toPoly Dt).natDegree = 0) :
-    cdeg (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).2.2)
+    cdeg (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).2.2)
       = cdeg (cHermiteReduceTower Dt a d).2.2 - 1 := by
   have hmonic : (toPoly (cHermiteReduceTower Dt a d).2.2).Monic :=
     toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0
@@ -165,9 +165,9 @@ theorem hcopgcd_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCor
     (hgen : GenuinePrimitiveMonomialLrt Dt) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0 := by
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0 := by
   intro x hx
   have hxzip : x ∈ (cSqfreeYunFF d).zipIdx := List.mem_of_mem_filter hx
   obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
@@ -253,13 +253,13 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     have htransport :
         toPoly (csub (cmul a (cmul (cHermiteReduceTower Dt a d).1.2
               (cHermiteReduceTower Dt a d).1.2))
-            (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
+            (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
                 (cHermiteReduceTower Dt a d).1.2)
               (cmul (cHermiteReduceTower Dt a d).1.1
-                (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
+                (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).1.2)))))
           = toPoly (csub (cmul a (cmul g.2 g.2))
-            (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2)
-              (cmul g.1 (cmonomialDeriv Dt g.2))))) := by
+            (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2)
+              (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2))))) := by
       simp only [denote, hg1, hg2]
     rw [htransport] at hWgd
     -- assemble `d·g.2² ∣ resNum·Dstar` from `W·g.2² ∣ resNum` and `d = W·Dstar`
@@ -269,7 +269,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
             * (toPoly (CPolyEuclidean.div d (cHermiteReduceTower Dt a d).2.2) * (toPoly g.2 * toPoly g.2))
         from by rw [← hWD]; ring,
       mul_comm (toPoly (csub (cmul a (cmul g.2 g.2))
-        (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2))))))]
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2) (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2))))))]
     exact mul_dvd_mul_left _ hWgd
   · -- hresDen : `d·g.2² ≠ 0`
     intro h

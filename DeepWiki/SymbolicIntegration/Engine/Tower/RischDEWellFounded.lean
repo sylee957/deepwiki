@@ -44,7 +44,7 @@ def cPolyRischDECancelPrim (Dt : DensePoly α) (b c : DensePoly α) (n : ℤ) :
     | none => none
     | some s =>
       let stm : DensePoly α := cshift m [s]               -- `s·tᵐ`
-      let c' := csub (csub c (cmul b stm)) (cmonomialDeriv Dt stm)
+      let c' := csub (csub c (cmul b stm)) (CPolyEngine.monomialDeriv Dt stm)
       if (cnorm c' : List α).length < (cnorm c : List α).length then
         match cPolyRischDECancelPrim Dt b c' ((m : ℤ) - 1) with
         | none => none
@@ -73,7 +73,7 @@ def cPolyRischDECancelExp (Dt : DensePoly α) (b c : DensePoly α) (n : ℤ) :
     | none => none
     | some s =>
       let stm : DensePoly α := cshift m [s]               -- `s·tᵐ`
-      let c' := csub (csub c (cmul b stm)) (cmonomialDeriv Dt stm)
+      let c' := csub (csub c (cmul b stm)) (CPolyEngine.monomialDeriv Dt stm)
       if (cnorm c' : List α).length < (cnorm c : List α).length then
         match cPolyRischDECancelExp Dt b c' ((m : ℤ) - 1) with
         | none => none
@@ -228,7 +228,7 @@ def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots :
   let d1 := CPolyEuclidean.div dstar (CFracGcdCoreWf.cgcdFFCoreWf dstar g)
   let fdenOverD1 := CPolyEuclidean.div fden d1
   let a := (CPoly.diophantineReduced fdenOverD1 d1 fnum).1
-  let Dd1 := cmonomialDeriv Dt d1
+  let Dd1 := CPolyEngine.monomialDeriv Dt d1
   let r := cResidueResultantTower Dt a d1
   let roots := cPosIntRoots r boundRoots
   roots.foldl (fun (acc : DensePoly α) (n : ℕ) =>
@@ -250,7 +250,7 @@ def cRdeNormalDenominator (Dt : DensePoly α) (fnum fden gnum gden : DensePoly �
   let dnh2 := cmul (cmul dn h) h
   if CPolyEuclidean.dvd en dnh2 then
     let a := cmul dn h
-    let Dh := cmonomialDeriv Dt h
+    let Dh := CPolyEngine.monomialDeriv Dt h
     let b := CPolyEuclidean.div (csub (cmul a fnum) (cmul (cmul dn Dh) fden)) fden
     let c := CPolyEuclidean.div (cmul dnh2 gnum) gden
     some (a, b, c, h)
@@ -281,7 +281,7 @@ def cRdeSpecialDenominator (Dt : DensePoly α) (a b c : DensePoly α) :
     let Nminusn : ℕ := (N - n).toNat
     let pN := cpow p Nnat
     let abar := cmul a pN
-    let DpOverp := CPolyEuclidean.div (cmonomialDeriv Dt p) p
+    let DpOverp := CPolyEuclidean.div (CPolyEngine.monomialDeriv Dt p) p
     let bterm := cscale (CCommRing.neg (CField.natCast negn)) (cmul a DpOverp)
     let bbar := cmul (cadd b bterm) pN
     let cbar := cmul c (cpow p Nminusn)
@@ -408,7 +408,7 @@ namespace DensePoly
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
 /-- The generic Risch differential equation solver `cRischDE Dt fnum fden gnum gden`. For
-`f = fnum/fden`, `g = gnum/gden ∈ α(t)` and the monomial derivation `D = cmonomialDeriv Dt`, returns
+`f = fnum/fden`, `g = gnum/gden ∈ α(t)` and the monomial derivation `D = CPolyEngine.monomialDeriv Dt`, returns
 `some (ynum, yden)` with `y = ynum/yden ∈ α(t)` solving `Dy + f·y = g`, or `none`. Stages: normal denominator
 (`cRdeNormalDenominator`) → special denominator (`cRdeSpecialDenominator`) → degree bound
 (`cRdeBoundDegree`) → SPDE (`cSPDE`) → PolyRischDE dispatch (`cPolyRischDE`), with the polynomial

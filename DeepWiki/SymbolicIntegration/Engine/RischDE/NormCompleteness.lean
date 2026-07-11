@@ -126,7 +126,7 @@ theorem hdvdB_of_dvd_wf (Dt : DensePoly β) (fnum fden h0 : DensePoly β)
     toPoly fden ∣ toPoly (DensePoly.csub
         (DensePoly.cmul (DensePoly.cmul (DensePoly.cSplitFactorFast Dt fden).1 h0) fnum)
         (DensePoly.cmul (DensePoly.cmul (DensePoly.cSplitFactorFast Dt fden).1
-          (DensePoly.cmonomialDeriv Dt h0)) fden)) := by
+          (CPolyEngine.monomialDeriv Dt h0)) fden)) := by
   simp only [denote] at hdvd ⊢
   apply dvd_sub
   · exact hdvd.mul_right _

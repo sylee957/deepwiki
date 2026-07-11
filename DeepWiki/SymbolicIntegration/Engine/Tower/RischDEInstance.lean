@@ -72,8 +72,8 @@ open DensePoly in
 theorem towerRdeG_solves_Dy_eq_one :
     (match cRischDE towerRdeGDt ([] : DensePoly (DenseFrac ℚ)) [CCommRing.one] [CCommRing.one] [CCommRing.one] with
       | some (ynum, yden) =>
-          let Dyn := cmonomialDeriv towerRdeGDt ynum
-          let Dyd := cmonomialDeriv towerRdeGDt yden
+          let Dyn := CPolyEngine.monomialDeriv towerRdeGDt ynum
+          let Dyd := CPolyEngine.monomialDeriv towerRdeGDt yden
           let fnum : DensePoly (DenseFrac ℚ) := []
           let fden : DensePoly (DenseFrac ℚ) := [CCommRing.one]
           let gnum : DensePoly (DenseFrac ℚ) := [CCommRing.one]
@@ -92,8 +92,8 @@ theorem towerRdeG_solves_Dy_plus_y_eq_t1_plus_one :
     (match cRischDE towerRdeGDt [CCommRing.one] [CCommRing.one]
         [CCommRing.one, CCommRing.one] [CCommRing.one] with
       | some (ynum, yden) =>
-          let Dyn := cmonomialDeriv towerRdeGDt ynum
-          let Dyd := cmonomialDeriv towerRdeGDt yden
+          let Dyn := CPolyEngine.monomialDeriv towerRdeGDt ynum
+          let Dyd := CPolyEngine.monomialDeriv towerRdeGDt yden
           let fnum : DensePoly (DenseFrac ℚ) := [CCommRing.one]
           let fden : DensePoly (DenseFrac ℚ) := [CCommRing.one]
           let gnum : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]

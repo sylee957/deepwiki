@@ -36,17 +36,17 @@ def clog : DensePoly (DenseFrac ℚ) := [clogLead]
 `5/(2x) = (j+1)θ' + lcf(g)` chosen so the constant `b = 1` solves eq. 5. -/
 def logC : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one, CFrac.ofFraction [5] [0, 2] (by cfrac_nonzero)]
 
-/-- The `θ`-derivative as a polynomial `[θ'] = [1/x] ∈ ℚ(x)[θ]`, the `Dt` for `cmonomialDeriv`. -/
+/-- The `θ`-derivative as a polynomial `[θ'] = [1/x] ∈ ℚ(x)[θ]`, the `Dt` for `CPolyEngine.monomialDeriv`. -/
 def logDtPoly : DensePoly (DenseFrac ℚ) := [logDt]
 
 /-- The solved `θ = log v` leading-coefficient cofactor `B = b·θ² = 1·θ²` (`b = lcf(C)/bracket =
 (5/(2x))/(5/(2x)) = 1`, a constant). -/
 def logB : DensePoly (DenseFrac ℚ) := CPoly.radCase3CofactorGen logDt logF clog logC
 
-/-- The `θ = log v` residual `D = B'f + Bg − C`, with `B' = cmonomialDeriv [θ'] B` the full log-monomial
+/-- The `θ = log v` residual `D = B'f + Bg − C`, with `B' = CPolyEngine.monomialDeriv [θ'] B` the full log-monomial
 derivative — expected `−θ` (degree `1 < deg_θ C = 2`). -/
 def logD : DensePoly (DenseFrac ℚ) :=
-  CPoly.radCase3Residual logF clog logB logC (cmonomialDeriv logDtPoly logB)
+  CPoly.radCase3Residual logF clog logB logC (CPolyEngine.monomialDeriv logDtPoly logB)
 
 /-- The `log` cofactor is the constant monomial `B = θ²`: `b = (5/(2x))/((2)(1/x) + 1/(2x)) = 1` at
 degree `j+1 = 2`. -/
@@ -54,11 +54,11 @@ theorem logCase_cofactor_eq :
     cisZero (csub logB [CCommRing.zero, CCommRing.zero, (CCommRing.one : DenseFrac ℚ)]) = true := by
   native_decide
 
-/-- The `θ = log v` cleared identity `B'f + Bg − C = D` in `ℚ(x)[log x]` (`B = θ²`, `B' = cmonomialDeriv
+/-- The `θ = log v` cleared identity `B'f + Bg − C = D` in `ℚ(x)[log x]` (`B = θ²`, `B' = CPolyEngine.monomialDeriv
 [1/x] B`, `D = −θ`). -/
 theorem logCase_cleared_identity :
     cisZero (csub
-      (csub (cadd (cmul (cmonomialDeriv logDtPoly logB) logF) (cmul logB clog)) logC)
+      (csub (cadd (cmul (CPolyEngine.monomialDeriv logDtPoly logB) logF) (cmul logB clog)) logC)
       logD) = true := by native_decide
 
 /-- The `log` residual `D = −θ` has `θ`-degree `1`, strictly below `deg_θ C = 2`. -/
@@ -86,7 +86,7 @@ def expC : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
 /-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CCommRing.one` of `DenseFrac ℚ`. -/
 def expVder : DenseFrac ℚ := CCommRing.one
 
-/-- `θ' = v'·θ = θ` as the `Dt` polynomial `[0, 1] ∈ ℚ(x)[θ]` for `cmonomialDeriv` (`θ = exp x` is a
+/-- `θ' = v'·θ = θ` as the `Dt` polynomial `[0, 1] ∈ ℚ(x)[θ]` for `CPolyEngine.monomialDeriv` (`θ = exp x` is a
 factor of its own derivative). -/
 def expDtPoly : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
@@ -94,10 +94,10 @@ def expDtPoly : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 a constant). -/
 def expB : DensePoly (DenseFrac ℚ) := CPoly.radExpCofactor 1 expVder expF cexp expC
 
-/-- The `θ = exp v` `C/(θy)` residual `D = ((B'f + Bg − kv'Bf) − C)/θ`, `B' = cmonomialDeriv [θ] B` —
+/-- The `θ = exp v` `C/(θy)` residual `D = ((B'f + Bg − kv'Bf) − C)/θ`, `B' = CPolyEngine.monomialDeriv [θ] B` —
 expected `−1/2` (the multiplicity dropped `k = 1 → 0`). -/
 def expD : DensePoly (DenseFrac ℚ) :=
-  CPoly.radExpResidual 1 expVder expF cexp expB expC (cmonomialDeriv expDtPoly expB)
+  CPoly.radExpResidual 1 expVder expF cexp expB expC (CPolyEngine.monomialDeriv expDtPoly expB)
 
 /-- The `exp` cofactor is the constant `B = [−1]`: `b₀ = 1/(0 − 1·1·1) = −1` over `ℚ(x)[eˣ]`. -/
 theorem expCase_cofactor_eq :
@@ -107,7 +107,7 @@ theorem expCase_cofactor_eq :
 is divisible by `θ`. -/
 theorem expCase_congruence :
     cisZero (CPolyEuclidean.mod
-      (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
+      (csub (csub (cadd (cmul (CPolyEngine.monomialDeriv expDtPoly expB) expF) (cmul expB cexp))
           (cmul [CCommRing.mul (CField.natCast 1) expVder] (cmul expB expF))) expC)
       [CCommRing.zero, CCommRing.one]) = true := by native_decide
 
@@ -115,7 +115,7 @@ theorem expCase_congruence :
 `D = [−1/2]`). -/
 theorem expCase_cleared_identity :
     cisZero (csub
-      (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
+      (csub (csub (cadd (cmul (CPolyEngine.monomialDeriv expDtPoly expB) expF) (cmul expB cexp))
           (cmul [CCommRing.mul (CField.natCast 1) expVder] (cmul expB expF))) expC)
       (cmul [CCommRing.zero, CCommRing.one] expD)) = true := by native_decide
 

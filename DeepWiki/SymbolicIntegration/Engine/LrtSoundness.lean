@@ -276,9 +276,9 @@ theorem hherm_lrt_E [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     (towerDerivExt Dt (amGExt (toPoly (cHermiteReduceTower Dt a d).1.1)
           / amGExt (toPoly (cHermiteReduceTower Dt a d).1.2))
         + amGExt (toPoly (cHermiteReduceTower Dt a d).2.1)
@@ -813,8 +813,8 @@ theorem mem_cLrtLogArgG (Dt hNum Dstar : DensePoly α) (p : DensePoly α × List
     (hp : p ∈ cLrtLogArg Dt hNum Dstar) :
     ∃ idx, (p.1, idx) ∈ (cSqfreeYunFF (cResidueResultantTower Dt hNum Dstar)).zipIdx
       ∧ ¬ ((cnorm p.1 : List α).length ≤ 1)
-      ∧ (idx + 1 ≠ cdeg Dstar → p.2 = CPolySubresultant.parametric Dstar hNum (cmonomialDeriv Dt Dstar) (cdeg Dstar)
-          (cdeg (cmonomialDeriv Dt Dstar)) (idx + 1))
+      ∧ (idx + 1 ≠ cdeg Dstar → p.2 = CPolySubresultant.parametric Dstar hNum (CPolyEngine.monomialDeriv Dt Dstar) (cdeg Dstar)
+          (cdeg (CPolyEngine.monomialDeriv Dt Dstar)) (idx + 1))
       ∧ (idx + 1 = cdeg Dstar → p.2 = Dstar.map (fun x => ([x] : DensePoly α))) := by
   rw [cLrtLogArg, List.mem_filterMap] at hp
   obtain ⟨⟨Ri, idx⟩, hmem, hfn⟩ := hp
@@ -1077,12 +1077,12 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
     (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hsplit : (toPoly Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
     (hR : IsYunFactorizationInput (cResidueResultantTower Dt hNum Dstar))
-    (hm : cdeg (cmonomialDeriv Dt Dstar) = cdeg Dstar - 1)
-    (hB : ∀ β ∈ allpoles, ((toPoly (cmonomialDeriv Dt Dstar)).map
+    (hm : cdeg (CPolyEngine.monomialDeriv Dt Dstar) = cdeg Dstar - 1)
+    (hB : ∀ β ∈ allpoles, ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map
         (algebraMap (CFieldSpec.K α) E)).eval β ≠ 0)
     (hA : ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E)).natDegree
         < (Lagrange.nodal allpoles id).natDegree)
-    (hB_deg : ((toPoly (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)).natDegree
+    (hB_deg : ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)).natDegree
         ≤ (Lagrange.nodal allpoles id).natDegree - 1)
     (p : DensePoly α × List (DensePoly α)) (hp : p ∈ cLrtLogArg Dt hNum Dstar)
     (c : E) (hc : c ∈ ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots) :
@@ -1095,18 +1095,18 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
   have hp1 : (cSqfreeYunFF (cResidueResultantTower Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
     rw [List.get_eq_getElem]; exact hp1'
   -- `Dd_E = implicitDeriv Dt_E (nodal)` (fiber alignment)
-  have hDd : (toPoly (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)
+  have hDd : (toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)
       = Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E))
           (Lagrange.nodal allpoles id) := by
     simp only [denote]
     rw [implicitDeriv_map, hsplit]
   -- `rtResultantGen hNum_E (nodal) Dd_E = R_E`, hence `rootMult = idx+1`
   have hRR : rtResultantGen ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E))
-        (Lagrange.nodal allpoles id) ((toPoly (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E))
+        (Lagrange.nodal allpoles id) ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E))
       = (toPoly (cResidueResultantTower Dt hNum Dstar)).map (algebraMap (CFieldSpec.K α) E) := by
     rw [hDd, ← hsplit, ← toPolyG_cResidueResultantTowerG_map Dt hNum Dstar hDmonic hDt0 hAD]
   have hindex : idx + 1 = (rtResultantGen ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E))
-      (Lagrange.nodal allpoles id) ((toPoly (cmonomialDeriv Dt Dstar)).map
+      (Lagrange.nodal allpoles id) ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map
         (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c := by
     rw [hRR, rootMult_R_map_eq_idx_succ hgcd _ hR idx hj c (hp1 ▸ hc)]
   have hdeg : (Lagrange.nodal allpoles id).natDegree = cdeg Dstar := by
@@ -1119,7 +1119,7 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
       rw [Lagrange.nodal, ← Finset.prod_attach]
       exact separable_prod_X_sub_C_iff'.mpr fun a _ b _ h => Subtype.ext (by simpa using h)
     have hBroots : ∀ β ∈ (Lagrange.nodal allpoles id).roots,
-        ((toPoly (cmonomialDeriv Dt Dstar)).map φ).eval β ≠ 0 := fun β hβ =>
+        ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map φ).eval β ≠ 0 := fun β hβ =>
       hB β (Finset.mem_val.mp (nodal_roots allpoles ▸ hβ))
     -- `#fiber = deg gcd = rootMult c R_E = idx+1 = cdeg Dstar = #allpoles`, so `fiber = allpoles`.
     have hfiber : (allpoles.filter (fun β => ((toPoly hNum).map φ).eval β
@@ -1127,9 +1127,9 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
         = allpoles := by
       apply Finset.eq_of_subset_of_card_le (Finset.filter_subset _ _)
       have hcnt := natDegree_gcd_eq_count_residue_gen ((toPoly hNum).map φ) (Lagrange.nodal allpoles id)
-        ((toPoly (cmonomialDeriv Dt Dstar)).map φ) hDsep hBroots c
+        ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map φ) hDsep hBroots c
       have hrm := rootMultiplicity_rtResultantGen_eq_natDegree_gcd ((toPoly hNum).map φ)
-        (Lagrange.nodal allpoles id) ((toPoly (cmonomialDeriv Dt Dstar)).map φ) hDsep hBroots hA hB_deg c
+        (Lagrange.nodal allpoles id) ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map φ) hDsep hBroots hA hB_deg c
       have hcard : (allpoles.filter (fun β => ((toPoly hNum).map φ).eval β
           / (Differential.implicitDeriv ((toPoly Dt).map φ) (Lagrange.nodal allpoles id)).eval β = c)).card
           = idx + 1 := by
@@ -1144,20 +1144,20 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
     simp only [id_eq]
   · -- **`i < n`: subresultant** — the original path, `hi` now derived from `idx+1 ≤ cdeg` (`hindex` + degree).
     have hR_E0 : (rtResultantGen ((toPoly hNum).map φ) (Lagrange.nodal allpoles id)
-        ((toPoly (cmonomialDeriv Dt Dstar)).map φ)) ≠ 0 := by
+        ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map φ)) ≠ 0 := by
       rw [hRR, Polynomial.map_ne_zero_iff φ.injective]; exact hR.nonzero
     have hle : idx + 1 ≤ cdeg Dstar := by
       have h1 : idx + 1 ≤ (rtResultantGen ((toPoly hNum).map φ) (Lagrange.nodal allpoles id)
-          ((toPoly (cmonomialDeriv Dt Dstar)).map φ)).natDegree := by
+          ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map φ)).natDegree := by
         rw [hindex]
         refine le_trans (le_of_eq ?_) (Polynomial.natDegree_le_of_dvd
           (Polynomial.pow_rootMultiplicity_dvd _ c) hR_E0)
         rw [Polynomial.natDegree_pow, Polynomial.natDegree_X_sub_C, mul_one]
       exact le_trans h1 (by rw [← hdeg]; exact natDegree_rtResultantGen_le _ _ _)
     have hi' : (rtResultantGen ((toPoly hNum).map φ) (Lagrange.nodal allpoles id)
-        ((toPoly (cmonomialDeriv Dt Dstar)).map φ)).rootMultiplicity c
+        ((toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map φ)).rootMultiplicity c
         < (Lagrange.nodal allpoles id).natDegree := by rw [← hindex, hdeg]; omega
-    rw [hp2imp heqn, evalLrtArg_eq_fiber_prod Dstar hNum (cmonomialDeriv Dt Dstar) allpoles c (idx + 1) hm
+    rw [hp2imp heqn, evalLrtArg_eq_fiber_prod Dstar hNum (CPolyEngine.monomialDeriv Dt Dstar) allpoles c (idx + 1) hm
       hsplit hB hA hB_deg hindex (hindex ▸ hi'), hDd]
 
 
@@ -1258,8 +1258,8 @@ theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : DensePoly α) (idx : ℕ)
     (hlen : ¬ ((cnorm Ri : List α).length ≤ 1)) :
     ∃ Si, (Ri, Si) ∈ cLrtLogArg Dt hNum Dstar := by
   refine ⟨if idx + 1 = cdeg Dstar then Dstar.map (fun c => ([c] : DensePoly α))
-      else CPolySubresultant.parametric Dstar hNum (cmonomialDeriv Dt Dstar) (cdeg Dstar)
-        (cdeg (cmonomialDeriv Dt Dstar)) (idx + 1), ?_⟩
+      else CPolySubresultant.parametric Dstar hNum (CPolyEngine.monomialDeriv Dt Dstar) (cdeg Dstar)
+        (cdeg (CPolyEngine.monomialDeriv Dt Dstar)) (idx + 1), ?_⟩
   rw [cLrtLogArg]
   refine List.mem_filterMap.mpr ⟨(Ri, idx), List.mk_mem_zipIdx_iff_getElem?.mpr hget, ?_⟩
   simp only [if_neg hlen]
@@ -1326,9 +1326,9 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG.{u} [CharZero (CFieldSpec.K �
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hlog : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
         (logResidueSumLrt Dt (cLrtLogArg Dt (cHermiteReduceTower Dt a d).2.1
@@ -1354,7 +1354,7 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     (hDmonic : (toPoly Dstar).Monic) (hDsep : (toPoly Dstar).Separable)
     (hDt0 : (toPoly Dt).natDegree = 0) (hAD : (toPoly hNum).natDegree < (toPoly Dstar).natDegree)
     (hR : IsYunFactorizationInput (cResidueResultantTower Dt hNum Dstar))
-    (hm : cdeg (cmonomialDeriv Dt Dstar) = cdeg Dstar - 1)
+    (hm : cdeg (CPolyEngine.monomialDeriv Dt Dstar) = cdeg Dstar - 1)
     (hB : ∀ β ∈ ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
         (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E))
           ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
@@ -1383,7 +1383,7 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   have hsplit : (toPoly Dstar).map φ = Lagrange.nodal allpoles id :=
     monic_separable_eq_nodal _ hmonicE hsepE
   have hnd : (Lagrange.nodal allpoles id).natDegree = ((toPoly Dstar).map φ).natDegree := by rw [hsplit]
-  have hDd2 : (toPoly (cmonomialDeriv Dt Dstar)).map φ
+  have hDd2 : (toPoly (CPolyEngine.monomialDeriv Dt Dstar)).map φ
       = Differential.implicitDeriv ((toPoly Dt).map φ) ((toPoly Dstar).map φ) := by
     simp only [denote]
     rw [implicitDeriv_map]
@@ -1451,16 +1451,16 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hDt0 : (toPoly Dt).natDegree = 0)
     (hAD : (toPoly (cHermiteReduceTower Dt a d).2.1).natDegree
         < (toPoly (cHermiteReduceTower Dt a d).2.2).natDegree)
     (hR : IsYunFactorizationInput
         (cResidueResultantTower Dt (cHermiteReduceTower Dt a d).2.1
           (cHermiteReduceTower Dt a d).2.2))
-    (hm : cdeg (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).2.2)
+    (hm : cdeg (CPolyEngine.monomialDeriv Dt (cHermiteReduceTower Dt a d).2.2)
         = cdeg (cHermiteReduceTower Dt a d).2.2 - 1)
     (hE : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],

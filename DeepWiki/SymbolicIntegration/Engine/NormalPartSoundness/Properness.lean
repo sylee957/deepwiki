@@ -22,7 +22,7 @@ structure IsHermiteInnerFactor (Dt v u : DensePoly α) : Prop where
   nonzero : toPoly v ≠ 0
   /-- Every Diophantine cofactor against `u * D(v)` is proper modulo `v`. -/
   cofactor_proper : ∀ (rhs : DensePoly α),
-    (toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v rhs).1).degree
+    (toPoly (CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v rhs).1).degree
       < (toPoly v).degree
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -239,26 +239,26 @@ theorem foldl_guarded_fracAddG_proper {β : Type*} (glocOf : β → DensePoly α
       exact ih snew hsnew_proper hrest
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
-/-- `D(g)`'s numerator is proper for `gden²` (margin form): `cmonomialDeriv Dt gnum · gden −
-gnum · cmonomialDeriv Dt gden` is proper for `gden·gden`, given `gden ≠ 0` and the margin
+/-- `D(g)`'s numerator is proper for `gden²` (margin form): `CPolyEngine.monomialDeriv Dt gnum · gden −
+gnum · CPolyEngine.monomialDeriv Dt gden` is proper for `gden·gden`, given `gden ≠ 0` and the margin
 `deg gnum + max(0, deg Dt − 1) < deg gden`. -/
 theorem toPolyG_gprimeNum_proper_of_margin (Dt gnum gden : DensePoly α) (hM : toPoly gden ≠ 0)
     (hmargin :
       (toPoly gnum).degree + (max 0 ((toPoly Dt).natDegree - 1) : ℕ) < (toPoly gden).degree) :
-    (toPoly (csub (cmul (cmonomialDeriv Dt gnum) gden)
-        (cmul gnum (cmonomialDeriv Dt gden)))).degree
+    (toPoly (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+        (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))).degree
       < (toPoly (cmul gden gden)).degree := by
   simpa only [denote] using degree_implicitDeriv_frac_lt_of_margin hM hmargin
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- `D(g)` proper from `g` proper when `deg Dt ≤ 1`: a proper `g = gnum/gden` has proper derivative
-numerator `cmonomialDeriv Dt gnum · gden − gnum · cmonomialDeriv Dt gden` for `gden²`, the margin
+numerator `CPolyEngine.monomialDeriv Dt gnum · gden − gnum · CPolyEngine.monomialDeriv Dt gden` for `gden²`, the margin
 collapsing to plain properness. -/
 theorem toPolyG_gprimeNum_proper_of_degree_le_one (Dt gnum gden : DensePoly α) (hM : toPoly gden ≠ 0)
     (hDt : (toPoly Dt).natDegree ≤ 1)
     (hgproper : (toPoly gnum).degree < (toPoly gden).degree) :
-    (toPoly (csub (cmul (cmonomialDeriv Dt gnum) gden)
-        (cmul gnum (cmonomialDeriv Dt gden)))).degree
+    (toPoly (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+        (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))).degree
       < (toPoly (cmul gden gden)).degree := by
   refine toPolyG_gprimeNum_proper_of_margin Dt gnum gden hM ?_
   have hz : max 0 ((toPoly Dt).natDegree - 1) = 0 := by omega
@@ -278,7 +278,7 @@ theorem toPolyG_resNum_proper (a d gden gprimeNum : DensePoly α)
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- The residual fraction `a/d − D(g)` is proper for `deg Dt ≤ 1`: for `resNum = a·gden² −
-d·(cmonomialDeriv Dt gnum · gden − gnum · cmonomialDeriv Dt gden)`, `resDen = d·gden²`,
+d·(CPolyEngine.monomialDeriv Dt gnum · gden − gnum · CPolyEngine.monomialDeriv Dt gden)`, `resDen = d·gden²`,
 `deg resNum < deg resDen`, given `g = gnum/gden` proper, `a/d` proper, and `deg Dt ≤ 1`. -/
 theorem toPolyG_residualFraction_proper_of_degree_le_one
     (Dt a d gnum gden : DensePoly α) (hden : toPoly gden ≠ 0)
@@ -286,8 +286,8 @@ theorem toPolyG_residualFraction_proper_of_degree_le_one
     (haProper : (toPoly a).degree < (toPoly d).degree)
     (hgproper : (toPoly gnum).degree < (toPoly gden).degree) :
     (toPoly (csub (cmul a (cmul gden gden))
-        (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
-          (cmul gnum (cmonomialDeriv Dt gden)))))).degree
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+          (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))))).degree
       < (toPoly (cmul d (cmul gden gden))).degree :=
   toPolyG_resNum_proper a d gden _ haProper
     (toPolyG_gprimeNum_proper_of_degree_le_one Dt gnum gden hden hDt hgproper)
@@ -373,7 +373,7 @@ theorem foldl_guarded_fracAddG_margin {β : Type*} (glocOf : β → DensePoly α
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- The residual `a/d − D(g)` is proper for `deg Dt ≥ 2`, conditional on the `(deg Dt − 1)` margin of `g`:
-for `resNum = a·gden² − d·(cmonomialDeriv Dt gnum · gden − gnum · cmonomialDeriv Dt gden)`, `resDen =
+for `resNum = a·gden² − d·(CPolyEngine.monomialDeriv Dt gnum · gden − gnum · CPolyEngine.monomialDeriv Dt gden)`, `resDen =
 d·gden²`, `deg resNum < deg resDen`, given `a/d` proper and the margin
 `deg gnum + max(0, deg Dt − 1) < deg gden`. -/
 theorem toPolyG_residualFraction_proper_of_margin (Dt a d gnum gden : DensePoly α) (hden : toPoly gden ≠ 0)
@@ -381,8 +381,8 @@ theorem toPolyG_residualFraction_proper_of_margin (Dt a d gnum gden : DensePoly 
     (hmargin :
       (toPoly gnum).degree + (max 0 ((toPoly Dt).natDegree - 1) : ℕ) < (toPoly gden).degree) :
     (toPoly (csub (cmul a (cmul gden gden))
-        (cmul d (csub (cmul (cmonomialDeriv Dt gnum) gden)
-          (cmul gnum (cmonomialDeriv Dt gden)))))).degree
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt gnum) gden)
+          (cmul gnum (CPolyEngine.monomialDeriv Dt gden)))))).degree
       < (toPoly (cmul d (cmul gden gden))).degree :=
   toPolyG_resNum_proper a d gden _ haProper
     (toPolyG_gprimeNum_proper_of_margin Dt gnum gden hden hmargin)
@@ -425,7 +425,7 @@ theorem cHermiteReduceTowerInner_g_proper (Dt : DensePoly α) (v u : DensePoly �
     rw [cHermiteReduceTowerInnerWf]
     -- the step's summand `(b, cpow v (j+1))` is proper, so the `fracAddG` step preserves properness.
     set rhs := cscale (CCommRing.neg (CField.inv (CField.natCast (j + 1)))) a with hrhs
-    set b := (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v rhs).1 with hbdef
+    set b := (CPoly.diophantineReduced (cmul u (CPolyEngine.monomialDeriv Dt v)) v rhs).1 with hbdef
     have hbproper : (toPoly b).degree
         < (toPoly (cpow v (j + 1))).degree :=
       toPolyG_inner_summand_proper b v j (hfac.cofactor_proper rhs) hfac.nonzero
@@ -513,8 +513,8 @@ theorem cHermiteReduceTowerG_residual_proper_of_degree_le_one (Dt : DensePoly α
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
       ([CCommRing.zero], [CCommRing.one])
     (toPoly (csub (cmul a (cmul g.2 g.2))
-        (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2)
-          (cmul g.1 (cmonomialDeriv Dt g.2)))))).degree
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2)
+          (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2)))))).degree
       < (toPoly (cmul d (cmul g.2 g.2))).degree := by
   intro g
   have hgproper : (toPoly g.1).degree < (toPoly g.2).degree :=
@@ -564,8 +564,8 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : DensePo
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
       ([CCommRing.zero], [CCommRing.one])
     (toPoly (csub (cmul a (cmul g.2 g.2))
-        (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2)
-          (cmul g.1 (cmonomialDeriv Dt g.2)))))).degree
+        (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2)
+          (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2)))))).degree
       < (toPoly (cmul d (cmul g.2 g.2))).degree := by
   intro g
   have hgproper : (toPoly g.1).degree < (toPoly g.2).degree :=
@@ -598,7 +598,7 @@ theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α
       ([CCommRing.zero], [CCommRing.one]))
     (hdvd : toPoly (cmul d (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul a (cmul g.2 g.2))
-          (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2)))))
+          (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2) (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2)))))
         ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul d (cmul g.2 g.2)) ≠ ([] : DensePoly α))
     (hDstar : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) ≠ 0) :
@@ -610,7 +610,7 @@ theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α
   subst hgeq
   exact cHermiteReduceTowerG_leftover_proper_of_residual Dt a d
     (csub (cmul a (cmul _ _))
-      (cmul d (csub (cmul (cmonomialDeriv Dt _) _) (cmul _ (cmonomialDeriv Dt _)))))
+      (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt _) _) (cmul _ (CPolyEngine.monomialDeriv Dt _)))))
     (cmul d (cmul _ _))
     ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
     (by simp only [cHermiteReduceTower, denote])

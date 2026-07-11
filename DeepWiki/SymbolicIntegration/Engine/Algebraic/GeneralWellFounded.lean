@@ -38,7 +38,7 @@ def afYprimeWf (f : DensePoly α) : DensePoly α :=
 /-- The general derivation `afDerivWf f u = CPoly.reduceMod f (u.map cderiv + cderiv u · afYprimeWf f)`: the
 product rule `D(u) = Σᵢ aᵢ'·yⁱ + (Σᵢ aᵢ·i·yⁱ⁻¹)·y'`. `[CField α] [CDiffField α]`-generic. -/
 def afDerivWf (f u : DensePoly α) : DensePoly α :=
-  CPoly.reduceMod f (cadd (cmapDeriv u) (cmul (cderiv u) (afYprimeWf f)))
+  CPoly.reduceMod f (cadd (CPolyEngine.mapDeriv u) (cmul (cderiv u) (afYprimeWf f)))
 
 section WfInvariant
 
@@ -50,9 +50,9 @@ The shared quotient API lives in `ComputableGeneralQuotient`; separability is ph
 the selected extended gcd of `cderiv f` and `f` being a nonzero constant. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
-/-- `afDerivWf = CPoly.reduceMod f ∘ cmonomialDeriv (afYprimeWf f)` definitionally. -/
+/-- `afDerivWf = CPoly.reduceMod f ∘ CPolyEngine.monomialDeriv (afYprimeWf f)` definitionally. -/
 theorem afDerivWf_eq_reduceMod_cmonomialDeriv (f u : DensePoly α) :
-    afDerivWf f u = CPoly.reduceMod f (cmonomialDeriv (afYprimeWf f) u) := rfl
+    afDerivWf f u = CPoly.reduceMod f (CPolyEngine.monomialDeriv (afYprimeWf f) u) := rfl
 
 /-- The Wf keystone: `afDerivWf` realizes `implicitDeriv (toPoly (afYprimeWf f))` in the quotient. -/
 theorem mk_toPolyG_afDerivWf (f u : DensePoly α) (hf : cnorm f ≠ []) :

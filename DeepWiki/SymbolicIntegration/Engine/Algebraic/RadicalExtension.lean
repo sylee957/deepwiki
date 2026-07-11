@@ -239,7 +239,7 @@ def radCase3Residual {P : Type u → Type u} [CPoly P] [CPolyEngine P]
 
 For `θ = log v` (`θ' = v'/v ∈ F`) the `C/y` degree-lowering is shaped as Case 3, but the leading-coefficient
 bracket becomes `(j+1)·θ' + lcf(g)`, so `b = lcf(C)/((j+1)θ' + lcf(g))` (`radCase3CofactorGen` takes `θ'`
-as `Dt`), and `B'` is the full monomial derivative `cmonomialDeriv [θ'] B`. Setting `Dt = 1` recovers
+as `Dt`), and `B'` is the full monomial derivative `CPolyEngine.monomialDeriv [θ'] B`. Setting `Dt = 1` recovers
 Case 3. -/
 
 /-- Generalized Case-3 cofactor `radCase3CofactorGen Dt f g C = B`: the monomial `B = b·θ^{j+1}` with

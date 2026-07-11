@@ -117,14 +117,14 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
 residue `c` — the shared building block of the fuel-free residue resultant / log-argument engine
 (`cResidueResultantTower` / `cLogArgTower`, `Tower/WellFounded`). -/
 
-/-- Generic `a − c·Dd` `cAmcDd Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
+/-- Generic `a − c·Dd` `cAmcDd Dt a d c` for a residue value `c : α`: `a − c·(CPolyEngine.monomialDeriv Dt d)`,
 the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
 def cAmcDd (Dt a d : P α) (c : α) : P α :=
-  CPolyEngine.sub a (CPolyEngine.scale c (cmonomialDeriv Dt d))
+  CPolyEngine.sub a (CPolyEngine.scale c (CPolyEngine.monomialDeriv Dt d))
 
 /-- Generic `cAmcDd` specializes to the concrete dense engine operations. -/
 theorem cAmcDd_dense_eq (Dt a d : DensePoly α) (c : α) :
-    cAmcDd Dt a d c = csub a (cscale c (cmonomialDeriv Dt d)) := rfl
+    cAmcDd Dt a d c = csub a (cscale c (CPolyEngine.monomialDeriv Dt d)) := rfl
 
 end DensePoly
 
@@ -139,7 +139,7 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u
       CPoly.toPoly a - Polynomial.C (CFieldSpec.toK c) *
         Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly d) := by
   rw [DensePoly.cAmcDd, toPoly_sub, LawfulCPolyEngine.toPoly_scale,
-    toPoly_cmonomialDeriv]
+    toPoly_monomialDeriv]
   simp only [toR_eq_toK]
 
 end CPolyEngine
@@ -179,7 +179,7 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
 
 /-- The generic antiderivative identity, cleared of denominators `checkIdentity Dt res anum aden`:
 `true` iff `res` is a genuine antiderivative of `f = anum/aden`, i.e. `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` for
-`D = cmonomialDeriv Dt`. Accumulate `∑ᵢ cᵢ·D(vᵢ)/vᵢ` as a single fraction `(Lnum, Lden)` over `∏ᵢ vᵢ`,
+`D = CPolyEngine.monomialDeriv Dt`. Accumulate `∑ᵢ cᵢ·D(vᵢ)/vᵢ` as a single fraction `(Lnum, Lden)` over `∏ᵢ vᵢ`,
 add `D(g) = (D(gnum)·gden − gnum·D(gden))/gden²`, and equate with `f` over `gden²·Lden·aden`:
 `(gprimeNum·Lden + Lnum·gden²)·aden = anum·(gden²·Lden)`, by `cisZero` of the cleared difference. The
 generic mirror of `IntegralResult.checkIdentity` (`α` has no `DecidableEq`, hence the `cisZero∘csub`
@@ -188,8 +188,8 @@ def checkIdentity (Dt : P α) (res : IntegralResult α P) (anum aden : P α) : B
   let gnum := res.rational.1
   let gden := res.rational.2
   let gprimeNum := CPolyEngine.sub
-    (CPolyEngine.mul (cmonomialDeriv Dt gnum) gden)
-    (CPolyEngine.mul gnum (cmonomialDeriv Dt gden))
+    (CPolyEngine.mul (CPolyEngine.monomialDeriv Dt gnum) gden)
+    (CPolyEngine.mul gnum (CPolyEngine.monomialDeriv Dt gden))
   let gden2 := CPolyEngine.mul gden gden
   let Lstart : P α × P α :=
     (CPolyEngine.ofCoeffList [CCommRing.zero], CPolyEngine.ofCoeffList [CCommRing.one])
@@ -197,7 +197,7 @@ def checkIdentity (Dt : P α) (res : IntegralResult α P) (anum aden : P α) : B
     (fun (acc : P α × P α) (cv : α × P α) =>
       let c := cv.1
       let v := cv.2
-      let Dv := cmonomialDeriv Dt v
+      let Dv := CPolyEngine.monomialDeriv Dt v
       let termNum := CPolyEngine.scale c Dv
       (CPolyEngine.add (CPolyEngine.mul acc.1 v) (CPolyEngine.mul termNum acc.2),
         CPolyEngine.mul acc.2 v))
@@ -254,9 +254,9 @@ def towerIntLvl2Half : Lvl2 := cratCast (1/2)
 def towerIntLvl2Num : DensePoly Lvl2 :=
   csub
     (cscale towerIntLvl2Half
-      (cmul (cmonomialDeriv towerIntLvl2Dt towerIntLvl2VPlus) towerIntLvl2VMinus))
+      (cmul (CPolyEngine.monomialDeriv towerIntLvl2Dt towerIntLvl2VPlus) towerIntLvl2VMinus))
     (cscale towerIntLvl2Half
-      (cmul (cmonomialDeriv towerIntLvl2Dt towerIntLvl2VMinus) towerIntLvl2VPlus))
+      (cmul (CPolyEngine.monomialDeriv towerIntLvl2Dt towerIntLvl2VMinus) towerIntLvl2VPlus))
 
 /-- The level-2 integrand denominator `d = v₊·v₋ = (t₂+1)(t₂−1) = t₂² − 1` over `DensePoly Lvl2`. -/
 def towerIntLvl2Den : DensePoly Lvl2 := cmul towerIntLvl2VPlus towerIntLvl2VMinus

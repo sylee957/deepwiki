@@ -206,7 +206,7 @@ theorem radX3Risch_nonscalar_none :
 
 /-! ### A transcendental monomial over the algebraic base
 
-A transcendental monomial `t` stacks on `RadX3 = ℚ(x)[√(x³+1)]`; `cmonomialDeriv` runs over
+A transcendental monomial `t` stacks on `RadX3 = ℚ(x)[√(x³+1)]`; `CPolyEngine.monomialDeriv` runs over
 `RadX3[t]`, exhibited by `D(t²) = 2t²` (for `t = exp`) and the mixing `D(y·t) = (ℓ+1)·y·t`. -/
 
 /-- The transcendental monomial `t = eˣ` over the radical base: its derivative `Dt = t`, as the
@@ -219,11 +219,11 @@ def radX3T2sq : DensePoly RadX3 := [CCommRing.zero, CCommRing.zero, CCommRing.on
 /-- The `RadX3[t]`-polynomial `2·t² = [0, 0, 2]` (`2 = 1 + 1`), the expected `D(t²)` for `t = eˣ`. -/
 def radX3TwoT2sq : DensePoly RadX3 := [CCommRing.zero, CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
-/-- `D(t²) = 2t²` over `RadX3[t] = ℚ(x)[√(x³+1)][eˣ]`: `cmonomialDeriv` (with `t = eˣ`, `Dt = t`)
+/-- `D(t²) = 2t²` over `RadX3[t] = ℚ(x)[√(x³+1)][eˣ]`: `CPolyEngine.monomialDeriv` (with `t = eˣ`, `Dt = t`)
 computes `D(t²) = 2t·t = 2t²` over the algebraic base. -/
 theorem radX3_monomialDeriv_t2sq_eq_two_t2sq :
     DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv radX3DtExp radX3T2sq) radX3TwoT2sq) = true := by ccompute
+      (CPolyEngine.monomialDeriv radX3DtExp radX3T2sq) radX3TwoT2sq) = true := by ccompute
 
 /-- The `RadX3[t]`-polynomial `y·t = [0, y]` (the radical generator `y = √(x³+1)` times the monomial
 `t = eˣ`): constant `t`-coefficient `0`, linear `t`-coefficient `y = RadExt.gen`. -/
@@ -237,14 +237,14 @@ def radX3GenTDeriv : DensePoly RadX3 :=
 `Dt = t` (monomial) both firing via the product rule. -/
 theorem radX3_monomialDeriv_genT_eq :
     DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv radX3DtExp radX3GenT) radX3GenTDeriv) = true := by ccompute
+      (CPolyEngine.monomialDeriv radX3DtExp radX3GenT) radX3GenTDeriv) = true := by ccompute
 
 /-- The mixed derivation genuinely runs the coefficient derivation: `D(y·t)` over `RadX3[t]` is neither
 zero nor equal to the pure-`d/dt` result `y·t`, confirming the radical-base `cderiv` contributed. -/
 theorem radX3_monomialDeriv_genT_runs_coeff :
-    (DensePoly.cisZero (DensePoly.cmonomialDeriv radX3DtExp radX3GenT) = false) ∧
+    (DensePoly.cisZero (CPolyEngine.monomialDeriv radX3DtExp radX3GenT) = false) ∧
     (DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv radX3DtExp radX3GenT) radX3GenT) = false) := by
+      (CPolyEngine.monomialDeriv radX3DtExp radX3GenT) radX3GenT) = false) := by
   constructor <;> ccompute
 
 /-! ### The keystone composes: a transcendental level `DenseFrac (RadExt …)` over the algebraic base

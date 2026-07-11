@@ -111,8 +111,8 @@ def cSPDEGClearedGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
              let rz := CPoly.diophantineReduced bd ad cd
              (toPoly bd * toPoly rz.1 + toPoly ad * toPoly rz.2 = toPoly cd)
                ∧ (if (n - (cdeg ad : ℤ) + 1).toNat < (n + 1).toNat then
-                    cSPDEGClearedGenWf Dt ad (cadd bd (cmonomialDeriv Dt ad))
-                      (csub rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdeg ad : ℤ))
+                    cSPDEGClearedGenWf Dt ad (cadd bd (CPolyEngine.monomialDeriv Dt ad))
+                      (csub rz.2 (CPolyEngine.monomialDeriv Dt rz.1)) (n - (cdeg ad : ℤ))
                   else True))
     else True
 termination_by (n + 1).toNat
@@ -225,8 +225,8 @@ def CSPDEGClearedInputsGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
              let bd := CPolyEuclidean.div b g
              let rz := CPoly.diophantineReduced bd ad (CPolyEuclidean.div c g)
              (if (n - (cdeg ad : ℤ) + 1).toNat < (n + 1).toNat then
-                CSPDEGClearedInputsGenWf Dt ad (cadd bd (cmonomialDeriv Dt ad))
-                  (csub rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdeg ad : ℤ))
+                CSPDEGClearedInputsGenWf Dt ad (cadd bd (CPolyEngine.monomialDeriv Dt ad))
+                  (csub rz.2 (CPolyEngine.monomialDeriv Dt rz.1)) (n - (cdeg ad : ℤ))
               else True))
     else True
 termination_by (n + 1).toNat
@@ -292,7 +292,7 @@ theorem cRdeNormalDenominatorG_cleared_lift (Dt : DensePoly α) (fnum fden gnum 
     (hdn : toPoly (cSplitFactorFast Dt fden).1 ≠ 0)
     (hfden0 : cnorm fden ≠ []) (hgden0 : cnorm gden ≠ [])
     (hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (cSplitFactorFast Dt fden).1 h) fnum)
-        (cmul (cmul (cSplitFactorFast Dt fden).1 (cmonomialDeriv Dt h)) fden)))
+        (cmul (cmul (cSplitFactorFast Dt fden).1 (CPolyEngine.monomialDeriv Dt h)) fden)))
     (hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (cSplitFactorFast Dt fden).1 h) h) gnum))
     (hred : toPoly a * Differential.implicitDeriv (toPoly Dt) (toPoly Q) + toPoly b * toPoly Q
       = toPoly c) :
@@ -302,7 +302,7 @@ theorem cRdeNormalDenominatorG_cleared_lift (Dt : DensePoly α) (fnum fden gnum 
         + toPoly gden * toPoly fnum * toPoly Q * toPoly h
       = toPoly gnum * toPoly fden * toPoly h ^ 2 := by
   set dn := (cSplitFactorFast Dt fden).1 with hdndef
-  set bNum := csub (cmul (cmul dn h) fnum) (cmul (cmul dn (cmonomialDeriv Dt h)) fden) with hbNum
+  set bNum := csub (cmul (cmul dn h) fnum) (cmul (cmul dn (CPolyEngine.monomialDeriv Dt h)) fden) with hbNum
   set cNum := cmul (cmul (cmul dn h) h) gnum with hcNum
   rw [cRdeNormalDenominator] at hres
   split at hres
@@ -388,7 +388,7 @@ theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : DensePoly α)
     (hdn : toPoly (cSplitFactorFast Dt fden).1 ≠ 0)
     (hfden0 : cnorm fden ≠ []) (hgden0 : cnorm gden ≠ [])
     (hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (cSplitFactorFast Dt fden).1 h0) fnum)
-        (cmul (cmul (cSplitFactorFast Dt fden).1 (cmonomialDeriv Dt h0)) fden)))
+        (cmul (cmul (cSplitFactorFast Dt fden).1 (CPolyEngine.monomialDeriv Dt h0)) fden)))
     (hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (cSplitFactorFast Dt fden).1 h0) h0) gnum))
     (hspde : cSPDE Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
         (cRdeSpecialDenominator Dt a0 b0 c0).2.1 (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1
@@ -448,7 +448,7 @@ structure RischDEStructuralResidualWf (Dt : DensePoly α) (fnum fden gnum gden a
   hgden0 : cnorm gden ≠ []
   /-- `fden` divides the `B`-numerator (the `CPolyEuclidean.div` clearing is exact). -/
   hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (cSplitFactorFast Dt fden).1 h0) fnum)
-      (cmul (cmul (cSplitFactorFast Dt fden).1 (cmonomialDeriv Dt h0)) fden))
+      (cmul (cmul (cSplitFactorFast Dt fden).1 (CPolyEngine.monomialDeriv Dt h0)) fden))
   /-- `gden` divides the `C`-numerator (the `CPolyEuclidean.div` clearing is exact). -/
   hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (cSplitFactorFast Dt fden).1 h0) h0) gnum)
   /-- The transparent-input chain `CSPDEGClearedInputsGenWf` on the special-cleared coefficients at

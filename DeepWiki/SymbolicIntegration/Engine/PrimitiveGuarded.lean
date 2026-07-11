@@ -7,7 +7,7 @@ import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
 The primitive `b = 0` poly-RDE `cPolyRischDE Dt [] fp` is term-by-term integration, correct only for
 `Dt = 1` (canonical primitive) with constant coefficients (`mapCoeffs (toPoly fp) = 0`). Rather than
 assume the resulting field identity (`hspecialField`), `primitiveGuardedCase` guards the hook on those
-two conditions — both *computable* (`cisZero (csub Dt [1])` and `cisZero (cmapDeriv fp)`) — so a
+two conditions — both *computable* (`cisZero (csub Dt [1])` and `cisZero (CPolyEngine.mapDeriv fp)`) — so a
 successful special integration a-priori *guarantees* the identity. Declining outside the domain is honest:
 the algorithm is sound and complete for the constant-coefficient canonical-primitive case, while the
 non-constant case belongs to the general primitive recursion. -/
@@ -36,10 +36,10 @@ def defaultResidueCandidates (bound : ℕ) : List α :=
     (List.range bound).map (fun j => cRat ((i : ℤ) - (bound : ℤ)) (j + 1)))
 
 omit [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
-/-- `cisZero (cmapDeriv fp) = true` proves that `fp` has constant coefficients. -/
+/-- `cisZero (CPolyEngine.mapDeriv fp) = true` proves that `fp` has constant coefficients. -/
 theorem mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (fp : DensePoly α)
-    (h : cisZero (cmapDeriv fp) = true) : Differential.mapCoeffs (toPoly fp) = 0 := by
-  have hzero : toPoly (cmapDeriv fp) = 0 := (cisZeroG_iff _).mp h
+    (h : cisZero (CPolyEngine.mapDeriv fp) = true) : Differential.mapCoeffs (toPoly fp) = 0 := by
+  have hzero : toPoly (CPolyEngine.mapDeriv fp) = 0 := (cisZeroG_iff _).mp h
   simpa only [denote] using hzero
 
 omit [CFracGcdCoreWf α] in
@@ -80,7 +80,7 @@ theorem primitive_special_identity (Dt fp qp : DensePoly α)
 /-- The guarded primitive monomial case. -/
 def primitiveGuardedCase : MonomialCase α where
   integrateSpecial Dt fp b _ds :=
-    if cisZero b && cisZero (csub Dt [CCommRing.one]) && cisZero (cmapDeriv fp) then
+    if cisZero b && cisZero (csub Dt [CCommRing.one]) && cisZero (CPolyEngine.mapDeriv fp) then
       match cPolyRischDE Dt [] fp ((cdeg fp : ℤ) + 1) with
       | none => none
       | some qp => some (qp, [CCommRing.one])

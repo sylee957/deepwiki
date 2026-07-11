@@ -93,7 +93,7 @@ def cIntegratePrimPolyDegRaise {P : Type u → Type u} [CPoly P] [CPolyEngine P]
           (CPolyEngine.monomial (P := P) bc.1 (CPolyEngine.cdeg p))
         (cIntegratePrimPolyDegRaise η limInt fuel
           (CPolyEngine.sub p
-            (cmonomialDeriv (CPolyEngine.monomial (P := P) η 0) q0))).map fun qr =>
+            (CPolyEngine.monomialDeriv (CPolyEngine.monomial (P := P) η 0) q0))).map fun qr =>
           CPolyEngine.add qr q0
 
 /-- **Soundness of the degree-raising primitive-polynomial integrator** — `D_tower(q) = p`. Denotationally,
@@ -137,7 +137,7 @@ theorem cIntegratePrimPolyDegRaiseG_sound {P : Type u → Type u} [CPoly P] [CPo
       rw [Option.map_eq_some_iff] at hmap
       obtain ⟨qr, hrec, rfl⟩ := hmap
       rw [LawfulCPolyEngine.toPoly_add (P := P), map_add, ih _ _ hrec,
-        CPolyEngine.toPoly_sub (P := P), CPolyEngine.toPoly_cmonomialDeriv (P := P), hη]
+        CPolyEngine.toPoly_sub (P := P), CPolyEngine.toPoly_monomialDeriv (P := P), hη]
       ring
 
 /-! ### Representation-independence validation -/
@@ -149,7 +149,7 @@ example :
       | some q =>
           CPolyEngine.cisZero
               (CPolyEngine.sub
-                (cmonomialDeriv
+                (CPolyEngine.monomialDeriv
                   (CPolyEngine.monomial (P := CPoly.SparsePoly) (1 : ℚ) 0) q)
                 (CPoly.SparsePoly.ofList [(0, 1), (1, 2)]))
             && decide (CPolyEngine.cdeg q = 2)
