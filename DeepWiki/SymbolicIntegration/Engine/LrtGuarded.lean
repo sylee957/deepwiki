@@ -19,7 +19,8 @@ universe u
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CDiffField α] [CPolySquarefree DensePoly α]
+  [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
 
 /-- **The primitive-case integrability guard** (Bronstein §5.6, root-free): the residues (**roots** of the
 Rothstein–Trager residue resultant `R = cResidueResultantTower Dt hNum Dstar`, `hNum/Dstar` the Hermite
@@ -67,7 +68,8 @@ verbatim. The guard makes the integrator *correctly partial* (declining non-elem
 unconditional claim is false); this is the shape a real Risch soundness theorem takes — `= some res ⇒ correct`
 — now with a **real** guard instead of the no-op `some nrm`. -/
 theorem cIntegrateReducedLrtGuardedG_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
-    [CDiffFieldSpec α] [CFracGcdCoreWf α] (Dt a d : DensePoly α) (res : LrtResult α)
+    [CDiffFieldSpec α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    [CPolySubresultant DensePoly] (Dt a d : DensePoly α) (res : LrtResult α)
     (hguarded : cIntegrateReducedLrtGuarded Dt a d = some res)
     (hsound : IsIntegralResultLrt Dt a d (cIntegrateReducedLrt Dt a d)) :
     IsIntegralResultLrt Dt a d res :=
