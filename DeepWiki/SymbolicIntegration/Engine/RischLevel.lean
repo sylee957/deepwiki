@@ -29,11 +29,15 @@ def IsRischLevelIntegrable (Dt a d : P α) : Prop :=
     (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
     (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0)
 
-/-- Denotation-level soundness and relative-completeness contract for a one-level Risch solver. -/
+/-- Denotation-level soundness contract for a one-level Risch solver. -/
 class LawfulCRischLevel (L : CRischLevel P α) (domain : RischLevelDomain P α) : Prop where
   /-- Every successful level solve is an integral-result certificate for its input. -/
   sound : ∀ (Dt a d : P α) (res : IntegralResult α P),
-    CPoly.toPoly d ≠ 0 → L.integrate Dt a d = some res → IsIntegralResultP Dt a d res
+    domain Dt a d → CPoly.toPoly d ≠ 0 → L.integrate Dt a d = some res → IsIntegralResultP Dt a d res
+
+/-- Relative-completeness contract for a lawful one-level Risch solver. -/
+class CompleteCRischLevel (L : CRischLevel P α) (domain : RischLevelDomain P α)
+    [LawfulCRischLevel L domain] : Prop where
   /-- Any genuinely integrable input in this level's mathematical domain produces an output. -/
   relative_complete : ∀ (Dt a d : P α),
     domain Dt a d → CPoly.toPoly d ≠ 0 → IsRischLevelIntegrable Dt a d →
@@ -65,6 +69,15 @@ theorem oneLevelRisch_sound (C : CMonomialCase P α) [CCanonicalRepresentation P
     IsIntegralResultP Dt a d res :=
   assembleOneLevel_sound C Dt a d res hd hdomain hrun
 
+/-- The contract-only one-level assembly is a lawful Risch level. -/
+instance instLawfulCRischLevelOneLevelRisch (C : CMonomialCase P α)
+    [CCanonicalRepresentation P α] [LawfulCCanonicalRepresentation (P := P) (α := α)]
+    [LawfulCMonomialCase C] [CHermiteReduction P α]
+    [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
+    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)] :
+    LawfulCRischLevel (oneLevelRisch C) oneLevelRischDomain where
+  sound Dt a d res hdomain hd hrun := oneLevelRisch_sound C Dt a d res hd hdomain hrun
+
 /-- The polynomial-aware packaged level inherits contract-only one-level soundness. -/
 theorem oneLevelRischWithPolynomial_sound (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind) (fuel : ℕ)
@@ -77,5 +90,17 @@ theorem oneLevelRischWithPolynomial_sound (R : CPolynomialReduction P α)
     (hrun : (oneLevelRischWithPolynomial R kind fuel C).integrate Dt a d = some res) :
     IsIntegralResultP Dt a d res :=
   assembleOneLevelWithPolynomial_sound R kind fuel C Dt a d res hd hdomain hrun
+
+/-- The polynomial-aware contract composition is a lawful Risch level. -/
+instance instLawfulCRischLevelOneLevelRischWithPolynomial (R : CPolynomialReduction P α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind) (fuel : ℕ)
+    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
+    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
+    [CResidueSource P α] [CResidueLogPart P α]
+    [LawfulCResidueLogPart (P := P) (α := α)] :
+    LawfulCRischLevel (oneLevelRischWithPolynomial R kind fuel C) oneLevelRischDomain where
+  sound Dt a d res hdomain hd hrun :=
+    oneLevelRischWithPolynomial_sound R kind fuel C Dt a d res hd hdomain hrun
 
 end DeepWiki.SymbolicIntegration
