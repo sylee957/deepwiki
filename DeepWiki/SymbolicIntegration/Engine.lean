@@ -20,7 +20,7 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.CaseChecked
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
-import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
+import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
 import DeepWiki.SymbolicIntegration.Engine.RischTowerPrimitive
 import DeepWiki.SymbolicIntegration.Engine.RischTowerPrimitiveLrt
 import DeepWiki.SymbolicIntegration.Engine.RischTowerLrt

@@ -13,10 +13,9 @@ import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Engine.Assemble
 
-/-! # The generic one-level Risch assembler
+/-! # Dense canonical representation
 
-This file defines concrete canonical-split accessors (`crPoly`/…) and their reconstruction theorem.
--/
+Dense canonical-split accessors and their reconstruction theorem. -/
 
 namespace DeepWiki.SymbolicIntegration
 

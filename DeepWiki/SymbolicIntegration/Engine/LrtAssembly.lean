@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.RischTowerPrimitiveLrt
-import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
+import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
 import DeepWiki.SymbolicIntegration.Engine.LrtMonomialCase
 
 /-! # The one-level LRT (root-free) assembler core

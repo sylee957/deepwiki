@@ -376,7 +376,7 @@ solver an exact parallel of the rational one:
 | `IsIntegralResultG` | `IsIntegralResultLrtG` | IntegrationSpec / LrtSoundness |
 | `IsElementaryIntegrableG` | `IsElementaryIntegrableLrtG` | Assemble / RischTowerPrimitiveLrt |
 | `combineSN` / `combineSN_isIntegralResult` | `combineSNLrt` / `combineSNLrt_isIntegralResultLrt` | Assemble / LrtAssembly |
-| `cIntegrateCase` / `cIntegrateCase_sound` | `cIntegrateCaseLrt` / `cIntegrateCaseLrt_sound` | IntegratorAssembly / LrtAssembly |
+| legacy rational special assembly | `cIntegrateCaseLrt` / `cIntegrateCaseLrt_sound` | CanonicalRepresentationDense / LrtAssembly |
 | `LawfulRischLevel` / `integrate` / `sound` | `LawfulRischLevelLrt` / `integrateLrt` / `soundLrt` | RischTower / RischTowerLrt |
 | `PrimitiveFrontier.hreduced` ← `..._via_interfaces` | `PrimitiveFrontierLrt.hreducedLrt` ← `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` | RischTowerPrimitive(Lrt) |
 | `instLawfulRischLevelPrimitive` | `instLawfulRischLevelLrtPrimitive` | RischTowerPrimitive(Lrt) |

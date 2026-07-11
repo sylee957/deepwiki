@@ -164,19 +164,12 @@ Goal (user directive): NO concrete algorithm name (`cIntegrateCase`, `canonicalR
 (special fraction, normal result + its `IsIntegralResultG`, canonical reconstruction), NO concrete
 algorithm. `cIntegrateCase_sound` is now a thin wrapper over it.
 
-**Remaining (safe — all concrete refs are Assemble-internal, 0 external):** split the file.
-- **STAYS (abstract)** in `Assemble.lean`: `MonomialCase` (record), `combineSN`, `fieldFrac`,
-  `combineSN_isIntegralResult`. Minimal imports: `IntegrationSpec` (`IsIntegralResultG`),
-  `IntegrateTowerCorrectG` (`towerFractionFieldDerivG`/`amG`/`logResidueSumG`), the poly engine
-  (`toPolyG`/`caddG`/`cmulG`).
-- **MOVES** to a new `IntegratorAssembly.lean` (imports `Assemble`): `cIntegrateCase` (def),
-  `primitiveCase`/`hyperexpCase`, the `native_decide` validations, the `cr*` wrappers + `redNorm` +
-  `canonicalReconstruction`, `cIntegrateReducedG_isIntegralResult(_of_lawful)`, the two
-  `_via_interfaces` corollaries, `cIntegrateCase_sound` + the case corollaries, and
-  `field_identity_…_of_exact`.
-Care points: the split crosses two scopes (`namespace CPolyG` for `MonomialCase`/`combineSN`/`cIntegrateCase`
-vs the outer namespace for the rest) and several `variable [CFracGcdCoreWf]/[CRischField]` sections — the
-moved file must reproduce those. Best done as one focused, gate-checked pass.
+**Current ownership:** `Assemble.lean` contains the representation-neutral `CMonomialCase` and
+recombination laws. `CanonicalRepresentationDense.lean` contains only the dense `cr*` accessors and
+their reconstruction theorem. `PolynomialAssembly.lean` and `RischLevel.lean` provide the generic
+executable composition through `CCanonicalRepresentation`, `CPolynomialReduction`, `CNormalReduction`,
+and `CRischLevel`. The former `cIntegrateCase`/`RischSolver` experiment has been retired rather than kept
+as a compatibility layer.
 
 ## Abstract completeness (Stage-1) — DONE
 
@@ -199,28 +192,10 @@ completeness) isolated as the contract. Realizing that law concretely is the res
 `Completeness.HasLiouvilleForm` / `IsLiouville` machinery in `IntegratorCompleteness`; the transcendental
 log/exp `IsLiouville` instance is the missing Mathlib keystone).
 
-## The materializable solver bundle (`RischSolver`) — DONE
+## The current materializable solver bundle
 
-`RischSolver α` (in `IntegratorAssembly.lean`) packages the whole discipline as one structure. Its fields
-are exactly the obligations a new solver must discharge:
-
-- `case : MonomialCase α` — the computable hooks (the algorithm).
-- `specialVal` + `specialSound` — the special-part field-identity law (discharged by the case's `hSpecField`).
-- `reducedSound` — the reduced-part antiderivative law (discharged via `LawfulHermiteReduction` +
-  `LawfulResidueLogPart` through `cIntegrateReducedG_isIntegralResult_of_lawful`).
-- `recon` — canonical reconstruction (discharged by `canonicalReconstruction`).
-- `SpecElem`/`NrmElem` + `descend` — the completeness frontier contract.
-
-- `candidates` — the residue-candidate list, computed from `(Dt, a, d)`, so the assembled integrator takes
-  **no `cands` argument** (fully automatic).
-
-Materializing all fields yields, *derived from the abstract cores*, with no further proof:
-- `RischSolver.integrate Dt a d` — the assembled algorithm (`cIntegrateCase S.case … (S.candidates Dt a d)`),
-  a function of `(Dt, a, d)` alone.
-- `RischSolver.sound` — soundness (composes the laws through `cIntegrateCase_sound`).
-- `RischSolver.isElementaryIntegrable_of_run` — constructive completeness.
-- `RischSolver.not_isElementaryIntegrable` — the completeness frontier direction.
-
-This is the answer to "which classes/structures to materialize": instantiate one `RischSolver` (its case
-hooks + the four/three law fields, each closed by an independent Stage-2 realization) and the algorithm and
-both proofs come out automatically.
+`CRischLevel` is the executable one-level solver bundle. Its selected operation is assembled from the
+canonical, polynomial, normal, and monomial capabilities; `LawfulCRischLevel` derives soundness from their
+individual lawful contracts, and `CompleteCRischLevel` states relative completeness over an explicit domain.
+This lets each concrete primitive, hyperexponential, tangent, dense, or sparse realization install only its
+own leaf operations and domain proof, while the pipeline proof remains representation-neutral.

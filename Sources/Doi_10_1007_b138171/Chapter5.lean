@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.PolyPartTower
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
-import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
+import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 5: Integration of Transcendental Functions

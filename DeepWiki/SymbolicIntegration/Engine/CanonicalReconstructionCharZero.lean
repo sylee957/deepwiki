@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
+import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
 import DeepWiki.SymbolicIntegration.Engine.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SpecialNormalCoprime
 

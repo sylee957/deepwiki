@@ -82,6 +82,6 @@ rational-residue restriction — the primitive integrator using LRT, at parity w
 
 - **Retiring the rational `LawfulRischLevel`**: it is now subsumed by the genuine LRT solver
   (LRT ⊇ rational residues, both genuine). Retiring it would remove the rational-residue-restricted
-  path, but breaks the rational assembly (`IntegratorCases`, `IntegratorAssembly`,
+  path, but breaks the legacy rational assembly (including its dense canonical plumbing,
   `LiouvilleCompleteness`). Deferred — a large deletion, only worth it once the LRT path carries the
   completeness certificate too.

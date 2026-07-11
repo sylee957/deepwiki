@@ -7,7 +7,7 @@ import DeepWiki.SymbolicIntegration.Engine.NormalReduction
 The abstract soundness *core* of the one-level Risch integrator, proven purely over stage-result data —
 **no concrete algorithm** (`canonicalRepresentationFast`, `cIntegrateReduced`, `cHermiteReduceTower`, …)
 appears in this file. Dense canonical-split accessors and their reconstruction theorem live in
-`IntegratorAssembly.lean`, which imports this file. See `docs/risch-two-stage-discipline.md`. -/
+`CanonicalRepresentationDense.lean`, which imports this file. See `docs/risch-two-stage-discipline.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
