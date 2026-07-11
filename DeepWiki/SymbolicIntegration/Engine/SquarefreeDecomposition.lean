@@ -40,6 +40,30 @@ theorem monic_list_prod {K : Type*} [Field K] (L : List K[X]) (h : ∀ p ∈ L, 
 variable {P : Type u → Type u} [CPoly P]
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α]
 
+/-- File-local bridge from a selected lawful gcd to the mathematical polynomial gcd. -/
+private theorem selectedGcd_associated [CPolyEngine P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] (p q : P α) :
+    Associated (CPoly.toPoly (CPolyGcd.compute p q)) (gcd (CPoly.toPoly p) (CPoly.toPoly q)) := by
+  obtain ⟨hleft, hright, hgreatest⟩ := LawfulCPolyGcd.compute_isGCD' p q
+  apply associated_of_dvd_dvd (dvd_gcd hleft hright)
+  exact hgreatest _ (gcd_dvd_left _ _) (gcd_dvd_right _ _)
+
+/-- File-local bridge showing engine monic normalization preserves association. -/
+private theorem cmonic_associated [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    (p : P α) (hp : CPoly.toPoly p ≠ 0) :
+    Associated (CPoly.toPoly (CPolyEngine.cmonic p)) (CPoly.toPoly p) := by
+  have hlead : (CPoly.toPoly p).leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hp
+  rw [CPolyEngine.toPoly_cmonic_of_ne_zero p hp]
+  refine ⟨(isUnit_C.mpr (isUnit_iff_ne_zero.mpr hlead)).unit, ?_⟩
+  rw [IsUnit.unit_spec]
+  calc
+    Polynomial.C (CPoly.toPoly p).leadingCoeff⁻¹ * CPoly.toPoly p *
+        Polynomial.C (CPoly.toPoly p).leadingCoeff =
+      (Polynomial.C (CPoly.toPoly p).leadingCoeff⁻¹ *
+        Polynomial.C (CPoly.toPoly p).leadingCoeff) * CPoly.toPoly p := by ring
+    _ = CPoly.toPoly p := by
+      rw [← Polynomial.C_mul, inv_mul_cancel₀ hlead, Polynomial.C_1, one_mul]
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
