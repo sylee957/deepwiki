@@ -116,7 +116,7 @@ constant (`degree_toPolyG_cinterpolateG_lt`). The no-poles residue-resultant fac
 theorem cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero [CPolyResultant DensePoly]
     (Dt a d : DensePoly α) (hd : cdeg d = 0) :
     cdeg (cResidueResultantTower Dt a d) = 0 := by
-  rw [cResidueResultantTower, cResidueResultantTowerWith]
+  rw [cResidueResultantTower, cResidueResultantTowerWith, CPoly.interpolate_dense_eq]
   simp only [CPolyEngine.cdeg_dense_eq, hd, Nat.zero_add]
   set pts : List (α × α) := (List.range 1).map (fun k =>
     (CField.natCast k, CPolyResultant.compute d (cAmcDd Dt a d (CField.natCast k)))) with hpts

@@ -111,7 +111,10 @@ runs the same fraction algorithm.
    full integral-basis, and general-curve rational/log solves select `CLinearSolve.nullspaceBasis`; the
    duplicate algebraic `kernelBasis` implementation has been retired. `CPolySubresultant` now lives in
    ComputableAlgebra, and the root-free LRT construction and its correctness stack consume the selected
-   scalar and parametric subresultant operations rather than exposing the concrete helper name.
+   scalar and parametric subresultant operations rather than exposing the concrete helper name. Lagrange
+   interpolation now has a representation-selected `CPoly.interpolate` output with denotation, evaluation,
+   and degree laws; residue-resultant and parametric-subresultant construction independently select their
+   inner elimination and outer interpolation representations, with all-sparse execution witnesses.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

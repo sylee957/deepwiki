@@ -294,14 +294,16 @@ def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
 candidates as `α` elements; the resultant runs through `CPolyResultant`, the log argument through
 `cgcdFFCoreWf`. -/
 
-/-- Representation-independent inner-polynomial residue resultant, with dense interpolation in `z`. -/
-def cResidueResultantTowerWith {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyResultant P]
-    {β : Type u} [CField β] [CDiffField β] (Dt a d : P β) : DensePoly β :=
+/-- Representation-independent residue resultant with independently selected inner and outer polynomial
+representations. -/
+def cResidueResultantTowerWith {P Q : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [CPolyResultant P] [CPoly Q] [CPolyEngine Q]
+    {β : Type u} [CField β] [CDiffField β] (Dt a d : P β) : Q β :=
   let n := CPolyEngine.cdeg d
   let pts : List (β × β) := (List.range (n + 1)).map (fun k =>
     let zk : β := CField.natCast k
     (zk, CPolyResultant.compute d (cAmcDd Dt a d zk)))
-  cinterpolate pts
+  CPoly.interpolate pts
 
 /-- Dense residue resultant `R(z) = res_t(d, a − z·Dd)`, selected through `CPolyResultant`. -/
 def cResidueResultantTower [CPolyResultant DensePoly]
@@ -313,6 +315,15 @@ example :
       (CPoly.SparsePoly.ofList [(0, 1)] : CPoly.SparsePoly ℚ)
       (CPoly.SparsePoly.ofList [(0, 1)])
       (CPoly.SparsePoly.ofList [(0, -1), (2, 1)]) = [1, 0, -4] := by
+  native_decide
+
+/-- The residue resultant can use sparse storage for both the eliminated and interpolation variables. -/
+example :
+    cResidueResultantTowerWith (Q := CPoly.SparsePoly)
+      (CPoly.SparsePoly.ofList [(0, 1)] : CPoly.SparsePoly ℚ)
+      (CPoly.SparsePoly.ofList [(0, 1)])
+      (CPoly.SparsePoly.ofList [(0, -1), (2, 1)]) =
+        CPoly.SparsePoly.ofList [(0, 1), (1, 0), (2, -4)] := by
   native_decide
 
 /-- Generic log argument `cLogArgTower Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`: the

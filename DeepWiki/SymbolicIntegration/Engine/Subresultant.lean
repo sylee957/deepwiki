@@ -146,11 +146,12 @@ namespace CPolySubresultant
 /-- **The parametric subresultant `Sⱼ(z,t)`** of `Dstar` and `A − z·Dd`: a polynomial in `t`
 whose coefficients are dense polynomials in the residue `z`, computed root-free by interpolation of
 the selected scalar subresultant at `z = 0,1,…,n+m`. -/
-def parametric {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
-    [CPolyEngine P] [CPolySubresultant P] (Dstar A Dd : P α) (n m j : ℕ) : List (DensePoly α) :=
+def parametric {α : Type u} [CField α] {P Q : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [CPolySubresultant P] [CPoly Q] [CPolyEngine Q]
+    (Dstar A Dd : P α) (n m j : ℕ) : List (Q α) :=
   let N := n + m + 1
   (List.range (j + 1)).map (fun k =>
-    DensePoly.cinterpolate ((List.range N).map (fun jj =>
+    CPoly.interpolate ((List.range N).map (fun jj =>
       let c := CField.natCast jj
       (c, CPoly.coeff
         (CPolySubresultant.compute Dstar
@@ -216,10 +217,11 @@ theorem CPolySubresultant.parametric_eval :
 
 /-- Parametric subresultants also run with sparse inner-polynomial storage. -/
 theorem CPolySubresultant.parametric_sparse :
-    CPolySubresultant.parametric
+    CPolySubresultant.parametric (Q := CPoly.SparsePoly)
       (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
       (CPoly.SparsePoly.ofList [(1, 1)])
-      (CPoly.SparsePoly.ofList [(1, 2)]) 2 1 1 = [[], [1, -2]] := by
+      (CPoly.SparsePoly.ofList [(1, 2)]) 2 1 1 =
+        [CPoly.SparsePoly.ofList [], CPoly.SparsePoly.ofList [(0, 1), (1, -2)]] := by
   native_decide
 
 end DeepWiki.SymbolicIntegration
