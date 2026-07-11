@@ -127,10 +127,16 @@ monomial stage contracts.
    complete residue-source theorem. `CompleteCResidueLogPart` and the composite Hermite-residue normal domain
    are now domain-parameterized; bounded candidate sweeps remain intentionally incomplete and must not acquire
    a universal-domain instance.
-2. Implement the concrete recursive `CTangentSpecialIntegrator` and a relative-completeness contract for tangent
-   normal reduction. Bronstein's reduced hypertangent algorithm repeatedly strips a power of `t²+1`, calls the
-   coupled solver, subtracts the reconstructed derivative, and recurses; the former one-shot
-   `CTangentSpecialBridge` could not express this loop and has been retired. Soundness no longer depends on the
+2. Generalize the concrete `recursiveTangentSpecialIntegrator` beyond its current `ℚ(x)` polynomial-data
+   coupled solver. The executable now implements Bronstein's reduced hypertangent recursion: it recognizes a
+   power of `t²+1`, calls the coupled solver at each pole order, subtracts the reconstructed derivative, recurses,
+   performs the final nonlinear polynomial reduction, descends the constant coefficient through
+   `CRecursiveCoefficientIntegrator`, and emits the possible constant multiple of `log(t²+1)`. Its unchecked
+   candidate generator is private; the selected operation is certificate-checked, has a
+   `LawfulCTangentSpecialIntegrator` instance, and is relatively complete on its explicit acceptance domain.
+   The next completeness step is a coupled solver over general coefficient-field fractions rather than only
+   polynomial `ℚ[x]` data. The former one-shot `CTangentSpecialBridge` could not express the recursion and has
+   been retired. Soundness no longer depends on the
    low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
    special integrator through the generic assembler. `sparseTangentRischLevel` transports the same composition through the
@@ -140,8 +146,8 @@ monomial stage contracts.
    dense and sparse `CompleteCRischLevel` instances. This is executable relative completeness only. The generic
    monomial special stage now returns a full `IntegralResult`, so it can represent the constant multiple of
    `log(t²+1)` produced by hypertangent polynomial reduction; the LRT primitive path retains its separate
-   rational-only `CLrtMonomialCase`. Full semantic tangent completeness still needs the concrete recursive
-   integrator.
+   rational-only `CLrtMonomialCase`. Full semantic tangent completeness still needs a semantic completeness
+   theorem for the generalized coupled solver and coefficient recursion, beyond checked acceptance.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

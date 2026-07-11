@@ -88,8 +88,8 @@ private def tangentReducedCandidate (S : CTangentCoupledSolver) (degreeBound : �
           remainder := rest.remainder
         }
 
-/-- Raw recursive hypertangent special integrator parameterized by coefficient-field integration. -/
-def recursiveTangentSpecialIntegrator (config : TangentSpecialConfig)
+/-- Raw recursive hypertangent candidate generator parameterized by coefficient-field integration. -/
+private def recursiveTangentSpecialCandidate (config : TangentSpecialConfig)
     (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ)) : CTangentSpecialIntegrator where
   integrate S Dt fp b ds := do
     let alpha := CPoly.coeff Dt 2
@@ -121,23 +121,28 @@ def recursiveTangentSpecialIntegrator (config : TangentSpecialConfig)
           some { rational, logs }
 
 /-- Certificate-checked recursive hypertangent special integrator. -/
-def certifiedRecursiveTangentSpecialIntegrator (config : TangentSpecialConfig)
+def recursiveTangentSpecialIntegrator (config : TangentSpecialConfig)
     (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ)) : CTangentSpecialIntegrator :=
-  checkedTangentSpecialIntegrator (recursiveTangentSpecialIntegrator config I)
+  checkedTangentSpecialIntegrator (recursiveTangentSpecialCandidate config I)
+
+/-- Explicit acceptance domain of the recursive hypertangent special integrator. -/
+def recursiveTangentSpecialDomain (S : CTangentCoupledSolver) (config : TangentSpecialConfig)
+    (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ)) : TangentSpecialDomain :=
+  checkedTangentSpecialDomain S (recursiveTangentSpecialCandidate config I)
 
 /-- The certified recursive hypertangent operation satisfies its denotational contract. -/
 instance instLawfulCTangentSpecialIntegratorRecursive (S : CTangentCoupledSolver)
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ)) :
-    LawfulCTangentSpecialIntegrator S (certifiedRecursiveTangentSpecialIntegrator config I) := by
-  unfold certifiedRecursiveTangentSpecialIntegrator
+    LawfulCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator config I) := by
+  unfold recursiveTangentSpecialIntegrator
   infer_instance
 
 /-- The certified recursive hypertangent operation is complete on its explicit acceptance domain. -/
 instance instCompleteCTangentSpecialIntegratorRecursive (S : CTangentCoupledSolver)
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ)) :
-    CompleteCTangentSpecialIntegrator S (certifiedRecursiveTangentSpecialIntegrator config I)
-      (checkedTangentSpecialDomain S (recursiveTangentSpecialIntegrator config I)) := by
-  unfold certifiedRecursiveTangentSpecialIntegrator
+    CompleteCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator config I)
+      (recursiveTangentSpecialDomain S config I) := by
+  unfold recursiveTangentSpecialIntegrator recursiveTangentSpecialDomain
   infer_instance
 
 /-! ## Executable validation -/
@@ -158,7 +163,7 @@ private def tangentRecursiveExampleNumerator : DensePoly (DenseFrac ℚ) :=
 
 /-- The certified recursion succeeds on the pole-order-three hypertangent example. -/
 example :
-    ((certifiedRecursiveTangentSpecialIntegrator
+    ((recursiveTangentSpecialIntegrator
         { denominatorFuel := 4, polynomialFuel := 8, coefficientDegreeBound := 3 }
         tangentPolynomialCoefficientIntegrator).integrate
       tangentCoupledSolver tangentBase CPoly.czero tangentRecursiveExampleNumerator
@@ -167,7 +172,7 @@ example :
 
 /-- The polynomial stage emits `log(t²+1)` for the derivative `2t/(t²+1)`. -/
 example :
-    ((certifiedRecursiveTangentSpecialIntegrator
+    ((recursiveTangentSpecialIntegrator
         { denominatorFuel := 1, polynomialFuel := 2, coefficientDegreeBound := 1 }
         tangentPolynomialCoefficientIntegrator).integrate
       tangentCoupledSolver tangentBase [CCommRing.zero, CField.natCast 2]

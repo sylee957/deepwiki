@@ -1,11 +1,14 @@
 # Recursive hypertangent special integration
 
-## Goal
+## Status
 
-Implement the concrete `CTangentSpecialIntegrator` required by
-`Engine/CoupledDE/TangentCapability.lean`.  It must realize the hypertangent branch of Bronstein,
-*Symbolic Integration I*, Section 5.10 without putting coupled-solver details into the generic
-Figure-5.1 assembler.
+`Engine/CoupledDE/TangentSpecial.lean` now provides `recursiveTangentSpecialIntegrator`: a selected,
+certificate-checked `CTangentSpecialIntegrator` with a named finite acceptance domain. Its private raw
+candidate generator recognizes a bounded power of `t²+1`, recursively lowers that pole through the coupled
+solver, polynomial-reduces the remainder, and emits the checked `log(t²+1)` term. The focused executable
+validation accepts a pole-order-three input.
+
+This is a sound checked realization, not yet a proof of Bronstein's semantic completeness theorem.
 
 ## Mathematical spine
 
@@ -30,30 +33,26 @@ cast coefficients.
 
 ## Phases
 
-1. **Coefficient boundary.** Define a private, checked adapter from the current `DensePoly Q`
-   coupled solver to the coefficient representation used by a tangent special input.  State its
-   output as a field identity, including every nonzero common denominator certificate.  Do not
-   change `CTangentCoupledSolver` merely to hide this mismatch.
-2. **One-pole reducer.** In a new `CoupledDE/HypertangentSpecial.lean`, implement one checked
-   pole-cancellation step.  It extracts `m`, divides the cleared numerator by `t^2 + 1`, invokes
-   the adapter, constructs `(c*t+d)/(t^2+1)^m`, and verifies the resulting partial
-   `IntegralResult` with `CPoly.checkIdentity`.
-3. **Well-founded recursion.** Recurse on the special valuation/pole order, with the decrease
-   theorem localized beside the executable recursion.  The public operation returns an
-   `IntegralResult`, preserving every log term accumulated by recursive calls.
-4. **Polynomial tail.** Compose the existing polynomial reducer with the Section-5.10 degree-one
-   remainder rule.  Add the `log(t^2+1)` term only with a checked constant-residue certificate;
-   otherwise decline rather than assert elementary integrability.
-5. **Capability realization.** Export the selected operation and a
-   `LawfulCTangentSpecialIntegrator tangentCoupledSolver ...` instance.  Its proof should compose
-   checked one-pole identities and the recursive invariant; `checkedTangentMonomialCase` remains
-   the independent outer certificate boundary.
-6. **Relative completeness.** State the finite checked-acceptance domain first.  Upgrade it only
+1. **Coefficient boundary (partial).** The raw implementation accepts coupled coefficients whose
+   `DenseFrac ℚ` representation has denominator `1`; it declines the remaining cases. General
+   denominator clearing and its field-identity proof are still needed. Do not change
+   `CTangentCoupledSolver` merely to hide this mismatch.
+2. **One-pole reducer (checked).** `TangentSpecial.lean` divides by `t^2 + 1`, invokes the coupled
+   operation, constructs the candidate correction, and releases the final result only through
+   `CPoly.checkIdentity`.
+3. **Structural recursion (implemented).** The executable recursion follows the recognized pole
+   order and accumulates the rational part. A semantic valuation-decrease theorem remains open.
+4. **Polynomial tail (checked).** The selected operation uses nonlinear polynomial reduction and emits
+   `log(t^2+1)` only after a computable constant-residue guard; otherwise it declines.
+5. **Capability realization (implemented).** The raw candidate is private;
+   `recursiveTangentSpecialIntegrator` is the selected checked operation and has both `Lawful…` and
+   finite-domain `Complete…` instances.
+6. **Semantic relative completeness.** Upgrade the checked domain only
    after proving the coupled-system and constant-descent completeness assumptions required by
    Bronstein's theorem.
-7. **Integration and retirement.** Instantiate `tangentRischLevel` and its sparse transport with
-   the realizer, add focused examples, use `scripts/wiki rdeps` on any previous tangent bridge,
-   then retire only genuinely superseded bridge code.
+7. **Integration and retirement (partial).** The selected operation executes Bronstein's
+   pole-order-three example and the `log(t^2+1)` polynomial case, and the one-shot bridge is retired.
+   Thin dense/sparse `tangentRischLevel` selections and the semantic completeness upgrade remain.
 
 ## Verification sequence
 
