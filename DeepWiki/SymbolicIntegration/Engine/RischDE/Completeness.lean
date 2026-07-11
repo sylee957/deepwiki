@@ -52,9 +52,9 @@ theorem crischDESolveSoundWf_some_iff (f g y : DenseFrac β) :
             crischDERawSolveWf
                 (qReduce (weakNormalizedF f
                   (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
-                (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
+                (mul (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
               = some ytilde
-              ∧ y = qmulNZ ytilde (qinvNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
+              ∧ y = mul ytilde (inv (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
                   f.num f.den)))) := by
   set q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den with hq
   set q' : DenseFrac β := CFrac.ofPoly q with hq'
@@ -65,9 +65,9 @@ theorem crischDESolveSoundWf_some_iff (f g y : DenseFrac β) :
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
-                  match crischDERawSolveWf ftildeR (qmulNZ q' g) with
+                  match crischDERawSolveWf ftildeR (mul q' g) with
                   | none => none
-                  | some ytilde => some (qmulNZ ytilde (qinvNZ q'))
+                  | some ytilde => some (mul ytilde (inv q'))
               else none) from rfl]
   by_cases hqz : DensePoly.cisZero q = true
   · rw [if_pos hqz]
@@ -77,7 +77,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : DenseFrac β) :
     rw [Bool.not_eq_true] at hqz
     by_cases hck : cisCanonNormalized ftilde = true
     · rw [if_pos hck, reduceSoundOpt_eq]
-      rcases hinner : crischDERawSolveWf (qReduce ftilde) (qmulNZ q' g) with _ | ytilde
+      rcases hinner : crischDERawSolveWf (qReduce ftilde) (mul q' g) with _ | ytilde
       · simp only [hinner, hqz, hck, true_and]
         constructor
         · intro h; exact absurd h (by simp)
@@ -102,10 +102,10 @@ theorem crischDESolveSoundWf_some_of_stages (f g ytilde : DenseFrac β)
     (hinner : crischDERawSolveWf
         (qReduce (weakNormalizedF f
           (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
-        (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
+        (mul (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
         = some ytilde) :
     crischDESolveSoundWf f g
-      = some (qmulNZ ytilde (qinvNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
+      = some (mul ytilde (inv (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
           f.num f.den)))) :=
   (crischDESolveSoundWf_some_iff f g _).mpr ⟨hq, hck, ytilde, hinner, rfl⟩
 
@@ -120,10 +120,10 @@ example (f g ytilde : DenseFrac β)
     (hinner : crischDERawSolveWf
         (qReduce (weakNormalizedF f
           (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
-        (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
+        (mul (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
         = some ytilde) :
     crischDESolveSoundWf f g
-      = some (qmulNZ ytilde (qinvNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
+      = some (mul ytilde (inv (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
           f.num f.den)))) :=
   crischDESolveSoundWf_some_of_stages f g ytilde hq hck hinner
 
@@ -344,7 +344,7 @@ structure RischDECompletenessResidualWf (f g : DenseFrac β) : Prop where
       crischDERawSolveWf
           (qReduce (weakNormalizedF f
             (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den))))
-          (qmulNZ (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
+          (mul (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) g)
         = some ytilde
 
 /-- If the RDE is solvable and `RischDECompletenessResidualWf` holds, then `crischDESolveSoundWf`

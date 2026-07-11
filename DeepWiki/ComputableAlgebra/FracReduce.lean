@@ -142,15 +142,15 @@ def qReduce {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type 
 namespace CFrac
 
 /-- `qReduce` preserves the represented fraction's Boolean zero test. -/
-theorem isZeroNZ_qReduce
+theorem isZero_qReduce
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
     [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : F α) :
-    isZeroNZ (qReduce a) = isZeroNZ a := by
+    isZero (qReduce a) = isZero a := by
   apply Bool.eq_iff_iff.mpr
-  rw [isZeroNZ_iff_toRatFunc, isZeroNZ_iff_toRatFunc, toRatFunc_qReduce]
+  rw [isZero_iff_toRatFunc, isZero_iff_toRatFunc, toRatFunc_qReduce]
 
 end CFrac
 

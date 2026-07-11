@@ -18,7 +18,7 @@ variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]
 
 /-- `weakNormalizedF f q' = f − Dq'/q'` over `DenseFrac β`: the weakly-normalized field element. -/
 def weakNormalizedF (f q' : DenseFrac β) : DenseFrac β :=
-  qsubNZ f (qmulNZ (towerDerivCFrac ([CCommRing.one] : DensePoly β) q') (qinvNZ q'))
+  sub f (mul (towerDerivCFrac ([CCommRing.one] : DensePoly β) q') (inv q'))
 
 end Helpers
 

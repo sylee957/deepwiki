@@ -86,8 +86,8 @@ theorem toRatFuncDense_div (x y : DenseFrac ℚ) :
 
 open scoped Differential in
 /-- The formal derivative of a validated dense fraction reads as the `RatFunc` derivative. -/
-theorem toRatFuncDense_qderiv (x : DenseFrac ℚ) :
-    toRatFuncDense (CFrac.qderiv x) = (toRatFuncDense x)′ := by
+theorem toRatFuncDense_deriv (x : DenseFrac ℚ) :
+    toRatFuncDense (CFrac.deriv x) = (toRatFuncDense x)′ := by
   obtain ⟨a, b, hb⟩ := x
   have hb0 : DensePoly.toPoly b ≠ 0 := by
     intro h
@@ -110,7 +110,7 @@ theorem toRatFuncDense_qderiv (x : DenseFrac ℚ) :
             CFrac.am ℚ (derivative (CPoly.toPoly b))) /
         (CFrac.am ℚ (CPoly.toPoly b) ^ 2) := by
     rw [deriv_div, hda, hdb]
-  rw [toRatFuncDense, CFrac.qderiv, CFrac.toRatFunc_ofFraction]
+  rw [toRatFuncDense, CFrac.deriv, CFrac.toRatFunc_ofFraction]
   simp only [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul,
     LawfulCPolyEngine.toPoly_deriv, map_sub, map_mul, CFrac.num, CFrac.den,
     CFrac.toPair, toRatFuncDense, CFrac.toRatFunc_eq_div]

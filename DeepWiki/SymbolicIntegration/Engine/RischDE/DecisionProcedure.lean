@@ -62,7 +62,7 @@ paired with `q * g`, as `crischDESolveSoundWf` forms it before calling `crischDE
 def rischDEInnerInputWf (f g : DenseFrac β) : DenseFrac β × DenseFrac β :=
   let q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den
   let q' : DenseFrac β := CFrac.ofPoly q
-  (qReduce (weakNormalizedF f q'), qmulNZ q' g)
+  (qReduce (weakNormalizedF f q'), mul q' g)
 
 end InnerInputWf
 

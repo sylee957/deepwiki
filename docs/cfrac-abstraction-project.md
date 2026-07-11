@@ -34,7 +34,9 @@ runs the same fraction algorithm.
 3. **Generic field engine — DONE.** Generalize denominator-domain evidence, constructors, add/mul/neg/inv,
    zero test, and the `CField` instance over `[CFrac F P] [CPolyEngine P]`. Preserve the Prop-free runtime
    path; correctness assumptions remain in companion lawful classes. `CFrac.ofFraction` requires explicit
-   nonzero evidence, while `CFrac.ofFraction?` exposes the executable checked `Option` boundary.
+   nonzero evidence, while `CFrac.ofFraction?` exposes the executable checked `Option` boundary. The public
+   operations are the symmetric `CFrac.add`/`mul`/`neg`/`inv`/`sub`/`deriv`/`isZero` family; the legacy
+   `q*NZ` names were retired because denominator validity is already enforced by the carrier.
 4. **Generic denotation — DONE.** State the bridge into `RatFunc` through `CPoly.toPoly`, prove the fraction
    homomorphism laws with `LawfulCPolyEngine`, and expose `CFieldSpec (F α)`. Validate both
    `DenseFrac` and `SparseFrac` through their representation-independent denotation laws.

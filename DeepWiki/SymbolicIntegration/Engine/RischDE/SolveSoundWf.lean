@@ -62,9 +62,9 @@ def crischDESolveSoundWf (f g : DenseFrac β) : Option (DenseFrac β) :=
       match reduceSoundOpt ftilde with
       | none => none
       | some ftildeR =>
-        match crischDERawSolveWf ftildeR (qmulNZ q' g) with
+        match crischDERawSolveWf ftildeR (mul q' g) with
         | none => none
-        | some ytilde => some (qmulNZ ytilde (qinvNZ q'))
+        | some ytilde => some (mul ytilde (inv q'))
     else none
 
 end Solver
@@ -93,9 +93,9 @@ theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : DenseFrac β)
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
-                  match crischDERawSolveWf ftildeR (qmulNZ q' g) with
+                  match crischDERawSolveWf ftildeR (mul q' g) with
                   | none => none
-                  | some ytilde => some (qmulNZ ytilde (qinvNZ q'))
+                  | some ytilde => some (mul ytilde (inv q'))
               else none) from rfl] at hsolve
   by_cases hqz : DensePoly.cisZero q = true
   · rw [if_pos hqz] at hsolve
@@ -119,9 +119,9 @@ theorem crischDESolveSoundWf_check (f g y : DenseFrac β)
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
-                  match crischDERawSolveWf ftildeR (qmulNZ q' g) with
+                  match crischDERawSolveWf ftildeR (mul q' g) with
                   | none => none
-                  | some ytilde => some (qmulNZ ytilde (qinvNZ q'))
+                  | some ytilde => some (mul ytilde (inv q'))
               else none) from rfl] at hsolve
   by_cases hqz : DensePoly.cisZero q = true
   · rw [if_pos hqz] at hsolve

@@ -15,7 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### Product-size example: `qReduce` shrinks an unreduced product
 
-`qmulNZ (t/(t−1)) ((t−1)/t)` stores the constant `1` as `(t·(t−1))/((t−1)·t)` (num/den length 3);
+`mul (t/(t−1)) ((t−1)/t)` stores the constant `1` as `(t·(t−1))/((t−1)·t)` (num/den length 3);
 `qReduce` cancels to `1/1` (length 1) with the field value unchanged. -/
 
 namespace CFrac
@@ -27,9 +27,9 @@ def swellA : DenseFrac ℚ := CFrac.ofFraction [(0 : ℚ), 1] [(-1 : ℚ), 1] (b
 `swellA`. -/
 def swellB : DenseFrac ℚ := CFrac.ofFraction [(-1 : ℚ), 1] [(0 : ℚ), 1] (by cfrac_nonzero)
 
-/-- The unreduced product `swellA · swellB = (t·(t−1))/((t−1)·t)` via `qmulNZ`: both num and den are
+/-- The unreduced product `swellA · swellB = (t·(t−1))/((t−1)·t)` via `mul`: both num and den are
 `t²−t` (length 3) though the value is `1`. -/
-def swellProd : DenseFrac ℚ := qmulNZ swellA swellB
+def swellProd : DenseFrac ℚ := mul swellA swellB
 
 /-- The unreduced product `swellProd` has numerator length 3. -/
 theorem swellProd_num_length : (DensePoly.cnorm swellProd.num : List ℚ).length = 3 := by ccompute
@@ -56,11 +56,11 @@ theorem swellProd_value_preserved :
 
 /-! #### `qReduce` preserves the zero test
 
-Since `qReduce` preserves the field value, it preserves the zero test `isZeroNZ` (theorem
-`CFrac.isZeroNZ_qReduce`): a reduced fraction tests zero exactly when the original does. -/
+Since `qReduce` preserves the field value, it preserves the zero test `isZero` (theorem
+`CFrac.isZero_qReduce`): a reduced fraction tests zero exactly when the original does. -/
 
 #print axioms swellProd_value_preserved
-#print axioms CFrac.isZeroNZ_qReduce
+#print axioms CFrac.isZero_qReduce
 
 end CFrac
 
@@ -97,10 +97,10 @@ open DensePoly
 
 /-! #### The unreduced and reduced residual cases -/
 
-/-- The residual `1 ∈ ℚ(x)` stored unreduced as `(2x)/(2x)` via `qmulNZ (2x/1) (1/(2x))` (num and den
+/-- The residual `1 ∈ ℚ(x)` stored unreduced as `(2x)/(2x)` via `mul (2x/1) (1/(2x))` (num and den
 both length 2). -/
 def Rstuck : DenseFrac ℚ :=
-  qmulNZ nLvl1TwoX (CFrac.ofFraction [CCommRing.one] [(0 : ℚ), (2 : ℚ)] (by cfrac_nonzero))
+  mul nLvl1TwoX (CFrac.ofFraction [CCommRing.one] [(0 : ℚ), (2 : ℚ)] (by cfrac_nonzero))
 
 /-- `Rstuck` is the value `1`: `isZero (Rstuck − 1) = true`. -/
 theorem Rstuck_eq_one : CCommRing.isZero (CField.sub Rstuck (CCommRing.one : DenseFrac ℚ)) = true := by

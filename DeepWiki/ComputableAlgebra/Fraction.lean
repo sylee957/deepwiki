@@ -86,37 +86,37 @@ def ofScalar {α : Type u} [CField α] [CFieldDomain α P] (a : α) : F α :=
 @[simp] theorem den_ofPoly {α : Type u} [CField α] [CFieldDomain α P] (p : P α) :
     den (ofPoly (F := F) p) = CPoly.one := by simp [ofPoly]
 
-/-- `qaddNZ`: addition on `CFrac` (the product denominator `b·d` is nonzero). -/
-def qaddNZ {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
+/-- `add`: addition on `CFrac` (the product denominator `b·d` is nonzero). -/
+def add {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
   ofFraction
     (CPolyEngine.add (CPolyEngine.mul (num x) (den y))
       (CPolyEngine.mul (num y) (den x)))
     (CPolyEngine.mul (den x) (den y))
     (cmulG_ne_zero_of (cisZeroG_den x) (cisZeroG_den y))
 
-/-- `qmulNZ`: multiplication on `CFrac` (the product denominator `b·d` is nonzero). -/
-def qmulNZ {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
+/-- `mul`: multiplication on `CFrac` (the product denominator `b·d` is nonzero). -/
+def mul {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
   ofFraction (CPolyEngine.mul (num x) (num y))
     (CPolyEngine.mul (den x) (den y))
     (cmulG_ne_zero_of (cisZeroG_den x) (cisZeroG_den y))
 
-/-- `qnegNZ`: negation on `CFrac` (denominator unchanged). -/
-def qnegNZ {α : Type u} [CField α] (x : F α) : F α :=
+/-- `neg`: negation on `CFrac` (denominator unchanged). -/
+def neg {α : Type u} [CField α] (x : F α) : F α :=
   ofFraction (CPolyEngine.neg (num x)) (den x) (cisZeroG_den x)
 
-/-- `qinvNZ`: inverse on `CFrac`. If the numerator's zero test holds, the result is `ofPoly []` (the
+/-- `inv`: inverse on `CFrac`. If the numerator's zero test holds, the result is `ofPoly []` (the
 `0⁻¹ = 0` convention); otherwise swap numerator and denominator (the new denominator is the old
 numerator, nonzero exactly by `¬ cisZero`). -/
-def qinvNZ {α : Type u} [CField α] [CFieldDomain α P] (x : F α) : F α :=
+def inv {α : Type u} [CField α] [CFieldDomain α P] (x : F α) : F α :=
   if h : CPolyEngine.cisZero (num x) then ofPoly CPoly.czero
   else ofFraction (den x) (num x) (Bool.not_eq_true _ ▸ h)
 
-/-- `qsubNZ`: subtraction on `CFrac`, `x − y := x + (−y)`. -/
-def qsubNZ {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
-  qaddNZ x (qnegNZ y)
+/-- `sub`: subtraction on `CFrac`, `x − y := x + (−y)`. -/
+def sub {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : F α :=
+  add x (neg y)
 
 /-- Formal polynomial-variable derivative of a represented fraction by the quotient rule. -/
-def qderiv {α : Type u} [CField α] [CFieldDomain α P] (x : F α) : F α :=
+def deriv {α : Type u} [CField α] [CFieldDomain α P] (x : F α) : F α :=
   ofFraction
     (CPolyEngine.sub
       (CPolyEngine.mul (CPolyEngine.deriv (num x)) (den x))
@@ -124,9 +124,9 @@ def qderiv {α : Type u} [CField α] [CFieldDomain α P] (x : F α) : F α :=
     (CPolyEngine.mul (den x) (den x))
     (cmulG_ne_zero_of (cisZeroG_den x) (cisZeroG_den x))
 
-/-- `isZeroNZ`: the zero test on `CFrac`, reading `cisZero` off the **numerator** (the denominator
+/-- `isZero`: the zero test on `CFrac`, reading `cisZero` off the **numerator** (the denominator
 is nonzero by membership, so `x = 0` iff its numerator vanishes). -/
-def isZeroNZ {α : Type u} [CField α] (x : F α) : Bool := CPolyEngine.cisZero (num x)
+def isZero {α : Type u} [CField α] (x : F α) : Bool := CPolyEngine.cisZero (num x)
 
 end CFrac
 
@@ -138,11 +138,11 @@ instance instCFieldCFrac {F : (α : Type u) → [CField α] → Type u}
     {α : Type u} [CField α] [CFieldDomain α P] : CField (F α) where
   zero := CFrac.ofPoly (CPoly.czero : P α)
   one := CFrac.ofPoly (CPoly.one : P α)
-  add := CFrac.qaddNZ
-  mul := CFrac.qmulNZ
-  neg := CFrac.qnegNZ
-  inv := CFrac.qinvNZ
-  isZero := CFrac.isZeroNZ
+  add := CFrac.add
+  mul := CFrac.mul
+  neg := CFrac.neg
+  inv := CFrac.inv
+  isZero := CFrac.isZero
 
 /-! ### The bridge `toRatFunc` into `RatFunc (CFieldSpec.K α)` and its homomorphism laws -/
 
@@ -196,10 +196,10 @@ theorem toPoly_den_ne_zero_generic [LawfulCPolyEngine.{u,v} P]
   rw [toRatFunc, num_ofPoly, den_ofPoly, CPoly.toPoly_one, map_one, div_one]
 
 /-- Represented fraction addition realizes addition in `RatFunc`. -/
-@[denote] theorem toRatFunc_qaddNZ [LawfulCPolyEngine.{u,v} P]
+@[denote] theorem toRatFunc_add [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (x y : F α) :
-    toRatFunc (qaddNZ x y) = toRatFunc x + toRatFunc y := by
-  rw [qaddNZ, toRatFunc_ofFraction, toRatFunc_eq_div, toRatFunc_eq_div]
+    toRatFunc (add x y) = toRatFunc x + toRatFunc y := by
+  rw [add, toRatFunc_ofFraction, toRatFunc_eq_div, toRatFunc_eq_div]
   simp only [LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_mul, map_add, map_mul]
   have hx : am α (CPoly.toPoly (den x)) ≠ 0 :=
     am_ne_zero (toPoly_den_ne_zero_generic x)
@@ -209,25 +209,25 @@ theorem toPoly_den_ne_zero_generic [LawfulCPolyEngine.{u,v} P]
   ring
 
 /-- Represented fraction multiplication realizes multiplication in `RatFunc`. -/
-@[denote] theorem toRatFunc_qmulNZ [LawfulCPolyEngine.{u,v} P]
+@[denote] theorem toRatFunc_mul [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (x y : F α) :
-    toRatFunc (qmulNZ x y) = toRatFunc x * toRatFunc y := by
-  rw [qmulNZ, toRatFunc_ofFraction, toRatFunc_eq_div, toRatFunc_eq_div]
+    toRatFunc (mul x y) = toRatFunc x * toRatFunc y := by
+  rw [mul, toRatFunc_ofFraction, toRatFunc_eq_div, toRatFunc_eq_div]
   simp only [LawfulCPolyEngine.toPoly_mul, map_mul]
   rw [div_mul_div_comm]
 
 /-- Represented fraction negation realizes negation in `RatFunc`. -/
-@[denote] theorem toRatFunc_qnegNZ [LawfulCPolyEngine.{u,v} P]
+@[denote] theorem toRatFunc_neg [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] (x : F α) :
-    toRatFunc (qnegNZ x) = -toRatFunc x := by
-  rw [qnegNZ, toRatFunc_ofFraction, toRatFunc_eq_div]
+    toRatFunc (neg x) = -toRatFunc x := by
+  rw [neg, toRatFunc_ofFraction, toRatFunc_eq_div]
   simp only [LawfulCPolyEngine.toPoly_neg, map_neg, neg_div]
 
 /-- Represented fraction inversion realizes inversion in `RatFunc`. -/
-@[denote] theorem toRatFunc_qinvNZ [LawfulCPolyEngine.{u,v} P]
+@[denote] theorem toRatFunc_inv [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (x : F α) :
-    toRatFunc (qinvNZ x) = (toRatFunc x)⁻¹ := by
-  rw [qinvNZ]
+    toRatFunc (inv x) = (toRatFunc x)⁻¹ := by
+  rw [inv]
   split
   next hzero =>
     have hnum : CPoly.toPoly (num x) = 0 :=
@@ -238,16 +238,16 @@ theorem toPoly_den_ne_zero_generic [LawfulCPolyEngine.{u,v} P]
     rw [toRatFunc_ofFraction, toRatFunc_eq_div, inv_div]
 
 /-- Represented fraction subtraction realizes subtraction in `RatFunc`. -/
-@[denote] theorem toRatFunc_qsubNZ [LawfulCPolyEngine.{u,v} P]
+@[denote] theorem toRatFunc_sub [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (x y : F α) :
-    toRatFunc (qsubNZ x y) = toRatFunc x - toRatFunc y := by
-  rw [qsubNZ, toRatFunc_qaddNZ, toRatFunc_qnegNZ, sub_eq_add_neg]
+    toRatFunc (sub x y) = toRatFunc x - toRatFunc y := by
+  rw [sub, toRatFunc_add, toRatFunc_neg, sub_eq_add_neg]
 
 /-- The represented numerator zero test agrees with vanishing in `RatFunc`. -/
-@[denote] theorem isZeroNZ_iff_toRatFunc [LawfulCPolyEngine.{u,v} P]
+@[denote] theorem isZero_iff_toRatFunc [LawfulCPolyEngine.{u,v} P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] (x : F α) :
-    isZeroNZ x = true ↔ toRatFunc x = 0 := by
-  rw [isZeroNZ, LawfulCPolyEngine.cisZero_iff, toRatFunc_eq_div]
+    isZero x = true ↔ toRatFunc x = 0 := by
+  rw [isZero, LawfulCPolyEngine.cisZero_iff, toRatFunc_eq_div]
   have hden : am α (CPoly.toPoly (den x)) ≠ 0 :=
     am_ne_zero (toPoly_den_ne_zero_generic x)
   constructor
@@ -270,11 +270,11 @@ theorem toPoly_den_ne_zero_generic [LawfulCPolyEngine.{u,v} P]
   toK_one := by
     change toRatFunc (ofPoly (F := F) (CPoly.one : P α)) = 1
     rw [toRatFunc_ofPoly, CPoly.toPoly_one, map_one]
-  toK_add := toRatFunc_qaddNZ
-  toK_mul := toRatFunc_qmulNZ
-  toK_neg := toRatFunc_qnegNZ
-  toK_inv := toRatFunc_qinvNZ
-  isZero_iff := isZeroNZ_iff_toRatFunc
+  toK_add := toRatFunc_add
+  toK_mul := toRatFunc_mul
+  toK_neg := toRatFunc_neg
+  toK_inv := toRatFunc_inv
+  isZero_iff := isZero_iff_toRatFunc
 
 
 end CFrac

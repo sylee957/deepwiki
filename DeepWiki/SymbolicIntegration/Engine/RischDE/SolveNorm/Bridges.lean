@@ -32,14 +32,14 @@ theorem toRatFunc_weakNormalizedF (f q' : DenseFrac β) :
     toRatFunc (weakNormalizedF f q')
       = toRatFunc f
         - towerFractionFieldDeriv ([CCommRing.one] : DensePoly β) (toRatFunc q') / toRatFunc q' := by
-  rw [weakNormalizedF, toRatFunc_qsubNZ, toRatFunc_qmulNZ, toRatFunc_qinvNZ,
+  rw [weakNormalizedF, toRatFunc_sub, toRatFunc_mul, toRatFunc_inv,
     towerFractionFieldDeriv_toRatFunc, div_eq_mul_inv]
 
 omit [CDiffField β] [CDiffFieldSpec β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
-/-- `toRatFunc_solution`: `toRatFunc (qmulNZ ytilde (qinvNZ q')) = toRatFunc ytilde / toRatFunc q'`. -/
+/-- `toRatFunc_solution`: `toRatFunc (mul ytilde (inv q')) = toRatFunc ytilde / toRatFunc q'`. -/
 theorem toRatFunc_solution (ytilde q' : DenseFrac β) :
-    toRatFunc (qmulNZ ytilde (qinvNZ q'))
+    toRatFunc (mul ytilde (inv q'))
       = toRatFunc ytilde / toRatFunc q' := by
-  rw [toRatFunc_qmulNZ, toRatFunc_qinvNZ, div_eq_mul_inv]
+  rw [toRatFunc_mul, toRatFunc_inv, div_eq_mul_inv]
 
 end DeepWiki.SymbolicIntegration
