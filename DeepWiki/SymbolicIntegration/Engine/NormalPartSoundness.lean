@@ -24,7 +24,8 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- The fuel-free reduced-case field identity from the `checkIdentity` certificate: for
 `res = cIntegrateReduced Dt a d cands`, if `checkIdentity Dt res a d = true`, then
 `D(g) + logResidueSum Dt res.logs = am a/am d`. -/
-theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCoreWf α] (Dt : DensePoly α)
+theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CPolyGcd DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] (Dt : DensePoly α)
     (a d : DensePoly α) (cands : List α)
     (hgden : toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
     (haden : toPoly d ≠ 0)

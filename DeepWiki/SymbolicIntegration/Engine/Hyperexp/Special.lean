@@ -16,7 +16,9 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+  [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CRischField α]
 
 /-! ### The full hyperexponential integral driver `cIntegrateHyperexp`
 
