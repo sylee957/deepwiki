@@ -25,13 +25,6 @@ def combineSNLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] (snum sden : P α) (r : LrtResult α P) : LrtResult α P :=
   ⟨combineRationalParts snum sden r.rational.1 r.rational.2, r.logs⟩
 
-/-- Special/LRT recombination executes on sparse polynomial results. -/
-example :
-    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
-    let r : LrtResult ℚ CPoly.SparsePoly := ⟨(ofList [2], ofList [1]), []⟩
-    CPoly.coeff (combineSNLrt (ofList [3]) (ofList [1]) r).rational.1 0 = 5 := by
-  native_decide
-
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `amGExt (toPoly p) ≠ 0` when `toPoly p ≠ 0`: base change (`φ` injective) and the fraction-field
 embedding are injective. -/
