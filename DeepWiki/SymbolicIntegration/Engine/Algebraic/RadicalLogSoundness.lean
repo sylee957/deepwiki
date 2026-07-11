@@ -383,7 +383,10 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval [CPolyResultant DensePoly]
         CPolyResultant.compute
           (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (CField.natCast k)) D))
     with hpts
-  have hcompute : DensePoly.cAlgResidueResultant D rho g0 g1 = DensePoly.cinterpolate pts := rfl
+  have hcompute : DensePoly.cAlgResidueResultant D rho g0 g1 = DensePoly.cinterpolate pts := by
+    rw [DensePoly.cAlgResidueResultant, DensePoly.cAlgResidueResultantWith,
+      CPoly.interpolate_dense_eq, CPolyEngine.deriv_dense_eq, CPolyEngine.cdeg_dense_eq,
+      ← hDp, hpts]
   -- node-image list and its distinctness
   have hfst : pts.map (fun p => CFieldSpec.toK p.1)
       = (List.range (2 * DensePoly.cdeg D + 1 + 1)).map

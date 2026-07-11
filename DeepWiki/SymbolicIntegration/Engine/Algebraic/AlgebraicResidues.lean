@@ -37,17 +37,32 @@ example :
     CPoly.coeff N 0 = 4 ∧ CPoly.coeff N 1 = -1 := by
   native_decide
 
-/-- The `n = 2` algebraic-residue resultant `cAlgResidueResultant D rho g0 g1 = R(Z) ∈ K[Z]`,
-`R(Z) = res_X((Z·D' − g₀)² − g₁²·ρ, D)` for `y² = ρ` and numerator `g = g₀ + g₁·y`. Computed by
-evaluation at `2·deg D + 1` nodes plus Lagrange interpolation (`cinterpolate`). -/
-def cAlgResidueResultant [CPolyResultant DensePoly]
-    (D rho g0 g1 : DensePoly α) : DensePoly α :=
-  let Dprime := cderiv D
-  let nNodes := 2 * cdeg D + 1                          -- `deg_Z R ≤ 2·deg_X D`
+/-- Representation-independent radical residue resultant with independently selected input and output
+polynomial representations. -/
+def cAlgResidueResultantWith {P Q : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [CPolyResultant P] [CPoly Q] [CPolyEngine Q]
+    {α : Type u} [CField α] (D rho g0 g1 : P α) : Q α :=
+  let Dprime := CPolyEngine.deriv D
+  let nNodes := 2 * CPolyEngine.cdeg D + 1             -- `deg_Z R ≤ 2·deg_X D`
   let pts : List (α × α) := (List.range (nNodes + 1)).map (fun k =>
     let c : α := CField.natCast k
     (c, CPolyResultant.compute (cAlgResidueNorm Dprime rho g0 g1 c) D))
-  cinterpolate pts
+  CPoly.interpolate pts
+
+/-- The dense `n = 2` algebraic-residue resultant `R(Z) = res_X((Z·D' − g₀)² − g₁²·ρ, D)`. -/
+def cAlgResidueResultant [CPolyResultant DensePoly]
+    (D rho g0 g1 : DensePoly α) : DensePoly α :=
+  cAlgResidueResultantWith D rho g0 g1
+
+/-- Radical residue resultants execute with sparse input and output polynomial storage. -/
+example :
+    cAlgResidueResultantWith (Q := CPoly.SparsePoly)
+      (CPoly.SparsePoly.ofList [(0, -1), (1, 1)] : CPoly.SparsePoly ℚ)
+      (CPoly.SparsePoly.ofList [(1, 1)])
+      (CPoly.SparsePoly.ofList [])
+      (CPoly.SparsePoly.ofList [(0, 1)]) =
+        CPoly.SparsePoly.ofList [(0, 1), (1, 0), (2, -1)] := by
+  native_decide
 
 /-! ### Residue membership and the integer-residue failure-test certificate -/
 

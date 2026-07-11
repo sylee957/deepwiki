@@ -70,7 +70,18 @@ coefficients). The outer `res_X(·, D)` is `∏` over the `deg_X D` roots of `D`
 `res_Y` factor of `Z`-degree `≤ n`, so `deg_Z R ≤ n · deg_X D`. Hence `n · deg_X D + 1` nodes are exact
 (the hyperelliptic `n = 2` gives `2·deg D`, matching `cAlgResidueResultant`). -/
 
-/-- The general-curve algebraic-residue resultant `genResidueResultant f g Dder D = R(Z) ∈ ℚ[Z]` for an
+/-- The general-curve algebraic-residue resultant with representation-selected interpolation output. -/
+def genResidueResultantWith {Q : Type → Type} [CPoly Q] [CPolyEngine Q]
+    [CPolyResultant DensePoly]
+    (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ)
+    (D : DensePoly ℚ) : Q ℚ :=
+  let nNodes := cdeg f * cdeg D + 1
+  let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
+    let z : ℚ := (k : ℚ)
+    (z, CPolyResultant.compute (resYAtNode f g Dder z) D))
+  CPoly.interpolate pts
+
+/-- The dense general-curve algebraic-residue resultant `genResidueResultant f g Dder D = R(Z) ∈ ℚ[Z]` for an
 arbitrary monic curve `F = f`: the full double resultant `R(Z) = res_X(res_Y(Z·D'(X) − g(X, Y), F(X, Y)),
 D(X))`, in the residue indeterminate `Z`. Computed by evaluation + interpolation: for nodes
 `z = 0, …, n·deg_X D`, the inner `res_Y` (`resYAtNode`) gives `res_Y(z·D' − g, F)`, then `res_X(·, D)`
@@ -79,11 +90,7 @@ gives `R(z) ∈ ℚ`, and `cinterpolate` recovers `R(Z)`; `deg_Z R ≤ n·deg_X 
 def genResidueResultant [CPolyResultant DensePoly]
     (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ)
     (D : DensePoly ℚ) : DensePoly ℚ :=
-  let nNodes := cdeg f * cdeg D + 1                        -- `deg_Z R ≤ n · deg_X D`
-  let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
-    let z : ℚ := (k : ℚ)
-    (z, CPolyResultant.compute (resYAtNode f g Dder z) D))
-  cinterpolate pts
+  genResidueResultantWith f g Dder D
 
 end DensePoly
 
@@ -118,6 +125,13 @@ def genResTrigR : DensePoly ℚ :=
 /-- The expected `R(Z) = F(1, Z) = Z³ + Z + 1` (low→high in `Z`, `[1, 1, 0, 1]`): the residues are the
 three roots `y₀` of the curve fiber `F(1, y) = y³ + y + 1`. -/
 def genResTrigExpected : DensePoly ℚ := [1, 1, 0, 1]
+
+/-- The trigonal residue resultant also executes with sparse storage in the residue variable. -/
+example :
+    genResidueResultantWith (Q := CPoly.SparsePoly)
+      genResTrigF genResTrig genResTrigDder genResTrigD =
+        CPoly.SparsePoly.ofList [(0, 1), (1, 1), (2, 0), (3, 1)] := by
+  native_decide
 
 /-- The full double resultant on the trigonal cubic: for `∫ (y/(x − 1)) dx` on the non-hyperelliptic
 `y³ + xy + x = 0` (`n = 3`), `genResidueResultant` produces `R(Z) = Z³ + Z + 1 = F(1, Z)`, the curve
