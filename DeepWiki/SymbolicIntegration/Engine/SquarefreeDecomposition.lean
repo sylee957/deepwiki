@@ -356,6 +356,53 @@ private theorem default_length_ge_maxMult [CPolyEngine P] [LawfulCPolyEngine.{u,
   simpa only [Nat.sub_self, Nat.sub_zero] using
     (defaultGo_length_ge_maxMult p hpp (CPoly.degBound p) 1 b d (le_refl 1) hinv hfuel)
 
+/-- The generic Yun factors are associated to the consecutive abstract squarefree parts. -/
+private theorem default_forall₂_squarefreeParts [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] [CharZero (CFieldSpec.K α)] (p : P α)
+    (hp0 : CPoly.toPoly p ≠ 0) (hpp : (CPoly.toPoly p).primPart ≠ 0) :
+    List.Forall₂ Associated ((CPolySquarefree.default p).map CPoly.toPoly)
+      ((List.range (CPolySquarefree.default p).length).map
+        (fun j => sqfreeFactPart (CPoly.toPoly p) (1 + j))) := by
+  rw [CPolySquarefree.default]
+  set g := CPolyGcd.compute p (CPolyEngine.deriv p)
+  set b := CPolyEuclidean.div p g
+  set d := CPolyEngine.sub (CPolyEuclidean.div (CPolyEngine.deriv p) g)
+    (CPolyEngine.deriv b)
+  set L := (CPolySquarefree.defaultGo (CPoly.degBound p) b d).length with hL
+  have hinv : YunInv (CPoly.toPoly p) 1 (CPoly.toPoly b) (CPoly.toPoly d) := by
+    simpa only [g, b, d] using defaultInit_yunInv p hp0 hpp
+  have hmap := defaultGo_map_toPoly_eq_yunLoopAbs (P := P) (α := α)
+    (CPoly.degBound p) b d
+  rw [← hL] at hmap
+  rw [hmap, yunLoopAbs_irrelevant (0 : (CRingSpec.R α)[X]) (CPoly.toPoly p) L
+    (CPoly.toPoly b, CPoly.toPoly d) 1 1]
+  letI : CharZero (CRingSpec.R α) := by
+    change CharZero (CFieldSpec.K α)
+    infer_instance
+  exact yunLoopAbs_forall₂ (CPoly.toPoly p) hpp L 1 (CPoly.toPoly b) (CPoly.toPoly d)
+    (le_refl 1) hinv
+
+open UniqueFactorizationMonoid in
+/-- The generic Yun factors reconstruct their input polynomial up to associates. -/
+private theorem default_reconstruct [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] [CharZero (CFieldSpec.K α)] (p : P α)
+    (hp0 : CPoly.toPoly p ≠ 0) (hpp : (CPoly.toPoly p).primPart ≠ 0) :
+    Associated (CPoly.toPoly p) (prodPow 1 ((CPolySquarefree.default p).map CPoly.toPoly)) := by
+  have h1 : Associated (prodPow 1 ((CPolySquarefree.default p).map CPoly.toPoly))
+      (prodPow 1 ((List.range (CPolySquarefree.default p).length).map
+        (fun j => sqfreeFactPart (CPoly.toPoly p) (1 + j)))) :=
+    prodPow_associated (default_forall₂_squarefreeParts p hp0 hpp) 1
+  have h2 : Associated (prodPow 1 ((List.range (CPolySquarefree.default p).length).map
+      (fun j => sqfreeFactPart (CPoly.toPoly p) (1 + j)))) (CPoly.toPoly p).primPart := by
+    letI : CharZero (CRingSpec.R α) := by
+      change CharZero (CFieldSpec.K α)
+      infer_instance
+    exact prodPow_one_sqfreeFactPart_range_associated (CPoly.toPoly p) hpp _
+      (default_length_ge_maxMult p hp0 hpp)
+  exact ((h1.trans h2).trans (associated_primPart_self (CPoly.toPoly p) hp0)).symm
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
