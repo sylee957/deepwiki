@@ -27,10 +27,10 @@ def idealIdentity (n : ℕ) : GenDivisor :=
   (List.range n).map (fun i =>
     (List.range n).map (fun j => if i = j then (CCommRing.one : DenseFrac ℚ) else CCommRing.zero))
 
-/-- Entrywise lowest-terms reduction `qReduceMat I = I.map (List.map qReduce)`, value-preserving on
+/-- Entrywise lowest-terms reduction `reduceMat I = I.map (List.map CFrac.reduce)`, value-preserving on
 each `ℚ(x)` entry (cancels common polynomial factors only). -/
-def qReduceMat (I : GenDivisor) : GenDivisor :=
-  I.map (List.map qReduce)
+def reduceMat (I : GenDivisor) : GenDivisor :=
+  I.map (List.map CFrac.reduce)
 
 /-- Reconstruct a `K(x, y)` element from `[w]`-coordinates: `wToAf basis row = Σⱼ rowⱼ·wⱼ` (inverse
 of `toOCoords`). -/
@@ -81,10 +81,10 @@ def idealProduct (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dense
   match matInv n B with
   | none => []
   | some Binv =>
-    -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry put in lowest terms (`qReduceMat`,
+    -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry put in lowest terms (`reduceMat`,
     -- value-preserving) before the common-denominator clearing below
     let cross : List (List (DenseFrac ℚ)) :=
-      qReduceMat (I.flatMap (fun gi =>
+      reduceMat (I.flatMap (fun gi =>
         J.map (fun gk =>
           toOCoords Binv n (CPoly.mulMod f (wToAf basis gi) (wToAf basis gk)))))
     -- clear to K[x] at a common denom δ, Hermite-reduce, take the n nonzero rows
@@ -92,8 +92,8 @@ def idealProduct (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dense
     let N : PolyMatrix DensePoly ℚ := cross.map (clearRowExact δ)
     let nz := (CPoly.hermiteRowReduce N).filter (fun row => !row.all cisZero)
     -- read back the first n rows as the fractional ideal (1/δ)·Nhat, then put every entry in lowest terms
-    -- (`qReduceMat`, value-preserving) so the product fed back into the next `idealProduct` is canonical
-    qReduceMat ((List.range n).map (fun i =>
+    -- (`reduceMat`, value-preserving) so the product fed back into the next `idealProduct` is canonical
+    reduceMat ((List.range n).map (fun i =>
       (List.range n).map (fun j =>
         let num := (nz.getD i []).getD j []
         let dd := cnorm δ

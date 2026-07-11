@@ -308,7 +308,7 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   `cgcdExt`/`cdivmod`: `cdiophantine a b c` solves `s·a + t·b = c` when `gcd(a,b) ∣ c`
   (`toPoly_cdiophantine`, scaling the Bézout pair by the exact quotient `c/g`), and
   certified `CFrac` gcd cancellation normalises a represented fraction with the generic
-  `toRatFunc_qReduce` value-preservation theorem.
+  `CFrac.toRatFunc_reduce` value-preservation theorem.
 - **Evaluation** (`PolyReprDenote.lean`): `ceval` with `toR_ceval` (= Mathlib `eval`), the ring-hom
   squares `toR_ceval_add`/`toR_ceval_mul`, and the factor theorem `ceval_eq_zero_iff_dvd`.
 - **Resultant** (`PolyReprResultant.lean`, COMPLETE): `clistDetn` (computable cofactor determinant over

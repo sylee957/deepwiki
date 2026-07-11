@@ -89,7 +89,8 @@ runs the same fraction algorithm.
    `CPolyEngine P` and `CPolyEuclidean P`, so dense source witnesses are only specialization boundaries.
    Fraction gcd cancellation now lives in `ComputableAlgebra/FracReduce.lean` and is generic over
    `CFrac F P`, `CPolyGcd P`, and `CPolyEuclidean P`; the dense-only `Engine/QFunReduce.lean` module is
-   retired, and sparse fraction computations plus denotation theorems exercise the shared reducer.
+   retired, and the public operation is now the symmetric `CFrac.reduce` API with dense and sparse
+   computations plus a shared denotation theorem.
    Monic-denominator normalization is the generic `CFrac.reduceMonic` operation in the same module;
    algebraic integral-basis and divisor consumers no longer depend on the dense-only `qReduceNZ` helper.
    The parametric Risch-DE constraint builder, kernel solve, and limited-integration wrapper now live in

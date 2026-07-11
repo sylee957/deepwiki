@@ -59,12 +59,9 @@ def crischDESolveSoundWf (f g : DenseFrac β) : Option (DenseFrac β) :=
     let q' : DenseFrac β := CFrac.ofPoly q
     let ftilde : DenseFrac β := weakNormalizedF f q'
     if CFrac.canonNormalizedGate ftilde then
-      match reduceSoundOpt ftilde with
+      match crischDERawSolveWf (CFrac.reduce ftilde) (mul q' g) with
       | none => none
-      | some ftildeR =>
-        match crischDERawSolveWf ftildeR (mul q' g) with
-        | none => none
-        | some ytilde => some (mul ytilde (inv q'))
+      | some ytilde => some (mul ytilde (inv q'))
     else none
 
 end Solver
@@ -90,12 +87,9 @@ theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : DenseFrac β)
   rw [show crischDESolveSoundWf f g
       = (if DensePoly.cisZero q then none
          else if CFrac.canonNormalizedGate ftilde then
-                match reduceSoundOpt ftilde with
+                match crischDERawSolveWf (CFrac.reduce ftilde) (mul q' g) with
                 | none => none
-                | some ftildeR =>
-                  match crischDERawSolveWf ftildeR (mul q' g) with
-                  | none => none
-                  | some ytilde => some (mul ytilde (inv q'))
+                | some ytilde => some (mul ytilde (inv q'))
               else none) from rfl] at hsolve
   by_cases hqz : DensePoly.cisZero q = true
   · rw [if_pos hqz] at hsolve
@@ -116,12 +110,9 @@ theorem crischDESolveSoundWf_check (f g y : DenseFrac β)
   rw [show crischDESolveSoundWf f g
       = (if DensePoly.cisZero q then none
          else if CFrac.canonNormalizedGate ftilde then
-                match reduceSoundOpt ftilde with
+                match crischDERawSolveWf (CFrac.reduce ftilde) (mul q' g) with
                 | none => none
-                | some ftildeR =>
-                  match crischDERawSolveWf ftildeR (mul q' g) with
-                  | none => none
-                  | some ytilde => some (mul ytilde (inv q'))
+                | some ytilde => some (mul ytilde (inv q'))
               else none) from rfl] at hsolve
   by_cases hqz : DensePoly.cisZero q = true
   · rw [if_pos hqz] at hsolve

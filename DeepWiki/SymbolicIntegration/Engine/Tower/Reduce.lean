@@ -3,9 +3,9 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.ExampleData
 
-/-! # Tower-level demos for the `CFrac` gcd-cancel reducer `qReduce`
-`qReduce` divides a fraction's numerator and denominator by their monic gcd, preserving the field value
-(`toRatFunc_qReduce`). These examples show it shrinks a swollen product and lets a hyperexponential
+/-! # Tower-level demos for the `CFrac` gcd-cancel reducer `CFrac.reduce`
+`CFrac.reduce` divides a fraction's numerator and denominator by their monic gcd, preserving the field value
+(`CFrac.toRatFunc_reduce`). These examples show it shrinks a swollen product and lets a hyperexponential
 residual solver see a reduced constant residual. -/
 
 open Polynomial
@@ -13,10 +13,10 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 
-/-! ### Product-size example: `qReduce` shrinks an unreduced product
+/-! ### Product-size example: `CFrac.reduce` shrinks an unreduced product
 
 `mul (t/(t−1)) ((t−1)/t)` stores the constant `1` as `(t·(t−1))/((t−1)·t)` (num/den length 3);
-`qReduce` cancels to `1/1` (length 1) with the field value unchanged. -/
+`CFrac.reduce` cancels to `1/1` (length 1) with the field value unchanged. -/
 
 namespace CFrac
 
@@ -37,30 +37,30 @@ theorem swellProd_num_length : (DensePoly.cnorm swellProd.num : List ℚ).length
 /-- The unreduced product `swellProd` has denominator length 3. -/
 theorem swellProd_den_length : (DensePoly.cnorm swellProd.den : List ℚ).length = 3 := by ccompute
 
-/-- `qReduce` shrinks the swollen product's numerator to length 1. -/
+/-- `CFrac.reduce` shrinks the swollen product's numerator to length 1. -/
 theorem swellProd_reduced_num_length :
-    (DensePoly.cnorm (qReduce swellProd).num : List ℚ).length = 1 := by ccompute
+    (DensePoly.cnorm (CFrac.reduce swellProd).num : List ℚ).length = 1 := by ccompute
 
-/-- `qReduce` shrinks the swollen product's denominator to length 1. -/
+/-- `CFrac.reduce` shrinks the swollen product's denominator to length 1. -/
 theorem swellProd_reduced_den_length :
-    (DensePoly.cnorm (qReduce swellProd).den : List ℚ).length = 1 := by ccompute
+    (DensePoly.cnorm (CFrac.reduce swellProd).den : List ℚ).length = 1 := by ccompute
 
-/-- The reduced product `qReduce swellProd` has nonzero numerator (`cisZero` is `false`). -/
+/-- The reduced product `CFrac.reduce swellProd` has nonzero numerator (`cisZero` is `false`). -/
 theorem swellProd_reduced_num_nonzero :
-    DensePoly.cisZero (qReduce swellProd).num = false := by ccompute
+    DensePoly.cisZero (CFrac.reduce swellProd).num = false := by ccompute
 
-/-- `qReduce` preserves the field value: `toRatFunc (qReduce swellProd) = toRatFunc swellProd`. -/
+/-- `CFrac.reduce` preserves the field value: `toRatFunc (CFrac.reduce swellProd) = toRatFunc swellProd`. -/
 theorem swellProd_value_preserved :
-    toRatFunc (qReduce swellProd) = toRatFunc swellProd :=
-  toRatFunc_qReduce swellProd
+    toRatFunc (CFrac.reduce swellProd) = toRatFunc swellProd :=
+  CFrac.toRatFunc_reduce swellProd
 
-/-! #### `qReduce` preserves the zero test
+/-! #### `CFrac.reduce` preserves the zero test
 
-Since `qReduce` preserves the field value, it preserves the zero test `isZero` (theorem
-`CFrac.isZero_qReduce`): a reduced fraction tests zero exactly when the original does. -/
+Since `CFrac.reduce` preserves the field value, it preserves the zero test `isZero` (theorem
+`CFrac.isZero_reduce`): a reduced fraction tests zero exactly when the original does. -/
 
 #print axioms swellProd_value_preserved
-#print axioms CFrac.isZero_qReduce
+#print axioms CFrac.isZero_reduce
 
 end CFrac
 
@@ -76,19 +76,19 @@ private def sparseSwellFrac : SparseFrac ℚ :=
     (by ccompute)
 
 example :
-    CPolyEngine.cdeg (CFrac.num (qReduce sparseSwellFrac)) = 1 := by
+    CPolyEngine.cdeg (CFrac.num (CFrac.reduce sparseSwellFrac)) = 1 := by
   ccompute
 
 example :
-    CFrac.toRatFunc (qReduce sparseSwellFrac) = CFrac.toRatFunc sparseSwellFrac :=
-  toRatFunc_qReduce sparseSwellFrac
+    CFrac.toRatFunc (CFrac.reduce sparseSwellFrac) = CFrac.toRatFunc sparseSwellFrac :=
+  CFrac.toRatFunc_reduce sparseSwellFrac
 
 end CFrac
 
-/-! ### Residual-solver example: `qReduce` exposes a constant residual
+/-! ### Residual-solver example: `CFrac.reduce` exposes a constant residual
 
 A residual that is the value `1` stored as `(2x)/(2x)` makes `crischDESolve 0 R` return `none`
-(`Rstuck_unreduced_returns_none`); after `qReduce` collapses it to `1/1` the base solve succeeds,
+(`Rstuck_unreduced_returns_none`); after `CFrac.reduce` collapses it to `1/1` the base solve succeeds,
 recovering `∫1 = x` (`Rstuck_reduced_solves`). The obstruction is representational. -/
 
 namespace CFrac
@@ -114,10 +114,10 @@ because the stored denominator is the spurious factor `2x`. -/
 theorem Rstuck_unreduced_returns_none :
     CRischField.crischDESolve (CCommRing.zero : DenseFrac ℚ) Rstuck = none := by ccompute
 
-/-- The reduced residual solves: `crischDESolve 0 (qReduce Rstuck)` returns `some y` with `y = x`,
+/-- The reduced residual solves: `crischDESolve 0 (CFrac.reduce Rstuck)` returns `some y` with `y = x`,
 recovering `∫1 = x`. -/
 theorem Rstuck_reduced_solves :
-    (match CRischField.crischDESolve (CCommRing.zero : DenseFrac ℚ) (qReduce Rstuck) with
+    (match CRischField.crischDESolve (CCommRing.zero : DenseFrac ℚ) (CFrac.reduce Rstuck) with
       | some y => CCommRing.isZero (CField.sub y nLvl1X)
       | none => false) = true := by ccompute
 

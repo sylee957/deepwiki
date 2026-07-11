@@ -5,7 +5,7 @@ import DeepWiki.ComputableAlgebra.PolyReprGcd
 
 /-! # Representation-independent fraction reduction
 
-`qReduce` cancels the selected polynomial gcd from a represented fraction through the abstract gcd
+`CFrac.reduce` cancels the selected polynomial gcd from a represented fraction through the abstract gcd
 and Euclidean-division capabilities. Its denotation theorem is shared by dense and sparse fractions. -/
 
 open Polynomial
@@ -112,24 +112,22 @@ theorem cisZero_reduceDen [LawfulCPolyEngine.{u,v} P]
   apply toPoly_den_ne_zero_generic a
   rw [← toPoly_reduceDen_mul a, hz, zero_mul]
 
-end CFrac
-
 /-- Cancel the selected polynomial gcd from a represented fraction. -/
-def qReduce {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
-    [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
-    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
-    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : F α) : F α :=
-  CFrac.ofFraction (CFrac.reduceNum a) (CFrac.reduceDen a) (CFrac.cisZero_reduceDen a)
+def reduce {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P]
+    {α : Type u} [CField α] (a : F α) : F α :=
+  if h : CPolyEngine.cisZero (CFrac.reduceDen a) = false then
+    CFrac.ofFraction (CFrac.reduceNum a) (CFrac.reduceDen a) h
+  else a
 
-/-- `qReduce` preserves the represented fraction's rational-function value. -/
-@[denote] theorem toRatFunc_qReduce
+/-- `CFrac.reduce` preserves the represented fraction's rational-function value. -/
+@[denote] theorem toRatFunc_reduce
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
     [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : F α) :
-    CFrac.toRatFunc (qReduce a) = CFrac.toRatFunc a := by
+    CFrac.toRatFunc (CFrac.reduce a) = CFrac.toRatFunc a := by
   let G := CFrac.am α (CPoly.toPoly (CFrac.reduceGcd a))
   let Nq := CFrac.am α (CPoly.toPoly (CFrac.reduceNum a))
   let Dq := CFrac.am α (CPoly.toPoly (CFrac.reduceDen a))
@@ -147,23 +145,42 @@ def qReduce {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type 
     intro hzero
     rw [hzero, zero_mul] at hden
     exact hDne hden.symm
-  rw [qReduce, CFrac.toRatFunc_ofFraction, CFrac.toRatFunc_eq_div]
+  rw [CFrac.reduce, dif_pos (CFrac.cisZero_reduceDen a), CFrac.toRatFunc_ofFraction,
+    CFrac.toRatFunc_eq_div]
   change Nq / Dq = N / D
   rw [div_eq_div_iff hDqne hDne, ← hnum, ← hden]
   ring
 
-namespace CFrac
-
-/-- `qReduce` preserves the represented fraction's Boolean zero test. -/
-theorem isZero_qReduce
+/-- The lawful reduced fraction stores the selected quotient numerator. -/
+@[simp] theorem num_reduce
     {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
     [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
     {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : F α) :
-    isZero (qReduce a) = isZero a := by
+    num (reduce a) = reduceNum a := by
+  rw [reduce, dif_pos (cisZero_reduceDen a), num_ofFraction]
+
+/-- The lawful reduced fraction stores the selected quotient denominator. -/
+@[simp] theorem den_reduce
+    {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : F α) :
+    den (reduce a) = reduceDen a := by
+  rw [reduce, dif_pos (cisZero_reduceDen a), den_ofFraction]
+
+/-- `CFrac.reduce` preserves the represented fraction's Boolean zero test. -/
+theorem isZero_reduce
+    {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : F α) :
+    isZero (reduce a) = isZero a := by
   apply Bool.eq_iff_iff.mpr
-  rw [isZero_iff_toRatFunc, isZero_iff_toRatFunc, toRatFunc_qReduce]
+  rw [isZero_iff_toRatFunc, isZero_iff_toRatFunc, toRatFunc_reduce]
 
 /-- Monic-denominator reduction preserves the represented rational-function value. -/
 @[denote] theorem toRatFunc_reduceMonic
@@ -204,8 +221,8 @@ theorem isZero_qReduce
               rw [LawfulCPolyEngine.toPoly_cnorm, hz]))
       have hc : c ≠ 0 := am_ne_zero (Polynomial.C_ne_zero.mpr hcCoeff)
       rw [mul_div_mul_left _ _ hc]
-      have hreduce := toRatFunc_qReduce a
-      rw [qReduce, toRatFunc_ofFraction] at hreduce
+      have hreduce := toRatFunc_reduce a
+      rw [reduce, dif_pos (cisZero_reduceDen a), toRatFunc_ofFraction] at hreduce
       exact hreduce
     · rfl
 
@@ -225,8 +242,8 @@ end CFrac
 /-! The sparse specialization resolves the same reducer and denotation law without a dense adapter. -/
 
 example {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : SparseFrac α) :
-    CFrac.toRatFunc (qReduce a) = CFrac.toRatFunc a :=
-  toRatFunc_qReduce a
+    CFrac.toRatFunc (CFrac.reduce a) = CFrac.toRatFunc a :=
+  CFrac.toRatFunc_reduce a
 
 example {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : SparseFrac α) :
     CFrac.toRatFunc (CFrac.reduceMonic a) = CFrac.toRatFunc a :=
