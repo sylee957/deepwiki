@@ -22,8 +22,8 @@ abbrev derivation_idempotent_eq_zero := @FunctionAlgebra.derivation_idempotent_e
 /-- **§7.2 recombination integrator** (combining the component-wise results using the indicator
 functions): the recombined integral `F = Σᵢ eᵢ·Fᵢ` over a function algebra `K(x)[y]/(T)`, from the CRT
 indicators `es = [eᵢ]` and per-component integrals `Fs = [Fᵢ]`. The library's
-`DensePoly.afIntegrateFunctionAlgebra`. -/
-abbrev afIntegrateFunctionAlgebra := @DensePoly.afIntegrateFunctionAlgebra
+`CPoly.afIntegrateFunctionAlgebra`. -/
+abbrev afIntegrateFunctionAlgebra := @CPoly.afIntegrateFunctionAlgebra
 
 /-- **★ §7.1–7.2 zero-divisor soundness** `D(∫f) = f` over a REDUCIBLE curve (irreducible-curve caveat
 removed): for a separable (possibly reducible) curve `T` with CRT idempotent indicators forming a

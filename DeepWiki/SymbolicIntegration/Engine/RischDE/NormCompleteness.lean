@@ -47,10 +47,16 @@ omit [CDiffField α] [CFracGcdCoreWf α] in
 theorem dvd_eq_true_of_toPoly_dvd (q p : DensePoly α) (hq0 : DensePoly.cnorm q ≠ [])
     (hdvd : toPoly q ∣ toPoly p) :
     CPolyEuclidean.dvd q p = true := by
+  have hqDense : DensePoly.toPoly q ≠ 0 :=
+    fun h => hq0 ((DensePoly.cnormG_eq_nil_iff q).mpr h)
+  have hq0' : CPoly.toPoly q ≠ 0 := by
+    simpa only [toPoly_list_eq] using hqDense
+  have hdvd' : CPoly.toPoly q ∣ CPoly.toPoly p := by
+    simpa only [toPoly_list_eq] using hdvd
   by_cases h : CPolyEuclidean.dvd q p = true
   · exact h
   · have hfalse : CPolyEuclidean.dvd q p = false := Bool.eq_false_iff.mpr h
-    exact False.elim ((CPolyEuclidean.not_toPoly_dvd_of_dvd_eq_false q p hq0 hfalse) hdvd)
+    exact False.elim ((CPolyEuclidean.not_toPoly_dvd_of_dvd_eq_false q p hq0' hfalse) hdvd')
 
 /-- The normal-denominator step returns `some` from the mathematical divisibility `eₙ ∣ dₙh²`. -/
 theorem cRdeNormalDenominatorG_isSome_of_dvd (Dt : DensePoly α)

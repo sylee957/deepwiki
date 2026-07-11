@@ -147,7 +147,7 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
     subst hα; subst hβ
     simp only [denote, toPolyG_nil, add_zero]
     simp only [map_one, mul_zero, add_zero, one_mul]
-    have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvd c = true := hdvd
+    have hdvd' : CPolyEuclidean.dvd (CFracGcdCoreWf.cgcdFFCoreWf a b) c = true := hdvd
     rw [cSPDEGClearedGenWf] at hcert
     simp only [hn, hdvd'] at hcert
     obtain ⟨hdiva, hdivb, hdivc, hadne, _⟩ := hcert
@@ -176,7 +176,7 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
     simp only [Prod.mk.injEq] at hspde
     obtain ⟨hbbar, hcbar, hm, hα, hβ⟩ := hspde
     rw [← hbbar] at hh; rw [← hcbar] at hh
-    have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvd c = true := hdvd
+    have hdvd' : CPolyEuclidean.dvd (CFracGcdCoreWf.cgcdFFCoreWf a b) c = true := hdvd
     have hguard' : (n - ((CPolyEuclidean.div a (CFracGcdCoreWf.cgcdFFCoreWf a b)).cdeg : ℤ) + 1).toNat
         < (n + 1).toNat := hguard
     rw [cSPDEGClearedGenWf] at hcert
@@ -242,7 +242,7 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
     rw [if_pos hn]
     trivial
   | case2 a b c n hn g hdvd ad ih1 =>
-    have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvd c = true := hdvd
+    have hdvd' : CPolyEuclidean.dvd (CFracGcdCoreWf.cgcdFFCoreWf a b) c = true := hdvd
     have hadef : ad = CPolyEuclidean.div a g := rfl
     rw [cSPDEGClearedGenWf]
     simp only [hn, hdvd'] at hin ⊢
@@ -273,7 +273,7 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
       · rw [if_neg hguard] at hrest ⊢
         exact ⟨by simpa [hadef, mul_comm] using hbez, trivial⟩
   | case3 a b c n hn g hdvd =>
-    have hdvd' : ¬ (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvd c = true := hdvd
+    have hdvd' : ¬ CPolyEuclidean.dvd (CFracGcdCoreWf.cgcdFFCoreWf a b) c = true := hdvd
     rw [cSPDEGClearedGenWf]
     simp only [hn, if_neg hdvd']
     trivial
