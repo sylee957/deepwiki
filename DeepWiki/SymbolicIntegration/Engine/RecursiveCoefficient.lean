@@ -20,16 +20,23 @@ structure CRecursiveCoefficientIntegrator (α : Type u) [CField α] [CDiffField 
 
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
 
+/-- Semantic domain on which ordinary recursive coefficient integration is required to be complete. -/
+abbrev RecursiveCoefficientDomain := α → Prop
+
+/-- Semantic domain on which recursive limited integration is required to be complete. -/
+abbrev LimitedCoefficientDomain := α → α → Prop
+
 /-- Denotation-level soundness contract for recursive coefficient integration. -/
 class LawfulCRecursiveCoefficientIntegrator (C : CRecursiveCoefficientIntegrator α) : Prop where
   /-- Every returned coefficient differentiates to the requested input. -/
   sound : ∀ (c b : α), C.integrate c = some b →
     CFieldSpec.toK (CDiffField.cderiv b) = CFieldSpec.toK c
 
-/-- Relative-completeness contract for recursive coefficient integration. -/
-class CompleteCRecursiveCoefficientIntegrator (C : CRecursiveCoefficientIntegrator α) : Prop where
-  /-- Every coefficient with a denotational antiderivative is accepted. -/
-  complete : ∀ c : α,
+/-- Domain-relative completeness contract for recursive coefficient integration. -/
+class CompleteCRecursiveCoefficientIntegrator (C : CRecursiveCoefficientIntegrator α)
+    (domain : RecursiveCoefficientDomain (α := α)) : Prop where
+  /-- Every domain coefficient with a denotational antiderivative is accepted. -/
+  complete : ∀ c : α, domain c →
     (∃ b : α, CFieldSpec.toK (CDiffField.cderiv b) = CFieldSpec.toK c) →
       ∃ b, C.integrate c = some b
 
@@ -49,11 +56,12 @@ class LawfulCLimitedCoefficientIntegrator (C : CRecursiveCoefficientIntegrator �
   limited_sound : ∀ (η c b r : α), C.limitedIntegrate η c = some (b, r) →
     IsLimitedCoefficientResult η c b r
 
-/-- Relative-completeness contract for recursive limited integration. -/
+/-- Domain-relative completeness contract for recursive limited integration. -/
 class CompleteCLimitedCoefficientIntegrator (C : CRecursiveCoefficientIntegrator α)
+    (domain : LimitedCoefficientDomain (α := α))
     [LawfulCLimitedCoefficientIntegrator C] : Prop where
-  /-- Every limited-integrable coefficient is accepted. -/
-  limited_complete : ∀ (η c : α), IsLimitedCoefficientIntegrable η c →
+  /-- Every domain pair admitting a limited decomposition is accepted. -/
+  limited_complete : ∀ (η c : α), domain η c → IsLimitedCoefficientIntegrable η c →
     ∃ b r, C.limitedIntegrate η c = some (b, r) ∧ IsLimitedCoefficientResult η c b r
 
 end DeepWiki.SymbolicIntegration

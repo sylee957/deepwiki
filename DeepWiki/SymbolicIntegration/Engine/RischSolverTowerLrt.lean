@@ -183,6 +183,33 @@ instance instLawfulCLimitedCoefficientIntegratorLrt
     LawfulCLimitedCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β)) where
   limited_sound η c b r h := towerCoeffLimitedIntegrateLrt_sound η c b r h
 
+/-- Domain where tower limited integration descends to the selected coefficient-field capability. -/
+def towerLimitedCoefficientDomain (domain : LimitedIntegrateSingleDomain β) :
+    LimitedCoefficientDomain (α := DenseFrac β) := fun η c =>
+  domain (CFrac.num c) (CFrac.den c) (CFrac.num η) (CFrac.den η) ∧
+    IsLimitedIntegrateSingleIntegrable
+      (CFrac.num c) (CFrac.den c) (CFrac.num η) (CFrac.den η)
+
+/-- Coefficient-field limited completeness lifts through `DenseFrac` on the descended domain. -/
+instance instCompleteCLimitedCoefficientIntegratorLrt
+    [L : CLimitedIntegrateSingleLrt β] [LawfulCLimitedIntegrateSingleLrt L]
+    (domain : LimitedIntegrateSingleDomain β)
+    [CompleteCLimitedIntegrateSingleLrt L domain]
+    [LawfulCRischLevelLrt (inferInstance : CRischLevelLrt β)] :
+    CompleteCLimitedCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β))
+      (towerLimitedCoefficientDomain domain) where
+  limited_complete η c hdomain _ := by
+    obtain ⟨hdomain, hintegrable⟩ := hdomain
+    obtain ⟨bn, bd, cc, hrun, _hresult⟩ :=
+      CompleteCLimitedIntegrateSingleLrt.complete (C := L) (domain := domain)
+        (CFrac.num c) (CFrac.den c) (CFrac.num η) (CFrac.den η)
+        hdomain hintegrable
+    let b : DenseFrac β := CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd)
+    let r : DenseFrac β := CFrac.ofPoly [cc]
+    have hout : towerCoeffLimitedIntegrateLrt η c = some (b, r) := by
+      simp only [towerCoeffLimitedIntegrateLrt, hrun, b, r]
+    exact ⟨b, r, hout, towerCoeffLimitedIntegrateLrt_sound η c b r hout⟩
+
 /-- The tower primitive-polynomial stage driven by an explicit recursive coefficient operation. -/
 def recursiveTowerPolyIntegrateLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     (I : CRecursiveCoefficientIntegrator (DenseFrac β))

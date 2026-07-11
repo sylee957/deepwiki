@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentReconstruct
 import DeepWiki.SymbolicIntegration.Engine.MonomialCaseSparse
 import DeepWiki.SymbolicIntegration.Engine.RischLevel
+import DeepWiki.SymbolicIntegration.Engine.CheckIdentityCorrect
 
 /-! # Tangent coupled-solver capability
 
@@ -137,6 +138,76 @@ instance instCompleteCMonomialCaseTangent (S : CTangentCoupledSolver) (B : CTang
     refine ⟨B.reassemble p q₁ q₂, ?_⟩
     simp [tangentMonomialCase, hprepare, hsolve]
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
+
+/-- Certificate-check a tangent bridge's reassembled special fraction before releasing it. -/
+def checkedTangentMonomialCase (S : CTangentCoupledSolver) (B : CTangentSpecialBridge) :
+    CMonomialCase DensePoly (DenseFrac ℚ) where
+  integrateSpecial Dt fp b ds := do
+    let p ← B.prepare Dt fp b ds
+    let qs ← S.solve p.degreeBound p.diagonal p.offDiagonal p.rhs₁ p.rhs₂ p.level
+    let out := B.reassemble p qs.1 qs.2
+    if CPolyEngine.cisZero ds then none
+    else if CPolyEngine.cisZero out.2 then none
+    else
+      let result : IntegralResult (DenseFrac ℚ) := { rational := out, logs := [] }
+      if DensePoly.checkIdentity Dt result (polynomialSpecialNumerator fp b ds) ds then some out else none
+  postprocessNormal _ before := some before
+
+/-- The certificate-checked tangent monomial case is sound without a lawful bridge assumption. -/
+instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoupledSolver) (B : CTangentSpecialBridge) :
+    LawfulCMonomialCase (checkedTangentMonomialCase S B) where
+  special_sound Dt fp b ds snum sden hrun := by
+    simp only [checkedTangentMonomialCase] at hrun
+    rcases hprepare : B.prepare Dt fp b ds with _ | p
+    · simp [hprepare] at hrun
+    rw [hprepare] at hrun
+    change (S.solve p.degreeBound p.diagonal p.offDiagonal p.rhs₁ p.rhs₂ p.level).bind
+      (fun qs =>
+        if CPolyEngine.cisZero ds then none
+        else if CPolyEngine.cisZero (B.reassemble p qs.1 qs.2).2 then none
+        else
+          let result : IntegralResult (DenseFrac ℚ) :=
+            { rational := B.reassemble p qs.1 qs.2, logs := [] }
+          if DensePoly.checkIdentity Dt result (polynomialSpecialNumerator fp b ds) ds then
+            some (B.reassemble p qs.1 qs.2)
+          else none) = some (snum, sden) at hrun
+    rcases hsolve : S.solve p.degreeBound p.diagonal p.offDiagonal p.rhs₁ p.rhs₂ p.level with
+      _ | qs
+    · simp [hsolve] at hrun
+    rw [hsolve] at hrun
+    simp only [Option.bind_some] at hrun
+    let hif := hrun
+    split at hif
+    · simp at hif
+    rename_i hds
+    simp at hif
+    obtain ⟨hsden, hcheck, hout⟩ := hif
+    have hds' : CPoly.toPoly ds ≠ 0 :=
+      CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (Bool.eq_false_iff.mpr hds)
+    have houtRaw : CPoly.toPoly (B.reassemble p qs.1 qs.2).2 ≠ 0 :=
+      CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false hsden
+    have hout' : CPoly.toPoly sden ≠ 0 := by
+      simpa [hout] using houtRaw
+    let result : IntegralResult (DenseFrac ℚ) := { rational := B.reassemble p qs.1 qs.2, logs := [] }
+    have hid := field_identity_of_checkIdentityP Dt result (polynomialSpecialNumerator fp b ds) ds
+      houtRaw hds' (by simp [result]) hcheck
+    simp only [result, logResidueSumP, List.map_nil, List.sum_nil, add_zero] at hid
+    refine ⟨hout', ?_⟩
+    change (towerFractionFieldDerivP Dt)
+      (fieldFracP (B.reassemble p qs.1 qs.2).1 (B.reassemble p qs.1 qs.2).2) =
+        fieldFracP (polynomialSpecialNumerator fp b ds) ds at hid
+    rw [fieldFracP_polynomialSpecialNumerator fp b ds hds'] at hid
+    simpa [hout] using hid
+  postprocessNormal_sound _ _ _ before after hbefore hrun := by
+    change some before = some after at hrun
+    have hEq : before = after := Option.some.inj hrun
+    subst after
+    exact hbefore
+  postprocessNormal_den_nonzero _ before after hden hrun := by
+    change some before = some after at hrun
+    have hEq : before = after := Option.some.inj hrun
+    subst after
+    exact hden
 
 /-- Tangent normal reduction obtained by certificate-checking an arbitrary raw normal reducer. -/
 def tangentNormalReduction (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :

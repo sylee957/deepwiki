@@ -101,6 +101,10 @@ def checkedLimitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly �
       some out
     else none
 
+/-- Exact acceptance domain of the checked rational-base limited integrator. -/
+def CheckedLimitedIntegrateSingleBaseDomain (anum aden ηnum ηden : DensePoly ℚ) : Prop :=
+  ∃ out, checkedLimitedIntegrateSingleBaseNumDen anum aden ηnum ηden = some out
+
 /-- Every accepted checked base limited-integration result satisfies its field identity. -/
 theorem checkedLimitedIntegrateSingleBaseNumDen_sound
     (anum aden ηnum ηden bnum bden : DensePoly ℚ) (c : ℚ)

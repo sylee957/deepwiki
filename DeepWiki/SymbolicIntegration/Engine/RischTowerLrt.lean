@@ -55,6 +55,25 @@ class LawfulCLimitedIntegrateSingleLrt {α : Type*} [CField α] [CFieldSpec α] 
     C.run anum aden ηnum ηden = some ((bnum, bden), c) →
       DensePoly.IsLimitedIntegrateSingleResult anum aden ηnum ηden bnum bden c
 
+/-- Semantic domain on which a single-generator limited solver is required to be complete. -/
+abbrev LimitedIntegrateSingleDomain (α : Type*) :=
+  DensePoly α → DensePoly α → DensePoly α → DensePoly α → Prop
+
+/-- A single-generator limited problem admits a denotational solution. -/
+def IsLimitedIntegrateSingleIntegrable
+    (anum aden ηnum ηden : DensePoly α) : Prop :=
+  ∃ bnum bden c, DensePoly.IsLimitedIntegrateSingleResult
+    anum aden ηnum ηden bnum bden c
+
+/-- Domain-relative completeness contract for a single-generator limited solver. -/
+class CompleteCLimitedIntegrateSingleLrt (C : CLimitedIntegrateSingleLrt α)
+    (domain : LimitedIntegrateSingleDomain α) [LawfulCLimitedIntegrateSingleLrt C] : Prop where
+  /-- Every domain problem admitting a semantic solution is accepted with a certified result. -/
+  complete : ∀ (anum aden ηnum ηden : DensePoly α),
+    domain anum aden ηnum ηden → IsLimitedIntegrateSingleIntegrable anum aden ηnum ηden →
+      ∃ bnum bden c, C.run anum aden ηnum ηden = some ((bnum, bden), c) ∧
+        DensePoly.IsLimitedIntegrateSingleResult anum aden ηnum ηden bnum bden c
+
 /-- Certified base-field limited integration over `ℚ`. -/
 @[reducible] def limitedIntegrateSingleLrtBase : CLimitedIntegrateSingleLrt ℚ where
   run := DensePoly.checkedLimitedIntegrateSingleBaseNumDen
@@ -63,6 +82,43 @@ class LawfulCLimitedIntegrateSingleLrt {α : Type*} [CField α] [CFieldSpec α] 
 instance instLawfulCLimitedIntegrateSingleLrtBase :
     LawfulCLimitedIntegrateSingleLrt limitedIntegrateSingleLrtBase where
   sound := DensePoly.checkedLimitedIntegrateSingleBaseNumDen_sound
+
+/-- The checked base solver is complete on its exact executable acceptance domain. -/
+instance instCompleteCLimitedIntegrateSingleLrtBase :
+    CompleteCLimitedIntegrateSingleLrt limitedIntegrateSingleLrtBase
+      DensePoly.CheckedLimitedIntegrateSingleBaseDomain where
+  complete anum aden ηnum ηden hdomain _ := by
+    obtain ⟨⟨⟨bnum, bden⟩, c⟩, hrun⟩ := hdomain
+    refine ⟨bnum, bden, c, hrun, ?_⟩
+    apply DensePoly.checkedLimitedIntegrateSingleBaseNumDen_sound anum aden ηnum ηden
+      bnum bden c
+    · by_contra hzero
+      have hz : CPolyEngine.cisZero aden = true :=
+        (LawfulCPolyEngine.cisZero_iff (P := DensePoly) aden).2 (by
+          simpa only [toPoly_list_eq] using hzero)
+      unfold DensePoly.checkedLimitedIntegrateSingleBaseNumDen at hrun
+      unfold DensePoly.limitedIntegrateSingleBaseNumDen at hrun
+      have hzDense : DensePoly.cisZero aden = true := hz
+      have hguard : ¬ DensePoly.cisZero aden = false := by
+        rw [hzDense]
+        decide
+      simp only [dif_neg hguard, Option.bind_none] at hrun
+      contradiction
+    · by_contra hzero
+      have hz : CPolyEngine.cisZero ηden = true :=
+        (LawfulCPolyEngine.cisZero_iff (P := DensePoly) ηden).2 (by
+          simpa only [toPoly_list_eq] using hzero)
+      unfold DensePoly.checkedLimitedIntegrateSingleBaseNumDen at hrun
+      unfold DensePoly.limitedIntegrateSingleBaseNumDen at hrun
+      split at hrun
+      · have hzDense : DensePoly.cisZero ηden = true := hz
+        have hguard : ¬ DensePoly.cisZero ηden = false := by
+          rw [hzDense]
+          decide
+        simp only [dif_neg hguard, Option.bind_none] at hrun
+        contradiction
+      · simp at hrun
+    · exact hrun
 
 /-- Conservative fallback when no specialized limited integrator is available. -/
 instance instCLimitedIntegrateSingleLrtNone : CLimitedIntegrateSingleLrt α where
