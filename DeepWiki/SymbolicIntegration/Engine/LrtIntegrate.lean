@@ -24,7 +24,8 @@ structure LrtResult (α : Type u) [CField α] (P : Type u → Type u := DensePol
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CDiffField α] [CPolySquarefree DensePoly α]
+  [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
 
 /-- **The symbolic root-free LRT reduced integrator.** Hermite rational part + symbolic LRT log part. For
 `a/d` (reduced, normal), returns the rational antiderivative and the symbolic log terms — no roots. -/
@@ -34,7 +35,7 @@ def cIntegrateReducedLrt (Dt a d : DensePoly α) : LrtResult α :=
 
 end DensePoly
 
-/-! ### Validation (`native_decide`) -/
+/-! ### Validation (`ccompute`) -/
 
 namespace DensePoly
 
@@ -44,7 +45,7 @@ open scoped Classical
 the single symbolic term `(z²−1/4, S₁)` with `S₁(z,t) = 1 − 2z·t`. Root-free. -/
 theorem cIntegrateReducedLrtG_invT2m1 :
     (cIntegrateReducedLrt ([1] : DensePoly ℚ) [1] [-1, 0, 1]).logs
-      = [([-1/4, 0, 1], [[1], [0, -2]])] := by native_decide
+      = [([-1/4, 0, 1], [[1], [0, -2]])] := by ccompute
 
 end DensePoly
 

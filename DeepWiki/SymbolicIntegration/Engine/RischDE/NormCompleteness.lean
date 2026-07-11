@@ -18,7 +18,8 @@ universe u v
 
 section WfEngineLayer
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CPolyGcd DensePoly α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
 
 /-- The multiplicity factor `h = gcd(eₙ,eₙ')/gcd(p,p')`. -/
 def rdeNormHWf (Dt : DensePoly α) (fden gden : DensePoly α) : DensePoly α :=
@@ -76,7 +77,7 @@ end WfEngineLayer
 section DivisibilityResidualWf
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-  [CPolyGcd DensePoly α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
   [CRischField α]
 
 /-- `RdeNormalDivisibilityResidualWf` supplies `eₙ ∣ dₙh²` and nonzero `eₙ`. -/
@@ -120,7 +121,8 @@ end DivisibilityResidualWf
 
 section ClearingDivisibility
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CPolyGcd DensePoly β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β]
+  [CPolySplitFactor DensePoly β]
 
 /-- If `fden ∣ dₙ·h0`, then `fden` divides the `B`-numerator `dₙh·fnum - dₙ·Dh·fden`. -/
 theorem hdvdB_of_dvd_wf (Dt : DensePoly β) (fnum fden h0 : DensePoly β)
@@ -170,8 +172,8 @@ theorem dvd_dn_h_one_wf {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffFi
 
 section AssembleWf
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-  [CRischField α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
 
 /-- `RischDEInnerCompletenessWf` with `hnorm` discharged from the normal-denominator residual. -/
 theorem rischDEInnerCompletenessWf_of_norm_bound_solve (Dt fnum fden gnum gden : DensePoly α)
@@ -198,7 +200,8 @@ end AssembleWf
 /-! ### Restatements -/
 
 -- The Wf engine bridge: mathematical divisibility forces the Wf normal-denominator step to succeed.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CPolyGcd DensePoly α]
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
     (Dt fnum fden gnum gden : DensePoly α)
     (hen0 : DensePoly.cnorm (CPoly.splitFactor Dt gden).1 ≠ [])
     (hdvd : toPoly (CPoly.splitFactor Dt gden).1 ∣ toPoly (rdeNormDnh2Wf Dt fden gden)) :
@@ -206,8 +209,9 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CPolyGcd Dense
   cRdeNormalDenominatorG_isSome_of_dvd Dt fnum fden gnum gden hen0 hdvd
 
 -- The Wf residual produces exactly the `RischDEInnerCompletenessWf.hnorm` field shape.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-    [CRischField α] (Dt fnum fden gnum gden : DensePoly α)
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
+    (Dt fnum fden gnum gden : DensePoly α)
     (hres : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden) :
     (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
       (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true :=

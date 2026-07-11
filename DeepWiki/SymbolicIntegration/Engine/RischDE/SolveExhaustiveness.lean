@@ -20,7 +20,8 @@ open DensePoly CFrac
 
 section EngineLayerWf
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CPolyGcd DensePoly α]
+  [CPolySplitFactor DensePoly α] [CRischField α]
 
 /-- The Wf stage `some`s force `cRischDE.isSome`. -/
 theorem cRischDEG_isSome_of_stages (Dt : DensePoly α) (fnum fden gnum gden : DensePoly α)
@@ -130,8 +131,8 @@ the `RischDEInnerCompletenessWf.hsolve` field. -/
 
 section ExhaustiveResidualWf
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-  [CRischField α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
 
 /-- The inner-solve exhaustiveness residual: the three stage-`some` implications. -/
 structure RischDESolveExhaustiveResidualWf (Dt fnum fden gnum gden : DensePoly α) : Prop where
@@ -181,8 +182,8 @@ end ExhaustiveResidualWf
 
 section AssembleWf
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-  [CRischField α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
 
 /-- `RischDEInnerCompletenessWf` assembled from its three component residuals. -/
 theorem rischDEInnerCompletenessWf_of_residuals (Dt fnum fden gnum gden : DensePoly α)
@@ -199,8 +200,9 @@ end AssembleWf
 /-! ### Restatement against `RischDEInnerCompletenessWf` (anonymous `example`) -/
 
 -- The Wf solve residual fits directly into the Wf inner-completeness assembly.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-    [CRischField α] (Dt fnum fden gnum gden : DensePoly α)
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
+    (Dt fnum fden gnum gden : DensePoly α)
     (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
       (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true)
     (hbound : ∀ a0 b0 c0 h0 : DensePoly α,

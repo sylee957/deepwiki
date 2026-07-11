@@ -38,7 +38,7 @@ end Solvable
 section StructuralWf
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly]
-  [CFracGcdCoreWf β] [CRischField β]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CRischField β]
 
 omit [CFieldSpec β] in
 /-- `crischDESolveSoundWf f g = some y` iff the weak normalizer is nonzero, the canon-normality gate
@@ -195,8 +195,8 @@ end InnerSubResidual
 
 section InnerSubResidualWf
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-  [CRischField α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
 
 /-- `RischDEInnerCompletenessWf Dt fnum fden gnum gden`: the inner-stage completeness sub-residuals —
 `hnorm` (normal-denominator stage succeeds), `hbound` (degree-upper-bound), `hsolve` (inner solver succeeds)
@@ -237,7 +237,7 @@ Move the inner-completeness result across the `CFrac` denominator guard from `cR
 section RawInnerWf
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
-  [CFracGcdCoreWf β] [CRischField β]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CRischField β]
 
 omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β DensePoly] in
 /-- If `cRischDE [1]` succeeds and every returned denominator is nonzero, then `crischDERawSolveWf`
@@ -317,7 +317,8 @@ section CompleteWf
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
   [CFieldDomain β DensePoly]
-  [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+  [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- A successful `crischDESolveSoundWf` run (with soundness certificate `RischDESoundnessWf`) witnesses
 `FieldRDESolvable`. -/

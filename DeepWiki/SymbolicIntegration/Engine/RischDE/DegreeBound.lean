@@ -254,7 +254,8 @@ end ComputableBound
 
 section WiringWf
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
 
 /-- The degree-bound cancellation residual over the special-cleared coefficients. -/
 def RdeBoundCancellationResidualWf (Dt fnum fden gnum gden : DensePoly α) : Prop :=
@@ -296,8 +297,9 @@ end WiringWf
 /-! ### Restatement against `RischDEInnerCompletenessWf.hbound`'s field type (anonymous `example`) -/
 
 -- The Wf residual has exactly `RischDEInnerCompletenessWf.hbound`'s field shape.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-    [CRischField α] (Dt fnum fden gnum gden : DensePoly α)
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
+    (Dt fnum fden gnum gden : DensePoly α)
     (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
       (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true)
     (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →

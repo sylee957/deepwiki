@@ -15,7 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CDiffField α] [CPolySquarefree DensePoly α]
   [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
 
 /-- `cLrtLogArg Dt hNum Dstar = [(Rᵢ, Sᵢ)]`: for each non-constant squarefree

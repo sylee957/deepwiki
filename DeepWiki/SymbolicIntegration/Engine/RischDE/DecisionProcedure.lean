@@ -19,8 +19,8 @@ universe u v
 
 section InnerFrontierWf
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-  [CRischField α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
 
 /-- The inner-completeness frontier: the three residual clauses feeding `RischDEInnerCompletenessWf`. -/
 structure RischDEInnerDecisionFrontierWf (Dt fnum fden gnum gden : DensePoly α) : Prop where
@@ -45,8 +45,9 @@ theorem cRischDEG_isSome_of_decisionFrontierWf (Dt fnum fden gnum gden : DensePo
   cRischDEG_isSome_of_innerCompletenessWf Dt fnum fden gnum gden
     (rischDEInnerCompletenessWf_of_decisionFrontierWf Dt fnum fden gnum gden h) hsol
 
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
-    [CRischField α] (Dt fnum fden gnum gden : DensePoly α)
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
+    (Dt fnum fden gnum gden : DensePoly α)
     (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden) :
     RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
   rischDEInnerCompletenessWf_of_decisionFrontierWf Dt fnum fden gnum gden h
@@ -57,7 +58,8 @@ end InnerFrontierWf
 
 section InnerInputWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly] [CFracGcdCoreWf β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
 
 /-- The inner RDE input pair: after weak normalization by `q`, the reduced transformed left-hand side
 paired with `q * g`, as `crischDESolveSoundWf` forms it before calling `crischDERawSolveWf`. -/
@@ -74,7 +76,8 @@ section Capstone
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
   [CFieldDomain β DensePoly]
-  [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+  [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- `RischDEDecisionProcedureFrontierWf f g`: the field-level frontier — nonzero weak normalizer (`hwn`),
 canonical-normality (`hck`), a polynomial solution for the inner input (`hpolysol`), an inner-completeness
@@ -173,7 +176,8 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : DenseFrac β)
 -- field-level Risch DE `D(Y) + F·Y = G` is solvable, modulo the named Wf completeness frontier and the
 -- direct Wf soundness certificate.
 example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [LawfulCPolyGcd.{u,v} DensePoly β]
+    [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+    [LawfulCPolyGcd.{u,v} DensePoly β]
     [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g : DenseFrac β) (h : RischDEDecisionProcedureFrontierWf f g)
     (hsound : RischDESoundnessWf f g) :
