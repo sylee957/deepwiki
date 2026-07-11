@@ -153,6 +153,9 @@ monomial stage contracts.
    `CompleteCRischLevelRationalLrt` requires relative completeness of the lower level's log-free integrator,
    and `towerRecursiveCoefficientDomain` lifts exactly that capability through `DenseFrac`. Together with the
    limited-domain lift, `completeTowerPrimitiveCaseLrt` derives the concrete tower monomial completeness contract.
+   `completePrimitiveMonomialCase_on_tower` instantiates that composition at `DenseFrac ℚ`, using the checked
+   base limited-integration domain and the selected lower-level log-free acceptance domain. This is an executable
+   grounding, not yet the open semantic constant-descent theorem above.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
 
 ## Visibility policy
