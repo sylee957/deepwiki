@@ -40,8 +40,8 @@ private def splitFactorAux {P : Type u → Type u} [CPoly P] [CPolyEngine P]
         (parts.1, CPolyEngine.mul special parts.2)
       else (p, CPoly.one)
 
-/-- Generic bounded differential split factorization through selected gcd and Euclidean operations. -/
-def default {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+/-- File-local generic bounded differential split factorization through selected gcd and Euclidean operations. -/
+private def default {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] [CPolyGcd P α] [CPolyEuclidean P] [CDiffField α]
     (Dt p : P α) : P α × P α :=
   splitFactorAux Dt (CPoly.degBound p) p
