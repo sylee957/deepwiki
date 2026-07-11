@@ -3,5 +3,6 @@ import DeepWiki.SymbolicIntegration.Engine.CoupledDE.Assembly
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.Tangent
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.Bivariate
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentReconstruct
+import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentCapability
 
 /-! # Computable engine — coupled differential systems aggregator. -/
