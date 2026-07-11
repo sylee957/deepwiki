@@ -108,6 +108,7 @@ whose coefficients are dense polynomials in the residue `z`, computed root-free 
 the selected scalar subresultant at `z = 0,1,…,n+m`. -/
 def parametric {α : Type u} [CField α] {P Q : Type u → Type u}
     [CPoly P] [CPolyEngine P] [CPolySubresultant P] [CPoly Q] [CPolyEngine Q]
+    [CPolyInterpolate Q]
     (Dstar A Dd : P α) (n m j : ℕ) : List (Q α) :=
   let N := n + m + 1
   (List.range (j + 1)).map (fun k =>

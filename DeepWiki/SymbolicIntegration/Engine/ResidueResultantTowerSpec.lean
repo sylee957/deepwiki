@@ -73,7 +73,8 @@ theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)]
   set B := Differential.implicitDeriv (toPoly Dt) (toPoly d) with hBdef
   set pts : List (α × α) := (List.range (cdeg d + 1)).map
     (fun k => (CField.natCast k, CPolyResultant.compute d (cAmcDd Dt a d (CField.natCast k)))) with hpts
-  have hcompute : cResidueResultantTower Dt a d = cinterpolate pts := rfl
+  have hcompute : cResidueResultantTower Dt a d =
+      CPoly.interpolate (P := DensePoly) pts := rfl
   have hfst : pts.map (fun p => CFieldSpec.toK p.1)
       = (List.range (cdeg d + 1)).map (Nat.cast : ℕ → CFieldSpec.K α) := by
     rw [hpts, List.map_map]
@@ -88,7 +89,8 @@ theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)]
   symm
   refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := CFieldSpec.K α) (ι := ℕ)
     (s := Finset.range (cdeg d + 1)) (v := (Nat.cast : ℕ → CFieldSpec.K α))
-    (f := rtResultantGen (toPoly a) (toPoly d) B) (g := toPoly (cinterpolate pts)) ?_ ?_ ?_ ?_
+    (f := rtResultantGen (toPoly a) (toPoly d) B)
+    (g := DensePoly.toPoly (CPoly.interpolate (P := DensePoly) pts)) ?_ ?_ ?_ ?_
   · intro x _ y _ h; exact Nat.cast_injective h
   · rw [Finset.card_range, Nat.cast_withBot]
     refine lt_of_le_of_lt Polynomial.degree_le_natDegree ?_
@@ -97,16 +99,18 @@ theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)]
     have h2 := cdegG_eq_natDegree d
     omega
   · rw [Finset.card_range, Nat.cast_withBot]
-    have := degree_toPolyG_cinterpolateG_lt pts hne
+    have := CPoly.degree_toPoly_interpolate_lt (P := DensePoly) pts hne
+    rw [toPoly_list_eq] at this
     rw [hlen] at this
     simpa [Nat.cast_withBot] using this
   · intro k hk
     rw [Finset.mem_range] at hk
     have hmem : (CField.natCast k, CPolyResultant.compute d (cAmcDd Dt a d (CField.natCast k))) ∈ pts := by
       rw [hpts, List.mem_map]; exact ⟨k, List.mem_range.mpr hk, rfl⟩
+    have heval := CPoly.eval_toPoly_interpolate (P := DensePoly) pts hnodup hmem
+    rw [toPoly_list_eq] at heval
     rw [show (k : CFieldSpec.K α) = CFieldSpec.toK (CField.natCast k : α) from
-        (CFieldSpec.toK_natCast k).symm,
-      eval_toPolyG_cinterpolateG pts hnodup hmem,
+        (CFieldSpec.toK_natCast k).symm, heval,
       toK_cPolyResultant_cAmcDd_eq_eval Dt a d (CField.natCast k) hDmonic hDt0 hAD]
 
 omit [CDiffFieldSpec α] in
@@ -116,15 +120,16 @@ constant (`degree_toPolyG_cinterpolateG_lt`). The no-poles residue-resultant fac
 theorem cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero [CPolyResultant DensePoly]
     (Dt a d : DensePoly α) (hd : cdeg d = 0) :
     cdeg (cResidueResultantTower Dt a d) = 0 := by
-  rw [cResidueResultantTower, cResidueResultantTowerWith, CPoly.interpolate_dense_eq]
+  rw [cResidueResultantTower, cResidueResultantTowerWith]
   simp only [CPolyEngine.cdeg_dense_eq, hd, Nat.zero_add]
   set pts : List (α × α) := (List.range 1).map (fun k =>
     (CField.natCast k, CPolyResultant.compute d (cAmcDd Dt a d (CField.natCast k)))) with hpts
   have hlen : pts.length = 1 := by rw [hpts, List.length_map, List.length_range]
   have hne : pts ≠ [] := by rw [← List.length_pos_iff_ne_nil, hlen]; norm_num
-  by_cases hz : toPoly (cinterpolate pts) = 0
+  by_cases hz : DensePoly.toPoly (CPoly.interpolate (P := DensePoly) pts) = 0
   · rw [cdegG_eq_natDegree, hz, Polynomial.natDegree_zero]
-  · have hlt := degree_toPolyG_cinterpolateG_lt pts hne
+  · have hlt := CPoly.degree_toPoly_interpolate_lt (P := DensePoly) pts hne
+    rw [toPoly_list_eq] at hlt
     rw [hlen] at hlt
     rw [cdegG_eq_natDegree]
     have := (Polynomial.natDegree_lt_iff_degree_lt hz).mpr hlt

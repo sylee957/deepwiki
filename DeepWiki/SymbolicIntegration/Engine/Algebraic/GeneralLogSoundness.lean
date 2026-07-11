@@ -261,8 +261,9 @@ theorem toPolyG_genResidueResultant_eq_of_eval [CPolyResultant DensePoly]
   -- bridge the engine's node list to `pts` STRUCTURALLY (no resultant evaluation): the engine's
   -- `(range).map (fun k:ℕ => let z:=↑k; (z, …))` and `pts = ((range).map ↑).map (fun z:ℚ => (z, …))` are the
   -- SAME up to `flatMap_pure_eq_map` (the lifted coercion) + `map_map`.
-  have hcompute : genResidueResultant f g Dder D = cinterpolate pts := by
-    rw [genResidueResultant, genResidueResultantWith, CPoly.interpolate_dense_eq, hpts, hzs]
+  have hcompute : genResidueResultant f g Dder D =
+      CPoly.interpolate (P := DensePoly) pts := by
+    rw [genResidueResultant, genResidueResultantWith, hpts, hzs]
     simp only [CPolyEngine.cdeg_dense_eq]
     congr 1
     rw [List.map_map]
@@ -292,11 +293,12 @@ theorem toPolyG_genResidueResultant_eq_of_eval [CPolyResultant DensePoly]
   refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := ℚ) (ι := ℕ)
     (s := Finset.range (cdeg f * cdeg D + 1 + 1))
     (v := fun k => (k : ℚ))
-    (f := toPoly (cinterpolate pts)) (g := R)
+    (f := DensePoly.toPoly (CPoly.interpolate (P := DensePoly) pts)) (g := R)
     (fun a _ b _ hab => Nat.cast_injective hab) ?_ ?_ ?_
   · -- `degree (toPoly (cinterpolate pts)) < #nodes`
     rw [Finset.card_range, Nat.cast_withBot]
-    have := degree_toPolyG_cinterpolateG_lt pts hne
+    have := CPoly.degree_toPoly_interpolate_lt (P := DensePoly) pts hne
+    rw [toPoly_list_eq] at this
     rw [hlen] at this
     simpa [Nat.cast_withBot] using this
   · -- `degree R < #nodes`: `cdeg f · cdeg D + 2 = #nodes`
@@ -309,7 +311,9 @@ theorem toPolyG_genResidueResultant_eq_of_eval [CPolyResultant DensePoly]
     -- `(k:ℚ) ∈ zs` since `zs = (range n).map (↑·)` and `k ∈ range n`
     have hzmem : ((k : ℚ)) ∈ zs := by
       rw [hzs, List.mem_map]; exact ⟨k, by simpa using hk, rfl⟩
-    have heval := eval_toPolyG_cinterpolateG pts hnodup (hmempts ((k : ℚ)) hzmem)
+    have heval := CPoly.eval_toPoly_interpolate (P := DensePoly) pts hnodup
+      (hmempts ((k : ℚ)) hzmem)
+    rw [toPoly_list_eq] at heval
     rw [htoK, htoK] at heval
     rw [heval]
     exact (hnode k hk).symm

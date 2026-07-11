@@ -1,59 +1,16 @@
-import DeepWiki.ComputableAlgebra.PolyInterpolateDense
+import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
 import DeepWiki.ComputableAlgebra.PolyEngine
 import DeepWiki.Algebra.PolynomialMatrixDegree
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Generic Bézout cofactors, resultant, and selected interpolation
 
-The dense Lagrange implementation lives in `PolyInterpolateDense`; this module supplies its
-representation-selected `CPoly.interpolate` wrapper, generic denotation satellites, and seed
-resultants. -/
+The representation-selected interpolation implementations live in `PolyInterpolateDense` and
+`PolyInterpolateSparse`; this module supplies seed resultants. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
-
-/-! ### Representation-selected interpolation output -/
-
-namespace CPoly
-
-universe u v
-
-variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-  {α : Type u} [CField α]
-
-/-- Lagrange interpolation with its coefficient polynomial stored in representation `P`. -/
-def interpolate (pts : List (α × α)) : P α :=
-  CPolyEngine.ofCoeffList (DensePoly.cinterpolate pts)
-
-/-- Dense selected interpolation is definitionally the existing dense interpolation algorithm. -/
-@[simp] theorem interpolate_dense_eq (pts : List (α × α)) :
-    interpolate (P := DensePoly) pts = DensePoly.cinterpolate pts := rfl
-
-variable [CFieldSpec.{u,v} α] [LawfulCPolyEngine.{u,v} P]
-
-/-- Selected interpolation denotes the same polynomial as the coefficient-list implementation. -/
-@[denote] theorem toPoly_interpolate (pts : List (α × α)) :
-    toPoly (interpolate (P := P) pts) = DensePoly.toPoly (DensePoly.cinterpolate pts) := by
-  rw [interpolate, LawfulCPolyEngine.toPoly_ofCoeffList]
-  exact CPoly.toPoly_ofList_eq_dense _
-
-open scoped Classical in
-/-- Selected interpolation evaluates to the sampled value at each distinct node. -/
-theorem eval_toPoly_interpolate (pts : List (α × α))
-    (hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup)
-    {zk yk : α} (hmem : (zk, yk) ∈ pts) :
-    (toPoly (interpolate (P := P) pts)).eval (CFieldSpec.toK zk) = CFieldSpec.toK yk := by
-  rw [toPoly_interpolate]
-  exact DensePoly.eval_toPolyG_cinterpolateG pts hnodup hmem
-
-/-- A nonempty selected interpolant has degree strictly below the number of sample points. -/
-theorem degree_toPoly_interpolate_lt (pts : List (α × α)) (hne : pts ≠ []) :
-    (toPoly (interpolate (P := P) pts)).degree < (pts.length : WithBot ℕ) := by
-  rw [toPoly_interpolate]
-  exact DensePoly.degree_toPolyG_cinterpolateG_lt pts hne
-
-end CPoly
 
 /-! ### The seed-generic abstract Rothstein-Trager resultant `R(z) = res_t(d, a - z*Dd)` -/
 

@@ -1,10 +1,11 @@
-import DeepWiki.ComputableAlgebra.PolyEngine
+import DeepWiki.ComputableAlgebra.PolyInterpolate
+import DeepWiki.ComputableAlgebra.PolyEngineDense
 import DeepWiki.Algebra.PolynomialMatrixDegree
 
 /-! # Dense polynomial interpolation
 
-The concrete DensePoly Lagrange interpolator and its denotation, evaluation, and degree
-theorems. The representation-selected CPoly.interpolate wrapper lives in GenericBezout.lean. -/
+The concrete `DensePoly` Lagrange interpolator and its denotation, evaluation, and degree theorems,
+together with the dense `CPolyInterpolate` capability instance. -/
 
 open Polynomial
 
@@ -229,5 +230,34 @@ example (pts : List (α × α)) (hnodup : (pts.map (fun p => CFieldSpec.toK p.1)
   eval_toPolyG_cinterpolateG pts hnodup hmem
 
 end DensePoly
+
+/-! ### Dense interpolation capability -/
+
+/-- Dense polynomials select the coefficient-list Lagrange interpolation algorithm. -/
+instance instCPolyInterpolateDense : CPolyInterpolate DensePoly where
+  compute := DensePoly.cinterpolate
+
+namespace CPoly
+
+/-- Dense selected interpolation is the coefficient-list interpolation algorithm. -/
+@[simp] theorem interpolate_dense_eq {α : Type*} [CField α] (pts : List (α × α)) :
+    interpolate (P := DensePoly) pts = DensePoly.cinterpolate pts := rfl
+
+end CPoly
+
+/-- Dense selected interpolation satisfies the abstract interpolation laws. -/
+instance instLawfulCPolyInterpolateDense : LawfulCPolyInterpolate DensePoly where
+  eval_compute := by
+    intro α _ _ pts hnodup zk yk hmem
+    change (CPoly.toPoly (CPoly.interpolate (P := DensePoly) pts)).eval
+      (CFieldSpec.toK zk) = CFieldSpec.toK yk
+    rw [CPoly.interpolate_dense_eq, toPoly_list_eq]
+    exact DensePoly.eval_toPolyG_cinterpolateG pts hnodup hmem
+  degree_compute_lt := by
+    intro α _ _ pts hne
+    change (CPoly.toPoly (CPoly.interpolate (P := DensePoly) pts)).degree <
+      (pts.length : WithBot ℕ)
+    rw [CPoly.interpolate_dense_eq, toPoly_list_eq]
+    exact DensePoly.degree_toPolyG_cinterpolateG_lt pts hne
 
 end DeepWiki.SymbolicIntegration

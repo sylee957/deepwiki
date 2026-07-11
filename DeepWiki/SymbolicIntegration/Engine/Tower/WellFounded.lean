@@ -297,7 +297,8 @@ candidates as `α` elements; the resultant runs through `CPolyResultant`, the lo
 /-- Representation-independent residue resultant with independently selected inner and outer polynomial
 representations. -/
 def cResidueResultantTowerWith {P Q : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [CPolyResultant P] [CPoly Q] [CPolyEngine Q]
+    [CPoly P] [CPolyEngine P] [CPolyResultant P]
+    [CPoly Q] [CPolyEngine Q] [CPolyInterpolate Q]
     {β : Type u} [CField β] [CDiffField β] (Dt a d : P β) : Q β :=
   let n := CPolyEngine.cdeg d
   let pts : List (β × β) := (List.range (n + 1)).map (fun k =>

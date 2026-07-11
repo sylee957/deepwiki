@@ -40,7 +40,8 @@ example :
 /-- Representation-independent radical residue resultant with independently selected input and output
 polynomial representations. -/
 def cAlgResidueResultantWith {P Q : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [CPolyResultant P] [CPoly Q] [CPolyEngine Q]
+    [CPoly P] [CPolyEngine P] [CPolyResultant P]
+    [CPoly Q] [CPolyEngine Q] [CPolyInterpolate Q]
     {α : Type u} [CField α] (D rho g0 g1 : P α) : Q α :=
   let Dprime := CPolyEngine.deriv D
   let nNodes := 2 * CPolyEngine.cdeg D + 1             -- `deg_Z R ≤ 2·deg_X D`

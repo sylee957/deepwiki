@@ -383,9 +383,10 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval [CPolyResultant DensePoly]
         CPolyResultant.compute
           (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (CField.natCast k)) D))
     with hpts
-  have hcompute : DensePoly.cAlgResidueResultant D rho g0 g1 = DensePoly.cinterpolate pts := by
+  have hcompute : DensePoly.cAlgResidueResultant D rho g0 g1 =
+      CPoly.interpolate (P := DensePoly) pts := by
     rw [DensePoly.cAlgResidueResultant, DensePoly.cAlgResidueResultantWith,
-      CPoly.interpolate_dense_eq, CPolyEngine.deriv_dense_eq, CPolyEngine.cdeg_dense_eq,
+      CPolyEngine.deriv_dense_eq, CPolyEngine.cdeg_dense_eq,
       ← hDp, hpts]
   -- node-image list and its distinctness
   have hfst : pts.map (fun p => CFieldSpec.toK p.1)
@@ -405,10 +406,11 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval [CPolyResultant DensePoly]
   refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := CFieldSpec.K α) (ι := ℕ)
     (s := Finset.range (2 * DensePoly.cdeg D + 1 + 1))
     (v := fun k => CFieldSpec.toK (CField.natCast (α := α) k))
-    (f := DensePoly.toPoly (DensePoly.cinterpolate pts)) (g := R) hinj ?_ ?_ ?_
+    (f := DensePoly.toPoly (CPoly.interpolate (P := DensePoly) pts)) (g := R) hinj ?_ ?_ ?_
   · -- `degree (toPoly (cinterpolate pts)) < #nodes`
     rw [Finset.card_range, Nat.cast_withBot]
-    have := DensePoly.degree_toPolyG_cinterpolateG_lt pts hne
+    have := CPoly.degree_toPoly_interpolate_lt (P := DensePoly) pts hne
+    rw [toPoly_list_eq] at this
     rw [hlen] at this
     simpa [Nat.cast_withBot] using this
   · -- `degree R < #nodes`: `2·deg D + 2 = #nodes` (`cdeg D = (toPoly D).natDegree`)
@@ -425,7 +427,9 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval [CPolyResultant DensePoly]
           (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (CField.natCast k)) D)
         ∈ pts := by
       rw [hpts, List.mem_map]; exact ⟨k, by simpa using hk, rfl⟩
-    rw [DensePoly.eval_toPolyG_cinterpolateG pts hnodup hmem]
+    have heval := CPoly.eval_toPoly_interpolate (P := DensePoly) pts hnodup hmem
+    rw [toPoly_list_eq] at heval
+    rw [heval]
     exact (hnode k hk).symm
 
 end DensePoly

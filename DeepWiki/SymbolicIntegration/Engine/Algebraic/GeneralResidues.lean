@@ -85,7 +85,7 @@ def genResidueResultantWith
     [CPoly X] [CPolyEngine X] [CPolyEuclidean X] [CPolyResultant X]
     [CFrac F X] [CFieldDomain ℚ X]
     [CPoly Y] [CPolyEngine Y] [CPolyResultant Y]
-    [CPoly Q] [CPolyEngine Q]
+    [CPoly Q] [CPolyEngine Q] [CPolyInterpolate Q]
     (f g : Y (F ℚ)) (Dder : F ℚ) (D : X ℚ) : Q ℚ :=
   let nNodes := CPolyEngine.cdeg f * CPolyEngine.cdeg D + 1
   let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
