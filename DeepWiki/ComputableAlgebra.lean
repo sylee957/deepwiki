@@ -9,6 +9,8 @@ import DeepWiki.ComputableAlgebra.PolyReprSparse
 import DeepWiki.ComputableAlgebra.PolyReprBridge
 import DeepWiki.ComputableAlgebra.PolyEngineCore
 import DeepWiki.ComputableAlgebra.PolyEngineLawful
+import DeepWiki.ComputableAlgebra.PolyEngineDense
+import DeepWiki.ComputableAlgebra.PolyEngineSparse
 import DeepWiki.ComputableAlgebra.PolyEngine
 import DeepWiki.ComputableAlgebra.PolyAntiderivative
 import DeepWiki.ComputableAlgebra.PolyReprDivision
