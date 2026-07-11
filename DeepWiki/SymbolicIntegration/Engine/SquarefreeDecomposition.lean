@@ -501,6 +501,62 @@ private theorem default_squarefree [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
   exact yunLoopAbs_squarefree (CPoly.toPoly p) hpp _ 1 _ _ (le_refl 1)
     (defaultInit_yunInv p hp0 hpp) _ hmem'
 
+/-- Distinct generic Yun factors are relatively prime. -/
+private theorem default_coprime [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] [CharZero (CFieldSpec.K α)] (p : P α)
+    (hp0 : CPoly.toPoly p ≠ 0) (hpp : (CPoly.toPoly p).primPart ≠ 0) :
+    (CPolySquarefree.default p).Pairwise (fun q r =>
+      IsRelPrime (CPoly.toPoly q) (CPoly.toPoly r)) := by
+  rw [List.pairwise_iff_getElem]
+  intro i j hi hj hij
+  let b := CPolyEuclidean.div p (CPolyGcd.compute p (CPolyEngine.deriv p))
+  let d := CPolyEngine.sub
+    (CPolyEuclidean.div (CPolyEngine.deriv p) (CPolyGcd.compute p (CPolyEngine.deriv p)))
+    (CPolyEngine.deriv b)
+  have hinv : YunInv (CPoly.toPoly p) 1 (CPoly.toPoly b) (CPoly.toPoly d) := by
+    simpa only [b, d] using defaultInit_yunInv p hp0 hpp
+  have hmap := default_map_toPoly_eq_yunLoopAbs (P := P) (α := α) p
+  have hmap' : (CPolySquarefree.default p).map CPoly.toPoly =
+      yunLoopAbs (CPoly.toPoly p) (CPoly.toPoly b, CPoly.toPoly d) 1
+        (CPolySquarefree.default p).length := by
+    rw [hmap]
+    simpa only [b, d] using yunLoopAbs_irrelevant (0 : (CRingSpec.R α)[X])
+      (CPoly.toPoly p) (CPolySquarefree.default p).length
+      (CPoly.toPoly b, CPoly.toPoly d) 1 1
+  have hiMap : i < ((CPolySquarefree.default p).map CPoly.toPoly).length := by
+    simpa only [List.length_map] using hi
+  have hjMap : j < ((CPolySquarefree.default p).map CPoly.toPoly).length := by
+    simpa only [List.length_map] using hj
+  have hiLoop' : i < (yunLoopAbs (CPoly.toPoly p)
+      (CPoly.toPoly b, CPoly.toPoly d) 1 (CPolySquarefree.default p).length).length := by
+    exact hmap' ▸ hiMap
+  have hjLoop' : j < (yunLoopAbs (CPoly.toPoly p)
+      (CPoly.toPoly b, CPoly.toPoly d) 1 (CPolySquarefree.default p).length).length := by
+    exact hmap' ▸ hjMap
+  letI : CharZero (CRingSpec.R α) := by
+    change CharZero (CFieldSpec.K α)
+    infer_instance
+  have hloop := yunLoopAbs_pairwise_isRelPrime (CPoly.toPoly p) hpp
+    (CPolySquarefree.default p).length 1 (CPoly.toPoly b) (CPoly.toPoly d) (le_refl 1) hinv
+    (Nat.ne_of_lt hij) hiLoop' hjLoop'
+  have hiValue : (yunLoopAbs (CPoly.toPoly p) (CPoly.toPoly b, CPoly.toPoly d) 1
+      (CPolySquarefree.default p).length).get ⟨i, hiLoop'⟩ =
+      CPoly.toPoly (CPolySquarefree.default p)[i] := by
+    have hget := congrArg (fun xs => xs[i]?) hmap'
+    rw [List.getElem?_eq_getElem hiMap, List.getElem?_eq_getElem hiLoop'] at hget
+    apply Option.some.inj
+    simpa only [List.get_eq_getElem, List.getElem_map] using hget.symm
+  have hjValue : (yunLoopAbs (CPoly.toPoly p) (CPoly.toPoly b, CPoly.toPoly d) 1
+      (CPolySquarefree.default p).length).get ⟨j, hjLoop'⟩ =
+      CPoly.toPoly (CPolySquarefree.default p)[j] := by
+    have hget := congrArg (fun xs => xs[j]?) hmap'
+    rw [List.getElem?_eq_getElem hjMap, List.getElem?_eq_getElem hjLoop'] at hget
+    apply Option.some.inj
+    simpa only [List.get_eq_getElem, List.getElem_map] using hget.symm
+  rw [hiValue, hjValue] at hloop
+  exact hloop
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
@@ -513,6 +569,17 @@ structure LawfulSquarefreeDecomposition (d : P α) (decomp : List (P α)) : Prop
   squarefree : ∀ p ∈ decomp, Squarefree (CPoly.toPoly p)
   /-- Distinct factors are relatively prime. -/
   coprime : decomp.Pairwise (fun p q => IsRelPrime (CPoly.toPoly p) (CPoly.toPoly q))
+
+/-- The representation-generic Yun decomposition satisfies the squarefree-decomposition contract. -/
+theorem CPolySquarefree.default_lawful [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] [CharZero (CFieldSpec.K α)] (d : P α)
+    (hd0 : CPoly.toPoly d ≠ 0) (hpp : (CPoly.toPoly d).primPart ≠ 0) :
+    LawfulSquarefreeDecomposition d (CPolySquarefree.default d) where
+  reconstruct := default_reconstruct d hd0 hpp
+  monic := default_monic d hd0
+  squarefree := default_squarefree d hd0 hpp
+  coprime := default_coprime d hd0 hpp
 
 /-- Denotation law for a representation-selected squarefree decomposition. The selected output is
 lawful whenever its input denotes a nonzero polynomial with nonzero primitive part. -/
@@ -536,6 +603,14 @@ theorem compute_lawful' (d : P α) (hd0 : CPoly.toPoly d ≠ 0)
   LawfulCPolySquarefree.compute_lawful d hd0 hpp
 
 end LawfulCPolySquarefree
+
+/-- The representation-generic sparse Yun implementation satisfies the squarefree contract. -/
+instance instLawfulCPolySquarefreeSparse [CharZero (CFieldSpec.K α)] :
+    LawfulCPolySquarefree CPoly.SparsePoly α := by
+  refine ⟨?_⟩
+  intro d hd0 hpp
+  simpa only [CPoly.squarefreeYun_sparse_eq] using
+    CPolySquarefree.default_lawful d hd0 hpp
 
 namespace LawfulSquarefreeDecomposition
 
