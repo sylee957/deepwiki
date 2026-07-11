@@ -12,6 +12,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac
 
+universe u v
 
 /-! ## Engine guard -/
 
@@ -152,12 +153,15 @@ theorem dvd_dn_h_of_normal_wf (Dt : DensePoly β) (fden h0 : DensePoly β)
 end ClearingDivisibility
 
 /-- `fden ∣ dₙh` for the shape `fden = [1]`. -/
-theorem dvd_dn_h_one_wf {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
-    [CTowerGcdWitnessWf β] (h0 : DensePoly β) :
+theorem dvd_dn_h_one_wf {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
+    [CFracGcdCoreWf β] [LawfulCPolyGcd.{u,v} DensePoly β] (h0 : DensePoly β) :
     toPoly ([CCommRing.one] : DensePoly β)
       ∣ toPoly (DensePoly.cmul (CPoly.splitFactor ([CCommRing.one] : DensePoly β) [CCommRing.one]).1 h0) := by
   rw [CPoly.splitFactor_one_eq]
-  simp only [denote, toPolyG_cone_eq_one_wf]
+  have hone : toPoly ([CCommRing.one] : DensePoly β) = 1 := by
+    simp only [denote]
+    simp
+  rw [hone]
   exact one_dvd _
 
 

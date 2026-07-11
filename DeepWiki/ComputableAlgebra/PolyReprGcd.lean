@@ -81,6 +81,13 @@ theorem compute_isGCD' [CFieldSpec.{u,v} α] (p q : P α) :
   exact @LawfulCPolyGcd.compute_isGCD P inferInstance α inferInstance inferInstance inferInstance
     (inferInstance : CFieldSpec.{u,v} α) p q
 
+/-- The selected gcd of `1` and any represented polynomial denotes a unit. -/
+theorem compute_one_isUnit [CFieldSpec.{u,v} α] (p : P α) :
+    IsUnit (CPoly.toPoly (CPolyGcd.compute (CPoly.one : P α) p)) := by
+  have hdvd := (compute_isGCD' (CPoly.one : P α) p).1
+  rw [CPoly.toPoly_one] at hdvd
+  exact isUnit_iff_dvd_one.mpr hdvd
+
 end LawfulCPolyGcd
 
 end DeepWiki.SymbolicIntegration

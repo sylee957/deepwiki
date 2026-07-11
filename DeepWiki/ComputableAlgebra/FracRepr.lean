@@ -3,8 +3,8 @@ import DeepWiki.ComputableAlgebra.PolyEngineCore
 /-! # Representation-independent computable fractions
 
 `CFrac F P` is the minimal fraction-representation interface: `F` stores a numerator and a nonzero
-denominator in polynomial representation `P`. `PolyFrac P` is the canonical proof-carrying builder used
-by the dense and sparse specializations. -/
+denominator in polynomial representation `P`. Concrete proof-carrying carriers live in the dense and
+sparse representation modules. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -24,24 +24,6 @@ class CFrac (F : (α : Type u) → [CField α] → Type u)
   /-- Every represented fraction stores a denominator certified nonzero. -/
   den_nonzero_impl : ∀ {α : Type u} [CField α] (x : F α),
     CPolyEngine.cisZero (toPair x).2 = false
-
-/-- Canonical proof-carrying fractions over a polynomial representation `P`. -/
-structure PolyFrac (P : Type u → Type u) [CPoly P] [CPolyEngine P]
-    (α : Type u) [CField α] where
-  /-- Stored numerator polynomial. -/
-  num : P α
-  /-- Stored denominator polynomial. -/
-  den : P α
-  /-- The stored denominator is nonzero according to the polynomial engine. -/
-  den_nonzero : CPolyEngine.cisZero den = false
-
-/-- `PolyFrac P` implements the `CFrac` interface by structure projection and construction. -/
-instance instCFracPolyFrac {P : Type u → Type u} [CPoly P] [CPolyEngine P] :
-    CFrac (PolyFrac P) P where
-  toPair x := (x.num, x.den)
-  ofPair num den h := ⟨num, den, h⟩
-  toPair_ofPair _ _ _ := rfl
-  den_nonzero_impl x := x.den_nonzero
 
 namespace CFrac
 
@@ -76,17 +58,17 @@ def ofFraction? {α : Type u} [CField α] (num den : P α) : Option (F α) :=
 
 /-- The numerator of a constructed represented fraction is the supplied numerator. -/
 @[simp] theorem num_ofFraction {α : Type u} [CField α] (a b : P α)
-    (h : CPolyEngine.cisZero b = false) : num (ofFraction (F := F) a b h) = a := by
-  rw [num, ofFraction, CFrac.toPair_ofPair]
+    (h : CPolyEngine.cisZero b = false) : CFrac.num (ofFraction (F := F) a b h) = a := by
+  rw [CFrac.num, ofFraction, CFrac.toPair_ofPair]
 
 /-- The denominator of a constructed represented fraction is the supplied denominator. -/
 @[simp] theorem den_ofFraction {α : Type u} [CField α] (a b : P α)
-    (h : CPolyEngine.cisZero b = false) : den (ofFraction (F := F) a b h) = b := by
-  rw [den, ofFraction, CFrac.toPair_ofPair]
+    (h : CPolyEngine.cisZero b = false) : CFrac.den (ofFraction (F := F) a b h) = b := by
+  rw [CFrac.den, ofFraction, CFrac.toPair_ofPair]
 
 /-- A represented fraction's stored denominator passes its polynomial engine's nonzero test. -/
 theorem den_nonzero {α : Type u} [CField α] (x : F α) :
-    CPolyEngine.cisZero (den x) = false :=
+    CPolyEngine.cisZero (CFrac.den x) = false :=
   CFrac.den_nonzero_impl x
 
 end CFrac

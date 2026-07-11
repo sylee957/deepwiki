@@ -32,22 +32,22 @@ def swellB : DenseFrac ℚ := CFrac.ofFraction [(-1 : ℚ), 1] [(0 : ℚ), 1] (b
 def swellProd : DenseFrac ℚ := mul swellA swellB
 
 /-- The unreduced product `swellProd` has numerator length 3. -/
-theorem swellProd_num_length : (DensePoly.cnorm swellProd.num : List ℚ).length = 3 := by ccompute
+theorem swellProd_num_length : (DensePoly.cnorm (CFrac.num swellProd) : List ℚ).length = 3 := by ccompute
 
 /-- The unreduced product `swellProd` has denominator length 3. -/
-theorem swellProd_den_length : (DensePoly.cnorm swellProd.den : List ℚ).length = 3 := by ccompute
+theorem swellProd_den_length : (DensePoly.cnorm (CFrac.den swellProd) : List ℚ).length = 3 := by ccompute
 
 /-- `CFrac.reduce` shrinks the swollen product's numerator to length 1. -/
 theorem swellProd_reduced_num_length :
-    (DensePoly.cnorm (CFrac.reduce swellProd).num : List ℚ).length = 1 := by ccompute
+    (DensePoly.cnorm (CFrac.num (CFrac.reduce swellProd)) : List ℚ).length = 1 := by ccompute
 
 /-- `CFrac.reduce` shrinks the swollen product's denominator to length 1. -/
 theorem swellProd_reduced_den_length :
-    (DensePoly.cnorm (CFrac.reduce swellProd).den : List ℚ).length = 1 := by ccompute
+    (DensePoly.cnorm (CFrac.den (CFrac.reduce swellProd)) : List ℚ).length = 1 := by ccompute
 
 /-- The reduced product `CFrac.reduce swellProd` has nonzero numerator (`cisZero` is `false`). -/
 theorem swellProd_reduced_num_nonzero :
-    DensePoly.cisZero (CFrac.reduce swellProd).num = false := by ccompute
+    DensePoly.cisZero (CFrac.num (CFrac.reduce swellProd)) = false := by ccompute
 
 /-- `CFrac.reduce` preserves the field value: `toRatFunc (CFrac.reduce swellProd) = toRatFunc swellProd`. -/
 theorem swellProd_value_preserved :
@@ -107,7 +107,7 @@ theorem Rstuck_eq_one : CCommRing.isZero (CField.sub Rstuck (CCommRing.one : Den
   ccompute
 
 /-- `Rstuck`'s stored denominator is swollen: length 2 (`2x`, not the reduced `1`). -/
-theorem Rstuck_den_swollen : (DensePoly.cnorm Rstuck.den : List ℚ).length = 2 := by ccompute
+theorem Rstuck_den_swollen : (DensePoly.cnorm (CFrac.den Rstuck) : List ℚ).length = 2 := by ccompute
 
 /-- The unreduced residual makes `crischDESolve 0 Rstuck` return `none` even though `Rstuck = 1`,
 because the stored denominator is the spurious factor `2x`. -/

@@ -25,9 +25,12 @@ runs the same fraction algorithm.
 
 ## Phases
 
-1. **Carrier/interface split — DONE.** Introduce `CFrac F P`, `PolyFrac P`, `DenseFrac`, and `SparseFrac` in
-   symmetric representation modules. Migrate type occurrences from the old `CFrac α` carrier to
-   `DenseFrac α`; keep `CFrac.*` as the generic API namespace, not a compatibility type alias.
+1. **Carrier/interface split — DONE.** Introduce `CFrac F P` with genuinely distinct `DenseFrac` and
+   `SparseFrac` proof-carrying structures in symmetric representation modules. Their constructors are private
+   and pair storage is protected; construction and generic inspection pass through `CFrac`, while symmetric protected
+   `DenseFrac.num`/`den` and `SparseFrac.num`/`den` satellites preserve readable dot notation without exposing
+   concrete fields. Migrate type occurrences from the old `CFrac α` carrier to `DenseFrac α`; keep `CFrac.*`
+   as the generic API namespace, not a compatibility type alias.
 2. **Raw fraction boundary — DONE.** Retire the duplicate legacy pair arithmetic. Valid field operations now
    use `DenseFrac`/`CFrac`; the unused `RawFrac` module was removed once reverse-dependency checks showed
    that no algorithm boundary still consumed unchecked numerator/denominator pairs.
@@ -166,7 +169,10 @@ runs the same fraction algorithm.
    The rational RREF implementation, its `CLinearSolve ℚ` instance, and the corresponding lawful proof
    now live in `ComputableAlgebra/LinearAlgebraRat*.lean`; SymbolicIntegration imports the selected
    linear-solver capability instead of owning the concrete executable solver or its correctness stack.
-   SymbolicIntegration consumers request the weakest capability they need.
+   SymbolicIntegration consumers request the weakest capability they need. The redundant
+   `CTowerGcdWitnessWf` class has been retired: its only law followed from `LawfulCPolyGcd`, whose public
+   `compute_one_isUnit` satellite now supplies the tower split-factor proof without mentioning
+   `cgcdFFCoreWf`.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;

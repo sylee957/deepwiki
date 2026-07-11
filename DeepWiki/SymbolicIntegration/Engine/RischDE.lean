@@ -8,7 +8,7 @@ import DeepWiki.SymbolicIntegration.Engine.RischDE.SolveExhaustiveness
 import DeepWiki.SymbolicIntegration.Engine.RischDE.SolveNorm
 import DeepWiki.SymbolicIntegration.Engine.RischDE.SolveSoundWf
 import DeepWiki.SymbolicIntegration.Engine.RischDE.Structural
-import DeepWiki.SymbolicIntegration.Engine.RischDE.TowerGcdWitnessWf
+import DeepWiki.SymbolicIntegration.Engine.RischDE.TowerGcdUnit
 import DeepWiki.SymbolicIntegration.Engine.RischDE.TowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.RischDE.TowerGlue
 

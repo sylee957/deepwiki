@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.RischDE.TowerGcdWitnessWf
+import DeepWiki.SymbolicIntegration.Engine.RischDE.TowerGcdUnit
 import DeepWiki.SymbolicIntegration.Engine.RischDE.Structural
 
 /-! # Weak-normalization constructions for Risch-DE solving

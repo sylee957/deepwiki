@@ -331,7 +331,8 @@ the whole `lake build` passes). Steps 1–4 verified green twice already:
    `crischDEWf_field_of_success_and_residual`; add `[CFracGcdCoreWf β]` to the section block. ✓
 4. **Port `NormalCorrect`** — `crischDESolveWf_yden_ne_zero`, `RischDESuccessResidualCrux`→Wf,
    `residual_of_crux`→builds `RischDESuccessResidualWf` (using `cdegG_cSpecialPolyG_one_eq_zero`,
-   `hdvdB_of_dvd_wf`, `hdvdC_of_dvd_wf` from `TowerGcdWitnessWf`), `crischDESolve_field_of_crux`→Wf. ✓
+   from `TowerGcdUnit` and `hdvdB_of_dvd_wf`, `hdvdC_of_dvd_wf` from `NormCompleteness`),
+   `crischDESolve_field_of_crux`→Wf. ✓
 5. **Port `SolveNorm`** — add `[CFracGcdCoreWf β]` to Solver/Normality/Bridges/Capstone blocks; port the
    Normality section (`IsWeaklyNormalizedNorm`→Wf via `cSplitFactorFastG`, `isWeaklyNormalizedNorm_dvdB`→
    `dvd_dn_h_of_normal_wf`) and the Capstone that builds the now-Wf crux.
