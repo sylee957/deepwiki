@@ -227,6 +227,10 @@ runs the same fraction algorithm.
    that uses fraction-field arithmetic requests `[LawfulCFrac F P]`. The remaining direct dense gcd
    names occur only inside `Tower/WellFounded.lean`, which owns the selected dense recursive
    implementation and its denotation bridge.
+   The radical log-argument solver and unified elementary-integration driver now quantify over `CFrac F P`:
+   denominator clearing uses the representation-independent polynomial bound and coefficient readers, while
+   nullspace selection remains abstract through `CLinearSolve β`. Dense tower callers infer their established
+   specialization and a sparse arcsinh witness runs the identical matrix-and-reassembly kernel.
 
 ## Checkpoint discipline
 

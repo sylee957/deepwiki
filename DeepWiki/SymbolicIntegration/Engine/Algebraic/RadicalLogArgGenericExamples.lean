@@ -1,7 +1,9 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogArgGeneric
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogIntegral
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalOverTower
+import DeepWiki.SymbolicIntegration.Engine.ElementaryIntegrate
 import DeepWiki.ComputableAlgebra.LinearAlgebraRat
+import DeepWiki.ComputableAlgebra.FracReprSparse
 
 /-! # Generic radical log-argument examples
 
@@ -53,6 +55,17 @@ theorem genArg_arcsinh_matches_closed_form :
       CCommRing.isZero (CField.sub a0 (CCommRing.mul a1 genArgX)))) = some true := by
   native_decide
 
+/-! ### Sparse representation validation -/
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let ρ : SparseFrac ℚ := CFrac.ofPoly (ofList [1, 0, 1])
+    let integrand : RadElem (SparseFrac ℚ) := radInvYLift ρ CCommRing.one
+    ((radLogArgSolve ρ integrand (ofList [1]) 1).isSome,
+      (cIntegrateElementary ρ ([] : RadElem (SparseFrac ℚ)) integrand CCommRing.one
+        (ofList [1]) 1).logTerms.length) = (true, 1) := by
+  ccompute
+
 /-! ### Compute `∫ dx/√(eˣ+1) = log((y−1)/(y+1))` over `α = ℚ(x)(eˣ)`
 
 `β = ℚ(x)`, `α = ℚ(x)(eˣ)`, `θ = eˣ`, `ρ = θ+1`, `y² = ρ`, with the exponential derivation
@@ -72,7 +85,8 @@ def expArgIntegrand : RadElem Lvl2 := radInvYLift expRadicand CCommRing.one
 `α = ℚ(x)(eˣ)`, with `expTowerDiff`, `ρ = eˣ+1`, `D = θ`, ansatz degree `1` (expected `N = (θ+2) − 2y`,
 so `u = N/θ = (y−1)/(y+1)`). -/
 def expArgSolved : Option (RadElem Lvl2) :=
-  @radLogArgSolve _ _ _ _ expTowerDiff expRadicand expArgIntegrand expDenTheta 1
+  letI : CDiffField Lvl2 := expTowerDiff
+  radLogArgSolve expRadicand expArgIntegrand expDenTheta 1
 
 -- Computed numerator `N` for `∫ dx/√(eˣ+1)` over the tower, a multiple of `(θ+2) − 2y`.
 #eval (expArgSolved.map (fun N => N.map (fun z =>

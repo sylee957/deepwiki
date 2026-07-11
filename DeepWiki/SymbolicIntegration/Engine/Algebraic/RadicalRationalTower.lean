@@ -159,8 +159,8 @@ def rtFullDenTheta : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one
 rational part `expC3Vlift` (`v = 2y`) and the log argument computed from the residual by `radLogArgSolve`,
 assembling `F' = ⟨2y, [(1, u)]⟩`. -/
 def rtFullRecovered : AlgIntegralResult Lvl2 :=
-  @cIntegrateElementary _ _ _ _ expTowerDiff expC3RhoLvl2 expC3Vlift rtFullLogResidual
-    CCommRing.one rtFullDenTheta 1
+  letI : CDiffField Lvl2 := expTowerDiff
+  cIntegrateElementary expC3RhoLvl2 expC3Vlift rtFullLogResidual CCommRing.one rtFullDenTheta 1
 
 -- Sanity print: the recovered rational part `v` (should be `2y = [0,2]`, i.e. coefficient `2` on `y`) and
 -- the recovered log argument `u` (a constant multiple of `(y−1)/(y+1) = ((θ+2)−2y)/θ`).

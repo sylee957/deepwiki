@@ -49,7 +49,8 @@ def elemDenTheta : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The recovered result `F' = cIntegrateElementary ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
 def elemRecovered : AlgIntegralResult Lvl2 :=
-  @cIntegrateElementary _ _ _ _ expTowerDiff expRadicand elemRatPart elemLogResidual CCommRing.one elemDenTheta 1
+  letI : CDiffField Lvl2 := expTowerDiff
+  cIntegrateElementary expRadicand elemRatPart elemLogResidual CCommRing.one elemDenTheta 1
 
 /-- Round-trip `algDeriv F' = elemIntegrand` over ℚ(x)(eˣ): `DensePoly.cisZero (algDeriv F' − integrand)`. -/
 theorem rt_elementary_combined :
