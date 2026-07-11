@@ -13,7 +13,9 @@ open CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+  [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+  [Algebra ℚ (CFieldSpec.K α)]
 
 /-- **The hyperexp case, as a corollary of the generic soundness** (not the driver): the special value is
 the polynomial part `⟦fpPart⟧`, `integrateSpecial`/`reducedCorrect` are the Laurent/normal solves. -/
