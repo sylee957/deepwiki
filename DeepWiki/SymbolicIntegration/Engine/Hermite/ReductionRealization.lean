@@ -56,9 +56,11 @@ theorem cHermiteReduceTower_lawful_of_contracts (Dt a d : DensePoly α)
     LawfulHermiteReduction Dt a d (cHermiteReduceTower Dt a d).1.1
       (cHermiteReduceTower Dt a d).1.2 (cHermiteReduceTower Dt a d).2.1
       (cHermiteReduceTower Dt a d).2.2 where
-  field_identity := hfield
-  squarefree := cHermiteReduceTower_squarefree_of_decomposition Dt a d hdecomp
-  proper := hproper
+  field_identity := by
+    simpa only [towerFractionFieldDerivP, towerFractionFieldDeriv, toPoly_list_eq] using hfield
+  squarefree := by
+    simpa only [toPoly_list_eq] using cHermiteReduceTower_squarefree_of_decomposition Dt a d hdecomp
+  proper := by simpa only [toPoly_list_eq] using hproper
 
 /-- The selected squarefree contract supplies the decomposition clause of the Hermite realization. -/
 theorem cHermiteReduceTower_lawful_of_selected_squarefree [CharZero (CFieldSpec.K α)]

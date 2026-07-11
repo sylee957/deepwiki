@@ -53,7 +53,11 @@ private theorem cIntegrateReducedG_isIntegralResult_of_lawful [CPolySquarefree D
     (hres : LawfulResidueLogPart Dt (DensePoly.cHermiteReduceTower Dt a d).2.1
       (DensePoly.cHermiteReduceTower Dt a d).2.2 (DensePoly.cIntegrateReduced Dt a d cands).logs) :
     IsIntegralResult Dt a d (DensePoly.cIntegrateReduced Dt a d cands) :=
-  cIntegrateReducedG_isIntegralResult Dt a d cands hherm.field_identity hres.residue_match
+  cIntegrateReducedG_isIntegralResult Dt a d cands
+    (by simpa only [cIntegrateReduced, towerFractionFieldDerivP, towerFractionFieldDeriv, toPoly_list_eq] using
+      hherm.field_identity)
+    (by simpa only [towerFractionFieldDerivP, towerFractionFieldDeriv, toPoly_list_eq] using
+      hres.residue_match)
 
 open Classical in
 omit [CRischField α] in

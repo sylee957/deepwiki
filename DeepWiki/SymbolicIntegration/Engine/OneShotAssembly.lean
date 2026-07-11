@@ -454,10 +454,12 @@ theorem cIntegrateReducedG_lawfulResidueLogPart [CPolySquarefree DensePoly α] [
             (cHermiteReduceTower Dt a d).2.2 (residueCand β))))) :
     LawfulResidueLogPart Dt (cHermiteReduceTower Dt a d).2.1 (cHermiteReduceTower Dt a d).2.2
       (DensePoly.cIntegrateReduced Dt a d cands).logs where
-  residue_match := primitive_engine_hmatch Dt s (cHermiteReduceTower Dt a d).2.1
-    (cHermiteReduceTower Dt a d).2.2 w (DensePoly.cIntegrateReduced Dt a d cands).logs hDt hden hA
-    hnorm (cIntegrateReducedG_logs_eq_per_root Dt a d cands s residueCand hden hres hDd hdist hcand
-      hgcdread)
+  residue_match := by
+    simpa only [towerFractionFieldDerivP, towerFractionFieldDeriv, toPoly_list_eq] using
+      primitive_engine_hmatch Dt s (cHermiteReduceTower Dt a d).2.1
+        (cHermiteReduceTower Dt a d).2.2 w (DensePoly.cIntegrateReduced Dt a d cands).logs hDt hden hA
+        hnorm (cIntegrateReducedG_logs_eq_per_root Dt a d cands s residueCand hden hres hDd hdist hcand
+          hgcdread)
 
 /-- **Realization (Stage 2, hyperexp): `cIntegrateReduced.logs` is a lawful residue-log part.** The
 `LawfulResidueLogPart` realization for the hyperexponential monomial (`t′ = b·t`, `b ≠ 0`) — identical to
@@ -493,10 +495,12 @@ theorem cIntegrateReducedG_lawfulResidueLogPart_hyperexp [CPolySquarefree DenseP
             (cHermiteReduceTower Dt a d).2.2 (residueCand β))))) :
     LawfulResidueLogPart Dt (cHermiteReduceTower Dt a d).2.1 (cHermiteReduceTower Dt a d).2.2
       (DensePoly.cIntegrateReduced Dt a d cands).logs where
-  residue_match := hyperexp_engine_hmatch Dt s (cHermiteReduceTower Dt a d).2.1
-    (cHermiteReduceTower Dt a d).2.2 b hb (DensePoly.cIntegrateReduced Dt a d cands).logs hDt hden
-    hA hnorm hsum (cIntegrateReducedG_logs_eq_per_root Dt a d cands s residueCand hden hres hDd hdist
-      hcand hgcdread)
+  residue_match := by
+    simpa only [towerFractionFieldDerivP, towerFractionFieldDeriv, toPoly_list_eq] using
+      hyperexp_engine_hmatch Dt s (cHermiteReduceTower Dt a d).2.1
+        (cHermiteReduceTower Dt a d).2.2 b hb (DensePoly.cIntegrateReduced Dt a d cands).logs hDt hden
+        hA hnorm hsum (cIntegrateReducedG_logs_eq_per_root Dt a d cands s residueCand hden hres hDd hdist
+          hcand hgcdread)
 
 /-! ### ★ The `hA` discharge — the Hermite leftover is a PROPER fraction (numer degree < denom degree)
 

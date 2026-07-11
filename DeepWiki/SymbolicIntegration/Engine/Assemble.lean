@@ -22,6 +22,26 @@ structure CMonomialCase (P : Type u → Type u) [CPoly P] [CPolyEngine P]
   /-- Post-process a reduced normal result (identity for primitive; residual subtraction for hyperexponential). -/
   postprocessNormal : P α → IntegralResult α P → Option (IntegralResult α P)
 
+/-- Representation-neutral output of canonical rational-function decomposition. -/
+structure CanonicalRepresentationResult (P : Type u → Type u) [CPoly P]
+    (α : Type u) [CField α] where
+  /-- Polynomial part. -/
+  polynomial : P α
+  /-- Numerator of the special-denominator part. -/
+  specialNum : P α
+  /-- Special denominator. -/
+  specialDen : P α
+  /-- Numerator of the normal-denominator part. -/
+  normalNum : P α
+  /-- Normal denominator. -/
+  normalDen : P α
+
+/-- Prop-free canonical-representation stage over a polynomial representation. -/
+class CCanonicalRepresentation (P : Type u → Type u) [CPoly P] [CPolyEngine P]
+    (α : Type u) [CField α] [CDiffField α] where
+  /-- Decompose `a/d` into polynomial, special-denominator, and normal-denominator parts. -/
+  compute : P α → P α → P α → CanonicalRepresentationResult P α
+
 /-- Combine fractions `snum/sden + gnum/gden` in any polynomial representation. -/
 def combineRationalParts {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] (snum sden gnum gden : P α) : P α × P α :=
@@ -79,6 +99,26 @@ class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
     towerFractionFieldDerivP Dt (fieldFracP snum sden)
       = fieldFracP fp CPoly.one + fieldFracP b ds →
       ∃ out, C.integrateSpecial Dt fp b ds = some out
+
+/-- Denotation-level contract for canonical representation. -/
+class LawfulCCanonicalRepresentation [CCanonicalRepresentation P α] : Prop where
+  /-- Canonical decomposition reconstructs the input fraction. -/
+  reconstruction : ∀ (Dt a d : P α), CPoly.toPoly d ≠ 0 →
+    let out := CCanonicalRepresentation.compute Dt a d
+    fieldFracP out.polynomial CPoly.one
+        + fieldFracP out.specialNum out.specialDen
+        + fieldFracP out.normalNum out.normalDen
+      = fieldFracP a d
+  /-- A nonzero input denominator produces a nonzero special denominator. -/
+  specialDen_nonzero : ∀ (Dt a d : P α), CPoly.toPoly d ≠ 0 →
+    CPoly.toPoly (CCanonicalRepresentation.compute Dt a d).specialDen ≠ 0
+  /-- A nonzero input denominator produces a nonzero normal denominator. -/
+  normalDen_nonzero : ∀ (Dt a d : P α), CPoly.toPoly d ≠ 0 →
+    CPoly.toPoly (CCanonicalRepresentation.compute Dt a d).normalDen ≠ 0
+  /-- The canonical normal fraction is proper. -/
+  normal_proper : ∀ (Dt a d : P α), CPoly.toPoly d ≠ 0 →
+    (CPoly.toPoly (CCanonicalRepresentation.compute Dt a d).normalNum).degree <
+      (CPoly.toPoly (CCanonicalRepresentation.compute Dt a d).normalDen).degree
 
 /-- **Representation-independent assembler recombination.** A special fraction whose derivative is
 `specialVal`, a normal result for `cn/dn`, and their reconstruction of `a/d` combine into an integral result.

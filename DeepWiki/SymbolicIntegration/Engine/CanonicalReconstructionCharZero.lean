@@ -68,6 +68,23 @@ theorem canonicalReconstruction_of_charZero [CPolySplitFactor DensePoly α]
   have hgne : toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0 := hgu'.ne_zero
   exact canonicalReconstruction Dt a d hd hdn hds hsplit hgdeg hgne
 
+omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] [CPolyGcd DensePoly α]
+  [LawfulCPolyGcd.{u, v} DensePoly α] in
+/-- A lawful selected split factorization preserves nonzeroness of the canonical special denominator. -/
+theorem crSpecDen_ne_zero_of_lawfulSplit [CPolySplitFactor DensePoly α]
+    [LawfulCPolySplitFactor DensePoly α] (Dt a d : DensePoly α)
+    (hd : toPoly d ≠ 0) : toPoly (crSpecDen Dt a d) ≠ 0 := by
+  have hsplit : @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩
+      (toPoly d) (toPoly (CPoly.splitFactor Dt d).2) (toPoly (CPoly.splitFactor Dt d).1) := by
+    convert LawfulCPolySplitFactor.compute_isSplittingFactorizationGen' Dt d
+      (by simpa only [toPoly_list_eq] using hd) using 1 <;> simp only [toPoly_list_eq]
+  obtain ⟨hfac, _, _⟩ := hsplit
+  have hsd : crSpecDen Dt a d = (CPoly.splitFactor Dt d).2 := by
+    simp only [crSpecDen, canonicalRepresentationFast]
+  rw [hsd]
+  intro h
+  exact hd (by rw [hfac, h, zero_mul])
+
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The canonical normal denominator is nonzero when `d ≠ 0`** (`[CharZero]` + lawful selected gcd): `dₙ` is a
 factor of the split `d = dₛ·dₙ`, so `d ≠ 0 ⇒ dₙ ≠ 0`. -/
@@ -198,5 +215,40 @@ theorem crNormNum_degree_lt_crNormDen_of_lawfulSplit [CPolySplitFactor DensePoly
     (CPoly.splitFactor Dt d).2 (CPolyEuclidean.divmod a d).2
     (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1
     (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).2 d hds hdn hfac hbez hr
+
+/-! ## Dense canonical-stage realization -/
+
+/-- Dense realization of the canonical-representation operation interface. -/
+instance instCCanonicalRepresentationDense [CPolySplitFactor DensePoly α] :
+    CCanonicalRepresentation DensePoly α where
+  compute Dt a d :=
+    { polynomial := crPoly Dt a d
+      specialNum := crSpecNum Dt a d
+      specialDen := crSpecDen Dt a d
+      normalNum := crNormNum Dt a d
+      normalDen := crNormDen Dt a d }
+
+/-- The dense canonical-representation realization satisfies its representation-neutral contract. -/
+instance instLawfulCCanonicalRepresentationDense [CPolySplitFactor DensePoly α]
+    [LawfulCPolySplitFactor DensePoly α] : LawfulCCanonicalRepresentation (P := DensePoly) (α := α) where
+  reconstruction Dt a d hd := by
+    change fieldFracP (crPoly Dt a d) CPoly.one
+        + fieldFracP (crSpecNum Dt a d) (crSpecDen Dt a d)
+        + fieldFracP (crNormNum Dt a d) (crNormDen Dt a d) = fieldFracP a d
+    rw [show (CPoly.one : DensePoly α) = [CCommRing.one] from rfl]
+    simpa only [fieldFracP, fieldFrac, toPoly_list_eq] using
+      canonicalReconstruction_of_charZero Dt a d (by simpa only [toPoly_list_eq] using hd)
+  specialDen_nonzero Dt a d hd := by
+    change CPoly.toPoly (crSpecDen Dt a d) ≠ 0
+    simpa only [toPoly_list_eq] using
+      crSpecDen_ne_zero_of_lawfulSplit Dt a d (by simpa only [toPoly_list_eq] using hd)
+  normalDen_nonzero Dt a d hd := by
+    change CPoly.toPoly (crNormDen Dt a d) ≠ 0
+    simpa only [toPoly_list_eq] using
+      crNormDen_ne_zero_of_lawfulSplit Dt a d (by simpa only [toPoly_list_eq] using hd)
+  normal_proper Dt a d hd := by
+    change (CPoly.toPoly (crNormNum Dt a d)).degree < (CPoly.toPoly (crNormDen Dt a d)).degree
+    simpa only [toPoly_list_eq] using
+      crNormNum_degree_lt_crNormDen_of_lawfulSplit Dt a d (by simpa only [toPoly_list_eq] using hd)
 
 end DeepWiki.SymbolicIntegration

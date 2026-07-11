@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.Engine.CheckIdentityCorrect
 
 /-! # Interface: `LawfulHermiteReduction`
 
@@ -11,19 +11,24 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open DensePoly CFrac
+open CFrac
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+universe u v
+
+variable {P : Type u → Type u} [CPoly P]
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- Interface law for a Hermite reduction output `(gnum, gden, hNum, Dstar)` of `a/d`. -/
-structure LawfulHermiteReduction (Dt a d gnum gden hNum Dstar : DensePoly α) : Prop where
+structure LawfulHermiteReduction (Dt a d gnum gden hNum Dstar : P α) : Prop where
   /-- The cleared Hermite identity `D⟦gnum/gden⟧ + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
-  field_identity : towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
-      + am α (toPoly hNum) / am α (toPoly Dstar) = am α (toPoly a) / am α (toPoly d)
+  field_identity : towerFractionFieldDerivP Dt
+      (am α (CPoly.toPoly gnum) / am α (CPoly.toPoly gden))
+      + am α (CPoly.toPoly hNum) / am α (CPoly.toPoly Dstar)
+        = am α (CPoly.toPoly a) / am α (CPoly.toPoly d)
   /-- The leftover denominator is squarefree. -/
-  squarefree : Squarefree (toPoly Dstar)
+  squarefree : Squarefree (CPoly.toPoly Dstar)
   /-- The leftover fraction is proper. -/
-  proper : (toPoly hNum).degree < (toPoly Dstar).degree
+  proper : (CPoly.toPoly hNum).degree < (CPoly.toPoly Dstar).degree
 
 end DeepWiki.SymbolicIntegration
