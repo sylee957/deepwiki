@@ -104,6 +104,24 @@ theorem toPoly_czero : (toPoly (czero : P α)) = 0 := by
   rw [coeff_toPoly, czero, coeff_ofFn, if_neg (by omega), CRingSpec.toR_zero,
     Polynomial.coeff_zero]
 
+/-- A singleton zero coefficient list denotes the zero polynomial. -/
+@[simp] theorem toPoly_ofList_zero : toPoly (ofList (P := P) [(CCommRing.zero : α)]) = 0 := by
+  apply Polynomial.ext
+  intro k
+  rw [coeff_toPoly, coeff_ofList]
+  cases k <;> simp [CRingSpec.toR_zero]
+
+/-- A singleton unit coefficient list denotes the constant polynomial `1`. -/
+@[simp] theorem toPoly_ofList_one : toPoly (ofList (P := P) [(CCommRing.one : α)]) = 1 := by
+  apply Polynomial.ext
+  intro k
+  rw [coeff_toPoly, coeff_ofList]
+  cases k with
+  | zero => simp [CRingSpec.toR_one]
+  | succ k =>
+    simp only [List.getD_cons_succ, List.getD_nil, CRingSpec.toR_zero,
+      Polynomial.coeff_one, if_neg (Nat.succ_ne_zero k)]
+
 /-- **`cpow` correctness:** `toPoly (cpow p n) = (toPoly p) ^ n` — representation-generic. -/
 theorem toPoly_cpow (p : P α) (n : ℕ) : toPoly (cpow p n) = (toPoly p) ^ n := by
   induction n with
