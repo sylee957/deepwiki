@@ -581,12 +581,13 @@ splitting): `deg (…).2.1 < deg (…).2.2`. Assembles the residual-fraction pro
 (`cHermiteReduceTowerG_leftover_proper_of_residual`, via the `.2.1`/`.2.2` projections + the residual
 divisibility `hdvd`). The generic core of `hAD` (the `DenseFrac ℚ` `_numer_degree_lt` reads off `s.card` from
 this by splitting; this stops at the split-free `degree` comparison). -/
-theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α] (Dt a d : DensePoly α)
+theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CPolySquarefree DensePoly α]
+    (Dt a d : DensePoly α)
     (hDtdeg : (toPoly Dt).natDegree ≤ 1)
     (haProper : (toPoly a).degree < (toPoly d).degree)
-    (hfac : IsHermiteFactorData Dt d (cSqfreeYunFF d))
+    (hfac : IsHermiteFactorData Dt d (CPoly.squarefreeYun d))
     (g : DensePoly α × DensePoly α)
-    (hgeq : g = (cSqfreeYunFF d).zipIdx.foldl
+    (hgeq : g = (CPoly.squarefreeYun d).zipIdx.foldl
       (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
           let i := idx + 1
           if i ≤ 1 then gAcc
@@ -599,22 +600,23 @@ theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α
     (hdvd : toPoly (cmul d (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul a (cmul g.2 g.2))
           (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt g.1) g.2) (cmul g.1 (CPolyEngine.monomialDeriv Dt g.2)))))
-        ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])))
+        ((CPoly.squarefreeYun d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul d (cmul g.2 g.2)) ≠ ([] : DensePoly α))
-    (hDstar : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) ≠ 0) :
+    (hDstar : toPoly ((CPoly.squarefreeYun d).foldl
+      (fun acc vi => cmul acc vi) [CCommRing.one]) ≠ 0) :
     (toPoly (cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (cHermiteReduceTower Dt a d).2.2).degree := by
   have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d
-    (cSqfreeYunFF d) hDtdeg haProper hfac
+    (CPoly.squarefreeYun d) hDtdeg haProper hfac
   simp only at hresProper
   subst hgeq
   exact cHermiteReduceTowerG_leftover_proper_of_residual Dt a d
     (csub (cmul a (cmul _ _))
       (cmul d (csub (cmul (CPolyEngine.monomialDeriv Dt _) _) (cmul _ (CPolyEngine.monomialDeriv Dt _)))))
     (cmul d (cmul _ _))
-    ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
-    (by simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote])
-    (by simp only [cHermiteReduceTower, squarefreeYun_dense_wf_eq, denote])
+    ((CPoly.squarefreeYun d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
+    (by simp only [cHermiteReduceTower, denote])
+    (by simp only [cHermiteReduceTower, denote])
     hdvd hresDen hDstar hresProper
 
 end DeepWiki.SymbolicIntegration

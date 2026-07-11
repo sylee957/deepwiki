@@ -60,6 +60,9 @@ denotations does not make those terms definitionally equal.
 - `cHermiteReduceTower_lawful_of_contracts` assembles the selected Hermite output from its field identity,
   lawful squarefree decomposition, and properness contracts. The well-founded theorem is now a provider
   of those three facts rather than the place where the result interface is assembled.
+- `cHermiteReduceTowerG_leftover_proper_of_degree_le_one` now quantifies over `CPolySquarefree` and the
+  selected `CPoly.squarefreeYun` output. Its Wf/LRT consumer resolves that selection at the concrete
+  boundary instead of forcing the properness theorem itself to depend on `CFracGcdCoreWf`.
 
 ## Verification
 
