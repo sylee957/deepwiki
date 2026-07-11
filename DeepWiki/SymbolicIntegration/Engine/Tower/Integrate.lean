@@ -8,7 +8,7 @@ The integration pipeline (special/normal split, canonical representation, transc
 reduction, Rothstein–Trager logarithmic part) over the generic tower carrier `DenseFrac α`. Pipeline defs
 carry the suffix `G`, run on the generic engine ops, and take every `t`-gcd from the flat fraction-free
 `CFracGcdCore.cgcdFFCore` to avoid fraction-field coefficient swell. This file keeps the fueled engine and
-the shared level-2 example data; the fuel-free `native_decide` validations live downstream. -/
+the shared level-2 example data; the fuel-free `ccompute` validations live downstream. -/
 
 open Polynomial
 
@@ -16,7 +16,7 @@ namespace DeepWiki.SymbolicIntegration
 
 universe u v
 
-/-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
+/-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`ccompute`)
 
 This is the headline. We run `cHermiteReduceTower` over `DensePoly (DenseFrac (DenseFrac ℚ)) =
 ℚ(x)(t₁)[t₂]` (tower level 2, the new monomial `t₂`) on a concrete proper fraction whose
@@ -30,7 +30,7 @@ Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt�
 All coefficients are level-2 *constants* (elements of ℚ ⊂ ℚ(x)(t₁) = `Lvl2`), so the engine genuinely
 runs the level-2 `CField`/`CDiffField` instances over `DensePoly Lvl2`. The `CField (DenseFrac (DenseFrac ℚ))`
 and `CDiffField (DenseFrac (DenseFrac ℚ))` instances are `[CField …]`-computable with `Prop`-erased subtype
-proofs, so nothing noncomputable reaches the native compiler — `native_decide` reduces. The load-bearing
+proofs, so nothing noncomputable reaches the compiled decision procedure — `ccompute` reduces. The load-bearing
 check is the cleared-denominator form of `D(gnum/gden) + h_num/h_den = a/d`, equating numerators over the
 common denominator `gden²·h_den·d`: `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`. -/
 
@@ -106,23 +106,31 @@ def cratCast (q : ℚ) : α :=
 
 end DensePoly
 
-namespace DensePoly
+namespace CPoly
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
   {α : Type u} [CField α] [CDiffField α]
 
 /-! ### The generic Rothstein–Trager numerator `a − c·Dd`
 
-`cAmcDd` is the polynomial in `t` whose `t`-gcd with `d` is the Rothstein–Trager log argument at a
+`CPoly.amcDd` is the polynomial in `t` whose `t`-gcd with `d` is the Rothstein–Trager log argument at a
 residue `c` — the shared building block of the fuel-free residue resultant / log-argument engine
 (`cResidueResultantTower` / `cLogArgTower`, `Tower/WellFounded`). -/
 
-/-- Generic `a − c·Dd` `cAmcDd Dt a d c` for a residue value `c : α`: `a − c·(CPolyEngine.monomialDeriv Dt d)`,
-the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
-def cAmcDd (Dt a d : P α) (c : α) : P α :=
+/-- Generic `a − c·Dd` for a residue value `c`, whose `t`-gcd with `d` is the log argument. -/
+def amcDd (Dt a d : P α) (c : α) : P α :=
   CPolyEngine.sub a (CPolyEngine.scale c (CPolyEngine.monomialDeriv Dt d))
 
-/-- Generic `cAmcDd` specializes to the concrete dense engine operations. -/
+end CPoly
+
+namespace DensePoly
+
+variable {α : Type u} [CField α] [CDiffField α]
+
+/-- Dense specialization of the representation-independent Rothstein–Trager numerator. -/
+def cAmcDd (Dt a d : DensePoly α) (c : α) : DensePoly α := CPoly.amcDd Dt a d c
+
+/-- Dense `cAmcDd` specializes to the concrete dense engine operations. -/
 theorem cAmcDd_dense_eq (Dt a d : DensePoly α) (c : α) :
     cAmcDd Dt a d c = csub a (cscale c (CPolyEngine.monomialDeriv Dt d)) := rfl
 
@@ -135,10 +143,10 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u
 
 /-- Generic `cAmcDd` denotes the Rothstein–Trager numerator `a - c·Dd`. -/
 @[denote] theorem toPoly_cAmcDd (Dt a d : P α) (c : α) :
-    CPoly.toPoly (DensePoly.cAmcDd Dt a d c) =
+    CPoly.toPoly (CPoly.amcDd Dt a d c) =
       CPoly.toPoly a - Polynomial.C (CFieldSpec.toK c) *
         Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly d) := by
-  rw [DensePoly.cAmcDd, toPoly_sub, LawfulCPolyEngine.toPoly_scale,
+  rw [CPoly.amcDd, toPoly_sub, LawfulCPolyEngine.toPoly_scale,
     toPoly_monomialDeriv]
   simp only [toR_eq_toK]
 
@@ -148,11 +156,11 @@ namespace DensePoly
 
 example :
     CPolyEngine.cisZero
-      (cAmcDd
+      (CPoly.amcDd
         (CPoly.SparsePoly.ofList [(0, (1 : ℚ))])
         (CPoly.SparsePoly.ofList [(1, 2)])
         (CPoly.SparsePoly.ofList [(2, 1)]) 1) = true := by
-  native_decide
+  ccompute
 
 end DensePoly
 
@@ -213,7 +221,7 @@ example :
     let res : IntegralResult ℚ CPoly.SparsePoly :=
       ⟨(ofList [0, 0, 1 / 2], ofList [1]), []⟩
     checkIdentity (ofList [1]) res (ofList [0, 1]) (ofList [1]) = true := by
-  native_decide
+  ccompute
 
 end DensePoly
 

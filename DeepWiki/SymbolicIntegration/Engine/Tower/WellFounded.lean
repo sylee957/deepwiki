@@ -13,7 +13,7 @@ The generic tower integration pipeline, by well-founded recursion. Three recursi
 fraction-free gcd kernel `cprimPRSgcdGenCoreWf`, the split loop `cSplitFactorFast`, and Yun's main loop
 `cSqfreeYunFFGgoWf` — and a flat composition (`canonicalRepresentationFast`, `cHermiteReduceTower`, the
 logarithmic part) over those leaves. `[CField α]`-only on the runtime fragment (plus
-`[CDiffField α]`/`[CFracGcdCoreWf α]` where needed), so it `native_decide`s over the noncomputable tower. -/
+`[CDiffField α]`/`[CFracGcdCoreWf α]` where needed), so `ccompute` can validate the noncomputable tower. -/
 
 open Polynomial
 
@@ -113,7 +113,7 @@ inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : DensePoly B → Den
 
 The public monic gcd is `cgcdFFCoreWf := cmonic ∘ cgcdFFRawCoreWf`. Every method is `[CField α]`-only
 (plus the recursion's `[CFieldDomain β DensePoly]`/`[CFracGcdCoreWf β]`) — no `[CFieldSpec α]`, so the whole gcd
-`native_decide`s over the noncomputable tower. -/
+is validated by `ccompute` over the noncomputable tower. -/
 
 /-- Recursive fraction-free gcd over a tower level: the *raw* (content-normalized, non-monic) gcd
 `cgcdFFRawCoreWf p q` of `p, q ∈ DensePoly α = α[t]`. Monic normalization is applied only at the top, by
@@ -358,44 +358,53 @@ def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
 
 end HermiteReduction
 
+end DensePoly
+
 /-! ### The generic logarithmic part (Rothstein–Trager)
 
 `cResidueResultantTower`/`cLogArgTower`/`cRationalResidues`/`cLogPart`, taking the residue
 candidates as `α` elements; the resultant runs through `CPolyResultant`, the log argument through
 `cgcdFFCoreWf`. -/
 
-/-- Representation-independent residue resultant with independently selected inner and outer polynomial
-representations. -/
-def cResidueResultantTowerWith {P Q : Type u → Type u}
+namespace CPoly
+
+/-- Residue resultant with independently selected inner and outer polynomial representations. -/
+def residueResultantTower {P Q : Type u → Type u}
     [CPoly P] [CPolyEngine P] [CPolyResultant P]
     [CPoly Q] [CPolyEngine Q] [CPolyInterpolate Q]
     {β : Type u} [CField β] [CDiffField β] (Dt a d : P β) : Q β :=
   let n := CPolyEngine.cdeg d
   let pts : List (β × β) := (List.range (n + 1)).map (fun k =>
     let zk : β := CField.natCast k
-    (zk, CPolyResultant.compute d (cAmcDd Dt a d zk)))
+    (zk, CPolyResultant.compute d (CPoly.amcDd Dt a d zk)))
   CPoly.interpolate pts
+
+end CPoly
+
+namespace DensePoly
+
+variable {α : Type*} [CField α] [CDiffField α]
 
 /-- Dense residue resultant `R(z) = res_t(d, a − z·Dd)`, selected through `CPolyResultant`. -/
 def cResidueResultantTower [CPolyResultant DensePoly]
     (Dt : DensePoly α) (a d : DensePoly α) : DensePoly α :=
-  cResidueResultantTowerWith Dt a d
+  CPoly.residueResultantTower Dt a d
 
 example :
-    cResidueResultantTowerWith
+    CPoly.residueResultantTower
       (CPoly.SparsePoly.ofList [(0, 1)] : CPoly.SparsePoly ℚ)
       (CPoly.SparsePoly.ofList [(0, 1)])
       (CPoly.SparsePoly.ofList [(0, -1), (2, 1)]) = [1, 0, -4] := by
-  native_decide
+  ccompute
 
 /-- The residue resultant can use sparse storage for both the eliminated and interpolation variables. -/
 example :
-    cResidueResultantTowerWith (Q := CPoly.SparsePoly)
+    CPoly.residueResultantTower (Q := CPoly.SparsePoly)
       (CPoly.SparsePoly.ofList [(0, 1)] : CPoly.SparsePoly ℚ)
       (CPoly.SparsePoly.ofList [(0, 1)])
       (CPoly.SparsePoly.ofList [(0, -1), (2, 1)]) =
         CPoly.SparsePoly.ofList [(0, 1), (1, 0), (2, -4)] := by
-  native_decide
+  ccompute
 
 /-- Generic log argument `cLogArgTower Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`,
 using the selected `CPolyGcd` implementation. -/
@@ -454,12 +463,12 @@ theorem towerHermiteLvl2_rationalPartWf :
       let lhs := DensePoly.cmul
         (DensePoly.cadd (DensePoly.cmul gprimeNum hDen) (DensePoly.cmul hNum gden2)) towerHermiteLvl2D
       let rhs := DensePoly.cmul towerHermiteLvl2A (DensePoly.cmul gden2 hDen)
-      DensePoly.cisZero (DensePoly.csub lhs rhs)) = true := by native_decide
+      DensePoly.cisZero (DensePoly.csub lhs rhs)) = true := by ccompute
 
 /-- The level-2 residual denominator has degree 1. -/
 theorem towerHermiteLvl2_residual_degreeWf :
     DensePoly.cdeg (DensePoly.cHermiteReduceTower towerHermiteLvl2Dt
-      towerHermiteLvl2A towerHermiteLvl2D).2.2 = 1 := by native_decide
+      towerHermiteLvl2A towerHermiteLvl2D).2.2 = 1 := by ccompute
 
 /-- The canonical representation recombines to `f` at level 2. -/
 theorem towerCanRepLvl2_recombinesWf :
@@ -474,13 +483,13 @@ theorem towerCanRepLvl2_recombinesWf :
       let num := DensePoly.cadd (DensePoly.cadd (DensePoly.cmul q dsdn) (DensePoly.cmul b dn))
         (DensePoly.cmul c ds)
       DensePoly.cisZero (DensePoly.csub (DensePoly.cmul num towerCanRepLvl2D)
-        (DensePoly.cmul towerCanRepLvl2A dsdn))) = true := by native_decide
+        (DensePoly.cmul towerCanRepLvl2A dsdn))) = true := by ccompute
 
 /-- The recovered level-2 logarithmic part has length 2: the residue scan over `ℚ(x)(t₁)[t₂]` finds
 exactly the two rational residues `±1/2` (log arguments `t₂ ± 1`). -/
 theorem towerIntLvl2_logs_lengthWf :
     (DensePoly.cIntegrateReduced towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
-      towerIntLvl2Cands).logs.length = 2 := by native_decide
+      towerIntLvl2Cands).logs.length = 2 := by ccompute
 
 /-- A full elementary tower integral at level 2 with `D(∫f) = f`. For
 `f = (1/2)/(t₂+1) − (1/2)/(t₂−1)` over ℚ(x)(t₁)(t₂), the capstone `cIntegrateReduced` returns an
@@ -490,7 +499,7 @@ theorem towerIntLvl2_fullIntegralWf :
     DensePoly.checkIdentity towerIntLvl2Dt
       (DensePoly.cIntegrateReduced towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
         towerIntLvl2Cands)
-      towerIntLvl2Num towerIntLvl2Den = true := by native_decide
+      towerIntLvl2Num towerIntLvl2Den = true := by ccompute
 
 /-! ## The remaining RDE (PolyRischDE / SPDE) recursive bottoms
 
