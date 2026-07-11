@@ -35,7 +35,7 @@ example :
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `amGExt (toPoly p) ≠ 0` when `toPoly p ≠ 0`: base change (`φ` injective) and the fraction-field
 embedding are injective. -/
-theorem amGExt_ne_zero {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E]
+private theorem amGExt_ne_zero {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E]
     {p : (CFieldSpec.K α)[X]} (hp : p ≠ 0) : amGExt (E := E) p ≠ 0 := by
   rw [amGExt, Ne, map_eq_zero_iff _ (IsFractionRing.injective E[X] (RatFunc E))]
   exact (Polynomial.map_ne_zero_iff (algebraMap (CFieldSpec.K α) E).injective).mpr hp
