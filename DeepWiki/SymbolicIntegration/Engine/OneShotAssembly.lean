@@ -519,7 +519,7 @@ residual-properness to the `s.card` form the one-shots consume. -/
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The fuel-free reduced one-shot degree side condition follows from leftover properness. -/
-theorem cHermiteReduceTowerG_numer_degree_lt [CFracGcdCoreWf α] (Dt : DensePoly α)
+private theorem cHermiteReduceTowerG_numer_degree_lt [CPolySquarefree DensePoly α] (Dt : DensePoly α)
     (a d : DensePoly α) (s : Finset (CFieldSpec.K α))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hproper : (toPoly (cHermiteReduceTower Dt a d).2.1).degree
@@ -529,7 +529,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt [CFracGcdCoreWf α] (Dt : DensePoly
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The fuel-free reduced one-shot degree side condition from residual properness. -/
-theorem cHermiteReduceTowerG_numer_degree_lt_of_residual [CFracGcdCoreWf α]
+private theorem cHermiteReduceTowerG_numer_degree_lt_of_residual [CPolySquarefree DensePoly α]
     (Dt : DensePoly α) (a d : DensePoly α) (s : Finset (CFieldSpec.K α))
     (resNum resDen Dstar : DensePoly α)
     (hnumeq : toPoly (cHermiteReduceTower Dt a d).2.1
