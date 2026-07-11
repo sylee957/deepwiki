@@ -103,6 +103,30 @@ instance instLawfulCRecursiveCoefficientIntegratorLrt
     LawfulCRecursiveCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β)) where
   sound c b h := towerCoeffIntegrateLrt_sound c b h
 
+/-- Domain where ordinary tower coefficient integration descends to a complete log-free lower-level problem. -/
+def towerRecursiveCoefficientDomain (domain : RationalLrtDomain β) :
+    RecursiveCoefficientDomain (α := DenseFrac β) := fun c =>
+  domain [CCommRing.one] (CFrac.num c) (CFrac.den c) ∧
+    IsRationallyIntegrableLrt [CCommRing.one] (CFrac.num c) (CFrac.den c)
+
+/-- Log-free lower-level completeness lifts through `DenseFrac` to ordinary coefficient completeness. -/
+instance instCompleteCRecursiveCoefficientIntegratorLrt
+    [L : CLimitedIntegrateSingleLrt β]
+    [LawfulCRischLevelLrt (inferInstance : CRischLevelLrt β)]
+    (domain : RationalLrtDomain β)
+    [CompleteCRischLevelRationalLrt (inferInstance : CRischLevelLrt β) domain] :
+    CompleteCRecursiveCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β))
+      (towerRecursiveCoefficientDomain domain) where
+  complete c hdomain _ := by
+    have hcden : toPoly (CFrac.den c) ≠ 0 := by
+      simpa only [toPoly_list_eq] using CFrac.toPoly_den_ne_zero_generic c
+    obtain ⟨bn, bd, hrun⟩ := CompleteCRischLevelRationalLrt.relative_complete
+      (C := (inferInstance : CRischLevelLrt β)) (domain := domain)
+      [CCommRing.one] (CFrac.num c) (CFrac.den c) hdomain.1 hcden hdomain.2
+    let b : DenseFrac β := CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd)
+    refine ⟨b, ?_⟩
+    simp only [towerCoefficientIntegratorLrt, towerCoeffIntegrateLrt, hrun, Option.map_some, b]
+
 /-- LRT limited coefficient recursion returns `c = D b + r·η` with constant `r`. -/
 theorem towerCoeffLimitedIntegrateLrt_sound
     [L : CLimitedIntegrateSingleLrt β] [LawfulCLimitedIntegrateSingleLrt L]
@@ -231,12 +255,14 @@ theorem recursiveTowerPolyIntegrateLrt_sound {P : Type u → Type u} [CPoly P] [
 
 /-- The LRT tower's polynomial-stage specialization of `recursiveTowerPolyIntegrateLrt`. -/
 def towerPolyIntegrateLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [CLimitedIntegrateSingleLrt β]
     (η : DenseFrac β) (p : P (DenseFrac β)) : Option (P (DenseFrac β)) :=
   recursiveTowerPolyIntegrateLrt (towerCoefficientIntegratorLrt (β := β)) η p
 
 /-- The LRT tower step's polynomial-part soundness. -/
 theorem towerPolyIntegrateLrt_sound {P : Type u → Type u} [CPoly P] [CPolyEngine P]
-    [LawfulCPolyEngine.{u,v} P] (η : DenseFrac β) (p q : P (DenseFrac β))
+    [LawfulCPolyEngine.{u,v} P] [CLimitedIntegrateSingleLrt β]
+    (η : DenseFrac β) (p q : P (DenseFrac β))
     (h : towerPolyIntegrateLrt η p = some q) :
     Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (CPoly.toPoly q) =
       CPoly.toPoly p :=
@@ -280,8 +306,9 @@ def towerPrimitiveRecursiveMonomialCaseLrt :
     else none
   postprocessNormal := (primitiveGuardedCase (α := DenseFrac β)).postprocessNormal
 
-/-- The LRT tower primitive monomial case, supplied with its recursive coefficient operation. -/
-def towerPrimitiveCaseLrt : CMonomialCase DensePoly (DenseFrac β) :=
+/-- The LRT tower primitive monomial case, supplied with its selected recursive coefficient operation. -/
+def towerPrimitiveCaseLrt [CLimitedIntegrateSingleLrt β] :
+    CMonomialCase DensePoly (DenseFrac β) :=
   (towerPrimitiveRecursiveMonomialCaseLrt (β := β)).withCoefficient
     (towerCoefficientIntegratorLrt (β := β))
 
@@ -292,6 +319,7 @@ Under the guard (`b = 0`, `Dθ = 1`) the LRT polynomial recursion `towerPolyInte
 vanishing, `b = 0`) closes; off the guard the hook returns `none`. This is the `specialSound` field of the LRT
 tower instance. -/
 theorem towerPrimitiveCaseLrt_specialSound
+    [L : CLimitedIntegrateSingleLrt β]
     (Dt a d snum sden : DensePoly (DenseFrac β)) (hd0 : toPoly d ≠ 0)
     (hhook : (towerPrimitiveCaseLrt (β := β)).integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
       (crSpecDen Dt a d) = some (snum, sden)) :
@@ -417,17 +445,44 @@ instance instCompleteCRecursiveMonomialCaseTowerPrimitiveLrt
         simp only [denote, mul_zero, add_zero]
         rw [hbefore.coefficients_constant cv hcv, map_zero]
 
+omit [CPolyGcd DensePoly (DenseFrac β)] [CPolySplitFactor DensePoly (DenseFrac β)]
+  [LawfulCPolySplitFactor DensePoly (DenseFrac β)]
+  [CPolySquarefree DensePoly (DenseFrac β)] in
+/-- Lower-level log-free and limited completeness compose into tower primitive monomial completeness. -/
+theorem completeTowerPrimitiveCaseLrt
+    [L : CLimitedIntegrateSingleLrt β] [LawfulCLimitedIntegrateSingleLrt L]
+    [LawfulCRischLevelLrt (inferInstance : CRischLevelLrt β)]
+    (rationalDomain : RationalLrtDomain β)
+    [CompleteCRischLevelRationalLrt (inferInstance : CRischLevelLrt β) rationalDomain]
+    (limitedSingleDomain : LimitedIntegrateSingleDomain β)
+    [CompleteCLimitedIntegrateSingleLrt L limitedSingleDomain] :
+    CompleteCMonomialCase (towerPrimitiveCaseLrt (β := β))
+      (towerPrimitiveRecursiveSpecialDomainLrt
+        (towerLimitedCoefficientDomain limitedSingleDomain)) := by
+  change CompleteCMonomialCase
+    ((towerPrimitiveRecursiveMonomialCaseLrt (β := β)).withCoefficient
+      (towerCoefficientIntegratorLrt (β := β))) _
+  exact completeCMonomialCaseWithRecursiveCoefficient
+    (towerPrimitiveRecursiveMonomialCaseLrt (β := β))
+    (towerRecursiveCoefficientDomain rationalDomain)
+    (towerLimitedCoefficientDomain limitedSingleDomain)
+    (towerPrimitiveRecursiveSpecialDomainLrt
+      (towerLimitedCoefficientDomain limitedSingleDomain))
+    (towerCoefficientIntegratorLrt (β := β))
+
 /-- The LRT tower step operation: `CRischLevelLrt (DenseFrac β)` from a below-level operation and contract
 and this level's reduced LRT frontier `[PrimitiveFrontierLrt (DenseFrac β)]`.
 With the base (`instCRischLevelLrtPrimitive`) the LRT solver resolves at every tower depth by recursion:
 the re-based recursion, now with a dischargeable frontier at every level. `specialSound` is the LRT coefficient
 recursion (`towerPrimitiveCaseLrt_specialSound`); `reducedSoundLrt` is `PrimitiveFrontierLrt.hreducedLrt`. -/
-instance instCRischLevelLrtTower [PrimitiveFrontierLrt (DenseFrac β)] :
+instance instCRischLevelLrtTower [CLimitedIntegrateSingleLrt β]
+    [PrimitiveFrontierLrt (DenseFrac β)] :
     CRischLevelLrt (DenseFrac β) where
   case := towerPrimitiveCaseLrt
 
 /-- The recursive LRT tower operation satisfies its algebraic-residue contract. -/
-instance instLawfulCRischLevelLrtTower [PrimitiveFrontierLrt (DenseFrac β)] :
+instance instLawfulCRischLevelLrtTower [CLimitedIntegrateSingleLrt β]
+    [PrimitiveFrontierLrt (DenseFrac β)] :
     LawfulCRischLevelLrt (inferInstance : CRischLevelLrt (DenseFrac β)) where
   specialSound := fun Dt a d snum sden hd0 hhook =>
     towerPrimitiveCaseLrt_specialSound Dt a d snum sden hd0 hhook

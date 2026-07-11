@@ -283,6 +283,43 @@ def integrateRationalLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
     (C : CRischLevelLrt α) (Dt a d : DensePoly α) : Option (DensePoly α × DensePoly α) :=
   (C.integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
 
+end CRischLevelLrt
+
+/-- Semantic domain on which a log-free LRT integrator is required to be complete. -/
+abbrev RationalLrtDomain (α : Type u) := DensePoly α → DensePoly α → DensePoly α → Prop
+
+/-- A represented fraction has a rational antiderivative at the selected monomial derivative. -/
+def IsRationallyIntegrableLrt (Dt a d : DensePoly α) : Prop :=
+  ∃ num den, toPoly den ≠ 0 ∧
+    towerFractionFieldDeriv Dt (fieldFrac num den) = fieldFrac a d
+
+/-- Domain-relative completeness contract for the log-free LRT integrator. -/
+class CompleteCRischLevelRationalLrt [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) (domain : RationalLrtDomain α) [LawfulCRischLevelLrt C] : Prop where
+  /-- Every domain input with a rational antiderivative is accepted without logarithms. -/
+  relative_complete : ∀ (Dt a d : DensePoly α), domain Dt a d → toPoly d ≠ 0 →
+    IsRationallyIntegrableLrt Dt a d →
+      ∃ num den, C.integrateRationalLrt Dt a d = some (num, den)
+
+/-- Exact executable acceptance domain of a selected log-free LRT integrator. -/
+def rationalLrtAcceptanceDomain [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) : RationalLrtDomain α :=
+  fun Dt a d => ∃ num den, C.integrateRationalLrt Dt a d = some (num, den)
+
+/-- Every selected log-free LRT integrator is complete on its exact acceptance domain. -/
+instance instCompleteCRischLevelRationalLrtAcceptance [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) [LawfulCRischLevelLrt C] :
+    CompleteCRischLevelRationalLrt C (rationalLrtAcceptanceDomain C) where
+  relative_complete _Dt _a _d hdomain _hd _hintegrable := hdomain
+
+namespace CRischLevelLrt
+
 /-- **★ K-level soundness of the log-free LRT integrator** — the ∀E ⇒ K descent for log-free results. A
 successful `integrateRationalLrt` run gives the **base-level** identity `D_tower(num/den) = a/d` in
 `RatFunc (CFieldSpec.K α)`, with no algebraic-closure extension. The `∀E` LRT soundness instantiates at the
