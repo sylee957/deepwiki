@@ -13,15 +13,16 @@ namespace DeepWiki.SymbolicIntegration
 
 universe u v
 
-/-- Executable polynomial gcd over a representation-independent `CPoly`. -/
-class CPolyGcd (P : Type u → Type u) [CPoly P] where
+/-- Executable polynomial gcd selected by a polynomial representation and coefficient field. -/
+class CPolyGcd (P : Type u → Type u) [CPoly P] (α : Type u) [CField α] where
   /-- Compute a greatest common divisor of two represented polynomials. -/
-  compute : {α : Type u} → [CField α] → P α → P α → P α
+  compute : P α → P α → P α
 
 /-- Denotation-level gcd law for an executable polynomial gcd. -/
-class LawfulCPolyGcd (P : Type u → Type u) [CPoly P] [CPolyGcd P] : Prop where
+class LawfulCPolyGcd (P : Type u → Type u) [CPoly P] (α : Type u) [CField α]
+    [CPolyGcd P α] : Prop where
   /-- The computed gcd divides both inputs and every common divisor divides it. -/
-  compute_isGCD : ∀ {α : Type u} [CField α] [CFieldSpec.{u,v} α] (p q : P α),
+  compute_isGCD : ∀ [CFieldSpec.{u,v} α] (p q : P α),
     CPoly.toPoly (CPolyGcd.compute p q) ∣ CPoly.toPoly p ∧
       CPoly.toPoly (CPolyGcd.compute p q) ∣ CPoly.toPoly q ∧
         ∀ d : (CFieldSpec.K α)[X], d ∣ CPoly.toPoly p → d ∣ CPoly.toPoly q →
@@ -29,38 +30,41 @@ class LawfulCPolyGcd (P : Type u → Type u) [CPoly P] [CPolyGcd P] : Prop where
 
 /-! ### Built-in dense and sparse instances -/
 
-/-- The generic Euclidean gcd supplies the dense executable capability. -/
-instance instCPolyGcdDense : CPolyGcd DensePoly where
+/-- The generic Euclidean gcd supplies the default dense executable capability. -/
+instance (priority := low) instCPolyGcdDense {α : Type u} [CField α] :
+    CPolyGcd DensePoly α where
   compute := CPoly.cgcd
 
 /-- The dense Euclidean gcd satisfies the lawful gcd interface. -/
-instance instLawfulCPolyGcdDense : LawfulCPolyGcd DensePoly where
+instance (priority := low) instLawfulCPolyGcdDense {α : Type u} [CField α] :
+    LawfulCPolyGcd.{u,v} DensePoly α where
   compute_isGCD := by
-    intro α _ _ p q
+    intro _ p q
     exact CPoly.cgcd_isGCD p q
 
 /-- The generic Euclidean gcd supplies the sparse executable capability. -/
-instance instCPolyGcdSparse : CPolyGcd CPoly.SparsePoly where
+instance instCPolyGcdSparse {α : Type u} [CField α] : CPolyGcd CPoly.SparsePoly α where
   compute := CPoly.cgcd
 
 /-- The sparse Euclidean gcd satisfies the lawful gcd interface. -/
-instance instLawfulCPolyGcdSparse : LawfulCPolyGcd CPoly.SparsePoly where
+instance instLawfulCPolyGcdSparse {α : Type u} [CField α] :
+    LawfulCPolyGcd.{u,v} CPoly.SparsePoly α where
   compute_isGCD := by
-    intro α _ _ p q
+    intro _ p q
     exact CPoly.cgcd_isGCD p q
 
-variable {P : Type u → Type u} [CPoly P] [CPolyGcd P] [LawfulCPolyGcd.{u,v} P]
+variable {P : Type u → Type u} [CPoly P] {α : Type u} [CField α]
+  [CPolyGcd P α] [LawfulCPolyGcd.{u,v} P α]
 
 namespace LawfulCPolyGcd
 
 /-- Universe-explicit projection of the lawful gcd law for a coefficient field. -/
-theorem compute_isGCD' {α : Type u} [CField α] [CFieldSpec.{u,v} α]
-    (p q : P α) :
+theorem compute_isGCD' [CFieldSpec.{u,v} α] (p q : P α) :
     CPoly.toPoly (CPolyGcd.compute p q) ∣ CPoly.toPoly p ∧
       CPoly.toPoly (CPolyGcd.compute p q) ∣ CPoly.toPoly q ∧
         ∀ d : (CFieldSpec.K α)[X], d ∣ CPoly.toPoly p → d ∣ CPoly.toPoly q →
           d ∣ CPoly.toPoly (CPolyGcd.compute p q) := by
-  exact @LawfulCPolyGcd.compute_isGCD P inferInstance inferInstance inferInstance α inferInstance
+  exact @LawfulCPolyGcd.compute_isGCD P inferInstance α inferInstance inferInstance inferInstance
     (inferInstance : CFieldSpec.{u,v} α) p q
 
 end LawfulCPolyGcd
