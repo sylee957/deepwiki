@@ -85,41 +85,4 @@ def convertRischLevel (L : CRischLevel P α) : CRischLevel Q α where
 def convertRischLevelDomain (domain : RischLevelDomain P α) : RischLevelDomain Q α :=
   fun Dt a d => domain (CPolyEngine.convert Dt) (CPolyEngine.convert a) (CPolyEngine.convert d)
 
-set_option maxHeartbeats 3000000 in
-/-- Build the lawful contract for a Risch level transported through representation conversion. -/
-def lawfulCRischLevelConvert (L : CRischLevel P α) (domain : RischLevelDomain P α)
-    [LawfulCRischLevel L domain] :
-    LawfulCRischLevel (convertRischLevel (Q := Q) L) (convertRischLevelDomain domain) where
-  sound fuel Dt a d res hdomain hd hrun := by
-    change (L.integrate fuel (CPolyEngine.convert Dt) (CPolyEngine.convert a)
-      (CPolyEngine.convert d)).map (convertIntegralResult (Q := Q)) = some res at hrun
-    change domain (CPolyEngine.convert Dt) (CPolyEngine.convert a)
-      (CPolyEngine.convert d) at hdomain
-    rw [Option.map_eq_some_iff] at hrun
-    obtain ⟨sourceRes, hsource, rfl⟩ := hrun
-    have hdSource : CPoly.toPoly (CPolyEngine.convert d : P α) ≠ 0 := by
-      simpa only [CPolyEngine.toPoly_convert] using hd
-    have h := LawfulCRischLevel.sound fuel (CPolyEngine.convert Dt)
-      (CPolyEngine.convert a) (CPolyEngine.convert d) sourceRes hdomain hdSource hsource
-    exact isIntegralResultP_convert (Q := Q) _ _ _ _ h
-
-set_option maxHeartbeats 3000000 in
-/-- Build the relative-completeness contract for a Risch level transported through representation conversion. -/
-theorem completeCRischLevelConvert (L : CRischLevel P α) (domain : RischLevelDomain P α)
-    [LawfulCRischLevel L domain]
-    [LawfulCRischLevel (convertRischLevel (Q := Q) L) (convertRischLevelDomain domain)]
-    [CompleteCRischLevel L domain] :
-    CompleteCRischLevel (convertRischLevel (Q := Q) L) (convertRischLevelDomain domain) where
-  relative_complete Dt a d hdomain hd hintegrable := by
-    have hsourceIntegrable := isRischLevelIntegrable_convert (P := Q) (Q := P) Dt a d hintegrable
-    have hdSource : CPoly.toPoly (CPolyEngine.convert d : P α) ≠ 0 := by
-      simpa only [CPolyEngine.toPoly_convert] using hd
-    obtain ⟨fuel, sourceRes, hrun⟩ := CompleteCRischLevel.relative_complete
-      (L := L) (domain := domain) (CPolyEngine.convert Dt) (CPolyEngine.convert a)
-        (CPolyEngine.convert d) hdomain hdSource hsourceIntegrable
-    refine ⟨fuel, convertIntegralResult (Q := Q) sourceRes, ?_⟩
-    change (L.integrate fuel (CPolyEngine.convert Dt) (CPolyEngine.convert a)
-      (CPolyEngine.convert d)).map (convertIntegralResult (Q := Q)) = some _
-    simpa only [Option.map_some] using congrArg (Option.map (convertIntegralResult (Q := Q))) hrun
-
 end DeepWiki.SymbolicIntegration
