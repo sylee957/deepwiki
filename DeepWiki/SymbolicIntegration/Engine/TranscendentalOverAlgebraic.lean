@@ -143,25 +143,25 @@ abbrev RadX3 : Type := RadExt (DenseFrac ℚ) 2 radicandX3p1
 theorem radX3_gen_sq_eq_radicand :
     CCommRing.isZero (CField.sub (CCommRing.mul (RadExt.gen : RadX3) RadExt.gen)
       (⟨[radicandX3p1]⟩ : RadX3)) = true := by
-  native_decide
+  ccompute
 
 /-- `D(y) = (f'/(2f))·y` in `RadX3` through `CDiffField.cderiv`: the diagonal derivation sends
 `y = √(x³+1)` to `ℓ·y` with `ℓ = 3x²/(2(x³+1))`. -/
 theorem radX3_cderiv_gen_eq :
     CCommRing.isZero (CField.sub (CDiffField.cderiv (RadExt.gen : RadX3))
-      (⟨[CCommRing.zero, radicandLogDer]⟩ : RadX3)) = true := by native_decide
+      (⟨[CCommRing.zero, radicandLogDer]⟩ : RadX3)) = true := by ccompute
 
 /-- `u · u⁻¹ = 1` in `RadX3` through `CCommRing.mul`/`CField.inv`: for `u = x + y` the conjugate-norm
 inverse is genuine, so `RadExt` is a field, not just a ring. -/
 theorem radX3_mul_inv_eq_one :
     CCommRing.isZero (CField.sub (CCommRing.mul (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3)
-      (CField.inv (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3))) CCommRing.one) = true := by native_decide
+      (CField.inv (⟨[CFrac.ofPoly [0, 1], CCommRing.one]⟩ : RadX3))) CCommRing.one) = true := by ccompute
 
 /-- `D(1) = 0` and `D(0) = 0` in `RadX3`: the derivation annihilates the unit and zero. -/
 theorem radX3_cderiv_one_zero :
     CCommRing.isZero (CDiffField.cderiv (CCommRing.one : RadX3)) = true ∧
     CCommRing.isZero (CDiffField.cderiv (CCommRing.zero : RadX3)) = true := by
-  constructor <;> native_decide
+  constructor <;> ccompute
 
 /-! ### The generic `CRischField (RadExt …)` solves a genuine algebraic RDE
 
@@ -183,12 +183,12 @@ def radX3RischC : RadX3 :=
 
 /-- The right-hand side `C` has a genuine `y`-component (`DensePoly.cisZero (C.toRad.tail) = false`). -/
 theorem radX3Risch_C_has_y_component :
-    DensePoly.cisZero ((radX3RischC.toRad : List (DenseFrac ℚ)).tail) = false := by native_decide
+    DensePoly.cisZero ((radX3RischC.toRad : List (DenseFrac ℚ)).tail) = false := by ccompute
 
 /-- `CRischField.crischDESolve B C` returns `some` on the algebraic RDE over `RadX3` (`B = 1`, `C`
 with a `y`-component). -/
 theorem radX3Risch_solve_isSome :
-    (CRischField.crischDESolve radX3RischB radX3RischC).isSome = true := by native_decide
+    (CRischField.crischDESolve radX3RischB radX3RischC).isSome = true := by ccompute
 
 /-- `CRischField (RadExt …)` solves a genuine algebraic RDE: `crischDESolve B C` over `RadX3` returns
 `some z` satisfying `radDeriv z + B·z = C` exactly. -/
@@ -197,12 +197,12 @@ theorem radX3Risch_solves_rde :
       | some z => DensePoly.cisZero (DensePoly.csub
           (DensePoly.cadd (RadElem.radDeriv 2 radicandX3p1 z.toRad)
             (RadElem.radMul 2 radicandX3p1 radX3RischB.toRad z.toRad)) radX3RischC.toRad)
-      | none => false) = true := by native_decide
+      | none => false) = true := by ccompute
 
 /-- A non-scalar coefficient `B` returns `none`: with `B = y`, `crischDESolve B C` does not attempt the
 coupled-system case, keeping the solver sound. -/
 theorem radX3Risch_nonscalar_none :
-    CRischField.crischDESolve (RadExt.gen : RadX3) radX3RischC = none := by native_decide
+    CRischField.crischDESolve (RadExt.gen : RadX3) radX3RischC = none := by ccompute
 
 /-! ### A transcendental monomial over the algebraic base
 
@@ -223,7 +223,7 @@ def radX3TwoT2sq : DensePoly RadX3 := [CCommRing.zero, CCommRing.zero, CCommRing
 computes `D(t²) = 2t·t = 2t²` over the algebraic base. -/
 theorem radX3_monomialDeriv_t2sq_eq_two_t2sq :
     DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv radX3DtExp radX3T2sq) radX3TwoT2sq) = true := by native_decide
+      (DensePoly.cmonomialDeriv radX3DtExp radX3T2sq) radX3TwoT2sq) = true := by ccompute
 
 /-- The `RadX3[t]`-polynomial `y·t = [0, y]` (the radical generator `y = √(x³+1)` times the monomial
 `t = eˣ`): constant `t`-coefficient `0`, linear `t`-coefficient `y = RadExt.gen`. -/
@@ -237,7 +237,7 @@ def radX3GenTDeriv : DensePoly RadX3 :=
 `Dt = t` (monomial) both firing via the product rule. -/
 theorem radX3_monomialDeriv_genT_eq :
     DensePoly.cisZero (DensePoly.csub
-      (DensePoly.cmonomialDeriv radX3DtExp radX3GenT) radX3GenTDeriv) = true := by native_decide
+      (DensePoly.cmonomialDeriv radX3DtExp radX3GenT) radX3GenTDeriv) = true := by ccompute
 
 /-- The mixed derivation genuinely runs the coefficient derivation: `D(y·t)` over `RadX3[t]` is neither
 zero nor equal to the pure-`d/dt` result `y·t`, confirming the radical-base `cderiv` contributed. -/
@@ -245,7 +245,7 @@ theorem radX3_monomialDeriv_genT_runs_coeff :
     (DensePoly.cisZero (DensePoly.cmonomialDeriv radX3DtExp radX3GenT) = false) ∧
     (DensePoly.cisZero (DensePoly.csub
       (DensePoly.cmonomialDeriv radX3DtExp radX3GenT) radX3GenT) = false) := by
-  constructor <;> native_decide
+  constructor <;> ccompute
 
 /-! ### The keystone composes: a transcendental level `DenseFrac (RadExt …)` over the algebraic base
 
@@ -620,12 +620,12 @@ def tOverRadX3 : DenseFrac RadX3 := CFrac.ofPoly [CCommRing.zero, CCommRing.one]
 sends the transcendental monomial `t` to `1` over the algebraic base. -/
 theorem cderiv_tOverRadX3_eq_one :
     CCommRing.isZero (CField.sub (CDiffField.cderiv tOverRadX3) (CCommRing.one : DenseFrac RadX3)) = true := by
-  native_decide
+  ccompute
 
 /-- `t · t⁻¹ = 1` over `ℚ(x)[√(x³+1)](t)` — the typeclass field operations of `DenseFrac RadX3` invert
 the transcendental monomial `t` over the algebraic base. -/
 theorem mul_inv_tOverRadX3_eq_one :
     CCommRing.isZero (CField.sub (CCommRing.mul tOverRadX3 (CField.inv tOverRadX3))
-      (CCommRing.one : DenseFrac RadX3)) = true := by native_decide
+      (CCommRing.one : DenseFrac RadX3)) = true := by ccompute
 
 end DeepWiki.SymbolicIntegration
