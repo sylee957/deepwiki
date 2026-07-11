@@ -39,7 +39,7 @@ class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField �
     [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
     [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] where
   /-- The per-monomial-case computable hooks for this level (the special/polynomial-part integrator). -/
-  case : MonomialCase α
+  case : CMonomialCase DensePoly α
   /-- Special-part soundness + reconstruction (`K`-level, existential special value — identical to the rational
   solver's `specialSound`). The `d ≠ 0` precondition is supplied by the integrator's guard. -/
   specialSound : ∀ (Dt a d snum sden : DensePoly α), toPoly d ≠ 0 →

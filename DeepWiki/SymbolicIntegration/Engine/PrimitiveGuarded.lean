@@ -76,14 +76,14 @@ theorem primitive_special_identity (Dt fp qp : DensePoly α)
   · exact field_identity_Dt1 Dt fp qp _ hDt1 (by simpa using hfp) (le_refl _) hsome hconst
 
 /-- The guarded primitive monomial case. -/
-def primitiveGuardedCase : MonomialCase α where
+def primitiveGuardedCase : CMonomialCase DensePoly α where
   integrateSpecial Dt fp b _ds :=
     if cisZero b && cisZero (csub Dt [CCommRing.one]) && cisZero (CPolyEngine.mapDeriv fp) then
       match cPolyRischDE Dt [] fp ((cdeg fp : ℤ) + 1) with
       | none => none
       | some qp => some (qp, [CCommRing.one])
     else none
-  reducedCorrect _Dt nrm :=
+  postprocessNormal _Dt nrm :=
     if nrm.logs.all (fun cv => cisZero [CDiffField.cderiv cv.1]) then some nrm else none
 
 end DeepWiki.SymbolicIntegration

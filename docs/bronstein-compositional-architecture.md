@@ -13,6 +13,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   decomposition, resultants, and subresultants.
 - `Assemble.lean` now proves `combineSN_isIntegralResultP` once for every lawful polynomial
   representation; the former `DensePoly` theorem is a specialization through `toPoly_list_eq`.
+- `CMonomialCase P` is now the representation-parameterized, Prop-free operation interface used by
+  dense and recursive realizers; `LawfulCMonomialCase` separates its soundness, denominator preservation,
+  and special-part relative-completeness contract.
 - `LawfulHermiteReduction` and `LawfulResidueLogPart` exist as stage-result contracts.
 - `LawfulRischLevelLrt` already packages the recursive LRT-level special and reduced contracts.
 
@@ -39,10 +42,10 @@ monomial stage contracts.
 1. Inventory every public assembler and proof that mentions a concrete dense/Wf operation; use
    `scripts/wiki rdeps` before changing it. Classify each declaration as a stage contract,
    a realization, or obsolete duplicated wiring.
-2. Generalize the Stage-1 result data and `MonomialCase` from `DensePoly` to a polynomial
-   representation parameter `P`. The representation-neutral recombination square is complete;
-   next introduce the generic stage operation and lawful contracts, then move dense consumers to
-   realizers rather than parallel theorem bodies.
+2. Generalize the Stage-1 result data and monomial case from `DensePoly` to a polynomial
+   representation parameter `P`. The representation-neutral recombination square and
+   `CMonomialCase`/`LawfulCMonomialCase` split are complete; next materialize lawful dense
+   realizations and make the generic assembler consume the contracts rather than dense hypotheses.
 3. Introduce paired executable/lawful interfaces for canonical representation and polynomial
    reduction; fold existing Hermite and residue contracts into the same stage vocabulary.
 4. Define one generic Figure-5.1 one-level assembler and prove its soundness from only the stage

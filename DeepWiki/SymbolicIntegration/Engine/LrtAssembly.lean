@@ -79,11 +79,11 @@ theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : DensePoly α)
 /-- **The one-level primitive LRT case integrator.** Canonical split (`canonicalRepresentationFast`) →
 special part via the case hook `C.integrateSpecial` (rational, shared with the rational solver) → reduced
 normal part via the root-free `cIntegrateReducedLrt` → combined with `combineSNLrt`. The LRT analogue of
-`cIntegrateCase` (no candidate sweep, no `reducedCorrect` post-processing: the primitive LRT reduced
+`cIntegrateCase` (no candidate sweep, no `postprocessNormal` step: the primitive LRT reduced
 integrator is direct). -/
 def cIntegrateCaseLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
     [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
-    (C : MonomialCase α) (Dt a d : DensePoly α) :
+    (C : CMonomialCase DensePoly α) (Dt a d : DensePoly α) :
     Option (LrtResult α) :=
   -- **Primitive-case runtime guard** (`Dθ ∈ k`, i.e. `deg Dt = 0`): the LRT reduced integrator is
   -- primitive-specific, so a successful run *decides* `deg Dt = 0` — discharging `hDt0` from the branch
@@ -103,7 +103,7 @@ alg-closed `E`. The composition consumes this result-level contract; it does not
 theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)]
     [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
     [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
-    (C : MonomialCase α) (Dt a d : DensePoly α) (res : LrtResult α) (snum sden : DensePoly α)
+    (C : CMonomialCase DensePoly α) (Dt a d : DensePoly α) (res : LrtResult α) (snum sden : DensePoly α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden))
     (hsome : cIntegrateCaseLrt C Dt a d = some res) (hsden : toPoly sden ≠ 0)

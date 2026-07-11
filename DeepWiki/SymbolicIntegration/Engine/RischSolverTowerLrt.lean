@@ -133,17 +133,17 @@ variable [CRischField (DenseFrac β)]
   [LawfulCPolySplitFactor DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)]
 
 /-- The LRT tower primitive monomial case: the `Dθ = 1` log-tower case with the polynomial part integrated
-by the LRT coefficient RECURSION `towerPolyIntegrateLrt`. Guard: `b = 0` and `Dt = [1]`. The `reducedCorrect`
+by the LRT coefficient RECURSION `towerPolyIntegrateLrt`. Guard: `b = 0` and `Dt = [1]`. The `postprocessNormal`
 field is inert here (`cIntegrateCaseLrt` never calls it — the reduced part goes through the direct root-free
 `cIntegrateReducedLrt`), so it reuses the shared guarded hook. -/
-def towerPrimitiveCaseLrt : MonomialCase (DenseFrac β) where
+def towerPrimitiveCaseLrt : CMonomialCase DensePoly (DenseFrac β) where
   integrateSpecial Dt fp b _ds :=
     if cisZero b && cisZero (csub Dt [CCommRing.one]) then
       match towerPolyIntegrateLrt CCommRing.one fp with
       | none => none
       | some qp => some (qp, [CCommRing.one])
     else none
-  reducedCorrect := (primitiveGuardedCase (α := DenseFrac β)).reducedCorrect
+  postprocessNormal := (primitiveGuardedCase (α := DenseFrac β)).postprocessNormal
 
 omit [CPolyGcd DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)] in
 /-- LRT tower primitive special-part soundness, the tower-recursion analogue of `primitiveGuardedCase_specialSound`.

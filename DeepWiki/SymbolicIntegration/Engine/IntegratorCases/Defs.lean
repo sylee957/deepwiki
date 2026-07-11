@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
 
 /-! # Concrete one-level Risch case definitions
 
-The primitive and hyperexponential `MonomialCase` realizations, plus concrete
+The primitive and hyperexponential `CMonomialCase DensePoly` realizations, plus concrete
 `native_decide` validations of the generic assembler on each case.
 -/
 
@@ -17,24 +17,24 @@ variable [CRischField α]
 
 /-- Primitive monomial case (`Dt ∈ α`): the special part is empty (`b = 0` required), the polynomial part
 `fₚ` is integrated by the `b = 0` RDE `cPolyRischDE` as `qₚ/1`; the reduced part needs no correction. -/
-def primitiveCase : MonomialCase α where
+def primitiveCase : CMonomialCase DensePoly α where
   integrateSpecial Dt fp b _ds :=
     if cisZero b then
       match cPolyRischDE Dt [] fp ((cdeg fp : ℤ) + 1) with
       | none => none
       | some qp => some (qp, [CCommRing.one])
     else none
-  reducedCorrect _Dt nrm := some nrm
+  postprocessNormal _Dt nrm := some nrm
 
 variable [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
   [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
 
 /-- Hyperexponential monomial case (`Dt = η·t`): the special/Laurent part is integrated by
 `cIntegrateHyperexpLaurent`; the reduced correction subtracts `∫R` (the residual `η·∑ᵢ cᵢ`). -/
-def hyperexpCase : MonomialCase α where
+def hyperexpCase : CMonomialCase DensePoly α where
   integrateSpecial Dt fp b ds :=
     cIntegrateHyperexpLaurent (cExpEta Dt) fp (cHyperexpSpecialNeg b ds)
-  reducedCorrect Dt nrm := cCorrectHyperexpNormal (cExpEta Dt) nrm
+  postprocessNormal Dt nrm := cCorrectHyperexpNormal (cExpEta Dt) nrm
 
 /-- **Bridge (hyperexp): the hyperexponential driver is definitionally the hyperexp case.** -/
 theorem cIntegrateHyperexpFullG_eq_case (Dt a d : DensePoly α) (cands : List α) :

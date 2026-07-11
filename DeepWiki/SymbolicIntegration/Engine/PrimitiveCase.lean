@@ -24,7 +24,7 @@ integrates `f = a/d ∈ K(x)(…)(t)` when `t` is primitive.
   `CField` / polynomial `DensePoly` (see `ComputableAlgebra.PolyReprDense`). Level `n` is
   `DensePoly (CFracGⁿ K)`. Everything is `native_decide`-executable.
 * **The solver interface** is the class `LawfulRischLevelLrt` (`RischTowerLrt`). It bundles the
-  per-level computable case hook (`case : MonomialCase`) with its soundness fields. `LawfulX`/`X` idiom:
+  per-level computable case hook (`case : CMonomialCase DensePoly`) with its soundness fields. `LawfulX`/`X` idiom:
   the computable half reduces; the abstract soundness lives in the lawful half.
 * **The recursion** is two instances: `instLawfulRischLevelLrtPrimitive` (the base — constant-coefficient
   polynomials over `ℚ(x)`) and `instLawfulRischLevelLrtTower` (the step — given a solver for the

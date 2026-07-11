@@ -6,26 +6,21 @@ import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
 The abstract soundness *core* of the one-level Risch integrator, proven purely over stage-result data —
 **no concrete algorithm** (`cIntegrateCase`, `canonicalRepresentationFast`, `cIntegrateReduced`,
 `cHermiteReduceTower`, …) appears in this file. The concrete assembler (the `cIntegrateCase` def, the
-per-case `MonomialCase` instances, the reduced-stage realizations, and the end-to-end one-shots) lives in
+per-case `CMonomialCase` realizers, the reduced-stage realizations, and the end-to-end one-shots) lives in
 `IntegratorAssembly.lean`, which imports this file. See `docs/risch-two-stage-discipline.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 universe u v
 
-namespace DensePoly
-
-variable {α : Type*} [CField α] [CDiffField α]
-
-/-- The per-monomial-case hooks of one-level Risch integration: `integrateSpecial Dt fp b ds` handles the
-polynomial/special part as a fraction, `reducedCorrect Dt` post-processes the reduced normal part. -/
-structure MonomialCase (α : Type*) [CField α] [CDiffField α] where
-  /-- Integrate the special/polynomial part `fₚ + b/dₛ` to a fraction `(snum, sden)`, or `none`. -/
-  integrateSpecial : DensePoly α → DensePoly α → DensePoly α → DensePoly α → Option (DensePoly α × DensePoly α)
-  /-- Post-process the reduced normal result (identity for primitive; residual subtraction for hyperexp). -/
-  reducedCorrect : DensePoly α → IntegralResult α → Option (IntegralResult α)
-
-end DensePoly
+/-- The Prop-free per-monomial-case operations of one-level Risch integration over a polynomial
+representation `P`: integrate the polynomial/special part and post-process the normal result. -/
+structure CMonomialCase (P : Type u → Type u) [CPoly P] [CPolyEngine P]
+    (α : Type u) [CField α] [CDiffField α] where
+  /-- Integrate the special/polynomial part `fₚ + b/dₛ` to a fraction `(snum, sden)`, or fail. -/
+  integrateSpecial : P α → P α → P α → P α → Option (P α × P α)
+  /-- Post-process a reduced normal result (identity for primitive; residual subtraction for hyperexponential). -/
+  postprocessNormal : P α → IntegralResult α P → Option (IntegralResult α P)
 
 /-- Combine fractions `snum/sden + gnum/gden` in any polynomial representation. -/
 def combineRationalParts {P : Type u → Type u} [CPoly P] [CPolyEngine P]
@@ -59,6 +54,31 @@ noncomputable abbrev fieldFracP {P : Type u → Type u} [CPoly P]
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
   [Algebra ℚ (CFieldSpec.K α)]
+
+/-- Denotation-level contract for a `CMonomialCase`: successful special integration has the expected
+derivative, normal post-processing preserves certified integration results and nonzero denominators, and every
+valid special antiderivative is found. -/
+class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
+  /-- A successful special integration has derivative `fₚ + b/dₛ`. -/
+  special_sound : ∀ (Dt fp b ds snum sden : P α),
+    C.integrateSpecial Dt fp b ds = some (snum, sden) →
+      CPoly.toPoly sden ≠ 0 ∧
+        towerFractionFieldDerivP Dt (fieldFracP snum sden)
+          = fieldFracP fp CPoly.one + fieldFracP b ds
+  /-- Normal-result post-processing preserves its integral-result certificate. -/
+  postprocessNormal_sound : ∀ (Dt cn dn : P α) (before after : IntegralResult α P),
+    IsIntegralResultP Dt cn dn before → C.postprocessNormal Dt before = some after →
+      IsIntegralResultP Dt cn dn after
+  /-- Normal-result post-processing preserves a nonzero rational denominator. -/
+  postprocessNormal_den_nonzero : ∀ (Dt : P α) (before after : IntegralResult α P),
+    CPoly.toPoly before.rational.2 ≠ 0 → C.postprocessNormal Dt before = some after →
+      CPoly.toPoly after.rational.2 ≠ 0
+  /-- Relative completeness for special-part integration. -/
+  special_complete : ∀ (Dt fp b ds snum sden : P α),
+    CPoly.toPoly sden ≠ 0 →
+    towerFractionFieldDerivP Dt (fieldFracP snum sden)
+      = fieldFracP fp CPoly.one + fieldFracP b ds →
+      ∃ out, C.integrateSpecial Dt fp b ds = some out
 
 /-- **Representation-independent assembler recombination.** A special fraction whose derivative is
 `specialVal`, a normal result for `cn/dn`, and their reconstruction of `a/d` combine into an integral result.

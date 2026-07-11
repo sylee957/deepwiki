@@ -15,7 +15,7 @@ import DeepWiki.SymbolicIntegration.Engine.Assemble
 
 /-! # The generic one-level Risch assembler
 
-This file defines the `MonomialCase`-parameterized integrator `cIntegrateCase`, the canonical-split
+This file defines the `CMonomialCase`-parameterized integrator `cIntegrateCase`, the canonical-split
 accessors (`crPoly`/…/`redNorm`), canonical reconstruction, and generic soundness theorem
 `cIntegrateCase_sound`.
 -/
@@ -32,13 +32,13 @@ variable [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
 
 /-- The generic one-level Risch integrator, parameterized by a monomial case `C`: canonical-split, run the
 case's special-part hook, correct the reduced normal part, and combine. -/
-def cIntegrateCase (C : MonomialCase α) (Dt a d : DensePoly α) (cands : List α) :
+def cIntegrateCase (C : CMonomialCase DensePoly α) (Dt a d : DensePoly α) (cands : List α) :
     Option (IntegralResult α) :=
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
   match C.integrateSpecial Dt fp b ds with
   | none => none
   | some (snum, sden) =>
-    match C.reducedCorrect Dt (cIntegrateReduced Dt cn dn cands) with
+    match C.postprocessNormal Dt (cIntegrateReduced Dt cn dn cands) with
     | none => none
     | some nrm => some (combineSN snum sden nrm)
 
@@ -125,13 +125,13 @@ omit [CRischField α] in
 /-- Generic soundness of `cIntegrateCase` from special-part, normal-part, and reconstruction hypotheses. -/
 theorem cIntegrateCase_sound [CPolyGcd DensePoly α]
     [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
-    (C : MonomialCase α) (Dt a d : DensePoly α) (cands : List α)
+    (C : CMonomialCase DensePoly α) (Dt a d : DensePoly α) (cands : List α)
     (res : IntegralResult α) (snum sden : DensePoly α) (nrm : IntegralResult α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPoly sden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
       = some (snum, sden))
-    (hCorr : C.reducedCorrect Dt (redNorm Dt a d cands) = some nrm)
+    (hCorr : C.postprocessNormal Dt (redNorm Dt a d cands) = some nrm)
     (hsome : cIntegrateCase C Dt a d cands = some res)
     (hSpecField : towerFractionFieldDeriv Dt (fieldFrac snum sden) = specialVal)
     (hNrmField : IsIntegralResult Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)

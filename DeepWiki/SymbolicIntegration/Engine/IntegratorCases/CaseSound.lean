@@ -18,7 +18,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- **The hyperexp case, as a corollary of the generic soundness** (not the driver): the special value is
-the polynomial part `⟦fpPart⟧`, `integrateSpecial`/`reducedCorrect` are the Laurent/normal solves. -/
+the polynomial part `⟦fpPart⟧`, `integrateSpecial`/`postprocessNormal` are the Laurent/normal solves. -/
 theorem cIntegrateCase_hyperexp_sound (Dt a d : DensePoly α)
     (cands : List α) (res : IntegralResult α) (lnum lden : DensePoly α) (nrm : IntegralResult α)
     (fpPart : DensePoly α) (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
