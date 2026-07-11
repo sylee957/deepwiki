@@ -2,16 +2,84 @@ import DeepWiki.ComputableAlgebra.Fraction
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 
-/-! # Computable rational functions `ℚ(x)`
+/-! # Computable rational functions
 
-The validated carrier is `DenseFrac ℚ`. Its field operations and formal polynomial-variable
-derivative are read through `CFrac.toRatFunc` into `RatFunc ℚ`; unchecked pairs occur only in the explicit
-`ratFuncOfPair` boundary used by residual certificates.
+Every lawful `CFrac F P` reads through `CFrac.toRatFunc` into `RatFunc`; dense `ℚ(x)` remains the
+concrete validation carrier. Unchecked pairs occur only in the explicit `ratFuncOfPair` boundary used by
+residual certificates.
 -/
 
 open Polynomial
 
-namespace DeepWiki.SymbolicIntegration.Compute
+namespace DeepWiki.SymbolicIntegration
+
+universe u v
+
+namespace CFrac
+
+open scoped Differential in
+/-- Formal differentiation of a lawful represented fraction realizes rational-function differentiation. -/
+theorem toRatFunc_deriv
+    {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (x : F α) :
+    toRatFunc (deriv x) = (toRatFunc x)′ := by
+  have hbm : am α (CPoly.toPoly (den x)) ≠ 0 :=
+    am_ne_zero (toPoly_den_ne_zero_generic x)
+  have hda : (am α (CPoly.toPoly (num x)))′ =
+      am α (derivative (CPoly.toPoly (num x))) :=
+    ratFuncDeriv_algebraMap (CPoly.toPoly (num x))
+  have hdb : (am α (CPoly.toPoly (den x)))′ =
+      am α (derivative (CPoly.toPoly (den x))) :=
+    ratFuncDeriv_algebraMap (CPoly.toPoly (den x))
+  have hderiv : (am α (CPoly.toPoly (num x)) / am α (CPoly.toPoly (den x)))′
+      = (am α (CPoly.toPoly (den x)) * am α (derivative (CPoly.toPoly (num x)))
+          - am α (CPoly.toPoly (num x)) * am α (derivative (CPoly.toPoly (den x)))) /
+        (am α (CPoly.toPoly (den x)) ^ 2) := by
+    rw [deriv_div, hda, hdb]
+  rw [deriv, toRatFunc_ofFraction]
+  simp only [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul,
+    LawfulCPolyEngine.toPoly_deriv, map_sub, map_mul, toRatFunc_eq_div]
+  rw [hderiv, pow_two]
+  field_simp [hbm]
+
+open scoped Differential in
+/-- Rational-function differentiation commutes with a finite sum of lawful represented fractions. -/
+theorem deriv_toRatFunc_foldl_add
+    {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
+    [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P] [CFrac F P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (gs : List (F α)) :
+    (toRatFunc (gs.foldl CCommRing.add (CCommRing.zero : F α)))′ =
+      (gs.map (fun g => (toRatFunc g)′)).sum := by
+  rw [show toRatFunc (gs.foldl CCommRing.add (CCommRing.zero : F α)) =
+      (gs.map toRatFunc).sum by
+        have hfold : ∀ (zs : List (F α)) (z : F α),
+            toRatFunc (zs.foldl CCommRing.add z) =
+              toRatFunc z + (zs.map toRatFunc).sum := by
+          intro zs
+          induction zs with
+          | nil => intro z; simp
+          | cons g zs ih =>
+            intro z
+            simp only [List.foldl_cons, List.map_cons, List.sum_cons]
+            rw [ih]
+            change toRatFunc (add z g) + (zs.map toRatFunc).sum =
+              toRatFunc z + (toRatFunc g + (zs.map toRatFunc).sum)
+            rw [toRatFunc_add]
+            abel
+        have h := hfold gs (CCommRing.zero : F α)
+        rw [show toRatFunc (CCommRing.zero : F α) = 0 by
+          change CFieldSpec.toK (CCommRing.zero : F α) = 0
+          exact CFieldSpec.toK_zero, zero_add] at h
+        exact h]
+  rw [show ((gs.map toRatFunc).sum)′ =
+      Differential.deriv (R := RatFunc (CFieldSpec.K α)) (gs.map toRatFunc).sum from rfl,
+    map_list_sum, List.map_map]
+  rfl
+
+end CFrac
+
+namespace Compute
 
 /-- Exact division selected by a lawful polynomial Euclidean capability becomes division in `RatFunc ℚ`. -/
 theorem am_div_of_mod_zero {P : Type → Type} [CPoly P] [CPolyEuclidean P]
@@ -88,34 +156,19 @@ open scoped Differential in
 /-- The formal derivative of a validated dense fraction reads as the `RatFunc` derivative. -/
 theorem toRatFuncDense_deriv (x : DenseFrac ℚ) :
     toRatFuncDense (CFrac.deriv x) = (toRatFuncDense x)′ := by
-  obtain ⟨a, b, hb⟩ := x
-  have hb0 : DensePoly.toPoly b ≠ 0 := by
-    intro h
-    have hz := (DensePoly.cisZeroG_iff b).mpr h
-    exact (Bool.eq_false_iff.mp hb) hz
-  have hb0' : CPoly.toPoly b ≠ 0 := by simpa only [toPoly_list_eq] using hb0
-  have hbm : CFrac.am ℚ (CPoly.toPoly b) ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hb0'
-  have hda : (CFrac.am ℚ (CPoly.toPoly a))′ =
-      CFrac.am ℚ (derivative (CPoly.toPoly a)) :=
-    ratFuncDeriv_algebraMap (CPoly.toPoly a)
-  have hdb : (CFrac.am ℚ (CPoly.toPoly b))′ =
-      CFrac.am ℚ (derivative (CPoly.toPoly b)) :=
-    ratFuncDeriv_algebraMap (CPoly.toPoly b)
-  have hderiv : (CFrac.am ℚ (CPoly.toPoly a) /
-        CFrac.am ℚ (CPoly.toPoly b))′
-      = (CFrac.am ℚ (CPoly.toPoly b) *
-          CFrac.am ℚ (derivative (CPoly.toPoly a))
-          - CFrac.am ℚ (CPoly.toPoly a) *
-            CFrac.am ℚ (derivative (CPoly.toPoly b))) /
-        (CFrac.am ℚ (CPoly.toPoly b) ^ 2) := by
-    rw [deriv_div, hda, hdb]
-  rw [toRatFuncDense, CFrac.deriv, CFrac.toRatFunc_ofFraction]
-  simp only [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul,
-    LawfulCPolyEngine.toPoly_deriv, map_sub, map_mul, CFrac.num, CFrac.den,
-    CFrac.toPair, toRatFuncDense, CFrac.toRatFunc_eq_div]
-  rw [hderiv, pow_two]
-  field_simp [hbm]
+  simpa only [toRatFuncDense] using
+    (CFrac.toRatFunc_deriv (F := DenseFrac) (P := DensePoly) x)
+
+open scoped Differential in
+example (x : SparseFrac ℚ) :
+    CFrac.toRatFunc (CFrac.deriv x) = (CFrac.toRatFunc x)′ :=
+  CFrac.toRatFunc_deriv x
+
+open scoped Differential in
+example (gs : List (SparseFrac ℚ)) :
+    (CFrac.toRatFunc (gs.foldl CCommRing.add (CCommRing.zero : SparseFrac ℚ)))′ =
+      (gs.map (fun g => (CFrac.toRatFunc g)′)).sum :=
+  CFrac.deriv_toRatFunc_foldl_add gs
 
 /-! ### Folded derivatives -/
 
@@ -124,26 +177,8 @@ open scoped Differential in
 theorem deriv_toRatFuncDense_foldl_add (gs : List (DenseFrac ℚ)) :
     (toRatFuncDense (gs.foldl CCommRing.add (CCommRing.zero : DenseFrac ℚ)))′ =
       (gs.map (fun g => (toRatFuncDense g)′)).sum := by
-  rw [show toRatFuncDense (gs.foldl CCommRing.add (CCommRing.zero : DenseFrac ℚ)) =
-      (gs.map toRatFuncDense).sum by
-        have hfold : ∀ (zs : List (DenseFrac ℚ)) (z : DenseFrac ℚ),
-            toRatFuncDense (zs.foldl CCommRing.add z) =
-              toRatFuncDense z + (zs.map toRatFuncDense).sum := by
-          intro zs
-          induction zs with
-          | nil => intro z; simp
-          | cons g zs ih =>
-            intro z
-            simp only [List.foldl_cons, List.map_cons, List.sum_cons]
-            rw [ih, toRatFuncDense_add]
-            abel
-        have h := hfold gs (CCommRing.zero : DenseFrac ℚ)
-        rw [toRatFuncDense_zero, zero_add] at h
-        exact h]
-  rw [show ((gs.map toRatFuncDense).sum)′ =
-      Differential.deriv (R := RatFunc ℚ) (gs.map toRatFuncDense).sum from rfl,
-    map_list_sum, List.map_map]
-  rfl
+  simpa only [toRatFuncDense] using
+    (CFrac.deriv_toRatFunc_foldl_add (F := DenseFrac) (P := DensePoly) gs)
 
 open scoped Differential in
 /-- A folded derivative with increments `T - resid g` has residual `T - nT + ∑ resid g`. -/
