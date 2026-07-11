@@ -4,7 +4,7 @@ import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 
 `listDetn` is the cofactor-expansion determinant on a row-list matrix over a `CommRing`; `listDetn_eq_det`
 proves it equals `Matrix.det` of the corresponding `Fin n × Fin n` matrix. The bridge lets the computable
-`cDet`/`cSubresultant` be certified against the abstract Sylvester-determinant subresultant. -/
+`CPolySubresultant.det`/`default` be certified against the abstract Sylvester-determinant subresultant. -/
 
 namespace DeepWiki.SymbolicIntegration
 

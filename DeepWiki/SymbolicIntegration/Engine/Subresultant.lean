@@ -5,8 +5,8 @@ import DeepWiki.ComputableAlgebra.PolySubresultant
 
 /-! # Computable determinant + subresultant (L1 of the computable-LRT build)
 
-`cDetGn` is a generic `[CField α]` cofactor-expansion determinant on a row-list matrix. `CPolySubresultant`
-selects the representation-independent Sylvester-submatrix algorithm, which builds one polynomial column
+`CPolySubresultant.det` is a generic `[CField α]` cofactor-expansion determinant on a row-list matrix.
+`CPolySubresultant` selects the representation-independent Sylvester-submatrix algorithm, which builds one polynomial column
 `Σ_i (scalar cofactor det)·tⁱ`, mirroring the abstract
 `DeepWiki.SymbolicIntegration.subresultant`. Foundation for the symbolic (root-free) LRT log part — see
 `docs/computable-lrt.md`. Validated by `native_decide`; abstract `toPoly` correctness layered later. -/
@@ -19,21 +19,6 @@ namespace DensePoly
 
 variable {α : Type u} [CField α]
 
-/-- **Generic cofactor-expansion determinant** on a row-list matrix, dimension-indexed for termination.
-`cDetGn n M` expands `M` (assumed `n × n`) along its first row: `Σ_j (−1)ʲ · M[0][j] · det(minorⱼ)`. -/
-def cDetGn : ℕ → List (List α) → α
-  | 0, _ => CCommRing.one
-  | _ + 1, [] => CCommRing.one
-  | n + 1, row :: rest =>
-    ((List.range (n + 1)).map (fun j =>
-      let aij := row.getD j CCommRing.zero
-      let minor := rest.map (fun r => r.take j ++ r.drop (j + 1))
-      let term := CCommRing.mul aij (cDetGn n minor)
-      if j % 2 = 0 then term else CCommRing.neg term)).foldl CCommRing.add CCommRing.zero
-
-/-- Determinant of a square row-list matrix (`cDetGn` at its own row-count). -/
-def cDet (M : List (List α)) : α := cDetGn M.length M
-
 /-- The Sylvester matrix of `p` (degree-`< n` slots) and `q` (degree-`< m` slots) as an `(m+n)×(m+n)`
 row-list matrix: `m` shifted rows of `p`'s coefficients then `n` shifted rows of `q`'s (coefficients low to
 high within a row, padded with zeros). Used for the resultant/subresultant. -/
@@ -45,39 +30,13 @@ def cSylvesterRows (p q : DensePoly α) (n m : ℕ) : List (List α) :=
     (List.replicate k CCommRing.zero ++ coeffs ++ List.replicate width CCommRing.zero).take width
   (List.range m).map (fun i => shiftRow pc i) ++ (List.range n).map (fun i => shiftRow qc i)
 
-/-- The representation-independent **exact `bSylvester` matrix**: `m` `A`-rows then
-`n` `B`-rows, entry `(i,l) = A.coeff(n+i−l)` (`i≤l≤i+n`) resp. `B.coeff(i−l)` (`i−m≤l≤i`), coefficients
-high-to-low. -/
-def cBSylvesterRows {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
-    (p q : P α) (n m : ℕ) : List (List α) :=
-  let width := m + n
-  let arow (i : ℕ) : List α := (List.range width).map (fun l =>
-    if i ≤ l ∧ l ≤ i + n then CPoly.coeff p (n + i - l) else CCommRing.zero)
-  let brow (i : ℕ) : List α := (List.range width).map (fun l =>
-    if i - m ≤ l ∧ l ≤ i then CPoly.coeff q (i - l) else CCommRing.zero)
-  (List.range m).map (fun i => arow i) ++ (List.range n).map (fun jj => brow (m + jj))
+end DensePoly
 
-/-- Row-index selector `subRow n m j` (delete the last `j` rows of each Sylvester block). -/
-def cSubRowIdx (n m j : ℕ) : List ℕ :=
-  (List.range (m + n - 2 * j)).map (fun t => if t < m - j then t else t + j)
+namespace CPolySubresultant
 
-/-- Column-index selector `subCol n m j i` (first `m+n−2j−1` columns plus column `m+n−i−j−1`). -/
-def cSubColIdx (n m j i : ℕ) : List ℕ :=
-  (List.range (m + n - 2 * j)).map (fun s => if s < m + n - 2 * j - 1 then s else m + n - i - j - 1)
+variable {α : Type u} [CField α]
 
-/-- Extract the submatrix of `M` on the given row/column index lists. -/
-def cSubmatrix (M : List (List α)) (rows cols : List ℕ) : List (List α) :=
-  rows.map (fun r => cols.map (fun c => (M.getD r []).getD c CCommRing.zero))
-
-/-- **The `j`-th subresultant polynomial** `Sⱼ(p,q) = Σ_{i=0}^{j} det(ⱼSᵢ)·tⁱ` (coefficients low-to-high),
-mirroring `DeepWiki.SymbolicIntegration.subresultant p q n m j`. The symbolic (root-free) LRT log arguments
-are these. -/
-def cSubresultant {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
-    (p q : P α) (n m j : ℕ) : P α :=
-  CPoly.ofFn (j + 1) (fun i =>
-    cDet (cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)))
-
-/-! ### `toK`-determinant homomorphism (L4b): certifying `cDet` against `Matrix.det` -/
+/-! ### `toK`-determinant homomorphism (L4b): certifying the selected default against `Matrix.det` -/
 
 section Spec
 
@@ -85,19 +44,20 @@ variable [CFieldSpec α]
 
 open CFieldSpec
 
-/-- **`toK` is a determinant homomorphism.** `toK (cDetGn n M) = listDetn n (M.map (map toK))` — the
+/-- **`toK` is a determinant homomorphism.** `toK (CPolySubresultant.detAux n M) = listDetn n (M.map (map toK))` — the
 computable cofactor determinant maps to the generic-`CommRing` determinant over `K`. -/
-@[denote] theorem toK_cDetGn : ∀ (n : ℕ) (M : List (List α)),
-    toK (cDetGn n M) = listDetn n (M.map (fun r => r.map toK)) := by
+@[denote] theorem toK_detAux : ∀ (n : ℕ) (M : List (List α)),
+    toK (CPolySubresultant.detAux n M) = listDetn n (M.map (fun r => r.map toK)) := by
   intro n
   induction n with
-  | zero => intro M; simp [cDetGn, listDetn, CFieldSpec.toK_one]
+  | zero => intro M; simp [CPolySubresultant.detAux, listDetn, CFieldSpec.toK_one]
   | succ n ih =>
     intro M
     cases M with
-    | nil => simp [cDetGn, listDetn, CFieldSpec.toK_one]
+    | nil => simp [CPolySubresultant.detAux, listDetn, CFieldSpec.toK_one]
     | cons row rest =>
-      rw [cDetGn, List.map_cons, listDetn, toK_foldl_add, CFieldSpec.toK_zero, List.map_map]
+      rw [CPolySubresultant.detAux, List.map_cons, listDetn, toK_foldl_add,
+        CFieldSpec.toK_zero, List.map_map]
       congr 1
       apply List.map_congr_left
       intro j _
@@ -112,34 +72,34 @@ computable cofactor determinant maps to the generic-`CommRing` determinant over 
       · simp only [if_pos hpar, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
       · simp only [if_neg hpar, CFieldSpec.toK_neg, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
 
-/-- `toK (cDet M) = listDetn M.length (M.map (map toK))`. -/
-@[denote] theorem toK_cDetG (M : List (List α)) :
-    toK (cDet M) = listDetn M.length (M.map (fun r => r.map toK)) := by
-  rw [cDet, toK_cDetGn]
+/-- `toK (CPolySubresultant.det M) = listDetn M.length (M.map (map toK))`. -/
+@[denote] theorem toK_det (M : List (List α)) :
+    toK (CPolySubresultant.det M) = listDetn M.length (M.map (fun r => r.map toK)) := by
+  rw [CPolySubresultant.det, toK_detAux]
 
-/-- **`cDet` computes `Matrix.det`.** For a well-formed `n × n` row-list `M`, the computable determinant
-`toK (cDet M)` equals `(matrixOfList (M.map (map toK)) n).det` — the full bridge from the computable
+/-- **`CPolySubresultant.det` computes `Matrix.det`.** For a well-formed `n × n` row-list `M`, the computable determinant
+`toK (CPolySubresultant.det M)` equals `(matrixOfList (M.map (map toK)) n).det` — the full bridge from the computable
 cofactor determinant to Mathlib's abstract determinant over `K`. -/
-theorem toK_cDetG_eq_det (M : List (List α)) (n : ℕ) (hlen : M.length = n)
+theorem toK_det_eq_matrix_det (M : List (List α)) (n : ℕ) (hlen : M.length = n)
     (hrows : ∀ r ∈ M, r.length = n) :
-    toK (cDet M) = (matrixOfList (M.map (fun r => r.map toK)) n).det := by
+    toK (CPolySubresultant.det M) = (matrixOfList (M.map (fun r => r.map toK)) n).det := by
   have hlen' : (M.map (fun r => r.map toK)).length = n := by rw [List.length_map]; exact hlen
   have hrows' : ∀ r ∈ (M.map (fun r => r.map toK)), r.length = n := by
     intro r hr; rw [List.mem_map] at hr; obtain ⟨s, hs, rfl⟩ := hr
     rw [List.length_map]; exact hrows s hs
-  rw [toK_cDetG, hlen, listDetn_eq_det n (M.map (fun r => r.map toK)) hlen' hrows']
+  rw [toK_det, hlen, listDetn_eq_det n (M.map (fun r => r.map toK)) hlen' hrows']
 
 end Spec
 
-end DensePoly
+end CPolySubresultant
 
 /-- Dense polynomials use the representation-independent Sylvester-submatrix implementation. -/
 instance instCPolySubresultantDense : CPolySubresultant DensePoly where
-  compute := DensePoly.cSubresultant
+  compute := CPolySubresultant.default
 
 /-- Sparse polynomials use the representation-independent Sylvester-submatrix implementation. -/
 instance instCPolySubresultantSparse : CPolySubresultant CPoly.SparsePoly where
-  compute := DensePoly.cSubresultant
+  compute := CPolySubresultant.default
 
 namespace CPolySubresultant
 
@@ -157,14 +117,14 @@ def parametric {α : Type u} [CField α] {P Q : Type u → Type u}
         (CPolySubresultant.compute Dstar
           (CPolyEngine.sub A (CPolyEngine.scale c Dd)) n m j) k))))
 
-/-- Dense subresultant selection unfolds to `DensePoly.cSubresultant`. -/
+/-- Dense subresultant selection unfolds to the representation-independent default. -/
 @[simp] theorem compute_dense_eq {α : Type*} [CField α] (p q : DensePoly α) (n m j : ℕ) :
-    CPolySubresultant.compute p q n m j = DensePoly.cSubresultant p q n m j := rfl
+    CPolySubresultant.compute p q n m j = CPolySubresultant.default p q n m j := rfl
 
 /-- Sparse subresultant selection unfolds to the generic implementation. -/
 @[simp] theorem compute_sparse_eq {α : Type*} [CField α]
     (p q : CPoly.SparsePoly α) (n m j : ℕ) :
-    CPolySubresultant.compute p q n m j = DensePoly.cSubresultant p q n m j := rfl
+    CPolySubresultant.compute p q n m j = CPolySubresultant.default p q n m j := rfl
 
 end CPolySubresultant
 
@@ -173,31 +133,31 @@ end CPolySubresultant
 open DensePoly
 
 /-- `det [[1,2],[3,4]] = −2` over `ℚ`. -/
-theorem cDetG_two_by_two : cDet ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := by native_decide
+theorem subresultantDet_two_by_two : CPolySubresultant.det ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := by native_decide
 
 /-- `det [[2,0,1],[1,3,2],[0,1,1]] = 3` over `ℚ` (cofactor expansion). -/
-theorem cDetG_three_by_three :
-    cDet ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by native_decide
+theorem subresultantDet_three_by_three :
+    CPolySubresultant.det ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by native_decide
 
-/-- **`cDet ∘ cSylvesterRows` computes the resultant** (up to the standard `(-1)^{deg p·deg q}` sign):
+/-- **`CPolySubresultant.det ∘ cSylvesterRows` computes the resultant** (up to the standard `(-1)^{deg p·deg q}` sign):
 here `Res(t²−1, t+2) = 3` matches `cresultantWf` with the even sign — validating the Sylvester construction
 against the proven `cresultantWf`. -/
-theorem cDetG_cSylvesterRows_eq_resultant :
-    cDet (cSylvesterRows ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1)
+theorem subresultantDet_cSylvesterRows_eq_resultant :
+    CPolySubresultant.det (cSylvesterRows ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1)
       = cresultantWf ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) := by native_decide
 
 /-- The **0-th subresultant is the resultant** (constant polynomial): `S₀(t²−1, t+2) = [3]` — the full
 `bSylvester` determinant, matching `cresultantWf`. -/
-theorem cSubresultantG_zero :
-    cSubresultant ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1 0
+theorem subresultantDefault_zero :
+    CPolySubresultant.default ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1 0
       = [cresultantWf ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ)] := by native_decide
 
 /-- The **degree-1 subresultant of `(t²−1, t+2)` is `t+2`** (`= q`, since `deg q = 1`): `S₁ = [2,1]`. -/
-theorem cSubresultantG_one :
-    cSubresultant ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1 1 = [2, 1] := by native_decide
+theorem subresultantDefault_one :
+    CPolySubresultant.default ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1 1 = [2, 1] := by native_decide
 
 /-- The selected sparse implementation computes the same degree-one subresultant. -/
-theorem cSubresultant_sparse_one :
+theorem subresultantCompute_sparse_one :
     CPolySubresultant.compute
       (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
       (CPoly.SparsePoly.ofList [(0, 2), (1, 1)]) 2 1 1 =
@@ -211,7 +171,7 @@ theorem CPolySubresultant.parametric_eval :
     (CPolySubresultant.parametric ([-1, 0, 1] : DensePoly ℚ) ([0, 1] : DensePoly ℚ)
         ([0, 2] : DensePoly ℚ) 2 1 1).map
         (fun zp => ceval zp (2 : ℚ))
-      = (cnorm (cSubresultant ([-1, 0, 1] : DensePoly ℚ)
+      = (cnorm (CPolySubresultant.default ([-1, 0, 1] : DensePoly ℚ)
           (csub ([0, 1] : DensePoly ℚ) (cscale (2 : ℚ) ([0, 2] : DensePoly ℚ))) 2 1 1) : List ℚ) := by
   native_decide
 

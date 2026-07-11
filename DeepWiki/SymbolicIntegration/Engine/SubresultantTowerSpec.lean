@@ -9,7 +9,7 @@ import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
 entry is the `z`-polynomial coefficient of `tᵏ`, computed by interpolation in `z` of the coefficient of
 the selected subresultant of `Dstar` and `A − z·Dd`. This file connects it to the general-derivation abstract
 subresultant `subresultant (toPoly Dstar) (toPoly A − C z · B) n m j` (`B = toPoly Dd`), building on
-the L4b subresultant certification `toPolyG_cSubresultantG`. See `docs/generalize-lrt-derivation.md`. -/
+the L4b subresultant certification `CPolySubresultant.toPoly_default`. See `docs/generalize-lrt-derivation.md`. -/
 
 open Polynomial
 
@@ -25,9 +25,9 @@ variable {α : Type u} [CField α] [CFieldSpec.{u,v} α]
 /-- **Per-value subresultant agreement.** The `k`-th `t`-coefficient of the selected computable
 subresultant of `Dstar` and `A − c·Dd`, read through `toK`, equals the `k`-th `t`-coefficient of the
 abstract subresultant of `(Dstar, A − c·B)` (`B = toPoly Dd`), for any value `c`. Immediate from the L4b
-certification `toPolyG_cSubresultantG` plus the `csub`/`cscale` bridges — no interpolation needed (this is
+certification `CPolySubresultant.toPoly_default` plus the `csub`/`cscale` bridges — no interpolation needed (this is
 the per-node fact the interpolation extends to all residues). -/
-theorem toK_cSubresultantG_getD_eq_coeff (Dstar A Dd : DensePoly α) (c : α) (n m j k : ℕ) :
+theorem toK_selectedSubresultant_getD_eq_coeff (Dstar A Dd : DensePoly α) (c : α) (n m j k : ℕ) :
     CFieldSpec.toK
         (((CPolySubresultant.compute Dstar (csub A (cscale c Dd)) n m j : DensePoly α) : List α).getD k
           CCommRing.zero)
@@ -41,7 +41,7 @@ variable [CDiffField α] [CDiffFieldSpec α]
 
 /-- The per-value subresultant agreement with the **tower derivation** `Dd = cmonomialDeriv Dt Dstar`, so
 `B = implicitDeriv (toPoly Dt) (toPoly Dstar)` — the form used by `cLrtLogArg`. -/
-theorem toK_cSubresultantG_getD_eq_coeff_monomial (Dt Dstar A : DensePoly α) (c : α) (n m j k : ℕ) :
+theorem toK_selectedSubresultant_getD_eq_coeff_monomial (Dt Dstar A : DensePoly α) (c : α) (n m j k : ℕ) :
     CFieldSpec.toK
         (((CPolySubresultant.compute Dstar
             (csub A (cscale c (cmonomialDeriv Dt Dstar))) n m j : DensePoly α) :
@@ -49,7 +49,7 @@ theorem toK_cSubresultantG_getD_eq_coeff_monomial (Dt Dstar A : DensePoly α) (c
       = (subresultant (toPoly Dstar)
           (toPoly A - C (CFieldSpec.toK c)
             * Differential.implicitDeriv (toPoly Dt) (toPoly Dstar)) n m j).coeff k := by
-  rw [toK_cSubresultantG_getD_eq_coeff]
+  rw [toK_selectedSubresultant_getD_eq_coeff]
   simp only [denote]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
@@ -117,7 +117,7 @@ theorem CPolySubresultant.toPoly_parametric_getD [CharZero (CFieldSpec.K α)] (D
         rw [hpts, List.mem_map]; exact ⟨jj, List.mem_range.mpr hjj, rfl⟩
       rw [show (jj : CFieldSpec.K α) = CFieldSpec.toK (CField.natCast jj : α) from
           (CFieldSpec.toK_natCast jj).symm]
-      rw [eval_toPolyG_cinterpolateG pts hnodup hmem, toK_cSubresultantG_getD_eq_coeff, hcommute,
+      rw [eval_toPolyG_cinterpolateG pts hnodup hmem, toK_selectedSubresultant_getD_eq_coeff, hcommute,
         lrtSubresultantGen_eval, hnm, hmm, ← hdd]
   · -- `k > j`: both are `0`
     have hget : (CPolySubresultant.parametric Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k [] = [] := by
