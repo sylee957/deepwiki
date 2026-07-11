@@ -52,11 +52,12 @@ example :
 
 /-- The principal divisor `principalDivisor f basis g = div(g) = g·O`: row `i` is the `[w]`-coordinates
 of `g·wᵢ = CPoly.mulMod f g wᵢ` (via `B⁻¹`); empty matrix if `B` is singular. -/
-def principalDivisor (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+def principalDivisor [CLinearSolve (DenseFrac ℚ)]
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (g : DensePoly (DenseFrac ℚ)) : GenDivisor :=
   let n := cdeg f
   let B := orderToPowerMatrix n basis
-  match matInv n B with
+  match CLinearSolve.matrixInverse n B with
   | none => []
   | some Binv =>
     basis.map (fun wi => toOCoords Binv n (CPoly.mulMod f g wi))
@@ -74,11 +75,12 @@ def idealClear (I : GenDivisor) : DensePoly ℚ × PolyMatrix DensePoly ℚ :=
 /-- The ideal product `idealProduct f basis I J` (the Pic group law): the fractional `O`-ideal from
 the `n²` cross-products `genᵢ·genₖ`, cleared to a common denominator and `hermiteRowReduce`d to `n`
 generators; `[]` if `B` is singular. -/
-def idealProduct (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+def idealProduct [CLinearSolve (DenseFrac ℚ)]
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (I J : GenDivisor) : GenDivisor :=
   let n := cdeg f
   let B := orderToPowerMatrix n basis
-  match matInv n B with
+  match CLinearSolve.matrixInverse n B with
   | none => []
   | some Binv =>
     -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry put in lowest terms (`reduceMat`,

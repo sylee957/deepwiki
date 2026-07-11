@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgFunctionField
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogArgGeneric
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
+import DeepWiki.ComputableAlgebra.FracLinearAlgebra
 import DeepWiki.ComputableAlgebra.LinearAlgebraRat
 
 /-! # The Ford–Zassenhaus Round-2 step: p-trace-radical + idealizer
@@ -123,7 +124,7 @@ The enlarged order `Î = (I_p : I_p) = { z ∈ K(x, y) : z·I_p ⊆ I_p }`. With
 
 namespace DensePoly
 
-/-! #### Field matrix algebra over `K(x) = DenseFrac ℚ` (inverse, product) -/
+/-! #### Field matrix multiplication over `K(x) = DenseFrac ℚ` -/
 
 /-- Matrix product over a `[CField β]` `matMul A Bm`: the `(i, j)` entry is `Σₖ A[i][k]·Bm[k][j]`. -/
 def matMul {β : Type*} [CField β] (A Bm : List (List β)) : List (List β) :=
@@ -133,44 +134,6 @@ def matMul {β : Type*} [CField β] (A Bm : List (List β)) : List (List β) :=
       ((List.range rowA.length).foldl (fun acc k =>
         CCommRing.add acc (CCommRing.mul (rowA.getD k CCommRing.zero) ((Bm.getD k []).getD j CCommRing.zero)))
         CCommRing.zero)))
-
-/-- Inverse of a square `n×n` matrix over a `[CField β]` `matInv n M = some M⁻¹` (or `none` if singular):
-Gauss–Jordan on the augmented `[M | Iₙ]`, reading the right half. Fuel-free. -/
-def matInv {β : Type*} [CField β] (n : ℕ) (M : List (List β)) : Option (List (List β)) :=
-  -- augment each row with the identity
-  let aug : List (List β) := (List.range n).map (fun i =>
-    (M.getD i []) ++ (List.range n).map (fun j => if i = j then (CCommRing.one : β) else CCommRing.zero))
-  -- Gauss–Jordan over the 2n columns, pivoting on columns 0 … n−1
-  let step : Option (List (List β)) → ℕ → Option (List (List β)) :=
-    fun st col =>
-      match st with
-      | none => none
-      | some rs =>
-        match (List.range n).find?
-            (fun i => i ≥ col && (!CCommRing.isZero ((rs.getD i []).getD col CCommRing.zero))) with
-        | none => none
-        | some i =>
-          let rowCol := rs.getD col []
-          let rowI := rs.getD i []
-          let rs := (rs.set col rowI).set i rowCol
-          let pivRow := rs.getD col []
-          let lead := pivRow.getD col CCommRing.zero
-          let pivRow := pivRow.map (fun a => CField.div a lead)
-          let rs := rs.set col pivRow
-          let rs := (List.range n).foldl (fun acc rr =>
-            if rr = col then acc
-            else
-              let row := acc.getD rr []
-              let factor := row.getD col CCommRing.zero
-              if CCommRing.isZero factor then acc
-              else
-                let newRow := (List.range (2 * n)).map (fun c =>
-                  CField.sub (row.getD c CCommRing.zero) (CCommRing.mul factor (pivRow.getD c CCommRing.zero)))
-                acc.set rr newRow) rs
-          some rs
-  match (List.range n).foldl step (some aug) with
-  | none => none
-  | some rs => some (rs.map (fun row => (List.range n).map (fun j => row.getD (n + j) CCommRing.zero)))
 
 /-! #### `K(x) ↔ K[x]` denominator clearing and lifts -/
 
@@ -224,11 +187,12 @@ the current order basis and the `I_p` `K[x]`-basis (`pTraceRadical` output). For
 `Mⱼ = B⁻¹ · CPoly.multMatrix f ιⱼ` for each `ιⱼ`, stacks into `M`, clears to `N = δ·M` over `K[x]`, Hermite-reduces,
 inverts the first `n` rows, and scales by `δ`: the columns of `δ·N̂⁻¹` are the idealizer basis. Returns
 `orderBasis` unchanged if any inverse is singular. -/
-def idealizerBasis (f : DensePoly (DenseFrac ℚ)) (orderBasis : List (DensePoly (DenseFrac ℚ)))
+def idealizerBasis [CLinearSolve (DenseFrac ℚ)]
+    (f : DensePoly (DenseFrac ℚ)) (orderBasis : List (DensePoly (DenseFrac ℚ)))
     (ipRows : PolyMatrix DensePoly ℚ) : List (DensePoly (DenseFrac ℚ)) :=
   let n := cdeg f
   let B : List (List (DenseFrac ℚ)) := ipBasisMatrix n ipRows
-  match matInv n B with
+  match CLinearSolve.matrixInverse n B with
   | none => orderBasis
   | some Binv =>
     -- stack the `Mⱼ = Binv · CPoly.multMatrix f ιⱼ` (each `n×n` over K(x))
@@ -244,7 +208,7 @@ def idealizerBasis (f : DensePoly (DenseFrac ℚ)) (orderBasis : List (DensePoly
     let reduced := CPoly.hermiteRowReduce N
     let Nhat : List (List (DenseFrac ℚ)) :=
       (List.range n).map (fun i => (List.range n).map (fun j => CFrac.ofPoly ((reduced.getD i []).getD j [])))
-    match matInv n Nhat with
+    match CLinearSolve.matrixInverse n Nhat with
     | none => orderBasis
     | some NhatInv =>
       -- columns of δ·N̂⁻¹ are the new basis vectors (in the [1,y,…] order/power basis)
@@ -268,7 +232,8 @@ def isPowerBasis (n : ℕ) (basis : List (DensePoly (DenseFrac ℚ))) : Bool :=
 `O = CPoly.powerBasis f`, for the first bad prime `p = x − a`, computes the p-trace-radical `I_p` and the idealizer
 `Î = (I_p : I_p)`, returning `Î`'s basis and whether it strictly enlarged `O`. With no bad prime, returns the
 power basis with `grew = false`. -/
-def round2Step [CLinearSolve ℚ] (f : DensePoly (DenseFrac ℚ)) :
+def round2Step [CLinearSolve ℚ] [CLinearSolve (DenseFrac ℚ)]
+    (f : DensePoly (DenseFrac ℚ)) :
     List (DensePoly (DenseFrac ℚ)) × Bool :=
   let n := cdeg f
   let O := CPoly.powerBasis f

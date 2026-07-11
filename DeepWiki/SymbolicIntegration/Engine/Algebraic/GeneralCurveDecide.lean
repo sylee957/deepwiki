@@ -43,7 +43,8 @@ structure GeneralCurveTorsionInputs where
 /-- The torsion log term: `genDivisorOrder fuel f basis tin.divisor` yields `some m` ⟹
 `some (1/m, tin.genGen m)` (the `(1/m)·log g` term for the `m`-torsion residue divisor); `none`
 (non-torsion within fuel) ⟹ `none`. -/
-def genCurveTorsionLogTerm (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+def genCurveTorsionLogTerm [CLinearSolve (DenseFrac ℚ)]
+    (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (tin : GeneralCurveTorsionInputs) : Option (DenseFrac ℚ × DensePoly (DenseFrac ℚ)) :=
   match genDivisorOrder fuel f basis tin.divisor with
   | none => none
@@ -53,7 +54,7 @@ def genCurveTorsionLogTerm (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis :
 
 section SelectedLinearSolve
 
-variable [CLinearSolve ℚ]
+variable [CLinearSolve ℚ] [CLinearSolve (DenseFrac ℚ)]
 
 /-- The elementarity-deciding integrator over `K(x)[y]/(f)`, `Option GeneralCurveIntegralResult`:
 compute the rational part `v = afRationalSolveWf …` (fail ⟹ `none`); if `hasLogPart = false` ⟹
@@ -185,6 +186,7 @@ end SelectedLinearSolve
 
 section PicTorsion
 
+variable [CLinearSolve (DenseFrac ℚ)]
 variable (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
 variable (tin : GeneralCurveTorsionInputs)
 
@@ -220,7 +222,7 @@ end PicTorsion
 
 section SelectedLinearSolve
 
-variable [CLinearSolve ℚ]
+variable [CLinearSolve ℚ] [CLinearSolve (DenseFrac ℚ)]
 
 section Completeness
 
@@ -350,7 +352,7 @@ theorem self_determining_general_curve_decision_validates :
 
 section Restatements
 
-variable [CLinearSolve ℚ]
+variable [CLinearSolve ℚ] [CLinearSolve (DenseFrac ℚ)]
 
 -- SOUNDNESS (modulo the named frontier): `some F → D(F) = integrand`.
 example (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)

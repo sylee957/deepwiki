@@ -109,6 +109,11 @@ denotations does not make those terms definitionally equal.
   `[CPolyResultant DensePoly]`. That same capability is threaded through the reusable Risch-DE solver,
   soundness/completeness predicates, decision-procedure API, and next-tower completeness frontier;
   Chapter 6 executable checks remain concrete default-dense specializations.
+- Matrix inversion is now the public derived operation `CLinearSolve.matrixInverse`, implemented by
+  solving against the standard basis through the selected `solveUnique`. The concrete engine-local
+  `matInv` Gauss–Jordan implementation is retired, and Round-2, integral-basis, general-divisor, and
+  general-curve decision APIs explicitly thread `[CLinearSolve (DenseFrac ℚ)]`. The fraction-free
+  agreement and degree-swell benchmarks still pass at the default represented-fraction solver.
 
 ## Verification
 

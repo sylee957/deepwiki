@@ -76,7 +76,8 @@ Proved by `ccompute` — the computed Hermite rational part matches the book exa
 theorem hermite_ex221_g_eq_book :
     let ((gnum, gden), _) :=
       DensePoly.cHermiteReduceTower ([1] : DensePoly ℚ) cA221 cD221
-    cnorm (cmul gnum cBookG221.den) = cnorm (cmul cBookG221.num gden) := by ccompute
+    cnorm (cmul gnum (CFrac.den cBookG221)) =
+      cnorm (cmul (CFrac.num cBookG221) gden) := by ccompute
 
 -- **Example 2.2.1 via `ratIntegrate`**: the rational part `g = gnum/gden` plus the LRT log part of the
 -- residual `B/Dstar = 1/x`. The residual `∫ dx/x = log(x)` gives a single residue `1` with argument

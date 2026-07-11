@@ -2,10 +2,10 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.BareissEngine
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.BareissExamples
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.Round2IntegralBasis
 
-/-! # Agreement of the fraction-free `ℚ(x)` wrappers with `fieldDet`/`matInv`
+/-! # Agreement of fraction-free `ℚ(x)` wrappers with selected field linear algebra
 
 The `ℚ(x)` wrappers `qfDet`/`qfAdjugate`/`qfInv`/`qfSolve` (clear to `ℚ[x]`, run Bareiss, read back)
-agree with the fraction-based `fieldDet`/`matInv` on the trace-matrix curves and `ℚ(x)`-fraction
+agree with the fraction-based `fieldDet`/`CLinearSolve.matrixInverse` on trace-matrix curves and `ℚ(x)`-fraction
 matrices, and the degree-swell benchmark `qfSwellWin` measures the fraction path's ballooning degrees
 against the flat fraction-free ones. -/
 
@@ -46,21 +46,22 @@ carries an unreduced fraction of total degree `24` and `qfDet` a flat polynomial
 theorem qfDet_eq_fieldDet_fracMat3 :
     CCommRing.isZero (CField.sub (CFrac.qfDet qfFracMat3) (fieldDet qfFracMat3)) = true := by native_decide
 
-/-! ### The fraction-free inverse agrees with `matInv` -/
+/-! ### The fraction-free inverse agrees with selected matrix inversion -/
 
-/-- `qfInv` agrees with `matInv` entrywise on the cusp `I_x`-basis matrix `B = [[x, 0], [0, 1]]`, both
+/-- `qfInv` agrees with selected matrix inversion entrywise on the cusp `I_x`-basis matrix
+`B = [[x, 0], [0, 1]]`, both
 `B⁻¹ = [[1/x, 0], [0, 1]]`. -/
-theorem qfInv_eq_matInvG_cuspBasis :
+theorem qfInv_eq_matrixInverse_cuspBasis :
     let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
-    let Binv := (matInv 2 B).getD []
+    let Binv := (CLinearSolve.matrixInverse 2 B).getD []
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
       CCommRing.isZero (CField.sub (CFrac.qfInvEntry B i j) ((Binv.getD i []).getD j CCommRing.zero)))) = true := by
   native_decide
 
-/-- `qfInv` agrees with `matInv` entrywise on the `3×3` fraction matrix `qfFracMat3` as `ℚ(x)` values,
-though `matInv` carries each entry as an unreduced fraction of total degree up to `41`. -/
-theorem qfInv_eq_matInvG_fracMat3 :
-    let Minv := (matInv 3 qfFracMat3).getD []
+/-- `qfInv` agrees with selected matrix inversion entrywise on the `3×3` fraction matrix
+`qfFracMat3` as `ℚ(x)` values. -/
+theorem qfInv_eq_matrixInverse_fracMat3 :
+    let Minv := (CLinearSolve.matrixInverse 3 qfFracMat3).getD []
     (List.range 3).all (fun i => (List.range 3).all (fun j =>
       CCommRing.isZero (CField.sub (CFrac.qfInvEntry qfFracMat3 i j)
         ((Minv.getD i []).getD j CCommRing.zero)))) = true := by
@@ -95,9 +96,10 @@ theorem qfSolve_fracMat3 :
       CCommRing.isZero (CField.sub (lhs.getD i CCommRing.zero) (b.getD i CCommRing.zero))) = true := by
   native_decide
 
-/-! ### The swell benchmark: `qfDet`/`qfInv` vs `fieldDet`/`matInv`
+/-! ### The swell benchmark: fraction-free versus selected field linear algebra
 
-On the `3×3` fraction matrix `qfFracMat3`, the fraction path (`fieldDet`/`matInv` over `ℚ(x)`) carries
+On the `3×3` fraction matrix `qfFracMat3`, the fraction path
+(`fieldDet`/`CLinearSolve.matrixInverse` over `ℚ(x)`) carries
 a determinant of total degree `24` and inverse entries of total degree up to `41`, while the
 fraction-free `qfDet`/`qfInv` stay flat with a single bounded `ℚ[x]` per matrix. -/
 
@@ -114,10 +116,10 @@ def qfDetFracTotalDeg : ℕ :=
 def qfDetFlatDeg : ℕ := cdeg (CFrac.num (CFrac.qfDet qfFracMat3))
 
 /-- The fraction-path inverse max total degree `max over entries of (cdeg num + cdeg den)` of
-`matInv 3 qfFracMat3`, the largest numerator+denominator degree among the unreduced `ℚ(x)` inverse
-entries (`= 41`). -/
-def qfInvFracMaxTotalDeg : ℕ :=
-  match matInv 3 qfFracMat3 with
+`CLinearSolve.matrixInverse 3 qfFracMat3`, the largest numerator+denominator degree among its
+`ℚ(x)` inverse entries. -/
+def qfInvSelectedMaxTotalDeg : ℕ :=
+  match CLinearSolve.matrixInverse 3 qfFracMat3 with
   | none => 0
   | some Minv =>
     ((Minv.map (fun row => row.map (fun z =>
@@ -129,18 +131,18 @@ shared determinant. -/
 def qfInvFlatMaxDeg : ℕ :=
   ((((CFrac.qfInv qfFracMat3).2).map (fun row => row.map cdeg)).flatten).foldl max 0
 
-/-- The measured swell win: `qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvFracMaxTotalDeg`
+/-- The measured swell win:
+`qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvSelectedMaxTotalDeg`
 — the fraction-free degrees are strictly below the fraction-path degrees on the `3×3` fraction matrix. -/
 theorem qfSwellWin :
-    qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvFracMaxTotalDeg := by native_decide
+    qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvSelectedMaxTotalDeg := by native_decide
 
 /-- The fraction-path determinant total degree is `24`: numerator degree `9` over denominator degree
 `15`. -/
 theorem qfDetFracTotalDeg_eq : qfDetFracTotalDeg = 24 := by native_decide
 
-/-- The fraction-path inverse max total degree is `41`: the largest `matInv 3 qfFracMat3` inverse entry
-has numerator degree `22` over denominator degree `19`. -/
-theorem qfInvFracMaxTotalDeg_eq : qfInvFracMaxTotalDeg = 41 := by native_decide
+/-- The selected fraction-path inverse's maximum numerator-plus-denominator degree is `41`. -/
+theorem qfInvSelectedMaxTotalDeg_eq : qfInvSelectedMaxTotalDeg = 41 := by native_decide
 
 /-- The fraction-free inverse stays flat: the `qfInv` adjugate entries have max degree `qfInvFlatMaxDeg`,
 far below the fraction path's `41`, over one shared `ℚ[x]` determinant. -/
@@ -150,7 +152,7 @@ theorem qfInvFlatMaxDeg_lt : qfInvFlatMaxDeg < 41 := by native_decide
 
 set_option maxHeartbeats 400000 in
 example :
-    qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvFracMaxTotalDeg := by native_decide
+    qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvSelectedMaxTotalDeg := by native_decide
 
 /-! ### `#print axioms` for the `ℚ(x)` Bareiss validations -/
 
@@ -160,9 +162,9 @@ example :
 #print axioms qfDet_eq_fieldDet_cusp
 #print axioms qfDet_eq_fieldDet_fracMat3
 
--- Agreement of the fraction-free `qfInv` with the fraction-based `matInv` (the idealizer inverse).
-#print axioms qfInv_eq_matInvG_cuspBasis
-#print axioms qfInv_eq_matInvG_fracMat3
+-- Agreement of fraction-free `qfInv` with the selected fraction-field matrix inverse.
+#print axioms qfInv_eq_matrixInverse_cuspBasis
+#print axioms qfInv_eq_matrixInverse_fracMat3
 
 -- The fraction-free adjugate / solve identities `M'·adj = det·I`, `M·x = b` (over `ℚ(x)`).
 #print axioms qfAdjugate_mul_cuspBasis
@@ -171,7 +173,7 @@ example :
 -- The swell benchmark: fraction path (det 24 / inv 41) vs flat fraction-free Bareiss.
 #print axioms qfSwellWin
 #print axioms qfDetFracTotalDeg_eq
-#print axioms qfInvFracMaxTotalDeg_eq
+#print axioms qfInvSelectedMaxTotalDeg_eq
 #print axioms qfInvFlatMaxDeg_lt
 
 end DeepWiki.SymbolicIntegration

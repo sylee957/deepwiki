@@ -95,7 +95,8 @@ def genCandidates (basis : List (DensePoly (DenseFrac ℚ))) (I : GenDivisor) : 
 /-- `true` iff `I` is principal `isPrincipalIdeal f basis I`: `canonHNFEq I (principalDivisor f basis
 g)` for some candidate generator `g ∈ genCandidates basis I`. Sound — a `true` means `[I] = 0` in
 `Pic⁰(C)`. -/
-def isPrincipalIdeal (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+def isPrincipalIdeal [CLinearSolve (DenseFrac ℚ)]
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (I : GenDivisor) : Bool :=
   (genCandidates basis I).any (fun g => canonHNFEq I (principalDivisor f basis g))
 
@@ -104,7 +105,8 @@ def isPrincipalIdeal (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (D
 /-- Order-search loop `genDivisorOrderAux f basis δ fuel acc n`: with `acc = n·δ`, test
 `(n+1)·δ = idealProduct δ acc` for principality; on a hit return `some (n+1)`, else recurse.
 `fuel` bounds the remaining multiples. -/
-def genDivisorOrderAux (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (δ : GenDivisor) :
+def genDivisorOrderAux [CLinearSolve (DenseFrac ℚ)]
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (δ : GenDivisor) :
     ℕ → GenDivisor → ℕ → Option ℕ
   | 0, _, _ => none
   | fuel + 1, acc, n =>
@@ -114,7 +116,8 @@ def genDivisorOrderAux (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly 
 
 /-- The divisor order `genDivisorOrder fuel f basis δ`: `some m` = the smallest `m ≥ 1` with `m·δ`
 principal (⟹ `δ` is `m`-torsion), searching up to `fuel` multiples; `none` if no `m ≤ fuel` works. -/
-def genDivisorOrder (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+def genDivisorOrder [CLinearSolve (DenseFrac ℚ)]
+    (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (δ : GenDivisor) : Option ℕ :=
   genDivisorOrderAux f basis δ fuel (idealIdentity (cdeg f)) 0
 

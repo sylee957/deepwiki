@@ -19,4 +19,10 @@ example : Nonempty (CLinearSolve (DenseFrac ℚ)) := ⟨inferInstance⟩
 
 example : Nonempty (CLinearSolve (SparseFrac ℚ)) := ⟨inferInstance⟩
 
+example :
+    let one : SparseFrac ℚ := CCommRing.one
+    let zero : SparseFrac ℚ := CCommRing.zero
+    (CLinearSolve.matrixInverse 2 [[one, zero], [zero, one]]).isSome = true := by
+  ccompute
+
 end DeepWiki.SymbolicIntegration

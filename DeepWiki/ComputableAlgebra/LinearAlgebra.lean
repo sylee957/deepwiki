@@ -4,7 +4,8 @@ import DeepWiki.ComputableAlgebra.Field
 
 `CLinearSolve` separates unique, particular, and homogeneous-kernel linear-system computations from
 their implementation. `LawfulCLinearSolve` supplies the shape and row-equation guarantees consumed by
-symbolic-integration proofs; concrete solvers remain responsible for providing the operations and laws. -/
+symbolic-integration proofs; `CLinearSolve.matrixInverse` derives square-matrix inversion from the
+selected unique solver. Concrete solvers remain responsible for providing the operations and laws. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -110,6 +111,42 @@ def gauss {α : Type u} [CField α] : CLinearSolve α where
   solveUnique := gaussSolveUnique
   solveAny := gaussSolveAny
   nullspaceBasis := gaussNullspaceBasis
+
+/-- Invert a square matrix by solving its columns against the standard basis through the selected
+`CLinearSolve.solveUnique` operation. -/
+def matrixInverse {α : Type u} [CField α] [CLinearSolve α]
+    (n : ℕ) (rows : List (List α)) : Option (List (List α)) :=
+  let columns := (List.range n).map (fun j =>
+    CLinearSolve.solveUnique rows
+      ((List.range n).map (fun i => if i = j then CCommRing.one else CCommRing.zero)) n)
+  if columns.all Option.isSome then
+    some ((List.range n).map (fun i =>
+      (List.range n).map (fun j =>
+        (Option.getD (columns.getD j none) []).getD i CCommRing.zero)))
+  else none
+
+/-- A returned selected matrix inverse has the requested number of rows. -/
+theorem matrixInverse_length {α : Type u} [CField α] [CLinearSolve α]
+    (n : ℕ) (rows inverse : List (List α))
+    (h : matrixInverse n rows = some inverse) : inverse.length = n := by
+  simp only [matrixInverse] at h
+  split at h
+  · simp only [Option.some.injEq] at h
+    subst inverse
+    simp
+  · simp at h
+
+/-- Every row of a returned selected matrix inverse has the requested width. -/
+theorem matrixInverse_row_length {α : Type u} [CField α] [CLinearSolve α]
+    (n : ℕ) (rows inverse : List (List α))
+    (h : matrixInverse n rows = some inverse) :
+    ∀ row ∈ inverse, row.length = n := by
+  simp only [matrixInverse] at h
+  split at h
+  · simp only [Option.some.injEq] at h
+    subst inverse
+    simp
+  · simp at h
 
 end CLinearSolve
 
