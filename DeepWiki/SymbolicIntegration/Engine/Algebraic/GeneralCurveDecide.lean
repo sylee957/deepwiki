@@ -51,6 +51,10 @@ def genCurveTorsionLogTerm (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis :
 
 /-! ### The decision integrator `cIntegrateGeneralCurveDecide` -/
 
+section SelectedLinearSolve
+
+variable [CLinearSolve ℚ]
+
 /-- The elementarity-deciding integrator over `K(x)[y]/(f)`, `Option GeneralCurveIntegralResult`:
 compute the rational part `v = afRationalSolveWf …` (fail ⟹ `none`); if `hasLogPart = false` ⟹
 `some ⟨v, []⟩`; else principal `afLogArgSolveWf … = some u` ⟹ `some ⟨v, [(1, u)]⟩`; else the torsion
@@ -175,6 +179,8 @@ theorem cIntegrateGeneralCurveDecide_sound
 
 end Soundness
 
+end SelectedLinearSolve
+
 /-! ## The isolated torsion frontier `GeneralPicTorsionFrontier` -/
 
 section PicTorsion
@@ -211,6 +217,10 @@ theorem genCurveTorsionLogTerm_complete_of_frontier {isTorsion elem : Prop}
 end PicTorsion
 
 /-! ## Completeness `none → ¬ elementary` -/
+
+section SelectedLinearSolve
+
+variable [CLinearSolve ℚ]
 
 section Completeness
 
@@ -277,6 +287,8 @@ theorem cIntegrateGeneralCurveDecide_decides {isTorsion elem : Prop} (v : DenseP
 
 end Decides
 
+end SelectedLinearSolve
+
 /-! ## End-to-end `native_decide` witnesses -/
 
 open DensePoly
@@ -337,6 +349,8 @@ theorem self_determining_general_curve_decision_validates :
 /-! ### Restatements pinning the decision-procedure content (anonymous `example`s) -/
 
 section Restatements
+
+variable [CLinearSolve ℚ]
 
 -- SOUNDNESS (modulo the named frontier): `some F → D(F) = integrand`.
 example (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)

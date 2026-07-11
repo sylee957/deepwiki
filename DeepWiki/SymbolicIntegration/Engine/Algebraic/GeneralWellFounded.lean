@@ -214,7 +214,8 @@ def afRatMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dens
 /-- General rational-part solve `afRationalSolveWf f basis degBound integrand = some v`: the rational part
 `v = Σ c_{ij} xʲ wᵢ` with `afDeriv f v = integrand`, by a `K`-linear solve over the integral basis (build
 `afRatMatrixWf`, find a kernel vector with nonzero RHS coordinate, normalize, reassemble `v`). -/
-def afRationalSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+def afRationalSolveWf [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : Option (DensePoly (DenseFrac ℚ)) :=
   let (rows, nCols) := afRatMatrixWf f basis degBound integrand
   let kers := CLinearSolve.nullspaceBasis rows nCols
@@ -267,7 +268,8 @@ def afLogMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dens
 /-- General log-argument solve `afLogArgSolveWf f basis degBound integrand = some u`: the log argument
 `u = Σ c_{ij} xʲ wᵢ` with `afDeriv f u = CPoly.mulMod f u integrand` (`∫ integrand = log u`), by the homogeneous
 `K`-linear solve (build `afLogMatrixWf`, find the first nonzero kernel vector, reassemble `u`). -/
-def afLogArgSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+def afLogArgSolveWf [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : Option (DensePoly (DenseFrac ℚ)) :=
   let (rows, nCols) := afLogMatrixWf f basis degBound integrand
   let kers := CLinearSolve.nullspaceBasis rows nCols
@@ -288,7 +290,8 @@ some (v, u)`: `∫ (ratIntegrand + logIntegrand) dx = v + log u` (principal case
 `afRationalSolveWf` (`afDeriv f v = ratIntegrand`) and the log argument `u` by `afLogArgSolveWf`
 (`afDeriv f u = CPoly.mulMod f u logIntegrand`), both `K`-linear solves through `afDerivWf`. `none` if either
 solve fails. The general analogue of `cIntegrateAlgebraicWf`. -/
-def afIntegrateAlgebraicWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
+def afIntegrateAlgebraicWf [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (degBound : ℕ) (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) :
     Option (DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ)) :=
   match afRationalSolveWf f basis degBound ratIntegrand,

@@ -90,6 +90,10 @@ denotations does not make those terms definitionally equal.
 - The Round-2 integral-basis pipeline now threads `[CLinearSolve ℚ]` from `pTraceRadical` and
   `ipOCoords` through `round2Step`, the pass/iteration loop, and `integralBasis`. Fixed `ℚ` coefficients
   no longer cause Lean to hardcode the global nullspace implementation into these executable drivers.
+- The general algebraic-function rational and logarithmic solvers, `afIntegrateAlgebraicWf`, and the
+  full `cIntegrateGeneralCurveDecide` soundness/completeness API now thread `[CLinearSolve ℚ]`. The
+  concrete curve witnesses remain explicit specialization boundaries using the default rational RREF
+  instance, while reusable drivers and contracts accept any selected linear-solver implementation.
 
 ## Verification
 

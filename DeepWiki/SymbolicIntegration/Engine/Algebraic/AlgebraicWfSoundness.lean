@@ -59,6 +59,10 @@ theorem cIntegrateAlgebraicWf_sound
 
 /-! ## Task 2 — the general-curve integrator `afIntegrateAlgebraicWf` -/
 
+section SelectedLinearSolve
+
+variable [CLinearSolve ℚ]
+
 /-- The general integrator's `some (v, u)` output satisfies the cross-multiplied
 `IsGeneralAlgebraicIntegralWf`: given the proven `hrat`, `hlog`, and the round-trip `hsplit`,
 `IsGeneralAlgebraicIntegralWf f g v commonDenomQ [(c, u)] cofs` holds for the literal output. -/
@@ -161,6 +165,8 @@ example (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)
       ((afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand).get
         (by rw [hrun]; exact rfl)).1 :=
   afIntegrateAlgebraicWf_isGeneralRationalIntegralWf f basis degBound ratIntegrand logIntegrand p hrun hcheck
+
+end SelectedLinearSolve
 
 -- The cross-multiplied radical `IsAlgebraicIntegral` for the literal output (Form A): the proven
 -- telescoping + partial fraction, the split from the round-trip.
