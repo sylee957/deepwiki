@@ -1,6 +1,8 @@
 import DeepWiki.ComputableAlgebra.Fraction
+import DeepWiki.ComputableAlgebra.FracReprDense
 import DeepWiki.ComputableAlgebra.FracReprSparse
 import DeepWiki.ComputableAlgebra.PolyEuclidean
+import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.ComputableAlgebra.PolyReprGcd
 
 /-! # Representation-independent fraction reduction
@@ -239,7 +241,15 @@ theorem isZero_reduceMonic
 
 end CFrac
 
-/-! The sparse specialization resolves the same reducer and denotation law without a dense adapter. -/
+/-! Both dense and sparse specializations resolve the same reducer and denotation law. -/
+
+example {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : DenseFrac α) :
+    CFrac.toRatFunc (CFrac.reduce a) = CFrac.toRatFunc a :=
+  CFrac.toRatFunc_reduce a
+
+example {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : DenseFrac α) :
+    CFrac.toRatFunc (CFrac.reduceMonic a) = CFrac.toRatFunc a :=
+  CFrac.toRatFunc_reduceMonic a
 
 example {α : Type u} [CField α] [CFieldSpec.{u,v} α] (a : SparseFrac α) :
     CFrac.toRatFunc (CFrac.reduce a) = CFrac.toRatFunc a :=
