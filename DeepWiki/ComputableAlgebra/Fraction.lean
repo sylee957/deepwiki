@@ -18,7 +18,7 @@ universe u v
 
 /-- Polynomial-domain facts for representation `P`: `1` and products of nonzero polynomials are nonzero. -/
 class CFieldDomain (α : Type u) [CField α]
-    (P : Type u → Type u := DensePoly) [CPoly P] [CPolyEngine P] where
+    (P : Type u → Type u) [CPoly P] [CPolyEngine P] where
   /-- The represented constant `1` is nonzero. -/
   nz_one : CPolyEngine.cisZero (CPoly.one : P α) = false
   /-- A product of represented nonzero polynomials is nonzero. -/

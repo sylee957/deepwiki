@@ -25,7 +25,7 @@ open scoped Differential
 universe u v
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec.{u,v} β]
-  [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
+  [CFieldDomain β DensePoly] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
   [CharZero (CFieldSpec.K β)] [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))] [LawfulRischLevelLrt β]
 
 /-- Integrate a coefficient `c ∈ DenseFrac β = β(s)` by recursing into

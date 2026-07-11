@@ -256,14 +256,14 @@ agrees with the coefficient-ring embedding. -/
 Read back over `β(s)`, the cleared polynomial equals `C s · toPoly p` for the common-denominator unit
 `s = ∏_j denⱼ`, hence is `Associated` to `toPoly p`; the combinatorics reuse `filter_prod_mul`. -/
 
-variable [CFieldDomain β]
+variable [CFieldDomain β DensePoly]
 
 /-- The common-denominator scalar `commonDen p ∈ R`: the product of all the `β[s]`-denominators of `p`'s
 coefficients, the unit by which `cclearDenomsCore` scales `toPoly p`. -/
 noncomputable def commonDen (p : DensePoly (DenseFrac β)) : (CFieldSpec.K β)[X] :=
   ((p.map CFrac.den).map DensePoly.toPoly).prod
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- `commonDen p ≠ 0`: a product of nonzero denominators. -/
 theorem commonDenG_ne_zero (p : DensePoly (DenseFrac β)) : commonDen p ≠ 0 := by
   rw [commonDen]
@@ -277,12 +277,12 @@ theorem commonDenG_ne_zero (p : DensePoly (DenseFrac β)) : commonDen p ≠ 0 :=
     simpa only [toPoly_list_eq] using CFrac.toPoly_den_ne_zero_generic c
   exact hne hd0
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- `am (commonDen p) ≠ 0` (the field embedding of a nonzero product). -/
 theorem amG_commonDenG_ne_zero (p : DensePoly (DenseFrac β)) : CFrac.am β (commonDen p) ≠ 0 :=
   (map_ne_zero_iff _ (RatFunc.algebraMap_injective (CFieldSpec.K β))).mpr (commonDenG_ne_zero p)
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- `toPoly` of a `cmul`-fold is `toPoly init` times the product of the `toPoly`-images of the folded
 list. -/
 @[denote] theorem toPolyG_foldl_cmulG (init : DensePoly β) (ds : List (DensePoly β × ℕ)) :
@@ -304,7 +304,7 @@ theorem cclearDenomsCoreG_getElem (p : DensePoly (DenseFrac β)) (i : ℕ) (hi :
   rw [List.getElem?_map, List.getElem?_zipIdx, List.getElem?_eq_getElem hi]
   simp [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hi]
 
-omit [CFieldSpec β] [CFieldDomain β] in
+omit [CFieldSpec β] [CFieldDomain β DensePoly] in
 /-- `cclearDenomsCore` preserves the `t`-length: `(cclearDenomsCore p).length = p.length`. -/
 theorem cclearDenomsCoreG_length (p : DensePoly (DenseFrac β)) :
     (DensePoly.cclearDenomsCore p).length = p.length := by
@@ -444,7 +444,7 @@ end GBPolyCore
 
 open GBPolyCore
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- The β(s)[t] lift of the pseudo-division identity: `C (am (toPoly c)) · toGBPoly p = toGBPoly s ·
 toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)` for some quotient `s` and multiplier `c`. -/
 theorem toGBPolyG_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
@@ -458,19 +458,19 @@ theorem toGBPolyG_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
   rw [liftKG_C] at hl
   simpa [toGBPoly] using hl
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- `toGBPoly` ignores normalization: `toGBPoly (gbnormCore p) = toGBPoly p`. -/
 @[simp, denote] theorem toGBPolyG_gbnormCore (p : GBPolyCore β) :
     toGBPoly (gbnormCore p) = toGBPoly p := by
   rw [toGBPoly, toPolyG_gbnormCore, ← toGBPoly]
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- `toGBPoly p = 0 ↔ DensePoly.toPoly p = 0` (the lift is injective, `am` injective on coefficients). -/
 theorem toGBPolyG_eq_zero_iff (p : GBPolyCore β) : toGBPoly p = 0 ↔ DensePoly.toPoly p = 0 := by
   rw [toGBPoly, liftK, ← Polynomial.map_zero (CFrac.am β)]
   exact Polynomial.map_injective (CFrac.am β) (RatFunc.algebraMap_injective (CFieldSpec.K β)) |>.eq_iff
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- `toGBPoly p = 0 ↔ DensePoly.cisZero p = true`. -/
 theorem toGBPolyG_eq_zero_iff_cisZero (p : GBPolyCore β) :
     toGBPoly p = 0 ↔ DensePoly.cisZero p = true := by
@@ -478,7 +478,7 @@ theorem toGBPolyG_eq_zero_iff_cisZero (p : GBPolyCore β) :
 
 /-! ### Step 2 — the primitive-PRS gcd invariant over β(s) -/
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- gcd is invariant under an associated right argument in `(RatFunc (CFieldSpec.K β))[X]`. -/
 theorem associated_gcd_right_gbpolyG {A B B' : (RatFunc (CFieldSpec.K β))[X]} (h : Associated B B') :
     Associated (gcd A B) (gcd A B') :=
@@ -511,7 +511,7 @@ def CPrimPRSGenAssocReg (cgcdB : DensePoly β → DensePoly β → DensePoly β)
           (GBPolyCore.gbprimitivePartCore cgcdB
             (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- The primitive-PRS gcd invariant: for a regular run, `Associated (toGBPoly (cprimPRSgcdGenCore cgcdB
 fuel P Q)) (gcd (toGBPoly P) (toGBPoly Q))` over β(s). -/
 theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : DensePoly β → DensePoly β → DensePoly β) :
@@ -609,7 +609,7 @@ end GBPolyCore
 
 open GBPolyCore
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- When the content `g` is nonzero and divides every `t`-coefficient exactly, `C(toPoly g) ·
 DensePoly.toPoly (gbprimitivePartCore cgcdB p) = DensePoly.toPoly p`. -/
 theorem toPolyG_gbprimitivePartCore_exact (fuel : ℕ)
@@ -628,7 +628,7 @@ theorem toPolyG_gbprimitivePartCore_exact (fuel : ℕ)
     (gbcontentCore cgcdB p) hgcn hdvd
   simpa only [toPolyG_gbnormCore] using hexact
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- Clause (iii): under the content-nonzero and content-divides-each-coefficient hypotheses, `Associated
 (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)` over β(s). -/
 theorem associated_toGBPolyG_gbprimitivePartCore (fuel : ℕ)

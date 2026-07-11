@@ -93,7 +93,7 @@ def cprimPRSgcdGenCore (cgcdB : DensePoly B → DensePoly B → DensePoly B) :
 
 namespace DensePoly
 
-variable {β : Type*} [CField β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldDomain β DensePoly]
 
 /-- Clear denominators `cclearDenomsCore p ∈ GBPolyCore β`: multiply `p` over `α = DenseFrac β` by the
 product of its coefficient denominators, so coefficient `i` becomes `numᵢ · ∏_{j≠i} denⱼ ∈ DensePoly β`. -/

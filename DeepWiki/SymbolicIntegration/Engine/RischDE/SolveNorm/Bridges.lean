@@ -11,7 +11,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac GBPolyCore
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
   [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 omit [CRischField β] in

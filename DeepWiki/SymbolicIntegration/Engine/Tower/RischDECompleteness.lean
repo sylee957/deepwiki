@@ -150,20 +150,20 @@ down). -/
 
 section StepAssemblyWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- Next-level RDE completeness `CRischFieldCompleteWf β`: the public solver returns `some` on every
 solvable field-level RDE over `DenseFrac β`. -/
 def CRischFieldCompleteWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
+    [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
   ∀ f g : DenseFrac β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
 
 /-- The per-level step frontier `RischDEStepFrontierWf β`: given the base-oracle IH one level down, every
 solvable `DenseFrac β` RDE satisfies the weak-normalizer clauses, the inner residual-tip frontier, the
 polynomial solution/denominator guards, and the direct soundness certificate. -/
 structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
+    [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g →
     DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den) = false
@@ -224,7 +224,7 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
   crischDESolve_isSome_of_complete hβ b₀ c₀ hsol
 
 -- Wf step: the IH and per-level frontier give fuel-free wrapper completeness at level `n+1`.
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (hβ : CRischFieldComplete β) (hstep : RischDEStepFrontierWf β) :
     CRischFieldCompleteWf β :=

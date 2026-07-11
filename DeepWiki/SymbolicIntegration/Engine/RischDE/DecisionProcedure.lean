@@ -55,7 +55,7 @@ end InnerFrontierWf
 
 section InnerInputWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly] [CFracGcdCoreWf β]
 
 /-- The inner RDE input pair: after weak normalization by `q`, the reduced transformed left-hand side
 paired with `q * g`, as `crischDESolveSoundWf` forms it before calling `crischDERawSolveWf`. -/
@@ -70,7 +70,7 @@ end InnerInputWf
 
 section Capstone
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- `RischDEDecisionProcedureFrontierWf f g`: the field-level frontier — nonzero weak normalizer (`hwn`),
@@ -168,7 +168,7 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : DenseFrac β)
 -- The RDE decision procedure: the fuel-free recursive Risch-DE solver returns `some` iff the
 -- field-level Risch DE `D(Y) + F·Y = G` is solvable, modulo the named Wf completeness frontier and the
 -- direct Wf soundness certificate.
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g : DenseFrac β) (h : RischDEDecisionProcedureFrontierWf f g)
     (hsound : RischDESoundnessWf f g) :

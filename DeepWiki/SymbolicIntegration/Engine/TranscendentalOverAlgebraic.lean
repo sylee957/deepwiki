@@ -75,7 +75,7 @@ end RadExt
 
 /-- `CField (RadExt α n f)`: the radical extension `α[y]/(yⁿ − f)` as a computable field, with ops the
 radical-carrier computations (`radZero`/…/`DensePoly.cisZero`, `inv` the conjugate-norm `radInv2`). -/
-instance instCFieldRadExt {α : Type*} [CField α] [CFieldDomain α] {n : ℕ} {f : α} :
+instance instCFieldRadExt {α : Type*} [CField α] [CFieldDomain α DensePoly] {n : ℕ} {f : α} :
     CField (RadExt α n f) where
   zero := RadExt.zero
   one := RadExt.one
@@ -95,7 +95,7 @@ end of this file; the composition section below carries `CFieldDomain RadX3` as 
 
 /-- `CDiffField (RadExt α n f)`: the radical extension as a computable differential field, with
 `cderiv := radDeriv n f` the diagonal derivation extending `α`'s `cderiv` by `y' = (f'/(nf))·y`. -/
-instance instCDiffFieldRadExt {α : Type*} [CField α] [CFieldDomain α] [CDiffField α] {n : ℕ} {f : α} :
+instance instCDiffFieldRadExt {α : Type*} [CField α] [CFieldDomain α DensePoly] [CDiffField α] {n : ℕ} {f : α} :
     CDiffField (RadExt α n f) where
   cderiv p := ⟨radDeriv n f p.toRad⟩
 
@@ -127,7 +127,7 @@ def radExtRischDESolve {α : Type*} [CField α] [CDiffField α] [CRischField α]
 
 /-- `CRischField (RadExt α n f)`: the base Risch-DE solver over the radical field, by scalar
 decoupling (`radExtRischDESolve`). -/
-instance instCRischFieldRadExt {α : Type*} [CField α] [CDiffField α] [CFieldDomain α] [CRischField α]
+instance instCRischFieldRadExt {α : Type*} [CField α] [CDiffField α] [CFieldDomain α DensePoly] [CRischField α]
     {n : ℕ} {f : α} : CRischField (RadExt α n f) where
   crischDESolve := radExtRischDESolve
 
@@ -249,23 +249,23 @@ theorem radX3_monomialDeriv_genT_runs_coeff :
 
 /-! ### The keystone composes: a transcendental level `DenseFrac (RadExt …)` over the algebraic base
 
-Under `[CFieldDomain RadX3]`, `DenseFrac RadX3 ≅ ℚ(x)[√(x³+1)](t)` resolves its `CField` and `CDiffField`
+Under `[CFieldDomain RadX3 DensePoly]`, `DenseFrac RadX3 ≅ ℚ(x)[√(x³+1)](t)` resolves its `CField` and `CDiffField`
 automatically from the `RadExt` instances above. -/
 
 section
-variable [CFieldDomain RadX3]
+variable [CFieldDomain RadX3 DensePoly]
 
-/-- `DenseFrac RadX3` is a `CField` (given `[CFieldDomain RadX3]`) — the transcendental level
+/-- `DenseFrac RadX3` is a `CField` (given `[CFieldDomain RadX3 DensePoly]`) — the transcendental level
 `ℚ(x)[√(x³+1)](t)` resolves automatically from the radical-base instance. -/
 theorem cfield_qfunNZG_radX3 : Nonempty (CField (DenseFrac RadX3)) := ⟨inferInstance⟩
 
-/-- `DenseFrac RadX3` is a `CDiffField` (given `[CFieldDomain RadX3]`) — the transcendental level inherits
+/-- `DenseFrac RadX3` is a `CDiffField` (given `[CFieldDomain RadX3 DensePoly]`) — the transcendental level inherits
 the full tower derivation `d/dx + radical y' + ∂/∂t`. -/
 theorem cdiffField_qfunNZG_radX3 : Nonempty (CDiffField (DenseFrac RadX3)) := ⟨inferInstance⟩
 
 end
 
-/-! ### Toward discharging `[CFieldDomain RadX3]`: irreducibility of `y² − (x³+1)` over ℚ(x)
+/-! ### Toward discharging `[CFieldDomain RadX3 DensePoly]`: irreducibility of `y² − (x³+1)` over ℚ(x)
 
 `ℚ(x)[√(x³+1)] = ℚ(x)[y]/(y² − (x³+1))` is a field because `y² − (x³+1)` is irreducible over ℚ(x)
 (`x³+1` is not a square — odd degree). Proven here as `irreducible_radX3` and registered as a `Fact`. -/
@@ -586,7 +586,7 @@ and making `DenseFrac (RadExt …)` an unconditional `CField` + `CDiffField`. -/
 
 /-- `CFieldSpec (RadExt α 2 f)` — the field-homomorphism bridge into `K = AdjoinRoot (X² − C(toK f))`
 with `toK := RadElem.toAdj`, all laws the `RadElem.toAdj_*` bridge theorems. Noncomputable. -/
-noncomputable instance instCFieldSpecRadExt {α : Type*} [CField α] [CFieldDomain α] [CFieldSpec α]
+noncomputable instance instCFieldSpecRadExt {α : Type*} [CField α] [CFieldDomain α DensePoly] [CFieldSpec α]
     {f : α} [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK f)))] : CFieldSpec (RadExt α 2 f) where
   K := AdjoinRoot (X ^ 2 - C (CFieldSpec.toK f))
   toK := RadElem.toAdj

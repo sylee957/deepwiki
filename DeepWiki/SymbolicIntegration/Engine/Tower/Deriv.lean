@@ -33,7 +33,7 @@ def towerDerivCFracWith {α : Type u} [CField α] [CDiffField α] [CFieldDomain 
     (CFrac.cmulG_ne_zero_of (CFrac.cisZeroG_den x) (CFrac.cisZeroG_den x))
 
 /-- Dense specialization of the representation-independent quotient-rule tower derivation. -/
-def towerDerivCFrac {α : Type u} [CField α] [CDiffField α] [CFieldDomain α]
+def towerDerivCFrac {α : Type u} [CField α] [CDiffField α] [CFieldDomain α DensePoly]
     (Dt : DensePoly α) (x : DenseFrac α) : DenseFrac α :=
   towerDerivCFracWith Dt x
 
@@ -52,14 +52,14 @@ def towerDerivCFrac {α : Type u} [CField α] [CDiffField α] [CFieldDomain α]
   simp [towerDerivCFracWith]
 
 /-- The numerator of `towerDerivCFrac Dt x` is `D n · d − n · D d` (with `D = cmonomialDeriv Dt`). -/
-theorem towerDerivCFracG_num {α : Type u} [CField α] [CDiffField α] [CFieldDomain α]
+theorem towerDerivCFracG_num {α : Type u} [CField α] [CDiffField α] [CFieldDomain α DensePoly]
     (Dt : DensePoly α) (x : DenseFrac α) :
     (towerDerivCFrac Dt x).num
       = DensePoly.csub (DensePoly.cmul (DensePoly.cmonomialDeriv Dt x.num) x.den)
           (DensePoly.cmul x.num (DensePoly.cmonomialDeriv Dt x.den)) := rfl
 
 /-- The denominator of `towerDerivCFrac Dt x` is `d·d`. -/
-theorem towerDerivCFracG_den {α : Type u} [CField α] [CDiffField α] [CFieldDomain α]
+theorem towerDerivCFracG_den {α : Type u} [CField α] [CDiffField α] [CFieldDomain α DensePoly]
     (Dt : DensePoly α) (x : DenseFrac α) :
     (towerDerivCFrac Dt x).den = DensePoly.cmul x.den x.den := rfl
 

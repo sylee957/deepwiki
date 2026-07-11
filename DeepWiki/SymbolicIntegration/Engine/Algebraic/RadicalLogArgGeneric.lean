@@ -82,7 +82,7 @@ Over `α = DenseFrac β = β(x)`, the residual `radDeriv(N)·D − N·D' − rad
 `gaussElim`/`kernelVector`. -/
 
 section
-variable {β : Type*} [CField β] [CFieldDomain β] [CDiffField (DenseFrac β)]
+variable {β : Type*} [CField β] [CFieldDomain β DensePoly] [CDiffField (DenseFrac β)]
 
 /-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. -/
 def qMonomial (k : ℕ) : DenseFrac β := CFrac.ofPoly (cshift k [(CCommRing.one : β)])

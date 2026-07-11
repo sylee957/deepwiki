@@ -20,7 +20,7 @@ terms, solve the inner RDE via `cRischDE`, and transform back by `y = ỹ/q'`. -
 
 section Solver
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β]
 
 /-- `crischDERawSolveWf ftilde gtilde`: run `cRischDE [1]` on the num/den components, re-lifting
@@ -31,7 +31,7 @@ def crischDERawSolveWf (ftilde gtilde : DenseFrac β) : Option (DenseFrac β) :=
   | some (ynum, yden) =>
     if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
 
-omit [CFieldSpec β] [CFieldDomain β] in
+omit [CFieldSpec β] [CFieldDomain β DensePoly] in
 /-- `crischDERawSolveWf` returns `some y` exactly when `cRischDE [1]` returns a pair with nonzero
 denominator and `y` is its `CFrac` lift. -/
 theorem crischDERawSolveWf_some_iff (ftilde gtilde y : DenseFrac β) :
@@ -76,7 +76,7 @@ solver without unfolding it. -/
 
 section Reductions
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly] [CFracGcdCoreWf β]
   [CRischField β]
 
 omit [CFieldSpec β] in
@@ -145,7 +145,7 @@ end Reductions
 
 section Capstone
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- `RischDESoundnessWf f g`: every successful `crischDESolveSoundWf` run satisfies the field-level Risch-DE identity. -/
@@ -172,7 +172,7 @@ theorem crischDESolveSoundWf_field (f g y : DenseFrac β)
 
 /-! ### Restatement example -/
 
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : DenseFrac β) (hsolve : crischDESolveSoundWf f g = some y)
     (hsound : RischDESoundnessWf f g) :

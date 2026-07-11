@@ -14,7 +14,7 @@ open DensePoly CFrac GBPolyCore
 
 section Helpers
 
-variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β DensePoly]
 
 /-- `weakNormalizedF f q' = f − Dq'/q'` over `DenseFrac β`: the weakly-normalized field element. -/
 def weakNormalizedF (f q' : DenseFrac β) : DenseFrac β :=

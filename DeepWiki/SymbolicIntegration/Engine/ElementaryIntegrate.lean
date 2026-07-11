@@ -18,7 +18,7 @@ open RadElem DensePoly
 /-- Elementary integrator `cIntegrateElementary ρ v residual c D degBound` over `α = DenseFrac β`,
 `y² = ρ`: supplied rational part `v`, log argument from `radLogArgSolve ρ residual D degBound`.
 On `some N` packs the log term `(c, N/D)`; on `none` returns `⟨v, []⟩`. -/
-def cIntegrateElementary {β : Type*} [CField β] [CFieldDomain β] [CDiffField (DenseFrac β)]
+def cIntegrateElementary {β : Type*} [CField β] [CFieldDomain β DensePoly] [CDiffField (DenseFrac β)]
     (ρ : DenseFrac β) (v : RadElem (DenseFrac β)) (residual : RadElem (DenseFrac β)) (c : DenseFrac β)
     (D : DensePoly β) (degBound : ℕ) : AlgIntegralResult (DenseFrac β) :=
   match radLogArgSolve ρ residual D degBound with

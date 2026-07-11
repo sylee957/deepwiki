@@ -109,7 +109,7 @@ inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : DensePoly B → Den
   content-gcd, lift back. Bottoms at `CFracGcdCoreWf ℚ`.
 
 The public monic gcd is `cgcdFFCoreWf := cmonic ∘ cgcdFFRawCoreWf`. Every method is `[CField α]`-only
-(plus the recursion's `[CFieldDomain β]`/`[CFracGcdCoreWf β]`) — no `[CFieldSpec α]`, so the whole gcd
+(plus the recursion's `[CFieldDomain β DensePoly]`/`[CFracGcdCoreWf β]`) — no `[CFieldSpec α]`, so the whole gcd
 `native_decide`s over the noncomputable tower. -/
 
 /-- Recursive fraction-free gcd over a tower level: the *raw* (content-normalized, non-monic) gcd
@@ -135,7 +135,7 @@ instance instCFracGcdCoreWfQ : CFracGcdCoreWf ℚ where
   cgcdFFRawCoreWf p q := (CPolyEuclidean.gcdExt p q).1
 
 section
-variable {β : Type*} [CField β] [CFieldDomain β] [CFracGcdCoreWf β]
+variable {β : Type*} [CField β] [CFieldDomain β DensePoly] [CFracGcdCoreWf β]
 
 /-- `CFracGcdCoreWf (DenseFrac β)` — the *raw* fraction-free gcd over `β(s)[t]`, built by running the kernel
 `cprimPRSgcdGenCoreWf` over the GCD-domain `DensePoly β = β[s]` with the level-`β` `cgcdFFRawCoreWf` as

@@ -13,7 +13,7 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly CFrac
 
 section
-variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β]
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [CRischField β]
 
 /-- `CRischField (DenseFrac β)` — the gated, sound RDE over `β(s) = DenseFrac β`, running `cRischDE` over
 `DensePoly β = β[s]` (`Ds = [1]`) with `[CRischField β]` for the base solve, behind the gate

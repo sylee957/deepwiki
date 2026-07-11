@@ -16,7 +16,7 @@ open DensePoly CFrac
 
 section Solvable
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
   [Algebra ℚ (CFieldSpec.K β)]
 
 /-- `FieldRDESolvable f g`: some `y : DenseFrac β` solves the field-level Risch DE `D(Y) + F·Y = G`
@@ -35,7 +35,7 @@ end Solvable
 
 section StructuralWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β]
 
 /-- `crischDESolveSoundWf f g = some y` iff the weak normalizer is nonzero, the canon-normality gate
@@ -235,10 +235,10 @@ Move the inner-completeness result across the `CFrac` denominator guard from `cR
 
 section RawInnerWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β]
 
-omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
+omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β DensePoly] in
 /-- If `cRischDE [1]` succeeds and every returned denominator is nonzero, then `crischDERawSolveWf`
 returns `some`. -/
 theorem crischDERawSolveWf_isSome_of_cRischDEG_some_den (ftilde gtilde : DenseFrac β)
@@ -252,7 +252,7 @@ theorem crischDERawSolveWf_isSome_of_cRischDEG_some_den (ftilde gtilde : DenseFr
   exact (crischDERawSolveWf_some_iff ftilde gtilde _).mpr
     ⟨ynum, yden, hden ynum yden hp, hp, rfl⟩
 
-omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
+omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β DensePoly] in
 /-- Inner stage successes plus the returned-denominator guard imply `crischDERawSolveWf` succeeds. -/
 theorem crischDERawSolveWf_isSome_of_cRischDEG_stages_den (ftilde gtilde : DenseFrac β)
     (a0 b0 c0 h0 bbar cbar : DensePoly β) (m : ℤ) (α' β' v : DensePoly β)
@@ -278,7 +278,7 @@ theorem crischDERawSolveWf_isSome_of_cRischDEG_stages_den (ftilde gtilde : Dense
     simp only [hspde, hpoly, Option.isSome_some]
   exact crischDERawSolveWf_isSome_of_cRischDEG_some_den ftilde gtilde hsome hden
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β DensePoly] in
 /-- An inner-completeness residual, a polynomial solution, and the denominator guard imply
 `crischDERawSolveWf` succeeds. -/
 theorem crischDERawSolveWf_isSome_of_innerCompletenessWf (ftilde gtilde : DenseFrac β)
@@ -314,7 +314,7 @@ end RawInnerWf
 
 section CompleteWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- A successful `crischDESolveSoundWf` run (with soundness certificate `RischDESoundnessWf`) witnesses

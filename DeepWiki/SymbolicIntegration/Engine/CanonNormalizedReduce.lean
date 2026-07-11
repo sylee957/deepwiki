@@ -50,7 +50,7 @@ end Bridge
 
 section NormalityWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly]
 
 /-- `IsCanonNormalized f q'`: the canonicalized element `qReduce (weakNormalizedF f q')` is weakly
 normalized (`IsWeaklyNormalizedNorm`). -/
@@ -84,7 +84,7 @@ theorem denomNormalGate_qReduce_weakNormalized (f : DenseFrac β) :
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))
 
 /-- The denominator gate on the reduced weak-normalized input passes iff `IsCanonNormalized` holds. -/
-theorem denomNormalGate_qReduce_weakNormalized_iff [CFieldDomain β] (f : DenseFrac β) :
+theorem denomNormalGate_qReduce_weakNormalized_iff [CFieldDomain β DensePoly] (f : DenseFrac β) :
     CFrac.denomNormalGate (qReduce (weakNormalizedF f
         (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)))) = true
       ↔ IsCanonNormalized f
