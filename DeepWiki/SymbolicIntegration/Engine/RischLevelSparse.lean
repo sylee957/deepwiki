@@ -6,7 +6,7 @@ import DeepWiki.SymbolicIntegration.Engine.RischLevel
 
 /-! # Sparse realization of the compositional Risch level
 
-The sparse-facing level composes transported stage realizations with the generic polynomial assembler. -/
+The sparse-facing level composes transported stage realizations with the generic contract-based assembler. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -19,17 +19,34 @@ variable {α : Type u} [CField α] [CFieldSpec.{u,u} α] [CDiffField α] [CDiffF
   [CPolySplitFactor DensePoly α] [LawfulCPolySplitFactor DensePoly α]
   [CPolyResultant DensePoly] [CResidueSource CPoly.SparsePoly α]
 
+/-- Sparse Hermite-residue realization of the normal-reduction operation. -/
+def sparseNormalReduction : CNormalReduction CPoly.SparsePoly α :=
+  hermiteResidueNormalReduction
+
+/-- Semantic domain of sparse Hermite-residue normal reduction. -/
+def sparseNormalDomain : NormalReductionDomain CPoly.SparsePoly α :=
+  hermiteResidueNormalSoundDomain
+
+/-- Sparse Hermite-residue normal reduction satisfies its soundness contract. -/
+instance instLawfulCNormalReductionSparse :
+    LawfulCNormalReduction (sparseNormalReduction (α := α))
+      (sparseNormalDomain (α := α)) := by
+  unfold sparseNormalReduction sparseNormalDomain
+  infer_instance
+
 /-- Sparse Figure-5.1 level using a selected dense monomial-case specialization. -/
 def sparseRischLevel (kind : PolynomialReductionKind) (C : CMonomialCase DensePoly α) :
     CRischLevel CPoly.SparsePoly α :=
-  oneLevelRischWithPolynomial
+  oneLevelRisch
     (DensePoly.towerPolynomialReduction (P := CPoly.SparsePoly) (α := α)) kind
+    sparseNormalReduction
     (denseMonomialCaseAsSparse C)
 
 /-- Lawful stage contracts compose into soundness of the sparse Figure-5.1 level. -/
 instance instLawfulCRischLevelSparse (kind : PolynomialReductionKind)
     (C : CMonomialCase DensePoly α) [LawfulCMonomialCase C] :
-    LawfulCRischLevel (sparseRischLevel kind C) lowDerivDegreeRischLevelDomain := by
+    LawfulCRischLevel (sparseRischLevel kind C)
+      (oneLevelRischSoundDomain sparseNormalDomain) := by
   unfold sparseRischLevel
   infer_instance
 

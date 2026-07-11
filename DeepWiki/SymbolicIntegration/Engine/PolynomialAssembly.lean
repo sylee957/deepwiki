@@ -1,10 +1,10 @@
 import DeepWiki.SymbolicIntegration.Engine.Assemble
 import DeepWiki.SymbolicIntegration.Engine.PolyPartTower
 
-/-! # Polynomial-reduction stage in one-level Risch assembly
+/-! # Contract-based one-level Risch assembly
 
-This module inserts the representation-neutral polynomial-reduction capability between canonical
-representation and monomial-case special integration. Its soundness theorem uses only stage contracts. -/
+This module composes canonical representation, polynomial reduction, normal reduction, and a
+monomial-case solver. Its soundness and relative-completeness theorems use only stage contracts. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -49,22 +49,22 @@ theorem polynomialReduction_antiderivative_sound (Dt p q r : P α)
   rw [map_add] at hmap
   exact eq_sub_iff_add_eq.mpr hmap.symm
 
-/-- Execute a one-level Risch assembly with an explicit polynomial-reduction stage. -/
-def assembleOneLevelWithPolynomial (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
-    (fuel : ℕ) (C : CMonomialCase P α) [CCanonicalRepresentation P α]
-    [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α]
+/-- Execute one-level Risch assembly from explicit polynomial- and normal-reduction operations. -/
+def assembleOneLevel (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
+    (N : CNormalReduction P α) (fuel : ℕ) (C : CMonomialCase P α)
+    [CCanonicalRepresentation P α]
     (Dt a d : P α) : Option (IntegralResult α P) := do
   let split := canonicalResult Dt a d
   let reduced ← R.reduce kind Dt fuel split.polynomial
   let (snum, sden) ← C.integrateSpecial Dt reduced.remainder split.specialNum split.specialDen
-  let before ← reduceNormal Dt split.normalNum split.normalDen
+  let before ← N.reduce Dt split.normalNum split.normalDen
   let normal ← C.postprocessNormal Dt before
   pure (combineSN (polynomialSpecialNumerator reduced.antiderivative snum sden) sden normal)
 
-/-- Explicit stage-decomposed hypotheses under which polynomial-aware one-level assembly is complete. -/
-structure PolynomialAssemblyWitness (R : CPolynomialReduction P α)
-    (kind : PolynomialReductionKind) (Dt a d : P α)
-    [CCanonicalRepresentation P α] [CHermiteReduction P α] : Prop where
+/-- Explicit stage-decomposed hypotheses under which contract-based one-level assembly is complete. -/
+structure OneLevelAssemblyWitness (R : CPolynomialReduction P α)
+    (kind : PolynomialReductionKind) (normalDomain : NormalReductionDomain P α)
+    (Dt a d : P α) [CCanonicalRepresentation P α] : Prop where
   /-- The requested polynomial normal form exists. -/
   polynomial_reduction_exists :
     ∃ reduced, IsPolynomialReduction kind Dt (canonicalResult Dt a d).polynomial reduced
@@ -77,29 +77,27 @@ structure PolynomialAssemblyWitness (R : CPolynomialReduction P α)
           fieldFracP reduced.remainder CPoly.one +
             fieldFracP (canonicalResult Dt a d).specialNum
               (canonicalResult Dt a d).specialDen
-  /-- The Hermite remainder of the normal branch has a genuine logarithmic antiderivative. -/
-  normal_logarithms : ∃ logs : List (α × P α),
-    GenuineResidueLogPart Dt
-      (hermiteResult Dt (canonicalResult Dt a d).normalNum
-        (canonicalResult Dt a d).normalDen).remainderNum
-      (hermiteResult Dt (canonicalResult Dt a d).normalNum
-        (canonicalResult Dt a d).normalDen).remainderDen logs
+  /-- The canonical normal branch lies in the selected normal reducer's semantic domain. -/
+  normal_domain : normalDomain Dt (canonicalResult Dt a d).normalNum
+    (canonicalResult Dt a d).normalDen
+  /-- The canonical normal branch has a certified normal-form antiderivative. -/
+  normal_integrable : IsNormalPartIntegrable Dt (canonicalResult Dt a d).normalNum
+    (canonicalResult Dt a d).normalDen
 
-/-- Complete stage contracts compose into eventual success of polynomial-aware one-level assembly. -/
-theorem assembleOneLevelWithPolynomial_complete (R : CPolynomialReduction P α)
+omit [LawfulCPolyEngine P] in
+/-- Complete stage contracts compose into eventual success of contract-based one-level assembly. -/
+theorem assembleOneLevel_complete (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] [CompleteCPolynomialReduction R]
-    (kind : PolynomialReductionKind) (C : CMonomialCase P α)
+    (kind : PolynomialReductionKind) (N : CNormalReduction P α)
+    (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [CompleteCNormalReduction N normalDomain]
+    (C : CMonomialCase P α)
     [LawfulCMonomialCase C] [CompleteCMonomialCase C]
     [CCanonicalRepresentation P α]
     [LawfulCCanonicalRepresentation (P := P) (α := α)]
-    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
-    [CResidueSource P α] [CResidueLogPart P α]
-    [LawfulCResidueLogPart (P := P) (α := α)]
-    [CompleteCResidueLogPart (P := P) (α := α)]
-    (hsource : LawfulCResidueSource P α) (Dt a d : P α)
-    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
-    (hwitness : PolynomialAssemblyWitness R kind Dt a d) :
-    ∃ fuel out, assembleOneLevelWithPolynomial R kind fuel C Dt a d = some out := by
+    (Dt a d : P α) (hd : CPoly.toPoly d ≠ 0)
+    (hwitness : OneLevelAssemblyWitness R kind normalDomain Dt a d) :
+    ∃ fuel out, assembleOneLevel R kind N fuel C Dt a d = some out := by
   obtain ⟨fuel, reduced, hreduce⟩ := CompleteCPolynomialReduction.relative_complete
     (C := R) kind Dt (canonicalResult Dt a d).polynomial
       hwitness.polynomial_reduction_exists
@@ -110,50 +108,50 @@ theorem assembleOneLevelWithPolynomial_complete (R : CPolynomialReduction P α)
     (canonicalResult Dt a d).specialDen snum sden hsden hspecialSemantic
   obtain ⟨snum', sden'⟩ := special
   have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
-  have hnormalForm := LawfulCCanonicalRepresentation.normal_isNormalSqfree Dt a d hd
-  have hnormalProper := LawfulCCanonicalRepresentation.normal_proper Dt a d hd
-  obtain ⟨before, hnormal, hbefore⟩ := reduceNormal_complete hsource Dt
+  obtain ⟨before, hnormal, hbefore⟩ := CompleteCNormalReduction.relative_complete (N := N)
+    Dt
     (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen
-    hnormalDen hnormalForm hnormalProper hdegree hwitness.normal_logarithms
+    hwitness.normal_domain hnormalDen hwitness.normal_integrable
   obtain ⟨normal, hpost⟩ := CompleteCMonomialCase.postprocess_complete (C := C) Dt
     (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before hbefore
   refine ⟨fuel, combineSN (polynomialSpecialNumerator reduced.antiderivative snum' sden')
     sden' normal, ?_⟩
-  simp only [assembleOneLevelWithPolynomial, hreduce, hspecial, hnormal, hpost, Option.bind_eq_bind,
+  simp only [assembleOneLevel, hreduce, hspecial, hnormal, hpost, Option.bind_eq_bind,
     Option.bind_some]
   rfl
 
 set_option maxHeartbeats 800000 in
-/-- A successful polynomial-aware one-level assembly is an integral result of its input. -/
-theorem assembleOneLevelWithPolynomial_sound (R : CPolynomialReduction P α)
+/-- A successful contract-based one-level assembly is an integral result of its input. -/
+theorem assembleOneLevel_sound (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind) (fuel : ℕ)
-    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] (C : CMonomialCase P α)
+    [CCanonicalRepresentation P α]
     [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
-    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
-    [CResidueSource P α] [CResidueLogPart P α]
-    [LawfulCResidueLogPart (P := P) (α := α)]
     (Dt a d : P α) (out : IntegralResult α P)
-    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
-    (hrun : assembleOneLevelWithPolynomial R kind fuel C Dt a d = some out) :
+    (hd : CPoly.toPoly d ≠ 0)
+    (hnormalDomain : normalDomain Dt (canonicalResult Dt a d).normalNum
+      (canonicalResult Dt a d).normalDen)
+    (hrun : assembleOneLevel R kind N fuel C Dt a d = some out) :
     IsIntegralResultP Dt a d out := by
   cases hreduce : R.reduce kind Dt fuel (canonicalResult Dt a d).polynomial with
-  | none => simp [assembleOneLevelWithPolynomial, hreduce] at hrun
+  | none => simp [assembleOneLevel, hreduce] at hrun
   | some reduced =>
     cases hspecial : C.integrateSpecial Dt reduced.remainder
         (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen with
-    | none => simp [assembleOneLevelWithPolynomial, hreduce, hspecial] at hrun
+    | none => simp [assembleOneLevel, hreduce, hspecial] at hrun
     | some special =>
       obtain ⟨snum, sden⟩ := special
-      cases hnormal : reduceNormal Dt (canonicalResult Dt a d).normalNum
+      cases hnormal : N.reduce Dt (canonicalResult Dt a d).normalNum
           (canonicalResult Dt a d).normalDen with
-      | none => simp [assembleOneLevelWithPolynomial, hreduce, hnormal] at hrun
+      | none => simp [assembleOneLevel, hreduce, hnormal] at hrun
       | some before =>
         cases hpost : C.postprocessNormal Dt before with
-        | none => simp [assembleOneLevelWithPolynomial, hreduce, hnormal, hpost] at hrun
+        | none => simp [assembleOneLevel, hreduce, hnormal, hpost] at hrun
         | some normal =>
           have hout : combineSN (polynomialSpecialNumerator reduced.antiderivative snum sden)
               sden normal = out := by
-            simpa [assembleOneLevelWithPolynomial, hreduce, hspecial, hnormal, hpost] using hrun
+            simpa [assembleOneLevel, hreduce, hspecial, hnormal, hpost] using hrun
           subst out
           have hred := LawfulCPolynomialReduction.sound (C := R) kind Dt fuel
             (canonicalResult Dt a d).polynomial reduced hreduce
@@ -171,14 +169,12 @@ theorem assembleOneLevelWithPolynomial_sound (R : CPolynomialReduction P α)
             rw [hpolySpecial, map_add, hq, hspecialField]
             ring
           have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
-          have hnormalForm := LawfulCCanonicalRepresentation.normal_isNormalSqfree Dt a d hd
-          have hnormalProper := LawfulCCanonicalRepresentation.normal_proper Dt a d hd
-          have hbefore := reduceNormal_sound (P := P) (α := α) Dt
+          have hbefore := LawfulCNormalReduction.sound (N := N) Dt
             (canonicalResult Dt a d).normalNum
-            (canonicalResult Dt a d).normalDen before hnormalDen hnormalForm hnormalProper hdegree hnormal
-          have hbeforeDen := reduceNormal_rationalDen_nonzero (P := P) (α := α) Dt
+            (canonicalResult Dt a d).normalDen before hnormalDomain hnormalDen hnormal
+          have hbeforeDen := LawfulCNormalReduction.rationalDen_nonzero (N := N) Dt
             (canonicalResult Dt a d).normalNum
-            (canonicalResult Dt a d).normalDen before hnormalDen hnormalForm hnormal
+            (canonicalResult Dt a d).normalDen before hnormalDomain hnormalDen hnormal
           have hnormalResult := LawfulCMonomialCase.postprocessNormal_sound (C := C) Dt
             (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before normal hbefore hpost
           have hnormalResultDen := LawfulCMonomialCase.postprocessNormal_den_nonzero (C := C) Dt

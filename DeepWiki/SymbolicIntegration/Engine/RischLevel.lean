@@ -45,84 +45,84 @@ class CompleteCRischLevel (L : CRischLevel P α) (domain : RischLevelDomain P α
     domain Dt a d → CPoly.toPoly d ≠ 0 → IsRischLevelIntegrable Dt a d →
       ∃ fuel res, L.integrate fuel Dt a d = some res
 
-/-- The generic Figure-5.1 composition with an explicit polynomial-reduction budget. -/
-def oneLevelRischWithPolynomial (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
-    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
-    [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α] : CRischLevel P α where
-  integrate fuel Dt a d := assembleOneLevelWithPolynomial R kind fuel C Dt a d
+/-- The generic Figure-5.1 composition from polynomial, normal, and monomial-case operations. -/
+def oneLevelRisch (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
+    (N : CNormalReduction P α) (C : CMonomialCase P α)
+    [CCanonicalRepresentation P α] : CRischLevel P α where
+  integrate fuel Dt a d := assembleOneLevel R kind N fuel C Dt a d
 
 /-- The Figure-5.1 level with an explicit recursively supplied coefficient-field stage. -/
 def oneLevelRischWithRecursiveCoefficient (R : CPolynomialReduction P α)
     (kind : PolynomialReductionKind) (C : CRecursiveMonomialCase P α)
-    (I : CRecursiveCoefficientIntegrator α) [CCanonicalRepresentation P α]
-    [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α] : CRischLevel P α :=
-  oneLevelRischWithPolynomial R kind (C.withCoefficient I)
+    (N : CNormalReduction P α) (I : CRecursiveCoefficientIntegrator α)
+    [CCanonicalRepresentation P α] : CRischLevel P α :=
+  oneLevelRisch R kind N (C.withCoefficient I)
 
-/-- Domain of the Hermite-based assembler: monomial derivatives of degree at most one. -/
-def lowDerivDegreeRischLevelDomain : RischLevelDomain P α :=
-  fun Dt _ _ => (CPoly.toPoly Dt).natDegree ≤ 1
+/-- Soundness domain induced by a normal reducer after canonical decomposition. -/
+def oneLevelRischSoundDomain (normalDomain : NormalReductionDomain P α)
+    [CCanonicalRepresentation P α] : RischLevelDomain P α :=
+  fun Dt a d => normalDomain Dt (canonicalResult Dt a d).normalNum
+    (canonicalResult Dt a d).normalDen
 
-/-- The polynomial-aware packaged level inherits contract-only one-level soundness. -/
-theorem oneLevelRischWithPolynomial_sound (R : CPolynomialReduction P α)
+/-- The packaged level inherits soundness solely from its stage contracts. -/
+theorem oneLevelRisch_sound (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind) (fuel : ℕ)
-    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] (C : CMonomialCase P α)
+    [CCanonicalRepresentation P α]
     [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
-    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
-    [CResidueSource P α] [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)]
     (Dt a d : P α) (res : IntegralResult α P)
-    (hd : CPoly.toPoly d ≠ 0) (hdomain : lowDerivDegreeRischLevelDomain Dt a d)
-    (hrun : (oneLevelRischWithPolynomial R kind C).integrate fuel Dt a d = some res) :
+    (hd : CPoly.toPoly d ≠ 0) (hdomain : oneLevelRischSoundDomain normalDomain Dt a d)
+    (hrun : (oneLevelRisch R kind N C).integrate fuel Dt a d = some res) :
     IsIntegralResultP Dt a d res :=
-  assembleOneLevelWithPolynomial_sound R kind fuel C Dt a d res hd hdomain hrun
+  assembleOneLevel_sound R kind fuel N normalDomain C Dt a d res hd hdomain hrun
 
-/-- The polynomial-aware contract composition is a lawful Risch level. -/
-instance instLawfulCRischLevelOneLevelRischWithPolynomial (R : CPolynomialReduction P α)
+/-- Contract composition is a lawful Risch level on the selected normal reducer's domain. -/
+instance instLawfulCRischLevelOneLevelRisch (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
-    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] (C : CMonomialCase P α)
+    [CCanonicalRepresentation P α]
     [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
-    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
-    [CResidueSource P α] [CResidueLogPart P α]
-    [LawfulCResidueLogPart (P := P) (α := α)] :
-    LawfulCRischLevel (oneLevelRischWithPolynomial R kind C) lowDerivDegreeRischLevelDomain where
+    : LawfulCRischLevel (oneLevelRisch R kind N C)
+      (oneLevelRischSoundDomain normalDomain) where
   sound fuel Dt a d res hdomain hd hrun :=
-    oneLevelRischWithPolynomial_sound R kind fuel C Dt a d res hd hdomain hrun
+    oneLevelRisch_sound R kind fuel N normalDomain C Dt a d res hd hdomain hrun
 
 /-- Domain where genuine integrability decomposes into explicit Figure-5.1 stage witnesses. -/
-def polynomialRischLevelDomain (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
-    [CCanonicalRepresentation P α] [CHermiteReduction P α] : RischLevelDomain P α :=
-  fun Dt a d => lowDerivDegreeRischLevelDomain Dt a d ∧
-    (IsRischLevelIntegrable Dt a d → PolynomialAssemblyWitness R kind Dt a d)
+def oneLevelRischCompleteDomain (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
+    (normalDomain : NormalReductionDomain P α)
+    [CCanonicalRepresentation P α] : RischLevelDomain P α :=
+  fun Dt a d => oneLevelRischSoundDomain normalDomain Dt a d ∧
+    (IsRischLevelIntegrable Dt a d → OneLevelAssemblyWitness R kind normalDomain Dt a d)
 
-/-- The polynomial-aware level is lawful on the explicit stage-decomposition domain. -/
-instance instLawfulCRischLevelPolynomialDomain (R : CPolynomialReduction P α)
+/-- The composed level is lawful on its explicit stage-decomposition domain. -/
+instance instLawfulCRischLevelCompleteDomain (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
-    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] (C : CMonomialCase P α)
+    [CCanonicalRepresentation P α]
     [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
-    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
-    [CResidueSource P α] [CResidueLogPart P α]
-    [LawfulCResidueLogPart (P := P) (α := α)] :
-    LawfulCRischLevel (oneLevelRischWithPolynomial R kind C)
-      (polynomialRischLevelDomain R kind) where
+    : LawfulCRischLevel (oneLevelRisch R kind N C)
+      (oneLevelRischCompleteDomain R kind normalDomain) where
   sound fuel Dt a d res hdomain hd hrun :=
-    oneLevelRischWithPolynomial_sound R kind fuel C Dt a d res hd hdomain.1 hrun
+    oneLevelRisch_sound R kind fuel N normalDomain C Dt a d res hd hdomain.1 hrun
 
-/-- Complete stage contracts make the polynomial-aware level relatively complete at some finite budget. -/
-theorem completeCRischLevelWithPolynomial (R : CPolynomialReduction P α)
+/-- Complete stage contracts make the composed level relatively complete at some finite budget. -/
+theorem completeCRischLevel (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] [CompleteCPolynomialReduction R]
-    (kind : PolynomialReductionKind) (C : CMonomialCase P α)
+    (kind : PolynomialReductionKind) (N : CNormalReduction P α)
+    (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [CompleteCNormalReduction N normalDomain]
+    (C : CMonomialCase P α)
     [LawfulCMonomialCase C] [CompleteCMonomialCase C]
     [CCanonicalRepresentation P α]
-    [LawfulCCanonicalRepresentation (P := P) (α := α)]
-    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
-    [CResidueSource P α] [CResidueLogPart P α]
-    [LawfulCResidueLogPart (P := P) (α := α)]
-    [CompleteCResidueLogPart (P := P) (α := α)]
-    (hsource : LawfulCResidueSource P α) :
-    CompleteCRischLevel (oneLevelRischWithPolynomial R kind C)
-      (polynomialRischLevelDomain R kind) := by
+    [LawfulCCanonicalRepresentation (P := P) (α := α)] :
+    CompleteCRischLevel (oneLevelRisch R kind N C)
+      (oneLevelRischCompleteDomain R kind normalDomain) := by
   constructor
   intro Dt a d hdomain hd hintegrable
-  exact assembleOneLevelWithPolynomial_complete R kind C hsource Dt a d hd hdomain.1
+  exact assembleOneLevel_complete R kind N normalDomain C Dt a d hd
     (hdomain.2 hintegrable)
 
 end DeepWiki.SymbolicIntegration

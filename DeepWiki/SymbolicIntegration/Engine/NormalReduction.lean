@@ -161,27 +161,44 @@ def hermiteResidueNormalReduction [CHermiteReduction P α] [CResidueSource P α]
     [CResidueLogPart P α] : CNormalReduction P α where
   reduce := reduceNormal
 
-/-- Domain where Hermite reduction is proper and integrability supplies genuine residue logarithms. -/
-def hermiteResidueNormalDomain [CHermiteReduction P α] : NormalReductionDomain P α :=
+/-- Soundness domain where Hermite reduction is normal, proper, and low-degree. -/
+def hermiteResidueNormalSoundDomain [CHermiteReduction P α] : NormalReductionDomain P α :=
   fun Dt a d =>
     @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩ (CPoly.toPoly d) ∧
     (CPoly.toPoly a).degree < (CPoly.toPoly d).degree ∧
-    (CPoly.toPoly Dt).natDegree ≤ 1 ∧
+    (CPoly.toPoly Dt).natDegree ≤ 1
+
+/-- Complete normal-reduction domain: the soundness hypotheses plus a genuine residue-log witness. -/
+def hermiteResidueNormalCompleteDomain [CHermiteReduction P α] : NormalReductionDomain P α :=
+  fun Dt a d => hermiteResidueNormalSoundDomain Dt a d ∧
     (IsNormalPartIntegrable Dt a d →
       ∃ logs : List (α × P α),
         GenuineResidueLogPart Dt (hermiteResult Dt a d).remainderNum
-          (hermiteResult Dt a d).remainderDen logs)
+        (hermiteResult Dt a d).remainderDen logs)
 
 /-- Lawful Hermite and residue stages realize sound normal reduction on the low-degree domain. -/
 instance instLawfulCNormalReductionHermiteResidue [CHermiteReduction P α]
     [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
     [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)] :
     LawfulCNormalReduction (hermiteResidueNormalReduction (P := P) (α := α))
-      (hermiteResidueNormalDomain (P := P) (α := α)) where
+      (hermiteResidueNormalSoundDomain (P := P) (α := α)) where
   sound Dt a d out hdomain hd hrun :=
-    reduceNormal_sound Dt a d out hd hdomain.1 hdomain.2.1 hdomain.2.2.1 hrun
+    reduceNormal_sound Dt a d out hd hdomain.1 hdomain.2.1 hdomain.2.2 hrun
   rationalDen_nonzero Dt a d out hdomain hd hrun :=
     reduceNormal_rationalDen_nonzero Dt a d out hd hdomain.1 hrun
+
+/-- The stronger complete domain inherits the normal-reduction soundness contract. -/
+instance instLawfulCNormalReductionHermiteResidueCompleteDomain [CHermiteReduction P α]
+    [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
+    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)] :
+    LawfulCNormalReduction (hermiteResidueNormalReduction (P := P) (α := α))
+      (hermiteResidueNormalCompleteDomain (P := P) (α := α)) where
+  sound Dt a d out hdomain hd hrun :=
+    LawfulCNormalReduction.sound (N := hermiteResidueNormalReduction (P := P) (α := α))
+      Dt a d out hdomain.1 hd hrun
+  rationalDen_nonzero Dt a d out hdomain hd hrun :=
+    LawfulCNormalReduction.rationalDen_nonzero
+      (N := hermiteResidueNormalReduction (P := P) (α := α)) Dt a d out hdomain.1 hd hrun
 
 /-- Complete residue extraction realizes relative completeness of the Hermite-residue normal stage. -/
 instance instCompleteCNormalReductionHermiteResidue [CHermiteReduction P α]
@@ -190,9 +207,9 @@ instance instCompleteCNormalReductionHermiteResidue [CHermiteReduction P α]
     [LawfulCResidueLogPart (P := P) (α := α)]
     [CompleteCResidueLogPart (P := P) (α := α)] :
     CompleteCNormalReduction (hermiteResidueNormalReduction (P := P) (α := α))
-      (hermiteResidueNormalDomain (P := P) (α := α)) where
+      (hermiteResidueNormalCompleteDomain (P := P) (α := α)) where
   relative_complete Dt a d hdomain hd hintegrable :=
     reduceNormal_complete (inferInstance : LawfulCResidueSource P α) Dt a d hd
-      hdomain.1 hdomain.2.1 hdomain.2.2.1 (hdomain.2.2.2 hintegrable)
+      hdomain.1.1 hdomain.1.2.1 hdomain.1.2.2 (hdomain.2 hintegrable)
 
 end DeepWiki.SymbolicIntegration
