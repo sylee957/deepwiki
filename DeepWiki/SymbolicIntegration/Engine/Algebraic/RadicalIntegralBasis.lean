@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgebraicResidues
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
+import DeepWiki.ComputableAlgebra.PolySquarefree
 
 /-! # Algebraic-function integration: the simple-radical integral basis
 
@@ -16,29 +17,30 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace DensePoly
+universe u
 
-variable {α : Type*} [CField α]
+namespace CPoly
+
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+variable {α : Type u} [CField α]
 
 /-! ### The square-part / squarefree-part split for `n = 2`
 
 `ρ = d²·s`: `d = ∏ᵢ Pᵢ^{⌊i/2⌋}` and `s = ∏_{i odd} Pᵢ` (squarefree), from the multiplicity-indexed
 squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFF`). -/
 
-variable [CFracGcdCoreWf α]
-
 /-- Square part `radSquarePart ρ = d = ∏ᵢ Pᵢ^{⌊i/2⌋}`: the root of the largest square divisor of `ρ`
 (each squarefree part `Pᵢ` of multiplicity `i` contributes `Pᵢ^{⌊i/2⌋}`), so `d² ∣ ρ` and `ρ/d²` is
 squarefree. Monic. -/
-def radSquarePart (ρ : DensePoly α) : DensePoly α :=
-  (cSqfreeYunFF ρ).zipIdx.foldl
-    (fun acc (Pi, i) => cmul acc (cpow Pi ((i + 1) / 2))) [CCommRing.one]
+def radSquarePart (ρ : P α) : P α :=
+  (squarefreeYun ρ).zipIdx.foldl
+    (fun acc (Pi, i) => CPolyEngine.mul acc (CPoly.cpow Pi ((i + 1) / 2))) CPoly.one
 
 /-- Squarefree part `radSquarefreePart ρ = s = ∏_{i odd} Pᵢ = ρ/d²`: one copy of each odd-multiplicity
 factor `Pᵢ`, so `ρ = d²·s` with `d = radSquarePart` and `s` squarefree by construction. Monic. -/
-def radSquarefreePart (ρ : DensePoly α) : DensePoly α :=
-  (cSqfreeYunFF ρ).zipIdx.foldl
-    (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmul acc Pi else acc) [CCommRing.one]
+def radSquarefreePart (ρ : P α) : P α :=
+  (squarefreeYun ρ).zipIdx.foldl
+    (fun acc (Pi, i) => if (i + 1) % 2 = 1 then CPolyEngine.mul acc Pi else acc) CPoly.one
 
 /-! ### The integral basis `[1, y/d]`
 
@@ -48,7 +50,7 @@ the maximal integral element of the form `y/q`. Returned as the pair `(d, s)`. -
 /-- The simple-radical integral basis `radIntegralBasis ρ = (d, s)` for `ℚ[x][y]/(y² − ρ)`: the integral
 closure of `ℚ[x]` has basis `[1, y/d]` with `d = radSquarePart ρ`, `s = radSquarefreePart ρ = ρ/d²`
 squarefree, `(y/d)² = s` (`[1, y]` for squarefree `ρ`). -/
-def radIntegralBasis (ρ : DensePoly α) : DensePoly α × DensePoly α :=
+def radIntegralBasis (ρ : P α) : P α × P α :=
   (radSquarePart ρ, radSquarefreePart ρ)
 
 /-! ### Integral-closure validation predicates
@@ -62,31 +64,33 @@ because `s` is squarefree. -/
 /-- **The square-part split is exact** `radSplitExact ρ`: `d²·s = ρ` where `(d, s) = radIntegralBasis
 ρ` — so `s = ρ/d²` is a genuine `ℚ[x]` polynomial (no fractional residue), the precondition that `y/d`
 satisfies the monic `T² − s = 0` over `ℚ[x]`. Checked by `cisZero (d²·s − ρ)`, comparing monic-normalized
-(the Yun factors are monic, so `d, s` are; `ρ` is taken monic). `[CField α] [CFracGcdCoreWf α]`-generic. -/
-def radSplitExact (ρ : DensePoly α) : Bool :=
+(the Yun factors are monic, so `d, s` are; `ρ` is taken monic). Representation-independent. -/
+def radSplitExact (ρ : P α) : Bool :=
   let d := radSquarePart ρ
   let s := radSquarefreePart ρ
-  cisZero (csub (cmul (cmul d d) s) (cmonic ρ))
+  CPolyEngine.cisZero
+    (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.mul d d) s) (CPolyEngine.cmonic ρ))
 
 /-- **`y/d` is integral: `s` is squarefree** `radSquarefreePartIsSquarefree ρ`: `gcd(s, s') = 1`
 (constant) where `s = radSquarefreePart ρ`. Together with `radSplitExact` this is exactly "`y/d` is
 integral over `ℚ[x]`" — `(y/d)² = s` is a squarefree polynomial, so `y/d` is a root of the monic
-`T² − s ∈ ℚ[x][T]` and the integral closure contains it. Checked by `cdeg (gcd s s') = 0`. `[CField α]
-[CFracGcdCoreWf α]`-generic. -/
-def radSquarefreePartIsSquarefree (ρ : DensePoly α) : Bool :=
+`T² − s ∈ ℚ[x][T]` and the integral closure contains it. Checked by `cdeg (gcd s s') = 0` through the
+selected Euclidean capability. -/
+def radSquarefreePartIsSquarefree (ρ : P α) : Bool :=
   let s := radSquarefreePart ρ
-  cdeg (cgcdMonicWf s (cderiv s)) = 0
+  CPolyEngine.cdeg (CPolyEuclidean.gcdExt s (CPolyEngine.deriv s)).1 = 0
 
 /-- `radNotIntegralFactor ρ P` checks that `P² ∤ s` for nonconstant `P`, where
 `s = radSquarefreePart ρ`. The basis-maximality witness — `y/(d·P)` would need minimal polynomial
 `T² − s/P²` over `ℚ[x]`, but `P² ∤ s` (since `s` is squarefree, no nonconstant square divides it), so
 `s/P²` is not a polynomial and `y/(d·P)` is not integral. Hence `y/d` is the maximal integral element of
 the form `y/q`. Returns `true` (= "not integral", `P² ∤ s`) for nonconstant `P`; `false` for constant `P`
-(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `CPolyEuclidean.dvd`. `[CField α]
-[CFracGcdCoreWf α]`-generic. -/
-def radNotIntegralFactor (ρ P : DensePoly α) : Bool :=
+(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `CPolyEuclidean.dvd`.
+Representation-independent. -/
+def radNotIntegralFactor (ρ factor : P α) : Bool :=
   let s := radSquarefreePart ρ
-  if cdeg P = 0 then false else !(CPolyEuclidean.dvd (cmul P P) s)
+  if CPolyEngine.cdeg factor = 0 then false
+  else !(CPolyEuclidean.dvd (CPolyEngine.mul factor factor) s)
 
 /-! ### Discriminant and genus of the simple-radical basis
 
@@ -97,20 +101,31 @@ For `y² = s` with `s` squarefree, the minimal polynomial of `y/d` is `T² − s
 /-- **Basis discriminant** `radBasisDiscriminant ρ = 4·s` — the discriminant of the minimal
 polynomial `T² − s` of the basis element `y/d` (`s = radSquarefreePart ρ`): `disc(T² − s) = 0² − 4·1·(−s)
 = 4s`. The polynomial discriminant `disc(T² + bT + c) = b² − 4c` at `b = 0, c = −s`. (Up to the unit `1`
-this is `s` itself; the `4` is the classical normalization.) `[CField α] [CFracGcdCoreWf α]`-generic. -/
-def radBasisDiscriminant (ρ : DensePoly α) : DensePoly α :=
-  cscale (CField.natCast 4) (radSquarefreePart ρ)
+this is `s` itself; the `4` is the classical normalization.) Representation-independent. -/
+def radBasisDiscriminant (ρ : P α) : P α :=
+  CPolyEngine.scale (CField.natCast 4) (radSquarefreePart ρ)
 
 /-- **Genus** `radGenus ρ = ⌈deg s / 2⌉ − 1` — the genus of the hyperelliptic curve `y² = s`
 (`s = radSquarefreePart ρ` squarefree of degree `m`): `g = ⌈m/2⌉ − 1 = (m + 1)/2 − 1` (`ℕ`-division, so
 `(m + 1)/2` is `⌈m/2⌉`). For simple radicals `y² = s`, `g = 0` (rational) for `deg s ≤ 2`, `g = 1`
-(elliptic) for `deg s ∈ {3, 4}`, etc. `[CField α]
-[CFracGcdCoreWf α]`-generic. -/
-def radGenus (ρ : DensePoly α) : ℕ :=
-  let m := cdeg (radSquarefreePart ρ)
+(elliptic) for `deg s ∈ {3, 4}`, etc. Representation-independent. -/
+def radGenus (ρ : P α) : ℕ :=
+  let m := CPolyEngine.cdeg (radSquarefreePart ρ)
   (m + 1) / 2 - 1
 
-end DensePoly
+end CPoly
+
+/-- The sparse simple-radical basis for `(x - 1)²(x + 2)` is `[1, y/(x - 1)]`. -/
+example :
+    let rho : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 2), (1, -3), (3, 1)]
+    let basis := CPoly.radIntegralBasis rho
+    CPolyEngine.cisZero
+          (CPolyEngine.sub basis.1 (CPoly.SparsePoly.ofList [(0, -1), (1, 1)])) = true
+      ∧ CPolyEngine.cisZero
+          (CPolyEngine.sub basis.2 (CPoly.SparsePoly.ofList [(0, 2), (1, 1)])) = true
+      ∧ CPoly.radSplitExact rho = true
+      ∧ CPoly.radSquarefreePartIsSquarefree rho = true := by
+  ccompute
 
 /-! ## Examples over `ℚ[x]` (`native_decide`)
 
@@ -118,7 +133,7 @@ end DensePoly
 operations are list/`ℚ` arithmetic; the `CFracGcdCore ℚ` / `CField ℚ` instances reduce in the native
 compiler. -/
 
-open DensePoly
+open CPoly
 
 /-! ### The square-part / squarefree-part split computes
 

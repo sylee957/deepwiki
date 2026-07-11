@@ -102,7 +102,7 @@ open DensePoly
 /-! ### The elliptic curve `y² = x³ + 1` and its points -/
 
 /-- The genus of `y² = x³ + 1`: `radGenus = 1` (elliptic). -/
-def cantorGenusX3p1 : ℕ := radGenus hypRhoX3p1
+def cantorGenusX3p1 : ℕ := CPoly.radGenus hypRhoX3p1
 
 /-- `radGenus (x³+1) = 1`: the curve `y² = x³ + 1` is elliptic. -/
 theorem cantorGenusX3p1_eq : cantorGenusX3p1 = 1 := by native_decide
@@ -171,7 +171,7 @@ A genuinely hyperelliptic example (`g = 2`), beyond the elliptic case. -/
 def hypRhoX5p1 : DensePoly ℚ := [1, 0, 0, 0, 0, 1]
 
 /-- `radGenus (x⁵+1) = 2`: `y² = x⁵ + 1` is a genus-2 hyperelliptic curve. -/
-theorem cantorGenusX5p1_eq : radGenus hypRhoX5p1 = 2 := by native_decide
+theorem cantorGenusX5p1_eq : CPoly.radGenus hypRhoX5p1 = 2 := by native_decide
 
 /-- The point `(0, 1)` on `y² = x⁵ + 1` (`1² = 0⁵ + 1`): Mumford `(x, 1)`. -/
 def hypG2Pt01 : MumfordDivisor ℚ := mumfordPoint (0 : ℚ) 1

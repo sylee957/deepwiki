@@ -140,6 +140,10 @@ runs the same fraction algorithm.
    Finite root scanning with multiplicity now runs as `CPoly.rootsWithMult`, using representation bounds, selected
    evaluation, linear-factor construction, and Euclidean division rather than dense list length and literals; the
    Picard point-extraction path specializes it to dense storage while a sparse double-root witness shares the kernel.
+   Yun squarefree decomposition now has a representation-independent `CPoly.squarefreeYun` kernel selecting
+   derivative, normalization, quotient, subtraction, and extended gcd through polynomial capabilities. The
+   simple-radical square/squarefree split, integral-basis checks, discriminant, and genus consequently live in
+   `CPoly`; dense catalog examples and a sparse repeated-factor basis witness share the same implementation.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

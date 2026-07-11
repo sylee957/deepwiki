@@ -119,14 +119,14 @@ theorem mumfordValid_pt01opp : mumfordValid hypRhoX3p1 hypPt01opp = true := by n
 
 /-- The point divisors are reduced: `deg u = 1 ≤ g = 1` for the genus-1 curve. -/
 theorem mumfordIsReduced_pts :
-    mumfordIsReduced (radGenus hypRhoX3p1) hypPt01 = true
-    ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPt23 = true
-    ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPtM10 = true := by native_decide
+    mumfordIsReduced (CPoly.radGenus hypRhoX3p1) hypPt01 = true
+    ∧ mumfordIsReduced (CPoly.radGenus hypRhoX3p1) hypPt23 = true
+    ∧ mumfordIsReduced (CPoly.radGenus hypRhoX3p1) hypPtM10 = true := by native_decide
 
 /-- The identity `(1, 0)` is valid and reduced. -/
 theorem mumfordIdentity_valid_reduced :
     mumfordValid hypRhoX3p1 (mumfordIdentity : MumfordDivisor ℚ) = true
-    ∧ mumfordIsReduced (radGenus hypRhoX3p1) (mumfordIdentity : MumfordDivisor ℚ) = true := by
+    ∧ mumfordIsReduced (CPoly.radGenus hypRhoX3p1) (mumfordIdentity : MumfordDivisor ℚ) = true := by
   native_decide
 
 /-! ### A two-point divisor on `y² = x³+1` (`native_decide`)
@@ -180,8 +180,8 @@ theorem mumford_representation_validates :
     (mumfordValid hypRhoX3p1 hypPt01 = true
       ∧ mumfordValid hypRhoX3p1 hypPt23 = true
       ∧ mumfordValid hypRhoX3p1 hypPtM10 = true)
-    ∧ (mumfordIsReduced (radGenus hypRhoX3p1) hypPt01 = true
-      ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPt23 = true)
+    ∧ (mumfordIsReduced (CPoly.radGenus hypRhoX3p1) hypPt01 = true
+      ∧ mumfordIsReduced (CPoly.radGenus hypRhoX3p1) hypPt23 = true)
     -- opposite and identity
     ∧ (hypPt01opp = mumfordPoint (0 : ℚ) (-1)
       ∧ mumfordValid hypRhoX3p1 (mumfordIdentity : MumfordDivisor ℚ) = true)
