@@ -18,7 +18,7 @@ open DensePoly CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+  [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
 /-- Rational `p/q ∈ α` (`p : ℤ`, `q : ℕ`) via the `[CField α]` casts — `p.natAbs` lifted, negated when
 `p < 0`, divided by `q`. -/
@@ -35,14 +35,13 @@ def defaultResidueCandidates (bound : ℕ) : List α :=
   (List.range (2 * bound + 1)).flatMap (fun i =>
     (List.range bound).map (fun j => cRat ((i : ℤ) - (bound : ℤ)) (j + 1)))
 
-omit [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
+omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
 /-- `cisZero (CPolyEngine.mapDeriv fp) = true` proves that `fp` has constant coefficients. -/
 theorem mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (fp : DensePoly α)
     (h : cisZero (CPolyEngine.mapDeriv fp) = true) : Differential.mapCoeffs (toPoly fp) = 0 := by
   have hzero : toPoly (CPolyEngine.mapDeriv fp) = 0 := (cisZeroG_iff _).mp h
   simpa only [denote] using hzero
 
-omit [CFracGcdCoreWf α] in
 /-- The poly-RDE field identity holds for any `Dt` with `toPoly Dt = 1`. -/
 theorem field_identity_Dt1 (Dt c q : DensePoly α) (n : ℤ)
     (hDt1 : toPoly Dt = 1) (hc : cisZero c = false) (hdeg : (cdeg c : ℤ) + 1 ≤ n)
@@ -59,7 +58,6 @@ theorem field_identity_Dt1 (Dt c q : DensePoly α) (n : ℤ)
   rw [hcongr]
   exact cPolyRischDEG_nil_field_identity c q n hc hdeg hsome1 hconst
 
-omit [CFracGcdCoreWf α] in
 /-- The primitive special-part identity holds under the guarded regime. -/
 theorem primitive_special_identity (Dt fp qp : DensePoly α)
     (hDt1 : toPoly Dt = 1) (hconst : Differential.mapCoeffs (toPoly fp) = 0)

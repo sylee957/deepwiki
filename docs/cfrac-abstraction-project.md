@@ -171,6 +171,17 @@ runs the same fraction algorithm.
    `CgcdBCorrect cgcdFFCoreWf` callback has been removed. Weak normalization, normal-denominator reduction,
    special-polynomial construction, and their completeness bridges request the selected gcd/split
    capabilities rather than using `CFracGcdCoreWf` as an implementation-selection proxy.
+   The well-founded SPDE and headline Risch-DE runtimes now select `CPolyGcd` and `CPolySplitFactor`
+   directly, and the structural/raw-soundness stack carries those capabilities instead of the concrete
+   fraction-free gcd core. The one-level integration assembly likewise selects squarefree decomposition,
+   gcd, splitting, and resultant capabilities independently; `CFracGcdCoreWf` remains only where the dense
+   tower implementation or its implementation-specific correctness frontier is genuinely required.
+   The reduced-integrator composition is now capability-specific as well: Hermite reduction requests
+   `CPolySquarefree`, residue construction requests `CPolyResultant`, log arguments request `CPolyGcd`, and
+   `cIntegrateCase` composes those with `CPolySplitFactor`. The primitive and guarded-primitive hooks no longer
+   carry a gcd-selection proxy; the hyperexponential hook retains it at the concrete correction boundary. The
+   generic reconstruction field-identity helper is private after a direct-dependent
+   audit showed that only `canonicalReconstruction` consumes it.
    The rational RREF implementation, its `CLinearSolve ℚ` instance, and the corresponding lawful proof
    now live in `ComputableAlgebra/LinearAlgebraRat*.lean`; SymbolicIntegration imports the selected
    linear-solver capability instead of owning the concrete executable solver or its correctness stack.

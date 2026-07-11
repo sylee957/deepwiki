@@ -39,7 +39,8 @@ theorem cPolyRischDEG_eq_noCancel_of_primitive [CRischField α] (Dt : DensePoly 
 
 /-- From a bare `cRischDE` success in the primitive regime, the normal-denominator, SPDE, and
 non-cancellation stage results all hold. -/
-theorem cRischDEG_some_imp_noCancel_of_primitive [CFracGcdCoreWf α] [CRischField α] (Dt : DensePoly α)
+theorem cRischDEG_some_imp_noCancel_of_primitive [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CRischField α] (Dt : DensePoly α)
     (fnum fden gnum gden ynum yden : DensePoly α) (hδ : cdeg Dt = 0)
     (hsucc : cRischDE Dt fnum fden gnum gden = some (ynum, yden)) :
     ∃ (a0 b0 c0 h0 bbar cbar : DensePoly α) (m : ℤ) (α' β v : DensePoly α),
@@ -91,9 +92,10 @@ end WfCleared
 
 section WfSPDECleared
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α]
 
-/-- `cSPDEGClearedGenWf`: the per-level certificate for `cSPDE`, with `g = cgcdFFCoreWf a b` and
+/-- `cSPDEGClearedGenWf`: the per-level certificate for `cSPDE`, with `g = CPolyGcd.compute a b` and
 divided coefficients via `CPolyEuclidean.div`. -/
 def cSPDEGClearedGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
   if n < 0 then True
@@ -283,7 +285,8 @@ end WfSPDECleared
 
 section WfNormalDenominator
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
 
 /-- Writing `dₙ = (CPoly.splitFactor Dt fden).1`, if `cRdeNormalDenominator … = some (a, b, c, h)`,
 the clearings are exact, and `Q` solves `a·D(Q) + b·Q = c`, then `Q` solves the cleared
@@ -338,7 +341,8 @@ end WfNormalDenominator
 
 section WfCapstone
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α]
 
 /-- Lift under the transparent input predicate directly, composing `cSPDEG_cleared_lifting_gen` with
 `cSPDEGClearedGenWf_of_inputs`. -/
@@ -381,7 +385,7 @@ theorem cSPDEG_polyRischDENoCancel_cleared_at_boundDegree (Dt : DensePoly α) (a
 /-- In the primitive regime, from the normal-denominator output, its divisibility certificates, the
 SPDE output under `CSPDEGClearedInputsGenWf`, and the poly-RDE identity `D(v) + bbar·v = cbar`, the
 reconstruction `ynum = (α'·v + β)·[1]`, `yden = h0` satisfies the cleared Risch-DE identity. -/
-theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : DensePoly α)
+theorem rdeClearedIdentityWf_of_polyRDEIdentity [CPolySplitFactor DensePoly α] (Dt : DensePoly α)
     (fnum fden gnum gden a0 b0 c0 h0 : DensePoly α)
     (bbar cbar : DensePoly α) (m : ℤ) (α' β v : DensePoly α)
     (hprim : cdeg (cSpecialPoly Dt) = 0)
@@ -432,7 +436,8 @@ end WfCapstone
 
 section WfResidual
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
   [CRischField α]
 
 /-- `RischDEStructuralResidualWf`: the residual hypotheses of `rdeClearedIdentityWf_of_polyRDEIdentity`
@@ -503,7 +508,8 @@ end WfResidual
 
 section WfFieldHeadline
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
   [CRischField α] [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The RDE oracle's field-level soundness in the primitive regime, from bare `cRischDE` success

@@ -16,12 +16,14 @@ open DensePoly CFrac
 section RawSolveField
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
-  [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+  [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
-omit [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFracGcdCoreWf β] [CRischField β]
+omit [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CPolyGcd DensePoly β]
+  [CPolySplitFactor DensePoly β] [CRischField β]
   [Algebra ℚ (CFieldSpec.K β)] in
 /-- `cdeg [CCommRing.one] = 0` over a `CFieldDomain`: the constant `[1]` has degree `0` (primitive regime). -/
-theorem cdegG_one_eq_zero_wf : cdeg ([CCommRing.one] : DensePoly β) = 0 := by
+private theorem cdegG_one_eq_zero_wf : cdeg ([CCommRing.one] : DensePoly β) = 0 := by
   have hnz : DensePoly.cisZero ([CCommRing.one] : DensePoly β) = false := by
     simpa only [CPolyEngine.one_dense_eq, CPolyEngine.cisZero_dense_eq] using
       (CFieldDomain.nz_one (α := β) (P := DensePoly))

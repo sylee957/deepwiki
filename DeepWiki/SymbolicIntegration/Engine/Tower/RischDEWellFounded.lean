@@ -9,7 +9,7 @@ The generic Risch-DE pipeline, by well-founded recursion: the recursive bottoms
 `cPolyRischDECancelPrim` (primitive cancellation), `cPolyRischDECancelExp` (hyperexponential
 cancellation), and `cValuation` (the `p`-adic valuation), plus a flat composition over them for the
 weak normalizer, normal/special denominators, degree bound, and the headline `cRischDE`. `[CField α]`-only
-on the runtime fragment (plus `[CDiffField α]`/`[CFracGcdCoreWf α]`/`[CRischField α]` where needed), so it
+on the runtime fragment (plus selected gcd/split capabilities, `[CDiffField α]`, and `[CRischField α]` where needed), so it
 `native_decide`s over the noncomputable tower. -/
 
 open Polynomial
@@ -413,7 +413,8 @@ level-`n+1` call recurses into the level-`n` `crischDESolve`. -/
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CPolyGcd DensePoly α]
+  [CPolySplitFactor DensePoly α] [CRischField α]
 
 /-- The generic Risch differential equation solver `cRischDE Dt fnum fden gnum gden`. For
 `f = fnum/fden`, `g = gnum/gden ∈ α(t)` and the monomial derivation `D = CPolyEngine.monomialDeriv Dt`, returns
@@ -421,7 +422,8 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischFie
 (`cRdeNormalDenominator`) → special denominator (`cRdeSpecialDenominator`) → degree bound
 (`cRdeBoundDegree`) → SPDE (`cSPDE`) → PolyRischDE dispatch (`cPolyRischDE`), with the polynomial
 unknown `Q = α'·v + β` reassembled to `y = Q·h₁ / h₀`. The cancellation cases recurse into
-`CRischField.crischDESolve` over `α`. `[CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]`-generic;
+`CRischField.crischDESolve` over `α`; gcd and differential splitting are selected through
+`CPolyGcd` and `CPolySplitFactor`.
 `f` is assumed weakly normalized. -/
 def cRischDE (Dt : DensePoly α) (fnum fden gnum gden : DensePoly α) :
     Option (DensePoly α × DensePoly α) :=

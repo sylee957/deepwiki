@@ -23,7 +23,7 @@ terms, solve the inner RDE via `cRischDE`, and transform back by `y = ỹ/q'`. -
 section Solver
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly]
-  [CFracGcdCoreWf β] [CRischField β]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CRischField β]
 
 /-- `crischDERawSolveWf ftilde gtilde`: run `cRischDE [1]` on the num/den components, re-lifting
 the returned `(ynum, yden)` to `DenseFrac β` under a `cisZero` denominator guard. -/
@@ -76,7 +76,7 @@ solver without unfolding it. -/
 section Reductions
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
-  [CFieldDomain β DensePoly] [CFracGcdCoreWf β]
+  [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
   [CRischField β]
 
 omit [CFieldSpec β] in
@@ -141,7 +141,8 @@ end Reductions
 section Capstone
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
-  [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+  [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- `RischDESoundnessWf f g`: every successful `crischDESolveSoundWf` run satisfies the field-level Risch-DE identity. -/
 structure RischDESoundnessWf (f g : DenseFrac β) : Prop where
@@ -168,7 +169,8 @@ theorem crischDESolveSoundWf_field (f g y : DenseFrac β)
 /-! ### Restatement example -/
 
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
-    [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+    [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+    [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : DenseFrac β) (hsolve : crischDESolveSoundWf f g = some y)
     (hsound : RischDESoundnessWf f g) :
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly β)

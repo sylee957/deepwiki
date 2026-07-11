@@ -27,7 +27,8 @@ namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
-variable [CFracGcdCoreWf α]
+variable [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+  [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
 
 /-- The generic one-level Risch integrator, parameterized by a monomial case `C`: canonical-split, run the
 case's special-part hook, correct the reduced normal part, and combine. -/
@@ -48,11 +49,11 @@ open CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+  [CPolySplitFactor DensePoly α] [Algebra ℚ (CFieldSpec.K α)]
 
 /-- From `a = q·d + r`, `d = dₛ·dₙ`, and `b·dₙ + c·dₛ = r`, the pieces recombine:
 `q + b/dₛ + c/dₙ = a/d`. -/
-theorem canonicalRepFast_field_identity {K : Type*} [Field K] (a d q r dn ds b c : K[X])
+private theorem canonicalRepFast_field_identity {K : Type*} [Field K] (a d q r dn ds b c : K[X])
     (hd : d ≠ 0) (hdn : dn ≠ 0) (hds : ds ≠ 0)
     (hadiv : a = q * d + r) (hsplit : d = ds * dn) (hbcr : b * dn + c * ds = r) :
     (algebraMap K[X] (RatFunc K) q)
@@ -81,7 +82,8 @@ abbrev crNormNum (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentat
 /-- Normal-part denominator `dₙ` of the canonical split. -/
 abbrev crNormDen (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentationFast Dt a d).2.2.2
 /-- The reduced integral of the normal part `cₙ/dₙ`. -/
-abbrev redNorm (Dt a d : DensePoly α) (cands : List α) : IntegralResult α :=
+abbrev redNorm [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (Dt a d : DensePoly α) (cands : List α) : IntegralResult α :=
   cIntegrateReduced Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
 
 omit [CDiffFieldSpec α] [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -121,7 +123,9 @@ theorem canonicalReconstruction (Dt a d : DensePoly α)
 
 omit [CRischField α] in
 /-- Generic soundness of `cIntegrateCase` from special-part, normal-part, and reconstruction hypotheses. -/
-theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : DensePoly α) (cands : List α)
+theorem cIntegrateCase_sound [CPolyGcd DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
+    (C : MonomialCase α) (Dt a d : DensePoly α) (cands : List α)
     (res : IntegralResult α) (snum sden : DensePoly α) (nrm : IntegralResult α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPoly sden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)

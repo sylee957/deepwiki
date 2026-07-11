@@ -327,7 +327,9 @@ def canonicalRepresentationFast (Dt : DensePoly α) (a d : DensePoly α) :
 
 end CanonicalRepresentation
 
-variable [CFracGcdCoreWf α] [CPolyResultant DensePoly]
+section HermiteReduction
+
+variable [CPolySquarefree DensePoly α]
 
 /-- Generic transcendental Hermite reduction `cHermiteReduceTower Dt a d = ((gnum, gden),
 (h_num, h_den))` over the tower: squarefree-factor `d` with `CPoly.squarefreeYun`; for each factor `(v, i)` of
@@ -353,6 +355,8 @@ def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
   let resDen := cmul d gden2
   let hNum := CPolyEuclidean.div (cmul resNum Dstar) resDen
   ((cnorm g.1, cnorm g.2), (cnorm hNum, cnorm Dstar))
+
+end HermiteReduction
 
 /-! ### The generic logarithmic part (Rothstein–Trager)
 
@@ -393,21 +397,24 @@ example :
         CPoly.SparsePoly.ofList [(0, 1), (1, 0), (2, -4)] := by
   native_decide
 
-/-- Generic log argument `cLogArgTower Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`: the
-fraction-free gcd `cgcdFFCoreWf` of `d` and `a − c·Dd`. -/
-def cLogArgTower (Dt : DensePoly α) (a d : DensePoly α) (c : α) : DensePoly α :=
+/-- Generic log argument `cLogArgTower Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`,
+using the selected `CPolyGcd` implementation. -/
+def cLogArgTower [CPolyGcd DensePoly α]
+    (Dt : DensePoly α) (a d : DensePoly α) (c : α) : DensePoly α :=
   CPolyGcd.compute d (cAmcDd Dt a d c)
 
 /-- Generic rational/field residues `cRationalResidues Dt a d cands`: keep the candidates
 `c ∈ cands : List α` that are roots of the residue resultant `R(z) = cResidueResultantTower Dt a d`,
 i.e. `R(c) = 0` (tested by `CCommRing.isZero (ceval R c)`). -/
-def cRationalResidues (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) : List α :=
+def cRationalResidues [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) : List α :=
   let R := cResidueResultantTower Dt a d
   cands.filter (fun c => CCommRing.isZero (ceval R c))
 
 /-- Generic logarithmic part `cLogPart Dt a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈ residues]`: pair
 each residue `c : α` (from `cRationalResidues`) with its log argument `cLogArgTower Dt a d c`. -/
-def cLogPart (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) : List (α × DensePoly α) :=
+def cLogPart [CPolyGcd DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) : List (α × DensePoly α) :=
   (cRationalResidues Dt a d cands).map (fun c => (c, cLogArgTower Dt a d c))
 
 /-- The generic reduced-case integration capstone `cIntegrateReduced Dt a d cands`: for `f = a/d`
@@ -415,7 +422,8 @@ reduced/normal, `∫ f = g + ∑ c·log(v)`. Hermite-reduce (`cHermiteReduceTowe
 `g = gnum/gden` and the simple residual `h = h_num/h_den`, then take the residue log part of `h`
 (`cLogPart`, residues drawn from `cands : List α`). Returns the `IntegralResult` `⟨(gnum, gden),
 [(c, v)]⟩`. -/
-def cIntegrateReduced (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) :
+def cIntegrateReduced [CPolySquarefree DensePoly α] [CPolyGcd DensePoly α]
+    [CPolyResultant DensePoly] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) :
     IntegralResult α :=
   let H := cHermiteReduceTower Dt a d
   let logs := cLogPart Dt H.2.1 H.2.2 cands
@@ -520,14 +528,14 @@ end DensePoly
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CDiffField α] [CPolyGcd DensePoly α]
 
 /-- Generic SPDE `cSPDE Dt a b c n`: the `g = gcd(a, b)`-peel reducing the degree-bounded
 `a·Dq + b·q = c` to one with `a = 1`. Returns `none` or `some (b̄, c̄, m, α', β)` so any solution is
-`q = α'·h + β` with `h` solving `Dh + b̄·h = c̄`, `deg(h) ≤ m`. Peels `g = cgcdFFCoreWf a b`; the constant
+`q = α'·h + β` with `h` solving `Dh + b̄·h = c̄`, `deg(h) ≤ m`. Peels `g = CPolyGcd.compute a b`; the constant
 `a/g` base case returns the identity reconstruction, else solves the Bézout `CPoly.diophantineReduced b̄ ā c̄` and
-recurses on `ā = a/g` at `n − deg(ā)`. Well-founded on `(n+1).toNat`. `[CField α] [CDiffField α]
-[CFracGcdCoreWf α]`-generic. -/
+recurses on `ā = a/g` at `n − deg(ā)`. Well-founded on `(n+1).toNat`; gcd selection is supplied by
+`CPolyGcd DensePoly α`. -/
 def cSPDE (Dt : DensePoly α) (a b c : DensePoly α) (n : ℤ) :
     Option (DensePoly α × DensePoly α × ℤ × DensePoly α × DensePoly α) :=
   if n < 0 then

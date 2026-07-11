@@ -13,8 +13,6 @@ namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α]
 
-variable [CFracGcdCoreWf α]
-
 variable [CRischField α]
 
 /-- Primitive monomial case (`Dt ∈ α`): the special part is empty (`b = 0` required), the polynomial part
@@ -27,6 +25,8 @@ def primitiveCase : MonomialCase α where
       | some qp => some (qp, [CCommRing.one])
     else none
   reducedCorrect _Dt nrm := some nrm
+
+variable [CFracGcdCoreWf α]
 
 /-- Hyperexponential monomial case (`Dt = η·t`): the special/Laurent part is integrated by
 `cIntegrateHyperexpLaurent`; the reduced correction subtracts `∫R` (the residual `η·∑ᵢ cᵢ`). -/
