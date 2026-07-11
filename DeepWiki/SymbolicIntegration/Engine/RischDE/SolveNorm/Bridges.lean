@@ -16,7 +16,7 @@ universe u v
 section Generic
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
-variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec.{u,v} β]
   [CFieldDomain β P] [Algebra ℚ (CFieldSpec.K β)]
 

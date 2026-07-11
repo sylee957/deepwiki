@@ -24,7 +24,7 @@ normalizes `c₀ = 1`, and recovers `b` by antidifferentiating the cleared polyn
 def limitedIntegrateSingleBase
     {F : (α : Type) → [CField α] → Type} {P : Type → Type}
     [CPoly P] [CPolyEngine P] [CPolyGcd P ℚ] [CPolyEuclidean P]
-    [CFrac F P] [CFieldDomain ℚ P] [CLinearSolve ℚ]
+    [CFrac F P] [LawfulCFrac F P] [CFieldDomain ℚ P] [CLinearSolve ℚ]
     (a η : F ℚ) : Option (F ℚ × ℚ) :=
   let gnums := [CFrac.num a, CFrac.num η]
   let gdens := [CFrac.den a, CFrac.den η]

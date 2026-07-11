@@ -16,7 +16,7 @@ namespace CFrac
 
 /-- The fuel-free wrapper canonical-normality check on the reduced denominator. -/
 def canonNormalizedGate {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [CPolyEuclidean P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P]
     {β : Type u} [CField β] [CPolyGcd P β] [CDiffField β] [CPolySplitFactor P β]
     (ftilde : F β) : Bool :=
   CPolyEngine.cisZero (CPolyEngine.sub
@@ -38,7 +38,7 @@ section Bridge
 
 variable {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
 variable [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
-  [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+  [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
 variable {β : Type u} [CField β] [CPolyGcd P β] [LawfulCPolyGcd.{u,v} P β]
   [CFieldSpec.{u,v} β] [CDiffField β] [CPolySplitFactor P β]
 
@@ -59,7 +59,7 @@ section NormalityWf
 
 variable {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
 variable [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
-  [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P]
+  [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
 variable {β : Type u} [CField β] [CPolyGcd P β] [LawfulCPolyGcd.{u,v} P β]
   [CFieldSpec.{u,v} β] [CDiffField β] [CFieldDomain β P] [CPolySplitFactor P β]
 

@@ -37,7 +37,7 @@ constant-in-`y` term `z·D'(x)` (`CFrac.ofPoly [z] · Dder`, a singleton `DenseP
 `≤ deg_y F = n`. `Dder = D'(x) ∈ K(x)` is supplied by the caller. -/
 def zDderMinus
     {F : (α : Type) → [CField α] → Type} {X Y : Type → Type}
-    [CPoly X] [CPolyEngine X] [CFrac F X] [CFieldDomain ℚ X]
+    [CPoly X] [CPolyEngine X] [CFrac F X] [LawfulCFrac F X] [CFieldDomain ℚ X]
     [CPoly Y] [CPolyEngine Y]
     (g : Y (F ℚ)) (Dder : F ℚ) (z : ℚ) : Y (F ℚ) :=
   CPolyEngine.sub
@@ -61,7 +61,7 @@ read as a `ℚ[X]`-polynomial: the resultant in `y` over the field `α = DenseFr
 def resYAtNode
     {F : (α : Type) → [CField α] → Type} {X Y : Type → Type}
     [CPoly X] [CPolyEngine X] [CPolyEuclidean X]
-    [CFrac F X] [CFieldDomain ℚ X]
+    [CFrac F X] [LawfulCFrac F X] [CFieldDomain ℚ X]
     [CPoly Y] [CPolyEngine Y] [CPolyResultant Y]
     (f g : Y (F ℚ)) (Dder : F ℚ) (z : ℚ) : X ℚ :=
   CFrac.polynomialQuotient (CPolyResultant.compute (zDderMinus g Dder z) f)
@@ -85,7 +85,7 @@ and interpolation representations. -/
 def genResidueResultantWith
     {F : (α : Type) → [CField α] → Type} {X Y Q : Type → Type}
     [CPoly X] [CPolyEngine X] [CPolyEuclidean X] [CPolyResultant X]
-    [CFrac F X] [CFieldDomain ℚ X]
+    [CFrac F X] [LawfulCFrac F X] [CFieldDomain ℚ X]
     [CPoly Y] [CPolyEngine Y] [CPolyResultant Y]
     [CPoly Q] [CPolyEngine Q] [CPolyInterpolate Q]
     (f g : Y (F ℚ)) (Dder : F ℚ) (D : X ℚ) : Q ℚ :=

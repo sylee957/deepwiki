@@ -485,7 +485,7 @@ namespace CFrac
 
 /-- Test whether a represented fraction denominator equals its selected differential normal part. -/
 def denomNormalGate {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
-    [CPoly P] [CPolyEngine P] [CPolyEuclidean P] [CFrac F P]
+    [CPoly P] [CPolyEngine P] [CPolyEuclidean P] [CFrac F P] [LawfulCFrac F P]
     {β : Type u} [CField β] [CPolyGcd P β] [CDiffField β] [CPolySplitFactor P β]
     (a : F β) : Bool :=
   CPolyEngine.cisZero (CPolyEngine.sub
