@@ -52,18 +52,6 @@ def towerDerivCFrac {α : Type u} [CField α] [CDiffField α] [CFieldDomain α D
     CFrac.den (towerDerivCFracWith Dt x) = CPolyEngine.mul (CFrac.den x) (CFrac.den x) := by
   simp [towerDerivCFracWith]
 
-/-- The numerator of `towerDerivCFrac Dt x` is `D n · d − n · D d` (with `D = CPolyEngine.monomialDeriv Dt`). -/
-theorem towerDerivCFracG_num {α : Type u} [CField α] [CDiffField α] [CFieldDomain α DensePoly]
-    (Dt : DensePoly α) (x : DenseFrac α) :
-    (towerDerivCFrac Dt x).num
-      = DensePoly.csub (DensePoly.cmul (CPolyEngine.monomialDeriv Dt x.num) x.den)
-          (DensePoly.cmul x.num (CPolyEngine.monomialDeriv Dt x.den)) := rfl
-
-/-- The denominator of `towerDerivCFrac Dt x` is `d·d`. -/
-theorem towerDerivCFracG_den {α : Type u} [CField α] [CDiffField α] [CFieldDomain α DensePoly]
-    (Dt : DensePoly α) (x : DenseFrac α) :
-    (towerDerivCFrac Dt x).den = DensePoly.cmul x.den x.den := rfl
-
 end CFrac
 
 /-! ### The iterating instance `CDiffField (DenseFrac α)` -/

@@ -21,7 +21,8 @@ variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β DensePoly] [C
 instance instCRischFieldCFrac : CRischField (DenseFrac β) where
   crischDESolve f g :=
     if CFrac.denomNormalGate f then
-      match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
+      match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) (CFrac.num f) (CFrac.den f)
+          (CFrac.num g) (CFrac.den g) with
       | none => none
       | some (ynum, yden) =>
         if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
@@ -32,13 +33,15 @@ then `crischDESolve f g` is the bare `cRischDE [1]`-then-`cisZero`-guard match. 
 theorem crischDESolveWf_eq_solve_of_normal (f g : DenseFrac β)
     (hgate : CFrac.denomNormalGate f = true) :
     CRischField.crischDESolve f g
-      = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
+      = (match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) (CFrac.num f) (CFrac.den f)
+          (CFrac.num g) (CFrac.den g) with
          | none => none
          | some (ynum, yden) =>
            if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none) := by
   rw [show CRischField.crischDESolve f g
       = (if CFrac.denomNormalGate f then
-           match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
+           match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) (CFrac.num f) (CFrac.den f)
+               (CFrac.num g) (CFrac.den g) with
            | none => none
            | some (ynum, yden) =>
              if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
@@ -52,7 +55,8 @@ theorem denomNormalGate_of_crischDESolve_isSome (f g y : DenseFrac β)
   · exact hgate
   · rw [show CRischField.crischDESolve f g
         = (if CFrac.denomNormalGate f then
-             match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) f.num f.den g.num g.den with
+             match DensePoly.cRischDE ([CCommRing.one] : DensePoly β) (CFrac.num f) (CFrac.den f)
+                 (CFrac.num g) (CFrac.den g) with
              | none => none
              | some (ynum, yden) =>
                if h : DensePoly.cisZero yden = false then some (CFrac.ofFraction ynum yden h) else none
