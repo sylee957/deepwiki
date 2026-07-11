@@ -81,7 +81,9 @@ special part via the case hook `C.integrateSpecial` (rational, shared with the r
 normal part via the root-free `cIntegrateReducedLrt` → combined with `combineSNLrt`. The LRT analogue of
 `cIntegrateCase` (no candidate sweep, no `reducedCorrect` post-processing: the primitive LRT reduced
 integrator is direct). -/
-def cIntegrateCaseLrt [CFracGcdCoreWf α] (C : MonomialCase α) (Dt a d : DensePoly α) :
+def cIntegrateCaseLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : MonomialCase α) (Dt a d : DensePoly α) :
     Option (LrtResult α) :=
   -- **Primitive-case runtime guard** (`Dθ ∈ k`, i.e. `deg Dt = 0`): the LRT reduced integrator is
   -- primitive-specific, so a successful run *decides* `deg Dt = 0` — discharging `hDt0` from the branch
