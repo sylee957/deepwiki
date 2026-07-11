@@ -124,5 +124,5 @@ The reduced part (root-free LRT) and Hermite are **kind-generic** — reused ver
 `LiouvilleFrontier` are superseded by the LRT path but **deeply entangled** — 11 consumer files, and the
 rational `LiouvilleFrontier` is load-bearing for the **algebraic-function completeness**
 (`Algebraic/AlgebraicCompleteness`, `AlgebraicHermiteCompleteness`), plus `RischTowerPrimitive` holds the shared
-`primitiveGuardedCase_specialSound`. Full retirement = porting the completeness arc (rational + algebraic) onto
+canonical reconstruction bridge used by the LRT tower. Full retirement = porting the completeness arc (rational + algebraic) onto
 the LRT genuine notions, then deleting the rational classes — a large multi-session port, not a deletion.

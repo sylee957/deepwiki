@@ -12,8 +12,11 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - Leaf operation/law splits exist for fractions, gcd, Euclidean division, resultants, interpolation,
   squarefree decomposition, and subresultants, with dense and sparse lawful realizers. The squarefree and
   subresultant specifications and lawful contracts live in `ComputableAlgebra`; the engine consumes them as leaves.
-- `Assemble.lean` now proves `combineSN_isIntegralResultP` once for every lawful polynomial
-  representation. Its former dense-only wrapper and unchecked executable example have been retired.
+- `CMonomialCase.integrateSpecial` returns a full `IntegralResult`, so special stages can contribute both
+  rational and logarithmic terms. `combineIntegralResults_isIntegralResultP` is the single
+  representation-neutral recombination square; the obsolete pair-only theorem, former dense-only wrapper,
+  and unchecked executable example have been retired. The root-free LRT path deliberately retains the separate
+  rational-only `CLrtMonomialCase` interface.
 - `CMonomialCase P` is now the representation-parameterized, Prop-free operation interface used by
   dense and recursive realizers; `LawfulCMonomialCase` separates its soundness, denominator preservation,
   and normal-postprocessing laws, while `CompleteCMonomialCase` records relative completeness separately.
@@ -134,10 +137,11 @@ monomial stage contracts.
    sparse representation boundary. Both canonical compositions certificate-check every reassembled special
    fraction and are sound without solver or bridge laws; the former unchecked duplicate APIs have been retired.
    Their explicit checked-acceptance domains now compose the polynomial, normal, and tangent contracts into
-   dense and sparse `CompleteCRischLevel` instances. This is executable relative completeness only. Full semantic
-   tangent completeness still needs the concrete recursive integrator and a special-stage result shape that can
-   represent the constant multiple of `log(t²+1)` produced by hypertangent polynomial reduction; the LRT primitive
-   path should retain its separate rational-only special interface.
+   dense and sparse `CompleteCRischLevel` instances. This is executable relative completeness only. The generic
+   monomial special stage now returns a full `IntegralResult`, so it can represent the constant multiple of
+   `log(t²+1)` produced by hypertangent polynomial reduction; the LRT primitive path retains its separate
+   rational-only `CLrtMonomialCase`. Full semantic tangent completeness still needs the concrete recursive
+   integrator.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

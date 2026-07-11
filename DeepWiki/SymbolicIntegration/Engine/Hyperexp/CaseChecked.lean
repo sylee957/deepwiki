@@ -24,7 +24,7 @@ def hyperexpCheckedCase : CMonomialCase DensePoly α where
       let inputNum := CPolyEngine.add (CPolyEngine.mul fp ds) b
       let result : IntegralResult α := ⟨out, []⟩
       if ((!CPolyEngine.cisZero ds && !CPolyEngine.cisZero out.2) &&
-          CPoly.checkIdentity Dt result inputNum ds) then some out else none
+          CPoly.checkIdentity Dt result inputNum ds) then some result else none
   postprocessNormal _Dt nrm := some nrm
 
 end DensePoly
@@ -35,15 +35,16 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- The checked hyperexponential hook satisfies the sound monomial-case contract. -/
 instance instLawfulCMonomialCaseHyperexpChecked :
     LawfulCMonomialCase (DensePoly.hyperexpCheckedCase (α := α)) where
-  special_sound Dt fp b ds snum sden hrun := by
+  special_sound Dt fp b ds res hrun := by
     simp only [DensePoly.hyperexpCheckedCase] at hrun
     split at hrun
     · contradiction
     · rename_i out hlaurent
       split at hrun
       · rename_i hguard
-        have hout : out = (snum, sden) := Option.some.inj hrun
-        subst out
+        have hout : ({ rational := out, logs := [] } : IntegralResult α) = res :=
+          Option.some.inj hrun
+        subst res
         rw [Bool.and_eq_true, Bool.and_eq_true] at hguard
         obtain ⟨⟨hdsBool, hsdenBool⟩, hcheck⟩ := hguard
         have hds : CPoly.toPoly ds ≠ 0 := by
@@ -53,16 +54,16 @@ instance instLawfulCMonomialCaseHyperexpChecked :
           have hfalse : DensePoly.cisZero ds = false := by simpa using hdsBool
           rw [hzero] at hfalse
           contradiction
-        have hsden : CPoly.toPoly sden ≠ 0 := by
+        have hsden : CPoly.toPoly out.2 ≠ 0 := by
           intro hz
           rw [toPoly_list_eq] at hz
-          have hzero := (DensePoly.cisZeroG_iff sden).mpr hz
-          have hfalse : DensePoly.cisZero sden = false := by simpa using hsdenBool
+          have hzero := (DensePoly.cisZeroG_iff out.2).mpr hz
+          have hfalse : DensePoly.cisZero out.2 = false := by simpa using hsdenBool
           rw [hzero] at hfalse
           contradiction
         refine ⟨hsden, ?_⟩
         let inputNum := CPolyEngine.add (CPolyEngine.mul fp ds) b
-        let result : IntegralResult α := ⟨(snum, sden), []⟩
+        let result : IntegralResult α := ⟨out, []⟩
         have hid := field_identity_of_checkIdentityP Dt result inputNum ds hsden hds
           (by simp [result]) hcheck
         have htarget : fieldFracP inputNum ds =
@@ -71,6 +72,8 @@ instance instLawfulCMonomialCaseHyperexpChecked :
             LawfulCPolyEngine.toPoly_mul, CPoly.toPoly_one, map_add, map_mul, map_one]
           have hAds : am α (CPoly.toPoly ds) ≠ 0 := am_ne_zero hds
           field_simp
+        change towerFractionFieldDerivP Dt (fieldFracP out.1 out.2) +
+          logResidueSumP Dt [] = fieldFracP fp CPoly.one + fieldFracP b ds
         simpa only [result, logResidueSumP, List.map_nil, List.sum_nil, add_zero] using
           hid.trans htarget
       · contradiction

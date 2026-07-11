@@ -11,13 +11,13 @@ The re-based analogue of `LawfulRischLevel`: same `X`/`LawfulX` idiom, but the a
 `cIntegrateCaseLrt`. The payoff is that its reduced-part frontier is the **dischargeable** `PrimitiveFrontierLrt`
 (closed to `LrtReducedGenuineData` by `hreducedLrt_of_genuineAll`) rather than the rational `PrimitiveFrontier`,
 which is *not* universally dischargeable — the rational reduced soundness `IsIntegralResult` forces the reduced
-denominator to split over `K`, false when the residues are algebraic. The special/polynomial part is unchanged
-(`specialSound`, a `K`-level identity, shared verbatim with the rational solver).
+denominator to split over `K`, false when the residues are algebraic. The special/polynomial part is
+discharged compositionally from the selected `LawfulCLrtMonomialCase`.
 
 Materialize one `CRischLevelLrt` operation and its `LawfulCRischLevelLrt` contract; the assembled integrator
 and soundness theorem then compose them directly. The base is `instCRischLevelLrtPrimitive` (from
-`[PrimitiveFrontierLrt α]`, reusing
-`primitiveGuardedCase_specialSound` — no coefficient recursion at the base); the tower step (the recursion into
+`[PrimitiveFrontierLrt α]`, using `lrtMonomialCase_specialSound` — no coefficient recursion at the base);
+the tower step (the recursion into
 the coefficient field) is built in `RischSolverTowerLrt.lean`. See `docs/recursive-lrt-typeclass.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
@@ -402,9 +402,8 @@ theorem not_isElementaryIntegrable_reduced [CFracGcdCoreWf α]
 end CRischLevelLrt
 
 /-- **The primitive LRT base instance — assembled from `PrimitiveFrontierLrt` by resolution.** Materialize one
-`PrimitiveFrontierLrt α` and the whole LRT solver resolves. The `case` is `primitiveGuardedCase`, so
-`specialSound` is the proven `primitiveGuardedCase_specialSound` (the `Dθ = 1` special identity + the
-`canonicalReconstruction_of_charZero`, `b = 0` special term vanishing); `reducedSoundLrt` is the frontier field
+`PrimitiveFrontierLrt α` and the whole LRT solver resolves. The `case` is `primitiveGuardedLrtCase`, whose
+lawful contract composes with `canonicalReconstruction_of_charZero`; `reducedSoundLrt` is the frontier field
 `PrimitiveFrontierLrt.hreducedLrt`. No coefficient recursion — the primitive base has constant-coefficient
 special parts. -/
 instance instCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly α]
@@ -412,7 +411,7 @@ instance instCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly α]
     [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
     [PrimitiveFrontierLrt α] :
     CRischLevelLrt α where
-  case := { integrateSpecial := primitiveGuardedCase.integrateSpecial }
+  case := primitiveGuardedLrtCase
 
 /-- The primitive LRT operation satisfies its algebraic-residue soundness contract. -/
 instance instLawfulCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly α]
@@ -421,7 +420,7 @@ instance instLawfulCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly 
     [PrimitiveFrontierLrt α] :
     LawfulCRischLevelLrt (inferInstance : CRischLevelLrt α) where
   specialSound := fun Dt a d snum sden hd0 hhook =>
-    primitiveGuardedCase_specialSound Dt a d snum sden hd0 hhook
+    lrtMonomialCase_specialSound primitiveGuardedLrtCase Dt a d snum sden hd0 hhook
   reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
   reducedDenNonzero := fun Dt a d hd0 hDt0 =>
     PrimitiveFrontierLrt.hreducedDenNonzero Dt a d hd0 hDt0

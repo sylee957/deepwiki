@@ -56,10 +56,11 @@ def assembleOneLevel (R : CPolynomialReduction P α) (kind : PolynomialReduction
     (Dt a d : P α) : Option (IntegralResult α P) := do
   let split := canonicalResult Dt a d
   let reduced ← R.reduce kind Dt fuel split.polynomial
-  let (snum, sden) ← C.integrateSpecial Dt reduced.remainder split.specialNum split.specialDen
+  let special ← C.integrateSpecial Dt reduced.remainder split.specialNum split.specialDen
   let before ← N.reduce Dt split.normalNum split.normalDen
   let normal ← C.postprocessNormal Dt before
-  pure (combineSN (polynomialSpecialNumerator reduced.antiderivative snum sden) sden normal)
+  let polynomialSpecial := combineSN reduced.antiderivative CPoly.one special
+  pure (combineIntegralResults polynomialSpecial normal)
 
 /-- Explicit stage-decomposed hypotheses under which contract-based one-level assembly is complete. -/
 structure OneLevelAssemblyWitness (R : CPolynomialReduction P α)
@@ -80,9 +81,10 @@ structure OneLevelAssemblyWitness (R : CPolynomialReduction P α)
   /-- Every reduction selected by the executable stage leaves a solvable monomial special part. -/
   special_antiderivative : ∀ (fuel : ℕ) (reduced : PolynomialReductionResult P α),
     R.reduce kind Dt fuel (canonicalResult Dt a d).polynomial = some reduced →
-      ∃ (snum sden : P α),
-        CPoly.toPoly sden ≠ 0 ∧
-        towerFractionFieldDerivP Dt (fieldFracP snum sden) =
+      ∃ res : IntegralResult α P,
+        CPoly.toPoly res.rational.2 ≠ 0 ∧
+        towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
+            logResidueSumP Dt res.logs =
           fieldFracP reduced.remainder CPoly.one +
             fieldFracP (canonicalResult Dt a d).specialNum
               (canonicalResult Dt a d).specialDen
@@ -111,13 +113,12 @@ theorem assembleOneLevel_complete (R : CPolynomialReduction P α)
   obtain ⟨fuel, reduced, hreduce, _hnormal⟩ := CompleteCPolynomialReduction.relative_complete
     (C := R) kind Dt (canonicalResult Dt a d).polynomial
       hwitness.polynomial_domain hwitness.polynomial_reduction_exists
-  obtain ⟨snum, sden, hsden, hspecialSemantic⟩ :=
+  obtain ⟨specialWitness, hspecialDen, hspecialSemantic⟩ :=
     hwitness.special_antiderivative fuel reduced hreduce
   obtain ⟨special, hspecial⟩ := CompleteCMonomialCase.special_complete (C := C) Dt
     reduced.remainder (canonicalResult Dt a d).specialNum
-    (canonicalResult Dt a d).specialDen snum sden
-      (hwitness.special_domain fuel reduced hreduce) hsden hspecialSemantic
-  obtain ⟨snum', sden'⟩ := special
+    (canonicalResult Dt a d).specialDen specialWitness
+      (hwitness.special_domain fuel reduced hreduce) hspecialDen hspecialSemantic
   have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
   obtain ⟨before, hnormal, hbefore⟩ := CompleteCNormalReduction.relative_complete (N := N)
     Dt
@@ -125,8 +126,8 @@ theorem assembleOneLevel_complete (R : CPolynomialReduction P α)
     hwitness.normal_domain hnormalDen hwitness.normal_integrable
   obtain ⟨normal, hpost⟩ := CompleteCMonomialCase.postprocess_complete (C := C) specialDomain Dt
     (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before hbefore
-  refine ⟨fuel, combineSN (polynomialSpecialNumerator reduced.antiderivative snum' sden')
-    sden' normal, ?_⟩
+  refine ⟨fuel, combineIntegralResults
+    (combineSN reduced.antiderivative CPoly.one special) normal, ?_⟩
   simp only [assembleOneLevel, hreduce, hspecial, hnormal, hpost, Option.bind_eq_bind,
     Option.bind_some]
   rfl
@@ -152,7 +153,6 @@ theorem assembleOneLevel_sound (R : CPolynomialReduction P α)
         (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen with
     | none => simp [assembleOneLevel, hreduce, hspecial] at hrun
     | some special =>
-      obtain ⟨snum, sden⟩ := special
       cases hnormal : N.reduce Dt (canonicalResult Dt a d).normalNum
           (canonicalResult Dt a d).normalDen with
       | none => simp [assembleOneLevel, hreduce, hnormal] at hrun
@@ -160,24 +160,34 @@ theorem assembleOneLevel_sound (R : CPolynomialReduction P α)
         cases hpost : C.postprocessNormal Dt before with
         | none => simp [assembleOneLevel, hreduce, hnormal, hpost] at hrun
         | some normal =>
-          have hout : combineSN (polynomialSpecialNumerator reduced.antiderivative snum sden)
-              sden normal = out := by
+          have hout : combineIntegralResults
+              (combineSN reduced.antiderivative CPoly.one special) normal = out := by
             simpa [assembleOneLevel, hreduce, hspecial, hnormal, hpost] using hrun
           subst out
           have hred := LawfulCPolynomialReduction.sound (C := R) kind Dt fuel
             (canonicalResult Dt a d).polynomial reduced hreduce
           have hq := polynomialReduction_antiderivative_sound Dt
             (canonicalResult Dt a d).polynomial reduced.antiderivative reduced.remainder hred
-          obtain ⟨hsden, hspecialField⟩ := LawfulCMonomialCase.special_sound (C := C) Dt
+          obtain ⟨hspecialDen, hspecialField⟩ := LawfulCMonomialCase.special_sound (C := C) Dt
             reduced.remainder (canonicalResult Dt a d).specialNum
-            (canonicalResult Dt a d).specialDen snum sden hspecial
-          have hpolySpecial := fieldFracP_polynomialSpecialNumerator reduced.antiderivative snum sden hsden
+            (canonicalResult Dt a d).specialDen special hspecial
+          have hone : CPoly.toPoly (CPoly.one : P α) ≠ 0 := by
+            rw [CPoly.toPoly_one]
+            exact one_ne_zero
           have hspecialFull : towerFractionFieldDerivP Dt
-              (fieldFracP (polynomialSpecialNumerator reduced.antiderivative snum sden) sden) =
+              (fieldFracP (combineSN reduced.antiderivative CPoly.one special).rational.1
+                (combineSN reduced.antiderivative CPoly.one special).rational.2) +
+              logResidueSumP Dt (combineSN reduced.antiderivative CPoly.one special).logs =
               fieldFracP (canonicalResult Dt a d).polynomial CPoly.one +
                 fieldFracP (canonicalResult Dt a d).specialNum
                   (canonicalResult Dt a d).specialDen := by
-            rw [hpolySpecial, map_add, hq, hspecialField]
+            rw [combineSN_value Dt reduced.antiderivative CPoly.one special
+              (fieldFracP (canonicalResult Dt a d).polynomial CPoly.one -
+                fieldFracP reduced.remainder CPoly.one)
+              (fieldFracP reduced.remainder CPoly.one +
+                fieldFracP (canonicalResult Dt a d).specialNum
+                  (canonicalResult Dt a d).specialDen)
+              hone hspecialDen hq hspecialField]
             ring
           have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
           have hbefore := LawfulCNormalReduction.sound (N := N) Dt
@@ -191,13 +201,16 @@ theorem assembleOneLevel_sound (R : CPolynomialReduction P α)
           have hnormalResultDen := LawfulCMonomialCase.postprocessNormal_den_nonzero (C := C) Dt
             before normal hbeforeDen hpost
           have hcanonical := LawfulCCanonicalRepresentation.reconstruction Dt a d hd
-          refine combineSN_isIntegralResultP Dt a d (canonicalResult Dt a d).normalNum
-            (canonicalResult Dt a d).normalDen
-            (polynomialSpecialNumerator reduced.antiderivative snum sden) sden normal
+          refine combineIntegralResults_isIntegralResultP Dt a d
+            (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen
+            (combineSN reduced.antiderivative CPoly.one special) normal
             (fieldFracP (canonicalResult Dt a d).polynomial CPoly.one +
               fieldFracP (canonicalResult Dt a d).specialNum
                 (canonicalResult Dt a d).specialDen)
-            hsden hnormalResultDen hspecialFull hnormalResult ?_
+            ?_ hnormalResultDen hspecialFull hnormalResult ?_
+          · simp only [combineSN, combineRationalParts, LawfulCPolyEngine.toPoly_mul,
+              CPoly.toPoly_one]
+            exact mul_ne_zero one_ne_zero hspecialDen
           simpa only [add_assoc] using hcanonical
 
 end DeepWiki.SymbolicIntegration

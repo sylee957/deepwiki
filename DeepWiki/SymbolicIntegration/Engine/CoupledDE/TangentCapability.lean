@@ -50,16 +50,17 @@ structure CTangentSpecialIntegrator where
   /-- Integrate the polynomial and special-denominator parts, making as many coupled calls as required. -/
   integrate : CTangentCoupledSolver → DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) →
     DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) →
-      Option (DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
+      Option (IntegralResult (DenseFrac ℚ))
 
 /-- Denotational soundness contract for a selected tangent special integrator and coupled solver. -/
 class LawfulCTangentSpecialIntegrator (S : CTangentCoupledSolver)
     (T : CTangentSpecialIntegrator) : Prop where
   /-- Every returned fraction differentiates to the requested polynomial and special parts. -/
-  sound : ∀ (Dt fp b ds snum sden : DensePoly (DenseFrac ℚ)),
-    T.integrate S Dt fp b ds = some (snum, sden) →
-      CPoly.toPoly sden ≠ 0 ∧
-        towerFractionFieldDerivP Dt (fieldFracP snum sden) =
+  sound : ∀ (Dt fp b ds : DensePoly (DenseFrac ℚ)) (res : IntegralResult (DenseFrac ℚ)),
+    T.integrate S Dt fp b ds = some res →
+      CPoly.toPoly res.rational.2 ≠ 0 ∧
+        towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
+            logResidueSumP Dt res.logs =
           fieldFracP fp CPoly.one + fieldFracP b ds
 
 /-- Relative-completeness contract for recursive tangent special integration. -/
@@ -67,9 +68,10 @@ class CompleteCTangentSpecialIntegrator (S : CTangentCoupledSolver)
     (T : CTangentSpecialIntegrator) (domain : TangentSpecialDomain)
     [LawfulCTangentSpecialIntegrator S T] : Prop where
   /-- Every domain input possessing a represented special antiderivative is accepted. -/
-  complete : ∀ (Dt fp b ds snum sden : DensePoly (DenseFrac ℚ)),
-    domain Dt fp b ds → CPoly.toPoly sden ≠ 0 →
-    towerFractionFieldDerivP Dt (fieldFracP snum sden) =
+  complete : ∀ (Dt fp b ds : DensePoly (DenseFrac ℚ)) (res : IntegralResult (DenseFrac ℚ)),
+    domain Dt fp b ds → CPoly.toPoly res.rational.2 ≠ 0 →
+    towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
+        logResidueSumP Dt res.logs =
       fieldFracP fp CPoly.one + fieldFracP b ds →
     ∃ out, T.integrate S Dt fp b ds = some out
 
@@ -82,8 +84,8 @@ def tangentMonomialCase (S : CTangentCoupledSolver) (T : CTangentSpecialIntegrat
 /-- A lawful recursive tangent special integrator makes the composed monomial case lawful. -/
 instance instLawfulCMonomialCaseTangent (S : CTangentCoupledSolver) (T : CTangentSpecialIntegrator)
     [LawfulCTangentSpecialIntegrator S T] : LawfulCMonomialCase (tangentMonomialCase S T) where
-  special_sound Dt fp b ds snum sden hrun :=
-    LawfulCTangentSpecialIntegrator.sound Dt fp b ds snum sden hrun
+  special_sound Dt fp b ds res hrun :=
+    LawfulCTangentSpecialIntegrator.sound Dt fp b ds res hrun
   postprocessNormal_sound _ _ _ before after hbefore hrun := by
     change some before = some after at hrun
     have heq : before = after := Option.some.inj hrun
@@ -100,9 +102,9 @@ instance instCompleteCMonomialCaseTangent (S : CTangentCoupledSolver) (T : CTang
     (domain : TangentSpecialDomain) [LawfulCTangentSpecialIntegrator S T]
     [CompleteCTangentSpecialIntegrator S T domain] :
     CompleteCMonomialCase (tangentMonomialCase S T) domain where
-  special_complete Dt fp b ds snum sden hdomain hsden hderiv := by
+  special_complete Dt fp b ds res hdomain hsden hderiv := by
     obtain ⟨out, hrun⟩ := CompleteCTangentSpecialIntegrator.complete
-      (S := S) (T := T) (domain := domain) Dt fp b ds snum sden hdomain hsden hderiv
+      (S := S) (T := T) (domain := domain) Dt fp b ds res hdomain hsden hderiv
     exact ⟨out, hrun⟩
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 
@@ -112,27 +114,26 @@ def checkedTangentMonomialCase (S : CTangentCoupledSolver) (T : CTangentSpecialI
   integrateSpecial Dt fp b ds := do
     let out ← T.integrate S Dt fp b ds
     if CPolyEngine.cisZero ds then none
-    else if CPolyEngine.cisZero out.2 then none
+    else if CPolyEngine.cisZero out.rational.2 then none
+    else if !out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) then none
     else
-      let result : IntegralResult (DenseFrac ℚ) := { rational := out, logs := [] }
-      if CPoly.checkIdentity Dt result (polynomialSpecialNumerator fp b ds) ds then some out else none
+      if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then some out else none
   postprocessNormal _ before := some before
 
 /-- The certificate-checked tangent monomial case is sound without a lawful integrator assumption. -/
 instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
     (T : CTangentSpecialIntegrator) : LawfulCMonomialCase (checkedTangentMonomialCase S T) where
-  special_sound Dt fp b ds snum sden hrun := by
+  special_sound Dt fp b ds res hrun := by
     simp only [checkedTangentMonomialCase] at hrun
     change (T.integrate S Dt fp b ds).bind
       (fun out =>
         if CPolyEngine.cisZero ds then none
-        else if CPolyEngine.cisZero out.2 then none
+        else if CPolyEngine.cisZero out.rational.2 then none
+        else if !out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) then none
         else
-          let result : IntegralResult (DenseFrac ℚ) :=
-            { rational := out, logs := [] }
-          if CPoly.checkIdentity Dt result (polynomialSpecialNumerator fp b ds) ds then
+          if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then
             some out
-          else none) = some (snum, sden) at hrun
+          else none) = some res at hrun
     rcases hraw : T.integrate S Dt fp b ds with _ | out
     · simp [hraw] at hrun
     rw [hraw] at hrun
@@ -142,20 +143,22 @@ instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
     · simp at hif
     rename_i hds
     simp at hif
-    obtain ⟨hsden, hcheck, hout⟩ := hif
+    obtain ⟨hsden, hlogs, hcheck, hout⟩ := hif
     have hds' : CPoly.toPoly ds ≠ 0 :=
       CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (Bool.eq_false_iff.mpr hds)
-    have houtRaw : CPoly.toPoly out.2 ≠ 0 :=
+    have houtRaw : CPoly.toPoly out.rational.2 ≠ 0 :=
       CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false hsden
-    have hout' : CPoly.toPoly sden ≠ 0 := by
+    have hout' : CPoly.toPoly res.rational.2 ≠ 0 := by
       simpa [hout] using houtRaw
-    let result : IntegralResult (DenseFrac ℚ) := { rational := out, logs := [] }
-    have hid := field_identity_of_checkIdentityP Dt result (polynomialSpecialNumerator fp b ds) ds
-      houtRaw hds' (by simp [result]) hcheck
-    simp only [result, logResidueSumP, List.map_nil, List.sum_nil, add_zero] at hid
+    have hargs : ∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0 := by
+      intro cv hcv
+      apply CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false
+      exact hlogs cv.1 cv.2 hcv
+    have hid := field_identity_of_checkIdentityP Dt out (polynomialSpecialNumerator fp b ds) ds
+      houtRaw hds' hargs hcheck
     refine ⟨hout', ?_⟩
     change (towerFractionFieldDerivP Dt)
-      (fieldFracP out.1 out.2) =
+      (fieldFracP out.rational.1 out.rational.2) + logResidueSumP Dt out.logs =
         fieldFracP (polynomialSpecialNumerator fp b ds) ds at hid
     rw [fieldFracP_polynomialSpecialNumerator fp b ds hds'] at hid
     simpa [hout] using hid
@@ -173,13 +176,14 @@ instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
 /-- The explicit certificate-acceptance domain for a checked tangent special stage. -/
 def checkedTangentSpecialDomain (S : CTangentCoupledSolver) (T : CTangentSpecialIntegrator) :
     TangentSpecialDomain := fun Dt fp b ds =>
-  ∀ (snum sden : DensePoly (DenseFrac ℚ)), CPoly.toPoly sden ≠ 0 →
-    towerFractionFieldDerivP Dt (fieldFracP snum sden) =
+  ∀ (res : IntegralResult (DenseFrac ℚ)), CPoly.toPoly res.rational.2 ≠ 0 →
+    towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
+        logResidueSumP Dt res.logs =
       fieldFracP fp CPoly.one + fieldFracP b ds →
     CPoly.toPoly ds ≠ 0 ∧
-      ∃ out, T.integrate S Dt fp b ds = some out ∧ CPoly.toPoly out.2 ≠ 0 ∧
-        CPoly.checkIdentity Dt ({ rational := out, logs := [] } : IntegralResult (DenseFrac ℚ))
-          (polynomialSpecialNumerator fp b ds) ds = true
+      ∃ out, T.integrate S Dt fp b ds = some out ∧ CPoly.toPoly out.rational.2 ≠ 0 ∧
+        (∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0) ∧
+        CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds = true
 
 /-- The checked tangent special stage is complete where the underlying recursive integrator and its
 certificate accept the input. -/
@@ -187,18 +191,26 @@ instance instCompleteCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
     (T : CTangentSpecialIntegrator) :
     CompleteCMonomialCase (checkedTangentMonomialCase S T)
       (checkedTangentSpecialDomain S T) where
-  special_complete Dt fp b ds snum sden hdomain hsden hderiv := by
-    obtain ⟨hds, out, hraw, hout, hcheck⟩ := hdomain snum sden hsden hderiv
+  special_complete Dt fp b ds res hdomain hsden hderiv := by
+    obtain ⟨hds, out, hraw, hout, hlogs, hcheck⟩ := hdomain res hsden hderiv
     have hdsBool : DensePoly.cisZero ds = false := by
       rw [Bool.eq_false_iff]
       intro hzero
       exact hds (by simpa only [toPoly_list_eq] using (cisZeroG_iff ds).mp hzero)
-    have houtBool : DensePoly.cisZero out.2 = false := by
+    have houtBool : DensePoly.cisZero out.rational.2 = false := by
       rw [Bool.eq_false_iff]
       intro hzero
-      exact hout (by simpa only [toPoly_list_eq] using (cisZeroG_iff out.2).mp hzero)
+      exact hout (by simpa only [toPoly_list_eq] using (cisZeroG_iff out.rational.2).mp hzero)
+    have hlogsBool : out.logs.all (fun cv => !DensePoly.cisZero cv.2) = true :=
+      List.all_eq_true.mpr fun cv hcv => by
+        have hzfalse : DensePoly.cisZero cv.2 = false := by
+          rw [Bool.eq_false_iff]
+          intro hzero
+          exact hlogs cv hcv (by
+            simpa only [toPoly_list_eq] using (cisZeroG_iff cv.2).mp hzero)
+        simpa using hzfalse
     refine ⟨out, ?_⟩
-    simp [checkedTangentMonomialCase, hraw, hdsBool, houtBool, hcheck]
+    simp [checkedTangentMonomialCase, hraw, hdsBool, houtBool, hlogsBool, hcheck]
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 
 /-- Tangent normal reduction obtained by certificate-checking an arbitrary raw normal reducer. -/

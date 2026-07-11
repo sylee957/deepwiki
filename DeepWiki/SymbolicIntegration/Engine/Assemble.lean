@@ -17,8 +17,8 @@ universe u v
 representation `P`: integrate the polynomial/special part and post-process the normal result. -/
 structure CMonomialCase (P : Type u → Type u) [CPoly P] [CPolyEngine P]
     (α : Type u) [CField α] [CDiffField α] where
-  /-- Integrate the special/polynomial part `fₚ + b/dₛ` to a fraction `(snum, sden)`, or fail. -/
-  integrateSpecial : P α → P α → P α → P α → Option (P α × P α)
+  /-- Integrate the special/polynomial part `fₚ + b/dₛ` to a rational-plus-log result, or fail. -/
+  integrateSpecial : P α → P α → P α → P α → Option (IntegralResult α P)
   /-- Post-process a reduced normal result (identity for primitive; residual subtraction for hyperexponential). -/
   postprocessNormal : P α → IntegralResult α P → Option (IntegralResult α P)
 
@@ -53,6 +53,12 @@ def combineSN {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] (snum sden : P α) (nrm : IntegralResult α P) : IntegralResult α P :=
   ⟨combineRationalParts snum sden nrm.rational.1 nrm.rational.2, nrm.logs⟩
 
+/-- Add two represented integral results, combining rational fractions and concatenating logarithms. -/
+def combineIntegralResults {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (left right : IntegralResult α P) : IntegralResult α P :=
+  ⟨combineRationalParts left.rational.1 left.rational.2 right.rational.1 right.rational.2,
+    left.logs ++ right.logs⟩
+
 /-! ### Representation-independent recombination -/
 
 open CFrac Polynomial
@@ -72,11 +78,12 @@ variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffF
 derivative, while normal post-processing preserves certified integration results and nonzero denominators. -/
 class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
   /-- A successful special integration has derivative `fₚ + b/dₛ`. -/
-  special_sound : ∀ (Dt fp b ds snum sden : P α),
-    C.integrateSpecial Dt fp b ds = some (snum, sden) →
-      CPoly.toPoly sden ≠ 0 ∧
-        towerFractionFieldDerivP Dt (fieldFracP snum sden)
-          = fieldFracP fp CPoly.one + fieldFracP b ds
+  special_sound : ∀ (Dt fp b ds : P α) (res : IntegralResult α P),
+    C.integrateSpecial Dt fp b ds = some res →
+      CPoly.toPoly res.rational.2 ≠ 0 ∧
+        towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2)
+            + logResidueSumP Dt res.logs =
+          fieldFracP fp CPoly.one + fieldFracP b ds
   /-- Normal-result post-processing preserves its integral-result certificate. -/
   postprocessNormal_sound : ∀ (Dt cn dn : P α) (before after : IntegralResult α P),
     IsIntegralResultP Dt cn dn before → C.postprocessNormal Dt before = some after →
@@ -93,11 +100,11 @@ abbrev MonomialSpecialDomain (P : Type u → Type u) (α : Type u) := P α → P
 class CompleteCMonomialCase (C : CMonomialCase P α)
     (specialDomain : MonomialSpecialDomain P α) : Prop where
   /-- Every domain-admissible special antiderivative lies in the executable solver's domain. -/
-  special_complete : ∀ (Dt fp b ds snum sden : P α),
+  special_complete : ∀ (Dt fp b ds : P α) (res : IntegralResult α P),
     specialDomain Dt fp b ds →
-    CPoly.toPoly sden ≠ 0 →
-    towerFractionFieldDerivP Dt (fieldFracP snum sden)
-      = fieldFracP fp CPoly.one + fieldFracP b ds →
+    CPoly.toPoly res.rational.2 ≠ 0 →
+    towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2)
+        + logResidueSumP Dt res.logs = fieldFracP fp CPoly.one + fieldFracP b ds →
       ∃ out, C.integrateSpecial Dt fp b ds = some out
   /-- Every certified genuine normal result lies in the normal postprocessor's domain. -/
   postprocess_complete : ∀ (Dt cn dn : P α) (before : IntegralResult α P),
@@ -133,35 +140,74 @@ abbrev canonicalResult [CCanonicalRepresentation P α] (Dt a d : P α) :
     CanonicalRepresentationResult P α :=
   CCanonicalRepresentation.compute Dt a d
 
-/-- **Representation-independent assembler recombination.** A special fraction whose derivative is
-`specialVal`, a normal result for `cn/dn`, and their reconstruction of `a/d` combine into an integral result.
-This is the common soundness square consumed by every concrete one-level assembler. -/
-theorem combineSN_isIntegralResultP (Dt a d cn dn snum sden : P α) (nrm : IntegralResult α P)
-    (specialVal : RatFunc (CFieldSpec.K α))
-    (hsden : CPoly.toPoly sden ≠ 0) (hgden : CPoly.toPoly nrm.rational.2 ≠ 0)
-    (hSpecField : towerFractionFieldDerivP Dt (fieldFracP snum sden) = specialVal)
-    (hNrmField : IsIntegralResultP Dt cn dn nrm)
-    (hrecon : specialVal + fieldFracP cn dn = fieldFracP a d) :
-    IsIntegralResultP Dt a d (combineSN snum sden nrm) := by
-  simp only [IsIntegralResultP] at hNrmField ⊢
-  show towerFractionFieldDerivP Dt
-      (am α (CPoly.toPoly (CPolyEngine.add (CPolyEngine.mul snum nrm.rational.2)
-        (CPolyEngine.mul nrm.rational.1 sden))) /
-        am α (CPoly.toPoly (CPolyEngine.mul sden nrm.rational.2)))
-      + logResidueSumP Dt nrm.logs = _
+omit [LawfulCPolyEngine P] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- Logarithmic denotations turn list concatenation into addition. -/
+theorem logResidueSumP_append (Dt : P α) (left right : List (α × P α)) :
+    logResidueSumP Dt (left ++ right) = logResidueSumP Dt left + logResidueSumP Dt right := by
+  simp only [logResidueSumP, List.map_append, List.sum_append]
+
+/-- Adding a rational antiderivative to an integral result adds their denotational values. -/
+theorem combineSN_value (Dt snum sden : P α) (nrm : IntegralResult α P)
+    (rationalVal normalVal : RatFunc (CFieldSpec.K α))
+    (hsden : CPoly.toPoly sden ≠ 0) (hnrmDen : CPoly.toPoly nrm.rational.2 ≠ 0)
+    (hrational : towerFractionFieldDerivP Dt (fieldFracP snum sden) = rationalVal)
+    (hnormal : towerFractionFieldDerivP Dt (fieldFracP nrm.rational.1 nrm.rational.2) +
+      logResidueSumP Dt nrm.logs = normalVal) :
+    towerFractionFieldDerivP Dt
+        (fieldFracP (combineSN snum sden nrm).rational.1 (combineSN snum sden nrm).rational.2) +
+      logResidueSumP Dt (combineSN snum sden nrm).logs = rationalVal + normalVal := by
   have hAsden : am α (CPoly.toPoly sden) ≠ 0 := am_ne_zero hsden
-  have hAgden : am α (CPoly.toPoly nrm.rational.2) ≠ 0 := am_ne_zero hgden
-  have hcombine : am α (CPoly.toPoly (CPolyEngine.add (CPolyEngine.mul snum nrm.rational.2)
-        (CPolyEngine.mul nrm.rational.1 sden))) /
-        am α (CPoly.toPoly (CPolyEngine.mul sden nrm.rational.2))
-      = am α (CPoly.toPoly snum) / am α (CPoly.toPoly sden)
-        + am α (CPoly.toPoly nrm.rational.1) / am α (CPoly.toPoly nrm.rational.2) := by
-    rw [LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_mul,
-      LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul]
-    simp only [map_add, map_mul]
+  have hAnrmDen : am α (CPoly.toPoly nrm.rational.2) ≠ 0 := am_ne_zero hnrmDen
+  have hcombine : fieldFracP
+      (CPolyEngine.add (CPolyEngine.mul snum nrm.rational.2)
+        (CPolyEngine.mul nrm.rational.1 sden))
+      (CPolyEngine.mul sden nrm.rational.2) =
+      fieldFracP snum sden + fieldFracP nrm.rational.1 nrm.rational.2 := by
+    simp only [fieldFracP, LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_mul,
+      map_add, map_mul]
     field_simp
-  rw [hcombine, map_add]
-  rw [hSpecField, add_assoc, hNrmField]
-  simpa only [fieldFracP] using hrecon
+  simp only [combineSN, combineRationalParts]
+  rw [hcombine, map_add, hrational]
+  linear_combination hnormal
+
+/-- Two certified partial results add to a certified result for the reconstructed input fraction. -/
+theorem combineIntegralResults_isIntegralResultP (Dt a d cn dn : P α)
+    (left right : IntegralResult α P) (leftVal : RatFunc (CFieldSpec.K α))
+    (hleftDen : CPoly.toPoly left.rational.2 ≠ 0)
+    (hrightDen : CPoly.toPoly right.rational.2 ≠ 0)
+    (hleft : towerFractionFieldDerivP Dt (fieldFracP left.rational.1 left.rational.2)
+        + logResidueSumP Dt left.logs = leftVal)
+    (hright : IsIntegralResultP Dt cn dn right)
+    (hrecon : leftVal + fieldFracP cn dn = fieldFracP a d) :
+    IsIntegralResultP Dt a d (combineIntegralResults left right) := by
+  have hAleft : am α (CPoly.toPoly left.rational.2) ≠ 0 := am_ne_zero hleftDen
+  have hAright : am α (CPoly.toPoly right.rational.2) ≠ 0 := am_ne_zero hrightDen
+  have hcombine : fieldFracP
+      (CPolyEngine.add (CPolyEngine.mul left.rational.1 right.rational.2)
+        (CPolyEngine.mul right.rational.1 left.rational.2))
+      (CPolyEngine.mul left.rational.2 right.rational.2) =
+      fieldFracP left.rational.1 left.rational.2 +
+        fieldFracP right.rational.1 right.rational.2 := by
+    simp only [fieldFracP, LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_mul,
+      map_add, map_mul]
+    field_simp
+  change towerFractionFieldDerivP Dt
+      (fieldFracP
+        (CPolyEngine.add (CPolyEngine.mul left.rational.1 right.rational.2)
+          (CPolyEngine.mul right.rational.1 left.rational.2))
+        (CPolyEngine.mul left.rational.2 right.rational.2)) +
+      logResidueSumP Dt (left.logs ++ right.logs) = fieldFracP a d
+  rw [hcombine, map_add, logResidueSumP_append]
+  simp only [IsIntegralResultP] at hright
+  calc
+    (towerFractionFieldDerivP Dt (fieldFracP left.rational.1 left.rational.2) +
+          towerFractionFieldDerivP Dt (fieldFracP right.rational.1 right.rational.2)) +
+        (logResidueSumP Dt left.logs + logResidueSumP Dt right.logs) =
+        (towerFractionFieldDerivP Dt (fieldFracP left.rational.1 left.rational.2) +
+          logResidueSumP Dt left.logs) +
+          (towerFractionFieldDerivP Dt (fieldFracP right.rational.1 right.rational.2) +
+            logResidueSumP Dt right.logs) := by ring
+    _ = leftVal + fieldFracP cn dn := by rw [hleft, hright]
+    _ = fieldFracP a d := hrecon
 
 end DeepWiki.SymbolicIntegration

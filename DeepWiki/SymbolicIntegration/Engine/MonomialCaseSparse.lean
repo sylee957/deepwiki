@@ -42,7 +42,7 @@ def denseMonomialCaseAsSparse (C : CMonomialCase DensePoly α) :
   integrateSpecial Dt fp b ds :=
     (C.integrateSpecial (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
       (CPolyEngine.convert b) (CPolyEngine.convert ds)).map fun out =>
-        (CPolyEngine.convert out.1, CPolyEngine.convert out.2)
+        convertResult (Q := CPoly.SparsePoly) out
   postprocessNormal Dt before :=
     (C.postprocessNormal (CPolyEngine.convert Dt)
       (convertResult (Q := DensePoly) before)).map
@@ -51,22 +51,28 @@ def denseMonomialCaseAsSparse (C : CMonomialCase DensePoly α) :
 /-- A lawful dense monomial case remains lawful through the sparse representation boundary. -/
 instance instLawfulCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
     [LawfulCMonomialCase C] : LawfulCMonomialCase (denseMonomialCaseAsSparse C) where
-  special_sound Dt fp b ds snum sden hrun := by
+  special_sound Dt fp b ds res hrun := by
     change (C.integrateSpecial (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
       (CPolyEngine.convert b) (CPolyEngine.convert ds)).map
-        (fun out => (CPolyEngine.convert out.1, CPolyEngine.convert out.2)) =
-      some (snum, sden) at hrun
+        (convertResult (Q := CPoly.SparsePoly)) = some res at hrun
     rw [Option.map_eq_some_iff] at hrun
-    obtain ⟨⟨denseNum, denseDen⟩, hdense, hout⟩ := hrun
-    simp only [Prod.mk.injEq] at hout
-    obtain ⟨rfl, rfl⟩ := hout
+    obtain ⟨denseRes, hdense, rfl⟩ := hrun
     have h := LawfulCMonomialCase.special_sound (C := C)
       (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
-      (CPolyEngine.convert ds) denseNum denseDen hdense
+      (CPolyEngine.convert ds) denseRes hdense
     constructor
-    · simpa only [CPolyEngine.toPoly_convert] using h.1
-    · simpa only [fieldFracP, towerFractionFieldDerivP, CPolyEngine.toPoly_convert,
-        CPoly.toPoly_one, map_one, div_one] using h.2
+    · simpa only [convertResult, CPolyEngine.toPoly_convert] using h.1
+    · have hlog : logResidueSumP Dt
+          (denseRes.logs.map fun cv => (cv.1, CPolyEngine.convert cv.2)) =
+          logResidueSumP (CPolyEngine.convert Dt : DensePoly α) denseRes.logs := by
+        rw [logResidueSumP, logResidueSumP, List.map_map]
+        apply congrArg List.sum
+        apply List.map_congr_left
+        intro cv _
+        simp only [Function.comp_apply, CPolyEngine.toPoly_convert,
+          CPolyEngine.toPoly_monomialDeriv]
+      simpa only [convertResult, fieldFracP, towerFractionFieldDerivP,
+        CPolyEngine.toPoly_convert, CPoly.toPoly_one, map_one, hlog] using h.2
   postprocessNormal_sound Dt cn dn before after hbefore hrun := by
     change (C.postprocessNormal (CPolyEngine.convert Dt)
       (convertResult (Q := DensePoly) before)).map
@@ -113,27 +119,43 @@ instance instCompleteCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
     CompleteCMonomialCase (denseMonomialCaseAsSparse C)
       (fun Dt fp b ds => denseDomain (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
         (CPolyEngine.convert b) (CPolyEngine.convert ds)) where
-  special_complete Dt fp b ds snum sden hdomain hsden hderiv := by
-    have hsdenDense : CPoly.toPoly (CPolyEngine.convert sden : DensePoly α) ≠ 0 := by
-      simpa only [CPolyEngine.toPoly_convert] using hsden
+  special_complete Dt fp b ds res hdomain hsden hderiv := by
+    let denseRes : IntegralResult α := convertResult (Q := DensePoly) res
+    have hsdenDense : CPoly.toPoly denseRes.rational.2 ≠ 0 := by
+      simpa only [denseRes, convertResult, CPolyEngine.toPoly_convert] using hsden
+    have hlog : logResidueSumP (CPolyEngine.convert Dt : DensePoly α)
+        (res.logs.map fun cv => (cv.1, CPolyEngine.convert cv.2)) =
+        logResidueSumP Dt res.logs := by
+      rw [logResidueSumP, logResidueSumP, List.map_map]
+      apply congrArg List.sum
+      apply List.map_congr_left
+      intro cv _
+      simp only [Function.comp_apply, CPolyEngine.toPoly_convert,
+        CPolyEngine.toPoly_monomialDeriv]
     have hderivDense :
         towerFractionFieldDerivP (CPolyEngine.convert Dt : DensePoly α)
-          (fieldFracP (CPolyEngine.convert snum : DensePoly α)
-            (CPolyEngine.convert sden : DensePoly α)) =
-          fieldFracP (CPolyEngine.convert fp : DensePoly α) (CPoly.one : DensePoly α) +
+          (fieldFracP denseRes.rational.1 denseRes.rational.2) +
+            logResidueSumP (CPolyEngine.convert Dt : DensePoly α) denseRes.logs =
+            fieldFracP (CPolyEngine.convert fp : DensePoly α) (CPoly.one : DensePoly α) +
             fieldFracP (CPolyEngine.convert b : DensePoly α) (CPolyEngine.convert ds : DensePoly α) := by
+      change towerFractionFieldDerivP (CPolyEngine.convert Dt : DensePoly α)
+          (fieldFracP (CPolyEngine.convert res.rational.1 : DensePoly α)
+            (CPolyEngine.convert res.rational.2 : DensePoly α)) +
+          logResidueSumP (CPolyEngine.convert Dt : DensePoly α)
+            (res.logs.map fun cv => (cv.1, CPolyEngine.convert cv.2)) = _
+      rw [hlog]
       simpa only [fieldFracP, towerFractionFieldDerivP, CPolyEngine.toPoly_convert,
         CPoly.toPoly_one, map_one] using hderiv
     obtain ⟨out, hout⟩ := CompleteCMonomialCase.special_complete (C := C)
       (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
-      (CPolyEngine.convert ds) (CPolyEngine.convert snum) (CPolyEngine.convert sden)
+      (CPolyEngine.convert ds) denseRes
       hdomain hsdenDense hderivDense
-    refine ⟨(CPolyEngine.convert out.1, CPolyEngine.convert out.2), ?_⟩
+    refine ⟨convertResult (Q := CPoly.SparsePoly) out, ?_⟩
     change (C.integrateSpecial (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
       (CPolyEngine.convert b) (CPolyEngine.convert ds)).map
-        (fun result => (CPolyEngine.convert result.1, CPolyEngine.convert result.2)) = some _
+        (convertResult (Q := CPoly.SparsePoly)) = some _
     simpa only [Option.map_some] using congrArg
-      (Option.map (fun result => (CPolyEngine.convert result.1, CPolyEngine.convert result.2))) hout
+      (Option.map (convertResult (Q := CPoly.SparsePoly))) hout
   postprocess_complete Dt cn dn before hbefore := by
     have hbeforeDense : CertifiedNormalResult (CPolyEngine.convert Dt : DensePoly α)
         (CPolyEngine.convert cn) (CPolyEngine.convert dn)

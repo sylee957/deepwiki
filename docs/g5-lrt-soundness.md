@@ -381,8 +381,8 @@ solver an exact parallel of the rational one:
 | `PrimitiveFrontier.hreduced` ← `..._via_interfaces` | `PrimitiveFrontierLrt.hreducedLrt` ← `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` | RischTowerPrimitive(Lrt) |
 | `instLawfulRischLevelPrimitive` | `instLawfulRischLevelLrtPrimitive` | RischTowerPrimitive(Lrt) |
 
-- The special part is **shared** (rational, frontier-independent): `primitiveGuardedCase_specialSound`,
-  extracted from `instLawfulRischLevelPrimitive` and reused by both.
+- The rational special part is frontier-independent: `lrtMonomialCase_specialSound` composes the selected
+  `LawfulCLrtMonomialCase` with canonical reconstruction.
 - `soundLrt` holds over **every** algebraically-closed differential extension `E` (the descent vehicle
   built into `IsIntegralResultLrtG`), so it handles **algebraic residues** — the whole point.
 - Materialize **one** `PrimitiveFrontierLrt α` ⇒ `integrateLrt`/`soundLrt` resolve parameter-free.
