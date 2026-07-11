@@ -105,4 +105,54 @@ instance instLawfulCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
       denseAfter hdenDense hdense
     simpa only [convertResult, CPolyEngine.toPoly_convert] using hout
 
+set_option maxHeartbeats 3000000 in
+/-- A relatively complete dense monomial case remains relatively complete through the sparse boundary. -/
+instance instCompleteCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
+    [CompleteCMonomialCase C] : CompleteCMonomialCase (denseMonomialCaseAsSparse C) where
+  special_complete Dt fp b ds snum sden hsden hderiv := by
+    have hsdenDense : CPoly.toPoly (CPolyEngine.convert sden : DensePoly α) ≠ 0 := by
+      simpa only [CPolyEngine.toPoly_convert] using hsden
+    have hderivDense :
+        towerFractionFieldDerivP (CPolyEngine.convert Dt : DensePoly α)
+          (fieldFracP (CPolyEngine.convert snum : DensePoly α)
+            (CPolyEngine.convert sden : DensePoly α)) =
+          fieldFracP (CPolyEngine.convert fp : DensePoly α) (CPoly.one : DensePoly α) +
+            fieldFracP (CPolyEngine.convert b : DensePoly α) (CPolyEngine.convert ds : DensePoly α) := by
+      simpa only [fieldFracP, towerFractionFieldDerivP, CPolyEngine.toPoly_convert,
+        CPoly.toPoly_one, map_one] using hderiv
+    obtain ⟨out, hout⟩ := CompleteCMonomialCase.special_complete (C := C)
+      (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
+      (CPolyEngine.convert ds) (CPolyEngine.convert snum) (CPolyEngine.convert sden)
+      hsdenDense hderivDense
+    refine ⟨(CPolyEngine.convert out.1, CPolyEngine.convert out.2), ?_⟩
+    change (C.integrateSpecial (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
+      (CPolyEngine.convert b) (CPolyEngine.convert ds)).map
+        (fun result => (CPolyEngine.convert result.1, CPolyEngine.convert result.2)) = some _
+    simpa only [Option.map_some] using congrArg
+      (Option.map (fun result => (CPolyEngine.convert result.1, CPolyEngine.convert result.2))) hout
+  postprocess_complete Dt cn dn before hbefore := by
+    have hbeforeDense : CertifiedNormalResult (CPolyEngine.convert Dt : DensePoly α)
+        (CPolyEngine.convert cn) (CPolyEngine.convert dn)
+        (convertResult (Q := DensePoly) before) :=
+      { integral := isIntegralResultP_convertResult Dt cn dn before hbefore.integral
+        rationalDen_nonzero := by
+          simpa only [convertResult, CPolyEngine.toPoly_convert] using hbefore.rationalDen_nonzero
+        coefficients_constant := by
+          intro cv hcv
+          obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
+          exact hbefore.coefficients_constant source hsource
+        arguments_nonzero := by
+          intro cv hcv
+          obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
+          simpa only [CPolyEngine.toPoly_convert] using hbefore.arguments_nonzero source hsource }
+    obtain ⟨after, hafter⟩ := CompleteCMonomialCase.postprocess_complete (C := C)
+      (CPolyEngine.convert Dt) (CPolyEngine.convert cn) (CPolyEngine.convert dn)
+      (convertResult (Q := DensePoly) before) hbeforeDense
+    refine ⟨convertResult (Q := CPoly.SparsePoly) after, ?_⟩
+    change (C.postprocessNormal (CPolyEngine.convert Dt)
+      (convertResult (Q := DensePoly) before)).map
+        (convertResult (Q := CPoly.SparsePoly)) = some _
+    simpa only [Option.map_some] using congrArg
+      (Option.map (convertResult (Q := CPoly.SparsePoly))) hafter
+
 end DeepWiki.SymbolicIntegration
