@@ -744,6 +744,119 @@ theorem back_read_solves_rref_any (R : List (List ℚ)) (PC : List ℕ) (ncols :
   rw [hmain]
   ring
 
+/-- The free-column vector of an RREF pivot system solves every homogeneous row. -/
+private theorem freeColumn_solves_rref (R : List (List ℚ)) (PC : List ℕ) (ncols fc : ℕ)
+    (hid : isIdentitySubmatrix R PC) (hnd : PC.Nodup) (hpcb : ∀ c ∈ PC, c < ncols)
+    (hrlen : ∀ r ∈ R, ncols ≤ r.length) (hfc : fc < ncols) (hfree : fc ∉ PC) :
+    let x : List ℚ := (List.range ncols).map (fun j =>
+      if j = fc then 1
+      else match PC.idxOf? j with
+        | some pr => -((R.getD pr []).getD fc 0)
+        | none => 0)
+    solvesAll R x := by
+  obtain ⟨hRPClen, hidval⟩ := hid
+  intro x r hr
+  obtain ⟨i, hi, hri⟩ := List.getElem_of_mem hr
+  rw [show r = R.getD i [] by rw [getD_lt_gen R i [] hi, hri]]
+  have hiPC : i < PC.length := by rw [← hRPClen]; exact hi
+  have hRlen : ncols ≤ (R.getD i []).length := hrlen _ (getD_mem_lt R i [] hi)
+  have hxlen : x.length = ncols := by simp [x]
+  have hx_fc : x.getD fc 0 = 1 := by
+    rw [show x = (List.range ncols).map (fun j =>
+      if j = fc then 1 else match PC.idxOf? j with
+        | some pr => -((R.getD pr []).getD fc 0)
+        | none => 0) from rfl]
+    rw [getD_lt_gen _ fc 0 (by rw [List.length_map, List.length_range]; exact hfc),
+      List.getElem_map, List.getElem_range, if_pos rfl]
+  have hx_pivot : ∀ j, j < PC.length →
+      x.getD (PC.getD j 0) 0 = -((R.getD j []).getD fc 0) := by
+    intro j hj
+    have hpc : PC.getD j 0 < ncols := hpcb _ (getD_mem_lt PC j 0 hj)
+    have hpc_ne : PC.getD j 0 ≠ fc := fun h =>
+      hfree (h ▸ getD_mem_lt PC j 0 hj)
+    rw [show x = (List.range ncols).map (fun k =>
+      if k = fc then 1 else match PC.idxOf? k with
+        | some pr => -((R.getD pr []).getD fc 0)
+        | none => 0) from rfl]
+    rw [getD_lt_gen _ _ 0 (by rw [List.length_map, List.length_range]; exact hpc),
+      List.getElem_map, List.getElem_range, if_neg hpc_ne,
+      idxOf?_of_mem PC (PC.getD j 0) (getD_mem_lt PC j 0 hj),
+      getD_lt_gen PC j 0 hj, List.Nodup.idxOf_getElem hnd j hj]
+  unfold solvesRow
+  rw [dotQ_eq_sum (R.getD i []) x (by rw [hxlen]; exact hRlen)]
+  let f : ℕ → ℚ := fun c => (R.getD i []).getD c 0 * x.getD c 0
+  rw [hxlen]
+  change (∑ c ∈ Finset.range ncols, f c) = 0
+  have hsub : PC.toFinset ∪ {fc} ⊆ Finset.range ncols := by
+    intro c hc
+    rw [Finset.mem_union, Finset.mem_singleton] at hc
+    rw [Finset.mem_range]
+    rcases hc with hc | rfl
+    · exact hpcb c (by simpa using hc)
+    · exact hfc
+  have hzero : ∀ c ∈ Finset.range ncols, c ∉ PC.toFinset ∪ {fc} → f c = 0 := by
+    intro c hc hnot
+    rw [Finset.mem_union, Finset.mem_singleton] at hnot
+    have hpcFin : c ∉ PC.toFinset := fun h => hnot (Or.inl h)
+    have hne : c ≠ fc := fun h => hnot (Or.inr h)
+    have hpc : c ∉ PC := fun h => hpcFin (by simpa using h)
+    have hc' : c < ncols := Finset.mem_range.mp hc
+    have hidx : PC.idxOf? c = none := by
+      rw [List.idxOf?, List.findIdx?_eq_none_iff]
+      intro a ha
+      simp only [beq_eq_false_iff_ne]
+      intro hac
+      exact hpc (by simpa [hac] using ha)
+    have hxzero : x.getD c 0 = 0 := by
+      rw [show x = (List.range ncols).map (fun k =>
+        if k = fc then 1 else match PC.idxOf? k with
+          | some pr => -((R.getD pr []).getD fc 0)
+          | none => 0) from rfl]
+      rw [getD_lt_gen _ c 0 (by rw [List.length_map, List.length_range]; exact hc'),
+        List.getElem_map, List.getElem_range, if_neg hne, hidx]
+    simp only [f, hxzero, mul_zero]
+  have hext : (∑ c ∈ PC.toFinset ∪ {fc}, f c) = ∑ c ∈ Finset.range ncols, f c :=
+    Finset.sum_subset hsub hzero
+  have hbij : (∑ c ∈ PC.toFinset, f c) =
+      ∑ j ∈ Finset.range PC.length, f (PC.getD j 0) := by
+    apply Finset.sum_nbij' (fun c => PC.idxOf c) (fun j => PC.getD j 0)
+    · intro c hc
+      rw [Finset.mem_range]
+      exact List.idxOf_lt_length_of_mem (by simpa using hc)
+    · intro j hj
+      rw [Finset.mem_range] at hj
+      exact (by simpa using getD_mem_lt PC j 0 hj)
+    · intro c hc
+      rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem
+        (List.idxOf_lt_length_of_mem (by simpa using hc))]
+      exact List.getElem_idxOf (List.idxOf_lt_length_of_mem (by simpa using hc))
+    · intro j hj
+      rw [Finset.mem_range] at hj
+      rw [getD_lt_gen PC j 0 hj]
+      exact List.Nodup.idxOf_getElem hnd j hj
+    · intro c hc
+      have hcMem : c ∈ PC := by simpa using hc
+      have hidx : PC.getD (PC.idxOf c) 0 = c := by
+        rw [getD_lt_gen PC (PC.idxOf c) 0 (List.idxOf_lt_length_of_mem hcMem)]
+        exact List.getElem_idxOf (List.idxOf_lt_length_of_mem hcMem)
+      rw [hidx]
+  have hpivsum : (∑ c ∈ PC.toFinset, f c) = -((R.getD i []).getD fc 0) := by
+    rw [hbij, Finset.sum_eq_single i]
+    · simp only [f]
+      rw [hidval i i hi hiPC, if_pos rfl, one_mul, hx_pivot i hiPC]
+    · intro j hj hji
+      rw [Finset.mem_range] at hj
+      simp only [f]
+      rw [hidval i j hi hj, if_neg (Ne.symm hji), zero_mul]
+    · intro hnot
+      exact (hnot (Finset.mem_range.mpr hiPC)).elim
+  have hdisj : Disjoint PC.toFinset {fc} :=
+    Finset.disjoint_singleton_right.mpr (by simpa using hfree)
+  rw [← hext, Finset.sum_union hdisj, hpivsum, Finset.sum_singleton]
+  dsimp [f]
+  rw [hx_fc]
+  ring
+
 /-- Output rows of `crref.go` are at least `ncols` wide. -/
 theorem crref_go_rowlen (ncols : ℕ) :
     ∀ (fuel col : ℕ) (rest pivRows : List (List ℚ)) (pivCols : List ℕ),
@@ -839,6 +952,41 @@ theorem cNullspaceBasisQ_mem_length (rows : List (List ℚ)) (ncols : ℕ) (x : 
   rw [List.mem_map] at hx
   obtain ⟨fc, _, rfl⟩ := hx
   simp
+
+/-- Every vector returned by `cNullspaceBasisQ` solves the original homogeneous system. -/
+theorem cNullspaceBasisQ_mem_solves (rows : List (List ℚ)) (ncols : ℕ) (x : List ℚ)
+    (hwidth : ∀ r ∈ rows, r.length = ncols)
+    (hx : x ∈ cNullspaceBasisQ rows ncols) :
+    ∀ i, i < rows.length → dotQ (rows.getD i []) x = 0 := by
+  unfold cNullspaceBasisQ at hx
+  split at hx
+  next R PC hcrref =>
+    rw [List.mem_map] at hx
+    obtain ⟨fc, hfc, rfl⟩ := hx
+    rw [List.mem_filter] at hfc
+    have hfcLt : fc < ncols := List.mem_range.mp hfc.1
+    have hfree : fc ∉ PC := by
+      intro hmem
+      simp [hmem] at hfc
+    have hwidth' : ∀ r ∈ rows, ncols ≤ r.length := fun r hr => le_of_eq (hwidth r hr).symm
+    obtain ⟨hid, hnd, hpcb⟩ := crref_rref rows ncols hwidth'
+    rw [hcrref] at hid hnd hpcb
+    have hrlen : ∀ r ∈ R, ncols ≤ r.length := by
+      have h := crref_rowlen rows ncols hwidth'
+      simpa [hcrref] using h
+    have hsolR := freeColumn_solves_rref R PC ncols fc hid hnd hpcb hrlen hfcLt hfree
+    have hsol : solvesAll rows ((List.range ncols).map (fun j =>
+        if j = fc then 1 else match PC.idxOf? j with
+          | some pr => -((R.getD pr []).getD fc 0)
+          | none => 0)) :=
+      crref_solves rows ncols _ (by simp) (by
+        intro r hr
+        rw [hwidth r hr]
+        simp) (by
+        rw [hcrref]
+        exact hsolR)
+    intro i hi
+    exact hsol _ (getD_mem_lt rows i [] hi)
 
 /-- Soundness of `cConstSolveUniqueQ`: if it returns `some x`, then `x` solves `A·x = b` rowwise,
 `dotQ (Arows.getD i []) x = urhs.getD i 0` for each `i < Arows.length`. -/
@@ -1031,5 +1179,9 @@ instance instLawfulCLinearSolveRat : LawfulCLinearSolve ℚ where
   nullspaceBasis_length := by
     intro rows ncols x hx
     exact DensePoly.cNullspaceBasisQ_mem_length rows ncols x hx
+  nullspaceBasis_sound := by
+    intro rows ncols x hwidth hx i hi
+    rw [linearDot_rat_eq_dotQ]
+    exact DensePoly.cNullspaceBasisQ_mem_solves rows ncols x hwidth hx i hi
 
 end DeepWiki.SymbolicIntegration

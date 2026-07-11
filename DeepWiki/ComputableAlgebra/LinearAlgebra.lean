@@ -49,5 +49,10 @@ class LawfulCLinearSolve (α : Type u) [CField α] [CLinearSolve α] where
   /-- Every returned nullspace vector has exactly the requested number of columns. -/
   nullspaceBasis_length : ∀ (rows : List (List α)) (ncols : ℕ) (x : List α),
     x ∈ CLinearSolve.nullspaceBasis rows ncols → x.length = ncols
+  /-- Every returned nullspace vector solves each row of a well-formed homogeneous system. -/
+  nullspaceBasis_sound : ∀ (rows : List (List α)) (ncols : ℕ) (x : List α),
+    (∀ row ∈ rows, row.length = ncols) →
+    x ∈ CLinearSolve.nullspaceBasis rows ncols →
+      ∀ i, i < rows.length → linearDot (rows.getD i []) x = CCommRing.zero
 
 end DeepWiki.SymbolicIntegration
