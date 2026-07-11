@@ -41,6 +41,97 @@ instance instLawfulCTangentCoupledSolver [CLinearSolve ℚ] [LawfulCLinearSolve 
   sound dbound b0 b2 c1 c2 q1 q2 n hrun :=
     DensePoly.reconstruct dbound b0 n b2 c1 c2 q1 q2 hrun
 
+/-! ## Coefficient-field coupled-system boundary -/
+
+/-- Prop-free coupled-system operation over the actual hypertangent coefficient field. -/
+structure CTangentCoefficientSolver (α : Type*) [CField α] [CDiffField α] where
+  /-- Attempt `Dc - coupling*d = a` and `Dd + coupling*c = b` at a finite search bound. -/
+  solve : ℕ → α → α → α → Option (α × α)
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+
+/-- Denotational soundness contract for a coefficient-field tangent coupled solver. -/
+class LawfulCTangentCoefficientSolver (C : CTangentCoefficientSolver α) : Prop where
+  /-- Every returned pair solves both coefficient-field differential equations. -/
+  sound : ∀ (fuel : ℕ) (coupling a b c d : α), C.solve fuel coupling a b = some (c, d) →
+    CFieldSpec.toK (CDiffField.cderiv c) - CFieldSpec.toK coupling * CFieldSpec.toK d =
+        CFieldSpec.toK a ∧
+      CFieldSpec.toK (CDiffField.cderiv d) + CFieldSpec.toK coupling * CFieldSpec.toK c =
+        CFieldSpec.toK b
+
+/-- Semantic domain for relative completeness of coefficient-field tangent coupled solving. -/
+abbrev TangentCoefficientDomain := α → α → α → Prop
+
+/-- A coefficient-field tangent coupled system has a denotational solution. -/
+def IsTangentCoefficientSolvable (coupling a b : α) : Prop :=
+  ∃ c d,
+    CFieldSpec.toK (CDiffField.cderiv c) - CFieldSpec.toK coupling * CFieldSpec.toK d =
+        CFieldSpec.toK a ∧
+      CFieldSpec.toK (CDiffField.cderiv d) + CFieldSpec.toK coupling * CFieldSpec.toK c =
+        CFieldSpec.toK b
+
+/-- Domain-relative completeness for coefficient-field tangent coupled solving. -/
+class CompleteCTangentCoefficientSolver (C : CTangentCoefficientSolver α)
+    (domain : TangentCoefficientDomain (α := α)) [LawfulCTangentCoefficientSolver C] : Prop where
+  /-- Every solvable in-domain system succeeds at some finite search bound. -/
+  complete : ∀ (coupling a b : α), domain coupling a b →
+    IsTangentCoefficientSolvable coupling a b →
+      ∃ fuel c d, C.solve fuel coupling a b = some (c, d)
+
+/-- Check both coefficient-field coupled equations before releasing a candidate. -/
+def checkedTangentCoefficientSolver (raw : CTangentCoefficientSolver α) :
+    CTangentCoefficientSolver α where
+  solve fuel coupling a b := do
+    let out ← raw.solve fuel coupling a b
+    let row₁ := CField.sub
+      (CField.sub (CDiffField.cderiv out.1) (CCommRing.mul coupling out.2)) a
+    let row₂ := CField.sub
+      (CCommRing.add (CDiffField.cderiv out.2) (CCommRing.mul coupling out.1)) b
+    if CCommRing.isZero row₁ && CCommRing.isZero row₂ then some out else none
+
+/-- The checked coefficient-field coupled operation is lawful without assumptions on its candidate generator. -/
+instance instLawfulCTangentCoefficientSolverChecked (raw : CTangentCoefficientSolver α) :
+    LawfulCTangentCoefficientSolver (checkedTangentCoefficientSolver raw) where
+  sound fuel coupling a b c d hrun := by
+    simp only [checkedTangentCoefficientSolver] at hrun
+    rcases hraw : raw.solve fuel coupling a b with _ | out
+    · simp [hraw] at hrun
+    rw [hraw] at hrun
+    change (if CCommRing.isZero
+          (CField.sub (CField.sub (CDiffField.cderiv out.1)
+            (CCommRing.mul coupling out.2)) a) &&
+        CCommRing.isZero
+          (CField.sub (CCommRing.add (CDiffField.cderiv out.2)
+            (CCommRing.mul coupling out.1)) b)
+      then some out else none) = some (c, d) at hrun
+    split at hrun
+    · rename_i hcheck
+      have hout : out = (c, d) := Option.some.inj hrun
+      subst out
+      rw [Bool.and_eq_true] at hcheck
+      obtain ⟨hrow₁, hrow₂⟩ := hcheck
+      rw [CFieldSpec.isZero_iff, CFieldSpec.toK_sub, CFieldSpec.toK_sub,
+        CFieldSpec.toK_mul] at hrow₁
+      rw [CFieldSpec.isZero_iff, CFieldSpec.toK_sub, CFieldSpec.toK_add,
+        CFieldSpec.toK_mul] at hrow₂
+      change CFieldSpec.toK (CDiffField.cderiv c) -
+        CFieldSpec.toK coupling * CFieldSpec.toK d - CFieldSpec.toK a = 0 at hrow₁
+      change CFieldSpec.toK (CDiffField.cderiv d) +
+        CFieldSpec.toK coupling * CFieldSpec.toK c - CFieldSpec.toK b = 0 at hrow₂
+      exact ⟨sub_eq_zero.mp hrow₁, sub_eq_zero.mp hrow₂⟩
+    · contradiction
+
+/-- Exact executable acceptance domain of a checked coefficient-field coupled solver. -/
+def checkedTangentCoefficientDomain (raw : CTangentCoefficientSolver α) :
+    TangentCoefficientDomain (α := α) := fun coupling a b =>
+  ∃ fuel c d, (checkedTangentCoefficientSolver raw).solve fuel coupling a b = some (c, d)
+
+/-- A checked coefficient-field coupled solver is complete on its exact acceptance domain. -/
+instance instCompleteCTangentCoefficientSolverChecked (raw : CTangentCoefficientSolver α) :
+    CompleteCTangentCoefficientSolver (checkedTangentCoefficientSolver raw)
+      (checkedTangentCoefficientDomain raw) where
+  complete _ _ _ hdomain _ := hdomain
+
 /-- Semantic domain on which a tangent special integrator is required to be complete. -/
 abbrev TangentSpecialDomain := DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) →
   DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) → Prop

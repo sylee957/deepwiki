@@ -134,8 +134,11 @@ monomial stage contracts.
    `CRecursiveCoefficientIntegrator`, and emits the possible constant multiple of `log(t²+1)`. Its unchecked
    candidate generator is private; the selected operation is certificate-checked, has a
    `LawfulCTangentSpecialIntegrator` instance, and is relatively complete on its explicit acceptance domain.
-   The next completeness step is a coupled solver over general coefficient-field fractions rather than only
-   polynomial `ℚ[x]` data. The former one-shot `CTangentSpecialBridge` could not express the recursion and has
+   `CTangentCoefficientSolver` now states the representation-neutral coefficient-field system
+   `Dc - λd = a`, `Dd + λc = b`, with separate lawful and domain-relative-completeness contracts; its checked
+   adapter is sound and complete on its explicit executable-acceptance domain. The next realization step is a
+   coupled solver over general coefficient-field fractions rather than only polynomial `ℚ[x]` data. The former
+   one-shot `CTangentSpecialBridge` could not express the recursion and has
    been retired. Soundness no longer depends on the
    low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
