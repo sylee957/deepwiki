@@ -284,16 +284,16 @@ section WfNormalDenominator
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
-/-- Writing `dₙ = (cSplitFactorFast Dt fden).1`, if `cRdeNormalDenominator … = some (a, b, c, h)`,
+/-- Writing `dₙ = (CPoly.splitFactor Dt fden).1`, if `cRdeNormalDenominator … = some (a, b, c, h)`,
 the clearings are exact, and `Q` solves `a·D(Q) + b·Q = c`, then `Q` solves the cleared
 `gden·fden·(D(Q)·h − Q·D(h)) + gden·fnum·Q·h = gnum·fden·h²`. -/
 theorem cRdeNormalDenominatorG_cleared_lift (Dt : DensePoly α) (fnum fden gnum gden a b c h Q : DensePoly α)
     (hres : cRdeNormalDenominator Dt fnum fden gnum gden = some (a, b, c, h))
-    (hdn : toPoly (cSplitFactorFast Dt fden).1 ≠ 0)
+    (hdn : toPoly (CPoly.splitFactor Dt fden).1 ≠ 0)
     (hfden0 : cnorm fden ≠ []) (hgden0 : cnorm gden ≠ [])
-    (hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (cSplitFactorFast Dt fden).1 h) fnum)
-        (cmul (cmul (cSplitFactorFast Dt fden).1 (CPolyEngine.monomialDeriv Dt h)) fden)))
-    (hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (cSplitFactorFast Dt fden).1 h) h) gnum))
+    (hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (CPoly.splitFactor Dt fden).1 h) fnum)
+        (cmul (cmul (CPoly.splitFactor Dt fden).1 (CPolyEngine.monomialDeriv Dt h)) fden)))
+    (hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (CPoly.splitFactor Dt fden).1 h) h) gnum))
     (hred : toPoly a * Differential.implicitDeriv (toPoly Dt) (toPoly Q) + toPoly b * toPoly Q
       = toPoly c) :
     toPoly gden * toPoly fden
@@ -301,7 +301,7 @@ theorem cRdeNormalDenominatorG_cleared_lift (Dt : DensePoly α) (fnum fden gnum 
             - toPoly Q * Differential.implicitDeriv (toPoly Dt) (toPoly h))
         + toPoly gden * toPoly fnum * toPoly Q * toPoly h
       = toPoly gnum * toPoly fden * toPoly h ^ 2 := by
-  set dn := (cSplitFactorFast Dt fden).1 with hdndef
+  set dn := (CPoly.splitFactor Dt fden).1 with hdndef
   set bNum := csub (cmul (cmul dn h) fnum) (cmul (cmul dn (CPolyEngine.monomialDeriv Dt h)) fden) with hbNum
   set cNum := cmul (cmul (cmul dn h) h) gnum with hcNum
   rw [cRdeNormalDenominator] at hres
@@ -385,11 +385,11 @@ theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : DensePoly α)
     (bbar cbar : DensePoly α) (m : ℤ) (α' β v : DensePoly α)
     (hprim : cdeg (cSpecialPoly Dt) = 0)
     (hnorm : cRdeNormalDenominator Dt fnum fden gnum gden = some (a0, b0, c0, h0))
-    (hdn : toPoly (cSplitFactorFast Dt fden).1 ≠ 0)
+    (hdn : toPoly (CPoly.splitFactor Dt fden).1 ≠ 0)
     (hfden0 : cnorm fden ≠ []) (hgden0 : cnorm gden ≠ [])
-    (hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (cSplitFactorFast Dt fden).1 h0) fnum)
-        (cmul (cmul (cSplitFactorFast Dt fden).1 (CPolyEngine.monomialDeriv Dt h0)) fden)))
-    (hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (cSplitFactorFast Dt fden).1 h0) h0) gnum))
+    (hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (CPoly.splitFactor Dt fden).1 h0) fnum)
+        (cmul (cmul (CPoly.splitFactor Dt fden).1 (CPolyEngine.monomialDeriv Dt h0)) fden)))
+    (hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (CPoly.splitFactor Dt fden).1 h0) h0) gnum))
     (hspde : cSPDE Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
         (cRdeSpecialDenominator Dt a0 b0 c0).2.1 (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1
         (cRdeBoundDegree Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
@@ -440,17 +440,17 @@ structure RischDEStructuralResidualWf (Dt : DensePoly α) (fnum fden gnum gden a
     Prop where
   /-- Primitive special regime: `cdeg (cSpecialPoly Dt) = 0`. -/
   hprim : cdeg (cSpecialPoly Dt) = 0
-  /-- The normal part `dₙ = (cSplitFactorFast Dt fden).1` is nonzero. -/
-  hdn : toPoly (cSplitFactorFast Dt fden).1 ≠ 0
+  /-- The normal part `dₙ = (CPoly.splitFactor Dt fden).1` is nonzero. -/
+  hdn : toPoly (CPoly.splitFactor Dt fden).1 ≠ 0
   /-- The input denominator `fden` is nonzero. -/
   hfden0 : cnorm fden ≠ []
   /-- The input denominator `gden` is nonzero. -/
   hgden0 : cnorm gden ≠ []
   /-- `fden` divides the `B`-numerator (the `CPolyEuclidean.div` clearing is exact). -/
-  hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (cSplitFactorFast Dt fden).1 h0) fnum)
-      (cmul (cmul (cSplitFactorFast Dt fden).1 (CPolyEngine.monomialDeriv Dt h0)) fden))
+  hdvdB : toPoly fden ∣ toPoly (csub (cmul (cmul (CPoly.splitFactor Dt fden).1 h0) fnum)
+      (cmul (cmul (CPoly.splitFactor Dt fden).1 (CPolyEngine.monomialDeriv Dt h0)) fden))
   /-- `gden` divides the `C`-numerator (the `CPolyEuclidean.div` clearing is exact). -/
-  hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (cSplitFactorFast Dt fden).1 h0) h0) gnum)
+  hdvdC : toPoly gden ∣ toPoly (cmul (cmul (cmul (CPoly.splitFactor Dt fden).1 h0) h0) gnum)
   /-- The transparent-input chain `CSPDEGClearedInputsGenWf` on the special-cleared coefficients at
   the bound degree. -/
   hin : CSPDEGClearedInputsGenWf Dt (cRdeSpecialDenominator Dt a0 b0 c0).1

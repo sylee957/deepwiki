@@ -269,13 +269,13 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- Generic canonical representation over the tower:
 `canonicalRepresentationFast Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d` (`d` monic).
-Divide `a = q·d + r` (`CPolyEuclidean.divmod`); split the denominator `d = dₛ·dₙ` (`cSplitFactorFast`); Bézout-split
+Divide `a = q·d + r` (`CPolyEuclidean.divmod`); split the denominator `d = dₛ·dₙ` (`CPoly.splitFactor`); Bézout-split
 `r` over the coprime `(dₙ, dₛ)` (`CPoly.extendedEuclideanSplit` with `CPoly.bezoutOne`). Stated with `.1`/`.2`
 projections. -/
 def canonicalRepresentationFast (Dt : DensePoly α) (a d : DensePoly α) :
     DensePoly α × (DensePoly α × DensePoly α) × (DensePoly α × DensePoly α) :=
   let qr := CPolyEuclidean.divmod a d
-  let dnds := cSplitFactorFast Dt d
+  let dnds := CPoly.splitFactor Dt d
   let uw := CPoly.bezoutOne dnds.1 dnds.2
   let bc := CPoly.extendedEuclideanSplit dnds.1 dnds.2 qr.2 uw.1 uw.2
   (qr.1, (bc.1, dnds.2), (bc.2, dnds.1))

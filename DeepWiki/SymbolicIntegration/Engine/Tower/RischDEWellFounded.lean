@@ -217,12 +217,12 @@ namespace DensePoly
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- Generic weak normalizer `cWeakNormalizer Dt fnum fden = q ∈ α[t]`: split the denominator into its
-normal part `dₙ` (`cSplitFactorFast`), form `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve the
+normal part `dₙ` (`CPoly.splitFactor`), form `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve the
 residue numerator `a` via `CPoly.diophantineReduced`, build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
 (`cResidueResultantTower`), and return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the positive integer roots `nᵢ`
 of `r`. For an already-weakly-normalized `f`, `q = 1`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
 def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots : ℕ := 16) : DensePoly α :=
-  let dn := (cSplitFactorFast Dt fden).1
+  let dn := (CPoly.splitFactor Dt fden).1
   let g := CFracGcdCoreWf.cgcdFFCoreWf dn (cderiv dn)
   let dstar := CPolyEuclidean.div dn g
   let d1 := CPolyEuclidean.div dstar (CFracGcdCoreWf.cgcdFFCoreWf dstar g)
@@ -242,8 +242,8 @@ normalized `f = fnum/fden`, `g = gnum/gden`. Returns `none` or `some (a, b, c, h
 `c = dₙh²·gnum/gden`. -/
 def cRdeNormalDenominator (Dt : DensePoly α) (fnum fden gnum gden : DensePoly α) :
     Option (DensePoly α × DensePoly α × DensePoly α × DensePoly α) :=
-  let dn := (cSplitFactorFast Dt fden).1
-  let en := (cSplitFactorFast Dt gden).1
+  let dn := (CPoly.splitFactor Dt fden).1
+  let en := (CPoly.splitFactor Dt gden).1
   let p := CFracGcdCoreWf.cgcdFFCoreWf dn en
   let h := CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf en (cderiv en))
     (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))
@@ -258,9 +258,9 @@ def cRdeNormalDenominator (Dt : DensePoly α) (fnum fden gnum gden : DensePoly �
 
 /-- Generic special monic irreducible of the monomial `cSpecialPoly Dt = p`: the monic special part of
 the monomial derivative `Dt` (`t²+1` hypertangent, `t` hyperexponential, `1` primitive) via the
-splitting-factorization `cSplitFactorFast`. -/
+selected splitting-factorization `CPoly.splitFactor`. -/
 def cSpecialPoly (Dt : DensePoly α) : DensePoly α :=
-  cmonic (cSplitFactorFast Dt Dt).2
+  cmonic (CPoly.splitFactor Dt Dt).2
 
 /-- Generic special-denominator reduction `cRdeSpecialDenominator Dt a b c`. Given `a·Dq + b·q = c` with
 `a` free of special factors, returns the special-cleared quadruplet `(ā, b̄, c̄, h)` (`h = p^{−n}`) so
@@ -476,7 +476,7 @@ namespace CFrac
 /-- Test whether a represented fraction denominator equals its selected differential normal part. -/
 def denomNormalGate {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
     [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P]
-    {β : Type u} [CField β] [CDiffField β] (a : F β) : Bool :=
+    {β : Type u} [CField β] [CDiffField β] [CPolySplitFactor P β] (a : F β) : Bool :=
   CPolyEngine.cisZero (CPolyEngine.sub
     (CPoly.splitFactor (CPoly.one : P β) (CFrac.den a)).1 (CFrac.den a))
 

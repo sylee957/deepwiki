@@ -98,7 +98,7 @@ theorem canonicalReconstruction (Dt a d : DensePoly α)
         + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
       = fieldFrac a d := by
   set qr := CPolyEuclidean.divmod a d with hqr
-  set sn := cSplitFactorFast Dt d with hsn
+  set sn := CPoly.splitFactor Dt d with hsn
   set uw := CPoly.bezoutOne sn.1 sn.2 with huw
   set bc := CPoly.extendedEuclideanSplit sn.1 sn.2 qr.2 uw.1 uw.2 with hbc
   have hcanon : canonicalRepresentationFast Dt a d = (qr.1, (bc.1, sn.2), (bc.2, sn.1)) := by

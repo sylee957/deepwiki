@@ -57,16 +57,16 @@ theorem cdegG_cstepG_one : cdeg (DensePoly.cstep ([CCommRing.one] : DensePoly β
       (by simpa only [toPoly_list_eq] using
         (fun h => hg20 ((DensePoly.cnormG_eq_nil_iff g2).mpr h)))
 
-/-- `cSplitFactorFast [1] [1] = ([1], [1])`: the split factorization of the unit `[1]` is trivial. -/
-theorem cSplitFactorFastG_one_eq :
-    DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) [CCommRing.one]
+/-- `CPoly.splitFactor [1] [1] = ([1], [1])`: the split factorization of the unit `[1]` is trivial. -/
+theorem CPoly.splitFactor_one_eq :
+    CPoly.splitFactor ([CCommRing.one] : DensePoly β) [CCommRing.one]
       = ([CCommRing.one], [CCommRing.one]) := by
-  rw [DensePoly.cSplitFactorFast, if_pos cdegG_cstepG_one]
+  rw [CPoly.splitFactor_dense_eq, DensePoly.cSplitFactorFast, if_pos cdegG_cstepG_one]
 
 /-- `cdeg (cSpecialPoly [1]) = 0`: the special part of the primitive monomial `[1]` is constant. -/
 theorem cdegG_cSpecialPolyG_one_eq_zero :
     cdeg (DensePoly.cSpecialPoly ([CCommRing.one] : DensePoly β)) = 0 := by
-  rw [DensePoly.cSpecialPoly, cSplitFactorFastG_one_eq, cdegG_eq_natDegree]
+  rw [DensePoly.cSpecialPoly, CPoly.splitFactor_one_eq, cdegG_eq_natDegree]
   have hassoc := associated_toPolyG_cmonicG ([CCommRing.one] : DensePoly β)
   rw [toPolyG_cone_eq_one_wf] at hassoc
   exact natDegree_eq_zero_of_isUnit (associated_one_iff_isUnit.mp hassoc)

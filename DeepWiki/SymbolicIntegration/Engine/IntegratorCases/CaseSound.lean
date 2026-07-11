@@ -82,7 +82,7 @@ theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
 /-- **Primitive case with BOTH `hSpecField` and `hrecon` discharged** (canonical primitive `Dt = 1`,
 `fₚ ≠ 0`, special part `b = 0`): the special-part identity comes from the poly-RDE soundness and the
 reconstruction from `canonicalReconstruction` (the `b = 0` special term vanishes). The only remaining
-inputs are the shared reduced identity (`hNrmField`) and the `cSplitFactorFast` split-correctness facts
+inputs are the shared reduced identity (`hNrmField`) and the `CPoly.splitFactor` split-correctness facts
 (`hsplit`, coprimality) — the engine's split frontier. -/
 theorem cIntegrateCase_primitive_sound_full [CharZero (CFieldSpec.K α)]
     (a d : DensePoly α) (cands : List α) (res : IntegralResult α) (qp : DensePoly α)
