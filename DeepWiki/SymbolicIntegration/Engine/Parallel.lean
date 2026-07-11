@@ -206,7 +206,7 @@ undetermined numerator), forms the eq. 10.6 linear system (`cParallelSystemQ`), 
 
 Validated on transcendental integrands (`t = exp x`, `t = tan x`) and rational ones via the cleared
 identity `D(∫f) = f`. -/
-def cParallelIntegrate (Dt a d : DensePoly ℚ) :
+def cParallelIntegrate [CLinearSolve ℚ] (Dt a d : DensePoly ℚ) :
     Option ((DensePoly ℚ × DensePoly ℚ) × List (ℚ × DensePoly ℚ)) :=
   let (rows, rhs, nU, m) := cParallelSystemQ Dt a d
   let (ps, s, _) := cParallelAnsatzQ d (cdeg (cscale (1 / clead d) a) : ℤ)
@@ -302,7 +302,7 @@ def cToRatCoeffsQ {P Q : Type → Type} [CPoly P] [CPolyEngine P]
 /-- Run the base-field parallel integrator through any represented-fraction coefficient carrier. -/
 def cParallelIntegrateTower {P Q : Type → Type} [CPoly P] [CPolyEngine P]
     [CPoly Q] [CPolyEngine Q] [CPolyGcd Q ℚ] [CPolyEuclidean Q]
-    {F : (α : Type) → [CField α] → Type} [CFrac F Q] [CFieldDomain ℚ Q]
+    {F : (α : Type) → [CField α] → Type} [CFrac F Q] [CFieldDomain ℚ Q] [CLinearSolve ℚ]
     (Dt a d : P (F ℚ)) : Option ((P (F ℚ) × P (F ℚ)) × List (ℚ × P (F ℚ))) :=
   match cToRatCoeffsQ Dt, cToRatCoeffsQ a, cToRatCoeffsQ d with
   | some DtQ, some aQ, some dQ =>

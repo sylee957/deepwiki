@@ -94,6 +94,9 @@ denotations does not make those terms definitionally equal.
   full `cIntegrateGeneralCurveDecide` soundness/completeness API now thread `[CLinearSolve ℚ]`. The
   concrete curve witnesses remain explicit specialization boundaries using the default rational RREF
   instance, while reusable drivers and contracts accept any selected linear-solver implementation.
+- The Risch–Norman `cParallelIntegrate` driver and its representation-generic tower wrapper now select
+  `CLinearSolve.solveAny` through `[CLinearSolve ℚ]`; Chapter 10 examples remain concrete default-RREF
+  regression checks rather than fixing that implementation in the reusable API.
 
 ## Verification
 
