@@ -27,7 +27,7 @@ def gcuspRho : DenseFrac ℚ := CFrac.ofPoly [0, 0, 0, 1]
 the maximal-order datum the algebraic Hermite reduction consumes. -/
 theorem gcusp_integralBasis_eq :
     (cisZero (csub ((integralBasis cuspF).getD 1 [])
-          [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
+          [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)])
       && cisZero (csub ((integralBasis cuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (CPoly.mulMod cuspF ((integralBasis cuspF).getD 1 [])
             ((integralBasis cuspF).getD 1 [])) [CFrac.ofPoly [0, 1]])

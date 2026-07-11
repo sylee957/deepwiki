@@ -56,7 +56,7 @@ example :
 
 /-- Fuel-free iterated Case-3 reduction `radReduceCase3IterateG der f g C vNum = (Crem, vNumOut)`, using
 the generic cofactor `B := radCase3CofactorTower der f g C`: while `deg C ≥ deg f`, cancel the leading term
-with `B`, form the residual `D := radCase3Residual f g B C (der B)`, accumulate `B·f` into `vNum`, recurse
+with `B`, form the residual `D := CPoly.radCase3Residual f g B C (der B)`, accumulate `B·f` into `vNum`, recurse
 on `−D`; bottom at `deg C < deg f`. `der` the radicand-level derivation. Generic over `[CField α]`. -/
 def radReduceCase3IterateG (der : DensePoly α → DensePoly α) (f g : DensePoly α) :
     DensePoly α → DensePoly α → DensePoly α × DensePoly α
@@ -64,7 +64,7 @@ def radReduceCase3IterateG (der : DensePoly α → DensePoly α) (f g : DensePol
     if cisZero C || cdeg C < cdeg f then (C, vNum)
     else
       let B := radCase3CofactorTower der f g C
-      let D := radCase3Residual f g B C (der B)
+      let D := CPoly.radCase3Residual f g B C (der B)
       if (cnorm (cneg D) : List α).length < (cnorm C : List α).length then
         radReduceCase3IterateG der f g (cneg D) (cadd vNum (cmul B f))
       else (C, vNum)

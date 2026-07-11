@@ -356,9 +356,9 @@ end RadElem
 
 /-! ### Bridge (iii): the per-step polynomial cleared identity is definitional
 
-The Case-3 single-step residual `radCase3Residual f g B C Bder = B'f + Bg − C` is the *defining*
+The Case-3 single-step residual `CPoly.radCase3Residual f g B C Bder = B'f + Bg − C` is the *defining*
 expression `csub (cadd (cmul Bder f) (cmul B g)) C`. The engine's per-step cleared identity is
-`radCase3Residual f g B C (cderiv B) = D` (the next leftover), and reading it through `toPoly` is the
+`CPoly.radCase3Residual f g B C (cderiv B) = D` (the next leftover), and reading it through `toPoly` is the
 polynomial equation `B'·f + B·g − C = D` in `K[X]` — a `rfl`/`cisZero` fact, no `radDeriv` reasoning.
 This is the trivial bridge: it just unfolds the definition. -/
 
@@ -367,12 +367,12 @@ namespace DensePoly
 variable {α : Type*} [CField α] [CDiffField α]
 
 omit [CDiffField α] in
-/-- **Bridge (iii) — `radCase3Residual` is definitionally `B'f + Bg − C`** — `radCase3Residual f g B C
+/-- **Bridge (iii) — `CPoly.radCase3Residual` is definitionally `B'f + Bg − C`** — `CPoly.radCase3Residual f g B C
 Bder = csub (cadd (cmul Bder f) (cmul B g)) C`. The per-step polynomial cleared identity is `rfl`: the
 residual the Case-3 iterate negates and recurses on is literally `B'·f + B·g − C` (with `Bder = B'`
 supplied by the caller). No content beyond unfolding — the bridge is definitional. -/
 theorem radCase3Residual_eq (f g B C Bder : DensePoly α) :
-    radCase3Residual f g B C Bder
+    CPoly.radCase3Residual f g B C Bder
       = csub (cadd (cmul Bder f) (cmul B g)) C :=
   rfl
 
@@ -386,7 +386,7 @@ coefficients — pure-`y` lifts of `CFrac.ofPoly`-of-polynomials over the radica
 `K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` (with `cBᵢ = CFrac.ofPoly Bᵢ`, `cCᵢ = CFrac.ofPoly Cᵢ`, `ℓ =
 logDerRadicand n (CFrac.ofPoly ρ) = ρ'/(nρ)`) clears, via bridges (i) (`cderiv∘CFrac.ofPoly = CFrac.ofPoly∘cderiv`) and
 (ii) (`ℓ·ρ = (1/n)ρ'`), to the polynomial cleared identity `n·ρ·Bᵢ' + Bᵢ·ρ' = n·ρ·(Cᵢ − Cᵢ₊₁)` in
-`K[X]` — the genuine-field reading of each engine step's `radCase3Residual = 0` (bridge (iii)). Feeding
+`K[X]` — the genuine-field reading of each engine step's `CPoly.radCase3Residual = 0` (bridge (iii)). Feeding
 the polynomial identities into the telescope yields the literal rational-part soundness over `ℚ(x)`. -/
 
 namespace RadElem
@@ -425,7 +425,7 @@ holds in `RatFunc ℚ` **iff** the cleared polynomial identity
 `(n:K[X])·ρ̄·B̄' + B̄·ρ̄' = (n:K[X])·ρ̄·(C̄ − C̄')` holds in `K[X]` (`ρ̄ = toPoly ρ` etc.), provided `n ≠ 0`
 and `ρ̄ ≠ 0`. This is the (i)+(ii)+(iii) composition at one step: bridge (i) reads `cderiv∘CFrac.ofPoly`, bridge
 (ii) clears `ℓ = ρ'/(nρ)`, and `am` injectivity descends the `RatFunc` equation to the `K[X]` identity.
-The genuine-field form of `radCase3Residual = 0`. -/
+The genuine-field form of `CPoly.radCase3Residual = 0`. -/
 theorem toK_step_ofPoly_iff (n : ℕ) (ρ B C C' : DensePoly ℚ)
     (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : DensePoly.toPoly ρ ≠ 0) :
     CFieldSpec.toK (CCommRing.add (CDiffField.cderiv (CFrac.ofPoly B : DenseFrac ℚ))
@@ -460,7 +460,7 @@ theorem toK_step_ofPoly_iff (n : ℕ) (ρ B C C' : DensePoly ℚ)
 /-- **★ The LITERAL rational-part soundness over `ℚ(x)`** — for a radicand `ρ`, a list of step-contribution
 polynomials `Bpolys` and a one-longer list of leftover polynomials `Cpolys` (all `DensePoly ℚ`), **if** every
 step's cleared polynomial identity `(n:K[X])·ρ̄·Bᵢ' + Bᵢ·ρ̄' = (n:K[X])·ρ̄·(Cᵢ − Cᵢ₊₁)` holds in `K[X]`
-(`ρ̄ = toPoly ρ` etc. — the genuine-field reading of each engine step's `radCase3Residual = 0`, bridge
+(`ρ̄ = toPoly ρ` etc. — the genuine-field reading of each engine step's `CPoly.radCase3Residual = 0`, bridge
 (iii)), **then** the assembled pure-`y` antiderivative `v = (Bpolys.map (CFrac.ofPoly · ↦ [0, ·])).foldl DensePoly.cadd
 radZero` satisfies the soundness identity `radDeriv n (CFrac.ofPoly ρ) v + [0, CFrac.ofPoly Cpolys.last] = [0,
 CFrac.ofPoly Cpolys.head]` in `K[X]` (`radDeriv(v) = integrand − final-leftover`). The (i)+(ii)+(iii) composition
@@ -633,7 +633,7 @@ leftover as `c3itRatLift = [0, CFrac.ofPoly (C − Crem) / CFrac.ofPoly ρ]` (`R
 `radDeriv 2 ρ c3itVlift = c3itRatLift` by `native_decide` (`c3itDriver_integrates`). Here that soundness is
 proven **abstractly** (`[propext, Classical.choice, Quot.sound]`, no `native_decide`) **from the engine's own
 cleared `cisZero` check** of the whole-accumulator polynomial identity `2·ρ·vNum' − vNum·ρ' = 2·ρ·(C − Crem)`
-(supplied as the explicit hypothesis `hcheck` — the genuine-field reading of the run's `radCase3Residual`
+(supplied as the explicit hypothesis `hcheck` — the genuine-field reading of the run's `CPoly.radCase3Residual`
 sum, which the kernel cannot reduce for `ℚ`, hence stated rather than discharged): the fraction iff
 `isRadicalRationalIntegral_div_ofPoly_iff` collapses the radical derivation to that one `K[X]` identity, and
 `clearedKX2_of_cisZeroG` reads the engine check into it. The remaining precondition is exactly `hcheck` — the

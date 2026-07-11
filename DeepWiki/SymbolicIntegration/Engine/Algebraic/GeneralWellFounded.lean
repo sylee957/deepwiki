@@ -47,7 +47,7 @@ variable [CFieldSpec α] [CDiffFieldSpec α]
 /-! ### The Wf derivation invariant
 
 The shared quotient API lives in `ComputableGeneralQuotient`; separability is phrased as the gcd
-`cgcdWf (cderiv f) f` being a nonzero constant. -/
+the selected extended gcd of `cderiv f` and `f` being a nonzero constant. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 /-- `afDerivWf = CPoly.reduceMod f ∘ cmonomialDeriv (afYprimeWf f)` definitionally. -/
@@ -74,8 +74,8 @@ theorem mk_toPolyG_afDerivWf_add (f a b : DensePoly α) (hf : cnorm f ≠ []) :
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Bézout inverse of `f_y` in the quotient. -/
 theorem mk_toPolyG_afFyInvWf_mul_afFy (f : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f)
         (toPoly (afFyInvWf f) * toPoly (cderiv f)) = 1 := by
   have hbez := toPolyG_diophantineReduced (cderiv f) f [CCommRing.one] hf hgdeg hgne
@@ -93,8 +93,8 @@ theorem mk_toPolyG_afFyInvWf_mul_afFy (f : DensePoly α) (hf : cnorm f ≠ [])
 
 /-- The implicit derivation kills the curve generator modulo its ideal. -/
 theorem implicitDerivWf_curve_mem (f : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1 ≠ 0) :
     Differential.implicitDeriv (toPoly (afYprimeWf f)) (toPoly f) ∈ afIdeal f := by
   rw [← Ideal.Quotient.eq_zero_iff_mem]
   rw [show Differential.implicitDeriv (toPoly (afYprimeWf f)) (toPoly f)
@@ -114,8 +114,8 @@ theorem implicitDerivWf_curve_mem (f : DensePoly α) (hf : cnorm f ≠ [])
 
 /-- The implicit derivation maps `afIdeal f` into itself. -/
 theorem implicitDerivWf_mem_afIdeal (f : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0)
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1 ≠ 0)
     {x : (CFieldSpec.K α)[X]} (hx : x ∈ afIdeal f) :
     Differential.implicitDeriv (toPoly (afYprimeWf f)) x ∈ afIdeal f := by
   rw [afIdeal, Ideal.mem_span_singleton'] at hx
@@ -127,8 +127,8 @@ theorem implicitDerivWf_mem_afIdeal (f : DensePoly α) (hf : cnorm f ≠ [])
 
 /-- The implicit derivation descends to the quotient by `afIdeal f`. -/
 theorem mk_implicitDerivWf_congr (f : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0)
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1 ≠ 0)
     {p q : (CFieldSpec.K α)[X]}
     (hpq : Ideal.Quotient.mk (afIdeal f) p = Ideal.Quotient.mk (afIdeal f) q) :
     Ideal.Quotient.mk (afIdeal f)
@@ -141,8 +141,8 @@ theorem mk_implicitDerivWf_congr (f : DensePoly α) (hf : cnorm f ≠ [])
 
 /-- `afDerivWf` is Leibniz modulo the curve ideal. -/
 theorem mk_toPoly_afDerivWf_mulMod (f a b : DensePoly α) (hf : cnorm f ≠ [])
-    (hgdeg : (toPoly (cgcdWf (cderiv f) f).1).natDegree = 0)
-    (hgne : toPoly (cgcdWf (cderiv f) f).1 ≠ 0) :
+    (hgdeg : (toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1).natDegree = 0)
+    (hgne : toPoly (CPolyEuclidean.gcdExt (cderiv f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (CPoly.mulMod f a b)))
       = Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f (afDerivWf f a) b))
         + Ideal.Quotient.mk (afIdeal f) (toPoly (CPoly.mulMod f a (afDerivWf f b))) := by
@@ -298,7 +298,7 @@ def afIntegrateAlgebraicWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DenseP
 /-- The log-derivative input for the cuspidal-cubic combined validation. -/
 def gcCombineLogIntegrandWf : DensePoly (DenseFrac ℚ) :=
   CPoly.mulMod gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
-    [CCommRing.zero, CCommRing.zero, CFrac.ofFraction [1] [0, 0, 1] (by decide)]
+    [CCommRing.zero, CCommRing.zero, CFrac.ofFraction [1] [0, 0, 1] (by cfrac_nonzero)]
 
 /-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
 `∫ (y + afDerivWf(y)/y) dx`. -/

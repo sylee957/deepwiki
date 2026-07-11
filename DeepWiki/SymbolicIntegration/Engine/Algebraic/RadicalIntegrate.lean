@@ -22,7 +22,7 @@ Iterates the single-step Hermite reduction from multiplicity `k₀` down to `1`,
 rational part over the common denominator `V^{k₀−1}`. -/
 
 /-- Iterated Case-1 reduction: one Hermite step per unit of `fuel`, accumulating the cofactor
-contribution `B·f·V^{k0−k}` into `vNum` and recursing on `−radCase1Residual` at `k−1`; returns the
+contribution `B·f·V^{k0−k}` into `vNum` and recursing on `−CPoly.radCase1Residual` at `k−1`; returns the
 leftover `k = 1` numerator and the assembled rational-part numerator `vNum`. -/
 def radReduceCase1Iterate (der : DensePoly α → DensePoly α) (V Df f g : DensePoly α) (k0 : ℕ) :
     ℕ → ℕ → DensePoly α → DensePoly α → DensePoly α × DensePoly α
@@ -30,9 +30,9 @@ def radReduceCase1Iterate (der : DensePoly α → DensePoly α) (V Df f g : Dens
   | fuel + 1, k, C, vNum =>
     if k ≤ 1 then (C, vNum)
     else
-      let B := radCase1Cofactor k V Df f C
+      let B := CPoly.radCase1Cofactor k V Df f C
       let Bder := der B
-      let D := radCase1Residual k V Df f g B C Bder
+      let D := CPoly.radCase1Residual k V Df f g B C Bder
       -- contribution `B·f/(V^{k−1}y)` over the common denominator `V^{k0−1}`: `B·f·V^{k0−k}`
       let contrib := cmul (cmul B f) (cpow V (k0 - k))
       radReduceCase1Iterate der V Df f g k0 fuel (k - 1) (cneg D) (cadd vNum contrib)

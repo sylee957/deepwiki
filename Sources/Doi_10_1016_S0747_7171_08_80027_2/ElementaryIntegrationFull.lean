@@ -144,7 +144,7 @@ abbrev bie_both_halves_computed := @rtFull_both_halves_computed
 /-- **`radIntegrateCase3G cderiv` reduces to the ℚ-base fuel-free Case-3 driver** (Bronstein 1990,
 rational part; `native_decide`): at the ℚ base (`α ≅ ℚ(x)`, `θ' = 1`) the generic Case-3-G driver and
 `radIntegrateCase3Wf` produce the **identical** `(Crem, vNum)` on `∫ x⁴/√(x³+1)` — the ACTUAL-derivation
-generalization is conservative (`radCase3CofactorTower cderiv` specializes back to `radCase3Cofactor`). -/
+generalization is conservative (`radCase3CofactorTower cderiv` specializes back to `CPoly.radCase3Cofactor`). -/
 abbrev bie_case3_tower_base_conservative := @stretch_case3G_eq_case3_base
 
 end DeepWiki.Bie

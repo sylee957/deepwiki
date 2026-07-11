@@ -125,25 +125,29 @@ with `(1−k)V'fB ≡ C (mod V)` (solvable since `gcd((1−k)V'f, V) = 1`) and r
 `D = ((1−k)V'fB − C)/V + B'f + Bg` (`g` from `(f/y)' = g/y`); cleared over `Vᵏy` the step is the pure
 `F[θ]` identity `(1−k)V'fB − C + V(B'f + Bg) = V·D`. -/
 
-namespace DensePoly
-
-variable {α : Type*} [CField α]
+namespace CPoly
 
 /-- Case-1 cofactor `radCase1Cofactor k V Df f C = B`: the degree-`< deg V` polynomial solving
 `(1−k)·V'·f·B ≡ C (mod V)` via `CPoly.diophantineReduced ((1−k)·V'·f) V C`. `Df = V'` is passed in. -/
-def radCase1Cofactor (k : ℕ) (V Df f C : DensePoly α) : DensePoly α :=
-  let oneMinusK := cneg [cnatCast (k - 1)]                    -- the constant `(1 − k) = −(k−1)`
-  let coeff := cmul oneMinusK (cmul Df f)                     -- `(1−k)·V'·f`
+def radCase1Cofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (k : ℕ) (V Df f C : P α) : P α :=
+  let oneMinusK := CPolyEngine.ofCoeffList
+    [CCommRing.neg (DensePoly.cnatCast (k - 1))]
+  let coeff := CPolyEngine.mul oneMinusK (CPolyEngine.mul Df f)
   (CPoly.diophantineReduced coeff V C).1
 
 /-- Case-1 residual `radCase1Residual k V Df f g B C Bder = D`: the lowered-`k` numerator
 `D = ((1−k)V'fB − C)/V + B'f + Bg`. `Df = V'`, `Bder = B'`, `g` from `(f/y)' = g/y` passed in; division
 by `V` is selected through `CPolyEuclidean.div`. -/
-def radCase1Residual (k : ℕ) (V Df f g B C Bder : DensePoly α) : DensePoly α :=
-  let oneMinusK := cneg [cnatCast (k - 1)]
-  let topNum := csub (cmul oneMinusK (cmul Df (cmul f B))) C  -- `(1−k)V'fB − C`
-  let quotient := CPolyEuclidean.div topNum V                     -- `((1−k)V'fB − C)/V`
-  cadd quotient (cadd (cmul Bder f) (cmul B g))               -- `… + B'f + Bg`
+def radCase1Residual {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (k : ℕ) (V Df f g B C Bder : P α) : P α :=
+  let oneMinusK := CPolyEngine.ofCoeffList
+    [CCommRing.neg (DensePoly.cnatCast (k - 1))]
+  let topNum := CPolyEngine.sub
+    (CPolyEngine.mul oneMinusK (CPolyEngine.mul Df (CPolyEngine.mul f B))) C
+  let quotient := CPolyEuclidean.div topNum V
+  CPolyEngine.add quotient
+    (CPolyEngine.add (CPolyEngine.mul Bder f) (CPolyEngine.mul B g))
 
 /-! ### Case 2 rational-part reduction (`θ' = 1`, `n = 2`)
 
@@ -154,21 +158,54 @@ The piece `C/(Wᵏy)` where `W` is a squarefree factor of the radicand `f` (not 
 
 /-- Case-2 cofactor (`n = 2`) `radCase2Cofactor k W h C = B`: the degree-`< deg W` polynomial solving
 `B·(½−k)·W'·h ≡ C (mod W)` via `CPoly.diophantineReduced ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderiv W`. -/
-def radCase2Cofactor (k : ℕ) (W h C : DensePoly α) : DensePoly α :=
-  let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- `½`
-  let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- `(½ − k)·W'·h`
+def radCase2Cofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (k : ℕ) (W h C : P α) : P α :=
+  let half := CPolyEngine.ofCoeffList (P := P)
+    [CField.div CCommRing.one (DensePoly.cnatCast 2)]
+  let kpoly := CPolyEngine.ofCoeffList (P := P) [DensePoly.cnatCast k]
+  let coef := CPolyEngine.mul (CPolyEngine.sub half kpoly)
+    (CPolyEngine.mul (CPolyEngine.deriv W) h)
   (CPoly.diophantineReduced coef W C).1
 
 /-- Case-2 residual (`n = 2`) `radCase2Residual k W h C B = D`: the lowered-`k` numerator
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderiv B`, `h'` is `cderiv h`, division by `W` is
 `CPolyEuclidean.div`. -/
-def radCase2Residual (k : ℕ) (W h C B : DensePoly α) : DensePoly α :=
-  let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- `½`
-  let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- `(½ − k)·W'·h`
-  let topNum := csub (cmul B coef) C                                      -- `B·(½−k)W'h − C`
-  let quotient := CPolyEuclidean.div topNum W                               -- `/W`
-  cadd quotient (cadd (cmul (cderiv B) h)                              -- `+ B'h`
-    (cmul half (cmul B (cderiv h))))                                     -- `+ ½Bh'`
+def radCase2Residual {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (k : ℕ) (W h C B : P α) : P α :=
+  let half := CPolyEngine.ofCoeffList (P := P)
+    [CField.div CCommRing.one (DensePoly.cnatCast 2)]
+  let kpoly := CPolyEngine.ofCoeffList (P := P) [DensePoly.cnatCast k]
+  let coef := CPolyEngine.mul (CPolyEngine.sub half kpoly)
+    (CPolyEngine.mul (CPolyEngine.deriv W) h)
+  let topNum := CPolyEngine.sub (CPolyEngine.mul B coef) C
+  let quotient := CPolyEuclidean.div topNum W
+  CPolyEngine.add quotient
+    (CPolyEngine.add (CPolyEngine.mul (CPolyEngine.deriv B) h)
+      (CPolyEngine.mul half (CPolyEngine.mul B (CPolyEngine.deriv h))))
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let f := ofList [0, 1]
+    let V := ofList [-1, 1]
+    let Df := ofList [1]
+    let C := ofList [1]
+    let g := ofList [1 / 2]
+    let B := radCase1Cofactor 2 V Df f C
+    let D := radCase1Residual 2 V Df f g B C (CPolyEngine.deriv B)
+    CPolyEngine.cisZero (CPolyEngine.sub B (ofList [-1])) = true ∧
+      CPolyEngine.cisZero (CPolyEngine.sub D (ofList [1 / 2])) = true := by
+  ccompute
+
+example :
+    let ofList : List ℚ → CPoly.SparsePoly ℚ := CPolyEngine.ofCoeffList
+    let W := ofList [0, 1]
+    let h := ofList [-1, 0, 1]
+    let C := ofList [1]
+    let B := radCase2Cofactor 2 W h C
+    let D := radCase2Residual 2 W h C B
+    CPolyEngine.cisZero (CPolyEngine.sub B (ofList [2 / 3])) = true ∧
+      CPolyEngine.cisZero (CPolyEngine.sub D (ofList [0, -1 / 3])) = true := by
+  ccompute
 
 /-! ### Case 3 rational-part reduction (`θ' = 1`)
 
@@ -186,7 +223,7 @@ def radCase3Cofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P]
   if CPolyEngine.cisZero C || dC < dF then CPolyEngine.ofCoeffList []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CCommRing.add (cnatCast jp1) (CPolyEngine.clead g) -- `(j+1) + lcf(g)`
+    let denom := CCommRing.add (DensePoly.cnatCast jp1) (CPolyEngine.clead g)
     let b := CField.div (CPolyEngine.clead C) denom                -- `b = lcf(C)/((j+1)+lcf(g))`
     CPolyEngine.monomial b jp1                                     -- `b·θ^{j+1}`
 
@@ -215,7 +252,8 @@ def radCase3CofactorGen {P : Type u → Type u} [CPoly P] [CPolyEngine P]
   if CPolyEngine.cisZero C || dC < dF then CPolyEngine.ofCoeffList []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CCommRing.add (CCommRing.mul (cnatCast jp1) Dt) (CPolyEngine.clead g)
+    let denom := CCommRing.add
+      (CCommRing.mul (DensePoly.cnatCast jp1) Dt) (CPolyEngine.clead g)
     let b := CField.div (CPolyEngine.clead C) denom                 -- `b = lcf(C)/((j+1)θ' + lcf(g))`
     CPolyEngine.monomial b jp1                                      -- `b·θ^{j+1}`
 
@@ -228,7 +266,7 @@ example :
     let D := radCase3Residual f g B C (CPolyEngine.deriv B)
     CPoly.coeff B 2 = 2 / 5 ∧ CPoly.coeff D 1 = -1 ∧
       CPoly.coeff (radCase3CofactorGen (1 : ℚ) f g C) 2 = 2 / 5 := by
-  native_decide
+  ccompute
 
 /-! ### `θ = exp v` rational-part reduction
 
@@ -245,7 +283,8 @@ def radExpCofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P]
   let f0 := CPoly.coeff f 0
   let g0 := CPoly.coeff g 0
   let c0 := CPoly.coeff C 0
-  let denom := CField.sub g0 (CCommRing.mul (CCommRing.mul (cnatCast k) vder) f0)  -- `g₀ − k·v'·f₀`
+  let denom := CField.sub g0
+    (CCommRing.mul (CCommRing.mul (DensePoly.cnatCast k) vder) f0)
   CPolyEngine.ofCoeffList [CField.div c0 denom]                               -- `[b₀]`
 
 example :
@@ -254,16 +293,22 @@ example :
     let g := ofList [0, 1 / 2]
     let C := ofList [1, 1]
     CPoly.coeff (radExpCofactor 1 (1 : ℚ) f g C) 0 = -1 := by
-  native_decide
+  ccompute
 
 /-- `θ = exp v` `C/(θᵏy)` residual `radExpResidual k vder f g B C Bder = D`: the lowered-`k` numerator
 `D = ((B'f + Bg − k·v'·B·f) − C)/θ`. `vder = v'`, `Bder = B'`, `g` passed in; division by `θ` is
 `CPolyEuclidean.div _ [0,1]`. -/
-def radExpResidual (k : ℕ) (vder : α) (f g B C Bder : DensePoly α) : DensePoly α :=
-  let kvBf := cmul [CCommRing.mul (cnatCast k) vder] (cmul B f)    -- `k·v'·B·f`
-  let num := csub (csub (cadd (cmul Bder f) (cmul B g)) kvBf) C  -- `B'f + Bg − kv'Bf − C`
-  CPolyEuclidean.div num [CCommRing.zero, CCommRing.one]                 -- `… / θ`
+def radExpResidual {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (k : ℕ) (vder : α) (f g B C Bder : P α) : P α :=
+  let kpoly := CPolyEngine.ofCoeffList (P := P)
+    [CCommRing.mul (DensePoly.cnatCast k) vder]
+  let kvBf := CPolyEngine.mul kpoly (CPolyEngine.mul B f)
+  let num := CPolyEngine.sub
+    (CPolyEngine.sub
+      (CPolyEngine.add (CPolyEngine.mul Bder f) (CPolyEngine.mul B g)) kvBf) C
+  CPolyEuclidean.div num
+    (CPolyEngine.ofCoeffList (P := P) [CCommRing.zero, CCommRing.one])
 
-end DensePoly
+end CPoly
 
 end DeepWiki.SymbolicIntegration

@@ -71,14 +71,14 @@ abbrev appA_radDeriv_decouples := @radDeriv_decouples
 
 /-! ## Case 1 — `C/(Vᵏy)`, `θ' = 1` (App. A §2.1) -/
 
-/-- **Case 1 cofactor** (Trager, Appendix A §2.1, p.75–76): `radCase1Cofactor` solves the
+/-- **Case 1 cofactor** (Trager, Appendix A §2.1, p.75–76): `CPoly.radCase1Cofactor` solves the
 Hermite congruence `(1−k)V'fB ≡ C (mod V)` via the fuel-free Bézout solver `cdiophantine`, giving
 the numerator `B` of the lowered term `Bf/(V^{k−1}y)`. -/
-abbrev appA_case1_cofactor := @radCase1Cofactor
+abbrev appA_case1_cofactor := @CPoly.radCase1Cofactor
 
-/-- **Case 1 residual** (Trager, Appendix A §2.1, p.76): `radCase1Residual` returns the residual
+/-- **Case 1 residual** (Trager, Appendix A §2.1, p.76): `CPoly.radCase1Residual` returns the residual
 numerator `D` at multiplicity `k−1` after subtracting `(Bf/(V^{k−1}y))'` from `C/(Vᵏy)`. -/
-abbrev appA_case1_residual := @radCase1Residual
+abbrev appA_case1_residual := @CPoly.radCase1Residual
 
 /-- **Appendix A §2.1, p.76** (validation): the Case-1 cleared Hermite identity
 `(Bf/(V^{k−1}y))' − C/(Vᵏy) = D/(V^{k−1}y)` holds for `y = √(x−1)`-style data
@@ -87,15 +87,15 @@ abbrev appA_case1_cleared_identity := @case1_cleared_identity
 
 /-! ## Case 2 — `C/(Wᵏy)`, `W ∣ f` squarefree, `n = 2` (App. A §2.2) -/
 
-/-- **Case 2 cofactor** (Trager, Appendix A §2.2, p.76–77, `n = 2`): `radCase2Cofactor` solves
+/-- **Case 2 cofactor** (Trager, Appendix A §2.2, p.76–77, `n = 2`): `CPoly.radCase2Cofactor` solves
 the `radDeriv`-validated congruence `B·(½−k)W'h ≡ C (mod W)` (`h = f/W`; the bracket `½−k =
 1−k−eⱼ/n` is Trager's at `eⱼ = 1, n = 2`) via `cdiophantine`, clearing `f`-factors from
 denominators. -/
-abbrev appA_case2_cofactor := @radCase2Cofactor
+abbrev appA_case2_cofactor := @CPoly.radCase2Cofactor
 
-/-- **Case 2 residual** (Trager, Appendix A §2.2, p.77, `n = 2`): `radCase2Residual` returns the
+/-- **Case 2 residual** (Trager, Appendix A §2.2, p.77, `n = 2`): `CPoly.radCase2Residual` returns the
 residual numerator `D` from the cleared identity `B·(½−k)W'h − C + W·(B'h + ½Bh') = W·D`. -/
-abbrev appA_case2_residual := @radCase2Residual
+abbrev appA_case2_residual := @CPoly.radCase2Residual
 
 /-- **Appendix A §2.2, p.77** (validation): the Case-2 cleared identity
 `B·(½−k)W'h − C + W·(B'h + ½Bh') = W·D` holds for the `C/(Wᵏy)` reduction (`native_decide`). -/
@@ -103,14 +103,14 @@ abbrev appA_case2_cleared_identity := @case2_cleared_identity
 
 /-! ## Case 3 — `C/y`, `θ' = 1` (App. A §2.3) -/
 
-/-- **Case 3 cofactor** (Trager, Appendix A §2.3, p.77–78): `radCase3Cofactor` does the
+/-- **Case 3 cofactor** (Trager, Appendix A §2.3, p.77–78): `CPoly.radCase3Cofactor` does the
 degree-lowering leading-coefficient match `c_{j+m} = (j+1 + lcf(g))b`,
 `b = lcf(C)/((j+1)+lcf(g))`, giving the numerator `B` for the `C/y` reduction. -/
-abbrev appA_case3_cofactor := @radCase3Cofactor
+abbrev appA_case3_cofactor := @CPoly.radCase3Cofactor
 
-/-- **Case 3 residual** (Trager, Appendix A §2.3, p.78): `radCase3Residual` returns the residual
+/-- **Case 3 residual** (Trager, Appendix A §2.3, p.78): `CPoly.radCase3Residual` returns the residual
 numerator `D` from the cleared identity `B'f + Bg − C = D` with `deg D < deg C`. -/
-abbrev appA_case3_residual := @radCase3Residual
+abbrev appA_case3_residual := @CPoly.radCase3Residual
 
 /-- **Appendix A §2.3, p.78** (validation): the Case-3 cleared identity `B'f + Bg − C = D` holds
 for the `C/y` reduction (`native_decide`). -/
@@ -118,11 +118,11 @@ abbrev appA_case3_cleared_identity := @case3_cleared_identity
 
 /-! ## `θ = log v` cofactor (App. A §2.3, eq. 5) -/
 
-/-- **`θ = log v` cofactor** (Trager, Appendix A §2.3, eq. 5, p.78): `radCase3CofactorGen` does
+/-- **`θ = log v` cofactor** (Trager, Appendix A §2.3, eq. 5, p.78): `CPoly.radCase3CofactorGen` does
 the `C/y` degree-lowering with the `v'/v`-weighted bracket `(j+1)·θ' + lcf(g)` and the full
 monomial derivative `cmonomialDeriv [θ']` for `B'`, validated on a genuine 2-level tower
 `ℚ(x)[log x]`, `y = √(log x)`. -/
-abbrev appA_logTheta_cofactor := @radCase3CofactorGen
+abbrev appA_logTheta_cofactor := @CPoly.radCase3CofactorGen
 
 /-- **Appendix A §2.3, eq. 5, p.78** (validation): the `θ = log v` cleared identity holds on the
 `ℚ(x)[log x]`, `y = √(log x)` tower (`native_decide`). -/
@@ -130,14 +130,14 @@ abbrev appA_logTheta_cleared_identity := @logCase_cleared_identity
 
 /-! ## `θ = exp v` cofactor — the `C/(θᵏy)` step (App. A §2.4) -/
 
-/-- **`θ = exp v` cofactor** (Trager, Appendix A §2.4, p.79): `radExpCofactor` is the `C/(θᵏy)`
+/-- **`θ = exp v` cofactor** (Trager, Appendix A §2.4, p.79): `CPoly.radExpCofactor` is the `C/(θᵏy)`
 step where `θ ∣ θ'`, matching constant (θ-degree-`0`) terms `c₀ = b₀g₀ − k·v'·b₀·f₀`
 (constant-`b₀` slice `b₀ = c₀/(g₀ − kv'f₀)`). -/
-abbrev appA_expTheta_cofactor := @radExpCofactor
+abbrev appA_expTheta_cofactor := @CPoly.radExpCofactor
 
-/-- **`θ = exp v` residual** (Trager, Appendix A §2.4, p.79): `radExpResidual` returns the
+/-- **`θ = exp v` residual** (Trager, Appendix A §2.4, p.79): `CPoly.radExpResidual` returns the
 residual `D` from the cleared identity `(B'f + Bg − kv'Bf) − C = θ·D`. -/
-abbrev appA_expTheta_residual := @radExpResidual
+abbrev appA_expTheta_residual := @CPoly.radExpResidual
 
 /-- **Appendix A §2.4, p.79** (validation): the `θ = exp v` cleared identity
 `(B'f + Bg − kv'Bf) − C = θ·D` holds on the exponential tower `ℚ(x)[eˣ]`, `y = √(eˣ+1)`

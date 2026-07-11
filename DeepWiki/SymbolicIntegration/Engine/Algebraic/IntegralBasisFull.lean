@@ -94,13 +94,13 @@ def commonDenom (M : List (List (DenseFrac ℚ))) : DensePoly ℚ :=
       acc) [CCommRing.one]
 
 /-- Clear a `K(x)`-row to a `K[x]`-row at `δ` by exact division: `clearRowExact δ row = [(δ·numᵢ)/denᵢ]`
-via exact polynomial division (`cdivWf`, valid since `denᵢ | δ`), giving the integral row `δ·row`. -/
+via selected exact polynomial division (valid since `denᵢ | δ`), giving the integral row `δ·row`. -/
 def clearRowExact (δ : DensePoly ℚ) (row : List (DenseFrac ℚ)) : List (DensePoly ℚ) :=
   row.map (fun z =>
     let zz := qReduceNZ z
     let num := zz.num
     let den := cnorm zz.den
-    cdivWf (cmul δ num) den)
+    CPolyEuclidean.div (cmul δ num) den)
 
 /-- The idealizer `Î = (I_p : I_p)` of an order `O`, as a new `K(x)` order basis: from `O` (power
 coordinates) and `ipO` (`I_p` in `O`-coordinates), build the multiply-by-`ιⱼ` matrices in the `I_p`
@@ -170,7 +170,7 @@ def badPrimesOrder (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFr
     List (DensePoly ℚ) :=
   let d := discNumOrder f O
   let distinct := ((cSqfreeYunFF d).map cmonic).filter (fun p => 0 < cdeg p)
-  distinct.filter (fun p => cisZero (cmodWf d (cmul p p)))
+  distinct.filter (fun p => cisZero (CPolyEuclidean.mod d (cmul p p)))
 
 /-- `true` iff two order bases agree: each `O1ᵢ` is `cisZero`-equal to `O2ᵢ` over the `n`
 coordinates. The iteration's fixed-point test. -/
@@ -230,7 +230,7 @@ def cuspIBGen : DensePoly (DenseFrac ℚ) := (integralBasis cuspF).getD 1 []
 
 /-- The cusp integral basis is `[1, y/x]`, integral (`(y/x)² = x`) and maximal. -/
 theorem cusp_integralBasis_eq :
-    (cisZero (csub cuspIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
+    (cisZero (csub cuspIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)])
       && cisZero (csub ((integralBasis cuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (CPoly.mulMod cuspF cuspIBGen cuspIBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
@@ -243,7 +243,7 @@ def nodeIBGen : DensePoly (DenseFrac ℚ) := (integralBasis nodeF).getD 1 []
 
 /-- The node integral basis is `[1, y/x]`, integral (`(y/x)² = x + 1`) and maximal. -/
 theorem node_integralBasis_eq :
-    (cisZero (csub nodeIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
+    (cisZero (csub nodeIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)])
       && cisZero (csub ((integralBasis nodeF).getD 0 []) [CCommRing.one])
       && cisZero (csub (CPoly.mulMod nodeF nodeIBGen nodeIBGen) [CFrac.ofPoly [1, 1]])
       && isMaximalOrder nodeF (integralBasis nodeF)) = true := by native_decide
@@ -275,12 +275,12 @@ def cusp5IBGen : DensePoly (DenseFrac ℚ) := (integralBasis cusp5F).getD 1 []
 theorem cusp5_oneStep_not_maximal :
     (((round2Step cusp5F).2)
       && cisZero (csub ((round2Step cusp5F).1.getD 1 [])
-            [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
+            [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)])
       && !isMaximalOrder cusp5F (reduceOrder (round2Step cusp5F).1)) = true := by native_decide
 
 /-- The full iteration reaches `[1, y/x²]` for `y² − x⁵` (two Round-2 steps). -/
 theorem cusp5_integralBasis_eq :
-    (cisZero (csub cusp5IBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 0, 1] (by decide)])
+    (cisZero (csub cusp5IBGen [CCommRing.zero, CFrac.ofFraction [1] [0, 0, 1] (by cfrac_nonzero)])
       && cisZero (csub ((integralBasis cusp5F).getD 0 []) [CCommRing.one])) = true := by native_decide
 
 /-- The worse-cusp generator `y/x²` is integral (`(y/x²)² = x`) and `[1, y/x²]` is maximal. -/
@@ -325,7 +325,7 @@ the generator `[0, 1/(x² − x)] = y/(x(x − 1))` and the first vector `1`; th
 (`CPoly.mulMod biCuspF g g = x`, i.e. `(y/(x(x−1)))² = x³(x−1)²/(x²(x−1)²) = x`); and `isMaximalOrder` is `true`. The
 single combined denominator `x(x − 1)` carries the enlargement at both primes at once. -/
 theorem biCusp_integralBasis_eq :
-    (cisZero (csub biCuspIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, -1, 1] (by decide)])
+    (cisZero (csub biCuspIBGen [CCommRing.zero, CFrac.ofFraction [1] [0, -1, 1] (by cfrac_nonzero)])
       && cisZero (csub ((integralBasis biCuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (CPoly.mulMod biCuspF biCuspIBGen biCuspIBGen) [CFrac.ofPoly [0, 1]])
       && isMaximalOrder biCuspF (integralBasis biCuspF)) = true := by native_decide
@@ -341,7 +341,7 @@ remaining pieces:
    trace-matrix kernel is then linear algebra **over `K[x]/(p)`** — arithmetic on `DensePoly ℚ` reduced mod `p`
    (a degree-`< deg p` representative ring), not a single evaluation at a root. The construction is otherwise
    identical (`ipOCoords`'s residue-kernel in `O`-coords + `idealizerOCoords`): replace `qEvalAtRoot` /
-   `kernelBasis` over `K` by their `K[x]/(p)`-coefficient analogues (`cmodWf · p` arithmetic in the Gauss
+   `kernelBasis` over `K` by their `K[x]/(p)`-coefficient analogues (selected remainder arithmetic in the Gauss
    elimination). The linear case here already covers the cusp/node and the multi-step/multi-prime curves
    above (all bad primes `x`, `x − 1`).
 
@@ -363,7 +363,7 @@ Each validation carries the standard `[propext, Classical.choice, Quot.sound]` p
 compiler axiom — **no `sorry`, no `sorryAx`, no extra axiom** (the iteration `integralBasisLoop` is `ℕ`-fuel
 structural recursion; `round2Pass`/`round2StepOrderAt`/`ipOCoords`/`idealizerOCoords` are non-recursive
 compositions over finite-list kernels; `kernelBasis`/`matInv`/`hermiteRowReduce` fold over finite
-`List.range`s, while exact division and fraction cancellation use the fuel-free `cdivWf`/`qReduceNZ` path).
+`List.range`s, while exact division and fraction cancellation use selected Euclidean division and `qReduceNZ`).
 **The engine now computes the FULL general-curve integral basis** —
 iterating the Ford–Zassenhaus Round-2 step to the maximal order: for the cusp `y² − x³` and node
 `y² − x²(x+1)` it returns `[1, y/x]` in one step (`cusp_integralBasis_eq`, `node_integralBasis_eq`); for the

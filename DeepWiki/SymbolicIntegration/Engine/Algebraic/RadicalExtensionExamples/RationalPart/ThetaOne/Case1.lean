@@ -32,11 +32,11 @@ def case1Vder : DensePoly ℚ := cderiv case1V
 def case1 : DensePoly ℚ := cscale (1/2 : ℚ) (cderiv case1F)
 
 /-- The solved Case-1 cofactor `B` for `−x·B ≡ 1 (mod x−1)` — expected `B = −1`. -/
-def case1B : DensePoly ℚ := radCase1Cofactor 2 case1V case1Vder case1F case1C
+def case1B : DensePoly ℚ := CPoly.radCase1Cofactor 2 case1V case1Vder case1F case1C
 
 /-- The Case-1 residual `D` — expected the constant `1/2`. -/
 def case1D : DensePoly ℚ :=
-  radCase1Residual 2 case1V case1Vder case1F case1 case1B case1C (cderiv case1B)
+  CPoly.radCase1Residual 2 case1V case1Vder case1F case1 case1B case1C (cderiv case1B)
 
 /-- The cofactor is `B = −1`: `−x·B ≡ 1 (mod x−1)` gives `B = −1`. -/
 theorem case1_cofactor_eq :

@@ -49,7 +49,7 @@ variable {α : Type*} [CField α]
 
 /-- Roots with multiplicity `rootsWithMult scan poly` — for each `r` in the scan list (e.g. all of
 `𝔽_p` via `zmodGrid`), the multiplicity of `r` as a root of `poly`, found by repeatedly dividing out
-`(x − r)` (each exact division by `cdivWf`); emit `r` repeated that many times. The
+`(x − r)` (each exact division selected by `CPolyEuclidean`); emit `r` repeated that many times. The
 independent `𝔽_p` point-extraction reading the support out of a reduced `u(x)`. Generic over `[CField α]`. -/
 def rootsWithMult (scan : List α) (poly : DensePoly α) : List α :=
   scan.foldr (fun r acc =>
@@ -57,7 +57,8 @@ def rootsWithMult (scan : List α) (poly : DensePoly α) : List α :=
       | 0, _ => 0
       | k + 1, q =>
         if cisZero q then 0
-        else if CCommRing.isZero (ceval q r) then 1 + mult k (cdivWf q [CCommRing.neg r, CCommRing.one])
+        else if CCommRing.isZero (ceval q r) then
+          1 + mult k (CPolyEuclidean.div q [CCommRing.neg r, CCommRing.one])
         else 0
     (List.replicate (mult (poly.length + 1) poly) r) ++ acc) []
 

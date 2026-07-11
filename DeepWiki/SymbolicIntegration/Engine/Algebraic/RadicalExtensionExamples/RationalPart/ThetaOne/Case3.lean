@@ -26,10 +26,10 @@ def case3 : DensePoly ℚ := cscale (1/2 : ℚ) (cderiv case3F)
 def case3C : DensePoly ℚ := [0, 1, 1]
 
 /-- The solved Case-3 leading-coefficient cofactor `B = (2/5)x²` (`j+1 = 2`, `b = 1/(2+1/2) = 2/5`). -/
-def case3B : DensePoly ℚ := radCase3Cofactor case3F case3 case3C
+def case3B : DensePoly ℚ := CPoly.radCase3Cofactor case3F case3 case3C
 
 /-- The Case-3 residual `D = B'f + Bg − C` — expected `−x` (degree `1 < deg C = 2`). -/
-def case3D : DensePoly ℚ := radCase3Residual case3F case3 case3B case3C (cderiv case3B)
+def case3D : DensePoly ℚ := CPoly.radCase3Residual case3F case3 case3B case3C (cderiv case3B)
 
 /-- The cofactor is `B = (2/5)x²`: `b = lcf(C)/((j+1)+lcf(g)) = 1/(2+1/2) = 2/5` at degree `j+1 = 2`. -/
 theorem case3_cofactor_eq :

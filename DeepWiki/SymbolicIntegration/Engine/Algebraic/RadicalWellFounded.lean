@@ -26,17 +26,17 @@ The `C/(Vᵏy)` Hermite step `k → k−1`, `V` coprime to the radicand; termina
 multiplicity `k`. -/
 
 /-- Iterated Case-1 Hermite reduction `radReduceCase1IterateWf der V Df f g k0 k C vNum =
-(Crem, vNumOut)`: at `k ≥ 2` solve the cofactor `B = radCase1Cofactor`, form the residual
-`D = radCase1Residual`, accumulate `B·f·V^{k0−k}` into `vNum`, and recurse on `−D` at `k − 1`;
+(Crem, vNumOut)`: at `k ≥ 2` solve the cofactor `B = CPoly.radCase1Cofactor`, form the residual
+`D = CPoly.radCase1Residual`, accumulate `B·f·V^{k0−k}` into `vNum`, and recurse on `−D` at `k − 1`;
 bottom at `k ≤ 1` returning `(C, vNum)`. Well-founded on `k`; `[CField α]`-only. -/
 def radReduceCase1IterateWf (der : DensePoly α → DensePoly α) (V Df f g : DensePoly α) (k0 : ℕ) :
     ℕ → DensePoly α → DensePoly α → DensePoly α × DensePoly α
   | k, C, vNum =>
     if hk : k ≤ 1 then (C, vNum)
     else
-      let B := radCase1Cofactor k V Df f C
+      let B := CPoly.radCase1Cofactor k V Df f C
       let Bder := der B
-      let D := radCase1Residual k V Df f g B C Bder
+      let D := CPoly.radCase1Residual k V Df f g B C Bder
       let contrib := cmul (cmul B f) (cpow V (k0 - k))
       radReduceCase1IterateWf der V Df f g k0 (k - 1) (cneg D) (cadd vNum contrib)
 termination_by k => k
@@ -55,7 +55,7 @@ The branch-place (`W ∣ ρ`) Hermite step `k → k−1`; same multiplicity meas
 contribution scaled by `W^{k0−k}` over the common denominator `W^{k0}·y`. -/
 
 /-- Iterated Case-2 Hermite reduction `radReduceCase2IterateWf W h ρ k0 k C vNum = (Crem, vNumOut)`:
-at `k ≥ 2` solve the cofactor `B = radCase2Cofactor`, form the residual `D = radCase2Residual`,
+at `k ≥ 2` solve the cofactor `B = CPoly.radCase2Cofactor`, form the residual `D = CPoly.radCase2Residual`,
 accumulate `B·ρ·W^{k0−k}` into `vNum`, and recurse on `−D` at `k − 1`; bottom at `k ≤ 1` returning
 `(C, vNum)`. `W` a squarefree factor of the radicand `ρ`, `h = ρ/W`. Well-founded on `k`;
 `[CField α]`-only. -/
@@ -64,8 +64,8 @@ def radReduceCase2IterateWf (W h ρ : DensePoly α) (k0 : ℕ) :
   | k, C, vNum =>
     if hk : k ≤ 1 then (C, vNum)
     else
-      let B := radCase2Cofactor k W h C
-      let D := radCase2Residual k W h C B
+      let B := CPoly.radCase2Cofactor k W h C
+      let D := CPoly.radCase2Residual k W h C B
       let contrib := cmul (cmul B ρ) (cpow W (k0 - k))
       radReduceCase2IterateWf W h ρ k0 (k - 1) (cneg D) (cadd vNum contrib)
 termination_by k => k
@@ -83,8 +83,8 @@ Termination is by `(cnorm C).length`; unlike Cases 1–2 the degree drop is data
 recursion is taken only under a structural length-drop guard. -/
 
 /-- Iterated Case-3 reduction `radReduceCase3IterateWf der f g C vNum = (Crem, vNumOut)`: while
-`deg C ≥ deg f`, cancel the leading term with `B = radCase3Cofactor`, form the residual
-`D = radCase3Residual`, accumulate `B·f` into `vNum`, and recurse on `−D`; bottom at `deg C < deg f`
+`deg C ≥ deg f`, cancel the leading term with `B = CPoly.radCase3Cofactor`, form the residual
+`D = CPoly.radCase3Residual`, accumulate `B·f` into `vNum`, and recurse on `−D`; bottom at `deg C < deg f`
 (or `C = 0`) returning `(C, vNum)`. Well-founded on `(cnorm C).length` under the structural
 length-drop guard (on a real run the leading term cancels, so the guard always holds). `der` the base
 derivation, `f` the radicand, `g` from `(f/y)' = g/y`. `[CField α]`-only. -/
@@ -93,8 +93,8 @@ def radReduceCase3IterateWf (der : DensePoly α → DensePoly α) (f g : DensePo
   | C, vNum =>
     if cisZero C || cdeg C < cdeg f then (C, vNum)
     else
-      let B := radCase3Cofactor f g C
-      let D := radCase3Residual f g B C (der B)
+      let B := CPoly.radCase3Cofactor f g C
+      let D := CPoly.radCase3Residual f g B C (der B)
       if (cnorm (cneg D) : List α).length < (cnorm C : List α).length then
         radReduceCase3IterateWf der f g (cneg D) (cadd vNum (cmul B f))
       else (C, vNum)   -- unreachable on a real run (the leading term cancels, `deg D < deg C`)

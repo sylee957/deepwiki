@@ -25,23 +25,23 @@ def cantorCompose (ρ : DensePoly α) (D₁ D₂ : MumfordDivisor α) : MumfordD
   let u₁ := D₁.u; let v₁ := D₁.v
   let u₂ := D₂.u; let v₂ := D₂.v
   -- first extended gcd: d₁ = gcd(u₁,u₂) = e₁·u₁ + e₂·u₂
-  let (d₁, e₁, e₂) := cgcdWf u₁ u₂
+  let (d₁, e₁, e₂) := CPolyEuclidean.gcdExt u₁ u₂
   -- second extended gcd: d = gcd(d₁, v₁+v₂) = c₁·d₁ + c₂·(v₁+v₂)
   let vsum := cadd v₁ v₂
-  let (d, c₁, c₂) := cgcdWf d₁ vsum
+  let (d, c₁, c₂) := CPolyEuclidean.gcdExt d₁ vsum
   -- cofactors of d over (u₁, u₂, v₁+v₂)
   let s₁ := cmul c₁ e₁
   let s₂ := cmul c₁ e₂
   let s₃ := c₂
   -- u = u₁·u₂/d²  (monic-normalized)
   let d2 := cmul d d
-  let u := cmonic (cdivWf (cmul u₁ u₂) d2)
+  let u := cmonic (CPolyEuclidean.div (cmul u₁ u₂) d2)
   -- v numerator = s₁·u₁·v₂ + s₂·u₂·v₁ + s₃·(v₁·v₂ + ρ)
   let vnum :=
     cadd (cadd (cmul s₁ (cmul u₁ v₂)) (cmul s₂ (cmul u₂ v₁)))
       (cmul s₃ (cadd (cmul v₁ v₂) ρ))
   -- v = (vnum / d) mod u
-  let v := cmodWf (cdivWf vnum d) u
+  let v := CPolyEuclidean.mod (CPolyEuclidean.div vnum d) u
   ⟨u, v⟩
 
 /-! ### Cantor reduction (to `deg u ≤ g`) -/
@@ -50,8 +50,8 @@ def cantorCompose (ρ : DensePoly α) (D₁ D₂ : MumfordDivisor α) : MumfordD
 `deg u`. Generic over `[CField α]`. -/
 def cantorReduceStep (ρ : DensePoly α) (D : MumfordDivisor α) : MumfordDivisor α :=
   let u := D.u; let v := D.v
-  let unew := cmonic (cdivWf (csub ρ (cmul v v)) u)
-  let vnew := cmodWf (cneg v) unew
+  let unew := cmonic (CPolyEuclidean.div (csub ρ (cmul v v)) u)
+  let vnew := CPolyEuclidean.mod (cneg v) unew
   ⟨unew, vnew⟩
 
 /-- Cantor reduction driver `cantorReduceAux fuel g ρ (u, v)`: apply `cantorReduceStep` until

@@ -55,14 +55,14 @@ denominator is `1` for a monic `f`), whose squarefree part bounds the bad primes
 def discNum (f : DensePoly (DenseFrac ℚ)) : DensePoly ℚ := (discriminant f).num
 
 /-- The bad primes of `f` `badPrimes f`: the distinct monic squarefree factors of the discriminant
-numerator (Yun factorization) with `p² ∣ d` (tested by `cisZero (cmodWf d (p·p))`) — the primes where the
+numerator (Yun factorization) with `p² ∣ d` (tested by the selected remainder) — the primes where the
 equation order may be non-maximal. -/
 def badPrimes (f : DensePoly (DenseFrac ℚ)) : List (DensePoly ℚ) :=
   let d := discNum f
   let sqf := cSqfreeYunFF d
   -- distinct nonconstant squarefree factors, each made monic
   let distinct := (sqf.map cmonic).filter (fun p => 0 < cdeg p)
-  distinct.filter (fun p => cisZero (cmodWf d (cmul p p)))
+  distinct.filter (fun p => cisZero (CPolyEuclidean.mod d (cmul p p)))
 
 /-! ### The cusp `f = y² − x³` over `ℚ(x)`
 
@@ -312,7 +312,7 @@ theorem cusp_round2_grew :
 /-- The enlarged generator is `y/x`: `round2Step cuspF` produces `[1, y/x]` (second vector `[0, 1/x]`, first
 `[1]`), checked by `cisZero (cuspNewGen − [0, 1/x])`. -/
 theorem cusp_round2_newGen_eq :
-    (cisZero (csub cuspNewGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
+    (cisZero (csub cuspNewGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)])
       && cisZero (csub ((round2Step cuspF).1.getD 0 []) [CCommRing.one])) = true := by native_decide
 
 /-- The enlarged generator `y/x` is integral: `CPoly.mulMod f (y/x) (y/x) = x` in `ℚ(x)[y]/(y² − x³)`, checked by
@@ -348,7 +348,7 @@ new generator `[0, 1/x] = y/x`, first vector `1`. -/
 theorem node_round2_newGen_eq :
     ((badPrimes nodeF).map cmonic = [([0, 1] : DensePoly ℚ)]
       && (round2Step nodeF).2
-      && cisZero (csub nodeNewGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by decide)])
+      && cisZero (csub nodeNewGen [CCommRing.zero, CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)])
       && cisZero (csub ((round2Step nodeF).1.getD 0 []) [CCommRing.one])) = true := by
   native_decide
 

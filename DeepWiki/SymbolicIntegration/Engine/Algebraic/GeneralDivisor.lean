@@ -120,7 +120,7 @@ def idealEq (I J : GenDivisor) : Bool :=
       let zz := qReduceNZ z
       let num := zz.num
       let den := cnorm zz.den
-      cdivWf (cmul cc num) den))
+      CPolyEuclidean.div (cmul cc num) den))
   let NI := scale (cmul δI δJ) I
   let NJ := scale (cmul δI δJ) J
   let HI := (CPoly.hermiteRowReduce NI).filter (fun row => !row.all cisZero)

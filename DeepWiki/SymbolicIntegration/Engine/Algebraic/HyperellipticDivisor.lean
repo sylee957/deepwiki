@@ -46,7 +46,7 @@ def mumfordPoint (x0 y0 : α) : MumfordDivisor α := ⟨[CCommRing.neg x0, CComm
 /-- The opposite `mumfordOpposite D = (u, (−v) mod u)` — the Jacobian inverse: same support,
 opposite sheet `yᵢ ↦ −yᵢ`. -/
 def mumfordOpposite (D : MumfordDivisor α) : MumfordDivisor α :=
-  ⟨D.u, cmodWf (cneg D.v) D.u⟩
+  ⟨D.u, CPolyEuclidean.mod (cneg D.v) D.u⟩
 
 /-! ### Reducedness `deg u ≤ g` -/
 

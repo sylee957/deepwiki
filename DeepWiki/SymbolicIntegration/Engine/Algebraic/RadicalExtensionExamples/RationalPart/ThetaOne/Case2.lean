@@ -33,11 +33,11 @@ def case2C : DensePoly ℚ := [1]
 def case2Wder : DensePoly ℚ := cderiv case2W
 
 /-- The solved Case-2 cofactor `B` for `B·(½−2)·W'·h ≡ 1 (mod x)` — expected `B = 2/3`. -/
-def case2B : DensePoly ℚ := radCase2Cofactor 2 case2W case2H case2C
+def case2B : DensePoly ℚ := CPoly.radCase2Cofactor 2 case2W case2H case2C
 
 /-- The Case-2 residual `D` — expected `−x/3` (multiplicity dropped `k = 2 → 1`). -/
 def case2D : DensePoly ℚ :=
-  radCase2Residual 2 case2W case2H case2C case2B
+  CPoly.radCase2Residual 2 case2W case2H case2C case2B
 
 /-- The cofactor is `B = 2/3`: `B·(½−2)·W'·h ≡ 1 (mod x)` gives `B = 2/3`. -/
 theorem case2_cofactor_eq :
