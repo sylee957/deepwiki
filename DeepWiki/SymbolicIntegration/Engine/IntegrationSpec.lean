@@ -41,6 +41,10 @@ namespace DensePoly
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
+/-- The dense tower fraction-field element represented by `num/den`. -/
+noncomputable abbrev fieldFrac (num den : DensePoly α) : RatFunc (CFieldSpec.K α) :=
+  am α (toPoly num) / am α (toPoly den)
+
 /-- `IsIntegralResult Dt anum aden res`: the rational part and log terms in `res` differentiate to the
 integrand `anum / aden` in the tower fraction field. This is a **formal** log-derivative identity — it treats
 each residue `cᵢ` as a constant (`logResidueSum = Σ cᵢ·Δvᵢ/vᵢ`), so it certifies a *genuine* antiderivative
