@@ -169,12 +169,12 @@ theorem assembleOneLevelP_sound (C : CMonomialCase P α) [CCanonicalRepresentati
       (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen = some (snum, sden))
     (hpost : C.postprocessNormal Dt before = some nrm) :
     IsIntegralResultP Dt a d (combineSN snum sden nrm) := by
-  obtain ⟨hsden, hspecialField⟩ := LawfulCMonomialCase.special_sound C Dt
+  obtain ⟨hsden, hspecialField⟩ := LawfulCMonomialCase.special_sound (C := C) Dt
     (canonicalResult Dt a d).polynomial (canonicalResult Dt a d).specialNum
     (canonicalResult Dt a d).specialDen snum sden hspecial
-  have hnrm := LawfulCMonomialCase.postprocessNormal_sound C Dt
+  have hnrm := LawfulCMonomialCase.postprocessNormal_sound (C := C) Dt
     (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before nrm hbefore hpost
-  have hnrmDen := LawfulCMonomialCase.postprocessNormal_den_nonzero C Dt before nrm hbeforeDen hpost
+  have hnrmDen := LawfulCMonomialCase.postprocessNormal_den_nonzero (C := C) Dt before nrm hbeforeDen hpost
   have hcanonical := LawfulCCanonicalRepresentation.reconstruction Dt a d hd
   refine combineSN_isIntegralResultP Dt a d (canonicalResult Dt a d).normalNum
     (canonicalResult Dt a d).normalDen snum sden nrm

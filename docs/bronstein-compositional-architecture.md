@@ -16,6 +16,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `CMonomialCase P` is now the representation-parameterized, Prop-free operation interface used by
   dense and recursive realizers; `LawfulCMonomialCase` separates its soundness, denominator preservation,
   and special-part relative-completeness contract.
+- `CCanonicalRepresentation`/`LawfulCCanonicalRepresentation` now have a dense realization, and
+  `assembleOneLevelP_sound` composes canonical, monomial, and normal-result contracts without a
+  concrete polynomial implementation.
 - `CCanonicalRepresentation` and `LawfulCCanonicalRepresentation` expose canonical decomposition and its
   reconstruction/nonzero/properness laws; `canonicalRepresentationFast` is the dense realizer.
 - `LawfulHermiteReduction` and `LawfulResidueLogPart` are representation-neutral stage-result
@@ -54,7 +57,9 @@ monomial stage contracts.
    laws are representation-neutral, but still need Prop-free operation interfaces before the generic
    assembler can select them.
 4. Define one generic Figure-5.1 one-level assembler and prove its soundness from only the stage
-   contracts. Add a relative-completeness theorem parameterized by complete stage capabilities.
+   contracts. The contract-level soundness combiner is complete; next give polynomial reduction and
+   residue criterion executable interfaces, then add the full executable assembler and a relative-
+   completeness theorem parameterized by complete stage capabilities.
 5. Materialize primitive, hyperexponential, and tangent realizers. Move their concrete proofs next
    to their executable operations and make the old full drivers corollaries.
 6. Lift the same contract composition through `LawfulRischLevel` / `LawfulRischLevelLrt` for tower
