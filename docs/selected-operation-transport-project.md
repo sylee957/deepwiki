@@ -125,6 +125,10 @@ denotations does not make those terms definitionally equal.
 - The primitive `LawfulRischLevelLrt` base instance now has the same selected-operation boundary: `CRischField`,
   gcd, lawful split, squarefree, resultant, subresultant, and `PrimitiveFrontierLrt`. Its former
   `CFracGcdCoreWf` and PRS-correctness section variables were unused composition umbrellas.
+- `RischTowerLrt.lean` no longer carries concrete fraction-free gcd constraints as file-wide section
+  variables. The assembled integrator, soundness API, and primitive instance expose only their selected
+  capabilities; `CFracGcdCoreWf` and its lawful gcd proof are bound locally on the two completeness theorems
+  that certify the concrete fraction-free decision procedure.
 
 ## Verification
 

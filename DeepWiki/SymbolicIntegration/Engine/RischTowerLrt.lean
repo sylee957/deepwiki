@@ -26,9 +26,7 @@ open DensePoly CFrac Polynomial
 open scoped Differential
 
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
-  [LawfulCPolyGcd.{u,v} DensePoly α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
+  [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
 /-- **The recursive LRT Risch solver as a class.** The computable data (`case`) plus the two soundness laws:
 `specialSound` (the special/polynomial part reconstructs `a/d`, a `K`-level identity — shared with the rational
@@ -69,8 +67,6 @@ class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField �
 
 namespace LawfulRischLevelLrt
 
-omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **The assembled LRT integrator** — a function of `(Dt, a, d)` alone, via the root-free assembler
 `cIntegrateCaseLrt` (no candidate sweep). **Guards on `d ≠ 0`**, so a successful run supplies `d ≠ 0` to the
 soundness laws. -/
@@ -79,8 +75,6 @@ def integrate [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySqua
     (Dt a d : DensePoly α) : Option (LrtResult α) :=
   if cisZero d then none else cIntegrateCaseLrt case Dt a d
 
-omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Formal LRT soundness.** Any successful run satisfies the algebraic-residue log-derivative identity
 `IsIntegralResultLrt` — over every alg-closed differential extension `E`, `D_E(rational) + Σ residue logs =
 a/d`. Composed from the instance's `specialSound` + `reducedSoundLrt` through the assembler soundness
@@ -111,8 +105,6 @@ theorem soundFormalLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
       exact cIntegrateCaseLrt_sound case Dt a d res snum sden v
         hSpec h0 hsden hSpecField hNrm hredDen hrecon
 
-omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Derived broad elementary integrability.** A successful LRT run certifies `a/d` is elementary integrable in
 the broad (algebraic-residue) sense — `IsElementaryIntegrableLrt`, via `soundFormalLrt`. -/
 theorem isElementaryIntegrableLrt_of_run [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
@@ -121,8 +113,6 @@ theorem isElementaryIntegrableLrt_of_run [CPolyGcd DensePoly α] [CPolySplitFact
     (res : LrtResult α) (h : integrate Dt a d = some res) : IsElementaryIntegrableLrt Dt a d :=
   ⟨res, soundFormalLrt Dt a d res h⟩
 
-omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Limited (log-free) LRT integration** — `integrate` restricted to results with **no** algebraic-residue
 logs. A log-free antiderivative is purely rational, so it needs no algebraic closure to state — making this the
 right coefficient integrator for the tower recursion (the LRT analogue of the rational `integrateRational`). -/
@@ -131,8 +121,6 @@ def integrateRationalLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
     [LawfulRischLevelLrt α] (Dt a d : DensePoly α) : Option (DensePoly α × DensePoly α) :=
   (integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
 
-omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **★ K-level soundness of the log-free LRT integrator** — the ∀E ⇒ K descent for log-free results. A
 successful `integrateRationalLrt` run gives the **base-level** identity `D_tower(num/den) = a/d` in
 `RatFunc (CFieldSpec.K α)`, with no algebraic-closure extension. The `∀E` LRT soundness instantiates at the
@@ -164,14 +152,15 @@ theorem integrateRationalLrt_sound [CPolyGcd DensePoly α] [CPolySplitFactor Den
     exact (ratFuncBaseChange (AlgebraicClosure (CFieldSpec.K α))).injective hE
   · exact absurd hguard (by simp)
 
-omit [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **★ Derived decision procedure — completeness meets soundness at the class.** The *same* instance that
 gives `soundFormalLrt` also **decides** genuine (algebraic-residue) elementary integrability of the reduced
 normal part `cₙ/dₙ`, once the Liouville completeness frontier `[LrtLiouvilleFrontier α]` is available:
 integrability **iff** the root-free residue guard passes. The `←` (sufficiency) draws on the instance's own
 `reducedSoundLrt`; the `→` (necessity/completeness) on the frontier. The completeness frontier is an *instance
 argument*, never a class field — so `soundFormalLrt` stays independent of it (the deliberate decoupling). -/
-theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
+theorem reducedDecides [CFracGcdCoreWf α] [LawfulCPolyGcd.{u,v} DensePoly α]
+    [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α]
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0)
     (hR0 : toPoly (cResidueResultantTower Dt
         (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
@@ -181,11 +170,11 @@ theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd 
   exact primitiveLrtDecides_of_setup hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
     (crNormDen_ne_zero_of_charZero Dt a d hd0) hR0 (reducedSoundLrt Dt a d hd0 hDt0)
 
-omit [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Derived completeness certificate at the class.** From `reducedDecides`: if the residue guard *fails*, the
 reduced normal part is not genuinely elementary integrable — a decidable non-integrability certificate that the
 solver's class produces directly (given the Liouville frontier). -/
-theorem not_isElementaryIntegrable_reduced [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α]
+theorem not_isElementaryIntegrable_reduced [CFracGcdCoreWf α]
+    [LawfulCPolyGcd.{u,v} DensePoly α] [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hDt0 : (toPoly Dt).natDegree = 0)
     (hR0 : toPoly (cResidueResultantTower Dt
@@ -197,8 +186,6 @@ theorem not_isElementaryIntegrable_reduced [LawfulRischLevelLrt α] [LrtLiouvill
 
 end LawfulRischLevelLrt
 
-omit [CFracGcdCoreWf α] [LawfulCPolyGcd DensePoly α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **The primitive LRT base instance — assembled from `PrimitiveFrontierLrt` by resolution.** Materialize one
 `PrimitiveFrontierLrt α` and the whole LRT solver resolves. The `case` is `primitiveGuardedCase`, so
 `specialSound` is the proven `primitiveGuardedCase_specialSound` (the `Dθ = 1` special identity + the
@@ -217,8 +204,6 @@ instance instLawfulRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly �
   reducedDenNonzero := fun Dt a d hd0 hDt0 =>
     PrimitiveFrontierLrt.hreducedDenNonzero Dt a d hd0 hDt0
 
-omit [CFracGcdCoreWf α] [LawfulCPolyGcd DensePoly α]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Validation: the base LRT solver resolves from selected operations and the reduced frontier.** -/
 example [CRischField α] [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
     [LawfulCPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
