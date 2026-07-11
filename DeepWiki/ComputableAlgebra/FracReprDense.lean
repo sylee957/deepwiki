@@ -25,12 +25,4 @@ instance instCFracDenseFrac : CFrac DenseFrac DensePoly where
   toPair_ofPair _ _ _ := rfl
   den_nonzero_impl x := x.den_nonzero
 
-/-- Dot-notation access to the dense numerator through the `CFrac` interface. -/
-protected abbrev DenseFrac.num {α : Type u} [CField α] (x : DenseFrac α) : DensePoly α :=
-  CFrac.num x
-
-/-- Dot-notation access to the dense denominator through the `CFrac` interface. -/
-protected abbrev DenseFrac.den {α : Type u} [CField α] (x : DenseFrac α) : DensePoly α :=
-  CFrac.den x
-
 end DeepWiki.SymbolicIntegration

@@ -26,11 +26,11 @@ runs the same fraction algorithm.
 ## Phases
 
 1. **Carrier/interface split — DONE.** Introduce `CFrac F P` with genuinely distinct `DenseFrac` and
-   `SparseFrac` proof-carrying structures in symmetric representation modules. Their constructors are private
-   and pair storage is protected; construction and generic inspection pass through `CFrac`, while symmetric protected
-   `DenseFrac.num`/`den` and `SparseFrac.num`/`den` satellites preserve readable dot notation without exposing
-   concrete fields. Migrate type occurrences from the old `CFrac α` carrier to `DenseFrac α`; keep `CFrac.*`
-   as the generic API namespace, not a compatibility type alias.
+   `SparseFrac` proof-carrying structures in symmetric representation modules. Their constructors and pair storage are
+   private; construction and inspection pass through the public generic `CFrac` API. The unused
+   representation-specific reader aliases were retired, so `CFrac.num`/`den` is the single visible reader surface.
+   Migrate type occurrences from the old `CFrac α` carrier to `DenseFrac α`; keep `CFrac.*` as the generic API
+   namespace, not a compatibility type alias.
 2. **Raw fraction boundary — DONE.** Retire the duplicate legacy pair arithmetic. Valid field operations now
    use `DenseFrac`/`CFrac`; the unused `RawFrac` module was removed once reverse-dependency checks showed
    that no algorithm boundary still consumed unchecked numerator/denominator pairs.

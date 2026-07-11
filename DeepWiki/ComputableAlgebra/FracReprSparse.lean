@@ -25,12 +25,4 @@ instance instCFracSparseFrac : CFrac SparseFrac CPoly.SparsePoly where
   toPair_ofPair _ _ _ := rfl
   den_nonzero_impl x := x.den_nonzero
 
-/-- Dot-notation access to the sparse numerator through the `CFrac` interface. -/
-protected abbrev SparseFrac.num {α : Type u} [CField α] (x : SparseFrac α) : CPoly.SparsePoly α :=
-  CFrac.num x
-
-/-- Dot-notation access to the sparse denominator through the `CFrac` interface. -/
-protected abbrev SparseFrac.den {α : Type u} [CField α] (x : SparseFrac α) : CPoly.SparsePoly α :=
-  CFrac.den x
-
 end DeepWiki.SymbolicIntegration
