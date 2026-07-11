@@ -475,6 +475,32 @@ private theorem default_monic [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
   rw [← EuclideanDomain.mul_div_cancel' hg
     ((selectedGcd_associated p (CPolyEngine.deriv p)).dvd.trans (gcd_dvd_left _ _)), h, mul_zero]
 
+/-- Every factor of the generic Yun decomposition is squarefree. -/
+private theorem default_squarefree [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] [CharZero (CFieldSpec.K α)] (p : P α)
+    (hp0 : CPoly.toPoly p ≠ 0) (hpp : (CPoly.toPoly p).primPart ≠ 0) :
+    ∀ q ∈ CPolySquarefree.default p, Squarefree (CPoly.toPoly q) := by
+  intro q hq
+  have hmem : CPoly.toPoly q ∈ (CPolySquarefree.default p).map CPoly.toPoly :=
+    List.mem_map.mpr ⟨q, hq, rfl⟩
+  rw [default_map_toPoly_eq_yunLoopAbs p] at hmem
+  letI : CharZero (CRingSpec.R α) := by
+    change CharZero (CFieldSpec.K α)
+    infer_instance
+  have hmem' : CPoly.toPoly q ∈ yunLoopAbs (CPoly.toPoly p)
+      (CPoly.toPoly (CPolyEuclidean.div p (CPolyGcd.compute p (CPolyEngine.deriv p))),
+        CPoly.toPoly (CPolyEngine.sub
+          (CPolyEuclidean.div (CPolyEngine.deriv p) (CPolyGcd.compute p (CPolyEngine.deriv p)))
+          (CPolyEngine.deriv
+            (CPolyEuclidean.div p (CPolyGcd.compute p (CPolyEngine.deriv p)))))) 1
+      (CPolySquarefree.default p).length := by
+    rw [← yunLoopAbs_irrelevant (0 : (CRingSpec.R α)[X]) (CPoly.toPoly p)
+      (CPolySquarefree.default p).length _ 1 1]
+    exact hmem
+  exact yunLoopAbs_squarefree (CPoly.toPoly p) hpp _ 1 _ _ (le_refl 1)
+    (defaultInit_yunInv p hp0 hpp) _ hmem'
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
@@ -491,7 +517,7 @@ structure LawfulSquarefreeDecomposition (d : P α) (decomp : List (P α)) : Prop
 /-- Denotation law for a representation-selected squarefree decomposition. The selected output is
 lawful whenever its input denotes a nonzero polynomial with nonzero primitive part. -/
 class LawfulCPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
-    (α : Type u) [CField α] [CPolyGcd P α] [CFieldSpec.{u,v} α] [CharZero (CFieldSpec.K α)]
+    (α : Type u) [CField α] [CFieldSpec.{u,v} α] [CharZero (CFieldSpec.K α)]
     [CPolySquarefree P α] : Prop where
   /-- The selected squarefree decomposition satisfies the semantic factorization contract. -/
   compute_lawful : ∀ (d : P α), CPoly.toPoly d ≠ 0 → (CPoly.toPoly d).primPart ≠ 0 →
@@ -501,7 +527,7 @@ namespace LawfulCPolySquarefree
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CharZero (CFieldSpec.K α)]
-  [CPolyGcd P α] [CPolySquarefree P α] [LawfulCPolySquarefree.{u,v} P α]
+  [CPolySquarefree P α] [LawfulCPolySquarefree.{u,v} P α]
 
 /-- The selected squarefree decomposition satisfies its semantic contract. -/
 theorem compute_lawful' (d : P α) (hd0 : CPoly.toPoly d ≠ 0)
