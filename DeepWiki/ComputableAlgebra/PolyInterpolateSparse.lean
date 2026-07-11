@@ -1,31 +1,25 @@
-import DeepWiki.ComputableAlgebra.PolyInterpolateDense
+import DeepWiki.ComputableAlgebra.PolyInterpolate
 import DeepWiki.ComputableAlgebra.PolyEngineSparse
 
 /-! # Sparse polynomial interpolation
 
-Sparse polynomials select the shared coefficient-list Lagrange computation and store its result through
-the sparse representation's lawful coefficient-list constructor. -/
+Sparse polynomials run the representation-generic Lagrange kernel directly through their selected
+polynomial engine. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 universe u v
 
-/-- Sparse polynomials select interpolation followed by sparse coefficient storage. -/
+/-- Sparse polynomials select the representation-generic interpolation kernel. -/
 instance instCPolyInterpolateSparse : CPolyInterpolate CPoly.SparsePoly where
-  compute pts := CPolyEngine.ofCoeffList (DensePoly.cinterpolate pts)
+  compute := CPolyInterpolate.default
 
 namespace CPoly
 
-/-- A sparse selected interpolant denotes the same polynomial as the coefficient-list computation. -/
-@[denote] theorem toPoly_interpolate_sparse {α : Type u} [CField α] [CFieldSpec.{u,v} α]
-    (pts : List (α × α)) :
-    toPoly (interpolate (P := CPoly.SparsePoly) pts) =
-      DensePoly.toPoly (DensePoly.cinterpolate pts) := by
-  rw [interpolate]
-  change toPoly (CPolyEngine.ofCoeffList (P := CPoly.SparsePoly)
-    (DensePoly.cinterpolate pts)) = _
-  rw [LawfulCPolyEngine.toPoly_ofCoeffList]
-  exact CPoly.toPoly_ofList_eq_dense _
+/-- Sparse selected interpolation unfolds to the representation-generic kernel. -/
+@[simp] theorem interpolate_sparse_eq {α : Type u} [CField α] (pts : List (α × α)) :
+    interpolate (P := CPoly.SparsePoly) pts =
+      CPolyInterpolate.default (P := CPoly.SparsePoly) pts := rfl
 
 end CPoly
 
@@ -35,14 +29,14 @@ instance instLawfulCPolyInterpolateSparse : LawfulCPolyInterpolate CPoly.SparseP
     intro α _ _ pts hnodup zk yk hmem
     change (CPoly.toPoly (CPoly.interpolate (P := CPoly.SparsePoly) pts)).eval
       (CFieldSpec.toK zk) = CFieldSpec.toK yk
-    rw [CPoly.toPoly_interpolate_sparse]
-    exact DensePoly.eval_toPolyG_cinterpolateG pts hnodup hmem
+    rw [CPoly.interpolate_sparse_eq]
+    exact CPolyInterpolate.eval_toPoly_default pts hnodup hmem
   degree_compute_lt := by
     intro α _ _ pts hne
     change (CPoly.toPoly (CPoly.interpolate (P := CPoly.SparsePoly) pts)).degree <
       (pts.length : WithBot ℕ)
-    rw [CPoly.toPoly_interpolate_sparse]
-    exact DensePoly.degree_toPolyG_cinterpolateG_lt pts hne
+    rw [CPoly.interpolate_sparse_eq]
+    exact CPolyInterpolate.degree_toPoly_default_lt pts hne
 
 /-- Sparse selected interpolation computes `1 + 2X` through the abstract capability. -/
 theorem interpolate_sparse_linear :

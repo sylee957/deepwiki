@@ -3,6 +3,7 @@ import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
 
 /-! # Log-part residues of algebraic-function integrals

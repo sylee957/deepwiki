@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.PolySubresultant
+import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
 
 /-! # Computable determinant + subresultant (L1 of the computable-LRT build)
