@@ -403,6 +403,63 @@ private theorem default_reconstruct [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
       (default_length_ge_maxMult p hp0 hpp)
   exact ((h1.trans h2).trans (associated_primPart_self (CPoly.toPoly p) hp0)).symm
 
+/-- Every factor emitted by the generic Yun loop is monic. -/
+private theorem defaultGo_monic [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] :
+    ∀ (fuel : ℕ) (b d : P α), CPoly.toPoly b ≠ 0 →
+      ∀ q ∈ CPolySquarefree.defaultGo fuel b d, (CPoly.toPoly q).Monic := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro b d _ q hq
+    simp [CPolySquarefree.defaultGo] at hq
+  | succ fuel ih =>
+    intro b d hb q hq
+    rw [CPolySquarefree.defaultGo] at hq
+    by_cases hdeg : CPolyEngine.cdeg b = 0
+    · rw [if_pos hdeg] at hq
+      simp at hq
+    · rw [if_neg hdeg, List.mem_cons] at hq
+      set g := CPolyGcd.compute b d
+      have hassoc : Associated (CPoly.toPoly g) (gcd (CPoly.toPoly b) (CPoly.toPoly d)) :=
+        selectedGcd_associated b d
+      have hG : gcd (CPoly.toPoly b) (CPoly.toPoly d) ≠ 0 := fun h =>
+        hb (zero_dvd_iff.mp (h ▸ gcd_dvd_left _ _))
+      have hg : CPoly.toPoly g ≠ 0 := fun h => hG (hassoc.eq_zero_iff.mp h)
+      rcases hq with rfl | hq
+      · have hlead : (CPoly.toPoly g).leadingCoeff ≠ 0 :=
+          Polynomial.leadingCoeff_ne_zero.mpr hg
+        rw [CPolyEngine.toPoly_cmonic_of_ne_zero g hg, Polynomial.Monic,
+          Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C, inv_mul_cancel₀ hlead]
+      · have hb' : CPoly.toPoly (CPolyEuclidean.div b (CPolyEngine.cmonic g)) ≠ 0 := by
+          rw [defaultGo_deflate_fst_toPoly b d hb]
+          intro h
+          apply hb
+          rw [← EuclideanDomain.mul_div_cancel' hG (gcd_dvd_left _ _), h, mul_zero]
+        exact ih _ _ hb' q hq
+
+/-- Every factor of the generic Yun decomposition is monic. -/
+private theorem default_monic [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] (p : P α) (hp0 : CPoly.toPoly p ≠ 0) :
+    ∀ q ∈ CPolySquarefree.default p, (CPoly.toPoly q).Monic := by
+  rw [CPolySquarefree.default]
+  set g := CPolyGcd.compute p (CPolyEngine.deriv p)
+  set b := CPolyEuclidean.div p g
+  set d := CPolyEngine.sub (CPolyEuclidean.div (CPolyEngine.deriv p) g)
+    (CPolyEngine.deriv b)
+  apply defaultGo_monic
+  have hg : CPoly.toPoly g ≠ 0 := fun h =>
+    hp0 (zero_dvd_iff.mp (h ▸ (selectedGcd_associated p (CPolyEngine.deriv p)).dvd.trans
+      (gcd_dvd_left _ _)))
+  rw [CPolyEuclidean.toPoly_div_eq_div p g hg (by
+    exact (selectedGcd_associated p (CPolyEngine.deriv p)).dvd.trans (gcd_dvd_left _ _))]
+  intro h
+  apply hp0
+  rw [← EuclideanDomain.mul_div_cancel' hg
+    ((selectedGcd_associated p (CPolyEngine.deriv p)).dvd.trans (gcd_dvd_left _ _)), h, mul_zero]
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
