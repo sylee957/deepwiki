@@ -25,7 +25,7 @@ Termination is by `(cnorm p).length`, strictly dropped each reduce step (`stepG_
 
 /-- One reduce step of Euclidean division: replace `p` by the leading-term-cancelled
 `cnorm (p − (clead p/clead q)·xᵏ·q)`. Recursion driver of `cdivmodWf`. -/
-def reduceStepWf (p q : DensePoly α) : DensePoly α :=
+private def reduceStepWf (p q : DensePoly α) : DensePoly α :=
   cnorm (csub (cnorm p)
     (cmul (cshift ((cnorm p : List α).length - (cnorm q : List α).length)
       [CField.div (clead p) (clead q)]) (cnorm q)))
@@ -113,7 +113,7 @@ theorem degreeG_reduce_step_lt {P Q : (CFieldSpec.K α)[X]} (hP : P ≠ 0) (hQ :
 
 /-- One reduce step strictly shortens the normalized list: `cnorm (p − (lcP/lcQ)·xᵏ·q)` has
 strictly smaller normalized length than `p`. -/
-theorem stepG_length_lt (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
+private theorem stepG_length_lt (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
     (hpq : (cnorm q : List α).length ≤ (cnorm p : List α).length) :
     (cnorm (csub (cnorm p)
         (cmul (cshift ((cnorm p : List α).length - (cnorm q : List α).length)
@@ -158,7 +158,7 @@ theorem stepG_length_lt (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cnorm q
 
 /-- The reduce step strictly shortens the normalized list (over `[CFieldSpec α]`): discharges
 `cdivmodWf`'s structural guard, so over a genuine field the reducing branch is always taken. -/
-theorem reduceStepWf_length_lt (p q : DensePoly α) (hcz : cisZero (cnorm q) = false)
+private theorem reduceStepWf_length_lt (p q : DensePoly α) (hcz : cisZero (cnorm q) = false)
     (hlen : ¬ (cnorm p : List α).length < (cnorm q : List α).length) :
     (cnorm (reduceStepWf p q) : List α).length < (cnorm p : List α).length := by
   have hq : cnorm q ≠ [] := by
