@@ -17,14 +17,15 @@ is intentionally selected.
 
 ## Proof route
 
-1. Prove a generic selected-gcd associatedness bridge and use exact division to relate one
-   `defaultGo` transition to `yunLoopAbs`.
-2. Prove the initialization pair of `default` is associated to
-   `(A / gcd A A', gcd A A')`, using monic normalization only up to associates.
-3. Induct on the generic fuel to obtain `List.Forall₂ Associated` between `defaultGo` and the
-   abstract Yun loop. Fuel is `degBound`; the honest-degree bound discharges the abstract loop's
-   termination requirement.
-4. Transport the abstract loop's powered-product reconstruction, monicity, squarefreeness, and
+1. **Done:** prove generic selected-gcd associatedness and exact selected-division readings for
+   each `defaultGo` transition.
+2. **Done:** prove the initialization pair is `YunInv A 1`: the selected gcd's unit factor scales
+   both `A / gcd(A,A')` and `A' / gcd(A,A') - (A / gcd(A,A'))'` equally.
+3. **Done:** trace `defaultGo.map toPoly` to `yunLoopAbs` for its actual output length. The loop
+   remains a qualified namespaced kernel definition because this semantic theorem lives outside
+   `ComputableAlgebra`.
+4. Prove that `degBound` is sufficient to reach the final Yun multiplicity, then transport the
+   abstract loop's powered-product reconstruction, monicity, squarefreeness, and
    pairwise-coprimality through the `Forall₂` bridge to build `LawfulSquarefreeDecomposition`.
 5. Register the sparse lawful instance and add a sparse semantic consumer/witness. Keep helper
    simulations private; only the selected class law is public.
