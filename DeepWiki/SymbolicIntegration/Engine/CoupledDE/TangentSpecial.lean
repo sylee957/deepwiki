@@ -151,7 +151,59 @@ def recursiveTangentRischLevel [CLinearSolve ℚ]
     (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly (DenseFrac ℚ))
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
     [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : CRischLevel DensePoly (DenseFrac ℚ) :=
-  tangentRischLevel R kind raw tangentCoupledSolver (recursiveTangentSpecialIntegrator config I)
+  tangentRischLevel R kind raw tangentCoupledSolver (recursiveTangentSpecialCandidate config I)
+
+/-- Exact stage-acceptance domain of the selected dense recursive tangent level. -/
+def recursiveTangentRischLevelCompleteDomain [CLinearSolve ℚ]
+    (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly (DenseFrac ℚ))
+    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : RischLevelDomain DensePoly (DenseFrac ℚ) :=
+  tangentRischLevelCompleteDomain R kind polynomialDomain raw tangentCoupledSolver
+    (recursiveTangentSpecialCandidate config I)
+
+/-- The selected dense recursive tangent level inherits generic contract-based soundness. -/
+instance instLawfulCRischLevelRecursiveTangent [CLinearSolve ℚ]
+    (R : CPolynomialReduction DensePoly (DenseFrac ℚ)) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFrac ℚ)] :
+    LawfulCRischLevel (recursiveTangentRischLevel R kind raw config I)
+      (oneLevelRischSoundDomain tangentNormalDomain) := by
+  unfold recursiveTangentRischLevel
+  infer_instance
+
+/-- The selected dense recursive tangent level is lawful on its exact acceptance domain. -/
+instance instLawfulCRischLevelRecursiveTangentCompleteDomain [CLinearSolve ℚ]
+    (R : CPolynomialReduction DensePoly (DenseFrac ℚ)) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly (DenseFrac ℚ))
+    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFrac ℚ)] :
+    LawfulCRischLevel (recursiveTangentRischLevel R kind raw config I)
+      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw config I) := by
+  unfold recursiveTangentRischLevel recursiveTangentRischLevelCompleteDomain
+  infer_instance
+
+/-- The selected dense recursive tangent level is complete on its exact acceptance domain. -/
+instance instCompleteCRischLevelRecursiveTangent [CLinearSolve ℚ]
+    (R : CPolynomialReduction DensePoly (DenseFrac ℚ)) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly (DenseFrac ℚ))
+    [CompleteCPolynomialReduction R polynomialDomain]
+    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFrac ℚ)] :
+    CompleteCRischLevel (recursiveTangentRischLevel R kind raw config I)
+      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw config I) := by
+  unfold recursiveTangentRischLevel recursiveTangentRischLevelCompleteDomain
+  infer_instance
 
 /-- Install the selected recursive tangent special stage and coupled solver into a sparse Risch level. -/
 def sparseRecursiveTangentRischLevel [CLinearSolve ℚ]
@@ -160,7 +212,64 @@ def sparseRecursiveTangentRischLevel [CLinearSolve ℚ]
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
     [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
     CRischLevel CPoly.SparsePoly (DenseFrac ℚ) :=
-  sparseTangentRischLevel R kind raw tangentCoupledSolver (recursiveTangentSpecialIntegrator config I)
+  sparseTangentRischLevel R kind raw tangentCoupledSolver (recursiveTangentSpecialCandidate config I)
+
+/-- Exact transported stage-acceptance domain of the selected sparse recursive tangent level. -/
+def sparseRecursiveTangentRischLevelCompleteDomain [CLinearSolve ℚ]
+    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly (DenseFrac ℚ))
+    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
+    RischLevelDomain CPoly.SparsePoly (DenseFrac ℚ) :=
+  sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw tangentCoupledSolver
+    (recursiveTangentSpecialCandidate config I)
+
+/-- The selected sparse recursive tangent level inherits soundness through representation transport. -/
+instance instLawfulCRischLevelSparseRecursiveTangent [CLinearSolve ℚ]
+    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ)) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFrac ℚ)] :
+    LawfulCRischLevel (sparseRecursiveTangentRischLevel R kind raw config I)
+      (oneLevelRischSoundDomain
+        (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := DenseFrac ℚ))) := by
+  unfold sparseRecursiveTangentRischLevel
+  infer_instance
+
+/-- The selected sparse recursive tangent level is lawful on its transported acceptance domain. -/
+instance instLawfulCRischLevelSparseRecursiveTangentCompleteDomain [CLinearSolve ℚ]
+    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ)) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly (DenseFrac ℚ))
+    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFrac ℚ)] :
+    LawfulCRischLevel (sparseRecursiveTangentRischLevel R kind raw config I)
+      (sparseRecursiveTangentRischLevelCompleteDomain
+        R kind polynomialDomain raw config I) := by
+  unfold sparseRecursiveTangentRischLevel sparseRecursiveTangentRischLevelCompleteDomain
+  infer_instance
+
+/-- The selected sparse recursive tangent level is complete on its transported acceptance domain. -/
+instance instCompleteCRischLevelSparseRecursiveTangent [CLinearSolve ℚ]
+    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ)) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly (DenseFrac ℚ))
+    [CompleteCPolynomialReduction R polynomialDomain]
+    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFrac ℚ)] :
+    CompleteCRischLevel (sparseRecursiveTangentRischLevel R kind raw config I)
+      (sparseRecursiveTangentRischLevelCompleteDomain
+        R kind polynomialDomain raw config I) := by
+  unfold sparseRecursiveTangentRischLevel sparseRecursiveTangentRischLevelCompleteDomain
+  infer_instance
 
 /-! ## Executable validation -/
 
