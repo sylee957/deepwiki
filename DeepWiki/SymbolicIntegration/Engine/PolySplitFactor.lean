@@ -11,7 +11,13 @@ namespace DeepWiki.SymbolicIntegration
 
 universe u
 
-namespace CPoly
+/-- Executable differential split factorization selected for a polynomial representation and coefficient field. -/
+class CPolySplitFactor (P : Type u → Type u) [CPoly P] [CPolyEngine P]
+    (α : Type u) [CField α] [CDiffField α] where
+  /-- Split a polynomial into its differential normal and special factors. -/
+  compute : P α → P α → P α × P α
+
+namespace CPolySplitFactor
 
 /-- Internal bounded driver for differential normal/special factorization. -/
 private def splitFactorAux {P : Type u → Type u} [CPoly P] [CPolyEngine P]
@@ -30,11 +36,26 @@ private def splitFactorAux {P : Type u → Type u} [CPoly P] [CPolyEngine P]
         (parts.1, CPolyEngine.mul special parts.2)
       else (p, CPoly.one)
 
-/-- Split a represented differential polynomial into its normal and special factors. -/
-def splitFactor {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+/-- Generic bounded differential split factorization through selected gcd and Euclidean operations. -/
+def default {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     [CPolyGcd P] [CPolyEuclidean P] {α : Type u} [CField α] [CDiffField α]
     (Dt p : P α) : P α × P α :=
   splitFactorAux Dt (CPoly.degBound p) p
+
+end CPolySplitFactor
+
+/-- Sparse polynomials select the representation-generic bounded split-factor kernel. -/
+instance instCPolySplitFactorSparse {α : Type u} [CField α] [CDiffField α] :
+    CPolySplitFactor CPoly.SparsePoly α where
+  compute := CPolySplitFactor.default
+
+namespace CPoly
+
+/-- Split a represented differential polynomial using its selected implementation. -/
+def splitFactor {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CDiffField α] [CPolySplitFactor P α]
+    (Dt p : P α) : P α × P α :=
+  CPolySplitFactor.compute Dt p
 
 /-- Sparse splitting with the zero derivation extracts `(x - 1)²` as entirely special. -/
 example :

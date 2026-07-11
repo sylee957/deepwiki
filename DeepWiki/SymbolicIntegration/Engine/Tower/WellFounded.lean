@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.SymbolicIntegration.Engine.PolySplitFactor
 import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
 
@@ -186,6 +187,20 @@ termination_by (cnorm p).length
 decreasing_by assumption
 
 end DensePoly
+
+/-- Dense polynomials select the established well-founded differential split implementation. -/
+instance instCPolySplitFactorDense {α : Type*} [CField α] [CDiffField α]
+    [CFracGcdCoreWf α] : CPolySplitFactor DensePoly α where
+  compute := DensePoly.cSplitFactorFast
+
+namespace CPoly
+
+/-- Dense selected splitting is the established well-founded implementation. -/
+theorem splitFactor_dense_eq {α : Type*} [CField α] [CDiffField α]
+    [CFracGcdCoreWf α] (Dt p : DensePoly α) :
+    CPoly.splitFactor Dt p = DensePoly.cSplitFactorFast Dt p := rfl
+
+end CPoly
 
 namespace DensePoly
 

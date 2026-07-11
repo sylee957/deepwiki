@@ -123,6 +123,17 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
   intro p hp
   exact hmain (cnorm p : List α).length p le_rfl hp
 
+/-- The selected dense split implementation computes a general splitting factorization. -/
+theorem CPoly.splitFactor_isSplittingFactorizationGen [CharZero (CFieldSpec.K α)]
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt : DensePoly α) :
+    ∀ (p : DensePoly α), DensePoly.toPoly p ≠ 0 →
+      @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (DensePoly.toPoly Dt)⟩
+        (DensePoly.toPoly p) (DensePoly.toPoly (CPoly.splitFactor Dt p).2)
+        (DensePoly.toPoly (CPoly.splitFactor Dt p).1) := by
+  intro p hp
+  rw [CPoly.splitFactor_dense_eq]
+  exact cSplitFactorFastG_isSplittingFactorizationGen hgcd Dt p hp
+
 /-! ### M3 — discharging the gcd frontier at the `ℚ` base -/
 
 /-- **The gcd frontier is unconditional at `ℚ`.** There `cgcdFFCoreWf` selects
