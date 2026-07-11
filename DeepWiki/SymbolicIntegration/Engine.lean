@@ -19,7 +19,6 @@ import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionSparse
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.CaseChecked
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
-import DeepWiki.SymbolicIntegration.Engine.IntegrationFunctionsCatalog
 import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
 import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
 import DeepWiki.SymbolicIntegration.Engine.RischTowerPrimitive
