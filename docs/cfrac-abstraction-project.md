@@ -159,7 +159,10 @@ runs the same fraction algorithm.
    execute both gates through the same kernel. Weak normalization, its semantic normality predicate, reduction
    bridge, Boolean specification, and `RatFunc` denotation satellites now quantify over arbitrary `CFrac F P`;
    only the re-pin corollary and legacy `towerFractionFieldDeriv` spelling remain dense specializations.
-   SymbolicIntegration consumers request the weakest capability they need.
+   The rational RREF implementation and its `CLinearSolve ℚ` instance now live in
+   `ComputableAlgebra/LinearAlgebraRat.lean`; SymbolicIntegration imports the selected linear-solver
+   capability instead of owning the concrete executable solver. SymbolicIntegration consumers request
+   the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
    Bareiss/Hermite consumers. Remove parallel implementations when two bodies express the same algorithm;

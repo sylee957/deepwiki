@@ -1,4 +1,5 @@
-import DeepWiki.SymbolicIntegration.Engine.LinearSolve
+import DeepWiki.ComputableAlgebra.LinearAlgebraRat
+import DeepWiki.ComputableAlgebra.FracReprDense
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 import DeepWiki.ComputableAlgebra.FracReduce

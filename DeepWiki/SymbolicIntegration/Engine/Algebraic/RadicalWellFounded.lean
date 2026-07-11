@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalRationalDriver
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalAssembly
-import DeepWiki.SymbolicIntegration.Engine.LinearSolve
+import DeepWiki.ComputableAlgebra.LinearAlgebraRat
 
 /-! # Well-founded algebraic simple-radical integration
 

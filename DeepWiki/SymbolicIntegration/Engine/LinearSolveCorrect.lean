@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.LinearSolve
+import DeepWiki.ComputableAlgebra.LinearAlgebraRat
 
 /-! # Abstract correctness of the ℚ-Gaussian-elimination linear solver
 

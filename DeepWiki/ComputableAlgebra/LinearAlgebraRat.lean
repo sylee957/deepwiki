@@ -1,11 +1,9 @@
-import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.ComputableAlgebra.LinearAlgebra
 
 /-! # Executable dense linear solving over `ℚ`
 
 List-based reduced row echelon form, nullspace bases, and unique or particular
-solution reading for dense rational matrices, plus the small generic `getD`
-helper used by downstream matrix proofs.
+solution reading for dense rational matrices.
 -/
 
 namespace DeepWiki.SymbolicIntegration

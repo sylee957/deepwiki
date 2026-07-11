@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogArgGeneric
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogIntegral
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalOverTower
-import DeepWiki.SymbolicIntegration.Engine.LinearSolve
+import DeepWiki.ComputableAlgebra.LinearAlgebraRat
 
 /-! # Generic radical log-argument examples
 
