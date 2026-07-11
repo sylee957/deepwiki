@@ -56,7 +56,8 @@ runs the same fraction algorithm.
     constraints, and the parallel Risch–Norman system now expose those lawful row equations; coupled-DE
     and parallel-integration consumers request the capability rather than `cConstSolveUniqueQ` or
     `cConstSolveAnyQ` directly. In the second slice,
-   `CPolyGcd`/`LawfulCPolyGcd` selects gcd for raw-fraction reduction, while
+   `CPolyGcd`/`LawfulCPolyGcd` selects gcd for raw-fraction reduction, with the selection indexed by
+   both polynomial representation and coefficient field, while
    `CPolyEuclidean`/`LawfulCPolyEuclidean` selects division and extended Bézout: dense polynomials use the
    well-founded engine, sparse polynomials use the generic `CPoly` engine, and the rational-function
     exact-division bridge consumes only the capability. Concrete dense and generic implementations become

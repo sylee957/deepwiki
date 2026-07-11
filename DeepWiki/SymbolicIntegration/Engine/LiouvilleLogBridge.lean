@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Structure
+import DeepWiki.ComputableAlgebra.LinearAlgebraRatCorrect
 import DeepWiki.SymbolicIntegration.LiouvilleLog
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
@@ -177,53 +178,6 @@ With `logDerivs = []`, `CFrac.logIsNewMonomial` decides only `w ≠ 0` — neces
 
 section ComputableEmptyBase
 
-open DensePoly
-
-/-- `crref.go` halts once the working column reaches `ncols = 1`, returning the accumulated pivot
-rows/columns reversed. -/
-private lemma crref_go_stop (f : ℕ) (rows pr : List (List ℚ)) (pc : List ℕ) :
-    crref.go 1 f 1 rows pr pc = (pr.reverse, pc.reverse) := by
-  cases f with
-  | zero => cases rows <;> rfl
-  | succ g => cases rows with
-    | nil => rfl
-    | cons hd tl => rw [crref.go] <;> simp
-
-/-- `crref.go` at the first column (`ncols = 1`): pivot columns `[0]` if some row has a nonzero
-entry in column `0`, else `[]`. -/
-private lemma crref_go_col0 (f : ℕ) (M : List (List ℚ)) :
-    (crref.go 1 (f + 1) 0 M [] []).2 =
-      (if (M.find? (fun r => (r.getD 0 0) ≠ 0)).isSome then [0] else []) := by
-  cases M with
-  | nil => simp [crref.go]
-  | cons hd tl =>
-    rw [crref.go, if_neg (show ¬ ((0 : ℕ) ≥ 1) from by omega)]
-    · cases hfind : (hd :: tl).find? (fun r => (r.getD 0 0) ≠ 0) with
-      | none =>
-        simp only [Option.isSome_none, Bool.false_eq_true, if_false,
-          show (0 + 1) = 1 from rfl, crref_go_stop, List.reverse_nil]
-      | some pr =>
-        simp only [Option.isSome_some, if_true, show (0 + 1) = 1 from rfl,
-          crref_go_stop, List.reverse_cons, List.reverse_nil, List.nil_append]
-    · nofun
-
-/-- Pivot columns of a single-column RREF: `[0]` iff some row has a nonzero entry in column `0`,
-else `[]`. -/
-private lemma crref_single_col_pivots (M : List (List ℚ)) :
-    (crref M 1).2 = (if (M.find? (fun r => (r.getD 0 0) ≠ 0)).isSome then [0] else []) :=
-  crref_go_col0 (1 + M.length) M
-
-/-- Nullspace basis of a single-column matrix: empty if column `0` is a pivot, else `[[1]]`. -/
-private lemma nullspace_single_col (M : List (List ℚ)) :
-    cNullspaceBasisQ M 1 = (if (crref M 1).2.contains 0 then [] else [[1]]) := by
-  unfold cNullspaceBasisQ
-  obtain ⟨R, pivCols⟩ := crref M 1
-  show List.map _ ((List.range 1).filter (fun j => !pivCols.contains j)) = _
-  rw [show List.range 1 = [0] from rfl, List.filter_cons, List.filter_nil]
-  by_cases h0 : pivCols.contains 0 = true
-  · rw [h0]; simp
-  · simp only [Bool.not_eq_true] at h0; rw [h0]; simp
-
 /-- `CFrac.logIsNewMonomial [] w = true` iff the cleared coefficient column `(CFrac.linearDepData [] w).1`
 has a nonzero entry — the empty-base test decides `w ≠ 0`. -/
 theorem logIsNewMonomial_nil_eq_col_nonzero (w : DenseFrac ℚ) :
@@ -236,8 +190,7 @@ theorem logIsNewMonomial_nil_eq_col_nonzero (w : DenseFrac ℚ) :
   have h2 : (CFrac.linearDepData [] w).2 = 0 := rfl
   rw [hbridge, h2, show (0 : ℕ) + 1 = 1 from rfl]
   set M := (CFrac.linearDepData [] w).1 with hM
-  rw [CLinearSolve.nullspaceBasis_rat_eq]
-  rw [nullspace_single_col M, crref_single_col_pivots M]
+  rw [CLinearSolve.nullspaceBasis_rat_single_col]
   cases hfind : M.find? (fun r => (r.getD 0 0) ≠ 0) with
   | none => simp
   | some pr => simp

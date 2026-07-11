@@ -1140,6 +1140,55 @@ theorem cConstSolveAnyQ_sound (Arows : List (List ℚ)) (urhs : List ℚ) (ncols
     rw [hcompute] at hsolvei
     linarith [hsolvei]
 
+/-- `crref.go` stops once the working column reaches the column bound. -/
+private lemma crref_go_stop_one (f : ℕ) (rows pr : List (List ℚ)) (pc : List ℕ) :
+    crref.go 1 f 1 rows pr pc = (pr.reverse, pc.reverse) := by
+  cases f with
+  | zero => cases rows <;> rfl
+  | succ g => cases rows with
+    | nil => rfl
+    | cons hd tl => rw [crref.go] <;> simp
+
+/-- The first-column RREF step records pivot `0` exactly when the column has a nonzero entry. -/
+private lemma crref_go_col_zero (f : ℕ) (M : List (List ℚ)) :
+    (crref.go 1 (f + 1) 0 M [] []).2 =
+      (if (M.find? (fun r => (r.getD 0 0) ≠ 0)).isSome then [0] else []) := by
+  cases M with
+  | nil => simp [crref.go]
+  | cons hd tl =>
+    rw [crref.go, if_neg (show ¬ ((0 : ℕ) ≥ 1) from by omega)]
+    · cases hfind : (hd :: tl).find? (fun r => (r.getD 0 0) ≠ 0) with
+      | none =>
+        simp only [Option.isSome_none, Bool.false_eq_true, if_false,
+          show (0 + 1) = 1 from rfl, crref_go_stop_one, List.reverse_nil]
+      | some pr =>
+        simp only [Option.isSome_some, if_true, show (0 + 1) = 1 from rfl,
+          crref_go_stop_one, List.reverse_cons, List.reverse_nil, List.nil_append]
+    · nofun
+
+/-- A single-column RREF has pivot column `[0]` exactly when that column has a nonzero entry. -/
+private lemma crref_single_col_pivots (M : List (List ℚ)) :
+    (crref M 1).2 = (if (M.find? (fun r => (r.getD 0 0) ≠ 0)).isSome then [0] else []) :=
+  crref_go_col_zero (1 + M.length) M
+
+/-- The rational nullspace basis of a single column is empty exactly when the column is nonzero. -/
+private lemma cNullspaceBasisQ_single_col_pivot (M : List (List ℚ)) :
+    cNullspaceBasisQ M 1 = (if (crref M 1).2.contains 0 then [] else [[1]]) := by
+  unfold cNullspaceBasisQ
+  obtain ⟨R, pivCols⟩ := crref M 1
+  show List.map _ ((List.range 1).filter (fun j => !pivCols.contains j)) = _
+  rw [show List.range 1 = [0] from rfl, List.filter_cons, List.filter_nil]
+  by_cases h0 : pivCols.contains 0 = true
+  · rw [h0]; simp
+  · simp only [Bool.not_eq_true] at h0; rw [h0]; simp
+
+/-- The rational nullspace basis of a single column is empty exactly when the column is nonzero. -/
+theorem cNullspaceBasisQ_single_col (M : List (List ℚ)) :
+    cNullspaceBasisQ M 1 =
+      (if (M.find? (fun r => (r.getD 0 0) ≠ 0)).isSome then [] else [[1]]) := by
+  rw [cNullspaceBasisQ_single_col_pivot, crref_single_col_pivots]
+  cases hfind : M.find? (fun r => (r.getD 0 0) ≠ 0) <;> simp
+
 
 end DeepWiki.SymbolicIntegration.DensePoly
 
@@ -1183,5 +1232,16 @@ instance instLawfulCLinearSolveRat : LawfulCLinearSolve ℚ where
     intro rows ncols x hwidth hx i hi
     rw [linearDot_rat_eq_dotQ]
     exact DensePoly.cNullspaceBasisQ_mem_solves rows ncols x hwidth hx i hi
+
+namespace CLinearSolve
+
+/-- The selected rational nullspace basis of one column is empty exactly when the column is nonzero. -/
+theorem nullspaceBasis_rat_single_col (M : List (List ℚ)) :
+    CLinearSolve.nullspaceBasis M 1 =
+      (if (M.find? (fun r => (r.getD 0 0) ≠ 0)).isSome then [] else [[1]]) := by
+  rw [nullspaceBasis_rat_eq]
+  exact DensePoly.cNullspaceBasisQ_single_col M
+
+end CLinearSolve
 
 end DeepWiki.SymbolicIntegration

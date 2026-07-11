@@ -107,17 +107,17 @@ theorem subresultantDet_three_by_three :
     CPolySubresultant.det ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by ccompute
 
 /-- **`CPolySubresultant.det ∘ cSylvesterRows` computes the resultant** (up to the standard `(-1)^{deg p·deg q}` sign):
-here `Res(t²−1, t+2) = 3` matches `cresultantWf` with the even sign — validating the Sylvester construction
-against the proven `cresultantWf`. -/
+here `Res(t²−1, t+2) = 3` matches the selected resultant with the even sign — validating the Sylvester
+construction against the lawful dense resultant. -/
 private theorem subresultantDet_cSylvesterRows_eq_resultant :
     CPolySubresultant.det (cSylvesterRows ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1)
-      = cresultantWf ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) := by ccompute
+      = CPolyResultant.compute ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) := by ccompute
 
 /-- The **0-th subresultant is the resultant** (constant polynomial): `S₀(t²−1, t+2) = [3]` — the full
-`bSylvester` determinant, matching `cresultantWf`. -/
+`bSylvester` determinant, matching the selected dense resultant. -/
 theorem subresultantDefault_zero :
     CPolySubresultant.default ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ) 2 1 0
-      = [cresultantWf ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ)] := by ccompute
+      = [CPolyResultant.compute ([-1, 0, 1] : DensePoly ℚ) ([2, 1] : DensePoly ℚ)] := by ccompute
 
 /-- The **degree-1 subresultant of `(t²−1, t+2)` is `t+2`** (`= q`, since `deg q = 1`): `S₁ = [2,1]`. -/
 theorem subresultantDefault_one :

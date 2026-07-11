@@ -7,7 +7,7 @@ import Mathlib.Tactic.LinearCombination
 /-! # Dense well-founded Euclidean division and gcd
 
 Euclidean division, extended gcd, and divisibility testing on `DensePoly`, by well-founded recursion
-on the normalized list length. The defs are `[CField α]`-only (so they reduce under `native_decide`
+on the normalized list length. The defs are `[CField α]`-only (so they reduce under compiled decision
 over noncomputable-`CFieldSpec` carriers); correctness through `toPoly` is proved by well-founded
 induction on each def's own recursion. -/
 
