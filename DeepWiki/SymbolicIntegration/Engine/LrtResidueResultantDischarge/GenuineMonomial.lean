@@ -186,20 +186,22 @@ theorem hcopgcd_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCor
 
 set_option maxHeartbeats 1600000 in
 open scoped Differential in
-/-- **The Hermite properness `hAD` (`degree` form) discharged from the genuine monomial property.** For
-`deg Dt ≤ 1` and a proper input `deg a < deg d`, `deg (…).2.1 < deg (…).2.2`, resting only on
-`(hgcd, hd0, hpp, hgen)`. Discharges every hypothesis of `cHermiteReduceTowerG_leftover_proper_of_degree_le_one`:
+/-- **Hermite properness from the per-factor differential-normality certificate.** For `deg Dt ≤ 1` and a
+proper input, the Hermite remainder is proper whenever every repeated Yun factor satisfies `hcopgcd`.
+Discharges every other hypothesis of `cHermiteReduceTowerG_leftover_proper_of_degree_le_one`:
 `hv`/`hb` from Yun `get_ne_zero` + `diophantineReduced_fst_degree_lt`; `hDstar`/`hresDen` from the radical/denominator
-nonvanishing; and the residual divisibility `hdvd` from `hWgd_of_multiplicity` (the Yun coprimality `hcopgcd`
-*derived* from `hgen` via `hcopgcd_of_genuineMonomial`) via the `d = W·Dstar` cancellation, bridging the raw
-fold `g` to the `cnorm`-projections through `toPoly`. -/
-theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
+nonvanishing; and residual divisibility from `hWgd_of_multiplicity` via `d = W·Dstar`. -/
+theorem hAD_degree_of_hcopgcd [CharZero (CFieldSpec.K α)]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hpp : (toPoly d).primPart ≠ 0) (hDtdeg : (toPoly Dt).natDegree ≤ 1)
-    (haProper : (toPoly a).degree < (toPoly d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt) :
+    (haProper : (toPoly a).degree < (toPoly d).degree)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPoly (CPolyEuclidean.gcdExt (cmul (CPolyEuclidean.div d (cpow x.1 (x.2 + 1)))
+          (CPolyEngine.monomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     (toPoly (cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (cHermiteReduceTower Dt a d).2.2).degree := by
-  have hcopgcd := hcopgcd_of_genuineMonomial hgcd Dt d hd0 hpp hgen
   have hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0 :=
     toPolyG_cHermiteReduceTowerG_den_ne_zero hgcd Dt a d hd0 hpp
   set g := (cSqfreeYunFF d).zipIdx.foldl
@@ -276,5 +278,15 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     have h0 := (cnormG_eq_nil_iff _).mp h
     simp only [denote] at h0
     exact mul_ne_zero hd0 (mul_ne_zero hg2ne hg2ne) h0
+
+/-- Hermite properness follows from the genuine primitive-monomial property. -/
+theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
+    (hpp : (toPoly d).primPart ≠ 0) (hDtdeg : (toPoly Dt).natDegree ≤ 1)
+    (haProper : (toPoly a).degree < (toPoly d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt) :
+    (toPoly (cHermiteReduceTower Dt a d).2.1).degree
+      < (toPoly (cHermiteReduceTower Dt a d).2.2).degree :=
+  hAD_degree_of_hcopgcd hgcd Dt a d hd0 hpp hDtdeg haProper
+    (hcopgcd_of_genuineMonomial hgcd Dt d hd0 hpp hgen)
 
 end DeepWiki.SymbolicIntegration

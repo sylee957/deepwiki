@@ -33,7 +33,7 @@ theorem reduceNormal_sound [CHermiteReduction P α] [LawfulCHermiteReduction (P 
     (hnormal : @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
       (CPoly.toPoly d))
     (hproper : (CPoly.toPoly a).degree < (CPoly.toPoly d).degree)
-    (hdegree : (CPoly.toPoly Dt).degree ≤ 1)
+    (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
     (hrun : reduceNormal Dt a d = some out) :
     IsIntegralResultP Dt a d out := by
   cases hlogs : CResidueLogPart.compute Dt (hermiteResult Dt a d).remainderNum
@@ -93,7 +93,7 @@ theorem reduceNormal_complete [CHermiteReduction P α]
     (hnormal : @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
       (CPoly.toPoly d))
     (hproper : (CPoly.toPoly a).degree < (CPoly.toPoly d).degree)
-    (hdegree : (CPoly.toPoly Dt).degree ≤ 1)
+    (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
     (hwitness : ∃ logs : List (α × P α),
       LawfulResidueLogPart Dt (hermiteResult Dt a d).remainderNum
         (hermiteResult Dt a d).remainderDen logs ∧

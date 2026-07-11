@@ -204,7 +204,7 @@ theorem assembleOneLevel_sound (C : CMonomialCase P α) [CCanonicalRepresentatio
     [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
     [CResidueSource P α] [CResidueLogPart P α]
     [LawfulCResidueLogPart (P := P) (α := α)] (Dt a d : P α) (out : IntegralResult α P)
-    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).degree ≤ 1)
+    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
     (hrun : assembleOneLevel C Dt a d = some out) :
     IsIntegralResultP Dt a d out := by
   cases hspecial : C.integrateSpecial Dt (canonicalResult Dt a d).polynomial

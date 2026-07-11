@@ -46,7 +46,7 @@ def oneLevelRisch (C : CMonomialCase P α) [CCanonicalRepresentation P α]
 
 /-- Low-derivation-degree domain of the generic Hermite-based one-level assembler. -/
 def oneLevelRischDomain : RischLevelDomain P α :=
-  fun Dt _ _ => (CPoly.toPoly Dt).degree ≤ 1
+  fun Dt _ _ => (CPoly.toPoly Dt).natDegree ≤ 1
 
 /-- The packaged generic level inherits the one-level assembler's soundness theorem. -/
 theorem oneLevelRisch_sound (C : CMonomialCase P α) [CCanonicalRepresentation P α]

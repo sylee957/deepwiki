@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.RischLevel
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPartDense
 import DeepWiki.SymbolicIntegration.Engine.CanonicalReconstructionCharZero
-import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionDenseLawful
 
 /-! # Dense realization of the compositional Risch level
 
@@ -29,15 +29,16 @@ open Polynomial
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+  [CFracGcdCoreWf α]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
   [CPolyGcd DensePoly α]
   [CPolySplitFactor DensePoly α] [LawfulCPolySplitFactor DensePoly α]
-  [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
-  [LawfulCHermiteReduction (P := DensePoly) (α := α)]
+  [CPolyResultant DensePoly]
 
 /-- A successful checked dense one-level run satisfies the representation-neutral integral specification. -/
 theorem DensePoly.cIntegrateCaseChecked_sound (C : CMonomialCase DensePoly α)
     [LawfulCMonomialCase C] (cands : List α) (Dt a d : DensePoly α) (res : IntegralResult α)
-    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).degree ≤ 1)
+    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
     (hrun : DensePoly.cIntegrateCaseChecked C cands Dt a d = some res) :
     IsIntegralResultP Dt a d res := by
   letI : CResidueSource DensePoly α := { candidates := fun _ => cands }

@@ -14,6 +14,7 @@ import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
 import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionDenseLawful
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.IntegrationFunctionsCatalog

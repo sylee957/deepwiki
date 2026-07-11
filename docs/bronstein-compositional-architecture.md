@@ -25,8 +25,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   contracts; the selected dense realizations cross `toPoly_list_eq` explicitly.
 - `CHermiteReduction`/`LawfulCHermiteReduction` pair a representation-neutral Hermite operation with
   semantic nonzero, reconstruction, squarefree, and low-derivation-degree properness laws. The existing
-  dense reducer is selected as the operation, while its full lawful instance remains gated on replacing
-  implementation-frontier hypotheses by the semantic normal-squarefree premise.
+  dense reducer now realizes this contract: normal-squarefreeness discharges its repeated-Yun-factor
+  coprimality frontier, and the checked dense Risch-level adapter obtains the law as an instance rather
+  than accepting it as an assumption.
 - `CResidueLogPart` makes residue-log extraction option-valued. `LawfulCResidueLogPart` certifies every
   successful reconstruction, while `CompleteCResidueLogPart` separately states completeness relative to
   a lawful residue source and a genuine logarithmic witness.
@@ -84,8 +85,8 @@ monomial stage contracts.
    reduction. Canonical representation is paired and densely realized. Polynomial reduction now has
    its Prop-free interface, checked tower realizer, and its full lawful contract; prove the tower
    realizer's normal-form and eventual-fuel laws next. Hermite and residue-log stages now have paired
-   operation/law interfaces and a generic normal-branch composition; materialize their lawful dense and
-   sparse realizations next.
+   operation/law interfaces and a generic normal-branch composition; dense Hermite is realized, with
+   sparse Hermite and the remaining residue realizations still pending.
 4. Define one generic Figure-5.1 one-level assembler and prove its soundness from only the stage
    contracts. The executable assembler now calls `reduceNormal`, and its contract-only soundness theorem
    is complete. Next separate polynomial reduction from `CMonomialCase.integrateSpecial` and add the

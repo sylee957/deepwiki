@@ -80,7 +80,7 @@ class LawfulCHermiteReduction [CPolyEngine P] [CHermiteReduction P α] : Prop wh
   remainder_proper : ∀ (Dt a d : P α), CPoly.toPoly d ≠ 0 →
     @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩ (CPoly.toPoly d) →
     (CPoly.toPoly a).degree < (CPoly.toPoly d).degree →
-    (CPoly.toPoly Dt).degree ≤ 1 →
+    (CPoly.toPoly Dt).natDegree ≤ 1 →
     (CPoly.toPoly (hermiteResult Dt a d).remainderNum).degree <
       (CPoly.toPoly (hermiteResult Dt a d).remainderDen).degree
 
@@ -91,7 +91,7 @@ theorem LawfulCHermiteReduction.result_lawful [CPolyEngine P] [CHermiteReduction
     (hnormal : @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
       (CPoly.toPoly d))
     (hproper : (CPoly.toPoly a).degree < (CPoly.toPoly d).degree)
-    (hdegree : (CPoly.toPoly Dt).degree ≤ 1) :
+    (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1) :
     LawfulHermiteReduction Dt a d (hermiteResult Dt a d).rationalNum
       (hermiteResult Dt a d).rationalDen (hermiteResult Dt a d).remainderNum
       (hermiteResult Dt a d).remainderDen where
