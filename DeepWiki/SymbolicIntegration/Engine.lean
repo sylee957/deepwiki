@@ -93,6 +93,7 @@ import DeepWiki.SymbolicIntegration.Engine.Hermite.TowerStep
 import DeepWiki.SymbolicIntegration.Engine.YunSquarefreeDecomposition
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
 import DeepWiki.SymbolicIntegration.Engine.Assemble
+import DeepWiki.SymbolicIntegration.Engine.PolynomialAssembly
 
 /-! # The generic executable Risch engine (`CField` / `DensePoly` world) — aggregator over the
 core plus the RischDE, Hyperexp, CoupledDE, Tower, and Algebraic sub-areas. -/
