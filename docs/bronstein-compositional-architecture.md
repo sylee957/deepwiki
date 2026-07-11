@@ -15,6 +15,24 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `LawfulHermiteReduction` and `LawfulResidueLogPart` exist as stage-result contracts.
 - `LawfulRischLevelLrt` already packages the recursive LRT-level special and reduced contracts.
 
+## Leaf inventory
+
+| Capability | Executable interface | Lawful contract | Realization location |
+|---|---|---|---|
+| Fractions | `CFrac` | `LawfulCFrac` | `ComputableAlgebra/Fraction.lean` and representation modules |
+| Polynomial engine | `CPolyEngine` | `LawfulCPolyEngine` | `ComputableAlgebra/PolyEngine*.lean` |
+| GCD | `CPolyGcd` | `LawfulCPolyGcd` | `ComputableAlgebra/PolyReprGcd.lean` |
+| Euclidean division | `CPolyEuclidean` | `LawfulCPolyEuclidean` | `ComputableAlgebra/PolyEuclidean.lean` |
+| Squarefree Yun | `CPolySquarefree` | `LawfulCPolySquarefree` | `ComputableAlgebra/PolySquarefree.lean`, semantic law in `Engine/SquarefreeDecomposition.lean` |
+| Resultant | `CPolyResultant` | `LawfulCPolyResultant` | `ComputableAlgebra/PolyResultant.lean` |
+| Subresultant | `CPolySubresultant` | `LawfulCPolySubresultant` | `Engine/SubresultantSpec.lean` |
+| Interpolation | `CPolyInterpolate` | `LawfulCPolyInterpolate` | `ComputableAlgebra/PolyInterpolate.lean` |
+| Linear solve | `CLinearSolve` | `LawfulCLinearSolve` | `ComputableAlgebra/LinearAlgebra.lean` |
+
+Therefore the first architectural refactor is **not** another leaf abstraction. It is to make the
+existing leaf contracts the only dependencies of the canonical, Hermite, polynomial, residue, and
+monomial stage contracts.
+
 ## Migration order
 
 1. Inventory every public assembler and proof that mentions a concrete dense/Wf operation; use
