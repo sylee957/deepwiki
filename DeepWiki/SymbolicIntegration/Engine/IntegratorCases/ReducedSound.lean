@@ -21,7 +21,7 @@ half (`hherm`) and the Rothstein–Trager residue match (`hmatch`), `cIntegrateR
 satisfies the antiderivative predicate. A restatement of
 `field_identity_of_cIntegrateReducedG_of_residueMatch` as `IsIntegralResult`; `hherm`/`hmatch` are the
 `cHermiteReduceTower` / RT-residue `native_decide` frontier. It discharges `hNrmField`. -/
-theorem cIntegrateReducedG_isIntegralResult (Dt a d : DensePoly α) (cands : List α)
+private theorem cIntegrateReducedG_isIntegralResult (Dt a d : DensePoly α) (cands : List α)
     (hherm : towerFractionFieldDeriv Dt
             (am α (toPoly (cIntegrateReduced Dt a d cands).rational.1)
               / am α (toPoly (cIntegrateReduced Dt a d cands).rational.2))
@@ -42,7 +42,7 @@ omit [CRischField α] in
 cleared Hermite identity) and `LawfulResidueLogPart` (the RT residue match) — the two *abstract* stage
 laws — the reduced normal part integrates correctly. This is the assembler consuming its interfaces: the
 composition `Hermite ∘ ResidueLogPart = reduced-part soundness`, with no concrete algorithm re-derived. -/
-theorem cIntegrateReducedG_isIntegralResult_of_lawful (Dt a d : DensePoly α) (cands : List α)
+private theorem cIntegrateReducedG_isIntegralResult_of_lawful (Dt a d : DensePoly α) (cands : List α)
     (hherm : LawfulHermiteReduction Dt a d (DensePoly.cHermiteReduceTower Dt a d).1.1
       (DensePoly.cHermiteReduceTower Dt a d).1.2 (DensePoly.cHermiteReduceTower Dt a d).2.1
       (DensePoly.cHermiteReduceTower Dt a d).2.2)
