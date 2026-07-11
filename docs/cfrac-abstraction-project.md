@@ -51,7 +51,8 @@ runs the same fraction algorithm.
    specialization only where an actual downstream polynomial algorithm is still dense.
 6. **Abstract algorithm capabilities — IN PROGRESS.** Introduce Prop-free/lawful pairs for polynomial
     gcd/division, resultant/subresultant, and linear solve. `CLinearSolve`/`LawfulCLinearSolve` now expose
-    both unique and arbitrary consistent-system solves, with length and row-equation laws for each; coupled-DE
+    unique and arbitrary consistent-system solves plus homogeneous-kernel selection, with length and row-equation
+    laws for each returned vector; coupled-DE
     and parallel-integration consumers request the capability rather than `cConstSolveUniqueQ` or
     `cConstSolveAnyQ` directly. In the second slice,
    `CPolyGcd`/`LawfulCPolyGcd` selects gcd for raw-fraction reduction, while
