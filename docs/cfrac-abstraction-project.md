@@ -134,6 +134,9 @@ runs the same fraction algorithm.
    Logarithmic-relation verification now runs as `CFrac.logRelationCheck`; the dense-only
    `structRelationCheck` was retired, rational coefficients enter through `CFrac.ofScalar`, and the sparse
    logarithmic-dependence witness verifies the recovered relation through the same generic fraction arithmetic.
+   Function-algebra component recombination now runs as `CPoly.afIntegrateFunctionAlgebra`, selecting modular
+   multiplication, Euclidean remainder, addition, and zero through the polynomial interfaces; its existing dense
+   quotient soundness theorem crosses the specialization boundary explicitly, and a sparse witness executes the kernel.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

@@ -9,7 +9,29 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 open scoped Differential
+
+namespace CPoly
+
+/-- Recombine component antiderivatives as `Σᵢ eᵢ·Fᵢ` modulo a represented curve. -/
+def afIntegrateFunctionAlgebra
+    {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (f : P α) (es Fs : List (P α)) : P α :=
+  ((es.zip Fs).map (fun p => CPoly.mulMod f p.1 p.2)).foldl CPolyEngine.add CPoly.czero
+
+end CPoly
+
+/-! Function-algebra recombination executes through sparse polynomial storage. -/
+
+example :
+    let f : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, -1), (2, 1)]
+    let x : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(1, 1)]
+    let z : CPoly.SparsePoly ℚ := CPoly.czero
+    CPolyEngine.cisZero
+      (CPolyEngine.sub (CPoly.afIntegrateFunctionAlgebra f [CPoly.one, z] [x, x]) x) = true := by
+  ccompute
 
 namespace DensePoly
 
@@ -57,11 +79,6 @@ theorem IsAfIdempotent.isConstant {f e : DensePoly α} (he : IsAfIdempotent f e)
     _ = (dē * (1 - 2 * ē)) * (1 - 2 * ē) := by ring
     _ = 0 := by rw [h2, zero_mul]
 
-/-- The recombination integrator `afIntegrateFunctionAlgebra T es Fs = Σᵢ eᵢ·Fᵢ`: the `cadd`-fold
-of the products `CPoly.mulMod T eᵢ Fᵢ` over the zipped indicators `es` and component integrals `Fs`. -/
-def afIntegrateFunctionAlgebra (f : DensePoly α) (es Fs : List (DensePoly α)) : DensePoly α :=
-  ((es.zip Fs).map (fun p => CPoly.mulMod f p.1 p.2)).foldl cadd ([] : DensePoly α)
-
 /-- Function-algebra soundness `D(F) = integrand` over a reducible curve: for a separable curve `T`,
 CRT indicators `es` each idempotent (`hidem`), per-component integrals `Fs` with
 `eᵢ·D(Fᵢ) = eᵢ·integrand` (`hcomp`), and partition of unity `Σ eᵢ = 1` (`hsum`), the recombined
@@ -78,9 +95,14 @@ theorem afIntegrateFunctionAlgebra_sound (f integrand : DensePoly α)
         = Ideal.Quotient.mk (afIdeal f) (toPoly p.1)
           * Ideal.Quotient.mk (afIdeal f) (toPoly integrand))
     (hsum : ((es.zip Fs).map (fun p => Ideal.Quotient.mk (afIdeal f) (toPoly p.1))).sum = 1) :
-    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (afIntegrateFunctionAlgebra f es Fs)))
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f (CPoly.afIntegrateFunctionAlgebra f es Fs)))
       = Ideal.Quotient.mk (afIdeal f) (toPoly integrand) := by
-  rw [afIntegrateFunctionAlgebra, mk_toPolyG_afDerivWf_foldlCaddG f hf]
+  rw [CPoly.afIntegrateFunctionAlgebra]
+  change Ideal.Quotient.mk (afIdeal f)
+      (toPoly (afDerivWf f
+        (((es.zip Fs).map (fun p => CPoly.mulMod f p.1 p.2)).foldl cadd ([] : DensePoly α))))
+    = Ideal.Quotient.mk (afIdeal f) (toPoly integrand)
+  rw [mk_toPolyG_afDerivWf_foldlCaddG f hf]
   -- `afDerivWf` of the empty seed is `0` in the quotient
   rw [mk_toPolyG_afDerivWf_nil f hf, zero_add]
   -- fuse the `map ∘ map` over `es.zip Fs`
