@@ -1,6 +1,7 @@
 import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
 import DeepWiki.ComputableAlgebra.PolyReprSparse
 import DeepWiki.ComputableAlgebra.PolyEngine
+import Mathlib.RingTheory.Coprime.Basic
 
 /-! # Abstract executable polynomial Euclidean algorithms
 
@@ -66,6 +67,13 @@ namespace CPolyEuclidean
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P]
   {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+
+/-- Coprime inputs make the selected extended-gcd component a unit. -/
+theorem gcdExt_isUnit_of_isCoprime (p q : P α)
+    (hcop : IsCoprime (CPoly.toPoly p) (CPoly.toPoly q)) :
+    IsUnit (CPoly.toPoly (gcdExt p q).1) := by
+  obtain ⟨hp, hq⟩ := LawfulCPolyEuclidean.gcdExt_dvd (P := P) p q
+  exact hcop.isUnit_of_dvd' hp hq
 
 /-- A zero selected remainder turns the Euclidean identity into exact quotient multiplication. -/
 theorem toPoly_eq_div_mul_of_mod_eq_zero (p q : P α) (hq : CPoly.toPoly q ≠ 0)

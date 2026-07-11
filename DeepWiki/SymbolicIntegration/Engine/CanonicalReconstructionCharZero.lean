@@ -48,17 +48,12 @@ theorem canonicalReconstruction_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf
   have hcop : IsCoprime (toPoly (crSpecDen Dt a d)) (toPoly (crNormDen Dt a d)) := by
     rw [hspd, hnd]
     exact isCoprime_of_isSpecial_isNormalSqfree (by rw [← hspd]; exact hds) hspec hnorm
-  -- gcd of the split parts is a unit ⇒ the computable gcd is a nonzero constant
-  have hgu : IsUnit (gcd (toPoly (crNormDen Dt a d)) (toPoly (crSpecDen Dt a d))) :=
-    gcd_isUnit_iff_isRelPrime.mpr (hcop.symm.isRelPrime)
-  have hassoc : Associated (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1)
-      (gcd (toPoly (crNormDen Dt a d)) (toPoly (crSpecDen Dt a d))) := by
-    have h1 : Associated (toPoly (cgcdMonicWf (crNormDen Dt a d) (crSpecDen Dt a d)))
-        (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1) := by
-      rw [cgcdMonicWf]; exact associated_toPolyG_cmonicG _
-    exact h1.symm.trans (associated_toPolyG_cgcdMonicWf _ _)
-  have hgu' : IsUnit (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1) :=
-    (Associated.isUnit_iff hassoc).mpr hgu
+  -- coprime split parts make the selected extended gcd a nonzero constant
+  have hgu' : IsUnit (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1) := by
+    simpa only [toPoly_list_eq] using
+      (CPolyEuclidean.gcdExt_isUnit_of_isCoprime (P := DensePoly)
+        (crNormDen Dt a d) (crSpecDen Dt a d)
+        (by simpa only [toPoly_list_eq] using hcop.symm))
   have hgdeg : (toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0 :=
     natDegree_eq_zero_of_isUnit hgu'
   have hgne : toPoly (CPolyEuclidean.gcdExt (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0 := hgu'.ne_zero
@@ -97,16 +92,11 @@ theorem crNormNum_degree_lt_crNormDen (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdF
   -- special ⊥ normal ⇒ the split parts are coprime ⇒ the computable gcd is a nonzero constant ⇒ Bézout
   have hcop : IsCoprime (toPoly (CPoly.splitFactor Dt d).2) (toPoly (CPoly.splitFactor Dt d).1) :=
     isCoprime_of_isSpecial_isNormalSqfree hds0 hspec hnorm
-  have hgu : IsUnit (gcd (toPoly (CPoly.splitFactor Dt d).1) (toPoly (CPoly.splitFactor Dt d).2)) :=
-    gcd_isUnit_iff_isRelPrime.mpr (hcop.symm.isRelPrime)
-  have hassoc : Associated (toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1)
-      (gcd (toPoly (CPoly.splitFactor Dt d).1) (toPoly (CPoly.splitFactor Dt d).2)) := by
-    have h1 : Associated (toPoly (cgcdMonicWf (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2))
-        (toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1) := by
-      rw [cgcdMonicWf]; exact associated_toPolyG_cmonicG _
-    exact h1.symm.trans (associated_toPolyG_cgcdMonicWf _ _)
-  have hgu' : IsUnit (toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1) :=
-    (Associated.isUnit_iff hassoc).mpr hgu
+  have hgu' : IsUnit (toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1) := by
+    simpa only [toPoly_list_eq] using
+      (CPolyEuclidean.gcdExt_isUnit_of_isCoprime (P := DensePoly)
+        (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2
+        (by simpa only [toPoly_list_eq] using hcop.symm))
   have hgdeg : (toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1).natDegree = 0 :=
     natDegree_eq_zero_of_isUnit hgu'
   have hgne : toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1 ≠ 0 := hgu'.ne_zero
