@@ -16,6 +16,7 @@ import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionDenseLawful
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.CaseChecked
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.IntegrationFunctionsCatalog
 import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
@@ -55,7 +56,6 @@ import DeepWiki.SymbolicIntegration.Engine.Parametric
 import DeepWiki.SymbolicIntegration.Engine.PolyPartTower
 import DeepWiki.SymbolicIntegration.Engine.PolyPartTowerExamples
 import DeepWiki.SymbolicIntegration.Engine.PrimitiveGuarded
-import DeepWiki.SymbolicIntegration.Engine.PrimitiveGuardedExamples
 import DeepWiki.SymbolicIntegration.Engine.PrimitiveLrtDecision
 import DeepWiki.SymbolicIntegration.Engine.PrimitiveCase
 import DeepWiki.SymbolicIntegration.Engine.PrimPRSRegular.Assembly
