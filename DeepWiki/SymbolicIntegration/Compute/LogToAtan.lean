@@ -50,7 +50,7 @@ arguments `[((−x+3x³−x⁵), −2), ((−x³), −1), ((x), 1)]`. -/
 theorem logToAtanCompute_ex281 :
     logToAtanCompute 20 cX3m3X cX2m2
       = [([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])] := by
-  native_decide
+  ccompute
 
 /-! ### Agreement with the `ℚ[X]`-level `logToAtanAux`
 The cofactor Bézout identity `B·D − A·C = G` is the specialization of
