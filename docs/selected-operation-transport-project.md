@@ -57,6 +57,9 @@ denotations does not make those terms definitionally equal.
 - `cHermiteReduceTower_squarefree_of_decomposition` derives the Hermite leftover-denominator contract
   from any lawful selected squarefree decomposition. The well-founded realization now supplies its Yun
   proof to that generic bridge instead of re-proving the denominator property inside the concrete theorem.
+- `cHermiteReduceTower_lawful_of_contracts` assembles the selected Hermite output from its field identity,
+  lawful squarefree decomposition, and properness contracts. The well-founded theorem is now a provider
+  of those three facts rather than the place where the result interface is assembled.
 
 ## Verification
 

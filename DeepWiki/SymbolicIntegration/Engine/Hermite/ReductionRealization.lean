@@ -37,6 +37,31 @@ theorem cHermiteReduceTower_squarefree_of_decomposition (Dt a d : DensePoly α)
 
 end Selected
 
+section SelectedRealization
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [Algebra ℚ (CFieldSpec.K α)] [CPolySquarefree DensePoly α]
+
+/-- Semantic contracts assemble the selected tower Hermite output into `LawfulHermiteReduction`. -/
+theorem cHermiteReduceTower_lawful_of_contracts (Dt a d : DensePoly α)
+    (hfield : towerFractionFieldDeriv Dt
+        (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
+          / am α (toPoly (cHermiteReduceTower Dt a d).1.2))
+      + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+          / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
+      = am α (toPoly a) / am α (toPoly d))
+    (hdecomp : LawfulSquarefreeDecomposition d (CPoly.squarefreeYun d))
+    (hproper : (toPoly (cHermiteReduceTower Dt a d).2.1).degree
+      < (toPoly (cHermiteReduceTower Dt a d).2.2).degree) :
+    LawfulHermiteReduction Dt a d (cHermiteReduceTower Dt a d).1.1
+      (cHermiteReduceTower Dt a d).1.2 (cHermiteReduceTower Dt a d).2.1
+      (cHermiteReduceTower Dt a d).2.2 where
+  field_identity := hfield
+  squarefree := cHermiteReduceTower_squarefree_of_decomposition Dt a d hdecomp
+  proper := hproper
+
+end SelectedRealization
+
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α]
 
@@ -53,13 +78,12 @@ theorem cHermiteReduceTowerG_lawfulHermiteReduction [CharZero (CFieldSpec.K α)]
       < (toPoly (cHermiteReduceTower Dt a d).2.2).degree) :
     LawfulHermiteReduction Dt a d (cHermiteReduceTower Dt a d).1.1
       (cHermiteReduceTower Dt a d).1.2 (cHermiteReduceTower Dt a d).2.1
-      (cHermiteReduceTower Dt a d).2.2 where
-  field_identity := by
-    have hcap := cHermiteReduceTowerG_field_identity hgcd Dt a d hd0 hpp hcopgcd
+      (cHermiteReduceTower Dt a d).2.2 := by
+  apply cHermiteReduceTower_lawful_of_contracts Dt a d
+  · have hcap := cHermiteReduceTowerG_field_identity hgcd Dt a d hd0 hpp hcopgcd
     rwa [toPolyG_hNum'_eq_2_1 hgcd Dt a d hd0 hpp hcopgcd] at hcap
-  squarefree := cHermiteReduceTower_squarefree_of_decomposition Dt a d
-    (by simpa only [squarefreeYun_dense_wf_eq] using
-      cSqfreeYunFFG_lawfulSquarefreeDecomposition hgcd d hd0 hpp)
-  proper := hproper
+  · simpa only [squarefreeYun_dense_wf_eq] using
+      cSqfreeYunFFG_lawfulSquarefreeDecomposition hgcd d hd0 hpp
+  · exact hproper
 
 end DeepWiki.SymbolicIntegration
