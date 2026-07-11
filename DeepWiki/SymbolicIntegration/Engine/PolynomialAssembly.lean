@@ -64,10 +64,16 @@ def assembleOneLevel (R : CPolynomialReduction P α) (kind : PolynomialReduction
 /-- Explicit stage-decomposed hypotheses under which contract-based one-level assembly is complete. -/
 structure OneLevelAssemblyWitness (R : CPolynomialReduction P α)
     (kind : PolynomialReductionKind) (normalDomain : NormalReductionDomain P α)
+    (specialDomain : MonomialSpecialDomain P α)
     (Dt a d : P α) [CCanonicalRepresentation P α] : Prop where
   /-- The requested polynomial normal form exists. -/
   polynomial_reduction_exists :
     ∃ reduced, IsPolynomialReduction kind Dt (canonicalResult Dt a d).polynomial reduced
+  /-- Every selected polynomial reduction leaves a special part in the monomial solver's domain. -/
+  special_domain : ∀ (fuel : ℕ) (reduced : PolynomialReductionResult P α),
+    R.reduce kind Dt fuel (canonicalResult Dt a d).polynomial = some reduced →
+      specialDomain Dt reduced.remainder (canonicalResult Dt a d).specialNum
+        (canonicalResult Dt a d).specialDen
   /-- Every reduction selected by the executable stage leaves a solvable monomial special part. -/
   special_antiderivative : ∀ (fuel : ℕ) (reduced : PolynomialReductionResult P α),
     R.reduce kind Dt fuel (canonicalResult Dt a d).polynomial = some reduced →
@@ -91,12 +97,12 @@ theorem assembleOneLevel_complete (R : CPolynomialReduction P α)
     (kind : PolynomialReductionKind) (N : CNormalReduction P α)
     (normalDomain : NormalReductionDomain P α)
     [LawfulCNormalReduction N normalDomain] [CompleteCNormalReduction N normalDomain]
-    (C : CMonomialCase P α)
-    [LawfulCMonomialCase C] [CompleteCMonomialCase C]
+    (C : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase C] [CompleteCMonomialCase C specialDomain]
     [CCanonicalRepresentation P α]
     [LawfulCCanonicalRepresentation (P := P) (α := α)]
     (Dt a d : P α) (hd : CPoly.toPoly d ≠ 0)
-    (hwitness : OneLevelAssemblyWitness R kind normalDomain Dt a d) :
+    (hwitness : OneLevelAssemblyWitness R kind normalDomain specialDomain Dt a d) :
     ∃ fuel out, assembleOneLevel R kind N fuel C Dt a d = some out := by
   obtain ⟨fuel, reduced, hreduce⟩ := CompleteCPolynomialReduction.relative_complete
     (C := R) kind Dt (canonicalResult Dt a d).polynomial
@@ -105,14 +111,15 @@ theorem assembleOneLevel_complete (R : CPolynomialReduction P α)
     hwitness.special_antiderivative fuel reduced hreduce
   obtain ⟨special, hspecial⟩ := CompleteCMonomialCase.special_complete (C := C) Dt
     reduced.remainder (canonicalResult Dt a d).specialNum
-    (canonicalResult Dt a d).specialDen snum sden hsden hspecialSemantic
+    (canonicalResult Dt a d).specialDen snum sden
+      (hwitness.special_domain fuel reduced hreduce) hsden hspecialSemantic
   obtain ⟨snum', sden'⟩ := special
   have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
   obtain ⟨before, hnormal, hbefore⟩ := CompleteCNormalReduction.relative_complete (N := N)
     Dt
     (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen
     hwitness.normal_domain hnormalDen hwitness.normal_integrable
-  obtain ⟨normal, hpost⟩ := CompleteCMonomialCase.postprocess_complete (C := C) Dt
+  obtain ⟨normal, hpost⟩ := CompleteCMonomialCase.postprocess_complete (C := C) specialDomain Dt
     (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before hbefore
   refine ⟨fuel, combineSN (polynomialSpecialNumerator reduced.antiderivative snum' sden')
     sden' normal, ?_⟩

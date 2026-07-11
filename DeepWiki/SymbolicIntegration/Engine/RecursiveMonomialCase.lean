@@ -47,25 +47,28 @@ instance instLawfulCMonomialCaseWithRecursiveCoefficient (C : CRecursiveMonomial
 /-- Relative-completeness contract for a recursive monomial case on selected coefficient domains. -/
 class CompleteCRecursiveMonomialCase (C : CRecursiveMonomialCase P α)
     (recursiveDomain : RecursiveCoefficientDomain (α := α))
-    (limitedDomain : LimitedCoefficientDomain (α := α)) : Prop where
+    (limitedDomain : LimitedCoefficientDomain (α := α))
+    (specialDomain : MonomialSpecialDomain P α) : Prop where
   /-- Installing coefficient stages complete on the selected domains preserves monomial completeness. -/
   complete (I : CRecursiveCoefficientIntegrator α)
     [CompleteCRecursiveCoefficientIntegrator I recursiveDomain]
     [LawfulCLimitedCoefficientIntegrator I]
     [CompleteCLimitedCoefficientIntegrator I limitedDomain] :
-      CompleteCMonomialCase (C.withCoefficient I)
+      CompleteCMonomialCase (C.withCoefficient I) specialDomain
 
 omit [LawfulCPolyEngine P] in
 /-- Complete recursive coefficient stages lift to a complete ordinary monomial case on their named domains. -/
 theorem completeCMonomialCaseWithRecursiveCoefficient (C : CRecursiveMonomialCase P α)
     (recursiveDomain : RecursiveCoefficientDomain (α := α))
     (limitedDomain : LimitedCoefficientDomain (α := α))
+    (specialDomain : MonomialSpecialDomain P α)
     (I : CRecursiveCoefficientIntegrator α)
-    [CompleteCRecursiveMonomialCase C recursiveDomain limitedDomain]
+    [CompleteCRecursiveMonomialCase C recursiveDomain limitedDomain specialDomain]
     [CompleteCRecursiveCoefficientIntegrator I recursiveDomain]
     [LawfulCLimitedCoefficientIntegrator I]
     [CompleteCLimitedCoefficientIntegrator I limitedDomain] :
-    CompleteCMonomialCase (C.withCoefficient I) :=
-  CompleteCRecursiveMonomialCase.complete (C := C) recursiveDomain limitedDomain I
+    CompleteCMonomialCase (C.withCoefficient I) specialDomain :=
+  CompleteCRecursiveMonomialCase.complete (C := C) (recursiveDomain := recursiveDomain)
+    (limitedDomain := limitedDomain) (specialDomain := specialDomain) I
 
 end DeepWiki.SymbolicIntegration

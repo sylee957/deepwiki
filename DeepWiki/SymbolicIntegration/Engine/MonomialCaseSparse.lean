@@ -108,8 +108,12 @@ instance instLawfulCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
 set_option maxHeartbeats 3000000 in
 /-- A relatively complete dense monomial case remains relatively complete through the sparse boundary. -/
 instance instCompleteCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
-    [CompleteCMonomialCase C] : CompleteCMonomialCase (denseMonomialCaseAsSparse C) where
-  special_complete Dt fp b ds snum sden hsden hderiv := by
+    (denseDomain : MonomialSpecialDomain DensePoly α)
+    [CompleteCMonomialCase C denseDomain] :
+    CompleteCMonomialCase (denseMonomialCaseAsSparse C)
+      (fun Dt fp b ds => denseDomain (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
+        (CPolyEngine.convert b) (CPolyEngine.convert ds)) where
+  special_complete Dt fp b ds snum sden hdomain hsden hderiv := by
     have hsdenDense : CPoly.toPoly (CPolyEngine.convert sden : DensePoly α) ≠ 0 := by
       simpa only [CPolyEngine.toPoly_convert] using hsden
     have hderivDense :
@@ -123,7 +127,7 @@ instance instCompleteCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
     obtain ⟨out, hout⟩ := CompleteCMonomialCase.special_complete (C := C)
       (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
       (CPolyEngine.convert ds) (CPolyEngine.convert snum) (CPolyEngine.convert sden)
-      hsdenDense hderivDense
+      hdomain hsdenDense hderivDense
     refine ⟨(CPolyEngine.convert out.1, CPolyEngine.convert out.2), ?_⟩
     change (C.integrateSpecial (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
       (CPolyEngine.convert b) (CPolyEngine.convert ds)).map
@@ -145,7 +149,7 @@ instance instCompleteCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
           intro cv hcv
           obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
           simpa only [CPolyEngine.toPoly_convert] using hbefore.arguments_nonzero source hsource }
-    obtain ⟨after, hafter⟩ := CompleteCMonomialCase.postprocess_complete (C := C)
+    obtain ⟨after, hafter⟩ := CompleteCMonomialCase.postprocess_complete (C := C) denseDomain
       (CPolyEngine.convert Dt) (CPolyEngine.convert cn) (CPolyEngine.convert dn)
       (convertResult (Q := DensePoly) before) hbeforeDense
     refine ⟨convertResult (Q := CPoly.SparsePoly) after, ?_⟩

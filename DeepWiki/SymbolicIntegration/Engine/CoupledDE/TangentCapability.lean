@@ -130,8 +130,9 @@ instance instLawfulCMonomialCaseTangent (S : CTangentCoupledSolver) (B : CTangen
 
 /-- Complete tangent preparation and bounded solving make the composed monomial case relatively complete. -/
 instance instCompleteCMonomialCaseTangent (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
-    [CompleteCTangentSpecialBridge S B] : CompleteCMonomialCase (tangentMonomialCase S B) where
-  special_complete Dt fp b ds snum sden hsden hderiv := by
+    [CompleteCTangentSpecialBridge S B] :
+    CompleteCMonomialCase (tangentMonomialCase S B) (fun _ _ _ _ => True) where
+  special_complete Dt fp b ds snum sden _ hsden hderiv := by
     obtain ⟨p, q₁, q₂, hprepare, hsolve⟩ :=
       CompleteCTangentSpecialBridge.complete (S := S) (B := B)
         Dt fp b ds snum sden hsden hderiv

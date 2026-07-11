@@ -1,12 +1,11 @@
-import DeepWiki.SymbolicIntegration.Engine.RischSolverTowerLrt
+import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
 
 /-! # Grounding the recursive LRT solver — the honest end state of the re-base
 
-The re-based recursive solver resolves at every tower depth (`instCRischLevelLrtPrimitive`
-+ `instCRischLevelLrtTower`), and the contract-backed assembled soundness `CRischLevelLrt.soundFormalLrt` produces a genuine `∀E`
-antiderivative. This file crystallizes what the solver **depends on**, on the concrete carrier `DenseFrac ℚ`
-(the ℚ(x)-tower the whole engine runs over): the recursion bottoms out at exactly two **honest** frontiers per
-level, and no others:
+`Tower.LrtDepth` packages the dictionary-dependent carriers and proves the recursive soundness and
+domain-relative completeness step at every depth. This file specializes that construction to `DenseFrac ℚ`
+as a small concrete grounding theorem. The recursive construction depends on exactly two **honest** frontiers
+per level, and no others:
 
 * `PrimitiveFrontierLrt` — the reduced-part soundness. Closed (`hreducedLrt_of_genuineAll`) to the bundled
   genuine data `LrtReducedGenuineData` — Bronstein's *necessary* residue/normality conditions, which a
@@ -18,8 +17,9 @@ level, and no others:
   needed only by the separate bridge that constructs `PrimitiveFrontierLrt` from genuine residue data.
 
 So "no dangling frontier" is achieved in the honest sense: every remaining hypothesis is a **named genuine
-mathematical condition**, not an opaque assumed lemma. Completeness (the decidable non-integrability
-certificate) is the separate `LrtLiouvilleFrontier` (Liouville criterion). See `docs/recursive-lrt-typeclass.md`. -/
+mathematical condition**, not an opaque assumed lemma. Full recursive completeness additionally requires
+coverage of the explicit limited-integration domains; `lrtTowerStep_succeeds_iff_integrable` deliberately does
+not hide that requirement. See `docs/recursive-lrt-typeclass.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
 

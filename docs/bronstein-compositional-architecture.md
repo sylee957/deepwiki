@@ -139,6 +139,8 @@ monomial stage contracts.
    `towerLimitedCoefficientDomain`, which explicitly requires a coefficient-field solution with a descended
    constant. `CompleteCRecursiveMonomialCase` likewise names both recursive coefficient domains; its
    lifting theorem requires callers to select them explicitly rather than silently assuming `True`.
+   `Tower/LrtDepth.lean` now packages the dictionary-dependent carrier `DenseFracTower n` and proves the
+   recursive LRT soundness and explicit-domain success equivalence uniformly for every successor depth.
    Full monomial completeness still requires proving that this domain covers every coefficient pair generated
    by the stage; that mathematical constant-descent/search theorem remains open.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.

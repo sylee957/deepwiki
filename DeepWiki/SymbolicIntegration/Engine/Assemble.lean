@@ -93,10 +93,15 @@ class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
     CPoly.toPoly before.rational.2 ≠ 0 → C.postprocessNormal Dt before = some after →
       CPoly.toPoly after.rational.2 ≠ 0
 
-/-- Relative completeness contract for a monomial-case special solver. -/
-class CompleteCMonomialCase (C : CMonomialCase P α) : Prop where
-  /-- Every valid special antiderivative lies in the executable solver's domain. -/
+/-- Semantic domain on which a monomial special solver is required to be complete. -/
+abbrev MonomialSpecialDomain (P : Type u → Type u) (α : Type u) := P α → P α → P α → P α → Prop
+
+/-- Relative completeness contract for a monomial-case special solver on a selected domain. -/
+class CompleteCMonomialCase (C : CMonomialCase P α)
+    (specialDomain : MonomialSpecialDomain P α) : Prop where
+  /-- Every domain-admissible special antiderivative lies in the executable solver's domain. -/
   special_complete : ∀ (Dt fp b ds snum sden : P α),
+    specialDomain Dt fp b ds →
     CPoly.toPoly sden ≠ 0 →
     towerFractionFieldDerivP Dt (fieldFracP snum sden)
       = fieldFracP fp CPoly.one + fieldFracP b ds →
