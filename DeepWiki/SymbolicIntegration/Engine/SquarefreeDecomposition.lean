@@ -264,6 +264,69 @@ private theorem defaultGo_map_toPoly_eq_yunLoopAbs [CPolyEngine P] [LawfulCPolyE
         defaultGo_deflate_fst_toPoly b d hb, defaultGo_deflate_snd_toPoly b d hb]
       exact yunLoopAbs_irrelevant _ _ _ _ _ _
 
+open UniqueFactorizationMonoid in
+/-- A generic Yun loop with sufficient fuel emits through its input's maximum multiplicity. -/
+private theorem defaultGo_length_ge_maxMult [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] [CharZero (CFieldSpec.K α)] (p : P α)
+    (hpp : (CPoly.toPoly p).primPart ≠ 0) :
+    ∀ (fuel i : ℕ) (b d : P α), 1 ≤ i →
+      YunInv (CPoly.toPoly p) i (CPoly.toPoly b) (CPoly.toPoly d) →
+      (normalizedFactors (CPoly.toPoly p).primPart).toFinset.sup
+          (fun q => (normalizedFactors (CPoly.toPoly p).primPart).count q) - (i - 1) ≤ fuel →
+      (normalizedFactors (CPoly.toPoly p).primPart).toFinset.sup
+          (fun q => (normalizedFactors (CPoly.toPoly p).primPart).count q) - (i - 1) ≤
+        (CPolySquarefree.defaultGo fuel b d).length := by
+  letI : CharZero (CRingSpec.R α) := by
+    change CharZero (CFieldSpec.K α)
+    infer_instance
+  set M := (normalizedFactors (CPoly.toPoly p).primPart).toFinset.sup
+    (fun q => (normalizedFactors (CPoly.toPoly p).primPart).count q) with hM
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro i b d _ _ hfuel
+    simp only [Nat.le_zero] at hfuel
+    rw [hfuel]
+    exact Nat.zero_le _
+  | succ fuel ih =>
+    intro i b d hi hinv hfuel
+    rw [CPolySquarefree.defaultGo]
+    by_cases hdeg : CPolyEngine.cdeg b = 0
+    · rw [if_pos hdeg]
+      obtain ⟨c, hc, hb, _⟩ := hinv
+      have hMle : M ≤ i - 1 := by
+        rw [LawfulCPolyEngine.cdeg_eq_natDegree, hb, Polynomial.natDegree_C_mul hc] at hdeg
+        rw [hM, ← squarefreePart_deflation_natDegree_eq_zero_iff_maxmult
+          (CPoly.toPoly p) (i - 1) hpp]
+        exact hdeg
+      simp only [List.length_nil]
+      omega
+    · rw [if_neg hdeg]
+      have hbne : CPoly.toPoly b ≠ 0 := fun h0 => hdeg (by
+        rw [LawfulCPolyEngine.cdeg_eq_natDegree, h0, Polynomial.natDegree_zero])
+      have hMgt : i ≤ M := by
+        by_contra hlt
+        obtain ⟨c, hc, hb, _⟩ := hinv
+        apply hdeg
+        rw [LawfulCPolyEngine.cdeg_eq_natDegree, hb, Polynomial.natDegree_C_mul hc,
+          show Babs (CPoly.toPoly p) i =
+            squarefreePart (deflation (CPoly.toPoly p) (i - 1)) from rfl,
+          squarefreePart_deflation_natDegree_eq_zero_iff_maxmult
+            (CPoly.toPoly p) (i - 1) hpp, ← hM]
+        omega
+      have hinv' : YunInv (CPoly.toPoly p) (i + 1)
+          (CPoly.toPoly (CPolyEuclidean.div b (CPolyEngine.cmonic (CPolyGcd.compute b d))))
+          (CPoly.toPoly (CPolyEngine.sub
+            (CPolyEuclidean.div d (CPolyEngine.cmonic (CPolyGcd.compute b d)))
+            (CPolyEngine.deriv
+              (CPolyEuclidean.div b (CPolyEngine.cmonic (CPolyGcd.compute b d)))))) := by
+        rw [defaultGo_deflate_fst_toPoly b d hbne, defaultGo_deflate_snd_toPoly b d hbne]
+        exact (yunStep_preserves (CPoly.toPoly p) i hi hpp hinv).2
+      have hih := ih (i + 1) _ _ (by omega) hinv' (by omega)
+      rw [List.length_cons]
+      omega
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
