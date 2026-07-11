@@ -110,7 +110,7 @@ def radIntegrateCase3Wf (der : DensePoly α → DensePoly α) (f g C : DensePoly
 /-! ## The multi-case dispatch `radIntegrateRationalWf` -/
 
 /-- Multi-case simple-radical rational-part driver `radIntegrateRationalWf ρ R B` over `y² = ρ`,
-denominator `B` monic, numerator `R` proper: squarefree-decompose `B` (`cSqfreeYunFF`), split each
+denominator `B` monic, numerator `R` proper: squarefree-decompose `B` (`CPoly.squarefreeYun`), split each
 factor into its `V`-part / `W`-part (`CPolyEuclidean.gcdExt`/`CPolyEuclidean.div` against `ρ`), partial-fraction `R`
 (`radPartialFractionCoprime`), and dispatch each summand to the Case-1 / Case-2 Hermite descent.
 Returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`. `[CFracGcdCoreWf α]` supplies
@@ -119,7 +119,7 @@ def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : DensePoly α) :
     List (Bool × DensePoly α × ℕ × DensePoly α × DensePoly α × DensePoly α) :=
   let g : DensePoly α := cscale (CField.div CCommRing.one (CField.natCast 2)) (cderiv ρ)   -- `½·ρ'` (n = 2)
   let factored : List (DensePoly α × ℕ) :=
-    (cSqfreeYunFF B).zipIdx.filterMap (fun (Bi, i) =>
+    (CPoly.squarefreeYun B).zipIdx.filterMap (fun (Bi, i) =>
       if cdeg Bi = 0 then none else some (Bi, i + 1))
   let split : List (Bool × DensePoly α × ℕ) :=
     factored.flatMap (fun (Bi, e) =>

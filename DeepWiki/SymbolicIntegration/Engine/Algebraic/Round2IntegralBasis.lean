@@ -35,7 +35,7 @@ numerator (Yun factorization) with `p² ∣ d` (tested by the selected remainder
 equation order may be non-maximal. -/
 def badPrimes (f : DensePoly (DenseFrac ℚ)) : List (DensePoly ℚ) :=
   let d := discNum f
-  let sqf := cSqfreeYunFF d
+  let sqf := CPoly.squarefreeYun d
   -- distinct nonconstant squarefree factors, each made monic
   let distinct := (sqf.map cmonic).filter (fun p => 0 < cdeg p)
   distinct.filter (fun p => cisZero (CPolyEuclidean.mod d (cmul p p)))
