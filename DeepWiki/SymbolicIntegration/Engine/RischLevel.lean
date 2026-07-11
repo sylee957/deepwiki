@@ -44,11 +44,6 @@ class CompleteCRischLevel (L : CRischLevel P α) (domain : RischLevelDomain P α
     domain Dt a d → CPoly.toPoly d ≠ 0 → IsRischLevelIntegrable Dt a d →
       ∃ fuel res, L.integrate fuel Dt a d = some res
 
-/-- The generic Figure-5.1 one-level composition, packaged as a `CRischLevel` operation. -/
-def oneLevelRisch (C : CMonomialCase P α) [CCanonicalRepresentation P α]
-    [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α] : CRischLevel P α where
-  integrate _fuel Dt a d := assembleOneLevel C Dt a d
-
 /-- The generic Figure-5.1 composition with an explicit polynomial-reduction budget. -/
 def oneLevelRischWithPolynomial (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
     (C : CMonomialCase P α) [CCanonicalRepresentation P α]
@@ -58,27 +53,6 @@ def oneLevelRischWithPolynomial (R : CPolynomialReduction P α) (kind : Polynomi
 /-- Low-derivation-degree domain of the generic Hermite-based one-level assembler. -/
 def oneLevelRischDomain : RischLevelDomain P α :=
   fun Dt _ _ => (CPoly.toPoly Dt).natDegree ≤ 1
-
-/-- The packaged generic level inherits the one-level assembler's soundness theorem. -/
-theorem oneLevelRisch_sound (C : CMonomialCase P α) [CCanonicalRepresentation P α]
-    [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
-    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
-    [CResidueSource P α] [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)]
-    (fuel : ℕ) (Dt a d : P α) (res : IntegralResult α P)
-    (hd : CPoly.toPoly d ≠ 0) (hdomain : oneLevelRischDomain Dt a d)
-    (hrun : (oneLevelRisch C).integrate fuel Dt a d = some res) :
-    IsIntegralResultP Dt a d res :=
-  assembleOneLevel_sound C Dt a d res hd hdomain hrun
-
-/-- The contract-only one-level assembly is a lawful Risch level. -/
-instance instLawfulCRischLevelOneLevelRisch (C : CMonomialCase P α)
-    [CCanonicalRepresentation P α] [LawfulCCanonicalRepresentation (P := P) (α := α)]
-    [LawfulCMonomialCase C] [CHermiteReduction P α]
-    [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
-    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)] :
-    LawfulCRischLevel (oneLevelRisch C) oneLevelRischDomain where
-  sound fuel Dt a d res hdomain hd hrun :=
-    oneLevelRisch_sound C fuel Dt a d res hd hdomain hrun
 
 /-- The polynomial-aware packaged level inherits contract-only one-level soundness. -/
 theorem oneLevelRischWithPolynomial_sound (R : CPolynomialReduction P α)
