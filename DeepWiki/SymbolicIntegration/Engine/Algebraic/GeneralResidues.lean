@@ -7,9 +7,9 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 /-! # Algebraic-function residues for arbitrary curves: the full double resultant
 
 The residue resultant `R(Z) = res_X(res_Y(Z·D'(X) − g(X, Y), F(X, Y)), D(X))` for an arbitrary monic
-plane curve `F(x, y) = 0` (`genResidueResultant`, by evaluate-`Z`-nodes + Lagrange interpolation over
-`K(x) = DenseFrac ℚ`), generalizing the hyperelliptic norm shortcut of `cAlgResidueResultant`; the roots of
-`R` are the residues of `(g/D) dx` at its simple finite poles. -/
+plane curve `F(x, y) = 0` (`genResidueResultant`, by evaluate-`Z`-nodes + Lagrange interpolation),
+generalizing the hyperelliptic norm shortcut of `cAlgResidueResultant`; the roots of `R` are the residues
+of `(g/D) dx` at its simple finite poles. -/
 
 open Polynomial
 
@@ -33,10 +33,14 @@ capability: when `denominator ∣ numerator` this is the exact polynomial quotie
 constant-in-`y` term `z·D'(x)` (`CFrac.ofPoly [z] · Dder`, a singleton `DensePoly`) minus `g`. Its only
 `Z`-dependent coefficient is the `y⁰` one, so `res_Y` of this against `F` has `Z`-degree
 `≤ deg_y F = n`. `Dder = D'(x) ∈ K(x)` is supplied by the caller. -/
-def zDderMinus {P : Type → Type} [CPoly P] [CPolyEngine P]
-    (g : P (DenseFrac ℚ)) (Dder : DenseFrac ℚ) (z : ℚ) : P (DenseFrac ℚ) :=
+def zDderMinus
+    {F : (α : Type) → [CField α] → Type} {X Y : Type → Type}
+    [CPoly X] [CPolyEngine X] [CFrac F X] [CFieldDomain ℚ X]
+    [CPoly Y] [CPolyEngine Y]
+    (g : Y (F ℚ)) (Dder : F ℚ) (z : ℚ) : Y (F ℚ) :=
   CPolyEngine.sub
-    (CPolyEngine.ofCoeffList [CCommRing.mul (CFrac.ofPoly [z]) Dder]) g
+    (CPolyEngine.ofCoeffList
+      [CCommRing.mul (CFrac.ofScalar (F := F) z) Dder]) g
 
 example :
     let ofList : List (DenseFrac ℚ) → CPoly.SparsePoly (DenseFrac ℚ) := CPolyEngine.ofCoeffList
@@ -52,8 +56,12 @@ read as a `ℚ[X]`-polynomial: the resultant in `y` over the field `α = DenseFr
 `zDderMinus g Dder z` against the monic curve `f`, recovered through
 `CFrac.polynomialQuotient`. The general-curve replacement for the `n = 2` norm
 `(z·D' − g₀)² − g₁²·ρ`. -/
-def resYAtNode [CPolyResultant DensePoly]
-    (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ) (z : ℚ) : DensePoly ℚ :=
+def resYAtNode
+    {F : (α : Type) → [CField α] → Type} {X Y : Type → Type}
+    [CPoly X] [CPolyEngine X] [CPolyEuclidean X]
+    [CFrac F X] [CFieldDomain ℚ X]
+    [CPoly Y] [CPolyEngine Y] [CPolyResultant Y]
+    (f g : Y (F ℚ)) (Dder : F ℚ) (z : ℚ) : X ℚ :=
   CFrac.polynomialQuotient (CPolyResultant.compute (zDderMinus g Dder z) f)
 
 /-! ### The full general-`F` residue resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)`
@@ -70,12 +78,16 @@ coefficients). The outer `res_X(·, D)` is `∏` over the `deg_X D` roots of `D`
 `res_Y` factor of `Z`-degree `≤ n`, so `deg_Z R ≤ n · deg_X D`. Hence `n · deg_X D + 1` nodes are exact
 (the hyperelliptic `n = 2` gives `2·deg D`, matching `cAlgResidueResultant`). -/
 
-/-- The general-curve algebraic-residue resultant with representation-selected interpolation output. -/
-def genResidueResultantWith {Q : Type → Type} [CPoly Q] [CPolyEngine Q]
-    [CPolyResultant DensePoly]
-    (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ)
-    (D : DensePoly ℚ) : Q ℚ :=
-  let nNodes := cdeg f * cdeg D + 1
+/-- The general-curve algebraic-residue resultant with independently selected base, curve, fraction,
+and interpolation representations. -/
+def genResidueResultantWith
+    {F : (α : Type) → [CField α] → Type} {X Y Q : Type → Type}
+    [CPoly X] [CPolyEngine X] [CPolyEuclidean X] [CPolyResultant X]
+    [CFrac F X] [CFieldDomain ℚ X]
+    [CPoly Y] [CPolyEngine Y] [CPolyResultant Y]
+    [CPoly Q] [CPolyEngine Q]
+    (f g : Y (F ℚ)) (Dder : F ℚ) (D : X ℚ) : Q ℚ :=
+  let nNodes := CPolyEngine.cdeg f * CPolyEngine.cdeg D + 1
   let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
     let z : ℚ := (k : ℚ)
     (z, CPolyResultant.compute (resYAtNode f g Dder z) D))
@@ -90,7 +102,8 @@ gives `R(z) ∈ ℚ`, and `cinterpolate` recovers `R(Z)`; `deg_Z R ≤ n·deg_X 
 def genResidueResultant [CPolyResultant DensePoly]
     (f g : DensePoly (DenseFrac ℚ)) (Dder : DenseFrac ℚ)
     (D : DensePoly ℚ) : DensePoly ℚ :=
-  genResidueResultantWith f g Dder D
+  genResidueResultantWith (F := DenseFrac) (X := DensePoly) (Y := DensePoly) (Q := DensePoly)
+    f g Dder D
 
 end DensePoly
 
@@ -126,10 +139,18 @@ def genResTrigR : DensePoly ℚ :=
 three roots `y₀` of the curve fiber `F(1, y) = y³ + y + 1`. -/
 def genResTrigExpected : DensePoly ℚ := [1, 1, 0, 1]
 
-/-- The trigonal residue resultant also executes with sparse storage in the residue variable. -/
+/-- The trigonal residue resultant executes end-to-end with sparse base, curve, fraction, and residue
+storage. -/
 example :
-    genResidueResultantWith (Q := CPoly.SparsePoly)
-      genResTrigF genResTrig genResTrigDder genResTrigD =
+    let x : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(1, 1)]
+    let xFrac : SparseFrac ℚ := CFrac.ofPoly x
+    let f : CPoly.SparsePoly (SparseFrac ℚ) :=
+      CPoly.SparsePoly.ofList [(0, xFrac), (1, xFrac), (3, CCommRing.one)]
+    let g : CPoly.SparsePoly (SparseFrac ℚ) :=
+      CPoly.SparsePoly.ofList [(1, CCommRing.one)]
+    let Dder : SparseFrac ℚ := CFrac.ofPoly (CPoly.one : CPoly.SparsePoly ℚ)
+    let D : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, -1), (1, 1)]
+    genResidueResultantWith (Q := CPoly.SparsePoly) f g Dder D =
         CPoly.SparsePoly.ofList [(0, 1), (1, 1), (2, 0), (3, 1)] := by
   native_decide
 

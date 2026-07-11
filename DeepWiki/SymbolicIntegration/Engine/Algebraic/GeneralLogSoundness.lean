@@ -263,6 +263,7 @@ theorem toPolyG_genResidueResultant_eq_of_eval [CPolyResultant DensePoly]
   -- SAME up to `flatMap_pure_eq_map` (the lifted coercion) + `map_map`.
   have hcompute : genResidueResultant f g Dder D = cinterpolate pts := by
     rw [genResidueResultant, genResidueResultantWith, CPoly.interpolate_dense_eq, hpts, hzs]
+    simp only [CPolyEngine.cdeg_dense_eq]
     congr 1
     rw [List.map_map]
     -- the engine's inner `do let a ← range; pure ↑a` IS `range.map Nat.cast` (`flatMap_pure_eq_map`),
