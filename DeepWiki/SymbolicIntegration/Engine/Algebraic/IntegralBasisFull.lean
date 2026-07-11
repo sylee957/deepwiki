@@ -72,7 +72,7 @@ def toOCoords (Binv : List (List (DenseFrac ℚ))) (n : ℕ) (z : DensePoly (Den
 def commonDenom (M : List (List (DenseFrac ℚ))) : DensePoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
-      let den := cnorm (CFrac.reduceMonic z).den
+      let den := cnorm (CFrac.den (CFrac.reduceMonic z))
       if cisZero den || cisZero (csub den [CCommRing.one]) then a else cmul a den)
       acc) [CCommRing.one]
 
@@ -81,8 +81,8 @@ via selected exact polynomial division (valid since `denᵢ | δ`), giving the i
 def clearRowExact (δ : DensePoly ℚ) (row : List (DenseFrac ℚ)) : List (DensePoly ℚ) :=
   row.map (fun z =>
     let zz := CFrac.reduceMonic z
-    let num := zz.num
-    let den := cnorm zz.den
+    let num := CFrac.num zz
+    let den := cnorm (CFrac.den zz)
     CPolyEuclidean.div (cmul δ num) den)
 
 /-- The idealizer `Î = (I_p : I_p)` of an order `O`, as a new `K(x)` order basis: from `O` (power
@@ -206,7 +206,8 @@ end DensePoly
 open DensePoly
 
 -- Sanity print: the cusp integral basis (coordinate vectors over ℚ(x); expected `[1,0]`, `[0,1/x]`).
-#eval (integralBasis cuspF).map (fun b => b.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
+#eval (integralBasis cuspF).map (fun b => b.map (fun z =>
+  ((CFrac.num z : List ℚ), (CFrac.den z : List ℚ))))
 
 /-- The computed cusp integral-basis generator `y/x` = the second basis vector of `integralBasis cuspF`. -/
 def cuspIBGen : DensePoly (DenseFrac ℚ) := (integralBasis cuspF).getD 1 []
@@ -219,7 +220,8 @@ theorem cusp_integralBasis_eq :
       && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
 
 -- Sanity print: the node integral basis (expected `[1,0]`, `[0,1/x]`).
-#eval (integralBasis nodeF).map (fun b => b.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
+#eval (integralBasis nodeF).map (fun b => b.map (fun z =>
+  ((CFrac.num z : List ℚ), (CFrac.den z : List ℚ))))
 
 /-- The computed node integral-basis generator `y/x` = the second basis vector of `integralBasis nodeF`. -/
 def nodeIBGen : DensePoly (DenseFrac ℚ) := (integralBasis nodeF).getD 1 []
@@ -248,10 +250,12 @@ def cusp5IBGen : DensePoly (DenseFrac ℚ) := (integralBasis cusp5F).getD 1 []
 #eval (discNum cusp5F : List ℚ)
 
 -- Sanity print: a SINGLE round2Step on the worse cusp (expected `[1, y/x]`, NOT yet maximal).
-#eval (round2Step cusp5F).1.map (fun b => b.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
+#eval (round2Step cusp5F).1.map (fun b => b.map (fun z =>
+  ((CFrac.num z : List ℚ), (CFrac.den z : List ℚ))))
 
 -- Sanity print: the FULL integralBasis on the worse cusp (expected `[1, y/x²]`).
-#eval (integralBasis cusp5F).map (fun b => b.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
+#eval (integralBasis cusp5F).map (fun b => b.map (fun z =>
+  ((CFrac.num z : List ℚ), (CFrac.den z : List ℚ))))
 
 /-- A single Round-2 step on `y² − x⁵` reaches only `[1, y/x]`, not the maximal order
 (`isMaximalOrder` is `false`). -/
@@ -292,7 +296,8 @@ def biCuspIBGen : DensePoly (DenseFrac ℚ) := (integralBasis biCuspF).getD 1 []
 #eval (badPrimes biCuspF).map (fun p => (cmonic p : List ℚ))
 
 -- Sanity print: the FULL integralBasis (expected `[1, y/(x²−x)]`, i.e. second vector denom `[0,-1,1]`).
-#eval (integralBasis biCuspF).map (fun b => b.map (fun z => ((z.num : List ℚ), (z.den : List ℚ))))
+#eval (integralBasis biCuspF).map (fun b => b.map (fun z =>
+  ((CFrac.num z : List ℚ), (CFrac.den z : List ℚ))))
 
 /-- **★★ The curve `y² − x³(x−1)²` has TWO bad primes `x` and `x − 1`** (`native_decide`): `badPrimes biCuspF`
 (in factoring order) is `[x − 1, x]` — the discriminant `4x³(x − 1)²` flags both `p = x` and `p = x − 1` as

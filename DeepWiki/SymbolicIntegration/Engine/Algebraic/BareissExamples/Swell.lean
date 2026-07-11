@@ -30,7 +30,7 @@ def bareissCauchyCleared : List (List (DensePoly ℚ)) :=
 `fieldDet bareissCauchyQ` (numerator degree `6` plus denominator degree `15`, total `21`). -/
 def bareissCauchyFracTotalDeg : ℕ :=
   let z := fieldDet bareissCauchyQ
-  cdeg z.num + cdeg z.den
+  cdeg (CFrac.num z) + cdeg (CFrac.den z)
 
 /-- The fraction-free flat degree `cdeg (bareissDet bareissCauchyCleared)`, the degree of the single
 `ℚ[x]` polynomial the Bareiss path produces for the cleared Cauchy matrix (degree `6`). -/

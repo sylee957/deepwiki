@@ -196,8 +196,10 @@ def afRatMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dens
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
     let entryOf : ℕ → DenseFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
-    let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).num)
-    let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).den)
+    let nums : List (DensePoly ℚ) :=
+      (List.range nCols).map (fun k => cnorm (CFrac.num (entryOf k)))
+    let dens : List (DensePoly ℚ) :=
+      (List.range nCols).map (fun k => cnorm (CFrac.den (entryOf k)))
     let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
       let prod := (List.range nCols).foldl (fun acc l =>
         if l = k then acc else cmul acc (dens[l]!)) [(1 : ℚ)]
@@ -247,8 +249,10 @@ def afLogMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dens
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
     let entryOf : ℕ → DenseFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
-    let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).num)
-    let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).den)
+    let nums : List (DensePoly ℚ) :=
+      (List.range nCols).map (fun k => cnorm (CFrac.num (entryOf k)))
+    let dens : List (DensePoly ℚ) :=
+      (List.range nCols).map (fun k => cnorm (CFrac.den (entryOf k)))
     let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
       let prod := (List.range nCols).foldl (fun acc l =>
         if l = k then acc else cmul acc (dens[l]!)) [(1 : ℚ)]
