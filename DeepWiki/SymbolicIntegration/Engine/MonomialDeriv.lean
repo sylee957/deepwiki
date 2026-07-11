@@ -165,11 +165,14 @@ computable monomial derivation realizes Mathlib's `implicitDeriv`. -/
   ring
 
 example :
-    CPolyEngine.cdeg
-      (CPolyEngine.monomialDeriv
-        (CPoly.SparsePoly.ofList [(0, (1 : ℚ))])
-        (CPoly.SparsePoly.ofList [(0, 1), (2, 3)])) = 1 := by
-  ccompute
+    CPoly.toPoly
+        (CPolyEngine.monomialDeriv
+          (CPoly.SparsePoly.ofList [(0, (1 : ℚ))])
+          (CPoly.SparsePoly.ofList [(0, 1), (2, 3)])) =
+      Differential.implicitDeriv
+        (CPoly.toPoly (CPoly.SparsePoly.ofList [(0, (1 : ℚ))]))
+        (CPoly.toPoly (CPoly.SparsePoly.ofList [(0, (1 : ℚ)), (2, 3)])) :=
+  CPolyEngine.toPoly_monomialDeriv _ _
 
 
 end DensePoly
