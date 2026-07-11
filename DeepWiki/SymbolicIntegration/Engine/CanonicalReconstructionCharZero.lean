@@ -21,12 +21,14 @@ variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffF
   [CPolyGcd DensePoly α] [LawfulCPolyGcd.{u,v} DensePoly α]
   [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
-omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **Canonical reconstruction, split conditions discharged.** From `[CharZero]`, lawful selected gcd
-correctness, and `d ≠ 0`, the split is a genuine coprime factorization (via
-`CPoly.splitFactor_isSplittingFactorizationGen` + `isCoprime_of_isSpecial_isNormalSqfree`), so the
+omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] [CPolyGcd DensePoly α]
+  [LawfulCPolyGcd DensePoly α] in
+/-- **Canonical reconstruction, split conditions discharged.** From a lawful selected split-factorization
+contract and `d ≠ 0`, the split is a genuine coprime factorization (via
+`LawfulCPolySplitFactor` + `isCoprime_of_isSpecial_isNormalSqfree`), so the
 canonical pieces recombine to `⟦a/d⟧`. -/
-theorem canonicalReconstruction_of_charZero (Dt a d : DensePoly α) (hd : toPoly d ≠ 0) :
+theorem canonicalReconstruction_of_charZero [CPolySplitFactor DensePoly α]
+    [LawfulCPolySplitFactor DensePoly α] (Dt a d : DensePoly α) (hd : toPoly d ≠ 0) :
     fieldFrac (crPoly Dt a d) [CCommRing.one]
         + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
         + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
@@ -38,7 +40,12 @@ theorem canonicalReconstruction_of_charZero (Dt a d : DensePoly α) (hd : toPoly
     simp only [crNormDen, canonicalRepresentationFast]
   -- abstract split correctness (special/normal factorization)
   letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPoly Dt)⟩
-  obtain ⟨hfac, hspec, hnorm⟩ := CPoly.splitFactor_isSplittingFactorizationGen Dt d hd
+  have hsplitGen : @IsSplittingFactorizationGen _ _
+      ⟨Differential.implicitDeriv (toPoly Dt)⟩
+      (toPoly d) (toPoly (CPoly.splitFactor Dt d).2) (toPoly (CPoly.splitFactor Dt d).1) := by
+    convert LawfulCPolySplitFactor.compute_isSplittingFactorizationGen' Dt d
+      (by simpa only [toPoly_list_eq] using hd) using 1 <;> simp only [toPoly_list_eq]
+  obtain ⟨hfac, hspec, hnorm⟩ := hsplitGen
   -- factor nonvanishing
   have hds : toPoly (crSpecDen Dt a d) ≠ 0 := by
     rw [hspd]; intro h; exact hd (by rw [hfac, h, zero_mul])

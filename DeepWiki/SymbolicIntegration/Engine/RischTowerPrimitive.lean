@@ -19,14 +19,15 @@ open scoped Differential
 universe u v
 
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
-  [CPolyGcd DensePoly α] [LawfulCPolyGcd.{u,v} DensePoly α]
   [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+  [CPolySplitFactor DensePoly α] [LawfulCPolySplitFactor DensePoly α]
 
 omit [CRischField α] in
 /-- **The shared primitive special-part soundness core** (base and tower). Given the polynomial-part special
 identity `hid : D_tower(⟦qp/1⟧) = ⟦fₚ/1⟧` and the vanishing special numerator `hb : crSpecNum = 0`, the
 `specialSound` conclusion follows: `⟦1⟧ ≠ 0`, the witness `v = ⟦fₚ/1⟧` is the special derivative (`hid`), and
-`v + ⟦cₙ/dₙ⟧ = a/d` from `canonicalReconstruction_of_charZero` with the special term dropping (`b = 0`).
+`v + ⟦cₙ/dₙ⟧ = a/d` from the lawful selected split contract through
+`canonicalReconstruction_of_charZero`, with the special term dropping (`b = 0`).
 Agnostic to HOW `hid` was obtained — the base proves it via `cPolyRischDEG_nil_field_identity`, the tower via
 the `implicitDeriv`/`towerFractionFieldDerivG_div` bridge — so both `*_specialSound` proofs reduce to this. -/
 theorem primitiveSpecialSoundCore (Dt a d qp : DensePoly α) (hd0 : toPoly d ≠ 0)

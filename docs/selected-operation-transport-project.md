@@ -114,6 +114,14 @@ denotations does not make those terms definitionally equal.
   `matInv` Gauss–Jordan implementation is retired, and Round-2, integral-basis, general-divisor, and
   general-curve decision APIs explicitly thread `[CLinearSolve (DenseFrac ℚ)]`. The fraction-free
   agreement and degree-swell benchmarks still pass at the default represented-fraction solver.
+- `canonicalReconstruction_of_charZero` and the shared primitive special-part proof now consume
+  `CPolySplitFactor` together with `LawfulCPolySplitFactor`; neither theorem fixes the dense Wf splitter or
+  requests gcd correctness that the reconstruction does not use.
+- The recursive LRT coefficient integrators depend on the lower-level `LawfulRischLevelLrt` and its selected
+  gcd, split, squarefree, resultant, and subresultant operations. The tower instance additionally requests an
+  abstract `CRischField`, selected tower-level operations, and the lawful split contract. Its soundness theorem
+  no longer exposes `CFracGcdCoreWf` or the implementation-specific PRS `Fact`; those remain only in the
+  explicit bridge that constructs `PrimitiveFrontierLrt` from concrete genuine-data proofs.
 
 ## Verification
 

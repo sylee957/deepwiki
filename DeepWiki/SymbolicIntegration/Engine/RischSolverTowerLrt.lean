@@ -25,9 +25,9 @@ open scoped Differential
 universe u v
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec.{u,v} β]
-  [CFieldDomain β DensePoly] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
-  [CharZero (CFieldSpec.K β)] [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))]
-  [LawfulCPolyGcd.{u,v} DensePoly β] [LawfulCPolyGcd.{u,v} DensePoly (DenseFrac β)]
+  [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+  [CPolySquarefree DensePoly β] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+  [Algebra ℚ (CFieldSpec.K β)] [CharZero (CFieldSpec.K β)]
   [LawfulRischLevelLrt β]
 
 /-- Integrate a coefficient `c ∈ DenseFrac β = β(s)` by recursing into
@@ -39,8 +39,6 @@ def towerCoeffIntegrateLrt (c : DenseFrac β) : Option (DenseFrac β) :=
   (LawfulRischLevelLrt.integrateRationalLrt [CCommRing.one] (CFrac.num c) (CFrac.den c)).map fun bd =>
     CField.div (CFrac.ofPoly bd.1) (CFrac.ofPoly bd.2)
 
-omit [CRischField β] [LawfulCPolyGcd DensePoly β] [LawfulCPolyGcd DensePoly (DenseFrac β)]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))] in
 /-- LRT coefficient-recursion soundness: `toK (cderiv b) = toK c` in
 `RatFunc (CFieldSpec.K β)`, reassembling `integrateRationalLrt_sound` (descent-free `K`-level) through the
 `DenseFrac β` field division that `towerCoeffIntegrateLrt` performs. -/
@@ -98,9 +96,6 @@ def towerPolyIntegrateLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     (η : DenseFrac β) (p : P (DenseFrac β)) : Option (P (DenseFrac β)) :=
   cIntegratePrimPolyDegRaise η (towerCoeffIntegrateSingleLrt η) (CPolyEngine.cdeg p + 2) p
 
-omit [CRischField β] [LawfulCPolyGcd DensePoly β]
-    [LawfulCPolyGcd DensePoly (DenseFrac β)]
-    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))] in
 /-- The LRT tower step's polynomial-part soundness: `D_tower(q) = p`, the telescoping
 `cIntegratePrimPolyDegRaiseG_sound` (each step's `q₀` is subtracted then added back, so the identity holds for
 *any* coefficient integrator — no `towerCoeffIntegrateLrt_sound` needed). -/
@@ -111,13 +106,10 @@ theorem towerPolyIntegrateLrt_sound {P : Type u → Type u} [CPoly P] [CPolyEngi
       CPoly.toPoly p :=
   cIntegratePrimPolyDegRaiseG_sound η _ (CPolyEngine.cdeg p + 2) p q h
 
-omit [CRischField β] [LawfulCPolyGcd DensePoly β]
-    [LawfulCPolyGcd DensePoly (DenseFrac β)]
-    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))] in
 /-- The LRT tower step's special-part field identity (`Dθ = 1`): from `towerPolyIntegrateLrt_sound`, the
 polynomial antiderivative `qp` of `fp` gives `D_tower(⟦qp/1⟧) = ⟦fp/1⟧`. The `Dt` + `toPoly Dt = 1`
 special identity for the tower step, with GENERAL coefficients via the LRT recursion. -/
-theorem tower_special_identityLrt (Dt fp qp : DensePoly (DenseFrac β)) (hDt : toPoly Dt = 1)
+private theorem tower_special_identityLrt (Dt fp qp : DensePoly (DenseFrac β)) (hDt : toPoly Dt = 1)
     (h : towerPolyIntegrateLrt CCommRing.one fp = some qp) :
     towerFractionFieldDeriv Dt (fieldFrac qp [CCommRing.one]) = fieldFrac fp [CCommRing.one] := by
   have hpoly : Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK CCommRing.one))
@@ -135,6 +127,11 @@ theorem tower_special_identityLrt (Dt fp qp : DensePoly (DenseFrac β)) (hDt : t
   simp only [fieldFrac, hone, map_one, div_one]
   rw [hbridge, hDt, hpoly]
 
+variable [CRischField (DenseFrac β)]
+  [CPolyGcd DensePoly (DenseFrac β)]
+  [CPolySplitFactor DensePoly (DenseFrac β)]
+  [LawfulCPolySplitFactor DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)]
+
 /-- The LRT tower primitive monomial case: the `Dθ = 1` log-tower case with the polynomial part integrated
 by the LRT coefficient RECURSION `towerPolyIntegrateLrt`. Guard: `b = 0` and `Dt = [1]`. The `reducedCorrect`
 field is inert here (`cIntegrateCaseLrt` never calls it — the reduced part goes through the direct root-free
@@ -148,16 +145,13 @@ def towerPrimitiveCaseLrt : MonomialCase (DenseFrac β) where
     else none
   reducedCorrect := (primitiveGuardedCase (α := DenseFrac β)).reducedCorrect
 
-omit [LawfulCPolyGcd DensePoly β]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))] in
-omit [LawfulCPolyGcd DensePoly β]
-  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := β)))] in
+omit [CPolyGcd DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)] in
 /-- LRT tower primitive special-part soundness, the tower-recursion analogue of `primitiveGuardedCase_specialSound`.
 Under the guard (`b = 0`, `Dθ = 1`) the LRT polynomial recursion `towerPolyIntegrateLrt` yields `qp` with
 `D_tower(⟦qp⟧) = ⟦fp⟧` (`tower_special_identityLrt`), and `canonicalReconstruction_of_charZero` (special term
 vanishing, `b = 0`) closes; off the guard the hook returns `none`. This is the `specialSound` field of the LRT
 tower instance. -/
-theorem towerPrimitiveCaseLrt_specialSound [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac β)))]
+theorem towerPrimitiveCaseLrt_specialSound
     (Dt a d snum sden : DensePoly (DenseFrac β)) (hd0 : toPoly d ≠ 0)
     (hhook : (towerPrimitiveCaseLrt (β := β)).integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
       (crSpecDen Dt a d) = some (snum, sden)) :
@@ -186,8 +180,8 @@ theorem towerPrimitiveCaseLrt_specialSound [Fact (CgcdBCorrect (CFracGcdCoreWf.c
 With the base (`instLawfulRischLevelLrtPrimitive`) the LRT solver resolves at every tower depth by recursion:
 the re-based recursion, now with a dischargeable frontier at every level. `specialSound` is the LRT coefficient
 recursion (`towerPrimitiveCaseLrt_specialSound`); `reducedSoundLrt` is `PrimitiveFrontierLrt.hreducedLrt`. -/
-instance instLawfulRischLevelLrtTower [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac β)))]
-    [PrimitiveFrontierLrt (DenseFrac β)] : LawfulRischLevelLrt (DenseFrac β) where
+instance instLawfulRischLevelLrtTower [PrimitiveFrontierLrt (DenseFrac β)] :
+    LawfulRischLevelLrt (DenseFrac β) where
   case := towerPrimitiveCaseLrt
   specialSound := fun Dt a d snum sden hd0 hhook =>
     towerPrimitiveCaseLrt_specialSound Dt a d snum sden hd0 hhook
@@ -196,9 +190,12 @@ instance instLawfulRischLevelLrtTower [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFF
     PrimitiveFrontierLrt.hreducedDenNonzero Dt a d hd0 hDt0
 
 -- The LRT tower solver resolves at depth 2 by recursion; the step instance chains on itself.
-noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac β)))] [PrimitiveFrontierLrt (DenseFrac β)]
-    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac (DenseFrac β))))]
-    [LawfulCPolyGcd.{u,v} DensePoly (DenseFrac (DenseFrac β))]
+noncomputable example [PrimitiveFrontierLrt (DenseFrac β)]
+    [CPolyGcd DensePoly (DenseFrac (DenseFrac β))]
+    [CPolySplitFactor DensePoly (DenseFrac (DenseFrac β))]
+    [LawfulCPolySplitFactor DensePoly (DenseFrac (DenseFrac β))]
+    [CPolySquarefree DensePoly (DenseFrac (DenseFrac β))]
+    [CRischField (DenseFrac (DenseFrac β))]
     [PrimitiveFrontierLrt (DenseFrac (DenseFrac β))] :
     LawfulRischLevelLrt (DenseFrac (DenseFrac β)) := inferInstance
 

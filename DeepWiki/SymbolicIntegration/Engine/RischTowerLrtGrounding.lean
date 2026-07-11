@@ -13,9 +13,9 @@ level, and no others:
   properly-built tower satisfies but which are not derivable from the computable data. This **replaced** the
   rational `PrimitiveFrontier`, whose `IsIntegralResult` was not dischargeable at all (it forces the reduced
   denominator to split over `K`).
-* `LawfulCPolyGcd DensePoly` — representation-independent selected-gcd correctness; the legacy
-  `Fact (CgcdBCorrect cgcdFFCoreWf)` remains separately where the PRS proof needs implementation-specific
-  associatedness. Both are proven at `ℚ`; at tower levels they are explicit correctness frontiers.
+* selected polynomial gcd, split-factor, and squarefree capabilities, plus `CRischField`, at the tower
+  coefficient carrier. The concrete `CFracGcdCoreWf` implementation and its PRS associatedness proof are
+  needed only by the separate bridge that constructs `PrimitiveFrontierLrt` from genuine residue data.
 
 So "no dangling frontier" is achieved in the honest sense: every remaining hypothesis is a **named genuine
 mathematical condition**, not an opaque assumed lemma. Completeness (the decidable non-integrability
@@ -27,13 +27,15 @@ open DensePoly CFrac
 
 /-- **★ The re-based recursive LRT solver is sound on the concrete ℚ(x)-tower, from the honest frontiers alone.**
 At carrier `DenseFrac ℚ` (so `a/d ∈ (DenseFrac ℚ)(t)`, a genuine two-level tower), a successful run of the
-assembled integrator `LawfulRischLevelLrt.integrate` is a true `∀E` antiderivative — depending only on the two
-honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this level) and the tower-level gcd
-`Fact` (the base `Fact (CgcdBCorrect cgcdFFCoreWf)` is a resolved instance). No rational-residue restriction, no
-undischargeable `PrimitiveFrontier`. -/
+assembled integrator `LawfulRischLevelLrt.integrate` is a true `∀E` antiderivative — depending on the two
+honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this level) and selected tower-level
+polynomial and field capabilities. No concrete fraction-gcd implementation, rational-residue restriction, or
+undischargeable `PrimitiveFrontier` appears in the solver theorem. -/
 theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
-    [LawfulCPolyGcd DensePoly (DenseFrac ℚ)]
-    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))] [PrimitiveFrontierLrt (DenseFrac ℚ)]
+    [CRischField (DenseFrac ℚ)] [CPolyGcd DensePoly (DenseFrac ℚ)]
+    [CPolySplitFactor DensePoly (DenseFrac ℚ)] [LawfulCPolySplitFactor DensePoly (DenseFrac ℚ)]
+    [CPolySquarefree DensePoly (DenseFrac ℚ)]
+    [PrimitiveFrontierLrt (DenseFrac ℚ)]
     (Dt a d : DensePoly (DenseFrac ℚ)) (res : LrtResult (DenseFrac ℚ))
     (h : LawfulRischLevelLrt.integrate Dt a d = some res) :
     IsIntegralResultLrt Dt a d res :=
@@ -42,8 +44,8 @@ theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
 /-- **The reduced frontier reduces to the genuine data — the whole solver from `LrtReducedGenuineData`.**
 Threading `hreducedLrt_of_genuineAll`: supplying Bronstein's genuine residue/normality data and the selected
 reduced-output denominator contract at every level *constructs* the `PrimitiveFrontierLrt` instances, hence
-(with the gcd `Fact`s) the whole recursive LRT solver at that depth. This is the honest closure — the solver's
-soundness rests on explicit integrability and result-regularity conditions, nothing opaque. -/
+the whole recursive LRT solver at that depth. This concrete bridge still supplies the PRS associatedness
+evidence required by `hreducedLrt_of_genuineAll`; that implementation fact does not leak into the solver API. -/
 noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))]
     [LawfulCPolyGcd DensePoly (DenseFrac ℚ)]
     (hgenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
