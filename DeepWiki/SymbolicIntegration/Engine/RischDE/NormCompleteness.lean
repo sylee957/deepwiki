@@ -18,7 +18,7 @@ universe u v
 
 section WfEngineLayer
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CPolyGcd DensePoly α]
 
 /-- The multiplicity factor `h = gcd(eₙ,eₙ')/gcd(p,p')`. -/
 def rdeNormHWf (Dt : DensePoly α) (fden gden : DensePoly α) : DensePoly α :=
@@ -43,7 +43,7 @@ theorem cRdeNormalDenominatorG_isSome_iff (Dt : DensePoly α) (fnum fden gnum gd
   simp only [rdeNormDnh2Wf, rdeNormHWf]
   split <;> simp_all
 
-omit [CDiffField α] [CFracGcdCoreWf α] in
+omit [CDiffField α] [CPolyGcd DensePoly α] in
 /-- Mathematical divisibility `toPoly q ∣ toPoly p` forces `CPolyEuclidean.dvd q p = true`. -/
 theorem dvd_eq_true_of_toPoly_dvd (q p : DensePoly α) (hq0 : DensePoly.cnorm q ≠ [])
     (hdvd : toPoly q ∣ toPoly p) :
@@ -75,7 +75,8 @@ end WfEngineLayer
 
 section DivisibilityResidualWf
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α]
   [CRischField α]
 
 /-- `RdeNormalDivisibilityResidualWf` supplies `eₙ ∣ dₙh²` and nonzero `eₙ`. -/
@@ -119,7 +120,7 @@ end DivisibilityResidualWf
 
 section ClearingDivisibility
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CPolyGcd DensePoly β]
 
 /-- If `fden ∣ dₙ·h0`, then `fden` divides the `B`-numerator `dₙh·fnum - dₙ·Dh·fden`. -/
 theorem hdvdB_of_dvd_wf (Dt : DensePoly β) (fnum fden h0 : DensePoly β)
@@ -154,7 +155,7 @@ end ClearingDivisibility
 
 /-- `fden ∣ dₙh` for the shape `fden = [1]`. -/
 theorem dvd_dn_h_one_wf {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
-    [CFracGcdCoreWf β] [LawfulCPolyGcd.{u,v} DensePoly β] (h0 : DensePoly β) :
+    [CPolyGcd DensePoly β] [LawfulCPolyGcd.{u,v} DensePoly β] (h0 : DensePoly β) :
     toPoly ([CCommRing.one] : DensePoly β)
       ∣ toPoly (DensePoly.cmul (CPoly.splitFactor ([CCommRing.one] : DensePoly β) [CCommRing.one]).1 h0) := by
   rw [CPoly.splitFactor_one_eq]
@@ -197,7 +198,7 @@ end AssembleWf
 /-! ### Restatements -/
 
 -- The Wf engine bridge: mathematical divisibility forces the Wf normal-denominator step to succeed.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreWf α]
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CPolyGcd DensePoly α]
     (Dt fnum fden gnum gden : DensePoly α)
     (hen0 : DensePoly.cnorm (CPoly.splitFactor Dt gden).1 ≠ [])
     (hdvd : toPoly (CPoly.splitFactor Dt gden).1 ∣ toPoly (rdeNormDnh2Wf Dt fden gden)) :

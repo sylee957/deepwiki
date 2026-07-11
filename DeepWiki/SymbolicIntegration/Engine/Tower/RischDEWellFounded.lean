@@ -214,13 +214,15 @@ Everything past the five recursive bottoms is a flat composition over the leaves
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CDiffField α] [CPolyGcd DensePoly α]
+  [CPolySplitFactor DensePoly α]
 
 /-- Generic weak normalizer `cWeakNormalizer Dt fnum fden = q ∈ α[t]`: split the denominator into its
 normal part `dₙ` (`CPoly.splitFactor`), form `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve the
 residue numerator `a` via `CPoly.diophantineReduced`, build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
 (`cResidueResultantTower`), and return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the positive integer roots `nᵢ`
-of `r`. For an already-weakly-normalized `f`, `q = 1`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
+of `r`. For an already-weakly-normalized `f`, `q = 1`; gcd and differential splitting are selected
+through `CPolyGcd` and `CPolySplitFactor`. -/
 def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots : ℕ := 16) : DensePoly α :=
   let dn := (CPoly.splitFactor Dt fden).1
   let g := CPolyGcd.compute dn (cderiv dn)
@@ -255,6 +257,12 @@ def cRdeNormalDenominator (Dt : DensePoly α) (fnum fden gnum gden : DensePoly �
     let c := CPolyEuclidean.div (cmul dnh2 gnum) gden
     some (a, b, c, h)
   else none
+
+end DensePoly
+
+namespace DensePoly
+
+variable {α : Type*} [CField α] [CDiffField α] [CPolySplitFactor DensePoly α]
 
 /-- Generic special monic irreducible of the monomial `cSpecialPoly Dt = p`: the monic special part of
 the monomial derivative `Dt` (`t²+1` hypertangent, `t` hyperexponential, `1` primitive) via the

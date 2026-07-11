@@ -29,8 +29,10 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly CFrac Polynomial
 open scoped Differential
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+universe u v
+
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α]
+  [CFracGcdCoreWf α] [LawfulCPolyGcd.{u,v} DensePoly α] [Algebra ℚ (CFieldSpec.K α)]
 
 /-- **Broad (algebraic-residue) elementary integrability.** `a/d` has an antiderivative in the extended
 Liouville form `⟦rational⟧ + Σᵢ Σ_{Rᵢ(c)=0} c·log(Sᵢ(c,t))` — an `LrtResult`, whose residue coefficients
@@ -67,13 +69,14 @@ omit [Algebra ℚ (CFieldSpec.K α)] in
 reduced input `(a', d')` with `d' ≠ 0` (which `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` supplies
 per input, modulo the genuine side conditions), then the frontier field `hreducedLrt` holds — specialize to
 the canonical normalized parts `(cₙ, dₙ)`, whose denominator is nonzero (`crNormDen_ne_zero_of_charZero`). -/
-theorem hreducedLrt_of_reducedSoundLrt [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
+theorem hreducedLrt_of_reducedSoundLrt [CharZero (CFieldSpec.K α)]
     (hRed : ∀ (Dt a' d' : DensePoly α), toPoly d' ≠ 0 → (toPoly Dt).natDegree = 0 →
       IsIntegralResultLrt Dt a' d' (cIntegrateReducedLrt Dt a' d'))
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
     IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) :=
-  hRed Dt (crNormNum Dt a d) (crNormDen Dt a d) (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hDt0
+      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) := by
+  exact hRed Dt (crNormNum Dt a d) (crNormDen Dt a d)
+    (crNormDen_ne_zero_of_charZero Dt a d hd0) hDt0
 
 /-- **★ `hreducedLrt` closed from the genuine data.** Threading the assembled `of_genuine` soundness through
 `hreducedLrt_of_reducedSoundLrt`: if the genuine Rothstein–Trager residue-data + tower-nondegeneracy conditions
@@ -85,13 +88,14 @@ theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorr
     (hgen : ∀ (Dt a' d' : DensePoly α), toPoly d' ≠ 0 → LrtReducedGenuineData Dt a' d')
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
     IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) :=
+      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) := by
+  letI : Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) := ⟨hgcd⟩
   -- apply `_of_genuine` directly at the canonical normal part, whose properness `deg crNormNum < deg crNormDen`
   -- (`crNormNum_degree_lt_crNormDen`) supplies the `haProper` input
-  isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
-    (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hDt0
-    (crNormNum_degree_lt_crNormDen hgcd Dt a d hd0)
-    (hgen Dt (crNormNum Dt a d) (crNormDen Dt a d) (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0))
+  exact isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
+    (crNormDen_ne_zero_of_charZero Dt a d hd0) hDt0
+    (crNormNum_degree_lt_crNormDen Dt a d hd0)
+    (hgen Dt (crNormNum Dt a d) (crNormDen Dt a d) (crNormDen_ne_zero_of_charZero Dt a d hd0))
 
 -- The closure genuinely constructs the frontier: given the genuine data for every reduced input, a
 -- `PrimitiveFrontierLrt` instance follows (hence the whole assembled root-free LRT solver).
@@ -100,6 +104,7 @@ example [CharZero (CFieldSpec.K α)] [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFC
     PrimitiveFrontierLrt α :=
   ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))) hgen⟩
 
+omit [LawfulCPolyGcd DensePoly α] in
 /-- **The frontier certifies broad elementary integrability of the reduced normal part.** From a
 `PrimitiveFrontierLrt` instance, the canonical normal part `cₙ/dₙ` is elementary-integrable in the
 algebraic-residue sense — the LRT analogue of the reduced-part payoff of `PrimitiveFrontier`. -/

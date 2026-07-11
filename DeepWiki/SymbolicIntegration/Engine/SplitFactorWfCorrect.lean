@@ -7,8 +7,8 @@ import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 /-! # Abstract correctness of the fuel-free splitting factorization `cSplitFactorFast`
 
 The computable `cSplitFactorFast` mirrors the abstract `splitFactor`
-(`CanonicalRepresentation.splitFactor_isSplittingFactorizationGen`). This file reduces its correctness to
-`CgcdBCorrect cgcdFFCoreWf` — dischargeable at the `ℚ` base where the gcd is the plain Euclidean gcd.
+(`CanonicalRepresentation.splitFactor_isSplittingFactorizationGen`). Correctness depends on the selected
+gcd only through `LawfulCPolyGcd`.
 M1: the per-step bridge `toPoly (cstep Dt p) ~ splitFactorStep (toPoly Dt) (toPoly p)`.
 -/
 
@@ -19,23 +19,41 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+universe u v
+
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α]
+  [CPolyGcd DensePoly α] [LawfulCPolyGcd.{u,v} DensePoly α]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- Dense-denotation form of the selected lawful gcd's associatedness law. -/
+private theorem selectedGcd_associated (p q : DensePoly α) :
+    Associated (toPoly (CPolyGcd.compute p q)) (gcd (toPoly p) (toPoly q)) := by
+  obtain ⟨hleft, hright, hgreatest⟩ := LawfulCPolyGcd.compute_isGCD' p q
+  have hleft' : toPoly (CPolyGcd.compute p q) ∣ toPoly p := by
+    simpa only [toPoly_list_eq] using hleft
+  have hright' : toPoly (CPolyGcd.compute p q) ∣ toPoly q := by
+    simpa only [toPoly_list_eq] using hright
+  apply associated_of_dvd_dvd (dvd_gcd hleft' hright')
+  have h := hgreatest (gcd (toPoly p) (toPoly q))
+      (by simpa only [toPoly_list_eq] using gcd_dvd_left (toPoly p) (toPoly q))
+      (by simpa only [toPoly_list_eq] using gcd_dvd_right (toPoly p) (toPoly q))
+  simpa only [toPoly_list_eq] using h
 
 /-- **M1 — the per-step bridge.** Under the gcd frontier, the computable split step
 `cstep Dt p = CPolyEuclidean.div (gcd_t(p, Dp)) (gcd_t(p, dp/dt))` denotes the abstract
 `splitFactorStep (toPoly Dt) (toPoly p) = gcd(P, D P)/gcd(P, dP)` up to associates. -/
 theorem toPolyG_cstepG_associated [CharZero (CFieldSpec.K α)]
-    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt p : DensePoly α) (hp : toPoly p ≠ 0) :
+    (Dt p : DensePoly α) (hp : toPoly p ≠ 0) :
     Associated (toPoly (cstep Dt p)) (splitFactorStep (toPoly Dt) (toPoly p)) := by
-  set A := CFracGcdCoreWf.cgcdFFCoreWf p (CPolyEngine.monomialDeriv Dt p) with hAdef
-  set B := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p) with hBdef
+  set A := CPolyGcd.compute p (CPolyEngine.monomialDeriv Dt p) with hAdef
+  set B := CPolyGcd.compute p (cderiv p) with hBdef
   have hA : Associated (toPoly A)
       (gcd (toPoly p) (Differential.implicitDeriv (toPoly Dt) (toPoly p))) := by
-    have := hgcd p (CPolyEngine.monomialDeriv Dt p)
-    rwa [toPolyG_cmonomialDeriv] at this
+    have hraw := selectedGcd_associated p (CPolyEngine.monomialDeriv Dt p)
+    simpa only [hAdef, toPolyG_cmonomialDeriv] using hraw
   have hB : Associated (toPoly B) (gcd (toPoly p) (derivative (toPoly p))) := by
-    have := hgcd p (cderiv p)
-    rwa [toPolyG_cderivG] at this
+    have hraw := selectedGcd_associated p (cderiv p)
+    simpa only [hBdef, toPolyG_cderivG] using hraw
   have hgcdBne : gcd (toPoly p) (derivative (toPoly p)) ≠ 0 := by
     rw [Ne, gcd_eq_zero_iff]; exact fun h => hp h.1
   have hB0 : toPoly B ≠ 0 := fun h => hgcdBne (hB.eq_zero_iff.mp h)
@@ -61,7 +79,7 @@ derivation `D = implicitDeriv (toPoly Dt)`: `toPoly p = toPoly pₛ · toPoly p�
 squarefree factor of `pₙ` normal. Well-founded induction mirroring the abstract `splitFactor`, with the
 per-step bridge (M1) transferring the `IsSpecial`/`IsNormalSqfree`/degree-drop facts through `toPoly`. -/
 theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α)]
-    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt : DensePoly α) :
+    (Dt : DensePoly α) :
     ∀ (p : DensePoly α), toPoly p ≠ 0 →
       @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩ (toPoly p)
         (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) := by
@@ -79,7 +97,7 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
       rw [cSplitFactorFast]
       set S := cstep Dt p with hSdef
       have hAstep : Associated (toPoly S) (splitFactorStep (toPoly Dt) (toPoly p)) :=
-        toPolyG_cstepG_associated hgcd Dt p hp
+        toPolyG_cstepG_associated Dt p hp
       by_cases hSdeg : cdeg S = 0
       · rw [if_pos hSdeg]
         have hstepdeg : (splitFactorStep (toPoly Dt) (toPoly p)).natDegree = 0 := by
@@ -125,14 +143,14 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
 
 /-- The selected dense split implementation computes a general splitting factorization. -/
 theorem CPoly.splitFactor_isSplittingFactorizationGen [CharZero (CFieldSpec.K α)]
-    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt : DensePoly α) :
+    (Dt : DensePoly α) :
     ∀ (p : DensePoly α), DensePoly.toPoly p ≠ 0 →
       @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (DensePoly.toPoly Dt)⟩
         (DensePoly.toPoly p) (DensePoly.toPoly (CPoly.splitFactor Dt p).2)
         (DensePoly.toPoly (CPoly.splitFactor Dt p).1) := by
   intro p hp
   rw [CPoly.splitFactor_dense_eq]
-  exact cSplitFactorFastG_isSplittingFactorizationGen hgcd Dt p hp
+  exact cSplitFactorFastG_isSplittingFactorizationGen Dt p hp
 
 /-! ### M3 — discharging the gcd frontier at the `ℚ` base -/
 
@@ -155,6 +173,6 @@ instance : CharZero (CFieldSpec.K ℚ) := inferInstanceAs (CharZero ℚ)
 theorem cSplitFactorFastG_isSplittingFactorizationGen_Q (Dt p : DensePoly ℚ) (hp : toPoly p ≠ 0) :
     @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩ (toPoly p)
       (toPoly (cSplitFactorFast Dt p).2) (toPoly (cSplitFactorFast Dt p).1) :=
-  cSplitFactorFastG_isSplittingFactorizationGen cgcdFFCoreWf_correct_Q Dt p hp
+  cSplitFactorFastG_isSplittingFactorizationGen Dt p hp
 
 end DeepWiki.SymbolicIntegration

@@ -17,7 +17,7 @@ universe u v
 section Hprim
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
-  [CFracGcdCoreWf β] [LawfulCPolyGcd.{u,v} DensePoly β]
+  [CPolyGcd DensePoly β] [LawfulCPolyGcd.{u,v} DensePoly β]
 
 omit [CDiffField β] in
 /-- The selected dense gcd of `[1]` and any tower polynomial denotes a unit. -/
@@ -70,7 +70,7 @@ end Hprim
 /-! ### Restatement -/
 
 example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
-    [CFracGcdCoreWf β] [LawfulCPolyGcd.{u,v} DensePoly β] :
+    [CPolyGcd DensePoly β] [LawfulCPolyGcd.{u,v} DensePoly β] :
     cdeg (DensePoly.cSpecialPoly ([CCommRing.one] : DensePoly β)) = 0 :=
   cdegG_cSpecialPolyG_one_eq_zero
 

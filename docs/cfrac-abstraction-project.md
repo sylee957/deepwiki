@@ -166,6 +166,11 @@ runs the same fraction algorithm.
    execute both gates through the same kernel. Weak normalization, its semantic normality predicate, reduction
    bridge, Boolean specification, and `RatFunc` denotation satellites now quantify over arbitrary `CFrac F P`;
    only the re-pin corollary and legacy `towerFractionFieldDeriv` spelling remain dense specializations.
+   The established dense well-founded split loop itself now takes `CPolyGcd DensePoly α`, and its correctness
+   is proved from `LawfulCPolyGcd` through a private dense-denotation adapter; the former
+   `CgcdBCorrect cgcdFFCoreWf` callback has been removed. Weak normalization, normal-denominator reduction,
+   special-polynomial construction, and their completeness bridges request the selected gcd/split
+   capabilities rather than using `CFracGcdCoreWf` as an implementation-selection proxy.
    The rational RREF implementation, its `CLinearSolve ℚ` instance, and the corresponding lawful proof
    now live in `ComputableAlgebra/LinearAlgebraRat*.lean`; SymbolicIntegration imports the selected
    linear-solver capability instead of owning the concrete executable solver or its correctness stack.

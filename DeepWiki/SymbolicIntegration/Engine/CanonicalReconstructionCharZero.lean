@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SpecialNormalCoprime
 /-! # Canonical reconstruction with the split conditions discharged (`CharZero`)
 
 `canonicalReconstruction_of_charZero`: the canonical pieces recombine `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`
-needing only `[CharZero]` + `CgcdBCorrect cgcdFFCoreWf` + `d ≠ 0` — the split identity, factor-nonvanishing, and
+needing only `[CharZero]` + `LawfulCPolyGcd` + `d ≠ 0` — the split identity, factor-nonvanishing, and
 coprimality (`hsplit`/`hdn`/`hds`/`hgdeg`/`hgne` of `canonicalReconstruction`) are *derived* from
 `CPoly.splitFactor_isSplittingFactorizationGen` (the abstract split correctness) and
 `isCoprime_of_isSpecial_isNormalSqfree` (special ⊥ normal). No split hypothesis remains. -/
@@ -15,16 +15,18 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly CFrac Polynomial Classical
 open scoped Differential
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+universe u v
+
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+  [CFracGcdCoreWf α] [LawfulCPolyGcd.{u,v} DensePoly α]
+  [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **Canonical reconstruction, split conditions discharged.** From `[CharZero]`, the fraction-free gcd
-correctness `CgcdBCorrect cgcdFFCoreWf`, and `d ≠ 0`, the split is a genuine coprime factorization (via
+/-- **Canonical reconstruction, split conditions discharged.** From `[CharZero]`, lawful selected gcd
+correctness, and `d ≠ 0`, the split is a genuine coprime factorization (via
 `CPoly.splitFactor_isSplittingFactorizationGen` + `isCoprime_of_isSpecial_isNormalSqfree`), so the
 canonical pieces recombine to `⟦a/d⟧`. -/
-theorem canonicalReconstruction_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
-    (Dt a d : DensePoly α) (hd : toPoly d ≠ 0) :
+theorem canonicalReconstruction_of_charZero (Dt a d : DensePoly α) (hd : toPoly d ≠ 0) :
     fieldFrac (crPoly Dt a d) [CCommRing.one]
         + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
         + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
@@ -36,7 +38,7 @@ theorem canonicalReconstruction_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf
     simp only [crNormDen, canonicalRepresentationFast]
   -- abstract split correctness (special/normal factorization)
   letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPoly Dt)⟩
-  obtain ⟨hfac, hspec, hnorm⟩ := CPoly.splitFactor_isSplittingFactorizationGen hgcd Dt d hd
+  obtain ⟨hfac, hspec, hnorm⟩ := CPoly.splitFactor_isSplittingFactorizationGen Dt d hd
   -- factor nonvanishing
   have hds : toPoly (crSpecDen Dt a d) ≠ 0 := by
     rw [hspd]; intro h; exact hd (by rw [hfac, h, zero_mul])
@@ -60,18 +62,18 @@ theorem canonicalReconstruction_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf
   exact canonicalReconstruction Dt a d hd hdn hds hsplit hgdeg hgne
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **The canonical normal denominator is nonzero when `d ≠ 0`** (`[CharZero]` + `CgcdBCorrect cgcdFFCoreWf`): `dₙ` is a
+/-- **The canonical normal denominator is nonzero when `d ≠ 0`** (`[CharZero]` + lawful selected gcd): `dₙ` is a
 factor of the split `d = dₛ·dₙ`, so `d ≠ 0 ⇒ dₙ ≠ 0`. -/
-theorem crNormDen_ne_zero_of_charZero (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
+theorem crNormDen_ne_zero_of_charZero (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0) : toPoly (crNormDen Dt a d) ≠ 0 := by
   have hnd : crNormDen Dt a d = (CPoly.splitFactor Dt d).1 := by
     simp only [crNormDen, canonicalRepresentationFast]
   letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPoly Dt)⟩
-  obtain ⟨hfac, _, _⟩ := CPoly.splitFactor_isSplittingFactorizationGen hgcd Dt d hd
+  obtain ⟨hfac, _, _⟩ := CPoly.splitFactor_isSplittingFactorizationGen Dt d hd
   rw [hnd]; intro h; exact hd (by rw [hfac, h, mul_zero])
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **The canonical normal part is proper** (`[CharZero]` + `CgcdBCorrect cgcdFFCoreWf`, `d ≠ 0`): `deg crNormNum <
+/-- **The canonical normal part is proper** (`[CharZero]` + lawful selected gcd, `d ≠ 0`): `deg crNormNum <
 deg crNormDen`. `crNormNum` is the second cofactor of `CPoly.extendedEuclideanSplit` over the normal denominator
 `crNormDen = dₙ`, so `extendedEuclideanSplit_snd_degree_lt` gives properness — from the split `d = dₛ·dₙ`
 (`CPoly.splitFactor_isSplittingFactorizationGen`), the special⊥normal Bézout identity
@@ -79,11 +81,11 @@ deg crNormDen`. `crNormNum` is the second cofactor of `CPoly.extendedEuclideanSp
 deg d` (selected-remainder shortening). The `degree` form holds unconditionally on `d ≠ 0` (incl. the trivial `crNormNum =
 0` case, `⊥ < deg dₙ`); it is the never-done crNorm-properness cleanup target, the foundation of the Hermite
 properness `hAD`. -/
-theorem crNormNum_degree_lt_crNormDen (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α)
+theorem crNormNum_degree_lt_crNormDen (Dt a d : DensePoly α)
     (hd : toPoly d ≠ 0) :
     (toPoly (crNormNum Dt a d)).degree < (toPoly (crNormDen Dt a d)).degree := by
   letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPoly Dt)⟩
-  obtain ⟨hfac, hspec, hnorm⟩ := CPoly.splitFactor_isSplittingFactorizationGen hgcd Dt d hd
+  obtain ⟨hfac, hspec, hnorm⟩ := CPoly.splitFactor_isSplittingFactorizationGen Dt d hd
   -- factor nonvanishing (from `d = dₛ·dₙ`) and the derived `cnorm ≠ []` guards
   have hds0 : toPoly (CPoly.splitFactor Dt d).2 ≠ 0 := fun h => hd (by rw [hfac, h, zero_mul])
   have hdn0 : toPoly (CPoly.splitFactor Dt d).1 ≠ 0 := fun h => hd (by rw [hfac, h, mul_zero])

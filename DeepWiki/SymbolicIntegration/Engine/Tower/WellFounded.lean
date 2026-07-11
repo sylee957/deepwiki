@@ -196,10 +196,10 @@ The §3.5 split loop `cSplitFactorFast` (`t`-degree drop) and Yun's main loop `c
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CDiffField α] [CPolyGcd DensePoly α]
 
-/-- The generic `SplitFactor` step `cstep Dt p = CPolyEuclidean.div (cgcdFFCoreWf p (CPolyEngine.monomialDeriv Dt p))
-(cgcdFFCoreWf p (cderiv p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)`. -/
+/-- The selected `SplitFactor` step: divide the selected gcd with the monomial derivative by the
+selected gcd with the formal derivative. -/
 def cstep (Dt : DensePoly α) (p : DensePoly α) : DensePoly α :=
   CPolyEuclidean.div (CPolyGcd.compute p (CPolyEngine.monomialDeriv Dt p))
     (CPolyGcd.compute p (cderiv p))
@@ -207,7 +207,7 @@ def cstep (Dt : DensePoly α) (p : DensePoly α) : DensePoly α :=
 /-- Generic splitting-factorization loop `cSplitFactorFast Dt p = (pₙ, pₛ)`: one step extracts
 `S = cstep Dt p`; a constant `S` (`cdeg S = 0`) ⇒ `p` is normal, else recurse on the exact quotient
 `p/S = CPolyEuclidean.div p S` and accumulate `S` into the special part. Well-founded on `(cnorm p).length`.
-`[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
+The gcd implementation is supplied by `CPolyGcd DensePoly α`. -/
 def cSplitFactorFast (Dt : DensePoly α) (p : DensePoly α) : DensePoly α × DensePoly α :=
   let S := cstep Dt p
   if cdeg S = 0 then (p, [CCommRing.one])
@@ -224,14 +224,14 @@ end DensePoly
 
 /-- Dense polynomials select the established well-founded differential split implementation. -/
 instance instCPolySplitFactorDense {α : Type*} [CField α] [CDiffField α]
-    [CFracGcdCoreWf α] : CPolySplitFactor DensePoly α where
+    [CPolyGcd DensePoly α] : CPolySplitFactor DensePoly α where
   compute := DensePoly.cSplitFactorFast
 
 namespace CPoly
 
 /-- Dense selected splitting is the established well-founded implementation. -/
 theorem splitFactor_dense_eq {α : Type*} [CField α] [CDiffField α]
-    [CFracGcdCoreWf α] (Dt p : DensePoly α) :
+    [CPolyGcd DensePoly α] (Dt p : DensePoly α) :
     CPoly.splitFactor Dt p = DensePoly.cSplitFactorFast Dt p := rfl
 
 end CPoly
@@ -306,8 +306,11 @@ Everything past the three recursive bottoms is a flat composition over the leave
 
 namespace DensePoly
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
-  [CPolyResultant DensePoly]
+variable {α : Type*} [CField α] [CDiffField α]
+
+section CanonicalRepresentation
+
+variable [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
 
 /-- Generic canonical representation over the tower:
 `canonicalRepresentationFast Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d` (`d` monic).
@@ -321,6 +324,10 @@ def canonicalRepresentationFast (Dt : DensePoly α) (a d : DensePoly α) :
   let uw := CPoly.bezoutOne dnds.1 dnds.2
   let bc := CPoly.extendedEuclideanSplit dnds.1 dnds.2 qr.2 uw.1 uw.2
   (qr.1, (bc.1, dnds.2), (bc.2, dnds.1))
+
+end CanonicalRepresentation
+
+variable [CFracGcdCoreWf α] [CPolyResultant DensePoly]
 
 /-- Generic transcendental Hermite reduction `cHermiteReduceTower Dt a d = ((gnum, gden),
 (h_num, h_den))` over the tower: squarefree-factor `d` with `CPoly.squarefreeYun`; for each factor `(v, i)` of

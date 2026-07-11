@@ -20,11 +20,14 @@ the coefficient field) is built in `RischSolverTowerLrt.lean`. See `docs/recursi
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u v
+
 open DensePoly CFrac Polynomial
 open scoped Differential
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+  [LawfulCPolyGcd.{u,v} DensePoly α]
   [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
 
 /-- **The recursive LRT Risch solver as a class.** The computable data (`case`) plus the two soundness laws:
@@ -148,9 +151,9 @@ theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd 
         (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
         (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0) :
     IsElementaryIntegrableGenuineLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      ↔ cResidueConstantGuard Dt (crNormNum Dt a d) (crNormDen Dt a d) = true :=
-  primitiveLrtDecides_of_setup hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
-    (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hR0 (reducedSoundLrt Dt a d hd0 hDt0)
+      ↔ cResidueConstantGuard Dt (crNormNum Dt a d) (crNormDen Dt a d) = true := by
+  exact primitiveLrtDecides_of_setup hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
+    (crNormDen_ne_zero_of_charZero Dt a d hd0) hR0 (reducedSoundLrt Dt a d hd0 hDt0)
 
 /-- **Derived completeness certificate at the class.** From `reducedDecides`: if the residue guard *fails*, the
 reduced normal part is not genuinely elementary integrable — a decidable non-integrability certificate that the

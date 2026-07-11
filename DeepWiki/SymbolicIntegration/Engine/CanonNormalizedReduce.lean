@@ -85,8 +85,8 @@ example (f q' : SparseFrac ℚ) :
 
 section Repin
 
-variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CFracGcdCoreWf β]
-  [LawfulCPolyGcd.{u,v} DensePoly β]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
+  [CPolyGcd DensePoly β] [LawfulCPolyGcd.{u,v} DensePoly β]
 
 /-- For `ftilde = weakNormalizedF f q'` (`q'` the lift of `cWeakNormalizer [1] f.num f.den`), the
 denominator gate on the reduced input equals the wrapper check on the pre-reduce input. -/

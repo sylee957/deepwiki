@@ -12,12 +12,12 @@ for the Hermite half). -/
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u
+universe u v
 
 open DensePoly CFrac Polynomial
 open scoped Differential
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- Combine a special-part fraction with an LRT result in any polynomial representation. -/
@@ -100,6 +100,7 @@ reduced LRT part is sound (`hNrmField`), then `res` is an antiderivative of `a/d
 The LRT analogue of `cIntegrateCase_sound`; the reduced-denominator nonvanishing is *proven* here
 (`toPolyG_cHermiteReduceTowerG_den_ne_zero` from `dₙ ≠ 0`). -/
 theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
+    [LawfulCPolyGcd.{u,v} DensePoly α]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (C : MonomialCase α) (Dt a d : DensePoly α) (res : LrtResult α) (snum sden : DensePoly α)
     (specialVal : RatFunc (CFieldSpec.K α)) (hd0 : toPoly d ≠ 0)
@@ -116,7 +117,7 @@ theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
   have hDt0 : (toPoly Dt).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hguard
   have hgden : toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0 :=
     toPolyG_cHermiteReduceTowerG_den_ne_zero hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) (Polynomial.primPart_ne_zero _)
+      (crNormDen_ne_zero_of_charZero Dt a d hd0) (Polynomial.primPart_ne_zero _)
   have hshape : res
       = combineSNLrt snum sden (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) := by
     have hexp : cIntegrateCaseLrt C Dt a d

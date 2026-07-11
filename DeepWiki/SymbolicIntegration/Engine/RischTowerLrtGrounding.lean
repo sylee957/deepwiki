@@ -13,8 +13,9 @@ level, and no others:
   properly-built tower satisfies but which are not derivable from the computable data. This **replaced** the
   rational `PrimitiveFrontier`, whose `IsIntegralResult` was not dischargeable at all (it forces the reduced
   denominator to split over `K`).
-* `Fact (CgcdBCorrect cgcdFFCoreWf)` — the fraction-free-gcd correctness. Proven unconditionally at `ℚ`
-  (`instFactCgcdFFCoreWfCorrectQ`); at tower levels it is the engine's PRS-regularity frontier.
+* `LawfulCPolyGcd DensePoly` — representation-independent selected-gcd correctness; the legacy
+  `Fact (CgcdBCorrect cgcdFFCoreWf)` remains separately where the PRS proof needs implementation-specific
+  associatedness. Both are proven at `ℚ`; at tower levels they are explicit correctness frontiers.
 
 So "no dangling frontier" is achieved in the honest sense: every remaining hypothesis is a **named genuine
 mathematical condition**, not an opaque assumed lemma. Completeness (the decidable non-integrability
@@ -31,6 +32,7 @@ honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this l
 `Fact` (the base `Fact (CgcdBCorrect cgcdFFCoreWf)` is a resolved instance). No rational-residue restriction, no
 undischargeable `PrimitiveFrontier`. -/
 theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
+    [LawfulCPolyGcd DensePoly (DenseFrac ℚ)]
     [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))] [PrimitiveFrontierLrt (DenseFrac ℚ)]
     (Dt a d : DensePoly (DenseFrac ℚ)) (res : LrtResult (DenseFrac ℚ))
     (h : LawfulRischLevelLrt.integrate Dt a d = some res) :
@@ -43,6 +45,7 @@ input at each level *constructs* the `PrimitiveFrontierLrt` instances, hence (wi
 recursive LRT solver at that depth. This is the honest closure — the solver's soundness rests on genuine
 integrability conditions, nothing opaque. -/
 noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))]
+    [LawfulCPolyGcd DensePoly (DenseFrac ℚ)]
     (hgenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
     (hgenℚx : ∀ (Dt a d : DensePoly (DenseFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
     LawfulRischLevelLrt (DenseFrac ℚ) :=
