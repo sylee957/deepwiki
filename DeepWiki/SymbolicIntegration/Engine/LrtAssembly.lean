@@ -97,29 +97,27 @@ def cIntegrateCaseLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
 
 open Classical in
 /-- **Generic primitive LRT assembler soundness.** If `cIntegrateCaseLrt C` returns `res`, the special hook
-gives `(snum, sden)` with `Δ(snum/sden) = specialVal` and reconstruction `specialVal + cn/dn = a/d`, and the
-reduced LRT part is sound (`hNrmField`), then `res` is an antiderivative of `a/d` over every alg-closed `E`.
-The LRT analogue of `cIntegrateCase_sound`; the reduced-denominator nonvanishing is *proven* here
-(`toPolyG_cHermiteReduceTowerG_den_ne_zero` from `dₙ ≠ 0`). -/
-theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
-    [LawfulCPolyGcd.{u,v} DensePoly α]
-    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
+gives `(snum, sden)` with `Δ(snum/sden) = specialVal` and reconstruction `specialVal + cn/dn = a/d`, while the
+reduced LRT output is both sound and denominator-certified, then `res` is an antiderivative of `a/d` over every
+alg-closed `E`. The composition consumes this result-level contract; it does not name a Hermite implementation. -/
+theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)]
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
     (C : MonomialCase α) (Dt a d : DensePoly α) (res : LrtResult α) (snum sden : DensePoly α)
-    (specialVal : RatFunc (CFieldSpec.K α)) (hd0 : toPoly d ≠ 0)
+    (specialVal : RatFunc (CFieldSpec.K α))
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden))
     (hsome : cIntegrateCaseLrt C Dt a d = some res) (hsden : toPoly sden ≠ 0)
     (hSpecField : towerFractionFieldDeriv Dt (fieldFrac snum sden) = specialVal)
     (hNrmField : (toPoly Dt).natDegree = 0 → IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)))
+    (hredDen : (toPoly Dt).natDegree = 0 →
+      toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0)
     (hrecon : specialVal + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
     IsIntegralResultLrt Dt a d res := by
   -- the primitive-case guard is *decided* by a successful run: `cIntegrateCaseLrt = some res ⟹ deg Dt = 0`
   have hguard : cdeg Dt = 0 := by
     by_contra h; rw [cIntegrateCaseLrt, if_neg h] at hsome; simp at hsome
   have hDt0 : (toPoly Dt).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hguard
-  have hgden : toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0 :=
-    toPolyG_cHermiteReduceTowerG_den_ne_zero hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      (crNormDen_ne_zero_of_charZero Dt a d hd0) (Polynomial.primPart_ne_zero _)
   have hshape : res
       = combineSNLrt snum sden (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) := by
     have hexp : cIntegrateCaseLrt C Dt a d
@@ -134,7 +132,8 @@ theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
     exact (Option.some.injEq _ _ ▸ hsome).symm
   rw [hshape]
   refine combineSNLrt_isIntegralResultLrt Dt a d (crNormNum Dt a d) (crNormDen Dt a d) snum sden
-    (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) hsden hgden ?_ (hNrmField hDt0)
+    (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) hsden (hredDen hDt0) ?_
+      (hNrmField hDt0)
   rw [hSpecField]; exact hrecon
 
 end DeepWiki.SymbolicIntegration

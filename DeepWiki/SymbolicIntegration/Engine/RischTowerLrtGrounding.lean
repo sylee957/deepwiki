@@ -40,18 +40,24 @@ theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
   LawfulRischLevelLrt.soundFormalLrt Dt a d res h
 
 /-- **The reduced frontier reduces to the genuine data — the whole solver from `LrtReducedGenuineData`.**
-Threading `hreducedLrt_of_genuineAll`: supplying Bronstein's genuine residue/normality data for every reduced
-input at each level *constructs* the `PrimitiveFrontierLrt` instances, hence (with the gcd `Fact`s) the whole
-recursive LRT solver at that depth. This is the honest closure — the solver's soundness rests on genuine
-integrability conditions, nothing opaque. -/
+Threading `hreducedLrt_of_genuineAll`: supplying Bronstein's genuine residue/normality data and the selected
+reduced-output denominator contract at every level *constructs* the `PrimitiveFrontierLrt` instances, hence
+(with the gcd `Fact`s) the whole recursive LRT solver at that depth. This is the honest closure — the solver's
+soundness rests on explicit integrability and result-regularity conditions, nothing opaque. -/
 noncomputable example [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))]
     [LawfulCPolyGcd DensePoly (DenseFrac ℚ)]
     (hgenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
-    (hgenℚx : ∀ (Dt a d : DensePoly (DenseFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
+    (hdenℚ : ∀ (Dt a d : DensePoly ℚ), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
+      toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0)
+    (hgenℚx : ∀ (Dt a d : DensePoly (DenseFrac ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
+    (hdenℚx : ∀ (Dt a d : DensePoly (DenseFrac ℚ)), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
+      toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0) :
     LawfulRischLevelLrt (DenseFrac ℚ) :=
-  letI : PrimitiveFrontierLrt ℚ := ⟨hreducedLrt_of_genuineAll cgcdFFCoreWf_correct_Q hgenℚ⟩
+  letI : PrimitiveFrontierLrt ℚ :=
+    ⟨hreducedLrt_of_genuineAll cgcdFFCoreWf_correct_Q hgenℚ, hdenℚ⟩
   letI : PrimitiveFrontierLrt (DenseFrac ℚ) :=
-    ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))) hgenℚx⟩
+    ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect
+      (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))) hgenℚx, hdenℚx⟩
   inferInstance
 
 end DeepWiki.SymbolicIntegration

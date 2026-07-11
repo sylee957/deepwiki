@@ -49,20 +49,21 @@ theorem IsElementaryIntegrableLrt.of_isIntegralResultLrt {Dt a d : DensePoly α}
     (h : IsIntegralResultLrt Dt a d res) : IsElementaryIntegrableLrt Dt a d :=
   ⟨res, h⟩
 
-/-- **The LRT primitive reduced frontier, as a class.** The root-free analogue of `PrimitiveFrontier`: the
-single field `hreducedLrt` asserts the reduced normal part `cₙ/dₙ` integrates correctly *with algebraic
-residues* — `IsIntegralResultLrt` for the symbolic integrator `cIntegrateReducedLrt`. Discharged (modulo the
-genuine Bronstein side conditions) by `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`; unlike the
-rational `hreduced`, there is **no** rational-residue restriction. -/
+/-- **The LRT primitive reduced frontier, as a class.** The root-free analogue of `PrimitiveFrontier`: it
+certifies both the algebraic-residue soundness of `cIntegrateReducedLrt` and the nonzero denominator of its
+rational output. The latter is a separate result contract because the LRT assembler divides by that stored
+denominator. -/
 class PrimitiveFrontierLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
     [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] where
   /-- Reduced-part soundness with algebraic residues: `cₙ/dₙ` integrates to `cIntegrateReducedLrt …`, whose
-  log part carries symbolic algebraic residues. The `d ≠ 0` precondition is supplied by the integrator guard;
-  the normalized-denominator nonvanishing is *proven* downstream (Hermite denominator ≠ 0 from `dₙ ≠ 0`). -/
+  log part carries symbolic algebraic residues. -/
   hreducedLrt : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
     IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d))
+  /-- The rational denominator stored by the selected reduced LRT output is nonzero. -/
+  hreducedDenNonzero : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
+    toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- **`hreducedLrt` from a universal reduced soundness.** If `cIntegrateReducedLrt` is sound on *every*
@@ -82,8 +83,8 @@ theorem hreducedLrt_of_reducedSoundLrt [CharZero (CFieldSpec.K α)]
 `hreducedLrt_of_reducedSoundLrt`: if the genuine Rothstein–Trager residue-data + tower-nondegeneracy conditions
 (`LrtReducedGenuineData`) hold for *every* reduced input, then the LRT primitive reduced frontier `hreducedLrt`
 holds. This closes the frontier down to those **necessary** conditions — no rational-residue restriction, no
-opaque soundness field. Instantiate `PrimitiveFrontierLrt` in one line: `⟨hreducedLrt_of_genuineAll hgcd
-genuineData⟩`. -/
+opaque soundness field. The separate denominator frontier is supplied alongside this result when materializing
+`PrimitiveFrontierLrt`. -/
 theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (hgen : ∀ (Dt a' d' : DensePoly α), toPoly d' ≠ 0 → LrtReducedGenuineData Dt a' d')
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
@@ -100,9 +101,12 @@ theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorr
 -- The closure genuinely constructs the frontier: given the genuine data for every reduced input, a
 -- `PrimitiveFrontierLrt` instance follows (hence the whole assembled root-free LRT solver).
 example [CharZero (CFieldSpec.K α)] [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
-    (hgen : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
+    (hgen : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
+    (hden : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
+      toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0) :
     PrimitiveFrontierLrt α :=
-  ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))) hgen⟩
+  ⟨hreducedLrt_of_genuineAll (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))) hgen,
+    hden⟩
 
 omit [LawfulCPolyGcd DensePoly α] in
 /-- **The frontier certifies broad elementary integrability of the reduced normal part.** From a

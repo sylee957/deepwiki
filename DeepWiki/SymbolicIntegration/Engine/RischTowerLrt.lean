@@ -54,6 +54,9 @@ class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField �
   reducedSoundLrt : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
     IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d))
+  /-- The selected reduced LRT rational part has a nonzero stored denominator. -/
+  reducedDenNonzero : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
+    toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0
   /-- **Optional single-`w` limited integrator** (Bronstein §5.8/§5.12) — `(anum, aden, ηnum, ηden) ↦
   ((bnum, bden), c)` with `anum/aden = D(bnum/bden) + c·(ηnum/ηden)` over `α(s)`. Feeds the degree-raising
   coefficient recursion `cIntegratePrimPolyDegRaise` its `c` (the `c·tᵐ⁺¹/(m+1)` term). Defaults to `none` ⟹
@@ -71,6 +74,7 @@ soundness laws. -/
 def integrate [LawfulRischLevelLrt α] (Dt a d : DensePoly α) : Option (LrtResult α) :=
   if cisZero d then none else cIntegrateCaseLrt case Dt a d
 
+omit [LawfulCPolyGcd.{u, v} DensePoly α] in
 /-- **Formal LRT soundness.** Any successful run satisfies the algebraic-residue log-derivative identity
 `IsIntegralResultLrt` — over every alg-closed differential extension `E`, `D_E(rational) + Σ residue logs =
 a/d`. Composed from the instance's `specialSound` + `reducedSoundLrt` through the assembler soundness
@@ -95,9 +99,11 @@ theorem soundFormalLrt [LawfulRischLevelLrt α] (Dt a d : DensePoly α) (res : L
         simp only [crPoly, crSpecNum, crSpecDen, hcrep]; exact hspec
       obtain ⟨hsden, v, hSpecField, hrecon⟩ := specialSound Dt a d snum sden hd0 hSpec
       have hNrm := reducedSoundLrt Dt a d hd0
-      exact cIntegrateCaseLrt_sound (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))) case Dt a d res snum sden v
-        hd0 hSpec h0 hsden hSpecField hNrm hrecon
+      have hredDen := reducedDenNonzero Dt a d hd0
+      exact cIntegrateCaseLrt_sound case Dt a d res snum sden v
+        hSpec h0 hsden hSpecField hNrm hredDen hrecon
 
+omit [LawfulCPolyGcd.{u, v} DensePoly α] in
 /-- **Derived broad elementary integrability.** A successful LRT run certifies `a/d` is elementary integrable in
 the broad (algebraic-residue) sense — `IsElementaryIntegrableLrt`, via `soundFormalLrt`. -/
 theorem isElementaryIntegrableLrt_of_run [LawfulRischLevelLrt α] (Dt a d : DensePoly α)
@@ -110,6 +116,7 @@ right coefficient integrator for the tower recursion (the LRT analogue of the ra
 def integrateRationalLrt [LawfulRischLevelLrt α] (Dt a d : DensePoly α) : Option (DensePoly α × DensePoly α) :=
   (integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
 
+omit [LawfulCPolyGcd.{u, v} DensePoly α] in
 /-- **★ K-level soundness of the log-free LRT integrator** — the ∀E ⇒ K descent for log-free results. A
 successful `integrateRationalLrt` run gives the **base-level** identity `D_tower(num/den) = a/d` in
 `RatFunc (CFieldSpec.K α)`, with no algebraic-closure extension. The `∀E` LRT soundness instantiates at the
@@ -182,6 +189,8 @@ instance instLawfulRischLevelLrtPrimitive [CRischField α] [PrimitiveFrontierLrt
   specialSound := fun Dt a d snum sden hd0 hhook =>
     primitiveGuardedCase_specialSound Dt a d snum sden hd0 hhook
   reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
+  reducedDenNonzero := fun Dt a d hd0 hDt0 =>
+    PrimitiveFrontierLrt.hreducedDenNonzero Dt a d hd0 hDt0
 
 /-- **Validation: the base LRT solver resolves from the reduced frontier.** Given `[PrimitiveFrontierLrt α]`,
 `LawfulRischLevelLrt α` resolves parameter-free — the base of the recursive LRT tower. -/
