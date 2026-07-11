@@ -63,7 +63,7 @@ theorem primitive_special_identity (Dt fp qp : DensePoly α)
   · exact field_identity_Dt1 Dt fp qp _ hDt1 (by simpa using hfp) (le_refl _) hsome hconst
 
 /-- Rational kernel shared by the generic and LRT guarded primitive special stages. -/
-def primitiveGuardedRationalSpecial (Dt fp b : DensePoly α) :
+private def primitiveGuardedRationalSpecial (Dt fp b : DensePoly α) :
     Option (DensePoly α × DensePoly α) :=
     if cisZero b && cisZero (csub Dt [CCommRing.one]) && cisZero (CPolyEngine.mapDeriv fp) then
       match cPolyRischDE Dt [] fp ((cdeg fp : ℤ) + 1) with
