@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.Basic
-import DeepWiki.SymbolicIntegration.Engine.LinearSolveCorrect
+import DeepWiki.ComputableAlgebra.LinearAlgebraRatCorrect
 
 /-! # Coupled-system matrix assembly faithfulness and base soundness
 

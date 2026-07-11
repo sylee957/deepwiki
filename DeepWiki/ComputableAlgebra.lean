@@ -36,6 +36,7 @@ import DeepWiki.ComputableAlgebra.FractionExamples
 import DeepWiki.ComputableAlgebra.FracReduce
 import DeepWiki.ComputableAlgebra.LinearAlgebra
 import DeepWiki.ComputableAlgebra.LinearAlgebraRat
+import DeepWiki.ComputableAlgebra.LinearAlgebraRatCorrect
 import DeepWiki.ComputableAlgebra.FracLinearAlgebraDense
 import DeepWiki.ComputableAlgebra.FracLinearAlgebraSparse
 

@@ -27,7 +27,7 @@ import DeepWiki.SymbolicIntegration.Engine.RischSolverTowerLrt
 import DeepWiki.SymbolicIntegration.Engine.RischTowerLrtGrounding
 import DeepWiki.SymbolicIntegration.Engine.LrtCompleteness
 import DeepWiki.SymbolicIntegration.Engine.IntegratorCompleteness
-import DeepWiki.SymbolicIntegration.Engine.LinearSolveCorrect
+import DeepWiki.ComputableAlgebra.LinearAlgebraRatCorrect
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.SymbolicIntegration.Engine.LiouvilleExpBridge
 import DeepWiki.SymbolicIntegration.Engine.LiouvilleFormBridge

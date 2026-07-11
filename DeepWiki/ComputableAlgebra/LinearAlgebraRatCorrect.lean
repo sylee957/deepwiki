@@ -1,6 +1,6 @@
 import DeepWiki.ComputableAlgebra.LinearAlgebraRat
 
-/-! # Abstract correctness of the ℚ-Gaussian-elimination linear solver
+/-! # Correctness of the ℚ-Gaussian-elimination linear solver
 
 Abstract correctness over `ℚ` of `crref` (list-based Gauss–Jordan reduction to RREF) and
 `cConstSolveUniqueQ` (back-substituted solution): the solution-preserving invariant, the forward
