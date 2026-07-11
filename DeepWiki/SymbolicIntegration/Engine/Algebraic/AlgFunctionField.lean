@@ -14,6 +14,8 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 namespace DensePoly
 
 variable {α : Type*} [CField α]
@@ -38,18 +40,45 @@ private def fieldDetSized : ℕ → List (List α) → α
 /-- The `n×n` determinant over `α` by recursive Laplace expansion along the first row. -/
 def fieldDet (M : List (List α)) : α := fieldDetSized M.length M
 
-/-- The discriminant of the monic curve `f` over `ℚ(x) = DenseFrac ℚ`: `det[Tr(ωᵢ·ωⱼ)]` for the
-power basis, computed fraction-free via `qfDet` (Bareiss over a common `ℚ[x]` denominator).
-Equal to `fieldDet (CPoly.traceMatrix f (CPoly.powerBasis f))`, hence to `± Resultant(f, f')`. -/
-def discriminant (f : DensePoly (DenseFrac ℚ)) : DenseFrac ℚ :=
-  CFrac.qfDet (CPoly.traceMatrix f (CPoly.powerBasis f))
-
-/-- `Resultant(f, f')` for the curve `f`, computed by the selected polynomial-resultant capability.
-Equal to `± discriminant f`. -/
-def discResultant [CPolyResultant DensePoly] (f : DensePoly α) : α :=
-  CPolyResultant.compute f (cderiv f)
-
 end DensePoly
+
+namespace CFrac
+
+/-- The trace-form discriminant of a monic curve, computed by the selected quotient and fraction-free
+polynomial capabilities. -/
+def discriminant
+    {F : (α : Type) → [CField α] → Type} {X Y : Type → Type}
+    [CPoly X] [CPolyEngine X] [CPolyGcd X] [CPolyEuclidean X]
+    [CFrac F X] [CFieldDomain ℚ X]
+    [CPoly Y] [CPolyEngine Y] [CPolyEuclidean Y]
+    (f : Y (F ℚ)) : F ℚ :=
+  qfDet (CPoly.traceMatrix f (CPoly.powerBasis f))
+
+end CFrac
+
+namespace CPoly
+
+/-- `Resultant(f, f')` for a represented curve, computed by the selected derivative and resultant
+capabilities. -/
+def discResultant {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyResultant P]
+    {α : Type u} [CField α] (f : P α) : α :=
+  CPolyResultant.compute f (CPolyEngine.deriv f)
+
+end CPoly
+
+/-! The trace discriminant and derivative resultant execute through sparse fraction and polynomial
+representations without dense adapters. -/
+
+example :
+    let x : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(1, 1)]
+    let f : CPoly.SparsePoly (SparseFrac ℚ) :=
+      CPoly.SparsePoly.ofList
+        [(0, CCommRing.neg (CFrac.ofPoly x)), (2, CCommRing.one)]
+    CCommRing.isZero (CField.sub (CFrac.discriminant f)
+      (CFrac.ofPoly (CPoly.SparsePoly.ofList [(1, 4)]))) = true ∧
+    CCommRing.isZero (CField.sub (CPoly.discResultant f)
+      (CFrac.ofPoly (CPoly.SparsePoly.ofList [(1, -4)]))) = true := by
+  native_decide
 
 /-! ### The non-radical curve `f = y² − x·y − x³` over `ℚ(x)` -/
 
@@ -89,13 +118,14 @@ theorem afNonRad_traceMatrix_entries :
 
 /-- The discriminant of `y² − xy − x³` is `det[Tr(ωᵢωⱼ)] = x² + 4x³`. -/
 theorem afNonRad_discriminant_eq :
-    CCommRing.isZero (CField.sub (discriminant afNonRadF) (CFrac.ofPoly [0, 0, 1, 4])) = true := by
+    CCommRing.isZero (CField.sub (CFrac.discriminant afNonRadF) (CFrac.ofPoly [0, 0, 1, 4])) = true := by
   ccompute
 
 /-- The discriminant equals `± Resultant(f, f')` for the non-radical curve: `discriminant f +
 discResultant f = 0`, so `Res(f, f') = −disc(f)`. -/
 theorem afNonRad_discriminant_eq_neg_resultant :
-    CCommRing.isZero (CCommRing.add (discriminant afNonRadF) (discResultant afNonRadF)) = true := by
+    CCommRing.isZero
+      (CCommRing.add (CFrac.discriminant afNonRadF) (CPoly.discResultant afNonRadF)) = true := by
   ccompute
 
 /-! ### The trigonal curve `f = y³ + x·y + x` over `ℚ(x)` (`n = 3`) -/
@@ -115,12 +145,13 @@ theorem afTrig_trace_ysq :
 
 /-- The trigonal discriminant of `y³ + xy + x` is the depressed-cubic value `−4x³ − 27x²`. -/
 theorem afTrig_discriminant_eq :
-    CCommRing.isZero (CField.sub (discriminant afTrigF) (CFrac.ofPoly [0, 0, -27, -4])) = true := by
+    CCommRing.isZero (CField.sub (CFrac.discriminant afTrigF) (CFrac.ofPoly [0, 0, -27, -4])) = true := by
   ccompute
 
 /-- The trigonal discriminant equals `± Resultant(f, f')`: `discriminant f + discResultant f = 0`. -/
 theorem afTrig_discriminant_eq_resultant :
-    CCommRing.isZero (CCommRing.add (discriminant afTrigF) (discResultant afTrigF)) = true := by
+    CCommRing.isZero
+      (CCommRing.add (CFrac.discriminant afTrigF) (CPoly.discResultant afTrigF)) = true := by
   ccompute
 
 /-! ### Conservativity: on a radical curve `f = y² − ρ`, `Tr(y) = 0` -/

@@ -36,7 +36,8 @@ open DensePoly
 
 /-- The numerator of the discriminant as a `ℚ[x]` polynomial `discNum f = (discriminant f).num` (the
 denominator is `1` for a monic `f`), whose squarefree part bounds the bad primes. -/
-def discNum (f : DensePoly (DenseFrac ℚ)) : DensePoly ℚ := (discriminant f).num
+def discNum (f : DensePoly (DenseFrac ℚ)) : DensePoly ℚ :=
+  CFrac.num (CFrac.discriminant f)
 
 /-- The bad primes of `f` `badPrimes f`: the distinct monic squarefree factors of the discriminant
 numerator (Yun factorization) with `p² ∣ d` (tested by the selected remainder) — the primes where the
