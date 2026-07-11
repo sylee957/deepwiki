@@ -102,6 +102,10 @@ class CompleteCMonomialCase (C : CMonomialCase P α) : Prop where
     towerFractionFieldDerivP Dt (fieldFracP snum sden)
       = fieldFracP fp CPoly.one + fieldFracP b ds →
       ∃ out, C.integrateSpecial Dt fp b ds = some out
+  /-- Every certified genuine normal result lies in the normal postprocessor's domain. -/
+  postprocess_complete : ∀ (Dt cn dn : P α) (before : IntegralResult α P),
+    CertifiedNormalResult Dt cn dn before →
+      ∃ after, C.postprocessNormal Dt before = some after
 
 /-- Denotation-level contract for canonical representation. -/
 class LawfulCCanonicalRepresentation [CCanonicalRepresentation P α] : Prop where

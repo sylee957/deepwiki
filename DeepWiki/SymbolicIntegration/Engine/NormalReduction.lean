@@ -25,6 +25,17 @@ def reduceNormal [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart
   | some logs => some ⟨((hermiteResult Dt a d).rationalNum,
       (hermiteResult Dt a d).rationalDen), logs⟩
 
+/-- Semantic certificate exported by a complete normal-part reduction. -/
+structure CertifiedNormalResult (Dt a d : P α) (out : IntegralResult α P) : Prop where
+  /-- The rational and logarithmic parts integrate the input fraction. -/
+  integral : IsIntegralResultP Dt a d out
+  /-- The represented rational denominator is nonzero. -/
+  rationalDen_nonzero : CPoly.toPoly out.rational.2 ≠ 0
+  /-- Every logarithmic coefficient is constant. -/
+  coefficients_constant : ∀ cv ∈ out.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0
+  /-- Every represented logarithm argument is nonzero. -/
+  arguments_nonzero : ∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0
+
 /-- Successful lawful normal reduction integrates its input fraction. -/
 theorem reduceNormal_sound [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
     [CResidueSource P α] [CResidueLogPart P α]
@@ -81,7 +92,6 @@ theorem reduceNormal_rationalDen_nonzero [CHermiteReduction P α]
     subst out
     exact LawfulCHermiteReduction.rationalDen_nonzero Dt a d hd hnormal
 
-omit [LawfulCPolyEngine P] in
 /-- A complete residue source makes normal reduction succeed whenever its Hermite remainder has a genuine
 logarithmic antiderivative. -/
 theorem reduceNormal_complete [CHermiteReduction P α]
@@ -95,16 +105,22 @@ theorem reduceNormal_complete [CHermiteReduction P α]
     (hproper : (CPoly.toPoly a).degree < (CPoly.toPoly d).degree)
     (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
     (hwitness : ∃ logs : List (α × P α),
-      LawfulResidueLogPart Dt (hermiteResult Dt a d).remainderNum
-        (hermiteResult Dt a d).remainderDen logs ∧
-      (∀ cv ∈ logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
-      (∀ cv ∈ logs, CPoly.toPoly cv.2 ≠ 0)) :
-    ∃ out, reduceNormal Dt a d = some out := by
+      GenuineResidueLogPart Dt (hermiteResult Dt a d).remainderNum
+        (hermiteResult Dt a d).remainderDen logs) :
+    ∃ out, reduceNormal Dt a d = some out ∧ CertifiedNormalResult Dt a d out := by
   have hherm := LawfulCHermiteReduction.result_lawful Dt a d hd hnormal hproper hdegree
-  obtain ⟨logs, hlogs⟩ := CompleteCResidueLogPart.complete hsource Dt
+  obtain ⟨logs, hlogs, hgenuine⟩ := CompleteCResidueLogPart.complete hsource Dt
     (hermiteResult Dt a d).remainderNum (hermiteResult Dt a d).remainderDen
     (LawfulCHermiteReduction.remainderDen_nonzero Dt a d hd) hherm.squarefree hherm.proper hwitness
-  refine ⟨⟨((hermiteResult Dt a d).rationalNum, (hermiteResult Dt a d).rationalDen), logs⟩, ?_⟩
-  simp only [reduceNormal, hlogs]
+  let out : IntegralResult α P :=
+    ⟨((hermiteResult Dt a d).rationalNum, (hermiteResult Dt a d).rationalDen), logs⟩
+  have hrun : reduceNormal Dt a d = some out := by
+    simp only [reduceNormal, hlogs, out]
+  refine ⟨out, hrun, ?_⟩
+  exact {
+    integral := reduceNormal_sound Dt a d out hd hnormal hproper hdegree hrun
+    rationalDen_nonzero := reduceNormal_rationalDen_nonzero Dt a d out hd hnormal hrun
+    coefficients_constant := by simpa only [out] using hgenuine.coefficients_constant
+    arguments_nonzero := by simpa only [out] using hgenuine.arguments_nonzero }
 
 end DeepWiki.SymbolicIntegration

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.Assemble
+import DeepWiki.SymbolicIntegration.Engine.PolynomialAssembly
 
 /-! # Compositional Risch-level interface
 
@@ -8,10 +8,10 @@ soundness and relative-completeness statements that a concrete monomial realizat
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u v
+universe u
 
-variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
-variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,u} P]
+variable {α : Type u} [CField α] [CFieldSpec.{u,u} α] [CDiffField α] [CDiffFieldSpec.{u,u} α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- Prop-free executable solver for one represented transcendental Risch level. -/
@@ -44,6 +44,12 @@ def oneLevelRisch (C : CMonomialCase P α) [CCanonicalRepresentation P α]
     [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α] : CRischLevel P α where
   integrate Dt a d := assembleOneLevel C Dt a d
 
+/-- The generic Figure-5.1 composition with an explicit polynomial-reduction budget. -/
+def oneLevelRischWithPolynomial (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
+    (fuel : ℕ) (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α] : CRischLevel P α where
+  integrate Dt a d := assembleOneLevelWithPolynomial R kind fuel C Dt a d
+
 /-- Low-derivation-degree domain of the generic Hermite-based one-level assembler. -/
 def oneLevelRischDomain : RischLevelDomain P α :=
   fun Dt _ _ => (CPoly.toPoly Dt).natDegree ≤ 1
@@ -58,5 +64,18 @@ theorem oneLevelRisch_sound (C : CMonomialCase P α) [CCanonicalRepresentation P
     (hrun : (oneLevelRisch C).integrate Dt a d = some res) :
     IsIntegralResultP Dt a d res :=
   assembleOneLevel_sound C Dt a d res hd hdomain hrun
+
+/-- The polynomial-aware packaged level inherits contract-only one-level soundness. -/
+theorem oneLevelRischWithPolynomial_sound (R : CPolynomialReduction P α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind) (fuel : ℕ)
+    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
+    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
+    [CResidueSource P α] [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)]
+    (Dt a d : P α) (res : IntegralResult α P)
+    (hd : CPoly.toPoly d ≠ 0) (hdomain : oneLevelRischDomain Dt a d)
+    (hrun : (oneLevelRischWithPolynomial R kind fuel C).integrate Dt a d = some res) :
+    IsIntegralResultP Dt a d res :=
+  assembleOneLevelWithPolynomial_sound R kind fuel C Dt a d res hd hdomain hrun
 
 end DeepWiki.SymbolicIntegration

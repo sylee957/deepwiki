@@ -27,6 +27,15 @@ structure LawfulResidueLogPart (Dt hNum Dstar : P α) (logs : List (α × P α))
           am α (CPoly.toPoly cv.2)))).sum
       = am α (CPoly.toPoly hNum) / am α (CPoly.toPoly Dstar)
 
+/-- A residue-logarithm result is genuine when its coefficients are constants and its arguments are nonzero. -/
+structure GenuineResidueLogPart (Dt hNum Dstar : P α) (logs : List (α × P α)) : Prop where
+  /-- The logarithmic derivative sum reconstructs the input remainder. -/
+  lawful : LawfulResidueLogPart Dt hNum Dstar logs
+  /-- Every logarithmic coefficient is constant in the coefficient differential field. -/
+  coefficients_constant : ∀ cv ∈ logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0
+  /-- Every represented logarithm argument is nonzero. -/
+  arguments_nonzero : ∀ cv ∈ logs, CPoly.toPoly cv.2 ≠ 0
+
 /-- Prop-free residue-logarithm operation driven by a selected residue source. -/
 class CResidueLogPart (P : Type u → Type u) [CPoly P] [CPolyEngine P]
     (α : Type u) [CField α] [CDiffField α] [CResidueSource P α] where
@@ -48,9 +57,8 @@ class CompleteCResidueLogPart [CPolyEngine P] [CResidueSource P α]
   complete : LawfulCResidueSource P α → ∀ (Dt hNum Dstar : P α),
     CPoly.toPoly Dstar ≠ 0 → Squarefree (CPoly.toPoly Dstar) →
     (CPoly.toPoly hNum).degree < (CPoly.toPoly Dstar).degree →
-    (∃ logs : List (α × P α), LawfulResidueLogPart Dt hNum Dstar logs ∧
-      (∀ cv ∈ logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
-      (∀ cv ∈ logs, CPoly.toPoly cv.2 ≠ 0)) →
-    ∃ logs, CResidueLogPart.compute Dt hNum Dstar = some logs
+    (∃ logs : List (α × P α), GenuineResidueLogPart Dt hNum Dstar logs) →
+    ∃ logs, CResidueLogPart.compute Dt hNum Dstar = some logs ∧
+      GenuineResidueLogPart Dt hNum Dstar logs
 
 end DeepWiki.SymbolicIntegration

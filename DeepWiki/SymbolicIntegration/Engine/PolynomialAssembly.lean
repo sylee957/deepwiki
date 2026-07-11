@@ -61,6 +61,68 @@ def assembleOneLevelWithPolynomial (R : CPolynomialReduction P α) (kind : Polyn
   let normal ← C.postprocessNormal Dt before
   pure (combineSN (polynomialSpecialNumerator reduced.antiderivative snum sden) sden normal)
 
+/-- Explicit stage-decomposed hypotheses under which polynomial-aware one-level assembly is complete. -/
+structure PolynomialAssemblyWitness (R : CPolynomialReduction P α)
+    (kind : PolynomialReductionKind) (Dt a d : P α)
+    [CCanonicalRepresentation P α] [CHermiteReduction P α] : Prop where
+  /-- The requested polynomial normal form exists. -/
+  polynomial_reduction_exists :
+    ∃ reduced, IsPolynomialReduction kind Dt (canonicalResult Dt a d).polynomial reduced
+  /-- Every reduction selected by the executable stage leaves a solvable monomial special part. -/
+  special_antiderivative : ∀ (fuel : ℕ) (reduced : PolynomialReductionResult P α),
+    R.reduce kind Dt fuel (canonicalResult Dt a d).polynomial = some reduced →
+      ∃ (snum sden : P α),
+        CPoly.toPoly sden ≠ 0 ∧
+        towerFractionFieldDerivP Dt (fieldFracP snum sden) =
+          fieldFracP reduced.remainder CPoly.one +
+            fieldFracP (canonicalResult Dt a d).specialNum
+              (canonicalResult Dt a d).specialDen
+  /-- The Hermite remainder of the normal branch has a genuine logarithmic antiderivative. -/
+  normal_logarithms : ∃ logs : List (α × P α),
+    GenuineResidueLogPart Dt
+      (hermiteResult Dt (canonicalResult Dt a d).normalNum
+        (canonicalResult Dt a d).normalDen).remainderNum
+      (hermiteResult Dt (canonicalResult Dt a d).normalNum
+        (canonicalResult Dt a d).normalDen).remainderDen logs
+
+/-- Complete stage contracts compose into eventual success of polynomial-aware one-level assembly. -/
+theorem assembleOneLevelWithPolynomial_complete (R : CPolynomialReduction P α)
+    [LawfulCPolynomialReduction R] [CompleteCPolynomialReduction R]
+    (kind : PolynomialReductionKind) (C : CMonomialCase P α)
+    [LawfulCMonomialCase C] [CompleteCMonomialCase C]
+    [CCanonicalRepresentation P α]
+    [LawfulCCanonicalRepresentation (P := P) (α := α)]
+    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
+    [CResidueSource P α] [CResidueLogPart P α]
+    [LawfulCResidueLogPart (P := P) (α := α)]
+    [CompleteCResidueLogPart (P := P) (α := α)]
+    (hsource : LawfulCResidueSource P α) (Dt a d : P α)
+    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
+    (hwitness : PolynomialAssemblyWitness R kind Dt a d) :
+    ∃ fuel out, assembleOneLevelWithPolynomial R kind fuel C Dt a d = some out := by
+  obtain ⟨fuel, reduced, hreduce⟩ := CompleteCPolynomialReduction.relative_complete
+    (C := R) kind Dt (canonicalResult Dt a d).polynomial
+      hwitness.polynomial_reduction_exists
+  obtain ⟨snum, sden, hsden, hspecialSemantic⟩ :=
+    hwitness.special_antiderivative fuel reduced hreduce
+  obtain ⟨special, hspecial⟩ := CompleteCMonomialCase.special_complete (C := C) Dt
+    reduced.remainder (canonicalResult Dt a d).specialNum
+    (canonicalResult Dt a d).specialDen snum sden hsden hspecialSemantic
+  obtain ⟨snum', sden'⟩ := special
+  have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
+  have hnormalForm := LawfulCCanonicalRepresentation.normal_isNormalSqfree Dt a d hd
+  have hnormalProper := LawfulCCanonicalRepresentation.normal_proper Dt a d hd
+  obtain ⟨before, hnormal, hbefore⟩ := reduceNormal_complete hsource Dt
+    (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen
+    hnormalDen hnormalForm hnormalProper hdegree hwitness.normal_logarithms
+  obtain ⟨normal, hpost⟩ := CompleteCMonomialCase.postprocess_complete (C := C) Dt
+    (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before hbefore
+  refine ⟨fuel, combineSN (polynomialSpecialNumerator reduced.antiderivative snum' sden')
+    sden' normal, ?_⟩
+  simp only [assembleOneLevelWithPolynomial, hreduce, hspecial, hnormal, hpost, Option.bind_eq_bind,
+    Option.bind_some]
+  rfl
+
 set_option maxHeartbeats 800000 in
 /-- A successful polynomial-aware one-level assembly is an integral result of its input. -/
 theorem assembleOneLevelWithPolynomial_sound (R : CPolynomialReduction P α)
