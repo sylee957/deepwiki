@@ -51,11 +51,11 @@ p.305, which may need to be larger to absorb cancellations — the heuristic's f
 5. solve it (linear algebra). No solution ⟹ `"failed"` (the guess was too small, *or* `f` has no
    elementary integral — the method cannot tell which). A solution ⟹ `∫f = v + Σ αᵢ log sᵢ + Σ βᵢ log pᵢ`.
 
-## What this file delivers (computable over the base monomial field `k = ℚ`, `native_decide`-validated)
+## What this file delivers (computable over the base monomial field `k = ℚ`, `ccompute`-validated)
 
 We realize `ParallelIntegrate` over the **base monomial case** `k = ℚ`, `t` a single monomial with
 derivative `Dt ∈ ℚ[t]` and the derivation `D = Dt·d/dt` (`Const(k) = ℚ`, `κ_D = 0`) — the worked
-Examples 10.3.1/10.3.3 setting and the field `ℚ(t)` the engine `native_decide`s over (`DensePoly ℚ`,
+Examples 10.3.1/10.3.3 setting and the field `ℚ(t)` the engine computes over (`DensePoly ℚ`,
 exactly as §7.1 in `ComputableParametric`). The transcendental monomials reachable this way include
 `t = exp(x)` (`Dt = t`), `t = tan(x)` (`Dt = 1 + t²`) and `t = x` (`Dt = 1`, ordinary rational
 integration). The candidate **log arguments** are taken to be the **squarefree factors** of `d` (the
@@ -81,7 +81,7 @@ signature stub) needs the special-polynomial list `S^irr_{K:F}` and irreducible 
 (Theorems 10.2.1/10.2.2, Examples 10.3.2/10.3.4) — the documented continuation; the §10.1 multivariate
 `SplitFactor`/`SplitSquarefreeFactor` and the §10.4 simple-differential-field exponent bounds
 (Def 10.4.1/Thm 10.4.1) are likewise out of scope here. Abstract correctness (that a returned ansatz
-solution satisfies (10.1)) is *not* proved; instead every landed integral is `native_decide`-validated on
+solution satisfies (10.1)) is *not* proved; instead every landed integral is `ccompute`-validated on
 its **cleared antiderivative identity** `D(∫f) = f` over `ℚ(t)`. No `sorry`. -/
 
 namespace DeepWiki.SymbolicIntegration
@@ -103,7 +103,7 @@ example :
     CPoly.cdeg (cDerivMonomialQ
       (CPoly.SparsePoly.ofList [(1, 1)] : CPoly.SparsePoly ℚ)
       (CPoly.SparsePoly.ofList [(0, 1), (1, 2), (2, 3)])) = 2 := by
-  native_decide
+  ccompute
 
 namespace DensePoly
 
@@ -166,6 +166,30 @@ def cParallelSystemQ (Dt a d : DensePoly ℚ) :
     (List.range nrows).map (fun i => allPolys.map (fun p => CPoly.coeff p i))
   let rhs : List ℚ := CPoly.coeffs target nrows
   (rows, rhs, nU, m)
+
+/-- Every equation row of `cParallelSystemQ` has one entry for each ansatz unknown. -/
+theorem cParallelSystemQ_row_length (Dt a d : DensePoly ℚ) :
+    ∀ row ∈ (cParallelSystemQ Dt a d).1,
+      row.length = (cParallelSystemQ Dt a d).2.2.1 + (cParallelSystemQ Dt a d).2.2.2 := by
+  simp [cParallelSystemQ]
+
+/-- `cParallelSystemQ` has one right-hand-side entry for every equation row. -/
+theorem cParallelSystemQ_rows_length_eq_rhs (Dt a d : DensePoly ℚ) :
+    (cParallelSystemQ Dt a d).1.length = (cParallelSystemQ Dt a d).2.1.length := by
+  simp [cParallelSystemQ]
+
+/-- A returned particular solution of `cParallelSystemQ` satisfies every ansatz equation. -/
+theorem cParallelSystemQ_solveAny_sound [LawfulCLinearSolve ℚ]
+    (Dt a d : DensePoly ℚ) (sol : List ℚ)
+    (hsol : CLinearSolve.solveAny (cParallelSystemQ Dt a d).1 (cParallelSystemQ Dt a d).2.1
+      ((cParallelSystemQ Dt a d).2.2.1 + (cParallelSystemQ Dt a d).2.2.2) = some sol) :
+    ∀ i, i < (cParallelSystemQ Dt a d).1.length →
+      linearSolveRow (cParallelSystemQ Dt a d).1 (cParallelSystemQ Dt a d).2.1 sol i := by
+  apply LawfulCLinearSolve.solveAny_sound (cParallelSystemQ Dt a d).1
+    (cParallelSystemQ Dt a d).2.1
+    ((cParallelSystemQ Dt a d).2.2.1 + (cParallelSystemQ Dt a d).2.2.2) sol ?_ ?_ hsol
+  · exact cParallelSystemQ_row_length Dt a d
+  · exact cParallelSystemQ_rows_length_eq_rhs Dt a d
 
 /-- **Parallel (Risch–Norman) integration over `ℚ(t)`** `cParallelIntegrate fuel Dt a d` (Bronstein
 §10.3, the `ParallelIntegrate(f, D)` box, book p.309), `k = ℚ`, the monomial `t` with derivative
@@ -242,7 +266,7 @@ example :
       (CPoly.SparsePoly.ofList [(0, 1)])
       (CPoly.SparsePoly.ofList [(0, 1)])
       ((CPoly.SparsePoly.ofList [(1, 1)], CPoly.SparsePoly.ofList [(0, 1)]), []) = true := by
-  native_decide
+  ccompute
 
 /-! ### Represented rational-function towers — documented signature stub
 
@@ -296,7 +320,7 @@ example :
       (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1)] : CPoly.SparsePoly (DenseFrac ℚ))
       (CPoly.SparsePoly.ofList [(1, CFrac.ofScalar 2)])
       (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1), (2, CFrac.ofScalar 1)])).isSome = true := by
-  native_decide
+  ccompute
 
 /-- The parallel tower wrapper also executes with sparse inner fractions and sparse outer polynomials. -/
 example :
@@ -304,11 +328,11 @@ example :
       (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1)] : CPoly.SparsePoly (SparseFrac ℚ))
       (CPoly.SparsePoly.ofList [(1, CFrac.ofScalar 2)])
       (CPoly.SparsePoly.ofList [(0, CFrac.ofScalar 1), (2, CFrac.ofScalar 1)])).isSome = true := by
-  native_decide
+  ccompute
 
 end DensePoly
 
-/-! ### Examples — `native_decide`, the cleared antiderivative identity `D(∫f) = f`
+/-! ### Examples — executable cleared antiderivative identities
 
 Each example feeds an integrand `f = a/d` over `ℚ(t)` with a known elementary integral to
 `cParallelIntegrate`, then verifies the returned `∫f = b/s + Σ cⱼ log pⱼ` actually satisfies
@@ -325,7 +349,7 @@ def parallelExampleLogA : DensePoly ℚ := [0, 2]
 /-- The denominator `t²+1`. -/
 def parallelExampleLogD : DensePoly ℚ := [1, 0, 1]
 
-/-- **Pure-log parallel integration computes** (`native_decide`, Bronstein §10.3, book p.309). For
+/-- **Pure-log parallel integration computes** (`ccompute`, Bronstein §10.3, book p.309). For
 `∫ 2t/(t²+1) dt` over `ℚ(t)` (`D = d/dt`), `cParallelIntegrate` returns `some res` whose reconstructed
 antiderivative `b/s + Σ cⱼ log pⱼ` is verified to **actually satisfy** `D(res) = 2t/(t²+1)` by the
 cleared identity `cParallelCheckQ` (`num·d − a·den = 0`). The Risch–Norman ansatz (squarefree-factor log
@@ -333,7 +357,7 @@ candidates + linear solve) recovers `log(t²+1)`. -/
 theorem parallelIntegrate_log_example :
     (match cParallelIntegrate [1] parallelExampleLogA parallelExampleLogD with
       | some res => cParallelCheckQ [1] parallelExampleLogA parallelExampleLogD res
-      | none => false) = true := by native_decide
+      | none => false) = true := by ccompute
 
 /-! #### (2) Transcendental, `t = exp x` (`Dt = t = [0,1]`): `∫ t/(t+1)² dx = −1/(t+1)`.
 A genuine element of `ℚ(exp x)`: `D(−1/(t+1)) = Dt·1/(t+1)² = t/(t+1)²`. The squarefree factor `t+1` has
@@ -346,7 +370,7 @@ def parallelExampleExpD : DensePoly ℚ := [1, 2, 1]
 /-- The exponential monomial derivative `Dt = t` (`t = exp x`, `Dexp = exp`). -/
 def parallelExampleExpDt : DensePoly ℚ := [0, 1]
 
-/-- **Transcendental parallel integration computes** (`native_decide`, Bronstein §10.3, book p.309). For
+/-- **Transcendental parallel integration computes** (`ccompute`, Bronstein §10.3, book p.309). For
 `∫ exp(x)/(exp(x)+1)² dx` — `f = t/(t+1)²` over the genuine transcendental field `ℚ(exp x)` with the
 monomial derivation `Dt = t` — `cParallelIntegrate` returns `some res` (the rational part `−1/(t+1)`),
 verified to **actually satisfy** `D(res) = t/(t+1)²` by `cParallelCheckQ`. This is the §10.3 deliverable:
@@ -355,7 +379,7 @@ extension (`Dt ≠ 1`), exactly the "parallel" virtue of handling the generator 
 theorem parallelIntegrate_exp_example :
     (match cParallelIntegrate parallelExampleExpDt parallelExampleExpA parallelExampleExpD with
       | some res => cParallelCheckQ parallelExampleExpDt parallelExampleExpA parallelExampleExpD res
-      | none => false) = true := by native_decide
+      | none => false) = true := by ccompute
 
 /-! #### (3) Transcendental mixed rational + log, `t = exp x` (`Dt = t`):
 `∫ (t²+2t)/(t+1)² dx = −1/(t+1) + log(t+1)`. The antiderivative carries **both** a rational part and a
@@ -365,7 +389,7 @@ log simultaneously — the full Risch–Norman shape. `D(−1/(t+1) + log(t+1)) 
 /-- Example: `f = (t²+2t)/(t+1)²`, `t = exp x` (`Dt = [0,1]`), antiderivative `−1/(t+1) + log(t+1)`. -/
 def parallelExampleMixA : DensePoly ℚ := [0, 2, 1]
 
-/-- **Mixed rational + log parallel integration computes** (`native_decide`, Bronstein §10.3, book
+/-- **Mixed rational + log parallel integration computes** (`ccompute`, Bronstein §10.3, book
 p.309). For `∫ (exp(x)²+2exp(x))/(exp(x)+1)² dx` — `f = (t²+2t)/(t+1)²` over `ℚ(exp x)`, `Dt = t` — the
 single linear solve of `cParallelIntegrate` produces **both** the rational part `−1/(t+1)` and the log
 `log(t+1)` at once, verified to **actually satisfy** `D(res) = (t²+2t)/(t+1)²` by `cParallelCheckQ`. This
@@ -374,7 +398,7 @@ step — the chapter's headline. -/
 theorem parallelIntegrate_mixed_example :
     (match cParallelIntegrate parallelExampleExpDt parallelExampleMixA parallelExampleExpD with
       | some res => cParallelCheckQ parallelExampleExpDt parallelExampleMixA parallelExampleExpD res
-      | none => false) = true := by native_decide
+      | none => false) = true := by ccompute
 
 /-! #### (4) The heuristic *fails* — `∫ 1/(exp(x)+1) dx` is not elementary in the ansatz.
 With `t = exp x`, `Dt = t`, `f = 1/(t+1)`: the only candidate log is `t+1` with `Dp/p = t/(t+1)`, which
@@ -388,7 +412,7 @@ def parallelExampleFailA : DensePoly ℚ := [1]
 /-- The denominator `exp x + 1 = t + 1`. -/
 def parallelExampleFailD : DensePoly ℚ := [1, 1]
 
-/-- **The parallel heuristic fails on a non-(ansatz-)elementary integrand** (`native_decide`, Bronstein
+/-- **The parallel heuristic fails on a non-(ansatz-)elementary integrand** (`ccompute`, Bronstein
 §10.3, book p.298). `∫ 1/(exp(x)+1) dx` has antiderivative `x − log(exp x+1)`, which is **not** in the
 candidate space `b/(t+1) + c·log(t+1)` over `ℚ(exp x)` (it needs the generator `x = ∫1` outside the
 field). `cParallelIntegrate` returns `none` — the linear system is inconsistent. This is the chapter's
@@ -396,6 +420,6 @@ key caveat: the method is *heuristic*, and `none` means "no elementary integral 
 proof of non-elementarity. -/
 theorem parallelIntegrate_failure_example :
     cParallelIntegrate parallelExampleExpDt parallelExampleFailA parallelExampleFailD = none := by
-  native_decide
+  ccompute
 
 end DeepWiki.SymbolicIntegration
