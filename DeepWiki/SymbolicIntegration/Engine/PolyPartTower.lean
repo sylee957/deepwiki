@@ -15,9 +15,9 @@ universe u
 
 The reduction kernels below are intentionally fuel-bounded.  A caller must therefore not treat a
 raw pair as a theorem.  `CPolynomialReduction` is the Prop-free operation boundary; its companion
-contract records the equation, normal-form bound, and eventual-success property.  The executable
-`towerPolynomialReduction` realizes the operation by checking the equation before exposing a
-result. -/
+contract records the reconstruction equation, while normal-form completeness is a separate capability.
+The executable `towerPolynomialReduction` realizes the operation by checking the equation before exposing
+a result. -/
 
 /-- The normal form requested from a polynomial-reduction stage. -/
 inductive PolynomialReductionKind where
@@ -55,12 +55,17 @@ def IsPolynomialReduction (kind : PolynomialReductionKind) (Dt p : P α)
       | .nonlinear => (CPoly.toPoly out.remainder).natDegree < (CPoly.toPoly Dt).natDegree
       | .primitive => (CPoly.toPoly out.remainder).natDegree = 0
 
-/-- Soundness and relative-completeness contract for a polynomial-reduction operation. -/
+/-- Denotation-level soundness contract for a polynomial-reduction operation. -/
 class LawfulCPolynomialReduction (C : CPolynomialReduction P α) : Prop where
-  /-- Every successful reduction reconstructs its input and meets its selected normal-form bound. -/
+  /-- Every successful reduction reconstructs its input. -/
   sound : ∀ (kind : PolynomialReductionKind) (Dt : P α) (fuel : ℕ) (p : P α)
       (out : PolynomialReductionResult P α),
-    C.reduce kind Dt fuel p = some out → IsPolynomialReduction kind Dt p out
+    C.reduce kind Dt fuel p = some out →
+      CPoly.toPoly p = Differential.implicitDeriv (CPoly.toPoly Dt)
+          (CPoly.toPoly out.antiderivative) + CPoly.toPoly out.remainder
+
+/-- Relative completeness contract for a polynomial-reduction operation. -/
+class CompleteCPolynomialReduction (C : CPolynomialReduction P α) : Prop where
   /-- If the requested normal form exists, some finite fuel budget returns one. -/
   relative_complete : ∀ (kind : PolynomialReductionKind) (Dt p : P α),
     (∃ out, IsPolynomialReduction kind Dt p out) →
@@ -88,7 +93,7 @@ theorem polynomialReductionCheck_sound (Dt p : P α) (out : PolynomialReductionR
 
 namespace DensePoly
 
-variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,u} P]
   {α : Type u} [CField α] [CDiffField α]
 
 /-! ### The polynomial reduction
@@ -159,6 +164,21 @@ def towerPolynomialReduction : CPolynomialReduction P α where
         let raw := cPrimitivePolyIntegrate Dt fuel p
         ⟨raw.1, raw.2⟩
     if polynomialReductionCheck Dt p out then some out else none
+
+variable [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
+
+/-- The checked tower polynomial reduction satisfies the reconstruction contract. -/
+instance instLawfulCPolynomialReductionTower :
+    LawfulCPolynomialReduction (towerPolynomialReduction (P := P) (α := α)) where
+  sound kind Dt fuel p out hrun := by
+    cases kind <;> simp only [towerPolynomialReduction] at hrun
+    all_goals
+      split at hrun
+      · rename_i hcheck
+        have hout := Option.some.inj hrun
+        subst out
+        exact polynomialReductionCheck_sound Dt p _ hcheck
+      · contradiction
 
 end DensePoly
 
