@@ -48,38 +48,38 @@ namespace DeepWiki.Si
 /-! ## §9.3 The Risch Structure Theorem — the new-monomial decision, computable + validated -/
 
 /-- **The new-logarithm structure decision** (§9.3, Corollary 9.3.1(i), eq. 9.8, book p.284/285): the
-computable `cLogIsNewMonomial fuel logDerivs w` over the logarithmic tower `C(x)(log u₁,…,log uₘ)`,
+computable `CFrac.logIsNewMonomial logDerivs w` over the logarithmic tower `C(x)(log u₁,…,log uₘ)`,
 `k = ℚ(x)`, `Const = ℚ`. Given the existing logarithmic derivatives `[Du₁/u₁,…,Duₘ/uₘ] ∈ ℚ(x)` and a
 candidate `log(u)`'s `w = Du/u`, returns `true` iff `log(u)` is a **new transcendental monomial** — iff
 `Du/u ∉ span_ℚ{Duᵢ/uᵢ}` (no `rᵢ ∈ ℚ` with `Du/u = Σ rᵢ Duᵢ/uᵢ`, eq. 9.8 with `E` empty), decided by the
 §7.1 ℚ-nullspace solver `CLinearSolve.nullspaceBasis`. Computable + `ccompute`-validated; abstract correctness
 (Thm 9.3.1) deferred. -/
-def alg_9_3_logIsNewMonomial := @cLogIsNewMonomial
+def alg_9_3_logIsNewMonomial := @CFrac.logIsNewMonomial
 
 /-- **The new-exponential structure decision** (§9.3, Corollary 9.3.1(ii), eq. 9.9, book p.284/285): the
-shared computable `cLogIsNewMonomial logDerivs Db` test over `k = ℚ(x)`. Given a candidate `exp(b)`'s
+shared computable `CFrac.logIsNewMonomial logDerivs Db` test over `k = ℚ(x)`. Given a candidate `exp(b)`'s
 derivative `Db ∈ ℚ(x)` and the existing logarithmic derivatives, returns `true` iff `exp(b)` is a **new
 transcendental monomial** — iff `Db` is not the logarithmic derivative of a `K`-radical, i.e. (at the
 base, `E`-part empty) `Db ∉ span_ℚ{Duᵢ/uᵢ}` — the *same* ℚ-linear-dependence engine as the logarithm
 case, applied to `Db`. Computable + `ccompute`-validated; abstract correctness deferred. -/
-def alg_9_3_expIsNewMonomial := @cLogIsNewMonomial
+def alg_9_3_expIsNewMonomial := @CFrac.logIsNewMonomial
 
 /-- **The ℚ-relation coefficients** (§9.3, the explicit `rᵢ ∈ ℚ` of eq. 9.8): the computable
-`cLogRelationCoeffs fuel logDerivs w`, returning `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` when a
+`CFrac.logRelationCoeffs logDerivs w`, returning `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` when a
 single relation pins them (the kernel is one-dimensional with nonzero `w`-coordinate), else `none` —
 e.g. `[2]` for `log(x²) = 2 log(x)`. Computable + `ccompute`-validated; abstract correctness
 deferred. -/
-def alg_9_3_logRelationCoeffs := @cLogRelationCoeffs
+def alg_9_3_logRelationCoeffs := @CFrac.logRelationCoeffs
 
 /-- **Example (§9.3, Corollary 9.3.1(i), book p.284/285)**, the logarithmic-monomial decision: over the
-tower `C(x)(log x)` (logarithmic derivative `D(x)/x = 1/x`), `cLogIsNewMonomial` returns `false` for the
+tower `C(x)(log x)` (logarithmic derivative `D(x)/x = 1/x`), `CFrac.logIsNewMonomial` returns `false` for the
 candidate `log(x²)` (`w = 2/x ∈ span_ℚ{1/x}`, the relation `log(x²) = 2 log(x)`) with detected
-`cLogRelationCoeffs = some [2]` verified to **actually satisfy** `D(x²)/x² = 2·D(x)/x` over ℚ(x), and
+`CFrac.logRelationCoeffs = some [2]` verified to **actually satisfy** `D(x²)/x² = 2·D(x)/x` over ℚ(x), and
 `true` for `log(x+1)` (`1/(x+1) ∉ span_ℚ{1/x}`, a new transcendental monomial), `ccompute`. -/
 abbrev ex_9_3_1_log := @structureTheorem_example
 
 /-- **Example (§9.3, Corollary 9.3.1(ii), book p.284/285)**, the exponential analogue: over `C(x)(log x)`,
-the shared `cLogIsNewMonomial` relation test returns `false` for a candidate `exp(b)` with
+the shared `CFrac.logIsNewMonomial` relation test returns `false` for a candidate `exp(b)` with
 `Db = 2/x ∈ span_ℚ{1/x}` (so `Db` is
 the logarithmic derivative of the radical `x²`, `exp(b)` already in the field), relation `[2]` verified,
 and `true` for `Db = 1/(x+1) ∉ span_ℚ{1/x}` (a new transcendental exponential monomial), `ccompute`.
@@ -88,7 +88,7 @@ abbrev ex_9_3_1_exp := @structureTheorem_example
 
 /-- **Example (§9.3, Corollary 9.3.1, book p.284/285)**, the multi-monomial decision: over the genuine
 2-element logarithmic tower `C(x)(log x, log(x+1))` (the ℚ-independent `1/x` and `1/(x+1)`),
-`cLogIsNewMonomial` returns `false` for `log(x²+x) = log(x(x+1))` (`(2x+1)/(x²+x) = 1/x + 1/(x+1)`,
+`CFrac.logIsNewMonomial` returns `false` for `log(x²+x) = log(x(x+1))` (`(2x+1)/(x²+x) = 1/x + 1/(x+1)`,
 relation `[1, 1]` verified) and `true` for each generator relative to the other (the tower is a genuine
 transcendence-degree-2 extension), `ccompute` — confirming the ℚ-linear-relation engine scales past
 the single-generator base. -/

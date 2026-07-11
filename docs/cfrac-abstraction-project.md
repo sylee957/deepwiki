@@ -89,7 +89,10 @@ runs the same fraction algorithm.
    The parametric Risch-DE constraint builder, kernel solve, and limited-integration wrapper now live in
    the `CPoly` namespace: gcd/lcm and quotient/remainder select `CPolyGcd` and `CPolyEuclidean`, while
    homogeneous solving selects `CLinearSolve.nullspaceBasis`. Dense consumers and a sparse execution
-   witness share the same definitions.
+   witness share the same definitions. The logarithmic structure decision is generic over `CFrac F P` as
+   well: denominator clearing selects the gcd and Euclidean capabilities, relation detection selects the
+   linear solver, and dense and sparse fractions execute the same `CFrac.logIsNewMonomial` and
+   `CFrac.logRelationCoeffs` definitions.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
@@ -104,9 +107,11 @@ runs the same fraction algorithm.
 Land the phases in small gate-green commits. Each new representation-independent executable path gets a
 `SparseFrac` or `SparsePoly` consumer or correctness witness. Computable declarations do not contain
 ad hoc `native_decide` proof scripts or executable showcase examples. Concrete evidence goals use the local
-`ccompute` tactic, which centralizes the policy: definitional reduction first, then compiled decision for
-opaque executable definitions, with kernel `decide` as the final fallback. Constructor APIs still require
-explicit evidence or expose an `Option`-returning checked boundary. A generic
+`ccompute` tactic, which centralizes the policy: definitional reduction first, then kernel `decide`,
+with compiled decision only when opaque executable definitions block kernel reduction.
+Constructor APIs still require explicit evidence or expose an `Option`-returning checked boundary;
+concrete fraction literals use the intent-specific `cfrac_nonzero` tactic rather than a default proof.
+A generic
 wrapper around a concrete dense algorithm does
 not count as migration: the algorithm itself must be supplied through an abstract capability or remain
 explicitly dense at the call site.

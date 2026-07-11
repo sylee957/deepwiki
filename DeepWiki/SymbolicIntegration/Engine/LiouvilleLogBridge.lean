@@ -170,9 +170,9 @@ theorem isLiouville_of_logDeriv_ne_zero [CharZero K] [IsAlgClosed K] (u : RatFun
 
 end RationalBase
 
-/-! ## The empty-base semantics of `cLogIsNewMonomial`
+/-! ## The empty-base semantics of `CFrac.logIsNewMonomial`
 
-With `logDerivs = []`, `cLogIsNewMonomial` decides only `w ≠ 0` — necessary but not sufficient for
+With `logDerivs = []`, `CFrac.logIsNewMonomial` decides only `w ≠ 0` — necessary but not sufficient for
 `NondegenerateLog`. -/
 
 section ComputableEmptyBase
@@ -224,18 +224,18 @@ private lemma nullspace_single_col (M : List (List ℚ)) :
   · rw [h0]; simp
   · simp only [Bool.not_eq_true] at h0; rw [h0]; simp
 
-/-- `cLogIsNewMonomial [] w = true` iff the cleared coefficient column `(cLinearDepData [] w).1`
+/-- `CFrac.logIsNewMonomial [] w = true` iff the cleared coefficient column `(CFrac.linearDepData [] w).1`
 has a nonzero entry — the empty-base test decides `w ≠ 0`. -/
-theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : DenseFrac ℚ) :
-    DensePoly.cLogIsNewMonomial [] w =
-      ((DensePoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
-  have hbridge : DensePoly.cLogIsNewMonomial [] w =
-      !((CLinearSolve.nullspaceBasis (DensePoly.cLinearDepData [] w).1
-          ((DensePoly.cLinearDepData [] w).2 + 1)).any
-        (fun rel => rel.getD (DensePoly.cLinearDepData [] w).2 0 ≠ 0)) := rfl
-  have h2 : (DensePoly.cLinearDepData [] w).2 = 0 := rfl
+theorem logIsNewMonomial_nil_eq_col_nonzero (w : DenseFrac ℚ) :
+    CFrac.logIsNewMonomial [] w =
+      ((CFrac.linearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
+  have hbridge : CFrac.logIsNewMonomial [] w =
+      !((CLinearSolve.nullspaceBasis (CFrac.linearDepData [] w).1
+          ((CFrac.linearDepData [] w).2 + 1)).any
+        (fun rel => rel.getD (CFrac.linearDepData [] w).2 0 ≠ 0)) := rfl
+  have h2 : (CFrac.linearDepData [] w).2 = 0 := rfl
   rw [hbridge, h2, show (0 : ℕ) + 1 = 1 from rfl]
-  set M := (DensePoly.cLinearDepData [] w).1 with hM
+  set M := (CFrac.linearDepData [] w).1 with hM
   rw [CLinearSolve.nullspaceBasis_rat_eq]
   rw [nullspace_single_col M, crref_single_col_pivots M]
   cases hfind : M.find? (fun r => (r.getD 0 0) ≠ 0) with
@@ -263,9 +263,9 @@ example (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv u) :
 
 -- The empty-base computable test decides only "cleared column nonzero" (≈ `w ≠ 0`).
 example (w : DenseFrac ℚ) :
-    DensePoly.cLogIsNewMonomial [] w =
-      ((DensePoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
-  cLogIsNewMonomial_nil_eq_col_nonzero w
+    CFrac.logIsNewMonomial [] w =
+      ((CFrac.linearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
+  logIsNewMonomial_nil_eq_col_nonzero w
 
 end Restatements
 

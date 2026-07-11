@@ -12,50 +12,56 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
-namespace DensePoly
+namespace CFrac
 
-/-! ### The ℚ-linear-dependence test among rational-function logarithmic derivatives -/
+/-! ### The ℚ-linear-dependence test among represented logarithmic derivatives -/
 
-/-- `cClearedNumCoeffs d w`: the dense `ℚ`-coefficient list of `w·d ∈ ℚ[x]` (well-defined because `d`
-is a common multiple of `w`'s denominator), via `CPoly.normalizeFracPair` then `numerator·(d/denom)`. -/
-def cClearedNumCoeffs (d : DensePoly ℚ) (w : DenseFrac ℚ) : DensePoly ℚ :=
-  let wn := CPoly.normalizeFracPair w.num w.den -- `w` in lowest terms `(a, b)`
+/-- File-local cleared numerator representing `w * d`. -/
+private def clearedNumCoeffs
+    {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P]
+    (d : P ℚ) (w : F ℚ) : P ℚ :=
+  let wn := CPoly.normalizeFracPair (CFrac.num w) (CFrac.den w)
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
   CPolyEngine.mul wn.1 (CPolyEuclidean.div d wn.2)
 
-/-- `cLinearDepData ws w = (M, m)`: clear `w₁,…,wₘ,w` to a common denominator and assemble the
+/-- `linearDepData ws w = (M, m)`: clear `w₁,…,wₘ,w` to a common denominator and assemble the
 coefficient matrix `M` (`w` last) whose nullspace vectors are the ℚ-relations `Σ rⱼ wⱼ + r·w = 0`;
 `m = ws.length`. -/
-def cLinearDepData (ws : List (DenseFrac ℚ)) (w : DenseFrac ℚ) :
+def linearDepData
+    {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P]
+    (ws : List (F ℚ)) (w : F ℚ) :
     List (List ℚ) × ℕ :=
   let all := ws ++ [w]
   -- common denominator `d = lcm(denom wⱼ)` over the lowest-terms forms.
-  let dens := all.map (fun u => (CPoly.normalizeFracPair u.num u.den).2)
-  let d := dens.foldl (fun acc den => CPoly.lcm acc den) [(1 : ℚ)]
-  let cols : List (DensePoly ℚ) := all.map (fun u => cClearedNumCoeffs d u)
-  let nrows := (cols.map cdeg).foldl Nat.max 0 + 1
+  let dens := all.map (fun u => (CPoly.normalizeFracPair (CFrac.num u) (CFrac.den u)).2)
+  let d := dens.foldl (fun acc den => CPoly.lcm acc den) (CPoly.one : P ℚ)
+  let cols : List (P ℚ) := all.map (fun u => clearedNumCoeffs d u)
+  let nrows := (cols.map CPolyEngine.cdeg).foldl Nat.max 0 + 1
   let M : List (List ℚ) :=
     (List.range nrows).map (fun i =>
-      cols.map (fun c => (cnorm c).getD i 0))
+      cols.map (fun c => CPoly.coeff c i))
   (M, ws.length)
 
-/-- `cLogIsNewMonomial logDerivs w = true` iff `log(u)` with logarithmic derivative `w = Du/u` is a
+/-- `logIsNewMonomial logDerivs w = true` iff `log(u)` with logarithmic derivative `w = Du/u` is a
 new transcendental monomial, i.e. no `rᵢ ∈ ℚ` give `Du/u = Σ rᵢ (Duᵢ/uᵢ)`. -/
-def cLogIsNewMonomial (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) : Bool :=
-  let (M, m) := cLinearDepData logDerivs w
+def logIsNewMonomial
+    {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P] [CLinearSolve ℚ]
+    (logDerivs : List (F ℚ)) (w : F ℚ) : Bool :=
+  let (M, m) := linearDepData logDerivs w
   let basis := CLinearSolve.nullspaceBasis M (m + 1)
   -- `log(u)` is a *new* monomial iff NO nullspace relation involves the `w`-column (index `m`).
   !(basis.any (fun rel => rel.getD m 0 ≠ 0))
 
-/-- `cLogRelationExists logDerivs w = !cLogIsNewMonomial …`: `true` iff `w = Du/u` is a ℚ-linear
-combination of the existing logarithmic derivatives (`log(u)` is dependent). -/
-def cLogRelationExists (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) : Bool :=
-  !cLogIsNewMonomial logDerivs w
-
-/-- `cLogRelationCoeffs logDerivs w`: when a relation exists with nonzero `w`-coordinate, returns
+/-- `logRelationCoeffs logDerivs w`: when a relation exists with nonzero `w`-coordinate, returns
 `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` (`w`-column normalized to `−1`); else `none`. -/
-def cLogRelationCoeffs (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) : Option (List ℚ) :=
-  let (M, m) := cLinearDepData logDerivs w
+def logRelationCoeffs
+    {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P] [CLinearSolve ℚ]
+    (logDerivs : List (F ℚ)) (w : F ℚ) : Option (List ℚ) :=
+  let (M, m) := linearDepData logDerivs w
   let basis := CLinearSolve.nullspaceBasis M (m + 1)
   match basis.find? (fun rel => rel.getD m 0 ≠ 0) with
   | none => none
@@ -64,7 +70,18 @@ def cLogRelationCoeffs (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) : 
     -- `Du/u = Σ (−rⱼ/r) (Duⱼ/uⱼ)`: solve `r·w = −Σ rⱼ wⱼ` for `w`.
     some ((List.range m).map (fun j => - (rel.getD j 0) / wc))
 
-end DensePoly
+end CFrac
+
+/-- Sparse fractions use the same logarithmic-dependence decision and recover `2/x = 2 · (1/x)`. -/
+theorem sparse_logRelation_example :
+    let x := CPoly.SparsePoly.ofList [(1, (1 : ℚ))]
+    let one := CPoly.SparsePoly.ofList [(0, (1 : ℚ))]
+    let two := CPoly.SparsePoly.ofList [(0, (2 : ℚ))]
+    let oneOverX : SparseFrac ℚ := CFrac.ofFraction one x (by cfrac_nonzero)
+    let twoOverX : SparseFrac ℚ := CFrac.ofFraction two x (by cfrac_nonzero)
+    CFrac.logIsNewMonomial [oneOverX] twoOverX = false ∧
+      CFrac.logRelationCoeffs [oneOverX] twoOverX = some [2] := by
+  ccompute
 
 /-! ### Logarithmic-monomial examples over `ℚ(x)`
 
@@ -74,38 +91,38 @@ Logarithmic derivatives as `DenseFrac ℚ` values: `log(x) ⟹ 1/x`, `log(x²) �
 open DensePoly
 
 /-- `D(x)/x = 1/x`: the logarithmic derivative of `log(x)`. Numerator `[1]`, denominator `x = [0,1]`. -/
-def structLogDerivX : DenseFrac ℚ := CFrac.ofFraction [1] [0, 1] (by ccompute)
+def structLogDerivX : DenseFrac ℚ := CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)
 /-- `D(x²)/x² = 2/x`: the logarithmic derivative of `log(x²)`. Numerator `[2]`, denominator `x = [0,1]`
 (`2x/x² = 2/x`). Equal to `2·structLogDerivX`, so `log(x²) = 2 log(x)` is a ℚ-linear relation. -/
-def structLogDerivX2 : DenseFrac ℚ := CFrac.ofFraction [2] [0, 1] (by ccompute)
+def structLogDerivX2 : DenseFrac ℚ := CFrac.ofFraction [2] [0, 1] (by cfrac_nonzero)
 /-- `D(x+1)/(x+1) = 1/(x+1)`: the logarithmic derivative of `log(x+1)`. Numerator `[1]`, denominator
 `x+1 = [1,1]`. Independent of `1/x` over ℚ. -/
-def structLogDerivX1 : DenseFrac ℚ := CFrac.ofFraction [1] [1, 1] (by ccompute)
+def structLogDerivX1 : DenseFrac ℚ := CFrac.ofFraction [1] [1, 1] (by cfrac_nonzero)
 
 -- Computed decisions against the existing monomial `log(x)` (`logDerivs = [1/x]`):
 -- `log(x²)` is dependent with relation `2/x = 2·(1/x)`, while `log(x+1)` is new.
-#eval DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX2   -- expect false
-#eval DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX1   -- expect true
-#eval DensePoly.cLogRelationCoeffs [structLogDerivX] structLogDerivX2  -- expect some [2]
+#eval CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX2   -- expect false
+#eval CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX1   -- expect true
+#eval CFrac.logRelationCoeffs [structLogDerivX] structLogDerivX2  -- expect some [2]
 
 /-- `structRelationCheck logDerivs w rs = true` iff the ℚ-coefficients `rs` satisfy `w = Σ rᵢ (Duᵢ/uᵢ)`
 over `ℚ(x)`, by `CCommRing.isZero` of `w − Σ rᵢ (logDerivsᵢ)`. -/
 def structRelationCheck (logDerivs : List (DenseFrac ℚ)) (w : DenseFrac ℚ) (rs : List ℚ) : Bool :=
   let combo := (List.zip logDerivs rs).foldl
     (fun acc (wi, r) =>
-      CCommRing.add acc (CCommRing.mul (CFrac.ofFraction [r] [1] (by ccompute)) wi)) CCommRing.zero
+      CCommRing.add acc (CCommRing.mul (CFrac.ofFraction [r] [1] (by cfrac_nonzero)) wi)) CCommRing.zero
   CCommRing.isZero (CField.sub w combo)
 
 /-- The shared logarithmic-dependence test computes over `C(x)(log x)`: derivative `2/x` is dependent
 with relation `[2]`, while `1/(x+1)` is independent, for either logarithmic or exponential candidates. -/
 theorem structureTheorem_example :
     (-- (1) `log(x²)` is dependent on `log(x)` — relation detected and verified `D(x²)/x² = 2·D(x)/x`.
-     (DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
-     && (match DensePoly.cLogRelationCoeffs [structLogDerivX] structLogDerivX2 with
+     (CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
+     && (match CFrac.logRelationCoeffs [structLogDerivX] structLogDerivX2 with
          | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
          | none => false)
      -- (2) `log(x+1)` is a new transcendental monomial over `C(x)(log x)`.
-     && (DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
+     && (CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   ccompute
 
 #print axioms structureTheorem_example
@@ -117,26 +134,26 @@ dependent with relation `[1, 1]` (`1/x + 1/(x+1)`). -/
 
 /-- `D(x²+x)/(x²+x) = (2x+1)/(x²+x) = 1/x + 1/(x+1)`: the logarithmic derivative of `log(x²+x)`.
 Numerator `2x+1 = [1,2]`, denominator `x²+x = [0,1,1]`. Equals `1·(1/x) + 1·(1/(x+1))`. -/
-def structLogDerivX2pX : DenseFrac ℚ := CFrac.ofFraction [1, 2] [0, 1, 1] (by ccompute)
+def structLogDerivX2pX : DenseFrac ℚ := CFrac.ofFraction [1, 2] [0, 1, 1] (by cfrac_nonzero)
 
 -- Computed decisions against the two-generator tower `[1/x, 1/(x+1)]`.
 -- `log(x²+x)` is dependent with relation `[1, 1]`.
-#eval DensePoly.cLogIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX  -- false
-#eval DensePoly.cLogRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX -- some [1,1]
+#eval CFrac.logIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX  -- false
+#eval CFrac.logRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX -- some [1,1]
 
 /-- The multi-generator structure decision computes over `C(x)(log x, log(x+1))`: `log(x²+x)` is not a
 new monomial (relation `[1, 1]`, verified by `structRelationCheck`) and the two generators are mutually
 independent. -/
 theorem multiStructureTheorem_example :
     (-- `log(x²+x)` is dependent on `{log x, log(x+1)}` with the verified relation `[1,1]`.
-     (DensePoly.cLogIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX == false)
-     && (match DensePoly.cLogRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX with
+     (CFrac.logIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX == false)
+     && (match CFrac.logRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX with
          | some rs => structRelationCheck [structLogDerivX, structLogDerivX1] structLogDerivX2pX rs
                         && (rs == [1, 1])
          | none => false)
      -- the two generators are independent of each other.
-     && (DensePoly.cLogIsNewMonomial [structLogDerivX1] structLogDerivX == true)
-     && (DensePoly.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
+     && (CFrac.logIsNewMonomial [structLogDerivX1] structLogDerivX == true)
+     && (CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   ccompute
 
 #print axioms multiStructureTheorem_example

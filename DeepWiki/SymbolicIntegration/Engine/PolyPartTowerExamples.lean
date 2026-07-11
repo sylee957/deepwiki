@@ -12,11 +12,11 @@ open DensePoly
 
 /-- Example monomial derivative for the primitive case: `Dt = 1/x`. -/
 def primitivePolyIntegrateExampleDt : DensePoly (DenseFrac ℚ) :=
-  [CFrac.ofFraction [1] [0, 1] (by ccompute)]
+  [CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)]
 
 /-- The polynomial part `p = (1/x)·t²` over `ℚ(x)[t]`. -/
 def primitivePolyIntegrateExampleP : DensePoly (DenseFrac ℚ) :=
-  [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofFraction [1] [0, 1] (by ccompute)]
+  [CFrac.ofScalar 0, CFrac.ofScalar 0, CFrac.ofFraction [1] [0, 1] (by cfrac_nonzero)]
 
 /-- `cPrimitivePolyIntegrate` satisfies `D(q) + rem = p` for the primitive monomial `t = log x`. -/
 theorem primitivePolyIntegrate_example :
