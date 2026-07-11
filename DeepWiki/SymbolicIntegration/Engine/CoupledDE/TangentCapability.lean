@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentReconstruct
+import DeepWiki.SymbolicIntegration.Engine.MonomialCaseSparse
 import DeepWiki.SymbolicIntegration.Engine.RischLevel
 
 /-! # Tangent coupled-solver capability
@@ -170,6 +171,30 @@ instance instLawfulCRischLevelTangent (R : CPolynomialReduction DensePoly (Dense
     LawfulCRischLevel (tangentRischLevel R kind raw S B)
       (oneLevelRischSoundDomain tangentNormalDomain) := by
   unfold tangentRischLevel
+  infer_instance
+
+/-- Assemble a sparse tangent Risch level using a sparse raw normal reducer and dense coupled bridge. -/
+def sparseTangentRischLevel (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (kind : PolynomialReductionKind) (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
+    CRischLevel CPoly.SparsePoly (DenseFrac ℚ) :=
+  oneLevelRisch R kind (checkedNormalReduction raw)
+    (denseMonomialCaseAsSparse (tangentMonomialCase S B))
+
+/-- Lawful tangent stages remain sound after transport through the sparse representation boundary. -/
+instance instLawfulCRischLevelSparseTangent
+    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [LawfulCTangentCoupledSolver S] [LawfulCTangentSpecialBridge B]
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFrac ℚ)] :
+    LawfulCRischLevel (sparseTangentRischLevel R kind raw S B)
+      (oneLevelRischSoundDomain
+        (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := DenseFrac ℚ))) := by
+  unfold sparseTangentRischLevel
   infer_instance
 
 end DeepWiki.SymbolicIntegration
