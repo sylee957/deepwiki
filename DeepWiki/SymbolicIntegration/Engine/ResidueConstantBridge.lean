@@ -236,7 +236,7 @@ theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : CgcdBCorrect (CFracGcdC
     simpa only [denote] using hzero
   rw [List.all_eq_true]
   intro RS hRS
-  rw [cLrtLogArg, List.mem_filterMap] at hRS
+  rw [cLrtLogArg, squarefreeYun_dense_wf_eq, List.mem_filterMap] at hRS
   obtain ⟨⟨Ri, idx⟩, hmem, hg⟩ := hRS
   simp only at hg
   -- `RS.1 = Ri` in both some-branches (`i = n` emits `Dstar` as `RS.2`, else the subresultant), so the

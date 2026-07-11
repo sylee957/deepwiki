@@ -802,7 +802,7 @@ theorem cLrtLogArgG_eq_nil_of_cdegG_zero (Dt hNum Dstar : DensePoly α) (hDstar 
     cLrtLogArg Dt hNum Dstar = [] := by
   have hR := cSqfreeYunFFG_eq_nil_of_cdegG_zero (cResidueResultantTower Dt hNum Dstar)
     (cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero Dt hNum Dstar hDstar)
-  simp only [cLrtLogArg, hR, List.zipIdx_nil, List.filterMap_nil]
+  simp only [cLrtLogArg, squarefreeYun_dense_wf_eq, hR, List.zipIdx_nil, List.filterMap_nil]
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
@@ -816,7 +816,7 @@ theorem mem_cLrtLogArgG (Dt hNum Dstar : DensePoly α) (p : DensePoly α × List
       ∧ (idx + 1 ≠ cdeg Dstar → p.2 = CPolySubresultant.parametric Dstar hNum (CPolyEngine.monomialDeriv Dt Dstar) (cdeg Dstar)
           (cdeg (CPolyEngine.monomialDeriv Dt Dstar)) (idx + 1))
       ∧ (idx + 1 = cdeg Dstar → p.2 = Dstar.map (fun x => ([x] : DensePoly α))) := by
-  rw [cLrtLogArg, List.mem_filterMap] at hp
+  rw [cLrtLogArg, squarefreeYun_dense_wf_eq, List.mem_filterMap] at hp
   obtain ⟨⟨Ri, idx⟩, hmem, hfn⟩ := hp
   simp only at hfn
   split at hfn
@@ -1173,7 +1173,7 @@ theorem disjoint_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     (cLrtLogArg Dt hNum Dstar).Pairwise (fun p q =>
       Disjoint ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
         ((toPoly q.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset) := by
-  rw [cLrtLogArg, List.pairwise_filterMap, List.pairwise_iff_getElem]
+  rw [cLrtLogArg, squarefreeYun_dense_wf_eq, List.pairwise_filterMap, List.pairwise_iff_getElem]
   intro i j hi hj hij b hb b' hb'
   have hi' : i < (cSqfreeYunFF (cResidueResultantTower Dt hNum Dstar)).length := by
     rwa [List.length_zipIdx] at hi
@@ -1260,7 +1260,7 @@ theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : DensePoly α) (idx : ℕ)
   refine ⟨if idx + 1 = cdeg Dstar then Dstar.map (fun c => ([c] : DensePoly α))
       else CPolySubresultant.parametric Dstar hNum (CPolyEngine.monomialDeriv Dt Dstar) (cdeg Dstar)
         (cdeg (CPolyEngine.monomialDeriv Dt Dstar)) (idx + 1), ?_⟩
-  rw [cLrtLogArg]
+  rw [cLrtLogArg, squarefreeYun_dense_wf_eq]
   refine List.mem_filterMap.mpr ⟨(Ri, idx), List.mk_mem_zipIdx_iff_getElem?.mpr hget, ?_⟩
   simp only [if_neg hlen]
   split <;> rfl
