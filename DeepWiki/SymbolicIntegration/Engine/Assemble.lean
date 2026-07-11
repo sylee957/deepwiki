@@ -25,6 +25,8 @@ structure MonomialCase (α : Type*) [CField α] [CDiffField α] where
   /-- Post-process the reduced normal result (identity for primitive; residual subtraction for hyperexp). -/
   reducedCorrect : DensePoly α → IntegralResult α → Option (IntegralResult α)
 
+end DensePoly
+
 /-- Combine fractions `snum/sden + gnum/gden` in any polynomial representation. -/
 def combineRationalParts {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] (snum sden gnum gden : P α) : P α × P α :=
@@ -42,8 +44,6 @@ example :
     let nrm : IntegralResult ℚ CPoly.SparsePoly := ⟨(ofList [2], ofList [1]), []⟩
     CPoly.coeff (combineSN (ofList [3]) (ofList [1]) nrm).rational.1 0 = 5 := by
   native_decide
-
-end DensePoly
 
 open DensePoly CFrac Polynomial
 open scoped Differential
