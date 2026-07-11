@@ -22,6 +22,7 @@ universe u
 namespace CPoly
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+  [CPolySquarefree P]
 variable {α : Type u} [CField α]
 
 /-! ### The square-part / squarefree-part split for `n = 2`

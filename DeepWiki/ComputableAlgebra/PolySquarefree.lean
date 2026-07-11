@@ -10,10 +10,15 @@ namespace DeepWiki.SymbolicIntegration
 
 universe u
 
-namespace CPoly
+/-- Executable squarefree decomposition selected by a computable polynomial representation. -/
+class CPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEuclidean P] where
+  /-- Return the multiplicity-indexed squarefree factors of a represented polynomial. -/
+  compute : {α : Type u} → [CField α] → P α → List (P α)
+
+namespace CPolySquarefree
 
 /-- Internal bounded Yun loop producing the successive multiplicity factors. -/
-private def squarefreeYunGo {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+private def defaultGo {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     [CPolyEuclidean P] {α : Type u} [CField α] : ℕ → P α → P α → List (P α)
   | 0, _, _ => []
   | fuel + 1, b, d =>
@@ -23,19 +28,37 @@ private def squarefreeYunGo {P : Type u → Type u} [CPoly P] [CPolyEngine P]
       let quotient := CPolyEuclidean.div b factor
       let residual := CPolyEngine.sub (CPolyEuclidean.div d factor)
         (CPolyEngine.deriv quotient)
-      factor :: squarefreeYunGo fuel quotient residual
+      factor :: defaultGo fuel quotient residual
 
-/-- Yun squarefree decomposition selected through polynomial capabilities, ordered by multiplicity. -/
-def squarefreeYun {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+/-- Representation-generic Yun decomposition built from the selected engine and Euclidean operations. -/
+def default {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
     {α : Type u} [CField α] (p : P α) : List (P α) :=
   let gcd := (CPolyEuclidean.gcdExt p (CPolyEngine.deriv p)).1
   let base := CPolyEuclidean.div p gcd
   let residual := CPolyEngine.sub (CPolyEuclidean.div (CPolyEngine.deriv p) gcd)
     (CPolyEngine.deriv base)
-  squarefreeYunGo (CPoly.degBound p) base residual
+  defaultGo (CPoly.degBound p) base residual
+
+end CPolySquarefree
+
+/-- Sparse polynomials select the representation-generic Yun kernel. -/
+instance instCPolySquarefreeSparse : CPolySquarefree CPoly.SparsePoly where
+  compute := CPolySquarefree.default
+
+namespace CPoly
+
+/-- Yun squarefree decomposition selected for the polynomial representation, ordered by multiplicity. -/
+def squarefreeYun {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    [CPolySquarefree P] {α : Type u} [CField α] (p : P α) : List (P α) :=
+  CPolySquarefree.compute p
+
+/-- Sparse selected Yun decomposition unfolds to the representation-generic kernel. -/
+@[simp] theorem squarefreeYun_sparse_eq {α : Type u} [CField α] (p : CPoly.SparsePoly α) :
+    squarefreeYun p = CPolySquarefree.default p := rfl
 
 /-- Nonconstant selected Yun factors paired with their one-based multiplicities. -/
 def squarefreeYunFactors {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    [CPolySquarefree P]
     {α : Type u} [CField α] (p : P α) : List (P α × ℕ) :=
   (squarefreeYun p).zipIdx.filterMap fun (q, i) =>
     if CPolyEngine.cdeg q = 0 then none else some (q, i + 1)
