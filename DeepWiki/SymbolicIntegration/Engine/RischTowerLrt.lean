@@ -45,6 +45,16 @@ class CRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [C
   limitedIntegrateSingle : DensePoly α → DensePoly α → DensePoly α → DensePoly α → Option ((DensePoly α × DensePoly α) × α) :=
     fun _ _ _ _ => none
 
+/-- Semantic result of single-generator limited integration in the coefficient rational-function field. -/
+def IsLimitedIntegrateSingleResult (anum aden ηnum ηden bnum bden : DensePoly α)
+    (c : α) : Prop :=
+  toPoly bden ≠ 0 ∧
+    towerFractionFieldDeriv ([CCommRing.one] : DensePoly α) (fieldFrac bnum bden) +
+        algebraMap (CFieldSpec.K α) (RatFunc (CFieldSpec.K α)) (CFieldSpec.toK c) *
+          fieldFrac ηnum ηden =
+      fieldFrac anum aden ∧
+    CFieldSpec.toK (CDiffField.cderiv c) = 0
+
 /-- Denotation-level soundness contract for a recursive LRT operation. -/
 class LawfulCRischLevelLrt {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
@@ -64,6 +74,11 @@ class LawfulCRischLevelLrt {α : Type*} [CField α] [CFieldSpec α] [CDiffField 
   /-- The selected reduced LRT rational denominator is nonzero. -/
   reducedDenNonzero : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
     toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0
+  /-- Every successful single-generator limited integration returns a valid decomposition. -/
+  limitedIntegrateSingle_sound : ∀ (anum aden ηnum ηden bnum bden : DensePoly α) (c : α),
+    toPoly aden ≠ 0 → toPoly ηden ≠ 0 →
+    C.limitedIntegrateSingle anum aden ηnum ηden = some ((bnum, bden), c) →
+      IsLimitedIntegrateSingleResult anum aden ηnum ηden bnum bden c
 
 namespace CRischLevelLrt
 
@@ -279,6 +294,10 @@ instance instLawfulCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly 
   reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
   reducedDenNonzero := fun Dt a d hd0 hDt0 =>
     PrimitiveFrontierLrt.hreducedDenNonzero Dt a d hd0 hDt0
+  limitedIntegrateSingle_sound := by
+    intro anum aden ηnum ηden bnum bden c _ _ hrun
+    change (none : Option ((DensePoly α × DensePoly α) × α)) = some ((bnum, bden), c) at hrun
+    contradiction
 
 /-- **Validation: the base LRT solver resolves from selected operations and the reduced frontier.** -/
 example [CRischField α] [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]

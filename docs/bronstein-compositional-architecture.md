@@ -83,7 +83,10 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
 - `CRischLevelLrt` is the Prop-free recursive algebraic-residue operation, while
-  `LawfulCRischLevelLrt` packages its special and reduced soundness contracts. The primitive base and
+  `LawfulCRischLevelLrt` packages its special, reduced, and single-generator limited-integration
+  soundness contracts. The LRT coefficient integrator transports that last contract through
+  `DenseFrac`, so every accepted limited result now proves both `c = D(b) + r·η` and `D(r) = 0`.
+  The primitive base and
   `DenseFrac` tower-step instances provide the recursive induction path.
 
 ## Leaf inventory
@@ -120,7 +123,8 @@ monomial stage contracts.
    `CompleteCLimitedCoefficientIntegrator` now tie returned pairs to that identity and record the boundary
    explicitly, so ordinary
    recursive antiderivative completeness alone cannot justify the degree-raising branch. The LRT
-   tower has not yet realized the limited-completeness contract; completeness remains relative to
+   tower now realizes the corresponding soundness contract, but has not yet realized the
+   limited-completeness contract; completeness remains relative to
    explicit stage-decomposition witnesses until that mathematical decomposition theorem is formalized.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
 

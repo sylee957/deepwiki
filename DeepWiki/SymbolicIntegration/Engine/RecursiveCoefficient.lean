@@ -33,12 +33,13 @@ class CompleteCRecursiveCoefficientIntegrator (C : CRecursiveCoefficientIntegrat
     (∃ b : α, CFieldSpec.toK (CDiffField.cderiv b) = CFieldSpec.toK c) →
       ∃ b, C.integrate c = some b
 
-/-- A pair `(b,r)` solves limited integration relative to `η` when `c = D b + r·η`. -/
+/-- A pair `(b,r)` solves limited integration when `c = D b + r·η` and `D r = 0`. -/
 def IsLimitedCoefficientResult (η c b r : α) : Prop :=
   CFieldSpec.toK c = CFieldSpec.toK (CDiffField.cderiv b) +
-    CFieldSpec.toK r * CFieldSpec.toK η
+    CFieldSpec.toK r * CFieldSpec.toK η ∧
+  CFieldSpec.toK (CDiffField.cderiv r) = 0
 
-/-- A coefficient has a limited antiderivative relative to `η`. -/
+/-- A coefficient has a limited antiderivative with constant remainder relative to `η`. -/
 def IsLimitedCoefficientIntegrable (η c : α) : Prop :=
   ∃ b r : α, IsLimitedCoefficientResult η c b r
 

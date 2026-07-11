@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.RischTowerLrt
+import DeepWiki.SymbolicIntegration.Engine.RischFieldSpec
 import DeepWiki.SymbolicIntegration.Engine.LimitedIntegrateSingle
 import DeepWiki.SymbolicIntegration.Engine.RecursiveCoefficient
 import DeepWiki.SymbolicIntegration.Engine.RecursiveMonomialCase
@@ -99,6 +100,85 @@ instance instLawfulCRecursiveCoefficientIntegratorLrt
     [LawfulCRischLevelLrt (inferInstance : CRischLevelLrt β)] :
     LawfulCRecursiveCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β)) where
   sound c b h := towerCoeffIntegrateLrt_sound c b h
+
+/-- LRT limited coefficient recursion returns `c = D b + r·η` with constant `r`. -/
+theorem towerCoeffLimitedIntegrateLrt_sound
+    [LawfulCRischLevelLrt (inferInstance : CRischLevelLrt β)]
+    (η c b r : DenseFrac β) (h : towerCoeffLimitedIntegrateLrt η c = some (b, r)) :
+    IsLimitedCoefficientResult η c b r := by
+  let L : CRischLevelLrt β := inferInstance
+  have hcden : toPoly (CFrac.den c) ≠ 0 := by
+    simpa only [toPoly_list_eq] using CFrac.toPoly_den_ne_zero_generic c
+  have hηden : toPoly (CFrac.den η) ≠ 0 := by
+    simpa only [toPoly_list_eq] using CFrac.toPoly_den_ne_zero_generic η
+  have htoK_frac : ∀ x : DenseFrac β,
+      CFieldSpec.toK x = fieldFrac (CFrac.num x) (CFrac.den x) := by
+    intro x
+    change CFrac.toRatFunc x = _
+    rw [CFrac.toRatFunc_eq_div]
+    simp only [fieldFrac, toPoly_list_eq]
+  have hderiv : ∀ x : DenseFrac β,
+      CFieldSpec.toK (CDiffField.cderiv x) =
+        towerFractionFieldDeriv ([CCommRing.one] : DensePoly β) (CFieldSpec.toK x) := by
+    intro x
+    rw [CDiffFieldSpec.toK_cderiv]
+    change extendDeriv (Differential.implicitDeriv
+        (CPoly.toPoly (CPoly.one : DensePoly β))) _ =
+      towerFractionFieldDeriv ([CCommRing.one] : DensePoly β) _
+    rw [towerFractionFieldDeriv, CPoly.toPoly_one]
+    have hone : toPoly ([CCommRing.one] : DensePoly β) = 1 := by
+      simp only [denote]
+      simp
+    rw [hone]
+  unfold towerCoeffLimitedIntegrateLrt at h
+  generalize hrun : L.limitedIntegrateSingle (CFrac.num c) (CFrac.den c)
+      (CFrac.num η) (CFrac.den η) = attempt at h
+  cases attempt with
+  | none =>
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨b₀, hb₀, hout⟩ := h
+      simp only [Prod.mk.injEq] at hout
+      obtain ⟨rfl, rfl⟩ := hout
+      rw [IsLimitedCoefficientResult, CFieldSpec.toK_zero, zero_mul, add_zero]
+      exact ⟨(towerCoeffIntegrateLrt_sound c b₀ hb₀).symm, by
+        rw [CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_zero, map_zero]⟩
+  | some value =>
+      obtain ⟨⟨bn, bd⟩, cc⟩ := value
+      simp only [Option.some.injEq, Prod.mk.injEq] at h
+      obtain ⟨rfl, rfl⟩ := h
+      have hlimited := LawfulCRischLevelLrt.limitedIntegrateSingle_sound (C := L)
+        (CFrac.num c) (CFrac.den c) (CFrac.num η) (CFrac.den η) bn bd cc
+        hcden hηden hrun
+      have htoK_b :
+          CFieldSpec.toK (CField.div (CFrac.ofPoly (F := DenseFrac) bn)
+            (CFrac.ofPoly (F := DenseFrac) bd)) = fieldFrac bn bd := by
+        rw [CFieldSpec.toK_div]
+        simp only [fieldFrac, CFrac.toK_ofPoly, toPoly_list_eq]
+      have htoK_cc :
+          CFieldSpec.toK (CFrac.ofPoly (F := DenseFrac) ([cc] : DensePoly β)) =
+            algebraMap (CFieldSpec.K β) (RatFunc (CFieldSpec.K β)) (CFieldSpec.toK cc) := by
+        rw [CFrac.toK_ofPoly]
+        simp only [toPoly_list_eq, denote, mul_zero, add_zero]
+        rw [CFrac.am, ← Polynomial.algebraMap_eq]
+        exact (IsScalarTower.algebraMap_apply (CFieldSpec.K β)
+          (CFieldSpec.K β)[X] (RatFunc (CFieldSpec.K β)) (CFieldSpec.toK cc)).symm
+      have htoK_cc_am :
+          CFieldSpec.toK (CFrac.ofPoly (F := DenseFrac) ([cc] : DensePoly β)) =
+            CFrac.am β (Polynomial.C (CFieldSpec.toK cc)) := by
+        rw [CFrac.toK_ofPoly]
+        simp only [toPoly_list_eq, denote, mul_zero, add_zero]
+      rw [IsLimitedCoefficientResult, htoK_frac c, hderiv, htoK_b, htoK_cc, htoK_frac η]
+      constructor
+      · exact hlimited.2.1.symm
+      · rw [hderiv, htoK_cc_am, towerFractionFieldDerivG_amG_C]
+        rw [← CDiffFieldSpec.toK_cderiv, hlimited.2.2]
+        simp
+
+/-- The LRT tower coefficient operation satisfies limited-integration soundness. -/
+instance instLawfulCLimitedCoefficientIntegratorLrt
+    [LawfulCRischLevelLrt (inferInstance : CRischLevelLrt β)] :
+    LawfulCLimitedCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β)) where
+  limited_sound η c b r h := towerCoeffLimitedIntegrateLrt_sound η c b r h
 
 /-- The tower primitive-polynomial stage driven by an explicit recursive coefficient operation. -/
 def recursiveTowerPolyIntegrateLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
@@ -286,6 +366,11 @@ instance instLawfulCRischLevelLrtTower [PrimitiveFrontierLrt (DenseFrac β)] :
   reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
   reducedDenNonzero := fun Dt a d hd0 hDt0 =>
     PrimitiveFrontierLrt.hreducedDenNonzero Dt a d hd0 hDt0
+  limitedIntegrateSingle_sound := by
+    intro anum aden ηnum ηden bnum bden c _ _ hrun
+    change (none : Option ((DensePoly (DenseFrac β) × DensePoly (DenseFrac β)) × DenseFrac β)) =
+      some ((bnum, bden), c) at hrun
+    contradiction
 
 -- The LRT tower solver resolves at depth 2 by recursion; the step instance chains on itself.
 noncomputable example [PrimitiveFrontierLrt (DenseFrac β)]
