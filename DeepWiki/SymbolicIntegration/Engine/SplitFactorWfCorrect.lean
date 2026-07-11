@@ -152,6 +152,15 @@ theorem CPoly.splitFactor_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
   rw [CPoly.splitFactor_dense_eq]
   exact cSplitFactorFastG_isSplittingFactorizationGen Dt p hp
 
+/-- The selected dense well-founded split implementation satisfies the lawful split-factor interface. -/
+instance instLawfulCPolySplitFactorDenseWf [CharZero (CFieldSpec.K α)] :
+    LawfulCPolySplitFactor DensePoly α where
+  compute_isSplittingFactorizationGen := by
+    intro Dt p hp
+    have hp' : DensePoly.toPoly p ≠ 0 := by simpa only [toPoly_list_eq] using hp
+    convert CPoly.splitFactor_isSplittingFactorizationGen Dt p hp' using 1 <;>
+      simp only [toPoly_list_eq]
+
 /-! ### M3 — discharging the gcd frontier at the `ℚ` base -/
 
 /-- **The gcd frontier is unconditional at `ℚ`.** There `cgcdFFCoreWf` selects

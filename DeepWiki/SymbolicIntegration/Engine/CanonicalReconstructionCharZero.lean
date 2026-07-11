@@ -125,4 +125,71 @@ theorem crNormNum_degree_lt_crNormDen (Dt a d : DensePoly α)
     (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1
     (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).2 d hds hdn hfac hbez hr
 
+omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] [CPolyGcd DensePoly α]
+  [LawfulCPolyGcd.{u, v} DensePoly α] in
+/-- A lawful selected split factorization preserves nonzeroness of the canonical normal denominator. -/
+theorem crNormDen_ne_zero_of_lawfulSplit [CPolySplitFactor DensePoly α]
+    [LawfulCPolySplitFactor DensePoly α] (Dt a d : DensePoly α)
+    (hd : toPoly d ≠ 0) : toPoly (crNormDen Dt a d) ≠ 0 := by
+  have hsplit : @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩
+      (toPoly d) (toPoly (CPoly.splitFactor Dt d).2) (toPoly (CPoly.splitFactor Dt d).1) := by
+    convert LawfulCPolySplitFactor.compute_isSplittingFactorizationGen' Dt d
+      (by simpa only [toPoly_list_eq] using hd) using 1 <;> simp only [toPoly_list_eq]
+  obtain ⟨hfac, _, _⟩ := hsplit
+  have hnd : crNormDen Dt a d = (CPoly.splitFactor Dt d).1 := by
+    simp only [crNormDen, canonicalRepresentationFast]
+  rw [hnd]
+  intro h
+  exact hd (by rw [hfac, h, mul_zero])
+
+omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] [CPolyGcd DensePoly α]
+  [LawfulCPolyGcd.{u, v} DensePoly α] in
+/-- A lawful selected split factorization makes the canonical normal fraction proper. -/
+theorem crNormNum_degree_lt_crNormDen_of_lawfulSplit [CPolySplitFactor DensePoly α]
+    [LawfulCPolySplitFactor DensePoly α] (Dt a d : DensePoly α)
+    (hd : toPoly d ≠ 0) :
+    (toPoly (crNormNum Dt a d)).degree < (toPoly (crNormDen Dt a d)).degree := by
+  letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPoly Dt)⟩
+  have hsplit : @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPoly Dt)⟩
+      (toPoly d) (toPoly (CPoly.splitFactor Dt d).2) (toPoly (CPoly.splitFactor Dt d).1) := by
+    convert LawfulCPolySplitFactor.compute_isSplittingFactorizationGen' Dt d
+      (by simpa only [toPoly_list_eq] using hd) using 1 <;> simp only [toPoly_list_eq]
+  obtain ⟨hfac, hspec, hnorm⟩ := hsplit
+  have hds0 : toPoly (CPoly.splitFactor Dt d).2 ≠ 0 := fun h => hd (by rw [hfac, h, zero_mul])
+  have hdn0 : toPoly (CPoly.splitFactor Dt d).1 ≠ 0 := fun h => hd (by rw [hfac, h, mul_zero])
+  have hds : cnorm (CPoly.splitFactor Dt d).2 ≠ [] := fun h => hds0 ((cnormG_eq_nil_iff _).mp h)
+  have hdn : cnorm (CPoly.splitFactor Dt d).1 ≠ [] := fun h => hdn0 ((cnormG_eq_nil_iff _).mp h)
+  have hcop : IsCoprime (toPoly (CPoly.splitFactor Dt d).2) (toPoly (CPoly.splitFactor Dt d).1) :=
+    isCoprime_of_isSpecial_isNormalSqfree hds0 hspec hnorm
+  have hgu' : IsUnit (toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1
+      (CPoly.splitFactor Dt d).2).1) := by
+    simpa only [toPoly_list_eq] using
+      (CPolyEuclidean.gcdExt_isUnit_of_isCoprime (P := DensePoly)
+        (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2
+        (by simpa only [toPoly_list_eq] using hcop.symm))
+  have hgdeg : (toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1
+      (CPoly.splitFactor Dt d).2).1).natDegree = 0 := natDegree_eq_zero_of_isUnit hgu'
+  have hgne : toPoly (CPolyEuclidean.gcdExt (CPoly.splitFactor Dt d).1
+      (CPoly.splitFactor Dt d).2).1 ≠ 0 := hgu'.ne_zero
+  have hbez : toPoly (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1
+        * toPoly (CPoly.splitFactor Dt d).1
+      + toPoly (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).2
+        * toPoly (CPoly.splitFactor Dt d).2 = 1 :=
+    toPolyG_bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2 hgdeg hgne
+  have hr : (toPoly (CPolyEuclidean.divmod a d).2).degree < (toPoly d).degree := by
+    simpa only [CPolyEuclidean.mod, toPoly_list_eq] using
+      (LawfulCPolyEuclidean.mod_degree_lt a d (by simpa only [toPoly_list_eq] using hd))
+  have hnn : crNormNum Dt a d = (CPoly.extendedEuclideanSplit (CPoly.splitFactor Dt d).1
+      (CPoly.splitFactor Dt d).2 (CPolyEuclidean.divmod a d).2
+      (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1
+      (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).2).2 := by
+    simp only [crNormNum, canonicalRepresentationFast]
+  have hnd : crNormDen Dt a d = (CPoly.splitFactor Dt d).1 := by
+    simp only [crNormDen, canonicalRepresentationFast]
+  rw [hnn, hnd]
+  exact extendedEuclideanSplit_snd_degree_lt (CPoly.splitFactor Dt d).1
+    (CPoly.splitFactor Dt d).2 (CPolyEuclidean.divmod a d).2
+    (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).1
+    (CPoly.bezoutOne (CPoly.splitFactor Dt d).1 (CPoly.splitFactor Dt d).2).2 d hds hdn hfac hbez hr
+
 end DeepWiki.SymbolicIntegration

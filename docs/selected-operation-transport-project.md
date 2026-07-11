@@ -66,6 +66,11 @@ denotations does not make those terms definitionally equal.
 - The LRT assembler now consumes the reduced result's field identity and a separate nonzero rational-denominator
   contract. `PrimitiveFrontierLrt` exports both facts, so recursive LRT composition no longer reaches into the
   well-founded Hermite denominator proof.
+- `LawfulCPolySplitFactor` now supplies the denotation law for a selected differential split. The dense
+  well-founded splitter is its provider, while canonical normalization derives nonzero/proper normal parts from
+  that law without selecting the Wf instance. `LrtReducedProperFrontier` packages soundness and denominator
+  nonzeroness for a selected proper reduced input; it supplies `PrimitiveFrontierLrt`, so primitive LRT consumers
+  depend on selected operations and result contracts rather than `CFracGcdCoreWf`.
 - `cHermiteReduceTowerG_leftover_proper_of_degree_le_one` now quantifies over `CPolySquarefree` and the
   selected `CPoly.squarefreeYun` output. Its Wf/LRT consumer resolves that selection at the concrete
   boundary instead of forcing the properness theorem itself to depend on `CFracGcdCoreWf`.

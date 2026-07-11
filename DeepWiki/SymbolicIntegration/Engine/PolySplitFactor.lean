@@ -1,5 +1,6 @@
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
+import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitFactor
 
 /-! # Representation-independent differential split factorization
 
@@ -9,7 +10,7 @@ representation-independent monomial derivative.
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u
+universe u v
 
 /-- Executable differential split factorization selected for a polynomial representation and coefficient field. -/
 class CPolySplitFactor (P : Type u → Type u) [CPoly P] [CPolyEngine P]
@@ -67,5 +68,29 @@ example :
   ccompute
 
 end CPoly
+
+/-- Denotation law for a selected differential split factorization. -/
+class LawfulCPolySplitFactor (P : Type u → Type u) [CPoly P] [CPolyEngine P]
+    (α : Type u) [CField α] [CDiffField α] [CFieldSpec.{u,v} α] [CDiffFieldSpec α]
+    [CharZero (CFieldSpec.K α)] [CPolySplitFactor P α] : Prop where
+  /-- The selected split is a normal/special splitting factorization of every nonzero input. -/
+  compute_isSplittingFactorizationGen : ∀ (Dt p : P α), CPoly.toPoly p ≠ 0 →
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
+      (CPoly.toPoly p) (CPoly.toPoly (CPoly.splitFactor Dt p).2)
+        (CPoly.toPoly (CPoly.splitFactor Dt p).1)
+
+namespace LawfulCPolySplitFactor
+
+/-- The selected split-factorization operation satisfies its denotation law. -/
+theorem compute_isSplittingFactorizationGen' {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CDiffField α] [CFieldSpec.{u,v} α] [CDiffFieldSpec α]
+    [CharZero (CFieldSpec.K α)] [CPolySplitFactor P α] [LawfulCPolySplitFactor P α]
+    (Dt p : P α) (hp : CPoly.toPoly p ≠ 0) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
+      (CPoly.toPoly p) (CPoly.toPoly (CPoly.splitFactor Dt p).2)
+        (CPoly.toPoly (CPoly.splitFactor Dt p).1) :=
+  LawfulCPolySplitFactor.compute_isSplittingFactorizationGen Dt p hp
+
+end LawfulCPolySplitFactor
 
 end DeepWiki.SymbolicIntegration
