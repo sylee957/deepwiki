@@ -3,10 +3,11 @@ import DeepWiki.ComputableAlgebra.PolyEngine
 import DeepWiki.Algebra.PolynomialMatrixDegree
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
-/-! # Generic Bézout cofactors, resultant, and Lagrange interpolation
+/-! # Generic Bézout cofactors, resultant, and selected interpolation
 
-Lagrange interpolation (`clagNum`/`cinterpolate`), generic over `[CField α]`, plus the `CFieldSpec`
-correctness layer for interpolation and seed resultants. -/
+The dense Lagrange implementation lives in `PolyInterpolateDense`; this module supplies its
+representation-selected `CPoly.interpolate` wrapper, generic denotation satellites, and seed
+resultants. -/
 
 open Polynomial
 
