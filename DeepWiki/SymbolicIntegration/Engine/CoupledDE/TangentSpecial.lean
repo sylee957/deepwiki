@@ -35,6 +35,36 @@ private def tangentCoefficientPolynomial? (x : DenseFrac ℚ) : Option (DensePol
     some (CFrac.num x)
   else none
 
+/-- Adapt the polynomial `ℚ[x][t]` cancellation kernel to coefficient-field coupled candidates. -/
+private def tangentPolynomialCoefficientCandidate (S : CTangentPolynomialCoupledSolver) :
+    CTangentCoefficientSolver (DenseFrac ℚ) where
+  solve fuel coupling a b := do
+    let couplingPoly ← tangentCoefficientPolynomial? coupling
+    let aPoly ← tangentCoefficientPolynomial? a
+    let bPoly ← tangentCoefficientPolynomial? b
+    let solution ← S.solve fuel (CPoly.czero : DensePoly ℚ) couplingPoly [aPoly] [bPoly] 0
+    let cPoly := CPoly.coeff solution.1 0
+    let dPoly := CPoly.coeff solution.2 0
+    some (CFrac.ofPoly cPoly, CFrac.ofPoly dPoly)
+
+/-- Checked coefficient-field realization backed by the polynomial tangent cancellation kernel. -/
+def tangentPolynomialCoefficientSolver (S : CTangentPolynomialCoupledSolver) :
+    CTangentCoefficientSolver (DenseFrac ℚ) :=
+  checkedTangentCoefficientSolver (tangentPolynomialCoefficientCandidate S)
+
+/-- The checked polynomial-backed coefficient solver satisfies the field-level coupled contract. -/
+instance instLawfulCTangentCoefficientSolverPolynomial (S : CTangentPolynomialCoupledSolver) :
+    LawfulCTangentCoefficientSolver (tangentPolynomialCoefficientSolver S) := by
+  unfold tangentPolynomialCoefficientSolver
+  infer_instance
+
+/-- The polynomial-backed coefficient solver is complete on its exact checked acceptance domain. -/
+instance instCompleteCTangentCoefficientSolverPolynomial (S : CTangentPolynomialCoupledSolver) :
+    CompleteCTangentCoefficientSolver (tangentPolynomialCoefficientSolver S)
+      (checkedTangentCoefficientDomain (tangentPolynomialCoefficientCandidate S)) := by
+  unfold tangentPolynomialCoefficientSolver
+  infer_instance
+
 /-- Recognize an exact power of `t² + 1`, bounded by the supplied fuel. -/
 private def tangentBasePower? : ℕ → DensePoly (DenseFrac ℚ) → Option ℕ
   | 0, den =>
@@ -55,8 +85,8 @@ private structure TangentReducedCandidate where
   remainder : DensePoly (DenseFrac ℚ)
 
 /-- Lower the `(t² + 1)` pole order by Bronstein's coupled-system recurrence. -/
-private def tangentReducedCandidate (S : CTangentCoupledSolver) (degreeBound : ℕ)
-    (alpha : DenseFrac ℚ) (alphaPoly : DensePoly ℚ) :
+private def tangentReducedCandidate (S : CTangentCoefficientSolver (DenseFrac ℚ)) (degreeBound : ℕ)
+    (alpha : DenseFrac ℚ) :
     (m : ℕ) → DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) →
       Option TangentReducedCandidate
   | 0, num, _den =>
@@ -68,20 +98,15 @@ private def tangentReducedCandidate (S : CTangentCoupledSolver) (degreeBound : �
       else
         let a := CPoly.coeff numDiv.2 1
         let b := CPoly.coeff numDiv.2 0
-        let aPoly ← tangentCoefficientPolynomial? a
-        let bPoly ← tangentCoefficientPolynomial? b
-        let coupling := CPolyEngine.scale (((2 * (m + 1) : ℕ) : ℚ)) alphaPoly
-        let solution ← S.solve degreeBound (CPoly.czero : DensePoly ℚ) coupling
-          [aPoly] [bPoly] 0
-        let cPoly := CPoly.coeff solution.1 0
-        let dPoly := CPoly.coeff solution.2 0
-        let c : DenseFrac ℚ := CFrac.ofPoly cPoly
-        let d : DenseFrac ℚ := CFrac.ofPoly dPoly
+        let coupling := CCommRing.mul (CField.natCast (2 * (m + 1))) alpha
+        let solution ← S.solve degreeBound coupling a b
+        let c := solution.1
+        let d := solution.2
         let oneMinusTwoM : DenseFrac ℚ :=
           CField.sub CCommRing.one (CField.natCast (2 * (m + 1)))
         let correction := CCommRing.mul (CCommRing.mul c alpha) oneMinusTwoM
         let nextNum := CPolyEngine.sub numDiv.1 [correction]
-        let rest ← tangentReducedCandidate S degreeBound alpha alphaPoly m nextNum denDiv.1
+        let rest ← tangentReducedCandidate S degreeBound alpha m nextNum denDiv.1
         let q0 : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ) := ([d, c], den)
         some {
           rational := combineRationalParts q0.1 q0.2 rest.rational.1 rest.rational.2
@@ -96,9 +121,8 @@ private def recursiveTangentSpecialCandidate (config : TangentSpecialConfig)
     if CCommRing.isZero alpha then none
     else if !tangentPolyEq Dt [alpha, CCommRing.zero, alpha] then none
     else
-      let alphaPoly ← tangentCoefficientPolynomial? alpha
       let m ← tangentBasePower? config.denominatorFuel ds
-      let reduced ← tangentReducedCandidate S config.coefficientDegreeBound alpha alphaPoly m b ds
+      let reduced ← tangentReducedCandidate S config.coefficientDegreeBound alpha m b ds
       let polynomialInput := CPolyEngine.add fp reduced.remainder
       let polynomial := DensePoly.cPolyReduceTower Dt config.polynomialFuel polynomialInput
       if decide (1 < CPolyEngine.cdeg polynomial.2) then none
@@ -126,19 +150,22 @@ def recursiveTangentSpecialIntegrator (config : TangentSpecialConfig)
   checkedTangentSpecialIntegrator (recursiveTangentSpecialCandidate config I)
 
 /-- Explicit acceptance domain of the recursive hypertangent special integrator. -/
-def recursiveTangentSpecialDomain (S : CTangentCoupledSolver) (config : TangentSpecialConfig)
+def recursiveTangentSpecialDomain (S : CTangentCoefficientSolver (DenseFrac ℚ))
+    (config : TangentSpecialConfig)
     (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ)) : TangentSpecialDomain :=
   checkedTangentSpecialDomain S (recursiveTangentSpecialCandidate config I)
 
 /-- The certified recursive hypertangent operation satisfies its denotational contract. -/
-instance instLawfulCTangentSpecialIntegratorRecursive (S : CTangentCoupledSolver)
+instance instLawfulCTangentSpecialIntegratorRecursive
+    (S : CTangentCoefficientSolver (DenseFrac ℚ))
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ)) :
     LawfulCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator config I) := by
   unfold recursiveTangentSpecialIntegrator
   infer_instance
 
 /-- The certified recursive hypertangent operation is complete on its explicit acceptance domain. -/
-instance instCompleteCTangentSpecialIntegratorRecursive (S : CTangentCoupledSolver)
+instance instCompleteCTangentSpecialIntegratorRecursive
+    (S : CTangentCoefficientSolver (DenseFrac ℚ))
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ)) :
     CompleteCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator config I)
       (recursiveTangentSpecialDomain S config I) := by
@@ -151,7 +178,8 @@ def recursiveTangentRischLevel [CLinearSolve ℚ]
     (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly (DenseFrac ℚ))
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
     [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : CRischLevel DensePoly (DenseFrac ℚ) :=
-  tangentRischLevel R kind raw tangentCoupledSolver (recursiveTangentSpecialCandidate config I)
+  tangentRischLevel R kind raw (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
+    (recursiveTangentSpecialCandidate config I)
 
 /-- Exact stage-acceptance domain of the selected dense recursive tangent level. -/
 def recursiveTangentRischLevelCompleteDomain [CLinearSolve ℚ]
@@ -161,7 +189,8 @@ def recursiveTangentRischLevelCompleteDomain [CLinearSolve ℚ]
     (raw : CNormalReduction DensePoly (DenseFrac ℚ))
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
     [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : RischLevelDomain DensePoly (DenseFrac ℚ) :=
-  tangentRischLevelCompleteDomain R kind polynomialDomain raw tangentCoupledSolver
+  tangentRischLevelCompleteDomain R kind polynomialDomain raw
+    (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
     (recursiveTangentSpecialCandidate config I)
 
 /-- The selected dense recursive tangent level inherits generic contract-based soundness. -/
@@ -212,7 +241,8 @@ def sparseRecursiveTangentRischLevel [CLinearSolve ℚ]
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
     [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
     CRischLevel CPoly.SparsePoly (DenseFrac ℚ) :=
-  sparseTangentRischLevel R kind raw tangentCoupledSolver (recursiveTangentSpecialCandidate config I)
+  sparseTangentRischLevel R kind raw (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
+    (recursiveTangentSpecialCandidate config I)
 
 /-- Exact transported stage-acceptance domain of the selected sparse recursive tangent level. -/
 def sparseRecursiveTangentRischLevelCompleteDomain [CLinearSolve ℚ]
@@ -223,7 +253,8 @@ def sparseRecursiveTangentRischLevelCompleteDomain [CLinearSolve ℚ]
     (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
     [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
     RischLevelDomain CPoly.SparsePoly (DenseFrac ℚ) :=
-  sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw tangentCoupledSolver
+  sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw
+    (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
     (recursiveTangentSpecialCandidate config I)
 
 /-- The selected sparse recursive tangent level inherits soundness through representation transport. -/
@@ -292,7 +323,8 @@ example :
     ((recursiveTangentSpecialIntegrator
         { denominatorFuel := 4, polynomialFuel := 8, coefficientDegreeBound := 3 }
         tangentPolynomialCoefficientIntegrator).integrate
-      tangentCoupledSolver tangentBase CPoly.czero tangentRecursiveExampleNumerator
+      (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
+        tangentBase CPoly.czero tangentRecursiveExampleNumerator
         (CPoly.cpow tangentBase 3)).isSome = true := by
   ccompute
 
@@ -301,7 +333,8 @@ example :
     ((recursiveTangentSpecialIntegrator
         { denominatorFuel := 1, polynomialFuel := 2, coefficientDegreeBound := 1 }
         tangentPolynomialCoefficientIntegrator).integrate
-      tangentCoupledSolver tangentBase [CCommRing.zero, CField.natCast 2]
+      (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
+        tangentBase [CCommRing.zero, CField.natCast 2]
         CPoly.czero CPoly.one).map (fun out => out.logs.length) = some 1 := by
   ccompute
 

@@ -33,11 +33,12 @@ cast coefficients.
 
 ## Phases
 
-1. **Coefficient boundary (partial).** The raw implementation accepts coupled coefficients whose
-   `DenseFrac ℚ` representation has denominator `1`; it declines the remaining cases. General
-   denominator clearing and its field-identity proof are still needed. Do not change
-   `CTangentCoupledSolver` merely to hide this mismatch.
-2. **One-pole reducer (checked).** `TangentSpecial.lean` divides by `t^2 + 1`, invokes the coupled
+1. **Coefficient boundary (composed).** The recursive algorithm consumes the representation-neutral
+   `CTangentCoefficientSolver (DenseFrac ℚ)` interface. `tangentPolynomialCoefficientSolver` is a
+   checked realizer backed by the old `ℚ[x][t]` kernel; it accepts stored denominator `1` and declines
+   other fractions. A general fraction-capable realizer remains, without leaking that restriction back
+   into the recursive stage.
+2. **One-pole reducer (checked).** `TangentSpecial.lean` divides by `t^2 + 1`, invokes the coefficient solver
    operation, constructs the candidate correction, and releases the final result only through
    `CPoly.checkIdentity`.
 3. **Structural recursion (implemented).** The executable recursion follows the recognized pole
