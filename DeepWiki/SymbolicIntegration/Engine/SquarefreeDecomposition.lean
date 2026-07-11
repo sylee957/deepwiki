@@ -327,6 +327,35 @@ private theorem defaultGo_length_ge_maxMult [CPolyEngine P] [LawfulCPolyEngine.{
       rw [List.length_cons]
       omega
 
+open UniqueFactorizationMonoid in
+/-- The generic Yun decomposition has enough factors to cover every input multiplicity. -/
+private theorem default_length_ge_maxMult [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CPolyGcd P α]
+    [LawfulCPolyGcd.{u,v} P α] [CharZero (CFieldSpec.K α)] (p : P α)
+    (hp0 : CPoly.toPoly p ≠ 0) (hpp : (CPoly.toPoly p).primPart ≠ 0) :
+    (normalizedFactors (CPoly.toPoly p).primPart).toFinset.sup
+        (fun q => (normalizedFactors (CPoly.toPoly p).primPart).count q) ≤
+      (CPolySquarefree.default p).length := by
+  rw [CPolySquarefree.default]
+  set g := CPolyGcd.compute p (CPolyEngine.deriv p)
+  set b := CPolyEuclidean.div p g
+  set d := CPolyEngine.sub (CPolyEuclidean.div (CPolyEngine.deriv p) g)
+    (CPolyEngine.deriv b)
+  have hinv : YunInv (CPoly.toPoly p) 1 (CPoly.toPoly b) (CPoly.toPoly d) := by
+    simpa only [g, b, d] using defaultInit_yunInv p hp0 hpp
+  have hfuel : (normalizedFactors (CPoly.toPoly p).primPart).toFinset.sup
+      (fun q => (normalizedFactors (CPoly.toPoly p).primPart).count q) ≤ CPoly.degBound p := by
+    have h1 := sup_count_le_natDegree_primPart (CPoly.toPoly p) hpp
+    have h2 : (CPoly.toPoly p).primPart.natDegree ≤ (CPoly.toPoly p).natDegree :=
+      natDegree_le_of_dvd (CPoly.toPoly p).primPart_dvd hp0
+    have h3 : (CPoly.toPoly p).natDegree < CPoly.degBound p := by
+      have h := CPoly.cdeg_lt_degBound_of_toPoly_ne_zero p hp0
+      rw [CPoly.cdeg_eq_natDegree] at h
+      exact h
+    omega
+  simpa only [Nat.sub_self, Nat.sub_zero] using
+    (defaultGo_length_ge_maxMult p hpp (CPoly.degBound p) 1 b d (le_refl 1) hinv hfuel)
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
