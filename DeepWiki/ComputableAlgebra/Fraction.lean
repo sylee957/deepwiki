@@ -123,6 +123,14 @@ def deriv {α : Type u} [CField α] [CFieldDomain α P] (x : F α) : F α :=
 is nonzero by membership, so `x = 0` iff its numerator vanishes). -/
 def isZero {α : Type u} [CField α] (x : F α) : Bool := CPolyEngine.cisZero (num x)
 
+/-- Boolean equality of represented fractions, computed by zero-testing their difference. -/
+def eq {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) : Bool :=
+  isZero (sub x y)
+
+/-- `CFrac.eq` is the zero test of the represented fraction difference. -/
+theorem eq_eq_isZero_sub {α : Type u} [CField α] [CFieldDomain α P] (x y : F α) :
+    eq x y = isZero (sub x y) := rfl
+
 /-- Evaluate a represented fraction at a coefficient-field point by evaluating its stored numerator
 and denominator. -/
 def eval {α : Type u} [CField α] (x : F α) (a : α) : α :=
@@ -262,6 +270,12 @@ theorem toPoly_den_ne_zero_generic [LawfulCPolyEngine.{u,v} P]
     rcases hzero with hzero | hzero
     · exact (map_eq_zero_iff _ (RatFunc.algebraMap_injective (CFieldSpec.K α))).mp hzero
     · exact absurd hzero hden
+
+/-- Represented-fraction Boolean equality agrees with equality of rational-function denotations. -/
+@[denote] theorem eq_iff_toRatFunc [LawfulCPolyEngine.{u,v} P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P] (x y : F α) :
+    eq x y = true ↔ toRatFunc x = toRatFunc y := by
+  rw [eq, isZero_iff_toRatFunc, toRatFunc_sub, sub_eq_zero]
 
 /-- The generic `CFieldSpec` induced by a lawful polynomial representation. -/
 @[reducible] noncomputable def fieldSpec [LawfulCPolyEngine.{u,v} P]

@@ -251,7 +251,7 @@ theorem decideWitnessTorsion_some :
     (decideWitnessTorsion.isSome,
      (decideWitnessTorsion.map fun F => F.logTerms.length),
      (decideWitnessTorsion.bind fun F => F.logTerms.head?.map fun t =>
-       qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))))
+       CFrac.eq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))))
       = (true, some 1, some true) := by native_decide
 
 /-! ### Principal witness -/
@@ -279,7 +279,7 @@ theorem self_determining_algebraic_decision_validates :
     ∧ (decideWitnessTorsion.isSome,
        (decideWitnessTorsion.map fun F => F.logTerms.length),
        (decideWitnessTorsion.bind fun F => F.logTerms.head?.map fun t =>
-         qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))))
+         CFrac.eq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))))
         = (true, some 1, some true)
     ∧ (decideWitnessPrincipal.isSome, decideWitnessPrincipal.map fun F => F.logTerms.length)
         = (true, some 1) := by native_decide

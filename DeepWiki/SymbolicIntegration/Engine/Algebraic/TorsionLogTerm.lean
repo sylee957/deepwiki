@@ -42,18 +42,15 @@ def tltTerm01 : Option (DenseFrac ℚ × RadElem (DenseFrac ℚ)) :=
 /-- The target generator `g = y − 1 = [−1, 1]` over `ℚ(x)` (the flex tangent line). -/
 def tltYm1 : RadElem (DenseFrac ℚ) := [CCommRing.neg CCommRing.one, CCommRing.one]
 
-/-- Field equality on `ℚ(x)`: `qEq a b = CCommRing.isZero (a − b)`, the `Bool` test `a = b` in `DenseFrac ℚ`. -/
-def qEq (a b : DenseFrac ℚ) : Bool := CCommRing.isZero (CField.sub a b)
-
 /-- The recovered-term check `tltTermCheck t`: `Bool` that a term `t = (c, g)` equals `(1/3, y − 1)`. -/
 def tltTermCheck (t : DenseFrac ℚ × RadElem (DenseFrac ℚ)) : Bool :=
-  qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))
+  CFrac.eq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))
     && DensePoly.cisZero (DensePoly.csub t.2 tltYm1)
 
 /-- `torsionLogTerm` on `(0, 1)` returns a term whose coefficient is field-equal to `1/3`. -/
 theorem tltTerm01_coeff :
     (tltTerm01.map fun t =>
-      qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))) = some true := by
+      CFrac.eq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))) = some true := by
   native_decide
 
 /-- `torsionLogTerm` on `(0, 1)` returns the log term `(1/3, y − 1)` (`tltTermCheck` holds). -/
@@ -94,7 +91,7 @@ theorem tltResult01_shape :
     (DensePoly.cisZero tltResult01.ratPart,
      tltResult01.logTerms.length,
      (tltResult01.logTerms.head?.map fun t =>
-       qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ))))) = (true, 1, some true) := by
+       CFrac.eq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ))))) = (true, 1, some true) := by
   native_decide
 
 /-- `algDeriv tltRhoX3p1 tltResult01` equals the differential `tltDiff01` (`DensePoly.cisZero` of the
@@ -134,7 +131,7 @@ theorem torsion_log_branch_validates :
     ∧ ((DensePoly.cisZero tltResult01.ratPart,
         tltResult01.logTerms.length,
         tltResult01.logTerms.head?.map fun t =>
-          qEq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))) = (true, 1, some true)
+          CFrac.eq t.1 (CField.div CCommRing.one (CFrac.ofScalar (3 : ℚ)))) = (true, 1, some true)
       ∧ DensePoly.cisZero (DensePoly.csub (algDeriv tltRhoX3p1 tltResult01) tltDiff01) = true)
     -- non-torsion (3,5) propagates to none ⟹ NOT elementary
     ∧ ((torsionLogTerm 5 tltRhoX3m2 hypRhoX3m2 1 hypPt35).isNone = true
