@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.RischTowerLrt
 import DeepWiki.SymbolicIntegration.Engine.LimitedIntegrateSingle
 import DeepWiki.SymbolicIntegration.Engine.RecursiveCoefficient
+import DeepWiki.SymbolicIntegration.Engine.RecursiveMonomialCase
 
 /-! # Recursive LRT Risch tower step
 
@@ -42,8 +43,16 @@ def towerCoeffIntegrateLrt (c : DenseFrac β) : Option (DenseFrac β) :=
     CField.div (CFrac.ofPoly bd.1) (CFrac.ofPoly bd.2)
 
 /-- The LRT tower's recursive coefficient operation. -/
+private def towerCoeffLimitedIntegrateLrt (η c : DenseFrac β) : Option (DenseFrac β × DenseFrac β) :=
+  match (inferInstance : CRischLevelLrt β).limitedIntegrateSingle (CFrac.num c) (CFrac.den c)
+      (CFrac.num η) (CFrac.den η) with
+  | some ((bn, bd), cc) => some (CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd), CFrac.ofPoly [cc])
+  | none => (towerCoeffIntegrateLrt (β := β) c).map fun b => (b, CCommRing.zero)
+
+/-- The LRT tower's recursive coefficient operation, including its optional single-`w` reduction. -/
 def towerCoefficientIntegratorLrt : CRecursiveCoefficientIntegrator (DenseFrac β) where
   integrate := towerCoeffIntegrateLrt
+  limitedIntegrate := towerCoeffLimitedIntegrateLrt
 
 /-- LRT coefficient-recursion soundness: `toK (cderiv b) = toK c` in
 `RatFunc (CFieldSpec.K β)`, reassembling `integrateRationalLrt_sound` (descent-free `K`-level) through the
@@ -91,45 +100,48 @@ instance instLawfulCRecursiveCoefficientIntegratorLrt
     LawfulCRecursiveCoefficientIntegrator (towerCoefficientIntegratorLrt (β := β)) where
   sound c b h := towerCoeffIntegrateLrt_sound c b h
 
-/-- The single-`w` LRT coefficient integrator `(b, c)` tries the optional
-`CRischLevelLrt.limitedIntegrateSingle` (reconstructing `b = bnum/bden` and the constant `c` as
-`DenseFrac β` elements), falling back to the log-free `towerCoeffIntegrateLrt` (`c = 0`) when the class supplies no
-single-`w` integrator (the default). This is the `limInt` that flips on the degree-raising `c·tᵐ⁺¹/(m+1)` term
-once a base `(b,c)` integrator (`CFrac.limitedIntegrateSingleBase`) is present. -/
-def towerCoeffIntegrateSingleLrt (η c : DenseFrac β) : Option (DenseFrac β × DenseFrac β) :=
-  match (inferInstance : CRischLevelLrt β).limitedIntegrateSingle (CFrac.num c) (CFrac.den c)
-      (CFrac.num η) (CFrac.den η) with
-  | some ((bn, bd), cc) => some (CField.div (CFrac.ofPoly bn) (CFrac.ofPoly bd), CFrac.ofPoly [cc])
-  | none => (towerCoefficientIntegratorLrt (β := β)).integrate c |>.map fun b =>
-    (b, CCommRing.zero)
+/-- The tower primitive-polynomial stage driven by an explicit recursive coefficient operation. -/
+def recursiveTowerPolyIntegrateLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    (I : CRecursiveCoefficientIntegrator (DenseFrac β))
+    (η : DenseFrac β) (p : P (DenseFrac β)) : Option (P (DenseFrac β)) :=
+  cIntegratePrimPolyDegRaise η (fun c => I.limitedIntegrate η c) (CPolyEngine.cdeg p + 2) p
 
-/-- The LRT tower step's polynomial-part integrator: the degree-raising primitive-polynomial recursion
-`cIntegratePrimPolyDegRaise` with `towerCoeffIntegrateSingleLrt` as the single-`w` `limInt` (real `(b,c)` when
-the class provides `limitedIntegrateSingle`, else log-free `c = 0`). Soundness `D_tower(q) = p` is the
-telescoping `cIntegratePrimPolyDegRaiseG_sound` with no `limInt` correctness hypothesis. -/
+omit [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CPolySquarefree DensePoly β]
+  [CPolyResultant DensePoly] [CPolySubresultant DensePoly] [CharZero (CFieldSpec.K β)]
+  [CRischLevelLrt β] in
+theorem recursiveTowerPolyIntegrateLrt_sound {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    [LawfulCPolyEngine.{u,v} P] (I : CRecursiveCoefficientIntegrator (DenseFrac β))
+    (η : DenseFrac β) (p q : P (DenseFrac β))
+    (h : recursiveTowerPolyIntegrateLrt I η p = some q) :
+    Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (CPoly.toPoly q) =
+      CPoly.toPoly p :=
+  cIntegratePrimPolyDegRaiseG_sound η
+    (fun c => I.limitedIntegrate η c)
+    (CPolyEngine.cdeg p + 2) p q h
+
+/-- The LRT tower's polynomial-stage specialization of `recursiveTowerPolyIntegrateLrt`. -/
 def towerPolyIntegrateLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     (η : DenseFrac β) (p : P (DenseFrac β)) : Option (P (DenseFrac β)) :=
-  cIntegratePrimPolyDegRaise η (towerCoeffIntegrateSingleLrt η) (CPolyEngine.cdeg p + 2) p
+  recursiveTowerPolyIntegrateLrt (towerCoefficientIntegratorLrt (β := β)) η p
 
-/-- The LRT tower step's polynomial-part soundness: `D_tower(q) = p`, the telescoping
-`cIntegratePrimPolyDegRaiseG_sound` (each step's `q₀` is subtracted then added back, so the identity holds for
-*any* coefficient integrator — no `towerCoeffIntegrateLrt_sound` needed). -/
+/-- The LRT tower step's polynomial-part soundness. -/
 theorem towerPolyIntegrateLrt_sound {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     [LawfulCPolyEngine.{u,v} P] (η : DenseFrac β) (p q : P (DenseFrac β))
     (h : towerPolyIntegrateLrt η p = some q) :
     Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (CPoly.toPoly q) =
       CPoly.toPoly p :=
-  cIntegratePrimPolyDegRaiseG_sound η _ (CPolyEngine.cdeg p + 2) p q h
+  recursiveTowerPolyIntegrateLrt_sound (towerCoefficientIntegratorLrt (β := β)) η p q h
 
-/-- The LRT tower step's special-part field identity (`Dθ = 1`): from `towerPolyIntegrateLrt_sound`, the
-polynomial antiderivative `qp` of `fp` gives `D_tower(⟦qp/1⟧) = ⟦fp/1⟧`. The `Dt` + `toPoly Dt = 1`
-special identity for the tower step, with GENERAL coefficients via the LRT recursion. -/
-private theorem tower_special_identityLrt (Dt fp qp : DensePoly (DenseFrac β)) (hDt : toPoly Dt = 1)
-    (h : towerPolyIntegrateLrt CCommRing.one fp = some qp) :
+omit [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CPolySquarefree DensePoly β]
+  [CPolyResultant DensePoly] [CPolySubresultant DensePoly] [CharZero (CFieldSpec.K β)]
+  [CRischLevelLrt β] in
+private theorem recursiveTowerSpecialIdentityLrt (I : CRecursiveCoefficientIntegrator (DenseFrac β))
+    (Dt fp qp : DensePoly (DenseFrac β)) (hDt : toPoly Dt = 1)
+    (h : recursiveTowerPolyIntegrateLrt I CCommRing.one fp = some qp) :
     towerFractionFieldDeriv Dt (fieldFrac qp [CCommRing.one]) = fieldFrac fp [CCommRing.one] := by
   have hpoly : Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK CCommRing.one))
       (toPoly qp) = toPoly fp := by
-    simpa only [toPoly_list_eq] using towerPolyIntegrateLrt_sound CCommRing.one fp qp h
+    simpa only [toPoly_list_eq] using recursiveTowerPolyIntegrateLrt_sound I CCommRing.one fp qp h
   rw [CFieldSpec.toK_one, Polynomial.C_1] at hpoly
   have hone : toPoly ([CCommRing.one] : DensePoly (DenseFrac β)) = 1 := by
     simp only [denote, map_one, mul_zero, add_zero]
@@ -147,18 +159,21 @@ variable [CRischField (DenseFrac β)]
   [CPolySplitFactor DensePoly (DenseFrac β)]
   [LawfulCPolySplitFactor DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)]
 
-/-- The LRT tower primitive monomial case: the `Dθ = 1` log-tower case with the polynomial part integrated
-by the LRT coefficient RECURSION `towerPolyIntegrateLrt`. Guard: `b = 0` and `Dt = [1]`. The `postprocessNormal`
-field is inert here (`cIntegrateCaseLrt` never calls it — the reduced part goes through the direct root-free
-`cIntegrateReducedLrt`), so it reuses the shared guarded hook. -/
-def towerPrimitiveCaseLrt : CMonomialCase DensePoly (DenseFrac β) where
-  integrateSpecial Dt fp b _ds :=
+/-- The primitive tower monomial stage parameterized by its recursive coefficient operation. -/
+def towerPrimitiveRecursiveMonomialCaseLrt :
+    CRecursiveMonomialCase DensePoly (DenseFrac β) where
+  integrateSpecial I Dt fp b _ds :=
     if cisZero b && cisZero (csub Dt [CCommRing.one]) then
-      match towerPolyIntegrateLrt CCommRing.one fp with
+      match recursiveTowerPolyIntegrateLrt I CCommRing.one fp with
       | none => none
       | some qp => some (qp, [CCommRing.one])
     else none
   postprocessNormal := (primitiveGuardedCase (α := DenseFrac β)).postprocessNormal
+
+/-- The LRT tower primitive monomial case, supplied with its recursive coefficient operation. -/
+def towerPrimitiveCaseLrt : CMonomialCase DensePoly (DenseFrac β) :=
+  (towerPrimitiveRecursiveMonomialCaseLrt (β := β)).withCoefficient
+    (towerCoefficientIntegratorLrt (β := β))
 
 omit [CPolyGcd DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)] in
 /-- LRT tower primitive special-part soundness, the tower-recursion analogue of `primitiveGuardedCase_specialSound`.
@@ -173,11 +188,15 @@ theorem towerPrimitiveCaseLrt_specialSound
     toPoly sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K (DenseFrac β)),
       towerFractionFieldDeriv Dt (fieldFrac snum sden) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
-  simp only [towerPrimitiveCaseLrt] at hhook
+  simp only [towerPrimitiveCaseLrt, CRecursiveMonomialCase.withCoefficient,
+    towerPrimitiveRecursiveMonomialCaseLrt] at hhook
   by_cases hguard : (cisZero (crSpecNum Dt a d) && cisZero (csub Dt [CCommRing.one])) = true
   · rw [if_pos hguard] at hhook
     rw [Bool.and_eq_true] at hguard
     obtain ⟨hb, hDt1g⟩ := hguard
+    change (match towerPolyIntegrateLrt CCommRing.one (crPoly Dt a d) with
+      | none => none
+      | some qp => some (qp, [CCommRing.one])) = some (snum, sden) at hhook
     rcases hqp : towerPolyIntegrateLrt CCommRing.one (crPoly Dt a d) with _ | qp
     · rw [hqp] at hhook; simp at hhook
     · rw [hqp] at hhook
@@ -187,8 +206,67 @@ theorem towerPrimitiveCaseLrt_specialSound
         have hh := (cisZeroG_iff (csub Dt [CCommRing.one])).mp hDt1g
         simpa only [denote, map_one, mul_zero, add_zero, sub_eq_zero] using hh
       exact primitiveSpecialSoundCore Dt a d qp hd0 hb
-        (tower_special_identityLrt Dt (crPoly Dt a d) qp hDt1 hqp)
+        (recursiveTowerSpecialIdentityLrt (towerCoefficientIntegratorLrt (β := β))
+          Dt (crPoly Dt a d) qp hDt1 (by simpa [towerPolyIntegrateLrt] using hqp))
   · rw [if_neg hguard] at hhook; simp at hhook
+
+/- A recursive primitive tower case has the ordinary monomial-stage special-part identity. -/
+omit [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CPolySquarefree DensePoly β]
+  [CPolyResultant DensePoly] [CPolySubresultant DensePoly] [CharZero (CFieldSpec.K β)]
+  [CRischLevelLrt β] [CPolyGcd DensePoly (DenseFrac β)] [CPolySplitFactor DensePoly (DenseFrac β)]
+  [LawfulCPolySplitFactor DensePoly (DenseFrac β)] [CPolySquarefree DensePoly (DenseFrac β)] in
+theorem towerPrimitiveRecursiveMonomialCaseLrt_special_sound
+    (I : CRecursiveCoefficientIntegrator (DenseFrac β))
+    (Dt fp b ds snum sden : DensePoly (DenseFrac β))
+    (hhook : (towerPrimitiveRecursiveMonomialCaseLrt (β := β)).integrateSpecial I Dt fp b ds =
+      some (snum, sden)) :
+    toPoly sden ≠ 0 ∧
+      towerFractionFieldDerivP Dt (fieldFracP snum sden) =
+        fieldFracP fp CPoly.one + fieldFracP b ds := by
+  simp only [towerPrimitiveRecursiveMonomialCaseLrt] at hhook
+  by_cases hguard : (cisZero b && cisZero (csub Dt [CCommRing.one])) = true
+  · rw [if_pos hguard] at hhook
+    rw [Bool.and_eq_true] at hguard
+    obtain ⟨hb, hDt1g⟩ := hguard
+    rcases hqp : recursiveTowerPolyIntegrateLrt I CCommRing.one fp with _ | qp
+    · rw [hqp] at hhook
+      simp at hhook
+    · rw [hqp] at hhook
+      simp only [Option.some.injEq, Prod.mk.injEq] at hhook
+      obtain ⟨rfl, rfl⟩ := hhook
+      have hDt1 : toPoly Dt = 1 := by
+        have hh := (cisZeroG_iff (csub Dt [CCommRing.one])).mp hDt1g
+        simpa only [denote, map_one, mul_zero, add_zero, sub_eq_zero] using hh
+      have hpoly := recursiveTowerSpecialIdentityLrt I Dt fp qp hDt1 hqp
+      constructor
+      · have hone : toPoly ([CCommRing.one] : DensePoly (DenseFrac β)) = 1 := by
+          simp only [denote, map_one, mul_zero, add_zero]
+        rw [hone]
+        exact one_ne_zero
+      · simp only [fieldFracP, towerFractionFieldDerivP, toPoly_list_eq]
+        rw [show (CPoly.one : DensePoly (DenseFrac β)) = [CCommRing.one] from rfl]
+        have hb0 : toPoly b = 0 := (cisZeroG_iff b).mp hb
+        rw [hb0, map_zero, zero_div, add_zero]
+        simpa only [towerFractionFieldDeriv] using hpoly
+  · rw [if_neg hguard] at hhook
+    simp at hhook
+
+/-- The primitive LRT tower case realizes the generic recursive monomial-stage contract. -/
+instance instLawfulCRecursiveMonomialCaseTowerPrimitiveLrt :
+    LawfulCRecursiveMonomialCase (towerPrimitiveRecursiveMonomialCaseLrt (β := β)) where
+  lawful I _ := by
+    constructor
+    · intro Dt fp b ds snum sden hrun
+      simpa only [toPoly_list_eq] using
+        towerPrimitiveRecursiveMonomialCaseLrt_special_sound I Dt fp b ds snum sden hrun
+    · intro Dt cn dn before after hbefore hrun
+      change (primitiveGuardedCase (α := DenseFrac β)).postprocessNormal Dt before = some after at hrun
+      exact LawfulCMonomialCase.postprocessNormal_sound (C := primitiveGuardedCase) Dt cn dn
+        before after hbefore hrun
+    · intro Dt before after hden hrun
+      change (primitiveGuardedCase (α := DenseFrac β)).postprocessNormal Dt before = some after at hrun
+      exact LawfulCMonomialCase.postprocessNormal_den_nonzero (C := primitiveGuardedCase) Dt
+        before after hden hrun
 
 /-- The LRT tower step operation: `CRischLevelLrt (DenseFrac β)` from a below-level operation and contract
 and this level's reduced LRT frontier `[PrimitiveFrontierLrt (DenseFrac β)]`.

@@ -13,6 +13,10 @@ universe u v
 structure CRecursiveCoefficientIntegrator (α : Type u) [CField α] [CDiffField α] where
   /-- Integrate a coefficient in the immediately lower differential field, if possible. -/
   integrate : α → Option α
+  /-- Attempt Bronstein's single-`w` limited integration, returning the rational and constant parts.
+  The default uses an ordinary recursive antiderivative and a zero constant part. -/
+  limitedIntegrate : α → α → Option (α × α) := fun _ c =>
+    integrate c |>.map fun b => (b, CCommRing.zero)
 
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
 
