@@ -16,7 +16,7 @@ Everything reuses the *generic* degree-raising coefficient recursion (`cIntegrat
 `cIntegratePrimPolyDegRaiseG_sound` — result-type-agnostic, telescoping soundness): only the coefficient
 integrator `limInt` changes to `CRischLevelLrt.integrateRationalLrt` (wrapped `b ↦ (b, 0)`; the
 degree-raising `c` is used when the base level supplies a `(b,c)` limited integrator). The special-part
-soundness `towerPrimitiveCaseLrt_specialSound` and the log-tower special identity `tower_special_identityLrt`
+soundness `towerPrimitiveCaseLrt_specialSound` and the log-tower special identity `recursiveTowerSpecialIdentityLrt`
 close the polynomial part; the reduced part goes through the root-free assembler `cIntegrateCaseLrt`. -/
 
 namespace DeepWiki.SymbolicIntegration

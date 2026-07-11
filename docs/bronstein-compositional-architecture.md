@@ -104,8 +104,11 @@ monomial stage contracts.
    full `CMonomialCase`: `deg Dt = 2` lies outside `lowDerivDegreeRischLevelDomain`, and the generic Hermite
    properness proof is known to fail there. Then obtain dense and sparse tangent-level soundness by composing
    that boundary with the existing recombination interface.
-3. Connect one-level relative completeness to the recursive tower path. Completeness remains relative to
-   explicit stage-decomposition witnesses until the mathematical decomposition theorem is formalized.
+3. Connect one-level relative completeness to the recursive tower path. This needs a separate
+   relative-completeness contract for Bronstein's limited integration
+   `a = D(b) + c·η`: ordinary recursive antiderivative completeness alone cannot justify the
+   degree-raising branch. Completeness remains relative to explicit stage-decomposition witnesses
+   until that mathematical decomposition theorem is formalized.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
 
 ## Visibility policy
