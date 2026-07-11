@@ -1,17 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.UnifiedFuelFree
-import DeepWiki.SymbolicIntegration.Engine.Hyperexp.NormalCore
-import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Special
-import DeepWiki.SymbolicIntegration.Engine.Hyperexp.FullSoundness
-import DeepWiki.ComputableAlgebra.PolyEuclideanDense
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
-import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
-import DeepWiki.SymbolicIntegration.Engine.Hermite.TowerStep
-import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
-import DeepWiki.SymbolicIntegration.Engine.OneShotAssembly
-import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
-import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
-import DeepWiki.SymbolicIntegration.Engine.ResidueLogPart
-import DeepWiki.SymbolicIntegration.Engine.Assemble
+import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
 /-! # Dense canonical representation
 
