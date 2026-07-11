@@ -15,34 +15,10 @@ import DeepWiki.SymbolicIntegration.Engine.Assemble
 
 /-! # The generic one-level Risch assembler
 
-This file defines the `CMonomialCase`-parameterized integrator `cIntegrateCase`, the canonical-split
-accessors (`crPoly`/…/`redNorm`), canonical reconstruction, and generic soundness theorem
-`cIntegrateCase_sound`.
+This file defines concrete canonical-split accessors (`crPoly`/…) and their reconstruction theorem.
 -/
 
 namespace DeepWiki.SymbolicIntegration
-
-
-namespace DensePoly
-
-variable {α : Type*} [CField α] [CDiffField α]
-
-variable [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
-  [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
-
-/-- The generic one-level Risch integrator, parameterized by a monomial case `C`: canonical-split, run the
-case's special-part hook, correct the reduced normal part, and combine. -/
-def cIntegrateCase (C : CMonomialCase DensePoly α) (Dt a d : DensePoly α) (cands : List α) :
-    Option (IntegralResult α) :=
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
-  match C.integrateSpecial Dt fp b ds with
-  | none => none
-  | some (snum, sden) =>
-    match C.postprocessNormal Dt (cIntegrateReduced Dt cn dn cands) with
-    | none => none
-    | some nrm => some (combineSN snum sden nrm)
-
-end DensePoly
 
 open DensePoly
 open CFrac Polynomial
@@ -81,11 +57,6 @@ abbrev crSpecDen (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentat
 abbrev crNormNum (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentationFast Dt a d).2.2.1
 /-- Normal-part denominator `dₙ` of the canonical split. -/
 abbrev crNormDen (Dt a d : DensePoly α) : DensePoly α := (canonicalRepresentationFast Dt a d).2.2.2
-/-- The reduced integral of the normal part `cₙ/dₙ`. -/
-abbrev redNorm [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
-    (Dt a d : DensePoly α) (cands : List α) : IntegralResult α :=
-  cIntegrateReduced Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
-
 omit [CDiffFieldSpec α] [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Canonical split pieces recombine as `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`. -/
 theorem canonicalReconstruction (Dt a d : DensePoly α)
@@ -120,32 +91,5 @@ theorem canonicalReconstruction (Dt a d : DensePoly α)
   rw [hone, div_one]
   exact canonicalRepFast_field_identity (toPoly a) (toPoly d) (toPoly qr.1) (toPoly qr.2)
     (toPoly sn.1) (toPoly sn.2) (toPoly bc.1) (toPoly bc.2) hd hdn hds hadiv hsplit hbcr
-
-omit [CRischField α] in
-/-- Generic soundness of `cIntegrateCase` from special-part, normal-part, and reconstruction hypotheses. -/
-theorem cIntegrateCase_sound [CPolyGcd DensePoly α]
-    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
-    (C : CMonomialCase DensePoly α) (Dt a d : DensePoly α) (cands : List α)
-    (res : IntegralResult α) (snum sden : DensePoly α) (nrm : IntegralResult α)
-    (specialVal : RatFunc (CFieldSpec.K α))
-    (hsden : toPoly sden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
-    (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
-      = some (snum, sden))
-    (hCorr : C.postprocessNormal Dt (redNorm Dt a d cands) = some nrm)
-    (hsome : cIntegrateCase C Dt a d cands = some res)
-    (hSpecField : towerFractionFieldDeriv Dt (fieldFrac snum sden) = specialVal)
-    (hNrmField : IsIntegralResult Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)
-    (hrecon : specialVal + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
-    IsIntegralResult Dt a d res := by
-  have hshape : res = combineSN snum sden nrm := by
-    rw [cIntegrateCase] at hsome
-    simp only [crPoly, crSpecNum, crSpecDen, redNorm, crNormNum, crNormDen] at hSpec hCorr
-    rcases hcrep : canonicalRepresentationFast Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
-    rw [hcrep] at hsome hSpec hCorr
-    simp only [hSpec, hCorr] at hsome
-    exact (Option.some.injEq _ _ ▸ hsome).symm
-  rw [hshape]
-  exact combineSN_isIntegralResult Dt a d (crNormNum Dt a d) (crNormDen Dt a d) snum sden nrm
-    specialVal hsden hgden hSpecField hNrmField hrecon
 
 end DeepWiki.SymbolicIntegration

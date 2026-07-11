@@ -5,9 +5,8 @@ import DeepWiki.SymbolicIntegration.Engine.NormalReduction
 /-! # The abstract one-level Risch assembler (Stage-1)
 
 The abstract soundness *core* of the one-level Risch integrator, proven purely over stage-result data —
-**no concrete algorithm** (`cIntegrateCase`, `canonicalRepresentationFast`, `cIntegrateReduced`,
-`cHermiteReduceTower`, …) appears in this file. The concrete assembler (the `cIntegrateCase` def, the
-per-case `CMonomialCase` realizers, the reduced-stage realizations, and the end-to-end one-shots) lives in
+**no concrete algorithm** (`canonicalRepresentationFast`, `cIntegrateReduced`, `cHermiteReduceTower`, …)
+appears in this file. Dense canonical-split accessors and their reconstruction theorem live in
 `IntegratorAssembly.lean`, which imports this file. See `docs/risch-two-stage-discipline.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
@@ -136,16 +135,6 @@ abbrev canonicalResult [CCanonicalRepresentation P α] (Dt a d : P α) :
     CanonicalRepresentationResult P α :=
   CCanonicalRepresentation.compute Dt a d
 
-/-- Execute one compositional integration level through canonical, special, normal, and recombination stages. -/
-def assembleOneLevel (C : CMonomialCase P α) [CCanonicalRepresentation P α]
-    [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α]
-    (Dt a d : P α) : Option (IntegralResult α P) := do
-  let split := canonicalResult Dt a d
-  let (snum, sden) ← C.integrateSpecial Dt split.polynomial split.specialNum split.specialDen
-  let before ← reduceNormal Dt split.normalNum split.normalDen
-  let normal ← C.postprocessNormal Dt before
-  pure (combineSN snum sden normal)
-
 /-- **Representation-independent assembler recombination.** A special fraction whose derivative is
 `specialVal`, a normal result for `cn/dn`, and their reconstruction of `a/d` combine into an integral result.
 This is the common soundness square consumed by every concrete one-level assembler. -/
@@ -204,40 +193,6 @@ theorem assembleOneLevelP_sound (C : CMonomialCase P α) [CCanonicalRepresentati
     hsden hnrmDen hspecialField hnrm ?_
   simpa only [add_assoc] using hcanonical
 
-/-- A successful generic one-level assembly is an integral result of its input. -/
-theorem assembleOneLevel_sound (C : CMonomialCase P α) [CCanonicalRepresentation P α]
-    [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
-    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
-    [CResidueSource P α] [CResidueLogPart P α]
-    [LawfulCResidueLogPart (P := P) (α := α)] (Dt a d : P α) (out : IntegralResult α P)
-    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
-    (hrun : assembleOneLevel C Dt a d = some out) :
-    IsIntegralResultP Dt a d out := by
-  cases hspecial : C.integrateSpecial Dt (canonicalResult Dt a d).polynomial
-      (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen with
-  | none => simp [assembleOneLevel, hspecial] at hrun
-  | some special =>
-    obtain ⟨snum, sden⟩ := special
-    cases hnormal : reduceNormal Dt (canonicalResult Dt a d).normalNum
-        (canonicalResult Dt a d).normalDen with
-    | none => simp [assembleOneLevel, hspecial, hnormal] at hrun
-    | some before =>
-      cases hpost : C.postprocessNormal Dt before with
-      | none => simp [assembleOneLevel, hspecial, hnormal, hpost] at hrun
-      | some normal =>
-        have hout : combineSN snum sden normal = out := by
-          simpa [assembleOneLevel, hspecial, hnormal, hpost] using hrun
-        subst out
-        have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
-        have hnormalForm := LawfulCCanonicalRepresentation.normal_isNormalSqfree Dt a d hd
-        have hnormalProper := LawfulCCanonicalRepresentation.normal_proper Dt a d hd
-        have hbefore := reduceNormal_sound Dt (canonicalResult Dt a d).normalNum
-          (canonicalResult Dt a d).normalDen before hnormalDen hnormalForm hnormalProper hdegree hnormal
-        have hbeforeDen := reduceNormal_rationalDen_nonzero Dt (canonicalResult Dt a d).normalNum
-          (canonicalResult Dt a d).normalDen before hnormalDen hnormalForm hnormal
-        exact assembleOneLevelP_sound C Dt a d before normal snum sden hd hbefore hbeforeDen
-          hspecial hpost
-
 namespace DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
@@ -251,8 +206,8 @@ noncomputable abbrev fieldFrac (num den : DensePoly α) : RatFunc (CFieldSpec.K 
 results — a special-part fraction `snum/sden` differentiating to `specialVal`, a normal-part result `nrm`
 that is an antiderivative of `cn/dn` (`hNrmField`), and the canonical reconstruction `specialVal + ⟦cn/dn⟧ =
 ⟦a/d⟧` (`hrecon`) — the combined result `combineSN snum sden nrm` is an antiderivative of `a/d`. This is the
-soundness proven *against the interface data*; the concrete assembler (`IntegratorAssembly.lean`) is a
-wrapper that supplies these from `canonicalRepresentationFast` / the reduced stage. -/
+soundness proven *against the interface data*; dense canonical decomposition (`IntegratorAssembly.lean`) is a
+separate downstream realization. -/
 theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : DensePoly α) (nrm : IntegralResult α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPoly sden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)

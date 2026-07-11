@@ -71,8 +71,8 @@ theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : DensePoly α)
 
 /-- **The one-level primitive LRT case integrator.** Canonical split (`canonicalRepresentationFast`) →
 special part via the case hook `C.integrateSpecial` (rational, shared with the rational solver) → reduced
-normal part via the root-free `cIntegrateReducedLrt` → combined with `combineSNLrt`. The LRT analogue of
-`cIntegrateCase` (no candidate sweep, no `postprocessNormal` step: the primitive LRT reduced
+normal part via the root-free `cIntegrateReducedLrt` → combined with `combineSNLrt`. Unlike the retired
+candidate-sweep assembler, it has no candidate sweep or `postprocessNormal` step: the primitive LRT reduced
 integrator is direct). -/
 def cIntegrateCaseLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
     [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
