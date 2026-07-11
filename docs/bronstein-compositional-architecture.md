@@ -42,6 +42,8 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - The guarded primitive monomial operation now has a `LawfulCMonomialCase` instance and specializes the
   generic dense level as `cIntegratePrimitiveGuardedChecked`; its successful runs inherit soundness entirely by
   composition. Its intentionally narrow guard does not claim `CompleteCMonomialCase`.
+- The checked hyperexponential monomial operation validates its Laurent special result before exposing it,
+  uses exact normal-result passthrough, and inherits one-level soundness from the generic assembler.
 - `CRischLevel` packages a one-level executable solver, while `LawfulCRischLevel` states soundness and
   relative completeness over an explicit semantic domain. `oneLevelRisch` packages the generic assembler;
   its current domain records the low-derivation-degree Hermite boundary, and completeness targets genuine
