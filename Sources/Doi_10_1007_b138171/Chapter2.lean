@@ -1118,8 +1118,9 @@ theorem ex_2_8_1_compute :
 
 /-- **Rothstein–Trager resultant, computable variant** (§2.4, eq 2.7, p.47): a genuinely `#eval`-able
 rendering of `R(t) = res_x(D, A − t·D')` over the dense coefficient carrier `DensePoly ℚ := List ℚ` (Mathlib's
-`ℚ[X]` resultant `rtResultant` is noncomputable). The univariate resultant `DensePoly.cresultantWf` uses the
-Euclidean-PRS identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q,r)`; the bivariate RT
+`ℚ[X]` resultant `rtResultant` is noncomputable). The selected univariate resultant
+`CPolyResultant.compute` uses the dense Euclidean-PRS implementation and the identity
+`res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q,r)`; the bivariate RT
 resultant is recovered, staying univariate, by evaluation + Lagrange interpolation
 (`DensePoly.cinterpolate`).
 The library's `cResidueResultantTower [1]`, with the computable monomial derivative and
