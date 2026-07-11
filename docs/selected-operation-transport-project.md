@@ -100,6 +100,10 @@ denotations does not make those terms definitionally equal.
 - The coupled-DE base solver, tangent-cancellation recursion, and their soundness/reconstruction chain
   now share a selected `[CLinearSolve ℚ]`; the soundness proofs request `[LawfulCLinearSolve ℚ]` only at
   the row-equation boundary. Chapter 8 executable examples remain default-RREF specializations.
+- The dense weak normalizer now selects its resultant operation through
+  `[CPolyResultant DensePoly]`. That same capability is threaded through the reusable Risch-DE solver,
+  soundness/completeness predicates, decision-procedure API, and next-tower completeness frontier;
+  Chapter 6 executable checks remain concrete default-dense specializations.
 
 ## Verification
 

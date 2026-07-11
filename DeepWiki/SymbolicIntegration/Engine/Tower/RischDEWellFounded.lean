@@ -215,7 +215,7 @@ Everything past the five recursive bottoms is a flat composition over the leaves
 namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CPolyGcd DensePoly α]
-  [CPolySplitFactor DensePoly α]
+  [CPolySplitFactor DensePoly α] [CPolyResultant DensePoly]
 
 /-- Generic weak normalizer `cWeakNormalizer Dt fnum fden = q ∈ α[t]`: split the denominator into its
 normal part `dₙ` (`CPoly.splitFactor`), form `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve the

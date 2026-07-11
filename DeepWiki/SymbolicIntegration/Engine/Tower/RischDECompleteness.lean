@@ -154,13 +154,14 @@ section StepAssemblyWf
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
   [CFieldDomain β DensePoly]
-  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+  [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CPolyResultant DensePoly]
   [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- Next-level RDE completeness `CRischFieldCompleteWf β`: the public solver returns `some` on every
 solvable field-level RDE over `DenseFrac β`. -/
 def CRischFieldCompleteWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+    [CPolyResultant DensePoly]
     [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
   ∀ f g : DenseFrac β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
 
@@ -169,7 +170,7 @@ solvable `DenseFrac β` RDE satisfies the weak-normalizer clauses, the inner res
 polynomial solution/denominator guards, and the direct soundness certificate. -/
 structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
-    [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
+    [CPolyResultant DensePoly] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : CRischFieldComplete β → ∀ f g : DenseFrac β, FieldRDESolvable f g →
     DensePoly.cisZero

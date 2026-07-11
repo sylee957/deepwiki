@@ -119,8 +119,8 @@ def idealEq (I J : GenDivisor) : Bool :=
     let cc := cnorm c
     K.map (fun row => row.map (fun z =>
       let zz := CFrac.reduceMonic z
-      let num := zz.num
-      let den := cnorm zz.den
+      let num := CFrac.num zz
+      let den := cnorm (CFrac.den zz)
       CPolyEuclidean.div (cmul cc num) den))
   let NI := scale (cmul δI δJ) I
   let NJ := scale (cmul δI δJ) J
@@ -137,7 +137,7 @@ denominator `1` (i.e. `I ⊆ O`). -/
 def idealIsIntegral (I : GenDivisor) : Bool :=
   I.all (fun row => row.all (fun z =>
     let zz := CFrac.reduceMonic z
-    cisZero (csub (cnorm zz.den) [CCommRing.one])))
+    cisZero (csub (cnorm (CFrac.den zz)) [CCommRing.one])))
 
 end DensePoly
 
