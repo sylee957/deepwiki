@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Parametric
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
+import DeepWiki.ComputableAlgebra.PolyAntiderivative
 
 /-! # Base single-`w` limited integration
 
@@ -31,7 +32,7 @@ def cLimitedIntegrateSingleBase (a η : DenseFrac ℚ) : Option (DenseFrac ℚ �
     let c0 := v.getD 0 0
     let c1 := (v.getD 1 0) / c0                                   -- normalized `c₁` (`c₀ = 1`)
     let integrand := cadd (qs.getD 0 []) (cscale c1 (qs.getD 1 []))
-    let bpoly := cIntegratePoly integrand
+    let bpoly := CPoly.antiderivative integrand
     some (CFrac.ofPoly bpoly, -c1)
 
 /-- **`cLimitedIntegrateSingleBase` in the num/den signature** of `LawfulRischLevelLrt.limitedIntegrateSingle`

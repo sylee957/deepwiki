@@ -8,6 +8,7 @@ import DeepWiki.ComputableAlgebra.PolyReprDegree
 import DeepWiki.ComputableAlgebra.PolyReprSparse
 import DeepWiki.ComputableAlgebra.PolyReprBridge
 import DeepWiki.ComputableAlgebra.PolyEngine
+import DeepWiki.ComputableAlgebra.PolyAntiderivative
 import DeepWiki.ComputableAlgebra.PolyReprDivision
 import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
 import DeepWiki.ComputableAlgebra.PolyReprGcd

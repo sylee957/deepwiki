@@ -183,6 +183,12 @@ and retain the existing dense worked output. The lawful engine laws are universe
 denotation carrier, so the same generic soundness theorem applies at tower coefficients such as
 `DenseFrac β`, whose denotation is `RatFunc (CFieldSpec.K β)`.
 
+Termwise antiderivation is representation-independent as well. `CPoly.antiderivative` is defined once
+from `coeff`/`degBound`/`ofFn`; `CPoly.derivative_toPoly_antiderivative` proves its characteristic-zero
+commuting square coefficientwise. Dense and sparse execution witnesses share that definition, the former
+`DensePoly.cIntegratePoly` body has been retired, and the polynomial Risch-DE and limited-integration
+consumers now select the abstract operation.
+
 The earlier Chapter 5 polynomial-part recursions now use the same representation-independent layer.
 `cPolyReduceTower` and `cPrimitivePolyIntegrate` normalize through the engine and state their former
 dense-list stopping tests semantically as “zero or degree below the cutoff.” Their cancellation steps use

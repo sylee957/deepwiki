@@ -1007,7 +1007,7 @@ example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : Li
 
 `cIntegrateGFullWf_poly_oneShot` is gated on `hpoly` (`D(am qₚ) = am fₚ`). For the primitive base
 `Dt = [CCommRing.one]`, the `b = []` branch integrates `fₚ` term by term and the Wf dispatcher pins
-`qₚ = cIntegratePoly fₚ`, so the existing constant-coefficient field identity discharges `hpoly`. -/
+`qₚ = CPoly.antiderivative fₚ`, so the existing constant-coefficient field identity discharges `hpoly`. -/
 
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf` with `hpoly` discharged
 (primitive base).** -/
@@ -1049,15 +1049,15 @@ theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracG
   set fp := (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).1 with hfpE
   have hfp := hbranch.poly_nonzero
   rw [← hfpE] at hfp
-  have hqp_eq : qp = DensePoly.cIntegratePoly fp := by
+  have hqp_eq : qp = CPoly.antiderivative fp := by
     rw [cPolyRischDEG_nil_eq ([CCommRing.one] : DensePoly α) fp ((DensePoly.cdeg fp : ℤ) + 1) hfp
       (le_refl _)] at hqp
     exact (Option.some.injEq _ _ ▸ hqp).symm
   have hpoly : towerFractionFieldDeriv ([CCommRing.one] : DensePoly α) (am α (toPoly qp))
       = am α (toPoly fp) := by
     rw [hqp_eq]
-    exact towerFractionFieldDerivG_amG_cIntegratePolyG_const fp
-      (cIntegratePolyG_const_coeff fp hconst)
+    exact towerFractionFieldDerivG_amG_antiderivative_const fp
+      (mapCoeffs_antiderivative_eq_zero fp hconst)
   exact cIntegrateGFullWf_poly_oneShot ([CCommRing.one] : DensePoly α) a d cands res qp hbranch hsome
     hqp hgden hpoly hnormal hrecon
 

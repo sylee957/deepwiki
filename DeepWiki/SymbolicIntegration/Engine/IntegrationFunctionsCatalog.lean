@@ -38,8 +38,8 @@ open DensePoly CFrac
 -- The primitive-base polynomial capstone: `hpoly` and `hA` discharged at `ℚ(x)(t)`.
 #check @cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
 
--- `cIntegratePoly`: PARTIAL soundness — the constant case only.
-#check @field_identity_cIntegratePolyG_const
+-- `CPoly.antiderivative`: PARTIAL soundness — the constant case only.
+#check @field_identity_antiderivative_const
 
 -- `cIntegrateReduced`: the conditional fuel-free reduced-case field identities.
 #check @field_identity_of_cIntegrateReducedG_primitive

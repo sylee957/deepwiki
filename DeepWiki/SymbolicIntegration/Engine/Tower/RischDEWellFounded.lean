@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
+import DeepWiki.ComputableAlgebra.PolyAntiderivative
 
 /-! # Well-founded generic tower Risch-DE oracle `cRischDE`
 
@@ -359,7 +360,7 @@ variable {α : Type*} [CField α] [CDiffField α]
 variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
 
 /-- Generic Poly-Risch-DE dispatcher `cPolyRischDE Dt b c n`: solves `Dq + b·q = c` for `q ∈ α[t]`,
-`deg(q) ≤ n`, routing by monomial type and `deg(b)`: `b = 0` ⇒ pure integration (`cIntegratePoly`, with
+`deg(q) ≤ n`, routing by monomial type and `deg(b)`: `b = 0` ⇒ pure integration (`CPoly.antiderivative`, with
 the `deg(c)+1 ≤ n` check); `deg(b) > max(0, δ−1)` ⇒ non-cancellation (`cPolyRischDENoCancel`);
 `δ = 0, deg(b) = 0` ⇒ primitive cancellation (`cPolyRischDECancelPrim`); `δ = 1, deg(b) = 0` ⇒
 hyperexponential cancellation (`cPolyRischDECancelExp`); else (`δ ≥ 2`) ⇒ non-cancellation.
@@ -370,7 +371,7 @@ def cPolyRischDE (Dt : DensePoly α) (b c : DensePoly α) (n : ℤ) : Option (De
   if cisZero b then
     if cisZero c then some []
     else if (cdeg c : ℤ) + 1 > n then none
-    else some (cIntegratePoly c)
+    else some (CPoly.antiderivative c)
   else if db > max 0 (δ - 1) then
     cPolyRischDENoCancel Dt b c n
   else if δ = 0 ∧ db = 0 then

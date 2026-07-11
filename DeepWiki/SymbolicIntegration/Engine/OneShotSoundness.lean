@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance
 /-! # Checker-free soundness of the integrator's polynomial branch
 
 Abstract correctness of the `b = 0` primitive-integration arm and the cancellation cases of the
-poly-Risch-DE dispatcher: the antiderivative `cIntegratePoly` differentiates back to its integrand,
+poly-Risch-DE dispatcher: the antiderivative `CPoly.antiderivative` differentiates back to its integrand,
 the output passes `checkIdentity` provably (never executed), and the field-level identity
 `D(∫fₚ) = fₚ` follows through `field_identity_of_checkIdentityG`. -/
 
@@ -18,76 +18,18 @@ open DensePoly CFrac
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- Shifted antiderivative-tail derivative law: for the index-`k`-started integration tail
-`L_k = (c.zipIdx k).map (fun (a,i) => a/(i+1))`, `D(X^{k+1} · toPoly L_k) = X^k · toPoly c`. -/
-theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (c : DensePoly α) :
-    ∀ k : ℕ, Polynomial.derivative
-        (X ^ (k + 1) *
-          toPoly ((c.zipIdx k).map (fun ai => CField.div ai.1 (CField.natCast (ai.2 + 1)))))
-      = X ^ k * toPoly c := by
-  induction c with
-  | nil => intro k; simp
-  | cons a as ih =>
-    intro k
-    -- `(a :: as).zipIdx k = (a, k) :: as.zipIdx (k+1)`; map and read `toPoly`
-    simp only [List.zipIdx_cons, List.map_cons, toPolyG_cons, toR_eq_toK]
-    -- `X^{k+1} · (C(toK (a/(k+1))) + X · toPoly(tail)) = C(..)·X^{k+1} + X^{k+2}·toPoly(tail)`
-    rw [mul_add, derivative_add]
-    -- the head term: `D(C(toK (a/(k+1)))·X^{k+1}) = (k+1)·C(toK (a/(k+1)))·X^k`
-    have hhead : Polynomial.derivative
-        (X ^ (k + 1) * Polynomial.C (CFieldSpec.toK (CField.div a (CField.natCast (k + 1)))))
-        = Polynomial.C (CFieldSpec.toK a) * X ^ k := by
-      rw [mul_comm, derivative_C_mul, derivative_X_pow, add_tsub_cancel_right, ← mul_assoc, ← C_mul]
-      congr 1
-      -- `(toK (a/(k+1))) · (k+1 : K) = toK a`, since `toK (CField.natCast (k+1)) = (k+1 : K)`
-      rw [CFieldSpec.toK_div, CFieldSpec.toK_natCast]
-      have hk1 : ((k : CFieldSpec.K α) + 1) ≠ 0 := by
-        have : ((k : CFieldSpec.K α) + 1) = ((k + 1 : ℕ) : CFieldSpec.K α) := by push_cast; ring
-        rw [this, Nat.cast_ne_zero]; omega
-      push_cast
-      field_simp
-    -- the tail term: regroup `X^{k+1}·(X·toPoly tail) = X^{(k+1)+1}·toPoly tail`, apply IH at `k+1`
-    have htail : Polynomial.derivative
-        (X ^ (k + 1) * (X * toPoly
-          ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (CField.natCast (ai.2 + 1))))))
-        = X ^ (k + 1) * toPoly as := by
-      have hrw : X ^ (k + 1) * (X * toPoly
-            ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (CField.natCast (ai.2 + 1)))))
-          = X ^ ((k + 1) + 1) * toPoly
-            ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (CField.natCast (ai.2 + 1)))) := by
-        rw [pow_succ]; ring
-      rw [hrw, ih (k + 1)]
-    rw [hhead, htail, mul_add]
-    ring
-
-/-! ### The `cIntegratePoly` formal-derivative correctness
-
-`cIntegratePoly c = 0 :: (c.zipIdx.map (fun (a,i) => a/(i+1)))` is the engine's term-by-term
-antiderivative `∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}`; its formal derivative inverts it exactly.
-Needs only characteristic zero (to divide by `i+1`). -/
-
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `D(toPoly (cIntegratePoly c)) = toPoly c` over `(CFieldSpec.K α)[X]`,
-`D = Polynomial.derivative`: the term-by-term antiderivative differentiates back to its integrand. -/
-theorem derivative_toPolyG_cIntegratePolyG [CharZero (CFieldSpec.K α)] (c : DensePoly α) :
-    Polynomial.derivative (toPoly (DensePoly.cIntegratePoly c)) = toPoly c := by
-  have h := derivative_Xpow_mul_toPolyG_integrateTail c 0
-  simpa only [DensePoly.cIntegratePoly, toPolyG_cons, toR_eq_toK, CFieldSpec.toK_zero, map_zero, zero_add,
-    pow_zero, pow_one, one_mul, List.zipIdx] using h
-
 /-! ### The `cmonomialDeriv [1]` (monomial-derivation) form over a constant base
 
 For the primitive monomial `Dt = [CCommRing.one]`, `implicitDeriv 1 = mapCoeffs + derivative`, so the
 antiderivative differentiates back exactly when the coefficient-derivation term `mapCoeffs` vanishes;
 that constant-base regime is carried as the explicit hypothesis `hconst`. -/
 
-/-- `cIntegratePoly` differentiates back under the primitive monomial derivation (`Dt = 1`): if
-`mapCoeffs (toPoly (cIntegratePoly c)) = 0` (constant base), then
-`toPoly (cmonomialDeriv [CCommRing.one] (cIntegratePoly c)) = toPoly c` over `(CFieldSpec.K α)[X]`. -/
-theorem toPolyG_cmonomialDeriv_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : DensePoly α)
-    (hconst : Differential.mapCoeffs (toPoly (DensePoly.cIntegratePoly c)) = 0) :
-    toPoly (DensePoly.cmonomialDeriv ([CCommRing.one] : DensePoly α) (DensePoly.cIntegratePoly c))
+/-- `CPoly.antiderivative` differentiates back under the primitive monomial derivation (`Dt = 1`): if
+`mapCoeffs (toPoly (CPoly.antiderivative c)) = 0` (constant base), then
+`toPoly (cmonomialDeriv [CCommRing.one] (CPoly.antiderivative c)) = toPoly c` over `(CFieldSpec.K α)[X]`. -/
+theorem toPolyG_cmonomialDeriv_antiderivative_const [CharZero (CFieldSpec.K α)] (c : DensePoly α)
+    (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
+    toPoly (DensePoly.cmonomialDeriv ([CCommRing.one] : DensePoly α) (CPoly.antiderivative c))
       = toPoly c := by
   rw [toPolyG_cmonomialDeriv]
   -- `toPoly [CCommRing.one] = 1`, so `implicitDeriv 1 = mapCoeffs + derivative`
@@ -97,24 +39,24 @@ theorem toPolyG_cmonomialDeriv_cIntegratePolyG_const [CharZero (CFieldSpec.K α)
   rw [hDt, Differential.implicitDeriv, Derivation.add_apply, hconst, zero_add]
   -- the `v • derivative'` part is `1 • derivative = derivative`
   rw [Derivation.smul_apply, one_smul, Derivation.restrictScalars_apply]
-  exact derivative_toPolyG_cIntegratePolyG c
+  exact DensePoly.derivative_toPoly_antiderivative c
 
 /-! ### The field identity `D(∫ fₚ) = fₚ` for the polynomial part -/
 
 /-- Field-level polynomial-part identity: over a constant base (`hconst`), the tower fraction-field
 derivation sends the antiderivative to the integrand,
-`towerFractionFieldDeriv [CCommRing.one] (am (toPoly (cIntegratePoly c))) = am (toPoly c)` over
+`towerFractionFieldDeriv [CCommRing.one] (am (toPoly (CPoly.antiderivative c))) = am (toPoly c)` over
 `RatFunc (CFieldSpec.K α)`. -/
-theorem towerFractionFieldDerivG_amG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)]
+theorem towerFractionFieldDerivG_amG_antiderivative_const [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] (c : DensePoly α)
-    (hconst : Differential.mapCoeffs (toPoly (DensePoly.cIntegratePoly c)) = 0) :
+    (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly α)
-        (am α (toPoly (DensePoly.cIntegratePoly c)))
+        (am α (toPoly (CPoly.antiderivative c)))
       = am α (toPoly c) := by
   -- the tower field derivation on a polynomial image is the image of the monomial derivation
   rw [towerFractionFieldDeriv, extendDeriv_algebraMap, ← toPolyG_cmonomialDeriv]
   -- which the abstract atom identifies with `toPoly c`
-  rw [toPolyG_cmonomialDeriv_cIntegratePolyG_const c hconst]
+  rw [toPolyG_cmonomialDeriv_antiderivative_const c hconst]
 
 /-! ### The polynomial-branch output passes `checkIdentity` abstractly -/
 
@@ -130,13 +72,13 @@ theorem toPolyG_cmonomialDeriv_one : toPoly
   exact Derivation.map_one_eq_zero _
 
 /-- Over a constant base (`hconst`), the pure-polynomial result
-`⟨(cIntegratePoly c, [CCommRing.one]), []⟩` satisfies
+`⟨(CPoly.antiderivative c, [CCommRing.one]), []⟩` satisfies
 `checkIdentity [CCommRing.one] · c [CCommRing.one] = true`, proven abstractly with no runtime check
 executed: the `b = 0` integration branch always passes its own check. -/
-theorem checkIdentityG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : DensePoly α)
-    (hconst : Differential.mapCoeffs (toPoly (DensePoly.cIntegratePoly c)) = 0) :
+theorem checkIdentityG_antiderivative_const [CharZero (CFieldSpec.K α)] (c : DensePoly α)
+    (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
     DensePoly.checkIdentity ([CCommRing.one] : DensePoly α)
-        ⟨(DensePoly.cIntegratePoly c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
+        ⟨(CPoly.antiderivative c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
       = true := by
   -- unfold the check; the empty-log fold is just the seed `([0], [1])`
   rw [DensePoly.checkIdentity]
@@ -156,37 +98,37 @@ theorem checkIdentityG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : D
   -- the rational-part numerator derivative `D(q)·1 − q·D(1)`, with `D(1) = 0`
   rw [Differential.implicitDeriv, Derivation.add_apply, hconst, zero_add,
     Derivation.smul_apply, one_smul, Derivation.restrictScalars_apply,
-    Polynomial.derivative'_apply, derivative_toPolyG_cIntegratePolyG c,
+    Polynomial.derivative'_apply, DensePoly.derivative_toPoly_antiderivative c,
     Derivation.map_one_eq_zero]
   ring
 
 /-! ### The one-shot: compose the crux with the field bridge -/
 
 /-- Checker-free one-shot `D(∫ fₚ) = fₚ` (polynomial branch): over a constant base, the antiderivative
-`g = am(toPoly (cIntegratePoly c))/am 1` satisfies
+`g = am(toPoly (CPoly.antiderivative c))/am 1` satisfies
 `towerFractionFieldDeriv [1] g + logResidueSum [1] [] = am(toPoly c)/am 1`, obtained by feeding the
 abstractly-proven `checkIdentity = true` into `field_identity_of_checkIdentityG`. -/
-theorem field_identity_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
-    (c : DensePoly α) (hconst : Differential.mapCoeffs (toPoly (DensePoly.cIntegratePoly c)) = 0) :
+theorem field_identity_antiderivative_const [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+    (c : DensePoly α) (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly α)
-        (am α (toPoly (DensePoly.cIntegratePoly c)) / am α (toPoly ([CCommRing.one] : DensePoly α)))
+        (am α (toPoly (CPoly.antiderivative c)) / am α (toPoly ([CCommRing.one] : DensePoly α)))
         + logResidueSum ([CCommRing.one] : DensePoly α)
-            (⟨(DensePoly.cIntegratePoly c, ([CCommRing.one] : DensePoly α)), []⟩ : IntegralResult α).logs
+            (⟨(CPoly.antiderivative c, ([CCommRing.one] : DensePoly α)), []⟩ : IntegralResult α).logs
       = am α (toPoly c) / am α (toPoly ([CCommRing.one] : DensePoly α)) := by
   have hone_ne : toPoly ([CCommRing.one] : DensePoly α) ≠ 0 := by
     simp only [denote, map_one, mul_zero, add_zero]
     exact one_ne_zero
   exact field_identity_of_checkIdentityG ([CCommRing.one] : DensePoly α)
-    ⟨(DensePoly.cIntegratePoly c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
-    hone_ne hone_ne (by simp) (checkIdentityG_cIntegratePolyG_const c hconst)
+    ⟨(CPoly.antiderivative c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
+    hone_ne hone_ne (by simp) (checkIdentityG_antiderivative_const c hconst)
 
 /-! ### Keyed on the algorithm function `cPolyRischDE` -/
 
 omit [CDiffFieldSpec α] in
-/-- `cPolyRischDE` returns `cIntegratePoly c` on the nonzero `b = 0` branch within budget. -/
+/-- `cPolyRischDE` returns `CPoly.antiderivative c` on the nonzero `b = 0` branch within budget. -/
 theorem cPolyRischDEG_nil_eq [CRischField α] (Dt : DensePoly α) (c : DensePoly α) (n : ℤ)
     (hc : DensePoly.cisZero c = false) (hdeg : (DensePoly.cdeg c : ℤ) + 1 ≤ n) :
-    DensePoly.cPolyRischDE Dt ([] : DensePoly α) c n = some (DensePoly.cIntegratePoly c) := by
+    DensePoly.cPolyRischDE Dt ([] : DensePoly α) c n = some (CPoly.antiderivative c) := by
   have hb : DensePoly.cisZero ([] : DensePoly α) = true := by rw [cisZeroG_iff, toPolyG_nil]
   simp only [DensePoly.cPolyRischDE, hb, if_true, hc, Bool.false_eq_true, if_false]
   rw [if_neg (by omega : ¬ (DensePoly.cdeg c : ℤ) + 1 > n)]
@@ -204,13 +146,13 @@ theorem field_identity_of_cPolyRischDEG [CharZero (CFieldSpec.K α)] [Algebra �
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly α)
         (am α (toPoly q) / am α (toPoly ([CCommRing.one] : DensePoly α)))
       = am α (toPoly c) / am α (toPoly ([CCommRing.one] : DensePoly α)) := by
-  -- the algorithm output is exactly `cIntegratePoly c`
-  have hq : q = DensePoly.cIntegratePoly c := by
+  -- the algorithm output is exactly `CPoly.antiderivative c`
+  have hq : q = CPoly.antiderivative c := by
     rw [cPolyRischDEG_nil_eq ([CCommRing.one] : DensePoly α) c n hc hdeg] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hq
   -- empty logs ⇒ `logResidueSum … [] = 0`, so the field-identity is exactly the bridge output
-  have h := field_identity_cIntegratePolyG_const (α := α) c hconst
+  have h := field_identity_antiderivative_const (α := α) c hconst
   rwa [logResidueSumG_nil, add_zero] at h
 
 /-! ### Discharging the constant-base hypothesis from integrand to antiderivative -/
@@ -227,21 +169,20 @@ theorem mapCoeffs_derivative_commute (r : (CFieldSpec.K α)[X]) :
       Derivation.map_natCast]
   rw [hc, smul_zero, zero_add, smul_eq_mul, mul_comm]
 
-/-- Constant-base condition transports through `cIntegratePoly`: if `mapCoeffs (toPoly c) = 0` then
-`mapCoeffs (toPoly (cIntegratePoly c)) = 0` (the two conditions are equivalent). -/
-theorem cIntegratePolyG_const_coeff [CharZero (CFieldSpec.K α)] (c : DensePoly α)
+/-- Constant-base condition transports through `CPoly.antiderivative`: if `mapCoeffs (toPoly c) = 0` then
+`mapCoeffs (toPoly (CPoly.antiderivative c)) = 0` (the two conditions are equivalent). -/
+theorem mapCoeffs_antiderivative_eq_zero [CharZero (CFieldSpec.K α)] (c : DensePoly α)
     (hc : Differential.mapCoeffs (toPoly c) = 0) :
-    Differential.mapCoeffs (toPoly (DensePoly.cIntegratePoly c)) = 0 := by
-  set Q := Differential.mapCoeffs (toPoly (DensePoly.cIntegratePoly c)) with hQ
+    Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0 := by
+  set Q := Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) with hQ
   -- `derivative Q = 0` by commuting `mapCoeffs`/`derivative` and the formal-derivative atom
   have hderiv : Polynomial.derivative Q = 0 := by
-    rw [hQ, ← mapCoeffs_derivative_commute, derivative_toPolyG_cIntegratePolyG, hc]
-  -- `coeff Q 0 = 0`: `cIntegratePoly` has zero constant term (`0 :: …`)
+    rw [hQ, ← mapCoeffs_derivative_commute, DensePoly.derivative_toPoly_antiderivative, hc]
+  -- `coeff Q 0 = 0`: `CPoly.antiderivative` has zero constant term (`0 :: …`)
   have hcoeff0 : Q.coeff 0 = 0 := by
     rw [hQ, Differential.coeff_mapCoeffs]
-    have : (toPoly (DensePoly.cIntegratePoly c)).coeff 0 = 0 := by
-      rw [DensePoly.cIntegratePoly, toPolyG_cons, coeff_add, coeff_C_zero, toR_eq_toK, CFieldSpec.toK_zero,
-        coeff_X_mul_zero, add_zero]
+    have : (toPoly (CPoly.antiderivative c)).coeff 0 = 0 :=
+      DensePoly.coeff_toPoly_antiderivative_zero c
     rw [this, map_zero]
   -- `derivative Q = 0` ⟹ `natDegree Q = 0` ⟹ `Q = C (coeff Q 0) = 0`
   have hdeg : Q.natDegree = 0 := Polynomial.derivative_eq_zero.mp hderiv
@@ -261,14 +202,14 @@ theorem cPolyRischDEG_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra �
     towerFractionFieldDeriv ([CCommRing.one] : DensePoly α)
         (am α (toPoly q) / am α (toPoly ([CCommRing.one] : DensePoly α)))
       = am α (toPoly c) / am α (toPoly ([CCommRing.one] : DensePoly α)) := by
-  -- `q = cIntegratePoly c`, so the output-side `mapCoeffs` follows from the input-side via the transport
-  have hq : q = DensePoly.cIntegratePoly c := by
+  -- `q = CPoly.antiderivative c`, so the output-side `mapCoeffs` follows from the input-side via the transport
+  have hq : q = CPoly.antiderivative c := by
     rw [cPolyRischDEG_nil_eq ([CCommRing.one] : DensePoly α) c n hc hdeg] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hq
-  exact field_identity_of_cPolyRischDEG c (DensePoly.cIntegratePoly c) n hc hdeg
+  exact field_identity_of_cPolyRischDEG c (CPoly.antiderivative c) n hc hdeg
     (cPolyRischDEG_nil_eq ([CCommRing.one] : DensePoly α) c n hc hdeg)
-    (cIntegratePolyG_const_coeff c hconst)
+    (mapCoeffs_antiderivative_eq_zero c hconst)
 
 /-! ### The deliverable at the level-1 carrier `α = DenseFrac ℚ = ℚ(x)` -/
 
@@ -298,18 +239,18 @@ theorem field_identity_of_cPolyRischDEG_qfunNZG (c q : DensePoly (DenseFrac ℚ)
 
 /-! ### Restatements of the polynomial-branch identities -/
 
--- The term-by-term antiderivative `cIntegratePoly` differentiates back to its integrand.
+-- The term-by-term antiderivative `CPoly.antiderivative` differentiates back to its integrand.
 example [CharZero (CFieldSpec.K α)] (c : DensePoly α) :
-    Polynomial.derivative (toPoly (DensePoly.cIntegratePoly c)) = toPoly c :=
-  derivative_toPolyG_cIntegratePolyG c
+    Polynomial.derivative (toPoly (CPoly.antiderivative c)) = toPoly c :=
+  DensePoly.derivative_toPoly_antiderivative c
 
 -- The polynomial-branch output satisfies `checkIdentity` abstractly, with no runtime check.
 example [CharZero (CFieldSpec.K α)] (c : DensePoly α)
-    (hconst : Differential.mapCoeffs (toPoly (DensePoly.cIntegratePoly c)) = 0) :
+    (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
     DensePoly.checkIdentity ([CCommRing.one] : DensePoly α)
-        ⟨(DensePoly.cIntegratePoly c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
+        ⟨(CPoly.antiderivative c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
       = true :=
-  checkIdentityG_cIntegratePolyG_const c hconst
+  checkIdentityG_antiderivative_const c hconst
 
 -- At `α = DenseFrac ℚ`, a successful polynomial RDE solve differentiates back to the integrand.
 example (c q : DensePoly (DenseFrac ℚ)) (n : ℤ)
@@ -326,8 +267,8 @@ example (c q : DensePoly (DenseFrac ℚ)) (n : ℤ)
 -- Differential-constant integrand coefficients give differential-constant antiderivative coefficients.
 example [CharZero (CFieldSpec.K α)] (c : DensePoly α)
     (hc : Differential.mapCoeffs (toPoly c) = 0) :
-    Differential.mapCoeffs (toPoly (DensePoly.cIntegratePoly c)) = 0 :=
-  cIntegratePolyG_const_coeff c hc
+    Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0 :=
+  mapCoeffs_antiderivative_eq_zero c hc
 
 -- Polynomial RDE soundness for the `b = 0` branch, keyed on the integrand.
 example [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] [CRischField α]
@@ -492,15 +433,15 @@ end Cancellation
 /-! ### Axiom audit — rests only on the standard kernel axioms
 (`propext`, `Classical.choice`, `Quot.sound`). -/
 
-#print axioms derivative_toPolyG_cIntegratePolyG
-#print axioms toPolyG_cmonomialDeriv_cIntegratePolyG_const
-#print axioms towerFractionFieldDerivG_amG_cIntegratePolyG_const
-#print axioms checkIdentityG_cIntegratePolyG_const
-#print axioms field_identity_cIntegratePolyG_const
+#print axioms DensePoly.derivative_toPoly_antiderivative
+#print axioms toPolyG_cmonomialDeriv_antiderivative_const
+#print axioms towerFractionFieldDerivG_amG_antiderivative_const
+#print axioms checkIdentityG_antiderivative_const
+#print axioms field_identity_antiderivative_const
 #print axioms field_identity_of_cPolyRischDEG
 #print axioms field_identity_of_cPolyRischDEG_qfunNZG
 #print axioms mapCoeffs_derivative_commute
-#print axioms cIntegratePolyG_const_coeff
+#print axioms mapCoeffs_antiderivative_eq_zero
 #print axioms cPolyRischDEG_nil_field_identity
 #print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelPrimG
 #print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelExpG
