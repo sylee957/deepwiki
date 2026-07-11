@@ -108,7 +108,7 @@ is divisible by `θ`. -/
 theorem expCase_congruence :
     cisZero (CPolyEuclidean.mod
       (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
-          (cmul [CCommRing.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
+          (cmul [CCommRing.mul (CField.natCast 1) expVder] (cmul expB expF))) expC)
       [CCommRing.zero, CCommRing.one]) = true := by native_decide
 
 /-- The `θ = exp v` cleared identity `(B'f + Bg − k·v'·B·f) − C = θ·D` in `ℚ(x)[eˣ]` (`B = [−1]`,
@@ -116,7 +116,7 @@ theorem expCase_congruence :
 theorem expCase_cleared_identity :
     cisZero (csub
       (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
-          (cmul [CCommRing.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
+          (cmul [CCommRing.mul (CField.natCast 1) expVder] (cmul expB expF))) expC)
       (cmul [CCommRing.zero, CCommRing.one] expD)) = true := by native_decide
 
 /-- The `exp` residual `D = −1/2` (a `θ`-constant): the `C/(θᵏy)` step lowered the `θ`-power multiplicity

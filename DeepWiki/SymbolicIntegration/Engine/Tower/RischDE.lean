@@ -22,18 +22,18 @@ universe u
 /-! ### Positive-integer-root test for residue resultants
 
 The weak normalizer needs the positive integer roots of the residue resultant `r ∈ α[z]`; the nodes
-`n : ℕ` are lifted by the `[CField α]`-only natural cast `cnatCast`. -/
+`n : ℕ` are lifted by the `[CField α]`-only natural cast `CField.natCast`. -/
 
 namespace DensePoly
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] {α : Type u} [CField α]
 
-/-- `cisRootNat r n = true` iff `r(cnatCast n) = 0` in `α` (Horner via `ceval`): whether the
+/-- `cisRootNat r n = true` iff `r(CField.natCast n) = 0` in `α` (Horner via `ceval`): whether the
 natural number `n`, lifted to `α`, is a root of `r`. -/
 def cisRootNat (r : P α) (n : ℕ) : Bool :=
-  CCommRing.isZero (CPolyEngine.eval r (cnatCast n))
+  CCommRing.isZero (CPolyEngine.eval r (CField.natCast n))
 
-/-- `cPosIntRoots r bound = [n ∈ {1,…,bound} : r(cnatCast n) = 0]`: the positive integer roots of
+/-- `cPosIntRoots r bound = [n ∈ {1,…,bound} : r(CField.natCast n) = 0]`: the positive integer roots of
 `r` up to `bound`; empty for an already-weakly-normalized input. -/
 def cPosIntRoots (r : P α) (bound : ℕ) : List ℕ :=
   (List.range bound).filterMap (fun k =>

@@ -79,14 +79,14 @@ variable [CDiffField α]
 /-- `logDerRadicand n f = f'/(n·f)` as a base element: the diagonal `radDeriv` multiplier, with
 `y' = logDerRadicand · y` and the `yⁱ`-component scaled by `i · logDerRadicand`. -/
 def logDerRadicand (n : ℕ) (f : α) : α :=
-  CField.div (CDiffField.cderiv f) (CCommRing.mul (DensePoly.cnatCast n) f)
+  CField.div (CDiffField.cderiv f) (CCommRing.mul (CField.natCast n) f)
 
 /-- The diagonal radical derivation `radDeriv n f [a₀,…] = [D a₀ + 0·a₀·ℓ, D a₁ + 1·a₁·ℓ, …]`
 (`ℓ = f'/(n·f)`): the `i`-th component maps `aᵢ ↦ D(aᵢ) + aᵢ·(i·ℓ)`, preserving each `yⁱ`-component. -/
 def radDeriv (n : ℕ) (f : α) (p : RadElem α) : RadElem α :=
   let ℓ := logDerRadicand n f
   (p.zipIdx.map (fun (a, i) =>
-    CCommRing.add (CDiffField.cderiv a) (CCommRing.mul a (CCommRing.mul (DensePoly.cnatCast i) ℓ))))
+    CCommRing.add (CDiffField.cderiv a) (CCommRing.mul a (CCommRing.mul (CField.natCast i) ℓ))))
 
 end RadElem
 
@@ -132,7 +132,7 @@ namespace CPoly
 def radCase1Cofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
     {α : Type u} [CField α] (k : ℕ) (V Df f C : P α) : P α :=
   let oneMinusK := CPolyEngine.ofCoeffList
-    [CCommRing.neg (DensePoly.cnatCast (k - 1))]
+    [CCommRing.neg (CField.natCast (k - 1))]
   let coeff := CPolyEngine.mul oneMinusK (CPolyEngine.mul Df f)
   (CPoly.diophantineReduced coeff V C).1
 
@@ -142,7 +142,7 @@ by `V` is selected through `CPolyEuclidean.div`. -/
 def radCase1Residual {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
     {α : Type u} [CField α] (k : ℕ) (V Df f g B C Bder : P α) : P α :=
   let oneMinusK := CPolyEngine.ofCoeffList
-    [CCommRing.neg (DensePoly.cnatCast (k - 1))]
+    [CCommRing.neg (CField.natCast (k - 1))]
   let topNum := CPolyEngine.sub
     (CPolyEngine.mul oneMinusK (CPolyEngine.mul Df (CPolyEngine.mul f B))) C
   let quotient := CPolyEuclidean.div topNum V
@@ -161,8 +161,8 @@ The piece `C/(Wᵏy)` where `W` is a squarefree factor of the radicand `f` (not 
 def radCase2Cofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
     {α : Type u} [CField α] (k : ℕ) (W h C : P α) : P α :=
   let half := CPolyEngine.ofCoeffList (P := P)
-    [CField.div CCommRing.one (DensePoly.cnatCast 2)]
-  let kpoly := CPolyEngine.ofCoeffList (P := P) [DensePoly.cnatCast k]
+    [CField.div CCommRing.one (CField.natCast 2)]
+  let kpoly := CPolyEngine.ofCoeffList (P := P) [CField.natCast k]
   let coef := CPolyEngine.mul (CPolyEngine.sub half kpoly)
     (CPolyEngine.mul (CPolyEngine.deriv W) h)
   (CPoly.diophantineReduced coef W C).1
@@ -173,8 +173,8 @@ def radCase2Cofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuc
 def radCase2Residual {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
     {α : Type u} [CField α] (k : ℕ) (W h C B : P α) : P α :=
   let half := CPolyEngine.ofCoeffList (P := P)
-    [CField.div CCommRing.one (DensePoly.cnatCast 2)]
-  let kpoly := CPolyEngine.ofCoeffList (P := P) [DensePoly.cnatCast k]
+    [CField.div CCommRing.one (CField.natCast 2)]
+  let kpoly := CPolyEngine.ofCoeffList (P := P) [CField.natCast k]
   let coef := CPolyEngine.mul (CPolyEngine.sub half kpoly)
     (CPolyEngine.mul (CPolyEngine.deriv W) h)
   let topNum := CPolyEngine.sub (CPolyEngine.mul B coef) C
@@ -223,7 +223,7 @@ def radCase3Cofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P]
   if CPolyEngine.cisZero C || dC < dF then CPolyEngine.ofCoeffList []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CCommRing.add (DensePoly.cnatCast jp1) (CPolyEngine.clead g)
+    let denom := CCommRing.add (CField.natCast jp1) (CPolyEngine.clead g)
     let b := CField.div (CPolyEngine.clead C) denom                -- `b = lcf(C)/((j+1)+lcf(g))`
     CPolyEngine.monomial b jp1                                     -- `b·θ^{j+1}`
 
@@ -253,7 +253,7 @@ def radCase3CofactorGen {P : Type u → Type u} [CPoly P] [CPolyEngine P]
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
     let denom := CCommRing.add
-      (CCommRing.mul (DensePoly.cnatCast jp1) Dt) (CPolyEngine.clead g)
+      (CCommRing.mul (CField.natCast jp1) Dt) (CPolyEngine.clead g)
     let b := CField.div (CPolyEngine.clead C) denom                 -- `b = lcf(C)/((j+1)θ' + lcf(g))`
     CPolyEngine.monomial b jp1                                      -- `b·θ^{j+1}`
 
@@ -284,7 +284,7 @@ def radExpCofactor {P : Type u → Type u} [CPoly P] [CPolyEngine P]
   let g0 := CPoly.coeff g 0
   let c0 := CPoly.coeff C 0
   let denom := CField.sub g0
-    (CCommRing.mul (CCommRing.mul (DensePoly.cnatCast k) vder) f0)
+    (CCommRing.mul (CCommRing.mul (CField.natCast k) vder) f0)
   CPolyEngine.ofCoeffList [CField.div c0 denom]                               -- `[b₀]`
 
 example :
@@ -301,7 +301,7 @@ example :
 def radExpResidual {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
     {α : Type u} [CField α] (k : ℕ) (vder : α) (f g B C Bder : P α) : P α :=
   let kpoly := CPolyEngine.ofCoeffList (P := P)
-    [CCommRing.mul (DensePoly.cnatCast k) vder]
+    [CCommRing.mul (CField.natCast k) vder]
   let kvBf := CPolyEngine.mul kpoly (CPolyEngine.mul B f)
   let num := CPolyEngine.sub
     (CPolyEngine.sub

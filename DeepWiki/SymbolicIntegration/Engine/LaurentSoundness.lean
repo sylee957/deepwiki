@@ -37,7 +37,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 theorem toK_cLaurentShiftG_natCast [CRischField α] (η : α) (k : ℕ) :
     CFieldSpec.toK (cLaurentShift η (k : ℤ)) = (k : CFieldSpec.K α) * CFieldSpec.toK η := by
   rw [cLaurentShift, Int.natAbs_natCast, if_neg (Int.not_lt.mpr (Int.natCast_nonneg k)),
-    CFieldSpec.toK_mul, DensePoly.toK_cnatCastG]
+    CFieldSpec.toK_mul, CFieldSpec.toK_natCast]
 
 /-- **A non-negative Laurent term is an antiderivative.** For a hyperexponential monomial
 `Dt = η·t` and a solved coefficient `cLaurentIntCoeff η k aₖ = some qₖ` (`k : ℕ`),
@@ -72,7 +72,7 @@ theorem toK_cLaurentShiftG_negCast [CRischField α] (η : α) (i : ℕ) :
       = -((i : CFieldSpec.K α) + 1) * CFieldSpec.toK η := by
   have hnat : (-(i + 1 : ℤ)).natAbs = i + 1 := by omega
   rw [cLaurentShift, hnat, if_pos (by omega), CFieldSpec.toK_mul, CFieldSpec.toK_neg,
-    DensePoly.toK_cnatCastG]
+    CFieldSpec.toK_natCast]
   push_cast; ring
 
 /-- **A negative Laurent term is an antiderivative.** For `Dt = η·t` and a solved

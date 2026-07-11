@@ -88,7 +88,7 @@ the residue resultant.
 The generic engine pieces `ceval`/`cresultantG`/`cinterpolate` are *already* `[CField α]`-generic. The
 remaining carrier-specific concern beyond the `t`-gcd is the embedding `ℚ → α`: the residue
 resultant samples `z` at the natural nodes `0, 1, …, n`, and a residue is a field constant. We lift the
-nodes through the existing `cnatCast : ℕ → α` (`[CField α]`-only), and take the residue candidates as
+nodes through the existing `CField.natCast : ℕ → α` (`[CField α]`-only), and take the residue candidates as
 `α` elements (the natural generic form) — so the whole log part generalizes. `cratCast` additionally
 gives the `ℚ → α` embedding for convenience. -/
 
@@ -96,13 +96,13 @@ namespace DensePoly
 
 variable {α : Type*} [CField α]
 
-/-- Rational into a `CField` `cratCast q = (sign · cnatCast |num|) / cnatCast den`: embed `q ∈ ℚ`
-into any `[CField α]` via the numerator/denominator natural casts (`cnatCast`) and a sign, all from
+/-- Rational into a `CField` `cratCast q = (sign · CField.natCast |num|) / CField.natCast den`: embed `q ∈ ℚ`
+into any `[CField α]` via the numerator/denominator natural casts (`CField.natCast`) and a sign, all from
 `CField` ops. The generic `ℚ → α` constant embedding (the generic `ofConstNZ` at the scalar level). -/
 def cratCast (q : ℚ) : α :=
-  let n : α := cnatCast q.num.natAbs
+  let n : α := CField.natCast q.num.natAbs
   let nsigned : α := if q.num < 0 then CCommRing.neg n else n
-  CCommRing.mul nsigned (CField.inv (cnatCast q.den))
+  CCommRing.mul nsigned (CField.inv (CField.natCast q.den))
 
 end DensePoly
 

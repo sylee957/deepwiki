@@ -45,14 +45,14 @@ theorem case1_cofactor_eq :
 /-- The Case-1 congruence `(1−k)V'fB − C ≡ 0 (mod V)` holds under the selected remainder. -/
 theorem case1_congruence :
     cisZero (CPolyEuclidean.mod
-      (csub (cmul (cneg [cnatCast 1]) (cmul case1Vder (cmul case1F case1B))) case1C)
+      (csub (cmul (cneg [CField.natCast 1]) (cmul case1Vder (cmul case1F case1B))) case1C)
       case1V) = true := by native_decide
 
 /-- The Case-1 cleared identity `(1−k)V'fB − C + V·(B'f + Bg) = V·D` in `ℚ[x]` (`B = −1`, `D = 1/2`). -/
 theorem case1_cleared_identity :
     cisZero (csub
       (cadd
-        (csub (cmul (cneg [cnatCast 1]) (cmul case1Vder (cmul case1F case1B))) case1C)
+        (csub (cmul (cneg [CField.natCast 1]) (cmul case1Vder (cmul case1F case1B))) case1C)
         (cmul case1V (cadd (cmul (cderiv case1B) case1F) (cmul case1B case1))))
       (cmul case1V case1D)) = true := by native_decide
 

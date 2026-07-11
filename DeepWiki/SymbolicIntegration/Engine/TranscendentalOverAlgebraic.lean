@@ -120,7 +120,7 @@ def radExtRischDESolve {α : Type*} [CField α] [CDiffField α] [CRischField α]
     let b₀ : α := (B.toRad : List α).headD CCommRing.zero
     let ℓ : α := RadElem.logDerRadicand n f
     (((List.range n).mapM fun i =>
-      let coeff : α := CCommRing.add b₀ (CCommRing.mul (DensePoly.cnatCast i) ℓ)
+      let coeff : α := CCommRing.add b₀ (CCommRing.mul (CField.natCast i) ℓ)
       let Ci : α := (C.toRad : List α).getD i CCommRing.zero
       CRischField.crischDESolve coeff Ci).map RadExt.ofRad)
   else none

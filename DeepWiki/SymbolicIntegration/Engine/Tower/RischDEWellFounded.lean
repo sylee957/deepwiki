@@ -65,7 +65,7 @@ def cPolyRischDECancelExp (Dt : DensePoly α) (b c : DensePoly α) (n : ℤ) :
   else
     let m : ℕ := cdeg c
     -- eq. 6.24 base RDE `Ds + (b₀ + m·η)·s = lc(c)` over `α`.
-    let coeff : α := CCommRing.add b0 (CCommRing.mul (cnatCast m) η)
+    let coeff : α := CCommRing.add b0 (CCommRing.mul (CField.natCast m) η)
     match CRischField.crischDESolve coeff (clead c) with
     | none => none
     | some s =>
@@ -217,7 +217,7 @@ def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots :
   let r := cResidueResultantTower Dt a d1
   let roots := cPosIntRoots r boundRoots
   roots.foldl (fun (acc : DensePoly α) (n : ℕ) =>
-    let gi := CFracGcdCoreWf.cgcdFFCoreWf (csub a (cscale (cnatCast n) Dd1)) d1
+    let gi := CFracGcdCoreWf.cgcdFFCoreWf (csub a (cscale (CField.natCast n) Dd1)) d1
     cmul acc (cpow gi n)) [CCommRing.one]
 
 /-- Generic normal-denominator reduction `cRdeNormalDenominator Dt fnum fden gnum gden` for weakly
@@ -267,7 +267,7 @@ def cRdeSpecialDenominator (Dt : DensePoly α) (a b c : DensePoly α) :
     let pN := cpow p Nnat
     let abar := cmul a pN
     let DpOverp := CPolyEuclidean.div (cmonomialDeriv Dt p) p
-    let bterm := cscale (CCommRing.neg (cnatCast negn)) (cmul a DpOverp)
+    let bterm := cscale (CCommRing.neg (CField.natCast negn)) (cmul a DpOverp)
     let bbar := cmul (cadd b bterm) pN
     let cbar := cmul c (cpow p Nminusn)
     let h := cpow p negn
@@ -341,7 +341,7 @@ theorem toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear [CFieldSpec α] (Dt : 
     dsimp only [pN]
     simp only [denote]
   · rw [cRdeSpecialDenominator]
-    simp only [if_neg hp, hn, neg_zero, Int.toNat_zero, cnatCast, denote, hbterm0, map_zero, zero_mul,
+    simp only [if_neg hp, hn, neg_zero, Int.toNat_zero, CField.natCast, denote, hbterm0, map_zero, zero_mul,
       add_zero, zero_sub]
     dsimp only [pN]
     simp only [denote]

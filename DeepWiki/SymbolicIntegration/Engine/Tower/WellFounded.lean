@@ -299,7 +299,7 @@ def cResidueResultantTowerWith {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {β : Type u} [CField β] [CDiffField β] (Dt a d : P β) : DensePoly β :=
   let n := CPolyEngine.cdeg d
   let pts : List (β × β) := (List.range (n + 1)).map (fun k =>
-    let zk : β := cnatCast k
+    let zk : β := CField.natCast k
     (zk, CPolyResultant.compute d (cAmcDd Dt a d zk)))
   cinterpolate pts
 

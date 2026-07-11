@@ -243,7 +243,7 @@ theorem toPolyG_genResidueResultant_eq_of_eval [CPolyResultant DensePoly]
   -- Lean elaborates the engine's `(range n).map (fun k:ℕ => ((k:ℚ), …))` by lifting the tuple coercion to a
   -- DOUBLE map `((range n).map Nat.cast).map (fun z:ℚ => (z, …))`. We pin `pts` in exactly that doubly-mapped
   -- form (so `hpts` is `rfl` against the engine), and the list-shape lemmas compose over the two `List.map`s.
-  -- `zs` = the `ℚ`-node abscissae. Build it via `List.range'` reused through `cnatCast`-free `map`; pin it
+  -- `zs` = the `ℚ`-node abscissae. Build it via `List.range'` reused through `CField.natCast`-free `map`; pin it
   -- with `List.Nodup`/`length`/`mem` facts proven by the dedicated `range_map` lemmas (the coercion makes the
   -- literal `(range).map (↑·)` re-display as a `flatMap`/`do`-block, so we keep the facts, not the syntax).
   -- `zs` = the `ℚ`-node abscissae, kept as the EXPLICIT cast-map of `range` (`List.map_coe_range`) so the

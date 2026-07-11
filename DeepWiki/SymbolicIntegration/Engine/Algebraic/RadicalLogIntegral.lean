@@ -174,7 +174,7 @@ variable {α : Type*} [CField α]
 /-- Heuristic log argument for `∫ dx/√(x² + bx + c)`: `radQuadraticLogArg b = [b/2, 1]`, the element
 `u = x + b/2 + y` of `α[y]/(y² − (x² + bx + c))`. -/
 def radQuadraticLogArg (b : α) : RadElem α :=
-  [CField.div b (DensePoly.cnatCast 2), CCommRing.one]
+  [CField.div b (CField.natCast 2), CCommRing.one]
 
 end RadElem
 

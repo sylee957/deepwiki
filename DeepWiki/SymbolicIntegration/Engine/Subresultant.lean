@@ -151,7 +151,7 @@ def parametric {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
   let N := n + m + 1
   (List.range (j + 1)).map (fun k =>
     DensePoly.cinterpolate ((List.range N).map (fun jj =>
-      let c := DensePoly.cnatCast jj
+      let c := CField.natCast jj
       (c, CPoly.coeff
         (CPolySubresultant.compute Dstar
           (CPolyEngine.sub A (CPolyEngine.scale c Dd)) n m j) k))))

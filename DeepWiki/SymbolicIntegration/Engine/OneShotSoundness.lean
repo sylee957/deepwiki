@@ -24,7 +24,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (c : DensePoly α) :
     ∀ k : ℕ, Polynomial.derivative
         (X ^ (k + 1) *
-          toPoly ((c.zipIdx k).map (fun ai => CField.div ai.1 (cnatCast (ai.2 + 1)))))
+          toPoly ((c.zipIdx k).map (fun ai => CField.div ai.1 (CField.natCast (ai.2 + 1)))))
       = X ^ k * toPoly c := by
   induction c with
   | nil => intro k; simp
@@ -36,12 +36,12 @@ theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (
     rw [mul_add, derivative_add]
     -- the head term: `D(C(toK (a/(k+1)))·X^{k+1}) = (k+1)·C(toK (a/(k+1)))·X^k`
     have hhead : Polynomial.derivative
-        (X ^ (k + 1) * Polynomial.C (CFieldSpec.toK (CField.div a (cnatCast (k + 1)))))
+        (X ^ (k + 1) * Polynomial.C (CFieldSpec.toK (CField.div a (CField.natCast (k + 1)))))
         = Polynomial.C (CFieldSpec.toK a) * X ^ k := by
       rw [mul_comm, derivative_C_mul, derivative_X_pow, add_tsub_cancel_right, ← mul_assoc, ← C_mul]
       congr 1
-      -- `(toK (a/(k+1))) · (k+1 : K) = toK a`, since `toK (cnatCast (k+1)) = (k+1 : K)`
-      rw [CFieldSpec.toK_div, DensePoly.toK_cnatCastG]
+      -- `(toK (a/(k+1))) · (k+1 : K) = toK a`, since `toK (CField.natCast (k+1)) = (k+1 : K)`
+      rw [CFieldSpec.toK_div, CFieldSpec.toK_natCast]
       have hk1 : ((k : CFieldSpec.K α) + 1) ≠ 0 := by
         have : ((k : CFieldSpec.K α) + 1) = ((k + 1 : ℕ) : CFieldSpec.K α) := by push_cast; ring
         rw [this, Nat.cast_ne_zero]; omega
@@ -50,12 +50,12 @@ theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (
     -- the tail term: regroup `X^{k+1}·(X·toPoly tail) = X^{(k+1)+1}·toPoly tail`, apply IH at `k+1`
     have htail : Polynomial.derivative
         (X ^ (k + 1) * (X * toPoly
-          ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (cnatCast (ai.2 + 1))))))
+          ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (CField.natCast (ai.2 + 1))))))
         = X ^ (k + 1) * toPoly as := by
       have hrw : X ^ (k + 1) * (X * toPoly
-            ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (cnatCast (ai.2 + 1)))))
+            ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (CField.natCast (ai.2 + 1)))))
           = X ^ ((k + 1) + 1) * toPoly
-            ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (cnatCast (ai.2 + 1)))) := by
+            ((as.zipIdx (k + 1)).map (fun ai => CField.div ai.1 (CField.natCast (ai.2 + 1)))) := by
         rw [pow_succ]; ring
       rw [hrw, ih (k + 1)]
     rw [hhead, htail, mul_add]

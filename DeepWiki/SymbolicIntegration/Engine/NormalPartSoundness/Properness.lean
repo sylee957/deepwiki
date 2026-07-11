@@ -424,7 +424,7 @@ theorem cHermiteReduceTowerInner_g_proper (Dt : DensePoly Î±) (v u : DensePoly Î
     intro a g hg
     rw [cHermiteReduceTowerInnerWf]
     -- the step's summand `(b, cpow v (j+1))` is proper, so the `fracAddG` step preserves properness.
-    set rhs := cscale (CCommRing.neg (CField.inv (cnatCast (j + 1)))) a with hrhs
+    set rhs := cscale (CCommRing.neg (CField.inv (CField.natCast (j + 1)))) a with hrhs
     set b := (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v rhs).1 with hbdef
     have hbproper : (toPoly b).degree
         < (toPoly (cpow v (j + 1))).degree :=

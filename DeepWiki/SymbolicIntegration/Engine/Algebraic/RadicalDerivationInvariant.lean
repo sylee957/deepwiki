@@ -44,7 +44,7 @@ radDerivFrom (logDerRadicand n f) 0`). Generalizing `k` is what lets the closed-
 go through. -/
 def radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) : RadElem α :=
   (List.zipIdx p k).map (fun a =>
-    CCommRing.add (CDiffField.cderiv a.1) (CCommRing.mul a.1 (CCommRing.mul (DensePoly.cnatCast a.2) ℓ)))
+    CCommRing.add (CDiffField.cderiv a.1) (CCommRing.mul a.1 (CCommRing.mul (CField.natCast a.2) ℓ)))
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 /-- `radDeriv n f p = radDerivFrom (logDerRadicand n f) 0 p`: unfolds `radDeriv`'s `zipIdx`
@@ -67,11 +67,11 @@ theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
   | cons a as ih =>
     rw [radDerivFrom, List.zipIdx_cons, List.map_cons]
     show DensePoly.toPoly (CCommRing.add (CDiffField.cderiv a)
-          (CCommRing.mul a (CCommRing.mul (DensePoly.cnatCast k) ℓ)) :: radDerivFrom ℓ (k + 1) as) = _
+          (CCommRing.mul a (CCommRing.mul (CField.natCast k) ℓ)) :: radDerivFrom ℓ (k + 1) as) = _
     rw [DensePoly.toPolyG_cons]
     simp only [toR_eq_toK]
     rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_mul,
-      CDiffFieldSpec.toK_cderiv, DensePoly.toK_cnatCastG]
+      CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_natCast]
     rw [ih (k + 1), DensePoly.toPolyG_cons]
     simp only [toR_eq_toK]
     -- expand `mapCoeffs (C(toK a) + X·toPoly as)` and `derivative (C(toK a) + X·toPoly as)` by the
@@ -302,7 +302,7 @@ theorem toK_logDerRadicand_mul (n : ℕ) (f : α)
     (hnf : (n : CFieldSpec.K α) * CFieldSpec.toK f ≠ 0) :
     (n : CFieldSpec.K α) * CFieldSpec.toK (logDerRadicand n f) * CFieldSpec.toK f
       = CFieldSpec.toK (CDiffField.cderiv f) := by
-  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, DensePoly.toK_cnatCastG]
+  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, CFieldSpec.toK_natCast]
   rw [mul_comm ((n : CFieldSpec.K α)) _, mul_assoc, div_mul_cancel₀ _ hnf]
 
 /-- The crux: `D(Xⁿ − C(toK f)) ∈ radIdeal n f` for `D = implicitDeriv (C(toK ℓ)·X)`. Computes

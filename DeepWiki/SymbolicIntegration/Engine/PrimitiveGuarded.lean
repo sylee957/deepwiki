@@ -23,8 +23,8 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- Rational `p/q ∈ α` (`p : ℤ`, `q : ℕ`) via the `[CField α]` casts — `p.natAbs` lifted, negated when
 `p < 0`, divided by `q`. -/
 def cRat (p : ℤ) (q : ℕ) : α :=
-  CField.div (if p < 0 then CCommRing.neg (DensePoly.cnatCast p.natAbs) else DensePoly.cnatCast p.natAbs)
-    (DensePoly.cnatCast q)
+  CField.div (if p < 0 then CCommRing.neg (CField.natCast p.natAbs) else CField.natCast p.natAbs)
+    (CField.natCast q)
 
 /-- Automatic residue candidates from the bounded rational sweep `{p/q : |p| ≤ bound, 1 ≤ q ≤ bound}`.
 `cRationalResidues` filters these to the actual residues (roots of the residue resultant), so the reduced

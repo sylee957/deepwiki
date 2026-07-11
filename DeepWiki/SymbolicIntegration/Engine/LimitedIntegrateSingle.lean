@@ -63,7 +63,7 @@ def cIntegratePrimPolyDegRaise {P : Type u → Type u} [CPoly P] [CPolyEngine P]
       (limInt (CPolyEngine.clead p)).bind fun bc =>
         let q0 := CPolyEngine.add
           (CPolyEngine.monomial (P := P)
-            (CField.div bc.2 (cnatCast (CPolyEngine.cdeg p + 1))) (CPolyEngine.cdeg p + 1))
+            (CField.div bc.2 (CField.natCast (CPolyEngine.cdeg p + 1))) (CPolyEngine.cdeg p + 1))
           (CPolyEngine.monomial (P := P) bc.1 (CPolyEngine.cdeg p))
         (cIntegratePrimPolyDegRaise η limInt fuel
           (CPolyEngine.sub p

@@ -99,7 +99,7 @@ polynomial `T² − s` of the basis element `y/d` (`s = radSquarefreePart ρ`): 
 = 4s`. The polynomial discriminant `disc(T² + bT + c) = b² − 4c` at `b = 0, c = −s`. (Up to the unit `1`
 this is `s` itself; the `4` is the classical normalization.) `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def radBasisDiscriminant (ρ : DensePoly α) : DensePoly α :=
-  cscale (cnatCast 4) (radSquarefreePart ρ)
+  cscale (CField.natCast 4) (radSquarefreePart ρ)
 
 /-- **Genus** `radGenus ρ = ⌈deg s / 2⌉ − 1` — the genus of the hyperelliptic curve `y² = s`
 (`s = radSquarefreePart ρ` squarefree of degree `m`): `g = ⌈m/2⌉ − 1 = (m + 1)/2 − 1` (`ℕ`-division, so

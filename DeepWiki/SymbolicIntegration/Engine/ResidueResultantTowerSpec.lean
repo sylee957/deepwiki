@@ -72,14 +72,14 @@ theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)]
           (Differential.implicitDeriv (toPoly Dt) (toPoly d)) := by
   set B := Differential.implicitDeriv (toPoly Dt) (toPoly d) with hBdef
   set pts : List (α × α) := (List.range (cdeg d + 1)).map
-    (fun k => (cnatCast k, CPolyResultant.compute d (cAmcDd Dt a d (cnatCast k)))) with hpts
+    (fun k => (CField.natCast k, CPolyResultant.compute d (cAmcDd Dt a d (CField.natCast k)))) with hpts
   have hcompute : cResidueResultantTower Dt a d = cinterpolate pts := rfl
   have hfst : pts.map (fun p => CFieldSpec.toK p.1)
       = (List.range (cdeg d + 1)).map (Nat.cast : ℕ → CFieldSpec.K α) := by
     rw [hpts, List.map_map]
     apply List.map_congr_left
     intro k _
-    simp only [Function.comp_apply, DensePoly.toK_cnatCastG]
+    simp only [Function.comp_apply, CFieldSpec.toK_natCast]
   have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
     rw [hfst]; exact (List.nodup_range).map Nat.cast_injective
   have hlen : pts.length = cdeg d + 1 := by rw [hpts, List.length_map, List.length_range]
@@ -102,12 +102,12 @@ theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)]
     simpa [Nat.cast_withBot] using this
   · intro k hk
     rw [Finset.mem_range] at hk
-    have hmem : (cnatCast k, CPolyResultant.compute d (cAmcDd Dt a d (cnatCast k))) ∈ pts := by
+    have hmem : (CField.natCast k, CPolyResultant.compute d (cAmcDd Dt a d (CField.natCast k))) ∈ pts := by
       rw [hpts, List.mem_map]; exact ⟨k, List.mem_range.mpr hk, rfl⟩
-    rw [show (k : CFieldSpec.K α) = CFieldSpec.toK (cnatCast k : α) from
-        (DensePoly.toK_cnatCastG k).symm,
+    rw [show (k : CFieldSpec.K α) = CFieldSpec.toK (CField.natCast k : α) from
+        (CFieldSpec.toK_natCast k).symm,
       eval_toPolyG_cinterpolateG pts hnodup hmem,
-      toK_cPolyResultant_cAmcDd_eq_eval Dt a d (cnatCast k) hDmonic hDt0 hAD]
+      toK_cPolyResultant_cAmcDd_eq_eval Dt a d (CField.natCast k) hDmonic hDt0 hAD]
 
 omit [CDiffFieldSpec α] in
 /-- **The residue resultant of a constant is a constant** (`cdeg d = 0 ⟹ cdeg (cResidueResultantTower
@@ -119,7 +119,7 @@ theorem cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero [CPolyResultant Dens
   rw [cResidueResultantTower, cResidueResultantTowerWith]
   simp only [CPolyEngine.cdeg_dense_eq, hd, Nat.zero_add]
   set pts : List (α × α) := (List.range 1).map (fun k =>
-    (cnatCast k, CPolyResultant.compute d (cAmcDd Dt a d (cnatCast k)))) with hpts
+    (CField.natCast k, CPolyResultant.compute d (cAmcDd Dt a d (CField.natCast k)))) with hpts
   have hlen : pts.length = 1 := by rw [hpts, List.length_map, List.length_range]
   have hne : pts ≠ [] := by rw [← List.length_pos_iff_ne_nil, hlen]; norm_num
   by_cases hz : toPoly (cinterpolate pts) = 0

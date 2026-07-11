@@ -367,27 +367,27 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval [CPolyResultant DensePoly]
     [LawfulCPolyResultant.{u,v} DensePoly] (D rho g0 g1 : DensePoly α)
     (R : (CFieldSpec.K α)[X])
     (hRdeg : R.degree < (2 * (DensePoly.toPoly D).natDegree + 2 : ℕ))
-    (hinj : Set.InjOn (fun k : ℕ => CFieldSpec.toK (DensePoly.cnatCast (α := α) k))
+    (hinj : Set.InjOn (fun k : ℕ => CFieldSpec.toK (CField.natCast (α := α) k))
       (Finset.range (2 * DensePoly.cdeg D + 1 + 1)))
     (hnode : ∀ k ∈ Finset.range (2 * DensePoly.cdeg D + 1 + 1),
-      R.eval (CFieldSpec.toK (DensePoly.cnatCast (α := α) k))
+      R.eval (CFieldSpec.toK (CField.natCast (α := α) k))
         = CFieldSpec.toK (CPolyResultant.compute
-            (DensePoly.cAlgResidueNorm (DensePoly.cderiv D) rho g0 g1 (DensePoly.cnatCast k)) D)) :
+            (DensePoly.cAlgResidueNorm (DensePoly.cderiv D) rho g0 g1 (CField.natCast k)) D)) :
     DensePoly.toPoly (DensePoly.cAlgResidueResultant D rho g0 g1) = R := by
   classical
   -- the engine builds `cAlgResidueResultant = cinterpolate pts` over the `Z`-nodes
   set Dprime := DensePoly.cderiv D with hDp
   set pts : List (α × α) :=
     (List.range (2 * DensePoly.cdeg D + 1 + 1)).map (fun k =>
-      (DensePoly.cnatCast (α := α) k,
+      (CField.natCast (α := α) k,
         CPolyResultant.compute
-          (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (DensePoly.cnatCast k)) D))
+          (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (CField.natCast k)) D))
     with hpts
   have hcompute : DensePoly.cAlgResidueResultant D rho g0 g1 = DensePoly.cinterpolate pts := rfl
   -- node-image list and its distinctness
   have hfst : pts.map (fun p => CFieldSpec.toK p.1)
       = (List.range (2 * DensePoly.cdeg D + 1 + 1)).map
-          (fun k => CFieldSpec.toK (DensePoly.cnatCast (α := α) k)) := by
+          (fun k => CFieldSpec.toK (CField.natCast (α := α) k)) := by
     rw [hpts, List.map_map]; rfl
   have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
     rw [hfst]
@@ -401,7 +401,7 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval [CPolyResultant DensePoly]
   -- Lagrange uniqueness: degree `< #nodes` both sides, and they agree at the nodes
   refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := CFieldSpec.K α) (ι := ℕ)
     (s := Finset.range (2 * DensePoly.cdeg D + 1 + 1))
-    (v := fun k => CFieldSpec.toK (DensePoly.cnatCast (α := α) k))
+    (v := fun k => CFieldSpec.toK (CField.natCast (α := α) k))
     (f := DensePoly.toPoly (DensePoly.cinterpolate pts)) (g := R) hinj ?_ ?_ ?_
   · -- `degree (toPoly (cinterpolate pts)) < #nodes`
     rw [Finset.card_range, Nat.cast_withBot]
@@ -417,9 +417,9 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval [CPolyResultant DensePoly]
     exact hRdeg
   · -- agree at the nodes: `toPoly(cinterpolate pts)(k) = node value = R(k)`
     intro k hk
-    have hmem : (DensePoly.cnatCast (α := α) k,
+    have hmem : (CField.natCast (α := α) k,
         CPolyResultant.compute
-          (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (DensePoly.cnatCast k)) D)
+          (DensePoly.cAlgResidueNorm Dprime rho g0 g1 (CField.natCast k)) D)
         ∈ pts := by
       rw [hpts, List.mem_map]; exact ⟨k, by simpa using hk, rfl⟩
     rw [DensePoly.eval_toPolyG_cinterpolateG pts hnodup hmem]

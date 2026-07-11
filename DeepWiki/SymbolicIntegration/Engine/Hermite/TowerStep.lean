@@ -107,10 +107,10 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
     (hu : toPoly u ≠ 0) (hv : toPoly v ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : DensePoly α),
       toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
-            (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).1
+            (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A')).1
           * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
         + toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
-            (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).2 * toPoly v
+            (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A')).2 * toPoly v
       = -toPoly A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
     ∀ (j : ℕ) (A : DensePoly α) (g : DensePoly α × DensePoly α), toPoly g.2 ≠ 0 →
       am α (toPoly A) / (am α (toPoly u) * am α (toPoly v) ^ (j + 1))
@@ -129,7 +129,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
   | succ j ih =>
     intro A g hg
     rw [cHermiteReduceTowerInnerWf]
-    set jval : α := cnatCast (j + 1) with hjval
+    set jval : α := CField.natCast (j + 1) with hjval
     set Dv := cmonomialDeriv Dt v with hDv
     set p := cmul u Dv with hp
     set rhs := cscale (CCommRing.neg (CField.inv jval)) A with hrhs
@@ -166,7 +166,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
         = -(Polynomial.C ((j : CFieldSpec.K α) + 1)) * toPoly C
           - toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly B) := by
       rw [hA']
-      simp only [denote, CFieldSpec.toK_neg, hjval, DensePoly.toK_cnatCastG, Nat.cast_add_one, map_neg]
+      simp only [denote, CFieldSpec.toK_neg, hjval, CFieldSpec.toK_natCast, Nat.cast_add_one, map_neg]
     rw [hstepadd, hVpoweq] at ihA
     rw [map_add] at ihA
     rw [hA'eq] at ihA

@@ -77,13 +77,13 @@ theorem CPolySubresultant.toPoly_parametric_getD [CharZero (CFieldSpec.K α)] (D
   · -- `k ≤ j`: the `k`-th entry is the interpolant of the `t`-power-`k` samples
     have hget : (CPolySubresultant.parametric Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k []
         = cinterpolate ((List.range N).map (fun jj =>
-            (cnatCast jj, ((CPolySubresultant.compute Dstar (csub A (cscale (cnatCast jj) Dd))
+            (CField.natCast jj, ((CPolySubresultant.compute Dstar (csub A (cscale (CField.natCast jj) Dd))
               (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CCommRing.zero))) := by
       rw [CPolySubresultant.parametric]
       rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range hk]
       rfl
     set pts : List (α × α) := (List.range N).map (fun jj =>
-      (cnatCast jj, ((CPolySubresultant.compute Dstar (csub A (cscale (cnatCast jj) Dd))
+      (CField.natCast jj, ((CPolySubresultant.compute Dstar (csub A (cscale (CField.natCast jj) Dd))
         (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CCommRing.zero)) with hpts
     have hlen : pts.length = N := by rw [hpts, List.length_map, List.length_range]
     have hne : pts ≠ [] := by rw [hpts]; simp [hN]
@@ -91,7 +91,7 @@ theorem CPolySubresultant.toPoly_parametric_getD [CharZero (CFieldSpec.K α)] (D
       have : pts.map (fun p => CFieldSpec.toK p.1)
           = (List.range N).map (Nat.cast : ℕ → CFieldSpec.K α) := by
         rw [hpts, List.map_map]; apply List.map_congr_left; intro jj _
-        simp only [Function.comp_apply, DensePoly.toK_cnatCastG]
+        simp only [Function.comp_apply, CFieldSpec.toK_natCast]
       rw [this]; exact (List.nodup_range).map Nat.cast_injective
     rw [hget]
     symm
@@ -111,12 +111,12 @@ theorem CPolySubresultant.toPoly_parametric_getD [CharZero (CFieldSpec.K α)] (D
       simpa [Nat.cast_withBot] using this
     · intro jj hjj
       rw [Finset.mem_range] at hjj
-      have hmem : (cnatCast jj, ((CPolySubresultant.compute Dstar
-          (csub A (cscale (cnatCast jj) Dd))
+      have hmem : (CField.natCast jj, ((CPolySubresultant.compute Dstar
+          (csub A (cscale (CField.natCast jj) Dd))
           (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CCommRing.zero) ∈ pts := by
         rw [hpts, List.mem_map]; exact ⟨jj, List.mem_range.mpr hjj, rfl⟩
-      rw [show (jj : CFieldSpec.K α) = CFieldSpec.toK (cnatCast jj : α) from
-          (DensePoly.toK_cnatCastG jj).symm]
+      rw [show (jj : CFieldSpec.K α) = CFieldSpec.toK (CField.natCast jj : α) from
+          (CFieldSpec.toK_natCast jj).symm]
       rw [eval_toPolyG_cinterpolateG pts hnodup hmem, toK_cSubresultantG_getD_eq_coeff, hcommute,
         lrtSubresultantGen_eval, hnm, hmm, ← hdd]
   · -- `k > j`: both are `0`

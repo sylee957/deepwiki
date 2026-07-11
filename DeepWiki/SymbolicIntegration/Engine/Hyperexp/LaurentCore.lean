@@ -23,7 +23,7 @@ variable {α : Type*} [CField α] [CRischField α]
 
 /-- Signed scalar `cLaurentShift η j = j·η ∈ α`, the base-RDE coefficient of `Dqⱼ + (j·η)·qⱼ = aⱼ`. -/
 def cLaurentShift (η : α) (j : ℤ) : α :=
-  let n : α := cnatCast j.natAbs
+  let n : α := CField.natCast j.natAbs
   let nsigned : α := if j < 0 then CCommRing.neg n else n
   CCommRing.mul nsigned η
 

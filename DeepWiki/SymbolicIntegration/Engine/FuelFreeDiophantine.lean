@@ -121,7 +121,7 @@ def cHermiteReduceTowerInnerWf (Dt : DensePoly α) (v u : DensePoly α) :
     ℕ → DensePoly α → DensePoly α × DensePoly α → (DensePoly α × DensePoly α) × DensePoly α
   | 0, a, g => (g, a)
   | j + 1, a, g =>
-    let jval : α := cnatCast (j + 1)                                 -- `j` as a field element
+    let jval : α := CField.natCast (j + 1)                                 -- `j` as a field element
     let Dv := cmonomialDeriv Dt v
     let p := cmul u Dv
     let rhs := cscale (CCommRing.neg (CField.inv jval)) a               -- `−a/j`

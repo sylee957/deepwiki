@@ -7,7 +7,7 @@ import Mathlib.Algebra.Field.Rat
 `CField α`: computable field operations (`zero`/`one`/`add`/`mul`/`neg`/`inv`, zero test), bridge-free
 so instances stay computable; every `CField` is a `CCommRing` (bridge below). `CFieldSpec α`: the
 companion homomorphism `toK : α → K` into a Mathlib `Field K` (a `CRingSpec` with `R = K`). `ℚ` is the
-base instance. The foundational `cnatCast` builds natural-number constants using only `CField`
+base instance. The foundational `CField.natCast` builds natural-number constants using only `CField`
 operations. See `CommRing.lean` for the ring layer and `PolyReprDense.lean` for the `DensePoly` engine. -/
 
 namespace DeepWiki.SymbolicIntegration
@@ -127,22 +127,27 @@ end CFieldSpec
 
 /-! ### Natural-number constants -/
 
-namespace DensePoly
+namespace CField
 
-/-- Natural number as a field element: `cnatCast k = 1 + 1 + … + 1` (`k` times), built from
+/-- Natural number as a computable field element: `natCast k = 1 + 1 + … + 1` (`k` times), built from
 `CCommRing.add`/`CCommRing.one`; `[CField α]`-only. -/
-def cnatCast {α : Type*} [CField α] : ℕ → α
+def natCast {α : Type*} [CField α] : ℕ → α
   | 0 => CCommRing.zero
-  | k + 1 => CCommRing.add CCommRing.one (cnatCast k)
+  | k + 1 => CCommRing.add CCommRing.one (natCast k)
 
-/-- `toK (cnatCast k) = (k : K)`: the computable natural cast reads as the genuine one. -/
-@[denote] theorem toK_cnatCastG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) :
-    CFieldSpec.toK (cnatCast k : α) = (k : CFieldSpec.K α) := by
+end CField
+
+namespace CFieldSpec
+
+/-- `toK (CField.natCast k) = (k : K)`: the computable natural cast reads as the genuine one. -/
+@[denote] theorem toK_natCast {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) :
+    CFieldSpec.toK (CField.natCast k : α) = (k : CFieldSpec.K α) := by
   induction k with
-  | zero => rw [cnatCast, CFieldSpec.toK_zero, Nat.cast_zero]
-  | succ n ih => rw [cnatCast, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ, add_comm]
+  | zero => rw [CField.natCast, CFieldSpec.toK_zero, Nat.cast_zero]
+  | succ n ih =>
+      rw [CField.natCast, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ, add_comm]
 
-end DensePoly
+end CFieldSpec
 
 /-! ### Instances: `CField ℚ` and `CFieldSpec ℚ`
 

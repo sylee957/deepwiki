@@ -92,7 +92,7 @@ def expC3Rho : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
 /-- The exp-tower Case-3 helper `g = ½ρ'` over `ℚ(x)[θ]` with the `θ' = θ` derivation: `ρ' = θ`, so
 `g = θ/2 = [0, 1/2]` (degree `1`, matching `deg f`). -/
 def expC3 : DensePoly (DenseFrac ℚ) :=
-  cscale (CField.div CCommRing.one (cnatCast 2)) (cmonomialDeriv expDt1 expC3Rho)
+  cscale (CField.div CCommRing.one (CField.natCast 2)) (cmonomialDeriv expDt1 expC3Rho)
 
 /-- The exp-tower Case-3 numerator `C = ρ = θ+1 ∈ ℚ(x)[θ]` (integrand `√(eˣ+1) = ρ/y`), `[1,1]`. -/
 def expC3C : DensePoly (DenseFrac ℚ) := [CCommRing.one, CCommRing.one]
@@ -110,7 +110,7 @@ def expC3Run : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ) :=
 /-- Case-3-G computes `vNum = 2ρ` (so `v = 2y`) over the exp tower: the reduction with `θ' = θ` produces
 `vNum = 2(θ+1) = 2ρ`, checked by `cisZero (vNum − 2ρ)`. -/
 theorem expC3_vNum_eq_two_rho :
-    cisZero (csub expC3Run.2 (cscale (cnatCast 2) expC3Rho)) = true := by native_decide
+    cisZero (csub expC3Run.2 (cscale (CField.natCast 2) expC3Rho)) = true := by native_decide
 
 /-- The exp-tower radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)(eˣ) = Lvl2` lifted to a level-2 scalar, the radicand for
 `radDeriv 2` (the same value as `expRadicand`). -/

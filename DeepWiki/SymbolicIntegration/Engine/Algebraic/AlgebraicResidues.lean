@@ -45,7 +45,7 @@ def cAlgResidueResultant [CPolyResultant DensePoly]
   let Dprime := cderiv D
   let nNodes := 2 * cdeg D + 1                          -- `deg_Z R ≤ 2·deg_X D`
   let pts : List (α × α) := (List.range (nNodes + 1)).map (fun k =>
-    let c : α := cnatCast k
+    let c : α := CField.natCast k
     (c, CPolyResultant.compute (cAlgResidueNorm Dprime rho g0 g1 c) D))
   cinterpolate pts
 

@@ -72,7 +72,7 @@ def cfpow {α : Type*} [CField α] (c : α) : ℕ → α
 /-- Polynomial antiderivative `cIntegratePoly c = q` with zero constant coefficient: termwise
 `∫ Σ cᵢXⁱ = Σ (cᵢ/(i+1))X^(i+1)`, using the computable natural cast in the coefficient field. -/
 def cIntegratePoly {α : Type*} [CField α] (c : DensePoly α) : DensePoly α :=
-  CCommRing.zero :: ((c : List α).zipIdx.map (fun (a, i) => CField.div a (cnatCast (i + 1))))
+  CCommRing.zero :: ((c : List α).zipIdx.map (fun (a, i) => CField.div a (CField.natCast (i + 1))))
 
 /-- Horner evaluation `ceval p c = p(c)` for a dense coefficient list, low degree first. -/
 def ceval {α : Type*} [CCommRing α] (p : DensePoly α) (c : α) : α :=

@@ -70,7 +70,7 @@ theorem toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow (Dt v u : DensePoly α) :
     intro a g
     rw [cHermiteReduceTowerInnerWf]
     rcases hBC : CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
-      (cscale (CCommRing.neg (CField.inv (cnatCast (j + 1)))) a) with ⟨b, c⟩
+      (cscale (CCommRing.neg (CField.inv (CField.natCast (j + 1)))) a) with ⟨b, c⟩
     obtain ⟨M, hM⟩ := ih _ (cadd (cmul g.1 (cpow v (j + 1))) (cmul b g.2),
       cmul g.2 (cpow v (j + 1)))
     refine ⟨j + 1 + M, ?_⟩
@@ -322,16 +322,16 @@ theorem cHermiteInner_hbez_of_gcd (Dt v u : DensePoly α)
     (hgne : toPoly (CPolyEuclidean.gcdExt (cmul u (cmonomialDeriv Dt v)) v).1 ≠ 0) :
     ∀ (j' : ℕ) (A' : DensePoly α),
       toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
-            (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).1
+            (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A')).1
           * (toPoly u * Differential.implicitDeriv (toPoly Dt) (toPoly v))
         + toPoly (CPoly.diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
-            (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A')).2 * toPoly v
+            (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A')).2 * toPoly v
       = -toPoly A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹) := by
   intro j' A'
   have h := toPolyG_diophantineReduced (cmul u (cmonomialDeriv Dt v)) v
-    (cscale (CCommRing.neg (CField.inv (cnatCast (j' + 1)))) A') hqn hgdeg hgne
+    (cscale (CCommRing.neg (CField.inv (CField.natCast (j' + 1)))) A') hqn hgdeg hgne
   rw [toPolyG_cmulG, toPolyG_cmonomialDeriv] at h
-  rw [h, toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_neg, CFieldSpec.toK_inv, DensePoly.toK_cnatCastG,
+  rw [h, toPolyG_cscaleG, toR_eq_toK, CFieldSpec.toK_neg, CFieldSpec.toK_inv, CFieldSpec.toK_natCast,
     Nat.cast_add_one, Polynomial.C_neg]
   ring
 

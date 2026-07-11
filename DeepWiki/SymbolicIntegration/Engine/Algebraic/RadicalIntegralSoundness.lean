@@ -407,13 +407,13 @@ theorem toK_cderiv_ofPoly (p : DensePoly ℚ) :
 
 /-- **`toK (logDerRadicand n (CFrac.ofPoly ρ)) = am(ρ') / ((n:K)·am(ρ))`** — the diagonal multiplier of the
 literal radical derivation, read in `RatFunc ℚ`: `ℓ = ρ'/(nρ)` reads as `am(derivative ρ̄)/((n:K)·am ρ̄)`
-(`ρ̄ = toPoly ρ`). Routes `logDerRadicand`'s `div`/`mul`/`cnatCast` through the `toK` homomorphism laws
+(`ρ̄ = toPoly ρ`). Routes `logDerRadicand`'s `div`/`mul`/`CField.natCast` through the `toK` homomorphism laws
 and the bridge-(i) reading `toK_cderiv_ofPoly`. -/
 theorem toK_logDerRadicand_ofPoly (n : ℕ) (ρ : DensePoly ℚ) :
     CFieldSpec.toK (logDerRadicand n (CFrac.ofPoly (F := DenseFrac) ρ))
       = CFrac.am ℚ (derivative (DensePoly.toPoly ρ))
         / ((n : RatFunc (CFieldSpec.K ℚ)) * CFrac.am ℚ (DensePoly.toPoly ρ)) := by
-  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, DensePoly.toK_cnatCastG, toK_cderiv_ofPoly,
+  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, CFieldSpec.toK_natCast, toK_cderiv_ofPoly,
     CFrac.toK_ofPoly]
   simp only [toPoly_list_eq]
 

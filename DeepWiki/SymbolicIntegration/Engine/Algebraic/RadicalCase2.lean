@@ -52,7 +52,7 @@ theorem case2c_residual_eq :
 theorem case2c_congruence :
     cisZero (CPolyEuclidean.mod
       (csub (cmul case2cB
-        (cmul (csub [CField.div CCommRing.one (cnatCast 2)] [cnatCast 2])
+        (cmul (csub [CField.div CCommRing.one (CField.natCast 2)] [CField.natCast 2])
           (cmul (cderiv case2cW) case2cH))) case2cC)
       case2cW) = true := by native_decide
 
@@ -61,11 +61,11 @@ theorem case2c_cleared_identity :
     cisZero (csub
       (cadd
         (csub (cmul case2cB
-          (cmul (csub [CField.div CCommRing.one (cnatCast 2)] [cnatCast 2])
+          (cmul (csub [CField.div CCommRing.one (CField.natCast 2)] [CField.natCast 2])
             (cmul (cderiv case2cW) case2cH))) case2cC)
         (cmul case2cW
           (cadd (cmul (cderiv case2cB) case2cH)
-            (cmul [CField.div CCommRing.one (cnatCast 2)] (cmul case2cB (cderiv case2cH))))))
+            (cmul [CField.div CCommRing.one (CField.natCast 2)] (cmul case2cB (cderiv case2cH))))))
       (cmul case2cW case2cD)) = true := by native_decide
 
 /-! #### The end-to-end `radDeriv` validation
