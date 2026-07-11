@@ -108,23 +108,22 @@ instance instCompleteCMonomialCaseTangent (S : CTangentCoupledSolver) (T : CTang
     exact ⟨out, hrun⟩
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 
-/-- Certificate-check a tangent special integrator's returned fraction before releasing it. -/
-def checkedTangentMonomialCase (S : CTangentCoupledSolver) (T : CTangentSpecialIntegrator) :
-    CMonomialCase DensePoly (DenseFrac ℚ) where
-  integrateSpecial Dt fp b ds := do
+/-- Certificate-check every result returned by a tangent special integrator. -/
+def checkedTangentSpecialIntegrator (T : CTangentSpecialIntegrator) : CTangentSpecialIntegrator where
+  integrate S Dt fp b ds := do
     let out ← T.integrate S Dt fp b ds
     if CPolyEngine.cisZero ds then none
     else if CPolyEngine.cisZero out.rational.2 then none
     else if !out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) then none
     else
       if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then some out else none
-  postprocessNormal _ before := some before
 
-/-- The certificate-checked tangent monomial case is sound without a lawful integrator assumption. -/
-instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
-    (T : CTangentSpecialIntegrator) : LawfulCMonomialCase (checkedTangentMonomialCase S T) where
-  special_sound Dt fp b ds res hrun := by
-    simp only [checkedTangentMonomialCase] at hrun
+/-- The certificate-checked tangent special operation is lawful without assumptions on the raw integrator. -/
+instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoupledSolver)
+    (T : CTangentSpecialIntegrator) :
+    LawfulCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T) where
+  sound Dt fp b ds res hrun := by
+    simp only [checkedTangentSpecialIntegrator] at hrun
     change (T.integrate S Dt fp b ds).bind
       (fun out =>
         if CPolyEngine.cisZero ds then none
@@ -162,16 +161,17 @@ instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
         fieldFracP (polynomialSpecialNumerator fp b ds) ds at hid
     rw [fieldFracP_polynomialSpecialNumerator fp b ds hds'] at hid
     simpa [hout] using hid
-  postprocessNormal_sound _ _ _ before after hbefore hrun := by
-    change some before = some after at hrun
-    have hEq : before = after := Option.some.inj hrun
-    subst after
-    exact hbefore
-  postprocessNormal_den_nonzero _ before after hden hrun := by
-    change some before = some after at hrun
-    have hEq : before = after := Option.some.inj hrun
-    subst after
-    exact hden
+
+/-- Install a certificate-checked tangent special operation as an ordinary monomial stage. -/
+def checkedTangentMonomialCase (S : CTangentCoupledSolver) (T : CTangentSpecialIntegrator) :
+    CMonomialCase DensePoly (DenseFrac ℚ) :=
+  tangentMonomialCase S (checkedTangentSpecialIntegrator T)
+
+/-- The certificate-checked tangent monomial case is sound without a lawful raw-integrator assumption. -/
+instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
+    (T : CTangentSpecialIntegrator) : LawfulCMonomialCase (checkedTangentMonomialCase S T) := by
+  unfold checkedTangentMonomialCase
+  infer_instance
 
 /-- The explicit certificate-acceptance domain for a checked tangent special stage. -/
 def checkedTangentSpecialDomain (S : CTangentCoupledSolver) (T : CTangentSpecialIntegrator) :
@@ -185,13 +185,12 @@ def checkedTangentSpecialDomain (S : CTangentCoupledSolver) (T : CTangentSpecial
         (∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0) ∧
         CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds = true
 
-/-- The checked tangent special stage is complete where the underlying recursive integrator and its
-certificate accept the input. -/
-instance instCompleteCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
+/-- Certificate-checked tangent integration is complete on its explicit raw-acceptance domain. -/
+instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoupledSolver)
     (T : CTangentSpecialIntegrator) :
-    CompleteCMonomialCase (checkedTangentMonomialCase S T)
+    CompleteCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T)
       (checkedTangentSpecialDomain S T) where
-  special_complete Dt fp b ds res hdomain hsden hderiv := by
+  complete Dt fp b ds res hdomain hsden hderiv := by
     obtain ⟨hds, out, hraw, hout, hlogs, hcheck⟩ := hdomain res hsden hderiv
     have hdsBool : DensePoly.cisZero ds = false := by
       rw [Bool.eq_false_iff]
@@ -210,8 +209,15 @@ instance instCompleteCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
             simpa only [toPoly_list_eq] using (cisZeroG_iff cv.2).mp hzero)
         simpa using hzfalse
     refine ⟨out, ?_⟩
-    simp [checkedTangentMonomialCase, hraw, hdsBool, houtBool, hlogsBool, hcheck]
-  postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
+    simp [checkedTangentSpecialIntegrator, hraw, hdsBool, houtBool, hlogsBool, hcheck]
+
+/-- The checked tangent monomial stage is complete on the raw-integrator acceptance domain. -/
+instance instCompleteCMonomialCaseCheckedTangent (S : CTangentCoupledSolver)
+    (T : CTangentSpecialIntegrator) :
+    CompleteCMonomialCase (checkedTangentMonomialCase S T)
+      (checkedTangentSpecialDomain S T) := by
+  unfold checkedTangentMonomialCase
+  infer_instance
 
 /-- Tangent normal reduction obtained by certificate-checking an arbitrary raw normal reducer. -/
 def tangentNormalReduction (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :
