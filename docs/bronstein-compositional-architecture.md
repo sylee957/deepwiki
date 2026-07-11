@@ -20,6 +20,10 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   tower monomial stage.  Its `Lawful…` and `Complete…` contracts lift any lawful/complete
   `CRecursiveCoefficientIntegrator` into the existing `CMonomialCase` contract, so the generic
   Figure-5.1 assembler remains representation- and solver-neutral.
+- `CRecursiveCoefficientIntegrator` also carries the optional single-`w` limited-integration
+  operation used by Bronstein's degree-raising primitive polynomial reduction.  The LRT primitive
+  tower case is now a lawful `CRecursiveMonomialCase` realization, and the prior executable case is
+  exactly its specialization with `towerCoefficientIntegratorLrt`.
 - `CCanonicalRepresentation`/`LawfulCCanonicalRepresentation` have dense and sparse-facing
   realizations. The sparse realization transports the dense backend through denotation-preserving
   polynomial conversion.
