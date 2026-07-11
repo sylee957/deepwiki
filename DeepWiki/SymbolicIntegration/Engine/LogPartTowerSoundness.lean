@@ -67,7 +67,7 @@ theorem field_identity_of_reducedG_of_residueMatch (Dt : DensePoly α)
 
 Reads `cIntegrateReduced`'s fields into `field_identity_of_reducedG_of_residueMatch`. -/
 
-variable [CFracGcdCoreWf α]
+variable [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
 
 /-- The fuel-free reduced-case one-shot: for `res = cIntegrateReduced Dt a d cands`, given the
 Hermite half and the RT residue match, `D(g) + logResidueSum Dt res.logs = a/d`. -/
@@ -101,6 +101,7 @@ theorem field_identity_of_cIntegrateReducedG_of_residueMatch (Dt : DensePoly α)
 noncomputable local instance : Algebra ℚ (CFieldSpec.K (DenseFrac ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
+omit [CPolyResultant DensePoly] in
 /-- The tower residue resultant's roots are the residues over `ℚ(x)`
 (`roots_residueResultantTowerG_eq_residues` at `K = RatFunc ℚ`). -/
 theorem roots_residueResultantTowerG_eq_residues_qfunNZG (lc : CFieldSpec.K (DenseFrac ℚ)) (N : ℕ)
