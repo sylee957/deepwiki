@@ -34,7 +34,7 @@ that intertwines the tower derivation* and is **injective**. Plan:
    - `Rᵢ`'s roots `= ` the residues, grouped by multiplicity `i` (via G4b `toPolyG_cResidueResultantTowerG`
      = `rtResultantGen`, whose roots are the residues by G2 `roots_rtResultantGen`; `cSqfreeYunFFG`
      multiplicity `↔` `rootMultiplicity`).
-   - `Sᵢ(c,t) ~ gcd(Dstar, hNum − c·B)` at a residue `c` (via G4c `toPolyG_cSubresultantParam_getD`
+   - `Sᵢ(c,t) ~ gcd(Dstar, hNum − c·B)` at a residue `c` (via G4c `CPolySubresultant.toPoly_parametric_getD`
      = `lrtSubresultantGen` coeff, then G3 `lazardRiobooTrager_output_isSimilar_gcd_gen`:
      `lrtSubresultantGen.map (evalRingHom c) ~ gcd`).
    - `Σ_c c·logDeriv(gcd) = hNum/Dstar` (the analytic identity) — the general-derivation / `K̄` analog of
@@ -84,7 +84,7 @@ that intertwines the tower derivation* and is **injective**. Plan:
 - **P2 — the residue↔root grouping.** `Rᵢ`'s roots in `K̄` are the residues of multiplicity `i`
   (`cSqfreeYunFFG` mult ↔ `rootMultiplicity` of `rtResultantGen`, via G4b + G2). Reuse
   `cResidueResultantTowerG` = `rtResultantGen`.
-- **P3 — `Sᵢ` at a residue = the RT gcd.** `toPolyG_cSubresultantParam_getD` (G4c) + `lazardRiobooTrager_
+- **P3 — `Sᵢ` at a residue = the RT gcd.** `CPolySubresultant.toPoly_parametric_getD` (G4c) + `lazardRiobooTrager_
   output_isSimilar_gcd_gen` (G3), specialised at each root `c` of `Rᵢ`; the normality `hB` from
   `isCoprime_X_sub_C_implicitDeriv_iff` (the genuine `hcopgcd`).
 - **P4 — the analytic identity over `E`.** **★★ NOT NEW MATH (2026-07-04):** the candidate route's
@@ -120,13 +120,13 @@ proof **wrong**. The LRT log argument is a *subresultant* `Sᵢ(c,t)`, which equ
   isn't — its a rational function of `x`). So `Σ_c c·D_base(sᵢ(c))/sᵢ(c)` is a **spurious extra term**, and
   the raw-`Sᵢ` reduced identity is **FALSE** over the tower.
 
-**Consequence.** `cLrtLogArgG` currently emits the raw `cSubresultantParam`; for tower soundness the log
+**Consequence.** `cLrtLogArgG` currently emits the raw `CPolySubresultant.parametric`; for tower soundness the log
 arguments must be **monic-normalized** (Bronstein §2 Ex 2.7 — divide each `Sᵢ(c,t)` by its leading
 `t`-coefficient `sᵢ(c)`; abstract: `LrtMonicLogs.monicLrtLog`). So:
 1. **P1's `IsIntegralResultLrtG` / `logResidueSumLrtG` and `cLrtLogArgG` must use the MONIC-normalized
    `Sᵢ`** (or `evalLrtArg` must divide out the leading coefficient), else the predicate is false for the
    raw engine output. This is a **design fix, not just a proof step**.
-2. The computable engine needs a monic-normalization step (`cSubresultantParam` → divide by its top
+2. The computable engine needs a monic-normalization step (`CPolySubresultant.parametric` → divide by its top
    `t`-coefficient `z`-polynomial), and the `evalLrtArg`/soundness updated to match.
 
 This is why raw-`Sᵢ` "in one shot" would have been wrong. The reindexing machinery (`towerDerivExt_div_*`,
@@ -162,7 +162,7 @@ to `E` at `z=c`), `zipIdx_C_mul_X_pow_sum_coeff` (the coefficient-list polynomia
 `lrtSubresultantGen_map_eval₂` + `monicNormalize_eq_of_isSimilar_prod`. **The computable engine's log argument
 provably equals the residue-pole product over `E`.**
 
-**Remaining (mechanical wiring over proven lemmas):** discharge `hg4c` from G4c (`toPolyG_cSubresultantParam_getD`
+**Remaining (mechanical wiring over proven lemmas):** discharge `hg4c` from G4c (`CPolySubresultant.toPoly_parametric_getD`
 with `cLrtLogArgG`'s args + the `hm` degree fact) and `hsim` from G3 (`lazardRiobooTrager_output_isSimilar_gcd_gen`
 over `E`) + G2 (`gcd_nodal_eq_prod_residue_gen`, `gcd = ∏`); the pole partition; `monomial_residue_match_of_cancel`
 over `E`; the Hermite half; descent. No new math, no dense base-change — just applying proven theorems with

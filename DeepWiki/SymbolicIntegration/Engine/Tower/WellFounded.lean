@@ -248,6 +248,7 @@ Everything past the three recursive bottoms is a flat composition over the leave
 namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+  [CPolyResultant DensePoly]
 
 /-- Generic canonical representation over the tower:
 `canonicalRepresentationFast Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d` (`d` monic).

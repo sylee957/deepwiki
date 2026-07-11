@@ -145,7 +145,7 @@ theorem evalLrtArg_const_embed_eq (Dstar : DensePoly α) (c : E)
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **The engine's parametric subresultant gives the residue-pole product.** With coefficients certified by
-`toPolyG_cSubresultantParam_getD`, `evalLrtArg (cSubresultantParam Dstar hNum Dd (cdeg Dstar)(cdeg Dd) j) c
+`CPolySubresultant.toPoly_parametric_getD`, `evalLrtArg (CPolySubresultant.parametric Dstar hNum Dd (cdeg Dstar)(cdeg Dd) j) c
 = ∏_{β}(t−β)`, given `deg Dd = deg Dstar − 1` and `IsSimilar S (∏)`. -/
 theorem evalLrtArg_cSubresultantParam_eq_prod [CharZero (CFieldSpec.K α)]
     (Dstar hNum Dd : DensePoly α) (c : E) (j : ℕ) (poles : Multiset E)
@@ -156,16 +156,16 @@ theorem evalLrtArg_cSubresultantParam_eq_prod [CharZero (CFieldSpec.K α)]
           - Polynomial.C c * (toPoly Dd).map (algebraMap (CFieldSpec.K α) E))
         (toPoly Dstar).natDegree ((toPoly Dstar).natDegree - 1) j)
       (poles.map (fun β => Polynomial.X - Polynomial.C β)).prod) :
-    evalLrtArg (cSubresultantParam Dstar hNum Dd (cdeg Dstar) (cdeg Dd) j) c
+    evalLrtArg (CPolySubresultant.parametric Dstar hNum Dd (cdeg Dstar) (cdeg Dd) j) c
       = (poles.map (fun β => Polynomial.X - Polynomial.C β)).prod :=
   evalLrtArg_eq_prod _ c (toPoly hNum) (toPoly Dstar) (toPoly Dd) j poles hφ
-    (fun n => toPolyG_cSubresultantParam_getD Dstar hNum Dd j n hm) hsim
+    (fun n => CPolySubresultant.toPoly_parametric_getD Dstar hNum Dd j n hm) hsim
 
 open Classical in
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **`hfac` core: the entry log argument is the residue-`c` pole product.** For `Dstar_E = nodal allpoles`
 (split) and the entry index `i = rootMultiplicity c` in the residue resultant (the Yun index ↔ fiber-size
-match), `evalLrtArg (cSubresultantParam … i) c = ∏_{β ∈ allpoles, res β = c}(t − β)`. Chains
+match), `evalLrtArg (CPolySubresultant.parametric … i) c = ∏_{β ∈ allpoles, res β = c}(t − β)`. Chains
 `evalLrtArg_cSubresultantParam_eq_prod` with `isSimilar_subresultant_prod`. -/
 theorem evalLrtArg_eq_fiber_prod [CharZero (CFieldSpec.K α)] [IsAlgClosed E]
     (Dstar hNum Dd : DensePoly α) (allpoles : Finset E) (c : E) (i : ℕ)
@@ -179,7 +179,7 @@ theorem evalLrtArg_eq_fiber_prod [CharZero (CFieldSpec.K α)] [IsAlgClosed E]
     (hindex : i = (rtResultantGen ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E))
         (Lagrange.nodal allpoles id) ((toPoly Dd).map (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c)
     (hi : i < (Lagrange.nodal allpoles id).natDegree) :
-    evalLrtArg (cSubresultantParam Dstar hNum Dd (cdeg Dstar) (cdeg Dd) i) c
+    evalLrtArg (CPolySubresultant.parametric Dstar hNum Dd (cdeg Dstar) (cdeg Dd) i) c
       = ((allpoles.filter (fun β => ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
             / ((toPoly Dd).map (algebraMap (CFieldSpec.K α) E)).eval β = c)).val.map
           (fun β => X - C β)).prod := by
@@ -807,13 +807,13 @@ theorem cLrtLogArgG_eq_nil_of_cdegG_zero (Dt hNum Dstar : DensePoly α) (hDstar 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **Membership in `cLrtLogArg`.** Each entry `p` comes from a `(Rᵢ, idx)` in the Yun factorization
-`cSqfreeYunFF R` (`R = cResidueResultantTower …`) with `Rᵢ` non-constant, and `p = (Rᵢ, cSubresultantParam
+`cSqfreeYunFF R` (`R = cResidueResultantTower …`) with `Rᵢ` non-constant, and `p = (Rᵢ, CPolySubresultant.parametric
 … (idx+1))`. Unfolds the `filterMap ∘ zipIdx`; the foundation for the per-entry Yun facts. -/
 theorem mem_cLrtLogArgG (Dt hNum Dstar : DensePoly α) (p : DensePoly α × List (DensePoly α))
     (hp : p ∈ cLrtLogArg Dt hNum Dstar) :
     ∃ idx, (p.1, idx) ∈ (cSqfreeYunFF (cResidueResultantTower Dt hNum Dstar)).zipIdx
       ∧ ¬ ((cnorm p.1 : List α).length ≤ 1)
-      ∧ (idx + 1 ≠ cdeg Dstar → p.2 = cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdeg Dstar)
+      ∧ (idx + 1 ≠ cdeg Dstar → p.2 = CPolySubresultant.parametric Dstar hNum (cmonomialDeriv Dt Dstar) (cdeg Dstar)
           (cdeg (cmonomialDeriv Dt Dstar)) (idx + 1))
       ∧ (idx + 1 = cdeg Dstar → p.2 = Dstar.map (fun x => ([x] : DensePoly α))) := by
   rw [cLrtLogArg, List.mem_filterMap] at hp
@@ -1067,7 +1067,7 @@ theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Fie
 open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **`hentry` per entry.** Each entry's log argument evaluates to its residue-`c` pole product. Obtains the
-entry structure (`mem_cLrtLogArgG`: `p.2 = cSubresultantParam … (idx+1)`), establishes the index match
+entry structure (`mem_cLrtLogArgG`: `p.2 = CPolySubresultant.parametric … (idx+1)`), establishes the index match
 `idx+1 = rootMultiplicity c R` (`rootMult_R_map_eq_idx_succ` + `R_E = rtResultantGen`), then applies
 `evalLrtArg_eq_fiber_prod`; the fiber `Dd_E = implicitDeriv Dt_E Dstar_E` alignment closes it. -/
 theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
@@ -1258,7 +1258,7 @@ theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : DensePoly α) (idx : ℕ)
     (hlen : ¬ ((cnorm Ri : List α).length ≤ 1)) :
     ∃ Si, (Ri, Si) ∈ cLrtLogArg Dt hNum Dstar := by
   refine ⟨if idx + 1 = cdeg Dstar then Dstar.map (fun c => ([c] : DensePoly α))
-      else cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdeg Dstar)
+      else CPolySubresultant.parametric Dstar hNum (cmonomialDeriv Dt Dstar) (cdeg Dstar)
         (cdeg (cmonomialDeriv Dt Dstar)) (idx + 1), ?_⟩
   rw [cLrtLogArg]
   refine List.mem_filterMap.mpr ⟨(Ri, idx), List.mk_mem_zipIdx_iff_getElem?.mpr hget, ?_⟩

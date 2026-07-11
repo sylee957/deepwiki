@@ -89,8 +89,8 @@ route's tower analytic identity).
   - `natDegree_coeff_lrtSubresultantGen_le` (`LrtGeneralDerivation.lean`) — the **bivariate `z`-degree
     bound** (each `t`-coefficient of `lrtSubresultantGen` has `z`-degree `≤ deg D + (deg D−1) < N`), via
     `natDegree_det_le_sum_col_gen` (every Sylvester entry is `z`-degree `≤ 1`).
-  - **`toPolyG_cSubresultantParam_getD`** — the capstone: the `k`-th entry of the engine's parametric log
-    argument `cSubresultantParam` equals the `k`-th `t`-coefficient of `lrtSubresultantGen (toPolyG A)
+  - **`CPolySubresultant.toPoly_parametric_getD`** — the capstone: the `k`-th entry of the engine's parametric log
+    argument `CPolySubresultant.parametric` equals the `k`-th `t`-coefficient of `lrtSubresultantGen (toPolyG A)
     (toPolyG Dstar) (toPolyG Dd) j` (for `deg Dd = deg Dstar − 1`), via interpolation uniqueness (degree
     bound + node agreement + coeff/eval commutation + `lrtSubresultantGen_eval`).
   **⟹ the entire computable→abstract LRT connection is certified: residue resultant (G4b) + parametric

@@ -15,6 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 namespace DensePoly
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+  [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
 
 /-- `cLrtLogArg Dt hNum Dstar = [(Rᵢ, Sᵢ)]`: for each non-constant squarefree
 factor `Rᵢ` (multiplicity `i`) of the residue resultant `R(z) = Res_t(Dstar, hNum − z·D Dstar)`, the log
@@ -30,7 +31,7 @@ def cLrtLogArg (Dt hNum Dstar : DensePoly α) : List (DensePoly α × List (Dens
     let i := idx + 1
     if (cnorm Ri : List α).length ≤ 1 then none
     else if i = n then some (Ri, Dstar.map (fun c => ([c] : DensePoly α)))
-    else some (Ri, cSubresultantParam Dstar hNum Dd n m i))
+    else some (Ri, CPolySubresultant.parametric Dstar hNum Dd n m i))
 
 end DensePoly
 

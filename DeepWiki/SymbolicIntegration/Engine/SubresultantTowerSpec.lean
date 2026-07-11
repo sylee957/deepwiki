@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
 
 /-! # Connecting the computable parametric LRT subresultant to the abstract theory (G4c)
 
-`cSubresultantParam Dstar A Dd n m j` is the engine's parametric LRT log argument `Sⱼ(z,t)`: its `k`-th
+`CPolySubresultant.parametric Dstar A Dd n m j` is the engine's parametric LRT log argument `Sⱼ(z,t)`: its `k`-th
 entry is the `z`-polynomial coefficient of `tᵏ`, computed by interpolation in `z` of the coefficient of
 the selected subresultant of `Dstar` and `A − z·Dd`. This file connects it to the general-derivation abstract
 subresultant `subresultant (toPoly Dstar) (toPoly A − C z · B) n m j` (`B = toPoly Dd`), building on
@@ -55,16 +55,16 @@ theorem toK_cSubresultantG_getD_eq_coeff_monomial (Dt Dstar A : DensePoly α) (c
 omit [CDiffField α] [CDiffFieldSpec α] in
 open scoped Classical in
 /-- **The parametric-subresultant certification (G4c).** The `k`-th entry of the engine's parametric log
-argument `cSubresultantParam Dstar A Dd (cdeg Dstar) (cdeg Dd) j` (a `z`-polynomial) equals the `k`-th
+argument `CPolySubresultant.parametric Dstar A Dd (cdeg Dstar) (cdeg Dd) j` (a `z`-polynomial) equals the `k`-th
 `t`-coefficient of the abstract `lrtSubresultantGen (toPoly A) (toPoly Dstar) (toPoly Dd) j`, when
 `Dd`'s degree matches the formal degree `deg Dstar − 1`. Via interpolation uniqueness: both `z`-polynomials
 have degree `< N = cdeg Dstar + cdeg Dd + 1` (`natDegree_coeff_lrtSubresultantGen_le` /
 `degree_toPolyG_cinterpolateG_lt`) and agree at the `N` integer nodes (per-value agreement + coefficient/eval
 commutation + `lrtSubresultantGen_eval`). So the engine's interpolated log argument IS the abstract
 subresultant coefficient. -/
-theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd : DensePoly α) (j k : ℕ)
+theorem CPolySubresultant.toPoly_parametric_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd : DensePoly α) (j k : ℕ)
     (hm : cdeg Dd = cdeg Dstar - 1) :
-    toPoly ((cSubresultantParam Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k [])
+    toPoly ((CPolySubresultant.parametric Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k [])
       = (lrtSubresultantGen (toPoly A) (toPoly Dstar) (toPoly Dd) j).coeff k := by
   have hnm : cdeg Dstar = (toPoly Dstar).natDegree := cdegG_eq_natDegree Dstar
   have hmm : cdeg Dd = (toPoly Dd).natDegree := cdegG_eq_natDegree Dd
@@ -75,11 +75,11 @@ theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd
   set N := cdeg Dstar + cdeg Dd + 1 with hN
   by_cases hk : k < j + 1
   · -- `k ≤ j`: the `k`-th entry is the interpolant of the `t`-power-`k` samples
-    have hget : (cSubresultantParam Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k []
+    have hget : (CPolySubresultant.parametric Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k []
         = cinterpolate ((List.range N).map (fun jj =>
             (cnatCast jj, ((CPolySubresultant.compute Dstar (csub A (cscale (cnatCast jj) Dd))
               (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CCommRing.zero))) := by
-      rw [cSubresultantParam]
+      rw [CPolySubresultant.parametric]
       rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range hk]
       rfl
     set pts : List (α × α) := (List.range N).map (fun jj =>
@@ -120,8 +120,8 @@ theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd
       rw [eval_toPolyG_cinterpolateG pts hnodup hmem, toK_cSubresultantG_getD_eq_coeff, hcommute,
         lrtSubresultantGen_eval, hnm, hmm, ← hdd]
   · -- `k > j`: both are `0`
-    have hget : (cSubresultantParam Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k [] = [] := by
-      rw [cSubresultantParam, List.getD_eq_getElem?_getD, List.getElem?_map,
+    have hget : (CPolySubresultant.parametric Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k [] = [] := by
+      rw [CPolySubresultant.parametric, List.getD_eq_getElem?_getD, List.getElem?_map,
         List.getElem?_eq_none (by rw [List.length_range]; omega)]
       rfl
     rw [hget, toPolyG_nil]

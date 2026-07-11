@@ -34,31 +34,31 @@ open CFieldSpec
 /-! ### List-read helpers -/
 
 /-- Reading a mapped list at an in-bounds index commutes with the map. -/
-theorem getD_map_of_lt {β γ : Type*} (g : β → γ) (l : List β) (r : ℕ) (db : β) (dg : γ)
+private theorem getD_map_of_lt {β γ : Type*} (g : β → γ) (l : List β) (r : ℕ) (db : β) (dg : γ)
     (h : r < l.length) : (l.map g).getD r dg = g (l.getD r db) := by
   rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_eq_getElem h,
     List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h]; rfl
 
 /-- `(List.range N).getD r 0 = r` for `r < N`. -/
-theorem getD_range_of_lt {r N : ℕ} (h : r < N) : (List.range N).getD r 0 = r := by
+private theorem getD_range_of_lt {r N : ℕ} (h : r < N) : (List.range N).getD r 0 = r := by
   rw [List.getD_eq_getElem?_getD, List.getElem?_range h]; rfl
 
 /-! ### Index-selector reads -/
 
-theorem cSubRowIdx_length (n m j : ℕ) : (cSubRowIdx n m j).length = m + n - 2 * j := by
+private theorem cSubRowIdx_length (n m j : ℕ) : (cSubRowIdx n m j).length = m + n - 2 * j := by
   simp [cSubRowIdx]
 
-theorem cSubColIdx_length (n m j i : ℕ) : (cSubColIdx n m j i).length = m + n - 2 * j := by
+private theorem cSubColIdx_length (n m j i : ℕ) : (cSubColIdx n m j i).length = m + n - 2 * j := by
   simp [cSubColIdx]
 
 /-- The computable row selector reads as the abstract `subRow`'s value. -/
-theorem cSubRowIdx_getD (n m j : ℕ) (t : Fin (m + n - 2 * j)) :
+private theorem cSubRowIdx_getD (n m j : ℕ) (t : Fin (m + n - 2 * j)) :
     (cSubRowIdx n m j).getD (t : ℕ) 0 = (subRow n m j t : ℕ) := by
   rw [cSubRowIdx, List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range t.isLt]
   simp [subRow]
 
 /-- The computable column selector reads as the abstract `subCol`'s value. -/
-theorem cSubColIdx_getD (n m j i : ℕ) (s : Fin (m + n - 2 * j)) :
+private theorem cSubColIdx_getD (n m j i : ℕ) (s : Fin (m + n - 2 * j)) :
     (cSubColIdx n m j i).getD (s : ℕ) 0 = (subCol n m j i s : ℕ) := by
   rw [cSubColIdx, List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range s.isLt]
   simp [subCol]
@@ -67,7 +67,7 @@ theorem cSubColIdx_getD (n m j i : ℕ) (s : Fin (m + n - 2 * j)) :
 
 /-- `cBSylvesterRows` reads as the abstract `bSylvester`. Entry `(RR, CC)` of the computable Sylvester
 matrix, read through `toK`, equals the abstract `bSylvester (toPoly p) (toPoly q) n m` entry. -/
-theorem toK_cBSylvesterRows_getD (p q : P α) (n m : ℕ) {RR CC : ℕ}
+private theorem toK_cBSylvesterRows_getD (p q : P α) (n m : ℕ) {RR CC : ℕ}
     (hR : RR < m + n) (hC : CC < m + n) :
     toK (((cBSylvesterRows p q n m).getD RR []).getD CC CCommRing.zero)
       = bSylvester (CPoly.toPoly p) (CPoly.toPoly q) n m ⟨RR, hR⟩ ⟨CC, hC⟩ := by
@@ -99,7 +99,7 @@ theorem toK_cBSylvesterRows_getD (p q : P α) (n m : ℕ) {RR CC : ℕ}
 
 /-- The computable Sylvester submatrix maps to the abstract one. After `toK`, `matrixOfList` of the
 computable submatrix equals `(bSylvester …).submatrix (subRow …) (subCol …)`. -/
-theorem matrixOfList_cSubmatrix (p q : P α) (n m j i : ℕ) :
+private theorem matrixOfList_cSubmatrix (p q : P α) (n m j i : ℕ) :
     matrixOfList ((cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)).map
         (fun row => row.map toK)) (m + n - 2 * j)
       = (bSylvester (CPoly.toPoly p) (CPoly.toPoly q) n m).submatrix

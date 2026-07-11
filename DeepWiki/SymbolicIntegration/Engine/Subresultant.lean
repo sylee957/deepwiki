@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.ComputableAlgebra.ListDet
+import DeepWiki.ComputableAlgebra.PolySubresultant
 
 /-! # Computable determinant + subresultant (L1 of the computable-LRT build)
 
@@ -13,11 +14,6 @@ selects the representation-independent Sylvester-submatrix algorithm, which buil
 namespace DeepWiki.SymbolicIntegration
 
 universe u
-
-/-- Executable subresultant polynomial selected by a computable polynomial representation. -/
-class CPolySubresultant (P : Type u → Type u) [CPoly P] where
-  /-- Compute the `j`-th subresultant at the supplied formal degrees `n` and `m`. -/
-  compute : {α : Type u} → [CField α] → P α → P α → ℕ → ℕ → ℕ → P α
 
 namespace DensePoly
 
@@ -80,20 +76,6 @@ def cSubresultant {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
     (p q : P α) (n m j : ℕ) : P α :=
   CPoly.ofFn (j + 1) (fun i =>
     cDet (cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)))
-
-/-- **The parametric subresultant `Sⱼ(z,t)`** of `Dstar` and `A − z·Dd` — the symbolic RT log argument, a
-polynomial in `t` whose coefficients are polynomials in the residue `z`, **computed without roots** by
-interpolation in `z` (`cSubresultant` at `z = 0,1,…,n+m` per `t`-coefficient, then `cinterpolate`). Output:
-`List (DensePoly α)`, the `z`-polynomial coefficient of each `tᵏ` (`k = 0..j`). -/
-def cSubresultantParam {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
-    [CPolyEngine P] [CPolySubresultant P] (Dstar A Dd : P α) (n m j : ℕ) : List (DensePoly α) :=
-  let N := n + m + 1
-  (List.range (j + 1)).map (fun k =>
-    cinterpolate ((List.range N).map (fun jj =>
-      let c := cnatCast jj
-      (c, CPoly.coeff
-        (CPolySubresultant.compute Dstar
-          (CPolyEngine.sub A (CPolyEngine.scale c Dd)) n m j) k))))
 
 /-! ### `toK`-determinant homomorphism (L4b): certifying `cDet` against `Matrix.det` -/
 
@@ -161,6 +143,19 @@ instance instCPolySubresultantSparse : CPolySubresultant CPoly.SparsePoly where
 
 namespace CPolySubresultant
 
+/-- **The parametric subresultant `Sⱼ(z,t)`** of `Dstar` and `A − z·Dd`: a polynomial in `t`
+whose coefficients are dense polynomials in the residue `z`, computed root-free by interpolation of
+the selected scalar subresultant at `z = 0,1,…,n+m`. -/
+def parametric {α : Type u} [CField α] {P : Type u → Type u} [CPoly P]
+    [CPolyEngine P] [CPolySubresultant P] (Dstar A Dd : P α) (n m j : ℕ) : List (DensePoly α) :=
+  let N := n + m + 1
+  (List.range (j + 1)).map (fun k =>
+    DensePoly.cinterpolate ((List.range N).map (fun jj =>
+      let c := DensePoly.cnatCast jj
+      (c, CPoly.coeff
+        (CPolySubresultant.compute Dstar
+          (CPolyEngine.sub A (CPolyEngine.scale c Dd)) n m j) k))))
+
 /-- Dense subresultant selection unfolds to `DensePoly.cSubresultant`. -/
 @[simp] theorem compute_dense_eq {α : Type*} [CField α] (p q : DensePoly α) (n m j : ℕ) :
     CPolySubresultant.compute p q n m j = DensePoly.cSubresultant p q n m j := rfl
@@ -211,16 +206,17 @@ theorem cSubresultant_sparse_one :
 /-- **L2a — parametric = scalar at a point.** `S₁(z,t)` of `(t²−1, t − z·2t)` is `(1−2z)·t`; evaluated at
 `z = 2` (a sample point) it equals the *scalar* subresultant `S₁(t²−1, −3t)` (`= −3t`). The interpolation is
 exact at the sample nodes — validating the root-free parametric log-argument. -/
-theorem cSubresultantParam_eval :
-    (cSubresultantParam ([-1, 0, 1] : DensePoly ℚ) ([0, 1] : DensePoly ℚ) ([0, 2] : DensePoly ℚ) 2 1 1).map
+theorem CPolySubresultant.parametric_eval :
+    (CPolySubresultant.parametric ([-1, 0, 1] : DensePoly ℚ) ([0, 1] : DensePoly ℚ)
+        ([0, 2] : DensePoly ℚ) 2 1 1).map
         (fun zp => ceval zp (2 : ℚ))
       = (cnorm (cSubresultant ([-1, 0, 1] : DensePoly ℚ)
           (csub ([0, 1] : DensePoly ℚ) (cscale (2 : ℚ) ([0, 2] : DensePoly ℚ))) 2 1 1) : List ℚ) := by
   native_decide
 
 /-- Parametric subresultants also run with sparse inner-polynomial storage. -/
-theorem cSubresultantParam_sparse :
-    cSubresultantParam
+theorem CPolySubresultant.parametric_sparse :
+    CPolySubresultant.parametric
       (CPoly.SparsePoly.ofList [(0, -1), (2, 1)] : CPoly.SparsePoly ℚ)
       (CPoly.SparsePoly.ofList [(1, 1)])
       (CPoly.SparsePoly.ofList [(1, 2)]) 2 1 1 = [[], [1, -2]] := by
