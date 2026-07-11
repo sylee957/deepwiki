@@ -336,8 +336,8 @@ equal, under the `(toK ·, toPoly ·)` projection, the per-root list
 `cRationalResidues Dt hNum hDen cands = s.toList.map residueCand`; the literal log-argument shape is
 discharged by `cLogArgTowerG_eq_linear_factor`. -/
 omit [Algebra ℚ (CFieldSpec.K α)] in
-/-- The fuel-free log argument is literally the residue's linear factor. -/
-theorem cLogArgTowerG_eq_linear_factor [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)]
+/-- The canonical selected log argument is literally the residue's linear factor. -/
+theorem cLogArgTowerG_eq_linear_factor [CPolyGcd DensePoly α] [DecidableEq (CFieldSpec.K α)]
     (Dt a d : DensePoly α) (c : α) (s : Finset (CFieldSpec.K α)) (β : CFieldSpec.K α)
     (hread : Associated (toPoly (cLogArgTower Dt a d c))
       (gcd (toPoly d) (toPoly (cAmcDd Dt a d c))))
@@ -362,17 +362,21 @@ theorem cLogArgTowerG_eq_linear_factor [CFracGcdCoreWf α] [DecidableEq (CFieldS
     rw [h] at hassoc
     exact (Polynomial.X_sub_C_ne_zero β) ((associated_zero_iff_eq_zero _).mp hassoc.symm)
   have hmonic : (toPoly (cLogArgTower Dt a d c)).Monic := by
-    rw [cLogArgTower, CPolyGcd.compute_dense_wf_eq, CFracGcdCoreWf.cgcdFFCoreWf]
-    rw [cLogArgTower, CPolyGcd.compute_dense_wf_eq, CFracGcdCoreWf.cgcdFFCoreWf] at hne
-    have hraw_ne : toPoly (CFracGcdCoreWf.cgcdFFRawCoreWf d (cAmcDd Dt a d c)) ≠ 0 := by
-      intro h
-      exact hne (((associated_toPolyG_cmonicG _).trans (Associated.of_eq h)).eq_zero_iff.mpr rfl)
-    exact monic_toPolyG_cmonicG _ hraw_ne
+    rw [cLogArgTower]
+    have hraw : ¬ CPoly.cisZero (CPolyGcd.compute d (cAmcDd Dt a d c)) = true := by
+      intro hzero
+      apply hne
+      have hzero' : CPoly.toPoly (CPoly.cmonic (CPolyGcd.compute d (cAmcDd Dt a d c))) = 0 := by
+        rw [CPoly.toPoly_cmonic, (CPoly.cisZero_iff _).mp hzero, mul_zero]
+      simpa only [cLogArgTower, toPoly_list_eq] using hzero'
+    simpa only [toPoly_list_eq] using
+      CPoly.cmonic_monic (CPolyGcd.compute d (cAmcDd Dt a d c)) hraw
   exact eq_of_monic_of_associated hmonic (Polynomial.monic_X_sub_C β) hassoc
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- The fuel-free reduced logs reassemble into the per-root Lagrange log form. -/
-theorem cIntegrateReducedG_logs_eq_per_root [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)]
+theorem cIntegrateReducedG_logs_eq_per_root [CPolySquarefree DensePoly α] [CPolyGcd DensePoly α]
+    [CPolyResultant DensePoly] [DecidableEq (CFieldSpec.K α)]
     (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (s : Finset (CFieldSpec.K α)) (residueCand : CFieldSpec.K α → α)
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
@@ -421,7 +425,8 @@ theorem cIntegrateReducedG_logs_eq_per_root [CFracGcdCoreWf α] [DecidableEq (CF
 single `LawfulResidueLogPart` realization for the primitive monomial (`t′ = w`) — `primitive_engine_hmatch`
 fed by the per-root reassembly. Under the residue-data contract (`hden`/`hA`/`hnorm`/`hres`/`hDd`/`hdist`/
 `hcand`/`hgcdread`). -/
-theorem cIntegrateReducedG_lawfulResidueLogPart [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)]
+theorem cIntegrateReducedG_lawfulResidueLogPart [CPolySquarefree DensePoly α] [CPolyGcd DensePoly α]
+    [CPolyResultant DensePoly] [DecidableEq (CFieldSpec.K α)]
     (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (w : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
     (hDt : toPoly Dt = C w)
@@ -458,8 +463,8 @@ theorem cIntegrateReducedG_lawfulResidueLogPart [CFracGcdCoreWf α] [DecidableEq
 `LawfulResidueLogPart` realization for the hyperexponential monomial (`t′ = b·t`, `b ≠ 0`) — identical to
 the primitive realization but through `hyperexp_engine_hmatch`, which additionally consumes the
 integrability witness `hsum : ∑ c = 0` (the RT polynomial-part cancellation is not automatic here). -/
-theorem cIntegrateReducedG_lawfulResidueLogPart_hyperexp [CFracGcdCoreWf α]
-    [DecidableEq (CFieldSpec.K α)]
+theorem cIntegrateReducedG_lawfulResidueLogPart_hyperexp [CPolySquarefree DensePoly α]
+    [CPolyGcd DensePoly α] [CPolyResultant DensePoly] [DecidableEq (CFieldSpec.K α)]
     (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
     (hb : b ≠ 0) (hDt : toPoly Dt = C b * X)
@@ -550,7 +555,8 @@ private theorem cHermiteReduceTowerG_numer_degree_lt_of_residual [CPolySquarefre
 output `res = cIntegrateReduced Dt a d cands` with a primitive monomial `toPoly Dt = C w`, the Hermite
 telescoping and per-root residue-log reassembly hypotheses prove the field-level antiderivative identity
 with no runtime fuel. -/
-theorem field_identity_of_cIntegrateReducedG_primitive [CFracGcdCoreWf α] (Dt : DensePoly α)
+theorem field_identity_of_cIntegrateReducedG_primitive [CPolySquarefree DensePoly α] [CPolyGcd DensePoly α]
+    [CPolyResultant DensePoly] (Dt : DensePoly α)
     (a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (hDt : toPoly Dt = C w)
     (hherm : towerFractionFieldDeriv Dt
@@ -582,7 +588,8 @@ theorem field_identity_of_cIntegrateReducedG_primitive [CFracGcdCoreWf α] (Dt :
       (cHermiteReduceTower Dt a d).2.2 w
       (DensePoly.cIntegrateReduced Dt a d cands).logs hDt hden hA hnorm hform)
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolySquarefree DensePoly α] [CPolyGcd DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (hDt : toPoly Dt = C w)
     (hherm : towerFractionFieldDeriv Dt
@@ -609,7 +616,8 @@ example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : Li
 
 /-- **The fuel-free primitive reduced identity with `hform` discharged from residue data.** -/
 theorem field_identity_of_cIntegrateReducedG_primitive_of_residueData
-    [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)] (Dt : DensePoly α)
+    [CPolySquarefree DensePoly α] [CPolyGcd DensePoly α] [CPolyResultant DensePoly]
+    [DecidableEq (CFieldSpec.K α)] (Dt : DensePoly α)
     (a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (residueCand : CFieldSpec.K α → α)
     (hDt : toPoly Dt = C w)
@@ -661,7 +669,8 @@ automatically). -/
 for `res = cIntegrateReduced Dt a d cands`, a hyperexponential monomial `toPoly Dt = C b·X`, the Hermite
 half, the per-root reassembly, and the integrability witness `hsum : ∑c = 0` prove the reduced-case field
 identity with no runtime fuel. -/
-theorem field_identity_of_cIntegrateReducedG_hyperexp [CFracGcdCoreWf α] (Dt : DensePoly α)
+theorem field_identity_of_cIntegrateReducedG_hyperexp [CPolySquarefree DensePoly α] [CPolyGcd DensePoly α]
+    [CPolyResultant DensePoly] (Dt : DensePoly α)
     (a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hb : b ≠ 0)
     (hDt : toPoly Dt = C b * X)
     (hherm : towerFractionFieldDeriv Dt
@@ -695,7 +704,8 @@ theorem field_identity_of_cIntegrateReducedG_hyperexp [CFracGcdCoreWf α] (Dt : 
       (cHermiteReduceTower Dt a d).2.2 b hb
       (DensePoly.cIntegrateReduced Dt a d cands).logs hDt hden hA hnorm hsum hform)
 
-example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
+example [CPolySquarefree DensePoly α] [CPolyGcd DensePoly α] [CPolyResultant DensePoly]
+    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
     (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hb : b ≠ 0)
     (hDt : toPoly Dt = C b * X)
     (hherm : towerFractionFieldDeriv Dt

@@ -406,11 +406,11 @@ example :
         CPoly.SparsePoly.ofList [(0, 1), (1, 0), (2, -4)] := by
   ccompute
 
-/-- Generic log argument `cLogArgTower Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`,
-using the selected `CPolyGcd` implementation. -/
+/-- Canonical log argument `cLogArgTower Dt a d c`: the monic normalization of the selected
+`gcd_t(d, a − c·Dd)` for a residue `c : α`. -/
 def cLogArgTower [CPolyGcd DensePoly α]
     (Dt : DensePoly α) (a d : DensePoly α) (c : α) : DensePoly α :=
-  CPolyGcd.compute d (cAmcDd Dt a d c)
+  CPoly.cmonic (CPolyGcd.compute d (cAmcDd Dt a d c))
 
 /-- Generic rational/field residues `cRationalResidues Dt a d cands`: keep the candidates
 `c ∈ cands : List α` that are roots of the residue resultant `R(z) = cResidueResultantTower Dt a d`,
