@@ -1,4 +1,5 @@
-import DeepWiki.ComputableAlgebra.PolyReprDense
+import DeepWiki.ComputableAlgebra.PolyRepr
+import DeepWiki.ComputableAlgebra.Field
 import Mathlib.Algebra.Polynomial.Div
 import Mathlib.Algebra.Polynomial.Derivative
 
