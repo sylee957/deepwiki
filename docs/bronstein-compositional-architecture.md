@@ -133,11 +133,11 @@ monomial stage contracts.
    special integrator through the generic assembler. `sparseTangentRischLevel` transports the same composition through the
    sparse representation boundary. Both canonical compositions certificate-check every reassembled special
    fraction and are sound without solver or bridge laws; the former unchecked duplicate APIs have been retired.
-   The next prerequisite is to let the generic monomial special stage return a full `IntegralResult`: Bronstein's
-   hypertangent polynomial reduction may emit a constant multiple of `log(t²+1)`, which the current rational-pair
-   result cannot represent. The LRT primitive path should retain a separate rational-only special interface rather
-   than constraining the generic Figure-5.1 assembler. Relative completeness follows only after that result-shape
-   migration and the concrete recursive integrator are available.
+   Their explicit checked-acceptance domains now compose the polynomial, normal, and tangent contracts into
+   dense and sparse `CompleteCRischLevel` instances. This is executable relative completeness only. Full semantic
+   tangent completeness still needs the concrete recursive integrator and a special-stage result shape that can
+   represent the constant multiple of `log(t²+1)` produced by hypertangent polynomial reduction; the LRT primitive
+   path should retain its separate rational-only special interface.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and
