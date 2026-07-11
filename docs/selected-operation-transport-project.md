@@ -72,6 +72,9 @@ denotations does not make those terms definitionally equal.
 - The private reduced-stage composition lemmas in `IntegratorCases/ReducedSound.lean` now quantify over
   selected squarefree, gcd, and resultant capabilities. `CFracGcdCoreWf` remains only on the public
   Stage-2 theorems that realize those abstract Hermite and residue contracts for the dense Wf output.
+- `IsPureNormalBranch` and `IsPolynomialBranch` now depend on the selected gcd and differential
+  split-factor capabilities used by `canonicalRepresentationFast`, rather than on the dense
+  `CFracGcdCoreWf` implementation that happens to supply those capabilities in Wf drivers.
 
 ## Verification
 

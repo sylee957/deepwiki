@@ -70,7 +70,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-variable [CFracGcdCoreWf α] in
+variable [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] in
 /-- `canonicalRepresentationFast` is in the pure-normal branch. -/
 structure IsPureNormalBranch (Dt a d : DensePoly α) : Prop where
   /-- The special part vanishes. -/
@@ -79,7 +79,7 @@ structure IsPureNormalBranch (Dt a d : DensePoly α) : Prop where
   poly_zero : DensePoly.cisZero (canonicalRepresentationFast Dt a d).1 = true
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-variable [CFracGcdCoreWf α] in
+variable [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] in
 /-- `canonicalRepresentationFast` is in the polynomial branch. -/
 structure IsPolynomialBranch (Dt a d : DensePoly α) : Prop where
   /-- The special part vanishes. -/
