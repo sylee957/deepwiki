@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentReconstruct
-import DeepWiki.SymbolicIntegration.Engine.Assemble
+import DeepWiki.SymbolicIntegration.Engine.RischLevel
 
 /-! # Tangent coupled-solver capability
 
@@ -136,5 +136,40 @@ instance instCompleteCMonomialCaseTangent (S : CTangentCoupledSolver) (B : CTang
     refine ⟨B.reassemble p q₁ q₂, ?_⟩
     simp [tangentMonomialCase, hprepare, hsolve]
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
+
+/-- Tangent normal reduction obtained by certificate-checking an arbitrary raw normal reducer. -/
+def tangentNormalReduction (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :
+    CNormalReduction DensePoly (DenseFrac ℚ) :=
+  checkedNormalReduction raw
+
+/-- Universal soundness domain of certificate-checked tangent normal reduction. -/
+def tangentNormalDomain : NormalReductionDomain DensePoly (DenseFrac ℚ) :=
+  checkedNormalReductionDomain
+
+/-- Certificate-checked tangent normal reduction is lawful without a low-degree Hermite hypothesis. -/
+instance instLawfulCNormalReductionTangent (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :
+    LawfulCNormalReduction (tangentNormalReduction raw) tangentNormalDomain := by
+  unfold tangentNormalReduction tangentNormalDomain
+  infer_instance
+
+/-- Assemble a tangent Risch level from polynomial, raw normal, coupled-solver, and bridge operations. -/
+def tangentRischLevel (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+    (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : CRischLevel DensePoly (DenseFrac ℚ) :=
+  oneLevelRisch R kind (tangentNormalReduction raw) (tangentMonomialCase S B)
+
+/-- Lawful tangent stages compose into a sound one-level Risch solver on the checked normal domain. -/
+instance instLawfulCRischLevelTangent (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (S : CTangentCoupledSolver) (B : CTangentSpecialBridge)
+    [LawfulCTangentCoupledSolver S] [LawfulCTangentSpecialBridge B]
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFrac ℚ)] :
+    LawfulCRischLevel (tangentRischLevel R kind raw S B)
+      (oneLevelRischSoundDomain tangentNormalDomain) := by
+  unfold tangentRischLevel
+  infer_instance
 
 end DeepWiki.SymbolicIntegration

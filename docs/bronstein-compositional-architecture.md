@@ -50,6 +50,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `CNormalReduction` abstracts the normal branch. `LawfulCNormalReduction` carries its denotational
   soundness law, while `CompleteCNormalReduction` states relative completeness on a selected domain.
   `hermiteResidueNormalReduction` realizes the interface, with separate soundness and completeness domains.
+- `hyperexpCheckedNormalReduction` realizes the same soundness interface for dense residual-feedback
+  hyperexponential normal integration. It validates the candidate-driven output by checking its denominator,
+  logarithm arguments, and full identity; it intentionally has no completeness instance.
 - `assembleOneLevel` is the executable representation-neutral Figure-5.1 spine: canonical split,
   polynomial and special integration, an injected normal reducer, monomial-specific normal postprocessing,
   and recombination.
@@ -104,10 +107,11 @@ monomial stage contracts.
 
 1. Realize `CompleteCResidueLogPart` for an actually complete residue source. Bounded candidate sweeps
    remain intentionally incomplete and must not acquire a false lawful instance.
-2. Realize the existing `CNormalReduction` boundary for the tangent case before connecting the coupled-DE
-   capability to a full `CMonomialCase`: `deg Dt = 2` lies outside the Hermite-residue soundness domain,
-   and the generic Hermite properness proof is known to fail there. Then obtain dense and sparse tangent-level
-   soundness by selecting the tangent normal reducer in the same generic assembler.
+2. Implement the concrete `CTangentSpecialBridge` and a relative-completeness contract for tangent normal
+   reduction. Soundness no longer depends on the low-degree Hermite theorem: `tangentNormalReduction`
+   certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
+   bridge through the generic assembler. Sparse transport and relative completeness remain after the concrete
+   bridge is available.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: ordinary recursive antiderivative completeness alone cannot justify the

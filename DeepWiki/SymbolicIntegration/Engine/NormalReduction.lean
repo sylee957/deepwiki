@@ -69,6 +69,75 @@ class CompleteCNormalReduction (N : CNormalReduction P α)
     domain Dt a d → CPoly.toPoly d ≠ 0 → IsNormalPartIntegrable Dt a d →
       ∃ out, N.reduce Dt a d = some out ∧ CertifiedNormalResult Dt a d out
 
+/-- Executable certificate that a normal-reduction result has valid denominators, arguments, and identity. -/
+def normalReductionCheck (Dt a d : P α) (out : IntegralResult α P) : Bool :=
+  !CPolyEngine.cisZero d && !CPolyEngine.cisZero out.rational.2 &&
+    out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) &&
+      DensePoly.checkIdentity Dt out a d
+
+/-- A passed normal-reduction certificate yields its semantic identity and a nonzero result denominator. -/
+theorem normalReductionCheck_sound (Dt a d : P α) (out : IntegralResult α P)
+    (hcheck : normalReductionCheck Dt a d out = true) :
+    CPoly.toPoly out.rational.2 ≠ 0 ∧ IsIntegralResultP Dt a d out := by
+  rw [normalReductionCheck, Bool.and_eq_true, Bool.and_eq_true, Bool.and_eq_true] at hcheck
+  obtain ⟨⟨⟨hdBool, houtDenBool⟩, hargsBool⟩, hidentity⟩ := hcheck
+  have hd : CPoly.toPoly d ≠ 0 := by
+    intro hz
+    have hzBool : CPolyEngine.cisZero d = true :=
+      (LawfulCPolyEngine.cisZero_iff (P := P) d).mpr hz
+    rw [hzBool] at hdBool
+    contradiction
+  have houtDen : CPoly.toPoly out.rational.2 ≠ 0 := by
+    intro hz
+    have hzBool : CPolyEngine.cisZero out.rational.2 = true :=
+      (LawfulCPolyEngine.cisZero_iff (P := P) out.rational.2).mpr hz
+    rw [hzBool] at houtDenBool
+    contradiction
+  have hargs : ∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0 := by
+    intro cv hcv hz
+    have hcvBool := (List.all_eq_true.mp hargsBool) cv hcv
+    have hzBool : CPolyEngine.cisZero cv.2 = true :=
+      (LawfulCPolyEngine.cisZero_iff (P := P) cv.2).mpr hz
+    rw [hzBool] at hcvBool
+    contradiction
+  exact ⟨houtDen, isIntegralResultP_of_checkIdentity Dt out a d houtDen hd hargs hidentity⟩
+
+/-- Guard an arbitrary normal reducer by a complete executable result certificate. -/
+def checkedNormalReduction (raw : CNormalReduction P α) : CNormalReduction P α where
+  reduce Dt a d := do
+    let out ← raw.reduce Dt a d
+    if normalReductionCheck Dt a d out then some out else none
+
+/-- Universal semantic domain of certificate-checked normal reduction. -/
+def checkedNormalReductionDomain : NormalReductionDomain P α := fun _ _ _ => True
+
+/-- Certificate checking turns any raw normal reducer into a lawful normal-reduction operation. -/
+instance instLawfulCNormalReductionChecked (raw : CNormalReduction P α) :
+    LawfulCNormalReduction (checkedNormalReduction raw)
+      (checkedNormalReductionDomain (P := P) (α := α)) where
+  sound Dt a d out _ _ hrun := by
+    simp only [checkedNormalReduction] at hrun
+    rcases hraw : raw.reduce Dt a d with _ | candidate
+    · simp [hraw] at hrun
+    · rw [hraw] at hrun
+      change (if normalReductionCheck Dt a d candidate then some candidate else none) = some out at hrun
+      by_cases hcheck : normalReductionCheck Dt a d candidate = true
+      · have hout : candidate = out := by simpa [hcheck] using hrun
+        subst candidate
+        exact (normalReductionCheck_sound Dt a d out hcheck).2
+      · simp [hcheck] at hrun
+  rationalDen_nonzero Dt a d out _ _ hrun := by
+    simp only [checkedNormalReduction] at hrun
+    rcases hraw : raw.reduce Dt a d with _ | candidate
+    · simp [hraw] at hrun
+    · rw [hraw] at hrun
+      change (if normalReductionCheck Dt a d candidate then some candidate else none) = some out at hrun
+      by_cases hcheck : normalReductionCheck Dt a d candidate = true
+      · have hout : candidate = out := by simpa [hcheck] using hrun
+        subst candidate
+        exact (normalReductionCheck_sound Dt a d out hcheck).1
+      · simp [hcheck] at hrun
+
 /-- Successful lawful normal reduction integrates its input fraction. -/
 theorem reduceNormal_sound [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
     [CResidueSource P α] [CResidueLogPart P α]
