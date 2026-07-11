@@ -19,8 +19,8 @@ class CPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEu
 
 namespace CPolySquarefree
 
-/-- Internal bounded Yun loop producing the successive multiplicity factors. -/
-private def defaultGo {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+/-- Bounded Yun loop producing the successive multiplicity factors; kept qualified as a kernel detail. -/
+protected def defaultGo {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     [CPolyEuclidean P] {α : Type u} [CField α] [CPolyGcd P α] : ℕ → P α → P α → List (P α)
   | 0, _, _ => []
   | fuel + 1, b, d =>
@@ -30,7 +30,7 @@ private def defaultGo {P : Type u → Type u} [CPoly P] [CPolyEngine P]
       let quotient := CPolyEuclidean.div b factor
       let residual := CPolyEngine.sub (CPolyEuclidean.div d factor)
         (CPolyEngine.deriv quotient)
-      factor :: defaultGo fuel quotient residual
+      factor :: CPolySquarefree.defaultGo fuel quotient residual
 
 /-- Representation-generic Yun decomposition built from the selected engine and Euclidean operations. -/
 def default {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
@@ -39,7 +39,7 @@ def default {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
   let base := CPolyEuclidean.div p gcd
   let residual := CPolyEngine.sub (CPolyEuclidean.div (CPolyEngine.deriv p) gcd)
     (CPolyEngine.deriv base)
-  defaultGo (CPoly.degBound p) base residual
+  CPolySquarefree.defaultGo (CPoly.degBound p) base residual
 
 end CPolySquarefree
 

@@ -98,6 +98,14 @@ theorem toPoly_mod_eq_zero_of_dvd (p q : P α) (hq : CPoly.toPoly q ≠ 0)
       ring
     _ = 0 := by rw [hexact]; ring
 
+/-- Exact selected division denotes the mathematical polynomial quotient. -/
+theorem toPoly_div_eq_div (p q : P α) (hq : CPoly.toPoly q ≠ 0)
+    (hdvd : CPoly.toPoly q ∣ CPoly.toPoly p) :
+    CPoly.toPoly (div p q) = CPoly.toPoly p / CPoly.toPoly q := by
+  symm
+  rw [LawfulCPolyEuclidean.div_exact (P := P) p q hq hdvd]
+  exact mul_div_cancel_left₀ _ hq
+
 /-- Exact selected division respects equal dividend and divisor denotations. -/
 theorem toPoly_div_congr (p₁ q₁ p₂ q₂ : P α)
     (hp : CPoly.toPoly p₁ = CPoly.toPoly p₂)
