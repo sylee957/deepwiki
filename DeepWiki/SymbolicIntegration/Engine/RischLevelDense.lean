@@ -53,17 +53,4 @@ theorem DensePoly.cIntegrateCaseChecked_sound (C : CMonomialCase DensePoly α)
   change assembleOneLevel C Dt a d = some res at hrun
   exact assembleOneLevel_sound C Dt a d res hd hdegree hrun
 
-/-- A successful polynomial-aware dense level run satisfies the integral specification. -/
-theorem DensePoly.cIntegrateCaseCheckedWithPolynomial_sound
-    (kind : PolynomialReductionKind) (fuel : ℕ) (C : CMonomialCase DensePoly α)
-    [LawfulCMonomialCase C] (cands : List α) (Dt a d : DensePoly α) (res : IntegralResult α)
-    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).natDegree ≤ 1)
-    (hrun : DensePoly.cIntegrateCaseCheckedWithPolynomial kind fuel C cands Dt a d = some res) :
-    IsIntegralResultP Dt a d res := by
-  letI : CResidueSource DensePoly α := { candidates := fun _ => cands }
-  change assembleOneLevelWithPolynomial (towerPolynomialReduction (P := DensePoly) (α := α))
-    kind fuel C Dt a d = some res at hrun
-  exact assembleOneLevelWithPolynomial_sound (P := DensePoly) (α := α)
-    (towerPolynomialReduction (P := DensePoly) (α := α)) kind fuel C Dt a d res hd hdegree hrun
-
 end DeepWiki.SymbolicIntegration
