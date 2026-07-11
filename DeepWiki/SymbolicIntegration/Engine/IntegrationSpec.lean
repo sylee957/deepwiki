@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.Engine.CheckIdentityCorrect
 
 /-! # Semantic specifications for certified integration results
 
@@ -9,9 +10,31 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u
+universe u v
 
 open DensePoly CFrac
+
+/-! ### Representation-independent integral-result specifications -/
+
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
+  [Algebra ℚ (CFieldSpec.K α)]
+
+/-- `IsIntegralResultP` is the formal tower integral identity for any lawful polynomial representation. -/
+def IsIntegralResultP (Dt anum aden : P α) (res : IntegralResult α P) : Prop :=
+  towerFractionFieldDerivP Dt
+      (am α (CPoly.toPoly res.rational.1) / am α (CPoly.toPoly res.rational.2))
+    + logResidueSumP Dt res.logs
+      = am α (CPoly.toPoly anum) / am α (CPoly.toPoly aden)
+
+/-- A passed representation-independent checker certificate yields `IsIntegralResultP`. -/
+theorem isIntegralResultP_of_checkIdentity (Dt : P α) (res : IntegralResult α P)
+    (anum aden : P α)
+    (hgden : CPoly.toPoly res.rational.2 ≠ 0) (haden : CPoly.toPoly aden ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0)
+    (hcheck : DensePoly.checkIdentity Dt res anum aden = true) :
+    IsIntegralResultP Dt anum aden res :=
+  field_identity_of_checkIdentityP Dt res anum aden hgden haden hlogs hcheck
 
 namespace DensePoly
 

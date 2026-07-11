@@ -160,7 +160,9 @@ runs the same fraction algorithm.
    Tower Hermite reduction consumes `CPoly.squarefreeYun`, and its correctness stack crosses the selected dense
    implementation through an explicit equality bridge.
    Differential normal/special splitting now runs as `CPoly.splitFactor`, composing the selected gcd and
-   Euclidean capabilities with the generic monomial derivative. Denominator and reduced canonical-normality
+   Euclidean capabilities with the generic monomial derivative; its generic bounded loop has a lawful
+   denotation proof, so the sparse selected instance is semantically certified as well as executable.
+   Denominator and reduced canonical-normality
    gates moved into the symmetric `CFrac.denomNormalGate` / `CFrac.canonNormalizedGate` API; the Risch-DE
    instance, sound solver, and completeness stack specialize that API to dense towers, while sparse fractions
    execute both gates through the same kernel. Weak normalization, its semantic normality predicate, reduction
