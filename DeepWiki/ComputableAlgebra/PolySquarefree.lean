@@ -34,12 +34,26 @@ def squarefreeYun {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclid
     (CPolyEngine.deriv base)
   squarefreeYunGo (CPoly.degBound p) base residual
 
+/-- Nonconstant selected Yun factors paired with their one-based multiplicities. -/
+def squarefreeYunFactors {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (p : P α) : List (P α × ℕ) :=
+  (squarefreeYun p).zipIdx.filterMap fun (q, i) =>
+    if CPolyEngine.cdeg q = 0 then none else some (q, i + 1)
+
 /-- Sparse Yun decomposition preserves multiplicities for `(x - 1)²(x + 2)`. -/
 example :
     let p : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 2), (1, -3), (3, 1)]
     squarefreeYun p =
       [CPoly.SparsePoly.ofList [(0, 2), (1, 1)],
         CPoly.SparsePoly.ofList [(0, -1), (1, 1)]] := by
+  ccompute
+
+/-- Sparse Yun factor pairs retain their one-based multiplicities. -/
+example :
+    let p : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 2), (1, -3), (3, 1)]
+    squarefreeYunFactors p =
+      [(CPoly.SparsePoly.ofList [(0, 2), (1, 1)], 1),
+        (CPoly.SparsePoly.ofList [(0, -1), (1, 1)], 2)] := by
   ccompute
 
 end CPoly

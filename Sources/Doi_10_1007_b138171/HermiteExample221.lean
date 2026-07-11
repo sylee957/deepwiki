@@ -28,7 +28,7 @@ coefficients low→high: `[0, 0, 8, 0, 12, 0, 6, 0, 1]`. -/
 def cD221 : DensePoly ℚ := [0, 0, 8, 0, 12, 0, 6, 0, 1]
 
 -- **Example 2.2.1, the squarefree factorization** `D = x²·(x²+2)³`: Yun returns `[(x, 2), (x²+2, 3)]`.
-#eval DensePoly.cSqfreeYunFactors cD221
+#eval CPoly.squarefreeYunFactors cD221
 
 -- **Example 2.2.1, the computed Hermite reduction** `((gnum, gden), (B, Dstar))`. Book answer:
 -- `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)`, residual `B/Dstar = 1/x` (so `∫ dx/x`),
@@ -39,7 +39,7 @@ def cD221 : DensePoly ℚ := [0, 0, 8, 0, 12, 0, 6, 0, 1]
 `D = x⁸+6x⁶+12x⁴+8x²` is `[(x, 2), (x²+2, 3)]` — the factor `x` of multiplicity `2` and `x²+2` of
 multiplicity `3`. Proved by `ccompute`. -/
 theorem hermite_ex221_factors :
-    DensePoly.cSqfreeYunFactors cD221 = [([0, 1], 2), ([2, 0, 1], 3)] := by ccompute
+    CPoly.squarefreeYunFactors cD221 = [([0, 1], 2), ([2, 0, 1], 3)] := by ccompute
 
 /-- **Example 2.2.1: the residual log integrand is `(x²+2)/(x³+2x) = 1/x`** (§2.2, p.41): the squarefree
 radical computed is `Dstar = x³ + 2x = x·(x²+2)` (`[0, 2, 0, 1]`) and the residual numerator is

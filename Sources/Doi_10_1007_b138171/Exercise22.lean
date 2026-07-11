@@ -66,7 +66,7 @@ theorem ex_2_2_resultant :
 i.e. one squarefree factor of multiplicity one (all ten residues distinct). So no nontrivial
 multiplicity splitting is needed; the LRT subresultant index is `j = 1`. Proved by `ccompute`. -/
 theorem ex_2_2_resultant_squarefree :
-    DensePoly.cSqfreeYunFactors cR22 = [(cmonic cR22, 1)] := by ccompute
+    CPoly.squarefreeYunFactors cR22 = [(cmonic cR22, 1)] := by ccompute
 
 /-! ### The LRT log argument `S₁(t,x)` and the assembled answer -/
 

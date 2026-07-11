@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
+import DeepWiki.ComputableAlgebra.PolySquarefree
 
 /-! # Computable bivariate subresultant gcd / log argument over `ℚ[t]`
 The logarithmic part puts `S(t,x) = gcd_x(D(x), A(x) − t·D'(x))` inside the logarithms of
@@ -112,7 +113,7 @@ def lrtGcdCompute (fuel : ℕ) (j : ℕ) (R A D : DensePoly ℚ) : GBPolyCore �
 `∫A/D = ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`, for squarefree `D`. -/
 def lrtLogPart (fuel : ℕ) (A D : DensePoly ℚ) : List (DensePoly ℚ × GBPolyCore ℚ) :=
   let R := DensePoly.cResidueResultantTower ([1] : DensePoly ℚ) A D
-  (DensePoly.cSqfreeYunFactors R).map (fun (Qi, i) => (Qi, lrtGcdCompute fuel i Qi A D))
+  (CPoly.squarefreeYunFactors R).map (fun (Qi, i) => (Qi, lrtGcdCompute fuel i Qi A D))
 
 
 end Compute

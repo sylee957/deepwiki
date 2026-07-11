@@ -1170,7 +1170,7 @@ theorem ex_2_6_1_lrtGcd_compute :
 LRT pipeline — RT resultant `R = res_x(D, A−t·D')`, Yun squarefree factorization of `R`, the subresultant
 PRS, and mod-`R` monic-in-`x` normalization — returning the `(Qᵢ, Sᵢ)` pairs of
 `∫A/D = ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`. The library's `lrtLogPart` uses
-`DensePoly.cSqfreeYunFactors`. -/
+`CPoly.squarefreeYunFactors`. -/
 def ex_2_2_lrtLogPart := @DeepWiki.SymbolicIntegration.Compute.lrtLogPart
 
 /-- **Exercise 2.2, the computed answer** (§2.9, p.72), LRT on
