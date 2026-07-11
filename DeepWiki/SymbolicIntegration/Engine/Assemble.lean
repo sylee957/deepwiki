@@ -11,7 +11,7 @@ per-case `MonomialCase` instances, the reduced-stage realizations, and the end-t
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u
+universe u v
 
 namespace DensePoly
 
@@ -45,8 +45,53 @@ example :
     CPoly.coeff (combineSN (ofList [3]) (ofList [1]) nrm).rational.1 0 = 5 := by
   native_decide
 
-open DensePoly CFrac Polynomial
+/-! ### Representation-independent recombination -/
+
+open CFrac Polynomial
 open scoped Differential
+
+/-- The tower fraction-field element represented by a polynomial numerator and denominator. -/
+noncomputable abbrev fieldFracP {P : Type u → Type u} [CPoly P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] (num den : P α) :
+    RatFunc (CFieldSpec.K α) :=
+  am α (CPoly.toPoly num) / am α (CPoly.toPoly den)
+
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
+  [Algebra ℚ (CFieldSpec.K α)]
+
+/-- **Representation-independent assembler recombination.** A special fraction whose derivative is
+`specialVal`, a normal result for `cn/dn`, and their reconstruction of `a/d` combine into an integral result.
+This is the common soundness square consumed by every concrete one-level assembler. -/
+theorem combineSN_isIntegralResultP (Dt a d cn dn snum sden : P α) (nrm : IntegralResult α P)
+    (specialVal : RatFunc (CFieldSpec.K α))
+    (hsden : CPoly.toPoly sden ≠ 0) (hgden : CPoly.toPoly nrm.rational.2 ≠ 0)
+    (hSpecField : towerFractionFieldDerivP Dt (fieldFracP snum sden) = specialVal)
+    (hNrmField : IsIntegralResultP Dt cn dn nrm)
+    (hrecon : specialVal + fieldFracP cn dn = fieldFracP a d) :
+    IsIntegralResultP Dt a d (combineSN snum sden nrm) := by
+  simp only [IsIntegralResultP] at hNrmField ⊢
+  show towerFractionFieldDerivP Dt
+      (am α (CPoly.toPoly (CPolyEngine.add (CPolyEngine.mul snum nrm.rational.2)
+        (CPolyEngine.mul nrm.rational.1 sden))) /
+        am α (CPoly.toPoly (CPolyEngine.mul sden nrm.rational.2)))
+      + logResidueSumP Dt nrm.logs = _
+  have hAsden : am α (CPoly.toPoly sden) ≠ 0 := am_ne_zero hsden
+  have hAgden : am α (CPoly.toPoly nrm.rational.2) ≠ 0 := am_ne_zero hgden
+  have hcombine : am α (CPoly.toPoly (CPolyEngine.add (CPolyEngine.mul snum nrm.rational.2)
+        (CPolyEngine.mul nrm.rational.1 sden))) /
+        am α (CPoly.toPoly (CPolyEngine.mul sden nrm.rational.2))
+      = am α (CPoly.toPoly snum) / am α (CPoly.toPoly sden)
+        + am α (CPoly.toPoly nrm.rational.1) / am α (CPoly.toPoly nrm.rational.2) := by
+    rw [LawfulCPolyEngine.toPoly_add, LawfulCPolyEngine.toPoly_mul,
+      LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul]
+    simp only [map_add, map_mul]
+    field_simp
+  rw [hcombine, map_add]
+  rw [hSpecField, add_assoc, hNrmField]
+  simpa only [fieldFracP] using hrecon
+
+namespace DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -68,23 +113,16 @@ theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : DensePoly α) (nrm 
     (hNrmField : IsIntegralResult Dt cn dn nrm)
     (hrecon : specialVal + fieldFrac cn dn = fieldFrac a d) :
     IsIntegralResult Dt a d (combineSN snum sden nrm) := by
-  simp only [IsIntegralResult] at hNrmField ⊢
-  show towerFractionFieldDeriv Dt
-      (am α (toPoly (cadd (cmul snum nrm.rational.2) (cmul nrm.rational.1 sden)))
-        / am α (toPoly (cmul sden nrm.rational.2))) + logResidueSum Dt nrm.logs = _
-  have hAsden : am α (toPoly sden) ≠ 0 := am_ne_zero hsden
-  have hAgden : am α (toPoly nrm.rational.2) ≠ 0 := am_ne_zero hgden
-  have hcombine : am α (toPoly (cadd (cmul snum nrm.rational.2) (cmul nrm.rational.1 sden)))
-        / am α (toPoly (cmul sden nrm.rational.2))
-      = am α (toPoly snum) / am α (toPoly sden)
-        + am α (toPoly nrm.rational.1) / am α (toPoly nrm.rational.2) := by
-    -- front-load transport (denotation + `am` homomorphism) to a pure fraction-field goal, then math
-    simp only [denote, map_add, map_mul]
-    field_simp
-  rw [hcombine, map_add]
-  simp only [fieldFrac] at hSpecField
-  rw [hSpecField, add_assoc, hNrmField]
-  simpa only [fieldFrac] using hrecon
+  have hgeneric := combineSN_isIntegralResultP (P := DensePoly) Dt a d cn dn snum sden nrm specialVal
+    (by simpa only [toPoly_list_eq] using hsden)
+    (by simpa only [toPoly_list_eq] using hgden)
+    (by simpa only [fieldFracP, fieldFrac, towerFractionFieldDerivP,
+      towerFractionFieldDeriv, toPoly_list_eq] using hSpecField)
+    (by simpa only [IsIntegralResultP, IsIntegralResult, towerFractionFieldDerivP,
+      towerFractionFieldDeriv, logResidueSumP, logResidueSum, toPoly_list_eq] using hNrmField)
+    (by simpa only [fieldFracP, fieldFrac, toPoly_list_eq] using hrecon)
+  simpa only [IsIntegralResultP, IsIntegralResult, towerFractionFieldDerivP,
+    towerFractionFieldDeriv, logResidueSumP, logResidueSum, toPoly_list_eq] using hgeneric
 
 /-! ## Elementary-integrability targets
 
@@ -126,5 +164,7 @@ theorem IsElementaryIntegrableGenuine.of_isGenuineIntegralResult {Dt a d : Dense
 theorem IsElementaryIntegrableGenuine.toIsElementaryIntegrable {Dt a d : DensePoly α}
     (h : IsElementaryIntegrableGenuine Dt a d) : IsElementaryIntegrable Dt a d :=
   let ⟨res, hres⟩ := h; ⟨res, hres.1⟩
+
+end DensePoly
 
 end DeepWiki.SymbolicIntegration

@@ -11,7 +11,8 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 
 - Leaf operation/law splits exist for fractions, gcd, Euclidean division, squarefree
   decomposition, resultants, and subresultants.
-- `Assemble.lean` already contains a concrete-algorithm-free combination theorem.
+- `Assemble.lean` now proves `combineSN_isIntegralResultP` once for every lawful polynomial
+  representation; the former `DensePoly` theorem is a specialization through `toPoly_list_eq`.
 - `LawfulHermiteReduction` and `LawfulResidueLogPart` exist as stage-result contracts.
 - `LawfulRischLevelLrt` already packages the recursive LRT-level special and reduced contracts.
 
@@ -39,7 +40,9 @@ monomial stage contracts.
    `scripts/wiki rdeps` before changing it. Classify each declaration as a stage contract,
    a realization, or obsolete duplicated wiring.
 2. Generalize the Stage-1 result data and `MonomialCase` from `DensePoly` to a polynomial
-   representation parameter `P`. Keep dense consumers as instances/realizers.
+   representation parameter `P`. The representation-neutral recombination square is complete;
+   next introduce the generic stage operation and lawful contracts, then move dense consumers to
+   realizers rather than parallel theorem bodies.
 3. Introduce paired executable/lawful interfaces for canonical representation and polynomial
    reduction; fold existing Hermite and residue contracts into the same stage vocabulary.
 4. Define one generic Figure-5.1 one-level assembler and prove its soundness from only the stage
