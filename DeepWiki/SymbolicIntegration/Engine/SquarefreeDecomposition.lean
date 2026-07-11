@@ -64,6 +64,19 @@ private theorem cmonic_associated [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
     _ = CPoly.toPoly p := by
       rw [← Polynomial.C_mul, inv_mul_cancel₀ hlead, Polynomial.C_1, one_mul]
 
+/-- An exact selected Euclidean quotient is associated to the mathematical quotient. -/
+private theorem selectedDiv_associated_quotient [CPolyEngine P] [CPolyEuclidean P]
+    [LawfulCPolyEuclidean.{u,v} P] (p q : P α) (hq : CPoly.toPoly q ≠ 0)
+    (hdvd : CPoly.toPoly q ∣ CPoly.toPoly p) :
+    Associated (CPoly.toPoly (CPolyEuclidean.div p q))
+      (CPoly.toPoly p / CPoly.toPoly q) := by
+  have hexact := LawfulCPolyEuclidean.div_exact (P := P) p q hq hdvd
+  have hquot : Associated (CPoly.toPoly p / CPoly.toPoly q)
+      (CPoly.toPoly (CPolyEuclidean.div p q)) := by
+    rw [associated_div_iff hq hdvd]
+    rw [← hexact]
+  exact hquot.symm
+
 /-- **Interface law: `decomp` is a squarefree decomposition of `d`.** Through `toPoly`, the factors are
 monic, squarefree, and pairwise coprime, and the powered product `prodPow 1 (map toPoly decomp) = ∏ᵢ vᵢ^i`
 is associated to `d`. Abstract: the assembler and the Hermite stage consume *this*, never a concrete loop. -/
