@@ -105,59 +105,7 @@ noncomputable def ratFuncOfPair {P : Type → Type} [CPoly P] (x : P ℚ × P �
   algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly x.1) /
     algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly x.2)
 
-/-! ### Field-operation readings -/
-
-/-- Read a validated dense fraction in `RatFunc ℚ`. -/
-noncomputable def toRatFuncDense (x : DenseFrac ℚ) : RatFunc ℚ := CFrac.toRatFunc x
-
-/-- `DenseFrac` zero reads as `0`. -/
-theorem toRatFuncDense_zero : toRatFuncDense (CCommRing.zero : DenseFrac ℚ) = 0 := by
-  change CFieldSpec.toK (CCommRing.zero : DenseFrac ℚ) = 0
-  exact CFieldSpec.toK_zero
-
-/-- `DenseFrac` one reads as `1`. -/
-theorem toRatFuncDense_one : toRatFuncDense (CCommRing.one : DenseFrac ℚ) = 1 := by
-  change CFieldSpec.toK (CCommRing.one : DenseFrac ℚ) = 1
-  exact CFieldSpec.toK_one
-
-/-- Dense-fraction addition reads as addition in `RatFunc`. -/
-theorem toRatFuncDense_add (x y : DenseFrac ℚ) :
-    toRatFuncDense (CCommRing.add x y) = toRatFuncDense x + toRatFuncDense y :=
-  CFieldSpec.toK_add x y
-
-/-- Dense-fraction multiplication reads as multiplication in `RatFunc`. -/
-theorem toRatFuncDense_mul (x y : DenseFrac ℚ) :
-    toRatFuncDense (CCommRing.mul x y) = toRatFuncDense x * toRatFuncDense y :=
-  CFieldSpec.toK_mul x y
-
-/-- Dense-fraction negation reads as negation in `RatFunc`. -/
-theorem toRatFuncDense_neg (x : DenseFrac ℚ) :
-    toRatFuncDense (CCommRing.neg x) = -toRatFuncDense x :=
-  CFieldSpec.toK_neg x
-
-/-- Dense-fraction inversion reads as inversion in `RatFunc`. -/
-theorem toRatFuncDense_inv (x : DenseFrac ℚ) :
-    toRatFuncDense (CField.inv x) = (toRatFuncDense x)⁻¹ :=
-  CFieldSpec.toK_inv x
-
-/-- Dense-fraction subtraction reads as subtraction in `RatFunc`. -/
-theorem toRatFuncDense_sub (x y : DenseFrac ℚ) :
-    toRatFuncDense (CField.sub x y) = toRatFuncDense x - toRatFuncDense y :=
-  CFieldSpec.toK_sub x y
-
-/-- Dense-fraction division reads as division in `RatFunc`. -/
-theorem toRatFuncDense_div (x y : DenseFrac ℚ) :
-    toRatFuncDense (CField.div x y) = toRatFuncDense x / toRatFuncDense y :=
-  CFieldSpec.toK_div x y
-
 /-! ### Formal derivative -/
-
-open scoped Differential in
-/-- The formal derivative of a validated dense fraction reads as the `RatFunc` derivative. -/
-theorem toRatFuncDense_deriv (x : DenseFrac ℚ) :
-    toRatFuncDense (CFrac.deriv x) = (toRatFuncDense x)′ := by
-  simpa only [toRatFuncDense] using
-    (CFrac.toRatFunc_deriv (F := DenseFrac) (P := DensePoly) x)
 
 open scoped Differential in
 example (x : SparseFrac ℚ) :
@@ -170,24 +118,14 @@ example (gs : List (SparseFrac ℚ)) :
       (gs.map (fun g => (CFrac.toRatFunc g)′)).sum :=
   CFrac.deriv_toRatFunc_foldl_add gs
 
-/-! ### Folded derivatives -/
-
-open scoped Differential in
-/-- The derivative of a sum of validated dense fractions is the sum of the derivatives. -/
-theorem deriv_toRatFuncDense_foldl_add (gs : List (DenseFrac ℚ)) :
-    (toRatFuncDense (gs.foldl CCommRing.add (CCommRing.zero : DenseFrac ℚ)))′ =
-      (gs.map (fun g => (toRatFuncDense g)′)).sum := by
-  simpa only [toRatFuncDense] using
-    (CFrac.deriv_toRatFunc_foldl_add (F := DenseFrac) (P := DensePoly) gs)
-
 open scoped Differential in
 /-- A folded derivative with increments `T - resid g` has residual `T - nT + ∑ resid g`. -/
 theorem foldl_residual_eq (gs : List (DenseFrac ℚ))
     (T : RatFunc ℚ) (resid : DenseFrac ℚ → RatFunc ℚ)
-    (hstep : ∀ g ∈ gs, (toRatFuncDense g)′ = T - resid g) :
-    T - (toRatFuncDense (gs.foldl CCommRing.add (CCommRing.zero : DenseFrac ℚ)))′
+    (hstep : ∀ g ∈ gs, (CFrac.toRatFunc g)′ = T - resid g) :
+    T - (CFrac.toRatFunc (gs.foldl CCommRing.add (CCommRing.zero : DenseFrac ℚ)))′
       = T - gs.length • T + (gs.map resid).sum := by
-  rw [deriv_toRatFuncDense_foldl_add gs, List.map_congr_left hstep]
+  rw [CFrac.deriv_toRatFunc_foldl_add gs, List.map_congr_left hstep]
   have hsum : ∀ (zs : List (DenseFrac ℚ)),
       T - (zs.map (fun a => T - resid a)).sum =
         T - zs.length • T + (zs.map resid).sum := by
