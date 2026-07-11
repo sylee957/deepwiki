@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
+import DeepWiki.SymbolicIntegration.Engine.ResidueSource
 
 /-! # Guarded primitive special integration
 
@@ -19,21 +20,6 @@ open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
   [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
-
-/-- Rational `p/q ∈ α` (`p : ℤ`, `q : ℕ`) via the `[CField α]` casts — `p.natAbs` lifted, negated when
-`p < 0`, divided by `q`. -/
-def cRat (p : ℤ) (q : ℕ) : α :=
-  CField.div (if p < 0 then CCommRing.neg (CField.natCast p.natAbs) else CField.natCast p.natAbs)
-    (CField.natCast q)
-
-/-- Automatic residue candidates from the bounded rational sweep `{p/q : |p| ≤ bound, 1 ≤ q ≤ bound}`.
-`cRationalResidues` filters these to the actual residues (roots of the residue resultant), so the reduced
-integrator needs *no externally supplied* candidate list for small-rational residues — `candidates` becomes
-a fixed computable function. Completeness is bounded (large / non-rational residues need a bigger sweep or
-root-finding); soundness is unaffected (any candidate list is filtered to genuine roots). -/
-def defaultResidueCandidates (bound : ℕ) : List α :=
-  (List.range (2 * bound + 1)).flatMap (fun i =>
-    (List.range bound).map (fun j => cRat ((i : ℤ) - (bound : ℤ)) (j + 1)))
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
 /-- `cisZero (CPolyEngine.mapDeriv fp) = true` proves that `fp` has constant coefficients. -/

@@ -23,6 +23,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   reconstruction/nonzero/properness laws; `canonicalRepresentationFast` is the dense realizer.
 - `LawfulHermiteReduction` and `LawfulResidueLogPart` are representation-neutral stage-result
   contracts; the selected dense realizations cross `toPoly_list_eq` explicitly.
+- `CResidueSource P α` is the Prop-free residue-candidate capability and
+  `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
+  representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
 - `LawfulRischLevelLrt` already packages the recursive LRT-level special and reduced contracts.
 
 ## Leaf inventory
@@ -38,6 +41,7 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 | Subresultant | `CPolySubresultant` | `LawfulCPolySubresultant` | `Engine/SubresultantSpec.lean` |
 | Interpolation | `CPolyInterpolate` | `LawfulCPolyInterpolate` | `ComputableAlgebra/PolyInterpolate.lean` |
 | Linear solve | `CLinearSolve` | `LawfulCLinearSolve` | `ComputableAlgebra/LinearAlgebra.lean` |
+| Residue candidates | `CResidueSource` | `LawfulCResidueSource` | `Engine/ResidueSource.lean` |
 
 Therefore the first architectural refactor is **not** another leaf abstraction. It is to make the
 existing leaf contracts the only dependencies of the canonical, Hermite, polynomial, residue, and
@@ -57,8 +61,8 @@ monomial stage contracts.
    laws are representation-neutral, but still need Prop-free operation interfaces before the generic
    assembler can select them.
 4. Define one generic Figure-5.1 one-level assembler and prove its soundness from only the stage
-   contracts. The contract-level soundness combiner is complete; next give polynomial reduction and
-   residue criterion executable interfaces, then add the full executable assembler and a relative-
+   contracts. The contract-level soundness combiner and residue-source split are complete; next give
+   polynomial reduction and residue-log executable interfaces, then add the full executable assembler and a relative-
    completeness theorem parameterized by complete stage capabilities.
 5. Materialize primitive, hyperexponential, and tangent realizers. Move their concrete proofs next
    to their executable operations and make the old full drivers corollaries.
