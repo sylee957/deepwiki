@@ -152,7 +152,7 @@ discriminant numerator with `p² | d` — where `O` may still be non-maximal. -/
 def badPrimesOrder (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) :
     List (DensePoly ℚ) :=
   let d := discNumOrder f O
-  let distinct := ((cSqfreeYunFF d).map cmonic).filter (fun p => 0 < cdeg p)
+  let distinct := ((CPoly.squarefreeYun d).map cmonic).filter (fun p => 0 < cdeg p)
   distinct.filter (fun p => cisZero (CPolyEuclidean.mod d (cmul p p)))
 
 /-- `true` iff two order bases agree: each `O1ᵢ` is `cisZero`-equal to `O2ᵢ` over the `n`
