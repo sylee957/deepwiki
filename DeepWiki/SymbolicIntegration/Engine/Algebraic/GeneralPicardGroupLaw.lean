@@ -13,6 +13,8 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 open DensePoly
 
 /-! ## The reduced-divisor representation `RedDiv p` (a sorted `𝔽_p`-point list) -/
@@ -43,26 +45,34 @@ def pdivEq (p : ℕ) (D₁ D₂ : RedDiv p) : Bool := pdivCanon p D₁ == pdivCa
 
 /-! ## Light point-extraction: roots of `u(x)` over `𝔽_p` (`rootsWithMult`) -/
 
-namespace DensePoly
+namespace CPoly
 
-variable {α : Type*} [CField α]
+variable {α : Type u} [CField α]
 
 /-- Roots with multiplicity `rootsWithMult scan poly` — for each `r` in the scan list (e.g. all of
 `𝔽_p` via `zmodGrid`), the multiplicity of `r` as a root of `poly`, found by repeatedly dividing out
 `(x − r)` (each exact division selected by `CPolyEuclidean`); emit `r` repeated that many times. The
 independent `𝔽_p` point-extraction reading the support out of a reduced `u(x)`. Generic over `[CField α]`. -/
-def rootsWithMult (scan : List α) (poly : DensePoly α) : List α :=
+def rootsWithMult {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    (scan : List α) (poly : P α) : List α :=
   scan.foldr (fun r acc =>
-    let rec mult : ℕ → DensePoly α → ℕ
+    let rec mult : ℕ → P α → ℕ
       | 0, _ => 0
       | k + 1, q =>
-        if cisZero q then 0
-        else if CCommRing.isZero (ceval q r) then
-          1 + mult k (CPolyEuclidean.div q [CCommRing.neg r, CCommRing.one])
+        if CPolyEngine.cisZero q then 0
+        else if CCommRing.isZero (CPolyEngine.eval q r) then
+          1 + mult k (CPolyEuclidean.div q
+            (CPolyEngine.ofCoeffList [CCommRing.neg r, CCommRing.one]))
         else 0
-    (List.replicate (mult (poly.length + 1) poly) r) ++ acc) []
+    (List.replicate (mult (CPoly.degBound poly + 1) poly) r) ++ acc) []
 
-end DensePoly
+end CPoly
+
+/-- Sparse root scanning preserves multiplicity: `(x − 1)²` emits `1` twice. -/
+example :
+    let p : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 1), (1, -2), (2, 1)]
+    CPoly.rootsWithMult [0, 1, 2] p = [1, 1] := by
+  ccompute
 
 /-! ## The point-list ↔ Mumford round-trip (the reduction engine) -/
 
@@ -76,7 +86,7 @@ def ptToMum {α : Type*} [CField α] (ρ : DensePoly α) (g : ℕ) (pts : List (
 /-- Reduced Mumford pair → point list `mumToPts scan D`: the roots of `D.u` with multiplicity
 (`rootsWithMult` over `scan`) each paired with `y = D.v(root)`. -/
 def mumToPts {α : Type*} [CField α] (scan : List α) (D : MumfordDivisor α) : List (α × α) :=
-  (DensePoly.rootsWithMult scan D.u).map (fun r => (r, ceval D.v r))
+  (CPoly.rootsWithMult scan D.u).map (fun r => (r, ceval D.v r))
 
 /-! ## The group law: compose (`++`) then reduce (round-trip to Cantor), and `picOrder` -/
 

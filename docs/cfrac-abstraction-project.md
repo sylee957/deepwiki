@@ -137,6 +137,9 @@ runs the same fraction algorithm.
    Function-algebra component recombination now runs as `CPoly.afIntegrateFunctionAlgebra`, selecting modular
    multiplication, Euclidean remainder, addition, and zero through the polynomial interfaces; its existing dense
    quotient soundness theorem crosses the specialization boundary explicitly, and a sparse witness executes the kernel.
+   Finite root scanning with multiplicity now runs as `CPoly.rootsWithMult`, using representation bounds, selected
+   evaluation, linear-factor construction, and Euclidean division rather than dense list length and literals; the
+   Picard point-extraction path specializes it to dense storage while a sparse double-root witness shares the kernel.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
