@@ -48,7 +48,9 @@ example :
     (cCorrectHyperexpNormal (0 : ℚ) red).isSome = true := by
   native_decide
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α]
+  [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α]
+  [CPolyResultant DensePoly] [CRischField α]
 
 /-! ### The normal-part integrator `∫ fₙ = logPart − ∫R`
 
@@ -62,6 +64,8 @@ def cIntegrateHyperexpNormal (Dt : DensePoly α) (a d : DensePoly α) (cands : L
     Option (IntegralResult α) :=
   let red := cIntegrateReduced Dt a d cands
   cCorrectHyperexpNormal (cExpEta Dt) red
+
+variable [CPolySplitFactor DensePoly α]
 
 /-- Full hyperexponential integral `cIntegrateHyperexpFull Dt a d cands`: canonical-split
 `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrate the Laurent part by `cIntegrateHyperexpLaurent` and the normal part

@@ -26,7 +26,8 @@ def primitiveCase : MonomialCase α where
     else none
   reducedCorrect _Dt nrm := some nrm
 
-variable [CFracGcdCoreWf α]
+variable [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+  [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
 
 /-- Hyperexponential monomial case (`Dt = η·t`): the special/Laurent part is integrated by
 `cIntegrateHyperexpLaurent`; the reduced correction subtracts `∫R` (the residual `η·∑ᵢ cᵢ`). -/
