@@ -222,6 +222,12 @@ runs the same fraction algorithm.
    and concrete solver dependency as either an explicit specialization boundary or an unfinished
    migration. Run the full warning-/sorry-free gate and rebuild the dependency graph before completion.
 
+   The current `LawfulCFrac` audit leaves bare `[CFrac F P]` only at the interface itself and in the
+   file-private numerator/denominator clearing helpers of `Round2IntegralBasis`; every Engine definition
+   that uses fraction-field arithmetic requests `[LawfulCFrac F P]`. The remaining direct dense gcd
+   names occur only inside `Tower/WellFounded.lean`, which owns the selected dense recursive
+   implementation and its denotation bridge.
+
 ## Checkpoint discipline
 
 Land the phases in small gate-green commits. Each new representation-independent executable path gets a
