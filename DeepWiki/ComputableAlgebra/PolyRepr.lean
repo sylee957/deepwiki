@@ -47,6 +47,19 @@ variable {P : Type u → Type u} [CPoly P] {α : Type u} [CCommRing α]
 /-- The first `n` coefficients of `p`, low degree first and zero-extended through `CPoly.coeff`. -/
 def coeffs (p : P α) (n : ℕ) : List α := (List.range n).map (coeff p)
 
+/-- Build a represented polynomial from a low-to-high coefficient list. -/
+def ofList (xs : List α) : P α :=
+  ofFn xs.length (fun i => xs.getD i CCommRing.zero)
+
+/-- `CPoly.ofList` reads back the supplied coefficient or `0` past the list length. -/
+@[simp] theorem coeff_ofList (xs : List α) (i : ℕ) :
+    coeff (ofList (P := P) xs) i = xs.getD i CCommRing.zero := by
+  rw [ofList, coeff_ofFn]
+  by_cases hi : i < xs.length
+  · rw [if_pos hi]
+  · rw [if_neg hi, List.getD_eq_getElem?_getD,
+      List.getElem?_eq_none (by simpa using Nat.le_of_not_gt hi), Option.getD_none]
+
 /-- `CPoly.coeffs p n` contains exactly `n` coefficients. -/
 @[simp] theorem coeffs_length (p : P α) (n : ℕ) : (coeffs p n).length = n := by
   simp [coeffs]

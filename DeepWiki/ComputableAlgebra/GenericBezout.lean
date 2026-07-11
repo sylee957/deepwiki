@@ -36,6 +36,7 @@ variable [CFieldSpec.{u,v} α] [LawfulCPolyEngine.{u,v} P]
 @[denote] theorem toPoly_interpolate (pts : List (α × α)) :
     toPoly (interpolate (P := P) pts) = DensePoly.toPoly (DensePoly.cinterpolate pts) := by
   rw [interpolate, LawfulCPolyEngine.toPoly_ofCoeffList]
+  exact CPoly.toPoly_ofList_eq_dense _
 
 open scoped Classical in
 /-- Selected interpolation evaluates to the sampled value at each distinct node. -/

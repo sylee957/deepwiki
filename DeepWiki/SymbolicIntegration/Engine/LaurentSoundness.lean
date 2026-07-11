@@ -341,7 +341,7 @@ theorem cIntegrateHyperexpLaurentG_sound {P : Type u → Type u} [CPoly P] [CPol
           (CPolyEngine.ofCoeffList (P := P) (negCoeffs.reverse ++ posCoeffs))
         = toPoly negCoeffs.reverse
           + Polynomial.X ^ neg.length * toPoly posCoeffs := by
-      rw [LawfulCPolyEngine.toPoly_ofCoeffList (P := P),
+      rw [LawfulCPolyEngine.toPoly_ofCoeffList (P := P), CPoly.toPoly_ofList_eq_dense,
         toPolyG_append_laurent, List.length_reverse, hlen]
     rw [hsplit, map_add, add_div, map_add, add_comm (am α (CPoly.toPoly pos))]
     congr 1
@@ -354,7 +354,9 @@ theorem cIntegrateHyperexpLaurentG_sound {P : Type u → Type u} [CPoly P] [CPol
         (CPolyEngine.coeffList pos) posCoeffs 0 hposeq
       rw [hdenpow, map_mul, map_pow, mul_div_cancel_left₀ _ (pow_ne_zero neg.length hXne)]
       simp only [DensePoly.cshift] at hpos
-      rw [LawfulCPolyEngine.toPoly_coeffList (P := P)] at hpos
+      have hcoeff : toPoly (CPolyEngine.coeffList pos) = CPoly.toPoly pos := by
+        rw [← CPoly.toPoly_ofList_eq_dense (P := P), LawfulCPolyEngine.toPoly_coeffList]
+      rw [hcoeff] at hpos
       simpa using hpos
   all_goals simp at hsome
 

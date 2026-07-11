@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.PolyRepr
+import DeepWiki.ComputableAlgebra.PolyReprDenote
 import DeepWiki.ComputableAlgebra.Field
 import Mathlib.Algebra.Polynomial.Basic
 import Mathlib.Algebra.Polynomial.Degree.Defs
@@ -691,5 +692,18 @@ theorem monic_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : Dens
     inv_mul_cancel₀ (Polynomial.leadingCoeff_ne_zero.mpr hp)]
 
 end DensePoly
+
+namespace CPoly
+
+variable {P : Type u → Type u} [CPoly P] {α : Type u} [CCommRing α] [CRingSpec α]
+
+/-- Generic list construction and dense-list reading denote the same polynomial. -/
+theorem toPoly_ofList_eq_dense (xs : List α) :
+    CPoly.toPoly (CPoly.ofList (P := P) xs) = DensePoly.toPoly xs := by
+  apply Polynomial.ext
+  intro i
+  rw [CPoly.coeff_toPoly, CPoly.coeff_ofList, DensePoly.toPolyG_coeff]
+
+end CPoly
 
 end DeepWiki.SymbolicIntegration

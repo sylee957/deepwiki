@@ -1,5 +1,5 @@
 import DeepWiki.ComputableAlgebra.FracRepr
-import DeepWiki.ComputableAlgebra.PolyEngine
+import DeepWiki.ComputableAlgebra.PolyEngineLawful
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 
