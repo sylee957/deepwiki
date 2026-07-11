@@ -19,6 +19,7 @@ import DeepWiki.ComputableAlgebra.PolyReprGcd
 import DeepWiki.ComputableAlgebra.PolyReprResultant
 import DeepWiki.ComputableAlgebra.PolyReprResultantCoprime
 import DeepWiki.ComputableAlgebra.PolyResultant
+import DeepWiki.ComputableAlgebra.PolyResultantDense
 import DeepWiki.ComputableAlgebra.PolySubresultant
 import DeepWiki.ComputableAlgebra.PolyEuclidean
 import DeepWiki.ComputableAlgebra.PolyEuclideanDense

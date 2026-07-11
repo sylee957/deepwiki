@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.ComputableAlgebra.PolyResultantDense
 import DeepWiki.SymbolicIntegration.Engine.PolySplitFactor
 import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse

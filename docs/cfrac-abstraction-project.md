@@ -67,7 +67,8 @@ runs the same fraction algorithm.
     `cbezoutOneWf`, `cextendedEuclideanSplitWf`, and `cdiophantine` helpers are retired. The third slice adds
     `CPolyResultant`/`LawfulCPolyResultant`: dense polynomials select the
    well-founded PRS resultant, sparse polynomials select the generic Sylvester determinant, and tower,
-   radical, general-curve, and discriminant consumers request the capability. The tower residue-resultant
+   radical, general-curve, and discriminant consumers request the capability. The dense implementation and
+   its lawful instance now live in `ComputableAlgebra/PolyResultantDense.lean`. The tower residue-resultant
    bridge now proves correctness from `LawfulCPolyResultant`. The fourth slice generalizes the
    Sylvester-submatrix algorithm itself over `CPoly` and introduces `CPolySubresultant`/
    `LawfulCPolySubresultant`; dense and sparse LRT paths share the implementation, with correctness proved

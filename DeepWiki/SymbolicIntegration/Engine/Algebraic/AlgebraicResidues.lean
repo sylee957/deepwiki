@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalCase2
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.ComputableAlgebra.PolyEuclideanDense
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.ComputableAlgebra.PolyResultantDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
 

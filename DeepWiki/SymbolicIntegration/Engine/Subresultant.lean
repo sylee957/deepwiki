@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.ComputableAlgebra.PolyResultantDense
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.PolySubresultant

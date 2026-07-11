@@ -1,6 +1,6 @@
 import DeepWiki.ComputableAlgebra.Fraction
 import DeepWiki.ComputableAlgebra.FracReprDense
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.ComputableAlgebra.PolyResultantDense
 
 /-! # The level-2 tower carrier `Lvl2 = DenseFrac (DenseFrac ℚ) ≅ ℚ(x)(t₁)`
 The concrete ℚ tower at depth 2 (`DensePoly Lvl2 = ℚ(x)(t₁)[t₂]`), a shared readable alias used across the

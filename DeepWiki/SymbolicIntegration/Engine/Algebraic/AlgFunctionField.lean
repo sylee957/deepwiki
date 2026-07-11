@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtension
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.HermiteNormalForm
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.BareissEngine
-import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
+import DeepWiki.ComputableAlgebra.PolyResultantDense
 import DeepWiki.ComputableAlgebra.PolyQuotient
 
 /-! # The algebraic function field `K(x, y) = K(x)[y]/(f)`: trace and discriminant
