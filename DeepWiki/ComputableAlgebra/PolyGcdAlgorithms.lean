@@ -13,6 +13,21 @@ universe u v
 
 namespace CPoly
 
+/-- Test whether a coefficient is a root using the selected Euclidean remainder. -/
+def isRoot {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
+    {α : Type u} [CField α] (p : P α) (a : α) : Bool :=
+  CPolyEngine.cisZero
+    (CPolyEuclidean.mod p (CPolyEngine.ofCoeffList [CCommRing.neg a, CCommRing.one]))
+
+/-- Test whether a polynomial has exactly the supplied linear factors up to scalar. -/
+def matchesLinearFactors {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (p : P α) (roots : List α) : Bool :=
+  let product := roots.foldl (fun acc a =>
+    CPolyEngine.mul acc (CPolyEngine.ofCoeffList [CCommRing.neg a, CCommRing.one]))
+    (CPoly.one : P α)
+  CPolyEngine.cisZero
+    (CPolyEngine.sub (CPolyEngine.cmonic p) (CPolyEngine.cmonic product))
+
 /-- Normalize selected extended-gcd cofactors so their Bezout combination is `1`. -/
 def bezoutOne {P : Type u → Type u} [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
     {α : Type u} [CField α] (a b : P α) : P α × P α :=

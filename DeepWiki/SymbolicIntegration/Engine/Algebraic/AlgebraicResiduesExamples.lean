@@ -34,17 +34,17 @@ theorem algResExX_resultant_eq :
 
 /-- The residues `±1` and branch-place root `0` are roots of the computed resultant. -/
 theorem algResExX_residues_pm_one :
-    cIsResidue algResExX_R (1 : ℚ) = true
-    ∧ cIsResidue algResExX_R (-1 : ℚ) = true
-    ∧ cIsResidue algResExX_R (0 : ℚ) = true := by native_decide
+    CPoly.isRoot algResExX_R (1 : ℚ) = true
+    ∧ CPoly.isRoot algResExX_R (-1 : ℚ) = true
+    ∧ CPoly.isRoot algResExX_R (0 : ℚ) = true := by native_decide
 
 /-- `Z = 2` is not a residue of `∫ dx/((x − 1)·y)` on `y² = x`. -/
 theorem algResExX_two_not_residue :
-    cIsResidue algResExX_R (2 : ℚ) = false := by native_decide
+    CPoly.isRoot algResExX_R (2 : ℚ) = false := by native_decide
 
 /-- All residues in the `y² = x` example are integers. -/
 theorem algResExX_all_residues_integer :
-    cResiduesMatch algResExX_R [0, 0, 1, -1] = true := by native_decide
+    CPoly.matchesLinearFactors algResExX_R [0, 0, 1, -1] = true := by native_decide
 
 /-- Restatement: the `n = 2` residue resultant of `∫ dx/((x − 1)·y)` on `y² = x` is `Z⁴ − Z²`. -/
 example : cisZero (csub

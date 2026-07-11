@@ -73,15 +73,15 @@ the transcendental Rothstein–Trager resultant, replacing the operand by the in
 to `n = 2` (the linear-in-`y` reduction collapses eq. 7's inner `resultant_Y` to one norm). -/
 abbrev ch5_residue_resultant := @cAlgResidueResultant
 
-/-- **Residue membership test** (Trager, Chapter 5 §2): `cIsResidue` tests `(Z − c) ∣ R(Z)` — is
+/-- **Residue membership test** (Trager, Chapter 5 §2): `CPoly.isRoot` tests `(Z − c) ∣ R(Z)` — is
 `c ∈ K` a root of the residue resultant, hence a residue (divided by its branch order)? -/
-abbrev ch5_is_residue := @cIsResidue
+abbrev ch5_is_residue := @CPoly.isRoot
 
 /-- **Integer-residue / factorization certificate** (Trager, Chapter 5 §2, the failure test):
-`cResiduesMatch` checks that `R(Z)` equals (monic) a claimed product `∏ (Z − cᵢ)` of integer
+`CPoly.matchesLinearFactors` checks that `R(Z)` equals (monic) a claimed product `∏ (Z − cᵢ)` of integer
 linear factors — the certificate that a `df/f`-type differential passes Trager's "all residues
 are integers" elementarity test. -/
-abbrev ch5_residues_match := @cResiduesMatch
+abbrev ch5_residues_match := @CPoly.matchesLinearFactors
 
 /-! ## Validation: `∫ dx/((x−1)·y)` on `y² = x` (Ch. 5 §2, eq. 7) -/
 
@@ -299,7 +299,7 @@ abbrev ch5_residueAtInfinity_arccosh := @arccoshInf_residue_eq
 
 /-- **★ The residue theorem for `∫ dx/√(x²+1)`: finite + ∞ residues sum to `0`** (Trager, Chapter 5 §2,
 `native_decide`): the finite eq. 7 resultant is a pure `Z`-power (every finite residue `0`) while the
-residues at `∞` are `±1` (`cResiduesMatch` on the isolated place `Z² − 1 = (Z − 1)(Z + 1)`); their grand
+residues at `∞` are `±1` (`CPoly.matchesLinearFactors` on the isolated place `Z² − 1 = (Z − 1)(Z + 1)`); their grand
 sum `0 + (+1) + (−1) = 0`. The arcsinh log term comes entirely from infinity. -/
 abbrev ch5_residueAtInfinity_residueTheorem := @arcsinhInf_residue_theorem
 

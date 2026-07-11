@@ -125,10 +125,10 @@ fiber over the pole `x = 1`, via `cisZero` of `R − (Z³ + Z + 1)`. -/
 theorem genResTrig_resultant_eq :
     cisZero (csub genResTrigR genResTrigExpected) = true := by native_decide
 
-/-- The residues are the roots of `F(1, Z)`: `Z = 0` is not a residue (`cIsResidue R 0 = false`), matching
+/-- The residues are the roots of `F(1, Z)`: `Z = 0` is not a residue (`CPoly.isRoot R 0 = false`), matching
 `R = F(1, Z) = Z³ + Z + 1` whose roots are the three `y`-values over the pole `x = 1`. -/
 theorem genResTrig_zero_not_residue :
-    cIsResidue genResTrigR (0 : ℚ) = false := by native_decide
+    CPoly.isRoot genResTrigR (0 : ℚ) = false := by native_decide
 
 /-! ### Example: trigonal `g = 1` (constant in `y`) — residue `1` on all three sheets
 
@@ -153,9 +153,9 @@ once per sheet, via `cisZero` of `R − (Z − 1)³`. -/
 theorem genResTrig1_resultant_eq :
     cisZero (csub genResTrigR1 genResTrigExpected1) = true := by native_decide
 
-/-- The common residue `1` is a root of `R`: `cIsResidue R 1 = true` for `R(Z) = (Z − 1)³`. -/
+/-- The common residue `1` is a root of `R`: `CPoly.isRoot R 1 = true` for `R(Z) = (Z − 1)³`. -/
 theorem genResTrig1_residue_one :
-    cIsResidue genResTrigR1 (1 : ℚ) = true := by native_decide
+    CPoly.isRoot genResTrigR1 (1 : ℚ) = true := by native_decide
 
 /-! ### Conservativity: hyperelliptic `F = y² − x` reproduces `cAlgResidueResultant`
 

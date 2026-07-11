@@ -147,14 +147,14 @@ theorem arcsinhInf_full_resultant_eq :
     cisZero (csub (cAlgResidueAtInfinity arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
       [0, 0, 0, 0, -16, 0, 16]) = true := by native_decide
 
-/-- `±1` are residues at ∞; `2` is not: `cIsResidue` on the isolated place resultant `Z² − 1` accepts
+/-- `±1` are residues at ∞; `2` is not: `CPoly.isRoot` on the isolated place resultant `Z² − 1` accepts
 `Z = ±1` and rejects `Z = 2`. -/
 theorem arcsinhInf_isResidue :
-    cIsResidue (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+    CPoly.isRoot (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
         (1 : ℚ) = true
-    ∧ cIsResidue (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+    ∧ CPoly.isRoot (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
         (-1 : ℚ) = true
-    ∧ cIsResidue (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+    ∧ CPoly.isRoot (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
         (2 : ℚ) = false := by
   native_decide
 
@@ -176,11 +176,11 @@ theorem arcsinhInf_finite_residues_zero :
       [0, 0, 0, 0, 16]) = true := by native_decide
 
 /-- The residue theorem for `∫ dx/√(x² + 1)`: finite residues all `0` and residues at ∞ are `±1`, summing
-to `0`. The ∞ side is certified by `cResiduesMatch` on `Z² − 1`. -/
+to `0`. The ∞ side is certified by `CPoly.matchesLinearFactors` on `Z² − 1`. -/
 theorem arcsinhInf_residue_theorem :
-    cResiduesMatch (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) [1, -1] = true
+    CPoly.matchesLinearFactors (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) [1, -1] = true
     ∧ cisZero (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) = false
-    ∧ cResiduesMatch (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) [0, 0, 0, 0] = true := by
+    ∧ CPoly.matchesLinearFactors (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) [0, 0, 0, 0] = true := by
   native_decide
 
 /-! ### A differential with both finite and ∞ residues nonzero

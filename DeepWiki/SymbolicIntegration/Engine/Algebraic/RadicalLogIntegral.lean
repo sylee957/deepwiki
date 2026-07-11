@@ -144,22 +144,22 @@ def radLogResR : DensePoly ℚ := cAlgResidueResultant radLogResD radLogResRho r
 #eval (cnorm radLogResR : List ℚ)
 
 /-- The finite-pole residues are `±1`: `cAlgResidueResultant` returns `R(Z) = 16·Z⁴(Z² − 1)`, so
-`cIsResidue R (±1) = true` and `cIsResidue R 0 = true`. -/
+`CPoly.isRoot R (±1) = true` and `CPoly.isRoot R 0 = true`. -/
 theorem radLog_finitePole_residues :
-    cIsResidue radLogResR (1 : ℚ) = true
-    ∧ cIsResidue radLogResR (-1 : ℚ) = true
-    ∧ cIsResidue radLogResR (0 : ℚ) = true := by
+    CPoly.isRoot radLogResR (1 : ℚ) = true
+    ∧ CPoly.isRoot radLogResR (-1 : ℚ) = true
+    ∧ CPoly.isRoot radLogResR (0 : ℚ) = true := by
   native_decide
 
-/-- `Z = 2` is not a residue: `cIsResidue R 2 = false` (`R(2) ≠ 0`). -/
+/-- `Z = 2` is not a residue: `CPoly.isRoot R 2 = false` (`R(2) ≠ 0`). -/
 theorem radLog_finitePole_two_not_residue :
-    cIsResidue radLogResR (2 : ℚ) = false := by
+    CPoly.isRoot radLogResR (2 : ℚ) = false := by
   native_decide
 
 /-- The finite-pole residues are all integers: `R(Z)` factors with integer linear factors
-`0, 0, 0, 0, 1, −1`, so `cResiduesMatch R [0, 0, 0, 0, 1, -1] = true`. -/
+`0, 0, 0, 0, 1, −1`, so `CPoly.matchesLinearFactors R [0, 0, 0, 0, 1, -1] = true`. -/
 theorem radLog_finitePole_residues_integer :
-    cResiduesMatch radLogResR [0, 0, 0, 0, 1, -1] = true := by
+    CPoly.matchesLinearFactors radLogResR [0, 0, 0, 0, 1, -1] = true := by
   native_decide
 
 /-! ### A heuristic computing `u` for `∫ dx/√(monic quadratic)`
