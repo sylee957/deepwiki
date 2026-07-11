@@ -20,6 +20,7 @@ import DeepWiki.ComputableAlgebra.PolyEuclidean
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 import DeepWiki.ComputableAlgebra.PolySquarefree
 import DeepWiki.ComputableAlgebra.PolyQuotient
+import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.FracRepr
