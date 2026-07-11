@@ -9,10 +9,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 
 ## Current verified pieces
 
-- Leaf operation/law splits exist for fractions, gcd, Euclidean division, resultants, and interpolation,
-  with dense and sparse lawful realizers. Squarefree decomposition and subresultants have dense and sparse
-  executable realizers; their denotation laws remain in the engine layer, and sparse Yun certification is
-  still an explicit gap.
+- Leaf operation/law splits exist for fractions, gcd, Euclidean division, resultants, interpolation, and
+  squarefree decomposition, with dense and sparse lawful realizers. The squarefree denotation contract remains
+  in the engine layer; subresultants still have dense and sparse executable realizers whose laws remain there too.
 - `Assemble.lean` now proves `combineSN_isIntegralResultP` once for every lawful polynomial
   representation; the former `DensePoly` theorem is a specialization through `toPoly_list_eq`.
 - `CMonomialCase P` is now the representation-parameterized, Prop-free operation interface used by
@@ -141,14 +140,15 @@ monomial stage contracts.
    `towerLimitedCoefficientDomain`, which explicitly requires a coefficient-field solution with a descended
    constant. `CompleteCRecursiveMonomialCase` likewise names both recursive coefficient domains; its
    lifting theorem requires callers to select them explicitly rather than silently assuming `True`.
-   `Tower/LrtDepth.lean` now packages the dictionary-dependent carrier `DenseFracTower n` and proves the
-   recursive LRT soundness and explicit-domain success equivalence uniformly for every successor depth.
+   `Tower/LrtDepth.lean` now packages the dictionary-dependent carrier `DenseFracTower n`; the recursive
+   `lawfulDenseLrtTower` builder selects a `CRischLevelLrt` and its `LawfulCRischLevelLrt` contract by induction
+   from a per-level leaf/frontier capability family, and its theorems give soundness and the explicit-domain
+   success equivalence uniformly at every depth.
    Full monomial completeness still requires proving that this domain covers every coefficient pair generated
    by the stage; that mathematical constant-descent/search theorem remains open.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
-5. Move the abstract squarefree and subresultant denotation contracts to the leaf boundary, then certify the
-   sparse Yun realization. Until that proof is available, do not present sparse squarefree decomposition as a
-   lawful stage realization.
+5. Move the abstract squarefree and subresultant denotation contracts to the leaf boundary. Sparse Yun is now a
+   lawful squarefree-stage realization; the remaining task is colocation, not a missing certification.
 
 ## Visibility policy
 
