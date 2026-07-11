@@ -37,8 +37,9 @@ residues, `IsIntegralResultLrt` over every alg-closed extension `E`). One `insta
 `soundFormalLrt` by resolution. The reduced law is the *dischargeable* frontier `PrimitiveFrontierLrt` — no
 rational-residue restriction. -/
 class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
-    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] where
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] where
   /-- The per-monomial-case computable hooks for this level (the special/polynomial-part integrator). -/
   case : MonomialCase α
   /-- Special-part soundness + reconstruction (`K`-level, existential special value — identical to the rational
@@ -74,7 +75,8 @@ soundness laws. -/
 def integrate [LawfulRischLevelLrt α] (Dt a d : DensePoly α) : Option (LrtResult α) :=
   if cisZero d then none else cIntegrateCaseLrt case Dt a d
 
-omit [LawfulCPolyGcd.{u, v} DensePoly α] in
+omit [LawfulCPolyGcd.{u, v} DensePoly α]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Formal LRT soundness.** Any successful run satisfies the algebraic-residue log-derivative identity
 `IsIntegralResultLrt` — over every alg-closed differential extension `E`, `D_E(rational) + Σ residue logs =
 a/d`. Composed from the instance's `specialSound` + `reducedSoundLrt` through the assembler soundness
@@ -103,7 +105,8 @@ theorem soundFormalLrt [LawfulRischLevelLrt α] (Dt a d : DensePoly α) (res : L
       exact cIntegrateCaseLrt_sound case Dt a d res snum sden v
         hSpec h0 hsden hSpecField hNrm hredDen hrecon
 
-omit [LawfulCPolyGcd.{u, v} DensePoly α] in
+omit [LawfulCPolyGcd.{u, v} DensePoly α]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Derived broad elementary integrability.** A successful LRT run certifies `a/d` is elementary integrable in
 the broad (algebraic-residue) sense — `IsElementaryIntegrableLrt`, via `soundFormalLrt`. -/
 theorem isElementaryIntegrableLrt_of_run [LawfulRischLevelLrt α] (Dt a d : DensePoly α)
@@ -116,7 +119,8 @@ right coefficient integrator for the tower recursion (the LRT analogue of the ra
 def integrateRationalLrt [LawfulRischLevelLrt α] (Dt a d : DensePoly α) : Option (DensePoly α × DensePoly α) :=
   (integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
 
-omit [LawfulCPolyGcd.{u, v} DensePoly α] in
+omit [LawfulCPolyGcd.{u, v} DensePoly α]
+  [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **★ K-level soundness of the log-free LRT integrator** — the ∀E ⇒ K descent for log-free results. A
 successful `integrateRationalLrt` run gives the **base-level** identity `D_tower(num/den) = a/d` in
 `RatFunc (CFieldSpec.K α)`, with no algebraic-closure extension. The `∀E` LRT soundness instantiates at the
@@ -146,6 +150,7 @@ theorem integrateRationalLrt_sound [LawfulRischLevelLrt α] (Dt a d num den : De
     exact (ratFuncBaseChange (AlgebraicClosure (CFieldSpec.K α))).injective hE
   · exact absurd hguard (by simp)
 
+omit [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **★ Derived decision procedure — completeness meets soundness at the class.** The *same* instance that
 gives `soundFormalLrt` also **decides** genuine (algebraic-residue) elementary integrability of the reduced
 normal part `cₙ/dₙ`, once the Liouville completeness frontier `[LrtLiouvilleFrontier α]` is available:
@@ -162,6 +167,7 @@ theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd 
   exact primitiveLrtDecides_of_setup hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
     (crNormDen_ne_zero_of_charZero Dt a d hd0) hR0 (reducedSoundLrt Dt a d hd0 hDt0)
 
+omit [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))] in
 /-- **Derived completeness certificate at the class.** From `reducedDecides`: if the residue guard *fails*, the
 reduced normal part is not genuinely elementary integrable — a decidable non-integrability certificate that the
 solver's class produces directly (given the Liouville frontier). -/
