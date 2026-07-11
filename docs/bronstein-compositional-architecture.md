@@ -9,11 +9,11 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 
 ## Current verified pieces
 
-- Leaf operation/law splits exist for fractions, gcd, Euclidean division, resultants, interpolation, and
-  squarefree decomposition, with dense and sparse lawful realizers. The squarefree denotation contract remains
-  in the engine layer; subresultants still have dense and sparse executable realizers whose laws remain there too.
+- Leaf operation/law splits exist for fractions, gcd, Euclidean division, resultants, interpolation,
+  squarefree decomposition, and subresultants, with dense and sparse lawful realizers. The squarefree and
+  subresultant specifications and lawful contracts live in `ComputableAlgebra`; the engine consumes them as leaves.
 - `Assemble.lean` now proves `combineSN_isIntegralResultP` once for every lawful polynomial
-  representation; the former `DensePoly` theorem is a specialization through `toPoly_list_eq`.
+  representation. Its former dense-only wrapper and unchecked executable example have been retired.
 - `CMonomialCase P` is now the representation-parameterized, Prop-free operation interface used by
   dense and recursive realizers; `LawfulCMonomialCase` separates its soundness, denominator preservation,
   and normal-postprocessing laws, while `CompleteCMonomialCase` records relative completeness separately.
