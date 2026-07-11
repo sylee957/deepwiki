@@ -23,6 +23,19 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   reconstruction/nonzero/properness laws; `canonicalRepresentationFast` is the dense realizer.
 - `LawfulHermiteReduction` and `LawfulResidueLogPart` are representation-neutral stage-result
   contracts; the selected dense realizations cross `toPoly_list_eq` explicitly.
+- `CHermiteReduction`/`LawfulCHermiteReduction` pair a representation-neutral Hermite operation with
+  semantic nonzero, reconstruction, squarefree, and low-derivation-degree properness laws. The existing
+  dense reducer is selected as the operation, while its full lawful instance remains gated on replacing
+  implementation-frontier hypotheses by the semantic normal-squarefree premise.
+- `CResidueLogPart`/`LawfulCResidueLogPart` make residue-log extraction option-valued, with successful
+  reconstruction and completeness relative to a lawful residue source and a genuine logarithmic witness.
+- `reduceNormal` composes Hermite and residue-log operations; `reduceNormal_sound` and
+  `reduceNormal_complete` prove the normal branch by contract composition only.
+- `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
+  polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
+  obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only
+  after an executable reconstruction check; `polynomialReductionCheck_sound` is the generic
+  denotation bridge. Its degree-bound and eventual-fuel realization proof remains an explicit next step.
 - `CResidueSource P α` is the Prop-free residue-candidate capability and
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
@@ -57,13 +70,15 @@ monomial stage contracts.
    `CMonomialCase`/`LawfulCMonomialCase` split are complete; next materialize lawful dense
    realizations and make the generic assembler consume the contracts rather than dense hypotheses.
 3. Introduce paired executable/lawful interfaces for canonical representation and polynomial
-   reduction. Canonical representation is paired and densely realized; Hermite and residue result
-   laws are representation-neutral, but still need Prop-free operation interfaces before the generic
-   assembler can select them.
+   reduction. Canonical representation is paired and densely realized. Polynomial reduction now has
+   its Prop-free interface, checked tower realizer, and its full lawful contract; prove the tower
+   realizer's normal-form and eventual-fuel laws next. Hermite and residue-log stages now have paired
+   operation/law interfaces and a generic normal-branch composition; materialize their lawful dense and
+   sparse realizations next.
 4. Define one generic Figure-5.1 one-level assembler and prove its soundness from only the stage
-   contracts. The contract-level soundness combiner and residue-source split are complete; next give
-   polynomial reduction and residue-log executable interfaces, then add the full executable assembler and a relative-
-   completeness theorem parameterized by complete stage capabilities.
+   contracts. The contract-level recombination and normal-branch soundness/completeness combiners are
+   complete; next make the full executable assembler call `reduceNormal` and polynomial reduction, then
+   prove relative completeness parameterized by complete stage capabilities.
 5. Materialize primitive, hyperexponential, and tangent realizers. Move their concrete proofs next
    to their executable operations and make the old full drivers corollaries.
 6. Lift the same contract composition through `LawfulRischLevel` / `LawfulRischLevelLrt` for tower

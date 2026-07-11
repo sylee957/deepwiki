@@ -11,6 +11,81 @@ namespace DeepWiki.SymbolicIntegration
 
 universe u
 
+/-! ### Polynomial-reduction stage interface
+
+The reduction kernels below are intentionally fuel-bounded.  A caller must therefore not treat a
+raw pair as a theorem.  `CPolynomialReduction` is the Prop-free operation boundary; its companion
+contract records the equation, normal-form bound, and eventual-success property.  The executable
+`towerPolynomialReduction` realizes the operation by checking the equation before exposing a
+result. -/
+
+/-- The normal form requested from a polynomial-reduction stage. -/
+inductive PolynomialReductionKind where
+  /-- Reduce modulo a nonlinear monomial derivative, leaving degree below `deg Dt`. -/
+  | nonlinear
+  /-- Reduce a primitive polynomial part to a constant remainder. -/
+  | primitive
+deriving DecidableEq, Repr
+
+/-- The quotient and unreduced remainder emitted by polynomial reduction. -/
+structure PolynomialReductionResult (P : Type u → Type u) [CPoly P]
+    (α : Type u) [CField α] where
+  /-- The polynomial whose monomial derivative has been removed. -/
+  antiderivative : P α
+  /-- The residual polynomial. -/
+  remainder : P α
+
+/-- Prop-free polynomial-reduction operations.  `none` means that the supplied fuel did not certify
+a reduction; callers may increase fuel without changing the interface. -/
+structure CPolynomialReduction (P : Type u → Type u) [CPoly P] [CPolyEngine P]
+    (α : Type u) [CField α] [CDiffField α] where
+  /-- Attempt the selected polynomial reduction with a finite fuel budget. -/
+  reduce : PolynomialReductionKind → P α → ℕ → P α → Option (PolynomialReductionResult P α)
+
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,u} P]
+  {α : Type u} [CField α] [CFieldSpec.{u,u} α] [CDiffField α] [CDiffFieldSpec.{u,u} α]
+  [Algebra ℚ (CFieldSpec.K α)]
+
+/-- Denotation-level normal-form predicate for a polynomial-reduction output. -/
+def IsPolynomialReduction (kind : PolynomialReductionKind) (Dt p : P α)
+    (out : PolynomialReductionResult P α) : Prop :=
+  CPoly.toPoly p = Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly out.antiderivative)
+      + CPoly.toPoly out.remainder
+    ∧ match kind with
+      | .nonlinear => (CPoly.toPoly out.remainder).natDegree < (CPoly.toPoly Dt).natDegree
+      | .primitive => (CPoly.toPoly out.remainder).natDegree = 0
+
+/-- Soundness and relative-completeness contract for a polynomial-reduction operation. -/
+class LawfulCPolynomialReduction (C : CPolynomialReduction P α) : Prop where
+  /-- Every successful reduction reconstructs its input and meets its selected normal-form bound. -/
+  sound : ∀ (kind : PolynomialReductionKind) (Dt : P α) (fuel : ℕ) (p : P α)
+      (out : PolynomialReductionResult P α),
+    C.reduce kind Dt fuel p = some out → IsPolynomialReduction kind Dt p out
+  /-- If the requested normal form exists, some finite fuel budget returns one. -/
+  relative_complete : ∀ (kind : PolynomialReductionKind) (Dt p : P α),
+    (∃ out, IsPolynomialReduction kind Dt p out) →
+      ∃ fuel out, C.reduce kind Dt fuel p = some out
+
+/-- Boolean reconstruction check for a candidate polynomial reduction. -/
+def polynomialReductionCheck (Dt p : P α) (out : PolynomialReductionResult P α) : Bool :=
+  CPolyEngine.cisZero
+    (CPolyEngine.sub
+      (CPolyEngine.add (CPolyEngine.monomialDeriv Dt out.antiderivative) out.remainder) p)
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- A passed polynomial-reduction reconstruction check has its denotation-level meaning. -/
+theorem polynomialReductionCheck_sound (Dt p : P α) (out : PolynomialReductionResult P α)
+    (h : polynomialReductionCheck Dt p out = true) :
+    CPoly.toPoly p = Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly out.antiderivative)
+      + CPoly.toPoly out.remainder := by
+  have hzero : CPoly.toPoly
+      (CPolyEngine.sub
+        (CPolyEngine.add (CPolyEngine.monomialDeriv Dt out.antiderivative) out.remainder) p) = 0 :=
+    (LawfulCPolyEngine.cisZero_iff _).mp h
+  rw [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_add,
+    CPolyEngine.toPoly_monomialDeriv] at hzero
+  exact (sub_eq_zero.mp hzero).symm
+
 namespace DensePoly
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
@@ -70,6 +145,20 @@ def cPrimitivePolyIntegrate (Dt : P α) : ℕ → P α → P α × P α
       let p' := CPolyEngine.sub p (CPolyEngine.monomialDeriv Dt q0)           -- `p − D(q₀)`
       let (q, rem) := cPrimitivePolyIntegrate Dt fuel p'
       (CPolyEngine.add q0 q, rem)
+
+/-- The existing tower polynomial kernels exposed as a checked `CPolynomialReduction` operation.
+An insufficient fuel budget returns `none` rather than an uncertified pair. -/
+def towerPolynomialReduction : CPolynomialReduction P α where
+  reduce kind Dt fuel p :=
+    let out : PolynomialReductionResult P α :=
+      match kind with
+      | .nonlinear =>
+        let raw := cPolyReduceTower Dt fuel p
+        ⟨raw.1, raw.2⟩
+      | .primitive =>
+        let raw := cPrimitivePolyIntegrate Dt fuel p
+        ⟨raw.1, raw.2⟩
+    if polynomialReductionCheck Dt p out then some out else none
 
 /-! ### Representation-independence validation -/
 
