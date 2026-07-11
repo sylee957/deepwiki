@@ -3,15 +3,15 @@ import DeepWiki.ComputableAlgebra.PolyReprGcd
 
 /-! # Representation-independent squarefree decomposition
 
-Yun's multiplicity-indexed squarefree decomposition is composed from the selected polynomial engine
-and Euclidean algorithms, so dense and sparse representations share one executable kernel.
+Yun's multiplicity-indexed squarefree decomposition is composed from the selected polynomial engine,
+gcd, and Euclidean algorithms, so dense and sparse representations share one executable kernel.
 -/
 
 namespace DeepWiki.SymbolicIntegration
 
 universe u
 
-/-- Executable squarefree decomposition selected by a polynomial representation and coefficient field. -/
+/-- Executable squarefree decomposition selected by a polynomial representation, gcd, and Euclidean engine. -/
 class CPolySquarefree (P : Type u → Type u) [CPoly P] [CPolyEngine P] [CPolyEuclidean P]
     (α : Type u) [CField α] [CPolyGcd P α] where
   /-- Return the multiplicity-indexed squarefree factors of a represented polynomial. -/
