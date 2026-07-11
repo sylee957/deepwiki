@@ -129,6 +129,10 @@ denotations does not make those terms definitionally equal.
   variables. The assembled integrator, soundness API, and primitive instance expose only their selected
   capabilities; `CFracGcdCoreWf` and its lawful gcd proof are bound locally on the two completeness theorems
   that certify the concrete fraction-free decision procedure.
+- The recursive `CRischField (DenseFrac β)` instance now asks directly for the selected `CPolyGcd` and
+  `CPolySplitFactor` capabilities consumed by `cRischDE`, instead of advertising the concrete
+  `CFracGcdCoreWf` selector. Two unreferenced implementation-unfolding theorems were deleted rather than
+  hidden with `private`; neither was part of a used semantic API.
 
 ## Verification
 
