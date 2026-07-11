@@ -44,7 +44,7 @@ def radReduceCase2Iterate (W h ρ : DensePoly α) (k0 : ℕ) :
 `∫ C/(W^{k0}y)` over `y² = ρ`, `W ∣ ρ`: computes `h = ρ/W` and runs `radReduceCase2Iterate` from `k0`
 down to `1`. Master identity `∫ C/(W^{k0}y) = vNum/(W^{k0}y) + ∫ Crem/(Wy)`. Generic over `[CField α]`. -/
 def radIntegrateCase2 (W ρ : DensePoly α) (k0 : ℕ) (C : DensePoly α) : DensePoly α × DensePoly α :=
-  radReduceCase2Iterate W (cdivWf ρ W) ρ k0 k0 k0 C []
+  radReduceCase2Iterate W (CPolyEuclidean.div ρ W) ρ k0 k0 k0 C []
 
 /-! ### The iterated Case-3 (`C/y`) degree-lowering
 

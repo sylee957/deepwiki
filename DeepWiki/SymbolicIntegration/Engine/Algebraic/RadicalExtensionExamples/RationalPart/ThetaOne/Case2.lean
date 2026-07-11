@@ -43,9 +43,9 @@ def case2D : DensePoly ℚ :=
 theorem case2_cofactor_eq :
     cisZero (csub case2B [(2/3 : ℚ)]) = true := by native_decide
 
-/-- The Case-2 congruence `B·(½−k)·W'·h − C ≡ 0 (mod W)` holds: `cmodWf (B·(½−k)W'h − C) W` vanishes. -/
+/-- The Case-2 congruence `B·(½−k)·W'·h − C ≡ 0 (mod W)` holds under the selected remainder. -/
 theorem case2_congruence :
-    cisZero (cmodWf
+    cisZero (CPolyEuclidean.mod
       (csub (cmul case2B
         (cmul (csub [CField.div CCommRing.one (cnatCast 2)] [cnatCast 2])
           (cmul case2Wder case2H))) case2C)

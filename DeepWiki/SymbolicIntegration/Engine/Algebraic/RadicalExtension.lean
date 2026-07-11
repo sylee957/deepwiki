@@ -138,11 +138,11 @@ def radCase1Cofactor (k : ℕ) (V Df f C : DensePoly α) : DensePoly α :=
 
 /-- Case-1 residual `radCase1Residual k V Df f g B C Bder = D`: the lowered-`k` numerator
 `D = ((1−k)V'fB − C)/V + B'f + Bg`. `Df = V'`, `Bder = B'`, `g` from `(f/y)' = g/y` passed in; division
-by `V` is `cdivWf`. -/
+by `V` is selected through `CPolyEuclidean.div`. -/
 def radCase1Residual (k : ℕ) (V Df f g B C Bder : DensePoly α) : DensePoly α :=
   let oneMinusK := cneg [cnatCast (k - 1)]
   let topNum := csub (cmul oneMinusK (cmul Df (cmul f B))) C  -- `(1−k)V'fB − C`
-  let quotient := cdivWf topNum V                                 -- `((1−k)V'fB − C)/V`
+  let quotient := CPolyEuclidean.div topNum V                     -- `((1−k)V'fB − C)/V`
   cadd quotient (cadd (cmul Bder f) (cmul B g))               -- `… + B'f + Bg`
 
 /-! ### Case 2 rational-part reduction (`θ' = 1`, `n = 2`)
@@ -161,12 +161,12 @@ def radCase2Cofactor (k : ℕ) (W h C : DensePoly α) : DensePoly α :=
 
 /-- Case-2 residual (`n = 2`) `radCase2Residual k W h C B = D`: the lowered-`k` numerator
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderiv B`, `h'` is `cderiv h`, division by `W` is
-`cdivWf`. -/
+`CPolyEuclidean.div`. -/
 def radCase2Residual (k : ℕ) (W h C B : DensePoly α) : DensePoly α :=
   let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- `½`
   let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- `(½ − k)·W'·h`
   let topNum := csub (cmul B coef) C                                      -- `B·(½−k)W'h − C`
-  let quotient := cdivWf topNum W                                           -- `/W`
+  let quotient := CPolyEuclidean.div topNum W                               -- `/W`
   cadd quotient (cadd (cmul (cderiv B) h)                              -- `+ B'h`
     (cmul half (cmul B (cderiv h))))                                     -- `+ ½Bh'`
 
@@ -258,11 +258,11 @@ example :
 
 /-- `θ = exp v` `C/(θᵏy)` residual `radExpResidual k vder f g B C Bder = D`: the lowered-`k` numerator
 `D = ((B'f + Bg − k·v'·B·f) − C)/θ`. `vder = v'`, `Bder = B'`, `g` passed in; division by `θ` is
-`cdivWf _ [0,1]`. -/
+`CPolyEuclidean.div _ [0,1]`. -/
 def radExpResidual (k : ℕ) (vder : α) (f g B C Bder : DensePoly α) : DensePoly α :=
   let kvBf := cmul [CCommRing.mul (cnatCast k) vder] (cmul B f)    -- `k·v'·B·f`
   let num := csub (csub (cadd (cmul Bder f) (cmul B g)) kvBf) C  -- `B'f + Bg − kv'Bf − C`
-  cdivWf num [CCommRing.zero, CCommRing.one]                             -- `… / θ`
+  CPolyEuclidean.div num [CCommRing.zero, CCommRing.one]                 -- `… / θ`
 
 end DensePoly
 

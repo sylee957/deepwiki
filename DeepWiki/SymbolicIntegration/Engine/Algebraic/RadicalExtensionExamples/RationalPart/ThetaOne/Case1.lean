@@ -42,9 +42,9 @@ def case1D : DensePoly ℚ :=
 theorem case1_cofactor_eq :
     cisZero (csub case1B [(-1 : ℚ)]) = true := by native_decide
 
-/-- The Case-1 congruence `(1−k)V'fB − C ≡ 0 (mod V)` holds: `cmodWf ((1−k)V'fB − C) V` vanishes. -/
+/-- The Case-1 congruence `(1−k)V'fB − C ≡ 0 (mod V)` holds under the selected remainder. -/
 theorem case1_congruence :
-    cisZero (cmodWf
+    cisZero (CPolyEuclidean.mod
       (csub (cmul (cneg [cnatCast 1]) (cmul case1Vder (cmul case1F case1B))) case1C)
       case1V) = true := by native_decide
 

@@ -48,9 +48,9 @@ theorem case2c_cofactor_eq :
 theorem case2c_residual_eq :
     cisZero (csub case2cD [(0 : ℚ), -1/3]) = true := by native_decide
 
-/-- The Case-2 congruence `B·(½−k)·W'·h − C ≡ 0 (mod W)` holds: `cmodWf (B·(½−k)W'h − C) W` vanishes. -/
+/-- The Case-2 congruence `B·(½−k)·W'·h − C ≡ 0 (mod W)` holds under the selected remainder. -/
 theorem case2c_congruence :
-    cisZero (cmodWf
+    cisZero (CPolyEuclidean.mod
       (csub (cmul case2cB
         (cmul (csub [CField.div CCommRing.one (cnatCast 2)] [cnatCast 2])
           (cmul (cderiv case2cW) case2cH))) case2cC)

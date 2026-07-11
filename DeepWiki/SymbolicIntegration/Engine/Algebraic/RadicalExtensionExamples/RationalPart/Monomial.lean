@@ -106,7 +106,7 @@ theorem expCase_cofactor_eq :
 /-- The `θ = exp v` constant-term congruence `(B'f + Bg − kv'Bf) − C ≡ 0 (mod θ)`: the numerator `(−1/2)θ`
 is divisible by `θ`. -/
 theorem expCase_congruence :
-    cisZero (cmodWf
+    cisZero (CPolyEuclidean.mod
       (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
           (cmul [CCommRing.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
       [CCommRing.zero, CCommRing.one]) = true := by native_decide

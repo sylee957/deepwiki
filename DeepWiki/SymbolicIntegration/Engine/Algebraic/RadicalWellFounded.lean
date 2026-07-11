@@ -72,10 +72,10 @@ termination_by k => k
 decreasing_by exact Nat.sub_lt (Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.lt_of_not_le hk).le) Nat.zero_lt_one
 
 /-- Case-2 simple-radical rational-part driver `radIntegrateCase2Wf W ρ k0 C = (Crem, vNum)`: run
-`radReduceCase2IterateWf` with `h = cdivWf ρ W` from multiplicity `k0` down to `1`. Master identity
+`radReduceCase2IterateWf` with `h = CPolyEuclidean.div ρ W` from multiplicity `k0` down to `1`. Master identity
 `∫ C/(W^{k0}y) = vNum/(W^{k0}y) + ∫ Crem/(Wy)`. -/
 def radIntegrateCase2Wf (W ρ : DensePoly α) (k0 : ℕ) (C : DensePoly α) : DensePoly α × DensePoly α :=
-  radReduceCase2IterateWf W (cdivWf ρ W) ρ k0 k0 C []
+  radReduceCase2IterateWf W (CPolyEuclidean.div ρ W) ρ k0 k0 C []
 
 /-! ## The Case-3 (`C/y`) degree-lowering `radReduceCase3IterateWf`
 
@@ -110,7 +110,7 @@ def radIntegrateCase3Wf (der : DensePoly α → DensePoly α) (f g C : DensePoly
 
 /-- Multi-case simple-radical rational-part driver `radIntegrateRationalWf ρ R B` over `y² = ρ`,
 denominator `B` monic, numerator `R` proper: squarefree-decompose `B` (`cSqfreeYunFF`), split each
-factor into its `V`-part / `W`-part (`cgcdWf`/`cdivWf` against `ρ`), partial-fraction `R`
+factor into its `V`-part / `W`-part (`CPolyEuclidean.gcdExt`/`CPolyEuclidean.div` against `ρ`), partial-fraction `R`
 (`radPartialFractionCoprime`), and dispatch each summand to the Case-1 / Case-2 Hermite descent.
 Returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`. `[CFracGcdCoreWf α]` supplies
 the squarefree factorization. -/
@@ -122,8 +122,8 @@ def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : DensePoly α) :
       if cdeg Bi = 0 then none else some (Bi, i + 1))
   let split : List (Bool × DensePoly α × ℕ) :=
     factored.flatMap (fun (Bi, e) =>
-      let Wi := cmonic (cgcdWf Bi ρ).1
-      let Vi := cdivWf Bi Wi
+      let Wi := cmonic (CPolyEuclidean.gcdExt Bi ρ).1
+      let Vi := CPolyEuclidean.div Bi Wi
       (if cdeg Vi = 0 then [] else [(true, Vi, e)]) ++
       (if cdeg Wi = 0 then [] else [(false, Wi, e)]))
   let primePowers : List (DensePoly α) := split.map (fun (_, fi, e) => cpow fi e)
@@ -133,7 +133,8 @@ def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : DensePoly α) :
       let (Crem, vNum) := radReduceCase1IterateWf cderiv fi (cderiv fi) ρ g e e Ni []
       (true, fi, e, Ni, vNum, Crem)
     else
-      let (Crem, vNum) := radReduceCase2IterateWf fi (cdivWf ρ fi) ρ e e Ni []
+      let (Crem, vNum) :=
+        radReduceCase2IterateWf fi (CPolyEuclidean.div ρ fi) ρ e e Ni []
       (false, fi, e, Ni, vNum, Crem))
 
 end DensePoly
