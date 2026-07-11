@@ -190,7 +190,9 @@ runs the same fraction algorithm.
    `CPoly.residueResultantTower`; dense names are specialization boundaries, while sparse inner and outer
    polynomial representations execute the same kernels. The
    primitive and guarded-primitive hooks no longer
-   carry a gcd-selection proxy; the hyperexponential hook retains it at the concrete correction boundary. The
+   carry a gcd-selection proxy. Canonical reconstruction and the shared primitive special-part soundness now
+   likewise request the selected gcd together with its lawful interface; the hyperexponential hook retains
+   the recursive implementation bundle at its concrete correction boundary. The
    tower Risch-DE completeness predicate/frontier now request selected gcd and differential-split
    capabilities directly. The fuel-free top integrator likewise declares its actual composition inputs:
    gcd, differential split, squarefree decomposition, and resultant, rather than using the recursive dense

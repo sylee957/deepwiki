@@ -18,7 +18,7 @@ open scoped Differential
 universe u v
 
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
-  [CFracGcdCoreWf α] [LawfulCPolyGcd.{u,v} DensePoly α]
+  [CPolyGcd DensePoly α] [LawfulCPolyGcd.{u,v} DensePoly α]
   [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
 omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
