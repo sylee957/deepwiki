@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.AlgFunctionField
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogArgGeneric
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
+import DeepWiki.SymbolicIntegration.Engine.LinearSolve
 
 /-! # The Ford–Zassenhaus Round-2 step: p-trace-radical + idealizer
 
@@ -26,23 +27,6 @@ the root `a` (`qEvalAtRoot`). -/
 numerator and denominator of `z : DenseFrac ℚ` and dividing. The reduction `z mod (x − a)`. -/
 def qEvalAtRoot (z : DenseFrac ℚ) (a : ℚ) : ℚ :=
   CField.div (ceval z.num a) (ceval z.den a)
-
-/-! ### A full kernel basis of a `β`-matrix (`kernelBasis`) -/
-
-/-- A basis of the kernel of a `β`-matrix `kernelBasis nCols rows`: one vector per free (non-pivot) column
-of the `gaussElim` reduction — for free column `fc`, a `1` at `fc` with each pivot variable set to the
-negated pivot-row entry — the reduced-row-echelon nullspace basis. Fuel-free. -/
-def kernelBasis {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) :
-    List (List β) :=
-  let (rs, pivots) := gaussElim nCols rows
-  let freeCols := (List.range nCols).filter (fun c => ¬ pivots.contains c)
-  freeCols.map (fun fc =>
-    let base : List β := (List.range nCols).map (fun c =>
-      if c = fc then (CCommRing.one : β) else CCommRing.zero)
-    (List.range pivots.length).foldl (fun (acc : List β) r =>
-      let pc := pivots[r]!
-      let v := CCommRing.neg ((rs[r]!).getD fc CCommRing.zero)
-      acc.set pc v) base)
 
 end DensePoly
 
@@ -102,12 +86,12 @@ def traceMatrixAtRoot (f : DensePoly (DenseFrac ℚ)) (a : ℚ) : List (List ℚ
 
 /-- The p-trace-radical `I_p` at a linear prime `p = x − a` `pTraceRadical f p a`: a `K[x]`-basis of
 `I_p = { z ∈ O : p ∣ Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ` (rows = basis vectors in power coordinates).
-The kernel of `traceMatrixAtRoot f a` (`kernelBasis`) lifts to constant coordinate rows which, with the
+The selected kernel of `traceMatrixAtRoot f a` (`CLinearSolve.nullspaceBasis`) lifts to constant coordinate rows which, with the
 `p·ωᵢ` rows, generate `I_p ⊇ p·O`; `hermiteRowReduce` triangularizes to the basis. -/
 def pTraceRadical (f : DensePoly (DenseFrac ℚ)) (p : DensePoly ℚ) (a : ℚ) :
     PolyMatrix DensePoly ℚ :=
   let n := cdeg f
-  let kers : List (List ℚ) := kernelBasis n (traceMatrixAtRoot f a)
+  let kers : List (List ℚ) := CLinearSolve.nullspaceBasis (traceMatrixAtRoot f a) n
   -- lift each kernel vector to a constant `ℚ[x]` coordinate row (the residue generators)
   let kerRows : PolyMatrix DensePoly ℚ := kers.map (fun v => (List.range n).map (fun i => [v.getD i 0]))
   -- the `p·ωᵢ` rows: `p` in column `i`, zero elsewhere
@@ -134,7 +118,8 @@ theorem cusp_traceMatrixAtRoot_eq :
 /-- The cusp p-trace-radical kernel is `(0, 1) = y`: the kernel basis of the reduced trace matrix mod `x`
 is the single vector `(0, 1)`, the order element `y`. -/
 theorem cusp_pTraceRadical_kernel_eq :
-    kernelBasis (cdeg cuspF) (traceMatrixAtRoot cuspF 0) = [[0, 1]] := by native_decide
+    CLinearSolve.nullspaceBasis (traceMatrixAtRoot cuspF 0) (cdeg cuspF) = [[0, 1]] := by
+  native_decide
 
 /-- The cusp p-trace-radical has `K[x]`-basis `[x, y]`: `pTraceRadical (y² − x³) x` Hermite-reduces
 `{y, x·1, x·y}` to the rows `[x, 0]` and `[0, 1]`, i.e. `I_x = ⟨x, y⟩`, strictly larger than `x·O`. -/

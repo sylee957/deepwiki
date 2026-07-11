@@ -58,7 +58,7 @@ together with the `p·O` generators, Hermite-reduced to the nonzero rows. -/
 def ipOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (p : DensePoly ℚ) (a : ℚ) :
     PolyMatrix DensePoly ℚ :=
   let n := cdeg f
-  let kers : List (List ℚ) := kernelBasis n (traceMatrixOrderAtRoot f O a)
+  let kers : List (List ℚ) := CLinearSolve.nullspaceBasis (traceMatrixOrderAtRoot f O a) n
   let kerRows : PolyMatrix DensePoly ℚ := kers.map (fun v => (List.range n).map (fun i => [v.getD i 0]))
   let pRows : PolyMatrix DensePoly ℚ := (List.range n).map (fun i =>
     (List.range n).map (fun j => if i = j then p else ([] : DensePoly ℚ)))
@@ -341,7 +341,7 @@ remaining pieces:
    trace-matrix kernel is then linear algebra **over `K[x]/(p)`** — arithmetic on `DensePoly ℚ` reduced mod `p`
    (a degree-`< deg p` representative ring), not a single evaluation at a root. The construction is otherwise
    identical (`ipOCoords`'s residue-kernel in `O`-coords + `idealizerOCoords`): replace `qEvalAtRoot` /
-   `kernelBasis` over `K` by their `K[x]/(p)`-coefficient analogues (selected remainder arithmetic in the Gauss
+   `CLinearSolve.nullspaceBasis` over `K` by their `K[x]/(p)`-coefficient analogues (selected remainder arithmetic in the Gauss
    elimination). The linear case here already covers the cusp/node and the multi-step/multi-prime curves
    above (all bad primes `x`, `x − 1`).
 
@@ -362,7 +362,7 @@ poles" decidable and the algebraic-function integral computable for an arbitrary
 Each validation carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
 compiler axiom — **no `sorry`, no `sorryAx`, no extra axiom** (the iteration `integralBasisLoop` is `ℕ`-fuel
 structural recursion; `round2Pass`/`round2StepOrderAt`/`ipOCoords`/`idealizerOCoords` are non-recursive
-compositions over finite-list kernels; `kernelBasis`/`matInv`/`hermiteRowReduce` fold over finite
+compositions over finite-list kernels; `CLinearSolve.nullspaceBasis`/`matInv`/`hermiteRowReduce` fold over finite
 `List.range`s, while exact division and fraction cancellation use selected Euclidean division and `qReduceNZ`).
 **The engine now computes the FULL general-curve integral basis** —
 iterating the Ford–Zassenhaus Round-2 step to the maximal order: for the cusp `y² − x³` and node

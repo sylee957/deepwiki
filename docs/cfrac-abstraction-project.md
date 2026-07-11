@@ -105,7 +105,9 @@ runs the same fraction algorithm.
    likewise select Euclidean operations rather than naming the dense well-founded implementations. The
    tower Risch-DE normalizer, valuation, denominator stages, Hermite/LRT contracts, and function-algebra
    soundness hypotheses now select `CPolyEuclidean.div`/`gcdExt`; only the dense Euclidean implementation
-   and its implementation-level correctness proofs name `cdivWf`/`cgcdWf` directly.
+   and its implementation-level correctness proofs name `cdivWf`/`cgcdWf` directly. Algebraic Round-2,
+   full integral-basis, and general-curve rational/log solves select `CLinearSolve.nullspaceBasis`; the
+   duplicate algebraic `kernelBasis` implementation has been retired.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function

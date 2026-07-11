@@ -178,7 +178,8 @@ end DensePoly
 
 /-! ## The flat rational and log-argument solvers
 
-Build a `ℚ`-matrix from `afDerivWf` and solve it with `kernelBasis`; specialized to `DenseFrac ℚ`. -/
+Build a `ℚ`-matrix from `afDerivWf` and solve it with `CLinearSolve.nullspaceBasis`; specialized to
+`DenseFrac ℚ`. -/
 
 /-- Rational-part residual columns `afRatColumnsWf f basis degBound integrand`: the per-monomial
 derivatives `afDerivWf f (xʲ wᵢ)` followed by the forced `−integrand` column. -/
@@ -214,7 +215,7 @@ def afRatMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dens
 def afRationalSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : Option (DensePoly (DenseFrac ℚ)) :=
   let (rows, nCols) := afRatMatrixWf f basis degBound integrand
-  let kers := kernelBasis nCols rows
+  let kers := CLinearSolve.nullspaceBasis rows nCols
   match kers.find? (fun c => c.getD (nCols - 1) 0 ≠ 0) with
   | none => none
   | some c =>
@@ -265,7 +266,7 @@ def afLogMatrixWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (Dens
 def afLogArgSolveWf (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ)))
     (degBound : ℕ) (integrand : DensePoly (DenseFrac ℚ)) : Option (DensePoly (DenseFrac ℚ)) :=
   let (rows, nCols) := afLogMatrixWf f basis degBound integrand
-  let kers := kernelBasis nCols rows
+  let kers := CLinearSolve.nullspaceBasis rows nCols
   match kers.find? (fun c => c.any (fun a => a ≠ 0)) with
   | none => none
   | some c =>
