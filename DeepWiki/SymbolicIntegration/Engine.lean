@@ -15,6 +15,7 @@ import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionDenseLawful
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionSparse
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.CaseChecked
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
