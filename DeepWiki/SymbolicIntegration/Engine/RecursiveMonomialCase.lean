@@ -44,22 +44,28 @@ instance instLawfulCMonomialCaseWithRecursiveCoefficient (C : CRecursiveMonomial
     [LawfulCRecursiveCoefficientIntegrator I] : LawfulCMonomialCase (C.withCoefficient I) :=
   LawfulCRecursiveMonomialCase.lawful (C := C) I inferInstance
 
-/-- Relative-completeness contract for a recursive monomial case. -/
-class CompleteCRecursiveMonomialCase (C : CRecursiveMonomialCase P α) : Prop where
-  /-- Installing ordinary and limited-complete recursive coefficient stages preserves monomial completeness. -/
+/-- Relative-completeness contract for a recursive monomial case on selected coefficient domains. -/
+class CompleteCRecursiveMonomialCase (C : CRecursiveMonomialCase P α)
+    (recursiveDomain : RecursiveCoefficientDomain (α := α))
+    (limitedDomain : LimitedCoefficientDomain (α := α)) : Prop where
+  /-- Installing coefficient stages complete on the selected domains preserves monomial completeness. -/
   complete (I : CRecursiveCoefficientIntegrator α)
-    [CompleteCRecursiveCoefficientIntegrator I (fun _ => True)]
+    [CompleteCRecursiveCoefficientIntegrator I recursiveDomain]
     [LawfulCLimitedCoefficientIntegrator I]
-    [CompleteCLimitedCoefficientIntegrator I (fun _ _ => True)] :
+    [CompleteCLimitedCoefficientIntegrator I limitedDomain] :
       CompleteCMonomialCase (C.withCoefficient I)
 
-/-- A complete recursive coefficient stage lifts to a complete ordinary monomial case. -/
-instance instCompleteCMonomialCaseWithRecursiveCoefficient (C : CRecursiveMonomialCase P α)
-    (I : CRecursiveCoefficientIntegrator α) [CompleteCRecursiveMonomialCase C]
-    [CompleteCRecursiveCoefficientIntegrator I (fun _ => True)]
+omit [LawfulCPolyEngine P] in
+/-- Complete recursive coefficient stages lift to a complete ordinary monomial case on their named domains. -/
+theorem completeCMonomialCaseWithRecursiveCoefficient (C : CRecursiveMonomialCase P α)
+    (recursiveDomain : RecursiveCoefficientDomain (α := α))
+    (limitedDomain : LimitedCoefficientDomain (α := α))
+    (I : CRecursiveCoefficientIntegrator α)
+    [CompleteCRecursiveMonomialCase C recursiveDomain limitedDomain]
+    [CompleteCRecursiveCoefficientIntegrator I recursiveDomain]
     [LawfulCLimitedCoefficientIntegrator I]
-    [CompleteCLimitedCoefficientIntegrator I (fun _ _ => True)] :
+    [CompleteCLimitedCoefficientIntegrator I limitedDomain] :
     CompleteCMonomialCase (C.withCoefficient I) :=
-  CompleteCRecursiveMonomialCase.complete (C := C) I
+  CompleteCRecursiveMonomialCase.complete (C := C) recursiveDomain limitedDomain I
 
 end DeepWiki.SymbolicIntegration
