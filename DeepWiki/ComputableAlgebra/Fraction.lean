@@ -58,11 +58,6 @@ theorem cisZeroG_den {α : Type u} [CField α] (x : F α) :
     CPolyEngine.cisZero (den x) = false :=
   CFrac.den_nonzero x
 
-/-- The represented constant `1` is nonzero (from `CFieldDomain`). -/
-theorem cisZeroG_one_singleton {α : Type u} [CField α] [CFieldDomain α P] :
-    CPolyEngine.cisZero (CPoly.one : P α) = false :=
-  CFieldDomain.nz_one
-
 /-- The product of two represented nonzero polynomials is nonzero (from `CFieldDomain`). -/
 theorem cmulG_ne_zero_of {α : Type u} [CField α] [CFieldDomain α P] {b d : P α}
     (hb : CPolyEngine.cisZero b = false)
@@ -72,7 +67,7 @@ theorem cmulG_ne_zero_of {α : Type u} [CField α] [CFieldDomain α P] {b d : P 
 
 /-- Embed a computable polynomial as the fraction `p/1`. -/
 def ofPoly {α : Type u} [CField α] [CFieldDomain α P] (p : P α) : F α :=
-  ofFraction p CPoly.one cisZeroG_one_singleton
+  ofFraction p CPoly.one CFieldDomain.nz_one
 
 /-- Embed a coefficient as the constant fraction `a/1`. -/
 def ofScalar {α : Type u} [CField α] [CFieldDomain α P] (a : α) : F α :=
