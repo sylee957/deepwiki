@@ -44,6 +44,29 @@ def linearDepData
       cols.map (fun c => CPoly.coeff c i))
   (M, ws.length)
 
+/-- Every cleared logarithmic-dependence row has one column per input derivative. -/
+theorem linearDepData_row_length
+    {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P]
+    (ws : List (F ℚ)) (w : F ℚ) :
+    ∀ row ∈ (linearDepData ws w).1, row.length = ws.length + 1 := by
+  simp [linearDepData]
+
+/-- Every selected logarithmic-dependence kernel vector satisfies each cleared relation row. -/
+theorem linearDepData_kernel_mem_row_sound
+    {F : (α : Type) → [CField α] → Type} {P : Type → Type}
+    [CPoly P] [CPolyEngine P] [CPolyGcd P] [CPolyEuclidean P] [CFrac F P]
+    [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (ws : List (F ℚ)) (w : F ℚ) (rel : List ℚ)
+    (hrel : rel ∈ CLinearSolve.nullspaceBasis (linearDepData ws w).1
+      ((linearDepData ws w).2 + 1)) :
+    ∀ i, i < (linearDepData ws w).1.length →
+      linearDot ((linearDepData ws w).1.getD i []) rel = 0 := by
+  apply LawfulCLinearSolve.nullspaceBasis_sound (linearDepData ws w).1
+    ((linearDepData ws w).2 + 1) rel ?_ hrel
+  intro row hrow
+  simpa [linearDepData] using linearDepData_row_length ws w row hrow
+
 /-- `logIsNewMonomial logDerivs w = true` iff `log(u)` with logarithmic derivative `w = Du/u` is a
 new transcendental monomial, i.e. no `rᵢ ∈ ℚ` give `Du/u = Σ rᵢ (Duᵢ/uᵢ)`. -/
 def logIsNewMonomial
@@ -111,12 +134,6 @@ def structLogDerivX2 : DenseFrac ℚ := CFrac.ofFraction [2] [0, 1] (by cfrac_no
 `x+1 = [1,1]`. Independent of `1/x` over ℚ. -/
 def structLogDerivX1 : DenseFrac ℚ := CFrac.ofFraction [1] [1, 1] (by cfrac_nonzero)
 
--- Computed decisions against the existing monomial `log(x)` (`logDerivs = [1/x]`):
--- `log(x²)` is dependent with relation `2/x = 2·(1/x)`, while `log(x+1)` is new.
-#eval CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX2   -- expect false
-#eval CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX1   -- expect true
-#eval CFrac.logRelationCoeffs [structLogDerivX] structLogDerivX2  -- expect some [2]
-
 /-- The shared logarithmic-dependence test computes over `C(x)(log x)`: derivative `2/x` is dependent
 with relation `[2]`, while `1/(x+1)` is independent, for either logarithmic or exponential candidates. -/
 theorem structureTheorem_example :
@@ -129,8 +146,6 @@ theorem structureTheorem_example :
      && (CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   ccompute
 
-#print axioms structureTheorem_example
-
 /-! ### Multi-generator logarithmic examples
 
 Over the 2-element tower `C(x)(log x, log(x+1))` (`1/x`, `1/(x+1)` ℚ-independent), `log(x²+x)` is
@@ -139,11 +154,6 @@ dependent with relation `[1, 1]` (`1/x + 1/(x+1)`). -/
 /-- `D(x²+x)/(x²+x) = (2x+1)/(x²+x) = 1/x + 1/(x+1)`: the logarithmic derivative of `log(x²+x)`.
 Numerator `2x+1 = [1,2]`, denominator `x²+x = [0,1,1]`. Equals `1·(1/x) + 1·(1/(x+1))`. -/
 def structLogDerivX2pX : DenseFrac ℚ := CFrac.ofFraction [1, 2] [0, 1, 1] (by cfrac_nonzero)
-
--- Computed decisions against the two-generator tower `[1/x, 1/(x+1)]`.
--- `log(x²+x)` is dependent with relation `[1, 1]`.
-#eval CFrac.logIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX  -- false
-#eval CFrac.logRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX -- some [1,1]
 
 /-- The multi-generator structure decision computes over `C(x)(log x, log(x+1))`: `log(x²+x)` is not a
 new monomial (relation `[1, 1]`, verified by `CFrac.logRelationCheck`) and the two generators are mutually
@@ -159,7 +169,5 @@ theorem multiStructureTheorem_example :
      && (CFrac.logIsNewMonomial [structLogDerivX1] structLogDerivX == true)
      && (CFrac.logIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   ccompute
-
-#print axioms multiStructureTheorem_example
 
 end DeepWiki.SymbolicIntegration
