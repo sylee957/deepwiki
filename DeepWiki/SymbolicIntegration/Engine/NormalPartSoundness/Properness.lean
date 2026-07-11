@@ -64,7 +64,7 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The `cHermiteReduceTower` leftover is proper (`deg (…).2.1 < deg (…).2.2`) from the leftover
 projections `hnum`/`hden`, the exact-division divisibility `resDen ∣ resNum·Dstar`, nonzero radical,
 and residual-fraction properness `deg resNum < deg resDen`. -/
-theorem cHermiteReduceTowerG_leftover_proper_of_residual [CFracGcdCoreWf α]
+theorem cHermiteReduceTowerG_leftover_proper_of_residual [CPolySquarefree DensePoly α]
     (Dt : DensePoly α) (a d : DensePoly α) (resNum resDen Dstar : DensePoly α)
     (hnum : toPoly (DensePoly.cHermiteReduceTower Dt a d).2.1
       = toPoly (CPolyEuclidean.div (cmul resNum Dstar) resDen))
