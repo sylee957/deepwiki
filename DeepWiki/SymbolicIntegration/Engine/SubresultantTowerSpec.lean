@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
-import DeepWiki.SymbolicIntegration.Engine.SubresultantSpec
+import DeepWiki.ComputableAlgebra.PolySubresultantLawful
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
 

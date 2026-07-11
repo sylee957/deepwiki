@@ -23,6 +23,7 @@ import DeepWiki.ComputableAlgebra.PolyResultant
 import DeepWiki.ComputableAlgebra.PolyResultantDense
 import DeepWiki.ComputableAlgebra.PolySubresultant
 import DeepWiki.ComputableAlgebra.PolySubresultantSpec
+import DeepWiki.ComputableAlgebra.PolySubresultantLawful
 import DeepWiki.ComputableAlgebra.PolyEuclidean
 import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms

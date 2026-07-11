@@ -82,7 +82,6 @@ import DeepWiki.SymbolicIntegration.Engine.SplitFactorHelpers
 import DeepWiki.SymbolicIntegration.Engine.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Engine.Structure
 import DeepWiki.SymbolicIntegration.Engine.Subresultant
-import DeepWiki.SymbolicIntegration.Engine.SubresultantSpec
 import DeepWiki.SymbolicIntegration.Engine.LrtLogArg
 import DeepWiki.SymbolicIntegration.Engine.LrtIntegrate
 import DeepWiki.SymbolicIntegration.Engine.LrtGuarded

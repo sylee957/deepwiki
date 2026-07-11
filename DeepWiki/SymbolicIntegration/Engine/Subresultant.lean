@@ -1,6 +1,4 @@
 import DeepWiki.ComputableAlgebra.PolyResultantDense
-import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
-import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.PolySubresultant
 import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
@@ -33,67 +31,6 @@ private def cSylvesterRows (p q : DensePoly α) (n m : ℕ) : List (List α) :=
   (List.range m).map (fun i => shiftRow pc i) ++ (List.range n).map (fun i => shiftRow qc i)
 
 end DensePoly
-
-namespace CPolySubresultant
-
-variable {α : Type u} [CField α]
-
-/-! ### `toK`-determinant homomorphism (L4b): certifying the selected default against `Matrix.det` -/
-
-section Spec
-
-variable [CFieldSpec α]
-
-open CFieldSpec
-
-/-- **`toK` is a determinant homomorphism.** `toK (CPolySubresultant.detAux n M) = listDetn n (M.map (map toK))` — the
-computable cofactor determinant maps to the generic-`CommRing` determinant over `K`. -/
-@[denote] theorem toK_detAux : ∀ (n : ℕ) (M : List (List α)),
-    toK (CPolySubresultant.detAux n M) = listDetn n (M.map (fun r => r.map toK)) := by
-  intro n
-  induction n with
-  | zero => intro M; simp [CPolySubresultant.detAux, listDetn, CFieldSpec.toK_one]
-  | succ n ih =>
-    intro M
-    cases M with
-    | nil => simp [CPolySubresultant.detAux, listDetn, CFieldSpec.toK_one]
-    | cons row rest =>
-      rw [CPolySubresultant.detAux, List.map_cons, listDetn, toK_foldl_add,
-        CFieldSpec.toK_zero, List.map_map]
-      congr 1
-      apply List.map_congr_left
-      intro j _
-      simp only [Function.comp]
-      have hminor : (rest.map (fun r => r.take j ++ r.drop (j + 1))).map (fun r => r.map toK)
-          = (rest.map (fun r => r.map toK)).map (fun r => r.take j ++ r.drop (j + 1)) := by
-        rw [List.map_map, List.map_map]
-        apply List.map_congr_left
-        intro r _
-        simp only [Function.comp, List.map_append, List.map_take, List.map_drop]
-      by_cases hpar : j % 2 = 0
-      · simp only [if_pos hpar, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
-      · simp only [if_neg hpar, CFieldSpec.toK_neg, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
-
-/-- `toK (CPolySubresultant.det M) = listDetn M.length (M.map (map toK))`. -/
-@[denote] theorem toK_det (M : List (List α)) :
-    toK (CPolySubresultant.det M) = listDetn M.length (M.map (fun r => r.map toK)) := by
-  rw [CPolySubresultant.det, toK_detAux]
-
-/-- **`CPolySubresultant.det` computes `Matrix.det`.** For a well-formed `n × n` row-list `M`, the computable determinant
-`toK (CPolySubresultant.det M)` equals `(matrixOfList (M.map (map toK)) n).det` — the full bridge from the computable
-cofactor determinant to Mathlib's abstract determinant over `K`. -/
-theorem toK_det_eq_matrix_det (M : List (List α)) (n : ℕ) (hlen : M.length = n)
-    (hrows : ∀ r ∈ M, r.length = n) :
-    toK (CPolySubresultant.det M) = (matrixOfList (M.map (fun r => r.map toK)) n).det := by
-  have hlen' : (M.map (fun r => r.map toK)).length = n := by rw [List.length_map]; exact hlen
-  have hrows' : ∀ r ∈ (M.map (fun r => r.map toK)), r.length = n := by
-    intro r hr; rw [List.mem_map] at hr; obtain ⟨s, hs, rfl⟩ := hr
-    rw [List.length_map]; exact hrows s hs
-  rw [toK_det, hlen, listDetn_eq_det n (M.map (fun r => r.map toK)) hlen' hrows']
-
-end Spec
-
-end CPolySubresultant
 
 /-! ### Validation (`ccompute`) -/
 
