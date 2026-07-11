@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogIntegral
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogArgGeneric
+import DeepWiki.SymbolicIntegration.Engine.LinearSolve
 
 /-! # Solving for the log argument `u` in `∫ = log u` (principal case)
 

@@ -1,10 +1,11 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtension
+import DeepWiki.ComputableAlgebra.LinearAlgebra
 
 /-! # Solving for the log argument `u` over a transcendental tower base
 
 The log-argument solve, generalized off `ℚ` to an arbitrary computable base `[CField β]`. When
-`α = DenseFrac β = β(x)`, the cleared log-derivative system is `β`-linear, so `gaussElim`/`kernelVector`
-and `radLogArgSolve` solve it over any `β`. Over `α = ℚ(x)(eˣ)`, `radLogArgSolve` computes
+`α = DenseFrac β = β(x)`, the cleared log-derivative system is `β`-linear, so `radLogArgSolve`
+selects its nullspace computation through `CLinearSolve β`. Over `α = ℚ(x)(eˣ)`, it computes
 `N = (θ+2) − 2y` for `∫ dx/√(eˣ+1)`,
 whose `u = N/θ` passes the log-derivative certificate; the `ℚ`-base instance specializes
 to the classical arcsinh log argument. -/
@@ -15,74 +16,15 @@ namespace DeepWiki.SymbolicIntegration
 
 open RadElem DensePoly
 
-/-! ### Generic Gaussian elimination over `[CField β]`: a nonzero kernel vector of a `β`-matrix
-
-`gaussElim`/`kernelVector` row-reduce a `β`-matrix over any `[CField β]` using the engine ops
-(`CCommRing.isZero`/`div`/`mul`/`sub`), no `DecidableEq β` needed. The matrix is a `List (List β)` of rows
-of length `nCols`. -/
-
-/-- Reduce a `β`-matrix to reduced row-echelon form over `[CField β]`, returning `(rrefRows, pivotCols)`
-by Gauss–Jordan with the engine ops over `nCols` columns. -/
-def gaussElim {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) :
-    List (List β) × List ℕ :=
-  let step : (List (List β) × ℕ × List ℕ) → ℕ → (List (List β) × ℕ × List ℕ) :=
-    fun (rs, pr, piv) col =>
-      if pr ≥ rs.length then (rs, pr, piv)
-      else
-        -- find a row index ≥ pr whose `col`-entry is `CCommRing.isZero`-nonzero
-        match (List.range rs.length).find?
-            (fun i => i ≥ pr && (!CCommRing.isZero (rs[i]!.getD col CCommRing.zero))) with
-        | none => (rs, pr, piv)
-        | some i =>
-          -- swap rows `pr` and `i`
-          let rowPr := rs[pr]!
-          let rowI := rs[i]!
-          let rs := rs.set pr rowI |>.set i rowPr
-          -- scale pivot row to a leading `1`
-          let pivRow := rs[pr]!
-          let lead := pivRow.getD col CCommRing.zero
-          let pivRow := pivRow.map (fun a => CField.div a lead)
-          let rs := rs.set pr pivRow
-          -- eliminate `col` from all other rows
-          let rs := (List.range rs.length).foldl (fun acc r =>
-            if r = pr then acc
-            else
-              let row := acc[r]!
-              let factor := row.getD col CCommRing.zero
-              if CCommRing.isZero factor then acc
-              else
-                let newRow := (List.range nCols).map (fun c =>
-                  CField.sub (row.getD c CCommRing.zero) (CCommRing.mul factor (pivRow.getD c CCommRing.zero)))
-                acc.set r newRow) rs
-          (rs, pr + 1, col :: piv)
-  let (rs, _, pivRev) := (List.range nCols).foldl step (rows, 0, [])
-  (rs, pivRev.reverse)
-
-/-- A nonzero kernel vector of a `β`-matrix over `[CField β]`: `kernelVector nCols rows = some c` with
-`M·c = 0`, `c ≠ 0`, read off the first free column after `gaussElim`, or `none` for a trivial kernel. -/
-def kernelVector {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) :
-    Option (List β) :=
-  let (rs, pivots) := gaussElim nCols rows
-  let freeCols := (List.range nCols).filter (fun c => ¬ pivots.contains c)
-  match freeCols with
-  | [] => none
-  | fc :: _ =>
-    let base : List β := (List.range nCols).map (fun c =>
-      if c = fc then (CCommRing.one : β) else CCommRing.zero)
-    let withPivots := (List.range pivots.length).foldl (fun (acc : List β) r =>
-      let pc := pivots[r]!
-      let v := CCommRing.neg ((rs[r]!).getD fc CCommRing.zero)
-      acc.set pc v) base
-    some withPivots
-
 /-! ### The generic cleared log-derivative residual + matrix over `α = DenseFrac β`
 
 Over `α = DenseFrac β = β(x)`, the residual `radDeriv(N)·D − N·D' − radMul(N, integrand)·D` is a pair of
 `β(x)` elements; clearing each to a numerator over `β` gives a `β`-matrix solved by
-`gaussElim`/`kernelVector`. -/
+the selected `CLinearSolve.nullspaceBasis` operation. -/
 
 section
-variable {β : Type*} [CField β] [CFieldDomain β DensePoly] [CDiffField (DenseFrac β)]
+variable {β : Type*} [CField β] [CLinearSolve β]
+variable [CFieldDomain β DensePoly] [CDiffField (DenseFrac β)]
 
 /-- A `β(x)` value `xᵏ`: numerator the `k`-th monomial, denominator `1`. -/
 def qMonomial (k : ℕ) : DenseFrac β := CFrac.ofPoly (cshift k [(CCommRing.one : β)])
@@ -131,8 +73,8 @@ def radLogMatrix (ρ : DenseFrac β) (integrand : RadElem (DenseFrac β)) (D : D
 
 /-- Solve for the log argument over `α = DenseFrac β`: `radLogArgSolve ρ integrand D degBound = some N`
 with `N = a₀ + a₁·y` (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel
-vector of the `β`-matrix `radLogMatrix` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. The
-whole solve runs over any tower base `β`. -/
+vector selected from the `β`-matrix `radLogMatrix` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on a trivial
+kernel. The whole solve depends only on the abstract linear-solver capability. -/
 def radLogArgSolve (ρ : DenseFrac β) (integrand : RadElem (DenseFrac β)) (D : DensePoly β)
     (degBound : ℕ) : Option (RadElem (DenseFrac β)) :=
   let (rows, nCols) := radLogMatrix ρ integrand D degBound

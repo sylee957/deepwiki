@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogArgGeneric
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogIntegral
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalOverTower
+import DeepWiki.SymbolicIntegration.Engine.LinearSolve
 
 /-! # Generic radical log-argument examples
 
@@ -12,6 +13,9 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 open RadElem DensePoly
+
+local instance instCLinearSolveDenseFracRatLogArgExamples : CLinearSolve (DenseFrac ℚ) :=
+  CLinearSolve.gauss
 
 /-! ### Generic solver over the rational base
 
@@ -71,7 +75,7 @@ def expArgIntegrand : RadElem Lvl2 := radInvYLift expRadicand CCommRing.one
 `α = ℚ(x)(eˣ)`, with `expTowerDiff`, `ρ = eˣ+1`, `D = θ`, ansatz degree `1` (expected `N = (θ+2) − 2y`,
 so `u = N/θ = (y−1)/(y+1)`). -/
 def expArgSolved : Option (RadElem Lvl2) :=
-  @radLogArgSolve _ _ _ expTowerDiff expRadicand expArgIntegrand expDenTheta 1
+  @radLogArgSolve _ _ _ _ expTowerDiff expRadicand expArgIntegrand expDenTheta 1
 
 -- Computed numerator `N` for `∫ dx/√(eˣ+1)` over the tower, a multiple of `(θ+2) − 2y`.
 #eval (expArgSolved.map (fun N => N.map (fun z =>

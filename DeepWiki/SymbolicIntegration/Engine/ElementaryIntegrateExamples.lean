@@ -12,6 +12,9 @@ namespace DeepWiki.SymbolicIntegration
 
 open RadElem DensePoly
 
+local instance instCLinearSolveDenseFracRatElementaryExamples : CLinearSolve (DenseFrac ℚ) :=
+  CLinearSolve.gauss
+
 /-! ### Round-trip validation: `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))` over ℚ(x)(eˣ) -/
 
 /-- The rational part `v = 2√(eˣ+1) = 2y` as the `RadElem Lvl2` `[0, 2]` over ℚ(x)(eˣ). -/
@@ -49,7 +52,7 @@ def elemDenTheta : DensePoly (DenseFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The recovered result `F' = cIntegrateElementary ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
 def elemRecovered : AlgIntegralResult Lvl2 :=
-  @cIntegrateElementary _ _ _ expTowerDiff expRadicand elemRatPart elemLogResidual CCommRing.one elemDenTheta 1
+  @cIntegrateElementary _ _ _ _ expTowerDiff expRadicand elemRatPart elemLogResidual CCommRing.one elemDenTheta 1
 
 /-- Round-trip `algDeriv F' = elemIntegrand` over ℚ(x)(eˣ): `DensePoly.cisZero (algDeriv F' − integrand)`. -/
 theorem rt_elementary_combined :

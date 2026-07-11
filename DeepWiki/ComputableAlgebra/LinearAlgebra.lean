@@ -28,6 +28,96 @@ class CLinearSolve (α : Type u) [CField α] where
   /-- Return a basis of the nullspace of a homogeneous system with `ncols` unknowns. -/
   nullspaceBasis : List (List α) → ℕ → List (List α)
 
+/-- Reduce a computable-field matrix to row-echelon form, returning its pivot columns. -/
+def gaussElim {α : Type u} [CField α] (ncols : ℕ) (rows : List (List α)) :
+    List (List α) × List ℕ :=
+  let step : (List (List α) × ℕ × List ℕ) → ℕ → (List (List α) × ℕ × List ℕ) :=
+    fun (rs, pr, piv) col =>
+      if pr ≥ rs.length then (rs, pr, piv)
+      else
+        match (List.range rs.length).find?
+            (fun i => i ≥ pr && (!CCommRing.isZero (rs[i]!.getD col CCommRing.zero))) with
+        | none => (rs, pr, piv)
+        | some i =>
+          let rowPr := rs[pr]!
+          let rowI := rs[i]!
+          let rs := rs.set pr rowI |>.set i rowPr
+          let pivotRow := rs[pr]!
+          let lead := pivotRow.getD col CCommRing.zero
+          let pivotRow := pivotRow.map (fun a => CField.div a lead)
+          let rs := rs.set pr pivotRow
+          let rs := (List.range rs.length).foldl (fun acc r =>
+            if r = pr then acc
+            else
+              let row := acc[r]!
+              let factor := row.getD col CCommRing.zero
+              if CCommRing.isZero factor then acc
+              else
+                let newRow := (List.range ncols).map (fun c =>
+                  CField.sub (row.getD c CCommRing.zero)
+                    (CCommRing.mul factor (pivotRow.getD c CCommRing.zero)))
+                acc.set r newRow) rs
+          (rs, pr + 1, col :: piv)
+  let (rs, _, pivRev) := (List.range ncols).foldl step (rows, 0, [])
+  (rs, pivRev.reverse)
+
+namespace CLinearSolve
+
+/-- Generic particular solve obtained from computable-field Gauss–Jordan elimination. -/
+private def gaussSolveAny {α : Type u} [CField α] (rows : List (List α)) (rhs : List α)
+    (ncols : ℕ) : Option (List α) :=
+  let aug := List.zipWith (fun row b => row ++ [b]) rows rhs
+  let (reduced, pivots) := gaussElim (ncols + 1) aug
+  if pivots.contains ncols then none
+  else
+    some ((List.range ncols).map (fun j =>
+      match pivots.idxOf? j with
+      | some r => (reduced.getD r []).getD ncols CCommRing.zero
+      | none => CCommRing.zero))
+
+/-- Generic unique solve obtained from computable-field Gauss–Jordan elimination. -/
+private def gaussSolveUnique {α : Type u} [CField α] (rows : List (List α)) (rhs : List α)
+    (ncols : ℕ) : Option (List α) :=
+  let aug := List.zipWith (fun row b => row ++ [b]) rows rhs
+  let (reduced, pivots) := gaussElim (ncols + 1) aug
+  if pivots.contains ncols then none
+  else if pivots.length < ncols then none
+  else
+    some ((List.range ncols).map (fun j =>
+      match pivots.idxOf? j with
+      | some r => (reduced.getD r []).getD ncols CCommRing.zero
+      | none => CCommRing.zero))
+
+/-- Generic nullspace basis obtained from computable-field Gauss–Jordan elimination. -/
+private def gaussNullspaceBasis {α : Type u} [CField α] (rows : List (List α))
+    (ncols : ℕ) : List (List α) :=
+  let (reduced, pivots) := gaussElim ncols rows
+  let freeCols := (List.range ncols).filter (fun j => !pivots.contains j)
+  freeCols.map (fun free =>
+    let base := (List.range ncols).map (fun j =>
+      if j = free then (CCommRing.one : α) else CCommRing.zero)
+    (List.range pivots.length).foldl (fun acc r =>
+      let pivot := pivots[r]!
+      let value := CCommRing.neg ((reduced[r]!).getD free CCommRing.zero)
+      acc.set pivot value) base)
+
+/-! The generic implementation is an explicit builder, not a global fallback instance: callers choose it
+when no representation-specific solver is available, avoiding incoherent hidden instance arguments. -/
+
+/-- Build the generic Gauss–Jordan linear-solver implementation over a computable field. -/
+@[reducible]
+def gauss {α : Type u} [CField α] : CLinearSolve α where
+  solveUnique := gaussSolveUnique
+  solveAny := gaussSolveAny
+  nullspaceBasis := gaussNullspaceBasis
+
+end CLinearSolve
+
+/-- Select the first vector returned by an abstract homogeneous-kernel computation. -/
+def kernelVector {α : Type u} [CField α] [CLinearSolve α]
+    (ncols : ℕ) (rows : List (List α)) : Option (List α) :=
+  (CLinearSolve.nullspaceBasis rows ncols).head?
+
 /-- Lawful interface for executable system solves and homogeneous-kernel vector shape. -/
 class LawfulCLinearSolve (α : Type u) [CField α] [CLinearSolve α] where
   /-- A returned unique solution has exactly the requested number of columns. -/
