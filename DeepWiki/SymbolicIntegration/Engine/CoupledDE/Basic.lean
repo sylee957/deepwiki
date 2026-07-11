@@ -81,7 +81,7 @@ theorem matAddQ_len (A B : List (List ℚ)) : (matAddQ A B).length = min A.lengt
   rw [matAddQ, List.length_zipWith]
 
 /-- Assemble and solve the coupled system using explicit degree, scaling, and normalization operations. -/
-def cCoupledDESystemWith {P : Type → Type} [CPoly P]
+def cCoupledDESystemWith {P : Type → Type} [CPoly P] [CLinearSolve ℚ]
     (polyDeg : P ℚ → ℕ) (polyScale : ℚ → P ℚ → P ℚ) (polyNorm : P ℚ → P ℚ)
     (a : ℚ) (b1 b2 z1 z2 : P ℚ) (d : ℕ) :
     Option (P ℚ × P ℚ) :=
@@ -111,13 +111,14 @@ def cCoupledDESystemWith {P : Type → Type} [CPoly P]
 /-- `cCoupledDESystem a b1 b2 z1 z2 d` (`D = d/dx`): in any `CPolyEngine` representation, solve
 `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]]·(y₁; y₂) = (z₁; z₂)` for degree-`≤ d` polynomials via one
 abstract unique linear solve (`CLinearSolve.solveUnique`). Returns `some (y₁, y₂)` or `none`. -/
-def cCoupledDESystem {P : Type → Type} [CPoly P] [CPolyEngine P]
+def cCoupledDESystem {P : Type → Type} [CPoly P] [CPolyEngine P] [CLinearSolve ℚ]
     (a : ℚ) (b1 b2 z1 z2 : P ℚ) (d : ℕ) : Option (P ℚ × P ℚ) :=
   cCoupledDESystemWith CPolyEngine.cdeg CPolyEngine.scale CPolyEngine.cnorm
     a b1 b2 z1 z2 d
 
 /-- The generic coupled solver specializes definitionally to the original dense-list computation. -/
-theorem cCoupledDESystem_dense_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) :
+theorem cCoupledDESystem_dense_eq [CLinearSolve ℚ]
+    (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) :
     cCoupledDESystem a b1 b2 z1 z2 d =
       cCoupledDESystemWith cdeg cscale cnorm a b1 b2 z1 z2 d := rfl
 
@@ -205,7 +206,8 @@ theorem coupledClearedCheck_sound {P : Type → Type} [CPoly P] [CPolyEngine P]
 /-- `cCoupledDESystem_sound_of_check`: if `cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)` and the
 returned pair passes `coupledClearedCheck`, then `(y₁, y₂)` solves the base coupled system at the `ℚ[X]`
 level (composition with `coupledClearedCheck_sound`). -/
-theorem cCoupledDESystem_sound_of_check (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ)
+theorem cCoupledDESystem_sound_of_check [CLinearSolve ℚ]
+    (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ)
     (y1 y2 : DensePoly ℚ)
     (_hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2))
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
@@ -235,7 +237,7 @@ theorem coupledDESystem_example :
 
 -- ★ Base coupled-system soundness, `native_decide`-free: a self-certifying `cCoupledDESystem` solve gives
 -- the two `ℚ[X]` row identities `D(y₁) + b₁y₁ + a·b₂y₂ = z₁`, `D(y₂) + b₂y₁ + b₁y₂ = z₂`.
-example (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
+example [CLinearSolve ℚ] (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
     (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2))
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
     Polynomial.derivative (toPoly y1) + toPoly b1 * toPoly y1

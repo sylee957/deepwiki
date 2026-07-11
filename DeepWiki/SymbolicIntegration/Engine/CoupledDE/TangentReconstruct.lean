@@ -504,7 +504,8 @@ def TanSolves (b0 b2 : DensePoly ℚ) (n : ℕ) (c1 c2 q1 q2 : List (DensePoly �
       + (C (toPoly b0) - C (C ((n : ℚ))) * X) * DensePoly.toPoly q2 = DensePoly.toPoly c2
 
 /-- Base case (`n = 0`, `q = [s]`): the singleton solution solves the level-0 coupled `t`-system. -/
-theorem reconstruct_base (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 : List (DensePoly ℚ))
+theorem reconstruct_base [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 : List (DensePoly ℚ))
     (s1 s2 : DensePoly ℚ) (hd1 : cdeg c1 = 0) (hd2 : cdeg c2 = 0)
     (hsolve : cCoupledDESystem (-1) b0 b2 (c1.getD 0 []) (c2.getD 0 []) dbound = some (s1, s2)) :
     TanSolves b0 b2 0 c1 c2 [s1] [s2] := by
@@ -535,7 +536,8 @@ theorem reconstruct_base (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 : List (D
 
 /-- Telescoping reconstruction: a returned `cCoupledDECancelTan` solution solves the coupled system
 at the `ℚ[x][t]` level (`D = ∂x + (t²+1)∂t`), by induction on `n`. -/
-theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
+theorem reconstruct [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (dbound : ℕ) (b0 : DensePoly ℚ) :
     ∀ (n : ℕ) (b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ)),
       cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2) →
       TanSolves b0 b2 n c1 c2 q1 q2 := by
@@ -654,7 +656,8 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
 
 /-- A successful `cCoupledDECancelTan … 2` solve satisfies `cancelTanClearedCheck … = true`,
 since `reconstruct` makes the residual `t`-polynomials `DensePoly.toPoly = 0` at level `n = 2`. -/
-theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : DensePoly ℚ)
+theorem cancelTanClearedCheck_of_reconstruct [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (dbound : ℕ) (b0 b2 : DensePoly ℚ)
     (c1 c2 q1 q2 : List (DensePoly ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true := by
@@ -685,7 +688,8 @@ open DensePoly Polynomial
 /-- Tangent RDE cancellation soundness: a successful `cCoupledDECancelTan dbound b0 b2 c1 c2 2` solve
 `(q₁, q₂)` solves the tangent coupled `t`-polynomial system at the `ℚ[x][t]` level
 (`D = ∂x + (t²+1)∂t`, diagonal shift `−2t`). -/
-theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : DensePoly ℚ)
+theorem cCoupledDECancelTan_sound [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (dbound : ℕ) (b0 b2 : DensePoly ℚ)
     (c1 c2 q1 q2 : List (DensePoly ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
@@ -702,7 +706,8 @@ theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : DensePoly ℚ)
     (DensePoly.cancelTanClearedCheck_of_reconstruct dbound b0 b2 c1 c2 q1 q2 hsome)
 
 -- ★ Restatement against the intended wording.
-example (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ))
+example [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
         + (Polynomial.C (toPoly b0) * DensePoly.toPoly q1

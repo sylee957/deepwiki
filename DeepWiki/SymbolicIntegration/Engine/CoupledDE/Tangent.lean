@@ -105,7 +105,7 @@ namespace DensePoly
 for `q₁, q₂ ∈ k[t]` of `t`-degree `≤ n` (`D = tanDeriv`). Recurses structurally on `n`: each level a
 base `cCoupledDESystem` solve (ansatz degree `≤ dbound`) after evaluating the `cᵢ` at `t = √−1`, then a
 `t − √−1` division dropping the degree. Returns `some (q₁, q₂)` or `none`. -/
-def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : DensePoly ℚ) :
+def cCoupledDECancelTan [CLinearSolve ℚ] (dbound : ℕ) (b0 b2 : DensePoly ℚ) :
     (c1 c2 : List (DensePoly ℚ)) → (n : ℕ) → Option (List (DensePoly ℚ) × List (DensePoly ℚ))
   | c1, c2, 0 =>
     -- n = 0: c₁, c₂ must be in k (degree-0 in t); solve the base coupled system directly.

@@ -97,6 +97,9 @@ denotations does not make those terms definitionally equal.
 - The Risch–Norman `cParallelIntegrate` driver and its representation-generic tower wrapper now select
   `CLinearSolve.solveAny` through `[CLinearSolve ℚ]`; Chapter 10 examples remain concrete default-RREF
   regression checks rather than fixing that implementation in the reusable API.
+- The coupled-DE base solver, tangent-cancellation recursion, and their soundness/reconstruction chain
+  now share a selected `[CLinearSolve ℚ]`; the soundness proofs request `[LawfulCLinearSolve ℚ]` only at
+  the row-equation boundary. Chapter 8 executable examples remain default-RREF specializations.
 
 ## Verification
 

@@ -331,7 +331,8 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ) (
 
 /-- A successful `cCoupledDESystem` solve satisfies `coupledClearedCheck … = true`, discharged from
 the lawful linear-solver soundness law via the row identities and the residual degree bound. -/
-theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ)
+theorem coupledClearedCheck_of_cCoupledDESystem [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ)
     (d : ℕ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true := by
   rw [cCoupledDESystem_dense_eq, cCoupledDESystemWith] at hsome
@@ -499,7 +500,8 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly in
 /-- Base coupled-system soundness: a successful `cCoupledDESystem` solve `(y₁, y₂)` satisfies the two
 `ℚ[X]` identities `D(y₁) + b₁·y₁ + C a·(b₂·y₂) = z₁` and `D(y₂) + b₂·y₁ + b₁·y₂ = z₂`. -/
-theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ)
+theorem cCoupledDESystem_sound [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ)
     (y1 y2 : DensePoly ℚ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     Polynomial.derivative (toPoly y1) + toPoly b1 * toPoly y1
         + Polynomial.C a * (toPoly b2 * toPoly y2) = toPoly z1 ∧
@@ -512,7 +514,8 @@ theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : DensePoly ℚ) (d : ℕ)
 
 -- The base coupled-system solve satisfies the two `ℚ[X]` row identities without a separate cleared-check
 -- hypothesis; the check is discharged from the lawful abstract linear-solver soundness law.
-example (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
+example [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
     (hsome : DensePoly.cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     Polynomial.derivative (DensePoly.toPoly y1) + DensePoly.toPoly b1 * DensePoly.toPoly y1
         + Polynomial.C a * (DensePoly.toPoly b2 * DensePoly.toPoly y2) = DensePoly.toPoly z1 ∧
@@ -521,7 +524,8 @@ example (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
   cCoupledDESystem_sound a b1 b2 z1 z2 d y1 y2 hsome
 
 -- The abstract linear-solver soundness law: a returned solution solves `A·x = b` rowwise.
-example (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
+example [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
+    (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
     (hwidth : ∀ r ∈ Arows, r.length = ncols) (hlen : Arows.length = urhs.length)
     (hsome : CLinearSolve.solveUnique Arows urhs ncols = some x) :
     ∀ i, i < Arows.length → DensePoly.dotQ (Arows.getD i []) x = urhs.getD i 0 :=

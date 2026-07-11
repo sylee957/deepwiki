@@ -228,7 +228,8 @@ theorem cancelTanClearedCheck_sound (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List 
 /-- `cCoupledDECancelTan_sound_of_check`: if `cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2)`
 and the returned pair passes `cancelTanClearedCheck`, then `(q₁, q₂)` solves the tangent coupled
 `t`-polynomial system at the `ℚ[x][t]` level (composition with `cancelTanClearedCheck_sound`). -/
-theorem cCoupledDECancelTan_sound_of_check (dbound : ℕ) (b0 b2 : DensePoly ℚ)
+theorem cCoupledDECancelTan_sound_of_check [CLinearSolve ℚ]
+    (dbound : ℕ) (b0 b2 : DensePoly ℚ)
     (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ)
     (_hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
@@ -259,7 +260,8 @@ theorem rischDE_cancelTan_example :
 
 -- ★ Tangent RDE cancellation soundness, `native_decide`-free: a self-certifying `cCoupledDECancelTan` solve
 -- gives both rows of the tangent coupled `t`-system over `ℚ[x][t]` (`D = ∂/∂x + (t²+1)∂/∂t`).
-example (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ)
+example [CLinearSolve ℚ]
+    (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ)
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
     (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
