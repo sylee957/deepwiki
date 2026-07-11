@@ -57,6 +57,15 @@ theorem lrtSolver_succeeds_iff_integrable_on_tower [PrimitiveFrontierLrt ℚ]
     (primitiveRischLevelLrtDomain (inferInstance : CRischLevelLrt (DenseFrac ℚ)))
     Dt a d hdomain hd
 
+/-- The concrete `DenseFrac ℚ` primitive monomial case is complete on the checked recursive domains. -/
+theorem completePrimitiveMonomialCase_on_tower [PrimitiveFrontierLrt ℚ] :
+    CompleteCMonomialCase (towerPrimitiveCaseLrt (β := ℚ))
+      (towerPrimitiveRecursiveSpecialDomainLrt
+        (towerLimitedCoefficientDomain DensePoly.CheckedLimitedIntegrateSingleBaseDomain)) := by
+  exact completeTowerPrimitiveCaseLrt
+    (rationalLrtAcceptanceDomain (inferInstance : CRischLevelLrt ℚ))
+    DensePoly.CheckedLimitedIntegrateSingleBaseDomain
+
 /-- The selected tower operation and its soundness contract resolve together. -/
 example [PrimitiveFrontierLrt ℚ]
     [CRischField (DenseFrac ℚ)] [CPolyGcd DensePoly (DenseFrac ℚ)]

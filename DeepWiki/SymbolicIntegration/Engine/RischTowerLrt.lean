@@ -136,6 +136,20 @@ instance instLawfulCLimitedIntegrateSingleLrtNone :
 instance instCLimitedIntegrateSingleLrtRat : CLimitedIntegrateSingleLrt ℚ :=
   limitedIntegrateSingleLrtBase
 
+/-- The selected rational limited-integration instance satisfies its semantic contract. -/
+instance instLawfulCLimitedIntegrateSingleLrtRat :
+    LawfulCLimitedIntegrateSingleLrt (inferInstance : CLimitedIntegrateSingleLrt ℚ) := by
+  change LawfulCLimitedIntegrateSingleLrt limitedIntegrateSingleLrtBase
+  infer_instance
+
+/-- The selected rational limited-integration instance is complete on its checked acceptance domain. -/
+instance instCompleteCLimitedIntegrateSingleLrtRat :
+    CompleteCLimitedIntegrateSingleLrt (inferInstance : CLimitedIntegrateSingleLrt ℚ)
+      DensePoly.CheckedLimitedIntegrateSingleBaseDomain := by
+  change CompleteCLimitedIntegrateSingleLrt limitedIntegrateSingleLrtBase
+    DensePoly.CheckedLimitedIntegrateSingleBaseDomain
+  infer_instance
+
 example :
     ((inferInstance : CLimitedIntegrateSingleLrt ℚ).run [1, 1] [0, 1] [1] [0, 1]).map
       (fun r => (CPoly.normalizeFracPair r.1.1 r.1.2, r.2)) = some (([0, 1], [1]), 1) := by
