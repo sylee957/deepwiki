@@ -13,7 +13,7 @@ open CFrac Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+  [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CRischField α] in
 /-- **The reduced normal part is an integral result**, modulo the reduced-stage frontier: from the Hermite
@@ -21,7 +21,9 @@ half (`hherm`) and the Rothstein–Trager residue match (`hmatch`), `cIntegrateR
 satisfies the antiderivative predicate. A restatement of
 `field_identity_of_cIntegrateReducedG_of_residueMatch` as `IsIntegralResult`; `hherm`/`hmatch` are the
 `cHermiteReduceTower` / RT-residue `native_decide` frontier. It discharges `hNrmField`. -/
-private theorem cIntegrateReducedG_isIntegralResult (Dt a d : DensePoly α) (cands : List α)
+private theorem cIntegrateReducedG_isIntegralResult [CPolySquarefree DensePoly α]
+    [CPolyGcd DensePoly α] [CPolyResultant DensePoly]
+    (Dt a d : DensePoly α) (cands : List α)
     (hherm : towerFractionFieldDeriv Dt
             (am α (toPoly (cIntegrateReduced Dt a d cands).rational.1)
               / am α (toPoly (cIntegrateReduced Dt a d cands).rational.2))
@@ -42,7 +44,9 @@ omit [CRischField α] in
 cleared Hermite identity) and `LawfulResidueLogPart` (the RT residue match) — the two *abstract* stage
 laws — the reduced normal part integrates correctly. This is the assembler consuming its interfaces: the
 composition `Hermite ∘ ResidueLogPart = reduced-part soundness`, with no concrete algorithm re-derived. -/
-private theorem cIntegrateReducedG_isIntegralResult_of_lawful (Dt a d : DensePoly α) (cands : List α)
+private theorem cIntegrateReducedG_isIntegralResult_of_lawful [CPolySquarefree DensePoly α]
+    [CPolyGcd DensePoly α] [CPolyResultant DensePoly]
+    (Dt a d : DensePoly α) (cands : List α)
     (hherm : LawfulHermiteReduction Dt a d (DensePoly.cHermiteReduceTower Dt a d).1.1
       (DensePoly.cHermiteReduceTower Dt a d).1.2 (DensePoly.cHermiteReduceTower Dt a d).2.1
       (DensePoly.cHermiteReduceTower Dt a d).2.2)
@@ -59,6 +63,7 @@ end-to-end payoff of the two-stage discipline: `cHermiteReduceTowerG_lawfulHermi
 (Stage 1) — the reduced normal part integrates correctly with NO concrete algorithm re-derived in the
 composition, only the two realization theorems and the abstract law. -/
 theorem cIntegrateReducedG_primitive_isIntegralResult_via_interfaces [CharZero (CFieldSpec.K α)]
+    [CFracGcdCoreWf α]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (w : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
@@ -103,6 +108,7 @@ omit [CRischField α] in
 hyperexponential analogue of `…primitive_isIntegralResult_via_interfaces` — same Stage-1 composition, with
 the hyperexp `ResidueLogPart` realization (integrability witness `hsum : ∑ c = 0`). -/
 theorem cIntegrateReducedG_hyperexp_isIntegralResult_via_interfaces [CharZero (CFieldSpec.K α)]
+    [CFracGcdCoreWf α]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (Dt a d : DensePoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
