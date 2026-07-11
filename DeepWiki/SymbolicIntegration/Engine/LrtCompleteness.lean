@@ -17,7 +17,8 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+  [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+  [Algebra ℚ (CFieldSpec.K α)]
 
 /-- **The LRT completeness frontier (Liouville criterion), as a class.** `descendGenuineLrt`: genuine (broad)
 elementary integrability implies the residues are constants (`cResidueConstantGuard = true`, root-free
@@ -26,7 +27,8 @@ is done in-project (`isLiouville_logExtension_uncond`, the transcendental log Li
 criterion), so this field is the computable→abstract bridge for the algebraic (LRT) residues, not a missing
 theorem. The completeness analogue of the reduced-soundness frontier `PrimitiveFrontierLrt`. -/
 class LrtLiouvilleFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [Algebra ℚ (CFieldSpec.K α)] where
   /-- Genuine (broad) elementary integrability ⟹ the residue-constancy guard passes. -/
   descendGenuineLrt : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 →
     IsElementaryIntegrableGenuineLrt Dt a d → cResidueConstantGuard Dt a d = true
