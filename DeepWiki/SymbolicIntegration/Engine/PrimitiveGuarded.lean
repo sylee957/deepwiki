@@ -2,7 +2,6 @@ import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.IntegratorAssembly
 import DeepWiki.SymbolicIntegration.Engine.ResidueSource
-import DeepWiki.SymbolicIntegration.Engine.RischLevelDense
 
 /-! # Guarded primitive special integration
 

@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.LaurentCore
-import DeepWiki.SymbolicIntegration.Engine.RischLevelDense
+import DeepWiki.SymbolicIntegration.Engine.Assemble
 
 /-! # Checked hyperexponential monomial-case realization
 

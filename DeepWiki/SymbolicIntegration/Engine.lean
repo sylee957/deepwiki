@@ -75,7 +75,6 @@ import DeepWiki.SymbolicIntegration.Engine.RecursiveMonomialCase
 import DeepWiki.SymbolicIntegration.Engine.RischLevel
 import DeepWiki.SymbolicIntegration.Engine.RischLevelConvert
 import DeepWiki.SymbolicIntegration.Engine.MonomialCaseSparse
-import DeepWiki.SymbolicIntegration.Engine.RischLevelDense
 import DeepWiki.SymbolicIntegration.Engine.RischLevelSparse
 import DeepWiki.SymbolicIntegration.Engine.RischFieldCore
 import DeepWiki.SymbolicIntegration.Engine.RischFieldSpec
