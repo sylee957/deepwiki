@@ -50,9 +50,11 @@ cast coefficients.
 6. **Semantic relative completeness.** Upgrade the checked domain only
    after proving the coupled-system and constant-descent completeness assumptions required by
    Bronstein's theorem.
-7. **Integration and retirement (partial).** The selected operation executes Bronstein's
-   pole-order-three example and the `log(t^2+1)` polynomial case, and the one-shot bridge is retired.
-   Thin dense/sparse `tangentRischLevel` selections and the semantic completeness upgrade remain.
+7. **Level integration (implemented).** The selected operation executes Bronstein's pole-order-three
+   example and the `log(t^2+1)` polynomial case. `recursiveTangentRischLevel` and
+   `sparseRecursiveTangentRischLevel` install the selected coupled solver and checked special stage,
+   while retaining polynomial and normal stages as explicit dependencies. The semantic completeness
+   upgrade remains.
 
 ## Verification sequence
 

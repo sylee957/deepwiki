@@ -145,6 +145,23 @@ instance instCompleteCTangentSpecialIntegratorRecursive (S : CTangentCoupledSolv
   unfold recursiveTangentSpecialIntegrator recursiveTangentSpecialDomain
   infer_instance
 
+/-- Install the selected recursive tangent special stage and coupled solver into a dense Risch level. -/
+def recursiveTangentRischLevel [CLinearSolve ℚ]
+    (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+    (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : CRischLevel DensePoly (DenseFrac ℚ) :=
+  tangentRischLevel R kind raw tangentCoupledSolver (recursiveTangentSpecialIntegrator config I)
+
+/-- Install the selected recursive tangent special stage and coupled solver into a sparse Risch level. -/
+def sparseRecursiveTangentRischLevel [CLinearSolve ℚ]
+    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (kind : PolynomialReductionKind) (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator (DenseFrac ℚ))
+    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
+    CRischLevel CPoly.SparsePoly (DenseFrac ℚ) :=
+  sparseTangentRischLevel R kind raw tangentCoupledSolver (recursiveTangentSpecialIntegrator config I)
+
 /-! ## Executable validation -/
 
 /-- Polynomial-only coefficient integrator used to exercise the outer tangent recursion over `ℚ(x)`. -/
