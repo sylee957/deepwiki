@@ -32,7 +32,6 @@ open scoped Differential
 universe u v
 
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α]
-  [CFracGcdCoreWf α] [LawfulCPolyGcd.{u,v} DensePoly α] [Algebra ℚ (CFieldSpec.K α)]
 
 /-- **Broad (algebraic-residue) elementary integrability.** `a/d` has an antiderivative in the extended
 Liouville form `⟦rational⟧ + Σᵢ Σ_{Rᵢ(c)=0} c·log(Sᵢ(c,t))` — an `LrtResult`, whose residue coefficients
@@ -41,7 +40,6 @@ restricts the coefficients to `K`. -/
 def IsElementaryIntegrableLrt (Dt a d : DensePoly α) : Prop :=
   ∃ res : LrtResult α, IsIntegralResultLrt Dt a d res
 
-omit [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The LRT soundness→completeness bridge.** Any `IsIntegralResultLrt` witness makes `a/d`
 elementary-integrable in the broad (algebraic-residue) sense — verbatim, the LRT analogue of
 `IsElementaryIntegrable.of_isIntegralResult`. -/
@@ -85,7 +83,7 @@ class PrimitiveFrontierLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField 
 instance (priority := low) instPrimitiveFrontierLrtOfReduced [CPolyGcd DensePoly α]
     [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
     [CPolySubresultant DensePoly] [LawfulCPolyGcd.{u, v} DensePoly α]
-    [CharZero (CFieldSpec.K α)] [LawfulCPolySplitFactor DensePoly α]
+    [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] [LawfulCPolySplitFactor DensePoly α]
     [LrtReducedProperFrontier α] :
     PrimitiveFrontierLrt α where
   hreducedLrt := fun Dt a d hd0 hDt0 =>
@@ -96,27 +94,14 @@ instance (priority := low) instPrimitiveFrontierLrtOfReduced [CPolyGcd DensePoly
     LrtReducedProperFrontier.rational_den_nonzero Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (crNormDen_ne_zero_of_lawfulSplit Dt a d hd0) hDt0
 
-omit [Algebra ℚ (CFieldSpec.K α)] in
-/-- **`hreducedLrt` from a universal reduced soundness.** If `cIntegrateReducedLrt` is sound on *every*
-reduced input `(a', d')` with `d' ≠ 0` (which `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` supplies
-per input, modulo the genuine side conditions), then the frontier field `hreducedLrt` holds — specialize to
-the canonical normalized parts `(cₙ, dₙ)`, whose denominator is nonzero (`crNormDen_ne_zero_of_charZero`). -/
-theorem hreducedLrt_of_reducedSoundLrt [CharZero (CFieldSpec.K α)]
-    (hRed : ∀ (Dt a' d' : DensePoly α), toPoly d' ≠ 0 → (toPoly Dt).natDegree = 0 →
-      IsIntegralResultLrt Dt a' d' (cIntegrateReducedLrt Dt a' d'))
-    (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
-    IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
-      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)) := by
-  exact hRed Dt (crNormNum Dt a d) (crNormDen Dt a d)
-    (crNormDen_ne_zero_of_charZero Dt a d hd0) hDt0
-
 /-- **★ `hreducedLrt` closed from the genuine data.** Threading the assembled `of_genuine` soundness through
-`hreducedLrt_of_reducedSoundLrt`: if the genuine Rothstein–Trager residue-data + tower-nondegeneracy conditions
-(`LrtReducedGenuineData`) hold for *every* reduced input, then the LRT primitive reduced frontier `hreducedLrt`
-holds. This closes the frontier down to those **necessary** conditions — no rational-residue restriction, no
-opaque soundness field. The separate denominator frontier is supplied alongside this result when materializing
-`PrimitiveFrontierLrt`. -/
-theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
+the canonical normalized input: if the genuine Rothstein–Trager residue-data + tower-nondegeneracy conditions
+(`LrtReducedGenuineData`) hold for every reduced input, then the LRT primitive reduced frontier `hreducedLrt`
+holds. This closes the frontier down to those necessary conditions, with no rational-residue restriction or
+opaque soundness field. -/
+theorem hreducedLrt_of_genuineAll [CFracGcdCoreWf α] [LawfulCPolyGcd.{u,v} DensePoly α]
+    [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (hgen : ∀ (Dt a' d' : DensePoly α), toPoly d' ≠ 0 → LrtReducedGenuineData Dt a' d')
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0) :
     IsIntegralResultLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)
@@ -129,10 +114,10 @@ theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorr
     (crNormNum_degree_lt_crNormDen Dt a d hd0)
     (hgen Dt (crNormNum Dt a d) (crNormDen Dt a d) (crNormDen_ne_zero_of_charZero Dt a d hd0))
 
-omit [LawfulCPolyGcd.{u, v} DensePoly α] in
 /-- The concrete well-founded reduced-integrator proof supplies the representation-independent proper-result
 contract. This is a provider boundary: consumers use `LrtReducedProperFrontier`, not the Wf gcd realization. -/
-theorem lrtReducedProperFrontier_of_genuineAll [CharZero (CFieldSpec.K α)]
+theorem lrtReducedProperFrontier_of_genuineAll [CFracGcdCoreWf α]
+    [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
     (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
     (hgen : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
     (hden : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
@@ -145,7 +130,9 @@ theorem lrtReducedProperFrontier_of_genuineAll [CharZero (CFieldSpec.K α)]
 
 -- The closure genuinely constructs the frontier: given the genuine data for every reduced input, a
 -- `PrimitiveFrontierLrt` instance follows (hence the whole assembled root-free LRT solver).
-example [CharZero (CFieldSpec.K α)] [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
+example [CFracGcdCoreWf α] [LawfulCPolyGcd.{u,v} DensePoly α]
+    [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+    [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))]
     (hgen : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
     (hden : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
       toPoly (cIntegrateReducedLrt Dt a d).rational.2 ≠ 0) :
@@ -155,13 +142,13 @@ example [CharZero (CFieldSpec.K α)] [Fact (CgcdBCorrect (CFracGcdCoreWf.cgcdFFC
       (Fact.out (p := CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))) hgen hden
   infer_instance
 
-omit [CFracGcdCoreWf α] [LawfulCPolyGcd.{u, v} DensePoly α] in
 /-- **The frontier certifies broad elementary integrability of the reduced normal part.** From a
 `PrimitiveFrontierLrt` instance, the canonical normal part `cₙ/dₙ` is elementary-integrable in the
 algebraic-residue sense — the LRT analogue of the reduced-part payoff of `PrimitiveFrontier`. -/
 theorem isElementaryIntegrableLrtG_crNorm_of_frontier [CharZero (CFieldSpec.K α)]
     [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
-    [CPolyResultant DensePoly] [CPolySubresultant DensePoly] [PrimitiveFrontierLrt α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    [Algebra ℚ (CFieldSpec.K α)] [PrimitiveFrontierLrt α]
     (Dt a d : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hDt0 : (toPoly Dt).natDegree = 0) :
     IsElementaryIntegrableLrt Dt (crNormNum Dt a d) (crNormDen Dt a d) :=

@@ -133,6 +133,14 @@ denotations does not make those terms definitionally equal.
   `CPolySplitFactor` capabilities consumed by `cRischDE`, instead of advertising the concrete
   `CFracGcdCoreWf` selector. Two unreferenced implementation-unfolding theorems were deleted rather than
   hidden with `private`; neither was part of a used semantic API.
+- `RischTowerPrimitiveLrt.lean` no longer carries concrete fraction-free gcd and algebra constraints across
+  the whole file. They are local to the genuine-data realization theorems and grounding example; the frontier
+  classes and composition payoff expose selected capabilities. An unused universal-soundness adapter was
+  deleted, while the cross-file grounding bridge remains public.
+- Access modifiers follow actual reachability: the generic squarefree loop is ordinary public API because its
+  cross-file simulation proof consumes it. It is not `protected`, which would only alter name resolution and
+  misleadingly suggest dot-notation intent; downstream algorithms still consume the selected squarefree
+  operation and lawful result contract rather than calling the loop directly.
 
 ## Verification
 
