@@ -250,5 +250,11 @@ instance instLawfulCCanonicalRepresentationDense [CPolySplitFactor DensePoly α]
     change (CPoly.toPoly (crNormNum Dt a d)).degree < (CPoly.toPoly (crNormDen Dt a d)).degree
     simpa only [toPoly_list_eq] using
       crNormNum_degree_lt_crNormDen_of_lawfulSplit Dt a d (by simpa only [toPoly_list_eq] using hd)
+  normal_isNormalSqfree Dt a d hd := by
+    have hsplit := LawfulCPolySplitFactor.compute_isSplittingFactorizationGen' Dt d
+      (by simpa only [toPoly_list_eq] using hd)
+    change @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
+      (CPoly.toPoly (crNormDen Dt a d))
+    simpa only [crNormDen, canonicalRepresentationFast, toPoly_list_eq] using hsplit.2.2
 
 end DeepWiki.SymbolicIntegration

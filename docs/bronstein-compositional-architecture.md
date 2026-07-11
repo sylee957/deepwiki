@@ -31,6 +31,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   reconstruction and completeness relative to a lawful residue source and a genuine logarithmic witness.
 - `reduceNormal` composes Hermite and residue-log operations; `reduceNormal_sound` and
   `reduceNormal_complete` prove the normal branch by contract composition only.
+- `assembleOneLevel` is the first executable representation-neutral Figure-5.1 spine: canonical split,
+  special integration, `reduceNormal`, monomial-specific normal postprocessing, and recombination.
+  `assembleOneLevel_sound` derives its full one-level identity solely from lawful capability instances.
 - `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
   obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only
@@ -76,9 +79,10 @@ monomial stage contracts.
    operation/law interfaces and a generic normal-branch composition; materialize their lawful dense and
    sparse realizations next.
 4. Define one generic Figure-5.1 one-level assembler and prove its soundness from only the stage
-   contracts. The contract-level recombination and normal-branch soundness/completeness combiners are
-   complete; next make the full executable assembler call `reduceNormal` and polynomial reduction, then
-   prove relative completeness parameterized by complete stage capabilities.
+   contracts. The executable assembler now calls `reduceNormal`, and its contract-only soundness theorem
+   is complete. Next separate polynomial reduction from `CMonomialCase.integrateSpecial` and add the
+   semantic completeness law for normal postprocessing; those two laws unblock one-level relative
+   completeness parameterized by complete stage capabilities.
 5. Materialize primitive, hyperexponential, and tangent realizers. Move their concrete proofs next
    to their executable operations and make the old full drivers corollaries.
 6. Lift the same contract composition through `LawfulRischLevel` / `LawfulRischLevelLrt` for tower

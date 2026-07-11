@@ -64,6 +64,24 @@ theorem reduceNormal_sound [CHermiteReduction P α] [LawfulCHermiteReduction (P 
       _ = am α (CPoly.toPoly a) / am α (CPoly.toPoly d) := hherm.field_identity
 
 omit [LawfulCPolyEngine P] in
+/-- Successful normal reduction has a nonzero rational-part denominator. -/
+theorem reduceNormal_rationalDen_nonzero [CHermiteReduction P α]
+    [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
+    [CResidueLogPart P α] (Dt a d : P α) (out : IntegralResult α P)
+    (hd : CPoly.toPoly d ≠ 0)
+    (hnormal : @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
+      (CPoly.toPoly d))
+    (hrun : reduceNormal Dt a d = some out) :
+    CPoly.toPoly out.rational.2 ≠ 0 := by
+  cases hlogs : CResidueLogPart.compute Dt (hermiteResult Dt a d).remainderNum
+      (hermiteResult Dt a d).remainderDen with
+  | none => simp [reduceNormal, hlogs] at hrun
+  | some logs =>
+    simp only [reduceNormal, hlogs, Option.some.injEq] at hrun
+    subst out
+    exact LawfulCHermiteReduction.rationalDen_nonzero Dt a d hd hnormal
+
+omit [LawfulCPolyEngine P] in
 /-- A complete residue source makes normal reduction succeed whenever its Hermite remainder has a genuine
 logarithmic antiderivative. -/
 theorem reduceNormal_complete [CHermiteReduction P α]

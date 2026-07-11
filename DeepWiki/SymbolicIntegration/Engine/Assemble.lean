@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
+import DeepWiki.SymbolicIntegration.Engine.NormalReduction
 
 /-! # The abstract one-level Risch assembler (Stage-1)
 
@@ -119,11 +120,25 @@ class LawfulCCanonicalRepresentation [CCanonicalRepresentation P α] : Prop wher
   normal_proper : ∀ (Dt a d : P α), CPoly.toPoly d ≠ 0 →
     (CPoly.toPoly (CCanonicalRepresentation.compute Dt a d).normalNum).degree <
       (CPoly.toPoly (CCanonicalRepresentation.compute Dt a d).normalDen).degree
+  /-- The canonical normal denominator is differential normal-squarefree. -/
+  normal_isNormalSqfree : ∀ (Dt a d : P α), CPoly.toPoly d ≠ 0 →
+    @IsNormalSqfree _ _ ⟨Differential.implicitDeriv (CPoly.toPoly Dt)⟩
+      (CPoly.toPoly (CCanonicalRepresentation.compute Dt a d).normalDen)
 
 /-- The selected canonical decomposition for `Dt`, `a`, and `d`. -/
 abbrev canonicalResult [CCanonicalRepresentation P α] (Dt a d : P α) :
     CanonicalRepresentationResult P α :=
   CCanonicalRepresentation.compute Dt a d
+
+/-- Execute one compositional integration level through canonical, special, normal, and recombination stages. -/
+def assembleOneLevel (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α]
+    (Dt a d : P α) : Option (IntegralResult α P) := do
+  let split := canonicalResult Dt a d
+  let (snum, sden) ← C.integrateSpecial Dt split.polynomial split.specialNum split.specialDen
+  let before ← reduceNormal Dt split.normalNum split.normalDen
+  let normal ← C.postprocessNormal Dt before
+  pure (combineSN snum sden normal)
 
 /-- **Representation-independent assembler recombination.** A special fraction whose derivative is
 `specialVal`, a normal result for `cn/dn`, and their reconstruction of `a/d` combine into an integral result.
@@ -182,6 +197,40 @@ theorem assembleOneLevelP_sound (C : CMonomialCase P α) [CCanonicalRepresentati
       fieldFracP (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen)
     hsden hnrmDen hspecialField hnrm ?_
   simpa only [add_assoc] using hcanonical
+
+/-- A successful generic one-level assembly is an integral result of its input. -/
+theorem assembleOneLevel_sound (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
+    [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
+    [CResidueSource P α] [CResidueLogPart P α]
+    [LawfulCResidueLogPart (P := P) (α := α)] (Dt a d : P α) (out : IntegralResult α P)
+    (hd : CPoly.toPoly d ≠ 0) (hdegree : (CPoly.toPoly Dt).degree ≤ 1)
+    (hrun : assembleOneLevel C Dt a d = some out) :
+    IsIntegralResultP Dt a d out := by
+  cases hspecial : C.integrateSpecial Dt (canonicalResult Dt a d).polynomial
+      (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen with
+  | none => simp [assembleOneLevel, hspecial] at hrun
+  | some special =>
+    obtain ⟨snum, sden⟩ := special
+    cases hnormal : reduceNormal Dt (canonicalResult Dt a d).normalNum
+        (canonicalResult Dt a d).normalDen with
+    | none => simp [assembleOneLevel, hspecial, hnormal] at hrun
+    | some before =>
+      cases hpost : C.postprocessNormal Dt before with
+      | none => simp [assembleOneLevel, hspecial, hnormal, hpost] at hrun
+      | some normal =>
+        have hout : combineSN snum sden normal = out := by
+          simpa [assembleOneLevel, hspecial, hnormal, hpost] using hrun
+        subst out
+        have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
+        have hnormalForm := LawfulCCanonicalRepresentation.normal_isNormalSqfree Dt a d hd
+        have hnormalProper := LawfulCCanonicalRepresentation.normal_proper Dt a d hd
+        have hbefore := reduceNormal_sound Dt (canonicalResult Dt a d).normalNum
+          (canonicalResult Dt a d).normalDen before hnormalDen hnormalForm hnormalProper hdegree hnormal
+        have hbeforeDen := reduceNormal_rationalDen_nonzero Dt (canonicalResult Dt a d).normalNum
+          (canonicalResult Dt a d).normalDen before hnormalDen hnormalForm hnormal
+        exact assembleOneLevelP_sound C Dt a d before normal snum sden hd hbefore hbeforeDen
+          hspecial hpost
 
 namespace DensePoly
 
