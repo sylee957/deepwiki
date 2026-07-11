@@ -164,31 +164,4 @@ theorem combineSN_isIntegralResultP (Dt a d cn dn snum sden : P α) (nrm : Integ
   rw [hSpecField, add_assoc, hNrmField]
   simpa only [fieldFracP] using hrecon
 
-/-- **Generic one-level Risch assembly soundness.** A lawful canonical decomposition, a lawful monomial-case
-special integration, and a certified normal result compose to an integral result of the original input. No
-concrete polynomial representation or reduction implementation occurs in this theorem. -/
-theorem assembleOneLevelP_sound (C : CMonomialCase P α) [CCanonicalRepresentation P α]
-    [LawfulCMonomialCase C] [LawfulCCanonicalRepresentation (P := P) (α := α)]
-    (Dt a d : P α) (before nrm : IntegralResult α P) (snum sden : P α)
-    (hd : CPoly.toPoly d ≠ 0) (hbefore : IsIntegralResultP Dt
-      (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before)
-    (hbeforeDen : CPoly.toPoly before.rational.2 ≠ 0)
-    (hspecial : C.integrateSpecial Dt (canonicalResult Dt a d).polynomial
-      (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen = some (snum, sden))
-    (hpost : C.postprocessNormal Dt before = some nrm) :
-    IsIntegralResultP Dt a d (combineSN snum sden nrm) := by
-  obtain ⟨hsden, hspecialField⟩ := LawfulCMonomialCase.special_sound (C := C) Dt
-    (canonicalResult Dt a d).polynomial (canonicalResult Dt a d).specialNum
-    (canonicalResult Dt a d).specialDen snum sden hspecial
-  have hnrm := LawfulCMonomialCase.postprocessNormal_sound (C := C) Dt
-    (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before nrm hbefore hpost
-  have hnrmDen := LawfulCMonomialCase.postprocessNormal_den_nonzero (C := C) Dt before nrm hbeforeDen hpost
-  have hcanonical := LawfulCCanonicalRepresentation.reconstruction Dt a d hd
-  refine combineSN_isIntegralResultP Dt a d (canonicalResult Dt a d).normalNum
-    (canonicalResult Dt a d).normalDen snum sden nrm
-    (fieldFracP (canonicalResult Dt a d).polynomial CPoly.one +
-      fieldFracP (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen)
-    hsden hnrmDen hspecialField hnrm ?_
-  simpa only [add_assoc] using hcanonical
-
 end DeepWiki.SymbolicIntegration
