@@ -12,6 +12,7 @@ import DeepWiki.ComputableAlgebra.PolyEngineLawful
 import DeepWiki.ComputableAlgebra.PolyEngineDense
 import DeepWiki.ComputableAlgebra.PolyEngineSparse
 import DeepWiki.ComputableAlgebra.PolyEngine
+import DeepWiki.ComputableAlgebra.PolyReprConvert
 import DeepWiki.ComputableAlgebra.PolyAntiderivative
 import DeepWiki.ComputableAlgebra.PolyReprDivision
 import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
