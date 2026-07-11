@@ -67,6 +67,7 @@ import DeepWiki.SymbolicIntegration.Engine.ResidueConstantBridge
 import DeepWiki.SymbolicIntegration.Engine.TransferExamples
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPartDense
+import DeepWiki.SymbolicIntegration.Engine.ResidueLogPartSparse
 import DeepWiki.SymbolicIntegration.Engine.ResidueSource
 import DeepWiki.SymbolicIntegration.Engine.NormalReduction
 import DeepWiki.SymbolicIntegration.Engine.ResidueMatchSoundness
