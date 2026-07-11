@@ -79,7 +79,7 @@ instance instCDiffFieldCFrac : CDiffField (F α) where
 
 end
 
-/-! ### The level-2 derivation computes (`native_decide`) -/
+/-! ### The level-2 derivation computes (`ccompute`) -/
 
 /-- A level-2 scalar `c ∈ Lvl2 = DenseFrac (DenseFrac ℚ) = ℚ(x)(t₁)` from a numerator/denominator pair of
 `DensePoly (DenseFrac ℚ)`s, with denominator a nonzero singleton `[d]`. -/
@@ -90,7 +90,7 @@ def lvl2OfList (num : DensePoly (DenseFrac ℚ)) (d : DenseFrac ℚ)
 /-- The level-2 scalar `t₁ ∈ ℚ(x)(t₁)` (numerator `[0, 1]` over ℚ(x): `t₁ = 0 + 1·t₁`, denominator
 `[1]`). -/
 def lvl2T1 : Lvl2 :=
-  lvl2OfList [(CCommRing.zero : DenseFrac ℚ), CCommRing.one] (CCommRing.one : DenseFrac ℚ) (by native_decide)
+  lvl2OfList [(CCommRing.zero : DenseFrac ℚ), CCommRing.one] (CCommRing.one : DenseFrac ℚ) (by cfrac_nonzero)
 
 /-! #### The level-2 scalar derivation `towerDerivCFrac` reduces -/
 
@@ -98,15 +98,15 @@ def lvl2T1 : Lvl2 :=
 the difference). -/
 theorem lvl2_deriv_t1_eq_one :
     CCommRing.isZero
-      (CField.sub (CDiffField.cderiv lvl2T1) (CCommRing.one : Lvl2)) = true := by native_decide
+      (CField.sub (CDiffField.cderiv lvl2T1) (CCommRing.one : Lvl2)) = true := by ccompute
 
 -- `D(1) = 0` at level 2: the derivation annihilates the constant `1`.
 example :
-    CCommRing.isZero (CDiffField.cderiv (CCommRing.one : Lvl2)) = true := by native_decide
+    CCommRing.isZero (CDiffField.cderiv (CCommRing.one : Lvl2)) = true := by ccompute
 
 -- `D(0) = 0` at level 2: the derivation annihilates `0`.
 example :
-    CCommRing.isZero (CDiffField.cderiv (CCommRing.zero : Lvl2)) = true := by native_decide
+    CCommRing.isZero (CDiffField.cderiv (CCommRing.zero : Lvl2)) = true := by ccompute
 
 /-! #### The level-2 monomial derivation `cmonomialDeriv` reduces over `ℚ(x)(t₁)[t₂]` -/
 
@@ -124,26 +124,26 @@ def lvl2TwoT2 : DensePoly Lvl2 := [CCommRing.zero, CCommRing.add CCommRing.one C
 `2·t₂` (checked via `cisZero` of the difference). -/
 theorem lvl2_monomialDeriv_t2sq_eq_two_t2 :
     DensePoly.cisZero (DensePoly.csub (DensePoly.cmonomialDeriv lvl2Dt2 lvl2T2sq) lvl2TwoT2) = true := by
-  native_decide
+  ccompute
 
 -- `D(t₂) = 1` over `ℚ(x)(t₁)[t₂]`: `cmonomialDeriv` of the monomial `t₂` is the constant `1`.
 example :
     DensePoly.cisZero (DensePoly.csub
       (DensePoly.cmonomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), CCommRing.one]) [CCommRing.one]) = true := by
-  native_decide
+  ccompute
 
 -- `D(t₁·t₂)` over `ℚ(x)(t₁)[t₂]` is nonzero (`cisZero = false`): `cmonomialDeriv`
 -- differentiates the `t₂`-coefficients too, not just the `d/dt₂` part.
 example :
     DensePoly.cisZero (DensePoly.cmonomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), lvl2T1]) = false := by
-  native_decide
+  ccompute
 
 -- `D(t₁·t₂) = t₁ + t₂` over `ℚ(x)(t₁)[t₂]` (checked via `cisZero` of the difference
 -- against `[t₁, 1]`).
 example :
     DensePoly.cisZero (DensePoly.csub
       (DensePoly.cmonomialDeriv lvl2Dt2 [(CCommRing.zero : Lvl2), lvl2T1])
-      [lvl2T1, (CCommRing.one : Lvl2)]) = true := by native_decide
+      [lvl2T1, (CCommRing.one : Lvl2)]) = true := by ccompute
 
 /-- The independent sparse tower monomial `t`. -/
 def sparseTowerT : SparseFrac ℚ :=
@@ -152,8 +152,7 @@ def sparseTowerT : SparseFrac ℚ :=
 /-- The generic iterated derivation computes `D(t) = 1` for `SparseFrac`. -/
 theorem sparseTowerT_deriv_eq_one :
     CCommRing.isZero
-      (CField.sub (CDiffField.cderiv sparseTowerT) (CCommRing.one : SparseFrac ℚ)) = true := by
-  native_decide
+      (CField.sub (CDiffField.cderiv sparseTowerT) (CCommRing.one : SparseFrac ℚ)) = true := by ccompute
 
 /-! ### The abstract bridge `toRatFunc (towerDerivCFrac Dt x) = extendDeriv …` -/
 
@@ -184,19 +183,4 @@ theorem toRatFunc_towerDerivCFracWith (Dt : P α) (x : F α) :
 
 
 end CFrac
-
-/-! ### Axiom audit -/
-
--- The level-2 scalar derivation `D(t₁) = 1` (`native_decide`):
--- `[propext, Classical.choice, Quot.sound, lvl2T1._native…, lvl2_deriv_t1_eq_one._native…]`.
-#print axioms lvl2_deriv_t1_eq_one
-
--- The level-2 monomial derivation `D(t₂²) = 2·t₂` (`native_decide`):
--- `[propext, Classical.choice, Quot.sound, lvl2_monomialDeriv_t2sq_eq_two_t2._native…]`.
-#print axioms lvl2_monomialDeriv_t2sq_eq_two_t2
-
--- The abstract bridge (computable tower derivation vs `extendDeriv`):
--- `[propext, Classical.choice, Quot.sound]` (no native axiom — it is a proof, not a computation).
-#print axioms CFrac.toRatFunc_towerDerivCFracWith
-
 end DeepWiki.SymbolicIntegration
