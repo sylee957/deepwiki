@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.PolynomialAssembly
+import DeepWiki.SymbolicIntegration.Engine.RecursiveMonomialCase
 
 /-! # Compositional Risch-level interface
 
@@ -49,6 +50,13 @@ def oneLevelRischWithPolynomial (R : CPolynomialReduction P α) (kind : Polynomi
     (C : CMonomialCase P α) [CCanonicalRepresentation P α]
     [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α] : CRischLevel P α where
   integrate fuel Dt a d := assembleOneLevelWithPolynomial R kind fuel C Dt a d
+
+/-- The Figure-5.1 level with an explicit recursively supplied coefficient-field stage. -/
+def oneLevelRischWithRecursiveCoefficient (R : CPolynomialReduction P α)
+    (kind : PolynomialReductionKind) (C : CRecursiveMonomialCase P α)
+    (I : CRecursiveCoefficientIntegrator α) [CCanonicalRepresentation P α]
+    [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α] : CRischLevel P α :=
+  oneLevelRischWithPolynomial R kind (C.withCoefficient I)
 
 /-- Domain of the Hermite-based assembler: monomial derivatives of degree at most one. -/
 def lowDerivDegreeRischLevelDomain : RischLevelDomain P α :=

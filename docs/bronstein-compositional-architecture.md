@@ -16,6 +16,10 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `CMonomialCase P` is now the representation-parameterized, Prop-free operation interface used by
   dense and recursive realizers; `LawfulCMonomialCase` separates its soundness, denominator preservation,
   and normal-postprocessing laws, while `CompleteCMonomialCase` records relative completeness separately.
+- `CRecursiveMonomialCase P` makes the lower coefficient-field reduction an explicit input to a
+  tower monomial stage.  Its `Lawful…` and `Complete…` contracts lift any lawful/complete
+  `CRecursiveCoefficientIntegrator` into the existing `CMonomialCase` contract, so the generic
+  Figure-5.1 assembler remains representation- and solver-neutral.
 - `CCanonicalRepresentation`/`LawfulCCanonicalRepresentation` have dense and sparse-facing
   realizations. The sparse realization transports the dense backend through denotation-preserving
   polynomial conversion.
@@ -53,7 +57,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   reduction stages into a sound sparse Figure-5.1 level.
 - `CRischLevel` packages a one-level executable solver, while `LawfulCRischLevel` states soundness and
   `CompleteCRischLevel` separately states relative completeness over an explicit semantic domain.
-  `oneLevelRischWithPolynomial` packages the generic assembler; `lowDerivDegreeRischLevelDomain` records
+  `oneLevelRischWithPolynomial` packages the generic assembler and
+  `oneLevelRischWithRecursiveCoefficient` installs an explicit lower coefficient stage;
+  `lowDerivDegreeRischLevelDomain` records
   its `deg Dt ≤ 1` Hermite boundary plus explicit stage-decomposition witnesses.
 - `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
