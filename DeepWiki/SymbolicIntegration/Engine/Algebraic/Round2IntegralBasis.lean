@@ -75,7 +75,8 @@ def traceMatrixAtRoot (f : DensePoly (DenseFrac ℚ)) (a : ℚ) : List (List ℚ
 `I_p = { z ∈ O : p ∣ Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ` (rows = basis vectors in power coordinates).
 The selected kernel of `traceMatrixAtRoot f a` (`CLinearSolve.nullspaceBasis`) lifts to constant coordinate rows which, with the
 `p·ωᵢ` rows, generate `I_p ⊇ p·O`; `hermiteRowReduce` triangularizes to the basis. -/
-def pTraceRadical (f : DensePoly (DenseFrac ℚ)) (p : DensePoly ℚ) (a : ℚ) :
+def pTraceRadical [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) (p : DensePoly ℚ) (a : ℚ) :
     PolyMatrix DensePoly ℚ :=
   let n := cdeg f
   let kers : List (List ℚ) := CLinearSolve.nullspaceBasis (traceMatrixAtRoot f a) n
@@ -267,7 +268,7 @@ def isPowerBasis (n : ℕ) (basis : List (DensePoly (DenseFrac ℚ))) : Bool :=
 `O = CPoly.powerBasis f`, for the first bad prime `p = x − a`, computes the p-trace-radical `I_p` and the idealizer
 `Î = (I_p : I_p)`, returning `Î`'s basis and whether it strictly enlarged `O`. With no bad prime, returns the
 power basis with `grew = false`. -/
-def round2Step (f : DensePoly (DenseFrac ℚ)) :
+def round2Step [CLinearSolve ℚ] (f : DensePoly (DenseFrac ℚ)) :
     List (DensePoly (DenseFrac ℚ)) × Bool :=
   let n := cdeg f
   let O := CPoly.powerBasis f

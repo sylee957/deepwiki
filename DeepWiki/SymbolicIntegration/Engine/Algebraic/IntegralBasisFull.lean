@@ -39,7 +39,8 @@ def traceMatrixOrderAtRoot (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly 
 /-- The p-trace-radical `I_p` of an order `O` in `O`-coordinates: a `K[x]`-basis of
 `I_p = { z ∈ O : p | Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ`, from the kernel of `traceMatrixOrderAtRoot`
 together with the `p·O` generators, Hermite-reduced to the nonzero rows. -/
-def ipOCoords (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (p : DensePoly ℚ) (a : ℚ) :
+def ipOCoords [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (p : DensePoly ℚ) (a : ℚ) :
     PolyMatrix DensePoly ℚ :=
   let n := cdeg f
   let kers : List (List ℚ) := CLinearSolve.nullspaceBasis (traceMatrixOrderAtRoot f O a) n
@@ -162,7 +163,8 @@ def orderEq (n : ℕ) (O1 O2 : List (DensePoly (DenseFrac ℚ))) : Bool :=
 
 /-- One Round-2 enlargement of an order `O` at a linear prime `p`: compute the p-trace-radical
 `ipOCoords` and its idealizer `idealizerOCoords`, reduced to canonical form. -/
-def round2StepOrderAt (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (p : DensePoly ℚ) :
+def round2StepOrderAt [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (p : DensePoly ℚ) :
     List (DensePoly (DenseFrac ℚ)) :=
   let pm := cmonic p
   let a : ℚ := CCommRing.neg (pm.getD 0 CCommRing.zero)
@@ -170,7 +172,8 @@ def round2StepOrderAt (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (Dens
 
 /-- One full pass of Round-2 over all bad primes of `O`: `round2Pass f O = (O', grew)` folds
 `round2StepOrderAt` over every bad prime, reporting whether the order grew (`grew = ¬ orderEq O O'`). -/
-def round2Pass (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) :
+def round2Pass [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) :
     List (DensePoly (DenseFrac ℚ)) × Bool :=
   let n := cdeg f
   let O' := (badPrimesOrder f O).foldl (fun acc p => round2StepOrderAt f acc p) O
@@ -178,7 +181,7 @@ def round2Pass (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac �
 
 /-- The Round-2 iteration loop `integralBasisLoop fuel f O`: run `round2Pass` repeatedly until a pass
 leaves `O` unchanged — the maximal order. `fuel` bounds the iteration count by the discriminant degree. -/
-def integralBasisLoop (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) :
+def integralBasisLoop [CLinearSolve ℚ] (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) :
     List (DensePoly (DenseFrac ℚ)) → List (DensePoly (DenseFrac ℚ))
   | O =>
     match fuel with
@@ -190,13 +193,15 @@ def integralBasisLoop (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) :
 /-- The general-curve integral basis `integralBasis f`: iterate the Round-2 step from the equation
 order `[1, y, …, yⁿ⁻¹]` to the maximal order, whose `K[x]`-basis is the integral basis of
 `K(x, y) = K(x)[y]/(f)` (the functions with no finite poles). -/
-def integralBasis (f : DensePoly (DenseFrac ℚ)) : List (DensePoly (DenseFrac ℚ)) :=
+def integralBasis [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) : List (DensePoly (DenseFrac ℚ)) :=
   let fuel := cdeg (discNum f) + 1
   reduceOrder (integralBasisLoop fuel f (CPoly.powerBasis f))
 
 /-- `true` iff `O` is the maximal order: a Round-2 pass over `O` does not grow it
 (`¬ (round2Pass f O).2`). -/
-def isMaximalOrder (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) : Bool :=
+def isMaximalOrder [CLinearSolve ℚ]
+    (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) : Bool :=
   !(round2Pass f O).2
 
 end DensePoly

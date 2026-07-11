@@ -80,6 +80,9 @@ denotations does not make those terms definitionally equal.
   `CFracGcdCoreWf` implementation that happens to supply those capabilities in Wf drivers. The
   pure-normal and polynomial driver-shape theorems likewise quantify over the selected gcd, split,
   squarefree, and resultant operations used by `cIntegrateGFullWf`.
+- The Round-2 integral-basis pipeline now threads `[CLinearSolve ℚ]` from `pTraceRadical` and
+  `ipOCoords` through `round2Step`, the pass/iteration loop, and `integralBasis`. Fixed `ℚ` coefficients
+  no longer cause Lean to hardcode the global nullspace implementation into these executable drivers.
 
 ## Verification
 
