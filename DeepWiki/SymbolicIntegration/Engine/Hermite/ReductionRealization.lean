@@ -13,6 +13,18 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac
 
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- Dense realization of the representation-neutral transcendental Hermite-reduction operation. -/
+instance instCHermiteReductionDense [CPolySquarefree DensePoly α] :
+    CHermiteReduction DensePoly α where
+  compute Dt a d :=
+    let out := DensePoly.cHermiteReduceTower Dt a d
+    { rationalNum := out.1.1
+      rationalDen := out.1.2
+      remainderNum := out.2.1
+      remainderDen := out.2.2 }
+
 section Selected
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
