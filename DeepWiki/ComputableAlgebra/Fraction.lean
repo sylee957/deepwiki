@@ -128,6 +128,15 @@ def deriv {α : Type u} [CField α] [CFieldDomain α P] (x : F α) : F α :=
 is nonzero by membership, so `x = 0` iff its numerator vanishes). -/
 def isZero {α : Type u} [CField α] (x : F α) : Bool := CPolyEngine.cisZero (num x)
 
+/-- Evaluate a represented fraction at a coefficient-field point by evaluating its stored numerator
+and denominator. -/
+def eval {α : Type u} [CField α] (x : F α) (a : α) : α :=
+  CField.div (CPolyEngine.eval (num x) a) (CPolyEngine.eval (den x) a)
+
+/-- Fraction evaluation is the quotient of the selected polynomial evaluations of the stored pair. -/
+theorem eval_eq_div {α : Type u} [CField α] (x : F α) (a : α) :
+    eval x a = CField.div (CPolyEngine.eval (num x) a) (CPolyEngine.eval (den x) a) := rfl
+
 end CFrac
 
 /-! ### The generic computable field instance -/
@@ -143,6 +152,13 @@ instance instCFieldCFrac {F : (α : Type u) → [CField α] → Type u}
   neg := CFrac.neg
   inv := CFrac.inv
   isZero := CFrac.isZero
+
+/-! The same evaluation API executes over sparse fraction and polynomial storage. -/
+
+example :
+    let p : CPoly.SparsePoly ℚ := CPoly.SparsePoly.ofList [(0, 1), (1, 1)]
+    CFrac.eval (CFrac.ofPoly (F := SparseFrac) p) 2 = 3 := by
+  native_decide
 
 /-! ### The bridge `toRatFunc` into `RatFunc (CFieldSpec.K α)` and its homomorphism laws -/
 

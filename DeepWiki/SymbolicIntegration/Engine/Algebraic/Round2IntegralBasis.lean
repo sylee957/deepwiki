@@ -14,21 +14,10 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-namespace DensePoly
-
-variable {α : Type*} [CField α]
-
 /-! ### Residue-field reduction at a linear prime `p = x − a`
 
-For a linear prime `p = x − a`, the residue field `K[x]/(p) = K` and reduction mod `p` is evaluation at
-the root `a` (`qEvalAtRoot`). -/
-
-/-- Evaluate a `ℚ(x)` element at a root `a`: `qEvalAtRoot z a = num(a)/den(a) ∈ ℚ`, Horner-evaluating the
-numerator and denominator of `z : DenseFrac ℚ` and dividing. The reduction `z mod (x − a)`. -/
-def qEvalAtRoot (z : DenseFrac ℚ) (a : ℚ) : ℚ :=
-  CField.div (ceval z.num a) (ceval z.den a)
-
-end DensePoly
+For a linear prime `p = x − a`, the residue field `K[x]/(p) = K` and reduction mod `p` is
+`CFrac.eval` at the root `a`. -/
 
 /-! ### Bad primes: squarefree factors of the discriminant with `p² ∣ d` (`badPrimes`) -/
 
@@ -80,10 +69,10 @@ def afCoordRow (n : ℕ) (z : DensePoly (DenseFrac ℚ)) : List (DensePoly ℚ) 
   (List.range n).map (fun i => (z.getD i CCommRing.zero : DenseFrac ℚ).num)
 
 /-- The trace matrix reduced at a linear prime root `a` `traceMatrixAtRoot f a`: the `n×n` `ℚ`-matrix
-`CPoly.traceMatrix f (CPoly.powerBasis f)` with every entry evaluated at `x = a` (`qEvalAtRoot`), i.e. `T mod (x − a)`.
+`CPoly.traceMatrix f (CPoly.powerBasis f)` with every entry evaluated at `x = a` (`CFrac.eval`), i.e. `T mod (x − a)`.
 Its kernel is the p-trace-radical mod `p`. -/
 def traceMatrixAtRoot (f : DensePoly (DenseFrac ℚ)) (a : ℚ) : List (List ℚ) :=
-  (CPoly.traceMatrix f (CPoly.powerBasis f)).map (fun row => row.map (fun e => qEvalAtRoot e a))
+  (CPoly.traceMatrix f (CPoly.powerBasis f)).map (fun row => row.map (fun e => CFrac.eval e a))
 
 /-- The p-trace-radical `I_p` at a linear prime `p = x − a` `pTraceRadical f p a`: a `K[x]`-basis of
 `I_p = { z ∈ O : p ∣ Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ` (rows = basis vectors in power coordinates).

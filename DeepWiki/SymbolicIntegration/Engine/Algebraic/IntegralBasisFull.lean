@@ -47,10 +47,10 @@ kernel of the trace matrix `CPoly.traceMatrix f O` evaluated at `a`, expressed i
 is an integral `K[x]`-lattice (no denominators), Hermite-reduced. -/
 
 /-- The trace matrix of an order `O` evaluated at a linear prime root `a`: the `n×n` `ℚ`-matrix
-`CPoly.traceMatrix f O` with every entry evaluated at `x = a` (`qEvalAtRoot`). -/
+`CPoly.traceMatrix f O` with every entry evaluated at `x = a` (`CFrac.eval`). -/
 def traceMatrixOrderAtRoot (f : DensePoly (DenseFrac ℚ)) (O : List (DensePoly (DenseFrac ℚ))) (a : ℚ) :
     List (List ℚ) :=
-  (CPoly.traceMatrix f O).map (fun row => row.map (fun e => qEvalAtRoot e a))
+  (CPoly.traceMatrix f O).map (fun row => row.map (fun e => CFrac.eval e a))
 
 /-- The p-trace-radical `I_p` of an order `O` in `O`-coordinates: a `K[x]`-basis of
 `I_p = { z ∈ O : p | Tr(z·ωⱼ) ∀j }` as a `PolyMatrix DensePoly ℚ`, from the kernel of `traceMatrixOrderAtRoot`
@@ -333,14 +333,14 @@ theorem biCusp_integralBasis_eq :
 /-! ### The NEXT piece: higher-degree (non-linear) bad primes, and the genus
 
 `integralBasis` now iterates Round-2 to the maximal order for **linear** bad primes `p = x − a` (the residue
-field `K[x]/(p) = K`, so the trace-matrix kernel mod `p` is a single root evaluation `qEvalAtRoot`). The two
+field `K[x]/(p) = K`, so the trace-matrix kernel mod `p` is a single root evaluation `CFrac.eval`). The two
 remaining pieces:
 
 1. **Higher-degree bad primes.** For a bad prime `p` of degree `> 1` (e.g. an irreducible quadratic
    `x² + 1` over `ℚ`), the residue field `K[x]/(p)` is a proper field **extension** of `K`. The mod-`p`
    trace-matrix kernel is then linear algebra **over `K[x]/(p)`** — arithmetic on `DensePoly ℚ` reduced mod `p`
    (a degree-`< deg p` representative ring), not a single evaluation at a root. The construction is otherwise
-   identical (`ipOCoords`'s residue-kernel in `O`-coords + `idealizerOCoords`): replace `qEvalAtRoot` /
+   identical (`ipOCoords`'s residue-kernel in `O`-coords + `idealizerOCoords`): replace `CFrac.eval` /
    `CLinearSolve.nullspaceBasis` over `K` by their `K[x]/(p)`-coefficient analogues (selected remainder arithmetic in the Gauss
    elimination). The linear case here already covers the cusp/node and the multi-step/multi-prime curves
    above (all bad primes `x`, `x − 1`).

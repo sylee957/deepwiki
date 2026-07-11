@@ -128,6 +128,9 @@ runs the same fraction algorithm.
    fraction witnesses execute the same definition, while the num/den callback remains an explicit dense boundary.
    The base properness and parametric logarithmic-derivative recognizers also moved from `DensePoly` to `CFrac`;
    coefficient extraction now uses `CPoly.coeff`, and a sparse-fraction witness shares the recognizer body.
+   Point evaluation now belongs to the symmetric fraction API as `CFrac.eval`, selecting polynomial evaluation
+   for the stored representation; the dense-only `qEvalAtRoot` helper was retired and Round-2 trace reduction
+   consumes the generic operation, with sparse evaluation evidence colocated in `Fraction.lean`.
    SymbolicIntegration consumers request the weakest capability they need.
 7. **Consumer migration — IN PROGRESS.** Rewire closed components in dependency order: rational reduction and tower
    gcd; residue/resultant and squarefree layers; linear systems and coupled DE; algebraic-function
