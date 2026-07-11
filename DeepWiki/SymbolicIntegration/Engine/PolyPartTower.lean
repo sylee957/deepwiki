@@ -64,12 +64,28 @@ class LawfulCPolynomialReduction (C : CPolynomialReduction P α) : Prop where
       CPoly.toPoly p = Differential.implicitDeriv (CPoly.toPoly Dt)
           (CPoly.toPoly out.antiderivative) + CPoly.toPoly out.remainder
 
-/-- Relative completeness contract for a polynomial-reduction operation. -/
-class CompleteCPolynomialReduction (C : CPolynomialReduction P α) : Prop where
-  /-- If the requested normal form exists, some finite fuel budget returns one. -/
+/-- Semantic domain on which a polynomial-reduction operation is required to be complete. -/
+abbrev PolynomialReductionDomain (P : Type u → Type u) (α : Type u) :=
+  PolynomialReductionKind → P α → P α → Prop
+
+/-- Relative completeness contract for a polynomial-reduction operation on a selected domain. -/
+class CompleteCPolynomialReduction (C : CPolynomialReduction P α)
+    (domain : PolynomialReductionDomain P α) [LawfulCPolynomialReduction C] : Prop where
+  /-- If an in-domain requested normal form exists, some finite fuel budget returns a normal-form result. -/
   relative_complete : ∀ (kind : PolynomialReductionKind) (Dt p : P α),
-    (∃ out, IsPolynomialReduction kind Dt p out) →
-      ∃ fuel out, C.reduce kind Dt fuel p = some out
+    domain kind Dt p → (∃ out, IsPolynomialReduction kind Dt p out) →
+      ∃ fuel out, C.reduce kind Dt fuel p = some out ∧ IsPolynomialReduction kind Dt p out
+
+/-- The exact acceptance domain of a selected polynomial-reduction operation. -/
+def polynomialReductionAcceptanceDomain (C : CPolynomialReduction P α) :
+    PolynomialReductionDomain P α := fun kind Dt p =>
+  ∃ fuel out, C.reduce kind Dt fuel p = some out ∧ IsPolynomialReduction kind Dt p out
+
+/-- Every selected polynomial-reduction operation is complete on its explicit acceptance domain. -/
+instance instCompleteCPolynomialReductionAcceptance (C : CPolynomialReduction P α)
+    [LawfulCPolynomialReduction C] :
+    CompleteCPolynomialReduction C (polynomialReductionAcceptanceDomain C) where
+  relative_complete _kind _Dt _p hdomain _ := hdomain
 
 /-- Boolean reconstruction check for a candidate polynomial reduction. -/
 def polynomialReductionCheck (Dt p : P α) (out : PolynomialReductionResult P α) : Bool :=

@@ -91,28 +91,32 @@ instance instLawfulCRischLevelOneLevelRisch (R : CPolynomialReduction P α)
 
 /-- Domain where genuine integrability decomposes into explicit Figure-5.1 stage witnesses. -/
 def oneLevelRischCompleteDomain (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain P α)
     (normalDomain : NormalReductionDomain P α) (specialDomain : MonomialSpecialDomain P α)
     [CCanonicalRepresentation P α] : RischLevelDomain P α :=
   fun Dt a d => oneLevelRischSoundDomain normalDomain Dt a d ∧
-    (IsRischLevelIntegrable Dt a d → OneLevelAssemblyWitness R kind normalDomain specialDomain Dt a d)
+    (IsRischLevelIntegrable Dt a d →
+      OneLevelAssemblyWitness R kind polynomialDomain normalDomain specialDomain Dt a d)
 
 /-- The composed level is lawful on its explicit stage-decomposition domain. -/
 instance instLawfulCRischLevelCompleteDomain (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain P α)
     (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
     (specialDomain : MonomialSpecialDomain P α)
     [LawfulCNormalReduction N normalDomain] (C : CMonomialCase P α)
     [CCanonicalRepresentation P α]
     [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
     : LawfulCRischLevel (oneLevelRisch R kind N C)
-      (oneLevelRischCompleteDomain R kind normalDomain specialDomain) where
+      (oneLevelRischCompleteDomain R kind polynomialDomain normalDomain specialDomain) where
   sound fuel Dt a d res hdomain hd hrun :=
     oneLevelRisch_sound R kind fuel N normalDomain C Dt a d res hd hdomain.1 hrun
 
 /-- Complete stage contracts make the composed level relatively complete at some finite budget. -/
 theorem completeCRischLevel (R : CPolynomialReduction P α)
-    [LawfulCPolynomialReduction R] [CompleteCPolynomialReduction R]
-    (kind : PolynomialReductionKind) (N : CNormalReduction P α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain P α)
+    [CompleteCPolynomialReduction R polynomialDomain] (N : CNormalReduction P α)
     (normalDomain : NormalReductionDomain P α)
     [LawfulCNormalReduction N normalDomain] [CompleteCNormalReduction N normalDomain]
     (C : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
@@ -120,10 +124,10 @@ theorem completeCRischLevel (R : CPolynomialReduction P α)
     [CCanonicalRepresentation P α]
     [LawfulCCanonicalRepresentation (P := P) (α := α)] :
     CompleteCRischLevel (oneLevelRisch R kind N C)
-      (oneLevelRischCompleteDomain R kind normalDomain specialDomain) := by
+      (oneLevelRischCompleteDomain R kind polynomialDomain normalDomain specialDomain) := by
   constructor
   intro Dt a d hdomain hd hintegrable
-  exact assembleOneLevel_complete R kind N normalDomain C specialDomain Dt a d hd
+  exact assembleOneLevel_complete R kind polynomialDomain N normalDomain C specialDomain Dt a d hd
     (hdomain.2 hintegrable)
 
 end DeepWiki.SymbolicIntegration
