@@ -98,7 +98,7 @@ divided coefficients via `CPolyEuclidean.div`. -/
 def cSPDEGClearedGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
-    let g := CFracGcdCoreWf.cgcdFFCoreWf a b
+    let g := CPolyGcd.compute a b
     if CPolyEuclidean.dvd g c then
       let ad := CPolyEuclidean.div a g
       let bd := CPolyEuclidean.div b g
@@ -147,7 +147,7 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
     subst hα; subst hβ
     simp only [denote, toPolyG_nil, add_zero]
     simp only [map_one, mul_zero, add_zero, one_mul]
-    have hdvd' : CPolyEuclidean.dvd (CFracGcdCoreWf.cgcdFFCoreWf a b) c = true := hdvd
+    have hdvd' : CPolyEuclidean.dvd (CPolyGcd.compute a b) c = true := hdvd
     rw [cSPDEGClearedGenWf] at hcert
     simp only [hn, hdvd'] at hcert
     obtain ⟨hdiva, hdivb, hdivc, hadne, _⟩ := hcert
@@ -168,7 +168,7 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
       exact spde_const_base (Differential.implicitDeriv (toPoly Dt)) a0 (toPoly b') (toPoly c')
         (toPoly h) ha0ne hh
     rw [← hdiva, ← hdivb, ← hdivc]
-    linear_combination toPoly (CFracGcdCoreWf.cgcdFFCoreWf a b) * hdivided
+    linear_combination toPoly (CPolyGcd.compute a b) * hdivided
   | case4 a b c n hn g hdvd a' b' c' hdeg => exact absurd hspde (by simp)
   | case5 a b c n hn g hdvd a' b' c' hdeg r z hdioph Da Dr hguard bbar' cbar' m' α'' β'' hrec ih =>
     intro h hh
@@ -176,8 +176,8 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
     simp only [Prod.mk.injEq] at hspde
     obtain ⟨hbbar, hcbar, hm, hα, hβ⟩ := hspde
     rw [← hbbar] at hh; rw [← hcbar] at hh
-    have hdvd' : CPolyEuclidean.dvd (CFracGcdCoreWf.cgcdFFCoreWf a b) c = true := hdvd
-    have hguard' : (n - ((CPolyEuclidean.div a (CFracGcdCoreWf.cgcdFFCoreWf a b)).cdeg : ℤ) + 1).toNat
+    have hdvd' : CPolyEuclidean.dvd (CPolyGcd.compute a b) c = true := hdvd
+    have hguard' : (n - ((CPolyEuclidean.div a (CPolyGcd.compute a b)).cdeg : ℤ) + 1).toNat
         < (n + 1).toNat := hguard
     rw [cSPDEGClearedGenWf] at hcert
     simp only [hn, hdvd'] at hcert
@@ -186,8 +186,8 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
     obtain ⟨hbez'0, hcertrecOpt⟩ := hcertrest
     rw [if_pos hguard'] at hcertrecOpt
     have hdioph' : CPoly.diophantineReduced
-        (CPolyEuclidean.div b (CFracGcdCoreWf.cgcdFFCoreWf a b))
-        (CPolyEuclidean.div a (CFracGcdCoreWf.cgcdFFCoreWf a b)) (CPolyEuclidean.div c (CFracGcdCoreWf.cgcdFFCoreWf a b))
+        (CPolyEuclidean.div b (CPolyGcd.compute a b))
+        (CPolyEuclidean.div a (CPolyGcd.compute a b)) (CPolyEuclidean.div c (CPolyGcd.compute a b))
         = (r, z) := hdioph
     rw [hdioph'] at hbez'0 hcertrecOpt
     have hbez' : toPoly b' * toPoly r + toPoly a' * toPoly z = toPoly c' := hbez'0
@@ -206,7 +206,7 @@ theorem cSPDEG_cleared_lifting_gen (Dt a b c : DensePoly α) (n : ℤ) (bbar cba
         = toPoly (cadd (cmul a' (cadd (cmul α'' h) β'')) r) := by
       simp only [denote]; ring
     rw [hqeq, ← hdiva, ← hdivb, ← hdivc]
-    linear_combination toPoly (CFracGcdCoreWf.cgcdFFCoreWf a b) * hpeel
+    linear_combination toPoly (CPolyGcd.compute a b) * hpeel
   | case6 => exact absurd hspde (by simp)
   | case7 a b c n hn g hdvd => exact absurd hspde (by simp)
 
@@ -215,7 +215,7 @@ cleared-certificate discharge. -/
 def CSPDEGClearedInputsGenWf (Dt a b c : DensePoly α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
-    let g := CFracGcdCoreWf.cgcdFFCoreWf a b
+    let g := CPolyGcd.compute a b
     if CPolyEuclidean.dvd g c then
       let ad := CPolyEuclidean.div a g
       (cnorm g ≠ []) ∧ Associated (toPoly g) (gcd (toPoly a) (toPoly b))
@@ -242,7 +242,8 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
     rw [if_pos hn]
     trivial
   | case2 a b c n hn g hdvd ad ih1 =>
-    have hdvd' : CPolyEuclidean.dvd (CFracGcdCoreWf.cgcdFFCoreWf a b) c = true := hdvd
+    have hdvd' : CPolyEuclidean.dvd (CPolyGcd.compute a b) c = true := hdvd
+    have hgdef : g = CPolyGcd.compute a b := rfl
     have hadef : ad = CPolyEuclidean.div a g := rfl
     rw [cSPDEGClearedGenWf]
     simp only [hn, hdvd'] at hin ⊢
@@ -269,11 +270,11 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : DensePoly α) (n : ℤ) (hin : 
       by_cases hguard : (n - (cdeg ad : ℤ) + 1).toNat < (n + 1).toNat
       · rw [if_pos hguard] at hrest ⊢
         refine ⟨?_, ih1 hguard hrest⟩
-        simpa [hadef, mul_comm] using hbez
+        simpa [hadef, hgdef, mul_comm] using hbez
       · rw [if_neg hguard] at hrest ⊢
-        exact ⟨by simpa [hadef, mul_comm] using hbez, trivial⟩
+        exact ⟨by simpa [hadef, hgdef, mul_comm] using hbez, trivial⟩
   | case3 a b c n hn g hdvd =>
-    have hdvd' : ¬ CPolyEuclidean.dvd (CFracGcdCoreWf.cgcdFFCoreWf a b) c = true := hdvd
+    have hdvd' : ¬ CPolyEuclidean.dvd (CPolyGcd.compute a b) c = true := hdvd
     rw [cSPDEGClearedGenWf]
     simp only [hn, if_neg hdvd']
     trivial

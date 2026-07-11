@@ -23,9 +23,9 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreW
 def rdeNormHWf (Dt : DensePoly α) (fden gden : DensePoly α) : DensePoly α :=
   let en := (CPoly.splitFactor Dt gden).1
   let dn := (CPoly.splitFactor Dt fden).1
-  let p := CFracGcdCoreWf.cgcdFFCoreWf dn en
-  CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf en (DensePoly.cderiv en))
-    (CFracGcdCoreWf.cgcdFFCoreWf p (DensePoly.cderiv p))
+  let p := CPolyGcd.compute dn en
+  CPolyEuclidean.div (CPolyGcd.compute en (DensePoly.cderiv en))
+    (CPolyGcd.compute p (DensePoly.cderiv p))
 
 /-- The dividend `dₙ·h²`. -/
 def rdeNormDnh2Wf (Dt : DensePoly α) (fden gden : DensePoly α) : DensePoly α :=

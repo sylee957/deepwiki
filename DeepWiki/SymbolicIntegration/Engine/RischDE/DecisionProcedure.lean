@@ -13,6 +13,8 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac
 
+universe u v
+
 /-! ## Inner frontier -/
 
 section InnerFrontierWf
@@ -70,7 +72,8 @@ end InnerInputWf
 
 section Capstone
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
+  [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- `RischDEDecisionProcedureFrontierWf f g`: the field-level frontier — nonzero weak normalizer (`hwn`),
@@ -157,6 +160,7 @@ theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : DenseFrac �
 /-- Under `RischDEDecisionProcedureFrontierWf f g` and `RischDESoundnessWf f g`, the recursive solver returns
 `some` iff the field-level Risch DE is solvable — `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`. -/
 theorem crischDESolveSoundWf_isDecisionProcedure (f g : DenseFrac β)
+    [LawfulCPolyGcd.{u,v} DensePoly β]
     (h : RischDEDecisionProcedureFrontierWf f g)
     (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
@@ -168,8 +172,9 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : DenseFrac β)
 -- The RDE decision procedure: the fuel-free recursive Risch-DE solver returns `some` iff the
 -- field-level Risch DE `D(Y) + F·Y = G` is solvable, modulo the named Wf completeness frontier and the
 -- direct Wf soundness certificate.
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
-    [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [LawfulCPolyGcd.{u,v} DensePoly β]
+    [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g : DenseFrac β) (h : RischDEDecisionProcedureFrontierWf f g)
     (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=

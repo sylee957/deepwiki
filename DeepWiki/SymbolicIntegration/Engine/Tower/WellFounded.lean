@@ -132,10 +132,44 @@ def cgcdFFCoreWf (p q : DensePoly α) : DensePoly α := DensePoly.cmonic (cgcdFF
 
 end CFracGcdCoreWf
 
+/-- Dense tower polynomials select the fraction-free gcd for their coefficient field. -/
+instance (priority := high) instCPolyGcdDenseWf {α : Type*} [CField α] [CFracGcdCoreWf α] :
+    CPolyGcd DensePoly α where
+  compute := CFracGcdCoreWf.cgcdFFCoreWf
+
+namespace CPolyGcd
+
+/-- Dense tower gcd selection unfolds to the fraction-free implementation. -/
+@[simp] theorem compute_dense_wf_eq {α : Type*} [CField α] [CFracGcdCoreWf α]
+    (p q : DensePoly α) :
+    CPolyGcd.compute p q = CFracGcdCoreWf.cgcdFFCoreWf p q := rfl
+
+end CPolyGcd
+
 /-- Base `CFracGcdCoreWf ℚ` — the bottom of the tower. `ℚ[t]`'s raw fraction-free gcd is the generic
 Euclidean gcd `(CPolyEuclidean.gcdExt p q).1`. -/
 instance instCFracGcdCoreWfQ : CFracGcdCoreWf ℚ where
   cgcdFFRawCoreWf p q := (CPolyEuclidean.gcdExt p q).1
+
+/-- The selected fraction-free gcd over `ℚ` satisfies the lawful gcd interface. -/
+instance (priority := high) instLawfulCPolyGcdDenseWfQ : LawfulCPolyGcd DensePoly ℚ where
+  compute_isGCD := by
+    intro _ p q
+    have hcompute : CPolyGcd.compute p q = DensePoly.cgcdMonicWf p q := rfl
+    rw [hcompute]
+    obtain ⟨hp, hq⟩ := DensePoly.toPolyG_cgcdMonicWf_dvd p q
+    refine ⟨by simpa only [toPoly_list_eq] using hp,
+      by simpa only [toPoly_list_eq] using hq, ?_⟩
+    intro d hdp hdq
+    have hraw : d ∣ DensePoly.toPoly (DensePoly.cgcdWf p q).1 :=
+      DensePoly.toPolyG_dvd_cgcdWf p q
+        (by simpa only [toPoly_list_eq] using hdp)
+        (by simpa only [toPoly_list_eq] using hdq)
+    have hassoc : Associated (DensePoly.toPoly (DensePoly.cgcdMonicWf p q))
+        (DensePoly.toPoly (DensePoly.cgcdWf p q).1) := by
+      rw [DensePoly.cgcdMonicWf]
+      exact DensePoly.associated_toPolyG_cmonicG _
+    simpa only [toPoly_list_eq] using hraw.trans hassoc.symm.dvd
 
 section
 variable {β : Type*} [CField β] [CFieldDomain β DensePoly] [CFracGcdCoreWf β]
@@ -167,8 +201,8 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 /-- The generic `SplitFactor` step `cstep Dt p = CPolyEuclidean.div (cgcdFFCoreWf p (CPolyEngine.monomialDeriv Dt p))
 (cgcdFFCoreWf p (cderiv p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)`. -/
 def cstep (Dt : DensePoly α) (p : DensePoly α) : DensePoly α :=
-  CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf p (CPolyEngine.monomialDeriv Dt p))
-    (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))
+  CPolyEuclidean.div (CPolyGcd.compute p (CPolyEngine.monomialDeriv Dt p))
+    (CPolyGcd.compute p (cderiv p))
 
 /-- Generic splitting-factorization loop `cSplitFactorFast Dt p = (pₙ, pₛ)`: one step extracts
 `S = cstep Dt p`; a constant `S` (`cdeg S = 0`) ⇒ `p` is normal, else recurse on the exact quotient
@@ -217,7 +251,7 @@ def cSqfreeYunFFGgoWf : ℕ → DensePoly α → DensePoly α → List (DensePol
   | fo + 1, b, d =>
     if cdeg b = 0 then []
     else
-      let p := cmonic (CFracGcdCoreWf.cgcdFFCoreWf b d)
+      let p := cmonic (CPolyGcd.compute b d)
       let b' := CPolyEuclidean.div b p
       let d' := csub (CPolyEuclidean.div d p) (cderiv b')
       p :: cSqfreeYunFFGgoWf fo b' d'
@@ -232,7 +266,7 @@ def cyunBound (p : DensePoly α) : ℕ := (cnorm p : List α).length
 `cSqfreeYunFFGgoWf (cyunBound p) b₁ d₁` with the internally-computed counter `cyunBound p`. `p` is
 associate to `∏ᵢ pᵢ^i`. Correct even at skipped multiplicities. `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def cSqfreeYunFF (p : DensePoly α) : List (DensePoly α) :=
-  let g := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)
+  let g := CPolyGcd.compute p (cderiv p)
   let b1 := CPolyEuclidean.div p g
   let d1 := csub (CPolyEuclidean.div (cderiv p) g) (cderiv b1)
   cSqfreeYunFFGgoWf (cyunBound p) b1 d1
@@ -257,7 +291,7 @@ def cSplitSquarefreeFactorFast [CDiffField α] (Dt : DensePoly α) (p : DensePol
     List (DensePoly α) × List (DensePoly α) :=
   let ps := CPoly.squarefreeYun p
   let parts := ps.map (fun pf =>
-    let si := CFracGcdCoreWf.cgcdFFCoreWf pf (CPolyEngine.monomialDeriv Dt pf)
+    let si := CPolyGcd.compute pf (CPolyEngine.monomialDeriv Dt pf)
     let ni := CPolyEuclidean.div pf si
     (ni, si))
   (parts.map Prod.fst, parts.map Prod.snd)
@@ -355,7 +389,7 @@ example :
 /-- Generic log argument `cLogArgTower Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`: the
 fraction-free gcd `cgcdFFCoreWf` of `d` and `a − c·Dd`. -/
 def cLogArgTower (Dt : DensePoly α) (a d : DensePoly α) (c : α) : DensePoly α :=
-  CFracGcdCoreWf.cgcdFFCoreWf d (cAmcDd Dt a d c)
+  CPolyGcd.compute d (cAmcDd Dt a d c)
 
 /-- Generic rational/field residues `cRationalResidues Dt a d cands`: keep the candidates
 `c ∈ cands : List α` that are roots of the residue resultant `R(z) = cResidueResultantTower Dt a d`,
@@ -492,7 +526,7 @@ def cSPDE (Dt : DensePoly α) (a b c : DensePoly α) (n : ℤ) :
   if n < 0 then
     if cisZero c then some ([], [], 0, [], []) else none
   else
-    let g := CFracGcdCoreWf.cgcdFFCoreWf a b
+    let g := CPolyGcd.compute a b
     if CPolyEuclidean.dvd g c then
       let a' := CPolyEuclidean.div a g
       let b' := CPolyEuclidean.div b g

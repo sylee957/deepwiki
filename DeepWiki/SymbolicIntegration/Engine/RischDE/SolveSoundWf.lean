@@ -13,6 +13,8 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac
 
+universe u v
+
 /-! ## The solver `crischDESolveSoundWf`
 
 Pipeline: weak-normalize, run the solvability check `CFrac.canonNormalizedGate`, reduce to lowest
@@ -73,7 +75,8 @@ solver without unfolding it. -/
 
 section Reductions
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β DensePoly] [CFracGcdCoreWf β]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
+  [CFieldDomain β DensePoly] [CFracGcdCoreWf β]
   [CRischField β]
 
 omit [CFieldSpec β] in
@@ -124,7 +127,8 @@ theorem crischDESolveSoundWf_check (f g y : DenseFrac β)
       exact absurd hsolve (by simp)
 
 /-- A successful Wf sound solve supplies the Wf canonical-normality proposition. -/
-theorem crischDESolveSoundWf_isCanonNormalized (f g y : DenseFrac β)
+theorem crischDESolveSoundWf_isCanonNormalized [LawfulCPolyGcd.{u,v} DensePoly β]
+    (f g y : DenseFrac β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     IsCanonNormalized f
       (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.num f.den)) :=

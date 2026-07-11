@@ -40,7 +40,7 @@ theorem cgcdFFCoreWf_one_isUnit (z : DensePoly β) :
 
 /-- The split step `cstep [1] [1]` on the unit input `[1]` has degree `0` (a unit-by-unit division). -/
 theorem cdegG_cstepG_one : cdeg (DensePoly.cstep ([CCommRing.one] : DensePoly β) [CCommRing.one]) = 0 := by
-  rw [DensePoly.cstep]
+  rw [DensePoly.cstep, CPolyGcd.compute_dense_wf_eq, CPolyGcd.compute_dense_wf_eq]
   set g1 := CFracGcdCoreWf.cgcdFFCoreWf ([CCommRing.one] : DensePoly β)
     (CPolyEngine.monomialDeriv [CCommRing.one] [CCommRing.one]) with hg1
   set g2 := CFracGcdCoreWf.cgcdFFCoreWf ([CCommRing.one] : DensePoly β) (DensePoly.cderiv [CCommRing.one]) with hg2

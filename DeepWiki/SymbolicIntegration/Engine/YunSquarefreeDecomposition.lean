@@ -170,6 +170,7 @@ theorem prod_map_cSqfreeYunFFGgoWf_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcd
     by_cases hdeg : cdeg b = 0
     · rw [if_pos hdeg]; simp
     · rw [if_neg hdeg]
+      simp only [CPolyGcd.compute_dense_wf_eq]
       have hbne : toPoly b ≠ 0 := by
         intro h; exact hdeg (by rw [cdegG_eq_natDegree, h, natDegree_zero])
       have hgne : gcd (toPoly b) (toPoly d) ≠ 0 :=
@@ -207,6 +208,7 @@ theorem prod_map_cSqfreeYunFFG_dvd (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCo
     (hp : toPoly p ≠ 0) :
     ((cSqfreeYunFF p).map toPoly).prod ∣ toPoly p := by
   rw [cSqfreeYunFF]
+  simp only [CPolyGcd.compute_dense_wf_eq]
   set g := CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p) with hgdef
   -- `toPoly g ∣ toPoly p` (associated to `gcd(p, p′)`).
   have hgp : toPoly g ∣ toPoly p :=
@@ -347,6 +349,7 @@ theorem map_toPolyG_cSqfreeYunFFGgoWf_eq (hgcd : CgcdBCorrect (CFracGcdCoreWf.cg
     by_cases hdeg : cdeg b = 0
     · rw [if_pos hdeg]; simp [yunLoopAbs]
     · rw [if_neg hdeg]
+      simp only [CPolyGcd.compute_dense_wf_eq]
       have hbne : toPoly b ≠ 0 := fun h => hdeg (by rw [cdegG_eq_natDegree, h, natDegree_zero])
       rw [List.map_cons, List.length_cons, toPolyG_yunEmit_eq_gcd hgcd b d]
       -- unfold one `yunLoopAbs` step on the RHS.
@@ -369,6 +372,7 @@ theorem cSqfreeYunFFG_forall₂ [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
       ((List.range (cSqfreeYunFF p).length).map
         (fun j => sqfreeFactPart (toPoly p) (1 + j))) := by
   rw [cSqfreeYunFF]
+  simp only [CPolyGcd.compute_dense_wf_eq]
   set b₁ := CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)) with hb1
   set d₁ := csub (CPolyEuclidean.div (cderiv p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))
     (cderiv (CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))) with hd1
@@ -499,6 +503,7 @@ theorem length_cSqfreeYunFFGgoWf_ge [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCo
         exact hdeg
       simp only [List.length_nil]; omega
     · rw [if_neg hdeg]
+      simp only [CPolyGcd.compute_dense_wf_eq]
       have hbne : toPoly b ≠ 0 := by
         intro h0; apply hdeg; rw [cdegG_eq_natDegree, h0, natDegree_zero]
       have hMgt : i ≤ M := by
@@ -529,6 +534,7 @@ theorem length_cSqfreeYunFFG_ge [CharZero (CFieldSpec.K α)] (hgcd : CgcdBCorrec
     (normalizedFactors (toPoly p).primPart).toFinset.sup
         (fun P => (normalizedFactors (toPoly p).primPart).count P) ≤ (cSqfreeYunFF p).length := by
   rw [cSqfreeYunFF]
+  simp only [CPolyGcd.compute_dense_wf_eq]
   have hinv : YunInv (toPoly p) 1
       (toPoly (CPolyEuclidean.div p (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))))
       (toPoly (csub (CPolyEuclidean.div (cderiv p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p)))
@@ -595,6 +601,7 @@ theorem cSqfreeYunFFGgoWf_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreW
     by_cases hdeg : cdeg b = 0
     · rw [if_pos hdeg] at hp; simp at hp
     · rw [if_neg hdeg, List.mem_cons] at hp
+      simp only [CPolyGcd.compute_dense_wf_eq] at hp
       have hgne : gcd (toPoly b) (toPoly d) ≠ 0 :=
         fun h => hb (zero_dvd_iff.mp (h ▸ gcd_dvd_left (toPoly b) (toPoly d)))
       have hcg : toPoly (CFracGcdCoreWf.cgcdFFCoreWf b d) ≠ 0 :=
@@ -634,6 +641,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 theorem cSqfreeYunFFG_monic (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α))) (d : DensePoly α) (hd0 : toPoly d ≠ 0) :
     ∀ p ∈ cSqfreeYunFF d, (toPoly p).Monic := by
   rw [cSqfreeYunFF]
+  simp only [CPolyGcd.compute_dense_wf_eq]
   apply cSqfreeYunFFGgoWf_monic hgcd
   set g := CFracGcdCoreWf.cgcdFFCoreWf d (cderiv d) with hgdef
   have hgp : toPoly g ∣ toPoly d :=

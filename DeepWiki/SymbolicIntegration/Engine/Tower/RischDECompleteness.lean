@@ -14,6 +14,8 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac
 
+universe u v
+
 /-! ## The uniform field-level RDE solvability and per-level completeness predicates -/
 
 section Predicate
@@ -150,7 +152,8 @@ down). -/
 
 section StepAssemblyWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
+  [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- Next-level RDE completeness `CRischFieldCompleteWf β`: the public solver returns `some` on every
@@ -201,6 +204,7 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
 /-- Step: a complete base oracle one level down plus the per-level frontier makes the public RDE solver
 complete at the next `CFrac` level. -/
 theorem crischFieldCompleteWf_step (hβ : CRischFieldComplete β)
+    [LawfulCPolyGcd.{u,v} DensePoly β]
     (hstep : RischDEStepFrontierWf β) : CRischFieldCompleteWf β := by
   intro f g hsol
   let hfront : RischDEDecisionProcedureFrontierWf f g :=
@@ -227,8 +231,9 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
   crischDESolve_isSome_of_complete hβ b₀ c₀ hsol
 
 -- Wf step: the IH and per-level frontier give fuel-free wrapper completeness at level `n+1`.
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
-    [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β DensePoly] [CFracGcdCoreWf β] [LawfulCPolyGcd.{u,v} DensePoly β]
+    [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (hβ : CRischFieldComplete β) (hstep : RischDEStepFrontierWf β) :
     CRischFieldCompleteWf β :=
   crischFieldCompleteWf_step hβ hstep

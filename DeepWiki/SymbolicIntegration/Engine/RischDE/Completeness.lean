@@ -12,6 +12,8 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly CFrac
 
+universe u v
+
 /-! ## The field-level RDE solvability predicate `FieldRDESolvable` -/
 
 section Solvable
@@ -313,7 +315,8 @@ end RawInnerWf
 
 section CompleteWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
+  [CFieldDomain β DensePoly]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- A successful `crischDESolveSoundWf` run (with soundness certificate `RischDESoundnessWf`) witnesses
@@ -349,6 +352,7 @@ structure RischDECompletenessResidualWf (f g : DenseFrac β) : Prop where
 /-- If the RDE is solvable and `RischDECompletenessResidualWf` holds, then `crischDESolveSoundWf`
 returns `some`. -/
 theorem crischDESolveSoundWf_complete_of_residualWf (f g : DenseFrac β)
+    [LawfulCPolyGcd.{u,v} DensePoly β]
     (hsol : FieldRDESolvable f g) (hres : RischDECompletenessResidualWf f g) :
     ∃ y, crischDESolveSoundWf f g = some y := by
   obtain ⟨ytilde, hinner⟩ := hres.hinner hsol
@@ -360,6 +364,7 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : DenseFrac β)
 /-- Modulo `RischDECompletenessResidualWf` and `RischDESoundnessWf`, `crischDESolveSoundWf f g` returns
 `some` iff the field-level RDE is solvable. -/
 theorem crischDESolveSoundWf_decides_of_residualWf (f g : DenseFrac β)
+    [LawfulCPolyGcd.{u,v} DensePoly β]
     (hres : RischDECompletenessResidualWf f g)
     (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g := by
@@ -372,7 +377,8 @@ theorem crischDESolveSoundWf_decides_of_residualWf (f g : DenseFrac β)
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 -- The Wf-native residual gives the same decision statement with a fuel-free completeness direction.
-example (f g : DenseFrac β) (hres : RischDECompletenessResidualWf f g)
+example (f g : DenseFrac β) [LawfulCPolyGcd.{u,v} DensePoly β]
+    (hres : RischDECompletenessResidualWf f g)
     (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_decides_of_residualWf f g hres hsound

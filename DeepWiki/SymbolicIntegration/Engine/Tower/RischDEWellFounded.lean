@@ -223,16 +223,16 @@ residue numerator `a` via `CPoly.diophantineReduced`, build the residue resultan
 of `r`. For an already-weakly-normalized `f`, `q = 1`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
 def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots : ℕ := 16) : DensePoly α :=
   let dn := (CPoly.splitFactor Dt fden).1
-  let g := CFracGcdCoreWf.cgcdFFCoreWf dn (cderiv dn)
+  let g := CPolyGcd.compute dn (cderiv dn)
   let dstar := CPolyEuclidean.div dn g
-  let d1 := CPolyEuclidean.div dstar (CFracGcdCoreWf.cgcdFFCoreWf dstar g)
+  let d1 := CPolyEuclidean.div dstar (CPolyGcd.compute dstar g)
   let fdenOverD1 := CPolyEuclidean.div fden d1
   let a := (CPoly.diophantineReduced fdenOverD1 d1 fnum).1
   let Dd1 := CPolyEngine.monomialDeriv Dt d1
   let r := cResidueResultantTower Dt a d1
   let roots := cPosIntRoots r boundRoots
   roots.foldl (fun (acc : DensePoly α) (n : ℕ) =>
-    let gi := CFracGcdCoreWf.cgcdFFCoreWf (csub a (cscale (CField.natCast n) Dd1)) d1
+    let gi := CPolyGcd.compute (csub a (cscale (CField.natCast n) Dd1)) d1
     cmul acc (cpow gi n)) [CCommRing.one]
 
 /-- Generic normal-denominator reduction `cRdeNormalDenominator Dt fnum fden gnum gden` for weakly
@@ -244,9 +244,9 @@ def cRdeNormalDenominator (Dt : DensePoly α) (fnum fden gnum gden : DensePoly �
     Option (DensePoly α × DensePoly α × DensePoly α × DensePoly α) :=
   let dn := (CPoly.splitFactor Dt fden).1
   let en := (CPoly.splitFactor Dt gden).1
-  let p := CFracGcdCoreWf.cgcdFFCoreWf dn en
-  let h := CPolyEuclidean.div (CFracGcdCoreWf.cgcdFFCoreWf en (cderiv en))
-    (CFracGcdCoreWf.cgcdFFCoreWf p (cderiv p))
+  let p := CPolyGcd.compute dn en
+  let h := CPolyEuclidean.div (CPolyGcd.compute en (cderiv en))
+    (CPolyGcd.compute p (cderiv p))
   let dnh2 := cmul (cmul dn h) h
   if CPolyEuclidean.dvd en dnh2 then
     let a := cmul dn h

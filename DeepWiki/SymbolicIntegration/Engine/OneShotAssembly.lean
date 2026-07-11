@@ -362,8 +362,8 @@ theorem cLogArgTowerG_eq_linear_factor [CFracGcdCoreWf α] [DecidableEq (CFieldS
     rw [h] at hassoc
     exact (Polynomial.X_sub_C_ne_zero β) ((associated_zero_iff_eq_zero _).mp hassoc.symm)
   have hmonic : (toPoly (cLogArgTower Dt a d c)).Monic := by
-    rw [cLogArgTower, CFracGcdCoreWf.cgcdFFCoreWf]
-    rw [cLogArgTower, CFracGcdCoreWf.cgcdFFCoreWf] at hne
+    rw [cLogArgTower, CPolyGcd.compute_dense_wf_eq, CFracGcdCoreWf.cgcdFFCoreWf]
+    rw [cLogArgTower, CPolyGcd.compute_dense_wf_eq, CFracGcdCoreWf.cgcdFFCoreWf] at hne
     have hraw_ne : toPoly (CFracGcdCoreWf.cgcdFFRawCoreWf d (cAmcDd Dt a d c)) ≠ 0 := by
       intro h
       exact hne (((associated_toPolyG_cmonicG _).trans (Associated.of_eq h)).eq_zero_iff.mpr rfl)
