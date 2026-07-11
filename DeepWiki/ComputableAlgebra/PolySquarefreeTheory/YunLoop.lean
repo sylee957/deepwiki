@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYun
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.Yun
 
 /-! # Polynomial Yun loop state
 

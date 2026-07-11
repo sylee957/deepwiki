@@ -3,11 +3,11 @@ import Mathlib.RingTheory.Polynomial.GaussLemma
 import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import DeepWiki.Algebra.PolynomialNormalization
 import DeepWiki.Algebra.SquarefreeDeflation
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYunLoop
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization.Initialization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.Derivative
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.PartDerivatives
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.Parts
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.YunLoop
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.Initialization
 
 /-! # Squarefree factorization via the derivative criterion
 The squarefree part and deflations of `A ∈ D[x]` are computed by gcds with `dA/dx`, since a prime

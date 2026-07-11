@@ -3,10 +3,10 @@ import Mathlib.RingTheory.Polynomial.GaussLemma
 import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import DeepWiki.Algebra.PolynomialNormalization
 import DeepWiki.Algebra.SquarefreeDeflation
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYunLoop
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.Derivative
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.PartDerivatives
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.Parts
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.YunLoop
 
 /-! # Squarefree factorization initialization
 

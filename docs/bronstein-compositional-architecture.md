@@ -107,7 +107,7 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 | Polynomial engine | `CPolyEngine` | `LawfulCPolyEngine` | `ComputableAlgebra/PolyEngine*.lean` |
 | GCD | `CPolyGcd` | `LawfulCPolyGcd` | `ComputableAlgebra/PolyReprGcd.lean` |
 | Euclidean division | `CPolyEuclidean` | `LawfulCPolyEuclidean` | `ComputableAlgebra/PolyEuclidean.lean` |
-| Squarefree Yun | `CPolySquarefree` | `LawfulCPolySquarefree` | `ComputableAlgebra/PolySquarefree.lean`, semantic law in `Engine/SquarefreeDecomposition.lean` |
+| Squarefree Yun | `CPolySquarefree` | `LawfulCPolySquarefree` | `ComputableAlgebra/PolySquarefree*.lean` |
 | Resultant | `CPolyResultant` | `LawfulCPolyResultant` | `ComputableAlgebra/PolyResultant.lean` |
 | Subresultant | `CPolySubresultant` | `LawfulCPolySubresultant` | `ComputableAlgebra/PolySubresultant*.lean` |
 | Interpolation | `CPolyInterpolate` | `LawfulCPolyInterpolate` | `ComputableAlgebra/PolyInterpolate.lean` |
@@ -149,10 +149,11 @@ monomial stage contracts.
    that closure into executable success. Full semantic completeness still requires proving that every genuinely
    integrable primitive polynomial satisfies this closure predicate; that mathematical constant-descent theorem
    remains open.
+   Ordinary coefficient recursion is kept distinct from broad elementary integration:
+   `CompleteCRischLevelRationalLrt` requires relative completeness of the lower level's log-free integrator,
+   and `towerRecursiveCoefficientDomain` lifts exactly that capability through `DenseFrac`. Together with the
+   limited-domain lift, `completeTowerPrimitiveCaseLrt` derives the concrete tower monomial completeness contract.
 4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
-5. Move the squarefree contract to the leaf boundary. The abstract Sylvester specification, determinant
-   bridge, and `LawfulCPolySubresultant` certification now all live with the executable subresultant;
-   sparse Yun is already a lawful squarefree-stage realization.
 
 ## Visibility policy
 

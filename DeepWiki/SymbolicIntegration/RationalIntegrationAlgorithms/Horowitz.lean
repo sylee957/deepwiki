@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 import Mathlib.RingTheory.EuclideanDomain
 import Mathlib.RingTheory.Radical.Basic
 

@@ -2,9 +2,9 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.SymbolicIntegration.Engine.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
-import DeepWiki.SymbolicIntegration.Engine.SquarefreeDecomposition
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYunLoop
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeLawful
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.YunLoop
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Correctness of the fuel-free Yun factorization `cSqfreeYunFF`
 

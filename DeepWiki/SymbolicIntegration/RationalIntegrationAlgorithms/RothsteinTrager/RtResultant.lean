@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
 import DeepWiki.SymbolicIntegration.Residues
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 import DeepWiki.ComputableAlgebra.PolySubresultantSpec
 
 /-! # Rothstein-Trager resultant primitives

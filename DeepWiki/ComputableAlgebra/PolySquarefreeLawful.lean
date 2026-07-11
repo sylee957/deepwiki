@@ -1,6 +1,6 @@
 import DeepWiki.Algebra.ListProducts
 import DeepWiki.ComputableAlgebra.PolySquarefree
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Interface: `LawfulSquarefreeDecomposition`
 

@@ -1,7 +1,7 @@
 import Mathlib.Algebra.GCDMonoid.Basic
 import Mathlib.FieldTheory.Separable
 import DeepWiki.Algebra.PolynomialNormalization
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.PartDerivatives
 
 /-! # Polynomial Yun recurrence terms
 

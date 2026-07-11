@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.Algebra.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Derivative readings of local principal coefficients
 

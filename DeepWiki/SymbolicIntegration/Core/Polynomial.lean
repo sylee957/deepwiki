@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipal
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFunc
-import DeepWiki.SymbolicIntegration.Core.Polynomial.Squarefree
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Core polynomial
 

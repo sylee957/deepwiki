@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.CanonicalRepresentation.RootCharacterization
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitFactor
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitSquarefreeFactor
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Radical.Basic
 

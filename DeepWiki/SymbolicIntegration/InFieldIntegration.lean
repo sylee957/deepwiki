@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.DifferentialFields
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Recognizing derivatives — the in-field-integration criterion
 After the Hermite reduction `f = g′ + A/D` (`D` squarefree, `gcd(A, D) = 1`, `deg A < deg D`), `f` is

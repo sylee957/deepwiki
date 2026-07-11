@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Polynomial.Derivative
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory.Parts
 
 /-! # Polynomial squarefree-part derivatives
 

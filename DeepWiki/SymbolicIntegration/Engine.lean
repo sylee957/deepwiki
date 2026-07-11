@@ -77,7 +77,7 @@ import DeepWiki.SymbolicIntegration.Engine.MonomialCaseSparse
 import DeepWiki.SymbolicIntegration.Engine.RischLevelSparse
 import DeepWiki.SymbolicIntegration.Engine.RischFieldCore
 import DeepWiki.SymbolicIntegration.Engine.RischFieldSpec
-import DeepWiki.SymbolicIntegration.Engine.SquarefreeDecomposition
+import DeepWiki.ComputableAlgebra.PolySquarefreeLawful
 import DeepWiki.SymbolicIntegration.Engine.SplitFactorHelpers
 import DeepWiki.SymbolicIntegration.Engine.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Engine.Structure

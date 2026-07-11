@@ -28,6 +28,8 @@ import DeepWiki.ComputableAlgebra.PolyEuclidean
 import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.ComputableAlgebra.PolyGcdAlgorithms
 import DeepWiki.ComputableAlgebra.PolySquarefree
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
+import DeepWiki.ComputableAlgebra.PolySquarefreeLawful
 import DeepWiki.ComputableAlgebra.PolyQuotient
 import DeepWiki.ComputableAlgebra.PolyInterpolate
 import DeepWiki.ComputableAlgebra.PolyInterpolateDense

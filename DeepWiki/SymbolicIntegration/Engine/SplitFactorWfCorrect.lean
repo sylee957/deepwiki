@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect
 import DeepWiki.SymbolicIntegration.Engine.SplitFactorHelpers
 import DeepWiki.ComputableAlgebra.PolyEuclideanDense
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Abstract correctness of the fuel-free splitting factorization `cSplitFactorFast`
 

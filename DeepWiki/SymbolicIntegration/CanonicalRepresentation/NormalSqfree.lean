@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.Classify
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Squarefree-normal splitting predicates
 

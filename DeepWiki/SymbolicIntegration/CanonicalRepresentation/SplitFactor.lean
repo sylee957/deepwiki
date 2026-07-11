@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.CanonicalRepresentation.Classify
 import DeepWiki.SymbolicIntegration.Core.Differential.Gcd.PrimeFactors
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.NormalSqfree
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Canonical split-factor algorithm
 
