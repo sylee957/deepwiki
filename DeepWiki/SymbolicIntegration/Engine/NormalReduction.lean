@@ -111,10 +111,11 @@ def checkedNormalReduction (raw : CNormalReduction P α) : CNormalReduction P α
 /-- Universal semantic domain of certificate-checked normal reduction. -/
 def checkedNormalReductionDomain : NormalReductionDomain P α := fun _ _ _ => True
 
-/-- Certificate checking turns any raw normal reducer into a lawful normal-reduction operation. -/
-instance instLawfulCNormalReductionChecked (raw : CNormalReduction P α) :
-    LawfulCNormalReduction (checkedNormalReduction raw)
-      (checkedNormalReductionDomain (P := P) (α := α)) where
+/-- Certificate checking turns any raw normal reducer into a lawful normal-reduction operation on every
+selected domain. -/
+instance instLawfulCNormalReductionChecked (raw : CNormalReduction P α)
+    (domain : NormalReductionDomain P α) :
+    LawfulCNormalReduction (checkedNormalReduction raw) domain where
   sound Dt a d out _ _ hrun := by
     simp only [checkedNormalReduction] at hrun
     rcases hraw : raw.reduce Dt a d with _ | candidate
@@ -137,6 +138,22 @@ instance instLawfulCNormalReductionChecked (raw : CNormalReduction P α) :
         subst candidate
         exact (normalReductionCheck_sound Dt a d out hcheck).1
       · simp [hcheck] at hrun
+
+/-- The exact acceptance domain of a certificate-checked normal reducer. -/
+def checkedNormalReductionAcceptanceDomain (raw : CNormalReduction P α) :
+    NormalReductionDomain P α := fun Dt a d =>
+  IsNormalPartIntegrable Dt a d →
+    ∃ out, raw.reduce Dt a d = some out ∧ normalReductionCheck Dt a d out = true ∧
+      CertifiedNormalResult Dt a d out
+
+/-- A certificate-checked normal reducer is complete on its explicit checked acceptance domain. -/
+instance instCompleteCNormalReductionChecked (raw : CNormalReduction P α) :
+    CompleteCNormalReduction (checkedNormalReduction raw)
+      (checkedNormalReductionAcceptanceDomain raw) where
+  relative_complete Dt a d hdomain _hd hintegrable := by
+    obtain ⟨out, hraw, hcheck, hcert⟩ := hdomain hintegrable
+    refine ⟨out, ?_, hcert⟩
+    simp [checkedNormalReduction, hraw, hcheck]
 
 /-- Successful lawful normal reduction integrates its input fraction. -/
 theorem reduceNormal_sound [CHermiteReduction P α] [LawfulCHermiteReduction (P := P) (α := α)]
