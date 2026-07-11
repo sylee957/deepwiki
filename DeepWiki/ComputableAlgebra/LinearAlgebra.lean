@@ -145,4 +145,33 @@ class LawfulCLinearSolve (α : Type u) [CField α] [CLinearSolve α] where
     x ∈ CLinearSolve.nullspaceBasis rows ncols →
       ∀ i, i < rows.length → linearDot (rows.getD i []) x = CCommRing.zero
 
+/-- A selected kernel vector belongs to the abstract nullspace basis. -/
+theorem mem_nullspaceBasis_of_kernelVector_eq_some {α : Type u} [CField α] [CLinearSolve α]
+    (rows : List (List α)) (ncols : ℕ) (x : List α)
+    (h : kernelVector ncols rows = some x) :
+    x ∈ CLinearSolve.nullspaceBasis rows ncols := by
+  unfold kernelVector at h
+  cases hbasis : CLinearSolve.nullspaceBasis rows ncols with
+  | nil => simp [hbasis] at h
+  | cons y ys =>
+    simp [hbasis] at h
+    subst y
+    exact List.mem_cons_self
+
+/-- A lawful selected kernel vector has exactly the requested number of columns. -/
+theorem kernelVector_length {α : Type u} [CField α] [CLinearSolve α] [LawfulCLinearSolve α]
+    (rows : List (List α)) (ncols : ℕ) (x : List α)
+    (h : kernelVector ncols rows = some x) : x.length = ncols :=
+  LawfulCLinearSolve.nullspaceBasis_length rows ncols x
+    (mem_nullspaceBasis_of_kernelVector_eq_some rows ncols x h)
+
+/-- A lawful selected kernel vector solves every row of a well-formed homogeneous system. -/
+theorem kernelVector_sound {α : Type u} [CField α] [CLinearSolve α] [LawfulCLinearSolve α]
+    (rows : List (List α)) (ncols : ℕ) (x : List α)
+    (hwidth : ∀ row ∈ rows, row.length = ncols)
+    (h : kernelVector ncols rows = some x) :
+    ∀ i, i < rows.length → linearDot (rows.getD i []) x = CCommRing.zero :=
+  LawfulCLinearSolve.nullspaceBasis_sound rows ncols x hwidth
+    (mem_nullspaceBasis_of_kernelVector_eq_some rows ncols x h)
+
 end DeepWiki.SymbolicIntegration
