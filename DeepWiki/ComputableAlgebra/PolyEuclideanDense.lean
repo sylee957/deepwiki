@@ -441,7 +441,8 @@ instance instCPolyEuclideanDense : CPolyEuclidean DensePoly where
   gcdExt := DensePoly.cgcdWf
 
 /-- Dense polynomials default to the representation-generic Yun kernel over well-founded Euclidean operations. -/
-instance (priority := low) instCPolySquarefreeDense {α : Type*} [CField α] :
+instance (priority := low) instCPolySquarefreeDense {α : Type*} [CField α]
+    [CPolyGcd DensePoly α] :
     CPolySquarefree DensePoly α where
   compute := CPolySquarefree.default
 
