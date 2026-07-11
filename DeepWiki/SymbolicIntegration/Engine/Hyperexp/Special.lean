@@ -81,7 +81,7 @@ theorem hyperexp_eta_eq_one :
 `checkIdentity`. -/
 theorem hyperexpInv_landsSpecialPart :
     (match DensePoly.cIntegrateHyperexp hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
-      | some res => DensePoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
+      | some res => CPoly.checkIdentity hyperexpDt res hyperexpInvA hyperexpInvD
       | none => false) = true := by native_decide
 
 #print axioms hyperexpInv_landsSpecialPart
@@ -102,7 +102,7 @@ term (`q₁ = 1`, `q₋₁ = −1`), recombining to `t − t⁻¹` satisfying `c
 theorem hyperexpPolySpec_lands :
     (match DensePoly.cIntegrateHyperexp hyperexpDt hyperexpPolySpecA hyperexpPolySpecD
         hyperexpInvCands with
-      | some res => DensePoly.checkIdentity hyperexpDt res hyperexpPolySpecA hyperexpPolySpecD
+      | some res => CPoly.checkIdentity hyperexpDt res hyperexpPolySpecA hyperexpPolySpecD
       | none => false) = true := by native_decide
 
 /-! ### A special + normal mix — the special part lands, the normal log part overshoots

@@ -150,7 +150,7 @@ def checkedTangentMonomialCase (S : CTangentCoupledSolver) (B : CTangentSpecialB
     else if CPolyEngine.cisZero out.2 then none
     else
       let result : IntegralResult (DenseFrac ℚ) := { rational := out, logs := [] }
-      if DensePoly.checkIdentity Dt result (polynomialSpecialNumerator fp b ds) ds then some out else none
+      if CPoly.checkIdentity Dt result (polynomialSpecialNumerator fp b ds) ds then some out else none
   postprocessNormal _ before := some before
 
 /-- The certificate-checked tangent monomial case is sound without a lawful bridge assumption. -/
@@ -168,7 +168,7 @@ instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoupledSolver) (B : 
         else
           let result : IntegralResult (DenseFrac ℚ) :=
             { rational := B.reassemble p qs.1 qs.2, logs := [] }
-          if DensePoly.checkIdentity Dt result (polynomialSpecialNumerator fp b ds) ds then
+          if CPoly.checkIdentity Dt result (polynomialSpecialNumerator fp b ds) ds then
             some (B.reassemble p qs.1 qs.2)
           else none) = some (snum, sden) at hrun
     rcases hsolve : S.solve p.degreeBound p.diagonal p.offDiagonal p.rhs₁ p.rhs₂ p.level with

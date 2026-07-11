@@ -97,7 +97,7 @@ def checkedLimitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly �
     let targetDen := CPolyEngine.mul aden ηden
     let result : IntegralResult ℚ := { rational := out.1, logs := [] }
     if CPolyEngine.cisZero out.1.2 then none
-    else if DensePoly.checkIdentity ([CCommRing.one] : DensePoly ℚ) result targetNum targetDen then
+    else if CPoly.checkIdentity ([CCommRing.one] : DensePoly ℚ) result targetNum targetDen then
       some out
     else none
 

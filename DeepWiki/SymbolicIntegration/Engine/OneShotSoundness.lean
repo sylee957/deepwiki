@@ -78,11 +78,11 @@ theorem toPolyG_cmonomialDeriv_one : toPoly
 executed: the `b = 0` integration branch always passes its own check. -/
 theorem checkIdentityG_antiderivative_const [CharZero (CFieldSpec.K α)] (c : DensePoly α)
     (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
-    DensePoly.checkIdentity ([CCommRing.one] : DensePoly α)
+    CPoly.checkIdentity ([CCommRing.one] : DensePoly α)
         ⟨(CPoly.antiderivative c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
       = true := by
   -- unfold the check; the empty-log fold is just the seed `([0], [1])`
-  rw [DensePoly.checkIdentity]
+  rw [CPoly.checkIdentity]
   simp only [CPolyEngine.sub_dense_eq, CPolyEngine.mul_dense_eq, CPolyEngine.add_dense_eq,
     CPolyEngine.scale_dense_eq, CPolyEngine.ofCoeffList_dense_eq,
     CPolyEngine.cisZero_dense_eq]
@@ -254,7 +254,7 @@ example [CharZero (CFieldSpec.K α)] (c : DensePoly α) :
 -- The polynomial-branch output satisfies `checkIdentity` abstractly, with no runtime check.
 example [CharZero (CFieldSpec.K α)] (c : DensePoly α)
     (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
-    DensePoly.checkIdentity ([CCommRing.one] : DensePoly α)
+    CPoly.checkIdentity ([CCommRing.one] : DensePoly α)
         ⟨(CPoly.antiderivative c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
       = true :=
   checkIdentityG_antiderivative_const c hconst

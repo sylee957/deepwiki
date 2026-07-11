@@ -38,7 +38,7 @@ def mixedTa : DensePoly RadX3 := [CCommRing.zero, CCommRing.one]
 /-- `∫ t dt = t²/2` over `RadX3[t]`, validated `D(∫f) = f` via `checkIdentity`. -/
 theorem mixedT_integral_eq :
     (match DensePoly.cIntegrateGFullWf mixedDt mixedTa mixedD mixedCands with
-      | some res => DensePoly.checkIdentity mixedDt res mixedTa mixedD
+      | some res => CPoly.checkIdentity mixedDt res mixedTa mixedD
       | none => false) = true := by native_decide
 
 /-! ### `∫ t² dt = t³/3` and `∫ (2t+1) dt = t²+t` over `RadX3[t]` -/
@@ -49,7 +49,7 @@ def mixedT2a : DensePoly RadX3 := [CCommRing.zero, CCommRing.zero, CCommRing.one
 /-- `∫ t² dt = t³/3` over `RadX3[t]`, validated `D(∫f) = f`. -/
 theorem mixedT2_integral_eq :
     (match DensePoly.cIntegrateGFullWf mixedDt mixedT2a mixedD mixedCands with
-      | some res => DensePoly.checkIdentity mixedDt res mixedT2a mixedD
+      | some res => CPoly.checkIdentity mixedDt res mixedT2a mixedD
       | none => false) = true := by native_decide
 
 /-- The integrand `f = 2t + 1` over `DensePoly RadX3` (`[1,2]`). -/
@@ -58,7 +58,7 @@ def mixedLina : DensePoly RadX3 := [CCommRing.one, CCommRing.add CCommRing.one C
 /-- `∫ (2t+1) dt = t²+t` over `RadX3[t]`, validated `D(∫f) = f`. -/
 theorem mixedLin_integral_eq :
     (match DensePoly.cIntegrateGFullWf mixedDt mixedLina mixedD mixedCands with
-      | some res => DensePoly.checkIdentity mixedDt res mixedLina mixedD
+      | some res => CPoly.checkIdentity mixedDt res mixedLina mixedD
       | none => false) = true := by native_decide
 
 /-! ### `∫ dt/t = log t` over `RadX3[t]` — the normal-part / Rothstein–Trager log route -/
@@ -72,7 +72,7 @@ def mixedRecipDen : DensePoly RadX3 := [CCommRing.zero, CCommRing.one]
 /-- `∫ dt/t = log t` over `RadX3[t]`, validated `D(log t) = 1/t` via the residue-log route. -/
 theorem mixedRecip_integral_eq :
     (match DensePoly.cIntegrateGFullWf mixedDt mixedRecipNum mixedRecipDen mixedCands with
-      | some res => DensePoly.checkIdentity mixedDt res mixedRecipNum mixedRecipDen
+      | some res => CPoly.checkIdentity mixedDt res mixedRecipNum mixedRecipDen
       | none => false) = true := by native_decide
 
 /-! ### The algebraic-coefficient boundary: `∫ y dt` does not validate
@@ -87,7 +87,7 @@ def mixedYa : DensePoly RadX3 := [RadExt.gen]
 false, since `y` is not a `D`-constant. -/
 theorem mixedY_not_validated :
     (match DensePoly.cIntegrateGFullWf mixedDt mixedYa mixedD mixedCands with
-      | some res => DensePoly.checkIdentity mixedDt res mixedYa mixedD
+      | some res => CPoly.checkIdentity mixedDt res mixedYa mixedD
       | none => false) = false := by native_decide
 
 /-! ### A multi-level RDE descent through the algebraic solver
@@ -161,7 +161,7 @@ through the algebraic solver, validated `D(∫f) = f`. -/
 theorem mixedHyperexpRecip_integral_descends :
     (match DensePoly.cIntegrateHyperexpLaurent (CCommRing.one : RadX3) [] [CCommRing.one] with
       | some (num, den) =>
-          DensePoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩ [CCommRing.one] [CCommRing.zero, CCommRing.one]
+          CPoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩ [CCommRing.one] [CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
 /-- `∫ (t + t⁻¹) = t − t⁻¹` over `RadX3[t]` via the Laurent integrator (polynomial part plus a
@@ -170,7 +170,7 @@ theorem mixedHyperexpPolySpec_integral_descends :
     (match DensePoly.cIntegrateHyperexpLaurent (CCommRing.one : RadX3) [CCommRing.zero, CCommRing.one]
         [CCommRing.one] with
       | some (num, den) =>
-          DensePoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩
+          CPoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩
             [CCommRing.one, CCommRing.zero, CCommRing.one] [CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
@@ -182,7 +182,7 @@ theorem mixedHyperexpG_topEntry_validates :
     (match DensePoly.cIntegrateHyperexp mixedHyperexpDt [CCommRing.one, CCommRing.zero, CCommRing.one]
         [CCommRing.zero, CCommRing.one] [CCommRing.zero, CCommRing.one] with
       | some res =>
-          DensePoly.checkIdentity mixedHyperexpDt res [CCommRing.one, CCommRing.zero, CCommRing.one]
+          CPoly.checkIdentity mixedHyperexpDt res [CCommRing.one, CCommRing.zero, CCommRing.one]
             [CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 

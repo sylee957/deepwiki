@@ -58,7 +58,7 @@ theorem field_identity_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     (hsome : DensePoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
-    (hcheck : DensePoly.checkIdentity Dt res a d = true) :
+    (hcheck : CPoly.checkIdentity Dt res a d = true) :
     towerFractionFieldDeriv Dt
         (CFrac.am α (toPoly res.rational.1) / CFrac.am α (toPoly res.rational.2))
         + logResidueSum Dt res.logs
@@ -78,7 +78,7 @@ theorem isIntegralResultG_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     (hsome : DensePoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
-    (hcheck : DensePoly.checkIdentity Dt res a d = true) :
+    (hcheck : CPoly.checkIdentity Dt res a d = true) :
     DensePoly.IsIntegralResult Dt a d res := by
   have _ := hsome
   exact DensePoly.isIntegralResultG_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
@@ -93,7 +93,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     (hsome : DensePoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
-    (hcheck : DensePoly.checkIdentity Dt res a d = true) :
+    (hcheck : CPoly.checkIdentity Dt res a d = true) :
     towerFractionFieldDeriv Dt
         (CFrac.am α (toPoly res.rational.1) / CFrac.am α (toPoly res.rational.2))
         + logResidueSum Dt res.logs
@@ -123,7 +123,7 @@ def towerFullLvl2Cands : List Lvl2 := [CCommRing.zero, CCommRing.one]
 theorem towerFullLvl2_landsPolynomialPartWf :
     (match DensePoly.cIntegrateGFullWf towerFullLvl2Dt towerFullLvl2A towerFullLvl2D
         towerFullLvl2Cands with
-      | some res => DensePoly.checkIdentity towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
+      | some res => CPoly.checkIdentity towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
       | none => false) = true := by native_decide
 
 

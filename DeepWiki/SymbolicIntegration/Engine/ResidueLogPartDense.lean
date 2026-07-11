@@ -23,7 +23,7 @@ def checkedResidueLogPart (Dt hNum Dstar : DensePoly α) : Option (List (α × D
   let logs := cLogPart Dt hNum Dstar candidates
   let result : IntegralResult α := ⟨(CPoly.czero, CPoly.one), logs⟩
   if (!cisZero Dstar && logs.all (fun cv => !cisZero cv.2)) &&
-      checkIdentity Dt result hNum Dstar then some logs else none
+      CPoly.checkIdentity Dt result hNum Dstar then some logs else none
 
 end DensePoly
 
@@ -46,7 +46,7 @@ instance instLawfulCResidueLogPartDense : LawfulCResidueLogPart (P := DensePoly)
       (CResidueSource.candidates (DensePoly.cResidueResultantTower Dt hNum Dstar))
     let result : IntegralResult α := ⟨(CPoly.czero, CPoly.one), raw⟩
     by_cases hguard : ((!DensePoly.cisZero Dstar && raw.all (fun cv => !DensePoly.cisZero cv.2)) &&
-        DensePoly.checkIdentity Dt result hNum Dstar) = true
+        CPoly.checkIdentity Dt result hNum Dstar) = true
     · rw [if_pos hguard] at hrun
       have hlogsEq : raw = logs := Option.some.inj hrun
       subst logs

@@ -32,7 +32,7 @@ theorem isIntegralResultP_of_checkIdentity (Dt : P α) (res : IntegralResult α 
     (anum aden : P α)
     (hgden : CPoly.toPoly res.rational.2 ≠ 0) (haden : CPoly.toPoly aden ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0)
-    (hcheck : DensePoly.checkIdentity Dt res anum aden = true) :
+    (hcheck : CPoly.checkIdentity Dt res anum aden = true) :
     IsIntegralResultP Dt anum aden res :=
   field_identity_of_checkIdentityP Dt res anum aden hgden haden hlogs hcheck
 
@@ -77,7 +77,7 @@ theorem isIntegralResultG_of_checkIdentityG (Dt : DensePoly α) (res : IntegralR
     (anum aden : DensePoly α)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly aden ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
-    (hcheck : DensePoly.checkIdentity Dt res anum aden = true) :
+    (hcheck : CPoly.checkIdentity Dt res anum aden = true) :
     IsIntegralResult Dt anum aden res :=
   field_identity_of_checkIdentityG Dt res anum aden hgden haden hlogs hcheck
 

@@ -496,7 +496,7 @@ theorem towerIntLvl2_logs_lengthWf :
 `IntegralResult` whose antiderivative identity `D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds exactly
 (`checkIdentity`). -/
 theorem towerIntLvl2_fullIntegralWf :
-    DensePoly.checkIdentity towerIntLvl2Dt
+    CPoly.checkIdentity towerIntLvl2Dt
       (DensePoly.cIntegrateReduced towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
         towerIntLvl2Cands)
       towerIntLvl2Num towerIntLvl2Den = true := by ccompute

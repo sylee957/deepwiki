@@ -148,7 +148,7 @@ theorem field_identity_of_checkIdentityP (Dt : P α) (res : IntegralResult α P)
     (anum aden : P α)
     (hgden : CPoly.toPoly res.rational.2 ≠ 0) (haden : CPoly.toPoly aden ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0)
-    (hcheck : DensePoly.checkIdentity Dt res anum aden = true) :
+    (hcheck : CPoly.checkIdentity Dt res anum aden = true) :
     towerFractionFieldDerivP Dt
         (CFrac.am α (CPoly.toPoly res.rational.1) / CFrac.am α (CPoly.toPoly res.rational.2))
       + logResidueSumP Dt res.logs
@@ -202,7 +202,7 @@ theorem field_identity_of_checkIdentityP (Dt : P α) (res : IntegralResult α P)
       map_sub, map_mul]
     rw [hGD]
   have hLfield' : logResidueSumP Dt res.logs = LN / LD := by rw [← hLfield, hLN, hLD]
-  rw [DensePoly.checkIdentity] at hcheck
+  rw [CPoly.checkIdentity] at hcheck
   rw [LawfulCPolyEngine.cisZero_iff] at hcheck
   simp only [← hgnum, ← hgdenE, ← hgp, ← hgden2, ← hfolded,
     CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul,

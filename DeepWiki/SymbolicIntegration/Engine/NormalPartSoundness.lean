@@ -30,7 +30,7 @@ theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CPolyGcd DensePo
     (hgden : toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
     (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ (DensePoly.cIntegrateReduced Dt a d cands).logs, toPoly cv.2 ≠ 0)
-    (hcheck : DensePoly.checkIdentity Dt (DensePoly.cIntegrateReduced Dt a d cands) a d = true) :
+    (hcheck : CPoly.checkIdentity Dt (DensePoly.cIntegrateReduced Dt a d cands) a d = true) :
     towerFractionFieldDeriv Dt
         (am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.1)
           / am α (toPoly (DensePoly.cIntegrateReduced Dt a d cands).rational.2))

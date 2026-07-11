@@ -148,7 +148,7 @@ theorem field_identity_of_checkIdentityG (Dt : DensePoly α) (res : IntegralResu
     (anum aden : DensePoly α)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly aden ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
-    (hcheck : DensePoly.checkIdentity Dt res anum aden = true) :
+    (hcheck : CPoly.checkIdentity Dt res anum aden = true) :
     towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
         + logResidueSum Dt res.logs
       = am α (toPoly anum) / am α (toPoly aden) := by
@@ -198,7 +198,7 @@ theorem field_identity_of_checkIdentityG (Dt : DensePoly α) (res : IntegralResu
     rw [hGD]
   have hLfield' : logResidueSum Dt res.logs = LN / LD := by rw [← hLfield, hLN, hLD]
   -- ── the converse direction: extract the cleared polynomial identity from `checkIdentity = true` ──
-  rw [DensePoly.checkIdentity] at hcheck
+  rw [CPoly.checkIdentity] at hcheck
   simp only [CPolyEngine.sub_dense_eq, CPolyEngine.mul_dense_eq, CPolyEngine.add_dense_eq,
     CPolyEngine.scale_dense_eq, CPolyEngine.ofCoeffList_dense_eq,
     CPolyEngine.cisZero_dense_eq] at hcheck

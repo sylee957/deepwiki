@@ -24,7 +24,7 @@ def hyperexpCheckedCase : CMonomialCase DensePoly α where
       let inputNum := CPolyEngine.add (CPolyEngine.mul fp ds) b
       let result : IntegralResult α := ⟨out, []⟩
       if ((!CPolyEngine.cisZero ds && !CPolyEngine.cisZero out.2) &&
-          checkIdentity Dt result inputNum ds) then some out else none
+          CPoly.checkIdentity Dt result inputNum ds) then some out else none
   postprocessNormal _Dt nrm := some nrm
 
 end DensePoly

@@ -51,7 +51,7 @@ theorem nNormInv_baseIntegral_eq_x :
 /-- The plain reduced driver overshoots on `f = 1/(exp x − 1)`: `cIntegrateReduced` returns `log(t−1)`,
 which overshoots by `R = 1`, so `checkIdentity = false`. -/
 theorem nNormInv_reduced_overshoots :
-    DensePoly.checkIdentity nHyperexpDt
+    CPoly.checkIdentity nHyperexpDt
       (cIntegrateReduced nHyperexpDt nNormInvA nNormInvD nNormInvCands)
       nNormInvA nNormInvD = false := by native_decide
 
@@ -59,7 +59,7 @@ theorem nNormInv_reduced_overshoots :
 `cIntegrateHyperexpNormal` returns `some res` satisfying `checkIdentity`. -/
 theorem nNormInv_landsNormalPart :
     (match DensePoly.cIntegrateHyperexpNormal nHyperexpDt nNormInvA nNormInvD nNormInvCands with
-      | some res => DensePoly.checkIdentity nHyperexpDt res nNormInvA nNormInvD
+      | some res => CPoly.checkIdentity nHyperexpDt res nNormInvA nNormInvD
       | none => false) = true := by native_decide
 
 /-- The driver's result on `f = 1/(exp x − 1)` is exactly `log(t−1) − x`: rational part `−x` and a single
@@ -92,7 +92,7 @@ def nSpecNormCands : List Lvl1 := [CCommRing.zero, CCommRing.one, CCommRing.neg 
 `some` but its normal log part overshoots by `R = 1`, so `checkIdentity = false`. -/
 theorem nSpecNorm_specialOnly_overshoots :
     (match DensePoly.cIntegrateHyperexp nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
-      | some res => DensePoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
+      | some res => CPoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = false := by native_decide
 
 /-- The full driver lands `∫ (1/exp + 1/(exp−1)) = −1/exp + log(exp−1) − x` with `D(∫f) = f`:
@@ -100,7 +100,7 @@ theorem nSpecNorm_specialOnly_overshoots :
 returning `some res` satisfying `checkIdentity`. -/
 theorem nSpecNorm_full_lands :
     (match DensePoly.cIntegrateHyperexpFull nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
-      | some res => DensePoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
+      | some res => CPoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = true := by native_decide
 
 /-! ### A non-constant base residual: `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²`
@@ -145,7 +145,7 @@ theorem nVarNorm_baseIntegral_eq_xSq :
 theorem nVarNorm_landsNormalPart :
     (match DensePoly.cIntegrateHyperexpNormal nVarDt nVarNormA nVarNormD nVarNormCands with
       | some res =>
-        DensePoly.checkIdentity nVarDt res nVarNormA nVarNormD
+        CPoly.checkIdentity nVarDt res nVarNormA nVarNormD
           && DensePoly.cisZero (DensePoly.csub res.rational.1 [CCommRing.neg nLvl1XSq])
           && res.logs.length == 1
       | none => false) = true := by native_decide

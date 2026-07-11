@@ -180,7 +180,7 @@ structure IntegralResult (α : Type u) [CField α] (P : Type u → Type u := Den
   /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f`. -/
   logs : List (α × P α)
 
-namespace DensePoly
+namespace CPoly
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
   {α : Type u} [CField α] [CDiffField α]
@@ -223,7 +223,7 @@ example :
     checkIdentity (ofList [1]) res (ofList [0, 1]) (ofList [1]) = true := by
   ccompute
 
-end DensePoly
+end CPoly
 
 /-! ### Level-2 reduced integration test data
 
