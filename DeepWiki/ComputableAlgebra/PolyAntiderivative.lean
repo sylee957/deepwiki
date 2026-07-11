@@ -59,24 +59,6 @@ variable [CFieldSpec.{u,v} α]
 
 end CPoly
 
-namespace DensePoly
-
-variable {α : Type u} [CField α] [CFieldSpec.{u,v} α]
-
-/-- Dense denotation reads the selected antiderivative with zero constant coefficient. -/
-@[simp] theorem coeff_toPoly_antiderivative_zero (p : DensePoly α) :
-    (toPoly (CPoly.antiderivative p)).coeff 0 = 0 := by
-  rw [← toPoly_list_eq]
-  exact CPoly.coeff_toPoly_antiderivative_zero p
-
-/-- Dense denotation inherits the representation-independent antiderivative law. -/
-@[denote] theorem derivative_toPoly_antiderivative [CharZero (CFieldSpec.K α)] (p : DensePoly α) :
-    (toPoly (CPoly.antiderivative p)).derivative = toPoly p := by
-  rw [← toPoly_list_eq, ← toPoly_list_eq]
-  exact CPoly.derivative_toPoly_antiderivative p
-
-end DensePoly
-
 /-! ### Representation-independence validation -/
 
 /-- Dense antiderivation returns the expected low-to-high coefficient list. -/

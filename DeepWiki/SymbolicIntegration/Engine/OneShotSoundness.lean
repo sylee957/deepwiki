@@ -39,7 +39,8 @@ theorem toPolyG_cmonomialDeriv_antiderivative_const [CharZero (CFieldSpec.K α)]
   rw [hDt, Differential.implicitDeriv, Derivation.add_apply, hconst, zero_add]
   -- the `v • derivative'` part is `1 • derivative = derivative`
   rw [Derivation.smul_apply, one_smul, Derivation.restrictScalars_apply]
-  exact DensePoly.derivative_toPoly_antiderivative c
+  rw [← toPoly_list_eq, ← toPoly_list_eq]
+  exact CPoly.derivative_toPoly_antiderivative c
 
 /-! ### The field identity `D(∫ fₚ) = fₚ` for the polynomial part -/
 
@@ -98,7 +99,8 @@ theorem checkIdentityG_antiderivative_const [CharZero (CFieldSpec.K α)] (c : De
   -- the rational-part numerator derivative `D(q)·1 − q·D(1)`, with `D(1) = 0`
   rw [Differential.implicitDeriv, Derivation.add_apply, hconst, zero_add,
     Derivation.smul_apply, one_smul, Derivation.restrictScalars_apply,
-    Polynomial.derivative'_apply, DensePoly.derivative_toPoly_antiderivative c,
+    Polynomial.derivative'_apply, ← toPoly_list_eq (CPoly.antiderivative c), ← toPoly_list_eq c,
+    CPoly.derivative_toPoly_antiderivative c,
     Derivation.map_one_eq_zero]
   ring
 
@@ -177,12 +179,15 @@ theorem mapCoeffs_antiderivative_eq_zero [CharZero (CFieldSpec.K α)] (c : Dense
   set Q := Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) with hQ
   -- `derivative Q = 0` by commuting `mapCoeffs`/`derivative` and the formal-derivative atom
   have hderiv : Polynomial.derivative Q = 0 := by
-    rw [hQ, ← mapCoeffs_derivative_commute, DensePoly.derivative_toPoly_antiderivative, hc]
+    rw [hQ, ← mapCoeffs_derivative_commute, ← toPoly_list_eq (CPoly.antiderivative c),
+      CPoly.derivative_toPoly_antiderivative, toPoly_list_eq c, hc]
   -- `coeff Q 0 = 0`: `CPoly.antiderivative` has zero constant term (`0 :: …`)
   have hcoeff0 : Q.coeff 0 = 0 := by
     rw [hQ, Differential.coeff_mapCoeffs]
     have : (toPoly (CPoly.antiderivative c)).coeff 0 = 0 :=
-      DensePoly.coeff_toPoly_antiderivative_zero c
+      by
+        rw [← toPoly_list_eq]
+        exact CPoly.coeff_toPoly_antiderivative_zero c
     rw [this, map_zero]
   -- `derivative Q = 0` ⟹ `natDegree Q = 0` ⟹ `Q = C (coeff Q 0) = 0`
   have hdeg : Q.natDegree = 0 := Polynomial.derivative_eq_zero.mp hderiv
@@ -242,7 +247,9 @@ theorem field_identity_of_cPolyRischDEG_qfunNZG (c q : DensePoly (DenseFrac ℚ)
 -- The term-by-term antiderivative `CPoly.antiderivative` differentiates back to its integrand.
 example [CharZero (CFieldSpec.K α)] (c : DensePoly α) :
     Polynomial.derivative (toPoly (CPoly.antiderivative c)) = toPoly c :=
-  DensePoly.derivative_toPoly_antiderivative c
+  by
+    rw [← toPoly_list_eq, ← toPoly_list_eq]
+    exact CPoly.derivative_toPoly_antiderivative c
 
 -- The polynomial-branch output satisfies `checkIdentity` abstractly, with no runtime check.
 example [CharZero (CFieldSpec.K α)] (c : DensePoly α)
@@ -429,23 +436,5 @@ example (Dt b c q : DensePoly α) (m : ℤ)
   cPolyRischDEG_cancelPrim_field Dt b c q m hδ hdb hb hsome
 
 end Cancellation
-
-/-! ### Axiom audit — rests only on the standard kernel axioms
-(`propext`, `Classical.choice`, `Quot.sound`). -/
-
-#print axioms DensePoly.derivative_toPoly_antiderivative
-#print axioms toPolyG_cmonomialDeriv_antiderivative_const
-#print axioms towerFractionFieldDerivG_amG_antiderivative_const
-#print axioms checkIdentityG_antiderivative_const
-#print axioms field_identity_antiderivative_const
-#print axioms field_identity_of_cPolyRischDEG
-#print axioms field_identity_of_cPolyRischDEG_qfunNZG
-#print axioms mapCoeffs_derivative_commute
-#print axioms mapCoeffs_antiderivative_eq_zero
-#print axioms cPolyRischDEG_nil_field_identity
-#print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelPrimG
-#print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelExpG
-#print axioms cPolyRischDEG_cancelPrim_field
-#print axioms cPolyRischDEG_cancelExp_field
 
 end DeepWiki.SymbolicIntegration
