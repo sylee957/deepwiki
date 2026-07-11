@@ -166,7 +166,7 @@ example :
       (cmonomialDeriv
         (CPoly.SparsePoly.ofList [(0, (1 : ℚ))])
         (CPoly.SparsePoly.ofList [(0, 1), (2, 3)])) = 1 := by
-  native_decide
+  ccompute
 
 
 end DensePoly
