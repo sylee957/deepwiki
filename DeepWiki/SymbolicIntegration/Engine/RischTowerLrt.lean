@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.RischTowerPrimitive
 import DeepWiki.SymbolicIntegration.Engine.LrtAssembly
 import DeepWiki.SymbolicIntegration.Engine.LrtAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Engine.PrimitiveLrtDecision
+import DeepWiki.SymbolicIntegration.Engine.LimitedIntegrateSingle
 
 /-! # Recursive LRT (algebraic-residue) Risch-level interface
 
@@ -26,6 +27,13 @@ universe u v
 open DensePoly CFrac Polynomial
 open scoped Differential
 
+/-- Prop-free executable capability for Bronstein's single-generator limited integration. -/
+class CLimitedIntegrateSingleLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] where
+  /-- Attempt `(anum/aden) = D(bnum/bden) + c·(ηnum/ηden)`. -/
+  run : DensePoly α → DensePoly α → DensePoly α → DensePoly α →
+    Option ((DensePoly α × DensePoly α) × α)
+
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
@@ -36,24 +44,46 @@ class CRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [C
     [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] where
   /-- The per-monomial-case computable hooks for this level (the special/polynomial-part integrator). -/
   case : CMonomialCase DensePoly α
-  /-- **Optional single-`w` limited integrator** (Bronstein §5.8/§5.12) — `(anum, aden, ηnum, ηden) ↦
-  ((bnum, bden), c)` with `anum/aden = D(bnum/bden) + c·(ηnum/ηden)` over `α(s)`. Feeds the degree-raising
-  coefficient recursion `cIntegratePrimPolyDegRaise` its `c` (the `c·tᵐ⁺¹/(m+1)` term). Defaults to `none` ⟹
-  the tower recursion falls back to the log-free coefficient integrator (`c = 0`), so existing instances are
-  unaffected; a `(b,c)` instance (base = `CFrac.limitedIntegrateSingleBase`) flips on degree-raising. Soundness is
-  telescoping (`cIntegratePrimPolyDegRaiseG_sound` needs no correctness law on this). -/
-  limitedIntegrateSingle : DensePoly α → DensePoly α → DensePoly α → DensePoly α → Option ((DensePoly α × DensePoly α) × α) :=
-    fun _ _ _ _ => none
 
-/-- Semantic result of single-generator limited integration in the coefficient rational-function field. -/
-def IsLimitedIntegrateSingleResult (anum aden ηnum ηden bnum bden : DensePoly α)
-    (c : α) : Prop :=
-  toPoly bden ≠ 0 ∧
-    towerFractionFieldDeriv ([CCommRing.one] : DensePoly α) (fieldFrac bnum bden) +
-        algebraMap (CFieldSpec.K α) (RatFunc (CFieldSpec.K α)) (CFieldSpec.toK c) *
-          fieldFrac ηnum ηden =
-      fieldFrac anum aden ∧
-    CFieldSpec.toK (CDiffField.cderiv c) = 0
+/-- Soundness contract for a single-generator limited-integration capability. -/
+class LawfulCLimitedIntegrateSingleLrt {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+    (C : CLimitedIntegrateSingleLrt α) : Prop where
+  /-- Every successful run returns a valid limited-integration decomposition. -/
+  sound : ∀ (anum aden ηnum ηden bnum bden : DensePoly α) (c : α),
+    toPoly aden ≠ 0 → toPoly ηden ≠ 0 →
+    C.run anum aden ηnum ηden = some ((bnum, bden), c) →
+      DensePoly.IsLimitedIntegrateSingleResult anum aden ηnum ηden bnum bden c
+
+/-- Certified base-field limited integration over `ℚ`. -/
+@[reducible] def limitedIntegrateSingleLrtBase : CLimitedIntegrateSingleLrt ℚ where
+  run := DensePoly.checkedLimitedIntegrateSingleBaseNumDen
+
+/-- The certified base limited-integration capability satisfies its semantic contract. -/
+instance instLawfulCLimitedIntegrateSingleLrtBase :
+    LawfulCLimitedIntegrateSingleLrt limitedIntegrateSingleLrtBase where
+  sound := DensePoly.checkedLimitedIntegrateSingleBaseNumDen_sound
+
+/-- Conservative fallback when no specialized limited integrator is available. -/
+instance instCLimitedIntegrateSingleLrtNone : CLimitedIntegrateSingleLrt α where
+  run := fun _ _ _ _ => none
+
+/-- The conservative fallback is sound because it never returns a result. -/
+instance instLawfulCLimitedIntegrateSingleLrtNone :
+    LawfulCLimitedIntegrateSingleLrt (inferInstance : CLimitedIntegrateSingleLrt α) where
+  sound := by
+    intro anum aden ηnum ηden bnum bden c _ _ h
+    change (none : Option ((DensePoly α × DensePoly α) × α)) = some ((bnum, bden), c) at h
+    contradiction
+
+/-- The checked rational-base implementation of single-generator limited integration. -/
+instance instCLimitedIntegrateSingleLrtRat : CLimitedIntegrateSingleLrt ℚ :=
+  limitedIntegrateSingleLrtBase
+
+example :
+    ((inferInstance : CLimitedIntegrateSingleLrt ℚ).run [1, 1] [0, 1] [1] [0, 1]).map
+      (fun r => (CPoly.normalizeFracPair r.1.1 r.1.2, r.2)) = some (([0, 1], [1]), 1) := by
+  ccompute
 
 /-- Denotation-level soundness contract for a recursive LRT operation. -/
 class LawfulCRischLevelLrt {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
@@ -74,11 +104,6 @@ class LawfulCRischLevelLrt {α : Type*} [CField α] [CFieldSpec α] [CDiffField 
   /-- The selected reduced LRT rational denominator is nonzero. -/
   reducedDenNonzero : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
     toPoly (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0
-  /-- Every successful single-generator limited integration returns a valid decomposition. -/
-  limitedIntegrateSingle_sound : ∀ (anum aden ηnum ηden bnum bden : DensePoly α) (c : α),
-    toPoly aden ≠ 0 → toPoly ηden ≠ 0 →
-    C.limitedIntegrateSingle anum aden ηnum ηden = some ((bnum, bden), c) →
-      IsLimitedIntegrateSingleResult anum aden ηnum ηden bnum bden c
 
 namespace CRischLevelLrt
 
@@ -281,7 +306,6 @@ instance instCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly α]
     [PrimitiveFrontierLrt α] :
     CRischLevelLrt α where
   case := primitiveGuardedCase
-  limitedIntegrateSingle := fun _ _ _ _ => none
 
 /-- The primitive LRT operation satisfies its algebraic-residue soundness contract. -/
 instance instLawfulCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly α]
@@ -294,10 +318,6 @@ instance instLawfulCRischLevelLrtPrimitive [CRischField α] [CPolyGcd DensePoly 
   reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
   reducedDenNonzero := fun Dt a d hd0 hDt0 =>
     PrimitiveFrontierLrt.hreducedDenNonzero Dt a d hd0 hDt0
-  limitedIntegrateSingle_sound := by
-    intro anum aden ηnum ηden bnum bden c _ _ hrun
-    change (none : Option ((DensePoly α × DensePoly α) × α)) = some ((bnum, bden), c) at hrun
-    contradiction
 
 /-- **Validation: the base LRT solver resolves from selected operations and the reduced frontier.** -/
 example [CRischField α] [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]

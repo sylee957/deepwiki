@@ -24,6 +24,10 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   operation used by Bronstein's degree-raising primitive polynomial reduction.  The LRT primitive
   tower case is now a lawful `CRecursiveMonomialCase` realization, and the prior executable case is
   exactly its specialization with `towerCoefficientIntegratorLrt`.
+- `CLimitedIntegrateSingleLrt` / `LawfulCLimitedIntegrateSingleLrt` isolate the coefficient-field
+  single-generator operation from the LRT level itself.  The conservative `none` capability is lawful;
+  the named base realizer `limitedIntegrateSingleLrtBase` runs the generic candidate routine only after an
+  identity check, and its law proves the full decomposition and constant-coefficient condition.
 - `CCanonicalRepresentation`/`LawfulCCanonicalRepresentation` have dense and sparse-facing
   realizations. The sparse realization transports the dense backend through denotation-preserving
   polynomial conversion.
@@ -83,10 +87,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
 - `CRischLevelLrt` is the Prop-free recursive algebraic-residue operation, while
-  `LawfulCRischLevelLrt` packages its special, reduced, and single-generator limited-integration
-  soundness contracts. The LRT coefficient integrator transports that last contract through
-  `DenseFrac`, so every accepted limited result now proves both `c = D(b) + r·η` and `D(r) = 0`.
-  The primitive base and
+  `LawfulCRischLevelLrt` packages its special and reduced soundness contracts. The LRT coefficient
+  integrator transports the separate limited-integration contract through `DenseFrac`, so every accepted
+  limited result proves both `c = D(b) + r·η` and `D(r) = 0`. The primitive base and
   `DenseFrac` tower-step instances provide the recursive induction path.
 
 ## Leaf inventory

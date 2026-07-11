@@ -1,6 +1,9 @@
 import DeepWiki.SymbolicIntegration.Engine.Parametric
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
+import DeepWiki.SymbolicIntegration.Engine.CheckIdentityCorrect
+import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.Engine.Assemble
 import DeepWiki.ComputableAlgebra.PolyAntiderivative
 
 /-! # Base single-`w` limited integration
@@ -58,8 +61,20 @@ example :
 
 namespace DensePoly
 
+/-- Semantic result of single-generator limited integration in a coefficient rational-function field. -/
+def IsLimitedIntegrateSingleResult {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+    [CDiffField α] [CDiffFieldSpec.{u,v} α]
+    [Algebra ℚ (CFieldSpec.K α)]
+    (anum aden ηnum ηden bnum bden : DensePoly α) (c : α) : Prop :=
+  toPoly bden ≠ 0 ∧
+    towerFractionFieldDeriv ([CCommRing.one] : DensePoly α) (fieldFrac bnum bden) +
+        algebraMap (CFieldSpec.K α) (RatFunc (CFieldSpec.K α)) (CFieldSpec.toK c) *
+          fieldFrac ηnum ηden =
+      fieldFrac anum aden ∧
+    CFieldSpec.toK (CDiffField.cderiv c) = 0
+
 /-- **`CFrac.limitedIntegrateSingleBase` in the num/den signature** of
-`CRischLevelLrt.limitedIntegrateSingle`
+`CLimitedIntegrateSingleLrt.run`
 (`anum aden ηnum ηden ↦ ((bnum, bden), c)`) — the base ℚ instance's field for Phase 3-wire-2. Guards the
 denominators nonzero (`CFrac` needs `cisZero den = false`), then wraps the generic integrator. -/
 def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly ℚ) :
@@ -72,6 +87,88 @@ def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly ℚ) :
         fun bc => ((CFrac.num bc.1, CFrac.den bc.1), bc.2)
     else none
   else none
+
+/-- Checked base limited integration accepts only outputs whose cleared derivative identity holds. -/
+def checkedLimitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : DensePoly ℚ) :
+    Option ((DensePoly ℚ × DensePoly ℚ) × ℚ) :=
+  limitedIntegrateSingleBaseNumDen anum aden ηnum ηden |>.bind fun out =>
+    let targetNum := CPolyEngine.sub (CPolyEngine.mul anum ηden)
+      (CPolyEngine.mul (CPolyEngine.scale out.2 ηnum) aden)
+    let targetDen := CPolyEngine.mul aden ηden
+    let result : IntegralResult ℚ := { rational := out.1, logs := [] }
+    if CPolyEngine.cisZero out.1.2 then none
+    else if DensePoly.checkIdentity ([CCommRing.one] : DensePoly ℚ) result targetNum targetDen then
+      some out
+    else none
+
+/-- Every accepted checked base limited-integration result satisfies its field identity. -/
+theorem checkedLimitedIntegrateSingleBaseNumDen_sound
+    (anum aden ηnum ηden bnum bden : DensePoly ℚ) (c : ℚ)
+    (haden : toPoly aden ≠ 0) (hηden : toPoly ηden ≠ 0)
+    (hrun : checkedLimitedIntegrateSingleBaseNumDen anum aden ηnum ηden =
+      some ((bnum, bden), c)) :
+    IsLimitedIntegrateSingleResult anum aden ηnum ηden bnum bden c := by
+  unfold checkedLimitedIntegrateSingleBaseNumDen at hrun
+  rw [Option.bind_eq_some_iff] at hrun
+  obtain ⟨⟨⟨bn, bd⟩, cc⟩, _hbase, hchecked⟩ := hrun
+  dsimp only at hchecked
+  split at hchecked
+  · contradiction
+  rename_i hbd
+  split at hchecked
+  · rename_i hcheck
+    simp only [Option.some.injEq, Prod.mk.injEq] at hchecked
+    obtain ⟨⟨hbn, hbdEq⟩, hcc⟩ := hchecked
+    subst bnum
+    subst bden
+    subst c
+    have hbdenG : CPoly.toPoly bd ≠ 0 := by
+      apply CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false
+      exact Bool.eq_false_iff.mpr hbd
+    have hbden : toPoly bd ≠ 0 := by
+      simpa only [toPoly_list_eq] using hbdenG
+    let targetNum := CPolyEngine.sub (CPolyEngine.mul anum ηden)
+      (CPolyEngine.mul (CPolyEngine.scale cc ηnum) aden)
+    let targetDen := CPolyEngine.mul aden ηden
+    let result : IntegralResult ℚ := { rational := (bn, bd), logs := [] }
+    have htargetDenG : CPoly.toPoly targetDen ≠ 0 := by
+      simp only [targetDen]
+      rw [LawfulCPolyEngine.toPoly_mul]
+      exact mul_ne_zero (by simpa only [toPoly_list_eq] using haden)
+        (by simpa only [toPoly_list_eq] using hηden)
+    have hid := field_identity_of_checkIdentityP
+      (P := DensePoly) ([CCommRing.one] : DensePoly ℚ) result targetNum targetDen
+      (by simpa [result] using hbdenG) htargetDenG (by simp [result]) hcheck
+    rw [IsLimitedIntegrateSingleResult]
+    refine ⟨hbden, ?_, ?_⟩
+    · simp only [result, logResidueSumP, List.map_nil, List.sum_nil, add_zero] at hid
+      have hid' : towerFractionFieldDeriv ([CCommRing.one] : DensePoly ℚ) (fieldFrac bn bd) =
+          fieldFrac targetNum targetDen := by
+        simpa only [towerFractionFieldDerivP, towerFractionFieldDeriv, fieldFracP, fieldFrac,
+          toPoly_list_eq] using hid
+      have hscalar : CFrac.am ℚ (Polynomial.C (CFieldSpec.toK cc)) =
+          algebraMap (CFieldSpec.K ℚ) (RatFunc (CFieldSpec.K ℚ)) (CFieldSpec.toK cc) := by
+        rw [CFrac.am, ← Polynomial.algebraMap_eq]
+        exact (IsScalarTower.algebraMap_apply (CFieldSpec.K ℚ) (CFieldSpec.K ℚ)[X]
+          (RatFunc (CFieldSpec.K ℚ)) (CFieldSpec.toK cc)).symm
+      have htarget : fieldFrac targetNum targetDen = fieldFrac anum aden -
+          algebraMap (CFieldSpec.K ℚ) (RatFunc (CFieldSpec.K ℚ)) (CFieldSpec.toK cc) *
+            fieldFrac ηnum ηden := by
+        simp only [fieldFrac, ← toPoly_list_eq]
+        simp only [targetNum, targetDen, CPolyEngine.toPoly_sub,
+          LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_scale, toR_eq_toK,
+          map_sub, map_mul]
+        rw [hscalar]
+        have hA : CFrac.am ℚ (CPoly.toPoly aden) ≠ 0 :=
+          CFrac.am_ne_zero (by simpa only [toPoly_list_eq] using haden)
+        have hη : CFrac.am ℚ (CPoly.toPoly ηden) ≠ 0 :=
+          CFrac.am_ne_zero (by simpa only [toPoly_list_eq] using hηden)
+        field_simp [hA, hη]
+      rw [htarget] at hid'
+      rw [hid']
+      ring
+    · rfl
+  · contradiction
 
 /-- **Degree-raising primitive-polynomial integration** `cIntegratePrimPolyDegRaise η limInt fuel p`
 (Bronstein `IntegratePrimitivePolynomial`, Thm 5.8.1): given the primitive derivation `Dt = η ∈ α`, a
