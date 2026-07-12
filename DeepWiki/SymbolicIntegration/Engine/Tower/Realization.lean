@@ -142,6 +142,42 @@ noncomputable def lift (R : TowerRealization N) (n : ℕ) (hn : n + 1 ≤ N) :
       (R.Carrier (n + 1) hn) := R.stepAlgebra n hn
   exact algebraMap _ _
 
+/-- The successor realization lift commutes with differentiation. -/
+theorem lift_deriv (R : TowerRealization N) (n : ℕ) (hn : n + 1 ≤ N) :
+    letI : Field (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)) :=
+      R.field (TowerRealization.index (Nat.le_trans (Nat.le_succ n) hn))
+    letI : Differential (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)) :=
+      R.differential (TowerRealization.index (Nat.le_trans (Nat.le_succ n) hn))
+    letI : Differential (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn))) :=
+      R.stepDifferential n hn
+    letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+    letI : Differential (R.Carrier (n + 1) hn) := R.differential (TowerRealization.index hn)
+    letI : Algebra (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)))
+        (R.Carrier (n + 1) hn) := R.stepAlgebra n hn
+    letI : DifferentialAlgebra (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)))
+        (R.Carrier (n + 1) hn) := R.stepDifferentialAlgebra n hn
+    ∀ x : RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)),
+      R.lift n hn (Differential.deriv x) = Differential.deriv (R.lift n hn x) := by
+  letI : Field (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)) :=
+    R.field (TowerRealization.index (Nat.le_trans (Nat.le_succ n) hn))
+  letI : Differential (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)) :=
+    R.differential (TowerRealization.index (Nat.le_trans (Nat.le_succ n) hn))
+  letI : Differential (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn))) :=
+    R.stepDifferential n hn
+  letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+  letI : Differential (R.Carrier (n + 1) hn) := R.differential (TowerRealization.index hn)
+  letI : Algebra (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)))
+      (R.Carrier (n + 1) hn) := R.stepAlgebra n hn
+  letI : DifferentialAlgebra (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)))
+      (R.Carrier (n + 1) hn) := R.stepDifferentialAlgebra n hn
+  intro x
+  change algebraMap (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)))
+      (R.Carrier (n + 1) hn) (Differential.deriv x) =
+    Differential.deriv
+      (algebraMap (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)))
+        (R.Carrier (n + 1) hn) x)
+  exact (DifferentialAlgebra.deriv_algebraMap x).symm
+
 end TowerRealization
 
 end DeepWiki.SymbolicIntegration
