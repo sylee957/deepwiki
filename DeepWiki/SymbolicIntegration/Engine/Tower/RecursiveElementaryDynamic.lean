@@ -24,6 +24,14 @@ def coefficientLogSumWith {α : Type u} [CField α] [CFieldSpec.{u,v} α]
   (logs.map fun cv => CFieldSpec.toK cv.1 *
     (CFieldSpec.toK (derivation.cderiv cv.2) / CFieldSpec.toK cv.2)).sum
 
+/-- `coefficientLogSumWith` splits over its leading logarithmic term. -/
+theorem coefficientLogSumWith_cons {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+    (derivation : CFieldDerivation α) (cv : α × α) (rest : List (α × α)) :
+    coefficientLogSumWith derivation (cv :: rest) =
+      CFieldSpec.toK cv.1 *
+        (CFieldSpec.toK (derivation.cderiv cv.2) / CFieldSpec.toK cv.2) +
+      coefficientLogSumWith derivation rest := rfl
+
 /-- A recursive elementary result is sound for the selected explicit coefficient differential. -/
 def IsCoefficientIntegralResultWith {α : Type u} [CField α] [CFieldSpec.{u,v} α]
     (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))

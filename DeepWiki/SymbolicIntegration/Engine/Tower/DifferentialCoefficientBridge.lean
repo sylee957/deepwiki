@@ -10,6 +10,11 @@ against the successor derivation. The lift theorem is the sole representation-sp
 
 namespace DeepWiki.SymbolicIntegration
 
+/-- Cast a packaged successor semantic value into its preceding rational-function presentation. -/
+noncomputable def denseFracTowerKSuccCast (n : ℕ) :
+    CFieldSpec.K (DenseFracTower (n + 1)) → RatFunc (CFieldSpec.K (DenseFracTower n)) :=
+  cast (denseFracTower_K_succ n)
+
 /-- Present a successor coefficient as a Risch input at the preceding presentation depth. -/
 noncomputable def presentationCoefficientInput (T : DifferentialTowerPresentation N)
     (n : ℕ) (hn : n + 1 ≤ N) (c : DenseFracTower (n + 1)) :
@@ -124,6 +129,34 @@ theorem coefficientLogTerm_towerOfPoly
   rw [toPoly_list_eq]
   simp only [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil, toR_eq_toK, mul_zero, add_zero]
   rfl
+
+/-- Lifting every lower logarithmic residue yields the successor coefficient logarithmic sum. -/
+theorem coefficientLogSumWith_liftTowerLogs
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n + 1 ≤ N)
+    (logs : List (DenseFracTower n × DensePoly (DenseFracTower n))) :
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    let C := T.context n hprev
+    coefficientLogSumWith (T.derivation (n + 1) hn) (liftTowerLogs n logs) =
+      differentialLogResidueSum C (T.monomialDerivative n hn) logs := by
+  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+  let C := T.context n hprev
+  induction logs with
+  | nil => rfl
+  | cons cv rest ih =>
+      change coefficientLogSumWith (T.derivation (n + 1) hn)
+          ((towerOfPoly n [cv.1], towerOfPoly n cv.2) :: liftTowerLogs n rest) =
+        differentialLogResidueSum C (T.monomialDerivative n hn) (cv :: rest)
+      rw [coefficientLogSumWith_cons]
+      have hsplit :
+          differentialLogResidueSum C (T.monomialDerivative n hn) (cv :: rest) =
+            CFrac.am (DenseFracTower n) (Polynomial.C (CFieldSpec.toK cv.1)) *
+                (C.fractionDeriv (T.monomialDerivative n hn)
+                  (CFrac.am (DenseFracTower n) (CPoly.toPoly cv.2)) /
+                  CFrac.am (DenseFracTower n) (CPoly.toPoly cv.2)) +
+              differentialLogResidueSum C (T.monomialDerivative n hn) rest := rfl
+      rw [hsplit]
+      rw [DifferentialTowerPresentation.toK_cderiv T (n + 1) hn (towerOfPoly n cv.2)]
+      rw [coefficientLogTerm_towerOfPoly T n hn cv.1 cv.2, ih]
 
 /-- The legacy dense lift has the packaged successor tower's rational-function denotation. -/
 theorem denseFracTower_toRatFunc_liftRischResult_rational
