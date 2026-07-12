@@ -130,7 +130,7 @@ Then feed M2 (item hstep) + Y4-extended (radical) + item-2 (structural) into the
 `prod_dvd_residNum` to get `W·gden²∣resNum`, discharging `hWgd`.
 
 Once M2+M3 land, `hNrmField` for the reduced part is discharged down to the RT residue-match frontier,
-matching the primitive/hyperexp footing (see `risch-typeclass-architecture.md`).
+matching the primitive/hyperexp footing (see `bronstein-compositional-architecture.md`).
 
 ## Yun side COMPLETE (2026-07-04) — pole-cancellation isolated to one valuation lemma
 

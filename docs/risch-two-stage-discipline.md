@@ -2,8 +2,9 @@
 
 This is the organizing discipline for the whole Risch development. It supersedes the ad-hoc wiring that
 accreted in `Computable/Assemble.lean` (concrete `cHermiteReduceTowerG`/`cSqfreeYunFFG`/`CFracG ℚ`
-lemmas mixed into the assembler). It refines — does not replace — `docs/risch-typeclass-architecture.md`;
-that doc describes the *assembler shape*, this one fixes the *proof organization law* it must obey.
+lemmas mixed into the assembler). Together with
+`docs/bronstein-compositional-architecture.md`, it fixes the assembler shape and the proof-organization
+law it must obey.
 
 ## The principle (two stages, 1-1)
 

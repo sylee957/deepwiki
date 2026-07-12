@@ -82,7 +82,7 @@ theorem towerFractionFieldDerivG_amG_C (Dt : DensePoly α) (k : CFieldSpec.K α)
 /-- The pure-integration residual `D(∫R) = R`: if `crischDESolve 0 R = some intR`, the constant
 `intR` embedded into the tower fraction field as `am (C (toK intR))` differentiates back to
 `am (C (toK R))`. Discharges the base-oracle hypothesis `hintR` of
-`ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound`. -/
+`cIntegrateHyperexpNormalG_sound`. -/
 theorem crischDESolve_zero_intDeriv (Dt : DensePoly α) (R intR : α)
     (hsolve : CRischField.crischDESolve (CCommRing.zero : α) R = some intR) :
     towerFractionFieldDeriv Dt (am α (Polynomial.C (CFieldSpec.toK intR)))

@@ -301,80 +301,6 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : DensePoly (DenseFrac ℚ))
   cIntegrateHyperexpNormalG_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 
-/-! ### The full driver soundness `cIntegrateHyperexpFullG_sound`
-
-`cIntegrateHyperexpFull` combines the Laurent special part with the normal part. Soundness composes the
-Laurent field identity `hLaurField`, the normal-part soundness, and the canonical reconstruction `hrecon`,
-giving `D(res) + logResidueSum = a/d`, unconditional in `∑c`. -/
-
-omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- Output shape of `cIntegrateHyperexpFull`: when it returns `some res` and both the Laurent and normal
-parts succeed, `res` is the combined rational part with the normal logs. -/
-private theorem cIntegrateHyperexpFullG_shape [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
-    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] (Dt : DensePoly α)
-    (a d : DensePoly α) (cands : List α) (res : IntegralResult α) (lnum lden : DensePoly α)
-    (nrm : IntegralResult α)
-    (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
-        (canonicalRepresentationFast Dt a d).1
-        (cHyperexpSpecialNeg (canonicalRepresentationFast Dt a d).2.1.1
-          (canonicalRepresentationFast Dt a d).2.1.2)
-      = some (lnum, lden))
-    (hNrm : DensePoly.cIntegrateHyperexpNormal Dt
-        (canonicalRepresentationFast Dt a d).2.2.1
-        (canonicalRepresentationFast Dt a d).2.2.2 cands = some nrm)
-    (hsome : DensePoly.cIntegrateHyperexpFull Dt a d cands = some res) :
-    res = ⟨(cadd (cmul lnum nrm.rational.2) (cmul nrm.rational.1 lden), cmul lden nrm.rational.2),
-          nrm.logs⟩ := by
-  rw [DensePoly.cIntegrateHyperexpFull] at hsome
-  rcases hcrep : canonicalRepresentationFast Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
-  rw [hcrep] at hsome hLaur hNrm
-  simp only [hLaur, hNrm] at hsome
-  exact (Option.some.injEq _ _ ▸ hsome).symm
-
-/-- Full hyperexponential driver soundness `D(∫f) = f` for `cIntegrateHyperexpFull`, unconditional in
-`∑c` — composes the Laurent field identity, the normal-part field identity, and the canonical
-reconstruction. -/
-theorem cIntegrateHyperexpFullG_sound [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
-    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
-    (Dt : DensePoly α) (a d : DensePoly α)
-    (cands : List α) (res : IntegralResult α) (lnum lden : DensePoly α) (nrm : IntegralResult α)
-    (fpPart : DensePoly α) (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
-    (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
-        (canonicalRepresentationFast Dt a d).1
-        (cHyperexpSpecialNeg (canonicalRepresentationFast Dt a d).2.1.1
-          (canonicalRepresentationFast Dt a d).2.1.2)
-      = some (lnum, lden))
-    (hNrm : DensePoly.cIntegrateHyperexpNormal Dt
-        (canonicalRepresentationFast Dt a d).2.2.1
-        (canonicalRepresentationFast Dt a d).2.2.2 cands = some nrm)
-    (hsome : DensePoly.cIntegrateHyperexpFull Dt a d cands = some res)
-    (hLaurField : towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))
-        = am α (toPoly fpPart))
-    (hNrmField : towerFractionFieldDeriv Dt
-            (am α (toPoly nrm.rational.1) / am α (toPoly nrm.rational.2))
-          + logResidueSum Dt nrm.logs
-        = am α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-          / am α (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
-    (hrecon : am α (toPoly fpPart)
-          + am α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-            / am α (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
-        = am α (toPoly a) / am α (toPoly d)) :
-    towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
-        + logResidueSum Dt res.logs
-      = am α (toPoly a) / am α (toPoly d) := by
-  rw [cIntegrateHyperexpFullG_shape Dt a d cands res lnum lden nrm hLaur hNrm hsome]
-  have hAlden : am α (toPoly lden) ≠ 0 := am_ne_zero hlden
-  have hAgden : am α (toPoly nrm.rational.2) ≠ 0 := am_ne_zero hgden
-  have hcombine : am α (toPoly (cadd (cmul lnum nrm.rational.2) (cmul nrm.rational.1 lden)))
-        / am α (toPoly (cmul lden nrm.rational.2))
-      = am α (toPoly lnum) / am α (toPoly lden)
-        + am α (toPoly nrm.rational.1) / am α (toPoly nrm.rational.2) := by
-    simp only [denote, map_add, map_mul]
-    field_simp
-  rw [hcombine, map_add, hLaurField]
-  rw [add_assoc, hNrmField]
-  exact hrecon
-
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- The overshoot identity: the Rothstein–Trager log part of a hyperexp normal part differentiates
@@ -464,38 +390,5 @@ example [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant D
       = am α (toPoly a) / am α (toPoly d) :=
   cIntegrateHyperexpNormalG_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
-
--- The full hyperexp driver soundness: `cIntegrateHyperexpFull = some res ⟹ D(res) = a/d`, combining
--- the canonical and normal parts.
-example [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
-    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
-    (Dt : DensePoly α) (a d : DensePoly α) (cands : List α)
-    (res : IntegralResult α) (lnum lden : DensePoly α) (nrm : IntegralResult α) (fpPart : DensePoly α)
-    (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
-    (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
-        (canonicalRepresentationFast Dt a d).1
-        (cHyperexpSpecialNeg (canonicalRepresentationFast Dt a d).2.1.1
-          (canonicalRepresentationFast Dt a d).2.1.2)
-      = some (lnum, lden))
-    (hNrm : DensePoly.cIntegrateHyperexpNormal Dt
-        (canonicalRepresentationFast Dt a d).2.2.1
-        (canonicalRepresentationFast Dt a d).2.2.2 cands = some nrm)
-    (hsome : DensePoly.cIntegrateHyperexpFull Dt a d cands = some res)
-    (hLaurField : towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))
-        = am α (toPoly fpPart))
-    (hNrmField : towerFractionFieldDeriv Dt
-            (am α (toPoly nrm.rational.1) / am α (toPoly nrm.rational.2))
-          + logResidueSum Dt nrm.logs
-        = am α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-          / am α (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
-    (hrecon : am α (toPoly fpPart)
-          + am α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-            / am α (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
-        = am α (toPoly a) / am α (toPoly d)) :
-    towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
-        + logResidueSum Dt res.logs
-      = am α (toPoly a) / am α (toPoly d) :=
-  cIntegrateHyperexpFullG_sound Dt a d cands res lnum lden nrm fpPart hlden hgden
-    hLaur hNrm hsome hLaurField hNrmField hrecon
 
 end DeepWiki.SymbolicIntegration

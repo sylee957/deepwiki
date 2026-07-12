@@ -4,8 +4,8 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.ExampleData
 
 /-! # The hyperexponential normal part via residual feedback
 
-Worked examples of the residual-feedback hyperexponential integrators `cIntegrateHyperexpNormal` /
-`cIntegrateHyperexpFull`, e.g. `∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
+Worked examples of the residual-feedback hyperexponential normal integrator
+`cIntegrateHyperexpNormal`, e.g. `∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
 
 open Polynomial
 
@@ -94,14 +94,6 @@ theorem nSpecNorm_specialOnly_overshoots :
     (match DensePoly.cIntegrateHyperexp nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
       | some res => CPoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = false := by native_decide
-
-/-- The full driver lands `∫ (1/exp + 1/(exp−1)) = −1/exp + log(exp−1) − x` with `D(∫f) = f`:
-`cIntegrateHyperexpFull` integrates the special part to `−1/t` and the normal part to `log(t−1) − x`,
-returning `some res` satisfying `checkIdentity`. -/
-theorem nSpecNorm_full_lands :
-    (match DensePoly.cIntegrateHyperexpFull nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
-      | some res => CPoly.checkIdentity nHyperexpDt res nSpecNormA nSpecNormD
-      | none => false) = true := by native_decide
 
 /-! ### A non-constant base residual: `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²`
 

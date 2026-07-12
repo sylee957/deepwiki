@@ -53,7 +53,7 @@ DeepWiki/SymbolicIntegration/          -- abstract theory on Mathlib carriers (~
      │   Hermite-, LogPart-, PolyPart-, Parametric-, Structure-, Parallel-, Integrate-,
      │   Liouville*- and OneShot-/Capstone-layer files
      ├── RischDE/    -- base Risch DE: Normal, Special, DegreeBound*, *Cancellation, Solve*, Completeness…
-     ├── Hyperexp/   -- Normal, NormalCore, Special, LaurentCore, Eta, ExampleData, FullSoundness
+     ├── Hyperexp/   -- Normal, NormalCore, NormalSoundness, Special, LaurentCore, Eta, ExampleData
      ├── CoupledDE/  -- core, Assembly, TangentReconstruct
      ├── Tower/      -- arbitrary-depth towers (CFracG): Field, Deriv, Reduce, GcdFF*, RischDE*,
      │                  Integrate*, Unify, Bench, WellFounded

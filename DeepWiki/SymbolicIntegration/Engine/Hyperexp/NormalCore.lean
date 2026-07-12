@@ -2,9 +2,9 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.LaurentCore
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Eta
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
-/-! # Core hyperexponential normal-part drivers
+/-! # Core hyperexponential normal-part driver
 
-The residual-feedback normal and full hyperexponential integration drivers.
+The residual-feedback hyperexponential normal integration driver.
 -/
 
 open Polynomial
@@ -64,27 +64,6 @@ def cIntegrateHyperexpNormal (Dt : DensePoly α) (a d : DensePoly α) (cands : L
     Option (IntegralResult α) :=
   let red := cIntegrateReduced Dt a d cands
   cCorrectHyperexpNormal (cExpEta Dt) red
-
-variable [CPolySplitFactor DensePoly α]
-
-/-- Full hyperexponential integral `cIntegrateHyperexpFull Dt a d cands`: canonical-split
-`f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrate the Laurent part by `cIntegrateHyperexpLaurent` and the normal part
-by `cIntegrateHyperexpNormal`, and combine the rational parts; `none` if either is non-elementary. -/
-def cIntegrateHyperexpFull (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) :
-    Option (IntegralResult α) :=
-  let η : α := cExpEta Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
-  let neg : List α := cHyperexpSpecialNeg b ds
-  match cIntegrateHyperexpLaurent η fp neg with
-  | none => none
-  | some (lnum, lden) =>
-    match cIntegrateHyperexpNormal Dt cn dn cands with
-    | none => none
-    | some nrm =>
-      let (gnum, gden) := nrm.rational
-      let num := cadd (cmul lnum gden) (cmul gnum lden)
-      let den := cmul lden gden
-      some ⟨(num, den), nrm.logs⟩
 
 end DensePoly
 

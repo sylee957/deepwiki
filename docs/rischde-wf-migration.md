@@ -108,7 +108,7 @@ Wf side (to build on — already exists):
 
 Instance consumers (import chains to update): `SoundnessCapstone`, `MixedTowerIntegrate`,
 `TranscendentalOverAlgebraic`, `RischDE/SolveSound`, `RischDE/SolveNorm`, `RischDE/SolveNormCanon`,
-`Hyperexp/FullSoundness`, `Tower/GcdFF`, and the catalog `Sources/Doi_10_1007_b138171/Chapter6.lean`
+`Hyperexp/NormalSoundness`, `Tower/GcdFF`, and the catalog `Sources/Doi_10_1007_b138171/Chapter6.lean`
 (`alg_6_6_rischDEBase` / `alg_6_6_rationalRDE` route through `CRischField.crischDESolve`; the
 `native_decide` examples must still evaluate to the same results).
 

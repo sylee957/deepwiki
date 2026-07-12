@@ -2,7 +2,7 @@
 
 Goal: prove `cIntegrateHyperexpLaurentG` correct, so the hyperexp assembler's `hLaurField`
 (`D(lnum/lden) = ⟦Laurent integrand⟧`) is discharged and the hyperexp case reaches the same
-frontier-only footing as the primitive case (see `risch-typeclass-architecture.md`).
+frontier-only footing as the primitive case (see `bronstein-compositional-architecture.md`).
 
 ## The target
 
