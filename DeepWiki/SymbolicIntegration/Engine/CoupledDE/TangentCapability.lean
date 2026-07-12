@@ -616,4 +616,26 @@ instance instCompleteCRischLevelTangent (R : CPolynomialReduction DensePoly α)
     (tangentNormalCompleteDomain raw) (checkedTangentMonomialCase S T)
     (checkedTangentSpecialDomain S T)
 
+/-- **Hypertangent (§5.10) sound-and-complete decision procedure.** On the certificate-checked stage
+domain, the assembled coupled-DE hypertangent Risch level succeeds **iff** the input is genuinely
+(Liouville-form) integrable — the §5.10 analogue of the primitive `lrtSolver_soundAndComplete_on_tower`
+and the hyperexponential `hyperexpRischLevel_succeeds_iff_integrable`, obtained by instantiating the
+generic `rischLevel_succeeds_iff_integrable` with the tangent level's lawful, genuine, and complete
+contracts (all global instances via the coupled-DE arc). -/
+theorem tangentRischLevel_succeeds_iff_integrable (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CompleteCPolynomialReduction R polynomialDomain]
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)]
+    (Dt a d : DensePoly α)
+    (hdomain : tangentRischLevelCompleteDomain R kind polynomialDomain raw S T Dt a d)
+    (hd : CPoly.toPoly d ≠ 0) :
+    IsRischLevelIntegrable Dt a d ↔
+      ∃ fuel res, (tangentRischLevel R kind raw S T).integrate fuel Dt a d = some res :=
+  rischLevel_succeeds_iff_integrable (tangentRischLevel R kind raw S T)
+    (tangentRischLevelCompleteDomain R kind polynomialDomain raw S T) Dt a d hdomain hd
+
 end DeepWiki.SymbolicIntegration

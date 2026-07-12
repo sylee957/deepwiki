@@ -4,6 +4,8 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
 import DeepWiki.SymbolicIntegration.Engine.RischTowerLrtGrounding
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.RischLevel
+import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentCapability
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 5: Integration of Transcendental Functions
@@ -15,14 +17,19 @@ integration (§5.8) — are now rendered as **computable** algorithms over the m
 example. The chapter rests on Chapters 3–4 (differential/monomial extensions, the order function and
 the Rothstein–Trager resultant) and is the heart of the book.
 
-**Computable-vs-abstract.** Each algorithm below is a computable function validated by `native_decide`
-on the book's example (the cleared reduction identity `D(g) + h = f` etc.); the *abstract* correctness
-theorems (that `g` is the integral's rational part, Theorems 5.3.1/5.4.1/5.6.1/5.8.1) are **NOT**
-proved. Liouville's theorem (§5.5) is partly formalized — the transcendental *logarithmic* case
-(conditional on the new-monomial condition) and the rational case (§2.4/§2.5) are in catalog
-`Sources.Doi_10_1007_b138171.Liouville`; the exp-extension instance and the general structure theorem
-remain (see the block below). The full hyperexponential case (§5.9), the hypertangent case (§5.10), and the
-structural §5.7/§5.11/§5.12 theory remain unformalized.
+**Computable-vs-abstract.** Each reduction algorithm below is a computable function validated by
+`native_decide` on the book's example (the cleared reduction identity `D(g) + h = f` etc.). Beyond
+that validation, the **assembled integrator is now proved a sound-and-complete decision procedure** for
+each of the three transcendental monomial cases — `some ⟺ genuinely elementary-integrable`, with a
+genuine antiderivative on success — resting only on the necessary Risch new-monomial condition (and, for
+the coefficient recursion, the field-RDE completeness): the **primitive** case (Thm 5.5.1 realization,
+`thm_5_5_1_soundAndComplete`), the **hyperexponential** §5.9 case (`thm_5_9_1_soundAndComplete`), and the
+**hypertangent** §5.10 case (`thm_5_10_soundAndComplete`), all cataloged below and axiom-clean. Liouville's
+theorem (§5.5): the transcendental *logarithmic* AND *exponential* cases (each conditional on the
+new-monomial condition) and the rational case (§2.4/§2.5) are in catalog
+`Sources.Doi_10_1007_b138171.Liouville`; the general structure theorem (Thm 5.5.2/5.5.3) remains. The
+per-reduction *abstract correctness* theorems (Thms 5.3.1/5.4.1/5.6.1/5.8.1 in isolation) and the
+structural §5.7/§5.11/§5.12 theory remain (see the block below).
 
 **Carrier: the generic ℚ(x).** The §5.3 Hermite and §5.6 residue-criterion reductions are aliased to the
 canonical **generic** engine at `α = DenseFrac ℚ` (the recursive `Frac(ℚ[x])`, every instance bottoming at
@@ -58,9 +65,16 @@ level and instantiable at `DenseFrac ℚ` like the rest of the engine.
   degree-lowering loop, constant-coefficient sub-case, is now computable + native_decide-validated,
   see `alg_5_8_primitivePolyIntegrate`/`ex_5_8_primitive`). The full `LimitedIntegrate` solve for the
   coefficient antiderivatives is the deferred Chapter-7 oracle.
-§5.9 The Hyperexponential Case: Thm 5.9.1; Lemma 5.9.1; algorithm `IntegrateHyperexponential`.
-§5.10 The Hypertangent Case: Def 5.10.1; Thm 5.10.1, Thm 5.10.2; Lemma 5.10.1;
-  Ex 5.10.1, Ex 5.10.2, Ex 5.10.3; algorithm `IntegrateHypertangent`.
+§5.9 The Hyperexponential Case: Lemma 5.9.1 (the Laurent per-term bounds). (Thm 5.9.1 is realized:
+  the hyperexponential integrator `IntegrateHyperexponential` is computable + native_decide-validated,
+  and the **sound-and-complete decision procedure** — `some ⟺ genuinely elementary-integrable`, resting
+  on the field-RDE completeness `CRischFieldComplete` — is cataloged as `thm_5_9_1_soundAndComplete`
+  above.)
+§5.10 The Hypertangent Case: Def 5.10.1; Lemma 5.10.1; Ex 5.10.1, Ex 5.10.2, Ex 5.10.3. (Thm 5.10.1/
+  5.10.2 are realized: the coupled-DE hypertangent integrator `IntegrateHypertangent` is computable +
+  native_decide-validated, and the **sound-and-complete decision procedure** — `some ⟺ genuinely
+  elementary-integrable` on the certificate-checked domain — is cataloged as `thm_5_10_soundAndComplete`
+  above.)
 §5.11 The Nonlinear Case with no Specials: Cor 5.11.1; Ex 5.11.1, Ex 5.11.2.
 §5.12 In-Field Integration: Lemma 5.12.1.
 Exercises: Ex 5.1, Ex 5.2, Ex 5.3, Ex 5.4, Ex 5.5, Ex 5.6.
@@ -215,5 +229,18 @@ abbrev thm_5_5_1_soundAndComplete := @lrtSolver_soundAndComplete_on_tower
 condition "`η = Dt` is not a derivative" (`GenuinePrimitiveMonomialLrt`, bundled `LrtReducedGenuineData`)
 — the necessary Risch new-monomial hypothesis, `t` a genuine new transcendental. -/
 abbrev thm_5_5_1_frontier_of_newMonomial := @primitiveFrontierLrt_of_genuineData
+
+/-- **§5.9 hyperexponential — sound-and-complete decision procedure** (Thm 5.9.1, abstract): the
+assembled hyperexponential Risch level (`t′ = η·t`) succeeds **iff** the input is genuinely
+elementary-integrable, on the semantic completeness domain. Rests on the field-RDE completeness
+`CRischFieldComplete` (the tower recursion hypothesis) — the §5.9 analogue of `thm_5_5_1_soundAndComplete`.
+Axiom-clean (no `native_decide`). -/
+abbrev thm_5_9_1_soundAndComplete := @hyperexpRischLevel_succeeds_iff_integrable
+
+/-- **§5.10 hypertangent — sound-and-complete decision procedure** (Thm 5.10.1/5.10.2, abstract): the
+assembled coupled-DE hypertangent Risch level (`t′ = t²+1`) succeeds **iff** the input is genuinely
+elementary-integrable, on the certificate-checked stage domain. The §5.10 analogue of the primitive and
+hyperexponential capstones, via the coupled-DE arc. Axiom-clean. -/
+abbrev thm_5_10_soundAndComplete := @tangentRischLevel_succeeds_iff_integrable
 
 end DeepWiki.Si
