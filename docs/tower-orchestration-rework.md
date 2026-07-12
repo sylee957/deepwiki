@@ -59,6 +59,31 @@ gate; retention is deliberate — a later semantic-consolidation pass can revisi
 - **P6 — final audit.** `scripts/wiki build`; `scripts/wiki rdeps` on the retired names returns empty.
   Update the SI memory + this doc. Rebuild default gate once more.
 
+## Status — COMPLETE (2026-07-12)
+
+All phases landed; `scripts/check.sh` → **GATE: PASS** on all default targets (4953 jobs,
+warning-/sorry-free). Commits on branch `retire-lrt-depth-orchestration`:
+
+- `68f2b0aa` foundation — presentation keystone + this plan.
+- `44a60893` **P1** — TangentDepth off LrtDepth (direct CarrierRec/WellFounded/
+  CanonicalReconstructionCharZero imports + explicit `[CFracGcdCoreWf (DenseFracTower n)]`
+  binders; the tower canonical-rep instance cannot auto-recurse on `n`).
+- `3d2e6e4a` **P2** — RischTowerLrtGrounding re-anchored to RischSolverTowerLrt (survives; its
+  body used no LrtDepth name).
+- `fc20a509` **P3+P4** — deleted `Tower/LrtDepth.lean` (660 L, the sole gate-failing module) and
+  `Tower/Transcendental.lean` (455 L, its only consumer, a leaf); both imports dropped from the
+  Tower aggregator. Merged because the aggregator can't be green with either dangling.
+- **P5** — contract pins already present in `DifferentialLegacyCapabilities.lean`: `example`s
+  pinning `stage_sound`/`stage_complete` for primitive (genuine composition) and exp/tangent
+  (through `exponentialOneStepScheme`/`tangentOneStepScheme`), with `rfl` witnesses that the
+  monomial derivatives are `t`/`t²+1`, never `1`. Exp/tangent take the local capability bundles
+  as hypotheses — the documented differential-explicit-solver frontier.
+- **P6** — `scripts/wiki build` rebuilt; `rdeps DenseLrtStage` → "no declaration matching"; no
+  orphan catalogs; no LRT-depth name anywhere in `DeepWiki/`+`Sources/`.
+
+Net: −1115 L of broken/dead orchestration; the sound presentation path is the sole
+transcendental-tower spine. LRT grounding remains a documented external frontier (unchanged).
+
 ## Invariants
 
 - Rebuild the wiki graph and re-audit callers before each deletion; gate serially.
