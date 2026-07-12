@@ -19,6 +19,11 @@ noncomputable def presentationCoefficientInput (T : DifferentialTowerPresentatio
   den := CFrac.den c
   den_nonzero := CFrac.toPoly_den_ne_zero_generic c
 
+/-- Embed a preceding represented polynomial into its packaged successor fraction carrier. -/
+noncomputable def towerOfPoly (n : ℕ) (p : DensePoly (DenseFracTower n)) :
+    DenseFracTower (n + 1) :=
+  CFrac.ofPoly (F := DenseFrac) p
+
 /-- Lift a lower integral result into successor coefficient data with an explicit rational-denominator certificate. -/
 noncomputable def liftRischResultToTowerCoefficient (n : ℕ)
     (res : IntegralResult (DenseFracTower n))
@@ -26,7 +31,7 @@ noncomputable def liftRischResultToTowerCoefficient (n : ℕ)
     CoefficientIntegralResult (DenseFracTower (n + 1)) where
   rational := CFrac.ofFraction (F := DenseFrac) res.rational.1 res.rational.2 hden
   logs := res.logs.map fun cv =>
-    (CFrac.ofPoly (F := DenseFrac) [cv.1], CFrac.ofPoly (F := DenseFrac) cv.2)
+    (towerOfPoly n [cv.1], towerOfPoly n cv.2)
 
 /-- The lifted rational part denotes the lower integral result's rational function in the packaged successor field. -/
 theorem toK_liftRischResultToTowerCoefficient_rational (n : ℕ)
@@ -62,7 +67,7 @@ theorem differential_deriv_liftRischResultToTowerCoefficient_rational
 
 /-- An embedded successor polynomial denotes its ordinary preceding function-field embedding. -/
 theorem toK_towerOfPoly (n : ℕ) (p : DensePoly (DenseFracTower n)) :
-    CFieldSpec.toK (CFrac.ofPoly (F := DenseFrac) p : DenseFracTower (n + 1)) =
+    CFieldSpec.toK (towerOfPoly n p) =
       CFrac.am (DenseFracTower n) (CPoly.toPoly p) := by
   change CFrac.toRatFunc (CFrac.ofPoly (F := DenseFrac) p) = _
   exact CFrac.toRatFunc_ofPoly p
@@ -74,7 +79,7 @@ theorem differential_deriv_towerOfPoly
     let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
     let C := T.context n hprev
     @Differential.deriv _ _ (T.differential (n + 1) hn)
-      (CFieldSpec.toK (CFrac.ofPoly (F := DenseFrac) p : DenseFracTower (n + 1))) =
+      (CFieldSpec.toK (towerOfPoly n p)) =
       C.fractionDeriv (T.monomialDerivative n hn)
         (CFrac.am (DenseFracTower n) (CPoly.toPoly p)) := by
   let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
@@ -86,6 +91,7 @@ theorem differential_deriv_towerOfPoly
     exact C.algebraQ
   rw [← DifferentialTowerPresentation.toK_cderiv T (n + 1) hn]
   rw [T.successorSemantics n hn]
+  unfold towerOfPoly
   change extendDeriv (Differential.implicitDeriv (CPoly.toPoly (T.monomialDerivative n hn)))
       (CFrac.toRatFunc (CFrac.ofPoly (F := DenseFrac) p)) = _
   rw [CFrac.toRatFunc_ofPoly]
