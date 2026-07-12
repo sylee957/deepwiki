@@ -87,6 +87,9 @@ retains a lower node without reinterpreting it as an upper
    `TowerLog.EvaluationMaps.restrict` and its rational/log/full-denotation
    transport theorems now let a lower result be evaluated in any coherent
    successor target, supplying the semantic induction step for that proof.
+   `isTowerIntegralResult_evaluate` packages the resulting induction rule;
+   the remaining tangent semantic bridge is the derivative of the lifted
+   lower rational part as a constant polynomial at the new extension.
 3. The old native-result `TranscendentalTowerScheme` has been retired after a
    source and reverse-dependency audit; audit the remaining selected-stage
    constructors once the heterogeneous successor constructor is in place. Dense and sparse remain
