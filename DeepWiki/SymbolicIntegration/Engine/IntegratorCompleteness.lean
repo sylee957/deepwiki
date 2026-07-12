@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.LiouvilleLog
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
+import DeepWiki.SymbolicIntegration.Engine.LiouvilleExpBridge
 import Mathlib.FieldTheory.Differential.Liouville
 
 /-! # Integrator completeness: non-elementarity propagation
@@ -84,6 +85,39 @@ theorem not_elementary_logExtension_of_not_elementary_base (u : F) (hnd : Nondeg
 
 end LogTower
 
+section ExpTower
+
+open DeepWiki.SymbolicIntegration.LiouvilleExp
+open DeepWiki.SymbolicIntegration.LiouvilleExpBridge (isLiouville_expExtension_uncond)
+
+variable {F : Type*} [Field F] [Differential F] [CharZero F]
+
+/-- Completeness for a single exponential extension: for a genuine new exp monomial
+(`NondegenerateExp u`), a Liouville form over `F(exp u) = RatFunc F` descends to one over `F`. -/
+theorem expExtension_completeness (u : F) (hnd : NondegenerateExp u) :
+    letI := expDifferential u
+    letI := expDifferentialAlgebra u
+    ∀ a : F, HasLiouvilleForm F (RatFunc F) a → HasLiouvilleForm F F a := by
+  letI := expDifferential u
+  letI := expDifferentialAlgebra u
+  haveI : IsLiouville F (RatFunc F) := isLiouville_expExtension_uncond u hnd
+  intro a h
+  exact elementary_base_of_elementary_extension F (RatFunc F) a h
+
+/-- Non-elementarity propagates across an exponential extension: no Liouville form over `F` implies
+none over `F(exp u) = RatFunc F` for a genuine new exp monomial (`NondegenerateExp u`). -/
+theorem not_elementary_expExtension_of_not_elementary_base (u : F) (hnd : NondegenerateExp u)
+    (a : F) (h : ¬ HasLiouvilleForm F F a) :
+    letI := expDifferential u
+    letI := expDifferentialAlgebra u
+    ¬ HasLiouvilleForm F (RatFunc F) a := by
+  letI := expDifferential u
+  letI := expDifferentialAlgebra u
+  haveI : IsLiouville F (RatFunc F) := isLiouville_expExtension_uncond u hnd
+  exact not_elementary_extension_of_not_elementary_base F (RatFunc F) a h
+
+end ExpTower
+
 section LogAlgebraicTower
 
 variable {F : Type*} [Field F] [Differential F] [CharZero F]
@@ -156,8 +190,12 @@ section Roadmap
 
 variable (F : Type*) [Field F] [Differential F] [CharZero F]
 
-/-- Frontier piece 1: existence of a Liouville instance `IsLiouville F K` for every differential
-extension `K` — the exponential-case sibling of the log keystone. -/
+/-- Frontier piece 1 (deliberately-too-strong roadmap marker): a Liouville instance `IsLiouville F K`
+for *every* differential extension `K`. This blanket form is NOT a theorem — an arbitrary extension
+need not be Liouville. The honest, per-extension exponential content — the sibling of the log keystone
+`logExtension_completeness` — is proved as `expExtension_completeness` (single exp extension, under the
+genuine new-monomial condition `NondegenerateExp u`), built on the unconditional exp Liouville keystone
+`isLiouville_expExtension_uncond`. -/
 def ExpCaseLiouvilleFrontier : Prop :=
   ∀ (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K],
     Nonempty (IsLiouville F K)
@@ -209,6 +247,20 @@ example (u : F) (hnd : NondegenerateLog u) (a : F)
     (h : ¬ HasLiouvilleForm F F a) :
     letI := logDifferential u; ¬ HasLiouvilleForm F (RatFunc F) a :=
   not_elementary_logExtension_of_not_elementary_base u hnd a h
+
+-- The single-exp keystone yields completeness: elementary over `F(exp u)` descends to `F`.
+example (u : F) (hnd : DeepWiki.SymbolicIntegration.LiouvilleExp.NondegenerateExp u) (a : F)
+    (h : letI := DeepWiki.SymbolicIntegration.LiouvilleExp.expDifferential u;
+      HasLiouvilleForm F (RatFunc F) a) :
+    HasLiouvilleForm F F a :=
+  expExtension_completeness u hnd a h
+
+-- Non-elementarity over the base propagates to the exp extension (the integrator-completeness step).
+example (u : F) (hnd : DeepWiki.SymbolicIntegration.LiouvilleExp.NondegenerateExp u) (a : F)
+    (h : ¬ HasLiouvilleForm F F a) :
+    letI := DeepWiki.SymbolicIntegration.LiouvilleExp.expDifferential u;
+      ¬ HasLiouvilleForm F (RatFunc F) a :=
+  not_elementary_expExtension_of_not_elementary_base u hnd a h
 
 -- A concrete witness is one base-field obstruction away (rational base: that obstruction is done).
 example (u : F) (hnd : NondegenerateLog u) (a : F) (hobs : BaseFieldObstruction a) :
