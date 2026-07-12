@@ -45,6 +45,16 @@ noncomputable def sparseTangentLevelDomain (C : SparseTangentLevelCapabilities n
     DensePoly.towerPolynomialReduction .nonlinear DensePoly.nonlinearPolynomialReductionDomain
     C.normal C.coupled C.coefficient
 
+/-- Compositional stage domain for a sparse tangent level with explicit recursive subdomains. -/
+noncomputable def sparseTangentLevelCompositionalDomain (C : SparseTangentLevelCapabilities n)
+    (solverDomain : TangentCoefficientDomain (α := DenseFracTower n))
+    (coefficientDomain : RecursiveElementaryDomain (α := DenseFracTower n)) :
+    RischLevelDomain CPoly.SparsePoly (DenseFracTower n) := by
+  letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
+  exact sparseRecursiveTowerTangentRischLevelCompositionalDomain
+    DensePoly.towerPolynomialReduction DensePoly.nonlinearPolynomialReductionDomain C.normal C.coupled
+    solverDomain coefficientDomain
+
 /-- The canonical decomposition selected by a sparse tangent capability. -/
 noncomputable def sparseTangentCanonicalResult (C : SparseTangentLevelCapabilities n)
     (Dt a d : CPoly.SparsePoly (DenseFracTower n)) :
@@ -126,6 +136,26 @@ theorem sparseTangentLevel_complete (C : SparseTangentLevelCapabilities n)
   exact (instCompleteCRischLevelSparseRecursiveTangent DensePoly.towerPolynomialReduction
     DensePoly.towerPolynomialReduction .nonlinear DensePoly.nonlinearPolynomialReductionDomain
     C.normal C.coupled C.coefficient).relative_complete Dt a d hdomain hden hintegrable
+
+/-- A sparse tangent level is complete on the transported compositional tangent domain. -/
+theorem sparseTangentLevel_compositional_complete (C : SparseTangentLevelCapabilities n)
+    (solverDomain : TangentCoefficientDomain (α := DenseFracTower n))
+    [LawfulCTangentCoefficientSolver C.coupled]
+    [CompleteCTangentCoefficientSolver C.coupled solverDomain]
+    (coefficientDomain : RecursiveElementaryDomain (α := DenseFracTower n))
+    [LawfulCRecursiveElementaryIntegrator C.coefficient]
+    [CompleteCRecursiveElementaryIntegrator C.coefficient coefficientDomain]
+    (Dt a d : CPoly.SparsePoly (DenseFracTower n))
+    (hdomain : sparseTangentLevelCompositionalDomain C solverDomain coefficientDomain Dt a d)
+    (hden : CPoly.toPoly d ≠ 0) (hintegrable : IsRischLevelIntegrable Dt a d) :
+    ∃ fuel res, (sparseTangentLevel C).integrate fuel Dt a d = some res := by
+  letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
+  letI : LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFracTower n) :=
+    C.lawfulCanonical
+  unfold sparseTangentLevel sparseTangentLevelCompositionalDomain at *
+  exact (instCompleteCRischLevelSparseRecursiveTowerTangentCompositional
+    DensePoly.towerPolynomialReduction DensePoly.nonlinearPolynomialReductionDomain C.normal C.coupled
+    solverDomain C.coefficient coefficientDomain).relative_complete Dt a d hdomain hden hintegrable
 
 /-- Build the next sparse tangent capability from the preceding level's dense fraction adapter. -/
 noncomputable def SparseTangentLevelCapabilities.step (below : SparseTangentLevelCapabilities n)

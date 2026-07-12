@@ -45,6 +45,15 @@ noncomputable def denseTangentLevelDomain (C : DenseTangentLevelCapabilities n) 
   exact recursiveTangentRischLevelCompleteDomain DensePoly.towerPolynomialReduction .nonlinear
     DensePoly.nonlinearPolynomialReductionDomain C.normal C.coupled C.coefficient
 
+/-- Compositional stage domain for a dense tangent level with explicit solver and coefficient domains. -/
+noncomputable def denseTangentLevelCompositionalDomain (C : DenseTangentLevelCapabilities n)
+    (solverDomain : TangentCoefficientDomain (α := DenseFracTower n))
+    (coefficientDomain : RecursiveElementaryDomain (α := DenseFracTower n)) :
+    RischLevelDomain DensePoly (DenseFracTower n) := by
+  letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
+  exact recursiveTowerTangentRischLevelCompositionalDomain C.normal C.coupled solverDomain
+    coefficientDomain
+
 /-- The canonical decomposition selected by a dense tangent capability. -/
 noncomputable def denseTangentCanonicalResult (C : DenseTangentLevelCapabilities n)
     (Dt a d : DensePoly (DenseFracTower n)) : CanonicalRepresentationResult DensePoly
@@ -111,6 +120,24 @@ theorem denseTangentLevel_complete (C : DenseTangentLevelCapabilities n)
   exact (instCompleteCRischLevelRecursiveTangent DensePoly.towerPolynomialReduction .nonlinear
     DensePoly.nonlinearPolynomialReductionDomain C.normal C.coupled C.coefficient).relative_complete
       Dt a d hdomain hden hintegrable
+
+/-- A dense tangent level is complete on the explicit compositional tangent-special domain. -/
+theorem denseTangentLevel_compositional_complete (C : DenseTangentLevelCapabilities n)
+    (solverDomain : TangentCoefficientDomain (α := DenseFracTower n))
+    [LawfulCTangentCoefficientSolver C.coupled]
+    [CompleteCTangentCoefficientSolver C.coupled solverDomain]
+    (coefficientDomain : RecursiveElementaryDomain (α := DenseFracTower n))
+    [LawfulCRecursiveElementaryIntegrator C.coefficient]
+    [CompleteCRecursiveElementaryIntegrator C.coefficient coefficientDomain]
+    (Dt a d : DensePoly (DenseFracTower n))
+    (hdomain : denseTangentLevelCompositionalDomain C solverDomain coefficientDomain Dt a d)
+    (hden : CPoly.toPoly d ≠ 0) (hintegrable : IsRischLevelIntegrable Dt a d) :
+    ∃ fuel res, (denseTangentLevel C).integrate fuel Dt a d = some res := by
+  letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
+  letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) := C.lawfulCanonical
+  unfold denseTangentLevel denseTangentLevelCompositionalDomain at *
+  exact (instCompleteCRischLevelRecursiveTowerTangentCompositional C.normal C.coupled
+    solverDomain C.coefficient coefficientDomain).relative_complete Dt a d hdomain hden hintegrable
 
 /-- Build the next tangent capability by certificate-checking the preceding selected Risch level. -/
 noncomputable def DenseTangentLevelCapabilities.step (below : DenseTangentLevelCapabilities n)
