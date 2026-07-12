@@ -114,6 +114,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   `CompleteCPolynomialReduction` instance. No completeness is claimed for nonconstant primitive
   coefficients or an arbitrary degree-zero `Dt`. The former acceptance-only polynomial-reduction
   completeness wrapper has been retired: relative completeness now names one of these semantic domains.
+  These instances feed unchanged through `assembleOneLevel_complete`, `completeCRischLevel`, and the
+  dense and sparse tangent-level capability records, whose selected `polynomialDomain` is already an
+  explicit parameter.
 - `CResidueSource P α` is the Prop-free residue-candidate capability and
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
