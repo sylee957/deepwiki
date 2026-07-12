@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
+import DeepWiki.SymbolicIntegration.Engine.Tower.Stage
 import DeepWiki.ComputableAlgebra.PolyEngine
 
 /-! # Computable polynomial reduction and primitive-case integration over ℚ(x)[t]
@@ -82,6 +83,46 @@ class CompleteCPolynomialReduction (C : CPolynomialReduction P α)
   relative_complete : ∀ (kind : PolynomialReductionKind) (Dt p : P α),
     domain kind Dt p → (∃ out, IsPolynomialReduction kind Dt p out) →
       ∃ fuel out, C.reduce kind Dt fuel p = some out ∧ IsPolynomialReduction kind Dt p out
+
+/-- The input supplied to a polynomial-reduction remainder stage. -/
+structure PolynomialReductionInput (P : Type u → Type u) [CPoly P]
+    (α : Type u) [CField α] where
+  /-- The requested reduction normal form. -/
+  kind : PolynomialReductionKind
+  /-- The selected monomial derivative. -/
+  derivative : P α
+  /-- The polynomial to reduce. -/
+  polynomial : P α
+
+/-- Polynomial reduction's semantic output-remainder invariant. -/
+def IsPolynomialReductionRemainder (input : PolynomialReductionInput P α)
+    (antiderivative remainder : P α) : Prop :=
+  IsPolynomialReduction input.kind input.derivative input.polynomial
+    ⟨antiderivative, remainder⟩
+
+/-- The representation-neutral remainder stage exported by a certified polynomial reducer. -/
+noncomputable def CPolynomialReduction.asRemainderIntegrationStage
+    (C : CPolynomialReduction P α) (domain : PolynomialReductionDomain P α)
+    [LawfulCPolynomialReduction C] [CompleteCPolynomialReduction C domain] :
+    RemainderIntegrationStage (PolynomialReductionInput P α) (P α) (P α)
+      (fun input => ∃ out, IsPolynomialReduction input.kind input.derivative input.polynomial out)
+      IsPolynomialReductionRemainder :=
+  { stage :=
+      { run := fun fuel input =>
+          (C.reduce input.kind input.derivative fuel input.polynomial).map fun out =>
+            ⟨out.antiderivative, out.remainder⟩
+        domain := fun input => domain input.kind input.derivative input.polynomial
+        sound := by
+          intro fuel input result hdomain hrun
+          obtain ⟨out, hout, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          exact ⟨LawfulCPolynomialReduction.sound input.kind input.derivative fuel input.polynomial out hout,
+            LawfulCPolynomialReduction.normal_form input.kind input.derivative fuel input.polynomial out hout⟩
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨fuel, out, hrun, _⟩ := CompleteCPolynomialReduction.relative_complete
+            (C := C) (domain := domain)
+            input.kind input.derivative input.polynomial hdomain hintegrable
+          exact ⟨fuel, ⟨out.antiderivative, out.remainder⟩, by simp [hrun]⟩ } }
 
 /-- Boolean reconstruction check for a candidate polynomial reduction. -/
 def polynomialReductionCheck (Dt p : P α) (out : PolynomialReductionResult P α) : Bool :=
