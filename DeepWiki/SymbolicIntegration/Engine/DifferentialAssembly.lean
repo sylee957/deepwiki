@@ -90,7 +90,7 @@ noncomputable def PolynomialSpecialInput.asDifferentialHandoffStage
             by simp [hout]⟩ } }
 
 /-- Compose explicit polynomial reduction and explicit special integration. -/
-noncomputable def CDifferentialPolynomialReduction.asPolynomialSpecialRemainderStage
+noncomputable def DynamicPolynomialReduction.CDifferentialPolynomialReduction.asPolynomialSpecialRemainderStage
     (C : MonomialDifferentialContext (P := P) α)
     (R : CDifferentialPolynomialReduction P α C.derivation)
     (polynomialDomain : DifferentialPolynomialReductionDomain P α)
@@ -134,7 +134,7 @@ noncomputable def CDifferentialPolynomialReduction.asPolynomialSpecialRemainderS
       simpa [hhandoff.2.1, hhandoff.2.2.1, hhandoff.2.2.2] using hspecial)
 
 /-- Reindex the explicit polynomial-special branch to a complete one-level split. -/
-noncomputable def CDifferentialPolynomialReduction.asOneLevelBranchStage
+noncomputable def DynamicPolynomialReduction.CDifferentialPolynomialReduction.asOneLevelBranchStage
     (C : MonomialDifferentialContext (P := P) α)
     (R : CDifferentialPolynomialReduction P α C.derivation)
     (polynomialDomain : DifferentialPolynomialReductionDomain P α)
@@ -176,7 +176,7 @@ noncomputable def CDifferentialNormalReduction.asOneLevelBranchStage
     OneLevelBranchInput.toNormalReductionInput
 
 /-- Run the explicit polynomial-special and postprocessed-normal branches independently. -/
-noncomputable def CDifferentialPolynomialReduction.asParallelOneLevelBranchStage
+noncomputable def DynamicPolynomialReduction.CDifferentialPolynomialReduction.asParallelOneLevelBranchStage
     (C : MonomialDifferentialContext (P := P) α)
     (R : CDifferentialPolynomialReduction P α C.derivation)
     (polynomialDomain : DifferentialPolynomialReductionDomain P α)
