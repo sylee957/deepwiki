@@ -118,4 +118,36 @@ theorem soundGenuineLrt_of_guard [PrimitiveFrontierLrt ℚ]
   soundGenuineLrt (inferInstance : CRischLevelLrt (DenseFrac ℚ)) Dt a d res h
     (allResiduesConstantLrtG_of_guard hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d) hR0 hguard)
 
+/-! ## The sound-and-complete capstone on the concrete ℚ(x)-tower
+
+Bundles the two axes into one statement: on the primitive decomposition domain, the assembled
+transcendental integrator `CRischLevelLrt.integrate` is a **sound and complete decision procedure** —
+it succeeds exactly when the input is elementary-integrable (completeness, both directions), and a
+successful guard-passing run yields a *genuine* antiderivative (soundness). This is the transcendental
+Risch sound-and-complete statement, relative to the honest `PrimitiveFrontierLrt` frontier (the
+new-monomial condition) and the primitive domain. -/
+
+/-- **Sound and complete (capstone).** At carrier `DenseFrac ℚ`, on the primitive decomposition domain
+(`hdomain`, `hd`): the integrator succeeds **iff** the input is elementary-integrable (completeness),
+**and** whenever it succeeds with a passing residue guard, the result is a genuine true antiderivative
+(soundness). Combines `lrtSolver_succeeds_iff_integrable_on_tower` with `soundGenuineLrt_of_guard`. -/
+theorem lrtSolver_soundAndComplete_on_tower [PrimitiveFrontierLrt ℚ]
+    [CRischField (DenseFrac ℚ)] [LawfulCPolySplitFactor DensePoly (DenseFrac ℚ)]
+    [PrimitiveFrontierLrt (DenseFrac ℚ)]
+    (Dt a d : DensePoly (DenseFrac ℚ))
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))
+    (hdomain : primitiveRischLevelLrtDomain
+      (inferInstance : CRischLevelLrt (DenseFrac ℚ)) Dt a d)
+    (hd : toPoly d ≠ 0) :
+    (IsElementaryIntegrableLrt Dt a d ↔
+        ∃ res, (inferInstance : CRischLevelLrt (DenseFrac ℚ)).integrate Dt a d = some res) ∧
+      (∀ res, (inferInstance : CRischLevelLrt (DenseFrac ℚ)).integrate Dt a d = some res →
+        toPoly (cResidueResultantTower Dt
+            (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
+            (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0 →
+          cResidueConstantGuard Dt (crNormNum Dt a d) (crNormDen Dt a d) = true →
+          IsGenuineIntegralResultLrt Dt a d res) :=
+  ⟨lrtSolver_succeeds_iff_integrable_on_tower Dt a d hdomain hd,
+    fun res h hR0 hguard => soundGenuineLrt_of_guard Dt a d res hgcd h hR0 hguard⟩
+
 end DeepWiki.SymbolicIntegration
