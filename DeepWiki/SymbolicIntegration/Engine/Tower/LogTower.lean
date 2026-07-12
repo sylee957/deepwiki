@@ -62,6 +62,13 @@ noncomputable def TowerIntegralResult.ofLrtResult {n : ℕ} (derivative : DenseP
 def TowerLog.inheritAll {n : ℕ} (logs : List (TowerLog n)) : List (TowerLog (n + 1)) :=
   logs.map .inherited
 
+/-- Retain all lower-depth logs while adding a successor's local rational and logarithmic result. -/
+def TowerIntegralResult.appendInherited {n : ℕ}
+    (localResult : TowerIntegralResult (n + 1)) (lower : TowerIntegralResult n) :
+    TowerIntegralResult (n + 1) where
+  rational := localResult.rational
+  logs := localResult.logs ++ TowerLog.inheritAll lower.logs
+
 /-- Derivative contribution of a current-extension logarithm in an evaluation field. -/
 noncomputable def localLogTerm {E : Type*} [Field E]
     [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
@@ -343,5 +350,15 @@ theorem towerLog_inheritAll_genuine {n : ℕ} (logs : List (TowerLog n))
   intro log hlog
   obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlog
   exact hlogs source hsource
+
+/-- Appending inherited lower logs preserves genuine-log validity. -/
+theorem TowerIntegralResult.logsGenuine_appendInherited {n : ℕ}
+    (localResult : TowerIntegralResult (n + 1)) (lower : TowerIntegralResult n)
+    (hlocal : localResult.LogsGenuine) (hlower : lower.LogsGenuine) :
+    (localResult.appendInherited lower).LogsGenuine := by
+  intro log hlog
+  rcases List.mem_append.mp hlog with hlocalLog | hinherited
+  · exact hlocal log hlocalLog
+  · exact towerLog_inheritAll_genuine lower.logs hlower log hinherited
 
 end DeepWiki.SymbolicIntegration

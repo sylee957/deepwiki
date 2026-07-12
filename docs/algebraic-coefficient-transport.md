@@ -71,7 +71,11 @@ combines their denotations only at the reconstruction theorem.
    needed by its source-level soundness contract. `IsTowerIntegralResult` is
    the common recursive semantic invariant, and both the ordinary and
    root-free LRT result embeddings transport their existing certificates into
-   it. The next theorem is the successor-lift identity for inherited logs.
+   it. `TowerIntegralResult.appendInherited` now combines a successor-local
+   result with the preceding result's depth-preserving log syntax, and its
+   genuine-log theorem composes both certificates. The remaining successor
+   theorem is the corresponding semantic evaluation identity for inherited
+   logs.
    `denseFracTower_K_succ` and `denseFracTowerKStep` expose the required
    `Kₙ₊₁ = RatFunc Kₙ` field equality and canonical inclusion across the
    packaged carrier boundary.
