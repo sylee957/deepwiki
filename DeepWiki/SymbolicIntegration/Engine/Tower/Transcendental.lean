@@ -237,4 +237,33 @@ theorem LayeredTranscendentalTowerScheme.stage_complete (T : LayeredTranscendent
     ∃ fuel result, (T.asIntegrationTowerScheme.stage n).run fuel input = some result :=
   T.asIntegrationTowerScheme.stage_complete n input hdomain hintegrable
 
+/-- Select a primitive root-free stage in the common layered-output language. -/
+def primitiveLayeredTranscendentalStage (S : DenseLrtStage n) : LayeredTranscendentalStage n :=
+  .primitive S
+
+/-- Select a semantic hyperexponential dense stage in the common layered-output language. -/
+noncomputable def hyperexpLayeredTranscendentalStage (n : ℕ)
+    (R : CPolynomialReduction DensePoly (DenseFracTower n))
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly (DenseFracTower n))
+    [LawfulCPolynomialReduction R] [CompleteCPolynomialReduction R polynomialDomain]
+    [CCanonicalRepresentation DensePoly (DenseFracTower n)]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n)]
+    [CRischField (DenseFracTower n)] [CRischFieldSpec (DenseFracTower n)]
+    [CPolyGcd DensePoly (DenseFracTower n)] [CPolySquarefree DensePoly (DenseFracTower n)]
+    [CPolyResultant DensePoly] [CResidueSource DensePoly (DenseFracTower n)]
+    (hfield : CRischFieldComplete (DenseFracTower n)) : LayeredTranscendentalStage n :=
+  .hyperexponential (hyperexpDenseRischStage n R kind polynomialDomain hfield)
+
+/-- Select a compositional tangent dense stage in the common layered-output language. -/
+noncomputable def tangentLayeredTranscendentalStage (C : DenseTangentLevelCapabilities n)
+    (solverDomain : TangentCoefficientDomain (α := DenseFracTower n))
+    [LawfulCTangentCoefficientSolver C.coupled]
+    [CompleteCTangentCoefficientSolver C.coupled solverDomain]
+    (coefficientDomain : RecursiveElementaryDomain (α := DenseFracTower n))
+    [LawfulCRecursiveElementaryIntegrator C.coefficient]
+    [CompleteCRecursiveElementaryIntegrator C.coefficient coefficientDomain] :
+    LayeredTranscendentalStage n :=
+  .tangent (denseTangentCompositionalStage C solverDomain coefficientDomain)
+
 end DeepWiki.SymbolicIntegration
