@@ -39,8 +39,8 @@ section Bridge
 variable {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
 variable [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
   [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
-variable {β : Type u} [CField β] [CPolyGcd P β] [LawfulCPolyGcd.{u,v} P β]
-  [CFieldSpec.{u,v} β] [CDiffField β] [CPolySplitFactor P β]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CPolyGcd P β]
+  [LawfulCPolyGcd.{u,v} P β] [CDiffField β] [CPolySplitFactor P β]
 
 /-- The denominator-normality gate on `CFrac.reduce x` is the wrapper check on `x`. -/
 theorem denomNormalGate_reduce (x : F β) :
@@ -60,8 +60,8 @@ section NormalityWf
 variable {F : (α : Type u) → [CField α] → Type u} {P : Type u → Type u}
 variable [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
   [CPolyEuclidean P] [LawfulCPolyEuclidean.{u,v} P] [CFrac F P] [LawfulCFrac F P]
-variable {β : Type u} [CField β] [CPolyGcd P β] [LawfulCPolyGcd.{u,v} P β]
-  [CFieldSpec.{u,v} β] [CDiffField β] [CFieldDomain β P] [CPolySplitFactor P β]
+variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CPolyGcd P β]
+  [LawfulCPolyGcd.{u,v} P β] [CDiffField β] [CFieldDomain β P] [CPolySplitFactor P β]
 
 /-- `IsCanonNormalized f q'`: the canonicalized element `CFrac.reduce (weakNormalizedF f q')` is weakly
 normalized (`IsWeaklyNormalizedNorm`). -/
