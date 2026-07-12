@@ -8,3 +8,13 @@
 - **Workaround used:** Run `scripts/wiki build` before the deletion or signature-change audit, then repeat `rdeps`.
 - **Suggested fix:** Store and compare the indexed source or environment revision and warn when queries run against a stale graph.
 - **Status:** open
+
+## Follow-up: 2026-07-12
+
+- **Tool/step:** `scripts/wiki rdeps` during the presentation-tower retirement audit.
+- **Expected:** newly compiled `LayeredTranscendentalStage.asPresentationTowerCoefficientStage`
+  and `LayeredTranscendentalLevel.asTowerCoefficientStage` resolve for caller audits.
+- **Actual:** both qualified queries returned `no declaration matching`, while their definitions
+  are present in `Engine/Tower/Transcendental.lean` and compile through the full library.
+- **Workaround used:** treat source imports and `rg` as authoritative for this audit; rebuild the
+  graph before the next deletion decision.

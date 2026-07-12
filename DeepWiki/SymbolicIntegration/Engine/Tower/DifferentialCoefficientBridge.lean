@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialTranscendental
-import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
 
 /-! # Checked successor coefficient bridges
 
@@ -9,11 +8,6 @@ against the successor derivation. The lift theorem is the sole representation-sp
 -/
 
 namespace DeepWiki.SymbolicIntegration
-
-/-- Cast a packaged successor semantic value into its preceding rational-function presentation. -/
-noncomputable def denseFracTowerKSuccCast (n : ℕ) :
-    CFieldSpec.K (DenseFracTower (n + 1)) → RatFunc (CFieldSpec.K (DenseFracTower n)) :=
-  cast (denseFracTower_K_succ n)
 
 /-- Present a successor coefficient as a Risch input at the preceding presentation depth. -/
 noncomputable def presentationCoefficientInput (T : DifferentialTowerPresentation N)
@@ -204,38 +198,6 @@ theorem isCoefficientIntegralResultWith_liftRischResultToTowerCoefficient
     obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlifted
     rw [toK_towerOfPoly]
     exact CFrac.am_ne_zero (harguments source hsource)
-
-/-- The legacy dense lift has the packaged successor tower's rational-function denotation. -/
-theorem denseFracTower_toRatFunc_liftRischResult_rational
-    (n : ℕ) (res : IntegralResult (DenseFracTower n)) :
-    CFrac.toRatFunc (liftRischResultToCoefficient res).rational =
-      fieldFracP res.rational.1 res.rational.2 := by
-  exact toK_liftRischResult_rational res
-
-/-- The successor presentation differentiates a lifted rational part by the preceding selected function-field derivative. -/
-theorem differential_deriv_liftRischResult_rational
-    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n + 1 ≤ N)
-    (res : IntegralResult (DenseFracTower n)) :
-    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
-    let C := T.context n hprev
-    @Differential.deriv _ _ (T.differential (n + 1) hn)
-      (CFieldSpec.toK (liftRischResultToCoefficient res).rational) =
-      C.fractionDeriv (T.monomialDerivative n hn)
-        (fieldFracP res.rational.1 res.rational.2) := by
-  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
-  let C := T.context n hprev
-  letI : Differential (CFieldSpec.K (DenseFracTower n)) := T.differential n hprev
-  letI : Differential (CRingSpec.R (DenseFracTower n)) := T.differential n hprev
-  letI : Algebra ℚ (CRingSpec.R (DenseFracTower n)) := by
-    change Algebra ℚ (CFieldSpec.K (DenseFracTower n))
-    exact C.algebraQ
-  rw [← DifferentialTowerPresentation.toK_cderiv T (n + 1) hn]
-  rw [T.successorSemantics n hn]
-  change extendDeriv (Differential.implicitDeriv (CPoly.toPoly (T.monomialDerivative n hn)))
-      (CFrac.toRatFunc (liftRischResultToCoefficient res).rational) = _
-  rw [denseFracTower_toRatFunc_liftRischResult_rational n res]
-  rw [MonomialDifferentialContext.fractionDeriv]
-  rfl
 
 /-- A certified lift from one presentation level into its successor coefficient field. -/
 structure DifferentialCoefficientBridge (T : DifferentialTowerPresentation N)
