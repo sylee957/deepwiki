@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.NormalCore
-import DeepWiki.SymbolicIntegration.Engine.OneShotAssembly.ResidueMatch
+import DeepWiki.SymbolicIntegration.Engine.ResidueMatchBridge
 
 /-! # Soundness of the hyperexponential normal-part driver
 

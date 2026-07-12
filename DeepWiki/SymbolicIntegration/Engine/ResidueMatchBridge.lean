@@ -1,13 +1,10 @@
 import DeepWiki.SymbolicIntegration.Engine.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDerivLinearFactor
-import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
-import DeepWiki.SymbolicIntegration.Engine.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPart
 
-/-! # One-shot residue-match bridges
+/-! # Residue-match bridges
 
-List-to-`Finset` residue-match bridges and the hyperexponential cancellation obstruction for the
-checker-free one-shot assembly.
+List-to-`Finset` residue-match bridges and the hyperexponential cancellation obstruction.
 -/
 
 open Polynomial Classical
@@ -19,7 +16,7 @@ open DensePoly CFrac
 
 namespace ResidueMatchTower
 
-/-! ### Task 1: the list↔Finset bridge for the PRIMITIVE residue match
+/-! ### Primitive list-to-`Finset` bridge
 
 `primitive_monomial_residue_match` is a `Finset.sum` over the roots `s`; the engine's `hmatch`
 (`logResidueSumG_eq_of_residue_match`) is a `List.map (...) |>.sum`. We bridge them through the **per-root
@@ -53,7 +50,7 @@ theorem primitive_residue_match_list (s : Finset K) (a : K[X]) (w : K)
   -- the per-root summand is exactly `primitive_monomial_residue_match`'s
   exact primitive_monomial_residue_match s a w hA hnorm
 
-/-! ### ★ Task 4 (STRETCH): the general-case `hcancel` for the HYPEREXPONENTIAL monomial reduces to `∑ c_α = 0`
+/-! ### Hyperexponential cancellation criterion
 
 For a NON-primitive monomial the residue match needs `monomial_residue_match_of_cancel`'s extra hypothesis
 `hcancel : ∑_α C(c_α)·((v − Cα′) /ₘ (t−α)) = 0`. The cleanest non-primitive case is the **hyperexponential**
@@ -95,7 +92,7 @@ condition (`a/d` integrable in the log part alone, the exponential-case correcti
 hyperexponential case the general `hcancel` is GENUINELY EXTRA content equivalent to `∑ c_α = 0`, NOT a free
 identity. By `hyperexp_cancel_sum_eq` (the sum is `algebraMap(C(b·∑c_α))`) and `algebraMap`-injectivity:
 `algebraMap(C(b·∑c_α)) = 0 ↔ b·∑c_α = 0 ↔ ∑c_α = 0` (`b ≠ 0`). The precise general-case obstruction the
-engine's integrability witness must discharge. -/
+integration witness must discharge. -/
 theorem hyperexp_cancel_iff_sum_zero (s : Finset K) (b : K) (hb : b ≠ 0) (c : K → K) :
     (∑ α ∈ s, algebraMap K[X] (RatFunc K) (C (c α) * ((C b * X - C (α′)) /ₘ (X - C α))) = 0)
       ↔ ∑ α ∈ s, c α = 0 := by
@@ -104,7 +101,7 @@ theorem hyperexp_cancel_iff_sum_zero (s : Finset K) (b : K) (hb : b ≠ 0) (c : 
   rw [(map_eq_zero_iff _ (RatFunc.algebraMap_injective K)), Polynomial.C_eq_zero,
     mul_eq_zero, or_iff_right hb]
 
-/-! ### ★ Task 2 (the decomposition): the monomial RT residue sum = `(cancel sum) + a/d` UNCONDITIONALLY
+/-! ### Unconditional monomial residue decomposition
 
 `monomial_residue_match_of_cancel` proves the residue sum `= a/d` *given* `hcancel`. Its proof first rewrites
 the sum into `(∑_α c_α·(v − Cα′) /ₘ (t−α)) + a/d` (`Finset.sum_add_distrib` after the per-term euclidean
@@ -164,8 +161,7 @@ theorem monomial_residue_sum_eq_cancel_add (s : Finset K) (a v : K[X])
 consumes) **iff** `∑_{α∈s} c_α = 0` — the integrability condition (`a/d` integrable in the log part alone).
 Composes the unconditional decomposition `monomial_residue_sum_eq_cancel_add` (residue sum = cancel sum + a/d)
 with `hyperexp_cancel_iff_sum_zero` (cancel sum = 0 ⟺ ∑c = 0): `residue sum = a/d ⟺ cancel sum = 0 ⟺ ∑c = 0`.
-The cleanest pin of the hyperexp integrability obstruction — the residue match the §5.6/`cIntegrateGFullWf`
-log-part needs is GENUINELY EQUIVALENT to the side condition `∑c = 0`, not an engine-success consequence
+The cleanest pin of the hyperexp integrability obstruction — the residue match log-part needs is GENUINELY EQUIVALENT to the side condition `∑c = 0`, not an engine-success consequence
 (see the closing status: `cIntegrateGFullWf`'s pure-normal branch returns `some` even when `∑c ≠ 0`). -/
 theorem hyperexp_residue_match_iff_sum_zero (s : Finset K) (a : K[X]) (b : K) (hb : b ≠ 0)
     (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, (C b * X).eval α ≠ α′) :

@@ -68,6 +68,7 @@ import DeepWiki.SymbolicIntegration.Engine.ResidueLogPartSparse
 import DeepWiki.SymbolicIntegration.Engine.ResidueSource
 import DeepWiki.SymbolicIntegration.Engine.NormalReduction
 import DeepWiki.SymbolicIntegration.Engine.ResidueMatchSoundness
+import DeepWiki.SymbolicIntegration.Engine.ResidueMatchBridge
 import DeepWiki.SymbolicIntegration.Engine.RischDE
 import DeepWiki.SymbolicIntegration.Engine.RecursiveMonomialCase
 import DeepWiki.SymbolicIntegration.Engine.RischLevel

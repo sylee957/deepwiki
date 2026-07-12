@@ -71,7 +71,7 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   and recombination.
   `assembleOneLevel_sound` derives its full one-level identity solely from lawful capability instances.
 - The obsolete concrete `OneShotAssembly.lean` driver has been retired after its one-shot entry points became
-  dead. Its reusable residue identity remains in `OneShotAssembly/ResidueMatch.lean` as a leaf theorem used by
+  dead. Its reusable residue identity now lives in `Engine/ResidueMatchBridge.lean` as a leaf theorem used by
   the checked hyperexponential soundness development.
 - The guarded primitive monomial operation has a `LawfulCMonomialCase` instance. Its intentionally narrow
   guard does not claim `CompleteCMonomialCase`; the former standalone dense driver and redundant wrapper
