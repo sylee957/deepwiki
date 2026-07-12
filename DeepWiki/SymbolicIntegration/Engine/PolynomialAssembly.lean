@@ -388,6 +388,89 @@ noncomputable def CPolynomialReduction.asCanonicalOneLevelBranchStage
     intro input output _ hcorrect
     exact hcorrect.2)
 
+/-- Recombine the two independently certified one-level branches. -/
+def reconstructOneLevelBranches (branches : (P α × IntegralResult α P) × IntegralResult α P) :
+    IntegralResult α P :=
+  combineIntegralResults (combineSN branches.1.1 CPoly.one branches.1.2) branches.2
+
+/-- A polynomial-special and normal branch reconstruct an integral result when their split reconstructs the input. -/
+theorem oneLevelBranchAssembly_sound (input : OneLevelBranchInput P α)
+    (branches : (P α × IntegralResult α P) × IntegralResult α P)
+    (hreconstruct :
+      fieldFracP input.polynomial CPoly.one + fieldFracP input.specialNum input.specialDen +
+          fieldFracP input.normalNum input.normalDen = fieldFracP input.numerator input.denominator)
+    (hbranches : IsOneLevelBranchAssembly input branches.1 branches.2) :
+    IsIntegralResultP input.derivative input.numerator input.denominator
+      (reconstructOneLevelBranches branches) := by
+  obtain ⟨remainder, hreduce, hspecial⟩ := hbranches.1
+  obtain ⟨hspecialDen, _hspecialConstants, _hspecialArguments, hspecialIdentity⟩ := hspecial
+  have hpoly : towerFractionFieldDerivP input.derivative
+      (fieldFracP branches.1.1 CPoly.one) =
+      fieldFracP input.polynomial CPoly.one - fieldFracP remainder CPoly.one :=
+    polynomialReduction_antiderivative_sound input.derivative input.polynomial branches.1.1 remainder
+      hreduce.1
+  have hone : CPoly.toPoly (CPoly.one : P α) ≠ 0 := by
+    rw [CPoly.toPoly_one]
+    exact one_ne_zero
+  have hpolynomialSpecial : towerFractionFieldDerivP input.derivative
+      (fieldFracP (combineSN branches.1.1 CPoly.one branches.1.2).rational.1
+        (combineSN branches.1.1 CPoly.one branches.1.2).rational.2) +
+        logResidueSumP input.derivative (combineSN branches.1.1 CPoly.one branches.1.2).logs =
+      fieldFracP input.polynomial CPoly.one + fieldFracP input.specialNum input.specialDen := by
+    rw [combineSN_value input.derivative branches.1.1 CPoly.one branches.1.2
+      (fieldFracP input.polynomial CPoly.one - fieldFracP remainder CPoly.one)
+      (fieldFracP remainder CPoly.one + fieldFracP input.specialNum input.specialDen)
+      hone hspecialDen hpoly hspecialIdentity]
+    ring
+  have hleftDen : CPoly.toPoly (combineSN branches.1.1 CPoly.one branches.1.2).rational.2 ≠ 0 := by
+    simp only [combineSN, combineRationalParts, LawfulCPolyEngine.toPoly_mul, CPoly.toPoly_one]
+    exact mul_ne_zero one_ne_zero hspecialDen
+  have hnormal : IsIntegralResultP input.derivative input.normalNum input.normalDen branches.2 :=
+    hbranches.2.integral
+  refine combineIntegralResults_isIntegralResultP input.derivative input.numerator input.denominator
+    input.normalNum input.normalDen (combineSN branches.1.1 CPoly.one branches.1.2) branches.2
+    (fieldFracP input.polynomial CPoly.one + fieldFracP input.specialNum input.specialDen)
+    hleftDen hbranches.2.rationalDen_nonzero hpolynomialSpecial hnormal ?_
+  simpa only [add_assoc] using hreconstruct
+
+omit [LawfulCPolyEngine P] [Algebra ℚ (CFieldSpec.K α)] in
+/-- The canonical branch selected from a full input satisfies the canonical reconstruction equation. -/
+theorem canonicalOneLevelBranch_reconstruction (kind : PolynomialReductionKind)
+    [CCanonicalRepresentation P α] [LawfulCCanonicalRepresentation (P := P) (α := α)]
+    (input : OneLevelInput P α) :
+    fieldFracP (canonicalOneLevelBranch kind input).polynomial CPoly.one +
+        fieldFracP (canonicalOneLevelBranch kind input).specialNum
+          (canonicalOneLevelBranch kind input).specialDen +
+        fieldFracP (canonicalOneLevelBranch kind input).normalNum
+          (canonicalOneLevelBranch kind input).normalDen =
+      fieldFracP input.numerator input.denominator := by
+  exact LawfulCCanonicalRepresentation.reconstruction input.derivative input.numerator input.denominator
+    input.denominator_nonzero
+
+/-- Finish the canonical one-level pipeline by reconstructing its two certified branch results. -/
+noncomputable def CPolynomialReduction.asOneLevelRemainderStage
+    (C : CPolynomialReduction P α) (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain P α)
+    [LawfulCPolynomialReduction C] [CompleteCPolynomialReduction C polynomialDomain]
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [LawfulGenuineCNormalReduction N normalDomain]
+    [CompleteCNormalReduction N normalDomain]
+    (M : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase M] [LawfulGenuineCMonomialCase M]
+    [CompleteCMonomialCase M specialDomain]
+    [CCanonicalRepresentation P α] [LawfulCCanonicalRepresentation (P := P) (α := α)] :
+    RemainderIntegrationStage (OneLevelInput P α) (IntegralResult α P) (Unit × Unit)
+      (fun input =>
+        IsPolynomialSpecialIntegrable (canonicalOneLevelBranch kind input).toPolynomialSpecialInput ∧
+          IsNormalPartIntegrable input.derivative (canonicalOneLevelBranch kind input).normalNum
+            (canonicalOneLevelBranch kind input).normalDen)
+      (fun input result _ => IsIntegralResultP input.derivative input.numerator input.denominator result) := by
+  let branches := C.asCanonicalOneLevelBranchStage kind polynomialDomain N normalDomain M specialDomain
+  exact branches.mapOutput reconstructOneLevelBranches (by
+    intro input output _ hcorrect
+    exact oneLevelBranchAssembly_sound (canonicalOneLevelBranch kind input) output
+      (canonicalOneLevelBranch_reconstruction kind input) hcorrect)
+
 /-- Explicit stage-decomposed hypotheses under which contract-based one-level assembly is complete. -/
 structure OneLevelAssemblyWitness (R : CPolynomialReduction P α)
     (kind : PolynomialReductionKind) (polynomialDomain : PolynomialReductionDomain P α)
