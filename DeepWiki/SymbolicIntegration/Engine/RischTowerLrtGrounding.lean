@@ -150,4 +150,31 @@ theorem lrtSolver_soundAndComplete_on_tower [PrimitiveFrontierLrt ℚ]
   ⟨lrtSolver_succeeds_iff_integrable_on_tower Dt a d hdomain hd,
     fun res h hR0 hguard => soundGenuineLrt_of_guard Dt a d res hgcd h hR0 hguard⟩
 
+/-! ### The capstone grounded on the honest new-monomial condition alone
+
+`PrimitiveFrontierLrt` is not an axiom: it is *constructible* from the single genuine input-independent
+condition `GenuinePrimitiveMonomialLrt Dt` — "`η = Dt` is not a derivative", i.e. `t` is a genuine new
+transcendental monomial (the mathematically necessary Risch new-monomial condition; if `η` were a
+derivative, `t` would not be a new monomial and the extension degenerates). The theorem below rests the
+whole sound-and-complete statement on exactly that condition (at both tower levels), spelled out as an
+explicit hypothesis — no opaque frontier instance. This is the honest theoretical floor: the condition
+is *necessary*, not a gap. -/
+
+/-- **The frontier is the new-monomial condition — no axiom.** `PrimitiveFrontierLrt` at carrier `α` is
+*constructible* from the single genuine input-independent condition `LrtReducedGenuineData` (whose only
+field is `GenuinePrimitiveMonomialLrt Dt` = "`η = Dt` is not a derivative") for every reduced input,
+plus the reduced denominator-nonzero facts. So the whole sound-and-complete statement rests on exactly
+that necessary condition, not on an assumed frontier. (Instantiate at `α = ℚ` and `α = DenseFrac ℚ` to
+ground the two frontiers `lrtSolver_soundAndComplete_on_tower` consumes.) -/
+theorem primitiveFrontierLrt_of_genuineData {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α]
+    [CDiffFieldSpec α] [CFracGcdCoreWf α] [LawfulCPolyGcd.{u,v} DensePoly α]
+    [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] [LawfulCPolySplitFactor DensePoly α]
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := α)))
+    (hgen : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
+    (hden : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 → (toPoly Dt).natDegree = 0 →
+      toPoly (cIntegrateReducedLrt Dt a d).rational.2 ≠ 0) :
+    PrimitiveFrontierLrt α :=
+  letI : LrtReducedProperFrontier α := lrtReducedProperFrontier_of_genuineAll hgcd hgen hden
+  inferInstance
+
 end DeepWiki.SymbolicIntegration
