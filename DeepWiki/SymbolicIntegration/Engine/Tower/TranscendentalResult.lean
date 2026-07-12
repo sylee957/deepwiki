@@ -1,20 +1,23 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.AlgebraicCoefficient
 
-/-! # Two-layer transcendental integration results
+/-! # Layered transcendental integration results
 
-Separates logarithms created in the current monomial extension from inherited coefficient-field logarithms.
-The two kinds use different derivations and therefore cannot be represented by one `IntegralResult.logs` list. -/
+Separates ordinary and root-free logarithms created in the current monomial extension from inherited
+coefficient-field logarithms. The layers use different derivations and cannot share one `IntegralResult.logs`
+list. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 universe u
 
-/-- A full result over `DenseFrac β`: a rational part, current-extension logs, and inherited coefficient logs. -/
+/-- A full result over `DenseFrac β` with current ordinary/LRT logs and inherited coefficient logs. -/
 structure TranscendentalIntegralResult (β : Type u) [CField β] where
   /-- Rational part in the current fraction field. -/
   rational : DenseFrac β
   /-- Logarithms whose polynomial arguments lie in the current monomial extension. -/
   localLogs : List (β × DensePoly β)
+  /-- Root-free algebraic-residue logarithms whose arguments lie in the current monomial extension. -/
+  localLrtLogs : List (DensePoly β × List (DensePoly β))
   /-- Logarithms inherited from coefficient-field recursion. -/
   inheritedLogs : List (AlgebraicCoefficientLog β)
 
@@ -25,6 +28,15 @@ def TranscendentalIntegralResult.ofIntegralResult (res : IntegralResult β) :
     TranscendentalIntegralResult β where
   rational := CField.div (CFrac.ofPoly res.rational.1) (CFrac.ofPoly res.rational.2)
   localLogs := res.logs
+  localLrtLogs := []
+  inheritedLogs := []
+
+/-- Embed a root-free current-extension result without changing its algebraic-residue log family. -/
+def TranscendentalIntegralResult.ofLrtResult (res : LrtResult β) :
+    TranscendentalIntegralResult β where
+  rational := CField.div (CFrac.ofPoly res.rational.1) (CFrac.ofPoly res.rational.2)
+  localLogs := []
+  localLrtLogs := res.logs
   inheritedLogs := []
 
 /-- Embed an inherited coefficient result, with no new current-extension logarithms. -/
@@ -32,6 +44,7 @@ def TranscendentalIntegralResult.ofCoefficientResult (res : AlgebraicCoefficient
     TranscendentalIntegralResult β where
   rational := res.rational
   localLogs := []
+  localLrtLogs := []
   inheritedLogs := res.logs
 
 omit [CDiffField β] in
@@ -41,6 +54,15 @@ theorem toK_ofIntegralResult_rational [CFieldDomain β DensePoly]
     CFieldSpec.toK (TranscendentalIntegralResult.ofIntegralResult res).rational =
       fieldFracP res.rational.1 res.rational.2 := by
   simp [TranscendentalIntegralResult.ofIntegralResult, fieldFracP,
+    CFieldSpec.toK_div, CFrac.toK_ofPoly]
+
+omit [CDiffField β] in
+/-- The rational part of a root-free result keeps its represented field denotation. -/
+theorem toK_ofLrtResult_rational [CFieldDomain β DensePoly]
+    (res : LrtResult β) :
+    CFieldSpec.toK (TranscendentalIntegralResult.ofLrtResult res).rational =
+      fieldFracP res.rational.1 res.rational.2 := by
+  simp [TranscendentalIntegralResult.ofLrtResult, fieldFracP,
     CFieldSpec.toK_div, CFrac.toK_ofPoly]
 
 /-- Derivative contribution of a local logarithm in an algebraically closed differential extension. -/
@@ -100,11 +122,18 @@ theorem localLogSum_eq_baseChange (Dt : DensePoly β) (logs : List (β × DenseP
       simpa [localLogSum, logResidueSumP] using ih
     rw [htail]
 
-/-- A two-layer result is a genuine Liouville result when both log layers are genuine. -/
+/-- The root-free local logs have constant algebraic residues. -/
+def TranscendentalIntegralResult.LocalLrtLogsGenuine
+    (logs : List (DensePoly β × List (DensePoly β))) : Prop :=
+  logs.all (fun RS =>
+    CPolyEngine.cisZero (CPolyEngine.mapDeriv (CPolyEngine.cmonic RS.1))) = true
+
+/-- A layered result is a genuine Liouville result when each of its log layers is genuine. -/
 def TranscendentalIntegralResult.LogsGenuine [CDiffFieldSpec β]
     (res : TranscendentalIntegralResult β) : Prop :=
   (∀ log ∈ res.localLogs,
     CFieldSpec.toK (CDiffField.cderiv log.1) = 0 ∧ CPoly.toPoly log.2 ≠ 0) ∧
+  TranscendentalIntegralResult.LocalLrtLogsGenuine res.localLrtLogs ∧
   ∀ log ∈ res.inheritedLogs, log.IsGenuine
 
 /-- Genuine ordinary one-level logarithms remain genuine in the local layer. -/
@@ -116,7 +145,19 @@ theorem TranscendentalIntegralResult.logsGenuine_ofIntegralResult [CDiffFieldSpe
   constructor
   · intro log hlog
     exact ⟨hconstants log hlog, hargs log hlog⟩
+  constructor
+  · rfl
   · simp [TranscendentalIntegralResult.ofIntegralResult]
+
+/-- A genuine root-free result remains genuine in the current LRT layer. -/
+theorem TranscendentalIntegralResult.logsGenuine_ofLrtResult [CDiffFieldSpec β]
+    (res : LrtResult β) (hres : AllResiduesConstantLrt res) :
+    (TranscendentalIntegralResult.ofLrtResult res).LogsGenuine := by
+  constructor
+  · simp [TranscendentalIntegralResult.ofLrtResult]
+  constructor
+  · exact hres
+  · simp [TranscendentalIntegralResult.ofLrtResult]
 
 /-- Denotational identity for a two-layer result at a current monomial derivative `Dt`. -/
 def IsTranscendentalIntegralResult [CDiffFieldSpec β]
@@ -127,6 +168,7 @@ def IsTranscendentalIntegralResult [CDiffFieldSpec β]
         (amGExt (E := E) (CPoly.toPoly (CFrac.num res.rational)) /
           amGExt (E := E) (CPoly.toPoly (CFrac.den res.rational))) +
       localLogSum (E := E) Dt res.localLogs +
+      logResidueSumLrt (E := E) Dt res.localLrtLogs +
       algebraicCoefficientLogSum (E := E) ([CCommRing.one] : DensePoly β) res.inheritedLogs =
     amGExt (E := E) (CPoly.toPoly anum) /
       amGExt (E := E) (CPoly.toPoly aden)
@@ -169,7 +211,35 @@ theorem isTranscendentalIntegralResult_ofIntegralResult [CDiffFieldSpec β]
     ratFuncBaseChange_amG_div] at hbase
   rw [hrational]
   simp only [TranscendentalIntegralResult.ofIntegralResult, algebraicCoefficientLogSum,
-    List.map_nil, List.sum_nil, add_zero]
+    List.map_nil, List.sum_nil, logResidueSumLrtG_nil, add_zero]
   exact hbase
+
+/-- A root-free current-extension certificate transports to the layered invariant with no other logs. -/
+theorem isTranscendentalIntegralResult_ofLrtResult [CDiffFieldSpec β]
+    [CFieldDomain β DensePoly] [Algebra ℚ (CFieldSpec.K β)]
+    (Dt anum aden : DensePoly β) (res : LrtResult β)
+    (hres : IsIntegralResultLrt Dt anum aden res) :
+    IsTranscendentalIntegralResult Dt anum aden
+      (TranscendentalIntegralResult.ofLrtResult res) := by
+  intro E _ _ _ _ _ _
+  have hrational :
+      amGExt (E := E)
+          (CPoly.toPoly (CFrac.num (TranscendentalIntegralResult.ofLrtResult res).rational)) /
+        amGExt (E := E)
+          (CPoly.toPoly (CFrac.den (TranscendentalIntegralResult.ofLrtResult res).rational)) =
+        amGExt (E := E) (CPoly.toPoly res.rational.1) /
+          amGExt (E := E) (CPoly.toPoly res.rational.2) := by
+    calc
+      _ = ratFuncBaseChange E
+          (CFieldSpec.toK (TranscendentalIntegralResult.ofLrtResult res).rational) := by
+        symm
+        rw [toK_denseFrac_eq_fieldFrac, fieldFracP, ratFuncBaseChange_amG_div]
+      _ = ratFuncBaseChange E (fieldFracP res.rational.1 res.rational.2) := by
+        rw [toK_ofLrtResult_rational]
+      _ = _ := by
+        rw [fieldFracP, ratFuncBaseChange_amG_div]
+  rw [hrational]
+  simpa only [TranscendentalIntegralResult.ofLrtResult, localLogSum, algebraicCoefficientLogSum,
+    List.map_nil, List.sum_nil, zero_add, add_zero, toPoly_list_eq] using hres E
 
 end DeepWiki.SymbolicIntegration

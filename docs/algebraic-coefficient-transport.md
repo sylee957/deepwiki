@@ -32,10 +32,10 @@ The tangent reconstruction audit adds one necessary distinction for phase 4:
 `AlgebraicCoefficientLog` describes a **lower** unit-monomial antiderivative,
 whose derivative is in the coefficient field. It is not a replacement for an
 upper `IntegralResult.logs` entry, whose argument is differentiated by the
-current monomial `Dt`. The next full-result carrier must therefore retain two
-separate layers: local `(coefficient, polynomial-argument)` logs for the
-current extension, and inherited algebraic coefficient logs. It combines their
-denotations only at the reconstruction theorem.
+current monomial `Dt`. The full-result carrier therefore retains three
+separate layers: local ordinary `(coefficient, polynomial-argument)` logs,
+local root-free LRT families, and inherited algebraic coefficient logs. It
+combines their denotations only at the reconstruction theorem.
 
 ## Phases
 
@@ -52,8 +52,9 @@ denotations only at the reconstruction theorem.
    embeds through `CRecursiveElementaryIntegrator.asAlgebraicCoefficientStage`.
    `DenseLrtStage.asAlgebraicCoefficientStage` supplies the primitive adapter
    from its genuine stage theorem while retaining the root-free residue guard.
-4. **In progress.** `Tower/TranscendentalResult.lean` defines the two-layer
-   full-result carrier and its semantic invariant. Generalize tangent and
+4. **In progress.** `Tower/TranscendentalResult.lean` defines the layered
+   full-result carrier and its semantic invariant, with certified embeddings
+   from both ordinary and root-free current-extension results. Generalize tangent and
    hyperexponential special/reconstruction assemblies to append inherited
    algebraic coefficient logs without forcing them into `IntegralResult.logs`,
    then prove their local soundness and relative completeness by composition.
