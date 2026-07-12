@@ -30,6 +30,16 @@ structure MonomialDifferentialContext {P : Type u → Type u} [CPoly P]
 
 namespace MonomialDifferentialContext
 
+/-- Package the legacy implicit coefficient differential as an explicit context. -/
+noncomputable def ofCDiffField {P : Type u → Type u} [CPoly P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec α]
+    [Algebra ℚ (CFieldSpec.K α)] :
+    MonomialDifferentialContext (P := P) α where
+  derivation := CFieldDerivation.ofCDiffField α
+  differential := CDiffFieldSpec.diffK
+  lawful := LawfulCFieldDerivation.ofCDiffField α
+  algebraQ := inferInstance
+
 /-- Extract the explicit stage context selected by a finite differential tower presentation. -/
 noncomputable def ofTowerPresentation (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N) :
     MonomialDifferentialContext (P := DensePoly) (DenseFracTower n) where
