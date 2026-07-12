@@ -33,11 +33,12 @@ cast coefficients.
 
 ## Phases
 
-1. **Coefficient boundary (composed).** The recursive algorithm consumes the representation-neutral
-   `CTangentCoefficientSolver (DenseFrac ℚ)` interface. `tangentPolynomialCoefficientSolver` is a
-   checked realizer backed by the old `ℚ[x][t]` kernel; it accepts stored denominator `1` and declines
-   other fractions. A general fraction-capable realizer remains, without leaking that restriction back
-   into the recursive stage.
+1. **Coefficient boundary (bounded rational solver).** The recursive algorithm consumes the
+   representation-neutral `CTangentCoefficientSolver (DenseFrac ℚ)` interface. Its selected
+   `tangentRationalCoefficientSolver` clears all input and derivative denominators, solves the finite
+   rational linear system at the supplied degree bound, and certificate-checks the result. The older
+   `tangentPolynomialCoefficientSolver` remains a narrower specialized realizer. Semantic completeness
+   still needs a bound proving that every solvable rational system is searched.
 2. **One-pole reducer (checked).** `TangentSpecial.lean` divides by `t^2 + 1`, invokes the coefficient solver
    operation, constructs the candidate correction, and releases the final result only through
    `CPoly.checkIdentity`.

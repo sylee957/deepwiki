@@ -137,10 +137,11 @@ monomial stage contracts.
    `CTangentCoefficientSolver` now states the representation-neutral coefficient-field system
    `Dc - λd = a`, `Dd + λc = b`, with separate lawful and domain-relative-completeness contracts; its checked
    adapter is sound and complete on its explicit executable-acceptance domain. The recursive tangent stage now
-   depends only on this interface; `tangentPolynomialCoefficientSolver` contains the old `ℚ[x]` restriction as
-   one checked realizer. The next realization step is a
-   coupled solver over general coefficient-field fractions rather than only polynomial `ℚ[x]` data. The former
-   one-shot `CTangentSpecialBridge` could not express the recursion and has
+   depends only on this interface; its selected `tangentRationalCoefficientSolver` clears rational-function
+   denominators, solves the resulting finite linear system, and certificate-checks the reconstructed pair.
+   This is executable relative completeness at a selected degree bound; semantic completeness still needs a
+   degree-bound theorem for general coefficient-field fractions. The former one-shot `CTangentSpecialBridge`
+   could not express the recursion and has
    been retired. Soundness no longer depends on the
    low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
