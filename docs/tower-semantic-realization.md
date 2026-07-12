@@ -52,6 +52,9 @@ The replacement invariant is indexed by a realization rather than a universal si
 This is the sound induction step needed by the tangent coefficient recursion.  The same invariant is shared by
 primitive and exponential stages; only `Dtₙ` and their stage-local reduction contracts differ.
 
+`TowerCoefficientStage.IsRealized` is the executable/semantic boundary for that induction step: it records
+both the selected lower `Dtₙ` and the realization-indexed certificate of every accepted coefficient run.
+
 ## Migration order
 
 1. Define realization-indexed local rational and log derivative denotations, including a lifted inherited-log

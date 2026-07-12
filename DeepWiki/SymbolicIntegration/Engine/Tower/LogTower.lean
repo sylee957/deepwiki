@@ -676,6 +676,14 @@ structure TowerCoefficientStage (n : ℕ) where
   stage : IntegrationStage (DenseFracTower (n + 1)) (TowerIntegralResult n)
     Integrable (TowerCoefficientStage.Correct derivative)
 
+/-- A coefficient stage is semantically aligned with one step of a recursive realization. -/
+def TowerCoefficientStage.IsRealized {N n : ℕ} (C : TowerCoefficientStage n)
+    (R : TowerRealization N) (hn : n + 1 ≤ N) : Prop :=
+  C.derivative = R.monomialDerivative n hn ∧
+    ∀ fuel c result, C.stage.domain c → C.stage.run fuel c = some result →
+      IsRealizedTowerIntegralResult R (Nat.le_trans (Nat.le_succ n) hn)
+        C.derivative (CFrac.num c) (CFrac.den c) result ∧ result.LogsGenuine
+
 /-- A successor-local result is correct relative to the logarithms retained from the preceding level. -/
 def IsTowerIntegralResultWithLowerLogs {n : ℕ}
     (Dt anum aden : DensePoly (DenseFracTower (n + 1)))
