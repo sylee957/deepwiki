@@ -41,6 +41,17 @@ theorem not_elementary_extension_of_not_elementary_base [IsLiouville F K] (a : F
     (h : ¬ HasLiouvilleForm F F a) : ¬ HasLiouvilleForm F K a :=
   fun hK => h (elementary_base_of_elementary_extension F K a hK)
 
+/-- **Tower exhaustiveness (transitivity kernel of Thm 5.5.2/5.5.3).** Non-elementarity propagates up a
+*composed* Liouville tower `F ⊆ K ⊆ L`: if `a ∈ F` has no Liouville form over `F`, it has none over the
+top `L`. Composes the two Liouville layers with `IsLiouville.trans`, so iterating gives the general
+finite-tower "no Liouville form over the base ⟹ not elementary anywhere in the tower". -/
+theorem not_elementary_tower_of_not_elementary_base (L : Type*) [Field L] [Differential L]
+    [Algebra K L] [Algebra F L] [DifferentialAlgebra F K] [IsScalarTower F K L]
+    [Differential.ContainConstants F K] [IsLiouville F K] [IsLiouville K L]
+    (a : F) (h : ¬ HasLiouvilleForm F F a) : ¬ HasLiouvilleForm F L a := by
+  haveI : IsLiouville F L := IsLiouville.trans F K ‹IsLiouville F K› ‹IsLiouville K L›
+  exact not_elementary_extension_of_not_elementary_base F L a h
+
 /-- `IsLiouville F K ↔` for every base integrand, a Liouville form over `K` descends to one over `F`. -/
 theorem isLiouville_iff_descends :
     IsLiouville F K ↔ ∀ a : F, HasLiouvilleForm F K a → HasLiouvilleForm F F a := by
