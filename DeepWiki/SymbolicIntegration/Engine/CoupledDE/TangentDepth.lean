@@ -1,8 +1,10 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentPolynomial
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentSpecial
+import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.Tower.Compositional
-import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
+import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
+import DeepWiki.SymbolicIntegration.Engine.CanonicalReconstructionCharZero
 
 /-! # Depth-indexed recursive tangent levels
 
@@ -115,6 +117,7 @@ theorem denseTangentLevel_canonicalPolynomial_reduction_exists (C : DenseTangent
 
 /-- A selected dense tangent level is sound solely from its lawful stage contracts. -/
 theorem denseTangentLevel_sound (C : DenseTangentLevelCapabilities n) (fuel : ℕ)
+    [CFracGcdCoreWf (DenseFracTower n)]
     (Dt a d : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
     (hdomain : oneLevelRischSoundDomain tangentNormalDomain Dt a d)
     (hden : CPoly.toPoly d ≠ 0)
@@ -128,6 +131,7 @@ theorem denseTangentLevel_sound (C : DenseTangentLevelCapabilities n) (fuel : �
 
 /-- Every successful selected dense tangent level returns genuine elementary logarithmic terms. -/
 theorem denseTangentLevel_logs_genuine (C : DenseTangentLevelCapabilities n) (fuel : ℕ)
+    [CFracGcdCoreWf (DenseFracTower n)]
     (Dt a d : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
     (hdomain : oneLevelRischSoundDomain tangentNormalDomain Dt a d)
     (hden : CPoly.toPoly d ≠ 0)
@@ -231,6 +235,7 @@ noncomputable def denseTangentTower (C : DenseTangentTowerCapabilities) (n : ℕ
 
 /-- Soundness of the recursively selected tangent level at every tower depth. -/
 theorem denseTangentTower_sound (C : DenseTangentTowerCapabilities) (n fuel : ℕ)
+    [CFracGcdCoreWf (DenseFracTower n)]
     (Dt a d : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
     (hdomain : oneLevelRischSoundDomain tangentNormalDomain Dt a d)
     (hden : CPoly.toPoly d ≠ 0)
@@ -240,6 +245,7 @@ theorem denseTangentTower_sound (C : DenseTangentTowerCapabilities) (n fuel : �
 
 /-- Every successful recursively selected dense tangent level returns genuine elementary logarithms. -/
 theorem denseTangentTower_logs_genuine (C : DenseTangentTowerCapabilities) (n fuel : ℕ)
+    [CFracGcdCoreWf (DenseFracTower n)]
     (Dt a d : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
     (hdomain : oneLevelRischSoundDomain tangentNormalDomain Dt a d)
     (hden : CPoly.toPoly d ≠ 0)

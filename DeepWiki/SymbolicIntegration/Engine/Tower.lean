@@ -3,12 +3,12 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Compositional
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialPresentation
 import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialTranscendental
+import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialLegacyCapabilities
 import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialCoefficientBridge
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
-import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
 import DeepWiki.SymbolicIntegration.Engine.Tower.LogTower
 import DeepWiki.SymbolicIntegration.Engine.Tower.PolyPartDynamic
 import DeepWiki.SymbolicIntegration.Engine.Tower.Realization
@@ -20,7 +20,6 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDECompleteness
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEWellFounded
-import DeepWiki.SymbolicIntegration.Engine.Tower.Transcendental
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
 /-! # Computable engine — arbitrary-depth towers (`CFrac`) aggregator. -/
