@@ -254,6 +254,34 @@ private theorem tangentReducedCandidate_complete {α : Type u} [CField α] [CFie
         rw [hrest]
         rfl
 
+/-- Finish a reduced tangent candidate through polynomial and coefficient-field integration. -/
+private def finishTangentCandidate {α : Type} [CField α] [CDiffField α]
+    (R : CPolynomialReduction DensePoly α) (I : CRecursiveElementaryIntegrator α)
+    (Dt fp : DensePoly α) (alpha : α) (reduced : TangentReducedCandidate α)
+    (polynomialFuel coefficientFuel : ℕ) : Option (IntegralResult α) := do
+  let polynomialInput := CPolyEngine.add fp reduced.remainder
+  let polynomial ← R.reduce .nonlinear Dt polynomialFuel polynomialInput
+  if decide (1 < CPolyEngine.cdeg polynomial.remainder) then none
+  else
+    let constantPart := CPoly.coeff polynomial.remainder 0
+    let linearPart := CPoly.coeff polynomial.remainder 1
+    let coefficientResult ←
+      if CCommRing.isZero constantPart then
+        some ({ rational := CCommRing.zero, logs := [] } : CoefficientIntegralResult α)
+      else I.integrate coefficientFuel constantPart
+    let twoAlpha := CCommRing.mul (CField.natCast 2) alpha
+    let logCoefficient := CField.div linearPart twoAlpha
+    if !CCommRing.isZero (CDiffField.cderiv logCoefficient) then none
+    else
+      let polynomialAntiderivative :=
+        CPolyEngine.add polynomial.antiderivative [coefficientResult.rational]
+      let rational := combineRationalParts reduced.rational.1 reduced.rational.2
+        polynomialAntiderivative CPoly.one
+      let coefficientLogs := coefficientResult.logs.map fun cv => (cv.1, [cv.2])
+      let tangentLogs :=
+        if CCommRing.isZero logCoefficient then [] else [(logCoefficient, tangentBase)]
+      some { rational, logs := coefficientLogs ++ tangentLogs }
+
 /-- Raw recursive hypertangent candidate generator parameterized by coefficient-field integration. -/
 private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField α]
     (R : CPolynomialReduction DensePoly α) (I : CRecursiveElementaryIntegrator α) :
@@ -268,28 +296,140 @@ private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField
     else
       let m : ℕ ← tangentBasePower? (α := α) denominatorStage.1 ds
       let reduced ← tangentReducedCandidate (α := α) S coupledStage.1 alpha m b ds
-      let polynomialInput := CPolyEngine.add fp reduced.remainder
-      let polynomial ← R.reduce .nonlinear Dt polynomialStage.1 polynomialInput
-      if decide (1 < CPolyEngine.cdeg polynomial.remainder) then none
-      else
-        let constantPart := CPoly.coeff polynomial.remainder 0
-        let linearPart := CPoly.coeff polynomial.remainder 1
-        let coefficientResult ←
-          if CCommRing.isZero constantPart then
-            some ({ rational := CCommRing.zero, logs := [] } : CoefficientIntegralResult α)
-          else I.integrate polynomialStage.2 constantPart
-        let twoAlpha := CCommRing.mul (CField.natCast 2) alpha
-        let logCoefficient := CField.div linearPart twoAlpha
-        if !CCommRing.isZero (CDiffField.cderiv logCoefficient) then none
-        else
-          let polynomialAntiderivative :=
-            CPolyEngine.add polynomial.antiderivative [coefficientResult.rational]
-          let rational := combineRationalParts reduced.rational.1 reduced.rational.2
-            polynomialAntiderivative CPoly.one
-          let coefficientLogs := coefficientResult.logs.map fun cv => (cv.1, [cv.2])
-          let tangentLogs :=
-            if CCommRing.isZero logCoefficient then [] else [(logCoefficient, tangentBase)]
-          some { rational, logs := coefficientLogs ++ tangentLogs }
+      finishTangentCandidate R I Dt fp alpha reduced polynomialStage.1 polynomialStage.2
+
+/-- Stagewise domain used to compose recursive tangent candidate completeness. -/
+private def recursiveTangentCandidateDomain {α : Type} [CField α] [CFieldSpec α]
+    [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
+    (S : CTangentCoefficientSolver α) (solverDomain : TangentCoefficientDomain (α := α))
+    (R : CPolynomialReduction DensePoly α)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    (coefficientDomain : RecursiveElementaryDomain (α := α)) :
+    TangentSpecialDomain α := fun Dt fp b ds =>
+  let alpha := CPoly.coeff Dt 2
+  CCommRing.isZero alpha = false ∧
+    tangentPolyEq Dt [alpha, CCommRing.zero, alpha] = true ∧
+    ∃ denominatorFuel m,
+      tangentBasePower? denominatorFuel ds = some m ∧
+        TangentReducedCompleteDomain S solverDomain alpha m b ds ∧
+        ∀ coupledFuel reduced,
+          tangentReducedCandidate S coupledFuel alpha m b ds = some reduced →
+            let polynomialInput := CPolyEngine.add fp reduced.remainder
+            polynomialDomain .nonlinear Dt polynomialInput ∧
+              (∃ out, IsPolynomialReduction .nonlinear Dt polynomialInput out) ∧
+              ∀ polynomialFuel polynomial,
+                R.reduce .nonlinear Dt polynomialFuel polynomialInput = some polynomial →
+                  ¬1 < CPolyEngine.cdeg polynomial.remainder ∧
+                    let constantPart := CPoly.coeff polynomial.remainder 0
+                    let linearPart := CPoly.coeff polynomial.remainder 1
+                    (CCommRing.isZero constantPart = false →
+                      coefficientDomain constantPart ∧
+                        IsCoefficientElementarilyIntegrable constantPart) ∧
+                    CCommRing.isZero
+                      (CDiffField.cderiv
+                        (CField.div linearPart
+                          (CCommRing.mul (CField.natCast 2) alpha))) = true
+
+/-- Complete coupled, polynomial, and coefficient stages supply one finite outer candidate budget. -/
+private theorem recursiveTangentSpecialCandidate_complete
+    {α : Type} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [Algebra ℚ (CFieldSpec.K α)]
+    (S : CTangentCoefficientSolver α) (solverDomain : TangentCoefficientDomain (α := α))
+    [LawfulCTangentCoefficientSolver S] [CompleteCTangentCoefficientSolver S solverDomain]
+    (R : CPolynomialReduction DensePoly α)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [LawfulCPolynomialReduction R] [CompleteCPolynomialReduction R polynomialDomain]
+    (I : CRecursiveElementaryIntegrator α) (coefficientDomain : RecursiveElementaryDomain (α := α))
+    [LawfulCRecursiveElementaryIntegrator I]
+    [CompleteCRecursiveElementaryIntegrator I coefficientDomain]
+    (Dt fp b ds : DensePoly α)
+    (hdomain : recursiveTangentCandidateDomain S solverDomain R polynomialDomain
+      coefficientDomain Dt fp b ds) :
+    ∃ fuel out, (recursiveTangentSpecialCandidate R I).integrate S fuel Dt fp b ds = some out := by
+  simp only [recursiveTangentCandidateDomain] at hdomain
+  obtain ⟨halpha, hDt, denominatorFuel, m, hdenominator, hreducedDomain, hcontinuation⟩ :=
+    hdomain
+  obtain ⟨coupledFuel, reduced, hreduced⟩ := tangentReducedCandidate_complete
+    S solverDomain (CPoly.coeff Dt 2) m b ds hreducedDomain
+  let polynomialInput := CPolyEngine.add fp reduced.remainder
+  obtain ⟨hpolynomialDomain, hpolynomialExists, hnext⟩ :=
+    hcontinuation coupledFuel reduced hreduced
+  obtain ⟨polynomialFuel, polynomial, hpolynomial, _hpolynomialSpec⟩ :=
+    CompleteCPolynomialReduction.relative_complete (C := R) (domain := polynomialDomain)
+      .nonlinear Dt polynomialInput hpolynomialDomain hpolynomialExists
+  obtain ⟨hdegree, hcoefficient, hlogCoefficient⟩ :=
+    hnext polynomialFuel polynomial hpolynomial
+  have hdegreeBool : decide (1 < CPolyEngine.cdeg polynomial.remainder) = false := by
+    simp only [decide_eq_false_iff_not]
+    exact hdegree
+  let constantPart := CPoly.coeff polynomial.remainder 0
+  by_cases hconstant : CCommRing.isZero constantPart = true
+  · refine ⟨Nat.pair denominatorFuel
+        (Nat.pair coupledFuel (Nat.pair polynomialFuel 0)), ?_, ?_⟩
+    · exact {
+        rational := combineRationalParts reduced.rational.1 reduced.rational.2
+          (CPolyEngine.add polynomial.antiderivative [CCommRing.zero]) CPoly.one
+        logs := if CCommRing.isZero
+          (CField.div (CPoly.coeff polynomial.remainder 1)
+          (CCommRing.mul (CField.natCast 2) (CPoly.coeff Dt 2))) then []
+          else [(CField.div (CPoly.coeff polynomial.remainder 1)
+            (CCommRing.mul (CField.natCast 2) (CPoly.coeff Dt 2)), tangentBase)] }
+    · simp only [recursiveTangentSpecialCandidate, Nat.unpair_pair]
+      rw [halpha, hDt, hdenominator]
+      simp only [Bool.false_eq_true, ↓reduceIte, Bool.not_true]
+      change (tangentReducedCandidate S coupledFuel (CPoly.coeff Dt 2) m b ds).bind
+        (fun reduced => finishTangentCandidate R I Dt fp (CPoly.coeff Dt 2) reduced
+          polynomialFuel 0) = _
+      rw [hreduced]
+      simp only [Option.bind_some, finishTangentCandidate]
+      rw [hpolynomial]
+      change (if decide (1 < CPolyEngine.cdeg polynomial.remainder) then none else _) = _
+      rw [hdegreeBool]
+      change CCommRing.isZero (CPoly.coeff polynomial.remainder 0) = true at hconstant
+      rw [hconstant]
+      change (if !CCommRing.isZero
+          (CDiffField.cderiv
+            (CField.div (CPoly.coeff polynomial.remainder 1)
+              (CCommRing.mul (CField.natCast 2) (CPoly.coeff Dt 2)))) then none else _) = _
+      rw [hlogCoefficient]
+      rfl
+  · have hconstantFalse : CCommRing.isZero constantPart = false := by
+      exact Bool.eq_false_of_not_eq_true hconstant
+    obtain ⟨hcoefficientDomain, hcoefficientIntegrable⟩ := hcoefficient hconstantFalse
+    obtain ⟨coefficientFuel, coefficientResult, hcoefficientRun⟩ :=
+      CompleteCRecursiveElementaryIntegrator.complete (C := I) (domain := coefficientDomain)
+        constantPart hcoefficientDomain hcoefficientIntegrable
+    refine ⟨Nat.pair denominatorFuel
+        (Nat.pair coupledFuel (Nat.pair polynomialFuel coefficientFuel)), ?_, ?_⟩
+    · exact {
+        rational := combineRationalParts reduced.rational.1 reduced.rational.2
+          (CPolyEngine.add polynomial.antiderivative [coefficientResult.rational]) CPoly.one
+        logs := (coefficientResult.logs.map fun cv => (cv.1, [cv.2])) ++
+          if CCommRing.isZero
+            (CField.div (CPoly.coeff polynomial.remainder 1)
+              (CCommRing.mul (CField.natCast 2) (CPoly.coeff Dt 2))) then []
+          else [(CField.div (CPoly.coeff polynomial.remainder 1)
+            (CCommRing.mul (CField.natCast 2) (CPoly.coeff Dt 2)), tangentBase)] }
+    · simp only [recursiveTangentSpecialCandidate, Nat.unpair_pair]
+      rw [halpha, hDt, hdenominator]
+      simp only [Bool.false_eq_true, ↓reduceIte, Bool.not_true]
+      change (tangentReducedCandidate S coupledFuel (CPoly.coeff Dt 2) m b ds).bind
+        (fun reduced => finishTangentCandidate R I Dt fp (CPoly.coeff Dt 2) reduced
+          polynomialFuel coefficientFuel) = _
+      rw [hreduced]
+      simp only [Option.bind_some, finishTangentCandidate]
+      rw [hpolynomial]
+      change (if decide (1 < CPolyEngine.cdeg polynomial.remainder) then none else _) = _
+      rw [hdegreeBool]
+      change CCommRing.isZero (CPoly.coeff polynomial.remainder 0) = false at hconstantFalse
+      rw [hconstantFalse]
+      rw [hcoefficientRun]
+      change (if !CCommRing.isZero
+          (CDiffField.cderiv
+            (CField.div (CPoly.coeff polynomial.remainder 1)
+              (CCommRing.mul (CField.natCast 2) (CPoly.coeff Dt 2)))) then none else _) = _
+      rw [hlogCoefficient]
+      rfl
 
 /-- Certificate-checked recursive hypertangent special integrator. -/
 def recursiveTangentSpecialIntegrator {α : Type} [CField α] [CDiffField α]

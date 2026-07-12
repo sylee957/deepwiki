@@ -75,7 +75,10 @@ cast coefficients.
    sparse and tangent-internal dense polynomial stages with their contracts. `TangentReducedCompleteDomain`
    records semantic solvability along every selected pole-lowering state, and its composition theorem derives
    one finite encoded budget solely from `CompleteCTangentCoefficientSolver`, without a solver-monotonicity
-   assumption.
+   assumption. The outer candidate-completeness theorem now continues that witness through
+   `CompleteCPolynomialReduction` and `CompleteCRecursiveElementaryIntegrator`, producing one finite budget
+   for the entire raw special stage. Promoting this to the public checked integrator still requires deriving
+   its final certificate from the stage soundness laws.
 
 ## Verification sequence
 
