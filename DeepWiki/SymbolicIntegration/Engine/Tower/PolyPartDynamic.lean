@@ -222,7 +222,8 @@ theorem checked_sound (derivation : CFieldDerivation α) (diffK : Differential (
 @[reducible] noncomputable def checkedLawful
     (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
     [LawfulCFieldDerivation α derivation diffK] :
-    LawfulCDifferentialPolynomialReduction derivation diffK (checked derivation) where
+    LawfulCDifferentialPolynomialReduction (P := P) derivation diffK
+      (checked (P := P) derivation) where
   sound := checked_sound derivation diffK
 
 end CheckedSoundness
