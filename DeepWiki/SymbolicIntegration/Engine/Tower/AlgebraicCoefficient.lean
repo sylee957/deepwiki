@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.LrtGuarded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
+import DeepWiki.SymbolicIntegration.Engine.Tower.Stage
 
 /-! # Algebraic coefficient-log language
 
@@ -75,6 +76,15 @@ def IsAlgebraicCoefficientIntegralResult [CDiffFieldSpec β] (c : DenseFrac β)
         algebraicCoefficientLogSum (E := E) ([CCommRing.one] : DensePoly β) res.logs =
       ratFuncBaseChange E (CFieldSpec.toK c)
 
+/-- A lower fraction possesses a heterogeneous algebraic coefficient antiderivative. -/
+def IsAlgebraicCoefficientElementarilyIntegrable [CDiffFieldSpec β] (c : DenseFrac β) : Prop :=
+  ∃ res : AlgebraicCoefficientIntegralResult β, IsAlgebraicCoefficientIntegralResult c res
+
+/-- The common integration-stage specialization for heterogeneous coefficient antiderivatives. -/
+abbrev AlgebraicCoefficientStage [CDiffFieldSpec β] :=
+  IntegrationStage (DenseFrac β) (AlgebraicCoefficientIntegralResult β)
+    IsCoefficientElementarilyIntegrable IsAlgebraicCoefficientIntegralResult
+
 /-- The algebraic coefficient-log interpretation of an embedded LRT result is exactly its LRT residue sum. -/
 theorem algebraicCoefficientLogSum_ofLrt {E : Type*} [Field E]
     [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
@@ -113,6 +123,23 @@ theorem isAlgebraicCoefficientIntegralResult_ofOrdinary [CDiffFieldSpec β]
   have hbase := congrArg (ratFuncBaseChange E) hres.1
   rw [map_add, ← algebraicCoefficientLogSum_ofOrdinary] at hbase
   exact hbase
+
+/-- An ordinary recursive coefficient integrator is a common stage after embedding its log language. -/
+noncomputable def CRecursiveElementaryIntegrator.asAlgebraicCoefficientStage
+    [CDiffFieldSpec β] (C : CRecursiveElementaryIntegrator (DenseFrac β))
+    (domain : RecursiveElementaryDomain (α := DenseFrac β))
+    [LawfulCRecursiveElementaryIntegrator C]
+    [CompleteCRecursiveElementaryIntegrator C domain] : AlgebraicCoefficientStage (β := β) where
+  run fuel c := (C.integrate fuel c).map AlgebraicCoefficientIntegralResult.ofOrdinary
+  domain := domain
+  sound fuel c output _hdomain hrun := by
+    obtain ⟨ordinary, hordinary, rfl⟩ := Option.map_eq_some_iff.mp hrun
+    exact isAlgebraicCoefficientIntegralResult_ofOrdinary c ordinary
+      (LawfulCRecursiveElementaryIntegrator.sound fuel c ordinary hordinary)
+  complete c hdomain hintegrable := by
+    obtain ⟨fuel, ordinary, hrun⟩ := CompleteCRecursiveElementaryIntegrator.complete
+      (C := C) (domain := domain) c hdomain hintegrable
+    exact ⟨fuel, AlgebraicCoefficientIntegralResult.ofOrdinary ordinary, by simp [hrun]⟩
 
 /-- A genuine root-free LRT identity embeds into the heterogeneous coefficient-log semantics. -/
 theorem isAlgebraicCoefficientIntegralResult_ofLrt [CDiffFieldSpec β]

@@ -37,9 +37,11 @@ output of coefficient recursion rather than only an embedding target.
 2. **Done.** Define an algebraic coefficient-integral result: a rational coefficient
    part plus that language. Prove embeddings from `CoefficientIntegralResult`
    and `LrtResult`, preserving derivative identities and genuine logs.
-3. **Next.** Generalize the recursive coefficient interface and its checked adapter to
-   this result language. Ordinary `DenseRischStage` adapters should embed
-   unchanged; a primitive LRT adapter should use its genuine stage theorem.
+3. **In progress.** Generalize the recursive coefficient interface and its checked adapter to
+   this result language. The representation-independent `IntegrationStage`
+   contract now lives in `Tower/Stage`, and the ordinary recursive adapter
+   embeds through `CRecursiveElementaryIntegrator.asAlgebraicCoefficientStage`.
+   Add the primitive LRT adapter using its genuine stage theorem next.
 4. Generalize tangent and hyperexponential special/reconstruction assemblies
    to append algebraic coefficient logs to their own result rather than forcing
    them into `IntegralResult.logs`. Prove local soundness and relative
