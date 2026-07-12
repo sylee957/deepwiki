@@ -91,6 +91,30 @@ theorem completeCRischLevelHyperexpSemantic (R : CPolynomialReduction DensePoly 
     (DensePoly.hyperexpCheckedCase (α := α))
     (hyperexpLaurentSpecialDomain (α := α))
 
+/-- **Hyperexponential (§5.9) sound-and-complete decision procedure.** On the semantic completeness
+domain, the assembled hyperexponential Risch level succeeds **iff** the input is genuinely (Liouville-
+form) integrable — the §5.9 analogue of the primitive `lrtSolver_soundAndComplete_on_tower`, obtained
+by instantiating the generic `rischLevel_succeeds_iff_integrable` with the hyperexp level's lawful,
+genuine, and (field-RDE-complete) relative-completeness contracts. Rests on the field-RDE completeness
+`CRischFieldComplete α` (the recursion hypothesis) and the polynomial-reduction completeness. -/
+theorem hyperexpRischLevel_succeeds_iff_integrable (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CompleteCPolynomialReduction R polynomialDomain]
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)]
+    [CRischFieldSpec α] (hfield : CRischFieldComplete α)
+    (Dt a d : DensePoly α)
+    (hdomain : hyperexpRischLevelSemanticCompleteDomain R kind polynomialDomain Dt a d)
+    (hd : CPoly.toPoly d ≠ 0) :
+    IsRischLevelIntegrable Dt a d ↔
+      ∃ fuel res, (hyperexpRischLevel (α := α) R kind).integrate fuel Dt a d = some res := by
+  letI : CompleteCRischLevel (hyperexpRischLevel (α := α) R kind)
+      (hyperexpRischLevelSemanticCompleteDomain R kind polynomialDomain) :=
+    completeCRischLevelHyperexpSemantic R kind polynomialDomain hfield
+  exact rischLevel_succeeds_iff_integrable (hyperexpRischLevel (α := α) R kind)
+    (hyperexpRischLevelSemanticCompleteDomain R kind polynomialDomain) Dt a d hdomain hd
+
 /-- Sparse hyperexponential Risch level obtained solely by converting the dense semantic level. -/
 def sparseHyperexpRischLevel (R : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind) [CCanonicalRepresentation DensePoly α] :

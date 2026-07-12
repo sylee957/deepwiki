@@ -189,4 +189,24 @@ theorem completeCRischLevel (R : CPolynomialReduction P α)
   exact assembleOneLevel_complete R kind polynomialDomain N normalDomain C specialDomain Dt a d hd
     (hdomain.2 hintegrable)
 
+omit [LawfulCPolyEngine P] in
+/-- **The generic one-level Risch decision procedure.** On its mathematical domain, a lawful, genuine,
+relatively-complete Risch level succeeds **iff** the input is genuinely (Liouville-form) integrable —
+the representation-neutral analogue of the LRT `rischLevelLrt_succeeds_iff_integrable`. Forward is
+`CompleteCRischLevel.relative_complete`; the reverse assembles `IsRischLevelIntegrable` (its literal
+definition) from the run's `LawfulCRischLevel.sound` certificate plus the
+`LawfulGenuineCRischLevel` constant-coefficient / nonzero-argument facts. This is the shared missing
+piece for a hyperexponential (§5.9) and hypertangent (§5.10) sound-and-complete capstone. -/
+theorem rischLevel_succeeds_iff_integrable (L : CRischLevel P α) (domain : RischLevelDomain P α)
+    [LawfulCRischLevel L domain] [LawfulGenuineCRischLevel L domain] [CompleteCRischLevel L domain]
+    (Dt a d : P α) (hdomain : domain Dt a d) (hd : CPoly.toPoly d ≠ 0) :
+    IsRischLevelIntegrable Dt a d ↔ ∃ fuel res, L.integrate fuel Dt a d = some res := by
+  constructor
+  · exact CompleteCRischLevel.relative_complete Dt a d hdomain hd
+  · rintro ⟨fuel, res, hrun⟩
+    exact ⟨res,
+      LawfulCRischLevel.sound fuel Dt a d res hdomain hd hrun,
+      LawfulGenuineCRischLevel.coefficients_constant fuel Dt a d res hdomain hd hrun,
+      LawfulGenuineCRischLevel.arguments_nonzero fuel Dt a d res hdomain hd hrun⟩
+
 end DeepWiki.SymbolicIntegration
