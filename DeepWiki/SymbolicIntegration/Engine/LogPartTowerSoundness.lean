@@ -173,20 +173,4 @@ example (Dt : DensePoly α) (gnum gden hNum hDen anum aden : DensePoly α) (logs
       = am α (toPoly anum) / am α (toPoly aden) :=
   field_identity_of_reducedG_of_residueMatch Dt gnum gden hNum hDen anum aden logs hherm hmatch
 
-/-! ### Axiom audit -/
-
-#print axioms LogResidueTower.residueLinearFactor_eq
-#print axioms LogResidueTower.roots_residueResultantTowerG_eq_residues
-#print axioms LogResidueTower.residue_gcd_associated_linear_factor
-#print axioms LogResidueTower.residue_gcd_eq_linear_factor
-#print axioms monic_toPolyG_cmonicG
-#print axioms toPolyG_cAmcDdG
-#print axioms towerFractionFieldDerivG_logDeriv
-#print axioms logResidueSumG_eq_logDeriv_sum
-#print axioms logResidueSumG_eq_of_residue_match
-#print axioms field_identity_of_reducedG_of_residueMatch
-#print axioms field_identity_of_cIntegrateReducedG_of_residueMatch
-#print axioms roots_residueResultantTowerG_eq_residues_qfunNZG
-#print axioms field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG
-
 end DeepWiki.SymbolicIntegration

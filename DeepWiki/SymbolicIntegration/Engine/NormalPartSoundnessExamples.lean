@@ -236,6 +236,5 @@ example [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α] [CPolyResultant D
       = am α (toPoly a) / am α (toPoly d) :=
   field_identity_of_cIntegrateReducedG_of_checkIdentityG Dt a d cands hgden haden hlogs hcheck
 
-#print axioms cHermiteReduceTowerG_telescope_seed_qfunNZG
 
 end DeepWiki.SymbolicIntegration

@@ -42,34 +42,4 @@ theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CPolyGcd DensePo
 /-! ### Axiom audit — rests only on the standard kernel axioms
 (`propext`, `Classical.choice`, `Quot.sound`). -/
 
-#print axioms amG_toPolyG_fracAddG
-#print axioms amG_toPolyG_foldl_fracAddG
-#print axioms towerFractionFieldDerivG_amG_fracAccG
-#print axioms sum_towerFractionFieldDerivG_telescope
-#print axioms degree_lt_of_exact_div
-#print axioms cHermiteReduceTowerG_leftover_proper_of_residual
-#print axioms degree_fracAdd_lt_of_proper
-#print axioms degree_fracAdd_lt_of_margin
-#print axioms toPolyG_fracAddG_margin
-#print axioms foldl_guarded_fracAddG_margin
-#print axioms toPolyG_residualFraction_proper_of_margin
-#print axioms degree_resNum_lt
-#print axioms degree_implicitDeriv_frac_lt_of_margin
-#print axioms toPolyG_fracAddG_proper
-#print axioms foldl_fracAddG_proper
-#print axioms foldl_guarded_fracAddG_proper
-#print axioms toPolyG_gprimeNum_proper_of_margin
-#print axioms toPolyG_gprimeNum_proper_of_degree_le_one
-#print axioms toPolyG_resNum_proper
-#print axioms toPolyG_residualFraction_proper_of_degree_le_one
-#print axioms degree_lt_pow_succ_of_degree_lt
-#print axioms toPolyG_inner_summand_proper
-#print axioms cHermiteReduceTowerInner_g_proper
-#print axioms toPolyG_seedPair_proper
-#print axioms cHermiteReduceTowerInner_gloc_proper
-#print axioms cHermiteReduceTowerG_g_proper
-#print axioms cHermiteReduceTowerG_residual_proper_of_degree_le_one
-#print axioms cHermiteReduceTowerG_telescope
-#print axioms cHermiteReduceTowerG_telescope_seed
-#print axioms field_identity_of_cIntegrateReducedG_of_checkIdentityG
 end DeepWiki.SymbolicIntegration
