@@ -26,12 +26,24 @@ class LawfulCTangentPolynomialCoupledSolver (C : CTangentPolynomialCoupledSolver
   sound : ∀ (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ),
     C.solve dbound b0 b2 c1 c2 n = some (q1, q2) → TanSolves b0 b2 n c1 c2 q1 q2
 
-/-- Relative-completeness contract for a tangent coupled solver. -/
-class CompleteCTangentPolynomialCoupledSolver (C : CTangentPolynomialCoupledSolver) : Prop where
-  /-- Any solvable system is found at some finite coefficient-degree bound. -/
+/-- Semantic domain for relative completeness of a polynomial tangent coupled solver. -/
+abbrev TangentPolynomialCoupledDomain := DensePoly ℚ → DensePoly ℚ →
+  List (DensePoly ℚ) → List (DensePoly ℚ) → ℕ → Prop
+
+/-- Relative-completeness contract for a polynomial tangent coupled solver on a selected domain. -/
+class CompleteCTangentPolynomialCoupledSolver (C : CTangentPolynomialCoupledSolver)
+    (domain : TangentPolynomialCoupledDomain)
+    [LawfulCTangentPolynomialCoupledSolver C] : Prop where
+  /-- Every solvable in-domain system is found at some finite coefficient-degree bound. -/
   complete : ∀ (b0 b2 : DensePoly ℚ) (c1 c2 : List (DensePoly ℚ)) (n : ℕ),
-    (∃ q1 q2, TanSolves b0 b2 n c1 c2 q1 q2) →
-      ∃ dbound q1 q2, C.solve dbound b0 b2 c1 c2 n = some (q1, q2)
+    domain b0 b2 c1 c2 n →
+      (∃ q1 q2, TanSolves b0 b2 n c1 c2 q1 q2) →
+        ∃ dbound q1 q2, C.solve dbound b0 b2 c1 c2 n = some (q1, q2)
+
+/-- Exact executable-acceptance domain of a polynomial tangent coupled solver. -/
+def tangentPolynomialCoupledAcceptanceDomain (C : CTangentPolynomialCoupledSolver) :
+    TangentPolynomialCoupledDomain := fun b0 b2 c1 c2 n =>
+  ∃ dbound q1 q2, C.solve dbound b0 b2 c1 c2 n = some (q1, q2)
 
 /-- The existing degree-bounded tangent cancellation algorithm as a coupled-solver capability. -/
 def tangentPolynomialCoupledSolver [CLinearSolve ℚ] : CTangentPolynomialCoupledSolver where
@@ -42,6 +54,12 @@ instance instLawfulCTangentPolynomialCoupledSolver [CLinearSolve ℚ] [LawfulCLi
     LawfulCTangentPolynomialCoupledSolver tangentPolynomialCoupledSolver where
   sound dbound b0 b2 c1 c2 q1 q2 n hrun :=
     DensePoly.reconstruct dbound b0 n b2 c1 c2 q1 q2 hrun
+
+/-- The degree-bounded polynomial tangent solver is complete on its exact acceptance domain. -/
+instance instCompleteCTangentPolynomialCoupledSolver [CLinearSolve ℚ] [LawfulCLinearSolve ℚ] :
+    CompleteCTangentPolynomialCoupledSolver tangentPolynomialCoupledSolver
+      (tangentPolynomialCoupledAcceptanceDomain tangentPolynomialCoupledSolver) where
+  complete _ _ _ _ _ hdomain _ := hdomain
 
 /-! ## Coefficient-field coupled-system boundary -/
 
