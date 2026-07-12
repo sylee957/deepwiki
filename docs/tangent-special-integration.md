@@ -69,8 +69,10 @@ cast coefficients.
    tangent coefficient adapter; tower capabilities no longer freeze a per-level coefficient fuel. Dense and
    sparse assembled levels now carry that genuine-result contract through every successor. Full semantic
    completeness still requires the coupled solver and its degree-bound hypotheses. The special-stage budget
-   now splits into an encoded sequence of independent coupled-solver bounds and a lower-coefficient budget;
-   `TangentSpecialConfig` no longer stores a fixed coupled degree bound. `TangentReducedCompleteDomain`
+   now splits into independent denominator-recognition, encoded coupled-solver, polynomial-reduction, and
+   lower-coefficient budgets. `TangentSpecialConfig` has been retired: the executable receives its selected
+   `CPolynomialReduction` operation explicitly, and sparse tower capabilities separately expose the outer
+   sparse and tangent-internal dense polynomial stages with their contracts. `TangentReducedCompleteDomain`
    records semantic solvability along every selected pole-lowering state, and its composition theorem derives
    one finite encoded budget solely from `CompleteCTangentCoefficientSolver`, without a solver-monotonicity
    assumption.

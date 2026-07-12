@@ -191,10 +191,12 @@ monomial stage contracts.
    establish the genuine-success contract for selected dense and sparse tangent levels, so the adapter's
    eventual-success theorem applies compositionally at every successor. The remaining gap is semantic
    completeness of the coupled solver and its degree bound, not propagation of Liouville side conditions.
-   The recursive tangent stage no longer freezes that degree bound in `TangentSpecialConfig`: its monomial
-   budget pairs an encoded finite sequence of coupled-solver bounds with an independent lower-coefficient
-   budget, so existential bounds from `CompleteCTangentCoefficientSolver` can be threaded without assuming
-   monotonicity.
+   The recursive tangent stage no longer has `TangentSpecialConfig`: its monomial budget carries independent
+   denominator-recognition, encoded coupled-solver, polynomial-reduction, and lower-coefficient budgets, so
+   existential bounds from the stage completeness contracts can be threaded without assuming monotonicity.
+   Its polynomial continuation is now a selected `CPolynomialReduction` operation rather than a direct call to
+   the dense tower kernel; sparse tower capabilities expose the distinct outer sparse and tangent-internal
+   dense reductions explicitly.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

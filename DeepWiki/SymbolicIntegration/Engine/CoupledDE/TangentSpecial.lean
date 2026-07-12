@@ -13,13 +13,6 @@ open DensePoly
 
 universe u
 
-/-- Finite search bounds for recursive hypertangent special integration. -/
-structure TangentSpecialConfig where
-  /-- Fuel for recognizing a denominator as a power of `t² + 1`. -/
-  denominatorFuel : ℕ
-  /-- Fuel for the final nonlinear polynomial reduction. -/
-  polynomialFuel : ℕ
-
 /-- The hypertangent base polynomial `t² + 1`. -/
 def tangentBase {α : Type u} [CCommRing α] : DensePoly α :=
   [CCommRing.one, CCommRing.zero, CCommRing.one]
@@ -263,32 +256,34 @@ private theorem tangentReducedCandidate_complete {α : Type u} [CField α] [CFie
 
 /-- Raw recursive hypertangent candidate generator parameterized by coefficient-field integration. -/
 private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField α]
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
+    (R : CPolynomialReduction DensePoly α) (I : CRecursiveElementaryIntegrator α) :
     CTangentSpecialIntegrator α where
   integrate S fuel Dt fp b ds := do
-    let stageFuel := Nat.unpair fuel
+    let denominatorStage := Nat.unpair fuel
+    let coupledStage := Nat.unpair denominatorStage.2
+    let polynomialStage := Nat.unpair coupledStage.2
     let alpha := CPoly.coeff Dt 2
     if CCommRing.isZero alpha then none
     else if !tangentPolyEq Dt [alpha, CCommRing.zero, alpha] then none
     else
-      let m : ℕ ← tangentBasePower? (α := α) config.denominatorFuel ds
-      let reduced ← tangentReducedCandidate (α := α) S stageFuel.1 alpha m b ds
+      let m : ℕ ← tangentBasePower? (α := α) denominatorStage.1 ds
+      let reduced ← tangentReducedCandidate (α := α) S coupledStage.1 alpha m b ds
       let polynomialInput := CPolyEngine.add fp reduced.remainder
-      let polynomial := DensePoly.cPolyReduceTower Dt config.polynomialFuel polynomialInput
-      if decide (1 < CPolyEngine.cdeg polynomial.2) then none
+      let polynomial ← R.reduce .nonlinear Dt polynomialStage.1 polynomialInput
+      if decide (1 < CPolyEngine.cdeg polynomial.remainder) then none
       else
-        let constantPart := CPoly.coeff polynomial.2 0
-        let linearPart := CPoly.coeff polynomial.2 1
+        let constantPart := CPoly.coeff polynomial.remainder 0
+        let linearPart := CPoly.coeff polynomial.remainder 1
         let coefficientResult ←
           if CCommRing.isZero constantPart then
             some ({ rational := CCommRing.zero, logs := [] } : CoefficientIntegralResult α)
-          else I.integrate stageFuel.2 constantPart
+          else I.integrate polynomialStage.2 constantPart
         let twoAlpha := CCommRing.mul (CField.natCast 2) alpha
         let logCoefficient := CField.div linearPart twoAlpha
         if !CCommRing.isZero (CDiffField.cderiv logCoefficient) then none
         else
           let polynomialAntiderivative :=
-            CPolyEngine.add polynomial.1 [coefficientResult.rational]
+            CPolyEngine.add polynomial.antiderivative [coefficientResult.rational]
           let rational := combineRationalParts reduced.rational.1 reduced.rational.2
             polynomialAntiderivative CPoly.one
           let coefficientLogs := coefficientResult.logs.map fun cv => (cv.1, [cv.2])
@@ -298,23 +293,23 @@ private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField
 
 /-- Certificate-checked recursive hypertangent special integrator. -/
 def recursiveTangentSpecialIntegrator {α : Type} [CField α] [CDiffField α]
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
+    (R : CPolynomialReduction DensePoly α) (I : CRecursiveElementaryIntegrator α) :
     CTangentSpecialIntegrator α :=
-  checkedTangentSpecialIntegrator (recursiveTangentSpecialCandidate config I)
+  checkedTangentSpecialIntegrator (recursiveTangentSpecialCandidate R I)
 
 /-- Explicit acceptance domain of the recursive hypertangent special integrator. -/
 def recursiveTangentSpecialDomain {α : Type} [CField α] [CFieldSpec α]
     [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
-    (S : CTangentCoefficientSolver α) (config : TangentSpecialConfig)
+    (S : CTangentCoefficientSolver α) (R : CPolynomialReduction DensePoly α)
     (I : CRecursiveElementaryIntegrator α) : TangentSpecialDomain α :=
-  checkedTangentSpecialDomain S (recursiveTangentSpecialCandidate config I)
+  checkedTangentSpecialDomain S (recursiveTangentSpecialCandidate R I)
 
 /-- The certified recursive hypertangent operation satisfies its denotational contract. -/
 instance instLawfulCTangentSpecialIntegratorRecursive
     {α : Type} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
-    LawfulCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator config I) := by
+    (R : CPolynomialReduction DensePoly α) (I : CRecursiveElementaryIntegrator α) :
+    LawfulCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator R I) := by
   unfold recursiveTangentSpecialIntegrator
   infer_instance
 
@@ -322,9 +317,9 @@ instance instLawfulCTangentSpecialIntegratorRecursive
 instance instCompleteCTangentSpecialIntegratorRecursive
     {α : Type} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
-    CompleteCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator config I)
-      (recursiveTangentSpecialDomain S config I) := by
+    (R : CPolynomialReduction DensePoly α) (I : CRecursiveElementaryIntegrator α) :
+    CompleteCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator R I)
+      (recursiveTangentSpecialDomain S R I) := by
   unfold recursiveTangentSpecialIntegrator recursiveTangentSpecialDomain
   infer_instance
 
@@ -337,11 +332,10 @@ variable {α : Type} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
 def recursiveTangentRischLevel
     (R : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α] : CRischLevel DensePoly α :=
   tangentRischLevel R kind raw S
-    (recursiveTangentSpecialCandidate config I)
+    (recursiveTangentSpecialCandidate R I)
 
 /-- Exact stage-acceptance domain of a dense recursive tangent level. -/
 def recursiveTangentRischLevelCompleteDomain
@@ -349,21 +343,19 @@ def recursiveTangentRischLevelCompleteDomain
     (kind : PolynomialReductionKind)
     (polynomialDomain : PolynomialReductionDomain DensePoly α)
     (raw : CNormalReduction DensePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α] : RischLevelDomain DensePoly α :=
   tangentRischLevelCompleteDomain R kind polynomialDomain raw S
-    (recursiveTangentSpecialCandidate config I)
+    (recursiveTangentSpecialCandidate R I)
 
 /-- A dense recursive tangent level inherits generic contract-based soundness. -/
 instance instLawfulCRischLevelRecursiveTangent
     (R : CPolynomialReduction DensePoly α) [LawfulCPolynomialReduction R]
     (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
-    LawfulCRischLevel (recursiveTangentRischLevel R kind raw S config I)
+    LawfulCRischLevel (recursiveTangentRischLevel R kind raw S I)
       (oneLevelRischSoundDomain tangentNormalDomain) := by
   unfold recursiveTangentRischLevel
   infer_instance
@@ -372,11 +364,10 @@ instance instLawfulCRischLevelRecursiveTangent
 instance instLawfulGenuineCRischLevelRecursiveTangent
     (R : CPolynomialReduction DensePoly α) [LawfulCPolynomialReduction R]
     (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
-    LawfulGenuineCRischLevel (recursiveTangentRischLevel R kind raw S config I)
+    LawfulGenuineCRischLevel (recursiveTangentRischLevel R kind raw S I)
       (oneLevelRischSoundDomain tangentNormalDomain) := by
   unfold recursiveTangentRischLevel
   infer_instance
@@ -387,12 +378,11 @@ instance instLawfulCRischLevelRecursiveTangentCompleteDomain
     (kind : PolynomialReductionKind)
     (polynomialDomain : PolynomialReductionDomain DensePoly α)
     (raw : CNormalReduction DensePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
-    LawfulCRischLevel (recursiveTangentRischLevel R kind raw S config I)
-      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw S config I) := by
+    LawfulCRischLevel (recursiveTangentRischLevel R kind raw S I)
+      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw S I) := by
   unfold recursiveTangentRischLevel recursiveTangentRischLevelCompleteDomain
   infer_instance
 
@@ -402,12 +392,11 @@ instance instLawfulGenuineCRischLevelRecursiveTangentCompleteDomain
     (kind : PolynomialReductionKind)
     (polynomialDomain : PolynomialReductionDomain DensePoly α)
     (raw : CNormalReduction DensePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
-    LawfulGenuineCRischLevel (recursiveTangentRischLevel R kind raw S config I)
-      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw S config I) := by
+    LawfulGenuineCRischLevel (recursiveTangentRischLevel R kind raw S I)
+      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw S I) := by
   unfold recursiveTangentRischLevel recursiveTangentRischLevelCompleteDomain
   infer_instance
 
@@ -418,49 +407,48 @@ instance instCompleteCRischLevelRecursiveTangent
     (polynomialDomain : PolynomialReductionDomain DensePoly α)
     [CompleteCPolynomialReduction R polynomialDomain]
     (raw : CNormalReduction DensePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
-    CompleteCRischLevel (recursiveTangentRischLevel R kind raw S config I)
-      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw S config I) := by
+    CompleteCRischLevel (recursiveTangentRischLevel R kind raw S I)
+      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw S I) := by
   unfold recursiveTangentRischLevel recursiveTangentRischLevelCompleteDomain
   infer_instance
 
 /-- Install a recursive tangent special stage and coupled solver into a sparse Risch level. -/
 def sparseRecursiveTangentRischLevel
     (R : CPolynomialReduction CPoly.SparsePoly α)
+    (specialR : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind) (raw : CNormalReduction CPoly.SparsePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α] :
     CRischLevel CPoly.SparsePoly α :=
   sparseTangentRischLevel R kind raw S
-    (recursiveTangentSpecialCandidate config I)
+    (recursiveTangentSpecialCandidate specialR I)
 
 /-- Exact transported stage-acceptance domain of the selected sparse recursive tangent level. -/
 def sparseRecursiveTangentRischLevelCompleteDomain
     (R : CPolynomialReduction CPoly.SparsePoly α)
+    (specialR : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind)
     (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
     (raw : CNormalReduction CPoly.SparsePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α] :
     RischLevelDomain CPoly.SparsePoly α :=
   sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw S
-    (recursiveTangentSpecialCandidate config I)
+    (recursiveTangentSpecialCandidate specialR I)
 
 /-- The selected sparse recursive tangent level inherits soundness through representation transport. -/
 instance instLawfulCRischLevelSparseRecursiveTangent
     (R : CPolynomialReduction CPoly.SparsePoly α) [LawfulCPolynomialReduction R]
+    (specialR : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind)
     (raw : CNormalReduction CPoly.SparsePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
-    LawfulCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
+    LawfulCRischLevel (sparseRecursiveTangentRischLevel R specialR kind raw S I)
       (oneLevelRischSoundDomain
         (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := α))) := by
   unfold sparseRecursiveTangentRischLevel
@@ -469,13 +457,13 @@ instance instLawfulCRischLevelSparseRecursiveTangent
 /-- The sparse recursive tangent level returns genuine elementary logarithmic terms. -/
 instance instLawfulGenuineCRischLevelSparseRecursiveTangent
     (R : CPolynomialReduction CPoly.SparsePoly α) [LawfulCPolynomialReduction R]
+    (specialR : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind)
     (raw : CNormalReduction CPoly.SparsePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
-    LawfulGenuineCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
+    LawfulGenuineCRischLevel (sparseRecursiveTangentRischLevel R specialR kind raw S I)
       (oneLevelRischSoundDomain
         (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := α))) := by
   unfold sparseRecursiveTangentRischLevel
@@ -484,49 +472,49 @@ instance instLawfulGenuineCRischLevelSparseRecursiveTangent
 /-- The selected sparse recursive tangent level is lawful on its transported acceptance domain. -/
 instance instLawfulCRischLevelSparseRecursiveTangentCompleteDomain
     (R : CPolynomialReduction CPoly.SparsePoly α) [LawfulCPolynomialReduction R]
+    (specialR : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind)
     (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
     (raw : CNormalReduction CPoly.SparsePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
-    LawfulCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
+    LawfulCRischLevel (sparseRecursiveTangentRischLevel R specialR kind raw S I)
       (sparseRecursiveTangentRischLevelCompleteDomain
-        R kind polynomialDomain raw S config I) := by
+        R specialR kind polynomialDomain raw S I) := by
   unfold sparseRecursiveTangentRischLevel sparseRecursiveTangentRischLevelCompleteDomain
   infer_instance
 
 /-- The exact sparse recursive tangent domain inherits genuine-output soundness. -/
 instance instLawfulGenuineCRischLevelSparseRecursiveTangentCompleteDomain
     (R : CPolynomialReduction CPoly.SparsePoly α) [LawfulCPolynomialReduction R]
+    (specialR : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind)
     (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
     (raw : CNormalReduction CPoly.SparsePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
-    LawfulGenuineCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
+    LawfulGenuineCRischLevel (sparseRecursiveTangentRischLevel R specialR kind raw S I)
       (sparseRecursiveTangentRischLevelCompleteDomain
-        R kind polynomialDomain raw S config I) := by
+        R specialR kind polynomialDomain raw S I) := by
   unfold sparseRecursiveTangentRischLevel sparseRecursiveTangentRischLevelCompleteDomain
   infer_instance
 
 /-- The selected sparse recursive tangent level is complete on its transported acceptance domain. -/
 instance instCompleteCRischLevelSparseRecursiveTangent
     (R : CPolynomialReduction CPoly.SparsePoly α) [LawfulCPolynomialReduction R]
+    (specialR : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind)
     (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
     [CompleteCPolynomialReduction R polynomialDomain]
     (raw : CNormalReduction CPoly.SparsePoly α)
-    (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    (S : CTangentCoefficientSolver α) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
-    CompleteCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
+    CompleteCRischLevel (sparseRecursiveTangentRischLevel R specialR kind raw S I)
       (sparseRecursiveTangentRischLevelCompleteDomain
-        R kind polynomialDomain raw S config I) := by
+        R specialR kind polynomialDomain raw S I) := by
   unfold sparseRecursiveTangentRischLevel sparseRecursiveTangentRischLevelCompleteDomain
   infer_instance
 
@@ -575,10 +563,11 @@ private def tangentRecursiveExampleNumerator : DensePoly (DenseFrac ℚ) :=
 /-- The certified recursion succeeds on the pole-order-three hypertangent example. -/
 example :
     ((recursiveTangentSpecialIntegrator (α := DenseFrac ℚ)
-        { denominatorFuel := 4, polynomialFuel := 8 }
+        (DensePoly.towerPolynomialReduction (P := DensePoly) (α := DenseFrac ℚ))
         tangentPolynomialCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
-        (Nat.pair (Nat.pair 3 (Nat.pair 3 (Nat.pair 3 0))) 8)
+        (Nat.pair 4
+          (Nat.pair (Nat.pair 3 (Nat.pair 3 (Nat.pair 3 0))) (Nat.pair 8 8)))
         tangentBase CPoly.czero tangentRecursiveExampleNumerator
         (CPoly.cpow tangentBase 3)).isSome = true := by
   ccompute
@@ -586,10 +575,10 @@ example :
 /-- The recursive polynomial tail lifts a logarithm returned by the coefficient field. -/
 example :
     ((recursiveTangentSpecialIntegrator (α := DenseFrac ℚ)
-        { denominatorFuel := 0, polynomialFuel := 1 }
+        (DensePoly.towerPolynomialReduction (P := DensePoly) (α := DenseFrac ℚ))
         tangentLogCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
-        (Nat.pair 0 1)
+        (Nat.pair 0 (Nat.pair 0 (Nat.pair 1 1)))
         tangentBase [tangentInvX] CPoly.czero CPoly.one).map
           (fun out => out.logs.length) = some 1 := by
   ccompute
@@ -597,10 +586,10 @@ example :
 /-- The polynomial stage emits `log(t²+1)` for the derivative `2t/(t²+1)`. -/
 example :
     ((recursiveTangentSpecialIntegrator (α := DenseFrac ℚ)
-        { denominatorFuel := 1, polynomialFuel := 2 }
+        (DensePoly.towerPolynomialReduction (P := DensePoly) (α := DenseFrac ℚ))
         tangentPolynomialCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
-        (Nat.pair 1 2)
+        (Nat.pair 1 (Nat.pair 1 (Nat.pair 2 2)))
         tangentBase [CCommRing.zero, CField.natCast 2]
         CPoly.czero CPoly.one).map (fun out => out.logs.length) = some 1 := by
   ccompute

@@ -34,8 +34,6 @@ structure DenseTangentLevelLeaves (n : ℕ) where
   normal : CNormalReduction DensePoly (DenseFracTower n)
   /-- Coupled coefficient-system solver for the tangent case. -/
   coupled : CTangentCoefficientSolver (DenseFracTower n)
-  /-- Finite bounds used by the recursive tangent special realization. -/
-  config : TangentSpecialConfig
 
 /-- Concrete leaves and coefficient recursion selecting one tangent level at dense tower depth `n`. -/
 structure DenseTangentLevelCapabilities (n : ℕ) extends DenseTangentLevelLeaves n where
@@ -46,14 +44,14 @@ structure DenseTangentLevelCapabilities (n : ℕ) extends DenseTangentLevelLeave
 noncomputable def denseTangentLevel (C : DenseTangentLevelCapabilities n) :
     CRischLevel DensePoly (DenseFracTower n) := by
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
-  exact recursiveTangentRischLevel C.polynomial C.kind C.normal C.coupled C.config C.coefficient
+  exact recursiveTangentRischLevel C.polynomial C.kind C.normal C.coupled C.coefficient
 
 /-- The exact composition domain for a selected recursive tangent level. -/
 noncomputable def denseTangentLevelDomain (C : DenseTangentLevelCapabilities n) :
     RischLevelDomain DensePoly (DenseFracTower n) := by
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
   exact recursiveTangentRischLevelCompleteDomain C.polynomial C.kind C.polynomialDomain C.normal
-    C.coupled C.config C.coefficient
+    C.coupled C.coefficient
 
 /-- A selected dense tangent level is sound solely from its lawful stage contracts. -/
 theorem denseTangentLevel_sound (C : DenseTangentLevelCapabilities n) (fuel : ℕ)
@@ -66,7 +64,7 @@ theorem denseTangentLevel_sound (C : DenseTangentLevelCapabilities n) (fuel : �
   letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) := C.lawfulCanonical
   letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
   unfold denseTangentLevel at hrun
-  exact (instLawfulCRischLevelRecursiveTangent C.polynomial C.kind C.normal C.coupled C.config C.coefficient).sound
+  exact (instLawfulCRischLevelRecursiveTangent C.polynomial C.kind C.normal C.coupled C.coefficient).sound
     fuel Dt a d res hdomain hden hrun
 
 /-- Every successful selected dense tangent level returns genuine elementary logarithmic terms. -/
@@ -84,10 +82,10 @@ theorem denseTangentLevel_logs_genuine (C : DenseTangentLevelCapabilities n) (fu
   unfold denseTangentLevel at hrun
   constructor
   · exact (instLawfulGenuineCRischLevelRecursiveTangent C.polynomial C.kind C.normal
-      C.coupled C.config C.coefficient).coefficients_constant fuel Dt a d res
+      C.coupled C.coefficient).coefficients_constant fuel Dt a d res
         hdomain hden hrun
   · exact (instLawfulGenuineCRischLevelRecursiveTangent C.polynomial C.kind C.normal
-      C.coupled C.config C.coefficient).arguments_nonzero fuel Dt a d res
+      C.coupled C.coefficient).arguments_nonzero fuel Dt a d res
         hdomain hden hrun
 
 /-- A selected dense tangent level is relatively complete on its explicit stage domain. -/
@@ -102,7 +100,7 @@ theorem denseTangentLevel_complete (C : DenseTangentLevelCapabilities n)
   letI : CompleteCPolynomialReduction C.polynomial C.polynomialDomain := C.completePolynomial
   unfold denseTangentLevel denseTangentLevelDomain at *
   exact (instCompleteCRischLevelRecursiveTangent C.polynomial C.kind C.polynomialDomain C.normal
-    C.coupled C.config C.coefficient).relative_complete Dt a d hdomain hden hintegrable
+    C.coupled C.coefficient).relative_complete Dt a d hdomain hden hintegrable
 
 /-- Build the next tangent capability by certificate-checking the preceding selected Risch level. -/
 noncomputable def DenseTangentLevelCapabilities.step (below : DenseTangentLevelCapabilities n)
