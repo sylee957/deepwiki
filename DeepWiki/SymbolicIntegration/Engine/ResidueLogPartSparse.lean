@@ -67,4 +67,16 @@ instance instLawfulCResidueLogPartSparse :
     simpa only [denseTerm, denseDt, denseNum, denseDen, CPolyEngine.toPoly_convert]
       using h.residue_match
 
+/-- Exact executable acceptance domain of sparse checked residue extraction. -/
+def sparseResidueLogPartAcceptanceDomain :
+    ResidueLogPartDomain (P := CPoly.SparsePoly) (α := α) := fun Dt hNum Dstar =>
+  ∃ logs : List (α × CPoly.SparsePoly α),
+    CResidueLogPart.compute Dt hNum Dstar = some logs ∧ GenuineResidueLogPart Dt hNum Dstar logs
+
+/-- Sparse checked residue extraction is relatively complete on its explicit acceptance domain. -/
+instance instCompleteCResidueLogPartSparseCheckedAcceptance :
+    CompleteCResidueLogPart (P := CPoly.SparsePoly) (α := α)
+      sparseResidueLogPartAcceptanceDomain where
+  complete _ _ _ _ hdomain _ _ _ _ := hdomain
+
 end DeepWiki.SymbolicIntegration

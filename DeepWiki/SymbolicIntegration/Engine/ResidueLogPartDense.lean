@@ -79,4 +79,15 @@ instance instLawfulCResidueLogPartDense : LawfulCResidueLogPart (P := DensePoly)
     · rw [if_neg hguard] at hrun
       contradiction
 
+/-- Exact executable acceptance domain of checked dense residue-logarithm extraction. -/
+def checkedResidueLogPartAcceptanceDomain : ResidueLogPartDomain (P := DensePoly) (α := α) :=
+  fun Dt hNum Dstar => ∃ logs : List (α × DensePoly α),
+    DensePoly.checkedResidueLogPart Dt hNum Dstar = some logs ∧
+      GenuineResidueLogPart Dt hNum Dstar logs
+
+/-- Checked dense residue extraction is relatively complete on its explicit acceptance domain. -/
+instance instCompleteCResidueLogPartDenseCheckedAcceptance :
+    CompleteCResidueLogPart (P := DensePoly) (α := α) checkedResidueLogPartAcceptanceDomain where
+  complete _ _ _ _ hdomain _ _ _ _ := hdomain
+
 end DeepWiki.SymbolicIntegration

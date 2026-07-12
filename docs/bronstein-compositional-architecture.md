@@ -130,9 +130,10 @@ monomial stage contracts.
 ## Remaining work
 
 1. Enlarge the explicit `ResidueLogPartDomain` beyond checked/known residue families by proving an actually
-   complete residue-source theorem. `CompleteCResidueLogPart` and the composite Hermite-residue normal domain
-   are now domain-parameterized; bounded candidate sweeps remain intentionally incomplete and must not acquire
-   a universal-domain instance.
+   complete residue-source theorem. Dense and sparse checked residue stages now realize
+   `CompleteCResidueLogPart` on their exact executable-acceptance domains, and the composite
+   Hermite-residue normal domain can consume those contracts. Bounded candidate sweeps remain intentionally
+   incomplete and must not acquire a universal-domain instance.
 2. Generalize the concrete `recursiveTangentSpecialIntegrator` beyond its current `ℚ(x)` polynomial-data
    coupled solver. The executable now implements Bronstein's reduced hypertangent recursion: it recognizes a
    power of `t²+1`, calls the coupled solver at each pole order, subtracts the reconstructed derivative, recurses,
