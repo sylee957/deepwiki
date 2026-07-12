@@ -75,7 +75,9 @@ implementation choice rather than a second orchestration language.
 `MonomialDifferentialStage.lean` gives the special/polynomial branch the same treatment. It has an
 explicit function-field log sum and a certified adapter for existing primitive, hyperexponential,
 and tangent special solvers. `Tower/RecursiveElementaryDynamic.lean` already provides the analogous
-explicit coefficient-recursion stage.
+explicit coefficient-recursion stage. `Tower/RecursiveMonomialDifferential.lean` makes that stage
+an explicit argument of recursive special integration, and the presentation-level capability
+constructor installs its resulting special and normal operations in the complete one-level stage.
 
 `DifferentialCanonical.lean`, `DifferentialAssembly.lean`, `DifferentialReconstruction.lean`, and
 `DifferentialOneLevel.lean` now compose the explicit canonical split, polynomial-special branch,

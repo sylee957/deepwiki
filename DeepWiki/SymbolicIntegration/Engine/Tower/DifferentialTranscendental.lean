@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.DifferentialOneLevel
+import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveMonomialDifferential
 
 /-! # Presentation-indexed compositional transcendental towers
 
@@ -85,6 +86,44 @@ structure DifferentialOneLevelCapabilities
     CompleteCDifferentialNormalPostprocessor C
 
 namespace DifferentialOneLevelCapabilities
+
+/-- Replace a capability bundle's monomial branch by one that explicitly consumes a lower coefficient stage. -/
+noncomputable def withRecursiveMonomialCase
+    {α : Type u} [CField α] [CFieldSpec.{u,u} α]
+    (C : MonomialDifferentialContext (P := DensePoly) α)
+    (K : DifferentialOneLevelCapabilities C)
+    (M : CDifferentialRecursiveMonomialCase C)
+    (I : CRecursiveElementaryIntegratorWith α C.derivation)
+    (coefficientDomain : RecursiveElementaryDomainWith α)
+    [LawfulCDifferentialRecursiveMonomialCase M]
+    [CompleteCDifferentialRecursiveMonomialCase M coefficientDomain K.specialDomain]
+    (hI : LawfulCRecursiveElementaryIntegratorWith C.derivation C.differential I)
+    (hIComplete : @CompleteCRecursiveElementaryIntegratorWith α _ _
+      C.derivation C.differential I coefficientDomain hI) :
+    DifferentialOneLevelCapabilities C :=
+  { canonical := K.canonical
+    canonicalLawful := K.canonicalLawful
+    polynomial := K.polynomial
+    polynomialDomain := K.polynomialDomain
+    polynomialLawful := K.polynomialLawful
+    polynomialComplete := K.polynomialComplete
+    special := M.asSpecial I
+    specialDomain := K.specialDomain
+    specialLawful := by
+      exact LawfulCDifferentialRecursiveMonomialCase.specialLawful (C := M) I hI
+    specialComplete := by
+      exact CompleteCDifferentialRecursiveMonomialCase.specialComplete (C := M)
+        (coefficientDomain := coefficientDomain) (specialDomain := K.specialDomain) I hI hIComplete
+    normal := K.normal
+    normalDomain := K.normalDomain
+    normalLawful := K.normalLawful
+    normalComplete := K.normalComplete
+    postprocessor := M.asPostprocessor
+    postprocessorLawful := by
+      exact LawfulCDifferentialRecursiveMonomialCase.postprocessorLawful (C := M)
+    postprocessorComplete := by
+      exact CompleteCDifferentialRecursiveMonomialCase.postprocessorComplete (C := M)
+        (coefficientDomain := coefficientDomain) (specialDomain := K.specialDomain) }
 
 /-- Export all one-level capabilities as the common proof-carrying tower stage. -/
 noncomputable def asRischStage
@@ -271,6 +310,24 @@ noncomputable def ofCapabilities (T : DifferentialTowerPresentation N) (n : ℕ)
   exact ofStage T n hn
     (fun input => IsDifferentialOneLevelIntegrable (T.context n hn) kind input.toOneLevelInput)
     (K.asRischStage (T.context n hn) kind)
+
+/-- Build a presentation-indexed level whose special and normal branches consume explicit coefficient recursion. -/
+noncomputable def ofRecursiveMonomialCase
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N)
+    (K : DifferentialOneLevelCapabilities (T.context n hn))
+    (M : CDifferentialRecursiveMonomialCase (T.context n hn))
+    (I : CRecursiveElementaryIntegratorWith (DenseFracTower n) (T.context n hn).derivation)
+    (coefficientDomain : RecursiveElementaryDomainWith (DenseFracTower n))
+    (kind : PolynomialReductionKind)
+    [LawfulCDifferentialRecursiveMonomialCase M]
+    [CompleteCDifferentialRecursiveMonomialCase M coefficientDomain K.specialDomain]
+    [LawfulCRecursiveElementaryIntegratorWith (T.context n hn).derivation
+      (T.context n hn).differential I]
+    [CompleteCRecursiveElementaryIntegratorWith (T.context n hn).derivation
+      (T.context n hn).differential I coefficientDomain] :
+    DifferentialTranscendentalLevel T n hn :=
+  ofCapabilities T n hn
+    (K.withRecursiveMonomialCase (T.context n hn) M I coefficientDomain inferInstance inferInstance) kind
 
 /-- Every accepted presentation-indexed level result satisfies its selected derivative invariant. -/
 theorem sound (L : DifferentialTranscendentalLevel T n hn) (fuel : ℕ)
