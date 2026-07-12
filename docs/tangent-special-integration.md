@@ -63,8 +63,10 @@ cast coefficients.
    successor coefficient operation now runs the preceding selected Risch level and certificate-checks the
    lifted rational-plus-log result. The checker is complete for semantic coefficient-result certificates, and
    the dense-fraction bridge now derives such a certificate from a lower `IsIntegralResultP` identity with
-   constant coefficients and nonzero arguments. Full tower completeness still requires a genuine-success
-   contract for lower levels and recursive search-budget threading instead of a fixed per-level fuel.
+   constant coefficients and nonzero arguments. A lower `LawfulElementaryDenseRischLevel` plus
+   `CompleteCRischLevel` now implies eventual success of the coefficient adapter. Full tower completeness still
+   requires instances of that stronger contract for assembled levels and recursive search-budget threading
+   instead of a fixed per-level fuel.
 
 ## Verification sequence
 

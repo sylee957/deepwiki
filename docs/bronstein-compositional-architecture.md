@@ -175,9 +175,11 @@ monomial stage contracts.
    checker now reflects its denotational contract in both directions. The dense-fraction denotation bridge
    proves that a lower `IsIntegralResultP` identity with constant coefficients and nonzero arguments becomes a
    genuine lifted coefficient result, so the adapter is complete on a domain stated entirely in the lower
-   Risch vocabulary. The remaining tower-completeness gap is operational: package lower-level successful
-   results with these genuine side conditions and thread a sufficiently large recursive search budget rather
-   than fixing one coefficient fuel independently of the outer call.
+   Risch vocabulary. `LawfulElementaryDenseRischLevel` packages exactly the stronger lower-level soundness
+   needed here, and together with `CompleteCRischLevel` proves that the checked coefficient adapter succeeds
+   at some finite lower fuel. The remaining tower-completeness gap is to realize this genuine-success contract
+   for the selected assembled levels and thread that existential recursive budget through the outer tangent
+   call rather than fixing one coefficient fuel independently of it.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

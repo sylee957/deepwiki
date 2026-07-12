@@ -9,13 +9,25 @@ the lifted rational and logarithmic result in the represented fraction field.
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u v
+universe u
 
 open DensePoly CFrac Polynomial
 open scoped Differential
 
-variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
-  [CDiffFieldSpec.{u,v} β] [CFieldDomain β DensePoly] [Algebra ℚ (CFieldSpec.K β)]
+variable {β : Type u} [CField β] [CFieldSpec.{u,u} β] [CDiffField β]
+  [CDiffFieldSpec.{u,u} β] [CFieldDomain β DensePoly] [Algebra ℚ (CFieldSpec.K β)]
+
+/-- Genuine elementary soundness of a selected dense Risch level. -/
+class LawfulElementaryDenseRischLevel (L : CRischLevel DensePoly β)
+    (domain : RischLevelDomain DensePoly β) : Prop extends LawfulCRischLevel L domain where
+  /-- Every successful result has constant logarithmic coefficients. -/
+  coefficients_constant : ∀ (fuel : ℕ) (Dt a d : DensePoly β) (res : IntegralResult β),
+    domain Dt a d → CPoly.toPoly d ≠ 0 → L.integrate fuel Dt a d = some res →
+      ∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0
+  /-- Every successful result has nonzero represented logarithm arguments. -/
+  arguments_nonzero : ∀ (fuel : ℕ) (Dt a d : DensePoly β) (res : IntegralResult β),
+    domain Dt a d → CPoly.toPoly d ≠ 0 → L.integrate fuel Dt a d = some res →
+      ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0
 
 /-- Lift a lower dense Risch result into elementary-antiderivative data over `DenseFrac β`. -/
 def liftRischResultToCoefficient (res : IntegralResult β) :
@@ -181,5 +193,32 @@ instance instCompleteCRecursiveElementaryIntegratorOfRischLevelGenuine
     have hcheck := coefficientIntegralResultCheck_of_isCoefficientIntegralResult c _ hresult
     simp [recursiveElementaryOfRischLevel, checkedRecursiveElementaryIntegrator,
       recursiveElementaryCandidateOfRischLevel, hrun, hcheck]
+
+/-- A complete genuinely lawful lower level eventually supplies an accepted coefficient result. -/
+theorem recursiveElementaryOfRischLevel_eventually_succeeds
+    (L : CRischLevel DensePoly β) (domain : RischLevelDomain DensePoly β)
+    [LawfulElementaryDenseRischLevel L domain] [CompleteCRischLevel L domain]
+    (c : DenseFrac β)
+    (hdomain : domain [CCommRing.one] (CFrac.num c) (CFrac.den c))
+    (hintegrable : IsRischLevelIntegrable ([CCommRing.one] : DensePoly β)
+      (CFrac.num c) (CFrac.den c)) :
+    ∃ fuel out, (recursiveElementaryOfRischLevel L fuel).integrate c = some out := by
+  have hden : CPoly.toPoly (CFrac.den c) ≠ 0 := CFrac.toPoly_den_ne_zero_generic c
+  obtain ⟨fuel, res, hrun⟩ := CompleteCRischLevel.relative_complete
+    (L := L) (domain := domain) [CCommRing.one] (CFrac.num c) (CFrac.den c)
+      hdomain hden hintegrable
+  have hintegral := LawfulCRischLevel.sound (L := L) (domain := domain)
+    fuel [CCommRing.one] (CFrac.num c) (CFrac.den c) res hdomain hden hrun
+  have hconstants := LawfulElementaryDenseRischLevel.coefficients_constant
+    (L := L) (domain := domain) fuel [CCommRing.one] (CFrac.num c) (CFrac.den c) res
+      hdomain hden hrun
+  have hargs := LawfulElementaryDenseRischLevel.arguments_nonzero
+    (L := L) (domain := domain) fuel [CCommRing.one] (CFrac.num c) (CFrac.den c) res
+      hdomain hden hrun
+  have hresult := isCoefficientIntegralResult_liftRischResult c res hintegral hconstants hargs
+  have hcheck := coefficientIntegralResultCheck_of_isCoefficientIntegralResult c _ hresult
+  refine ⟨fuel, liftRischResultToCoefficient res, ?_⟩
+  simp [recursiveElementaryOfRischLevel, checkedRecursiveElementaryIntegrator,
+    recursiveElementaryCandidateOfRischLevel, hrun, hcheck]
 
 end DeepWiki.SymbolicIntegration
