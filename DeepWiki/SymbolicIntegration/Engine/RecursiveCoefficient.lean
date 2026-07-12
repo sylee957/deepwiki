@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
+import DeepWiki.SymbolicIntegration.Engine.Tower.Stage
 
 /-! # Recursive coefficient-field integration capability
 
@@ -174,6 +175,25 @@ class CompleteCRecursiveElementaryIntegrator (C : CRecursiveElementaryIntegrator
   /-- Every in-domain coefficient with a represented elementary antiderivative is accepted. -/
   complete : ∀ c : α, domain c → IsCoefficientElementarilyIntegrable c →
     ∃ fuel res, C.integrate fuel c = some res
+
+/-- The completion-style remainder stage exported by a certified recursive coefficient integrator. -/
+noncomputable def CRecursiveElementaryIntegrator.asRemainderIntegrationStage
+    (C : CRecursiveElementaryIntegrator α) (domain : RecursiveElementaryDomain (α := α))
+    [LawfulCRecursiveElementaryIntegrator C] [CompleteCRecursiveElementaryIntegrator C domain] :
+    RemainderIntegrationStage α (CoefficientIntegralResult α) Unit
+      IsCoefficientElementarilyIntegrable (fun c result _ => IsCoefficientIntegralResult c result) :=
+  { stage :=
+      { run := fun fuel c => (C.integrate fuel c).map fun result => ⟨result, ()⟩
+        domain := domain
+        sound := by
+          intro fuel c result _ hrun
+          obtain ⟨out, hout, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          exact LawfulCRecursiveElementaryIntegrator.sound fuel c out hout
+        complete := by
+          intro c hdomain hintegrable
+          obtain ⟨fuel, result, hrun⟩ := CompleteCRecursiveElementaryIntegrator.complete (C := C)
+            c hdomain hintegrable
+          exact ⟨fuel, ⟨result, ()⟩, by simp [hrun]⟩ } }
 
 /-- Semantic domain on which ordinary recursive coefficient integration is required to be complete. -/
 abbrev RecursiveCoefficientDomain := α → Prop
