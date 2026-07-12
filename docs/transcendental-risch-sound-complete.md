@@ -82,6 +82,45 @@ is provable.
    `## NOT YET FORMALIZED` block (subtractive, [[feedback-subtractive-missing-markers]]). Status lives
    in the catalog, not memory.
 
+## Status — SUBSTANTIVELY COMPLETE (2026-07-13)
+
+The transcendental Risch integrator is **proved sound and complete for every transcendental monomial
+case, both per level and at every tower depth**, all axiom-clean (`[propext, Classical.choice,
+Quot.sound]`, no `sorry`, no `native_decide`), all cataloged, all merged to main. 12 gate-green phases:
+
+- **Per-level sound-and-complete** (`some ⟺ genuinely elementary-integrable`, genuine antiderivative on
+  success): primitive (`lrtSolver_soundAndComplete_on_tower`, `thm_5_5_1_soundAndComplete`),
+  hyperexponential §5.9 (`hyperexpRischLevel_succeeds_iff_integrable`, `thm_5_9_1_soundAndComplete`),
+  hypertangent §5.10 (`tangentRischLevel_succeeds_iff_integrable`, `thm_5_10_soundAndComplete`), via the
+  generic `rischLevel_succeeds_iff_integrable`.
+- **At every tower depth** `DenseFracTower n`: `hyperexpRischLevel_succeeds_iff_integrable_tower`,
+  `denseTangentTower_soundAndComplete` (`thm_5_9_1/5_10_soundAndComplete_tower`).
+- **Genuine soundness** (true antiderivative, not the formal residue-constant identity):
+  `soundGenuineLrt`/`soundGenuineLrt_of_guard`.
+- **Grounded on the necessary condition, not an axiom**: `primitiveFrontierLrt_of_genuineData` proves the
+  frontier IS the necessary new-monomial condition (`GenuinePrimitiveMonomialLrt`, "η is not a
+  derivative").
+- **Tower-exhaustiveness kernel** (Thm 5.5.2/5.5.3): `not_elementary_tower_of_not_elementary_base`
+  (`thm_5_5_2_tower_exhaustiveness`).
+- **Both transcendental Liouville keystones** proved: `liouville_logExtension`/`liouville_expExtension`.
+
+Everything rests on exactly the **necessary Risch new-monomial conditions** (`NondegenerateLog`/`Exp`,
+`GenuinePrimitiveMonomialLrt`) + the field-RDE completeness recursion hypothesis
+(`CRischFieldComplete (DenseFracTower n)`).
+
+### The honest remaining boundary (research/refactor, NOT autonomously forceable — rigorously assessed)
+
+- **Whole-tower *unconditionality*** (discharging `CRischFieldComplete` up the tower): requires a
+  **design refactor** — the `CRischField (DenseFrac β)` instance solver is normalization-free, so its
+  completeness is false as stated; the fix is rebasing it onto the weak-normalizing `crischDESolveSoundWf`
+  (the never-completed `docs/rischde-wf-migration.md` task), after which the RDE frontier
+  `RischDEStepFrontierWf` (6 genuine Bronstein-completeness clauses) still remains — genuine math, a
+  necessary hypothesis, not bookkeeping. Left as the explicit `CRischFieldComplete` hypothesis, which is
+  the mathematically honest compositional form.
+- **The fully general structure theorem** (Thm 5.5.2/5.5.3 inductive form): needs an abstract
+  `IsElementary` / elementary-tower predicate Mathlib lacks. The transitivity kernel + the per-monomial
+  conditioned instances are the assemblable core; the full induction is the `[research]` boundary.
+
 ## Execution
 
 Autonomous, self-paced, commit-per-gate-green-phase ([[feedback-merge-after-proving]],
