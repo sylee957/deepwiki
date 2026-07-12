@@ -60,6 +60,37 @@ theorem differential_deriv_liftRischResultToTowerCoefficient_rational
   rw [toK_liftRischResultToTowerCoefficient_rational]
   rfl
 
+/-- An embedded successor polynomial denotes its ordinary preceding function-field embedding. -/
+theorem toK_towerOfPoly (n : ℕ) (p : DensePoly (DenseFracTower n)) :
+    CFieldSpec.toK (CFrac.ofPoly (F := DenseFrac) p : DenseFracTower (n + 1)) =
+      CFrac.am (DenseFracTower n) (CPoly.toPoly p) := by
+  change CFrac.toRatFunc (CFrac.ofPoly (F := DenseFrac) p) = _
+  exact CFrac.toRatFunc_ofPoly p
+
+/-- The successor presentation differentiates an embedded polynomial by the preceding selected function-field derivative. -/
+theorem differential_deriv_towerOfPoly
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n + 1 ≤ N)
+    (p : DensePoly (DenseFracTower n)) :
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    let C := T.context n hprev
+    @Differential.deriv _ _ (T.differential (n + 1) hn)
+      (CFieldSpec.toK (CFrac.ofPoly (F := DenseFrac) p : DenseFracTower (n + 1))) =
+      C.fractionDeriv (T.monomialDerivative n hn)
+        (CFrac.am (DenseFracTower n) (CPoly.toPoly p)) := by
+  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+  let C := T.context n hprev
+  letI : Differential (CFieldSpec.K (DenseFracTower n)) := T.differential n hprev
+  letI : Differential (CRingSpec.R (DenseFracTower n)) := T.differential n hprev
+  letI : Algebra ℚ (CRingSpec.R (DenseFracTower n)) := by
+    change Algebra ℚ (CFieldSpec.K (DenseFracTower n))
+    exact C.algebraQ
+  rw [← DifferentialTowerPresentation.toK_cderiv T (n + 1) hn]
+  rw [T.successorSemantics n hn]
+  change extendDeriv (Differential.implicitDeriv (CPoly.toPoly (T.monomialDerivative n hn)))
+      (CFrac.toRatFunc (CFrac.ofPoly (F := DenseFrac) p)) = _
+  rw [CFrac.toRatFunc_ofPoly]
+  rfl
+
 /-- The legacy dense lift has the packaged successor tower's rational-function denotation. -/
 theorem denseFracTower_toRatFunc_liftRischResult_rational
     (n : ℕ) (res : IntegralResult (DenseFracTower n)) :
