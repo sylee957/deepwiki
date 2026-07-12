@@ -157,6 +157,7 @@ theorem coefficientLogSumWith_liftTowerLogs
       rw [hsplit]
       rw [DifferentialTowerPresentation.toK_cderiv T (n + 1) hn (towerOfPoly n cv.2)]
       rw [coefficientLogTerm_towerOfPoly T n hn cv.1 cv.2, ih]
+      rfl
 
 /-- The legacy dense lift has the packaged successor tower's rational-function denotation. -/
 theorem denseFracTower_toRatFunc_liftRischResult_rational
