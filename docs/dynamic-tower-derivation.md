@@ -91,9 +91,13 @@ completeness at every selected depth.
 
 ## Migration order
 
-1. Thread `CRecursiveElementaryIntegratorWith` through the new presentation-indexed successor
-   constructor, so coefficient recursion is a certified input to the next level rather than a
-   parallel API.
+The explicit recursive coefficient and monomial adapters now feed
+`DifferentialTranscendentalLevel.ofRecursiveMonomialCase`, so coefficient recursion is a certified
+input of the next level. The remaining successor lift must still construct and certificate-check
+that coefficient solver from the preceding presentation-indexed level.
+
+1. Construct the certificate-checked successor coefficient solver from a preceding
+   presentation-indexed level, using the presentation quotient-rule square.
 2. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.
 3. Use the selected lower derivative identity in the recursive tangent finish theorem and connect

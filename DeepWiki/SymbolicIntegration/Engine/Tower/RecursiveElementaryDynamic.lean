@@ -38,6 +38,105 @@ def IsCoefficientElementarilyIntegrableWith {α : Type u} [CField α] [CFieldSpe
     (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α)) (c : α) : Prop :=
   ∃ res : CoefficientIntegralResult α, IsCoefficientIntegralResultWith derivation diffK c res
 
+/-- The computable logarithmic derivative sum selected by an explicit coefficient derivation. -/
+def coefficientLogDerivativeWith {α : Type u} [CField α]
+    (derivation : CFieldDerivation α) : List (α × α) → α
+  | [] => CCommRing.zero
+  | cv :: rest => CCommRing.add
+      (CCommRing.mul cv.1 (CField.div (derivation.cderiv cv.2) cv.2))
+      (coefficientLogDerivativeWith derivation rest)
+
+/-- Check an explicit coefficient result using only computable field operations and the selected derivative. -/
+def coefficientIntegralResultCheckWith {α : Type u} [CField α]
+    (derivation : CFieldDerivation α) (c : α) (res : CoefficientIntegralResult α) : Bool :=
+  CCommRing.isZero (CField.sub
+      (CCommRing.add (derivation.cderiv res.rational)
+        (coefficientLogDerivativeWith derivation res.logs)) c) &&
+    res.logs.all (fun cv => CCommRing.isZero (derivation.cderiv cv.1)) &&
+    res.logs.all (fun cv => !CCommRing.isZero cv.2)
+
+/-- A certificate-checked explicit coefficient candidate. -/
+def checkedRecursiveElementaryIntegratorWith {α : Type u} [CField α]
+    (derivation : CFieldDerivation α)
+    (raw : CRecursiveElementaryIntegratorWith α derivation) :
+    CRecursiveElementaryIntegratorWith α derivation where
+  integrate fuel c := raw.integrate fuel c |>.bind fun res =>
+    if coefficientIntegralResultCheckWith derivation c res then some res else none
+
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+
+/-- The selected computable logarithmic sum denotes its explicit semantic counterpart. -/
+theorem toK_coefficientLogDerivativeWith
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    [LawfulCFieldDerivation α derivation diffK] (logs : List (α × α)) :
+    CFieldSpec.toK (coefficientLogDerivativeWith derivation logs) =
+      coefficientLogSumWith derivation logs := by
+  induction logs with
+  | nil => simp [coefficientLogDerivativeWith, coefficientLogSumWith, CFieldSpec.toK_zero]
+  | cons cv rest ih =>
+      simp [coefficientLogDerivativeWith, coefficientLogSumWith, CFieldSpec.toK_add,
+        CFieldSpec.toK_mul, CFieldSpec.toK_div, ih, (LawfulCFieldDerivation.toK_cderiv cv.2)]
+
+/-- A passed explicit coefficient-result check has its selected semantic meaning. -/
+theorem isCoefficientIntegralResultWith_of_check
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    [LawfulCFieldDerivation α derivation diffK]
+    (c : α) (res : CoefficientIntegralResult α)
+    (hcheck : coefficientIntegralResultCheckWith derivation c res = true) :
+    IsCoefficientIntegralResultWith derivation diffK c res := by
+  simp only [coefficientIntegralResultCheckWith, Bool.and_eq_true] at hcheck
+  obtain ⟨⟨hid, hconstants⟩, hargs⟩ := hcheck
+  refine ⟨?_, ?_, ?_⟩
+  · rw [CFieldSpec.isZero_iff, CFieldSpec.toK_sub, sub_eq_zero,
+      CFieldSpec.toK_add, toK_coefficientLogDerivativeWith derivation diffK] at hid
+    simpa only [LawfulCFieldDerivation.toK_cderiv] using hid
+  · intro cv hcv
+    have hz := (List.all_eq_true.mp hconstants) cv hcv
+    rw [CFieldSpec.isZero_iff] at hz
+    simpa only [LawfulCFieldDerivation.toK_cderiv] using hz
+  · intro cv hcv hzero
+    have hfalse := (List.all_eq_true.mp hargs) cv hcv
+    rw [Bool.not_eq_true', Bool.eq_false_iff, Ne, CFieldSpec.isZero_iff] at hfalse
+    exact hfalse hzero
+
+/-- The explicit coefficient-result check accepts every selected semantic certificate. -/
+theorem coefficientIntegralResultCheckWith_of_isCoefficientIntegralResultWith
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    [LawfulCFieldDerivation α derivation diffK]
+    (c : α) (res : CoefficientIntegralResult α)
+    (h : IsCoefficientIntegralResultWith derivation diffK c res) :
+    coefficientIntegralResultCheckWith derivation c res = true := by
+  obtain ⟨hid, hconstants, hargs⟩ := h
+  simp only [coefficientIntegralResultCheckWith, Bool.and_eq_true]
+  constructor
+  · constructor
+    · rw [CFieldSpec.isZero_iff, CFieldSpec.toK_sub, sub_eq_zero,
+        CFieldSpec.toK_add, toK_coefficientLogDerivativeWith derivation diffK]
+      simpa only [LawfulCFieldDerivation.toK_cderiv] using hid
+    · apply List.all_eq_true.mpr
+      intro cv hcv
+      rw [CFieldSpec.isZero_iff]
+      simpa only [LawfulCFieldDerivation.toK_cderiv] using hconstants cv hcv
+  · apply List.all_eq_true.mpr
+    intro cv hcv
+    cases hz : CCommRing.isZero cv.2 with
+    | false => rfl
+    | true =>
+      have hzero : CFieldSpec.toK cv.2 = 0 := by
+        rw [← CFieldSpec.isZero_iff]
+        exact hz
+      exact (hargs cv hcv hzero).elim
+
+/-- The explicit coefficient-result check exactly reflects its selected semantic certificate. -/
+theorem coefficientIntegralResultCheckWith_iff
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    [LawfulCFieldDerivation α derivation diffK]
+    (c : α) (res : CoefficientIntegralResult α) :
+    coefficientIntegralResultCheckWith derivation c res = true ↔
+      IsCoefficientIntegralResultWith derivation diffK c res :=
+  ⟨isCoefficientIntegralResultWith_of_check derivation diffK c res,
+    coefficientIntegralResultCheckWith_of_isCoefficientIntegralResultWith derivation diffK c res⟩
+
 /-- Soundness law for an explicit recursive elementary coefficient integrator. -/
 class LawfulCRecursiveElementaryIntegratorWith {α : Type u} [CField α] [CFieldSpec.{u,v} α]
     (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
@@ -45,6 +144,27 @@ class LawfulCRecursiveElementaryIntegratorWith {α : Type u} [CField α] [CField
   /-- Every accepted result is an elementary antiderivative under the selected differential. -/
   sound : ∀ fuel c res, C.integrate fuel c = some res →
     IsCoefficientIntegralResultWith derivation diffK c res
+
+/-- Certificate checking makes any explicit recursive coefficient candidate lawful. -/
+instance instLawfulCRecursiveElementaryIntegratorWithChecked
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    [LawfulCFieldDerivation α derivation diffK]
+    (raw : CRecursiveElementaryIntegratorWith α derivation) :
+    LawfulCRecursiveElementaryIntegratorWith derivation diffK
+      (checkedRecursiveElementaryIntegratorWith derivation raw) where
+  sound fuel c res hrun := by
+    simp only [checkedRecursiveElementaryIntegratorWith] at hrun
+    cases hraw : raw.integrate fuel c with
+    | none => simp [hraw] at hrun
+    | some candidate =>
+      rw [hraw] at hrun
+      simp only [Option.bind_some] at hrun
+      split at hrun
+      · rename_i hcheck
+        simp only [Option.some.injEq] at hrun
+        subst candidate
+        exact isCoefficientIntegralResultWith_of_check derivation diffK c res hcheck
+      · simp at hrun
 
 /-- Semantic input domain for explicit recursive elementary coefficient integration. -/
 abbrev RecursiveElementaryDomainWith (α : Type u) := α → Prop
