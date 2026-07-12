@@ -70,7 +70,10 @@ cast coefficients.
    sparse assembled levels now carry that genuine-result contract through every successor. Full semantic
    completeness still requires the coupled solver and its degree-bound hypotheses. The special-stage budget
    now splits into an encoded sequence of independent coupled-solver bounds and a lower-coefficient budget;
-   `TangentSpecialConfig` no longer stores a fixed coupled degree bound.
+   `TangentSpecialConfig` no longer stores a fixed coupled degree bound. `TangentReducedCompleteDomain`
+   records semantic solvability along every selected pole-lowering state, and its composition theorem derives
+   one finite encoded budget solely from `CompleteCTangentCoefficientSolver`, without a solver-monotonicity
+   assumption.
 
 ## Verification sequence
 

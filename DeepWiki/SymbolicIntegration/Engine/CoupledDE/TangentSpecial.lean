@@ -147,6 +147,27 @@ private structure TangentReducedCandidate (α : Type u) where
   /-- Polynomial residual remaining after all powers of `t² + 1` have been removed. -/
   remainder : DensePoly α
 
+/-- Recursive domain in which every selected pole-lowering coupled system is semantically solvable. -/
+def TangentReducedCompleteDomain {α : Type u} [CField α] [CFieldSpec α]
+    [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
+    (S : CTangentCoefficientSolver α) (solverDomain : TangentCoefficientDomain (α := α))
+    (alpha : α) : (m : ℕ) → DensePoly α → DensePoly α → Prop
+  | 0, _num, _den => True
+  | m + 1, num, den =>
+      let numDiv := CPolyEuclidean.divmod num tangentBase
+      let denDiv := CPolyEuclidean.divmod den tangentBase
+      let a := CPoly.coeff numDiv.2 1
+      let b := CPoly.coeff numDiv.2 0
+      let coupling := CCommRing.mul (CField.natCast (2 * (m + 1))) alpha
+      CPolyEngine.cisZero denDiv.2 = true ∧
+        solverDomain coupling a b ∧ IsTangentCoefficientSolvable coupling a b ∧
+        ∀ fuel solution, S.solve fuel coupling a b = some solution →
+          let oneMinusTwoM : α :=
+            CField.sub CCommRing.one (CField.natCast (2 * (m + 1)))
+          let correction := CCommRing.mul (CCommRing.mul solution.1 alpha) oneMinusTwoM
+          TangentReducedCompleteDomain S solverDomain alpha m
+            (CPolyEngine.sub numDiv.1 [correction]) denDiv.1
+
 /-- Lower the `(t² + 1)` pole order by Bronstein's coupled-system recurrence. -/
 private def tangentReducedCandidate {α : Type u} [CField α] [CDiffField α]
     (S : CTangentCoefficientSolver α) (coupledFuel : ℕ) (alpha : α) :
@@ -175,6 +196,70 @@ private def tangentReducedCandidate {α : Type u} [CField α] [CDiffField α]
           rational := combineRationalParts q0.1 q0.2 rest.rational.1 rest.rational.2
           remainder := rest.remainder
         }
+
+/-- Complete coupled solving supplies a finite encoded budget for every pole-lowering step. -/
+private theorem tangentReducedCandidate_complete {α : Type u} [CField α] [CFieldSpec α]
+    [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
+    (S : CTangentCoefficientSolver α) (solverDomain : TangentCoefficientDomain (α := α))
+    [LawfulCTangentCoefficientSolver S] [CompleteCTangentCoefficientSolver S solverDomain]
+    (alpha : α) (m : ℕ) (num den : DensePoly α)
+    (hdomain : TangentReducedCompleteDomain S solverDomain alpha m num den) :
+    ∃ fuel out, tangentReducedCandidate S fuel alpha m num den = some out := by
+  induction m generalizing num den with
+  | zero =>
+      exact ⟨0, { rational := (CPoly.czero, CPoly.one), remainder := num }, rfl⟩
+  | succ m ih =>
+      simp only [TangentReducedCompleteDomain] at hdomain
+      let numDiv := CPolyEuclidean.divmod num tangentBase
+      let denDiv := CPolyEuclidean.divmod den tangentBase
+      let a := CPoly.coeff numDiv.2 1
+      let b := CPoly.coeff numDiv.2 0
+      let coupling := CCommRing.mul (CField.natCast (2 * (m + 1))) alpha
+      obtain ⟨hden, hsolverDomain, hsolvable, hnext⟩ := hdomain
+      obtain ⟨solveFuel, c, d, hsolve⟩ := CompleteCTangentCoefficientSolver.complete
+        (C := S) (domain := solverDomain) coupling a b hsolverDomain hsolvable
+      let oneMinusTwoM : α := CField.sub CCommRing.one (CField.natCast (2 * (m + 1)))
+      let correction := CCommRing.mul (CCommRing.mul c alpha) oneMinusTwoM
+      have hrestDomain : TangentReducedCompleteDomain S solverDomain alpha m
+          (CPolyEngine.sub numDiv.1 [correction]) denDiv.1 := by
+        simpa only [numDiv, denDiv, a, b, coupling, oneMinusTwoM, correction] using
+          hnext solveFuel (c, d) hsolve
+      obtain ⟨restFuel, rest, hrest⟩ := ih
+        (CPolyEngine.sub numDiv.1 [correction]) denDiv.1 hrestDomain
+      refine ⟨Nat.pair solveFuel restFuel, ?_, ?_⟩
+      · exact {
+          rational := combineRationalParts ([d, c] : DensePoly α) den
+            rest.rational.1 rest.rational.2
+          remainder := rest.remainder }
+      ·
+        simp only [tangentReducedCandidate, Nat.unpair_pair]
+        rw [hden]
+        simp only [Bool.not_true, Bool.false_eq_true, ↓reduceIte]
+        change (do
+          let solution ← S.solve solveFuel coupling a b
+          let rest ← tangentReducedCandidate S restFuel alpha m
+            (CPolyEngine.sub numDiv.1
+              [CCommRing.mul (CCommRing.mul solution.1 alpha) oneMinusTwoM]) denDiv.1
+          some ({
+            rational := combineRationalParts ([solution.2, solution.1] : DensePoly α) den
+              rest.rational.1 rest.rational.2
+            remainder := rest.remainder } : TangentReducedCandidate α)) = some ({
+              rational := combineRationalParts ([d, c] : DensePoly α) den
+                rest.rational.1 rest.rational.2
+              remainder := rest.remainder } : TangentReducedCandidate α)
+        rw [hsolve]
+        change (do
+          let rest ← tangentReducedCandidate S restFuel alpha m
+            (CPolyEngine.sub numDiv.1 [correction]) denDiv.1
+          some ({
+            rational := combineRationalParts ([d, c] : DensePoly α) den
+              rest.rational.1 rest.rational.2
+            remainder := rest.remainder } : TangentReducedCandidate α)) = some ({
+              rational := combineRationalParts ([d, c] : DensePoly α) den
+                rest.rational.1 rest.rational.2
+              remainder := rest.remainder } : TangentReducedCandidate α)
+        rw [hrest]
+        rfl
 
 /-- Raw recursive hypertangent candidate generator parameterized by coefficient-field integration. -/
 private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField α]
