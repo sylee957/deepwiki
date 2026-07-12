@@ -106,11 +106,14 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
   obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only
   after executable reconstruction and requested-degree-normal-form checks; its lawful contract now carries
-  both facts. The nonlinear domain (`2 ≤ deg Dt`) now has a representation-neutral leading-term
-  cancellation proof: each active step strictly lowers degree, so `deg p + 1` fuel returns a checked
-  normal form and installs a genuine `CompleteCPolynomialReduction` instance. The primitive branch
-  remains separate: its constant nonzero `Dt` and coefficient-constantness hypotheses must be shown
-  closed under each generated residual before it can receive the analogous finite-fuel instance.
+  both facts. Both executable kernels now have representation-neutral finite-fuel completeness proofs.
+  The nonlinear domain requires `2 ≤ deg Dt`; each active step cancels the leading term and strictly
+  lowers degree. The primitive domain requires `Dt = C η` for a nonzero differential constant `η` and
+  `mapCoeffs p = 0`; its residual preserves coefficient-constantness while strictly lowering degree.
+  In both domains, `deg p + 1` fuel returns a checked normal form and supplies a genuine
+  `CompleteCPolynomialReduction` instance. No completeness is claimed for nonconstant primitive
+  coefficients or an arbitrary degree-zero `Dt`. The former acceptance-only polynomial-reduction
+  completeness wrapper has been retired: relative completeness now names one of these semantic domains.
 - `CResidueSource P α` is the Prop-free residue-candidate capability and
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.

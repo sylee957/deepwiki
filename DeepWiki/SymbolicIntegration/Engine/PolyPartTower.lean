@@ -83,17 +83,6 @@ class CompleteCPolynomialReduction (C : CPolynomialReduction P α)
     domain kind Dt p → (∃ out, IsPolynomialReduction kind Dt p out) →
       ∃ fuel out, C.reduce kind Dt fuel p = some out ∧ IsPolynomialReduction kind Dt p out
 
-/-- The exact acceptance domain of a selected polynomial-reduction operation. -/
-def polynomialReductionAcceptanceDomain (C : CPolynomialReduction P α) :
-    PolynomialReductionDomain P α := fun kind Dt p =>
-  ∃ fuel out, C.reduce kind Dt fuel p = some out ∧ IsPolynomialReduction kind Dt p out
-
-/-- Every selected polynomial-reduction operation is complete on its explicit acceptance domain. -/
-instance instCompleteCPolynomialReductionAcceptance (C : CPolynomialReduction P α)
-    [LawfulCPolynomialReduction C] :
-    CompleteCPolynomialReduction C (polynomialReductionAcceptanceDomain C) where
-  relative_complete _kind _Dt _p hdomain _ := hdomain
-
 /-- Boolean reconstruction check for a candidate polynomial reduction. -/
 def polynomialReductionCheck (Dt p : P α) (out : PolynomialReductionResult P α) : Bool :=
   CPolyEngine.cisZero
