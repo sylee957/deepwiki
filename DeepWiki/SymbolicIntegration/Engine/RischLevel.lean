@@ -127,6 +127,17 @@ def oneLevelRischCompleteDomain (R : CPolynomialReduction P α) (kind : Polynomi
     (IsRischLevelIntegrable Dt a d →
       OneLevelAssemblyWitness R kind polynomialDomain normalDomain specialDomain Dt a d)
 
+omit [LawfulCPolyEngine P] in
+/-- An integrable input in the complete level domain supplies its three-stage assembly witness. -/
+theorem oneLevelAssemblyWitness_of_completeDomain (R : CPolynomialReduction P α)
+    (kind : PolynomialReductionKind) (polynomialDomain : PolynomialReductionDomain P α)
+    (normalDomain : NormalReductionDomain P α) (specialDomain : MonomialSpecialDomain P α)
+    [CCanonicalRepresentation P α] (Dt a d : P α)
+    (hdomain : oneLevelRischCompleteDomain R kind polynomialDomain normalDomain specialDomain Dt a d)
+    (hintegrable : IsRischLevelIntegrable Dt a d) :
+    OneLevelAssemblyWitness R kind polynomialDomain normalDomain specialDomain Dt a d :=
+  hdomain.2 hintegrable
+
 /-- The composed level is lawful on its explicit stage-decomposition domain. -/
 instance instLawfulCRischLevelCompleteDomain (R : CPolynomialReduction P α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
