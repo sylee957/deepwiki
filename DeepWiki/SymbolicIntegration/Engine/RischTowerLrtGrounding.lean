@@ -1,9 +1,9 @@
-import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
+import DeepWiki.SymbolicIntegration.Engine.RischSolverTowerLrt
 
 /-! # Grounding the recursive LRT solver — the honest end state of the re-base
 
-`Tower.LrtDepth` packages the dictionary-dependent carriers and proves the recursive soundness and
-domain-relative completeness step at every depth. This file specializes that construction to `DenseFrac ℚ`
+`RischSolverTowerLrt` assembles the dictionary-dependent recursive LRT solver and proves its soundness
+and domain-relative completeness step at every depth. This file specializes that construction to `DenseFrac ℚ`
 as a small concrete grounding theorem. The recursive construction depends on exactly two **honest** frontiers
 per level, and no others:
 
