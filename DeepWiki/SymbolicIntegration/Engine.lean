@@ -13,6 +13,7 @@ import DeepWiki.SymbolicIntegration.Engine.FunctionAlgebraIntegrate
 import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
 import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
+import DeepWiki.SymbolicIntegration.Engine.Hermite.DifferentialStage
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionDenseLawful
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionSparse
