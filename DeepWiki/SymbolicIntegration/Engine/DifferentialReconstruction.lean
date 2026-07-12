@@ -17,7 +17,6 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u
 variable {α : Type u} [CField α] [CFieldSpec.{u,u} α]
 
 omit [LawfulCPolyEngine P] in
-omit [LawfulCPolyEngine P] in
 /-- Explicit logarithmic residue sums respect list concatenation. -/
 theorem differentialLogResidueSum_append
     (C : MonomialDifferentialContext (P := P) α) (Dt : P α)
