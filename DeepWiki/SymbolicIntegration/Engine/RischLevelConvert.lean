@@ -114,4 +114,51 @@ instance instLawfulCRischLevelConvert (L : CRischLevel P α) (domain : RischLeve
     simpa only [IsIntegralResultP, convertIntegralResult, CPolyEngine.toPoly_convert,
       towerFractionFieldDerivP] using hconverted
 
+/-- Representation conversion preserves genuine successful Risch-level outputs. -/
+instance instLawfulGenuineCRischLevelConvert (L : CRischLevel P α)
+    (domain : RischLevelDomain P α) [LawfulCRischLevel L domain]
+    [LawfulGenuineCRischLevel L domain] :
+    LawfulGenuineCRischLevel (convertRischLevel (Q := Q) L)
+      (convertRischLevelDomain (Q := Q) domain) where
+  coefficients_constant fuel Dt a d res hdomain hd hrun := by
+    change (L.integrate fuel (CPolyEngine.convert Dt) (CPolyEngine.convert a)
+      (CPolyEngine.convert d)).map (convertIntegralResult (Q := Q)) = some res at hrun
+    rw [Option.map_eq_some_iff] at hrun
+    obtain ⟨source, hsource, rfl⟩ := hrun
+    intro cv hcv
+    obtain ⟨sourceLog, hsourceLog, rfl⟩ := List.mem_map.mp hcv
+    exact LawfulGenuineCRischLevel.coefficients_constant (L := L) (domain := domain)
+      fuel (CPolyEngine.convert Dt) (CPolyEngine.convert a) (CPolyEngine.convert d)
+      source hdomain (by simpa only [CPolyEngine.toPoly_convert] using hd) hsource
+      sourceLog hsourceLog
+  arguments_nonzero fuel Dt a d res hdomain hd hrun := by
+    change (L.integrate fuel (CPolyEngine.convert Dt) (CPolyEngine.convert a)
+      (CPolyEngine.convert d)).map (convertIntegralResult (Q := Q)) = some res at hrun
+    rw [Option.map_eq_some_iff] at hrun
+    obtain ⟨source, hsource, rfl⟩ := hrun
+    intro cv hcv
+    obtain ⟨sourceLog, hsourceLog, rfl⟩ := List.mem_map.mp hcv
+    simpa only [CPolyEngine.toPoly_convert] using
+      (LawfulGenuineCRischLevel.arguments_nonzero (L := L) (domain := domain)
+        fuel (CPolyEngine.convert Dt) (CPolyEngine.convert a) (CPolyEngine.convert d)
+        source hdomain (by simpa only [CPolyEngine.toPoly_convert] using hd) hsource
+        sourceLog hsourceLog)
+
+/-- Representation conversion preserves relative completeness on the pulled-back domain. -/
+instance instCompleteCRischLevelConvert (L : CRischLevel P α)
+    (domain : RischLevelDomain P α) [LawfulCRischLevel L domain]
+    [CompleteCRischLevel L domain] :
+    CompleteCRischLevel (convertRischLevel (Q := Q) L)
+      (convertRischLevelDomain (Q := Q) domain) where
+  relative_complete Dt a d hdomain hd hintegrable := by
+    have hsourceIntegrable : IsRischLevelIntegrable
+        (CPolyEngine.convert Dt : P α) (CPolyEngine.convert a) (CPolyEngine.convert d) :=
+      isRischLevelIntegrable_convert (P := Q) (Q := P) Dt a d hintegrable
+    obtain ⟨fuel, source, hsource⟩ := CompleteCRischLevel.relative_complete
+      (L := L) (domain := domain) (CPolyEngine.convert Dt) (CPolyEngine.convert a)
+      (CPolyEngine.convert d) hdomain
+      (by simpa only [CPolyEngine.toPoly_convert] using hd) hsourceIntegrable
+    refine ⟨fuel, convertIntegralResult (Q := Q) source, ?_⟩
+    simp [convertRischLevel, hsource]
+
 end DeepWiki.SymbolicIntegration

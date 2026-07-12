@@ -93,9 +93,15 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   `oneLevelRischWithRecursiveCoefficient` installs an explicit lower coefficient stage;
   `oneLevelRischSoundDomain` and `oneLevelRischCompleteDomain` lift the selected normal reducer's
   domain through canonical decomposition and add explicit stage-decomposition witnesses for completeness.
-- `convertRischLevel` is a representation boundary rather than a second assembler: its lawful instance
-  transports a source level's denotation square to the pulled-back target domain, including converted
-  logarithmic terms.
+- `LawfulGenuineCNormalReduction`, `LawfulGenuineCMonomialCase`, and
+  `LawfulGenuineCRischLevel` separately track the Liouville side conditions that the formal derivative
+  identity alone cannot express: constant log coefficients and nonzero log arguments.  The generic assembler
+  composes these contracts; checked normal and tangent-special realizers enforce them executable-side, and
+  dense/sparse recursive tangent levels now expose the resulting genuine-output contract to their successor
+  coefficient adapters.
+- `convertRischLevel` is a representation boundary rather than a second assembler: its lawful, genuine,
+  and complete instances transport the source level's denotation square, Liouville side conditions, and
+  eventual success to the pulled-back target domain, including converted logarithmic terms.
 - `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
   obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only
@@ -175,13 +181,16 @@ monomial stage contracts.
    checker now reflects its denotational contract in both directions. The dense-fraction denotation bridge
    proves that a lower `IsIntegralResultP` identity with constant coefficients and nonzero arguments becomes a
    genuine lifted coefficient result, so the adapter is complete on a domain stated entirely in the lower
-   Risch vocabulary. `LawfulElementaryDenseRischLevel` packages exactly the stronger lower-level soundness
-   needed here, and together with `CompleteCRischLevel` proves that the checked coefficient adapter succeeds
-   at some finite lower fuel. The generic assembler now decodes its outer fuel into independent polynomial and
+   Risch vocabulary. The representation-neutral `LawfulGenuineCRischLevel` packages exactly the stronger
+   lower-level soundness needed here, and together with `CompleteCRischLevel` proves that the checked
+   coefficient adapter succeeds at some finite lower fuel. The generic assembler now decodes its outer fuel
+   into independent polynomial and
    monomial-stage budgets using `Nat.unpair`; the tangent monomial stage forwards its budget into
    `CRecursiveElementaryIntegrator`, and dense/sparse successor capabilities derive that budgeted adapter from
-   the preceding level without storing a fixed coefficient fuel. The remaining tower-completeness gap is to
-   realize the genuine-success contract for the selected assembled levels.
+   the preceding level without storing a fixed coefficient fuel. Checked normal and tangent-special stages now
+   establish the genuine-success contract for selected dense and sparse tangent levels, so the adapter's
+   eventual-success theorem applies compositionally at every successor. The remaining gap is semantic
+   completeness of the coupled solver and its degree bound, not propagation of Liouville side conditions.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

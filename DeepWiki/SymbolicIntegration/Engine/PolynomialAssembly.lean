@@ -216,4 +216,65 @@ theorem assembleOneLevel_sound (R : CPolynomialReduction P α)
             exact mul_ne_zero one_ne_zero hspecialDen
           simpa only [add_assoc] using hcanonical
 
+omit [LawfulCPolyEngine P] in
+/-- Successful one-level assembly preserves genuine logarithmic coefficients and arguments. -/
+theorem assembleOneLevel_logs_genuine (R : CPolynomialReduction P α)
+    (kind : PolynomialReductionKind) (fuel : ℕ)
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [LawfulGenuineCNormalReduction N normalDomain]
+    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
+    [LawfulGenuineCMonomialCase C]
+    (Dt a d : P α) (out : IntegralResult α P) (hd : CPoly.toPoly d ≠ 0)
+    (hnormalDomain : normalDomain Dt (canonicalResult Dt a d).normalNum
+      (canonicalResult Dt a d).normalDen)
+    (hrun : assembleOneLevel R kind N fuel C Dt a d = some out) :
+    (∀ cv ∈ out.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      ∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0 := by
+  cases hreduce : R.reduce kind Dt (Nat.unpair fuel).1
+      (canonicalResult Dt a d).polynomial with
+  | none => simp [assembleOneLevel, hreduce] at hrun
+  | some reduced =>
+    cases hspecial : C.integrateSpecial (Nat.unpair fuel).2 Dt reduced.remainder
+        (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen with
+    | none => simp [assembleOneLevel, hreduce, hspecial] at hrun
+    | some special =>
+      cases hnormal : N.reduce Dt (canonicalResult Dt a d).normalNum
+          (canonicalResult Dt a d).normalDen with
+      | none => simp [assembleOneLevel, hreduce, hnormal] at hrun
+      | some before =>
+        cases hpost : C.postprocessNormal Dt before with
+        | none => simp [assembleOneLevel, hreduce, hnormal, hpost] at hrun
+        | some normal =>
+          have hout : combineIntegralResults
+              (combineSN reduced.antiderivative CPoly.one special) normal = out := by
+            simpa [assembleOneLevel, hreduce, hspecial, hnormal, hpost] using hrun
+          subst out
+          have hspecialConstants := LawfulGenuineCMonomialCase.special_coefficients_constant
+            (C := C) (Nat.unpair fuel).2 Dt reduced.remainder
+              (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen special hspecial
+          have hspecialArguments := LawfulGenuineCMonomialCase.special_arguments_nonzero
+            (C := C) (Nat.unpair fuel).2 Dt reduced.remainder
+              (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen special hspecial
+          have hnormalDen := LawfulCCanonicalRepresentation.normalDen_nonzero Dt a d hd
+          have hbeforeConstants := LawfulGenuineCNormalReduction.coefficients_constant (N := N) Dt
+            (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before
+              hnormalDomain hnormalDen hnormal
+          have hbeforeArguments := LawfulGenuineCNormalReduction.arguments_nonzero (N := N) Dt
+            (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before
+              hnormalDomain hnormalDen hnormal
+          have hnormalConstants := LawfulGenuineCMonomialCase.postprocessNormal_coefficients_constant
+            (C := C) Dt before normal hbeforeConstants hpost
+          have hnormalArguments := LawfulGenuineCMonomialCase.postprocessNormal_arguments_nonzero
+            (C := C) Dt before normal hbeforeArguments hpost
+          constructor
+          · intro cv hcv
+            change cv ∈ special.logs ++ normal.logs at hcv
+            rw [List.mem_append] at hcv
+            exact hcv.elim (hspecialConstants cv) (hnormalConstants cv)
+          · intro cv hcv
+            change cv ∈ special.logs ++ normal.logs at hcv
+            rw [List.mem_append] at hcv
+            exact hcv.elim (hspecialArguments cv) (hnormalArguments cv)
+
 end DeepWiki.SymbolicIntegration

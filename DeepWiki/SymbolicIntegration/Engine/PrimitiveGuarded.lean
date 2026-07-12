@@ -118,6 +118,40 @@ instance instLawfulCMonomialCasePrimitiveGuarded :
     simp only [primitiveGuardedCase] at hpost
     split at hpost <;> simp_all
 
+/-- The guarded primitive stage emits only genuine logarithmic terms. -/
+instance instLawfulGenuineCMonomialCasePrimitiveGuarded :
+    LawfulGenuineCMonomialCase (primitiveGuardedCase (α := α)) where
+  special_coefficients_constant _fuel Dt fp b ds res hrun := by
+    simp only [primitiveGuardedCase] at hrun
+    rcases hraw : primitiveGuardedRationalSpecial Dt fp b with _ | rational
+    · simp [hraw] at hrun
+    · rw [hraw] at hrun
+      simp only [Option.map_some, Option.some.injEq] at hrun
+      subst res
+      simp
+  special_arguments_nonzero _fuel Dt fp b ds res hrun := by
+    simp only [primitiveGuardedCase] at hrun
+    rcases hraw : primitiveGuardedRationalSpecial Dt fp b with _ | rational
+    · simp [hraw] at hrun
+    · rw [hraw] at hrun
+      simp only [Option.map_some, Option.some.injEq] at hrun
+      subst res
+      simp
+  postprocessNormal_coefficients_constant _ before after hconstants hrun := by
+    simp only [primitiveGuardedCase] at hrun
+    split at hrun
+    · have heq : before = after := Option.some.inj hrun
+      subst after
+      exact hconstants
+    · contradiction
+  postprocessNormal_arguments_nonzero _ before after hargs hrun := by
+    simp only [primitiveGuardedCase] at hrun
+    split at hrun
+    · have heq : before = after := Option.some.inj hrun
+      subst after
+      exact hargs
+    · contradiction
+
 /-- Rational-only guarded primitive special stage used by the root-free LRT assembler. -/
 def primitiveGuardedLrtCase : CLrtMonomialCase DensePoly α where
   integrateSpecial Dt fp b _ds := primitiveGuardedRationalSpecial Dt fp b

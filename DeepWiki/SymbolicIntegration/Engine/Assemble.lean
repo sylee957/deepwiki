@@ -93,6 +93,32 @@ class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
     CPoly.toPoly before.rational.2 ≠ 0 → C.postprocessNormal Dt before = some after →
       CPoly.toPoly after.rational.2 ≠ 0
 
+/-- A lawful monomial case whose special and postprocessed logarithms are genuine elementary terms. -/
+class LawfulGenuineCMonomialCase (C : CMonomialCase P α)
+    [LawfulCMonomialCase C] : Prop where
+  /-- Every successful special result has constant logarithmic coefficients. -/
+  special_coefficients_constant : ∀ (fuel : ℕ) (Dt fp b ds : P α)
+      (res : IntegralResult α P),
+    C.integrateSpecial fuel Dt fp b ds = some res →
+      ∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0
+  /-- Every successful special result has nonzero logarithm arguments. -/
+  special_arguments_nonzero : ∀ (fuel : ℕ) (Dt fp b ds : P α)
+      (res : IntegralResult α P),
+    C.integrateSpecial fuel Dt fp b ds = some res →
+      ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0
+  /-- Normal postprocessing preserves constant logarithmic coefficients. -/
+  postprocessNormal_coefficients_constant : ∀ (Dt : P α)
+      (before after : IntegralResult α P),
+    (∀ cv ∈ before.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) →
+    C.postprocessNormal Dt before = some after →
+      ∀ cv ∈ after.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0
+  /-- Normal postprocessing preserves nonzero logarithm arguments. -/
+  postprocessNormal_arguments_nonzero : ∀ (Dt : P α)
+      (before after : IntegralResult α P),
+    (∀ cv ∈ before.logs, CPoly.toPoly cv.2 ≠ 0) →
+    C.postprocessNormal Dt before = some after →
+      ∀ cv ∈ after.logs, CPoly.toPoly cv.2 ≠ 0
+
 /-- Semantic domain on which a monomial special solver is required to be complete. -/
 abbrev MonomialSpecialDomain (P : Type u → Type u) (α : Type u) := P α → P α → P α → P α → Prop
 

@@ -157,6 +157,20 @@ class LawfulCTangentSpecialIntegrator (S : CTangentCoefficientSolver α)
             logResidueSumP Dt res.logs =
           fieldFracP fp CPoly.one + fieldFracP b ds
 
+/-- A lawful tangent special integrator whose successful logarithmic terms are genuine. -/
+class LawfulGenuineCTangentSpecialIntegrator (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) [LawfulCTangentSpecialIntegrator S T] : Prop where
+  /-- Every successful result has constant logarithmic coefficients. -/
+  coefficients_constant : ∀ (fuel : ℕ) (Dt fp b ds : DensePoly α)
+      (res : IntegralResult α),
+    T.integrate S fuel Dt fp b ds = some res →
+      ∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0
+  /-- Every successful result has nonzero represented logarithm arguments. -/
+  arguments_nonzero : ∀ (fuel : ℕ) (Dt fp b ds : DensePoly α)
+      (res : IntegralResult α),
+    T.integrate S fuel Dt fp b ds = some res →
+      ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0
+
 /-- Relative-completeness contract for recursive tangent special integration. -/
 class CompleteCTangentSpecialIntegrator (S : CTangentCoefficientSolver α)
     (T : CTangentSpecialIntegrator α) (domain : TangentSpecialDomain α)
@@ -191,6 +205,26 @@ instance instLawfulCMonomialCaseTangent (S : CTangentCoefficientSolver α) (T : 
     subst after
     exact hden
 
+/-- Genuine tangent-special results make the composed monomial stage genuinely lawful. -/
+instance instLawfulGenuineCMonomialCaseTangent (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) [LawfulCTangentSpecialIntegrator S T]
+    [LawfulGenuineCTangentSpecialIntegrator S T] :
+    LawfulGenuineCMonomialCase (tangentMonomialCase S T) where
+  special_coefficients_constant fuel Dt fp b ds res hrun :=
+    LawfulGenuineCTangentSpecialIntegrator.coefficients_constant fuel Dt fp b ds res hrun
+  special_arguments_nonzero fuel Dt fp b ds res hrun :=
+    LawfulGenuineCTangentSpecialIntegrator.arguments_nonzero fuel Dt fp b ds res hrun
+  postprocessNormal_coefficients_constant _ before after hconstants hrun := by
+    change some before = some after at hrun
+    have heq : before = after := Option.some.inj hrun
+    subst after
+    exact hconstants
+  postprocessNormal_arguments_nonzero _ before after hargs hrun := by
+    change some before = some after at hrun
+    have heq : before = after := Option.some.inj hrun
+    subst after
+    exact hargs
+
 /-- Complete recursive tangent integration makes the composed monomial case relatively complete. -/
 instance instCompleteCMonomialCaseTangent (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
     (domain : TangentSpecialDomain α) [LawfulCTangentSpecialIntegrator S T]
@@ -209,6 +243,7 @@ def checkedTangentSpecialIntegrator (T : CTangentSpecialIntegrator α) : CTangen
     if CPolyEngine.cisZero ds then none
     else if CPolyEngine.cisZero out.rational.2 then none
     else if !out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) then none
+    else if !out.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) then none
     else
       if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then some out else none
 
@@ -223,6 +258,7 @@ instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolv
         if CPolyEngine.cisZero ds then none
         else if CPolyEngine.cisZero out.rational.2 then none
         else if !out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) then none
+        else if !out.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) then none
         else
           if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then
             some out
@@ -236,7 +272,7 @@ instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolv
     · simp at hif
     rename_i hds
     simp at hif
-    obtain ⟨hsden, hlogs, hcheck, hout⟩ := hif
+    obtain ⟨hsden, hlogs, _hconstants, hcheck, hout⟩ := hif
     have hds' : CPoly.toPoly ds ≠ 0 :=
       CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (Bool.eq_false_iff.mpr hds)
     have houtRaw : CPoly.toPoly out.rational.2 ≠ 0 :=
@@ -256,6 +292,53 @@ instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolv
     rw [fieldFracP_polynomialSpecialNumerator fp b ds hds'] at hid
     simpa [hout] using hid
 
+/-- The checked tangent special operation accepts only genuine logarithmic terms. -/
+instance instLawfulGenuineCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) :
+    LawfulGenuineCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T) where
+  coefficients_constant fuel Dt fp b ds res hrun := by
+    simp only [checkedTangentSpecialIntegrator] at hrun
+    change (T.integrate S fuel Dt fp b ds).bind
+      (fun out =>
+        if CPolyEngine.cisZero ds then none
+        else if CPolyEngine.cisZero out.rational.2 then none
+        else if !out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) then none
+        else if !out.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) then none
+        else if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then some out
+        else none) = some res at hrun
+    rcases hraw : T.integrate S fuel Dt fp b ds with _ | out
+    · simp [hraw] at hrun
+    rw [hraw] at hrun
+    split at hrun
+    · contradiction
+    rename_i hds
+    simp at hrun
+    obtain ⟨_hsden, _hargs, hconstants, _hcheck, hout⟩ := hrun
+    subst res
+    intro cv hcv
+    exact (CFieldSpec.isZero_iff (CDiffField.cderiv cv.1)).mp (hconstants cv.1 cv.2 hcv)
+  arguments_nonzero fuel Dt fp b ds res hrun := by
+    simp only [checkedTangentSpecialIntegrator] at hrun
+    change (T.integrate S fuel Dt fp b ds).bind
+      (fun out =>
+        if CPolyEngine.cisZero ds then none
+        else if CPolyEngine.cisZero out.rational.2 then none
+        else if !out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) then none
+        else if !out.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) then none
+        else if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then some out
+        else none) = some res at hrun
+    rcases hraw : T.integrate S fuel Dt fp b ds with _ | out
+    · simp [hraw] at hrun
+    rw [hraw] at hrun
+    split at hrun
+    · contradiction
+    rename_i hds
+    simp at hrun
+    obtain ⟨_hsden, hargs, _hconstants, _hcheck, hout⟩ := hrun
+    subst res
+    intro cv hcv
+    exact CPolyEngine.toPoly_ne_zero_of_cisZero_eq_false (hargs cv.1 cv.2 hcv)
+
 /-- Install a certificate-checked tangent special operation as an ordinary monomial stage. -/
 def checkedTangentMonomialCase (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α) :
     CMonomialCase DensePoly α :=
@@ -264,6 +347,13 @@ def checkedTangentMonomialCase (S : CTangentCoefficientSolver α) (T : CTangentS
 /-- The certificate-checked tangent monomial case is sound without a lawful raw-integrator assumption. -/
 instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoefficientSolver α)
     (T : CTangentSpecialIntegrator α) : LawfulCMonomialCase (checkedTangentMonomialCase S T) := by
+  unfold checkedTangentMonomialCase
+  infer_instance
+
+/-- The certificate-checked tangent monomial case emits only genuine logarithmic terms. -/
+instance instLawfulGenuineCMonomialCaseCheckedTangent (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) :
+    LawfulGenuineCMonomialCase (checkedTangentMonomialCase S T) := by
   unfold checkedTangentMonomialCase
   infer_instance
 
@@ -277,6 +367,7 @@ def checkedTangentSpecialDomain (S : CTangentCoefficientSolver α) (T : CTangent
     CPoly.toPoly ds ≠ 0 ∧
       ∃ fuel out, T.integrate S fuel Dt fp b ds = some out ∧ CPoly.toPoly out.rational.2 ≠ 0 ∧
         (∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0) ∧
+        (∀ cv ∈ out.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
         CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds = true
 
 /-- Certificate-checked tangent integration is complete on its explicit raw-acceptance domain. -/
@@ -285,7 +376,8 @@ instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoefficientSo
     CompleteCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T)
       (checkedTangentSpecialDomain S T) where
   complete Dt fp b ds res hdomain hsden hderiv := by
-    obtain ⟨hds, fuel, out, hraw, hout, hlogs, hcheck⟩ := hdomain res hsden hderiv
+    obtain ⟨hds, fuel, out, hraw, hout, hlogs, hconstants, hcheck⟩ :=
+      hdomain res hsden hderiv
     have hdsBool : DensePoly.cisZero ds = false := by
       rw [Bool.eq_false_iff]
       intro hzero
@@ -302,8 +394,13 @@ instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoefficientSo
           exact hlogs cv hcv (by
             simpa only [toPoly_list_eq] using (cisZeroG_iff cv.2).mp hzero)
         simpa using hzfalse
+    have hconstantsBool :
+        out.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) = true :=
+      List.all_eq_true.mpr fun cv hcv =>
+        (CFieldSpec.isZero_iff (CDiffField.cderiv cv.1)).mpr (hconstants cv hcv)
     refine ⟨fuel, out, ?_⟩
-    simp [checkedTangentSpecialIntegrator, hraw, hdsBool, houtBool, hlogsBool, hcheck]
+    simp [checkedTangentSpecialIntegrator, hraw, hdsBool, houtBool, hlogsBool,
+      hconstantsBool, hcheck]
 
 /-- The checked tangent monomial stage is complete on the raw-integrator acceptance domain. -/
 instance instCompleteCMonomialCaseCheckedTangent (S : CTangentCoefficientSolver α)
@@ -333,10 +430,23 @@ instance instLawfulCNormalReductionTangent (raw : CNormalReduction DensePoly α)
   unfold tangentNormalReduction tangentNormalDomain
   infer_instance
 
+/-- Certificate-checked tangent normal reduction emits only genuine logarithmic terms. -/
+instance instLawfulGenuineCNormalReductionTangent (raw : CNormalReduction DensePoly α) :
+    LawfulGenuineCNormalReduction (tangentNormalReduction raw) tangentNormalDomain := by
+  unfold tangentNormalReduction tangentNormalDomain
+  infer_instance
+
 /-- Certificate-checked tangent normal reduction is lawful on its explicit acceptance domain. -/
 instance instLawfulCNormalReductionTangentCompleteDomain
     (raw : CNormalReduction DensePoly α) :
     LawfulCNormalReduction (tangentNormalReduction raw) (tangentNormalCompleteDomain raw) := by
+  unfold tangentNormalReduction tangentNormalCompleteDomain
+  infer_instance
+
+/-- The tangent normal stage remains genuinely lawful on its explicit acceptance domain. -/
+instance instLawfulGenuineCNormalReductionTangentCompleteDomain
+    (raw : CNormalReduction DensePoly α) :
+    LawfulGenuineCNormalReduction (tangentNormalReduction raw) (tangentNormalCompleteDomain raw) := by
   unfold tangentNormalReduction tangentNormalCompleteDomain
   infer_instance
 
@@ -375,6 +485,18 @@ instance instLawfulCRischLevelTangent (R : CPolynomialReduction DensePoly α)
   unfold tangentRischLevel
   infer_instance
 
+/-- Certificate checks make every successful dense tangent level a genuine elementary result. -/
+instance instLawfulGenuineCRischLevelTangent (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
+    LawfulGenuineCRischLevel (tangentRischLevel R kind raw S T)
+      (oneLevelRischSoundDomain tangentNormalDomain) := by
+  unfold tangentRischLevel
+  infer_instance
+
 /-- The certificate-checked tangent level is lawful on its complete stage-acceptance domain. -/
 instance instLawfulCRischLevelTangentCompleteDomain
     (R : CPolynomialReduction DensePoly α)
@@ -385,6 +507,20 @@ instance instLawfulCRischLevelTangentCompleteDomain
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
     LawfulCRischLevel (tangentRischLevel R kind raw S T)
+      (tangentRischLevelCompleteDomain R kind polynomialDomain raw S T) := by
+  unfold tangentRischLevel tangentRischLevelCompleteDomain
+  infer_instance
+
+/-- The complete-stage tangent domain inherits genuine successful outputs. -/
+instance instLawfulGenuineCRischLevelTangentCompleteDomain
+    (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
+    LawfulGenuineCRischLevel (tangentRischLevel R kind raw S T)
       (tangentRischLevelCompleteDomain R kind polynomialDomain raw S T) := by
   unfold tangentRischLevel tangentRischLevelCompleteDomain
   infer_instance
@@ -424,6 +560,20 @@ instance instLawfulCRischLevelSparseTangent
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     LawfulCRischLevel (sparseTangentRischLevel R kind raw S T)
+      (oneLevelRischSoundDomain
+        (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := α))) := by
+  unfold sparseTangentRischLevel
+  infer_instance
+
+/-- Certificate checks preserve genuine tangent logarithms across the sparse representation boundary. -/
+instance instLawfulGenuineCRischLevelSparseTangent
+    (R : CPolynomialReduction CPoly.SparsePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
+    LawfulGenuineCRischLevel (sparseTangentRischLevel R kind raw S T)
       (oneLevelRischSoundDomain
         (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := α))) := by
   unfold sparseTangentRischLevel
@@ -474,6 +624,20 @@ instance instLawfulCRischLevelSparseTangentCompleteDomain
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     LawfulCRischLevel (sparseTangentRischLevel R kind raw S T)
+      (sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw S T) := by
+  unfold sparseTangentRischLevel sparseTangentRischLevelCompleteDomain sparseTangentSpecialDomain
+  infer_instance
+
+/-- The sparse complete-stage domain inherits genuine successful outputs. -/
+instance instLawfulGenuineCRischLevelSparseTangentCompleteDomain
+    (R : CPolynomialReduction CPoly.SparsePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
+    (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
+    LawfulGenuineCRischLevel (sparseTangentRischLevel R kind raw S T)
       (sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw S T) := by
   unfold sparseTangentRischLevel sparseTangentRischLevelCompleteDomain sparseTangentSpecialDomain
   infer_instance

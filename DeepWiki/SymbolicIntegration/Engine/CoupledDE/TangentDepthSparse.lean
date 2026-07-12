@@ -77,6 +77,29 @@ theorem sparseTangentLevel_sound (C : SparseTangentLevelCapabilities n) (fuel : 
   exact (instLawfulCRischLevelSparseRecursiveTangent C.polynomial C.kind C.normal C.coupled C.config
     C.coefficient).sound fuel Dt a d res hdomain hden hrun
 
+/-- Every successful selected sparse tangent level returns genuine elementary logarithmic terms. -/
+theorem sparseTangentLevel_logs_genuine (C : SparseTangentLevelCapabilities n) (fuel : ℕ)
+    (Dt a d : CPoly.SparsePoly (DenseFracTower n))
+    (res : IntegralResult (DenseFracTower n) CPoly.SparsePoly)
+    (hdomain : sparseTangentLevelSoundDomain C Dt a d)
+    (hden : CPoly.toPoly d ≠ 0)
+    (hrun : (sparseTangentLevel C).integrate fuel Dt a d = some res) :
+    (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0) := by
+  letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
+  letI : LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFracTower n) :=
+    C.lawfulCanonical
+  letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
+  unfold sparseTangentLevelSoundDomain at hdomain
+  unfold sparseTangentLevel at hrun
+  constructor
+  · exact (instLawfulGenuineCRischLevelSparseRecursiveTangent C.polynomial C.kind C.normal
+      C.coupled C.config C.coefficient).coefficients_constant fuel Dt a d res
+        hdomain hden hrun
+  · exact (instLawfulGenuineCRischLevelSparseRecursiveTangent C.polynomial C.kind C.normal
+      C.coupled C.config C.coefficient).arguments_nonzero fuel Dt a d res
+        hdomain hden hrun
+
 /-- A selected sparse tangent level is relatively complete on its explicit stage domain. -/
 theorem sparseTangentLevel_complete (C : SparseTangentLevelCapabilities n)
     (Dt a d : CPoly.SparsePoly (DenseFracTower n))
@@ -98,6 +121,41 @@ noncomputable def SparseTangentLevelCapabilities.step (below : SparseTangentLeve
   toSparseTangentLevelLeaves := next
   coefficient := recursiveElementaryOfRischLevel
     (convertRischLevel (Q := DensePoly) (sparseTangentLevel below))
+
+/-- Genuine completeness of a sparse level makes its dense successor coefficient adapter succeed. -/
+theorem SparseTangentLevelCapabilities.step_coefficient_eventually_succeeds
+    (below : SparseTangentLevelCapabilities n) (next : SparseTangentLevelLeaves (n + 1))
+    (c : DenseFracTower (n + 1))
+    (hdomain : convertRischLevelDomain (Q := DensePoly) (sparseTangentLevelDomain below)
+      [CCommRing.one] (CFrac.num c) (CFrac.den c))
+    (hintegrable : IsRischLevelIntegrable ([CCommRing.one] : DensePoly (DenseFracTower n))
+      (CFrac.num c) (CFrac.den c)) :
+    ∃ fuel out, ((below.step next).coefficient).integrate fuel c = some out := by
+  letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := below.canonical
+  letI : LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFracTower n) :=
+    below.lawfulCanonical
+  letI : LawfulCPolynomialReduction below.polynomial := below.lawfulPolynomial
+  letI : CompleteCPolynomialReduction below.polynomial below.polynomialDomain :=
+    below.completePolynomial
+  let sparseLevel := sparseTangentLevel below
+  let sparseDomain := sparseTangentLevelDomain below
+  letI : LawfulCRischLevel sparseLevel sparseDomain := by
+    dsimp [sparseLevel, sparseDomain]
+    unfold sparseTangentLevel sparseTangentLevelDomain
+    infer_instance
+  letI : LawfulGenuineCRischLevel sparseLevel sparseDomain := by
+    dsimp [sparseLevel, sparseDomain]
+    unfold sparseTangentLevel sparseTangentLevelDomain
+    infer_instance
+  letI : CompleteCRischLevel sparseLevel sparseDomain := by
+    dsimp [sparseLevel, sparseDomain]
+    unfold sparseTangentLevel sparseTangentLevelDomain
+    infer_instance
+  change ∃ fuel out, (recursiveElementaryOfRischLevel
+    (convertRischLevel (Q := DensePoly) sparseLevel)).integrate fuel c = some out
+  exact recursiveElementaryOfRischLevel_eventually_succeeds
+    (convertRischLevel (Q := DensePoly) sparseLevel)
+    (convertRischLevelDomain (Q := DensePoly) sparseDomain) c hdomain hintegrable
 
 /-- Inductive selection data for sparse recursive tangent levels over the dense fraction tower. -/
 structure SparseTangentTowerCapabilities where
@@ -127,6 +185,18 @@ theorem sparseTangentTower_sound (C : SparseTangentTowerCapabilities) (n fuel : 
     (hrun : (sparseTangentTower C n).integrate fuel Dt a d = some res) :
     IsIntegralResultP Dt a d res := by
   exact sparseTangentLevel_sound (sparseTangentTowerCapabilities C n) fuel Dt a d res hdomain hden hrun
+
+/-- Every successful recursively selected sparse tangent level returns genuine elementary logarithms. -/
+theorem sparseTangentTower_logs_genuine (C : SparseTangentTowerCapabilities) (n fuel : ℕ)
+    (Dt a d : CPoly.SparsePoly (DenseFracTower n))
+    (res : IntegralResult (DenseFracTower n) CPoly.SparsePoly)
+    (hdomain : sparseTangentLevelSoundDomain (sparseTangentTowerCapabilities C n) Dt a d)
+    (hden : CPoly.toPoly d ≠ 0)
+    (hrun : (sparseTangentTower C n).integrate fuel Dt a d = some res) :
+    (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0) := by
+  exact sparseTangentLevel_logs_genuine (sparseTangentTowerCapabilities C n)
+    fuel Dt a d res hdomain hden hrun
 
 /-- Relative completeness of the recursively selected sparse tangent level at every tower depth. -/
 theorem sparseTangentTower_complete (C : SparseTangentTowerCapabilities) (n : ℕ)

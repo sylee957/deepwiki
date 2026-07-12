@@ -63,11 +63,12 @@ cast coefficients.
    successor coefficient operation now runs the preceding selected Risch level and certificate-checks the
    lifted rational-plus-log result. The checker is complete for semantic coefficient-result certificates, and
    the dense-fraction bridge now derives such a certificate from a lower `IsIntegralResultP` identity with
-   constant coefficients and nonzero arguments. A lower `LawfulElementaryDenseRischLevel` plus
+   constant coefficients and nonzero arguments. A lower `LawfulGenuineCRischLevel` plus
    `CompleteCRischLevel` now implies eventual success of the coefficient adapter. The outer Risch fuel is split
    into polynomial and monomial budgets, and the monomial budget reaches the lower Risch call through the
-   tangent coefficient adapter; tower capabilities no longer freeze a per-level coefficient fuel. Full tower
-   completeness still requires instances of the stronger genuine-result contract for assembled levels.
+   tangent coefficient adapter; tower capabilities no longer freeze a per-level coefficient fuel. Dense and
+   sparse assembled levels now carry that genuine-result contract through every successor. Full semantic
+   completeness still requires the coupled solver and its degree-bound hypotheses.
 
 ## Verification sequence
 

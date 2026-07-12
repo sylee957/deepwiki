@@ -61,6 +61,18 @@ class LawfulCNormalReduction (N : CNormalReduction P α)
     domain Dt a d → CPoly.toPoly d ≠ 0 → N.reduce Dt a d = some out →
       CPoly.toPoly out.rational.2 ≠ 0
 
+/-- A lawful normal reducer whose successful logarithmic terms are genuine elementary terms. -/
+class LawfulGenuineCNormalReduction (N : CNormalReduction P α)
+    (domain : NormalReductionDomain P α) [LawfulCNormalReduction N domain] : Prop where
+  /-- Every successful in-domain reduction has constant logarithmic coefficients. -/
+  coefficients_constant : ∀ (Dt a d : P α) (out : IntegralResult α P),
+    domain Dt a d → CPoly.toPoly d ≠ 0 → N.reduce Dt a d = some out →
+      ∀ cv ∈ out.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0
+  /-- Every successful in-domain reduction has nonzero logarithm arguments. -/
+  arguments_nonzero : ∀ (Dt a d : P α) (out : IntegralResult α P),
+    domain Dt a d → CPoly.toPoly d ≠ 0 → N.reduce Dt a d = some out →
+      ∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0
+
 /-- Relative-completeness contract for a lawful normal-reduction operation. -/
 class CompleteCNormalReduction (N : CNormalReduction P α)
     (domain : NormalReductionDomain P α) [LawfulCNormalReduction N domain] : Prop where
@@ -73,14 +85,16 @@ class CompleteCNormalReduction (N : CNormalReduction P α)
 def normalReductionCheck (Dt a d : P α) (out : IntegralResult α P) : Bool :=
   !CPolyEngine.cisZero d && !CPolyEngine.cisZero out.rational.2 &&
     out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) &&
+      out.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) &&
       CPoly.checkIdentity Dt out a d
 
 /-- A passed normal-reduction certificate yields its semantic identity and a nonzero result denominator. -/
 theorem normalReductionCheck_sound (Dt a d : P α) (out : IntegralResult α P)
     (hcheck : normalReductionCheck Dt a d out = true) :
     CPoly.toPoly out.rational.2 ≠ 0 ∧ IsIntegralResultP Dt a d out := by
-  rw [normalReductionCheck, Bool.and_eq_true, Bool.and_eq_true, Bool.and_eq_true] at hcheck
-  obtain ⟨⟨⟨hdBool, houtDenBool⟩, hargsBool⟩, hidentity⟩ := hcheck
+  rw [normalReductionCheck, Bool.and_eq_true, Bool.and_eq_true, Bool.and_eq_true,
+    Bool.and_eq_true] at hcheck
+  obtain ⟨⟨⟨⟨hdBool, houtDenBool⟩, hargsBool⟩, _hconstantsBool⟩, hidentity⟩ := hcheck
   have hd : CPoly.toPoly d ≠ 0 := by
     intro hz
     have hzBool : CPolyEngine.cisZero d = true :=
@@ -101,6 +115,26 @@ theorem normalReductionCheck_sound (Dt a d : P α) (out : IntegralResult α P)
     rw [hzBool] at hcvBool
     contradiction
   exact ⟨houtDen, isIntegralResultP_of_checkIdentity Dt out a d houtDen hd hargs hidentity⟩
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- A passed normal-reduction certificate has constant coefficients and nonzero logarithm arguments. -/
+theorem normalReductionCheck_logs_genuine (Dt a d : P α) (out : IntegralResult α P)
+    (hcheck : normalReductionCheck Dt a d out = true) :
+    (∀ cv ∈ out.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      (∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0) := by
+  rw [normalReductionCheck, Bool.and_eq_true, Bool.and_eq_true, Bool.and_eq_true,
+    Bool.and_eq_true] at hcheck
+  obtain ⟨⟨⟨⟨_hdBool, _houtDenBool⟩, hargsBool⟩, hconstantsBool⟩, _hidentity⟩ := hcheck
+  constructor
+  · intro cv hcv
+    have hcvBool := (List.all_eq_true.mp hconstantsBool) cv hcv
+    exact (CFieldSpec.isZero_iff (CDiffField.cderiv cv.1)).mp hcvBool
+  · intro cv hcv hz
+    have hcvBool := (List.all_eq_true.mp hargsBool) cv hcv
+    have hzBool : CPolyEngine.cisZero cv.2 = true :=
+      (LawfulCPolyEngine.cisZero_iff (P := P) cv.2).mpr hz
+    rw [hzBool] at hcvBool
+    contradiction
 
 /-- Guard an arbitrary normal reducer by a complete executable result certificate. -/
 def checkedNormalReduction (raw : CNormalReduction P α) : CNormalReduction P α where
@@ -139,6 +173,32 @@ instance instLawfulCNormalReductionChecked (raw : CNormalReduction P α)
         exact (normalReductionCheck_sound Dt a d out hcheck).1
       · simp [hcheck] at hrun
 
+/-- Certificate checking makes every accepted normal result genuinely elementary. -/
+instance instLawfulGenuineCNormalReductionChecked (raw : CNormalReduction P α)
+    (domain : NormalReductionDomain P α) :
+    LawfulGenuineCNormalReduction (checkedNormalReduction raw) domain where
+  coefficients_constant Dt a d out _ _ hrun := by
+    simp only [checkedNormalReduction] at hrun
+    rcases hraw : raw.reduce Dt a d with _ | candidate
+    · simp [hraw] at hrun
+    · rw [hraw] at hrun
+      change (if normalReductionCheck Dt a d candidate then some candidate else none) = some out at hrun
+      by_cases hcheck : normalReductionCheck Dt a d candidate = true
+      · have hout : candidate = out := by simpa [hcheck] using hrun
+        subst candidate
+        exact (normalReductionCheck_logs_genuine Dt a d out hcheck).1
+      · simp [hcheck] at hrun
+  arguments_nonzero Dt a d out _ _ hrun := by
+    simp only [checkedNormalReduction] at hrun
+    rcases hraw : raw.reduce Dt a d with _ | candidate
+    · simp [hraw] at hrun
+    · rw [hraw] at hrun
+      change (if normalReductionCheck Dt a d candidate then some candidate else none) = some out at hrun
+      by_cases hcheck : normalReductionCheck Dt a d candidate = true
+      · have hout : candidate = out := by simpa [hcheck] using hrun
+        subst candidate
+        exact (normalReductionCheck_logs_genuine Dt a d out hcheck).2
+      · simp [hcheck] at hrun
 /-- The exact acceptance domain of a certificate-checked normal reducer. -/
 def checkedNormalReductionAcceptanceDomain (raw : CNormalReduction P α) :
     NormalReductionDomain P α := fun Dt a d =>
@@ -280,6 +340,34 @@ instance instLawfulCNormalReductionHermiteResidue [CHermiteReduction P α]
   rationalDen_nonzero Dt a d out hdomain hd hrun :=
     reduceNormal_rationalDen_nonzero Dt a d out hd hdomain.1 hrun
 
+/-- Genuine residue extraction makes Hermite-residue normal reduction genuinely lawful. -/
+instance instLawfulGenuineCNormalReductionHermiteResidue [CHermiteReduction P α]
+    [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
+    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)]
+    [LawfulGenuineCResidueLogPart (P := P) (α := α)] :
+    LawfulGenuineCNormalReduction (hermiteResidueNormalReduction (P := P) (α := α))
+      (hermiteResidueNormalSoundDomain (P := P) (α := α)) where
+  coefficients_constant Dt a d out _hdomain _hd hrun := by
+    cases hlogs : CResidueLogPart.compute Dt (hermiteResult Dt a d).remainderNum
+        (hermiteResult Dt a d).remainderDen with
+    | none => simp [hermiteResidueNormalReduction, reduceNormal, hlogs] at hrun
+    | some logs =>
+      simp only [hermiteResidueNormalReduction, reduceNormal, hlogs, Option.some.injEq] at hrun
+      subst out
+      exact (LawfulGenuineCResidueLogPart.genuine Dt
+        (hermiteResult Dt a d).remainderNum
+        (hermiteResult Dt a d).remainderDen logs hlogs).coefficients_constant
+  arguments_nonzero Dt a d out _hdomain _hd hrun := by
+    cases hlogs : CResidueLogPart.compute Dt (hermiteResult Dt a d).remainderNum
+        (hermiteResult Dt a d).remainderDen with
+    | none => simp [hermiteResidueNormalReduction, reduceNormal, hlogs] at hrun
+    | some logs =>
+      simp only [hermiteResidueNormalReduction, reduceNormal, hlogs, Option.some.injEq] at hrun
+      subst out
+      exact (LawfulGenuineCResidueLogPart.genuine Dt
+        (hermiteResult Dt a d).remainderNum
+        (hermiteResult Dt a d).remainderDen logs hlogs).arguments_nonzero
+
 /-- The stronger complete domain inherits the normal-reduction soundness contract. -/
 instance instLawfulCNormalReductionHermiteResidueCompleteDomain [CHermiteReduction P α]
     [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
@@ -293,6 +381,25 @@ instance instLawfulCNormalReductionHermiteResidueCompleteDomain [CHermiteReducti
   rationalDen_nonzero Dt a d out hdomain hd hrun :=
     LawfulCNormalReduction.rationalDen_nonzero
       (N := hermiteResidueNormalReduction (P := P) (α := α)) Dt a d out hdomain.1 hd hrun
+
+/-- The complete Hermite-residue domain inherits genuine normal-reduction soundness. -/
+instance instLawfulGenuineCNormalReductionHermiteResidueCompleteDomain [CHermiteReduction P α]
+    [LawfulCHermiteReduction (P := P) (α := α)] [CResidueSource P α]
+    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)]
+    [LawfulGenuineCResidueLogPart (P := P) (α := α)]
+    (residueDomain : ResidueLogPartDomain (P := P) (α := α)) :
+    LawfulGenuineCNormalReduction (hermiteResidueNormalReduction (P := P) (α := α))
+      (hermiteResidueNormalCompleteDomain (P := P) (α := α) residueDomain) where
+  coefficients_constant Dt a d out hdomain hd hrun :=
+    LawfulGenuineCNormalReduction.coefficients_constant
+      (N := hermiteResidueNormalReduction (P := P) (α := α))
+      (domain := hermiteResidueNormalSoundDomain (P := P) (α := α))
+      Dt a d out hdomain.1 hd hrun
+  arguments_nonzero Dt a d out hdomain hd hrun :=
+    LawfulGenuineCNormalReduction.arguments_nonzero
+      (N := hermiteResidueNormalReduction (P := P) (α := α))
+      (domain := hermiteResidueNormalSoundDomain (P := P) (α := α))
+      Dt a d out hdomain.1 hd hrun
 
 /-- Complete residue extraction realizes relative completeness of the Hermite-residue normal stage. -/
 instance instCompleteCNormalReductionHermiteResidue [CHermiteReduction P α]

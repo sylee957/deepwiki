@@ -111,6 +111,68 @@ instance instLawfulCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
       denseAfter hdenDense hdense
     simpa only [convertResult, CPolyEngine.toPoly_convert] using hout
 
+/-- Genuine dense monomial results remain genuine through the sparse representation boundary. -/
+instance instLawfulGenuineCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
+    [LawfulCMonomialCase C] [LawfulGenuineCMonomialCase C] :
+    LawfulGenuineCMonomialCase (denseMonomialCaseAsSparse C) where
+  special_coefficients_constant fuel Dt fp b ds res hrun := by
+    change (C.integrateSpecial fuel (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
+      (CPolyEngine.convert b) (CPolyEngine.convert ds)).map
+        (convertResult (Q := CPoly.SparsePoly)) = some res at hrun
+    rw [Option.map_eq_some_iff] at hrun
+    obtain ⟨denseRes, hdense, rfl⟩ := hrun
+    intro cv hcv
+    obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
+    exact LawfulGenuineCMonomialCase.special_coefficients_constant (C := C)
+      fuel (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
+      (CPolyEngine.convert ds) denseRes hdense source hsource
+  special_arguments_nonzero fuel Dt fp b ds res hrun := by
+    change (C.integrateSpecial fuel (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
+      (CPolyEngine.convert b) (CPolyEngine.convert ds)).map
+        (convertResult (Q := CPoly.SparsePoly)) = some res at hrun
+    rw [Option.map_eq_some_iff] at hrun
+    obtain ⟨denseRes, hdense, rfl⟩ := hrun
+    intro cv hcv
+    obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
+    simpa only [CPolyEngine.toPoly_convert] using
+      (LawfulGenuineCMonomialCase.special_arguments_nonzero (C := C)
+        fuel (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
+        (CPolyEngine.convert ds) denseRes hdense source hsource)
+  postprocessNormal_coefficients_constant Dt before after hconstants hrun := by
+    change (C.postprocessNormal (CPolyEngine.convert Dt)
+      (convertResult (Q := DensePoly) before)).map
+        (convertResult (Q := CPoly.SparsePoly)) = some after at hrun
+    rw [Option.map_eq_some_iff] at hrun
+    obtain ⟨denseAfter, hdense, rfl⟩ := hrun
+    have hbefore : ∀ cv ∈ (convertResult (Q := DensePoly) before).logs,
+        CFieldSpec.toK (CDiffField.cderiv cv.1) = 0 := by
+      intro cv hcv
+      obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
+      exact hconstants source hsource
+    have hafter := LawfulGenuineCMonomialCase.postprocessNormal_coefficients_constant
+      (C := C) (CPolyEngine.convert Dt) (convertResult (Q := DensePoly) before)
+      denseAfter hbefore hdense
+    intro cv hcv
+    obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
+    exact hafter source hsource
+  postprocessNormal_arguments_nonzero Dt before after hargs hrun := by
+    change (C.postprocessNormal (CPolyEngine.convert Dt)
+      (convertResult (Q := DensePoly) before)).map
+        (convertResult (Q := CPoly.SparsePoly)) = some after at hrun
+    rw [Option.map_eq_some_iff] at hrun
+    obtain ⟨denseAfter, hdense, rfl⟩ := hrun
+    have hbefore : ∀ cv ∈ (convertResult (Q := DensePoly) before).logs,
+        CPoly.toPoly cv.2 ≠ 0 := by
+      intro cv hcv
+      obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
+      simpa only [CPolyEngine.toPoly_convert] using hargs source hsource
+    have hafter := LawfulGenuineCMonomialCase.postprocessNormal_arguments_nonzero
+      (C := C) (CPolyEngine.convert Dt) (convertResult (Q := DensePoly) before)
+      denseAfter hbefore hdense
+    intro cv hcv
+    obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hcv
+    simpa only [CPolyEngine.toPoly_convert] using hafter source hsource
+
 set_option maxHeartbeats 3000000 in
 /-- A relatively complete dense monomial case remains relatively complete through the sparse boundary. -/
 instance instCompleteCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)

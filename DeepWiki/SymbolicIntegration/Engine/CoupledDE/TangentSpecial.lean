@@ -283,6 +283,19 @@ instance instLawfulCRischLevelRecursiveTangent
   unfold recursiveTangentRischLevel
   infer_instance
 
+/-- The dense recursive tangent level returns genuine elementary logarithmic terms. -/
+instance instLawfulGenuineCRischLevelRecursiveTangent
+    (R : CPolynomialReduction DensePoly α) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
+    LawfulGenuineCRischLevel (recursiveTangentRischLevel R kind raw S config I)
+      (oneLevelRischSoundDomain tangentNormalDomain) := by
+  unfold recursiveTangentRischLevel
+  infer_instance
+
 /-- A dense recursive tangent level is lawful on its exact acceptance domain. -/
 instance instLawfulCRischLevelRecursiveTangentCompleteDomain
     (R : CPolynomialReduction DensePoly α) [LawfulCPolynomialReduction R]
@@ -294,6 +307,21 @@ instance instLawfulCRischLevelRecursiveTangentCompleteDomain
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
     LawfulCRischLevel (recursiveTangentRischLevel R kind raw S config I)
+      (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw S config I) := by
+  unfold recursiveTangentRischLevel recursiveTangentRischLevelCompleteDomain
+  infer_instance
+
+/-- The exact dense recursive tangent domain inherits genuine-output soundness. -/
+instance instLawfulGenuineCRischLevelRecursiveTangentCompleteDomain
+    (R : CPolynomialReduction DensePoly α) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
+    LawfulGenuineCRischLevel (recursiveTangentRischLevel R kind raw S config I)
       (recursiveTangentRischLevelCompleteDomain R kind polynomialDomain raw S config I) := by
   unfold recursiveTangentRischLevel recursiveTangentRischLevelCompleteDomain
   infer_instance
@@ -353,6 +381,21 @@ instance instLawfulCRischLevelSparseRecursiveTangent
   unfold sparseRecursiveTangentRischLevel
   infer_instance
 
+/-- The sparse recursive tangent level returns genuine elementary logarithmic terms. -/
+instance instLawfulGenuineCRischLevelSparseRecursiveTangent
+    (R : CPolynomialReduction CPoly.SparsePoly α) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
+    LawfulGenuineCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
+      (oneLevelRischSoundDomain
+        (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := α))) := by
+  unfold sparseRecursiveTangentRischLevel
+  infer_instance
+
 /-- The selected sparse recursive tangent level is lawful on its transported acceptance domain. -/
 instance instLawfulCRischLevelSparseRecursiveTangentCompleteDomain
     (R : CPolynomialReduction CPoly.SparsePoly α) [LawfulCPolynomialReduction R]
@@ -364,6 +407,22 @@ instance instLawfulCRischLevelSparseRecursiveTangentCompleteDomain
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     LawfulCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
+      (sparseRecursiveTangentRischLevelCompleteDomain
+        R kind polynomialDomain raw S config I) := by
+  unfold sparseRecursiveTangentRischLevel sparseRecursiveTangentRischLevelCompleteDomain
+  infer_instance
+
+/-- The exact sparse recursive tangent domain inherits genuine-output soundness. -/
+instance instLawfulGenuineCRischLevelSparseRecursiveTangentCompleteDomain
+    (R : CPolynomialReduction CPoly.SparsePoly α) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
+    (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
+    LawfulGenuineCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
       (sparseRecursiveTangentRischLevelCompleteDomain
         R kind polynomialDomain raw S config I) := by
   unfold sparseRecursiveTangentRischLevel sparseRecursiveTangentRischLevelCompleteDomain

@@ -69,6 +69,27 @@ theorem denseTangentLevel_sound (C : DenseTangentLevelCapabilities n) (fuel : �
   exact (instLawfulCRischLevelRecursiveTangent C.polynomial C.kind C.normal C.coupled C.config C.coefficient).sound
     fuel Dt a d res hdomain hden hrun
 
+/-- Every successful selected dense tangent level returns genuine elementary logarithmic terms. -/
+theorem denseTangentLevel_logs_genuine (C : DenseTangentLevelCapabilities n) (fuel : ℕ)
+    (Dt a d : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
+    (hdomain : oneLevelRischSoundDomain tangentNormalDomain Dt a d)
+    (hden : CPoly.toPoly d ≠ 0)
+    (hrun : (denseTangentLevel C).integrate fuel Dt a d = some res) :
+    (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0) := by
+  letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
+  letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) :=
+    C.lawfulCanonical
+  letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
+  unfold denseTangentLevel at hrun
+  constructor
+  · exact (instLawfulGenuineCRischLevelRecursiveTangent C.polynomial C.kind C.normal
+      C.coupled C.config C.coefficient).coefficients_constant fuel Dt a d res
+        hdomain hden hrun
+  · exact (instLawfulGenuineCRischLevelRecursiveTangent C.polynomial C.kind C.normal
+      C.coupled C.config C.coefficient).arguments_nonzero fuel Dt a d res
+        hdomain hden hrun
+
 /-- A selected dense tangent level is relatively complete on its explicit stage domain. -/
 theorem denseTangentLevel_complete (C : DenseTangentLevelCapabilities n)
     (Dt a d : DensePoly (DenseFracTower n))
@@ -89,6 +110,35 @@ noncomputable def DenseTangentLevelCapabilities.step (below : DenseTangentLevelC
     DenseTangentLevelCapabilities (n + 1) where
   toDenseTangentLevelLeaves := next
   coefficient := recursiveElementaryOfRischLevel (denseTangentLevel below)
+
+/-- Genuine completeness of a selected level makes its successor coefficient adapter eventually succeed. -/
+theorem DenseTangentLevelCapabilities.step_coefficient_eventually_succeeds
+    (below : DenseTangentLevelCapabilities n) (next : DenseTangentLevelLeaves (n + 1))
+    (c : DenseFracTower (n + 1))
+    (hdomain : denseTangentLevelDomain below [CCommRing.one] (CFrac.num c) (CFrac.den c))
+    (hintegrable : IsRischLevelIntegrable ([CCommRing.one] : DensePoly (DenseFracTower n))
+      (CFrac.num c) (CFrac.den c)) :
+    ∃ fuel out, ((below.step next).coefficient).integrate fuel c = some out := by
+  letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := below.canonical
+  letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) :=
+    below.lawfulCanonical
+  letI : LawfulCPolynomialReduction below.polynomial := below.lawfulPolynomial
+  letI : CompleteCPolynomialReduction below.polynomial below.polynomialDomain :=
+    below.completePolynomial
+  letI : LawfulCRischLevel (denseTangentLevel below) (denseTangentLevelDomain below) := by
+    unfold denseTangentLevel denseTangentLevelDomain
+    infer_instance
+  letI : LawfulGenuineCRischLevel (denseTangentLevel below)
+      (denseTangentLevelDomain below) := by
+    unfold denseTangentLevel denseTangentLevelDomain
+    infer_instance
+  letI : CompleteCRischLevel (denseTangentLevel below) (denseTangentLevelDomain below) := by
+    unfold denseTangentLevel denseTangentLevelDomain
+    infer_instance
+  change ∃ fuel out,
+    (recursiveElementaryOfRischLevel (denseTangentLevel below)).integrate fuel c = some out
+  exact recursiveElementaryOfRischLevel_eventually_succeeds
+    (denseTangentLevel below) (denseTangentLevelDomain below) c hdomain hintegrable
 
 /-- Inductive selection data for recursive tangent levels over the dense fraction tower. -/
 structure DenseTangentTowerCapabilities where
@@ -117,6 +167,17 @@ theorem denseTangentTower_sound (C : DenseTangentTowerCapabilities) (n fuel : �
     (hrun : (denseTangentTower C n).integrate fuel Dt a d = some res) :
     IsIntegralResultP Dt a d res := by
   exact denseTangentLevel_sound (denseTangentTowerCapabilities C n) fuel Dt a d res hdomain hden hrun
+
+/-- Every successful recursively selected dense tangent level returns genuine elementary logarithms. -/
+theorem denseTangentTower_logs_genuine (C : DenseTangentTowerCapabilities) (n fuel : ℕ)
+    (Dt a d : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
+    (hdomain : oneLevelRischSoundDomain tangentNormalDomain Dt a d)
+    (hden : CPoly.toPoly d ≠ 0)
+    (hrun : (denseTangentTower C n).integrate fuel Dt a d = some res) :
+    (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0) := by
+  exact denseTangentLevel_logs_genuine (denseTangentTowerCapabilities C n)
+    fuel Dt a d res hdomain hden hrun
 
 /-- Relative completeness of the recursively selected tangent level at every tower depth. -/
 theorem denseTangentTower_complete (C : DenseTangentTowerCapabilities) (n : ℕ)

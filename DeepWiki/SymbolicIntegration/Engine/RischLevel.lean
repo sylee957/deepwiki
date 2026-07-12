@@ -37,6 +37,18 @@ class LawfulCRischLevel (L : CRischLevel P α) (domain : RischLevelDomain P α) 
     domain Dt a d → CPoly.toPoly d ≠ 0 → L.integrate fuel Dt a d = some res →
       IsIntegralResultP Dt a d res
 
+/-- A lawful Risch level whose successful logarithmic terms are genuine elementary terms. -/
+class LawfulGenuineCRischLevel (L : CRischLevel P α)
+    (domain : RischLevelDomain P α) [LawfulCRischLevel L domain] : Prop where
+  /-- Every successful result has constant logarithmic coefficients. -/
+  coefficients_constant : ∀ (fuel : ℕ) (Dt a d : P α) (res : IntegralResult α P),
+    domain Dt a d → CPoly.toPoly d ≠ 0 → L.integrate fuel Dt a d = some res →
+      ∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0
+  /-- Every successful result has nonzero represented logarithm arguments. -/
+  arguments_nonzero : ∀ (fuel : ℕ) (Dt a d : P α) (res : IntegralResult α P),
+    domain Dt a d → CPoly.toPoly d ≠ 0 → L.integrate fuel Dt a d = some res →
+      ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0
+
 /-- Relative-completeness contract for a lawful one-level Risch solver. -/
 class CompleteCRischLevel (L : CRischLevel P α) (domain : RischLevelDomain P α)
     [LawfulCRischLevel L domain] : Prop where
@@ -89,6 +101,23 @@ instance instLawfulCRischLevelOneLevelRisch (R : CPolynomialReduction P α)
   sound fuel Dt a d res hdomain hd hrun :=
     oneLevelRisch_sound R kind fuel N normalDomain C Dt a d res hd hdomain hrun
 
+/-- Genuine normal and monomial contracts compose to genuine successful Risch-level outputs. -/
+instance instLawfulGenuineCRischLevelOneLevelRisch (R : CPolynomialReduction P α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [LawfulGenuineCNormalReduction N normalDomain]
+    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
+    [LawfulGenuineCMonomialCase C] :
+    LawfulGenuineCRischLevel (oneLevelRisch R kind N C)
+      (oneLevelRischSoundDomain normalDomain) where
+  coefficients_constant fuel Dt a d res hdomain hd hrun :=
+    (assembleOneLevel_logs_genuine R kind fuel N normalDomain C Dt a d res hd hdomain
+      (by simpa [oneLevelRisch] using hrun)).1
+  arguments_nonzero fuel Dt a d res hdomain hd hrun :=
+    (assembleOneLevel_logs_genuine R kind fuel N normalDomain C Dt a d res hd hdomain
+      (by simpa [oneLevelRisch] using hrun)).2
+
 /-- Domain where genuine integrability decomposes into explicit Figure-5.1 stage witnesses. -/
 def oneLevelRischCompleteDomain (R : CPolynomialReduction P α) (kind : PolynomialReductionKind)
     (polynomialDomain : PolynomialReductionDomain P α)
@@ -111,6 +140,25 @@ instance instLawfulCRischLevelCompleteDomain (R : CPolynomialReduction P α)
       (oneLevelRischCompleteDomain R kind polynomialDomain normalDomain specialDomain) where
   sound fuel Dt a d res hdomain hd hrun :=
     oneLevelRisch_sound R kind fuel N normalDomain C Dt a d res hd hdomain.1 hrun
+
+/-- The explicit complete-stage domain inherits the assembled level's genuine-output contract. -/
+instance instLawfulGenuineCRischLevelCompleteDomain (R : CPolynomialReduction P α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain P α)
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCNormalReduction N normalDomain] [LawfulGenuineCNormalReduction N normalDomain]
+    (C : CMonomialCase P α) [CCanonicalRepresentation P α]
+    [LawfulCCanonicalRepresentation (P := P) (α := α)] [LawfulCMonomialCase C]
+    [LawfulGenuineCMonomialCase C] :
+    LawfulGenuineCRischLevel (oneLevelRisch R kind N C)
+      (oneLevelRischCompleteDomain R kind polynomialDomain normalDomain specialDomain) where
+  coefficients_constant fuel Dt a d res hdomain hd hrun :=
+    (assembleOneLevel_logs_genuine R kind fuel N normalDomain C Dt a d res hd hdomain.1
+      (by simpa [oneLevelRisch] using hrun)).1
+  arguments_nonzero fuel Dt a d res hdomain hd hrun :=
+    (assembleOneLevel_logs_genuine R kind fuel N normalDomain C Dt a d res hd hdomain.1
+      (by simpa [oneLevelRisch] using hrun)).2
 
 /-- Complete stage contracts make the composed level relatively complete at some finite budget. -/
 theorem completeCRischLevel (R : CPolynomialReduction P α)

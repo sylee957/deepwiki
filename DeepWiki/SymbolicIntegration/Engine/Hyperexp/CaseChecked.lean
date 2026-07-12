@@ -88,6 +88,38 @@ instance instLawfulCMonomialCaseHyperexpChecked :
     subst after
     exact hden
 
+/-- The checked hyperexponential stage emits only genuine logarithmic terms. -/
+instance instLawfulGenuineCMonomialCaseHyperexpChecked :
+    LawfulGenuineCMonomialCase (DensePoly.hyperexpCheckedCase (α := α)) where
+  special_coefficients_constant _fuel Dt fp b ds res hrun := by
+    simp only [DensePoly.hyperexpCheckedCase] at hrun
+    split at hrun
+    · contradiction
+    · split at hrun
+      · have hout : res.logs = [] := by
+          rw [← Option.some.inj hrun]
+        simp [hout]
+      · contradiction
+  special_arguments_nonzero _fuel Dt fp b ds res hrun := by
+    simp only [DensePoly.hyperexpCheckedCase] at hrun
+    split at hrun
+    · contradiction
+    · split at hrun
+      · have hout : res.logs = [] := by
+          rw [← Option.some.inj hrun]
+        simp [hout]
+      · contradiction
+  postprocessNormal_coefficients_constant _ before after hconstants hrun := by
+    have heq : before = after := Option.some.inj (by
+      simpa only [DensePoly.hyperexpCheckedCase] using hrun)
+    subst after
+    exact hconstants
+  postprocessNormal_arguments_nonzero _ before after hargs hrun := by
+    have heq : before = after := Option.some.inj (by
+      simpa only [DensePoly.hyperexpCheckedCase] using hrun)
+    subst after
+    exact hargs
+
 /-- Exact raw-acceptance domain of the checked hyperexponential special stage. -/
 def hyperexpCheckedSpecialDomain : MonomialSpecialDomain DensePoly α := fun Dt fp b ds =>
   ∀ (res : IntegralResult α), CPoly.toPoly res.rational.2 ≠ 0 →
