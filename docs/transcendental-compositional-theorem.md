@@ -27,7 +27,7 @@ The current specializations do not yet share one semantic completeness story:
 | Case | Current path | Gap to close |
 | --- | --- | --- |
 | Primitive | Root-free LRT `CLrtMonomialCase` and recursive limited integration | The rational special result now bridges to the common special certificate without conflating algebraic-residue logs; connect the full LRT assembly through the tower package. |
-| Exponential | `Hyperexp/CaseChecked` and `Hyperexp/RischLevel` | The Laurent special stage now has a coefficient-RDE semantic domain; residual-feedback normal reduction still has only an explicit acceptance domain. |
+| Exponential | `Hyperexp/CaseChecked`, `Hyperexp/NormalSemantic`, and `Hyperexp/RischLevel` | Laurent special and residual-feedback normal stages now have semantic domains; audit and retire their superseded acceptance-only completeness paths. |
 | Tangent | `CoupledDE/TangentSpecial` and depth adapters | The reduced semantic domain now composes coupled solving, polynomial reduction, coefficient recursion, and checked output; extract the reusable monomial-special pattern without erasing tangent-specific recurrence hypotheses. |
 
 ## Migration rules
@@ -75,13 +75,12 @@ Gate: tangent special, dense depth, sparse depth, then their aggregators.
 
 ### Phase 3 — hyperexponential semantic domain
 
-`hyperexpLaurentSpecialDomain` now states hyperexponential shape, certified
-special denominator, and coefficient-RDE solvability. Field-RDE completeness
-proves checked special-stage and Risch-level relative completeness on this
-domain. Preserve the checked acceptance path as a fallback. The remaining
-work is a semantic completeness theorem for residual-feedback normal
-reduction; until then, its explicit acceptance domain stays visible in the
-level domain.
+`hyperexpLaurentSpecialDomain` states hyperexponential shape, certified
+special denominator, and coefficient-RDE solvability. The residual-normal
+domain records its pre-correction residual identity and solvable scalar RDE.
+Field-RDE completeness proves both checked stages and the fully semantic
+`completeCRischLevelHyperexpSemantic` theorem. The acceptance-only
+hyperexponential completeness domains were retired after a caller audit.
 
 Gate: `Hyperexp/CaseChecked`, `Hyperexp/NormalCapability`, and
 `Hyperexp/RischLevel`.

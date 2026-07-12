@@ -136,6 +136,34 @@ theorem normalReductionCheck_logs_genuine (Dt a d : P α) (out : IntegralResult 
     rw [hzBool] at hcvBool
     contradiction
 
+/-- A certified normal result with a nonzero input denominator is accepted by `normalReductionCheck`. -/
+theorem normalReductionCheck_of_certified (Dt a d : P α) (out : IntegralResult α P)
+    (hd : CPoly.toPoly d ≠ 0) (hcert : CertifiedNormalResult Dt a d out) :
+    normalReductionCheck Dt a d out = true := by
+  have hidentity : CPoly.checkIdentity Dt out a d = true :=
+    checkIdentityP_of_field_identity Dt out a d hcert.rationalDen_nonzero hd
+      hcert.arguments_nonzero hcert.integral
+  have hdBool : CPolyEngine.cisZero d = false := by
+    rw [Bool.eq_false_iff]
+    intro hzero
+    exact hd ((LawfulCPolyEngine.cisZero_iff (P := P) d).mp hzero)
+  have houtBool : CPolyEngine.cisZero out.rational.2 = false := by
+    rw [Bool.eq_false_iff]
+    intro hzero
+    exact hcert.rationalDen_nonzero
+      ((LawfulCPolyEngine.cisZero_iff (P := P) out.rational.2).mp hzero)
+  have hargsBool : out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) = true :=
+    List.all_eq_true.mpr fun cv hcv => by
+      rw [Bool.not_eq_true', Bool.eq_false_iff]
+      intro hzero
+      exact hcert.arguments_nonzero cv hcv
+        ((LawfulCPolyEngine.cisZero_iff (P := P) cv.2).mp hzero)
+  have hconstantsBool : out.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) = true :=
+    List.all_eq_true.mpr fun cv hcv =>
+      (CFieldSpec.isZero_iff (CDiffField.cderiv cv.1)).mpr
+        (hcert.coefficients_constant cv hcv)
+  simp [normalReductionCheck, hdBool, houtBool, hargsBool, hconstantsBool, hidentity]
+
 /-- Guard an arbitrary normal reducer by a complete executable result certificate. -/
 def checkedNormalReduction (raw : CNormalReduction P α) : CNormalReduction P α where
   reduce Dt a d := do

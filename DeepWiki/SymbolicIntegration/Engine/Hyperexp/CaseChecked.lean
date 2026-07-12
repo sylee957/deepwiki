@@ -127,17 +127,6 @@ theorem hyperexpCheckedCase_isMonomialSpecialResult (fuel : ℕ)
     IsMonomialSpecialResult Dt fp b ds res :=
   isMonomialSpecialResult_of_run DensePoly.hyperexpCheckedCase fuel Dt fp b ds res hrun
 
-/-- Exact raw-acceptance domain of the checked hyperexponential special stage. -/
-def hyperexpCheckedSpecialDomain : MonomialSpecialDomain DensePoly α := fun Dt fp b ds =>
-  ∀ (res : IntegralResult α), CPoly.toPoly res.rational.2 ≠ 0 →
-    towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
-        logResidueSumP Dt res.logs = fieldFracP fp CPoly.one + fieldFracP b ds →
-      ∃ out, DensePoly.cIntegrateHyperexpLaurent (DensePoly.cExpEta Dt) fp
-          (DensePoly.cHyperexpSpecialNeg b ds) = some out ∧
-        CPoly.toPoly ds ≠ 0 ∧ CPoly.toPoly out.2 ≠ 0 ∧
-        CPoly.checkIdentity Dt ({ rational := out, logs := [] } : IntegralResult α)
-          (CPolyEngine.add (CPolyEngine.mul fp ds) b) ds = true
-
 /-- Semantic domain of Laurent special integration: a hyperexponential monomial, a certified special
 denominator, and solvable coefficient RDEs. -/
 def hyperexpLaurentSpecialDomain : MonomialSpecialDomain DensePoly α := fun Dt fp b ds =>
@@ -211,26 +200,6 @@ theorem completeCMonomialCaseHyperexpLaurent
       exact hcheck
     refine ⟨0, out, ?_⟩
     simp [DensePoly.hyperexpCheckedCase, out, hlaurent, hdsBool, houtBool, hcheck']
-  postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
-
-/-- The checked hyperexponential monomial stage is complete on its explicit raw-acceptance domain. -/
-instance instCompleteCMonomialCaseHyperexpChecked :
-    CompleteCMonomialCase (DensePoly.hyperexpCheckedCase (α := α))
-      (hyperexpCheckedSpecialDomain (α := α)) where
-  special_complete Dt fp b ds res hdomain hsden hderiv := by
-    obtain ⟨out, hlaurent, hds, hout, hcheck⟩ := hdomain res hsden hderiv
-    change CPoly.checkIdentity Dt ({ rational := out, logs := [] } : IntegralResult α)
-      (DensePoly.cadd (DensePoly.cmul fp ds) b) ds = true at hcheck
-    have hdsBool : DensePoly.cisZero ds = false := by
-      rw [Bool.eq_false_iff]
-      intro hzero
-      exact hds (by simpa only [toPoly_list_eq] using (DensePoly.cisZeroG_iff ds).mp hzero)
-    have houtBool : DensePoly.cisZero out.2 = false := by
-      rw [Bool.eq_false_iff]
-      intro hzero
-      exact hout (by simpa only [toPoly_list_eq] using (DensePoly.cisZeroG_iff out.2).mp hzero)
-    refine ⟨0, { rational := out, logs := [] }, ?_⟩
-    simp [DensePoly.hyperexpCheckedCase, hlaurent, hdsBool, houtBool, hcheck]
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 
 end DeepWiki.SymbolicIntegration
