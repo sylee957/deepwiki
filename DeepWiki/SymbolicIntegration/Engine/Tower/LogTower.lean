@@ -382,6 +382,60 @@ theorem TowerIntegralResult.realizeSum_appendInherited {N n : ℕ} (R : TowerRea
   simp only [TowerLog.realizeSum, List.map_append, List.sum_append]
   rw [hinherit']
 
+/-- Realization-indexed ordinary logs sum to the corresponding one-level log contribution. -/
+theorem towerLog_realizeSum_ordinary {N n : ℕ} (R : TowerRealization N) (hn : n ≤ N)
+    (derivative : DensePoly (DenseFracTower n))
+    (logs : List (DenseFracTower n × DensePoly (DenseFracTower n))) :
+    letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+    letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+    letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+    TowerLog.realizeSum R hn (logs.map fun log => TowerLog.ordinary derivative log.1 log.2) =
+      localLogSum (E := R.Carrier n hn) derivative logs := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+  letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  induction logs with
+  | nil => rfl
+  | cons log logs ih =>
+    have ih' :
+        (List.map (TowerLog.realize R n hn)
+          (logs.map fun log => TowerLog.ordinary derivative log.1 log.2)).sum =
+          localLogSum (E := R.Carrier n hn) derivative logs := by
+      simpa [TowerLog.realizeSum] using ih
+    simp only [TowerLog.realizeSum, localLogSum, List.map_cons, List.sum_cons]
+    rw [ih']
+    unfold TowerLog.realize
+    cases n <;> rfl
+
+/-- Realization-indexed LRT logs sum to the corresponding one-level residue contribution. -/
+theorem towerLog_realizeSum_lrt {N n : ℕ} (R : TowerRealization N) (hn : n ≤ N)
+    (derivative : DensePoly (DenseFracTower n))
+    (logs : List (DensePoly (DenseFracTower n) × List (DensePoly (DenseFracTower n)))) :
+    letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+    letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+    letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+    TowerLog.realizeSum R hn (logs.map fun log => TowerLog.lrt derivative log.1 log.2) =
+      logResidueSumLrt (E := R.Carrier n hn) derivative logs := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+  letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  induction logs with
+  | nil => rfl
+  | cons log logs ih =>
+    have ih' :
+        (List.map (TowerLog.realize R n hn)
+          (logs.map fun log => TowerLog.lrt derivative log.1 log.2)).sum =
+          logResidueSumLrt (E := R.Carrier n hn) derivative logs := by
+      simpa [TowerLog.realizeSum] using ih
+    simp only [TowerLog.realizeSum, logResidueSumLrtG_cons, List.map_cons, List.sum_cons]
+    rw [ih']
+    unfold TowerLog.realize
+    cases n <;> rfl
+
 /-- Restricting evaluation maps does not change a source-level log's denotation. -/
 theorem TowerLog.denote_restrict {n M N : ℕ} {E : Type*}
     [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
@@ -760,6 +814,99 @@ theorem isTowerIntegralResult_ofLrtResult {n : ℕ}
         rw [fieldFracP, ratFuncBaseChange_amG_div]
   rw [hrational, TowerIntegralResult.denoteSum_ofLrtResult maps (Nat.le_refl n) Dt res]
   simpa only [toPoly_list_eq] using hres E
+
+/-- An ordinary one-level certificate transports to the realization-indexed tower invariant. -/
+theorem isRealizedTowerIntegralResult_ofIntegralResult {N n : ℕ} (R : TowerRealization N)
+    (hn : n ≤ N) [CFieldDomain (DenseFracTower n) DensePoly]
+    (Dt anum aden : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
+    (hres : IsIntegralResultP Dt anum aden res) :
+    IsRealizedTowerIntegralResult R hn Dt anum aden
+      (TowerIntegralResult.ofIntegralResult Dt res) := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+  letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  letI : DifferentialAlgebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) :=
+    R.differentialAlgebra n hn
+  have hderiv :
+      ratFuncBaseChange (R.Carrier n hn)
+          (towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2)) =
+        towerDerivExt Dt
+          (amGExt (E := R.Carrier n hn) (CPoly.toPoly res.rational.1) /
+            amGExt (E := R.Carrier n hn) (CPoly.toPoly res.rational.2)) := by
+    simpa only [towerFractionFieldDerivP, towerFractionFieldDeriv, fieldFracP, toPoly_list_eq] using
+      (ratFuncBaseChange_towerFractionFieldDerivG (E := R.Carrier n hn) Dt
+        (CPoly.toPoly res.rational.1) (CPoly.toPoly res.rational.2))
+  have hrational :
+      amGExt (E := R.Carrier n hn)
+          (CPoly.toPoly (CFrac.num (TowerIntegralResult.ofIntegralResult Dt res).rational)) /
+        amGExt (E := R.Carrier n hn)
+          (CPoly.toPoly (CFrac.den (TowerIntegralResult.ofIntegralResult Dt res).rational)) =
+        amGExt (E := R.Carrier n hn) (CPoly.toPoly res.rational.1) /
+          amGExt (E := R.Carrier n hn) (CPoly.toPoly res.rational.2) := by
+    calc
+      _ = ratFuncBaseChange (R.Carrier n hn)
+          (CFieldSpec.toK (TowerIntegralResult.ofIntegralResult Dt res).rational) := by
+        symm
+        rw [toK_denseFrac_eq_fieldFrac, fieldFracP, ratFuncBaseChange_amG_div]
+      _ = ratFuncBaseChange (R.Carrier n hn) (fieldFracP res.rational.1 res.rational.2) := by
+        simp [TowerIntegralResult.ofIntegralResult, fieldFracP, CFieldSpec.toK_div,
+          CFrac.toK_ofPoly]
+      _ = _ := by
+        rw [fieldFracP, ratFuncBaseChange_amG_div]
+  have hbase := congrArg (ratFuncBaseChange (R.Carrier n hn)) hres
+  rw [map_add, hderiv, ← localLogSum_eq_baseChange,
+    ratFuncBaseChange_amG_div] at hbase
+  unfold IsRealizedTowerIntegralResult TowerIntegralResult.derivRealize
+    TowerIntegralResult.rationalRealize
+  have hlogs :
+      TowerLog.realizeSum R hn (TowerIntegralResult.ofIntegralResult Dt res).logs =
+        localLogSum (E := R.Carrier n hn) Dt res.logs := by
+    simpa [TowerIntegralResult.ofIntegralResult] using
+      (towerLog_realizeSum_ordinary R hn Dt res.logs)
+  rw [hrational, hlogs]
+  exact hbase
+
+/-- A root-free one-level certificate transports to the realization-indexed tower invariant. -/
+theorem isRealizedTowerIntegralResult_ofLrtResult {N n : ℕ} (R : TowerRealization N)
+    (hn : n ≤ N) [CFieldDomain (DenseFracTower n) DensePoly]
+    (Dt anum aden : DensePoly (DenseFracTower n)) (res : LrtResult (DenseFracTower n))
+    (hres : IsIntegralResultLrt Dt anum aden res) :
+    IsRealizedTowerIntegralResult R hn Dt anum aden
+      (TowerIntegralResult.ofLrtResult Dt res) := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+  letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+  letI : IsAlgClosed (R.Carrier n hn) := R.isAlgClosed (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  letI : DifferentialAlgebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) :=
+    R.differentialAlgebra n hn
+  have hrational :
+      amGExt (E := R.Carrier n hn)
+          (CPoly.toPoly (CFrac.num (TowerIntegralResult.ofLrtResult Dt res).rational)) /
+        amGExt (E := R.Carrier n hn)
+          (CPoly.toPoly (CFrac.den (TowerIntegralResult.ofLrtResult Dt res).rational)) =
+        amGExt (E := R.Carrier n hn) (CPoly.toPoly res.rational.1) /
+          amGExt (E := R.Carrier n hn) (CPoly.toPoly res.rational.2) := by
+    calc
+      _ = ratFuncBaseChange (R.Carrier n hn)
+          (CFieldSpec.toK (TowerIntegralResult.ofLrtResult Dt res).rational) := by
+        symm
+        rw [toK_denseFrac_eq_fieldFrac, fieldFracP, ratFuncBaseChange_amG_div]
+      _ = ratFuncBaseChange (R.Carrier n hn) (fieldFracP res.rational.1 res.rational.2) := by
+        simp [TowerIntegralResult.ofLrtResult, fieldFracP, CFieldSpec.toK_div,
+          CFrac.toK_ofPoly]
+      _ = _ := by
+        rw [fieldFracP, ratFuncBaseChange_amG_div]
+  unfold IsRealizedTowerIntegralResult TowerIntegralResult.derivRealize
+    TowerIntegralResult.rationalRealize
+  have hlogs :
+      TowerLog.realizeSum R hn (TowerIntegralResult.ofLrtResult Dt res).logs =
+        logResidueSumLrt (E := R.Carrier n hn) Dt res.logs := by
+    simpa [TowerIntegralResult.ofLrtResult] using
+      (towerLog_realizeSum_lrt R hn Dt res.logs)
+  rw [hrational, hlogs]
+  simpa only [toPoly_list_eq] using hres (R.Carrier n hn)
 
 /-- Genuine ordinary one-level logs remain genuine in the recursive syntax. -/
 theorem TowerIntegralResult.logsGenuine_ofIntegralResult {n : ℕ}

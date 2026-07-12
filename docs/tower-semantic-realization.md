@@ -58,6 +58,9 @@ primitive and exponential stages; only `Dtₙ` and their stage-local reduction c
    contribution. **Done:** `TowerLog.realize`, `TowerLog.realizeSum`, and
    `TowerIntegralResult.derivRealize` evaluate an inherited contribution through the recursive lift.
 2. Restate the one-level ordinary and LRT soundness adapters against that local invariant.
+   **Done:** `DenseRischStage.asRealizedTowerIntegrationStage` and
+   `DenseLrtStage.asRealizedTowerIntegrationStage` supply the shared certified interface; the
+   selected primitive, hyperexponential, and local tangent stage cases all export it.
 3. Prove the coefficient-lift lemma from `TowerRealization.stepDifferentialAlgebra` and `coherent`.
 4. Prove `finishTowerTangentCandidate` sound; then expose it through the selected tangent stage.
 5. Give primitive and hyperexponential selected stages the same realization-indexed contract and use

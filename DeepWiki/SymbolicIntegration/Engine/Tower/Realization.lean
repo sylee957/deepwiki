@@ -13,8 +13,6 @@ one final field.
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u
-
 /-- The finite index corresponding to a realized tower depth. -/
 def TowerRealization.index {N n : ℕ} (hn : n ≤ N) : Fin (N + 1) :=
   ⟨n, Nat.lt_succ_iff.mpr hn⟩
@@ -26,7 +24,7 @@ successor carrier contains `RatFunc (carrier n)` as a differential subfield, and
 that this embedding agrees with the represented dense-fraction tower inclusion. -/
 structure TowerRealization (N : ℕ) where
   /-- Algebraically closed coefficient field selected at each realized depth. -/
-  carrier : Fin (N + 1) → Type u
+  carrier : Fin (N + 1) → Type
   /-- Field structure on every selected coefficient field. -/
   field : ∀ i, Field (carrier i)
   /-- Differential-field structure on every selected coefficient field. -/
@@ -117,7 +115,7 @@ structure TowerRealization (N : ℕ) where
 namespace TowerRealization
 
 /-- The selected coefficient field at a realized depth. -/
-abbrev Carrier (R : TowerRealization N) (n : ℕ) (hn : n ≤ N) : Type u :=
+abbrev Carrier (R : TowerRealization N) (n : ℕ) (hn : n ≤ N) : Type :=
   R.carrier (TowerRealization.index hn)
 
 /-- The represented-field embedding at a realized depth. -/
