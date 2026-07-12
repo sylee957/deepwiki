@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
 import DeepWiki.SymbolicIntegration.Engine.NormalReduction
+import DeepWiki.SymbolicIntegration.Engine.Tower.Stage
 
 /-! # The abstract one-level Risch assembler (Stage-1)
 
@@ -156,6 +157,49 @@ class CompleteCMonomialCase (C : CMonomialCase P α)
   postprocess_complete : ∀ (Dt cn dn : P α) (before : IntegralResult α P),
     CertifiedNormalResult Dt cn dn before →
       ∃ after, C.postprocessNormal Dt before = some after
+
+/-- The input supplied to a monomial-special remainder stage. -/
+structure MonomialSpecialInput (P : Type u → Type u) [CPoly P]
+    (α : Type u) [CField α] [CFieldSpec α] where
+  /-- The selected monomial derivative. -/
+  derivative : P α
+  /-- Polynomial contribution from polynomial reduction. -/
+  polynomial : P α
+  /-- Special-fraction numerator. -/
+  specialNum : P α
+  /-- Special-fraction denominator. -/
+  specialDen : P α
+  /-- The represented special denominator denotes a nonzero polynomial. -/
+  specialDen_nonzero : CPoly.toPoly specialDen ≠ 0
+
+/-- The representation-neutral completion stage exported by a certified monomial special solver. -/
+noncomputable def CMonomialCase.asRemainderIntegrationStage
+    (C : CMonomialCase P α) (domain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase C] [LawfulGenuineCMonomialCase C]
+    [CompleteCMonomialCase C domain] :
+    RemainderIntegrationStage (MonomialSpecialInput P α) (IntegralResult α P) Unit
+      (fun input => ∃ result,
+        IsMonomialSpecialResult input.derivative input.polynomial input.specialNum input.specialDen result)
+      (fun input result _ =>
+        IsMonomialSpecialResult input.derivative input.polynomial input.specialNum input.specialDen result) :=
+  { stage :=
+      { run := fun fuel input =>
+          (C.integrateSpecial fuel input.derivative input.polynomial input.specialNum input.specialDen).map
+            fun result => ⟨result, ()⟩
+        domain := fun input => domain input.derivative input.polynomial input.specialNum input.specialDen
+        sound := by
+          intro fuel input result hdomain hrun
+          obtain ⟨out, hout, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          exact isMonomialSpecialResult_of_run C fuel input.derivative input.polynomial
+            input.specialNum input.specialDen out hout
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨result, hresult⟩ := hintegrable
+          obtain ⟨hden, _hconstants, _hargs, hidentity⟩ := hresult
+          obtain ⟨fuel, out, hrun⟩ := CompleteCMonomialCase.special_complete (C := C)
+            input.derivative input.polynomial input.specialNum input.specialDen result hdomain
+              hden hidentity
+          exact ⟨fuel, ⟨out, ()⟩, by simp [hrun]⟩ } }
 
 /-- Denotation-level contract for canonical representation. -/
 class LawfulCCanonicalRepresentation [CCanonicalRepresentation P α] : Prop where
