@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Compositional
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialPresentation
 import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialTranscendental
+import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialCoefficientBridge
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect

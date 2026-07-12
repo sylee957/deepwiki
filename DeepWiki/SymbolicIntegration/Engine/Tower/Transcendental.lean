@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.TowerStage
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentDepth
+import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialPresentation
 import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
 import DeepWiki.SymbolicIntegration.Engine.Tower.LogTower
 
@@ -214,6 +215,11 @@ theorem LayeredTranscendentalStage.asIntegrationStage_domain_eq_realized
     S.asIntegrationStage.domain input = S.asRealizedIntegrationStage R hn |>.domain input := by
   cases S <;> rfl
 
+/-- A recursive realization selects the monomial derivatives of an explicit tower presentation. -/
+def TowerRealization.MatchesMonomialPresentation
+    (R : TowerRealization N) (T : DifferentialTowerPresentation N) : Prop :=
+  ∀ n (hn : n + 1 ≤ N), T.monomialDerivative n hn = R.monomialDerivative n hn
+
 /-- Package a selected lower stage as an executable coefficient stage certified in one realization. -/
 noncomputable def LayeredTranscendentalStage.asRealizedTowerCoefficientStage
     (S : LayeredTranscendentalStage n) (R : TowerRealization N) (hn : n + 1 ≤ N) :
@@ -238,6 +244,41 @@ noncomputable def LayeredTranscendentalStage.asRealizedTowerCoefficientStage
   refine { executable := executable, realized := ?_ }
   constructor
   · rfl
+  · intro fuel c result hdomain hrun
+    have hdomain' : realized.domain (input c) := by
+      rw [← S.asIntegrationStage_domain_eq_realized R (Nat.le_trans (Nat.le_succ n) hn)]
+      exact hdomain
+    have hrun' : realized.run fuel (input c) = some result := by
+      rw [← S.asIntegrationStage_run_eq_realized R (Nat.le_trans (Nat.le_succ n) hn)]
+      exact hrun
+    exact realized.sound fuel (input c) result hdomain' hrun'
+
+/-- Package a selected lower stage using the monomial derivative fixed by an explicit presentation. -/
+noncomputable def LayeredTranscendentalStage.asPresentationTowerCoefficientStage
+    (S : LayeredTranscendentalStage n) (R : TowerRealization N)
+    (T : DifferentialTowerPresentation N) (hn : n + 1 ≤ N)
+    (hmatch : R.MatchesMonomialPresentation T) :
+    RealizedTowerCoefficientStage R hn := by
+  let derivative := T.monomialDerivative n hn
+  let input : DenseFracTower (n + 1) → RischStageInput DensePoly (DenseFracTower n) :=
+    denseFracTowerCoefficientInput n derivative
+  let base := S.asIntegrationStage
+  let realized := S.asRealizedIntegrationStage R (Nat.le_trans (Nat.le_succ n) hn)
+  let executable : TowerCoefficientStage n :=
+    { derivative := derivative
+      Integrable := fun c => S.Integrable (input c)
+      stage :=
+        { run := fun fuel c => base.run fuel (input c)
+          domain := fun c => base.domain (input c)
+          sound := by
+            intro fuel c result hdomain hrun
+            exact base.sound fuel (input c) result hdomain hrun
+          complete := by
+            intro c hdomain hintegrable
+            exact base.complete (input c) hdomain hintegrable } }
+  refine { executable := executable, realized := ?_ }
+  constructor
+  · exact hmatch n hn
   · intro fuel c result hdomain hrun
     have hdomain' : realized.domain (input c) := by
       rw [← S.asIntegrationStage_domain_eq_realized R (Nat.le_trans (Nat.le_succ n) hn)]
