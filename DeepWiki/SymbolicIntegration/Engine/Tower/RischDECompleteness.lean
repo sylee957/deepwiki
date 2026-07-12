@@ -202,6 +202,19 @@ theorem crischFieldCompleteWf_step (hβ : CRischFieldComplete β)
       (fun hsol' ynum yden => hstep.hden hβ f g hsol' ynum yden)
   exact (crischDESolveSoundWf_isDecisionProcedure f g hfront (hstep.hsound hβ f g hsol)).mpr hsol
 
+/-- `CRischFieldCompleteWf β` grounded directly on the per-input Risch-DE decision-procedure frontier: if
+every `DenseFrac β` RDE carries the named completeness frontier `RischDEDecisionProcedureFrontierWf` and the
+direct soundness certificate `RischDESoundnessWf`, then the public fuel-free solver returns `some` on every
+solvable field-level RDE. Mirrors how `primitiveFrontierLrt_of_genuineData` grounds the primitive frontier:
+the Wf-solver's completeness rests transparently on the honest Bronstein RDE frontier, with no
+`CRischFieldComplete`/`CRischFieldCompleteWf` assumption. -/
+theorem crischFieldCompleteWf_of_decisionFrontier
+    [LawfulCPolyGcd.{u,v} DensePoly β]
+    (hfront : ∀ f g : DenseFrac β, RischDEDecisionProcedureFrontierWf f g)
+    (hsound : ∀ f g : DenseFrac β, RischDESoundnessWf f g) :
+    CRischFieldCompleteWf β := fun f g hsol =>
+  (crischDESolveSoundWf_isDecisionProcedure f g (hfront f g) (hsound f g)).mpr hsol
+
 end StepAssemblyWf
 
 /-! ### Restatements (anonymous `example`s) -/
@@ -225,10 +238,20 @@ example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFi
     CRischFieldCompleteWf β :=
   crischFieldCompleteWf_step hβ hstep
 
+-- Frontier grounding: the per-input decision-procedure frontier plus direct soundness give fuel-free
+-- wrapper completeness, with no `CRischFieldComplete`/`CRischFieldCompleteWf` assumption.
+example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
+    [CPolyResultant DensePoly] [LawfulCPolyGcd.{u,v} DensePoly β]
+    [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+    (hfront : ∀ f g : DenseFrac β, RischDEDecisionProcedureFrontierWf f g)
+    (hsound : ∀ f g : DenseFrac β, RischDESoundnessWf f g) :
+    CRischFieldCompleteWf β :=
+  crischFieldCompleteWf_of_decisionFrontier hfront hsound
+
 /-! ### Axiom audit
 
-The base case, recursion-tie helper, and Wf assembled step are axiom-clean and do not rely on
-`native_decide`. -/
-
+The base case, recursion-tie helper, the Wf assembled step, and the frontier-grounding
+`crischFieldCompleteWf_of_decisionFrontier` are axiom-clean and do not rely on `native_decide`. -/
 
 end DeepWiki.SymbolicIntegration
