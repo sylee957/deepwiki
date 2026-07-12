@@ -102,6 +102,22 @@ theorem complete (S : RemainderIntegrationStage Input Output Remainder Integrabl
     ∃ fuel result, S.stage.run fuel input = some result :=
   S.stage.complete input hdomain hintegrable
 
+/-- Restrict a certified stage to an additional semantic input guard. -/
+noncomputable def restrictInput
+    (S : RemainderIntegrationStage Input Output Remainder Integrable Correct)
+    (guard : Input → Prop) :
+    RemainderIntegrationStage Input Output Remainder
+      (fun input => guard input ∧ Integrable input) Correct :=
+  { stage :=
+      { run := S.stage.run
+        domain := fun input => guard input ∧ S.stage.domain input
+        sound := by
+          intro fuel input result hdomain hrun
+          exact S.sound fuel input result hdomain.2 hrun
+        complete := by
+          intro input hdomain hintegrable
+          exact S.complete input hdomain.2 hintegrable.2 } }
+
 /-- Reindex a certified stage along a deterministic input adapter. -/
 noncomputable def precompose
     {Source : Type u} {Input : Type v} {Output : Type w} {Remainder : Type _}

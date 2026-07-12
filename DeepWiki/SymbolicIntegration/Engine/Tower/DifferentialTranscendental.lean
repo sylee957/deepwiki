@@ -22,6 +22,161 @@ def IsPresentationIntegralResult (T : DifferentialTowerPresentation N) (n : ℕ)
     (result : IntegralResult (DenseFracTower n)) : Prop :=
   IsGenuineDifferentialOneLevelResult (T.context n hn) input.toOneLevelInput result
 
+/-- The executable capabilities and local proofs needed by one explicit-differential level. -/
+structure DifferentialOneLevelCapabilities
+    {α : Type u} [CField α] [CFieldSpec.{u,u} α]
+    (C : MonomialDifferentialContext (P := DensePoly) α) where
+  /-- Canonically split the input into polynomial, special, and normal branches. -/
+  canonical : CDifferentialCanonicalRepresentation DensePoly α C.derivation
+  /-- The canonical split reconstructs its source fraction and preserves denominator certificates. -/
+  canonicalLawful :
+    letI : CDifferentialCanonicalRepresentation DensePoly α C.derivation := canonical
+    LawfulCDifferentialCanonicalRepresentation C
+  /-- Reduce the polynomial branch for the selected coefficient derivative. -/
+  polynomial : DynamicPolynomialReduction.CDifferentialPolynomialReduction DensePoly α C.derivation
+  /-- The semantic domain on which polynomial reduction is relatively complete. -/
+  polynomialDomain : DynamicPolynomialReduction.DifferentialPolynomialReductionDomain DensePoly α
+  /-- The polynomial reduction output satisfies its selected differential identity. -/
+  polynomialLawful :
+    DynamicPolynomialReduction.LawfulCDifferentialPolynomialReduction C.derivation C.differential polynomial
+  /-- Polynomial reduction is relatively complete on its selected domain. -/
+  polynomialComplete :
+    letI : DynamicPolynomialReduction.LawfulCDifferentialPolynomialReduction
+      C.derivation C.differential polynomial :=
+      polynomialLawful
+    DynamicPolynomialReduction.CompleteCDifferentialPolynomialReduction
+      C.derivation C.differential polynomial polynomialDomain
+  /-- Integrate the selected polynomial-special branch. -/
+  special : CDifferentialMonomialSpecial DensePoly α C.derivation
+  /-- The semantic domain on which special integration is relatively complete. -/
+  specialDomain : MonomialSpecialDomain DensePoly α
+  /-- Accepted special results satisfy the selected differential identity and genuine-log laws. -/
+  specialLawful :
+    letI : CDifferentialMonomialSpecial DensePoly α C.derivation := special
+    LawfulCDifferentialMonomialSpecial C
+  /-- Special integration is relatively complete on its selected domain. -/
+  specialComplete :
+    letI : CDifferentialMonomialSpecial DensePoly α C.derivation := special
+    letI : LawfulCDifferentialMonomialSpecial C := specialLawful
+    CompleteCDifferentialMonomialSpecial C specialDomain
+  /-- Reduce the normal/Hermite branch. -/
+  normal : CDifferentialNormalReduction DensePoly α C.derivation
+  /-- The semantic domain on which normal reduction is relatively complete. -/
+  normalDomain : DifferentialNormalReductionDomain DensePoly α
+  /-- Accepted normal results satisfy the selected differential identity and genuine-log laws. -/
+  normalLawful :
+    letI : CDifferentialNormalReduction DensePoly α C.derivation := normal
+    LawfulCDifferentialNormalReduction C normalDomain
+  /-- Normal reduction is relatively complete on its selected domain. -/
+  normalComplete :
+    letI : CDifferentialNormalReduction DensePoly α C.derivation := normal
+    letI : LawfulCDifferentialNormalReduction C normalDomain := normalLawful
+    CompleteCDifferentialNormalReduction C normalDomain
+  /-- Apply the selected monomial-specific correction to a normal result. -/
+  postprocessor : CDifferentialNormalPostprocessor DensePoly α C.derivation
+  /-- The correction preserves the certified normal-result invariant. -/
+  postprocessorLawful :
+    letI : CDifferentialNormalPostprocessor DensePoly α C.derivation := postprocessor
+    LawfulCDifferentialNormalPostprocessor C
+  /-- Every certified normal result admits a selected correction. -/
+  postprocessorComplete :
+    letI : CDifferentialNormalPostprocessor DensePoly α C.derivation := postprocessor
+    letI : LawfulCDifferentialNormalPostprocessor C := postprocessorLawful
+    CompleteCDifferentialNormalPostprocessor C
+
+namespace DifferentialOneLevelCapabilities
+
+/-- Export all one-level capabilities as the common proof-carrying tower stage. -/
+noncomputable def asRischStage
+    {α : Type u} [CField α] [CFieldSpec.{u,u} α]
+    (C : MonomialDifferentialContext (P := DensePoly) α)
+    (K : DifferentialOneLevelCapabilities C) (kind : PolynomialReductionKind) :
+    letI : CDifferentialCanonicalRepresentation DensePoly α C.derivation := K.canonical
+    letI : LawfulCDifferentialCanonicalRepresentation C := by exact K.canonicalLawful
+    RemainderIntegrationStage (RischStageInput DensePoly α) (IntegralResult α) (Unit × Unit)
+      (fun input => IsDifferentialOneLevelIntegrable C kind input.toOneLevelInput)
+      (fun input result _ => IsGenuineDifferentialOneLevelResult C input.toOneLevelInput result) := by
+  letI : CDifferentialCanonicalRepresentation DensePoly α C.derivation := K.canonical
+  letI : LawfulCDifferentialCanonicalRepresentation C := K.canonicalLawful
+  letI : DynamicPolynomialReduction.CDifferentialPolynomialReduction DensePoly α C.derivation :=
+    K.polynomial
+  letI : DynamicPolynomialReduction.LawfulCDifferentialPolynomialReduction
+      C.derivation C.differential K.polynomial :=
+    K.polynomialLawful
+  letI : DynamicPolynomialReduction.CompleteCDifferentialPolynomialReduction
+      C.derivation C.differential K.polynomial
+      K.polynomialDomain := K.polynomialComplete
+  letI : CDifferentialMonomialSpecial DensePoly α C.derivation := K.special
+  letI : LawfulCDifferentialMonomialSpecial C := K.specialLawful
+  letI : CompleteCDifferentialMonomialSpecial C K.specialDomain := K.specialComplete
+  letI : CDifferentialNormalReduction DensePoly α C.derivation := K.normal
+  letI : LawfulCDifferentialNormalReduction C K.normalDomain := K.normalLawful
+  letI : CompleteCDifferentialNormalReduction C K.normalDomain := K.normalComplete
+  letI : CDifferentialNormalPostprocessor DensePoly α C.derivation := K.postprocessor
+  letI : LawfulCDifferentialNormalPostprocessor C := K.postprocessorLawful
+  letI : CompleteCDifferentialNormalPostprocessor C := K.postprocessorComplete
+  exact K.polynomial.asRischStageRemainderStage C K.canonical kind K.polynomialDomain
+    K.specialDomain K.normalDomain
+
+end DifferentialOneLevelCapabilities
+
+/-- A tower input uses the monomial derivative selected at its presentation depth. -/
+def IsPresentationMonomialInput (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n + 1 ≤ N)
+    (input : RischStageInput DensePoly (DenseFracTower n)) : Prop :=
+  input.Dt = T.monomialDerivative n hn
+
+/-- Restrict a complete one-level capability bundle to the monomial selected by a presentation. -/
+noncomputable def DifferentialOneLevelCapabilities.asPresentationMonomialStage
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N) (hsucc : n + 1 ≤ N)
+    (K : DifferentialOneLevelCapabilities (T.context n hn)) (kind : PolynomialReductionKind) :
+    letI : CDifferentialCanonicalRepresentation DensePoly (DenseFracTower n)
+      (T.context n hn).derivation := K.canonical
+    letI : LawfulCDifferentialCanonicalRepresentation (T.context n hn) := by
+      exact K.canonicalLawful
+    RemainderIntegrationStage (RischStageInput DensePoly (DenseFracTower n))
+      (IntegralResult (DenseFracTower n)) (Unit × Unit)
+      (fun input => IsPresentationMonomialInput T n hsucc input ∧
+        IsDifferentialOneLevelIntegrable (T.context n hn) kind input.toOneLevelInput)
+      (fun input result _ => IsPresentationIntegralResult T n hn input result) := by
+  letI : CDifferentialCanonicalRepresentation DensePoly (DenseFracTower n)
+      (T.context n hn).derivation := K.canonical
+  letI : LawfulCDifferentialCanonicalRepresentation (T.context n hn) := K.canonicalLawful
+  exact (K.asRischStage (T.context n hn) kind).restrictInput
+    (IsPresentationMonomialInput T n hsucc)
+
+/-- The coefficient-field context selected before adjoining a primitive monomial. -/
+noncomputable abbrev primitiveOneStepCoefficientContext :=
+  DifferentialTowerPresentation.primitiveOneStep.context 0 (Nat.zero_le 1)
+
+/-- The coefficient-field context selected before adjoining an exponential monomial. -/
+noncomputable abbrev exponentialOneStepCoefficientContext :=
+  DifferentialTowerPresentation.exponentialOneStep.context 0 (Nat.zero_le 1)
+
+/-- The coefficient-field context selected before adjoining a tangent monomial. -/
+noncomputable abbrev tangentOneStepCoefficientContext :=
+  DifferentialTowerPresentation.tangentOneStep.context 0 (Nat.zero_le 1)
+
+/-- The complete one-level primitive stage selected by `t′ = 1`. -/
+noncomputable def primitiveOneStepStage
+    (K : DifferentialOneLevelCapabilities primitiveOneStepCoefficientContext)
+    (kind : PolynomialReductionKind) :=
+  K.asPresentationMonomialStage DifferentialTowerPresentation.primitiveOneStep 0 (Nat.zero_le 1)
+    (Nat.le_refl 1) kind
+
+/-- The complete one-level exponential stage selected by `t′ = t`. -/
+noncomputable def exponentialOneStepStage
+    (K : DifferentialOneLevelCapabilities exponentialOneStepCoefficientContext)
+    (kind : PolynomialReductionKind) :=
+  K.asPresentationMonomialStage DifferentialTowerPresentation.exponentialOneStep 0 (Nat.zero_le 1)
+    (Nat.le_refl 1) kind
+
+/-- The complete one-level tangent stage selected by `t′ = t² + 1`. -/
+noncomputable def tangentOneStepStage
+    (K : DifferentialOneLevelCapabilities tangentOneStepCoefficientContext)
+    (kind : PolynomialReductionKind) :=
+  K.asPresentationMonomialStage DifferentialTowerPresentation.tangentOneStep 0 (Nat.zero_le 1)
+    (Nat.le_refl 1) kind
+
 /-- A certified presentation-indexed integration level at one finite tower depth. -/
 structure DifferentialTranscendentalLevel (T : DifferentialTowerPresentation N)
     (n : ℕ) (hn : n ≤ N) where
@@ -42,6 +197,17 @@ def ofStage (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N)
       Integrable (fun input result _ => IsPresentationIntegralResult T n hn input result)) :
     DifferentialTranscendentalLevel T n hn :=
   ⟨Integrable, stage⟩
+
+/-- Build a certified tower level by installing the five explicit one-level capabilities. -/
+noncomputable def ofCapabilities (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N)
+    (K : DifferentialOneLevelCapabilities (T.context n hn)) (kind : PolynomialReductionKind) :
+    DifferentialTranscendentalLevel T n hn := by
+  letI : CDifferentialCanonicalRepresentation DensePoly (DenseFracTower n)
+      (T.context n hn).derivation := K.canonical
+  letI : LawfulCDifferentialCanonicalRepresentation (T.context n hn) := K.canonicalLawful
+  exact ofStage T n hn
+    (fun input => IsDifferentialOneLevelIntegrable (T.context n hn) kind input.toOneLevelInput)
+    (K.asRischStage (T.context n hn) kind)
 
 /-- Every accepted presentation-indexed level result satisfies its selected derivative invariant. -/
 theorem sound (L : DifferentialTranscendentalLevel T n hn) (fuel : ℕ)
