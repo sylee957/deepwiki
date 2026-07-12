@@ -347,6 +347,28 @@ structure DifferentialCoefficientSuccessor
 
 namespace DifferentialCoefficientSuccessor
 
+/-- Build a successor using the canonical dense lift of its preceding presentation level. -/
+noncomputable def ofPresentationLevel
+    {N : ℕ} {T : DifferentialTowerPresentation N} {n : ℕ} {hn : n + 1 ≤ N}
+    (lower : DifferentialTranscendentalLevel T n (Nat.le_trans (Nat.le_succ n) hn))
+    (capabilities : DifferentialOneLevelCapabilities (T.context (n + 1) hn))
+    (monomial : CDifferentialRecursiveMonomialCase (T.context (n + 1) hn))
+    (kind : PolynomialReductionKind)
+    (lawful : LawfulCDifferentialRecursiveMonomialCase monomial)
+    (complete :
+      letI : LawfulCDifferentialRecursiveMonomialCase monomial := lawful
+      CompleteCDifferentialRecursiveMonomialCase monomial
+        (DifferentialCoefficientBridge.ofPresentationLevel T n hn lower).domain
+        capabilities.specialDomain) :
+    DifferentialCoefficientSuccessor T n hn lower where
+  bridge := DifferentialCoefficientBridge.ofPresentationLevel T n hn lower
+  bridge_lower := rfl
+  capabilities := capabilities
+  monomial := monomial
+  kind := kind
+  lawful := lawful
+  complete := complete
+
 /-- Construct the successor level selected by bridge-aware recursive coefficient integration. -/
 noncomputable def level
     {N : ℕ} {T : DifferentialTowerPresentation N} {n : ℕ} {hn : n + 1 ≤ N}

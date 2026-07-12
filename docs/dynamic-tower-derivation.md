@@ -93,22 +93,25 @@ completeness at every selected depth.
 
 The explicit recursive coefficient and monomial adapters now feed
 `DifferentialTranscendentalLevel.ofRecursiveMonomialCase`, so coefficient recursion is a certified
-input of the next level. The remaining successor lift must still construct and certificate-check
-that coefficient solver from the preceding presentation-indexed level.
+input of the next level. `DifferentialCoefficientBridge.ofPresentationLevel` now gives the concrete
+DenseFrac successor lift: it embeds the lower rational part by field division, transports the
+presentation quotient-rule derivative, transports the complete logarithmic-residue sum, and proves
+the lifted coefficients constant and logarithm arguments nonzero. The successor checker therefore
+turns every accepted lower presentation result into a lawful coefficient result without a separate
+denominator certificate. `DifferentialCoefficientSuccessor.ofPresentationLevel` installs that
+bridge directly in a successor level.
 
-`Tower/DifferentialCoefficientBridge.lean` now packages that successor shape: a lift theorem turns
-a preceding level result into successor coefficient data, the explicit checker makes the resulting
+`Tower/DifferentialCoefficientBridge.lean` packages that successor shape: a lift theorem turns a
+preceding level result into successor coefficient data, the explicit checker makes the resulting
 candidate globally lawful, and `DifferentialCoefficientTowerScheme` derives the common finite
-tower's soundness and relative completeness by induction. What remains is the dense lift theorem
-for the concrete represented-result conversion under an arbitrary selected monomial derivative.
+tower's soundness and relative completeness by induction. The concrete represented-result
+conversion is now discharged for an arbitrary selected monomial derivative.
 
-1. Prove and instantiate the dense represented-result lift theorem under the presentation
-   quotient-rule square.
-2. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
+1. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.
-3. Use the selected lower derivative identity in the recursive tangent finish theorem and connect
+2. Use the selected lower derivative identity in the recursive tangent finish theorem and connect
    the resulting successor constructor to `DifferentialTranscendentalTowerScheme`.
-4. Audit and retire the static `DenseFracTower` orchestration paths once callers use the new
+3. Audit and retire the static `DenseFracTower` orchestration paths once callers use the new
    presentation; preserve only deliberately primitive compatibility imports.
 
 ## Retirement audit (current)
