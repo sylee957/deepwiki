@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 import DeepWiki.SymbolicIntegration.LiouvilleLog
+import DeepWiki.SymbolicIntegration.Engine.LiouvilleExpBridge
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Liouville's Theorem (the completeness direction)
@@ -101,6 +102,14 @@ residual `DerivSimplePoleSeparation u` (the twisted derivative `v′` has no sim
 itself a theorem from `NondegenerateLog` (`derivSimplePoleSeparation_of_nondegenerateLog`), which is what
 upgrades this to the unconditional-modulo-new-monomial `liouville_logExtension`. -/
 abbrev liouville_logExtension_of_separation := @LiouvilleLog.isLiouville_logExtension
+
+/-- **★ Liouville's transcendental-exp keystone** (§5.5 / §9.2): `F(exp u)` is Liouville over `F` given the
+new-monomial condition `NondegenerateExp u` (`exp u ∉ F`, i.e. `u' ≠ 0`). The exponential sibling of
+`liouville_logExtension`, discharged unconditionally-modulo-new-monomial from the pole-matching over
+`expDerivPoly` (the special factor `t = exp u` is a unit, so `logDeriv t = u'` is `F`-valued and folds into
+the polynomial part; the genuine pole-matching runs over `π ≠ t`). This is the transcendental-exp
+`IsLiouville` instance Mathlib lacked, completing the log+exp Liouville pair. -/
+abbrev liouville_expExtension := @LiouvilleExpBridge.isLiouville_expExtension_uncond
 
 /-- **The fraction-field derivation extension `fracDeriv`** (Mathlib-infra, the enabling lemma): a
 derivation `d` on `F[X]` extends to a fraction field `K` of `F[X]` by the quotient rule, as a

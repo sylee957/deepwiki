@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
+import DeepWiki.SymbolicIntegration.Engine.RischTowerLrtGrounding
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 5: Integration of Transcendental Functions
@@ -40,11 +41,15 @@ level and instantiable at `DenseFrac ℚ` like the rest of the engine.
   `PolynomialReduce` now computable + native_decide-validated, see `alg_5_4_polynomialReduce`/`ex_5_4_1`).
 §5.5 Liouville's Theorem: Thm 5.5.2, Thm 5.5.3 (the general structure theorem — every elementary
   antiderivative is `g + ∑ cᵢ log uᵢ`, and the tower-exhaustiveness "no such form ⟹ not elementary" —
-  `[research]`); the exp-extension Liouville instance `IsLiouville F F(exp u)` `[external]` (in flight).
-  (Thm 5.5.1, the transcendental *logarithmic* case `IsLiouville F F(log u)`, is now formalized
-  CONDITIONAL on the new-monomial condition `log u ∉ F` (the necessary transcendence hypothesis), see
-  catalog `Sources.Doi_10_1007_b138171.Liouville` `liouville_logExtension`; the rational case §2.4/§2.5 is
-  cataloged there too, unconditionally.)
+  `[research]`).
+  (Thm 5.5.1 is now formalized for BOTH transcendental cases, conditional on the necessary new-monomial
+  condition: the *logarithmic* case `IsLiouville F F(log u)` (`log u ∉ F`) and the *exponential* case
+  `IsLiouville F F(exp u)` (`exp u ∉ F`), see catalog `Sources.Doi_10_1007_b138171.Liouville`
+  `liouville_logExtension`/`liouville_expExtension`; the rational case §2.4/§2.5 is cataloged there too,
+  unconditionally. The assembled integrator's **sound-and-complete decision procedure** on the primitive
+  domain over ℚ(x) — `some ⟺ elementary` with a genuine antiderivative on success, resting on the
+  new-monomial frontier — is cataloged as `thm_5_5_1_soundAndComplete`/`thm_5_5_1_frontier_of_newMonomial`
+  above.)
 §5.6 The Residue Criterion: Thm 5.6.1 (abstract correctness); Lemma 5.6.1, Lemma 5.6.2; Ex 5.6.1,
   Ex 5.6.3 (the algorithm `ResidueReduce` / the residue resultant + log argument are now computable +
   native_decide-validated on Ex 5.6.2, see `alg_5_6_residueResultant`/`alg_5_6_logArg`/`ex_5_6_2`).
@@ -188,5 +193,27 @@ theorem ex_5_8_primitive :
      let q := res.1; let rem := res.2
      let Dq := CPolyEngine.monomialDeriv Dt q
      DensePoly.cisZero (DensePoly.csub (DensePoly.cadd Dq rem) p)) = true := by native_decide
+
+/-! ## §5.5 + §5.6 + §6 — the assembled integrator is a sound and complete decision procedure
+
+The abstract-correctness capstone: on the primitive decomposition domain, over the concrete tower
+ℚ(x) = `DenseFrac ℚ`, the assembled root-free transcendental integrator `CRischLevelLrt.integrate`
+is a **sound and complete decision procedure** for elementary integrability, resting on exactly one
+honest hypothesis — the Risch new-monomial condition (Thm 5.5.1: `η = Dt` is not a derivative, so `t`
+is a genuine new transcendental). This is the abstract statement behind the `native_decide`-validated
+reductions above; the general structure theorem (Thm 5.5.2/5.5.3) and the non-primitive cases (§5.9
+hyperexp, §5.10 hypertangent) remain (see the block below). -/
+
+/-- **Sound and complete (Thm 5.5.1 realization), abstract.** On the primitive domain over ℚ(x), the
+integrator succeeds **iff** the input is elementary-integrable (completeness), and a guard-passing
+success yields a genuine true antiderivative `D(∫f) = f` (soundness). Axiom-clean (no `native_decide`);
+rests on the honest new-monomial frontier `PrimitiveFrontierLrt`. -/
+abbrev thm_5_5_1_soundAndComplete := @lrtSolver_soundAndComplete_on_tower
+
+/-- **The frontier is the new-monomial condition, not an axiom** (Thm 5.5.1, faithfulness): the
+`PrimitiveFrontierLrt` the capstone rests on is *constructible* from the genuine input-independent
+condition "`η = Dt` is not a derivative" (`GenuinePrimitiveMonomialLrt`, bundled `LrtReducedGenuineData`)
+— the necessary Risch new-monomial hypothesis, `t` a genuine new transcendental. -/
+abbrev thm_5_5_1_frontier_of_newMonomial := @primitiveFrontierLrt_of_genuineData
 
 end DeepWiki.Si
