@@ -261,6 +261,33 @@ noncomputable def LayeredTranscendentalLevel.ofSelected (S : LayeredTranscendent
   Integrable := S.Integrable
   stage := S.asIntegrationStage
 
+/-- Lift a genuine one-level remainder stage into the common layered tower-result language. -/
+noncomputable def LayeredTranscendentalLevel.ofOneLevelRemainderStage
+    {Remainder : Type} {Integrable : RischStageInput DensePoly (DenseFracTower n) → Prop}
+    (S : RemainderIntegrationStage
+      (RischStageInput DensePoly (DenseFracTower n)) (IntegralResult (DenseFracTower n)) Remainder
+      Integrable
+      (fun input result _ => IsGenuineOneLevelResult input.toOneLevelInput result)) :
+    LayeredTranscendentalLevel n where
+  Integrable := Integrable
+  stage :=
+    { run := fun fuel input =>
+        (S.stage.run fuel input).map fun result =>
+          TowerIntegralResult.ofIntegralResult input.Dt result.output
+      domain := S.stage.domain
+      sound := by
+        intro fuel input result hdomain hrun
+        obtain ⟨ordinary, hordinary, rfl⟩ := Option.map_eq_some_iff.mp hrun
+        have hnative := S.sound fuel input ordinary hdomain hordinary
+        exact ⟨isTowerIntegralResult_ofIntegralResult input.Dt input.num input.den ordinary.output
+          hnative.1,
+          TowerIntegralResult.logsGenuine_ofIntegralResult input.Dt ordinary.output
+            hnative.2.1 hnative.2.2⟩
+      complete := by
+        intro input hdomain hintegrable
+        obtain ⟨fuel, ordinary, hrun⟩ := S.complete input hdomain hintegrable
+        exact ⟨fuel, TowerIntegralResult.ofIntegralResult input.Dt ordinary.output, by simp [hrun]⟩ }
+
 /-- Run a lower certified level as a coefficient integrator at its actual monomial derivative. -/
 noncomputable def LayeredTranscendentalLevel.runCoefficient
     (L : LayeredTranscendentalLevel n) (derivative : DensePoly (DenseFracTower n))
