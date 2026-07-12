@@ -74,4 +74,48 @@ example [PrimitiveFrontierLrt ℚ]
     ∃ C : CRischLevelLrt (DenseFrac ℚ), LawfulCRischLevelLrt C :=
   ⟨inferInstance, inferInstance⟩
 
+/-! ## Genuine (true-antiderivative) soundness of a run
+
+`soundFormalLrt` gives only the FORMAL identity `IsIntegralResultLrt` (residues treated as constants).
+The genuine result `IsGenuineIntegralResultLrt = IsIntegralResultLrt ∧ AllResiduesConstantLrt`
+certifies a *true* antiderivative. The theorems below upgrade a successful run to the genuine result,
+composing the formal soundness with the constant-residue propagation — the assembly the checker-free
+north star needs. -/
+
+/-- **Genuine LRT soundness of a run (generic).** A successful run whose canonical *normal* remainder
+has all-constant residues (`hnormal`) is a genuine LRT integral result: the formal log-derivative
+identity holds AND every residue is constant, so `res` is a true antiderivative. Composes
+`soundFormalLrt` with `CRischLevelLrt.allResiduesConstant_of_integrate`. -/
+theorem soundGenuineLrt {α : Type} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) [LawfulCRischLevelLrt C] (Dt a d : DensePoly α) (res : LrtResult α)
+    (h : C.integrate Dt a d = some res)
+    (hnormal : AllResiduesConstantLrt
+      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d))) :
+    IsGenuineIntegralResultLrt Dt a d res :=
+  ⟨C.soundFormalLrt Dt a d res h,
+    C.allResiduesConstant_of_integrate Dt a d res h hnormal⟩
+
+/-- **Genuine LRT soundness from the residue guard, on the concrete ℚ(x)-tower.** At carrier
+`DenseFrac ℚ`, the `hnormal` hypothesis of `soundGenuineLrt` is discharged by the decidable
+residue-constancy guard on the canonical normal part plus the nonzero residue-resultant `hR0` — the
+same guard the total engine already computes. So a successful run whose normal part passes
+`cResidueConstantGuard` is a genuine true antiderivative, with no residue-constancy assumed by hand.
+Stated at the concrete carrier so the global `CPolySquarefree` instance is uniform (no abstract binder
+to shadow it — the diamond that would otherwise diverge `whnf`). -/
+theorem soundGenuineLrt_of_guard [PrimitiveFrontierLrt ℚ]
+    [CRischField (DenseFrac ℚ)] [PrimitiveFrontierLrt (DenseFrac ℚ)]
+    (Dt a d : DensePoly (DenseFrac ℚ)) (res : LrtResult (DenseFrac ℚ))
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))
+    (h : (inferInstance : CRischLevelLrt (DenseFrac ℚ)).integrate Dt a d = some res)
+    (hR0 : toPoly (cResidueResultantTower Dt
+      (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
+      (cHermiteReduceTower Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0)
+    (hguard : cResidueConstantGuard Dt (crNormNum Dt a d) (crNormDen Dt a d) = true) :
+    IsGenuineIntegralResultLrt Dt a d res :=
+  soundGenuineLrt (inferInstance : CRischLevelLrt (DenseFrac ℚ)) Dt a d res h
+    (allResiduesConstantLrtG_of_guard hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d) hR0 hguard)
+
 end DeepWiki.SymbolicIntegration
