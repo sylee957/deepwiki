@@ -62,6 +62,9 @@ primitive and exponential stages; only `Dtₙ` and their stage-local reduction c
    `DenseLrtStage.asRealizedTowerIntegrationStage` supply the shared certified interface; the
    selected primitive, hyperexponential, and local tangent stage cases all export it.
 3. Prove the coefficient-lift lemma from `TowerRealization.stepDifferentialAlgebra` and `coherent`.
+   **Done:** `TowerRealization.lift_deriv`, `TowerRealization.lift_coefficientRealize`, and
+   `lift_isRealizedCoefficient` move a certified lower derivative equality into the exact successor
+   coefficient field.
 4. Prove `finishTowerTangentCandidate` sound; then expose it through the selected tangent stage.
 5. Give primitive and hyperexponential selected stages the same realization-indexed contract and use
    `IntegrationTowerScheme` / `LayeredTranscendentalTowerScheme` for finite-tower soundness and relative

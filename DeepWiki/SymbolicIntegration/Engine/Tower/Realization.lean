@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Engine.LrtSoundness
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
+import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
 
 /-! # Recursive semantic realizations of transcendental towers
 
@@ -175,6 +176,62 @@ theorem lift_deriv (R : TowerRealization N) (n : ℕ) (hn : n + 1 ≤ N) :
       (algebraMap (RatFunc (R.Carrier n (Nat.le_trans (Nat.le_succ n) hn)))
         (R.Carrier (n + 1) hn) x)
   exact (DifferentialAlgebra.deriv_algebraMap x).symm
+
+/-- Realize a represented successor coefficient in the preceding function field. -/
+noncomputable def coefficientRealize (R : TowerRealization N) (n : ℕ) (hn : n ≤ N)
+    (c : DenseFracTower (n + 1)) :
+    letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+    RatFunc (R.Carrier n hn) := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  exact amGExt (E := R.Carrier n hn) (CPoly.toPoly (CFrac.num c)) /
+    amGExt (E := R.Carrier n hn) (CPoly.toPoly (CFrac.den c))
+
+/-- The function-field realization of a coefficient is its ordinary rational-function base change. -/
+theorem coefficientRealize_eq_baseChange (R : TowerRealization N) (n : ℕ) (hn : n ≤ N)
+    (c : DenseFracTower (n + 1)) :
+    letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+    R.coefficientRealize n hn c =
+      ratFuncBaseChange (α := DenseFracTower n) (R.Carrier n hn) (CFieldSpec.toK c) := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  unfold coefficientRealize
+  change _ = ratFuncBaseChange (R.Carrier n hn) (CFrac.toRatFunc c)
+  rw [CFrac.toRatFunc_eq_div, ratFuncBaseChange_amG_div]
+
+/-- Lifting a realized coefficient agrees with its successor represented-field embedding. -/
+theorem lift_coefficientRealize (R : TowerRealization N) (n : ℕ) (hn : n + 1 ≤ N)
+    (c : DenseFracTower (n + 1)) :
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+    letI : Differential (R.Carrier n hprev) := R.differential (TowerRealization.index hprev)
+    letI : Algebra ℚ (R.Carrier n hprev) := R.algebraQ (TowerRealization.index hprev)
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hprev) := R.algebra n hprev
+    letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+    letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) := R.stepAlgebra n hn
+    letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) (R.Carrier (n + 1) hn) :=
+      R.algebra (n + 1) hn
+    R.lift n hn (R.coefficientRealize n hprev c) =
+      algebraMap (CFieldSpec.K (DenseFracTower (n + 1))) (R.Carrier (n + 1) hn)
+        (CFieldSpec.toK c) := by
+  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+  letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+  letI : Differential (R.Carrier n hprev) := R.differential (TowerRealization.index hprev)
+  letI : Algebra ℚ (R.Carrier n hprev) := R.algebraQ (TowerRealization.index hprev)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hprev) := R.algebra n hprev
+  letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+  letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) := R.stepAlgebra n hn
+  letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) (R.Carrier (n + 1) hn) :=
+    R.algebra (n + 1) hn
+  dsimp
+  rw [coefficientRealize_eq_baseChange]
+  change ((R.lift n hn).comp
+    (ratFuncBaseChange (α := DenseFracTower n) (R.Carrier n hprev))) (CFieldSpec.toK c) = _
+  change ((algebraMap (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn)).comp
+    (ratFuncBaseChange (α := DenseFracTower n) (R.Carrier n hprev))) (CFieldSpec.toK c) = _
+  exact DFunLike.congr_fun (R.coherent n hn) (CFieldSpec.toK c)
 
 end TowerRealization
 

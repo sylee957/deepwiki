@@ -353,6 +353,39 @@ def IsRealizedTowerIntegralResult {N n : ℕ} (R : TowerRealization N) (hn : n �
     amGExt (E := R.Carrier n hn) (CPoly.toPoly anum) /
       amGExt (E := R.Carrier n hn) (CPoly.toPoly aden)
 
+/-- A realized lower coefficient identity lifts to its successor represented-field value. -/
+theorem lift_isRealizedCoefficient {N n : ℕ} (R : TowerRealization N) (hn : n + 1 ≤ N)
+    (Dt : DensePoly (DenseFracTower n)) (c : DenseFracTower (n + 1))
+    (res : TowerIntegralResult n)
+    (hres : IsRealizedTowerIntegralResult R (Nat.le_trans (Nat.le_succ n) hn)
+      Dt (CFrac.num c) (CFrac.den c) res) :
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+    letI : Differential (R.Carrier n hprev) := R.differential (TowerRealization.index hprev)
+    letI : Algebra ℚ (R.Carrier n hprev) := R.algebraQ (TowerRealization.index hprev)
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hprev) := R.algebra n hprev
+    letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+    letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) := R.stepAlgebra n hn
+    letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) (R.Carrier (n + 1) hn) :=
+      R.algebra (n + 1) hn
+    R.lift n hn (res.derivRealize R hprev Dt) =
+      algebraMap (CFieldSpec.K (DenseFracTower (n + 1))) (R.Carrier (n + 1) hn)
+        (CFieldSpec.toK c) := by
+  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+  letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+  letI : Differential (R.Carrier n hprev) := R.differential (TowerRealization.index hprev)
+  letI : Algebra ℚ (R.Carrier n hprev) := R.algebraQ (TowerRealization.index hprev)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hprev) := R.algebra n hprev
+  letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+  letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) := R.stepAlgebra n hn
+  letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) (R.Carrier (n + 1) hn) :=
+    R.algebra (n + 1) hn
+  dsimp
+  unfold IsRealizedTowerIntegralResult at hres
+  rw [hres]
+  change R.lift n hn (R.coefficientRealize n hprev c) = _
+  exact R.lift_coefficientRealize n hn c
+
 /-- Appending lower logs realizes as the local sum plus the lifted preceding log contribution. -/
 theorem TowerIntegralResult.realizeSum_appendInherited {N n : ℕ} (R : TowerRealization N)
     (hn : n + 1 ≤ N) (localResult : TowerIntegralResult (n + 1))
