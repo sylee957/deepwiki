@@ -57,6 +57,9 @@ retains a lower node without reinterpreting it as an upper
    and `isTowerIntegralResult_appendInherited` transports it to the ordinary
    tower invariant. The remaining work is to make tangent and
    hyperexponential reconstruction produce that relative certificate.
+   `TowerIntegralResult.add` and its rational, log, differentiated-denotation,
+   and genuine-log laws now provide the common reconstruction operation for
+   composing polynomial, normal, special, and inherited pieces.
    `denseFracTower_K_succ` and `denseFracTowerKStep` expose the required
    `Kₙ₊₁ = RatFunc Kₙ` field equality and canonical inclusion across the
    packaged carrier boundary.

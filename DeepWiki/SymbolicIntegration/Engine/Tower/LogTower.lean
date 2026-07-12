@@ -69,6 +69,12 @@ def TowerIntegralResult.appendInherited {n : ℕ}
   rational := localResult.rational
   logs := localResult.logs ++ TowerLog.inheritAll lower.logs
 
+/-- Add two tower antiderivative pieces at the same extension depth. -/
+noncomputable def TowerIntegralResult.add {n : ℕ} (left right : TowerIntegralResult n) :
+    TowerIntegralResult n where
+  rational := CCommRing.add left.rational right.rational
+  logs := left.logs ++ right.logs
+
 /-- Derivative contribution of a current-extension logarithm in an evaluation field. -/
 noncomputable def localLogTerm {E : Type*} [Field E]
     [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
@@ -147,6 +153,40 @@ noncomputable def TowerLog.EvaluationMaps.map {N : ℕ} {E : Type*} [Field E] [D
     CFieldSpec.K (DenseFracTower n) →+* E :=
   @algebraMap (CFieldSpec.K (DenseFracTower n)) E _ _ (maps.algebra n hn)
 
+/-- Evaluate the rational part of a tower result in a selected final evaluation field. -/
+noncomputable def TowerIntegralResult.rationalDenote {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n ≤ N) (res : TowerIntegralResult n) : RatFunc E := by
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+  exact amGExt (E := E) (CPoly.toPoly (CFrac.num res.rational)) /
+    amGExt (E := E) (CPoly.toPoly (CFrac.den res.rational))
+
+/-- The rational evaluation is the base change of the represented fraction's denotation. -/
+theorem TowerIntegralResult.rationalDenote_eq_baseChange {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n ≤ N) (res : TowerIntegralResult n) :
+    res.rationalDenote maps hn =
+      letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+      ratFuncBaseChange E (CFieldSpec.toK res.rational) := by
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+  unfold TowerIntegralResult.rationalDenote
+  symm
+  rw [toK_denseFrac_eq_fieldFrac, fieldFracP, ratFuncBaseChange_amG_div]
+
+/-- Rational evaluation distributes over composition of tower antiderivative pieces. -/
+theorem TowerIntegralResult.rationalDenote_add {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n ≤ N) (left right : TowerIntegralResult n) :
+    (left.add right).rationalDenote maps hn =
+      left.rationalDenote maps hn + right.rationalDenote maps hn := by
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+  rw [TowerIntegralResult.rationalDenote_eq_baseChange,
+    TowerIntegralResult.rationalDenote_eq_baseChange,
+    TowerIntegralResult.rationalDenote_eq_baseChange]
+  change ratFuncBaseChange E
+      (CFieldSpec.toK (CCommRing.add left.rational right.rational)) = _
+  rw [CFieldSpec.toK_add, map_add]
+
 /-- Evaluate logs created by the extension over `Kₙ` in a target field with maps through `Kₙ`. -/
 noncomputable def TowerLog.denote {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
     (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) : TowerLog (n + 1) → RatFunc E :=
@@ -173,6 +213,34 @@ termination_by n
 noncomputable def TowerLog.denoteSum {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
     (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) (logs : List (TowerLog (n + 1))) : RatFunc E :=
   (logs.map (TowerLog.denote maps hn)).sum
+
+/-- Log evaluation distributes over composition of tower antiderivative pieces. -/
+theorem TowerIntegralResult.denoteSum_add {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n ≤ N) (left right : TowerIntegralResult n) :
+    TowerLog.denoteSum maps hn (left.add right).logs =
+      TowerLog.denoteSum maps hn left.logs + TowerLog.denoteSum maps hn right.logs := by
+  simp only [TowerIntegralResult.add, TowerLog.denoteSum, List.map_append, List.sum_append]
+
+/-- The complete differentiated denotation of one tower antiderivative piece. -/
+noncomputable def TowerIntegralResult.derivDenote {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (Dt : DensePoly (DenseFracTower n))
+    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) (res : TowerIntegralResult n) : RatFunc E := by
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+  exact towerDerivExt Dt (res.rationalDenote maps hn) + TowerLog.denoteSum maps hn res.logs
+
+/-- Differentiated tower-result denotation distributes over reconstruction by addition. -/
+theorem TowerIntegralResult.derivDenote_add {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (Dt : DensePoly (DenseFracTower n))
+    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N)
+    (left right : TowerIntegralResult n) :
+    (left.add right).derivDenote Dt maps hn =
+      left.derivDenote Dt maps hn + right.derivDenote Dt maps hn := by
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+  unfold TowerIntegralResult.derivDenote
+  rw [TowerIntegralResult.rationalDenote_add, map_add,
+    TowerIntegralResult.denoteSum_add]
+  ring
 
 /-- Evaluating an inherited log agrees with evaluating its source-level syntax. -/
 theorem TowerLog.denote_inherited {n N : ℕ} {E : Type*}
@@ -420,6 +488,16 @@ theorem TowerIntegralResult.logsGenuine_ofLrtResult {n : ℕ}
   intro log hlog
   obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlog
   exact (List.all_eq_true.mp hres) source hsource
+
+/-- Composing two genuine tower antiderivative pieces preserves genuine-log validity. -/
+theorem TowerIntegralResult.logsGenuine_add {n : ℕ}
+    (left right : TowerIntegralResult n)
+    (hleft : left.LogsGenuine) (hright : right.LogsGenuine) :
+    (left.add right).LogsGenuine := by
+  intro log hlog
+  rcases List.mem_append.mp hlog with hlog | hlog
+  · exact hleft log hlog
+  · exact hright log hlog
 
 /-- Inheriting a genuine log list preserves its genuine-log condition. -/
 theorem towerLog_inheritAll_genuine {n : ℕ} (logs : List (TowerLog n))
