@@ -72,11 +72,11 @@ theorem nNormInv_result_is_logTMinus1_minus_x :
           && (res.logs.all (fun cv => DensePoly.cisZero (DensePoly.csub cv.2 nNormInvD)))
       | none => false) = true := by native_decide
 
-/-! ### The special + normal mix: `∫ (1/exp + 1/(exp−1)) = −1/exp + log(exp−1) − x`
+/-! ### The special + normal counterexample
 
-The combined driver on `f = 1/t + 1/(t−1) = (2t−1)/(t²−t)` over `ℚ(x)[t]` (`t = exp`, `η = 1`): the special
-part lands `−1/t`, the normal part `log(t−1) − x`, so `∫f = −1/t + log(t−1) − x`, satisfying
-`D(∫f) = f`. -/
+On `f = 1/t + 1/(t−1) = (2t−1)/(t²−t)` over `ℚ(x)[t]`, the old special-only
+driver omits the normal residual correction. The compositional `hyperexpRischLevel` owns the full
+canonical/special/normal recombination. -/
 
 /-- Integrand numerator `a = 2t − 1` for `f = (2t−1)/(t²−t) = 1/t + 1/(t−1)` over `DensePoly Lvl1`. -/
 def nSpecNormA : DensePoly Lvl1 := [CCommRing.neg CCommRing.one, CCommRing.add CCommRing.one CCommRing.one]
