@@ -179,6 +179,30 @@ class CompleteCRecursiveElementaryIntegratorWith {α : Type u} [CField α] [CFie
   complete : ∀ c, domain c → IsCoefficientElementarilyIntegrableWith derivation diffK c →
     ∃ fuel res, C.integrate fuel c = some res
 
+/-- The exact semantic acceptance domain of a checked explicit coefficient candidate. -/
+def checkedRecursiveElementaryIntegratorWithDomain
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    (raw : CRecursiveElementaryIntegratorWith α derivation) :
+    RecursiveElementaryDomainWith α := fun c =>
+  ∃ fuel res, raw.integrate fuel c = some res ∧
+    IsCoefficientIntegralResultWith derivation diffK c res
+
+/-- A checked explicit coefficient candidate is relatively complete on its exact certified domain. -/
+instance instCompleteCRecursiveElementaryIntegratorWithChecked
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    [LawfulCFieldDerivation α derivation diffK]
+    (raw : CRecursiveElementaryIntegratorWith α derivation) :
+    @CompleteCRecursiveElementaryIntegratorWith α _ _ derivation diffK
+      (checkedRecursiveElementaryIntegratorWith derivation raw)
+      (checkedRecursiveElementaryIntegratorWithDomain derivation diffK raw)
+      (instLawfulCRecursiveElementaryIntegratorWithChecked derivation diffK raw) where
+  complete c hdomain _ := by
+    obtain ⟨fuel, result, hrun, hresult⟩ := hdomain
+    have hcheck := coefficientIntegralResultCheckWith_of_isCoefficientIntegralResultWith
+      derivation diffK c result hresult
+    refine ⟨fuel, result, ?_⟩
+    simp [checkedRecursiveElementaryIntegratorWith, hrun, hcheck]
+
 /-- Export an explicit recursive elementary coefficient solver as a common remainder stage. -/
 noncomputable def CRecursiveElementaryIntegratorWith.asRemainderIntegrationStage
     {α : Type u} [CField α] [CFieldSpec.{u,v} α]

@@ -151,6 +151,44 @@ noncomputable def SparseRischStage.asIntegrationStage (S : SparseRischStage n) :
     exact CompleteCRischLevel.relative_complete input.Dt input.num input.den hdomain
       input.den_nonzero hintegrable
 
+/-- Export a certified dense implementation as the common output-remainder stage. -/
+noncomputable def DenseRischStage.asRemainderIntegrationStage (S : DenseRischStage n) :
+    RemainderIntegrationStage (RischStageInput DensePoly (DenseFracTower n))
+      (IntegralResult (DenseFracTower n)) Unit
+      (fun input => IsRischLevelIntegrable input.Dt input.num input.den)
+      (fun input result _ => IsGenuineRischStageResult input result) :=
+  { stage :=
+      { run := fun fuel input =>
+          (S.asIntegrationStage.run fuel input).map fun output => ⟨output, ()⟩
+        domain := S.asIntegrationStage.domain
+        sound := by
+          intro fuel input result hdomain hrun
+          obtain ⟨output, houtput, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          exact S.asIntegrationStage.sound fuel input output hdomain houtput
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨fuel, output, hrun⟩ := S.asIntegrationStage.complete input hdomain hintegrable
+          exact ⟨fuel, ⟨output, ()⟩, by simp [hrun]⟩ } }
+
+/-- Export a certified sparse implementation as the same common output-remainder stage. -/
+noncomputable def SparseRischStage.asRemainderIntegrationStage (S : SparseRischStage n) :
+    RemainderIntegrationStage (RischStageInput CPoly.SparsePoly (DenseFracTower n))
+      (IntegralResult (DenseFracTower n) CPoly.SparsePoly) Unit
+      (fun input => IsRischLevelIntegrable input.Dt input.num input.den)
+      (fun input result _ => IsGenuineRischStageResult input result) :=
+  { stage :=
+      { run := fun fuel input =>
+          (S.asIntegrationStage.run fuel input).map fun output => ⟨output, ()⟩
+        domain := S.asIntegrationStage.domain
+        sound := by
+          intro fuel input result hdomain hrun
+          obtain ⟨output, houtput, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          exact S.asIntegrationStage.sound fuel input output hdomain houtput
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨fuel, output, hrun⟩ := S.asIntegrationStage.complete input hdomain hintegrable
+          exact ⟨fuel, ⟨output, ()⟩, by simp [hrun]⟩ } }
+
 /-- The recursive elementary coefficient domain induced by a certified lower dense Risch level. -/
 def DenseRischStage.coefficientDomain (S : DenseRischStage n) :
     RecursiveElementaryDomain (α := DenseFrac (DenseFracTower n)) :=
