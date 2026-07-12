@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
+import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialPresentation
 
 /-! # Explicit-differential Hermite stage interface
 
@@ -28,6 +29,14 @@ structure MonomialDifferentialContext {P : Type u → Type u} [CPoly P]
   algebraQ : Algebra ℚ (CFieldSpec.K α)
 
 namespace MonomialDifferentialContext
+
+/-- Extract the explicit stage context selected by a finite differential tower presentation. -/
+noncomputable def ofTowerPresentation (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N) :
+    MonomialDifferentialContext (P := DensePoly) (DenseFracTower n) where
+  derivation := T.derivation n hn
+  differential := T.differential n hn
+  lawful := T.lawful n hn
+  algebraQ := inferInstance
 
 /-- The polynomial differential induced by the selected coefficient differential and monomial derivative. -/
 @[reducible] noncomputable def polynomialDifferential {P : Type u → Type u} [CPoly P] [CPolyEngine P]
