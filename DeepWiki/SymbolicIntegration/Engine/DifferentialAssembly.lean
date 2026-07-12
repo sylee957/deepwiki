@@ -133,4 +133,81 @@ noncomputable def CDifferentialPolynomialReduction.asPolynomialSpecialRemainderS
       refine ⟨next.polynomial, hhandoff.1, ?_⟩
       simpa [hhandoff.2.1, hhandoff.2.2.1, hhandoff.2.2.2] using hspecial)
 
+/-- Reindex the explicit polynomial-special branch to a complete one-level split. -/
+noncomputable def CDifferentialPolynomialReduction.asOneLevelBranchStage
+    (C : MonomialDifferentialContext (P := P) α)
+    (R : CDifferentialPolynomialReduction P α C.derivation)
+    (polynomialDomain : DifferentialPolynomialReductionDomain P α)
+    [LawfulCDifferentialPolynomialReduction (P := P) C.derivation C.differential R]
+    [CompleteCDifferentialPolynomialReduction (P := P) C.derivation C.differential R polynomialDomain]
+    (specialDomain : MonomialSpecialDomain P α)
+    [CDifferentialMonomialSpecial P α C.derivation]
+    [LawfulCDifferentialMonomialSpecial C]
+    [CompleteCDifferentialMonomialSpecial C specialDomain] :
+    RemainderIntegrationStage (OneLevelBranchInput P α) (P α × IntegralResult α P) Unit
+      (fun input =>
+        (∃ out, IsDifferentialPolynomialReduction (P := P) (α := α) C.differential
+          input.kind input.derivative input.polynomial out) ∧
+        ∀ antiderivative next,
+          IsDifferentialPolynomialSpecialHandoff C input.toPolynomialSpecialInput antiderivative next →
+            ∃ result, IsDifferentialMonomialSpecialResult C next.derivative next.polynomial
+              next.specialNum next.specialDen result)
+      (fun input output _ =>
+        IsDifferentialPolynomialSpecialAssembly C input.toPolynomialSpecialInput output.1 output.2) :=
+  (CDifferentialPolynomialReduction.asPolynomialSpecialRemainderStage C R polynomialDomain
+    specialDomain).precompose
+    OneLevelBranchInput.toPolynomialSpecialInput
+
+/-- Reindex the explicit normal branch to a complete one-level split. -/
+noncomputable def CDifferentialNormalReduction.asOneLevelBranchStage
+    (C : MonomialDifferentialContext (P := P) α)
+    (normalDomain : DifferentialNormalReductionDomain P α)
+    [CDifferentialNormalReduction P α C.derivation]
+    [LawfulCDifferentialNormalReduction C normalDomain]
+    [CompleteCDifferentialNormalReduction C normalDomain]
+    [CDifferentialNormalPostprocessor P α C.derivation]
+    [LawfulCDifferentialNormalPostprocessor C]
+    [CompleteCDifferentialNormalPostprocessor C] :
+    RemainderIntegrationStage (OneLevelBranchInput P α) (IntegralResult α P) Unit
+      (fun input => IsDifferentialNormalPartIntegrable C input.derivative input.normalNum input.normalDen)
+      (fun input result _ =>
+        CertifiedDifferentialNormalResult C input.derivative input.normalNum input.normalDen result) :=
+  (CDifferentialNormalReduction.asPostprocessedRemainderStage C normalDomain).precompose
+    OneLevelBranchInput.toNormalReductionInput
+
+/-- Run the explicit polynomial-special and postprocessed-normal branches independently. -/
+noncomputable def CDifferentialPolynomialReduction.asParallelOneLevelBranchStage
+    (C : MonomialDifferentialContext (P := P) α)
+    (R : CDifferentialPolynomialReduction P α C.derivation)
+    (polynomialDomain : DifferentialPolynomialReductionDomain P α)
+    [LawfulCDifferentialPolynomialReduction (P := P) C.derivation C.differential R]
+    [CompleteCDifferentialPolynomialReduction (P := P) C.derivation C.differential R polynomialDomain]
+    (specialDomain : MonomialSpecialDomain P α)
+    [CDifferentialMonomialSpecial P α C.derivation]
+    [LawfulCDifferentialMonomialSpecial C]
+    [CompleteCDifferentialMonomialSpecial C specialDomain]
+    (normalDomain : DifferentialNormalReductionDomain P α)
+    [CDifferentialNormalReduction P α C.derivation]
+    [LawfulCDifferentialNormalReduction C normalDomain]
+    [CompleteCDifferentialNormalReduction C normalDomain]
+    [CDifferentialNormalPostprocessor P α C.derivation]
+    [LawfulCDifferentialNormalPostprocessor C]
+    [CompleteCDifferentialNormalPostprocessor C] :
+    RemainderIntegrationStage (OneLevelBranchInput P α)
+      ((P α × IntegralResult α P) × IntegralResult α P) (Unit × Unit)
+      (fun input =>
+        ((∃ out, IsDifferentialPolynomialReduction (P := P) (α := α) C.differential
+          input.kind input.derivative input.polynomial out) ∧
+          ∀ antiderivative next,
+            IsDifferentialPolynomialSpecialHandoff C input.toPolynomialSpecialInput antiderivative next →
+              ∃ result, IsDifferentialMonomialSpecialResult C next.derivative next.polynomial
+                next.specialNum next.specialDen result) ∧
+          IsDifferentialNormalPartIntegrable C input.derivative input.normalNum input.normalDen)
+      (fun input output _ =>
+        IsDifferentialPolynomialSpecialAssembly C input.toPolynomialSpecialInput output.1.1 output.1.2 ∧
+          CertifiedDifferentialNormalResult C input.derivative input.normalNum input.normalDen output.2) := by
+  let special := CDifferentialPolynomialReduction.asOneLevelBranchStage C R polynomialDomain specialDomain
+  let normal := CDifferentialNormalReduction.asOneLevelBranchStage C normalDomain
+  exact special.product normal
+
 end DeepWiki.SymbolicIntegration
