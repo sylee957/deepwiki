@@ -1,6 +1,6 @@
 import DeepWiki.Algebra.PolynomialDivisibility
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
-import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
+import DeepWiki.SymbolicIntegration.Engine.PolynomialBranchSoundness
 
 /-! # Tower Hermite step identities
 

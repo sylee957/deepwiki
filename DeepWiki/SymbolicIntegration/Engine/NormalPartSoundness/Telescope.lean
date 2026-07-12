@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
+import DeepWiki.SymbolicIntegration.Engine.PolynomialBranchSoundness
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
 /-! # Hermite normal-part telescoping

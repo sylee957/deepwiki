@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.RischFieldSpec
-import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
+import DeepWiki.SymbolicIntegration.Engine.PolynomialBranchSoundness
 
 /-! # RDE structural decomposition
 

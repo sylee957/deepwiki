@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
+import DeepWiki.SymbolicIntegration.Engine.PolynomialBranchSoundness
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Engine.NormalPartSoundness.Telescope
 import DeepWiki.SymbolicIntegration.Engine.NormalPartSoundness.Properness

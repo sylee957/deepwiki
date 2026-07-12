@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
+import DeepWiki.SymbolicIntegration.Engine.PolynomialBranchSoundness
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
 import DeepWiki.SymbolicIntegration.Engine.ResidueSource

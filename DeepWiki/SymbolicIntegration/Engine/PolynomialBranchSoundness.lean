@@ -2,12 +2,11 @@ import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEWellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance
 
-/-! # Checker-free soundness of the integrator's polynomial branch
+/-! # Polynomial-branch soundness
 
-Abstract correctness of the `b = 0` primitive-integration arm and the cancellation cases of the
-poly-Risch-DE dispatcher: the antiderivative `CPoly.antiderivative` differentiates back to its integrand,
-the output passes `checkIdentity` provably (never executed), and the field-level identity
-`D(∫fₚ) = fₚ` follows through `field_identity_of_checkIdentityG`. -/
+Soundness of the `b = 0` primitive-integration arm and the cancellation cases of the
+polynomial Risch-DE dispatcher. The antiderivative differentiates back to its integrand and the
+field-level identity follows through `field_identity_of_checkIdentityG`. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -104,9 +103,9 @@ theorem checkIdentityG_antiderivative_const [CharZero (CFieldSpec.K α)] (c : De
     Derivation.map_one_eq_zero]
   ring
 
-/-! ### The one-shot: compose the crux with the field bridge -/
+/-! ### The polynomial-branch: compose the crux with the field bridge -/
 
-/-- Checker-free one-shot `D(∫ fₚ) = fₚ` (polynomial branch): over a constant base, the antiderivative
+/-- Checker-free polynomial-branch `D(∫ fₚ) = fₚ` (polynomial branch): over a constant base, the antiderivative
 `g = am(toPoly (CPoly.antiderivative c))/am 1` satisfies
 `towerFractionFieldDeriv [1] g + logResidueSum [1] [] = am(toPoly c)/am 1`, obtained by feeding the
 abstractly-proven `checkIdentity = true` into `field_identity_of_checkIdentityG`. -/
@@ -135,7 +134,7 @@ theorem cPolyRischDEG_nil_eq [CRischField α] (Dt : DensePoly α) (c : DensePoly
   simp only [DensePoly.cPolyRischDE, hb, if_true, hc, Bool.false_eq_true, if_false]
   rw [if_neg (by omega : ¬ (DensePoly.cdeg c : ℤ) + 1 > n)]
 
-/-- Checker-free one-shot keyed on `cPolyRischDE`: if `cPolyRischDE [CCommRing.one] [] c n = some q`
+/-- Checker-free polynomial-branch keyed on `cPolyRischDE`: if `cPolyRischDE [CCommRing.one] [] c n = some q`
 (nonzero `c` within the degree budget, constant base), then
 `towerFractionFieldDeriv [1] (am(toPoly q)/am 1) = am(toPoly c)/am 1` holds, no `checkIdentity`
 executed. -/
@@ -219,7 +218,7 @@ theorem cPolyRischDEG_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra �
 /-! ### The deliverable at the level-1 carrier `α = DenseFrac ℚ = ℚ(x)` -/
 
 /-- `CharZero (CFieldSpec.K (DenseFrac ℚ))` via `RatFunc ℚ`: local instance for the polynomial-branch
-one-shot over the carrier abbreviation. -/
+polynomial-branch over the carrier abbreviation. -/
 noncomputable local instance : CharZero (CFieldSpec.K (DenseFrac ℚ)) :=
   inferInstanceAs (CharZero (RatFunc ℚ))
 
@@ -227,7 +226,7 @@ noncomputable local instance : CharZero (CFieldSpec.K (DenseFrac ℚ)) :=
 noncomputable local instance : Algebra ℚ (CFieldSpec.K (DenseFrac ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
-/-- Fuel-free checker-free one-shot at `α = DenseFrac ℚ`: if `cPolyRischDE [CCommRing.one] [] c n = some q`
+/-- Fuel-free checker-free polynomial-branch at `α = DenseFrac ℚ`: if `cPolyRischDE [CCommRing.one] [] c n = some q`
 over `ℚ(x) = DenseFrac ℚ` (nonzero `c` within the degree budget, constant base), then
 `towerFractionFieldDeriv [1] (am(toPoly q)/am 1) = am(toPoly c)/am 1` over `RatFunc ℚ`. The
 `DenseFrac ℚ` instance of `field_identity_of_cPolyRischDEG`. -/
