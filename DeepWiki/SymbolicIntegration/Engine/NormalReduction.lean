@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
+import DeepWiki.SymbolicIntegration.Engine.Tower.Stage
 
 /-! # Representation-independent normal-part reduction
 
@@ -24,6 +25,18 @@ structure CNormalReduction (P : Type u → Type u) [CPoly P] [CPolyEngine P]
 
 /-- Semantic domain predicate for a represented normal-reduction operation. -/
 abbrev NormalReductionDomain (P : Type u → Type u) (α : Type u) := P α → P α → P α → Prop
+
+/-- The input supplied to a normal-reduction remainder stage. -/
+structure NormalReductionInput (P : Type u → Type u) [CPoly P]
+    (α : Type u) [CField α] [CFieldSpec α] where
+  /-- The selected monomial derivative. -/
+  derivative : P α
+  /-- Numerator of the normal rational part. -/
+  numerator : P α
+  /-- Denominator of the normal rational part. -/
+  denominator : P α
+  /-- The represented denominator denotes a nonzero polynomial. -/
+  denominator_nonzero : CPoly.toPoly denominator ≠ 0
 
 /-- Compose Hermite reduction and residue-logarithm extraction for a normal rational part. -/
 def reduceNormal [CHermiteReduction P α] [CResidueSource P α] [CResidueLogPart P α]
@@ -80,6 +93,36 @@ class CompleteCNormalReduction (N : CNormalReduction P α)
   relative_complete : ∀ (Dt a d : P α),
     domain Dt a d → CPoly.toPoly d ≠ 0 → IsNormalPartIntegrable Dt a d →
       ∃ out, N.reduce Dt a d = some out ∧ CertifiedNormalResult Dt a d out
+
+/-- The representation-neutral remainder stage exported by a certified normal reducer. -/
+noncomputable def CNormalReduction.asRemainderIntegrationStage
+    (N : CNormalReduction P α) (domain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N domain] [LawfulGenuineCNormalReduction N domain]
+    [CompleteCNormalReduction N domain] :
+    RemainderIntegrationStage (NormalReductionInput P α) (IntegralResult α P) Unit
+      (fun input => IsNormalPartIntegrable input.derivative input.numerator input.denominator)
+      (fun input result _ =>
+        CertifiedNormalResult input.derivative input.numerator input.denominator result) :=
+  { stage :=
+      { run := fun _ input => (N.reduce input.derivative input.numerator input.denominator).map fun out =>
+          ⟨out, ()⟩
+        domain := fun input => domain input.derivative input.numerator input.denominator
+        sound := by
+          intro _ input result hdomain hrun
+          obtain ⟨out, hout, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          refine ⟨LawfulCNormalReduction.sound input.derivative input.numerator input.denominator out
+            hdomain input.denominator_nonzero hout, ?_, ?_, ?_⟩
+          · exact LawfulCNormalReduction.rationalDen_nonzero input.derivative input.numerator
+              input.denominator out hdomain input.denominator_nonzero hout
+          · exact LawfulGenuineCNormalReduction.coefficients_constant input.derivative input.numerator
+              input.denominator out hdomain input.denominator_nonzero hout
+          · exact LawfulGenuineCNormalReduction.arguments_nonzero input.derivative input.numerator
+              input.denominator out hdomain input.denominator_nonzero hout
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨out, hrun, _⟩ := CompleteCNormalReduction.relative_complete (N := N)
+            input.derivative input.numerator input.denominator hdomain input.denominator_nonzero hintegrable
+          exact ⟨0, ⟨out, ()⟩, by simp [hrun]⟩ } }
 
 /-- Executable certificate that a normal-reduction result has valid denominators, arguments, and identity. -/
 def normalReductionCheck (Dt a d : P α) (out : IntegralResult α P) : Bool :=
