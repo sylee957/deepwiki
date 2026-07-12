@@ -60,8 +60,10 @@ combines their denotations only at the reconstruction theorem.
    then prove their local soundness and relative completeness by composition.
    `Tower/LogTower.lean` now supplies the required depth-indexed syntax:
    `TowerLog.inherited` preserves a lower ordinary or LRT log at its own field
-   level, and the ordinary/LRT embeddings preserve genuine-log evidence. The
-   next theorem is its semantic lift through one successor fraction field.
+   level, while each local node retains the monomial derivative of the
+   extension that created it. The ordinary/LRT embeddings preserve genuine-log
+   evidence. The next theorem is its semantic lift through one successor
+   fraction field.
 5. Make the concrete tangent and hyperexponential successor constructors consume
    the complete lower `LayeredTranscendentalLevel` that
    `LayeredTranscendentalTowerScheme` now supplies. Their lower adapter must

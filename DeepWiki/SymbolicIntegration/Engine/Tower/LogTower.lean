@@ -11,19 +11,20 @@ namespace DeepWiki.SymbolicIntegration
 /-- A Liouville logarithm living in the denotation field at a finite dense-tower depth. -/
 inductive TowerLog : (n : ℕ) → Type
   /-- An ordinary logarithm created by the extension from depth `n` to depth `n + 1`. -/
-  | ordinary (coefficient : DenseFracTower n) (argument : DensePoly (DenseFracTower n)) :
+  | ordinary (derivative : DensePoly (DenseFracTower n))
+      (coefficient : DenseFracTower n) (argument : DensePoly (DenseFracTower n)) :
       TowerLog (n + 1)
   /-- A root-free LRT family created by the extension from depth `n` to depth `n + 1`. -/
-  | lrt (residue : DensePoly (DenseFracTower n))
+  | lrt (derivative : DensePoly (DenseFracTower n)) (residue : DensePoly (DenseFracTower n))
       (argument : List (DensePoly (DenseFracTower n))) : TowerLog (n + 1)
   /-- A logarithm inherited unchanged from the preceding tower depth. -/
   | inherited : TowerLog n → TowerLog (n + 1)
 
 /-- The syntactic genuine-log condition appropriate to a recursive tower log. -/
 def TowerLog.IsGenuine : ∀ {n : ℕ}, TowerLog n → Prop
-  | _, .ordinary coefficient argument =>
+  | _, .ordinary _ coefficient argument =>
       CFieldSpec.toK (CDiffField.cderiv coefficient) = 0 ∧ CPoly.toPoly argument ≠ 0
-  | _, .lrt residue _ =>
+  | _, .lrt _ residue _ =>
       CPolyEngine.cisZero (CPolyEngine.mapDeriv (CPolyEngine.cmonic residue)) = true
   | _, .inherited log => log.IsGenuine
 
@@ -39,16 +40,18 @@ def TowerIntegralResult.LogsGenuine {n : ℕ} (res : TowerIntegralResult n) : Pr
   ∀ log ∈ res.logs, log.IsGenuine
 
 /-- Embed an ordinary result as local logs at the successor tower depth. -/
-noncomputable def TowerIntegralResult.ofIntegralResult {n : ℕ} (res : IntegralResult (DenseFracTower n)) :
+noncomputable def TowerIntegralResult.ofIntegralResult {n : ℕ} (derivative : DensePoly (DenseFracTower n))
+    (res : IntegralResult (DenseFracTower n)) :
     TowerIntegralResult n where
   rational := CField.div (CFrac.ofPoly res.rational.1) (CFrac.ofPoly res.rational.2)
-  logs := res.logs.map fun log => .ordinary log.1 log.2
+  logs := res.logs.map fun log => .ordinary derivative log.1 log.2
 
 /-- Embed a root-free result as local LRT logs at the successor tower depth. -/
-noncomputable def TowerIntegralResult.ofLrtResult {n : ℕ} (res : LrtResult (DenseFracTower n)) :
+noncomputable def TowerIntegralResult.ofLrtResult {n : ℕ} (derivative : DensePoly (DenseFracTower n))
+    (res : LrtResult (DenseFracTower n)) :
     TowerIntegralResult n where
   rational := CField.div (CFrac.ofPoly res.rational.1) (CFrac.ofPoly res.rational.2)
-  logs := res.logs.map fun log => .lrt log.1 log.2
+  logs := res.logs.map fun log => .lrt derivative log.1 log.2
 
 /-- Lift a log list unchanged through one new tower extension. -/
 def TowerLog.inheritAll {n : ℕ} (logs : List (TowerLog n)) : List (TowerLog (n + 1)) :=
@@ -56,19 +59,20 @@ def TowerLog.inheritAll {n : ℕ} (logs : List (TowerLog n)) : List (TowerLog (n
 
 /-- Genuine ordinary one-level logs remain genuine in the recursive syntax. -/
 theorem TowerIntegralResult.logsGenuine_ofIntegralResult {n : ℕ}
-    (res : IntegralResult (DenseFracTower n))
+    (derivative : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
     (hconstants : ∀ log ∈ res.logs,
       CFieldSpec.toK (CDiffField.cderiv log.1) = 0)
     (hargs : ∀ log ∈ res.logs, CPoly.toPoly log.2 ≠ 0) :
-    (TowerIntegralResult.ofIntegralResult res).LogsGenuine := by
+    (TowerIntegralResult.ofIntegralResult derivative res).LogsGenuine := by
   intro log hlog
   obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlog
   exact ⟨hconstants source hsource, hargs source hsource⟩
 
 /-- Genuine root-free one-level logs remain genuine in the recursive syntax. -/
 theorem TowerIntegralResult.logsGenuine_ofLrtResult {n : ℕ}
-    (res : LrtResult (DenseFracTower n)) (hres : AllResiduesConstantLrt res) :
-    (TowerIntegralResult.ofLrtResult res).LogsGenuine := by
+    (derivative : DensePoly (DenseFracTower n)) (res : LrtResult (DenseFracTower n))
+    (hres : AllResiduesConstantLrt res) :
+    (TowerIntegralResult.ofLrtResult derivative res).LogsGenuine := by
   intro log hlog
   obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlog
   exact (List.all_eq_true.mp hres) source hsource
