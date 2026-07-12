@@ -52,6 +52,7 @@ import DeepWiki.SymbolicIntegration.Engine.LimitedIntegrateSingleExamples
 import DeepWiki.SymbolicIntegration.Engine.Parallel
 import DeepWiki.SymbolicIntegration.Engine.Parametric
 import DeepWiki.SymbolicIntegration.Engine.PolyPartTower
+import DeepWiki.SymbolicIntegration.Engine.PolyPartTowerComplete
 import DeepWiki.SymbolicIntegration.Engine.PolyPartTowerExamples
 import DeepWiki.SymbolicIntegration.Engine.PrimitiveGuarded
 import DeepWiki.SymbolicIntegration.Engine.PrimitiveLrtDecision
