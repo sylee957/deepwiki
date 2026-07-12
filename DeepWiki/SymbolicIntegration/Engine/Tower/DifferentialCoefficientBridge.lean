@@ -24,14 +24,19 @@ noncomputable def towerOfPoly (n : ℕ) (p : DensePoly (DenseFracTower n)) :
     DenseFracTower (n + 1) :=
   CFrac.ofPoly (F := DenseFrac) p
 
+/-- Lift logarithmic coefficient/argument pairs into the packaged successor fraction carrier. -/
+noncomputable def liftTowerLogs (n : ℕ)
+    (logs : List (DenseFracTower n × DensePoly (DenseFracTower n))) :
+    List (DenseFracTower (n + 1) × DenseFracTower (n + 1)) :=
+  logs.map fun cv => (towerOfPoly n [cv.1], towerOfPoly n cv.2)
+
 /-- Lift a lower integral result into successor coefficient data with an explicit rational-denominator certificate. -/
 noncomputable def liftRischResultToTowerCoefficient (n : ℕ)
     (res : IntegralResult (DenseFracTower n))
     (hden : CPolyEngine.cisZero res.rational.2 = false) :
     CoefficientIntegralResult (DenseFracTower (n + 1)) where
   rational := CFrac.ofFraction (F := DenseFrac) res.rational.1 res.rational.2 hden
-  logs := res.logs.map fun cv =>
-    (towerOfPoly n [cv.1], towerOfPoly n cv.2)
+  logs := liftTowerLogs n res.logs
 
 /-- The lifted rational part denotes the lower integral result's rational function in the packaged successor field. -/
 theorem toK_liftRischResultToTowerCoefficient_rational (n : ℕ)
@@ -95,6 +100,29 @@ theorem differential_deriv_towerOfPoly
   change extendDeriv (Differential.implicitDeriv (CPoly.toPoly (T.monomialDerivative n hn)))
       (CFrac.toRatFunc (CFrac.ofPoly (F := DenseFrac) p)) = _
   rw [CFrac.toRatFunc_ofPoly]
+  rfl
+
+/-- One lifted coefficient logarithm has the preceding presentation's explicit log-residue value. -/
+theorem coefficientLogTerm_towerOfPoly
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n + 1 ≤ N)
+    (c : DenseFracTower n) (p : DensePoly (DenseFracTower n)) :
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    let C := T.context n hprev
+    CFieldSpec.toK (towerOfPoly n [c]) *
+        (@Differential.deriv _ _ (T.differential (n + 1) hn)
+          (CFieldSpec.toK (towerOfPoly n p)) /
+          CFieldSpec.toK (towerOfPoly n p)) =
+      CFrac.am (DenseFracTower n) (Polynomial.C (CFieldSpec.toK c)) *
+        (C.fractionDeriv (T.monomialDerivative n hn)
+          (CFrac.am (DenseFracTower n) (CPoly.toPoly p)) /
+          CFrac.am (DenseFracTower n) (CPoly.toPoly p)) := by
+  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+  let C := T.context n hprev
+  rw [differential_deriv_towerOfPoly T n hn p]
+  rw [toK_towerOfPoly n p]
+  rw [toK_towerOfPoly n ([c] : DensePoly (DenseFracTower n))]
+  rw [toPoly_list_eq]
+  simp only [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil, toR_eq_toK, mul_zero, add_zero]
   rfl
 
 /-- The legacy dense lift has the packaged successor tower's rational-function denotation. -/
