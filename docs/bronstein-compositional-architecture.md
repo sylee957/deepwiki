@@ -63,9 +63,11 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   `hermiteResidueNormalReduction` realizes the interface, with separate soundness and completeness domains.
 - `hyperexpCheckedNormalReduction` realizes the same soundness interface for dense residual-feedback
   hyperexponential normal integration. It validates the candidate-driven output by checking its denominator,
-  logarithm arguments, and full identity; it intentionally has no completeness instance.
+  logarithm arguments, and full identity; its relative-completeness contract is explicitly limited to
+  raw outputs accepted by those checks.
 - `hyperexpRischLevel` composes that normal stage with the checked Laurent special stage and an arbitrary
-  lawful polynomial reducer, yielding a dense sound hyperexponential one-level realization.
+  polynomial reducer. Its soundness and relative-completeness theorems follow from the selected stage
+  contracts; completeness is limited to the explicit checked special and normal acceptance domains.
 - `assembleOneLevel` is the executable representation-neutral Figure-5.1 spine: canonical split,
   polynomial and special integration, an injected normal reducer, monomial-specific normal postprocessing,
   and recombination.
@@ -80,8 +82,8 @@ depends only on executable stage interfaces and `Lawful…` contracts.
   guard does not claim `CompleteCMonomialCase`; the former standalone dense driver and redundant wrapper
   theorem have been retired.
 - The checked hyperexponential monomial operation validates its Laurent special result before exposing it,
-  uses exact normal-result passthrough, and supplies a lawful monomial capability. Its former standalone
-  dense driver and redundant wrapper theorem have been retired.
+  uses exact normal-result passthrough, and supplies lawful plus acceptance-domain complete monomial
+  capabilities. Its former standalone dense driver and redundant wrapper theorem have been retired.
 - `denseMonomialCaseAsSparse` transports any lawful dense monomial specialization to a lawful sparse one.
   `sparseRischLevel` composes that hook with sparse canonical, Hermite, residue-log, and generic polynomial
   reduction stages into a sound sparse Figure-5.1 level.
