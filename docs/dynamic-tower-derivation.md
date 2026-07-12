@@ -116,8 +116,10 @@ tower orchestration path. `DenseRischTowerScheme.asPrimitivePresentationTowerSch
 static dense prefix through that same boundary; it is an explicit compatibility migration path, not
 a replacement for bridge-aware mixed-tower recursion.
 
-1. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
-   presentation.
+1. Rebuild the ordinary/LRT realization adapters over an explicit presentation only after their
+   recursive log output has a presentation-indexed semantic contract. The old
+   `asPresentationTowerCoefficientStage` façade has been retired: matching only a monomial
+   polynomial does not change the static carrier's inherited coefficient derivative.
 2. Use the selected lower derivative identity in the recursive tangent finish theorem and connect
    the resulting successor constructor to `DifferentialTranscendentalTowerScheme`.
 3. Audit and retire the static `DenseFracTower` orchestration paths once callers use the new
@@ -135,3 +137,26 @@ primitive compatibility paths is currently intentional.
 
 This is a design correction, not a proof gap: continuing with the static carrier would make a
 mixed-tower soundness claim false in its intended semantics.
+
+## Ultimate completion contract
+
+The migration is complete only when the following code-level statement is true.
+
+```text
+For every finite `DifferentialTowerPresentation T`, the common tower stage is built by
+composition of certified polynomial reduction, normal/Hermite reduction, monomial-special
+integration, recursive coefficient integration, and logarithmic reconstruction.  At every level,
+accepted results satisfy the selected differential identity, all logarithmic coefficients are
+constants, and all logarithmic arguments are nonzero.  The corresponding local relative-
+completeness assumptions compose to `DifferentialTranscendentalTowerScheme.stage_complete`.
+
+Primitive (`t' = 1`), exponential (`t' = t`), and tangent (`t' = t² + 1`) presentations each
+instantiate this common contract.  Dense and sparse implementations enter only through certified
+adapters.  Static `DenseFracTower` APIs remain solely as explicitly named all-primitive
+compatibility adapters, or are removed after `scripts/wiki rdeps` confirms they have no callers.
+```
+
+Claude Code continuation rule: work from this contract backward; do not call the migration complete
+merely because a legacy static tower is gated.  For every deletion or API demotion, rebuild the wiki
+graph, audit callers, gate changes serially with `scripts/check.sh`, and retain a stable import only
+when it is an intentional compatibility boundary.
