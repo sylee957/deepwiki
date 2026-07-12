@@ -186,6 +186,95 @@ noncomputable def CPolynomialReduction.asPolynomialSpecialRemainderStage
       refine ⟨next.polynomial, hpoly, ?_⟩
       simpa [hderivative, hnum, hden] using hspecial)
 
+/-- The two independent canonical branches supplied to the one-level remainder pipeline. -/
+structure OneLevelBranchInput (P : Type u → Type u) [CPoly P]
+    (α : Type u) [CField α] [CFieldSpec α] where
+  /-- Requested polynomial-reduction form. -/
+  kind : PolynomialReductionKind
+  /-- Derivative of the current monomial. -/
+  derivative : P α
+  /-- Polynomial branch of the canonical decomposition. -/
+  polynomial : P α
+  /-- Special-branch numerator. -/
+  specialNum : P α
+  /-- Special-branch denominator. -/
+  specialDen : P α
+  /-- Normal-branch numerator. -/
+  normalNum : P α
+  /-- Normal-branch denominator. -/
+  normalDen : P α
+  /-- The special denominator is nonzero. -/
+  specialDen_nonzero : CPoly.toPoly specialDen ≠ 0
+  /-- The normal denominator is nonzero. -/
+  normalDen_nonzero : CPoly.toPoly normalDen ≠ 0
+
+/-- View the polynomial-special half of a canonical split as its typed pipeline input. -/
+def OneLevelBranchInput.toPolynomialSpecialInput (input : OneLevelBranchInput P α) :
+    PolynomialSpecialInput P α :=
+  ⟨input.kind, input.derivative, input.polynomial, input.specialNum, input.specialDen,
+    input.specialDen_nonzero⟩
+
+/-- View the normal half of a canonical split as its typed reduction input. -/
+def OneLevelBranchInput.toNormalReductionInput (input : OneLevelBranchInput P α) :
+    NormalReductionInput P α :=
+  ⟨input.derivative, input.normalNum, input.normalDen, input.normalDen_nonzero⟩
+
+/-- The two branch certificates retained before their final rational-and-logarithmic reconstruction. -/
+def IsOneLevelBranchAssembly (input : OneLevelBranchInput P α)
+    (polynomialSpecial : P α × IntegralResult α P) (normal : IntegralResult α P) : Prop :=
+  IsPolynomialSpecialAssembly input.toPolynomialSpecialInput polynomialSpecial.1 polynomialSpecial.2 ∧
+    CertifiedNormalResult input.derivative input.normalNum input.normalDen normal
+
+/-- Reindex the polynomial-special pipeline to the polynomial half of a canonical split. -/
+noncomputable def CPolynomialReduction.asOneLevelBranchStage
+    (C : CPolynomialReduction P α) (polynomialDomain : PolynomialReductionDomain P α)
+    [LawfulCPolynomialReduction C] [CompleteCPolynomialReduction C polynomialDomain]
+    (M : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase M] [LawfulGenuineCMonomialCase M]
+    [CompleteCMonomialCase M specialDomain] :
+    RemainderIntegrationStage (OneLevelBranchInput P α) (P α × IntegralResult α P) Unit
+      (fun input => IsPolynomialSpecialIntegrable input.toPolynomialSpecialInput)
+      (fun input output _ =>
+        IsPolynomialSpecialAssembly input.toPolynomialSpecialInput output.1 output.2) :=
+  (C.asPolynomialSpecialRemainderStage polynomialDomain M specialDomain).precompose
+    OneLevelBranchInput.toPolynomialSpecialInput
+
+/-- Reindex the postprocessed normal pipeline to the normal half of a canonical split. -/
+noncomputable def CNormalReduction.asOneLevelBranchStage
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [LawfulGenuineCNormalReduction N normalDomain]
+    [CompleteCNormalReduction N normalDomain]
+    (M : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase M] [LawfulGenuineCMonomialCase M]
+    [CompleteCMonomialCase M specialDomain] :
+    RemainderIntegrationStage (OneLevelBranchInput P α) (IntegralResult α P) Unit
+      (fun input => IsNormalPartIntegrable input.derivative input.normalNum input.normalDen)
+      (fun input result _ =>
+        CertifiedNormalResult input.derivative input.normalNum input.normalDen result) :=
+  (N.asPostprocessedRemainderStage normalDomain M specialDomain).precompose
+    OneLevelBranchInput.toNormalReductionInput
+
+/-- Run the polynomial-special and postprocessed normal pipelines independently on one canonical split. -/
+noncomputable def CPolynomialReduction.asParallelOneLevelBranchStage
+    (C : CPolynomialReduction P α) (polynomialDomain : PolynomialReductionDomain P α)
+    [LawfulCPolynomialReduction C] [CompleteCPolynomialReduction C polynomialDomain]
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [LawfulGenuineCNormalReduction N normalDomain]
+    [CompleteCNormalReduction N normalDomain]
+    (M : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase M] [LawfulGenuineCMonomialCase M]
+    [CompleteCMonomialCase M specialDomain] :
+    RemainderIntegrationStage (OneLevelBranchInput P α)
+      ((P α × IntegralResult α P) × IntegralResult α P) (Unit × Unit)
+      (fun input =>
+        IsPolynomialSpecialIntegrable input.toPolynomialSpecialInput ∧
+          IsNormalPartIntegrable input.derivative input.normalNum input.normalDen)
+      (fun input output _ =>
+        IsOneLevelBranchAssembly input output.1 output.2) := by
+  let special := C.asOneLevelBranchStage polynomialDomain M specialDomain
+  let normal := N.asOneLevelBranchStage normalDomain M specialDomain
+  exact special.product normal
+
 /-- Explicit stage-decomposed hypotheses under which contract-based one-level assembly is complete. -/
 structure OneLevelAssemblyWitness (R : CPolynomialReduction P α)
     (kind : PolynomialReductionKind) (polynomialDomain : PolynomialReductionDomain P α)

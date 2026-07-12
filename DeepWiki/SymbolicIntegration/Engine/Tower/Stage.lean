@@ -102,6 +102,25 @@ theorem complete (S : RemainderIntegrationStage Input Output Remainder Integrabl
     ∃ fuel result, S.stage.run fuel input = some result :=
   S.stage.complete input hdomain hintegrable
 
+/-- Reindex a certified stage along a deterministic input adapter. -/
+noncomputable def precompose
+    {Source : Type u} {Input : Type v} {Output : Type w} {Remainder : Type _}
+    {Integrable : Input → Prop} {Correct : Input → Output → Remainder → Prop}
+    (S : RemainderIntegrationStage Input Output Remainder Integrable Correct)
+    (adapt : Source → Input) :
+    RemainderIntegrationStage Source Output Remainder
+      (fun source => Integrable (adapt source))
+      (fun source output remainder => Correct (adapt source) output remainder) :=
+  { stage :=
+      { run := fun fuel source => S.stage.run fuel (adapt source)
+        domain := fun source => S.stage.domain (adapt source)
+        sound := by
+          intro fuel source result hdomain hrun
+          exact S.sound fuel (adapt source) result hdomain hrun
+        complete := by
+          intro source hdomain hintegrable
+          exact S.complete (adapt source) hdomain hintegrable } }
+
 /-- Repackage a stage's extracted contribution while preserving its certified remainder. -/
 noncomputable def mapOutput
     {Input : Type u} {Output : Type v} {MappedOutput : Type w} {Remainder : Type _}
