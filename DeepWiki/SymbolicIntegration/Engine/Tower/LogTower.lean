@@ -58,17 +58,33 @@ noncomputable def TowerIntegralResult.ofLrtResult {n : ℕ} (derivative : DenseP
 def TowerLog.inheritAll {n : ℕ} (logs : List (TowerLog n)) : List (TowerLog (n + 1)) :=
   logs.map .inherited
 
-/-- Explicit embeddings of every field through depth `N` into one final evaluation field. -/
-structure TowerLog.EvaluationMaps (N : ℕ) (E : Type*) [Field E] where
-  /-- Embed the denotation field at a selected depth into `E`. -/
-  map : ∀ n, n ≤ N → CFieldSpec.K (DenseFracTower n) →+* E
+/-- Coherent differential embeddings of every field through depth `N` into one final evaluation field. -/
+structure TowerLog.EvaluationMaps (N : ℕ) (E : Type*) [Field E] [Differential E] where
+  /-- The selected algebra structure at each tower depth. -/
+  algebra : ∀ n, n ≤ N → Algebra (CFieldSpec.K (DenseFracTower n)) E
+  /-- Each selected algebra embedding commutes with the selected derivations. -/
+  differentialAlgebra : ∀ n (hn : n ≤ N),
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := algebra n hn
+    DifferentialAlgebra (CFieldSpec.K (DenseFracTower n)) E
+  /-- Consecutive embeddings agree with the canonical rational-function inclusion. -/
+  coherent : ∀ n (hn : n + 1 ≤ N),
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := algebra n (Nat.le_trans (Nat.le_succ n) hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) E := algebra (n + 1) hn
+    (algebraMap (CFieldSpec.K (DenseFracTower (n + 1))) E).comp (denseFracTowerKStep n) =
+      algebraMap (CFieldSpec.K (DenseFracTower n)) E
+
+/-- The ring homomorphism induced by a coherent evaluation algebra at a selected depth. -/
+noncomputable def TowerLog.EvaluationMaps.map {N : ℕ} {E : Type*} [Field E] [Differential E]
+    (maps : TowerLog.EvaluationMaps N E) (n : ℕ) (hn : n ≤ N) :
+    CFieldSpec.K (DenseFracTower n) →+* E :=
+  @algebraMap (CFieldSpec.K (DenseFracTower n)) E _ _ (maps.algebra n hn)
 
 /-- Evaluate logs created by the extension over `Kₙ` in a target field with maps through `Kₙ`. -/
 noncomputable def TowerLog.denote {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
     (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) : TowerLog (n + 1) → RatFunc E := by
   intro log
   letI : Algebra (CFieldSpec.K (DenseFracTower n)) E :=
-    RingHom.toAlgebra (maps.map n hn)
+    maps.algebra n hn
   cases log with
   | ordinary derivative coefficient argument =>
     exact localLogTerm (E := E) derivative (coefficient, argument)
@@ -84,6 +100,160 @@ noncomputable def TowerLog.denote {n N : ℕ} {E : Type*} [Field E] [Differentia
 noncomputable def TowerLog.denoteSum {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
     (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) (logs : List (TowerLog (n + 1))) : RatFunc E :=
   (logs.map (TowerLog.denote maps hn)).sum
+
+/-- A recursive tower result differentiates to its input after all local and inherited logs are evaluated. -/
+def IsTowerIntegralResult {n : ℕ} (Dt anum aden : DensePoly (DenseFracTower n))
+    (res : TowerIntegralResult n) : Prop :=
+  ∀ (E : Type) [Field E] [Differential E] [Algebra ℚ E] [IsAlgClosed E]
+    (maps : TowerLog.EvaluationMaps n E),
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n (Nat.le_refl n)
+    letI : DifferentialAlgebra (CFieldSpec.K (DenseFracTower n)) E :=
+      maps.differentialAlgebra n (Nat.le_refl n)
+    towerDerivExt Dt
+        (amGExt (E := E) (CPoly.toPoly (CFrac.num res.rational)) /
+          amGExt (E := E) (CPoly.toPoly (CFrac.den res.rational))) +
+      TowerLog.denoteSum maps (Nat.le_refl n) res.logs =
+      amGExt (E := E) (CPoly.toPoly anum) /
+        amGExt (E := E) (CPoly.toPoly aden)
+
+/-- Recursive ordinary logs evaluate to the corresponding current-level log sum. -/
+theorem towerLog_denoteSum_ordinary {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n ≤ N) (derivative : DensePoly (DenseFracTower n))
+    (logs : List (DenseFracTower n × DensePoly (DenseFracTower n))) :
+    TowerLog.denoteSum maps hn (logs.map fun log => TowerLog.ordinary derivative log.1 log.2) =
+      letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+      localLogSum (E := E) derivative logs := by
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+  induction logs with
+  | nil => rfl
+  | cons log logs ih =>
+    simp only [TowerLog.denoteSum, localLogSum,
+      List.map_cons, List.sum_cons]
+    change TowerLog.denote maps hn (TowerLog.ordinary derivative log.1 log.2) +
+        TowerLog.denoteSum maps hn (logs.map fun log => TowerLog.ordinary derivative log.1 log.2) =
+      localLogTerm (E := E) derivative log + localLogSum (E := E) derivative logs
+    rw [ih]
+    have hhead : TowerLog.denote maps hn (TowerLog.ordinary derivative log.1 log.2) =
+        localLogTerm (E := E) derivative log := by
+      unfold TowerLog.denote
+      cases n <;> rfl
+    rw [hhead]
+
+/-- The recursive evaluation of an ordinary one-level result is its ordinary local log sum. -/
+theorem TowerIntegralResult.denoteSum_ofIntegralResult {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n ≤ N) (derivative : DensePoly (DenseFracTower n))
+    (res : IntegralResult (DenseFracTower n)) :
+    TowerLog.denoteSum maps hn (TowerIntegralResult.ofIntegralResult derivative res).logs =
+      letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+      localLogSum (E := E) derivative res.logs := by
+  exact towerLog_denoteSum_ordinary maps hn derivative res.logs
+
+/-- Recursive root-free logs evaluate to the corresponding current-level LRT sum. -/
+theorem towerLog_denoteSum_lrt {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n ≤ N) (derivative : DensePoly (DenseFracTower n))
+    (logs : List (DensePoly (DenseFracTower n) × List (DensePoly (DenseFracTower n)))) :
+    TowerLog.denoteSum maps hn (logs.map fun log => TowerLog.lrt derivative log.1 log.2) =
+      letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+      logResidueSumLrt (E := E) derivative logs := by
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+  induction logs with
+  | nil => rfl
+  | cons log logs ih =>
+    simp only [TowerLog.denoteSum, logResidueSumLrtG_cons, List.map_cons, List.sum_cons]
+    change TowerLog.denote maps hn (TowerLog.lrt derivative log.1 log.2) +
+        TowerLog.denoteSum maps hn (logs.map fun log => TowerLog.lrt derivative log.1 log.2) =
+      logResidueTermLrt (E := E) derivative log + logResidueSumLrt (E := E) derivative logs
+    rw [ih]
+    have hhead : TowerLog.denote maps hn (TowerLog.lrt derivative log.1 log.2) =
+        logResidueTermLrt (E := E) derivative log := by
+      unfold TowerLog.denote
+      cases n <;> rfl
+    rw [hhead]
+
+/-- The recursive evaluation of a root-free one-level result is its LRT log sum. -/
+theorem TowerIntegralResult.denoteSum_ofLrtResult {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n ≤ N) (derivative : DensePoly (DenseFracTower n))
+    (res : LrtResult (DenseFracTower n)) :
+    TowerLog.denoteSum maps hn (TowerIntegralResult.ofLrtResult derivative res).logs =
+      letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+      logResidueSumLrt (E := E) derivative res.logs := by
+  exact towerLog_denoteSum_lrt maps hn derivative res.logs
+
+/-- An ordinary one-level certificate transports to the recursive tower-result invariant. -/
+theorem isTowerIntegralResult_ofIntegralResult {n : ℕ}
+    [CFieldDomain (DenseFracTower n) DensePoly]
+    (Dt anum aden : DensePoly (DenseFracTower n)) (res : IntegralResult (DenseFracTower n))
+    (hres : IsIntegralResultP Dt anum aden res) :
+    IsTowerIntegralResult Dt anum aden (TowerIntegralResult.ofIntegralResult Dt res) := by
+  intro E _ _ _ _ maps
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n (Nat.le_refl n)
+  letI : DifferentialAlgebra (CFieldSpec.K (DenseFracTower n)) E :=
+    maps.differentialAlgebra n (Nat.le_refl n)
+  have hderiv :
+      ratFuncBaseChange E
+          (towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2)) =
+        towerDerivExt Dt
+          (amGExt (E := E) (CPoly.toPoly res.rational.1) /
+            amGExt (E := E) (CPoly.toPoly res.rational.2)) := by
+    simpa only [towerFractionFieldDerivP, towerFractionFieldDeriv, fieldFracP, toPoly_list_eq] using
+      (ratFuncBaseChange_towerFractionFieldDerivG (E := E) Dt
+        (CPoly.toPoly res.rational.1) (CPoly.toPoly res.rational.2))
+  have hrational :
+      amGExt (E := E)
+          (CPoly.toPoly (CFrac.num (TowerIntegralResult.ofIntegralResult Dt res).rational)) /
+        amGExt (E := E)
+          (CPoly.toPoly (CFrac.den (TowerIntegralResult.ofIntegralResult Dt res).rational)) =
+        amGExt (E := E) (CPoly.toPoly res.rational.1) /
+          amGExt (E := E) (CPoly.toPoly res.rational.2) := by
+    calc
+      _ = ratFuncBaseChange E
+          (CFieldSpec.toK (TowerIntegralResult.ofIntegralResult Dt res).rational) := by
+        symm
+        rw [toK_denseFrac_eq_fieldFrac, fieldFracP, ratFuncBaseChange_amG_div]
+      _ = ratFuncBaseChange E (fieldFracP res.rational.1 res.rational.2) := by
+        simp [TowerIntegralResult.ofIntegralResult, fieldFracP, CFieldSpec.toK_div,
+          CFrac.toK_ofPoly]
+      _ = _ := by
+        rw [fieldFracP, ratFuncBaseChange_amG_div]
+  have hbase := congrArg (ratFuncBaseChange E) hres
+  rw [map_add, hderiv, ← localLogSum_eq_baseChange,
+    ratFuncBaseChange_amG_div] at hbase
+  rw [hrational, TowerIntegralResult.denoteSum_ofIntegralResult maps (Nat.le_refl n) Dt res]
+  exact hbase
+
+/-- A root-free one-level certificate transports to the recursive tower-result invariant. -/
+theorem isTowerIntegralResult_ofLrtResult {n : ℕ}
+    [CFieldDomain (DenseFracTower n) DensePoly]
+    (Dt anum aden : DensePoly (DenseFracTower n)) (res : LrtResult (DenseFracTower n))
+    (hres : IsIntegralResultLrt Dt anum aden res) :
+    IsTowerIntegralResult Dt anum aden (TowerIntegralResult.ofLrtResult Dt res) := by
+  intro E _ _ _ _ maps
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n (Nat.le_refl n)
+  letI : DifferentialAlgebra (CFieldSpec.K (DenseFracTower n)) E :=
+    maps.differentialAlgebra n (Nat.le_refl n)
+  have hrational :
+      amGExt (E := E)
+          (CPoly.toPoly (CFrac.num (TowerIntegralResult.ofLrtResult Dt res).rational)) /
+        amGExt (E := E)
+          (CPoly.toPoly (CFrac.den (TowerIntegralResult.ofLrtResult Dt res).rational)) =
+        amGExt (E := E) (CPoly.toPoly res.rational.1) /
+          amGExt (E := E) (CPoly.toPoly res.rational.2) := by
+    calc
+      _ = ratFuncBaseChange E
+          (CFieldSpec.toK (TowerIntegralResult.ofLrtResult Dt res).rational) := by
+        symm
+        rw [toK_denseFrac_eq_fieldFrac, fieldFracP, ratFuncBaseChange_amG_div]
+      _ = ratFuncBaseChange E (fieldFracP res.rational.1 res.rational.2) := by
+        simp [TowerIntegralResult.ofLrtResult, fieldFracP, CFieldSpec.toK_div,
+          CFrac.toK_ofPoly]
+      _ = _ := by
+        rw [fieldFracP, ratFuncBaseChange_amG_div]
+  rw [hrational, TowerIntegralResult.denoteSum_ofLrtResult maps (Nat.le_refl n) Dt res]
+  simpa only [toPoly_list_eq] using hres E
 
 /-- Genuine ordinary one-level logs remain genuine in the recursive syntax. -/
 theorem TowerIntegralResult.logsGenuine_ofIntegralResult {n : ℕ}

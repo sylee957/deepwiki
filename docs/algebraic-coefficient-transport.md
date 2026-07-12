@@ -62,13 +62,17 @@ combines their denotations only at the reconstruction theorem.
    `TowerLog.inherited` preserves a lower ordinary or LRT log at its own field
    level, while each local node retains the monomial derivative of the
    extension that created it. The ordinary/LRT embeddings preserve genuine-log
-   evidence. `TowerLog.EvaluationMaps` and `TowerLog.denote` now evaluate each
-   result at extension step `n` in a final differential field over `Kₙ`, the
-   same base field used by the existing ordinary and LRT soundness contracts.
-   The next theorem establishes the coherent canonical maps and the
-   successor-lift identity they use.
-   `denseFracTower_K_succ` exposes the required `Kₙ₊₁ = RatFunc Kₙ` field
-   equality across the packaged carrier boundary.
+   evidence. `TowerLog.EvaluationMaps` now packages the algebra and
+   differential-algebra structures at every depth together with compatibility
+   for the canonical `Kₙ → Kₙ₊₁` rational-function inclusion. `TowerLog.denote`
+   therefore evaluates every local or inherited log with the exact structure
+   needed by its source-level soundness contract. `IsTowerIntegralResult` is
+   the common recursive semantic invariant, and both the ordinary and
+   root-free LRT result embeddings transport their existing certificates into
+   it. The next theorem is the successor-lift identity for inherited logs.
+   `denseFracTower_K_succ` and `denseFracTowerKStep` expose the required
+   `Kₙ₊₁ = RatFunc Kₙ` field equality and canonical inclusion across the
+   packaged carrier boundary.
 5. Make the concrete tangent and hyperexponential successor constructors consume
    the complete lower `LayeredTranscendentalLevel` that
    `LayeredTranscendentalTowerScheme` now supplies. Their lower adapter must

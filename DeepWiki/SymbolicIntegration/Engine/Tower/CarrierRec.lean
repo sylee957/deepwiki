@@ -137,6 +137,12 @@ theorem denseFracTower_succ (n : ℕ) :
 theorem denseFracTower_K_succ (n : ℕ) :
     CFieldSpec.K (DenseFracTower (n + 1)) = RatFunc (CFieldSpec.K (DenseFracTower n)) := rfl
 
+/-- The canonical embedding of one dense-tower denotation field into its successor. -/
+noncomputable def denseFracTowerKStep (n : ℕ) :
+    CFieldSpec.K (DenseFracTower n) →+* CFieldSpec.K (DenseFracTower (n + 1)) := by
+  change CFieldSpec.K (DenseFracTower n) →+* RatFunc (CFieldSpec.K (DenseFracTower n))
+  exact RatFunc.C
+
 /-- The generic differential-denotation square resolves recursively at depth two for sparse fractions. -/
 theorem sparseFrac_recursive_toK_cderiv (x : SparseFrac (SparseFrac ℚ)) :
     CFieldSpec.toK (CDiffField.cderiv x) = Differential.deriv (CFieldSpec.toK x) :=
