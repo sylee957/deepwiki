@@ -102,6 +102,75 @@ theorem complete (S : RemainderIntegrationStage Input Output Remainder Integrabl
     ∃ fuel result, S.stage.run fuel input = some result :=
   S.stage.complete input hdomain hintegrable
 
+/-- Repackage a stage's extracted contribution while preserving its certified remainder. -/
+noncomputable def mapOutput
+    {Input : Type u} {Output : Type v} {MappedOutput : Type w} {Remainder : Type _}
+    {Integrable : Input → Prop} {Correct : Input → Output → Remainder → Prop}
+    {MappedCorrect : Input → MappedOutput → Remainder → Prop}
+    (S : RemainderIntegrationStage Input Output Remainder Integrable Correct)
+    (map : Output → MappedOutput)
+    (mapCorrect : ∀ input output remainder, Correct input output remainder →
+      MappedCorrect input (map output) remainder) :
+    RemainderIntegrationStage Input MappedOutput Remainder Integrable MappedCorrect :=
+  { stage :=
+      { run := fun fuel input =>
+          (S.stage.run fuel input).map fun result => ⟨map result.output, result.remainder⟩
+        domain := S.stage.domain
+        sound := by
+          intro fuel input result hdomain hrun
+          obtain ⟨output, houtput, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          exact mapCorrect input output.output output.remainder
+            (S.sound fuel input output hdomain houtput)
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨fuel, output, hrun⟩ := S.complete input hdomain hintegrable
+          exact ⟨fuel, ⟨map output.output, output.remainder⟩, by simp [hrun]⟩ } }
+
+/-- Run two independent certified stages on the same input, pairing contributions and remainders.
+
+This is the compositional form needed for branches such as polynomial-special reduction and normal
+reduction: neither branch is encoded as an unchecked callback of the other. -/
+noncomputable def product
+    {Input : Type u} {Output : Type v} {NextOutput : Type w}
+    {Remainder : Type _} {NextRemainder : Type _}
+    {Integrable : Input → Prop} {NextIntegrable : Input → Prop}
+    {Correct : Input → Output → Remainder → Prop}
+    {NextCorrect : Input → NextOutput → NextRemainder → Prop}
+    (S : RemainderIntegrationStage Input Output Remainder Integrable Correct)
+    (T : RemainderIntegrationStage Input NextOutput NextRemainder NextIntegrable NextCorrect) :
+    RemainderIntegrationStage Input (Output × NextOutput) (Remainder × NextRemainder)
+      (fun input => Integrable input ∧ NextIntegrable input)
+      (fun input output remainder =>
+        Correct input output.1 remainder.1 ∧ NextCorrect input output.2 remainder.2) :=
+  { stage :=
+      { run := fun fuel input =>
+          let fuels := Nat.unpair fuel
+          match S.stage.run fuels.1 input with
+          | none => none
+          | some left =>
+            match T.stage.run fuels.2 input with
+            | none => none
+            | some right => some ⟨(left.output, right.output), (left.remainder, right.remainder)⟩
+        domain := fun input => S.stage.domain input ∧ T.stage.domain input
+        sound := by
+          intro fuel input result hdomain hrun
+          cases hleft : S.stage.run (Nat.unpair fuel).1 input with
+          | none => simp [hleft] at hrun
+          | some left =>
+            cases hright : T.stage.run (Nat.unpair fuel).2 input with
+            | none => simp [hleft, hright] at hrun
+            | some right =>
+              simp only [hleft, hright, Option.some.injEq] at hrun
+              subst result
+              exact ⟨S.sound _ _ _ hdomain.1 hleft, T.sound _ _ _ hdomain.2 hright⟩
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨fuelLeft, left, hleft⟩ := S.complete input hdomain.1 hintegrable.1
+          obtain ⟨fuelRight, right, hright⟩ := T.complete input hdomain.2 hintegrable.2
+          refine ⟨Nat.pair fuelLeft fuelRight,
+            ⟨(left.output, right.output), (left.remainder, right.remainder)⟩, ?_⟩
+          simp [Nat.unpair_pair, hleft, hright] } }
+
 /-- Sequentially compose two certified remainder stages with an explicit handoff invariant. -/
 noncomputable def compose
     (S : RemainderIntegrationStage Input Output Remainder Integrable Correct)
