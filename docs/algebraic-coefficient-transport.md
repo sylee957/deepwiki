@@ -63,8 +63,10 @@ combines their denotations only at the reconstruction theorem.
    level, while each local node retains the monomial derivative of the
    extension that created it. The ordinary/LRT embeddings preserve genuine-log
    evidence. `TowerLog.EvaluationMaps` and `TowerLog.denote` now evaluate each
-   depth directly in one final differential field; the next theorem establishes
-   the coherent canonical maps and the successor-lift identity they use.
+   result at extension step `n` in a final differential field over `Kₙ`, the
+   same base field used by the existing ordinary and LRT soundness contracts.
+   The next theorem establishes the coherent canonical maps and the
+   successor-lift identity they use.
    `denseFracTower_K_succ` exposes the required `Kₙ₊₁ = RatFunc Kₙ` field
    equality across the packaged carrier boundary.
 5. Make the concrete tangent and hyperexponential successor constructors consume

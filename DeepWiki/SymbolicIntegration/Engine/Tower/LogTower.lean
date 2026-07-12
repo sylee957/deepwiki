@@ -63,27 +63,26 @@ structure TowerLog.EvaluationMaps (N : ℕ) (E : Type*) [Field E] where
   /-- Embed the denotation field at a selected depth into `E`. -/
   map : ∀ n, n ≤ N → CFieldSpec.K (DenseFracTower n) →+* E
 
-/-- Evaluate a recursive log in a target field equipped with explicit maps from every lower depth. -/
+/-- Evaluate logs created by the extension over `Kₙ` in a target field with maps through `Kₙ`. -/
 noncomputable def TowerLog.denote {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
-    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) : TowerLog n → RatFunc E := by
+    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) : TowerLog (n + 1) → RatFunc E := by
   intro log
-  cases n with
-  | zero => exact nomatch log
-  | succ n =>
-    have hpred : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
-    letI : Algebra (CFieldSpec.K (DenseFracTower n)) E :=
-      RingHom.toAlgebra (maps.map n hpred)
-    cases log with
-    | ordinary derivative coefficient argument =>
-      exact localLogTerm (E := E) derivative (coefficient, argument)
-    | lrt derivative residue argument =>
-      exact logResidueTermLrt (E := E) derivative (residue, argument)
-    | inherited log =>
-      exact TowerLog.denote maps hpred log
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E :=
+    RingHom.toAlgebra (maps.map n hn)
+  cases log with
+  | ordinary derivative coefficient argument =>
+    exact localLogTerm (E := E) derivative (coefficient, argument)
+  | lrt derivative residue argument =>
+    exact logResidueTermLrt (E := E) derivative (residue, argument)
+  | inherited log =>
+    cases n with
+    | zero => exact nomatch log
+    | succ n =>
+      exact TowerLog.denote maps (Nat.le_trans (Nat.le_succ n) hn) log
 
 /-- Sum recursive-log denotations in a final evaluation field. -/
 noncomputable def TowerLog.denoteSum {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
-    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) (logs : List (TowerLog n)) : RatFunc E :=
+    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) (logs : List (TowerLog (n + 1))) : RatFunc E :=
   (logs.map (TowerLog.denote maps hn)).sum
 
 /-- Genuine ordinary one-level logs remain genuine in the recursive syntax. -/
