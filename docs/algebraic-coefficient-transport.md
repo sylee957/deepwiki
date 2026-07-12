@@ -84,6 +84,9 @@ retains a lower node without reinterpreting it as an upper
    Semantic soundness and relative-completeness proofs are next; the
    ordinary-only candidate remains the legacy path until those proofs and
    caller migration land.
+   `TowerLog.EvaluationMaps.restrict` and its rational/log/full-denotation
+   transport theorems now let a lower result be evaluated in any coherent
+   successor target, supplying the semantic induction step for that proof.
 3. The old native-result `TranscendentalTowerScheme` has been retired after a
    source and reverse-dependency audit; audit the remaining selected-stage
    constructors once the heterogeneous successor constructor is in place. Dense and sparse remain

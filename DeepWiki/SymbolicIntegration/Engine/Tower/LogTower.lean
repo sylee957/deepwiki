@@ -154,6 +154,14 @@ noncomputable def TowerLog.EvaluationMaps.map {N : ℕ} {E : Type*} [Field E] [D
     CFieldSpec.K (DenseFracTower n) →+* E :=
   @algebraMap (CFieldSpec.K (DenseFracTower n)) E _ _ (maps.algebra n hn)
 
+/-- Restrict coherent evaluation maps to an initial finite prefix of the tower. -/
+noncomputable def TowerLog.EvaluationMaps.restrict {M N : ℕ} {E : Type*}
+    [Field E] [Differential E] (maps : TowerLog.EvaluationMaps N E) (hMN : M ≤ N) :
+    TowerLog.EvaluationMaps M E where
+  algebra n hn := maps.algebra n (Nat.le_trans hn hMN)
+  differentialAlgebra n hn := maps.differentialAlgebra n (Nat.le_trans hn hMN)
+  coherent n hn := maps.coherent n (Nat.le_trans hn hMN)
+
 /-- Evaluate the rational part of a tower result in a selected final evaluation field. -/
 noncomputable def TowerIntegralResult.rationalDenote {n N : ℕ} {E : Type*}
     [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
@@ -173,6 +181,15 @@ theorem TowerIntegralResult.rationalDenote_eq_baseChange {n N : ℕ} {E : Type*}
   unfold TowerIntegralResult.rationalDenote
   symm
   rw [toK_denseFrac_eq_fieldFrac, fieldFracP, ratFuncBaseChange_amG_div]
+
+/-- Restricting maps does not change the rational denotation of a tower result. -/
+theorem TowerIntegralResult.rationalDenote_restrict {n M N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hMN : M ≤ N) (hn : n ≤ M) (res : TowerIntegralResult n) :
+    res.rationalDenote (maps.restrict hMN) hn =
+      res.rationalDenote maps (Nat.le_trans hn hMN) := by
+  unfold TowerIntegralResult.rationalDenote TowerLog.EvaluationMaps.restrict
+  rfl
 
 /-- Rational evaluation distributes over composition of tower antiderivative pieces. -/
 theorem TowerIntegralResult.rationalDenote_add {n N : ℕ} {E : Type*}
@@ -210,10 +227,45 @@ noncomputable def TowerLog.denote {n N : ℕ} {E : Type*} [Field E] [Differentia
       TowerLog.denote maps (Nat.le_trans (Nat.le_succ n) hn) log
 termination_by n
 
+/-- Restricting evaluation maps does not change a source-level log's denotation. -/
+theorem TowerLog.denote_restrict {n M N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hMN : M ≤ N) (hn : n ≤ M) (log : TowerLog (n + 1)) :
+    TowerLog.denote (maps.restrict hMN) hn log =
+      TowerLog.denote maps (Nat.le_trans hn hMN) log := by
+  induction n generalizing M N with
+  | zero =>
+    cases log <;> simp only [TowerLog.denote, TowerLog.EvaluationMaps.restrict]
+  | succ n ih =>
+    cases log with
+    | ordinary derivative coefficient argument =>
+      simp only [TowerLog.denote, TowerLog.EvaluationMaps.restrict]
+    | lrt derivative residue argument =>
+      simp only [TowerLog.denote, TowerLog.EvaluationMaps.restrict]
+    | inherited log =>
+      simp only [TowerLog.denote, TowerLog.EvaluationMaps.restrict]
+      exact ih maps hMN (Nat.le_trans (Nat.le_succ n) hn) log
+
 /-- Sum recursive-log denotations in a final evaluation field. -/
 noncomputable def TowerLog.denoteSum {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
     (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) (logs : List (TowerLog (n + 1))) : RatFunc E :=
   (logs.map (TowerLog.denote maps hn)).sum
+
+/-- Restricting maps preserves the denotation of an entire source-level log list. -/
+theorem TowerLog.denoteSum_restrict {n M N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hMN : M ≤ N) (hn : n ≤ M) (logs : List (TowerLog (n + 1))) :
+    TowerLog.denoteSum (maps.restrict hMN) hn logs =
+      TowerLog.denoteSum maps (Nat.le_trans hn hMN) logs := by
+  induction logs with
+  | nil => rfl
+  | cons log logs ih =>
+    simp only [TowerLog.denoteSum, List.map_cons, List.sum_cons]
+    change TowerLog.denote (maps.restrict hMN) hn log +
+        TowerLog.denoteSum (maps.restrict hMN) hn logs =
+      TowerLog.denote maps (Nat.le_trans hn hMN) log +
+        TowerLog.denoteSum maps (Nat.le_trans hn hMN) logs
+    rw [TowerLog.denote_restrict, ih]
 
 /-- Log evaluation distributes over composition of tower antiderivative pieces. -/
 theorem TowerIntegralResult.denoteSum_add {n N : ℕ} {E : Type*}
@@ -242,6 +294,20 @@ theorem TowerIntegralResult.derivDenote_add {n N : ℕ} {E : Type*}
   rw [TowerIntegralResult.rationalDenote_add, map_add,
     TowerIntegralResult.denoteSum_add]
   ring
+
+/-- Restricting maps preserves a complete differentiated tower-result denotation. -/
+theorem TowerIntegralResult.derivDenote_restrict {n M N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (Dt : DensePoly (DenseFracTower n))
+    (maps : TowerLog.EvaluationMaps N E) (hMN : M ≤ N) (hn : n ≤ M)
+    (res : TowerIntegralResult n) :
+    res.derivDenote Dt (maps.restrict hMN) hn =
+      res.derivDenote Dt maps (Nat.le_trans hn hMN) := by
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E :=
+    maps.algebra n (Nat.le_trans hn hMN)
+  unfold TowerIntegralResult.derivDenote
+  rw [TowerIntegralResult.rationalDenote_restrict,
+    TowerLog.denoteSum_restrict]
+  rfl
 
 /-- Evaluating an inherited log agrees with evaluating its source-level syntax. -/
 theorem TowerLog.denote_inherited {n N : ℕ} {E : Type*}
@@ -335,6 +401,21 @@ theorem isTowerIntegralResult_iff {n : ℕ} (Dt anum aden : DensePoly (DenseFrac
     IsTowerIntegralResult Dt anum aden res ↔
       IsTowerAntiderivative Dt res (towerInputRemainder anum aden) := by
   rfl
+
+/-- A certified tower result evaluates correctly in any coherent extension of its source depth. -/
+theorem isTowerIntegralResult_evaluate {n N : ℕ} {E : Type}
+    [Field E] [Differential E] [Algebra ℚ E] [IsAlgClosed E]
+    (Dt anum aden : DensePoly (DenseFracTower n)) (res : TowerIntegralResult n)
+    (hres : IsTowerIntegralResult Dt anum aden res)
+    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) :
+    res.derivDenote Dt maps hn =
+      letI : Algebra (CFieldSpec.K (DenseFracTower n)) E := maps.algebra n hn
+      amGExt (E := E) (CPoly.toPoly anum) /
+        amGExt (E := E) (CPoly.toPoly aden) := by
+  have hsource := (isTowerIntegralResult_iff Dt anum aden res).mp hres E
+    (maps.restrict hn)
+  rw [TowerIntegralResult.derivDenote_restrict Dt maps hn (Nat.le_refl n)] at hsource
+  exact hsource
 
 /-- The common recursive-output contract for integrating a coefficient in the preceding tower field. -/
 def TowerCoefficientStage.Correct {n : ℕ} (c : DenseFracTower (n + 1))
