@@ -73,7 +73,10 @@ retains a lower node without reinterpreting it as an upper
    domain, soundness, and relative-completeness hypotheses. Concrete
    reconstructions must discharge those hypotheses from their coefficient
    integrability witnesses; they must not treat this wrapper as unconditional
-   recursive success.
+   recursive success. `TowerCoefficientStage` now exports precisely this
+   lower-field contract independently of the selector, and
+   `LayeredTranscendentalLevel.asTowerCoefficientStage` is the certified
+   adapter from a selected lower level.
 3. The old native-result `TranscendentalTowerScheme` has been retired after a
    source and reverse-dependency audit; audit the remaining selected-stage
    constructors once the heterogeneous successor constructor is in place. Dense and sparse remain

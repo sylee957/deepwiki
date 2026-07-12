@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.LrtGuarded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
+import DeepWiki.SymbolicIntegration.Engine.Tower.Stage
 
 /-! # Recursive transcendental log syntax
 
@@ -334,6 +335,20 @@ theorem isTowerIntegralResult_iff {n : ℕ} (Dt anum aden : DensePoly (DenseFrac
     IsTowerIntegralResult Dt anum aden res ↔
       IsTowerAntiderivative Dt res (towerInputRemainder anum aden) := by
   rfl
+
+/-- The common recursive-output contract for integrating a coefficient in the preceding tower field. -/
+def TowerCoefficientStage.Correct {n : ℕ} (c : DenseFracTower (n + 1))
+    (res : TowerIntegralResult n) : Prop :=
+  IsTowerIntegralResult (CPoly.one : DensePoly (DenseFracTower n))
+    (CFrac.num c) (CFrac.den c) res ∧ res.LogsGenuine
+
+/-- A certified lower coefficient stage with a recursive tower-result output. -/
+structure TowerCoefficientStage (n : ℕ) where
+  /-- Semantic integrability predicate supported by the selected lower stage. -/
+  Integrable : DenseFracTower (n + 1) → Prop
+  /-- Executable, domain-certified lower coefficient stage. -/
+  stage : IntegrationStage (DenseFracTower (n + 1)) (TowerIntegralResult n)
+    Integrable TowerCoefficientStage.Correct
 
 /-- A successor-local result is correct relative to the logarithms retained from the preceding level. -/
 def IsTowerIntegralResultWithLowerLogs {n : ℕ}

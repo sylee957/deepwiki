@@ -139,6 +139,22 @@ theorem LayeredTranscendentalLevel.runCoefficient_complete
     ∃ fuel result, L.runCoefficient fuel c = some result :=
   L.stage.complete (denseFracTowerCoefficientInput n c) hdomain hintegrable
 
+/-- Export a selected lower level through the recursive tower-coefficient interface. -/
+noncomputable def LayeredTranscendentalLevel.asTowerCoefficientStage
+    (L : LayeredTranscendentalLevel n) : TowerCoefficientStage n := by
+  let integrable : DenseFracTower (n + 1) → Prop := fun c =>
+    L.Integrable (denseFracTowerCoefficientInput n c)
+  refine { Integrable := integrable, stage := ?_ }
+  refine
+    { run := L.runCoefficient
+      domain := L.coefficientDomain
+      sound := ?_
+      complete := ?_ }
+  · intro fuel c result hdomain hrun
+    exact L.runCoefficient_sound fuel c result hdomain hrun
+  · intro c hdomain hintegrable
+    exact L.runCoefficient_complete c hdomain hintegrable
+
 /-- A finite tower whose successor constructor receives the complete certified lower level. -/
 structure LayeredTranscendentalTowerScheme where
   /-- Certified base level. -/
