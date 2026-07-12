@@ -299,6 +299,49 @@ instance instCompleteCPolynomialReductionNonlinear :
     obtain ⟨out, hrun, hresult⟩ := towerPolynomialReduction_nonlinear_runs Dt p hdelta
     exact ⟨CPolyEngine.cdeg p + 1, out, hrun, hresult⟩
 
+omit [CharZero (CFieldSpec.K α)] in
+/-- The primitive subdomain handled by the termwise kernel: a nonzero constant monomial derivative
+and constant polynomial coefficients. -/
+def primitivePolynomialReductionDomain : PolynomialReductionDomain P α := fun kind Dt p =>
+  kind = .primitive ∧ ∃ η : CFieldSpec.K α,
+    CPoly.toPoly Dt = Polynomial.C η ∧ η ≠ 0 ∧ η′ = 0 ∧
+      Differential.mapCoeffs (CPoly.toPoly p) = 0
+
+omit [CharZero (CFieldSpec.K α)] in
+/-- Every fuel-bounded primitive integration run reconstructs its input polynomial. -/
+theorem cPrimitivePolyIntegrate_reconstruct (Dt : P α) : ∀ (fuel : ℕ) (p : P α),
+    CPoly.toPoly p = Differential.implicitDeriv (CPoly.toPoly Dt)
+        (CPoly.toPoly (cPrimitivePolyIntegrate Dt fuel p).1) +
+      CPoly.toPoly (cPrimitivePolyIntegrate Dt fuel p).2 := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro p
+      simp only [cPrimitivePolyIntegrate, CPoly.toPoly_czero, map_zero, zero_add]
+      exact (LawfulCPolyEngine.toPoly_cnorm p).symm
+  | succ fuel ih =>
+      intro p
+      rw [← LawfulCPolyEngine.toPoly_cnorm p]
+      simp only [cPrimitivePolyIntegrate]
+      split
+      · simp only [CPoly.toPoly_czero, map_zero, zero_add]
+      · rename_i hstop
+        let m := CPolyEngine.cdeg (CPolyEngine.cnorm p)
+        let am := CPolyEngine.clead (CPolyEngine.cnorm p)
+        let mp1 : α := CField.natCast (m + 1)
+        let dtConst := CPolyEngine.clead Dt
+        let c := CField.div am (CCommRing.mul mp1 dtConst)
+        let q0 := CPolyEngine.monomial (P := P) c (m + 1)
+        let p' := CPolyEngine.sub (CPolyEngine.cnorm p) (CPolyEngine.monomialDeriv Dt q0)
+        have hrec := ih p'
+        change CPoly.toPoly (CPolyEngine.cnorm p) =
+          Differential.implicitDeriv (CPoly.toPoly Dt)
+              (CPoly.toPoly (CPolyEngine.add q0 (cPrimitivePolyIntegrate Dt fuel p').1)) +
+            CPoly.toPoly (cPrimitivePolyIntegrate Dt fuel p').2
+        rw [LawfulCPolyEngine.toPoly_add, map_add, add_assoc, ← hrec,
+          CPolyEngine.toPoly_sub, CPolyEngine.toPoly_monomialDeriv]
+        ring
+
 end DensePoly
 
 end DeepWiki.SymbolicIntegration
