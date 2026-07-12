@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.LrtGuarded
+import DeepWiki.SymbolicIntegration.Engine.Tower.TranscendentalResult
 
 /-! # Recursive transcendental log syntax
 
@@ -56,6 +57,34 @@ noncomputable def TowerIntegralResult.ofLrtResult {n : ℕ} (derivative : DenseP
 /-- Lift a log list unchanged through one new tower extension. -/
 def TowerLog.inheritAll {n : ℕ} (logs : List (TowerLog n)) : List (TowerLog (n + 1)) :=
   logs.map .inherited
+
+/-- Explicit embeddings of every field through depth `N` into one final evaluation field. -/
+structure TowerLog.EvaluationMaps (N : ℕ) (E : Type*) [Field E] where
+  /-- Embed the denotation field at a selected depth into `E`. -/
+  map : ∀ n, n ≤ N → CFieldSpec.K (DenseFracTower n) →+* E
+
+/-- Evaluate a recursive log in a target field equipped with explicit maps from every lower depth. -/
+noncomputable def TowerLog.denote {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
+    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) : TowerLog n → RatFunc E := by
+  intro log
+  cases n with
+  | zero => exact nomatch log
+  | succ n =>
+    have hpred : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) E :=
+      RingHom.toAlgebra (maps.map n hpred)
+    cases log with
+    | ordinary derivative coefficient argument =>
+      exact localLogTerm (E := E) derivative (coefficient, argument)
+    | lrt derivative residue argument =>
+      exact logResidueTermLrt (E := E) derivative (residue, argument)
+    | inherited log =>
+      exact TowerLog.denote maps hpred log
+
+/-- Sum recursive-log denotations in a final evaluation field. -/
+noncomputable def TowerLog.denoteSum {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
+    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) (logs : List (TowerLog n)) : RatFunc E :=
+  (logs.map (TowerLog.denote maps hn)).sum
 
 /-- Genuine ordinary one-level logs remain genuine in the recursive syntax. -/
 theorem TowerIntegralResult.logsGenuine_ofIntegralResult {n : ℕ}
