@@ -105,6 +105,39 @@ theorem isCoefficientIntegralResult_of_check (c : α) (res : CoefficientIntegral
     rw [Bool.not_eq_true', Bool.eq_false_iff, Ne, CFieldSpec.isZero_iff] at hfalse
     exact hfalse hzero
 
+omit [CDiffFieldSpec α] in
+/-- The coefficient-result checker accepts every denotational elementary antiderivative certificate. -/
+theorem coefficientIntegralResultCheck_of_isCoefficientIntegralResult
+    (c : α) (res : CoefficientIntegralResult α) (h : IsCoefficientIntegralResult c res) :
+    coefficientIntegralResultCheck c res = true := by
+  obtain ⟨hid, hconstants, hargs⟩ := h
+  simp only [coefficientIntegralResultCheck, Bool.and_eq_true]
+  constructor
+  · constructor
+    · rw [CFieldSpec.isZero_iff, CFieldSpec.toK_sub, sub_eq_zero,
+        CFieldSpec.toK_add, toK_coefficientLogDerivative]
+      exact hid
+    · apply List.all_eq_true.mpr
+      intro cv hcv
+      rw [CFieldSpec.isZero_iff]
+      exact hconstants cv hcv
+  · apply List.all_eq_true.mpr
+    intro cv hcv
+    cases hz : CCommRing.isZero cv.2 with
+    | false => rfl
+    | true =>
+        have hzero : CFieldSpec.toK cv.2 = 0 := by
+          rw [← CFieldSpec.isZero_iff]
+          exact hz
+        exact (hargs cv hcv hzero).elim
+
+omit [CDiffFieldSpec α] in
+/-- The executable coefficient-result checker exactly reflects its denotational contract. -/
+theorem coefficientIntegralResultCheck_iff (c : α) (res : CoefficientIntegralResult α) :
+    coefficientIntegralResultCheck c res = true ↔ IsCoefficientIntegralResult c res :=
+  ⟨isCoefficientIntegralResult_of_check c res,
+    coefficientIntegralResultCheck_of_isCoefficientIntegralResult c res⟩
+
 /-- Certificate checking makes any recursive elementary candidate unconditionally lawful. -/
 instance instLawfulCRecursiveElementaryIntegratorChecked
     (raw : CRecursiveElementaryIntegrator α) :

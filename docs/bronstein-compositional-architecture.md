@@ -170,8 +170,10 @@ monomial stage contracts.
    derives their contracts uniformly. Every successor step constructs its elementary coefficient operation
    from the preceding selected Risch level, lifts its rational and logarithmic result through `DenseFrac`, and
    certificate-checks the lifted derivative identity, constant coefficients, and nonzero arguments. The
-   remaining completeness gap is semantic: replace the exact certificate-acceptance domain with hypotheses
-   ensuring that the preceding complete Risch level produces a result accepted by those checks.
+   checker now reflects its denotational contract in both directions, so the adapter is complete not only on
+   its exact Boolean acceptance domain but also on the semantic domain where the preceding level returns a
+   genuine lifted elementary result. The remaining completeness gap is the denotation bridge proving that a
+   genuine lower `IsIntegralResultP` result inhabits this lifted semantic domain.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and
