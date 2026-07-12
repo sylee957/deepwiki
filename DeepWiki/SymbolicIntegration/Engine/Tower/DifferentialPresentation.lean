@@ -40,6 +40,60 @@ structure DifferentialTowerPresentation (N : ℕ) where
 
 namespace DifferentialTowerPresentation
 
+/-- Build a one-step explicit tower presentation from a chosen monomial derivative over `ℚ`. -/
+noncomputable def oneStep (Dt : DensePoly ℚ) : DifferentialTowerPresentation 1 where
+  derivation
+    | 0, _ => CFieldDerivation.ofCDiffField ℚ
+    | 1, _ =>
+      ⟨CFrac.towerDerivCFracWithDerivation (CFieldDerivation.ofCDiffField ℚ) Dt⟩
+    | n + 2, hn => False.elim (by omega)
+  differential
+    | 0, _ => instDifferentialQ
+    | 1, _ => by
+      letI : Differential (CRingSpec.R ℚ) := instDifferentialQ
+      exact fractionFieldDifferential (Differential.implicitDeriv (CPoly.toPoly Dt))
+    | n + 2, hn => False.elim (by omega)
+  lawful
+    | 0, _ => LawfulCFieldDerivation.ofCDiffField ℚ
+    | 1, _ => by
+      letI : LawfulCFieldDerivation ℚ (CFieldDerivation.ofCDiffField ℚ) instDifferentialQ :=
+        LawfulCFieldDerivation.ofCDiffField ℚ
+      refine ⟨?_⟩
+      intro x
+      rw [denseFracTower_toK_succ]
+      change CFrac.toRatFunc
+          (CFrac.towerDerivCFracWithDerivation (CFieldDerivation.ofCDiffField ℚ) Dt x) =
+        @Differential.deriv _ _
+          (fractionFieldDifferential (Differential.implicitDeriv (CPoly.toPoly Dt)))
+          (CFrac.toRatFunc x)
+      rw [fractionFieldDifferential_deriv]
+      exact CFrac.toRatFunc_towerDerivCFracWithDerivation
+        (CFieldDerivation.ofCDiffField ℚ) instDifferentialQ Dt x
+    | n + 2, hn => False.elim (by omega)
+  monomialDerivative
+    | 0, _ => Dt
+    | n + 1, hn => False.elim (by omega)
+  successor
+    | 0, _, x => rfl
+    | n + 1, hn, x => False.elim (by omega)
+  successorSemantics
+    | 0, _, x => by
+      letI : LawfulCFieldDerivation ℚ (CFieldDerivation.ofCDiffField ℚ) instDifferentialQ :=
+        LawfulCFieldDerivation.ofCDiffField ℚ
+      rw [denseFracTower_toK_succ]
+      exact CFrac.toRatFunc_towerDerivCFracWithDerivation
+        (CFieldDerivation.ofCDiffField ℚ) instDifferentialQ Dt x
+    | n + 1, hn, x => False.elim (by omega)
+
+/-- The one-step primitive presentation has `t′ = 1`. -/
+noncomputable def primitiveOneStep : DifferentialTowerPresentation 1 := oneStep [1]
+
+/-- The one-step exponential presentation has `t′ = t`. -/
+noncomputable def exponentialOneStep : DifferentialTowerPresentation 1 := oneStep [0, 1]
+
+/-- The one-step tangent presentation has `t′ = t² + 1`. -/
+noncomputable def tangentOneStep : DifferentialTowerPresentation 1 := oneStep [1, 0, 1]
+
 /-- The legacy dense fraction tower, viewed as the all-primitive explicit presentation. -/
 noncomputable def primitive (N : ℕ) : DifferentialTowerPresentation N where
   derivation n _ := CFieldDerivation.ofCDiffField (DenseFracTower n)
