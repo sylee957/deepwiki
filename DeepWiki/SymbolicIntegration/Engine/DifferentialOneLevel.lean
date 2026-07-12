@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.DifferentialReconstruction
+import DeepWiki.SymbolicIntegration.Engine.Tower.Compositional
 
 /-! # Explicit-differential compositional one-level integration
 
@@ -157,5 +158,32 @@ noncomputable def DynamicPolynomialReduction.CDifferentialPolynomialReduction.as
       (differentialCanonicalOneLevelBranch_reconstruction C kind input) hcorrect,
       differentialOneLevelBranchAssembly_logs_genuine C
         (differentialCanonicalOneLevelBranch C kind input) output hcorrect⟩)
+
+/-- Export the full explicit one-level pipeline at the proof-carrying tower input boundary. -/
+noncomputable def DynamicPolynomialReduction.CDifferentialPolynomialReduction.asRischStageRemainderStage
+    (C : MonomialDifferentialContext (P := P) α)
+    (canonical : CDifferentialCanonicalRepresentation P α C.derivation)
+    (kind : PolynomialReductionKind)
+    (R : CDifferentialPolynomialReduction P α C.derivation)
+    (polynomialDomain : DifferentialPolynomialReductionDomain P α)
+    [LawfulCDifferentialPolynomialReduction C.derivation C.differential R]
+    [CompleteCDifferentialPolynomialReduction C.derivation C.differential R polynomialDomain]
+    (specialDomain : MonomialSpecialDomain P α)
+    [CDifferentialMonomialSpecial P α C.derivation]
+    [LawfulCDifferentialMonomialSpecial C]
+    [CompleteCDifferentialMonomialSpecial C specialDomain]
+    (normalDomain : DifferentialNormalReductionDomain P α)
+    [CDifferentialNormalReduction P α C.derivation]
+    [LawfulCDifferentialNormalReduction C normalDomain]
+    [CompleteCDifferentialNormalReduction C normalDomain]
+    [CDifferentialNormalPostprocessor P α C.derivation]
+    [LawfulCDifferentialNormalPostprocessor C]
+    [CompleteCDifferentialNormalPostprocessor C]
+    [LawfulCDifferentialCanonicalRepresentation C] :
+    RemainderIntegrationStage (RischStageInput P α) (IntegralResult α P) (Unit × Unit)
+      (fun input => IsDifferentialOneLevelIntegrable C kind input.toOneLevelInput)
+      (fun input result _ => IsGenuineDifferentialOneLevelResult C input.toOneLevelInput result) :=
+  (R.asOneLevelRemainderStage C canonical kind polynomialDomain specialDomain normalDomain).precompose
+    RischStageInput.toOneLevelInput
 
 end DeepWiki.SymbolicIntegration
