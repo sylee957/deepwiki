@@ -72,10 +72,13 @@ combines their denotations only at the reconstruction theorem.
    the common recursive semantic invariant, and both the ordinary and
    root-free LRT result embeddings transport their existing certificates into
    it. `TowerIntegralResult.appendInherited` now combines a successor-local
-   result with the preceding result's depth-preserving log syntax, and its
-   genuine-log theorem composes both certificates. The remaining successor
-   theorem is the corresponding semantic evaluation identity for inherited
-   logs.
+   result with the preceding result's depth-preserving log syntax. Its
+   genuine-log theorem composes both certificates, while
+   `TowerLog.denote_inherited`, `towerLog_denoteSum_inheritAll`, and
+   `TowerIntegralResult.denoteSum_appendInherited` prove that inherited logs
+   are evaluated at exactly their original field depth. The remaining work is
+   to make tangent and hyperexponential reconstruction produce the relative
+   certificate that uses this composed log sum.
    `denseFracTower_K_succ` and `denseFracTowerKStep` expose the required
    `Kₙ₊₁ = RatFunc Kₙ` field equality and canonical inclusion across the
    packaged carrier boundary.

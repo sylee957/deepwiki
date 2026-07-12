@@ -149,25 +149,70 @@ noncomputable def TowerLog.EvaluationMaps.map {N : ℕ} {E : Type*} [Field E] [D
 
 /-- Evaluate logs created by the extension over `Kₙ` in a target field with maps through `Kₙ`. -/
 noncomputable def TowerLog.denote {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
-    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) : TowerLog (n + 1) → RatFunc E := by
-  intro log
-  letI : Algebra (CFieldSpec.K (DenseFracTower n)) E :=
-    maps.algebra n hn
-  cases log with
-  | ordinary derivative coefficient argument =>
-    exact localLogTerm (E := E) derivative (coefficient, argument)
-  | lrt derivative residue argument =>
-    exact logResidueTermLrt (E := E) derivative (residue, argument)
-  | inherited log =>
-    cases n with
-    | zero => exact nomatch log
-    | succ n =>
-      exact TowerLog.denote maps (Nat.le_trans (Nat.le_succ n) hn) log
+    (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) : TowerLog (n + 1) → RatFunc E :=
+  match n with
+  | 0 => fun log =>
+    letI : Algebra (CFieldSpec.K (DenseFracTower 0)) E := maps.algebra 0 hn
+    match log with
+    | .ordinary derivative coefficient argument =>
+      localLogTerm (E := E) derivative (coefficient, argument)
+    | .lrt derivative residue argument =>
+      logResidueTermLrt (E := E) derivative (residue, argument)
+  | n + 1 => fun log =>
+    letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) E := maps.algebra (n + 1) hn
+    match log with
+    | .ordinary derivative coefficient argument =>
+      localLogTerm (E := E) derivative (coefficient, argument)
+    | .lrt derivative residue argument =>
+      logResidueTermLrt (E := E) derivative (residue, argument)
+    | .inherited log =>
+      TowerLog.denote maps (Nat.le_trans (Nat.le_succ n) hn) log
+termination_by n
 
 /-- Sum recursive-log denotations in a final evaluation field. -/
 noncomputable def TowerLog.denoteSum {n N : ℕ} {E : Type*} [Field E] [Differential E] [Algebra ℚ E]
     (maps : TowerLog.EvaluationMaps N E) (hn : n ≤ N) (logs : List (TowerLog (n + 1))) : RatFunc E :=
   (logs.map (TowerLog.denote maps hn)).sum
+
+/-- Evaluating an inherited log agrees with evaluating its source-level syntax. -/
+theorem TowerLog.denote_inherited {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n + 1 ≤ N) (log : TowerLog (n + 1)) :
+    TowerLog.denote maps hn (TowerLog.inherited log) =
+      TowerLog.denote maps (Nat.le_trans (Nat.le_succ n) hn) log := by
+  cases n <;> cases log <;> simp only [TowerLog.denote]
+
+/-- Evaluating a lifted log list agrees with evaluating the original list at its source depth. -/
+theorem towerLog_denoteSum_inheritAll {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n + 1 ≤ N) (logs : List (TowerLog (n + 1))) :
+    TowerLog.denoteSum maps hn (TowerLog.inheritAll logs) =
+      TowerLog.denoteSum maps (Nat.le_trans (Nat.le_succ n) hn) logs := by
+  induction logs with
+  | nil => rfl
+  | cons log logs ih =>
+    simp only [TowerLog.inheritAll, TowerLog.denoteSum, List.map_cons, List.sum_cons]
+    change TowerLog.denote maps hn (TowerLog.inherited log) +
+        TowerLog.denoteSum maps hn (TowerLog.inheritAll logs) =
+      TowerLog.denote maps (Nat.le_trans (Nat.le_succ n) hn) log +
+        TowerLog.denoteSum maps (Nat.le_trans (Nat.le_succ n) hn) logs
+    rw [TowerLog.denote_inherited, ih]
+
+/-- Appending lower logs evaluates as the sum of local and lower-depth contributions. -/
+theorem TowerIntegralResult.denoteSum_appendInherited {n N : ℕ} {E : Type*}
+    [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
+    (hn : n + 1 ≤ N) (localResult : TowerIntegralResult (n + 1))
+    (lower : TowerIntegralResult n) :
+    TowerLog.denoteSum maps hn (localResult.appendInherited lower).logs =
+      TowerLog.denoteSum maps hn localResult.logs +
+        TowerLog.denoteSum maps (Nat.le_trans (Nat.le_succ n) hn) lower.logs := by
+  simp only [TowerIntegralResult.appendInherited, TowerLog.denoteSum,
+    List.map_append, List.sum_append]
+  change TowerLog.denoteSum maps hn localResult.logs +
+      TowerLog.denoteSum maps hn (TowerLog.inheritAll lower.logs) =
+    TowerLog.denoteSum maps hn localResult.logs +
+      TowerLog.denoteSum maps (Nat.le_trans (Nat.le_succ n) hn) lower.logs
+  rw [towerLog_denoteSum_inheritAll]
 
 /-- A recursive tower result differentiates to its input after all local and inherited logs are evaluated. -/
 def IsTowerIntegralResult {n : ℕ} (Dt anum aden : DensePoly (DenseFracTower n))
