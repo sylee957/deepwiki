@@ -187,10 +187,11 @@ The primitive entry point can use `denseLrtLevelCapabilitiesWf`, which supplies
 the Wf gcd residue criterion; its full-domain theorem derives canonical normal
 support and the Liouville guard internally.
 
-The layered selector is therefore an end-to-end theorem for an explicitly
-selected finite sequence of certified stages with a common output invariant.
-It does **not** yet construct arbitrary alternations from the preceding result
-alone:
+The layered tower interface now passes the full certified lower level to each
+successor constructor, and its soundness/completeness theorems compose those
+contracts by finite recursion. The existing concrete constructors still do
+**not** consume heterogeneous lower logarithms to construct arbitrary
+alternations from the preceding result alone:
 ordinary hyperexponential/tangent recursion lifts lower `IntegralResult` logs
 through `CRecursiveElementaryIntegrator`, whereas the primitive LRT recursion
 intentionally consumes only a log-free rational lower antiderivative. A fully

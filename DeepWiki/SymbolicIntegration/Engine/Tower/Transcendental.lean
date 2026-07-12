@@ -88,45 +88,49 @@ noncomputable def LayeredTranscendentalStage.asIntegrationStage (S : LayeredTran
   | hyperexponential stage => exact stage.asLayeredIntegrationStage
   | tangent stage => exact stage.asLayeredIntegrationStage
 
-/-- A finite tower choosing common layered-output stages at its base and successors. -/
+/-- A certified common-output integration level at one fraction-tower depth. -/
+structure LayeredTranscendentalLevel (n : ℕ) where
+  /-- The semantic integrability predicate supported by this level. -/
+  Integrable : RischStageInput DensePoly (DenseFracTower n) → Prop
+  /-- Executable stage with the common semantic and genuine-log postcondition. -/
+  stage : IntegrationStage (RischStageInput DensePoly (DenseFracTower n))
+    (TranscendentalIntegralResult (DenseFracTower n)) Integrable LayeredTranscendentalStage.Correct
+
+/-- Promote a selected primitive, hyperexponential, or tangent stage to a certified common-output level. -/
+noncomputable def LayeredTranscendentalLevel.ofSelected (S : LayeredTranscendentalStage n) :
+    LayeredTranscendentalLevel n where
+  Integrable := S.Integrable
+  stage := S.asIntegrationStage
+
+/-- A finite tower whose successor constructor receives the complete certified lower level. -/
 structure LayeredTranscendentalTowerScheme where
-  /-- Selected base stage. -/
-  base : LayeredTranscendentalStage 0
-  /-- Select the next extension stage from the previous selected stage. -/
-  step : ∀ n, LayeredTranscendentalStage n → LayeredTranscendentalStage (n + 1)
+  /-- Certified base level. -/
+  base : LayeredTranscendentalLevel 0
+  /-- Build a successor from its entire lower-level executable and semantic contract. -/
+  step : ∀ n, LayeredTranscendentalLevel n → LayeredTranscendentalLevel (n + 1)
 
-/-- The common layered-output stage selected at a finite tower depth. -/
-def LayeredTranscendentalTowerScheme.stage (T : LayeredTranscendentalTowerScheme) :
-    (n : ℕ) → LayeredTranscendentalStage n
+/-- The complete certified level selected at a finite tower depth. -/
+def LayeredTranscendentalTowerScheme.level (T : LayeredTranscendentalTowerScheme) :
+    (n : ℕ) → LayeredTranscendentalLevel n
   | 0 => T.base
-  | n + 1 => T.step n (T.stage n)
-
-/-- Export a layered selector through generic finite integration-tower recursion. -/
-noncomputable def LayeredTranscendentalTowerScheme.asIntegrationTowerScheme
-    (T : LayeredTranscendentalTowerScheme) :
-    IntegrationTowerScheme (fun n => RischStageInput DensePoly (DenseFracTower n)) where
-  Output n := TranscendentalIntegralResult (DenseFracTower n)
-  Integrable n := (T.stage n).Integrable
-  Correct n := LayeredTranscendentalStage.Correct
-  base := T.base.asIntegrationStage
-  step n _ := (T.step n (T.stage n)).asIntegrationStage
+  | n + 1 => T.step n (T.level n)
 
 /-- Every accepted layered tower result satisfies the common semantic and genuine-log invariant. -/
 theorem LayeredTranscendentalTowerScheme.stage_sound (T : LayeredTranscendentalTowerScheme)
     (n fuel : ℕ) (input : RischStageInput DensePoly (DenseFracTower n))
     (result : TranscendentalIntegralResult (DenseFracTower n))
-    (hdomain : (T.asIntegrationTowerScheme.stage n).domain input)
-    (hrun : (T.asIntegrationTowerScheme.stage n).run fuel input = some result) :
+    (hdomain : (T.level n).stage.domain input)
+    (hrun : (T.level n).stage.run fuel input = some result) :
     LayeredTranscendentalStage.Correct input result :=
-  T.asIntegrationTowerScheme.stage_sound n fuel input result hdomain hrun
+  (T.level n).stage.sound fuel input result hdomain hrun
 
 /-- Every integrable in-domain layered tower input eventually returns a common semantic result. -/
 theorem LayeredTranscendentalTowerScheme.stage_complete (T : LayeredTranscendentalTowerScheme)
     (n : ℕ) (input : RischStageInput DensePoly (DenseFracTower n))
-    (hdomain : (T.asIntegrationTowerScheme.stage n).domain input)
-    (hintegrable : (T.stage n).Integrable input) :
-    ∃ fuel result, (T.asIntegrationTowerScheme.stage n).run fuel input = some result :=
-  T.asIntegrationTowerScheme.stage_complete n input hdomain hintegrable
+    (hdomain : (T.level n).stage.domain input)
+    (hintegrable : (T.level n).Integrable input) :
+    ∃ fuel result, (T.level n).stage.run fuel input = some result :=
+  (T.level n).stage.complete input hdomain hintegrable
 
 /-- Select a primitive root-free stage in the common layered-output language. -/
 def primitiveLayeredTranscendentalStage (S : DenseLrtStage n) : LayeredTranscendentalStage n :=
