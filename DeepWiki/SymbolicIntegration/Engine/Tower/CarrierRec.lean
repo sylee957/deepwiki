@@ -41,6 +41,98 @@ noncomputable instance instCDiffFieldSpecCFracRec
     rw [CFrac.toRatFunc_towerDerivCFracWith (CPoly.one : P α) a]
     rfl
 
+/-- A carrier together with the lawful computable field and differential dictionaries needed by a
+dense represented-fraction tower step. -/
+structure DenseTowerCarrier where
+  /-- The executable carrier at this tower depth. -/
+  Carrier : Type
+  /-- Computable field operations on the carrier. -/
+  cfield : CField Carrier
+  /-- Denotation of the computable field into a mathematical field. -/
+  cfieldSpec : @CFieldSpec Carrier cfield
+  /-- Computable derivation on the carrier. -/
+  cdiffField : @CDiffField Carrier cfield
+  /-- Rational-algebra structure on the denotation field. -/
+  algebraQ : let _ : CField Carrier := cfield
+    let _ : CFieldSpec Carrier := cfieldSpec
+    Algebra ℚ (CFieldSpec.K Carrier)
+  /-- Characteristic-zero law on the denotation field. -/
+  charZero : let _ : CField Carrier := cfield
+    let _ : CFieldSpec Carrier := cfieldSpec
+    CharZero (CFieldSpec.K Carrier)
+  /-- Denotational differential-field contract on the carrier. -/
+  cdiffFieldSpec : @CDiffFieldSpec Carrier cfield cfieldSpec cdiffField
+
+/-- The constant-field base of the dense recursive fraction tower. -/
+noncomputable def denseTowerBase : DenseTowerCarrier where
+  Carrier := ℚ
+  cfield := inferInstance
+  cfieldSpec := inferInstance
+  cdiffField := inferInstance
+  algebraQ := inferInstanceAs (Algebra ℚ ℚ)
+  charZero := inferInstanceAs (CharZero ℚ)
+  cdiffFieldSpec := inferInstance
+
+/-- Extend a packaged carrier by one dense represented-fraction level. -/
+noncomputable def DenseTowerCarrier.step (T : DenseTowerCarrier) : DenseTowerCarrier := by
+  letI : CField T.Carrier := T.cfield
+  letI : CFieldSpec T.Carrier := T.cfieldSpec
+  letI : CDiffField T.Carrier := T.cdiffField
+  letI : Algebra ℚ (CFieldSpec.K T.Carrier) := T.algebraQ
+  letI : CharZero (CFieldSpec.K T.Carrier) := T.charZero
+  letI : CDiffFieldSpec T.Carrier := T.cdiffFieldSpec
+  exact {
+    Carrier := DenseFrac T.Carrier
+    cfield := inferInstance
+    cfieldSpec := inferInstance
+    cdiffField := inferInstance
+    algebraQ := inferInstance
+    charZero := inferInstance
+    cdiffFieldSpec := inferInstance
+  }
+
+/-- The packaged dense represented-fraction carrier obtained after `n` recursive tower steps. -/
+noncomputable def denseTowerCarrier : ℕ → DenseTowerCarrier
+  | 0 => denseTowerBase
+  | n + 1 => (denseTowerCarrier n).step
+
+/-- The executable dense represented-fraction carrier at tower depth `n`. -/
+abbrev DenseFracTower (n : ℕ) : Type := (denseTowerCarrier n).Carrier
+
+/-- The depth-indexed dense tower carries computable field operations. -/
+noncomputable instance instCFieldDenseFracTower (n : ℕ) : CField (DenseFracTower n) :=
+  (denseTowerCarrier n).cfield
+
+/-- The depth-indexed dense tower carries a lawful field denotation. -/
+noncomputable instance instCFieldSpecDenseFracTower (n : ℕ) : CFieldSpec (DenseFracTower n) :=
+  (denseTowerCarrier n).cfieldSpec
+
+/-- The depth-indexed dense tower carries a computable derivation. -/
+noncomputable instance instCDiffFieldDenseFracTower (n : ℕ) : CDiffField (DenseFracTower n) :=
+  (denseTowerCarrier n).cdiffField
+
+/-- The denotation field at every dense tower depth is a `ℚ`-algebra. -/
+noncomputable instance instAlgebraQDenseFracTower (n : ℕ) :
+    Algebra ℚ (CFieldSpec.K (DenseFracTower n)) :=
+  (denseTowerCarrier n).algebraQ
+
+/-- The denotation field at every dense tower depth has characteristic zero. -/
+noncomputable instance instCharZeroDenseFracTower (n : ℕ) :
+    CharZero (CFieldSpec.K (DenseFracTower n)) :=
+  (denseTowerCarrier n).charZero
+
+/-- The depth-indexed dense tower derivation satisfies its denotational contract. -/
+noncomputable instance instCDiffFieldSpecDenseFracTower (n : ℕ) :
+    CDiffFieldSpec (DenseFracTower n) :=
+  (denseTowerCarrier n).cdiffFieldSpec
+
+/-- Tower depth zero is the constant field `ℚ`. -/
+theorem denseFracTower_zero : DenseFracTower 0 = ℚ := rfl
+
+/-- A successor tower depth is one dense represented-fraction extension of the preceding depth. -/
+theorem denseFracTower_succ (n : ℕ) :
+    DenseFracTower (n + 1) = DenseFrac (DenseFracTower n) := rfl
+
 /-- The generic differential-denotation square resolves recursively at depth two for sparse fractions. -/
 theorem sparseFrac_recursive_toK_cderiv (x : SparseFrac (SparseFrac ℚ)) :
     CFieldSpec.toK (CDiffField.cderiv x) = Differential.deriv (CFieldSpec.toK x) :=
