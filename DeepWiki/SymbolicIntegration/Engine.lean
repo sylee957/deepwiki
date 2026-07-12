@@ -46,7 +46,6 @@ import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Engine.PolySplitFactor
 import DeepWiki.SymbolicIntegration.Engine.NormalPartSoundness
 import DeepWiki.SymbolicIntegration.Engine.NormalPartSoundnessExamples
-import DeepWiki.SymbolicIntegration.Engine.OneShotAssembly
 import DeepWiki.SymbolicIntegration.Engine.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Engine.LimitedIntegrateSingle
 import DeepWiki.SymbolicIntegration.Engine.LimitedIntegrateSingleExamples

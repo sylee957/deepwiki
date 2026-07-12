@@ -101,7 +101,7 @@ private def tangentRationalCoefficientCandidate [CLinearSolve ℚ] :
       (List.range nrows).map (fun i => clearedColumns.map fun col => CPoly.coeff col.1 i) ++
       (List.range nrows).map (fun i => clearedColumns.map fun col => CPoly.coeff col.2 i)
     let rhs := CPoly.coeffs clearedA nrows ++ CPoly.coeffs clearedB nrows
-    match CLinearSolve.solveUnique matrix rhs (2 * (degreeBound + 1)) with
+    match CLinearSolve.solveAny matrix rhs (2 * (degreeBound + 1)) with
     | none => none
     | some solution =>
         let cNum : DensePoly ℚ := CPoly.ofFn (degreeBound + 1) fun i => solution.getD i 0

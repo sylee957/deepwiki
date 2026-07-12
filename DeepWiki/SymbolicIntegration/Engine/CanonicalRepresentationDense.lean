@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
+import DeepWiki.SymbolicIntegration.Engine.Assemble
 
 /-! # Dense canonical representation
 
