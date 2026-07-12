@@ -33,6 +33,28 @@ class LrtLiouvilleFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField 
   descendGenuineLrt : ∀ (Dt a d : DensePoly α), toPoly d ≠ 0 →
     IsElementaryIntegrableGenuineLrt Dt a d → cResidueConstantGuard Dt a d = true
 
+omit [CPolySubresultant DensePoly] in
+/-- Over the rational constant field, coefficientwise derivation is zero, so every root-free residue
+polynomial is constant and the LRT Liouville guard always passes. -/
+private theorem cResidueConstantGuardQ (Dt a d : DensePoly ℚ) :
+    cResidueConstantGuard Dt a d = true := by
+  unfold cResidueConstantGuard
+  dsimp only
+  rw [DensePoly.cmapDeriv_dense_eq]
+  induction (cmonic (cResidueResultantTower Dt
+      (cHermiteReduceTower Dt a d).2.1 (cHermiteReduceTower Dt a d).2.2) : DensePoly ℚ) with
+  | nil => simp [DensePoly.cisZero]
+  | cons q qs ih =>
+    have hnorm : DensePoly.cnorm (List.map CDiffField.cderiv qs) = [] := by
+      simpa [DensePoly.cisZero] using ih
+    simp [DensePoly.cisZero, DensePoly.cnorm, hnorm]
+    change CCommRing.isZero (0 : ℚ) = true
+    rfl
+
+/-- The rational constant field supplies the LRT Liouville descent frontier. -/
+noncomputable instance instLrtLiouvilleFrontierQ : LrtLiouvilleFrontier.{0, 0, 0} ℚ where
+  descendGenuineLrt Dt a d _ _ := cResidueConstantGuardQ Dt a d
+
 /-- **Derived completeness — a decidable non-integrability certificate (root-free).** If the integrability
 guard *fails* (`cResidueConstantGuard = false`: some residue is non-constant), then `a/d` is **not** genuinely
 (broadly) elementary integrable. Non-vacuous, and with **no rational-residue restriction** (unlike the rational

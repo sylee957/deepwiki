@@ -201,6 +201,19 @@ def primitiveRischLevelLrtDomain [CPolyGcd DensePoly α] [CPolySplitFactor Dense
 
 namespace CRischLevelLrt
 
+/-- A successful LRT level preserves the constant-residue invariant of its canonical normal remainder. -/
+theorem allResiduesConstant_of_integrate [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
+    [CPolySquarefree DensePoly α] [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CRischLevelLrt α) (Dt a d : DensePoly α) (res : LrtResult α)
+    (hrun : C.integrate Dt a d = some res)
+    (hnormal : AllResiduesConstantLrt
+      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d))) :
+    AllResiduesConstantLrt res := by
+  rw [integrate] at hrun
+  split at hrun
+  · simp at hrun
+  · exact cIntegrateCaseLrt_allResiduesConstant C.case Dt a d res hrun hnormal
+
 /-- **Formal LRT soundness.** Any successful run satisfies the algebraic-residue log-derivative identity
 `IsIntegralResultLrt` — over every alg-closed differential extension `E`, `D_E(rational) + Σ residue logs =
 a/d`. Composed from the instance's `specialSound` + `reducedSoundLrt` through the assembler soundness

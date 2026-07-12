@@ -1,4 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
+import DeepWiki.SymbolicIntegration.Engine.Tower.AlgebraicCoefficient
+import DeepWiki.SymbolicIntegration.Engine.Tower.AlgebraicCoefficientLrt
 import DeepWiki.SymbolicIntegration.Engine.Tower.Compositional
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
@@ -12,6 +14,8 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDECompleteness
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEWellFounded
+import DeepWiki.SymbolicIntegration.Engine.Tower.Transcendental
+import DeepWiki.SymbolicIntegration.Engine.Tower.TranscendentalResult
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
 /-! # Computable engine — arbitrary-depth towers (`CFrac`) aggregator. -/

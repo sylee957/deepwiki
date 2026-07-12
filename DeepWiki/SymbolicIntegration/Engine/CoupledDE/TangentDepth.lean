@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentPolynomial
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentSpecial
+import DeepWiki.SymbolicIntegration.Engine.Tower.Compositional
 import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
 
@@ -53,6 +54,43 @@ noncomputable def denseTangentLevelCompositionalDomain (C : DenseTangentLevelCap
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
   exact recursiveTowerTangentRischLevelCompositionalDomain C.normal C.coupled solverDomain
     coefficientDomain
+
+/-- Package a tangent level with its semantic recursive domains as one certified dense tower stage. -/
+noncomputable def denseTangentCompositionalStage (C : DenseTangentLevelCapabilities n)
+    (solverDomain : TangentCoefficientDomain (α := DenseFracTower n))
+    [LawfulCTangentCoefficientSolver C.coupled]
+    [CompleteCTangentCoefficientSolver C.coupled solverDomain]
+    (coefficientDomain : RecursiveElementaryDomain (α := DenseFracTower n))
+    [LawfulCRecursiveElementaryIntegrator C.coefficient]
+    [CompleteCRecursiveElementaryIntegrator C.coefficient coefficientDomain] : DenseRischStage n := by
+  letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
+  letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) :=
+    C.lawfulCanonical
+  let level := denseTangentLevel C
+  let domain := denseTangentLevelCompositionalDomain C solverDomain coefficientDomain
+  letI : LawfulCRischLevel level domain := by
+    dsimp [level, domain]
+    unfold denseTangentLevel denseTangentLevelCompositionalDomain
+    infer_instance
+  letI : LawfulGenuineCRischLevel level domain := by
+    dsimp [level, domain]
+    unfold denseTangentLevel denseTangentLevelCompositionalDomain
+    infer_instance
+  letI : CompleteCRischLevel level domain := by
+    dsimp [level, domain]
+    unfold denseTangentLevel denseTangentLevelCompositionalDomain
+    infer_instance
+  exact ⟨level, domain, inferInstance, inferInstance, inferInstance⟩
+
+/-- The sparse tangent stage is the certified conversion of the selected dense tangent stage. -/
+noncomputable def sparseTangentCompositionalStage (C : DenseTangentLevelCapabilities n)
+    (solverDomain : TangentCoefficientDomain (α := DenseFracTower n))
+    [LawfulCTangentCoefficientSolver C.coupled]
+    [CompleteCTangentCoefficientSolver C.coupled solverDomain]
+    (coefficientDomain : RecursiveElementaryDomain (α := DenseFracTower n))
+    [LawfulCRecursiveElementaryIntegrator C.coefficient]
+    [CompleteCRecursiveElementaryIntegrator C.coefficient coefficientDomain] : SparseRischStage n :=
+  (denseTangentCompositionalStage C solverDomain coefficientDomain).toSparse
 
 /-- The canonical decomposition selected by a dense tangent capability. -/
 noncomputable def denseTangentCanonicalResult (C : DenseTangentLevelCapabilities n)

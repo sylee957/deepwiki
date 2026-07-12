@@ -14,34 +14,19 @@ open DensePoly GBPolyCore
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
-/-! ## The reduction theorem: regularity + correctness + bookkeeping ⟹ `CPrimPRSGenAssocReg` -/
-
-/-- **Per-step content-strip bookkeeping** `CPrimPRSGenFuelOk fuel P Q`: at each primitive-PRS node, every
-`t`-coefficient entering `gbprimitivePartCore` has `cnorm`-length at most `30`, mirroring the
-`cprimPRSgcdGenCore` recursion so it threads alongside `CPrimPRSGenRegular`. -/
-def CPrimPRSGenFuelOk (cgcdB : DensePoly β → DensePoly β → DensePoly β) :
-    ℕ → GBPolyCore β → GBPolyCore β → Prop
-  | 0, P, _ => ∀ a ∈ gbnormCore P, (DensePoly.cnorm a : List β).length ≤ 30
-  | fuel + 1, P, Q =>
-    if DensePoly.cisZero (gbnormCore Q) = true then
-      ∀ a ∈ gbnormCore (gbnormCore P), (DensePoly.cnorm a : List β).length ≤ 30
-    else
-      (∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
-          (DensePoly.cnorm a : List β).length ≤ 30)
-        ∧ CPrimPRSGenFuelOk cgcdB fuel (gbnormCore Q)
-            (gbprimitivePartCore cgcdB (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))
+/-! ## The reduction theorem: regularity + correctness ⟹ `CPrimPRSGenAssocReg` -/
 
 /-- **The reduction theorem** `CPrimPRSGenAssocReg` from PRS termination and gcd-correctness: given
-`CPrimPRSGenRegular cgcdB fuel P Q`, `CgcdBCorrect cgcdB`, and `CPrimPRSGenFuelOk cgcdB fuel P Q`, the
-per-step regularity bundle `CPrimPRSGenAssocReg cgcdB fuel P Q` holds. -/
+`CPrimPRSGenRegular cgcdB fuel P Q` and `CgcdBCorrect cgcdB`, the per-step regularity bundle
+`CPrimPRSGenAssocReg cgcdB fuel P Q` holds. Content stripping needs no artificial coefficient-size bound. -/
 theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : DensePoly β → DensePoly β → DensePoly β)
     (hcorr : CgcdBCorrect cgcdB) :
     ∀ (fuel : ℕ) (P Q : GBPolyCore β), CPrimPRSGenRegular cgcdB fuel P Q →
-      CPrimPRSGenFuelOk cgcdB fuel P Q → CPrimPRSGenAssocReg cgcdB fuel P Q := by
+      CPrimPRSGenAssocReg cgcdB fuel P Q := by
   intro fuel
   induction fuel with
   | zero =>
-    intro P Q hreg hfuel
+    intro P Q hreg
     -- at fuel 0, CPrimPRSGenRegular must be a `stop` node (the `step` ctor needs `fuel+1`)
     rw [CPrimPRSGenAssocReg]
     refine ⟨?_, ?_⟩
@@ -49,40 +34,36 @@ theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : DensePoly β → Dens
       cases hreg with
       | stop hz => rwa [cisZero_gbnormCore] at hz
     · -- clause (iii) on `P` (terminal strip): total content scaling
-      rw [CPrimPRSGenFuelOk] at hfuel
-      exact associated_toGBPolyG_gbprimitivePartCore_total 30 cgcdB hcorr P hfuel
+      exact associated_toGBPolyG_gbprimitivePartCore_total cgcdB hcorr P
   | succ fuel ih =>
-    intro P Q hreg hfuel
+    intro P Q hreg
     rw [CPrimPRSGenAssocReg]
     cases hreg with
     | stop hz =>
       -- terminal: left disjunct (Q normalizes to zero) + clause (iii) on `gbnormCore P`
       refine Or.inl ⟨hz, ?_⟩
-      rw [CPrimPRSGenFuelOk, if_pos hz] at hfuel
-      have h := associated_toGBPolyG_gbprimitivePartCore_total 30 cgcdB hcorr (gbnormCore P) hfuel
+      have h := associated_toGBPolyG_gbprimitivePartCore_total cgcdB hcorr (gbnormCore P)
       rwa [toGBPolyG_gbnormCore] at h
-    | step hz hguard hrec =>
+    | step hz _ hrec =>
       -- recursive node: right disjunct
-      rw [CPrimPRSGenFuelOk, if_neg (by rw [hz]; simp)] at hfuel
-      obtain ⟨hfuelPrem, hfuelRec⟩ := hfuel
       refine Or.inr ⟨by rw [hz]; simp, ?_, ?_, ?_⟩
       · -- clause (ii): the nonzero-multiplier pseudo-division witness
-        obtain ⟨s, c, hrel, hc0⟩ := toGBPolyG_gbpsremainderCore_ne_zero 60 (gbnormCore P)
+        obtain ⟨s, c, hrel, hc0⟩ := toGBPolyG_gbpsremainderCore_ne_zero (gbnormCore P).length (gbnormCore P)
           (gbnormCore Q) (by rw [gbnormCore_idemp]; exact hz)
         exact ⟨s, c, hrel, hc0⟩
       · -- clause (iii): the total content strip on `prem`
-        exact associated_toGBPolyG_gbprimitivePartCore_total 30 cgcdB hcorr
-          (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)) hfuelPrem
-      · -- the tower recursion: regularity ∧ fuel ⟹ AssocReg one level down
-        exact ih (gbnormCore Q) _ hrec hfuelRec
+        exact associated_toGBPolyG_gbprimitivePartCore_total cgcdB hcorr
+          (gbpsremainderCore (gbnormCore P).length (gbnormCore P) (gbnormCore Q))
+      · -- the tower recursion preserves regularity.
+        exact ih (gbnormCore Q) _ hrec
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- The per-step regularity gate follows from PRS termination, level-β gcd-correctness, and transparent fuel.
 example (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBCorrect cgcdB)
-    (fuel : ℕ) (P Q : GBPolyCore β) (hreg : CPrimPRSGenRegular cgcdB fuel P Q)
-    (hfuel : CPrimPRSGenFuelOk cgcdB fuel P Q) : CPrimPRSGenAssocReg cgcdB fuel P Q :=
-  cPrimPRSGenAssocReg_of_regular_of_correct cgcdB hcorr fuel P Q hreg hfuel
+    (fuel : ℕ) (P Q : GBPolyCore β) (hreg : CPrimPRSGenRegular cgcdB fuel P Q) :
+    CPrimPRSGenAssocReg cgcdB fuel P Q :=
+  cPrimPRSGenAssocReg_of_regular_of_correct cgcdB hcorr fuel P Q hreg
 
 -- The list-length WF guard is the polynomial `t`-degree.
 example (p : GBPolyCore β) : DensePoly.cdeg p = (DensePoly.toPoly p).natDegree := DensePoly.cdegG_eq_natDegree p
@@ -112,8 +93,8 @@ example (q : GBPolyCore β) (hq : DensePoly.cisZero (gbnormCore q) = false)
 
 /-! ## Summary
 
-`CPrimPRSGenAssocReg cgcdB fuel P Q` is equivalent (given the bookkeeping `CPrimPRSGenFuelOk`) to two
-per-run witnesses: PRS termination `CPrimPRSGenRegular` and level-`β` gcd-correctness `CgcdBCorrect`.
+`CPrimPRSGenAssocReg cgcdB fuel P Q` follows from two per-run witnesses: PRS termination
+`CPrimPRSGenRegular` and level-`β` gcd-correctness `CgcdBCorrect`.
 The degree-drop content of termination is a theorem (`natDegree_gbStepReduce_lt`,
 `gbpsremainderCore_degree_lt`), leaving only a satisfiable numeric fuel bound. -/
 

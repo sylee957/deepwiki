@@ -28,6 +28,15 @@ LRT embeddings preserve the derivative identity as well as their respective
 genuine-log certificates. The next step is to make this result language the
 output of coefficient recursion rather than only an embedding target.
 
+The tangent reconstruction audit adds one necessary distinction for phase 4:
+`AlgebraicCoefficientLog` describes a **lower** unit-monomial antiderivative,
+whose derivative is in the coefficient field. It is not a replacement for an
+upper `IntegralResult.logs` entry, whose argument is differentiated by the
+current monomial `Dt`. The next full-result carrier must therefore retain two
+separate layers: local `(coefficient, polynomial-argument)` logs for the
+current extension, and inherited algebraic coefficient logs. It combines their
+denotations only at the reconstruction theorem.
+
 ## Phases
 
 1. **Done.** Define an algebraic coefficient-log language, with ordinary log terms and
@@ -37,15 +46,17 @@ output of coefficient recursion rather than only an embedding target.
 2. **Done.** Define an algebraic coefficient-integral result: a rational coefficient
    part plus that language. Prove embeddings from `CoefficientIntegralResult`
    and `LrtResult`, preserving derivative identities and genuine logs.
-3. **In progress.** Generalize the recursive coefficient interface and its checked adapter to
+3. **Done.** Generalize the recursive coefficient interface and its checked adapter to
    this result language. The representation-independent `IntegrationStage`
    contract now lives in `Tower/Stage`, and the ordinary recursive adapter
    embeds through `CRecursiveElementaryIntegrator.asAlgebraicCoefficientStage`.
-   Add the primitive LRT adapter using its genuine stage theorem next.
-4. Generalize tangent and hyperexponential special/reconstruction assemblies
-   to append algebraic coefficient logs to their own result rather than forcing
-   them into `IntegralResult.logs`. Prove local soundness and relative
-   completeness by composition.
+   `DenseLrtStage.asAlgebraicCoefficientStage` supplies the primitive adapter
+   from its genuine stage theorem while retaining the root-free residue guard.
+4. **In progress.** `Tower/TranscendentalResult.lean` defines the two-layer
+   full-result carrier and its semantic invariant. Generalize tangent and
+   hyperexponential special/reconstruction assemblies to append inherited
+   algebraic coefficient logs without forcing them into `IntegralResult.logs`,
+   then prove their local soundness and relative completeness by composition.
 5. Replace the selected-only claim in `TranscendentalTowerScheme` with a true
    heterogeneous successor constructor, whose lower adapter is supplied by the
    preceding stage. Then prove finite-tower soundness and relative completeness

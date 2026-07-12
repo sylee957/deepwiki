@@ -7,5 +7,6 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.NormalCore
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.NormalSemantic
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.RischLevel
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Special
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.TowerStage
 
 /-! # Hyperexponential computable integration modules. -/

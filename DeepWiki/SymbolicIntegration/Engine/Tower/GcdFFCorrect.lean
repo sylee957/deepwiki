@@ -500,16 +500,20 @@ def CPrimPRSGenAssocReg (cgcdB : DensePoly β → DensePoly β → DensePoly β)
         (∃ (s : GBPolyCore β) (c : DensePoly β),
           Polynomial.C (CFrac.am β (DensePoly.toPoly c)) * toGBPoly (GBPolyCore.gbnormCore P)
             = toGBPoly s * toGBPoly (GBPolyCore.gbnormCore Q)
-              + toGBPoly (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
+              + toGBPoly (GBPolyCore.gbpsremainderCore (GBPolyCore.gbnormCore P).length
+                  (GBPolyCore.gbnormCore P)
                   (GBPolyCore.gbnormCore Q))
           ∧ CFrac.am β (DensePoly.toPoly c) ≠ 0) ∧
         Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB
-            (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
-          (toGBPoly (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
+            (GBPolyCore.gbpsremainderCore (GBPolyCore.gbnormCore P).length
+              (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
+          (toGBPoly (GBPolyCore.gbpsremainderCore (GBPolyCore.gbnormCore P).length
+              (GBPolyCore.gbnormCore P)
               (GBPolyCore.gbnormCore Q))) ∧
         CPrimPRSGenAssocReg cgcdB fuel (GBPolyCore.gbnormCore Q)
           (GBPolyCore.gbprimitivePartCore cgcdB
-            (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
+            (GBPolyCore.gbpsremainderCore (GBPolyCore.gbnormCore P).length
+              (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
 
 omit [CFieldDomain β DensePoly] in
 /-- The primitive-PRS gcd invariant: for a regular run, `Associated (toGBPoly (cprimPRSgcdGenCore cgcdB
@@ -534,7 +538,7 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : DensePoly β → DenseP
         let P := GBPolyCore.gbnormCore P; let Q := GBPolyCore.gbnormCore Q;
         if DensePoly.cisZero Q then GBPolyCore.gbprimitivePartCore cgcdB P
         else cprimPRSgcdGenCore cgcdB fuel Q
-          (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q))))
+          (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore P.length P Q))))
       (gcd (toGBPoly P) (toGBPoly Q))
     simp only
     by_cases hQ : DensePoly.cisZero (GBPolyCore.gbnormCore Q) = true
@@ -552,7 +556,7 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : DensePoly β → DenseP
       · exact absurd h hQ
       set Pn := GBPolyCore.gbnormCore P with hPn
       set Qn := GBPolyCore.gbnormCore Q with hQn
-      set prem := GBPolyCore.gbpsremainderCore 60 Pn Qn with hprem
+      set prem := GBPolyCore.gbpsremainderCore Pn.length Pn Qn with hprem
       set r := GBPolyCore.gbprimitivePartCore cgcdB prem with hr
       have hih := ih Qn r hrec
       have hstep : Associated (gcd (toGBPoly Pn) (toGBPoly Qn))
@@ -612,11 +616,10 @@ open GBPolyCore
 omit [CFieldDomain β DensePoly] in
 /-- When the content `g` is nonzero and divides every `t`-coefficient exactly, `C(toPoly g) ·
 DensePoly.toPoly (gbprimitivePartCore cgcdB p) = DensePoly.toPoly p`. -/
-theorem toPolyG_gbprimitivePartCore_exact (fuel : ℕ)
+theorem toPolyG_gbprimitivePartCore_exact
     (cgcdB : DensePoly β → DensePoly β → DensePoly β) (p : GBPolyCore β)
     (hg : ¬ DensePoly.cisZero (gbcontentCore cgcdB p) = true)
     (hgcn : DensePoly.cnorm (gbcontentCore cgcdB p) ≠ [])
-    (_hfuel : ∀ a ∈ gbnormCore p, (DensePoly.cnorm a : List β).length ≤ fuel)
     (hdvd : ∀ a ∈ gbnormCore p, DensePoly.toPoly (gbcontentCore cgcdB p) ∣ DensePoly.toPoly a) :
     Polynomial.C (DensePoly.toPoly (gbcontentCore cgcdB p))
         * DensePoly.toPoly (gbprimitivePartCore cgcdB p)
@@ -631,16 +634,15 @@ theorem toPolyG_gbprimitivePartCore_exact (fuel : ℕ)
 omit [CFieldDomain β DensePoly] in
 /-- Clause (iii): under the content-nonzero and content-divides-each-coefficient hypotheses, `Associated
 (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)` over β(s). -/
-theorem associated_toGBPolyG_gbprimitivePartCore (fuel : ℕ)
+theorem associated_toGBPolyG_gbprimitivePartCore
     (cgcdB : DensePoly β → DensePoly β → DensePoly β) (p : GBPolyCore β)
     (hg : ¬ DensePoly.cisZero (gbcontentCore cgcdB p) = true)
     (hgcn : DensePoly.cnorm (gbcontentCore cgcdB p) ≠ [])
     (hg0 : DensePoly.toPoly (gbcontentCore cgcdB p) ≠ 0)
-    (hfuel : ∀ a ∈ gbnormCore p, (DensePoly.cnorm a : List β).length ≤ fuel)
     (hdvd : ∀ a ∈ gbnormCore p, DensePoly.toPoly (gbcontentCore cgcdB p) ∣ DensePoly.toPoly a) :
     Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p) := by
   -- lift the DensePoly.toPoly-exact identity through liftK to a C(am g)-scaling on toGBPoly
-  have hexact := toPolyG_gbprimitivePartCore_exact fuel cgcdB p hg hgcn hfuel hdvd
+  have hexact := toPolyG_gbprimitivePartCore_exact cgcdB p hg hgcn hdvd
   have hl := congrArg (liftK β) hexact
   rw [map_mul, liftKG_C] at hl
   -- hl : C (am (toPoly g)) * toGBPoly (gbprimitivePartCore …) = toGBPoly p
@@ -704,16 +706,15 @@ theorem toPolyG_gbcontentCore_dvd_mem (cgcdB : DensePoly β → DensePoly β →
   rw [hbc]
   exact (toPolyG_foldl_cgcdB_dvd cgcdB hcorr [] (GBPolyCore.gbnormCore p)).2
 
-/-- Clause (iii) discharged from `CgcdBCorrect cgcdB` (plus content-nonzero and the per-coefficient
-bound): `Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)`. -/
-theorem associated_toGBPolyG_gbprimitivePartCore_of_correct (fuel : ℕ)
+/-- Clause (iii) discharged from `CgcdBCorrect cgcdB`: `Associated
+(toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)`. -/
+theorem associated_toGBPolyG_gbprimitivePartCore_of_correct
     (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
     (hg : ¬ DensePoly.cisZero (GBPolyCore.gbcontentCore cgcdB p) = true)
     (hgcn : DensePoly.cnorm (GBPolyCore.gbcontentCore cgcdB p) ≠ [])
-    (hg0 : DensePoly.toPoly (GBPolyCore.gbcontentCore cgcdB p) ≠ 0)
-    (hfuel : ∀ a ∈ GBPolyCore.gbnormCore p, (DensePoly.cnorm a : List β).length ≤ fuel) :
+    (hg0 : DensePoly.toPoly (GBPolyCore.gbcontentCore cgcdB p) ≠ 0) :
     Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB p)) (toGBPoly p) :=
-  associated_toGBPolyG_gbprimitivePartCore fuel cgcdB p hg hgcn hg0 hfuel
+  associated_toGBPolyG_gbprimitivePartCore cgcdB p hg hgcn hg0
     (toPolyG_gbcontentCore_dvd_mem cgcdB hcorr p)
 
 /-! ### Step 3 — the recursive `cgcdFFRawCore` capstone (the deliverable)
@@ -731,11 +732,12 @@ example (cgcdB : DensePoly β → DensePoly β → DensePoly β) (fuel : ℕ) (P
   associated_toGBPolyG_cprimPRSgcdGenCore cgcdB fuel P Q hreg
 
 
-/-! ### Verdict and the remaining gap
-The fraction-free-gcd correctness holds at every tower level, gated on the per-step regularity bundle
-`CPrimPRSGenAssocReg`; clauses (ii) and (iii) are discharged from `CgcdBCorrect cgcdB`. The remaining gap
-is unconditional bookkeeping: discharging clause (i) termination from a `t`-degree bound, and threading
-`CgcdBCorrect (cgcdFFRawCore β)` with its fuel/termination side-conditions through the tower recursion. -/
+/-! ### Verdict
+
+The fuel specification's primitive-PRS invariant is reduced to `CPrimPRSGenAssocReg`; clauses (ii) and
+(iii) follow from `CgcdBCorrect cgcdB`. `PrimPRSRegular/Termination` discharges the degree-fuelled
+termination witness, while `WellFounded` lifts the resulting Wf primitive-PRS invariant through denominator
+clearing and monic normalization to the recursive dense gcd law. -/
 
 #print axioms associated_toGBPolyG_cprimPRSgcdGenCore
 

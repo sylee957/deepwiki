@@ -27,6 +27,12 @@ structure AlgebraicCoefficientIntegralResult (β : Type u) [CField β] where
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,u} β] [CDiffField β]
 
+/-- Add two heterogeneous coefficient antiderivative results. -/
+def AlgebraicCoefficientIntegralResult.add (x y : AlgebraicCoefficientIntegralResult β) :
+    AlgebraicCoefficientIntegralResult β where
+  rational := CCommRing.add x.rational y.rational
+  logs := x.logs ++ y.logs
+
 /-- Embed an ordinary recursive coefficient result into the heterogeneous log language. -/
 def AlgebraicCoefficientIntegralResult.ofOrdinary (res : CoefficientIntegralResult (DenseFrac β)) :
     AlgebraicCoefficientIntegralResult β where
@@ -38,6 +44,11 @@ def AlgebraicCoefficientIntegralResult.ofLrt (res : LrtResult β) :
     AlgebraicCoefficientIntegralResult β where
   rational := CField.div (CFrac.ofPoly res.rational.1) (CFrac.ofPoly res.rational.2)
   logs := res.logs.map fun RS => .lrt RS.1 RS.2
+
+/-- Embed a unit-monomial lower Risch result into the heterogeneous coefficient language. -/
+def AlgebraicCoefficientIntegralResult.ofUnitRischResult (res : IntegralResult β) :
+    AlgebraicCoefficientIntegralResult β :=
+  AlgebraicCoefficientIntegralResult.ofOrdinary (liftRischResultToCoefficient res)
 
 /-- The genuine-log condition for one heterogeneous coefficient log contribution. -/
 def AlgebraicCoefficientLog.IsGenuine : AlgebraicCoefficientLog β → Prop
@@ -63,8 +74,16 @@ noncomputable def AlgebraicCoefficientLog.denote {E : Type*} [Field E]
 /-- The derivative contribution of a heterogeneous coefficient-log list. -/
 noncomputable def algebraicCoefficientLogSum {E : Type*} [Field E]
     [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
-    (Dt : DensePoly β) (logs : List (AlgebraicCoefficientLog β)) : RatFunc E :=
+  (Dt : DensePoly β) (logs : List (AlgebraicCoefficientLog β)) : RatFunc E :=
   (logs.map (AlgebraicCoefficientLog.denote (E := E) Dt)).sum
+
+/-- The derivative contribution of concatenated heterogeneous logs is the sum of their contributions. -/
+theorem algebraicCoefficientLogSum_append {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
+    (Dt : DensePoly β) (xs ys : List (AlgebraicCoefficientLog β)) :
+    algebraicCoefficientLogSum (E := E) Dt (xs ++ ys) =
+      algebraicCoefficientLogSum (E := E) Dt xs + algebraicCoefficientLogSum (E := E) Dt ys := by
+  simp [algebraicCoefficientLogSum]
 
 /-- A heterogeneous coefficient result differentiates to its input after base change to every algebraically
 closed differential extension. -/
@@ -79,6 +98,51 @@ def IsAlgebraicCoefficientIntegralResult [CDiffFieldSpec β] (c : DenseFrac β)
 /-- A lower fraction possesses a heterogeneous algebraic coefficient antiderivative. -/
 def IsAlgebraicCoefficientElementarilyIntegrable [CDiffFieldSpec β] (c : DenseFrac β) : Prop :=
   ∃ res : AlgebraicCoefficientIntegralResult β, IsAlgebraicCoefficientIntegralResult c res
+
+/-- A heterogeneous coefficient result is semantically valid and every reconstructed logarithm is genuine. -/
+def IsGenuineAlgebraicCoefficientIntegralResult [CDiffFieldSpec β] (c : DenseFrac β)
+    (res : AlgebraicCoefficientIntegralResult β) : Prop :=
+  IsAlgebraicCoefficientIntegralResult c res ∧ res.LogsGenuine
+
+/-- Genuine-log validity is closed under addition of heterogeneous coefficient results. -/
+theorem AlgebraicCoefficientIntegralResult.logsGenuine_add
+    (x y : AlgebraicCoefficientIntegralResult β) (hx : x.LogsGenuine) (hy : y.LogsGenuine) :
+    (x.add y).LogsGenuine := by
+  intro log hlog
+  rw [AlgebraicCoefficientIntegralResult.add] at hlog
+  rcases List.mem_append.mp hlog with hmem | hmem
+  · exact hx log hmem
+  · exact hy log hmem
+
+/-- The heterogeneous coefficient antiderivative invariant is closed under addition. -/
+theorem isAlgebraicCoefficientIntegralResult_add [CDiffFieldSpec β]
+    [CFieldDomain β DensePoly] [Algebra ℚ (CFieldSpec.K β)]
+    (c d : DenseFrac β) (x y : AlgebraicCoefficientIntegralResult β)
+    (hx : IsAlgebraicCoefficientIntegralResult c x)
+    (hy : IsAlgebraicCoefficientIntegralResult d y) :
+    IsAlgebraicCoefficientIntegralResult (CCommRing.add c d) (x.add y) := by
+  intro E _ _ _ _ _ _
+  have hxE := hx E
+  have hyE := hy E
+  rw [AlgebraicCoefficientIntegralResult.add, algebraicCoefficientLogSum_append]
+  rw [toK_cderiv_denseFrac, CFieldSpec.toK_add, map_add, map_add]
+  calc
+    ratFuncBaseChange E (towerFractionFieldDerivP ([CCommRing.one] : DensePoly β)
+        (CFieldSpec.toK x.rational)) +
+        ratFuncBaseChange E (towerFractionFieldDerivP ([CCommRing.one] : DensePoly β)
+          (CFieldSpec.toK y.rational)) +
+          (algebraicCoefficientLogSum (E := E) ([CCommRing.one] : DensePoly β) x.logs +
+            algebraicCoefficientLogSum (E := E) ([CCommRing.one] : DensePoly β) y.logs) =
+        (ratFuncBaseChange E (CFieldSpec.toK (CDiffField.cderiv x.rational)) +
+          algebraicCoefficientLogSum (E := E) ([CCommRing.one] : DensePoly β) x.logs) +
+        (ratFuncBaseChange E (CFieldSpec.toK (CDiffField.cderiv y.rational)) +
+          algebraicCoefficientLogSum (E := E) ([CCommRing.one] : DensePoly β) y.logs) := by
+      rw [toK_cderiv_denseFrac, toK_cderiv_denseFrac]
+      ring
+    _ = ratFuncBaseChange E (CFieldSpec.toK c) + ratFuncBaseChange E (CFieldSpec.toK d) := by
+      rw [hxE, hyE]
+    _ = ratFuncBaseChange E (CFieldSpec.toK (CCommRing.add c d)) := by
+      rw [CFieldSpec.toK_add, map_add]
 
 /-- The common integration-stage specialization for heterogeneous coefficient antiderivatives. -/
 abbrev AlgebraicCoefficientStage [CDiffFieldSpec β] :=
@@ -123,6 +187,19 @@ theorem isAlgebraicCoefficientIntegralResult_ofOrdinary [CDiffFieldSpec β]
   have hbase := congrArg (ratFuncBaseChange E) hres.1
   rw [map_add, ← algebraicCoefficientLogSum_ofOrdinary] at hbase
   exact hbase
+
+/-- A genuine unit-monomial lower Risch identity embeds into the heterogeneous coefficient semantics. -/
+theorem isAlgebraicCoefficientIntegralResult_ofUnitRischResult [CDiffFieldSpec β]
+    [CFieldDomain β DensePoly] [Algebra ℚ (CFieldSpec.K β)]
+    (c : DenseFrac β) (res : IntegralResult β)
+    (hintegral : IsIntegralResultP ([CCommRing.one] : DensePoly β)
+      (CFrac.num c) (CFrac.den c) res)
+    (hconstants : ∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0)
+    (hargs : ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0) :
+    IsAlgebraicCoefficientIntegralResult c
+      (AlgebraicCoefficientIntegralResult.ofUnitRischResult res) :=
+  isAlgebraicCoefficientIntegralResult_ofOrdinary c (liftRischResultToCoefficient res)
+    (isCoefficientIntegralResult_liftRischResult c res hintegral hconstants hargs)
 
 /-- An ordinary recursive coefficient integrator is a common stage after embedding its log language. -/
 noncomputable def CRecursiveElementaryIntegrator.asAlgebraicCoefficientStage

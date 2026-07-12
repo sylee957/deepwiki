@@ -22,13 +22,22 @@ dense and sparse code are adapters, not separate algorithms.
 - `convertRischLevel` and `denseMonomialCaseAsSparse` transport lawful,
   genuine, and complete contracts across representations.
 
-The current specializations do not yet share one semantic completeness story:
+`Tower/Compositional` now exposes `IntegrationStage`: an output-polymorphic,
+fuel-indexed contract carrying a semantic domain, accepted-output correctness,
+and relative completeness. `DenseRischStage.asIntegrationStage` exports the
+ordinary-log dense stages, while `DenseLrtStage.asIntegrationStage` exports the
+guarded algebraic-residue primitive stage without coercing its log type.
+`SparseLrtStage` is the corresponding certified sparse-input adapter: it runs
+the dense root-free backend and deliberately retains the dense LRT result.
+
+The specializations share one output-polymorphic stage theorem while retaining their mathematically distinct
+semantic domains:
 
 | Case | Current path | Gap to close |
 | --- | --- | --- |
-| Primitive | Root-free LRT `CLrtMonomialCase` and recursive limited integration | The rational special result now bridges to the common special certificate without conflating algebraic-residue logs; connect the full LRT assembly through the tower package. |
-| Exponential | `Hyperexp/CaseChecked`, `Hyperexp/NormalSemantic`, and `Hyperexp/RischLevel` | Laurent special and residual-feedback normal stages now have semantic domains; audit and retire their superseded acceptance-only completeness paths. |
-| Tangent | `CoupledDE/TangentSpecial` and depth adapters | The reduced semantic domain now composes coupled solving, polynomial reduction, coefficient recursion, and checked output; extract the reusable monomial-special pattern without erasing tangent-specific recurrence hypotheses. |
+| Primitive | Root-free LRT `CLrtMonomialCase`, `Tower/LrtDepth`, and recursive limited integration | `DenseLrtStage` now packages the recursive finite LRT tower with formal soundness and relative completeness. Full-domain completeness assumes special decomposition and a genuine primitive monomial; the Wf gcd derives either a nonzero residue resultant or the no-poles empty-log branch. |
+| Exponential | `Hyperexp/CaseChecked`, `Hyperexp/NormalSemantic`, `Hyperexp/RischLevel`, and `Hyperexp/TowerStage` | Laurent special and residual-feedback normal stages now form a certified dense tower stage; retain only the dense-to-sparse adapter as the tower-facing sparse path. |
+| Tangent | `CoupledDE/TangentSpecial` and `TangentDepth` | The reduced semantic domain now composes coupled solving, polynomial reduction, coefficient recursion, and checked output as a certified dense tower stage; the independent sparse depth orchestrator is retired in favor of the common adapter. |
 
 ## Migration rules
 
@@ -94,17 +103,105 @@ produces the common semantic special witness. Next, connect the complete LRT
 assembly to the tower package without merging its algebraic log type into
 `IntegralResult`.
 
+`DenseLrtStage` now performs that tower packaging: it has a selected LRT
+operation, explicit primitive decomposition domain, formal algebraic-residue
+soundness, and relative completeness at every finite dense fraction-tower
+depth. Its `integrateGenuine` wrapper checks `allResiduesConstantLrt`, so every
+successful guarded run proves `IsGenuineIntegralResultLrt`. The inverse
+assembler theorem
+`isElementaryIntegrableGenuineLrt_normal_of_full_of_special` subtracts the
+rational special antiderivative from a full genuine LRT witness (including a
+degenerate raw rational denominator), preserving its algebraic logs. Therefore
+`DenseLrtStage.normalResidueGuard_of_genuine` derives the canonical normal
+Liouville guard from full-input genuine integrability, and the common
+`asIntegrationStage` now uses `genuineFullDomain`: special decomposition plus
+the input-independent `GenuinePrimitiveMonomialLrt` condition. From it, the Wf
+gcd derivation establishes normal-residue support—either normal-resultant
+nonvanishing or a constant Hermite residual denominator, whose symbolic log
+list is empty—without a caller-supplied residue guard or resultant condition.
+`SparseLrtStage` converts only its input at the representation boundary; its
+algebraic-residue output stays dense rather than being incorrectly coerced into
+ordinary sparse logarithms.
+
+The former standalone `cIntegrateReducedLrtGuarded` acceptance-only reducer has
+been retired after a reverse-dependency audit. `cResidueConstantGuard` and
+`AllResiduesConstantLrt` remain the shared primitive-stage leaves.
+
+`DenseLrtLevelCapabilities` makes every selected implementation refinement
+explicit: lawful gcd/split-factor/squarefree operations, Liouville descent,
+and the root-free residue criterion. Canonical-normal denominator
+nonvanishing now follows directly from the selected lawful split
+factorization. The established fraction-free Yun implementation supplies the
+criterion through `primitiveLrtResidueCriterionWf`.
+`denseLrtLevelCapabilitiesWf` materializes that Wf gcd and criterion together
+with selected Risch, splitting, squarefree, and Liouville frontiers. The Wf gcd
+theorem also derives the normal-residue-support disjunction from the genuine
+monomial condition and canonical properness; this must not be silently
+identified with a default split-factor instance.
+
+The rational base is now grounded: `instLrtLiouvilleFrontierQ` proves its
+Liouville descent because `CDiffField.cderiv` is definitionally zero on `ℚ`, so
+every root-free residue polynomial passes the guard. The recursive Wf gcd
+boundary is now concrete: degree-fuelled pseudo-division replaces the unsound
+fixed fuel cutoff; `PrimPRSRegular/Termination` proves a finite regular run,
+and `WellFounded` lifts it through denominator clearing and monic
+normalization. `LawfulCPolyGcd` is tied to its selected `CFieldSpec`, so the
+base-and-successor instances synthesize for every `DenseFracTower` level. This
+closes the primitive normal-residue-support boundary.
+
 Gate: `LrtMonomialCase`, `RischTowerLrt`, `RischSolverTowerLrt`, and primitive
 grounding modules.
 
 ### Phase 5 — finite-tower theorem
 
-Introduce a tower-indexed stage package with: carrier representation adapter,
-canonical/normal/polynomial capabilities, monomial classification, and the
-lower-level coefficient adapter. Prove by induction that each selected level
-is lawful, genuine, and relatively complete on its compositional domain.
-State separate dense and sparse selector theorems as instantiations of this
-package.
+`Tower/Compositional` now provides `DenseRischStage`, its certified
+`SparseRischStage` adapter, and `DenseRischTowerScheme`. Its
+`asIntegrationTowerScheme` adapter routes every concrete dense level through
+the generic induction, which exposes soundness, genuine logarithms, and
+relative completeness at every selected depth. `hyperexpDenseRischStage` and
+`denseTangentCompositionalStage` are the first concrete dense stage
+constructors, and their sparse forms are obtained only with
+`DenseRischStage.toSparse`.
+
+The output-polymorphic `IntegrationStage` is the common boundary for those
+ordinary-log stages and the guarded LRT primitive stage, so algebraic-residue
+logs remain valid first-class evidence rather than an invalid coercion. Dense
+ordinary stages supply sparse adapters by result conversion; the LRT primitive
+stage supplies a sparse-input/dense-result adapter because its root-free
+residue construction is dense.
+
+`IntegrationTowerScheme` supplies the generic finite-depth induction: its
+recursive `stage` selection proves accepted-output correctness and eventual
+success at every depth directly from the base and successor contracts.
+
+`Tower/Transcendental` now supplies that mixed selector. A
+`TranscendentalTowerScheme` selects primitive LRT, hyperexponential, or tangent
+at every depth while retaining the selected stage's native result type;
+`stage_sound` and `stage_complete` are the end-to-end finite-tower theorems.
+`primitiveTranscendentalStage`, `hyperexpTranscendentalStage`, and
+`tangentTranscendentalStage` are the three certified constructor entry points.
+The primitive entry point can use `denseLrtLevelCapabilitiesWf`, which supplies
+the Wf gcd residue criterion; its full-domain theorem derives canonical normal
+support and the Liouville guard internally.
+
+The current `TranscendentalTowerScheme` is therefore an end-to-end theorem for
+an explicitly selected finite sequence of certified stages. It does **not** yet
+construct arbitrary alternations from the preceding native result alone:
+ordinary hyperexponential/tangent recursion lifts lower `IntegralResult` logs
+through `CRecursiveElementaryIntegrator`, whereas the primitive LRT recursion
+intentionally consumes only a log-free rational lower antiderivative. A fully
+heterogeneous construction requires an algebraic-coefficient log language and
+a transport theorem through the requisite algebraic constant extension. Until
+that interface exists, do not describe the selector as proving recursive
+interoperation for every arbitrary primitive/hyperexponential/tangent order.
+The dependency-ordered implementation plan is
+`docs/algebraic-coefficient-transport.md`.
+`Tower/AlgebraicCoefficient.lean` now gives the shared algebraically closed
+semantics, an ordinary recursive-coefficient stage adapter, and the common
+stage contract; `Tower/AlgebraicCoefficientLrt.lean` adapts genuine primitive
+LRT stages while preserving root-free residue-log evidence. What remains is
+to make tangent and hyperexponential reconstruction consume this common
+coefficient-stage output instead of the ordinary-only `CoefficientIntegralResult`.
 
 Gate: tower aggregators and a full serial `scripts/check.sh`.
 

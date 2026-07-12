@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect
-import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
 /-! # Primitive PRS regularity: content witnesses
 
@@ -107,15 +106,14 @@ theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
 /-! ## The total clause (iii): the content strip is a `β(s)`-unit scaling on any input
 
 Bundling the nonzero-content case with the zero case (where `gbprimitivePartCore` is the identity) gives
-clause (iii) conditional only on `CgcdBCorrect cgcdB` plus the retained bookkeeping. -/
+clause (iii) from `CgcdBCorrect cgcdB` alone. -/
 
-/-- **The content strip is a `β(s)`-unit scaling on any input**: under `CgcdBCorrect cgcdB` and the
-per-`t`-coefficient size bound, `Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)`.
+/-- **The content strip is a `β(s)`-unit scaling on any input**: under `CgcdBCorrect cgcdB`,
+`Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)`.
 Splits on whether the content `gbcontentCore cgcdB p` is zero (identity, reflexive) or nonzero (unit
 scaling). -/
-theorem associated_toGBPolyG_gbprimitivePartCore_total (fuel : ℕ)
-    (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
-    (hfuel : ∀ a ∈ gbnormCore p, (DensePoly.cnorm a : List β).length ≤ fuel) :
+theorem associated_toGBPolyG_gbprimitivePartCore_total
+    (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β) :
     Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p) := by
   by_cases hgz : DensePoly.cisZero (gbcontentCore cgcdB p) = true
   · -- content zero: gbprimitivePartCore is the identity `gbnormCore p`
@@ -127,6 +125,6 @@ theorem associated_toGBPolyG_gbprimitivePartCore_total (fuel : ℕ)
       rw [Ne, ← DensePoly.cisZeroG_iff]; exact hgz
     have hgcn : DensePoly.cnorm (gbcontentCore cgcdB p) ≠ [] := by
       rw [Ne, DensePoly.cnormG_eq_nil_iff]; exact hg0
-    exact associated_toGBPolyG_gbprimitivePartCore_of_correct fuel cgcdB hcorr p hgz hgcn hg0 hfuel
+    exact associated_toGBPolyG_gbprimitivePartCore_of_correct cgcdB hcorr p hgz hgcn hg0
 
 end DeepWiki.SymbolicIntegration

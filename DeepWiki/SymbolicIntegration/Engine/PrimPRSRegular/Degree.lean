@@ -20,9 +20,9 @@ The generic `DensePoly.cdegG_eq_natDegree` theorem turns the list-length loop gu
 `t`-degree statement over the integral domain `R = (CFieldSpec.K β)[X]`. -/
 
 /-- **`(DensePoly.toPoly p).natDegree` is bounded by the normalized `t`-length**:
-`(DensePoly.toPoly p).natDegree ≤ (gbnormCore p).length − 1`. The `GBPolyCore` mirror of
-`natDegree_toPolyG_le` — coefficients past `(gbnormCore p).length` read `toPoly [] = 0`. -/
-theorem natDegree_toPolyG_le (p : GBPolyCore β) :
+`(DensePoly.toPoly p).natDegree ≤ (gbnormCore p).length − 1`. This bivariate helper has a distinct
+name so it does not shadow the dense-polynomial reading lemma. -/
+theorem natDegree_toGBPoly_le (p : GBPolyCore β) :
     (DensePoly.toPoly p).natDegree ≤ (gbnormCore p).length - 1 := by
   rw [← toPolyG_gbnormCore]
   apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
@@ -231,36 +231,35 @@ theorem natDegree_toGBPolyG (p : GBPolyCore β) :
   rw [toGBPoly, liftK, Polynomial.coe_mapRingHom,
     Polynomial.natDegree_map_eq_of_injective (RatFunc.algebraMap_injective (CFieldSpec.K β))]
 
-/-- **The content strip preserves the `t`-degree**: under `CgcdBCorrect cgcdB` and the per-coefficient
-size bound, `(DensePoly.toPoly (gbprimitivePartCore cgcdB p)).natDegree = (DensePoly.toPoly p).natDegree`
+/-- **The content strip preserves the `t`-degree**: under `CgcdBCorrect cgcdB`,
+`(DensePoly.toPoly (gbprimitivePartCore cgcdB p)).natDegree = (DensePoly.toPoly p).natDegree`
 (the strip is a `β(s)`-unit scaling, and `Associated` polynomials over `β(s)` have equal `natDegree`). -/
-theorem natDegree_toPolyG_gbprimitivePartCore (fuel : ℕ)
-    (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
-    (hfuel : ∀ a ∈ gbnormCore p, (DensePoly.cnorm a : List β).length ≤ fuel) :
+theorem natDegree_toPolyG_gbprimitivePartCore
+    (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β) :
     (DensePoly.toPoly (gbprimitivePartCore cgcdB p)).natDegree = (DensePoly.toPoly p).natDegree := by
-  have hassoc := associated_toGBPolyG_gbprimitivePartCore_total fuel cgcdB hcorr p hfuel
+  have hassoc := associated_toGBPolyG_gbprimitivePartCore_total cgcdB hcorr p
   have := natDegree_eq_of_associated hassoc
   rwa [natDegree_toGBPolyG, natDegree_toGBPolyG] at this
 
 /-- **The list-length loop guard is exactly the pseudo-remainder `t`-degree drop**: under `CgcdBCorrect
-cgcdB`, the retained size bound on `prem`, `Q` nonzero, and the stripped node nonzero (`hrz`), the
+cgcdB`, `Q` nonzero, and the stripped node nonzero (`hrz`), the
 `CPrimPRSGenRegular`-`step` guard
 `(gbnormCore (gbprimitivePartCore cgcdB prem)).length < (gbnormCore Q).length`
 holds iff `(DensePoly.toPoly prem).natDegree < (DensePoly.toPoly Q).natDegree`. -/
 theorem gbnormGuard_iff_premDegree (cgcdB : DensePoly β → DensePoly β → DensePoly β) (hcorr : CgcdBCorrect cgcdB)
     (P Q : GBPolyCore β) (hQ : DensePoly.cisZero (gbnormCore Q) = false)
-    (hfuel : ∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
-      (DensePoly.cnorm a : List β).length ≤ 30)
     (hrz : DensePoly.cisZero (gbprimitivePartCore cgcdB
-      (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))) = false) :
+      (gbpsremainderCore (gbnormCore P).length (gbnormCore P) (gbnormCore Q))) = false) :
     ((gbnormCore (gbprimitivePartCore cgcdB
-        (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))).length < (gbnormCore Q).length)
-      ↔ (DensePoly.toPoly (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))).natDegree
+        (gbpsremainderCore (gbnormCore P).length (gbnormCore P) (gbnormCore Q)))).length
+          < (gbnormCore Q).length)
+      ↔ (DensePoly.toPoly (gbpsremainderCore (gbnormCore P).length
+          (gbnormCore P) (gbnormCore Q))).natDegree
           < (DensePoly.toPoly (gbnormCore Q)).natDegree := by
   -- `DensePoly.cisZero Q = false` (idempotence) to apply the length lemma on the outer `gbnormCore Q`
   have hQ' : DensePoly.cisZero Q = false := by rwa [cisZero_gbnormCore] at hQ
   rw [gbnormCore_length_eq_natDegree_succ hrz, gbnormCore_length_eq_natDegree_succ hQ',
     Nat.add_lt_add_iff_right,
-    natDegree_toPolyG_gbprimitivePartCore 30 cgcdB hcorr _ hfuel, toPolyG_gbnormCore]
+    natDegree_toPolyG_gbprimitivePartCore cgcdB hcorr _, toPolyG_gbnormCore]
 
 end DeepWiki.SymbolicIntegration

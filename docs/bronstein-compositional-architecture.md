@@ -135,7 +135,7 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 |---|---|---|---|
 | Fractions | `CFrac` | `LawfulCFrac` | `ComputableAlgebra/Fraction.lean` and representation modules |
 | Polynomial engine | `CPolyEngine` | `LawfulCPolyEngine` | `ComputableAlgebra/PolyEngine*.lean` |
-| GCD | `CPolyGcd` | `LawfulCPolyGcd` | `ComputableAlgebra/PolyReprGcd.lean` |
+| GCD | `CPolyGcd` | `LawfulCPolyGcd` at the selected `CFieldSpec` | `ComputableAlgebra/PolyReprGcd.lean` |
 | Euclidean division | `CPolyEuclidean` | `LawfulCPolyEuclidean` | `ComputableAlgebra/PolyEuclidean.lean` |
 | Squarefree Yun | `CPolySquarefree` | `LawfulCPolySquarefree` | `ComputableAlgebra/PolySquarefree*.lean` |
 | Resultant | `CPolyResultant` | `LawfulCPolyResultant` | `ComputableAlgebra/PolyResultant.lean` |
@@ -178,9 +178,10 @@ monomial stage contracts.
    been retired. Soundness no longer depends on the
    low-degree Hermite theorem: `tangentNormalReduction`
    certificate-checks every raw normal result, and `tangentRischLevel` composes it with the coupled solver and
-   special integrator through the generic assembler. `sparseTangentRischLevel` transports the same composition through the
-   sparse representation boundary. Both canonical compositions certificate-check every reassembled special
-   fraction and are sound without solver or bridge laws; the former unchecked duplicate APIs have been retired.
+   special integrator through the generic assembler. The certified dense stage is transported through
+   `DenseRischStage.toSparse` at the sparse representation boundary. Both canonical compositions certificate-check every
+   reassembled special fraction and are sound without solver or bridge laws; the former unchecked duplicate APIs have
+   been retired.
    Their explicit checked-acceptance domains now compose the polynomial, normal, and tangent contracts into
    dense and sparse `CompleteCRischLevel` instances. This is executable relative completeness only. The generic
    monomial special stage now returns a full `IntegralResult`, so it can represent the constant multiple of
@@ -235,7 +236,10 @@ monomial stage contracts.
    `completePrimitiveMonomialCase_on_tower` instantiates that composition at `DenseFrac ℚ`, using the checked
    base limited-integration domain and the selected lower-level log-free acceptance domain. This is an executable
    grounding, not yet the open semantic constant-descent theorem above.
-4. Continue deleting dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
+4. The standalone acceptance-only `cIntegrateReducedLrtGuarded` reducer is retired: its only consumers were
+   self-contained bridge and validation declarations, while the compositional `DenseLrtStage` owns guarded
+   acceptance. Retain the shared residue guard and result-level constancy invariant. Continue deleting other
+   dead dense/Wf drivers after reverse-dependency checks; retain no internal shim.
 
 ## Visibility policy
 

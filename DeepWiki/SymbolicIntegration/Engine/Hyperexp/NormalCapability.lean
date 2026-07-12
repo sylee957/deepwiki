@@ -62,6 +62,13 @@ instance instLawfulCNormalReductionHyperexpSemantic :
   unfold hyperexpCheckedNormalReduction
   infer_instance
 
+/-- The semantic checked hyperexponential normal stage returns only genuine elementary data. -/
+instance instLawfulGenuineCNormalReductionHyperexpSemantic :
+    LawfulGenuineCNormalReduction (hyperexpCheckedNormalReduction (α := α))
+      (hyperexpResidualNormalCompleteDomain (α := α)) := by
+  unfold hyperexpCheckedNormalReduction
+  infer_instance
+
 /-- Field-RDE completeness makes semantic residual-feedback normal inputs executable. -/
 theorem completeCNormalReductionHyperexpSemantic [CRischFieldSpec α]
     (hfield : CRischFieldComplete α) :

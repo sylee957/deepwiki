@@ -86,8 +86,33 @@ def cprimPRSgcdGenCore (cgcdB : DensePoly B → DensePoly B → DensePoly B) :
     let Q := GBPolyCore.gbnormCore Q
     if DensePoly.cisZero Q then GBPolyCore.gbprimitivePartCore cgcdB P
     else
-      let r := GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q)
+      -- A normalized nonzero dividend has `natDegree < length`, so this fuel completes
+      -- pseudo-division for arbitrary input degree rather than imposing a global cutoff.
+      let r := GBPolyCore.gbprimitivePartCore cgcdB
+        (GBPolyCore.gbpsremainderCore P.length P Q)
       cprimPRSgcdGenCore cgcdB fuel Q r
+
+/-! ### Primitive-PRS termination predicate -/
+
+/-- Per-run primitive-PRS regularity `CPrimPRSGenRegular cgcdB fuel P Q`: mirrors the recursive PRS
+kernel. A terminal node has zero normalized divisor; a step has a nonzero divisor, a strict normalized
+length drop for its degree-fuelled pseudo-remainder primitive part, and regularity of the next node. -/
+inductive CPrimPRSGenRegular (cgcdB : DensePoly B → DensePoly B → DensePoly B) :
+    ℕ → GBPolyCore B → GBPolyCore B → Prop
+  /-- Terminal node: the next divisor is zero. -/
+  | stop {fuel : ℕ} {P Q : GBPolyCore B} (hz : DensePoly.cisZero (GBPolyCore.gbnormCore Q) = true) :
+      CPrimPRSGenRegular cgcdB fuel P Q
+  /-- Recursive node: the next primitive pseudo-remainder strictly drops normalized `t`-length. -/
+  | step {fuel : ℕ} {P Q : GBPolyCore B} (hz : DensePoly.cisZero (GBPolyCore.gbnormCore Q) = false)
+      (hguard : (GBPolyCore.gbnormCore (GBPolyCore.gbprimitivePartCore cgcdB
+          (GBPolyCore.gbpsremainderCore (GBPolyCore.gbnormCore P).length
+            (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q)))).length
+        < (GBPolyCore.gbnormCore Q).length)
+      (hrec : CPrimPRSGenRegular cgcdB fuel (GBPolyCore.gbnormCore Q)
+        (GBPolyCore.gbprimitivePartCore cgcdB
+          (GBPolyCore.gbpsremainderCore (GBPolyCore.gbnormCore P).length
+            (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q)))) :
+      CPrimPRSGenRegular cgcdB (fuel + 1) P Q
 
 /-! ### Clear denominators `DensePoly (DenseFrac β) ↔ GBPolyCore β` (`β(s)[t] ↔ (β[s])[t]`) -/
 

@@ -6,6 +6,7 @@ import DeepWiki.ComputableAlgebra.PolyResultantDense
 import DeepWiki.SymbolicIntegration.Engine.PolySplitFactor
 import DeepWiki.ComputableAlgebra.PolyInterpolateDense
 import DeepWiki.ComputableAlgebra.PolyInterpolateSparse
+import DeepWiki.SymbolicIntegration.Engine.PrimPRSRegular.Termination
 
 /-! # Well-founded generic tower integration engine
 
@@ -15,7 +16,7 @@ fraction-free gcd kernel `cprimPRSgcdGenCoreWf`, the split loop `cSplitFactorFas
 logarithmic part) over those leaves. `[CField α]`-only on the runtime fragment (plus
 `[CDiffField α]`/`[CFracGcdCoreWf α]` where needed), so `ccompute` can validate the noncomputable tower. -/
 
-open Polynomial
+open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -27,7 +28,7 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The primitive-PRS kernel `cprimPRSgcdGenCoreWf`
 
-`(P, Q) → (Q, r)` with `r = gbprimitivePartCore (gbpsremainder P Q)`; the normalized `t`-length
+`(P, Q) → (Q, r)` with `r = gbprimitivePartCore (gbpsremainder P.length P Q)`; the normalized `t`-length
 `(gbnormCore Q).length` strictly drops each step, under the structural runtime guard
 `(gbnormCore r).length < (gbnormCore Q).length` (`decreasing_by := assumption`). -/
 
@@ -57,7 +58,7 @@ variable {B : Type*} [CField B]
 /-- Generic primitive polynomial-remainder-sequence gcd `cprimPRSgcdGenCoreWf cgcdB P Q ∈ GBPolyCore B`:
 the gcd of `P, Q` in `t` (over the coefficient ring `DensePoly B = B[s]`), up to a `B[s]`-content factor.
 Normalize `P, Q`; if `Q = 0` return the primitive part of `P`, else take the next PRS node
-`r = gbprimitivePartCore cgcdB (gbpsremainderCore 60 P Q)` and recurse on `(Q, r)` under the structural
+`r = gbprimitivePartCore cgcdB (gbpsremainderCore P.length P Q)` and recurse on `(Q, r)` under the structural
 guard `(gbnormCore r).length < (gbnormCore Q).length`. `[CField B]`-only. The content-gcd `cgcdB` is passed
 in. -/
 private def cprimPRSgcdGenCoreWf (cgcdB : DensePoly B → DensePoly B → DensePoly B) (P Q : GBPolyCore B) :
@@ -66,41 +67,52 @@ private def cprimPRSgcdGenCoreWf (cgcdB : DensePoly B → DensePoly B → DenseP
   let Q := gbnormCore Q
   if DensePoly.cisZero Q then gbprimitivePartCore cgcdB P
   else
-    let r := gbprimitivePartCore cgcdB (gbpsremainderCore 60 P Q)
+    let r := gbprimitivePartCore cgcdB (gbpsremainderCore P.length P Q)
     if (gbnormCore r).length < (gbnormCore Q).length then
       cprimPRSgcdGenCoreWf cgcdB Q r
     else gbprimitivePartCore cgcdB P   -- unreachable on a real run (PRS `t`-degree drop)
 termination_by (gbnormCore Q).length
 decreasing_by exact Nat.lt_of_lt_of_le ‹_ < _› (le_of_eq (by rw [gbnormCore_idem]))
 
+/-- On a regular run, the well-founded primitive PRS agrees with its fuel-recursive specification. -/
+private theorem cprimPRSgcdGenCoreWf_eq_fuel {β : Type*} [CField β] [CFieldSpec β]
+    (cgcdB : DensePoly β → DensePoly β → DensePoly β) :
+    ∀ (fuel : ℕ) (P Q : GBPolyCore β), CPrimPRSGenRegular cgcdB fuel P Q →
+      cprimPRSgcdGenCoreWf cgcdB P Q = cprimPRSgcdGenCore cgcdB fuel P Q := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro P Q hreg
+    cases hreg with
+    | stop hz =>
+      rw [cprimPRSgcdGenCoreWf]
+      simp only [cprimPRSgcdGenCore, hz, if_true]
+      simp only [gbprimitivePartCore, gbnormCore_idemp]
+  | succ fuel ih =>
+    intro P Q hreg
+    cases hreg with
+    | stop hz =>
+      rw [cprimPRSgcdGenCoreWf]
+      simp only [cprimPRSgcdGenCore, hz, if_true]
+    | step hz hguard hrec =>
+      rw [cprimPRSgcdGenCoreWf]
+      simp only [cprimPRSgcdGenCore, hz, Bool.false_eq_true, if_false, gbnormCore_idemp]
+      rw [if_pos hguard]
+      exact ih _ _ hrec
+
+/-- The well-founded primitive PRS computes the polynomial gcd up to associates whenever its content
+gcd is correct. -/
+private theorem associated_toGBPolyG_cprimPRSgcdGenCoreWf {β : Type*} [CField β] [CFieldSpec β]
+    [CFieldDomain β DensePoly] (cgcdB : DensePoly β → DensePoly β → DensePoly β)
+    (hcorr : CgcdBCorrect cgcdB) (P Q : GBPolyCore β) :
+    Associated (toGBPoly (cprimPRSgcdGenCoreWf cgcdB P Q))
+      (gcd (toGBPoly P) (toGBPoly Q)) := by
+  obtain ⟨fuel, hreg⟩ := cPrimPRSGenRegular_exists cgcdB hcorr P Q
+  rw [cprimPRSgcdGenCoreWf_eq_fuel cgcdB fuel P Q hreg]
+  exact associated_toGBPolyG_cprimPRSgcdGenCore cgcdB fuel P Q
+    (cPrimPRSGenAssocReg_of_regular_of_correct cgcdB hcorr fuel P Q hreg)
+
 end GBPolyCore
-
-/-! ### Primitive-PRS termination predicate
-
-There is no abstract `gbpsremainderCore` length-drop lemma over the generic GCD-domain `DensePoly B = B[s]`,
-so the correctness layer uses a fuel-regularity predicate `CPrimPRSGenRegular` mirroring the fuel-recursive
-`cprimPRSgcdGenCore` with the per-step length-drop guard built in. -/
-
-/-- Per-run primitive-PRS-kernel fuel-regularity `CPrimPRSGenRegular cgcdB fuel P Q`: mirrors the
-`cprimPRSgcdGenCore` fuel recursion as an inductive predicate over the structural fuel counter — `stop`
-(any fuel) when the next divisor is zero (`DensePoly.cisZero (gbnormCore Q)`), or `step` (fuel `n+1`) when `Q`
-is nonzero, the next PRS node `r = gbprimitivePartCore cgcdB (gbpsremainderCore 60 (gbnormCore P)
-(gbnormCore Q))` strictly drops the normalized `t`-length, and the same holds recursively on
-`(gbnormCore Q, r)` at one less fuel. -/
-inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : DensePoly B → DensePoly B → DensePoly B) :
-    ℕ → GBPolyCore B → GBPolyCore B → Prop
-  /-- terminal node: the next divisor is zero, the loop stops (any fuel). -/
-  | stop {fuel : ℕ} {P Q : GBPolyCore B} (hz : DensePoly.cisZero (GBPolyCore.gbnormCore Q) = true) :
-      CPrimPRSGenRegular cgcdB fuel P Q
-  /-- recursive node: `Q` nonzero, the next PRS node drops the `t`-length, recurse on `(gbnormCore Q, r)`. -/
-  | step {fuel : ℕ} {P Q : GBPolyCore B} (hz : DensePoly.cisZero (GBPolyCore.gbnormCore Q) = false)
-      (hguard : (GBPolyCore.gbnormCore (GBPolyCore.gbprimitivePartCore cgcdB
-          (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q)))).length
-        < (GBPolyCore.gbnormCore Q).length)
-      (hrec : CPrimPRSGenRegular cgcdB fuel (GBPolyCore.gbnormCore Q)
-        (GBPolyCore.gbprimitivePartCore cgcdB
-          (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q)))) :
-      CPrimPRSGenRegular cgcdB (fuel + 1) P Q
 
 /-! ### `class CFracGcdCoreWf α` — the recursive fraction-free gcd over `α[t]`
 
@@ -154,7 +166,7 @@ instance instCFracGcdCoreWfQ : CFracGcdCoreWf ℚ where
 /-- The selected fraction-free gcd over `ℚ` satisfies the lawful gcd interface. -/
 instance (priority := high) instLawfulCPolyGcdDenseWfQ : LawfulCPolyGcd DensePoly ℚ where
   compute_isGCD := by
-    intro _ p q
+    intro p q
     have hcompute : CPolyGcd.compute p q = DensePoly.cgcdMonicWf p q := rfl
     rw [hcompute]
     obtain ⟨hp, hq⟩ := DensePoly.toPolyG_cgcdMonicWf_dvd p q
@@ -186,6 +198,101 @@ instance instCFracGcdCoreWfCFrac : CFracGcdCoreWf (DenseFrac β) where
     let Q := DensePoly.cclearDenomsCore q
     let (P, Q) := if DensePoly.cdeg P < DensePoly.cdeg Q then (Q, P) else (P, Q)
     DensePoly.liftGBPolyCore (GBPolyCore.cprimPRSgcdGenCoreWf CFracGcdCoreWf.cgcdFFRawCoreWf P Q)
+
+/-- Conditional raw-gcd correctness at one fraction-tower successor: a correct lower content gcd is
+lifted through denominator clearing, primitive PRS, and the final coefficient embedding. -/
+private theorem associated_cgcdFFRawCoreWf_cfrac_of_correct [CFieldSpec β]
+    (hcorr : CgcdBCorrect (CFracGcdCoreWf.cgcdFFRawCoreWf (α := β)))
+    (p q : DensePoly (DenseFrac β)) :
+    Associated (DensePoly.toPoly (CFracGcdCoreWf.cgcdFFRawCoreWf (α := DenseFrac β) p q))
+      (gcd (DensePoly.toPoly p) (DensePoly.toPoly q)) := by
+  let P₀ := DensePoly.cclearDenomsCore p
+  let Q₀ := DensePoly.cclearDenomsCore q
+  let P := if DensePoly.cdeg P₀ < DensePoly.cdeg Q₀ then Q₀ else P₀
+  let Q := if DensePoly.cdeg P₀ < DensePoly.cdeg Q₀ then P₀ else Q₀
+  have hcore := GBPolyCore.associated_toGBPolyG_cprimPRSgcdGenCoreWf
+    (CFracGcdCoreWf.cgcdFFRawCoreWf (α := β)) hcorr P Q
+  have hlift : Associated (DensePoly.toPoly
+      (DensePoly.liftGBPolyCore
+        (GBPolyCore.cprimPRSgcdGenCoreWf (CFracGcdCoreWf.cgcdFFRawCoreWf (α := β)) P Q)))
+      (gcd (toGBPoly P) (toGBPoly Q)) := by
+    rw [toPolyG_liftGBPolyCoreG]
+    exact hcore
+  have horder : Associated (gcd (toGBPoly P) (toGBPoly Q))
+      (gcd (toGBPoly P₀) (toGBPoly Q₀)) := by
+    by_cases h : DensePoly.cdeg P₀ < DensePoly.cdeg Q₀
+    · simp only [P, Q, h, ↓reduceIte, gcd_comm]
+      exact Associated.rfl
+    · simp only [P, Q, h, ↓reduceIte]
+      exact Associated.rfl
+  have hclear : Associated (gcd (toGBPoly P₀) (toGBPoly Q₀))
+      (gcd (DensePoly.toPoly p) (DensePoly.toPoly q)) :=
+    (associated_toGBPolyG_cclearDenomsCoreG p).gcd
+      (associated_toGBPolyG_cclearDenomsCoreG q)
+  have hraw : CFracGcdCoreWf.cgcdFFRawCoreWf (α := DenseFrac β) p q =
+      DensePoly.liftGBPolyCore
+        (GBPolyCore.cprimPRSgcdGenCoreWf (CFracGcdCoreWf.cgcdFFRawCoreWf (α := β)) P Q) := by
+    by_cases h : DensePoly.cdeg P₀ < DensePoly.cdeg Q₀ <;>
+      simp [CFracGcdCoreWf.cgcdFFRawCoreWf, P, Q, P₀, Q₀, h]
+  rw [hraw]
+  exact hlift.trans (horder.trans hclear)
+
+/-- At the concrete tower universe, a lawful selected lower gcd proves correctness of the raw Wf
+content gcd used by the successor fraction level. -/
+private theorem cGcdFFRawCoreWf_correct_of_lawful {γ : Type} [CField γ]
+    [CFieldDomain γ DensePoly] [CFracGcdCoreWf γ] [CFieldSpec.{0, 0} γ]
+    [LawfulCPolyGcd.{0, 0} DensePoly γ] :
+    CgcdBCorrect (CFracGcdCoreWf.cgcdFFRawCoreWf (α := γ)) := by
+  intro a b
+  obtain ⟨hleft, hright, hgreatest⟩ := LawfulCPolyGcd.compute_isGCD' a b
+  have hassocCompute : Associated (CPoly.toPoly (CPolyGcd.compute a b))
+      (gcd (CPoly.toPoly a) (CPoly.toPoly b)) :=
+    gcd_greatest_associated hleft hright hgreatest
+  have hassocMonic : Associated (CPoly.toPoly (CPolyGcd.compute a b))
+      (DensePoly.toPoly (CFracGcdCoreWf.cgcdFFRawCoreWf a b)) := by
+    rw [CPolyGcd.compute_dense_wf_eq, CFracGcdCoreWf.cgcdFFCoreWf]
+    simpa only [toPoly_list_eq] using DensePoly.associated_toPolyG_cmonicG _
+  simpa only [toPoly_list_eq] using hassocMonic.symm.trans hassocCompute
+
+/-- The selected monic Wf gcd is correct whenever the selected dense gcd law is available. -/
+theorem cgcdFFCoreWf_correct_of_lawful {γ : Type} [CField γ]
+    [CFieldDomain γ DensePoly] [CFracGcdCoreWf γ] [CFieldSpec.{0, 0} γ]
+    [LawfulCPolyGcd.{0, 0} DensePoly γ] :
+    CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := γ)) := by
+  intro a b
+  have hraw := cGcdFFRawCoreWf_correct_of_lawful (γ := γ) a b
+  have hmonic : Associated
+      (DensePoly.toPoly (CFracGcdCoreWf.cgcdFFCoreWf a b))
+      (DensePoly.toPoly (CFracGcdCoreWf.cgcdFFRawCoreWf a b)) :=
+    DensePoly.associated_toPolyG_cmonicG _
+  exact hmonic.trans hraw
+
+/-- The well-founded fraction-free gcd is lawful at one concrete `DenseFrac` successor whenever
+the selected lower dense gcd is lawful. -/
+instance (priority := high) instLawfulCPolyGcdDenseWfCFrac {γ : Type} [CField γ]
+    [CFieldDomain γ DensePoly] [CFracGcdCoreWf γ] [CFieldSpec.{0, 0} γ]
+    [LawfulCPolyGcd.{0, 0} DensePoly γ] :
+    LawfulCPolyGcd.{0, 0} DensePoly (DenseFrac γ) where
+  compute_isGCD := by
+    intro p q
+    have hraw := associated_cgcdFFRawCoreWf_cfrac_of_correct (β := γ)
+      (cGcdFFRawCoreWf_correct_of_lawful (γ := γ)) p q
+    have hmonic : Associated
+        (DensePoly.toPoly (CFracGcdCoreWf.cgcdFFCoreWf p q))
+        (DensePoly.toPoly (CFracGcdCoreWf.cgcdFFRawCoreWf p q)) :=
+      DensePoly.associated_toPolyG_cmonicG _
+    have hfinal : Associated
+        (DensePoly.toPoly (CFracGcdCoreWf.cgcdFFCoreWf p q))
+        (gcd (DensePoly.toPoly p) (DensePoly.toPoly q)) :=
+      hmonic.trans hraw
+    rw [CPolyGcd.compute_dense_wf_eq]
+    refine ⟨?_, ?_, ?_⟩
+    · simpa only [toPoly_list_eq] using hfinal.dvd.trans (gcd_dvd_left _ _)
+    · simpa only [toPoly_list_eq] using hfinal.dvd.trans (gcd_dvd_right _ _)
+    · intro d hdp hdq
+      have hdp' : d ∣ DensePoly.toPoly p := by simpa only [toPoly_list_eq] using hdp
+      have hdq' : d ∣ DensePoly.toPoly q := by simpa only [toPoly_list_eq] using hdq
+      simpa only [toPoly_list_eq] using (dvd_gcd hdp' hdq').trans hfinal.symm.dvd
 
 end
 

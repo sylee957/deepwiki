@@ -56,6 +56,18 @@ instance instLawfulCRischLevelHyperexpSemanticCompleteDomain (R : CPolynomialRed
   unfold hyperexpRischLevel hyperexpRischLevelSemanticCompleteDomain
   infer_instance
 
+/-- The semantic hyperexponential level returns only genuine logarithmic reconstruction data. -/
+instance instLawfulGenuineCRischLevelHyperexpSemanticCompleteDomain
+    (R : CPolynomialReduction DensePoly α) [LawfulCPolynomialReduction R]
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
+    LawfulGenuineCRischLevel (hyperexpRischLevel (α := α) R kind)
+      (hyperexpRischLevelSemanticCompleteDomain R kind polynomialDomain) := by
+  unfold hyperexpRischLevel hyperexpRischLevelSemanticCompleteDomain
+  infer_instance
+
 /-- Field-RDE completeness composes every semantic hyperexponential stage into a relatively complete
 one-level Risch solver. -/
 theorem completeCRischLevelHyperexpSemantic (R : CPolynomialReduction DensePoly α)

@@ -56,10 +56,9 @@ cast coefficients.
    Bronstein's theorem.
 7. **Level integration (implemented).** The selected operation executes Bronstein's pole-order-three
    example, the `log(t^2+1)` polynomial case, and a lower-field `1/x` tail whose `log x` result is lifted into
-   the outer result. `recursiveTangentRischLevel` and
-   `sparseRecursiveTangentRischLevel` inject a per-level coupled solver and checked special stage,
-   while retaining polynomial and normal stages as explicit dependencies. The semantic completeness
-   upgrade remains. `TangentDepth.lean` packages these choices uniformly over `DenseFracTower n`; every
+   the outer result. `recursiveTangentRischLevel` injects a per-level coupled solver and checked special stage,
+   while retaining polynomial and normal stages as explicit dependencies. `TangentDepth.lean` packages these
+   choices uniformly over `DenseFracTower n`; the sparse path is only the certified adapter of that dense stage. Every
    successor coefficient operation now runs the preceding selected Risch level and certificate-checks the
    lifted rational-plus-log result. The checker is complete for semantic coefficient-result certificates, and
    the dense-fraction bridge now derives such a certificate from a lower `IsIntegralResultP` identity with

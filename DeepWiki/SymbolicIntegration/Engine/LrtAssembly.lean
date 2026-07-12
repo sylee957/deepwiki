@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.RischTowerPrimitiveLrt
 import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
+import DeepWiki.SymbolicIntegration.Engine.LrtGuarded
 import DeepWiki.SymbolicIntegration.Engine.LrtMonomialCase
 
 /-! # The one-level LRT (root-free) assembler core
@@ -25,6 +26,23 @@ variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffF
 def combineSNLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] (snum sden : P α) (r : LrtResult α P) : LrtResult α P :=
   ⟨combineRationalParts snum sden r.rational.1 r.rational.2, r.logs⟩
+
+/-- Subtract a rational special part from an LRT result, preserving its algebraic-residue logs. -/
+def subtractSNLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (snum sden : P α) (r : LrtResult α P) : LrtResult α P :=
+  ⟨combineRationalParts (CPolyEngine.neg snum) sden r.rational.1 r.rational.2, r.logs⟩
+
+/-- Combining a rational special part leaves the LRT algebraic-residue logs unchanged. -/
+theorem allResiduesConstantLrt_combineSNLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CDiffField α] (snum sden : P α) (r : LrtResult α P) :
+    allResiduesConstantLrt (combineSNLrt snum sden r) = allResiduesConstantLrt r :=
+  rfl
+
+/-- Subtracting a rational special part leaves LRT algebraic-residue constancy unchanged. -/
+theorem allResiduesConstantLrt_subtractSNLrt {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CDiffField α] (snum sden : P α) (r : LrtResult α P) :
+    allResiduesConstantLrt (subtractSNLrt snum sden r) = allResiduesConstantLrt r :=
+  rfl
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `amGExt (toPoly p) ≠ 0` when `toPoly p ≠ 0`: base change (`φ` injective) and the fraction-field
@@ -70,6 +88,81 @@ theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : DensePoly α)
   rw [hcombine, map_add, add_assoc, hNE]
   exact hspecE
 
+/-- A genuine full LRT antiderivative and a rational special-part reconstruction give a genuine
+antiderivative of the canonical normal remainder. This is the inverse of `combineSNLrt`: it is the
+completeness bridge that lets Liouville's residue criterion be applied to the normal part of a full input. -/
+theorem isElementaryIntegrableGenuineLrt_normal_of_full_of_special
+    (Dt a d cn dn snum sden : DensePoly α) (r : LrtResult α)
+    (hsden : toPoly sden ≠ 0)
+    (hspecial : towerFractionFieldDeriv Dt (fieldFrac snum sden) + fieldFrac cn dn = fieldFrac a d)
+    (hfull : IsGenuineIntegralResultLrt Dt a d r) :
+    IsElementaryIntegrableGenuineLrt Dt cn dn := by
+  by_cases hrden : toPoly r.rational.2 = 0
+  · refine ⟨⟨(cneg snum, sden), r.logs⟩, ?_, ?_⟩
+    · intro F _ _ _ _ _ _
+      have hfullE := hfull.1 F
+      rw [hrden] at hfullE
+      have hspecialE := congrArg (ratFuncBaseChange F) hspecial
+      simp only [fieldFrac] at hspecialE
+      rw [map_add, ratFuncBaseChange_towerFractionFieldDerivG,
+        ratFuncBaseChange_amG_div, ratFuncBaseChange_amG_div] at hspecialE
+      change towerDerivExt Dt
+          (amGExt (toPoly (cneg snum)) / amGExt (toPoly sden))
+          + logResidueSumLrt Dt r.logs = amGExt (toPoly cn) / amGExt (toPoly dn)
+      have hneg : amGExt (E := F) (toPoly (cneg snum)) / amGExt (E := F) (toPoly sden)
+          = -(amGExt (E := F) (toPoly snum) / amGExt (E := F) (toPoly sden)) := by
+        simp [amGExt]
+        rw [neg_div]
+      rw [hneg, map_neg]
+      have hfullE' : logResidueSumLrt Dt r.logs =
+          amGExt (E := F) (toPoly a) / amGExt (E := F) (toPoly d) := by
+        simpa [amGExt] using hfullE
+      rw [hfullE']
+      rw [← hspecialE]
+      ring
+    · exact hfull.2
+  · refine ⟨⟨combineRationalParts (cneg snum) sden r.rational.1 r.rational.2, r.logs⟩, ?_, ?_⟩
+    · intro F _ _ _ _ _ _
+      have hfullE := hfull.1 F
+      have hspecialE := congrArg (ratFuncBaseChange F) hspecial
+      simp only [fieldFrac] at hspecialE
+      rw [map_add, ratFuncBaseChange_towerFractionFieldDerivG,
+        ratFuncBaseChange_amG_div, ratFuncBaseChange_amG_div] at hspecialE
+      have hAsden : amGExt (E := F) (toPoly sden) ≠ 0 := amGExt_ne_zero hsden
+      have hArden : amGExt (E := F) (toPoly r.rational.2) ≠ 0 :=
+        amGExt_ne_zero hrden
+      have hcombine :
+          amGExt (E := F) (toPoly
+              (combineRationalParts (CPolyEngine.neg snum) sden r.rational.1 r.rational.2).1)
+            / amGExt (E := F) (toPoly
+              (combineRationalParts (CPolyEngine.neg snum) sden r.rational.1 r.rational.2).2)
+          = -(amGExt (E := F) (toPoly snum) / amGExt (E := F) (toPoly sden))
+            + amGExt (E := F) (toPoly r.rational.1)
+              / amGExt (E := F) (toPoly r.rational.2) := by
+        simp only [combineRationalParts, CPolyEngine.add_dense_eq,
+          CPolyEngine.mul_dense_eq, CPolyEngine.neg_dense_eq]
+        have e1 : amGExt (E := F) (toPoly
+            (cadd (cmul (cneg snum) r.rational.2) (cmul r.rational.1 sden)))
+            = -amGExt (E := F) (toPoly snum) * amGExt (E := F) (toPoly r.rational.2)
+              + amGExt (E := F) (toPoly r.rational.1) * amGExt (E := F) (toPoly sden) := by
+          simp [amGExt]
+        have e2 : amGExt (E := F) (toPoly (cmul sden r.rational.2))
+            = amGExt (E := F) (toPoly sden) * amGExt (E := F) (toPoly r.rational.2) := by
+          simp [amGExt]
+        rw [e1, e2]
+        field_simp [hAsden, hArden]
+      change towerDerivExt Dt
+          (amGExt (toPoly
+              (combineRationalParts (cneg snum) sden r.rational.1 r.rational.2).1)
+            / amGExt (toPoly
+              (combineRationalParts (cneg snum) sden r.rational.1 r.rational.2).2))
+          + logResidueSumLrt Dt r.logs = amGExt (toPoly cn) / amGExt (toPoly dn)
+      have hcombine' := hcombine
+      simp only [CPolyEngine.neg_dense_eq] at hcombine'
+      rw [hcombine', map_add, map_neg]
+      linear_combination hfullE - hspecialE
+    · exact hfull.2
+
 /-- **The one-level primitive LRT case integrator.** Canonical split (`canonicalRepresentationFast`) →
 special part via the case hook `C.integrateSpecial` (rational, shared with the rational solver) → reduced
 normal part via the root-free `cIntegrateReducedLrt` → combined with `combineSNLrt`. Unlike the retired
@@ -88,6 +181,34 @@ def cIntegrateCaseLrt [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
     | none => none
     | some (snum, sden) => some (combineSNLrt snum sden (cIntegrateReducedLrt Dt cn dn))
   else none
+
+omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- A successful primitive assembler preserves the constant-residue invariant of its canonical normal remainder. -/
+theorem cIntegrateCaseLrt_allResiduesConstant [CPolyGcd DensePoly α]
+    [CPolySplitFactor DensePoly α] [CPolySquarefree DensePoly α]
+    [CPolyResultant DensePoly] [CPolySubresultant DensePoly]
+    (C : CLrtMonomialCase DensePoly α) (Dt a d : DensePoly α) (res : LrtResult α)
+    (hrun : cIntegrateCaseLrt C Dt a d = some res)
+    (hnormal : AllResiduesConstantLrt
+      (cIntegrateReducedLrt Dt (crNormNum Dt a d) (crNormDen Dt a d))) :
+    AllResiduesConstantLrt res := by
+  have hdegree : cdeg Dt = 0 := by
+    by_contra h
+    rw [cIntegrateCaseLrt, if_neg h] at hrun
+    simp at hrun
+  rw [cIntegrateCaseLrt, if_pos hdegree] at hrun
+  rcases hcanonical : canonicalRepresentationFast Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+  simp only [crNormNum, crNormDen, hcanonical] at hnormal
+  simp only [hcanonical] at hrun
+  rcases hspecial : C.integrateSpecial Dt fp b ds with _ | ⟨snum, sden⟩
+  · simp only [hspecial] at hrun
+    simp at hrun
+  · simp only [hspecial, Option.some.injEq] at hrun
+    subst res
+    change allResiduesConstantLrt (combineSNLrt snum sden
+      (cIntegrateReducedLrt Dt cn dn)) = true
+    rw [allResiduesConstantLrt_combineSNLrt]
+    exact hnormal
 
 open Classical in
 /-- **Generic primitive LRT assembler soundness.** If `cIntegrateCaseLrt C` returns `res`, the special hook

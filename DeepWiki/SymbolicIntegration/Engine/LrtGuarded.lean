@@ -11,7 +11,7 @@ real derivative carries an extra `Σ D(c)·log(Sᵢ)`.
 
 Bronstein's primitive-case criterion (§5.6) is **decidable and root-free**: the residues (roots of the
 Rothstein–Trager residue resultant `R`) are all constants iff `R` has constant coefficients, i.e. `D(R) = 0`.
-This file adds that guard, turning the integrator into an `Option` that declines non-elementary inputs. -/
+This file provides that guard and the result-level invariant consumed by the compositional primitive stage. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -32,48 +32,7 @@ def cResidueConstantGuard (Dt a d : DensePoly α) : Bool :=
   let H := cHermiteReduceTower Dt a d
   cisZero (CPolyEngine.mapDeriv (cmonic (cResidueResultantTower Dt H.2.1 H.2.2)))
 
-/-- **The guarded root-free LRT reduced integrator.** Returns the LRT reduced result only when the
-integrability guard passes (residues are constants); `none` otherwise — correctly declining non-elementary
-reduced parts (e.g. `∫1/log x`, whose residue `x` is non-constant). -/
-def cIntegrateReducedLrtGuarded (Dt a d : DensePoly α) : Option (LrtResult α) :=
-  if cResidueConstantGuard Dt a d then some (cIntegrateReducedLrt Dt a d) else none
-
-/-- The guard passes iff `cResidueConstantGuard` is `true` (definitional unfolding of the `if`). -/
-theorem cIntegrateReducedLrtGuardedG_eq_some_iff (Dt a d : DensePoly α) :
-    cIntegrateReducedLrtGuarded Dt a d = some (cIntegrateReducedLrt Dt a d)
-      ↔ cResidueConstantGuard Dt a d = true := by
-  unfold cIntegrateReducedLrtGuarded
-  cases h : cResidueConstantGuard Dt a d <;> simp_all
-
-/-- **Extraction from a successful guarded run.** If the guarded integrator returns `res`, then the guard
-passed *and* `res` is exactly the unguarded LRT result — the bridge from the `Option`-valued integrator to the
-underlying soundness. -/
-theorem cIntegrateReducedLrtGuardedG_some (Dt a d : DensePoly α) (res : LrtResult α)
-    (h : cIntegrateReducedLrtGuarded Dt a d = some res) :
-    cResidueConstantGuard Dt a d = true ∧ res = cIntegrateReducedLrt Dt a d := by
-  unfold cIntegrateReducedLrtGuarded at h
-  split at h
-  · rename_i hg
-    injection h with h'
-    exact ⟨hg, h'.symm⟩
-  · exact absurd h (by simp)
-
 end DensePoly
-
-open DensePoly in
-/-- **Guarded LRT reduced soundness.** A successful *guarded* run is sound: it returns the unguarded LRT
-result (`cIntegrateReducedLrtGuardedG_some`), whose soundness `hsound` — supplied by
-`isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` under the genuine Bronstein setup conditions — transfers
-verbatim. The guard makes the integrator *correctly partial* (declining non-elementary inputs, where the
-unconditional claim is false); this is the shape a real Risch soundness theorem takes — `= some res ⇒ correct`
-— now with a **real** guard instead of the no-op `some nrm`. -/
-theorem cIntegrateReducedLrtGuardedG_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
-    [CDiffFieldSpec α] [CPolySquarefree DensePoly α] [CPolyResultant DensePoly]
-    [CPolySubresultant DensePoly] (Dt a d : DensePoly α) (res : LrtResult α)
-    (hguarded : cIntegrateReducedLrtGuarded Dt a d = some res)
-    (hsound : IsIntegralResultLrt Dt a d (cIntegrateReducedLrt Dt a d)) :
-    IsIntegralResultLrt Dt a d res :=
-  (cIntegrateReducedLrtGuardedG_some Dt a d res hguarded).2 ▸ hsound
 
 /-- **All LRT residues are constant** (result-level, `Bool`). Every residue minimal polynomial `Rᵢ` in
 `res.logs` has constant coefficients after monic normalization (`D(monic Rᵢ) = 0`, coefficient-wise
@@ -128,13 +87,6 @@ example :
 `∫1/(t²−1)` is accepted (residues `±1/2` are constants). -/
 theorem cResidueConstantGuardG_invT2m1 :
     cResidueConstantGuard ([1] : DensePoly ℚ) [1] [-1, 0, 1] = true := by native_decide
-
-/-- The guarded integrator accepts `∫1/(t²−1)` over `ℚ`, returning the same result as the unguarded one
-(derived from the guard passing + the `= some` characterization, no `DecidableEq` on `LrtResult` needed). -/
-theorem cIntegrateReducedLrtGuardedG_invT2m1 :
-    cIntegrateReducedLrtGuarded ([1] : DensePoly ℚ) [1] [-1, 0, 1]
-      = some (cIntegrateReducedLrt ([1] : DensePoly ℚ) [1] [-1, 0, 1]) :=
-  (cIntegrateReducedLrtGuardedG_eq_some_iff _ _ _).mpr cResidueConstantGuardG_invT2m1
 
 end DensePoly
 
