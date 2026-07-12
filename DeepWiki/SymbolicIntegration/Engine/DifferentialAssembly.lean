@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.MonomialDifferentialPostprocess
+import DeepWiki.SymbolicIntegration.Engine.DifferentialCanonical
 import DeepWiki.SymbolicIntegration.Engine.PolynomialAssembly
 import DeepWiki.SymbolicIntegration.Engine.Tower.PolyPartDynamic
 
@@ -209,5 +210,118 @@ noncomputable def DynamicPolynomialReduction.CDifferentialPolynomialReduction.as
   let special := CDifferentialPolynomialReduction.asOneLevelBranchStage C R polynomialDomain specialDomain
   let normal := CDifferentialNormalReduction.asOneLevelBranchStage C normalDomain
   exact special.product normal
+
+/-- Compose explicit canonical decomposition with the parallel explicit one-level branches. -/
+noncomputable def DynamicPolynomialReduction.CDifferentialPolynomialReduction.asCanonicalOneLevelBranchStage
+    (C : MonomialDifferentialContext (P := P) α)
+    (canonical : CDifferentialCanonicalRepresentation P α C.derivation)
+    (kind : PolynomialReductionKind)
+    (R : CDifferentialPolynomialReduction P α C.derivation)
+    (polynomialDomain : DifferentialPolynomialReductionDomain P α)
+    [LawfulCDifferentialPolynomialReduction (P := P) C.derivation C.differential R]
+    [CompleteCDifferentialPolynomialReduction (P := P) C.derivation C.differential R polynomialDomain]
+    (specialDomain : MonomialSpecialDomain P α)
+    [CDifferentialMonomialSpecial P α C.derivation]
+    [LawfulCDifferentialMonomialSpecial C]
+    [CompleteCDifferentialMonomialSpecial C specialDomain]
+    (normalDomain : DifferentialNormalReductionDomain P α)
+    [CDifferentialNormalReduction P α C.derivation]
+    [LawfulCDifferentialNormalReduction C normalDomain]
+    [CompleteCDifferentialNormalReduction C normalDomain]
+    [CDifferentialNormalPostprocessor P α C.derivation]
+    [LawfulCDifferentialNormalPostprocessor C]
+    [CompleteCDifferentialNormalPostprocessor C]
+    [LawfulCDifferentialCanonicalRepresentation C] :
+    RemainderIntegrationStage (OneLevelInput P α)
+      ((P α × IntegralResult α P) × IntegralResult α P) (Unit × Unit)
+      (fun input =>
+        ((∃ out, IsDifferentialPolynomialReduction (P := P) (α := α) C.differential
+          (differentialCanonicalOneLevelBranch C kind input).kind input.derivative
+          (differentialCanonicalOneLevelBranch C kind input).polynomial out) ∧
+          ∀ antiderivative next,
+            IsDifferentialPolynomialSpecialHandoff C
+              (differentialCanonicalOneLevelBranch C kind input).toPolynomialSpecialInput
+                antiderivative next →
+              ∃ result, IsDifferentialMonomialSpecialResult C next.derivative next.polynomial
+                next.specialNum next.specialDen result) ∧
+          IsDifferentialNormalPartIntegrable C input.derivative
+            (differentialCanonicalOneLevelBranch C kind input).normalNum
+            (differentialCanonicalOneLevelBranch C kind input).normalDen)
+      (fun input output _ =>
+        IsDifferentialPolynomialSpecialAssembly C
+            (differentialCanonicalOneLevelBranch C kind input).toPolynomialSpecialInput
+              output.1.1 output.1.2 ∧
+          CertifiedDifferentialNormalResult C input.derivative
+            (differentialCanonicalOneLevelBranch C kind input).normalNum
+            (differentialCanonicalOneLevelBranch C kind input).normalDen output.2) := by
+  letI : CDifferentialCanonicalRepresentation P α C.derivation := canonical
+  let canonicalStage := differentialCanonicalOneLevelRemainderStage C kind
+  let branches := R.asParallelOneLevelBranchStage C polynomialDomain specialDomain normalDomain
+  let composed :
+      RemainderIntegrationStage (OneLevelInput P α)
+        (Unit × ((P α × IntegralResult α P) × IntegralResult α P)) (Unit × Unit)
+        (fun input =>
+          ((∃ out, IsDifferentialPolynomialReduction (P := P) (α := α) C.differential
+            (differentialCanonicalOneLevelBranch C kind input).kind input.derivative
+            (differentialCanonicalOneLevelBranch C kind input).polynomial out) ∧
+            ∀ antiderivative next,
+              IsDifferentialPolynomialSpecialHandoff C
+                (differentialCanonicalOneLevelBranch C kind input).toPolynomialSpecialInput
+                  antiderivative next →
+                ∃ result, IsDifferentialMonomialSpecialResult C next.derivative next.polynomial
+                  next.specialNum next.specialDen result) ∧
+            IsDifferentialNormalPartIntegrable C input.derivative
+              (differentialCanonicalOneLevelBranch C kind input).normalNum
+              (differentialCanonicalOneLevelBranch C kind input).normalDen)
+        (fun input output _ =>
+          output.1 = () ∧
+            IsDifferentialPolynomialSpecialAssembly C
+                (differentialCanonicalOneLevelBranch C kind input).toPolynomialSpecialInput
+                  output.2.1.1 output.2.1.2 ∧
+              CertifiedDifferentialNormalResult C input.derivative
+                (differentialCanonicalOneLevelBranch C kind input).normalNum
+                (differentialCanonicalOneLevelBranch C kind input).normalDen output.2.2) :=
+    canonicalStage.compose branches
+      (fun input =>
+        DifferentialPolynomialSpecialDomain C polynomialDomain specialDomain
+          (differentialCanonicalOneLevelBranch C kind input).toPolynomialSpecialInput ∧
+          normalDomain input.derivative (differentialCanonicalOneLevelBranch C kind input).normalNum
+            (differentialCanonicalOneLevelBranch C kind input).normalDen)
+      (fun input =>
+        ((∃ out, IsDifferentialPolynomialReduction (P := P) (α := α) C.differential
+          (differentialCanonicalOneLevelBranch C kind input).kind input.derivative
+          (differentialCanonicalOneLevelBranch C kind input).polynomial out) ∧
+          ∀ antiderivative next,
+            IsDifferentialPolynomialSpecialHandoff C
+              (differentialCanonicalOneLevelBranch C kind input).toPolynomialSpecialInput
+                antiderivative next →
+              ∃ result, IsDifferentialMonomialSpecialResult C next.derivative next.polynomial
+                next.specialNum next.specialDen result) ∧
+          IsDifferentialNormalPartIntegrable C input.derivative
+            (differentialCanonicalOneLevelBranch C kind input).normalNum
+            (differentialCanonicalOneLevelBranch C kind input).normalDen)
+      (by
+        intro _ _
+        trivial)
+      (by
+        intro _ _ branch hdomain hcanonical
+        rcases hcanonical with ⟨_, hbranch⟩
+        subst branch
+        exact hdomain)
+      (by
+        intro _ hintegrable
+        refine ⟨True.intro, ?_⟩
+        intro _ branch hcanonical
+        rcases hcanonical with ⟨_, hbranch⟩
+        subst branch
+        exact hintegrable)
+      (by
+        intro _ first branch output _ hcanonical hbranches
+        rcases hcanonical with ⟨hunit, hbranch⟩
+        subst branch
+        exact ⟨hunit, hbranches⟩)
+  exact composed.mapOutput Prod.snd (by
+    intro _ output _ hcorrect
+    exact hcorrect.2)
 
 end DeepWiki.SymbolicIntegration
