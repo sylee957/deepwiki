@@ -80,20 +80,22 @@ explicit coefficient-recursion stage.
 `DifferentialCanonical.lean`, `DifferentialAssembly.lean`, `DifferentialReconstruction.lean`, and
 `DifferentialOneLevel.lean` now compose the explicit canonical split, polynomial-special branch,
 normal/Hermite branch, logarithmic reconstruction, and genuine-log condition into one
-`RemainderIntegrationStage`. `Tower/DifferentialTranscendental.lean` indexes a finite recursive
-tower scheme by `DifferentialTowerPresentation`; its soundness and relative-completeness theorems
-therefore state the selected derivative at every depth. The primitive, exponential, and tangent
-one-step presentation constructors select `t' = 1`, `t' = t`, and `t' = t² + 1` respectively.
+`RemainderIntegrationStage`. `Tower/DifferentialTranscendental.lean` packages the five required
+local operations and their laws in `DifferentialOneLevelCapabilities`, then installs that package
+as a presentation-indexed stage. Its monomial-stage adapter additionally guards the input by the
+presentation's selected `Dt`, so the primitive, exponential, and tangent constructors cannot be
+run under each other's derivative. The finite recursive scheme exposes soundness and relative
+completeness at every selected depth.
 
 ## Migration order
 
-1. Parameterize normal postprocessing and the canonical/one-level assembly handoffs by the landed
-   explicit dictionary, then compose the polynomial, special, normal, and coefficient stages through
-   one dynamic output-remainder invariant.
+1. Thread `CRecursiveElementaryIntegratorWith` through the new presentation-indexed successor
+   constructor, so coefficient recursion is a certified input to the next level rather than a
+   parallel API.
 2. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.
-3. Prove the recursive tangent finish theorem using the lifted lower derivative identity, then
-   instantiate primitive, exponential, and tangent stages and derive finite-tower induction.
+3. Use the selected lower derivative identity in the recursive tangent finish theorem and connect
+   the resulting successor constructor to `DifferentialTranscendentalTowerScheme`.
 4. Audit and retire the static `DenseFracTower` orchestration paths once callers use the new
    presentation; preserve only deliberately primitive compatibility imports.
 
