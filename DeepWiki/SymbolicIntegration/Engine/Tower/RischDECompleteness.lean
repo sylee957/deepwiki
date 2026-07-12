@@ -217,6 +217,23 @@ theorem crischFieldCompleteWf_of_decisionFrontier
 
 end StepAssemblyWf
 
+/-! ### Whole-tower Wf completeness
+
+The tower step at an arbitrary concrete depth `DenseFracTower n`: given field-RDE completeness at that
+level (the fuel'd recursion hypothesis) and the honest per-level Bronstein frontier
+`RischDEStepFrontierWf`, the public fuel-free solver is complete at that level. This packages the tower
+induction at every depth, resting transparently on exactly the necessary conditions — the honest
+whole-tower form (the frontier is genuine Bronstein-completeness content, correctly a hypothesis; it
+cannot be discharged, and the normalization-free instance solver cannot be made complete without a
+rebase onto this weak-normalizing solver). -/
+theorem crischFieldCompleteWf_tower (n : ℕ)
+    [CRischField (DenseFracTower n)] [CFracGcdCoreWf (DenseFracTower n)]
+    [LawfulCPolyGcd DensePoly (DenseFracTower n)]
+    (hn : CRischFieldComplete (DenseFracTower n))
+    (hstep : RischDEStepFrontierWf (DenseFracTower n)) :
+    CRischFieldCompleteWf (DenseFracTower n) :=
+  crischFieldCompleteWf_step hn hstep
+
 /-! ### Restatements (anonymous `example`s) -/
 
 -- The base case: `CRischFieldComplete ℚ` is the constant-field decision procedure.
