@@ -13,10 +13,12 @@ are adapters of dense stages, never separate tower algorithms.
 
 namespace DeepWiki.SymbolicIntegration
 
+universe u
+
 variable {n : ℕ}
 
 /-- A represented Risch input with its required nonzero denominator certificate. -/
-structure RischStageInput (P : Type → Type) [CPoly P] (α : Type) [CCommRing α] [CRingSpec α] where
+structure RischStageInput (P : Type u → Type u) [CPoly P] (α : Type u) [CCommRing α] [CRingSpec α] where
   /-- Monomial derivative. -/
   Dt : P α
   /-- Numerator of the integrand. -/
@@ -25,6 +27,40 @@ structure RischStageInput (P : Type → Type) [CPoly P] (α : Type) [CCommRing �
   den : P α
   /-- The represented denominator denotes a nonzero polynomial. -/
   den_nonzero : CPoly.toPoly den ≠ 0
+
+section OneLevelRemainderAdapter
+
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,u} P]
+variable {α : Type u} [CField α] [CFieldSpec.{u,u} α] [CDiffField α] [CDiffFieldSpec.{u,u} α]
+  [Algebra ℚ (CFieldSpec.K α)]
+
+/-- View a denominator-certified tower input as the one-level pipeline's proof-carrying input. -/
+def RischStageInput.toOneLevelInput (input : RischStageInput P α) : OneLevelInput P α :=
+  ⟨input.Dt, input.num, input.den, input.den_nonzero⟩
+
+/-- Export the full compositional one-level pipeline at the stable tower input boundary. -/
+noncomputable def CPolynomialReduction.asRischStageRemainderStage
+    (C : CPolynomialReduction P α) (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain P α)
+    [LawfulCPolynomialReduction C] [CompleteCPolynomialReduction C polynomialDomain]
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [LawfulGenuineCNormalReduction N normalDomain]
+    [CompleteCNormalReduction N normalDomain]
+    (M : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase M] [LawfulGenuineCMonomialCase M]
+    [CompleteCMonomialCase M specialDomain]
+    [CCanonicalRepresentation P α] [LawfulCCanonicalRepresentation (P := P) (α := α)] :
+    RemainderIntegrationStage (RischStageInput P α) (IntegralResult α P) (Unit × Unit)
+      (fun input =>
+        IsPolynomialSpecialIntegrable
+            (canonicalOneLevelBranch kind input.toOneLevelInput).toPolynomialSpecialInput ∧
+          IsNormalPartIntegrable input.Dt (canonicalOneLevelBranch kind input.toOneLevelInput).normalNum
+            (canonicalOneLevelBranch kind input.toOneLevelInput).normalDen)
+      (fun input result _ => IsGenuineOneLevelResult input.toOneLevelInput result) :=
+  (C.asOneLevelRemainderStage kind polynomialDomain N normalDomain M specialDomain).precompose
+    RischStageInput.toOneLevelInput
+
+end OneLevelRemainderAdapter
 
 /-- A represented `IntegralResult` with genuine constant coefficients and nonzero logarithm arguments. -/
 def IsGenuineRischStageResult {P : Type → Type} [CPoly P] [CPolyEngine P]

@@ -393,6 +393,12 @@ def reconstructOneLevelBranches (branches : (P α × IntegralResult α P) × Int
     IntegralResult α P :=
   combineIntegralResults (combineSN branches.1.1 CPoly.one branches.1.2) branches.2
 
+/-- The final one-level result has the formal integral identity and genuine logarithmic terms. -/
+def IsGenuineOneLevelResult (input : OneLevelInput P α) (result : IntegralResult α P) : Prop :=
+  IsIntegralResultP input.derivative input.numerator input.denominator result ∧
+    (∀ cv ∈ result.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      ∀ cv ∈ result.logs, CPoly.toPoly cv.2 ≠ 0
+
 /-- A polynomial-special and normal branch reconstruct an integral result when their split reconstructs the input. -/
 theorem oneLevelBranchAssembly_sound (input : OneLevelBranchInput P α)
     (branches : (P α × IntegralResult α P) × IntegralResult α P)
@@ -433,6 +439,26 @@ theorem oneLevelBranchAssembly_sound (input : OneLevelBranchInput P α)
     hleftDen hbranches.2.rationalDen_nonzero hpolynomialSpecial hnormal ?_
   simpa only [add_assoc] using hreconstruct
 
+omit [LawfulCPolyEngine P] in
+/-- Genuine logarithmic coefficients and arguments survive one-level branch reconstruction. -/
+theorem oneLevelBranchAssembly_logs_genuine (input : OneLevelBranchInput P α)
+    (branches : (P α × IntegralResult α P) × IntegralResult α P)
+    (hbranches : IsOneLevelBranchAssembly input branches.1 branches.2) :
+    (∀ cv ∈ (reconstructOneLevelBranches branches).logs,
+      CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      ∀ cv ∈ (reconstructOneLevelBranches branches).logs, CPoly.toPoly cv.2 ≠ 0 := by
+  obtain ⟨_remainder, _hreduce, hspecial⟩ := hbranches.1
+  obtain ⟨_hspecialDen, hspecialConstants, hspecialArguments, _hspecialIdentity⟩ := hspecial
+  constructor
+  · intro cv hcv
+    change cv ∈ branches.1.2.logs ++ branches.2.logs at hcv
+    rw [List.mem_append] at hcv
+    exact hcv.elim (hspecialConstants cv) (hbranches.2.coefficients_constant cv)
+  · intro cv hcv
+    change cv ∈ branches.1.2.logs ++ branches.2.logs at hcv
+    rw [List.mem_append] at hcv
+    exact hcv.elim (hspecialArguments cv) (hbranches.2.arguments_nonzero cv)
+
 omit [LawfulCPolyEngine P] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The canonical branch selected from a full input satisfies the canonical reconstruction equation. -/
 theorem canonicalOneLevelBranch_reconstruction (kind : PolynomialReductionKind)
@@ -464,12 +490,13 @@ noncomputable def CPolynomialReduction.asOneLevelRemainderStage
         IsPolynomialSpecialIntegrable (canonicalOneLevelBranch kind input).toPolynomialSpecialInput ∧
           IsNormalPartIntegrable input.derivative (canonicalOneLevelBranch kind input).normalNum
             (canonicalOneLevelBranch kind input).normalDen)
-      (fun input result _ => IsIntegralResultP input.derivative input.numerator input.denominator result) := by
+      (fun input result _ => IsGenuineOneLevelResult input result) := by
   let branches := C.asCanonicalOneLevelBranchStage kind polynomialDomain N normalDomain M specialDomain
   exact branches.mapOutput reconstructOneLevelBranches (by
     intro input output _ hcorrect
-    exact oneLevelBranchAssembly_sound (canonicalOneLevelBranch kind input) output
-      (canonicalOneLevelBranch_reconstruction kind input) hcorrect)
+    refine ⟨oneLevelBranchAssembly_sound (canonicalOneLevelBranch kind input) output
+      (canonicalOneLevelBranch_reconstruction kind input) hcorrect,
+      oneLevelBranchAssembly_logs_genuine (canonicalOneLevelBranch kind input) output hcorrect⟩)
 
 /-- Explicit stage-decomposed hypotheses under which contract-based one-level assembly is complete. -/
 structure OneLevelAssemblyWitness (R : CPolynomialReduction P α)
