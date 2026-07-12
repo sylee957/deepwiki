@@ -177,8 +177,8 @@ success at every depth directly from the base and successor contracts.
 `Tower/Transcendental` now supplies the common-output
 `LayeredTranscendentalTowerScheme`. It selects primitive LRT,
 hyperexponential, or tangent at every depth but always returns
-`TranscendentalIntegralResult`: ordinary local logs, root-free local LRT
-families, and inherited coefficient logs remain distinct. Its `stage_sound`
+`TowerIntegralResult`: ordinary local logs, root-free local LRT families, and
+inherited logs retain the depth at which they were created. Its `stage_sound`
 and `stage_complete` are the end-to-end finite-tower theorems in that common
 semantic language. `primitiveLayeredTranscendentalStage`,
 `hyperexpLayeredTranscendentalStage`, and `tangentLayeredTranscendentalStage`

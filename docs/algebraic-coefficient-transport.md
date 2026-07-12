@@ -52,13 +52,15 @@ combines their denotations only at the reconstruction theorem.
    embeds through `CRecursiveElementaryIntegrator.asAlgebraicCoefficientStage`.
    `DenseLrtStage.asAlgebraicCoefficientStage` supplies the primitive adapter
    from its genuine stage theorem while retaining the root-free residue guard.
-4. **In progress.** `Tower/TranscendentalResult.lean` defines the layered
-   full-result carrier and its semantic invariant, with certified embeddings
-   from both ordinary and root-free current-extension results. Generalize tangent and
+4. **In progress.** `Tower/LogTower.lean` is the single full-result carrier:
+   `TowerIntegralResult` and `IsTowerIntegralResult` are now the output and
+   semantic invariant of primitive, hyperexponential, and tangent selected
+   stages. The obsolete one-level `TranscendentalResult` carrier has been
+   retired after source and reverse-dependency audit. Generalize tangent and
    hyperexponential special/reconstruction assemblies to append inherited
    algebraic coefficient logs without forcing them into `IntegralResult.logs`,
    then prove their local soundness and relative completeness by composition.
-   `Tower/LogTower.lean` now supplies the required depth-indexed syntax:
+   `TowerLog` supplies the required depth-indexed syntax:
    `TowerLog.inherited` preserves a lower ordinary or LRT log at its own field
    level, while each local node retains the monomial derivative of the
    extension that created it. The ordinary/LRT embeddings preserve genuine-log

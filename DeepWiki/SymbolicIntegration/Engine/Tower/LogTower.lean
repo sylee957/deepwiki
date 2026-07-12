@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.LrtGuarded
-import DeepWiki.SymbolicIntegration.Engine.Tower.TranscendentalResult
+import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
 
 /-! # Recursive transcendental log syntax
 
@@ -8,6 +8,10 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.TranscendentalResult
 successor can add local ordinary or root-free LRT logs while retaining all lower evidence as inherited syntax. -/
 
 namespace DeepWiki.SymbolicIntegration
+
+universe u
+
+variable {β : Type u} [CField β] [CFieldSpec.{u,u} β] [CDiffField β]
 
 /-- A Liouville logarithm living in the denotation field at a finite dense-tower depth. -/
 inductive TowerLog : (n : ℕ) → Type
@@ -57,6 +61,63 @@ noncomputable def TowerIntegralResult.ofLrtResult {n : ℕ} (derivative : DenseP
 /-- Lift a log list unchanged through one new tower extension. -/
 def TowerLog.inheritAll {n : ℕ} (logs : List (TowerLog n)) : List (TowerLog (n + 1)) :=
   logs.map .inherited
+
+/-- Derivative contribution of a current-extension logarithm in an evaluation field. -/
+noncomputable def localLogTerm {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
+    (Dt : DensePoly β) (log : β × DensePoly β) : RatFunc E :=
+  algebraMap E (RatFunc E) (algebraMap (CFieldSpec.K β) E (CFieldSpec.toK log.1)) *
+    (towerDerivExt Dt (amGExt (E := E) (CPoly.toPoly log.2)) /
+      amGExt (E := E) (CPoly.toPoly log.2))
+
+/-- Derivative contribution of all current-extension logarithms. -/
+noncomputable def localLogSum {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
+    (Dt : DensePoly β) (logs : List (β × DensePoly β)) : RatFunc E :=
+  (logs.map (localLogTerm (E := E) Dt)).sum
+
+/-- The current-extension derivation of a represented polynomial is its base-changed monomial derivative. -/
+theorem towerDerivExt_amGExt (Dt p : DensePoly β) {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
+    [CDiffFieldSpec β] [DifferentialAlgebra (CFieldSpec.K β) E] :
+    towerDerivExt Dt (amGExt (E := E) (CPoly.toPoly p)) =
+      amGExt (E := E) (CPoly.toPoly (CPolyEngine.monomialDeriv Dt p)) := by
+  unfold towerDerivExt amGExt
+  rw [extendDeriv_algebraMap, CPolyEngine.toPoly_monomialDeriv, ← implicitDeriv_map]
+  simp only [toPoly_list_eq]
+
+/-- A current-extension logarithmic term is the base change of its represented logarithmic derivative. -/
+theorem localLogTerm_eq_baseChange (Dt : DensePoly β) (log : β × DensePoly β)
+    {E : Type*} [Field E] [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
+    [CDiffFieldSpec β] [DifferentialAlgebra (CFieldSpec.K β) E] :
+    localLogTerm (E := E) Dt log =
+      ratFuncBaseChange E
+        (CFrac.am β (Polynomial.C (CFieldSpec.toK log.1)) *
+          (CFrac.am β (CPoly.toPoly (CPolyEngine.monomialDeriv Dt log.2)) /
+            CFrac.am β (CPoly.toPoly log.2))) := by
+  unfold localLogTerm
+  rw [map_mul, ratFuncBaseChange_amG, ratFuncBaseChange_amG_div,
+    ← towerDerivExt_amGExt]
+  simp [amGExt]
+
+/-- The current-extension log sum is the base change of the ordinary represented log sum. -/
+theorem localLogSum_eq_baseChange (Dt : DensePoly β) (logs : List (β × DensePoly β))
+    {E : Type*} [Field E] [Algebra (CFieldSpec.K β) E] [Differential E] [Algebra ℚ E]
+    [CDiffFieldSpec β] [DifferentialAlgebra (CFieldSpec.K β) E] :
+    localLogSum (E := E) Dt logs = ratFuncBaseChange E (logResidueSumP Dt logs) := by
+  induction logs with
+  | nil => simp [localLogSum, logResidueSumP]
+  | cons log logs ih =>
+    simp only [localLogSum, logResidueSumP, List.map_cons, List.sum_cons, map_add]
+    rw [localLogTerm_eq_baseChange]
+    have htail : (logs.map (localLogTerm (E := E) Dt)).sum =
+        ratFuncBaseChange E
+          (logs.map fun cv =>
+            CFrac.am β (Polynomial.C (CFieldSpec.toK cv.1)) *
+              (CFrac.am β (CPoly.toPoly (CPolyEngine.monomialDeriv Dt cv.2)) /
+                CFrac.am β (CPoly.toPoly cv.2))).sum := by
+      simpa [localLogSum, logResidueSumP] using ih
+    rw [htail]
 
 /-- Coherent differential embeddings of every field through depth `N` into one final evaluation field. -/
 structure TowerLog.EvaluationMaps (N : ℕ) (E : Type*) [Field E] [Differential E] where

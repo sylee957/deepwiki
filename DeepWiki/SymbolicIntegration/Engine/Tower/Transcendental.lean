@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.TowerStage
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentDepth
 import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
-import DeepWiki.SymbolicIntegration.Engine.Tower.TranscendentalResult
+import DeepWiki.SymbolicIntegration.Engine.Tower.LogTower
 
 /-! # Mixed finite transcendental integration towers
 
@@ -13,50 +13,52 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {n : ℕ}
 
-/-- A dense ordinary Risch stage rendered into the common layered transcendental result language. -/
-noncomputable def DenseRischStage.asLayeredIntegrationStage (S : DenseRischStage n) :
+/-- A dense ordinary Risch stage rendered into the recursive tower-result language. -/
+noncomputable def DenseRischStage.asTowerIntegrationStage (S : DenseRischStage n) :
     IntegrationStage (RischStageInput DensePoly (DenseFracTower n))
-      (TranscendentalIntegralResult (DenseFracTower n))
+      (TowerIntegralResult n)
       (fun input => IsRischLevelIntegrable input.Dt input.num input.den)
       (fun input result =>
-        IsTranscendentalIntegralResult input.Dt input.num input.den result ∧ result.LogsGenuine) := by
+        IsTowerIntegralResult input.Dt input.num input.den result ∧ result.LogsGenuine) := by
   let native := S.asIntegrationStage
   refine
-    { run := fun fuel input => (native.run fuel input).map TranscendentalIntegralResult.ofIntegralResult
+    { run := fun fuel input =>
+        (native.run fuel input).map (TowerIntegralResult.ofIntegralResult input.Dt)
       domain := native.domain
       sound := ?_
       complete := ?_ }
   · intro fuel input output hdomain hrun
     obtain ⟨ordinary, hordinary, rfl⟩ := Option.map_eq_some_iff.mp hrun
     have hnative := native.sound fuel input ordinary hdomain hordinary
-    exact ⟨isTranscendentalIntegralResult_ofIntegralResult input.Dt input.num input.den ordinary
+    exact ⟨isTowerIntegralResult_ofIntegralResult input.Dt input.num input.den ordinary
       hnative.1,
-      TranscendentalIntegralResult.logsGenuine_ofIntegralResult ordinary hnative.2.1 hnative.2.2⟩
+      TowerIntegralResult.logsGenuine_ofIntegralResult input.Dt ordinary hnative.2.1 hnative.2.2⟩
   · intro input hdomain hintegrable
     obtain ⟨fuel, ordinary, hrun⟩ := native.complete input hdomain hintegrable
-    exact ⟨fuel, TranscendentalIntegralResult.ofIntegralResult ordinary, by simp [hrun]⟩
+    exact ⟨fuel, TowerIntegralResult.ofIntegralResult input.Dt ordinary, by simp [hrun]⟩
 
-/-- A dense primitive LRT stage rendered into the common layered transcendental result language. -/
-noncomputable def DenseLrtStage.asLayeredIntegrationStage (S : DenseLrtStage n) :
+/-- A dense primitive LRT stage rendered into the recursive tower-result language. -/
+noncomputable def DenseLrtStage.asTowerIntegrationStage (S : DenseLrtStage n) :
     IntegrationStage (RischStageInput DensePoly (DenseFracTower n))
-      (TranscendentalIntegralResult (DenseFracTower n))
+      (TowerIntegralResult n)
       (fun input => IsElementaryIntegrableGenuineLrt input.Dt input.num input.den)
       (fun input result =>
-        IsTranscendentalIntegralResult input.Dt input.num input.den result ∧ result.LogsGenuine) := by
+        IsTowerIntegralResult input.Dt input.num input.den result ∧ result.LogsGenuine) := by
   let native := S.asIntegrationStage
   refine
-    { run := fun fuel input => (native.run fuel input).map TranscendentalIntegralResult.ofLrtResult
+    { run := fun fuel input =>
+        (native.run fuel input).map (TowerIntegralResult.ofLrtResult input.Dt)
       domain := native.domain
       sound := ?_
       complete := ?_ }
   · intro fuel input output hdomain hrun
     obtain ⟨lrt, hlrt, rfl⟩ := Option.map_eq_some_iff.mp hrun
     have hnative := native.sound fuel input lrt hdomain hlrt
-    exact ⟨isTranscendentalIntegralResult_ofLrtResult input.Dt input.num input.den lrt hnative.1,
-      TranscendentalIntegralResult.logsGenuine_ofLrtResult lrt hnative.2⟩
+    exact ⟨isTowerIntegralResult_ofLrtResult input.Dt input.num input.den lrt hnative.1,
+      TowerIntegralResult.logsGenuine_ofLrtResult input.Dt lrt hnative.2⟩
   · intro input hdomain hintegrable
     obtain ⟨fuel, lrt, hrun⟩ := native.complete input hdomain hintegrable
-    exact ⟨fuel, TranscendentalIntegralResult.ofLrtResult lrt, by simp [hrun]⟩
+    exact ⟨fuel, TowerIntegralResult.ofLrtResult input.Dt lrt, by simp [hrun]⟩
 
 /-- A primitive, hyperexponential, or tangent stage with one common layered-output representation. -/
 inductive LayeredTranscendentalStage (n : ℕ) where
@@ -74,19 +76,19 @@ def LayeredTranscendentalStage.Integrable (S : LayeredTranscendentalStage n) :
   | .primitive _ => fun input => IsElementaryIntegrableGenuineLrt input.Dt input.num input.den
   | .hyperexponential _ | .tangent _ => fun input => IsRischLevelIntegrable input.Dt input.num input.den
 
-/-- The semantic invariant selected by a common layered-output stage. -/
+/-- The semantic invariant selected by a common recursive-output stage. -/
 def LayeredTranscendentalStage.Correct (input : RischStageInput DensePoly (DenseFracTower n))
-    (result : TranscendentalIntegralResult (DenseFracTower n)) : Prop :=
-  IsTranscendentalIntegralResult input.Dt input.num input.den result ∧ result.LogsGenuine
+    (result : TowerIntegralResult n) : Prop :=
+  IsTowerIntegralResult input.Dt input.num input.den result ∧ result.LogsGenuine
 
 /-- Export every layered stage through the common integration-stage interface. -/
 noncomputable def LayeredTranscendentalStage.asIntegrationStage (S : LayeredTranscendentalStage n) :
     IntegrationStage (RischStageInput DensePoly (DenseFracTower n))
-      (TranscendentalIntegralResult (DenseFracTower n)) S.Integrable S.Correct := by
+      (TowerIntegralResult n) S.Integrable S.Correct := by
   cases S with
-  | primitive stage => exact stage.asLayeredIntegrationStage
-  | hyperexponential stage => exact stage.asLayeredIntegrationStage
-  | tangent stage => exact stage.asLayeredIntegrationStage
+  | primitive stage => exact stage.asTowerIntegrationStage
+  | hyperexponential stage => exact stage.asTowerIntegrationStage
+  | tangent stage => exact stage.asTowerIntegrationStage
 
 /-- A certified common-output integration level at one fraction-tower depth. -/
 structure LayeredTranscendentalLevel (n : ℕ) where
@@ -94,7 +96,7 @@ structure LayeredTranscendentalLevel (n : ℕ) where
   Integrable : RischStageInput DensePoly (DenseFracTower n) → Prop
   /-- Executable stage with the common semantic and genuine-log postcondition. -/
   stage : IntegrationStage (RischStageInput DensePoly (DenseFracTower n))
-    (TranscendentalIntegralResult (DenseFracTower n)) Integrable LayeredTranscendentalStage.Correct
+    (TowerIntegralResult n) Integrable LayeredTranscendentalStage.Correct
 
 /-- Promote a selected primitive, hyperexponential, or tangent stage to a certified common-output level. -/
 noncomputable def LayeredTranscendentalLevel.ofSelected (S : LayeredTranscendentalStage n) :
@@ -118,7 +120,7 @@ def LayeredTranscendentalTowerScheme.level (T : LayeredTranscendentalTowerScheme
 /-- Every accepted layered tower result satisfies the common semantic and genuine-log invariant. -/
 theorem LayeredTranscendentalTowerScheme.stage_sound (T : LayeredTranscendentalTowerScheme)
     (n fuel : ℕ) (input : RischStageInput DensePoly (DenseFracTower n))
-    (result : TranscendentalIntegralResult (DenseFracTower n))
+    (result : TowerIntegralResult n)
     (hdomain : (T.level n).stage.domain input)
     (hrun : (T.level n).stage.run fuel input = some result) :
     LayeredTranscendentalStage.Correct input result :=
