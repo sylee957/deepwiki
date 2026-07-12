@@ -79,9 +79,11 @@ retains a lower node without reinterpreting it as an upper
    adapter from a selected lower level. `towerTangentSpecialCandidate` now
    executes tangent special reconstruction against that stage: it uses the
    lower rational part in the polynomial tail and appends lower logs only as
-   `TowerLog.inherited` nodes. Its stage-local soundness and relative-
-   completeness proofs are next; the ordinary-only candidate remains the
-   legacy path until those proofs and caller migration land.
+   `TowerLog.inherited` nodes. Its local genuine-log theorem composes the
+   tangent coefficient check with the lower stage's `LogsGenuine` result.
+   Semantic soundness and relative-completeness proofs are next; the
+   ordinary-only candidate remains the legacy path until those proofs and
+   caller migration land.
 3. The old native-result `TranscendentalTowerScheme` has been retired after a
    source and reverse-dependency audit; audit the remaining selected-stage
    constructors once the heterogeneous successor constructor is in place. Dense and sparse remain

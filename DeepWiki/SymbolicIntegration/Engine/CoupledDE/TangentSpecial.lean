@@ -956,6 +956,47 @@ private def finishTangentCandidate {α : Type} [CField α] [CDiffField α]
         if CCommRing.isZero logCoefficient then [] else [(logCoefficient, tangentBase)]
       some { rational, logs := coefficientLogs ++ tangentLogs }
 
+/-- Build the local tangent contribution of a recursive tower-special result. -/
+noncomputable def tangentTowerLocalResult (n : ℕ)
+    (Dt : DensePoly (DenseFracTower (n + 1)))
+    (rational : DensePoly (DenseFracTower (n + 1)) × DensePoly (DenseFracTower (n + 1)))
+    (logCoefficient : DenseFracTower (n + 1)) : TowerIntegralResult (n + 1) :=
+  TowerIntegralResult.ofIntegralResult Dt
+    ({ rational, logs := if CCommRing.isZero logCoefficient then []
+      else [(logCoefficient, tangentBase)] } : IntegralResult (DenseFracTower (n + 1)))
+
+/-- The local tangent logarithm is genuine when its coefficient is constant. -/
+theorem tangentTowerLocalResult_logsGenuine (n : ℕ)
+    (Dt : DensePoly (DenseFracTower (n + 1)))
+    (rational : DensePoly (DenseFracTower (n + 1)) × DensePoly (DenseFracTower (n + 1)))
+    (logCoefficient : DenseFracTower (n + 1))
+    (hconstant : CFieldSpec.toK (CDiffField.cderiv logCoefficient) = 0) :
+    (tangentTowerLocalResult n Dt rational logCoefficient).LogsGenuine := by
+  apply TowerIntegralResult.logsGenuine_ofIntegralResult
+  · intro log hlog
+    split at hlog
+    · simp at hlog
+    · simp only [List.mem_cons, List.not_mem_nil, or_false] at hlog
+      subst log
+      exact hconstant
+  · intro log hlog
+    split at hlog
+    · simp at hlog
+    · simp only [List.mem_cons, List.not_mem_nil, or_false] at hlog
+      subst log
+      exact tangentBase_toPoly_ne_zero
+
+/-- Appending a genuine lower result preserves genuine logs in tangent reconstruction. -/
+theorem tangentTowerResult_logsGenuine (n : ℕ)
+    (Dt : DensePoly (DenseFracTower (n + 1)))
+    (rational : DensePoly (DenseFracTower (n + 1)) × DensePoly (DenseFracTower (n + 1)))
+    (logCoefficient : DenseFracTower (n + 1)) (lower : TowerIntegralResult n)
+    (hconstant : CFieldSpec.toK (CDiffField.cderiv logCoefficient) = 0)
+    (hlower : lower.LogsGenuine) :
+    ((tangentTowerLocalResult n Dt rational logCoefficient).appendInherited lower).LogsGenuine :=
+  TowerIntegralResult.logsGenuine_appendInherited _ _
+    (tangentTowerLocalResult_logsGenuine n Dt rational logCoefficient hconstant) hlower
+
 /-- Finish a reduced tangent candidate while retaining the lower stage's recursive log syntax. -/
 noncomputable def finishTowerTangentCandidate (n : ℕ)
     (R : CPolynomialReduction DensePoly (DenseFracTower (n + 1)))
@@ -981,10 +1022,7 @@ noncomputable def finishTowerTangentCandidate (n : ℕ)
         CPolyEngine.add polynomial.antiderivative [coefficientResult.rational]
       let rational := combineRationalParts reduced.rational.1 reduced.rational.2
         polynomialAntiderivative CPoly.one
-      let tangentLogs :=
-        if CCommRing.isZero logCoefficient then [] else [(logCoefficient, tangentBase)]
-      let localResult := TowerIntegralResult.ofIntegralResult Dt
-        ({ rational, logs := tangentLogs } : IntegralResult (DenseFracTower (n + 1)))
+      let localResult := tangentTowerLocalResult n Dt rational logCoefficient
       some (localResult.appendInherited coefficientResult)
 
 /-- Raw recursive hypertangent candidate that preserves a lower tower stage's logarithmic syntax. -/
