@@ -54,6 +54,8 @@ primitive and exponential stages; only `Dtₙ` and their stage-local reduction c
 
 `TowerCoefficientStage.IsRealized` is the executable/semantic boundary for that induction step: it records
 both the selected lower `Dtₙ` and the realization-indexed certificate of every accepted coefficient run.
+`LayeredTranscendentalStage.asRealizedTowerCoefficientStage` now constructs that boundary for each selected
+primitive, hyperexponential, or tangent lower stage without changing its executable run or acceptance domain.
 
 ## Migration order
 

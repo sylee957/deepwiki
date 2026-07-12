@@ -684,6 +684,13 @@ def TowerCoefficientStage.IsRealized {N n : ℕ} (C : TowerCoefficientStage n)
       IsRealizedTowerIntegralResult R (Nat.le_trans (Nat.le_succ n) hn)
         C.derivative (CFrac.num c) (CFrac.den c) result ∧ result.LogsGenuine
 
+/-- An executable coefficient stage paired with its recursive-realization certificate. -/
+structure RealizedTowerCoefficientStage {N n : ℕ} (R : TowerRealization N) (hn : n + 1 ≤ N) where
+  /-- The executable coefficient stage. -/
+  executable : TowerCoefficientStage n
+  /-- The executable stage is aligned with the selected recursive realization. -/
+  realized : executable.IsRealized R hn
+
 /-- A successor-local result is correct relative to the logarithms retained from the preceding level. -/
 def IsTowerIntegralResultWithLowerLogs {n : ℕ}
     (Dt anum aden : DensePoly (DenseFracTower (n + 1)))

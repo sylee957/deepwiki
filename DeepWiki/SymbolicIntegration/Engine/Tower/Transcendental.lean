@@ -163,6 +163,53 @@ noncomputable def LayeredTranscendentalStage.asRealizedIntegrationStage
   | hyperexponential stage => exact stage.asRealizedTowerIntegrationStage R hn
   | tangent stage => exact stage.asRealizedTowerIntegrationStage R hn
 
+/-- The legacy and realization-indexed selected-stage adapters have the same executable run. -/
+theorem LayeredTranscendentalStage.asIntegrationStage_run_eq_realized
+    (S : LayeredTranscendentalStage n) (R : TowerRealization N) (hn : n ≤ N)
+    (fuel : ℕ) (input : RischStageInput DensePoly (DenseFracTower n)) :
+    S.asIntegrationStage.run fuel input = S.asRealizedIntegrationStage R hn |>.run fuel input := by
+  cases S <;> rfl
+
+/-- The legacy and realization-indexed selected-stage adapters have the same input domain. -/
+theorem LayeredTranscendentalStage.asIntegrationStage_domain_eq_realized
+    (S : LayeredTranscendentalStage n) (R : TowerRealization N) (hn : n ≤ N)
+    (input : RischStageInput DensePoly (DenseFracTower n)) :
+    S.asIntegrationStage.domain input = S.asRealizedIntegrationStage R hn |>.domain input := by
+  cases S <;> rfl
+
+/-- Package a selected lower stage as an executable coefficient stage certified in one realization. -/
+noncomputable def LayeredTranscendentalStage.asRealizedTowerCoefficientStage
+    (S : LayeredTranscendentalStage n) (R : TowerRealization N) (hn : n + 1 ≤ N) :
+    RealizedTowerCoefficientStage R hn := by
+  let derivative := R.monomialDerivative n hn
+  let input : DenseFracTower (n + 1) → RischStageInput DensePoly (DenseFracTower n) :=
+    denseFracTowerCoefficientInput n derivative
+  let base := S.asIntegrationStage
+  let realized := S.asRealizedIntegrationStage R (Nat.le_trans (Nat.le_succ n) hn)
+  let executable : TowerCoefficientStage n :=
+    { derivative := derivative
+      Integrable := fun c => S.Integrable (input c)
+      stage :=
+        { run := fun fuel c => base.run fuel (input c)
+          domain := fun c => base.domain (input c)
+          sound := by
+            intro fuel c result hdomain hrun
+            exact base.sound fuel (input c) result hdomain hrun
+          complete := by
+            intro c hdomain hintegrable
+            exact base.complete (input c) hdomain hintegrable } }
+  refine { executable := executable, realized := ?_ }
+  constructor
+  · rfl
+  · intro fuel c result hdomain hrun
+    have hdomain' : realized.domain (input c) := by
+      rw [← S.asIntegrationStage_domain_eq_realized R (Nat.le_trans (Nat.le_succ n) hn)]
+      exact hdomain
+    have hrun' : realized.run fuel (input c) = some result := by
+      rw [← S.asIntegrationStage_run_eq_realized R (Nat.le_trans (Nat.le_succ n) hn)]
+      exact hrun
+    exact realized.sound fuel (input c) result hdomain' hrun'
+
 /-- A certified common-output integration level at one fraction-tower depth. -/
 structure LayeredTranscendentalLevel (n : ℕ) where
   /-- The semantic integrability predicate supported by this level. -/
