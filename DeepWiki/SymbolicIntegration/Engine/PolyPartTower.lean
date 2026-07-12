@@ -63,6 +63,13 @@ class LawfulCPolynomialReduction (C : CPolynomialReduction P α) : Prop where
     C.reduce kind Dt fuel p = some out →
       CPoly.toPoly p = Differential.implicitDeriv (CPoly.toPoly Dt)
           (CPoly.toPoly out.antiderivative) + CPoly.toPoly out.remainder
+  /-- Every successful reduction reaches the requested remainder normal form. -/
+  normal_form : ∀ (kind : PolynomialReductionKind) (Dt : P α) (fuel : ℕ) (p : P α)
+      (out : PolynomialReductionResult P α),
+    C.reduce kind Dt fuel p = some out →
+      match kind with
+      | .nonlinear => (CPoly.toPoly out.remainder).natDegree < (CPoly.toPoly Dt).natDegree
+      | .primitive => (CPoly.toPoly out.remainder).natDegree = 0
 
 /-- Semantic domain on which a polynomial-reduction operation is required to be complete. -/
 abbrev PolynomialReductionDomain (P : Type u → Type u) (α : Type u) :=
@@ -92,6 +99,13 @@ def polynomialReductionCheck (Dt p : P α) (out : PolynomialReductionResult P α
   CPolyEngine.cisZero
     (CPolyEngine.sub
       (CPolyEngine.add (CPolyEngine.monomialDeriv Dt out.antiderivative) out.remainder) p)
+
+/-- Executable normal-form check for the requested polynomial-reduction branch. -/
+def polynomialReductionNormalCheck (kind : PolynomialReductionKind) (Dt : P α)
+    (out : PolynomialReductionResult P α) : Bool :=
+  match kind with
+  | .nonlinear => decide (CPolyEngine.cdeg out.remainder < CPolyEngine.cdeg Dt)
+  | .primitive => decide (CPolyEngine.cdeg out.remainder = 0)
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- A passed polynomial-reduction reconstruction check has its denotation-level meaning. -/
@@ -179,7 +193,7 @@ def towerPolynomialReduction : CPolynomialReduction P α where
       | .primitive =>
         let raw := cPrimitivePolyIntegrate Dt fuel p
         ⟨raw.1, raw.2⟩
-    if polynomialReductionCheck Dt p out then some out else none
+    if polynomialReductionCheck Dt p out && polynomialReductionNormalCheck kind Dt out then some out else none
 
 variable [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
 
@@ -193,7 +207,19 @@ instance instLawfulCPolynomialReductionTower :
       · rename_i hcheck
         have hout := Option.some.inj hrun
         subst out
-        exact polynomialReductionCheck_sound Dt p _ hcheck
+        rw [Bool.and_eq_true] at hcheck
+        exact polynomialReductionCheck_sound Dt p _ hcheck.1
+      · contradiction
+  normal_form kind Dt fuel p out hrun := by
+    cases kind <;> simp only [towerPolynomialReduction] at hrun
+    all_goals
+      split at hrun
+      · rename_i hcheck
+        have hout := Option.some.inj hrun
+        subst out
+        rw [Bool.and_eq_true] at hcheck
+        simp only [polynomialReductionNormalCheck] at hcheck
+        simpa only [LawfulCPolyEngine.cdeg_eq_natDegree] using (of_decide_eq_true hcheck.2)
       · contradiction
 
 end DensePoly

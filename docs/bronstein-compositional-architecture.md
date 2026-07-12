@@ -105,8 +105,8 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `CPolynomialReduction`/`LawfulCPolynomialReduction` now separate the Prop-free, fuel-bounded
   polynomial-reduction operation from its reconstruction, normal-form, and relative-completeness
   obligations. `towerPolynomialReduction` exposes the existing nonlinear and primitive kernels only
-  after an executable reconstruction check; `polynomialReductionCheck_sound` is the generic
-  denotation bridge. Its degree-bound and eventual-fuel realization proof remains an explicit next step.
+  after executable reconstruction and requested-degree-normal-form checks; its lawful contract now carries
+  both facts. Its degree-bound and eventual-fuel realization proof remains an explicit next step.
 - `CResidueSource P α` is the Prop-free residue-candidate capability and
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
@@ -191,6 +191,10 @@ monomial stage contracts.
    establish the genuine-success contract for selected dense and sparse tangent levels, so the adapter's
    eventual-success theorem applies compositionally at every successor. The remaining gap is semantic
    completeness of the coupled solver and its degree bound, not propagation of Liouville side conditions.
+   The recursive tangent stage no longer freezes that degree bound in `TangentSpecialConfig`: its monomial
+   budget pairs an encoded finite sequence of coupled-solver bounds with an independent lower-coefficient
+   budget, so existential bounds from `CompleteCTangentCoefficientSolver` can be threaded without assuming
+   monotonicity.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and
