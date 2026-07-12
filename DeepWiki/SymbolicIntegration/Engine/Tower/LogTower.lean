@@ -644,6 +644,34 @@ theorem isTowerIntegralResult_iff {n : ℕ} (Dt anum aden : DensePoly (DenseFrac
       IsTowerAntiderivative Dt res (towerInputRemainder anum aden) := by
   rfl
 
+/-- The common remainder-carrying stage contract for a tower antiderivative at one depth. -/
+abbrev TowerRemainderStage {n : ℕ} (Input : Type u) (Integrable : Input → Prop)
+    (derivative : Input → DensePoly (DenseFracTower n)) :=
+  RemainderIntegrationStage Input (TowerIntegralResult n) (TowerRemainder n) Integrable
+    (fun input result remainder => IsTowerAntiderivative (derivative input) result remainder)
+
+namespace TowerRemainderStage
+
+/-- Lift a stage whose output integrates to an input-selected remainder into the common remainder contract. -/
+noncomputable def ofStage {n : ℕ} {Input : Type u} (Integrable : Input → Prop)
+    (derivative : Input → DensePoly (DenseFracTower n)) (remainder : Input → TowerRemainder n)
+    (S : IntegrationStage Input (TowerIntegralResult n) Integrable
+      (fun input result => IsTowerAntiderivative (derivative input) result (remainder input))) :
+    TowerRemainderStage Input Integrable derivative :=
+  { stage :=
+      { run := fun fuel input => (S.run fuel input).map fun result => ⟨result, remainder input⟩
+        domain := S.domain
+        sound := by
+          intro fuel input output hdomain hrun
+          obtain ⟨result, hresult, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          exact S.sound fuel input result hdomain hresult
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨fuel, result, hrun⟩ := S.complete input hdomain hintegrable
+          exact ⟨fuel, ⟨result, remainder input⟩, by simp [hrun]⟩ } }
+
+end TowerRemainderStage
+
 /-- A certified tower result evaluates correctly in any coherent extension of its source depth. -/
 theorem isTowerIntegralResult_evaluate {n N : ℕ} {E : Type}
     [Field E] [Differential E] [Algebra ℚ E] [IsAlgClosed E]

@@ -21,6 +21,41 @@ structure IntegrationStage (Input : Type u) (Output : Type v) (Integrable : Inpu
   /-- Every integrable input in the invariant domain succeeds at some finite budget. -/
   complete : ∀ input, domain input → Integrable input → ∃ fuel output, run fuel input = some output
 
+/-- The output of one integration stage together with the semantic remainder it leaves for later stages. -/
+structure RemainderResult (Output : Type u) (Remainder : Type v) where
+  /-- The extracted antiderivative contribution. -/
+  output : Output
+  /-- The remainder invariant passed to the next compositional stage. -/
+  remainder : Remainder
+
+/-- A finite-search integration stage whose certified output explicitly carries a semantic remainder.
+
+The executable algorithm remains representation-neutral. Polynomial reduction, Hermite reduction,
+monomial special integration, coefficient recursion, and logarithmic reconstruction can therefore
+use the same contract while choosing their own output and remainder types. -/
+structure RemainderIntegrationStage (Input : Type u) (Output : Type v) (Remainder : Type w)
+    (Integrable : Input → Prop) (Correct : Input → Output → Remainder → Prop) where
+  /-- The underlying finite-search stage. -/
+  stage : IntegrationStage Input (RemainderResult Output Remainder) Integrable
+    (fun input result => Correct input result.output result.remainder)
+
+namespace RemainderIntegrationStage
+
+/-- Every accepted remainder-stage result satisfies its selected output-remainder invariant. -/
+theorem sound (S : RemainderIntegrationStage Input Output Remainder Integrable Correct)
+    (fuel : ℕ) (input : Input) (result : RemainderResult Output Remainder)
+    (hdomain : S.stage.domain input) (hrun : S.stage.run fuel input = some result) :
+    Correct input result.output result.remainder :=
+  S.stage.sound fuel input result hdomain hrun
+
+/-- Every integrable in-domain input eventually produces a certified output-remainder pair. -/
+theorem complete (S : RemainderIntegrationStage Input Output Remainder Integrable Correct)
+    (input : Input) (hdomain : S.stage.domain input) (hintegrable : Integrable input) :
+    ∃ fuel result, S.stage.run fuel input = some result :=
+  S.stage.complete input hdomain hintegrable
+
+end RemainderIntegrationStage
+
 /-- A finite integration tower selects a base stage and builds every successor from its predecessor. -/
 structure IntegrationTowerScheme (Input : ℕ → Type u) where
   /-- Output representation selected at each tower depth. -/

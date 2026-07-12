@@ -40,6 +40,17 @@ structure DifferentialTowerPresentation (N : ℕ) where
 
 namespace DifferentialTowerPresentation
 
+/-- The legacy dense fraction tower, viewed as the all-primitive explicit presentation. -/
+noncomputable def primitive (N : ℕ) : DifferentialTowerPresentation N where
+  derivation n _ := CFieldDerivation.ofCDiffField (DenseFracTower n)
+  differential n _ := CDiffFieldSpec.diffK
+  lawful n _ := LawfulCFieldDerivation.ofCDiffField (DenseFracTower n)
+  monomialDerivative n _ := CPoly.one
+  successor n _ x := rfl
+  successorSemantics n _ x := by
+    rw [denseFracTower_toK_succ]
+    exact CFrac.toRatFunc_towerDerivCFracWith (P := DensePoly) (F := DenseFrac) CPoly.one x
+
 /-- The selected derivative commutes with its field denotation at every realized depth. -/
 theorem toK_cderiv (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N)
     (x : DenseFracTower n) :
