@@ -92,12 +92,9 @@ noncomputable def DifferentialTranscendentalLevel.successorOfCoefficientBridge
     [LawfulCDifferentialRecursiveMonomialCase M]
     [CompleteCDifferentialRecursiveMonomialCase M B.domain K.specialDomain] :
     DifferentialTranscendentalLevel T (n + 1) hn := by
-  letI : LawfulCRecursiveElementaryIntegratorWith (T.derivation (n + 1) hn)
-      (T.differential (n + 1) hn) B.checked := B.lawful
-  letI : CompleteCRecursiveElementaryIntegratorWith (T.derivation (n + 1) hn)
-      (T.differential (n + 1) hn) B.checked B.domain := B.complete
-  exact DifferentialTranscendentalLevel.ofRecursiveMonomialCase T (n + 1) hn K M B.checked
-    B.domain kind
+  exact DifferentialTranscendentalLevel.ofCapabilities T (n + 1) hn
+    (K.withRecursiveMonomialCase (T.context (n + 1) hn) M B.checked B.domain B.lawful B.complete)
+    kind
 
 end DifferentialCoefficientBridge
 
