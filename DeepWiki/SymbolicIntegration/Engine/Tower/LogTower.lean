@@ -282,6 +282,37 @@ theorem TowerIntegralResult.denoteSum_appendInherited {n N : ℕ} {E : Type*}
       TowerLog.denoteSum maps (Nat.le_trans (Nat.le_succ n) hn) lower.logs
   rw [towerLog_denoteSum_inheritAll]
 
+/-- A semantic remainder in every algebraically closed evaluation field at one tower depth. -/
+abbrev TowerRemainder (n : ℕ) : Type 1 :=
+  ∀ (E : Type) [Field E] [Differential E] [Algebra ℚ E] [IsAlgClosed E],
+    TowerLog.EvaluationMaps n E → RatFunc E
+
+/-- The semantic remainder denoted by a represented input fraction. -/
+noncomputable def towerInputRemainder {n : ℕ}
+    (anum aden : DensePoly (DenseFracTower n)) : TowerRemainder n :=
+  fun E _ _ _ _ maps => by
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) E :=
+      maps.algebra n (Nat.le_refl n)
+    exact amGExt (E := E) (CPoly.toPoly anum) /
+      amGExt (E := E) (CPoly.toPoly aden)
+
+/-- A tower result has the specified semantic derivative remainder. -/
+def IsTowerAntiderivative {n : ℕ} (Dt : DensePoly (DenseFracTower n))
+    (res : TowerIntegralResult n) (remainder : TowerRemainder n) : Prop :=
+  ∀ (E : Type) [Field E] [Differential E] [Algebra ℚ E] [IsAlgClosed E]
+    (maps : TowerLog.EvaluationMaps n E),
+    res.derivDenote Dt maps (Nat.le_refl n) = remainder E maps
+
+/-- Semantic tower antiderivative certificates compose by addition of their remainders. -/
+theorem isTowerAntiderivative_add {n : ℕ} (Dt : DensePoly (DenseFracTower n))
+    (left right : TowerIntegralResult n) (leftRemainder rightRemainder : TowerRemainder n)
+    (hleft : IsTowerAntiderivative Dt left leftRemainder)
+    (hright : IsTowerAntiderivative Dt right rightRemainder) :
+    IsTowerAntiderivative Dt (left.add right)
+      (fun E _ _ _ _ maps => leftRemainder E maps + rightRemainder E maps) := by
+  intro E _ _ _ _ maps
+  rw [TowerIntegralResult.derivDenote_add, hleft E maps, hright E maps]
+
 /-- A recursive tower result differentiates to its input after all local and inherited logs are evaluated. -/
 def IsTowerIntegralResult {n : ℕ} (Dt anum aden : DensePoly (DenseFracTower n))
     (res : TowerIntegralResult n) : Prop :=
@@ -296,6 +327,13 @@ def IsTowerIntegralResult {n : ℕ} (Dt anum aden : DensePoly (DenseFracTower n)
       TowerLog.denoteSum maps (Nat.le_refl n) res.logs =
       amGExt (E := E) (CPoly.toPoly anum) /
         amGExt (E := E) (CPoly.toPoly aden)
+
+/-- The concrete input-fraction invariant is the general tower-remainder contract specialized to that input. -/
+theorem isTowerIntegralResult_iff {n : ℕ} (Dt anum aden : DensePoly (DenseFracTower n))
+    (res : TowerIntegralResult n) :
+    IsTowerIntegralResult Dt anum aden res ↔
+      IsTowerAntiderivative Dt res (towerInputRemainder anum aden) := by
+  rfl
 
 /-- A successor-local result is correct relative to the logarithms retained from the preceding level. -/
 def IsTowerIntegralResultWithLowerLogs {n : ℕ}
