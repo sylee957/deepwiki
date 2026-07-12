@@ -83,7 +83,13 @@ combines their denotations only at the reconstruction theorem.
    the complete lower `LayeredTranscendentalLevel` that
    `LayeredTranscendentalTowerScheme` now supplies. Their lower adapter must
    transport heterogeneous coefficient logs, then finite-tower soundness and
-   relative completeness follow by the existing induction.
+   relative completeness follow by the existing induction. The lower level now
+   exposes `runCoefficient`: it turns a represented fraction into the
+   certified unit-monomial Risch input and carries forward the selected
+   domain, soundness, and relative-completeness hypotheses. Concrete
+   reconstructions must discharge those hypotheses from their coefficient
+   integrability witnesses; they must not treat this wrapper as unconditional
+   recursive success.
 6. The old native-result `TranscendentalTowerScheme` has been retired after a
    source and reverse-dependency audit; audit the remaining selected-stage
    constructors once the heterogeneous successor constructor is in place. Dense and sparse remain
