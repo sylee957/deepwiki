@@ -30,6 +30,28 @@ class CRischFieldSpec (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [
         + CFieldSpec.toK b * CFieldSpec.toK y
       = CFieldSpec.toK g
 
+/-- A field Risch-DE has a denotational solution. -/
+def CFieldRDESolvable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] (f g : α) : Prop :=
+  ∃ y : α, @Differential.deriv _ _ CDiffFieldSpec.diffK (CFieldSpec.toK y)
+      + CFieldSpec.toK f * CFieldSpec.toK y = CFieldSpec.toK g
+
+/-- The field Risch-DE oracle returns an output for every denotationally solvable input. -/
+def CRischFieldComplete (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CRischField α] : Prop :=
+  ∀ f g : α, CFieldRDESolvable f g → (CRischField.crischDESolve f g).isSome = true
+
+/-- Field-level completeness turns a solvable RDE into an executable oracle result. -/
+theorem crischDESolve_exists_of_complete {α : Type*} [CField α] [CFieldSpec α]
+    [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+    (hcomplete : CRischFieldComplete α) (f g : α)
+    (hsolvable : CFieldRDESolvable f g) :
+    ∃ y, CRischField.crischDESolve f g = some y := by
+  have hisSome := hcomplete f g hsolvable
+  cases hsolve : CRischField.crischDESolve f g with
+  | none => simp [hsolve] at hisSome
+  | some y => exact ⟨y, rfl⟩
+
 /-! ### The constant base instance `CRischFieldSpec ℚ` -/
 
 /-- `CRischFieldSpec ℚ`, the constant-field base soundness: over `ℚ` (`D = 0`, `toK = id`) the

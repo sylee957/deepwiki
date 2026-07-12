@@ -16,28 +16,10 @@ open DensePoly CFrac
 
 universe u v
 
-/-! ## The uniform field-level RDE solvability and per-level completeness predicates -/
+/-! ## Field-level RDE predicates
 
-section Predicate
-
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
-
-/-- Uniform field-level RDE solvability `CFieldRDESolvable f g`: there is `y : α` solving `Dy + f·y = g`
-read through `toK` into `K = CFieldSpec.K α` — `(toK y)′ + (toK f)·(toK y) = toK g`, with
-`′ = Differential.deriv` the `CDiffFieldSpec` derivation. -/
-def CFieldRDESolvable (f g : α) : Prop :=
-  ∃ y : α, @Differential.deriv _ _ CDiffFieldSpec.diffK (CFieldSpec.toK y)
-      + CFieldSpec.toK f * CFieldSpec.toK y
-    = CFieldSpec.toK g
-
-/-- Per-level RDE completeness `CRischFieldComplete α`: the field-level oracle
-`CRischField.crischDESolve` returns `some` on every solvable field RDE — `∀ f g, CFieldRDESolvable f g →
-(crischDESolve f g).isSome = true`. -/
-def CRischFieldComplete (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CRischField α] : Prop :=
-  ∀ f g : α, CFieldRDESolvable f g → (CRischField.crischDESolve f g).isSome = true
-
-end Predicate
+`CFieldRDESolvable` and `CRischFieldComplete` live in `RischFieldSpec.lean`, alongside the
+field-oracle soundness contract. This tower module supplies their induction through `DenseFrac`. -/
 
 /-! ## The base case `CRischFieldComplete ℚ`
 

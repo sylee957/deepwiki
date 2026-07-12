@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.RischFieldCore
+import DeepWiki.SymbolicIntegration.Engine.RischFieldSpec
 import DeepWiki.ComputableAlgebra.PolyEngine
 
 /-! # Core hyperexponential Laurent integration helpers
@@ -31,6 +32,19 @@ def cLaurentShift (η : α) (j : ℤ) : α :=
 `Dqⱼ + (j·η)·qⱼ = aⱼ` via `CRischField.crischDESolve`, or `none` if non-elementary. -/
 def cLaurentIntCoeff (η : α) (j : ℤ) (aj : α) : Option α :=
   CRischField.crischDESolve (cLaurentShift η j) aj
+
+/-- The coefficient RDE for one hyperexponential Laurent term is denotationally solvable. -/
+def IsLaurentCoefficientSolvable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] (η : α) (j : ℤ) (aj : α) : Prop :=
+  CFieldRDESolvable (cLaurentShift η j) aj
+
+/-- Field RDE completeness makes a solvable Laurent coefficient executable. -/
+theorem cLaurentIntCoeff_exists_of_solvable
+    [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    (hcomplete : CRischFieldComplete α) (η : α) (j : ℤ) (aj : α)
+    (hsolvable : IsLaurentCoefficientSolvable η j aj) :
+    ∃ q, cLaurentIntCoeff η j aj = some q :=
+  crischDESolve_exists_of_complete hcomplete (cLaurentShift η j) aj hsolvable
 
 /-! ### The Laurent special-part integrator over the tower
 
