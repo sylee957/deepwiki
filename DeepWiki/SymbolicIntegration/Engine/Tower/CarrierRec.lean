@@ -133,6 +133,10 @@ theorem denseFracTower_zero : DenseFracTower 0 = ℚ := rfl
 theorem denseFracTower_succ (n : ℕ) :
     DenseFracTower (n + 1) = DenseFrac (DenseFracTower n) := rfl
 
+/-- The semantic field of a successor dense tower carrier is the preceding rational-function field. -/
+theorem denseFracTower_K_succ (n : ℕ) :
+    CFieldSpec.K (DenseFracTower (n + 1)) = RatFunc (CFieldSpec.K (DenseFracTower n)) := rfl
+
 /-- The generic differential-denotation square resolves recursively at depth two for sparse fractions. -/
 theorem sparseFrac_recursive_toK_cderiv (x : SparseFrac (SparseFrac ℚ)) :
     CFieldSpec.toK (CDiffField.cderiv x) = Differential.deriv (CFieldSpec.toK x) :=

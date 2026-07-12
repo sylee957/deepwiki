@@ -65,6 +65,8 @@ combines their denotations only at the reconstruction theorem.
    evidence. `TowerLog.EvaluationMaps` and `TowerLog.denote` now evaluate each
    depth directly in one final differential field; the next theorem establishes
    the coherent canonical maps and the successor-lift identity they use.
+   `denseFracTower_K_succ` exposes the required `Kₙ₊₁ = RatFunc Kₙ` field
+   equality across the packaged carrier boundary.
 5. Make the concrete tangent and hyperexponential successor constructors consume
    the complete lower `LayeredTranscendentalLevel` that
    `LayeredTranscendentalTowerScheme` now supplies. Their lower adapter must
