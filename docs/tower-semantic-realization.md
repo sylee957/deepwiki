@@ -33,6 +33,11 @@ At each depth `n`, the realization contains:
 `stepDifferential_eq` prevents a proof from silently replacing a primitive, exponential, or tangent monomial
 derivation with the unrelated formal `d/dX` derivation.
 
+`TowerCoefficientStage` likewise carries the lower monomial derivative explicitly.  The previous adapter
+always formed its coefficient input with `Dt = 1`; that was only sound when the lower field happened to be a
+primitive extension.  `denseFracTowerCoefficientInput` and the layered coefficient adapter now require the
+actual derivative, so a mixed primitive/exponential/tangent tower cannot silently use the wrong derivation.
+
 ## Composition invariant
 
 The replacement invariant is indexed by a realization rather than a universal single field.
@@ -50,7 +55,8 @@ primitive and exponential stages; only `Dtₙ` and their stage-local reduction c
 ## Migration order
 
 1. Define realization-indexed local rational and log derivative denotations, including a lifted inherited-log
-   contribution.
+   contribution. **Done:** `TowerLog.realize`, `TowerLog.realizeSum`, and
+   `TowerIntegralResult.derivRealize` evaluate an inherited contribution through the recursive lift.
 2. Restate the one-level ordinary and LRT soundness adapters against that local invariant.
 3. Prove the coefficient-lift lemma from `TowerRealization.stepDifferentialAlgebra` and `coherent`.
 4. Prove `finishTowerTangentCandidate` sound; then expose it through the selected tangent stage.

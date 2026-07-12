@@ -13,10 +13,11 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {n : ℕ}
 
-/-- Present a lower-field fraction as a unit-monomial Risch input at the preceding tower depth. -/
-noncomputable def denseFracTowerCoefficientInput (n : ℕ) (c : DenseFracTower (n + 1)) :
+/-- Present a lower-field fraction as a Risch input at the preceding tower depth. -/
+noncomputable def denseFracTowerCoefficientInput (n : ℕ)
+    (derivative : DensePoly (DenseFracTower n)) (c : DenseFracTower (n + 1)) :
     RischStageInput DensePoly (DenseFracTower n) where
-  Dt := CPoly.one
+  Dt := derivative
   num := CFrac.num c
   den := CFrac.den c
   den_nonzero := CFrac.toPoly_den_ne_zero_generic c
@@ -112,48 +113,52 @@ noncomputable def LayeredTranscendentalLevel.ofSelected (S : LayeredTranscendent
   Integrable := S.Integrable
   stage := S.asIntegrationStage
 
-/-- Run a lower certified level as a coefficient integrator with monomial derivative `1`. -/
+/-- Run a lower certified level as a coefficient integrator at its actual monomial derivative. -/
 noncomputable def LayeredTranscendentalLevel.runCoefficient
-    (L : LayeredTranscendentalLevel n) (fuel : ℕ) (c : DenseFracTower (n + 1)) :
+    (L : LayeredTranscendentalLevel n) (derivative : DensePoly (DenseFracTower n))
+    (fuel : ℕ) (c : DenseFracTower (n + 1)) :
     Option (TowerIntegralResult n) :=
-  L.stage.run fuel (denseFracTowerCoefficientInput n c)
+  L.stage.run fuel (denseFracTowerCoefficientInput n derivative c)
 
 /-- The lower stage's domain viewed at a coefficient-field fraction. -/
 def LayeredTranscendentalLevel.coefficientDomain
-    (L : LayeredTranscendentalLevel n) (c : DenseFracTower (n + 1)) : Prop :=
-  L.stage.domain (denseFracTowerCoefficientInput n c)
+    (L : LayeredTranscendentalLevel n) (derivative : DensePoly (DenseFracTower n))
+    (c : DenseFracTower (n + 1)) : Prop :=
+  L.stage.domain (denseFracTowerCoefficientInput n derivative c)
 
 /-- Every accepted lower coefficient run has the common recursive-result certificate. -/
 theorem LayeredTranscendentalLevel.runCoefficient_sound
-    (L : LayeredTranscendentalLevel n) (fuel : ℕ) (c : DenseFracTower (n + 1))
-    (result : TowerIntegralResult n) (hdomain : L.coefficientDomain c)
-    (hrun : L.runCoefficient fuel c = some result) :
-    LayeredTranscendentalStage.Correct (denseFracTowerCoefficientInput n c) result :=
-  L.stage.sound fuel (denseFracTowerCoefficientInput n c) result hdomain hrun
+    (L : LayeredTranscendentalLevel n) (derivative : DensePoly (DenseFracTower n))
+    (fuel : ℕ) (c : DenseFracTower (n + 1)) (result : TowerIntegralResult n)
+    (hdomain : L.coefficientDomain derivative c)
+    (hrun : L.runCoefficient derivative fuel c = some result) :
+    LayeredTranscendentalStage.Correct (denseFracTowerCoefficientInput n derivative c) result :=
+  L.stage.sound fuel (denseFracTowerCoefficientInput n derivative c) result hdomain hrun
 
 /-- A lower coefficient input satisfying its selected integrability predicate eventually succeeds. -/
 theorem LayeredTranscendentalLevel.runCoefficient_complete
-    (L : LayeredTranscendentalLevel n) (c : DenseFracTower (n + 1))
-    (hdomain : L.coefficientDomain c)
-    (hintegrable : L.Integrable (denseFracTowerCoefficientInput n c)) :
-    ∃ fuel result, L.runCoefficient fuel c = some result :=
-  L.stage.complete (denseFracTowerCoefficientInput n c) hdomain hintegrable
+    (L : LayeredTranscendentalLevel n) (derivative : DensePoly (DenseFracTower n))
+    (c : DenseFracTower (n + 1)) (hdomain : L.coefficientDomain derivative c)
+    (hintegrable : L.Integrable (denseFracTowerCoefficientInput n derivative c)) :
+    ∃ fuel result, L.runCoefficient derivative fuel c = some result :=
+  L.stage.complete (denseFracTowerCoefficientInput n derivative c) hdomain hintegrable
 
 /-- Export a selected lower level through the recursive tower-coefficient interface. -/
 noncomputable def LayeredTranscendentalLevel.asTowerCoefficientStage
-    (L : LayeredTranscendentalLevel n) : TowerCoefficientStage n := by
+    (L : LayeredTranscendentalLevel n) (derivative : DensePoly (DenseFracTower n)) :
+    TowerCoefficientStage n := by
   let integrable : DenseFracTower (n + 1) → Prop := fun c =>
-    L.Integrable (denseFracTowerCoefficientInput n c)
-  refine { Integrable := integrable, stage := ?_ }
+    L.Integrable (denseFracTowerCoefficientInput n derivative c)
+  refine { derivative := derivative, Integrable := integrable, stage := ?_ }
   refine
-    { run := L.runCoefficient
-      domain := L.coefficientDomain
+    { run := L.runCoefficient derivative
+      domain := L.coefficientDomain derivative
       sound := ?_
       complete := ?_ }
   · intro fuel c result hdomain hrun
-    exact L.runCoefficient_sound fuel c result hdomain hrun
+    exact L.runCoefficient_sound derivative fuel c result hdomain hrun
   · intro c hdomain hintegrable
-    exact L.runCoefficient_complete c hdomain hintegrable
+    exact L.runCoefficient_complete derivative c hdomain hintegrable
 
 /-- A finite tower whose successor constructor receives the complete certified lower level. -/
 structure LayeredTranscendentalTowerScheme where

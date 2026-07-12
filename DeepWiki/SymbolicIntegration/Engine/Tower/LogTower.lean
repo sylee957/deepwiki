@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.LrtGuarded
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
+import DeepWiki.SymbolicIntegration.Engine.Tower.Realization
 import DeepWiki.SymbolicIntegration.Engine.Tower.Stage
 
 /-! # Recursive transcendental log syntax
@@ -227,6 +228,160 @@ noncomputable def TowerLog.denote {n N : ℕ} {E : Type*} [Field E] [Differentia
       TowerLog.denote maps (Nat.le_trans (Nat.le_succ n) hn) log
 termination_by n
 
+/-- Evaluate a recursive log in the field layer where it is differentiated.
+
+Unlike `TowerLog.denote`, inherited logs are transported through the recursive realization's
+function-field lift before they are included as successor coefficients. -/
+noncomputable def TowerLog.realize {N : ℕ} (R : TowerRealization N) :
+    ∀ n (hn : n ≤ N),
+      letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+      TowerLog (n + 1) → RatFunc (R.Carrier n hn)
+  | 0, hn, log => by
+    letI : Field (R.Carrier 0 hn) := R.field (TowerRealization.index hn)
+    letI : Differential (R.Carrier 0 hn) := R.differential (TowerRealization.index hn)
+    letI : Algebra ℚ (R.Carrier 0 hn) := R.algebraQ (TowerRealization.index hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower 0)) (R.Carrier 0 hn) := R.algebra 0 hn
+    exact match log with
+    | .ordinary derivative coefficient argument =>
+      localLogTerm (E := R.Carrier 0 hn) derivative (coefficient, argument)
+    | .lrt derivative residue argument =>
+      logResidueTermLrt (E := R.Carrier 0 hn) derivative (residue, argument)
+    | .inherited lower => nomatch lower
+  | n + 1, hn, log => by
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+    letI : Differential (R.Carrier (n + 1) hn) := R.differential (TowerRealization.index hn)
+    letI : Algebra ℚ (R.Carrier (n + 1) hn) := R.algebraQ (TowerRealization.index hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) (R.Carrier (n + 1) hn) :=
+      R.algebra (n + 1) hn
+    exact match log with
+    | .ordinary derivative coefficient argument =>
+      localLogTerm (E := R.Carrier (n + 1) hn) derivative (coefficient, argument)
+    | .lrt derivative residue argument =>
+      logResidueTermLrt (E := R.Carrier (n + 1) hn) derivative (residue, argument)
+    | .inherited lower =>
+      letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+      letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) :=
+        R.stepAlgebra n hn
+      algebraMap (R.Carrier (n + 1) hn) (RatFunc (R.Carrier (n + 1) hn))
+        (R.lift n hn (TowerLog.realize R n hprev lower))
+
+/-- Sum the realization-indexed derivative contributions of a recursive log list. -/
+noncomputable def TowerLog.realizeSum {N n : ℕ} (R : TowerRealization N) (hn : n ≤ N)
+    (logs : List (TowerLog (n + 1))) :
+    letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+    RatFunc (R.Carrier n hn) := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  exact (logs.map (TowerLog.realize R n hn)).sum
+
+/-- The realization of an inherited log is the coefficient lift of its preceding derivative term. -/
+theorem TowerLog.realize_inherited {N n : ℕ} (R : TowerRealization N) (hn : n + 1 ≤ N)
+    (log : TowerLog (n + 1)) :
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+    letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+    letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) :=
+      R.stepAlgebra n hn
+    TowerLog.realize R (n + 1) hn (TowerLog.inherited log) =
+      algebraMap (R.Carrier (n + 1) hn) (RatFunc (R.Carrier (n + 1) hn))
+        (R.lift n hn (TowerLog.realize R n hprev log)) := by
+  rfl
+
+/-- Realizing an inherited log list applies the successor coefficient lift to its preceding sum. -/
+theorem towerLog_realizeSum_inheritAll {N n : ℕ} (R : TowerRealization N) (hn : n + 1 ≤ N)
+    (logs : List (TowerLog (n + 1))) :
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+    letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+    letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) :=
+      R.stepAlgebra n hn
+    TowerLog.realizeSum R hn (TowerLog.inheritAll logs) =
+      algebraMap (R.Carrier (n + 1) hn) (RatFunc (R.Carrier (n + 1) hn))
+        (R.lift n hn (TowerLog.realizeSum R hprev logs)) := by
+  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+  letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+  letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+  letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) :=
+    R.stepAlgebra n hn
+  induction logs with
+  | nil => simp [TowerLog.inheritAll, TowerLog.realizeSum]
+  | cons log logs ih =>
+    have htail :
+        (List.map (TowerLog.realize R (n + 1) hn)
+          (List.map TowerLog.inherited logs)).sum =
+          algebraMap (R.Carrier (n + 1) hn) (RatFunc (R.Carrier (n + 1) hn))
+            (R.lift n hn ((List.map (TowerLog.realize R n
+              (Nat.le_trans (Nat.le_succ n) hn)) logs).sum)) := by
+      simpa [TowerLog.inheritAll, TowerLog.realizeSum] using ih
+    simp only [TowerLog.inheritAll, TowerLog.realizeSum, List.map_cons, List.sum_cons]
+    rw [TowerLog.realize_inherited, htail]
+    simp only [map_add]
+
+/-- Realize the rational part of a tower result at its own recursive coefficient field. -/
+noncomputable def TowerIntegralResult.rationalRealize {N n : ℕ} (R : TowerRealization N)
+    (hn : n ≤ N) (res : TowerIntegralResult n) :
+    letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+    RatFunc (R.Carrier n hn) := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  exact amGExt (E := R.Carrier n hn) (CPoly.toPoly (CFrac.num res.rational)) /
+    amGExt (E := R.Carrier n hn) (CPoly.toPoly (CFrac.den res.rational))
+
+/-- Differentiate a tower result in the realization layer for its monomial extension. -/
+noncomputable def TowerIntegralResult.derivRealize {N n : ℕ} (R : TowerRealization N)
+    (hn : n ≤ N) (Dt : DensePoly (DenseFracTower n)) (res : TowerIntegralResult n) :
+    letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+    letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+    letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+    letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+    RatFunc (R.Carrier n hn) := by
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+  letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  exact towerDerivExt Dt (res.rationalRealize R hn) + TowerLog.realizeSum R hn res.logs
+
+/-- A result differentiates to its input fraction in a fixed recursive tower realization. -/
+def IsRealizedTowerIntegralResult {N n : ℕ} (R : TowerRealization N) (hn : n ≤ N)
+    (Dt anum aden : DensePoly (DenseFracTower n)) (res : TowerIntegralResult n) : Prop :=
+  letI : Field (R.Carrier n hn) := R.field (TowerRealization.index hn)
+  letI : Differential (R.Carrier n hn) := R.differential (TowerRealization.index hn)
+  letI : Algebra ℚ (R.Carrier n hn) := R.algebraQ (TowerRealization.index hn)
+  letI : Algebra (CFieldSpec.K (DenseFracTower n)) (R.Carrier n hn) := R.algebra n hn
+  res.derivRealize R hn Dt =
+    amGExt (E := R.Carrier n hn) (CPoly.toPoly anum) /
+      amGExt (E := R.Carrier n hn) (CPoly.toPoly aden)
+
+/-- Appending lower logs realizes as the local sum plus the lifted preceding log contribution. -/
+theorem TowerIntegralResult.realizeSum_appendInherited {N n : ℕ} (R : TowerRealization N)
+    (hn : n + 1 ≤ N) (localResult : TowerIntegralResult (n + 1))
+    (lower : TowerIntegralResult n) :
+    let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+    letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+    letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+    letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) :=
+      R.stepAlgebra n hn
+    TowerLog.realizeSum R hn (localResult.appendInherited lower).logs =
+      TowerLog.realizeSum R hn localResult.logs +
+        algebraMap (R.Carrier (n + 1) hn) (RatFunc (R.Carrier (n + 1) hn))
+          (R.lift n hn (TowerLog.realizeSum R hprev lower.logs)) := by
+  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+  letI : Field (R.Carrier n hprev) := R.field (TowerRealization.index hprev)
+  letI : Field (R.Carrier (n + 1) hn) := R.field (TowerRealization.index hn)
+  letI : Algebra (RatFunc (R.Carrier n hprev)) (R.Carrier (n + 1) hn) :=
+    R.stepAlgebra n hn
+  unfold TowerIntegralResult.appendInherited
+  have hinherit := towerLog_realizeSum_inheritAll R hn lower.logs
+  have hinherit' :
+      (List.map (TowerLog.realize R (n + 1) hn)
+        (TowerLog.inheritAll lower.logs)).sum =
+        algebraMap (R.Carrier (n + 1) hn) (RatFunc (R.Carrier (n + 1) hn))
+          (R.lift n hn ((List.map (TowerLog.realize R n hprev) lower.logs).sum)) := by
+    simpa [TowerLog.realizeSum] using hinherit
+  simp only [TowerLog.realizeSum, List.map_append, List.sum_append]
+  rw [hinherit']
+
 /-- Restricting evaluation maps does not change a source-level log's denotation. -/
 theorem TowerLog.denote_restrict {n M N : ℕ} {E : Type*}
     [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)
@@ -417,19 +572,22 @@ theorem isTowerIntegralResult_evaluate {n N : ℕ} {E : Type}
   rw [TowerIntegralResult.derivDenote_restrict Dt maps hn (Nat.le_refl n)] at hsource
   exact hsource
 
-/-- The common recursive-output contract for integrating a coefficient in the preceding tower field. -/
-def TowerCoefficientStage.Correct {n : ℕ} (c : DenseFracTower (n + 1))
+/-- The common recursive-output contract for a coefficient under the preceding monomial derivative. -/
+def TowerCoefficientStage.Correct {n : ℕ} (derivative : DensePoly (DenseFracTower n))
+    (c : DenseFracTower (n + 1))
     (res : TowerIntegralResult n) : Prop :=
-  IsTowerIntegralResult (CPoly.one : DensePoly (DenseFracTower n))
+  IsTowerIntegralResult derivative
     (CFrac.num c) (CFrac.den c) res ∧ res.LogsGenuine
 
 /-- A certified lower coefficient stage with a recursive tower-result output. -/
 structure TowerCoefficientStage (n : ℕ) where
+  /-- Monomial derivative of the field in which coefficient fractions are integrated. -/
+  derivative : DensePoly (DenseFracTower n)
   /-- Semantic integrability predicate supported by the selected lower stage. -/
   Integrable : DenseFracTower (n + 1) → Prop
   /-- Executable, domain-certified lower coefficient stage. -/
   stage : IntegrationStage (DenseFracTower (n + 1)) (TowerIntegralResult n)
-    Integrable TowerCoefficientStage.Correct
+    Integrable (TowerCoefficientStage.Correct derivative)
 
 /-- A successor-local result is correct relative to the logarithms retained from the preceding level. -/
 def IsTowerIntegralResultWithLowerLogs {n : ℕ}
