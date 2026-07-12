@@ -32,6 +32,39 @@ class CDiffFieldSpec (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] wh
   toK_cderiv : ∀ a,
     CFieldSpec.toK (CDiffField.cderiv a) = @Differential.deriv _ _ diffK (CFieldSpec.toK a)
 
+/-- An explicitly selected computable derivation on a represented coefficient field.
+
+Unlike the legacy `[CDiffField α]` instance, this is a value. A tower can therefore select a
+different successor derivation at every level without asking Lean to globally choose one. -/
+structure CFieldDerivation (α : Type*) [CField α] where
+  /-- Computable derivative on represented coefficients. -/
+  cderiv : α → α
+
+namespace CFieldDerivation
+
+/-- View the legacy implicit coefficient derivation as an explicit derivation dictionary. -/
+def ofCDiffField (α : Type*) [CField α] [CDiffField α] : CFieldDerivation α :=
+  ⟨CDiffField.cderiv⟩
+
+end CFieldDerivation
+
+/-- Semantic law for an explicit computable coefficient derivation and selected mathematical differential. -/
+class LawfulCFieldDerivation (α : Type*) [CField α] [CFieldSpec α]
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α)) where
+  /-- The computable derivative commutes with the coefficient-field denotation. -/
+  toK_cderiv : ∀ a,
+    CFieldSpec.toK (derivation.cderiv a) = @Differential.deriv _ _ diffK (CFieldSpec.toK a)
+
+namespace LawfulCFieldDerivation
+
+/-- The legacy `CDiffFieldSpec` law supplies the law for its explicit compatibility dictionary. -/
+@[reducible] noncomputable def ofCDiffField (α : Type*) [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] :
+    LawfulCFieldDerivation α (CFieldDerivation.ofCDiffField α) CDiffFieldSpec.diffK where
+  toK_cderiv := CDiffFieldSpec.toK_cderiv
+
+end LawfulCFieldDerivation
+
 /-- Expose `Differential (CFieldSpec.K α)` as an instance so the field derivation resolves. -/
 instance instDifferentialK (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] :
     Differential (CFieldSpec.K α) :=
@@ -64,22 +97,91 @@ noncomputable instance instCDiffFieldSpecQ : CDiffFieldSpec ℚ where
 
 namespace CPolyEngine
 
+/-- Coefficientwise application of an explicitly selected computable derivation. -/
+def mapDerivWith {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (derivation : CFieldDerivation α) (p : P α) : P α :=
+  CPolyEngine.mapCoeffs derivation.cderiv p
+
+/-- The monomial derivation selected by an explicit coefficient derivation and monomial derivative. -/
+def monomialDerivWith {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] (derivation : CFieldDerivation α) (Dt p : P α) : P α :=
+  CPolyEngine.add (mapDerivWith derivation p) (CPolyEngine.mul (CPolyEngine.deriv p) Dt)
+
 /-- Coefficientwise derivation: apply `CDiffField.cderiv` to every represented coefficient. -/
 def mapDeriv {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] [CDiffField α] (p : P α) : P α :=
-  CPolyEngine.mapCoeffs CDiffField.cderiv p
+  mapDerivWith (CFieldDerivation.ofCDiffField α) p
 
 /-- Monomial derivation `monomialDeriv Dt p = mapDeriv p + (dp/dt)·Dt`: the derivation on `k[t]`
 with `Dt` the derivative of the monomial `t`. Needs only `[CDiffField α]`, so it reduces. -/
 def monomialDeriv {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     {α : Type u} [CField α] [CDiffField α] (Dt p : P α) : P α :=
-  CPolyEngine.add (mapDeriv p) (CPolyEngine.mul (CPolyEngine.deriv p) Dt)
+  monomialDerivWith (CFieldDerivation.ofCDiffField α) Dt p
+
+/-- The explicit compatibility dictionary gives the legacy coefficientwise derivation. -/
+@[simp] theorem mapDerivWith_ofCDiffField {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CDiffField α] (p : P α) :
+    mapDerivWith (CFieldDerivation.ofCDiffField α) p = mapDeriv p := rfl
+
+/-- The explicit compatibility dictionary gives the legacy monomial derivation. -/
+@[simp] theorem monomialDerivWith_ofCDiffField {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CDiffField α] (Dt p : P α) :
+    monomialDerivWith (CFieldDerivation.ofCDiffField α) Dt p = monomialDeriv Dt p := rfl
 
 end CPolyEngine
 
 namespace CPolyEngine
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+
+/-- An explicit coefficientwise derivation denotes `Differential.mapCoeffs`. -/
+@[denote] theorem toPoly_mapDerivWith {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    [LawfulCFieldDerivation α derivation diffK] (p : P α) :
+    letI : Differential (CRingSpec.R α) :=
+    diffK
+    CPoly.toPoly (CPolyEngine.mapDerivWith derivation p) =
+      Differential.mapCoeffs (CPoly.toPoly p) := by
+  letI : Differential (CRingSpec.R α) := diffK
+  have hzero : CRingSpec.toR (derivation.cderiv (CCommRing.zero : α)) = 0 := by
+    simp only [toR_eq_toK]
+    rw [LawfulCFieldDerivation.toK_cderiv (diffK := diffK), CFieldSpec.toK_zero, map_zero]
+  apply Polynomial.ext
+  intro i
+  rw [CPoly.coeff_toPoly, Differential.coeff_mapCoeffs, CPoly.coeff_toPoly]
+  change CRingSpec.toR
+      (CPoly.coeff (CPolyEngine.mapCoeffs derivation.cderiv p) i) = _
+  calc
+    CRingSpec.toR (CPoly.coeff (CPolyEngine.mapCoeffs derivation.cderiv p) i) =
+        CRingSpec.toR (derivation.cderiv (CPoly.coeff p i)) :=
+      LawfulCPolyEngine.toR_coeff_mapCoeffs (P := P) derivation.cderiv hzero p i
+    _ = (CRingSpec.toR (CPoly.coeff p i))′ := by
+      simpa only [toR_eq_toK] using
+        LawfulCFieldDerivation.toK_cderiv (diffK := diffK) (CPoly.coeff p i)
+
+/-- An explicit monomial derivation denotes `Differential.implicitDeriv`. -/
+@[denote] theorem toPoly_monomialDerivWith {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+    (derivation : CFieldDerivation α) (diffK : Differential (CFieldSpec.K α))
+    [LawfulCFieldDerivation α derivation diffK] (Dt p : P α) :
+    letI : Differential (CRingSpec.R α) :=
+    diffK
+    CPoly.toPoly (CPolyEngine.monomialDerivWith derivation Dt p) =
+      Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly p) := by
+  letI : Differential (CRingSpec.R α) := diffK
+  change CPoly.toPoly
+      (CPolyEngine.add (CPolyEngine.mapDerivWith derivation p)
+        (CPolyEngine.mul (CPolyEngine.deriv p) Dt)) = _
+  rw [LawfulCPolyEngine.toPoly_add (P := P)
+      (CPolyEngine.mapDerivWith derivation p)
+      (CPolyEngine.mul (CPolyEngine.deriv p) Dt)]
+  rw [toPoly_mapDerivWith derivation diffK]
+  rw [LawfulCPolyEngine.toPoly_mul (P := P) (CPolyEngine.deriv p) Dt]
+  rw [LawfulCPolyEngine.toPoly_deriv (P := P) p]
+  rw [show Differential.implicitDeriv (CPoly.toPoly Dt) (CPoly.toPoly p) =
+      Differential.mapCoeffs (CPoly.toPoly p) +
+        CPoly.toPoly Dt * Polynomial.derivative (CPoly.toPoly p) from by
+    simp [Differential.implicitDeriv, derivative']]
+  ring
 
 /-- Generic coefficientwise derivation denotes `Differential.mapCoeffs`. -/
 @[denote] theorem toPoly_mapDeriv {α : Type u} [CField α] [CDiffField α]
@@ -142,7 +244,7 @@ derivation realizes Mathlib's polynomial coefficient-map derivation. -/
     (p : DensePoly α) :
     toPoly (CPolyEngine.mapDeriv p) = Differential.mapCoeffs (toPoly p) := by
   induction p with
-  | nil => simp [CPolyEngine.mapDeriv]
+  | nil => simp [CPolyEngine.mapDeriv, CPolyEngine.mapDerivWith]
   | cons a as ih =>
     show toPoly (CDiffField.cderiv a :: CPolyEngine.mapDeriv as) =
       Differential.mapCoeffs (toPoly (a :: as))

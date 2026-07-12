@@ -24,14 +24,21 @@ namespace CFrac
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P]
 variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 
+/-- The quotient-rule tower derivation selected by an explicit coefficient derivation. -/
+def towerDerivCFracWithDerivation {α : Type u} [CField α] [CFieldDomain α P]
+    (derivation : CFieldDerivation α) (Dt : P α) (x : F α) : F α :=
+  CFrac.ofFraction
+    (CPolyEngine.sub
+      (CPolyEngine.mul (CPolyEngine.monomialDerivWith derivation Dt (CFrac.num x)) (CFrac.den x))
+      (CPolyEngine.mul (CFrac.num x)
+        (CPolyEngine.monomialDerivWith derivation Dt (CFrac.den x))))
+    (CPolyEngine.mul (CFrac.den x) (CFrac.den x))
+    (CFrac.cmulG_ne_zero_of (CFrac.cisZeroG_den x) (CFrac.cisZeroG_den x))
+
 /-- The quotient-rule tower derivation on any represented fraction `F` over polynomial representation `P`. -/
 def towerDerivCFracWith {α : Type u} [CField α] [CDiffField α] [CFieldDomain α P]
     (Dt : P α) (x : F α) : F α :=
-  CFrac.ofFraction
-    (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.monomialDeriv Dt (CFrac.num x)) (CFrac.den x))
-      (CPolyEngine.mul (CFrac.num x) (CPolyEngine.monomialDeriv Dt (CFrac.den x))))
-    (CPolyEngine.mul (CFrac.den x) (CFrac.den x))
-    (CFrac.cmulG_ne_zero_of (CFrac.cisZeroG_den x) (CFrac.cisZeroG_den x))
+  towerDerivCFracWithDerivation (CFieldDerivation.ofCDiffField α) Dt x
 
 /-- Dense specialization of the representation-independent quotient-rule tower derivation. -/
 def towerDerivCFrac {α : Type u} [CField α] [CDiffField α] [CFieldDomain α DensePoly]
@@ -43,14 +50,14 @@ def towerDerivCFrac {α : Type u} [CField α] [CDiffField α] [CFieldDomain α D
     [CFieldDomain α P] (Dt : P α) (x : F α) :
     CFrac.num (towerDerivCFracWith Dt x) =
       CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.monomialDeriv Dt (CFrac.num x)) (CFrac.den x))
-        (CPolyEngine.mul (CFrac.num x) (CPolyEngine.monomialDeriv Dt (CFrac.den x))) := by
-  simp [towerDerivCFracWith]
+      (CPolyEngine.mul (CFrac.num x) (CPolyEngine.monomialDeriv Dt (CFrac.den x))) := by
+  simp [towerDerivCFracWith, towerDerivCFracWithDerivation]
 
 /-- The generic tower derivative denominator is the square of the input denominator. -/
 @[simp] theorem towerDerivCFracWith_den {α : Type u} [CField α] [CDiffField α]
     [CFieldDomain α P] (Dt : P α) (x : F α) :
     CFrac.den (towerDerivCFracWith Dt x) = CPolyEngine.mul (CFrac.den x) (CFrac.den x) := by
-  simp [towerDerivCFracWith]
+  simp [towerDerivCFracWith, towerDerivCFracWithDerivation]
 
 end CFrac
 
@@ -148,6 +155,38 @@ namespace CFrac
 
 variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
 variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CFieldDomain α P]
+variable [Algebra ℚ (CFieldSpec.K α)]
+
+/-- An explicit represented quotient-rule derivation realizes the corresponding function-field extension. -/
+theorem toRatFunc_towerDerivCFracWithDerivation (derivation : CFieldDerivation α)
+    (diffK : Differential (CFieldSpec.K α)) [LawfulCFieldDerivation α derivation diffK]
+    (Dt : P α) (x : F α) :
+    letI : Differential (CFieldSpec.K α) :=
+      diffK
+    toRatFunc (towerDerivCFracWithDerivation derivation Dt x) =
+      extendDeriv (Differential.implicitDeriv (CPoly.toPoly Dt)) (toRatFunc x) := by
+  letI : Differential (CFieldSpec.K α) :=
+    diffK
+  letI : Differential (CRingSpec.R α) :=
+    diffK
+  have hxmk : toRatFunc x = RatFunc.mk (CPoly.toPoly (CFrac.num x)) (CPoly.toPoly (CFrac.den x)) := by
+    rw [toRatFunc_eq_div, RatFunc.mk_eq_div]
+    rfl
+  rw [towerDerivCFracWithDerivation, toRatFunc_ofFraction, hxmk, extendDeriv_mk, RatFunc.mk_eq_div,
+    CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul,
+    LawfulCPolyEngine.toPoly_mul]
+  rw [CPolyEngine.toPoly_monomialDerivWith derivation diffK,
+    CPolyEngine.toPoly_monomialDerivWith derivation diffK,
+    map_sub, map_mul, map_mul, map_pow]
+  conv_rhs =>
+    rw [map_sub, map_mul, map_mul]
+  simp only [map_mul, pow_two]
+  cases ‹CFieldSpec α›
+  rfl
+
+variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+variable {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
 variable {α : Type u} [CField α] [CDiffField α] [CFieldSpec.{u,v} α]
   [CDiffFieldSpec.{u,v} α] [CFieldDomain α P]
 variable [Algebra ℚ (CFieldSpec.K α)]
@@ -159,10 +198,13 @@ theorem toRatFunc_towerDerivCFracWith (Dt : P α) (x : F α) :
   have hxmk : toRatFunc x = RatFunc.mk (CPoly.toPoly (CFrac.num x)) (CPoly.toPoly (CFrac.den x)) := by
     rw [toRatFunc_eq_div, RatFunc.mk_eq_div]
     rfl
-  rw [towerDerivCFracWith, toRatFunc_ofFraction, hxmk, extendDeriv_mk, RatFunc.mk_eq_div,
+  rw [towerDerivCFracWith, towerDerivCFracWithDerivation, toRatFunc_ofFraction, hxmk,
+    extendDeriv_mk, RatFunc.mk_eq_div,
     CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul, LawfulCPolyEngine.toPoly_mul,
-    LawfulCPolyEngine.toPoly_mul, CPolyEngine.toPoly_monomialDeriv,
-    CPolyEngine.toPoly_monomialDeriv, map_sub, map_mul, map_mul, map_pow]
+    LawfulCPolyEngine.toPoly_mul]
+  simp only [CPolyEngine.monomialDerivWith_ofCDiffField]
+  rw [CPolyEngine.toPoly_monomialDeriv, CPolyEngine.toPoly_monomialDeriv,
+    map_sub, map_mul, map_mul, map_pow]
   conv_rhs =>
     rw [map_sub, map_mul, map_mul]
   simp only [map_mul, pow_two]

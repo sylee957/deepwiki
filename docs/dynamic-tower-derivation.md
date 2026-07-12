@@ -47,19 +47,30 @@ derivation dictionary).  `RischStageInput.Dt` then specifies the extension curre
 while coefficient recursion uses the presentation's preceding derivative.  This makes the
 `TowerRealization` construction inhabitable for primitive, exponential, and tangent sequences.
 
+## Landed foundation
+
+`MonomialDeriv.lean` now provides `CFieldDerivation` and its explicitly parameterized
+`LawfulCFieldDerivation` law. `CPolyEngine.mapDerivWith` and
+`CPolyEngine.monomialDerivWith` use this dictionary directly, while the legacy implicit operations
+remain compatibility wrappers. `Tower/Deriv.lean` similarly provides
+`CFrac.towerDerivCFracWithDerivation` and its function-field square.
+
+`Tower/DifferentialPresentation.lean` records a finite derivative sequence, the monomial derivative
+at every successor, the computable quotient-rule equation, and the successor semantic square with
+the lower `Differential` supplied explicitly. It deliberately does not install a global
+`Differential` instance: doing so would let `CRingSpec.R` silently recover the legacy primitive
+derivative. This is the common dynamic input that the Risch/Hermite/special stages must consume.
+
 ## Migration order
 
-1. Factor the Prop-free computable derivation operations out of `CDiffField` into an explicit
-   per-level dictionary, with a `Lawful` companion carrying the denotation law.
-2. Parameterize polynomial, Hermite/normal, and special-mononomial stages by that dictionary;
+1. Parameterize polynomial, Hermite/normal, and special-mononomial stages by the landed explicit
+   dictionary;
    retain the current dense APIs as primitive-tower compatibility adapters only.
-3. Define `DifferentialTowerPresentation` and derive its semantic recursive realization from the
-   supplied derivative sequence.
-4. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
+2. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.
-5. Prove the recursive tangent finish theorem using the lifted lower derivative identity, then
+3. Prove the recursive tangent finish theorem using the lifted lower derivative identity, then
    instantiate primitive, exponential, and tangent stages and derive finite-tower induction.
-6. Audit and retire the static `DenseFracTower` orchestration paths once callers use the new
+4. Audit and retire the static `DenseFracTower` orchestration paths once callers use the new
    presentation; preserve only deliberately primitive compatibility imports.
 
 This is a design correction, not a proof gap: continuing with the static carrier would make a

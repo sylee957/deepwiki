@@ -153,6 +153,10 @@ noncomputable def fractionFieldDifferential : Differential (RatFunc K) :=
   letI : Algebra ℤ (RatFunc K) := Ring.toIntAlgebra _
   ⟨(extendDerivQ d).restrictScalars ℤ⟩
 
+/-- The derivative selected by `fractionFieldDifferential` is `extendDeriv`. -/
+@[simp] theorem fractionFieldDifferential_deriv (x : RatFunc K) :
+    @Differential.deriv _ _ (fractionFieldDifferential d) x = extendDeriv d x := rfl
+
 end Bundle
 
 /-! ## Restatement examples -/

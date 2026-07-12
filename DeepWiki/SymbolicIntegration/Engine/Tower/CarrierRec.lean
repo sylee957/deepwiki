@@ -137,6 +137,10 @@ theorem denseFracTower_succ (n : ℕ) :
 theorem denseFracTower_K_succ (n : ℕ) :
     CFieldSpec.K (DenseFracTower (n + 1)) = RatFunc (CFieldSpec.K (DenseFracTower n)) := rfl
 
+/-- At a successor depth, the packaged field denotation is the represented fraction's rational-function map. -/
+theorem denseFracTower_toK_succ (n : ℕ) (x : DenseFracTower (n + 1)) :
+    CFieldSpec.toK x = CFrac.toRatFunc x := rfl
+
 /-- The canonical embedding of one dense-tower denotation field into its successor. -/
 noncomputable def denseFracTowerKStep (n : ℕ) :
     CFieldSpec.K (DenseFracTower n) →+* CFieldSpec.K (DenseFracTower (n + 1)) := by
