@@ -74,7 +74,7 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
 - [x] sweep: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do n=$(grep -coE "\(h[a-zA-Z0-9]+ :" "$f"); [ "$n" -gt 40 ] && echo "$n $f"; done | sort -rn`
       was run after the listed bundles. The raw count still flags already-audited files plus future
       candidates such as `LiouvilleLog.lean`, `SubresultantPRS.lean`, `IntegratorCases.lean`,
-      and `Hyperexp/NormalSoundness.lean`; those need a separate cluster audit before any bundling.
+      and `Hyperexp/NormalCapability.lean`; those need a separate cluster audit before any bundling.
 
 ## Guardrails
 
