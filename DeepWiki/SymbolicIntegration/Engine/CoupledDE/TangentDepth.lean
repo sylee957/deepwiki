@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentSpecial
 import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
+import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
 
 /-! # Depth-indexed recursive tangent levels
 
@@ -12,8 +13,8 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
-/-- Concrete leaves required to select one recursive tangent level at dense tower depth `n`. -/
-structure DenseTangentLevelCapabilities (n : ℕ) where
+/-- Concrete nonrecursive leaves required by one tangent level at dense tower depth `n`. -/
+structure DenseTangentLevelLeaves (n : ℕ) where
   /-- Canonical decomposition selected for this coefficient carrier. -/
   canonical : CCanonicalRepresentation DensePoly (DenseFracTower n)
   /-- Denotational contract for the selected canonical decomposition. -/
@@ -35,6 +36,9 @@ structure DenseTangentLevelCapabilities (n : ℕ) where
   coupled : CTangentCoefficientSolver (DenseFracTower n)
   /-- Finite bounds used by the recursive tangent special realization. -/
   config : TangentSpecialConfig
+
+/-- Concrete leaves and coefficient recursion selecting one tangent level at dense tower depth `n`. -/
+structure DenseTangentLevelCapabilities (n : ℕ) extends DenseTangentLevelLeaves n where
   /-- Elementary integrator used for coefficients at this tower depth. -/
   coefficient : CRecursiveElementaryIntegrator (DenseFracTower n)
 
@@ -79,18 +83,28 @@ theorem denseTangentLevel_complete (C : DenseTangentLevelCapabilities n)
   exact (instCompleteCRischLevelRecursiveTangent C.polynomial C.kind C.polynomialDomain C.normal
     C.coupled C.config C.coefficient).relative_complete Dt a d hdomain hden hintegrable
 
+/-- Build the next tangent capability by certificate-checking the preceding selected Risch level. -/
+noncomputable def DenseTangentLevelCapabilities.step (below : DenseTangentLevelCapabilities n)
+    (fuel : ℕ) (next : DenseTangentLevelLeaves (n + 1)) :
+    DenseTangentLevelCapabilities (n + 1) where
+  toDenseTangentLevelLeaves := next
+  coefficient := recursiveElementaryOfRischLevel (denseTangentLevel below) fuel
+
 /-- Inductive selection data for recursive tangent levels over the dense fraction tower. -/
 structure DenseTangentTowerCapabilities where
   /-- The selected constant-field tangent level. -/
   base : DenseTangentLevelCapabilities 0
-  /-- Extend a selected level by choosing the next depth's coefficient operation and stage leaves. -/
-  step : ∀ n, DenseTangentLevelCapabilities n → DenseTangentLevelCapabilities (n + 1)
+  /-- Search budget passed to the preceding Risch level at each successor depth. -/
+  coefficientFuel : ℕ → ℕ
+  /-- Nonrecursive stage leaves selected at each successor depth. -/
+  stepLeaves : ∀ n, DenseTangentLevelLeaves (n + 1)
 
 /-- Select recursive tangent capabilities at every dense fraction-tower depth. -/
 noncomputable def denseTangentTowerCapabilities (C : DenseTangentTowerCapabilities) :
     (n : ℕ) → DenseTangentLevelCapabilities n
   | 0 => C.base
-  | n + 1 => C.step n (denseTangentTowerCapabilities C n)
+  | n + 1 =>
+      (denseTangentTowerCapabilities C n).step (C.coefficientFuel n) (C.stepLeaves n)
 
 /-- The recursively selected tangent operation at depth `n`. -/
 noncomputable def denseTangentTower (C : DenseTangentTowerCapabilities) (n : ℕ) :

@@ -59,9 +59,10 @@ cast coefficients.
    the outer result. `recursiveTangentRischLevel` and
    `sparseRecursiveTangentRischLevel` inject a per-level coupled solver and checked special stage,
    while retaining polynomial and normal stages as explicit dependencies. The semantic completeness
-   upgrade remains. `TangentDepth.lean` packages these choices uniformly over `DenseFracTower n`; its current
-   induction selects an explicit coefficient operation at each depth, pending the adapter that derives that
-   operation from the preceding lawful Risch level.
+   upgrade remains. `TangentDepth.lean` packages these choices uniformly over `DenseFracTower n`; every
+   successor coefficient operation now runs the preceding selected Risch level and certificate-checks the
+   lifted rational-plus-log result. Semantic completeness still requires a theorem showing that the lower
+   complete level reaches this executable acceptance domain.
 
 ## Verification sequence
 

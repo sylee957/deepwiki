@@ -6,6 +6,7 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
 import DeepWiki.SymbolicIntegration.Engine.Tower.Reduce
+import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDECompleteness
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance

@@ -167,8 +167,11 @@ monomial stage contracts.
    rational-only `CLrtMonomialCase`. Full semantic tangent completeness still needs a semantic completeness
    theorem for the generalized coupled solver and coefficient recursion, beyond checked acceptance. The
    depth-indexed `DenseTangentTowerCapabilities` family now selects generic tangent levels inductively and
-   derives their contracts uniformly. Each step still explicitly supplies its elementary coefficient
-   integrator; the remaining tower gap is an adapter deriving it from the preceding lawful Risch level.
+   derives their contracts uniformly. Every successor step constructs its elementary coefficient operation
+   from the preceding selected Risch level, lifts its rational and logarithmic result through `DenseFrac`, and
+   certificate-checks the lifted derivative identity, constant coefficients, and nonzero arguments. The
+   remaining completeness gap is semantic: replace the exact certificate-acceptance domain with hypotheses
+   ensuring that the preceding complete Risch level produces a result accepted by those checks.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

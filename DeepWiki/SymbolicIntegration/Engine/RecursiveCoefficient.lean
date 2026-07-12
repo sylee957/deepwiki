@@ -30,12 +30,44 @@ structure CRecursiveElementaryIntegrator (α : Type u) [CField α] [CDiffField �
   /-- Integrate a coefficient to a rational part plus lower-field logarithms, if possible. -/
   integrate : α → Option (CoefficientIntegralResult α)
 
+/-- Executable value of the logarithmic derivative sum stored in a coefficient result. -/
+def coefficientLogDerivative {α : Type u} [CField α] [CDiffField α] :
+    List (α × α) → α
+  | [] => CCommRing.zero
+  | cv :: rest => CCommRing.add
+      (CCommRing.mul cv.1 (CField.div (CDiffField.cderiv cv.2) cv.2))
+      (coefficientLogDerivative rest)
+
+/-- Check the derivative identity, constant coefficients, and nonzero arguments of a coefficient result. -/
+def coefficientIntegralResultCheck {α : Type u} [CField α] [CDiffField α]
+    (c : α) (res : CoefficientIntegralResult α) : Bool :=
+  CCommRing.isZero (CField.sub
+      (CCommRing.add (CDiffField.cderiv res.rational) (coefficientLogDerivative res.logs)) c) &&
+    res.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) &&
+    res.logs.all (fun cv => !CCommRing.isZero cv.2)
+
+/-- Certificate-check an arbitrary recursive elementary coefficient candidate. -/
+def checkedRecursiveElementaryIntegrator {α : Type u} [CField α] [CDiffField α]
+    (raw : CRecursiveElementaryIntegrator α) : CRecursiveElementaryIntegrator α where
+  integrate c := raw.integrate c |>.bind fun res =>
+    if coefficientIntegralResultCheck c res then some res else none
+
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
 
 /-- Denotation of the logarithmic terms in a recursive coefficient result. -/
 def coefficientLogSum (logs : List (α × α)) : CFieldSpec.K α :=
-  (logs.map fun cv => CFieldSpec.toK cv.1 *
+    (logs.map fun cv => CFieldSpec.toK cv.1 *
     (CFieldSpec.toK (CDiffField.cderiv cv.2) / CFieldSpec.toK cv.2)).sum
+
+omit [CDiffFieldSpec α] in
+/-- The executable logarithmic derivative sum denotes the semantic coefficient log sum. -/
+theorem toK_coefficientLogDerivative (logs : List (α × α)) :
+    CFieldSpec.toK (coefficientLogDerivative logs) = coefficientLogSum logs := by
+  induction logs with
+  | nil => simp [coefficientLogDerivative, coefficientLogSum, CFieldSpec.toK_zero]
+  | cons cv rest ih =>
+      simp [coefficientLogDerivative, coefficientLogSum, CFieldSpec.toK_add,
+        CFieldSpec.toK_mul, CFieldSpec.toK_div, ih]
 
 /-- A recursive coefficient result is a valid elementary antiderivative of `c`. -/
 def IsCoefficientIntegralResult (c : α) (res : CoefficientIntegralResult α) : Prop :=
@@ -53,6 +85,43 @@ class LawfulCRecursiveElementaryIntegrator (C : CRecursiveElementaryIntegrator �
   /-- Every returned result is an elementary antiderivative of the requested coefficient. -/
   sound : ∀ (c : α) (res : CoefficientIntegralResult α),
     C.integrate c = some res → IsCoefficientIntegralResult c res
+
+omit [CDiffFieldSpec α] in
+/-- A passed coefficient-result certificate proves the denotational elementary antiderivative contract. -/
+theorem isCoefficientIntegralResult_of_check (c : α) (res : CoefficientIntegralResult α)
+    (hcheck : coefficientIntegralResultCheck c res = true) :
+    IsCoefficientIntegralResult c res := by
+  simp only [coefficientIntegralResultCheck, Bool.and_eq_true] at hcheck
+  obtain ⟨⟨hid, hconstants⟩, hargs⟩ := hcheck
+  rw [CFieldSpec.isZero_iff, CFieldSpec.toK_sub, sub_eq_zero,
+    CFieldSpec.toK_add, toK_coefficientLogDerivative] at hid
+  refine ⟨hid, ?_, ?_⟩
+  · intro cv hcv
+    have hz := (List.all_eq_true.mp hconstants) cv hcv
+    rw [CFieldSpec.isZero_iff] at hz
+    exact hz
+  · intro cv hcv hzero
+    have hfalse := (List.all_eq_true.mp hargs) cv hcv
+    rw [Bool.not_eq_true', Bool.eq_false_iff, Ne, CFieldSpec.isZero_iff] at hfalse
+    exact hfalse hzero
+
+/-- Certificate checking makes any recursive elementary candidate unconditionally lawful. -/
+instance instLawfulCRecursiveElementaryIntegratorChecked
+    (raw : CRecursiveElementaryIntegrator α) :
+    LawfulCRecursiveElementaryIntegrator (checkedRecursiveElementaryIntegrator raw) where
+  sound c res hrun := by
+    simp only [checkedRecursiveElementaryIntegrator] at hrun
+    cases hraw : raw.integrate c with
+    | none => simp [hraw] at hrun
+    | some candidate =>
+        rw [hraw] at hrun
+        simp only [Option.bind_some] at hrun
+        split at hrun
+        · rename_i hcheck
+          simp only [Option.some.injEq] at hrun
+          subst candidate
+          exact isCoefficientIntegralResult_of_check c res hcheck
+        · simp at hrun
 
 /-- Semantic domain for relative completeness of recursive elementary coefficient integration. -/
 abbrev RecursiveElementaryDomain := α → Prop
