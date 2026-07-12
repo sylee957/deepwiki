@@ -107,6 +107,18 @@ def polynomialReductionNormalCheck (kind : PolynomialReductionKind) (Dt : P α)
   | .nonlinear => decide (CPolyEngine.cdeg out.remainder < CPolyEngine.cdeg Dt)
   | .primitive => decide (CPolyEngine.cdeg out.remainder = 0)
 
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- A passed polynomial-reduction normal-form check has its denotation-level meaning. -/
+theorem polynomialReductionNormalCheck_sound (kind : PolynomialReductionKind) (Dt : P α)
+    (out : PolynomialReductionResult P α)
+    (h : polynomialReductionNormalCheck kind Dt out = true) :
+    match kind with
+    | .nonlinear => (CPoly.toPoly out.remainder).natDegree < (CPoly.toPoly Dt).natDegree
+    | .primitive => (CPoly.toPoly out.remainder).natDegree = 0 := by
+  cases kind <;> simp only [polynomialReductionNormalCheck] at h
+  · simpa only [LawfulCPolyEngine.cdeg_eq_natDegree] using (of_decide_eq_true h)
+  · simpa only [LawfulCPolyEngine.cdeg_eq_natDegree] using (of_decide_eq_true h)
+
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- A passed polynomial-reduction reconstruction check has its denotation-level meaning. -/
 theorem polynomialReductionCheck_sound (Dt p : P α) (out : PolynomialReductionResult P α)
@@ -211,15 +223,24 @@ instance instLawfulCPolynomialReductionTower :
         exact polynomialReductionCheck_sound Dt p _ hcheck.1
       · contradiction
   normal_form kind Dt fuel p out hrun := by
-    cases kind <;> simp only [towerPolynomialReduction] at hrun
-    all_goals
+    cases kind with
+    | nonlinear =>
+      simp only [towerPolynomialReduction] at hrun
       split at hrun
       · rename_i hcheck
         have hout := Option.some.inj hrun
         subst out
         rw [Bool.and_eq_true] at hcheck
-        simp only [polynomialReductionNormalCheck] at hcheck
-        simpa only [LawfulCPolyEngine.cdeg_eq_natDegree] using (of_decide_eq_true hcheck.2)
+        exact polynomialReductionNormalCheck_sound .nonlinear Dt _ hcheck.2
+      · contradiction
+    | primitive =>
+      simp only [towerPolynomialReduction] at hrun
+      split at hrun
+      · rename_i hcheck
+        have hout := Option.some.inj hrun
+        subst out
+        rw [Bool.and_eq_true] at hcheck
+        exact polynomialReductionNormalCheck_sound .primitive Dt _ hcheck.2
       · contradiction
 
 end DensePoly
