@@ -77,6 +77,14 @@ explicit function-field log sum and a certified adapter for existing primitive, 
 and tangent special solvers. `Tower/RecursiveElementaryDynamic.lean` already provides the analogous
 explicit coefficient-recursion stage.
 
+`DifferentialCanonical.lean`, `DifferentialAssembly.lean`, `DifferentialReconstruction.lean`, and
+`DifferentialOneLevel.lean` now compose the explicit canonical split, polynomial-special branch,
+normal/Hermite branch, logarithmic reconstruction, and genuine-log condition into one
+`RemainderIntegrationStage`. `Tower/DifferentialTranscendental.lean` indexes a finite recursive
+tower scheme by `DifferentialTowerPresentation`; its soundness and relative-completeness theorems
+therefore state the selected derivative at every depth. The primitive, exponential, and tangent
+one-step presentation constructors select `t' = 1`, `t' = t`, and `t' = t² + 1` respectively.
+
 ## Migration order
 
 1. Parameterize normal postprocessing and the canonical/one-level assembly handoffs by the landed
@@ -88,6 +96,16 @@ explicit coefficient-recursion stage.
    instantiate primitive, exponential, and tangent stages and derive finite-tower induction.
 4. Audit and retire the static `DenseFracTower` orchestration paths once callers use the new
    presentation; preserve only deliberately primitive compatibility imports.
+
+## Retirement audit (current)
+
+`oneLevelRisch` and `assembleOneLevel` are still live legacy APIs, not removable shims. The caller
+audit (`scripts/wiki rdeps`, depth 2) found direct dependencies in the hyperexponential level,
+dense and sparse tangent levels, recursive tangent levels, sparse conversion, and the old
+`CRischLevel` lawful/genuine/complete instances. `DenseRischTowerScheme` is likewise still used by
+its static integration-tower adapter and sparse-stage adapter. No deletion is safe until these
+callers are migrated to `DifferentialTranscendentalTowerScheme`; retaining them as explicit
+primitive compatibility paths is currently intentional.
 
 This is a design correction, not a proof gap: continuing with the static carrier would make a
 mixed-tower soundness claim false in its intended semantics.
