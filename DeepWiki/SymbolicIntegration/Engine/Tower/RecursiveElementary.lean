@@ -11,7 +11,8 @@ namespace DeepWiki.SymbolicIntegration
 
 universe u v
 
-open DensePoly CFrac
+open DensePoly CFrac Polynomial
+open scoped Differential
 
 variable {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
   [CDiffFieldSpec.{u,v} β] [CFieldDomain β DensePoly] [Algebra ℚ (CFieldSpec.K β)]
@@ -21,6 +22,87 @@ def liftRischResultToCoefficient (res : IntegralResult β) :
     CoefficientIntegralResult (DenseFrac β) where
   rational := CField.div (CFrac.ofPoly res.rational.1) (CFrac.ofPoly res.rational.2)
   logs := res.logs.map fun cv => (CFrac.ofPoly [cv.1], CFrac.ofPoly cv.2)
+
+/-- The iterated `DenseFrac` derivation is the represented tower derivation with `D(t) = 1`. -/
+theorem toK_cderiv_denseFrac (x : DenseFrac β) :
+    CFieldSpec.toK (CDiffField.cderiv x) =
+      towerFractionFieldDerivP ([CCommRing.one] : DensePoly β) (CFieldSpec.toK x) := by
+  rw [CDiffFieldSpec.toK_cderiv]
+  change extendDeriv (Differential.implicitDeriv
+      (CPoly.toPoly (CPoly.one : DensePoly β))) _ =
+    towerFractionFieldDerivP ([CCommRing.one] : DensePoly β) _
+  rw [towerFractionFieldDerivP]
+  rfl
+
+/-- Differentiating an embedded polynomial agrees with the represented monomial derivative. -/
+theorem toK_cderiv_denseFrac_ofPoly (p : DensePoly β) :
+    CFieldSpec.toK (CDiffField.cderiv (CFrac.ofPoly (F := DenseFrac) p)) =
+      CFrac.am β (CPoly.toPoly
+        (CPolyEngine.monomialDeriv ([CCommRing.one] : DensePoly β) p)) := by
+  rw [toK_cderiv_denseFrac, CFrac.toK_ofPoly, towerFractionFieldDerivP, extendDeriv_algebraMap]
+  simp only [CPolyEngine.toPoly_monomialDeriv]
+
+omit [CDiffField β] [CDiffFieldSpec β] [Algebra ℚ (CFieldSpec.K β)] in
+/-- A represented dense fraction denotes its numerator divided by its denominator. -/
+theorem toK_denseFrac_eq_fieldFrac (x : DenseFrac β) :
+    CFieldSpec.toK x = fieldFracP (CFrac.num x) (CFrac.den x) := by
+  change CFrac.toRatFunc x = _
+  rw [CFrac.toRatFunc_eq_div]
+
+omit [CDiffField β] [CDiffFieldSpec β] [Algebra ℚ (CFieldSpec.K β)] in
+/-- The lifted rational part denotes the lower Risch result's represented fraction. -/
+theorem toK_liftRischResult_rational (res : IntegralResult β) :
+    CFieldSpec.toK (liftRischResultToCoefficient res).rational =
+      fieldFracP res.rational.1 res.rational.2 := by
+  simp [liftRischResultToCoefficient, fieldFracP, CFieldSpec.toK_div, CFrac.toK_ofPoly]
+
+/-- Lifting lower logarithms preserves their represented logarithmic-derivative sum. -/
+theorem coefficientLogSum_liftRischLogs (logs : List (β × DensePoly β)) :
+    coefficientLogSum (α := DenseFrac β)
+        (logs.map fun cv =>
+          (CFrac.ofPoly (F := DenseFrac) [cv.1], CFrac.ofPoly (F := DenseFrac) cv.2)) =
+      logResidueSumP ([CCommRing.one] : DensePoly β) logs := by
+  induction logs with
+  | nil => simp [coefficientLogSum]
+  | cons cv rest ih =>
+      rw [List.map_cons, coefficientLogSum_cons, logResidueSumP_cons]
+      rw [CFrac.toK_ofPoly, toK_cderiv_denseFrac, CFrac.toK_ofPoly,
+        towerFractionFieldDerivP_logDeriv, ih]
+      simp only [toPoly_list_eq]
+      simp
+
+/-- A genuine lower Risch certificate is a genuine elementary coefficient result after lifting. -/
+theorem isCoefficientIntegralResult_liftRischResult (c : DenseFrac β) (res : IntegralResult β)
+    (hintegral : IsIntegralResultP ([CCommRing.one] : DensePoly β)
+      (CFrac.num c) (CFrac.den c) res)
+    (hconstants : ∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0)
+    (hargs : ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0) :
+    IsCoefficientIntegralResult c (liftRischResultToCoefficient res) := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [toK_cderiv_denseFrac, toK_liftRischResult_rational]
+    rw [liftRischResultToCoefficient, coefficientLogSum_liftRischLogs,
+      toK_denseFrac_eq_fieldFrac]
+    exact hintegral
+  · intro lifted hlifted
+    obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlifted
+    rw [toK_cderiv_denseFrac_ofPoly]
+    rw [CPolyEngine.toPoly_monomialDeriv]
+    have hsourceConstant := hconstants source hsource
+    have hsingleton : CPoly.toPoly ([source.1] : DensePoly β) =
+        Polynomial.C (CFieldSpec.toK source.1) := by
+      rw [toPoly_list_eq]
+      simp only [denote, mul_zero, add_zero]
+    rw [hsingleton]
+    have hderivZero : (CFieldSpec.toK source.1)′ = 0 := by
+      rw [← CDiffFieldSpec.toK_cderiv]
+      exact hsourceConstant
+    rw [Differential.implicitDeriv_C, hderivZero]
+    rw [Polynomial.C_0]
+    exact map_zero (CFrac.am β)
+  · intro lifted hlifted
+    obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlifted
+    rw [CFrac.toK_ofPoly]
+    exact CFrac.am_ne_zero (hargs source hsource)
 
 /-- Raw coefficient candidate obtained by running a lower dense Risch level with `D(t) = 1`. -/
 def recursiveElementaryCandidateOfRischLevel (L : CRischLevel DensePoly β) (fuel : ℕ) :
@@ -55,6 +137,15 @@ def recursiveElementaryOfRischLevelSemanticDomain (L : CRischLevel DensePoly β)
     L.integrate fuel [CCommRing.one] (CFrac.num c) (CFrac.den c) = some res ∧
       IsCoefficientIntegralResult c (liftRischResultToCoefficient res)
 
+/-- Lower-level domain stated entirely in the genuine `IsIntegralResultP` vocabulary. -/
+def recursiveElementaryOfRischLevelGenuineDomain (L : CRischLevel DensePoly β) (fuel : ℕ) :
+    RecursiveElementaryDomain (α := DenseFrac β) := fun c =>
+  ∃ res : IntegralResult β,
+    L.integrate fuel [CCommRing.one] (CFrac.num c) (CFrac.den c) = some res ∧
+      IsIntegralResultP ([CCommRing.one] : DensePoly β) (CFrac.num c) (CFrac.den c) res ∧
+      (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+      (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0)
+
 /-- The lower-level adapter is relatively complete on its exact certificate-acceptance domain. -/
 instance instCompleteCRecursiveElementaryIntegratorOfRischLevel
     (L : CRischLevel DensePoly β) (fuel : ℕ) :
@@ -74,6 +165,19 @@ instance instCompleteCRecursiveElementaryIntegratorOfRischLevelSemantic
   complete c hdomain _ := by
     obtain ⟨res, hrun, hresult⟩ := hdomain
     refine ⟨liftRischResultToCoefficient res, ?_⟩
+    have hcheck := coefficientIntegralResultCheck_of_isCoefficientIntegralResult c _ hresult
+    simp [recursiveElementaryOfRischLevel, checkedRecursiveElementaryIntegrator,
+      recursiveElementaryCandidateOfRischLevel, hrun, hcheck]
+
+/-- Genuine lower Risch results make the checked coefficient adapter relatively complete. -/
+instance instCompleteCRecursiveElementaryIntegratorOfRischLevelGenuine
+    (L : CRischLevel DensePoly β) (fuel : ℕ) :
+    CompleteCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L fuel)
+      (recursiveElementaryOfRischLevelGenuineDomain L fuel) where
+  complete c hdomain _ := by
+    obtain ⟨res, hrun, hintegral, hconstants, hargs⟩ := hdomain
+    refine ⟨liftRischResultToCoefficient res, ?_⟩
+    have hresult := isCoefficientIntegralResult_liftRischResult c res hintegral hconstants hargs
     have hcheck := coefficientIntegralResultCheck_of_isCoefficientIntegralResult c _ hresult
     simp [recursiveElementaryOfRischLevel, checkedRecursiveElementaryIntegrator,
       recursiveElementaryCandidateOfRischLevel, hrun, hcheck]

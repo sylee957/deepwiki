@@ -61,9 +61,10 @@ cast coefficients.
    while retaining polynomial and normal stages as explicit dependencies. The semantic completeness
    upgrade remains. `TangentDepth.lean` packages these choices uniformly over `DenseFracTower n`; every
    successor coefficient operation now runs the preceding selected Risch level and certificate-checks the
-   lifted rational-plus-log result. The checker is complete for semantic coefficient-result certificates, so
-   the adapter has a non-Boolean semantic completeness domain. Full tower completeness still requires the
-   denotation bridge from the lower level's genuine `IsIntegralResultP` result to that lifted certificate.
+   lifted rational-plus-log result. The checker is complete for semantic coefficient-result certificates, and
+   the dense-fraction bridge now derives such a certificate from a lower `IsIntegralResultP` identity with
+   constant coefficients and nonzero arguments. Full tower completeness still requires a genuine-success
+   contract for lower levels and recursive search-budget threading instead of a fixed per-level fuel.
 
 ## Verification sequence
 

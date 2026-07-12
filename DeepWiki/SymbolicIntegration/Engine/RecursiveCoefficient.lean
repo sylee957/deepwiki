@@ -56,8 +56,17 @@ variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffF
 
 /-- Denotation of the logarithmic terms in a recursive coefficient result. -/
 def coefficientLogSum (logs : List (α × α)) : CFieldSpec.K α :=
-    (logs.map fun cv => CFieldSpec.toK cv.1 *
+  (logs.map fun cv => CFieldSpec.toK cv.1 *
     (CFieldSpec.toK (CDiffField.cderiv cv.2) / CFieldSpec.toK cv.2)).sum
+
+omit [CDiffFieldSpec α] in
+/-- The semantic coefficient logarithmic sum peels its leading term. -/
+theorem coefficientLogSum_cons (cv : α × α) (rest : List (α × α)) :
+    coefficientLogSum (cv :: rest) =
+      CFieldSpec.toK cv.1 *
+          (CFieldSpec.toK (CDiffField.cderiv cv.2) / CFieldSpec.toK cv.2) +
+        coefficientLogSum rest := by
+  simp [coefficientLogSum]
 
 omit [CDiffFieldSpec α] in
 /-- The executable logarithmic derivative sum denotes the semantic coefficient log sum. -/
