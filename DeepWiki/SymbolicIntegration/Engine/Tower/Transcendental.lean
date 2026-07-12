@@ -338,6 +338,63 @@ theorem LayeredTranscendentalTowerScheme.stage_complete (T : LayeredTranscendent
     ∃ fuel result, (T.level n).stage.run fuel input = some result :=
   (T.level n).stage.complete input hdomain hintegrable
 
+/-- View one certified layered level through the common tower remainder-stage contract. -/
+noncomputable def LayeredTranscendentalLevel.asRemainderIntegrationStage
+    (L : LayeredTranscendentalLevel n) :
+    TowerRemainderStage (RischStageInput DensePoly (DenseFracTower n)) L.Integrable
+      (fun input => input.Dt) := by
+  let base := L.stage
+  let antiderivative :
+      IntegrationStage (RischStageInput DensePoly (DenseFracTower n))
+        (TowerIntegralResult n) L.Integrable
+        (fun input result =>
+          IsTowerAntiderivative input.Dt result (towerInputRemainder input.num input.den) ∧
+            result.LogsGenuine) :=
+    { run := base.run
+      domain := base.domain
+      sound := by
+        intro fuel input result hdomain hrun
+        have hresult := base.sound fuel input result hdomain hrun
+        exact ⟨(isTowerIntegralResult_iff input.Dt input.num input.den result).mp hresult.1,
+          hresult.2⟩
+      complete := by
+        intro input hdomain hintegrable
+        exact base.complete input hdomain hintegrable }
+  exact TowerRemainderStage.ofStage L.Integrable (fun input => input.Dt)
+    (fun input => towerInputRemainder input.num input.den) antiderivative
+
+/-- The finite layered tower instantiates the generic remainder-carrying tower recursion. -/
+noncomputable def LayeredTranscendentalTowerScheme.asRemainderIntegrationTowerScheme
+    (T : LayeredTranscendentalTowerScheme) :
+    RemainderIntegrationTowerScheme
+      (fun n => RischStageInput DensePoly (DenseFracTower n)) where
+  Output n := TowerIntegralResult n
+  Remainder n := TowerRemainder n
+  Integrable n := (T.level n).Integrable
+  Correct n input result remainder :=
+    IsTowerAntiderivative input.Dt result remainder ∧ result.LogsGenuine
+  base := T.base.asRemainderIntegrationStage
+  step n _ := (T.step n (T.level n)).asRemainderIntegrationStage
+
+/-- Finite-tower soundness in the common output-remainder invariant. -/
+theorem LayeredTranscendentalTowerScheme.remainder_stage_sound
+    (T : LayeredTranscendentalTowerScheme) (n fuel : ℕ)
+    (input : RischStageInput DensePoly (DenseFracTower n))
+    (result : RemainderResult (TowerIntegralResult n) (TowerRemainder n))
+    (hdomain : (T.asRemainderIntegrationTowerScheme.stage n).stage.domain input)
+    (hrun : (T.asRemainderIntegrationTowerScheme.stage n).stage.run fuel input = some result) :
+    IsTowerAntiderivative input.Dt result.output result.remainder ∧ result.output.LogsGenuine :=
+  T.asRemainderIntegrationTowerScheme.stage_sound n fuel input result hdomain hrun
+
+/-- Finite-tower relative completeness in the common output-remainder invariant. -/
+theorem LayeredTranscendentalTowerScheme.remainder_stage_complete
+    (T : LayeredTranscendentalTowerScheme) (n : ℕ)
+    (input : RischStageInput DensePoly (DenseFracTower n))
+    (hdomain : (T.asRemainderIntegrationTowerScheme.stage n).stage.domain input)
+    (hintegrable : (T.level n).Integrable input) :
+    ∃ fuel result, (T.asRemainderIntegrationTowerScheme.stage n).stage.run fuel input = some result :=
+  T.asRemainderIntegrationTowerScheme.stage_complete n input hdomain hintegrable
+
 /-- Select a primitive root-free stage in the common layered-output language. -/
 def primitiveLayeredTranscendentalStage (S : DenseLrtStage n) : LayeredTranscendentalStage n :=
   .primitive S

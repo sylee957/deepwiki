@@ -155,6 +155,52 @@ noncomputable def compose
 
 end RemainderIntegrationStage
 
+/-- A finite tower of remainder-carrying integration stages. -/
+structure RemainderIntegrationTowerScheme (Input : ℕ → Type u) where
+  /-- Extracted output representation at each tower depth. -/
+  Output : ℕ → Type v
+  /-- Semantic remainder representation at each tower depth. -/
+  Remainder : ℕ → Type w
+  /-- Integrability predicate selected at each depth. -/
+  Integrable : ∀ n, Input n → Prop
+  /-- Output-remainder invariant selected at each depth. -/
+  Correct : ∀ n, Input n → Output n → Remainder n → Prop
+  /-- Certified base stage. -/
+  base : RemainderIntegrationStage (Input 0) (Output 0) (Remainder 0)
+    (Integrable 0) (Correct 0)
+  /-- Certified successor constructor receiving the immediately preceding stage. -/
+  step : ∀ n,
+    RemainderIntegrationStage (Input n) (Output n) (Remainder n)
+      (Integrable n) (Correct n) →
+    RemainderIntegrationStage (Input (n + 1)) (Output (n + 1)) (Remainder (n + 1))
+      (Integrable (n + 1)) (Correct (n + 1))
+
+namespace RemainderIntegrationTowerScheme
+
+/-- The remainder-carrying stage selected recursively at a finite tower depth. -/
+def stage (T : RemainderIntegrationTowerScheme Input) : (n : ℕ) →
+    RemainderIntegrationStage (Input n) (T.Output n) (T.Remainder n)
+      (T.Integrable n) (T.Correct n)
+  | 0 => T.base
+  | n + 1 => T.step n (T.stage n)
+
+/-- Every accepted result of a selected finite tower stage satisfies its output-remainder invariant. -/
+theorem stage_sound (T : RemainderIntegrationTowerScheme Input) (n fuel : ℕ)
+    (input : Input n) (result : RemainderResult (T.Output n) (T.Remainder n))
+    (hdomain : (T.stage n).stage.domain input)
+    (hrun : (T.stage n).stage.run fuel input = some result) :
+    T.Correct n input result.output result.remainder :=
+  (T.stage n).sound fuel input result hdomain hrun
+
+/-- Every integrable in-domain input eventually produces a certified result at its selected depth. -/
+theorem stage_complete (T : RemainderIntegrationTowerScheme Input) (n : ℕ)
+    (input : Input n) (hdomain : (T.stage n).stage.domain input)
+    (hintegrable : T.Integrable n input) :
+    ∃ fuel result, (T.stage n).stage.run fuel input = some result :=
+  (T.stage n).complete input hdomain hintegrable
+
+end RemainderIntegrationTowerScheme
+
 /-- A finite integration tower selects a base stage and builds every successor from its predecessor. -/
 structure IntegrationTowerScheme (Input : ℕ → Type u) where
   /-- Output representation selected at each tower depth. -/
