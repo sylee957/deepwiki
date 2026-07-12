@@ -12,7 +12,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-universe u
+universe u v
 
 namespace DensePoly
 
@@ -45,6 +45,42 @@ theorem cLaurentIntCoeff_exists_of_solvable
     (hsolvable : IsLaurentCoefficientSolvable η j aj) :
     ∃ q, cLaurentIntCoeff η j aj = some q :=
   crischDESolve_exists_of_complete hcomplete (cLaurentShift η j) aj hsolvable
+
+/-- If every indexed Laurent coefficient is executable, the coefficient solve loop succeeds. -/
+theorem laurentSolveLoop_exists {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] [CRischField α] (η : α) (shift : ℕ → ℤ) :
+    ∀ (coeffs : List α) (start : ℕ),
+      (∀ ck ∈ coeffs.zipIdx start,
+        ∃ q, cLaurentIntCoeff η (shift ck.2) ck.1 = some q) →
+      ∃ solved,
+        (coeffs.zipIdx start).foldr (fun ck acc =>
+          match acc with
+          | none => none
+          | some tail =>
+            match cLaurentIntCoeff η (shift ck.2) ck.1 with
+            | none => none
+            | some q => some (q :: tail)) (some []) = some solved := by
+  intro coeffs
+  induction coeffs with
+  | nil =>
+      intro start _
+      exact ⟨[], by simp⟩
+  | cons a rest ih =>
+      intro start hall
+      have hhead : ∃ q, cLaurentIntCoeff η (shift start) a = some q := by
+        apply hall (a, start)
+        rw [List.zipIdx_cons]
+        exact List.mem_cons_self
+      have htail : ∀ ck ∈ rest.zipIdx (start + 1),
+          ∃ q, cLaurentIntCoeff η (shift ck.2) ck.1 = some q := by
+        intro ck hck
+        apply hall ck
+        rw [List.zipIdx_cons]
+        exact List.mem_cons.mpr (Or.inr hck)
+      obtain ⟨tail, htailRun⟩ := ih (start + 1) htail
+      obtain ⟨q, hq⟩ := hhead
+      refine ⟨q :: tail, ?_⟩
+      rw [List.zipIdx_cons, List.foldr_cons, htailRun, hq]
 
 /-! ### The Laurent special-part integrator over the tower
 
@@ -85,6 +121,58 @@ def cIntegrateHyperexpLaurent {P : Type u → Type u} [CPoly P] [CPolyEngine P]
     let den : P α := CPolyEngine.monomial (P := P) CCommRing.one m
     some (num, den)
   | _, _ => none
+
+/-- Semantic domain for Laurent integration: every coefficient RDE is solvable in the base field. -/
+def HyperexpLaurentDomain {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    (η : α) (pos : P α) (neg : List α) : Prop :=
+  (∀ ck ∈ neg.zipIdx,
+    IsLaurentCoefficientSolvable η (-(ck.2 + 1 : ℤ)) ck.1) ∧
+  ∀ ck ∈ (CPolyEngine.coeffList pos).zipIdx,
+    IsLaurentCoefficientSolvable η (ck.2 : ℤ) ck.1
+
+/-- A complete field RDE oracle makes Laurent integration succeed on its semantic domain. -/
+theorem cIntegrateHyperexpLaurent_exists_of_domain
+    {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CRischField α] (hcomplete : CRischFieldComplete α)
+    (η : α) (pos : P α) (neg : List α)
+    (hdomain : HyperexpLaurentDomain η pos neg) :
+    ∃ num den, cIntegrateHyperexpLaurent η pos neg = some (num, den) := by
+  have hnegExec : ∀ ck ∈ neg.zipIdx,
+      ∃ q, cLaurentIntCoeff η (-(ck.2 + 1 : ℤ)) ck.1 = some q := by
+    intro ck hck
+    exact cLaurentIntCoeff_exists_of_solvable hcomplete η (-(ck.2 + 1 : ℤ)) ck.1
+      (hdomain.1 ck hck)
+  have hposExec : ∀ ck ∈ (CPolyEngine.coeffList pos).zipIdx,
+      ∃ q, cLaurentIntCoeff η (ck.2 : ℤ) ck.1 = some q := by
+    intro ck hck
+    exact cLaurentIntCoeff_exists_of_solvable hcomplete η (ck.2 : ℤ) ck.1
+      (hdomain.2 ck hck)
+  obtain ⟨negCoeffs, hneg⟩ := laurentSolveLoop_exists η (fun i => -(i + 1 : ℤ)) neg 0 hnegExec
+  obtain ⟨posCoeffs, hpos⟩ := laurentSolveLoop_exists η (fun i => (i : ℤ))
+    (CPolyEngine.coeffList pos) 0 hposExec
+  refine ⟨CPolyEngine.ofCoeffList (negCoeffs.reverse ++ posCoeffs),
+    CPolyEngine.monomial CCommRing.one neg.length, ?_⟩
+  simp only [cIntegrateHyperexpLaurent, hneg, hpos]
+
+/-- Every successful Laurent integration result has a nonzero monomial denominator. -/
+theorem cIntegrateHyperexpLaurent_den_nonzero
+    {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u,v} P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CRischField α]
+    (η : α) (pos : P α) (neg : List α) (num den : P α)
+    (hsome : cIntegrateHyperexpLaurent η pos neg = some (num, den)) :
+    CPoly.toPoly den ≠ 0 := by
+  rw [cIntegrateHyperexpLaurent] at hsome
+  split at hsome
+  · rename_i negCoeffs posCoeffs hneg hpos
+    simp only [Option.some.injEq, Prod.mk.injEq] at hsome
+    obtain ⟨_hnum, hden⟩ := hsome
+    subst den
+    rw [LawfulCPolyEngine.toPoly_monomial]
+    simp only [toR_eq_toK, CFieldSpec.toK_one, map_one, one_mul]
+    exact pow_ne_zero _ Polynomial.X_ne_zero
+  · simp at hsome
 
 /-- The Laurent integrator executes on sparse polynomials without a separate sparse algorithm. -/
 example :

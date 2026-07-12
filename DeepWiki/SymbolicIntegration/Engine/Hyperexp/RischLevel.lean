@@ -43,6 +43,16 @@ def hyperexpRischLevelCompleteDomain (R : CPolynomialReduction DensePoly α)
     (hyperexpCheckedNormalAcceptanceDomain (α := α))
     (hyperexpCheckedSpecialDomain (α := α))
 
+/-- Hyperexponential level domain with semantic Laurent special integration and the current explicit
+normal-stage acceptance boundary. -/
+def hyperexpRischLevelLaurentCompleteDomain (R : CPolynomialReduction DensePoly α)
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CCanonicalRepresentation DensePoly α] : RischLevelDomain DensePoly α :=
+  oneLevelRischCompleteDomain R kind polynomialDomain
+    (hyperexpCheckedNormalAcceptanceDomain (α := α))
+    (hyperexpLaurentSpecialDomain (α := α))
+
 /-- The checked hyperexponential level is lawful on its explicit stage-acceptance domain. -/
 instance instLawfulCRischLevelHyperexpCompleteDomain (R : CPolynomialReduction DensePoly α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
@@ -68,5 +78,36 @@ instance instCompleteCRischLevelHyperexp (R : CPolynomialReduction DensePoly α)
     (hyperexpCheckedNormalAcceptanceDomain (α := α))
     (DensePoly.hyperexpCheckedCase (α := α))
     (hyperexpCheckedSpecialDomain (α := α))
+
+/-- The semantic Laurent complete domain inherits level soundness from the checked stage contracts. -/
+instance instLawfulCRischLevelHyperexpLaurentCompleteDomain (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
+    LawfulCRischLevel (hyperexpRischLevel (α := α) R kind)
+      (hyperexpRischLevelLaurentCompleteDomain R kind polynomialDomain) := by
+  unfold hyperexpRischLevel hyperexpRischLevelLaurentCompleteDomain
+  infer_instance
+
+/-- Field-RDE completeness and the explicit normal-stage contract compose into relative completeness
+of the hyperexponential level on its semantic Laurent domain. -/
+theorem completeCRischLevelHyperexpLaurent (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CompleteCPolynomialReduction R polynomialDomain]
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)]
+    [CRischFieldSpec α] (hfield : CRischFieldComplete α) :
+    CompleteCRischLevel (hyperexpRischLevel (α := α) R kind)
+      (hyperexpRischLevelLaurentCompleteDomain R kind polynomialDomain) := by
+  letI : CompleteCMonomialCase (DensePoly.hyperexpCheckedCase (α := α))
+      (hyperexpLaurentSpecialDomain (α := α)) :=
+    completeCMonomialCaseHyperexpLaurent hfield
+  exact completeCRischLevel R kind polynomialDomain
+    (hyperexpCheckedNormalReduction (α := α))
+    (hyperexpCheckedNormalAcceptanceDomain (α := α))
+    (DensePoly.hyperexpCheckedCase (α := α))
+    (hyperexpLaurentSpecialDomain (α := α))
 
 end DeepWiki.SymbolicIntegration

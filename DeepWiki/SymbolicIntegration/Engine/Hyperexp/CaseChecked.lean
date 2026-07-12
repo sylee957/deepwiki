@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.Hyperexp.LaurentCore
+import DeepWiki.SymbolicIntegration.Engine.LaurentSpecialSoundness
 import DeepWiki.SymbolicIntegration.Engine.Assemble
 
 /-! # Checked hyperexponential monomial-case realization
@@ -137,6 +137,81 @@ def hyperexpCheckedSpecialDomain : MonomialSpecialDomain DensePoly α := fun Dt 
         CPoly.toPoly ds ≠ 0 ∧ CPoly.toPoly out.2 ≠ 0 ∧
         CPoly.checkIdentity Dt ({ rational := out, logs := [] } : IntegralResult α)
           (CPolyEngine.add (CPolyEngine.mul fp ds) b) ds = true
+
+/-- Semantic domain of Laurent special integration: a hyperexponential monomial, a certified special
+denominator, and solvable coefficient RDEs. -/
+def hyperexpLaurentSpecialDomain : MonomialSpecialDomain DensePoly α := fun Dt fp b ds =>
+  IsHyperexpMonomial Dt (DensePoly.cExpEta Dt) ∧
+    IsSpecialDenominator b ds ∧
+      DensePoly.HyperexpLaurentDomain (DensePoly.cExpEta Dt) fp
+        (DensePoly.cHyperexpSpecialNeg b ds)
+
+/-- Field-RDE completeness makes the checked hyperexponential special stage complete on its semantic
+Laurent domain. -/
+theorem completeCMonomialCaseHyperexpLaurent
+    [CRischFieldSpec α] (hfield : CRischFieldComplete α) :
+    CompleteCMonomialCase (DensePoly.hyperexpCheckedCase (α := α))
+      (hyperexpLaurentSpecialDomain (α := α)) where
+  special_complete Dt fp b ds _res hdomain _hsden _hderiv := by
+    obtain ⟨hDt, hspecial, hlaurentDomain⟩ := hdomain
+    have hds : CPoly.toPoly ds ≠ 0 := by
+      intro hz
+      rw [toPoly_list_eq] at hz
+      have hzero := (DensePoly.cisZeroG_iff ds).mpr hz
+      have hfalse : DensePoly.cisZero ds = false := hspecial.nz
+      rw [hzero] at hfalse
+      contradiction
+    obtain ⟨outNum, outDen, hlaurent⟩ :=
+      DensePoly.cIntegrateHyperexpLaurent_exists_of_domain hfield (DensePoly.cExpEta Dt) fp
+        (DensePoly.cHyperexpSpecialNeg b ds) hlaurentDomain
+    have hout : CPoly.toPoly outDen ≠ 0 :=
+      DensePoly.cIntegrateHyperexpLaurent_den_nonzero (DensePoly.cExpEta Dt) fp
+        (DensePoly.cHyperexpSpecialNeg b ds) outNum outDen hlaurent
+    have hrawIdentity := cIntegrateHyperexpLaurentG_special_sound Dt
+      (DensePoly.cExpEta Dt) fp b ds outNum outDen hDt hspecial hlaurent
+    let inputNum := CPolyEngine.add (CPolyEngine.mul fp ds) b
+    have htarget : fieldFracP inputNum ds = fieldFracP fp CPoly.one + fieldFracP b ds := by
+      simp only [inputNum, fieldFracP, LawfulCPolyEngine.toPoly_add,
+        LawfulCPolyEngine.toPoly_mul, CPoly.toPoly_one, map_add, map_mul, map_one]
+      have hAds : am α (CPoly.toPoly ds) ≠ 0 := am_ne_zero hds
+      field_simp
+    let out : IntegralResult α := ⟨(outNum, outDen), []⟩
+    have hidentity : towerFractionFieldDerivP Dt (fieldFracP out.rational.1 out.rational.2) +
+        logResidueSumP Dt out.logs = fieldFracP inputNum ds := by
+      have htarget' := htarget.symm
+      dsimp only [fieldFracP] at htarget'
+      rw [CPoly.toPoly_one, map_one, div_one] at htarget'
+      have hrawIdentity' : towerFractionFieldDerivP Dt (fieldFracP outNum outDen) =
+          am α (CPoly.toPoly fp) + am α (CPoly.toPoly b) / am α (CPoly.toPoly ds) := by
+        simpa only [fieldFracP, towerFractionFieldDerivP, towerFractionFieldDeriv,
+          toPoly_list_eq] using hrawIdentity
+      have hcombined : towerFractionFieldDerivP Dt (fieldFracP outNum outDen) =
+          fieldFracP inputNum ds := by
+        exact hrawIdentity'.trans htarget'
+      change towerFractionFieldDerivP Dt (fieldFracP outNum outDen) +
+        logResidueSumP Dt [] = fieldFracP inputNum ds
+      simpa only [logResidueSumP, List.map_nil, List.sum_nil, add_zero] using hcombined
+    have hcheck : CPoly.checkIdentity Dt out inputNum ds = true := by
+      apply checkIdentityP_of_field_identity Dt out inputNum ds
+        hout hds
+      · simp [out]
+      · change towerFractionFieldDerivP Dt (fieldFracP out.rational.1 out.rational.2) +
+          logResidueSumP Dt out.logs = fieldFracP inputNum ds
+        exact hidentity
+    have hdsBool : DensePoly.cisZero ds = false := by
+      rw [Bool.eq_false_iff]
+      intro hzero
+      exact hds (by simpa only [toPoly_list_eq] using (DensePoly.cisZeroG_iff ds).mp hzero)
+    have houtBool : DensePoly.cisZero outDen = false := by
+      rw [Bool.eq_false_iff]
+      intro hzero
+      exact hout (by simpa only [toPoly_list_eq] using (DensePoly.cisZeroG_iff outDen).mp hzero)
+    have hcheck' : CPoly.checkIdentity Dt out (DensePoly.cadd (DensePoly.cmul fp ds) b) ds = true := by
+      change CPoly.checkIdentity Dt out inputNum ds = true
+      exact hcheck
+    refine ⟨0, out, ?_⟩
+    simp [DensePoly.hyperexpCheckedCase, out, hlaurent, hdsBool, houtBool, hcheck']
+  postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 
 /-- The checked hyperexponential monomial stage is complete on its explicit raw-acceptance domain. -/
 instance instCompleteCMonomialCaseHyperexpChecked :
