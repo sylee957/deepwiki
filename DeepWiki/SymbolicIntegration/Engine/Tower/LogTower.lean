@@ -229,6 +229,39 @@ def IsTowerIntegralResult {n : ℕ} (Dt anum aden : DensePoly (DenseFracTower n)
       amGExt (E := E) (CPoly.toPoly anum) /
         amGExt (E := E) (CPoly.toPoly aden)
 
+/-- A successor-local result is correct relative to the logarithms retained from the preceding level. -/
+def IsTowerIntegralResultWithLowerLogs {n : ℕ}
+    (Dt anum aden : DensePoly (DenseFracTower (n + 1)))
+    (localResult : TowerIntegralResult (n + 1)) (lower : TowerIntegralResult n) : Prop :=
+  ∀ (E : Type) [Field E] [Differential E] [Algebra ℚ E] [IsAlgClosed E]
+    (maps : TowerLog.EvaluationMaps (n + 1) E),
+    letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) E :=
+      maps.algebra (n + 1) (Nat.le_refl (n + 1))
+    letI : DifferentialAlgebra (CFieldSpec.K (DenseFracTower (n + 1))) E :=
+      maps.differentialAlgebra (n + 1) (Nat.le_refl (n + 1))
+    towerDerivExt Dt
+        (amGExt (E := E) (CPoly.toPoly (CFrac.num localResult.rational)) /
+          amGExt (E := E) (CPoly.toPoly (CFrac.den localResult.rational))) +
+      (TowerLog.denoteSum maps (Nat.le_refl (n + 1)) localResult.logs +
+        TowerLog.denoteSum maps
+          (Nat.le_trans (Nat.le_succ n) (Nat.le_refl (n + 1))) lower.logs) =
+      amGExt (E := E) (CPoly.toPoly anum) /
+        amGExt (E := E) (CPoly.toPoly aden)
+
+/-- A relative successor certificate becomes an ordinary result certificate after inherited logs are appended. -/
+theorem isTowerIntegralResult_appendInherited {n : ℕ}
+    (Dt anum aden : DensePoly (DenseFracTower (n + 1)))
+    (localResult : TowerIntegralResult (n + 1)) (lower : TowerIntegralResult n)
+    (hresult : IsTowerIntegralResultWithLowerLogs Dt anum aden localResult lower) :
+    IsTowerIntegralResult Dt anum aden (localResult.appendInherited lower) := by
+  intro E _ _ _ _ maps
+  letI : Algebra (CFieldSpec.K (DenseFracTower (n + 1))) E :=
+    maps.algebra (n + 1) (Nat.le_refl (n + 1))
+  letI : DifferentialAlgebra (CFieldSpec.K (DenseFracTower (n + 1))) E :=
+    maps.differentialAlgebra (n + 1) (Nat.le_refl (n + 1))
+  rw [TowerIntegralResult.denoteSum_appendInherited maps (Nat.le_refl (n + 1))]
+  exact hresult E maps
+
 /-- Recursive ordinary logs evaluate to the corresponding current-level log sum. -/
 theorem towerLog_denoteSum_ordinary {n N : ℕ} {E : Type*}
     [Field E] [Differential E] [Algebra ℚ E] (maps : TowerLog.EvaluationMaps N E)

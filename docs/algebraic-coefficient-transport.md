@@ -76,9 +76,11 @@ combines their denotations only at the reconstruction theorem.
    genuine-log theorem composes both certificates, while
    `TowerLog.denote_inherited`, `towerLog_denoteSum_inheritAll`, and
    `TowerIntegralResult.denoteSum_appendInherited` prove that inherited logs
-   are evaluated at exactly their original field depth. The remaining work is
-   to make tangent and hyperexponential reconstruction produce the relative
-   certificate that uses this composed log sum.
+   are evaluated at exactly their original field depth.
+   `IsTowerIntegralResultWithLowerLogs` is the relative successor certificate,
+   and `isTowerIntegralResult_appendInherited` transports it to the ordinary
+   tower invariant. The remaining work is to make tangent and
+   hyperexponential reconstruction produce that relative certificate.
    `denseFracTower_K_succ` and `denseFracTowerKStep` expose the required
    `Kₙ₊₁ = RatFunc Kₙ` field equality and canonical inclusion across the
    packaged carrier boundary.
