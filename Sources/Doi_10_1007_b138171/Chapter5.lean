@@ -5,7 +5,10 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.CanonicalRepresentationDense
 import DeepWiki.SymbolicIntegration.Engine.RischTowerLrtGrounding
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.RischLevel
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.TowerStage
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentCapability
+import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentDepth
+import DeepWiki.SymbolicIntegration.Engine.IntegratorCompleteness
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 5: Integration of Transcendental Functions
@@ -214,9 +217,12 @@ The abstract-correctness capstone: on the primitive decomposition domain, over t
 ℚ(x) = `DenseFrac ℚ`, the assembled root-free transcendental integrator `CRischLevelLrt.integrate`
 is a **sound and complete decision procedure** for elementary integrability, resting on exactly one
 honest hypothesis — the Risch new-monomial condition (Thm 5.5.1: `η = Dt` is not a derivative, so `t`
-is a genuine new transcendental). This is the abstract statement behind the `native_decide`-validated
-reductions above; the general structure theorem (Thm 5.5.2/5.5.3) and the non-primitive cases (§5.9
-hyperexp, §5.10 hypertangent) remain (see the block below). -/
+is a genuine new transcendental). All three transcendental monomial cases (primitive, §5.9
+hyperexponential, §5.10 hypertangent) are now sound-and-complete decision procedures — both per level
+and **at every tower depth** (`thm_5_9_1_soundAndComplete_tower`, `thm_5_10_soundAndComplete_tower`) —
+and the tower-exhaustiveness transitivity kernel of the general structure theorem is proved
+(`thm_5_5_2_tower_exhaustiveness`). Only the general structure theorem's full inductive form (Thm
+5.5.2/5.5.3 over an abstract elementary-tower predicate) remains (see the block below). -/
 
 /-- **Sound and complete (Thm 5.5.1 realization), abstract.** On the primitive domain over ℚ(x), the
 integrator succeeds **iff** the input is elementary-integrable (completeness), and a guard-passing
@@ -242,5 +248,20 @@ assembled coupled-DE hypertangent Risch level (`t′ = t²+1`) succeeds **iff** 
 elementary-integrable, on the certificate-checked stage domain. The §5.10 analogue of the primitive and
 hyperexponential capstones, via the coupled-DE arc. Axiom-clean. -/
 abbrev thm_5_10_soundAndComplete := @tangentRischLevel_succeeds_iff_integrable
+
+/-- **§5.9 hyperexponential — sound-and-complete at every tower depth**: the decision procedure holds
+over `DenseFracTower n` for every `n`, relative to the field-RDE completeness at that level — the §5.9
+case at every level of a mixed transcendental tower, not only the base. Axiom-clean. -/
+abbrev thm_5_9_1_soundAndComplete_tower := @hyperexpRischLevel_succeeds_iff_integrable_tower
+
+/-- **§5.10 hypertangent — sound-and-complete at every tower depth**: the recursively-selected tangent
+level is a sound-and-complete decision procedure over `DenseFracTower n` for every `n` (soundness +
+genuine logs on a run; completeness for every integrable input). Axiom-clean. -/
+abbrev thm_5_10_soundAndComplete_tower := @denseTangentTower_soundAndComplete
+
+/-- **§5.5 tower exhaustiveness (Thm 5.5.2/5.5.3 transitivity kernel)**: non-elementarity propagates up
+a composed Liouville tower `F ⊆ K ⊆ L` — no Liouville form over the base ⟹ none anywhere in the tower,
+via `IsLiouville.trans`. The inductive kernel of the general structure theorem. Axiom-clean. -/
+abbrev thm_5_5_2_tower_exhaustiveness := @DeepWiki.SymbolicIntegration.Completeness.not_elementary_tower_of_not_elementary_base
 
 end DeepWiki.Si
