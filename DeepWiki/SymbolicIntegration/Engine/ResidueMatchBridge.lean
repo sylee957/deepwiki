@@ -161,8 +161,8 @@ theorem monomial_residue_sum_eq_cancel_add (s : Finset K) (a v : K[X])
 consumes) **iff** `∑_{α∈s} c_α = 0` — the integrability condition (`a/d` integrable in the log part alone).
 Composes the unconditional decomposition `monomial_residue_sum_eq_cancel_add` (residue sum = cancel sum + a/d)
 with `hyperexp_cancel_iff_sum_zero` (cancel sum = 0 ⟺ ∑c = 0): `residue sum = a/d ⟺ cancel sum = 0 ⟺ ∑c = 0`.
-The cleanest pin of the hyperexp integrability obstruction — the residue match log-part needs is GENUINELY EQUIVALENT to the side condition `∑c = 0`, not an engine-success consequence
-(see the closing status: `cIntegrateGFullWf`'s pure-normal branch returns `some` even when `∑c ≠ 0`). -/
+The cleanest pin of the hyperexp integrability obstruction — the residue match log-part needs is GENUINELY
+EQUIVALENT to the side condition `∑c = 0`, not merely a successful-run certificate. -/
 theorem hyperexp_residue_match_iff_sum_zero (s : Finset K) (a : K[X]) (b : K) (hb : b ≠ 0)
     (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, (C b * X).eval α ≠ α′) :
     (∑ α ∈ s, algebraMap K[X] (RatFunc K)

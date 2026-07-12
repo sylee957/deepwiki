@@ -34,7 +34,7 @@ cast coefficients.
 ## Phases
 
 1. **Coefficient boundary (bounded rational solver).** The recursive algorithm consumes the
-   representation-neutral `CTangentCoefficientSolver (DenseFrac ℚ)` interface. Its selected
+   representation-neutral `CTangentCoefficientSolver α` interface. Its `DenseFrac ℚ` realization,
    `tangentRationalCoefficientSolver` clears all input and derivative denominators, solves the finite
    rational linear system at the supplied degree bound, and certificate-checks the result. The older
    `tangentPolynomialCoefficientSolver` remains a narrower specialized realizer. Semantic completeness
@@ -48,13 +48,14 @@ cast coefficients.
    `log(t^2+1)` only after a computable constant-residue guard; otherwise it declines.
 5. **Capability realization (implemented).** The raw candidate is private;
    `recursiveTangentSpecialIntegrator` is the selected checked operation and has both `Lawful…` and
-   finite-domain `Complete…` instances.
+   finite-domain `Complete…` instances. The operation and its dense/sparse Risch-level compositions are generic
+   over the coefficient differential field; `DenseFrac ℚ` is only the concrete rational-solver realization.
 6. **Semantic relative completeness.** Upgrade the checked domain only
    after proving the coupled-system and constant-descent completeness assumptions required by
    Bronstein's theorem.
 7. **Level integration (implemented).** The selected operation executes Bronstein's pole-order-three
    example and the `log(t^2+1)` polynomial case. `recursiveTangentRischLevel` and
-   `sparseRecursiveTangentRischLevel` install the selected coupled solver and checked special stage,
+   `sparseRecursiveTangentRischLevel` inject a per-level coupled solver and checked special stage,
    while retaining polynomial and normal stages as explicit dependencies. The semantic completeness
    upgrade remains.
 

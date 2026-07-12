@@ -1,13 +1,10 @@
 import DeepWiki.SymbolicIntegration.Engine.TranscendentalOverAlgebraic
-import DeepWiki.SymbolicIntegration.Engine.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Special
 
 /-! # Transcendental integrals over an algebraic base (the mixed tower)
 
-Equips the radical field `RadX3 = ℚ(x)[√(x³+1)]` with `CFracGcdCoreWf` and `CRischField`, then runs the
-full tower integrator `cIntegrateGFullWf` at `α = RadX3`. The validation examples cover polynomial parts,
-the normal-part route, a nonconstant algebraic-coefficient boundary, a multi-level RDE descent, and
-hyperexponential Laurent integrals descending through `crischDESolve` over `RadX3`. -/
+Equips the radical field `RadX3 = ℚ(x)[√(x³+1)]` with the capabilities used by
+multi-level Risch-DE descent and hyperexponential Laurent integration. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -18,77 +15,6 @@ open DensePoly
 /-- `CFracGcdCoreWf RadX3` selects the fuel-free extended-gcd component over `RadX3[t]`. -/
 instance instCFracGcdCoreWfRadX3 : CFracGcdCoreWf RadX3 where
   cgcdFFRawCoreWf p q := (CPolyEuclidean.gcdExt p q).1
-
-/-! ### Shared integrand data over `RadX3[t]` -/
-
-/-- The primitive monomial derivative `Dt = 1` over `DensePoly RadX3` (`t` primitive, `t' = 1`). -/
-def mixedDt : DensePoly RadX3 := [CCommRing.one]
-
-/-- The integrand denominator `d = 1` over `DensePoly RadX3` (for the pure polynomial parts). -/
-def mixedD : DensePoly RadX3 := [CCommRing.one]
-
-/-- The residue candidate set over `RadX3` (`0`, `1` — the log integrand `1/t` has residue `1`). -/
-def mixedCands : List RadX3 := [CCommRing.zero, CCommRing.one]
-
-/-! ### `∫ t dt = t²/2` over `RadX3[t]` -/
-
-/-- The integrand `f = t` over `DensePoly RadX3` (`[0, 1]`): a pure polynomial part. -/
-def mixedTa : DensePoly RadX3 := [CCommRing.zero, CCommRing.one]
-
-/-- `∫ t dt = t²/2` over `RadX3[t]`, validated `D(∫f) = f` via `checkIdentity`. -/
-theorem mixedT_integral_eq :
-    (match DensePoly.cIntegrateGFullWf mixedDt mixedTa mixedD mixedCands with
-      | some res => CPoly.checkIdentity mixedDt res mixedTa mixedD
-      | none => false) = true := by native_decide
-
-/-! ### `∫ t² dt = t³/3` and `∫ (2t+1) dt = t²+t` over `RadX3[t]` -/
-
-/-- The integrand `f = t²` over `DensePoly RadX3` (`[0,0,1]`). -/
-def mixedT2a : DensePoly RadX3 := [CCommRing.zero, CCommRing.zero, CCommRing.one]
-
-/-- `∫ t² dt = t³/3` over `RadX3[t]`, validated `D(∫f) = f`. -/
-theorem mixedT2_integral_eq :
-    (match DensePoly.cIntegrateGFullWf mixedDt mixedT2a mixedD mixedCands with
-      | some res => CPoly.checkIdentity mixedDt res mixedT2a mixedD
-      | none => false) = true := by native_decide
-
-/-- The integrand `f = 2t + 1` over `DensePoly RadX3` (`[1,2]`). -/
-def mixedLina : DensePoly RadX3 := [CCommRing.one, CCommRing.add CCommRing.one CCommRing.one]
-
-/-- `∫ (2t+1) dt = t²+t` over `RadX3[t]`, validated `D(∫f) = f`. -/
-theorem mixedLin_integral_eq :
-    (match DensePoly.cIntegrateGFullWf mixedDt mixedLina mixedD mixedCands with
-      | some res => CPoly.checkIdentity mixedDt res mixedLina mixedD
-      | none => false) = true := by native_decide
-
-/-! ### `∫ dt/t = log t` over `RadX3[t]` — the normal-part / Rothstein–Trager log route -/
-
-/-- The integrand `f = 1/t` over `RadX3[t]` as `a/d` with `a = 1`, `d = t` (a pure normal part). -/
-def mixedRecipNum : DensePoly RadX3 := [CCommRing.one]
-
-/-- The denominator `d = t = [0,1]` over `DensePoly RadX3`. -/
-def mixedRecipDen : DensePoly RadX3 := [CCommRing.zero, CCommRing.one]
-
-/-- `∫ dt/t = log t` over `RadX3[t]`, validated `D(log t) = 1/t` via the residue-log route. -/
-theorem mixedRecip_integral_eq :
-    (match DensePoly.cIntegrateGFullWf mixedDt mixedRecipNum mixedRecipDen mixedCands with
-      | some res => CPoly.checkIdentity mixedDt res mixedRecipNum mixedRecipDen
-      | none => false) = true := by native_decide
-
-/-! ### The algebraic-coefficient boundary: `∫ y dt` does not validate
-
-`y = √(x³+1)` is not a `D`-constant (`D(y) = ℓ·y ≠ 0`), so the would-be antiderivative `y·t` is not a
-genuine antiderivative and `checkIdentity` is false. -/
-
-/-- The integrand `f = y = √(x³+1)` over `DensePoly RadX3` (`[RadExt.gen]`; `y` is not a `D`-constant). -/
-def mixedYa : DensePoly RadX3 := [RadExt.gen]
-
-/-- `∫ y dt` does not satisfy `D(∫f) = f`: the driver returns `some (y·t)` but `checkIdentity` is
-false, since `y` is not a `D`-constant. -/
-theorem mixedY_not_validated :
-    (match DensePoly.cIntegrateGFullWf mixedDt mixedYa mixedD mixedCands with
-      | some res => CPoly.checkIdentity mixedDt res mixedYa mixedD
-      | none => false) = false := by native_decide
 
 /-! ### A multi-level RDE descent through the algebraic solver
 
@@ -185,17 +111,5 @@ theorem mixedHyperexpG_topEntry_validates :
           CPoly.checkIdentity mixedHyperexpDt res [CCommRing.one, CCommRing.zero, CCommRing.one]
             [CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
-
-/-! ### Axiom audit -/
-
-#print axioms mixedT_integral_eq
-#print axioms mixedT2_integral_eq
-#print axioms mixedLin_integral_eq
-#print axioms mixedRecip_integral_eq
-#print axioms mixedY_not_validated
-#print axioms mixedRde_radx3_descends
-#print axioms mixedHyperexpRecip_integral_descends
-#print axioms mixedHyperexpPolySpec_integral_descends
-#print axioms mixedHyperexpG_topEntry_validates
 
 end DeepWiki.SymbolicIntegration

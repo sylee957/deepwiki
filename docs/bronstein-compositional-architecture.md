@@ -73,6 +73,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - The obsolete concrete `OneShotAssembly.lean` driver has been retired after its one-shot entry points became
   dead. Its reusable residue identity now lives in `Engine/ResidueMatchBridge.lean` as a leaf theorem used by
   the checked hyperexponential soundness development.
+- The dense fuel-free top entry `UnifiedFuelFree.cIntegrateGFullWf` has also been retired: its only callers
+  were legacy validation examples, including an explicitly unchecked result, rather than the compositional
+  Risch-level pipeline.
 - The guarded primitive monomial operation has a `LawfulCMonomialCase` instance. Its intentionally narrow
   guard does not claim `CompleteCMonomialCase`; the former standalone dense driver and redundant wrapper
   theorem have been retired.
@@ -140,7 +143,9 @@ monomial stage contracts.
    `CTangentCoefficientSolver` now states the representation-neutral coefficient-field system
    `Dc - λd = a`, `Dd + λc = b`, with separate lawful and domain-relative-completeness contracts; its checked
    adapter is sound and complete on its explicit executable-acceptance domain. The recursive tangent stage now
-   depends only on this interface; its selected `tangentRationalCoefficientSolver` clears rational-function
+   depends only on this interface. Its contracts, recursive kernel, and dense/sparse Risch-level compositions
+   are generic over the coefficient differential field `α`, so each tower level can inject its coupled solver
+   and lower coefficient integrator. The concrete `tangentRationalCoefficientSolver` clears rational-function
    denominators, solves the resulting finite linear system, and certificate-checks the reconstructed pair.
    This is executable relative completeness at a selected degree bound; semantic completeness still needs a
    degree-bound theorem for general coefficient-field fractions. The former one-shot `CTangentSpecialBridge`
@@ -156,7 +161,8 @@ monomial stage contracts.
    monomial special stage now returns a full `IntegralResult`, so it can represent the constant multiple of
    `log(t²+1)` produced by hypertangent polynomial reduction; the LRT primitive path retains its separate
    rational-only `CLrtMonomialCase`. Full semantic tangent completeness still needs a semantic completeness
-   theorem for the generalized coupled solver and coefficient recursion, beyond checked acceptance.
+   theorem for the generalized coupled solver and coefficient recursion, beyond checked acceptance, plus a
+   depth-indexed capability family selecting these generic levels inductively.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

@@ -12,6 +12,8 @@ namespace DeepWiki.SymbolicIntegration
 
 open DensePoly
 
+universe u
+
 /-- Prop-free executable capability for the tangent coupled differential system over `ℚ(x)[t]`. -/
 structure CTangentPolynomialCoupledSolver where
   /-- Solve the level-`n` tangent system with the supplied coefficient-degree bound. -/
@@ -44,11 +46,12 @@ instance instLawfulCTangentPolynomialCoupledSolver [CLinearSolve ℚ] [LawfulCLi
 /-! ## Coefficient-field coupled-system boundary -/
 
 /-- Prop-free coupled-system operation over the actual hypertangent coefficient field. -/
-structure CTangentCoefficientSolver (α : Type*) [CField α] [CDiffField α] where
+structure CTangentCoefficientSolver (α : Type u) [CField α] [CDiffField α] where
   /-- Attempt `Dc - coupling*d = a` and `Dd + coupling*c = b` at a finite search bound. -/
   solve : ℕ → α → α → α → Option (α × α)
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+variable {α : Type u} [CField α] [CFieldSpec.{u,u} α] [CDiffField α] [CDiffFieldSpec.{u,u} α]
+  [Algebra ℚ (CFieldSpec.K α)]
 
 /-- Denotational soundness contract for a coefficient-field tangent coupled solver. -/
 class LawfulCTangentCoefficientSolver (C : CTangentCoefficientSolver α) : Prop where
@@ -133,21 +136,21 @@ instance instCompleteCTangentCoefficientSolverChecked (raw : CTangentCoefficient
   complete _ _ _ hdomain _ := hdomain
 
 /-- Semantic domain on which a tangent special integrator is required to be complete. -/
-abbrev TangentSpecialDomain := DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) →
-  DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) → Prop
+abbrev TangentSpecialDomain (α : Type u) := DensePoly α → DensePoly α →
+  DensePoly α → DensePoly α → Prop
 
 /-- Prop-free recursive hypertangent special integrator parameterized by a coupled-system solver. -/
-structure CTangentSpecialIntegrator where
+structure CTangentSpecialIntegrator (α : Type u) [CField α] [CDiffField α] where
   /-- Integrate the polynomial and special-denominator parts, making as many coupled calls as required. -/
-  integrate : CTangentCoefficientSolver (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) →
-    DensePoly (DenseFrac ℚ) → DensePoly (DenseFrac ℚ) →
-      Option (IntegralResult (DenseFrac ℚ))
+  integrate : CTangentCoefficientSolver α → DensePoly α → DensePoly α →
+    DensePoly α → DensePoly α →
+      Option (IntegralResult α)
 
 /-- Denotational soundness contract for a selected tangent special integrator and coupled solver. -/
-class LawfulCTangentSpecialIntegrator (S : CTangentCoefficientSolver (DenseFrac ℚ))
-    (T : CTangentSpecialIntegrator) : Prop where
+class LawfulCTangentSpecialIntegrator (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) : Prop where
   /-- Every returned fraction differentiates to the requested polynomial and special parts. -/
-  sound : ∀ (Dt fp b ds : DensePoly (DenseFrac ℚ)) (res : IntegralResult (DenseFrac ℚ)),
+  sound : ∀ (Dt fp b ds : DensePoly α) (res : IntegralResult α),
     T.integrate S Dt fp b ds = some res →
       CPoly.toPoly res.rational.2 ≠ 0 ∧
         towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
@@ -155,11 +158,11 @@ class LawfulCTangentSpecialIntegrator (S : CTangentCoefficientSolver (DenseFrac 
           fieldFracP fp CPoly.one + fieldFracP b ds
 
 /-- Relative-completeness contract for recursive tangent special integration. -/
-class CompleteCTangentSpecialIntegrator (S : CTangentCoefficientSolver (DenseFrac ℚ))
-    (T : CTangentSpecialIntegrator) (domain : TangentSpecialDomain)
+class CompleteCTangentSpecialIntegrator (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) (domain : TangentSpecialDomain α)
     [LawfulCTangentSpecialIntegrator S T] : Prop where
   /-- Every domain input possessing a represented special antiderivative is accepted. -/
-  complete : ∀ (Dt fp b ds : DensePoly (DenseFrac ℚ)) (res : IntegralResult (DenseFrac ℚ)),
+  complete : ∀ (Dt fp b ds : DensePoly α) (res : IntegralResult α),
     domain Dt fp b ds → CPoly.toPoly res.rational.2 ≠ 0 →
     towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
         logResidueSumP Dt res.logs =
@@ -167,13 +170,13 @@ class CompleteCTangentSpecialIntegrator (S : CTangentCoefficientSolver (DenseFra
     ∃ out, T.integrate S Dt fp b ds = some out
 
 /-- Compose a tangent coupled solver and recursive special integrator into a monomial case. -/
-def tangentMonomialCase (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator) :
-    CMonomialCase DensePoly (DenseFrac ℚ) where
+def tangentMonomialCase (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α) :
+    CMonomialCase DensePoly α where
   integrateSpecial := T.integrate S
   postprocessNormal _ before := some before
 
 /-- A lawful recursive tangent special integrator makes the composed monomial case lawful. -/
-instance instLawfulCMonomialCaseTangent (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
+instance instLawfulCMonomialCaseTangent (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
     [LawfulCTangentSpecialIntegrator S T] : LawfulCMonomialCase (tangentMonomialCase S T) where
   special_sound Dt fp b ds res hrun :=
     LawfulCTangentSpecialIntegrator.sound Dt fp b ds res hrun
@@ -189,8 +192,8 @@ instance instLawfulCMonomialCaseTangent (S : CTangentCoefficientSolver (DenseFra
     exact hden
 
 /-- Complete recursive tangent integration makes the composed monomial case relatively complete. -/
-instance instCompleteCMonomialCaseTangent (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    (domain : TangentSpecialDomain) [LawfulCTangentSpecialIntegrator S T]
+instance instCompleteCMonomialCaseTangent (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    (domain : TangentSpecialDomain α) [LawfulCTangentSpecialIntegrator S T]
     [CompleteCTangentSpecialIntegrator S T domain] :
     CompleteCMonomialCase (tangentMonomialCase S T) domain where
   special_complete Dt fp b ds res hdomain hsden hderiv := by
@@ -200,7 +203,7 @@ instance instCompleteCMonomialCaseTangent (S : CTangentCoefficientSolver (DenseF
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 
 /-- Certificate-check every result returned by a tangent special integrator. -/
-def checkedTangentSpecialIntegrator (T : CTangentSpecialIntegrator) : CTangentSpecialIntegrator where
+def checkedTangentSpecialIntegrator (T : CTangentSpecialIntegrator α) : CTangentSpecialIntegrator α where
   integrate S Dt fp b ds := do
     let out ← T.integrate S Dt fp b ds
     if CPolyEngine.cisZero ds then none
@@ -210,8 +213,8 @@ def checkedTangentSpecialIntegrator (T : CTangentSpecialIntegrator) : CTangentSp
       if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then some out else none
 
 /-- The certificate-checked tangent special operation is lawful without assumptions on the raw integrator. -/
-instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolver (DenseFrac ℚ))
-    (T : CTangentSpecialIntegrator) :
+instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) :
     LawfulCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T) where
   sound Dt fp b ds res hrun := by
     simp only [checkedTangentSpecialIntegrator] at hrun
@@ -254,20 +257,20 @@ instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolv
     simpa [hout] using hid
 
 /-- Install a certificate-checked tangent special operation as an ordinary monomial stage. -/
-def checkedTangentMonomialCase (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator) :
-    CMonomialCase DensePoly (DenseFrac ℚ) :=
+def checkedTangentMonomialCase (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α) :
+    CMonomialCase DensePoly α :=
   tangentMonomialCase S (checkedTangentSpecialIntegrator T)
 
 /-- The certificate-checked tangent monomial case is sound without a lawful raw-integrator assumption. -/
-instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoefficientSolver (DenseFrac ℚ))
-    (T : CTangentSpecialIntegrator) : LawfulCMonomialCase (checkedTangentMonomialCase S T) := by
+instance instLawfulCMonomialCaseCheckedTangent (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) : LawfulCMonomialCase (checkedTangentMonomialCase S T) := by
   unfold checkedTangentMonomialCase
   infer_instance
 
 /-- The explicit certificate-acceptance domain for a checked tangent special stage. -/
-def checkedTangentSpecialDomain (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator) :
-    TangentSpecialDomain := fun Dt fp b ds =>
-  ∀ (res : IntegralResult (DenseFrac ℚ)), CPoly.toPoly res.rational.2 ≠ 0 →
+def checkedTangentSpecialDomain (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α) :
+    TangentSpecialDomain α := fun Dt fp b ds =>
+  ∀ (res : IntegralResult α), CPoly.toPoly res.rational.2 ≠ 0 →
     towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
         logResidueSumP Dt res.logs =
       fieldFracP fp CPoly.one + fieldFracP b ds →
@@ -277,8 +280,8 @@ def checkedTangentSpecialDomain (S : CTangentCoefficientSolver (DenseFrac ℚ)) 
         CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds = true
 
 /-- Certificate-checked tangent integration is complete on its explicit raw-acceptance domain. -/
-instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolver (DenseFrac ℚ))
-    (T : CTangentSpecialIntegrator) :
+instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) :
     CompleteCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T)
       (checkedTangentSpecialDomain S T) where
   complete Dt fp b ds res hdomain hsden hderiv := by
@@ -303,70 +306,70 @@ instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoefficientSo
     simp [checkedTangentSpecialIntegrator, hraw, hdsBool, houtBool, hlogsBool, hcheck]
 
 /-- The checked tangent monomial stage is complete on the raw-integrator acceptance domain. -/
-instance instCompleteCMonomialCaseCheckedTangent (S : CTangentCoefficientSolver (DenseFrac ℚ))
-    (T : CTangentSpecialIntegrator) :
+instance instCompleteCMonomialCaseCheckedTangent (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) :
     CompleteCMonomialCase (checkedTangentMonomialCase S T)
       (checkedTangentSpecialDomain S T) := by
   unfold checkedTangentMonomialCase
   infer_instance
 
 /-- Tangent normal reduction obtained by certificate-checking an arbitrary raw normal reducer. -/
-def tangentNormalReduction (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :
-    CNormalReduction DensePoly (DenseFrac ℚ) :=
+def tangentNormalReduction (raw : CNormalReduction DensePoly α) :
+    CNormalReduction DensePoly α :=
   checkedNormalReduction raw
 
 /-- Universal soundness domain of certificate-checked tangent normal reduction. -/
-def tangentNormalDomain : NormalReductionDomain DensePoly (DenseFrac ℚ) :=
+def tangentNormalDomain : NormalReductionDomain DensePoly α :=
   checkedNormalReductionDomain
 
 /-- The explicit certificate-acceptance domain of a checked tangent normal reduction. -/
-def tangentNormalCompleteDomain (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :
-    NormalReductionDomain DensePoly (DenseFrac ℚ) :=
+def tangentNormalCompleteDomain (raw : CNormalReduction DensePoly α) :
+    NormalReductionDomain DensePoly α :=
   checkedNormalReductionAcceptanceDomain raw
 
 /-- Certificate-checked tangent normal reduction is lawful without a low-degree Hermite hypothesis. -/
-instance instLawfulCNormalReductionTangent (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :
+instance instLawfulCNormalReductionTangent (raw : CNormalReduction DensePoly α) :
     LawfulCNormalReduction (tangentNormalReduction raw) tangentNormalDomain := by
   unfold tangentNormalReduction tangentNormalDomain
   infer_instance
 
 /-- Certificate-checked tangent normal reduction is lawful on its explicit acceptance domain. -/
 instance instLawfulCNormalReductionTangentCompleteDomain
-    (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :
+    (raw : CNormalReduction DensePoly α) :
     LawfulCNormalReduction (tangentNormalReduction raw) (tangentNormalCompleteDomain raw) := by
   unfold tangentNormalReduction tangentNormalCompleteDomain
   infer_instance
 
 /-- Certificate-checked tangent normal reduction is complete on its explicit acceptance domain. -/
-instance instCompleteCNormalReductionTangent (raw : CNormalReduction DensePoly (DenseFrac ℚ)) :
+instance instCompleteCNormalReductionTangent (raw : CNormalReduction DensePoly α) :
     CompleteCNormalReduction (tangentNormalReduction raw) (tangentNormalCompleteDomain raw) := by
   unfold tangentNormalReduction tangentNormalCompleteDomain
   infer_instance
 
 /-- Assemble a certificate-checked tangent Risch level from arbitrary coupled and special integrators. -/
-def tangentRischLevel (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
-    (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : CRischLevel DensePoly (DenseFrac ℚ) :=
+def tangentRischLevel (R : CPolynomialReduction DensePoly α)
+    (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α] : CRischLevel DensePoly α :=
   oneLevelRisch R kind (tangentNormalReduction raw) (checkedTangentMonomialCase S T)
 
 /-- The explicit stage-acceptance domain of a certificate-checked tangent Risch level. -/
-def tangentRischLevelCompleteDomain (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+def tangentRischLevelCompleteDomain (R : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind)
-    (polynomialDomain : PolynomialReductionDomain DensePoly (DenseFrac ℚ))
-    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)] : RischLevelDomain DensePoly (DenseFrac ℚ) :=
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α] : RischLevelDomain DensePoly α :=
   oneLevelRischCompleteDomain R kind polynomialDomain (tangentNormalCompleteDomain raw)
     (checkedTangentSpecialDomain S T)
 
 /-- Certificate checks make the dense tangent Risch level sound without solver or bridge laws. -/
-instance instLawfulCRischLevelTangent (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+instance instLawfulCRischLevelTangent (R : CPolynomialReduction DensePoly α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
-    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)]
-    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFrac ℚ)] :
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
     LawfulCRischLevel (tangentRischLevel R kind raw S T)
       (oneLevelRischSoundDomain tangentNormalDomain) := by
   unfold tangentRischLevel
@@ -374,13 +377,13 @@ instance instLawfulCRischLevelTangent (R : CPolynomialReduction DensePoly (Dense
 
 /-- The certificate-checked tangent level is lawful on its complete stage-acceptance domain. -/
 instance instLawfulCRischLevelTangentCompleteDomain
-    (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+    (R : CPolynomialReduction DensePoly α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
-    (polynomialDomain : PolynomialReductionDomain DensePoly (DenseFrac ℚ))
-    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)]
-    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFrac ℚ)] :
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
     LawfulCRischLevel (tangentRischLevel R kind raw S T)
       (tangentRischLevelCompleteDomain R kind polynomialDomain raw S T) := by
   unfold tangentRischLevel tangentRischLevelCompleteDomain
@@ -388,15 +391,15 @@ instance instLawfulCRischLevelTangentCompleteDomain
 
 /-- Complete polynomial, normal, and checked tangent stages compose to a relatively complete tangent level
 on the explicit stage-acceptance domain. -/
-instance instCompleteCRischLevelTangent (R : CPolynomialReduction DensePoly (DenseFrac ℚ))
+instance instCompleteCRischLevelTangent (R : CPolynomialReduction DensePoly α)
     [LawfulCPolynomialReduction R]
     (kind : PolynomialReductionKind)
-    (polynomialDomain : PolynomialReductionDomain DensePoly (DenseFrac ℚ))
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
     [CompleteCPolynomialReduction R polynomialDomain]
-    (raw : CNormalReduction DensePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation DensePoly (DenseFrac ℚ)]
-    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFrac ℚ)] :
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
     CompleteCRischLevel (tangentRischLevel R kind raw S T)
       (tangentRischLevelCompleteDomain R kind polynomialDomain raw S T) := by
   exact completeCRischLevel R kind polynomialDomain (tangentNormalReduction raw)
@@ -404,38 +407,38 @@ instance instCompleteCRischLevelTangent (R : CPolynomialReduction DensePoly (Den
     (checkedTangentSpecialDomain S T)
 
 /-- Assemble a sparse tangent Risch level whose dense special result is certificate-checked. -/
-def sparseTangentRischLevel (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
-    (kind : PolynomialReductionKind) (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
-    CRischLevel CPoly.SparsePoly (DenseFrac ℚ) :=
+def sparseTangentRischLevel (R : CPolynomialReduction CPoly.SparsePoly α)
+    (kind : PolynomialReductionKind) (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α] :
+    CRischLevel CPoly.SparsePoly α :=
   oneLevelRisch R kind (checkedNormalReduction raw)
     (denseMonomialCaseAsSparse (checkedTangentMonomialCase S T))
 
 /-- Certificate checks preserve tangent soundness across the sparse representation boundary. -/
 instance instLawfulCRischLevelSparseTangent
-    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (R : CPolynomialReduction CPoly.SparsePoly α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
-    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)]
-    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFrac ℚ)] :
+    (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     LawfulCRischLevel (sparseTangentRischLevel R kind raw S T)
       (oneLevelRischSoundDomain
-        (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := DenseFrac ℚ))) := by
+        (checkedNormalReductionDomain (P := CPoly.SparsePoly) (α := α))) := by
   unfold sparseTangentRischLevel
   infer_instance
 
 /-- The explicit special-stage domain obtained by transporting the checked dense tangent domain to sparse
 polynomial inputs. -/
-def sparseTangentSpecialDomain (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator) :
-    MonomialSpecialDomain CPoly.SparsePoly (DenseFrac ℚ) := fun Dt fp b ds =>
+def sparseTangentSpecialDomain (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α) :
+    MonomialSpecialDomain CPoly.SparsePoly α := fun Dt fp b ds =>
   checkedTangentSpecialDomain S T (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
     (CPolyEngine.convert b) (CPolyEngine.convert ds)
 
 /-- Checked tangent special completeness transports through the sparse monomial-case adapter. -/
-instance instCompleteCMonomialCaseSparseCheckedTangent (S : CTangentCoefficientSolver (DenseFrac ℚ))
-    (T : CTangentSpecialIntegrator) :
+instance instCompleteCMonomialCaseSparseCheckedTangent (S : CTangentCoefficientSolver α)
+    (T : CTangentSpecialIntegrator α) :
     CompleteCMonomialCase (denseMonomialCaseAsSparse (checkedTangentMonomialCase S T))
       (sparseTangentSpecialDomain S T) := by
   unfold sparseTangentSpecialDomain
@@ -443,7 +446,7 @@ instance instCompleteCMonomialCaseSparseCheckedTangent (S : CTangentCoefficientS
 
 /-- Certificate-checked sparse normal reduction is lawful on its explicit acceptance domain. -/
 instance instLawfulCNormalReductionSparseTangentCompleteDomain
-    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ)) :
+    (raw : CNormalReduction CPoly.SparsePoly α) :
     LawfulCNormalReduction (checkedNormalReduction raw)
       (checkedNormalReductionAcceptanceDomain raw) := by
   unfold checkedNormalReductionAcceptanceDomain
@@ -451,25 +454,25 @@ instance instLawfulCNormalReductionSparseTangentCompleteDomain
 
 /-- The explicit stage-acceptance domain of a sparse certificate-checked tangent Risch level. -/
 def sparseTangentRischLevelCompleteDomain
-    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (R : CPolynomialReduction CPoly.SparsePoly α)
     (kind : PolynomialReductionKind)
-    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly (DenseFrac ℚ))
-    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)] :
-    RischLevelDomain CPoly.SparsePoly (DenseFrac ℚ) :=
+    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
+    (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α] :
+    RischLevelDomain CPoly.SparsePoly α :=
   oneLevelRischCompleteDomain R kind polynomialDomain (checkedNormalReductionAcceptanceDomain raw)
     (sparseTangentSpecialDomain S T)
 
 /-- The sparse checked tangent level is lawful on its complete stage-acceptance domain. -/
 instance instLawfulCRischLevelSparseTangentCompleteDomain
-    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (R : CPolynomialReduction CPoly.SparsePoly α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
-    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly (DenseFrac ℚ))
-    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)]
-    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFrac ℚ)] :
+    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
+    (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     LawfulCRischLevel (sparseTangentRischLevel R kind raw S T)
       (sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw S T) := by
   unfold sparseTangentRischLevel sparseTangentRischLevelCompleteDomain sparseTangentSpecialDomain
@@ -478,14 +481,14 @@ instance instLawfulCRischLevelSparseTangentCompleteDomain
 /-- Complete polynomial, normal, and checked tangent stages compose to a relatively complete sparse tangent
 level on the transported stage-acceptance domain. -/
 instance instCompleteCRischLevelSparseTangent
-    (R : CPolynomialReduction CPoly.SparsePoly (DenseFrac ℚ))
+    (R : CPolynomialReduction CPoly.SparsePoly α)
     [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
-    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly (DenseFrac ℚ))
+    (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
     [CompleteCPolynomialReduction R polynomialDomain]
-    (raw : CNormalReduction CPoly.SparsePoly (DenseFrac ℚ))
-    (S : CTangentCoefficientSolver (DenseFrac ℚ)) (T : CTangentSpecialIntegrator)
-    [CCanonicalRepresentation CPoly.SparsePoly (DenseFrac ℚ)]
-    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFrac ℚ)] :
+    (raw : CNormalReduction CPoly.SparsePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation CPoly.SparsePoly α]
+    [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     CompleteCRischLevel (sparseTangentRischLevel R kind raw S T)
       (sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw S T) := by
   exact completeCRischLevel R kind polynomialDomain (checkedNormalReduction raw)
