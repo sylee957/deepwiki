@@ -107,6 +107,13 @@ candidate globally lawful, and `DifferentialCoefficientTowerScheme` derives the 
 tower's soundness and relative completeness by induction. The concrete represented-result
 conversion is now discharged for an arbitrary selected monomial derivative.
 
+For backwards-compatible primitive callers, `DenseRischStage.asPrimitivePresentationLevel` is the
+certified adapter from the static dense implementation to the common presentation-level contract.
+It is intentionally restricted to the all-primitive presentation: the inherited carrier derivative
+is `t' = 1`, so exporting it as exponential or tangent would be unsound. Sparse stages remain
+certified adapters at the representation-independent stage boundary and must not become a second
+tower orchestration path.
+
 1. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.
 2. Use the selected lower derivative identity in the recursive tangent finish theorem and connect
