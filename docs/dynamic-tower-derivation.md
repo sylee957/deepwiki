@@ -96,8 +96,14 @@ The explicit recursive coefficient and monomial adapters now feed
 input of the next level. The remaining successor lift must still construct and certificate-check
 that coefficient solver from the preceding presentation-indexed level.
 
-1. Construct the certificate-checked successor coefficient solver from a preceding
-   presentation-indexed level, using the presentation quotient-rule square.
+`Tower/DifferentialCoefficientBridge.lean` now packages that successor shape: a lift theorem turns
+a preceding level result into successor coefficient data, the explicit checker makes the resulting
+candidate globally lawful, and `DifferentialCoefficientTowerScheme` derives the common finite
+tower's soundness and relative completeness by induction. What remains is the dense lift theorem
+for the concrete represented-result conversion under an arbitrary selected monomial derivative.
+
+1. Prove and instantiate the dense represented-result lift theorem under the presentation
+   quotient-rule square.
 2. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.
 3. Use the selected lower derivative identity in the recursive tangent finish theorem and connect
