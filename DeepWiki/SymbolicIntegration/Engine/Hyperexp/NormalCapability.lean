@@ -47,4 +47,20 @@ instance instLawfulCNormalReductionHyperexpChecked :
   unfold hyperexpCheckedNormalReduction hyperexpCheckedNormalDomain
   infer_instance
 
+/-- The checked hyperexponential normal stage is lawful on its explicit raw-acceptance domain. -/
+instance instLawfulCNormalReductionHyperexpCheckedAcceptance :
+    LawfulCNormalReduction (hyperexpCheckedNormalReduction (α := α))
+      (checkedNormalReductionAcceptanceDomain
+        (DensePoly.hyperexpNormalReduction (α := α))) := by
+  unfold hyperexpCheckedNormalReduction
+  infer_instance
+
+/-- The checked hyperexponential normal stage is complete on its explicit raw-acceptance domain. -/
+instance instCompleteCNormalReductionHyperexpChecked :
+    CompleteCNormalReduction (hyperexpCheckedNormalReduction (α := α))
+      (checkedNormalReductionAcceptanceDomain
+        (DensePoly.hyperexpNormalReduction (α := α))) := by
+  unfold hyperexpCheckedNormalReduction
+  infer_instance
+
 end DeepWiki.SymbolicIntegration

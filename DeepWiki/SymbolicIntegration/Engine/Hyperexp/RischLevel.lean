@@ -34,4 +34,41 @@ instance instLawfulCRischLevelHyperexp (R : CPolynomialReduction DensePoly α)
   unfold hyperexpRischLevel
   infer_instance
 
+/-- Exact composition domain of the checked hyperexponential Risch level. -/
+def hyperexpRischLevelCompleteDomain (R : CPolynomialReduction DensePoly α)
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CCanonicalRepresentation DensePoly α] : RischLevelDomain DensePoly α :=
+  oneLevelRischCompleteDomain R kind polynomialDomain
+    (checkedNormalReductionAcceptanceDomain
+      (DensePoly.hyperexpNormalReduction (α := α)))
+    (hyperexpCheckedSpecialDomain (α := α))
+
+/-- The checked hyperexponential level is lawful on its explicit stage-acceptance domain. -/
+instance instLawfulCRischLevelHyperexpCompleteDomain (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
+    LawfulCRischLevel (hyperexpRischLevel (α := α) R kind)
+      (hyperexpRischLevelCompleteDomain R kind polynomialDomain) := by
+  unfold hyperexpRischLevel hyperexpRischLevelCompleteDomain
+  infer_instance
+
+/-- Complete checked stages compose to a relatively complete hyperexponential Risch level. -/
+instance instCompleteCRischLevelHyperexp (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CompleteCPolynomialReduction R polynomialDomain]
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
+    CompleteCRischLevel (hyperexpRischLevel (α := α) R kind)
+      (hyperexpRischLevelCompleteDomain R kind polynomialDomain) := by
+  exact completeCRischLevel R kind polynomialDomain
+    (hyperexpCheckedNormalReduction (α := α))
+    (checkedNormalReductionAcceptanceDomain
+      (DensePoly.hyperexpNormalReduction (α := α)))
+    (DensePoly.hyperexpCheckedCase (α := α))
+    (hyperexpCheckedSpecialDomain (α := α))
+
 end DeepWiki.SymbolicIntegration
