@@ -201,6 +201,128 @@ noncomputable def CMonomialCase.asRemainderIntegrationStage
               hden hidentity
           exact ⟨fuel, ⟨out, ()⟩, by simp [hrun]⟩ } }
 
+/-- A certified normal result packaged for the monomial-specific normal postprocessor. -/
+structure NormalPostprocessInput (P : Type u → Type u) [CPoly P]
+    (α : Type u) [CField α] [CFieldSpec α] where
+  /-- Original normal-reduction input. -/
+  source : NormalReductionInput P α
+  /-- Certified output of normal/Hermite reduction. -/
+  normalResult : IntegralResult α P
+
+/-- A normal-reduction result is handed off to normal postprocessing without changing its source fraction. -/
+def IsNormalPostprocessHandoff (input : NormalReductionInput P α) (_ : Unit)
+    (next : NormalPostprocessInput P α) : Prop :=
+  CertifiedNormalResult input.derivative input.numerator input.denominator next.normalResult ∧
+    next.source.derivative = input.derivative ∧ next.source.numerator = input.numerator ∧
+      next.source.denominator = input.denominator
+
+/-- Export normal/Hermite reduction with its certified result as the postprocessor's typed input. -/
+noncomputable def CNormalReduction.asPostprocessHandoffStage
+    (N : CNormalReduction P α) (domain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N domain] [LawfulGenuineCNormalReduction N domain]
+    [CompleteCNormalReduction N domain] :
+    RemainderIntegrationStage (NormalReductionInput P α) Unit (NormalPostprocessInput P α)
+      (fun input => IsNormalPartIntegrable input.derivative input.numerator input.denominator)
+      IsNormalPostprocessHandoff :=
+  { stage :=
+      { run := fun _ input =>
+          (N.reduce input.derivative input.numerator input.denominator).map fun out =>
+            ⟨(), ⟨input, out⟩⟩
+        domain := fun input => domain input.derivative input.numerator input.denominator
+        sound := by
+          intro fuel input result hdomain hrun
+          obtain ⟨out, hout, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          refine ⟨?_, rfl, rfl, rfl⟩
+          exact ⟨LawfulCNormalReduction.sound input.derivative input.numerator input.denominator out
+              hdomain input.denominator_nonzero hout,
+            LawfulCNormalReduction.rationalDen_nonzero input.derivative input.numerator
+              input.denominator out hdomain input.denominator_nonzero hout,
+            LawfulGenuineCNormalReduction.coefficients_constant input.derivative input.numerator
+              input.denominator out hdomain input.denominator_nonzero hout,
+            LawfulGenuineCNormalReduction.arguments_nonzero input.derivative input.numerator
+              input.denominator out hdomain input.denominator_nonzero hout⟩
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨out, hrun, _⟩ := CompleteCNormalReduction.relative_complete (N := N)
+            input.derivative input.numerator input.denominator hdomain input.denominator_nonzero hintegrable
+          exact ⟨0, ⟨(), ⟨input, out⟩⟩, by simp [hrun]⟩ } }
+
+/-- Post-process a typed certified normal result as a remainder stage. -/
+noncomputable def CMonomialCase.asNormalPostprocessRemainderStage
+    (C : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase C] [LawfulGenuineCMonomialCase C]
+    [CompleteCMonomialCase C specialDomain] :
+    RemainderIntegrationStage (NormalPostprocessInput P α) (IntegralResult α P) Unit
+      (fun _ => True)
+      (fun input result _ =>
+        CertifiedNormalResult input.source.derivative input.source.numerator input.source.denominator result) :=
+  { stage :=
+      { run := fun _ input =>
+          (C.postprocessNormal input.source.derivative input.normalResult).map fun result => ⟨result, ()⟩
+        domain := fun input =>
+          CertifiedNormalResult input.source.derivative input.source.numerator input.source.denominator
+            input.normalResult
+        sound := by
+          intro _ input result hcertified hrun
+          obtain ⟨out, hout, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          refine ⟨LawfulCMonomialCase.postprocessNormal_sound input.source.derivative
+              input.source.numerator input.source.denominator input.normalResult out hcertified.integral
+              hout,
+            LawfulCMonomialCase.postprocessNormal_den_nonzero input.source.derivative
+              input.normalResult out hcertified.rationalDen_nonzero hout,
+            LawfulGenuineCMonomialCase.postprocessNormal_coefficients_constant input.source.derivative
+              input.normalResult out hcertified.coefficients_constant hout,
+            LawfulGenuineCMonomialCase.postprocessNormal_arguments_nonzero input.source.derivative
+              input.normalResult out hcertified.arguments_nonzero hout⟩
+        complete := by
+          intro input hcertified _
+          obtain ⟨out, hout⟩ := CompleteCMonomialCase.postprocess_complete (C := C) specialDomain
+            input.source.derivative input.source.numerator input.source.denominator input.normalResult
+              hcertified
+          exact ⟨0, ⟨out, ()⟩, by simp [hout]⟩ } }
+
+/-- Compose normal/Hermite reduction and monomial-specific normal postprocessing. -/
+noncomputable def CNormalReduction.asPostprocessedRemainderStage
+    (N : CNormalReduction P α) (normalDomain : NormalReductionDomain P α)
+    [LawfulCNormalReduction N normalDomain] [LawfulGenuineCNormalReduction N normalDomain]
+    [CompleteCNormalReduction N normalDomain]
+    (C : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase C] [LawfulGenuineCMonomialCase C]
+    [CompleteCMonomialCase C specialDomain] :
+    RemainderIntegrationStage (NormalReductionInput P α) (IntegralResult α P) Unit
+      (fun input => IsNormalPartIntegrable input.derivative input.numerator input.denominator)
+      (fun input result _ =>
+        CertifiedNormalResult input.derivative input.numerator input.denominator result) := by
+  let normal := N.asPostprocessHandoffStage normalDomain
+  let postprocess := C.asNormalPostprocessRemainderStage specialDomain
+  let composed :
+      RemainderIntegrationStage (NormalReductionInput P α) (Unit × IntegralResult α P) Unit
+        (fun input => IsNormalPartIntegrable input.derivative input.numerator input.denominator)
+        (fun input output _ =>
+          CertifiedNormalResult input.derivative input.numerator input.denominator output.2) :=
+    normal.compose postprocess
+    (fun input => normalDomain input.derivative input.numerator input.denominator)
+    (fun input => IsNormalPartIntegrable input.derivative input.numerator input.denominator)
+    (by
+      intro input hdomain
+      exact hdomain)
+    (by
+      intro input _ next _ hhandoff
+      rcases hhandoff with ⟨hcertified, hderivative, hnum, hden⟩
+      change CertifiedNormalResult next.source.derivative next.source.numerator
+        next.source.denominator next.normalResult
+      simpa [hderivative, hnum, hden] using hcertified)
+    (by
+      intro input hintegrable
+      exact ⟨hintegrable, fun _ _ _ => True.intro⟩)
+    (by
+      intro input _ next result _ hhandoff hpostprocess
+      rcases hhandoff with ⟨_, hderivative, hnum, hden⟩
+      simpa [hderivative, hnum, hden] using hpostprocess)
+  exact composed.mapOutput Prod.snd (by
+    intro input _ _ hcorrect
+    exact hcorrect)
+
 /-- Denotation-level contract for canonical representation. -/
 class LawfulCCanonicalRepresentation [CCanonicalRepresentation P α] : Prop where
   /-- Canonical decomposition reconstructs the input fraction. -/

@@ -63,6 +63,129 @@ def assembleOneLevel (R : CPolynomialReduction P α) (kind : PolynomialReduction
   let polynomialSpecial := combineSN reduced.antiderivative CPoly.one special
   pure (combineIntegralResults polynomialSpecial normal)
 
+/-- Inputs shared by polynomial reduction and the monomial-special branch of one Risch level. -/
+structure PolynomialSpecialInput (P : Type u → Type u) [CPoly P]
+    (α : Type u) [CField α] [CFieldSpec α] where
+  /-- The requested polynomial normal form. -/
+  kind : PolynomialReductionKind
+  /-- The derivative of the current monomial. -/
+  derivative : P α
+  /-- Polynomial component of the canonical decomposition. -/
+  polynomial : P α
+  /-- Numerator of the special component. -/
+  specialNum : P α
+  /-- Denominator of the special component. -/
+  specialDen : P α
+  /-- The represented special denominator is nonzero. -/
+  specialDen_nonzero : CPoly.toPoly specialDen ≠ 0
+
+/-- Turn a polynomial-special input into the polynomial reducer's input. -/
+def PolynomialSpecialInput.toPolynomialReductionInput (input : PolynomialSpecialInput P α) :
+    PolynomialReductionInput P α :=
+  ⟨input.kind, input.derivative, input.polynomial⟩
+
+/-- Pass a polynomial-reduction remainder to the monomial-special solver. -/
+def PolynomialSpecialInput.toMonomialSpecialInput (input : PolynomialSpecialInput P α)
+    (remainder : P α) : MonomialSpecialInput P α :=
+  ⟨input.derivative, remainder, input.specialNum, input.specialDen, input.specialDen_nonzero⟩
+
+/-- The semantic contract obtained by composing polynomial reduction with special integration. -/
+def IsPolynomialSpecialAssembly (input : PolynomialSpecialInput P α)
+    (antiderivative : P α) (special : IntegralResult α P) : Prop :=
+  ∃ remainder,
+    IsPolynomialReduction input.kind input.derivative input.polynomial ⟨antiderivative, remainder⟩ ∧
+      IsMonomialSpecialResult input.derivative remainder input.specialNum input.specialDen special
+
+/-- A polynomial reduction result packaged as the precisely corresponding special-stage input. -/
+def IsPolynomialSpecialHandoff (input : PolynomialSpecialInput P α)
+    (antiderivative : P α) (next : MonomialSpecialInput P α) : Prop :=
+  IsPolynomialReduction input.kind input.derivative input.polynomial
+      ⟨antiderivative, next.polynomial⟩ ∧
+    next.derivative = input.derivative ∧ next.specialNum = input.specialNum ∧
+      next.specialDen = input.specialDen
+
+/-- Semantic domain for the polynomial-special pipeline, including the reduction-to-special handoff. -/
+def PolynomialSpecialDomain (polynomialDomain : PolynomialReductionDomain P α)
+    (specialDomain : MonomialSpecialDomain P α) (input : PolynomialSpecialInput P α) : Prop :=
+  polynomialDomain input.kind input.derivative input.polynomial ∧
+    ∀ antiderivative remainder,
+      IsPolynomialReduction input.kind input.derivative input.polynomial ⟨antiderivative, remainder⟩ →
+        specialDomain input.derivative remainder input.specialNum input.specialDen
+
+/-- Relative integrability for polynomial reduction followed by monomial-special integration. -/
+def IsPolynomialSpecialIntegrable (input : PolynomialSpecialInput P α) : Prop :=
+  (∃ reduced, IsPolynomialReduction input.kind input.derivative input.polynomial reduced) ∧
+    ∀ antiderivative remainder,
+      IsPolynomialReduction input.kind input.derivative input.polynomial ⟨antiderivative, remainder⟩ →
+        ∃ special,
+          IsMonomialSpecialResult input.derivative remainder input.specialNum input.specialDen special
+
+/-- Export polynomial reduction with its remainder packaged as the next special-stage input. -/
+noncomputable def CPolynomialReduction.asSpecialHandoffStage
+    (C : CPolynomialReduction P α) (domain : PolynomialReductionDomain P α)
+    [LawfulCPolynomialReduction C] [CompleteCPolynomialReduction C domain] :
+    RemainderIntegrationStage (PolynomialSpecialInput P α) (P α) (MonomialSpecialInput P α)
+      (fun input => ∃ out,
+        IsPolynomialReduction input.kind input.derivative input.polynomial out)
+      IsPolynomialSpecialHandoff :=
+  { stage :=
+      { run := fun fuel input =>
+          (C.reduce input.kind input.derivative fuel input.polynomial).map fun out =>
+            ⟨out.antiderivative, input.toMonomialSpecialInput out.remainder⟩
+        domain := fun input => domain input.kind input.derivative input.polynomial
+        sound := by
+          intro fuel input result hdomain hrun
+          obtain ⟨out, hout, rfl⟩ := Option.map_eq_some_iff.mp hrun
+          exact ⟨⟨LawfulCPolynomialReduction.sound input.kind input.derivative fuel input.polynomial
+              out hout,
+              LawfulCPolynomialReduction.normal_form input.kind input.derivative fuel input.polynomial
+                out hout⟩,
+            rfl, rfl, rfl⟩
+        complete := by
+          intro input hdomain hintegrable
+          obtain ⟨fuel, out, hrun, _⟩ := CompleteCPolynomialReduction.relative_complete
+            (C := C) (domain := domain) input.kind input.derivative input.polynomial
+              hdomain hintegrable
+          exact ⟨fuel, ⟨out.antiderivative, input.toMonomialSpecialInput out.remainder⟩,
+            by simp [hrun]⟩ } }
+
+/-- Compose certified polynomial reduction and monomial-special integration through a typed remainder. -/
+noncomputable def CPolynomialReduction.asPolynomialSpecialRemainderStage
+    (C : CPolynomialReduction P α) (polynomialDomain : PolynomialReductionDomain P α)
+    [LawfulCPolynomialReduction C] [CompleteCPolynomialReduction C polynomialDomain]
+    (M : CMonomialCase P α) (specialDomain : MonomialSpecialDomain P α)
+    [LawfulCMonomialCase M] [LawfulGenuineCMonomialCase M]
+    [CompleteCMonomialCase M specialDomain] :
+    RemainderIntegrationStage (PolynomialSpecialInput P α) (P α × IntegralResult α P) Unit
+      IsPolynomialSpecialIntegrable
+      (fun input output _ => IsPolynomialSpecialAssembly input output.1 output.2) := by
+  let reduction := C.asSpecialHandoffStage polynomialDomain
+  let special := M.asRemainderIntegrationStage specialDomain
+  exact reduction.compose special
+    (PolynomialSpecialDomain polynomialDomain specialDomain)
+    IsPolynomialSpecialIntegrable
+    (by
+      intro input hdomain
+      exact hdomain.1)
+    (by
+      intro input antiderivative next hdomain hcorrect
+      rcases hcorrect with ⟨hreduction, hderivative, hnum, hden⟩
+      change specialDomain next.derivative next.polynomial next.specialNum next.specialDen
+      simpa [hderivative, hnum, hden] using
+        hdomain.2 antiderivative next.polynomial hreduction)
+    (by
+      intro input hintegrable
+      refine ⟨hintegrable.1, ?_⟩
+      intro antiderivative next hcorrect
+      rcases hcorrect with ⟨hreduction, hderivative, hnum, hden⟩
+      simpa [hderivative, hnum, hden] using
+        hintegrable.2 antiderivative next.polynomial hreduction)
+    (by
+      intro input antiderivative next specialResult _ hreduction hspecial
+      rcases hreduction with ⟨hpoly, hderivative, hnum, hden⟩
+      refine ⟨next.polynomial, hpoly, ?_⟩
+      simpa [hderivative, hnum, hden] using hspecial)
+
 /-- Explicit stage-decomposed hypotheses under which contract-based one-level assembly is complete. -/
 structure OneLevelAssemblyWitness (R : CPolynomialReduction P α)
     (kind : PolynomialReductionKind) (polynomialDomain : PolynomialReductionDomain P α)
