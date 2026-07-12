@@ -263,4 +263,27 @@ theorem denseTangentTower_complete (C : DenseTangentTowerCapabilities) (n : ℕ)
     ∃ fuel res, (denseTangentTower C n).integrate fuel Dt a d = some res := by
   exact denseTangentLevel_complete (denseTangentTowerCapabilities C n) Dt a d hdomain hden hintegrable
 
+/-- **Hypertangent sound-and-complete at every tower depth `n`.** Over `DenseFracTower n`, the
+recursively-selected hypertangent Risch level is a sound-and-complete decision procedure: a successful
+run yields a genuine integral result with genuine logarithmic terms (soundness, on the sound domain),
+and every genuinely integrable input succeeds (completeness, on the level domain). The whole-tower §5.10
+analogue of `hyperexpRischLevel_succeeds_iff_integrable_tower`, assembled from `denseTangentTower_sound`
+/`_logs_genuine`/`_complete`. Soundness and completeness carry their respective domain hypotheses
+(the two directions use the sound vs. level domain, as at the primitive capstone). -/
+theorem denseTangentTower_soundAndComplete (C : DenseTangentTowerCapabilities) (n : ℕ)
+    [CFracGcdCoreWf (DenseFracTower n)]
+    (Dt a d : DensePoly (DenseFracTower n)) (hden : CPoly.toPoly d ≠ 0) :
+    (∀ fuel res, (denseTangentTower C n).integrate fuel Dt a d = some res →
+        oneLevelRischSoundDomain tangentNormalDomain Dt a d →
+        IsIntegralResultP Dt a d res ∧
+          (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+          (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0)) ∧
+      (denseTangentLevelDomain (denseTangentTowerCapabilities C n) Dt a d →
+        IsRischLevelIntegrable Dt a d →
+        ∃ fuel res, (denseTangentTower C n).integrate fuel Dt a d = some res) :=
+  ⟨fun fuel res hrun hdomain =>
+      ⟨denseTangentTower_sound C n fuel Dt a d res hdomain hden hrun,
+        denseTangentTower_logs_genuine C n fuel Dt a d res hdomain hden hrun⟩,
+    fun hdomain hintegrable => denseTangentTower_complete C n Dt a d hdomain hden hintegrable⟩
+
 end DeepWiki.SymbolicIntegration
