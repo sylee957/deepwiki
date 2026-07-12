@@ -9,7 +9,7 @@ global coefficient derivative.
 
 namespace DeepWiki.SymbolicIntegration
 
-open CFrac Polynomial
+open CFrac Polynomial DynamicPolynomialReduction
 
 universe u
 
@@ -24,6 +24,20 @@ theorem differentialLogResidueSum_append
     differentialLogResidueSum C Dt (left ++ right) =
       differentialLogResidueSum C Dt left + differentialLogResidueSum C Dt right := by
   simp only [differentialLogResidueSum, List.map_append, List.sum_append]
+
+omit [LawfulCPolyEngine P] in
+/-- An explicit polynomial-reduction certificate yields its rational antiderivative identity. -/
+theorem differentialPolynomialReduction_antiderivative_sound
+    (C : MonomialDifferentialContext (P := P) α) (kind : PolynomialReductionKind) (Dt p q r : P α)
+    (hreduce : IsDifferentialPolynomialReduction (P := P) (α := α)
+      C.differential kind Dt p ⟨q, r⟩) :
+    C.fractionDeriv Dt (fieldFracP q CPoly.one) =
+      fieldFracP p CPoly.one - fieldFracP r CPoly.one := by
+  simp only [fieldFracP, CPoly.toPoly_one, map_one, div_one]
+  rw [MonomialDifferentialContext.fractionDeriv_algebraMap]
+  have hmap := congrArg (am α) hreduce.1
+  rw [map_add] at hmap
+  exact eq_sub_iff_add_eq.mpr hmap.symm
 
 /-- Adding a rational term to an explicit integral result adds their selected differential values. -/
 theorem differentialCombineSN_value

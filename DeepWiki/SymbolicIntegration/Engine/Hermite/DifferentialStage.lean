@@ -79,6 +79,20 @@ noncomputable def fractionDeriv {P : Type u → Type u} [CPoly P] [CPolyEngine P
       exact C.algebraQ
     exact extendDeriv (Differential.implicitDeriv (CPoly.toPoly Dt))
 
+/-- The selected function-field derivation acts on embedded polynomials by `implicitDeriv`. -/
+theorem fractionDeriv_algebraMap {P : Type u → Type u} [CPoly P] [CPolyEngine P]
+    {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+    (C : MonomialDifferentialContext (P := P) α) (Dt : P α) (p : (CFieldSpec.K α)[X]) :
+    letI : Differential (CRingSpec.R α) := C.differential
+    C.fractionDeriv Dt (am α p) =
+      am α (Differential.implicitDeriv (CPoly.toPoly Dt) p) := by
+  letI : Differential (CRingSpec.R α) := C.differential
+  letI : Algebra ℚ (CRingSpec.R α) := by
+    change Algebra ℚ (CFieldSpec.K α)
+    exact C.algebraQ
+  rw [fractionDeriv]
+  exact extendDeriv_algebraMap _ _
+
 end MonomialDifferentialContext
 
 /-- A Hermite operation selected for one explicit coefficient derivation. -/
