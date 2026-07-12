@@ -113,4 +113,41 @@ noncomputable abbrev exponentialOneStepContext :=
 noncomputable abbrev tangentOneStepContext :=
   DifferentialTowerPresentation.tangentOneStep.context 1 (Nat.le_refl 1)
 
+/-- Build a certified height-one tower scheme from its base and selected top level. -/
+noncomputable def oneStepScheme (T : DifferentialTowerPresentation 1)
+    (base : DifferentialTranscendentalLevel T 0 (Nat.zero_le 1))
+    (top : DifferentialTranscendentalLevel T 1 (Nat.le_refl 1)) :
+    DifferentialTranscendentalTowerScheme T where
+  base := base
+  step
+    | 0, _ => fun _ => top
+    | n + 1, hn => False.elim (by omega)
+
+/-- A finite certified primitive one-step tower scheme. -/
+noncomputable def primitiveOneStepScheme
+    (base : DifferentialTranscendentalLevel DifferentialTowerPresentation.primitiveOneStep 0
+      (Nat.zero_le 1))
+    (top : DifferentialTranscendentalLevel DifferentialTowerPresentation.primitiveOneStep 1
+      (Nat.le_refl 1)) :
+    DifferentialTranscendentalTowerScheme DifferentialTowerPresentation.primitiveOneStep :=
+  oneStepScheme DifferentialTowerPresentation.primitiveOneStep base top
+
+/-- A finite certified exponential one-step tower scheme. -/
+noncomputable def exponentialOneStepScheme
+    (base : DifferentialTranscendentalLevel DifferentialTowerPresentation.exponentialOneStep 0
+      (Nat.zero_le 1))
+    (top : DifferentialTranscendentalLevel DifferentialTowerPresentation.exponentialOneStep 1
+      (Nat.le_refl 1)) :
+    DifferentialTranscendentalTowerScheme DifferentialTowerPresentation.exponentialOneStep :=
+  oneStepScheme DifferentialTowerPresentation.exponentialOneStep base top
+
+/-- A finite certified tangent one-step tower scheme. -/
+noncomputable def tangentOneStepScheme
+    (base : DifferentialTranscendentalLevel DifferentialTowerPresentation.tangentOneStep 0
+      (Nat.zero_le 1))
+    (top : DifferentialTranscendentalLevel DifferentialTowerPresentation.tangentOneStep 1
+      (Nat.le_refl 1)) :
+    DifferentialTranscendentalTowerScheme DifferentialTowerPresentation.tangentOneStep :=
+  oneStepScheme DifferentialTowerPresentation.tangentOneStep base top
+
 end DeepWiki.SymbolicIntegration
