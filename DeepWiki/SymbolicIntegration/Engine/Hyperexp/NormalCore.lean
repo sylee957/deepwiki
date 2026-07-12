@@ -2,9 +2,9 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.LaurentCore
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Eta
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
-/-! # Core hyperexponential normal-part driver
+/-! # Hyperexponential residual-feedback kernel
 
-The residual-feedback hyperexponential normal integration driver.
+The representation-independent correction of a residue-logarithm normal result.
 -/
 
 open Polynomial
@@ -47,23 +47,6 @@ example :
     let red : IntegralResult ℚ CPoly.SparsePoly := ⟨(ofList [1], ofList [1]), []⟩
     (cCorrectHyperexpNormal (0 : ℚ) red).isSome = true := by
   native_decide
-
-variable {α : Type*} [CField α] [CDiffField α]
-  [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α]
-  [CPolyResultant DensePoly] [CRischField α]
-
-/-! ### The normal-part integrator `∫ fₙ = logPart − ∫R`
-
-`cIntegrateHyperexpNormal` runs the reduced integrator, reads the residual `R`, integrates `∫R` over the
-base, and subtracts it. -/
-
-/-- Hyperexponential normal-part integral `cIntegrateHyperexpNormal Dt a d cands`: run
-`cIntegrateReduced`, read `R = η·∑ᵢ cᵢ`, integrate `∫R` by `crischDESolve 0 R`, and subtract it from the
-rational part (same logs); `none` if `∫R` is non-elementary. -/
-def cIntegrateHyperexpNormal (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) :
-    Option (IntegralResult α) :=
-  let red := cIntegrateReduced Dt a d cands
-  cCorrectHyperexpNormal (cExpEta Dt) red
 
 end DensePoly
 

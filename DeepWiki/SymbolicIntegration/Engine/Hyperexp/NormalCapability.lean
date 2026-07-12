@@ -19,11 +19,12 @@ variable {α : Type u} [CField α] [CDiffField α] [CRischField α]
   [CPolyGcd DensePoly α] [CPolySquarefree DensePoly α]
   [CPolyResultant DensePoly] [CResidueSource DensePoly α]
 
-/-- Raw residual-feedback integration of a hyperexponential normal fraction. -/
-def hyperexpNormalReduction : CNormalReduction DensePoly α where
+/-- Raw residual-feedback normal reduction, kept behind the selected checked capability. -/
+private def hyperexpNormalReduction : CNormalReduction DensePoly α where
   reduce Dt a d :=
-    cIntegrateHyperexpNormal Dt a d
+    let red := cIntegrateReduced Dt a d
       (CResidueSource.candidates (cResidueResultantTower Dt a d))
+    cCorrectHyperexpNormal (cExpEta Dt) red
 
 end DensePoly
 
@@ -40,6 +41,10 @@ def hyperexpCheckedNormalReduction : CNormalReduction DensePoly α where
 abbrev hyperexpCheckedNormalDomain : NormalReductionDomain DensePoly α :=
   checkedNormalReductionDomain
 
+/-- Exact raw-acceptance domain of the selected checked hyperexponential normal stage. -/
+def hyperexpCheckedNormalAcceptanceDomain : NormalReductionDomain DensePoly α :=
+  checkedNormalReductionAcceptanceDomain (DensePoly.hyperexpNormalReduction (α := α))
+
 /-- The checked residual-feedback normal operation satisfies the normal-reduction soundness contract. -/
 instance instLawfulCNormalReductionHyperexpChecked :
     LawfulCNormalReduction (hyperexpCheckedNormalReduction (α := α))
@@ -50,17 +55,15 @@ instance instLawfulCNormalReductionHyperexpChecked :
 /-- The checked hyperexponential normal stage is lawful on its explicit raw-acceptance domain. -/
 instance instLawfulCNormalReductionHyperexpCheckedAcceptance :
     LawfulCNormalReduction (hyperexpCheckedNormalReduction (α := α))
-      (checkedNormalReductionAcceptanceDomain
-        (DensePoly.hyperexpNormalReduction (α := α))) := by
-  unfold hyperexpCheckedNormalReduction
+      (hyperexpCheckedNormalAcceptanceDomain (α := α)) := by
+  unfold hyperexpCheckedNormalReduction hyperexpCheckedNormalAcceptanceDomain
   infer_instance
 
 /-- The checked hyperexponential normal stage is complete on its explicit raw-acceptance domain. -/
 instance instCompleteCNormalReductionHyperexpChecked :
     CompleteCNormalReduction (hyperexpCheckedNormalReduction (α := α))
-      (checkedNormalReductionAcceptanceDomain
-        (DensePoly.hyperexpNormalReduction (α := α))) := by
-  unfold hyperexpCheckedNormalReduction
+      (hyperexpCheckedNormalAcceptanceDomain (α := α)) := by
+  unfold hyperexpCheckedNormalReduction hyperexpCheckedNormalAcceptanceDomain
   infer_instance
 
 end DeepWiki.SymbolicIntegration

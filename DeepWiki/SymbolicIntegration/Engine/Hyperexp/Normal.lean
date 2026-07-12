@@ -1,11 +1,11 @@
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Special
-import DeepWiki.SymbolicIntegration.Engine.Hyperexp.NormalCore
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.NormalCapability
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp.ExampleData
 
 /-! # The hyperexponential normal part via residual feedback
 
-Worked examples of the residual-feedback hyperexponential normal integrator
-`cIntegrateHyperexpNormal`, e.g. `∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
+Worked examples of the checked residual-feedback hyperexponential normal capability,
+e.g. `∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
 
 open Polynomial
 
@@ -18,6 +18,10 @@ Over `ℚ(x)[t]` (`t = exp x`, `Dt = η·t`, `η = 1`), `f = 1/(t−1)` has log 
 `R = 1`; the feedback subtracts `∫R = x`. -/
 
 open DensePoly
+
+/-- The finite candidate source used by the checked normal-stage examples. -/
+@[reducible] private def normalExampleResidueSource : CResidueSource DensePoly Lvl1 :=
+  boundedRationalResidueSource 1
 
 /-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `DensePoly Lvl1 = ℚ(x)[t]` (`t = exp x`,
 `η = 1`). -/
@@ -55,17 +59,18 @@ theorem nNormInv_reduced_overshoots :
       (cIntegrateReduced nHyperexpDt nNormInvA nNormInvD nNormInvCands)
       nNormInvA nNormInvD = false := by native_decide
 
-/-- The residual-feedback driver lands `∫ 1/(exp x − 1) = log(exp x − 1) − x` with `D(∫f) = f`:
-`cIntegrateHyperexpNormal` returns `some res` satisfying `checkIdentity`. -/
+/-- The checked normal stage lands `∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
 theorem nNormInv_landsNormalPart :
-    (match DensePoly.cIntegrateHyperexpNormal nHyperexpDt nNormInvA nNormInvD nNormInvCands with
+    letI : CResidueSource DensePoly Lvl1 := normalExampleResidueSource
+    (match (hyperexpCheckedNormalReduction (α := Lvl1)).reduce nHyperexpDt nNormInvA nNormInvD with
       | some res => CPoly.checkIdentity nHyperexpDt res nNormInvA nNormInvD
       | none => false) = true := by native_decide
 
 /-- The driver's result on `f = 1/(exp x − 1)` is exactly `log(t−1) − x`: rational part `−x` and a single
 log with argument `t − 1`. Pins the shape, not just the derivative identity. -/
 theorem nNormInv_result_is_logTMinus1_minus_x :
-    (match DensePoly.cIntegrateHyperexpNormal nHyperexpDt nNormInvA nNormInvD nNormInvCands with
+    letI : CResidueSource DensePoly Lvl1 := normalExampleResidueSource
+    (match (hyperexpCheckedNormalReduction (α := Lvl1)).reduce nHyperexpDt nNormInvA nNormInvD with
       | some res =>
         DensePoly.cisZero (DensePoly.csub res.rational.1 [CCommRing.neg nLvl1X])
           && res.logs.length == 1
@@ -131,11 +136,10 @@ theorem nVarNorm_baseIntegral_eq_xSq :
       | some y => CCommRing.isZero (CField.sub y nLvl1XSq)
       | none => false) = true := by native_decide
 
-/-- The driver lands `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²` with `D(∫f) = f`:
-`cIntegrateHyperexpNormal` reads the non-constant residual `R = 2x`, integrates `∫R = x²`, and returns
-`log(t−1) − x²` (rational part `−x²`, one log) satisfying `checkIdentity`. -/
+/-- The checked normal stage lands `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²`. -/
 theorem nVarNorm_landsNormalPart :
-    (match DensePoly.cIntegrateHyperexpNormal nVarDt nVarNormA nVarNormD nVarNormCands with
+    letI : CResidueSource DensePoly Lvl1 := normalExampleResidueSource
+    (match (hyperexpCheckedNormalReduction (α := Lvl1)).reduce nVarDt nVarNormA nVarNormD with
       | some res =>
         CPoly.checkIdentity nVarDt res nVarNormA nVarNormD
           && DensePoly.cisZero (DensePoly.csub res.rational.1 [CCommRing.neg nLvl1XSq])

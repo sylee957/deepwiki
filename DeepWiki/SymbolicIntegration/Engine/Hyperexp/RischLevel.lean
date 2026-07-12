@@ -40,8 +40,7 @@ def hyperexpRischLevelCompleteDomain (R : CPolynomialReduction DensePoly α)
     (polynomialDomain : PolynomialReductionDomain DensePoly α)
     [CCanonicalRepresentation DensePoly α] : RischLevelDomain DensePoly α :=
   oneLevelRischCompleteDomain R kind polynomialDomain
-    (checkedNormalReductionAcceptanceDomain
-      (DensePoly.hyperexpNormalReduction (α := α)))
+    (hyperexpCheckedNormalAcceptanceDomain (α := α))
     (hyperexpCheckedSpecialDomain (α := α))
 
 /-- The checked hyperexponential level is lawful on its explicit stage-acceptance domain. -/
@@ -66,8 +65,7 @@ instance instCompleteCRischLevelHyperexp (R : CPolynomialReduction DensePoly α)
       (hyperexpRischLevelCompleteDomain R kind polynomialDomain) := by
   exact completeCRischLevel R kind polynomialDomain
     (hyperexpCheckedNormalReduction (α := α))
-    (checkedNormalReductionAcceptanceDomain
-      (DensePoly.hyperexpNormalReduction (α := α)))
+    (hyperexpCheckedNormalAcceptanceDomain (α := α))
     (DensePoly.hyperexpCheckedCase (α := α))
     (hyperexpCheckedSpecialDomain (α := α))
 
