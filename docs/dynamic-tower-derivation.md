@@ -112,7 +112,9 @@ certified adapter from the static dense implementation to the common presentatio
 It is intentionally restricted to the all-primitive presentation: the inherited carrier derivative
 is `t' = 1`, so exporting it as exponential or tangent would be unsound. Sparse stages remain
 certified adapters at the representation-independent stage boundary and must not become a second
-tower orchestration path.
+tower orchestration path. `DenseRischTowerScheme.asPrimitivePresentationTowerScheme` lifts a finite
+static dense prefix through that same boundary; it is an explicit compatibility migration path, not
+a replacement for bridge-aware mixed-tower recursion.
 
 1. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.

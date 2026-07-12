@@ -300,40 +300,6 @@ def ofStage (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N)
     DifferentialTranscendentalLevel T n hn :=
   ⟨Integrable, stage⟩
 
-/-- View a certified dense static Risch stage as an adapter to the all-primitive presentation.
-
-This is deliberately limited to `DifferentialTowerPresentation.primitive`: a static
-`DenseFracTower` stage uses the carrier's inherited unit-monomial coefficient derivative. -/
-noncomputable def DenseRischStage.asPrimitivePresentationLevel
-    (S : DenseRischStage n) (N : ℕ) (hn : n ≤ N) :
-    DifferentialTranscendentalLevel (DifferentialTowerPresentation.primitive N) n hn := by
-  refine ofStage (DifferentialTowerPresentation.primitive N) n hn
-    (fun input => IsRischLevelIntegrable input.Dt input.num input.den) ?_
-  let legacy := S.asRemainderIntegrationStage
-  refine { stage := ?_ }
-  refine
-    { run := fun fuel input =>
-        (legacy.stage.run fuel input).map fun result => ⟨result.output, ((), ())⟩
-      domain := legacy.stage.domain
-      sound := ?_
-      complete := ?_ }
-  · intro fuel input result hdomain hrun
-    obtain ⟨output, houtput, rfl⟩ := Option.map_eq_some_iff.mp hrun
-    obtain ⟨hintegral, hconstants, harguments⟩ :=
-      legacy.sound fuel input output hdomain houtput
-    change IsGenuineDifferentialOneLevelResult
-      (MonomialDifferentialContext.ofCDiffField (P := DensePoly) (α := DenseFracTower n))
-      input.toOneLevelInput output.output
-    refine ⟨(isDifferentialIntegralResultP_ofCDiffField_iff input.Dt input.num input.den output.output).mpr
-      hintegral, ?_, harguments⟩
-    intro cv hcv
-    change @Differential.deriv _ _ CDiffFieldSpec.diffK (CFieldSpec.toK cv.1) = 0
-    rw [← CDiffFieldSpec.toK_cderiv]
-    exact hconstants cv hcv
-  · intro input hdomain hintegrable
-    obtain ⟨fuel, output, hrun⟩ := legacy.complete input hdomain hintegrable
-    exact ⟨fuel, ⟨output.output, ((), ())⟩, by simp [hrun]⟩
-
 /-- Build a certified tower level by installing the five explicit one-level capabilities. -/
 noncomputable def ofCapabilities (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N)
     (K : DifferentialOneLevelCapabilities (T.context n hn)) (kind : PolynomialReductionKind) :
@@ -380,6 +346,40 @@ theorem complete (L : DifferentialTranscendentalLevel T n hn)
 
 end DifferentialTranscendentalLevel
 
+/-- View a certified dense static Risch stage as an adapter to the all-primitive presentation.
+
+This is deliberately limited to `DifferentialTowerPresentation.primitive`: a static
+`DenseFracTower` stage uses the carrier's inherited unit-monomial coefficient derivative. -/
+noncomputable def DenseRischStage.asPrimitivePresentationLevel
+    (S : DenseRischStage n) (N : ℕ) (hn : n ≤ N) :
+    DifferentialTranscendentalLevel (DifferentialTowerPresentation.primitive N) n hn := by
+  refine DifferentialTranscendentalLevel.ofStage (DifferentialTowerPresentation.primitive N) n hn
+    (fun input => IsRischLevelIntegrable input.Dt input.num input.den) ?_
+  let legacy := S.asRemainderIntegrationStage
+  refine { stage := ?_ }
+  refine
+    { run := fun fuel input =>
+        (legacy.stage.run fuel input).map fun result => ⟨result.output, ((), ())⟩
+      domain := legacy.stage.domain
+      sound := ?_
+      complete := ?_ }
+  · intro fuel input result hdomain hrun
+    obtain ⟨output, houtput, rfl⟩ := Option.map_eq_some_iff.mp hrun
+    obtain ⟨hintegral, hconstants, harguments⟩ :=
+      legacy.sound fuel input output hdomain houtput
+    change IsGenuineDifferentialOneLevelResult
+      (MonomialDifferentialContext.ofCDiffField (P := DensePoly) (α := DenseFracTower n))
+      input.toOneLevelInput output.output
+    refine ⟨(isDifferentialIntegralResultP_ofCDiffField_iff input.Dt input.num input.den output.output).mpr
+      hintegral, ?_, harguments⟩
+    intro cv hcv
+    change @Differential.deriv _ _ CDiffFieldSpec.diffK (CFieldSpec.toK cv.1) = 0
+    rw [← CDiffFieldSpec.toK_cderiv]
+    exact hconstants cv hcv
+  · intro input hdomain hintegrable
+    obtain ⟨fuel, output, hrun⟩ := legacy.complete input hdomain hintegrable
+    exact ⟨fuel, ⟨output.output, ((), ())⟩, by simp [hrun]⟩
+
 /-- A finite presentation-indexed tower builds every successor from the complete lower level. -/
 structure DifferentialTranscendentalTowerScheme (T : DifferentialTowerPresentation N) where
   /-- Certified base level. -/
@@ -420,6 +420,17 @@ theorem stage_complete {N : ℕ} {T : DifferentialTowerPresentation N}
   (S.level n hn).complete input hdomain hintegrable
 
 end DifferentialTranscendentalTowerScheme
+
+/-- Adapt a finite prefix of a static dense Risch tower to the all-primitive presentation.
+
+The static scheme chooses each dense implementation independently, so its predecessor argument is
+intentionally ignored here. It is a compatibility migration path only; mixed towers must instead
+use `DifferentialCoefficientTowerScheme` and its explicit successor bridge. -/
+noncomputable def DenseRischTowerScheme.asPrimitivePresentationTowerScheme
+    (S : DenseRischTowerScheme) (N : ℕ) :
+    DifferentialTranscendentalTowerScheme (DifferentialTowerPresentation.primitive N) where
+  base := (S.stage 0).asPrimitivePresentationLevel N (Nat.zero_le N)
+  step n hn _ := (S.stage (n + 1)).asPrimitivePresentationLevel N hn
 
 /-- The selected context for a primitive one-step presentation. -/
 noncomputable abbrev primitiveOneStepContext :=
