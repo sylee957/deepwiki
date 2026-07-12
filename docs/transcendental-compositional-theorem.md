@@ -194,19 +194,19 @@ contracts by finite recursion. The existing concrete constructors still do
 alternations from the preceding result alone:
 ordinary hyperexponential/tangent recursion lifts lower `IntegralResult` logs
 through `CRecursiveElementaryIntegrator`, whereas the primitive LRT recursion
-intentionally consumes only a log-free rational lower antiderivative. A fully
-heterogeneous construction requires an algebraic-coefficient log language and
-a transport theorem through the requisite algebraic constant extension. Until
-that interface exists, do not describe the selector as proving recursive
-interoperation for every arbitrary primitive/hyperexponential/tangent order.
+intentionally consumes only a log-free rational lower antiderivative.
+`TowerLog` now supplies the heterogeneous depth-indexed language and its
+evaluation transport. Do not yet describe the selector as proving recursive
+interoperation for every arbitrary primitive/hyperexponential/tangent order:
+the tangent and hyperexponential reconstruction executables still need to
+consume that carrier directly.
 The dependency-ordered implementation plan is
 `docs/algebraic-coefficient-transport.md`.
-`Tower/AlgebraicCoefficient.lean` now gives the shared algebraically closed
-semantics, an ordinary recursive-coefficient stage adapter, and the common
-stage contract; `Tower/AlgebraicCoefficientLrt.lean` adapts genuine primitive
-LRT stages while preserving root-free residue-log evidence. What remains is
-to make tangent and hyperexponential reconstruction consume this common
-coefficient-stage output instead of the ordinary-only `CoefficientIntegralResult`.
+The superseded `AlgebraicCoefficient*` bridge modules were retired after a
+caller audit. `Tower/LogTower.lean` is the common syntax, genuine-log, and
+semantic boundary; what remains is to make tangent and hyperexponential
+reconstruction consume it instead of the ordinary-only
+`CoefficientIntegralResult`.
 
 Gate: tower aggregators and a full serial `scripts/check.sh`.
 

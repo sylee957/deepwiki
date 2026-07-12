@@ -19,40 +19,16 @@ encoded as `List (α × α)` without choosing roots or extending `α`. The curre
 primitive recursion therefore correctly requests only a log-free rational
 lower antiderivative.
 
-`Tower/AlgebraicCoefficient.lean` now supplies the complete semantic boundary:
-`AlgebraicCoefficientLog` has separate ordinary and root-free LRT
-constructors, `AlgebraicCoefficientIntegralResult` stores their common list,
-and `IsAlgebraicCoefficientIntegralResult` interprets it over every
-same-universe algebraically closed differential extension. The ordinary and
-LRT embeddings preserve the derivative identity as well as their respective
-genuine-log certificates. The next step is to make this result language the
-output of coefficient recursion rather than only an embedding target.
-
-The tangent reconstruction audit adds one necessary distinction for phase 4:
-`AlgebraicCoefficientLog` describes a **lower** unit-monomial antiderivative,
-whose derivative is in the coefficient field. It is not a replacement for an
-upper `IntegralResult.logs` entry, whose argument is differentiated by the
-current monomial `Dt`. The full-result carrier therefore retains three
-separate layers: local ordinary `(coefficient, polynomial-argument)` logs,
-local root-free LRT families, and inherited algebraic coefficient logs. It
-combines their denotations only at the reconstruction theorem.
+An earlier `AlgebraicCoefficientLog` bridge duplicated this purpose with a
+separate coefficient-result carrier. It was retired after caller audit:
+`TowerLog` is the sole heterogeneous-log syntax. A local ordinary or LRT node
+records the monomial derivative that created it, and `TowerLog.inherited`
+retains a lower node without reinterpreting it as an upper
+`IntegralResult.logs` entry.
 
 ## Phases
 
-1. **Done.** Define an algebraic coefficient-log language, with ordinary log terms and
-   root-free LRT residue-log families as distinct constructors. Give it a
-   semantic interpretation over an algebraically closed differential extension
-   and genuine-log validity predicates.
-2. **Done.** Define an algebraic coefficient-integral result: a rational coefficient
-   part plus that language. Prove embeddings from `CoefficientIntegralResult`
-   and `LrtResult`, preserving derivative identities and genuine logs.
-3. **Done.** Generalize the recursive coefficient interface and its checked adapter to
-   this result language. The representation-independent `IntegrationStage`
-   contract now lives in `Tower/Stage`, and the ordinary recursive adapter
-   embeds through `CRecursiveElementaryIntegrator.asAlgebraicCoefficientStage`.
-   `DenseLrtStage.asAlgebraicCoefficientStage` supplies the primitive adapter
-   from its genuine stage theorem while retaining the root-free residue guard.
-4. **In progress.** `Tower/LogTower.lean` is the single full-result carrier:
+1. **In progress.** `Tower/LogTower.lean` is the single full-result carrier:
    `TowerIntegralResult` and `IsTowerIntegralResult` are now the output and
    semantic invariant of primitive, hyperexponential, and tangent selected
    stages. The obsolete one-level `TranscendentalResult` carrier has been
@@ -84,7 +60,7 @@ combines their denotations only at the reconstruction theorem.
    `denseFracTower_K_succ` and `denseFracTowerKStep` expose the required
    `Kₙ₊₁ = RatFunc Kₙ` field equality and canonical inclusion across the
    packaged carrier boundary.
-5. Make the concrete tangent and hyperexponential successor constructors consume
+2. Make the concrete tangent and hyperexponential successor constructors consume
    the complete lower `LayeredTranscendentalLevel` that
    `LayeredTranscendentalTowerScheme` now supplies. Their lower adapter must
    transport heterogeneous coefficient logs, then finite-tower soundness and
@@ -95,15 +71,15 @@ combines their denotations only at the reconstruction theorem.
    reconstructions must discharge those hypotheses from their coefficient
    integrability witnesses; they must not treat this wrapper as unconditional
    recursive success.
-6. The old native-result `TranscendentalTowerScheme` has been retired after a
+3. The old native-result `TranscendentalTowerScheme` has been retired after a
    source and reverse-dependency audit; audit the remaining selected-stage
    constructors once the heterogeneous successor constructor is in place. Dense and sparse remain
    conversion adapters; neither gains an independent assembler.
 
 ## Gates
 
-Gate each phase serially: the coefficient-language module, its ordinary and
-LRT embeddings, tangent/hyperexponential assemblies, `Tower/Transcendental`,
-then the full `scripts/check.sh` gate. Before deleting a wrapper, run
+Gate each phase serially: the recursive log carrier, tangent/hyperexponential
+assemblies, `Tower/Transcendental`, then the full `scripts/check.sh` gate.
+Before deleting a wrapper, run
 `scripts/wiki rdeps` and confirm current-source callers with `rg` when the
 graph is stale.
