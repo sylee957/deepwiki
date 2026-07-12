@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentPolynomial
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentSpecial
 import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
@@ -20,16 +21,6 @@ structure DenseTangentLevelLeaves (n : ℕ) where
   /-- Denotational contract for the selected canonical decomposition. -/
   lawfulCanonical : let _ : CCanonicalRepresentation DensePoly (DenseFracTower n) := canonical
     LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n)
-  /-- Polynomial-reduction stage selected at this depth. -/
-  polynomial : CPolynomialReduction DensePoly (DenseFracTower n)
-  /-- Monomial kind consumed by the selected polynomial reduction. -/
-  kind : PolynomialReductionKind
-  /-- Relative-completeness domain of the polynomial stage. -/
-  polynomialDomain : PolynomialReductionDomain DensePoly (DenseFracTower n)
-  /-- Denotational soundness of the selected polynomial stage. -/
-  lawfulPolynomial : LawfulCPolynomialReduction polynomial
-  /-- Relative completeness of the selected polynomial stage. -/
-  completePolynomial : CompleteCPolynomialReduction polynomial polynomialDomain
   /-- Candidate normal reducer, certified by the tangent-level checker. -/
   normal : CNormalReduction DensePoly (DenseFracTower n)
   /-- Coupled coefficient-system solver for the tangent case. -/
@@ -44,14 +35,36 @@ structure DenseTangentLevelCapabilities (n : ℕ) extends DenseTangentLevelLeave
 noncomputable def denseTangentLevel (C : DenseTangentLevelCapabilities n) :
     CRischLevel DensePoly (DenseFracTower n) := by
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
-  exact recursiveTangentRischLevel C.polynomial C.kind C.normal C.coupled C.coefficient
+  exact recursiveTangentRischLevel DensePoly.towerPolynomialReduction .nonlinear C.normal C.coupled
+    C.coefficient
 
 /-- The exact composition domain for a selected recursive tangent level. -/
 noncomputable def denseTangentLevelDomain (C : DenseTangentLevelCapabilities n) :
     RischLevelDomain DensePoly (DenseFracTower n) := by
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
-  exact recursiveTangentRischLevelCompleteDomain C.polynomial C.kind C.polynomialDomain C.normal
-    C.coupled C.coefficient
+  exact recursiveTangentRischLevelCompleteDomain DensePoly.towerPolynomialReduction .nonlinear
+    DensePoly.nonlinearPolynomialReductionDomain C.normal C.coupled C.coefficient
+
+/-- The canonical decomposition selected by a dense tangent capability. -/
+noncomputable def denseTangentCanonicalResult (C : DenseTangentLevelCapabilities n)
+    (Dt a d : DensePoly (DenseFracTower n)) : CanonicalRepresentationResult DensePoly
+      (DenseFracTower n) := by
+  letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
+  exact canonicalResult Dt a d
+
+/-- A tangent monomial puts the dense canonical polynomial branch in the selected nonlinear domain. -/
+theorem denseTangentLevel_canonicalPolynomial_domain (C : DenseTangentLevelCapabilities n)
+    {Dt a d : DensePoly (DenseFracTower n)} (h : IsTangentMonomial Dt) :
+    DensePoly.nonlinearPolynomialReductionDomain .nonlinear Dt
+      (denseTangentCanonicalResult C Dt a d).polynomial :=
+  h.nonlinearPolynomialReductionDomain
+
+/-- A tangent monomial gives the dense canonical polynomial branch a nonlinear normal form. -/
+theorem denseTangentLevel_canonicalPolynomial_reduction_exists (C : DenseTangentLevelCapabilities n)
+    {Dt a d : DensePoly (DenseFracTower n)} (h : IsTangentMonomial Dt) :
+    ∃ out : PolynomialReductionResult DensePoly (DenseFracTower n),
+      IsPolynomialReduction .nonlinear Dt (denseTangentCanonicalResult C Dt a d).polynomial out :=
+  h.nonlinearReduction_exists
 
 /-- A selected dense tangent level is sound solely from its lawful stage contracts. -/
 theorem denseTangentLevel_sound (C : DenseTangentLevelCapabilities n) (fuel : ℕ)
@@ -62,10 +75,9 @@ theorem denseTangentLevel_sound (C : DenseTangentLevelCapabilities n) (fuel : �
     IsIntegralResultP Dt a d res := by
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
   letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) := C.lawfulCanonical
-  letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
   unfold denseTangentLevel at hrun
-  exact (instLawfulCRischLevelRecursiveTangent C.polynomial C.kind C.normal C.coupled C.coefficient).sound
-    fuel Dt a d res hdomain hden hrun
+  exact (instLawfulCRischLevelRecursiveTangent DensePoly.towerPolynomialReduction .nonlinear
+    C.normal C.coupled C.coefficient).sound fuel Dt a d res hdomain hden hrun
 
 /-- Every successful selected dense tangent level returns genuine elementary logarithmic terms. -/
 theorem denseTangentLevel_logs_genuine (C : DenseTangentLevelCapabilities n) (fuel : ℕ)
@@ -78,14 +90,13 @@ theorem denseTangentLevel_logs_genuine (C : DenseTangentLevelCapabilities n) (fu
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
   letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) :=
     C.lawfulCanonical
-  letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
   unfold denseTangentLevel at hrun
   constructor
-  · exact (instLawfulGenuineCRischLevelRecursiveTangent C.polynomial C.kind C.normal
-      C.coupled C.coefficient).coefficients_constant fuel Dt a d res
+  · exact (instLawfulGenuineCRischLevelRecursiveTangent DensePoly.towerPolynomialReduction .nonlinear
+      C.normal C.coupled C.coefficient).coefficients_constant fuel Dt a d res
         hdomain hden hrun
-  · exact (instLawfulGenuineCRischLevelRecursiveTangent C.polynomial C.kind C.normal
-      C.coupled C.coefficient).arguments_nonzero fuel Dt a d res
+  · exact (instLawfulGenuineCRischLevelRecursiveTangent DensePoly.towerPolynomialReduction .nonlinear
+      C.normal C.coupled C.coefficient).arguments_nonzero fuel Dt a d res
         hdomain hden hrun
 
 /-- A selected dense tangent level is relatively complete on its explicit stage domain. -/
@@ -96,11 +107,10 @@ theorem denseTangentLevel_complete (C : DenseTangentLevelCapabilities n)
     ∃ fuel res, (denseTangentLevel C).integrate fuel Dt a d = some res := by
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := C.canonical
   letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) := C.lawfulCanonical
-  letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
-  letI : CompleteCPolynomialReduction C.polynomial C.polynomialDomain := C.completePolynomial
   unfold denseTangentLevel denseTangentLevelDomain at *
-  exact (instCompleteCRischLevelRecursiveTangent C.polynomial C.kind C.polynomialDomain C.normal
-    C.coupled C.coefficient).relative_complete Dt a d hdomain hden hintegrable
+  exact (instCompleteCRischLevelRecursiveTangent DensePoly.towerPolynomialReduction .nonlinear
+    DensePoly.nonlinearPolynomialReductionDomain C.normal C.coupled C.coefficient).relative_complete
+      Dt a d hdomain hden hintegrable
 
 /-- Build the next tangent capability by certificate-checking the preceding selected Risch level. -/
 noncomputable def DenseTangentLevelCapabilities.step (below : DenseTangentLevelCapabilities n)
@@ -120,9 +130,6 @@ theorem DenseTangentLevelCapabilities.step_coefficient_eventually_succeeds
   letI : CCanonicalRepresentation DensePoly (DenseFracTower n) := below.canonical
   letI : LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n) :=
     below.lawfulCanonical
-  letI : LawfulCPolynomialReduction below.polynomial := below.lawfulPolynomial
-  letI : CompleteCPolynomialReduction below.polynomial below.polynomialDomain :=
-    below.completePolynomial
   letI : LawfulCRischLevel (denseTangentLevel below) (denseTangentLevelDomain below) := by
     unfold denseTangentLevel denseTangentLevelDomain
     infer_instance

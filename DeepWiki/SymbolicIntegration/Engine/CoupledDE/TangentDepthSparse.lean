@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentPolynomial
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentSpecial
 import DeepWiki.SymbolicIntegration.Engine.RischLevelConvert
 import DeepWiki.SymbolicIntegration.Engine.Tower.LrtDepth
@@ -19,25 +20,6 @@ structure SparseTangentLevelLeaves (n : ℕ) where
   /-- Denotational contract for the selected canonical decomposition. -/
   lawfulCanonical : let _ : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := canonical
     LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFracTower n)
-  /-- Polynomial-reduction stage selected at this depth. -/
-  polynomial : CPolynomialReduction CPoly.SparsePoly (DenseFracTower n)
-  /-- Monomial kind consumed by the selected polynomial reduction. -/
-  kind : PolynomialReductionKind
-  /-- Relative-completeness domain of the polynomial stage. -/
-  polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly (DenseFracTower n)
-  /-- Denotational soundness of the selected polynomial stage. -/
-  lawfulPolynomial : LawfulCPolynomialReduction polynomial
-  /-- Relative completeness of the selected polynomial stage. -/
-  completePolynomial : CompleteCPolynomialReduction polynomial polynomialDomain
-  /-- Dense polynomial reduction used internally by the tangent-special representation. -/
-  specialPolynomial : CPolynomialReduction DensePoly (DenseFracTower n)
-  /-- Relative-completeness domain of the tangent-special polynomial reduction. -/
-  specialPolynomialDomain : PolynomialReductionDomain DensePoly (DenseFracTower n)
-  /-- Denotational soundness of the tangent-special polynomial reduction. -/
-  lawfulSpecialPolynomial : LawfulCPolynomialReduction specialPolynomial
-  /-- Relative completeness of the tangent-special polynomial reduction. -/
-  completeSpecialPolynomial :
-    CompleteCPolynomialReduction specialPolynomial specialPolynomialDomain
   /-- Candidate normal reducer, certified by the tangent-level checker. -/
   normal : CNormalReduction CPoly.SparsePoly (DenseFracTower n)
   /-- Coupled coefficient-system solver for the tangent case. -/
@@ -52,15 +34,38 @@ structure SparseTangentLevelCapabilities (n : ℕ) extends SparseTangentLevelLea
 noncomputable def sparseTangentLevel (C : SparseTangentLevelCapabilities n) :
     CRischLevel CPoly.SparsePoly (DenseFracTower n) := by
   letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
-  exact sparseRecursiveTangentRischLevel C.polynomial C.specialPolynomial C.kind C.normal
-    C.coupled C.coefficient
+  exact sparseRecursiveTangentRischLevel DensePoly.towerPolynomialReduction
+    DensePoly.towerPolynomialReduction .nonlinear C.normal C.coupled C.coefficient
 
 /-- The exact composition domain for a selected sparse tangent level. -/
 noncomputable def sparseTangentLevelDomain (C : SparseTangentLevelCapabilities n) :
     RischLevelDomain CPoly.SparsePoly (DenseFracTower n) := by
   letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
-  exact sparseRecursiveTangentRischLevelCompleteDomain C.polynomial C.specialPolynomial C.kind
-    C.polynomialDomain C.normal C.coupled C.coefficient
+  exact sparseRecursiveTangentRischLevelCompleteDomain DensePoly.towerPolynomialReduction
+    DensePoly.towerPolynomialReduction .nonlinear DensePoly.nonlinearPolynomialReductionDomain
+    C.normal C.coupled C.coefficient
+
+/-- The canonical decomposition selected by a sparse tangent capability. -/
+noncomputable def sparseTangentCanonicalResult (C : SparseTangentLevelCapabilities n)
+    (Dt a d : CPoly.SparsePoly (DenseFracTower n)) :
+    CanonicalRepresentationResult CPoly.SparsePoly (DenseFracTower n) := by
+  letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
+  exact canonicalResult Dt a d
+
+/-- A tangent monomial puts the sparse canonical polynomial branch in the selected nonlinear domain. -/
+theorem sparseTangentLevel_canonicalPolynomial_domain (C : SparseTangentLevelCapabilities n)
+    {Dt a d : CPoly.SparsePoly (DenseFracTower n)} (h : IsTangentMonomial Dt) :
+    DensePoly.nonlinearPolynomialReductionDomain .nonlinear Dt
+      (sparseTangentCanonicalResult C Dt a d).polynomial :=
+  h.nonlinearPolynomialReductionDomain
+
+/-- A tangent monomial gives the sparse canonical polynomial branch a nonlinear normal form. -/
+theorem sparseTangentLevel_canonicalPolynomial_reduction_exists
+    (C : SparseTangentLevelCapabilities n) {Dt a d : CPoly.SparsePoly (DenseFracTower n)}
+    (h : IsTangentMonomial Dt) :
+    ∃ out : PolynomialReductionResult CPoly.SparsePoly (DenseFracTower n),
+      IsPolynomialReduction .nonlinear Dt (sparseTangentCanonicalResult C Dt a d).polynomial out :=
+  h.nonlinearReduction_exists
 
 /-- The soundness domain for a sparse tangent level after installing its canonical stage. -/
 noncomputable def sparseTangentLevelSoundDomain (C : SparseTangentLevelCapabilities n) :
@@ -79,11 +84,11 @@ theorem sparseTangentLevel_sound (C : SparseTangentLevelCapabilities n) (fuel : 
     IsIntegralResultP Dt a d res := by
   letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
   letI : LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFracTower n) := C.lawfulCanonical
-  letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
   unfold sparseTangentLevelSoundDomain at hdomain
   unfold sparseTangentLevel at hrun
-  exact (instLawfulCRischLevelSparseRecursiveTangent C.polynomial C.specialPolynomial C.kind C.normal
-    C.coupled C.coefficient).sound fuel Dt a d res hdomain hden hrun
+  exact (instLawfulCRischLevelSparseRecursiveTangent DensePoly.towerPolynomialReduction
+    DensePoly.towerPolynomialReduction .nonlinear C.normal C.coupled C.coefficient).sound
+      fuel Dt a d res hdomain hden hrun
 
 /-- Every successful selected sparse tangent level returns genuine elementary logarithmic terms. -/
 theorem sparseTangentLevel_logs_genuine (C : SparseTangentLevelCapabilities n) (fuel : ℕ)
@@ -97,15 +102,16 @@ theorem sparseTangentLevel_logs_genuine (C : SparseTangentLevelCapabilities n) (
   letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
   letI : LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFracTower n) :=
     C.lawfulCanonical
-  letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
   unfold sparseTangentLevelSoundDomain at hdomain
   unfold sparseTangentLevel at hrun
   constructor
-  · exact (instLawfulGenuineCRischLevelSparseRecursiveTangent C.polynomial C.specialPolynomial
-      C.kind C.normal C.coupled C.coefficient).coefficients_constant fuel Dt a d res
+  · exact (instLawfulGenuineCRischLevelSparseRecursiveTangent DensePoly.towerPolynomialReduction
+      DensePoly.towerPolynomialReduction .nonlinear C.normal C.coupled C.coefficient).coefficients_constant
+        fuel Dt a d res
         hdomain hden hrun
-  · exact (instLawfulGenuineCRischLevelSparseRecursiveTangent C.polynomial C.specialPolynomial
-      C.kind C.normal C.coupled C.coefficient).arguments_nonzero fuel Dt a d res
+  · exact (instLawfulGenuineCRischLevelSparseRecursiveTangent DensePoly.towerPolynomialReduction
+      DensePoly.towerPolynomialReduction .nonlinear C.normal C.coupled C.coefficient).arguments_nonzero
+        fuel Dt a d res
         hdomain hden hrun
 
 /-- A selected sparse tangent level is relatively complete on its explicit stage domain. -/
@@ -116,12 +122,10 @@ theorem sparseTangentLevel_complete (C : SparseTangentLevelCapabilities n)
     ∃ fuel res, (sparseTangentLevel C).integrate fuel Dt a d = some res := by
   letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := C.canonical
   letI : LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFracTower n) := C.lawfulCanonical
-  letI : LawfulCPolynomialReduction C.polynomial := C.lawfulPolynomial
-  letI : CompleteCPolynomialReduction C.polynomial C.polynomialDomain := C.completePolynomial
   unfold sparseTangentLevel sparseTangentLevelDomain at *
-  exact (instCompleteCRischLevelSparseRecursiveTangent C.polynomial C.specialPolynomial C.kind
-    C.polynomialDomain C.normal C.coupled C.coefficient).relative_complete
-      Dt a d hdomain hden hintegrable
+  exact (instCompleteCRischLevelSparseRecursiveTangent DensePoly.towerPolynomialReduction
+    DensePoly.towerPolynomialReduction .nonlinear DensePoly.nonlinearPolynomialReductionDomain
+    C.normal C.coupled C.coefficient).relative_complete Dt a d hdomain hden hintegrable
 
 /-- Build the next sparse tangent capability from the preceding level's dense fraction adapter. -/
 noncomputable def SparseTangentLevelCapabilities.step (below : SparseTangentLevelCapabilities n)
@@ -143,9 +147,6 @@ theorem SparseTangentLevelCapabilities.step_coefficient_eventually_succeeds
   letI : CCanonicalRepresentation CPoly.SparsePoly (DenseFracTower n) := below.canonical
   letI : LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := DenseFracTower n) :=
     below.lawfulCanonical
-  letI : LawfulCPolynomialReduction below.polynomial := below.lawfulPolynomial
-  letI : CompleteCPolynomialReduction below.polynomial below.polynomialDomain :=
-    below.completePolynomial
   let sparseLevel := sparseTangentLevel below
   let sparseDomain := sparseTangentLevelDomain below
   letI : LawfulCRischLevel sparseLevel sparseDomain := by
