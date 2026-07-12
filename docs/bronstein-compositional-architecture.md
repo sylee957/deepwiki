@@ -114,6 +114,9 @@ depends only on executable stage interfaces and `Lawful…` contracts.
 - `CResidueSource P α` is the Prop-free residue-candidate capability and
   `LawfulCResidueSource P α` states constant-root completeness. The bounded-rational source is
   representation-neutral but intentionally has no lawful instance because a finite sweep is incomplete.
+  `CConstantEnumerator` / `LawfulCConstantEnumerator` now supply a separate finite-constant-field
+  realization: filtering the enumerated constants by the representation's lawful polynomial evaluation
+  yields a lawful residue source for every polynomial representation.
 - `CRischLevelLrt` is the Prop-free recursive algebraic-residue operation, while
   `LawfulCRischLevelLrt` packages its special and reduced soundness contracts. The LRT coefficient
   integrator transports the separate limited-integration contract through `DenseFrac`, so every accepted
