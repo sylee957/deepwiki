@@ -160,6 +160,51 @@ theorem coefficientLogSumWith_liftTowerLogs
       rw [coefficientLogTerm_towerOfPoly T n hn cv.1 cv.2, ih]
       rfl
 
+/-- A genuine lower presentation result lifts to a genuine explicit coefficient result upstairs. -/
+theorem isCoefficientIntegralResultWith_liftRischResultToTowerCoefficient
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n + 1 ≤ N)
+    (c : DenseFracTower (n + 1)) (res : IntegralResult (DenseFracTower n))
+    (hresult : IsPresentationIntegralResult T n (Nat.le_trans (Nat.le_succ n) hn)
+      (presentationCoefficientInput T n hn c) res) :
+    IsCoefficientIntegralResultWith (T.derivation (n + 1) hn)
+      (T.differential (n + 1) hn) c (liftRischResultToTowerCoefficient n res) := by
+  let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
+  let C := T.context n hprev
+  letI : Differential (CFieldSpec.K (DenseFracTower n)) := T.differential n hprev
+  letI : Differential (CRingSpec.R (DenseFracTower n)) := T.differential n hprev
+  letI : Algebra ℚ (CRingSpec.R (DenseFracTower n)) := by
+    change Algebra ℚ (CFieldSpec.K (DenseFracTower n))
+    exact C.algebraQ
+  change IsGenuineDifferentialOneLevelResult C
+      ⟨T.monomialDerivative n hn, CFrac.num c, CFrac.den c,
+        CFrac.toPoly_den_ne_zero_generic c⟩ res at hresult
+  obtain ⟨hintegral, hconstants, harguments⟩ := hresult
+  refine ⟨?_, ?_, ?_⟩
+  · change @Differential.deriv _ _ (T.differential (n + 1) hn)
+        (CFieldSpec.toK (liftRischResultToTowerCoefficient n res).rational) +
+          coefficientLogSumWith (T.derivation (n + 1) hn) (liftTowerLogs n res.logs) =
+        CFieldSpec.toK c
+    rw [coefficientLogSumWith_liftTowerLogs T n hn]
+    rw [differential_deriv_liftRischResultToTowerCoefficient_rational T n hn]
+    change C.fractionDeriv (T.monomialDerivative n hn)
+        (fieldFracP res.rational.1 res.rational.2) +
+          differentialLogResidueSum C (T.monomialDerivative n hn) res.logs =
+        CFrac.toRatFunc c
+    rw [CFrac.toRatFunc_eq_div]
+    exact hintegral
+  · intro lifted hlifted
+    obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlifted
+    rw [differential_deriv_towerOfPoly T n hn ([source.1] : DensePoly (DenseFracTower n))]
+    rw [toPoly_list_eq]
+    simp only [DensePoly.toPolyG_cons, DensePoly.toPolyG_nil, toR_eq_toK, mul_zero, add_zero]
+    rw [MonomialDifferentialContext.fractionDeriv_algebraMap, Differential.implicitDeriv_C]
+    rw [hconstants source hsource, Polynomial.C_0, map_zero]
+    rfl
+  · intro lifted hlifted
+    obtain ⟨source, hsource, rfl⟩ := List.mem_map.mp hlifted
+    rw [toK_towerOfPoly]
+    exact CFrac.am_ne_zero (harguments source hsource)
+
 /-- The legacy dense lift has the packaged successor tower's rational-function denotation. -/
 theorem denseFracTower_toRatFunc_liftRischResult_rational
     (n : ℕ) (res : IntegralResult (DenseFracTower n)) :
@@ -203,8 +248,17 @@ structure DifferentialCoefficientBridge (T : DifferentialTowerPresentation N)
   lift_sound : ∀ (c : DenseFracTower (n + 1)) (result : IntegralResult (DenseFracTower n)),
     IsPresentationIntegralResult T n (Nat.le_trans (Nat.le_succ n) hn)
       (presentationCoefficientInput T n hn c) result →
-      IsCoefficientIntegralResultWith (T.derivation (n + 1) hn) (T.differential (n + 1) hn)
+    IsCoefficientIntegralResultWith (T.derivation (n + 1) hn) (T.differential (n + 1) hn)
         c (lift result)
+
+/-- The canonical dense successor bridge lifts every genuine result from its preceding presentation level. -/
+noncomputable def DifferentialCoefficientBridge.ofPresentationLevel
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n + 1 ≤ N)
+    (lower : DifferentialTranscendentalLevel T n (Nat.le_trans (Nat.le_succ n) hn)) :
+    DifferentialCoefficientBridge T n hn where
+  lower := lower
+  lift := liftRischResultToTowerCoefficient n
+  lift_sound := isCoefficientIntegralResultWith_liftRischResultToTowerCoefficient T n hn
 
 namespace DifferentialCoefficientBridge
 
