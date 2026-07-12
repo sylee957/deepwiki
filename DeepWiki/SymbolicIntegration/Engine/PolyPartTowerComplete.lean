@@ -59,6 +59,28 @@ theorem cPolyReduceTower_reconstruct (Dt : P α) : ∀ (fuel : ℕ) (p : P α),
 
 variable [CharZero (CFieldSpec.K α)]
 
+/-- The leading monomial and residual polynomial used by one nonlinear reduction step. -/
+def nonlinearReductionStep (Dt p : P α) : P α × P α :=
+  let p := CPolyEngine.cnorm p
+  let delta := CPolyEngine.cdeg Dt
+  let m := CPolyEngine.cdeg p - delta + 1
+  let c := CField.div (CPolyEngine.clead p)
+    (CCommRing.mul (CField.natCast m) (CPolyEngine.clead Dt))
+  let q0 := CPolyEngine.monomial (P := P) c m
+  (q0, CPolyEngine.sub p (CPolyEngine.monomialDeriv Dt q0))
+
+omit [LawfulCPolyEngine P] [CFieldSpec α] [CDiffFieldSpec α]
+  [CharZero (CFieldSpec.K α)] in
+/-- An active nonlinear recursive call exposes its leading monomial and strictly smaller residual. -/
+theorem cPolyReduceTower_succ_active (Dt p : P α) (fuel : ℕ)
+    (hzero : CPolyEngine.cisZero (CPolyEngine.cnorm p) = false)
+    (hsmall : ¬ CPolyEngine.cdeg (CPolyEngine.cnorm p) < CPolyEngine.cdeg Dt) :
+    cPolyReduceTower Dt (fuel + 1) p =
+      let step := nonlinearReductionStep Dt p
+      let rest := cPolyReduceTower Dt fuel step.2
+      (CPolyEngine.add step.1 rest.1, rest.2) := by
+  simp [cPolyReduceTower, nonlinearReductionStep, hzero, hsmall]
+
 /-- One nonlinear cancellation step strictly lowers the represented polynomial degree. -/
 theorem cPolyReduceTower_step_degree_lt (Dt p : P α)
     (hdelta : 2 ≤ CPolyEngine.cdeg Dt) (hpzero : CPolyEngine.cisZero p = false)
@@ -170,6 +192,112 @@ theorem cPolyReduceTower_step_degree_lt (Dt p : P α)
     rw [Polynomial.degree_eq_natDegree hp, hn] at hsub
     rw [hn]
     exact hsub
+
+/-- An active nonlinear step strictly lowers its residual's represented degree. -/
+theorem nonlinearReductionStep_degree_lt (Dt p : P α)
+    (hdelta : 2 ≤ CPolyEngine.cdeg Dt)
+    (hzero : CPolyEngine.cisZero (CPolyEngine.cnorm p) = false)
+    (hsmall : ¬ CPolyEngine.cdeg (CPolyEngine.cnorm p) < CPolyEngine.cdeg Dt) :
+    CPolyEngine.cdeg (nonlinearReductionStep Dt p).2 < CPolyEngine.cdeg (CPolyEngine.cnorm p) := by
+  unfold nonlinearReductionStep
+  exact cPolyReduceTower_step_degree_lt Dt (CPolyEngine.cnorm p) hdelta hzero hsmall
+
+omit [CDiffField α] [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] in
+/-- Normalization preserves the represented polynomial degree. -/
+theorem cdeg_cnorm (p : P α) : CPolyEngine.cdeg (CPolyEngine.cnorm p) = CPolyEngine.cdeg p := by
+  rw [LawfulCPolyEngine.cdeg_eq_natDegree, LawfulCPolyEngine.toPoly_cnorm,
+    ← LawfulCPolyEngine.cdeg_eq_natDegree]
+
+/-- Fuel at least one more than the input degree reaches the nonlinear remainder bound. -/
+theorem cPolyReduceTower_normal_of_fuel (Dt : P α) (hdelta : 2 ≤ CPolyEngine.cdeg Dt) :
+    ∀ (p : P α) (fuel : ℕ), CPolyEngine.cdeg p + 1 ≤ fuel →
+      CPolyEngine.cdeg (cPolyReduceTower Dt fuel p).2 < CPolyEngine.cdeg Dt := by
+  intro p fuel hfuel
+  generalize hn : CPolyEngine.cdeg p = n at hfuel
+  induction n using Nat.strong_induction_on generalizing p fuel with
+  | h n ih =>
+      cases fuel with
+      | zero => omega
+      | succ fuel =>
+          have hpnorm : CPolyEngine.cdeg (CPolyEngine.cnorm p) = n := by
+            rw [cdeg_cnorm, hn]
+          by_cases hzero : CPolyEngine.cisZero (CPolyEngine.cnorm p) = true
+          · have hpzero : CPoly.toPoly (CPolyEngine.cnorm p) = 0 :=
+              (LawfulCPolyEngine.cisZero_iff _).mp hzero
+            have hdegzero : CPolyEngine.cdeg (CPolyEngine.cnorm p) = 0 := by
+              rw [LawfulCPolyEngine.cdeg_eq_natDegree, hpzero]
+              simp only [Polynomial.natDegree_zero]
+            have hpositive : 0 < CPolyEngine.cdeg Dt := by omega
+            simpa [cPolyReduceTower, hzero, hdegzero] using hpositive
+          · have hzero' : CPolyEngine.cisZero (CPolyEngine.cnorm p) = false := by
+              simpa only [Bool.eq_false_iff] using hzero
+            by_cases hsmall : CPolyEngine.cdeg (CPolyEngine.cnorm p) < CPolyEngine.cdeg Dt
+            · simp [cPolyReduceTower, hzero', hsmall]
+            · let step := nonlinearReductionStep Dt p
+              have hstep : CPolyEngine.cdeg step.2 < n := by
+                calc
+                  CPolyEngine.cdeg step.2 < CPolyEngine.cdeg (CPolyEngine.cnorm p) :=
+                    nonlinearReductionStep_degree_lt Dt p hdelta hzero' hsmall
+                  _ = n := hpnorm
+              have hrec := ih (CPolyEngine.cdeg step.2) hstep step.2 fuel rfl (by omega)
+              rw [cPolyReduceTower_succ_active Dt p fuel hzero' hsmall]
+              exact hrec
+
+omit [CharZero (CFieldSpec.K α)] in
+/-- A denotational reconstruction identity makes the executable reduction check succeed. -/
+theorem polynomialReductionCheck_of_reconstruction (Dt p : P α)
+    (out : PolynomialReductionResult P α)
+    (h : CPoly.toPoly p = Differential.implicitDeriv (CPoly.toPoly Dt)
+        (CPoly.toPoly out.antiderivative) + CPoly.toPoly out.remainder) :
+    polynomialReductionCheck Dt p out = true := by
+  unfold polynomialReductionCheck
+  apply (LawfulCPolyEngine.cisZero_iff _).mpr
+  rw [CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_add,
+    CPolyEngine.toPoly_monomialDeriv]
+  exact sub_eq_zero.mpr h.symm
+
+omit [LawfulCPolyEngine P] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CharZero (CFieldSpec.K α)] in
+/-- A proved nonlinear degree bound makes the executable normal-form check succeed. -/
+theorem nonlinearPolynomialReductionNormalCheck (Dt : P α)
+    (out : PolynomialReductionResult P α)
+    (h : CPolyEngine.cdeg out.remainder < CPolyEngine.cdeg Dt) :
+    polynomialReductionNormalCheck .nonlinear Dt out = true := by
+  simp only [polynomialReductionNormalCheck, decide_eq_true_eq]
+  exact h
+
+/-- The checked nonlinear reduction succeeds with input-degree fuel. -/
+theorem towerPolynomialReduction_nonlinear_runs (Dt p : P α)
+    (hdelta : 2 ≤ CPolyEngine.cdeg Dt) :
+    ∃ out : PolynomialReductionResult P α,
+      (DensePoly.towerPolynomialReduction (P := P) (α := α)).reduce .nonlinear Dt
+          (CPolyEngine.cdeg p + 1) p = some out ∧
+        IsPolynomialReduction .nonlinear Dt p out := by
+  let raw := cPolyReduceTower Dt (CPolyEngine.cdeg p + 1) p
+  let out : PolynomialReductionResult P α := ⟨raw.1, raw.2⟩
+  have hreconstruct : CPoly.toPoly p = Differential.implicitDeriv (CPoly.toPoly Dt)
+      (CPoly.toPoly out.antiderivative) + CPoly.toPoly out.remainder := by
+    simpa only [out, raw] using cPolyReduceTower_reconstruct Dt (CPolyEngine.cdeg p + 1) p
+  have hnormal : CPolyEngine.cdeg out.remainder < CPolyEngine.cdeg Dt := by
+    simpa only [out, raw] using cPolyReduceTower_normal_of_fuel Dt hdelta p
+      (CPolyEngine.cdeg p + 1) (by omega)
+  refine ⟨out, ?_, ?_⟩
+  · simp only [towerPolynomialReduction, out, raw]
+    rw [polynomialReductionCheck_of_reconstruction Dt p out hreconstruct,
+      nonlinearPolynomialReductionNormalCheck Dt out hnormal]
+    rfl
+  · constructor
+    · exact hreconstruct
+    · simpa only [LawfulCPolyEngine.cdeg_eq_natDegree] using hnormal
+
+/-- The checked tower reducer is complete on nonlinear monomial inputs with derivative degree at least two. -/
+instance instCompleteCPolynomialReductionNonlinear :
+    CompleteCPolynomialReduction (DensePoly.towerPolynomialReduction (P := P) (α := α))
+      nonlinearPolynomialReductionDomain where
+  relative_complete kind Dt p hdomain _ := by
+    rcases hdomain with ⟨rfl, hdelta⟩
+    obtain ⟨out, hrun, hresult⟩ := towerPolynomialReduction_nonlinear_runs Dt p hdelta
+    exact ⟨CPolyEngine.cdeg p + 1, out, hrun, hresult⟩
 
 end DensePoly
 
