@@ -20,6 +20,12 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
   [Algebra ℚ (CFieldSpec.K α)]
 
+/-- A semantic certificate for a rational special result in the root-free LRT path. -/
+def IsLrtMonomialSpecialResult (Dt fp b ds snum sden : P α) : Prop :=
+  CPoly.toPoly sden ≠ 0 ∧
+    towerFractionFieldDerivP Dt (fieldFracP snum sden) =
+      fieldFracP fp CPoly.one + fieldFracP b ds
+
 /-- Denotational soundness contract for an LRT rational special-stage operation. -/
 class LawfulCLrtMonomialCase (C : CLrtMonomialCase P α) : Prop where
   /-- Every returned fraction differentiates to the requested polynomial and special parts. -/
@@ -28,6 +34,14 @@ class LawfulCLrtMonomialCase (C : CLrtMonomialCase P α) : Prop where
       CPoly.toPoly sden ≠ 0 ∧
         towerFractionFieldDerivP Dt (fieldFracP snum sden) =
           fieldFracP fp CPoly.one + fieldFracP b ds
+
+omit [LawfulCPolyEngine P] in
+/-- A lawful LRT special-stage run yields its rational semantic result certificate. -/
+theorem isLrtMonomialSpecialResult_of_run (C : CLrtMonomialCase P α)
+    [LawfulCLrtMonomialCase C] (Dt fp b ds snum sden : P α)
+    (hrun : C.integrateSpecial Dt fp b ds = some (snum, sden)) :
+    IsLrtMonomialSpecialResult Dt fp b ds snum sden :=
+  LawfulCLrtMonomialCase.special_sound Dt fp b ds snum sden hrun
 
 /-- Relative-completeness contract for an LRT rational special-stage operation. -/
 class CompleteCLrtMonomialCase (C : CLrtMonomialCase P α)
