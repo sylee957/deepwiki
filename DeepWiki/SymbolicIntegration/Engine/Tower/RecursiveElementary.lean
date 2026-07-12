@@ -210,4 +210,22 @@ theorem recursiveElementaryOfRischLevel_eventually_succeeds
   simp [recursiveElementaryOfRischLevel, checkedRecursiveElementaryIntegrator,
     recursiveElementaryCandidateOfRischLevel, hrun, hcheck]
 
+/-- Compositional coefficient domain induced by a lower Risch level: the embedded coefficient lies
+in the lower level's domain and has a genuine Liouville-form antiderivative there. -/
+def recursiveElementaryOfRischLevelCompositionalDomain
+    (domain : RischLevelDomain DensePoly β) : RecursiveElementaryDomain (α := DenseFrac β) := fun c =>
+  domain [CCommRing.one] (CFrac.num c) (CFrac.den c) ∧
+    IsRischLevelIntegrable ([CCommRing.one] : DensePoly β) (CFrac.num c) (CFrac.den c)
+
+/-- Relative completeness of a genuinely lawful lower Risch level lifts compositionally to its
+certificate-checked recursive elementary coefficient adapter. -/
+theorem completeCRecursiveElementaryIntegratorOfRischLevelCompositional
+    (L : CRischLevel DensePoly β) (domain : RischLevelDomain DensePoly β)
+    [LawfulCRischLevel L domain] [LawfulGenuineCRischLevel L domain]
+    [CompleteCRischLevel L domain] :
+    CompleteCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L)
+      (recursiveElementaryOfRischLevelCompositionalDomain domain) where
+  complete c hdomain _ :=
+    recursiveElementaryOfRischLevel_eventually_succeeds L domain c hdomain.1 hdomain.2
+
 end DeepWiki.SymbolicIntegration

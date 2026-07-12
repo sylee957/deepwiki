@@ -26,8 +26,8 @@ The current specializations do not yet share one semantic completeness story:
 
 | Case | Current path | Gap to close |
 | --- | --- | --- |
-| Primitive | Root-free LRT `CLrtMonomialCase` and recursive limited integration | Keep its algebraic-residue log representation separate, but expose a bridge from its rational special result to the common one-level remainder invariant. |
-| Exponential | `Hyperexp/CaseChecked` and `Hyperexp/RischLevel` | Completeness is only the Laurent candidate acceptance domain; factor its semantic special domain and residual-feedback normal domain. |
+| Primitive | Root-free LRT `CLrtMonomialCase` and recursive limited integration | The rational special result now bridges to the common special certificate without conflating algebraic-residue logs; connect the full LRT assembly through the tower package. |
+| Exponential | `Hyperexp/CaseChecked` and `Hyperexp/RischLevel` | The Laurent special stage now has a coefficient-RDE semantic domain; residual-feedback normal reduction still has only an explicit acceptance domain. |
 | Tangent | `CoupledDE/TangentSpecial` and depth adapters | The reduced semantic domain now composes coupled solving, polynomial reduction, coefficient recursion, and checked output; extract the reusable monomial-special pattern without erasing tangent-specific recurrence hypotheses. |
 
 ## Migration rules
@@ -75,20 +75,25 @@ Gate: tangent special, dense depth, sparse depth, then their aggregators.
 
 ### Phase 3 — hyperexponential semantic domain
 
-Replace `hyperexpCheckedSpecialDomain` and the residual-feedback normal
-acceptance domain as the primary completeness statement with semantic stage
-domains. Preserve the checked domains as explicit fallback realizations. Feed
-the resulting special/normal witnesses into the Phase-1 invariant.
+`hyperexpLaurentSpecialDomain` now states hyperexponential shape, certified
+special denominator, and coefficient-RDE solvability. Field-RDE completeness
+proves checked special-stage and Risch-level relative completeness on this
+domain. Preserve the checked acceptance path as a fallback. The remaining
+work is a semantic completeness theorem for residual-feedback normal
+reduction; until then, its explicit acceptance domain stays visible in the
+level domain.
 
 Gate: `Hyperexp/CaseChecked`, `Hyperexp/NormalCapability`, and
 `Hyperexp/RischLevel`.
 
 ### Phase 4 — primitive/LRT bridge
 
-Define the bridge theorem from `CLrtMonomialCase`'s rational special identity
-plus LRT residue logs to `OneLevelRemainderInvariant`. Do not merge LRT's
-algebraic log type into the ordinary `IntegralResult` type. Lift recursive
-limited-coefficient completeness through the bridge.
+`lrtRationalSpecialResult` now turns a `CLrtMonomialCase` rational special
+certificate into the common `IsMonomialSpecialResult` with no ordinary logs;
+algebraic-residue logs remain in the LRT result layer. Its completeness bridge
+produces the common semantic special witness. Next, connect the complete LRT
+assembly to the tower package without merging its algebraic log type into
+`IntegralResult`.
 
 Gate: `LrtMonomialCase`, `RischTowerLrt`, `RischSolverTowerLrt`, and primitive
 grounding modules.
