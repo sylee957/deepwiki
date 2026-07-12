@@ -44,8 +44,9 @@ cast coefficients.
    `CPoly.checkIdentity`.
 3. **Structural recursion (implemented).** The executable recursion follows the recognized pole
    order and accumulates the rational part. A semantic valuation-decrease theorem remains open.
-4. **Polynomial tail (checked).** The selected operation uses nonlinear polynomial reduction and emits
-   `log(t^2+1)` only after a computable constant-residue guard; otherwise it declines.
+4. **Polynomial tail (checked).** The selected operation uses nonlinear polynomial reduction, recursively
+   integrates its constant coefficient to a rational part plus lower-field logarithms, lifts both into the
+   current level, and emits `log(t^2+1)` only after a computable constant-residue guard; otherwise it declines.
 5. **Capability realization (implemented).** The raw candidate is private;
    `recursiveTangentSpecialIntegrator` is the selected checked operation and has both `Lawful…` and
    finite-domain `Complete…` instances. The operation and its dense/sparse Risch-level compositions are generic
@@ -54,10 +55,13 @@ cast coefficients.
    after proving the coupled-system and constant-descent completeness assumptions required by
    Bronstein's theorem.
 7. **Level integration (implemented).** The selected operation executes Bronstein's pole-order-three
-   example and the `log(t^2+1)` polynomial case. `recursiveTangentRischLevel` and
+   example, the `log(t^2+1)` polynomial case, and a lower-field `1/x` tail whose `log x` result is lifted into
+   the outer result. `recursiveTangentRischLevel` and
    `sparseRecursiveTangentRischLevel` inject a per-level coupled solver and checked special stage,
    while retaining polynomial and normal stages as explicit dependencies. The semantic completeness
-   upgrade remains.
+   upgrade remains. `TangentDepth.lean` packages these choices uniformly over `DenseFracTower n`; its current
+   induction selects an explicit coefficient operation at each depth, pending the adapter that derives that
+   operation from the preceding lawful Risch level.
 
 ## Verification sequence
 
