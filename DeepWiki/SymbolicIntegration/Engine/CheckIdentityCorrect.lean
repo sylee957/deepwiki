@@ -220,4 +220,98 @@ theorem field_identity_of_checkIdentityP (Dt : P α) (res : IntegralResult α P)
     linear_combination hcheck
   rw [hGD, hquot, hLfield', hfield]
 
+/-- A valid field identity with nonzero represented denominators is accepted by `checkIdentity`. -/
+theorem checkIdentityP_of_field_identity (Dt : P α) (res : IntegralResult α P)
+    (anum aden : P α)
+    (hgden : CPoly.toPoly res.rational.2 ≠ 0) (haden : CPoly.toPoly aden ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0)
+    (hidentity :
+      towerFractionFieldDerivP Dt
+          (CFrac.am α (CPoly.toPoly res.rational.1) /
+            CFrac.am α (CPoly.toPoly res.rational.2)) +
+        logResidueSumP Dt res.logs =
+          CFrac.am α (CPoly.toPoly anum) / CFrac.am α (CPoly.toPoly aden)) :
+    CPoly.checkIdentity Dt res anum aden = true := by
+  set gnum := res.rational.1 with hgnum
+  set gden := res.rational.2 with hgdenE
+  set gprimeNum := CPolyEngine.sub
+    (CPolyEngine.mul (CPolyEngine.monomialDeriv Dt gnum) gden)
+    (CPolyEngine.mul gnum (CPolyEngine.monomialDeriv Dt gden)) with hgp
+  set gden2 := CPolyEngine.mul gden gden with hgden2
+  set folded := res.logs.foldl
+    (fun (acc : P α × P α) (cv : α × P α) =>
+      let c := cv.1
+      let v := cv.2
+      let Dv := CPolyEngine.monomialDeriv Dt v
+      let termNum := CPolyEngine.scale c Dv
+      (CPolyEngine.add (CPolyEngine.mul acc.1 v) (CPolyEngine.mul termNum acc.2),
+        CPolyEngine.mul acc.2 v))
+    (CPolyEngine.ofCoeffList [CCommRing.zero], CPolyEngine.ofCoeffList [CCommRing.one]) with hfolded
+  have hseedden : CPoly.toPoly
+      (CPolyEngine.ofCoeffList (P := P) [(CCommRing.one : α)]) ≠ 0 := by
+    rw [LawfulCPolyEngine.toPoly_ofCoeffList, CPoly.toPoly_ofList_one]
+    exact one_ne_zero
+  obtain ⟨hLden_ne, hLfield⟩ := checkIdentityP_fold_eq Dt res.logs
+    (CPolyEngine.ofCoeffList [(CCommRing.zero : α)])
+    (CPolyEngine.ofCoeffList [(CCommRing.one : α)]) hseedden hlogs
+  rw [← hfolded] at hLden_ne hLfield
+  have hseed0 : CFrac.am α
+      (CPoly.toPoly (CPolyEngine.ofCoeffList (P := P) [(CCommRing.zero : α)])) /
+      CFrac.am α
+        (CPoly.toPoly (CPolyEngine.ofCoeffList (P := P) [(CCommRing.one : α)])) = 0 := by
+    simp only [LawfulCPolyEngine.toPoly_ofCoeffList, CPoly.toPoly_ofList_zero,
+      CPoly.toPoly_ofList_one, map_zero, map_one, zero_div]
+  rw [hseed0, zero_add] at hLfield
+  set GP := CFrac.am α (CPoly.toPoly gprimeNum) with hGP
+  set LN := CFrac.am α (CPoly.toPoly folded.1) with hLN
+  set LD := CFrac.am α (CPoly.toPoly folded.2) with hLD
+  set AN := CFrac.am α (CPoly.toPoly anum) with hAN
+  set AD := CFrac.am α (CPoly.toPoly aden) with hAD
+  set GD := CFrac.am α (CPoly.toPoly gden) with hGD
+  have hGDne : GD ≠ 0 := by rw [hGD]; exact CFrac.am_ne_zero hgden
+  have hLDne : LD ≠ 0 := by rw [hLD]; exact CFrac.am_ne_zero hLden_ne
+  have hADne : AD ≠ 0 := by rw [hAD]; exact CFrac.am_ne_zero haden
+  have hGD2 : CFrac.am α (CPoly.toPoly gden2) = GD ^ 2 := by
+    rw [hgden2, LawfulCPolyEngine.toPoly_mul]
+    simp only [map_mul, hGD, pow_two]
+  have hquot : towerFractionFieldDerivP Dt (CFrac.am α (CPoly.toPoly gnum) /
+      CFrac.am α (CPoly.toPoly gden)) = GP / GD ^ 2 := by
+    rw [towerFractionFieldDerivP_div, hGP, hgp, CPolyEngine.toPoly_sub]
+    simp only [LawfulCPolyEngine.toPoly_mul, CPolyEngine.toPoly_monomialDeriv,
+      map_sub, map_mul]
+    rw [hGD]
+  have hLfield' : logResidueSumP Dt res.logs = LN / LD := by rw [← hLfield, hLN, hLD]
+  have hfield : GP / GD ^ 2 + LN / LD = AN / AD := by
+    rw [hGD, hquot, hLfield'] at hidentity
+    exact hidentity
+  have hcleared : (GP * LD + LN * GD ^ 2) * AD = AN * (GD ^ 2 * LD) := by
+    rw [div_add_div _ _ (pow_ne_zero 2 hGDne) hLDne,
+      div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hGDne) hLDne) hADne] at hfield
+    ring_nf at hfield ⊢
+    linear_combination hfield
+  rw [CPoly.checkIdentity, LawfulCPolyEngine.cisZero_iff]
+  simp only [← hgnum, ← hgdenE, ← hgp, ← hgden2, ← hfolded,
+    CPolyEngine.toPoly_sub, LawfulCPolyEngine.toPoly_mul,
+    LawfulCPolyEngine.toPoly_add, sub_eq_zero]
+  rw [← (RatFunc.algebraMap_injective (CFieldSpec.K α)).eq_iff]
+  simp only [map_mul, map_add]
+  change (GP * LD + LN * CFrac.am α (CPoly.toPoly gden2)) * AD =
+    AN * (CFrac.am α (CPoly.toPoly gden2) * LD)
+  rw [hGD2]
+  exact hcleared
+
+/-- With nonzero represented denominators, `checkIdentity` exactly reflects its field identity. -/
+theorem checkIdentityP_iff_field_identity (Dt : P α) (res : IntegralResult α P)
+    (anum aden : P α)
+    (hgden : CPoly.toPoly res.rational.2 ≠ 0) (haden : CPoly.toPoly aden ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0) :
+    CPoly.checkIdentity Dt res anum aden = true ↔
+      towerFractionFieldDerivP Dt
+          (CFrac.am α (CPoly.toPoly res.rational.1) /
+            CFrac.am α (CPoly.toPoly res.rational.2)) +
+        logResidueSumP Dt res.logs =
+          CFrac.am α (CPoly.toPoly anum) / CFrac.am α (CPoly.toPoly aden) :=
+  ⟨field_identity_of_checkIdentityP Dt res anum aden hgden haden hlogs,
+    checkIdentityP_of_field_identity Dt res anum aden hgden haden hlogs⟩
+
 end DeepWiki.SymbolicIntegration

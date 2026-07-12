@@ -420,6 +420,62 @@ instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoefficientSo
     simp [checkedTangentSpecialIntegrator, hraw, hdsBool, houtBool, hlogsBool,
       hconstantsBool, hcheck]
 
+/-- Strengthen a raw tangent completeness domain with the required nonzero special denominator. -/
+def checkedTangentSpecialCompleteDomain (domain : TangentSpecialDomain α) :
+    TangentSpecialDomain α := fun Dt fp b ds => CPoly.toPoly ds ≠ 0 ∧ domain Dt fp b ds
+
+/-- Lawful genuine raw completeness lifts through the final tangent certificate checker. -/
+instance instCompleteCTangentSpecialIntegratorCheckedOfLawful
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    (domain : TangentSpecialDomain α) [LawfulCTangentSpecialIntegrator S T]
+    [LawfulGenuineCTangentSpecialIntegrator S T]
+    [CompleteCTangentSpecialIntegrator S T domain] :
+    CompleteCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T)
+      (checkedTangentSpecialCompleteDomain domain) where
+  complete Dt fp b ds res hdomain hsden hderiv := by
+    obtain ⟨hds, hrawDomain⟩ := hdomain
+    obtain ⟨fuel, out, hraw⟩ := CompleteCTangentSpecialIntegrator.complete
+      (S := S) (T := T) (domain := domain) Dt fp b ds res hrawDomain hsden hderiv
+    obtain ⟨hout, houtIdentity⟩ := LawfulCTangentSpecialIntegrator.sound
+      (S := S) (T := T) fuel Dt fp b ds out hraw
+    have hargs : ∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0 :=
+      LawfulGenuineCTangentSpecialIntegrator.arguments_nonzero
+        (S := S) (T := T) fuel Dt fp b ds out hraw
+    have hconstants : ∀ cv ∈ out.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0 :=
+      LawfulGenuineCTangentSpecialIntegrator.coefficients_constant
+        (S := S) (T := T) fuel Dt fp b ds out hraw
+    have hcheck : CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds = true := by
+      apply checkIdentityP_of_field_identity Dt out (polynomialSpecialNumerator fp b ds) ds
+        hout hds hargs
+      change towerFractionFieldDerivP Dt (fieldFracP out.rational.1 out.rational.2) +
+          logResidueSumP Dt out.logs = fieldFracP (polynomialSpecialNumerator fp b ds) ds
+      rw [fieldFracP_polynomialSpecialNumerator fp b ds hds]
+      exact houtIdentity
+    have hdsBool : DensePoly.cisZero ds = false := by
+      rw [Bool.eq_false_iff]
+      intro hzero
+      exact hds (by simpa only [toPoly_list_eq] using (cisZeroG_iff ds).mp hzero)
+    have houtBool : DensePoly.cisZero out.rational.2 = false := by
+      rw [Bool.eq_false_iff]
+      intro hzero
+      exact hout (by
+        simpa only [toPoly_list_eq] using (cisZeroG_iff out.rational.2).mp hzero)
+    have hargsBool : out.logs.all (fun cv => !DensePoly.cisZero cv.2) = true :=
+      List.all_eq_true.mpr fun cv hcv => by
+        have hzfalse : DensePoly.cisZero cv.2 = false := by
+          rw [Bool.eq_false_iff]
+          intro hzero
+          exact hargs cv hcv (by
+            simpa only [toPoly_list_eq] using (cisZeroG_iff cv.2).mp hzero)
+        simpa using hzfalse
+    have hconstantsBool :
+        out.logs.all (fun cv => CCommRing.isZero (CDiffField.cderiv cv.1)) = true :=
+      List.all_eq_true.mpr fun cv hcv =>
+        (CFieldSpec.isZero_iff (CDiffField.cderiv cv.1)).mpr (hconstants cv hcv)
+    refine ⟨fuel, out, ?_⟩
+    simp [checkedTangentSpecialIntegrator, hraw, hdsBool, houtBool, hargsBool,
+      hconstantsBool, hcheck]
+
 /-- The checked tangent monomial stage is complete on the raw-integrator acceptance domain. -/
 instance instCompleteCMonomialCaseCheckedTangent (S : CTangentCoefficientSolver α)
     (T : CTangentSpecialIntegrator α) :
