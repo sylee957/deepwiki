@@ -50,6 +50,14 @@ class LawfulCResidueLogPart [CPolyEngine P] [CResidueSource P α]
     CResidueLogPart.compute Dt hNum Dstar = some logs →
       LawfulResidueLogPart Dt hNum Dstar logs
 
+/-- A lawful residue stage whose successful logarithms are genuine elementary terms. -/
+class LawfulGenuineCResidueLogPart [CPolyEngine P] [CResidueSource P α]
+    [CResidueLogPart P α] [LawfulCResidueLogPart (P := P) (α := α)] : Prop where
+  /-- Every successful output has constant coefficients and nonzero arguments. -/
+  genuine : ∀ (Dt hNum Dstar : P α) (logs : List (α × P α)),
+    CResidueLogPart.compute Dt hNum Dstar = some logs →
+      GenuineResidueLogPart Dt hNum Dstar logs
+
 /-- Semantic domain on which residue-logarithm extraction is required to be complete. -/
 abbrev ResidueLogPartDomain := P α → P α → P α → Prop
 

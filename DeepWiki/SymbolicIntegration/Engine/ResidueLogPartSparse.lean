@@ -67,6 +67,40 @@ instance instLawfulCResidueLogPartSparse :
     simpa only [denseTerm, denseDt, denseNum, denseDen, CPolyEngine.toPoly_convert]
       using h.residue_match
 
+/-- A lawful constant-only sparse source transports genuine residue logs through the dense backend. -/
+instance instLawfulGenuineCResidueLogPartSparse [LawfulCResidueSource CPoly.SparsePoly α] :
+    LawfulGenuineCResidueLogPart (P := CPoly.SparsePoly) (α := α) where
+  genuine Dt hNum Dstar logs hrun := by
+    have hrunSparse := hrun
+    letI : CResidueSource DensePoly α := denseResidueSourceFromSparse
+    letI : LawfulCResidueSource DensePoly α := {
+      candidates_constant R c hc :=
+        LawfulCResidueSource.candidates_constant (P := CPoly.SparsePoly)
+          (CPolyEngine.convert R) c hc
+      candidates_complete R c hconstant hroot := by
+        apply LawfulCResidueSource.candidates_complete (P := CPoly.SparsePoly)
+          (CPolyEngine.convert R) c hconstant
+        simpa only [CPolyEngine.toPoly_convert] using hroot
+    }
+    let denseDt : DensePoly α := CPolyEngine.convert Dt
+    let denseNum : DensePoly α := CPolyEngine.convert hNum
+    let denseDen : DensePoly α := CPolyEngine.convert Dstar
+    change sparseResidueLogCompute Dt hNum Dstar = some logs at hrun
+    change (DensePoly.checkedResidueLogPart denseDt denseNum denseDen).map sparseLogs = some logs at hrun
+    rw [Option.map_eq_some_iff] at hrun
+    obtain ⟨denseLogs, hdense, rfl⟩ := hrun
+    have hgenuine := LawfulGenuineCResidueLogPart.genuine denseDt denseNum denseDen denseLogs hdense
+    refine ⟨LawfulCResidueLogPart.sound Dt hNum Dstar (sparseLogs denseLogs)
+      (by simpa using hrunSparse), ?_, ?_⟩
+    · intro cv hcv
+      rw [sparseLogs] at hcv
+      obtain ⟨denseLog, hdenseLog, rfl⟩ := List.mem_map.mp hcv
+      exact hgenuine.coefficients_constant denseLog hdenseLog
+    · intro cv hcv
+      rw [sparseLogs] at hcv
+      obtain ⟨denseLog, hdenseLog, rfl⟩ := List.mem_map.mp hcv
+      simpa only [CPolyEngine.toPoly_convert] using hgenuine.arguments_nonzero denseLog hdenseLog
+
 /-- Exact executable acceptance domain of sparse checked residue extraction. -/
 def sparseResidueLogPartAcceptanceDomain :
     ResidueLogPartDomain (P := CPoly.SparsePoly) (α := α) := fun Dt hNum Dstar =>

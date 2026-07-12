@@ -23,6 +23,9 @@ class CResidueSource (P : Type u → Type u) [CPoly P]
 class LawfulCResidueSource (P : Type u → Type u) [CPoly P]
     (α : Type u) [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
     [CResidueSource P α] : Prop where
+  /-- Every enumerated candidate belongs to the constant field. -/
+  candidates_constant : ∀ (R : P α) (c : α), c ∈ CResidueSource.candidates R →
+    CFieldSpec.toK (CDiffField.cderiv c) = 0
   /-- Every constant coefficient-field root of the resultant is enumerated. -/
   candidates_complete : ∀ (R : P α) (c : α),
     CFieldSpec.toK (CDiffField.cderiv c) = 0 →

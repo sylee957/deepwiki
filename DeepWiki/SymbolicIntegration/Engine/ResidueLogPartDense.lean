@@ -79,6 +79,46 @@ instance instLawfulCResidueLogPartDense : LawfulCResidueLogPart (P := DensePoly)
     · rw [if_neg hguard] at hrun
       contradiction
 
+/-- A lawful constant-only residue source makes checked dense residue logs genuine. -/
+instance instLawfulGenuineCResidueLogPartDense [LawfulCResidueSource DensePoly α] :
+    LawfulGenuineCResidueLogPart (P := DensePoly) (α := α) where
+  genuine Dt hNum Dstar logs hrun := by
+    have hrunDense := hrun
+    change DensePoly.checkedResidueLogPart Dt hNum Dstar = some logs at hrunDense
+    simp only [DensePoly.checkedResidueLogPart] at hrunDense
+    let candidates := CResidueSource.candidates (DensePoly.cResidueResultantTower Dt hNum Dstar)
+    let raw := DensePoly.cLogPart Dt hNum Dstar candidates
+    let result : IntegralResult α := ⟨(CPoly.czero, CPoly.one), raw⟩
+    have hsuccess : raw = logs ∧ raw.all (fun cv => !DensePoly.cisZero cv.2) = true := by
+      by_cases hguard : ((!DensePoly.cisZero Dstar && raw.all (fun cv => !DensePoly.cisZero cv.2)) &&
+          CPoly.checkIdentity Dt result hNum Dstar) = true
+      · rw [if_pos hguard] at hrunDense
+        rw [Bool.and_eq_true] at hguard
+        obtain ⟨hpre, _⟩ := hguard
+        rw [Bool.and_eq_true] at hpre
+        exact ⟨Option.some.inj hrunDense, hpre.2⟩
+      · rw [if_neg hguard] at hrunDense
+        contradiction
+    obtain ⟨hlogsEq, hargsBool⟩ := hsuccess
+    have hconstants : ∀ cv ∈ logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0 := by
+      intro cv hcv
+      rw [← hlogsEq] at hcv
+      change cv ∈ DensePoly.cLogPart Dt hNum Dstar candidates at hcv
+      rw [DensePoly.cLogPart] at hcv
+      obtain ⟨c, hc, rfl⟩ := List.mem_map.mp hcv
+      unfold DensePoly.cRationalResidues at hc
+      exact LawfulCResidueSource.candidates_constant _ _ (List.mem_filter.mp hc).1
+    have harguments : ∀ cv ∈ logs, CPoly.toPoly cv.2 ≠ 0 := by
+      intro cv hcv
+      rw [← hlogsEq] at hcv
+      have hcvBool := (List.all_eq_true.mp hargsBool) cv hcv
+      intro hzero
+      have hzBool : DensePoly.cisZero cv.2 = true :=
+        (LawfulCPolyEngine.cisZero_iff (P := DensePoly) cv.2).mpr hzero
+      rw [hzBool] at hcvBool
+      contradiction
+    exact ⟨LawfulCResidueLogPart.sound Dt hNum Dstar logs hrun, hconstants, harguments⟩
+
 /-- Exact executable acceptance domain of checked dense residue-logarithm extraction. -/
 def checkedResidueLogPartAcceptanceDomain : ResidueLogPartDomain (P := DensePoly) (α := α) :=
   fun Dt hNum Dstar => ∃ logs : List (α × DensePoly α),
