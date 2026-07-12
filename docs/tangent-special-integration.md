@@ -68,7 +68,9 @@ cast coefficients.
    into polynomial and monomial budgets, and the monomial budget reaches the lower Risch call through the
    tangent coefficient adapter; tower capabilities no longer freeze a per-level coefficient fuel. Dense and
    sparse assembled levels now carry that genuine-result contract through every successor. Full semantic
-   completeness still requires the coupled solver and its degree-bound hypotheses.
+   completeness still requires the coupled solver and its degree-bound hypotheses. The special-stage budget
+   now splits into an encoded sequence of independent coupled-solver bounds and a lower-coefficient budget;
+   `TangentSpecialConfig` no longer stores a fixed coupled degree bound.
 
 ## Verification sequence
 

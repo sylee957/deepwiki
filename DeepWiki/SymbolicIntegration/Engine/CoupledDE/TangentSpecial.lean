@@ -19,8 +19,6 @@ structure TangentSpecialConfig where
   denominatorFuel : ℕ
   /-- Fuel for the final nonlinear polynomial reduction. -/
   polynomialFuel : ℕ
-  /-- Degree bound supplied to each coefficient-field coupled solve. -/
-  coefficientDegreeBound : ℕ
 
 /-- The hypertangent base polynomial `t² + 1`. -/
 def tangentBase {α : Type u} [CCommRing α] : DensePoly α :=
@@ -151,11 +149,12 @@ private structure TangentReducedCandidate (α : Type u) where
 
 /-- Lower the `(t² + 1)` pole order by Bronstein's coupled-system recurrence. -/
 private def tangentReducedCandidate {α : Type u} [CField α] [CDiffField α]
-    (S : CTangentCoefficientSolver α) (degreeBound : ℕ) (alpha : α) :
+    (S : CTangentCoefficientSolver α) (coupledFuel : ℕ) (alpha : α) :
     (m : ℕ) → DensePoly α → DensePoly α → Option (TangentReducedCandidate α)
   | 0, num, _den =>
       some { rational := (CPoly.czero, CPoly.one), remainder := num }
   | m + 1, num, den => do
+      let stageFuel := Nat.unpair coupledFuel
       let numDiv := CPolyEuclidean.divmod num tangentBase
       let denDiv := CPolyEuclidean.divmod den tangentBase
       if !CPolyEngine.cisZero denDiv.2 then none
@@ -163,14 +162,14 @@ private def tangentReducedCandidate {α : Type u} [CField α] [CDiffField α]
         let a := CPoly.coeff numDiv.2 1
         let b := CPoly.coeff numDiv.2 0
         let coupling := CCommRing.mul (CField.natCast (2 * (m + 1))) alpha
-        let solution ← S.solve degreeBound coupling a b
+        let solution ← S.solve stageFuel.1 coupling a b
         let c := solution.1
         let d := solution.2
         let oneMinusTwoM : α :=
           CField.sub CCommRing.one (CField.natCast (2 * (m + 1)))
         let correction := CCommRing.mul (CCommRing.mul c alpha) oneMinusTwoM
         let nextNum := CPolyEngine.sub numDiv.1 [correction]
-        let rest ← tangentReducedCandidate S degreeBound alpha m nextNum denDiv.1
+        let rest ← tangentReducedCandidate S stageFuel.2 alpha m nextNum denDiv.1
         let q0 : DensePoly α × DensePoly α := ([d, c], den)
         some {
           rational := combineRationalParts q0.1 q0.2 rest.rational.1 rest.rational.2
@@ -182,12 +181,13 @@ private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField
     (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
     CTangentSpecialIntegrator α where
   integrate S fuel Dt fp b ds := do
+    let stageFuel := Nat.unpair fuel
     let alpha := CPoly.coeff Dt 2
     if CCommRing.isZero alpha then none
     else if !tangentPolyEq Dt [alpha, CCommRing.zero, alpha] then none
     else
       let m : ℕ ← tangentBasePower? (α := α) config.denominatorFuel ds
-      let reduced ← tangentReducedCandidate (α := α) S config.coefficientDegreeBound alpha m b ds
+      let reduced ← tangentReducedCandidate (α := α) S stageFuel.1 alpha m b ds
       let polynomialInput := CPolyEngine.add fp reduced.remainder
       let polynomial := DensePoly.cPolyReduceTower Dt config.polynomialFuel polynomialInput
       if decide (1 < CPolyEngine.cdeg polynomial.2) then none
@@ -197,7 +197,7 @@ private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField
         let coefficientResult ←
           if CCommRing.isZero constantPart then
             some ({ rational := CCommRing.zero, logs := [] } : CoefficientIntegralResult α)
-          else I.integrate fuel constantPart
+          else I.integrate stageFuel.2 constantPart
         let twoAlpha := CCommRing.mul (CField.natCast 2) alpha
         let logCoefficient := CField.div linearPart twoAlpha
         if !CCommRing.isZero (CDiffField.cderiv logCoefficient) then none
@@ -490,10 +490,10 @@ private def tangentRecursiveExampleNumerator : DensePoly (DenseFrac ℚ) :=
 /-- The certified recursion succeeds on the pole-order-three hypertangent example. -/
 example :
     ((recursiveTangentSpecialIntegrator (α := DenseFrac ℚ)
-        { denominatorFuel := 4, polynomialFuel := 8, coefficientDegreeBound := 3 }
+        { denominatorFuel := 4, polynomialFuel := 8 }
         tangentPolynomialCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
-        8
+        (Nat.pair (Nat.pair 3 (Nat.pair 3 (Nat.pair 3 0))) 8)
         tangentBase CPoly.czero tangentRecursiveExampleNumerator
         (CPoly.cpow tangentBase 3)).isSome = true := by
   ccompute
@@ -501,10 +501,10 @@ example :
 /-- The recursive polynomial tail lifts a logarithm returned by the coefficient field. -/
 example :
     ((recursiveTangentSpecialIntegrator (α := DenseFrac ℚ)
-        { denominatorFuel := 0, polynomialFuel := 1, coefficientDegreeBound := 0 }
+        { denominatorFuel := 0, polynomialFuel := 1 }
         tangentLogCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
-        1
+        (Nat.pair 0 1)
         tangentBase [tangentInvX] CPoly.czero CPoly.one).map
           (fun out => out.logs.length) = some 1 := by
   ccompute
@@ -512,10 +512,10 @@ example :
 /-- The polynomial stage emits `log(t²+1)` for the derivative `2t/(t²+1)`. -/
 example :
     ((recursiveTangentSpecialIntegrator (α := DenseFrac ℚ)
-        { denominatorFuel := 1, polynomialFuel := 2, coefficientDegreeBound := 1 }
+        { denominatorFuel := 1, polynomialFuel := 2 }
         tangentPolynomialCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
-        2
+        (Nat.pair 1 2)
         tangentBase [CCommRing.zero, CField.natCast 2]
         CPoly.czero CPoly.one).map (fun out => out.logs.length) = some 1 := by
   ccompute
