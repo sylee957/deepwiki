@@ -174,14 +174,15 @@ residue construction is dense.
 recursive `stage` selection proves accepted-output correctness and eventual
 success at every depth directly from the base and successor contracts.
 
-`Tower/Transcendental` now supplies both the native compatibility selector and
-the common-output `LayeredTranscendentalTowerScheme`. The latter selects
-primitive LRT, hyperexponential, or tangent at every depth but always returns
+`Tower/Transcendental` now supplies the common-output
+`LayeredTranscendentalTowerScheme`. It selects primitive LRT,
+hyperexponential, or tangent at every depth but always returns
 `TranscendentalIntegralResult`: ordinary local logs, root-free local LRT
 families, and inherited coefficient logs remain distinct. Its `stage_sound`
 and `stage_complete` are the end-to-end finite-tower theorems in that common
-semantic language. `primitiveTranscendentalStage`, `hyperexpTranscendentalStage`,
-and `tangentTranscendentalStage` remain the three native constructor entry points.
+semantic language. `primitiveLayeredTranscendentalStage`,
+`hyperexpLayeredTranscendentalStage`, and `tangentLayeredTranscendentalStage`
+are the three certified constructor entry points.
 The primitive entry point can use `denseLrtLevelCapabilitiesWf`, which supplies
 the Wf gcd residue criterion; its full-domain theorem derives canonical normal
 support and the Liouville guard internally.

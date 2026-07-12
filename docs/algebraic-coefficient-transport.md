@@ -58,12 +58,13 @@ combines their denotations only at the reconstruction theorem.
    hyperexponential special/reconstruction assemblies to append inherited
    algebraic coefficient logs without forcing them into `IntegralResult.logs`,
    then prove their local soundness and relative completeness by composition.
-5. Replace the selected-only claim in `TranscendentalTowerScheme` with a true
+5. Replace the selected-stage limitation in `LayeredTranscendentalTowerScheme` with a true
    heterogeneous successor constructor, whose lower adapter is supplied by the
    preceding stage. Then prove finite-tower soundness and relative completeness
    by induction.
-6. Audit and retire the old selected-only mixed wrapper only once all public
-   callers use the heterogeneous constructor. Dense and sparse remain
+6. The old native-result `TranscendentalTowerScheme` has been retired after a
+   source and reverse-dependency audit; audit the remaining selected-stage
+   constructors once the heterogeneous successor constructor is in place. Dense and sparse remain
    conversion adapters; neither gains an independent assembler.
 
 ## Gates
