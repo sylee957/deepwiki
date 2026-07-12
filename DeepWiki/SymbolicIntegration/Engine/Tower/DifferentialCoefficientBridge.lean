@@ -35,32 +35,33 @@ noncomputable def liftTowerLogs (n : ℕ)
     List (DenseFracTower (n + 1) × DenseFracTower (n + 1)) :=
   logs.map fun cv => (towerOfPoly n [cv.1], towerOfPoly n cv.2)
 
-/-- Lift a lower integral result into successor coefficient data with an explicit rational-denominator certificate. -/
+/-- Lift a lower integral result into successor coefficient data. -/
 noncomputable def liftRischResultToTowerCoefficient (n : ℕ)
-    (res : IntegralResult (DenseFracTower n))
-    (hden : CPolyEngine.cisZero res.rational.2 = false) :
+    (res : IntegralResult (DenseFracTower n)) :
     CoefficientIntegralResult (DenseFracTower (n + 1)) where
-  rational := CFrac.ofFraction (F := DenseFrac) res.rational.1 res.rational.2 hden
+  rational := CField.div (CFrac.ofPoly (F := DenseFrac) res.rational.1)
+    (CFrac.ofPoly (F := DenseFrac) res.rational.2)
   logs := liftTowerLogs n res.logs
 
 /-- The lifted rational part denotes the lower integral result's rational function in the packaged successor field. -/
 theorem toK_liftRischResultToTowerCoefficient_rational (n : ℕ)
-    (res : IntegralResult (DenseFracTower n))
-    (hden : CPolyEngine.cisZero res.rational.2 = false) :
-    CFieldSpec.toK (liftRischResultToTowerCoefficient n res hden).rational =
+    (res : IntegralResult (DenseFracTower n)) :
+    CFieldSpec.toK (liftRischResultToTowerCoefficient n res).rational =
       fieldFracP res.rational.1 res.rational.2 := by
-  rw [denseFracTower_toK_succ]
-  exact CFrac.toRatFunc_ofFraction res.rational.1 res.rational.2 hden
+  change CFieldSpec.toK (CField.div
+    (CFrac.ofPoly (F := DenseFrac) res.rational.1)
+    (CFrac.ofPoly (F := DenseFrac) res.rational.2)) = _
+  rw [CFieldSpec.toK_div]
+  rw [CFrac.toK_ofPoly, CFrac.toK_ofPoly]
 
 /-- The successor presentation differentiates the lifted rational part by the preceding selected function-field derivative. -/
 theorem differential_deriv_liftRischResultToTowerCoefficient_rational
     (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n + 1 ≤ N)
-    (res : IntegralResult (DenseFracTower n))
-    (hden : CPolyEngine.cisZero res.rational.2 = false) :
+    (res : IntegralResult (DenseFracTower n)) :
     let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
     let C := T.context n hprev
     @Differential.deriv _ _ (T.differential (n + 1) hn)
-      (CFieldSpec.toK (liftRischResultToTowerCoefficient n res hden).rational) =
+      (CFieldSpec.toK (liftRischResultToTowerCoefficient n res).rational) =
       C.fractionDeriv (T.monomialDerivative n hn)
         (fieldFracP res.rational.1 res.rational.2) := by
   let hprev : n ≤ N := Nat.le_trans (Nat.le_succ n) hn
