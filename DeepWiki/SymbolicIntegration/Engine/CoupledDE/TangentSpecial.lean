@@ -995,15 +995,11 @@ private def recursiveTangentCandidateManualDomain {α : Type} [CField α] [CFiel
                         (CField.div linearPart
                           (CCommRing.mul (CField.natCast 2) alpha))) = true
 
-/-- Semantic certificate emitted by the domain-complete raw tangent candidate. -/
-private def IsTangentSpecialCandidateOutput {α : Type u} [CField α] [CFieldSpec α]
+/-- The tangent raw candidate uses the representation-independent special-result certificate. -/
+private abbrev IsTangentSpecialCandidateOutput {α : Type u} [CField α] [CFieldSpec α]
     [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
     (Dt fp b ds : DensePoly α) (out : IntegralResult α) : Prop :=
-  CPoly.toPoly out.rational.2 ≠ 0 ∧
-    (∀ cv ∈ out.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
-    (∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0) ∧
-    towerFractionFieldDerivP Dt (fieldFracP out.rational.1 out.rational.2) +
-      logResidueSumP Dt out.logs = fieldFracP fp CPoly.one + fieldFracP b ds
+  IsMonomialSpecialResult Dt fp b ds out
 
 /-- Complete coupled, polynomial, and coefficient stages supply a certified outer candidate. -/
 private theorem recursiveTangentSpecialCandidate_complete_manual

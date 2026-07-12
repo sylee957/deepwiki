@@ -120,6 +120,13 @@ instance instLawfulGenuineCMonomialCaseHyperexpChecked :
     subst after
     exact hargs
 
+/-- A successful checked hyperexponential special stage has the common semantic certificate. -/
+theorem hyperexpCheckedCase_isMonomialSpecialResult (fuel : ℕ)
+    (Dt fp b ds : DensePoly α) (res : IntegralResult α)
+    (hrun : DensePoly.hyperexpCheckedCase.integrateSpecial fuel Dt fp b ds = some res) :
+    IsMonomialSpecialResult Dt fp b ds res :=
+  isMonomialSpecialResult_of_run DensePoly.hyperexpCheckedCase fuel Dt fp b ds res hrun
+
 /-- Exact raw-acceptance domain of the checked hyperexponential special stage. -/
 def hyperexpCheckedSpecialDomain : MonomialSpecialDomain DensePoly α := fun Dt fp b ds =>
   ∀ (res : IntegralResult α), CPoly.toPoly res.rational.2 ≠ 0 →

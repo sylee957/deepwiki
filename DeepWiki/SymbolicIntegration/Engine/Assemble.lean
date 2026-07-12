@@ -74,6 +74,14 @@ variable {P : Type u → Type u} [CPoly P] [CPolyEngine P] [LawfulCPolyEngine.{u
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
   [Algebra ℚ (CFieldSpec.K α)]
 
+/-- A semantic certificate for one monomial-special integration result. -/
+def IsMonomialSpecialResult (Dt fp b ds : P α) (res : IntegralResult α P) : Prop :=
+  CPoly.toPoly res.rational.2 ≠ 0 ∧
+    (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+    (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0) ∧
+    towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
+      logResidueSumP Dt res.logs = fieldFracP fp CPoly.one + fieldFracP b ds
+
 /-- Denotation-level contract for a `CMonomialCase`: successful special integration has the expected
 derivative, while normal post-processing preserves certified integration results and nonzero denominators. -/
 class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
@@ -118,6 +126,18 @@ class LawfulGenuineCMonomialCase (C : CMonomialCase P α)
     (∀ cv ∈ before.logs, CPoly.toPoly cv.2 ≠ 0) →
     C.postprocessNormal Dt before = some after →
       ∀ cv ∈ after.logs, CPoly.toPoly cv.2 ≠ 0
+
+omit [LawfulCPolyEngine P] in
+/-- A lawful genuine special-stage run yields the common semantic result certificate. -/
+theorem isMonomialSpecialResult_of_run (C : CMonomialCase P α)
+    [LawfulCMonomialCase C] [LawfulGenuineCMonomialCase C]
+    (fuel : ℕ) (Dt fp b ds : P α) (res : IntegralResult α P)
+    (hrun : C.integrateSpecial fuel Dt fp b ds = some res) :
+    IsMonomialSpecialResult Dt fp b ds res := by
+  obtain ⟨hden, hidentity⟩ := LawfulCMonomialCase.special_sound fuel Dt fp b ds res hrun
+  refine ⟨hden, ?_, ?_, hidentity⟩
+  · exact LawfulGenuineCMonomialCase.special_coefficients_constant fuel Dt fp b ds res hrun
+  · exact LawfulGenuineCMonomialCase.special_arguments_nonzero fuel Dt fp b ds res hrun
 
 /-- Semantic domain on which a monomial special solver is required to be complete. -/
 abbrev MonomialSpecialDomain (P : Type u → Type u) (α : Type u) := P α → P α → P α → P α → Prop
