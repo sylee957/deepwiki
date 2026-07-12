@@ -11,6 +11,14 @@ of the next extension before that extension's own logarithms are introduced.  Th
 The old evaluator remains a valid one-level transport API.  It must not be used to state cross-level
 soundness of `appendInherited`, `TowerCoefficientStage`, or the recursive tangent candidate.
 
+There is a second, independent prerequisite for the full mixed-tower theorem: the current
+`DenseFracTower` carrier fixes every built-in fraction derivative to `t' = 1`.  The explicit `Dt`
+argument only controls a local stage, so it does not make the preceding coefficient field into an
+exponential or tangent differential extension.  The required presentation-level replacement is
+specified in [dynamic-tower-derivation.md](dynamic-tower-derivation.md).  Until that replacement
+lands, the realization interfaces here are a semantic target and a primitive-tower-compatible
+foundation, not evidence of a full mixed-tower theorem.
+
 ## Target realization
 
 For a fixed finite monomial tower, choose fields recursively:
