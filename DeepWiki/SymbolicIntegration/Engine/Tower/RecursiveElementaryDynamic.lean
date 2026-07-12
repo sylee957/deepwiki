@@ -84,4 +84,55 @@ noncomputable def CRecursiveElementaryIntegratorWith.asRemainderIntegrationStage
               (C := C) (domain := domain) c hdomain hintegrable
           exact ⟨fuel, ⟨result, ()⟩, by simp [hrun]⟩ } }
 
+/-! ### Compatibility adapter for legacy coefficient recursion -/
+
+variable {α : Type u} [CField α] [CFieldSpec.{u,v} α]
+  [CDiffField α] [CDiffFieldSpec.{u,v} α]
+
+/-- The legacy recursive elementary solver viewed through its explicit coefficient derivation. -/
+@[reducible] noncomputable def CRecursiveElementaryIntegrator.asWith
+    (C : CRecursiveElementaryIntegrator α) :
+    CRecursiveElementaryIntegratorWith α (CFieldDerivation.ofCDiffField α) where
+  integrate := C.integrate
+
+omit [CDiffFieldSpec α] in
+/-- The explicit and legacy coefficient logarithmic sums agree in the compatibility context. -/
+theorem coefficientLogSumWith_ofCDiffField (logs : List (α × α)) :
+    coefficientLogSumWith (CFieldDerivation.ofCDiffField α) logs = coefficientLogSum logs := by
+  simp only [coefficientLogSumWith, CFieldDerivation.ofCDiffField, coefficientLogSum]
+
+/-- The legacy elementary coefficient certificate is the explicit certificate in the compatibility context. -/
+theorem isCoefficientIntegralResultWith_ofCDiffField_iff (c : α) (res : CoefficientIntegralResult α) :
+    IsCoefficientIntegralResultWith (CFieldDerivation.ofCDiffField α) CDiffFieldSpec.diffK c res ↔
+      IsCoefficientIntegralResult c res := by
+  unfold IsCoefficientIntegralResultWith IsCoefficientIntegralResult
+  rw [coefficientLogSumWith_ofCDiffField]
+  simp only [CDiffFieldSpec.toK_cderiv]
+
+/-- Promote a lawful legacy coefficient solver to the explicit-differential contract. -/
+@[reducible] noncomputable def LawfulCRecursiveElementaryIntegratorWith.ofLegacy
+    (C : CRecursiveElementaryIntegrator α) [LawfulCRecursiveElementaryIntegrator C] :
+    LawfulCRecursiveElementaryIntegratorWith (CFieldDerivation.ofCDiffField α)
+      CDiffFieldSpec.diffK C.asWith where
+  sound fuel c res hrun :=
+    (isCoefficientIntegralResultWith_ofCDiffField_iff c res).mpr
+      (LawfulCRecursiveElementaryIntegrator.sound fuel c res hrun)
+
+/-- Promote a complete legacy coefficient solver to the explicit-differential contract. -/
+@[reducible] noncomputable def CompleteCRecursiveElementaryIntegratorWith.ofLegacy
+    (C : CRecursiveElementaryIntegrator α) (domain : RecursiveElementaryDomain (α := α))
+    [LawfulCRecursiveElementaryIntegrator C] [CompleteCRecursiveElementaryIntegrator C domain] :
+    @CompleteCRecursiveElementaryIntegratorWith α _ _
+      (CFieldDerivation.ofCDiffField α) CDiffFieldSpec.diffK C.asWith domain
+      (@LawfulCRecursiveElementaryIntegratorWith.ofLegacy α _ _ _ _ C _) := by
+  letI : LawfulCRecursiveElementaryIntegratorWith (CFieldDerivation.ofCDiffField α)
+      CDiffFieldSpec.diffK C.asWith := LawfulCRecursiveElementaryIntegratorWith.ofLegacy C
+  refine ⟨?_⟩
+  intro c hdomain hintegrable
+  obtain ⟨witness, hwitness⟩ := hintegrable
+  obtain ⟨fuel, result, hrun⟩ := CompleteCRecursiveElementaryIntegrator.complete
+    (C := C) (domain := domain) c hdomain
+      ⟨witness, (isCoefficientIntegralResultWith_ofCDiffField_iff c witness).mp hwitness⟩
+  exact ⟨fuel, result, hrun⟩
+
 end DeepWiki.SymbolicIntegration

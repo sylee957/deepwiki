@@ -118,6 +118,34 @@ noncomputable def asRischStage
   exact K.polynomial.asRischStageRemainderStage C K.canonical kind K.polynomialDomain
     K.specialDomain K.normalDomain
 
+/-- Every accepted capability-stage result satisfies the selected differential identity and genuine-log laws. -/
+theorem asRischStage_sound
+    {α : Type u} [CField α] [CFieldSpec.{u,u} α]
+    (C : MonomialDifferentialContext (P := DensePoly) α)
+    (K : DifferentialOneLevelCapabilities C) (kind : PolynomialReductionKind)
+    (fuel : ℕ) (input : RischStageInput DensePoly α)
+    (result : RemainderResult (IntegralResult α) (Unit × Unit))
+    (hdomain : (K.asRischStage C kind).stage.domain input)
+    (hrun : (K.asRischStage C kind).stage.run fuel input = some result) :
+    IsGenuineDifferentialOneLevelResult C input.toOneLevelInput result.output :=
+  (K.asRischStage C kind).sound fuel input result hdomain hrun
+
+/-- Every integrable input accepted by the capability-stage domain eventually succeeds. -/
+theorem asRischStage_complete
+    {α : Type u} [CField α] [CFieldSpec.{u,u} α]
+    (C : MonomialDifferentialContext (P := DensePoly) α)
+    (K : DifferentialOneLevelCapabilities C) (kind : PolynomialReductionKind) :
+    letI : CDifferentialCanonicalRepresentation DensePoly α C.derivation := K.canonical
+    letI : LawfulCDifferentialCanonicalRepresentation C := K.canonicalLawful
+    ∀ input : RischStageInput DensePoly α,
+      (K.asRischStage C kind).stage.domain input →
+      IsDifferentialOneLevelIntegrable C kind input.toOneLevelInput →
+      ∃ fuel result, (K.asRischStage C kind).stage.run fuel input = some result := by
+  letI : CDifferentialCanonicalRepresentation DensePoly α C.derivation := K.canonical
+  letI : LawfulCDifferentialCanonicalRepresentation C := K.canonicalLawful
+  intro input hdomain hintegrable
+  exact (K.asRischStage C kind).complete input hdomain hintegrable
+
 end DifferentialOneLevelCapabilities
 
 /-- A tower input uses the monomial derivative selected at its presentation depth. -/
@@ -143,6 +171,41 @@ noncomputable def DifferentialOneLevelCapabilities.asPresentationMonomialStage
   letI : LawfulCDifferentialCanonicalRepresentation (T.context n hn) := K.canonicalLawful
   exact (K.asRischStage (T.context n hn) kind).restrictInput
     (IsPresentationMonomialInput T n hsucc)
+
+/-- A guarded presentation stage preserves the selected-depth differential invariant. -/
+theorem DifferentialOneLevelCapabilities.asPresentationMonomialStage_sound
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N) (hsucc : n + 1 ≤ N)
+    (K : DifferentialOneLevelCapabilities (T.context n hn)) (kind : PolynomialReductionKind) :
+    letI : CDifferentialCanonicalRepresentation DensePoly (DenseFracTower n)
+      (T.context n hn).derivation := K.canonical
+    letI : LawfulCDifferentialCanonicalRepresentation (T.context n hn) := K.canonicalLawful
+    ∀ fuel input result,
+      (K.asPresentationMonomialStage T n hn hsucc kind).stage.domain input →
+      (K.asPresentationMonomialStage T n hn hsucc kind).stage.run fuel input = some result →
+      IsPresentationIntegralResult T n hn input result.output := by
+  letI : CDifferentialCanonicalRepresentation DensePoly (DenseFracTower n)
+      (T.context n hn).derivation := K.canonical
+  letI : LawfulCDifferentialCanonicalRepresentation (T.context n hn) := K.canonicalLawful
+  intro fuel input result hdomain hrun
+  exact (K.asPresentationMonomialStage T n hn hsucc kind).sound fuel input result hdomain hrun
+
+/-- Every integrable guarded presentation input eventually returns a certified result. -/
+theorem DifferentialOneLevelCapabilities.asPresentationMonomialStage_complete
+    (T : DifferentialTowerPresentation N) (n : ℕ) (hn : n ≤ N) (hsucc : n + 1 ≤ N)
+    (K : DifferentialOneLevelCapabilities (T.context n hn)) (kind : PolynomialReductionKind) :
+    letI : CDifferentialCanonicalRepresentation DensePoly (DenseFracTower n)
+      (T.context n hn).derivation := K.canonical
+    letI : LawfulCDifferentialCanonicalRepresentation (T.context n hn) := K.canonicalLawful
+    ∀ input,
+      (K.asPresentationMonomialStage T n hn hsucc kind).stage.domain input →
+      (IsPresentationMonomialInput T n hsucc input ∧
+        IsDifferentialOneLevelIntegrable (T.context n hn) kind input.toOneLevelInput) →
+      ∃ fuel result, (K.asPresentationMonomialStage T n hn hsucc kind).stage.run fuel input = some result := by
+  letI : CDifferentialCanonicalRepresentation DensePoly (DenseFracTower n)
+      (T.context n hn).derivation := K.canonical
+  letI : LawfulCDifferentialCanonicalRepresentation (T.context n hn) := K.canonicalLawful
+  intro input hdomain hintegrable
+  exact (K.asPresentationMonomialStage T n hn hsucc kind).complete input hdomain hintegrable
 
 /-- The coefficient-field context selected before adjoining a primitive monomial. -/
 noncomputable abbrev primitiveOneStepCoefficientContext :=
