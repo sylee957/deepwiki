@@ -153,6 +153,43 @@ noncomputable def LayeredTranscendentalStage.asIntegrationStage (S : LayeredTran
   | hyperexponential stage => exact stage.asTowerIntegrationStage
   | tangent stage => exact stage.asTowerIntegrationStage
 
+/-- Forget the representation-specific identity spelling while retaining the semantic input remainder. -/
+noncomputable def LayeredTranscendentalStage.asAntiderivativeStage
+    (S : LayeredTranscendentalStage n) :
+    IntegrationStage (RischStageInput DensePoly (DenseFracTower n))
+      (TowerIntegralResult n) S.Integrable
+      (fun input result =>
+        IsTowerAntiderivative input.Dt result (towerInputRemainder input.num input.den) ∧
+          result.LogsGenuine) := by
+  let base := S.asIntegrationStage
+  refine
+    { run := base.run
+      domain := base.domain
+      sound := ?_
+      complete := ?_ }
+  · intro fuel input result hdomain hrun
+    have hresult := base.sound fuel input result hdomain hrun
+    exact ⟨(isTowerIntegralResult_iff input.Dt input.num input.den result).mp hresult.1,
+      hresult.2⟩
+  · intro input hdomain hintegrable
+    exact base.complete input hdomain hintegrable
+
+/-- Every selected primitive, exponential, or tangent stage has the common output-remainder contract. -/
+noncomputable def LayeredTranscendentalStage.asRemainderIntegrationStage
+    (S : LayeredTranscendentalStage n) :
+    TowerRemainderStage (RischStageInput DensePoly (DenseFracTower n)) S.Integrable
+      (fun input => input.Dt) :=
+  TowerRemainderStage.ofStage S.Integrable (fun input => input.Dt)
+    (fun input => towerInputRemainder input.num input.den) S.asAntiderivativeStage
+
+/-- Every selected primitive, exponential, or tangent stage also retains genuine-log validity. -/
+noncomputable def LayeredTranscendentalStage.asGenuineRemainderIntegrationStage
+    (S : LayeredTranscendentalStage n) :
+    TowerGenuineRemainderStage (RischStageInput DensePoly (DenseFracTower n)) S.Integrable
+      (fun input => input.Dt) :=
+  TowerGenuineRemainderStage.ofStage S.Integrable (fun input => input.Dt)
+    (fun input => towerInputRemainder input.num input.den) S.asAntiderivativeStage
+
 /-- Export every selected stage through the realization-indexed common interface. -/
 noncomputable def LayeredTranscendentalStage.asRealizedIntegrationStage
     (S : LayeredTranscendentalStage n) (R : TowerRealization N) (hn : n ≤ N) :
