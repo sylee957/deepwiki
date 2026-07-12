@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentCapability
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE.TangentPolynomial
 import DeepWiki.SymbolicIntegration.Engine.RecursiveCoefficient
+import DeepWiki.SymbolicIntegration.Engine.Tower.LogTower
 import DeepWiki.ComputableAlgebra.PolyAntiderivative
 
 /-! # Recursive hypertangent special integration
@@ -13,6 +14,14 @@ namespace DeepWiki.SymbolicIntegration
 open DensePoly
 
 universe u
+
+/-- Prop-free tangent-special operation whose lower coefficient results retain recursive tower logs. -/
+structure CTowerTangentSpecialIntegrator (n : ℕ) where
+  /-- Integrate a tangent special part over `Kₙ₊₁`, preserving lower log syntax. -/
+  integrate : CTangentCoefficientSolver (DenseFracTower (n + 1)) → ℕ →
+    DensePoly (DenseFracTower (n + 1)) → DensePoly (DenseFracTower (n + 1)) →
+    DensePoly (DenseFracTower (n + 1)) → DensePoly (DenseFracTower (n + 1)) →
+      Option (TowerIntegralResult (n + 1))
 
 /-- The hypertangent base polynomial `t² + 1`. -/
 def tangentBase {α : Type u} [CCommRing α] : DensePoly α :=
@@ -946,6 +955,53 @@ private def finishTangentCandidate {α : Type} [CField α] [CDiffField α]
       let tangentLogs :=
         if CCommRing.isZero logCoefficient then [] else [(logCoefficient, tangentBase)]
       some { rational, logs := coefficientLogs ++ tangentLogs }
+
+/-- Finish a reduced tangent candidate while retaining the lower stage's recursive log syntax. -/
+noncomputable def finishTowerTangentCandidate (n : ℕ)
+    (R : CPolynomialReduction DensePoly (DenseFracTower (n + 1)))
+    (C : TowerCoefficientStage n)
+    (Dt fp : DensePoly (DenseFracTower (n + 1))) (alpha : DenseFracTower (n + 1))
+    (reduced : TangentReducedCandidate (DenseFracTower (n + 1)))
+    (polynomialFuel coefficientFuel : ℕ) : Option (TowerIntegralResult (n + 1)) := do
+  let polynomialInput := CPolyEngine.add fp reduced.remainder
+  let polynomial ← R.reduce .nonlinear Dt polynomialFuel polynomialInput
+  if decide (1 < CPolyEngine.cdeg polynomial.remainder) then none
+  else
+    let constantPart := CPoly.coeff polynomial.remainder 0
+    let linearPart := CPoly.coeff polynomial.remainder 1
+    let coefficientResult ←
+      if CCommRing.isZero constantPart then
+        some ({ rational := CCommRing.zero, logs := [] } : TowerIntegralResult n)
+      else C.stage.run coefficientFuel constantPart
+    let twoAlpha := CCommRing.mul (CField.natCast 2) alpha
+    let logCoefficient := CField.div linearPart twoAlpha
+    if !CCommRing.isZero (CDiffField.cderiv logCoefficient) then none
+    else
+      let polynomialAntiderivative :=
+        CPolyEngine.add polynomial.antiderivative [coefficientResult.rational]
+      let rational := combineRationalParts reduced.rational.1 reduced.rational.2
+        polynomialAntiderivative CPoly.one
+      let tangentLogs :=
+        if CCommRing.isZero logCoefficient then [] else [(logCoefficient, tangentBase)]
+      let localResult := TowerIntegralResult.ofIntegralResult Dt
+        ({ rational, logs := tangentLogs } : IntegralResult (DenseFracTower (n + 1)))
+      some (localResult.appendInherited coefficientResult)
+
+/-- Raw recursive hypertangent candidate that preserves a lower tower stage's logarithmic syntax. -/
+noncomputable def towerTangentSpecialCandidate (n : ℕ)
+    (R : CPolynomialReduction DensePoly (DenseFracTower (n + 1)))
+    (C : TowerCoefficientStage n) : CTowerTangentSpecialIntegrator n where
+  integrate S fuel Dt fp b ds := do
+    let denominatorStage := Nat.unpair fuel
+    let coupledStage := Nat.unpair denominatorStage.2
+    let polynomialStage := Nat.unpair coupledStage.2
+    let alpha := CPoly.coeff Dt 2
+    if CCommRing.isZero alpha then none
+    else if !tangentPolyEq Dt [alpha, CCommRing.zero, alpha] then none
+    else
+      let m : ℕ ← tangentBasePower? (α := DenseFracTower (n + 1)) denominatorStage.1 ds
+      let reduced ← tangentReducedCandidate S coupledStage.1 alpha m b ds
+      finishTowerTangentCandidate n R C Dt fp alpha reduced polynomialStage.1 polynomialStage.2
 
 /-- Raw recursive hypertangent candidate generator parameterized by coefficient-field integration. -/
 private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField α]
