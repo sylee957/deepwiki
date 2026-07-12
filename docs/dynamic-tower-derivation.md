@@ -61,10 +61,15 @@ the lower `Differential` supplied explicitly. It deliberately does not install a
 `Differential` instance: doing so would let `CRingSpec.R` silently recover the legacy primitive
 derivative. This is the common dynamic input that the Risch/Hermite/special stages must consume.
 
+`Tower/PolyPartDynamic.lean` is the first migrated algorithm kernel. Its nonlinear and primitive
+polynomial reductions take `CFieldDerivation` explicitly, and its checked reconstruction theorem
+uses the selected `LawfulCFieldDerivation`. The legacy `CPolynomialReduction` is also exposed as a
+remainder-carrying stage, establishing the common output-remainder shape before the Hermite,
+special, coefficient, and logarithmic stages move across.
+
 ## Migration order
 
-1. Parameterize polynomial, Hermite/normal, and special-mononomial stages by the landed explicit
-   dictionary;
+1. Parameterize Hermite/normal and special-mononomial stages by the landed explicit dictionary;
    retain the current dense APIs as primitive-tower compatibility adapters only.
 2. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.
