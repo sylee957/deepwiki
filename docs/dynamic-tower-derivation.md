@@ -61,16 +61,27 @@ the lower `Differential` supplied explicitly. It deliberately does not install a
 `Differential` instance: doing so would let `CRingSpec.R` silently recover the legacy primitive
 derivative. This is the common dynamic input that the Risch/Hermite/special stages must consume.
 
-`Tower/PolyPartDynamic.lean` is the first migrated algorithm kernel. Its nonlinear and primitive
-polynomial reductions take `CFieldDerivation` explicitly, and its checked reconstruction theorem
-uses the selected `LawfulCFieldDerivation`. The legacy `CPolynomialReduction` is also exposed as a
-remainder-carrying stage, establishing the common output-remainder shape before the Hermite,
-special, coefficient, and logarithmic stages move across.
+`Tower/PolyPartDynamic.lean` now exports the checked nonlinear and primitive kernels as
+`CDifferentialPolynomialReduction`: accepted outputs have an explicit reconstruction and normal-form
+certificate, and completeness remains an independent domain-relative capability. The polynomial
+branch can therefore enter `RemainderIntegrationStage` without recovering a global derivative.
+
+`Hermite/DifferentialNormal.lean` supplies the corresponding explicit normal-reduction contract.
+Its certificate includes the function-field reconstruction equation, constant logarithmic
+coefficients, nonzero log arguments, and relative completeness. Existing normal reducers are
+certified compatibility adapters through the legacy context, so dense and sparse code remains an
+implementation choice rather than a second orchestration language.
+
+`MonomialDifferentialStage.lean` gives the special/polynomial branch the same treatment. It has an
+explicit function-field log sum and a certified adapter for existing primitive, hyperexponential,
+and tangent special solvers. `Tower/RecursiveElementaryDynamic.lean` already provides the analogous
+explicit coefficient-recursion stage.
 
 ## Migration order
 
-1. Parameterize Hermite/normal and special-mononomial stages by the landed explicit dictionary;
-   retain the current dense APIs as primitive-tower compatibility adapters only.
+1. Parameterize normal postprocessing and the canonical/one-level assembly handoffs by the landed
+   explicit dictionary, then compose the polynomial, special, normal, and coefficient stages through
+   one dynamic output-remainder invariant.
 2. Rebuild the ordinary/LRT realization adapters and `TowerCoefficientStage.IsRealized` over the
    presentation.
 3. Prove the recursive tangent finish theorem using the lifted lower derivative identity, then
