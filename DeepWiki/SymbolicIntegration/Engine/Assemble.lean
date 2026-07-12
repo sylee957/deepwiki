@@ -18,7 +18,7 @@ representation `P`: integrate the polynomial/special part and post-process the n
 structure CMonomialCase (P : Type u → Type u) [CPoly P] [CPolyEngine P]
     (α : Type u) [CField α] [CDiffField α] where
   /-- Integrate the special/polynomial part `fₚ + b/dₛ` to a rational-plus-log result, or fail. -/
-  integrateSpecial : P α → P α → P α → P α → Option (IntegralResult α P)
+  integrateSpecial : ℕ → P α → P α → P α → P α → Option (IntegralResult α P)
   /-- Post-process a reduced normal result (identity for primitive; residual subtraction for hyperexponential). -/
   postprocessNormal : P α → IntegralResult α P → Option (IntegralResult α P)
 
@@ -78,8 +78,8 @@ variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffF
 derivative, while normal post-processing preserves certified integration results and nonzero denominators. -/
 class LawfulCMonomialCase (C : CMonomialCase P α) : Prop where
   /-- A successful special integration has derivative `fₚ + b/dₛ`. -/
-  special_sound : ∀ (Dt fp b ds : P α) (res : IntegralResult α P),
-    C.integrateSpecial Dt fp b ds = some res →
+  special_sound : ∀ (fuel : ℕ) (Dt fp b ds : P α) (res : IntegralResult α P),
+    C.integrateSpecial fuel Dt fp b ds = some res →
       CPoly.toPoly res.rational.2 ≠ 0 ∧
         towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2)
             + logResidueSumP Dt res.logs =
@@ -105,7 +105,7 @@ class CompleteCMonomialCase (C : CMonomialCase P α)
     CPoly.toPoly res.rational.2 ≠ 0 →
     towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2)
         + logResidueSumP Dt res.logs = fieldFracP fp CPoly.one + fieldFracP b ds →
-      ∃ out, C.integrateSpecial Dt fp b ds = some out
+      ∃ fuel out, C.integrateSpecial fuel Dt fp b ds = some out
   /-- Every certified genuine normal result lies in the normal postprocessor's domain. -/
   postprocess_complete : ∀ (Dt cn dn : P α) (before : IntegralResult α P),
     CertifiedNormalResult Dt cn dn before →

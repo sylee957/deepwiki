@@ -39,8 +39,8 @@ private theorem isIntegralResultP_convertResult {P Q : Type u → Type u}
 /-- Expose dense monomial-case hooks through sparse polynomial inputs and outputs. -/
 def denseMonomialCaseAsSparse (C : CMonomialCase DensePoly α) :
     CMonomialCase CPoly.SparsePoly α where
-  integrateSpecial Dt fp b ds :=
-    (C.integrateSpecial (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
+  integrateSpecial fuel Dt fp b ds :=
+    (C.integrateSpecial fuel (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
       (CPolyEngine.convert b) (CPolyEngine.convert ds)).map fun out =>
         convertResult (Q := CPoly.SparsePoly) out
   postprocessNormal Dt before :=
@@ -51,14 +51,14 @@ def denseMonomialCaseAsSparse (C : CMonomialCase DensePoly α) :
 /-- A lawful dense monomial case remains lawful through the sparse representation boundary. -/
 instance instLawfulCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
     [LawfulCMonomialCase C] : LawfulCMonomialCase (denseMonomialCaseAsSparse C) where
-  special_sound Dt fp b ds res hrun := by
-    change (C.integrateSpecial (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
+  special_sound fuel Dt fp b ds res hrun := by
+    change (C.integrateSpecial fuel (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
       (CPolyEngine.convert b) (CPolyEngine.convert ds)).map
         (convertResult (Q := CPoly.SparsePoly)) = some res at hrun
     rw [Option.map_eq_some_iff] at hrun
     obtain ⟨denseRes, hdense, rfl⟩ := hrun
     have h := LawfulCMonomialCase.special_sound (C := C)
-      (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
+      fuel (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
       (CPolyEngine.convert ds) denseRes hdense
     constructor
     · simpa only [convertResult, CPolyEngine.toPoly_convert] using h.1
@@ -146,12 +146,12 @@ instance instCompleteCMonomialCaseDenseAsSparse (C : CMonomialCase DensePoly α)
       rw [hlog]
       simpa only [fieldFracP, towerFractionFieldDerivP, CPolyEngine.toPoly_convert,
         CPoly.toPoly_one, map_one] using hderiv
-    obtain ⟨out, hout⟩ := CompleteCMonomialCase.special_complete (C := C)
+    obtain ⟨fuel, out, hout⟩ := CompleteCMonomialCase.special_complete (C := C)
       (CPolyEngine.convert Dt) (CPolyEngine.convert fp) (CPolyEngine.convert b)
       (CPolyEngine.convert ds) denseRes
       hdomain hsdenDense hderivDense
-    refine ⟨convertResult (Q := CPoly.SparsePoly) out, ?_⟩
-    change (C.integrateSpecial (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
+    refine ⟨fuel, convertResult (Q := CPoly.SparsePoly) out, ?_⟩
+    change (C.integrateSpecial fuel (CPolyEngine.convert Dt) (CPolyEngine.convert fp)
       (CPolyEngine.convert b) (CPolyEngine.convert ds)).map
         (convertResult (Q := CPoly.SparsePoly)) = some _
     simpa only [Option.map_some] using congrArg

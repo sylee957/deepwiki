@@ -54,9 +54,10 @@ def assembleOneLevel (R : CPolynomialReduction P α) (kind : PolynomialReduction
     (N : CNormalReduction P α) (fuel : ℕ) (C : CMonomialCase P α)
     [CCanonicalRepresentation P α]
     (Dt a d : P α) : Option (IntegralResult α P) := do
+  let stageFuel := Nat.unpair fuel
   let split := canonicalResult Dt a d
-  let reduced ← R.reduce kind Dt fuel split.polynomial
-  let special ← C.integrateSpecial Dt reduced.remainder split.specialNum split.specialDen
+  let reduced ← R.reduce kind Dt stageFuel.1 split.polynomial
+  let special ← C.integrateSpecial stageFuel.2 Dt reduced.remainder split.specialNum split.specialDen
   let before ← N.reduce Dt split.normalNum split.normalDen
   let normal ← C.postprocessNormal Dt before
   let polynomialSpecial := combineSN reduced.antiderivative CPoly.one special
@@ -115,7 +116,7 @@ theorem assembleOneLevel_complete (R : CPolynomialReduction P α)
       hwitness.polynomial_domain hwitness.polynomial_reduction_exists
   obtain ⟨specialWitness, hspecialDen, hspecialSemantic⟩ :=
     hwitness.special_antiderivative fuel reduced hreduce
-  obtain ⟨special, hspecial⟩ := CompleteCMonomialCase.special_complete (C := C) Dt
+  obtain ⟨specialFuel, special, hspecial⟩ := CompleteCMonomialCase.special_complete (C := C) Dt
     reduced.remainder (canonicalResult Dt a d).specialNum
     (canonicalResult Dt a d).specialDen specialWitness
       (hwitness.special_domain fuel reduced hreduce) hspecialDen hspecialSemantic
@@ -126,9 +127,9 @@ theorem assembleOneLevel_complete (R : CPolynomialReduction P α)
     hwitness.normal_domain hnormalDen hwitness.normal_integrable
   obtain ⟨normal, hpost⟩ := CompleteCMonomialCase.postprocess_complete (C := C) specialDomain Dt
     (canonicalResult Dt a d).normalNum (canonicalResult Dt a d).normalDen before hbefore
-  refine ⟨fuel, combineIntegralResults
+  refine ⟨Nat.pair fuel specialFuel, combineIntegralResults
     (combineSN reduced.antiderivative CPoly.one special) normal, ?_⟩
-  simp only [assembleOneLevel, hreduce, hspecial, hnormal, hpost, Option.bind_eq_bind,
+  simp only [assembleOneLevel, Nat.unpair_pair, hreduce, hspecial, hnormal, hpost, Option.bind_eq_bind,
     Option.bind_some]
   rfl
 
@@ -146,10 +147,11 @@ theorem assembleOneLevel_sound (R : CPolynomialReduction P α)
       (canonicalResult Dt a d).normalDen)
     (hrun : assembleOneLevel R kind N fuel C Dt a d = some out) :
     IsIntegralResultP Dt a d out := by
-  cases hreduce : R.reduce kind Dt fuel (canonicalResult Dt a d).polynomial with
+  cases hreduce : R.reduce kind Dt (Nat.unpair fuel).1
+      (canonicalResult Dt a d).polynomial with
   | none => simp [assembleOneLevel, hreduce] at hrun
   | some reduced =>
-    cases hspecial : C.integrateSpecial Dt reduced.remainder
+    cases hspecial : C.integrateSpecial (Nat.unpair fuel).2 Dt reduced.remainder
         (canonicalResult Dt a d).specialNum (canonicalResult Dt a d).specialDen with
     | none => simp [assembleOneLevel, hreduce, hspecial] at hrun
     | some special =>
@@ -164,11 +166,12 @@ theorem assembleOneLevel_sound (R : CPolynomialReduction P α)
               (combineSN reduced.antiderivative CPoly.one special) normal = out := by
             simpa [assembleOneLevel, hreduce, hspecial, hnormal, hpost] using hrun
           subst out
-          have hred := LawfulCPolynomialReduction.sound (C := R) kind Dt fuel
+          have hred := LawfulCPolynomialReduction.sound (C := R) kind Dt (Nat.unpair fuel).1
             (canonicalResult Dt a d).polynomial reduced hreduce
           have hq := polynomialReduction_antiderivative_sound Dt
             (canonicalResult Dt a d).polynomial reduced.antiderivative reduced.remainder hred
-          obtain ⟨hspecialDen, hspecialField⟩ := LawfulCMonomialCase.special_sound (C := C) Dt
+          obtain ⟨hspecialDen, hspecialField⟩ := LawfulCMonomialCase.special_sound (C := C)
+            (Nat.unpair fuel).2 Dt
             reduced.remainder (canonicalResult Dt a d).specialNum
             (canonicalResult Dt a d).specialDen special hspecial
           have hone : CPoly.toPoly (CPoly.one : P α) ≠ 0 := by

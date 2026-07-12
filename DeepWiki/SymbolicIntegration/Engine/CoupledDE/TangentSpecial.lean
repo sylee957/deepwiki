@@ -181,7 +181,7 @@ private def tangentReducedCandidate {α : Type u} [CField α] [CDiffField α]
 private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField α]
     (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
     CTangentSpecialIntegrator α where
-  integrate S Dt fp b ds := do
+  integrate S fuel Dt fp b ds := do
     let alpha := CPoly.coeff Dt 2
     if CCommRing.isZero alpha then none
     else if !tangentPolyEq Dt [alpha, CCommRing.zero, alpha] then none
@@ -197,7 +197,7 @@ private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField
         let coefficientResult ←
           if CCommRing.isZero constantPart then
             some ({ rational := CCommRing.zero, logs := [] } : CoefficientIntegralResult α)
-          else I.integrate constantPart
+          else I.integrate fuel constantPart
         let twoAlpha := CCommRing.mul (CField.natCast 2) alpha
         let logCoefficient := CField.div linearPart twoAlpha
         if !CCommRing.isZero (CDiffField.cderiv logCoefficient) then none
@@ -406,7 +406,7 @@ example :
 /-- Polynomial-only coefficient integrator used to exercise the outer tangent recursion over `ℚ(x)`. -/
 private def tangentPolynomialCoefficientIntegrator :
     CRecursiveElementaryIntegrator (DenseFrac ℚ) where
-  integrate c :=
+  integrate _fuel c :=
     if CPolyEngine.cisZero
         (CPolyEngine.sub (CFrac.den c) (CPoly.one : DensePoly ℚ)) then
       some { rational := CFrac.ofPoly (CPoly.antiderivative (CFrac.num c)), logs := [] }
@@ -415,7 +415,7 @@ private def tangentPolynomialCoefficientIntegrator :
 /-- Coefficient integrator returning the lower-field identity `∫1/x = log x`. -/
 private def tangentLogCoefficientIntegrator :
     CRecursiveElementaryIntegrator (DenseFrac ℚ) where
-  integrate c :=
+  integrate _fuel c :=
     if CCommRing.isZero (CField.sub c tangentInvX) then
       some {
         rational := CCommRing.zero
@@ -434,6 +434,7 @@ example :
         { denominatorFuel := 4, polynomialFuel := 8, coefficientDegreeBound := 3 }
         tangentPolynomialCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
+        8
         tangentBase CPoly.czero tangentRecursiveExampleNumerator
         (CPoly.cpow tangentBase 3)).isSome = true := by
   ccompute
@@ -444,6 +445,7 @@ example :
         { denominatorFuel := 0, polynomialFuel := 1, coefficientDegreeBound := 0 }
         tangentLogCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
+        1
         tangentBase [tangentInvX] CPoly.czero CPoly.one).map
           (fun out => out.logs.length) = some 1 := by
   ccompute
@@ -454,6 +456,7 @@ example :
         { denominatorFuel := 1, polynomialFuel := 2, coefficientDegreeBound := 1 }
         tangentPolynomialCoefficientIntegrator).integrate
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
+        2
         tangentBase [CCommRing.zero, CField.natCast 2]
         CPoly.czero CPoly.one).map (fun out => out.logs.length) = some 1 := by
   ccompute

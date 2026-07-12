@@ -142,7 +142,7 @@ abbrev TangentSpecialDomain (α : Type u) := DensePoly α → DensePoly α →
 /-- Prop-free recursive hypertangent special integrator parameterized by a coupled-system solver. -/
 structure CTangentSpecialIntegrator (α : Type u) [CField α] [CDiffField α] where
   /-- Integrate the polynomial and special-denominator parts, making as many coupled calls as required. -/
-  integrate : CTangentCoefficientSolver α → DensePoly α → DensePoly α →
+  integrate : CTangentCoefficientSolver α → ℕ → DensePoly α → DensePoly α →
     DensePoly α → DensePoly α →
       Option (IntegralResult α)
 
@@ -150,8 +150,8 @@ structure CTangentSpecialIntegrator (α : Type u) [CField α] [CDiffField α] wh
 class LawfulCTangentSpecialIntegrator (S : CTangentCoefficientSolver α)
     (T : CTangentSpecialIntegrator α) : Prop where
   /-- Every returned fraction differentiates to the requested polynomial and special parts. -/
-  sound : ∀ (Dt fp b ds : DensePoly α) (res : IntegralResult α),
-    T.integrate S Dt fp b ds = some res →
+  sound : ∀ (fuel : ℕ) (Dt fp b ds : DensePoly α) (res : IntegralResult α),
+    T.integrate S fuel Dt fp b ds = some res →
       CPoly.toPoly res.rational.2 ≠ 0 ∧
         towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
             logResidueSumP Dt res.logs =
@@ -167,19 +167,19 @@ class CompleteCTangentSpecialIntegrator (S : CTangentCoefficientSolver α)
     towerFractionFieldDerivP Dt (fieldFracP res.rational.1 res.rational.2) +
         logResidueSumP Dt res.logs =
       fieldFracP fp CPoly.one + fieldFracP b ds →
-    ∃ out, T.integrate S Dt fp b ds = some out
+    ∃ fuel out, T.integrate S fuel Dt fp b ds = some out
 
 /-- Compose a tangent coupled solver and recursive special integrator into a monomial case. -/
 def tangentMonomialCase (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α) :
     CMonomialCase DensePoly α where
-  integrateSpecial := T.integrate S
+  integrateSpecial fuel := T.integrate S fuel
   postprocessNormal _ before := some before
 
 /-- A lawful recursive tangent special integrator makes the composed monomial case lawful. -/
 instance instLawfulCMonomialCaseTangent (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
     [LawfulCTangentSpecialIntegrator S T] : LawfulCMonomialCase (tangentMonomialCase S T) where
-  special_sound Dt fp b ds res hrun :=
-    LawfulCTangentSpecialIntegrator.sound Dt fp b ds res hrun
+  special_sound fuel Dt fp b ds res hrun :=
+    LawfulCTangentSpecialIntegrator.sound fuel Dt fp b ds res hrun
   postprocessNormal_sound _ _ _ before after hbefore hrun := by
     change some before = some after at hrun
     have heq : before = after := Option.some.inj hrun
@@ -197,15 +197,15 @@ instance instCompleteCMonomialCaseTangent (S : CTangentCoefficientSolver α) (T 
     [CompleteCTangentSpecialIntegrator S T domain] :
     CompleteCMonomialCase (tangentMonomialCase S T) domain where
   special_complete Dt fp b ds res hdomain hsden hderiv := by
-    obtain ⟨out, hrun⟩ := CompleteCTangentSpecialIntegrator.complete
+    obtain ⟨fuel, out, hrun⟩ := CompleteCTangentSpecialIntegrator.complete
       (S := S) (T := T) (domain := domain) Dt fp b ds res hdomain hsden hderiv
-    exact ⟨out, hrun⟩
+    exact ⟨fuel, out, hrun⟩
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 
 /-- Certificate-check every result returned by a tangent special integrator. -/
 def checkedTangentSpecialIntegrator (T : CTangentSpecialIntegrator α) : CTangentSpecialIntegrator α where
-  integrate S Dt fp b ds := do
-    let out ← T.integrate S Dt fp b ds
+  integrate S fuel Dt fp b ds := do
+    let out ← T.integrate S fuel Dt fp b ds
     if CPolyEngine.cisZero ds then none
     else if CPolyEngine.cisZero out.rational.2 then none
     else if !out.logs.all (fun cv => !CPolyEngine.cisZero cv.2) then none
@@ -216,9 +216,9 @@ def checkedTangentSpecialIntegrator (T : CTangentSpecialIntegrator α) : CTangen
 instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolver α)
     (T : CTangentSpecialIntegrator α) :
     LawfulCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T) where
-  sound Dt fp b ds res hrun := by
+  sound fuel Dt fp b ds res hrun := by
     simp only [checkedTangentSpecialIntegrator] at hrun
-    change (T.integrate S Dt fp b ds).bind
+    change (T.integrate S fuel Dt fp b ds).bind
       (fun out =>
         if CPolyEngine.cisZero ds then none
         else if CPolyEngine.cisZero out.rational.2 then none
@@ -227,7 +227,7 @@ instance instLawfulCTangentSpecialIntegratorChecked (S : CTangentCoefficientSolv
           if CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds then
             some out
           else none) = some res at hrun
-    rcases hraw : T.integrate S Dt fp b ds with _ | out
+    rcases hraw : T.integrate S fuel Dt fp b ds with _ | out
     · simp [hraw] at hrun
     rw [hraw] at hrun
     simp only [Option.bind_some] at hrun
@@ -275,7 +275,7 @@ def checkedTangentSpecialDomain (S : CTangentCoefficientSolver α) (T : CTangent
         logResidueSumP Dt res.logs =
       fieldFracP fp CPoly.one + fieldFracP b ds →
     CPoly.toPoly ds ≠ 0 ∧
-      ∃ out, T.integrate S Dt fp b ds = some out ∧ CPoly.toPoly out.rational.2 ≠ 0 ∧
+      ∃ fuel out, T.integrate S fuel Dt fp b ds = some out ∧ CPoly.toPoly out.rational.2 ≠ 0 ∧
         (∀ cv ∈ out.logs, CPoly.toPoly cv.2 ≠ 0) ∧
         CPoly.checkIdentity Dt out (polynomialSpecialNumerator fp b ds) ds = true
 
@@ -285,7 +285,7 @@ instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoefficientSo
     CompleteCTangentSpecialIntegrator S (checkedTangentSpecialIntegrator T)
       (checkedTangentSpecialDomain S T) where
   complete Dt fp b ds res hdomain hsden hderiv := by
-    obtain ⟨hds, out, hraw, hout, hlogs, hcheck⟩ := hdomain res hsden hderiv
+    obtain ⟨hds, fuel, out, hraw, hout, hlogs, hcheck⟩ := hdomain res hsden hderiv
     have hdsBool : DensePoly.cisZero ds = false := by
       rw [Bool.eq_false_iff]
       intro hzero
@@ -302,7 +302,7 @@ instance instCompleteCTangentSpecialIntegratorChecked (S : CTangentCoefficientSo
           exact hlogs cv hcv (by
             simpa only [toPoly_list_eq] using (cisZeroG_iff cv.2).mp hzero)
         simpa using hzfalse
-    refine ⟨out, ?_⟩
+    refine ⟨fuel, out, ?_⟩
     simp [checkedTangentSpecialIntegrator, hraw, hdsBool, houtBool, hlogsBool, hcheck]
 
 /-- The checked tangent monomial stage is complete on the raw-integrator acceptance domain. -/

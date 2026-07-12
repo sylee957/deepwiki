@@ -177,9 +177,11 @@ monomial stage contracts.
    genuine lifted coefficient result, so the adapter is complete on a domain stated entirely in the lower
    Risch vocabulary. `LawfulElementaryDenseRischLevel` packages exactly the stronger lower-level soundness
    needed here, and together with `CompleteCRischLevel` proves that the checked coefficient adapter succeeds
-   at some finite lower fuel. The remaining tower-completeness gap is to realize this genuine-success contract
-   for the selected assembled levels and thread that existential recursive budget through the outer tangent
-   call rather than fixing one coefficient fuel independently of it.
+   at some finite lower fuel. The generic assembler now decodes its outer fuel into independent polynomial and
+   monomial-stage budgets using `Nat.unpair`; the tangent monomial stage forwards its budget into
+   `CRecursiveElementaryIntegrator`, and dense/sparse successor capabilities derive that budgeted adapter from
+   the preceding level without storing a fixed coefficient fuel. The remaining tower-completeness gap is to
+   realize the genuine-success contract for the selected assembled levels.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and

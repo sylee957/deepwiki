@@ -93,18 +93,16 @@ theorem sparseTangentLevel_complete (C : SparseTangentLevelCapabilities n)
 
 /-- Build the next sparse tangent capability from the preceding level's dense fraction adapter. -/
 noncomputable def SparseTangentLevelCapabilities.step (below : SparseTangentLevelCapabilities n)
-    (fuel : ℕ) (next : SparseTangentLevelLeaves (n + 1)) :
+    (next : SparseTangentLevelLeaves (n + 1)) :
     SparseTangentLevelCapabilities (n + 1) where
   toSparseTangentLevelLeaves := next
   coefficient := recursiveElementaryOfRischLevel
-    (convertRischLevel (Q := DensePoly) (sparseTangentLevel below)) fuel
+    (convertRischLevel (Q := DensePoly) (sparseTangentLevel below))
 
 /-- Inductive selection data for sparse recursive tangent levels over the dense fraction tower. -/
 structure SparseTangentTowerCapabilities where
   /-- The selected constant-field sparse tangent level. -/
   base : SparseTangentLevelCapabilities 0
-  /-- Search budget passed to the preceding Risch level at each successor depth. -/
-  coefficientFuel : ℕ → ℕ
   /-- Nonrecursive stage leaves selected at each successor depth. -/
   stepLeaves : ∀ n, SparseTangentLevelLeaves (n + 1)
 
@@ -113,7 +111,7 @@ noncomputable def sparseTangentTowerCapabilities (C : SparseTangentTowerCapabili
     (n : ℕ) → SparseTangentLevelCapabilities n
   | 0 => C.base
   | n + 1 =>
-      (sparseTangentTowerCapabilities C n).step (C.coefficientFuel n) (C.stepLeaves n)
+      (sparseTangentTowerCapabilities C n).step (C.stepLeaves n)
 
 /-- The recursively selected sparse tangent operation at depth `n`. -/
 noncomputable def sparseTangentTower (C : SparseTangentTowerCapabilities) (n : ℕ) :

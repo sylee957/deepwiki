@@ -28,7 +28,7 @@ structure CoefficientIntegralResult (α : Type u) where
 /-- Prop-free recursive elementary-integration operation for the immediately lower field. -/
 structure CRecursiveElementaryIntegrator (α : Type u) [CField α] [CDiffField α] where
   /-- Integrate a coefficient to a rational part plus lower-field logarithms, if possible. -/
-  integrate : α → Option (CoefficientIntegralResult α)
+  integrate : ℕ → α → Option (CoefficientIntegralResult α)
 
 /-- Executable value of the logarithmic derivative sum stored in a coefficient result. -/
 def coefficientLogDerivative {α : Type u} [CField α] [CDiffField α] :
@@ -49,7 +49,7 @@ def coefficientIntegralResultCheck {α : Type u} [CField α] [CDiffField α]
 /-- Certificate-check an arbitrary recursive elementary coefficient candidate. -/
 def checkedRecursiveElementaryIntegrator {α : Type u} [CField α] [CDiffField α]
     (raw : CRecursiveElementaryIntegrator α) : CRecursiveElementaryIntegrator α where
-  integrate c := raw.integrate c |>.bind fun res =>
+  integrate fuel c := raw.integrate fuel c |>.bind fun res =>
     if coefficientIntegralResultCheck c res then some res else none
 
 variable {α : Type u} [CField α] [CFieldSpec.{u,v} α] [CDiffField α] [CDiffFieldSpec.{u,v} α]
@@ -92,8 +92,8 @@ def IsCoefficientElementarilyIntegrable (c : α) : Prop :=
 /-- Denotation-level soundness of recursive elementary coefficient integration. -/
 class LawfulCRecursiveElementaryIntegrator (C : CRecursiveElementaryIntegrator α) : Prop where
   /-- Every returned result is an elementary antiderivative of the requested coefficient. -/
-  sound : ∀ (c : α) (res : CoefficientIntegralResult α),
-    C.integrate c = some res → IsCoefficientIntegralResult c res
+  sound : ∀ (fuel : ℕ) (c : α) (res : CoefficientIntegralResult α),
+    C.integrate fuel c = some res → IsCoefficientIntegralResult c res
 
 omit [CDiffFieldSpec α] in
 /-- A passed coefficient-result certificate proves the denotational elementary antiderivative contract. -/
@@ -151,9 +151,9 @@ theorem coefficientIntegralResultCheck_iff (c : α) (res : CoefficientIntegralRe
 instance instLawfulCRecursiveElementaryIntegratorChecked
     (raw : CRecursiveElementaryIntegrator α) :
     LawfulCRecursiveElementaryIntegrator (checkedRecursiveElementaryIntegrator raw) where
-  sound c res hrun := by
+  sound fuel c res hrun := by
     simp only [checkedRecursiveElementaryIntegrator] at hrun
-    cases hraw : raw.integrate c with
+    cases hraw : raw.integrate fuel c with
     | none => simp [hraw] at hrun
     | some candidate =>
         rw [hraw] at hrun
@@ -173,7 +173,7 @@ class CompleteCRecursiveElementaryIntegrator (C : CRecursiveElementaryIntegrator
     (domain : RecursiveElementaryDomain (α := α)) [LawfulCRecursiveElementaryIntegrator C] : Prop where
   /-- Every in-domain coefficient with a represented elementary antiderivative is accepted. -/
   complete : ∀ c : α, domain c → IsCoefficientElementarilyIntegrable c →
-    ∃ res, C.integrate c = some res
+    ∃ fuel res, C.integrate fuel c = some res
 
 /-- Semantic domain on which ordinary recursive coefficient integration is required to be complete. -/
 abbrev RecursiveCoefficientDomain := α → Prop
@@ -198,13 +198,13 @@ class CompleteCRecursiveCoefficientIntegrator (C : CRecursiveCoefficientIntegrat
 /-- Regard a log-free recursive coefficient integrator as an elementary integrator with no logs. -/
 def recursiveElementaryOfCoefficient (C : CRecursiveCoefficientIntegrator α) :
     CRecursiveElementaryIntegrator α where
-  integrate c := C.integrate c |>.map fun b => { rational := b, logs := [] }
+  integrate _fuel c := C.integrate c |>.map fun b => { rational := b, logs := [] }
 
 /-- A lawful log-free coefficient integrator remains lawful through the elementary-result embedding. -/
 instance instLawfulCRecursiveElementaryIntegratorOfCoefficient
     (C : CRecursiveCoefficientIntegrator α) [LawfulCRecursiveCoefficientIntegrator C] :
     LawfulCRecursiveElementaryIntegrator (recursiveElementaryOfCoefficient C) where
-  sound c res hrun := by
+  sound _fuel c res hrun := by
     rw [recursiveElementaryOfCoefficient, Option.map_eq_some_iff] at hrun
     obtain ⟨b, hb, rfl⟩ := hrun
     exact ⟨by simpa [coefficientLogSum] using LawfulCRecursiveCoefficientIntegrator.sound c b hb,
@@ -225,7 +225,7 @@ instance instCompleteCRecursiveElementaryIntegratorOfCoefficient
   complete c hdomain _ := by
     obtain ⟨b, hrun⟩ := CompleteCRecursiveCoefficientIntegrator.complete
       (C := C) (domain := domain) c hdomain.1 hdomain.2
-    exact ⟨{ rational := b, logs := [] }, by simp [recursiveElementaryOfCoefficient, hrun]⟩
+    exact ⟨0, { rational := b, logs := [] }, by simp [recursiveElementaryOfCoefficient, hrun]⟩
 
 /-- A pair `(b,r)` solves limited integration when `c = D b + r·η` and `D r = 0`. -/
 def IsLimitedCoefficientResult (η c b r : α) : Prop :=

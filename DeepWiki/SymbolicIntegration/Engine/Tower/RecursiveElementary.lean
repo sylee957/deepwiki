@@ -117,42 +117,42 @@ theorem isCoefficientIntegralResult_liftRischResult (c : DenseFrac β) (res : In
     exact CFrac.am_ne_zero (hargs source hsource)
 
 /-- Raw coefficient candidate obtained by running a lower dense Risch level with `D(t) = 1`. -/
-def recursiveElementaryCandidateOfRischLevel (L : CRischLevel DensePoly β) (fuel : ℕ) :
+def recursiveElementaryCandidateOfRischLevel (L : CRischLevel DensePoly β) :
     CRecursiveElementaryIntegrator (DenseFrac β) where
-  integrate c :=
+  integrate fuel c :=
     (L.integrate fuel [CCommRing.one] (CFrac.num c) (CFrac.den c)).map
       liftRischResultToCoefficient
 
 /-- Certificate-checked elementary coefficient integration supplied by a lower dense Risch level. -/
-def recursiveElementaryOfRischLevel (L : CRischLevel DensePoly β) (fuel : ℕ) :
+def recursiveElementaryOfRischLevel (L : CRischLevel DensePoly β) :
     CRecursiveElementaryIntegrator (DenseFrac β) :=
-  checkedRecursiveElementaryIntegrator (recursiveElementaryCandidateOfRischLevel L fuel)
+  checkedRecursiveElementaryIntegrator (recursiveElementaryCandidateOfRischLevel L)
 
 /-- The checked lower-level adapter is sound independently of its candidate generator. -/
 instance instLawfulCRecursiveElementaryIntegratorOfRischLevel
-    (L : CRischLevel DensePoly β) (fuel : ℕ) :
-    LawfulCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L fuel) := by
+    (L : CRischLevel DensePoly β) :
+    LawfulCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L) := by
   unfold recursiveElementaryOfRischLevel
   infer_instance
 
 /-- Exact executable-acceptance domain of the checked lower-level coefficient adapter. -/
-def recursiveElementaryOfRischLevelDomain (L : CRischLevel DensePoly β) (fuel : ℕ) :
+def recursiveElementaryOfRischLevelDomain (L : CRischLevel DensePoly β) :
     RecursiveElementaryDomain (α := DenseFrac β) := fun c =>
-  ∃ res : IntegralResult β,
+  ∃ fuel res,
     L.integrate fuel [CCommRing.one] (CFrac.num c) (CFrac.den c) = some res ∧
       coefficientIntegralResultCheck c (liftRischResultToCoefficient res) = true
 
 /-- Semantic domain where the lower level returns a genuine lifted elementary antiderivative. -/
-def recursiveElementaryOfRischLevelSemanticDomain (L : CRischLevel DensePoly β) (fuel : ℕ) :
+def recursiveElementaryOfRischLevelSemanticDomain (L : CRischLevel DensePoly β) :
     RecursiveElementaryDomain (α := DenseFrac β) := fun c =>
-  ∃ res : IntegralResult β,
+  ∃ fuel res,
     L.integrate fuel [CCommRing.one] (CFrac.num c) (CFrac.den c) = some res ∧
       IsCoefficientIntegralResult c (liftRischResultToCoefficient res)
 
 /-- Lower-level domain stated entirely in the genuine `IsIntegralResultP` vocabulary. -/
-def recursiveElementaryOfRischLevelGenuineDomain (L : CRischLevel DensePoly β) (fuel : ℕ) :
+def recursiveElementaryOfRischLevelGenuineDomain (L : CRischLevel DensePoly β) :
     RecursiveElementaryDomain (α := DenseFrac β) := fun c =>
-  ∃ res : IntegralResult β,
+  ∃ fuel res,
     L.integrate fuel [CCommRing.one] (CFrac.num c) (CFrac.den c) = some res ∧
       IsIntegralResultP ([CCommRing.one] : DensePoly β) (CFrac.num c) (CFrac.den c) res ∧
       (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
@@ -160,35 +160,35 @@ def recursiveElementaryOfRischLevelGenuineDomain (L : CRischLevel DensePoly β) 
 
 /-- The lower-level adapter is relatively complete on its exact certificate-acceptance domain. -/
 instance instCompleteCRecursiveElementaryIntegratorOfRischLevel
-    (L : CRischLevel DensePoly β) (fuel : ℕ) :
-    CompleteCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L fuel)
-      (recursiveElementaryOfRischLevelDomain L fuel) where
+    (L : CRischLevel DensePoly β) :
+    CompleteCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L)
+      (recursiveElementaryOfRischLevelDomain L) where
   complete c hdomain _ := by
-    obtain ⟨res, hrun, hcheck⟩ := hdomain
-    refine ⟨liftRischResultToCoefficient res, ?_⟩
+    obtain ⟨fuel, res, hrun, hcheck⟩ := hdomain
+    refine ⟨fuel, liftRischResultToCoefficient res, ?_⟩
     simp [recursiveElementaryOfRischLevel, checkedRecursiveElementaryIntegrator,
       recursiveElementaryCandidateOfRischLevel, hrun, hcheck]
 
 /-- Semantic lifted-result certificates imply completeness of the checked lower-level adapter. -/
 instance instCompleteCRecursiveElementaryIntegratorOfRischLevelSemantic
-    (L : CRischLevel DensePoly β) (fuel : ℕ) :
-    CompleteCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L fuel)
-      (recursiveElementaryOfRischLevelSemanticDomain L fuel) where
+    (L : CRischLevel DensePoly β) :
+    CompleteCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L)
+      (recursiveElementaryOfRischLevelSemanticDomain L) where
   complete c hdomain _ := by
-    obtain ⟨res, hrun, hresult⟩ := hdomain
-    refine ⟨liftRischResultToCoefficient res, ?_⟩
+    obtain ⟨fuel, res, hrun, hresult⟩ := hdomain
+    refine ⟨fuel, liftRischResultToCoefficient res, ?_⟩
     have hcheck := coefficientIntegralResultCheck_of_isCoefficientIntegralResult c _ hresult
     simp [recursiveElementaryOfRischLevel, checkedRecursiveElementaryIntegrator,
       recursiveElementaryCandidateOfRischLevel, hrun, hcheck]
 
 /-- Genuine lower Risch results make the checked coefficient adapter relatively complete. -/
 instance instCompleteCRecursiveElementaryIntegratorOfRischLevelGenuine
-    (L : CRischLevel DensePoly β) (fuel : ℕ) :
-    CompleteCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L fuel)
-      (recursiveElementaryOfRischLevelGenuineDomain L fuel) where
+    (L : CRischLevel DensePoly β) :
+    CompleteCRecursiveElementaryIntegrator (recursiveElementaryOfRischLevel L)
+      (recursiveElementaryOfRischLevelGenuineDomain L) where
   complete c hdomain _ := by
-    obtain ⟨res, hrun, hintegral, hconstants, hargs⟩ := hdomain
-    refine ⟨liftRischResultToCoefficient res, ?_⟩
+    obtain ⟨fuel, res, hrun, hintegral, hconstants, hargs⟩ := hdomain
+    refine ⟨fuel, liftRischResultToCoefficient res, ?_⟩
     have hresult := isCoefficientIntegralResult_liftRischResult c res hintegral hconstants hargs
     have hcheck := coefficientIntegralResultCheck_of_isCoefficientIntegralResult c _ hresult
     simp [recursiveElementaryOfRischLevel, checkedRecursiveElementaryIntegrator,
@@ -202,7 +202,7 @@ theorem recursiveElementaryOfRischLevel_eventually_succeeds
     (hdomain : domain [CCommRing.one] (CFrac.num c) (CFrac.den c))
     (hintegrable : IsRischLevelIntegrable ([CCommRing.one] : DensePoly β)
       (CFrac.num c) (CFrac.den c)) :
-    ∃ fuel out, (recursiveElementaryOfRischLevel L fuel).integrate c = some out := by
+    ∃ fuel out, (recursiveElementaryOfRischLevel L).integrate fuel c = some out := by
   have hden : CPoly.toPoly (CFrac.den c) ≠ 0 := CFrac.toPoly_den_ne_zero_generic c
   obtain ⟨fuel, res, hrun⟩ := CompleteCRischLevel.relative_complete
     (L := L) (domain := domain) [CCommRing.one] (CFrac.num c) (CFrac.den c)

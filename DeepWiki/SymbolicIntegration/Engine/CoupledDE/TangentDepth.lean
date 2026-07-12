@@ -85,17 +85,15 @@ theorem denseTangentLevel_complete (C : DenseTangentLevelCapabilities n)
 
 /-- Build the next tangent capability by certificate-checking the preceding selected Risch level. -/
 noncomputable def DenseTangentLevelCapabilities.step (below : DenseTangentLevelCapabilities n)
-    (fuel : ℕ) (next : DenseTangentLevelLeaves (n + 1)) :
+    (next : DenseTangentLevelLeaves (n + 1)) :
     DenseTangentLevelCapabilities (n + 1) where
   toDenseTangentLevelLeaves := next
-  coefficient := recursiveElementaryOfRischLevel (denseTangentLevel below) fuel
+  coefficient := recursiveElementaryOfRischLevel (denseTangentLevel below)
 
 /-- Inductive selection data for recursive tangent levels over the dense fraction tower. -/
 structure DenseTangentTowerCapabilities where
   /-- The selected constant-field tangent level. -/
   base : DenseTangentLevelCapabilities 0
-  /-- Search budget passed to the preceding Risch level at each successor depth. -/
-  coefficientFuel : ℕ → ℕ
   /-- Nonrecursive stage leaves selected at each successor depth. -/
   stepLeaves : ∀ n, DenseTangentLevelLeaves (n + 1)
 
@@ -104,7 +102,7 @@ noncomputable def denseTangentTowerCapabilities (C : DenseTangentTowerCapabiliti
     (n : ℕ) → DenseTangentLevelCapabilities n
   | 0 => C.base
   | n + 1 =>
-      (denseTangentTowerCapabilities C n).step (C.coefficientFuel n) (C.stepLeaves n)
+      (denseTangentTowerCapabilities C n).step (C.stepLeaves n)
 
 /-- The recursively selected tangent operation at depth `n`. -/
 noncomputable def denseTangentTower (C : DenseTangentTowerCapabilities) (n : ℕ) :

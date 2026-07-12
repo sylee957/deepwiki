@@ -17,7 +17,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
 
 /-- Checked hyperexponential special integration with exact normal-result passthrough. -/
 def hyperexpCheckedCase : CMonomialCase DensePoly α where
-  integrateSpecial Dt fp b ds :=
+  integrateSpecial _fuel Dt fp b ds :=
     match cIntegrateHyperexpLaurent (cExpEta Dt) fp (cHyperexpSpecialNeg b ds) with
     | none => none
     | some out =>
@@ -35,7 +35,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- The checked hyperexponential hook satisfies the sound monomial-case contract. -/
 instance instLawfulCMonomialCaseHyperexpChecked :
     LawfulCMonomialCase (DensePoly.hyperexpCheckedCase (α := α)) where
-  special_sound Dt fp b ds res hrun := by
+  special_sound _fuel Dt fp b ds res hrun := by
     simp only [DensePoly.hyperexpCheckedCase] at hrun
     split at hrun
     · contradiction
@@ -115,7 +115,7 @@ instance instCompleteCMonomialCaseHyperexpChecked :
       rw [Bool.eq_false_iff]
       intro hzero
       exact hout (by simpa only [toPoly_list_eq] using (DensePoly.cisZeroG_iff out.2).mp hzero)
-    refine ⟨{ rational := out, logs := [] }, ?_⟩
+    refine ⟨0, { rational := out, logs := [] }, ?_⟩
     simp [DensePoly.hyperexpCheckedCase, hlaurent, hdsBool, houtBool, hcheck]
   postprocess_complete _ _ _ before _ := ⟨before, rfl⟩
 

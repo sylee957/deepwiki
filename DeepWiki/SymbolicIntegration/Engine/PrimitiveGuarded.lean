@@ -73,7 +73,7 @@ private def primitiveGuardedRationalSpecial (Dt fp b : DensePoly α) :
 
 /-- The guarded primitive monomial case. -/
 def primitiveGuardedCase : CMonomialCase DensePoly α where
-  integrateSpecial Dt fp b _ds :=
+  integrateSpecial _fuel Dt fp b _ds :=
     (primitiveGuardedRationalSpecial Dt fp b).map fun rational => { rational, logs := [] }
   postprocessNormal _Dt nrm :=
     if nrm.logs.all (fun cv => cisZero [CDiffField.cderiv cv.1]) then some nrm else none
@@ -81,7 +81,7 @@ def primitiveGuardedCase : CMonomialCase DensePoly α where
 /-- The guarded primitive hook satisfies the sound monomial-case contract. -/
 instance instLawfulCMonomialCasePrimitiveGuarded :
     LawfulCMonomialCase (primitiveGuardedCase (α := α)) where
-  special_sound Dt fp b ds res hsome := by
+  special_sound _fuel Dt fp b ds res hsome := by
     simp only [primitiveGuardedCase, primitiveGuardedRationalSpecial] at hsome
     by_cases hguard : (cisZero b && cisZero (csub Dt [CCommRing.one]) &&
         cisZero (CPolyEngine.mapDeriv fp)) = true
@@ -126,13 +126,13 @@ def primitiveGuardedLrtCase : CLrtMonomialCase DensePoly α where
 instance instLawfulCLrtMonomialCasePrimitiveGuarded :
     LawfulCLrtMonomialCase (primitiveGuardedLrtCase (α := α)) where
   special_sound Dt fp b ds snum sden hrun := by
-    have hfull : primitiveGuardedCase.integrateSpecial Dt fp b ds =
+    have hfull : primitiveGuardedCase.integrateSpecial 0 Dt fp b ds =
         some ({ rational := (snum, sden), logs := [] } : IntegralResult α) := by
       simp only [primitiveGuardedCase, primitiveGuardedLrtCase] at hrun ⊢
       rw [hrun]
       rfl
     have hsound := LawfulCMonomialCase.special_sound (C := primitiveGuardedCase)
-      Dt fp b ds ({ rational := (snum, sden), logs := [] } : IntegralResult α) hfull
+      0 Dt fp b ds ({ rational := (snum, sden), logs := [] } : IntegralResult α) hfull
     exact ⟨hsound.1, by simpa only [logResidueSumP_nil, add_zero] using hsound.2⟩
 
 end DeepWiki.SymbolicIntegration

@@ -16,7 +16,7 @@ structure CRecursiveMonomialCase (P : Type u → Type u) [CPoly P] [CPolyEngine 
     (α : Type u) [CField α] [CDiffField α] where
   /-- Integrate the special part using the supplied lower-field coefficient integrator. -/
   integrateSpecial : CRecursiveCoefficientIntegrator α →
-    P α → P α → P α → P α → Option (IntegralResult α P)
+    ℕ → P α → P α → P α → P α → Option (IntegralResult α P)
   /-- Post-process the normal result after the recursive special stage. -/
   postprocessNormal : P α → IntegralResult α P → Option (IntegralResult α P)
 
