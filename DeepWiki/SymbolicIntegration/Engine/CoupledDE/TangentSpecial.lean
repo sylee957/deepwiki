@@ -179,7 +179,7 @@ private def tangentReducedCandidate {α : Type u} [CField α] [CDiffField α]
 
 /-- Raw recursive hypertangent candidate generator parameterized by coefficient-field integration. -/
 private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField α]
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α) :
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
     CTangentSpecialIntegrator α where
   integrate S Dt fp b ds := do
     let alpha := CPoly.coeff Dt 2
@@ -194,24 +194,26 @@ private def recursiveTangentSpecialCandidate {α : Type} [CField α] [CDiffField
       else
         let constantPart := CPoly.coeff polynomial.2 0
         let linearPart := CPoly.coeff polynomial.2 1
-        let constantAntiderivative ←
-          if CCommRing.isZero constantPart then some CCommRing.zero
+        let coefficientResult ←
+          if CCommRing.isZero constantPart then
+            some ({ rational := CCommRing.zero, logs := [] } : CoefficientIntegralResult α)
           else I.integrate constantPart
         let twoAlpha := CCommRing.mul (CField.natCast 2) alpha
         let logCoefficient := CField.div linearPart twoAlpha
         if !CCommRing.isZero (CDiffField.cderiv logCoefficient) then none
         else
           let polynomialAntiderivative :=
-            CPolyEngine.add polynomial.1 [constantAntiderivative]
+            CPolyEngine.add polynomial.1 [coefficientResult.rational]
           let rational := combineRationalParts reduced.rational.1 reduced.rational.2
             polynomialAntiderivative CPoly.one
-          let logs :=
+          let coefficientLogs := coefficientResult.logs.map fun cv => (cv.1, [cv.2])
+          let tangentLogs :=
             if CCommRing.isZero logCoefficient then [] else [(logCoefficient, tangentBase)]
-          some { rational, logs }
+          some { rational, logs := coefficientLogs ++ tangentLogs }
 
 /-- Certificate-checked recursive hypertangent special integrator. -/
 def recursiveTangentSpecialIntegrator {α : Type} [CField α] [CDiffField α]
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α) :
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
     CTangentSpecialIntegrator α :=
   checkedTangentSpecialIntegrator (recursiveTangentSpecialCandidate config I)
 
@@ -219,14 +221,14 @@ def recursiveTangentSpecialIntegrator {α : Type} [CField α] [CDiffField α]
 def recursiveTangentSpecialDomain {α : Type} [CField α] [CFieldSpec α]
     [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
     (S : CTangentCoefficientSolver α) (config : TangentSpecialConfig)
-    (I : CRecursiveCoefficientIntegrator α) : TangentSpecialDomain α :=
+    (I : CRecursiveElementaryIntegrator α) : TangentSpecialDomain α :=
   checkedTangentSpecialDomain S (recursiveTangentSpecialCandidate config I)
 
 /-- The certified recursive hypertangent operation satisfies its denotational contract. -/
 instance instLawfulCTangentSpecialIntegratorRecursive
     {α : Type} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α) :
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
     LawfulCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator config I) := by
   unfold recursiveTangentSpecialIntegrator
   infer_instance
@@ -235,7 +237,7 @@ instance instLawfulCTangentSpecialIntegratorRecursive
 instance instCompleteCTangentSpecialIntegratorRecursive
     {α : Type} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α) :
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α) :
     CompleteCTangentSpecialIntegrator S (recursiveTangentSpecialIntegrator config I)
       (recursiveTangentSpecialDomain S config I) := by
   unfold recursiveTangentSpecialIntegrator recursiveTangentSpecialDomain
@@ -251,7 +253,7 @@ def recursiveTangentRischLevel
     (R : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α] : CRischLevel DensePoly α :=
   tangentRischLevel R kind raw S
     (recursiveTangentSpecialCandidate config I)
@@ -263,7 +265,7 @@ def recursiveTangentRischLevelCompleteDomain
     (polynomialDomain : PolynomialReductionDomain DensePoly α)
     (raw : CNormalReduction DensePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α] : RischLevelDomain DensePoly α :=
   tangentRischLevelCompleteDomain R kind polynomialDomain raw S
     (recursiveTangentSpecialCandidate config I)
@@ -273,7 +275,7 @@ instance instLawfulCRischLevelRecursiveTangent
     (R : CPolynomialReduction DensePoly α) [LawfulCPolynomialReduction R]
     (kind : PolynomialReductionKind) (raw : CNormalReduction DensePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
     LawfulCRischLevel (recursiveTangentRischLevel R kind raw S config I)
@@ -288,7 +290,7 @@ instance instLawfulCRischLevelRecursiveTangentCompleteDomain
     (polynomialDomain : PolynomialReductionDomain DensePoly α)
     (raw : CNormalReduction DensePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
     LawfulCRischLevel (recursiveTangentRischLevel R kind raw S config I)
@@ -304,7 +306,7 @@ instance instCompleteCRischLevelRecursiveTangent
     [CompleteCPolynomialReduction R polynomialDomain]
     (raw : CNormalReduction DensePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation DensePoly α]
     [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)] :
     CompleteCRischLevel (recursiveTangentRischLevel R kind raw S config I)
@@ -317,7 +319,7 @@ def sparseRecursiveTangentRischLevel
     (R : CPolynomialReduction CPoly.SparsePoly α)
     (kind : PolynomialReductionKind) (raw : CNormalReduction CPoly.SparsePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α] :
     CRischLevel CPoly.SparsePoly α :=
   sparseTangentRischLevel R kind raw S
@@ -330,7 +332,7 @@ def sparseRecursiveTangentRischLevelCompleteDomain
     (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
     (raw : CNormalReduction CPoly.SparsePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α] :
     RischLevelDomain CPoly.SparsePoly α :=
   sparseTangentRischLevelCompleteDomain R kind polynomialDomain raw S
@@ -342,7 +344,7 @@ instance instLawfulCRischLevelSparseRecursiveTangent
     (kind : PolynomialReductionKind)
     (raw : CNormalReduction CPoly.SparsePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     LawfulCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
@@ -358,7 +360,7 @@ instance instLawfulCRischLevelSparseRecursiveTangentCompleteDomain
     (polynomialDomain : PolynomialReductionDomain CPoly.SparsePoly α)
     (raw : CNormalReduction CPoly.SparsePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     LawfulCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
@@ -375,7 +377,7 @@ instance instCompleteCRischLevelSparseRecursiveTangent
     [CompleteCPolynomialReduction R polynomialDomain]
     (raw : CNormalReduction CPoly.SparsePoly α)
     (S : CTangentCoefficientSolver α)
-    (config : TangentSpecialConfig) (I : CRecursiveCoefficientIntegrator α)
+    (config : TangentSpecialConfig) (I : CRecursiveElementaryIntegrator α)
     [CCanonicalRepresentation CPoly.SparsePoly α]
     [LawfulCCanonicalRepresentation (P := CPoly.SparsePoly) (α := α)] :
     CompleteCRischLevel (sparseRecursiveTangentRischLevel R kind raw S config I)
@@ -403,11 +405,22 @@ example :
 
 /-- Polynomial-only coefficient integrator used to exercise the outer tangent recursion over `ℚ(x)`. -/
 private def tangentPolynomialCoefficientIntegrator :
-    CRecursiveCoefficientIntegrator (DenseFrac ℚ) where
+    CRecursiveElementaryIntegrator (DenseFrac ℚ) where
   integrate c :=
     if CPolyEngine.cisZero
         (CPolyEngine.sub (CFrac.den c) (CPoly.one : DensePoly ℚ)) then
-      some (CFrac.ofPoly (CPoly.antiderivative (CFrac.num c)))
+      some { rational := CFrac.ofPoly (CPoly.antiderivative (CFrac.num c)), logs := [] }
+    else none
+
+/-- Coefficient integrator returning the lower-field identity `∫1/x = log x`. -/
+private def tangentLogCoefficientIntegrator :
+    CRecursiveElementaryIntegrator (DenseFrac ℚ) where
+  integrate c :=
+    if CCommRing.isZero (CField.sub c tangentInvX) then
+      some {
+        rational := CCommRing.zero
+        logs := [(CCommRing.one, CFrac.ofPoly [0, 1])]
+      }
     else none
 
 /-- Bronstein's three-step `(t²+1)` example numerator `t⁵+t³-x²t+1`. -/
@@ -423,6 +436,16 @@ example :
       (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
         tangentBase CPoly.czero tangentRecursiveExampleNumerator
         (CPoly.cpow tangentBase 3)).isSome = true := by
+  ccompute
+
+/-- The recursive polynomial tail lifts a logarithm returned by the coefficient field. -/
+example :
+    ((recursiveTangentSpecialIntegrator (α := DenseFrac ℚ)
+        { denominatorFuel := 0, polynomialFuel := 1, coefficientDegreeBound := 0 }
+        tangentLogCoefficientIntegrator).integrate
+      (tangentPolynomialCoefficientSolver tangentPolynomialCoupledSolver)
+        tangentBase [tangentInvX] CPoly.czero CPoly.one).map
+          (fun out => out.logs.length) = some 1 := by
   ccompute
 
 /-- The polynomial stage emits `log(t²+1)` for the derivative `2t/(t²+1)`. -/

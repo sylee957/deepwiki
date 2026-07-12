@@ -137,7 +137,10 @@ monomial stage contracts.
    coupled solver. The executable now implements Bronstein's reduced hypertangent recursion: it recognizes a
    power of `t²+1`, calls the coupled solver at each pole order, subtracts the reconstructed derivative, recurses,
    performs the final nonlinear polynomial reduction, descends the constant coefficient through
-   `CRecursiveCoefficientIntegrator`, and emits the possible constant multiple of `log(t²+1)`. Its unchecked
+   `CRecursiveElementaryIntegrator`, lifts the lower field's rational and logarithmic antiderivative terms,
+   and emits the possible constant multiple of `log(t²+1)`. The log-free
+   `CRecursiveCoefficientIntegrator` remains the operation needed by limited integration and embeds into the
+   elementary interface on an explicit rational-antiderivative domain. Its unchecked
    candidate generator is private; the selected operation is certificate-checked, has a
    `LawfulCTangentSpecialIntegrator` instance, and is relatively complete on its explicit acceptance domain.
    `CTangentCoefficientSolver` now states the representation-neutral coefficient-field system
@@ -161,8 +164,10 @@ monomial stage contracts.
    monomial special stage now returns a full `IntegralResult`, so it can represent the constant multiple of
    `log(t²+1)` produced by hypertangent polynomial reduction; the LRT primitive path retains its separate
    rational-only `CLrtMonomialCase`. Full semantic tangent completeness still needs a semantic completeness
-   theorem for the generalized coupled solver and coefficient recursion, beyond checked acceptance, plus a
-   depth-indexed capability family selecting these generic levels inductively.
+   theorem for the generalized coupled solver and coefficient recursion, beyond checked acceptance. The
+   depth-indexed `DenseTangentTowerCapabilities` family now selects generic tangent levels inductively and
+   derives their contracts uniformly. Each step still explicitly supplies its elementary coefficient
+   integrator; the remaining tower gap is an adapter deriving it from the preceding lawful Risch level.
 3. Connect one-level relative completeness to the recursive tower path. This needs a separate
    relative-completeness contract for Bronstein's limited integration
    `a = D(b) + c·η`: `LawfulCLimitedCoefficientIntegrator` and
