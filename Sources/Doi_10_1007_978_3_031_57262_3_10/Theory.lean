@@ -3,16 +3,12 @@ import Sources.Doi_10_1007_978_3_031_57262_3_10.Source
 
 /-! # Trocq theory — coverage catalog
 
-Coverage map for the mathematical definitions and metatheorems in the ESOP 2024 paper. The current
-library work in `DeepWiki.Refine.RelationStructure` supplies the source-neutral relation hierarchy,
-annotation order, and base weakening operation.
+Coverage map for the mathematical definitions and metatheorems in the ESOP 2024 paper. The
+section-specific catalogs point to the source-neutral equivalence, relation, annotation, weakening,
+and core-parametricity modules.
 
 ## NOT YET FORMALIZED
 
-- Definition 1 (type isomorphism and type equivalence), p. 6 — [external] represented by Mathlib's
-  standard equivalence API; the paper's HoTT distinction still needs an explicit catalog bridge.
-- Lemma 1 (every isomorphism is an equivalence), p. 6 — [external] standard HoTT/Mathlib result.
-- Definition 2 (univalent universe), p. 7 — [infra] Lean's foundation does not assume univalence.
 - Theorem 1 (raw-parametricity abstraction theorem), p. 7 — [infra] needs the translated syntax and
   typing judgments.
 - Theorem 2 (univalent-parametricity abstraction theorem), p. 9 — [infra] needs univalence and the

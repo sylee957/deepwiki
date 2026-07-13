@@ -3,6 +3,7 @@ import DeepWiki.Refine.RelationStructure
 import DeepWiki.Refine.FunctionalRelation
 import DeepWiki.Refine.Dependent
 import DeepWiki.Refine.ProofTransfer
+import DeepWiki.Refine.TypeEquivalence
 import DeepWiki.Refine.CoreParametricity
 import DeepWiki.Refine.WitnessWeakening
 import DeepWiki.Refine.Resolve
@@ -21,6 +22,6 @@ Trocq's Elpi engine): a `@[refines]` witness table + an `isDefEq`-driven `refine
 synthesizes a term's abstract denotation and proof by relational composition, no `simp`.
 `Refine/Goal` lifts the same resolver to first-order propositions via `Iff` and provides
 `refine_goal`. The theory modules formalize the six-level annotation lattice, contractible
-functional relations, dependent respectful products, recursive witness weakening, and an intrinsic
-core abstraction theorem; `ResolverTheory` identifies the executable resolver with its multisorted
-arrow fragment. -/
+functional relations, type equivalence and explicit univalence hypotheses, dependent respectful
+products, recursive witness weakening, and an intrinsic core abstraction theorem; `ResolverTheory`
+identifies the executable resolver with its multisorted arrow fragment. -/

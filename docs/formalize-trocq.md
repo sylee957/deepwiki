@@ -12,6 +12,7 @@ the paper statement in ordinary Lean.
 ## Reading map
 
 - PDF pp. 5-6: the proof-transfer synthesis problem, induction example, and functional pullback.
+- PDF pp. 6-7: type isomorphism, coherent equivalence, univalence, and equivalence transport.
 - PDF pp. 7-8: raw and univalent parametricity translations.
 - PDF pp. 9-11: functional relations, univalent maps, and the symmetric characterization of
   equivalence.
@@ -31,6 +32,22 @@ the paper statement in ordinary Lean.
   to identity after substituting the graph equality.
 - [x] Restate the structurally conjugated `W″` candidate and identify it definitionally with the
   functional pullback construction.
+
+## Section 2.2 - type equivalence and univalence
+
+- [x] Define pointwise equality and prove that it coincides with equality of functions.
+- [x] Represent a type isomorphism by a forward map, inverse map, section, and retraction.
+- [x] Represent the paper's coherence equation between section and retraction proofs.
+- [x] Define `A ≃ B` in the paper's sigma form and prove it equivalent to Lean's bundled `Equiv`.
+- [x] Prove that every two-sided isomorphism is coherently equivalent in Lean, where equality proofs
+  are proof-irrelevant.
+- [x] Prove explicitly that coherent equivalence evidence for a fixed map is proof-irrelevant.
+- [x] Expose the forward and backward transport maps carried by a type equivalence.
+- [x] Verify contravariant domain and covariant codomain transport for function types.
+- [x] Formalize a univalent universe as an explicit coherent-equivalence hypothesis on the
+  equality-to-equivalence map; do not add univalence as an axiom.
+- [x] Derive the paper's transfer principle `A ≃ B -> P A ≃ P B` and proof transport from that
+  hypothesis.
 
 ## First checkpoint: what the six levels mean
 
