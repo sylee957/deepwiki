@@ -6,8 +6,7 @@ import DeepWiki.CAlgebra.Poly.Tower
 import DeepWiki.CAlgebra.Matrix.Dense
 import DeepWiki.CAlgebra.Matrix.Sylvester
 import DeepWiki.CAlgebra.Frac.Basic
-import DeepWiki.CAlgebra.Diff.DifferentialRing
-import DeepWiki.CAlgebra.Diff.DifferentialBridge
+import DeepWiki.CAlgebra.Diff.Basic
 import DeepWiki.CAlgebra.Test.Computable
 
 /-! # CAlgebra — Hex-style computable algebra (greenfield)
