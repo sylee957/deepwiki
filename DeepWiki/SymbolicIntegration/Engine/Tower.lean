@@ -1,10 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.Tower.Compositional
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
-import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialPresentation
-import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialTranscendental
-import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialLegacyCapabilities
-import DeepWiki.SymbolicIntegration.Engine.Tower.DifferentialCoefficientBridge
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect
@@ -15,7 +11,6 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.Realization
 import DeepWiki.SymbolicIntegration.Engine.Tower.Reduce
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementaryDynamic
-import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveMonomialDifferential
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDECompleteness
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance
