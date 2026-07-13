@@ -115,6 +115,27 @@ theorem hyperexpRischLevel_succeeds_iff_integrable (R : CPolynomialReduction Den
   exact rischLevel_succeeds_iff_integrable (hyperexpRischLevel (α := α) R kind)
     (hyperexpRischLevelSemanticCompleteDomain R kind polynomialDomain) Dt a d hdomain hd
 
+/-- **Fraction-integrand form** of the hyperexponential decision procedure: the integrand is a single
+`CFrac` fraction `frac` (numerator + certified-nonzero denominator), so no `den ≠ 0` hypothesis appears
+— it is carried by the fraction. Wraps `hyperexpRischLevel_succeeds_iff_integrable`. -/
+theorem hyperexpRischLevel_succeeds_iff_integrable_frac
+    {F : (β : Type u) → [CField β] → Type u} [CFrac F DensePoly] [LawfulCFrac F DensePoly]
+    (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CompleteCPolynomialReduction R polynomialDomain]
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)]
+    [CRischFieldSpec α] (hfield : CRischFieldComplete α)
+    (Dt : DensePoly α) (frac : F α)
+    (hdomain : hyperexpRischLevelSemanticCompleteDomain R kind polynomialDomain Dt
+      (CFrac.num frac) (CFrac.den frac)) :
+    IsRischLevelIntegrable Dt (CFrac.num frac) (CFrac.den frac) ↔
+      ∃ fuel res, (hyperexpRischLevel (α := α) R kind).integrate fuel Dt
+        (CFrac.num frac) (CFrac.den frac) = some res :=
+  hyperexpRischLevel_succeeds_iff_integrable R kind polynomialDomain hfield Dt
+    (CFrac.num frac) (CFrac.den frac) hdomain (CFrac.toPoly_den_ne_zero_generic frac)
+
 /-- Sparse hyperexponential Risch level obtained solely by converting the dense semantic level. -/
 def sparseHyperexpRischLevel (R : CPolynomialReduction DensePoly α)
     (kind : PolynomialReductionKind) [CCanonicalRepresentation DensePoly α] :
