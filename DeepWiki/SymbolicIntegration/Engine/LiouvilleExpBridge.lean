@@ -724,6 +724,18 @@ example (u : F) (hnd : NondegenerateExp u) :
     IsLiouville F (RatFunc F) :=
   isLiouville_expExtension_uncond u hnd
 
+/-- A nondegenerate exp monomial introduces no new constants in `RatFunc F` (`ContainConstants`): a
+constant `x` (with `x′ = 0 ∈ range(algebraMap F …)`) already lies in `F`, immediately from
+`expDeriv_mem_range_imp_mem_range` (the exp `v′ ∈ F ⟹ v ∈ F` descent). The exp sibling of
+`containConstants_of_nondegenerateLog`; the exp case is direct — no linear `v`-reduction needed. -/
+theorem containConstants_of_nondegenerateExp (u : F) (hnd : NondegenerateExp u) :
+    letI := expDifferential u
+    Differential.ContainConstants F (RatFunc F) := by
+  letI := expDifferential u
+  letI := expDifferentialAlgebra u
+  refine ⟨fun {x} hx => ?_⟩
+  exact expDeriv_mem_range_imp_mem_range u hnd (by rw [hx]; exact ⟨0, by rw [map_zero]⟩)
+
 end ExpPole
 
 end DeepWiki.SymbolicIntegration.LiouvilleExpBridge
