@@ -185,9 +185,16 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `Differential (DensePoly R)` instance (Mathlib `Differential R = Derivation ℤ R R`). The CAlgebra
     polynomial carrier is now a Mathlib **differential ring**, so the abstract Risch/Hermite
     development (over `[Differential K]`) can run over it, with `toPolynomial` carrying each derivation
-    step to `Polynomial.derivative`. **← NEXT: 6b** — differential structure on the *field* carrier
-    (needs `Field`/`Differential` on `DenseFrac` or the `RatFunc` differential — this also unblocks 5c);
-    then port the first engine algorithm (Hermite reduction) as a commuting square.
+    step to `Polynomial.derivative`.
+  - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
+    `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
+    = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
+    commuting square every ported engine step transports through). Also found: Mathlib has no
+    `Differential (RatFunc R)` either, so the differential FIELD carrier (5c / field-level 6c) needs a
+    RatFunc/DenseFrac derivation built by hand (quotient rule + representative-independence).
+    **← NEXT: 6c** — differential field carrier (build the `RatFunc`/`DenseFrac` derivation) OR port
+    the first engine algorithm (Hermite reduction, which is abstract over `[Differential K]` and can
+    now be instantiated at `Polynomial R`) as a commuting square.
 - **Phase Z — retire the old tree.** Once parity + catalog reachability confirmed, delete
   `ComputableAlgebra` + old `Engine`, repoint `Sources/` catalogs, update CLAUDE.md.
 
