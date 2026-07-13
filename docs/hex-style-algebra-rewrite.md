@@ -95,8 +95,12 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
   ring-iso thesis holds; note `RingEquiv` needs only `Mul`+`Add` on `DensePoly`, so no `CommRing`
   instance was required to state it. **← NEXT: Phase 2.**
 - **Phase 2 — Euclid + Laws + gcd bridge.** `divMod`/`gcd`/`xgcd`, `DivModLaws`/`GcdLaws`, `ℚ`
-  instances, `PolyBridge/Euclid.lean` (`toPolynomial_dvd_iff`, `gcd_associated`, Bezout transport).
+  instances, `PolyBridge/Euclid.lean` (`gcd_associated`, Bezout transport).
   Optional: `EuclidFuel.lean` + one `decide +kernel` certificate.
+  - **2a DONE:** `PolyBridge/Ring.lean` — `CommRing (DensePoly R)` via injective `toPolynomial`
+    (computable `+`/`-`/`*`; auxiliary `•`/`^`/casts through the bridge) + `toPolynomial_dvd_iff`
+    (divisibility preserved AND reflected — first completeness-by-reverse-transport payoff). **← NEXT:
+    2b divMod/gcd/xgcd (Wf) + `GcdLaws` + gcd `Associated` bridge.**
 - **Phase 3 — resultant / subresultant / Bareiss** + Mathlib correspondence.
 - **Phase 4 — canonical `DenseFrac` fraction field + `≃+* RatFunc`**, and the tower iteration
   (replacing `CFracG`/`QFunNZG` towers with normalized-fraction carriers bridged by field iso).
