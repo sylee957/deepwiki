@@ -59,4 +59,21 @@ example (p q : DensePoly R) : toPolynomial (DensePoly.gcd p q) ∣ toPolynomial 
   (refines_gcd.prf p (toPolynomial p) rfl q (toPolynomial q) rfl).dvd.trans
     (EuclideanDomain.gcd_dvd_left _ _)
 
+/-! ### Relation-hierarchy coercion: equality `⊑` up-to-a-unit -/
+
+/-- Equality implies `Associated`: `RPoly` is finer than `RPolyU`. Registering it lets the resolver
+weaken any equality-level transfer to the up-to-unit level. -/
+@[refines_sub] theorem subsume_RPoly_RPolyU : Subsumes (RPoly (R := R)) RPolyU := by
+  intro c a h
+  have h' : toPolynomial c = a := h
+  subst h'
+  exact Associated.refl _
+
+/-- The resolver now weakens across the hierarchy: a purely-functional term transfers **at the coarser
+`RPolyU`** even though only equality-level (`RPoly`) witnesses exist — `refine_transfer` resolves it at
+`RPoly` and coerces up along the subsumption. -/
+example (p q : DensePoly R) :
+    Refines RPolyU (p * q) (toPolynomial p * toPolynomial q) := by
+  refine_transfer
+
 end DeepWiki.Refine

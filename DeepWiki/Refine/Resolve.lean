@@ -24,6 +24,18 @@ initialize registerBuiltinAttribute {
     descr := "A refinement witness `Refines (R ⟹ … ⟹ R) F G` for the transfer resolver."
     add := fun decl _stx _kind => modifyEnv fun env => refinesExt.addEntry env decl }
 
+/-- Env extension collecting `@[refines_sub]`-tagged subsumptions `Subsumes R S` (relation-hierarchy
+coercions the resolver may weaken along). -/
+initialize subsumeExt : SimplePersistentEnvExtension Name (Array Name) ←
+  registerSimplePersistentEnvExtension {
+    addEntryFn := Array.push
+    addImportedFn := fun arrs => arrs.foldl Array.append #[] }
+
+initialize registerBuiltinAttribute {
+    name := `refines_sub
+    descr := "A subsumption `Subsumes R S` (finer `R` implies coarser `S`) for the transfer resolver."
+    add := fun decl _stx _kind => modifyEnv fun env => subsumeExt.addEntry env decl }
+
 /-- Decompose a witness relation `R₁ ⟹ … ⟹ Rₖ ⟹ Rout` into the argument relations `[R₁,…,Rₖ]` and
 the output relation `Rout`. This is what lets the resolver thread a *different* relation on the output
 than on the inputs (e.g. `gcd`: equality inputs, up-to-unit output). -/
@@ -79,6 +91,24 @@ partial def resolve (R : Expr) (c : Expr) : MetaM (Expr × Expr) := do
             proof ← mkAppM ``Refines.app #[proof, xPf]
           return (mkAppN (← instantiateMVars gExpr) absArgs, proof)
         else s.restore
+      else s.restore
+    | _ => s.restore
+  -- relation-hierarchy coercion: weaken a transfer proved at a finer relation `Rstrong ⊑ R`
+  for sub in subsumeExt.getState (← getEnv) do
+    let s ← saveState
+    let subConst ← mkConstWithFreshMVarLevels sub
+    -- non-reducing: `Subsumes` is a `∀`-def; `…Reducing` would telescope past it and lose the match
+    let (params, bis, concl) ← forallMetaTelescope (← inferType subConst)
+    match concl.getAppFnArgs with
+    | (``Subsumes, #[_, _, Rstrong, Sweak]) =>
+      if ← isDefEq R Sweak then
+        for i in [0:params.size] do
+          if bis[i]!.isInstImplicit then
+            let m := params[i]!.mvarId!
+            unless ← m.isAssigned do
+              try m.assign (← synthInstance (← m.getType)) catch _ => pure ()
+        let (a, pf) ← resolve (← instantiateMVars Rstrong) c
+        return (a, ← mkAppM ``Refines.weaken #[mkAppN subConst params, pf])
       else s.restore
     | _ => s.restore
   -- leaf: `c` refines its denotation (functional relation)

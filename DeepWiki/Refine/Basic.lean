@@ -45,4 +45,13 @@ def DenoteRel {C : Type u} {A : Type v} (denote : C → A) : C → A → Prop :=
 theorem refines_denote {C : Type u} {A : Type v} (denote : C → A) (c : C) :
     Refines (DenoteRel denote) c (denote c) := ⟨rfl⟩
 
+/-- `Subsumes R S`: the finer relation `R` implies the coarser `S`. Registering these gives the
+resolver a **relation-hierarchy coercion** (Trocq's relation lattice): a transfer proved at `R` can be
+weakened to `S` (e.g. equality `⟹` associated-up-to-a-unit). -/
+def Subsumes {C : Type u} {A : Type v} (R S : C → A → Prop) : Prop := ∀ c a, R c a → S c a
+
+/-- Weaken a refinement along a subsumption `R ⊑ S`. -/
+theorem Refines.weaken {C : Type u} {A : Type v} {R S : C → A → Prop} {c : C} {a : A}
+    (h : Subsumes R S) (hr : Refines R c a) : Refines S c a := ⟨h c a hr.prf⟩
+
 end DeepWiki.Refine
