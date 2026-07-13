@@ -41,6 +41,21 @@ Mathlib-style differential-algebra layer, not orchestration.
 - **P2** — `scripts/wiki build`; confirm the retired decls have no callers; audit no orphaned imports;
   update `docs/dynamic-tower-derivation.md` (mark the path retired) and this doc.
 
+## Status — COMPLETE (2026-07-13)
+
+- **P1 done** (`e9de68a9`): 13 files / ~2802 lines deleted; imports removed from `Engine.lean`/`Tower.lean`;
+  full gate PASS (4941 jobs, was 4954).
+- **P2 done**: `scripts/wiki build` rebuilt (20530 → 20198 decls); `rdeps primitiveOneStepStage` /
+  `DifferentialTranscendentalLevel` → "no declaration matching"; no orphaned imports; sweep found no
+  other superseded-solver islands (`LogTower`/`Compositional`/`TangentCapability`/`Algebraic/*` are all
+  live with external consumers; the sparse-representation layer — `convertRischLevel`,
+  `sparseHyperexpRischLevel`, `instCCanonicalRepresentationSparse` — is the deliberate
+  representation-independence keepsake and stays). `docs/dynamic-tower-derivation.md` marked retired.
+
+The sound-and-complete transcendental Risch results are unaffected (they never used the presentation
+path). Net: −2802 lines of superseded orchestration; the LRT/RischLevel track is the sole live
+transcendental solver path.
+
 ## Invariants
 
 - Rebuild the wiki graph and re-audit before deletion; gate with `scripts/check.sh` (must be GATE:

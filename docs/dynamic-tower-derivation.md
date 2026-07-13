@@ -1,5 +1,17 @@
 # Dynamic derivatives for mixed transcendental towers
 
+> **RETIRED (2026-07-13).** The presentation-path orchestration this doc describes
+> (`DifferentialTowerPresentation` / `DifferentialTranscendentalLevel` / the `*OneStep*` stages /
+> `DifferentialLegacyCapabilities` / `DifferentialCanonical`·`Assembly`·`Reconstruction`·`OneLevel` /
+> `MonomialDifferentialStage` / `Hermite/Differential{Normal,Stage}`) was a candidate orchestration
+> replacement that ended up **superseded by the LRT / `CRischLevel` (RischLevel) track** — the path the
+> actual sound-and-complete transcendental Risch solvers use (`hyperexpRischLevel`, `tangentRischLevel`,
+> `CRischLevelLrt.integrate`, the per-level + tower-depth sound+complete capstones). It had zero external
+> consumers and no `Sources/` catalog coverage, and was deleted (13 files, ~2802 lines) — see
+> `docs/retire-presentation-orchestration.md`. This doc is kept as the historical design record of the
+> obstruction that motivated it. The abstract differential-algebra foundations and
+> `DifferentialAlgebraicClosure` are untouched and live.
+
 ## Verified obstruction
 
 The current executable carrier `DenseFracTower` is not a representation of a general differential
