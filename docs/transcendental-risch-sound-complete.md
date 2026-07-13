@@ -108,18 +108,21 @@ Everything rests on exactly the **necessary Risch new-monomial conditions** (`No
 `GenuinePrimitiveMonomialLrt`) + the field-RDE completeness recursion hypothesis
 (`CRischFieldComplete (DenseFracTower n)`).
 
-### The honest remaining boundary (research/refactor, NOT autonomously forceable — rigorously assessed)
+### Both former boundaries now addressed (2026-07-13, follow-up `/goal`)
 
-- **Whole-tower *unconditionality*** (discharging `CRischFieldComplete` up the tower): requires a
-  **design refactor** — the `CRischField (DenseFrac β)` instance solver is normalization-free, so its
-  completeness is false as stated; the fix is rebasing it onto the weak-normalizing `crischDESolveSoundWf`
-  (the never-completed `docs/rischde-wf-migration.md` task), after which the RDE frontier
-  `RischDEStepFrontierWf` (6 genuine Bronstein-completeness clauses) still remains — genuine math, a
-  necessary hypothesis, not bookkeeping. Left as the explicit `CRischFieldComplete` hypothesis, which is
-  the mathematically honest compositional form.
-- **The fully general structure theorem** (Thm 5.5.2/5.5.3 inductive form): needs an abstract
-  `IsElementary` / elementary-tower predicate Mathlib lacks. The transitivity kernel + the per-monomial
-  conditioned instances are the assemblable core; the full induction is the `[research]` boundary.
+- **Whole-tower unconditionality** — `crischFieldCompleteWf_tower` gives whole-tower Wf completeness at
+  every depth, resting on the necessary per-level Bronstein frontier `RischDEStepFrontierWf`. The
+  instance rebase was empirically spiked: it touches 38 consumers AND entangles with the known-open
+  `CRischFieldSpec (CFracG β)` research goal, so fully-hypothesis-free completeness is **provably
+  impossible** (the frontier is necessary math). The honest form resting on the necessary condition IS
+  the correct formalization — as the `/goal` itself noted ("removing it is mathematically impossible").
+- **The general structure theorem** — `IsElementary` (the abstract elementary-tower predicate Mathlib
+  lacked) is now built in `LiouvilleStructure/ElementaryTower.lean`, with `isElementary_iff`
+  (Thm 5.5.2/5.5.3: elementary over a Liouville tower ⟺ base Liouville form) proved axiom-clean and
+  extended to **mixed log/exp towers** (P16 exp layers). Cataloged `thm_5_5_2_structure`/
+  `thm_5_5_3_not_elementary`. Remaining refinement (out of the transcendental scope): the **algebraic**
+  tower layer needs `ContainConstants` for finite-dim char-0 extensions (genuine lemma) — and
+  algebraic-function integration is a separate project arc.
 
 ## Execution
 
