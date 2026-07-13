@@ -162,6 +162,12 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
       instance-recursion plumbing, [[leanproofs-tower-orchestration-rework]]) OR the fraction-field
       tower needing `Field (DenseFrac)` via canonical reduced form. Then Phase 5 (derivations).
 - **Phase 5 — computable derivation + bridge** to Mathlib `′`/`Derivation` on the new carriers.
+  **← NEXT.**
+  - **5a DONE:** `Poly/Derivative.lean` — `deriv` (formal derivative, `coeff k = (k+1)·coeff (k+1)`) +
+    `coeff_deriv` + `toPolynomial_deriv` (bridges to `Polynomial.derivative`).
+  - **← NEXT: 5b** — `deriv` satellite laws (additivity, Leibniz `deriv (p*q) = deriv p * q + p * deriv q`
+    transported from `Polynomial.derivative_mul`) and the `DenseFrac` quotient-rule derivative + bridge.
+  - (4c-ii generic depth-`n` tower deferred — instance-recursion plumbing; not blocking Phase 5/6.)
 - **Phase 6…N — re-anchor the engine.** Port Hermite → Rothstein–Trager → residues/log part →
   LRT → RDE / coefficient recursion → tower orchestration → algebraic layer, each restated as a
   transported commuting square over `CAlgebra` carriers. Reproduce the end-to-end `cIntegrate`
