@@ -171,6 +171,13 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
       native arithmetic still works; only `^`/`•`/casts don't. **Refinement for full tower
       computability:** give those auxiliary ops computable definitions so the whole `CommRing` instance
       is computable (optional; not blocking).
+    - ★ COMPUTABILITY IS BUILD-VERIFIED (`ComputableGuard.lean`): Lean's compiler is a computability
+      decision procedure — a plain `def` computing an op proves it's on the computable path (else the
+      `dependsOnNoncomputable` error breaks the gate). Confirmed: `*`/`+`/`-`/`divMod`/`gcd`/`deriv` +
+      `DenseFrac` ops ARE computable; `^`/`•`/`natCast` on `DensePoly` are NOT (compiler-rejected).
+      Guards are `def`s, not `native_decide`, so they add nothing to any theorem's TCB. Full
+      verified-computable-path = these guards (path exists) + the `toX_*` bridge squares (path denotes
+      the right Mathlib op).
     - **← NEXT: 4c-ii generic depth-`n` tower carrier** (recursive type + instances — the known
       instance-recursion plumbing, [[leanproofs-tower-orchestration-rework]]) OR the fraction-field
       tower needing `Field (DenseFrac)` via canonical reduced form. Then Phase 5 (derivations).

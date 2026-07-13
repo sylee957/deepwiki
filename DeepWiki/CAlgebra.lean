@@ -15,6 +15,7 @@ import DeepWiki.CAlgebra.Frac.Additive
 import DeepWiki.CAlgebra.FracBridge.Basic
 import DeepWiki.CAlgebra.Diff.DifferentialRing
 import DeepWiki.CAlgebra.Diff.DifferentialBridge
+import DeepWiki.CAlgebra.ComputableGuard
 import DeepWiki.CAlgebra.Frac.Additive
 import DeepWiki.CAlgebra.PolyBridge.Euclid
 
