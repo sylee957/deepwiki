@@ -1,10 +1,9 @@
 import DeepWiki.SymbolicIntegration.Engine.RatFuncValuation.Basic
-import DeepWiki.SymbolicIntegration.Engine.RatFuncValuation.PolynomialOrderDrop
 
 /-! # The `K(t)`-valuation calculus
 
 Aggregator for the `p`-adic valuation `ratFuncOrd p x = νₚ(x)` on `RatFunc K` and its basic
-algebraic laws (`Basic`) plus the polynomial order-drop calculus (`PolynomialOrderDrop`).
+algebraic laws (`Basic`).
 -/
 
 open Polynomial Classical
