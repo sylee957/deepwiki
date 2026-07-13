@@ -97,6 +97,71 @@ theorem divMod_spec (p q : DensePoly R) : (divMod p q).1 * q + (divMod p q).2 = 
 /-- Validation: `div`/`mod` reconstruct the dividend (the Euclidean division spec). -/
 example (p q : DensePoly R) : div p q * q + mod p q = p := divMod_spec p q
 
+/-- The remainder produced by `divModAux` has size below the divisor (for a nonzero divisor). -/
+theorem divModAux_rem_size_lt {q : DensePoly R} (hq : q.size ≠ 0) (r quot : DensePoly R) :
+    (divModAux q r quot).2.size < q.size := by
+  induction r, quot using divModAux.induct (q := q) with
+  | case1 r quot h => rw [divModAux.eq_def, if_pos h]; exact h.resolve_right hq
+  | case2 r quot h ih => rw [divModAux.eq_def, if_neg h]; exact ih
+
+/-- The remainder of polynomial division has strictly smaller size than a nonzero divisor. -/
+theorem mod_size_lt {q : DensePoly R} (hq : q.size ≠ 0) (p : DensePoly R) :
+    (mod p q).size < q.size :=
+  divModAux_rem_size_lt hq p 0
+
+/-- Polynomial gcd via the Euclidean algorithm (last nonzero remainder). -/
+def gcd (p q : DensePoly R) : DensePoly R :=
+  if q.size = 0 then p else gcd q (mod p q)
+  termination_by q.size
+  decreasing_by
+    rename_i h
+    exact mod_size_lt h p
+
+/-- A size-zero polynomial is the zero polynomial. -/
+theorem eq_zero_of_size_zero {p : DensePoly R} (h : p.size = 0) : p = 0 := by
+  ext i; rw [coeff_zero]; exact coeff_eq_zero_of_size_le p (by omega)
+
+/-- `mod p q = p - (p / q) * q`, the remainder as an explicit difference. -/
+theorem mod_eq_sub (p q : DensePoly R) : mod p q = p - div p q * q :=
+  eq_sub_of_add_eq' (divMod_spec p q)
+
+/-- The Euclidean gcd divides both arguments (soundness half of the gcd universal property). -/
+theorem gcd_dvd (p q : DensePoly R) : gcd p q ∣ p ∧ gcd p q ∣ q := by
+  induction p, q using gcd.induct with
+  | case1 p q h =>
+      rw [gcd.eq_def, if_pos h]
+      exact ⟨dvd_refl p, by rw [eq_zero_of_size_zero h]; exact dvd_zero p⟩
+  | case2 p q h ih =>
+      rw [gcd.eq_def, if_neg h]
+      refine ⟨?_, ih.1⟩
+      have hp : div p q * q + mod p q = p := divMod_spec p q
+      have key : gcd q (mod p q) ∣ div p q * q + mod p q :=
+        dvd_add (ih.1.mul_left (div p q)) ih.2
+      rwa [hp] at key
+
+/-- The Euclidean gcd divides its left argument. -/
+theorem gcd_dvd_left (p q : DensePoly R) : gcd p q ∣ p := (gcd_dvd p q).1
+
+/-- The Euclidean gcd divides its right argument. -/
+theorem gcd_dvd_right (p q : DensePoly R) : gcd p q ∣ q := (gcd_dvd p q).2
+
+/-- Any common divisor divides the gcd (greatest / completeness half of the universal property). -/
+theorem dvd_gcd {d : DensePoly R} : ∀ p q, d ∣ p → d ∣ q → d ∣ gcd p q := by
+  intro p q
+  induction p, q using gcd.induct with
+  | case1 p q h => intro hp _; rw [gcd.eq_def, if_pos h]; exact hp
+  | case2 p q h ih =>
+      intro hp hq
+      rw [gcd.eq_def, if_neg h]
+      refine ih hq ?_
+      rw [mod_eq_sub]
+      exact dvd_sub hp (hq.mul_left (div p q))
+
+/-- Validation: the gcd is a genuine greatest common divisor. -/
+example (p q : DensePoly R) : gcd p q ∣ p ∧ gcd p q ∣ q ∧
+    ∀ d, d ∣ p → d ∣ q → d ∣ gcd p q :=
+  ⟨gcd_dvd_left p q, gcd_dvd_right p q, fun _ hp hq => dvd_gcd p q hp hq⟩
+
 end DensePoly
 
 end DeepWiki.CAlgebra
