@@ -20,7 +20,20 @@ theorems across. No Lean 4 port of this exists (the Lean Zulip parametricity thr
   `(p+q)*r - s` transfers to its `Polynomial` denotation by **pure `Refines.app` composition** — zero
   `simp`. This is the relational abstraction theorem instantiated by hand.
 
-## ← NEXT: the `MetaM` resolver (the Trocq-Elpi analog)
+## DONE: the `MetaM` resolver (the Trocq-Elpi analog) — `Refine/Resolve.lean`
+
+Built and gate-green (commit 50d36da1): the `@[refines]` attribute + env extension, the `resolve`
+recursion, and the `refine_transfer` tactic. The Poly demo now transfers `(p+q)*r-s` and
+`-((p*q)+p)-(q-p)` with a single `by refine_transfer` — the hand `Refines.app` trees are gone. Added
+a **head-symbol pre-filter** (compare `lhs.getAppFn.constName?` before `isDefEq`) — essential, since
+`isDefEq`/`whnf` through the hand-built `CommRing` is costly and blindly trying every witness times out.
+
+**← NEXT (3c):** more witnesses (`DenseFrac ⇄ RatFunc`, `deriv`, constant leaves `0`/`1`/`C x`), a
+`refine_transfer%` term elaborator (return the synthesized `Refines` proof as data), and — the real
+payoff — **theorem** transfer: given a Mathlib theorem about `Polynomial`, rewrite a `DensePoly` goal
+into it via the transfer proof (not just denote a term). That's what serves Phase 6.
+
+### Design notes (implemented)
 
 Automate building the `Refines.app` tree so the user writes `refine_transfer%`/`refine_transfer`
 instead of a nested composition by hand.
