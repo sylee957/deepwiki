@@ -41,6 +41,14 @@ Algorithm `resolve (c : Expr) : MetaM (a : Expr × proof : Expr)` — `proof : R
 2. Leaf (no witness matches): `a := denote c`, `proof := refines_denote denote c` (extract `denote`
    from the goal relation `R = DenoteRel denote`).
 
+Implementation caveats (found while designing):
+- Instantiate each witness's own binders (`{R} [CommRing R] [DecidableEq R]`) with
+  `forallMetaTelescopeReducing`; after `isDefEq c (F ?xs)` fixes `R`, the instance mvars must be
+  **synthesized** (`synthInstanceMVars` / `synthAppInstances`) before `mkAppM ``Refines.app` — else the
+  proof term has unassigned instance holes.
+- Arity = count nested `Respectful` in the witness's `rel` (peel `rel.getAppFnArgs = (``Respectful,
+  …, RB)` and recurse on `RB`). `Respectful` is `@[reducible]`, so `whnf`/`getAppFnArgs` see it.
+
 Layers:
 - **3a** — a `@[refines]` attribute + `SimpleScopedEnvExtension` mapping the concrete op's head constant
   → witness const name (indexed lookup instead of scanning all witnesses).
