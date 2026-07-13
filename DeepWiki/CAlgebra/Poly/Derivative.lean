@@ -51,6 +51,21 @@ theorem deriv_mul (p q : DensePoly R) : deriv (p * q) = deriv p * q + p * deriv 
   apply toPolynomial_injective
   simp only [toPolynomial_deriv, toPolynomial_mul, toPolynomial_add, Polynomial.derivative_mul]
 
+/-- The derivative of the zero polynomial is zero. -/
+@[simp] theorem deriv_zero : deriv (0 : DensePoly R) = 0 := by
+  apply toPolynomial_injective
+  simp only [toPolynomial_deriv, toPolynomial_zero, Polynomial.derivative_zero]
+
+/-- The derivative commutes with negation. -/
+@[simp] theorem deriv_neg (p : DensePoly R) : deriv (-p) = -deriv p := by
+  apply toPolynomial_injective
+  simp only [toPolynomial_deriv, toPolynomial_neg, Polynomial.derivative_neg]
+
+/-- The derivative of a constant is zero. -/
+@[simp] theorem deriv_one : deriv (1 : DensePoly R) = 0 := by
+  apply toPolynomial_injective
+  simp only [toPolynomial_deriv, toPolynomial_one, Polynomial.derivative_one, toPolynomial_zero]
+
 end DensePoly
 
 /-- Validation: the dense derivative matches Mathlib's polynomial derivative through the bridge,
