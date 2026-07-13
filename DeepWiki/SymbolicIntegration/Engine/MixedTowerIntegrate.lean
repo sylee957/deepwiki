@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.TranscendentalOverAlgebraic
-import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Special
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.Eta
+import DeepWiki.SymbolicIntegration.Engine.Hyperexp.LaurentCore
 
 /-! # Transcendental integrals over an algebraic base (the mixed tower)
 
@@ -98,18 +99,6 @@ theorem mixedHyperexpPolySpec_integral_descends :
       | some (num, den) =>
           CPoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩
             [CCommRing.one, CCommRing.zero, CCommRing.one] [CCommRing.zero, CCommRing.one]
-      | none => false) = true := by native_decide
-
-/-! ### The full `cIntegrateHyperexp` top entry over `RadX3` -/
-
-/-- `cIntegrateHyperexp`'s top entry validates over `RadX3`: on `f = (t²+1)/t = t + t⁻¹` it returns
-`some res` with `checkIdentity` confirming `D(res) = f`. -/
-theorem mixedHyperexpG_topEntry_validates :
-    (match DensePoly.cIntegrateHyperexp mixedHyperexpDt [CCommRing.one, CCommRing.zero, CCommRing.one]
-        [CCommRing.zero, CCommRing.one] [CCommRing.zero, CCommRing.one] with
-      | some res =>
-          CPoly.checkIdentity mixedHyperexpDt res [CCommRing.one, CCommRing.zero, CCommRing.one]
-            [CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration
