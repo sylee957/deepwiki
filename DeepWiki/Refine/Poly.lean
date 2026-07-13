@@ -1,4 +1,4 @@
-import DeepWiki.Refine.Basic
+import DeepWiki.Refine.Resolve
 import DeepWiki.CAlgebra.Poly.Operations
 
 /-! # Refinement witnesses for `DensePoly R ⇄ Polynomial R`
@@ -23,7 +23,7 @@ theorem refines_toPolynomial (p : DensePoly R) : Refines RPoly p (toPolynomial p
   refines_denote _ p
 
 /-- Multiplication respects refinement. -/
-instance refines_mul : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· * ·) (· * ·) where
+@[refines] instance refines_mul : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· * ·) (· * ·) where
   prf c a hca c' a' hc'a' := by
     have hca : toPolynomial c = a := hca
     have hc'a' : toPolynomial c' = a' := hc'a'
@@ -31,7 +31,7 @@ instance refines_mul : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· * ·) (�
     rw [toPolynomial_mul, hca, hc'a']
 
 /-- Addition respects refinement. -/
-instance refines_add : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· + ·) (· + ·) where
+@[refines] instance refines_add : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· + ·) (· + ·) where
   prf c a hca c' a' hc'a' := by
     have hca : toPolynomial c = a := hca
     have hc'a' : toPolynomial c' = a' := hc'a'
@@ -39,7 +39,7 @@ instance refines_add : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· + ·) (�
     rw [toPolynomial_add, hca, hc'a']
 
 /-- Subtraction respects refinement. -/
-instance refines_sub : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· - ·) (· - ·) where
+@[refines] instance refines_sub : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· - ·) (· - ·) where
   prf c a hca c' a' hc'a' := by
     have hca : toPolynomial c = a := hca
     have hc'a' : toPolynomial c' = a' := hc'a'
@@ -47,24 +47,25 @@ instance refines_sub : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· - ·) (�
     rw [toPolynomial_sub, hca, hc'a']
 
 /-- Negation respects refinement. -/
-instance refines_neg : Refines (RPoly (R := R) ⟹ RPoly) (- ·) (- ·) where
+@[refines] instance refines_neg : Refines (RPoly (R := R) ⟹ RPoly) (- ·) (- ·) where
   prf c a hca := by
     have hca : toPolynomial c = a := hca
     show toPolynomial (-c) = -a
     rw [toPolynomial_neg, hca]
 
-/-- Demonstration: the compound `(p + q) * r - s` transfers to its `Polynomial` denotation by pure
-relational composition — no `simp`, no `@[denote]`, only `Refines.app` chaining the per-op witnesses.
-The abstract term on the right is exactly what the resolver synthesizes. -/
+/-- The resolver AUTOMATES the transfer: `refine_transfer` synthesizes the abstract `Polynomial`
+denotation of the compound `(p + q) * r - s` and its proof — by `isDefEq`-driven relational
+composition of the `@[refines]` witnesses, no `simp`. This one tactic replaces the hand-written
+`Refines.app` tree. -/
 example (p q r s : DensePoly R) :
     Refines RPoly ((p + q) * r - s)
-      ((toPolynomial p + toPolynomial q) * toPolynomial r - toPolynomial s) :=
-  Refines.app
-    (Refines.app refines_sub
-      (Refines.app
-        (Refines.app refines_mul
-          (Refines.app (Refines.app refines_add (refines_toPolynomial p)) (refines_toPolynomial q)))
-        (refines_toPolynomial r)))
-    (refines_toPolynomial s)
+      ((toPolynomial p + toPolynomial q) * toPolynomial r - toPolynomial s) := by
+  refine_transfer
+
+/-- A deeper term transfers just as automatically. -/
+example (p q : DensePoly R) :
+    Refines RPoly (-((p * q) + p) - (q - p))
+      (-((toPolynomial p * toPolynomial q) + toPolynomial p) - (toPolynomial q - toPolynomial p)) := by
+  refine_transfer
 
 end DeepWiki.Refine
