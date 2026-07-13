@@ -180,7 +180,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
 - **Phase 6…N — re-anchor the engine.** Port Hermite → Rothstein–Trager → residues/log part →
   LRT → RDE / coefficient recursion → tower orchestration → algebraic layer, each restated as a
   transported commuting square over `CAlgebra` carriers. Reproduce the end-to-end `cIntegrate`
-  examples. This is the bulk.
+  examples. This is the bulk. **← ACTIVE.**
+  - **6a DONE:** `Diff/DifferentialRing.lean` — `deriv` packaged as `Derivation ℤ`, giving a
+    `Differential (DensePoly R)` instance (Mathlib `Differential R = Derivation ℤ R R`). The CAlgebra
+    polynomial carrier is now a Mathlib **differential ring**, so the abstract Risch/Hermite
+    development (over `[Differential K]`) can run over it, with `toPolynomial` carrying each derivation
+    step to `Polynomial.derivative`. **← NEXT: 6b** — differential structure on the *field* carrier
+    (needs `Field`/`Differential` on `DenseFrac` or the `RatFunc` differential — this also unblocks 5c);
+    then port the first engine algorithm (Hermite reduction) as a commuting square.
 - **Phase Z — retire the old tree.** Once parity + catalog reachability confirmed, delete
   `ComputableAlgebra` + old `Engine`, repoint `Sources/` catalogs, update CLAUDE.md.
 
