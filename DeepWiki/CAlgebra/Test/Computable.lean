@@ -1,6 +1,6 @@
 import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Poly.Derivative
-import DeepWiki.CAlgebra.Frac.Additive
+import DeepWiki.CAlgebra.Frac.Basic
 
 /-! # Computability guards
 
@@ -21,7 +21,7 @@ nothing to any theorem's trusted base (and are unaffected by the `@[csimp]`/`nat
 axiom-tracking issue, leanprover/lean4#7463). Correctness of the *output* is a separate matter, handled
 by the `toX_*` bridge squares. -/
 
-namespace DeepWiki.CAlgebra.ComputableGuard
+namespace DeepWiki.CAlgebra.Test.Computable
 
 section
 variable {R : Type u}
@@ -62,4 +62,4 @@ private def fracAdd [CommRing R] [DecidableEq R] : DenseFrac R â†’ DenseFrac R â
 
 end
 
-end DeepWiki.CAlgebra.ComputableGuard
+end DeepWiki.CAlgebra.Test.Computable

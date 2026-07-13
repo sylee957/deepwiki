@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.PolyBridge.Ring
+import DeepWiki.CAlgebra.Poly.Operations
 import Mathlib.Algebra.Polynomial.Eval.Degree
 
 /-! # Tower iteration (concrete depth-2 validation)

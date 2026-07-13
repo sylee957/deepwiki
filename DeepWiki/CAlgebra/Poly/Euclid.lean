@@ -1,5 +1,6 @@
-import DeepWiki.CAlgebra.PolyBridge.Ring
+import DeepWiki.CAlgebra.Poly.Operations
 import Mathlib.Algebra.Field.Basic
+import Mathlib.Algebra.Polynomial.FieldDivision
 
 /-! # Euclidean division of normalized dense polynomials
 
@@ -163,5 +164,33 @@ example (p q : DensePoly R) : gcd p q ∣ p ∧ gcd p q ∣ q ∧
   ⟨gcd_dvd_left p q, gcd_dvd_right p q, fun _ hp hq => dvd_gcd p q hp hq⟩
 
 end DensePoly
+
+/-! ### gcd correspondence to Mathlib's `EuclideanDomain.gcd` -/
+
+open Polynomial in
+variable {R : Type u} [Field R] [DecidableEq R] in
+/-- The executable gcd is `Associated` to Mathlib's normalized polynomial gcd under `toPolynomial`:
+it divides the same things (soundness, forward transport) and is divisible by every common divisor
+(completeness, reverse transport). Up to `Associated` since the raw remainder isn't normalized. -/
+theorem toPolynomial_gcd_associated (p q : DensePoly R) :
+    Associated (toPolynomial (DensePoly.gcd p q))
+      (EuclideanDomain.gcd (toPolynomial p) (toPolynomial q)) := by
+  apply associated_of_dvd_dvd
+  · apply EuclideanDomain.dvd_gcd
+    · exact toPolynomial_dvd (DensePoly.gcd_dvd_left p q)
+    · exact toPolynomial_dvd (DensePoly.gcd_dvd_right p q)
+  · have hgp : ofPolynomial (EuclideanDomain.gcd (toPolynomial p) (toPolynomial q)) ∣ p :=
+      dvd_of_toPolynomial_dvd (by rw [toPolynomial_ofPolynomial]; exact EuclideanDomain.gcd_dvd_left _ _)
+    have hgq : ofPolynomial (EuclideanDomain.gcd (toPolynomial p) (toPolynomial q)) ∣ q :=
+      dvd_of_toPolynomial_dvd (by rw [toPolynomial_ofPolynomial]; exact EuclideanDomain.gcd_dvd_right _ _)
+    have hfin := toPolynomial_dvd (DensePoly.dvd_gcd p q hgp hgq)
+    rwa [toPolynomial_ofPolynomial] at hfin
+
+variable {R : Type u} [Field R] [DecidableEq R] in
+/-- Validation: the executable gcd and Mathlib's gcd divide each other (are associated). -/
+example (p q : DensePoly R) :
+    toPolynomial (DensePoly.gcd p q) ∣ EuclideanDomain.gcd (toPolynomial p) (toPolynomial q) ∧
+    EuclideanDomain.gcd (toPolynomial p) (toPolynomial q) ∣ toPolynomial (DensePoly.gcd p q) :=
+  ⟨(toPolynomial_gcd_associated p q).dvd, (toPolynomial_gcd_associated p q).symm.dvd⟩
 
 end DeepWiki.CAlgebra

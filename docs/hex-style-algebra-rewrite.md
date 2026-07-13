@@ -44,18 +44,17 @@ properties, `Associated` bridges). Kernel-reducible `decide` certificates (via f
 when a phase adds them; only compiler-trusting `native_decide` is transient. Record "computability
 checked, examples removed" in the phase commit message.
 
-**ARCHITECTURAL RULE (reaffirmed 2026-07-13, user): Mathlib correspondence lives in `*Bridge`
-modules, never mixed into core carriers.** A core module (`Poly/`, `Frac/`, `Matrix/`) defines only the
-computable carrier, its operations, and intrinsic laws — NO `toPolynomial`/`toRatFunc`/`toMatrix`
-denotations, NO Mathlib-type instances, NO bridge theorems (`toX_*`, `Associated`, `Differential`-on-
-Mathlib). Those all go in the paired `*Bridge/` module (`PolyBridge/`, `FracBridge/`, `MatrixBridge/`).
-A happy side effect: core modules often generalize (e.g. `Frac` core needs only `CommRing`, not `Field`).
-Cleanup status: **DONE** — Frac (`FracBridge/Basic`), Poly derivative (`PolyBridge/Derivative`), Matrix
-(`Matrix/{Dense,Sylvester}` core + `MatrixBridge/Basic`). `Diff/*` are inherently Mathlib-`Differential`
-bridges (fine as-is, the name signals it). `Poly/Euclid`, `Poly/Tower` *depend on* the bridge-provided
-`CommRing`/`equiv` but define computable content (acceptable core-uses-bridge, not correspondence-mixing).
-All core carriers now hold only computable defs + intrinsic laws; every `toX` denotation lives in a
-`*Bridge/` module.
+**ARCHITECTURAL RULE (superseded 2026-07-13, user): COHESIVE concept modules — no `*Bridge/`
+separation.** We are NOT pursuing Mathlib-free cores (a standalone-package goal we don't want), so
+splitting each concept into a core file + a `*Bridge` file only fragments it without payoff. Instead
+each concept module holds its computable defs *and* their Mathlib correspondence together. The earlier
+core/`*Bridge` split was reverted: `PolyBridge/`, `FracBridge/`, `MatrixBridge/` folders **deleted**,
+their content folded into the concept modules — `Poly/Operations` (arithmetic + `toPolynomial`/`equiv`
++ computable `CommRing` + dvd), `Poly/Euclid` (division/gcd + `Associated`), `Poly/Derivative` (deriv +
+bridge + laws), `Frac/Basic` (carrier + ops + `toRatFunc`), `Matrix/{Dense,Sylvester}` (carrier +
+`toMatrix`/resultant). Genuinely-noncomputable denotations (`toPolynomial`/`ofPolynomial`/`equiv`,
+`toRatFunc`) are marked `noncomputable def` individually; the computable ops and `CommRing` stay
+computable (guarded in `Test/Computable`).
 
 **Explicitly NOT load-bearing for us:** Hex's strict *Mathlib-free cores*. Hex keeps cores
 Mathlib-free so the packages are reusable standalone; DeepWiki is a Mathlib-based wiki and *wants*
@@ -171,9 +170,9 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
       hand-built the `CommRing` — arithmetic fields = the computable `Operations`, axioms proved by
       transport through `toPolynomial`, and `nsmul`/`zsmul` = `nsmulRec`/`zsmulRec` with `npow`/
       `natCast`/`intCast` at Lean's computable defaults. Now the ENTIRE `CommRing` is computable:
-      `^`/`•`/casts `#eval` correctly (guarded in `ComputableGuard`). Nothing noncomputable is bundled
+      `^`/`•`/casts `#eval` correctly (guarded in `Test/Computable`). Nothing noncomputable is bundled
       onto the compute type — matches Hex's discipline while keeping the `ring`-tactic convenience.
-    - ★ COMPUTABILITY IS BUILD-VERIFIED (`ComputableGuard.lean`): Lean's compiler is a computability
+    - ★ COMPUTABILITY IS BUILD-VERIFIED (`Test/Computable.lean`): Lean's compiler is a computability
       decision procedure — a plain `def` computing an op proves it's on the computable path (else the
       `dependsOnNoncomputable` error breaks the gate). Confirmed: `*`/`+`/`-`/`divMod`/`gcd`/`deriv` +
       `DenseFrac` ops ARE computable; `^`/`•`/`natCast` on `DensePoly` are NOT (compiler-rejected).

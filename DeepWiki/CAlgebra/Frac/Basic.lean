@@ -1,13 +1,11 @@
-import DeepWiki.CAlgebra.Frac.Additive
-import DeepWiki.CAlgebra.PolyBridge.Basic
+import DeepWiki.CAlgebra.Poly.Operations
 import Mathlib.FieldTheory.RatFunc.Basic
 
-/-! # Mathlib bridge for `DenseFrac`: `toRatFunc`
+/-! # Computable rational functions (`DenseFrac`)
 
-The Mathlib correspondence for the computable rational-function carrier: `toRatFunc` sends a
-`DenseFrac` to `RatFunc R` as `num/den`, and the homomorphism squares relate the computable
-arithmetic (`Frac/*`) to `RatFunc` operations. Kept out of the `Frac/` core modules so those stay
-Mathlib-correspondence-free. -/
+`DenseFrac R` is a numerator/denominator pair of dense polynomials — the computable carrier for
+rational functions — together with its arithmetic and its Mathlib correspondence `toRatFunc` into
+`RatFunc R` (`num/den`). Carrier + ops need only `CommRing`; the `RatFunc` bridge needs `Field`. -/
 
 open Polynomial
 
@@ -15,6 +13,53 @@ namespace DeepWiki.CAlgebra
 
 universe u
 
+/-! ### Carrier and arithmetic (any `CommRing` coefficient) -/
+
+section Carrier
+variable {R : Type u} [CommRing R] [DecidableEq R]
+
+/-- Computable rational function: a numerator and denominator of dense polynomials. -/
+structure DenseFrac (R : Type u) [CommRing R] [DecidableEq R] where
+  /-- The numerator polynomial. -/
+  num : DensePoly R
+  /-- The denominator polynomial. -/
+  den : DensePoly R
+
+namespace DenseFrac
+
+/-- Embed a dense polynomial as a rational function with denominator `1`. -/
+def ofPoly (p : DensePoly R) : DenseFrac R := ⟨p, 1⟩
+
+/-- Rational-function multiplication: multiply numerators and denominators. -/
+def mul (f g : DenseFrac R) : DenseFrac R := ⟨f.num * g.num, f.den * g.den⟩
+instance : Mul (DenseFrac R) where mul := mul
+theorem mul_def (f g : DenseFrac R) : f * g = ⟨f.num * g.num, f.den * g.den⟩ := rfl
+
+/-- The multiplicative unit `1/1`. -/
+instance : One (DenseFrac R) where one := ⟨1, 1⟩
+
+/-- Rational-function negation: negate the numerator. -/
+def neg (f : DenseFrac R) : DenseFrac R := ⟨-f.num, f.den⟩
+instance : Neg (DenseFrac R) where neg := neg
+theorem neg_def (f : DenseFrac R) : -f = ⟨-f.num, f.den⟩ := rfl
+
+/-- Rational-function inverse: swap numerator and denominator. -/
+def inv (f : DenseFrac R) : DenseFrac R := ⟨f.den, f.num⟩
+instance : Inv (DenseFrac R) where inv := inv
+theorem inv_def (f : DenseFrac R) : f⁻¹ = ⟨f.den, f.num⟩ := rfl
+
+/-- Rational-function addition by cross-multiplication. -/
+def add (f g : DenseFrac R) : DenseFrac R := ⟨f.num * g.den + g.num * f.den, f.den * g.den⟩
+instance : Add (DenseFrac R) where add := add
+theorem add_def (f g : DenseFrac R) :
+    f + g = ⟨f.num * g.den + g.num * f.den, f.den * g.den⟩ := rfl
+
+end DenseFrac
+end Carrier
+
+/-! ### Mathlib bridge `toRatFunc` (any `Field` coefficient) -/
+
+section Bridge
 variable {R : Type u} [Field R] [DecidableEq R]
 
 /-- A nonzero dense polynomial has nonzero Mathlib image. -/
@@ -67,13 +112,13 @@ theorem toRatFunc_add (f g : DenseFrac R) (hf : f.den ≠ 0) (hg : g.den ≠ 0) 
   congr 1
   ring
 
-/-- Validation: `toRatFunc` is a ring homomorphism into the rational-function field (mul/one
-unconditional; add on genuine nonzero-denominator fractions). -/
+/-- Validation: `toRatFunc` is a ring homomorphism into the rational-function field. -/
 example (f g : DenseFrac R) (hf : f.den ≠ 0) (hg : g.den ≠ 0) :
     toRatFunc (f * g) = toRatFunc f * toRatFunc g ∧
     toRatFunc (f + g) = toRatFunc f + toRatFunc g :=
   ⟨toRatFunc_mul f g, toRatFunc_add f g hf hg⟩
 
 end DenseFrac
+end Bridge
 
 end DeepWiki.CAlgebra
