@@ -93,6 +93,15 @@ theorem neg_def (p : DensePoly R) :
   · rw [if_neg h]
     rw [coeff_eq_zero_of_size_le p (Nat.not_lt.mp h), neg_zero]
 
+/-- Dense polynomial subtraction `a - b := a + (-b)`. -/
+instance : Sub (DensePoly R) where sub a b := a + (-b)
+
+theorem sub_def (p q : DensePoly R) : p - q = p + (-q) := rfl
+
+@[simp] theorem coeff_sub (p q : DensePoly R) (n : Nat) :
+    (p - q).coeff n = p.coeff n - q.coeff n := by
+  rw [sub_def, coeff_add, coeff_neg, sub_eq_add_neg]
+
 /-! ### Multiplication -/
 
 /-- Dense polynomial multiplication via the Cauchy convolution, then normalized. -/
