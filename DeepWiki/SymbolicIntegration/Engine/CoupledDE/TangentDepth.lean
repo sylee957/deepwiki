@@ -286,4 +286,23 @@ theorem denseTangentTower_soundAndComplete (C : DenseTangentTowerCapabilities) (
         denseTangentTower_logs_genuine C n fuel Dt a d res hdomain hden hrun⟩,
     fun hdomain hintegrable => denseTangentTower_complete C n Dt a d hdomain hden hintegrable⟩
 
+/-- **Fraction-integrand form** of the whole-tower hypertangent sound-and-complete theorem: at depth
+`n`, the integrand is a single `CFrac` fraction `frac` (num + certified-nonzero denom), so no `den ≠ 0`
+hypothesis — carried by the fraction. Wraps `denseTangentTower_soundAndComplete`. -/
+theorem denseTangentTower_soundAndComplete_frac (C : DenseTangentTowerCapabilities) (n : ℕ)
+    {F : (β : Type) → [CField β] → Type} [CFrac F DensePoly] [LawfulCFrac F DensePoly]
+    [CFracGcdCoreWf (DenseFracTower n)]
+    (Dt : DensePoly (DenseFracTower n)) (frac : F (DenseFracTower n)) :
+    (∀ fuel res, (denseTangentTower C n).integrate fuel Dt (CFrac.num frac) (CFrac.den frac) = some res →
+        oneLevelRischSoundDomain tangentNormalDomain Dt (CFrac.num frac) (CFrac.den frac) →
+        IsIntegralResultP Dt (CFrac.num frac) (CFrac.den frac) res ∧
+          (∀ cv ∈ res.logs, CFieldSpec.toK (CDiffField.cderiv cv.1) = 0) ∧
+          (∀ cv ∈ res.logs, CPoly.toPoly cv.2 ≠ 0)) ∧
+      (denseTangentLevelDomain (denseTangentTowerCapabilities C n) Dt (CFrac.num frac) (CFrac.den frac) →
+        IsRischLevelIntegrable Dt (CFrac.num frac) (CFrac.den frac) →
+        ∃ fuel res, (denseTangentTower C n).integrate fuel Dt
+          (CFrac.num frac) (CFrac.den frac) = some res) :=
+  denseTangentTower_soundAndComplete C n Dt (CFrac.num frac) (CFrac.den frac)
+    (CFrac.toPoly_den_ne_zero_generic frac)
+
 end DeepWiki.SymbolicIntegration

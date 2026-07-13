@@ -150,6 +150,33 @@ theorem lrtSolver_soundAndComplete_on_tower [PrimitiveFrontierLrt ℚ]
   ⟨lrtSolver_succeeds_iff_integrable_on_tower Dt a d hdomain hd,
     fun res h hR0 hguard => soundGenuineLrt_of_guard Dt a d res hgcd h hR0 hguard⟩
 
+/-- **Fraction-integrand form** of the primitive sound-and-complete capstone: the integrand is a single
+`CFrac` fraction `frac` over `DensePoly (DenseFrac ℚ)` (num + certified-nonzero denom), so no
+`toPoly d ≠ 0` hypothesis — it is carried by the fraction. Wraps `lrtSolver_soundAndComplete_on_tower`. -/
+theorem lrtSolver_soundAndComplete_on_tower_frac [PrimitiveFrontierLrt ℚ]
+    [CRischField (DenseFrac ℚ)] [LawfulCPolySplitFactor DensePoly (DenseFrac ℚ)]
+    [PrimitiveFrontierLrt (DenseFrac ℚ)]
+    {F : (β : Type) → [CField β] → Type} [CFrac F DensePoly] [LawfulCFrac F DensePoly]
+    (Dt : DensePoly (DenseFrac ℚ)) (frac : F (DenseFrac ℚ))
+    (hgcd : CgcdBCorrect (CFracGcdCoreWf.cgcdFFCoreWf (α := DenseFrac ℚ)))
+    (hdomain : primitiveRischLevelLrtDomain
+      (inferInstance : CRischLevelLrt (DenseFrac ℚ)) Dt (CFrac.num frac) (CFrac.den frac)) :
+    (IsElementaryIntegrableLrt Dt (CFrac.num frac) (CFrac.den frac) ↔
+        ∃ res, (inferInstance : CRischLevelLrt (DenseFrac ℚ)).integrate Dt
+          (CFrac.num frac) (CFrac.den frac) = some res) ∧
+      (∀ res, (inferInstance : CRischLevelLrt (DenseFrac ℚ)).integrate Dt
+          (CFrac.num frac) (CFrac.den frac) = some res →
+        toPoly (cResidueResultantTower Dt
+            (cHermiteReduceTower Dt (crNormNum Dt (CFrac.num frac) (CFrac.den frac))
+              (crNormDen Dt (CFrac.num frac) (CFrac.den frac))).2.1
+            (cHermiteReduceTower Dt (crNormNum Dt (CFrac.num frac) (CFrac.den frac))
+              (crNormDen Dt (CFrac.num frac) (CFrac.den frac))).2.2) ≠ 0 →
+          cResidueConstantGuard Dt (crNormNum Dt (CFrac.num frac) (CFrac.den frac))
+            (crNormDen Dt (CFrac.num frac) (CFrac.den frac)) = true →
+          IsGenuineIntegralResultLrt Dt (CFrac.num frac) (CFrac.den frac) res) :=
+  lrtSolver_soundAndComplete_on_tower Dt (CFrac.num frac) (CFrac.den frac) hgcd hdomain
+    (by rw [← toPoly_list_eq]; exact CFrac.toPoly_den_ne_zero_generic frac)
+
 /-! ### The capstone grounded on the honest new-monomial condition alone
 
 `PrimitiveFrontierLrt` is not an axiom: it is *constructible* from the single genuine input-independent

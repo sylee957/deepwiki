@@ -59,6 +59,30 @@ theorem hyperexpRischLevel_succeeds_iff_integrable_tower (n : ℕ)
         (hyperexpRischLevel (α := DenseFracTower n) R kind).integrate fuel Dt a d = some res :=
   hyperexpRischLevel_succeeds_iff_integrable R kind polynomialDomain hfield Dt a d hdomain hd
 
+/-- **Fraction-integrand form** of the whole-tower hyperexponential decision procedure: at depth `n`,
+the integrand is a single `CFrac` fraction `frac` (num + certified-nonzero denom), so no `den ≠ 0`
+hypothesis — carried by the fraction. Wraps `hyperexpRischLevel_succeeds_iff_integrable_tower`. -/
+theorem hyperexpRischLevel_succeeds_iff_integrable_tower_frac (n : ℕ)
+    {F : (β : Type) → [CField β] → Type} [CFrac F DensePoly] [LawfulCFrac F DensePoly]
+    (R : CPolynomialReduction DensePoly (DenseFracTower n))
+    (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly (DenseFracTower n))
+    [LawfulCPolynomialReduction R] [CompleteCPolynomialReduction R polynomialDomain]
+    [CCanonicalRepresentation DensePoly (DenseFracTower n)]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := DenseFracTower n)]
+    [CRischField (DenseFracTower n)] [CRischFieldSpec (DenseFracTower n)]
+    [CPolyGcd DensePoly (DenseFracTower n)] [CPolySquarefree DensePoly (DenseFracTower n)]
+    [CPolyResultant DensePoly] [CResidueSource DensePoly (DenseFracTower n)]
+    (hfield : CRischFieldComplete (DenseFracTower n))
+    (Dt : DensePoly (DenseFracTower n)) (frac : F (DenseFracTower n))
+    (hdomain : hyperexpRischLevelSemanticCompleteDomain R kind polynomialDomain Dt
+      (CFrac.num frac) (CFrac.den frac)) :
+    IsRischLevelIntegrable Dt (CFrac.num frac) (CFrac.den frac) ↔
+      ∃ fuel res, (hyperexpRischLevel (α := DenseFracTower n) R kind).integrate fuel Dt
+        (CFrac.num frac) (CFrac.den frac) = some res :=
+  hyperexpRischLevel_succeeds_iff_integrable_tower n R kind polynomialDomain hfield Dt
+    (CFrac.num frac) (CFrac.den frac) hdomain (CFrac.toPoly_den_ne_zero_generic frac)
+
 /-- The sparse hyperexponential stage is the certified adapter of the selected dense stage. -/
 noncomputable def hyperexpSparseRischStage (n : ℕ)
     (R : CPolynomialReduction DensePoly (DenseFracTower n))
