@@ -84,6 +84,27 @@ theorem toPolynomial_injective : Function.Injective (toPolynomial (R := R)) :=
   · rw [if_pos h, if_pos h.symm]
   · rw [if_neg h, if_neg (fun hh => h hh.symm)]
 
+/-- `toPolynomial` transports the executable degree (`degree?`, defaulting the zero polynomial to `0`)
+to Mathlib's `natDegree`. -/
+theorem natDegree_toPolynomial (p : DensePoly R) :
+    (toPolynomial p).natDegree = p.degree?.getD 0 := by
+  by_cases hsize : p.size = 0
+  · have hp0 : toPolynomial p = 0 := by
+      ext n
+      rw [coeff_toPolynomial, Polynomial.coeff_zero, DensePoly.coeff_eq_zero_of_size_le p (by omega)]
+    rw [hp0, Polynomial.natDegree_zero, DensePoly.degree?]
+    simp [hsize]
+  · have hpos : 0 < p.size := Nat.pos_of_ne_zero hsize
+    rw [DensePoly.degree?, if_neg hsize, Option.getD_some]
+    apply le_antisymm
+    · apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
+      intro N hN
+      rw [coeff_toPolynomial]
+      exact DensePoly.coeff_eq_zero_of_size_le p (by omega)
+    · apply Polynomial.le_natDegree_of_ne_zero
+      rw [coeff_toPolynomial]
+      exact DensePoly.coeff_last_ne_zero_of_pos_size p hpos
+
 @[simp] theorem toPolynomial_add (p q : DensePoly R) :
     toPolynomial (p + q) = toPolynomial p + toPolynomial q := by
   ext n; simp [Polynomial.coeff_add]
