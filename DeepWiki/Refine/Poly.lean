@@ -13,6 +13,10 @@ open scoped DeepWiki.Refine
 
 namespace DeepWiki.Refine
 
+-- The functional-denotation leaf (any atom refines its denotation): the default leaf rule, registered
+-- here so the resolver core stays free of a hardcoded base relation.
+attribute [refines_leaf] refines_denote
+
 variable {R : Type*} [CommRing R] [DecidableEq R]
 
 /-- The refinement relation: a dense polynomial refines its Mathlib denotation. -/

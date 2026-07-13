@@ -36,27 +36,29 @@ initialize registerBuiltinAttribute {
     descr := "A subsumption `Subsumes R S` (finer `R` implies coarser `S`) for the transfer resolver."
     add := fun decl _stx _kind => modifyEnv fun env => subsumeExt.addEntry env decl }
 
+/-- Env extension collecting `@[refines_leaf]`-tagged leaf rules `Refines R c (f c)` — how an atom
+(a variable/constant with no operation witness) refines at relation `R`. Keeps the base case pluggable
+instead of hardwiring the functional denotation. -/
+initialize leafExt : SimplePersistentEnvExtension Name (Array Name) ←
+  registerSimplePersistentEnvExtension {
+    addEntryFn := Array.push
+    addImportedFn := fun arrs => arrs.foldl Array.append #[] }
+
+initialize registerBuiltinAttribute {
+    name := `refines_leaf
+    descr := "A leaf rule `Refines R c (f c)` (how an atom refines at `R`) for the transfer resolver."
+    add := fun decl _stx _kind => modifyEnv fun env => leafExt.addEntry env decl }
+
 /-- Decompose a witness relation `R₁ ⟹ … ⟹ Rₖ ⟹ Rout` into the argument relations `[R₁,…,Rₖ]` and
 the output relation `Rout`. This is what lets the resolver thread a *different* relation on the output
 than on the inputs (e.g. `gcd`: equality inputs, up-to-unit output). -/
 partial def decomposeArrow (rel : Expr) : List Expr × Expr :=
-  match rel.getAppFnArgs with
-  | (``Respectful, args) =>
-    if args.size ≥ 6 then
-      let (rest, out) := decomposeArrow args[args.size - 1]!
-      (args[args.size - 2]! :: rest, out)
-    else ([], rel)
-  | _ => ([], rel)
-
-/-- Extract `denote` from a functional relation `R` definitionally equal to `DenoteRel denote`,
-δ-unfolding the relation head one step at a time. -/
-partial def getDenote (rel : Expr) : MetaM Expr := do
-  match rel.getAppFnArgs with
-  | (``DenoteRel, #[_, _, denote]) => return denote
-  | _ =>
-    match ← unfoldDefinition? rel with
-    | some rel' => getDenote rel'
-    | none => throwError "refine_transfer: relation is not a `DenoteRel`"
+  -- `R ⟹ S` is `Respectful … R S`: whatever the implicit-argument count, its two relations are the
+  -- last two explicit arguments, so peel them off structurally rather than by a fixed arity.
+  if rel.isAppOf ``Respectful && rel.getAppNumArgs ≥ 2 then
+    let (rest, out) := decomposeArrow rel.appArg!          -- `S`, the tail relation
+    (rel.appFn!.appArg! :: rest, out)                       -- `R`, this arrow's input relation
+  else ([], rel)
 
 /-- Resolve `c` at target relation `R` to `(abstract, proof)` with `proof : Refines R c abstract`. A
 witness matches when its **head symbol** and its **output relation** agree with `c` and `R`; each
@@ -111,9 +113,23 @@ partial def resolve (R : Expr) (c : Expr) : MetaM (Expr × Expr) := do
         return (a, ← mkAppM ``Refines.weaken #[mkAppN subConst params, pf])
       else s.restore
     | _ => s.restore
-  -- leaf: `c` refines its denotation (functional relation)
-  let denote ← getDenote R
-  return (mkApp denote c, ← mkAppM ``refines_denote #[denote, c])
+  -- leaf: `c` is an atom — close it with a registered `@[refines_leaf]` rule for relation `R`
+  for lf in leafExt.getState (← getEnv) do
+    let s ← saveState
+    let lfConst ← mkConstWithFreshMVarLevels lf
+    let (params, bis, concl) ← forallMetaTelescopeReducing (← inferType lfConst)
+    match concl.getAppFnArgs with
+    | (``Refines, #[_, _, rel, term, abs]) =>
+      if (← isDefEq R rel) && (← isDefEq c term) then
+        for i in [0:params.size] do
+          if bis[i]!.isInstImplicit then
+            let m := params[i]!.mvarId!
+            unless ← m.isAssigned do
+              try m.assign (← synthInstance (← m.getType)) catch _ => pure ()
+        return (← instantiateMVars abs, mkAppN lfConst params)
+      else s.restore
+    | _ => s.restore
+  throwError "refine_transfer: no witness or leaf rule resolves{indentExpr c}\nat the target relation"
 
 open Lean.Elab.Tactic in
 /-- `refine_transfer`: close a goal `Refines R c ?a` (or check `Refines R c a`) by synthesizing the
