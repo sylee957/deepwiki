@@ -165,12 +165,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `CommRing` by iterating the instance, and `equivTower2 : DensePoly (DensePoly ℚ) ≃+* ℚ[X][X]`
     composes the level-2 iso with `Polynomial.mapEquiv` of the level-1 iso (bijective). Confirms the
     tower carrier + bridge iterate.
-    - ★ FINDING: the `CommRing (DensePoly R)` instance is **noncomputable** — the auxiliary
-      `nsmul`/`zsmul`/`npow`/`natCast`/`intCast` route through the noncomputable `toPolynomial` bridge
-      (Phase 2a). Core `+`/`-`/`*` stay computable (they're the `Operations` instances), so `#eval`/
-      native arithmetic still works; only `^`/`•`/casts don't. **Refinement for full tower
-      computability:** give those auxiliary ops computable definitions so the whole `CommRing` instance
-      is computable (optional; not blocking).
+    - ★ FINDING (2026-07-13, now FIXED): the `CommRing (DensePoly R)` instance WAS noncomputable
+      because it used `Function.Injective.commRing` (itself noncomputable — no compiled stage) with
+      bridge-routed aux ops. **FIX (user directive "don't bundle Mathlib uncomputable ones"):**
+      hand-built the `CommRing` — arithmetic fields = the computable `Operations`, axioms proved by
+      transport through `toPolynomial`, and `nsmul`/`zsmul` = `nsmulRec`/`zsmulRec` with `npow`/
+      `natCast`/`intCast` at Lean's computable defaults. Now the ENTIRE `CommRing` is computable:
+      `^`/`•`/casts `#eval` correctly (guarded in `ComputableGuard`). Nothing noncomputable is bundled
+      onto the compute type — matches Hex's discipline while keeping the `ring`-tactic convenience.
     - ★ COMPUTABILITY IS BUILD-VERIFIED (`ComputableGuard.lean`): Lean's compiler is a computability
       decision procedure — a plain `def` computing an op proves it's on the computable path (else the
       `dependsOnNoncomputable` error breaks the gate). Confirmed: `*`/`+`/`-`/`divMod`/`gcd`/`deriv` +

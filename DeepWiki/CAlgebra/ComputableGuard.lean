@@ -11,9 +11,9 @@ API (`DensePoly`/`DenseFrac` arithmetic, Euclidean division, gcd, derivative) re
 computable path: if any of them regresses to noncomputable, the gate breaks here.
 
 This is not `native_decide` — a `def` compiling is codegen, not a proof axiom, so it adds nothing to
-any theorem's trusted base. (Note: `^`/`•`/`natCast` on `DensePoly` are deliberately absent — they
-route through the noncomputable `CommRing` auxiliary ops and are *not* on the computable path; see the
-plan's 4c-i finding.) -/
+any theorem's trusted base. Since the `CommRing (DensePoly R)` instance is now hand-built and fully
+computable (not `Function.Injective.commRing`), `^`/`•`/`natCast` are on the computable path too and
+are guarded here. -/
 
 namespace DeepWiki.CAlgebra.ComputableGuard
 
@@ -33,6 +33,12 @@ def poly_divMod : List ℚ × List ℚ :=
 def poly_gcd : List ℚ := (DensePoly.gcd (ofList [-1, 0, 1] : DensePoly ℚ) (ofList [-1, 1])).coeffs
 /-- The formal derivative is computable. -/
 def poly_deriv : List ℚ := (DensePoly.deriv (ofList [5, 4, 3] : DensePoly ℚ)).coeffs
+/-- Natural-number power is computable (via the hand-built computable `CommRing`). -/
+def poly_pow : List ℚ := ((ofList [1, 1] : DensePoly ℚ) ^ 3).coeffs
+/-- Natural-number cast is computable. -/
+def poly_natCast : List ℚ := ((7 : DensePoly ℚ)).coeffs
+/-- `ℕ`-scalar multiplication is computable. -/
+def poly_nsmul : List ℚ := ((3 : ℕ) • (ofList [1, 2] : DensePoly ℚ)).coeffs
 
 /-- Rational-function multiplication (carrier) is computable. -/
 def frac_mul : List ℚ :=
