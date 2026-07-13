@@ -36,6 +36,14 @@ Hex's advantages, ranked by how much they buy *us*:
    (dropping `native_decide`'s compiler-in-TCB) where a small trusted base is worth it. `native_decide`
    stays available for heavy end-to-end validation.
 
+**`native_decide` examples are dev-time scaffolding, deleted once compiled.** To validate that a
+computable layer genuinely runs, write `native_decide` `example`s and confirm they pass — then
+**delete them before (or immediately after) the phase commit**. The new tree stays `native_decide`-free
+(small TCB, Hex-aligned); the permanent verified content is the abstract theorems (`*_spec`, universal
+properties, `Associated` bridges). Kernel-reducible `decide` certificates (via fuel twins) may be kept
+when a phase adds them; only compiler-trusting `native_decide` is transient. Record "computability
+checked, examples removed" in the phase commit message.
+
 **Explicitly NOT load-bearing for us:** Hex's strict *Mathlib-free cores*. Hex keeps cores
 Mathlib-free so the packages are reusable standalone; DeepWiki is a Mathlib-based wiki and *wants*
 Mathlib available. We adopt the **core / `*Bridge` companion split** for organization and to keep the
