@@ -60,11 +60,43 @@ partial def decomposeArrow (rel : Expr) : List Expr × Expr :=
     (rel.appFn!.appArg! :: rest, out)                       -- `R`, this arrow's input relation
   else ([], rel)
 
+/-- A related pair of local variables available while resolving underneath a lambda binder. -/
+private structure LocalRefinement where
+  relation : Expr
+  concrete : Expr
+  abstract : Expr
+  proof : Expr
+
 /-- Resolve `c` at target relation `R` to `(abstract, proof)` with `proof : Refines R c abstract`. A
 witness matches when its **head symbol** and its **output relation** agree with `c` and `R`; each
 argument is then resolved at the relation named by the witness's arrow (so a functional-input /
 up-to-unit-output op like `gcd` composes). Leaves close via the functional denotation of `R`. -/
-partial def resolve (R : Expr) (c : Expr) : MetaM (Expr × Expr) := do
+private partial def resolveWithLocals
+    (locals : Array LocalRefinement) (R : Expr) (c : Expr) : MetaM (Expr × Expr) := do
+  -- Binder rule: introduce related concrete/abstract variables, resolve the body, then discharge the
+  -- local relation hypothesis with `Refines.lam`.
+  if c.isLambda && R.isAppOf ``Respectful then
+    let args := R.getAppArgs
+    if args.size ≥ 6 then
+      let inputRel := args[args.size - 2]!
+      let outputRel := args[args.size - 1]!
+      let abstractDomain := args[args.size - 5]!
+      return ← withLocalDeclD c.bindingName! c.bindingDomain! fun concreteVar => do
+        let concreteBody := c.bindingBody!.instantiate1 concreteVar
+        withLocalDeclD (c.bindingName!.appendAfter "'") abstractDomain fun abstractVar => do
+          let relatedType := mkAppN inputRel #[concreteVar, abstractVar]
+          withLocalDeclD `hRel relatedType fun relatedVar => do
+            let localProof ← mkAppM ``Refines.mk #[relatedVar]
+            let entry : LocalRefinement :=
+              { relation := inputRel, concrete := concreteVar, abstract := abstractVar,
+                proof := localProof }
+            let (abstractBody, bodyProof) ←
+              resolveWithLocals (locals.push entry) outputRel concreteBody
+            let abstractLambda ← mkLambdaFVars #[abstractVar] abstractBody
+            let pointwiseProof ←
+              mkLambdaFVars #[concreteVar, abstractVar, relatedVar] bodyProof
+            let lambdaProof ← mkAppM ``Refines.lam #[pointwiseProof]
+            pure (abstractLambda, lambdaProof)
   for w in refinesExt.getState (← getEnv) do
     let s ← saveState
     let wConst ← mkConstWithFreshMVarLevels w
@@ -88,7 +120,8 @@ partial def resolve (R : Expr) (c : Expr) : MetaM (Expr × Expr) := do
           let mut absArgs := #[]
           let mut proof := mkAppN wConst params
           for (x, Ri) in argMvars.zip argRels do
-            let (xAbs, xPf) ← resolve (← instantiateMVars Ri) (← instantiateMVars x)
+            let (xAbs, xPf) ←
+              resolveWithLocals locals (← instantiateMVars Ri) (← instantiateMVars x)
             absArgs := absArgs.push xAbs
             proof ← mkAppM ``Refines.app #[proof, xPf]
           return (mkAppN (← instantiateMVars gExpr) absArgs, proof)
@@ -109,11 +142,18 @@ partial def resolve (R : Expr) (c : Expr) : MetaM (Expr × Expr) := do
             let m := params[i]!.mvarId!
             unless ← m.isAssigned do
               try m.assign (← synthInstance (← m.getType)) catch _ => pure ()
-        let (a, pf) ← resolve (← instantiateMVars Rstrong) c
+        let (a, pf) ← resolveWithLocals locals (← instantiateMVars Rstrong) c
         return (a, ← mkAppM ``Refines.weaken #[mkAppN subConst params, pf])
       else s.restore
     | _ => s.restore
-  -- leaf: `c` is an atom — close it with a registered `@[refines_leaf]` rule for relation `R`
+  -- A variable introduced by the binder rule is a leaf with an explicit local refinement proof.
+  for entry in locals do
+    let s ← saveState
+    if (← isDefEq R entry.relation) && (← isDefEq c entry.concrete) then
+      return (entry.abstract, entry.proof)
+    else
+      s.restore
+  -- Other leaves close with a registered `@[refines_leaf]` rule for relation `R`.
   for lf in leafExt.getState (← getEnv) do
     let s ← saveState
     let lfConst ← mkConstWithFreshMVarLevels lf
@@ -131,6 +171,10 @@ partial def resolve (R : Expr) (c : Expr) : MetaM (Expr × Expr) := do
     | _ => s.restore
   throwError "refine_transfer: no witness or leaf rule resolves{indentExpr c}\nat the target relation"
 
+/-- Resolve a term from an empty local-refinement context. -/
+partial def resolve (R : Expr) (c : Expr) : MetaM (Expr × Expr) :=
+  resolveWithLocals #[] R c
+
 open Lean.Elab.Tactic in
 /-- `refine_transfer`: close a goal `Refines R c ?a` (or check `Refines R c a`) by synthesizing the
 abstract `?a` and its proof via the relational resolver — no `simp`. -/
@@ -143,5 +187,18 @@ elab "refine_transfer" : tactic => withMainContext do
       throwError "refine_transfer: computed abstract term{indentExpr absTerm}\ndoes not match the goal"
     goal.assign proof
   | _ => throwError "refine_transfer: goal is not `Refines _ _ _`"
+
+/-- `derive_refines [R₁, …] using h` proves a `@[refines]` witness from an existing denotation
+homomorphism theorem `h`; the listed relation definitions are unfolded before equality hypotheses
+are substituted. -/
+syntax (name := deriveRefines) "derive_refines " "[" Parser.Tactic.simpLemma,* "]" " using " term : tactic
+
+macro_rules
+  | `(tactic| derive_refines [$rels,*] using $rule) =>
+      `(tactic| (constructor
+                 dsimp only [Respectful, DenoteRel, $rels,*]
+                 intros
+                 subst_vars
+                 apply $rule))
 
 end DeepWiki.Refine

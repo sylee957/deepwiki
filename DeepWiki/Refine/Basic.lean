@@ -35,6 +35,13 @@ theorem Refines.app {C : Type u} {A : Type v} {C' : Type u'} {A' : Type v'}
     (hf : Refines (R ⟹ S) f g) (hc : Refines R c a) : Refines S (f c) (g a) :=
   ⟨hf.prf c a hc.prf⟩
 
+/-- The lambda rule: pointwise refinement under a related pair of bound variables gives refinement
+of the two functions. -/
+theorem Refines.lam {C : Type u} {A : Type v} {C' : Type u'} {A' : Type v'}
+    {R : C → A → Prop} {S : C' → A' → Prop} {f : C → C'} {g : A → A'}
+    (h : ∀ c a, R c a → Refines S (f c) (g a)) : Refines (R ⟹ S) f g :=
+  ⟨fun c a hr => (h c a hr).prf⟩
+
 /-- A **functional refinement**: the relation `denote c = a`. Under it, every term refines its own
 denotation (the leaf case of the resolver), and per-operation witnesses are exactly the denotation
 homomorphism squares `denote (op x y) = absOp (denote x) (denote y)`. -/

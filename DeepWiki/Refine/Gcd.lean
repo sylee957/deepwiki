@@ -1,4 +1,5 @@
 import DeepWiki.Refine.Poly
+import DeepWiki.Refine.Goal
 import DeepWiki.CAlgebra.Poly.Euclid
 
 /-! # Transferring `gcd` — the non-functional (up-to-unit) case
@@ -7,8 +8,8 @@ import DeepWiki.CAlgebra.Poly.Euclid
 `EuclideanDomain.gcd` agree only **up to a unit** (`Associated`), because the raw Euclidean remainder
 isn't normalized. So its transfer witness lives at a *weaker output relation* than equality — exactly
 the general-relation case CoqEAL/Trocq exist for. The `Refine` **kernel** composes it fine (the
-`⟹`/`Refines.app` machinery threads a different relation on the output than on the inputs); only the
-current auto-resolver, specialized to a single functional relation, cannot yet dispatch it. -/
+`⟹`/`Refines.app` machinery threads a different relation on the output than on the inputs), and the
+relation-threading resolver dispatches the mixed input/output relations automatically. -/
 
 open Polynomial DeepWiki.CAlgebra
 open scoped DeepWiki.Refine
@@ -23,20 +24,15 @@ def RPolyU : DensePoly R → Polynomial R → Prop := fun c a => Associated (toP
 
 /-- The gcd witness: **inputs** related by equality (`RPoly`), **output** related only up to a unit
 (`RPolyU`). This is `toPolynomial_gcd_associated` packaged relationally — a witness whose output
-relation differs from its inputs', which the functional resolver can't produce but the kernel accepts. -/
+relation differs from its inputs'. -/
 @[refines] theorem refines_gcd :
-    Refines (RPoly (R := R) ⟹ RPoly ⟹ RPolyU) DensePoly.gcd EuclideanDomain.gcd where
-  prf c a hca c' a' hc'a' := by
-    have hca : toPolynomial c = a := hca
-    have hc'a' : toPolynomial c' = a' := hc'a'
-    show Associated (toPolynomial (DensePoly.gcd c c')) (EuclideanDomain.gcd a a')
-    rw [← hca, ← hc'a']
-    exact toPolynomial_gcd_associated c c'
+    Refines (RPoly (R := R) ⟹ RPoly ⟹ RPolyU) DensePoly.gcd EuclideanDomain.gcd := by
+  derive_refines [RPoly, RPolyU] using toPolynomial_gcd_associated
 
 /-- Manual transfer of a *compound* gcd expression, mixing relations: the arguments `p * q` and `r`
 transfer at equality (`RPoly`, via the ring-op witnesses), and `gcd` combines them at the up-to-unit
 relation (`RPolyU`). The kernel's `Refines.app` threads the two relations correctly — demonstrating
-that `gcd` (and any such non-functional op) is expressible; automating it is the resolver's next step. -/
+that `gcd` (and any such non-functional op) is expressible independently of the resolver. -/
 example (p q r : DensePoly R) :
     Refines RPolyU (DensePoly.gcd (p * q) r)
       (EuclideanDomain.gcd (toPolynomial p * toPolynomial q) (toPolynomial r)) :=
@@ -53,11 +49,17 @@ example (p q r : DensePoly R) :
       (EuclideanDomain.gcd (toPolynomial p * toPolynomial q) (toPolynomial r)) := by
   refine_transfer
 
-/-- And the payoff shape: a fact about the *abstract* gcd transfers to the *computable* one, up to a
-unit — e.g. divisibility (which is `Associated`-invariant). -/
-example (p q : DensePoly R) : toPolynomial (DensePoly.gcd p q) ∣ toPolynomial p :=
-  (refines_gcd.prf p (toPolynomial p) rfl q (toPolynomial q) rfl).dvd.trans
-    (EuclideanDomain.gcd_dvd_left _ _)
+/-- Divisibility of denotations respects refinement up to associated polynomials. -/
+@[refines] theorem refines_dvd :
+    Refines (RPolyU (R := R) ⟹ RPolyU ⟹ Iff)
+      (fun p q : DensePoly R => toPolynomial p ∣ toPolynomial q)
+      ((· ∣ ·) : Polynomial R → Polynomial R → Prop) where
+  prf _ _ hp _ _ hq := by
+    constructor
+    · intro h
+      exact hp.symm.dvd.trans (h.trans hq.dvd)
+    · intro h
+      exact hp.dvd.trans (h.trans hq.symm.dvd)
 
 /-! ### Relation-hierarchy coercion: equality `⊑` up-to-a-unit -/
 
@@ -68,6 +70,11 @@ weaken any equality-level transfer to the up-to-unit level. -/
   have h' : toPolynomial c = a := h
   subst h'
   exact Associated.refl _
+
+/-- `refine_goal` turns the concrete divisibility goal into Mathlib's abstract gcd theorem. -/
+example (p q : DensePoly R) : toPolynomial (DensePoly.gcd p q) ∣ toPolynomial p := by
+  refine_goal
+  exact EuclideanDomain.gcd_dvd_left _ _
 
 /-- The resolver now weakens across the hierarchy: a purely-functional term transfers **at the coarser
 `RPolyU`** even though only equality-level (`RPoly`) witnesses exist — `refine_transfer` resolves it at

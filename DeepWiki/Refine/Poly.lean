@@ -27,35 +27,20 @@ theorem refines_toPolynomial (p : DensePoly R) : Refines RPoly p (toPolynomial p
   refines_denote _ p
 
 /-- Multiplication respects refinement. -/
-@[refines] instance refines_mul : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· * ·) (· * ·) where
-  prf c a hca c' a' hc'a' := by
-    have hca : toPolynomial c = a := hca
-    have hc'a' : toPolynomial c' = a' := hc'a'
-    show toPolynomial (c * c') = a * a'
-    rw [toPolynomial_mul, hca, hc'a']
+@[refines] instance refines_mul : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· * ·) (· * ·) := by
+  derive_refines [RPoly] using toPolynomial_mul
 
 /-- Addition respects refinement. -/
-@[refines] instance refines_add : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· + ·) (· + ·) where
-  prf c a hca c' a' hc'a' := by
-    have hca : toPolynomial c = a := hca
-    have hc'a' : toPolynomial c' = a' := hc'a'
-    show toPolynomial (c + c') = a + a'
-    rw [toPolynomial_add, hca, hc'a']
+@[refines] instance refines_add : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· + ·) (· + ·) := by
+  derive_refines [RPoly] using toPolynomial_add
 
 /-- Subtraction respects refinement. -/
-@[refines] instance refines_sub : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· - ·) (· - ·) where
-  prf c a hca c' a' hc'a' := by
-    have hca : toPolynomial c = a := hca
-    have hc'a' : toPolynomial c' = a' := hc'a'
-    show toPolynomial (c - c') = a - a'
-    rw [toPolynomial_sub, hca, hc'a']
+@[refines] instance refines_sub : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (· - ·) (· - ·) := by
+  derive_refines [RPoly] using toPolynomial_sub
 
 /-- Negation respects refinement. -/
-@[refines] instance refines_neg : Refines (RPoly (R := R) ⟹ RPoly) (- ·) (- ·) where
-  prf c a hca := by
-    have hca : toPolynomial c = a := hca
-    show toPolynomial (-c) = -a
-    rw [toPolynomial_neg, hca]
+@[refines] instance refines_neg : Refines (RPoly (R := R) ⟹ RPoly) (- ·) (- ·) := by
+  derive_refines [RPoly] using toPolynomial_neg
 
 /-- The resolver AUTOMATES the transfer: `refine_transfer` synthesizes the abstract `Polynomial`
 denotation of the compound `(p + q) * r - s` and its proof — by `isDefEq`-driven relational
@@ -70,6 +55,16 @@ example (p q r s : DensePoly R) :
 example (p q : DensePoly R) :
     Refines RPoly (-((p * q) + p) - (q - p))
       (-((toPolynomial p * toPolynomial q) + toPolynomial p) - (toPolynomial q - toPolynomial p)) := by
+  refine_transfer
+
+/-- The resolver transfers underneath a lambda by introducing a related pair of local variables. -/
+example : Refines (RPoly (R := R) ⟹ RPoly) (fun p => p + p)
+    (fun p => p + p) := by
+  refine_transfer
+
+/-- Nested lambdas use one explicit local refinement entry per binder. -/
+example : Refines (RPoly (R := R) ⟹ RPoly ⟹ RPoly) (fun p q => p * q + p)
+    (fun p q => p * q + p) := by
   refine_transfer
 
 end DeepWiki.Refine
