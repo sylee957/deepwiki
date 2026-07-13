@@ -24,11 +24,17 @@ initialize registerBuiltinAttribute {
     descr := "A refinement witness `Refines (R ⟹ … ⟹ R) F G` for the transfer resolver."
     add := fun decl _stx _kind => modifyEnv fun env => refinesExt.addEntry env decl }
 
-/-- The arity of a witness = the number of nested respectful arrows `⟹` in its relation. -/
-partial def arityOf (rel : Expr) : Nat :=
+/-- Decompose a witness relation `R₁ ⟹ … ⟹ Rₖ ⟹ Rout` into the argument relations `[R₁,…,Rₖ]` and
+the output relation `Rout`. This is what lets the resolver thread a *different* relation on the output
+than on the inputs (e.g. `gcd`: equality inputs, up-to-unit output). -/
+partial def decomposeArrow (rel : Expr) : List Expr × Expr :=
   match rel.getAppFnArgs with
-  | (``Respectful, args) => if args.size ≥ 1 then 1 + arityOf args[args.size - 1]! else 0
-  | _ => 0
+  | (``Respectful, args) =>
+    if args.size ≥ 6 then
+      let (rest, out) := decomposeArrow args[args.size - 1]!
+      (args[args.size - 2]! :: rest, out)
+    else ([], rel)
+  | _ => ([], rel)
 
 /-- Extract `denote` from a functional relation `R` definitionally equal to `DenoteRel denote`,
 δ-unfolding the relation head one step at a time. -/
@@ -40,22 +46,25 @@ partial def getDenote (rel : Expr) : MetaM Expr := do
     | some rel' => getDenote rel'
     | none => throwError "refine_transfer: relation is not a `DenoteRel`"
 
-/-- Resolve `c` to `(abstract, proof)` with `proof : Refines (DenoteRel denote) c abstract`, by
-matching registered witnesses (recursively) and falling back to the denotation leaf. -/
-partial def resolve (denote : Expr) (c : Expr) : MetaM (Expr × Expr) := do
+/-- Resolve `c` at target relation `R` to `(abstract, proof)` with `proof : Refines R c abstract`. A
+witness matches when its **head symbol** and its **output relation** agree with `c` and `R`; each
+argument is then resolved at the relation named by the witness's arrow (so a functional-input /
+up-to-unit-output op like `gcd` composes). Leaves close via the functional denotation of `R`. -/
+partial def resolve (R : Expr) (c : Expr) : MetaM (Expr × Expr) := do
   for w in refinesExt.getState (← getEnv) do
     let s ← saveState
     let wConst ← mkConstWithFreshMVarLevels w
     let (params, bis, concl) ← forallMetaTelescopeReducing (← inferType wConst)
     match concl.getAppFnArgs with
     | (``Refines, #[_, _, rel, fExpr, gExpr]) =>
-      let arity := arityOf rel
-      if arity > 0 then
-        let argMvars ← (List.replicate arity ()).mapM fun _ => mkFreshExprMVar none
+      let (argRels, outRel) := decomposeArrow rel
+      if argRels.length > 0 then
+        let argMvars ← argRels.mapM fun _ => mkFreshExprMVar none
         let lhs := fExpr.beta argMvars.toArray
-        -- cheap pre-filter: only run `isDefEq` when head symbols agree
+        -- cheap head pre-filter, then the output-relation and term matches
         if lhs.getAppFn.constName? != c.getAppFn.constName? || lhs.getAppFn.constName?.isNone then
           s.restore
+        else if !(← isDefEq R outRel) then s.restore
         else if ← isDefEq c lhs then
           for i in [0:params.size] do
             if bis[i]!.isInstImplicit then
@@ -64,15 +73,16 @@ partial def resolve (denote : Expr) (c : Expr) : MetaM (Expr × Expr) := do
                 try m.assign (← synthInstance (← m.getType)) catch _ => pure ()
           let mut absArgs := #[]
           let mut proof := mkAppN wConst params
-          for x in argMvars do
-            let (xAbs, xPf) ← resolve denote (← instantiateMVars x)
+          for (x, Ri) in argMvars.zip argRels do
+            let (xAbs, xPf) ← resolve (← instantiateMVars Ri) (← instantiateMVars x)
             absArgs := absArgs.push xAbs
             proof ← mkAppM ``Refines.app #[proof, xPf]
-          return (mkAppN gExpr absArgs, proof)
+          return (mkAppN (← instantiateMVars gExpr) absArgs, proof)
         else s.restore
       else s.restore
     | _ => s.restore
-  -- leaf: `c` refines its denotation
+  -- leaf: `c` refines its denotation (functional relation)
+  let denote ← getDenote R
   return (mkApp denote c, ← mkAppM ``refines_denote #[denote, c])
 
 open Lean.Elab.Tactic in
@@ -82,8 +92,7 @@ elab "refine_transfer" : tactic => withMainContext do
   let goal ← getMainGoal
   match (← goal.getType).getAppFnArgs with
   | (``Refines, #[_, _, rel, c, a]) =>
-    let denote ← getDenote rel
-    let (absTerm, proof) ← resolve denote (← instantiateMVars c)
+    let (absTerm, proof) ← resolve rel (← instantiateMVars c)
     unless ← isDefEq a absTerm do
       throwError "refine_transfer: computed abstract term{indentExpr absTerm}\ndoes not match the goal"
     goal.assign proof

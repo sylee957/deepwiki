@@ -24,7 +24,7 @@ def RPolyU : DensePoly R → Polynomial R → Prop := fun c a => Associated (toP
 /-- The gcd witness: **inputs** related by equality (`RPoly`), **output** related only up to a unit
 (`RPolyU`). This is `toPolynomial_gcd_associated` packaged relationally — a witness whose output
 relation differs from its inputs', which the functional resolver can't produce but the kernel accepts. -/
-theorem refines_gcd :
+@[refines] theorem refines_gcd :
     Refines (RPoly (R := R) ⟹ RPoly ⟹ RPolyU) DensePoly.gcd EuclideanDomain.gcd where
   prf c a hca c' a' hc'a' := by
     have hca : toPolynomial c = a := hca
@@ -44,6 +44,14 @@ example (p q r : DensePoly R) :
     (Refines.app refines_gcd
       (Refines.app (Refines.app refines_mul (refines_toPolynomial p)) (refines_toPolynomial q)))
     (refines_toPolynomial r)
+
+/-- The relation-threading resolver now does that **automatically**: `refine_transfer` transfers the
+mixed-relation `gcd (p*q) r` (equality-inputs, up-to-unit-output) with one tactic call — dispatching
+`gcd` at `RPolyU` and its arguments at `RPoly`, no `simp`. -/
+example (p q r : DensePoly R) :
+    Refines RPolyU (DensePoly.gcd (p * q) r)
+      (EuclideanDomain.gcd (toPolynomial p * toPolynomial q) (toPolynomial r)) := by
+  refine_transfer
 
 /-- And the payoff shape: a fact about the *abstract* gcd transfers to the *computable* one, up to a
 unit — e.g. divisibility (which is `Associated`-invariant). -/
