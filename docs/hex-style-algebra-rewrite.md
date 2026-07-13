@@ -124,6 +124,9 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
   fraction-free determinant + `det` correspondence; 3c Sylvester matrix + `resultant` = its determinant,
   bridged to `Polynomial.resultant`. (Alternatively a subresultant-PRS resultant reusing `divMod`, but
   the Mathlib-equality proof is harder than the determinant route.)
+  - **3a DONE:** `Matrix/Dense.lean` — `DenseMatrix R` (list-of-rows carrier) + `entry`/`ofFn` +
+    `toMatrix : → Matrix (Fin n) (Fin m) R` with entrywise agreement (`toMatrix_apply`,
+    `entry_ofFn`, `toMatrix_ofFn`). **← NEXT: 3b Bareiss fraction-free determinant + `det` bridge.**
 - **Phase 4 — canonical `DenseFrac` fraction field + `≃+* RatFunc`**, and the tower iteration
   (replacing `CFracG`/`QFunNZG` towers with normalized-fraction carriers bridged by field iso).
 - **Phase 5 — computable derivation + bridge** to Mathlib `′`/`Derivation` on the new carriers.
