@@ -1,11 +1,11 @@
-import Mathlib.Data.Matrix.Basic
+import Mathlib.Data.List.Basic
+import Mathlib.Algebra.GroupWithZero.Defs
 
-/-! # Computable dense matrices (Hex-style carrier)
+/-! # Computable dense matrices (`DenseMatrix`) — carrier
 
-`DenseMatrix R` stores a matrix as a list of rows. `entry` reads a coefficient (out-of-range → `0`),
-and `toMatrix` bridges to a Mathlib `Matrix (Fin n) (Fin m) R` of chosen dimensions, agreeing
-entrywise by definition. This is the carrier the Bareiss fraction-free determinant (Phase 3b) and the
-Sylvester resultant (Phase 3c) are built on. -/
+`DenseMatrix R` stores a matrix as a list of rows; `entry` reads a coefficient (out-of-range → `0`)
+and `ofFn` builds one from an entry function. Its Mathlib correspondence (`toMatrix` into
+`Matrix (Fin n) (Fin m) R`) lives in `MatrixBridge/Basic.lean`, keeping this core correspondence-free. -/
 
 namespace DeepWiki.CAlgebra
 
@@ -40,19 +40,6 @@ def ofFn (n m : Nat) (f : Nat → Nat → R) : DenseMatrix R :=
   simp only [Option.map_some, Option.getD_some, List.getElem?_map]
   rw [List.getElem?_range hj]
   simp
-
-/-- Bridge to a Mathlib matrix of dimensions `n × m`: the entry function read through `Fin`. -/
-def toMatrix (M : DenseMatrix R) (n m : Nat) : Matrix (Fin n) (Fin m) R :=
-  Matrix.of fun i j => M.entry i j
-
-/-- `toMatrix` reads entries through the dense `entry` function. -/
-@[simp] theorem toMatrix_apply (M : DenseMatrix R) (n m : Nat) (i : Fin n) (j : Fin m) :
-    M.toMatrix n m i j = M.entry i j := rfl
-
-/-- The Mathlib bridge of an `ofFn` matrix is the entry function itself. -/
-@[simp] theorem toMatrix_ofFn (n m : Nat) (f : Nat → Nat → R) (i : Fin n) (j : Fin m) :
-    (ofFn n m f).toMatrix n m i j = f i j := by
-  rw [toMatrix_apply, entry_ofFn n m f i j i.isLt j.isLt]
 
 end DenseMatrix
 

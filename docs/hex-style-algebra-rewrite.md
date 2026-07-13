@@ -50,10 +50,12 @@ computable carrier, its operations, and intrinsic laws — NO `toPolynomial`/`to
 denotations, NO Mathlib-type instances, NO bridge theorems (`toX_*`, `Associated`, `Differential`-on-
 Mathlib). Those all go in the paired `*Bridge/` module (`PolyBridge/`, `FracBridge/`, `MatrixBridge/`).
 A happy side effect: core modules often generalize (e.g. `Frac` core needs only `CommRing`, not `Field`).
-Cleanup status: **DONE** Frac (`FracBridge/Basic`), Poly derivative (`PolyBridge/Derivative`).
-**TODO** (incremental): Matrix (`Matrix/{Dense,Sylvester,Resultant}` → carrier core + `MatrixBridge/*`);
-`Diff/*` are inherently Mathlib-`Differential` bridges (fine as-is, name signals it); `Poly/Euclid`,
-`Poly/Tower` depend on the bridge-provided `CommRing`/`equiv` (acceptable core-uses-bridge, not mixing).
+Cleanup status: **DONE** — Frac (`FracBridge/Basic`), Poly derivative (`PolyBridge/Derivative`), Matrix
+(`Matrix/{Dense,Sylvester}` core + `MatrixBridge/Basic`). `Diff/*` are inherently Mathlib-`Differential`
+bridges (fine as-is, the name signals it). `Poly/Euclid`, `Poly/Tower` *depend on* the bridge-provided
+`CommRing`/`equiv` but define computable content (acceptable core-uses-bridge, not correspondence-mixing).
+All core carriers now hold only computable defs + intrinsic laws; every `toX` denotation lives in a
+`*Bridge/` module.
 
 **Explicitly NOT load-bearing for us:** Hex's strict *Mathlib-free cores*. Hex keeps cores
 Mathlib-free so the packages are reusable standalone; DeepWiki is a Mathlib-based wiki and *wants*
