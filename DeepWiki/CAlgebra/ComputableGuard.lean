@@ -4,47 +4,60 @@ import DeepWiki.CAlgebra.Frac.Additive
 
 /-! # Computability guards
 
-Each `def` below elaborates ONLY if its operation has a computable code path — Lean's compiler
-rejects a non-`noncomputable` definition that depends on `noncomputable` data (the
-`dependsOnNoncomputable` error). So these are a **build-checked proof** that the intended-computable
-API (`DensePoly`/`DenseFrac` arithmetic, Euclidean division, gcd, derivative) really is on the
-computable path: if any of them regresses to noncomputable, the gate breaks here.
+Each `def` below is an **operation given as a function value** — no concrete inputs. It elaborates
+only if that operation has a computable code path; Lean's compiler rejects a non-`noncomputable`
+definition depending on `noncomputable` data (`dependsOnNoncomputable`). So these are a build-checked
+proof that the intended-computable API is on the computable path: if any op regresses, the gate breaks
+here.
 
-This is not `native_decide` — a `def` compiling is codegen, not a proof axiom, so it adds nothing to
-any theorem's trusted base. Since the `CommRing (DensePoly R)` instance is now hand-built and fully
-computable (not `Function.Injective.commRing`), `^`/`•`/`natCast` are on the computable path too and
-are guarded here. -/
+Two reasons the guards are stated **generically over the coefficient ring `R`** and at the
+**function level** rather than as concrete evaluations:
+* computability is a property of the operation, not of any particular input — a function-level witness
+  is the honest statement, and isn't brittle against specific literals;
+* being generic, `R` instantiates to `ℚ`, to tower carriers like `DensePoly ℚ`, etc., so one guard
+  covers every (computable-instance) carrier at once.
+
+These are `def`s, not `native_decide` — a `def` compiling is codegen, not a proof axiom, so they add
+nothing to any theorem's trusted base (and are unaffected by the `@[csimp]`/`native_decide`
+axiom-tracking issue, leanprover/lean4#7463). Correctness of the *output* is a separate matter, handled
+by the `toX_*` bridge squares. -/
 
 namespace DeepWiki.CAlgebra.ComputableGuard
 
-open DeepWiki.CAlgebra DensePoly
+variable {R : Type u}
+
+/-! ### Ring operations (any `CommRing` coefficient) -/
 
 /-- Dense polynomial multiplication is computable. -/
-def poly_mul : List ℚ := ((ofList [1, 2, 3] : DensePoly ℚ) * ofList [1, 1]).coeffs
+def mul [CommRing R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R := (· * ·)
 /-- Dense polynomial addition is computable. -/
-def poly_add : List ℚ := ((ofList [1, 2] : DensePoly ℚ) + ofList [0, 0, 5]).coeffs
+def add [CommRing R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R := (· + ·)
 /-- Dense polynomial subtraction is computable. -/
-def poly_sub : List ℚ := ((ofList [1, 2] : DensePoly ℚ) - ofList [1, 1]).coeffs
-/-- Euclidean division is computable. -/
-def poly_divMod : List ℚ × List ℚ :=
-  let r := DensePoly.divMod (ofList [-1, 0, 1] : DensePoly ℚ) (ofList [-1, 1])
-  (r.1.coeffs, r.2.coeffs)
-/-- Polynomial gcd is computable. -/
-def poly_gcd : List ℚ := (DensePoly.gcd (ofList [-1, 0, 1] : DensePoly ℚ) (ofList [-1, 1])).coeffs
-/-- The formal derivative is computable. -/
-def poly_deriv : List ℚ := (DensePoly.deriv (ofList [5, 4, 3] : DensePoly ℚ)).coeffs
+def sub [CommRing R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R := (· - ·)
+/-- Dense polynomial negation is computable. -/
+def neg [CommRing R] [DecidableEq R] : DensePoly R → DensePoly R := (- ·)
 /-- Natural-number power is computable (via the hand-built computable `CommRing`). -/
-def poly_pow : List ℚ := ((ofList [1, 1] : DensePoly ℚ) ^ 3).coeffs
-/-- Natural-number cast is computable. -/
-def poly_natCast : List ℚ := ((7 : DensePoly ℚ)).coeffs
+def pow [CommRing R] [DecidableEq R] : DensePoly R → ℕ → DensePoly R := (· ^ ·)
 /-- `ℕ`-scalar multiplication is computable. -/
-def poly_nsmul : List ℚ := ((3 : ℕ) • (ofList [1, 2] : DensePoly ℚ)).coeffs
+def nsmul [CommRing R] [DecidableEq R] : ℕ → DensePoly R → DensePoly R := (· • ·)
+/-- Natural-number cast is computable. -/
+def natCast [CommRing R] [DecidableEq R] : ℕ → DensePoly R := Nat.cast
+/-- The formal derivative is computable. -/
+def deriv [CommRing R] [DecidableEq R] : DensePoly R → DensePoly R := DensePoly.deriv
+
+/-! ### Euclidean operations (any `Field` coefficient) -/
+
+/-- Euclidean division is computable. -/
+def divMod [Field R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R × DensePoly R :=
+  DensePoly.divMod
+/-- Polynomial gcd is computable. -/
+def gcd [Field R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R := DensePoly.gcd
+
+/-! ### Rational-function carrier operations -/
 
 /-- Rational-function multiplication (carrier) is computable. -/
-def frac_mul : List ℚ :=
-  (((⟨ofList [1], ofList [1, 1]⟩ : DenseFrac ℚ) * ⟨ofList [1], ofList [0, 1]⟩).num).coeffs
+def fracMul [CommRing R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· * ·)
 /-- Rational-function addition (carrier) is computable. -/
-def frac_add : List ℚ :=
-  (((⟨ofList [1], ofList [1, 1]⟩ : DenseFrac ℚ) + ⟨ofList [1], ofList [0, 1]⟩).num).coeffs
+def fracAdd [CommRing R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· + ·)
 
 end DeepWiki.CAlgebra.ComputableGuard
