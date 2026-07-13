@@ -73,6 +73,17 @@ theorem toPolynomial_injective : Function.Injective (toPolynomial (R := R)) :=
 @[simp] theorem toPolynomial_one : toPolynomial (1 : DensePoly R) = 1 := by
   ext n; rw [coeff_toPolynomial, DensePoly.coeff_one, Polynomial.coeff_one]
 
+@[simp] theorem toPolynomial_C (c : R) : toPolynomial (DensePoly.C c) = Polynomial.C c := by
+  ext n; rw [coeff_toPolynomial, DensePoly.coeff_C, Polynomial.coeff_C]
+
+@[simp] theorem toPolynomial_monomial (n : ℕ) (c : R) :
+    toPolynomial (DensePoly.monomial n c) = Polynomial.monomial n c := by
+  ext k
+  rw [coeff_toPolynomial, DensePoly.coeff_monomial, Polynomial.coeff_monomial]
+  by_cases h : k = n
+  · rw [if_pos h, if_pos h.symm]
+  · rw [if_neg h, if_neg (fun hh => h hh.symm)]
+
 @[simp] theorem toPolynomial_add (p q : DensePoly R) :
     toPolynomial (p + q) = toPolynomial p + toPolynomial q := by
   ext n; simp [Polynomial.coeff_add]

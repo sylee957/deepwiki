@@ -167,9 +167,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `coeff_deriv` + `toPolynomial_deriv` (bridges to `Polynomial.derivative`).
   - **5b DONE:** `deriv_add` (additivity) + `deriv_mul` (Leibniz), transported from
     `Polynomial.derivative_add`/`derivative_mul` via `toPolynomial_injective`.
-  - **← NEXT: 5c** — `DenseFrac` quotient-rule derivative + bridge (needs a `RatFunc` derivation target;
-    investigate whether Mathlib has one, else define the derivation and bridge to it). Then Phase 6+
-    (re-anchor the Risch engine as commuting squares over CAlgebra carriers).
+  - **5c BLOCKED (recorded):** Mathlib has **no** derivation/`derivative` on `RatFunc` (searched
+    `FieldTheory/RatFunc/*` — none). So the `DenseFrac` quotient-rule derivative has no ready Mathlib
+    bridge target. Options for later: (a) define a `RatFunc` derivation Mathlib-side (needs
+    representative-independence — nontrivial) and bridge to it; (b) bridge the fraction derivative into
+    the engine's own differential-field abstraction (Phase 6) rather than to a standalone RatFunc
+    derivation. Deferred until Phase 6 clarifies which target the engine wants.
+  - **5-API DONE:** `PolyBridge/Basic.lean` — added `toPolynomial_C`/`toPolynomial_monomial` (completes
+    the bridge hom-square family the engine consumes). **← NEXT: Phase 6** (re-anchor the Risch engine
+    as commuting squares over CAlgebra carriers).
   - (4c-ii generic depth-`n` tower deferred — instance-recursion plumbing; not blocking Phase 5/6.)
 - **Phase 6…N — re-anchor the engine.** Port Hermite → Rothstein–Trager → residues/log part →
   LRT → RDE / coefficient recursion → tower orchestration → algebraic layer, each restated as a
