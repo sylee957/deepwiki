@@ -138,10 +138,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
   (replacing `CFracG`/`QFunNZG` towers with normalized-fraction carriers bridged by field iso). **← NEXT.**
   - **4a DONE:** `Frac/Dense.lean` — `DenseFrac R` (num/den pair carrier) + noncomputable
     `toRatFunc : → RatFunc R` (`num/den` via `toPolynomial` + fraction-field `algebraMap`) +
-    `ofPoly` embedding with its bridge lemma. **← NEXT: 4b field arithmetic (add/mul/neg/inv via
-    cross-mult, carrying `den ≠ 0`) + hom squares to `RatFunc`.** Note: unlike `DensePoly`, the raw
-    `DenseFrac` map is a homomorphism not an iso (num/den not reduced); a gcd-reduced canonical form
-    (for the iso) is an optional refinement — the hom suffices for the engine's needs.
+    `ofPoly` embedding with its bridge lemma. Note: unlike `DensePoly`, the raw `DenseFrac` map is a
+    homomorphism not an iso (num/den not reduced); a gcd-reduced canonical form (for the iso) is an
+    optional refinement — the hom suffices for the engine's needs.
+  - **4b-i DONE:** `Frac/Arithmetic.lean` — `mul`/`one` + `toRatFunc_mul`/`toRatFunc_one` (the
+    multiplicative hom squares, which hold UNCONDITIONALLY — a field's `(a/b)(c/d)=(ac)/(bd)` needs no
+    `den ≠ 0`). **← NEXT: 4b-ii add/neg/inv + their hom squares (these DO need the `den ≠ 0` invariant;
+    thread it through, using `IsDomain (DensePoly R)` transported from `Polynomial R` via `equiv`).**
+    Then 4c tower iteration.
 - **Phase 5 — computable derivation + bridge** to Mathlib `′`/`Derivation` on the new carriers.
 - **Phase 6…N — re-anchor the engine.** Port Hermite → Rothstein–Trager → residues/log part →
   LRT → RDE / coefficient recursion → tower orchestration → algebraic layer, each restated as a
