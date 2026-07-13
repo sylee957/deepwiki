@@ -2,6 +2,7 @@ import DeepWiki.Algebra
 import DeepWiki.Transfer
 import DeepWiki.ComputableAlgebra
 import DeepWiki.CAlgebra
+import DeepWiki.Refine
 import DeepWiki.NetworkCalculus
 import DeepWiki.ReactiveSystems
 import DeepWiki.TimeSeries
