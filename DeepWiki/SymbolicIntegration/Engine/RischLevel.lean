@@ -209,4 +209,19 @@ theorem rischLevel_succeeds_iff_integrable (L : CRischLevel P α) (domain : Risc
       LawfulGenuineCRischLevel.coefficients_constant fuel Dt a d res hdomain hd hrun,
       LawfulGenuineCRischLevel.arguments_nonzero fuel Dt a d res hdomain hd hrun⟩
 
+/-- **Fraction-integrand form of the one-level decision procedure.** The integrand is a single
+`CFrac` fraction `frac` (numerator + certified-nonzero denominator) rather than a `(num, den)` pair
+plus a separate `den ≠ 0` hypothesis — the nonzero-denominator obligation `toPoly (den frac) ≠ 0` is
+carried by the fraction (`CFrac.toPoly_den_ne_zero_generic`), so it never appears as a hypothesis at
+call sites. Wraps `rischLevel_succeeds_iff_integrable` at `a := CFrac.num frac`, `d := CFrac.den frac`. -/
+theorem rischLevel_succeeds_iff_integrable_frac
+    {F : (α : Type u) → [CField α] → Type u} [CFrac F P] [LawfulCFrac F P]
+    (L : CRischLevel P α) (domain : RischLevelDomain P α)
+    [LawfulCRischLevel L domain] [LawfulGenuineCRischLevel L domain] [CompleteCRischLevel L domain]
+    (Dt : P α) (frac : F α) (hdomain : domain Dt (CFrac.num frac) (CFrac.den frac)) :
+    IsRischLevelIntegrable Dt (CFrac.num frac) (CFrac.den frac) ↔
+      ∃ fuel res, L.integrate fuel Dt (CFrac.num frac) (CFrac.den frac) = some res :=
+  rischLevel_succeeds_iff_integrable L domain Dt (CFrac.num frac) (CFrac.den frac) hdomain
+    (CFrac.toPoly_den_ne_zero_generic frac)
+
 end DeepWiki.SymbolicIntegration
