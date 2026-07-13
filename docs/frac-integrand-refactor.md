@@ -49,6 +49,35 @@ per-cluster cost from the spike. Do NOT fan out before the spike is gate-green.
 4. The hyperexp/tangent levels + their tower-depth capstones.
 5. The `Sources/` catalog examples, per chapter.
 
+## Status (2026-07-13)
+
+**Done — the API-surface frac conversion** (the safe, high-value tier): frac-integrand forms added for
+the whole transcendental sound-and-complete decision-procedure family, each `den ≠ 0`-free (the
+fraction carries it via `CFrac.toPoly_den_ne_zero_generic`), all axiom-clean, gate PASS:
+- `rischLevel_succeeds_iff_integrable_frac` (generic), `hyperexpRischLevel_succeeds_iff_integrable_frac`
+  (§5.9), `tangentRischLevel_succeeds_iff_integrable_frac` (§5.10),
+  `hyperexpRischLevel_succeeds_iff_integrable_tower_frac` + `denseTangentTower_soundAndComplete_frac`
+  (whole-tower), `lrtSolver_soundAndComplete_on_tower_frac` (primitive capstone).
+
+So downstream / user-facing code has den≠0-free entry points across the decision-procedure API.
+
+**Deliberately NOT converted (the honest scope boundary):**
+- **The computational core** (`cHermiteReduceTower`, `cIntegrateReducedLrt`, `integrate`, the canonical
+  representation) takes `(a, d)` as two polynomials — this is native_decide-validated at concrete `ℚ`,
+  and the reduction defs are `noncomputable` (abstract `toPoly` bridge), so they are not native_decide
+  targets to reshape and their two-poly form is structural.
+- **The reduction-chain / LRT-contract soundness theorems** (`Hermite/ValuationTower`, `NormalReduction`,
+  `RischTowerLrt`/`RischTowerPrimitiveLrt` class fields `specialSound`/`reducedSoundLrt`, `Yun*`) thread
+  `toPoly d ≠ 0` as a **load-bearing hypothesis in the abstract correctness proofs**, not mere
+  bookkeeping. Converting the `LawfulCRischLevelLrt`/`CRischLevel` contract fields to a frac integrand
+  would cascade to every instance and every soundness proof — a large invasive rewrite of the *verified*
+  sound-and-complete arc for marginal duplication reduction. Left intact; the API-tier frac forms give
+  the ergonomic win without that risk.
+
+**Verdict.** The `den ≠ 0` duplication the user saw is genuinely reduced at the API surface (the places
+callers touch); the remaining sites are load-bearing soundness hypotheses / native_decide-constrained
+core, where the two-poly form is structural and converting it would endanger the verified engine.
+
 ## Invariants
 
 - Gate with `scripts/check.sh` (GATE: PASS, warning-/sorry-free) per phase; keep `native_decide`
