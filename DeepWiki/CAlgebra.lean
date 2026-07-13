@@ -1,5 +1,6 @@
 import DeepWiki.CAlgebra.Poly.Dense
 import DeepWiki.CAlgebra.Poly.Operations
+import DeepWiki.CAlgebra.PolyBridge.Basic
 
 /-! # CAlgebra — Hex-style computable algebra (greenfield)
 

@@ -88,9 +88,12 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
 
 - **Phase 0 — scaffold.** Create `DeepWiki/CAlgebra/` area + aggregator, wire into `DeepWiki.lean`,
   add this plan. Decide namespace (`DeepWiki.CAlgebra`) and the parallel-build strategy. *(this commit)*
-- **Phase 1 — normalized `DensePoly` + `RingEquiv`.** `Poly/Dense.lean` (structure + invariant +
-  `coeff`/`degree`/`normalize` + `ext_coeff`), `Poly/Operations.lean`, `PolyBridge/Basic.lean`
-  (`coeff_toPolynomial`, hom squares, `equiv : DensePoly R ≃+* Polynomial R`). **Keystone.**
+- **Phase 1 — normalized `DensePoly` + `RingEquiv`. DONE.** `Poly/Dense.lean` (structure + invariant +
+  `coeff`/`degree`/`normalize` + `ext_coeff`) ✓ 1a; `Poly/Operations.lean` (one/monomial/add/neg/mul +
+  coeff laws) ✓ 1b; `PolyBridge/Basic.lean` (`coeff_toPolynomial`/`coeff_ofPolynomial`, round trips,
+  hom squares, `equiv : DensePoly R ≃+* Polynomial R`) ✓ 1c. Keystone landed: the canonical-rep →
+  ring-iso thesis holds; note `RingEquiv` needs only `Mul`+`Add` on `DensePoly`, so no `CommRing`
+  instance was required to state it. **← NEXT: Phase 2.**
 - **Phase 2 — Euclid + Laws + gcd bridge.** `divMod`/`gcd`/`xgcd`, `DivModLaws`/`GcdLaws`, `ℚ`
   instances, `PolyBridge/Euclid.lean` (`toPolynomial_dvd_iff`, `gcd_associated`, Bezout transport).
   Optional: `EuclidFuel.lean` + one `decide +kernel` certificate.
