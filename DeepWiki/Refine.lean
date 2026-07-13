@@ -1,6 +1,7 @@
 import DeepWiki.Refine.Basic
 import DeepWiki.Refine.Resolve
 import DeepWiki.Refine.Poly
+import DeepWiki.Refine.Gcd
 
 /-! # Refine — a relational refinement/transfer kernel (CoqEAL/Trocq-style)
 
