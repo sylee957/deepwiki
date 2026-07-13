@@ -39,8 +39,25 @@ end DensePoly
   push_cast
   ring
 
-/-- Validation: the dense derivative matches Mathlib's polynomial derivative through the bridge. -/
-example (p : DensePoly R) : toPolynomial (DensePoly.deriv p) = (toPolynomial p).derivative :=
-  toPolynomial_deriv p
+namespace DensePoly
+
+/-- The derivative is additive. -/
+@[simp] theorem deriv_add (p q : DensePoly R) : deriv (p + q) = deriv p + deriv q := by
+  apply toPolynomial_injective
+  simp only [toPolynomial_deriv, toPolynomial_add, Polynomial.derivative_add]
+
+/-- Leibniz rule: `deriv (p*q) = deriv p * q + p * deriv q`. -/
+theorem deriv_mul (p q : DensePoly R) : deriv (p * q) = deriv p * q + p * deriv q := by
+  apply toPolynomial_injective
+  simp only [toPolynomial_deriv, toPolynomial_mul, toPolynomial_add, Polynomial.derivative_mul]
+
+end DensePoly
+
+/-- Validation: the dense derivative matches Mathlib's polynomial derivative through the bridge,
+and satisfies the Leibniz rule. -/
+example (p q : DensePoly R) :
+    toPolynomial (DensePoly.deriv p) = (toPolynomial p).derivative ∧
+    DensePoly.deriv (p * q) = DensePoly.deriv p * q + p * DensePoly.deriv q :=
+  ⟨toPolynomial_deriv p, DensePoly.deriv_mul p q⟩
 
 end DeepWiki.CAlgebra

@@ -165,8 +165,11 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
   **← NEXT.**
   - **5a DONE:** `Poly/Derivative.lean` — `deriv` (formal derivative, `coeff k = (k+1)·coeff (k+1)`) +
     `coeff_deriv` + `toPolynomial_deriv` (bridges to `Polynomial.derivative`).
-  - **← NEXT: 5b** — `deriv` satellite laws (additivity, Leibniz `deriv (p*q) = deriv p * q + p * deriv q`
-    transported from `Polynomial.derivative_mul`) and the `DenseFrac` quotient-rule derivative + bridge.
+  - **5b DONE:** `deriv_add` (additivity) + `deriv_mul` (Leibniz), transported from
+    `Polynomial.derivative_add`/`derivative_mul` via `toPolynomial_injective`.
+  - **← NEXT: 5c** — `DenseFrac` quotient-rule derivative + bridge (needs a `RatFunc` derivation target;
+    investigate whether Mathlib has one, else define the derivation and bridge to it). Then Phase 6+
+    (re-anchor the Risch engine as commuting squares over CAlgebra carriers).
   - (4c-ii generic depth-`n` tower deferred — instance-recursion plumbing; not blocking Phase 5/6.)
 - **Phase 6…N — re-anchor the engine.** Port Hermite → Rothstein–Trager → residues/log part →
   LRT → RDE / coefficient recursion → tower orchestration → algebraic layer, each restated as a
