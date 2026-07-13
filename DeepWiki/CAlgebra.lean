@@ -6,6 +6,7 @@ import DeepWiki.CAlgebra.Poly.Operations
 import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Poly.Tower
 import DeepWiki.CAlgebra.Poly.Derivative
+import DeepWiki.CAlgebra.PolyBridge.Derivative
 import DeepWiki.CAlgebra.PolyBridge.Basic
 import DeepWiki.CAlgebra.PolyBridge.Ring
 import DeepWiki.CAlgebra.Frac.Dense

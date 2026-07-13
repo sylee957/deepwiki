@@ -44,6 +44,17 @@ properties, `Associated` bridges). Kernel-reducible `decide` certificates (via f
 when a phase adds them; only compiler-trusting `native_decide` is transient. Record "computability
 checked, examples removed" in the phase commit message.
 
+**ARCHITECTURAL RULE (reaffirmed 2026-07-13, user): Mathlib correspondence lives in `*Bridge`
+modules, never mixed into core carriers.** A core module (`Poly/`, `Frac/`, `Matrix/`) defines only the
+computable carrier, its operations, and intrinsic laws — NO `toPolynomial`/`toRatFunc`/`toMatrix`
+denotations, NO Mathlib-type instances, NO bridge theorems (`toX_*`, `Associated`, `Differential`-on-
+Mathlib). Those all go in the paired `*Bridge/` module (`PolyBridge/`, `FracBridge/`, `MatrixBridge/`).
+A happy side effect: core modules often generalize (e.g. `Frac` core needs only `CommRing`, not `Field`).
+Cleanup status: **DONE** Frac (`FracBridge/Basic`), Poly derivative (`PolyBridge/Derivative`).
+**TODO** (incremental): Matrix (`Matrix/{Dense,Sylvester,Resultant}` → carrier core + `MatrixBridge/*`);
+`Diff/*` are inherently Mathlib-`Differential` bridges (fine as-is, name signals it); `Poly/Euclid`,
+`Poly/Tower` depend on the bridge-provided `CommRing`/`equiv` (acceptable core-uses-bridge, not mixing).
+
 **Explicitly NOT load-bearing for us:** Hex's strict *Mathlib-free cores*. Hex keeps cores
 Mathlib-free so the packages are reusable standalone; DeepWiki is a Mathlib-based wiki and *wants*
 Mathlib available. We adopt the **core / `*Bridge` companion split** for organization and to keep the

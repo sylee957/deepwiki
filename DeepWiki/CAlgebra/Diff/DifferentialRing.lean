@@ -1,5 +1,4 @@
-import DeepWiki.CAlgebra.Poly.Derivative
-import DeepWiki.CAlgebra.PolyBridge.Ring
+import DeepWiki.CAlgebra.PolyBridge.Derivative
 import Mathlib.RingTheory.Derivation.DifferentialRing
 
 /-! # `DensePoly` as a differential ring
