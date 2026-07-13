@@ -148,6 +148,19 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `toPolynomial_ne_zero` + `div_add_div`). **← NEXT: 4c tower iteration** — build the depth-`n`
     carrier `ℚ(x)(t₁)…(tₙ)` by iterating `DenseFrac`/`DensePoly` over the previous level, bridging
     each level to the corresponding `RatFunc` tower. Then Phase 5 (derivations).
+  - **4c-i DONE:** `Poly/Tower.lean` — concrete depth-2 validation: `DensePoly (DensePoly ℚ)` is a
+    `CommRing` by iterating the instance, and `equivTower2 : DensePoly (DensePoly ℚ) ≃+* ℚ[X][X]`
+    composes the level-2 iso with `Polynomial.mapEquiv` of the level-1 iso (bijective). Confirms the
+    tower carrier + bridge iterate.
+    - ★ FINDING: the `CommRing (DensePoly R)` instance is **noncomputable** — the auxiliary
+      `nsmul`/`zsmul`/`npow`/`natCast`/`intCast` route through the noncomputable `toPolynomial` bridge
+      (Phase 2a). Core `+`/`-`/`*` stay computable (they're the `Operations` instances), so `#eval`/
+      native arithmetic still works; only `^`/`•`/casts don't. **Refinement for full tower
+      computability:** give those auxiliary ops computable definitions so the whole `CommRing` instance
+      is computable (optional; not blocking).
+    - **← NEXT: 4c-ii generic depth-`n` tower carrier** (recursive type + instances — the known
+      instance-recursion plumbing, [[leanproofs-tower-orchestration-rework]]) OR the fraction-field
+      tower needing `Field (DenseFrac)` via canonical reduced form. Then Phase 5 (derivations).
 - **Phase 5 — computable derivation + bridge** to Mathlib `′`/`Derivation` on the new carriers.
 - **Phase 6…N — re-anchor the engine.** Port Hermite → Rothstein–Trager → residues/log part →
   LRT → RDE / coefficient recursion → tower orchestration → algebraic layer, each restated as a

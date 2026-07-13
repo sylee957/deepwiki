@@ -4,6 +4,7 @@ import DeepWiki.CAlgebra.Matrix.Resultant
 import DeepWiki.CAlgebra.Poly.Dense
 import DeepWiki.CAlgebra.Poly.Operations
 import DeepWiki.CAlgebra.Poly.Euclid
+import DeepWiki.CAlgebra.Poly.Tower
 import DeepWiki.CAlgebra.PolyBridge.Basic
 import DeepWiki.CAlgebra.PolyBridge.Ring
 import DeepWiki.CAlgebra.Frac.Dense
