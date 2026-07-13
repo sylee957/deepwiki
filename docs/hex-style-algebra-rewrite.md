@@ -116,7 +116,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `Associated` to `EuclideanDomain.gcd` (up to a unit, since the raw remainder isn't normalized),
     proved purely by transporting the universal property across `toPolynomial_dvd_iff`. **← NEXT:
     2c optional `xgcd`/Bezout + `ℚ`-carrier `GcdLaws`/`DivModLaws` instances; then Phase 3 resultant.**
-- **Phase 3 — resultant / subresultant / Bareiss** + Mathlib correspondence.
+- **Phase 3 — resultant / subresultant / Bareiss** + Mathlib correspondence. **← NEXT.**
+  Approach (scouted): bridge target is Mathlib `Polynomial.resultant` (exists, over `CommRing`). Hex
+  has no standalone resultant module — it computes via the **Sylvester-matrix determinant**
+  (`HexDeterminant` + `HexBareiss` fraction-free). So this phase needs a small computable-matrix layer
+  first. Sub-phases: 3a computable `Matrix`/`Vector` carrier + `toMathlib` bridge; 3b Bareiss
+  fraction-free determinant + `det` correspondence; 3c Sylvester matrix + `resultant` = its determinant,
+  bridged to `Polynomial.resultant`. (Alternatively a subresultant-PRS resultant reusing `divMod`, but
+  the Mathlib-equality proof is harder than the determinant route.)
 - **Phase 4 — canonical `DenseFrac` fraction field + `≃+* RatFunc`**, and the tower iteration
   (replacing `CFracG`/`QFunNZG` towers with normalized-fraction carriers bridged by field iso).
 - **Phase 5 — computable derivation + bridge** to Mathlib `′`/`Derivation` on the new carriers.
