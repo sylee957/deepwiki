@@ -638,4 +638,26 @@ theorem tangentRischLevel_succeeds_iff_integrable (R : CPolynomialReduction Dens
   rischLevel_succeeds_iff_integrable (tangentRischLevel R kind raw S T)
     (tangentRischLevelCompleteDomain R kind polynomialDomain raw S T) Dt a d hdomain hd
 
+/-- **Fraction-integrand form** of the hypertangent decision procedure: the integrand is a single
+`CFrac` fraction `frac` (numerator + certified-nonzero denominator), so no `den ≠ 0` hypothesis appears
+— it is carried by the fraction. Wraps `tangentRischLevel_succeeds_iff_integrable`. -/
+theorem tangentRischLevel_succeeds_iff_integrable_frac
+    {F : (β : Type u) → [CField β] → Type u} [CFrac F DensePoly] [LawfulCFrac F DensePoly]
+    (R : CPolynomialReduction DensePoly α)
+    [LawfulCPolynomialReduction R] (kind : PolynomialReductionKind)
+    (polynomialDomain : PolynomialReductionDomain DensePoly α)
+    [CompleteCPolynomialReduction R polynomialDomain]
+    (raw : CNormalReduction DensePoly α)
+    (S : CTangentCoefficientSolver α) (T : CTangentSpecialIntegrator α)
+    [CCanonicalRepresentation DensePoly α]
+    [LawfulCCanonicalRepresentation (P := DensePoly) (α := α)]
+    (Dt : DensePoly α) (frac : F α)
+    (hdomain : tangentRischLevelCompleteDomain R kind polynomialDomain raw S T Dt
+      (CFrac.num frac) (CFrac.den frac)) :
+    IsRischLevelIntegrable Dt (CFrac.num frac) (CFrac.den frac) ↔
+      ∃ fuel res, (tangentRischLevel R kind raw S T).integrate fuel Dt
+        (CFrac.num frac) (CFrac.den frac) = some res :=
+  tangentRischLevel_succeeds_iff_integrable R kind polynomialDomain raw S T Dt
+    (CFrac.num frac) (CFrac.den frac) hdomain (CFrac.toPoly_den_ne_zero_generic frac)
+
 end DeepWiki.SymbolicIntegration
