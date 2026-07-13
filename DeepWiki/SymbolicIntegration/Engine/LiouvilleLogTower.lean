@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.LiouvilleLog
+import DeepWiki.SymbolicIntegration.Engine.LiouvilleExpBridge
 import Mathlib.Tactic
 
 /-! # The multi-level transcendental-log Liouville tower-induction
@@ -66,6 +67,24 @@ theorem isLiouville_ratFunc_step (hFK : IsLiouville F K) (u : K) (hnd : Nondegen
   have hKR : IsLiouville K (RatFunc K) := isLiouville_logExtension_uncond u hnd
   exact IsLiouville.trans (F := F) (K := K) (A := RatFunc K) hFK hKR
 
+omit [CharZero F] in
+/-- The tower-induction step, exponential layer: `IsLiouville F K` plus a nondegenerate exp `u : K`
+gives `IsLiouville F (RatFunc K)`. The exp sibling of `isLiouville_ratFunc_step`, composing the exp
+keystone with `IsLiouville.trans`. -/
+theorem isLiouville_ratFunc_expStep (hFK : IsLiouville F K) (u : K)
+    (hnd : DeepWiki.SymbolicIntegration.LiouvilleExp.NondegenerateExp u) :
+    letI := DeepWiki.SymbolicIntegration.LiouvilleExp.expDifferential u
+    IsLiouville F (RatFunc K) := by
+  letI _dK1 : Differential (RatFunc K) :=
+    DeepWiki.SymbolicIntegration.LiouvilleExp.expDifferential u
+  letI _dAK1 : DifferentialAlgebra K (RatFunc K) :=
+    DeepWiki.SymbolicIntegration.LiouvilleExp.expDifferentialAlgebra u
+  letI _dCCK1 : Differential.ContainConstants K (RatFunc K) :=
+    DeepWiki.SymbolicIntegration.LiouvilleExpBridge.containConstants_of_nondegenerateExp u hnd
+  have hKR : IsLiouville K (RatFunc K) :=
+    DeepWiki.SymbolicIntegration.LiouvilleExpBridge.isLiouville_expExtension_uncond u hnd
+  exact IsLiouville.trans (F := F) (K := K) (A := RatFunc K) hFK hKR
+
 end Step
 
 section Tower
@@ -114,6 +133,24 @@ noncomputable def extend (S : LiouvilleStage F) (u : S.carrier)
     containConstants_trans (A := F) (B := S.carrier) (C := RatFunc S.carrier)
   { carrier := RatFunc S.carrier
     isLiouvilleF := isLiouville_ratFunc_step S.isLiouvilleF u hnd }
+
+/-- Extend a stage by one nondegenerate exp `u`: the next stage has carrier `RatFunc S.carrier`, with
+the exp derivation. The exp sibling of `extend`; both produce Liouville stages, so a tower may mix log
+and exp layers. -/
+noncomputable def extendExp (S : LiouvilleStage F) (u : S.carrier)
+    (hnd : DeepWiki.SymbolicIntegration.LiouvilleExp.NondegenerateExp u) : LiouvilleStage F :=
+  letI _dC1 : Differential (RatFunc S.carrier) :=
+    DeepWiki.SymbolicIntegration.LiouvilleExp.expDifferential u
+  letI _dAC1 : DifferentialAlgebra S.carrier (RatFunc S.carrier) :=
+    DeepWiki.SymbolicIntegration.LiouvilleExp.expDifferentialAlgebra u
+  letI _dCC1 : Differential.ContainConstants S.carrier (RatFunc S.carrier) :=
+    DeepWiki.SymbolicIntegration.LiouvilleExpBridge.containConstants_of_nondegenerateExp u hnd
+  letI _dAF2 : DifferentialAlgebra F (RatFunc S.carrier) :=
+    differentialAlgebra_trans (A := F) (B := S.carrier) (C := RatFunc S.carrier)
+  letI _dCC2 : Differential.ContainConstants F (RatFunc S.carrier) :=
+    containConstants_trans (A := F) (B := S.carrier) (C := RatFunc S.carrier)
+  { carrier := RatFunc S.carrier
+    isLiouvilleF := isLiouville_ratFunc_expStep S.isLiouvilleF u hnd }
 
 /-- The `n`-level log tower: iterate `extend` `n` times along a dependent log supply `nextLog`,
 carrier at height `n` the `n`-fold log extension `F(log u₁)⋯(log uₙ)`. -/
