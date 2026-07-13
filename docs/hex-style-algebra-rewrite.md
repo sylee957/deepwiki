@@ -99,8 +99,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
   Optional: `EuclidFuel.lean` + one `decide +kernel` certificate.
   - **2a DONE:** `PolyBridge/Ring.lean` — `CommRing (DensePoly R)` via injective `toPolynomial`
     (computable `+`/`-`/`*`; auxiliary `•`/`^`/casts through the bridge) + `toPolynomial_dvd_iff`
-    (divisibility preserved AND reflected — first completeness-by-reverse-transport payoff). **← NEXT:
-    2b divMod/gcd/xgcd (Wf) + `GcdLaws` + gcd `Associated` bridge.**
+    (divisibility preserved AND reflected — first completeness-by-reverse-transport payoff).
+  - **2b-i DONE:** `Poly/Euclid.lean` — `divMod` (Wf on remainder size; termination = leading-term
+    cancellation `divStep_size_lt`) + `divMod_spec` (`div·q + mod = p`).
+  - **2b-ii DONE:** `gcd` (Wf on divisor size, `mod_size_lt`) + universal property
+    `gcd_dvd_left`/`gcd_dvd_right`/`dvd_gcd` (the intrinsic `GcdLaws` content).
+  - **2b-iii DONE:** `PolyBridge/Euclid.lean` — `toPolynomial_gcd_associated`: executable gcd is
+    `Associated` to `EuclideanDomain.gcd` (up to a unit, since the raw remainder isn't normalized),
+    proved purely by transporting the universal property across `toPolynomial_dvd_iff`. **← NEXT:
+    2c optional `xgcd`/Bezout + `ℚ`-carrier `GcdLaws`/`DivModLaws` instances; then Phase 3 resultant.**
 - **Phase 3 — resultant / subresultant / Bareiss** + Mathlib correspondence.
 - **Phase 4 — canonical `DenseFrac` fraction field + `≃+* RatFunc`**, and the tower iteration
   (replacing `CFracG`/`QFunNZG` towers with normalized-fraction carriers bridged by field iso).

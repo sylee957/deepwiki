@@ -3,6 +3,7 @@ import DeepWiki.CAlgebra.Poly.Operations
 import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.PolyBridge.Basic
 import DeepWiki.CAlgebra.PolyBridge.Ring
+import DeepWiki.CAlgebra.PolyBridge.Euclid
 
 /-! # CAlgebra — Hex-style computable algebra (greenfield)
 
