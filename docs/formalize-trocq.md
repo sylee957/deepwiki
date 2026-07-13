@@ -49,6 +49,23 @@ the paper statement in ordinary Lean.
 - [x] Derive the paper's transfer principle `A ≃ B -> P A ≃ P B` and proof transport from that
   hypothesis.
 
+## Section 2.3 - parametricity translations
+
+- [x] Formalize raw universe relations and the dependent product, application, and lambda rules.
+- [x] Verify that the raw universe translation is itself a relation in the next universe.
+- [x] Represent translated contexts by paired environments carrying proof-relevant witnesses.
+- [x] Prove raw abstraction by structural induction for the intrinsic function fragment.
+- [x] Package the two typed term interpretations and their translated witness as the three
+  conclusions of the abstraction theorem.
+- [x] Formalize the univalent universe package `Σ R, Σ e, R ≃ graph(e⁻¹)`.
+- [x] Prove that this package is equivalent to type equivalence under an explicit univalence
+  hypothesis.
+- [x] Separate the package-valued term translation from its relation-valued type projection.
+- [x] Construct the translated universe and verify its relation projection definitionally.
+- [x] Prove the univalent abstraction result for the intrinsic function fragment.
+- [ ] Extend both abstraction results from the intrinsic fragment to full dependent `CCω` typing
+  judgments.
+
 ## First checkpoint: what the six levels mean
 
 Fix a proof-relevant relation `R : A -> B -> Sort w` and a candidate map `m : A -> B`. There are

@@ -9,10 +9,10 @@ and core-parametricity modules.
 
 ## NOT YET FORMALIZED
 
-- Theorem 1 (raw-parametricity abstraction theorem), p. 7 — [infra] needs the translated syntax and
-  typing judgments.
-- Theorem 2 (univalent-parametricity abstraction theorem), p. 9 — [infra] needs univalence and the
-  translated syntax.
+- Theorem 1 (raw-parametricity abstraction theorem), p. 7 — [infra] the theorem is proved for the
+  intrinsic function fragment; the exact result still needs all dependent `CCω` typing judgments.
+- Theorem 2 (univalent-parametricity abstraction theorem), p. 9 — [infra] the theorem and universe
+  case are proved for the intrinsic fragment; the exact result still needs full `CCω` syntax.
 - Lemma 2 (equivalence as a relation functional in both directions), p. 10 — [infra] depends on
   univalence to identify an arbitrary functional relation family with an equality graph; the
   carrier- and existence-level directions are formalized.

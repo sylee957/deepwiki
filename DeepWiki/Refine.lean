@@ -5,6 +5,7 @@ import DeepWiki.Refine.Dependent
 import DeepWiki.Refine.ProofTransfer
 import DeepWiki.Refine.TypeEquivalence
 import DeepWiki.Refine.CoreParametricity
+import DeepWiki.Refine.ParametricityTranslations
 import DeepWiki.Refine.WitnessWeakening
 import DeepWiki.Refine.Resolve
 import DeepWiki.Refine.Goal
