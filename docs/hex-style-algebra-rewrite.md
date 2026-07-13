@@ -125,8 +125,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
   bridged to `Polynomial.resultant`. (Alternatively a subresultant-PRS resultant reusing `divMod`, but
   the Mathlib-equality proof is harder than the determinant route.)
   - **3a DONE:** `Matrix/Dense.lean` — `DenseMatrix R` (list-of-rows carrier) + `entry`/`ofFn` +
-    `toMatrix : → Matrix (Fin n) (Fin m) R` with entrywise agreement (`toMatrix_apply`,
-    `entry_ofFn`, `toMatrix_ofFn`). **← NEXT: 3b Bareiss fraction-free determinant + `det` bridge.**
+    `toMatrix : → Matrix (Fin n) (Fin m) R` with entrywise agreement.
+  - **PIVOT (correctness-first):** Mathlib *defines* `Polynomial.resultant f g := (f.sylvester g).det`,
+    so the resultant bridges through the Sylvester matrix with **no Bareiss correctness needed**.
+    Bareiss becomes an optional efficiency-only sub-phase (3b'), NOT on the correctness path.
+  - **3b DONE:** `Matrix/Sylvester.lean` — computable `sylvester p q m n` + `toMatrix_sylvester`
+    (bridges to `Polynomial.sylvester`; proved by `Fin.addCases` column-split matching).
+  - **3c DONE:** `Matrix/Resultant.lean` — `resultant := sylvester.det` + `toPolynomial_resultant`
+    (bridges to `Polynomial.resultant`, near-definitional). **← NEXT: Phase 4 (canonical `DenseFrac`
+    fraction field + `≃+* RatFunc` + tower iteration).** Optional later: 3b' Bareiss for efficient det.
 - **Phase 4 — canonical `DenseFrac` fraction field + `≃+* RatFunc`**, and the tower iteration
   (replacing `CFracG`/`QFunNZG` towers with normalized-fraction carriers bridged by field iso).
 - **Phase 5 — computable derivation + bridge** to Mathlib `′`/`Derivation` on the new carriers.
