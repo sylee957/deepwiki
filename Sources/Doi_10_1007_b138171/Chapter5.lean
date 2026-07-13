@@ -49,9 +49,12 @@ level and instantiable at `DenseFrac ℚ` like the rest of the engine.
   `HermiteReduce` is now computable + native_decide-validated, see `alg_5_3_hermiteReduce`/`ex_5_3_1`).
 §5.4 The Polynomial Reduction: Thm 5.4.2 (abstract correctness; Thm 5.4.1 + algorithm
   `PolynomialReduce` now computable + native_decide-validated, see `alg_5_4_polynomialReduce`/`ex_5_4_1`).
-§5.5 Liouville's Theorem: Thm 5.5.2, Thm 5.5.3 (the general structure theorem — every elementary
-  antiderivative is `g + ∑ cᵢ log uᵢ`, and the tower-exhaustiveness "no such form ⟹ not elementary" —
-  `[research]`).
+§5.5 Liouville's Theorem: the general structure theorem Thm 5.5.2/5.5.3 is now formalized abstractly
+  over a Liouville tower — `IsElementary a ↔ a` has a base Liouville form, covering mixed log/exp towers
+  — cataloged as `thm_5_5_2_structure`/`thm_5_5_3_not_elementary` in
+  `Sources.Doi_10_1007_b138171.Liouville`. (Its `IsElementary` predicate quantifies over the abstract
+  Liouville-tower stages; wiring in **algebraic** tower layers and deciding the per-stage new-monomial
+  conditions concretely is the remaining `[research]` refinement.)
   (Thm 5.5.1 is now formalized for BOTH transcendental cases, conditional on the necessary new-monomial
   condition: the *logarithmic* case `IsLiouville F F(log u)` (`log u ∉ F`) and the *exponential* case
   `IsLiouville F F(exp u)` (`exp u ∉ F`), see catalog `Sources.Doi_10_1007_b138171.Liouville`

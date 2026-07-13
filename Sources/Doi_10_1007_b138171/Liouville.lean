@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 import DeepWiki.SymbolicIntegration.LiouvilleLog
 import DeepWiki.SymbolicIntegration.Engine.LiouvilleExpBridge
+import DeepWiki.SymbolicIntegration.LiouvilleStructure.ElementaryTower
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Liouville's Theorem (the completeness direction)
@@ -119,5 +120,20 @@ only the Kähler-module-valued localization, not a self-derivation extension) �
 Mathlib-contributable derivation-extension lemma, recorded here as the enabler of the transcendental-log
 Liouville keystone. -/
 noncomputable abbrev fracField_deriv_extension := @PolynomialFractionDeriv.fracDeriv
+
+/-- **Liouville's Theorem — the general structure theorem** (Thm 5.5.2 / 5.5.3): a base element `a ∈ F`
+is *elementary* — has an elementary antiderivative, i.e. a Liouville form `∑ cᵢ log uᵢ + v′` in **some**
+finite tower of Liouville extensions of `F` (`IsElementary`, the abstract elementary-tower predicate) —
+**iff** it already has a Liouville form over the base `F` itself. Proved via the descent through the
+tower's `IsLiouville` (Mathlib's differential structure theorem), covering towers that mix log and exp
+extensions. This is the abstract Thm 5.5.2 (Liouville form of every elementary antiderivative) with the
+tower-exhaustiveness converse. -/
+abbrev thm_5_5_2_structure := @DeepWiki.SymbolicIntegration.LiouvilleStructure.isElementary_iff
+
+/-- **Thm 5.5.3 (non-elementarity criterion)**: if `a ∈ F` has no Liouville form over the base field,
+it is not elementary over any Liouville tower — the citable "not integrable in elementary terms"
+statement, the contrapositive of the structure theorem. -/
+abbrev thm_5_5_3_not_elementary :=
+  @DeepWiki.SymbolicIntegration.LiouvilleStructure.not_isElementary_of_not_hasWeakLiouvilleForm
 
 end DeepWiki.Si
