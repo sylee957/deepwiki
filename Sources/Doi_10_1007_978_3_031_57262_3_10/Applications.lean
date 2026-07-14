@@ -1,4 +1,4 @@
-import DeepWiki.Refine.BinaryNaturals
+import DeepWiki.Refine.Examples.BinaryNaturals
 import DeepWiki.Refine.RetractiveNaturalInduction
 import DeepWiki.Refine.ExtendedNonnegativeSums
 import DeepWiki.Refine.BitVectorRepresentation

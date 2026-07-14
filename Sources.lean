@@ -123,6 +123,9 @@ import Sources.Doi_10_1007_978_3_031_57262_3_10.Section22
 import Sources.Doi_10_1007_978_3_031_57262_3_10.Section23
 import Sources.Doi_10_1007_978_3_031_57262_3_10.Theory
 import Sources.Doi_10_1007_978_3_031_57262_3_10.Applications
+
+import Sources.Doi_10_1145_3737283.Source
+import Sources.Doi_10_1145_3737283.Section2
 import Sources.Doi_10_1007_978_3_7091_7551_4_9.Source
 import Sources.Doi_10_1007_978_3_7091_7551_4_9.SubresultantPRS
 import Sources.Doi_10_1006_jsco_1995_1043.Source

@@ -1,5 +1,8 @@
 # Formalizing the theory behind Trocq
 
+> Historical ESOP 2024 worklist. The expanded TOPLAS paper now drives new work; continue from
+> `docs/formalize-trocq-beyond-equivalence.md` and keep this file as the old paper's coverage record.
+
 Source: Cohen, Crance, and Mahboubi, *Trocq: Proof Transfer for Free, With or Without
 Univalence*, ESOP 2024, DOI `10.1007/978-3-031-57262-3_10`. The local reference is
 `references/2310.14022v2.pdf`.

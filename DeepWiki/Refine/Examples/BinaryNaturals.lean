@@ -1,6 +1,6 @@
 import DeepWiki.Refine.ProofTransfer
 
-/-! # Unary and binary natural-number representations
+/-! # Unary and binary natural-number representation example
 
 Canonical binary numerals give a computation-oriented natural-number carrier.  Its zero,
 successor, and conversions to and from `Nat` form an equivalent natural-number interface, so the
@@ -54,6 +54,38 @@ theorem toNat_succ (value : BinaryPositive) : value.succ.toNat = Nat.succ value.
       simp only [succ, toNat, ih]
       omega
 
+/-- Addition on canonical positive binary numerals. -/
+def add : BinaryPositive → BinaryPositive → BinaryPositive
+  | .one, right => right.succ
+  | .bit0 left, .one => .bit1 left
+  | .bit1 left, .one => .bit0 left.succ
+  | .bit0 left, .bit0 right => .bit0 (add left right)
+  | .bit0 left, .bit1 right => .bit1 (add left right)
+  | .bit1 left, .bit0 right => .bit1 (add left right)
+  | .bit1 left, .bit1 right => .bit0 (add left right).succ
+
+/-- Reading binary positive addition agrees with unary addition. -/
+@[simp] theorem toNat_add (left right : BinaryPositive) :
+    (add left right).toNat = left.toNat + right.toNat := by
+  induction left generalizing right with
+  | one => cases right <;> simp [add, toNat, toNat_succ] <;> omega
+  | bit0 left ih => cases right <;> simp [add, toNat, ih] <;> omega
+  | bit1 left ih => cases right <;> simp [add, toNat, toNat_succ, ih] <;> omega
+
+/-- Multiplication on canonical positive binary numerals. -/
+def mul : BinaryPositive → BinaryPositive → BinaryPositive
+  | .one, right => right
+  | .bit0 left, right => .bit0 (mul left right)
+  | .bit1 left, right => add (.bit0 (mul left right)) right
+
+/-- Reading binary positive multiplication agrees with unary multiplication. -/
+@[simp] theorem toNat_mul (left right : BinaryPositive) :
+    (mul left right).toNat = left.toNat * right.toNat := by
+  induction left generalizing right with
+  | one => simp [mul, toNat]
+  | bit0 left ih => simp [mul, toNat, ih, Nat.mul_assoc]
+  | bit1 left ih => simp [mul, toNat, ih, Nat.add_mul, Nat.mul_assoc]
+
 /-- Unary reading distinguishes canonical positive binary numerals. -/
 theorem toNat_injective : Function.Injective BinaryPositive.toNat := by
   intro left right equality
@@ -98,6 +130,59 @@ theorem toNat_injective : Function.Injective BinaryPositive.toNat := by
           simp only [toNat] at equality
           omega
 
+/-- Decide strict order directly on canonical positive binary numerals. -/
+def ltb : BinaryPositive → BinaryPositive → Bool
+  | .one, .one => false
+  | .one, .bit0 _ => true
+  | .one, .bit1 _ => true
+  | .bit0 _, .one => false
+  | .bit1 _, .one => false
+  | .bit0 left, .bit0 right => ltb left right
+  | .bit1 left, .bit1 right => ltb left right
+  | .bit0 left, .bit1 right => if left == right then true else ltb left right
+  | .bit1 left, .bit0 right => if left == right then false else ltb left right
+
+/-- Binary positive comparison returns true exactly when the unary readings are strictly ordered. -/
+@[simp] theorem ltb_eq_true_iff (left right : BinaryPositive) :
+    ltb left right = true ↔ left.toNat < right.toNat := by
+  induction left generalizing right with
+  | one =>
+      cases right with
+      | one => simp [ltb, toNat]
+      | bit0 right =>
+          have positive := right.toNat_pos
+          simp [ltb, toNat]
+          omega
+      | bit1 right =>
+          have positive := right.toNat_pos
+          simp [ltb, toNat]
+          omega
+  | bit0 left ih =>
+      cases right with
+      | one =>
+          have positive := left.toNat_pos
+          simp [ltb, toNat]
+          omega
+      | bit0 right => simpa [ltb, toNat] using ih right
+      | bit1 right =>
+          by_cases heq : left = right
+          · subst right
+            simp [ltb, toNat]
+          · have hneNat : left.toNat ≠ right.toNat := fun equality =>
+              heq (toNat_injective equality)
+            simp [ltb, toNat, heq, ih]
+            omega
+  | bit1 left ih =>
+      cases right with
+      | one => simp [ltb, toNat]
+      | bit0 right =>
+          by_cases heq : left = right
+          · subst right
+            simp [ltb, toNat]
+          · simp [ltb, toNat, heq, ih]
+            omega
+      | bit1 right => simpa [ltb, toNat] using ih right
+
 end BinaryPositive
 
 /-- A canonical binary representation of nonnegative natural numbers. -/
@@ -120,6 +205,10 @@ def succ : BinaryNat → BinaryNat
   | .zero => .pos .one
   | .pos value => .pos value.succ
 
+/-- The canonical binary representation of one. -/
+def one : BinaryNat :=
+  .pos .one
+
 /-- Reading binary zero produces unary zero. -/
 @[simp] theorem toNat_zero : BinaryNat.zero.toNat = 0 :=
   rfl
@@ -129,6 +218,10 @@ def succ : BinaryNat → BinaryNat
   cases value with
   | zero => rfl
   | pos value => exact value.toNat_succ
+
+/-- Reading binary one produces unary one. -/
+@[simp] theorem toNat_one : one.toNat = 1 :=
+  rfl
 
 /-- Unary reading distinguishes canonical binary natural numbers. -/
 theorem toNat_injective : Function.Injective BinaryNat.toNat := by
@@ -150,6 +243,27 @@ theorem toNat_injective : Function.Injective BinaryNat.toNat := by
       | pos right =>
           apply congrArg BinaryNat.pos
           exact BinaryPositive.toNat_injective equality
+
+/-- Decide strict order directly on canonical binary natural numbers. -/
+def ltb : BinaryNat → BinaryNat → Bool
+  | .zero, .zero => false
+  | .zero, .pos _ => true
+  | .pos _, .zero => false
+  | .pos left, .pos right => left.ltb right
+
+/-- Binary natural comparison returns true exactly when the unary readings are strictly ordered. -/
+@[simp] theorem ltb_eq_true_iff (left right : BinaryNat) :
+    ltb left right = true ↔ left.toNat < right.toNat := by
+  cases left with
+  | zero =>
+      cases right with
+      | zero => simp [ltb, toNat]
+      | pos right =>
+          have positive := right.toNat_pos
+          simp [ltb, toNat]
+          omega
+  | pos left =>
+      cases right <;> simp [ltb, toNat]
 
 /-- Encode a unary natural number as a canonical binary natural number. -/
 def ofNat : Nat → BinaryNat
@@ -175,6 +289,29 @@ def ofNat : Nat → BinaryNat
   apply BinaryNat.toNat_injective
   exact toNat_ofNat value.toNat
 
+/-- Multiplication of canonical binary natural numbers. -/
+def mul : BinaryNat → BinaryNat → BinaryNat
+  | .zero, _ => .zero
+  | _, .zero => .zero
+  | .pos left, .pos right => .pos (left.mul right)
+
+/-- Reading binary multiplication agrees with unary multiplication. -/
+@[simp] theorem toNat_mul (left right : BinaryNat) :
+    (mul left right).toNat = left.toNat * right.toNat := by
+  cases left <;> cases right <;> simp [mul, toNat]
+
+/-- The product of a list of canonical binary natural numbers. -/
+def listProduct : List BinaryNat → BinaryNat
+  | [] => one
+  | value :: values => mul value (listProduct values)
+
+/-- Reading a binary list product agrees with the unary list product. -/
+@[simp] theorem toNat_listProduct (values : List BinaryNat) :
+    (listProduct values).toNat = (values.map toNat).prod := by
+  induction values with
+  | nil => rfl
+  | cons value values ih => simp only [listProduct, toNat_mul, List.map_cons, List.prod_cons, ih]
+
 /-- Unary and canonical binary natural numbers are equivalent. -/
 def natEquiv : Nat ≃ BinaryNat where
   toFun := ofNat
@@ -183,32 +320,6 @@ def natEquiv : Nat ≃ BinaryNat where
   right_inv := ofNat_toNat
 
 end BinaryNat
-
-/-- The dependent elimination principle generated by a natural-number interface. -/
-def NatSignature.Eliminator (signature : NatSignature.{u}) :=
-  ∀ P : signature.Carrier → Sort v,
-    P signature.zero →
-    (∀ n, P n → P (signature.succ n)) →
-    ∀ n, P n
-
-/-- An interface equivalence transports its dependent elimination principle from left to right. -/
-def NatSignatureEquiv.eliminator {left : NatSignature.{u}}
-    {right : NatSignature.{v}} (equiv : NatSignatureEquiv left right) :
-    left.Eliminator.{u, w} → right.Eliminator.{v, w} := by
-  intro eliminate P hzero hsucc n
-  let Q : left.Carrier → Sort w := fun m => P (equiv.carrier m)
-  have qzero : Q left.zero := by
-    change P (equiv.carrier left.zero)
-    rw [equiv.map_zero]
-    exact hzero
-  have qsucc : ∀ m, Q m → Q (left.succ m) := by
-    intro m hm
-    change P (equiv.carrier (left.succ m))
-    rw [equiv.map_succ]
-    exact hsucc (equiv.carrier m) hm
-  have result := eliminate Q qzero qsucc (equiv.carrier.symm n)
-  change P (equiv.carrier (equiv.carrier.symm n)) at result
-  simpa using result
 
 /-- The standard unary natural-number interface. -/
 def unaryNatSignature : NatSignature where

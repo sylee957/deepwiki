@@ -48,11 +48,11 @@ import DeepWiki.Refine.MetaWitnessWeakeningEvaluator
 import DeepWiki.Refine.ArrowRelationStructure
 import DeepWiki.Refine.PiRelationStructure
 import DeepWiki.Refine.ProofTransfer
-import DeepWiki.Refine.BinaryNaturals
 import DeepWiki.Refine.RetractiveNaturalInduction
 import DeepWiki.Refine.ExtendedNonnegativeSums
 import DeepWiki.Refine.BitVectorRepresentation
 import DeepWiki.Refine.IntegerModularRetraction
+import DeepWiki.Refine.Examples
 import DeepWiki.Refine.SummableSequenceTransfer
 import DeepWiki.Refine.PolymorphicListRelations
 import DeepWiki.Refine.TupleVectorTransfer

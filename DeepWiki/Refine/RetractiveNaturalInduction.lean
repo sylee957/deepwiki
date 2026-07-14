@@ -1,5 +1,5 @@
-import DeepWiki.Refine.BinaryNaturals
 import DeepWiki.Refine.FunctionalRelation
+import DeepWiki.Refine.ProofTransfer
 
 /-! # Natural induction from a retractive representation
 
