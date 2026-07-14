@@ -25,22 +25,12 @@ modeling assumption.
 - Section 8: the expanded application gallery for isomorphisms, sections/retractions, and
   polymorphic dependent types.
 
-## Section 2 - proof transfer by example
+## Section 2 - intentionally decataloged
 
-- [x] Reuse the canonical unary/binary natural equivalence and its zero/successor laws.
-- [x] Add binary multiplication and list product with unary-reading lemmas in the defining file.
-- [x] Formalize Example 2.1's exact `[100, 101, 102]` ground-product comparison in both
-  representations.
-- [x] Implement direct binary strict comparison and prove its Boolean result agrees with `Nat`
-  order; state the binary benchmark using that executable comparison.
-- [x] Reuse the transferred binary eliminator and the weaker left-inverse construction for Example
-  2.2.
-- [x] Formalize Example 2.3's exact `23649 * 23703` computation modulo nine and the resulting
-  integer divisibility theorem.
-- [x] Prove the finite modular obstruction behind Example 2.4 by exhaustive computation in
-  `ZMod 9`.
-- [x] Transfer the obstruction back to prove Proposition 2.5 for arbitrary natural numbers.
-- [x] Add a complete subtractive Section 2 catalog for DOI `10.1145/3737283`.
+Section 2 was used as a reading exercise and its temporary Lean examples were removed afterward.
+The TOPLAS source catalog intentionally claims no formalization coverage for Examples 2.1, 2.2,
+2.3, and 2.4 or Proposition 2.5. Revisit them only if they become necessary tests for later Trocq
+infrastructure.
 
 ## Next phases
 

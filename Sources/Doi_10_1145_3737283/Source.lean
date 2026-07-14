@@ -2,7 +2,8 @@
 
 Cohen, Crance, and Mahboubi develop proof transfer beyond equivalence by decomposing relational
 structure into independently selectable components and synthesizing the structure needed by each
-translated term. -/
+translated term. Section 2 was intentionally decataloged after being used as a reading exercise;
+this source record claims no formalization coverage for those examples. -/
 
 namespace DeepWiki.CcmToplas
 
