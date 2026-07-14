@@ -4,10 +4,22 @@ Source: Cohen, Crance, and Mahboubi, *Trocq: Proof Transfer for Free, With or Wi
 Univalence*, ESOP 2024, DOI `10.1007/978-3-031-57262-3_10`. The local reference is
 `references/2310.14022v2.pdf`.
 
+The rendered 29-page arXiv/ESOP paper ends after Section 6 and the references. Appendix 0.A-0.E
+appears only in an unreachable arXiv source tail after `\end{document}`. It is supplementary audit
+material here, not part of rendered-paper completion.
+
 The supplementary constructions omitted from the PDF are in the official Trocq `0.1.5` artifact
 (DOI `10.5281/zenodo.10563382`), especially `Hierarchy.v`, `Param_Type.v`, `Param_forall.v`, and
 `Param_arrow.v`. Those files, rather than inference from the displayed tables alone, are the source
 of truth for porting the `p□`, `pΠ`, and `p→` witness families.
+
+The official repository is cached at `references/trocq-artifact`. The paper snapshot is tag
+`ESOP2024` (`dd6ae95e39247d7df8c2f797e5d77f3d9f473943`); artifact release `0.1.5` is
+`b5bd4bfcd7435b0cba121f9a7575a9fd97109af8`. Audit implementation claims against those tags, not
+against current master, whose architecture and supported Rocq versions have continued to evolve.
+The cached checkout currently points at `0.4.0`
+(`a36529e66dfd3d255c51506943dbdac77adbee56`). In particular, its optional `(1,0)` coercion hook is
+post-paper functionality and must not be attributed to the ESOP artifact.
 
 The goal is a readable Lean development of the mathematical theory that explains Trocq, followed
 by a deliberate comparison with `DeepWiki.Refine`. This is not initially a port of the Coq-Elpi
@@ -82,15 +94,25 @@ or a cubical/HoTT-flavored equality would be needed to instantiate them non-vacu
   hypothesis.
 - [x] Separate the package-valued term translation from its relation-valued type projection.
 - [x] Construct the native semantic translated-universe package and verify its relation projection
-  definitionally; the corresponding quoted `CCω` term and typing derivation remain open.
+  definitionally.
 - [x] State the exact quoted-universe boundary as `UnivalentUniverseQuotation`, indexed by an
   explicit extension of object-language typing and definitional conversion; its fields record the
   package typing and projected-relation conversion without identifying the native semantic package
   with an object-language term.
+- [x] Realize the top/top quoted-universe equation in `StructuredUniverseQuotationSyntax`: the
+  primitive structured witness has its displayed type, its projected relation has the top family
+  type, and projection converts definitionally to the quoted top relation family. Relate each
+  native top-universe fiber to both `StructuredRelation` at `(4,4)` and `UnivalentRelation` without
+  asserting the still-open full univalent abstraction induction.
 - [x] Prove the univalent abstraction result for the intrinsic function fragment.
-- [ ] Extend both abstraction results from the intrinsic fragment to full dependent `CCω` typing
-  judgments. For raw abstraction, the conversion case is proved; cumulativity and the strengthened
-  induction that recursively supplies translated type witnesses remain.
+- [x] Prove all three raw abstraction conclusions for a formation-explicit dependent judgment whose
+  lambda rule recursively supplies codomain formation and whose cumulativity rule records exact
+  substitution-stable relation-fiber monotonicity; prove its one-way erasure into ordinary `CCω`
+  typing. Add typed renaming, weakening, substitution, instantiation, lookup regularity, and assigned
+  type regularity for this judgment.
+- [ ] Bridge the paper's ordinary cumulative typing judgment to the formation-explicit judgment,
+  or prove the strongest faithful typed restriction. The full cumulative reading of the paper's
+  `CCω` Theorem 1 is not yet claimed.
 
 ## First checkpoint: what the six levels mean
 
@@ -138,8 +160,9 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
 - [x] Define the graph-to-relation and relation-to-graph directions.
 - [x] Define `MapClass0`, `MapClass1`, `MapClass2a`, `MapClass2b`, `MapClass3`, and `MapClass4`.
 - [x] Define the six-level index and the bidirectional level-`3` class.
-- [x] Define the exact structured-relation carrier `Σ R, RelationClass α R`, its projections,
-  converse symmetry, and structure-preserving weakening.
+- [x] Define the field-for-field structured-relation carrier `Σ R, RelationClass α R`, its
+  projections, converse symmetry, and structure-preserving weakening. Lean conservatively
+  generalizes the artifact's same-universe `Type` carriers to heterogeneous universes and `Sort`.
 - [x] Define the primitive weakening projections between adjacent map classes.
 - [x] Show that `DenoteRel denote` carries a canonical forward `MapClass4`.
 - [x] Show that two `MapClass3` directions determine a Lean equivalence of carriers.
@@ -209,11 +232,41 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
 - [x] Reduce its final embedding into ordinary `DependentCalculus` typing to the precise proposition
   `ErasedSubtypeTypehood`: a target reached by a typed erased-subtyping derivation preserves the
   existence of a universe typing. The construction covers every typing constructor, while erased
-  subtyping maps to ordinary cumulative conversion unconditionally. The older `CumulativeTypehood`
-  boundary is retained only as a strictly stronger sufficient assumption because it discards the
-  typing evidence carried by the subtyping derivation.
-- [ ] Prove `ErasedSubtypeTypehood` from conversion and regularity for the ordinary calculus; this is
-  now the only assumption in the Appendix B bridge.
+  subtyping maps to ordinary cumulative conversion unconditionally.
+- [ ] Prove `ErasedSubtypeTypehood` from conversion and regularity for the ordinary calculus. Its
+  remaining constructor-local boundary is the relation-indexed application theorem below.
+- [x] Audit source-tail 0.B's printed `|Γ| ⊢ |t| ≡ |A|` conclusion and refute it formally with the
+  annotated derivation `Sort 0 : Sort 1`; the repaired conservativity conclusion is typing.
+- [x] Prove parallel-beta substitution, complete-development triangle/diamond, Church-Rosser
+  joinability, distinct-sort nonconversion, and sort/product kind disjointness for the ordinary
+  scoped calculus.
+- [x] Prove dependent context narrowing unconditionally by a typed identity substitution, and reduce
+  conversion regularity to assigned-kind/sort discrimination. Prove the product construction from
+  reverse domain typehood transport, narrowing, and forward codomain transport.
+- [x] Prove constructor-local principal typing and beta-convertible product injectivity. Formalize
+  the source tail's false subtyping-as-beta-conversion claim and refute it with `Sort 0 ≤ Sort 1`;
+  retain cumulative conversion as the repaired conclusion. Remove the superseded conditional
+  product-fork and assigned-type-lower-bound route.
+- [x] Prove that erasing universe indices maps cumulative conversion to beta conversion and prove
+  directly that any two types assigned to one term agree after level erasure. This closes assigned-kind discrimination and typed conversion
+  regularity unconditionally; the stronger unused product-target detour has been removed.
+- [x] Prove lambda universe-typehood impossible and use mutual typing/subtyping recursion to close
+  conversion, lambda, forward and reverse product transport, narrowing, and the complete embedding
+  from an application-transport premise.
+- [x] Define `ErasedSubtypeRelationIndexedApplicationTransport`, whose two
+  fields retain the function-subtyping derivation, the target application's kind typing, and the
+  recursive forward or reverse typehood theorem. Re-run the mutual typing/subtyping recursion and
+  prove that this premise implies `ErasedSubtypeTypehood` and the complete ordinary
+  embedding.
+- [x] Delete the obsolete unindexed transport interface, its duplicate mutual recursor, and its
+  counterexample ladder; they were an internal failed reduction rather than paper content.
+- [ ] Prove the exact relation-indexed application transport premise. Canonically typed beta
+  redexes preserve their dependent type, root-beta preservation is sufficient for all compatible
+  one-step reductions, and full subject reduction follows from exact cumulative product-component inversion.
+  Proving that inversion across transitive paths, then strengthening the induction to arbitrary
+  application spines with substitution stability, remains. Product-fork coherence for two types
+  assigned to one term is insufficient because this boundary relates two distinct function terms;
+  the remaining premise relates two distinct function terms.
 - [x] Represent annotated universe levels and annotated types for a documented core fragment.
 - [x] Represent semantic parametricity contexts for an intrinsically typed lambda calculus.
 - [x] Formalize weakening of witnesses through the documented core types, including the
@@ -229,15 +282,15 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
 - [x] State Theorem 4 with its two typing conclusions.
 - [x] Audit Lemma 5 against the literal lambda rule and exhibit a closed counterexample to
   functionality caused by its unconstrained primed and witness domains.
+- [x] Refute the literal Theorem 4 itself with a closed, well-typed source lambda: choose a dependent
+  product as its unconstrained primed binder while the independent type sequent expects a universe
+  binder, then use cumulative-level erasure and product injectivity to refute the required typing.
 - [x] Define the minimally repaired domain-coherent judgment and prove its translation functional.
-- [x] Construct the translated context extension `x : A`, `x' : A'`, `xR : Aᴿ x x'` and prove
-  its well-formedness from the translated domain witness.
-- [x] Prove the universe and variable cases of the repaired abstraction typing induction.
-- [x] Prove context-lookup regularity and product-term inversion, peeling conversion and
-  cumulativity wrappers to recover the domain and codomain universe derivations.
-- [ ] Prove the repaired sequent abstraction theorem using a triple-extended dependent typing
-  context; application, lambda, product, and conversion remain, and the literal Figure 3 theorem
-  cannot hold without restoring the omitted domain data.
+- [x] Remove the abandoned constructor, strengthening, and typing-reflection scaffold: it targeted a
+  conditional repair of an already false theorem and no completed abstraction result consumed it.
+- [ ] State a repaired sequent abstraction theorem over `CoherentRawSequent` and prove its own typing
+  induction. The literal Figure 3 theorem cannot be repaired by an auxiliary premise alone because
+  its lambda constructor omits the domain translation data.
 
 ## Sections 4.2-4.5 - univalent sequents and Trocq
 
@@ -247,8 +300,32 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
   semantically as the top relation fiber `Σ R, IsUmap R × IsUmap (Converse R)`.
 - [x] Transcribe every Figure 7 Trocq rule in
   `DeepWiki/Refine/AnnotatedRelationTranslation.lean`, including `D□`, `D→`, `DΠ`, and conversion
-  weakening, and decompose the Theorem 6 conclusion through an explicit relation-quotation bridge.
-  The bridge itself is still an obligation, so this is not yet an object-language proof.
+  weakening.
+- [x] Prove that parallel primed syntax is structurally the source syntax and reduce both the
+  legacy and context-realized Theorem 6 schemas exactly to structured-witness typing.
+- [x] Prove that source-only contexts cannot reconstruct omitted binder witnesses, then define
+  `ContextRealization` with explicit primed types and witnesses and construct its three-copy
+  typing context.
+- [x] Isolate explicit `RelationFieldQuotation` and `QuotationBackedBridge` interfaces for the
+  paper's `rel(A_R) M M'` conclusion. These currently state syntactic alignment, not typed
+  quotation laws.
+- [x] Add a genuine intrinsically scoped syntax extension with relation families, structured
+  universe witnesses, and primitive `rel` projection; prove its typing, projection reduction,
+  binary-application congruence, and quotation-aware lambda-binder laws. Prove that the new
+  primitives lie outside the embedded core-syntax image.
+- [x] Prove that the canonical `rel(A_R) x x'` binder itself is not core-representable, which
+  formally rules out hiding the missing Theorem 6 context extension inside the old core syntax.
+- [x] Extend dependent contexts over the quotation syntax and build each realized source extension
+  as the faithful triple `x : A`, `x' : A'`, `x_R : rel(A_R) x x'`, with the expected newest-lookup
+  equation.
+- [x] Add a conservative extended-context typing fragment and prove that a typed structured witness
+  makes `rel(A_R) x x'` a context-entry type, that the resulting three-binder context is well formed,
+  and that `x_R` has its stored type by variable lookup. The exact bridge identifies this context
+  with one `ContextRealization` extension. Relation-fiber universe levels remain erased by the
+  current `relationType` syntax, so this is not yet full Figure 7 typing.
+- [ ] Make quotation-valued contexts canonical once the extended typing relation covers every core
+  constructor; then retire the older core-context-only `HasType` fragment instead of maintaining two
+  context and typing architectures.
 - [x] Isolate the universe-witness consequences of the abstraction claim in
   `DeepWiki/Refine/UniverseWitnessConsequences.lean`.
 - [x] Formalize all five Figure 8 recursive weakening equations as object-language definitional
@@ -256,31 +333,76 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
   dependent-product weakening. Raw syntax equality is too strong: even the identity equation is
   refuted by `noSyntacticIdentityTransformer`, while the quoted identity lambda satisfies it by
   beta conversion.
-- [x] Formalize Figure 9 constant type collections, common erasure, partial translation lookup,
-  functionality, stuck lookup, and completeness.
-- [ ] Prove Theorems 5 and 6 after supplying a typed object-language quotation of structured
-  relations; native Lean also cannot inhabit the paper's full universe-univalence premise.
+- [x] Index the five equations directly by a proof-relevant mirror of actual annotated subtyping;
+  prove coverage of every subtyping constructor and erasure back to the original judgment.
+- [x] Separate atomic identity from equal composite conversion and distinct beta-convertible
+  endpoints; exhibit a well-typed beta-redex showing that the five structural equations are not a
+  total conversion rule.
+- [x] Isolate paired-endpoint substitution as extra data not supplied by lambda subtyping alone, and
+  package typed weakening realizers that induce the translation realizer interface after selecting
+  an index.
+- [ ] Quote and type application, paired-endpoint substitution, and dependent-product transformers
+  on the supported typed fragment; add a normalization- or quotient-compatible conversion clause
+  and extend atomic fallback to the constant-aware calculus.
+- [x] Separate the paper-oriented application constructor from the artifact's partial evaluator.
+  The ESOP implementation returns identity for applications headed by a variable or global, suspends
+  a lambda as `wsuspend`, resumes that suspension after endpoint substitution, and recurses by
+  variance through products; it does not apply an arbitrary recursively weakened family witness to
+  every application. `MetaWitnessWeakeningEvaluator` implements the clause order of
+  `ESOP2024/elpi/param.elpi:217-246` over constant-aware syntax, records ready and suspended states,
+  gives a proof-relevant sound trace and deterministic outputs, and rejects an explicit unsupported
+  composite.
+- [ ] Connect every successful artifact-evaluator trace to annotated subtyping and a typed quoted
+  witness transformer; this typed soundness statement is deliberately not claimed by the untyped
+  operational model.
+- [x] Formalize Figure 9 constant type collections, common erasure, the functional partial lookup,
+  and its exact missing-entry stuck condition. Registry completeness is not asserted by the paper.
+- [x] Separate source-type lawfulness from translation-output lawfulness. A successful lookup now
+  types its primed output at the selected translated type and its witness at the explicitly quoted
+  relation type, relative to a coherent realization carrying the omitted binder translations.
+  Prove the complete Figure 9 constant branch from these non-circular laws and the translation of
+  the selected source type; source-only recovery of the omitted relation witnesses is refuted.
+- [ ] Prove Theorems 5 and 6 after extending the conservative projected-binder typing fragment to
+  the complete universe-aware annotated calculus, supplying typing and conversion laws for every
+  `SyntaxRealizers` field, lifting the existing quotation-aware lambda constructor into the actual
+  Figure 7 judgment, and completing the realized witness-typing induction. Native Lean also cannot
+  inhabit the paper's full universe-univalence premise.
 
 ## Appendices - erasure and maximality
 
-- [x] Prove Appendix 0.B annotation erasure for contexts, typing, and subtyping into the literal
+- [x] Prove source-tail 0.B annotation erasure for contexts, typing, and subtyping into the literal
   annotation-free calculus.
-- [ ] Complete Appendix 0.B conservativity by embedding the literal unannotated Figures 5/6 rule
-  system into the ordinary `CCω` typing judgment; the current `ExistingCalculusEmbedding` is only
-  the exact remaining interface.
+- [ ] Complete the repaired source-tail 0.B conservativity theorem by inhabiting the exact
+  relation-indexed application-transport boundary. Assigned-kind discrimination, typed conversion
+  regularity, dependent context narrowing, both product directions, lambda impossibility, and the
+  mutual embedding are proved. The remaining application case needs typed preservation along
+  convertible function heads and arbitrary application spines. The paper's printed beta-conversion
+  conclusion is false and already has a formal counterexample.
 - [x] Construct the erased parameter context, recursively project relation records with `rel*`, and
   map every annotated synthesis derivation to a raw sequent under explicit `ErasureLaws` for the
   opaque witness realizers.
-- [ ] Complete Appendix Theorem 0.C.1 by realizing `ErasureLaws` with the still-missing quoted
-  object-language relation projections and universe/product/weakening witnesses.
-- [x] Formalize Appendix 0.D's maximal annotation function on terms, substitutions, and contexts;
+- [x] Construct an erasure-only structural projection and prove its recursive projection law.
+  Construct `canonicalRawRealizers` by maximally annotating canonical raw witnesses and prove the
+  full `ErasureLaws` interface directly.
+- [x] Connect the genuine universe-witness primitive and its relation-field projection to raw
+  erasure. The projected witness reads back as the canonical raw universe relation and agrees
+  exactly with `canonicalRawRealizers`.
+- [ ] Complete the quotation-faithful source-tail Theorem 0.C.1 by extending the realizer interface
+  and connecting genuine typed arrow, product, and weakening witnesses to the erasure laws. The
+  typed projected-binder context and universe fragment are available, but do not yet constitute
+  the complete constructor induction.
+- [x] Formalize source-tail 0.D's maximal annotation function on terms, substitutions, and contexts;
   prove naturality for renaming, substitution, instantiation, and lookup, and prove erasure is a
   left inverse.
 - [x] Lift every context-formation, typing, and subtyping derivation of the literal unannotated
   calculus to the maximally annotated calculus.
-- [ ] Prove Appendix Theorem 0.D.1 by lifting every univalent-parametricity derivation to the
-  maximally annotated Trocq judgment; the remaining obligation is a scope bridge from its
-  already-expanded triple context to `AnnotatedRelationTranslation.Context`.
+- [x] Construct the canonical source-context bridge, prove that its erasure is exactly the
+  canonical triple context, and prove maximal correspondence for universes, variables,
+  applications, lambdas, products, conversions, and arrows under explicit realizer agreement.
+- [x] Remove the unrestricted-scope counterexample scaffold and state correspondence only for the
+  canonical source-generated contexts and constructors used by source-tail 0.D.
+- [ ] Assemble source-tail Theorem 0.D.1 over canonical source-generated derivations after adding
+  typed realizer laws.
 
 ## Section 4.5 - registered constants
 
@@ -290,11 +412,26 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
   not restricted to constant names because the paper's list witness is a lambda term.
 - [x] Formalize both constant rules of Figure 9 and prove the common-erasure invariant for their
   typing derivations.
-- [x] State an exact scoped extension interface that embeds the constant-free calculus, represents
-  genuine constant occurrences, and lifts both Figure 9 rules with arbitrary output terms.
-- [ ] Construct the paper's recursive syntax, typing, and translation judgments by parameterizing
-  every term former and rule over global constants; the interface records this remaining
-  implementation boundary without treating names as arbitrary terms.
+- [x] Construct recursive annotated and erased syntax parameterized by global constants, including
+  renaming, substitution, contexts, beta conversion, kinds, the full typing/subtyping rules, and the
+  complete sort/variable/application/lambda/arrow/product/conversion/constant synthesis judgment.
+  Registered target and witness outputs are arbitrary closed terms weakened into the local scope;
+  this follows Figure 9's mathematical term rule but is more general than the tagged artifact's
+  global-reference database.
+- [ ] Factor the constant-free and constant-aware calculi through one syntax parameter and an
+  explicit embedding law package, instead of duplicating renaming, substitution, contexts,
+  conversion, typing, and subtyping in `RegisteredConstantSyntax`.
+- [x] Add a separate `LawfulTranslationEnvironment` package: relative to an explicit relation-type
+  quotation, coherent context realization, and translation of the selected source type, each lookup
+  types its primed and witness outputs and proves all three constant-abstraction conclusions.
+- [x] Enrich annotation-only `D_K` rows with source constant, annotated type, target, and witness
+  payloads; prove that erasing the payload gives exactly the existing constraint semantics; and
+  formalize the complete family obtained by weakening one witness to every strict lower output.
+- [x] Prove the exact recursive-lookup boundary: because `Environment.translation` is keyed only by
+  source and annotated type, it realizes a weakened row in addition to the base row exactly when
+  witness weakening is syntactically fixed, and cannot hold two distinct weakened witnesses.
+- [ ] Realize payload-level witness weakening by the typed quoted transformer and connect its rows
+  to `LawfulTranslationEnvironment`; model the plugin command's duplicate-row suppression separately.
 
 ## Phase 6 - connect the theory to the existing resolver
 
@@ -309,6 +446,28 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
 - [x] Implement annotation inference as a separate proof-producing decision procedure
   (`Annotation.canWeaken` / `RelationClass.weaken?`); elaborator automation may call it, while the
   mathematical kernel remains independent of tactic and typeclass search behavior.
+- [x] Formalize the supplementary implementation appendix's finite constraint language with
+  constant/variable graph nodes, exact calculus equations, and the artifact's lower-bound
+  reductions for `D_→` and `D_Π`.
+- [x] Prove that exact constructor constraints imply their artifact relaxations and formally show
+  the converse fails already for one arrow constraint.
+- [x] Implement an executable finite-domain reference solver returning every componentwise-minimal
+  assignment, and prove its membership, soundness, satisfiability-completeness, and least-solution
+  uniqueness specifications.
+- [x] Implement the artifact's output-first dependency graph, reversed-Kahn order, and stepwise
+  least-upper-bound instantiation for order, universe, arrow, product, and registered-constant
+  constraints; certify every successful result against the original denotational system and prove
+  that it belongs to exhaustive search.
+- [x] Characterize graph success exactly as certification of its single propagated candidate and
+  formally refute general completeness and leastness. Duplicate-output first-match `D_K` rows can
+  reject satisfiable systems or return nonminimal solutions; unconstrained registered outputs are
+  not inferred; exact arrow/product equations are unsupported until explicitly relaxed.
+- [x] Enrich Lean's `D_K` rows with the source constant, annotated type, target, and witness payload
+  carried by the artifact graph, prove exact projection to annotation-assignment semantics, and
+  prove the conditional boundary for representing output-indexed rows in the current lookup.
+- [ ] Index recursive translation lookup by the selected output annotation, or prove a typed
+  quotient making every generated witness equal; then connect row selection to translation
+  lawfulness rather than only annotation-assignment soundness.
 
 ## Phase 7 - motivating examples and case studies
 
@@ -330,8 +489,10 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
   integer-to-modular container retraction and both displayed head/constant laws.
 
 The checked case-study items cover their mathematical relations, witnesses, and conclusions.
-`Trocq Use`, annotation constraint solving, and automatic tactic rewriting remain plugin-engineering
-work and are recorded separately in the source catalog rather than silently counted as formalized.
+The finite annotation-constraint problem now has an executable verified reference solver and a
+sound executable graph reducer. The optimized reducer's general completeness and leastness are
+formally false, not unproved; `Trocq Use` and automatic tactic rewriting remain plugin-engineering
+work and are recorded separately rather than silently counted as formalized.
 
 ### Case-study statement audit against pp. 22–26
 
@@ -369,7 +530,8 @@ definition, lemma, theorem, equation, and rule-bearing figure in the paper. In p
   claims;
 - replace the placeholder annotated types with scoped dependent `CCω`/`CCω⁺` terms, renaming,
   substitution, conversion, typing, erasure, and annotated subtyping;
-- formalize the raw, univalent, and Trocq sequent judgments and prove Lemma 5 and Theorems 1–6 by
+- formalize the raw, univalent, and Trocq sequent judgments, formally refute any ill-scoped or false
+  printed statement, and prove the strongest faithful repaired form of Lemma 5 and Theorems 1–6 by
   induction on their actual derivations;
 - construct the universe, dependent-product, and arrow witnesses with the definitional relation
   projections required by Equation (12);
@@ -392,47 +554,144 @@ shaped Lean declarations.
   depend on univalence are therefore conditional signature checks.
 - **Figure 3 is under-specified when read literally.** `ParamLam` contains no premise translating
   its domain, so its displayed `A'` and the type of `x_R` are unconstrained. The literal inductive
-  judgment has a closed counterexample to Lemma 5. `CoherentRawSequent` restores the omitted domain
-  premise and satisfies functionality.
+  judgment has a closed counterexample to Lemma 5. More strongly, `not_rawAbstractionClaim`
+  constructs all premises of the printed Theorem 4 while making its primed lambda conclusion
+  untypable, so the literal theorem is false as well. `CoherentRawSequent` restores the omitted
+  domain premise and satisfies functionality.
+- **The raw typing induction needs more than context-free cumulativity.** The repaired
+  `AbstractionHasType` judgment recursively exposes the type witnesses consumed by lambda and
+  conversion and requires fiberwise relational cumulativity. It proves the complete abstraction
+  conclusion and erases to ordinary typing, but no converse is claimed. The direct-lambda
+  obstruction for translated universe levels explains why the existing `Cumulative` induction is
+  insufficient.
 - **The coherence-preserving arrow level-4 dependency is not minimal for native Lean equality.**
   UIP lowers the necessary domain structure from level `4` to level `3`; the stronger requirement
   is retained as the intended proof-relevant specification, while the native reduction is proved
   separately.
-- **Figure 9 translations return terms, not only names.** The registry therefore separates source
-  constant names from the output-term type; this is necessary for witnesses such as the displayed
-  polymorphic-list lambda. `RegisteredConstantCalculus` gives the exact scoped integration
-  interface and lifts both rules, while construction of the paper's recursive syntax and inductive
-  judgments remains an explicit gap until they are parameterized by global constants.
+- **Figure 9 and the artifact have different output representations.** The mathematical rule returns
+  terms, so `RegisteredConstantSyntax` allows arbitrary closed primed and witness terms. In
+  `ESOP2024` and `0.1.5`, however, `trocq.db.gref` stores global
+  references for both outputs; `0.1.5` merely resolves the primed global reference to its term form
+  during graph reduction. `RegisteredConstantSyntax.Environment.translationSourceValid` checks only
+  the source declaration and annotated type, and `LawfulEnvironment` is deliberately only
+  source-lawfulness. The separate `LawfulTranslationEnvironment` now validates the primed and
+  witness outputs relative to the selected type translation, an explicit relation-type quotation,
+  and a coherent context realization; from it the complete Figure 9 constant-abstraction branch is
+  proved. `RegisteredConstantRows.Row` now retains the artifact graph's source/type/target/witness
+  payload, projects exactly to the annotation-only `D_K` constraint, and generates the full strict
+  lower-output family. The current recursive lookup still lacks an output index: it can represent
+  the base and a weakened row simultaneously exactly when their witness terms coincide. A typed
+  quoted weakener and its connection to `LawfulTranslationEnvironment` remain.
 - **Equations (11) and (12) are not merely semantic constructions.** Their native structured
   universe packages and relation projections are implemented. `UnivalentUniverseQuotation` states
   Equation (11)'s exact extended object-language typing and conversion obligations, while
-  `StructuredUniverseQuotation.Quotation` does the same for Equation (12) and derives its projected
-  relation conversion. Realizing either interface still requires the corresponding quoted syntax.
+  `StructuredUniverseQuotationSyntax` realizes its top/top instance in the genuine syntax.
+  `StructuredUniverseQuotationSyntax` gives Equation (12) the general syntax extension with typed
+  relation families, witnesses, projections, and definitional projection reduction.
+  The tagged artifact instead generates ordinary Coq constants for these families and projections,
+  so the Lean primitive extension is a faithful metamodel of their laws, not yet a literal quotation
+  through registered globals.
 - **Figure 7 uses one fixed realizer environment.** Universe, arrow, dependent-product, and
   subtyping-weakening witnesses are selected by a single `SyntaxRealizers` parameter shared by the
   entire derivation, so rules cannot choose unrelated witnesses independently.
+- **The printed Theorem 6 context is ill-scoped in its variable case.** Its definition of
+  `γ(Δ)` retains only `x : A`, while the theorem asks to type `x'` and `xR` there. The artifact
+  introduces all `x`, `x'`, and `xR` binders. `relationalScope_eq_sourceScope_iff` formalizes the
+  scope mismatch, `not_contextWitnessRecoveryClaim` proves that the omitted witness cannot be
+  recovered from the source-only context, and `ContextRealization` is the explicit scoped repair.
+- **The current Figure 7 lambda rule is not yet quotation-faithful.** It directly binds
+  `A_R x x'`; the paper relies on a structured record's coercion to its `rel` field. The explicit
+  core syntax must instead bind `rel(A_R) x x'`. `QuotationBackedBridge` records only untyped
+  syntactic alignment and must not be counted as the typed quotation theorem. The genuine syntax
+  now has both this binder and quotation-valued contexts; the realized triple-context construction
+  stores it and proves that it is not secretly an embedded core context. A conservative typing
+  fragment proves this projected binder well formed and makes its witness variable available by
+  lookup. That fragment deliberately forgets relation-fiber universe levels; lifting the complete
+  Figure 7 judgment and realizer laws into a universe-aware extension remains a separate obligation.
 - **Conservativity needs the ordinary target judgment, not only literal rule erasure.**
   `UnderlyingDependentCalculus` records the annotation-free Figures 5 and 6 judgments, and the
   mutual `WellFormed.erase`, `HasType.erase`, and `Subtype.erase` definitions prove exact erasure
   into that intermediate system. The appendix targets ordinary `CCω` typing. The final embedding is
   now constructed from the exact `ErasedSubtypeTypehood` boundary, while erased subtyping already
-  maps unconditionally to ordinary cumulativity. Unlike unrestricted `CumulativeTypehood`, the exact
-  boundary retains the original typed-subtyping derivation. Closing it requires conversion and
+  maps unconditionally to ordinary cumulativity. The boundary retains the original typed-subtyping
+  derivation. Closing it requires conversion and
   regularity metatheory; it is not assumed as an inhabitant.
-- **Canonical erasure is not Appendix Theorem 0.C.1.** `Judgment.canonicalErasure` proves only
+- **The source-tail 0.B has two genuine beta-conversion errata.** Universe cumulativity refutes the
+  printed subtyping-erasure lemma with `Sort 0 ≤ Sort 1`, and the typing derivation
+  `Sort 0 : Sort 1` refutes the theorem's displayed term/type conversion. The repairs target
+  cumulative conversion and ordinary typing, respectively. Parallel-beta confluence proves both
+  nonconversion facts; newest-entry narrowing is proved by a typed identity substitution. The
+  product typehood case needs reverse domain transport, not merely the forward induction hypothesis
+  supplied by contravariant subtyping. The application case retains the actual function-subtyping derivation in
+  `ErasedSubtypeRelationIndexedApplicationTransport`, which is sufficient for the mutual embedding.
+  Proving that exact relation-indexed premise remains the source-tail metatheory task.
+- **Canonical erasure is not source-tail Theorem 0.C.1.** `Judgment.canonicalErasure` proves only
   normalization equalities for the restricted self-translation. `Judgment.eraseToRaw` now supplies
-  the appendix's erased parameter context, raw parametricity sequent, and recursive `rel*`
-  projection under `ErasureLaws`; the remaining task is to realize those laws with quoted witness
-  syntax.
+  the source tail's erased parameter context, raw parametricity sequent, and recursive `rel*`
+  projection under `ErasureLaws`. `RelationFieldSyntax.erasure` is only a structural test model;
+  `canonicalRawRealizers` satisfies the complete law package directly by maximally annotating raw
+  witnesses, so the structural source-tail theorem is fully instantiated.
+  The genuine universe-witness primitive is now wired to that model: its quoted `rel` projection
+  reads back as the raw universe relation and agrees exactly with the structural universe law. The
+  genuine typed arrow, product, and weakening realizers remain, while the generic collision theorem
+  records the quotation constraint.
+- **The maximal-annotation correspondence is currently constructor-local.**
+  `MaximalCorrespondence` relates canonical source-generated contexts and derivations under
+  explicit `RealizerAgreement` equations; assembling the constructors into the full derivation
+  induction and proving the typed realizer laws remain.
 - **Figure 8 states definitional conversion, not raw syntax equality.** Literal equality is
   inconsistent already for the identity equation: no application node can equal every witness.
   `noSyntacticIdentityTransformer` proves this obstruction, and
   `identityWitnessTransformer_beta` verifies the intended beta-convertible identity case.
-- **A record of Figure 8 equations is a specification, not an implementation.** The native semantic
-  universe and dependent-product transformations execute, but the object-language
-  `ObjectWeakeningSpecification` is not yet inhabited. Its `ObjectWeakeningRealizability`
-  proposition remains in the source catalog until recursive quotation from an actual subtyping
-  derivation is constructed.
+- **The Figure 8 equations and artifact algorithm are distinct.** The proof-relevant
+  `RecursiveWitnessWeakeningSubtypeIndexed.TypedDerivation` indexes the five equations by actual
+  annotated-subtyping structure and avoids overlapping raw-term cases. Its application constructor
+  still recursively applies a family
+  transformer. The ESOP code is instead a partial typed meta-program with results `wfun` and
+  `wsuspend`: universes create a projection placeholder, products recurse by variance,
+  variable/global-headed applications are identity, lambdas suspend, and only application of a
+  suspended lambda resumes recursion after substituting both endpoints.
+  `MetaWitnessWeakeningEvaluator` now encodes that result type and exact first-match term-head
+  dispatch over constant-aware syntax. Its proof-relevant traces are sound for the executable
+  evaluator, successful outputs are deterministic, and a universe relation used as an applied
+  function is rejected explicitly. What remains is typed soundness connecting each successful
+  output to the originating annotated-subtyping derivation and quoted object-language transformer;
+  conversion boundaries, paired-endpoint substitution closure, and quotation remain explicit
+  obligations.
 - **A stated proposition is not counted as a proved theorem.** The catalog distinguishes exact
   judgment/claim encodings from abstraction, conservativity, and weakening proofs that still need
   derivation induction.
+- **The artifact is an implementation, not an internal proof of its meta-algorithms.** Coq checks the
+  generated hierarchy, witness constants, and final proof terms, but the Elpi constraint reducer,
+  first-match registry policy, and recursive weakening procedure do not themselves come with
+  soundness, completeness, or minimality theorems in the tagged artifact. Lean's certified reducer
+  and counterexamples are therefore additional metatheory rather than a transliteration of artifact
+  proofs.
+- **The verified finite solver is a reference semantics, not the artifact's optimized algorithm.**
+  It represents order, universe, arrow, dependent-product, and registered-constant `D_K` table
+  constraints, enumerates the finite assignment space, and returns all Pareto-minimal solutions.
+  When a pointwise least solution exists, a theorem reduces this set to its singleton. The graph
+  reducer separately implements output-first propagation and proves every successful result belongs
+  to exhaustive search. It does not always find a least solution: formal counterexamples show both
+  rejection of a satisfiable supported acyclic system and successful return of a nonminimal one.
+- **Registered-constant lookup is order-sensitive in the artifact.** The denotational `D_K`
+  constraint permits any matching row, while Coq-Elpi commits to the first row with the chosen
+  output annotation. The Lean graph reducer models first-match behavior and remains sound by final
+  certification, but duplicate output rows with different input requirements make it incomplete
+  and potentially nonminimal. A separate counterexample shows that rows alone do not infer an
+  otherwise unconstrained output annotation. Lean now has payload-backed rows carrying the artifact
+  node's source constant, annotated type, target, and witness, with a theorem identifying their
+  projection with annotation-only `D_K` satisfaction. `generatedRows` constructs the base row and
+  every strict lower-output weakening. The exact remaining mismatch is output indexing: the current
+  source/type-keyed recursive lookup cannot jointly realize two rows whose witnesses differ, while
+  the artifact registry stores them at distinct output annotations.
+- **The calculus and artifact use different constructor constraints operationally.** Figures 6 and
+  7 require exact equations `D_→(γ) = (α,β)` and `D_Π(γ) = (α,β)`. The Coq-Elpi graph reducer instead
+  propagates the computed pair as lower bounds. Exact satisfaction implies the relaxed artifact
+  constraint, but `arrowLowerRelaxation_strict` proves the converse is false.
+- **One tagged helper does not implement the product cover relation correctly.** In both
+  `ESOP2024` and `0.1.5`, `param-class.weakenings-from` takes the Cartesian product of strict
+  one-coordinate predecessor lists, omitting weakenings that lower only one component. The actual
+  hierarchy generation weakens each component separately, and `all-weakenings-from` includes the
+  one-component cases; current `0.4.0` also repairs the immediate helper. Lean therefore follows the
+  mathematical componentwise order, not this tagged implementation defect.

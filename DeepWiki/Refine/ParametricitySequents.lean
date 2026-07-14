@@ -179,36 +179,6 @@ theorem primedBinderRenaming_injective :
     Function.Injective (primedBinderRenaming : Renaming (n + 1) (n + 3)) :=
   Function.LeftInverse.injective primedBinderProjection_renaming
 
-/-- Renaming by an injective variable map is injective on scoped terms. -/
-theorem Term.rename_injective (mapping : Renaming source target)
-    (mappingInjective : Function.Injective mapping) :
-    Function.Injective (Term.rename mapping) := by
-  classical
-  let inverse : Substitution target source := fun index =>
-    if member : ∃ preimage, mapping preimage = index then
-      .var member.choose
-    else
-      .sort 0
-  have inverseMapping (index : Fin source) : inverse (mapping index) = .var index := by
-    rw [show inverse (mapping index) =
-        if member : ∃ preimage, mapping preimage = mapping index then
-          .var member.choose
-        else
-          .sort 0 from rfl]
-    simp only [dif_pos (⟨index, rfl⟩ : ∃ preimage, mapping preimage = mapping index)]
-    congr 1
-    apply mappingInjective
-    exact Classical.choose_spec (show ∃ preimage, mapping preimage = mapping index from
-      ⟨index, rfl⟩)
-  apply Function.LeftInverse.injective (g := fun term => term.substitute inverse)
-  intro term
-  change (term.rename mapping).substitute inverse = term
-  rw [Term.substitute_rename]
-  rw [show (fun index => inverse (mapping index)) = Substitution.identity by
-    funext index
-    exact inverseMapping index]
-  exact Term.substitute_identity term
-
 /-- The relation type assigned to a fresh witness variable from a domain relation. -/
 def relatedDomain (relation : Term n) : Term (n + 2) :=
   .app (.app (weakenBy relation 2) (.var 1)) (.var 0)
@@ -285,23 +255,6 @@ def AbstractionConclusion (typingContext : Context n)
   HasType typingContext term' type' ∧
     HasType typingContext termRelation (.app (.app typeRelation term) term')
 
-/-- Extend a typing context by original, primed, and relation-witness declarations. -/
-def relationalExtension (typingContext : Context n) (domain primedDomain relation : Term n) :
-    Context (n + 3) :=
-  .extend
-    (.extend
-      (.extend typingContext domain)
-      (weakenBy primedDomain 1))
-    (relatedDomain relation)
-
-/-- Structural strengthening needed to recover a primed binder from a relational extension. -/
-def PrimedBinderStrengtheningClaim : Prop :=
-  ∀ {n : Nat} {typingContext : Context n} {domain primedDomain relation : Term n}
-    {body bodyType : Term (n + 1)},
-    HasType (relationalExtension typingContext domain primedDomain relation)
-      (body.rename primedBinderRenaming) (bodyType.rename primedBinderRenaming) →
-    HasType (.extend typingContext primedDomain) body bodyType
-
 /-- The exact sequent-form raw abstraction claim as a proposition. -/
 def RawAbstractionClaim : Prop :=
   ∀ {n : Nat} {typingContext : Context n} {context : ParametricityContext n}
@@ -335,17 +288,6 @@ theorem rawSequent_not_functional :
   constructor
   · exact .paramLam (.paramSort context.extend 0)
   · decide
-
-/-- Raw lambda sequents have coherent domains when their binder witness is induced by a domain sequent. -/
-def HasCoherentLambdaDomain {context : ParametricityContext n}
-    {domain : Term n} {body : Term (n + 1)} {primedLambda relationLambda : Term n} : Prop :=
-  ∃ (primedDomain domainRelation : Term n) (primedBody : Term (n + 1))
-      (bodyRelation : Term (n + 3)),
-    RawSequent context domain primedDomain domainRelation ∧
-    RawSequent context.extend (body.rename originalBinderRenaming)
-      (primedBody.rename primedBinderRenaming) bodyRelation ∧
-    primedLambda = .lam primedDomain primedBody ∧
-    relationLambda = lambdaWitness domain primedDomain (relatedDomain domainRelation) bodyRelation
 
 /-- The domain-coherent raw sequent rules make every lambda binder relation explicit. -/
 inductive CoherentRawSequent :
@@ -383,32 +325,6 @@ inductive CoherentRawSequent :
         (primedCodomain.rename primedBinderRenaming) codomainRelation) :
       CoherentRawSequent context (.pi domain codomain) (.pi primedDomain primedCodomain)
         (piWitness domain codomain primedDomain primedCodomain domainRelation codomainRelation)
-
-/-- Every domain-coherent derivation is a derivation of the literal raw rules. -/
-theorem CoherentRawSequent.toRaw {context : ParametricityContext n}
-    {term term' termRelation : Term n}
-    (sequent : CoherentRawSequent context term term' termRelation) :
-    RawSequent context term term' termRelation := by
-  induction sequent with
-  | paramSort context level => exact .paramSort context level
-  | paramVar contextWellFormed member => exact .paramVar contextWellFormed member
-  | paramApp _ _ functionInduction argumentInduction =>
-      exact .paramApp functionInduction argumentInduction
-  | paramLam _ _ domainInduction bodyInduction =>
-      exact .paramLam bodyInduction
-  | paramPi _ _ domainInduction codomainInduction =>
-      exact .paramPi domainInduction codomainInduction
-
-/-- A domain-coherent lambda sequent exposes the relation translating its binder domain. -/
-theorem CoherentRawSequent.hasCoherentLambdaDomain
-    {context : ParametricityContext n} {domain : Term n} {body : Term (n + 1)}
-    {primedLambda relationLambda : Term n}
-    (sequent : CoherentRawSequent context (.lam domain body) primedLambda relationLambda) :
-    HasCoherentLambdaDomain (context := context) (domain := domain) (body := body)
-      (primedLambda := primedLambda) (relationLambda := relationLambda) := by
-  cases sequent with
-  | paramLam domainSequent bodySequent =>
-      exact ⟨_, _, _, _, domainSequent.toRaw, bodySequent.toRaw, rfl, rfl⟩
 
 /-- The domain-coherent raw translation is functional in its primed term and witness. -/
 theorem CoherentRawSequent.functional {context : ParametricityContext n}
@@ -465,16 +381,6 @@ theorem CoherentRawSequent.functional {context : ParametricityContext n}
           cases codomainRelationEqual
           rfl
 
-/-- The abstraction claim restricted to the domain-coherent sequent relation. -/
-def CoherentRawAbstractionClaim : Prop :=
-  ∀ {n : Nat} {typingContext : Context n} {context : ParametricityContext n}
-    {term term' termRelation type type' typeRelation : Term n},
-    Admissible typingContext context →
-    HasType typingContext term type →
-    CoherentRawSequent context term term' termRelation →
-    CoherentRawSequent context type type' typeRelation →
-    AbstractionConclusion typingContext term' termRelation type' typeRelation term
-
 example (context : ParametricityContext n) (level : Nat) :
     RawSequent context (.sort level) (.sort level) (sortRelation level n) :=
   .paramSort context level
@@ -512,14 +418,6 @@ example {context : ParametricityContext n} (contextWellFormed : context.WellForm
     (left, leftRelation) = (right, rightRelation) :=
   leftSequent.functional contextWellFormed rightSequent
 
-example {typingContext : Context n} {domain primedDomain relation : Term n}
-    {body bodyType : Term (n + 1)}
-    (strengthening : PrimedBinderStrengtheningClaim)
-    (bodyWellTyped : HasType (relationalExtension typingContext domain primedDomain relation)
-      (body.rename primedBinderRenaming) (bodyType.rename primedBinderRenaming)) :
-    HasType (.extend typingContext primedDomain) body bodyType :=
-  strengthening bodyWellTyped
-
 example : RawAbstractionClaim =
     (∀ {n : Nat} {typingContext : Context n} {context : ParametricityContext n}
       {term term' termRelation type type' typeRelation : Term n},
@@ -527,16 +425,6 @@ example : RawAbstractionClaim =
       HasType typingContext term type →
       RawSequent context term term' termRelation →
       RawSequent context type type' typeRelation →
-      AbstractionConclusion typingContext term' termRelation type' typeRelation term) :=
-  rfl
-
-example : CoherentRawAbstractionClaim =
-    (∀ {n : Nat} {typingContext : Context n} {context : ParametricityContext n}
-      {term term' termRelation type type' typeRelation : Term n},
-      Admissible typingContext context →
-      HasType typingContext term type →
-      CoherentRawSequent context term term' termRelation →
-      CoherentRawSequent context type type' typeRelation →
       AbstractionConclusion typingContext term' termRelation type' typeRelation term) :=
   rfl
 

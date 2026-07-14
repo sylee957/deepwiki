@@ -61,6 +61,12 @@ def weakenBy (term : Term n) : (amount : Nat) → Term (n + amount)
   | 0 => term
   | amount + 1 => (weakenBy term amount).rename Renaming.shift
 
+/-- Lift a simultaneous substitution beneath any finite number of binders. -/
+def liftSubstitutionBy (mapping : Substitution source target) :
+    (amount : Nat) → Substitution (source + amount) (target + amount)
+  | 0 => mapping
+  | amount + 1 => Substitution.lift (liftSubstitutionBy mapping amount)
+
 /-- Insert two variables between the three newest variables and an older ambient scope. -/
 def insertTwoAfterThree : Renaming (n + 3) (n + 5) :=
   Fin.cases 0 (Fin.cases 1 (Fin.cases 2

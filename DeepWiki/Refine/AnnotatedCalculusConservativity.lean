@@ -1,4 +1,5 @@
 import DeepWiki.Refine.AnnotatedDependentCalculus
+import DeepWiki.Refine.DependentCalculusConfluence
 
 /-! # Conservativity of the annotated dependent calculus
 
@@ -185,6 +186,47 @@ end DeepWiki.Refine.AnnotatedDependentCalculus
 
 namespace DeepWiki.Refine.AnnotatedCalculusConservativity
 
+/-- The ill-formed claim that annotated subtyping erases to beta conversion. -/
+def SubtypingErasureAsConversionClaim : Prop :=
+  ∀ {n : Nat} {context : AnnotatedDependentCalculus.Context n}
+    {left right : AnnotatedDependentCalculus.Term n},
+    AnnotatedDependentCalculus.Subtype context left right →
+      DependentCalculus.Convertible left.erase right.erase
+
+/-- Universe cumulativity refutes subtyping erasure to beta conversion. -/
+theorem not_subtypingErasureAsConversionClaim :
+    ¬ SubtypingErasureAsConversionClaim := by
+  intro claim
+  have annotatedSubtype :
+      AnnotatedDependentCalculus.Subtype
+        AnnotatedDependentCalculus.Context.empty
+        (.sort 0 Annotation.equivalence) (.sort 1 Annotation.equivalence) :=
+    .sort (le_refl Annotation.equivalence) (Nat.zero_le 1)
+  have conversion := claim annotatedSubtype
+  change DependentCalculus.Convertible
+    (.sort 0 : DependentCalculus.Term 0) (.sort 1) at conversion
+  exact Nat.zero_ne_one conversion.sort_level_eq
+
+/-- The ill-formed claim that annotated typing erases to beta conversion. -/
+def AnnotationErasureAsConversionClaim : Prop :=
+  ∀ {n : Nat} {context : AnnotatedDependentCalculus.Context n}
+    {term type : AnnotatedDependentCalculus.Term n},
+    AnnotatedDependentCalculus.HasType context term type →
+      DependentCalculus.Convertible term.erase type.erase
+
+/-- Annotated universe typing refutes erasure to beta conversion. -/
+theorem not_annotationErasureAsConversionClaim : ¬ AnnotationErasureAsConversionClaim := by
+  intro claim
+  have annotatedTyping :
+      AnnotatedDependentCalculus.HasType
+        AnnotatedDependentCalculus.Context.empty
+        (.sort 0 Annotation.equivalence) (.sort 1 Annotation.equivalence) :=
+    .sort .empty (admissibleUniverseTranslation_of_equivalence _) 0
+  have conversion := claim annotatedTyping
+  change DependentCalculus.Convertible
+    (.sort 0 : DependentCalculus.Term 0) (.sort 1) at conversion
+  exact Nat.zero_ne_one conversion.sort_level_eq
+
 /-- Annotation-erasure conservativity maps annotated typing into its literal unannotated calculus. -/
 abbrev AnnotationErasureConservativity : Prop :=
   ∀ {n : Nat} {context : AnnotatedDependentCalculus.Context n}
@@ -197,32 +239,8 @@ theorem annotationErasureConservativity : AnnotationErasureConservativity := by
   intro n context term type derivation
   exact derivation.erase
 
-/-- Structural closure principles for cumulative conversion. -/
-structure CumulativeStructuralClosure : Prop where
-  /-- Cumulative conversion is covariant in the function of an application. -/
-  application : ∀ {n : Nat} {function function' argument : DependentCalculus.Term n},
-    DependentCalculus.Cumulative function function' →
-      DependentCalculus.Cumulative (.app function argument) (.app function' argument)
-  /-- Cumulative conversion is covariant beneath a lambda with an unchanged domain. -/
-  lambda : ∀ {n : Nat} {domain : DependentCalculus.Term n}
-      {body body' : DependentCalculus.Term (n + 1)},
-    DependentCalculus.Cumulative body body' →
-      DependentCalculus.Cumulative (.lam domain body) (.lam domain body')
-  /-- Product conversion is contravariant in its domain and covariant in its codomain. -/
-  product : ∀ {n : Nat} {domain domain' : DependentCalculus.Term n}
-      {codomain codomain' : DependentCalculus.Term (n + 1)},
-    DependentCalculus.Cumulative domain' domain →
-      DependentCalculus.Cumulative codomain codomain' →
-        DependentCalculus.Cumulative (.pi domain codomain) (.pi domain' codomain')
-
-/-- Ordinary cumulative conversion has all structural closures used by erased subtyping. -/
-def cumulativeStructuralClosure : CumulativeStructuralClosure where
-  application := DependentCalculus.Cumulative.app
-  lambda := DependentCalculus.Cumulative.lam
-  product := DependentCalculus.Cumulative.piStructural
-
-/-- Erased subtyping maps to cumulative conversion given its structural closure principles. -/
-def subtypeToCumulative (closure : CumulativeStructuralClosure)
+/-- Every erased annotated-subtyping derivation is ordinary cumulative conversion. -/
+def subtype_toCumulative
     {context : UnderlyingDependentCalculus.Context n}
     {left right : UnderlyingDependentCalculus.Term n}
     (derivation : UnderlyingDependentCalculus.Subtype context left right) :
@@ -231,28 +249,12 @@ def subtypeToCumulative (closure : CumulativeStructuralClosure)
   | .conversion _ _ _ equal => .conversion equal
   | .sort levelOrder => .sort levelOrder
   | .app _ _ functionSubtype =>
-      closure.application (subtypeToCumulative closure functionSubtype)
+      .app (subtype_toCumulative functionSubtype)
   | .lam bodySubtype =>
-      closure.lambda (subtypeToCumulative closure bodySubtype)
+      .lam (subtype_toCumulative bodySubtype)
   | .pi _ domainSubtype codomainSubtype =>
-      closure.product (subtypeToCumulative closure domainSubtype)
-        (subtypeToCumulative closure codomainSubtype)
-
-/-- Every erased annotated-subtyping derivation is ordinary cumulative conversion. -/
-theorem subtype_toCumulative
-    {context : UnderlyingDependentCalculus.Context n}
-    {left right : UnderlyingDependentCalculus.Term n}
-    (derivation : UnderlyingDependentCalculus.Subtype context left right) :
-    DependentCalculus.Cumulative left right :=
-  subtypeToCumulative cumulativeStructuralClosure derivation
-
-/-- The proposition that cumulative conversion carries universe-typed terms to universe-typed terms. -/
-def CumulativeTypehood : Prop :=
-  ∀ {n : Nat} {context : DependentCalculus.Context n}
-    {left right : DependentCalculus.Term n},
-    (∃ level, DependentCalculus.HasType context left (.sort level)) →
-      DependentCalculus.Cumulative left right →
-        ∃ level, DependentCalculus.HasType context right (.sort level)
+      .piStructural (subtype_toCumulative domainSubtype)
+        (subtype_toCumulative codomainSubtype)
 
 /-- The precise typehood obligation for a target reached by an erased-subtyping derivation. -/
 def ErasedSubtypeTypehood : Prop :=
@@ -262,11 +264,31 @@ def ErasedSubtypeTypehood : Prop :=
       UnderlyingDependentCalculus.Subtype context left right →
         ∃ level, DependentCalculus.HasType context right (.sort level)
 
-/-- Unrestricted cumulative typehood implies the narrower erased-subtyping obligation. -/
-theorem erasedSubtypeTypehood_of_cumulativeTypehood
-    (typehood : CumulativeTypehood) : ErasedSubtypeTypehood := by
-  intro n context left right leftWellTyped subtype
-  exact typehood leftWellTyped (subtype_toCumulative subtype)
+/-- A term is universe-typed in the ordinary dependent calculus. -/
+def IsUniverseTyped {n : Nat} (context : DependentCalculus.Context n)
+    (term : DependentCalculus.Term n) : Prop :=
+  ∃ level, DependentCalculus.HasType context term (.sort level)
+
+/-- Typed conversion at a common kind preserves ordinary universe typehood. -/
+def TypedConversionUniverseRegularity : Prop :=
+  ∀ {n : Nat} {context : DependentCalculus.Context n}
+    {left right kind : DependentCalculus.Term n},
+    DependentCalculus.IsKind kind →
+      DependentCalculus.HasType context left kind →
+      DependentCalculus.HasType context right kind →
+      DependentCalculus.Convertible left right →
+      IsUniverseTyped context left → IsUniverseTyped context right
+
+/-- Narrowing a dependent context along cumulative domain subtyping preserves typing. -/
+def DependentContextNarrowing : Prop :=
+  ∀ {n : Nat} {context : DependentCalculus.Context n}
+    {domain domain' : DependentCalculus.Term n}
+    {term type : DependentCalculus.Term (n + 1)},
+    IsUniverseTyped context domain →
+      IsUniverseTyped context domain' →
+      DependentCalculus.Cumulative domain' domain →
+      DependentCalculus.HasType (.extend context domain) term type →
+        DependentCalculus.HasType (.extend context domain') term type
 
 /-- An interface embedding the annotation-free erasure calculus into the cumulative calculus. -/
 structure ExistingCalculusEmbedding : Prop where
@@ -338,12 +360,6 @@ def existingCalculusEmbedding_of_erasedSubtypeTypehood
   wellFormed := underlyingWellFormedToExisting typehood
   hasType := underlyingHasTypeToExisting typehood
 
-/-- Unrestricted cumulative typehood also supplies the erasure-to-existing-calculus embedding. -/
-def existingCalculusEmbedding_of_cumulativeTypehood
-    (typehood : CumulativeTypehood) : ExistingCalculusEmbedding :=
-  existingCalculusEmbedding_of_erasedSubtypeTypehood
-    (erasedSubtypeTypehood_of_cumulativeTypehood typehood)
-
 /-- Typing conservativity from annotated typing to cumulative typing after erasure. -/
 def ExistingTypingConservativity : Prop :=
   ∀ {n : Nat} {context : AnnotatedDependentCalculus.Context n}
@@ -351,55 +367,17 @@ def ExistingTypingConservativity : Prop :=
     AnnotatedDependentCalculus.HasType context term type →
       DependentCalculus.HasType context.erase term.erase type.erase
 
-/-- Context conservativity from annotated formation to cumulative formation after erasure. -/
-def ExistingContextConservativity : Prop :=
-  ∀ {n : Nat} {context : AnnotatedDependentCalculus.Context n},
-    AnnotatedDependentCalculus.WellFormed context →
-      DependentCalculus.WellFormed context.erase
-
 /-- An erasure-calculus embedding implies typing conservativity. -/
 theorem existingTypingConservativity_of_embedding
     (embedding : ExistingCalculusEmbedding) : ExistingTypingConservativity := by
   intro n context term type derivation
   exact embedding.hasType derivation.erase
 
-/-- An erasure-calculus embedding implies context conservativity. -/
-theorem existingContextConservativity_of_embedding
-    (embedding : ExistingCalculusEmbedding) : ExistingContextConservativity := by
-  intro n context derivation
-  exact embedding.wellFormed derivation.erase
-
-/-- Cumulative typehood implies typing conservativity into the existing cumulative calculus. -/
-theorem existingTypingConservativity_of_cumulativeTypehood
-    (typehood : CumulativeTypehood) : ExistingTypingConservativity :=
-  existingTypingConservativity_of_embedding
-    (existingCalculusEmbedding_of_cumulativeTypehood typehood)
-
-/-- Cumulative typehood implies context conservativity into the existing cumulative calculus. -/
-theorem existingContextConservativity_of_cumulativeTypehood
-    (typehood : CumulativeTypehood) : ExistingContextConservativity :=
-  existingContextConservativity_of_embedding
-    (existingCalculusEmbedding_of_cumulativeTypehood typehood)
-
 /-- Erased-subtyping typehood implies typing conservativity into the existing calculus. -/
 theorem existingTypingConservativity_of_erasedSubtypeTypehood
     (typehood : ErasedSubtypeTypehood) : ExistingTypingConservativity :=
   existingTypingConservativity_of_embedding
     (existingCalculusEmbedding_of_erasedSubtypeTypehood typehood)
-
-/-- Erased-subtyping typehood implies context conservativity into the existing calculus. -/
-theorem existingContextConservativity_of_erasedSubtypeTypehood
-    (typehood : ErasedSubtypeTypehood) : ExistingContextConservativity :=
-  existingContextConservativity_of_embedding
-    (existingCalculusEmbedding_of_erasedSubtypeTypehood typehood)
-
-/-- Annotated subtyping erases to cumulative conversion under the structural closure principles. -/
-theorem annotatedSubtype_toCumulative (closure : CumulativeStructuralClosure)
-    {context : AnnotatedDependentCalculus.Context n}
-    {left right : AnnotatedDependentCalculus.Term n}
-    (derivation : AnnotatedDependentCalculus.Subtype context left right) :
-    DependentCalculus.Cumulative left.erase right.erase :=
-  subtypeToCumulative closure derivation.erase
 
 /-- Annotated subtyping erases unconditionally to ordinary cumulative conversion. -/
 theorem annotatedSubtype_toCumulative_unconditional
@@ -421,13 +399,6 @@ example {context : AnnotatedDependentCalculus.Context n}
     UnderlyingDependentCalculus.Subtype context.erase left.erase right.erase :=
   derivation.erase
 
-example (closure : CumulativeStructuralClosure)
-    {context : AnnotatedDependentCalculus.Context n}
-    {left right : AnnotatedDependentCalculus.Term n}
-    (derivation : AnnotatedDependentCalculus.Subtype context left right) :
-    DependentCalculus.Cumulative left.erase right.erase :=
-  annotatedSubtype_toCumulative closure derivation
-
 example {context : AnnotatedDependentCalculus.Context n}
     {left right : AnnotatedDependentCalculus.Term n}
     (derivation : AnnotatedDependentCalculus.Subtype context left right) :
@@ -437,25 +408,16 @@ example {context : AnnotatedDependentCalculus.Context n}
 example (embedding : ExistingCalculusEmbedding) : ExistingTypingConservativity :=
   existingTypingConservativity_of_embedding embedding
 
-example (embedding : ExistingCalculusEmbedding) : ExistingContextConservativity :=
-  existingContextConservativity_of_embedding embedding
-
-example (typehood : CumulativeTypehood) : ExistingCalculusEmbedding :=
-  existingCalculusEmbedding_of_cumulativeTypehood typehood
-
-example (typehood : CumulativeTypehood) : ExistingTypingConservativity :=
-  existingTypingConservativity_of_cumulativeTypehood typehood
-
-example (typehood : CumulativeTypehood) : ExistingContextConservativity :=
-  existingContextConservativity_of_cumulativeTypehood typehood
-
 example (typehood : ErasedSubtypeTypehood) : ExistingCalculusEmbedding :=
   existingCalculusEmbedding_of_erasedSubtypeTypehood typehood
 
 example (typehood : ErasedSubtypeTypehood) : ExistingTypingConservativity :=
   existingTypingConservativity_of_erasedSubtypeTypehood typehood
 
-example (typehood : ErasedSubtypeTypehood) : ExistingContextConservativity :=
-  existingContextConservativity_of_erasedSubtypeTypehood typehood
+example : ¬ AnnotationErasureAsConversionClaim :=
+  not_annotationErasureAsConversionClaim
+
+example : ¬ SubtypingErasureAsConversionClaim :=
+  not_subtypingErasureAsConversionClaim
 
 end DeepWiki.Refine.AnnotatedCalculusConservativity

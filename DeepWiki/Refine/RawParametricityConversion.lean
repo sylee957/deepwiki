@@ -171,6 +171,97 @@ theorem relatedTermType_convertible {term type type' : Term n}
   exact Convertible.app_both
     (Convertible.app_both (translate_convertible conversion) (.refl _)) (.refl _)
 
+/-- Raising the result universe raises the beta-normal element-relation type. -/
+theorem elementRelationType_cumulative (term : Term n) {lower upper : Nat}
+    (levelOrder : lower ≤ upper) :
+    Cumulative (elementRelationType term lower) (elementRelationType term upper) := by
+  unfold elementRelationType
+  exact .piStructural (.refl _) (.piStructural (.refl _) (.sort levelOrder))
+
+/-- The related-term interpretation of universes is monotone in the universe level. -/
+theorem relatedTermType_sort_cumulative (term : Term n) {lower upper : Nat}
+    (levelOrder : lower ≤ upper) :
+    Cumulative (relatedTermType term (.sort lower))
+      (relatedTermType term (.sort upper)) := by
+  exact .trans (.conversion (relatedTermType_sort_beta term lower))
+    (.trans (elementRelationType_cumulative term levelOrder)
+      (.conversion (relatedTermType_sort_beta term upper).symm))
+
+/-- Apply a weakened function to the newest source variable. -/
+def fiberApplication (function : Term n) : Term (n + 1) :=
+  .app (function.rename Renaming.shift) (.var 0)
+
+/-- The related type of `fiberApplication` is the output in a product-relation fiber. -/
+theorem relatedTermType_fiberApplication (function : Term n)
+    (codomain : Term (n + 1)) :
+    relatedTermType (fiberApplication function) codomain =
+      applicationRelationBody function codomain := by
+  unfold fiberApplication relatedTermType applicationRelationBody
+  simp only [original, primed, Term.rename]
+  rw [show
+    Term.rename (originalRenaming (n + 1)) (Term.rename Renaming.shift function) =
+      weakenBy (original function) 3 by
+        exact (original_rename_shift function).trans
+          (weakenBy_three_eq_rename_translatedShift (original function)).symm]
+  rw [show
+    Term.rename (primedRenaming (n + 1)) (Term.rename Renaming.shift function) =
+      weakenBy (primed function) 3 by
+        exact (primed_rename_shift function).trans
+          (weakenBy_three_eq_rename_translatedShift (primed function)).symm]
+  rfl
+
+/-- Fiberwise cumulativity of a function term is preserved by source application. -/
+theorem relatedTermType_app_cumulative (term argument : Term n)
+    {function function' : Term n}
+    (functionCumulative : ∀ input : Term n,
+      Cumulative (relatedTermType input function)
+        (relatedTermType input function')) :
+    Cumulative (relatedTermType term (.app function argument))
+      (relatedTermType term (.app function' argument)) := by
+  have relationAtArgument := functionCumulative argument
+  have withArgumentWitness := Cumulative.app relationAtArgument
+    (argument := translate argument)
+  have withOriginalTerm := Cumulative.app withArgumentWitness
+    (argument := original term)
+  have withPrimedTerm := Cumulative.app withOriginalTerm
+    (argument := primed term)
+  simpa only [relatedTermType, translate_app] using withPrimedTerm
+
+/-- Fiberwise codomain cumulativity and convertible domains lift through products. -/
+theorem relatedTermType_pi_cumulative (term : Term n)
+    {domain domain' : Term n} {codomain codomain' : Term (n + 1)}
+    (domainEqual : Convertible domain domain')
+    (codomainCumulative : ∀ output : Term (n + 1),
+      Cumulative (relatedTermType output codomain)
+        (relatedTermType output codomain')) :
+    Cumulative (relatedTermType term (.pi domain codomain))
+      (relatedTermType term (.pi domain' codomain')) := by
+  have outputCumulative := codomainCumulative (fiberApplication term)
+  rw [relatedTermType_fiberApplication term codomain,
+    relatedTermType_fiberApplication term codomain'] at outputCumulative
+  have originalDomainEqual := original_convertible domainEqual
+  have primedDomainEqual := Convertible.weakenBy (primed_convertible domainEqual) 1
+  have relationDomainEqual : Convertible
+      (.app (.app (weakenBy (translate domain) 2) (.var 1)) (.var 0))
+      (.app (.app (weakenBy (translate domain') 2) (.var 1)) (.var 0)) :=
+    Convertible.app_both
+      (Convertible.app_both
+        (Convertible.weakenBy (translate_convertible domainEqual) 2) (.refl _))
+      (.refl _)
+  have normalCumulative :
+      Cumulative (piRelationFiberNormal domain codomain term)
+        (piRelationFiberNormal domain' codomain' term) := by
+    unfold piRelationFiberNormal
+    exact .pi originalDomainEqual
+      (.pi primedDomainEqual
+        (.pi relationDomainEqual outputCumulative))
+  have sourceBeta := relatedTermType_pi_beta term domain codomain
+  rw [piRelationFiber_eq_normal] at sourceBeta
+  have targetBeta := relatedTermType_pi_beta term domain' codomain'
+  rw [piRelationFiber_eq_normal] at targetBeta
+  exact .trans (.conversion sourceBeta)
+    (.trans normalCumulative (.conversion targetBeta.symm))
+
 /-- A translated type witness makes the corresponding related-term type universe-typed. -/
 theorem relatedTermType_hasType_of_typeWitness {source : Context n}
     {term type : Term n} {level : Nat}
@@ -215,5 +306,25 @@ theorem translate_conversion_witness_hasType {source : Context n}
     (relatedTermType_hasType_of_typeWitness translatedWellFormed convertedTerm
       targetWellTyped targetWitness)
     (relatedTermType_convertible conversion)
+
+/-- Universe cumulativity preserves the raw relational witness conclusion. -/
+theorem translate_sort_cumulativity_witness_hasType {source : Context n}
+    {term : Term n} {lower upper targetLevel : Nat}
+    (translatedWellFormed : WellFormed (context source))
+    (termWellTyped : HasType source term (.sort lower))
+    (targetWellTyped : HasType source (.sort upper) (.sort targetLevel))
+    (levelOrder : lower ≤ upper)
+    (termWitness : HasType (context source) (translate term)
+      (relatedTermType term (.sort lower)))
+    (targetWitness : HasType (context source) (translate (.sort upper : Term n))
+      (relatedTermType (.sort upper) (.sort targetLevel))) :
+    HasType (context source) (translate term)
+      (relatedTermType term (.sort upper)) := by
+  have raisedTerm : HasType source term (.sort upper) :=
+    .cumulativity termWellTyped targetWellTyped (.sort levelOrder)
+  exact .cumulativity termWitness
+    (relatedTermType_hasType_of_typeWitness translatedWellFormed raisedTerm
+      targetWellTyped targetWitness)
+    (relatedTermType_sort_cumulative term levelOrder)
 
 end DeepWiki.Refine.DependentCalculus.RawParametricity

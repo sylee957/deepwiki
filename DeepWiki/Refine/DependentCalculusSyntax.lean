@@ -367,6 +367,48 @@ def lookup : (context : Context n) → Fin n → Term n
 
 end Context
 
+/-- Choose a term-valued left inverse for an injective variable renaming. -/
+noncomputable def Renaming.leftInverseSubstitution
+    (mapping : Renaming source target) : Substitution target source :=
+  fun index =>
+    if member : ∃ preimage, mapping preimage = index then
+      .var member.choose
+    else
+      .sort 0
+
+/-- The chosen inverse substitution cancels an injective renaming on its image. -/
+theorem Renaming.leftInverseSubstitution_apply
+    (mapping : Renaming source target) (injective : Function.Injective mapping)
+    (index : Fin source) :
+    mapping.leftInverseSubstitution (mapping index) = .var index := by
+  rw [leftInverseSubstitution]
+  simp only [dif_pos (⟨index, rfl⟩ : ∃ preimage, mapping preimage = mapping index)]
+  congr 1
+  apply injective
+  exact Classical.choose_spec
+    (show ∃ preimage, mapping preimage = mapping index from ⟨index, rfl⟩)
+
+/-- Substitution by the chosen inverse cancels injective renaming on every term. -/
+theorem Term.substitute_leftInverse_rename
+    (mapping : Renaming source target) (injective : Function.Injective mapping)
+    (term : Term source) :
+    (term.rename mapping).substitute mapping.leftInverseSubstitution = term := by
+  rw [Term.substitute_rename]
+  rw [show
+      (fun index => mapping.leftInverseSubstitution (mapping index)) =
+        Substitution.identity by
+    funext index
+    exact mapping.leftInverseSubstitution_apply injective index]
+  exact Term.substitute_identity term
+
+/-- Renaming by an injective variable map is injective on scoped terms. -/
+theorem Term.rename_injective (mapping : Renaming source target)
+    (injective : Function.Injective mapping) : Function.Injective (Term.rename mapping) := by
+  intro left right equal
+  have substituted := congrArg
+    (fun term => term.substitute mapping.leftInverseSubstitution) equal
+  simpa only [Term.substitute_leftInverse_rename mapping injective] using substituted
+
 example : Term 0 := .sort 0
 
 example (domain : Term n) (codomain : Term (n + 1)) : Term n := .pi domain codomain

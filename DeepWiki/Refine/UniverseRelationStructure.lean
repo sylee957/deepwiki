@@ -12,17 +12,6 @@ namespace DeepWiki.Refine
 
 universe u w
 
-/-- Universe weakness is decidable for each finite directional map level. -/
-instance (level : MapLevel) : Decidable level.IsUniverseWeak := by
-  cases level with
-  | zero | one | twoA => exact isTrue trivial
-  | twoB | three | four => exact isFalse fun h => h
-
-/-- Universe weakness is decidable componentwise for relation annotations. -/
-instance (annotation : Annotation) : Decidable annotation.IsUniverseWeak :=
-  inferInstanceAs
-    (Decidable (annotation.forward.IsUniverseWeak ∧ annotation.backward.IsUniverseWeak))
-
 /-- The converse of the identity equality graph carries its canonical coherent identity map. -/
 def identityEqualityGraphConverseIsUmap (A : Type u) :
     IsUmap (Converse (EqualityGraph.{u, u, w} (id : A → A))) where

@@ -6,7 +6,8 @@ import DeepWiki.Refine.ParametricitySequents
 
 An intrinsically scoped synthesis judgment translates annotated dependent terms together with
 proof-relevant witnesses. Source and primed terms use parallel scopes; witnesses use the
-corresponding three-copy relational scope.
+corresponding three-copy relational scope. Explicit relation-field quotation and context
+realizations isolate the remaining structured-witness typing obligation.
 -/
 
 namespace DeepWiki.Refine.AnnotatedRelationTranslation
@@ -16,6 +17,12 @@ abbrev Term := AnnotatedDependentCalculus.Term
 
 /-- Number of original, primed, and witness variables generated from an `n`-variable scope. -/
 abbrev relationalScope (n : Nat) := DependentCalculus.RawParametricity.scopeSize n
+
+/-- The source and three-copy relation-witness scopes coincide only for an empty context. -/
+theorem relationalScope_eq_sourceScope_iff (n : Nat) :
+    relationalScope n = n ↔ n = 0 := by
+  simp only [relationalScope, DependentCalculus.RawParametricity.scopeSize_eq]
+  omega
 
 namespace Term
 
@@ -136,6 +143,18 @@ def entries (context : Context n) : List (Entry n) :=
 /-- A quadruple belongs to a proof-transfer context when it occurs in its canonical enumeration. -/
 def Contains (context : Context n) (entry : Entry n) : Prop :=
   entry ∈ context.entries
+
+/-- Membership exposes the unique source index from which a canonical context entry was built. -/
+theorem exists_entryAt_of_contains {context : Context n} {entry : Entry n}
+    (member : context.Contains entry) :
+    ∃ index, context.entryAt index = entry := by
+  simpa only [Contains, entries, List.mem_ofFn] using member
+
+/-- Original and primed indices coincide because they inhabit parallel copies of one scope. -/
+theorem original_eq_primed_of_contains {context : Context n} {entry : Entry n}
+    (member : context.Contains entry) : entry.original = entry.primed := by
+  obtain ⟨index, rfl⟩ := exists_entryAt_of_contains member
+  rfl
 
 /-- Erasing the empty proof-transfer context gives the empty annotated context. -/
 @[simp] theorem gamma_empty :
@@ -260,6 +279,29 @@ inductive Judgment (realizers : SyntaxRealizers) : (context : Context n) →
       Judgment realizers context term type' term'
         (realizers.weakening context subtype termWitness)
 
+/-- The scoped representation uses identical syntax for the source and parallel primed copies. -/
+theorem Judgment.primed_eq_source {realizers : SyntaxRealizers}
+    {context : Context n} {term type term' : Term n}
+    {termWitness : Term (relationalScope n)}
+    (translation : Judgment realizers context term type term' termWitness) :
+    term' = term := by
+  induction translation with
+  | sort => rfl
+  | var member contextWellFormed =>
+      rw [Context.original_eq_primed_of_contains member]
+  | app functionTranslation argumentTranslation functionInduction argumentInduction =>
+      simp only [functionInduction, argumentInduction]
+  | lam domainTranslation bodyTranslation domainInduction bodyInduction =>
+      simp only [domainInduction, bodyInduction]
+  | arrow requirements domainTranslation codomainTranslation
+      domainInduction codomainInduction =>
+      simp only [domainInduction, codomainInduction]
+  | pi requirements domainTranslation codomainTranslation
+      domainInduction codomainInduction =>
+      simp only [domainInduction, codomainInduction]
+  | conversion translation subtype inductionHypothesis =>
+      exact inductionHypothesis
+
 /-- Object-language quotation data for expressing witness typing in the relational scope. -/
 structure WitnessTypingBridge where
   /-- The annotated typing context for the original/prime/witness expansion of a source context. -/
@@ -267,8 +309,136 @@ structure WitnessTypingBridge where
     Context n → AnnotatedDependentCalculus.Context (relationalScope n)
   /-- Quote application of a relation record to an original and a primed term. -/
   relationType : {n : Nat} →
-    Term (relationalScope n) → Term (relationalScope n) →
-      Term (relationalScope n) → Term (relationalScope n)
+    Term n → Term n → Term n → Term n
+
+/-- Object-language syntax for projecting and applying the relation field of a structured witness. -/
+structure RelationFieldQuotation where
+  /-- Quote the relation field of an annotation-indexed structured witness. -/
+  relationField : {n : Nat} → Annotation → Term n → Term n
+
+namespace RelationFieldQuotation
+
+/-- Apply a quoted relation field to a left and a right endpoint. -/
+def application (quotation : RelationFieldQuotation) (annotation : Annotation)
+    (witness left right : Term n) : Term n :=
+  .app (.app (quotation.relationField annotation witness) left) right
+
+/-- Form the quoted relation type of the two newest endpoint variables. -/
+def relatedDomain (quotation : RelationFieldQuotation) (annotation : Annotation)
+    (witness : Term n) : Term (n + 2) :=
+  quotation.application annotation (witness.weakenBy 2) (.var 1) (.var 0)
+
+/-- Abstract a body witness using an explicit structured-relation projection at its third binder. -/
+def lambdaWitness (quotation : RelationFieldQuotation) (annotation : Annotation)
+    (domain domain' : Term n) (domainWitness : Term n)
+    (bodyWitness : Term (n + 3)) : Term n :=
+  .lam domain
+    (.lam (domain'.weakenBy 1)
+      (.lam (quotation.relatedDomain annotation domainWitness) bodyWitness))
+
+end RelationFieldQuotation
+
+/-- A bridge is quotation-backed when its relation type is explicit relation-field application. -/
+structure QuotationBackedBridge (bridge : WitnessTypingBridge)
+    (quotation : RelationFieldQuotation) : Prop where
+  /-- The bridge exposes the quoted relation field at every annotation and scope. -/
+  relationType_eq : ∀ {n : Nat} (annotation : Annotation)
+      (witness left right : Term n),
+    bridge.relationType witness left right =
+      quotation.application annotation witness left right
+
+/-- A context realization stores the primed type and structured witness omitted by `Context`. -/
+inductive ContextRealization : {n : Nat} → (context : Context n) → Type where
+  /-- The empty source context has an empty realization. -/
+  | empty : ContextRealization Context.empty
+  /-- Realize one source extension by its primed type and structured relation witness. -/
+  | extend {n : Nat} {context : Context n} {sourceType : Term n}
+      (prior : ContextRealization context) (primedType : Term n)
+      (typeWitness : Term (relationalScope n)) :
+      ContextRealization (.extend context sourceType)
+
+namespace ContextRealization
+
+/-- Project the context containing the stored primed types. -/
+def primedContext : {context : Context n} →
+    ContextRealization context → AnnotatedDependentCalculus.Context n
+  | .empty, .empty => .empty
+  | .extend _ _, .extend prior primedType _ =>
+      .extend prior.primedContext primedType
+
+/-- Build the three-copy typing context using the bridge's quoted relation application. -/
+def relationalContext (bridge : WitnessTypingBridge) : {context : Context n} →
+    ContextRealization context →
+      AnnotatedDependentCalculus.Context (relationalScope n)
+  | .empty, .empty => .empty
+  | .extend _ sourceType, .extend prior primedType typeWitness =>
+      .extend
+        (.extend
+          (.extend (prior.relationalContext bridge) sourceType.original)
+          (primedType.primed.weakenBy 1))
+        (bridge.relationType (typeWitness.weakenBy 2) (.var 1) (.var 0))
+
+/-- A realization is coherent when every stored binder pair is produced by translation. -/
+inductive Coherent (realizers : SyntaxRealizers) :
+    {context : Context n} → ContextRealization context → Prop where
+  /-- The empty realization is coherent. -/
+  | empty : Coherent realizers ContextRealization.empty
+  /-- Extend coherence with a translation of the source binder type. -/
+  | extend {n : Nat} {context : Context n} {sourceType primedType : Term n}
+      {typeWitness : Term (relationalScope n)} {level : Nat} {annotation : Annotation}
+      {prior : ContextRealization context}
+      (priorCoherent : Coherent realizers prior)
+      (typeTranslation :
+        Judgment realizers context sourceType (.sort level annotation)
+          primedType typeWitness) :
+      Coherent realizers
+        (ContextRealization.extend (sourceType := sourceType) prior primedType typeWitness)
+
+/-- A coherent realization's primed context is the parallel copy of its source context. -/
+theorem Coherent.primedContext_eq_gamma {realizers : SyntaxRealizers}
+    {context : Context n} {realization : ContextRealization context}
+    (coherent : Coherent realizers realization) :
+    realization.primedContext = context.gamma := by
+  induction coherent with
+  | empty => rfl
+  | extend priorCoherent typeTranslation inductionHypothesis =>
+      simp only [primedContext, Context.gamma_extend, inductionHypothesis,
+        typeTranslation.primed_eq_source]
+
+/-- The empty realization projects to the empty primed context. -/
+@[simp] theorem primedContext_empty :
+    primedContext (ContextRealization.empty : ContextRealization Context.empty) =
+      AnnotatedDependentCalculus.Context.empty :=
+  rfl
+
+/-- The empty realization projects to the empty relational context. -/
+@[simp] theorem relationalContext_empty (bridge : WitnessTypingBridge) :
+    relationalContext bridge
+        (ContextRealization.empty : ContextRealization Context.empty) =
+      AnnotatedDependentCalculus.Context.empty :=
+  rfl
+
+end ContextRealization
+
+/-- Recovering arbitrary omitted binder witnesses from `Context` alone is impossible. -/
+def ContextWitnessRecoveryClaim : Prop :=
+  ∃ recover : {n : Nat} → Context (n + 1) → Term (relationalScope n),
+    ∀ {n : Nat} (context : Context n) (sourceType : Term n)
+      (typeWitness : Term (relationalScope n)),
+      recover (.extend context sourceType) = typeWitness
+
+/-- The source-only context cannot determine the omitted structured witness of an extension. -/
+theorem not_contextWitnessRecoveryClaim : ¬ ContextWitnessRecoveryClaim := by
+  rintro ⟨recover, recovers⟩
+  let sourceType : Term 0 := .sort 0 Annotation.equivalence
+  have first := recovers Context.empty sourceType
+    (.sort 0 Annotation.equivalence : Term (relationalScope 0))
+  have second := recovers Context.empty sourceType
+    (.sort 1 Annotation.equivalence : Term (relationalScope 0))
+  have impossible :
+      ((.sort 0 Annotation.equivalence : Term (relationalScope 0))) =
+        .sort 1 Annotation.equivalence := first.symm.trans second
+  cases impossible
 
 /-- The abstraction conclusion types the primed term and the synthesized relational witness. -/
 def AbstractionConclusion (bridge : WitnessTypingBridge) (context : Context n)
@@ -277,6 +447,12 @@ def AbstractionConclusion (bridge : WitnessTypingBridge) (context : Context n)
   AnnotatedDependentCalculus.HasType context.gamma term' type' ∧
     AnnotatedDependentCalculus.HasType (bridge.relationalContext context) termWitness
       (bridge.relationType typeWitness term.original term'.primed)
+
+/-- The witness-only part of the abstraction theorem after parallel-copy typing is discharged. -/
+def WitnessTypingConclusion (bridge : WitnessTypingBridge) (context : Context n)
+    (term term' : Term n) (termWitness typeWitness : Term (relationalScope n)) : Prop :=
+  AnnotatedDependentCalculus.HasType (bridge.relationalContext context) termWitness
+    (bridge.relationType typeWitness term.original term'.primed)
 
 /-- The abstraction claim for a fixed-realizer synthesis derivation and translation of its type. -/
 def AbstractionClaim (realizers : SyntaxRealizers) (bridge : WitnessTypingBridge) : Prop :=
@@ -290,6 +466,100 @@ def AbstractionClaim (realizers : SyntaxRealizers) (bridge : WitnessTypingBridge
     Judgment realizers context termType (.sort level annotation) type' typeWitness →
     AbstractionConclusion bridge context term term' type'
       termWitness typeWitness
+
+/-- The exact remaining witness-typing obligation of the scoped abstraction theorem. -/
+def WitnessAbstractionClaim (realizers : SyntaxRealizers)
+    (bridge : WitnessTypingBridge) : Prop :=
+  ∀ {n : Nat} {context : Context n}
+    {term termType term' type' : Term n}
+    {termWitness typeWitness : Term (relationalScope n)}
+    {level : Nat} {annotation : Annotation},
+    AnnotatedDependentCalculus.WellFormed context.gamma →
+    AnnotatedDependentCalculus.HasType context.gamma term termType →
+    Judgment realizers context term termType term' termWitness →
+    Judgment realizers context termType (.sort level annotation) type' typeWitness →
+    WitnessTypingConclusion bridge context term term' termWitness typeWitness
+
+/-- Parallel-copy typing is automatic, so abstraction is equivalent to witness typing alone. -/
+theorem abstractionClaim_iff_witnessAbstractionClaim
+    (realizers : SyntaxRealizers) (bridge : WitnessTypingBridge) :
+    AbstractionClaim realizers bridge ↔ WitnessAbstractionClaim realizers bridge := by
+  constructor
+  · intro abstraction n context term termType term' type' termWitness typeWitness
+      level annotation contextWellFormed termWellTyped termTranslation typeTranslation
+    exact (abstraction contextWellFormed termWellTyped termTranslation typeTranslation).2
+  · intro witnessAbstraction n context term termType term' type' termWitness typeWitness
+      level annotation contextWellFormed termWellTyped termTranslation typeTranslation
+    constructor
+    · simpa only [termTranslation.primed_eq_source, typeTranslation.primed_eq_source] using
+        termWellTyped
+    · exact witnessAbstraction contextWellFormed termWellTyped termTranslation typeTranslation
+
+/-- The faithful context-indexed conclusion uses stored primed and witness binder types. -/
+def RealizedAbstractionConclusion (bridge : WitnessTypingBridge)
+    {context : Context n} (realization : ContextRealization context)
+    (term term' type' : Term n)
+    (termWitness typeWitness : Term (relationalScope n)) : Prop :=
+  AnnotatedDependentCalculus.HasType realization.primedContext term' type' ∧
+    AnnotatedDependentCalculus.HasType (realization.relationalContext bridge) termWitness
+      (bridge.relationType typeWitness term.original term'.primed)
+
+/-- The remaining witness judgment in a context realization carrying every binder translation. -/
+def RealizedWitnessTypingConclusion (bridge : WitnessTypingBridge)
+    {context : Context n} (realization : ContextRealization context)
+    (term term' : Term n) (termWitness typeWitness : Term (relationalScope n)) : Prop :=
+  AnnotatedDependentCalculus.HasType (realization.relationalContext bridge) termWitness
+    (bridge.relationType typeWitness term.original term'.primed)
+
+/-- A context-faithful abstraction claim makes all omitted binder translations explicit. -/
+def RealizedAbstractionClaim (realizers : SyntaxRealizers)
+    (bridge : WitnessTypingBridge) : Prop :=
+  ∀ {n : Nat} {context : Context n} {realization : ContextRealization context}
+    {term termType term' type' : Term n}
+    {termWitness typeWitness : Term (relationalScope n)}
+    {level : Nat} {annotation : Annotation},
+    ContextRealization.Coherent realizers realization →
+    AnnotatedDependentCalculus.WellFormed context.gamma →
+    AnnotatedDependentCalculus.HasType context.gamma term termType →
+    Judgment realizers context term termType term' termWitness →
+    Judgment realizers context termType (.sort level annotation) type' typeWitness →
+    RealizedAbstractionConclusion bridge realization term term' type'
+      termWitness typeWitness
+
+/-- The exact context-faithful witness-typing obligation after primed typing is discharged. -/
+def RealizedWitnessAbstractionClaim (realizers : SyntaxRealizers)
+    (bridge : WitnessTypingBridge) : Prop :=
+  ∀ {n : Nat} {context : Context n} {realization : ContextRealization context}
+    {term termType term' type' : Term n}
+    {termWitness typeWitness : Term (relationalScope n)}
+    {level : Nat} {annotation : Annotation},
+    ContextRealization.Coherent realizers realization →
+    AnnotatedDependentCalculus.WellFormed context.gamma →
+    AnnotatedDependentCalculus.HasType context.gamma term termType →
+    Judgment realizers context term termType term' termWitness →
+    Judgment realizers context termType (.sort level annotation) type' typeWitness →
+    RealizedWitnessTypingConclusion bridge realization term term'
+      termWitness typeWitness
+
+/-- Context-faithful abstraction is equivalent to its structured-witness typing component. -/
+theorem realizedAbstractionClaim_iff_witnessAbstractionClaim
+    (realizers : SyntaxRealizers) (bridge : WitnessTypingBridge) :
+    RealizedAbstractionClaim realizers bridge ↔
+      RealizedWitnessAbstractionClaim realizers bridge := by
+  constructor
+  · intro abstraction n context realization term termType term' type' termWitness
+      typeWitness level annotation coherent contextWellFormed termWellTyped termTranslation
+      typeTranslation
+    exact (abstraction coherent contextWellFormed termWellTyped termTranslation typeTranslation).2
+  · intro witnessAbstraction n context realization term termType term' type' termWitness
+      typeWitness level annotation coherent contextWellFormed termWellTyped termTranslation
+      typeTranslation
+    constructor
+    · rw [coherent.primedContext_eq_gamma]
+      simpa only [termTranslation.primed_eq_source, typeTranslation.primed_eq_source] using
+        termWellTyped
+    · exact witnessAbstraction coherent contextWellFormed termWellTyped termTranslation
+        typeTranslation
 
 example {realizers : SyntaxRealizers} {context : Context n} {source target : Annotation}
     (admissible : AdmissibleUniverseTranslation source target) (level : Nat)
@@ -375,5 +645,29 @@ example {realizers : SyntaxRealizers} {context : Context n} {term type type' ter
 
 example (realizers : SyntaxRealizers) (bridge : WitnessTypingBridge) : Prop :=
   AbstractionClaim realizers bridge
+
+example {realizers : SyntaxRealizers} {context : Context n}
+    {term type term' : Term n} {witness : Term (relationalScope n)}
+    (translation : Judgment realizers context term type term' witness) :
+    term' = term :=
+  translation.primed_eq_source
+
+example : ¬ ContextWitnessRecoveryClaim :=
+  not_contextWitnessRecoveryClaim
+
+example (realizers : SyntaxRealizers) (bridge : WitnessTypingBridge) :
+    AbstractionClaim realizers bridge ↔ WitnessAbstractionClaim realizers bridge :=
+  abstractionClaim_iff_witnessAbstractionClaim realizers bridge
+
+example {realizers : SyntaxRealizers} {context : Context n}
+    {realization : ContextRealization context}
+    (coherent : ContextRealization.Coherent realizers realization) :
+    realization.primedContext = context.gamma :=
+  coherent.primedContext_eq_gamma
+
+example (realizers : SyntaxRealizers) (bridge : WitnessTypingBridge) :
+    RealizedAbstractionClaim realizers bridge ↔
+      RealizedWitnessAbstractionClaim realizers bridge :=
+  realizedAbstractionClaim_iff_witnessAbstractionClaim realizers bridge
 
 end DeepWiki.Refine.AnnotatedRelationTranslation

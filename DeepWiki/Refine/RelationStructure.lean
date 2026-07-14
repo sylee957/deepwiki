@@ -1,6 +1,8 @@
 import DeepWiki.Refine.Basic
 import Mathlib.Logic.Equiv.Defs
 import Mathlib.Order.Defs.PartialOrder
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Fintype.Prod
 
 /-! # Structured heterogeneous relations
 
@@ -75,6 +77,11 @@ inductive MapLevel where
   | four
   deriving DecidableEq, Repr
 
+/-- The six directional map levels form a finite type. -/
+instance : Fintype MapLevel where
+  elems := {.zero, .one, .twoA, .twoB, .three, .four}
+  complete level := by cases level <;> simp
+
 /-- The structure order on one-direction levels, with incomparable level-`2` variants. -/
 protected def MapLevel.le : MapLevel → MapLevel → Prop
   | .zero, _ => True
@@ -145,6 +152,14 @@ structure Annotation where
   /-- Structure available from the converse relation's left carrier to its right carrier. -/
   backward : MapLevel
   deriving DecidableEq, Repr
+
+/-- Relation annotations form a finite product of the six directional levels. -/
+instance : Fintype Annotation where
+  elems := Finset.univ.image fun pair : MapLevel × MapLevel =>
+    ⟨pair.1, pair.2⟩
+  complete annotation := by
+    simp only [Finset.mem_image, Finset.mem_univ, true_and]
+    exact ⟨(annotation.forward, annotation.backward), rfl⟩
 
 /-- Annotations use the componentwise product order. -/
 instance : PartialOrder Annotation where
@@ -488,14 +503,29 @@ def MapLevel.IsUniverseWeak : MapLevel → Prop
   | .zero | .one | .twoA => True
   | .twoB | .three | .four => False
 
+/-- Universe weakness is decidable for each finite directional map level. -/
+instance (level : MapLevel) : Decidable level.IsUniverseWeak := by
+  cases level with
+  | zero | one | twoA => exact isTrue trivial
+  | twoB | three | four => exact isFalse fun h => h
+
 /-- Both directions of an annotation lie in the universe translation's weak fragment. -/
 def Annotation.IsUniverseWeak (α : Annotation) : Prop :=
   α.forward.IsUniverseWeak ∧ α.backward.IsUniverseWeak
+
+/-- Universe weakness is decidable componentwise for relation annotations. -/
+instance (annotation : Annotation) : Decidable annotation.IsUniverseWeak :=
+  inferInstanceAs
+    (Decidable (annotation.forward.IsUniverseWeak ∧ annotation.backward.IsUniverseWeak))
 
 /-- A pair of annotations is admissible for translating universes when the source is fully
 equivalent or the target asks only for weak graph-producing structure. -/
 def AdmissibleUniverseTranslation (source target : Annotation) : Prop :=
   source = Annotation.equivalence ∨ target.IsUniverseWeak
+
+/-- Admissibility of a finite universe-translation annotation pair is decidable. -/
+instance (source target : Annotation) : Decidable (AdmissibleUniverseTranslation source target) :=
+  inferInstanceAs (Decidable (source = Annotation.equivalence ∨ target.IsUniverseWeak))
 
 /-- A fully coherent source annotation permits every target annotation for universe translation. -/
 theorem admissibleUniverseTranslation_of_equivalence (target : Annotation) :

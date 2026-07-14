@@ -38,12 +38,6 @@ def piRelationFiber (domain : Term n) (codomain : Term (n + 1))
     (Substitution.lift (Substitution.single (original function)))).instantiate
       (primed function)
 
-/-- Lift a simultaneous substitution beneath any finite number of binders. -/
-def liftSubstitutionBy (mapping : Substitution source target) :
-    (amount : Nat) → Substitution (source + amount) (target + amount)
-  | 0 => mapping
-  | amount + 1 => Substitution.lift (liftSubstitutionBy mapping amount)
-
 /-- Weakening after substitution equals substitution lifted beneath the fresh binders. -/
 theorem weakenBy_substitute (term : Term source)
     (mapping : Substitution source target) (amount : Nat) :

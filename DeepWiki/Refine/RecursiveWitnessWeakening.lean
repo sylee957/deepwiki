@@ -48,53 +48,6 @@ def piWeakeningBody
       (.app (domainWeakening.weakenBy 3)
         (.var (DependentCalculus.RawParametricity.witnessRenaming (n + 1) 0))))
 
-/-- Object-language data needed to state the five recursive witness-weakening equations. -/
-structure ObjectWeakeningSpecification where
-  /-- Quote the relation witness associated with an annotated type. -/
-  relationWitness : {n : Nat} → Term n → Term (relationalScope n)
-  /-- Quote primitive componentwise projection between universe relation records. -/
-  annotationProjection : {n : Nat} → {low high : Annotation} →
-    low ≤ high → Term (relationalScope n)
-  /-- Quote the witness transformer associated with a pair of annotated types. -/
-  weaken : {n : Nat} → Term n → Term n → Term (relationalScope n)
-  /-- Universe weakening converts to primitive projection of relation-record fields. -/
-  universeEquation : ∀ {n level : Nat} {low high : Annotation}
-      (annotationOrder : low ≤ high) (witness : Term (relationalScope n)),
-    AnnotatedDependentCalculus.Convertible (applyUnaryWitness (weaken (.sort level high) (.sort level low)) witness)
-      (applyUnaryWitness (annotationProjection annotationOrder) witness)
-  /-- Weakening an applied family converts to the recursively weakened indexed witness. -/
-  applicationEquation : ∀ {n : Nat} (family family' argument argument' : Term n)
-      (witness : Term (relationalScope n)),
-    AnnotatedDependentCalculus.Convertible
-      (applyUnaryWitness (weaken (.app family argument) (.app family' argument')) witness)
-      ((weaken family family').applyWitness argument argument' witness)
-  /-- Weakening an applied lambda converts to recursion after substituting both indices. -/
-  substitutionEquation : ∀ {n : Nat} (domain domain' : Term n)
-      (body body' : Term (n + 1)) (argument argument' : Term n)
-      (witness : Term (relationalScope n)),
-    AnnotatedDependentCalculus.Convertible
-      ((weaken (.lam domain body) (.lam domain' body')).applyWitness
-        argument argument' witness)
-      (applyUnaryWitness
-        (weaken (body.instantiate argument) (body'.instantiate argument')) witness)
-  /-- Product weakening converts to backward-domain then forward-codomain transformation. -/
-  piEquation : ∀ {n : Nat} (domain domain' : Term n)
-      (codomain codomain' : Term (n + 1))
-      (witness : Term (relationalScope n)),
-    AnnotatedDependentCalculus.Convertible
-      (applyUnaryWitness (weaken (.pi domain codomain) (.pi domain' codomain')) witness)
-      (AnnotatedRelationTranslation.Term.lambdaWitness domain' domain' (relationWitness domain')
-        (piWeakeningBody (weaken codomain codomain') witness
-          (weaken domain' domain)))
-  /-- Weakening a type to itself is definitionally the identity on witnesses. -/
-  identityEquation : ∀ {n : Nat} (source : Term n)
-      (witness : Term (relationalScope n)),
-    AnnotatedDependentCalculus.Convertible (applyUnaryWitness (weaken source source) witness) witness
-
-/-- Existence of an object-language weakening specification is the missing quotation boundary. -/
-def ObjectWeakeningRealizability : Prop :=
-  Nonempty ObjectWeakeningSpecification
-
 universe u v w x y z
 
 /-- A directed transformation between two endpoint-indexed witness families. -/
@@ -210,50 +163,6 @@ def substitutionWitnessWeakening {Left : Type u} {Right : Type v}
       (codomainForward left right related).map (leftFunction left) (rightFunction right)
         (sourceWitness left right (domainBackward.map left right related)) :=
   rfl
-
-example (specification : ObjectWeakeningSpecification)
-    {n level : Nat} {low high : Annotation} (annotationOrder : low ≤ high)
-    (witness : Term (relationalScope n)) :
-    AnnotatedDependentCalculus.Convertible
-      (applyUnaryWitness (specification.weaken (.sort level high) (.sort level low)) witness)
-      (applyUnaryWitness (specification.annotationProjection annotationOrder) witness) :=
-  specification.universeEquation annotationOrder witness
-
-example (specification : ObjectWeakeningSpecification) {n : Nat}
-    (family family' argument argument' : Term n)
-    (witness : Term (relationalScope n)) :
-    AnnotatedDependentCalculus.Convertible
-      (applyUnaryWitness
-        (specification.weaken (.app family argument) (.app family' argument')) witness)
-      ((specification.weaken family family').applyWitness argument argument' witness) :=
-  specification.applicationEquation family family' argument argument' witness
-
-example (specification : ObjectWeakeningSpecification) {n : Nat}
-    (domain domain' : Term n) (body body' : Term (n + 1))
-    (argument argument' : Term n) (witness : Term (relationalScope n)) :
-    AnnotatedDependentCalculus.Convertible
-      ((specification.weaken (.lam domain body) (.lam domain' body')).applyWitness
-        argument argument' witness)
-      (applyUnaryWitness (specification.weaken (body.instantiate argument)
-        (body'.instantiate argument')) witness) :=
-  specification.substitutionEquation domain domain' body body' argument argument' witness
-
-example (specification : ObjectWeakeningSpecification) {n : Nat}
-    (domain domain' : Term n) (codomain codomain' : Term (n + 1))
-    (witness : Term (relationalScope n)) :
-    AnnotatedDependentCalculus.Convertible
-      (applyUnaryWitness
-        (specification.weaken (.pi domain codomain) (.pi domain' codomain')) witness)
-      (AnnotatedRelationTranslation.Term.lambdaWitness domain' domain' (specification.relationWitness domain')
-        (piWeakeningBody (specification.weaken codomain codomain') witness
-          (specification.weaken domain' domain))) :=
-  specification.piEquation domain domain' codomain codomain' witness
-
-example (specification : ObjectWeakeningSpecification) {n : Nat}
-    (source : Term n)
-    (witness : Term (relationalScope n)) :
-    AnnotatedDependentCalculus.Convertible (applyUnaryWitness (specification.weaken source source) witness) witness :=
-  specification.identityEquation source witness
 
 example {low high : Annotation} (annotationOrder : low ≤ high) (A B : Type u)
     (witness : StructuredRelation.{u, u, u} high A B) :

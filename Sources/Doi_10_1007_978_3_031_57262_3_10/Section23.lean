@@ -2,7 +2,9 @@ import DeepWiki.Refine.ParametricityTranslations
 import DeepWiki.Refine.RawParametricitySyntax
 import DeepWiki.Refine.RawParametricityTyping
 import DeepWiki.Refine.RawParametricityConversion
+import DeepWiki.Refine.RawParametricityAbstraction
 import DeepWiki.Refine.UnivalentUniverseQuotation
+import DeepWiki.Refine.StructuredUniverseQuotationSyntax
 import Sources.Doi_10_1007_978_3_031_57262_3_10.Source
 
 /-! # Section 2.3 - Parametricity translations
@@ -15,15 +17,12 @@ Catalog pointers for the raw and univalent parametricity constructions of Sectio
   translated-context lookup equations, typed original/prime renamings, triple-context extension,
   the universe, variable, application, lambda, and dependent-product witness cases, and the reduction
   to translated-context formation plus witness typing are formalized. The lambda case explicitly
-  uses the translated product-type witness, and the conversion case is proved. The remaining
-  strengthened induction must supply type witnesses recursively, handle cumulativity, and assemble
-  the cases.
+  uses the translated product-type witness, and the conversion case is proved. A formation-explicit
+  refinement supplies recursive codomain witnesses and substitution-stable fiberwise cumulativity,
+  and its full three-conclusion abstraction theorem is proved. The remaining bridge is from the
+  paper's ordinary cumulative typing judgment to that formation-explicit refinement.
 - Theorem 2 (univalent abstraction for full dependent `CCω`), p. 9 — [infra] the universe package
   and intrinsic fragment are formalized, but the exact typing induction is not.
-- Equation (11), p. 9 — [infra] its native semantic package is formalized separately, and the exact
-  object-language typing and definitional-projection obligations are packaged by
-  `UnivalentUniverseQuotation`. Realizing that interface still needs an extension with quoted
-  package, equivalence, univalence, and projection syntax plus its typing and reduction rules.
 -/
 
 namespace DeepWiki.Ccm
@@ -104,6 +103,18 @@ abbrev raw_product_witness_is_well_typed :=
 abbrev raw_conversion_witness_is_well_typed :=
   @DeepWiki.Refine.DependentCalculus.RawParametricity.translate_conversion_witness_hasType
 
+/-- **Theorem 1 repaired premise:** cumulative source types act on every translated relation fiber. -/
+abbrev raw_relational_cumulativity :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.IsRelationallyCumulative
+
+/-- **Theorem 1 repaired judgment:** formation-explicit dependent typing. -/
+abbrev raw_formation_explicit_typing :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.AbstractionHasType
+
+/-- **Theorem 1 repaired:** formation-explicit typing proves all three abstraction conclusions. -/
+abbrev raw_formation_explicit_abstraction :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.formationExplicitRawAbstraction
+
 /-- **Equation (6), p. 8:** the semantic application rule composes function and argument witnesses. -/
 abbrev raw_application_translation := @DeepWiki.Refine.RawPiRelation.app
 
@@ -145,6 +156,14 @@ abbrev equation_11_quoted_relation_projection :=
 /-- **Equation (11), p. 9:** realizability inside the unextended core calculus remains explicit. -/
 abbrev equation_11_core_quotation_realizability :=
   DeepWiki.Refine.DependentCalculus.CoreUnivalentUniverseQuotationRealizability
+
+/-- **Equation (11), p. 9:** the genuine quotation syntax realizes the top/top equation. -/
+abbrev equation_11_top_universe_equation_realized :=
+  DeepWiki.Refine.StructuredUniverseQuotationSyntax.satisfiesTopUniverseEquation
+
+/-- **Equation (11), semantic counterpart:** top structured relations are univalent packages. -/
+abbrev equation_11_top_fiber_equivalence :=
+  @DeepWiki.Refine.StructuredUniverseQuotationSyntax.topStructuredRelationEquivUnivalentRelation
 
 example {A B : Type u} (equivalence : A ≃ B) :
     DeepWiki.Refine.UnivalentRelation A B :=

@@ -7,26 +7,23 @@ import DeepWiki.Refine.PiRelationStructure
 import DeepWiki.Refine.UniverseRelationStructure
 import DeepWiki.Refine.UnivalentRelationStructure
 import DeepWiki.Refine.ParametricitySequents
+import DeepWiki.Refine.RawParametricityAbstractionCounterexample
 import DeepWiki.Refine.RawParametricityTyping
 import DeepWiki.Refine.UnivalentParametricitySequents
 import DeepWiki.Refine.AnnotatedDependentCalculus
 import DeepWiki.Refine.MaximalAnnotation
 import DeepWiki.Refine.AnnotatedCalculusConservativity
 import DeepWiki.Refine.AnnotatedRelationTranslation
-import DeepWiki.Refine.AnnotatedTranslationErasure
 import DeepWiki.Refine.AnnotatedParametricityErasure
-import DeepWiki.Refine.UniverseWitnessConsequences
-import DeepWiki.Refine.StructuredUniverseQuotation
-import DeepWiki.Refine.RegisteredConstants
-import DeepWiki.Refine.RegisteredConstantCalculus
-import DeepWiki.Refine.RecursiveWitnessWeakening
+import DeepWiki.Refine.StructuredUniverseQuotationSyntax
+import DeepWiki.Refine.RegisteredConstantSyntax
 import Sources.Doi_10_1007_978_3_031_57262_3_10.Source
 
 /-! # Trocq theory — coverage catalog
 
-Coverage map for the mathematical definitions and metatheorems in the ESOP 2024 paper. The
-section-specific catalogs point to the source-neutral equivalence, relation, annotation, weakening,
-and core-parametricity modules.
+Coverage map for the mathematical definitions and metatheorems in the rendered ESOP 2024 paper.
+Entries headed Appendix 0.A-0.E come from an unrendered arXiv source tail after `\end{document}`
+and are labeled separately from proceedings-paper coverage.
 
 Lean modeling caveat: native `Eq` is proof-irrelevant, so
 `IsEmpty IsUnivalentUniverse` is provable. The univalence-dependent entries below verify the paper's
@@ -39,57 +36,54 @@ signatures and dependency boundaries conditionally; they are not an internal HoT
   for native Lean equality: proof irrelevance lowers its sufficient domain from level `4` to level
   `3`. Full semantic minimality needs a proof-relevant HoTT identity semantics.
 - Theorem 4 (raw-parametricity abstraction theorem in sequent form), p. 16 — [infra] its exact
-  proposition is formalized, but the displayed lambda rule is under-specified: read literally it
-  leaves the primed domain and witness domain arbitrary, refuting Lemma 5. The repaired
-  domain-coherent judgment is functional. The triple-extended context construction and the
-  universe and variable typing cases are proved; context-lookup regularity and product-term
-  inversion are also available. Application, lambda, product, and conversion remain for the
-  repaired abstraction induction.
+  proposition is formalized and formally refuted: the displayed lambda rule leaves the primed and
+  witness domains arbitrary, so a closed well-typed source lambda can synthesize a primed lambda
+  whose binder is a dependent product while its separately translated type expects a universe
+  binder. This refutes both Lemma 5 and the literal Theorem 4. The repaired domain-coherent judgment
+  is functional. The former constructor-by-constructor strengthening and typing-reflection route did
+  not assemble a theorem and has been removed. A repaired abstraction theorem must instead use the
+  domain-coherent judgment throughout and prove its own typing induction.
 - Theorem 5 (univalent abstraction theorem in sequent form), p. 17 — [research] its exact
   univalence-conditional proposition and all Figure 4 rules are formalized, but native Lean has no
   inhabitant of the required universe-univalence hypothesis and the scoped syntax does not quote
   record projections needed for the typing induction.
-- Theorem 6 (Trocq abstraction theorem), p. 20 — [infra] the intrinsic core abstraction theorem is
-  proved and a scoped decomposition of the proposition is stated. Its relational typing context
-  and `rel(A_R) M M'` conclusion still pass through an explicit `WitnessTypingBridge`; constructing
-  that object-language bridge and proving the derivation induction remain.
+- Theorem 6 (Trocq abstraction theorem), p. 20 — [infra] the Figure 7 synthesis judgment is
+  formalized, but the printed abstraction theorem is not. Its typing proof still needs faithful
+  object-language quotation of relation projections, a coherent three-copy context, and a complete
+  induction over the translation judgment.
 - Remark 4 (source annotations determine translated relation structure), pp. 20–21 — [infra]
-  its exact conclusion is derived conditionally from Theorem 6 and lawful object-language
-  quotation, but discharging those two premises still depends on the exact Trocq abstraction proof.
-- Figure 8 (recursive weakening of translated witnesses), p. 21 — [infra] the five equations are
-  formalized as object-language convertibilities in `ObjectWeakeningSpecification`, and raw
-  syntactic equality is formally refuted by `noSyntacticIdentityTransformer`; their native
-  semantic counterparts execute, but `ObjectWeakeningRealizability` is not inhabited:
-  constructing quoted object-language transformers recursively from annotated subtyping
-  derivations remains.
+  depends on Theorem 6 and its typed relation-projection witness.
+- Figure 8 (recursive weakening of translated witnesses), p. 21 — [infra] no total recursive
+  weakening operation satisfying all five displayed conversion equations is formalized. Existing
+  specification and proof-relevant-index experiments do not cover conversion and lambda closure.
 - Remark 5 (universe witnesses inhabit their source annotation), p. 21 — [infra] depends on the
-  exact typed object-language judgment. Its conclusion is derived from the abstraction theorem,
-  quoted Equation (12), and their alignment; constructing those three object-language premises
-  remains.
-- Figure 9 (registered constants), p. 21 — [infra] the two displayed registry rules, common-erasure
-  invariant, functional lookup, stuckness, and completeness are formalized. An exact scoped
-  extension interface lifts the rules into genuine constant terms and allows arbitrary target and
-  witness terms. Constructing the paper's recursive syntax and both inductive judgments still
-  requires parameterizing every term former and rule by the global constant environment.
-- Equation (12), p. 13 — [infra] its admissibility-indexed native semantic family is formalized, and
-  `StructuredUniverseQuotation.Quotation` now states the exact quoted typing and definitional
-  projection obligations. Realizing that interface in the core annotated calculus still requires
-  quoted relation-family, witness, and projection syntax.
-- Theorem 0.B.1 (conservativity over ordinary `CCω`), appendix — [infra] annotation erasure into the
-  literal unannotated Figures 5/6 rule system is proved, and the final embedding into ordinary
-  `CCω` is derived from `ErasedSubtypeTypehood`. This precise boundary retains the typed
-  erased-subtyping derivation instead of discarding it into untyped cumulative conversion. Proving
-  the remaining typehood preservation proposition requires the ordinary calculus's conversion and
-  regularity metatheory.
-- Theorem 0.C.1 (erasure of Trocq to raw parametricity), appendix — [infra] the erased parameter
-  context, recursive `rel*` projection, and derivation induction into raw parametricity are
-  formalized under `AnnotatedParametricityErasure.ErasureLaws`. Instantiating those laws requires
-  the still-missing object-language relation projections and witness constructors.
-- Theorem 0.D.1 (maximal Trocq recovers univalent parametricity), appendix — [infra] the maximal
-  annotation function, its structural naturality, and its exact erasure retraction are proved;
-  every context-formation, typing, and subtyping derivation of the literal unannotated calculus
-  also lifts to the top annotation. Bridging the already-expanded univalent sequent scopes to
-  maximally annotated `Judgment` derivations remains.
+  exact typed Theorem 6 judgment and the quoted Equation (12) witness.
+- Theorem 0.B.1 (conservativity over ordinary `CCω`), unrendered arXiv source tail 0.B — [infra]
+  both the printed subtyping-erasure lemma and the theorem conclusion incorrectly target beta
+  conversion. `Sort 0 ≤ Sort 1` refutes the former and `Sort 0 : Sort 1` refutes the latter. The
+  repaired conclusions are cumulative conversion and ordinary typing. Annotation erasure into the
+  literal unannotated Figures 5/6 rule system is proved, and the final embedding into ordinary `CCω`
+  follows from `ErasedSubtypeTypehood`. Confluence, constructor-local principal typing, and dependent
+  context narrowing are proved. Erasing universe levels gives direct agreement of assigned types,
+  closing assigned-kind discrimination and typed conversion regularity unconditionally.
+  Mutual typing/subtyping recursion closes conversion, lambda, both directions of product transport,
+  narrowing, and the
+  final embedding once the application case retains its actual function-subtyping derivation. That
+  relation-indexed boundary is reduced further to application typehood transport along the explicit
+  term-level cumulative derivation obtained from subtyping.
+  The common-kind typed beta-conversion constructor is isolated as a necessary fragment: proving it
+  requires typed subject reduction and application/product inversion, not merely untyped confluence.
+  Canonically introduced beta redexes preserve typing unconditionally, and root-beta preservation
+  implies preservation for every compatible one-step reduction. Full subject reduction is reduced
+  to cumulative product-component inversion; transitive cumulative paths through beta-convertible
+  non-product intermediates make that inversion, plus arbitrary application-spine transport and
+  substitution stability, the remaining metatheory.
+- Erasure of Trocq, unrendered arXiv source tail 0.C — [infra] the recursive `rel*` projection and
+  erased parameter context are formalized. `Judgment.eraseToRaw` proves the theorem only under an
+  abstract `ErasureLaws` interface; genuine universe, arrow, product, and weakening laws remain.
+- Maximal Trocq, unrendered arXiv source tail 0.D — [infra] the maximal term and context annotation
+  equations are formalized. The biconditional, its reverse implication, the ordinary-typing
+  conjunct, arbitrary target context `Δ`, and genuine realizer equations remain.
 -/
 
 namespace DeepWiki.Ccm
@@ -181,17 +175,9 @@ abbrev lemma_5_domain_coherent :=
 abbrev theorem_4_claim :=
   DeepWiki.Refine.DependentCalculus.ParametricitySequents.RawAbstractionClaim
 
-/-- **Theorem 4, p. 16:** one source declaration forms a well-typed relational context triple. -/
-abbrev theorem_4_context_extension :=
-  @DeepWiki.Refine.DependentCalculus.RawParametricity.context_extend_wellFormed
-
-/-- **Theorem 4, p. 16:** the universe constructor satisfies raw abstraction typing. -/
-abbrev theorem_4_universe_case :=
-  @DeepWiki.Refine.DependentCalculus.RawParametricity.abstractionConclusion_sort
-
-/-- **Theorem 4, p. 16:** the variable constructor satisfies raw abstraction typing. -/
-abbrev theorem_4_variable_case :=
-  @DeepWiki.Refine.DependentCalculus.RawParametricity.abstractionConclusion_var
+/-- **Theorem 4 audit, p. 16:** the literal displayed theorem is false. -/
+abbrev theorem_4_literal_claim_false :=
+  DeepWiki.Refine.DependentCalculus.ParametricitySequents.not_rawAbstractionClaim
 
 /-- **Figure 4, p. 17:** univalent parametricity sequents with fixed syntax realizers. -/
 abbrev figure_4_univalent_sequent :=
@@ -207,43 +193,15 @@ abbrev theorem_5_claim.{u}
 abbrev remark_3_top_relation_fiber :=
   @DeepWiki.Refine.DependentCalculus.UnivalentParametricitySequents.universeRelationTopFiberEquiv
 
-/-- **Figure 9, p. 21, standalone rule:** constants carry well-typed, same-erasure choices. -/
-abbrev figure_9_constant_environment := @DeepWiki.Refine.RegisteredConstants.Registry
+/-- **Section 4.5, p. 21:** constants carry annotated type choices and partial translations. -/
+abbrev figure_9_constant_environment := @DeepWiki.Refine.RegisteredConstantSyntax.Environment
 
-/-- **Figure 9, p. 21, standalone rule:** any registered annotated choice types its constant. -/
-abbrev figure_9_constant_typing := @DeepWiki.Refine.RegisteredConstants.PositiveTyping
+/-- **Figure 9, p. 21, `Const+`:** an admitted annotated choice types its constant occurrence. -/
+abbrev figure_9_constant_typing := @DeepWiki.Refine.RegisteredConstantSyntax.HasType.constant
 
-/-- **Figure 9, p. 21, standalone rule:** a choice synthesizes target and witness terms. -/
+/-- **Figure 9, p. 21, `TrocqConst`:** an exact lookup synthesizes target and witness terms. -/
 abbrev figure_9_constant_translation :=
-  @DeepWiki.Refine.RegisteredConstants.RegisteredConstantTranslation
-
-/-- **Figure 9, p. 21:** exact boundary for extending the annotated calculus with constants. -/
-abbrev figure_9_calculus_integration :=
-  @DeepWiki.Refine.RegisteredConstants.RegisteredConstantCalculus
-
-/-- **Figure 9, p. 21:** positive registry typing lifts to a genuine constant occurrence. -/
-abbrev figure_9_integrated_constant_typing :=
-  @DeepWiki.Refine.RegisteredConstants.RegisteredConstantCalculus.typing_of_positive
-
-/-- **Figure 9, p. 21:** registry translation lifts without restricting outputs to names. -/
-abbrev figure_9_integrated_constant_translation :=
-  @DeepWiki.Refine.RegisteredConstants.RegisteredConstantCalculus.translation_of_lookup
-
-/-- **Section 4.5, p. 21:** every choice in `T_c` inhabits an annotated universe. -/
-abbrev constant_annotated_type_is_well_typed :=
-  @DeepWiki.Refine.RegisteredConstants.PositiveTyping.typeWellTyped
-
-/-- **Section 4.5, p. 21:** all annotated types of one constant have a common erasure. -/
-abbrev constant_type_erasure_invariant :=
-  @DeepWiki.Refine.RegisteredConstants.PositiveTyping.erase_eq
-
-/-- **Figure 9, p. 21:** translation is stuck exactly when the registry lookup is absent. -/
-abbrev figure_9_stuck_iff_missing :=
-  @DeepWiki.Refine.RegisteredConstants.isStuck_iff_no_registeredConstantTranslation
-
-/-- **Section 4.5, p. 21:** a complete registry translates every positively typed constant. -/
-abbrev complete_registry_translates_constant :=
-  @DeepWiki.Refine.RegisteredConstants.Registry.IsComplete.exists_registeredConstantTranslation
+  @DeepWiki.Refine.RegisteredConstantSyntax.Judgment.constant_of_lookup
 
 /-- **Section 4.3, p. 17:** intrinsically scoped `CCω⁺` terms annotate every universe occurrence. -/
 abbrev annotated_calculus_terms := DeepWiki.Refine.AnnotatedDependentCalculus.Term
@@ -287,113 +245,38 @@ abbrev erased_subtyping_to_cumulative :=
 abbrev annotated_subtyping_to_cumulative :=
   @DeepWiki.Refine.AnnotatedCalculusConservativity.annotatedSubtype_toCumulative_unconditional
 
-/-- **Theorem 0.B.1 boundary:** a direct embedding into the ordinary cumulative calculus. -/
-abbrev appendix_conservativity_embedding_boundary :=
-  DeepWiki.Refine.AnnotatedCalculusConservativity.ExistingCalculusEmbedding
+/-- **Source-tail Lemma 0.B.1 erratum:** the printed subtyping-as-beta-conversion claim. -/
+abbrev appendix_subtyping_erasure_printed_claim :=
+  DeepWiki.Refine.AnnotatedCalculusConservativity.SubtypingErasureAsConversionClaim
 
-/-- **Theorem 0.B.1 boundary:** erased typed subtyping must preserve universe typehood. -/
-abbrev appendix_conservativity_typehood_boundary :=
-  DeepWiki.Refine.AnnotatedCalculusConservativity.ErasedSubtypeTypehood
+/-- **Source-tail Lemma 0.B.1 erratum:** universe cumulativity refutes the printed claim. -/
+abbrev appendix_subtyping_erasure_printed_claim_false :=
+  DeepWiki.Refine.AnnotatedCalculusConservativity.not_subtypingErasureAsConversionClaim
 
-/-- **Theorem 0.B.1, conditional:** erased-subtyping typehood supplies the ordinary embedding. -/
-abbrev appendix_conservativity_embedding_of_typehood :=
-  @DeepWiki.Refine.AnnotatedCalculusConservativity.existingCalculusEmbedding_of_erasedSubtypeTypehood
+/-- **Theorem 0.B.1 erratum:** the printed typing-as-beta-conversion conclusion. -/
+abbrev appendix_conservativity_printed_claim :=
+  DeepWiki.Refine.AnnotatedCalculusConservativity.AnnotationErasureAsConversionClaim
 
-/-- **Theorem 0.B.1, conditional:** erased-subtyping typehood implies ordinary conservativity. -/
-abbrev appendix_conservativity_of_typehood :=
-  @DeepWiki.Refine.AnnotatedCalculusConservativity.existingTypingConservativity_of_erasedSubtypeTypehood
+/-- **Theorem 0.B.1 erratum:** `Sort 0 : Sort 1` refutes the printed conclusion. -/
+abbrev appendix_conservativity_printed_claim_false :=
+  DeepWiki.Refine.AnnotatedCalculusConservativity.not_annotationErasureAsConversionClaim
 
-/-- **Theorem 0.B.1:** unrestricted cumulative typehood is a sufficient stronger boundary. -/
-abbrev appendix_conservativity_of_cumulative_typehood :=
-  @DeepWiki.Refine.AnnotatedCalculusConservativity.existingTypingConservativity_of_cumulativeTypehood
-
-/-- **Appendix 0.D, Figure 3:** assign the maximal annotation to every ordinary universe. -/
+/-- **Source tail 0.D, maximal-annotation figure (`fig:topAnn`):** maximally annotate a term. -/
 abbrev maximal_annotation := @DeepWiki.Refine.MaximalAnnotation.Term.annotate
 
-/-- **Appendix 0.D, Figure 3:** maximal annotation commutes with dependent instantiation. -/
-abbrev maximal_annotation_instantiate :=
-  @DeepWiki.Refine.MaximalAnnotation.Term.annotate_instantiate
+/-- **Source tail 0.D, maximal-annotation figure (`fig:topAnn`):** maximally annotate a context. -/
+abbrev maximal_context_annotation := @DeepWiki.Refine.MaximalAnnotation.Context.annotate
 
-/-- **Appendix 0.D, Figure 3:** erasing maximal annotation returns the original term. -/
-abbrev maximal_annotation_erasure :=
-  @DeepWiki.Refine.MaximalAnnotation.Term.erase_annotate
-
-/-- **Appendix 0.D, Figure 3:** erasing a maximally annotated context is identity. -/
-abbrev maximal_context_erasure :=
-  @DeepWiki.Refine.MaximalAnnotation.Context.erase_annotate
-
-/-- **Theorem 0.C.1 audit:** canonical self-translation has a stronger erasure normalization. -/
-abbrev appendix_canonical_erasure_audit :=
-  @DeepWiki.Refine.AnnotatedTranslationErasure.Judgment.canonicalErasure
-
-/-- **Theorem 0.C.1 audit:** this normalization is not the general raw-sequent theorem. -/
-abbrev appendix_canonical_erasure_claim :=
-  @DeepWiki.Refine.AnnotatedTranslationErasure.CanonicalErasureClaim
-
-/-- **Theorem 0.C.1:** `rel*` recursively projects applications and lambda bodies. -/
+/-- **Source tail 0.C, Erasure of Trocq:** `rel*` recursively projects relation witnesses. -/
 abbrev appendix_relation_projection_star :=
   @DeepWiki.Refine.AnnotatedParametricityErasure.relationProjectionStar
 
-/-- **Theorem 0.C.1:** annotated contexts erase to raw parameter triples. -/
+/-- **Source tail 0.C, Erasure of Trocq:** erase an annotated context to raw parameter triples. -/
 abbrev appendix_erased_parametricity_context :=
   @DeepWiki.Refine.AnnotatedParametricityErasure.eraseParametricityContext
 
-/-- **Theorem 0.C.1 boundary:** quoted witness constructors obey the required erasure laws. -/
-abbrev appendix_parametricity_erasure_laws :=
-  @DeepWiki.Refine.AnnotatedParametricityErasure.ErasureLaws
-
-/-- **Theorem 0.C.1, conditional:** annotated translation erases to a raw sequent. -/
-abbrev appendix_trocq_erasure_to_raw :=
-  @DeepWiki.Refine.AnnotatedParametricityErasure.Judgment.eraseToRaw
-
-/-- **Theorem 0.D.1:** maximal annotation lifts unannotated context formation. -/
-abbrev maximal_annotation_well_formed :=
-  @DeepWiki.Refine.MaximalAnnotation.wellFormed
-
-/-- **Theorem 0.D.1:** maximal annotation lifts unannotated typing derivations. -/
-abbrev maximal_annotation_typing :=
-  @DeepWiki.Refine.MaximalAnnotation.hasType
-
-/-- **Theorem 0.D.1:** maximal annotation lifts unannotated subtyping derivations. -/
-abbrev maximal_annotation_subtyping :=
-  @DeepWiki.Refine.MaximalAnnotation.subtypeDerivation
-
 /-- **Figure 7, p. 20:** the scoped four-place Trocq synthesis judgment. -/
 abbrev figure_7_trocq_translation := @DeepWiki.Refine.AnnotatedRelationTranslation.Judgment
-
-/-- **Theorem 6, p. 20:** a scoped abstraction schema exposing the missing quotation bridge. -/
-abbrev theorem_6_claim := DeepWiki.Refine.AnnotatedRelationTranslation.AbstractionClaim
-
-/-- **Remark 4, pp. 20–21:** Theorem 6 and lawful quotation imply relation-witness typing. -/
-abbrev remark_4_of_abstraction :=
-  @DeepWiki.Refine.UniverseWitnessConsequences.universeRelationWitnessTyping_of_abstraction
-
-/-- **Remark 5, p. 21:** admissibility constructs the semantic universe witness branchwise. -/
-abbrev remark_5_semantic_universe_witness :=
-  @DeepWiki.Refine.UniverseWitnessConsequences.semanticUniverseWitnessOfAdmissible
-
-/-- **Remark 5, p. 21:** the semantic witness relation is indexed by the source annotation. -/
-abbrev remark_5_semantic_relation_projection :=
-  @DeepWiki.Refine.UniverseWitnessConsequences.semanticUniverseWitnessOfAdmissible_rel
-
-/-- **Figure 8, p. 21:** the interface specifying the five object-language weakening equations. -/
-abbrev figure_8_recursive_weakening :=
-  DeepWiki.Refine.RecursiveWitnessWeakening.ObjectWeakeningSpecification
-
-/-- **Figure 8, p. 21:** raw syntax equality cannot express even identity weakening. -/
-abbrev figure_8_raw_identity_not_syntactic :=
-  @DeepWiki.Refine.RecursiveWitnessWeakening.noSyntacticIdentityTransformer
-
-/-- **Figure 8, p. 21:** the quoted identity transformer satisfies weakening by beta conversion. -/
-abbrev figure_8_identity_beta :=
-  @DeepWiki.Refine.RecursiveWitnessWeakening.identityWitnessTransformer_beta
-
-/-- **Figure 8, p. 21:** realizability asks for an inhabitant of the weakening specification. -/
-abbrev figure_8_recursive_weakening_realizability :=
-  DeepWiki.Refine.RecursiveWitnessWeakening.ObjectWeakeningRealizability
-
-/-- **Figure 8, p. 21:** semantic dependent-product weakening is contravariant then covariant. -/
-abbrev figure_8_pi_weakening := @DeepWiki.Refine.RecursiveWitnessWeakening.piWitnessWeakening
 
 /-- **Figure 2, p. 14:** the dependency-annotation table for dependent products. -/
 abbrev dependent_product_requirements := DeepWiki.Refine.dependentProductRequirements
@@ -428,25 +311,21 @@ abbrev equation_12_semantic_assumptions := @DeepWiki.Refine.UniverseRelationAssu
 /-- **Equation (12), p. 13, semantic counterpart:** weak targets need no univalence evidence. -/
 abbrev equation_12_semantic_weak_target := @DeepWiki.Refine.universeStructuredRelationOfWeak
 
-/-- **Equation (12), p. 13:** exact quoted typing and projection obligations. -/
-abbrev equation_12_quotation_specification :=
-  @DeepWiki.Refine.StructuredUniverseQuotation.Quotation
+/-- **Equation (12), p. 13:** genuine syntax for relation families, witnesses, and projection. -/
+abbrev equation_12_quotation_syntax :=
+  DeepWiki.Refine.StructuredUniverseQuotationSyntax.Term
 
-/-- **Equation (12), p. 13:** admissibility gives the quoted witness equation. -/
-abbrev equation_12_quoted_universe_equation :=
-  @DeepWiki.Refine.StructuredUniverseQuotation.Quotation.satisfiesUniverseEquation
+/-- **Equation (12), p. 13:** every admissible pair satisfies quoted typing and projection. -/
+abbrev equation_12_quotation_realized :=
+  @DeepWiki.Refine.StructuredUniverseQuotationSyntax.satisfiesUniverseEquation
 
-/-- **Equation (12), p. 13:** quoted relation projection remains convertible after application. -/
-abbrev equation_12_quoted_relation_projection :=
-  @DeepWiki.Refine.StructuredUniverseQuotation.Quotation.projectedRelationApplication_convertible
+/-- **Equation (12), p. 13:** projection computes to the source relation family. -/
+abbrev equation_12_projection_beta :=
+  @DeepWiki.Refine.StructuredUniverseQuotationSyntax.projectedRelation_convertible
 
-/-- **Equation (12), p. 13:** core-calculus quotation realizability remains explicit. -/
-abbrev equation_12_core_quotation_realizability :=
-  DeepWiki.Refine.StructuredUniverseQuotation.CoreQuotationRealizability
-
-/-- **Remark 5, p. 21:** abstraction and quotation imply the translated universe conclusion. -/
-abbrev remark_5_conclusion_of_abstraction :=
-  @DeepWiki.Refine.StructuredUniverseQuotation.translatedTypeWitnessConclusion_of_abstraction
+/-- **Equation (12) modeling boundary:** a relation-family primitive is outside the core image. -/
+abbrev equation_12_not_directly_core_representable :=
+  @DeepWiki.Refine.StructuredUniverseQuotationSyntax.not_coreRepresentable_relationFamily
 
 example (univalent : DeepWiki.Refine.IsUnivalentUniverse.{u}) (A B : Type u) :
     (A ≃ B) ≃

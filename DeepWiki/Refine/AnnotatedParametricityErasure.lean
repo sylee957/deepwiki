@@ -5,7 +5,8 @@ import DeepWiki.Refine.ParametricitySequents
 
 Erasing an annotated translation context produces a raw parameter context. A relation-field
 projection is propagated through applications and lambda bodies, yielding the raw witness carried
-by the corresponding parametricity sequent.
+by the corresponding parametricity sequent. The erasure-only projection is a structural test model,
+not a quotation of the primitive relation-record projection.
 -/
 
 namespace DeepWiki.Refine.AnnotatedParametricityErasure
@@ -19,6 +20,10 @@ structure RelationFieldSyntax where
   /-- Project the relation field of one annotated witness term. -/
   relationField : {n : Nat} →
     AnnotatedDependentCalculus.Term n → DependentCalculus.Term n
+
+/-- The erasure-only projection interprets every atomic annotated term by annotation erasure. -/
+def RelationFieldSyntax.erasure : RelationFieldSyntax where
+  relationField := AnnotatedDependentCalculus.Term.erase
 
 /-- Recursively propagate relation-field projection through applications and lambda bodies. -/
 def relationProjectionStar (projection : RelationFieldSyntax) :
@@ -45,6 +50,21 @@ def relationProjectionStar (projection : RelationFieldSyntax) :
     relationProjectionStar projection (.lam domain body) =
       .lam domain.erase (relationProjectionStar projection body) :=
   rfl
+
+/-- The erasure-only projection agrees with ordinary annotation erasure on every term. -/
+@[simp] theorem relationProjectionStar_erasure
+    (term : AnnotatedDependentCalculus.Term n) :
+    relationProjectionStar RelationFieldSyntax.erasure term = term.erase := by
+  induction term with
+  | sort => rfl
+  | var => rfl
+  | app function argument functionInduction argumentInduction =>
+      simp only [relationProjectionStar_app, AnnotatedDependentCalculus.Term.erase,
+        functionInduction, argumentInduction]
+  | lam domain body _ bodyInduction =>
+      simp only [relationProjectionStar_lam, AnnotatedDependentCalculus.Term.erase,
+        bodyInduction]
+  | pi => rfl
 
 /-- Erase an annotated translation context to its canonical raw variable triples. -/
 def eraseParametricityContext : AnnotatedRelationTranslation.Context n →
@@ -134,6 +154,7 @@ structure ErasureLaws (realizers : SyntaxRealizers) (projection : RelationFieldS
       .var (RawParametricity.witnessRenaming n index)
   /-- The projected annotated universe witness is the raw universe relation. -/
   universeWitness : ∀ {n : Nat} (source target : Annotation) (level : Nat),
+    AdmissibleUniverseTranslation source target →
     relationProjectionStar projection
         (realizers.universeRule (n := n) source target level) =
       RawParametricity.sortRelation level (RawParametricity.scopeSize n)
@@ -191,6 +212,37 @@ structure ErasureLaws (realizers : SyntaxRealizers) (projection : RelationFieldS
     relationProjectionStar projection (realizers.weakening context subtype witness) =
       relationProjectionStar projection witness
 
+/-- A universe-witness quote collides when it is syntactically an embedded ordinary term. -/
+theorem noErasureLaws_of_universeWitness_collision
+    {realizers : SyntaxRealizers} {projection : RelationFieldSyntax}
+    {source target : Annotation} {level n : Nat}
+    (admissible : AdmissibleUniverseTranslation source target)
+    (term : AnnotatedDependentCalculus.Term n)
+    (collision : realizers.universeRule source target level =
+      AnnotatedRelationTranslation.Term.original term)
+    (different : (AnnotatedRelationTranslation.Term.original term).erase ≠
+      RawParametricity.sortRelation level (RawParametricity.scopeSize n)) :
+    ¬ ErasureLaws realizers projection := by
+  intro laws
+  apply different
+  rw [← laws.universeWitness source target level admissible, collision]
+  exact (laws.originalTerm term).symm
+
+example (term : AnnotatedDependentCalculus.Term n) :
+    relationProjectionStar RelationFieldSyntax.erasure term = term.erase :=
+  relationProjectionStar_erasure term
+
+example {realizers : SyntaxRealizers} {projection : RelationFieldSyntax}
+    {source target : Annotation} {level n : Nat}
+    (admissible : AdmissibleUniverseTranslation source target)
+    (term : AnnotatedDependentCalculus.Term n)
+    (collision : realizers.universeRule source target level =
+      AnnotatedRelationTranslation.Term.original term)
+    (different : (AnnotatedRelationTranslation.Term.original term).erase ≠
+      RawParametricity.sortRelation level (RawParametricity.scopeSize n)) :
+    ¬ ErasureLaws realizers projection :=
+  noErasureLaws_of_universeWitness_collision admissible term collision different
+
 /-- Erasing an annotated translation derivation yields its raw parametricity sequent. -/
 theorem Judgment.eraseToRaw {realizers : SyntaxRealizers} {projection : RelationFieldSyntax}
     (laws : ErasureLaws realizers projection)
@@ -204,7 +256,7 @@ theorem Judgment.eraseToRaw {realizers : SyntaxRealizers} {projection : Relation
       (relationProjectionStar projection witness) := by
   induction translation with
   | sort admissible level =>
-      rw [laws.universeWitness]
+      rw [laws.universeWitness _ _ _ admissible]
       exact .paramSort _ level
   | @var _ context entry member contextWellFormed =>
       have entryIndex : ∃ index, context.entryAt index = entry := by
