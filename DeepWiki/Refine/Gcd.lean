@@ -2,14 +2,12 @@ import DeepWiki.Refine.Poly
 import DeepWiki.Refine.Goal
 import DeepWiki.CAlgebra.Poly.Euclid
 
-/-! # Transferring `gcd` — the non-functional (up-to-unit) case
+/-! # Transferring `gcd` up to units
 
-`gcd` is the interesting frontier: unlike `+`/`*`, the computable `DensePoly.gcd` and Mathlib's
-`EuclideanDomain.gcd` agree only **up to a unit** (`Associated`), because the raw Euclidean remainder
-isn't normalized. So its transfer witness lives at a *weaker output relation* than equality — exactly
-the general-relation case CoqEAL/Trocq exist for. The `Refine` **kernel** composes it fine (the
-`⟹`/`Refines.app` machinery threads a different relation on the output than on the inputs), and the
-relation-threading resolver dispatches the mixed input/output relations automatically. -/
+Unlike `+` and `*`, the computable `DensePoly.gcd` and `EuclideanDomain.gcd` agree only **up to a
+unit** (`Associated`) because the raw Euclidean remainder is not normalized. Its transfer witness
+therefore uses equality on the inputs and the coarser
+`Associated` relation on the output; the resolver threads these mixed relations automatically. -/
 
 open Polynomial DeepWiki.CAlgebra
 open scoped DeepWiki.Refine

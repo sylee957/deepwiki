@@ -75,7 +75,7 @@ inductive MapLevel where
   | four
   deriving DecidableEq, Repr
 
-/-- The Trocq order on one-direction levels: the two level-`2` variants are incomparable. -/
+/-- The structure order on one-direction levels, with incomparable level-`2` variants. -/
 protected def MapLevel.le : MapLevel → MapLevel → Prop
   | .zero, _ => True
   | .one, .one | .one, .twoA | .one, .twoB | .one, .three | .one, .four => True
@@ -138,7 +138,7 @@ inductive MapClass {A : Type u} {B : Type v} (R : A → B → Sort w) :
   /-- A level-`3` map with proof-relevant witness coherence. -/
   | four (data : MapClass4 R) : MapClass R .four
 
-/-- A Trocq annotation pairs forward and backward map-class levels. -/
+/-- A relation annotation pairs forward and backward map-class levels. -/
 structure Annotation where
   /-- Structure available from the relation's left carrier to its right carrier. -/
   forward : MapLevel
@@ -160,9 +160,23 @@ instance : PartialOrder Annotation where
     cases hb
     rfl
 
+/-- Annotation comparison is componentwise comparison of its two map levels. -/
+theorem Annotation.le_iff (α β : Annotation) :
+    α ≤ β ↔ α.forward ≤ β.forward ∧ α.backward ≤ β.backward :=
+  Iff.rfl
+
 /-- Componentwise comparison of finite annotations is decidable. -/
 instance : DecidableLE Annotation := fun α β =>
   inferInstanceAs (Decidable (α.forward ≤ β.forward ∧ α.backward ≤ β.backward))
+
+/-- Swap the forward and backward components of an annotation. -/
+def Annotation.swap (α : Annotation) : Annotation :=
+  ⟨α.backward, α.forward⟩
+
+/-- Swapping an annotation twice recovers the original annotation. -/
+@[simp] theorem Annotation.swap_swap (α : Annotation) : α.swap.swap = α := by
+  cases α
+  rfl
 
 /-- Decide whether data at `available` can be weakened to `required`. -/
 def Annotation.canWeaken (available required : Annotation) : Bool :=
@@ -176,6 +190,44 @@ theorem Annotation.canWeaken_eq_true_iff {available required : Annotation} :
 /-- An indexed relation class pairs forward data with data for the converse relation. -/
 def RelationClass {A : Type u} {B : Type v} (α : Annotation) (R : A → B → Sort w) :=
   MapClass R α.forward × MapClass (Converse R) α.backward
+
+/-- A structured relation packages a type-valued relation with data at annotation `α`. -/
+abbrev StructuredRelation (α : Annotation) (A : Type u) (B : Type v) :=
+  Σ R : A → B → Type w, RelationClass α R
+
+/-- The underlying type-valued relation of a structured relation. -/
+abbrev StructuredRelation.rel {A : Type u} {B : Type v} {α : Annotation}
+    (S : StructuredRelation α A B) : A → B → Type w :=
+  S.1
+
+/-- The annotation-indexed class data carried by a structured relation. -/
+abbrev StructuredRelation.relationClass {A : Type u} {B : Type v} {α : Annotation}
+    (S : StructuredRelation α A B) : RelationClass α S.rel :=
+  S.2
+
+/-- Reverse a structured relation and swap its forward and backward annotations. -/
+def StructuredRelation.converse {A : Type u} {B : Type v} {α : Annotation}
+    (S : StructuredRelation α A B) : StructuredRelation α.swap B A :=
+  ⟨Converse S.rel, S.relationClass.2, S.relationClass.1⟩
+
+/-- The relation underlying a converse package is the converse relation. -/
+@[simp] theorem StructuredRelation.converse_rel {A : Type u} {B : Type v}
+    {α : Annotation} (S : StructuredRelation α A B) :
+    S.converse.rel = Converse S.rel :=
+  rfl
+
+/-- Reversing a structured relation twice recovers the original package. -/
+@[simp] theorem StructuredRelation.converse_converse {A : Type u} {B : Type v}
+    {α : Annotation} (S : StructuredRelation α A B) : S.converse.converse = S := by
+  rfl
+
+/-- Converse is an equivalence between oppositely annotated structured relations. -/
+def StructuredRelation.converseEquiv {A : Type u} {B : Type v} (α : Annotation) :
+    StructuredRelation α A B ≃ StructuredRelation α.swap B A where
+  toFun := StructuredRelation.converse
+  invFun := StructuredRelation.converse
+  left_inv := StructuredRelation.converse_converse
+  right_inv := StructuredRelation.converse_converse
 
 /-- Forget level-`4` coherence and retain level `3`. -/
 def MapClass4.toMapClass3 {A : Type u} {B : Type v} {R : A → B → Sort w}
@@ -271,11 +323,105 @@ def MapClass.weaken {A : Type u} {B : Type v} {R : A → B → Sort w}
     | four data => exact .three data.toMapClass3
   · exact data
 
+/-- Project the represented map from any map class at or above level `1`. -/
+def MapClass.mapOfOneLE {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {level : MapLevel} (data : MapClass R level) (h : MapLevel.one ≤ level) : A → B :=
+  match data.weaken h with
+  | .one mapData => mapData.map
+
+/-- Weakening above level `1` preserves the represented map. -/
+theorem MapClass.mapOfOneLE_weaken {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {low high : MapLevel} (h : low ≤ high) (data : MapClass R high)
+    (hOne : MapLevel.one ≤ low) :
+    (data.weaken h).mapOfOneLE hOne = data.mapOfOneLE (le_trans hOne h) := by
+  change MapLevel.le low high at h
+  change MapLevel.le .one low at hOne
+  cases low <;> cases high <;>
+    simp only [MapLevel.le] at h hOne <;>
+    cases data <;> rfl
+
+/-- Project the forward map carried by a relation class at a suitable annotation. -/
+def RelationClass.map {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {α : Annotation} (data : RelationClass α R) (h : MapLevel.one ≤ α.forward) : A → B :=
+  data.1.mapOfOneLE h
+
+/-- Project the backward map carried by a relation class at a suitable annotation. -/
+def RelationClass.comap {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {α : Annotation} (data : RelationClass α R) (h : MapLevel.one ≤ α.backward) : B → A :=
+  data.2.mapOfOneLE h
+
+/-- Project the forward map carried by a suitably annotated structured relation. -/
+def StructuredRelation.map {A : Type u} {B : Type v} {α : Annotation}
+    (relation : StructuredRelation α A B) (h : MapLevel.one ≤ α.forward) : A → B :=
+  relation.relationClass.map h
+
+/-- Project the backward map carried by a suitably annotated structured relation. -/
+def StructuredRelation.comap {A : Type u} {B : Type v} {α : Annotation}
+    (relation : StructuredRelation α A B) (h : MapLevel.one ≤ α.backward) : B → A :=
+  relation.relationClass.comap h
+
+/-- The forward map of a converse structured relation is the original backward map. -/
+@[simp] theorem StructuredRelation.converse_map {A : Type u} {B : Type v}
+    {α : Annotation} (S : StructuredRelation α A B)
+    (h : MapLevel.one ≤ α.backward) : S.converse.map h = S.comap h :=
+  rfl
+
+/-- The backward map of a converse structured relation is the original forward map. -/
+@[simp] theorem StructuredRelation.converse_comap {A : Type u} {B : Type v}
+    {α : Annotation} (S : StructuredRelation α A B)
+    (h : MapLevel.one ≤ α.forward) : S.converse.comap h = S.map h :=
+  rfl
+
 /-- Weaken both directions of a relation class componentwise along the annotation order. -/
 def RelationClass.weaken {A : Type u} {B : Type v} {R : A → B → Sort w}
     {low high : Annotation} (h : low ≤ high) (data : RelationClass high R) :
     RelationClass low R :=
   ⟨data.1.weaken h.1, data.2.weaken h.2⟩
+
+/-- Annotation weakening that retains forward level `1` preserves the forward map. -/
+theorem RelationClass.map_weaken {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {low high : Annotation} (h : low ≤ high) (data : RelationClass high R)
+    (hOne : MapLevel.one ≤ low.forward) :
+    (data.weaken h).map hOne = data.map (le_trans hOne h.1) :=
+  MapClass.mapOfOneLE_weaken h.1 data.1 hOne
+
+/-- Annotation weakening that retains backward level `1` preserves the backward map. -/
+theorem RelationClass.comap_weaken {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {low high : Annotation} (h : low ≤ high) (data : RelationClass high R)
+    (hOne : MapLevel.one ≤ low.backward) :
+    (data.weaken h).comap hOne = data.comap (le_trans hOne h.2) :=
+  MapClass.mapOfOneLE_weaken h.2 data.2 hOne
+
+/-- Weaken a structured relation's class data while preserving its underlying relation. -/
+def StructuredRelation.weaken {A : Type u} {B : Type v} {low high : Annotation}
+    (h : low ≤ high) (S : StructuredRelation high A B) : StructuredRelation low A B :=
+  ⟨S.rel, S.relationClass.weaken h⟩
+
+/-- Weakening a structured relation leaves its underlying relation definitionally unchanged. -/
+@[simp] theorem StructuredRelation.rel_weaken {A : Type u} {B : Type v}
+    {low high : Annotation} (h : low ≤ high) (S : StructuredRelation high A B) :
+    (S.weaken h).rel = S.rel :=
+  rfl
+
+/-- The class data of a weakened structured relation is componentwise weakening. -/
+theorem StructuredRelation.relationClass_weaken {A : Type u} {B : Type v}
+    {low high : Annotation} (h : low ≤ high) (S : StructuredRelation high A B) :
+    (S.weaken h).relationClass = S.relationClass.weaken h :=
+  rfl
+
+/-- Weakening a structured relation above forward level `1` preserves its forward map. -/
+theorem StructuredRelation.map_weaken {A : Type u} {B : Type v}
+    {low high : Annotation} (h : low ≤ high) (S : StructuredRelation high A B)
+    (hOne : MapLevel.one ≤ low.forward) :
+    (S.weaken h).map hOne = S.map (le_trans hOne h.1) :=
+  RelationClass.map_weaken h S.relationClass hOne
+
+/-- Weakening a structured relation above backward level `1` preserves its backward map. -/
+theorem StructuredRelation.comap_weaken {A : Type u} {B : Type v}
+    {low high : Annotation} (h : low ≤ high) (S : StructuredRelation high A B)
+    (hOne : MapLevel.one ≤ low.backward) :
+    (S.weaken h).comap hOne = S.comap (le_trans hOne h.2) :=
+  RelationClass.comap_weaken h S.relationClass hOne
 
 /-- A separate proof-producing decision procedure weakens relation data when the requested
 annotation lies below the available annotation. -/
@@ -435,5 +581,67 @@ example : AdmissibleUniverseTranslation Annotation.equivalence Annotation.isomor
 
 example : AdmissibleUniverseTranslation Annotation.function ⟨.twoA, .one⟩ :=
   admissibleUniverseTranslation_of_weak ⟨trivial, trivial⟩
+
+example {A : Type u} {B : Type v} (α : Annotation) :
+    StructuredRelation.{u, v, w} α A B = (Σ R : A → B → Type w, RelationClass α R) :=
+  rfl
+
+example {A : Type u} {B : Type v} (α : Annotation) :
+    StructuredRelation.{u, v, w} α A B ≃ StructuredRelation.{v, u, w} α.swap B A :=
+  StructuredRelation.converseEquiv α
+
+example {A : Type u} {B : Type v} {low high : Annotation} (h : low ≤ high)
+    (S : StructuredRelation high A B) : (S.weaken h).rel = S.rel :=
+  rfl
+
+example (α β : Annotation) :
+    α ≤ β ↔ α.forward ≤ β.forward ∧ α.backward ≤ β.backward :=
+  Annotation.le_iff α β
+
+example {A : Type u} {B : Type v} {α : Annotation}
+    (S : StructuredRelation α A B) (h : MapLevel.one ≤ α.forward) : A → B :=
+  S.map h
+
+example {A : Type u} {B : Type v} {α : Annotation}
+    (S : StructuredRelation α A B) (h : MapLevel.one ≤ α.backward) : B → A :=
+  S.comap h
+
+example {A : Type u} {B : Type v} {α : Annotation}
+    (S : StructuredRelation α A B) (h : MapLevel.one ≤ α.backward) :
+    S.converse.map h = S.comap h :=
+  StructuredRelation.converse_map S h
+
+example {A : Type u} {B : Type v} {α : Annotation}
+    (S : StructuredRelation α A B) (h : MapLevel.one ≤ α.forward) :
+    S.converse.comap h = S.map h :=
+  StructuredRelation.converse_comap S h
+
+example {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {low high : MapLevel} (h : low ≤ high) (data : MapClass R high)
+    (hOne : MapLevel.one ≤ low) :
+    (data.weaken h).mapOfOneLE hOne = data.mapOfOneLE (le_trans hOne h) :=
+  MapClass.mapOfOneLE_weaken h data hOne
+
+example {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {low high : Annotation} (h : low ≤ high) (data : RelationClass high R)
+    (hOne : MapLevel.one ≤ low.forward) :
+    (data.weaken h).map hOne = data.map (le_trans hOne h.1) :=
+  RelationClass.map_weaken h data hOne
+
+example {A : Type u} {B : Type v} {R : A → B → Sort w}
+    {low high : Annotation} (h : low ≤ high) (data : RelationClass high R)
+    (hOne : MapLevel.one ≤ low.backward) :
+    (data.weaken h).comap hOne = data.comap (le_trans hOne h.2) :=
+  RelationClass.comap_weaken h data hOne
+
+example {A : Type u} {B : Type v} {low high : Annotation} (h : low ≤ high)
+    (S : StructuredRelation high A B) (hOne : MapLevel.one ≤ low.forward) :
+    (S.weaken h).map hOne = S.map (le_trans hOne h.1) :=
+  StructuredRelation.map_weaken h S hOne
+
+example {A : Type u} {B : Type v} {low high : Annotation} (h : low ≤ high)
+    (S : StructuredRelation high A B) (hOne : MapLevel.one ≤ low.backward) :
+    (S.weaken h).comap hOne = S.comap (le_trans hOne h.2) :=
+  StructuredRelation.comap_weaken h S hOne
 
 end DeepWiki.Refine

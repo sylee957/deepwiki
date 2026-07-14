@@ -11,21 +11,6 @@ namespace DeepWiki.Refine
 
 universe u v r p q s
 
-/-- Raw terms in the universe/application/lambda/dependent-product grammar of a predicative
-dependent lambda calculus. -/
-inductive CalculusTerm where
-  /-- A universe in the predicative hierarchy. -/
-  | universe (level : Nat)
-  /-- A de Bruijn variable. -/
-  | var (index : Nat)
-  /-- Function application. -/
-  | app (function argument : CalculusTerm)
-  /-- Lambda abstraction with an explicit domain type. -/
-  | lam (domain body : CalculusTerm)
-  /-- A dependent function type. -/
-  | pi (domain codomain : CalculusTerm)
-  deriving DecidableEq, Repr
-
 /-- A solution to a proof-transfer problem consists of a synthesized target type former and a
 uniform relational witness from related inputs to related outputs. -/
 structure TypeFormerTransferSolution {T₁ : Type u} {T₂ : Type v}
@@ -63,6 +48,25 @@ def NatSignature.Induction (signature : NatSignature.{u}) : Prop :=
     P signature.zero →
     (∀ n, P n → P (signature.succ n)) →
     ∀ n, P n
+
+/-- The natural-number carrier with identity as successor. -/
+def identitySuccessorNatSignature : NatSignature where
+  Carrier := Nat
+  zero := 0
+  succ := id
+
+/-- Identity successor on `Nat` cannot satisfy the natural-number induction principle. -/
+theorem not_identitySuccessorNatSignature_induction :
+    ¬ identitySuccessorNatSignature.Induction := by
+  intro induction
+  change
+    (∀ P : Nat → Prop,
+      P 0 →
+      (∀ n, P n → P n) →
+      ∀ n, P n) at induction
+  have one_eq_zero : (1 : Nat) = 0 :=
+    induction (fun n => n = 0) rfl (fun _ hypothesis => hypothesis) 1
+  cases one_eq_zero
 
 /-- Reencode a natural-number interface through an arbitrary pair of carrier maps. -/
 def NatSignature.reencode (signature : NatSignature.{v}) {Carrier : Type u}
@@ -211,6 +215,9 @@ example {left : NatSignature.{u}} {right : NatSignature.{v}}
 example {left : NatSignature.{u}} {right : NatSignature.{v}}
     (equiv : NatSignatureEquiv left right) : left.Induction ↔ right.Induction :=
   equiv.induction_iff
+
+example : ¬ identitySuccessorNatSignature.Induction :=
+  not_identitySuccessorNatSignature_induction
 
 example (signature : NatSignature.{v}) {Carrier : Type u}
     (up : signature.Carrier → Carrier) (down : Carrier → signature.Carrier) :

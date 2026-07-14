@@ -1,11 +1,46 @@
 import DeepWiki.Refine.Basic
 import DeepWiki.Refine.RelationStructure
-import DeepWiki.Refine.FunctionalRelation
-import DeepWiki.Refine.Dependent
-import DeepWiki.Refine.ProofTransfer
+import DeepWiki.Refine.AnnotationLattice
+import DeepWiki.Refine.RelationEquivalence
+import DeepWiki.Refine.DependencyRequirements
+import DeepWiki.Refine.DependencyMinimality
 import DeepWiki.Refine.TypeEquivalence
+import DeepWiki.Refine.FunctionalRelation
+import DeepWiki.Refine.UniverseRelationStructure
+import DeepWiki.Refine.Dependent
+import DeepWiki.Refine.DependentCalculusSyntax
+import DeepWiki.Refine.DependentCalculusTyping
+import DeepWiki.Refine.RawParametricitySyntax
+import DeepWiki.Refine.RawParametricityTyping
+import DeepWiki.Refine.RawParametricityConversion
+import DeepWiki.Refine.UnivalentUniverseQuotation
+import DeepWiki.Refine.ParametricitySequents
+import DeepWiki.Refine.UnivalentParametricitySequents
+import DeepWiki.Refine.AnnotatedDependentCalculus
+import DeepWiki.Refine.MaximalAnnotation
+import DeepWiki.Refine.AnnotatedCalculusConservativity
+import DeepWiki.Refine.AnnotatedRelationTranslation
+import DeepWiki.Refine.AnnotatedTranslationErasure
+import DeepWiki.Refine.AnnotatedParametricityErasure
+import DeepWiki.Refine.UniverseWitnessConsequences
+import DeepWiki.Refine.StructuredUniverseQuotation
+import DeepWiki.Refine.RegisteredConstants
+import DeepWiki.Refine.RegisteredConstantCalculus
+import DeepWiki.Refine.RecursiveWitnessWeakening
+import DeepWiki.Refine.ArrowRelationStructure
+import DeepWiki.Refine.PiRelationStructure
+import DeepWiki.Refine.ProofTransfer
+import DeepWiki.Refine.BinaryNaturals
+import DeepWiki.Refine.RetractiveNaturalInduction
+import DeepWiki.Refine.ExtendedNonnegativeSums
+import DeepWiki.Refine.BitVectorRepresentation
+import DeepWiki.Refine.IntegerModularRetraction
+import DeepWiki.Refine.SummableSequenceTransfer
+import DeepWiki.Refine.PolymorphicListRelations
+import DeepWiki.Refine.TupleVectorTransfer
 import DeepWiki.Refine.CoreParametricity
 import DeepWiki.Refine.ParametricityTranslations
+import DeepWiki.Refine.UnivalentRelationStructure
 import DeepWiki.Refine.WitnessWeakening
 import DeepWiki.Refine.Resolve
 import DeepWiki.Refine.Goal
@@ -13,16 +48,10 @@ import DeepWiki.Refine.Poly
 import DeepWiki.Refine.Gcd
 import DeepWiki.Refine.ResolverTheory
 
-/-! # Refine — a relational refinement/transfer kernel (CoqEAL/Trocq-style)
+/-! # Relational refinement and proof transfer
 
-An isolated, relation-based proof-transfer core: the `Refines` relation, the `⟹` respectful arrow,
-and the single `Refines.app` composition rule — the principled logic behind Isabelle `Transfer`,
-CoqEAL, and Trocq, built directly rather than on `simp`. `Refine/Poly` supplies the
-`DensePoly ⇄ Polynomial` witnesses; and `Refine/Resolve` — the `MetaM` resolver (the Lean analog of
-Trocq's Elpi engine): a `@[refines]` witness table + an `isDefEq`-driven `refine_transfer` tactic that
-synthesizes a term's abstract denotation and proof by relational composition, no `simp`.
-`Refine/Goal` lifts the same resolver to first-order propositions via `Iff` and provides
-`refine_goal`. The theory modules formalize the six-level annotation lattice, contractible
-functional relations, type equivalence and explicit univalence hypotheses, dependent respectful
-products, recursive witness weakening, and an intrinsic core abstraction theorem; `ResolverTheory`
-identifies the executable resolver with its multisorted arrow fragment. -/
+This library combines a heterogeneous refinement kernel, structured relations indexed by annotation
+strength, dependent relation translations, and first-order proof-transfer automation. `Refines.app`
+composes operation witnesses, `refine_transfer` synthesizes related abstract terms, and `refine_goal`
+transfers first-order propositions. Additional modules provide relation structure, dependent
+products, witness weakening, concrete representations, and a multisorted semantics for the resolver. -/

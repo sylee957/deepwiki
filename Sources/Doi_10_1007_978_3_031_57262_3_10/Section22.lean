@@ -41,6 +41,9 @@ abbrev univalent_universe := DeepWiki.Refine.IsUnivalentUniverse
 /-- **Definition 2, p. 7:** univalence evidence is proof-irrelevant. -/
 abbrev univalence_is_proof_irrelevant := DeepWiki.Refine.isUnivalentUniverse_subsingleton
 
+/-- **Lean modeling boundary:** standard proof-irrelevant universes have no such univalence data. -/
+abbrev lean_univalent_universe_is_empty := @DeepWiki.Refine.isEmpty_isUnivalentUniverse
+
 /-- **Section 2.2, p. 7:** univalence maps equivalent inputs to equivalent type-former outputs. -/
 abbrev univalent_type_former_transport := @DeepWiki.Refine.IsUnivalentUniverse.mapTypeFormer
 

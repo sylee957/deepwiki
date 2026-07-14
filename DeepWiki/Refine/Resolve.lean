@@ -1,13 +1,12 @@
 import DeepWiki.Refine.Basic
 import Lean
 
-/-! # The transfer resolver — the Lean analog of Trocq's Elpi engine
+/-! # Transfer resolver
 
 A `MetaM` metaprogram that automates relational transfer over the `Refine` kernel. Given a goal
 `Refines R c ?a` (functional relation `R = DenoteRel denote`), it decomposes `c` by head symbol,
 looks up `@[refines]` witnesses, and composes them via `Refines.app` — synthesizing the abstract term
-`?a` and its proof. It is `isDefEq`-driven (the higher-order beta-match `c =?= F ?xs` that typeclass
-synthesis refuses), *not* `simp`-driven. -/
+`?a` and its proof. Higher-order matching is driven by `isDefEq`. -/
 
 open Lean Meta Elab
 

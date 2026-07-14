@@ -3,7 +3,7 @@ import DeepWiki.Refine.CoreParametricity
 /-! # Recursive weakening of relational witnesses
 
 Relation changes lift recursively through function types. The domain is transformed in the reverse
-direction and the codomain in the forward direction, matching the variance of Trocq weakening. -/
+direction and the codomain in the forward direction, matching relational variance. -/
 
 namespace DeepWiki.Refine
 

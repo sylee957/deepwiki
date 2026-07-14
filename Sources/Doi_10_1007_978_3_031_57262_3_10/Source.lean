@@ -13,7 +13,7 @@ def doi : String := "10.1007/978-3-031-57262-3_10"
 def title : String := "Trocq: Proof Transfer for Free, With or Without Univalence"
 
 /-- Reference of the Trocq paper. -/
-def reference : String := "ESOP 2024, LNCS 14577, pp. 239–268"
+def reference : String := "ESOP 2024, LNCS 14576, pp. 239–268"
 
 /-- Authors of the Trocq paper. -/
 def authors : List String := ["Cyril Cohen", "Enzo Crance", "Assia Mahboubi"]

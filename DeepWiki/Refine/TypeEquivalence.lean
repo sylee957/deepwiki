@@ -85,11 +85,11 @@ def CoherentEquivalenceData.toEquiv {A : Sort u} {B : Sort v} {f : A → B}
   left_inv := equivalence.sectionLaw
   right_inv := equivalence.retractionLaw
 
-/-- The paper's type equivalence `A ≃ B` is a map paired with coherent equivalence evidence. -/
+/-- A type equivalence can be presented as a map paired with coherent equivalence evidence. -/
 abbrev TypeEquivalenceData (A : Type u) (B : Type v) :=
   Σ f : A → B, CoherentEquivalenceData f
 
-/-- The paper's sigma presentation of type equivalence determines a standard Lean equivalence. -/
+/-- The dependent-pair presentation of type equivalence determines a standard Lean equivalence. -/
 def TypeEquivalenceData.toEquiv {A : Type u} {B : Type v}
     (equivalence : TypeEquivalenceData A B) : A ≃ B :=
   equivalence.2.toEquiv
@@ -101,12 +101,12 @@ def Equiv.toIsomorphismData {A : Sort u} {B : Sort v} (equivalence : A ≃ B) :
   sectionLaw := equivalence.left_inv
   retractionLaw := equivalence.right_inv
 
-/-- A standard Lean equivalence supplies the paper's sigma-packaged equivalence data. -/
+/-- A standard Lean equivalence supplies dependent-pair equivalence data. -/
 def TypeEquivalenceData.ofEquiv {A : Type u} {B : Type v} (equivalence : A ≃ B) :
     TypeEquivalenceData A B :=
   ⟨equivalence, (Equiv.toIsomorphismData equivalence).toCoherentEquivalence⟩
 
-/-- Converting paper-style equivalence data to Lean and back recovers the original data. -/
+/-- Converting dependent-pair equivalence data to Lean and back recovers the original data. -/
 theorem TypeEquivalenceData.toEquiv_ofEquiv {A : Type u} {B : Type v}
     (equivalence : TypeEquivalenceData A B) :
     TypeEquivalenceData.ofEquiv equivalence.toEquiv = equivalence := by
@@ -118,7 +118,7 @@ theorem TypeEquivalenceData.toEquiv_ofEquiv {A : Type u} {B : Type v}
   cases hfun
   exact heq_of_eq ((coherentEquivalenceData_subsingleton f).elim _ _)
 
-/-- Converting a Lean equivalence to paper-style data and back recovers the equivalence. -/
+/-- Converting a Lean equivalence to dependent-pair data and back recovers the equivalence. -/
 theorem TypeEquivalenceData.ofEquiv_toEquiv {A : Type u} {B : Type v}
     (equivalence : A ≃ B) :
     (TypeEquivalenceData.ofEquiv equivalence).toEquiv = equivalence := by
@@ -127,7 +127,7 @@ theorem TypeEquivalenceData.ofEquiv_toEquiv {A : Type u} {B : Type v}
   change equivalence a = equivalence a
   rfl
 
-/-- The paper's sigma presentation of type equivalence is equivalent to Lean's bundled `Equiv`. -/
+/-- The dependent-pair presentation of type equivalence is equivalent to Lean's bundled `Equiv`. -/
 def typeEquivalenceDataEquivEquiv (A : Type u) (B : Type v) :
     TypeEquivalenceData A B ≃ (A ≃ B) where
   toFun := TypeEquivalenceData.toEquiv
@@ -200,6 +200,35 @@ theorem IsUnivalentUniverse.pathOfEquivalence_eqTo (univalent : IsUnivalentUnive
     univalent.pathOfEquivalence (eqToTypeEquivalence path) = path :=
   (univalent A B).sectionLaw path
 
+/-- Proof-irrelevant equality makes univalence evidence for a standard Lean universe empty. -/
+theorem isEmpty_isUnivalentUniverse : IsEmpty IsUnivalentUniverse.{u} := by
+  constructor
+  intro univalent
+  let Carrier : Type u := ULift.{u} Bool
+  let identity : Carrier ≃ Carrier := Equiv.refl Carrier
+  let negation : Carrier ≃ Carrier :=
+    { toFun := fun value => ⟨Bool.not value.down⟩
+      invFun := fun value => ⟨Bool.not value.down⟩
+      left_inv := fun value => by rcases value with ⟨value⟩; cases value <;> rfl
+      right_inv := fun value => by rcases value with ⟨value⟩; cases value <;> rfl }
+  let identityPath : Carrier = Carrier := univalent.pathOfEquivalence identity
+  let negationPath : Carrier = Carrier := univalent.pathOfEquivalence negation
+  have pathsEqual : identityPath = negationPath := Subsingleton.elim _ _
+  have equivalencesEqual : identity = negation := by
+    calc
+      identity = eqToTypeEquivalence identityPath :=
+        (univalent.eqTo_pathOfEquivalence identity).symm
+      _ = eqToTypeEquivalence negationPath :=
+        congrArg (fun path : Carrier = Carrier => eqToTypeEquivalence path) pathsEqual
+      _ = negation := univalent.eqTo_pathOfEquivalence negation
+  have liftedFalse_eq_liftedTrue :
+      (ULift.up false : Carrier) = ULift.up true := by
+    exact congrArg
+      (fun equivalence : Carrier ≃ Carrier => equivalence (ULift.up false))
+      equivalencesEqual
+  have false_eq_true : false = true := congrArg ULift.down liftedFalse_eq_liftedTrue
+  cases false_eq_true
+
 /-- Under univalence, every type former maps equivalent inputs to equivalent output types. -/
 def IsUnivalentUniverse.mapTypeFormer (univalent : IsUnivalentUniverse.{u})
     (typeFormer : Type u → Type v) {A B : Type u} (equivalence : TypeEquivalence A B) :
@@ -251,6 +280,9 @@ example {A B : Type u} (univalent : IsUnivalentUniverse.{u}) (equivalence : A �
 example {A B : Type u} (univalent : IsUnivalentUniverse.{u}) (path : A = B) :
     univalent.pathOfEquivalence (eqToTypeEquivalence path) = path :=
   univalent.pathOfEquivalence_eqTo path
+
+example : IsEmpty IsUnivalentUniverse.{u} :=
+  isEmpty_isUnivalentUniverse
 
 example {A B : Type u} (univalent : IsUnivalentUniverse.{u}) (equivalence : A ≃ B)
     (typeFormer : Type u → Type v) : typeFormer A ≃ typeFormer B :=
