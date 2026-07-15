@@ -32,9 +32,6 @@ A context has the grammar `Γ ::= ⟨⟩ | Γ, x : A`. The wrappers `ccω!{...}`
 declare_syntax_cat ccwterm
 syntax:max ident : ccwterm
 syntax:max "□[" num "]" : ccwterm
-syntax:max "□₀" : ccwterm
-syntax:max "□₁" : ccwterm
-syntax:max "□₂" : ccwterm
 syntax:max "(" ccwterm ")" : ccwterm
 syntax:70 ccwterm:70 ccwterm:71 : ccwterm
 syntax:25 ccwterm:26 " → " ccwterm:25 : ccwterm
@@ -55,12 +52,6 @@ private def nameIndex? (name : Name) : List Name → Option Nat
 private partial def expandTerm (scope : List Name) (stx : Syntax) :
     MacroM (TSyntax `term) := do
   match stx with
-  | `(ccwterm| □₀) =>
-      `(.sort 0)
-  | `(ccwterm| □₁) =>
-      `(.sort 1)
-  | `(ccwterm| □₂) =>
-      `(.sort 2)
   | `(ccwterm| □[$level:num]) =>
       `(.sort $level)
   | `(ccwterm| $name:ident) =>
@@ -159,10 +150,10 @@ macro_rules
 
 /-! ## What a context is
 
-Read `⟨⟩, A : □₀, x : A` from left to right:
+Read `⟨⟩, A : □[0], x : A` from left to right:
 
 * `⟨⟩` says that nothing has been assumed yet.
-* `A : □₀` introduces a variable `A` whose value is a small type.
+* `A : □[0]` introduces a variable `A` whose value is a small type.
 * `x : A` introduces a value `x`; its type may refer to the earlier declaration `A`.
 
 Thus a context is the ordered list of declarations available while checking the expression to the
@@ -171,17 +162,17 @@ right of `⊢`. It is not itself a relation and is not the earlier tutorial's `R
 
 /-- The one-declaration context containing a small type `A`. -/
 def typeContext : Context 1 :=
-  ccωctx!{ ⟨⟩, A : □₀ }
+  ccωctx!{ ⟨⟩, A : □[0] }
 
-/-- The context `A : □₀` is well formed. -/
+/-- The context `A : □[0]` is well formed. -/
 theorem typeContextWellFormed : WellFormed typeContext :=
   .extend .empty (.sort .empty 0)
 
 /-- The dependent context containing a small type `A` and a value `x : A`. -/
 def typeValueContext : Context 2 :=
-  ccωctx!{ ⟨⟩, A : □₀, x : A }
+  ccωctx!{ ⟨⟩, A : □[0], x : A }
 
-/-- The context `A : □₀, x : A` is well formed. -/
+/-- The context `A : □[0], x : A` is well formed. -/
 theorem typeValueContextWellFormed : WellFormed typeValueContext :=
   .extend typeContextWellFormed (.var typeContextWellFormed 0)
 
@@ -198,39 +189,39 @@ cumulativity. The following small derivations exercise those rules directly.
 -/
 
 /-- The lowest universe is an element of its successor universe. -/
-theorem universeTypingExample : ccω!{ ⟨⟩ ⊢ □₀ : □₁ } :=
+theorem universeTypingExample : ccω!{ ⟨⟩ ⊢ □[0] : □[1] } :=
   .sort .empty 0
 
-/-- Looking up `A` in its context proves `A : □₀`. -/
-theorem typeVariableTypingExample : ccω!{ ⟨⟩, A : □₀ ⊢ A : □₀ } :=
+/-- Looking up `A` in its context proves `A : □[0]`. -/
+theorem typeVariableTypingExample : ccω!{ ⟨⟩, A : □[0] ⊢ A : □[0] } :=
   .var typeContextWellFormed 0
 
 /-- Looking up the newest declaration proves `x : A`. -/
 theorem valueVariableTypingExample :
-    ccω!{ ⟨⟩, A : □₀, x : A ⊢ x : A } :=
+    ccω!{ ⟨⟩, A : □[0], x : A ⊢ x : A } :=
   .var typeValueContextWellFormed 0
 
-/-- The polymorphic identity's dependent-product type belongs to `□₁`. -/
+/-- The polymorphic identity's dependent-product type belongs to `□[1]`. -/
 theorem polymorphicIdentityTypeTypingExample :
-    ccω!{ ⟨⟩ ⊢ Π A : □₀, Π x : A, A : □₁ } := by
+    ccω!{ ⟨⟩ ⊢ Π A : □[0], Π x : A, A : □[1] } := by
   exact .pi (.sort .empty 0)
     (.pi (.var typeContextWellFormed 0) (.var typeValueContextWellFormed 1))
 
 /-- The named term `λ A, λ x, x` has the polymorphic identity type. -/
 theorem polymorphicIdentityTypingExample :
     ccω!{ ⟨⟩ ⊢
-      λ A : □₀, λ x : A, x :
-      Π A : □₀, Π x : A, A } := by
+      λ A : □[0], λ x : A, x :
+      Π A : □[0], Π x : A, A } := by
   exact .lam (.sort .empty 0)
     (.lam (.var typeContextWellFormed 0) (.var typeValueContextWellFormed 0))
 
 /-- Applying the local identity to `x` is a well-scoped `CCω` term. -/
 def localIdentityApplication : Term 2 :=
-  ccωterm!{ ⟨⟩, A : □₀, x : A ⊢ (λ y : A, y) x }
+  ccωterm!{ ⟨⟩, A : □[0], x : A ⊢ (λ y : A, y) x }
 
 /-- The beta-normal result of applying the local identity to `x`. -/
 def localIdentityResult : Term 2 :=
-  ccωterm!{ ⟨⟩, A : □₀, x : A ⊢ x }
+  ccωterm!{ ⟨⟩, A : □[0], x : A ⊢ x }
 
 /-- Beta reduction substitutes `x` for `y` in the local identity body. -/
 theorem localIdentityBetaExample :
@@ -239,7 +230,7 @@ theorem localIdentityBetaExample :
 
 /-- The application rule proves that the local identity applied to `x` has type `A`. -/
 theorem localIdentityApplicationTypingExample :
-    ccω!{ ⟨⟩, A : □₀, x : A ⊢ (λ y : A, y) x : A } := by
+    ccω!{ ⟨⟩, A : □[0], x : A ⊢ (λ y : A, y) x : A } := by
   let aWellTyped := HasType.var typeValueContextWellFormed (1 : Fin 2)
   let bodyContextWellFormed := WellFormed.extend typeValueContextWellFormed aWellTyped
   let bodyWellTyped := HasType.var bodyContextWellFormed (0 : Fin 3)
@@ -247,13 +238,13 @@ theorem localIdentityApplicationTypingExample :
   let argumentWellTyped := HasType.var typeValueContextWellFormed (0 : Fin 2)
   exact HasType.app functionWellTyped argumentWellTyped
 
-/-- Cumulativity also regards `□₀` as an element of the still higher universe `□₂`. -/
-theorem universeCumulativityExample : ccω!{ ⟨⟩ ⊢ □₀ : □₂ } :=
+/-- Cumulativity also regards `□[0]` as an element of the still higher universe `□[2]`. -/
+theorem universeCumulativityExample : ccω!{ ⟨⟩ ⊢ □[0] : □[2] } :=
   HasType.sort_of_lt .empty (by decide)
 
 /-- The conversion rule accepts a beta-expanded presentation of the type `A`. -/
 theorem conversionTypingExample :
-    ccω!{ ⟨⟩, A : □₀, x : A ⊢ x : (λ X : □₀, X) A } := by
+    ccω!{ ⟨⟩, A : □[0], x : A ⊢ x : (λ X : □[0], X) A } := by
   let targetDomainWellTyped := HasType.sort typeValueContextWellFormed 0
   let targetBodyContextWellFormed :=
     WellFormed.extend typeValueContextWellFormed targetDomainWellTyped
@@ -282,14 +273,14 @@ Consequently, one source declaration `x : A` becomes three target declarations:
 
 `x : A, x′ : A′, xᴿ : ⟦A⟧ x x′`.
 
-For `A : □₀, x : A`, the whole translated context is therefore ordered as
+For `A : □[0], x : A`, the whole translated context is therefore ordered as
 `A, A′, Aᴿ, x, x′, xᴿ`. Because the kernel uses newest-first de Bruijn indices, the last three have
 indices `xᴿ = 0`, `x′ = 1`, and `x = 2`.
 -/
 
-/-- Translating `A : □₀` produces a context containing the triple `A, A′, Aᴿ`. -/
+/-- Translating `A : □[0]` produces a context containing the triple `A, A′, Aᴿ`. -/
 def translatedTypeContext : Context 3 :=
-  rawωctx!{ ⟨⟩, A : □₀ }
+  rawωctx!{ ⟨⟩, A : □[0] }
 
 /-- The translated one-type context is well formed. -/
 theorem translatedTypeContextWellFormed : WellFormed translatedTypeContext :=
@@ -297,9 +288,9 @@ theorem translatedTypeContextWellFormed : WellFormed translatedTypeContext :=
     (.sort .empty 0)
     (translate_sort_witness_hasType context_empty_wellFormed 0)
 
-/-- Translating `A : □₀, x : A` produces six dependent declarations. -/
+/-- Translating `A : □[0], x : A` produces six dependent declarations. -/
 def translatedTypeValueContext : Context 6 :=
-  rawωctx!{ ⟨⟩, A : □₀, x : A }
+  rawωctx!{ ⟨⟩, A : □[0], x : A }
 
 /-- The translated type-and-value context is well formed. -/
 theorem translatedTypeValueContextWellFormed : WellFormed translatedTypeValueContext :=
@@ -316,7 +307,7 @@ theorem translatedNewestTripleLayout :
 
 /-- The source variable `x` in the example context. -/
 def sourceX : Term 2 :=
-  ccωterm!{ ⟨⟩, A : □₀, x : A ⊢ x }
+  ccωterm!{ ⟨⟩, A : □[0], x : A ⊢ x }
 
 /-- The original copy of `x` selects the original slot of its translated triple. -/
 theorem sourceX_original : original sourceX = .var (originalRenaming 2 0) :=
