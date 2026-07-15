@@ -6,9 +6,10 @@ import DeepWiki.Refine.CCOmega.PrincipalTyping
 import DeepWiki.Refine.CCOmega.CumulativeInversion
 import DeepWiki.Refine.CCOmega.SubjectReduction
 import DeepWiki.Refine.CCOmega.SurfaceSyntax
+import DeepWiki.Refine.CCOmega.ProofTransfer
 import DeepWiki.Refine.CCOmega.Examples
 
 /-! # The CCω calculus
 
-Intrinsically scoped syntax, cumulative dependent typing, core metatheory, and named surface
-notation for the predicative Calculus of Constructions used by the refinement translations. -/
+Intrinsically scoped syntax, cumulative dependent typing, core metatheory, named surface notation,
+and object-language proof-transfer problems for the predicative Calculus of Constructions. -/

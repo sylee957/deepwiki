@@ -32,9 +32,22 @@ The TOPLAS source catalog intentionally claims no formalization coverage for Exa
 2.3, and 2.4 or Proposition 2.5. Revisit them only if they become necessary tests for later Trocq
 infrastructure.
 
+## Section 3.1 - proof transfer in type theory
+
+- [x] Reuse the intrinsically scoped `CCω` term and context grammars.
+- [x] Internalize the exact context of source and target carriers, type formers, and relations.
+- [x] Internalize `∀ s t, RInput s t → ROutput (V s) (W t)` and prove its formation judgment.
+- [x] Reuse the semantic package synthesizing `W` together with its uniform relational witness.
+- [x] Reuse the backward-arrow proof step, natural-number interfaces, and functional pullback
+  boundary case.
+- [x] Add revised-paper catalog pointers in `Sources/Doi_10_1145_3737283/Section31.lean`.
+
+The catalog retains explicit markers for equality/sigma extensions of the object syntax and for
+the implementation-only automation discussion; neither is silently counted as core `CCω` coverage.
+
 ## Next phases
 
-1. Audit revised Section 3 against the old `Section21`/`Section22`/`Section23` catalogs. Prefer new
+1. Audit revised Sections 3.2 and 3.3 against the old `Section22`/`Section23` catalogs. Prefer new
    TOPLAS aliases for unchanged declarations; record only semantic differences as library work.
 2. Treat Section 4 as the first likely refactor frontier: compare its operational sequents with
    `ParametricitySequents`, `UnivalentParametricitySequents`, and the erasure developments.
