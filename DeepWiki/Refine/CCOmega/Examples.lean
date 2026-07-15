@@ -56,6 +56,54 @@ example :
       .lam (.sort 0) (.lam (.var 0) (.var 0)) :=
   rfl
 
+/-! ## Lean interpolation
+
+`%{value}` inserts an already elaborated Lean `Term n` or `Context n` into the readable
+object-language syntax. The inserted term must already have exactly the scope at the insertion
+point; interpolation does not weaken or otherwise rewrite it.
+-/
+
+-- A Lean term can be inserted directly into a surface term.
+example (term : Term n) : ccω!{ %{term} } = term := rfl
+
+-- Without an interpolation, standalone term notation still denotes a closed term.
+example :
+    (let identity := ccω!{ λ A : □[0], A }; identity) =
+      (.lam (.sort 0) (.var 0) : Term 0) :=
+  rfl
+
+-- Several inserted Lean terms can be combined with object-language application syntax.
+example (function argument : Term n) :
+    ccω!{ %{function} %{argument} } = .app function argument :=
+  rfl
+
+-- A Lean context can be continued using named object-language declarations.
+example (source : Context n) (type : Term n) :
+    ccωctx!{ %{source}, x : %{type} } = .extend source type :=
+  rfl
+
+-- Names introduced after an opaque Lean context still elaborate to de Bruijn indices.
+example (source : Context n) (type : Term n) :
+    ccωterm!{ %{source}, x : %{type} ⊢ x } = (.var 0 : Term (n + 1)) :=
+  rfl
+
+-- An inserted body already lives under the binder introduced by the surface lambda.
+example (domain : Term n) (body : Term (n + 1)) :
+    ccω!{ λ x : %{domain}, %{body} } = .lam domain body :=
+  rfl
+
+-- Context-bearing typing notation checks every interpolation against the displayed scope.
+example (source : Context n) (term type : Term n)
+    (typing : HasType source term type) :
+    ccω!{ %{source} ⊢ %{term} : %{type} } :=
+  typing
+
+-- Context-bearing convertibility likewise requires two terms in that same scope.
+example (source : Context n) (left right : Term n)
+    (conversion : Convertible left right) :
+    ccω!{ %{source} ⊢ %{left} ≡ %{right} } :=
+  conversion
+
 /-! ## Contexts
 
 Read `⟨⟩, A : □[0], x : A` from left to right. The empty context assumes nothing,

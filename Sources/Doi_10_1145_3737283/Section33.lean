@@ -1,4 +1,5 @@
 import DeepWiki.Refine.ParametricityTranslations
+import DeepWiki.Refine.RawParametricityAbstraction
 import DeepWiki.Refine.RawParametricitySyntax
 import DeepWiki.Refine.RawParametricityTyping
 import DeepWiki.Refine.UnivalentUniverseQuotation
@@ -11,8 +12,9 @@ Catalog pointers for the raw and univalent parametricity constructions in the re
 ## NOT YET FORMALIZED
 
 - Theorem 3.4 (raw abstraction for full dependent `CCω`), PDF p. 9 — [infra] the exact syntax,
-  context translation, witness typing cases, and a formation-explicit abstraction theorem exist;
-  the remaining bridge starts from the paper's ordinary cumulative typing judgment.
+  context translation, witness typing cases, a formation-explicit theorem, and a conditional
+  ordinary-typing theorem exist; the remaining gap is relational compatibility of every rule in
+  the current broader cumulative-conversion relation.
 - Figure 2 (complete univalent term translation), PDF p. 11 — [infra] the universe package,
   relation projection, and intrinsic term fragment exist, but the complete dependent translation
   still requires realizers for its universe and dependent-product package constructors.
@@ -24,21 +26,45 @@ namespace DeepWiki.CcmToplas
 
 noncomputable section
 
-/-- **Figure 1, PDF p. 10:** the scoped raw translation of universes, variables, applications, lambdas, and products. -/
-abbrev figure_1_raw_translation :=
-  @DeepWiki.Refine.DependentCalculus.RawParametricity.translate
+/-- **Equation (1), PDF p. 10:** raw translation preserves the empty context. -/
+abbrev equation_1_raw_empty_context_translation :=
+  DeepWiki.Refine.DependentCalculus.RawParametricity.context_empty
 
-/-- **Figure 1, PDF p. 10:** a source context becomes original, primed, and witness declarations. -/
-abbrev figure_1_raw_context_translation :=
-  @DeepWiki.Refine.DependentCalculus.RawParametricity.context
+/-- **Equation (2), PDF p. 10:** a declaration translates to original, primed, and relation-witness declarations. -/
+abbrev equation_2_raw_context_extension_translation :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.context_extend
 
-/-- **Theorem 3.4, PDF p. 9, intrinsic fragment:** structurally generated raw abstraction witness. -/
-abbrev theorem_3_4_intrinsic_abstraction :=
-  @DeepWiki.Refine.CoreTerm.proofRelevantAbstraction
+/-- **Equation (3), PDF p. 10:** a universe translates to the heterogeneous-relation family. -/
+abbrev equation_3_raw_universe_translation :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.translate_sort
+
+/-- **Equation (4), PDF p. 10:** a variable translates to its relation-witness variable. -/
+abbrev equation_4_raw_variable_translation :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.translate_var
+
+/-- **Equation (5), PDF p. 10:** application translation supplies original, primed, and relational arguments. -/
+abbrev equation_5_raw_application_translation :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.translate_app
+
+/-- **Equation (6), PDF p. 10:** lambda translation binds original, primed, and related arguments. -/
+abbrev equation_6_raw_lambda_translation :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.translate_lam
+
+/-- **Equation (7), PDF p. 10:** product translation relates functions on related arguments. -/
+abbrev equation_7_raw_product_translation :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.translate_pi
 
 /-- **Equation (8), PDF p. 9:** the raw universe relation is well typed one level higher. -/
 abbrev equation_8_raw_universe_translation_is_well_typed :=
   DeepWiki.Refine.DependentCalculus.RawParametricity.rawUniverseTranslation_hasType
+
+/-- **Theorem 3.4, PDF p. 9, conditional form:** ordinary typing implies the three displayed conclusions when cumulativity preserves raw relation fibers. -/
+abbrev theorem_3_4_of_relational_cumulativity :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.displayedRawAbstraction_of_hasRelationalCumulativity
+
+/-- **Theorem 3.4, PDF p. 9, formation-explicit fragment:** dependent raw abstraction yields both term copies and their relation witness. -/
+abbrev theorem_3_4_formation_explicit_abstraction :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.formationExplicitRawAbstraction
 
 /-- **Equation (9), PDF p. 10:** a univalent universe relation packages an equivalence and equality-graph coherence. -/
 abbrev equation_9_univalent_universe_translation :=

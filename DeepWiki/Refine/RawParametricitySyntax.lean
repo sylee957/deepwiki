@@ -1,4 +1,4 @@
-import DeepWiki.Refine.CCOmega.Typing
+import DeepWiki.Refine.CCOmega.SurfaceSyntax
 
 /-! # Syntactic raw parametricity
 
@@ -7,6 +7,8 @@ each source variable gives an original variable, a primed variable, and a relati
 The corresponding term translation is capture-avoiding by construction. -/
 
 namespace DeepWiki.Refine.DependentCalculus.RawParametricity
+
+open DeepWiki.Refine.CCOmega.SurfaceSyntax
 
 /-- Number of variables in the relational translation of an `n`-variable scope. -/
 def scopeSize : Nat → Nat
@@ -119,17 +121,17 @@ mutual
 end
 
 /-- Translating the empty context returns the empty context. -/
-@[simp] theorem context_empty : context Context.empty = Context.empty :=
+@[simp] theorem context_empty : context (ccωctx!{ ⟨⟩ }) = ccωctx!{ ⟨⟩ } :=
   rfl
 
 /-- Context translation replaces one declaration by its original, primed, and witness copies. -/
 @[simp] theorem context_extend (source : Context n) (type : Term n) :
-    context (.extend source type) =
-      .extend
-        (.extend
-          (.extend (context source) (original type))
-          (weakenBy (primed type) 1))
-        (.app (.app (weakenBy (translate type) 2) (.var 1)) (.var 0)) :=
+    context (ccωctx!{ %{source}, x : %{type} }) =
+      ccωctx!{
+        %{context source},
+        x0 : %{original type},
+        x1 : %{weakenBy (primed type) 1},
+        xR : %{weakenBy (translate type) 2} x0 x1 } :=
   rfl
 
 /-- The newest source variable is embedded at index two of its triple. -/
@@ -173,46 +175,46 @@ end
 
 /-- Application translation applies a function witness to both arguments and their witness. -/
 @[simp] theorem translate_app (function argument : Term n) :
-    translate (.app function argument) =
-      .app (.app (.app (translate function) (original argument)) (primed argument))
-        (translate argument) :=
+    translate (ccω!{ %{function} %{argument} }) =
+      ccω!{
+        %{translate function}
+        %{original argument}
+        %{primed argument}
+        %{translate argument} } :=
   rfl
 
 /-- Lambda translation binds an original, a primed, and a related argument. -/
 @[simp] theorem translate_lam (domain : Term n) (body : Term (n + 1)) :
-    translate (.lam domain body) =
-      .lam (original domain)
-        (.lam (weakenBy (primed domain) 1)
-          (.lam
-            (.app (.app (weakenBy (translate domain) 2) (.var 1)) (.var 0))
-            (translate body))) :=
+    translate (ccω!{ λ x : %{domain}, %{body} }) =
+      ccω!{
+        λ x0 : %{original domain},
+        λ x1 : %{weakenBy (primed domain) 1},
+        λ xR : %{weakenBy (translate domain) 2} x0 x1,
+        %{translate body} } :=
   rfl
 
 /-- Product translation relates functions that send related inputs to related outputs. -/
 @[simp] theorem translate_pi (domain : Term n) (codomain : Term (n + 1)) :
-    translate (.pi domain codomain) =
-      .lam (original (.pi domain codomain))
-        (.lam (weakenBy (primed (.pi domain codomain)) 1)
-          (.pi (weakenBy (original domain) 2)
-            (.pi (weakenBy (primed domain) 3)
-              (.pi
-                (.app (.app (weakenBy (translate domain) 4) (.var 1)) (.var 0))
-                (.app
-                  (.app ((translate codomain).rename insertTwoAfterThree)
-                    (.app (.var 4) (.var 2)))
-                  (.app (.var 3) (.var 1))))))) :=
+    translate (ccω!{ Π x : %{domain}, %{codomain} }) =
+      ccω!{
+        λ f0 : %{original (.pi domain codomain)},
+        λ f1 : %{weakenBy (primed (.pi domain codomain)) 1},
+        Π x0 : %{weakenBy (original domain) 2},
+        Π x1 : %{weakenBy (primed domain) 3},
+        Π xR : %{weakenBy (translate domain) 4} x0 x1,
+        %{(translate codomain).rename insertTwoAfterThree} (f0 x0) (f1 x1) } :=
   rfl
 
-example : context Context.empty = Context.empty :=
+example : context (ccωctx!{ ⟨⟩ }) = ccωctx!{ ⟨⟩ } :=
   rfl
 
 example (source : Context n) (type : Term n) :
-    context (.extend source type) =
-      .extend
-        (.extend
-          (.extend (context source) (original type))
-          (weakenBy (primed type) 1))
-        (.app (.app (weakenBy (translate type) 2) (.var 1)) (.var 0)) :=
+    context (ccωctx!{ %{source}, x : %{type} }) =
+      ccωctx!{
+        %{context source},
+        x0 : %{original type},
+        x1 : %{weakenBy (primed type) 1},
+        xR : %{weakenBy (translate type) 2} x0 x1 } :=
   rfl
 
 example (index : Fin n) : translate (.var index) = .var (witnessRenaming n index) :=
@@ -232,32 +234,32 @@ example (level : Nat) :
   rfl
 
 example (function argument : Term n) :
-    translate (.app function argument) =
-      .app (.app (.app (translate function) (original argument)) (primed argument))
-        (translate argument) :=
+    translate (ccω!{ %{function} %{argument} }) =
+      ccω!{
+        %{translate function}
+        %{original argument}
+        %{primed argument}
+        %{translate argument} } :=
   rfl
 
 example (domain : Term n) (body : Term (n + 1)) :
-    translate (.lam domain body) =
-      .lam (original domain)
-        (.lam (weakenBy (primed domain) 1)
-          (.lam
-            (.app (.app (weakenBy (translate domain) 2) (.var 1)) (.var 0))
-            (translate body))) :=
+    translate (ccω!{ λ x : %{domain}, %{body} }) =
+      ccω!{
+        λ x0 : %{original domain},
+        λ x1 : %{weakenBy (primed domain) 1},
+        λ xR : %{weakenBy (translate domain) 2} x0 x1,
+        %{translate body} } :=
   rfl
 
 example (domain : Term n) (codomain : Term (n + 1)) :
-    translate (.pi domain codomain) =
-      .lam (original (.pi domain codomain))
-        (.lam (weakenBy (primed (.pi domain codomain)) 1)
-          (.pi (weakenBy (original domain) 2)
-            (.pi (weakenBy (primed domain) 3)
-              (.pi
-                (.app (.app (weakenBy (translate domain) 4) (.var 1)) (.var 0))
-                (.app
-                  (.app ((translate codomain).rename insertTwoAfterThree)
-                    (.app (.var 4) (.var 2)))
-                  (.app (.var 3) (.var 1))))))) :=
+    translate (ccω!{ Π x : %{domain}, %{codomain} }) =
+      ccω!{
+        λ f0 : %{original (.pi domain codomain)},
+        λ f1 : %{weakenBy (primed (.pi domain codomain)) 1},
+        Π x0 : %{weakenBy (original domain) 2},
+        Π x1 : %{weakenBy (primed domain) 3},
+        Π xR : %{weakenBy (translate domain) 4} x0 x1,
+        %{(translate codomain).rename insertTwoAfterThree} (f0 x0) (f1 x1) } :=
   rfl
 
 end DeepWiki.Refine.DependentCalculus.RawParametricity

@@ -75,6 +75,11 @@ theorem rename {left right : Term source}
 
 end IsRelationallyCumulative
 
+/-- Every cumulative conversion acts cumulatively on all substituted raw relation fibers. -/
+def HasRelationalCumulativity : Prop :=
+  ∀ {n : Nat} {left right : Term n},
+    Cumulative left right → IsRelationallyCumulative left right
+
 mutual
 
   /-- Context formation with recursively explicit raw-abstraction premises. -/
@@ -575,6 +580,36 @@ theorem typeWellTyped {context : Context n} {term type : Term n}
   · intro _ _ _ _ _ level _ targetWellTyped _ _ _ _
     exact ⟨level, targetWellTyped⟩
 
+/-- Ordinary typing lifts to formation-explicit typing under relational cumulativity. -/
+theorem ofHasType (relationalCumulativity : HasRelationalCumulativity)
+    {source : Context n} {term type : Term n}
+    (termWellTyped : HasType source term type) :
+    AbstractionHasType source term type := by
+  refine HasType.rec
+    (motive_1 := fun source _ => AbstractionWellFormed source)
+    (motive_2 := fun source term type _ =>
+      AbstractionHasType source term type)
+    ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ termWellTyped
+  · exact .empty
+  · intro _ _ _ _ _ _ sourceInduction typeInduction
+    exact .extend sourceInduction typeInduction
+  · intro _ _ _ level sourceInduction
+    exact .sort sourceInduction level
+  · intro _ _ _ index sourceInduction
+    exact .var sourceInduction index
+  · intro _ _ _ _ _ _ _ _ functionInduction argumentInduction
+    exact .app functionInduction argumentInduction
+  · intro _ _ _ _ _ _ _ _ domainInduction bodyInduction
+    obtain ⟨_, codomainInduction⟩ := bodyInduction.typeWellTyped
+    exact .lam domainInduction codomainInduction bodyInduction
+  · intro _ _ _ _ _ _ _ _ domainInduction codomainInduction
+    exact .pi domainInduction codomainInduction
+  · intro _ _ _ _ _ _ _ _ equal termInduction targetInduction
+    exact .conversion termInduction targetInduction equal
+  · intro _ _ _ _ _ _ _ _ subtype termInduction targetInduction
+    exact .cumulativity termInduction targetInduction subtype
+      (relationalCumulativity subtype)
+
 /-- Formation-explicit typing yields translated-context formation and witness typing together. -/
 theorem structural {source : Context n} {term type : Term n}
     (termWellTyped : AbstractionHasType source term type) :
@@ -669,6 +704,22 @@ def FormationExplicitRawAbstractionClaim : Prop :=
 theorem formationExplicitRawAbstraction : FormationExplicitRawAbstractionClaim :=
   fun termWellTyped => abstractionConclusion_of_abstractionHasType termWellTyped
 
+/-- Global relational cumulativity makes ordinary `CCω` typing satisfy raw abstraction. -/
+theorem rawAbstraction_of_hasRelationalCumulativity
+    (relationalCumulativity : HasRelationalCumulativity) :
+    RawAbstractionClaim := fun termWellTyped => by
+  have abstractionTyping :=
+    AbstractionHasType.ofHasType relationalCumulativity termWellTyped
+  exact ⟨abstractionTyping.translatedContextWellFormed,
+    abstractionConclusion_of_abstractionHasType abstractionTyping⟩
+
+/-- Relational cumulativity makes ordinary `CCω` typing satisfy the displayed abstraction theorem. -/
+theorem displayedRawAbstraction_of_hasRelationalCumulativity
+    (relationalCumulativity : HasRelationalCumulativity) :
+    DisplayedRawAbstractionClaim := fun termWellTyped =>
+  (rawAbstraction_of_hasRelationalCumulativity relationalCumulativity
+    termWellTyped).2
+
 example :
     AbstractionHasType Context.empty (.sort 0 : Term 0) (.sort 2) :=
   .cumulativity (.sort .empty 0) (.sort .empty 2)
@@ -678,5 +729,13 @@ example {source : Context n} {term type : Term n}
     (termWellTyped : AbstractionHasType source term type) :
     AbstractionConclusion source term type :=
   formationExplicitRawAbstraction termWellTyped
+
+example (relationalCumulativity : HasRelationalCumulativity) :
+    RawAbstractionClaim :=
+  rawAbstraction_of_hasRelationalCumulativity relationalCumulativity
+
+example (relationalCumulativity : HasRelationalCumulativity) :
+    DisplayedRawAbstractionClaim :=
+  displayedRawAbstraction_of_hasRelationalCumulativity relationalCumulativity
 
 end DeepWiki.Refine.DependentCalculus.RawParametricity

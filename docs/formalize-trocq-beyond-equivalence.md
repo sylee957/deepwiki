@@ -45,10 +45,35 @@ infrastructure.
 The catalog retains explicit markers for equality/sigma extensions of the object syntax and for
 the implementation-only automation discussion; neither is silently counted as core `CCω` coverage.
 
+## Section 3.3 - parametricity translations
+
+- [x] Catalog the exact raw context equations (1) and (2): the empty context and one source
+  declaration translated to its original, primed, and relation-witness triple.
+- [x] Catalog the exact raw term equations (3) through (7): universes, variables, applications,
+  lambdas, and dependent products in intrinsically scoped syntax.
+- [x] Catalog Equation (8), proving that the translated universe has the displayed relation type
+  one universe level higher.
+- [x] Point Theorem 3.4 at the strongest proved dependent result: all three displayed abstraction
+  conclusions follow from the formation-explicit `AbstractionHasType` judgment.
+- [x] Prove the paper-shaped ordinary `HasType` theorem from the explicit global law
+  `HasRelationalCumulativity`.
+- [ ] Establish that law for the intended standard `CCω` cumulativity, or narrow the current broader
+  `Cumulative` relation; until then, the paper's unrestricted Theorem 3.4 remains explicitly marked
+  `[infra]` in the source catalog.
+- [ ] Complete Figure 2 and unrestricted Theorem 3.6 after supplying object-language universe and
+  dependent-product package realizers; retain their `[infra]` markers in the source catalog.
+
+The formation-explicit theorem is not presented as the unrestricted paper theorem: its premise
+records codomain formation and substitution-stable relational cumulativity that ordinary
+`HasType` does not currently expose. The conditional bridge shows that codomain formation is not
+the remaining obstacle: the lambda case recovers it from regularity. The unresolved boundary is
+the global relational behavior of cumulative conversion, specifically the broader lambda and
+structural-product cases in the current calculus.
+
 ## Next phases
 
-1. Audit revised Sections 3.2 and 3.3 against the old `Section22`/`Section23` catalogs. Prefer new
-   TOPLAS aliases for unchanged declarations; record only semantic differences as library work.
+1. Audit revised Section 3.2 against the old `Section22` catalog. Prefer new TOPLAS aliases for
+   unchanged declarations; record only semantic differences as library work.
 2. Treat Section 4 as the first likely refactor frontier: compare its operational sequents with
    `ParametricitySequents`, `UnivalentParametricitySequents`, and the erasure developments.
 3. Audit Section 5 against `RelationStructure`, `FunctionalRelation`, `RelationEquivalence`, and
