@@ -11,6 +11,8 @@ intrinsically scoped de Bruijn representation used by the checked core. Thus the
 reader, while all examples are proofs about the actual `Term`, `Context`, and `HasType` definitions.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.ParametricityTranslationTutorial
 
 open DeepWiki.Refine.DependentCalculus

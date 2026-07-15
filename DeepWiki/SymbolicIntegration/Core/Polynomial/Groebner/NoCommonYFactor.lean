@@ -14,7 +14,8 @@ theorem isPrimitive_dvd_of_dvd_C_mul {K : Type*} [Field K]
     {P g : Polynomial (MvPolynomial (Fin 1) K)} {c : MvPolynomial (Fin 1) K}
     (hP : P.IsPrimitive) (hc : c ≠ 0) (hg : g ≠ 0) (hdvd : P ∣ Polynomial.C c * g) :
     P ∣ g := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   have hCg0 : Polynomial.C c * g ≠ 0 :=
     mul_ne_zero (by rwa [Ne, Polynomial.C_eq_zero]) hg
   have hpp : P ∣ (Polynomial.C c * g).primPart :=
@@ -28,14 +29,16 @@ theorem isPrimitive_dvd_of_dvd_C_mul {K : Type*} [Field K]
 /-- The primitive part of `lazardView f` is primitive. -/
 theorem isPrimitive_primPart_lazardView {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)).IsPrimitive :=
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   Polynomial.isPrimitive_primPart _
 
 /-- The primitive part of `lazardView f` divides `lazardView f`. -/
 theorem primPart_lazardView_dvd {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
       ∣ lazardView f :=
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   Polynomial.primPart_dvd _
 
 /-- `degreeOf 0 f = 0` iff the primitive part of `lazardView f` is a unit. -/
@@ -43,7 +46,8 @@ theorem degreeOf_zero_iff_isUnit_primPart_lazardView {K : Type*} [Field K]
     {f : MvPolynomial (Fin 2) K} :
     degreeOf 0 f = 0 ↔
       IsUnit (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   rw [← natDegree_lazardView, ← Polynomial.natDegree_primPart (p := lazardView f)]
   constructor
   · intro h0
@@ -67,7 +71,8 @@ theorem primPart_lazardView_min_dvd_succ {K : Type*} [Field K]
         (lazardView (sortedByYDegree hB i0))) ∣ lazardView (sortedByYDegree hB j)) :
     (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
       (lazardView (sortedByYDegree hB i0))) ∣ lazardView (sortedByYDegree hB i1) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   set P := (lazardView (sortedByYDegree hB i0)).primPart with hP_def
   set fi := sortedByYDegree hB i with hfi_def
   set fj := sortedByYDegree hB i1 with hfj_def
@@ -120,7 +125,8 @@ theorem primPart_lazardView_min_dvd_all {K : Type*} [Field K]
     (i0 : Fin B.card) (hi0 : i0.val = 0) (i : Fin B.card) :
     (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
       (lazardView (sortedByYDegree hB i0))) ∣ lazardView (sortedByYDegree hB i) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   induction hi : i.val using Nat.strong_induction_on generalizing i with
   | _ n ih =>
     subst hi
@@ -152,7 +158,8 @@ theorem degreeOf_min_eq_zero_of_hasNoCommonYFactor {K : Type*} [Field K]
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
     (hncf : HasNoCommonYFactor hB) (i0 : Fin B.card) (hi0 : i0.val = 0) :
     degreeOf 0 (sortedByYDegree hB i0) = 0 := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   have hunit : IsUnit ((lazardView (sortedByYDegree hB i0)).primPart) :=
     hncf _ (fun i => primPart_lazardView_min_dvd_all hB i0 hi0 i)
   exact degreeOf_zero_iff_isUnit_primPart_lazardView.mpr hunit

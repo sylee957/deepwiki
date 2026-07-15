@@ -146,9 +146,9 @@ theorem vDev_leftLim_eq_vDev_rightLim {f g : ℝ≥0 → ℝ≥0∞}
       rw [leftLim_eq_of_isBot (f := f) fun b => zero_le, hf0, zero_tsub]
       exact zero_le
     · show leftLim f t - leftLim g t ≤ _
-      rw [hf.leftLim_eq_sSup
-          (nhdsLT_neBot_of_exists_lt ⟨0, pos_iff_ne_zero.mpr ht⟩).ne,
-        tsub_le_iff_right]
+      letI : (𝓝[<] t).NeBot :=
+        nhdsLT_neBot_of_exists_lt ⟨0, pos_iff_ne_zero.mpr ht⟩
+      rw [hf.leftLim_eq_sSup, tsub_le_iff_right]
       refine sSup_le ?_
       rintro b ⟨y, (hy : y < t), rfl⟩
       rw [← tsub_le_iff_right]
@@ -176,7 +176,8 @@ theorem vDev_leftLim_eq_vDev_rightLim {f g : ℝ≥0 → ℝ≥0∞}
           ENNReal.add_iInf.symm
       _ ≤ vDev (leftLim f) (leftLim g) + rightLim g t := by
           refine add_le_add le_rfl ?_
-          rw [hg.rightLim_eq_sInf (nhdsGT_neBot t).ne]
+          letI : (𝓝[>] t).NeBot := nhdsGT_neBot t
+          rw [hg.rightLim_eq_sInf]
           refine le_sInf ?_
           rintro b ⟨z, (hz : t < z), rfl⟩
           refine iInf_le_of_le ⟨z - t, tsub_pos_of_lt hz⟩ ?_
@@ -195,9 +196,9 @@ theorem vDev_leftLim_le_vDev {f g : ℝ≥0 → ℝ≥0∞}
     rw [leftLim_zero_eq f, leftLim_zero_eq g]
     exact vDevAt_le_vDev f g 0
   · show leftLim f t - leftLim g t ≤ _
-    rw [hf.leftLim_eq_sSup
-        (nhdsLT_neBot_of_exists_lt ⟨0, pos_iff_ne_zero.mpr ht⟩).ne,
-      tsub_le_iff_right]
+    letI : (𝓝[<] t).NeBot :=
+      nhdsLT_neBot_of_exists_lt ⟨0, pos_iff_ne_zero.mpr ht⟩
+    rw [hf.leftLim_eq_sSup, tsub_le_iff_right]
     refine sSup_le ?_
     rintro b ⟨y, (hy : y < t), rfl⟩
     rw [← tsub_le_iff_right]
@@ -249,8 +250,9 @@ theorem vDev_leftLim_eq_vDev_of_isRightContinuous {f g : ℝ≥0 → ℝ≥0∞}
         ENNReal.add_iInf.symm
     _ ≤ vDev (leftLim f) (leftLim g) + g t := by
         refine add_le_add le_rfl ?_
+        letI : (𝓝[>] t).NeBot := nhdsGT_neBot t
         rw [← congrFun ((isRightContinuous_iff_rightLim_eq hg).mp hgrc) t,
-          hg.rightLim_eq_sInf (nhdsGT_neBot t).ne]
+          hg.rightLim_eq_sInf]
         refine le_sInf ?_
         rintro b ⟨z, (hz : t < z), rfl⟩
         refine iInf_le_of_le ⟨z - t, tsub_pos_of_lt hz⟩ ?_

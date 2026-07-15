@@ -6,6 +6,8 @@ import DeepWiki.Refine.RelationStructure
 An intrinsically typed lambda calculus gives a compact, executable statement of the abstraction
 theorem. Its relation environments are the semantic counterpart of parametricity contexts. -/
 
+set_option linter.checkUnivs false
+
 namespace DeepWiki.Refine
 
 universe u v w w'

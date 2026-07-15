@@ -38,7 +38,8 @@ theorem isLeftContinuous_of_mono_lsc
   apply le_antisymm (hmono.leftLim_le le_rfl)
   rcases eq_or_ne (𝓝[<] t) ⊥ with hbot | hbot
   · rw [leftLim_eq_of_eq_bot g hbot]
-  · rw [hmono.leftLim_eq_sSup hbot]
+  · letI : (𝓝[<] t).NeBot := neBot_iff.2 hbot
+    rw [hmono.leftLim_eq_sSup]
     by_contra hlt
     rw [not_le] at hlt
     set y := sSup (g '' Iio t) with hy

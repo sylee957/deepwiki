@@ -15,17 +15,27 @@ open MvPolynomial MonomialOrder
 namespace DeepWiki.SymbolicIntegration
 
 open scoped Classical in
-/-- A local `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` for polynomial content. -/
+/-- A local `StrongNormalizedGCDMonoid` on `MvPolynomial (Fin 1) K`. -/
+@[reducible] noncomputable def strongNormalizedGcdMonoidMvPolynomialFinOne
+    (K : Type*) [Field K] : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+  letI := UniqueFactorizationMonoid.strongNormalizationMonoid
+    (α := MvPolynomial (Fin 1) K)
+  UniqueFactorizationMonoid.toStrongNormalizedGCDMonoid _
+
+open scoped Classical in
+/-- The normalized GCD structure induced by `strongNormalizedGcdMonoidMvPolynomialFinOne`. -/
 @[reducible] noncomputable def normalizedGcdMonoidMvPolynomialFinOne (K : Type*) [Field K] :
     NormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
-  letI := UniqueFactorizationMonoid.normalizationMonoid (α := MvPolynomial (Fin 1) K)
-  UniqueFactorizationMonoid.toNormalizedGCDMonoid _
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
+  inferInstance
 
 /-- The content of `lazardView f` divides the leading `y`-coefficient of `f`. -/
 theorem content_lazardView_dvd_leadingYCoeff {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     @Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)
       ∣ leadingYCoeff f := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   rw [leadingYCoeff, Polynomial.leadingCoeff]
   exact Polynomial.content_dvd_coeff _
 
@@ -35,7 +45,8 @@ theorem content_associated_leadingYCoeff_of_C_dvd {K : Type*} [Field K]
     (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
     Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
       (leadingYCoeff f) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   refine associated_of_dvd_dvd (content_lazardView_dvd_leadingYCoeff f) ?_
   exact Polynomial.dvd_content_iff_C_dvd.mpr hdvd
 
@@ -45,7 +56,8 @@ theorem C_dvd_lazardView_iff_content_associated {K : Type*} [Field K]
     Polynomial.C (leadingYCoeff f) ∣ lazardView f ↔
       Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
         (leadingYCoeff f) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   refine ⟨content_associated_leadingYCoeff_of_C_dvd, fun hassoc => ?_⟩
   exact Polynomial.dvd_content_iff_C_dvd.mp hassoc.symm.dvd
 
@@ -54,7 +66,8 @@ theorem leadingCoeff_primPart_isUnit_of_C_dvd {K : Type*} [Field K] {f : MvPolyn
     (hf : f ≠ 0) (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
     IsUnit ((@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
       (lazardView f)).leadingCoeff) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   set c := Polynomial.content (lazardView f) with hc
   set s := Polynomial.primPart (lazardView f) with hs
   have hassoc : Associated c (leadingYCoeff f) := content_associated_leadingYCoeff_of_C_dvd hdvd
@@ -77,7 +90,8 @@ theorem lazard_Pk_eq_Rk_Sk {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (h
         Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
           (lazardView f)) (leadingYCoeff f) ∧
         S.IsPrimitive ∧ IsUnit S.leadingCoeff := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  letI : StrongNormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+    strongNormalizedGcdMonoidMvPolynomialFinOne K
   refine ⟨(lazardView f).primPart, Polynomial.eq_C_content_mul_primPart (lazardView f),
     content_associated_leadingYCoeff_of_C_dvd hdvd, Polynomial.isPrimitive_primPart _,
     leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd⟩

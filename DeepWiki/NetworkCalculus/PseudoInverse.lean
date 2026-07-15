@@ -163,7 +163,8 @@ theorem leftLim_pseudoInv [CompleteLinearOrder α] [DenselyOrdered α]
   · -- empty left neighbourhood: `leftLim` is the value by convention.
     exact leftLim_eq_of_eq_bot _ hbot
   · -- otherwise `leftLim = sup_{x'<x} f⁻¹ x' = f⁻¹ x`.
-    rw [(pseudoInv_mono f).leftLim_eq_sSup hbot,
+    letI : (𝓝[<] x).NeBot := neBot_iff.2 hbot
+    rw [(pseudoInv_mono f).leftLim_eq_sSup,
       sSup_pseudoInv_image_Iio f hf x]
 
 /-- `f⁻¹` is left-continuous (in the order topologies) for non-decreasing `f`. -/

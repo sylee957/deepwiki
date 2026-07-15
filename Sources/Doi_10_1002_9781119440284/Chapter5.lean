@@ -25,6 +25,8 @@ Book-numbered catalog entries for this chapter, each linked to the
 `DeepWiki` library declaration that formalizes it (`alias`/`abbrev`),
 or recorded as a note / unformalized item. -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Dnc
 
 open DeepWiki

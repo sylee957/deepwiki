@@ -8,6 +8,8 @@ calculus into a stricter cumulative calculus is specified separately by an inter
 regularity and conversion assumptions.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.UnderlyingDependentCalculus
 
 /-- Annotation-free terms reuse the intrinsically scoped dependent-calculus syntax. -/

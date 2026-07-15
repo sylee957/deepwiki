@@ -8,6 +8,8 @@ The quotient map from integers to `ZMod modulus` has a canonical right inverse. 
 graph therefore carries the `(4, 2a)` structure of a retraction, and integer multiplication and
 equality modulo the modulus respect that relation. -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine
 
 universe u v w

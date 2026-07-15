@@ -8,6 +8,8 @@ The pointwise list lifting preserves every one-direction map class. In particula
 fully coherent element relations and the asymmetric `(2a, 4)` structure needed when only the
 backward element relation is fully coherent. -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine
 
 universe u v w

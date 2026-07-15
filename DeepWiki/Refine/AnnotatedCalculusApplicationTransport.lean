@@ -7,6 +7,8 @@ Application typehood transport retains the erased function-subtyping derivation.
 induction then reduces ordinary conservativity to this constructor-local boundary.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.AnnotatedCalculusConservativity
 
 /-- Typed conversion between common-kind endpoints preserves universe typehood. -/

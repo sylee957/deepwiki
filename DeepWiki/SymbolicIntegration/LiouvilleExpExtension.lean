@@ -518,13 +518,14 @@ theorem expDeriv_mem_range_imp_mem_range (u : F) (hnd : NondegenerateExp u) {v :
   have hlogv : logDeriv v
       = algebraMap F[X] (RatFunc F) (expDerivPoly u N) / algebraMap F[X] (RatFunc F) N
         - algebraMap F (RatFunc F) ((k : F) * u′) := by
+    have hpow : logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.X ^ k)) =
+        algebraMap F (RatFunc F) ((k : F) * u′) := by
+      rw [map_pow, logDeriv_pow, logDeriv_X_eq, map_mul, map_natCast]
     have hsplit : logDeriv v = logDeriv (algebraMap F[X] (RatFunc F) N)
         - logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.X ^ k)) := by
       conv_lhs => rw [hveq]
       exact logDeriv_div _ _ hNA hXkA
-    rw [hsplit, logDeriv_algebraMap_eq u N]
-    congr 1
-    rw [map_pow, logDeriv_pow, logDeriv_X_eq, map_mul, map_natCast]
+    rw [hsplit, logDeriv_algebraMap_eq u N, hpow]
   have hv'eq : v′ = v * logDeriv v := by rw [logDeriv, mul_div_cancel₀ _ hv0]
   set M : F[X] := expDerivPoly u N - Polynomial.C ((k : F) * u′) * N with hMdef
   have hclear : v′ * algebraMap F[X] (RatFunc F) (Polynomial.X ^ k)

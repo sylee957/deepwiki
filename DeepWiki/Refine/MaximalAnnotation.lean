@@ -6,6 +6,8 @@ Ordinary dependent terms embed into the annotated calculus by assigning the top 
 annotation to every universe. Erasure is a left inverse of this maximal annotation embedding.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.MaximalAnnotation
 
 namespace Term

@@ -6,6 +6,8 @@ The scoped syntax is equipped with single-variable instantiation, compatible bet
 conversion, cumulative universes, well-formed contexts, and the ordinary dependent typing rules.
 De Bruijn indices make alpha-equivalence intrinsic to the representation. -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.DependentCalculus
 
 namespace Substitution

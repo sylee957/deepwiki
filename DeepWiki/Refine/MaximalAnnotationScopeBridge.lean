@@ -8,6 +8,8 @@ Canonical three-copy univalent sequents align with maximal annotated synthesis u
 equations for the object-language realizers.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.MaximalAnnotation
 
 namespace Context

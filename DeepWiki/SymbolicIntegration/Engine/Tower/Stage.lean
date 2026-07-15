@@ -6,6 +6,8 @@ import Mathlib.Data.Nat.Pairing
 The common executable stage contract and its finite recursive composition. Concrete polynomial,
 coefficient, and monomial layers instantiate this neutral interface without depending on one another. -/
 
+set_option linter.checkUnivs false
+
 namespace DeepWiki.SymbolicIntegration
 
 universe u v w

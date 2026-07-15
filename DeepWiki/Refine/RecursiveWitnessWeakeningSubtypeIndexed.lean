@@ -7,6 +7,8 @@ syntactic identity conversion is separated from conversion between distinct beta
 endpoints, while binder substitution is recorded as an additional realizability obligation.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.RecursiveWitnessWeakeningSubtypeIndexed
 
 open AnnotatedRelationTranslation

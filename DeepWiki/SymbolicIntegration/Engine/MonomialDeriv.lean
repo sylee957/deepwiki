@@ -8,6 +8,8 @@ import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 derivation `CPolyEngine.monomialDeriv Dt p = (coefficientwise cderiv of p) + (dp/dt)·Dt` realizing Mathlib's
 `Differential.implicitDeriv`. -/
 
+set_option linter.defProp false
+
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration

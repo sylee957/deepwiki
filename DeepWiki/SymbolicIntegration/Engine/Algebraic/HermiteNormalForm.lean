@@ -132,8 +132,6 @@ end CPoly
 Concrete `2×2`/`3×3` matrices reduce to upper-triangular form, preserve the determinant up to a
 unit, and (for a rank-deficient case) drop to a zero row. -/
 
-namespace DeepWiki.SymbolicIntegration
-
 open DensePoly
 
 /-- A concrete `2×2` matrix over `ℚ[x]`: `[[x² + 1, x], [x³, x + 2]]` (entries low→high). -/

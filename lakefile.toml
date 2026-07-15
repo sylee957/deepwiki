@@ -4,12 +4,12 @@ defaultTargets = ["DeepWiki", "Sources"]
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-version = "git#v4.31.0"
+version = "git#v4.32.0"
 
 [[require]]
 name = "«doc-gen4»"
 git = "https://github.com/leanprover/doc-gen4"
-rev = "v4.31.0"
+rev = "v4.32.0"
 
 [[lean_lib]]
 name = "DeepWiki"
@@ -33,6 +33,7 @@ root = "WikiRAG.Main"
 [[lean_lib]]
 name = "TltsCheck"
 srcDir = "tools"
+globs = ["TltsCheck.+"]
 
 [[lean_exe]]
 name = "tlts"
@@ -44,6 +45,7 @@ root = "TltsCheck.Main"
 [[lean_lib]]
 name = "MinPlusCalc"
 srcDir = "tools"
+globs = ["MinPlusCalc.+"]
 
 [[lean_exe]]
 name = "minplus"

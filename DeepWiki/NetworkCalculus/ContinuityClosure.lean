@@ -101,14 +101,16 @@ theorem tendstoRight_rightLim {f : ℝ≥0 → ℝ≥0∞} (hmono : Monotone f)
 /-- Any left limit at `t > 0` is the closure value: `TendstoLeft f t L`
 forces `leftLim f t = L` (no monotonicity needed). -/
 theorem leftLim_eq_of_tendstoLeft {f : ℝ≥0 → ℝ≥0∞} {t : ℝ≥0} {L : ℝ≥0∞}
-    (ht : 0 < t) (hL : TendstoLeft f t L) : leftLim f t = L :=
-  leftLim_eq_of_tendsto (nhdsLT_neBot_of_exists_lt ⟨0, ht⟩).ne hL
+    (ht : 0 < t) (hL : TendstoLeft f t L) : leftLim f t = L := by
+  letI : (𝓝[<] t).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, ht⟩
+  exact leftLim_eq_of_tendsto hL
 
 /-- Any right limit is the closure value: `TendstoRight f t L` forces
 `rightLim f t = L` (no monotonicity needed). -/
 theorem rightLim_eq_of_tendstoRight {f : ℝ≥0 → ℝ≥0∞} {t : ℝ≥0} {L : ℝ≥0∞}
-    (hL : TendstoRight f t L) : rightLim f t = L :=
-  rightLim_eq_of_tendsto (nhdsGT_neBot t).ne hL
+    (hL : TendstoRight f t L) : rightLim f t = L := by
+  letI : (𝓝[>] t).NeBot := nhdsGT_neBot t
+  exact rightLim_eq_of_tendsto hL
 
 /-! ## Book restatement (right- and left-continuous closure)
 For `f ∈ ℱ`, the right-continuous extension `fᵣ(x) = f(x+)` and the

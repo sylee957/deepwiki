@@ -62,7 +62,10 @@ theorem dvd_prod_X_sub_C_implicitDeriv_iff_dvd {K : Type*} [Field K] [Differenti
     rw [dvd_iff_isRoot, IsRoot.def, h a ha, hconst a]
   · intro h a ha
     rw [hconst a]
-    exact (dvd_iff_isRoot.mp ((Finset.dvd_prod_of_mem _ ha).trans h))
+    have hfactor : X - C a ∣ ∏ b ∈ s, (X - C b) :=
+      Finset.dvd_prod_of_mem (fun b => X - C b) ha
+    have hfactor_v : X - C a ∣ v := hfactor.trans h
+    exact dvd_iff_isRoot.mp hfactor_v
 
 /-- If every scalar is constant, then a product of linear factors is normal for `implicitDeriv v` iff it is coprime to `v`. -/
 theorem isCoprime_prod_X_sub_C_implicitDeriv_iff_isCoprime {K : Type*} [Field K] [Differential K]

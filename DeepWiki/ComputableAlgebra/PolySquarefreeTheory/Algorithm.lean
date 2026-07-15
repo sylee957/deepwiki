@@ -77,12 +77,21 @@ theorem squarefreeLoop_head_assoc (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.pr
     Associated (squarefreePart (deflation A (k - 1))
         / gcd (squarefreePart (deflation A (k - 1))) (deflation A k))
       (sqfreeFactPart A k) := by
-  have hYass := gcd_squarefreePart_deflation A k hk hA
+  have hYass : Associated
+      (gcd (squarefreePart (deflation A (k - 1))) (deflation A k))
+      (squarefreePart (deflation A k)) :=
+    gcd_squarefreePart_deflation A k hk hA
   have hY : gcd (squarefreePart (deflation A (k - 1))) (deflation A k) ≠ 0 :=
     fun h => deflation_ne_zero A k (eq_zero_of_zero_dvd (h ▸ gcd_dvd_right _ _))
-  have hsplit := squarefreePart_deflation_mul_sqfreeFactPart A k hk hA
-  rw [associated_div_iff hY (hYass.dvd.trans ⟨sqfreeFactPart A k, hsplit.symm⟩)]
-  exact hsplit ▸ hYass.symm.mul_right (sqfreeFactPart A k)
+  have hsplit : squarefreePart (deflation A k) * sqfreeFactPart A k =
+      squarefreePart (deflation A (k - 1)) :=
+    squarefreePart_deflation_mul_sqfreeFactPart A k hk hA
+  have hdvd : gcd (squarefreePart (deflation A (k - 1))) (deflation A k) ∣
+      squarefreePart (deflation A (k - 1)) :=
+    hYass.dvd.trans ⟨sqfreeFactPart A k, hsplit.symm⟩
+  exact (associated_div_iff hY hdvd).2
+    ((Associated.of_eq hsplit.symm).trans
+      (hYass.symm.mul_right (sqfreeFactPart A k)))
 
 /-- The updated loop deflation `A⁻ᵏ / gcd((A⁻⁽ᵏ⁻¹⁾)*, A⁻ᵏ)` is associated to `A⁻⁽ᵏ⁺¹⁾` (`1 ≤ k`). -/
 theorem squarefreeLoop_tail_assoc (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.primPart ≠ 0) :

@@ -6,6 +6,8 @@ The syntactic universe relation is typed inside the scoped dependent calculus. F
 is reduced to its structural context-translation and witness-typing core.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.DependentCalculus.RawParametricity
 
 /-- The beta-normal type of the raw relation interpreting a universe. -/

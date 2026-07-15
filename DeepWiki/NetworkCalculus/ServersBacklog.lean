@@ -177,8 +177,8 @@ theorem leftLim_start_eq_of_ne {A D : ℝ≥0 → ℝ≥0}
       rw [h]
       exact ⟨zero_le, h0⟩
     · exact h
-  have hbot : 𝓝[<] s ≠ ⊥ := (nhdsLT_neBot_of_exists_lt ⟨0, hs0⟩).ne
-  rw [hAmono.leftLim_eq_sSup hbot, hDmono.leftLim_eq_sSup hbot]
+  letI : (𝓝[<] s).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, hs0⟩
+  rw [hAmono.leftLim_eq_sSup, hDmono.leftLim_eq_sSup]
   apply le_antisymm
   · -- each `A y`, `y < s`, sits below `D u` at an equality point `y < u < s`
     refine csSup_le ((show (Iio s).Nonempty from ⟨0, hs0⟩).image A) ?_
@@ -374,10 +374,10 @@ theorem exists_rightContinuous_apply_start_eq_not_leftLim_start_eq :
     rw [if_neg (not_lt.mpr (le_of_lt hu.1))]
     exact hu.1
   · rw [hstart]
-    have hbot : 𝓝[<] (1 : ℝ≥0) ≠ ⊥ :=
-      (nhdsLT_neBot_of_exists_lt ⟨0, zero_lt_one⟩).ne
-    rw [monotone_id.leftLim_eq_sSup hbot,
-      stepOut_mono.leftLim_eq_sSup hbot, Set.image_id,
+    letI : (𝓝[<] (1 : ℝ≥0)).NeBot :=
+      nhdsLT_neBot_of_exists_lt ⟨0, zero_lt_one⟩
+    rw [monotone_id.leftLim_eq_sSup,
+      stepOut_mono.leftLim_eq_sSup, Set.image_id,
       stepOut_image_Iio, csSup_singleton, csSup_Iio_of_pos zero_lt_one]
     exact one_ne_zero
 
@@ -428,11 +428,11 @@ theorem exists_rightContinuous_not_apply_start_eq :
     rw [if_neg (not_lt.mpr (le_of_lt hu.1))]
     exact zero_lt_one
   · rw [hstart]
-    have hbot : 𝓝[<] (1 : ℝ≥0) ≠ ⊥ :=
-      (nhdsLT_neBot_of_exists_lt ⟨0, zero_lt_one⟩).ne
+    letI : (𝓝[<] (1 : ℝ≥0)).NeBot :=
+      nhdsLT_neBot_of_exists_lt ⟨0, zero_lt_one⟩
     have himg : (fun _ : ℝ≥0 => (0 : ℝ≥0)) '' Set.Iio 1 = {0} :=
       Set.Nonempty.image_const ⟨0, Set.mem_Iio.mpr zero_lt_one⟩ 0
-    rw [stepOut_mono.leftLim_eq_sSup hbot,
-      monotone_const.leftLim_eq_sSup hbot, stepOut_image_Iio, himg]
+    rw [stepOut_mono.leftLim_eq_sSup,
+      monotone_const.leftLim_eq_sSup, stepOut_image_Iio, himg]
 
 end DeepWiki

@@ -69,7 +69,7 @@ theorem splitFactorAux_isSplittingFactorization (v : K[X])
     obtain ⟨c, rfl⟩ := hp
     have hdeg0 : (splitFactorStep v (C c)).natDegree = 0 := by
       rcases eq_or_ne c 0 with rfl | hc
-      · simp only [map_zero, splitFactorStep, map_zero, gcd_zero_left,
+      · simp only [map_zero, splitFactorStep, gcd_zero_left, normalize_zero,
           EuclideanDomain.div_zero, natDegree_zero]
       · have hCcu : IsUnit (C c) := isUnit_C.mpr (isUnit_iff_ne_zero.mpr hc)
         have hnum : IsUnit (gcd (C c) (Differential.implicitDeriv v (C c))) :=

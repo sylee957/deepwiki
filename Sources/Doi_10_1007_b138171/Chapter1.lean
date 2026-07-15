@@ -1150,7 +1150,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rcases eq_or_ne B 0 with rfl | hB0
   · simp
   rw [← hA.dvd_primPart_iff_dvd hB0,
-      hA.dvd_iff_fraction_map_dvd_fraction_map K B.isPrimitive_primPart]
+      hA.dvd_iff_fraction_map_dvd_fraction_map K]
   have hc : IsUnit (C (algebraMap D K B.content)) :=
     isUnit_C.mpr (Ne.isUnit (by
       simpa using (IsFractionRing.injective D K).ne (mt content_eq_zero_iff.mp hB0)))

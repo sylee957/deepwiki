@@ -6,6 +6,8 @@ Narrowing the newest context entry is realized by a typed identity substitution.
 variable is transported by cumulativity, while every older lookup is definitionally unchanged.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.DependentCalculus
 
 namespace TypedSubstitution

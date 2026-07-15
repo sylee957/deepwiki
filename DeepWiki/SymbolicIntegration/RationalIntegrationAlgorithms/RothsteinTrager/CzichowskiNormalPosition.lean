@@ -41,10 +41,7 @@ theorem lazardView_liftX (p : K[X]) :
 theorem mvPolynomialFinOneEquivPolynomial_C (a : K) :
     mvPolynomialFinOneEquivPolynomial K (C a) = Polynomial.C a := by
   rw [mvPolynomialFinOneEquivPolynomial]
-  show Polynomial.map (isEmptyAlgEquiv K (Fin 0)).toRingEquiv.toRingHom
-    ((finSuccEquiv K 0) (C a)) = _
-  rw [finSuccEquiv_apply]
-  simp
+  exact ((finSuccEquiv K 0).trans (Polynomial.mapAlgEquiv (isEmptyAlgEquiv K (Fin 0)))).commutes a
 
 /-- The `K[x]`-equiv sends the only variable `X 0` to `Polynomial.X`. -/
 theorem mvPolynomialFinOneEquivPolynomial_X :

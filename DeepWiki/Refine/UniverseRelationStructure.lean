@@ -8,6 +8,8 @@ import DeepWiki.Refine.UnivalentRelationStructure
 Weak universe annotations are populated constructively, while a fully coherent source relation
 uses explicit universe-univalence evidence to support every target annotation. -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine
 
 universe u w

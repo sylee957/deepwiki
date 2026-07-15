@@ -5,6 +5,8 @@ import DeepWiki.Refine.CoreParametricity
 Relation changes lift recursively through function types. The domain is transformed in the reverse
 direction and the codomain in the forward direction, matching relational variance. -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine
 
 universe u v

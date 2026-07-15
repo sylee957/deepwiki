@@ -70,7 +70,9 @@ theorem deriv_eval_of_const_coeffs {R : Type*} [CommRing R] [Differential R]
     (p : R[X]) (u : R) (hp : ∀ i, (p.coeff i)′ = 0) :
     (p.eval u)′ = p.derivative.eval u * u′ := by
   have hmc : (Differential.deriv : Derivation ℤ R R).mapCoeffs p = 0 :=
-    Finsupp.ext fun i => by simp [Derivation.mapCoeffs_apply, hp i, PolynomialModule.zero_apply]
+    PolynomialModule.ext (Finsupp.ext fun i => by
+      simp only [Derivation.mapCoeffs_apply, PolynomialModule.coeff_zero,
+        Finsupp.zero_apply, hp i])
   rw [Derivation.apply_eval_eq, hmc, map_zero, zero_add, smul_eq_mul]
 
 /-- `(c • D₁ + D₂) a = c * D₁ a + D₂ a`: a linear combination of derivations acts pointwise. -/

@@ -7,6 +7,8 @@ Its erasure into `HasType` is one-way, and its cumulativity rule records the exa
 monotonicity used by relational transport.
 -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine.DependentCalculus.RawParametricity
 
 /-- `IsRelationallyCumulative left right` compares every substituted binary relation fiber. -/

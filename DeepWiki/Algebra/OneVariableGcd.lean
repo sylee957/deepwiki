@@ -10,6 +10,8 @@ import Mathlib.Algebra.MvPolynomial.Equiv
 GCD and Bézout infrastructure on `MvPolynomial (Fin 1) K`, transported through
 the equivalence with `Polynomial K` and kept as local instances. -/
 
+set_option linter.defProp false
+
 open MvPolynomial
 
 namespace DeepWiki.SymbolicIntegration

@@ -11,12 +11,20 @@ open MvPolynomial MonomialOrder
 namespace DeepWiki.SymbolicIntegration
 
 open scoped Classical in
-/-- A local `NormalizedGCDMonoid` on the `lazardView` ring `K[x][y]`. -/
+/-- A local `StrongNormalizedGCDMonoid` on the `lazardView` ring `K[x][y]`. -/
+@[reducible] noncomputable def strongGcdMonoidLazardRing (K : Type*) [Field K] :
+    StrongNormalizedGCDMonoid (Polynomial (MvPolynomial (Fin 1) K)) :=
+  letI := UniqueFactorizationMonoid.strongNormalizationMonoid
+    (α := Polynomial (MvPolynomial (Fin 1) K))
+  UniqueFactorizationMonoid.toStrongNormalizedGCDMonoid _
+
+open scoped Classical in
+/-- The normalized GCD structure induced by `strongGcdMonoidLazardRing`. -/
 @[reducible] noncomputable def gcdMonoidLazardRing (K : Type*) [Field K] :
     NormalizedGCDMonoid (Polynomial (MvPolynomial (Fin 1) K)) :=
-  letI := UniqueFactorizationMonoid.normalizationMonoid
-    (α := Polynomial (MvPolynomial (Fin 1) K))
-  UniqueFactorizationMonoid.toNormalizedGCDMonoid _
+  letI : StrongNormalizedGCDMonoid (Polynomial (MvPolynomial (Fin 1) K)) :=
+    strongGcdMonoidLazardRing K
+  inferInstance
 
 open scoped Classical in
 /-- The common `K[x][y]` factor of all sorted basis elements, taken in `lazardView` coordinates. -/

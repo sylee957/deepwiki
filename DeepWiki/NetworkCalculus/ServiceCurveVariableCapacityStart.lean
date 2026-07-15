@@ -30,9 +30,9 @@ theorem isJumpDominated_of_continuous {A C : ℝ≥0 → ℝ≥0}
     IsJumpDominated A C := by
   intro u
   have hCr : Function.rightLim C u = C u := by
-    refine rightLim_eq_of_tendsto ?_ ?_
-    · exact (inferInstance : (nhdsWithin u (Set.Ioi u)).NeBot).ne'
-    · exact (hC.continuousAt).tendsto.mono_left nhdsWithin_le_nhds
+    letI : (nhdsWithin u (Set.Ioi u)).NeBot := inferInstance
+    exact rightLim_eq_of_tendsto
+      ((hC.continuousAt).tendsto.mono_left nhdsWithin_le_nhds)
   rw [hCr]
   exact add_le_add (hAmono.le_rightLim le_rfl) le_rfl
 

@@ -126,12 +126,16 @@ theorem lrtSubresultant_map_of_injective {F G : Type*} [Field F] [Field G] (ι :
           - C Polynomial.X * (derivative (D.map ι)).map (C : G →+* G[X])
       = (A.map (C : F →+* F[X])
           - C Polynomial.X * (derivative D).map (C : F →+* F[X])).map (Polynomial.mapRingHom ι) := by
+    have hAmap : (A.map ι).map (C : G →+* G[X])
+        = (A.map (C : F →+* F[X])).map (Polynomial.mapRingHom ι) := by
+      rw [Polynomial.map_map, hcomm, ← Polynomial.map_map]
+    have hDmap : (derivative (D.map ι)).map (C : G →+* G[X])
+        = ((derivative D).map (C : F →+* F[X])).map (Polynomial.mapRingHom ι) := by
+      rw [derivative_map, Polynomial.map_map, Polynomial.map_map, hcomm]
     rw [Polynomial.map_sub, Polynomial.map_mul, Polynomial.map_C, Polynomial.coe_mapRingHom,
       Polynomial.map_X]
-    congr 1
-    · rw [Polynomial.map_map, hcomm, ← Polynomial.map_map]
-    · congr 1
-      rw [Polynomial.map_map, derivative_map, Polynomial.map_map, hcomm]
+    exact congrArg₂ (fun x y : Polynomial (Polynomial G) => x - y) hAmap
+      (congrArg₂ (fun x y : Polynomial (Polynomial G) => x * y) rfl hDmap)
   rw [hdeg, hop1, hop2, subresultant_map]
 
 /-- Eval-after-map commutes with an injective base change `ι`:

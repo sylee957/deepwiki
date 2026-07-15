@@ -5,6 +5,8 @@ import Mathlib.Logic.Equiv.Defs
 Two-sided inverses yield coherent equivalences because Lean's equality proofs are proof-irrelevant.
 Universe univalence is represented as additional data, without assuming it as an axiom. -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine
 
 universe u v w x

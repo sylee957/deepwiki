@@ -6,6 +6,8 @@ import DeepWiki.Refine.Gcd
 Multisorted relational types identify the resolver's nested respectful arrows with the arrow fragment
 of parametricity. Concrete polynomial and gcd witnesses exhibit both uniform and mixed relations. -/
 
+set_option linter.defProp false
+
 namespace DeepWiki.Refine
 
 universe u v w

@@ -27,7 +27,8 @@ theorem toPolyG_eq_sum_getD (p : List (DensePoly ℚ)) (N : ℕ) (hN : p.length 
       rw [DensePoly.toPolyG_cons_dense, Finset.sum_range_succ', ih M (by simpa using hN), Finset.mul_sum]
       simp only [List.getD_cons_succ, pow_succ, List.getD_cons_zero, pow_zero, mul_one]
       rw [add_comm]
-      congr 1
+      refine congrArg (fun q : Polynomial (Polynomial ℚ) =>
+        q + Polynomial.C (toPoly c)) ?_
       apply Finset.sum_congr rfl
       intro k _
       ring

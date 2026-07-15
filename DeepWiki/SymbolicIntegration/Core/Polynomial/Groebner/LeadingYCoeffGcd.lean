@@ -102,11 +102,11 @@ theorem lazard_gcd_construction {K : Type*} [Field K] {I : Ideal (MvPolynomial (
   -- their `d`-coefficients are `a·gᵢ` and `b·g_{i+1}`.
   have hpcoeff : p.coeff d = a * gi := by
     rw [hp_def, Polynomial.coeff_C_mul]
-    congr 1
+    refine congrArg (fun r : MvPolynomial (Fin 1) K => a * r) ?_
     rw [← hfsdeg, ← natDegree_lazardView, Polynomial.coeff_natDegree, ← hfslc]; rfl
   have hqcoeff : q.coeff d = b * gi1 := by
     rw [hq_def, Polynomial.coeff_C_mul]
-    congr 1
+    refine congrArg (fun r : MvPolynomial (Fin 1) K => b * r) ?_
     rw [hd_def, ← natDegree_lazardView, Polynomial.coeff_natDegree]; rfl
   have hsum_ne : p.coeff d + q.coeff d ≠ 0 := by rw [hpcoeff, hqcoeff, hab]; exact hgcd_ne
   obtain ⟨hPdeg, hPlc⟩ := natDegree_leadingCoeff_add hpdeg hqdeg hsum_ne
