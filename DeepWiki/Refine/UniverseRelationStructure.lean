@@ -8,8 +8,6 @@ import DeepWiki.Refine.UnivalentRelationStructure
 Weak universe annotations are populated constructively, while a fully coherent source relation
 uses explicit universe-univalence evidence to support every target annotation. -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine
 
 universe u w
@@ -173,7 +171,7 @@ inductive UniverseRelationAssumptions : Annotation → Annotation → Type (u + 
       UniverseRelationAssumptions Annotation.equivalence target
 
 /-- Branch-local universe assumptions imply annotation admissibility. -/
-def UniverseRelationAssumptions.admissible
+theorem UniverseRelationAssumptions.admissible
     {source target : Annotation} :
     UniverseRelationAssumptions.{u} source target →
       AdmissibleUniverseTranslation source target

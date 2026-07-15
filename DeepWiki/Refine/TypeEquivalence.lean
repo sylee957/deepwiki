@@ -5,8 +5,6 @@ import Mathlib.Logic.Equiv.Defs
 Two-sided inverses yield coherent equivalences because Lean's equality proofs are proof-irrelevant.
 Universe univalence is represented as additional data, without assuming it as an axiom. -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine
 
 universe u v w x
@@ -186,7 +184,7 @@ theorem isUnivalentUniverse_subsingleton : Subsingleton IsUnivalentUniverse.{u} 
     (fun path : A = B => eqToTypeEquivalence path)).elim _ _
 
 /-- Univalence converts an equivalence of types back into an equality of types. -/
-def IsUnivalentUniverse.pathOfEquivalence (univalent : IsUnivalentUniverse.{u})
+theorem IsUnivalentUniverse.pathOfEquivalence (univalent : IsUnivalentUniverse.{u})
     {A B : Type u} (equivalence : TypeEquivalence A B) : A = B :=
   (univalent A B).inverse equivalence
 

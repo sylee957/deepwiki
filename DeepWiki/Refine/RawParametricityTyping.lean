@@ -6,8 +6,6 @@ The syntactic universe relation is typed inside the scoped dependent calculus. F
 is reduced to its structural context-translation and witness-typing core.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.DependentCalculus.RawParametricity
 
 /-- The beta-normal type of the raw relation interpreting a universe. -/
@@ -978,14 +976,14 @@ theorem context_lookup_primed (source : Context n) (index : Fin n) :
         rfl
 
 /-- Original-variable embedding is typed whenever the translated target context is well formed. -/
-def originalTypedRenaming (source : Context n)
+theorem originalTypedRenaming (source : Context n)
     (translatedWellFormed : WellFormed (context source)) :
     TypedRenaming source (context source) (originalRenaming n) where
   targetWellFormed := translatedWellFormed
   lookup_eq := context_lookup_original source
 
 /-- Primed-variable embedding is typed whenever the translated target context is well formed. -/
-def primedTypedRenaming (source : Context n)
+theorem primedTypedRenaming (source : Context n)
     (translatedWellFormed : WellFormed (context source)) :
     TypedRenaming source (context source) (primedRenaming n) where
   targetWellFormed := translatedWellFormed

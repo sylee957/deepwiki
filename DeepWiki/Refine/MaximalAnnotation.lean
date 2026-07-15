@@ -6,8 +6,6 @@ Ordinary dependent terms embed into the annotated calculus by assigning the top 
 annotation to every universe. Erasure is a left inverse of this maximal annotation embedding.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.MaximalAnnotation
 
 namespace Term
@@ -146,7 +144,7 @@ def annotate : DependentCalculus.Context n → AnnotatedDependentCalculus.Contex
 end Context
 
 /-- Maximal annotation preserves the syntactic shape of ordinary kinds. -/
-def isKind {kind : DependentCalculus.Term n} :
+theorem isKind {kind : DependentCalculus.Term n} :
     DependentCalculus.IsKind kind →
       AnnotatedDependentCalculus.IsKind (Term.annotate kind)
   | .sort level => .sort level Annotation.equivalence
@@ -183,7 +181,7 @@ theorem convertible {left right : DependentCalculus.Term n}
 mutual
 
   /-- Maximal annotation preserves well-formedness of the literal annotation-free calculus. -/
-  def wellFormed {context : UnderlyingDependentCalculus.Context n} :
+  theorem wellFormed {context : UnderlyingDependentCalculus.Context n} :
       UnderlyingDependentCalculus.WellFormed context →
         AnnotatedDependentCalculus.WellFormed (Context.annotate context)
     | .empty => .empty
@@ -191,7 +189,7 @@ mutual
         .extend (wellFormed contextWellFormed) (hasType typeWellTyped)
 
   /-- Maximal annotation lifts every annotation-free typing derivation to the top annotation. -/
-  def hasType {context : UnderlyingDependentCalculus.Context n}
+  theorem hasType {context : UnderlyingDependentCalculus.Context n}
       {term type : UnderlyingDependentCalculus.Term n} :
       UnderlyingDependentCalculus.HasType context term type →
         AnnotatedDependentCalculus.HasType (Context.annotate context)
@@ -224,7 +222,7 @@ mutual
         .conversion (hasType termWellTyped) (subtypeDerivation subtype)
 
   /-- Maximal annotation lifts annotation-free subtyping derivations componentwise. -/
-  def subtypeDerivation {context : UnderlyingDependentCalculus.Context n}
+  theorem subtypeDerivation {context : UnderlyingDependentCalculus.Context n}
       {left right : UnderlyingDependentCalculus.Term n} :
       UnderlyingDependentCalculus.Subtype context left right →
         AnnotatedDependentCalculus.Subtype (Context.annotate context)

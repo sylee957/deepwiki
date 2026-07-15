@@ -25,8 +25,6 @@ Book-numbered catalog entries for this chapter, each linked to the
 `DeepWiki` library declaration that formalizes it (`alias`/`abbrev`),
 or recorded as a note / unformalized item. -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Dnc
 
 open DeepWiki
@@ -59,7 +57,7 @@ alias prop_5_2_2 := minDeconv_self_le_of_isMaximalArrivalBound
 /-- **Proposition 5.2** (linked: `IsMaximalArrivalBound.mono`). -/
 alias prop_5_2_3 := IsMaximalArrivalBound.mono
 /-- **Proposition 5.2** (linked: `IsMaximalArrivalCurve.subadditiveClosureENN`). -/
-noncomputable def prop_5_2_4 := @IsMaximalArrivalCurve.subadditiveClosureENN
+alias prop_5_2_4 := IsMaximalArrivalCurve.subadditiveClosureENN
 /-- **Proposition 5.2** (linked: `IsMaximalArrivalBound.subadditiveClosureMin`). -/
 alias prop_5_2_5 := IsMaximalArrivalBound.subadditiveClosureMin
 /-- **Proposition 5.2** (linked: `isMaximalArrivalBound_leftLim_of_isLeftContinuous`). -/
@@ -87,7 +85,7 @@ alias prop_5_3_2 := le_maxDeconv_self_of_isMinimalArrivalBound
 /-- **Proposition 5.3** (linked: `IsMinimalArrivalBound.mono`). -/
 alias prop_5_3_3 := IsMinimalArrivalBound.mono
 /-- **Proposition 5.3** (linked: `IsMinimalArrivalBound.superadditiveClosureMax`). -/
-noncomputable def prop_5_3_4 := @IsMinimalArrivalBound.superadditiveClosureMax
+alias prop_5_3_4 := IsMinimalArrivalBound.superadditiveClosureMax
 /-- **Proposition 5.3** (linked: `isMinimalArrivalBound_rightLim_of_isRightContinuous`). -/
 alias prop_5_3_5 := isMinimalArrivalBound_rightLim_of_isRightContinuous
 

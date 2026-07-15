@@ -7,8 +7,6 @@ Its erasure into `HasType` is one-way, and its cumulativity rule records the exa
 monotonicity used by relational transport.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.DependentCalculus.RawParametricity
 
 /-- `IsRelationallyCumulative left right` compares every substituted binary relation fiber. -/
@@ -151,14 +149,14 @@ structure AbstractionTypedRenaming (source : Context sourceSize)
 namespace AbstractionTypedRenaming
 
 /-- The identity renaming preserves every formation-explicit context. -/
-def identity {context : Context n}
+theorem identity {context : Context n}
     (contextWellFormed : AbstractionWellFormed context) :
     AbstractionTypedRenaming context context Renaming.identity where
   targetWellFormed := contextWellFormed
   lookup_eq index := (Term.rename_identity (context.lookup index)).symm
 
 /-- Formation-explicit context renamings compose. -/
-def comp {first : Context firstSize} {second : Context secondSize}
+theorem comp {first : Context firstSize} {second : Context secondSize}
     {third : Context thirdSize} {inner : Renaming firstSize secondSize}
     {outer : Renaming secondSize thirdSize}
     (outerTyped : AbstractionTypedRenaming second third outer)
@@ -176,7 +174,7 @@ def comp {first : Context firstSize} {second : Context secondSize}
             Term.rename_comp (first.lookup index) inner outer
 
 /-- Extend a formation-explicit renaming beneath matching dependent binders. -/
-def lift {source : Context sourceSize} {target : Context targetSize}
+theorem lift {source : Context sourceSize} {target : Context targetSize}
     {mapping : Renaming sourceSize targetSize} {domain : Term sourceSize} {level : Nat}
     (mappingTyped : AbstractionTypedRenaming source target mapping)
     (domainWellTyped :
@@ -198,7 +196,7 @@ def lift {source : Context sourceSize} {target : Context targetSize}
       rfl
 
 /-- Weakening into a formation-explicit extension preserves context lookup types. -/
-def shift {context : Context n} {domain : Term n}
+theorem shift {context : Context n} {domain : Term n}
     (extendedWellFormed : AbstractionWellFormed (.extend context domain)) :
     AbstractionTypedRenaming context (.extend context domain) Renaming.shift where
   targetWellFormed := extendedWellFormed
@@ -389,7 +387,7 @@ structure AbstractionTypedSubstitution (source : Context sourceSize)
 namespace AbstractionTypedSubstitution
 
 /-- The identity substitution preserves every formation-explicit context. -/
-def identity {context : Context n}
+theorem identity {context : Context n}
     (contextWellFormed : AbstractionWellFormed context) :
     AbstractionTypedSubstitution context context Substitution.identity where
   targetWellFormed := contextWellFormed
@@ -400,7 +398,7 @@ def identity {context : Context n}
     exact .var contextWellFormed index
 
 /-- Every formation-explicit typed renaming induces a typed substitution. -/
-def ofRenaming {source : Context sourceSize} {target : Context targetSize}
+theorem ofRenaming {source : Context sourceSize} {target : Context targetSize}
     {mapping : Renaming sourceSize targetSize}
     (mappingTyped : AbstractionTypedRenaming source target mapping) :
     AbstractionTypedSubstitution source target (Substitution.ofRenaming mapping) where
@@ -413,7 +411,7 @@ def ofRenaming {source : Context sourceSize} {target : Context targetSize}
       variableWellTyped
 
 /-- Extend a formation-explicit typed substitution beneath matching binders. -/
-def lift {source : Context sourceSize} {target : Context targetSize}
+theorem lift {source : Context sourceSize} {target : Context targetSize}
     {mapping : Substitution sourceSize targetSize} {domain : Term sourceSize}
     {level : Nat} (mappingTyped : AbstractionTypedSubstitution source target mapping)
     (domainWellTyped :
@@ -434,7 +432,7 @@ def lift {source : Context sourceSize} {target : Context targetSize}
         Term.substitute_rename_shift_lift] using olderWellTyped
 
 /-- A typed argument induces the formation-explicit newest-variable substitution. -/
-def single {context : Context n} {domain argument : Term n}
+theorem single {context : Context n} {domain argument : Term n}
     (contextWellFormed : AbstractionWellFormed context)
     (argumentWellTyped : AbstractionHasType context argument domain) :
     AbstractionTypedSubstitution (.extend context domain) context

@@ -5,8 +5,6 @@ import DeepWiki.Refine.CoreParametricity
 Relation changes lift recursively through function types. The domain is transformed in the reverse
 direction and the codomain in the forward direction, matching relational variance. -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine
 
 universe u v
@@ -19,19 +17,19 @@ structure RelationChange {A : Type u} {B : Type v} (R S : A → B → Prop) wher
   backward : ∀ a b, S a b → R a b
 
 /-- The identity change of a relation. -/
-def RelationChange.refl {A : Type u} {B : Type v} (R : A → B → Prop) : RelationChange R R where
+theorem RelationChange.refl {A : Type u} {B : Type v} (R : A → B → Prop) : RelationChange R R where
   forward := fun _ _ h => h
   backward := fun _ _ h => h
 
 /-- Reverse a bidirectional relation change. -/
-def RelationChange.symm {A : Type u} {B : Type v} {R S : A → B → Prop}
+theorem RelationChange.symm {A : Type u} {B : Type v} {R S : A → B → Prop}
     (change : RelationChange R S) : RelationChange S R where
   forward := change.backward
   backward := change.forward
 
 /-- Recursively transform a relational witness through a core type. Function domains use the
 backward transformation and function codomains use the forward transformation. -/
-def CoreType.relForward {A : Type u} {B : Type v} {R S : A → B → Prop}
+theorem CoreType.relForward {A : Type u} {B : Type v} {R S : A → B → Prop}
     (change : RelationChange R S) :
     (type : CoreType) → {left : type.interpret A} → {right : type.interpret B} →
       type.rel R left right → type.rel S left right
@@ -40,7 +38,7 @@ def CoreType.relForward {A : Type u} {B : Type v} {R S : A → B → Prop}
       codomain.relForward change (witness a b (domain.relForward change.symm related))
 
 /-- Recursively transform a relational witness in the reverse direction. -/
-def CoreType.relBackward {A : Type u} {B : Type v} {R S : A → B → Prop}
+theorem CoreType.relBackward {A : Type u} {B : Type v} {R S : A → B → Prop}
     (change : RelationChange R S) (type : CoreType)
     {left : type.interpret A} {right : type.interpret B}
     (witness : type.rel S left right) : type.rel R left right :=

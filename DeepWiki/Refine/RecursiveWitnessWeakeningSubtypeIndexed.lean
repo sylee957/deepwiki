@@ -7,8 +7,6 @@ syntactic identity conversion is separated from conversion between distinct beta
 endpoints, while binder substitution is recorded as an additional realizability obligation.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.RecursiveWitnessWeakeningSubtypeIndexed
 
 open AnnotatedRelationTranslation
@@ -79,7 +77,7 @@ inductive TypedDerivation : {n : Nat} → Context n → Term n → Term n → Ty
       TypedDerivation context (.pi domain codomain) (.pi domain' codomain')
 
 /-- Forget a proof-relevant structural index to ordinary annotated subtyping. -/
-def TypedDerivation.toSubtype :
+theorem TypedDerivation.toSubtype :
     TypedDerivation context source target →
       AnnotatedDependentCalculus.Subtype context source target
   | .identity _ kindShape sourceWellTyped =>

@@ -6,14 +6,12 @@ Narrowing the newest context entry is realized by a typed identity substitution.
 variable is transported by cumulativity, while every older lookup is definitionally unchanged.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.DependentCalculus
 
 namespace TypedSubstitution
 
 /-- Identity substitution narrows the newest context entry along cumulative conversion. -/
-def narrowExtension {context : Context n} {domain domain' : Term n}
+theorem narrowExtension {context : Context n} {domain domain' : Term n}
     {domainLevel domainLevel' : Nat}
     (domainWellTyped : HasType context domain (.sort domainLevel))
     (domain'WellTyped : HasType context domain' (.sort domainLevel'))

@@ -8,8 +8,6 @@ calculus into a stricter cumulative calculus is specified separately by an inter
 regularity and conversion assumptions.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.UnderlyingDependentCalculus
 
 /-- Annotation-free terms reuse the intrinsically scoped dependent-calculus syntax. -/
@@ -113,7 +111,7 @@ end DeepWiki.Refine.UnderlyingDependentCalculus
 namespace DeepWiki.Refine.AnnotatedDependentCalculus
 
 /-- Erasing an annotated kind gives an annotation-free kind. -/
-def IsKind.erase {term : Term n} :
+theorem IsKind.erase {term : Term n} :
     IsKind term → UnderlyingDependentCalculus.IsKind term.erase
   | .sort level _ => .sort level
   | .pi domain codomainKind => .pi domain.erase codomainKind.erase
@@ -121,14 +119,14 @@ def IsKind.erase {term : Term n} :
 mutual
 
   /-- Erasure preserves well-formed annotated contexts. -/
-  def WellFormed.erase {context : Context n} :
+  theorem WellFormed.erase {context : Context n} :
       WellFormed context → UnderlyingDependentCalculus.WellFormed context.erase
     | .empty => .empty
     | .extend contextWellFormed typeWellTyped =>
         .extend contextWellFormed.erase typeWellTyped.erase
 
   /-- Erasure preserves every annotated typing derivation. -/
-  def HasType.erase {context : Context n} {term type : Term n} :
+  theorem HasType.erase {context : Context n} {term type : Term n} :
       HasType context term type →
         UnderlyingDependentCalculus.HasType context.erase term.erase type.erase
     | .sort contextWellFormed _ level => .sort contextWellFormed.erase level
@@ -153,7 +151,7 @@ mutual
         .conversion termWellTyped.erase subtype.erase
 
   /-- Erasure preserves every annotated subtyping derivation. -/
-  def Subtype.erase {context : Context n} {left right : Term n} :
+  theorem Subtype.erase {context : Context n} {left right : Term n} :
       Subtype context left right →
         UnderlyingDependentCalculus.Subtype context.erase left.erase right.erase
     | .conversion kindShape leftWellTyped rightWellTyped equal =>
@@ -242,7 +240,7 @@ theorem annotationErasureConservativity : AnnotationErasureConservativity := by
   exact derivation.erase
 
 /-- Every erased annotated-subtyping derivation is ordinary cumulative conversion. -/
-def subtype_toCumulative
+theorem subtype_toCumulative
     {context : UnderlyingDependentCalculus.Context n}
     {left right : UnderlyingDependentCalculus.Term n}
     (derivation : UnderlyingDependentCalculus.Subtype context left right) :
@@ -307,7 +305,7 @@ structure ExistingCalculusEmbedding : Prop where
 mutual
 
   /-- Erased-subtyping typehood embeds every well-formed erasure-calculus context. -/
-  def underlyingWellFormedToExisting (typehood : ErasedSubtypeTypehood)
+  theorem underlyingWellFormedToExisting (typehood : ErasedSubtypeTypehood)
       {context : UnderlyingDependentCalculus.Context n} :
       UnderlyingDependentCalculus.WellFormed context →
         DependentCalculus.WellFormed context
@@ -317,7 +315,7 @@ mutual
           (underlyingHasTypeToExisting typehood typeWellTyped)
 
   /-- Erased-subtyping typehood embeds every erasure-calculus typing derivation. -/
-  def underlyingHasTypeToExisting (typehood : ErasedSubtypeTypehood)
+  theorem underlyingHasTypeToExisting (typehood : ErasedSubtypeTypehood)
       {context : UnderlyingDependentCalculus.Context n}
       {term type : UnderlyingDependentCalculus.Term n} :
       UnderlyingDependentCalculus.HasType context term type →
@@ -357,7 +355,7 @@ mutual
 end
 
 /-- Erased-subtyping typehood supplies the complete erasure-to-existing-calculus embedding. -/
-def existingCalculusEmbedding_of_erasedSubtypeTypehood
+theorem existingCalculusEmbedding_of_erasedSubtypeTypehood
     (typehood : ErasedSubtypeTypehood) : ExistingCalculusEmbedding where
   wellFormed := underlyingWellFormedToExisting typehood
   hasType := underlyingHasTypeToExisting typehood

@@ -10,8 +10,6 @@ import Mathlib.Algebra.MvPolynomial.Equiv
 GCD and Bézout infrastructure on `MvPolynomial (Fin 1) K`, transported through
 the equivalence with `Polynomial K` and kept as local instances. -/
 
-set_option linter.defProp false
-
 open MvPolynomial
 
 namespace DeepWiki.SymbolicIntegration
@@ -37,7 +35,7 @@ open scoped Classical in
 
 /-- `MvPolynomial (Fin 1) K` is a Bézout ring (transfer `K[x]`'s `IsBezout` through the surjective
 `mvPolynomialFinOneEquivPolynomial.symm`). Used as a local `letI`; not a global instance. -/
-@[reducible] noncomputable def isBezoutMvPolynomialFinOne (K : Type*) [Field K] :
+theorem isBezoutMvPolynomialFinOne (K : Type*) [Field K] :
     IsBezout (MvPolynomial (Fin 1) K) :=
   Function.Surjective.isBezout (mvPolynomialFinOneEquivPolynomial K).symm.toRingHom
     (mvPolynomialFinOneEquivPolynomial K).symm.surjective

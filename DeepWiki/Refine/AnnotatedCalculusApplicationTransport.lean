@@ -7,8 +7,6 @@ Application typehood transport retains the erased function-subtyping derivation.
 induction then reduces ordinary conservativity to this constructor-local boundary.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.AnnotatedCalculusConservativity
 
 /-- Typed conversion between common-kind endpoints preserves universe typehood. -/
@@ -51,7 +49,7 @@ structure ErasedSubtypeRelationIndexedApplicationTransport : Prop where
 mutual
 
   /-- Relation-indexed application transport embeds every erased well-formed context. -/
-  def underlyingWellFormedToExisting_of_relationIndexedApplicationTransport
+  theorem underlyingWellFormedToExisting_of_relationIndexedApplicationTransport
       (transport : ErasedSubtypeRelationIndexedApplicationTransport)
       {context : UnderlyingDependentCalculus.Context n} :
       UnderlyingDependentCalculus.WellFormed context →
@@ -65,7 +63,7 @@ mutual
             typeWellTyped)
 
   /-- Relation-indexed application transport embeds every erased typing derivation. -/
-  def underlyingHasTypeToExisting_of_relationIndexedApplicationTransport
+  theorem underlyingHasTypeToExisting_of_relationIndexedApplicationTransport
       (transport : ErasedSubtypeRelationIndexedApplicationTransport)
       {context : UnderlyingDependentCalculus.Context n}
       {term type : UnderlyingDependentCalculus.Term n} :
@@ -124,7 +122,7 @@ mutual
         exact .cumulativity termExisting targetWellTyped (subtype_toCumulative subtype)
 
   /-- Relation-indexed application transport carries typehood forward through erased subtyping. -/
-  def subtypeForwardTypehoodOfRelationIndexedApplicationTransport
+  theorem subtypeForwardTypehoodOfRelationIndexedApplicationTransport
       (transport : ErasedSubtypeRelationIndexedApplicationTransport)
       {context : UnderlyingDependentCalculus.Context n}
       {left right : UnderlyingDependentCalculus.Term n}
@@ -155,7 +153,7 @@ mutual
           productWellTyped
 
   /-- Relation-indexed application transport carries typehood backward through erased subtyping. -/
-  def subtypeReverseTypehoodOfRelationIndexedApplicationTransport
+  theorem subtypeReverseTypehoodOfRelationIndexedApplicationTransport
       (transport : ErasedSubtypeRelationIndexedApplicationTransport)
       {context : UnderlyingDependentCalculus.Context n}
       {left right : UnderlyingDependentCalculus.Term n}
@@ -192,7 +190,7 @@ theorem erasedSubtypeTypehood_of_relationIndexedApplicationTransport
     leftWellTyped
 
 /-- Relation-indexed application transport gives the complete erased-calculus embedding. -/
-def existingCalculusEmbedding_of_relationIndexedApplicationTransport
+theorem existingCalculusEmbedding_of_relationIndexedApplicationTransport
     (transport : ErasedSubtypeRelationIndexedApplicationTransport) :
     ExistingCalculusEmbedding where
   wellFormed :=

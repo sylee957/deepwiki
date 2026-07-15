@@ -6,8 +6,6 @@ The scoped syntax is equipped with single-variable instantiation, compatible bet
 conversion, cumulative universes, well-formed contexts, and the ordinary dependent typing rules.
 De Bruijn indices make alpha-equivalence intrinsic to the representation. -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.DependentCalculus
 
 namespace Substitution
@@ -430,13 +428,13 @@ structure TypedRenaming (source : Context sourceSize) (target : Context targetSi
 namespace TypedRenaming
 
 /-- The identity renaming is typed on every well-formed context. -/
-def identity {context : Context n} (contextWellFormed : WellFormed context) :
+theorem identity {context : Context n} (contextWellFormed : WellFormed context) :
     TypedRenaming context context Renaming.identity where
   targetWellFormed := contextWellFormed
   lookup_eq index := (Term.rename_identity (context.lookup index)).symm
 
 /-- Typed context renamings compose. -/
-def comp {first : Context firstSize} {second : Context secondSize}
+theorem comp {first : Context firstSize} {second : Context secondSize}
     {third : Context thirdSize} {inner : Renaming firstSize secondSize}
     {outer : Renaming secondSize thirdSize}
     (outerTyped : TypedRenaming second third outer)
@@ -454,7 +452,7 @@ def comp {first : Context firstSize} {second : Context secondSize}
             Term.rename_comp (first.lookup index) inner outer
 
 /-- Extend a typed renaming beneath matching dependent context extensions. -/
-def lift {source : Context sourceSize} {target : Context targetSize}
+theorem lift {source : Context sourceSize} {target : Context targetSize}
     {mapping : Renaming sourceSize targetSize} {domain : Term sourceSize} {level : Nat}
     (mappingTyped : TypedRenaming source target mapping)
     (domainWellTyped : HasType target (domain.rename mapping) (.sort level)) :
@@ -475,7 +473,7 @@ def lift {source : Context sourceSize} {target : Context targetSize}
       rfl
 
 /-- Weakening into a well-formed extension is a typed context renaming. -/
-def shift {context : Context n} {domain : Term n}
+theorem shift {context : Context n} {domain : Term n}
     (extendedWellFormed : WellFormed (.extend context domain)) :
     TypedRenaming context (.extend context domain) Renaming.shift where
   targetWellFormed := extendedWellFormed
@@ -667,7 +665,7 @@ structure TypedSubstitution (source : Context sourceSize) (target : Context targ
 namespace TypedSubstitution
 
 /-- The identity substitution is typed on every well-formed context. -/
-def identity {context : Context n} (contextWellFormed : WellFormed context) :
+theorem identity {context : Context n} (contextWellFormed : WellFormed context) :
     TypedSubstitution context context Substitution.identity where
   targetWellFormed := contextWellFormed
   variableWellTyped index := by
@@ -677,7 +675,7 @@ def identity {context : Context n} (contextWellFormed : WellFormed context) :
     exact HasType.var contextWellFormed index
 
 /-- Every typed renaming induces a typed variable-only substitution. -/
-def ofRenaming {source : Context sourceSize} {target : Context targetSize}
+theorem ofRenaming {source : Context sourceSize} {target : Context targetSize}
     {mapping : Renaming sourceSize targetSize}
     (mappingTyped : TypedRenaming source target mapping) :
     TypedSubstitution source target (Substitution.ofRenaming mapping) where
@@ -688,7 +686,7 @@ def ofRenaming {source : Context sourceSize} {target : Context targetSize}
     simpa only [Substitution.ofRenaming, Term.substitute_ofRenaming] using variableWellTyped
 
 /-- Extend a typed substitution beneath matching dependent context extensions. -/
-def lift {source : Context sourceSize} {target : Context targetSize}
+theorem lift {source : Context sourceSize} {target : Context targetSize}
     {mapping : Substitution sourceSize targetSize} {domain : Term sourceSize}
     {level : Nat} (mappingTyped : TypedSubstitution source target mapping)
     (domainWellTyped : HasType target (domain.substitute mapping) (.sort level)) :
@@ -708,7 +706,7 @@ def lift {source : Context sourceSize} {target : Context targetSize}
         Term.substitute_rename_shift_lift] using olderWellTyped
 
 /-- A well-typed argument gives the typed single substitution for the newest variable. -/
-def single {context : Context n} {domain argument : Term n}
+theorem single {context : Context n} {domain argument : Term n}
     (contextWellFormed : WellFormed context)
     (argumentWellTyped : HasType context argument domain) :
     TypedSubstitution (.extend context domain) context (Substitution.single argument) where
@@ -831,7 +829,7 @@ end HasType
 namespace TypedSubstitution
 
 /-- Typed simultaneous substitutions compose. -/
-def comp {first : Context firstSize} {second : Context secondSize}
+theorem comp {first : Context firstSize} {second : Context secondSize}
     {third : Context thirdSize} {inner : Substitution firstSize secondSize}
     {outer : Substitution secondSize thirdSize}
     (outerTyped : TypedSubstitution second third outer)

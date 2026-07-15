@@ -8,8 +8,6 @@ Canonical three-copy univalent sequents align with maximal annotated synthesis u
 equations for the object-language realizers.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.MaximalAnnotation
 
 namespace Context
@@ -148,7 +146,7 @@ end Term
 namespace ScopeBridge
 
 /-- Lift an annotation-free subtype into the maximal synthesis source context. -/
-def translatedSubtype {context : UnderlyingDependentCalculus.Context n}
+theorem translatedSubtype {context : UnderlyingDependentCalculus.Context n}
     {source target : UnderlyingDependentCalculus.Term n}
     (subtype : UnderlyingDependentCalculus.Subtype context source target) :
     AnnotatedDependentCalculus.Subtype (Context.toTranslation context).gamma

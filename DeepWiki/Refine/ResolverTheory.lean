@@ -6,8 +6,6 @@ import DeepWiki.Refine.Gcd
 Multisorted relational types identify the resolver's nested respectful arrows with the arrow fragment
 of parametricity. Concrete polynomial and gcd witnesses exhibit both uniform and mixed relations. -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine
 
 universe u v w
@@ -51,7 +49,7 @@ theorem SortedType.rel_arrow_iff {Index : Type u} {Left : Index → Type v}
   Iff.rfl
 
 /-- Application in the multisorted relational interpretation is the proof underneath `Refines.app`. -/
-def SortedType.relApp {Index : Type u} {Left : Index → Type v} {Right : Index → Type w}
+theorem SortedType.relApp {Index : Type u} {Left : Index → Type v} {Right : Index → Type w}
     {Relation : ∀ index, Left index → Right index → Prop}
     {domain codomain : SortedType Index}
     {f : domain.interpret Left → codomain.interpret Left}

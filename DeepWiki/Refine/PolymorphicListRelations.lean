@@ -8,8 +8,6 @@ The pointwise list lifting preserves every one-direction map class. In particula
 fully coherent element relations and the asymmetric `(2a, 4)` structure needed when only the
 backward element relation is fully coherent. -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine
 
 universe u v w
@@ -29,7 +27,7 @@ def graphToRel {A : Type u} {B : Type v} {R : A → B → Type w}
   Eq.ndrec (ofMap data as) equality
 
 /-- The lifted relation determines equality with the pointwise represented map. -/
-def relToGraph {A : Type u} {B : Type v} {R : A → B → Type w}
+theorem relToGraph {A : Type u} {B : Type v} {R : A → B → Type w}
     (data : MapClass2b R) :
     {as : List A} → {bs : List B} → ListRel R as bs → as.map data.map = bs
   | [], [], .nil => rfl

@@ -11,8 +11,6 @@ intrinsically scoped de Bruijn representation used by the checked core. Thus the
 reader, while all examples are proofs about the actual `Term`, `Context`, and `HasType` definitions.
 -/
 
-set_option linter.defProp false
-
 namespace DeepWiki.Refine.ParametricityTranslationTutorial
 
 open DeepWiki.Refine.DependentCalculus
@@ -176,7 +174,7 @@ def typeContext : Context 1 :=
   ccωctx!{ ⟨⟩, A : □₀ }
 
 /-- The context `A : □₀` is well formed. -/
-def typeContextWellFormed : WellFormed typeContext :=
+theorem typeContextWellFormed : WellFormed typeContext :=
   .extend .empty (.sort .empty 0)
 
 /-- The dependent context containing a small type `A` and a value `x : A`. -/
@@ -184,7 +182,7 @@ def typeValueContext : Context 2 :=
   ccωctx!{ ⟨⟩, A : □₀, x : A }
 
 /-- The context `A : □₀, x : A` is well formed. -/
-def typeValueContextWellFormed : WellFormed typeValueContext :=
+theorem typeValueContextWellFormed : WellFormed typeValueContext :=
   .extend typeContextWellFormed (.var typeContextWellFormed 0)
 
 /-- The named context macro elaborates `A` and `x` to the expected de Bruijn declarations. -/
@@ -294,7 +292,7 @@ def translatedTypeContext : Context 3 :=
   rawωctx!{ ⟨⟩, A : □₀ }
 
 /-- The translated one-type context is well formed. -/
-def translatedTypeContextWellFormed : WellFormed translatedTypeContext :=
+theorem translatedTypeContextWellFormed : WellFormed translatedTypeContext :=
   context_extend_wellFormed context_empty_wellFormed
     (.sort .empty 0)
     (translate_sort_witness_hasType context_empty_wellFormed 0)
@@ -304,7 +302,7 @@ def translatedTypeValueContext : Context 6 :=
   rawωctx!{ ⟨⟩, A : □₀, x : A }
 
 /-- The translated type-and-value context is well formed. -/
-def translatedTypeValueContextWellFormed : WellFormed translatedTypeValueContext :=
+theorem translatedTypeValueContextWellFormed : WellFormed translatedTypeValueContext :=
   context_extend_wellFormed translatedTypeContextWellFormed
     (.var typeContextWellFormed 0)
     (translate_var_witness_hasType translatedTypeContextWellFormed 0)

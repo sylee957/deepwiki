@@ -8,8 +8,6 @@ import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 derivation `CPolyEngine.monomialDeriv Dt p = (coefficientwise cderiv of p) + (dp/dt)·Dt` realizing Mathlib's
 `Differential.implicitDeriv`. -/
 
-set_option linter.defProp false
-
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
@@ -60,7 +58,7 @@ class LawfulCFieldDerivation (α : Type*) [CField α] [CFieldSpec α]
 namespace LawfulCFieldDerivation
 
 /-- The legacy `CDiffFieldSpec` law supplies the law for its explicit compatibility dictionary. -/
-@[reducible] noncomputable def ofCDiffField (α : Type*) [CField α] [CFieldSpec α] [CDiffField α]
+theorem ofCDiffField (α : Type*) [CField α] [CFieldSpec α] [CDiffField α]
     [CDiffFieldSpec α] :
     LawfulCFieldDerivation α (CFieldDerivation.ofCDiffField α) CDiffFieldSpec.diffK where
   toK_cderiv := CDiffFieldSpec.toK_cderiv
