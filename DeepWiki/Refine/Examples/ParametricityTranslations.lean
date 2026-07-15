@@ -1,11 +1,12 @@
 import DeepWiki.Refine.ParametricityTranslations
 import DeepWiki.Refine.ParametricitySurfaceSyntax
 import DeepWiki.Refine.RawParametricityTyping
+import DeepWiki.Refine.CCOmega.Examples
 
 /-! # Reading parametricity translations through `CCω`
 
-This tutorial starts with the syntax and typing judgment of a small Calculus of Constructions,
-then explains raw and univalent parametricity as translations of that syntax.
+This tutorial builds on the `CCω` term-and-typing guide, then explains raw and univalent
+parametricity as translations of that calculus.
 
 The notation macros accept named mathematical terms such as `λ x : A, x` and elaborate them to the
 intrinsically scoped de Bruijn representation used by the checked core. Thus the names are for the
@@ -16,121 +17,9 @@ namespace DeepWiki.Refine.ParametricityTranslationTutorial
 
 open DeepWiki.Refine.DependentCalculus
 open DeepWiki.Refine.DependentCalculus.RawParametricity
+open DeepWiki.Refine.CCOmega.Examples
 
 universe u
-
-/-! ## What a context is
-
-Read `⟨⟩, A : □[0], x : A` from left to right:
-
-* `⟨⟩` says that nothing has been assumed yet.
-* `A : □[0]` introduces a variable `A` whose value is a small type.
-* `x : A` introduces a value `x`; its type may refer to the earlier declaration `A`.
-
-Thus a context is the ordered list of declarations available while checking the expression to the
-right of `⊢`. It is not itself a relation and is not the earlier tutorial's `Related` record.
--/
-
-/-- The one-declaration context containing a small type `A`. -/
-def typeContext : Context 1 :=
-  ccωctx!{ ⟨⟩, A : □[0] }
-
-/-- The context `A : □[0]` is well formed. -/
-theorem typeContextWellFormed : WellFormed typeContext :=
-  .extend .empty (.sort .empty 0)
-
-/-- The dependent context containing a small type `A` and a value `x : A`. -/
-def typeValueContext : Context 2 :=
-  ccωctx!{ ⟨⟩, A : □[0], x : A }
-
-/-- The context `A : □[0], x : A` is well formed. -/
-theorem typeValueContextWellFormed : WellFormed typeValueContext :=
-  .extend typeContextWellFormed (.var typeContextWellFormed 0)
-
-/-- The named context macro elaborates `A` and `x` to the expected de Bruijn declarations. -/
-theorem typeValueContext_expansion :
-    typeValueContext = .extend (.extend .empty (.sort 0)) (.var 0) :=
-  rfl
-
-/-! ## The ordinary `CCω` typing rules
-
-`HasType Γ t A` is the Lean form of `Γ ⊢ t : A`. Its constructors are the inference rules for a
-universe, a variable, application, lambda abstraction, dependent products, conversion, and
-cumulativity. The following small derivations exercise those rules directly.
--/
-
-/-- The lowest universe is an element of its successor universe. -/
-theorem universeTypingExample : ccω!{ ⟨⟩ ⊢ □[0] : □[1] } :=
-  .sort .empty 0
-
-/-- Looking up `A` in its context proves `A : □[0]`. -/
-theorem typeVariableTypingExample : ccω!{ ⟨⟩, A : □[0] ⊢ A : □[0] } :=
-  .var typeContextWellFormed 0
-
-/-- Looking up the newest declaration proves `x : A`. -/
-theorem valueVariableTypingExample :
-    ccω!{ ⟨⟩, A : □[0], x : A ⊢ x : A } :=
-  .var typeValueContextWellFormed 0
-
-/-- The polymorphic identity's dependent-product type belongs to `□[1]`. -/
-theorem polymorphicIdentityTypeTypingExample :
-    ccω!{ ⟨⟩ ⊢ Π A : □[0], Π x : A, A : □[1] } := by
-  exact .pi (.sort .empty 0)
-    (.pi (.var typeContextWellFormed 0) (.var typeValueContextWellFormed 1))
-
-/-- The named term `λ A, λ x, x` has the polymorphic identity type. -/
-theorem polymorphicIdentityTypingExample :
-    ccω!{ ⟨⟩ ⊢
-      λ A : □[0], λ x : A, x :
-      Π A : □[0], Π x : A, A } := by
-  exact .lam (.sort .empty 0)
-    (.lam (.var typeContextWellFormed 0) (.var typeValueContextWellFormed 0))
-
-/-- Applying the local identity to `x` is a well-scoped `CCω` term. -/
-def localIdentityApplication : Term 2 :=
-  ccωterm!{ ⟨⟩, A : □[0], x : A ⊢ (λ y : A, y) x }
-
-/-- The beta-normal result of applying the local identity to `x`. -/
-def localIdentityResult : Term 2 :=
-  ccωterm!{ ⟨⟩, A : □[0], x : A ⊢ x }
-
-/-- Beta reduction substitutes `x` for `y` in the local identity body. -/
-theorem localIdentityBetaExample :
-    BetaStep localIdentityApplication localIdentityResult :=
-  .beta _ _ _
-
-/-- The application rule proves that the local identity applied to `x` has type `A`. -/
-theorem localIdentityApplicationTypingExample :
-    ccω!{ ⟨⟩, A : □[0], x : A ⊢ (λ y : A, y) x : A } := by
-  let aWellTyped := HasType.var typeValueContextWellFormed (1 : Fin 2)
-  let bodyContextWellFormed := WellFormed.extend typeValueContextWellFormed aWellTyped
-  let bodyWellTyped := HasType.var bodyContextWellFormed (0 : Fin 3)
-  let functionWellTyped := HasType.lam aWellTyped bodyWellTyped
-  let argumentWellTyped := HasType.var typeValueContextWellFormed (0 : Fin 2)
-  exact HasType.app functionWellTyped argumentWellTyped
-
-/-- Cumulativity also regards `□[0]` as an element of the still higher universe `□[2]`. -/
-theorem universeCumulativityExample : ccω!{ ⟨⟩ ⊢ □[0] : □[2] } :=
-  HasType.sort_of_lt .empty (by decide)
-
-/-- The conversion rule accepts a beta-expanded presentation of the type `A`. -/
-theorem conversionTypingExample :
-    ccω!{ ⟨⟩, A : □[0], x : A ⊢ x : (λ X : □[0], X) A } := by
-  let targetDomainWellTyped := HasType.sort typeValueContextWellFormed 0
-  let targetBodyContextWellFormed :=
-    WellFormed.extend typeValueContextWellFormed targetDomainWellTyped
-  let targetBodyWellTyped := HasType.var targetBodyContextWellFormed (0 : Fin 3)
-  let targetFunctionWellTyped := HasType.lam targetDomainWellTyped targetBodyWellTyped
-  let aWellTyped := HasType.var typeValueContextWellFormed (1 : Fin 2)
-  let targetWellTyped := HasType.app targetFunctionWellTyped aWellTyped
-  let xWellTyped := HasType.var typeValueContextWellFormed (0 : Fin 2)
-  change HasType typeValueContext (.var 0) (.var 1) at xWellTyped
-  have targetToSource :
-      Convertible
-        (.app (.lam (.sort 0) (.var 0)) (.var 1) : Term 2)
-        (.var 1) :=
-    .beta (.beta _ _ _)
-  exact HasType.conversion xWellTyped targetWellTyped targetToSource.symm
 
 /-! ## Raw context translation
 

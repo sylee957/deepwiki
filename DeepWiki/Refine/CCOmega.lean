@@ -6,6 +6,7 @@ import DeepWiki.Refine.CCOmega.PrincipalTyping
 import DeepWiki.Refine.CCOmega.CumulativeInversion
 import DeepWiki.Refine.CCOmega.SubjectReduction
 import DeepWiki.Refine.CCOmega.SurfaceSyntax
+import DeepWiki.Refine.CCOmega.Examples
 
 /-! # The CCω calculus
 
