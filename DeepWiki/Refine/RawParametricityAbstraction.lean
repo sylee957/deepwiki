@@ -1,10 +1,10 @@
 import DeepWiki.Refine.RawParametricityConversion
 
-/-! # Formation-explicit raw abstraction
+/-! # Raw abstraction
 
-Raw abstraction is proved for a formation-explicit refinement of the dependent typing rules.
-Its erasure into `HasType` is one-way, and its cumulativity rule records the exact fiberwise
-monotonicity used by relational transport.
+Raw abstraction is proved first for a formation-explicit refinement of dependent typing.
+Ordinary `CCω` cumulativity preserves every substituted relation fiber, so ordinary typing
+then embeds into the formation-explicit system and satisfies the abstraction theorem.
 -/
 
 namespace DeepWiki.Refine.DependentCalculus.RawParametricity
@@ -33,13 +33,6 @@ theorem trans {first second third : Term n}
     (secondThird : IsRelationallyCumulative second third) :
     IsRelationallyCumulative first third := fun mapping term =>
   (firstSecond mapping term).trans (secondThird mapping term)
-
-/-- Relational-fiber cumulativity is covariant in the function of an application. -/
-theorem app {function function' argument : Term n}
-    (functionCumulative : IsRelationallyCumulative function function') :
-    IsRelationallyCumulative (.app function argument) (.app function' argument) :=
-  fun mapping term => relatedTermType_app_cumulative term (argument.substitute mapping)
-    (functionCumulative mapping)
 
 /-- Convertible domains and fiberwise cumulative codomains induce cumulative product fibers. -/
 theorem pi {domain domain' : Term n} {codomain codomain' : Term (n + 1)}
@@ -79,6 +72,22 @@ end IsRelationallyCumulative
 def HasRelationalCumulativity : Prop :=
   ∀ {n : Nat} {left right : Term n},
     Cumulative left right → IsRelationallyCumulative left right
+
+/-- Every ordinary cumulative conversion preserves all substituted raw relation fibers. -/
+theorem isRelationallyCumulative_of_cumulative {left right : Term n}
+    (subtype : Cumulative left right) :
+    IsRelationallyCumulative left right := by
+  induction subtype with
+  | conversion equal => exact IsRelationallyCumulative.of_convertible equal
+  | sort level => exact IsRelationallyCumulative.sort level
+  | pi domainEqual _ codomainInduction =>
+      exact IsRelationallyCumulative.pi domainEqual codomainInduction
+  | trans _ _ firstInduction secondInduction =>
+      exact IsRelationallyCumulative.trans firstInduction secondInduction
+
+/-- Ordinary `CCω` cumulative conversion is relationally cumulative. -/
+theorem hasRelationalCumulativity : HasRelationalCumulativity :=
+  fun subtype => isRelationallyCumulative_of_cumulative subtype
 
 mutual
 
@@ -580,9 +589,8 @@ theorem typeWellTyped {context : Context n} {term type : Term n}
   · intro _ _ _ _ _ level _ targetWellTyped _ _ _ _
     exact ⟨level, targetWellTyped⟩
 
-/-- Ordinary typing lifts to formation-explicit typing under relational cumulativity. -/
-theorem ofHasType (relationalCumulativity : HasRelationalCumulativity)
-    {source : Context n} {term type : Term n}
+/-- Ordinary typing lifts to formation-explicit typing. -/
+theorem ofHasType {source : Context n} {term type : Term n}
     (termWellTyped : HasType source term type) :
     AbstractionHasType source term type := by
   refine HasType.rec
@@ -608,7 +616,7 @@ theorem ofHasType (relationalCumulativity : HasRelationalCumulativity)
     exact .conversion termInduction targetInduction equal
   · intro _ _ _ _ _ _ _ _ subtype termInduction targetInduction
     exact .cumulativity termInduction targetInduction subtype
-      (relationalCumulativity subtype)
+      (isRelationallyCumulative_of_cumulative subtype)
 
 /-- Formation-explicit typing yields translated-context formation and witness typing together. -/
 theorem structural {source : Context n} {term type : Term n}
@@ -704,21 +712,16 @@ def FormationExplicitRawAbstractionClaim : Prop :=
 theorem formationExplicitRawAbstraction : FormationExplicitRawAbstractionClaim :=
   fun termWellTyped => abstractionConclusion_of_abstractionHasType termWellTyped
 
-/-- Global relational cumulativity makes ordinary `CCω` typing satisfy raw abstraction. -/
-theorem rawAbstraction_of_hasRelationalCumulativity
-    (relationalCumulativity : HasRelationalCumulativity) :
-    RawAbstractionClaim := fun termWellTyped => by
+/-- Ordinary `CCω` typing satisfies raw abstraction. -/
+theorem rawAbstraction : RawAbstractionClaim := fun termWellTyped => by
   have abstractionTyping :=
-    AbstractionHasType.ofHasType relationalCumulativity termWellTyped
+    AbstractionHasType.ofHasType termWellTyped
   exact ⟨abstractionTyping.translatedContextWellFormed,
     abstractionConclusion_of_abstractionHasType abstractionTyping⟩
 
-/-- Relational cumulativity makes ordinary `CCω` typing satisfy the displayed abstraction theorem. -/
-theorem displayedRawAbstraction_of_hasRelationalCumulativity
-    (relationalCumulativity : HasRelationalCumulativity) :
-    DisplayedRawAbstractionClaim := fun termWellTyped =>
-  (rawAbstraction_of_hasRelationalCumulativity relationalCumulativity
-    termWellTyped).2
+/-- Ordinary `CCω` typing satisfies the displayed raw abstraction theorem. -/
+theorem displayedRawAbstraction : DisplayedRawAbstractionClaim :=
+  fun termWellTyped => (rawAbstraction termWellTyped).2
 
 example :
     AbstractionHasType Context.empty (.sort 0 : Term 0) (.sort 2) :=
@@ -730,12 +733,13 @@ example {source : Context n} {term type : Term n}
     AbstractionConclusion source term type :=
   formationExplicitRawAbstraction termWellTyped
 
-example (relationalCumulativity : HasRelationalCumulativity) :
-    RawAbstractionClaim :=
-  rawAbstraction_of_hasRelationalCumulativity relationalCumulativity
+example : HasRelationalCumulativity :=
+  hasRelationalCumulativity
 
-example (relationalCumulativity : HasRelationalCumulativity) :
-    DisplayedRawAbstractionClaim :=
-  displayedRawAbstraction_of_hasRelationalCumulativity relationalCumulativity
+example : RawAbstractionClaim :=
+  rawAbstraction
+
+example : DisplayedRawAbstractionClaim :=
+  displayedRawAbstraction
 
 end DeepWiki.Refine.DependentCalculus.RawParametricity

@@ -129,16 +129,12 @@ theorem eraseUniverseLevels {left right : Term n}
   | pi domainEqual _ codomainInduction =>
       exact domainEqual.eraseUniverseLevels.pi_domain.trans
         codomainInduction.pi_codomain
-  | app _ functionInduction => exact functionInduction.app_function
-  | lam _ bodyInduction => exact bodyInduction.lam_body
-  | piStructural _ _ domainInduction codomainInduction =>
-      exact domainInduction.symm.pi_domain.trans codomainInduction.pi_codomain
   | trans _ _ firstInduction secondInduction =>
       exact firstInduction.trans secondInduction
 
 end Cumulative
 
-/-- Cumulative conversion between products exposes its contravariant domain and covariant codomain. -/
+/-- Cumulative conversion between products exposes convertible domains and cumulative codomains. -/
 def CumulativeProductComponentInversion : Prop :=
   ∀ {n : Nat} {domain domain' : Term n} {codomain codomain' : Term (n + 1)},
     Cumulative (.pi domain codomain) (.pi domain' codomain') →

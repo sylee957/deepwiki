@@ -61,16 +61,12 @@ signatures and dependency boundaries conditionally; they are not an internal HoT
 - Theorem 0.B.1 (conservativity over ordinary `CCω`), unrendered arXiv source tail 0.B — [infra]
   both the printed subtyping-erasure lemma and the theorem conclusion incorrectly target beta
   conversion. `Sort 0 ≤ Sort 1` refutes the former and `Sort 0 : Sort 1` refutes the latter. The
-  repaired conclusions are cumulative conversion and ordinary typing. Annotation erasure into the
-  literal unannotated Figures 5/6 rule system is proved, and the final embedding into ordinary `CCω`
-  follows from `ErasedSubtypeTypehood`. Confluence, constructor-local principal typing, and dependent
-  context narrowing are proved. Erasing universe levels gives direct agreement of assigned types,
-  closing assigned-kind discrimination and typed conversion regularity unconditionally.
-  Mutual typing/subtyping recursion closes conversion, lambda, both directions of product transport,
-  narrowing, and the
-  final embedding once the application case retains its actual function-subtyping derivation. That
-  relation-indexed boundary is reduced further to application typehood transport along the explicit
-  term-level cumulative derivation obtained from subtyping.
+  exact erasure into the literal annotation-free Figures 5/6 rule system is proved. That system's
+  structural subtyping includes application covariance, lambda covariance, and contravariant product
+  domains, so it is intentionally distinct from ordinary `CCω` cumulativity. The former unconditional
+  map between them and its conditional application-transport scaffold have been retired. A repaired
+  final conservativity theorem requires a typed interpretation of the structural subtyping judgment
+  into ordinary typing.
   The common-kind typed beta-conversion constructor is isolated as a necessary fragment: proving it
   requires typed subject reduction and application/product inversion, not merely untyped confluence.
   Canonically introduced beta redexes preserve typing unconditionally, and root-beta preservation
@@ -229,21 +225,13 @@ abbrev subtyping_erases_to_strengthened :=
 abbrev typing_erases_to_strengthened :=
   @DeepWiki.Refine.AnnotatedDependentCalculus.typing_erases_to_strengthened
 
-/-- **Section 4.3, intermediate:** typing erases to the literal unannotated rule system. -/
-abbrev conservativity_ccomega_plus_over_ccomega :=
+/-- **Section 4.3, intermediate:** annotated typing erases to the literal unannotated rule system. -/
+abbrev annotation_erasure_conservativity :=
   @DeepWiki.Refine.AnnotatedCalculusConservativity.annotationErasureConservativity
 
 /-- **Section 4.3, p. 18:** contexts erase into the literal annotation-free rule system. -/
 abbrev context_erases_to_strengthened :=
   @DeepWiki.Refine.AnnotatedDependentCalculus.context_erases_to_strengthened
-
-/-- **Section 4.3, p. 18:** erased subtyping is ordinary cumulative conversion. -/
-abbrev erased_subtyping_to_cumulative :=
-  @DeepWiki.Refine.AnnotatedCalculusConservativity.subtype_toCumulative
-
-/-- **Section 4.3, p. 18:** annotated subtyping erases to ordinary cumulativity unconditionally. -/
-abbrev annotated_subtyping_to_cumulative :=
-  @DeepWiki.Refine.AnnotatedCalculusConservativity.annotatedSubtype_toCumulative_unconditional
 
 /-- **Source-tail Lemma 0.B.1 erratum:** the printed subtyping-as-beta-conversion claim. -/
 abbrev appendix_subtyping_erasure_printed_claim :=

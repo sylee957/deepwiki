@@ -11,10 +11,6 @@ Catalog pointers for the raw and univalent parametricity constructions in the re
 
 ## NOT YET FORMALIZED
 
-- Theorem 3.4 (raw abstraction for full dependent `CCω`), PDF p. 9 — [infra] the exact syntax,
-  context translation, witness typing cases, a formation-explicit theorem, and a conditional
-  ordinary-typing theorem exist; the remaining gap is relational compatibility of every rule in
-  the current broader cumulative-conversion relation.
 - Figure 2 (complete univalent term translation), PDF p. 11 — [infra] the universe package,
   relation projection, and intrinsic term fragment exist, but the complete dependent translation
   still requires realizers for its universe and dependent-product package constructors.
@@ -58,11 +54,11 @@ abbrev equation_7_raw_product_translation :=
 abbrev equation_8_raw_universe_translation_is_well_typed :=
   DeepWiki.Refine.DependentCalculus.RawParametricity.rawUniverseTranslation_hasType
 
-/-- **Theorem 3.4, PDF p. 9, conditional form:** ordinary typing implies the three displayed conclusions when cumulativity preserves raw relation fibers. -/
-abbrev theorem_3_4_of_relational_cumulativity :=
-  @DeepWiki.Refine.DependentCalculus.RawParametricity.displayedRawAbstraction_of_hasRelationalCumulativity
+/-- **Theorem 3.4, PDF p. 9:** ordinary `CCω` typing implies the three displayed raw-abstraction conclusions. -/
+abbrev theorem_3_4_raw_abstraction :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.displayedRawAbstraction
 
-/-- **Theorem 3.4, PDF p. 9, formation-explicit fragment:** dependent raw abstraction yields both term copies and their relation witness. -/
+/-- **Theorem 3.4 auxiliary, PDF p. 9:** formation-explicit typing yields both term copies and their relation witness. -/
 abbrev theorem_3_4_formation_explicit_abstraction :=
   @DeepWiki.Refine.DependentCalculus.RawParametricity.formationExplicitRawAbstraction
 

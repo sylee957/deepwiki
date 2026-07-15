@@ -110,12 +110,13 @@ or a cubical/HoTT-flavored equality would be needed to instantiate them non-vacu
 - [x] Prove the univalent abstraction result for the intrinsic function fragment.
 - [x] Prove all three raw abstraction conclusions for a formation-explicit dependent judgment whose
   lambda rule recursively supplies codomain formation and whose cumulativity rule records exact
-  substitution-stable relation-fiber monotonicity; prove its one-way erasure into ordinary `CCω`
+  substitution-stable relation-fiber monotonicity; prove its erasure into ordinary `CCω`
   typing. Add typed renaming, weakening, substitution, instantiation, lookup regularity, and assigned
   type regularity for this judgment.
-- [ ] Bridge the paper's ordinary cumulative typing judgment to the formation-explicit judgment,
-  or prove the strongest faithful typed restriction. The full cumulative reading of the paper's
-  `CCω` Theorem 1 is not yet claimed.
+- [x] Prove relational-fiber monotonicity for every ordinary `Cumulative` constructor—conversion,
+  universe lifting, products with convertible domains and cumulative codomains, and transitivity—
+  and lift ordinary typing into the formation-explicit judgment. Raw abstraction for ordinary
+  `CCω` typing is therefore unconditional.
 
 ## First checkpoint: what the six levels mean
 
@@ -223,7 +224,10 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
   and combine both branches into the complete `D_□`-indexed family.
 - [x] Define intrinsically scoped raw dependent terms and contexts with binder-safe renaming,
   simultaneous substitution, lookup, and their identity/composition/fusion laws.
-- [x] Add well-formedness, dependent typing, conversion, and cumulativity for the scoped calculus.
+- [x] Add well-formedness, dependent typing, conversion, and ordinary cumulativity for the scoped
+  calculus. `Cumulative` has exactly conversion, universe lifting, invariant-domain dependent
+  products, and transitivity; application covariance, lambda covariance, and contravariant product
+  domains are not ordinary cumulative constructors.
 - [x] Prove typed renaming, weakening, simultaneous substitution, instantiation, and their
   preservation of beta conversion, cumulativity, context well-formedness, and typing.
 - [x] Add annotations, binder-safe erasure, and the complete displayed `CCω⁺` subtyping and typing
@@ -232,12 +236,12 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
   prove mutually that erasure preserves context formation, typing, and every subtyping derivation.
 - [x] Erase every annotated context, typing, and subtyping derivation into the literal
   annotation-free Figures 5 and 6 calculus.
-- [x] Reduce its final embedding into ordinary `DependentCalculus` typing to the precise proposition
-  `ErasedSubtypeTypehood`: a target reached by a typed erased-subtyping derivation preserves the
-  existence of a universe typing. The construction covers every typing constructor, while erased
-  subtyping maps to ordinary cumulative conversion unconditionally.
-- [ ] Prove `ErasedSubtypeTypehood` from conversion and regularity for the ordinary calculus. Its
-  remaining constructor-local boundary is the relation-indexed application theorem below.
+- [x] Keep the literal erasure calculus separate from ordinary `CCω`: its `Subtype` judgment has
+  structural application, lambda, and contravariant-product rules that ordinary `Cumulative` does
+  not. Exact annotated erasure lands in `UnderlyingDependentCalculus`, not directly in ordinary
+  cumulative typing.
+- [x] Retire the false context-free bridge from structural `Subtype` to ordinary `Cumulative`, the
+  conditional embedding built on it, and the dead application-transport scaffold.
 - [x] Audit source-tail 0.B's printed `|Γ| ⊢ |t| ≡ |A|` conclusion and refute it formally with the
   annotated derivation `Sort 0 : Sort 1`; the repaired conservativity conclusion is typing.
 - [x] Prove parallel-beta substitution, complete-development triangle/diamond, Church-Rosser
@@ -248,28 +252,21 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
   reverse domain typehood transport, narrowing, and forward codomain transport.
 - [x] Prove constructor-local principal typing and beta-convertible product injectivity. Formalize
   the source tail's false subtyping-as-beta-conversion claim and refute it with `Sort 0 ≤ Sort 1`;
-  retain cumulative conversion as the repaired conclusion. Remove the superseded conditional
-  product-fork and assigned-type-lower-bound route.
+  do not replace it by a context-free cumulative claim for the structurally stronger erased
+  subtyping judgment. Remove the superseded conditional product-fork and assigned-type-lower-bound
+  route.
 - [x] Prove that erasing universe indices maps cumulative conversion to beta conversion and prove
-  directly that any two types assigned to one term agree after level erasure. This closes assigned-kind discrimination and typed conversion
-  regularity unconditionally; the stronger unused product-target detour has been removed.
-- [x] Prove lambda universe-typehood impossible and use mutual typing/subtyping recursion to close
-  conversion, lambda, forward and reverse product transport, narrowing, and the complete embedding
-  from an application-transport premise.
-- [x] Define `ErasedSubtypeRelationIndexedApplicationTransport`, whose two
-  fields retain the function-subtyping derivation, the target application's kind typing, and the
-  recursive forward or reverse typehood theorem. Re-run the mutual typing/subtyping recursion and
-  prove that this premise implies `ErasedSubtypeTypehood` and the complete ordinary
-  embedding.
-- [x] Delete the obsolete unindexed transport interface, its duplicate mutual recursor, and its
-  counterexample ladder; they were an internal failed reduction rather than paper content.
-- [ ] Prove the exact relation-indexed application transport premise. Canonically typed beta
-  redexes preserve their dependent type, root-beta preservation is sufficient for all compatible
-  one-step reductions, and full subject reduction follows from exact cumulative product-component inversion.
-  Proving that inversion across transitive paths, then strengthening the induction to arbitrary
-  application spines with substitution stability, remains. Product-fork coherence for two types
-  assigned to one term is insufficient because this boundary relates two distinct function terms;
-  the remaining premise relates two distinct function terms.
+  directly that any two types assigned to one term agree after level erasure. This closes
+  assigned-kind discrimination and typed conversion regularity unconditionally; the stronger unused
+  product-target detour has been removed.
+- [x] Prove that canonical beta redexes preserve their dependent type and that root-beta preservation
+  suffices for every compatible one-step reduction. General subject reduction follows conditionally
+  from cumulative product-component inversion.
+- [ ] If the repaired source-tail conservativity result is pursued directly, interpret the literal
+  erased typing and structural-subtyping derivations into ordinary typing using their typing premises
+  constructor by constructor. This must be a typed, derivation-indexed theorem rather than an
+  untyped structural-subtyping-to-cumulativity map; cumulative product inversion remains part of the
+  supporting subject-reduction metatheory.
 - [x] Represent annotated universe levels and annotated types for a documented core fragment.
 - [x] Represent semantic parametricity contexts for an intrinsically typed lambda calculus.
 - [x] Formalize weakening of witnesses through the documented core types, including the
@@ -375,12 +372,11 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
 
 - [x] Prove source-tail 0.B annotation erasure for contexts, typing, and subtyping into the literal
   annotation-free calculus.
-- [ ] Complete the repaired source-tail 0.B conservativity theorem by inhabiting the exact
-  relation-indexed application-transport boundary. Assigned-kind discrimination, typed conversion
-  regularity, dependent context narrowing, both product directions, lambda impossibility, and the
-  mutual embedding are proved. The remaining application case needs typed preservation along
-  convertible function heads and arbitrary application spines. The paper's printed beta-conversion
-  conclusion is false and already has a formal counterexample.
+- [ ] Complete the repaired source-tail 0.B conservativity theorem with a direct typed interpretation
+  of the literal annotation-free Figures 5 and 6 judgments into ordinary `CCω` typing. Context
+  narrowing, assigned-kind discrimination, typed conversion regularity, canonical-beta preservation,
+  and conditional subject reduction are available, but no complete embedding is currently claimed.
+  The paper's printed beta-conversion conclusion is false and already has a formal counterexample.
 - [x] Construct the erased parameter context, recursively project relation records with `rel*`, and
   map every annotated synthesis derivation to a raw sequent under explicit `ErasureLaws` for the
   opaque witness realizers.
@@ -561,12 +557,13 @@ shaped Lean declarations.
   constructs all premises of the printed Theorem 4 while making its primed lambda conclusion
   untypable, so the literal theorem is false as well. `CoherentRawSequent` restores the omitted
   domain premise and satisfies functionality.
-- **The raw typing induction needs more than context-free cumulativity.** The repaired
-  `AbstractionHasType` judgment recursively exposes the type witnesses consumed by lambda and
-  conversion and requires fiberwise relational cumulativity. It proves the complete abstraction
-  conclusion and erases to ordinary typing, but no converse is claimed. The direct-lambda
-  obstruction for translated universe levels explains why the existing `Cumulative` induction is
-  insufficient.
+- **Raw abstraction is unconditional for ordinary `CCω` typing.** `AbstractionHasType` recursively
+  exposes the type witnesses consumed by lambda and conversion and records fiberwise relational
+  cumulativity. Ordinary `Cumulative` has only conversion, universe lifting, invariant-domain
+  products, and transitivity; each constructor preserves every substituted relation fiber. Ordinary
+  typing therefore lifts into `AbstractionHasType`, giving the complete raw abstraction conclusion
+  without an extra premise. This does not identify the structurally stronger erased annotated
+  subtyping judgment with ordinary cumulativity.
 - **The coherence-preserving arrow level-4 dependency is not minimal for native Lean equality.**
   UIP lowers the necessary domain structure from level `4` to level `3`; the stronger requirement
   is retained as the intended proof-relevant specification, while the native reduction is proved
@@ -614,20 +611,21 @@ shaped Lean declarations.
 - **Conservativity needs the ordinary target judgment, not only literal rule erasure.**
   `UnderlyingDependentCalculus` records the annotation-free Figures 5 and 6 judgments, and the
   mutual `WellFormed.erase`, `HasType.erase`, and `Subtype.erase` definitions prove exact erasure
-  into that intermediate system. The appendix targets ordinary `CCω` typing. The final embedding is
-  now constructed from the exact `ErasedSubtypeTypehood` boundary, while erased subtyping already
-  maps unconditionally to ordinary cumulativity. The boundary retains the original typed-subtyping
-  derivation. Closing it requires conversion and
-  regularity metatheory; it is not assumed as an inhabitant.
+  into that intermediate system. Its structural `Subtype` includes application covariance, lambda
+  covariance, and contravariant product domains, whereas ordinary `Cumulative` contains only
+  conversion, universe lifting, invariant-domain products, and transitivity. The former context-free
+  map between them and its conditional application-transport embedding have been retired. The
+  appendix still targets ordinary `CCω` typing, so completing it requires a direct typed
+  interpretation of those structural derivations; no final embedding is currently claimed.
 - **The source-tail 0.B has two genuine beta-conversion errata.** Universe cumulativity refutes the
   printed subtyping-erasure lemma with `Sort 0 ≤ Sort 1`, and the typing derivation
   `Sort 0 : Sort 1` refutes the theorem's displayed term/type conversion. The repairs target
-  cumulative conversion and ordinary typing, respectively. Parallel-beta confluence proves both
-  nonconversion facts; newest-entry narrowing is proved by a typed identity substitution. The
-  product typehood case needs reverse domain transport, not merely the forward induction hypothesis
-  supplied by contravariant subtyping. The application case retains the actual function-subtyping derivation in
-  `ErasedSubtypeRelationIndexedApplicationTransport`, which is sufficient for the mutual embedding.
-  Proving that exact relation-indexed premise remains the source-tail metatheory task.
+  a typed interpretation of structural subtyping and ordinary typing, respectively, rather than an
+  untyped beta- or cumulative-conversion bridge. Parallel-beta confluence proves both nonconversion
+  facts; newest-entry narrowing is proved by a typed identity substitution, canonical beta redexes
+  preserve typing, and compatible one-step subject reduction is reduced to cumulative
+  product-component inversion. That inversion and the direct derivation-indexed interpretation are
+  the remaining source-tail metatheory, not an application-transport interface.
 - **Canonical erasure is not source-tail Theorem 0.C.1.** `Judgment.canonicalErasure` proves only
   normalization equalities for the restricted self-translation. `Judgment.eraseToRaw` now supplies
   the source tail's erased parameter context, raw parametricity sequent, and recursive `rel*`

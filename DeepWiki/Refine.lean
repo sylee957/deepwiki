@@ -23,7 +23,6 @@ import DeepWiki.Refine.UnivalentParametricitySequents
 import DeepWiki.Refine.AnnotatedDependentCalculus
 import DeepWiki.Refine.MaximalAnnotation
 import DeepWiki.Refine.AnnotatedCalculusConservativity
-import DeepWiki.Refine.AnnotatedCalculusApplicationTransport
 import DeepWiki.Refine.AnnotatedRelationTranslation
 import DeepWiki.Refine.AnnotatedTranslationErasure
 import DeepWiki.Refine.AnnotatedParametricityErasure

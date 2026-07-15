@@ -270,19 +270,6 @@ inductive Cumulative : Term n → Term n → Prop where
       (domainEqual : Convertible domain domain')
       (codomainCumulative : Cumulative codomain codomain') :
       Cumulative (.pi domain codomain) (.pi domain' codomain')
-  /-- Application is covariant in its function while retaining the same argument. -/
-  | app {function function' argument : Term n}
-      (functionCumulative : Cumulative function function') :
-      Cumulative (.app function argument) (.app function' argument)
-  /-- Lambda abstraction is covariant in its body under an unchanged domain. -/
-  | lam {domain : Term n} {body body' : Term (n + 1)}
-      (bodyCumulative : Cumulative body body') :
-      Cumulative (.lam domain body) (.lam domain body')
-  /-- Products are contravariant in their domains and covariant in their codomains. -/
-  | piStructural {domain domain' : Term n} {codomain codomain' : Term (n + 1)}
-      (domainCumulative : Cumulative domain' domain)
-      (codomainCumulative : Cumulative codomain codomain') :
-      Cumulative (.pi domain codomain) (.pi domain' codomain')
   /-- Cumulative conversion is transitive. -/
   | trans {first second third : Term n}
       (firstSecond : Cumulative first second) (secondThird : Cumulative second third) :
@@ -308,10 +295,6 @@ theorem rename {left right : Term source} (subtype : Cumulative left right)
   | sort level => exact .sort level
   | pi domainEqual _ codomain_ih =>
       exact .pi (domainEqual.rename mapping) (codomain_ih (Renaming.lift mapping))
-  | app _ function_ih => exact .app (function_ih mapping)
-  | lam _ body_ih => exact .lam (body_ih (Renaming.lift mapping))
-  | piStructural _ _ domain_ih codomain_ih =>
-      exact .piStructural (domain_ih mapping) (codomain_ih (Renaming.lift mapping))
   | trans _ _ first_ih second_ih => exact (first_ih mapping).trans (second_ih mapping)
 
 /-- Simultaneous substitution preserves cumulative conversion. -/
@@ -323,11 +306,6 @@ theorem substitute {left right : Term source} (subtype : Cumulative left right)
   | sort level => exact .sort level
   | pi domainEqual _ codomain_ih =>
       exact .pi (domainEqual.substitute mapping)
-        (codomain_ih (Substitution.lift mapping))
-  | app _ function_ih => exact .app (function_ih mapping)
-  | lam _ body_ih => exact .lam (body_ih (Substitution.lift mapping))
-  | piStructural _ _ domain_ih codomain_ih =>
-      exact .piStructural (domain_ih mapping)
         (codomain_ih (Substitution.lift mapping))
   | trans _ _ first_ih second_ih => exact (first_ih mapping).trans (second_ih mapping)
 

@@ -13,14 +13,6 @@ Catalog pointers for the raw and univalent parametricity constructions of Sectio
 
 ## NOT YET FORMALIZED
 
-- Theorem 1 (raw abstraction for full dependent `CCω`), p. 7 — [infra] the exact scoped claim,
-  translated-context lookup equations, typed original/prime renamings, triple-context extension,
-  the universe, variable, application, lambda, and dependent-product witness cases, and the reduction
-  to translated-context formation plus witness typing are formalized. The lambda case explicitly
-  uses the translated product-type witness, and the conversion case is proved. A formation-explicit
-  refinement supplies recursive codomain witnesses and substitution-stable fiberwise cumulativity,
-  and its full three-conclusion abstraction theorem is proved. The remaining bridge is from the
-  paper's ordinary cumulative typing judgment to that formation-explicit refinement.
 - Theorem 2 (univalent abstraction for full dependent `CCω`), p. 9 — [infra] the universe package
   and intrinsic fragment are formalized, but the exact typing induction is not.
 -/
@@ -67,6 +59,10 @@ abbrev raw_product_term_translation :=
 abbrev raw_abstraction_claim :=
   DeepWiki.Refine.DependentCalculus.RawParametricity.DisplayedRawAbstractionClaim
 
+/-- **Theorem 1, p. 7:** ordinary `CCω` typing satisfies the three displayed scoped conclusions. -/
+abbrev raw_abstraction :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.displayedRawAbstraction
+
 /-- **Theorem 1, p. 7:** the displayed claim reduces to context formation and witness typing. -/
 abbrev raw_abstraction_structural_reduction :=
   DeepWiki.Refine.DependentCalculus.RawParametricity.displayedRawAbstractionClaim_iff_structural
@@ -103,15 +99,15 @@ abbrev raw_product_witness_is_well_typed :=
 abbrev raw_conversion_witness_is_well_typed :=
   @DeepWiki.Refine.DependentCalculus.RawParametricity.translate_conversion_witness_hasType
 
-/-- **Theorem 1 repaired premise:** cumulative source types act on every translated relation fiber. -/
-abbrev raw_relational_cumulativity :=
-  @DeepWiki.Refine.DependentCalculus.RawParametricity.IsRelationallyCumulative
+/-- **Theorem 1 auxiliary:** ordinary cumulativity preserves every substituted raw relation fiber. -/
+abbrev raw_cumulativity_preserves_relation_fibers :=
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.isRelationallyCumulative_of_cumulative
 
-/-- **Theorem 1 repaired judgment:** formation-explicit dependent typing. -/
+/-- **Theorem 1 auxiliary:** formation-explicit dependent typing. -/
 abbrev raw_formation_explicit_typing :=
   @DeepWiki.Refine.DependentCalculus.RawParametricity.AbstractionHasType
 
-/-- **Theorem 1 repaired:** formation-explicit typing proves all three abstraction conclusions. -/
+/-- **Theorem 1 auxiliary:** formation-explicit typing proves all three abstraction conclusions. -/
 abbrev raw_formation_explicit_abstraction :=
   @DeepWiki.Refine.DependentCalculus.RawParametricity.formationExplicitRawAbstraction
 

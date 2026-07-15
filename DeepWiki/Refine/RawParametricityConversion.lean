@@ -176,7 +176,7 @@ theorem elementRelationType_cumulative (term : Term n) {lower upper : Nat}
     (levelOrder : lower ≤ upper) :
     Cumulative (elementRelationType term lower) (elementRelationType term upper) := by
   unfold elementRelationType
-  exact .piStructural (.refl _) (.piStructural (.refl _) (.sort levelOrder))
+  exact .pi (.refl _) (.pi (.refl _) (.sort levelOrder))
 
 /-- The related-term interpretation of universes is monotone in the universe level. -/
 theorem relatedTermType_sort_cumulative (term : Term n) {lower upper : Nat}
@@ -209,23 +209,6 @@ theorem relatedTermType_fiberApplication (function : Term n)
         exact (primed_rename_shift function).trans
           (weakenBy_three_eq_rename_translatedShift (primed function)).symm]
   rfl
-
-/-- Fiberwise cumulativity of a function term is preserved by source application. -/
-theorem relatedTermType_app_cumulative (term argument : Term n)
-    {function function' : Term n}
-    (functionCumulative : ∀ input : Term n,
-      Cumulative (relatedTermType input function)
-        (relatedTermType input function')) :
-    Cumulative (relatedTermType term (.app function argument))
-      (relatedTermType term (.app function' argument)) := by
-  have relationAtArgument := functionCumulative argument
-  have withArgumentWitness := Cumulative.app relationAtArgument
-    (argument := translate argument)
-  have withOriginalTerm := Cumulative.app withArgumentWitness
-    (argument := original term)
-  have withPrimedTerm := Cumulative.app withOriginalTerm
-    (argument := primed term)
-  simpa only [relatedTermType, translate_app] using withPrimedTerm
 
 /-- Fiberwise codomain cumulativity and convertible domains lift through products. -/
 theorem relatedTermType_pi_cumulative (term : Term n)

@@ -53,22 +53,20 @@ the implementation-only automation discussion; neither is silently counted as co
   lambdas, and dependent products in intrinsically scoped syntax.
 - [x] Catalog Equation (8), proving that the translated universe has the displayed relation type
   one universe level higher.
-- [x] Point Theorem 3.4 at the strongest proved dependent result: all three displayed abstraction
-  conclusions follow from the formation-explicit `AbstractionHasType` judgment.
-- [x] Prove the paper-shaped ordinary `HasType` theorem from the explicit global law
-  `HasRelationalCumulativity`.
-- [ ] Establish that law for the intended standard `CCω` cumulativity, or narrow the current broader
-  `Cumulative` relation; until then, the paper's unrestricted Theorem 3.4 remains explicitly marked
-  `[infra]` in the source catalog.
+- [x] Prove the formation-explicit abstraction theorem: all three displayed conclusions follow from
+  the `AbstractionHasType` judgment.
+- [x] Narrow ordinary `Cumulative` to the standard conversion, universe, dependent-product, and
+  transitivity rules, retiring the unrelated lambda and structural-product closure rules.
+- [x] Prove `HasRelationalCumulativity` for that ordinary relation and derive the unconditional
+  `displayedRawAbstraction`, discharging the source-catalog marker for Theorem 3.4.
 - [ ] Complete Figure 2 and unrestricted Theorem 3.6 after supplying object-language universe and
   dependent-product package realizers; retain their `[infra]` markers in the source catalog.
 
-The formation-explicit theorem is not presented as the unrestricted paper theorem: its premise
-records codomain formation and substitution-stable relational cumulativity that ordinary
-`HasType` does not currently expose. The conditional bridge shows that codomain formation is not
-the remaining obstacle: the lambda case recovers it from regularity. The unresolved boundary is
-the global relational behavior of cumulative conversion, specifically the broader lambda and
-structural-product cases in the current calculus.
+The formation-explicit theorem remains the proof factorization behind the unrestricted result.
+Ordinary `CCω` cumulativity now preserves every substituted relation fiber, so ordinary `HasType`
+embeds unconditionally into `AbstractionHasType` and Theorem 3.4 follows. The previous conditional
+bridge and its lambda/structural-product gap were artifacts of an overly broad `Cumulative`
+relation and have been retired. Figure 2 and Theorem 3.6 remain the next Section 3.3 boundary.
 
 ## Next phases
 
