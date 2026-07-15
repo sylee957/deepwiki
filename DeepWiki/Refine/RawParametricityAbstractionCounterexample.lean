@@ -1,4 +1,4 @@
-import DeepWiki.Refine.DependentCalculusCumulativeInversion
+import DeepWiki.Refine.CCOmega.CumulativeInversion
 import DeepWiki.Refine.ParametricitySequents
 
 /-! # Counterexample to unrestricted raw parametricity abstraction

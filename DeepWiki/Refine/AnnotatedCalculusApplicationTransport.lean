@@ -1,5 +1,5 @@
-import DeepWiki.Refine.DependentCalculusCumulativeInversion
-import DeepWiki.Refine.DependentCalculusRegularity
+import DeepWiki.Refine.CCOmega.CumulativeInversion
+import DeepWiki.Refine.CCOmega.Regularity
 
 /-! # Relation-indexed application transport
 

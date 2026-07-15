@@ -1,5 +1,5 @@
 import DeepWiki.Refine.ProofTransfer
-import DeepWiki.Refine.DependentCalculusSyntax
+import DeepWiki.Refine.CCOmega.Syntax
 import Sources.Doi_10_1007_978_3_031_57262_3_10.Source
 
 /-! # Section 2.1 — Proof transfer in type theory

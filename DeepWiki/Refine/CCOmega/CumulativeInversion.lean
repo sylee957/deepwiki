@@ -1,4 +1,4 @@
-import DeepWiki.Refine.DependentCalculusPrincipalTyping
+import DeepWiki.Refine.CCOmega.PrincipalTyping
 
 /-! # Inversion principles for cumulative conversion
 

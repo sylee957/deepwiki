@@ -1,4 +1,4 @@
-import DeepWiki.Refine.DependentCalculusTyping
+import DeepWiki.Refine.CCOmega.Typing
 
 /-! # Syntactic raw parametricity
 

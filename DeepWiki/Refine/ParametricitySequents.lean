@@ -1,5 +1,5 @@
 import DeepWiki.Refine.RawParametricitySyntax
-import DeepWiki.Refine.DependentCalculusTyping
+import DeepWiki.Refine.CCOmega.Typing
 import Mathlib.Data.List.Nodup
 
 /-! # Raw parametricity sequents

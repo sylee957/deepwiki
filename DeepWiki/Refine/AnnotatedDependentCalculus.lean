@@ -1,5 +1,5 @@
 import DeepWiki.Refine.DependencyRequirements
-import DeepWiki.Refine.DependentCalculusTyping
+import DeepWiki.Refine.CCOmega.Typing
 
 /-! # Annotated dependent calculus
 

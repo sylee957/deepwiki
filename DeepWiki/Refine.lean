@@ -10,9 +10,7 @@ import DeepWiki.Refine.TypeEquivalence
 import DeepWiki.Refine.FunctionalRelation
 import DeepWiki.Refine.UniverseRelationStructure
 import DeepWiki.Refine.Dependent
-import DeepWiki.Refine.DependentCalculusSyntax
-import DeepWiki.Refine.DependentCalculusTyping
-import DeepWiki.Refine.DependentCalculusConfluence
+import DeepWiki.Refine.CCOmega
 import DeepWiki.Refine.RawParametricitySyntax
 import DeepWiki.Refine.RawParametricityTyping
 import DeepWiki.Refine.RawParametricityConversion
@@ -25,10 +23,6 @@ import DeepWiki.Refine.UnivalentParametricitySequents
 import DeepWiki.Refine.AnnotatedDependentCalculus
 import DeepWiki.Refine.MaximalAnnotation
 import DeepWiki.Refine.AnnotatedCalculusConservativity
-import DeepWiki.Refine.DependentCalculusRegularity
-import DeepWiki.Refine.DependentCalculusPrincipalTyping
-import DeepWiki.Refine.DependentCalculusCumulativeInversion
-import DeepWiki.Refine.DependentCalculusSubjectReduction
 import DeepWiki.Refine.AnnotatedCalculusApplicationTransport
 import DeepWiki.Refine.AnnotatedRelationTranslation
 import DeepWiki.Refine.AnnotatedTranslationErasure
@@ -58,6 +52,7 @@ import DeepWiki.Refine.PolymorphicListRelations
 import DeepWiki.Refine.TupleVectorTransfer
 import DeepWiki.Refine.CoreParametricity
 import DeepWiki.Refine.ParametricityTranslations
+import DeepWiki.Refine.ParametricitySurfaceSyntax
 import DeepWiki.Refine.UnivalentRelationStructure
 import DeepWiki.Refine.WitnessWeakening
 import DeepWiki.Refine.Resolve

@@ -1,4 +1,4 @@
-import DeepWiki.Refine.DependentCalculusTyping
+import DeepWiki.Refine.CCOmega.Typing
 import Mathlib.Logic.Relation
 
 /-! # Confluence of beta conversion

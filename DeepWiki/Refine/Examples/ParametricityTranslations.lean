@@ -1,4 +1,5 @@
 import DeepWiki.Refine.ParametricityTranslations
+import DeepWiki.Refine.ParametricitySurfaceSyntax
 import DeepWiki.Refine.RawParametricityTyping
 
 /-! # Reading parametricity translations through `CCω`
@@ -15,138 +16,8 @@ namespace DeepWiki.Refine.ParametricityTranslationTutorial
 
 open DeepWiki.Refine.DependentCalculus
 open DeepWiki.Refine.DependentCalculus.RawParametricity
-open Lean Macro
 
 universe u
-
-/-! ## Named surface notation
-
-The object language has the grammar
-
-`A, B, t, u ::= □[i] | x | t u | λ x : A, t | Π x : A, B`.
-
-A context has the grammar `Γ ::= ⟨⟩ | Γ, x : A`. The wrappers `ccω!{...}` and
-`ccωctx!{...}` only tell Lean where this object-language syntax begins and ends.
--/
-
-declare_syntax_cat ccwterm
-syntax:max ident : ccwterm
-syntax:max "□[" num "]" : ccwterm
-syntax:max "(" ccwterm ")" : ccwterm
-syntax:70 ccwterm:70 ccwterm:71 : ccwterm
-syntax:25 ccwterm:26 " → " ccwterm:25 : ccwterm
-syntax:20 "λ " ident " : " ccwterm ", " ccwterm : ccwterm
-syntax:20 "Π " ident " : " ccwterm ", " ccwterm : ccwterm
-
-declare_syntax_cat ccwctx
-syntax:max "⟨⟩" : ccwctx
-syntax:20 ccwctx ", " ident " : " ccwterm : ccwctx
-
-/-- Find the de Bruijn index of the nearest binder carrying a surface name. -/
-private def nameIndex? (name : Name) : List Name → Option Nat
-  | [] => none
-  | current :: rest =>
-      if name == current then some 0 else (nameIndex? name rest).map Nat.succ
-
-/-- Elaborate a named surface term into an intrinsically scoped `CCω` term. -/
-private partial def expandTerm (scope : List Name) (stx : Syntax) :
-    MacroM (TSyntax `term) := do
-  match stx with
-  | `(ccwterm| □[$level:num]) =>
-      `(.sort $level)
-  | `(ccwterm| $name:ident) =>
-      let some index := nameIndex? name.getId scope
-        | Macro.throwErrorAt name s!"unbound CCω variable '{name.getId}'"
-      let indexSyntax := quote index
-      let sizeSyntax := quote scope.length
-      `(.var (⟨$indexSyntax, by decide⟩ : Fin $sizeSyntax))
-  | `(ccwterm| ($term:ccwterm)) =>
-      expandTerm scope term
-  | `(ccwterm| $function:ccwterm $argument:ccwterm) =>
-      let functionSyntax ← expandTerm scope function
-      let argumentSyntax ← expandTerm scope argument
-      `(.app $functionSyntax $argumentSyntax)
-  | `(ccwterm| $domain:ccwterm → $codomain:ccwterm) =>
-      let domainSyntax ← expandTerm scope domain
-      let codomainSyntax ← expandTerm (Name.anonymous :: scope) codomain
-      `(.pi $domainSyntax $codomainSyntax)
-  | `(ccwterm| λ $name:ident : $domain:ccwterm, $body:ccwterm) =>
-      let domainSyntax ← expandTerm scope domain
-      let bodySyntax ← expandTerm (name.getId :: scope) body
-      `(.lam $domainSyntax $bodySyntax)
-  | `(ccwterm| Π $name:ident : $domain:ccwterm, $codomain:ccwterm) =>
-      let domainSyntax ← expandTerm scope domain
-      let codomainSyntax ← expandTerm (name.getId :: scope) codomain
-      `(.pi $domainSyntax $codomainSyntax)
-  | _ => Macro.throwErrorAt stx "unsupported CCω term syntax"
-
-/-- Elaborate a named dependent context and return its newest-first name scope. -/
-private partial def expandContext (stx : Syntax) :
-    MacroM (List Name × TSyntax `term) := do
-  match stx with
-  | `(ccwctx| ⟨⟩) =>
-      let emptySyntax ← `(.empty)
-      pure ([], emptySyntax)
-  | `(ccwctx| $context:ccwctx, $name:ident : $type:ccwterm) =>
-      let (scope, contextSyntax) ← expandContext context
-      if (nameIndex? name.getId scope).isSome then
-        Macro.throwErrorAt name s!"duplicate CCω context variable '{name.getId}'"
-      let typeSyntax ← expandTerm scope type
-      let extendedSyntax ← `(.extend $contextSyntax $typeSyntax)
-      pure (name.getId :: scope, extendedSyntax)
-  | _ => Macro.throwErrorAt stx "unsupported CCω context syntax"
-
--- A closed surface term elaborates to `Term 0`.
-syntax:max "ccω!{" ccwterm "}" : term
-macro_rules
-  | `(ccω!{ $term:ccwterm }) => do
-      return (← expandTerm [] term).raw
-
--- A surface context elaborates to the indexed `Context` type.
-syntax:max "ccωctx!{" ccwctx "}" : term
-macro_rules
-  | `(ccωctx!{ $context:ccwctx }) => do
-      let (_, contextSyntax) ← expandContext context
-      pure contextSyntax.raw
-
--- An open term is elaborated relative to the declarations displayed before `⊢`.
-syntax:max "ccωterm!{" ccwctx " ⊢ " ccwterm "}" : term
-macro_rules
-  | `(ccωterm!{ $context:ccwctx ⊢ $term:ccwterm }) => do
-      let (scope, _) ← expandContext context
-      return (← expandTerm scope term).raw
-
--- A surface typing judgment elaborates directly to `HasType Γ t A`.
-syntax:20 "ccω!{" ccwctx " ⊢ " ccwterm " : " ccwterm "}" : term
-macro_rules
-  | `(ccω!{ $context:ccwctx ⊢ $term:ccwterm : $type:ccwterm }) => do
-      let (scope, contextSyntax) ← expandContext context
-      let termSyntax ← expandTerm scope term
-      let typeSyntax ← expandTerm scope type
-      `(HasType $contextSyntax $termSyntax $typeSyntax)
-
--- Definitional equality elaborates to the checked core's beta-convertibility relation.
-syntax:20 "ccω!{" ccwctx " ⊢ " ccwterm " ≡ " ccwterm "}" : term
-macro_rules
-  | `(ccω!{ $context:ccwctx ⊢ $left:ccwterm ≡ $right:ccwterm }) => do
-      let (scope, _) ← expandContext context
-      let leftSyntax ← expandTerm scope left
-      let rightSyntax ← expandTerm scope right
-      `(Convertible $leftSyntax $rightSyntax)
-
--- These two wrappers apply the raw term and context translations after surface elaboration.
-syntax:max "rawω!{" ccwctx " ⊢ " ccwterm "}" : term
-macro_rules
-  | `(rawω!{ $context:ccwctx ⊢ $term:ccwterm }) => do
-      let (scope, _) ← expandContext context
-      let termSyntax ← expandTerm scope term
-      `(DeepWiki.Refine.DependentCalculus.RawParametricity.translate $termSyntax)
-
-syntax:max "rawωctx!{" ccwctx "}" : term
-macro_rules
-  | `(rawωctx!{ $context:ccwctx }) => do
-      let (_, contextSyntax) ← expandContext context
-      `(DeepWiki.Refine.DependentCalculus.RawParametricity.context $contextSyntax)
 
 /-! ## What a context is
 

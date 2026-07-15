@@ -1,5 +1,5 @@
 import DeepWiki.Refine.AnnotatedDependentCalculus
-import DeepWiki.Refine.DependentCalculusConfluence
+import DeepWiki.Refine.CCOmega.Confluence
 
 /-! # Conservativity of the annotated dependent calculus
 

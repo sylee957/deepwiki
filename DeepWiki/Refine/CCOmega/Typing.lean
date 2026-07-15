@@ -1,4 +1,4 @@
-import DeepWiki.Refine.DependentCalculusSyntax
+import DeepWiki.Refine.CCOmega.Syntax
 
 /-! # Typing for a predicative dependent calculus
 
