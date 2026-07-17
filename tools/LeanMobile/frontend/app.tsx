@@ -5,6 +5,11 @@ import { useTree } from '@headless-tree/react'
 import Markdown, { type Components } from 'react-markdown'
 import { BrowserRouter, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router'
 import { SourceViewer } from './SourceViewer.tsx'
+import {
+  decodeSemanticTokens,
+  type SemanticToken,
+  type SemanticTokensPayload
+} from '../src/semantic-tokens.ts'
 
 interface Position {
   line: number
@@ -49,6 +54,10 @@ interface LeanProgressEvent {
   state: Exclude<LeanProgressState, 'idle' | 'offline'>
 }
 
+interface LeanSemanticRefreshEvent {
+  path: string
+}
+
 const emptyHover: HoverState = {
   open: false,
   loading: false,
@@ -78,12 +87,18 @@ function App() {
   const [hover, setHover] = useState<HoverState>(emptyHover)
   const [leanProgress, setLeanProgress] = useState<LeanProgressEvent | null>(null)
   const [leanEventsOnline, setLeanEventsOnline] = useState(false)
+  const [semanticTokens, setSemanticTokens] = useState<SemanticToken[]>([])
   const [hoverInset, setHoverInset] = useState(0)
   const hoverPanel = useRef<HTMLElement>(null)
   const fileRequest = useRef(0)
   const hoverRequest = useRef(0)
   const hoverAbort = useRef<AbortController | null>(null)
   const definitionAbort = useRef<AbortController | null>(null)
+  const semanticAbort = useRef<AbortController | null>(null)
+  const semanticRequest = useRef(0)
+  const semanticRequestPath = useRef<string | null>(null)
+  const semanticTargetPath = useRef<string | null>(null)
+  const semanticRefreshQueued = useRef(false)
 
   useLayoutEffect(() => {
     const panel = hoverPanel.current
@@ -111,6 +126,52 @@ function App() {
       .catch((error: Error) => setTreeStatus(error.message))
   }, [])
 
+  const cancelSemanticTokens = useCallback(() => {
+    semanticRequest.current += 1
+    semanticRefreshQueued.current = false
+    semanticTargetPath.current = null
+    semanticRequestPath.current = null
+    semanticAbort.current?.abort()
+    semanticAbort.current = null
+    setSemanticTokens([])
+  }, [])
+
+  const requestSemanticTokens = useCallback((filePath: string) => {
+    const run = () => {
+      if (semanticTargetPath.current !== filePath) return
+      if (semanticAbort.current) {
+        if (semanticRequestPath.current === filePath) semanticRefreshQueued.current = true
+        return
+      }
+
+      const controller = new AbortController()
+      const requestId = ++semanticRequest.current
+      semanticAbort.current = controller
+      semanticRequestPath.current = filePath
+      void api<SemanticTokensPayload & { path: string }>('/api/semantic-tokens', {
+        method: 'POST',
+        body: JSON.stringify({ path: filePath }),
+        signal: controller.signal
+      }).then(result => {
+        if (controller.signal.aborted || requestId !== semanticRequest.current) return
+        if (semanticTargetPath.current !== filePath || result.path !== filePath) return
+        setSemanticTokens(decodeSemanticTokens(result.data, result.legend))
+      }).catch(error => {
+        if (!isAbortError(error) && requestId === semanticRequest.current) {
+          console.error('Semantic highlighting failed', error)
+        }
+      }).finally(() => {
+        if (semanticAbort.current !== controller) return
+        semanticAbort.current = null
+        semanticRequestPath.current = null
+        const repeat = semanticRefreshQueued.current && semanticTargetPath.current === filePath
+        semanticRefreshQueued.current = false
+        if (repeat) queueMicrotask(run)
+      })
+    }
+    run()
+  }, [])
+
   useEffect(() => {
     const events = new EventSource('/api/events')
     const receiveProgress = (event: MessageEvent<string>) => {
@@ -118,18 +179,36 @@ function App() {
         const value: unknown = JSON.parse(event.data)
         if (!isLeanProgressEvent(value)) return
         setLeanProgress(value)
+        if (value.state === 'ready' && semanticTargetPath.current === value.path) {
+          requestSemanticTokens(value.path)
+        }
       } catch {
         // Ignore malformed event data and keep the last valid state.
       }
     }
+    const receiveSemanticRefresh = (event: MessageEvent<string>) => {
+      try {
+        const value: unknown = JSON.parse(event.data)
+        if (!isLeanSemanticRefreshEvent(value)) return
+        if (semanticTargetPath.current === value.path) requestSemanticTokens(value.path)
+      } catch {
+        // Ignore malformed refresh events; progress-ready and reconnect also retry.
+      }
+    }
     events.addEventListener('lean-progress', receiveProgress as EventListener)
-    events.onopen = () => setLeanEventsOnline(true)
+    events.addEventListener('lean-semantic-refresh', receiveSemanticRefresh as EventListener)
+    events.onopen = () => {
+      setLeanEventsOnline(true)
+      const filePath = semanticTargetPath.current
+      if (filePath) requestSemanticTokens(filePath)
+    }
     events.onerror = () => setLeanEventsOnline(false)
     return () => {
       events.removeEventListener('lean-progress', receiveProgress as EventListener)
+      events.removeEventListener('lean-semantic-refresh', receiveSemanticRefresh as EventListener)
       events.close()
     }
-  }, [])
+  }, [requestSemanticTokens])
 
   const requestHover = useCallback(async (filePath: string, position: Position) => {
     hoverAbort.current?.abort()
@@ -176,6 +255,7 @@ function App() {
     const requestId = ++fileRequest.current
     hoverAbort.current?.abort()
     definitionAbort.current?.abort()
+    cancelSemanticTokens()
     hoverRequest.current += 1
     setPath(filePath)
     setSourcePath(filePath)
@@ -189,16 +269,21 @@ function App() {
       if (requestId !== fileRequest.current) return
       setSource(result.text)
       setSourceStatus('')
+      if (filePath.endsWith('.lean')) {
+        semanticTargetPath.current = filePath
+        requestSemanticTokens(filePath)
+      }
     } catch (error) {
       if (requestId !== fileRequest.current) return
       setSourceStatus(errorMessage(error))
     }
-  }, [])
+  }, [cancelSemanticTokens, requestSemanticTokens])
 
   useEffect(() => {
     if (!routePath) {
       hoverAbort.current?.abort()
       definitionAbort.current?.abort()
+      cancelSemanticTokens()
       fileRequest.current += 1
       hoverRequest.current += 1
       setPath(null)
@@ -224,7 +309,7 @@ function App() {
       setSelected(null)
       setHover(emptyHover)
     }
-  }, [loadFile, path, requestHover, routePath, routePosition?.character, routePosition?.line, sourcePath, sourceStatus])
+  }, [cancelSemanticTokens, loadFile, path, requestHover, routePath, routePosition?.character, routePosition?.line, sourcePath, sourceStatus])
 
   const openFile = useCallback((filePath: string, position?: Position) => {
     navigate(viewerLocation(filePath, position), { replace: routePath === filePath })
@@ -270,6 +355,9 @@ function App() {
   useEffect(() => () => {
     hoverAbort.current?.abort()
     definitionAbort.current?.abort()
+    semanticRequest.current += 1
+    semanticTargetPath.current = null
+    semanticAbort.current?.abort()
   }, [])
 
   const progressState: LeanProgressState = path?.endsWith('.lean')
@@ -321,6 +409,7 @@ function App() {
           selected={selected}
           hoverRange={hover.range}
           highlightRanges={hover.highlights}
+          semanticTokens={semanticTokens}
           bottomInset={hoverInset}
           onSelect={selectPosition}
         />
@@ -530,6 +619,11 @@ function isLeanProgressEvent(value: unknown): value is LeanProgressEvent {
   const event = value as Partial<LeanProgressEvent>
   return typeof event.path === 'string'
     && (event.state === 'processing' || event.state === 'ready' || event.state === 'error')
+}
+
+function isLeanSemanticRefreshEvent(value: unknown): value is LeanSemanticRefreshEvent {
+  if (typeof value !== 'object' || value === null) return false
+  return typeof (value as Partial<LeanSemanticRefreshEvent>).path === 'string'
 }
 
 function viewerLocation(path: string, position?: Position) {

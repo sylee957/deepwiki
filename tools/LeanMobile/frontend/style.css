@@ -58,7 +58,7 @@ main { height: calc(100% - 3.4rem - env(safe-area-inset-top)); }
 
 #viewer { position: relative; width: 100%; height: 100%; min-width: 0; overflow: hidden; overscroll-behavior: contain; }
 #source { height: 100%; min-width: 0; }
-#source .cm-editor .cm-content, #source .cm-editor .cm-line { color: var(--text); -webkit-text-fill-color: var(--text); }
+#source .cm-editor .cm-content, #source .cm-editor .cm-line { color: #cdd6f4; -webkit-text-fill-color: #cdd6f4; }
 .viewer-status { position: absolute; z-index: 3; top: 0.5rem; right: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); }
 
 #hover-panel { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; max-height: min(52vh, 32rem); overflow: auto; background: #151e30; border-top: 1px solid #486185; box-shadow: 0 -8px 30px rgba(0,0,0,0.35); padding-bottom: env(safe-area-inset-bottom); }

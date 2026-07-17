@@ -2,6 +2,10 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createLeanMobileApp } from '../src/server.ts'
+import {
+  decodeSemanticTokens,
+  type SemanticTokensPayload
+} from '../src/semantic-tokens.ts'
 
 const toolRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const repositoryRoot = path.resolve(toolRoot, '../..')
@@ -98,6 +102,34 @@ try {
   assert.equal(goalResponse.status, 200)
   const goalBody = await goalResponse.json() as { goals: string | null }
   assert.match(goalBody.goals ?? '', /⊢ gcd/)
+
+  let semanticBody: (SemanticTokensPayload & { path: string }) | null = null
+  let semanticTypes = new Set<string>()
+  let semanticTokens = [] as ReturnType<typeof decodeSemanticTokens>
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const semanticResponse = await fetch(`${base}/api/semantic-tokens`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: 'DeepWiki/Algebra/GcdBasics.lean' })
+    })
+    assert.equal(semanticResponse.status, 200)
+    semanticBody = await semanticResponse.json() as SemanticTokensPayload & { path: string }
+    semanticTokens = decodeSemanticTokens(semanticBody.data, semanticBody.legend)
+    semanticTypes = new Set(semanticTokens.map(token => token.type))
+    if (['keyword', 'variable', 'property'].every(type => semanticTypes.has(type))) break
+    await Bun.sleep(250)
+  }
+  assert.equal(semanticBody?.path, 'DeepWiki/Algebra/GcdBasics.lean')
+  assert.deepEqual(semanticTokens[0], {
+    line: 0,
+    character: 0,
+    length: 6,
+    type: 'keyword',
+    modifiers: []
+  })
+  assert.equal(semanticTypes.has('keyword'), true)
+  assert.equal(semanticTypes.has('variable'), true)
+  assert.equal(semanticTypes.has('property'), true)
   assert.equal(leanNotifications.includes('$/lean/fileProgress'), true)
   const progress = JSON.parse(await progressEvent) as { path?: string; state?: string }
   assert.equal(progress.path, 'DeepWiki/Algebra/GcdBasics.lean')

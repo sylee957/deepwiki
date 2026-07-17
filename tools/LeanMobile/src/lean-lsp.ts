@@ -1,5 +1,9 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
+import {
+  semanticTokensPayload,
+  type SemanticTokenLegend
+} from './semantic-tokens.ts'
 
 export interface Position {
   line: number
@@ -43,6 +47,7 @@ interface OpenDocument {
 export interface LeanNotification {
   method: string
   params: unknown
+  documentUri?: string
 }
 
 export type LeanNotificationListener = (notification: LeanNotification) => void
@@ -60,6 +65,7 @@ export class LeanLanguageServer {
   private document: OpenDocument | null = null
   private operationTail: Promise<void> = Promise.resolve()
   private ready: Promise<void> | null = null
+  private semanticTokenLegend: SemanticTokenLegend | null = null
 
   constructor(private readonly root: string, private readonly logger: Logger = console) {}
 
@@ -91,10 +97,11 @@ export class LeanLanguageServer {
       this.process = null
       this.ready = null
       this.document = null
+      this.semanticTokenLegend = null
     })
 
     const rootUri = pathToFileURL(this.root).href
-    await this.request('initialize', {
+    const initializeResult = await this.request('initialize', {
       processId: globalThis.process.pid,
       clientInfo: { name: 'DeepWiki Lean Mobile', version: '0.2.0' },
       rootUri,
@@ -102,13 +109,26 @@ export class LeanLanguageServer {
         textDocument: {
           hover: { contentFormat: ['markdown', 'plaintext'] },
           definition: { linkSupport: true },
-          synchronization: { didSave: false, dynamicRegistration: false }
+          synchronization: { didSave: false, dynamicRegistration: false },
+          semanticTokens: {
+            dynamicRegistration: false,
+            requests: { range: true, full: true },
+            tokenTypes: semanticTokenClientTypes,
+            tokenModifiers: semanticTokenClientModifiers,
+            formats: ['relative'],
+            multilineTokenSupport: false,
+            overlappingTokenSupport: false
+          }
         },
-        workspace: { workspaceFolders: true }
+        workspace: {
+          workspaceFolders: true,
+          semanticTokens: { refreshSupport: true }
+        }
       },
       workspaceFolders: [{ uri: rootUri, name: 'deepwiki' }],
       initializationOptions: { editDelay: 50, hasWidgets: false }
     }, 30_000)
+    this.semanticTokenLegend = semanticTokenLegendFromInitialize(initializeResult)
     this.notify('initialized', {})
   }
 
@@ -152,6 +172,21 @@ export class LeanLanguageServer {
         textDocument: { uri: pathToFileURL(absolutePath).href },
         position
       }, 60_000, signal))
+  }
+
+  async semanticTokens(
+    absolutePath: string,
+    text: string,
+    signal?: AbortSignal
+  ) {
+    return this.withDocument('semantic tokens', absolutePath, text, signal, async () => {
+      const legend = this.semanticTokenLegend
+      if (!legend) throw new Error('Lean language server does not advertise semantic tokens')
+      const result = await this.request('textDocument/semanticTokens/full', {
+        textDocument: { uri: pathToFileURL(absolutePath).href }
+      }, 60_000, signal)
+      return semanticTokensPayload(result, legend)
+    })
   }
 
   private async withDocument<T>(
@@ -310,7 +345,7 @@ export class LeanLanguageServer {
     if (method === 'client/registerCapability'
       || method === 'workspace/semanticTokens/refresh'
       || method === 'workspace/inlayHint/refresh') {
-      this.emitNotification(method, params)
+      this.emitNotification(method, params, this.document?.uri)
       this.send({ jsonrpc: '2.0', id, result: null })
       return
     }
@@ -329,10 +364,10 @@ export class LeanLanguageServer {
     })
   }
 
-  private emitNotification(method: string, params: unknown) {
+  private emitNotification(method: string, params: unknown, documentUri?: string) {
     for (const listener of this.notificationListeners) {
       try {
-        listener({ method, params })
+        listener({ method, params, documentUri })
       } catch (error) {
         this.logger.error(error)
       }
@@ -360,6 +395,27 @@ export class LeanLanguageServer {
 
 function abortError(method: string) {
   return new DOMException(`Lean request aborted: ${method}`, 'AbortError')
+}
+
+const semanticTokenClientTypes = [
+  'namespace', 'type', 'class', 'enum', 'interface', 'struct', 'typeParameter',
+  'parameter', 'variable', 'property', 'enumMember', 'event', 'function', 'method',
+  'macro', 'keyword', 'modifier', 'comment', 'string', 'number', 'regexp', 'operator',
+  'decorator', 'leanSorryLike'
+]
+
+const semanticTokenClientModifiers = [
+  'declaration', 'definition', 'readonly', 'static', 'deprecated', 'abstract', 'async',
+  'modification', 'documentation', 'defaultLibrary'
+]
+
+export function semanticTokenLegendFromInitialize(result: unknown): SemanticTokenLegend | null {
+  if (!isObject(result) || !isObject(result.capabilities)) return null
+  const provider = result.capabilities.semanticTokensProvider
+  if (!isObject(provider) || !isObject(provider.legend)) return null
+  const { tokenTypes, tokenModifiers } = provider.legend
+  if (!isStringArray(tokenTypes) || !isStringArray(tokenModifiers)) return null
+  return { tokenTypes: [...tokenTypes], tokenModifiers: [...tokenModifiers] }
 }
 
 interface HoverResult {
@@ -420,4 +476,8 @@ function markedStringText(value: string | { value?: string }) {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string')
 }

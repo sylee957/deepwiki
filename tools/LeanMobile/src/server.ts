@@ -72,6 +72,17 @@ async function routeRequest(
     return jsonResponse(200, { path: relativePath, text: file.text, size: file.size })
   }
 
+  if (request.method === 'POST' && url.pathname === '/api/semantic-tokens') {
+    const body = await readJson(request)
+    const relativePath = body.path
+    if (typeof relativePath !== 'string' || !relativePath.endsWith('.lean')) {
+      throw new FileAccessError('Semantic highlighting is available for Lean files', 400)
+    }
+    const file = await readRepositoryTextFile(context.root, relativePath)
+    const semanticTokens = await context.lean.semanticTokens(file.absolutePath, file.text, request.signal)
+    return jsonResponse(200, { path: relativePath, ...semanticTokens })
+  }
+
   if (request.method === 'POST' && url.pathname === '/api/hover') {
     const body = await readJson(request)
     const relativePath = body.path
@@ -128,8 +139,12 @@ function leanEventStream(request: Request, root: string, lean: LeanLanguageServe
         }
       }
       const unsubscribe = lean.onNotification(notification => {
-        const event = leanProgressEvent(root, notification)
-        if (event) send(`event: lean-progress\ndata: ${JSON.stringify(event)}\n\n`)
+        const progress = leanProgressEvent(root, notification)
+        if (progress) send(`event: lean-progress\ndata: ${JSON.stringify(progress)}\n\n`)
+        const semanticRefresh = leanSemanticRefreshEvent(root, notification)
+        if (semanticRefresh) {
+          send(`event: lean-semantic-refresh\ndata: ${JSON.stringify(semanticRefresh)}\n\n`)
+        }
       })
       const heartbeat = setInterval(() => send(': keep-alive\n\n'), 5_000)
       const abort = () => {
@@ -177,6 +192,14 @@ function leanProgressEvent(root: string, notification: LeanNotification) {
     ? 'error'
     : processing.length > 0 ? 'processing' : 'ready'
   return { path: relativePath, state }
+}
+
+function leanSemanticRefreshEvent(root: string, notification: LeanNotification) {
+  if (notification.method !== 'workspace/semanticTokens/refresh' || !notification.documentUri) {
+    return null
+  }
+  const relativePath = repositoryPathFromUri(root, notification.documentUri)
+  return relativePath ? { path: relativePath } : null
 }
 
 async function serveStatic(pathname: string, headOnly: boolean, acceptsHtml: boolean) {

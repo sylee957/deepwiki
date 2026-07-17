@@ -5,8 +5,10 @@ import {
   hoverRange,
   hoverText,
   plainGoalText,
-  plainTermGoal
+  plainTermGoal,
+  semanticTokenLegendFromInitialize
 } from '../src/lean-lsp.ts'
+import { decodeSemanticTokens, semanticTokensPayload } from '../src/semantic-tokens.ts'
 
 test('hoverText normalizes LSP hover formats', () => {
   assert.equal(hoverText(null), null)
@@ -37,4 +39,58 @@ test('plain goals normalize Lean-specific goal responses', () => {
   assert.equal(plainGoalText({ goals: [] }), null)
   assert.deepEqual(plainTermGoal({ goal: '⊢ Nat', range }), { goal: '⊢ Nat', range })
   assert.equal(plainTermGoal({ goal: '⊢ Nat', range: { start: range.start } }), null)
+})
+
+test('semantic token legend comes from the Lean initialize response', () => {
+  const initializeResult = {
+    capabilities: {
+      semanticTokensProvider: {
+        legend: {
+          tokenTypes: ['property', 'keyword'],
+          tokenModifiers: ['readonly', 'deprecated']
+        },
+        full: true
+      }
+    }
+  }
+  assert.deepEqual(semanticTokenLegendFromInitialize(initializeResult), {
+    tokenTypes: ['property', 'keyword'],
+    tokenModifiers: ['readonly', 'deprecated']
+  })
+  assert.equal(semanticTokenLegendFromInitialize({ capabilities: {} }), null)
+  assert.equal(semanticTokenLegendFromInitialize({
+    capabilities: { semanticTokensProvider: { legend: { tokenTypes: [1], tokenModifiers: [] } } }
+  }), null)
+})
+
+test('semantic tokens decode relative UTF-16 positions with the advertised legend', () => {
+  const legend = {
+    tokenTypes: ['property', 'keyword'],
+    tokenModifiers: ['readonly', 'deprecated']
+  }
+  assert.deepEqual(decodeSemanticTokens([
+    0, 2, 4, 1, 2,
+    0, 6, 3, 0, 1,
+    2, 1, 5, 1, 0
+  ], legend), [
+    { line: 0, character: 2, length: 4, type: 'keyword', modifiers: ['deprecated'] },
+    { line: 0, character: 8, length: 3, type: 'property', modifiers: ['readonly'] },
+    { line: 2, character: 1, length: 5, type: 'keyword', modifiers: [] }
+  ])
+})
+
+test('semantic token payload stays compact and validates Lean data', () => {
+  const legend = { tokenTypes: ['keyword'], tokenModifiers: [] }
+  assert.deepEqual(semanticTokensPayload({ resultId: 'unused', data: [0, 0, 6, 0, 0] }, legend), {
+    legend,
+    data: [0, 0, 6, 0, 0]
+  })
+  assert.deepEqual(semanticTokensPayload(null, legend), { legend, data: [] })
+
+  assert.throws(() => decodeSemanticTokens([0], legend), /data length/)
+  assert.throws(() => decodeSemanticTokens([0, -1, 1, 0, 0], legend), /character delta/)
+  assert.throws(() => decodeSemanticTokens([0, 0, 1.5, 0, 0], legend), /length/)
+  assert.throws(() => decodeSemanticTokens([0, 0, 0, 0, 0], legend), /positive length/)
+  assert.throws(() => decodeSemanticTokens([0, 0, 1, 1, 0], legend), /type index/)
+  assert.throws(() => decodeSemanticTokens([0, 0, 1, 0, 0x1_0000_0000], legend), /bitset/)
 })

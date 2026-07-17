@@ -1,8 +1,9 @@
 # Lean Mobile
 
-Lean Mobile is a read-only, phone-friendly repository browser with tap-to-hover for Lean files.
-It serves the full Git repository tree while excluding ignored files and private/generated folders,
-then forwards hover and definition requests to the project's own Lean language server.
+Lean Mobile is a read-only, phone-friendly repository browser for Lean files. It serves the full
+Git repository tree while excluding ignored files and private/generated folders, then forwards
+semantic highlighting, tap-to-hover, goals, and definition requests to the project's own Lean
+language server.
 
 The backend and tests use Bun with strict TypeScript. The mobile interface is React 19 + TypeScript
 and is compiled with Bun's bundler.
@@ -57,8 +58,9 @@ the Mac firewall; do not forward the port from a router or expose it to the publ
 - Text files up to 5 MiB can be read. Binary files are rejected.
 - Canonical paths must stay inside the repository; symlinks cannot escape it.
 - There are no edit, upload, delete, command-execution, or terminal endpoints.
-- Lean hover and go-to-definition are available only for `.lean` files. The server starts with
-  `lake env lean --server`, so it uses the repository's pinned toolchain and dependencies.
+- Lean semantic highlighting, hover/goals, and go-to-definition are available only for `.lean`
+  files. The server starts with `lake env lean --server`, so it uses the repository's pinned
+  toolchain and dependencies. Semantic colors stream in as Lean elaborates the file.
 
 ## Test
 
