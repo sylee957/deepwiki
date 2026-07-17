@@ -76,10 +76,10 @@ def insertTwoAfterThree : Renaming (n + 3) (n + 5) :=
 
 /-- The raw relational interpretation of a universe. -/
 def sortRelation (level : Nat) (n : Nat) : Term n :=
-  .lam (.sort level)
-    (.lam (.sort level)
-      (.pi (.var 1)
-        (.pi (.var 1) (.sort level))))
+  ccω!{
+    λ A : %{Term.sort level},
+    λ B : %{Term.sort level},
+    A → B → %{Term.sort level} }
 
 mutual
 
@@ -88,35 +88,35 @@ mutual
     | _, .sort level => sortRelation level _
     | n + 1, .var index => .var (witnessRenaming (n + 1) index)
     | _, .app function argument =>
-        .app (.app (.app (translate function) (original argument)) (primed argument))
-          (translate argument)
+        ccω!{
+          %{translate function}
+          %{original argument}
+          %{primed argument}
+          %{translate argument} }
     | _, .lam domain body =>
-        .lam (original domain)
-          (.lam (weakenBy (primed domain) 1)
-            (.lam
-              (.app (.app (weakenBy (translate domain) 2) (.var 1)) (.var 0))
-              (translate body)))
-    | _, .pi domain codomain =>
-        .lam (original (.pi domain codomain))
-          (.lam (weakenBy (primed (.pi domain codomain)) 1)
-            (.pi (weakenBy (original domain) 2)
-              (.pi (weakenBy (primed domain) 3)
-                (.pi
-                  (.app (.app (weakenBy (translate domain) 4) (.var 1)) (.var 0))
-                  (.app
-                    (.app ((translate codomain).rename insertTwoAfterThree)
-                      (.app (.var 4) (.var 2)))
-                    (.app (.var 3) (.var 1)))))))
+        ccω!{
+          λ x0 : %{original domain},
+          λ x1 : %{weakenBy (primed domain) 1},
+          λ xR : %{weakenBy (translate domain) 2} x0 x1,
+          %{translate body} }
+    | _, source@(.pi domain codomain) =>
+        ccω!{
+          λ f0 : %{original source},
+          λ f1 : %{weakenBy (primed source) 1},
+          Π x0 : %{weakenBy (original domain) 2},
+          Π x1 : %{weakenBy (primed domain) 3},
+          Π xR : %{weakenBy (translate domain) 4} x0 x1,
+          %{(translate codomain).rename insertTwoAfterThree} (f0 x0) (f1 x1) }
 
   /-- Translate a context by adjoining original, primed, and witness declarations in that order. -/
   def context : {n : Nat} → Context n → Context (scopeSize n)
-    | 0, .empty => .empty
+    | 0, .empty => ccωctx!{ ⟨⟩ }
     | _ + 1, .extend source type =>
-        .extend
-          (.extend
-            (.extend (context source) (original type))
-            (weakenBy (primed type) 1))
-          (.app (.app (weakenBy (translate type) 2) (.var 1)) (.var 0))
+        ccωctx!{
+          %{context source},
+          x0 : %{original type},
+          x1 : %{weakenBy (primed type) 1},
+          xR : %{weakenBy (translate type) 2} x0 x1 }
 
 end
 
@@ -228,9 +228,10 @@ example (index : Fin n) : primed (.var index) = .var (primedRenaming n index) :=
 
 example (level : Nat) :
     translate (.sort level : Term n) =
-      .lam (.sort level)
-        (.lam (.sort level)
-          (.pi (.var 1) (.pi (.var 1) (.sort level)))) :=
+      ccω!{
+        λ A : %{Term.sort level},
+        λ B : %{Term.sort level},
+        A → B → %{Term.sort level} } :=
   rfl
 
 example (function argument : Term n) :
