@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, symlink, writeFile } from 'node:fs/promises'
+import { mkdtemp, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import test from 'node:test'
+import { test } from 'bun:test'
 import {
   FileAccessError,
   isVisibleRepositoryPath,
   readRepositoryTextFile,
   resolveRepositoryFile
-} from '../src/path-policy.mjs'
-import { buildFileTree } from '../src/repository.mjs'
+} from '../src/path-policy.ts'
+import { buildFileTree } from '../src/repository.ts'
 
 test('visible paths allow repository files and reject private or escaping paths', () => {
   assert.equal(isVisibleRepositoryPath('DeepWiki/NetworkCalculus.lean'), true)
@@ -44,7 +44,10 @@ test('text reader rejects binary files', async () => {
 
 test('file tree groups directories before files', () => {
   const tree = buildFileTree(['README.md', 'DeepWiki/Z.lean', 'DeepWiki/A.lean'])
-  assert.equal(tree[0].name, 'DeepWiki')
-  assert.deepEqual(tree[0].children.map(node => node.name), ['A.lean', 'Z.lean'])
-  assert.equal(tree[1].name, 'README.md')
+  assert.equal(tree[0]?.name, 'DeepWiki')
+  const directory = tree[0]
+  assert.equal(directory?.type, 'directory')
+  if (directory?.type !== 'directory') throw new Error('Expected a directory')
+  assert.deepEqual(directory.children.map(node => node.name), ['A.lean', 'Z.lean'])
+  assert.equal(tree[1]?.name, 'README.md')
 })

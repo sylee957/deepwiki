@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
-import { hoverText } from '../src/lean-lsp.mjs'
+import { test } from 'bun:test'
+import { hoverText } from '../src/lean-lsp.ts'
 
 test('hoverText normalizes LSP hover formats', () => {
   assert.equal(hoverText(null), null)

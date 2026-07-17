@@ -1,4 +1,4 @@
-import { lstat, realpath, readFile } from 'node:fs/promises'
+import { lstat, realpath } from 'node:fs/promises'
 import path from 'node:path'
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -16,7 +16,7 @@ export const HIDDEN_SEGMENTS = new Set([
   '_site'
 ])
 
-export function isVisibleRepositoryPath(relativePath) {
+export function isVisibleRepositoryPath(relativePath: unknown): relativePath is string {
   if (typeof relativePath !== 'string' || relativePath.length === 0) return false
   if (relativePath.includes('\0') || path.isAbsolute(relativePath)) return false
 
@@ -26,7 +26,7 @@ export function isVisibleRepositoryPath(relativePath) {
   return !segments.some(segment => HIDDEN_SEGMENTS.has(segment))
 }
 
-export async function resolveRepositoryFile(root, relativePath) {
+export async function resolveRepositoryFile(root: string, relativePath: unknown) {
   if (!isVisibleRepositoryPath(relativePath)) {
     throw new FileAccessError('Path is outside the visible repository', 403)
   }
@@ -47,19 +47,19 @@ export async function resolveRepositoryFile(root, relativePath) {
   return { absolutePath: candidateReal, size: stat.size }
 }
 
-export async function readRepositoryTextFile(root, relativePath) {
+export async function readRepositoryTextFile(root: string, relativePath: unknown) {
   const resolved = await resolveRepositoryFile(root, relativePath)
-  const content = await readFile(resolved.absolutePath)
-  if (content.subarray(0, Math.min(content.length, 8192)).includes(0)) {
+  const content = await Bun.file(resolved.absolutePath).arrayBuffer()
+  const bytes = new Uint8Array(content)
+  if (bytes.subarray(0, Math.min(bytes.length, 8192)).includes(0)) {
     throw new FileAccessError('Binary files cannot be displayed', 415)
   }
-  return { ...resolved, text: content.toString('utf8') }
+  return { ...resolved, text: new TextDecoder().decode(bytes) }
 }
 
 export class FileAccessError extends Error {
-  constructor(message, statusCode) {
+  constructor(message: string, readonly statusCode: number) {
     super(message)
     this.name = 'FileAccessError'
-    this.statusCode = statusCode
   }
 }

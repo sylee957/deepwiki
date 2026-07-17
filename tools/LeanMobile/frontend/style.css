@@ -6,13 +6,12 @@
   --border: #2b3853;
   --text: #e5e7eb;
   --muted: #93a4bd;
-  --accent: #60a5fa;
   --selected: #263b61;
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; overflow: hidden; }
+html, body, #root { height: 100%; margin: 0; overflow: hidden; }
 body { background: var(--bg); color: var(--text); }
 button, input { font: inherit; }
 button { color: var(--text); background: var(--panel-raised); border: 1px solid var(--border); border-radius: 7px; padding: 0.45rem 0.7rem; }

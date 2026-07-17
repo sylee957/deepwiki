@@ -4,21 +4,25 @@ Lean Mobile is a read-only, phone-friendly repository browser with tap-to-hover 
 It serves the full Git repository tree while excluding ignored files and private/generated folders,
 then forwards hover and definition requests to the project's own Lean language server.
 
+The backend and tests use Bun with strict TypeScript. The mobile interface is React 19 + TypeScript
+and is compiled with Bun's bundler.
+
 ## Run locally
 
 From the repository root:
 
 ```sh
 cd tools/LeanMobile
-npm start
+bun install
+bun start
 ```
 
-Open <http://127.0.0.1:3210>. No `npm install` is required; the viewer uses only Node.js built-ins.
+Open <http://127.0.0.1:3210>.
 
 The default repository is the DeepWiki root. To serve a different Lean repository:
 
 ```sh
-npm start -- --root /path/to/repository --port 3210
+bun start -- --root /path/to/repository --port 3210
 ```
 
 ## Open it from an iPhone
@@ -38,7 +42,7 @@ tailscale serve reset
 Alternatively, binding to the Mac's network interfaces makes it available on the local network:
 
 ```sh
-npm start -- --host 0.0.0.0
+bun start -- --host 0.0.0.0
 ```
 
 That mode has no application-level authentication. Use it only on a trusted network protected by
@@ -60,11 +64,13 @@ the Mac firewall; do not forward the port from a router or expose it to the publ
 
 ```sh
 cd tools/LeanMobile
-npm test
+bun run typecheck
+bun test
+bun run build
 ```
 
 To exercise the HTTP service and a real Lean hover request:
 
 ```sh
-npm run smoke
+bun run smoke
 ```
