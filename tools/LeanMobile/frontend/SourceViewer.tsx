@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { basicSetup } from 'codemirror'
 import { EditorSelection, EditorState, StateEffect, StateField } from '@codemirror/state'
-import { Decoration, EditorView, type DecorationSet } from '@codemirror/view'
+import { Decoration, EditorView, scrollPastEnd, type DecorationSet } from '@codemirror/view'
 
 export interface SourcePosition {
   line: number
@@ -19,15 +19,18 @@ export function SourceViewer(props: {
   isLean: boolean
   selected: SourcePosition | null
   hoverRange: SourceRange | null
+  bottomInset: number
   onSelect(position: SourcePosition): void
 }) {
   const parent = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const onSelect = useRef(props.onSelect)
   const isLean = useRef(props.isLean)
+  const bottomInset = useRef(props.bottomInset)
   const currentDocumentKey = useRef(props.documentKey)
   onSelect.current = props.onSelect
   isLean.current = props.isLean
+  bottomInset.current = props.bottomInset
 
   useLayoutEffect(() => {
     if (!parent.current) return
@@ -36,6 +39,8 @@ export function SourceViewer(props: {
       doc: '',
       extensions: [
         basicSetup,
+        scrollPastEnd(),
+        EditorView.scrollMargins.of(() => ({ bottom: bottomInset.current })),
         EditorState.readOnly.of(true),
         EditorView.editable.of(false),
         EditorView.contentAttributes.of({
@@ -120,6 +125,19 @@ export function SourceViewer(props: {
       : null
     editor.dispatch({ effects: setLspHoverRange.of(range) })
   }, [props.hoverRange])
+
+  useLayoutEffect(() => {
+    const editor = view.current
+    if (!editor) return
+    editor.requestMeasure()
+    if (props.bottomInset <= 0) return
+    editor.dispatch({
+      effects: EditorView.scrollIntoView(editor.state.selection.main.head, {
+        y: 'nearest',
+        yMargin: 8
+      })
+    })
+  }, [props.bottomInset])
 
   return <div id="source" ref={parent} />
 }

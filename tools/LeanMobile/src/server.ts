@@ -87,16 +87,21 @@ async function routeRequest(
     return jsonResponse(405, { error: 'Read-only server: method not allowed' })
   }
 
-  return serveStatic(url.pathname, request.method === 'HEAD')
+  return serveStatic(
+    url.pathname,
+    request.method === 'HEAD',
+    request.headers.get('accept')?.includes('text/html') ?? false
+  )
 }
 
-async function serveStatic(pathname: string, headOnly: boolean) {
+async function serveStatic(pathname: string, headOnly: boolean, acceptsHtml: boolean) {
   const files: Record<string, [string, string]> = {
     '/': [path.join(frontendRoot, 'index.html'), 'text/html; charset=utf-8'],
     '/app.js': [path.join(distRoot, 'app.js'), 'text/javascript; charset=utf-8'],
     '/style.css': [path.join(frontendRoot, 'style.css'), 'text/css; charset=utf-8']
   }
-  const item = files[pathname] ?? (pathname.startsWith('/file/') ? files['/'] : undefined)
+  const isBrowserRoute = acceptsHtml && !pathname.startsWith('/api/')
+  const item = files[pathname] ?? (isBrowserRoute ? files['/'] : undefined)
   if (!item) return jsonResponse(404, { error: 'Not found' })
 
   const file = Bun.file(item[0])

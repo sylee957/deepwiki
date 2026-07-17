@@ -16,10 +16,21 @@ try {
   assert.match(indexResponse.headers.get('content-security-policy') ?? '', /style-src 'self' 'unsafe-inline'/)
   assert.match(await indexResponse.text(), /id="root"/)
 
-  const routedIndexResponse = await fetch(`${base}/file/DeepWiki/Algebra/GcdBasics.lean?line=14&character=6`)
+  const routedIndexResponse = await fetch(
+    `${base}/file/DeepWiki/Algebra/GcdBasics.lean?line=14&character=6`,
+    { headers: { Accept: 'text/html' } }
+  )
   assert.equal(routedIndexResponse.status, 200)
   assert.match(routedIndexResponse.headers.get('content-type') ?? '', /text\/html/)
   assert.match(await routedIndexResponse.text(), /id="root"/)
+
+  const fileRootResponse = await fetch(`${base}/file`, { headers: { Accept: 'text/html' } })
+  assert.equal(fileRootResponse.status, 200)
+  assert.match(fileRootResponse.headers.get('content-type') ?? '', /text\/html/)
+
+  const missingApiResponse = await fetch(`${base}/api/missing`, { headers: { Accept: 'text/html' } })
+  assert.equal(missingApiResponse.status, 404)
+  assert.match(missingApiResponse.headers.get('content-type') ?? '', /application\/json/)
 
   const bundleResponse = await fetch(`${base}/app.js`)
   assert.equal(bundleResponse.status, 200)

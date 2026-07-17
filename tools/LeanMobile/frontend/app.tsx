@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { hotkeysCoreFeature, syncDataLoaderFeature, type Updater } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
@@ -55,8 +55,27 @@ function App() {
   const [sourceStatus, setSourceStatus] = useState('')
   const [selected, setSelected] = useState<Position | null>(null)
   const [hover, setHover] = useState<HoverState>(emptyHover)
+  const [hoverInset, setHoverInset] = useState(0)
+  const hoverPanel = useRef<HTMLElement>(null)
   const fileRequest = useRef(0)
   const hoverRequest = useRef(0)
+
+  useLayoutEffect(() => {
+    const panel = hoverPanel.current
+    if (!panel) {
+      setHoverInset(0)
+      return
+    }
+
+    const measure = () => {
+      const height = Math.ceil(panel.getBoundingClientRect().height)
+      setHoverInset(current => current === height ? current : height)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(panel)
+    return () => observer.disconnect()
+  }, [hover.open])
 
   useEffect(() => {
     void api<{ tree: TreeNode[]; count: number }>('/api/tree')
@@ -214,12 +233,13 @@ function App() {
           isLean={sourcePath?.endsWith('.lean') ?? false}
           selected={selected}
           hoverRange={hover.range}
+          bottomInset={hoverInset}
           onSelect={selectPosition}
         />
       </section>
     </main>
 
-    {hover.open && <section id="hover-panel" aria-live="polite">
+    {hover.open && <section id="hover-panel" ref={hoverPanel} aria-live="polite">
       <div className="panel-heading">
         <strong>Lean hover</strong>
         <button className="icon-button" aria-label="Close hover" onClick={closeHover}>×</button>
