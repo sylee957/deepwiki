@@ -1,0 +1,68 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b1020;
+  --panel: #111827;
+  --panel-raised: #172033;
+  --border: #2b3853;
+  --text: #e5e7eb;
+  --muted: #93a4bd;
+  --accent: #60a5fa;
+  --selected: #263b61;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--bg); color: var(--text); }
+button, input { font: inherit; }
+button { color: var(--text); background: var(--panel-raised); border: 1px solid var(--border); border-radius: 7px; padding: 0.45rem 0.7rem; }
+button:disabled { opacity: 0.45; }
+.icon-button { border: 0; background: transparent; font-size: 1.4rem; padding: 0.25rem 0.5rem; }
+
+header {
+  height: calc(3.4rem + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 0.65rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.title-wrap { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+#current-path { color: var(--muted); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+main { height: calc(100% - 3.4rem - env(safe-area-inset-top)); display: flex; }
+#sidebar { width: min(24rem, 88vw); flex: 0 0 auto; background: var(--panel); border-right: 1px solid var(--border); overflow: auto; padding-bottom: env(safe-area-inset-bottom); }
+.sidebar-heading, .panel-heading { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 0.8rem; background: var(--panel); z-index: 2; }
+#file-filter { width: calc(100% - 1.2rem); margin: 0 0.6rem 0.6rem; padding: 0.55rem 0.7rem; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 7px; }
+.status { color: var(--muted); padding: 0.6rem 0.8rem; font-size: 0.85rem; }
+#file-tree { padding: 0 0.35rem 1rem; font-size: 0.9rem; }
+details > summary { cursor: pointer; padding: 0.26rem 0; color: #c8d5e8; }
+.file-button { width: 100%; display: block; padding: 0.32rem 0.4rem; text-align: left; border: 0; background: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-button.active { background: var(--selected); color: white; }
+
+#viewer { flex: 1; min-width: 0; overflow: auto; overscroll-behavior: contain; }
+#welcome { max-width: 34rem; margin: 15vh auto; padding: 1rem 1.5rem; color: var(--muted); }
+#welcome h1 { color: var(--text); }
+#source { min-width: max-content; padding: 0.75rem 0 40vh; counter-reset: line; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; tab-size: 2; }
+.source-line { display: flex; min-height: 1.55em; white-space: pre; }
+.source-line::before { counter-increment: line; content: counter(line); position: sticky; left: 0; width: 4.2rem; flex: 0 0 4.2rem; padding-right: 0.8rem; text-align: right; color: #53627a; background: var(--bg); user-select: none; }
+.line-content { padding-right: 2rem; }
+.source-line.selected { background: rgba(37, 99, 235, 0.17); }
+.tok-comment { color: #6f8b75; }
+.tok-string { color: #d6ae76; }
+.tok-keyword { color: #c084fc; }
+.tok-number { color: #7dd3fc; }
+
+#hover-panel { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; max-height: min(52vh, 32rem); overflow: auto; background: #151e30; border-top: 1px solid #486185; box-shadow: 0 -8px 30px rgba(0,0,0,0.35); padding-bottom: env(safe-area-inset-bottom); }
+#hover-content { margin: 0; padding: 0.25rem 0.9rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+@media (max-width: 720px) {
+  #sidebar { position: fixed; z-index: 4; top: calc(3.4rem + env(safe-area-inset-top)); bottom: 0; left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.4); transform: translateX(-102%); transition: transform 150ms ease; }
+  #sidebar.open { transform: translateX(0); }
+  #source { font-size: 12px; }
+}
+
+@media (min-width: 721px) {
+  #tree-toggle, #close-sidebar { display: none; }
+}

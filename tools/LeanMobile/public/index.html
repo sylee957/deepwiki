@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#111827">
+    <title>DeepWiki Lean Mobile</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <header>
+      <button id="tree-toggle" class="icon-button" aria-label="Show repository files">☰</button>
+      <div class="title-wrap">
+        <strong>Lean Mobile</strong>
+        <span id="current-path">Choose a file</span>
+      </div>
+      <button id="definition-button" disabled>Definition</button>
+    </header>
+
+    <main>
+      <aside id="sidebar" aria-label="Repository files">
+        <div class="sidebar-heading">
+          <span>Repository</span>
+          <button id="close-sidebar" class="icon-button" aria-label="Close repository files">×</button>
+        </div>
+        <input id="file-filter" type="search" placeholder="Filter files…" autocomplete="off">
+        <div id="tree-status" class="status">Loading files…</div>
+        <nav id="file-tree"></nav>
+      </aside>
+
+      <section id="viewer" aria-label="Source viewer">
+        <div id="welcome">
+          <h1>DeepWiki</h1>
+          <p>Browse any repository file. Tap a Lean identifier to request its type and documentation.</p>
+        </div>
+        <div id="source" hidden></div>
+      </section>
+    </main>
+
+    <section id="hover-panel" hidden aria-live="polite">
+      <div class="panel-heading">
+        <strong>Lean hover</strong>
+        <button id="close-hover" class="icon-button" aria-label="Close hover">×</button>
+      </div>
+      <div id="hover-status" class="status"></div>
+      <pre id="hover-content"></pre>
+    </section>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
