@@ -102,6 +102,7 @@ export function SourceViewer(props: {
     const lineNumber = Math.min(props.selected.line + 1, editor.state.doc.lines)
     const line = editor.state.doc.line(Math.max(1, lineNumber))
     const position = Math.min(line.to, line.from + props.selected.character)
+    if (editor.state.selection.main.empty && editor.state.selection.main.head === position) return
     editor.dispatch({
       selection: EditorSelection.cursor(position),
       effects: EditorView.scrollIntoView(position, { y: 'center' })
