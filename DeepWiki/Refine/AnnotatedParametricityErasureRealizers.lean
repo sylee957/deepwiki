@@ -1,7 +1,7 @@
 import DeepWiki.Refine.AnnotatedParametricityErasure
 import DeepWiki.Refine.MaximalAnnotation
-import DeepWiki.Refine.ParametricitySequentRenaming
-import DeepWiki.Refine.StructuredUniverseQuotationSyntax
+import DeepWiki.Refine.Parametricity.Sequents.Renaming
+import DeepWiki.Refine.Annotated.Quotation.Syntax
 
 /-! # Structural realizers for annotated-parametricity erasure
 

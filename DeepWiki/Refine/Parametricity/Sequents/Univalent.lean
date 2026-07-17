@@ -1,7 +1,5 @@
-import DeepWiki.Refine.ParametricitySequents
-import DeepWiki.Refine.UnivalentRelationStructure
-import DeepWiki.Refine.UniverseRelationStructure
-import DeepWiki.Refine.PiRelationStructure
+import DeepWiki.Refine.Parametricity.Sequents.Raw
+import DeepWiki.Refine.TypeEquivalence
 
 /-! # Univalent parametricity sequents
 
@@ -14,7 +12,7 @@ namespace DeepWiki.Refine.DependentCalculus.UnivalentParametricitySequents
 
 open RawParametricity ParametricitySequents
 
-universe u v u' v'
+universe u
 
 /-- Object-language terms realizing the univalent universe and dependent-product witnesses. -/
 structure SyntaxRealizers where
@@ -85,38 +83,6 @@ def AbstractionClaim (realizers : SyntaxRealizers) : Prop :=
       Sequent realizers context term term' termRelation →
       Sequent realizers context type type' typeRelation →
       AbstractionConclusion typingContext term' termRelation type' typeRelation term
-
-/-- The top universe relation fiber is definitionally the type of top structured relations. -/
-@[simp] theorem universeRelationTop_fiber (univalent : IsUnivalentUniverse.{u})
-    (A B : Type u) :
-    (universeStructuredRelationTop univalent).rel A B =
-      StructuredRelation.{u, u, u} Annotation.equivalence A B :=
-  rfl
-
-/-- A top universe relation fiber is equivalent to a relation with univalent maps both ways. -/
-def universeRelationTopFiberEquiv (univalent : IsUnivalentUniverse.{u})
-    (A B : Type u) :
-    (universeStructuredRelationTop univalent).rel A B ≃
-      BidirectionallyUnivalentRelationData.{u, u, u} A B :=
-  (bidirectionallyUnivalentEquivStructuredRelation A B).symm
-
-/-- Every top universe relation fiber has the bidirectionally univalent sigma characterization. -/
-theorem universeRelationTopFiber_characterization
-    (univalent : IsUnivalentUniverse.{u}) (A B : Type u) :
-    Nonempty
-      ((universeStructuredRelationTop univalent).rel A B ≃
-        (Σ R : A → B → Type u, IsUmap R × IsUmap (Converse R))) :=
-  ⟨universeRelationTopFiberEquiv univalent A B⟩
-
-/-- Top dependent-product relation data is constructed from top domain and fiber relations. -/
-def univalentDependentProductRelation {A : Type u} {B : Type v}
-    {C : A → Type u'} {D : B → Type v'}
-    (domain : StructuredRelation Annotation.equivalence A B)
-    (fibers : ∀ a b (_related : domain.rel a b),
-      StructuredRelation Annotation.equivalence (C a) (D b)) :
-    StructuredRelation Annotation.equivalence
-      ((a : A) → C a) ((b : B) → D b) :=
-  StructuredRelation.pi Annotation.equivalence domain fibers
 
 /-- Fixed realizers make the scoped univalent-parametricity translation functional. -/
 theorem Sequent.functional {realizers : SyntaxRealizers}
@@ -219,18 +185,5 @@ example {realizers : SyntaxRealizers} {context : ParametricityContext n}
 
 example (realizers : SyntaxRealizers) : Prop :=
   AbstractionClaim.{u} realizers
-
-example (univalent : IsUnivalentUniverse.{u}) (A B : Type u) :
-    (universeStructuredRelationTop univalent).rel A B ≃
-      (Σ R : A → B → Type u, IsUmap R × IsUmap (Converse R)) :=
-  universeRelationTopFiberEquiv univalent A B
-
-example {A : Type u} {B : Type v} {C : A → Type u'} {D : B → Type v'}
-    (domain : StructuredRelation Annotation.equivalence A B)
-    (fibers : ∀ a b (_related : domain.rel a b),
-      StructuredRelation Annotation.equivalence (C a) (D b)) :
-    StructuredRelation Annotation.equivalence
-      ((a : A) → C a) ((b : B) → D b) :=
-  univalentDependentProductRelation domain fibers
 
 end DeepWiki.Refine.DependentCalculus.UnivalentParametricitySequents

@@ -1,4 +1,4 @@
-import DeepWiki.Refine.RawParametricitySyntax
+import DeepWiki.Refine.Parametricity.Raw.Translation
 import DeepWiki.Refine.CCOmega.Typing
 import Mathlib.Data.List.Nodup
 

@@ -1,4 +1,4 @@
-import DeepWiki.Refine.CoreParametricity
+import DeepWiki.Refine.Parametricity.Intrinsic.Core
 import DeepWiki.Refine.Gcd
 
 /-! # The first-order resolver as a multisorted parametricity fragment

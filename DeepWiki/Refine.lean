@@ -11,15 +11,7 @@ import DeepWiki.Refine.FunctionalRelation
 import DeepWiki.Refine.UniverseRelationStructure
 import DeepWiki.Refine.Dependent
 import DeepWiki.Refine.CCOmega
-import DeepWiki.Refine.RawParametricitySyntax
-import DeepWiki.Refine.RawParametricityTyping
-import DeepWiki.Refine.RawParametricityConversion
-import DeepWiki.Refine.RawParametricityAbstraction
-import DeepWiki.Refine.UnivalentUniverseQuotation
-import DeepWiki.Refine.ParametricitySequents
-import DeepWiki.Refine.ParametricitySequentRenaming
-import DeepWiki.Refine.RawParametricityAbstractionCounterexample
-import DeepWiki.Refine.UnivalentParametricitySequents
+import DeepWiki.Refine.Parametricity
 import DeepWiki.Refine.AnnotatedDependentCalculus
 import DeepWiki.Refine.MaximalAnnotation
 import DeepWiki.Refine.AnnotatedCalculusConservativity
@@ -29,9 +21,7 @@ import DeepWiki.Refine.AnnotatedParametricityErasure
 import DeepWiki.Refine.AnnotatedParametricityErasureRealizers
 import DeepWiki.Refine.MaximalAnnotationScopeBridge
 import DeepWiki.Refine.UniverseWitnessConsequences
-import DeepWiki.Refine.StructuredUniverseQuotationSyntax
-import DeepWiki.Refine.StructuredUniverseQuotationContext
-import DeepWiki.Refine.StructuredUniverseQuotationTyping
+import DeepWiki.Refine.Annotated.Quotation
 import DeepWiki.Refine.RegisteredConstantSyntax
 import DeepWiki.Refine.RegisteredConstantTranslationLawfulness
 import DeepWiki.Refine.RegisteredConstantWeakeningRows
@@ -49,9 +39,6 @@ import DeepWiki.Refine.Examples
 import DeepWiki.Refine.SummableSequenceTransfer
 import DeepWiki.Refine.PolymorphicListRelations
 import DeepWiki.Refine.TupleVectorTransfer
-import DeepWiki.Refine.CoreParametricity
-import DeepWiki.Refine.ParametricityTranslations
-import DeepWiki.Refine.ParametricitySurfaceSyntax
 import DeepWiki.Refine.UnivalentRelationStructure
 import DeepWiki.Refine.WitnessWeakening
 import DeepWiki.Refine.Resolve

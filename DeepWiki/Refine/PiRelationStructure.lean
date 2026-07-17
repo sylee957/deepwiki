@@ -242,6 +242,16 @@ def StructuredRelation.pi {A : Type u} {B : Type v}
     RelationClass.pi gamma domain.relationClass
       (fun a b r => (fibers a b r).relationClass)⟩
 
+/-- Top dependent-product relation data is constructed from top domain and fiber relations. -/
+def univalentDependentProductRelation {A : Type u} {B : Type v}
+    {C : A → Type u'} {D : B → Type v'}
+    (domain : StructuredRelation Annotation.equivalence A B)
+    (fibers : ∀ a b (_related : domain.rel a b),
+      StructuredRelation Annotation.equivalence (C a) (D b)) :
+    StructuredRelation Annotation.equivalence
+      ((a : A) → C a) ((b : B) → D b) :=
+  StructuredRelation.pi Annotation.equivalence domain fibers
+
 /-- The relation underlying `StructuredRelation.pi` is the dependent respectful relation. -/
 @[simp] theorem StructuredRelation.pi_rel {A : Type u} {B : Type v}
     {C : A → Type u'} {D : B → Type v'} (gamma : Annotation)

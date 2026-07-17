@@ -1,8 +1,9 @@
-import DeepWiki.Refine.ParametricityTranslations
-import DeepWiki.Refine.RawParametricityAbstraction
-import DeepWiki.Refine.RawParametricitySyntax
-import DeepWiki.Refine.RawParametricityTyping
-import DeepWiki.Refine.UnivalentUniverseQuotation
+import DeepWiki.Refine.Parametricity.Univalent.Package
+import DeepWiki.Refine.Parametricity.Intrinsic.Abstraction
+import DeepWiki.Refine.Parametricity.Raw.Abstraction
+import DeepWiki.Refine.Parametricity.Raw.Translation
+import DeepWiki.Refine.Parametricity.Raw.Typing
+import DeepWiki.Refine.Parametricity.Univalent.QuotationSpec
 import Sources.Doi_10_1145_3737283.Source
 
 /-! # Section 3.3 - Parametricity translations

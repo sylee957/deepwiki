@@ -1,4 +1,4 @@
-import DeepWiki.Refine.StructuredUniverseQuotationContext
+import DeepWiki.Refine.Annotated.Quotation.Context
 
 /-! # Typing for structured-universe quotation contexts
 

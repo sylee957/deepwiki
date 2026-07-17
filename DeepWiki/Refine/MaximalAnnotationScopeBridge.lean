@@ -1,6 +1,6 @@
 import DeepWiki.Refine.MaximalAnnotation
 import DeepWiki.Refine.AnnotatedParametricityErasure
-import DeepWiki.Refine.UnivalentParametricitySequents
+import DeepWiki.Refine.Parametricity.Sequents.Univalent
 
 /-! # Maximal annotation scope bridge
 

@@ -73,7 +73,7 @@ relation and have been retired. Figure 2 and Theorem 3.6 remain the next Section
 1. Audit revised Section 3.2 against the old `Section22` catalog. Prefer new TOPLAS aliases for
    unchanged declarations; record only semantic differences as library work.
 2. Treat Section 4 as the first likely refactor frontier: compare its operational sequents with
-   `ParametricitySequents`, `UnivalentParametricitySequents`, and the erasure developments.
+   `Parametricity/Sequents/Raw`, `Parametricity/Sequents/Univalent`, and the erasure developments.
 3. Audit Section 5 against `RelationStructure`, `FunctionalRelation`, `RelationEquivalence`, and
    `UnivalentRelationStructure`; retain the six-level API unless the revised symmetric presentation
    changes a theorem statement.

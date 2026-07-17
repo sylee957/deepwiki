@@ -6,16 +6,16 @@ import DeepWiki.Refine.ArrowRelationStructure
 import DeepWiki.Refine.PiRelationStructure
 import DeepWiki.Refine.UniverseRelationStructure
 import DeepWiki.Refine.UnivalentRelationStructure
-import DeepWiki.Refine.ParametricitySequents
-import DeepWiki.Refine.RawParametricityAbstractionCounterexample
-import DeepWiki.Refine.RawParametricityTyping
-import DeepWiki.Refine.UnivalentParametricitySequents
+import DeepWiki.Refine.Parametricity.Sequents.Raw
+import DeepWiki.Refine.Parametricity.Sequents.RawCounterexample
+import DeepWiki.Refine.Parametricity.Raw.Typing
+import DeepWiki.Refine.Parametricity.Sequents.Univalent
 import DeepWiki.Refine.AnnotatedDependentCalculus
 import DeepWiki.Refine.MaximalAnnotation
 import DeepWiki.Refine.AnnotatedCalculusConservativity
 import DeepWiki.Refine.AnnotatedRelationTranslation
 import DeepWiki.Refine.AnnotatedParametricityErasure
-import DeepWiki.Refine.StructuredUniverseQuotationSyntax
+import DeepWiki.Refine.Annotated.Quotation.Syntax
 import DeepWiki.Refine.RegisteredConstantSyntax
 import Sources.Doi_10_1007_978_3_031_57262_3_10.Source
 
@@ -186,7 +186,7 @@ abbrev theorem_5_claim.{u}
 
 /-- **Remark 3, p. 17:** top universe fibers are relations with univalent maps both ways. -/
 abbrev remark_3_top_relation_fiber :=
-  @DeepWiki.Refine.DependentCalculus.UnivalentParametricitySequents.universeRelationTopFiberEquiv
+  @DeepWiki.Refine.universeRelationTopFiberEquiv
 
 /-- **Section 4.5, p. 21:** constants carry annotated type choices and partial translations. -/
 abbrev figure_9_constant_environment := @DeepWiki.Refine.RegisteredConstantSyntax.Environment

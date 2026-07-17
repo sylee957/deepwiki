@@ -1,5 +1,4 @@
 import DeepWiki.Refine.Examples.BinaryNaturals
-import DeepWiki.Refine.Examples.ParametricityTranslations
 
 /-! # Proof-transfer examples
 

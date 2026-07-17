@@ -137,6 +137,28 @@ def universeStructuredRelationTop (univalent : IsUnivalentUniverse.{u}) :
     .four (universeStructuredRelationTopForwardIsUmap univalent),
     .four (universeStructuredRelationTopBackwardIsUmap univalent)⟩
 
+/-- The top universe relation fiber is definitionally the type of top structured relations. -/
+@[simp] theorem universeRelationTop_fiber (univalent : IsUnivalentUniverse.{u})
+    (A B : Type u) :
+    (universeStructuredRelationTop univalent).rel A B =
+      StructuredRelation.{u, u, u} Annotation.equivalence A B :=
+  rfl
+
+/-- A top universe relation fiber is equivalent to a relation with univalent maps both ways. -/
+def universeRelationTopFiberEquiv (univalent : IsUnivalentUniverse.{u})
+    (A B : Type u) :
+    (universeStructuredRelationTop univalent).rel A B ≃
+      BidirectionallyUnivalentRelationData.{u, u, u} A B :=
+  (bidirectionallyUnivalentEquivStructuredRelation A B).symm
+
+/-- Every top universe relation fiber has the bidirectionally univalent sigma characterization. -/
+theorem universeRelationTopFiber_characterization
+    (univalent : IsUnivalentUniverse.{u}) (A B : Type u) :
+    Nonempty
+      ((universeStructuredRelationTop univalent).rel A B ≃
+        (Σ R : A → B → Type u, IsUmap R × IsUmap (Converse R))) :=
+  ⟨universeRelationTopFiberEquiv univalent A B⟩
+
 /-- The top universe witness projects to the family of top structured relations. -/
 @[simp] theorem universeStructuredRelationTop_rel (univalent : IsUnivalentUniverse.{u}) :
     (universeStructuredRelationTop univalent).rel =

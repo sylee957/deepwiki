@@ -1,4 +1,4 @@
-import DeepWiki.Refine.RawParametricitySyntax
+import DeepWiki.Refine.Parametricity.Raw.Translation
 
 /-! # Typing the raw parametricity translation
 

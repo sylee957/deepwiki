@@ -1,5 +1,5 @@
 import DeepWiki.Refine.AnnotatedRelationTranslation
-import DeepWiki.Refine.ParametricitySequents
+import DeepWiki.Refine.Parametricity.Sequents.Raw
 
 /-! # Erasure of annotated translation to raw parametricity
 

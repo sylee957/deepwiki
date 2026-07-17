@@ -1,4 +1,4 @@
-import DeepWiki.Refine.CoreParametricity
+import DeepWiki.Refine.Parametricity.Intrinsic.Core
 
 /-! # Recursive weakening of relational witnesses
 

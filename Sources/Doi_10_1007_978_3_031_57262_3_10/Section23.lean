@@ -1,10 +1,13 @@
-import DeepWiki.Refine.ParametricityTranslations
-import DeepWiki.Refine.RawParametricitySyntax
-import DeepWiki.Refine.RawParametricityTyping
-import DeepWiki.Refine.RawParametricityConversion
-import DeepWiki.Refine.RawParametricityAbstraction
-import DeepWiki.Refine.UnivalentUniverseQuotation
-import DeepWiki.Refine.StructuredUniverseQuotationSyntax
+import DeepWiki.Refine.Dependent
+import DeepWiki.Refine.Parametricity.Raw.Semantics
+import DeepWiki.Refine.Parametricity.Univalent.Package
+import DeepWiki.Refine.Parametricity.Intrinsic.Abstraction
+import DeepWiki.Refine.Parametricity.Raw.Translation
+import DeepWiki.Refine.Parametricity.Raw.Typing
+import DeepWiki.Refine.Parametricity.Raw.Conversion
+import DeepWiki.Refine.Parametricity.Raw.Abstraction
+import DeepWiki.Refine.Parametricity.Univalent.QuotationSpec
+import DeepWiki.Refine.Annotated.Quotation.Syntax
 import Sources.Doi_10_1007_978_3_031_57262_3_10.Source
 
 /-! # Section 2.3 - Parametricity translations
@@ -112,13 +115,13 @@ abbrev raw_formation_explicit_abstraction :=
   @DeepWiki.Refine.DependentCalculus.RawParametricity.formationExplicitRawAbstraction
 
 /-- **Equation (6), p. 8:** the semantic application rule composes function and argument witnesses. -/
-abbrev raw_application_translation := @DeepWiki.Refine.RawPiRelation.app
+abbrev raw_application_translation := @DeepWiki.Refine.DependentRespectful.app
 
 /-- **Equation (7), p. 8:** the semantic lambda rule abstracts over paired related arguments. -/
-abbrev raw_lambda_translation := @DeepWiki.Refine.RawPiRelation.lam
+abbrev raw_lambda_translation := @DeepWiki.Refine.DependentRespectful.lam
 
 /-- **Equation (8), p. 8:** the relational interpretation of a dependent product. -/
-abbrev raw_product_translation := @DeepWiki.Refine.RawPiRelation
+abbrev raw_product_translation := @DeepWiki.Refine.DependentRespectful
 
 /-- **Equation (10), p. 8:** a univalent relation packages `R`, `A ≃ B`, and graph coherence. -/
 abbrev univalent_universe_translation := @DeepWiki.Refine.UnivalentRelation

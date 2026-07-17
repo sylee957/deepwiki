@@ -1,5 +1,5 @@
 import DeepWiki.Refine.FunctionalRelation
-import DeepWiki.Refine.ParametricityTranslations
+import DeepWiki.Refine.Parametricity.Univalent.Package
 
 /-! # Univalent universe packages as top structured relations
 

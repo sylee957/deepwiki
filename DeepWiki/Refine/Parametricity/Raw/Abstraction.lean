@@ -1,4 +1,4 @@
-import DeepWiki.Refine.RawParametricityConversion
+import DeepWiki.Refine.Parametricity.Raw.Conversion
 
 /-! # Raw abstraction
 

@@ -1,4 +1,4 @@
-import DeepWiki.Refine.RawParametricityTyping
+import DeepWiki.Refine.Parametricity.Raw.Typing
 
 /-! # Conversion for raw parametricity
 

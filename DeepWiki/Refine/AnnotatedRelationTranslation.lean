@@ -1,6 +1,6 @@
 import DeepWiki.Refine.AnnotatedDependentCalculus
-import DeepWiki.Refine.RawParametricitySyntax
-import DeepWiki.Refine.ParametricitySequents
+import DeepWiki.Refine.Parametricity.Raw.Translation
+import DeepWiki.Refine.Parametricity.Sequents.Raw
 
 /-! # Scoped annotated proof transfer
 

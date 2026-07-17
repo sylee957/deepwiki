@@ -1,5 +1,5 @@
 import DeepWiki.Refine.CCOmega.SurfaceSyntax
-import DeepWiki.Refine.RawParametricitySyntax
+import DeepWiki.Refine.Parametricity.Raw.Translation
 
 /-! # Surface syntax for raw parametricity
 

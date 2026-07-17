@@ -1,6 +1,7 @@
-import DeepWiki.Refine.ParametricityTranslations
-import DeepWiki.Refine.ParametricitySurfaceSyntax
-import DeepWiki.Refine.RawParametricityTyping
+import DeepWiki.Refine.Parametricity.Raw.Semantics
+import DeepWiki.Refine.Parametricity.Univalent.Package
+import DeepWiki.Refine.Parametricity.SurfaceSyntax
+import DeepWiki.Refine.Parametricity.Raw.Typing
 import DeepWiki.Refine.CCOmega.Examples
 
 /-! # Reading parametricity translations through `CCω`
@@ -151,7 +152,7 @@ def twoRelated : natBoxedRelation.rel 2 ⟨2⟩ :=
 
 /-- Unary and boxed successor map related inputs to related outputs. -/
 def successorRelated :
-    RawPiRelation natBoxedRelation.rel (fun _ _ _ => natBoxedRelation.rel)
+    DependentRespectful natBoxedRelation.rel (fun _ _ _ => natBoxedRelation.rel)
       Nat.succ boxedSucc :=
   fun _ _ related => ⟨⟨congrArg Nat.succ related.down.down⟩⟩
 
