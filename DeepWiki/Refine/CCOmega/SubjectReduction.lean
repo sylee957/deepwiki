@@ -3,15 +3,14 @@ import DeepWiki.Refine.CCOmega.Regularity
 
 /-! # Subject reduction for the dependent calculus
 
-Compatible beta reduction preserves typing once cumulative products expose their contra- and
-covariant components.  Canonically introduced beta redexes preserve typing unconditionally.
+Product-component inversion proves typed root-beta preservation, and structural induction lifts it
+to every compatible one-step beta reduction.
 -/
 
 namespace DeepWiki.Refine.DependentCalculus
 
-/-- Product-component inversion proves subject reduction for a typed root beta contraction. -/
-theorem rootBetaSubjectReduction_of_cumulativeProductComponentInversion
-    (inversion : CumulativeProductComponentInversion)
+/-- A typed root beta contraction preserves its assigned type. -/
+theorem rootBetaSubjectReduction
     {context : Context n} {domain argument type : Term n} {body : Term (n + 1)}
     (redexWellTyped : HasType context (.app (.lam domain body) argument) type) :
     HasType context (body.instantiate argument) type := by
@@ -20,7 +19,9 @@ theorem rootBetaSubjectReduction_of_cumulativeProductComponentInversion
   obtain ⟨bodyType, bodyWellTyped, productLower⟩ := lambdaWellTyped.lam_principal
   obtain ⟨_domainType, domainLevel, domainWellTyped, _bodyWellTyped'⟩ :=
     lambdaWellTyped.lamComponents
-  obtain ⟨domainLower, codomainLower⟩ := inversion productLower
+  obtain ⟨domainEqual, codomainLower⟩ := productLower.pi_components
+  have domainLower : Cumulative targetDomain domain :=
+    .conversion domainEqual.symm
   have argumentAtDisplayedDomain : HasType context argument domain :=
     .cumulativity argumentWellTyped domainWellTyped domainLower
   have reductAtBodyType :
@@ -138,14 +139,13 @@ private theorem subjectReduction_of_rootBeta
       termInduction _targetInduction term' termStep
     exact .cumulativity (termInduction termStep) targetWellTyped subtype
 
-/-- Product-component inversion proves full compatible one-step subject reduction. -/
-theorem subjectReduction_of_cumulativeProductComponentInversion
-    (inversion : CumulativeProductComponentInversion)
+/-- Compatible one-step beta reduction preserves typing. -/
+theorem subjectReduction
     {context : Context n} {term term' type : Term n}
     (termWellTyped : HasType context term type) (step : BetaStep term term') :
     HasType context term' type :=
   termWellTyped.subjectReduction_of_rootBeta
-    (rootBetaSubjectReduction_of_cumulativeProductComponentInversion inversion) step
+    rootBetaSubjectReduction step
 
 end HasType
 
@@ -157,5 +157,10 @@ example {context : Context n} {domain argument : Term n}
     HasType context (body.instantiate argument) (codomain.instantiate argument) :=
   (HasType.canonicalBetaRedex_subjectReduction domainWellTyped bodyWellTyped
     argumentWellTyped).2
+
+example {context : Context n} {term term' type : Term n}
+    (termWellTyped : HasType context term type) (step : BetaStep term term') :
+    HasType context term' type :=
+  termWellTyped.subjectReduction step
 
 end DeepWiki.Refine.DependentCalculus

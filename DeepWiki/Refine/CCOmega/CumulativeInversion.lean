@@ -4,6 +4,7 @@ import DeepWiki.Refine.CCOmega.PrincipalTyping
 
 Erasing universe levels turns cumulative conversion into ordinary beta conversion. This proves
 agreement of assigned types after level erasure and the kind discrimination needed downstream.
+Strengthened path induction also exposes product components through transitive intermediates.
 -/
 
 namespace DeepWiki.Refine.DependentCalculus
@@ -132,13 +133,59 @@ theorem eraseUniverseLevels {left right : Term n}
   | trans _ _ firstInduction secondInduction =>
       exact firstInduction.trans secondInduction
 
-end Cumulative
+/-- A cumulative target of a term convertible from a product remains product-shaped. -/
+private theorem pi_target_of_source_convertible
+    {source target : Term n} (subtype : Cumulative source target)
+    {domain : Term n} {codomain : Term (n + 1)}
+    (sourceShape : Convertible (.pi domain codomain) source) :
+    ∃ domain' codomain',
+      Convertible target (.pi domain' codomain') ∧
+        Convertible domain domain' ∧ Cumulative codomain codomain' := by
+  induction subtype with
+  | conversion equal =>
+      exact ⟨domain, codomain, (sourceShape.trans equal).symm, .refl _, .refl _⟩
+  | sort =>
+      exact sourceShape.symm.sort_not_pi.elim
+  | pi domainEqual codomainCumulative _codomainInduction =>
+      obtain ⟨domainShape, codomainShape⟩ := sourceShape.pi_components
+      exact ⟨_, _, .refl _, domainShape.trans domainEqual,
+        (Cumulative.conversion codomainShape).trans codomainCumulative⟩
+  | trans _ _ firstInduction secondInduction =>
+      obtain ⟨middleDomain, middleCodomain, middleShape,
+        middleDomainEqual, middleCodomainLower⟩ :=
+        firstInduction sourceShape
+      obtain ⟨targetDomain, targetCodomain, targetShape,
+        targetDomainEqual, targetCodomainLower⟩ :=
+        secondInduction middleShape.symm
+      exact ⟨targetDomain, targetCodomain, targetShape,
+        middleDomainEqual.trans targetDomainEqual,
+        middleCodomainLower.trans targetCodomainLower⟩
+
+/-- A cumulative target of a product has a convertible domain and cumulative codomain. -/
+theorem pi_target {domain : Term n} {codomain : Term (n + 1)} {target : Term n}
+    (subtype : Cumulative (.pi domain codomain) target) :
+    ∃ domain' codomain',
+      Convertible target (.pi domain' codomain') ∧
+        Convertible domain domain' ∧ Cumulative codomain codomain' :=
+  pi_target_of_source_convertible subtype (.refl _)
 
 /-- Cumulative conversion between products exposes convertible domains and cumulative codomains. -/
-def CumulativeProductComponentInversion : Prop :=
-  ∀ {n : Nat} {domain domain' : Term n} {codomain codomain' : Term (n + 1)},
-    Cumulative (.pi domain codomain) (.pi domain' codomain') →
-      Cumulative domain' domain ∧ Cumulative codomain codomain'
+theorem pi_components {domain domain' : Term n}
+    {codomain codomain' : Term (n + 1)}
+    (subtype : Cumulative (.pi domain codomain) (.pi domain' codomain')) :
+    Convertible domain domain' ∧ Cumulative codomain codomain' := by
+  obtain ⟨targetDomain, targetCodomain, targetShape,
+    domainEqual, codomainLower⟩ := subtype.pi_target
+  obtain ⟨domainShape, codomainShape⟩ := targetShape.pi_components
+  exact ⟨domainEqual.trans domainShape.symm,
+    codomainLower.trans (Cumulative.conversion codomainShape.symm)⟩
+
+example {domain domain' : Term n} {codomain codomain' : Term (n + 1)}
+    (subtype : Cumulative (.pi domain codomain) (.pi domain' codomain')) :
+    Convertible domain domain' ∧ Cumulative codomain codomain' :=
+  subtype.pi_components
+
+end Cumulative
 
 /-- Types assigned to one term become beta-convertible after erasing universe levels. -/
 theorem assignedTypes_eraseUniverseLevels_convertible

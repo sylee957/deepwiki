@@ -69,12 +69,9 @@ theorem not_rawAbstractionClaim : ¬ RawAbstractionClaim := by
     (abstraction admissible sourceWellTyped termSequent typeSequent).1
   obtain ⟨codomain, _bodyWellTyped, productLower⟩ :=
     primedWellTyped.lam_principal
-  have erasedProducts := productLower.eraseUniverseLevels
-  have erasedDomains := erasedProducts.pi_components.1
   have impossible : Convertible
       (.pi (.sort 0) (.var 0) : Term 0) (.sort 0) := by
-    simpa only [primedDomain, sourceType, Term.eraseUniverseLevels] using
-      erasedDomains
+    simpa only [primedDomain, sourceType] using productLower.pi_components.1
   exact impossible.symm.sort_not_pi
 
 example : ¬ RawAbstractionClaim := not_rawAbstractionClaim

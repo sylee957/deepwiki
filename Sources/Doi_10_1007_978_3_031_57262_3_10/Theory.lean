@@ -69,11 +69,10 @@ signatures and dependency boundaries conditionally; they are not an internal HoT
   into ordinary typing.
   The common-kind typed beta-conversion constructor is isolated as a necessary fragment: proving it
   requires typed subject reduction and application/product inversion, not merely untyped confluence.
-  Canonically introduced beta redexes preserve typing unconditionally, and root-beta preservation
-  implies preservation for every compatible one-step reduction. Full subject reduction is reduced
-  to cumulative product-component inversion; transitive cumulative paths through beta-convertible
-  non-product intermediates make that inversion, plus arbitrary application-spine transport and
-  substitution stability, the remaining metatheory.
+  Cumulative product targets now expose convertible domains and cumulative codomains even through
+  transitive beta-convertible intermediates. Consequently, typed root-beta contraction and every
+  compatible one-step beta reduction preserve typing unconditionally. Arbitrary application-spine
+  transport, substitution stability, and the direct typed interpretation remain.
 - Erasure of Trocq, unrendered arXiv source tail 0.C — [infra] the recursive `rel*` projection and
   erased parameter context are formalized. `Judgment.eraseToRaw` proves the theorem only under an
   abstract `ErasureLaws` interface; genuine universe, arrow, product, and weakening laws remain.

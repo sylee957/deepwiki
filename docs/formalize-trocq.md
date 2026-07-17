@@ -257,16 +257,15 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
   route.
 - [x] Prove that erasing universe indices maps cumulative conversion to beta conversion and prove
   directly that any two types assigned to one term agree after level erasure. This closes
-  assigned-kind discrimination and typed conversion regularity unconditionally; the stronger unused
-  product-target detour has been removed.
-- [x] Prove that canonical beta redexes preserve their dependent type and that root-beta preservation
-  suffices for every compatible one-step reduction. General subject reduction follows conditionally
-  from cumulative product-component inversion.
+  assigned-kind discrimination and typed conversion regularity unconditionally.
+- [x] Prove cumulative product-target shape preservation through transitive paths, derive convertible
+  domains and cumulative codomains, and prove root-beta and compatible one-step subject reduction
+  unconditionally.
 - [ ] If the repaired source-tail conservativity result is pursued directly, interpret the literal
   erased typing and structural-subtyping derivations into ordinary typing using their typing premises
   constructor by constructor. This must be a typed, derivation-indexed theorem rather than an
-  untyped structural-subtyping-to-cumulativity map; cumulative product inversion remains part of the
-  supporting subject-reduction metatheory.
+  untyped structural-subtyping-to-cumulativity map; arbitrary application-spine transport and
+  substitution stability remain part of the supporting metatheory.
 - [x] Represent annotated universe levels and annotated types for a documented core fragment.
 - [x] Represent semantic parametricity contexts for an intrinsically typed lambda calculus.
 - [x] Formalize weakening of witnesses through the documented core types, including the
@@ -375,7 +374,8 @@ tracked converse level and the inference of the minimal pair `(n, k)` required b
 - [ ] Complete the repaired source-tail 0.B conservativity theorem with a direct typed interpretation
   of the literal annotation-free Figures 5 and 6 judgments into ordinary `CCω` typing. Context
   narrowing, assigned-kind discrimination, typed conversion regularity, canonical-beta preservation,
-  and conditional subject reduction are available, but no complete embedding is currently claimed.
+  cumulative product inversion, and compatible one-step subject reduction are available, but no
+  complete embedding is currently claimed.
   The paper's printed beta-conversion conclusion is false and already has a formal counterexample.
 - [x] Construct the erased parameter context, recursively project relation records with `rel*`, and
   map every annotated synthesis derivation to a raw sequent under explicit `ErasureLaws` for the
@@ -623,9 +623,10 @@ shaped Lean declarations.
   a typed interpretation of structural subtyping and ordinary typing, respectively, rather than an
   untyped beta- or cumulative-conversion bridge. Parallel-beta confluence proves both nonconversion
   facts; newest-entry narrowing is proved by a typed identity substitution, canonical beta redexes
-  preserve typing, and compatible one-step subject reduction is reduced to cumulative
-  product-component inversion. That inversion and the direct derivation-indexed interpretation are
-  the remaining source-tail metatheory, not an application-transport interface.
+  preserve typing, and cumulative product-component inversion proves compatible one-step subject
+  reduction unconditionally, including transitive paths through beta-convertible intermediates. The
+  direct derivation-indexed interpretation remains the source-tail metatheory, not a context-free
+  application-transport interface.
 - **Canonical erasure is not source-tail Theorem 0.C.1.** `Judgment.canonicalErasure` proves only
   normalization equalities for the restricted self-translation. `Judgment.eraseToRaw` now supplies
   the source tail's erased parameter context, raw parametricity sequent, and recursive `rel*`
