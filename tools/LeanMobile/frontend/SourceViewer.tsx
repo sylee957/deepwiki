@@ -19,6 +19,7 @@ export function SourceViewer(props: {
   isLean: boolean
   selected: SourcePosition | null
   hoverRange: SourceRange | null
+  highlightRanges: SourceRange[]
   bottomInset: number
   onSelect(position: SourcePosition): void
 }) {
@@ -50,6 +51,7 @@ export function SourceViewer(props: {
           spellcheck: 'false'
         }),
         lspHoverRangeField,
+        lspHighlightRangesField,
         EditorView.domEventHandlers({
           click(event, currentView) {
             if (!isLean.current) return false
@@ -129,6 +131,20 @@ export function SourceViewer(props: {
   useLayoutEffect(() => {
     const editor = view.current
     if (!editor) return
+    const hover = props.hoverRange
+    const ranges = props.highlightRanges.flatMap(range => {
+      if (hover && sameSourceRange(range, hover)) return []
+      const start = sourceOffset(editor, range.start)
+      const end = sourceOffset(editor, range.end)
+      return start !== end ? [{ from: Math.min(start, end), to: Math.max(start, end) }] : []
+    })
+    ranges.sort((left, right) => left.from - right.from || left.to - right.to)
+    editor.dispatch({ effects: setLspHighlightRanges.of(ranges) })
+  }, [props.highlightRanges, props.hoverRange])
+
+  useLayoutEffect(() => {
+    const editor = view.current
+    if (!editor) return
     editor.requestMeasure()
     if (props.bottomInset <= 0) return
     editor.dispatch({
@@ -183,12 +199,17 @@ const editorTheme = EditorView.theme({
     backgroundColor: 'rgba(96, 165, 250, 0.28)',
     borderBottom: '1px solid rgba(147, 197, 253, 0.9)'
   },
+  '.cm-lsp-highlight-range': {
+    backgroundColor: 'rgba(250, 204, 21, 0.14)',
+    boxShadow: 'inset 0 -1px rgba(253, 224, 71, 0.7)'
+  },
   '&.cm-focused': {
     outline: 'none'
   }
 }, { dark: true })
 
 const setLspHoverRange = StateEffect.define<{ from: number; to: number } | null>()
+const setLspHighlightRanges = StateEffect.define<Array<{ from: number; to: number }>>()
 
 const lspHoverRangeField = StateField.define<DecorationSet>({
   create: () => Decoration.none,
@@ -206,8 +227,31 @@ const lspHoverRangeField = StateField.define<DecorationSet>({
   provide: field => EditorView.decorations.from(field)
 })
 
+const lspHighlightRangesField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(ranges, transaction) {
+    ranges = ranges.map(transaction.changes)
+    for (const effect of transaction.effects) {
+      if (effect.is(setLspHighlightRanges)) {
+        return Decoration.set(effect.value.map(range =>
+          Decoration.mark({ class: 'cm-lsp-highlight-range' }).range(range.from, range.to)
+        ), true)
+      }
+    }
+    return ranges
+  },
+  provide: field => EditorView.decorations.from(field)
+})
+
 function sourceOffset(editor: EditorView, position: SourcePosition) {
   const lineNumber = Math.max(1, Math.min(position.line + 1, editor.state.doc.lines))
   const line = editor.state.doc.line(lineNumber)
   return Math.min(line.to, line.from + position.character)
+}
+
+function sameSourceRange(left: SourceRange, right: SourceRange) {
+  return left.start.line === right.start.line
+    && left.start.character === right.start.character
+    && left.end.line === right.end.line
+    && left.end.character === right.end.character
 }

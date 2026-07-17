@@ -3,8 +3,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   LeanLanguageServer,
+  highlightRanges,
   hoverRange,
   hoverText,
+  plainGoalText,
+  plainTermGoal,
   type LeanNotification,
   type Position
 } from './lean-lsp.ts'
@@ -77,8 +80,14 @@ async function routeRequest(
     if (typeof relativePath !== 'string' || !relativePath.endsWith('.lean')) {
       throw new FileAccessError('Hover is available for Lean files', 400)
     }
-    const result = await context.lean.hover(file.absolutePath, file.text, position, request.signal)
-    return jsonResponse(200, { hover: hoverText(result), range: hoverRange(result) })
+    const result = await context.lean.caretInfo(file.absolutePath, file.text, position, request.signal)
+    return jsonResponse(200, {
+      hover: hoverText(result.hover),
+      range: hoverRange(result.hover),
+      highlights: highlightRanges(result.highlights),
+      goals: plainGoalText(result.goals),
+      termGoal: plainTermGoal(result.termGoal)
+    })
   }
 
   if (request.method === 'POST' && url.pathname === '/api/definition') {
@@ -122,7 +131,7 @@ function leanEventStream(request: Request, root: string, lean: LeanLanguageServe
         const event = leanProgressEvent(root, notification)
         if (event) send(`event: lean-progress\ndata: ${JSON.stringify(event)}\n\n`)
       })
-      const heartbeat = setInterval(() => send(': keep-alive\n\n'), 15_000)
+      const heartbeat = setInterval(() => send(': keep-alive\n\n'), 5_000)
       const abort = () => {
         cleanup()
         try {

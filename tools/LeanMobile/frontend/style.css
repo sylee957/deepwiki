@@ -62,12 +62,17 @@ main { height: calc(100% - 3.4rem - env(safe-area-inset-top)); }
 .viewer-status { position: absolute; z-index: 3; top: 0.5rem; right: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); }
 
 #hover-panel { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; max-height: min(52vh, 32rem); overflow: auto; background: #151e30; border-top: 1px solid #486185; box-shadow: 0 -8px 30px rgba(0,0,0,0.35); padding-bottom: env(safe-area-inset-bottom); }
-#hover-content { padding: 0.15rem 0.9rem 1rem; overflow-wrap: anywhere; font-size: 0.9rem; line-height: 1.5; }
+.lean-panel-tabs { display: flex; align-items: center; gap: 0.2rem; }
+.lean-panel-tabs button { padding: 0.35rem 0.65rem; border: 0; border-radius: 5px; color: var(--muted); background: transparent; font-weight: 600; }
+.lean-panel-tabs button.active { color: var(--text); background: var(--selected); }
+#hover-content, #goal-content { padding: 0.15rem 0.9rem 1rem; overflow-wrap: anywhere; font-size: 0.9rem; line-height: 1.5; }
 #hover-content > :first-child { margin-top: 0; }
 #hover-content > :last-child { margin-bottom: 0; }
 #hover-content p { margin: 0.65rem 0; }
-#hover-content pre { margin: 0.65rem 0; padding: 0.7rem 0.8rem; overflow: auto; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); white-space: pre; }
-#hover-content code { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+#hover-content pre, #goal-content pre { margin: 0.65rem 0; padding: 0.7rem 0.8rem; overflow: auto; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); white-space: pre; }
+#hover-content code, #goal-content code { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 #hover-content :not(pre) > code { padding: 0.1rem 0.3rem; border-radius: 4px; background: var(--bg); }
 #hover-content hr { margin: 0.8rem 0; border: 0; border-top: 1px solid var(--border); }
 #hover-content a { color: #8ab4f8; }
+#goal-content section + section { margin-top: 1rem; }
+#goal-content h3 { margin: 0.35rem 0 0.5rem; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; }

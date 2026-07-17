@@ -11,6 +11,13 @@ export interface Range {
   end: Position
 }
 
+export interface CaretInfo {
+  hover: unknown
+  highlights: unknown
+  goals: unknown
+  termGoal: unknown
+}
+
 interface JsonRpcMessage {
   jsonrpc: '2.0'
   id?: number
@@ -51,6 +58,7 @@ export class LeanLanguageServer {
   private readonly pending = new Map<number, PendingRequest>()
   private readonly notificationListeners = new Set<LeanNotificationListener>()
   private document: OpenDocument | null = null
+  private operationTail: Promise<void> = Promise.resolve()
   private ready: Promise<void> | null = null
 
   constructor(private readonly root: string, private readonly logger: Logger = console) {}
@@ -110,21 +118,63 @@ export class LeanLanguageServer {
   }
 
   async hover(absolutePath: string, text: string, position: Position, signal?: AbortSignal) {
-    if (signal?.aborted) throw abortError('textDocument/hover')
-    await this.openDocument(absolutePath, text)
-    return this.request('textDocument/hover', {
-      textDocument: { uri: pathToFileURL(absolutePath).href },
-      position
-    }, 60_000, signal)
+    return this.withDocument('textDocument/hover', absolutePath, text, signal, () =>
+      this.request('textDocument/hover', {
+        textDocument: { uri: pathToFileURL(absolutePath).href },
+        position
+      }, 60_000, signal))
+  }
+
+  async caretInfo(
+    absolutePath: string,
+    text: string,
+    position: Position,
+    signal?: AbortSignal
+  ): Promise<CaretInfo> {
+    return this.withDocument('caret information', absolutePath, text, signal, async () => {
+      const params = {
+        textDocument: { uri: pathToFileURL(absolutePath).href },
+        position
+      }
+      const [hover, highlights, goals, termGoal] = await Promise.all([
+        this.request('textDocument/hover', params, 60_000, signal),
+        this.request('textDocument/documentHighlight', params, 60_000, signal),
+        this.request('$/lean/plainGoal', params, 60_000, signal),
+        this.request('$/lean/plainTermGoal', params, 60_000, signal)
+      ])
+      return { hover, highlights, goals, termGoal }
+    })
   }
 
   async definition(absolutePath: string, text: string, position: Position, signal?: AbortSignal) {
-    if (signal?.aborted) throw abortError('textDocument/definition')
-    await this.openDocument(absolutePath, text)
-    return this.request('textDocument/definition', {
-      textDocument: { uri: pathToFileURL(absolutePath).href },
-      position
-    }, 60_000, signal)
+    return this.withDocument('textDocument/definition', absolutePath, text, signal, () =>
+      this.request('textDocument/definition', {
+        textDocument: { uri: pathToFileURL(absolutePath).href },
+        position
+      }, 60_000, signal))
+  }
+
+  private async withDocument<T>(
+    method: string,
+    absolutePath: string,
+    text: string,
+    signal: AbortSignal | undefined,
+    operation: () => Promise<T>
+  ) {
+    const previous = this.operationTail
+    let release = () => {}
+    this.operationTail = new Promise<void>(resolve => {
+      release = resolve
+    })
+    await previous
+    try {
+      if (signal?.aborted) throw abortError(method)
+      await this.openDocument(absolutePath, text)
+      if (signal?.aborted) throw abortError(method)
+      return await operation()
+    } finally {
+      release()
+    }
   }
 
   private async openDocument(absolutePath: string, text: string) {
@@ -331,6 +381,28 @@ export function hoverRange(result: unknown) {
   const start = lspPosition(result.range.start)
   const end = lspPosition(result.range.end)
   return start && end ? { start, end } satisfies Range : null
+}
+
+export function highlightRanges(result: unknown) {
+  if (!Array.isArray(result)) return []
+  return result.flatMap(item => {
+    if (!isObject(item) || !isObject(item.range)) return []
+    const start = lspPosition(item.range.start)
+    const end = lspPosition(item.range.end)
+    return start && end ? [{ start, end } satisfies Range] : []
+  })
+}
+
+export function plainGoalText(result: unknown) {
+  if (!isObject(result) || typeof result.rendered !== 'string') return null
+  return result.rendered
+}
+
+export function plainTermGoal(result: unknown) {
+  if (!isObject(result) || typeof result.goal !== 'string' || !isObject(result.range)) return null
+  const start = lspPosition(result.range.start)
+  const end = lspPosition(result.range.end)
+  return start && end ? { goal: result.goal, range: { start, end } satisfies Range } : null
 }
 
 function lspPosition(value: unknown): Position | null {

@@ -36,6 +36,10 @@ interface HoverState {
   message: string
   content: string
   range: SourceRange | null
+  highlights: SourceRange[]
+  goals: string
+  termGoal: { goal: string; range: SourceRange } | null
+  tab: 'hover' | 'goals'
 }
 
 type LeanProgressState = 'idle' | 'processing' | 'ready' | 'error' | 'offline'
@@ -45,7 +49,17 @@ interface LeanProgressEvent {
   state: Exclude<LeanProgressState, 'idle' | 'offline'>
 }
 
-const emptyHover: HoverState = { open: false, loading: false, message: '', content: '', range: null }
+const emptyHover: HoverState = {
+  open: false,
+  loading: false,
+  message: '',
+  content: '',
+  range: null,
+  highlights: [],
+  goals: '',
+  termGoal: null,
+  tab: 'hover'
+}
 
 function App() {
   const navigate = useNavigate()
@@ -123,25 +137,36 @@ function App() {
     const controller = new AbortController()
     hoverAbort.current = controller
     const requestId = ++hoverRequest.current
-    setHover({ open: true, loading: true, message: 'Asking Lean…', content: '', range: null })
+    setHover({ ...emptyHover, open: true, loading: true, message: 'Asking Lean…' })
     try {
-      const result = await api<{ hover: string | null; range: SourceRange | null }>('/api/hover', {
+      const result = await api<{
+        hover: string | null
+        range: SourceRange | null
+        highlights: SourceRange[]
+        goals: string | null
+        termGoal: { goal: string; range: SourceRange } | null
+      }>('/api/hover', {
         method: 'POST',
         body: JSON.stringify({ path: filePath, position }),
         signal: controller.signal
       })
       if (requestId !== hoverRequest.current) return
+      const hasGoals = Boolean(result.goals || result.termGoal)
       setHover({
         open: true,
         loading: false,
-        message: result.hover ? '' : 'No Lean information at this position.',
+        message: result.hover || hasGoals ? '' : 'No Lean information at this position.',
         content: result.hover ?? '',
-        range: result.range
+        range: result.range,
+        highlights: result.highlights,
+        goals: result.goals ?? '',
+        termGoal: result.termGoal,
+        tab: result.hover ? 'hover' : hasGoals ? 'goals' : 'hover'
       })
     } catch (error) {
       if (isAbortError(error)) return
       if (requestId !== hoverRequest.current) return
-      setHover({ open: true, loading: false, message: errorMessage(error), content: '', range: null })
+      setHover({ ...emptyHover, open: true, message: errorMessage(error) })
     } finally {
       if (hoverAbort.current === controller) hoverAbort.current = null
     }
@@ -229,7 +254,7 @@ function App() {
       openFile(definition.path, definition.position)
     } catch (error) {
       if (isAbortError(error)) return
-      setHover({ open: true, loading: false, message: errorMessage(error), content: '', range: null })
+      setHover({ ...emptyHover, open: true, message: errorMessage(error) })
     } finally {
       if (definitionAbort.current === controller) definitionAbort.current = null
     }
@@ -295,6 +320,7 @@ function App() {
           isLean={sourcePath?.endsWith('.lean') ?? false}
           selected={selected}
           hoverRange={hover.range}
+          highlightRanges={hover.highlights}
           bottomInset={hoverInset}
           onSelect={selectPosition}
         />
@@ -303,11 +329,39 @@ function App() {
 
     {hover.open && <section id="hover-panel" ref={hoverPanel} aria-live="polite">
       <div className="panel-heading">
-        <strong>Lean hover</strong>
+        <div className="lean-panel-tabs" role="tablist" aria-label="Lean information">
+          <button
+            role="tab"
+            aria-selected={hover.tab === 'hover'}
+            className={hover.tab === 'hover' ? 'active' : ''}
+            onClick={() => setHover(previous => ({ ...previous, tab: 'hover' }))}
+          >Hover</button>
+          <button
+            role="tab"
+            aria-selected={hover.tab === 'goals'}
+            className={hover.tab === 'goals' ? 'active' : ''}
+            onClick={() => setHover(previous => ({ ...previous, tab: 'goals' }))}
+          >Goals</button>
+        </div>
         <button className="icon-button" aria-label="Close hover" onClick={closeHover}>×</button>
       </div>
       {(hover.loading || hover.message) && <div className="status">{hover.message}</div>}
-      {hover.content && <div id="hover-content"><Markdown components={markdownComponents}>{hover.content}</Markdown></div>}
+      {!hover.loading && !hover.message && hover.tab === 'hover' && <div id="hover-content" role="tabpanel">
+        {hover.content
+          ? <Markdown components={markdownComponents}>{hover.content}</Markdown>
+          : <div className="status">No hover information at this position.</div>}
+      </div>}
+      {!hover.loading && !hover.message && hover.tab === 'goals' && <div id="goal-content" role="tabpanel">
+        {hover.goals && <section>
+          <h3>Tactic goals</h3>
+          <Markdown components={markdownComponents}>{hover.goals}</Markdown>
+        </section>}
+        {hover.termGoal && <section>
+          <h3>Expected type</h3>
+          <pre><code>{hover.termGoal.goal}</code></pre>
+        </section>}
+        {!hover.goals && !hover.termGoal && <div className="status">No proof or term goal at this position.</div>}
+      </div>}
     </section>}
   </>
 }

@@ -74,6 +74,9 @@ try {
   const hoverBody = await hoverResponse.json() as {
     hover: unknown
     range: { start?: { line?: unknown; character?: unknown }; end?: { line?: unknown; character?: unknown } } | null
+    highlights: Array<{ start?: { line?: unknown }; end?: { line?: unknown } }>
+    goals: string | null
+    termGoal: { goal?: unknown } | null
   }
   assert.equal(typeof hoverBody.hover, 'string')
   assert.match(String(hoverBody.hover), /IsGCD/)
@@ -81,6 +84,20 @@ try {
   assert.equal(Number.isInteger(hoverBody.range?.start?.character), true)
   assert.equal(Number.isInteger(hoverBody.range?.end?.line), true)
   assert.equal(Number.isInteger(hoverBody.range?.end?.character), true)
+  assert.equal(hoverBody.highlights.length > 0, true)
+  assert.equal(typeof hoverBody.termGoal?.goal, 'string')
+
+  const goalResponse = await fetch(`${base}/api/hover`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      path: 'DeepWiki/Algebra/GcdBasics.lean',
+      position: { line: 94, character: 8 }
+    })
+  })
+  assert.equal(goalResponse.status, 200)
+  const goalBody = await goalResponse.json() as { goals: string | null }
+  assert.match(goalBody.goals ?? '', /⊢ gcd/)
   assert.equal(leanNotifications.includes('$/lean/fileProgress'), true)
   const progress = JSON.parse(await progressEvent) as { path?: string; state?: string }
   assert.equal(progress.path, 'DeepWiki/Algebra/GcdBasics.lean')
@@ -98,7 +115,12 @@ try {
 
   const secondFilePath = path.join(repositoryRoot, 'DeepWiki/Algebra.lean')
   const secondFileText = await Bun.file(secondFilePath).text()
-  await app.lean.hover(secondFilePath, secondFileText, { line: 0, character: 7 })
+  const firstFilePath = path.join(repositoryRoot, 'DeepWiki/Algebra/GcdBasics.lean')
+  const [concurrentCaret] = await Promise.all([
+    app.lean.caretInfo(firstFilePath, fileBody.text, { line: 17, character: 9 }),
+    app.lean.hover(secondFilePath, secondFileText, { line: 0, character: 7 })
+  ])
+  assert.match(JSON.stringify(concurrentCaret.hover), /IsGCD/)
 
   console.log(`Smoke test passed: ${String(hoverBody.hover).split('\n')[0]}`)
 } finally {
