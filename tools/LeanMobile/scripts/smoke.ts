@@ -16,6 +16,11 @@ try {
   assert.match(indexResponse.headers.get('content-security-policy') ?? '', /style-src 'self' 'unsafe-inline'/)
   assert.match(await indexResponse.text(), /id="root"/)
 
+  const routedIndexResponse = await fetch(`${base}/file/DeepWiki/Algebra/GcdBasics.lean?line=14&character=6`)
+  assert.equal(routedIndexResponse.status, 200)
+  assert.match(routedIndexResponse.headers.get('content-type') ?? '', /text\/html/)
+  assert.match(await routedIndexResponse.text(), /id="root"/)
+
   const bundleResponse = await fetch(`${base}/app.js`)
   assert.equal(bundleResponse.status, 200)
   assert.match(bundleResponse.headers.get('content-type') ?? '', /javascript/)
@@ -46,9 +51,16 @@ try {
     })
   })
   assert.equal(hoverResponse.status, 200)
-  const hoverBody = await hoverResponse.json() as { hover: unknown }
+  const hoverBody = await hoverResponse.json() as {
+    hover: unknown
+    range: { start?: { line?: unknown; character?: unknown }; end?: { line?: unknown; character?: unknown } } | null
+  }
   assert.equal(typeof hoverBody.hover, 'string')
   assert.match(String(hoverBody.hover), /IsGCD/)
+  assert.equal(Number.isInteger(hoverBody.range?.start?.line), true)
+  assert.equal(Number.isInteger(hoverBody.range?.start?.character), true)
+  assert.equal(Number.isInteger(hoverBody.range?.end?.line), true)
+  assert.equal(Number.isInteger(hoverBody.range?.end?.character), true)
 
   console.log(`Smoke test passed: ${String(hoverBody.hover).split('\n')[0]}`)
 } finally {

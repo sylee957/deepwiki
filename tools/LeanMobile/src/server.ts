@@ -96,7 +96,7 @@ async function serveStatic(pathname: string, headOnly: boolean) {
     '/app.js': [path.join(distRoot, 'app.js'), 'text/javascript; charset=utf-8'],
     '/style.css': [path.join(frontendRoot, 'style.css'), 'text/css; charset=utf-8']
   }
-  const item = files[pathname]
+  const item = files[pathname] ?? (pathname.startsWith('/file/') ? files['/'] : undefined)
   if (!item) return jsonResponse(404, { error: 'Not found' })
 
   const file = Bun.file(item[0])

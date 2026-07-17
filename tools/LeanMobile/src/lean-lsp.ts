@@ -6,6 +6,11 @@ export interface Position {
   character: number
 }
 
+export interface Range {
+  start: Position
+  end: Position
+}
+
 interface JsonRpcMessage {
   jsonrpc: '2.0'
   id?: number
@@ -236,7 +241,18 @@ export function hoverText(result: unknown) {
 }
 
 export function hoverRange(result: unknown) {
-  return isObject(result) && 'range' in result ? result.range : null
+  if (!isObject(result) || !isObject(result.range)) return null
+  const start = lspPosition(result.range.start)
+  const end = lspPosition(result.range.end)
+  return start && end ? { start, end } satisfies Range : null
+}
+
+function lspPosition(value: unknown): Position | null {
+  if (!isObject(value)) return null
+  const { line, character } = value
+  if (!Number.isInteger(line) || Number(line) < 0) return null
+  if (!Number.isInteger(character) || Number(character) < 0) return null
+  return { line: Number(line), character: Number(character) }
 }
 
 function markedStringText(value: string | { value?: string }) {

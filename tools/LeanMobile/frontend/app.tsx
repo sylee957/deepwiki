@@ -3,11 +3,17 @@ import { createRoot } from 'react-dom/client'
 import { hotkeysCoreFeature, syncDataLoaderFeature, type Updater } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 import Markdown, { type Components } from 'react-markdown'
+import { BrowserRouter, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router'
 import { SourceViewer } from './SourceViewer.tsx'
 
 interface Position {
   line: number
   character: number
+}
+
+interface SourceRange {
+  start: Position
+  end: Position
 }
 
 interface FileNode {
@@ -29,11 +35,16 @@ interface HoverState {
   loading: boolean
   message: string
   content: string
+  range: SourceRange | null
 }
 
-const emptyHover: HoverState = { open: false, loading: false, message: '', content: '' }
+const emptyHover: HoverState = { open: false, loading: false, message: '', content: '', range: null }
 
 function App() {
+  const navigate = useNavigate()
+  const routePath = useParams()['*'] ?? null
+  const [searchParameters] = useSearchParams()
+  const routePosition = sourcePositionFrom(searchParameters)
   const [tree, setTree] = useState<TreeNode[]>([])
   const [treeStatus, setTreeStatus] = useState('Loading files…')
   const [filter, setFilter] = useState('')
@@ -58,9 +69,9 @@ function App() {
 
   const requestHover = useCallback(async (filePath: string, position: Position) => {
     const requestId = ++hoverRequest.current
-    setHover({ open: true, loading: true, message: 'Asking Lean…', content: '' })
+    setHover({ open: true, loading: true, message: 'Asking Lean…', content: '', range: null })
     try {
-      const result = await api<{ hover: string | null }>('/api/hover', {
+      const result = await api<{ hover: string | null; range: SourceRange | null }>('/api/hover', {
         method: 'POST',
         body: JSON.stringify({ path: filePath, position })
       })
@@ -69,15 +80,16 @@ function App() {
         open: true,
         loading: false,
         message: result.hover ? '' : 'No Lean information at this position.',
-        content: result.hover ?? ''
+        content: result.hover ?? '',
+        range: result.range
       })
     } catch (error) {
       if (requestId !== hoverRequest.current) return
-      setHover({ open: true, loading: false, message: errorMessage(error), content: '' })
+      setHover({ open: true, loading: false, message: errorMessage(error), content: '', range: null })
     }
   }, [])
 
-  const openFile = useCallback(async (filePath: string, position?: Position) => {
+  const loadFile = useCallback(async (filePath: string) => {
     const requestId = ++fileRequest.current
     hoverRequest.current += 1
     setPath(filePath)
@@ -92,20 +104,48 @@ function App() {
       if (requestId !== fileRequest.current) return
       setSource(result.text)
       setSourceStatus('')
-      if (position) {
-        setSelected(position)
-        void requestHover(filePath, position)
-      }
     } catch (error) {
       if (requestId !== fileRequest.current) return
       setSourceStatus(errorMessage(error))
     }
-  }, [requestHover])
+  }, [])
+
+  useEffect(() => {
+    if (!routePath) {
+      fileRequest.current += 1
+      hoverRequest.current += 1
+      setPath(null)
+      setSourcePath(null)
+      setSource('')
+      setSourceStatus('')
+      setSelected(null)
+      setHover(emptyHover)
+      return
+    }
+
+    if (routePath !== path) {
+      void loadFile(routePath)
+      return
+    }
+
+    if (sourcePath !== routePath || sourceStatus) return
+    if (routePosition) {
+      setSelected(routePosition)
+      void requestHover(routePath, routePosition)
+    } else {
+      hoverRequest.current += 1
+      setSelected(null)
+      setHover(emptyHover)
+    }
+  }, [loadFile, path, requestHover, routePath, routePosition?.character, routePosition?.line, sourcePath, sourceStatus])
+
+  const openFile = useCallback((filePath: string, position?: Position) => {
+    navigate(viewerLocation(filePath, position), { replace: routePath === filePath })
+  }, [navigate, routePath])
 
   const selectPosition = (position: Position) => {
     if (!path) return
-    setSelected(position)
-    void requestHover(path, position)
+    navigate(viewerLocation(path, position), { replace: true })
   }
 
   const goToDefinition = async () => {
@@ -120,9 +160,9 @@ function App() {
         setHover(previous => ({ ...previous, open: true, message: 'No repository definition found.' }))
         return
       }
-      await openFile(definition.path, definition.position)
+      openFile(definition.path, definition.position)
     } catch (error) {
-      setHover({ open: true, loading: false, message: errorMessage(error), content: '' })
+      setHover({ open: true, loading: false, message: errorMessage(error), content: '', range: null })
     }
   }
 
@@ -173,6 +213,7 @@ function App() {
           text={source ?? ''}
           isLean={sourcePath?.endsWith('.lean') ?? false}
           selected={selected}
+          hoverRange={hover.range}
           onSelect={selectPosition}
         />
       </section>
@@ -330,6 +371,35 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error)
 }
 
+function viewerLocation(path: string, position?: Position) {
+  const pathname = `/file/${path.split('/').map(encodeURIComponent).join('/')}`
+  const search = new URLSearchParams()
+  if (position) {
+    search.set('line', String(position.line))
+    search.set('character', String(position.character))
+  }
+  return { pathname, search: search.size ? `?${search}` : '' }
+}
+
+function sourcePositionFrom(parameters: URLSearchParams): Position | null {
+  const line = routeInteger(parameters.get('line'))
+  const character = routeInteger(parameters.get('character'))
+  return line === null || character === null ? null : { line, character }
+}
+
+function routeInteger(value: string | null) {
+  if (value === null || !/^\d+$/.test(value)) return null
+  const parsed = Number(value)
+  return Number.isSafeInteger(parsed) ? parsed : null
+}
+
 const root = document.querySelector('#root')
 if (!root) throw new Error('Missing React root')
-createRoot(root).render(<App />)
+createRoot(root).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />} />
+      <Route path="/file/*" element={<App />} />
+    </Routes>
+  </BrowserRouter>
+)

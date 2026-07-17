@@ -1,11 +1,16 @@
 import { useLayoutEffect, useRef } from 'react'
 import { basicSetup } from 'codemirror'
-import { EditorSelection, EditorState } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
+import { EditorSelection, EditorState, StateEffect, StateField } from '@codemirror/state'
+import { Decoration, EditorView, type DecorationSet } from '@codemirror/view'
 
 export interface SourcePosition {
   line: number
   character: number
+}
+
+export interface SourceRange {
+  start: SourcePosition
+  end: SourcePosition
 }
 
 export function SourceViewer(props: {
@@ -13,6 +18,7 @@ export function SourceViewer(props: {
   text: string
   isLean: boolean
   selected: SourcePosition | null
+  hoverRange: SourceRange | null
   onSelect(position: SourcePosition): void
 }) {
   const parent = useRef<HTMLDivElement>(null)
@@ -38,12 +44,14 @@ export function SourceViewer(props: {
           autocomplete: 'off',
           spellcheck: 'false'
         }),
+        lspHoverRangeField,
         EditorView.domEventHandlers({
           click(event, currentView) {
             if (!isLean.current) return false
             const position = currentView.posAtCoords({ x: event.clientX, y: event.clientY })
             if (position === null) return false
             currentView.dispatch({ selection: EditorSelection.cursor(position) })
+            currentView.focus()
             const line = currentView.state.doc.lineAt(position)
             onSelect.current({ line: line.number - 1, character: position - line.from })
             return false
@@ -98,7 +106,19 @@ export function SourceViewer(props: {
       selection: EditorSelection.cursor(position),
       effects: EditorView.scrollIntoView(position, { y: 'center' })
     })
+    editor.focus()
   }, [props.selected])
+
+  useLayoutEffect(() => {
+    const editor = view.current
+    if (!editor) return
+    const start = props.hoverRange ? sourceOffset(editor, props.hoverRange.start) : null
+    const end = props.hoverRange ? sourceOffset(editor, props.hoverRange.end) : null
+    const range = start !== null && end !== null && start !== end
+      ? { from: Math.min(start, end), to: Math.max(start, end) }
+      : null
+    editor.dispatch({ effects: setLspHoverRange.of(range) })
+  }, [props.hoverRange])
 
   return <div id="source" ref={parent} />
 }
@@ -134,9 +154,41 @@ const editorTheme = EditorView.theme({
     paddingTop: '0.75rem'
   },
   '.cm-activeLine, .cm-activeLineGutter': {
-    backgroundColor: 'rgba(37, 99, 235, 0.17)'
+    backgroundColor: 'transparent'
+  },
+  '.cm-cursor': {
+    borderLeftColor: '#93c5fd',
+    borderLeftWidth: '2px'
+  },
+  '.cm-lsp-hover-range': {
+    backgroundColor: 'rgba(96, 165, 250, 0.28)',
+    borderBottom: '1px solid rgba(147, 197, 253, 0.9)'
   },
   '&.cm-focused': {
     outline: 'none'
   }
 }, { dark: true })
+
+const setLspHoverRange = StateEffect.define<{ from: number; to: number } | null>()
+
+const lspHoverRangeField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(ranges, transaction) {
+    ranges = ranges.map(transaction.changes)
+    for (const effect of transaction.effects) {
+      if (effect.is(setLspHoverRange)) {
+        return effect.value
+          ? Decoration.set([Decoration.mark({ class: 'cm-lsp-hover-range' }).range(effect.value.from, effect.value.to)])
+          : Decoration.none
+      }
+    }
+    return ranges
+  },
+  provide: field => EditorView.decorations.from(field)
+})
+
+function sourceOffset(editor: EditorView, position: SourcePosition) {
+  const lineNumber = Math.max(1, Math.min(position.line + 1, editor.state.doc.lines))
+  const line = editor.state.doc.line(lineNumber)
+  return Math.min(line.to, line.from + position.character)
+}
