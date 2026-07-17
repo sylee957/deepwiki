@@ -226,43 +226,13 @@ theorem not_annotationErasureAsConversionClaim : ¬ AnnotationErasureAsConversio
     (.sort 0 : DependentCalculus.Term 0) (.sort 1) at conversion
   exact Nat.zero_ne_one conversion.sort_level_eq
 
-/-- Annotation-erasure conservativity maps annotated typing into its literal unannotated calculus. -/
-abbrev AnnotationErasureConservativity : Prop :=
-  ∀ {n : Nat} {context : AnnotatedDependentCalculus.Context n}
-    {term type : AnnotatedDependentCalculus.Term n},
-    AnnotatedDependentCalculus.HasType context term type →
-      UnderlyingDependentCalculus.HasType context.erase term.erase type.erase
-
 /-- The annotated calculus is conservative over its annotation-free erasure. -/
-theorem annotationErasureConservativity : AnnotationErasureConservativity := by
-  intro n context term type derivation
-  exact derivation.erase
-
-/-- A term is universe-typed in the ordinary dependent calculus. -/
-def IsUniverseTyped {n : Nat} (context : DependentCalculus.Context n)
-    (term : DependentCalculus.Term n) : Prop :=
-  ∃ level, DependentCalculus.HasType context term (.sort level)
-
-/-- Typed conversion at a common kind preserves ordinary universe typehood. -/
-def TypedConversionUniverseRegularity : Prop :=
-  ∀ {n : Nat} {context : DependentCalculus.Context n}
-    {left right kind : DependentCalculus.Term n},
-    DependentCalculus.IsKind kind →
-      DependentCalculus.HasType context left kind →
-      DependentCalculus.HasType context right kind →
-      DependentCalculus.Convertible left right →
-      IsUniverseTyped context left → IsUniverseTyped context right
-
-/-- Narrowing a dependent context along cumulative domain subtyping preserves typing. -/
-def DependentContextNarrowing : Prop :=
-  ∀ {n : Nat} {context : DependentCalculus.Context n}
-    {domain domain' : DependentCalculus.Term n}
-    {term type : DependentCalculus.Term (n + 1)},
-    IsUniverseTyped context domain →
-      IsUniverseTyped context domain' →
-      DependentCalculus.Cumulative domain' domain →
-      DependentCalculus.HasType (.extend context domain) term type →
-        DependentCalculus.HasType (.extend context domain') term type
+theorem annotationErasureConservativity
+    {context : AnnotatedDependentCalculus.Context n}
+    {term type : AnnotatedDependentCalculus.Term n}
+    (derivation : AnnotatedDependentCalculus.HasType context term type) :
+    UnderlyingDependentCalculus.HasType context.erase term.erase type.erase :=
+  derivation.erase
 
 example {context : AnnotatedDependentCalculus.Context n}
     {term type : AnnotatedDependentCalculus.Term n}

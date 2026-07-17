@@ -1,4 +1,5 @@
 import DeepWiki.Refine.CCOmega.CumulativeInversion
+import DeepWiki.Refine.CCOmega.Regularity
 
 /-! # Subject reduction for the dependent calculus
 

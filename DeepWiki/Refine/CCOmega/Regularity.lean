@@ -1,4 +1,4 @@
-import DeepWiki.Refine.AnnotatedCalculusConservativity
+import DeepWiki.Refine.CCOmega.Typing
 
 /-! # Regularity of dependent context extension
 
@@ -64,43 +64,26 @@ theorem narrowExtension {context : Context n} {domain domain' : Term n}
 
 end HasType
 
-end DeepWiki.Refine.DependentCalculus
-
-namespace DeepWiki.Refine.AnnotatedCalculusConservativity
-
-/-- A term assigned both a universe and a syntactic kind can only have a universe kind. -/
-def AssignedKindSortDiscrimination : Prop :=
-  ∀ {n : Nat} {context : DependentCalculus.Context n}
-    {term kind : DependentCalculus.Term n},
-    DependentCalculus.IsKind kind →
-      DependentCalculus.HasType context term kind →
-      IsUniverseTyped context term →
-        ∃ level, kind = .sort level
-
-/-- Kind-sort discrimination implies typed conversion universe regularity. -/
-theorem typedConversionUniverseRegularity_of_assignedKindSortDiscrimination
-    (discrimination : AssignedKindSortDiscrimination) :
-    TypedConversionUniverseRegularity := by
-  intro n context left right kind kindShape leftWellTyped rightWellTyped
-    _equal leftUniverseTyped
-  obtain ⟨level, rfl⟩ :=
-    discrimination kindShape leftWellTyped leftUniverseTyped
-  exact ⟨level, rightWellTyped⟩
-
 /-- The ordinary dependent calculus satisfies newest-entry context narrowing. -/
-theorem dependentContextNarrowing : DependentContextNarrowing := by
-  intro n context domain domain' term type domainWellTyped domain'WellTyped
-    domainCumulative termWellTyped
+theorem dependentContextNarrowing
+    {context : Context n}
+    {domain domain' : Term n}
+    {term type : Term (n + 1)}
+    (domainWellTyped : IsUniverseTyped context domain)
+    (domain'WellTyped : IsUniverseTyped context domain')
+    (domainCumulative : Cumulative domain' domain)
+    (termWellTyped : HasType (.extend context domain) term type) :
+    HasType (.extend context domain') term type := by
   obtain ⟨domainLevel, domainWellTyped⟩ := domainWellTyped
   obtain ⟨domainLevel', domain'WellTyped⟩ := domain'WellTyped
   exact termWellTyped.narrowExtension domainWellTyped domain'WellTyped domainCumulative
 
 /-- Product typehood follows from reverse domain transport and forward narrowed-codomain transport. -/
 theorem piUniverseTyped_of_transport
-    {context : DependentCalculus.Context n}
-    {domain domain' : DependentCalculus.Term n}
-    {codomain codomain' : DependentCalculus.Term (n + 1)}
-    (domainCumulative : DependentCalculus.Cumulative domain' domain)
+    {context : Context n}
+    {domain domain' : Term n}
+    {codomain codomain' : Term (n + 1)}
+    (domainCumulative : Cumulative domain' domain)
     (domainTypehood : IsUniverseTyped context domain →
       IsUniverseTyped context domain')
     (codomainTypehood : IsUniverseTyped (.extend context domain') codomain →
@@ -121,10 +104,10 @@ theorem piUniverseTyped_of_transport
 
 /-- Product typehood is covariant when both component subtype steps transport typehood both ways. -/
 theorem piUniverseTyped_of_bidirectional_transport
-    {context : DependentCalculus.Context n}
-    {domain domain' : DependentCalculus.Term n}
-    {codomain codomain' : DependentCalculus.Term (n + 1)}
-    (domainCumulative : DependentCalculus.Cumulative domain' domain)
+    {context : Context n}
+    {domain domain' : Term n}
+    {codomain codomain' : Term (n + 1)}
+    (domainCumulative : Cumulative domain' domain)
     (domainTypehood : IsUniverseTyped context domain' ↔
       IsUniverseTyped context domain)
     (codomainTypehood : IsUniverseTyped (.extend context domain') codomain ↔
@@ -134,17 +117,10 @@ theorem piUniverseTyped_of_bidirectional_transport
   piUniverseTyped_of_transport domainCumulative domainTypehood.mpr
     codomainTypehood.mp productTypehood
 
-example : DependentContextNarrowing :=
-  dependentContextNarrowing
-
-example (discrimination : AssignedKindSortDiscrimination) :
-    TypedConversionUniverseRegularity :=
-  typedConversionUniverseRegularity_of_assignedKindSortDiscrimination discrimination
-
-example {context : DependentCalculus.Context n}
-    {domain domain' : DependentCalculus.Term n}
-    {codomain codomain' : DependentCalculus.Term (n + 1)}
-    (domainCumulative : DependentCalculus.Cumulative domain' domain)
+example {context : Context n}
+    {domain domain' : Term n}
+    {codomain codomain' : Term (n + 1)}
+    (domainCumulative : Cumulative domain' domain)
     (domainTypehood : IsUniverseTyped context domain' ↔
       IsUniverseTyped context domain)
     (codomainTypehood : IsUniverseTyped (.extend context domain') codomain ↔
@@ -154,4 +130,4 @@ example {context : DependentCalculus.Context n}
   piUniverseTyped_of_bidirectional_transport domainCumulative domainTypehood
     codomainTypehood productTypehood
 
-end DeepWiki.Refine.AnnotatedCalculusConservativity
+end DeepWiki.Refine.DependentCalculus

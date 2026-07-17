@@ -1,4 +1,4 @@
-import DeepWiki.Refine.CCOmega.Regularity
+import DeepWiki.Refine.CCOmega.Confluence
 
 /-! # Principal typing for the dependent calculus
 

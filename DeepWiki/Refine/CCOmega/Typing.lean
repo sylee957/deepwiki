@@ -394,6 +394,10 @@ mutual
         HasType context term type'
 end
 
+/-- A term is universe-typed in the dependent calculus. -/
+def IsUniverseTyped {n : Nat} (context : Context n) (term : Term n) : Prop :=
+  ∃ level, HasType context term (.sort level)
+
 /-- A typed context renaming preserves each looked-up dependent type exactly after renaming. -/
 structure TypedRenaming (source : Context sourceSize) (target : Context targetSize)
     (mapping : Renaming sourceSize targetSize) : Prop where

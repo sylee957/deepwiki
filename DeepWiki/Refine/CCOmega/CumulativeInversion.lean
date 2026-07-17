@@ -201,23 +201,34 @@ example {context : Context n} {term type type' : Term n}
     Convertible type.eraseUniverseLevels type'.eraseUniverseLevels :=
   assignedTypes_eraseUniverseLevels_convertible termWellTyped termWellTyped'
 
-end DeepWiki.Refine.DependentCalculus
-
-namespace DeepWiki.Refine.AnnotatedCalculusConservativity
-
 /-- Assigned kinds are universe sorts whenever the same term has a universe type. -/
-theorem assignedKindSortDiscrimination : AssignedKindSortDiscrimination := by
-  intro n context term kind kindShape termAtKind termUniverseTyped
+theorem assignedKindSortDiscrimination
+    {context : Context n}
+    {term kind : Term n}
+    (kindShape : IsKind kind)
+    (termAtKind : HasType context term kind)
+    (termUniverseTyped : IsUniverseTyped context term) :
+    ∃ level, kind = .sort level := by
   obtain ⟨level, termAtSort⟩ := termUniverseTyped
   have erasedTypes :=
-    DependentCalculus.assignedTypes_eraseUniverseLevels_convertible
-      termAtSort termAtKind
+    assignedTypes_eraseUniverseLevels_convertible termAtSort termAtKind
   cases kindShape with
   | sort kindLevel => exact ⟨kindLevel, rfl⟩
   | pi domain codomainKind =>
       exact erasedTypes.sort_not_pi.elim
 
-example : AssignedKindSortDiscrimination :=
-  assignedKindSortDiscrimination
+/-- Typed conversion at a common kind preserves ordinary universe typehood. -/
+theorem typedConversionUniverseRegularity
+    {context : Context n}
+    {left right kind : Term n}
+    (kindShape : IsKind kind)
+    (leftWellTyped : HasType context left kind)
+    (rightWellTyped : HasType context right kind)
+    (_equal : Convertible left right)
+    (leftUniverseTyped : IsUniverseTyped context left) :
+    IsUniverseTyped context right := by
+  obtain ⟨level, rfl⟩ :=
+    assignedKindSortDiscrimination kindShape leftWellTyped leftUniverseTyped
+  exact ⟨level, rightWellTyped⟩
 
-end DeepWiki.Refine.AnnotatedCalculusConservativity
+end DeepWiki.Refine.DependentCalculus
