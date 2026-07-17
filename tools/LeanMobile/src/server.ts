@@ -1,7 +1,13 @@
 import { realpath } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { LeanLanguageServer, hoverRange, hoverText, type Position } from './lean-lsp.ts'
+import {
+  LeanLanguageServer,
+  hoverRange,
+  hoverText,
+  type LeanNotification,
+  type Position
+} from './lean-lsp.ts'
 import {
   FileAccessError,
   isVisibleRepositoryPath,
@@ -32,7 +38,7 @@ export async function createLeanMobileApp(options: {
       try {
         return await routeRequest(request, { root, lean })
       } catch (error) {
-        const status = error instanceof FileAccessError ? error.statusCode : 500
+        const status = isAbortError(error) ? 499 : error instanceof FileAccessError ? error.statusCode : 500
         if (status === 500) logger.error(error)
         return jsonResponse(status, {
           error: error instanceof Error ? error.message : 'Unexpected server error'
@@ -53,6 +59,10 @@ async function routeRequest(
     return jsonResponse(200, { tree: buildFileTree(files), count: files.length })
   }
 
+  if (request.method === 'GET' && url.pathname === '/api/events') {
+    return leanEventStream(request, context.root, context.lean)
+  }
+
   if (request.method === 'GET' && url.pathname === '/api/file') {
     const relativePath = url.searchParams.get('path') ?? ''
     const file = await readRepositoryTextFile(context.root, relativePath)
@@ -67,7 +77,7 @@ async function routeRequest(
     if (typeof relativePath !== 'string' || !relativePath.endsWith('.lean')) {
       throw new FileAccessError('Hover is available for Lean files', 400)
     }
-    const result = await context.lean.hover(file.absolutePath, file.text, position)
+    const result = await context.lean.hover(file.absolutePath, file.text, position, request.signal)
     return jsonResponse(200, { hover: hoverText(result), range: hoverRange(result) })
   }
 
@@ -79,7 +89,7 @@ async function routeRequest(
     if (typeof relativePath !== 'string' || !relativePath.endsWith('.lean')) {
       throw new FileAccessError('Definition lookup is available for Lean files', 400)
     }
-    const result = await context.lean.definition(file.absolutePath, file.text, position)
+    const result = await context.lean.definition(file.absolutePath, file.text, position, request.signal)
     return jsonResponse(200, { definitions: normalizeDefinitions(context.root, result) })
   }
 
@@ -92,6 +102,72 @@ async function routeRequest(
     request.method === 'HEAD',
     request.headers.get('accept')?.includes('text/html') ?? false
   )
+}
+
+function leanEventStream(request: Request, root: string, lean: LeanLanguageServer) {
+  const encoder = new TextEncoder()
+  let cleanup = () => {}
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      let closed = false
+      const send = (text: string) => {
+        if (closed) return
+        try {
+          controller.enqueue(encoder.encode(text))
+        } catch {
+          cleanup()
+        }
+      }
+      const unsubscribe = lean.onNotification(notification => {
+        const event = leanProgressEvent(root, notification)
+        if (event) send(`event: lean-progress\ndata: ${JSON.stringify(event)}\n\n`)
+      })
+      const heartbeat = setInterval(() => send(': keep-alive\n\n'), 15_000)
+      const abort = () => {
+        cleanup()
+        try {
+          controller.close()
+        } catch {
+          // The stream may already have been cancelled by the client.
+        }
+      }
+      cleanup = () => {
+        if (closed) return
+        closed = true
+        clearInterval(heartbeat)
+        unsubscribe()
+        request.signal.removeEventListener('abort', abort)
+      }
+      request.signal.addEventListener('abort', abort, { once: true })
+      send(': connected\n\n')
+    },
+    cancel() {
+      cleanup()
+    }
+  })
+  return new Response(stream, {
+    status: 200,
+    headers: securityHeaders({
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-store',
+      Connection: 'keep-alive'
+    })
+  })
+}
+
+function leanProgressEvent(root: string, notification: LeanNotification) {
+  if (notification.method !== '$/lean/fileProgress' || !isObject(notification.params)) return null
+  const textDocument = notification.params.textDocument
+  const processing = notification.params.processing
+  if (!isObject(textDocument) || typeof textDocument.uri !== 'string' || !Array.isArray(processing)) {
+    return null
+  }
+  const relativePath = repositoryPathFromUri(root, textDocument.uri)
+  if (!relativePath) return null
+  const state = processing.some(item => isObject(item) && item.kind === 2)
+    ? 'error'
+    : processing.length > 0 ? 'processing' : 'ready'
+  return { path: relativePath, state }
 }
 
 async function serveStatic(pathname: string, headOnly: boolean, acceptsHtml: boolean) {
@@ -137,6 +213,16 @@ function normalizeDefinitions(root: string, result: unknown) {
     if (!isVisibleRepositoryPath(relativePath)) return []
     return [{ path: relativePath, position: range.start }]
   })
+}
+
+function repositoryPathFromUri(root: string, uri: string) {
+  if (!uri.startsWith('file:')) return null
+  try {
+    const relativePath = path.relative(root, fileURLToPath(uri)).split(path.sep).join('/')
+    return isVisibleRepositoryPath(relativePath) ? relativePath : null
+  } catch {
+    return null
+  }
 }
 
 function validatePosition(value: unknown): Position {
@@ -203,6 +289,10 @@ function parseArguments(argv: string[]) {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError'
 }
 
 if (import.meta.main) {

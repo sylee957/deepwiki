@@ -24,12 +24,21 @@ interface PendingRequest {
   resolve: (value: unknown) => void
   reject: (error: Error) => void
   timeout: ReturnType<typeof setTimeout>
+  removeAbortListener?: () => void
 }
 
 interface OpenDocument {
+  uri: string
   text: string
   version: number
 }
+
+export interface LeanNotification {
+  method: string
+  params: unknown
+}
+
+export type LeanNotificationListener = (notification: LeanNotification) => void
 
 interface Logger {
   error(message?: unknown): void
@@ -40,7 +49,8 @@ export class LeanLanguageServer {
   private buffer = Buffer.alloc(0)
   private nextId = 1
   private readonly pending = new Map<number, PendingRequest>()
-  private readonly documents = new Map<string, OpenDocument>()
+  private readonly notificationListeners = new Set<LeanNotificationListener>()
+  private document: OpenDocument | null = null
   private ready: Promise<void> | null = null
 
   constructor(private readonly root: string, private readonly logger: Logger = console) {}
@@ -72,7 +82,7 @@ export class LeanLanguageServer {
       this.failAll(new Error(`Lean language server exited (${signal ?? code})`))
       this.process = null
       this.ready = null
-      this.documents.clear()
+      this.document = null
     })
 
     const rootUri = pathToFileURL(this.root).href
@@ -94,30 +104,42 @@ export class LeanLanguageServer {
     this.notify('initialized', {})
   }
 
-  async hover(absolutePath: string, text: string, position: Position) {
+  onNotification(listener: LeanNotificationListener) {
+    this.notificationListeners.add(listener)
+    return () => this.notificationListeners.delete(listener)
+  }
+
+  async hover(absolutePath: string, text: string, position: Position, signal?: AbortSignal) {
+    if (signal?.aborted) throw abortError('textDocument/hover')
     await this.openDocument(absolutePath, text)
     return this.request('textDocument/hover', {
       textDocument: { uri: pathToFileURL(absolutePath).href },
       position
-    }, 60_000)
+    }, 60_000, signal)
   }
 
-  async definition(absolutePath: string, text: string, position: Position) {
+  async definition(absolutePath: string, text: string, position: Position, signal?: AbortSignal) {
+    if (signal?.aborted) throw abortError('textDocument/definition')
     await this.openDocument(absolutePath, text)
     return this.request('textDocument/definition', {
       textDocument: { uri: pathToFileURL(absolutePath).href },
       position
-    }, 60_000)
+    }, 60_000, signal)
   }
 
   private async openDocument(absolutePath: string, text: string) {
     await this.start()
     const uri = pathToFileURL(absolutePath).href
-    const previous = this.documents.get(uri)
-    if (previous?.text === text) return
+    const previous = this.document
+    if (previous?.uri === uri && previous.text === text) return
 
-    if (!previous) {
-      this.documents.set(uri, { text, version: 1 })
+    if (previous?.uri !== uri) {
+      if (previous) {
+        this.notify('textDocument/didClose', {
+          textDocument: { uri: previous.uri }
+        })
+      }
+      this.document = { uri, text, version: 1 }
       this.notify('textDocument/didOpen', {
         textDocument: { uri, languageId: 'lean4', version: 1, text }
       })
@@ -125,22 +147,36 @@ export class LeanLanguageServer {
     }
 
     const version = previous.version + 1
-    this.documents.set(uri, { text, version })
+    this.document = { uri, text, version }
     this.notify('textDocument/didChange', {
       textDocument: { uri, version },
       contentChanges: [{ text }]
     })
   }
 
-  request(method: string, params: unknown, timeoutMs = 30_000): Promise<unknown> {
+  request(method: string, params: unknown, timeoutMs = 30_000, signal?: AbortSignal): Promise<unknown> {
     if (!this.process) return Promise.reject(new Error('Lean language server is not running'))
+    if (signal?.aborted) return Promise.reject(abortError(method))
     const id = this.nextId++
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        this.pending.delete(id)
+        const request = this.takePending(id)
+        if (!request) return
+        this.notify('$/cancelRequest', { id })
         reject(new Error(`Lean request timed out: ${method}`))
       }, timeoutMs)
-      this.pending.set(id, { resolve, reject, timeout })
+      const pending: PendingRequest = { resolve, reject, timeout }
+      if (signal) {
+        const abort = () => {
+          const request = this.takePending(id)
+          if (!request) return
+          this.notify('$/cancelRequest', { id })
+          request.reject(abortError(method))
+        }
+        signal.addEventListener('abort', abort, { once: true })
+        pending.removeAbortListener = () => signal.removeEventListener('abort', abort)
+      }
+      this.pending.set(id, pending)
       this.send({ jsonrpc: '2.0', id, method, params })
     })
   }
@@ -153,6 +189,12 @@ export class LeanLanguageServer {
   async stop() {
     if (!this.process) return
     const leanProcess = this.process
+    if (this.document) {
+      this.notify('textDocument/didClose', {
+        textDocument: { uri: this.document.uri }
+      })
+      this.document = null
+    }
     try {
       await this.request('shutdown', null, 5_000)
     } catch {
@@ -198,32 +240,76 @@ export class LeanLanguageServer {
   }
 
   private handleMessage(message: JsonRpcMessage) {
-    if (message.id === undefined) return
-
-    if (message.method) {
-      this.send({
-        jsonrpc: '2.0',
-        id: message.id,
-        error: { code: -32601, message: `Unsupported client request: ${message.method}` }
-      })
+    if (message.id === undefined) {
+      if (message.method) this.emitNotification(message.method, message.params)
       return
     }
 
-    const pending = this.pending.get(message.id)
+    if (message.method) {
+      this.handleServerRequest(message.id, message.method, message.params)
+      return
+    }
+
+    const pending = this.takePending(message.id)
     if (!pending) return
-    clearTimeout(pending.timeout)
-    this.pending.delete(message.id)
     if (message.error) pending.reject(new Error(message.error.message ?? 'Lean request failed'))
     else pending.resolve(message.result)
+  }
+
+  private handleServerRequest(id: number, method: string, params: unknown) {
+    if (method === 'client/registerCapability'
+      || method === 'workspace/semanticTokens/refresh'
+      || method === 'workspace/inlayHint/refresh') {
+      this.emitNotification(method, params)
+      this.send({ jsonrpc: '2.0', id, result: null })
+      return
+    }
+    if (method === 'workspace/applyEdit') {
+      this.send({
+        jsonrpc: '2.0',
+        id,
+        result: { applied: false, failureReason: 'Lean Mobile is read-only' }
+      })
+      return
+    }
+    this.send({
+      jsonrpc: '2.0',
+      id,
+      error: { code: -32601, message: `Unsupported client request: ${method}` }
+    })
+  }
+
+  private emitNotification(method: string, params: unknown) {
+    for (const listener of this.notificationListeners) {
+      try {
+        listener({ method, params })
+      } catch (error) {
+        this.logger.error(error)
+      }
+    }
+  }
+
+  private takePending(id: number) {
+    const pending = this.pending.get(id)
+    if (!pending) return null
+    this.pending.delete(id)
+    clearTimeout(pending.timeout)
+    pending.removeAbortListener?.()
+    return pending
   }
 
   private failAll(error: Error) {
     for (const pending of this.pending.values()) {
       clearTimeout(pending.timeout)
+      pending.removeAbortListener?.()
       pending.reject(error)
     }
     this.pending.clear()
   }
+}
+
+function abortError(method: string) {
+  return new DOMException(`Lean request aborted: ${method}`, 'AbortError')
 }
 
 interface HoverResult {

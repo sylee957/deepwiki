@@ -38,6 +38,13 @@ interface HoverState {
   range: SourceRange | null
 }
 
+type LeanProgressState = 'idle' | 'processing' | 'ready' | 'error' | 'offline'
+
+interface LeanProgressEvent {
+  path: string
+  state: Exclude<LeanProgressState, 'idle' | 'offline'>
+}
+
 const emptyHover: HoverState = { open: false, loading: false, message: '', content: '', range: null }
 
 function App() {
@@ -55,10 +62,14 @@ function App() {
   const [sourceStatus, setSourceStatus] = useState('')
   const [selected, setSelected] = useState<Position | null>(null)
   const [hover, setHover] = useState<HoverState>(emptyHover)
+  const [leanProgress, setLeanProgress] = useState<LeanProgressEvent | null>(null)
+  const [leanEventsOnline, setLeanEventsOnline] = useState(false)
   const [hoverInset, setHoverInset] = useState(0)
   const hoverPanel = useRef<HTMLElement>(null)
   const fileRequest = useRef(0)
   const hoverRequest = useRef(0)
+  const hoverAbort = useRef<AbortController | null>(null)
+  const definitionAbort = useRef<AbortController | null>(null)
 
   useLayoutEffect(() => {
     const panel = hoverPanel.current
@@ -86,13 +97,38 @@ function App() {
       .catch((error: Error) => setTreeStatus(error.message))
   }, [])
 
+  useEffect(() => {
+    const events = new EventSource('/api/events')
+    const receiveProgress = (event: MessageEvent<string>) => {
+      try {
+        const value: unknown = JSON.parse(event.data)
+        if (!isLeanProgressEvent(value)) return
+        setLeanProgress(value)
+      } catch {
+        // Ignore malformed event data and keep the last valid state.
+      }
+    }
+    events.addEventListener('lean-progress', receiveProgress as EventListener)
+    events.onopen = () => setLeanEventsOnline(true)
+    events.onerror = () => setLeanEventsOnline(false)
+    return () => {
+      events.removeEventListener('lean-progress', receiveProgress as EventListener)
+      events.close()
+    }
+  }, [])
+
   const requestHover = useCallback(async (filePath: string, position: Position) => {
+    hoverAbort.current?.abort()
+    definitionAbort.current?.abort()
+    const controller = new AbortController()
+    hoverAbort.current = controller
     const requestId = ++hoverRequest.current
     setHover({ open: true, loading: true, message: 'Asking Lean…', content: '', range: null })
     try {
       const result = await api<{ hover: string | null; range: SourceRange | null }>('/api/hover', {
         method: 'POST',
-        body: JSON.stringify({ path: filePath, position })
+        body: JSON.stringify({ path: filePath, position }),
+        signal: controller.signal
       })
       if (requestId !== hoverRequest.current) return
       setHover({
@@ -103,13 +139,18 @@ function App() {
         range: result.range
       })
     } catch (error) {
+      if (isAbortError(error)) return
       if (requestId !== hoverRequest.current) return
       setHover({ open: true, loading: false, message: errorMessage(error), content: '', range: null })
+    } finally {
+      if (hoverAbort.current === controller) hoverAbort.current = null
     }
   }, [])
 
   const loadFile = useCallback(async (filePath: string) => {
     const requestId = ++fileRequest.current
+    hoverAbort.current?.abort()
+    definitionAbort.current?.abort()
     hoverRequest.current += 1
     setPath(filePath)
     setSourcePath(filePath)
@@ -131,6 +172,8 @@ function App() {
 
   useEffect(() => {
     if (!routePath) {
+      hoverAbort.current?.abort()
+      definitionAbort.current?.abort()
       fileRequest.current += 1
       hoverRequest.current += 1
       setPath(null)
@@ -169,10 +212,14 @@ function App() {
 
   const goToDefinition = async () => {
     if (!path || !selected) return
+    definitionAbort.current?.abort()
+    const controller = new AbortController()
+    definitionAbort.current = controller
     try {
       const result = await api<{ definitions: Array<{ path: string; position: Position }> }>('/api/definition', {
         method: 'POST',
-        body: JSON.stringify({ path, position: selected })
+        body: JSON.stringify({ path, position: selected }),
+        signal: controller.signal
       })
       const definition = result.definitions[0]
       if (!definition) {
@@ -181,14 +228,28 @@ function App() {
       }
       openFile(definition.path, definition.position)
     } catch (error) {
+      if (isAbortError(error)) return
       setHover({ open: true, loading: false, message: errorMessage(error), content: '', range: null })
+    } finally {
+      if (definitionAbort.current === controller) definitionAbort.current = null
     }
   }
 
   const closeHover = () => {
+    hoverAbort.current?.abort()
+    definitionAbort.current?.abort()
     hoverRequest.current += 1
     setHover(emptyHover)
   }
+
+  useEffect(() => () => {
+    hoverAbort.current?.abort()
+    definitionAbort.current?.abort()
+  }, [])
+
+  const progressState: LeanProgressState = path?.endsWith('.lean')
+    ? !leanEventsOnline ? 'offline' : leanProgress?.path === path ? leanProgress.state : 'idle'
+    : 'idle'
 
   return <>
     <header>
@@ -197,6 +258,7 @@ function App() {
         <strong>Lean Mobile</strong>
         <span id="current-path" title={path ?? ''}>{path ?? 'Choose a file'}</span>
       </div>
+      {path?.endsWith('.lean') && <LeanProgress state={progressState} />}
       <button disabled={!selected} onClick={() => void goToDefinition()}>Definition</button>
     </header>
 
@@ -248,6 +310,20 @@ function App() {
       {hover.content && <div id="hover-content"><Markdown components={markdownComponents}>{hover.content}</Markdown></div>}
     </section>}
   </>
+}
+
+function LeanProgress(props: { state: LeanProgressState }) {
+  const labels: Record<LeanProgressState, string> = {
+    idle: 'Lean idle',
+    processing: 'Lean…',
+    ready: 'Lean ready',
+    error: 'Lean error',
+    offline: 'Lean offline'
+  }
+  return <span className={`lean-progress ${props.state}`} role="status" title={labels[props.state]}>
+    <span className="lean-progress-dot" aria-hidden="true" />
+    <span className="lean-progress-label">{labels[props.state]}</span>
+  </span>
 }
 
 function FileTree(props: {
@@ -389,6 +465,17 @@ async function api<T>(url: string, options?: RequestInit): Promise<T> {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error)
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
+
+function isLeanProgressEvent(value: unknown): value is LeanProgressEvent {
+  if (typeof value !== 'object' || value === null) return false
+  const event = value as Partial<LeanProgressEvent>
+  return typeof event.path === 'string'
+    && (event.state === 'processing' || event.state === 'ready' || event.state === 'error')
 }
 
 function viewerLocation(path: string, position?: Position) {

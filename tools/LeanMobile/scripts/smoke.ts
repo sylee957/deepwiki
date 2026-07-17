@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createLeanMobileApp } from '../src/server.ts'
 
 const toolRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -53,6 +53,15 @@ try {
   const mutationResponse = await fetch(`${base}/api/file`, { method: 'PUT', body: 'forbidden' })
   assert.equal(mutationResponse.status, 405)
 
+  const eventResponse = await fetch(`${base}/api/events`)
+  assert.equal(eventResponse.status, 200)
+  assert.match(eventResponse.headers.get('content-type') ?? '', /text\/event-stream/)
+  assert.ok(eventResponse.body)
+  const eventReader = eventResponse.body.getReader()
+  const progressEvent = waitForServerEvent(eventReader, 'lean-progress')
+
+  const leanNotifications: string[] = []
+  const unsubscribe = app.lean.onNotification(notification => leanNotifications.push(notification.method))
   const hoverResponse = await fetch(`${base}/api/hover`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -72,9 +81,62 @@ try {
   assert.equal(Number.isInteger(hoverBody.range?.start?.character), true)
   assert.equal(Number.isInteger(hoverBody.range?.end?.line), true)
   assert.equal(Number.isInteger(hoverBody.range?.end?.character), true)
+  assert.equal(leanNotifications.includes('$/lean/fileProgress'), true)
+  const progress = JSON.parse(await progressEvent) as { path?: string; state?: string }
+  assert.equal(progress.path, 'DeepWiki/Algebra/GcdBasics.lean')
+  assert.equal(['processing', 'ready'].includes(progress.state ?? ''), true)
+  await eventReader.cancel()
+  unsubscribe()
+
+  const fileUri = pathToFileURL(path.join(repositoryRoot, 'DeepWiki/Algebra/GcdBasics.lean')).href
+  const cancellation = new AbortController()
+  const cancelledRequest = app.lean.request('textDocument/documentSymbol', {
+    textDocument: { uri: fileUri }
+  }, 60_000, cancellation.signal)
+  cancellation.abort()
+  await assert.rejects(cancelledRequest, error => error instanceof DOMException && error.name === 'AbortError')
+
+  const secondFilePath = path.join(repositoryRoot, 'DeepWiki/Algebra.lean')
+  const secondFileText = await Bun.file(secondFilePath).text()
+  await app.lean.hover(secondFilePath, secondFileText, { line: 0, character: 7 })
 
   console.log(`Smoke test passed: ${String(hoverBody.hover).split('\n')[0]}`)
 } finally {
   server.stop(true)
   await app.lean.stop()
+}
+
+async function waitForServerEvent(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  eventName: string
+) {
+  const decoder = new TextDecoder()
+  let buffer = ''
+  const read = async () => {
+    while (true) {
+      const result = await reader.read()
+      if (result.done) throw new Error(`Event stream ended before ${eventName}`)
+      buffer += decoder.decode(result.value, { stream: true })
+      const records = buffer.split('\n\n')
+      buffer = records.pop() ?? ''
+      for (const record of records) {
+        const lines = record.split('\n')
+        if (lines.includes(`event: ${eventName}`)) {
+          const data = lines.find(line => line.startsWith('data: '))
+          if (data) return data.slice('data: '.length)
+        }
+      }
+    }
+  }
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      read(),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error(`Timed out waiting for ${eventName}`)), 20_000)
+      })
+    ])
+  } finally {
+    if (timeout) clearTimeout(timeout)
+  }
 }
