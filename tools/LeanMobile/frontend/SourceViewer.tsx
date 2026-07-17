@@ -1,0 +1,142 @@
+import { useLayoutEffect, useRef } from 'react'
+import { basicSetup } from 'codemirror'
+import { EditorSelection, EditorState } from '@codemirror/state'
+import { EditorView } from '@codemirror/view'
+
+export interface SourcePosition {
+  line: number
+  character: number
+}
+
+export function SourceViewer(props: {
+  documentKey: string
+  text: string
+  isLean: boolean
+  selected: SourcePosition | null
+  onSelect(position: SourcePosition): void
+}) {
+  const parent = useRef<HTMLDivElement>(null)
+  const view = useRef<EditorView | null>(null)
+  const onSelect = useRef(props.onSelect)
+  const isLean = useRef(props.isLean)
+  const currentDocumentKey = useRef(props.documentKey)
+  onSelect.current = props.onSelect
+  isLean.current = props.isLean
+
+  useLayoutEffect(() => {
+    if (!parent.current) return
+    const editor = new EditorView({
+      parent: parent.current,
+      doc: '',
+      extensions: [
+        basicSetup,
+        EditorState.readOnly.of(true),
+        EditorView.editable.of(false),
+        EditorView.contentAttributes.of({
+          tabindex: '0',
+          autocapitalize: 'off',
+          autocomplete: 'off',
+          spellcheck: 'false'
+        }),
+        EditorView.domEventHandlers({
+          click(event, currentView) {
+            if (!isLean.current) return false
+            const position = currentView.posAtCoords({ x: event.clientX, y: event.clientY })
+            if (position === null) return false
+            currentView.dispatch({ selection: EditorSelection.cursor(position) })
+            const line = currentView.state.doc.lineAt(position)
+            onSelect.current({ line: line.number - 1, character: position - line.from })
+            return false
+          }
+        }),
+        editorTheme
+      ]
+    })
+    view.current = editor
+    const resizeObserver = new ResizeObserver(() => editor.requestMeasure())
+    resizeObserver.observe(parent.current)
+    void document.fonts?.ready.then(() => editor.requestMeasure())
+    return () => {
+      resizeObserver.disconnect()
+      view.current = null
+      editor.destroy()
+    }
+  }, [])
+
+  useLayoutEffect(() => {
+    const editor = view.current
+    if (!editor) return
+    const changingDocument = currentDocumentKey.current !== props.documentKey
+
+    if (changingDocument || editor.state.doc.toString() !== props.text) {
+      const selection = changingDocument
+        ? 0
+        : Math.min(editor.state.selection.main.head, props.text.length)
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: props.text },
+        selection: EditorSelection.cursor(selection)
+      })
+      currentDocumentKey.current = props.documentKey
+      requestAnimationFrame(() => {
+        if (view.current !== editor) return
+        if (changingDocument) {
+          editor.scrollDOM.scrollTop = 0
+          editor.scrollDOM.scrollLeft = 0
+        }
+        editor.requestMeasure()
+      })
+    }
+  }, [props.documentKey, props.text])
+
+  useLayoutEffect(() => {
+    const editor = view.current
+    if (!editor || !props.selected) return
+    const lineNumber = Math.min(props.selected.line + 1, editor.state.doc.lines)
+    const line = editor.state.doc.line(Math.max(1, lineNumber))
+    const position = Math.min(line.to, line.from + props.selected.character)
+    editor.dispatch({
+      selection: EditorSelection.cursor(position),
+      effects: EditorView.scrollIntoView(position, { y: 'center' })
+    })
+  }, [props.selected])
+
+  return <div id="source" ref={parent} />
+}
+
+const editorTheme = EditorView.theme({
+  '&': {
+    height: '100%',
+    backgroundColor: '#0b1020',
+    color: '#e5e7eb',
+    fontSize: '13px'
+  },
+  '.cm-scroller': {
+    overflow: 'auto',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    lineHeight: '1.55',
+    WebkitTextSizeAdjust: '100%'
+  },
+  '.cm-content': {
+    padding: '0.75rem 0',
+    caretColor: 'transparent',
+    color: '#e5e7eb',
+    WebkitTextFillColor: '#e5e7eb'
+  },
+  '.cm-line': {
+    padding: '0 2rem 0 0.75rem',
+    color: '#e5e7eb',
+    WebkitTextFillColor: '#e5e7eb'
+  },
+  '.cm-gutters': {
+    backgroundColor: '#0b1020',
+    color: '#53627a',
+    border: 'none',
+    paddingTop: '0.75rem'
+  },
+  '.cm-activeLine, .cm-activeLineGutter': {
+    backgroundColor: 'rgba(37, 99, 235, 0.17)'
+  },
+  '&.cm-focused': {
+    outline: 'none'
+  }
+}, { dark: true })

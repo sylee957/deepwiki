@@ -11,6 +11,15 @@ const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: app.fetch })
 try {
   const base = server.url.origin
 
+  const indexResponse = await fetch(base)
+  assert.equal(indexResponse.status, 200)
+  assert.match(indexResponse.headers.get('content-security-policy') ?? '', /style-src 'self' 'unsafe-inline'/)
+  assert.match(await indexResponse.text(), /id="root"/)
+
+  const bundleResponse = await fetch(`${base}/app.js`)
+  assert.equal(bundleResponse.status, 200)
+  assert.match(bundleResponse.headers.get('content-type') ?? '', /javascript/)
+
   const treeResponse = await fetch(`${base}/api/tree`)
   assert.equal(treeResponse.status, 200)
   const treeBody = await treeResponse.json() as { tree: Array<{ name: string }> }
