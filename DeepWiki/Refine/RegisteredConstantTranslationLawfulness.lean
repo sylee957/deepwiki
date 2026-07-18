@@ -205,18 +205,14 @@ theorem Judgment.lawful_constant_branch
   exact ⟨.constant lookup,
     constant_abstraction_of_lookup lawful coherent contextWellFormed lookup typeTranslation⟩
 
-/-- Recovering omitted relation witnesses from a source-only translation context. -/
-def TranslationContextWitnessRecoveryClaim (Constant : Type u) : Prop :=
-  ∃ recover : {n : Nat} → TranslationContext Constant (n + 1) →
-      Term Constant (AnnotatedRelationTranslation.relationalScope n),
-    ∀ {n : Nat} (context : TranslationContext Constant n)
-      (sourceType : Term Constant n)
-      (typeWitness : Term Constant (AnnotatedRelationTranslation.relationalScope n)),
-      recover (.extend context sourceType) = typeWitness
-
 /-- A source-only translation context cannot determine its omitted relation witnesses. -/
 theorem not_translationContextWitnessRecoveryClaim :
-    ¬ TranslationContextWitnessRecoveryClaim Constant := by
+    ¬ (∃ recover : {n : Nat} → TranslationContext Constant (n + 1) →
+        Term Constant (AnnotatedRelationTranslation.relationalScope n),
+      ∀ {n : Nat} (context : TranslationContext Constant n)
+        (sourceType : Term Constant n)
+        (typeWitness : Term Constant (AnnotatedRelationTranslation.relationalScope n)),
+        recover (.extend context sourceType) = typeWitness) := by
   rintro ⟨recover, recovers⟩
   let sourceType : Term Constant 0 := .sort 0 Annotation.equivalence
   have first := recovers TranslationContext.empty sourceType

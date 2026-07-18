@@ -408,14 +408,11 @@ theorem no_supported_betaConversionIndex
   intro supported
   cases supported
 
-/-- Claim that the structural equations cover every annotated subtyping proposition. -/
-def FullStructuralSupport : Prop :=
-  ∀ {n : Nat} {context : Context n} {source target : Term n}
-    (subtype : AnnotatedDependentCalculus.Subtype context source target),
-    Supported (indexSubtype subtype)
-
 /-- Distinct beta-convertible endpoints refute coverage by the five structural equations alone. -/
-theorem not_fullStructuralSupport : ¬ FullStructuralSupport := by
+theorem not_fullStructuralSupport :
+    ¬ ∀ {n : Nat} {context : Context n} {source target : Term n}
+      (subtype : AnnotatedDependentCalculus.Subtype context source target),
+      Supported (indexSubtype subtype) := by
   intro support
   exact no_supported_betaConversionIndex
     (indexSubtype betaConversionBoundary.toSubtype)

@@ -138,25 +138,18 @@ theorem Judgment.canonicalErasure {realizers : SyntaxRealizers}
       exact ⟨inductionHypothesis.1,
         (laws.weakeningErases _ subtype _).trans inductionHypothesis.2⟩
 
-/-- Canonical-erasure normalization as a proposition for fixed lawful syntax realizers. -/
-def CanonicalErasureClaim (realizers : SyntaxRealizers) : Prop :=
-  CanonicalErasureLaws realizers →
-    ∀ {n : Nat} {context : AnnotatedRelationTranslation.Context n}
-      {term type term' : AnnotatedDependentCalculus.Term n}
-      {witness : AnnotatedDependentCalculus.Term
-        (DependentCalculus.RawParametricity.scopeSize n)},
-      Judgment realizers context term type term' witness →
-        term'.erase = term.erase ∧
-          witness.erase = DependentCalculus.RawParametricity.translate term.erase
-
 /-- Lawful syntax realizers satisfy canonical-erasure normalization. -/
 theorem canonicalErasureClaim (realizers : SyntaxRealizers) :
-    CanonicalErasureClaim realizers :=
+    CanonicalErasureLaws realizers →
+      ∀ {n : Nat} {context : AnnotatedRelationTranslation.Context n}
+        {term type term' : AnnotatedDependentCalculus.Term n}
+        {witness : AnnotatedDependentCalculus.Term
+          (DependentCalculus.RawParametricity.scopeSize n)},
+        Judgment realizers context term type term' witness →
+          term'.erase = term.erase ∧
+            witness.erase = DependentCalculus.RawParametricity.translate term.erase :=
   by
     intro laws n context term type term' witness translation
     exact Judgment.canonicalErasure laws translation
-
-example (realizers : SyntaxRealizers) : CanonicalErasureClaim realizers :=
-  canonicalErasureClaim realizers
 
 end DeepWiki.Refine.AnnotatedTranslationErasure

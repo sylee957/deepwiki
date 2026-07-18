@@ -310,6 +310,15 @@ not just defaults):
   for the same object across a related group (e.g. `apply` for `f t` across the
   four `*_of_*` inversion lemmas).
 
+- **Inline theorem-only proposition wrappers.** Do not introduce
+  `def FooClaim : Prop := P` when its only role is to be the type of
+  `theorem foo : FooClaim`; state `theorem foo : P` directly. Keep a named
+  `Prop` when it is part of the mathematical or public API: a reusable
+  predicate, an independently meaningful specification/open interface or
+  source-faithful claim, a subject of equivalence/transport/composition
+  lemmas, or the common statement of a theorem family. Apply this
+  semantically, not by raw reference count.
+
 - **The library is book-number-free; book numbers live ONLY in `Sources/`.**
   Neither a declaration NOR a module/file under `DeepWiki/<Topic>/` may be named
   after a book pointer — not `ex_3_25`/`thm_7_1`/`prop_7_2_if`/`def_9_2`/`eq_9_4`

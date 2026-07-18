@@ -87,8 +87,8 @@ theorem translatedContextWellFormed {source : Context n} {term type : Term n}
 
 end FormationHasType
 
-/-- Formation-explicit typing proves all three displayed raw abstraction conclusions. -/
-theorem abstractionConclusion_of_formationHasType {source : Context n}
+/-- Formation-explicit dependent typing satisfies the displayed raw abstraction theorem. -/
+theorem formationExplicitRawAbstraction {source : Context n}
     {term type : Term n} (termWellTyped : FormationHasType source term type) :
     AbstractionConclusion source term type := by
   have translatedWellFormed :=
@@ -97,21 +97,12 @@ theorem abstractionConclusion_of_formationHasType {source : Context n}
     HasType.primed termWellTyped.erase translatedWellFormed,
     termWellTyped.witness⟩
 
-/-- The displayed abstraction claim restricted to formation-explicit typing derivations. -/
-def FormationExplicitRawAbstractionClaim : Prop :=
-  ∀ {n : Nat} {source : Context n} {term type : Term n},
-    FormationHasType source term type → AbstractionConclusion source term type
-
-/-- Formation-explicit dependent typing satisfies the displayed raw abstraction theorem. -/
-theorem formationExplicitRawAbstraction : FormationExplicitRawAbstractionClaim :=
-  fun termWellTyped => abstractionConclusion_of_formationHasType termWellTyped
-
 /-- Ordinary `CCω` typing satisfies raw abstraction. -/
 theorem rawAbstraction : RawAbstractionClaim := fun termWellTyped => by
   have formationTyping :=
     FormationHasType.ofHasType termWellTyped
   exact ⟨formationTyping.translatedContextWellFormed,
-    abstractionConclusion_of_formationHasType formationTyping⟩
+    formationExplicitRawAbstraction formationTyping⟩
 
 /-- Ordinary `CCω` typing satisfies the displayed raw abstraction theorem. -/
 theorem displayedRawAbstraction : DisplayedRawAbstractionClaim :=

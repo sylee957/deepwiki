@@ -420,15 +420,12 @@ theorem Coherent.primedContext_eq_gamma {realizers : SyntaxRealizers}
 
 end ContextRealization
 
-/-- Recovering arbitrary omitted binder witnesses from `Context` alone is impossible. -/
-def ContextWitnessRecoveryClaim : Prop :=
-  ∃ recover : {n : Nat} → Context (n + 1) → Term (relationalScope n),
-    ∀ {n : Nat} (context : Context n) (sourceType : Term n)
-      (typeWitness : Term (relationalScope n)),
-      recover (.extend context sourceType) = typeWitness
-
 /-- The source-only context cannot determine the omitted structured witness of an extension. -/
-theorem not_contextWitnessRecoveryClaim : ¬ ContextWitnessRecoveryClaim := by
+theorem not_contextWitnessRecoveryClaim :
+    ¬ (∃ recover : {n : Nat} → Context (n + 1) → Term (relationalScope n),
+      ∀ {n : Nat} (context : Context n) (sourceType : Term n)
+        (typeWitness : Term (relationalScope n)),
+        recover (.extend context sourceType) = typeWitness) := by
   rintro ⟨recover, recovers⟩
   let sourceType : Term 0 := .sort 0 Annotation.equivalence
   have first := recovers Context.empty sourceType
@@ -651,9 +648,6 @@ example {realizers : SyntaxRealizers} {context : Context n}
     (translation : Judgment realizers context term type term' witness) :
     term' = term :=
   translation.primed_eq_source
-
-example : ¬ ContextWitnessRecoveryClaim :=
-  not_contextWitnessRecoveryClaim
 
 example (realizers : SyntaxRealizers) (bridge : WitnessTypingBridge) :
     AbstractionClaim realizers bridge ↔ WitnessAbstractionClaim realizers bridge :=
