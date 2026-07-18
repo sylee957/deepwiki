@@ -107,29 +107,23 @@ def RelationalRenaming.lift (mapping : RelationalRenaming source target) :
     intro older
     exact congrArg Fin.succ (congrArg Fin.succ (congrArg Fin.succ (mapping.witness_eq older)))
 
-/-- Lift a variable renaming beneath a specified number of fresh binders. -/
-def liftBy (mapping : Renaming source target) :
-    (amount : Nat) → Renaming (source + amount) (target + amount)
-  | 0 => mapping
-  | amount + 1 => Renaming.lift (liftBy mapping amount)
-
 /-- Weakening after renaming agrees with renaming beneath all fresh binders. -/
 theorem weakenBy_rename (term : Term source) (mapping : Renaming source target)
     (amount : Nat) :
     weakenBy (term.rename mapping) amount =
-      (weakenBy term amount).rename (liftBy mapping amount) := by
+      (weakenBy term amount).rename (Renaming.liftBy mapping amount) := by
   induction amount with
   | zero => rfl
   | succ amount inductionHypothesis =>
-      simp only [weakenBy, inductionHypothesis, Term.rename_comp, liftBy]
+      simp only [weakenBy, inductionHypothesis, Term.rename_comp, Renaming.liftBy]
       apply Term.rename_congr
       funext index
       rfl
 
 /-- Inserting two variables after three binders commutes with lifted renaming. -/
 theorem insertTwoAfterThree_natural (mapping : Renaming source target) :
-    Renaming.comp insertTwoAfterThree (liftBy mapping 3) =
-      Renaming.comp (liftBy mapping 5) insertTwoAfterThree := by
+    Renaming.comp insertTwoAfterThree (Renaming.liftBy mapping 3) =
+      Renaming.comp (Renaming.liftBy mapping 5) insertTwoAfterThree := by
   funext index
   refine Fin.cases rfl ?_ index
   intro index
@@ -187,7 +181,7 @@ theorem translate_rename (mapping : RelationalRenaming source target) (term : Te
         simpa only [RelationalRenaming.lift, scopeSize] using bodyInduction mapping.lift
       simp only [Term.rename, translate_lam, original_rename mapping,
         primed_rename mapping, domainInduction mapping,
-        bodyNatural, weakenBy_rename, liftBy, Renaming.lift_zero]
+        bodyNatural, weakenBy_rename, Renaming.liftBy, Renaming.lift_zero]
       rfl
   | pi domain codomain domainInduction codomainInduction =>
       have codomainNatural :
@@ -215,10 +209,10 @@ theorem translate_rename (mapping : RelationalRenaming source target) (term : Te
                 (Renaming.lift
                   (Renaming.lift (Renaming.lift (Renaming.lift mapping.relational)))))
               insertTwoAfterThree := by
-        simpa only [liftBy] using insertTwoAfterThree_natural mapping.relational
+        simpa only [Renaming.liftBy] using insertTwoAfterThree_natural mapping.relational
       simp only [Term.rename, translate_pi, original_rename mapping,
         primed_rename mapping, originalProductNatural, primedProductNatural,
-        domainInduction mapping, codomainNatural, weakenBy_rename, liftBy,
+        domainInduction mapping, codomainNatural, weakenBy_rename, Renaming.liftBy,
         Renaming.lift_zero, Term.rename_comp]
       rw [insertionNatural]
       rfl

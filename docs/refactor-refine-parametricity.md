@@ -36,6 +36,12 @@ DeepWiki/Refine/
     Univalent/
       Package.lean
       QuotationSpec.lean
+      Syntax.lean
+      Realizers.lean
+      Translation.lean
+      Typing.lean
+      RelationalCumulativity.lean
+      Abstraction.lean
     Sequents.lean
     Sequents/
       Raw.lean
@@ -60,15 +66,18 @@ DeepWiki/Refine/Annotated/
 Full univalent-parametricity work uses the semantic destinations reserved by this reorganization:
 
 ```text
+Parametricity/Univalent/Syntax.lean
 Parametricity/Univalent/Realizers.lean
 Parametricity/Univalent/Translation.lean
 Parametricity/Univalent/Typing.lean
+Parametricity/Univalent/RelationalCumulativity.lean
 Parametricity/Univalent/Abstraction.lean
 ```
 
-These modules now respectively contain the concrete `p□`/`pΠ` package constructors, Figure 2,
-Equation (17), and full dependent Theorem 3.6; `RelationalCumulativity.lean` supplies the additional
-conversion layer required by the abstraction induction.
+`Syntax.lean` owns the intrinsically scoped extended terms, contexts, renamings, substitutions, and
+their structural laws. The remaining modules contain the concrete `p□`/`pΠ` package constructors,
+Figure 2, Equation (17), the relational-cumulativity layer required by the abstraction induction,
+and full dependent Theorem 3.6.
 
 ## Mechanical move map
 
@@ -152,6 +161,9 @@ are reachable through the new aggregators, and both paper catalogs import the ne
 Subsequent work completed the full Figure 2 translation, object-level Equation (17), and dependent
 Theorem 3.6 in those destinations and discharged their TOPLAS source-catalog markers. The original
 reorganization itself remains a mechanical ownership change rather than that later formalization.
+On 2026-07-18, the completed univalent stack received its planned support-module split:
+`Univalent/Syntax.lean` now owns generic extended syntax and structural operations, while the shared
+`Renaming.liftBy` API lives with core renamings in `CCOmega/Syntax.lean`.
 
 Verification passed for `DeepWiki.Refine.Parametricity`, `DeepWiki.Refine.Annotated.Quotation`,
 the TOPLAS Section 3.3 catalog, the ESOP Section 2.3 and theory catalogs, `DeepWiki.Refine`, and the

@@ -92,7 +92,7 @@ theorem ParametricityContext.shiftThree_injective :
 
 /-- Triple lifting is three ordinary binder lifts. -/
 theorem liftTripleRenaming_eq_liftBy (mapping : Renaming source target) :
-    liftTripleRenaming mapping = RawParametricity.liftBy mapping 3 := by
+    liftTripleRenaming mapping = Renaming.liftBy mapping 3 := by
   funext index
   refine Fin.cases rfl ?_ index
   intro index
@@ -125,11 +125,11 @@ theorem rename_primedBinderRenaming (body : Term (source + 1))
 /-- Related-domain formation is natural under renaming. -/
 theorem relatedDomain_rename (relation : Term source)
     (mapping : Renaming source target) :
-    (relatedDomain relation).rename (RawParametricity.liftBy mapping 2) =
+    (relatedDomain relation).rename (Renaming.liftBy mapping 2) =
       relatedDomain (relation.rename mapping) := by
   unfold relatedDomain
   simp only [Term.rename, RawParametricity.weakenBy_rename,
-    RawParametricity.liftBy, Renaming.lift_zero]
+    Renaming.liftBy, Renaming.lift_zero]
   rfl
 
 /-- Dependent-product witnesses are natural under renaming. -/
@@ -160,7 +160,7 @@ theorem piWitness_rename
   simp only [Term.rename, RawParametricity.weakenBy_rename]
   rw [← relatedDomain_rename]
   rw [liftTripleRenaming_eq_liftBy]
-  simp only [RawParametricity.liftBy]
+  simp only [Renaming.liftBy]
   rw [primedProductNatural]
   rw [Term.rename_comp, Term.rename_comp]
   apply congrArg₂ Term.lam rfl
@@ -169,7 +169,7 @@ theorem piWitness_rename
   apply congrArg₂ Term.pi rfl
   apply congrArg₂ Term.pi rfl
   congr 3
-  simpa only [RawParametricity.liftBy] using
+  simpa only [Renaming.liftBy] using
     (RawParametricity.insertTwoAfterThree_natural mapping).symm
 
 

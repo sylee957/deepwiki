@@ -11,7 +11,7 @@ namespace DeepWiki.Refine.DependentCalculus.UnivalentParametricity
 def relationalExtend (context : Context n) (left right package : Term n) : Context (n + 3) :=
   .extend
     (.extend (.extend context left)
-      (right.rename DeepWiki.Refine.DependentCalculus.Renaming.shift))
+      (right.rename DependentCalculus.Renaming.shift))
     (Term.relatedDomain package)
 
 namespace Term
@@ -20,7 +20,7 @@ namespace Term
 theorem ofCore_instantiate (body : CoreTerm (n + 1)) (argument : CoreTerm n) :
     ofCore (body.instantiate argument) =
       (ofCore body).instantiate (ofCore argument) := by
-  simp only [DeepWiki.Refine.DependentCalculus.Term.instantiate,
+  simp only [DependentCalculus.Term.instantiate,
     instantiate, ofCore_substitute]
   apply substitute_congr
   funext index
@@ -153,7 +153,7 @@ theorem rename {left right : Term source} (step : BetaStep left right)
   | beta domain body argument =>
       simpa only [Term.rename, Term.rename_instantiate] using
         BetaStep.beta (domain.rename mapping)
-          (body.rename (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+          (body.rename (DependentCalculus.Renaming.lift mapping))
           (argument.rename mapping)
   | universeProjection level => exact .universeProjection level
   | dependentProductProjection leftDomain rightDomain leftCodomain rightCodomain
@@ -162,9 +162,9 @@ theorem rename {left right : Term source} (step : BetaStep left right)
         BetaStep.dependentProductProjection
           (leftDomain.rename mapping) (rightDomain.rename mapping)
           (leftCodomain.rename
-            (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+            (DependentCalculus.Renaming.lift mapping))
           (rightCodomain.rename
-            (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+            (DependentCalculus.Renaming.lift mapping))
           (domainPackage.rename mapping)
           (codomainPackage.rename (Renaming.liftBy mapping 3))
   | dependentProductLeftDomain _ inductionHypothesis =>
@@ -174,11 +174,11 @@ theorem rename {left right : Term source} (step : BetaStep left right)
   | dependentProductLeftCodomain _ inductionHypothesis =>
       exact .dependentProductLeftCodomain
         (inductionHypothesis
-          (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+          (DependentCalculus.Renaming.lift mapping))
   | dependentProductRightCodomain _ inductionHypothesis =>
       exact .dependentProductRightCodomain
         (inductionHypothesis
-          (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+          (DependentCalculus.Renaming.lift mapping))
   | dependentProductDomainPackage _ inductionHypothesis =>
       exact .dependentProductDomainPackage (inductionHypothesis mapping)
   | dependentProductCodomainPackage _ inductionHypothesis =>
@@ -193,13 +193,13 @@ theorem rename {left right : Term source} (step : BetaStep left right)
   | lamBody _ inductionHypothesis =>
       exact .lamBody
         (inductionHypothesis
-          (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+          (DependentCalculus.Renaming.lift mapping))
   | piDomain _ inductionHypothesis =>
       exact .piDomain (inductionHypothesis mapping)
   | piCodomain _ inductionHypothesis =>
       exact .piCodomain
         (inductionHypothesis
-          (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+          (DependentCalculus.Renaming.lift mapping))
   | relationProjection _ inductionHypothesis =>
       exact .relationProjection (inductionHypothesis mapping)
 
@@ -255,7 +255,7 @@ theorem substitute {left right : Term source} (step : BetaStep left right)
 
 /-- Embedding core syntax preserves one-step core beta reduction. -/
 theorem ofCore {left right : CoreTerm n}
-    (step : DeepWiki.Refine.DependentCalculus.BetaStep left right) :
+    (step : DependentCalculus.BetaStep left right) :
     BetaStep (Term.ofCore left) (Term.ofCore right) := by
   induction step with
   | beta domain body argument =>
@@ -271,7 +271,7 @@ theorem ofCore {left right : CoreTerm n}
 
 /-- Original endpoint copies preserve core beta steps. -/
 theorem original {left right : CoreTerm n}
-    (step : DeepWiki.Refine.DependentCalculus.BetaStep left right) :
+    (step : DependentCalculus.BetaStep left right) :
     BetaStep (UnivalentParametricity.original left)
       (UnivalentParametricity.original right) := by
   unfold UnivalentParametricity.original RawParametricity.original
@@ -279,7 +279,7 @@ theorem original {left right : CoreTerm n}
 
 /-- Primed endpoint copies preserve core beta steps. -/
 theorem primed {left right : CoreTerm n}
-    (step : DeepWiki.Refine.DependentCalculus.BetaStep left right) :
+    (step : DependentCalculus.BetaStep left right) :
     BetaStep (UnivalentParametricity.primed left)
       (UnivalentParametricity.primed right) := by
   unfold UnivalentParametricity.primed RawParametricity.primed
@@ -327,7 +327,7 @@ theorem substitute {left right : Term source} (conversion : Convertible left rig
 
 /-- Embedding core syntax preserves core definitional conversion. -/
 theorem ofCore {left right : CoreTerm n}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible left right) :
+    (conversion : DependentCalculus.Convertible left right) :
     Convertible (Term.ofCore left) (Term.ofCore right) := by
   induction conversion with
   | refl => exact .refl _
@@ -452,7 +452,7 @@ theorem weakenBy {left right : Term n} (conversion : Convertible left right)
   | zero => exact conversion
   | succ amount inductionHypothesis =>
       exact inductionHypothesis.rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift
+        DependentCalculus.Renaming.shift
 
 /-- Conversion is congruent in a translated relation-binder domain. -/
 theorem relatedDomain {package package' : Term n}
@@ -596,7 +596,7 @@ theorem dependentProductPackage
 
 /-- Original endpoint copies preserve core definitional conversion. -/
 theorem original {left right : CoreTerm n}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible left right) :
+    (conversion : DependentCalculus.Convertible left right) :
     Convertible (UnivalentParametricity.original left)
       (UnivalentParametricity.original right) := by
   unfold UnivalentParametricity.original RawParametricity.original
@@ -605,7 +605,7 @@ theorem original {left right : CoreTerm n}
 
 /-- Primed endpoint copies preserve core definitional conversion. -/
 theorem primed {left right : CoreTerm n}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible left right) :
+    (conversion : DependentCalculus.Convertible left right) :
     Convertible (UnivalentParametricity.primed left)
       (UnivalentParametricity.primed right) := by
   unfold UnivalentParametricity.primed RawParametricity.primed
@@ -614,24 +614,24 @@ theorem primed {left right : CoreTerm n}
 
 /-- Original codomain embeddings preserve core definitional conversion. -/
 theorem originalCodomain {left right : CoreTerm (n + 1)}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible left right) :
+    (conversion : DependentCalculus.Convertible left right) :
     Convertible (UnivalentParametricity.originalCodomain left)
       (UnivalentParametricity.originalCodomain right) := by
   unfold UnivalentParametricity.originalCodomain
   exact Convertible.ofCore
     (conversion.rename
-      (DeepWiki.Refine.DependentCalculus.Renaming.lift
+      (DependentCalculus.Renaming.lift
         (RawParametricity.originalRenaming n)))
 
 /-- Primed codomain embeddings preserve core definitional conversion. -/
 theorem primedCodomain {left right : CoreTerm (n + 1)}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible left right) :
+    (conversion : DependentCalculus.Convertible left right) :
     Convertible (UnivalentParametricity.primedCodomain left)
       (UnivalentParametricity.primedCodomain right) := by
   unfold UnivalentParametricity.primedCodomain
   exact Convertible.ofCore
     (conversion.rename
-      (DeepWiki.Refine.DependentCalculus.Renaming.lift
+      (DependentCalculus.Renaming.lift
         (RawParametricity.primedRenaming n)))
 
 end Convertible
@@ -673,7 +673,7 @@ theorem rename {left right : Term source} (subtype : Cumulative left right)
   | pi domainEqual _ codomainInduction =>
       exact .pi (domainEqual.rename mapping)
         (codomainInduction
-          (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+          (DependentCalculus.Renaming.lift mapping))
   | trans _ _ firstInduction secondInduction =>
       exact (firstInduction mapping).trans (secondInduction mapping)
 
@@ -696,7 +696,7 @@ theorem substitute {left right : Term source} (subtype : Cumulative left right)
 
 /-- Embedding core syntax preserves core cumulative conversion. -/
 theorem ofCore {left right : CoreTerm n}
-    (subtype : DeepWiki.Refine.DependentCalculus.Cumulative left right) :
+    (subtype : DependentCalculus.Cumulative left right) :
     Cumulative (Term.ofCore left) (Term.ofCore right) := by
   induction subtype with
   | conversion equal => exact .conversion (Convertible.ofCore equal)
@@ -818,7 +818,7 @@ namespace TypedRenaming
 /-- The identity renaming is typed on every well-formed context. -/
 theorem identity {context : Context n} (contextWellFormed : WellFormed context) :
     TypedRenaming context context
-      DeepWiki.Refine.DependentCalculus.Renaming.identity where
+      DependentCalculus.Renaming.identity where
   targetWellFormed := contextWellFormed
   lookup_eq index := (Term.rename_identity (context.lookup index)).symm
 
@@ -829,19 +829,19 @@ theorem comp {first : Context firstSize} {second : Context secondSize}
     (outerTyped : TypedRenaming second third outer)
     (innerTyped : TypedRenaming first second inner) :
     TypedRenaming first third
-      (DeepWiki.Refine.DependentCalculus.Renaming.comp outer inner) where
+      (DependentCalculus.Renaming.comp outer inner) where
   targetWellFormed := outerTyped.targetWellFormed
   lookup_eq index := by
     calc
       third.lookup
-          (DeepWiki.Refine.DependentCalculus.Renaming.comp outer inner index) =
+          (DependentCalculus.Renaming.comp outer inner index) =
           (second.lookup (inner index)).rename outer := by
-            simpa only [DeepWiki.Refine.DependentCalculus.Renaming.comp] using
+            simpa only [DependentCalculus.Renaming.comp] using
               outerTyped.lookup_eq (inner index)
       _ = ((first.lookup index).rename inner).rename outer := by
             rw [innerTyped.lookup_eq index]
       _ = (first.lookup index).rename
-          (DeepWiki.Refine.DependentCalculus.Renaming.comp outer inner) :=
+          (DependentCalculus.Renaming.comp outer inner) :=
             Term.rename_comp (first.lookup index) inner outer
 
 /-- Extend a typed renaming beneath matching dependent context extensions. -/
@@ -850,17 +850,17 @@ theorem lift {source : Context sourceSize} {target : Context targetSize}
     {level : Nat} (mappingTyped : TypedRenaming source target mapping)
     (domainWellTyped : HasType target (domain.rename mapping) (.sort level)) :
     TypedRenaming (.extend source domain) (.extend target (domain.rename mapping))
-      (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping) where
+      (DependentCalculus.Renaming.lift mapping) where
   targetWellFormed := .extend mappingTyped.targetWellFormed domainWellTyped
   lookup_eq index := by
     refine Fin.cases ?_ ?_ index
-    · simp only [DeepWiki.Refine.DependentCalculus.Renaming.lift_zero,
+    · simp only [DependentCalculus.Renaming.lift_zero,
         Context.lookup_zero, Term.rename_comp]
       apply Term.rename_congr
       funext older
       rfl
     · intro older
-      simp only [DeepWiki.Refine.DependentCalculus.Renaming.lift_succ,
+      simp only [DependentCalculus.Renaming.lift_succ,
         Context.lookup_succ]
       rw [mappingTyped.lookup_eq older, Term.rename_comp, Term.rename_comp]
       apply Term.rename_congr
@@ -871,7 +871,7 @@ theorem lift {source : Context sourceSize} {target : Context targetSize}
 theorem shift {context : Context n} {domain : Term n}
     (extendedWellFormed : WellFormed (.extend context domain)) :
     TypedRenaming context (.extend context domain)
-      DeepWiki.Refine.DependentCalculus.Renaming.shift where
+      DependentCalculus.Renaming.shift where
   targetWellFormed := extendedWellFormed
   lookup_eq _index := rfl
 
@@ -1148,27 +1148,27 @@ theorem rename {source : Context sourceSize} {term type : Term sourceSize}
     have targetLeftWellFormed : WellFormed targetLeft :=
       .extend mappingTyped.targetWellFormed renamedLeftDomain
     have mappingIntoTargetLeft : TypedRenaming context targetLeft
-        (DeepWiki.Refine.DependentCalculus.Renaming.comp
-          DeepWiki.Refine.DependentCalculus.Renaming.shift mapping) :=
+        (DependentCalculus.Renaming.comp
+          DependentCalculus.Renaming.shift mapping) :=
       TypedRenaming.comp (TypedRenaming.shift targetLeftWellFormed) mappingTyped
     have renamedRightInTargetLeft :
         HasType targetLeft
           ((rightDomain.rename mapping).rename
-            DeepWiki.Refine.DependentCalculus.Renaming.shift)
+            DependentCalculus.Renaming.shift)
           (.sort domainLevel) := by
       simpa only [targetLeft, Term.rename, Term.rename_comp] using
         rightDomainInduction mappingIntoTargetLeft
     let targetBoth : Context (targetSize + 2) :=
       .extend targetLeft
         ((rightDomain.rename mapping).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift)
+          DependentCalculus.Renaming.shift)
     have targetBothWellFormed : WellFormed targetBoth :=
       .extend targetLeftWellFormed renamedRightInTargetLeft
     have mappingIntoTargetBoth : TypedRenaming context targetBoth
-        (DeepWiki.Refine.DependentCalculus.Renaming.comp
-          DeepWiki.Refine.DependentCalculus.Renaming.shift
-          (DeepWiki.Refine.DependentCalculus.Renaming.comp
-            DeepWiki.Refine.DependentCalculus.Renaming.shift mapping)) :=
+        (DependentCalculus.Renaming.comp
+          DependentCalculus.Renaming.shift
+          (DependentCalculus.Renaming.comp
+            DependentCalculus.Renaming.shift mapping)) :=
       TypedRenaming.comp (TypedRenaming.shift targetBothWellFormed)
         mappingIntoTargetLeft
     have weakenedDomainPackage :
@@ -1196,8 +1196,8 @@ theorem rename {source : Context sourceSize} {term type : Term sourceSize}
         HasType.var targetBothWellFormed (1 : Fin (targetSize + 2))
       change HasType targetBoth (.var 1)
         (((leftDomain.rename mapping).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift) at variableWellTyped
+          DependentCalculus.Renaming.shift).rename
+          DependentCalculus.Renaming.shift) at variableWellTyped
       simpa only [Term.weakenBy] using variableWellTyped
     have rightVariable :
         HasType targetBoth (.var 0)
@@ -1206,8 +1206,8 @@ theorem rename {source : Context sourceSize} {term type : Term sourceSize}
         HasType.var targetBothWellFormed (0 : Fin (targetSize + 2))
       change HasType targetBoth (.var 0)
         (((rightDomain.rename mapping).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift) at variableWellTyped
+          DependentCalculus.Renaming.shift).rename
+          DependentCalculus.Renaming.shift) at variableWellTyped
       simpa only [Term.weakenBy] using variableWellTyped
     have relatedDomainWellTyped :
         HasType targetBoth
@@ -1225,7 +1225,7 @@ theorem rename {source : Context sourceSize} {term type : Term sourceSize}
           (.app (Term.rel ((domainPackage.rename mapping).weakenBy 2)) (.var 1))
           (Term.pi
             ((((rightDomain.rename mapping).weakenBy 2).rename
-              DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate (.var 1))
+              DependentCalculus.Renaming.shift).instantiate (.var 1))
             (.sort domainLevel)) at appliedLeft
         rw [Term.instantiate_rename_shift] at appliedLeft
         exact appliedLeft
@@ -1237,18 +1237,18 @@ theorem rename {source : Context sourceSize} {term type : Term sourceSize}
     have renamedShiftedRight :
         HasType targetLeft
           ((rightDomain.rename
-            DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-            (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping))
+            DependentCalculus.Renaming.shift).rename
+            (DependentCalculus.Renaming.lift mapping))
           (.sort domainLevel) := by
       simpa only [Term.rename_comp, shiftRenaming_natural] using
         renamedRightInTargetLeft
     have secondLiftRaw := firstLift.lift renamedShiftedRight
     have secondLift : TypedRenaming
         (.extend (.extend context leftDomain)
-          (rightDomain.rename DeepWiki.Refine.DependentCalculus.Renaming.shift))
+          (rightDomain.rename DependentCalculus.Renaming.shift))
         targetBoth
-        (DeepWiki.Refine.DependentCalculus.Renaming.lift
-          (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping)) := by
+        (DependentCalculus.Renaming.lift
+          (DependentCalculus.Renaming.lift mapping)) := by
       simpa only [targetBoth, targetLeft, Term.rename_comp,
         shiftRenaming_natural] using secondLiftRaw
     have relatedDomainRenamed :
@@ -1273,10 +1273,10 @@ theorem rename {source : Context sourceSize} {term type : Term sourceSize}
           (codomainPackage.rename (Renaming.liftBy mapping 3))
           (Term.packageType codomainLevel
             ((leftCodomain.rename
-              (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping)).rename
+              (DependentCalculus.Renaming.lift mapping)).rename
               originalBinderRenaming)
             ((rightCodomain.rename
-              (DeepWiki.Refine.DependentCalculus.Renaming.lift mapping)).rename
+              (DependentCalculus.Renaming.lift mapping)).rename
               primedBinderRenaming)) := by
       simpa only [Term.packageType_rename, Term.originalBinder_rename,
         Term.primedBinder_rename] using renamedCodomainPackage
@@ -1290,8 +1290,8 @@ theorem weaken {context : Context n} {term type domain : Term n}
     (termWellTyped : HasType context term type)
     (extendedWellFormed : WellFormed (.extend context domain)) :
     HasType (.extend context domain)
-      (term.rename DeepWiki.Refine.DependentCalculus.Renaming.shift)
-      (type.rename DeepWiki.Refine.DependentCalculus.Renaming.shift) :=
+      (term.rename DependentCalculus.Renaming.shift)
+      (type.rename DependentCalculus.Renaming.shift) :=
   termWellTyped.rename (TypedRenaming.shift extendedWellFormed)
 
 end HasType
@@ -1387,14 +1387,14 @@ theorem single {context : Context n} {domain argument : Term n}
   variableWellTyped index := by
     refine Fin.cases ?_ ?_ index
     · change HasType context argument
-        ((domain.rename DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate
+        ((domain.rename DependentCalculus.Renaming.shift).instantiate
           argument)
       rw [Term.instantiate_rename_shift]
       exact argumentWellTyped
     · intro older
       change HasType context (.var older)
         (((context.lookup older).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate argument)
+          DependentCalculus.Renaming.shift).instantiate argument)
       rw [Term.instantiate_rename_shift]
       exact HasType.var contextWellFormed older
 
@@ -1480,13 +1480,13 @@ theorem substitute {source : Context sourceSize} {term type : Term sourceSize}
     have substitutedRightInTargetLeft :
         HasType targetLeft
           ((rightDomain.substitute mapping).rename
-            DeepWiki.Refine.DependentCalculus.Renaming.shift)
+            DependentCalculus.Renaming.shift)
           (.sort domainLevel) :=
       substitutedRightDomain.weaken targetLeftWellFormed
     let targetBoth : Context (targetSize + 2) :=
       .extend targetLeft
         ((rightDomain.substitute mapping).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift)
+          DependentCalculus.Renaming.shift)
     have targetBothWellFormed : WellFormed targetBoth :=
       .extend targetLeftWellFormed substitutedRightInTargetLeft
     have weakenedDomainPackageOnce :=
@@ -1528,8 +1528,8 @@ theorem substitute {source : Context sourceSize} {term type : Term sourceSize}
         HasType.var targetBothWellFormed (1 : Fin (targetSize + 2))
       change HasType targetBoth (.var 1)
         (((leftDomain.substitute mapping).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift) at variableWellTyped
+          DependentCalculus.Renaming.shift).rename
+          DependentCalculus.Renaming.shift) at variableWellTyped
       simpa only [Term.weakenBy] using variableWellTyped
     have rightVariable :
         HasType targetBoth (.var 0)
@@ -1538,8 +1538,8 @@ theorem substitute {source : Context sourceSize} {term type : Term sourceSize}
         HasType.var targetBothWellFormed (0 : Fin (targetSize + 2))
       change HasType targetBoth (.var 0)
         (((rightDomain.substitute mapping).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift) at variableWellTyped
+          DependentCalculus.Renaming.shift).rename
+          DependentCalculus.Renaming.shift) at variableWellTyped
       simpa only [Term.weakenBy] using variableWellTyped
     have relatedDomainWellTyped :
         HasType targetBoth
@@ -1557,7 +1557,7 @@ theorem substitute {source : Context sourceSize} {term type : Term sourceSize}
           (.app (Term.rel ((domainPackage.substitute mapping).weakenBy 2)) (.var 1))
           (Term.pi
             ((((rightDomain.substitute mapping).weakenBy 2).rename
-              DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate (.var 1))
+              DependentCalculus.Renaming.shift).instantiate (.var 1))
             (.sort domainLevel)) at appliedLeft
         rw [Term.instantiate_rename_shift] at appliedLeft
         exact appliedLeft
@@ -1569,7 +1569,7 @@ theorem substitute {source : Context sourceSize} {term type : Term sourceSize}
     have substitutedShiftedRight :
         HasType targetLeft
           ((rightDomain.rename
-            DeepWiki.Refine.DependentCalculus.Renaming.shift).substitute
+            DependentCalculus.Renaming.shift).substitute
             (Substitution.lift mapping))
           (.sort domainLevel) := by
       simpa only [Term.substitute_rename_shift_lift] using
@@ -1577,7 +1577,7 @@ theorem substitute {source : Context sourceSize} {term type : Term sourceSize}
     have secondLiftRaw := firstLift.lift substitutedShiftedRight
     have secondLift : TypedSubstitution
         (.extend (.extend context leftDomain)
-          (rightDomain.rename DeepWiki.Refine.DependentCalculus.Renaming.shift))
+          (rightDomain.rename DependentCalculus.Renaming.shift))
         targetBoth (Substitution.lift (Substitution.lift mapping)) := by
       simpa only [targetBoth, targetLeft,
         Term.substitute_rename_shift_lift] using secondLiftRaw
@@ -1628,10 +1628,10 @@ end HasType
 
 /-- Embedding a well-formed core context preserves its formation derivation. -/
 theorem WellFormed.ofCore
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
-    (sourceWellFormed : DeepWiki.Refine.DependentCalculus.WellFormed source) :
+    {source : DependentCalculus.Context n}
+    (sourceWellFormed : DependentCalculus.WellFormed source) :
     WellFormed (Context.ofCore source) := by
-  refine DeepWiki.Refine.DependentCalculus.WellFormed.rec
+  refine DependentCalculus.WellFormed.rec
     (motive_1 := fun source _ => WellFormed (Context.ofCore source))
     (motive_2 := fun source term type _ =>
       HasType (Context.ofCore source) (Term.ofCore term) (Term.ofCore type))
@@ -1659,11 +1659,11 @@ theorem WellFormed.ofCore
 
 /-- Embedding a core typing derivation preserves dependent typing. -/
 theorem HasType.ofCore
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term type : CoreTerm n}
-    (termWellTyped : DeepWiki.Refine.DependentCalculus.HasType source term type) :
+    (termWellTyped : DependentCalculus.HasType source term type) :
     HasType (Context.ofCore source) (Term.ofCore term) (Term.ofCore type) := by
-  refine DeepWiki.Refine.DependentCalculus.HasType.rec
+  refine DependentCalculus.HasType.rec
     (motive_1 := fun source _ => WellFormed (Context.ofCore source))
     (motive_2 := fun source term type _ =>
       HasType (Context.ofCore source) (Term.ofCore term) (Term.ofCore type))
@@ -1691,7 +1691,7 @@ theorem HasType.ofCore
 
 /-- The original-variable embedding is a typed renaming into a translated context. -/
 theorem originalTypedRenaming
-    (source : DeepWiki.Refine.DependentCalculus.Context n)
+    (source : DependentCalculus.Context n)
     (translatedWellFormed : WellFormed (context source)) :
     TypedRenaming (Context.ofCore source) (context source)
       (RawParametricity.originalRenaming n) where
@@ -1703,7 +1703,7 @@ theorem originalTypedRenaming
 
 /-- The primed-variable embedding is a typed renaming into a translated context. -/
 theorem primedTypedRenaming
-    (source : DeepWiki.Refine.DependentCalculus.Context n)
+    (source : DependentCalculus.Context n)
     (translatedWellFormed : WellFormed (context source)) :
     TypedRenaming (Context.ofCore source) (context source)
       (RawParametricity.primedRenaming n) where
@@ -1717,9 +1717,9 @@ namespace HasType
 
 /-- Original-copy formation preserves every core typing derivation. -/
 theorem original
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term type : CoreTerm n}
-    (termWellTyped : DeepWiki.Refine.DependentCalculus.HasType source term type)
+    (termWellTyped : DependentCalculus.HasType source term type)
     (translatedWellFormed : WellFormed (context source)) :
     HasType (context source) (UnivalentParametricity.original term)
       (UnivalentParametricity.original type) := by
@@ -1730,9 +1730,9 @@ theorem original
 
 /-- Primed-copy formation preserves every core typing derivation. -/
 theorem primed
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term type : CoreTerm n}
-    (termWellTyped : DeepWiki.Refine.DependentCalculus.HasType source term type)
+    (termWellTyped : DependentCalculus.HasType source term type)
     (translatedWellFormed : WellFormed (context source)) :
     HasType (context source) (UnivalentParametricity.primed term)
       (UnivalentParametricity.primed type) := by
@@ -1755,13 +1755,13 @@ theorem relationType_hasType {context : Context n} {left right : Term n}
     .extend contextWellFormed leftWellTyped
   have rightWeakened :
       HasType (.extend context left)
-        (right.rename DeepWiki.Refine.DependentCalculus.Renaming.shift)
+        (right.rename DependentCalculus.Renaming.shift)
         (.sort rightLevel) := by
     simpa only [Term.rename] using rightWellTyped.weaken leftExtended
   have endpointsExtended :
       WellFormed
         (.extend (.extend context left)
-          (right.rename DeepWiki.Refine.DependentCalculus.Renaming.shift)) :=
+          (right.rename DependentCalculus.Renaming.shift)) :=
     .extend leftExtended rightWeakened
   have resultSort := HasType.sort endpointsExtended relationLevel
   have innerProduct := HasType.pi rightWeakened resultSort
@@ -1782,7 +1782,7 @@ theorem relationApplication_hasType {context : Context n}
       HasType context (.app relation leftTerm) (.pi right (.sort level)) := by
     change HasType context (.app relation leftTerm)
       (.pi ((right.rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate leftTerm)
+        DependentCalculus.Renaming.shift).instantiate leftTerm)
         (.sort level)) at appliedLeft
     rw [Term.instantiate_rename_shift] at appliedLeft
     exact appliedLeft
@@ -1868,7 +1868,7 @@ theorem relatedTermType_sort_convertible (term : CoreTerm n) (level : Nat) :
 
 /-- A universe-translated related-term type is itself universe-typed. -/
 theorem relatedTermType_sort_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term : CoreTerm n} {level : Nat}
     (translatedWellFormed : WellFormed (context source))
     (originalWellTyped : HasType (context source) (original term) (.sort level))
@@ -1887,7 +1887,7 @@ theorem relatedTermType_sort_hasType
 
 /-- Translating one source extension is exactly the `pΠ` relational extension. -/
 theorem context_extend_eq_relationalExtend
-    (source : DeepWiki.Refine.DependentCalculus.Context n) (domain : CoreTerm n) :
+    (source : DependentCalculus.Context n) (domain : CoreTerm n) :
     context (.extend source domain) =
       relationalExtend (context source) (original domain) (primed domain)
         (termTranslation domain) :=
@@ -1964,15 +1964,15 @@ theorem tripleBeta_convertible
     refine Fin.cases ?_ ?_ oneOrOlder
     · change
         (secondArgument.rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate
+          DependentCalculus.Renaming.shift).instantiate
             thirdArgument = secondArgument
       exact Term.instantiate_rename_shift secondArgument thirdArgument
     intro twoOrOlder
     refine Fin.cases ?_ ?_ twoOrOlder
     · change
         ((firstArgument.rename
-            DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-              DeepWiki.Refine.DependentCalculus.Renaming.shift).substitute
+            DependentCalculus.Renaming.shift).rename
+              DependentCalculus.Renaming.shift).substitute
             (Substitution.comp
               (Substitution.single thirdArgument)
               (Substitution.lift secondSingle)) =
@@ -1980,9 +1980,9 @@ theorem tripleBeta_convertible
       rw [← Term.substitute_comp, Term.substitute_rename_shift_lift]
       change
         (((firstArgument.rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate
+          DependentCalculus.Renaming.shift).instantiate
             secondArgument).rename
-              DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate
+              DependentCalculus.Renaming.shift).instantiate
                 thirdArgument = firstArgument
       rw [Term.instantiate_rename_shift, Term.instantiate_rename_shift]
     intro older
@@ -2015,7 +2015,7 @@ theorem termTranslation_beta
 
 /-- The package-valued translation preserves every core beta step as conversion. -/
 theorem termTranslation_betaStep {left right : CoreTerm n}
-    (step : DeepWiki.Refine.DependentCalculus.BetaStep left right) :
+    (step : DependentCalculus.BetaStep left right) :
     Convertible (termTranslation left) (termTranslation right) := by
   induction step with
   | beta domain body argument => exact termTranslation_beta domain body argument
@@ -2044,7 +2044,7 @@ theorem termTranslation_betaStep {left right : CoreTerm n}
 
 /-- The package-valued translation preserves core definitional conversion. -/
 theorem termTranslation_convertible {left right : CoreTerm n}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible left right) :
+    (conversion : DependentCalculus.Convertible left right) :
     Convertible (termTranslation left) (termTranslation right) := by
   induction conversion with
   | refl => exact .refl _
@@ -2055,14 +2055,14 @@ theorem termTranslation_convertible {left right : CoreTerm n}
 
 /-- The relation-valued translation preserves core definitional conversion. -/
 theorem typeTranslation_convertible {left right : CoreTerm n}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible left right) :
+    (conversion : DependentCalculus.Convertible left right) :
     Convertible (typeTranslation left) (typeTranslation right) :=
   (termTranslation_convertible conversion).relationProjection
 
 /-- Related-term types preserve conversion of the translated source type. -/
 theorem relatedTermType_convertible (term : CoreTerm n)
     {leftType rightType : CoreTerm n}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible leftType rightType) :
+    (conversion : DependentCalculus.Convertible leftType rightType) :
     Convertible (relatedTermType term leftType) (relatedTermType term rightType) :=
   Convertible.relationApplication (typeTranslation_convertible conversion)
     (.refl _) (.refl _)
@@ -2070,8 +2070,8 @@ theorem relatedTermType_convertible (term : CoreTerm n)
 /-- Related-term types preserve simultaneous conversion of term and source type. -/
 theorem relatedTermType_convertibleBoth
     {term term' type type' : CoreTerm n}
-    (termConversion : DeepWiki.Refine.DependentCalculus.Convertible term term')
-    (typeConversion : DeepWiki.Refine.DependentCalculus.Convertible type type') :
+    (termConversion : DependentCalculus.Convertible term term')
+    (typeConversion : DependentCalculus.Convertible type type') :
     Convertible (relatedTermType term type) (relatedTermType term' type') :=
   Convertible.relationApplication (typeTranslation_convertible typeConversion)
     (Convertible.original termConversion) (Convertible.primed termConversion)

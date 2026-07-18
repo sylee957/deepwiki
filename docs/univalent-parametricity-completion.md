@@ -70,30 +70,33 @@ paper's earlier univalent theorem.
 
 ## Target module graph
 
-1. `Parametricity/Univalent/Realizers.lean`
+1. `Parametricity/Univalent/Syntax.lean`
+   - intrinsically scoped extended terms and contexts;
+   - renaming, substitution, weakening, and instantiation laws.
+2. `Parametricity/Univalent/Realizers.lean`
    - semantic dependent-product package;
    - concrete quoted `p□`, `pΠ`, and `rel` constructors;
    - definitional projection equations.
-2. `Parametricity/Univalent/Translation.lean`
+3. `Parametricity/Univalent/Translation.lean`
    - package-valued term translation `[t]` for every CCω constructor;
    - relation-valued type translation `rel ([A])`;
    - renaming and substitution compatibility.
-3. `Parametricity/Univalent/Typing.lean`
+4. `Parametricity/Univalent/Typing.lean`
    - typing rules for the extended primitives;
    - preservation for both Figure 2 translations;
    - Equation (17), including its judgment and definitional equality.
-4. `Parametricity/Univalent/RelationalCumulativity.lean`
+5. `Parametricity/Univalent/RelationalCumulativity.lean`
    - normalization of projected dependent-product relation fibers;
    - preservation of source cumulativity by applied univalent relations.
-5. `Parametricity/Univalent/Abstraction.lean`
+6. `Parametricity/Univalent/Abstraction.lean`
    - the full dependent fundamental lemma/abstraction theorem;
    - Theorem 3.6 as the paper-facing corollary.
-6. `Parametricity/Univalent.lean`
+7. `Parametricity/Univalent.lean`
    - ordered public aggregator for the completed stack.
 
-If implementation reveals that renaming, substitution, or conversion forms a
-cohesive independent unit, it may be split into one additional support module;
-the public declarations and dependency order above remain unchanged.
+The completed implementation exposes renaming and substitution as a cohesive support layer in
+`Syntax.lean`. Generic repeated renaming lift is centralized as `Renaming.liftBy` in
+`CCOmega/Syntax.lean`; the univalent module retains only its extended-term structural laws.
 
 ## Required laws and completion evidence
 

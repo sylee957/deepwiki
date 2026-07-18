@@ -22,7 +22,7 @@ theorem rawLambdaWitness_rename
     (bodyRelation : Term (source + 3)) (mapping : Renaming source target) :
     (lambdaWitness domain primedDomain witnessDomain bodyRelation).rename mapping =
       lambdaWitness (domain.rename mapping) (primedDomain.rename mapping)
-        (witnessDomain.rename (liftBy mapping 2))
+        (witnessDomain.rename (Renaming.liftBy mapping 2))
         (bodyRelation.rename (liftTripleRenaming mapping)) := by
   unfold lambdaWitness
   simp only [Term.rename, weakenBy_rename]
@@ -61,7 +61,7 @@ theorem renamingLift_injective (mapping : Renaming source target)
 /-- Lifting beneath finitely many binders preserves injectivity. -/
 theorem liftBy_injective (mapping : Renaming source target)
     (injective : Function.Injective mapping) :
-    ∀ amount, Function.Injective (liftBy mapping amount)
+    ∀ amount, Function.Injective (Renaming.liftBy mapping amount)
   | 0 => injective
   | amount + 1 => renamingLift_injective _ (liftBy_injective mapping injective amount)
 
@@ -130,7 +130,7 @@ theorem rawSequentRenameInjective
       have result := RawSequent.paramLam
         (domain := domain.rename mapping)
         (primedDomain := primedDomain.rename mapping)
-        (witnessDomain := witnessDomain.rename (liftBy mapping 2)) renamedBody
+        (witnessDomain := witnessDomain.rename (Renaming.liftBy mapping 2)) renamedBody
       simpa only [Term.rename,
         rawLambdaWitness_rename] using result
   | paramPi domainSequent codomainSequent domainInduction codomainInduction =>

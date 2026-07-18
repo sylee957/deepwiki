@@ -80,6 +80,30 @@ def lift (rename : Renaming source target) : Renaming (source + 1) (target + 1) 
   funext index
   exact Fin.cases rfl (fun _ => rfl) index
 
+/-- Lift a renaming beneath any number of fresh binders. -/
+def liftBy (mapping : Renaming source target) :
+    (amount : Nat) → Renaming (source + amount) (target + amount)
+  | 0 => mapping
+  | amount + 1 => lift (liftBy mapping amount)
+
+/-- Repeatedly lifting the identity renaming gives the identity renaming. -/
+@[simp] theorem liftBy_identity (amount : Nat) :
+    liftBy (identity : Renaming n n) amount = identity := by
+  induction amount with
+  | zero => rfl
+  | succ amount inductionHypothesis =>
+      simp only [liftBy, inductionHypothesis, lift_identity]
+
+/-- Repeated lifting preserves composition of renamings. -/
+@[simp] theorem liftBy_comp (outer : Renaming middle target)
+    (inner : Renaming source middle) (amount : Nat) :
+    liftBy (comp outer inner) amount =
+      comp (liftBy outer amount) (liftBy inner amount) := by
+  induction amount with
+  | zero => rfl
+  | succ amount inductionHypothesis =>
+      simp only [liftBy, inductionHypothesis, lift_comp]
+
 end Renaming
 
 namespace Term

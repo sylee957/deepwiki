@@ -43,7 +43,7 @@ def functionCopySubstitution (function : CoreTerm n) :
     functionCopySubstitution function 1 = original function := by
   unfold functionCopySubstitution Substitution.comp
   change ((original function).rename
-    DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate
+    DependentCalculus.Renaming.shift).instantiate
       (primed function) = original function
   exact Term.instantiate_rename_shift (original function) (primed function)
 
@@ -61,8 +61,8 @@ theorem substitute_functionCopies_weakenBy_two
   calc
     term.substitute
         (fun index => functionCopySubstitution function
-          (DeepWiki.Refine.DependentCalculus.Renaming.shift
-            (DeepWiki.Refine.DependentCalculus.Renaming.shift index))) =
+          (DependentCalculus.Renaming.shift
+            (DependentCalculus.Renaming.shift index))) =
       term.substitute Substitution.identity := by
         apply Term.substitute_congr
         funext index
@@ -81,7 +81,7 @@ theorem substitute_lifted_functionCopies_weakenBy
       simpa only [Term.weakenBy, Substitution.liftBy,
         Term.substitute_rename_shift_lift] using
           congrArg (fun value => value.rename
-            DeepWiki.Refine.DependentCalculus.Renaming.shift) inductionHypothesis
+            DependentCalculus.Renaming.shift) inductionHypothesis
 
 /-- Removing function binders cancels insertion behind the three relation binders. -/
 theorem substitute_lifted_functionCopies_insertTwoAfterThree
@@ -161,9 +161,9 @@ theorem piRelationFiber_eq_normal (domain : CoreTerm n)
             (Substitution.lift (functionCopySubstitution function))) 4 =
         (original function).weakenBy 3 := by
     change (((functionCopySubstitution function 1).rename
-      DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-      DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-      DeepWiki.Refine.DependentCalculus.Renaming.shift =
+      DependentCalculus.Renaming.shift).rename
+      DependentCalculus.Renaming.shift).rename
+      DependentCalculus.Renaming.shift =
         (original function).weakenBy 3
     rw [functionCopySubstitution_one]
     rfl
@@ -173,9 +173,9 @@ theorem piRelationFiber_eq_normal (domain : CoreTerm n)
             (Substitution.lift (functionCopySubstitution function))) 3 =
         (primed function).weakenBy 3 := by
     change (((functionCopySubstitution function 0).rename
-      DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-      DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-      DeepWiki.Refine.DependentCalculus.Renaming.shift =
+      DependentCalculus.Renaming.shift).rename
+      DependentCalculus.Renaming.shift).rename
+      DependentCalculus.Renaming.shift =
         (primed function).weakenBy 3
     rw [functionCopySubstitution_zero]
     rfl
@@ -210,7 +210,7 @@ theorem piRelationFiber_eq_normal (domain : CoreTerm n)
 
 /-- Apply a weakened core function to the newest source variable. -/
 def fiberApplication (function : CoreTerm n) : CoreTerm (n + 1) :=
-  .app (function.rename DeepWiki.Refine.DependentCalculus.Renaming.shift) (.var 0)
+  .app (function.rename DependentCalculus.Renaming.shift) (.var 0)
 
 /-- The fiber application's related type is the product relation's codomain body. -/
 theorem relatedTermType_fiberApplication (function : CoreTerm n)
@@ -219,17 +219,17 @@ theorem relatedTermType_fiberApplication (function : CoreTerm n)
       applicationRelationBody function codomain := by
   unfold fiberApplication relatedTermType applicationRelationBody
   simp only [original, primed, RawParametricity.original, RawParametricity.primed,
-    DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore]
+    DependentCalculus.Term.rename, Term.ofCore]
   rw [show
     Term.ofCore
-        ((function.rename DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
+        ((function.rename DependentCalculus.Renaming.shift).rename
           (RawParametricity.originalRenaming (n + 1))) =
       (original function).weakenBy 3 by
         exact (original_rename (RawParametricity.relationalShift n) function).trans
           (weakenBy_three_eq_rename_translatedShift (original function)).symm]
   rw [show
     Term.ofCore
-        ((function.rename DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
+        ((function.rename DependentCalculus.Renaming.shift).rename
           (RawParametricity.primedRenaming (n + 1))) =
       (primed function).weakenBy 3 by
         exact (primed_rename (RawParametricity.relationalShift n) function).trans
@@ -269,7 +269,7 @@ theorem relatedTermType_sort (term : CoreTerm n) {lower upper : Nat}
 theorem relatedTermType_pi (term : CoreTerm n)
     {domain domain' : CoreTerm n}
     {codomain codomain' : CoreTerm (n + 1)}
-    (domainEqual : DeepWiki.Refine.DependentCalculus.Convertible domain domain')
+    (domainEqual : DependentCalculus.Convertible domain domain')
     (codomainCumulative : ∀ output : CoreTerm (n + 1),
       Cumulative (relatedTermType output codomain)
         (relatedTermType output codomain')) :
@@ -301,7 +301,7 @@ end Cumulative
 /-- Relational cumulativity compares every substituted applied relation fiber. -/
 def IsRelationallyCumulative (left right : CoreTerm n) : Prop :=
   ∀ {target : Nat}
-    (mapping : DeepWiki.Refine.DependentCalculus.Substitution n target)
+    (mapping : DependentCalculus.Substitution n target)
     (term : CoreTerm target),
     Cumulative (relatedTermType term (left.substitute mapping))
       (relatedTermType term (right.substitute mapping))
@@ -310,7 +310,7 @@ namespace IsRelationallyCumulative
 
 /-- Source conversion induces univalent relational-fiber cumulativity. -/
 theorem of_convertible {left right : CoreTerm n}
-    (conversion : DeepWiki.Refine.DependentCalculus.Convertible left right) :
+    (conversion : DependentCalculus.Convertible left right) :
     IsRelationallyCumulative left right := fun mapping _ =>
   .conversion (relatedTermType_convertible _ (conversion.substitute mapping))
 
@@ -329,25 +329,25 @@ theorem trans {first second third : CoreTerm n}
 /-- Convertible domains and cumulative codomain fibers induce cumulative product fibers. -/
 theorem pi {domain domain' : CoreTerm n}
     {codomain codomain' : CoreTerm (n + 1)}
-    (domainEqual : DeepWiki.Refine.DependentCalculus.Convertible domain domain')
+    (domainEqual : DependentCalculus.Convertible domain domain')
     (codomainCumulative : IsRelationallyCumulative codomain codomain') :
     IsRelationallyCumulative (.pi domain codomain) (.pi domain' codomain') :=
   fun mapping term => Cumulative.relatedTermType_pi term
     (domainEqual.substitute mapping)
-    (codomainCumulative (DeepWiki.Refine.DependentCalculus.Substitution.lift mapping))
+    (codomainCumulative (DependentCalculus.Substitution.lift mapping))
 
 /-- Relational cumulativity specializes to the original scope. -/
 theorem apply {left right : CoreTerm n}
     (subtype : IsRelationallyCumulative left right) (term : CoreTerm n) :
     Cumulative (relatedTermType term left) (relatedTermType term right) := by
-  simpa only [DeepWiki.Refine.DependentCalculus.Term.substitute_identity] using
-    subtype DeepWiki.Refine.DependentCalculus.Substitution.identity term
+  simpa only [DependentCalculus.Term.substitute_identity] using
+    subtype DependentCalculus.Substitution.identity term
 
 end IsRelationallyCumulative
 
 /-- Every source cumulative conversion preserves all substituted univalent relation fibers. -/
 theorem isRelationallyCumulative_of_cumulative {left right : CoreTerm n}
-    (subtype : DeepWiki.Refine.DependentCalculus.Cumulative left right) :
+    (subtype : DependentCalculus.Cumulative left right) :
     IsRelationallyCumulative left right := by
   induction subtype with
   | conversion equal => exact IsRelationallyCumulative.of_convertible equal
@@ -360,7 +360,7 @@ theorem isRelationallyCumulative_of_cumulative {left right : CoreTerm n}
 /-- Source cumulativity preserves the applied univalent related-term type. -/
 theorem relatedTermType_cumulative (term : CoreTerm n)
     {left right : CoreTerm n}
-    (subtype : DeepWiki.Refine.DependentCalculus.Cumulative left right) :
+    (subtype : DependentCalculus.Cumulative left right) :
     Cumulative (relatedTermType term left) (relatedTermType term right) :=
   IsRelationallyCumulative.apply
     (isRelationallyCumulative_of_cumulative subtype) term

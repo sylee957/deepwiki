@@ -9,7 +9,7 @@ namespace DeepWiki.Refine.DependentCalculus.UnivalentParametricity
 
 /-- The three displayed typing conclusions of univalent abstraction. -/
 def AbstractionConclusion
-    (source : DeepWiki.Refine.DependentCalculus.Context n)
+    (source : DependentCalculus.Context n)
     (term type : CoreTerm n) : Prop :=
   HasType (context source) (original term) (original type) ∧
     HasType (context source) (primed term) (primed type) ∧
@@ -17,33 +17,33 @@ def AbstractionConclusion
 
 /-- The displayed univalent abstraction statement. -/
 def DisplayedAbstractionClaim : Prop :=
-  ∀ {n : Nat} {source : DeepWiki.Refine.DependentCalculus.Context n}
+  ∀ {n : Nat} {source : DependentCalculus.Context n}
     {term type : CoreTerm n},
-    DeepWiki.Refine.DependentCalculus.HasType source term type →
+    DependentCalculus.HasType source term type →
       AbstractionConclusion source term type
 
 /-- Univalent abstraction together with formation of the translated context. -/
 def AbstractionClaim : Prop :=
-  ∀ {n : Nat} {source : DeepWiki.Refine.DependentCalculus.Context n}
+  ∀ {n : Nat} {source : DependentCalculus.Context n}
     {term type : CoreTerm n},
-    DeepWiki.Refine.DependentCalculus.HasType source term type →
+    DependentCalculus.HasType source term type →
       WellFormed (context source) ∧ AbstractionConclusion source term type
 
 /-- The structural induction combines translated-context formation with witness typing. -/
 def StructuralAbstractionClaim : Prop :=
-  ∀ {n : Nat} {source : DeepWiki.Refine.DependentCalculus.Context n}
+  ∀ {n : Nat} {source : DependentCalculus.Context n}
     {term type : CoreTerm n},
-    DeepWiki.Refine.DependentCalculus.HasType source term type →
+    DependentCalculus.HasType source term type →
       WellFormed (context source) ∧
         HasType (context source) (termTranslation term) (relatedTermType term type)
 
 /-- A translated type witness gives its direct endpoint package typing. -/
 theorem termTranslation_typePackage_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {type : CoreTerm n} {level : Nat}
     (translatedWellFormed : WellFormed (context source))
     (typeWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source type (.sort level))
+      DependentCalculus.HasType source type (.sort level))
     (typeWitness :
       HasType (context source) (termTranslation type)
         (relatedTermType type (.sort level))) :
@@ -57,13 +57,13 @@ theorem termTranslation_typePackage_hasType
 
 /-- A translated type witness makes every corresponding relation fiber universe-typed. -/
 theorem relatedTermType_hasType_of_typeWitness
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term type : CoreTerm n} {level : Nat}
     (translatedWellFormed : WellFormed (context source))
     (termWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source term type)
+      DependentCalculus.HasType source term type)
     (typeWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source type (.sort level))
+      DependentCalculus.HasType source type (.sort level))
     (typeWitness :
       HasType (context source) (termTranslation type)
         (relatedTermType type (.sort level))) :
@@ -78,10 +78,10 @@ theorem relatedTermType_hasType_of_typeWitness
   have appliedOriginal := HasType.app projected originalTerm
   have primedTypeInstantiated :
       ((primed type).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).substitute
+          DependentCalculus.Renaming.shift).substitute
           (Substitution.single (original term)) = primed type := by
     change ((primed type).rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate
+        DependentCalculus.Renaming.shift).instantiate
       (original term) = primed type
     exact Term.instantiate_rename_shift _ _
   have appliedOriginal' :
@@ -106,20 +106,20 @@ theorem relationalExtend_wellFormed
     WellFormed (relationalExtend base left right package) ∧
       HasType
         (.extend (.extend base left)
-          (right.rename DeepWiki.Refine.DependentCalculus.Renaming.shift))
+          (right.rename DependentCalculus.Renaming.shift))
         (Term.relatedDomain package) (.sort level) := by
   let leftContext : Context (n + 1) := .extend base left
   have leftContextWellFormed : WellFormed leftContext :=
     .extend baseWellFormed leftWellTyped
   have weakenedRight :
       HasType leftContext
-        (right.rename DeepWiki.Refine.DependentCalculus.Renaming.shift)
+        (right.rename DependentCalculus.Renaming.shift)
         (.sort level) := by
     simpa only [leftContext, Term.rename] using
       rightWellTyped.weaken leftContextWellFormed
   let endpointContext : Context (n + 2) :=
     .extend leftContext
-      (right.rename DeepWiki.Refine.DependentCalculus.Renaming.shift)
+      (right.rename DependentCalculus.Renaming.shift)
   have endpointContextWellFormed : WellFormed endpointContext :=
     .extend leftContextWellFormed weakenedRight
   have weakenedPackageOnce := packageWellTyped.weaken leftContextWellFormed
@@ -146,16 +146,16 @@ theorem relationalExtend_wellFormed
     have variableWellTyped :=
       HasType.var endpointContextWellFormed (1 : Fin (n + 2))
     change HasType endpointContext (.var 1)
-      ((left.rename DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift) at variableWellTyped
+      ((left.rename DependentCalculus.Renaming.shift).rename
+        DependentCalculus.Renaming.shift) at variableWellTyped
     simpa only [Term.weakenBy] using variableWellTyped
   have rightVariable :
       HasType endpointContext (.var 0) (right.weakenBy 2) := by
     have variableWellTyped :=
       HasType.var endpointContextWellFormed (0 : Fin (n + 2))
     change HasType endpointContext (.var 0)
-      ((right.rename DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift) at variableWellTyped
+      ((right.rename DependentCalculus.Renaming.shift).rename
+        DependentCalculus.Renaming.shift) at variableWellTyped
     simpa only [Term.weakenBy] using variableWellTyped
   have projected :=
     HasType.relationProjection weakenedLeft weakenedRight weakenedPackage
@@ -167,7 +167,7 @@ theorem relationalExtend_wellFormed
     change HasType endpointContext
       (.app (Term.rel (package.weakenBy 2)) (.var 1))
       (.pi (((right.weakenBy 2).rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate (.var 1))
+        DependentCalculus.Renaming.shift).instantiate (.var 1))
         (.sort level)) at appliedLeft
     rw [Term.instantiate_rename_shift] at appliedLeft
     exact appliedLeft
@@ -225,11 +225,11 @@ theorem primedBinderTypedRenaming
 
 /-- A domain witness forms its translated source extension. -/
 theorem context_extend_wellFormed
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {domain : CoreTerm n} {domainLevel : Nat}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source domain (.sort domainLevel))
+      DependentCalculus.HasType source domain (.sort domainLevel))
     (domainWitness :
       HasType (context source) (termTranslation domain)
         (relatedTermType domain (.sort domainLevel))) :
@@ -251,14 +251,14 @@ theorem context_extend_wellFormed
 
 /-- Original codomain embedding preserves typing in the original endpoint context. -/
 theorem originalCodomain_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {domain : CoreTerm n} {codomain : CoreTerm (n + 1)} {level : Nat}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source domain (.sort level))
+      DependentCalculus.HasType source domain (.sort level))
     {codomainLevel : Nat}
     (codomainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType (.extend source domain)
+      DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel)) :
     HasType (.extend (context source) (original domain))
       (originalCodomain codomain) (.sort codomainLevel) := by
@@ -268,19 +268,19 @@ theorem originalCodomain_hasType
   have lifted := baseRenaming.lift renamedDomain
   have renamed := (HasType.ofCore codomainWellTyped).rename lifted
   simpa only [original, originalCodomain, RawParametricity.original,
-    DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore_rename,
+    DependentCalculus.Term.rename, Term.ofCore_rename,
     Term.ofCore, Term.rename] using renamed
 
 /-- Primed codomain embedding preserves typing in the primed endpoint context. -/
 theorem primedCodomain_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {domain : CoreTerm n} {codomain : CoreTerm (n + 1)} {level : Nat}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source domain (.sort level))
+      DependentCalculus.HasType source domain (.sort level))
     {codomainLevel : Nat}
     (codomainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType (.extend source domain)
+      DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel)) :
     HasType (.extend (context source) (primed domain))
       (primedCodomain codomain) (.sort codomainLevel) := by
@@ -290,19 +290,19 @@ theorem primedCodomain_hasType
   have lifted := baseRenaming.lift renamedDomain
   have renamed := (HasType.ofCore codomainWellTyped).rename lifted
   simpa only [primed, primedCodomain, RawParametricity.primed,
-    DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore_rename,
+    DependentCalculus.Term.rename, Term.ofCore_rename,
     Term.ofCore, Term.rename] using renamed
 
 /-- The translated dependent product satisfies the univalent witness conclusion. -/
 theorem termTranslation_pi_witness_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {domain : CoreTerm n} {codomain : CoreTerm (n + 1)}
     {domainLevel codomainLevel : Nat}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source domain (.sort domainLevel))
+      DependentCalculus.HasType source domain (.sort domainLevel))
     (codomainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType (.extend source domain)
+      DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel))
     (codomainTranslatedWellFormed : WellFormed (context (.extend source domain)))
     (domainWitness :
@@ -344,11 +344,11 @@ theorem termTranslation_pi_witness_hasType
     domainPackage codomainPackage
   have originalProduct :=
     HasType.original
-      (DeepWiki.Refine.DependentCalculus.HasType.pi domainWellTyped codomainWellTyped)
+      (DependentCalculus.HasType.pi domainWellTyped codomainWellTyped)
       translatedWellFormed
   have primedProduct :=
     HasType.primed
-      (DeepWiki.Refine.DependentCalculus.HasType.pi domainWellTyped codomainWellTyped)
+      (DependentCalculus.HasType.pi domainWellTyped codomainWellTyped)
       translatedWellFormed
   have targetTypeWellTyped := relatedTermType_sort_hasType translatedWellFormed
     originalProduct primedProduct
@@ -358,7 +358,7 @@ theorem termTranslation_pi_witness_hasType
           (original (.pi domain codomain)) (primed (.pi domain codomain))) := by
     simpa only [termTranslation_pi, original, primed,
       RawParametricity.original, RawParametricity.primed,
-      DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore,
+      DependentCalculus.Term.rename, Term.ofCore,
       UnivalentParametricity.originalCodomain,
       UnivalentParametricity.primedCodomain] using packageTyping
   exact .conversion translatedProductPackage targetTypeWellTyped
@@ -367,53 +367,53 @@ theorem termTranslation_pi_witness_hasType
 
 /-- A dependent function applied to the newest source variable has its codomain. -/
 theorem fiberApplication_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {function domain : CoreTerm n} {codomain : CoreTerm (n + 1)}
     (functionWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source function (.pi domain codomain))
+      DependentCalculus.HasType source function (.pi domain codomain))
     (extendedWellFormed :
-      DeepWiki.Refine.DependentCalculus.WellFormed (.extend source domain)) :
-    DeepWiki.Refine.DependentCalculus.HasType (.extend source domain)
+      DependentCalculus.WellFormed (.extend source domain)) :
+    DependentCalculus.HasType (.extend source domain)
       (fiberApplication function) codomain := by
   have weakenedFunction := functionWellTyped.weaken extendedWellFormed
   have newestVariable :=
-    DeepWiki.Refine.DependentCalculus.HasType.var extendedWellFormed
+    DependentCalculus.HasType.var extendedWellFormed
       (0 : Fin (n + 1))
   have application :=
-    DeepWiki.Refine.DependentCalculus.HasType.app weakenedFunction newestVariable
+    DependentCalculus.HasType.app weakenedFunction newestVariable
   have codomainInstantiated :
       (codomain.rename
-          (DeepWiki.Refine.DependentCalculus.Renaming.lift
-            DeepWiki.Refine.DependentCalculus.Renaming.shift)).instantiate
+          (DependentCalculus.Renaming.lift
+            DependentCalculus.Renaming.shift)).instantiate
         (.var 0) = codomain := by
-    unfold DeepWiki.Refine.DependentCalculus.Term.instantiate
-    rw [DeepWiki.Refine.DependentCalculus.Term.substitute_rename]
+    unfold DependentCalculus.Term.instantiate
+    rw [DependentCalculus.Term.substitute_rename]
     rw [show
       (fun index =>
-        DeepWiki.Refine.DependentCalculus.Substitution.single (.var 0)
-          (DeepWiki.Refine.DependentCalculus.Renaming.lift
-            DeepWiki.Refine.DependentCalculus.Renaming.shift index)) =
-        DeepWiki.Refine.DependentCalculus.Substitution.identity by
+        DependentCalculus.Substitution.single (.var 0)
+          (DependentCalculus.Renaming.lift
+            DependentCalculus.Renaming.shift index)) =
+        DependentCalculus.Substitution.identity by
       funext index
       refine Fin.cases rfl ?_ index
       intro older
       rfl]
-    exact DeepWiki.Refine.DependentCalculus.Term.substitute_identity codomain
+    exact DependentCalculus.Term.substitute_identity codomain
   rw [codomainInstantiated] at application
   simpa only [fiberApplication] using application
 
 /-- The normalized projected product fiber is universe-typed. -/
 theorem piRelationFiberNormal_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {function domain : CoreTerm n} {codomain : CoreTerm (n + 1)}
     {domainLevel codomainLevel : Nat}
     (translatedWellFormed : WellFormed (context source))
     (functionWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source function (.pi domain codomain))
+      DependentCalculus.HasType source function (.pi domain codomain))
     (domainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source domain (.sort domainLevel))
+      DependentCalculus.HasType source domain (.sort domainLevel))
     (codomainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType (.extend source domain)
+      DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel))
     (domainWitness :
       HasType (context source) (termTranslation domain)
@@ -426,14 +426,14 @@ theorem piRelationFiberNormal_hasType
   have originalDomain :
       HasType (context source) (original domain) (.sort domainLevel) := by
     simpa only [original, RawParametricity.original,
-      DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore] using
+      DependentCalculus.Term.rename, Term.ofCore] using
       HasType.original domainWellTyped translatedWellFormed
   have firstWellFormed : WellFormed (.extend (context source) (original domain)) :=
     .extend translatedWellFormed originalDomain
   have primedDomainBase :
       HasType (context source) (primed domain) (.sort domainLevel) := by
     simpa only [primed, RawParametricity.primed,
-      DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore] using
+      DependentCalculus.Term.rename, Term.ofCore] using
       HasType.primed domainWellTyped translatedWellFormed
   have primedDomain :
       HasType (.extend (context source) (original domain))
@@ -460,11 +460,11 @@ theorem piRelationFiberNormal_hasType
 
 /-- A function witness alone exposes a universe-typed normalized product fiber. -/
 theorem piRelationFiberNormal_hasType_of_functionWitness
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {function domain : CoreTerm n} {codomain : CoreTerm (n + 1)}
     (translatedWellFormed : WellFormed (context source))
     (functionWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source function (.pi domain codomain))
+      DependentCalculus.HasType source function (.pi domain codomain))
     (functionWitness :
       HasType (context source) (termTranslation function)
         (relatedTermType function (.pi domain codomain))) :
@@ -573,16 +573,16 @@ def argumentTripleSubstitution (argument : CoreTerm n) :
 theorem substitute_argumentTriple_weakenBy_three
     (term : Term (scopeSize n)) (argument : CoreTerm n) :
     (term.weakenBy 3).substitute (argumentTripleSubstitution argument) = term := by
-  change (((term.rename DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-      DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-      DeepWiki.Refine.DependentCalculus.Renaming.shift).substitute
+  change (((term.rename DependentCalculus.Renaming.shift).rename
+      DependentCalculus.Renaming.shift).rename
+      DependentCalculus.Renaming.shift).substitute
       (argumentTripleSubstitution argument) = term
   rw [Term.substitute_rename, Term.substitute_rename, Term.substitute_rename]
   rw [show
       (fun index => argumentTripleSubstitution argument
-        (DeepWiki.Refine.DependentCalculus.Renaming.shift
-          (DeepWiki.Refine.DependentCalculus.Renaming.shift
-            (DeepWiki.Refine.DependentCalculus.Renaming.shift index)))) =
+        (DependentCalculus.Renaming.shift
+          (DependentCalculus.Renaming.shift
+            (DependentCalculus.Renaming.shift index)))) =
         Substitution.identity by
     funext index
     rfl]
@@ -604,20 +604,20 @@ theorem substitute_argumentTriple (term : Term (scopeSize n + 3))
   refine Fin.cases rfl (fun index => ?_) index
   refine Fin.cases ?_ (fun index => ?_) index
   · change ((primed argument).rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift).substitute
+        DependentCalculus.Renaming.shift).substitute
       (Substitution.single (termTranslation argument)) = primed argument
     exact Term.instantiate_rename_shift _ _
   refine Fin.cases ?_ (fun _older => rfl) index
   · simp only [Substitution.lift_succ, Substitution.single_zero]
     change (((original argument).rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift).rename
-        DeepWiki.Refine.DependentCalculus.Renaming.shift).substitute
+        DependentCalculus.Renaming.shift).rename
+        DependentCalculus.Renaming.shift).substitute
       (Substitution.comp (Substitution.single (termTranslation argument))
         (Substitution.lift (Substitution.single (primed argument)))) =
       original argument
     rw [← Term.substitute_comp, Term.substitute_rename_shift_lift]
     rw [show ((original argument).rename
-          DeepWiki.Refine.DependentCalculus.Renaming.shift).substitute
+          DependentCalculus.Renaming.shift).substitute
           (Substitution.single (primed argument)) = original argument by
       exact Term.instantiate_rename_shift _ _]
     exact Term.instantiate_rename_shift _ _
@@ -631,13 +631,13 @@ theorem substitute_liftBy_single_weakenBy (term : Term n) (argument : Term n)
   rw [← Term.weakenBy_substitute]
   change ((term.weakenBy 1).instantiate argument).weakenBy amount = _
   rw [show term.weakenBy 1 =
-      term.rename DeepWiki.Refine.DependentCalculus.Renaming.shift from rfl,
+      term.rename DependentCalculus.Renaming.shift from rfl,
     Term.instantiate_rename_shift]
 
 /-- A single substitution removes a onefold weakening. -/
 @[simp] theorem substitute_single_weakenBy_one (term argument : Term n) :
     (term.weakenBy 1).substitute (Substitution.single argument) = term := by
-  change (term.rename DeepWiki.Refine.DependentCalculus.Renaming.shift).instantiate
+  change (term.rename DependentCalculus.Renaming.shift).instantiate
     argument = term
   exact Term.instantiate_rename_shift term argument
 
@@ -672,22 +672,22 @@ theorem applicationRelationBody_substitute
   rw [show typeTranslation (codomain.instantiate argument) =
       (typeTranslation codomain).substitute (argumentTripleSubstitution argument) by
     change typeTranslation (codomain.substitute
-        (DeepWiki.Refine.DependentCalculus.Substitution.single argument)) =
+        (DependentCalculus.Substitution.single argument)) =
       (typeTranslation codomain).substitute (relationalSingle argument).relational
     exact typeTranslation_substitute (relationalSingle argument) codomain]
   simp only [Term.substitute, substitute_argumentTriple_weakenBy_three,
     argumentTripleSubstitution_one, argumentTripleSubstitution_two, original, primed,
     RawParametricity.original, RawParametricity.primed,
-    DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore]
+    DependentCalculus.Term.rename, Term.ofCore]
 
 /-- A well-formed product fiber lets application preserve witness typing. -/
 theorem termTranslation_app_witness_hasType_of_fiber
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {function argument domain : CoreTerm n} {codomain : CoreTerm (n + 1)}
     {fiberLevel : Nat}
     (translatedWellFormed : WellFormed (context source))
     (argumentWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source argument domain)
+      DependentCalculus.HasType source argument domain)
     (functionWitness :
       HasType (context source) (termTranslation function)
         (relatedTermType function (.pi domain codomain)))
@@ -745,18 +745,18 @@ theorem termTranslation_app_witness_hasType_of_fiber
 
 /-- Application preserves the univalent witness-typing conclusion. -/
 theorem termTranslation_app_witness_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {function argument domain : CoreTerm n} {codomain : CoreTerm (n + 1)}
     {domainLevel codomainLevel : Nat}
     (translatedWellFormed : WellFormed (context source))
     (functionWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source function (.pi domain codomain))
+      DependentCalculus.HasType source function (.pi domain codomain))
     (argumentWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source argument domain)
+      DependentCalculus.HasType source argument domain)
     (domainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source domain (.sort domainLevel))
+      DependentCalculus.HasType source domain (.sort domainLevel))
     (codomainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType (.extend source domain)
+      DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel))
     (domainWitness :
       HasType (context source) (termTranslation domain)
@@ -779,13 +779,13 @@ theorem termTranslation_app_witness_hasType
 
 /-- Function and argument witnesses suffice for translated application typing. -/
 theorem termTranslation_app_witness_hasType_of_witnesses
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {function argument domain : CoreTerm n} {codomain : CoreTerm (n + 1)}
     (translatedWellFormed : WellFormed (context source))
     (functionWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source function (.pi domain codomain))
+      DependentCalculus.HasType source function (.pi domain codomain))
     (argumentWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source argument domain)
+      DependentCalculus.HasType source argument domain)
     (functionWitness :
       HasType (context source) (termTranslation function)
         (relatedTermType function (.pi domain codomain)))
@@ -839,17 +839,17 @@ theorem lambdaApplicationRelationBody_convertible (domain : CoreTerm n)
 
 /-- Lambda abstraction preserves the univalent witness-typing conclusion. -/
 theorem termTranslation_lam_witness_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {domain : CoreTerm n} {body codomain : CoreTerm (n + 1)}
     {domainLevel codomainLevel : Nat}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source domain (.sort domainLevel))
+      DependentCalculus.HasType source domain (.sort domainLevel))
     (codomainWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType (.extend source domain)
+      DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel))
     (bodyWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType (.extend source domain) body codomain)
+      DependentCalculus.HasType (.extend source domain) body codomain)
     (domainWitness :
       HasType (context source) (termTranslation domain)
         (relatedTermType domain (.sort domainLevel)))
@@ -866,14 +866,14 @@ theorem termTranslation_lam_witness_hasType
   have originalDomain :
       HasType (context source) (original domain) (.sort domainLevel) := by
     simpa only [original, RawParametricity.original,
-      DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore] using
+      DependentCalculus.Term.rename, Term.ofCore] using
       HasType.original domainWellTyped translatedWellFormed
   have firstWellFormed : WellFormed (.extend (context source) (original domain)) :=
     .extend translatedWellFormed originalDomain
   have primedDomainBase :
       HasType (context source) (primed domain) (.sort domainLevel) := by
     simpa only [primed, RawParametricity.primed,
-      DeepWiki.Refine.DependentCalculus.Term.rename, Term.ofCore] using
+      DependentCalculus.Term.rename, Term.ofCore] using
       HasType.primed domainWellTyped translatedWellFormed
   have primedDomain :
       HasType (.extend (context source) (original domain))
@@ -882,7 +882,7 @@ theorem termTranslation_lam_witness_hasType
       primedDomainBase.weaken firstWellFormed
   have relatedDomain := extension.2
   have lambdaWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source (.lam domain body)
+      DependentCalculus.HasType source (.lam domain body)
         (.pi domain codomain) :=
     .lam domainWellTyped bodyWellTyped
   have fiberBodyWellTyped := fiberApplication_hasType lambdaWellTyped
@@ -913,7 +913,7 @@ theorem termTranslation_lam_witness_hasType
     simpa only [termTranslation_lam, piRelationFiberNormal] using
       translatedLambdaNormal
   have productWellTyped :
-      DeepWiki.Refine.DependentCalculus.HasType source (.pi domain codomain)
+      DependentCalculus.HasType source (.pi domain codomain)
         (.sort (max domainLevel codomainLevel)) :=
     .pi domainWellTyped codomainWellTyped
   have productWitness := termTranslation_pi_witness_hasType translatedWellFormed
@@ -927,7 +927,7 @@ theorem termTranslation_lam_witness_hasType
 
 /-- The translated universe satisfies the univalent witness conclusion. -/
 theorem termTranslation_sort_witness_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     (translatedWellFormed : WellFormed (context source)) (level : Nat) :
     HasType (context source) (termTranslation (.sort level : CoreTerm n))
       (relatedTermType (.sort level) (.sort (level + 1))) := by
@@ -937,7 +937,7 @@ theorem termTranslation_sort_witness_hasType
 
 /-- A translated variable is typed by its relation-witness context entry. -/
 theorem termTranslation_var_witness_hasType
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     (translatedWellFormed : WellFormed (context source)) (index : Fin n) :
     HasType (context source) (termTranslation (.var index))
       (relatedTermType (.var index) (source.lookup index)) := by
@@ -948,7 +948,7 @@ theorem termTranslation_var_witness_hasType
 
 /-- Formation-explicit typing yields translated-context formation and witness typing. -/
 theorem formationStructural
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term type : CoreTerm n}
     (termWellTyped : RawParametricity.FormationHasType source term type) :
     WellFormed (context source) ∧
@@ -998,7 +998,7 @@ theorem formationStructural
         (relatedTermType_convertible _ equal)⟩
   · intro _ source term _ type' _ termWellTyped targetWellTyped
       subtype termInduction targetInduction
-    have raisedTerm : DeepWiki.Refine.DependentCalculus.HasType source term type' :=
+    have raisedTerm : DependentCalculus.HasType source term type' :=
       .cumulativity termWellTyped.erase targetWellTyped.erase subtype
     have targetRelationWellTyped := relatedTermType_hasType_of_typeWitness
       termInduction.1 raisedTerm targetWellTyped.erase targetInduction.2
@@ -1008,14 +1008,14 @@ theorem formationStructural
 
 /-- The witness judgment asserted by univalent abstraction. -/
 def UnivalentAbstractionClaim : Prop :=
-  ∀ {n : Nat} {source : DeepWiki.Refine.DependentCalculus.Context n}
+  ∀ {n : Nat} {source : DependentCalculus.Context n}
     {term type : CoreTerm n},
-    DeepWiki.Refine.DependentCalculus.HasType source term type →
+    DependentCalculus.HasType source term type →
       HasType (context source) (termTranslation term) (relatedTermType term type)
 
 /-- A formation-explicit derivation yields its translated witness judgment. -/
 theorem formationWitness
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term type : CoreTerm n}
     (termWellTyped : RawParametricity.FormationHasType source term type) :
     HasType (context source) (termTranslation term) (relatedTermType term type) :=
@@ -1023,7 +1023,7 @@ theorem formationWitness
 
 /-- A formation-explicit derivation forms its translated context. -/
 theorem formationTranslatedContextWellFormed
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term type : CoreTerm n}
     (termWellTyped : RawParametricity.FormationHasType source term type) :
     WellFormed (context source) :=
@@ -1036,7 +1036,7 @@ theorem structuralUnivalentAbstraction : StructuralAbstractionClaim :=
 
 /-- Formation-explicit typing satisfies all three displayed typing conclusions. -/
 theorem formationExplicitUnivalentAbstraction
-    {source : DeepWiki.Refine.DependentCalculus.Context n}
+    {source : DependentCalculus.Context n}
     {term type : CoreTerm n}
     (termWellTyped : RawParametricity.FormationHasType source term type) :
     AbstractionConclusion source term type := by
