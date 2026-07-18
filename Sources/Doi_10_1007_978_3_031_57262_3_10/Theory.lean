@@ -8,7 +8,6 @@ import DeepWiki.Refine.UniverseRelationStructure
 import DeepWiki.Refine.UnivalentRelationStructure
 import DeepWiki.Refine.Parametricity.Sequents.Raw
 import DeepWiki.Refine.Parametricity.Sequents.RawCounterexample
-import DeepWiki.Refine.Parametricity.Raw.Typing
 import DeepWiki.Refine.Parametricity.Sequents.Univalent
 import DeepWiki.Refine.AnnotatedDependentCalculus
 import DeepWiki.Refine.MaximalAnnotation

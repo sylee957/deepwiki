@@ -1,4 +1,4 @@
-import DeepWiki.Refine.Parametricity.Raw.Typing
+import DeepWiki.Refine.Parametricity.Raw.RelationTypes
 
 /-! # Quoting univalent universe packages
 

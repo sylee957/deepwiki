@@ -3,8 +3,12 @@ import DeepWiki.Refine.Parametricity.Raw.Semantics
 import DeepWiki.Refine.Parametricity.Univalent.Package
 import DeepWiki.Refine.Parametricity.Intrinsic.Abstraction
 import DeepWiki.Refine.Parametricity.Raw.Translation
+import DeepWiki.Refine.Parametricity.Raw.RelationTypes
 import DeepWiki.Refine.Parametricity.Raw.Typing
+import DeepWiki.Refine.Parametricity.Raw.AbstractionClaims
 import DeepWiki.Refine.Parametricity.Raw.Conversion
+import DeepWiki.Refine.Parametricity.Raw.RelationalCumulativity
+import DeepWiki.Refine.Parametricity.Raw.FormationTyping
 import DeepWiki.Refine.Parametricity.Raw.Abstraction
 import DeepWiki.Refine.Parametricity.Univalent.QuotationSpec
 import DeepWiki.Refine.Annotated.Quotation.Syntax
@@ -108,7 +112,7 @@ abbrev raw_cumulativity_preserves_relation_fibers :=
 
 /-- **Theorem 1 auxiliary:** formation-explicit dependent typing. -/
 abbrev raw_formation_explicit_typing :=
-  @DeepWiki.Refine.DependentCalculus.RawParametricity.AbstractionHasType
+  @DeepWiki.Refine.DependentCalculus.RawParametricity.FormationHasType
 
 /-- **Theorem 1 auxiliary:** formation-explicit typing proves all three abstraction conclusions. -/
 abbrev raw_formation_explicit_abstraction :=

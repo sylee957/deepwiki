@@ -1,5 +1,5 @@
 import DeepWiki.Refine.Parametricity.Sequents.Raw
-import DeepWiki.Refine.Parametricity.Raw.Typing
+import DeepWiki.Refine.Parametricity.Raw.Naturality
 
 /-! # Constructive admissibility for raw parametricity sequents
 

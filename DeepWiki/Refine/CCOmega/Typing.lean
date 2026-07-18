@@ -215,6 +215,13 @@ theorem app_argument {function argument argument' : Term n}
   | symm _ ih => exact ih.symm
   | trans _ _ first_ih second_ih => exact first_ih.trans second_ih
 
+/-- Conversion is congruent in both the function and argument of an application. -/
+theorem app_both {function function' argument argument' : Term n}
+    (functionConversion : Convertible function function')
+    (argumentConversion : Convertible argument argument') :
+    Convertible (.app function argument) (.app function' argument') :=
+  functionConversion.app_function.trans argumentConversion.app_argument
+
 /-- Convertible lambda domains remain convertible under the same body. -/
 theorem lam_domain {domain domain' : Term n} {body : Term (n + 1)}
     (conversion : Convertible domain domain') :
@@ -235,6 +242,13 @@ theorem lam_body {domain : Term n} {body body' : Term (n + 1)}
   | symm _ ih => exact ih.symm
   | trans _ _ first_ih second_ih => exact first_ih.trans second_ih
 
+/-- Conversion is congruent in both the domain and body of a lambda. -/
+theorem lam_both {domain domain' : Term n} {body body' : Term (n + 1)}
+    (domainConversion : Convertible domain domain')
+    (bodyConversion : Convertible body body') :
+    Convertible (.lam domain body) (.lam domain' body') :=
+  domainConversion.lam_domain.trans bodyConversion.lam_body
+
 /-- Convertible product domains remain convertible under the same codomain. -/
 theorem pi_domain {domain domain' : Term n} {codomain : Term (n + 1)}
     (conversion : Convertible domain domain') :
@@ -254,6 +268,13 @@ theorem pi_codomain {domain : Term n} {codomain codomain' : Term (n + 1)}
   | beta step => exact .beta (.piCodomain step)
   | symm _ ih => exact ih.symm
   | trans _ _ first_ih second_ih => exact first_ih.trans second_ih
+
+/-- Conversion is congruent in both the domain and codomain of a dependent product. -/
+theorem pi_both {domain domain' : Term n} {codomain codomain' : Term (n + 1)}
+    (domainConversion : Convertible domain domain')
+    (codomainConversion : Convertible codomain codomain') :
+    Convertible (.pi domain codomain) (.pi domain' codomain') :=
+  domainConversion.pi_domain.trans codomainConversion.pi_codomain
 
 end Convertible
 

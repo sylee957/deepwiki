@@ -54,17 +54,17 @@ the implementation-only automation discussion; neither is silently counted as co
 - [x] Catalog Equation (8), proving that the translated universe has the displayed relation type
   one universe level higher.
 - [x] Prove the formation-explicit abstraction theorem: all three displayed conclusions follow from
-  the `AbstractionHasType` judgment.
+  the `FormationHasType` judgment.
 - [x] Narrow ordinary `Cumulative` to the standard conversion, universe, dependent-product, and
   transitivity rules, retiring the unrelated lambda and structural-product closure rules.
-- [x] Prove `HasRelationalCumulativity` for that ordinary relation and derive the unconditional
-  `displayedRawAbstraction`, discharging the source-catalog marker for Theorem 3.4.
+- [x] Prove `isRelationallyCumulative_of_cumulative` for that ordinary relation and derive the
+  unconditional `displayedRawAbstraction`, discharging the source-catalog marker for Theorem 3.4.
 - [ ] Complete Figure 2 and unrestricted Theorem 3.6 after supplying object-language universe and
   dependent-product package realizers; retain their `[infra]` markers in the source catalog.
 
 The formation-explicit theorem remains the proof factorization behind the unrestricted result.
 Ordinary `CCω` cumulativity now preserves every substituted relation fiber, so ordinary `HasType`
-embeds unconditionally into `AbstractionHasType` and Theorem 3.4 follows. The previous conditional
+embeds unconditionally into `FormationHasType` and Theorem 3.4 follows. The previous conditional
 bridge and its lambda/structural-product gap were artifacts of an overly broad `Cumulative`
 relation and have been retired. Figure 2 and Theorem 3.6 remain the next Section 3.3 boundary.
 

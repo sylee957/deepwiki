@@ -557,11 +557,11 @@ shaped Lean declarations.
   constructs all premises of the printed Theorem 4 while making its primed lambda conclusion
   untypable, so the literal theorem is false as well. `CoherentRawSequent` restores the omitted
   domain premise and satisfies functionality.
-- **Raw abstraction is unconditional for ordinary `CCω` typing.** `AbstractionHasType` recursively
-  exposes the type witnesses consumed by lambda and conversion and records fiberwise relational
-  cumulativity. Ordinary `Cumulative` has only conversion, universe lifting, invariant-domain
-  products, and transitivity; each constructor preserves every substituted relation fiber. Ordinary
-  typing therefore lifts into `AbstractionHasType`, giving the complete raw abstraction conclusion
+- **Raw abstraction is unconditional for ordinary `CCω` typing.** `FormationHasType` recursively
+  exposes the type witnesses consumed by lambda and conversion. Ordinary `Cumulative` has only
+  conversion, universe lifting, invariant-domain products, and transitivity; each constructor
+  separately preserves every substituted relation fiber. Ordinary typing therefore lifts into
+  `FormationHasType`, giving the complete raw abstraction conclusion
   without an extra premise. This does not identify the structurally stronger erased annotated
   subtyping judgment with ordinary cumulativity.
 - **The coherence-preserving arrow level-4 dependency is not minimal for native Lean equality.**

@@ -22,27 +22,6 @@ theorem translate_beta_redex (domain : Term n) (body : Term (n + 1))
 
 namespace Convertible
 
-/-- Conversion is congruent in both the function and argument of an application. -/
-theorem app_both {function function' argument argument' : Term n}
-    (functionConversion : Convertible function function')
-    (argumentConversion : Convertible argument argument') :
-    Convertible (.app function argument) (.app function' argument') :=
-  functionConversion.app_function.trans argumentConversion.app_argument
-
-/-- Conversion is congruent in both the domain and body of a lambda. -/
-theorem lam_both {domain domain' : Term n} {body body' : Term (n + 1)}
-    (domainConversion : Convertible domain domain')
-    (bodyConversion : Convertible body body') :
-    Convertible (.lam domain body) (.lam domain' body') :=
-  domainConversion.lam_domain.trans bodyConversion.lam_body
-
-/-- Conversion is congruent in both the domain and codomain of a dependent product. -/
-theorem pi_both {domain domain' : Term n} {codomain codomain' : Term (n + 1)}
-    (domainConversion : Convertible domain domain')
-    (codomainConversion : Convertible codomain codomain') :
-    Convertible (.pi domain codomain) (.pi domain' codomain') :=
-  domainConversion.pi_domain.trans codomainConversion.pi_codomain
-
 /-- Weakening by any number of binders preserves definitional conversion. -/
 theorem weakenBy {left right : Term n} (conversion : Convertible left right) :
     ∀ amount, Convertible (RawParametricity.weakenBy left amount)
@@ -53,7 +32,7 @@ theorem weakenBy {left right : Term n} (conversion : Convertible left right) :
 end Convertible
 
 /-- Application translation is congruent in all four translated components. -/
-theorem translate_app_congr {function function' argument argument' : Term n}
+private theorem translate_app_congr {function function' argument argument' : Term n}
     (functionConversion : Convertible (translate function) (translate function'))
     (originalArgumentConversion : Convertible (original argument) (original argument'))
     (primedArgumentConversion : Convertible (primed argument) (primed argument'))
@@ -68,7 +47,7 @@ theorem translate_app_congr {function function' argument argument' : Term n}
     argumentConversion
 
 /-- Lambda translation is congruent in its three domains and translated body. -/
-theorem translate_lam_congr {domain domain' : Term n}
+private theorem translate_lam_congr {domain domain' : Term n}
     {body body' : Term (n + 1)}
     (originalDomainConversion : Convertible (original domain) (original domain'))
     (primedDomainConversion : Convertible (primed domain) (primed domain'))
@@ -84,7 +63,7 @@ theorem translate_lam_congr {domain domain' : Term n}
         bodyConversion))
 
 /-- Product translation is congruent in every copied domain and codomain component. -/
-theorem translate_pi_congr {domain domain' : Term n}
+private theorem translate_pi_congr {domain domain' : Term n}
     {codomain codomain' : Term (n + 1)}
     (originalProductConversion :
       Convertible (original (.pi domain codomain)) (original (.pi domain' codomain')))
@@ -108,15 +87,15 @@ theorem translate_pi_congr {domain domain' : Term n}
                 (codomainConversion.rename insertTwoAfterThree) (.refl _))
               (.refl _))))))
 
-/-- Original-copy renaming sends a beta step to definitional conversion. -/
-theorem original_betaStep {left right : Term n} (step : BetaStep left right) :
+/-- Original copies preserve definitional conversion. -/
+theorem original_convertible {left right : Term n} (conversion : Convertible left right) :
     Convertible (original left) (original right) :=
-  .beta (step.rename (originalRenaming n))
+  conversion.rename (originalRenaming n)
 
-/-- Primed-copy renaming sends a beta step to definitional conversion. -/
-theorem primed_betaStep {left right : Term n} (step : BetaStep left right) :
+/-- Primed copies preserve definitional conversion. -/
+theorem primed_convertible {left right : Term n} (conversion : Convertible left right) :
     Convertible (primed left) (primed right) :=
-  .beta (step.rename (primedRenaming n))
+  conversion.rename (primedRenaming n)
 
 /-- Raw parametricity translation sends compatible beta reduction to conversion. -/
 theorem translate_betaStep {left right : Term n} (step : BetaStep left right) :
@@ -127,31 +106,22 @@ theorem translate_betaStep {left right : Term n} (step : BetaStep left right) :
   | appFunction step inductionHypothesis =>
       exact translate_app_congr inductionHypothesis (.refl _) (.refl _) (.refl _)
   | appArgument step inductionHypothesis =>
-      exact translate_app_congr (.refl _) (original_betaStep step)
-        (primed_betaStep step) inductionHypothesis
+      exact translate_app_congr (.refl _) (original_convertible (.beta step))
+        (primed_convertible (.beta step)) inductionHypothesis
   | @lamDomain n domain domain' body step inductionHypothesis =>
-      exact translate_lam_congr (original_betaStep step) (primed_betaStep step)
-        inductionHypothesis (.refl _)
+      exact translate_lam_congr (original_convertible (.beta step))
+        (primed_convertible (.beta step)) inductionHypothesis (.refl _)
   | @lamBody n domain body body' step inductionHypothesis =>
       exact translate_lam_congr (.refl _) (.refl _) (.refl _) inductionHypothesis
   | @piDomain n domain domain' codomain step inductionHypothesis =>
-      exact translate_pi_congr (original_betaStep (.piDomain step))
-        (primed_betaStep (.piDomain step)) (original_betaStep step)
-        (primed_betaStep step) inductionHypothesis (.refl _)
+      exact translate_pi_congr (original_convertible (.beta (.piDomain step)))
+        (primed_convertible (.beta (.piDomain step)))
+        (original_convertible (.beta step)) (primed_convertible (.beta step))
+        inductionHypothesis (.refl _)
   | @piCodomain n domain codomain codomain' step inductionHypothesis =>
-      exact translate_pi_congr (original_betaStep (.piCodomain step))
-        (primed_betaStep (.piCodomain step)) (.refl _) (.refl _) (.refl _)
-        inductionHypothesis
-
-/-- Original copies preserve definitional conversion. -/
-theorem original_convertible {left right : Term n} (conversion : Convertible left right) :
-    Convertible (original left) (original right) :=
-  conversion.rename (originalRenaming n)
-
-/-- Primed copies preserve definitional conversion. -/
-theorem primed_convertible {left right : Term n} (conversion : Convertible left right) :
-    Convertible (primed left) (primed right) :=
-  conversion.rename (primedRenaming n)
+      exact translate_pi_congr (original_convertible (.beta (.piCodomain step)))
+        (primed_convertible (.beta (.piCodomain step)))
+        (.refl _) (.refl _) (.refl _) inductionHypothesis
 
 /-- Raw parametricity translation preserves definitional conversion. -/
 theorem translate_convertible {left right : Term n} (conversion : Convertible left right) :
@@ -171,106 +141,6 @@ theorem relatedTermType_convertible {term type type' : Term n}
   exact Convertible.app_both
     (Convertible.app_both (translate_convertible conversion) (.refl _)) (.refl _)
 
-/-- Raising the result universe raises the beta-normal element-relation type. -/
-theorem elementRelationType_cumulative (term : Term n) {lower upper : Nat}
-    (levelOrder : lower ≤ upper) :
-    Cumulative (elementRelationType term lower) (elementRelationType term upper) := by
-  unfold elementRelationType
-  exact .pi (.refl _) (.pi (.refl _) (.sort levelOrder))
-
-/-- The related-term interpretation of universes is monotone in the universe level. -/
-theorem relatedTermType_sort_cumulative (term : Term n) {lower upper : Nat}
-    (levelOrder : lower ≤ upper) :
-    Cumulative (relatedTermType term (.sort lower))
-      (relatedTermType term (.sort upper)) := by
-  exact .trans (.conversion (relatedTermType_sort_beta term lower))
-    (.trans (elementRelationType_cumulative term levelOrder)
-      (.conversion (relatedTermType_sort_beta term upper).symm))
-
-/-- Apply a weakened function to the newest source variable. -/
-def fiberApplication (function : Term n) : Term (n + 1) :=
-  .app (function.rename Renaming.shift) (.var 0)
-
-/-- The related type of `fiberApplication` is the output in a product-relation fiber. -/
-theorem relatedTermType_fiberApplication (function : Term n)
-    (codomain : Term (n + 1)) :
-    relatedTermType (fiberApplication function) codomain =
-      applicationRelationBody function codomain := by
-  unfold fiberApplication relatedTermType applicationRelationBody
-  simp only [original, primed, Term.rename]
-  rw [show
-    Term.rename (originalRenaming (n + 1)) (Term.rename Renaming.shift function) =
-      weakenBy (original function) 3 by
-        exact (original_rename_shift function).trans
-          (weakenBy_three_eq_rename_translatedShift (original function)).symm]
-  rw [show
-    Term.rename (primedRenaming (n + 1)) (Term.rename Renaming.shift function) =
-      weakenBy (primed function) 3 by
-        exact (primed_rename_shift function).trans
-          (weakenBy_three_eq_rename_translatedShift (primed function)).symm]
-  rfl
-
-/-- Fiberwise codomain cumulativity and convertible domains lift through products. -/
-theorem relatedTermType_pi_cumulative (term : Term n)
-    {domain domain' : Term n} {codomain codomain' : Term (n + 1)}
-    (domainEqual : Convertible domain domain')
-    (codomainCumulative : ∀ output : Term (n + 1),
-      Cumulative (relatedTermType output codomain)
-        (relatedTermType output codomain')) :
-    Cumulative (relatedTermType term (.pi domain codomain))
-      (relatedTermType term (.pi domain' codomain')) := by
-  have outputCumulative := codomainCumulative (fiberApplication term)
-  rw [relatedTermType_fiberApplication term codomain,
-    relatedTermType_fiberApplication term codomain'] at outputCumulative
-  have originalDomainEqual := original_convertible domainEqual
-  have primedDomainEqual := Convertible.weakenBy (primed_convertible domainEqual) 1
-  have relationDomainEqual : Convertible
-      (.app (.app (weakenBy (translate domain) 2) (.var 1)) (.var 0))
-      (.app (.app (weakenBy (translate domain') 2) (.var 1)) (.var 0)) :=
-    Convertible.app_both
-      (Convertible.app_both
-        (Convertible.weakenBy (translate_convertible domainEqual) 2) (.refl _))
-      (.refl _)
-  have normalCumulative :
-      Cumulative (piRelationFiberNormal domain codomain term)
-        (piRelationFiberNormal domain' codomain' term) := by
-    unfold piRelationFiberNormal
-    exact .pi originalDomainEqual
-      (.pi primedDomainEqual
-        (.pi relationDomainEqual outputCumulative))
-  have sourceBeta := relatedTermType_pi_beta term domain codomain
-  rw [piRelationFiber_eq_normal] at sourceBeta
-  have targetBeta := relatedTermType_pi_beta term domain' codomain'
-  rw [piRelationFiber_eq_normal] at targetBeta
-  exact .trans (.conversion sourceBeta)
-    (.trans normalCumulative (.conversion targetBeta.symm))
-
-/-- A translated type witness makes the corresponding related-term type universe-typed. -/
-theorem relatedTermType_hasType_of_typeWitness {source : Context n}
-    {term type : Term n} {level : Nat}
-    (translatedWellFormed : WellFormed (context source))
-    (termWellTyped : HasType source term type)
-    (typeWellTyped : HasType source type (.sort level))
-    (typeWitness : HasType (context source) (translate type)
-      (relatedTermType type (.sort level))) :
-    HasType (context source) (relatedTermType term type) (.sort level) := by
-  have relationNormal := translate_type_hasType_normal translatedWellFormed
-    typeWellTyped typeWitness
-  have appliedOriginal := HasType.app relationNormal
-    (HasType.original termWellTyped translatedWellFormed)
-  have primedTypeInstantiated :
-      (weakenBy (primed type) 1).substitute
-          (Substitution.single (original term)) = primed type := by
-    simpa only [weakenBy] using
-      substitute_single_rename_shift (primed type) (original term)
-  simp only [Term.instantiate, Term.substitute] at appliedOriginal
-  rw [primedTypeInstantiated] at appliedOriginal
-  have appliedBoth := HasType.app appliedOriginal
-    (HasType.primed termWellTyped translatedWellFormed)
-  simpa only [relatedTermType, elementRelationType, Term.instantiate,
-    Term.substitute, Substitution.single, weakenBy,
-    substitute_single_rename_shift] using appliedBoth
-
 /-- The typing-conversion rule preserves the raw relational witness conclusion. -/
 theorem translate_conversion_witness_hasType {source : Context n}
     {term type type' : Term n} {level : Nat}
@@ -289,25 +159,5 @@ theorem translate_conversion_witness_hasType {source : Context n}
     (relatedTermType_hasType_of_typeWitness translatedWellFormed convertedTerm
       targetWellTyped targetWitness)
     (relatedTermType_convertible conversion)
-
-/-- Universe cumulativity preserves the raw relational witness conclusion. -/
-theorem translate_sort_cumulativity_witness_hasType {source : Context n}
-    {term : Term n} {lower upper targetLevel : Nat}
-    (translatedWellFormed : WellFormed (context source))
-    (termWellTyped : HasType source term (.sort lower))
-    (targetWellTyped : HasType source (.sort upper) (.sort targetLevel))
-    (levelOrder : lower ≤ upper)
-    (termWitness : HasType (context source) (translate term)
-      (relatedTermType term (.sort lower)))
-    (targetWitness : HasType (context source) (translate (.sort upper : Term n))
-      (relatedTermType (.sort upper) (.sort targetLevel))) :
-    HasType (context source) (translate term)
-      (relatedTermType term (.sort upper)) := by
-  have raisedTerm : HasType source term (.sort upper) :=
-    .cumulativity termWellTyped targetWellTyped (.sort levelOrder)
-  exact .cumulativity termWitness
-    (relatedTermType_hasType_of_typeWitness translatedWellFormed raisedTerm
-      targetWellTyped targetWitness)
-    (relatedTermType_sort_cumulative term levelOrder)
 
 end DeepWiki.Refine.DependentCalculus.RawParametricity

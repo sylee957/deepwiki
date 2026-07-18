@@ -2,7 +2,7 @@ import DeepWiki.Refine.Parametricity.Univalent.Package
 import DeepWiki.Refine.Parametricity.Intrinsic.Abstraction
 import DeepWiki.Refine.Parametricity.Raw.Abstraction
 import DeepWiki.Refine.Parametricity.Raw.Translation
-import DeepWiki.Refine.Parametricity.Raw.Typing
+import DeepWiki.Refine.Parametricity.Raw.RelationTypes
 import DeepWiki.Refine.Parametricity.Univalent.QuotationSpec
 import Sources.Doi_10_1145_3737283.Source
 
