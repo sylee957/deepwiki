@@ -8,28 +8,34 @@ is reduced to its structural context-translation and witness-typing core.
 
 namespace DeepWiki.Refine.DependentCalculus.RawParametricity
 
+open DeepWiki.Refine.CCOmega.SurfaceSyntax
+
 /-- The beta-normal type of the raw relation interpreting a universe. -/
 def sortRelationType (level : Nat) (n : Nat) : Term n :=
-  .pi (.sort level)
-    (.pi (.sort level) (.sort (level + 1)))
+  ccω!{
+    %{Term.sort level} →
+    %{Term.sort level} →
+    %{Term.sort (level + 1)} }
 
 /-- The literal translated type appearing on the right of the raw universe typing equation. -/
 def translatedSortType (level : Nat) (n : Nat) : Term (scopeSize n) :=
-  .app
-    (.app (translate (.sort (level + 1) : Term n)) (.sort level))
-    (.sort level)
+  ccω!{
+    %{translate (.sort (level + 1) : Term n)}
+    %{Term.sort level}
+    %{Term.sort level} }
 
 /-- The three-argument product body produced by translating a dependent product. -/
 def piRelationBody (domain : Term n) (codomain : Term (n + 1)) :
     Term (scopeSize n + 2) :=
-  .pi (weakenBy (original domain) 2)
-    (.pi (weakenBy (primed domain) 3)
-      (.pi
-        (.app (.app (weakenBy (translate domain) 4) (.var 1)) (.var 0))
-        (.app
-          (.app ((translate codomain).rename insertTwoAfterThree)
-            (.app (.var 4) (.var 2)))
-          (.app (.var 3) (.var 1)))))
+  let f0 : Term (scopeSize n + 5) := .var 4
+  let f1 : Term (scopeSize n + 5) := .var 3
+  ccω!{
+    Π x0 : %{weakenBy (original domain) 2},
+    Π x1 : %{weakenBy (primed domain) 3},
+    Π xR : %{weakenBy (translate domain) 4} x0 x1,
+    %{(translate codomain).rename insertTwoAfterThree}
+      (%{f0} x0)
+      (%{f1} x1) }
 
 /-- The beta-normal relation type assigned to a translated dependent function. -/
 def piRelationFiber (domain : Term n) (codomain : Term (n + 1))
@@ -172,14 +178,13 @@ theorem piRelationFiber_eq_substitute (domain : Term n) (codomain : Term (n + 1)
 /-- The explicit three-argument normal form of a dependent function's relation fiber. -/
 def piRelationFiberNormal (domain : Term n) (codomain : Term (n + 1))
     (function : Term n) : Term (scopeSize n) :=
-  .pi (original domain)
-    (.pi (weakenBy (primed domain) 1)
-      (.pi
-        (.app (.app (weakenBy (translate domain) 2) (.var 1)) (.var 0))
-        (.app
-          (.app (translate codomain)
-            (.app (weakenBy (original function) 3) (.var 2)))
-          (.app (weakenBy (primed function) 3) (.var 1)))))
+  ccω!{
+    Π x0 : %{original domain},
+    Π x1 : %{weakenBy (primed domain) 1},
+    Π xR : %{weakenBy (translate domain) 2} x0 x1,
+    %{translate codomain}
+      (%{weakenBy (original function) 3} x0)
+      (%{weakenBy (primed function) 3} x1) }
 
 /-- The substitution presentation of a product-relation fiber equals its explicit normal form. -/
 theorem piRelationFiber_eq_normal (domain : Term n) (codomain : Term (n + 1))
@@ -255,10 +260,11 @@ theorem piRelationFiber_eq_normal (domain : Term n) (codomain : Term (n + 1))
 
 /-- Translating a product exposes its two function arguments and product relation body. -/
 theorem translate_pi_body (domain : Term n) (codomain : Term (n + 1)) :
-    translate (.pi domain codomain) =
-      .lam (original (.pi domain codomain))
-        (.lam (weakenBy (primed (.pi domain codomain)) 1)
-          (piRelationBody domain codomain)) :=
+    translate (ccω!{ Π x : %{domain}, %{codomain} }) =
+      ccω!{
+        λ f0 : %{original (.pi domain codomain)},
+        λ f1 : %{weakenBy (primed (.pi domain codomain)) 1},
+        %{piRelationBody domain codomain} } :=
   rfl
 
 /-- Eliminating a finite index at numeral one selects the first successor branch. -/
@@ -412,14 +418,16 @@ theorem translate_sort_hasType {context : Context (scopeSize n)}
 
 /-- In the empty context, raw universe translation satisfies the literal universe typing equation. -/
 theorem rawUniverseTranslation_hasType (level : Nat) :
-    HasType Context.empty (translate (.sort level : Term 0))
-      (.app
-        (.app (translate (.sort (level + 1) : Term 0)) (.sort level))
-        (.sort level)) :=
-  translate_sort_hasType (n := 0) (context := Context.empty) WellFormed.empty level
+    ccω!{
+      ⟨⟩ ⊢
+      %{translate (.sort level : Term 0)} :
+      %{translate (.sort (level + 1) : Term 0)}
+        %{Term.sort level}
+        %{Term.sort level} } :=
+  translate_sort_hasType (n := 0) (context := ccωctx!{ ⟨⟩ }) WellFormed.empty level
 
 /-- Translation preserves well-formedness of the empty context. -/
-theorem context_empty_wellFormed : WellFormed (context Context.empty) :=
+theorem context_empty_wellFormed : WellFormed (context (ccωctx!{ ⟨⟩ })) :=
   WellFormed.empty
 
 /-- Weakening a source scope by one variable weakens its translated scope by one triple. -/
@@ -1005,22 +1013,25 @@ theorem HasType.primed {source : Context n} {term type : Term n}
 
 /-- The translated relation type asserting that two translated terms are related. -/
 def relatedTermType (term type : Term n) : Term (scopeSize n) :=
-  .app (.app (translate type) (original term)) (primed term)
+  ccω!{ %{translate type} %{original term} %{primed term} }
 
 /-- Codomain relation before substituting an application's original, primed, and witness triple. -/
 def applicationRelationBody (function : Term n) (codomain : Term (n + 1)) :
     Term (scopeSize n + 3) :=
-  .app
-    (.app (translate codomain)
-      (.app (weakenBy (original function) 3) (.var 2)))
-    (.app (weakenBy (primed function) 3) (.var 1))
+  let x0 : Term (scopeSize n + 3) := .var 2
+  let x1 : Term (scopeSize n + 3) := .var 1
+  ccω!{
+    %{translate codomain}
+      (%{weakenBy (original function) 3} %{x0})
+      (%{weakenBy (primed function) 3} %{x1}) }
 
 /-- Substituting an argument triple in a codomain relation gives the related application type. -/
 theorem applicationRelationBody_substitute (function argument : Term n)
     (codomain : Term (n + 1)) :
     (applicationRelationBody function codomain).substitute
         (relationalSingleSubstitution argument) =
-      relatedTermType (.app function argument) (codomain.instantiate argument) := by
+      relatedTermType (ccω!{ %{function} %{argument} })
+        (codomain.instantiate argument) := by
   unfold applicationRelationBody relatedTermType
   rw [translate_instantiate_normalized]
   simp only [Term.substitute, original, primed, Term.rename]
@@ -1034,7 +1045,8 @@ theorem applicationRelationBody_substitute (function argument : Term n)
 /-- The relation type of a translated dependent function beta-reduces to its product fiber. -/
 theorem relatedTermType_pi_beta (function domain : Term n)
     (codomain : Term (n + 1)) :
-    Convertible (relatedTermType function (.pi domain codomain))
+    Convertible
+      (relatedTermType function (ccω!{ Π x : %{domain}, %{codomain} }))
       (piRelationFiber domain codomain function) := by
   unfold relatedTermType
   rw [translate_pi_body]
@@ -1068,11 +1080,13 @@ theorem weakened_original_lam_apply_beta (domain : Term n) (body : Term (n + 1))
 /-- Instantiating the outer product-relation lambda exposes its primed-function lambda. -/
 theorem instantiate_piRelation_secondLambda (function domain : Term n)
     (codomain : Term (n + 1)) :
-    (Term.lam (weakenBy (primed (.pi domain codomain)) 1)
-      (piRelationBody domain codomain)).instantiate (original function) =
-        Term.lam (primed (.pi domain codomain))
-          ((piRelationBody domain codomain).substitute
-            (Substitution.lift (Substitution.single (original function)))) := by
+    (ccω!{
+      λ f1 : %{weakenBy (primed (.pi domain codomain)) 1},
+      %{piRelationBody domain codomain} }).instantiate (original function) =
+        ccω!{
+          λ f1 : %{primed (.pi domain codomain)},
+          %{(piRelationBody domain codomain).substitute
+            (Substitution.lift (Substitution.single (original function)))} } := by
   simp only [Term.instantiate, Term.substitute, weakenBy,
     substitute_single_rename_shift]
 
@@ -1080,9 +1094,11 @@ theorem instantiate_piRelation_secondLambda (function domain : Term n)
 theorem piRelationFiber_hasType_of_productTranslation {source : Context n}
     {function domain : Term n} {codomain : Term (n + 1)} {translationType : Term (scopeSize n)}
     (translatedWellFormed : WellFormed (context source))
-    (functionWellTyped : HasType source function (.pi domain codomain))
+    (functionWellTyped :
+      HasType source function (ccω!{ Π x : %{domain}, %{codomain} }))
     (translatedProductWellTyped :
-      HasType (context source) (translate (.pi domain codomain)) translationType) :
+      HasType (context source)
+        (translate (ccω!{ Π x : %{domain}, %{codomain} })) translationType) :
     ∃ level,
       HasType (context source) (piRelationFiber domain codomain function)
         (.sort level) := by
@@ -1106,17 +1122,20 @@ theorem piRelationFiber_hasType_of_productTranslation {source : Context n}
 theorem piRelationFiber_hasType {source : Context n} {function domain : Term n}
     {codomain : Term (n + 1)}
     (translatedWellFormed : WellFormed (context source))
-    (functionWellTyped : HasType source function (.pi domain codomain))
+    (functionWellTyped :
+      HasType source function (ccω!{ Π x : %{domain}, %{codomain} }))
     (functionWitness :
       HasType (context source) (translate function)
-        (relatedTermType function (.pi domain codomain))) :
+        (relatedTermType function (ccω!{ Π x : %{domain}, %{codomain} }))) :
     ∃ level,
       HasType (context source) (piRelationFiber domain codomain function)
         (.sort level) := by
   obtain ⟨_, relationTypeWellTyped⟩ := functionWitness.typeWellTyped
   change HasType (context source)
-    (.app (.app (translate (.pi domain codomain)) (original function))
-      (primed function)) _ at relationTypeWellTyped
+    (ccω!{
+      %{translate (.pi domain codomain)}
+      %{original function}
+      %{primed function} }) _ at relationTypeWellTyped
   obtain ⟨_, _, firstApplicationWellTyped, _⟩ :=
     relationTypeWellTyped.appComponents
   obtain ⟨_, _, translatedProductWellTyped, _⟩ :=
@@ -1128,16 +1147,18 @@ theorem piRelationFiber_hasType {source : Context n} {function domain : Term n}
 theorem translate_app_witness_hasType {source : Context n}
     {function argument domain : Term n} {codomain : Term (n + 1)}
     (translatedWellFormed : WellFormed (context source))
-    (functionWellTyped : HasType source function (.pi domain codomain))
+    (functionWellTyped :
+      HasType source function (ccω!{ Π x : %{domain}, %{codomain} }))
     (argumentWellTyped : HasType source argument domain)
     (functionWitness :
       HasType (context source) (translate function)
-        (relatedTermType function (.pi domain codomain)))
+        (relatedTermType function (ccω!{ Π x : %{domain}, %{codomain} })))
     (argumentWitness :
       HasType (context source) (translate argument)
         (relatedTermType argument domain)) :
-    HasType (context source) (translate (.app function argument))
-      (relatedTermType (.app function argument) (codomain.instantiate argument)) := by
+    HasType (context source) (translate (ccω!{ %{function} %{argument} }))
+      (relatedTermType (ccω!{ %{function} %{argument} })
+        (codomain.instantiate argument)) := by
   obtain ⟨_, relationFiberWellTyped⟩ :=
     piRelationFiber_hasType translatedWellFormed functionWellTyped functionWitness
   have functionWitnessNormal :
@@ -1165,14 +1186,14 @@ theorem translate_app_witness_hasType {source : Context n}
   rw [relatedDomainInstantiated] at appliedPrimed
   have appliedWitness := HasType.app appliedPrimed argumentWitness
   have appliedWitnessBody :
-      HasType (context source) (translate (.app function argument))
+      HasType (context source) (translate (ccω!{ %{function} %{argument} }))
         ((((applicationRelationBody function codomain).substitute
             (Substitution.lift
               (Substitution.lift (Substitution.single (original argument))))).substitute
           (Substitution.lift (Substitution.single (primed argument)))).instantiate
             (translate argument)) := by
     simpa only [applicationRelationBody, translate_app, Term.substitute] using appliedWitness
-  change HasType (context source) (translate (.app function argument))
+  change HasType (context source) (translate (ccω!{ %{function} %{argument} }))
     ((((applicationRelationBody function codomain).substitute
           (Substitution.lift
             (Substitution.lift (Substitution.single (original argument))))).substitute
@@ -1247,8 +1268,10 @@ theorem relatedType_hasType {source : Context n} {type : Term n} {level : Nat}
 
 /-- The beta-normal relation type between elements of two translated copies of a type. -/
 def elementRelationType (type : Term n) (level : Nat) : Term (scopeSize n) :=
-  .pi (original type)
-    (.pi (weakenBy (primed type) 1) (.sort level))
+  ccω!{
+    Π x0 : %{original type},
+    Π x1 : %{weakenBy (primed type) 1},
+    %{Term.sort level} }
 
 /-- The translated universe relation at a type beta-reduces to its element-relation type. -/
 theorem relatedTermType_sort_beta (type : Term n) (level : Nat) :
@@ -1289,7 +1312,8 @@ theorem weakened_primed_lam_apply_beta (domain : Term n) (body : Term (n + 1)) :
 
 /-- The output relation in a lambda fiber beta-reduces to the relation between its bodies. -/
 theorem lambdaRelationBody_beta (domain : Term n) (body codomain : Term (n + 1)) :
-    Convertible (applicationRelationBody (.lam domain body) codomain)
+    Convertible
+      (applicationRelationBody (ccω!{ λ x : %{domain}, %{body} }) codomain)
       (relatedTermType body codomain) := by
   unfold applicationRelationBody relatedTermType
   have originalBeta := weakened_original_lam_apply_beta domain body
@@ -1369,7 +1393,7 @@ theorem context_extend_wellFormed {source : Context n} {type : Term n} {level : 
     (typeWellTyped : HasType source type (.sort level))
     (witnessWellTyped :
       HasType (context source) (translate type) (relatedTermType type (.sort level))) :
-    WellFormed (context (.extend source type)) := by
+    WellFormed (context (ccωctx!{ %{source}, x : %{type} })) := by
   have originalType := HasType.original typeWellTyped translatedWellFormed
   have firstWellFormed : WellFormed (.extend (context source) (original type)) :=
     .extend translatedWellFormed originalType
@@ -1512,17 +1536,18 @@ theorem piRelationBody_hasType {source : Context n}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped : HasType source domain (.sort domainLevel))
     (codomainWellTyped :
-      HasType (.extend source domain) codomain (.sort codomainLevel))
+      HasType (ccωctx!{ %{source}, x : %{domain} }) codomain (.sort codomainLevel))
     (domainWitness :
       HasType (context source) (translate domain)
         (relatedTermType domain (.sort domainLevel)))
     (codomainWitness :
-      HasType (context (.extend source domain)) (translate codomain)
+      HasType (context (ccωctx!{ %{source}, x : %{domain} })) (translate codomain)
         (relatedTermType codomain (.sort codomainLevel))) :
     HasType
-      (.extend
-        (.extend (context source) (original (.pi domain codomain)))
-        (weakenBy (primed (.pi domain codomain)) 1))
+      (ccωctx!{
+        %{context source},
+        f0 : %{original (.pi domain codomain)},
+        f1 : %{weakenBy (primed (.pi domain codomain)) 1} })
       (piRelationBody domain codomain)
       (.sort (max domainLevel codomainLevel)) := by
   have productWellTyped := HasType.pi domainWellTyped codomainWellTyped
@@ -1710,15 +1735,16 @@ theorem translate_pi_witness_hasType {source : Context n}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped : HasType source domain (.sort domainLevel))
     (codomainWellTyped :
-      HasType (.extend source domain) codomain (.sort codomainLevel))
+      HasType (ccωctx!{ %{source}, x : %{domain} }) codomain (.sort codomainLevel))
     (domainWitness :
       HasType (context source) (translate domain)
         (relatedTermType domain (.sort domainLevel)))
     (codomainWitness :
-      HasType (context (.extend source domain)) (translate codomain)
+      HasType (context (ccωctx!{ %{source}, x : %{domain} })) (translate codomain)
         (relatedTermType codomain (.sort codomainLevel))) :
-    HasType (context source) (translate (.pi domain codomain))
-      (relatedTermType (.pi domain codomain)
+    HasType (context source)
+      (translate (ccω!{ Π x : %{domain}, %{codomain} }))
+      (relatedTermType (ccω!{ Π x : %{domain}, %{codomain} })
         (.sort (max domainLevel codomainLevel))) := by
   have productWellTyped := HasType.pi domainWellTyped codomainWellTyped
   have originalProduct := HasType.original productWellTyped translatedWellFormed
@@ -1732,8 +1758,9 @@ theorem translate_pi_witness_hasType {source : Context n}
       (by simpa only [weakenBy, primed, Term.rename] using primedProductWeakened)
       bodyWellTyped)
   have translatedProductNormal' :
-      HasType (context source) (translate (.pi domain codomain))
-        (elementRelationType (.pi domain codomain)
+      HasType (context source)
+        (translate (ccω!{ Π x : %{domain}, %{codomain} }))
+        (elementRelationType (ccω!{ Π x : %{domain}, %{codomain} })
           (max domainLevel codomainLevel)) := by
     simpa only [translate_pi_body, elementRelationType] using translatedProductNormal
   exact .conversion translatedProductNormal'
@@ -1746,18 +1773,23 @@ theorem translate_lam_witness_hasType_of_productWitness {source : Context n}
     {domain : Term n} {body codomain : Term (n + 1)} {domainLevel typeLevel : Nat}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped : HasType source domain (.sort domainLevel))
-    (bodyWellTyped : HasType (.extend source domain) body codomain)
-    (productWellTyped : HasType source (.pi domain codomain) (.sort typeLevel))
+    (bodyWellTyped :
+      HasType (ccωctx!{ %{source}, x : %{domain} }) body codomain)
+    (productWellTyped :
+      HasType source (ccω!{ Π x : %{domain}, %{codomain} }) (.sort typeLevel))
     (productWitness :
-      HasType (context source) (translate (.pi domain codomain))
-        (relatedTermType (.pi domain codomain) (.sort typeLevel)))
+      HasType (context source)
+        (translate (ccω!{ Π x : %{domain}, %{codomain} }))
+        (relatedTermType (ccω!{ Π x : %{domain}, %{codomain} }) (.sort typeLevel)))
     (bodyWitness :
-      HasType (context (.extend source domain)) (translate body)
+      HasType (context (ccωctx!{ %{source}, x : %{domain} })) (translate body)
         (relatedTermType body codomain)) :
-    HasType (context source) (translate (.lam domain body))
-      (relatedTermType (.lam domain body) (.pi domain codomain)) := by
-  let function : Term n := .lam domain body
-  have functionWellTyped : HasType source function (.pi domain codomain) :=
+    HasType (context source) (translate (ccω!{ λ x : %{domain}, %{body} }))
+      (relatedTermType (ccω!{ λ x : %{domain}, %{body} })
+        (ccω!{ Π x : %{domain}, %{codomain} })) := by
+  let function : Term n := ccω!{ λ x : %{domain}, %{body} }
+  have functionWellTyped :
+      HasType source function (ccω!{ Π x : %{domain}, %{codomain} }) :=
     .lam domainWellTyped bodyWellTyped
   obtain ⟨fiberLevel, fiberWellTyped⟩ :=
     piRelationFiber_hasType_of_productTranslation translatedWellFormed
@@ -1769,10 +1801,10 @@ theorem translate_lam_witness_hasType_of_productWitness {source : Context n}
     secondProductWellTyped.piComponents
   obtain ⟨_, outputLevel, domainRelationWellTyped, outputRelationWellTyped⟩ :=
     thirdProductWellTyped.piComponents
-  change HasType (context (.extend source domain))
+  change HasType (context (ccωctx!{ %{source}, x : %{domain} }))
     (applicationRelationBody function codomain) (.sort outputLevel) at outputRelationWellTyped
   have bodyWitnessExpanded :
-      HasType (context (.extend source domain)) (translate body)
+      HasType (context (ccωctx!{ %{source}, x : %{domain} })) (translate body)
         (applicationRelationBody function codomain) :=
     .conversion bodyWitness outputRelationWellTyped
       (lambdaRelationBody_beta domain body codomain).symm
@@ -1780,11 +1812,11 @@ theorem translate_lam_witness_hasType_of_productWitness {source : Context n}
       HasType (context source) (translate function)
         (piRelationFiberNormal domain codomain function) := by
     change HasType (context source)
-      (.lam (original domain)
-        (.lam (weakenBy (primed domain) 1)
-          (.lam
-            (.app (.app (weakenBy (translate domain) 2) (.var 1)) (.var 0))
-            (translate body))))
+      (ccω!{
+        λ x0 : %{original domain},
+        λ x1 : %{weakenBy (primed domain) 1},
+        λ xR : %{weakenBy (translate domain) 2} x0 x1,
+        %{translate body} })
       (piRelationFiberNormal domain codomain function)
     exact .lam originalDomainWellTyped
       (.lam primedDomainWellTyped (.lam domainRelationWellTyped bodyWitnessExpanded))
@@ -1803,7 +1835,8 @@ theorem translate_lam_witness_hasType_of_productWitness {source : Context n}
   have relatedFunctionTypeRaw := HasType.app productAppliedOriginal
     (HasType.primed functionWellTyped translatedWellFormed)
   have relatedFunctionTypeWellTyped :
-      HasType (context source) (relatedTermType function (.pi domain codomain))
+      HasType (context source)
+        (relatedTermType function (ccω!{ Π x : %{domain}, %{codomain} }))
         (.sort typeLevel) := by
     simpa only [elementRelationType, relatedTermType, function, Term.instantiate,
       Term.substitute, Substitution.single, weakenBy, substitute_single_rename_shift]
@@ -1940,10 +1973,12 @@ theorem rawAbstractionClaim_iff_witness :
   rawAbstractionClaim_iff_structural.trans structuralAbstractionClaim_iff_witness
 
 example (level : Nat) :
-    HasType Context.empty (translate (.sort level : Term 0))
-      (.app
-        (.app (translate (.sort (level + 1) : Term 0)) (.sort level))
-        (.sort level)) :=
+    ccω!{
+      ⟨⟩ ⊢
+      %{translate (.sort level : Term 0)} :
+      %{translate (.sort (level + 1) : Term 0)}
+        %{Term.sort level}
+        %{Term.sort level} } :=
   rawUniverseTranslation_hasType level
 
 example (source : Context n) (index : Fin n) :
@@ -1960,15 +1995,16 @@ example {source : Context n} {domain : Term n} {codomain : Term (n + 1)}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped : HasType source domain (.sort domainLevel))
     (codomainWellTyped :
-      HasType (.extend source domain) codomain (.sort codomainLevel))
+      HasType (ccωctx!{ %{source}, x : %{domain} }) codomain (.sort codomainLevel))
     (domainWitness :
       HasType (context source) (translate domain)
         (relatedTermType domain (.sort domainLevel)))
     (codomainWitness :
-      HasType (context (.extend source domain)) (translate codomain)
+      HasType (context (ccωctx!{ %{source}, x : %{domain} })) (translate codomain)
         (relatedTermType codomain (.sort codomainLevel))) :
-    HasType (context source) (translate (.pi domain codomain))
-      (relatedTermType (.pi domain codomain)
+    HasType (context source)
+      (translate (ccω!{ Π x : %{domain}, %{codomain} }))
+      (relatedTermType (ccω!{ Π x : %{domain}, %{codomain} })
         (.sort (max domainLevel codomainLevel))) :=
   translate_pi_witness_hasType translatedWellFormed domainWellTyped
     codomainWellTyped domainWitness codomainWitness
@@ -1977,16 +2013,20 @@ example {source : Context n} {domain : Term n} {body codomain : Term (n + 1)}
     {domainLevel typeLevel : Nat}
     (translatedWellFormed : WellFormed (context source))
     (domainWellTyped : HasType source domain (.sort domainLevel))
-    (bodyWellTyped : HasType (.extend source domain) body codomain)
-    (productWellTyped : HasType source (.pi domain codomain) (.sort typeLevel))
+    (bodyWellTyped :
+      HasType (ccωctx!{ %{source}, x : %{domain} }) body codomain)
+    (productWellTyped :
+      HasType source (ccω!{ Π x : %{domain}, %{codomain} }) (.sort typeLevel))
     (productWitness :
-      HasType (context source) (translate (.pi domain codomain))
-        (relatedTermType (.pi domain codomain) (.sort typeLevel)))
+      HasType (context source)
+        (translate (ccω!{ Π x : %{domain}, %{codomain} }))
+        (relatedTermType (ccω!{ Π x : %{domain}, %{codomain} }) (.sort typeLevel)))
     (bodyWitness :
-      HasType (context (.extend source domain)) (translate body)
+      HasType (context (ccωctx!{ %{source}, x : %{domain} })) (translate body)
         (relatedTermType body codomain)) :
-    HasType (context source) (translate (.lam domain body))
-      (relatedTermType (.lam domain body) (.pi domain codomain)) :=
+    HasType (context source) (translate (ccω!{ λ x : %{domain}, %{body} }))
+      (relatedTermType (ccω!{ λ x : %{domain}, %{body} })
+        (ccω!{ Π x : %{domain}, %{codomain} })) :=
   translate_lam_witness_hasType_of_productWitness translatedWellFormed
     domainWellTyped bodyWellTyped productWellTyped productWitness bodyWitness
 
