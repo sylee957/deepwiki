@@ -57,8 +57,7 @@ DeepWiki/Refine/Annotated/
     Typing.lean
 ```
 
-Future full univalent-parametricity work has reserved semantic destinations, but no empty or
-placeholder modules are created by this reorganization:
+Full univalent-parametricity work uses the semantic destinations reserved by this reorganization:
 
 ```text
 Parametricity/Univalent/Realizers.lean
@@ -67,8 +66,9 @@ Parametricity/Univalent/Typing.lean
 Parametricity/Univalent/Abstraction.lean
 ```
 
-These modules will respectively contain the concrete `p□`/`pΠ` package constructors, Figure 2,
-Equation (17), and full dependent Theorem 3.6 once those declarations exist.
+These modules now respectively contain the concrete `p□`/`pΠ` package constructors, Figure 2,
+Equation (17), and full dependent Theorem 3.6; `RelationalCumulativity.lean` supplies the additional
+conversion layer required by the abstraction induction.
 
 ## Mechanical move map
 
@@ -149,10 +149,9 @@ not part of the path-only move.
 
 Completed on 2026-07-17. The flat modules have no forwarding module shims, all moved declarations
 are reachable through the new aggregators, and both paper catalogs import the new ownership paths.
-The still-missing full Figure 2 translation and dependent Theorem 3.6 remain explicitly missing in
-the TOPLAS source catalog; Equation (17) remains represented by its semantic and quotation-spec
-counterparts. This reorganization creates destinations for future work without claiming its
-formalization.
+Subsequent work completed the full Figure 2 translation, object-level Equation (17), and dependent
+Theorem 3.6 in those destinations and discharged their TOPLAS source-catalog markers. The original
+reorganization itself remains a mechanical ownership change rather than that later formalization.
 
 Verification passed for `DeepWiki.Refine.Parametricity`, `DeepWiki.Refine.Annotated.Quotation`,
 the TOPLAS Section 3.3 catalog, the ESOP Section 2.3 and theory catalogs, `DeepWiki.Refine`, and the

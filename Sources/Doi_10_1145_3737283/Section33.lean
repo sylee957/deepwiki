@@ -1,8 +1,7 @@
 import DeepWiki.Refine.Parametricity.Univalent.Package
 import DeepWiki.Refine.Parametricity.Intrinsic.Abstraction
 import DeepWiki.Refine.Parametricity.Raw.Abstraction
-import DeepWiki.Refine.Parametricity.Raw.Translation
-import DeepWiki.Refine.Parametricity.Raw.RelationTypes
+import DeepWiki.Refine.Parametricity.Univalent.Abstraction
 import DeepWiki.Refine.Parametricity.Univalent.QuotationSpec
 import Sources.Doi_10_1145_3737283.Source
 
@@ -11,12 +10,6 @@ import Sources.Doi_10_1145_3737283.Source
 Catalog pointers for the raw and univalent parametricity constructions in the revised paper.
 
 ## NOT YET FORMALIZED
-
-- Figure 2 (complete univalent term translation), PDF p. 11 — [infra] the universe package,
-  relation projection, and intrinsic term fragment exist, but the complete dependent translation
-  still requires realizers for its universe and dependent-product package constructors.
-- Theorem 3.6 (univalent abstraction for full dependent `CCω`), PDF p. 11 — [infra] the intrinsic
-  abstraction theorem exists, but the exact full-calculus typing induction does not.
 -/
 
 namespace DeepWiki.CcmToplas
@@ -71,20 +64,94 @@ abbrev equation_9_univalent_universe_translation :=
 abbrev theorem_3_5_univalent_relation_equiv_type_equivalence :=
   @DeepWiki.Refine.univalentRelationEquivTypeEquivalence
 
-/-- **Figure 2, PDF p. 11:** using a translated type projects the relation from its universe package. -/
+/-- **Equation (10), Figure 2, PDF p. 11:** univalent translation preserves the empty context. -/
+abbrev equation_10_univalent_empty_context_translation :=
+  DeepWiki.Refine.DependentCalculus.UnivalentParametricity.context_empty
+
+/-- **Equation (11), Figure 2, PDF p. 11:** a declaration translates to its endpoint and witness triple. -/
+abbrev equation_11_univalent_context_extension_translation :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.context_extend
+
+/-- **Equation (12), Figure 2, PDF p. 11:** a universe translates to the concrete `p□` package. -/
+abbrev equation_12_univalent_universe_term_translation :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.termTranslation_sort
+
+/-- **Equation (13), Figure 2, PDF p. 11:** a variable translates to its relation-witness variable. -/
+abbrev equation_13_univalent_variable_term_translation :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.termTranslation_var
+
+/-- **Equation (14), Figure 2, PDF p. 11:** application supplies original, primed, and package witnesses. -/
+abbrev equation_14_univalent_application_term_translation :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.termTranslation_app
+
+/-- **Equation (15), Figure 2, PDF p. 11:** lambda translation binds original, primed, and relation witnesses. -/
+abbrev equation_15_univalent_lambda_term_translation :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.termTranslation_lam
+
+/-- **Equation (16), Figure 2, PDF p. 11:** product translation applies the concrete `pΠ` package constructor. -/
+abbrev equation_16_univalent_product_term_translation :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.termTranslation_pi
+
+/-- **Figure 2, PDF p. 11:** `p□` is the concrete level-indexed universe-package constructor. -/
+abbrev figure_2_universe_package_constructor :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.Term.universePackage
+
+/-- **Figure 2, PDF p. 11:** `pΠ` is the concrete dependent-product package constructor. -/
+abbrev figure_2_dependent_product_package_constructor :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.Term.dependentProductPackage
+
+/-- **Figure 2 semantic realizer, PDF p. 11:** dependent univalent packages close under products. -/
+abbrev figure_2_dependent_product_package_semantics :=
+  @DeepWiki.Refine.UnivalentRelation.pi
+
+/-- **Figure 2, PDF p. 11:** projecting `p□` computes to the univalent package family. -/
+abbrev figure_2_universe_package_projection :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.Term.contractProjection_universePackage
+
+/-- **Figure 2, PDF p. 11:** projecting `pΠ` computes to the dependent respectful relation. -/
+abbrev figure_2_dependent_product_package_projection :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.Term.contractProjection_dependentProductPackage
+
+/-- **Figure 2 semantic equation, PDF p. 11:** the relation field of `pΠ` is pointwise respectfulness. -/
+abbrev figure_2_dependent_product_relation_semantics :=
+  @DeepWiki.Refine.UnivalentRelation.pi_rel_apply
+
+/-- **Figure 2, PDF p. 11:** a translated type projects the relation from its package translation. -/
 abbrev figure_2_type_relation_projection :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.typeTranslation_eq
+
+/-- **Figure 2 auxiliary, PDF p. 11:** the semantic package projection selects its relation field. -/
+abbrev figure_2_semantic_relation_projection :=
   @DeepWiki.Refine.UnivalentRelation.rel
 
 /-- **Equation (17), PDF p. 11, semantic counterpart:** univalence supplies the native universe package. -/
 abbrev equation_17_semantic_universe_package :=
   @DeepWiki.Refine.univalentUniverseRelation
 
-/-- **Equation (17), PDF p. 11:** the quoted universe package has the required translated type. -/
-abbrev equation_17_quoted_universe_typing :=
+/-- **Equation (17), PDF p. 11:** the concrete universe package has its translated successor-universe type. -/
+abbrev equation_17_universe_package_typing :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.universePackage_hasType_translatedUniverse
+
+/-- **Equation (17), PDF p. 11:** projecting a translated universe converts to its univalent relation family. -/
+abbrev equation_17_universe_relation_projection :=
+  @DeepWiki.Refine.DependentCalculus.UnivalentParametricity.universeTypeTranslation_convertible
+
+/-- **Equation (17) auxiliary, PDF p. 11:** the earlier quotation interface records the universe typing obligation. -/
+abbrev equation_17_quoted_universe_typing_auxiliary :=
   @DeepWiki.Refine.DependentCalculus.UnivalentUniverseQuotation.termTranslation_hasType
 
-/-- **Theorem 3.6, PDF p. 11, intrinsic fragment:** abstraction restricted to a projected univalent relation. -/
-abbrev theorem_3_6_intrinsic_univalent_abstraction :=
+/-- **Theorem 3.6, PDF p. 11:** full dependent `CCω` typing implies the translated witness judgment. -/
+abbrev theorem_3_6_univalent_abstraction :
+    DeepWiki.Refine.DependentCalculus.UnivalentParametricity.UnivalentAbstractionClaim :=
+  DeepWiki.Refine.DependentCalculus.UnivalentParametricity.univalentAbstraction
+
+/-- **Theorem 3.6 strengthening, PDF p. 11:** context formation and both endpoint typings accompany abstraction. -/
+abbrev theorem_3_6_displayed_univalent_abstraction :
+    DeepWiki.Refine.DependentCalculus.UnivalentParametricity.DisplayedAbstractionClaim :=
+  DeepWiki.Refine.DependentCalculus.UnivalentParametricity.displayedUnivalentAbstraction
+
+/-- **Theorem 3.6 auxiliary, PDF p. 11:** the earlier intrinsic fragment handles projected arrow relations. -/
+abbrev theorem_3_6_intrinsic_univalent_abstraction_auxiliary :=
   @DeepWiki.Refine.CoreTerm.univalentParametricity
 
 end

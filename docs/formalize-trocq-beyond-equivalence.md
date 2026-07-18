@@ -59,14 +59,15 @@ the implementation-only automation discussion; neither is silently counted as co
   transitivity rules, retiring the unrelated lambda and structural-product closure rules.
 - [x] Prove `isRelationallyCumulative_of_cumulative` for that ordinary relation and derive the
   unconditional `displayedRawAbstraction`, discharging the source-catalog marker for Theorem 3.4.
-- [ ] Complete Figure 2 and unrestricted Theorem 3.6 after supplying object-language universe and
-  dependent-product package realizers; retain their `[infra]` markers in the source catalog.
+- [x] Complete Figure 2 and unrestricted Theorem 3.6 with concrete object-language universe and
+  dependent-product package constructors, projection computation, and the full typing induction.
 
 The formation-explicit theorem remains the proof factorization behind the unrestricted result.
 Ordinary `CCω` cumulativity now preserves every substituted relation fiber, so ordinary `HasType`
 embeds unconditionally into `FormationHasType` and Theorem 3.4 follows. The previous conditional
 bridge and its lambda/structural-product gap were artifacts of an overly broad `Cumulative`
-relation and have been retired. Figure 2 and Theorem 3.6 remain the next Section 3.3 boundary.
+relation and have been retired. The dedicated univalent object calculus now supplies `p□`, `pΠ`,
+and `rel`; its formation-explicit induction proves the exact witness judgment of Theorem 3.6.
 
 ## Next phases
 

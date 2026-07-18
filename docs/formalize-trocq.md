@@ -106,7 +106,7 @@ or a cubical/HoTT-flavored equality would be needed to instantiate them non-vacu
   primitive structured witness has its displayed type, its projected relation has the top family
   type, and projection converts definitionally to the quoted top relation family. Relate each
   native top-universe fiber to both `StructuredRelation` at `(4,4)` and `UnivalentRelation` without
-  asserting the still-open full univalent abstraction induction.
+  relying on the full univalent abstraction induction.
 - [x] Prove the univalent abstraction result for the intrinsic function fragment.
 - [x] Prove all three raw abstraction conclusions for a formation-explicit dependent judgment whose
   lambda rule recursively supplies codomain formation and whose cumulativity rule records exact
@@ -117,6 +117,9 @@ or a cubical/HoTT-flavored equality would be needed to instantiate them non-vacu
   universe lifting, products with convertible domains and cumulative codomains, and transitivity—
   and lift ordinary typing into the formation-explicit judgment. Raw abstraction for ordinary
   `CCω` typing is therefore unconditional.
+- [x] Extend object-language `CCω` with concrete `p□`, `pΠ`, and relation projection constructors;
+  implement the full dependent univalent translation and prove its formation-explicit abstraction
+  induction, yielding the unrestricted witness judgment.
 
 ## First checkpoint: what the six levels mean
 
