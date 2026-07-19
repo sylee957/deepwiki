@@ -1,5 +1,6 @@
 import DeepWiki.Refine.Parametricity.Raw.FormationTyping
 import DeepWiki.Refine.Parametricity.Univalent.RelationalCumulativity
+import DeepWiki.Refine.Parametricity.Univalent.SurfaceSyntax
 
 /-! # Univalent parametricity abstraction
 
@@ -7,13 +8,16 @@ The formation-explicit fundamental lemma yields the full dependent abstraction t
 
 namespace DeepWiki.Refine.DependentCalculus.UnivalentParametricity
 
+open DeepWiki.Refine.DependentCalculus.UnivalentParametricity.SurfaceSyntax
+
 /-- The three displayed typing conclusions of univalent abstraction. -/
 def AbstractionConclusion
     (source : DependentCalculus.Context n)
     (term type : CoreTerm n) : Prop :=
-  HasType (context source) (original term) (original type) ∧
-    HasType (context source) (primed term) (primed type) ∧
-      HasType (context source) (termTranslation term) (relatedTermType term type)
+  (uω!{ %{context source} ⊢ %{original term} : %{original type} }) ∧
+    (uω!{ %{context source} ⊢ %{primed term} : %{primed type} }) ∧
+      (uω!{ %{context source} ⊢
+        %{termTranslation term} : %{relatedTermType term type} })
 
 /-- The displayed univalent abstraction statement. -/
 def DisplayedAbstractionClaim : Prop :=
@@ -35,7 +39,8 @@ def StructuralAbstractionClaim : Prop :=
     {term type : CoreTerm n},
     DependentCalculus.HasType source term type →
       WellFormed (context source) ∧
-        HasType (context source) (termTranslation term) (relatedTermType term type)
+        (uω!{ %{context source} ⊢
+          %{termTranslation term} : %{relatedTermType term type} })
 
 /-- A translated type witness gives its direct endpoint package typing. -/
 theorem termTranslation_typePackage_hasType
@@ -45,10 +50,10 @@ theorem termTranslation_typePackage_hasType
     (typeWellTyped :
       DependentCalculus.HasType source type (.sort level))
     (typeWitness :
-      HasType (context source) (termTranslation type)
-        (relatedTermType type (.sort level))) :
-    HasType (context source) (termTranslation type)
-      (Term.packageType level (original type) (primed type)) := by
+      uω!{ %{context source} ⊢ %{termTranslation type} :
+        %{relatedTermType type (.sort level)} }) :
+    uω!{ %{context source} ⊢ %{termTranslation type} :
+      Pkg[level] %{original type} %{primed type} } := by
   exact .conversion typeWitness
     (packageType_hasType translatedWellFormed
       (HasType.original typeWellTyped translatedWellFormed)
@@ -65,9 +70,9 @@ theorem relatedTermType_hasType_of_typeWitness
     (typeWellTyped :
       DependentCalculus.HasType source type (.sort level))
     (typeWitness :
-      HasType (context source) (termTranslation type)
-        (relatedTermType type (.sort level))) :
-    HasType (context source) (relatedTermType term type) (.sort level) := by
+      uω!{ %{context source} ⊢ %{termTranslation type} :
+        %{relatedTermType type (.sort level)} }) :
+    uω!{ %{context source} ⊢ %{relatedTermType term type} : □[level] } := by
   have package := termTranslation_typePackage_hasType translatedWellFormed
     typeWellTyped typeWitness
   have originalTerm := HasType.original termWellTyped translatedWellFormed
@@ -99,15 +104,15 @@ theorem relatedTermType_hasType_of_typeWitness
 theorem relationalExtend_wellFormed
     {base : Context n} {left right package : Term n} {level : Nat}
     (baseWellFormed : WellFormed base)
-    (leftWellTyped : HasType base left (.sort level))
-    (rightWellTyped : HasType base right (.sort level))
+    (leftWellTyped : uω!{ %{base} ⊢ %{left} : □[level] })
+    (rightWellTyped : uω!{ %{base} ⊢ %{right} : □[level] })
     (packageWellTyped :
-      HasType base package (Term.packageType level left right)) :
+      uω!{ %{base} ⊢ %{package} : Pkg[level] %{left} %{right} }) :
     WellFormed (relationalExtend base left right package) ∧
-      HasType
-        (.extend (.extend base left)
-          (right.rename DependentCalculus.Renaming.shift))
-        (Term.relatedDomain package) (.sort level) := by
+      (uω!{
+        %{base}, x0 : %{left},
+          x1 : %{right.rename DependentCalculus.Renaming.shift} ⊢
+        %{Term.relatedDomain package} : □[level] }) := by
   let leftContext : Context (n + 1) := .extend base left
   have leftContextWellFormed : WellFormed leftContext :=
     .extend baseWellFormed leftWellTyped
@@ -128,7 +133,7 @@ theorem relationalExtend_wellFormed
       HasType endpointContext (package.weakenBy 2)
         (Term.packageType level (left.weakenBy 2) (right.weakenBy 2)) := by
     simpa only [endpointContext, leftContext, Term.weakenBy, Term.rename,
-      Term.packageType_rename] using weakenedPackageTwice
+      Term.packageType, Term.packageType_rename] using weakenedPackageTwice
   have weakenedLeftOnce := leftWellTyped.weaken leftContextWellFormed
   have weakenedLeftTwice := weakenedLeftOnce.weaken endpointContextWellFormed
   have weakenedLeft :
@@ -231,13 +236,13 @@ theorem context_extend_wellFormed
     (domainWellTyped :
       DependentCalculus.HasType source domain (.sort domainLevel))
     (domainWitness :
-      HasType (context source) (termTranslation domain)
-        (relatedTermType domain (.sort domainLevel))) :
+      uω!{ %{context source} ⊢ %{termTranslation domain} :
+        %{relatedTermType domain (.sort domainLevel)} }) :
     WellFormed (context (.extend source domain)) ∧
-      HasType
-        (.extend (.extend (context source) (original domain))
-          ((primed domain).weakenBy 1))
-        (Term.relatedDomain (termTranslation domain)) (.sort domainLevel) := by
+      (uω!{
+        %{context source}, x0 : %{original domain},
+          x1 : %{(primed domain).weakenBy 1} ⊢
+        %{Term.relatedDomain (termTranslation domain)} : □[domainLevel] }) := by
   have originalDomain := HasType.original domainWellTyped translatedWellFormed
   have primedDomain := HasType.primed domainWellTyped translatedWellFormed
   have domainPackage := termTranslation_typePackage_hasType translatedWellFormed
@@ -260,8 +265,8 @@ theorem originalCodomain_hasType
     (codomainWellTyped :
       DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel)) :
-    HasType (.extend (context source) (original domain))
-      (originalCodomain codomain) (.sort codomainLevel) := by
+    uω!{ %{context source}, x0 : %{original domain} ⊢
+      %{originalCodomain codomain} : □[codomainLevel] } := by
   have baseRenaming := originalTypedRenaming source translatedWellFormed
   have embeddedDomain := HasType.ofCore domainWellTyped
   have renamedDomain := embeddedDomain.rename baseRenaming
@@ -282,8 +287,8 @@ theorem primedCodomain_hasType
     (codomainWellTyped :
       DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel)) :
-    HasType (.extend (context source) (primed domain))
-      (primedCodomain codomain) (.sort codomainLevel) := by
+    uω!{ %{context source}, x1 : %{primed domain} ⊢
+      %{primedCodomain codomain} : □[codomainLevel] } := by
   have baseRenaming := primedTypedRenaming source translatedWellFormed
   have embeddedDomain := HasType.ofCore domainWellTyped
   have renamedDomain := embeddedDomain.rename baseRenaming
@@ -306,14 +311,14 @@ theorem termTranslation_pi_witness_hasType
         codomain (.sort codomainLevel))
     (codomainTranslatedWellFormed : WellFormed (context (.extend source domain)))
     (domainWitness :
-      HasType (context source) (termTranslation domain)
-        (relatedTermType domain (.sort domainLevel)))
+      uω!{ %{context source} ⊢ %{termTranslation domain} :
+        %{relatedTermType domain (.sort domainLevel)} })
     (codomainWitness :
-      HasType (context (.extend source domain)) (termTranslation codomain)
-        (relatedTermType codomain (.sort codomainLevel))) :
-    HasType (context source) (termTranslation (.pi domain codomain))
-      (relatedTermType (.pi domain codomain)
-        (.sort (max domainLevel codomainLevel))) := by
+      uω!{ %{context (.extend source domain)} ⊢ %{termTranslation codomain} :
+        %{relatedTermType codomain (.sort codomainLevel)} }) :
+    uω!{ %{context source} ⊢ %{termTranslation (.pi domain codomain)} :
+      %{relatedTermType (.pi domain codomain)
+        (.sort (max domainLevel codomainLevel))} } := by
   have originalDomain := HasType.original domainWellTyped translatedWellFormed
   have primedDomain := HasType.primed domainWellTyped translatedWellFormed
   have originalCodomain := originalCodomain_hasType translatedWellFormed
@@ -416,13 +421,14 @@ theorem piRelationFiberNormal_hasType
       DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel))
     (domainWitness :
-      HasType (context source) (termTranslation domain)
-        (relatedTermType domain (.sort domainLevel)))
+      uω!{ %{context source} ⊢ %{termTranslation domain} :
+        %{relatedTermType domain (.sort domainLevel)} })
     (codomainWitness :
-      HasType (context (.extend source domain)) (termTranslation codomain)
-        (relatedTermType codomain (.sort codomainLevel))) :
-    HasType (context source) (piRelationFiberNormal domain codomain function)
-      (.sort (max domainLevel codomainLevel)) := by
+      uω!{ %{context (.extend source domain)} ⊢ %{termTranslation codomain} :
+        %{relatedTermType codomain (.sort codomainLevel)} }) :
+    uω!{ %{context source} ⊢
+      %{piRelationFiberNormal domain codomain function} :
+      □[max domainLevel codomainLevel] } := by
   have originalDomain :
       HasType (context source) (original domain) (.sort domainLevel) := by
     simpa only [original, RawParametricity.original,
@@ -456,7 +462,8 @@ theorem piRelationFiberNormal_hasType
         max domainLevel codomainLevel := by
     omega
   rw [levelEquality] at originalProduct
-  simpa only [piRelationFiberNormal] using originalProduct
+  simpa only [piRelationFiberNormal, Term.relatedDomain,
+    applicationRelationBody] using originalProduct
 
 /-- A function witness alone exposes a universe-typed normalized product fiber. -/
 theorem piRelationFiberNormal_hasType_of_functionWitness
@@ -466,10 +473,10 @@ theorem piRelationFiberNormal_hasType_of_functionWitness
     (functionWellTyped :
       DependentCalculus.HasType source function (.pi domain codomain))
     (functionWitness :
-      HasType (context source) (termTranslation function)
-        (relatedTermType function (.pi domain codomain))) :
-    ∃ level, HasType (context source)
-      (piRelationFiberNormal domain codomain function) (.sort level) := by
+      uω!{ %{context source} ⊢ %{termTranslation function} :
+        %{relatedTermType function (.pi domain codomain)} }) :
+    ∃ level, (uω!{ %{context source} ⊢
+      %{piRelationFiberNormal domain codomain function} : □[level] }) := by
   obtain ⟨witnessLevel, witnessTypeWellTyped⟩ := functionWitness.typeWellTyped
   change HasType (context source)
     (.app
@@ -547,7 +554,9 @@ theorem piRelationFiberNormal_hasType_of_functionWitness
   have relationProduct := HasType.pi extension.2 outputWellTyped'
   have primedProduct := HasType.pi primedDomain' relationProduct
   have originalProduct := HasType.pi originalDomain primedProduct
-  exact ⟨_, by simpa only [piRelationFiberNormal] using originalProduct⟩
+  exact ⟨_, by
+    simpa only [piRelationFiberNormal, Term.relatedDomain,
+      applicationRelationBody] using originalProduct⟩
 
 /-- The simultaneous substitution for an argument's original, primed, and witness copies. -/
 def argumentTripleSubstitution (argument : CoreTerm n) :
@@ -668,7 +677,7 @@ theorem applicationRelationBody_substitute
     (applicationRelationBody function codomain).substitute
         (argumentTripleSubstitution argument) =
       relatedTermType (.app function argument) (codomain.instantiate argument) := by
-  unfold applicationRelationBody relatedTermType Term.relationApplication
+  unfold applicationRelationBody relatedTermType
   rw [show typeTranslation (codomain.instantiate argument) =
       (typeTranslation codomain).substitute (argumentTripleSubstitution argument) by
     change typeTranslation (codomain.substitute
@@ -689,16 +698,16 @@ theorem termTranslation_app_witness_hasType_of_fiber
     (argumentWellTyped :
       DependentCalculus.HasType source argument domain)
     (functionWitness :
-      HasType (context source) (termTranslation function)
-        (relatedTermType function (.pi domain codomain)))
+      uω!{ %{context source} ⊢ %{termTranslation function} :
+        %{relatedTermType function (.pi domain codomain)} })
     (argumentWitness :
-      HasType (context source) (termTranslation argument)
-        (relatedTermType argument domain))
+      uω!{ %{context source} ⊢ %{termTranslation argument} :
+        %{relatedTermType argument domain} })
     (fiberWellTyped :
-      HasType (context source) (piRelationFiberNormal domain codomain function)
-        (.sort fiberLevel)) :
-    HasType (context source) (termTranslation (.app function argument))
-      (relatedTermType (.app function argument) (codomain.instantiate argument)) := by
+      uω!{ %{context source} ⊢
+        %{piRelationFiberNormal domain codomain function} : □[fiberLevel] }) :
+    uω!{ %{context source} ⊢ %{termTranslation (.app function argument)} :
+      %{relatedTermType (.app function argument) (codomain.instantiate argument)} } := by
   have fiberConversion := relatedTermType_pi_beta function domain codomain
   rw [piRelationFiber_eq_normal] at fiberConversion
   have normalizedFunction :
@@ -717,7 +726,8 @@ theorem termTranslation_app_witness_hasType_of_fiber
             ((applicationRelationBody function codomain).substitute
               (Substitution.lift
                 (Substitution.lift (Substitution.single (original argument))))))) := by
-    simpa only [piRelationFiberNormal, Term.instantiate, Term.substitute,
+    simpa only [piRelationFiberNormal, Term.relatedDomain,
+      applicationRelationBody, Term.instantiate, Term.substitute,
       substitute_single_weakenBy_one] using appliedOriginal
   have appliedPrimed := HasType.app appliedOriginal'
     (HasType.primed argumentWellTyped translatedWellFormed)
@@ -737,7 +747,8 @@ theorem termTranslation_app_witness_hasType_of_fiber
         (original argument) (primed argument) by
       simpa only [Term.instantiate] using relatedDomain_instantiate
         (termTranslation domain) (original argument) (primed argument)] at appliedPrimed
-    simpa only [relatedTermType, typeTranslation, Term.rel] using appliedPrimed
+    simpa only [relatedTermType, typeTranslation, Term.rel,
+      Term.relationApplication] using appliedPrimed
   have appliedWitness := HasType.app appliedPrimed' argumentWitness
   simp only [Term.instantiate] at appliedWitness
   rw [substitute_argumentTriple, applicationRelationBody_substitute] at appliedWitness
@@ -759,19 +770,19 @@ theorem termTranslation_app_witness_hasType
       DependentCalculus.HasType (.extend source domain)
         codomain (.sort codomainLevel))
     (domainWitness :
-      HasType (context source) (termTranslation domain)
-        (relatedTermType domain (.sort domainLevel)))
+      uω!{ %{context source} ⊢ %{termTranslation domain} :
+        %{relatedTermType domain (.sort domainLevel)} })
     (codomainWitness :
-      HasType (context (.extend source domain)) (termTranslation codomain)
-        (relatedTermType codomain (.sort codomainLevel)))
+      uω!{ %{context (.extend source domain)} ⊢ %{termTranslation codomain} :
+        %{relatedTermType codomain (.sort codomainLevel)} })
     (functionWitness :
-      HasType (context source) (termTranslation function)
-        (relatedTermType function (.pi domain codomain)))
+      uω!{ %{context source} ⊢ %{termTranslation function} :
+        %{relatedTermType function (.pi domain codomain)} })
     (argumentWitness :
-      HasType (context source) (termTranslation argument)
-        (relatedTermType argument domain)) :
-    HasType (context source) (termTranslation (.app function argument))
-      (relatedTermType (.app function argument) (codomain.instantiate argument)) := by
+      uω!{ %{context source} ⊢ %{termTranslation argument} :
+        %{relatedTermType argument domain} }) :
+    uω!{ %{context source} ⊢ %{termTranslation (.app function argument)} :
+      %{relatedTermType (.app function argument) (codomain.instantiate argument)} } := by
   have fiberWellTyped := piRelationFiberNormal_hasType translatedWellFormed
     functionWellTyped domainWellTyped codomainWellTyped domainWitness codomainWitness
   exact termTranslation_app_witness_hasType_of_fiber translatedWellFormed
@@ -787,13 +798,13 @@ theorem termTranslation_app_witness_hasType_of_witnesses
     (argumentWellTyped :
       DependentCalculus.HasType source argument domain)
     (functionWitness :
-      HasType (context source) (termTranslation function)
-        (relatedTermType function (.pi domain codomain)))
+      uω!{ %{context source} ⊢ %{termTranslation function} :
+        %{relatedTermType function (.pi domain codomain)} })
     (argumentWitness :
-      HasType (context source) (termTranslation argument)
-        (relatedTermType argument domain)) :
-    HasType (context source) (termTranslation (.app function argument))
-      (relatedTermType (.app function argument) (codomain.instantiate argument)) := by
+      uω!{ %{context source} ⊢ %{termTranslation argument} :
+        %{relatedTermType argument domain} }) :
+    uω!{ %{context source} ⊢ %{termTranslation (.app function argument)} :
+      %{relatedTermType (.app function argument) (codomain.instantiate argument)} } := by
   obtain ⟨_, fiberWellTyped⟩ :=
     piRelationFiberNormal_hasType_of_functionWitness translatedWellFormed
       functionWellTyped functionWitness
@@ -832,7 +843,6 @@ theorem lambdaApplicationRelationBody_convertible (domain : CoreTerm n)
     Convertible (applicationRelationBody (.lam domain body) codomain)
       (relatedTermType body codomain) := by
   unfold applicationRelationBody relatedTermType typeTranslation
-    Term.relationApplication
   have originalBeta := original_lam_apply_convertible domain body
   have primedBeta := primed_lam_apply_convertible domain body
   exact (originalBeta.appArgument.appFunction).trans primedBeta.appArgument
@@ -851,16 +861,16 @@ theorem termTranslation_lam_witness_hasType
     (bodyWellTyped :
       DependentCalculus.HasType (.extend source domain) body codomain)
     (domainWitness :
-      HasType (context source) (termTranslation domain)
-        (relatedTermType domain (.sort domainLevel)))
+      uω!{ %{context source} ⊢ %{termTranslation domain} :
+        %{relatedTermType domain (.sort domainLevel)} })
     (codomainWitness :
-      HasType (context (.extend source domain)) (termTranslation codomain)
-        (relatedTermType codomain (.sort codomainLevel)))
+      uω!{ %{context (.extend source domain)} ⊢ %{termTranslation codomain} :
+        %{relatedTermType codomain (.sort codomainLevel)} })
     (bodyWitness :
-      HasType (context (.extend source domain)) (termTranslation body)
-        (relatedTermType body codomain)) :
-    HasType (context source) (termTranslation (.lam domain body))
-      (relatedTermType (.lam domain body) (.pi domain codomain)) := by
+      uω!{ %{context (.extend source domain)} ⊢ %{termTranslation body} :
+        %{relatedTermType body codomain} }) :
+    uω!{ %{context source} ⊢ %{termTranslation (.lam domain body)} :
+      %{relatedTermType (.lam domain body) (.pi domain codomain)} } := by
   have extension := context_extend_wellFormed translatedWellFormed
     domainWellTyped domainWitness
   have originalDomain :
@@ -910,8 +920,8 @@ theorem termTranslation_lam_witness_hasType
   have translatedLambdaNormal' :
       HasType (context source) (termTranslation (.lam domain body))
         (piRelationFiberNormal domain codomain (.lam domain body)) := by
-    simpa only [termTranslation_lam, piRelationFiberNormal] using
-      translatedLambdaNormal
+    simpa only [termTranslation_lam, piRelationFiberNormal,
+      Term.relatedDomain, applicationRelationBody] using translatedLambdaNormal
   have productWellTyped :
       DependentCalculus.HasType source (.pi domain codomain)
         (.sort (max domainLevel codomainLevel)) :=
@@ -929,8 +939,8 @@ theorem termTranslation_lam_witness_hasType
 theorem termTranslation_sort_witness_hasType
     {source : DependentCalculus.Context n}
     (translatedWellFormed : WellFormed (context source)) (level : Nat) :
-    HasType (context source) (termTranslation (.sort level : CoreTerm n))
-      (relatedTermType (.sort level) (.sort (level + 1))) := by
+    uω!{ %{context source} ⊢ %{termTranslation (.sort level : CoreTerm n)} :
+      %{relatedTermType (.sort level) (.sort (level + 1))} } := by
   change HasType (context source) (.universePackage level)
     (translatedUniversePackageType level)
   exact universePackage_hasType_translatedUniverse translatedWellFormed level
@@ -939,8 +949,8 @@ theorem termTranslation_sort_witness_hasType
 theorem termTranslation_var_witness_hasType
     {source : DependentCalculus.Context n}
     (translatedWellFormed : WellFormed (context source)) (index : Fin n) :
-    HasType (context source) (termTranslation (.var index))
-      (relatedTermType (.var index) (source.lookup index)) := by
+    uω!{ %{context source} ⊢ %{termTranslation (.var index)} :
+      %{relatedTermType (.var index) (source.lookup index)} } := by
   have witnessVariable := HasType.var translatedWellFormed
     (RawParametricity.witnessRenaming n index)
   rw [Context.translated_lookup_witness] at witnessVariable
@@ -1011,14 +1021,16 @@ def UnivalentAbstractionClaim : Prop :=
   ∀ {n : Nat} {source : DependentCalculus.Context n}
     {term type : CoreTerm n},
     DependentCalculus.HasType source term type →
-      HasType (context source) (termTranslation term) (relatedTermType term type)
+      (uω!{ %{context source} ⊢
+        %{termTranslation term} : %{relatedTermType term type} })
 
 /-- A formation-explicit derivation yields its translated witness judgment. -/
 theorem formationWitness
     {source : DependentCalculus.Context n}
     {term type : CoreTerm n}
     (termWellTyped : RawParametricity.FormationHasType source term type) :
-    HasType (context source) (termTranslation term) (relatedTermType term type) :=
+    uω!{ %{context source} ⊢
+      %{termTranslation term} : %{relatedTermType term type} } :=
   (formationStructural termWellTyped).2
 
 /-- A formation-explicit derivation forms its translated context. -/

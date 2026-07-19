@@ -1,5 +1,6 @@
 import DeepWiki.Refine.Parametricity.Raw.Naturality
 import DeepWiki.Refine.Parametricity.Univalent.Realizers
+import DeepWiki.Refine.Parametricity.Univalent.SurfaceSyntax
 
 /-! # Univalent parametricity translation
 
@@ -37,36 +38,43 @@ def termTranslation : {n : Nat} → CoreTerm n → Term (scopeSize n)
   | _, .sort level => .universePackage level
   | n + 1, .var index => .var (RawParametricity.witnessRenaming (n + 1) index)
   | _, .app function argument =>
-      .app (.app (.app (termTranslation function) (original argument))
-        (primed argument)) (termTranslation argument)
+      uω!{
+        %{termTranslation function}
+          %{original argument} %{primed argument} %{termTranslation argument} }
   | _, .lam domain body =>
-      .lam (original domain)
-        (.lam ((primed domain).weakenBy 1)
-          (.lam (Term.relatedDomain (termTranslation domain))
-            (termTranslation body)))
+      uω!{
+        λ originalArgument : %{original domain},
+        λ primedArgument : %{(primed domain).weakenBy 1},
+        λ relatedArgument : %{Term.relatedDomain (termTranslation domain)},
+        %{termTranslation body} }
   | n, .pi domain codomain =>
-      .dependentProductPackage
-        (original domain) (primed domain)
-        (originalCodomain (n := n) codomain) (primedCodomain (n := n) codomain)
-        (termTranslation domain) (termTranslation codomain)
+      uω!{
+        pΠ[
+          (originalArgument : %{original domain}) ↦
+            %{originalCodomain (n := n) codomain};
+          (primedArgument : %{primed domain}) ↦
+            %{primedCodomain (n := n) codomain};
+          (relatedArgument : rel(%{termTranslation domain})
+            originalArgument primedArgument) ↦
+              %{termTranslation codomain}] }
 
 /-- Translate a type by projecting the relation field of its package-valued translation. -/
 def typeTranslation (type : CoreTerm n) : Term (scopeSize n) :=
-  .relationProjection (termTranslation type)
+  uω!{ rel(%{termTranslation type}) }
 
 /-- Apply a translated type relation to the original and primed copies of a term. -/
 def relatedTermType (term type : CoreTerm n) : Term (scopeSize n) :=
-  Term.relationApplication (typeTranslation type) (original term) (primed term)
+  uω!{ %{typeTranslation type} %{original term} %{primed term} }
 
 /-- Translate a core context by adjoining its original, primed, and relation-witness entries. -/
 def context : {n : Nat} → DependentCalculus.Context n → Context (scopeSize n)
   | 0, .empty => .empty
   | _ + 1, .extend source type =>
-      .extend
-        (.extend
-          (.extend (context source) (original type))
-          ((primed type).weakenBy 1))
-        (Term.relatedDomain (termTranslation type))
+      uωctx!{
+        %{context source},
+        originalValue : %{original type},
+        primedValue : %{(primed type).weakenBy 1},
+        relatedValue : %{Term.relatedDomain (termTranslation type)} }
 
 /-- Translating a universe produces the concrete `p□` package. -/
 @[simp] theorem termTranslation_sort (level : Nat) :
@@ -84,32 +92,37 @@ def context : {n : Nat} → DependentCalculus.Context n → Context (scopeSize n
 /-- Translating an application supplies original, primed, and witness arguments. -/
 @[simp] theorem termTranslation_app (function argument : CoreTerm n) :
     termTranslation (.app function argument) =
-      .app (.app (.app (termTranslation function) (original argument))
-        (primed argument)) (termTranslation argument) :=
+      uω!{
+        %{termTranslation function}
+          %{original argument} %{primed argument} %{termTranslation argument} } :=
   rfl
 
 /-- Translating a lambda binds original, primed, and projected-relation arguments. -/
 @[simp] theorem termTranslation_lam (domain : CoreTerm n) (body : CoreTerm (n + 1)) :
     termTranslation (.lam domain body) =
-      .lam (original domain)
-        (.lam ((primed domain).weakenBy 1)
-          (.lam (Term.relatedDomain (termTranslation domain))
-            (termTranslation body))) :=
+      uω!{
+        λ originalArgument : %{original domain},
+        λ primedArgument : %{(primed domain).weakenBy 1},
+        λ relatedArgument : %{Term.relatedDomain (termTranslation domain)},
+        %{termTranslation body} } :=
   rfl
 
 /-- Translating a dependent product applies the concrete `pΠ` package constructor. -/
 @[simp] theorem termTranslation_pi (domain : CoreTerm n)
     (codomain : CoreTerm (n + 1)) :
     termTranslation (.pi domain codomain) =
-      .dependentProductPackage
-        (original domain) (primed domain)
-        (originalCodomain codomain) (primedCodomain codomain)
-        (termTranslation domain) (termTranslation codomain) :=
+      uω!{
+        pΠ[
+          (originalArgument : %{original domain}) ↦ %{originalCodomain codomain};
+          (primedArgument : %{primed domain}) ↦ %{primedCodomain codomain};
+          (relatedArgument : rel(%{termTranslation domain})
+            originalArgument primedArgument) ↦
+              %{termTranslation codomain}] } :=
   rfl
 
 /-- The relation-valued translation is definitionally the projection of the term translation. -/
 @[simp] theorem typeTranslation_eq (type : CoreTerm n) :
-    typeTranslation type = .relationProjection (termTranslation type) :=
+    typeTranslation type = uω!{ rel(%{termTranslation type}) } :=
   rfl
 
 /-- The empty context translates to the empty context. -/
@@ -121,11 +134,11 @@ def context : {n : Nat} → DependentCalculus.Context n → Context (scopeSize n
 @[simp] theorem context_extend (source : DependentCalculus.Context n)
     (type : CoreTerm n) :
     context (.extend source type) =
-      .extend
-        (.extend
-          (.extend (context source) (original type))
-          ((primed type).weakenBy 1))
-        (Term.relatedDomain (termTranslation type)) :=
+      uωctx!{
+        %{context source},
+        originalValue : %{original type},
+        primedValue : %{(primed type).weakenBy 1},
+        relatedValue : %{Term.relatedDomain (termTranslation type)} } :=
   rfl
 
 /-- Original-copy formation is natural with respect to relational renamings. -/
@@ -561,8 +574,8 @@ theorem dependentProductRelation_rename
       (Term.pi rightDomain rightCodomain).rename mapping from rfl]
   simp only [Term.weakenBy_rename]
   rw [codomainPackage_rename]
-  simp only [Term.relationApplication, Term.rename,
-    DependentCalculus.Renaming.lift_zero, Renaming.liftBy]
+  simp only [Term.rename, DependentCalculus.Renaming.lift_zero,
+    Renaming.liftBy]
   rfl
 
 /-- The projected dependent-product relation is natural under substitution. -/
@@ -585,8 +598,7 @@ theorem dependentProductRelation_substitute
       (Term.pi rightDomain rightCodomain).substitute mapping from rfl]
   simp only [Term.weakenBy_substitute]
   rw [codomainPackage_substitute]
-  simp only [Term.relationApplication, Term.substitute, Substitution.lift,
-    Substitution.liftBy]
+  simp only [Term.substitute, Substitution.lift, Substitution.liftBy]
   rfl
 
 /-- Related-term types are natural with respect to relational renamings. -/
@@ -595,8 +607,7 @@ theorem relatedTermType_rename
     (term type : CoreTerm source) :
     relatedTermType (term.rename mapping.base) (type.rename mapping.base) =
       (relatedTermType term type).rename mapping.relational := by
-  simp only [relatedTermType, Term.relationApplication,
-    typeTranslation_rename mapping, original_rename mapping,
+  simp only [relatedTermType, typeTranslation_rename mapping, original_rename mapping,
     primed_rename mapping, Term.rename]
 
 /-- Related-term types are natural with respect to relational substitutions. -/
@@ -605,8 +616,7 @@ theorem relatedTermType_substitute
     (term type : CoreTerm source) :
     relatedTermType (term.substitute mapping.base) (type.substitute mapping.base) =
       (relatedTermType term type).substitute mapping.relational := by
-  simp only [relatedTermType, Term.relationApplication,
-    typeTranslation_substitute mapping, original_substitute mapping,
+  simp only [relatedTermType, typeTranslation_substitute mapping, original_substitute mapping,
     primed_substitute mapping, Term.substitute]
 
 /-- Substitute one source argument into its original, primed, and witness slots. -/
@@ -760,11 +770,11 @@ example :
 example (source : DependentCalculus.Context n)
     (type : CoreTerm n) :
     context (.extend source type) =
-      .extend
-        (.extend
-          (.extend (context source) (original type))
-          ((primed type).weakenBy 1))
-        (Term.relatedDomain (termTranslation type)) :=
+      uωctx!{
+        %{context source},
+        originalValue : %{original type},
+        primedValue : %{(primed type).weakenBy 1},
+        relatedValue : %{Term.relatedDomain (termTranslation type)} } :=
   rfl
 
 example (level : Nat) :
@@ -778,28 +788,33 @@ example (index : Fin n) :
 
 example (function argument : CoreTerm n) :
     termTranslation (.app function argument) =
-      .app (.app (.app (termTranslation function) (original argument))
-        (primed argument)) (termTranslation argument) :=
+      uω!{
+        %{termTranslation function}
+          %{original argument} %{primed argument} %{termTranslation argument} } :=
   rfl
 
 example (domain : CoreTerm n) (body : CoreTerm (n + 1)) :
     termTranslation (.lam domain body) =
-      .lam (original domain)
-        (.lam ((primed domain).weakenBy 1)
-          (.lam (Term.relatedDomain (termTranslation domain))
-            (termTranslation body))) :=
+      uω!{
+        λ originalArgument : %{original domain},
+        λ primedArgument : %{(primed domain).weakenBy 1},
+        λ relatedArgument : %{Term.relatedDomain (termTranslation domain)},
+        %{termTranslation body} } :=
   rfl
 
 example (domain : CoreTerm n) (codomain : CoreTerm (n + 1)) :
     termTranslation (.pi domain codomain) =
-      .dependentProductPackage
-        (original domain) (primed domain)
-        (originalCodomain codomain) (primedCodomain codomain)
-        (termTranslation domain) (termTranslation codomain) :=
+      uω!{
+        pΠ[
+          (originalArgument : %{original domain}) ↦ %{originalCodomain codomain};
+          (primedArgument : %{primed domain}) ↦ %{primedCodomain codomain};
+          (relatedArgument : rel(%{termTranslation domain})
+            originalArgument primedArgument) ↦
+              %{termTranslation codomain}] } :=
   rfl
 
 example (type : CoreTerm n) :
-    typeTranslation type = .relationProjection (termTranslation type) :=
+    typeTranslation type = uω!{ rel(%{termTranslation type}) } :=
   rfl
 
 end DeepWiki.Refine.DependentCalculus.UnivalentParametricity

@@ -1,6 +1,7 @@
 import DeepWiki.Refine.Parametricity.Univalent.Package
 import DeepWiki.Refine.Parametricity.Univalent.QuotationSpec
 import DeepWiki.Refine.Parametricity.Univalent.Syntax
+import DeepWiki.Refine.Parametricity.Univalent.SurfaceSyntax
 import DeepWiki.Refine.Parametricity.Univalent.Realizers
 import DeepWiki.Refine.Parametricity.Univalent.Translation
 import DeepWiki.Refine.Parametricity.Univalent.Typing

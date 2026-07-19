@@ -1,4 +1,4 @@
-import DeepWiki.Refine.Parametricity.Univalent.Syntax
+import DeepWiki.Refine.Parametricity.Univalent.SurfaceSyntax
 import DeepWiki.Refine.PiRelationStructure
 import DeepWiki.Refine.UnivalentRelationStructure
 
@@ -121,23 +121,29 @@ namespace Term
 
 /-- The object-language type of level-`i` binary relations between two endpoint types. -/
 def relationType (level : Nat) (left right : Term n) : Term n :=
-  .pi left (.pi (right.rename DependentCalculus.Renaming.shift) (.sort level))
+  uω!{
+    Π leftValue : %{left},
+    Π rightValue : %{right.rename DependentCalculus.Renaming.shift},
+    □[level] }
 
 /-- Apply the level-indexed package family to two endpoint types. -/
 def packageType (level : Nat) (left right : Term n) : Term n :=
-  .app (.app (.packageFamily level) left) right
+  uω!{ Pkg[level] %{left} %{right} }
 
 /-- Apply a binary relation to its two endpoint terms. -/
 def relationApplication (relation left right : Term n) : Term n :=
-  .app (.app relation left) right
+  uω!{ %{relation} %{left} %{right} }
 
 /-- Project the binary relation carried by a package. -/
 def rel (package : Term n) : Term n :=
-  .relationProjection package
+  uω!{ rel(%{package}) }
 
 /-- Form the relation type of the two newest endpoint variables. -/
 def relatedDomain (package : Term n) : Term (n + 2) :=
-  relationApplication (.relationProjection (package.weakenBy 2)) (.var 1) (.var 0)
+  uω!{
+    rel(%{package.weakenBy 2})
+      %{(.var 1 : Term (n + 2))}
+      %{(.var 0 : Term (n + 2))} }
 
 /-- Relation types are natural under ambient renaming. -/
 theorem relationType_rename (level : Nat) (left right : Term source)
@@ -187,7 +193,7 @@ theorem relatedDomain_rename (package : Term source)
     (mapping : Renaming source target) :
     relatedDomain (package.rename mapping) =
       (relatedDomain package).rename (Renaming.liftBy mapping 2) := by
-  simp only [relatedDomain, relationApplication, rename, weakenBy_rename]
+  simp only [relatedDomain, rename, weakenBy_rename]
   rfl
 
 /-- The projected relation binder is natural under substitution of its ambient scope. -/
@@ -195,8 +201,7 @@ theorem relatedDomain_substitute (package : Term source)
     (mapping : Substitution source target) :
     relatedDomain (package.substitute mapping) =
       (relatedDomain package).substitute (Substitution.liftBy mapping 2) := by
-  simp only [relatedDomain, relationApplication, Term.substitute,
-    weakenBy_substitute]
+  simp only [relatedDomain, Term.substitute, weakenBy_substitute]
   congr 1
 
 /-- Relation types are natural under simultaneous substitution. -/
@@ -267,18 +272,17 @@ def dependentProductRelation
     (leftDomain rightDomain : Term n)
     (leftCodomain rightCodomain : Term (n + 1))
     (domainPackage : Term n) (codomainPackage : Term (n + 3)) : Term n :=
-  .lam (.pi leftDomain leftCodomain)
-    (.lam ((Term.pi rightDomain rightCodomain : Term n).weakenBy 1)
-      (.pi (leftDomain.weakenBy 2)
-        (.pi (rightDomain.weakenBy 3)
-          (.pi
-            (relationApplication
-              (.relationProjection (domainPackage.weakenBy 4)) (.var 1) (.var 0))
-            (relationApplication
-              (.relationProjection
-                (codomainPackage.rename insertTwoAfterThree))
-              (.app (.var 4) (.var 2))
-              (.app (.var 3) (.var 1)))))))
+  uω!{
+    λ leftFunction : (Π leftArgument : %{leftDomain}, %{leftCodomain}),
+    λ rightFunction :
+      %{(uω!{
+        Π rightArgument : %{rightDomain}, %{rightCodomain} }).weakenBy 1},
+    Π leftArgument : %{leftDomain.weakenBy 2},
+    Π rightArgument : %{rightDomain.weakenBy 3},
+    Π relatedArgument :
+      rel(%{domainPackage.weakenBy 4}) leftArgument rightArgument,
+    rel(%{codomainPackage.rename insertTwoAfterThree})
+      (leftFunction leftArgument) (rightFunction rightArgument) }
 
 /-- Contract a head relation projection from either canonical package constructor. -/
 def contractProjection : Term n → Term n
@@ -302,9 +306,12 @@ def contractProjection : Term n → Term n
     (leftCodomain rightCodomain : Term (n + 1))
     (domainPackage : Term n) (codomainPackage : Term (n + 3)) :
     contractProjection
-        (.relationProjection
-          (.dependentProductPackage leftDomain rightDomain leftCodomain rightCodomain
-            domainPackage codomainPackage)) =
+        (uω!{
+          rel(pΠ[
+            (leftValue : %{leftDomain}) ↦ %{leftCodomain};
+            (rightValue : %{rightDomain}) ↦ %{rightCodomain};
+            (relatedValue : rel(%{domainPackage}) leftValue rightValue) ↦
+              %{codomainPackage}]) }) =
       dependentProductRelation leftDomain rightDomain leftCodomain rightCodomain
         domainPackage codomainPackage :=
   rfl
@@ -321,9 +328,12 @@ example (leftDomain rightDomain : Term n)
     (leftCodomain rightCodomain : Term (n + 1))
     (domainPackage : Term n) (codomainPackage : Term (n + 3)) :
     Term.contractProjection
-        (.relationProjection
-          (.dependentProductPackage leftDomain rightDomain leftCodomain rightCodomain
-            domainPackage codomainPackage)) =
+        (uω!{
+          rel(pΠ[
+            (leftValue : %{leftDomain}) ↦ %{leftCodomain};
+            (rightValue : %{rightDomain}) ↦ %{rightCodomain};
+            (relatedValue : rel(%{domainPackage}) leftValue rightValue) ↦
+              %{codomainPackage}]) }) =
       Term.dependentProductRelation leftDomain rightDomain leftCodomain rightCodomain
         domainPackage codomainPackage :=
   rfl

@@ -1,4 +1,5 @@
 import DeepWiki.Refine.Parametricity.Univalent.Typing
+import DeepWiki.Refine.Parametricity.Univalent.SurfaceSyntax
 
 /-! # Relational cumulativity for univalent parametricity
 
@@ -10,15 +11,15 @@ namespace DeepWiki.Refine.DependentCalculus.UnivalentParametricity
 /-- The three-binder body exposed by projecting a translated `pΠ` package. -/
 def piRelationBody (domain : CoreTerm n) (codomain : CoreTerm (n + 1)) :
     Term (scopeSize n + 2) :=
-  .pi ((original domain).weakenBy 2)
-    (.pi ((primed domain).weakenBy 3)
-      (.pi
-        (Term.relationApplication
-          (Term.rel ((termTranslation domain).weakenBy 4)) (.var 1) (.var 0))
-        (Term.relationApplication
-          (Term.rel ((termTranslation codomain).rename insertTwoAfterThree))
-          (.app (.var 4) (.var 2))
-          (.app (.var 3) (.var 1)))))
+  let f0 : Term (scopeSize n + 5) := .var 4
+  let f1 : Term (scopeSize n + 5) := .var 3
+  uω!{
+    Π x0 : %{(original domain).weakenBy 2},
+    Π x1 : %{(primed domain).weakenBy 3},
+    Π xR : rel(%{(termTranslation domain).weakenBy 4}) x0 x1,
+    rel(%{(termTranslation codomain).rename insertTwoAfterThree})
+      (%{f0} x0)
+      (%{f1} x1) }
 
 /-- The relation fiber after substituting a function's two endpoint copies. -/
 def piRelationFiber (domain : CoreTerm n) (codomain : CoreTerm (n + 1))
@@ -115,18 +116,21 @@ theorem piRelationFiber_eq_substitute (domain : CoreTerm n)
 /-- Codomain relation before substituting an argument triple. -/
 def applicationRelationBody (function : CoreTerm n)
     (codomain : CoreTerm (n + 1)) : Term (scopeSize n + 3) :=
-  Term.relationApplication
-    (typeTranslation codomain)
-    (.app ((original function).weakenBy 3) (.var 2))
-    (.app ((primed function).weakenBy 3) (.var 1))
+  let x0 : Term (scopeSize n + 3) := .var 2
+  let x1 : Term (scopeSize n + 3) := .var 1
+  uω!{
+    %{typeTranslation codomain}
+      (%{(original function).weakenBy 3} %{x0})
+      (%{(primed function).weakenBy 3} %{x1}) }
 
 /-- Explicit beta-normal relation fiber of a translated dependent product. -/
 def piRelationFiberNormal (domain : CoreTerm n) (codomain : CoreTerm (n + 1))
     (function : CoreTerm n) : Term (scopeSize n) :=
-  .pi (original domain)
-    (.pi ((primed domain).weakenBy 1)
-      (.pi (Term.relatedDomain (termTranslation domain))
-        (applicationRelationBody function codomain)))
+  uω!{
+    Π x0 : %{original domain},
+    Π x1 : %{(primed domain).weakenBy 1},
+    Π xR : %{Term.relatedDomain (termTranslation domain)},
+    %{applicationRelationBody function codomain} }
 
 /-- The substitution presentation of a product fiber equals its explicit normal form. -/
 theorem piRelationFiber_eq_normal (domain : CoreTerm n)
@@ -200,9 +204,8 @@ theorem piRelationFiber_eq_normal (domain : CoreTerm n)
         (.var 1 : Term (scopeSize n + 3)) :=
     rfl
   rw [piRelationFiber_eq_substitute]
-  unfold piRelationBody piRelationFiberNormal applicationRelationBody
-  simp only [Term.substitute, Term.relatedDomain, Term.relationApplication,
-    typeTranslation, Term.rel]
+  unfold piRelationBody piRelationFiberNormal
+  simp only [Term.substitute]
   rw [originalDomain, primedDomain, domainRelation, codomainRelation,
     originalFunction, primedFunction, domainOriginalVariable,
     domainPrimedVariable, codomainOriginalVariable, codomainPrimedVariable]

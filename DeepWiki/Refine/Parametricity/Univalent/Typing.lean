@@ -1,4 +1,5 @@
 import DeepWiki.Refine.Parametricity.Univalent.Translation
+import DeepWiki.Refine.Parametricity.Univalent.SurfaceSyntax
 
 /-! # Typing for univalent parametricity
 
@@ -6,6 +7,8 @@ The extended `CCω` judgment types the concrete package primitives and derives t
 equation required by the univalent abstraction theorem. -/
 
 namespace DeepWiki.Refine.DependentCalculus.UnivalentParametricity
+
+open DeepWiki.Refine.DependentCalculus.UnivalentParametricity.SurfaceSyntax
 
 /-- Extend by an original endpoint, a primed endpoint, and their projected relation witness. -/
 def relationalExtend (context : Context n) (left right package : Term n) : Context (n + 3) :=
@@ -458,7 +461,7 @@ theorem weakenBy {left right : Term n} (conversion : Convertible left right)
 theorem relatedDomain {package package' : Term n}
     (conversion : Convertible package package') :
     Convertible (Term.relatedDomain package) (Term.relatedDomain package') := by
-  unfold Term.relatedDomain Term.relationApplication
+  unfold Term.relatedDomain
   exact ((conversion.weakenBy 2).relationProjection.appBoth (.refl _)).appBoth
     (.refl _)
 
@@ -804,6 +807,29 @@ mutual
 
 end
 
+/-- Elaborate a surface typing judgment directly to the extended `HasType` relation. -/
+syntax:20 "uω!{" uwctx " ⊢ " uwterm " : " uwterm "}" : term
+macro_rules
+  | `(uω!{ $context:uwctx ⊢ $term:uwterm : $type:uwterm }) => do
+      let (scope, contextSyntax) ← SurfaceSyntax.expandContext context
+      let termSyntax ← SurfaceSyntax.expandTerm scope term
+      let typeSyntax ← SurfaceSyntax.expandTerm scope type
+      `(DeepWiki.Refine.DependentCalculus.UnivalentParametricity.HasType
+        $contextSyntax $termSyntax $typeSyntax)
+
+/-- Elaborate surface definitional equality to the extended `Convertible` relation. -/
+syntax:20 "uω!{" uwctx " ⊢ " uwterm " ≡ " uwterm "}" : term
+macro_rules
+  | `(uω!{ $context:uwctx ⊢ $left:uwterm ≡ $right:uwterm }) => do
+      let (scope, contextSyntax) ← SurfaceSyntax.expandContext context
+      let leftSyntax ← SurfaceSyntax.expandTerm scope left
+      let rightSyntax ← SurfaceSyntax.expandTerm scope right
+      `(DeepWiki.Refine.DependentCalculus.UnivalentParametricity.Convertible
+        (DeepWiki.Refine.DependentCalculus.UnivalentParametricity.SurfaceSyntax.inContext
+          $contextSyntax $leftSyntax)
+        (DeepWiki.Refine.DependentCalculus.UnivalentParametricity.SurfaceSyntax.inContext
+          $contextSyntax $rightSyntax))
+
 /-- A typed context renaming preserves each source lookup after renaming. -/
 structure TypedRenaming (source : Context sourceSize) (target : Context targetSize)
     (mapping : Renaming sourceSize targetSize) : Prop where
@@ -944,10 +970,11 @@ private def dependentProductPackageComponentsConclusion
 /-- Typing a product term exposes universe typings for its domain and codomain. -/
 theorem piComponents {context : Context n} {domain : Term n}
     {codomain : Term (n + 1)} {type : Term n} :
-    HasType context (.pi domain codomain) type →
+    uω!{ %{context} ⊢ Π x : %{domain}, %{codomain} : %{type} } →
       ∃ domainLevel codomainLevel,
-        HasType context domain (.sort domainLevel) ∧
-          HasType (.extend context domain) codomain (.sort codomainLevel) := by
+        (uω!{ %{context} ⊢ %{domain} : □[domainLevel] }) ∧
+          (uω!{ %{context}, x : %{domain} ⊢
+            %{codomain} : □[codomainLevel] }) := by
   intro productWellTyped
   refine HasType.rec
     (motive_1 := fun _ _ => True)
@@ -970,10 +997,10 @@ theorem piComponents {context : Context n} {domain : Term n}
 
 /-- Typing an application exposes dependent-function and argument typings. -/
 theorem appComponents {context : Context n} {function argument type : Term n} :
-    HasType context (.app function argument) type →
+    uω!{ %{context} ⊢ %{function} %{argument} : %{type} } →
       ∃ domain codomain,
-        HasType context function (.pi domain codomain) ∧
-          HasType context argument domain := by
+        (uω!{ %{context} ⊢ %{function} : Π x : %{domain}, %{codomain} }) ∧
+          (uω!{ %{context} ⊢ %{argument} : %{domain} }) := by
   intro applicationWellTyped
   refine HasType.rec
     (motive_1 := fun _ _ => True)
@@ -997,11 +1024,11 @@ theorem appComponents {context : Context n} {function argument type : Term n} :
 /-- Typing a relation projection exposes its package and endpoint premises. -/
 theorem relationProjectionComponents
     {context : Context n} {package type : Term n} :
-    HasType context (.relationProjection package) type →
+    uω!{ %{context} ⊢ rel(%{package}) : %{type} } →
       ∃ level left right,
-        HasType context left (.sort level) ∧
-          HasType context right (.sort level) ∧
-            HasType context package (Term.packageType level left right) := by
+        (uω!{ %{context} ⊢ %{left} : □[level] }) ∧
+          (uω!{ %{context} ⊢ %{right} : □[level] }) ∧
+            (uω!{ %{context} ⊢ %{package} : Pkg[level] %{left} %{right} }) := by
   intro projectionWellTyped
   refine HasType.rec
     (motive_1 := fun _ _ => True)
@@ -1029,21 +1056,28 @@ theorem dependentProductPackageComponents
     {leftDomain rightDomain : Term n}
     {leftCodomain rightCodomain : Term (n + 1)}
     {domainPackage : Term n} {codomainPackage : Term (n + 3)} {type : Term n} :
-    HasType context
-      (.dependentProductPackage leftDomain rightDomain leftCodomain rightCodomain
-        domainPackage codomainPackage) type →
+    uω!{ %{context} ⊢
+      pΠ[(left : %{leftDomain}) ↦ %{leftCodomain};
+        (right : %{rightDomain}) ↦ %{rightCodomain};
+        (related : rel(%{domainPackage}) left right) ↦ %{codomainPackage}]
+      : %{type} } →
       ∃ domainLevel codomainLevel,
-        HasType context leftDomain (.sort domainLevel) ∧
-        HasType context rightDomain (.sort domainLevel) ∧
-        HasType (.extend context leftDomain) leftCodomain (.sort codomainLevel) ∧
-        HasType (.extend context rightDomain) rightCodomain (.sort codomainLevel) ∧
-        HasType context domainPackage
-          (Term.packageType domainLevel leftDomain rightDomain) ∧
-        HasType (relationalExtend context leftDomain rightDomain domainPackage)
-          codomainPackage
-          (Term.packageType codomainLevel
-            (leftCodomain.rename originalBinderRenaming)
-            (rightCodomain.rename primedBinderRenaming)) := by
+        (uω!{ %{context} ⊢ %{leftDomain} : □[domainLevel] }) ∧
+        (uω!{ %{context} ⊢ %{rightDomain} : □[domainLevel] }) ∧
+        (uω!{ %{context}, left : %{leftDomain} ⊢
+          %{leftCodomain} : □[codomainLevel] }) ∧
+        (uω!{ %{context}, right : %{rightDomain} ⊢
+          %{rightCodomain} : □[codomainLevel] }) ∧
+        (uω!{ %{context} ⊢ %{domainPackage} :
+          Pkg[domainLevel] %{leftDomain} %{rightDomain} }) ∧
+        (uω!{ %{context},
+          left : %{leftDomain},
+          right : %{rightDomain.rename DependentCalculus.Renaming.shift},
+          related : rel(%{domainPackage.weakenBy 2}) left right
+          ⊢ %{codomainPackage} :
+            Pkg[codomainLevel]
+              %{leftCodomain.rename originalBinderRenaming}
+              %{rightCodomain.rename primedBinderRenaming} }) := by
   intro packageWellTyped
   refine HasType.rec
     (motive_1 := fun _ _ => True)
@@ -1747,17 +1781,21 @@ end HasType
 theorem relationType_hasType {context : Context n} {left right : Term n}
     {leftLevel rightLevel relationLevel : Nat}
     (contextWellFormed : WellFormed context)
-    (leftWellTyped : HasType context left (.sort leftLevel))
-    (rightWellTyped : HasType context right (.sort rightLevel)) :
-    HasType context (Term.relationType relationLevel left right)
-      (.sort (max leftLevel (max rightLevel (relationLevel + 1)))) := by
+    (leftWellTyped : uω!{ %{context} ⊢ %{left} : □[leftLevel] })
+    (rightWellTyped : uω!{ %{context} ⊢ %{right} : □[rightLevel] }) :
+    uω!{ %{context} ⊢
+      Π leftTerm : %{left},
+        Π rightTerm : %{right.rename DependentCalculus.Renaming.shift},
+          □[relationLevel]
+      : □[max leftLevel (max rightLevel (relationLevel + 1))] } := by
   have leftExtended : WellFormed (.extend context left) :=
     .extend contextWellFormed leftWellTyped
   have rightWeakened :
       HasType (.extend context left)
         (right.rename DependentCalculus.Renaming.shift)
         (.sort rightLevel) := by
-    simpa only [Term.rename] using rightWellTyped.weaken leftExtended
+    simpa only [SurfaceSyntax.inContext, Term.rename] using
+      rightWellTyped.weaken leftExtended
   have endpointsExtended :
       WellFormed
         (.extend (.extend context left)
@@ -1766,17 +1804,19 @@ theorem relationType_hasType {context : Context n} {left right : Term n}
   have resultSort := HasType.sort endpointsExtended relationLevel
   have innerProduct := HasType.pi rightWeakened resultSort
   have outerProduct := HasType.pi leftWellTyped innerProduct
-  simpa only [Term.relationType, Nat.max_assoc] using outerProduct
+  simpa only [SurfaceSyntax.inContext, Term.relationType, Nat.max_assoc] using
+    outerProduct
 
 /-- Applying a typed binary relation to typed endpoints yields a universe inhabitant. -/
 theorem relationApplication_hasType {context : Context n}
     {relation left right leftTerm rightTerm : Term n} {level : Nat}
     (relationWellTyped :
-      HasType context relation (Term.relationType level left right))
-    (leftWellTyped : HasType context leftTerm left)
-    (rightWellTyped : HasType context rightTerm right) :
-    HasType context
-      (Term.relationApplication relation leftTerm rightTerm) (.sort level) := by
+      uω!{ %{context} ⊢ %{relation} :
+        Π leftTerm : %{left},
+          Π rightTerm : %{right.rename DependentCalculus.Renaming.shift}, □[level] })
+    (leftWellTyped : uω!{ %{context} ⊢ %{leftTerm} : %{left} })
+    (rightWellTyped : uω!{ %{context} ⊢ %{rightTerm} : %{right} }) :
+    uω!{ %{context} ⊢ %{relation} %{leftTerm} %{rightTerm} : □[level] } := by
   have appliedLeft := HasType.app relationWellTyped leftWellTyped
   have appliedLeft' :
       HasType context (.app relation leftTerm) (.pi right (.sort level)) := by
@@ -1787,20 +1827,20 @@ theorem relationApplication_hasType {context : Context n}
     rw [Term.instantiate_rename_shift] at appliedLeft
     exact appliedLeft
   have appliedRight := HasType.app appliedLeft' rightWellTyped
-  simpa only [Term.relationApplication, Term.instantiate, Term.substitute] using
-    appliedRight
+  simpa only [SurfaceSyntax.inContext, Term.relationApplication,
+    Term.instantiate, Term.substitute] using appliedRight
 
 /-- A package-family application is a type when both endpoints inhabit its universe. -/
 theorem packageType_hasType {context : Context n} {left right : Term n}
     {level : Nat} (contextWellFormed : WellFormed context)
-    (leftWellTyped : HasType context left (.sort level))
-    (rightWellTyped : HasType context right (.sort level)) :
-    HasType context (Term.packageType level left right) (.sort (level + 1)) := by
+    (leftWellTyped : uω!{ %{context} ⊢ %{left} : □[level] })
+    (rightWellTyped : uω!{ %{context} ⊢ %{right} : □[level] }) :
+    uω!{ %{context} ⊢ Pkg[level] %{left} %{right} : □[level + 1] } := by
   have family := HasType.packageFamily contextWellFormed level
   have firstApplication := HasType.app family leftWellTyped
   have secondApplication := HasType.app firstApplication rightWellTyped
-  simpa only [Term.packageType, Term.relationType, Term.instantiate,
-    Term.substitute, Term.rename] using secondApplication
+  simpa only [SurfaceSyntax.inContext, Term.packageType, Term.relationType,
+    Term.instantiate, Term.substitute, Term.rename] using secondApplication
 
 namespace HasType
 
@@ -1861,8 +1901,9 @@ end HasType
 
 /-- A universe-translated related-term type computes to its endpoint package type. -/
 theorem relatedTermType_sort_convertible (term : CoreTerm n) (level : Nat) :
-    Convertible (relatedTermType term (.sort level))
-      (Term.packageType level (original term) (primed term)) :=
+    Convertible
+      (uω!{ rel(p□[level]) %{original term} %{primed term} })
+      (uω!{ Pkg[level] %{original term} %{primed term} }) :=
   (Convertible.beta
     (BetaStep.universeProjection (n := scopeSize n) level)).appFunction.appFunction
 
@@ -1871,17 +1912,20 @@ theorem relatedTermType_sort_hasType
     {source : DependentCalculus.Context n}
     {term : CoreTerm n} {level : Nat}
     (translatedWellFormed : WellFormed (context source))
-    (originalWellTyped : HasType (context source) (original term) (.sort level))
-    (primedWellTyped : HasType (context source) (primed term) (.sort level)) :
-    HasType (context source) (relatedTermType term (.sort level))
-      (.sort (level + 1)) := by
+    (originalWellTyped :
+      uω!{ %{context source} ⊢ %{original term} : □[level] })
+    (primedWellTyped :
+      uω!{ %{context source} ⊢ %{primed term} : □[level] }) :
+    uω!{ %{context source} ⊢
+      rel(p□[level]) %{original term} %{primed term} : □[level + 1] } := by
   have package := HasType.universePackage translatedWellFormed level
   have universeType := HasType.sort translatedWellFormed level
   have projected :=
     HasType.relationProjection universeType universeType package
   have firstApplication := HasType.app projected originalWellTyped
   have secondApplication := HasType.app firstApplication primedWellTyped
-  simpa only [relatedTermType, typeTranslation, termTranslation_sort,
+  simpa only [SurfaceSyntax.inContext, relatedTermType, typeTranslation,
+    termTranslation_sort,
     Term.relationApplication, Term.rel, Term.packageType, Term.relationType,
     Term.instantiate, Term.substitute, Term.rename] using secondApplication
 
@@ -2084,17 +2128,17 @@ def translatedUniversePackageType (level : Nat) : Term n :=
 /-- The translated universe-package type is itself universe-typed. -/
 theorem translatedUniversePackageType_hasType {n : Nat} {context : Context n}
     (contextWellFormed : WellFormed context) (level : Nat) :
-    HasType context (translatedUniversePackageType (n := n) level)
-      (.sort (level + 2)) := by
+    uω!{ %{context} ⊢
+      rel(p□[level + 1]) □[level] □[level] : □[level + 2] } := by
   have higherPackage := HasType.universePackage contextWellFormed (level + 1)
   have higherSort := HasType.sort contextWellFormed (level + 1)
   have projected := HasType.relationProjection higherSort higherSort higherPackage
   have input := HasType.sort contextWellFormed level
   have firstApplication := HasType.app projected input
   have secondApplication := HasType.app firstApplication input
-  simpa only [translatedUniversePackageType, Term.relationType, Term.packageType,
-    Term.relationApplication, Term.rel, Term.instantiate, Term.substitute,
-    Term.rename] using secondApplication
+  simpa only [SurfaceSyntax.inContext, translatedUniversePackageType,
+    Term.relationType, Term.packageType, Term.relationApplication, Term.rel,
+    Term.instantiate, Term.substitute, Term.rename] using secondApplication
 
 /-- The translated universe-package type computes to the direct package-family application. -/
 theorem translatedUniversePackageType_convertible {n : Nat} (level : Nat) :
@@ -2105,8 +2149,8 @@ theorem translatedUniversePackageType_convertible {n : Nat} (level : Nat) :
 /-- The translated universe package has the translated successor-universe relation type. -/
 theorem universePackage_hasType_translatedUniverse {n : Nat} {context : Context n}
     (contextWellFormed : WellFormed context) (level : Nat) :
-    HasType context (.universePackage level)
-      (translatedUniversePackageType (n := n) level) :=
+    uω!{ %{context} ⊢ p□[level] :
+      rel(p□[level + 1]) □[level] □[level] } :=
   .conversion (.universePackage contextWellFormed level)
     (translatedUniversePackageType_hasType contextWellFormed level)
     (translatedUniversePackageType_convertible level).symm
@@ -2117,12 +2161,11 @@ theorem universeTypeTranslation_convertible {n : Nat} (level : Nat) :
   .beta (.universeProjection level)
 
 example :
-    HasType Context.empty (.universePackage 0)
-      (translatedUniversePackageType (n := 0) 0) :=
+    uω!{ ⟨⟩ ⊢ p□[0] : rel(p□[1]) □[0] □[0] } :=
   universePackage_hasType_translatedUniverse .empty 0
 
 example :
-    Convertible (typeTranslation (.sort 0 : CoreTerm 0)) (.packageFamily 0) :=
+    uω!{ ⟨⟩ ⊢ %{typeTranslation (.sort 0 : CoreTerm 0)} ≡ Pkg[0] } :=
   universeTypeTranslation_convertible 0
 
 end DeepWiki.Refine.DependentCalculus.UnivalentParametricity

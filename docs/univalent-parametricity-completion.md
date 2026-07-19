@@ -62,7 +62,7 @@ paper's earlier univalent theorem.
 - `PiRelationStructure.lean`: dependent respectful relations and the
   equivalence/univalence closure used by `pΠ`.
 - `Parametricity/Sequents/Univalent.lean`: the constructor-by-constructor
-  Figure 2 shape, currently abstract over unrealized syntax constructors.
+  Figure 2 shape, abstract over its `SyntaxRealizers` interface.
 - `Parametricity/Raw/*`: raw syntax translation, renaming/substitution,
   formation typing, and abstraction infrastructure to reuse rather than clone.
 - `Annotated/Quotation/*`: a later quotation design and projection beta laws;
@@ -73,25 +73,28 @@ paper's earlier univalent theorem.
 1. `Parametricity/Univalent/Syntax.lean`
    - intrinsically scoped extended terms and contexts;
    - renaming, substitution, weakening, and instantiation laws.
-2. `Parametricity/Univalent/Realizers.lean`
+2. `Parametricity/Univalent/SurfaceSyntax.lean`
+   - named target-language terms and contexts;
+   - surface forms for `Pkg`, `p□`, `pΠ`, and relation projection.
+3. `Parametricity/Univalent/Realizers.lean`
    - semantic dependent-product package;
    - concrete quoted `p□`, `pΠ`, and `rel` constructors;
    - definitional projection equations.
-3. `Parametricity/Univalent/Translation.lean`
+4. `Parametricity/Univalent/Translation.lean`
    - package-valued term translation `[t]` for every CCω constructor;
    - relation-valued type translation `rel ([A])`;
    - renaming and substitution compatibility.
-4. `Parametricity/Univalent/Typing.lean`
+5. `Parametricity/Univalent/Typing.lean`
    - typing rules for the extended primitives;
    - preservation for both Figure 2 translations;
    - Equation (17), including its judgment and definitional equality.
-5. `Parametricity/Univalent/RelationalCumulativity.lean`
+6. `Parametricity/Univalent/RelationalCumulativity.lean`
    - normalization of projected dependent-product relation fibers;
    - preservation of source cumulativity by applied univalent relations.
-6. `Parametricity/Univalent/Abstraction.lean`
+7. `Parametricity/Univalent/Abstraction.lean`
    - the full dependent fundamental lemma/abstraction theorem;
    - Theorem 3.6 as the paper-facing corollary.
-7. `Parametricity/Univalent.lean`
+8. `Parametricity/Univalent.lean`
    - ordered public aggregator for the completed stack.
 
 The completed implementation exposes renaming and substitution as a cohesive support layer in
