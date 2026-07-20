@@ -191,6 +191,16 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `toPolynomial_ne_zero` + `div_add_div`). **← NEXT: 4c tower iteration** — build the depth-`n`
     carrier `ℚ(x)(t₁)…(tₙ)` by iterating `DenseFrac`/`DensePoly` over the previous level, bridging
     each level to the corresponding `RatFunc` tower. Then Phase 5 (derivations).
+  - **4d DONE (2026-07-20):** `Frac/Canonical.lean` — canonical fraction form via the gcd stack:
+    `DenseFrac.reduce` (divide out `gcd`, monic-normalize the denominator, zero denominators
+    collapse to `0/1`) with `toRatFunc_reduce` (denotation preserved),
+    `reduce_den_leadingCoeff`/`reduce_den_ne_zero` (monic), `isCoprime_reduce` (coprime, via
+    unit-gcd cancellation + Bézout through the `EuclideanDomain` instance). Exact division is
+    Mathlib's `EuclideanDomain.mul_div_cancel'` through our instance — no new division lemmas.
+    ★ Lean lesson: `set`-abstract `g`/`n'`/`d'` before rewriting — raw `rw [← hnum]` also rewrites
+    the `f.num` inside `gcd f.num f.den` (garbage), and dvd-goals over nested WF `gcd` terms send
+    `whnf` into timeout. REMAINING for the full `≃+* RatFunc`: uniqueness of the canonical form
+    (`toRatFunc f = toRatFunc g → reduce f = reduce g`), then the subtype ring iso.
   - **4c-i DONE, module since removed (2026-07-20, user):** `Poly/Tower.lean` validated the depth-2
     tower — `DensePoly (DensePoly R)` a `CommRing` by iterating the instance, and the generic
     `equivTower2 : DensePoly (DensePoly R) ≃+* Polynomial (Polynomial R)` composing the level-2 iso
