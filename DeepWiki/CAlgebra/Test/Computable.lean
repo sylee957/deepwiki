@@ -1,6 +1,6 @@
 import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
-import DeepWiki.CAlgebra.Poly.GcdSubresultant
+import DeepWiki.CAlgebra.Gcd
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Frac.Basic
 import DeepWiki.CAlgebra.Frac.Field

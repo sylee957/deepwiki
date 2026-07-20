@@ -1,6 +1,6 @@
 import DeepWiki.Refine.Poly
 import DeepWiki.Refine.Goal
-import DeepWiki.CAlgebra.Poly.Gcd
+import DeepWiki.CAlgebra.Gcd
 
 /-! # Transferring `gcd` up to units
 

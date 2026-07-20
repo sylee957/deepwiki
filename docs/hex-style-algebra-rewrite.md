@@ -167,6 +167,12 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     every proof — algorithm choice is pure performance policy. ★ Lint lesson: a section-variable
     `[DensePolyGcd R]` auto-includes into theorems that don't use it → `omit [DensePolyGcd R] in`
     per theorem.
+  - **2i DONE (2026-07-21, user): gcd area directory.** The gcd family moves to its own area per
+    the subdirectory grammar: `CAlgebra/Gcd.lean` (the `DensePolyGcd` class = area root/aggregator)
+    over `CAlgebra/Gcd/{Euclid,Subresultant}.lean` (leaves drop the implied `Gcd` prefix). The
+    ED-agreement theorem `euclideanDomain_gcd_associated_gcdEuclid` migrated `Poly/Euclid` →
+    `Gcd/Euclid` so `Poly/` is gcd-free (pure carrier/division/instance layer). Import-only reorg,
+    zero declaration changes.
   - **2g DONE (2026-07-20): division/gcd file reorg** (zero declaration changes, user layout):
     `Poly/Division.lean` (long division), `Poly/DivisionPseudo.lean` (renamed from
     `PseudoDivision.lean`), `Poly/Gcd.lean` (Euclidean gcd + universal property + Mathlib bridge),

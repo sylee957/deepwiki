@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Poly.Division
+import DeepWiki.CAlgebra.Poly.Euclid
 import Mathlib.Algebra.Polynomial.FieldDivision
 
 /-! # Polynomial gcd via the Euclidean algorithm
@@ -54,6 +54,14 @@ theorem dvd_gcdEuclid {d : DensePoly R} : ∀ p q, d ∣ p → d ∣ q → d ∣
       refine ih hq ?_
       rw [mod_eq_sub]
       exact dvd_sub hp (hq.mul_left (div p q))
+
+/-- Mathlib's generic Euclidean-domain gcd and the executable `gcdEuclid` agree up to a unit (both
+satisfy the same universal property). -/
+theorem euclideanDomain_gcd_associated_gcdEuclid (p q : DensePoly R) :
+    Associated (EuclideanDomain.gcd p q) (gcdEuclid p q) :=
+  associated_of_dvd_dvd
+    (dvd_gcdEuclid p q (EuclideanDomain.gcd_dvd_left p q) (EuclideanDomain.gcd_dvd_right p q))
+    (EuclideanDomain.dvd_gcd (gcdEuclid_dvd_left p q) (gcdEuclid_dvd_right p q))
 
 end DensePoly
 

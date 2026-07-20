@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Poly.Gcd
+import DeepWiki.CAlgebra.Gcd
 import Mathlib.FieldTheory.RatFunc.Basic
 
 /-! # Canonical computable rational functions (`DenseFrac`)

@@ -1,5 +1,5 @@
-import DeepWiki.CAlgebra.Poly.Euclid
-import DeepWiki.CAlgebra.Poly.GcdSubresultant
+import DeepWiki.CAlgebra.Gcd.Euclid
+import DeepWiki.CAlgebra.Gcd.Subresultant
 
 /-! # The dense-polynomial gcd interface (`DensePolyGcd`)
 

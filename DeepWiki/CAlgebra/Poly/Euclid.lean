@@ -1,10 +1,10 @@
-import DeepWiki.CAlgebra.Poly.GcdEuclid
+import DeepWiki.CAlgebra.Poly.Division
+import Mathlib.Algebra.Polynomial.FieldDivision
 
 /-! # `DensePoly` over a field as a Euclidean domain
 
 The computable `EuclideanDomain (DensePoly R)` instance — division data is the executable
-`div`/`mod`, the Euclidean measure is `size` — with the size lemmas backing it, and the agreement
-of Mathlib's generic `EuclideanDomain.gcd` with the executable `gcd`. -/
+`div`/`mod`, the Euclidean measure is `size` — with the size lemmas backing it. -/
 
 namespace DeepWiki.CAlgebra
 
@@ -67,13 +67,6 @@ instance : EuclideanDomain (DensePoly R) :=
         have hbs : b.size ≠ 0 := fun h0 => hb (eq_zero_of_size_zero h0)
         omega }
 
-/-- Mathlib's generic Euclidean-domain gcd and the executable `gcdEuclid` agree up to a unit (both
-satisfy the same universal property). -/
-theorem euclideanDomain_gcd_associated_gcdEuclid (p q : DensePoly R) :
-    Associated (EuclideanDomain.gcd p q) (gcdEuclid p q) :=
-  associated_of_dvd_dvd
-    (dvd_gcdEuclid p q (EuclideanDomain.gcd_dvd_left p q) (EuclideanDomain.gcd_dvd_right p q))
-    (EuclideanDomain.dvd_gcd (gcdEuclid_dvd_left p q) (gcdEuclid_dvd_right p q))
 
 end DensePoly
 
