@@ -214,9 +214,18 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     ★ REVISED (2026-07-21, user): raw `DenseFrac` is NOT an engine-facing carrier — unreduced
     arithmetic grows exponentially under iteration (measured: 8 iterations of `f := f + f` from
     `1/(x+1)` give a degree-256 raw denominator vs the canonical `256/(x+1)`), matching why CAS
-    fraction arithmetic normalizes eagerly. `CanonicalFrac` is THE fraction carrier; `DenseFrac`
-    survives only as the representation layer (subtype base, `reduce`'s domain, one-step ops that
-    the canonical ops renormalize).
+    fraction arithmetic normalizes eagerly.
+  - **4f DONE (2026-07-21, user): raw/canonical MERGED — canonicality encoded directly on
+    `DenseFrac`.** The raw pair type and `CanonicalFrac` subtype are gone; `DenseFrac R` (now
+    `[Field R]`) bundles `monic_den` + `coprime` as structure fields (the `DensePoly`/`Normalized`
+    pattern one level up), with smart constructor `normalize (n d : DensePoly R)` (private
+    `normNum`/`normDen` components; zero denominators ↦ `0/1`). `Frac/Basic.lean` = type +
+    `normalize` + denotation + uniqueness (`toRatFunc_injective`) + renormalizing ops +
+    unconditional hom squares (`neg` is componentwise — no renormalization); `Frac/Field.lean` =
+    computable `CommRing`/`Field` instances + `equivRatFunc : DenseFrac R ≃+* RatFunc R`.
+    `Frac/Canonical.lean`/`Frac/CanonicalField.lean` deleted; `reduce`/`Eqv`/`IsCanonical` folded
+    in (`Eqv`'s bridge survives as `div_eq_div_iff_cross` on components). The old engine's
+    `SymbolicIntegration.DenseFrac` is an unrelated namespace — untouched.
   - **4c-i DONE, module since removed (2026-07-20, user):** `Poly/Tower.lean` validated the depth-2
     tower — `DensePoly (DensePoly R)` a `CommRing` by iterating the instance, and the generic
     `equivTower2 : DensePoly (DensePoly R) ≃+* Polynomial (Polynomial R)` composing the level-2 iso

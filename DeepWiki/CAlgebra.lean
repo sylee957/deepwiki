@@ -9,8 +9,7 @@ import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Matrix.Dense
 import DeepWiki.CAlgebra.Matrix.Sylvester
 import DeepWiki.CAlgebra.Frac.Basic
-import DeepWiki.CAlgebra.Frac.Canonical
-import DeepWiki.CAlgebra.Frac.CanonicalField
+import DeepWiki.CAlgebra.Frac.Field
 import DeepWiki.CAlgebra.Diff.Basic
 import DeepWiki.CAlgebra.Test.Computable
 

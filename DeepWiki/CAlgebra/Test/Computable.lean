@@ -3,8 +3,7 @@ import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Poly.GcdSubresultant
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Frac.Basic
-import DeepWiki.CAlgebra.Frac.Canonical
-import DeepWiki.CAlgebra.Frac.CanonicalField
+import DeepWiki.CAlgebra.Frac.Field
 
 /-! # Computability guards
 
@@ -69,19 +68,17 @@ private def euclideanDomainGcd [Field R] [DecidableEq R] :
 
 /-! ### Rational-function carrier operations -/
 
-/-- Rational-function multiplication (carrier) is computable. -/
-private def fracMul [CommRing R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· * ·)
-/-- Rational-function addition (carrier) is computable. -/
-private def fracAdd [CommRing R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· + ·)
 /-- Fraction canonicalization (gcd-reduce + monic denominator) is computable. -/
-private def fracReduce [Field R] [DecidableEq R] : DenseFrac R → DenseFrac R := DenseFrac.reduce
-/-- Canonical-field addition (renormalizing through `reduce`) is computable. -/
-private def canonicalAdd [Field R] [DecidableEq R] :
-    CanonicalFrac R → CanonicalFrac R → CanonicalFrac R := (· + ·)
-/-- Canonical-field inversion is computable. -/
-private def canonicalInv [Field R] [DecidableEq R] : CanonicalFrac R → CanonicalFrac R := (·⁻¹)
+private def fracNormalize [Field R] [DecidableEq R] :
+    DensePoly R → DensePoly R → DenseFrac R := DenseFrac.normalize
+/-- Canonical-fraction multiplication (renormalizing) is computable. -/
+private def fracMul [Field R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· * ·)
+/-- Canonical-fraction addition (renormalizing) is computable. -/
+private def fracAdd [Field R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· + ·)
+/-- Canonical-fraction inversion is computable. -/
+private def fracInv [Field R] [DecidableEq R] : DenseFrac R → DenseFrac R := (·⁻¹)
 /-- Semantic equality of rational functions is decidable on the canonical carrier. -/
-private def canonicalEq [Field R] [DecidableEq R] : CanonicalFrac R → CanonicalFrac R → Bool :=
+private def fracEq [Field R] [DecidableEq R] : DenseFrac R → DenseFrac R → Bool :=
   fun a b => decide (a = b)
 
 end
