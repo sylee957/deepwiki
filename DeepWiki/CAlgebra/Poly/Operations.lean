@@ -297,9 +297,32 @@ theorem dvd_of_toPolynomial_dvd {p q : DensePoly R}
     toPolynomial p ∣ toPolynomial q ↔ p ∣ q :=
   ⟨dvd_of_toPolynomial_dvd, toPolynomial_dvd⟩
 
+/-! ### Structure classes transported through the bridge -/
+
+/-- `DensePoly R` is nontrivial when `R` is (transported through `equiv`). -/
+instance [Nontrivial R] : Nontrivial (DensePoly R) :=
+  (equiv (R := R)).toEquiv.nontrivial
+
+/-- `DensePoly R` has no zero divisors when `R` is a domain (transported through `toPolynomial`). -/
+instance [IsDomain R] : NoZeroDivisors (DensePoly R) where
+  eq_zero_or_eq_zero_of_mul_eq_zero {p q} h := by
+    have hpq : toPolynomial p * toPolynomial q = 0 := by
+      rw [← toPolynomial_mul, h, toPolynomial_zero]
+    rcases mul_eq_zero.mp hpq with hp | hq
+    · exact Or.inl (toPolynomial_injective (by rw [hp, toPolynomial_zero]))
+    · exact Or.inr (toPolynomial_injective (by rw [hq, toPolynomial_zero]))
+
+/-- `DensePoly R` is an integral domain when `R` is. -/
+instance [IsDomain R] : IsDomain (DensePoly R) :=
+  NoZeroDivisors.to_isDomain _
+
 /-- Validation: `equiv` is a ring iso and divisibility reflects. -/
 example (p q : DensePoly R) : equiv (p * q) = equiv p * equiv q := map_mul equiv p q
 example : Function.Bijective (equiv (R := R)) := equiv.bijective
 example (p q : DensePoly R) : p ∣ q ↔ toPolynomial p ∣ toPolynomial q := toPolynomial_dvd_iff.symm
+
+/-- Validation: generic Mathlib domain theorems fire at `DensePoly` through the instances. -/
+example [IsDomain R] (p q : DensePoly R) (hp : p ≠ 0) (hq : q ≠ 0) : p * q ≠ 0 :=
+  mul_ne_zero hp hq
 
 end DeepWiki.CAlgebra
