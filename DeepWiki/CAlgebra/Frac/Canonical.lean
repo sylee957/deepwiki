@@ -46,15 +46,8 @@ theorem toRatFunc_reduce (f : DenseFrac R) : toRatFunc (reduce f) = toRatFunc f 
     have hc : d'.leadingCoeff ≠ 0 :=
       leadingCoeff_ne_zero fun h0 => hd'0 (eq_zero_of_size_zero h0)
     set c := d'.leadingCoeff with hcdef
-    simp only [toRatFunc]
-    have hB : algebraMap (Polynomial R) (RatFunc R) (toPolynomial (C c⁻¹ * d')) ≠ 0 :=
-      RatFunc.algebraMap_ne_zero (by
-        rw [toPolynomial_mul, toPolynomial_C]
-        exact mul_ne_zero (Polynomial.C_ne_zero.mpr (inv_ne_zero hc)) (toPolynomial_ne_zero hd'0))
-    have hD : algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.den) ≠ 0 :=
-      RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero hd)
-    rw [div_eq_div_iff hB hD, ← map_mul, ← map_mul, ← toPolynomial_mul, ← toPolynomial_mul]
-    suffices h : C c⁻¹ * n' * f.den = f.num * (C c⁻¹ * d') by rw [h]
+    rw [toRatFunc_eq_iff_eqv (mul_ne_zero (C_ne_zero (inv_ne_zero hc)) hd'0) hd]
+    show C c⁻¹ * n' * f.den = f.num * (C c⁻¹ * d')
     rw [← hnum, ← hden]
     ring
 
@@ -153,19 +146,8 @@ theorem eq_of_toRatFunc_eq {f g : DenseFrac R} (hf : f.IsCanonical) (hg : g.IsCa
     (h : toRatFunc f = toRatFunc g) : f = g := by
   have hfd := hf.den_ne_zero
   have hgd := hg.den_ne_zero
-  -- cross-multiplied polynomial identity
-  have key : f.num * g.den = g.num * f.den := by
-    apply toPolynomial_injective
-    rw [toPolynomial_mul, toPolynomial_mul]
-    apply IsFractionRing.injective (Polynomial R) (RatFunc R)
-    rw [map_mul, map_mul]
-    have hF : algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.den) ≠ 0 :=
-      RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero hfd)
-    have hG : algebraMap (Polynomial R) (RatFunc R) (toPolynomial g.den) ≠ 0 :=
-      RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero hgd)
-    have h' := h
-    simp only [toRatFunc] at h'
-    rwa [div_eq_div_iff hF hG] at h'
+  -- cross-multiplied polynomial identity, via the pairwise equivalence
+  have key : f.num * g.den = g.num * f.den := (toRatFunc_eq_iff_eqv hfd hgd).mp h
   -- the denominators divide each other via the coprimality certificates
   have h12 : f.den ∣ g.den := by
     apply hf.2.symm.dvd_of_dvd_mul_left

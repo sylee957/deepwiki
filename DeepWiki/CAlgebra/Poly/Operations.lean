@@ -153,6 +153,10 @@ theorem coeff_C_mul (c : R) (p : DensePoly R) (n : Nat) :
 theorem C_mul (a b : R) : (C (a * b) : DensePoly R) = C a * C b := by
   ext n; rw [coeff_C, coeff_C_mul, coeff_C, mul_ite, mul_zero]
 
+/-- Nonzero constants embed to nonzero polynomials. -/
+theorem C_ne_zero {c : R} (hc : c ≠ 0) : (C c : DensePoly R) ≠ 0 := fun h0 =>
+  hc (by simpa using congrArg (fun p => p.coeff 0) h0)
+
 /-- Constant multiplication never increases the stored size. -/
 theorem size_C_mul_le (c : R) (p : DensePoly R) : (C c * p).size ≤ p.size :=
   size_le_of_coeff_zero fun j hj => by

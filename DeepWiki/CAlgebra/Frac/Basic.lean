@@ -64,6 +64,14 @@ instance : Add (DenseFrac R) where add := add
 theorem add_def (f g : DenseFrac R) :
     f + g = ⟨f.num * g.den + g.num * f.den, f.den * g.den⟩ := rfl
 
+/-- Pairwise (cross-multiplication) equivalence of raw fractions: semantic equality of the pairs,
+expressible without normalization. -/
+def Eqv (f g : DenseFrac R) : Prop := f.num * g.den = g.num * f.den
+
+/-- Pairwise equivalence is decidable (one multiplication and a structural comparison — no gcd). -/
+instance (f g : DenseFrac R) : Decidable (f.Eqv g) :=
+  inferInstanceAs (Decidable (_ = _))
+
 end DenseFrac
 end Carrier
 
@@ -117,6 +125,19 @@ theorem toRatFunc_add (f g : DenseFrac R) (hf : f.den ≠ 0) (hg : g.den ≠ 0) 
   simp only [toPolynomial_add, toPolynomial_mul, map_add, map_mul]
   congr 1
   ring
+
+/-- For nonzero denominators, the `RatFunc` denotations agree iff the pairs are
+cross-multiplication equivalent: `Eqv` is exactly denotational equality. -/
+theorem toRatFunc_eq_iff_eqv {f g : DenseFrac R} (hf : f.den ≠ 0) (hg : g.den ≠ 0) :
+    toRatFunc f = toRatFunc g ↔ f.Eqv g := by
+  have hF : algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.den) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero hf)
+  have hG : algebraMap (Polynomial R) (RatFunc R) (toPolynomial g.den) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero hg)
+  simp only [toRatFunc]
+  rw [div_eq_div_iff hF hG, ← map_mul, ← map_mul, ← toPolynomial_mul, ← toPolynomial_mul]
+  exact ((IsFractionRing.injective (Polynomial R) (RatFunc R)).comp
+    toPolynomial_injective).eq_iff
 
 /-- Validation: `toRatFunc` is a ring homomorphism into the rational-function field. -/
 example (f g : DenseFrac R) (hf : f.den ≠ 0) (hg : g.den ≠ 0) :
