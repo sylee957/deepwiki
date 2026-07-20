@@ -28,7 +28,7 @@ theorem dvd_of_dvd_C_mul {c : R} (hc : c ≠ 0) {d p : DensePoly R} (hd : d ∣ 
 
 /-- Subresultant-PRS accumulator: `g` is the previous divisor's leading coefficient and `h` the
 running subresultant `h`-value; each pseudo-remainder is divided by `β = (−1)^(δ+1) · g · h^δ`. -/
-def gcdSubAux (r₁ r₂ : DensePoly R) (g h : R) : DensePoly R :=
+private def gcdSubAux (r₁ r₂ : DensePoly R) (g h : R) : DensePoly R :=
   if r₂.size = 0 then r₁
   else
     gcdSubAux r₂
@@ -46,7 +46,7 @@ def gcdSubresultant (p q : DensePoly R) : DensePoly R := gcdSubAux p q 1 1
 
 /-- The accumulator divides both sequence entries when `g` and `h` are nonzero (each `β` is then a
 unit constant, so pseudo-division steps preserve divisors up to units). -/
-theorem gcdSubAux_dvd (r₁ r₂ : DensePoly R) (g h : R) (hg : g ≠ 0) (hh : h ≠ 0) :
+private theorem gcdSubAux_dvd (r₁ r₂ : DensePoly R) (g h : R) (hg : g ≠ 0) (hh : h ≠ 0) :
     gcdSubAux r₁ r₂ g h ∣ r₁ ∧ gcdSubAux r₁ r₂ g h ∣ r₂ := by
   revert hg hh
   induction r₁, r₂, g, h using gcdSubAux.induct with
@@ -74,7 +74,7 @@ theorem gcdSubAux_dvd (r₁ r₂ : DensePoly R) (g h : R) (hg : g ≠ 0) (hh : h
 
 /-- Any common divisor of the sequence entries divides the accumulator (no side conditions:
 this direction never cancels a constant). -/
-theorem dvd_gcdSubAux {d : DensePoly R} (r₁ r₂ : DensePoly R) (g h : R)
+private theorem dvd_gcdSubAux {d : DensePoly R} (r₁ r₂ : DensePoly R) (g h : R)
     (h₁ : d ∣ r₁) (h₂ : d ∣ r₂) : d ∣ gcdSubAux r₁ r₂ g h := by
   revert h₁ h₂
   induction r₁, r₂, g, h using gcdSubAux.induct with

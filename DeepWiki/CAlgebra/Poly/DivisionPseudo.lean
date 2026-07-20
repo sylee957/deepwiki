@@ -18,7 +18,7 @@ variable {R : Type u} [CommRing R] [DecidableEq R]
 
 /-- Pseudo-division accumulator: `n` premultiplications by `b` remain; once the remainder drops
 below the divisor the unused ones are applied at once, keeping the total power exact. -/
-def pseudoDivModAux (q : DensePoly R) (b : R) :
+private def pseudoDivModAux (q : DensePoly R) (b : R) :
     Nat → DensePoly R → DensePoly R → DensePoly R × DensePoly R
   | 0, quot, r => (quot, r)
   | n + 1, quot, r =>
@@ -40,7 +40,7 @@ def pseudoDiv (p q : DensePoly R) : DensePoly R := (pseudoDivMod p q).1
 def pseudoMod (p q : DensePoly R) : DensePoly R := (pseudoDivMod p q).2
 
 /-- The accumulator invariant: the result pair reconstructs `b ^ n` times the input state. -/
-theorem pseudoDivModAux_spec (q : DensePoly R) (b : R) (n : Nat) :
+private theorem pseudoDivModAux_spec (q : DensePoly R) (b : R) (n : Nat) :
     ∀ quot r, (pseudoDivModAux q b n quot r).1 * q + (pseudoDivModAux q b n quot r).2
       = C (b ^ n) * (quot * q + r) := by
   induction n with
@@ -101,7 +101,7 @@ theorem pseudoStep_size_lt {q r : DensePoly R} (hq : q.size ≠ 0) (hr : q.size 
   omega
 
 /-- The accumulator's remainder drops below the divisor once enough steps are available. -/
-theorem pseudoDivModAux_rem_size_lt {q : DensePoly R} (hq : q.size ≠ 0) (n : Nat) :
+private theorem pseudoDivModAux_rem_size_lt {q : DensePoly R} (hq : q.size ≠ 0) (n : Nat) :
     ∀ quot r, r.size < q.size + n →
       (pseudoDivModAux q q.leadingCoeff n quot r).2.size < q.size := by
   induction n with

@@ -37,9 +37,7 @@ instance : EuclideanDomain (DensePoly R) :=
   { (inferInstance : CommRing (DensePoly R)),
     (inferInstance : Nontrivial (DensePoly R)) with
     quotient := div
-    quotient_zero := fun p => by
-      simp only [div, divMod]
-      rw [divModAux.eq_def, if_pos (Or.inr size_zero)]
+    quotient_zero := div_zero
     remainder := mod
     quotient_mul_add_remainder_eq := fun a b => by
       rw [mul_comm]; exact divMod_spec a b
