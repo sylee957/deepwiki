@@ -160,10 +160,11 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `toPolynomial_ne_zero` + `div_add_div`). **← NEXT: 4c tower iteration** — build the depth-`n`
     carrier `ℚ(x)(t₁)…(tₙ)` by iterating `DenseFrac`/`DensePoly` over the previous level, bridging
     each level to the corresponding `RatFunc` tower. Then Phase 5 (derivations).
-  - **4c-i DONE:** `Poly/Tower.lean` — concrete depth-2 validation: `DensePoly (DensePoly ℚ)` is a
-    `CommRing` by iterating the instance, and `equivTower2 : DensePoly (DensePoly ℚ) ≃+* ℚ[X][X]`
-    composes the level-2 iso with `Polynomial.mapEquiv` of the level-1 iso (bijective). Confirms the
-    tower carrier + bridge iterate.
+  - **4c-i DONE, module since removed (2026-07-20, user):** `Poly/Tower.lean` validated the depth-2
+    tower — `DensePoly (DensePoly R)` a `CommRing` by iterating the instance, and the generic
+    `equivTower2 : DensePoly (DensePoly R) ≃+* Polynomial (Polynomial R)` composing the level-2 iso
+    with `Polynomial.mapEquiv` of the level-1 iso. Validation served its purpose; the file was
+    deleted (no consumers). 4c-ii's generic depth-`n` carrier re-establishes the iso when built.
     - ★ FINDING (2026-07-13, now FIXED): the `CommRing (DensePoly R)` instance WAS noncomputable
       because it used `Function.Injective.commRing` (itself noncomputable — no compiled stage) with
       bridge-routed aux ops. **FIX (user directive "don't bundle Mathlib uncomputable ones"):**

@@ -316,13 +316,4 @@ instance [IsDomain R] : NoZeroDivisors (DensePoly R) where
 instance [IsDomain R] : IsDomain (DensePoly R) :=
   NoZeroDivisors.to_isDomain _
 
-/-- Validation: `equiv` is a ring iso and divisibility reflects. -/
-example (p q : DensePoly R) : equiv (p * q) = equiv p * equiv q := map_mul equiv p q
-example : Function.Bijective (equiv (R := R)) := equiv.bijective
-example (p q : DensePoly R) : p ∣ q ↔ toPolynomial p ∣ toPolynomial q := toPolynomial_dvd_iff.symm
-
-/-- Validation: generic Mathlib domain theorems fire at `DensePoly` through the instances. -/
-example [IsDomain R] (p q : DensePoly R) (hp : p ≠ 0) (hq : q ≠ 0) : p * q ≠ 0 :=
-  mul_ne_zero hp hq
-
 end DeepWiki.CAlgebra
