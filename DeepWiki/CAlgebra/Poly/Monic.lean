@@ -33,6 +33,12 @@ instance : DecidableEq (DensePolyMonic R) := fun a b =>
   | isTrue h => isTrue (ext h)
   | isFalse h => isFalse fun hh => h (congrArg toPoly hh)
 
+/-- A monic polynomial is nonzero (in a nontrivial ring). -/
+theorem ne_zero [Nontrivial R] (p : DensePolyMonic R) : p.toPoly ≠ 0 := fun h0 => by
+  have h := p.monic
+  rw [h0, DensePoly.leadingCoeff_zero] at h
+  exact zero_ne_one h
+
 end CommRing
 
 section Field
@@ -43,12 +49,6 @@ variable {R : Type u} [Field R] [DecidableEq R]
 instance : One (DensePolyMonic R) := ⟨1, DensePoly.leadingCoeff_one⟩
 
 @[simp] theorem toPoly_one : (1 : DensePolyMonic R).toPoly = 1 := rfl
-
-/-- A monic polynomial is nonzero. -/
-theorem ne_zero (p : DensePolyMonic R) : p.toPoly ≠ 0 := fun h0 => by
-  have h := p.monic
-  rw [h0, DensePoly.leadingCoeff_zero] at h
-  exact zero_ne_one h
 
 /-- Monic polynomials are closed under multiplication. -/
 instance : Mul (DensePolyMonic R) :=

@@ -1,6 +1,7 @@
 import DeepWiki.CAlgebra.Poly.Dense
 import DeepWiki.CAlgebra.Poly.Operations
 import DeepWiki.CAlgebra.Poly.Division
+import DeepWiki.CAlgebra.Poly.DivisionMonic
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Poly.Monic

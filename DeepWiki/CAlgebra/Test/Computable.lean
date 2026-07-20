@@ -1,4 +1,5 @@
 import DeepWiki.CAlgebra.Poly.Euclid
+import DeepWiki.CAlgebra.Poly.DivisionMonic
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Gcd
 import DeepWiki.CAlgebra.Poly.Derivative
@@ -52,6 +53,10 @@ private def pseudoDivMod [CommRing R] [DecidableEq R] :
     DensePoly R → DensePoly R → DensePoly R × DensePoly R := DensePoly.pseudoDivMod
 
 /-! ### Euclidean operations (any `Field` coefficient) -/
+
+/-- Division by a monic divisor is computable over any nontrivial `CommRing` (no field ops). -/
+private def divModMonic [CommRing R] [DecidableEq R] [Nontrivial R] :
+    DensePoly R → DensePolyMonic R → DensePoly R × DensePoly R := DensePoly.divModMonic
 
 /-- Euclidean division is computable. -/
 private def divMod [Field R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R × DensePoly R :=

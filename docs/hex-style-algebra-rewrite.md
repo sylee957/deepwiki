@@ -173,6 +173,17 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     (associated monic polynomials are equal — monicity pins the unit). `DenseFrac.den` is now a
     `DensePolyMonic`, deleting the `monic_den` field, `den_ne_zero`, and the inlined unit-pinning
     block in `toRatFunc_injective` (now one `eq_of_associated` call).
+  - **2j DONE (2026-07-21, user): monic division** (`Poly/DivisionMonic.lean`): `divModMonic p q`
+    for `q : DensePolyMonic` — the quotient term is `leadingCoeff r` directly (no coefficient
+    division), so it runs over any nontrivial `CommRing` (the fraction-free/domain track's
+    division) and saves a field division per step on expensive carriers (measured ~5% at `ℚ(x)`;
+    grows with coefficient-normalization cost). Connected to the general division by
+    **uniqueness of Euclidean division**: `divModMonic_eq_divMod` — literal equality of the pair
+    over a field (differing quotients would force `size ≥ size q` on one side of the remainder
+    identity, `< size q` on the other). ★ Lean lessons: a section variable used only in
+    `decreasing_by` is NOT auto-included (bind `[Nontrivial R]` explicitly on the def); `omega`
+    treats defeq-but-not-syntactic atoms (`(divMod …).2.size` vs `(mod …).size`) as unrelated —
+    ascribe hypotheses to the goal's spelling.
   - **2i DONE (2026-07-21, user): gcd area directory.** The gcd family moves to its own area per
     the subdirectory grammar: `CAlgebra/Gcd.lean` (the `DensePolyGcd` class = area root/aggregator)
     over `CAlgebra/Gcd/{Euclid,Subresultant}.lean` (leaves drop the implied `Gcd` prefix). The
