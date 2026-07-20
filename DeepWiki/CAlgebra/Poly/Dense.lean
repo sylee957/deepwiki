@@ -162,6 +162,20 @@ theorem coeff_last_ne_zero_of_pos_size (p : DensePoly R) (hpos : 0 < p.size) :
   · exact hne hzero
   · exact hlast (by rw [List.getLast?_eq_some_getLast hne, hc])
 
+/-- The leading (top-degree) coefficient; `0` for the zero polynomial. -/
+def leadingCoeff (p : DensePoly R) : R := p.coeff (p.size - 1)
+
+/-- A nonzero polynomial has nonzero leading coefficient. -/
+theorem leadingCoeff_ne_zero {p : DensePoly R} (hp : p.size ≠ 0) : leadingCoeff p ≠ 0 :=
+  coeff_last_ne_zero_of_pos_size p (Nat.pos_of_ne_zero hp)
+
+/-- If every coefficient from index `n` upward vanishes, the size is at most `n`. -/
+theorem size_le_of_coeff_zero {p : DensePoly R} {n : Nat} (h : ∀ j, n ≤ j → p.coeff j = 0) :
+    p.size ≤ n := by
+  by_contra hlt
+  have hpos : 0 < p.size := by omega
+  exact coeff_last_ne_zero_of_pos_size p hpos (h (p.size - 1) (by omega))
+
 /-- Coefficientwise equality of normalized polynomials forces equal stored sizes. -/
 theorem size_eq_of_coeff_eq {p q : DensePoly R} (hcoeff : ∀ i, p.coeff i = q.coeff i) :
     p.size = q.size := by

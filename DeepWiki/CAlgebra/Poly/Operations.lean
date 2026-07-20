@@ -133,6 +133,27 @@ theorem mul_def (p q : DensePoly R) :
       have hi' : i < p.size := Nat.not_le.mp hip
       rw [coeff_eq_zero_of_size_le q (by omega), mul_zero]
 
+/-- Coefficient of `monomial k c * q`: a `k`-shifted, `c`-scaled read of `q`. -/
+theorem coeff_monomial_mul (k : Nat) (c : R) (q : DensePoly R) (n : Nat) :
+    (monomial k c * q).coeff n = if k ≤ n then c * q.coeff (n - k) else 0 := by
+  rw [coeff_mul]
+  simp only [coeff_monomial, ite_mul, zero_mul]
+  rw [Finset.sum_ite_eq' (Finset.range (n + 1)) k (fun i => c * q.coeff (n - i))]
+  simp [Finset.mem_range]
+
+/-- Coefficient of `C c * p`: a `c`-scaled read of `p`. -/
+theorem coeff_C_mul (c : R) (p : DensePoly R) (n : Nat) :
+    (C c * p).coeff n = c * p.coeff n := by
+  rw [coeff_mul]
+  simp only [coeff_C, ite_mul, zero_mul]
+  rw [Finset.sum_ite_eq' (Finset.range (n + 1)) 0 (fun i => c * p.coeff (n - i))]
+  simp
+
+/-- Constant multiplication never increases the stored size. -/
+theorem size_C_mul_le (c : R) (p : DensePoly R) : (C c * p).size ≤ p.size :=
+  size_le_of_coeff_zero fun j hj => by
+    rw [coeff_C_mul, coeff_eq_zero_of_size_le p hj, mul_zero]
+
 end DensePoly
 
 /-! ### Mathlib denotation and the ring isomorphism `equiv` -/

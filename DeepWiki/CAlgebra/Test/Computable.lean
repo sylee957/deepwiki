@@ -1,4 +1,5 @@
 import DeepWiki.CAlgebra.Poly.Euclid
+import DeepWiki.CAlgebra.Poly.PseudoDivision
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Frac.Basic
 
@@ -44,6 +45,9 @@ private def nsmul [CommRing R] [DecidableEq R] : ℕ → DensePoly R → DensePo
 private def natCast [CommRing R] [DecidableEq R] : ℕ → DensePoly R := Nat.cast
 /-- The formal derivative is computable. -/
 private def deriv [CommRing R] [DecidableEq R] : DensePoly R → DensePoly R := DensePoly.deriv
+/-- Pseudo-division is computable over any `CommRing` coefficient (no `Field` needed). -/
+private def pseudoDivMod [CommRing R] [DecidableEq R] :
+    DensePoly R → DensePoly R → DensePoly R × DensePoly R := DensePoly.pseudoDivMod
 
 /-! ### Euclidean operations (any `Field` coefficient) -/
 

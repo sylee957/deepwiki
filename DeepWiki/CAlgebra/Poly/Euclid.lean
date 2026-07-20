@@ -16,28 +16,6 @@ namespace DensePoly
 
 variable {R : Type u} [Field R] [DecidableEq R]
 
-/-- The leading (top-degree) coefficient; `0` for the zero polynomial. -/
-def leadingCoeff (p : DensePoly R) : R := p.coeff (p.size - 1)
-
-/-- A nonzero polynomial has nonzero leading coefficient. -/
-theorem leadingCoeff_ne_zero {p : DensePoly R} (hp : p.size ≠ 0) : leadingCoeff p ≠ 0 :=
-  coeff_last_ne_zero_of_pos_size p (Nat.pos_of_ne_zero hp)
-
-/-- If every coefficient from index `n` upward vanishes, the size is at most `n`. -/
-theorem size_le_of_coeff_zero {p : DensePoly R} {n : Nat} (h : ∀ j, n ≤ j → p.coeff j = 0) :
-    p.size ≤ n := by
-  by_contra hlt
-  have hpos : 0 < p.size := by omega
-  exact coeff_last_ne_zero_of_pos_size p hpos (h (p.size - 1) (by omega))
-
-/-- Coefficient of `monomial k c * q`: a `k`-shifted, `c`-scaled read of `q`. -/
-theorem coeff_monomial_mul (k : Nat) (c : R) (q : DensePoly R) (n : Nat) :
-    (monomial k c * q).coeff n = if k ≤ n then c * q.coeff (n - k) else 0 := by
-  rw [coeff_mul]
-  simp only [coeff_monomial, ite_mul, zero_mul]
-  rw [Finset.sum_ite_eq' (Finset.range (n + 1)) k (fun i => c * q.coeff (n - i))]
-  simp [Finset.mem_range]
-
 /-- One division step strictly decreases the remainder size (leading-term cancellation). -/
 theorem divStep_size_lt {q r : DensePoly R} (hq : q.size ≠ 0) (hr : q.size ≤ r.size) :
     (r - monomial (r.size - q.size) (leadingCoeff r / leadingCoeff q) * q).size < r.size := by

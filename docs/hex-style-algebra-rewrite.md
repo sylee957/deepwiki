@@ -128,6 +128,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `Associated` to `EuclideanDomain.gcd` (up to a unit, since the raw remainder isn't normalized),
     proved purely by transporting the universal property across `toPolynomial_dvd_iff`. **← NEXT:
     2c optional `xgcd`/Bezout + `ℚ`-carrier `GcdLaws`/`DivModLaws` instances; then Phase 3 resultant.**
+  - **2d DONE (2026-07-20):** `Poly/PseudoDivision.lean` — pseudo-division over any `CommRing`
+    coefficient (structural recursion on the exact step count): `pseudoDivMod`/`pseudoDiv`/`pseudoMod`
+    with the exact-power identity `C (lc q ^ (size p + 1 − size q)) * p = quo * q + rem`
+    (`pseudoDivMod_spec`, proved by transport) + `pseudoMod_size_lt`, and the transported Mathlib-facing
+    square `toPolynomial_pseudoDivMod` (Mathlib has NO pseudo-division — the transported identity IS
+    the bridge). Shared helpers generalized out of Euclid's `Field` section (`leadingCoeff`,
+    `size_le_of_coeff_zero` → `Poly/Dense`; `coeff_monomial_mul` + new `coeff_C_mul`/`size_C_mul_le` →
+    `Poly/Operations`). Computability guarded; validated over `ℤ` and `DensePoly (DensePoly ℤ)`
+    (dev `#eval`s, removed). Prerequisite for subresultant PRS / tower-coefficient division (3b'/6).
 - **Phase 3 — resultant / subresultant / Bareiss** + Mathlib correspondence. **← NEXT.**
   Approach (scouted): bridge target is Mathlib `Polynomial.resultant` (exists, over `CommRing`). Hex
   has no standalone resultant module — it computes via the **Sylvester-matrix determinant**
