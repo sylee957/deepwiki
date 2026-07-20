@@ -19,12 +19,6 @@ namespace DensePoly
 
 variable {R : Type u} [Field R] [DecidableEq R]
 
-/-- Constant-unit cancellation: `d ∣ C c * p → d ∣ p` for `c ≠ 0`. -/
-theorem dvd_of_dvd_C_mul {c : R} (hc : c ≠ 0) {d p : DensePoly R} (hd : d ∣ C c * p) : d ∣ p := by
-  have hp : p = C c⁻¹ * (C c * p) := by
-    rw [← mul_assoc, ← C_mul, inv_mul_cancel₀ hc, ← one_def, one_mul]
-  exact hp ▸ hd.mul_left (C c⁻¹)
-
 /-- Subresultant-PRS accumulator: `g` is the previous divisor's leading coefficient and `h` the
 running subresultant `h`-value; each pseudo-remainder is divided by `β = (−1)^(δ+1) · g · h^δ`. -/
 private def gcdSubAux (r₁ r₂ : DensePoly R) (g h : R) : DensePoly R :=

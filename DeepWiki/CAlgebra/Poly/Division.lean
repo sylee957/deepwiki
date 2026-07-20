@@ -96,6 +96,12 @@ theorem div_zero (p : DensePoly R) : div p 0 = 0 := by
   simp only [div, divMod]
   rw [divModAux.eq_def, if_pos (Or.inr size_zero)]
 
+/-- Constant-unit cancellation: `d ∣ C c * p → d ∣ p` for `c ≠ 0`. -/
+theorem dvd_of_dvd_C_mul {c : R} (hc : c ≠ 0) {d p : DensePoly R} (hd : d ∣ C c * p) : d ∣ p := by
+  have hp : p = C c⁻¹ * (C c * p) := by
+    rw [← mul_assoc, ← C_mul, inv_mul_cancel₀ hc, ← one_def, one_mul]
+  exact hp ▸ hd.mul_left (C c⁻¹)
+
 /-- Multiplying by a nonzero constant preserves the stored size. -/
 theorem size_C_mul {c : R} (hc : c ≠ 0) (p : DensePoly R) : (C c * p).size = p.size := by
   refine le_antisymm (size_C_mul_le c p) ?_

@@ -184,6 +184,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `decreasing_by` is NOT auto-included (bind `[Nontrivial R]` explicitly on the def); `omega`
     treats defeq-but-not-syntactic atoms (`(divMod …).2.size` vs `(mod …).size`) as unrelated —
     ascribe hypotheses to the goal's spelling.
+  - **SHELVED (2026-07-21, user — "too many proofs for now"): monic-remainder Euclidean gcd.**
+    Prototyped and benchmarked, then reverted: re-monicizing each remainder makes every division
+    step the division-free `modMonic` and the result canonically monic. Measured: parity at `ℚ`
+    (15.5 vs 14.8 ms — division ≈ multiplication there), but **1.7× faster at the `ℚ(x)[t]` tower**
+    (261 vs 441 ms Euclid vs 703 ms subresultant) — the per-remainder scaling acts as coefficient
+    cleanup on fraction carriers (primitive-PRS-style content taming). When tower gcd performance
+    matters, reinstate as a `DensePolyGcd` override for `DenseFrac`-coefficient carriers: def
+    `gcdMonic p q := modMonic-loop with monicized remainders` + universal property by the standard
+    induction + `monicize` satellites (`toPoly_monicize`/`size_monicize`/`monicize_associated`).
   - **2k DONE (2026-07-21, user): `gcdEuclid` DELETED — Mathlib's generic `EuclideanDomain.gcd`
     is the Euclidean algorithm.** `Gcd/Euclid.lean` removed wholesale: the hand-rolled Euclidean
     gcd duplicated Mathlib's generic algorithm running through our computable `EuclideanDomain`
