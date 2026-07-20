@@ -1,4 +1,5 @@
 import DeepWiki.CAlgebra.Gcd
+import DeepWiki.CAlgebra.Poly.Monic
 import Mathlib.FieldTheory.RatFunc.Basic
 
 /-! # Canonical computable rational functions (`DenseFrac`)
@@ -23,12 +24,10 @@ polynomials with monic denominator. -/
 structure DenseFrac (R : Type u) [Field R] [DecidableEq R] where
   /-- The numerator polynomial. -/
   num : DensePoly R
-  /-- The denominator polynomial. -/
-  den : DensePoly R
-  /-- The denominator is monic. -/
-  monic_den : den.leadingCoeff = 1
+  /-- The monic denominator. -/
+  den : DensePolyMonic R
   /-- The numerator and denominator are coprime. -/
-  coprime : IsCoprime num den
+  coprime : IsCoprime num den.toPoly
 
 namespace DenseFrac
 
@@ -43,13 +42,6 @@ instance : DecidableEq (DenseFrac R) := fun a b =>
   | isTrue h1, isTrue h2 => isTrue (ext h1 h2)
   | isFalse h1, _ => isFalse fun h => h1 (congrArg DenseFrac.num h)
   | _, isFalse h2 => isFalse fun h => h2 (congrArg DenseFrac.den h)
-
-omit [DensePolyGcd R] in
-/-- A canonical denominator is nonzero (monic forces nonzero). -/
-theorem den_ne_zero (f : DenseFrac R) : f.den ≠ 0 := fun h0 => by
-  have h := f.monic_den
-  rw [h0, leadingCoeff_zero] at h
-  exact zero_ne_one h
 
 /-! ### The smart constructor `normalize` -/
 
@@ -130,24 +122,24 @@ private theorem isCoprime_norm (n d : DensePoly R) : IsCoprime (normNum n d) (no
 /-- Canonicalize a numerator/denominator pair (the smart constructor): divide out the gcd and
 scale the denominator monic; zero denominators collapse to the canonical zero `0 / 1`. -/
 def normalize (n d : DensePoly R) : DenseFrac R :=
-  ⟨normNum n d, normDen n d, monic_normDen n d, isCoprime_norm n d⟩
+  ⟨normNum n d, ⟨normDen n d, monic_normDen n d⟩, isCoprime_norm n d⟩
 
 /-- Embed a polynomial as the fraction with denominator `1` (already canonical). -/
-def ofPoly (p : DensePoly R) : DenseFrac R := ⟨p, 1, leadingCoeff_one, isCoprime_one_right⟩
+def ofPoly (p : DensePoly R) : DenseFrac R := ⟨p, 1, isCoprime_one_right⟩
 
 /-- Normalizing a zero-denominator pair gives the canonical zero. -/
-theorem normalize_den_zero (n : DensePoly R) : normalize n 0 = ⟨0, 1, leadingCoeff_one,
+theorem normalize_den_zero (n : DensePoly R) : normalize n 0 = ⟨0, 1,
     isCoprime_zero_left.mpr isUnit_one⟩ := by
   have h1 : normNum n 0 = 0 := by rw [normNum, if_pos rfl]
   have h2 : normDen n 0 = 1 := by rw [normDen, if_pos rfl]
-  exact ext h1 h2
+  exact ext h1 (DensePolyMonic.ext h2)
 
 /-! ### Mathlib bridge -/
 
 /-- Bridge to Mathlib: `num / den` in the rational-function field. -/
 noncomputable def toRatFunc (f : DenseFrac R) : RatFunc R :=
   algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.num) /
-    algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.den)
+    algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.den.toPoly)
 
 omit [DensePolyGcd R] in
 /-- Denotational equality of quotient expressions is polynomial cross-multiplication. -/
@@ -198,28 +190,21 @@ denominators to divide each other (Euclid's lemma), monicity pins the unit, canc
 the numerators. -/
 theorem toRatFunc_injective : Function.Injective (toRatFunc (R := R)) := by
   intro f g h
-  have key : f.num * g.den = g.num * f.den :=
-    (div_eq_div_iff_cross f.den_ne_zero g.den_ne_zero).mp h
-  have h12 : f.den ∣ g.den := by
+  have key : f.num * g.den.toPoly = g.num * f.den.toPoly :=
+    (div_eq_div_iff_cross f.den.ne_zero g.den.ne_zero).mp h
+  have h12 : f.den.toPoly ∣ g.den.toPoly := by
     apply f.coprime.symm.dvd_of_dvd_mul_left
     rw [key]
-    exact dvd_mul_left f.den g.num
-  have h21 : g.den ∣ f.den := by
+    exact dvd_mul_left f.den.toPoly g.num
+  have h21 : g.den.toPoly ∣ f.den.toPoly := by
     apply g.coprime.symm.dvd_of_dvd_mul_left
     rw [← key]
-    exact dvd_mul_left g.den f.num
-  obtain ⟨u, hu⟩ := associated_of_dvd_dvd h12 h21
-  obtain ⟨c, hc0, hcu⟩ := exists_C_of_isUnit u.isUnit
-  have hc1 : c = 1 := by
-    have hlc := congrArg DensePoly.leadingCoeff hu
-    rw [hcu, mul_comm, leadingCoeff_C_mul hc0, f.monic_den, mul_one, g.monic_den] at hlc
-    exact hlc
-  have hden : f.den = g.den := by
-    rw [← hu, hcu, hc1, ← one_def, mul_one]
+    exact dvd_mul_left g.den.toPoly f.num
+  have hden : f.den = g.den := DensePolyMonic.eq_of_associated (associated_of_dvd_dvd h12 h21)
   have hnum : f.num = g.num := by
     have hk := key
     rw [hden] at hk
-    exact mul_right_cancel₀ g.den_ne_zero hk
+    exact mul_right_cancel₀ g.den.ne_zero hk
   exact ext hnum hden
 
 omit [DensePolyGcd R] in
@@ -239,19 +224,19 @@ omit [DensePolyGcd R] in
 /-! ### Arithmetic (renormalizing through `normalize`) -/
 
 instance : Zero (DenseFrac R) :=
-  ⟨⟨0, 1, leadingCoeff_one, isCoprime_zero_left.mpr isUnit_one⟩⟩
+  ⟨⟨0, 1, isCoprime_zero_left.mpr isUnit_one⟩⟩
 
-instance : One (DenseFrac R) := ⟨⟨1, 1, leadingCoeff_one, isCoprime_one_right⟩⟩
+instance : One (DenseFrac R) := ⟨⟨1, 1, isCoprime_one_right⟩⟩
 
 instance : Add (DenseFrac R) :=
-  ⟨fun f g => normalize (f.num * g.den + g.num * f.den) (f.den * g.den)⟩
+  ⟨fun f g => normalize (f.num * g.den.toPoly + g.num * f.den.toPoly) (f.den.toPoly * g.den.toPoly)⟩
 
-instance : Mul (DenseFrac R) := ⟨fun f g => normalize (f.num * g.num) (f.den * g.den)⟩
+instance : Mul (DenseFrac R) := ⟨fun f g => normalize (f.num * g.num) (f.den.toPoly * g.den.toPoly)⟩
 
 /-- Negation preserves canonicity componentwise — no renormalization needed. -/
-instance : Neg (DenseFrac R) := ⟨fun f => ⟨-f.num, f.den, f.monic_den, f.coprime.neg_left⟩⟩
+instance : Neg (DenseFrac R) := ⟨fun f => ⟨-f.num, f.den, f.coprime.neg_left⟩⟩
 
-instance : Inv (DenseFrac R) := ⟨fun f => normalize f.den f.num⟩
+instance : Inv (DenseFrac R) := ⟨fun f => normalize f.den.toPoly f.num⟩
 
 omit [DensePolyGcd R] in
 @[simp] theorem toRatFunc_zero : toRatFunc (0 : DenseFrac R) = 0 := by
@@ -271,8 +256,8 @@ omit [DensePolyGcd R] in
     toRatFunc (f + g) = toRatFunc f + toRatFunc g := by
   show toRatFunc (normalize _ _) = _
   rw [toRatFunc_normalize, toRatFunc, toRatFunc,
-    div_add_div _ _ (RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero f.den_ne_zero))
-      (RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero g.den_ne_zero))]
+    div_add_div _ _ (RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero f.den.ne_zero))
+      (RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero g.den.ne_zero))]
   simp only [toPolynomial_add, toPolynomial_mul, map_add, map_mul]
   congr 1
   ring
@@ -289,7 +274,7 @@ omit [DensePolyGcd R] in
 @[simp] theorem toRatFunc_neg (f : DenseFrac R) : toRatFunc (-f) = -toRatFunc f := by
   rw [toRatFunc, toRatFunc]
   show algebraMap (Polynomial R) (RatFunc R) (toPolynomial (-f.num)) /
-    algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.den) = _
+    algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.den.toPoly) = _
   rw [toPolynomial_neg, map_neg, neg_div]
 
 /-- `toRatFunc` intertwines inversion. -/

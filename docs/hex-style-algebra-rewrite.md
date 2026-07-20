@@ -167,6 +167,12 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     every proof — algorithm choice is pure performance policy. ★ Lint lesson: a section-variable
     `[DensePolyGcd R]` auto-includes into theorems that don't use it → `omit [DensePolyGcd R] in`
     per theorem.
+  - **4g DONE (2026-07-21, user): bundled monic sub-carrier `DensePolyMonic`** (`Poly/Monic.lean`):
+    `toPoly` + `monic` with `One`/`Mul` closure (new satellites `leadingCoeff_toPolynomial`,
+    `leadingCoeff_mul` in `Poly/Euclid`), `ne_zero`, and the rigidity lemma `eq_of_associated`
+    (associated monic polynomials are equal — monicity pins the unit). `DenseFrac.den` is now a
+    `DensePolyMonic`, deleting the `monic_den` field, `den_ne_zero`, and the inlined unit-pinning
+    block in `toRatFunc_injective` (now one `eq_of_associated` call).
   - **2i DONE (2026-07-21, user): gcd area directory.** The gcd family moves to its own area per
     the subdirectory grammar: `CAlgebra/Gcd.lean` (the `DensePolyGcd` class = area root/aggregator)
     over `CAlgebra/Gcd/{Euclid,Subresultant}.lean` (leaves drop the implied `Gcd` prefix). The

@@ -3,6 +3,7 @@ import DeepWiki.CAlgebra.Poly.Operations
 import DeepWiki.CAlgebra.Poly.Division
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Poly.Euclid
+import DeepWiki.CAlgebra.Poly.Monic
 import DeepWiki.CAlgebra.Gcd
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Matrix.Dense

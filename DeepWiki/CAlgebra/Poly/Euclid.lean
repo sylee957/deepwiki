@@ -46,6 +46,20 @@ theorem exists_C_of_isUnit {u : DensePoly R} (hu : IsUnit u) : ∃ c : R, c ≠ 
   have hlast := coeff_last_ne_zero_of_pos_size u (by omega)
   rwa [hu1] at hlast
 
+/-- `toPolynomial` transports the leading coefficient of a nonzero polynomial. -/
+theorem leadingCoeff_toPolynomial {p : DensePoly R} (hp : p ≠ 0) :
+    (toPolynomial p).leadingCoeff = p.leadingCoeff := by
+  rw [Polynomial.leadingCoeff, coeff_toPolynomial, DensePoly.leadingCoeff]
+  congr 1
+  have := size_eq_natDegree_add_one hp
+  omega
+
+/-- Leading coefficients are multiplicative (nonzero polynomials over a field). -/
+theorem leadingCoeff_mul {p q : DensePoly R} (hp : p ≠ 0) (hq : q ≠ 0) :
+    (p * q).leadingCoeff = p.leadingCoeff * q.leadingCoeff := by
+  rw [← leadingCoeff_toPolynomial (mul_ne_zero hp hq), ← leadingCoeff_toPolynomial hp,
+    ← leadingCoeff_toPolynomial hq, toPolynomial_mul, Polynomial.leadingCoeff_mul]
+
 /-- `DensePoly` over a field is a Euclidean domain: division data is the executable `div`/`mod`,
 the Euclidean measure is `size`. Mathlib's generic `EuclideanDomain.gcd`/`xgcd` and Bézout theory
 then apply to the dense carrier — and compute, since the instance data is computable. -/
