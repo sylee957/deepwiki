@@ -146,6 +146,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     mapping the agreement through the iso and composing with the Euclidean bridge. Satellites:
     `C_mul` (Operations), `pseudoMod_eq_sub` (PseudoDivision), `eq_zero_of_size_zero` generalized to
     `Poly/Dense`. Fraction-free variant over non-field domains (exact-division interface) deferred.
+  - **2f DONE (2026-07-20):** computable `EuclideanDomain (DensePoly R)` instance (`Poly/Euclid`) —
+    quotient/remainder = the executable `div`/`mod`, measure = `size`; laws from `divMod_spec` +
+    `mod_size_lt` + new `size_mul` (via `natDegree` transport; `size_eq_natDegree_add_one`).
+    Mathlib's GENERIC `EuclideanDomain.gcd`/`xgcd`/Bézout now run computably on the dense carrier
+    (guarded; xgcd Bézout identity checked in dev `#eval`, removed) and
+    `euclideanDomain_gcd_associated_gcd` connects the generic gcd to ours by universal property.
+    `toPolynomial_ne_zero` moved Frac/Basic → Operations. Next candidate: `GCDMonoid` instance
+    (needs dvd → `mod = 0` exact-division lemma).
 - **Phase 3 — resultant / subresultant / Bareiss** + Mathlib correspondence. **← NEXT.**
   Approach (scouted): bridge target is Mathlib `Polynomial.resultant` (exists, over `CommRing`). Hex
   has no standalone resultant module — it computes via the **Sylvester-matrix determinant**

@@ -60,6 +60,10 @@ private def gcd [Field R] [DecidableEq R] : DensePoly R → DensePoly R → Dens
 /-- The subresultant-PRS gcd is computable. -/
 private def gcdSubresultant [Field R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R :=
   DensePoly.gcdSubresultant
+/-- Mathlib's generic `EuclideanDomain.gcd` runs computably on the dense carrier (through the
+computable `EuclideanDomain (DensePoly R)` instance). -/
+private def euclideanDomainGcd [Field R] [DecidableEq R] :
+    DensePoly R → DensePoly R → DensePoly R := EuclideanDomain.gcd
 
 /-! ### Rational-function carrier operations -/
 

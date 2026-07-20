@@ -207,6 +207,10 @@ theorem toPolynomial_injective : Function.Injective (toPolynomial (R := R)) :=
 @[simp] theorem toPolynomial_zero : toPolynomial (0 : DensePoly R) = 0 := by
   ext n; simp
 
+/-- A nonzero dense polynomial has nonzero Mathlib image. -/
+theorem toPolynomial_ne_zero {p : DensePoly R} (h : p ≠ 0) : toPolynomial p ≠ 0 :=
+  fun hz => h (toPolynomial_injective (by rw [hz, toPolynomial_zero]))
+
 @[simp] theorem toPolynomial_one : toPolynomial (1 : DensePoly R) = 1 := by
   ext n; rw [coeff_toPolynomial, DensePoly.coeff_one, Polynomial.coeff_one]
 

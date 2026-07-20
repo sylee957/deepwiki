@@ -62,10 +62,6 @@ end Carrier
 section Bridge
 variable {R : Type u} [Field R] [DecidableEq R]
 
-/-- A nonzero dense polynomial has nonzero Mathlib image. -/
-theorem toPolynomial_ne_zero {p : DensePoly R} (h : p ≠ 0) : toPolynomial p ≠ 0 :=
-  fun hz => h (toPolynomial_injective (by rw [hz, toPolynomial_zero]))
-
 namespace DenseFrac
 
 /-- Bridge to Mathlib: `num/den` in the rational-function field. -/
