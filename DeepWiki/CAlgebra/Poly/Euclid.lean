@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Poly.Gcd
+import DeepWiki.CAlgebra.Poly.GcdEuclid
 
 /-! # `DensePoly` over a field as a Euclidean domain
 
@@ -67,13 +67,13 @@ instance : EuclideanDomain (DensePoly R) :=
         have hbs : b.size ≠ 0 := fun h0 => hb (eq_zero_of_size_zero h0)
         omega }
 
-/-- Mathlib's generic Euclidean-domain gcd and the executable `gcd` agree up to a unit (both
+/-- Mathlib's generic Euclidean-domain gcd and the executable `gcdEuclid` agree up to a unit (both
 satisfy the same universal property). -/
-theorem euclideanDomain_gcd_associated_gcd (p q : DensePoly R) :
-    Associated (EuclideanDomain.gcd p q) (gcd p q) :=
+theorem euclideanDomain_gcd_associated_gcdEuclid (p q : DensePoly R) :
+    Associated (EuclideanDomain.gcd p q) (gcdEuclid p q) :=
   associated_of_dvd_dvd
-    (dvd_gcd p q (EuclideanDomain.gcd_dvd_left p q) (EuclideanDomain.gcd_dvd_right p q))
-    (EuclideanDomain.dvd_gcd (gcd_dvd_left p q) (gcd_dvd_right p q))
+    (dvd_gcdEuclid p q (EuclideanDomain.gcd_dvd_left p q) (EuclideanDomain.gcd_dvd_right p q))
+    (EuclideanDomain.dvd_gcd (gcdEuclid_dvd_left p q) (gcdEuclid_dvd_right p q))
 
 end DensePoly
 

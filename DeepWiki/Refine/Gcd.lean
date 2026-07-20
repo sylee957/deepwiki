@@ -4,7 +4,7 @@ import DeepWiki.CAlgebra.Poly.Gcd
 
 /-! # Transferring `gcd` up to units
 
-Unlike `+` and `*`, the computable `DensePoly.gcd` and `EuclideanDomain.gcd` agree only **up to a
+Unlike `+` and `*`, the computable `DensePolyGcd.gcd` and `EuclideanDomain.gcd` agree only **up to a
 unit** (`Associated`) because the raw Euclidean remainder is not normalized. Its transfer witness
 therefore uses equality on the inputs and the coarser
 `Associated` relation on the output; the resolver threads these mixed relations automatically. -/
@@ -14,7 +14,7 @@ open scoped DeepWiki.Refine
 
 namespace DeepWiki.Refine
 
-variable {R : Type*} [Field R] [DecidableEq R]
+variable {R : Type*} [Field R] [DecidableEq R] [DensePolyGcd R]
 
 /-- The **up-to-a-unit** output relation: `toPolynomial c` is `Associated` to `a` (equal modulo a
 unit), the coarser relation `gcd` respects. -/
@@ -24,7 +24,7 @@ def RPolyU : DensePoly R → Polynomial R → Prop := fun c a => Associated (toP
 (`RPolyU`). This is `toPolynomial_gcd_associated` packaged relationally — a witness whose output
 relation differs from its inputs'. -/
 @[refines] theorem refines_gcd :
-    Refines (RPoly (R := R) ⟹ RPoly ⟹ RPolyU) DensePoly.gcd EuclideanDomain.gcd := by
+    Refines (RPoly (R := R) ⟹ RPoly ⟹ RPolyU) DensePolyGcd.gcd EuclideanDomain.gcd := by
   derive_refines [RPoly, RPolyU] using toPolynomial_gcd_associated
 
 /-- Manual transfer of a *compound* gcd expression, mixing relations: the arguments `p * q` and `r`
@@ -32,7 +32,7 @@ transfer at equality (`RPoly`, via the ring-op witnesses), and `gcd` combines th
 relation (`RPolyU`). The kernel's `Refines.app` threads the two relations correctly — demonstrating
 that `gcd` (and any such non-functional op) is expressible independently of the resolver. -/
 example (p q r : DensePoly R) :
-    Refines RPolyU (DensePoly.gcd (p * q) r)
+    Refines RPolyU (DensePolyGcd.gcd (p * q) r)
       (EuclideanDomain.gcd (toPolynomial p * toPolynomial q) (toPolynomial r)) :=
   Refines.app
     (Refines.app refines_gcd
@@ -43,10 +43,11 @@ example (p q r : DensePoly R) :
 mixed-relation `gcd (p*q) r` (equality-inputs, up-to-unit-output) with one tactic call — dispatching
 `gcd` at `RPolyU` and its arguments at `RPoly`, no `simp`. -/
 example (p q r : DensePoly R) :
-    Refines RPolyU (DensePoly.gcd (p * q) r)
+    Refines RPolyU (DensePolyGcd.gcd (p * q) r)
       (EuclideanDomain.gcd (toPolynomial p * toPolynomial q) (toPolynomial r)) := by
   refine_transfer
 
+omit [DensePolyGcd R] in
 /-- Divisibility of denotations respects refinement up to associated polynomials. -/
 @[refines] theorem refines_dvd :
     Refines (RPolyU (R := R) ⟹ RPolyU ⟹ Iff)
@@ -61,6 +62,7 @@ example (p q r : DensePoly R) :
 
 /-! ### Relation-hierarchy coercion: equality `⊑` up-to-a-unit -/
 
+omit [DensePolyGcd R] in
 /-- Equality implies `Associated`: `RPoly` is finer than `RPolyU`. Registering it lets the resolver
 weaken any equality-level transfer to the up-to-unit level. -/
 @[refines_sub] theorem subsume_RPoly_RPolyU : Subsumes (RPoly (R := R)) RPolyU := by
@@ -70,7 +72,7 @@ weaken any equality-level transfer to the up-to-unit level. -/
   exact Associated.refl _
 
 /-- `refine_goal` turns the concrete divisibility goal into Mathlib's abstract gcd theorem. -/
-example (p q : DensePoly R) : toPolynomial (DensePoly.gcd p q) ∣ toPolynomial p := by
+example (p q : DensePoly R) : toPolynomial (DensePolyGcd.gcd p q) ∣ toPolynomial p := by
   refine_goal
   exact EuclideanDomain.gcd_dvd_left _ _
 

@@ -98,10 +98,10 @@ abbrev polynomialGcdType : SortedType PolynomialRelationKind :=
 abbrev polynomialBinaryExactType : SortedType PolynomialRelationKind :=
   .arrow (.base .exact) (.arrow (.base .exact) (.base .exact))
 
-variable {R : Type u} [Field R] [DecidableEq R]
+variable {R : Type u} [Field R] [DecidableEq R] [DeepWiki.CAlgebra.DensePolyGcd R]
 
 example : polynomialGcdType.rel (polynomialRelation (R := R))
-    (fun p q : DeepWiki.CAlgebra.DensePoly R => DeepWiki.CAlgebra.DensePoly.gcd p q)
+    (fun p q : DeepWiki.CAlgebra.DensePoly R => DeepWiki.CAlgebra.DensePolyGcd.gcd p q)
     (fun p q : Polynomial R => EuclideanDomain.gcd p q) :=
   refines_gcd.prf
 

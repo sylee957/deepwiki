@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Poly.Euclid
+import DeepWiki.CAlgebra.Poly.Gcd
 import Mathlib.FieldTheory.RatFunc.Basic
 
 /-! # Canonical computable rational functions (`DenseFrac`)
@@ -14,7 +14,7 @@ namespace DeepWiki.CAlgebra
 
 universe u
 
-variable {R : Type u} [Field R] [DecidableEq R]
+variable {R : Type u} [Field R] [DecidableEq R] [DensePolyGcd R]
 
 open DensePoly
 
@@ -32,6 +32,7 @@ structure DenseFrac (R : Type u) [Field R] [DecidableEq R] where
 
 namespace DenseFrac
 
+omit [DensePolyGcd R] in
 /-- Canonical fractions are equal when their components are (invariants are proof-irrelevant). -/
 @[ext] theorem ext {f g : DenseFrac R} (h1 : f.num = g.num) (h2 : f.den = g.den) : f = g := by
   cases f; cases g; cases h1; cases h2; rfl
@@ -43,6 +44,7 @@ instance : DecidableEq (DenseFrac R) := fun a b =>
   | isFalse h1, _ => isFalse fun h => h1 (congrArg DenseFrac.num h)
   | _, isFalse h2 => isFalse fun h => h2 (congrArg DenseFrac.den h)
 
+omit [DensePolyGcd R] in
 /-- A canonical denominator is nonzero (monic forces nonzero). -/
 theorem den_ne_zero (f : DenseFrac R) : f.den ≠ 0 := fun h0 => by
   have h := f.monic_den
@@ -54,12 +56,12 @@ theorem den_ne_zero (f : DenseFrac R) : f.den ≠ 0 := fun h0 => by
 /-- Numerator of the canonical form of a raw pair. -/
 private def normNum (n d : DensePoly R) : DensePoly R :=
   if d = 0 then 0
-  else C (d / DensePoly.gcd n d).leadingCoeff⁻¹ * (n / DensePoly.gcd n d)
+  else C (d / DensePolyGcd.gcd n d).leadingCoeff⁻¹ * (n / DensePolyGcd.gcd n d)
 
 /-- Denominator of the canonical form of a raw pair. -/
 private def normDen (n d : DensePoly R) : DensePoly R :=
   if d = 0 then 1
-  else C (d / DensePoly.gcd n d).leadingCoeff⁻¹ * (d / DensePoly.gcd n d)
+  else C (d / DensePolyGcd.gcd n d).leadingCoeff⁻¹ * (d / DensePolyGcd.gcd n d)
 
 /-- The canonical denominator of a raw pair is monic. -/
 private theorem monic_normDen (n d : DensePoly R) : (normDen n d).leadingCoeff = 1 := by
@@ -67,11 +69,11 @@ private theorem monic_normDen (n d : DensePoly R) : (normDen n d).leadingCoeff =
   split
   · exact leadingCoeff_one
   · rename_i hd
-    set g := DensePoly.gcd n d with hgdef
+    set g := DensePolyGcd.gcd n d with hgdef
     set d' := d / g with hd'def
-    have hg : g ≠ 0 := gcd_ne_zero_of_right hd n
+    have hg : g ≠ 0 := DensePolyGcd.gcd_ne_zero_of_right hd n
     have hden : g * d' = d :=
-      EuclideanDomain.mul_div_cancel' hg (DensePoly.gcd_dvd_right n d)
+      EuclideanDomain.mul_div_cancel' hg (DensePolyGcd.gcd_dvd_right n d)
     have hd'0 : d' ≠ 0 := fun h0 => hd (by rw [← hden, h0, mul_zero])
     have hc : d'.leadingCoeff ≠ 0 :=
       leadingCoeff_ne_zero fun h0 => hd'0 (eq_zero_of_size_zero h0)
@@ -82,32 +84,32 @@ private theorem isCoprime_norm (n d : DensePoly R) : IsCoprime (normNum n d) (no
   rw [normNum, normDen]
   split_ifs with hd
   · exact isCoprime_zero_left.mpr isUnit_one
-  · set g := DensePoly.gcd n d with hgdef
+  · set g := DensePolyGcd.gcd n d with hgdef
     set n' := n / g with hn'def
     set d' := d / g with hd'def
-    have hg : g ≠ 0 := gcd_ne_zero_of_right hd n
+    have hg : g ≠ 0 := DensePolyGcd.gcd_ne_zero_of_right hd n
     have hnum : g * n' = n :=
-      EuclideanDomain.mul_div_cancel' hg (DensePoly.gcd_dvd_left n d)
+      EuclideanDomain.mul_div_cancel' hg (DensePolyGcd.gcd_dvd_left n d)
     have hden : g * d' = d :=
-      EuclideanDomain.mul_div_cancel' hg (DensePoly.gcd_dvd_right n d)
+      EuclideanDomain.mul_div_cancel' hg (DensePolyGcd.gcd_dvd_right n d)
     have hd'0 : d' ≠ 0 := fun h0 => hd (by rw [← hden, h0, mul_zero])
     have hc : d'.leadingCoeff ≠ 0 :=
       leadingCoeff_ne_zero fun h0 => hd'0 (eq_zero_of_size_zero h0)
     set c := d'.leadingCoeff with hcdef
     -- the gcd-reduced pair has unit gcd: cancel `g` against `gcd n' d' * g ∣ g`
-    have hunit : IsUnit (DensePoly.gcd n' d') := by
+    have hunit : IsUnit (DensePolyGcd.gcd n' d') := by
       apply isUnit_of_dvd_one
-      have h2 : g * DensePoly.gcd n' d' ∣ n := by
-        rw [← hnum]; exact mul_dvd_mul_left _ (DensePoly.gcd_dvd_left _ _)
-      have h3 : g * DensePoly.gcd n' d' ∣ d := by
-        rw [← hden]; exact mul_dvd_mul_left _ (DensePoly.gcd_dvd_right _ _)
-      have h1 : g * DensePoly.gcd n' d' ∣ g * 1 := by
-        rw [mul_one]; exact DensePoly.dvd_gcd n d h2 h3
+      have h2 : g * DensePolyGcd.gcd n' d' ∣ n := by
+        rw [← hnum]; exact mul_dvd_mul_left _ (DensePolyGcd.gcd_dvd_left _ _)
+      have h3 : g * DensePolyGcd.gcd n' d' ∣ d := by
+        rw [← hden]; exact mul_dvd_mul_left _ (DensePolyGcd.gcd_dvd_right _ _)
+      have h1 : g * DensePolyGcd.gcd n' d' ∣ g * 1 := by
+        rw [mul_one]; exact DensePolyGcd.dvd_gcd n d h2 h3
       exact (mul_dvd_mul_iff_left hg).mp h1
     -- Bézout through the Euclidean-domain instance turns the unit gcd into coprimality
     have hcop : IsCoprime n' d' := by
       have hED : IsUnit (EuclideanDomain.gcd n' d') :=
-        (euclideanDomain_gcd_associated_gcd n' d').symm.isUnit hunit
+        (DensePolyGcd.associated_euclideanDomain_gcd n' d').symm.isUnit hunit
       obtain ⟨u, hu⟩ := hED
       refine ⟨↑u⁻¹ * EuclideanDomain.gcdA n' d', ↑u⁻¹ * EuclideanDomain.gcdB n' d', ?_⟩
       have hbez := EuclideanDomain.gcd_eq_gcd_ab n' d'
@@ -147,6 +149,7 @@ noncomputable def toRatFunc (f : DenseFrac R) : RatFunc R :=
   algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.num) /
     algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.den)
 
+omit [DensePolyGcd R] in
 /-- Denotational equality of quotient expressions is polynomial cross-multiplication. -/
 theorem div_eq_div_iff_cross {n d n' d' : DensePoly R} (hd : d ≠ 0) (hd' : d' ≠ 0) :
     algebraMap (Polynomial R) (RatFunc R) (toPolynomial n) /
@@ -173,14 +176,14 @@ theorem toRatFunc_normalize (n d : DensePoly R) :
   rw [normNum, normDen]
   split_ifs with hd
   · simp [hd]
-  · set g := DensePoly.gcd n d with hgdef
+  · set g := DensePolyGcd.gcd n d with hgdef
     set n' := n / g with hn'def
     set d' := d / g with hd'def
-    have hg : g ≠ 0 := gcd_ne_zero_of_right hd n
+    have hg : g ≠ 0 := DensePolyGcd.gcd_ne_zero_of_right hd n
     have hnum : g * n' = n :=
-      EuclideanDomain.mul_div_cancel' hg (DensePoly.gcd_dvd_left n d)
+      EuclideanDomain.mul_div_cancel' hg (DensePolyGcd.gcd_dvd_left n d)
     have hden : g * d' = d :=
-      EuclideanDomain.mul_div_cancel' hg (DensePoly.gcd_dvd_right n d)
+      EuclideanDomain.mul_div_cancel' hg (DensePolyGcd.gcd_dvd_right n d)
     have hd'0 : d' ≠ 0 := fun h0 => hd (by rw [← hden, h0, mul_zero])
     have hc : d'.leadingCoeff ≠ 0 :=
       leadingCoeff_ne_zero fun h0 => hd'0 (eq_zero_of_size_zero h0)
@@ -189,6 +192,7 @@ theorem toRatFunc_normalize (n d : DensePoly R) :
     rw [← hnum, ← hden]
     ring
 
+omit [DensePolyGcd R] in
 /-- The denotation is injective: canonical representatives are unique — coprimality forces the
 denominators to divide each other (Euclid's lemma), monicity pins the unit, cancellation matches
 the numerators. -/
@@ -218,10 +222,12 @@ theorem toRatFunc_injective : Function.Injective (toRatFunc (R := R)) := by
     exact mul_right_cancel₀ g.den_ne_zero hk
   exact ext hnum hden
 
+omit [DensePolyGcd R] in
 /-- Structural equality is semantic equality in `RatFunc` — and both are decidable. -/
 theorem toRatFunc_eq_iff {f g : DenseFrac R} : toRatFunc f = toRatFunc g ↔ f = g :=
   ⟨fun h => toRatFunc_injective h, fun h => h ▸ rfl⟩
 
+omit [DensePolyGcd R] in
 /-- The polynomial embedding denotes as the polynomial itself. -/
 @[simp] theorem toRatFunc_ofPoly (p : DensePoly R) :
     toRatFunc (ofPoly p) = algebraMap (Polynomial R) (RatFunc R) (toPolynomial p) := by
@@ -247,11 +253,13 @@ instance : Neg (DenseFrac R) := ⟨fun f => ⟨-f.num, f.den, f.monic_den, f.cop
 
 instance : Inv (DenseFrac R) := ⟨fun f => normalize f.den f.num⟩
 
+omit [DensePolyGcd R] in
 @[simp] theorem toRatFunc_zero : toRatFunc (0 : DenseFrac R) = 0 := by
   rw [toRatFunc]
   show algebraMap (Polynomial R) (RatFunc R) (toPolynomial (0 : DensePoly R)) / _ = 0
   rw [toPolynomial_zero, map_zero, zero_div]
 
+omit [DensePolyGcd R] in
 @[simp] theorem toRatFunc_one : toRatFunc (1 : DenseFrac R) = 1 := by
   rw [toRatFunc]
   show algebraMap (Polynomial R) (RatFunc R) (toPolynomial (1 : DensePoly R)) /
@@ -276,6 +284,7 @@ instance : Inv (DenseFrac R) := ⟨fun f => normalize f.den f.num⟩
   rw [toRatFunc_normalize, toRatFunc, toRatFunc, toPolynomial_mul, toPolynomial_mul,
     map_mul, map_mul, div_mul_div_comm]
 
+omit [DensePolyGcd R] in
 /-- `toRatFunc` intertwines negation. -/
 @[simp] theorem toRatFunc_neg (f : DenseFrac R) : toRatFunc (-f) = -toRatFunc f := by
   rw [toRatFunc, toRatFunc]

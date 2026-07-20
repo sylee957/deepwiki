@@ -10,7 +10,7 @@ namespace DeepWiki.CAlgebra
 
 universe u
 
-variable {R : Type u} [Field R] [DecidableEq R]
+variable {R : Type u} [Field R] [DecidableEq R] [DensePolyGcd R]
 
 namespace DenseFrac
 

@@ -154,6 +154,19 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `euclideanDomain_gcd_associated_gcd` connects the generic gcd to ours by universal property.
     `toPolynomial_ne_zero` moved Frac/Basic → Operations. Next candidate: `GCDMonoid` instance
     (needs dvd → `mod = 0` exact-division lemma).
+  - **2h DONE (2026-07-21, user): gcd dispatch class `DensePolyGcd`.** `Poly/Gcd.lean` is now the
+    INTERFACE: class `DensePolyGcd R` (fields = the gcd universal property) with priority-ordered
+    instances — generic default (100) = subresultant PRS, `ℚ` override (200) = Euclidean (measured
+    faster there; dispatch verified: `ℚ` → Euclid output, `𝔽₁₀₀₉` → subresultant output). The
+    Euclidean algorithm renamed `gcdEuclid` into `Poly/GcdEuclid.lean` (symmetric with
+    `GcdSubresultant`); `DensePoly.gcd` no longer exists. Class-level theorems (independent of the
+    instance): `gcd_ne_zero_of_right`, `associated_euclideanDomain_gcd`, `gcd_associated_gcdEuclid`
+    (all instances pairwise associated), `toPolynomial_gcd_associated` (Mathlib bridge).
+    `DenseFrac.normalize` + the fraction ops/instances now take `[DensePolyGcd R]` and dispatch per
+    carrier; `Refine/Gcd` witnesses target the class interface. Retuning instances is invisible to
+    every proof — algorithm choice is pure performance policy. ★ Lint lesson: a section-variable
+    `[DensePolyGcd R]` auto-includes into theorems that don't use it → `omit [DensePolyGcd R] in`
+    per theorem.
   - **2g DONE (2026-07-20): division/gcd file reorg** (zero declaration changes, user layout):
     `Poly/Division.lean` (long division), `Poly/DivisionPseudo.lean` (renamed from
     `PseudoDivision.lean`), `Poly/Gcd.lean` (Euclidean gcd + universal property + Mathlib bridge),
