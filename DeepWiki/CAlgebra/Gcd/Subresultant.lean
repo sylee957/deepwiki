@@ -1,16 +1,15 @@
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
-import DeepWiki.CAlgebra.Gcd.Euclid
+import DeepWiki.CAlgebra.Poly.Euclid
 
 /-! # Polynomial gcd via the subresultant pseudo-remainder sequence
 
 `gcdSubresultant p q` iterates pseudo-division, dividing each pseudo-remainder by the subresultant
 factor `β = (−1)^(δ+1) · g · h^δ` (`g` the previous divisor's leading coefficient, `h` the running
 subresultant `h`-value, `δ` the degree drop). Over a field every `β` is a nonzero constant — a unit
-`C β` of `DensePoly R` — so the sequence satisfies the same gcd universal property as the Euclidean
-`gcdEuclid`, and the two algorithms **agree up to a unit**: `gcdSubresultant_associated_gcdEuclid`. The Mathlib
-correspondence is derived by composing that agreement with the Euclidean gcd's bridge. The
-`β`-bookkeeping keeps intermediate coefficients small when the field elements are themselves big
-objects (tower carriers). -/
+`C β` of `DensePoly R` — so the sequence satisfies the gcd universal property, agreeing up to a
+unit with Mathlib's generic Euclidean-domain gcd (`gcdSubresultant_associated_euclideanDomainGcd`)
+and bridging to the `Polynomial` gcd under `toPolynomial`. The `β`-bookkeeping keeps intermediate
+coefficients small when the field elements are themselves big objects (tower carriers). -/
 
 namespace DeepWiki.CAlgebra
 
@@ -104,13 +103,13 @@ theorem dvd_gcdSubresultant {d : DensePoly R} (p q : DensePoly R) (h₁ : d ∣ 
     d ∣ gcdSubresultant p q :=
   dvd_gcdSubAux p q 1 1 h₁ h₂
 
-/-- **Agreement of the two gcd algorithms**: the subresultant-PRS gcd and the Euclidean `gcd`
-divide each other — both satisfy the same universal property, so they coincide up to a unit. -/
-theorem gcdSubresultant_associated_gcdEuclid (p q : DensePoly R) :
-    Associated (gcdSubresultant p q) (gcdEuclid p q) :=
+/-- **Agreement with Mathlib's generic Euclidean-domain gcd**: both satisfy the same universal
+property, so they coincide up to a unit. -/
+theorem gcdSubresultant_associated_euclideanDomainGcd (p q : DensePoly R) :
+    Associated (gcdSubresultant p q) (EuclideanDomain.gcd p q) :=
   associated_of_dvd_dvd
-    (dvd_gcdEuclid p q (gcdSubresultant_dvd_left p q) (gcdSubresultant_dvd_right p q))
-    (dvd_gcdSubresultant p q (gcdEuclid_dvd_left p q) (gcdEuclid_dvd_right p q))
+    (EuclideanDomain.dvd_gcd (gcdSubresultant_dvd_left p q) (gcdSubresultant_dvd_right p q))
+    (dvd_gcdSubresultant p q (EuclideanDomain.gcd_dvd_left p q) (EuclideanDomain.gcd_dvd_right p q))
 
 end DensePoly
 
@@ -118,13 +117,20 @@ end DensePoly
 
 open Polynomial in
 variable {R : Type u} [Field R] [DecidableEq R] in
-/-- The subresultant-PRS gcd is `Associated` to Mathlib's polynomial gcd — derived by carrying the
-algorithm-agreement `gcdSubresultant_associated_gcdEuclid` through the ring iso and composing with the
-Euclidean gcd's bridge. -/
+/-- The subresultant-PRS gcd is `Associated` to Mathlib's polynomial gcd under `toPolynomial`
+(soundness by forward transport, completeness by reverse transport). -/
 theorem toPolynomial_gcdSubresultant_associated (p q : DensePoly R) :
     Associated (toPolynomial (DensePoly.gcdSubresultant p q))
-      (EuclideanDomain.gcd (toPolynomial p) (toPolynomial q)) :=
-  ((DensePoly.gcdSubresultant_associated_gcdEuclid p q).map (equiv (R := R)).toRingHom).trans
-    (toPolynomial_gcdEuclid_associated p q)
+      (EuclideanDomain.gcd (toPolynomial p) (toPolynomial q)) := by
+  apply associated_of_dvd_dvd
+  · apply EuclideanDomain.dvd_gcd
+    · exact toPolynomial_dvd (DensePoly.gcdSubresultant_dvd_left p q)
+    · exact toPolynomial_dvd (DensePoly.gcdSubresultant_dvd_right p q)
+  · have hgp : ofPolynomial (EuclideanDomain.gcd (toPolynomial p) (toPolynomial q)) ∣ p :=
+      dvd_of_toPolynomial_dvd (by rw [toPolynomial_ofPolynomial]; exact EuclideanDomain.gcd_dvd_left _ _)
+    have hgq : ofPolynomial (EuclideanDomain.gcd (toPolynomial p) (toPolynomial q)) ∣ q :=
+      dvd_of_toPolynomial_dvd (by rw [toPolynomial_ofPolynomial]; exact EuclideanDomain.gcd_dvd_right _ _)
+    have hfin := toPolynomial_dvd (DensePoly.dvd_gcdSubresultant p q hgp hgq)
+    rwa [toPolynomial_ofPolynomial] at hfin
 
 end DeepWiki.CAlgebra

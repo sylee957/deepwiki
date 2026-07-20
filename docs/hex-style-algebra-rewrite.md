@@ -184,6 +184,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `decreasing_by` is NOT auto-included (bind `[Nontrivial R]` explicitly on the def); `omega`
     treats defeq-but-not-syntactic atoms (`(divMod …).2.size` vs `(mod …).size`) as unrelated —
     ascribe hypotheses to the goal's spelling.
+  - **2k DONE (2026-07-21, user): `gcdEuclid` DELETED — Mathlib's generic `EuclideanDomain.gcd`
+    is the Euclidean algorithm.** `Gcd/Euclid.lean` removed wholesale: the hand-rolled Euclidean
+    gcd duplicated Mathlib's generic algorithm running through our computable `EuclideanDomain`
+    instance. The `ℚ` override of `DensePolyGcd` now delegates to `EuclideanDomain.gcd` with ZERO
+    proof obligations (algorithm + universal-property laws all Mathlib's); the subresultant's
+    agreement retargets to it (`gcdSubresultant_associated_euclideanDomainGcd`) and its Mathlib
+    bridge is proved directly. Canonical fraction outputs verified invariant (monic scaling
+    cancels the gcd's unit ambiguity). Own the instance, inherit the algorithm.
   - **2i DONE (2026-07-21, user): gcd area directory.** The gcd family moves to its own area per
     the subdirectory grammar: `CAlgebra/Gcd.lean` (the `DensePolyGcd` class = area root/aggregator)
     over `CAlgebra/Gcd/{Euclid,Subresultant}.lean` (leaves drop the implied `Gcd` prefix). The

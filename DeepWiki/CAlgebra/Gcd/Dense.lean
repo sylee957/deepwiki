@@ -1,4 +1,3 @@
-import DeepWiki.CAlgebra.Gcd.Euclid
 import DeepWiki.CAlgebra.Gcd.Subresultant
 
 /-! # The dense-polynomial gcd interface (`DensePolyGcd`)
@@ -7,8 +6,8 @@ Algorithm-selection class for the gcd of dense polynomials: instances choose an 
 coefficient carrier, and the class fields are the gcd universal property, so any two instances'
 outputs are associated and no consumer can distinguish them — algorithm choice is a pure
 performance decision, invisible to every proof. The generic default is the subresultant PRS;
-`ℚ` overrides to the Euclidean algorithm. Carrier-specific overrides are one-line
-higher-priority instances. -/
+`ℚ` overrides to Mathlib's generic Euclidean-domain gcd, inherited through the computable
+`EuclideanDomain` instance. Carrier-specific overrides are one-line higher-priority instances. -/
 
 namespace DeepWiki.CAlgebra
 
@@ -35,12 +34,14 @@ instance (priority := 100) : DensePolyGcd R where
   gcd_dvd_right := DensePoly.gcdSubresultant_dvd_right
   dvd_gcd := fun p q h1 h2 => DensePoly.dvd_gcdSubresultant p q h1 h2
 
-/-- `ℚ` override: the Euclidean algorithm (measured faster on cheap-coefficient carriers). -/
+/-- `ℚ` override: Mathlib's generic Euclidean-domain gcd (measured faster on cheap-coefficient
+carriers), delegated with zero proof obligations — algorithm and laws are Mathlib's, running
+through the computable `EuclideanDomain (DensePoly ℚ)` instance. -/
 instance (priority := 200) : DensePolyGcd ℚ where
-  gcd := DensePoly.gcdEuclid
-  gcd_dvd_left := DensePoly.gcdEuclid_dvd_left
-  gcd_dvd_right := DensePoly.gcdEuclid_dvd_right
-  dvd_gcd := fun p q h1 h2 => DensePoly.dvd_gcdEuclid p q h1 h2
+  gcd := EuclideanDomain.gcd
+  gcd_dvd_left := EuclideanDomain.gcd_dvd_left
+  gcd_dvd_right := EuclideanDomain.gcd_dvd_right
+  dvd_gcd := fun _ _ h1 h2 => EuclideanDomain.dvd_gcd h1 h2
 
 namespace DensePolyGcd
 
@@ -57,13 +58,6 @@ theorem associated_euclideanDomain_gcd (p q : DensePoly R) :
     (dvd_gcd p q (EuclideanDomain.gcd_dvd_left p q) (EuclideanDomain.gcd_dvd_right p q))
     (EuclideanDomain.dvd_gcd (gcd_dvd_left p q) (gcd_dvd_right p q))
 
-/-- Every instance's gcd is associated to the Euclidean reference algorithm (so any two
-instances' outputs are associated to each other). -/
-theorem gcd_associated_gcdEuclid (p q : DensePoly R) :
-    Associated (gcd p q) (DensePoly.gcdEuclid p q) :=
-  associated_of_dvd_dvd
-    (DensePoly.dvd_gcdEuclid p q (gcd_dvd_left p q) (gcd_dvd_right p q))
-    (dvd_gcd p q (DensePoly.gcdEuclid_dvd_left p q) (DensePoly.gcdEuclid_dvd_right p q))
 
 end DensePolyGcd
 

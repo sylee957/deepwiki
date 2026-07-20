@@ -61,9 +61,6 @@ private def divModMonic [CommRing R] [DecidableEq R] [Nontrivial R] :
 /-- Euclidean division is computable. -/
 private def divMod [Field R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R × DensePoly R :=
   DensePoly.divMod
-/-- The Euclidean polynomial gcd is computable. -/
-private def gcdEuclid [Field R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R :=
-  DensePoly.gcdEuclid
 /-- The dispatching class gcd is computable (through whichever instance resolves). -/
 private def classGcd [Field R] [DecidableEq R] [DensePolyGcd R] :
     DensePoly R → DensePoly R → DensePoly R := DensePolyGcd.gcd
