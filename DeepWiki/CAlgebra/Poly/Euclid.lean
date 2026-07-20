@@ -30,6 +30,22 @@ theorem size_mul {p q : DensePoly R} (hp : p ≠ 0) (hq : q ≠ 0) :
     Polynomial.natDegree_mul (toPolynomial_ne_zero hp) (toPolynomial_ne_zero hq)]
   omega
 
+/-- Units of the dense polynomial ring over a field are exactly the nonzero constants. -/
+theorem exists_C_of_isUnit {u : DensePoly R} (hu : IsUnit u) : ∃ c : R, c ≠ 0 ∧ u = C c := by
+  obtain ⟨w, hw⟩ := hu
+  have hmul : u * ↑w⁻¹ = 1 := by rw [← hw]; exact w.mul_inv
+  have hu0 : u ≠ 0 := fun h0 => by rw [h0, zero_mul] at hmul; exact zero_ne_one hmul
+  have hv0 : (↑w⁻¹ : DensePoly R) ≠ 0 := fun h0 => by
+    rw [h0, mul_zero] at hmul; exact zero_ne_one hmul
+  have hsize := size_mul hu0 hv0
+  rw [hmul, size_one] at hsize
+  have hupos : u.size ≠ 0 := fun h0 => hu0 (eq_zero_of_size_zero h0)
+  have hvpos : (↑w⁻¹ : DensePoly R).size ≠ 0 := fun h0 => hv0 (eq_zero_of_size_zero h0)
+  have hu1 : u.size = 1 := by omega
+  refine ⟨u.coeff 0, ?_, eq_C_of_size_eq_one hu1⟩
+  have hlast := coeff_last_ne_zero_of_pos_size u (by omega)
+  rwa [hu1] at hlast
+
 /-- `DensePoly` over a field is a Euclidean domain: division data is the executable `div`/`mod`,
 the Euclidean measure is `size`. Mathlib's generic `EuclideanDomain.gcd`/`xgcd` and Bézout theory
 then apply to the dense carrier — and compute, since the instance data is computable. -/

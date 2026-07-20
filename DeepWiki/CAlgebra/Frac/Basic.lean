@@ -27,6 +27,13 @@ structure DenseFrac (R : Type u) [CommRing R] [DecidableEq R] where
 
 namespace DenseFrac
 
+/-- Structural equality of fractions is decidable (componentwise on the dense polynomials). -/
+instance : DecidableEq (DenseFrac R) := fun a b =>
+  match decEq a.num b.num, decEq a.den b.den with
+  | isTrue h1, isTrue h2 => isTrue (by cases a; cases b; cases h1; cases h2; rfl)
+  | isFalse h1, _ => isFalse fun h => h1 (congrArg DenseFrac.num h)
+  | _, isFalse h2 => isFalse fun h => h2 (congrArg DenseFrac.den h)
+
 /-- Embed a dense polynomial as a rational function with denominator `1`. -/
 def ofPoly (p : DensePoly R) : DenseFrac R := ⟨p, 1⟩
 

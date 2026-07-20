@@ -4,6 +4,7 @@ import DeepWiki.CAlgebra.Poly.GcdSubresultant
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Frac.Basic
 import DeepWiki.CAlgebra.Frac.Canonical
+import DeepWiki.CAlgebra.Frac.CanonicalField
 
 /-! # Computability guards
 
@@ -74,6 +75,14 @@ private def fracMul [CommRing R] [DecidableEq R] : DenseFrac R → DenseFrac R �
 private def fracAdd [CommRing R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· + ·)
 /-- Fraction canonicalization (gcd-reduce + monic denominator) is computable. -/
 private def fracReduce [Field R] [DecidableEq R] : DenseFrac R → DenseFrac R := DenseFrac.reduce
+/-- Canonical-field addition (renormalizing through `reduce`) is computable. -/
+private def canonicalAdd [Field R] [DecidableEq R] :
+    CanonicalFrac R → CanonicalFrac R → CanonicalFrac R := (· + ·)
+/-- Canonical-field inversion is computable. -/
+private def canonicalInv [Field R] [DecidableEq R] : CanonicalFrac R → CanonicalFrac R := (·⁻¹)
+/-- Semantic equality of rational functions is decidable on the canonical carrier. -/
+private def canonicalEq [Field R] [DecidableEq R] : CanonicalFrac R → CanonicalFrac R → Bool :=
+  fun a b => decide (a = b)
 
 end
 

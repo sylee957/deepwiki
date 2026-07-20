@@ -212,6 +212,16 @@ This is the keystone property the normalization invariant buys. -/
 theorem eq_zero_of_size_zero {p : DensePoly R} (h : p.size = 0) : p = 0 := by
   ext i; rw [coeff_zero]; exact coeff_eq_zero_of_size_le p (by omega)
 
+/-- A polynomial of size `1` is the constant on its `0`-th coefficient. -/
+theorem eq_C_of_size_eq_one {p : DensePoly R} (h : p.size = 1) : p = C (p.coeff 0) := by
+  ext i
+  rw [coeff_C]
+  cases i with
+  | zero => rw [if_pos rfl]
+  | succ n =>
+      rw [if_neg (Nat.succ_ne_zero n)]
+      exact coeff_eq_zero_of_size_le p (by omega)
+
 /-- The largest exponent with a stored coefficient, or `none` for the zero polynomial. -/
 def degree? (p : DensePoly R) : Option Nat :=
   if p.size = 0 then none else some (p.size - 1)

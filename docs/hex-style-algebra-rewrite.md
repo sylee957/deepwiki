@@ -199,8 +199,19 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     Mathlib's `EuclideanDomain.mul_div_cancel'` through our instance — no new division lemmas.
     ★ Lean lesson: `set`-abstract `g`/`n'`/`d'` before rewriting — raw `rw [← hnum]` also rewrites
     the `f.num` inside `gcd f.num f.den` (garbage), and dvd-goals over nested WF `gcd` terms send
-    `whnf` into timeout. REMAINING for the full `≃+* RatFunc`: uniqueness of the canonical form
-    (`toRatFunc f = toRatFunc g → reduce f = reduce g`), then the subtype ring iso.
+    `whnf` into timeout.
+  - **4e DONE (2026-07-21): the canonical fraction FIELD + `≃+* RatFunc`.** Uniqueness keystone
+    (`eq_of_toRatFunc_eq`: coprime + monic representatives are unique — Euclid's lemma on the
+    `IsCoprime` certificates + `exists_C_of_isUnit` unit characterization via `size_mul`) and
+    `reduce_eq_reduce_iff` (canonical forms decide semantic equality) in `Frac/Canonical.lean`;
+    `Frac/CanonicalField.lean` — carrier `CanonicalFrac R` (subtype of `IsCanonical`, ops
+    renormalize through `reduce`), computable hand-built `CommRing` + `Field` instances (laws by
+    transport through the injective denotation; `nnqsmul := _`/`qsmul := _` idiom), decidable
+    SEMANTIC equality (`toRatFunc_eq_iff` + structural `DecidableEq`), and
+    `equivRatFunc : CanonicalFrac R ≃+* RatFunc R` (surjectivity via `reduce ∘ (num, denom)` —
+    no Mathlib num/denom normalization lemmas needed). This is the lawful computable field carrier
+    the fraction-level tower (4c-ii) requires; raw `DenseFrac` stays as the cheap non-normalizing
+    carrier for algorithm interiors. Guards: `canonicalAdd`/`canonicalInv`/`canonicalEq`.
   - **4c-i DONE, module since removed (2026-07-20, user):** `Poly/Tower.lean` validated the depth-2
     tower — `DensePoly (DensePoly R)` a `CommRing` by iterating the instance, and the generic
     `equivTower2 : DensePoly (DensePoly R) ≃+* Polynomial (Polynomial R)` composing the level-2 iso

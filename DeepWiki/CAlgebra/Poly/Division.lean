@@ -112,6 +112,10 @@ theorem leadingCoeff_C_mul {c : R} (hc : c ≠ 0) (p : DensePoly R) :
 theorem leadingCoeff_one : (1 : DensePoly R).leadingCoeff = 1 := by
   simp [leadingCoeff, one_def, C, ofList, trimTrailingZeros, size, coeff, one_ne_zero]
 
+/-- The unit polynomial has size `1`. -/
+theorem size_one : (1 : DensePoly R).size = 1 := by
+  simp [one_def, C, ofList, trimTrailingZeros, size, one_ne_zero]
+
 end DensePoly
 
 end DeepWiki.CAlgebra
