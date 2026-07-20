@@ -46,6 +46,19 @@ theorem exists_C_of_isUnit {u : DensePoly R} (hu : IsUnit u) : ∃ c : R, c ≠ 
   have hlast := coeff_last_ne_zero_of_pos_size u (by omega)
   rwa [hu1] at hlast
 
+/-- Units of the dense polynomial ring are exactly the size-`1` polynomials. -/
+theorem isUnit_iff_size_eq_one {u : DensePoly R} : IsUnit u ↔ u.size = 1 := by
+  constructor
+  · intro hu
+    obtain ⟨c, hc, rfl⟩ := exists_C_of_isUnit hu
+    exact size_C hc
+  · intro hs
+    have hc : u.coeff 0 ≠ 0 := by
+      have h := coeff_last_ne_zero_of_pos_size u (by omega)
+      simpa [hs] using h
+    rw [eq_C_of_size_eq_one hs]
+    exact isUnit_C hc
+
 /-- `toPolynomial` transports the leading coefficient of a nonzero polynomial. -/
 theorem leadingCoeff_toPolynomial {p : DensePoly R} (hp : p ≠ 0) :
     (toPolynomial p).leadingCoeff = p.leadingCoeff := by

@@ -327,6 +327,20 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     polynomial carrier is now a Mathlib **differential ring**, so the abstract Risch/Hermite
     development (over `[Differential K]`) can run over it, with `toPolynomial` carrying each derivation
     step to `Polynomial.derivative`.
+  - **6c-sqf DONE (2026-07-21): squarefree KERNEL** (`Poly/Squarefree.lean`) — first engine-math
+    port onto CAlgebra. Bridge transports `isUnit/squarefree/isCoprime_toPolynomial_iff` (placed
+    here, not Operations — `Squarefree`/`IsCoprime` are outside the base import closure; ★ Mathlib
+    lesson: `isUnit_of_mul_eq_one` no longer exists in this Mathlib (Dedekind-finite refactor) —
+    construct `Units` directly). Derivative criterion `squarefree_iff_isCoprime_deriv` under
+    `[PerfectField R]` (covers char 0 via `PerfectField.ofCharZero`), proved as a pure rw-chain
+    through `PerfectField.separable_iff_squarefree` + `separable_def` + the transports —
+    hypothesis-free (works at `p = 0`). **`DecidablePred (Squarefree)`** via the gcd size test
+    (`squarefree_iff_gcd_deriv_size` + `isUnit_iff_size_eq_one`). `sqfreePart p = p / gcd(p, p′)`
+    with exact-division satellites. New satellites: `size_C` (Dense), `isUnit_C` (Division),
+    `isUnit_iff_size_eq_one` (Euclid), class-level `gcd_ne_zero_of_left` +
+    `isCoprime_iff_isUnit_gcd` (Gcd/Dense — the Bézout block, which also DEDUPS `isCoprime_norm`
+    in Frac/Basic to one line). REMAINING: `Squarefree (sqfreePart p)` (needs the multiplicity
+    argument, Mathlib lacks it) and Yun's full decomposition `p = ∏ pᵢ^i` — the next port step.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

@@ -98,17 +98,8 @@ private theorem isCoprime_norm (n d : DensePoly R) : IsCoprime (normNum n d) (no
       have h1 : g * DensePolyGcd.gcd n' d' ∣ g * 1 := by
         rw [mul_one]; exact DensePolyGcd.dvd_gcd n d h2 h3
       exact (mul_dvd_mul_iff_left hg).mp h1
-    -- Bézout through the Euclidean-domain instance turns the unit gcd into coprimality
-    have hcop : IsCoprime n' d' := by
-      have hED : IsUnit (EuclideanDomain.gcd n' d') :=
-        (DensePolyGcd.associated_euclideanDomain_gcd n' d').symm.isUnit hunit
-      obtain ⟨u, hu⟩ := hED
-      refine ⟨↑u⁻¹ * EuclideanDomain.gcdA n' d', ↑u⁻¹ * EuclideanDomain.gcdB n' d', ?_⟩
-      have hbez := EuclideanDomain.gcd_eq_gcd_ab n' d'
-      calc ↑u⁻¹ * EuclideanDomain.gcdA n' d' * n' + ↑u⁻¹ * EuclideanDomain.gcdB n' d' * d'
-          = ↑u⁻¹ * (n' * EuclideanDomain.gcdA n' d' + d' * EuclideanDomain.gcdB n' d') := by ring
-        _ = ↑u⁻¹ * ↑u := by rw [← hbez, hu]
-        _ = 1 := u.inv_mul
+    -- Bézout through the class-level criterion turns the unit gcd into coprimality
+    have hcop : IsCoprime n' d' := DensePolyGcd.isCoprime_iff_isUnit_gcd.mpr hunit
     -- unit scaling preserves coprimality
     obtain ⟨a, b, hab⟩ := hcop
     have hCC : C c * C c⁻¹ = (1 : DensePoly R) := by

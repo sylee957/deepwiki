@@ -102,6 +102,11 @@ theorem dvd_of_dvd_C_mul {c : R} (hc : c ≠ 0) {d p : DensePoly R} (hd : d ∣ 
     rw [← mul_assoc, ← C_mul, inv_mul_cancel₀ hc, ← one_def, one_mul]
   exact hp ▸ hd.mul_left (C c⁻¹)
 
+/-- Nonzero constants are units. -/
+theorem isUnit_C {c : R} (hc : c ≠ 0) : IsUnit (C c : DensePoly R) :=
+  ⟨⟨C c, C c⁻¹, by rw [← C_mul, mul_inv_cancel₀ hc, ← one_def],
+    by rw [← C_mul, inv_mul_cancel₀ hc, ← one_def]⟩, rfl⟩
+
 /-- Multiplying by a nonzero constant preserves the stored size. -/
 theorem size_C_mul {c : R} (hc : c ≠ 0) (p : DensePoly R) : (C c * p).size = p.size := by
   refine le_antisymm (size_C_mul_le c p) ?_

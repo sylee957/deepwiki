@@ -212,6 +212,10 @@ This is the keystone property the normalization invariant buys. -/
 theorem eq_zero_of_size_zero {p : DensePoly R} (h : p.size = 0) : p = 0 := by
   ext i; rw [coeff_zero]; exact coeff_eq_zero_of_size_le p (by omega)
 
+/-- A nonzero constant has size `1`. -/
+theorem size_C {c : R} (hc : c ≠ 0) : (C c).size = 1 := by
+  simp [C, ofList, size, trimTrailingZeros, hc]
+
 /-- A polynomial of size `1` is the constant on its `0`-th coefficient. -/
 theorem eq_C_of_size_eq_one {p : DensePoly R} (h : p.size = 1) : p = C (p.coeff 0) := by
   ext i

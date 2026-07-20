@@ -3,6 +3,7 @@ import DeepWiki.CAlgebra.Poly.DivisionMonic
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Gcd
 import DeepWiki.CAlgebra.Poly.Derivative
+import DeepWiki.CAlgebra.Poly.Squarefree
 import DeepWiki.CAlgebra.Frac.Basic
 import DeepWiki.CAlgebra.Frac.Field
 
@@ -71,6 +72,13 @@ private def gcdSubresultant [Field R] [DecidableEq R] : DensePoly R → DensePol
 computable `EuclideanDomain (DensePoly R)` instance). -/
 private def euclideanDomainGcd [Field R] [DecidableEq R] :
     DensePoly R → DensePoly R → DensePoly R := EuclideanDomain.gcd
+
+/-- The squarefree part is computable. -/
+private def sqfreePart [Field R] [DecidableEq R] [DensePolyGcd R] :
+    DensePoly R → DensePoly R := DensePoly.sqfreePart
+/-- Squarefreeness is decidable (over a perfect field, e.g. characteristic zero). -/
+private def squarefreeDecide [Field R] [DecidableEq R] [PerfectField R] [DensePolyGcd R] :
+    DensePoly R → Bool := fun p => decide (Squarefree p)
 
 /-! ### Rational-function carrier operations -/
 

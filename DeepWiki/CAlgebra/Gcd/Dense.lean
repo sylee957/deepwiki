@@ -51,6 +51,10 @@ variable [DensePolyGcd R]
 theorem gcd_ne_zero_of_right {q : DensePoly R} (hq : q ≠ 0) (p : DensePoly R) : gcd p q ≠ 0 :=
   fun h0 => hq (zero_dvd_iff.mp (h0 ▸ gcd_dvd_right p q))
 
+/-- The selected gcd of a pair with nonzero left argument is nonzero. -/
+theorem gcd_ne_zero_of_left {p : DensePoly R} (hp : p ≠ 0) (q : DensePoly R) : gcd p q ≠ 0 :=
+  fun h0 => hp (zero_dvd_iff.mp (h0 ▸ gcd_dvd_left p q))
+
 /-- Every instance's gcd is associated to Mathlib's generic Euclidean-domain gcd. -/
 theorem associated_euclideanDomain_gcd (p q : DensePoly R) :
     Associated (EuclideanDomain.gcd p q) (gcd p q) :=
@@ -58,6 +62,24 @@ theorem associated_euclideanDomain_gcd (p q : DensePoly R) :
     (dvd_gcd p q (EuclideanDomain.gcd_dvd_left p q) (EuclideanDomain.gcd_dvd_right p q))
     (EuclideanDomain.dvd_gcd (gcd_dvd_left p q) (gcd_dvd_right p q))
 
+
+/-- Coprimality is a unit gcd: Bézout coefficients come from Mathlib's `xgcd` through the
+Euclidean-domain instance, transported along the agreement with the selected gcd. -/
+theorem isCoprime_iff_isUnit_gcd {p q : DensePoly R} : IsCoprime p q ↔ IsUnit (gcd p q) := by
+  constructor
+  · rintro ⟨a, b, hab⟩
+    exact isUnit_of_dvd_one (hab ▸ dvd_add (Dvd.dvd.mul_left (gcd_dvd_left p q) a)
+      (Dvd.dvd.mul_left (gcd_dvd_right p q) b))
+  · intro hu
+    have hED : IsUnit (EuclideanDomain.gcd p q) :=
+      (associated_euclideanDomain_gcd p q).symm.isUnit hu
+    obtain ⟨u, hu'⟩ := hED
+    refine ⟨↑u⁻¹ * EuclideanDomain.gcdA p q, ↑u⁻¹ * EuclideanDomain.gcdB p q, ?_⟩
+    have hbez := EuclideanDomain.gcd_eq_gcd_ab p q
+    calc ↑u⁻¹ * EuclideanDomain.gcdA p q * p + ↑u⁻¹ * EuclideanDomain.gcdB p q * q
+        = ↑u⁻¹ * (p * EuclideanDomain.gcdA p q + q * EuclideanDomain.gcdB p q) := by ring
+      _ = ↑u⁻¹ * ↑u := by rw [← hbez, hu']
+      _ = 1 := u.inv_mul
 
 end DensePolyGcd
 
