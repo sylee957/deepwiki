@@ -210,8 +210,13 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     SEMANTIC equality (`toRatFunc_eq_iff` + structural `DecidableEq`), and
     `equivRatFunc : CanonicalFrac R ≃+* RatFunc R` (surjectivity via `reduce ∘ (num, denom)` —
     no Mathlib num/denom normalization lemmas needed). This is the lawful computable field carrier
-    the fraction-level tower (4c-ii) requires; raw `DenseFrac` stays as the cheap non-normalizing
-    carrier for algorithm interiors. Guards: `canonicalAdd`/`canonicalInv`/`canonicalEq`.
+    the fraction-level tower (4c-ii) requires. Guards: `canonicalAdd`/`canonicalInv`/`canonicalEq`.
+    ★ REVISED (2026-07-21, user): raw `DenseFrac` is NOT an engine-facing carrier — unreduced
+    arithmetic grows exponentially under iteration (measured: 8 iterations of `f := f + f` from
+    `1/(x+1)` give a degree-256 raw denominator vs the canonical `256/(x+1)`), matching why CAS
+    fraction arithmetic normalizes eagerly. `CanonicalFrac` is THE fraction carrier; `DenseFrac`
+    survives only as the representation layer (subtype base, `reduce`'s domain, one-step ops that
+    the canonical ops renormalize).
   - **4c-i DONE, module since removed (2026-07-20, user):** `Poly/Tower.lean` validated the depth-2
     tower — `DensePoly (DensePoly R)` a `CommRing` by iterating the instance, and the generic
     `equivTower2 : DensePoly (DensePoly R) ≃+* Polynomial (Polynomial R)` composing the level-2 iso

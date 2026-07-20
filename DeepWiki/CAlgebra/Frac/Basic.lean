@@ -1,11 +1,14 @@
 import DeepWiki.CAlgebra.Poly.Operations
 import Mathlib.FieldTheory.RatFunc.Basic
 
-/-! # Computable rational functions (`DenseFrac`)
+/-! # Raw fraction pairs (`DenseFrac`) — the representation layer
 
-`DenseFrac R` is a numerator/denominator pair of dense polynomials — the computable carrier for
-rational functions — together with its arithmetic and its Mathlib correspondence `toRatFunc` into
-`RatFunc R` (`num/den`). Carrier + ops need only `CommRing`; the `RatFunc` bridge needs `Field`. -/
+`DenseFrac R` is a numerator/denominator pair of dense polynomials: the **representation layer**
+beneath the canonical carrier `CanonicalFrac`, supplying the data type, the one-step arithmetic,
+and the `toRatFunc` homomorphism that the canonical construction reduces and transports. It is not
+itself a carrier: raw pairs form no lawful ring (representatives drift, e.g. `f + (−f) = ⟨0, d²⟩`),
+and unreduced arithmetic grows exponentially under iteration — engine-facing code uses
+`CanonicalFrac`. Pair + ops need only `CommRing`; the `RatFunc` bridge needs `Field`. -/
 
 open Polynomial
 
