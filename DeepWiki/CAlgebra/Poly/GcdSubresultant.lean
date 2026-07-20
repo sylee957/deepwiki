@@ -1,5 +1,5 @@
-import DeepWiki.CAlgebra.Poly.PseudoDivision
-import DeepWiki.CAlgebra.Poly.Euclid
+import DeepWiki.CAlgebra.Poly.DivisionPseudo
+import DeepWiki.CAlgebra.Poly.Gcd
 
 /-! # Polynomial gcd via the subresultant pseudo-remainder sequence
 

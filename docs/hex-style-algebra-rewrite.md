@@ -154,6 +154,11 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `euclideanDomain_gcd_associated_gcd` connects the generic gcd to ours by universal property.
     `toPolynomial_ne_zero` moved Frac/Basic → Operations. Next candidate: `GCDMonoid` instance
     (needs dvd → `mod = 0` exact-division lemma).
+  - **2g DONE (2026-07-20): division/gcd file reorg** (zero declaration changes, user layout):
+    `Poly/Division.lean` (long division), `Poly/DivisionPseudo.lean` (renamed from
+    `PseudoDivision.lean`), `Poly/Gcd.lean` (Euclidean gcd + universal property + Mathlib bridge),
+    `Poly/GcdSubresultant.lean`, `Poly/Euclid.lean` (now solely the `EuclideanDomain` instance +
+    size lemmas + generic-gcd agreement). Base-concept-first naming so families sort together.
 - **Phase 3 — resultant / subresultant / Bareiss** + Mathlib correspondence. **← NEXT.**
   Approach (scouted): bridge target is Mathlib `Polynomial.resultant` (exists, over `CommRing`). Hex
   has no standalone resultant module — it computes via the **Sylvester-matrix determinant**
