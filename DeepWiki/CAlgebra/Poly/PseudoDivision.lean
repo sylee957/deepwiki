@@ -72,6 +72,11 @@ theorem pseudoDivMod_spec {q : DensePoly R} (hq : q.size ≠ 0) (p : DensePoly R
   simp only [toPolynomial_mul, toPolynomial_add, toPolynomial_C, toPolynomial_zero]
   ring
 
+/-- `pseudoMod p q` as an explicit difference (the pseudo-division identity rearranged). -/
+theorem pseudoMod_eq_sub {q : DensePoly R} (hq : q.size ≠ 0) (p : DensePoly R) :
+    pseudoMod p q = C (q.leadingCoeff ^ (p.size + 1 - q.size)) * p - pseudoDiv p q * q :=
+  eq_sub_of_add_eq' (pseudoDivMod_spec hq p)
+
 /-- One pseudo-division step strictly decreases the remainder size (leading-term cancellation,
 using commutativity in place of a leading-coefficient division). -/
 theorem pseudoStep_size_lt {q r : DensePoly R} (hq : q.size ≠ 0) (hr : q.size ≤ r.size) :

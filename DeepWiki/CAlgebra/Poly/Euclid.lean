@@ -88,6 +88,10 @@ theorem mod_size_lt {q : DensePoly R} (hq : q.size ≠ 0) (p : DensePoly R) :
     (mod p q).size < q.size :=
   divModAux_rem_size_lt hq p 0
 
+/-- `mod p q = p - (p / q) * q`, the remainder as an explicit difference. -/
+theorem mod_eq_sub (p q : DensePoly R) : mod p q = p - div p q * q :=
+  eq_sub_of_add_eq' (divMod_spec p q)
+
 /-- Polynomial gcd via the Euclidean algorithm (last nonzero remainder). -/
 def gcd (p q : DensePoly R) : DensePoly R :=
   if q.size = 0 then p else gcd q (mod p q)
@@ -95,14 +99,6 @@ def gcd (p q : DensePoly R) : DensePoly R :=
   decreasing_by
     rename_i h
     exact mod_size_lt h p
-
-/-- A size-zero polynomial is the zero polynomial. -/
-theorem eq_zero_of_size_zero {p : DensePoly R} (h : p.size = 0) : p = 0 := by
-  ext i; rw [coeff_zero]; exact coeff_eq_zero_of_size_le p (by omega)
-
-/-- `mod p q = p - (p / q) * q`, the remainder as an explicit difference. -/
-theorem mod_eq_sub (p q : DensePoly R) : mod p q = p - div p q * q :=
-  eq_sub_of_add_eq' (divMod_spec p q)
 
 /-- The Euclidean gcd divides both arguments (soundness half of the gcd universal property). -/
 theorem gcd_dvd (p q : DensePoly R) : gcd p q ∣ p ∧ gcd p q ∣ q := by
@@ -136,11 +132,6 @@ theorem dvd_gcd {d : DensePoly R} : ∀ p q, d ∣ p → d ∣ q → d ∣ gcd p
       rw [mod_eq_sub]
       exact dvd_sub hp (hq.mul_left (div p q))
 
-/-- Validation: the gcd is a genuine greatest common divisor. -/
-example (p q : DensePoly R) : gcd p q ∣ p ∧ gcd p q ∣ q ∧
-    ∀ d, d ∣ p → d ∣ q → d ∣ gcd p q :=
-  ⟨gcd_dvd_left p q, gcd_dvd_right p q, fun _ hp hq => dvd_gcd p q hp hq⟩
-
 end DensePoly
 
 /-! ### gcd correspondence to Mathlib's `EuclideanDomain.gcd` -/
@@ -163,12 +154,5 @@ theorem toPolynomial_gcd_associated (p q : DensePoly R) :
       dvd_of_toPolynomial_dvd (by rw [toPolynomial_ofPolynomial]; exact EuclideanDomain.gcd_dvd_right _ _)
     have hfin := toPolynomial_dvd (DensePoly.dvd_gcd p q hgp hgq)
     rwa [toPolynomial_ofPolynomial] at hfin
-
-variable {R : Type u} [Field R] [DecidableEq R] in
-/-- Validation: the executable gcd and Mathlib's gcd divide each other (are associated). -/
-example (p q : DensePoly R) :
-    toPolynomial (DensePoly.gcd p q) ∣ EuclideanDomain.gcd (toPolynomial p) (toPolynomial q) ∧
-    EuclideanDomain.gcd (toPolynomial p) (toPolynomial q) ∣ toPolynomial (DensePoly.gcd p q) :=
-  ⟨(toPolynomial_gcd_associated p q).dvd, (toPolynomial_gcd_associated p q).symm.dvd⟩
 
 end DeepWiki.CAlgebra

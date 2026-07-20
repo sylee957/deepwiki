@@ -137,6 +137,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `size_le_of_coeff_zero` → `Poly/Dense`; `coeff_monomial_mul` + new `coeff_C_mul`/`size_C_mul_le` →
     `Poly/Operations`). Computability guarded; validated over `ℤ` and `DensePoly (DensePoly ℤ)`
     (dev `#eval`s, removed). Prerequisite for subresultant PRS / tower-coefficient division (3b'/6).
+  - **2e DONE (2026-07-20):** `Poly/GcdSubresultant.lean` — subresultant-PRS gcd `gcdSubresultant`
+    ALONGSIDE the Euclidean `gcd` (user directive: keep both, connect by proof): each pseudo-remainder
+    divided by `β = (−1)^(δ+1)·g·h^δ` (a unit constant over a field), universal property proved via
+    unit-cancellation (`dvd_of_dvd_C_mul`), and the **agreement theorem**
+    `gcdSubresultant_associated_gcd : Associated (gcdSubresultant p q) (gcd p q)` (both satisfy the
+    same universal property). Mathlib bridge `toPolynomial_gcdSubresultant_associated` DERIVED by
+    mapping the agreement through the iso and composing with the Euclidean bridge. Satellites:
+    `C_mul` (Operations), `pseudoMod_eq_sub` (PseudoDivision), `eq_zero_of_size_zero` generalized to
+    `Poly/Dense`. Fraction-free variant over non-field domains (exact-division interface) deferred.
 - **Phase 3 — resultant / subresultant / Bareiss** + Mathlib correspondence. **← NEXT.**
   Approach (scouted): bridge target is Mathlib `Polynomial.resultant` (exists, over `CommRing`). Hex
   has no standalone resultant module — it computes via the **Sylvester-matrix determinant**

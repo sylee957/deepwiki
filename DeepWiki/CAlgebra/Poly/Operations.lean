@@ -149,6 +149,10 @@ theorem coeff_C_mul (c : R) (p : DensePoly R) (n : Nat) :
   rw [Finset.sum_ite_eq' (Finset.range (n + 1)) 0 (fun i => c * p.coeff (n - i))]
   simp
 
+/-- `C` is multiplicative: `C (a * b) = C a * C b`. -/
+theorem C_mul (a b : R) : (C (a * b) : DensePoly R) = C a * C b := by
+  ext n; rw [coeff_C, coeff_C_mul, coeff_C, mul_ite, mul_zero]
+
 /-- Constant multiplication never increases the stored size. -/
 theorem size_C_mul_le (c : R) (p : DensePoly R) : (C c * p).size ≤ p.size :=
   size_le_of_coeff_zero fun j hj => by

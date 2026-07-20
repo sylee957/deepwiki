@@ -1,5 +1,6 @@
 import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Poly.PseudoDivision
+import DeepWiki.CAlgebra.Poly.GcdSubresultant
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Frac.Basic
 
@@ -56,6 +57,9 @@ private def divMod [Field R] [DecidableEq R] : DensePoly R → DensePoly R → D
   DensePoly.divMod
 /-- Polynomial gcd is computable. -/
 private def gcd [Field R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R := DensePoly.gcd
+/-- The subresultant-PRS gcd is computable. -/
+private def gcdSubresultant [Field R] [DecidableEq R] : DensePoly R → DensePoly R → DensePoly R :=
+  DensePoly.gcdSubresultant
 
 /-! ### Rational-function carrier operations -/
 

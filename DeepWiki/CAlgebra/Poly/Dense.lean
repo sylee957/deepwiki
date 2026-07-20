@@ -203,6 +203,10 @@ This is the keystone property the normalization invariant buys. -/
       simpa only [coeff_mk, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h₁,
         List.getElem?_eq_getElem h₂, Option.getD_some] using this
 
+/-- A size-zero polynomial is the zero polynomial. -/
+theorem eq_zero_of_size_zero {p : DensePoly R} (h : p.size = 0) : p = 0 := by
+  ext i; rw [coeff_zero]; exact coeff_eq_zero_of_size_le p (by omega)
+
 /-- The largest exponent with a stored coefficient, or `none` for the zero polynomial. -/
 def degree? (p : DensePoly R) : Option Nat :=
   if p.size = 0 then none else some (p.size - 1)
