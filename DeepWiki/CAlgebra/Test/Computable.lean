@@ -3,6 +3,7 @@ import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Poly.GcdSubresultant
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Frac.Basic
+import DeepWiki.CAlgebra.Frac.Canonical
 
 /-! # Computability guards
 
@@ -71,6 +72,8 @@ private def euclideanDomainGcd [Field R] [DecidableEq R] :
 private def fracMul [CommRing R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· * ·)
 /-- Rational-function addition (carrier) is computable. -/
 private def fracAdd [CommRing R] [DecidableEq R] : DenseFrac R → DenseFrac R → DenseFrac R := (· + ·)
+/-- Fraction canonicalization (gcd-reduce + monic denominator) is computable. -/
+private def fracReduce [Field R] [DecidableEq R] : DenseFrac R → DenseFrac R := DenseFrac.reduce
 
 end
 

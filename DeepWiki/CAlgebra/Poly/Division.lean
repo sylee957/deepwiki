@@ -96,6 +96,22 @@ theorem div_zero (p : DensePoly R) : div p 0 = 0 := by
   simp only [div, divMod]
   rw [divModAux.eq_def, if_pos (Or.inr size_zero)]
 
+/-- Multiplying by a nonzero constant preserves the stored size. -/
+theorem size_C_mul {c : R} (hc : c ≠ 0) (p : DensePoly R) : (C c * p).size = p.size := by
+  refine le_antisymm (size_C_mul_le c p) ?_
+  conv_lhs => rw [show p = C c⁻¹ * (C c * p) by
+    rw [← mul_assoc, ← C_mul, inv_mul_cancel₀ hc, ← one_def, one_mul]]
+  exact size_C_mul_le _ _
+
+/-- Multiplying by a nonzero constant scales the leading coefficient. -/
+theorem leadingCoeff_C_mul {c : R} (hc : c ≠ 0) (p : DensePoly R) :
+    (C c * p).leadingCoeff = c * p.leadingCoeff := by
+  rw [leadingCoeff, leadingCoeff, size_C_mul hc, coeff_C_mul]
+
+/-- The unit polynomial is monic. -/
+theorem leadingCoeff_one : (1 : DensePoly R).leadingCoeff = 1 := by
+  simp [leadingCoeff, one_def, C, ofList, trimTrailingZeros, size, coeff, one_ne_zero]
+
 end DensePoly
 
 end DeepWiki.CAlgebra

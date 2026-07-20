@@ -169,6 +169,11 @@ def leadingCoeff (p : DensePoly R) : R := p.coeff (p.size - 1)
 theorem leadingCoeff_ne_zero {p : DensePoly R} (hp : p.size ≠ 0) : leadingCoeff p ≠ 0 :=
   coeff_last_ne_zero_of_pos_size p (Nat.pos_of_ne_zero hp)
 
+/-- The zero polynomial has leading coefficient `0`. -/
+@[simp] theorem leadingCoeff_zero : (0 : DensePoly R).leadingCoeff = 0 := by
+  simp [leadingCoeff, coeff]
+  rfl
+
 /-- If every coefficient from index `n` upward vanishes, the size is at most `n`. -/
 theorem size_le_of_coeff_zero {p : DensePoly R} {n : Nat} (h : ∀ j, n ≤ j → p.coeff j = 0) :
     p.size ≤ n := by

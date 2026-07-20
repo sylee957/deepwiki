@@ -43,6 +43,10 @@ theorem gcd_dvd_left (p q : DensePoly R) : gcd p q ∣ p := (gcd_dvd p q).1
 /-- The Euclidean gcd divides its right argument. -/
 theorem gcd_dvd_right (p q : DensePoly R) : gcd p q ∣ q := (gcd_dvd p q).2
 
+/-- The gcd of a pair with nonzero right argument is nonzero. -/
+theorem gcd_ne_zero_of_right {q : DensePoly R} (hq : q ≠ 0) (p : DensePoly R) : gcd p q ≠ 0 :=
+  fun h0 => hq (zero_dvd_iff.mp (h0 ▸ gcd_dvd_right p q))
+
 /-- Any common divisor divides the gcd (greatest / completeness half of the universal property). -/
 theorem dvd_gcd {d : DensePoly R} : ∀ p q, d ∣ p → d ∣ q → d ∣ gcd p q := by
   intro p q
