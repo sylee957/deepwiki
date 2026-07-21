@@ -587,7 +587,10 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     recorded. ★ Lesson: `exact lemma _ _ (...)` with underscores for lambda-parameters of a
     WF-def can send the unifier INTO the WF-body (isDefEq timeout on `EuclideanDomain.gcd`)
     — pass the lambdas explicitly; same for `set`-opaquing mapped lists whose functions
-    contain WF-defs.
+    contain WF-defs. Naming follow-up: the family is now uniform —
+    `resultantPRSEuclidean` / `resultantPRSPrimitive` (future slot:
+    `resultantPRSSubresultant`), bivariate sequence `prsPrimitive` (was `primPRS`),
+    instances `euclideanDensePolyResultant` / `primitiveDensePolyResultant`.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

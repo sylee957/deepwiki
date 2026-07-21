@@ -126,12 +126,12 @@ def zPrimitive (p : DensePoly (DensePoly R)) : DensePoly (DensePoly R) :=
 
 /-- The primitive pseudo-remainder sequence in `x` over `K[z]`, starting from the second
 input: pseudo-divide, take the `z`-primitive part, recurse. -/
-def primPRS : ℕ → DensePoly (DensePoly R) → DensePoly (DensePoly R) →
+def prsPrimitive : ℕ → DensePoly (DensePoly R) → DensePoly (DensePoly R) →
     List (DensePoly (DensePoly R))
   | 0, _, _ => []
   | fuel + 1, A, B =>
       if B = 0 then []
-      else B :: primPRS fuel B (zPrimitive (pseudoMod A B))
+      else B :: prsPrimitive fuel B (zPrimitive (pseudoMod A B))
 
 end DensePoly
 

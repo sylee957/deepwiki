@@ -8,7 +8,7 @@ the larger argument by pseudo-division, correct by leading-coefficient powers an
 slack degree bounds down. Each algorithm branch mirrors one Mathlib resultant identity
 (`resultant_add_mul_right`, `resultant_C_mul_right`, `resultant_add_left_deg`,
 `resultant_add_right_deg`, `resultant_comm`, and the constant/zero base cases), so the
-equivalence `resultantPRS_eq` with the Sylvester-determinant resultant is a functional
+equivalence `resultantPRSEuclidean_eq` with the Sylvester-determinant resultant is a functional
 induction gluing those identities — polynomial-time where the determinant is factorial. -/
 
 open Polynomial
@@ -301,16 +301,16 @@ theorem resultantDescent_eq (clean : DensePoly S → S × DensePoly S)
 
 /-- **Resultant by the pseudo-remainder sequence** at the canonical degrees — the trivial
 instantiation of the descent (no stripping). -/
-def resultantPRS (f g : DensePoly S) : S :=
+def resultantPRSEuclidean (f g : DensePoly S) : S :=
   resultantDescent (fun r => (1, r)) (fun _ => le_refl _) f g (f.size - 1) (g.size - 1)
 
 /-- **The PRS resultant agrees with the Sylvester-determinant resultant** at the canonical
 degrees — hypothesis-free: functional induction over the descent, each branch discharged by
 the matching Mathlib identity. -/
-theorem resultantPRS_eq (f g : DensePoly S) :
-    resultantPRS f g = (toPolynomial f).resultant (toPolynomial g)
+theorem resultantPRSEuclidean_eq (f g : DensePoly S) :
+    resultantPRSEuclidean f g = (toPolynomial f).resultant (toPolynomial g)
       (toPolynomial f).natDegree (toPolynomial g).natDegree := by
-  rw [resultantPRS, natDegree_toPolynomial_eq_size_sub_one,
+  rw [resultantPRSEuclidean, natDegree_toPolynomial_eq_size_sub_one,
     natDegree_toPolynomial_eq_size_sub_one]
   exact resultantDescent_eq _ _ (fun r => by rw [← one_def, one_mul]) f g _ _
     (le_of_eq (natDegree_toPolynomial_eq_size_sub_one f))

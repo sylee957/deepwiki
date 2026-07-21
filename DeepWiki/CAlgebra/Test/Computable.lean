@@ -126,9 +126,9 @@ private def resultantPRSPrimitiveGuard [Field R] [DecidableEq R] :
   DensePoly.resultantPRSPrimitive
 
 /-- The PRS resultant computes over a computable Euclidean coefficient domain. -/
-private def resultantPRSGuard [Field R] [DecidableEq R] :
+private def resultantPRSEuclideanGuard [Field R] [DecidableEq R] :
     DensePoly (DensePoly R) → DensePoly (DensePoly R) → DensePoly R :=
-  DensePoly.resultantPRS
+  DensePoly.resultantPRSEuclidean
 
 /-- The dispatched squarefree decomposition computes through the class interface. -/
 private def classSqfDecompGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :

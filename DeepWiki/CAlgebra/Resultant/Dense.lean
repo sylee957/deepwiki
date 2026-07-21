@@ -32,10 +32,10 @@ instance (priority := 100) {S : Type u} [CommRing S] [DecidableEq S] :
 
 /-- Euclidean-descent algorithm: the pseudo-remainder sequence, where the coefficients form
 a computable Euclidean domain — polynomial-time. -/
-instance (priority := 200) prsDensePolyResultant {S : Type u} [EuclideanDomain S]
+instance (priority := 200) euclideanDensePolyResultant {S : Type u} [EuclideanDomain S]
     [DecidableEq S] : DensePolyResultant S where
-  resultant := DensePoly.resultantPRS
-  resultant_eq := DensePoly.resultantPRS_eq
+  resultant := DensePoly.resultantPRSEuclidean
+  resultant_eq := DensePoly.resultantPRSEuclidean_eq
 
 /-- Primitive pseudo-remainder sequence: content-stripping keeps coefficients small — wins
 the dispatch (320× over the plain descent on a degree-8 bivariate benchmark). -/
