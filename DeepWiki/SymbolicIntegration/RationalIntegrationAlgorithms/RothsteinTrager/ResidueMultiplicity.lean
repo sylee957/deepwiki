@@ -174,4 +174,36 @@ theorem czichowskiR1_dvd_rtResultant [IsAlgClosed F] (A D : F[X]) :
   (Multiset.prod_dvd_prod_of_le (Multiset.map_le_map (Multiset.dedup_le _))).trans
     (prod_multiset_X_sub_C_dvd _)
 
+open scoped Classical in
+/-- The residue multiplicity is at most `deg D` (it is the degree of a divisor of `D`). -/
+theorem rootMultiplicity_rtResultant_le [IsAlgClosed F] (A D : F[X]) (hD : D.Separable)
+    (hA : A.natDegree < D.natDegree) (a : F) :
+    (rtResultant A D).rootMultiplicity a ≤ D.natDegree := by
+  rw [rootMultiplicity_rtResultant_eq_natDegree_gcd A D hD hA a]
+  exact Polynomial.natDegree_le_of_dvd (gcd_dvd_left _ _) (fun h => by simp [h] at hA)
+
+/-- The Rothstein–Trager resultant of a separable denominator is nonzero: each root-product
+factor carries `−D′(α)·t` with `D′(α) ≠ 0` by separability. -/
+theorem rtResultant_ne_zero [IsAlgClosed F] (A D : F[X]) (hD : D.Separable)
+    (hA : A.natDegree < D.natDegree) : rtResultant A D ≠ 0 := by
+  have hD0 : D ≠ 0 := fun h => by simp [h] at hA
+  rw [rtResultant_eq_prod_roots A D hA]
+  refine mul_ne_zero (pow_ne_zero _ (by
+    rw [Ne, C_eq_zero]
+    exact leadingCoeff_ne_zero.mpr hD0)) ?_
+  refine Multiset.prod_ne_zero ?_
+  rw [Multiset.mem_map]
+  rintro ⟨α, hα, hfac⟩
+  have hDα : D.eval α = 0 := by
+    have := (mem_roots hD0).mp hα
+    exact this
+  have hD'α : (derivative D).eval α = 0 := by
+    have h1 := congrArg (fun q => Polynomial.coeff q 1) hfac
+    simp only [coeff_sub, coeff_C, coeff_zero, mul_comm Polynomial.X, coeff_C_mul,
+      coeff_X_one, mul_one, if_neg one_ne_zero, zero_sub, neg_eq_zero] at h1
+    exact h1
+  obtain ⟨u, v, huv⟩ := hD
+  have := congrArg (Polynomial.eval α) huv
+  simp [hDα, hD'α] at this
+
 end DeepWiki.SymbolicIntegration

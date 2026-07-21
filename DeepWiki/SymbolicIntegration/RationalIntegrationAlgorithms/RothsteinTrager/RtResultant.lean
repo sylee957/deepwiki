@@ -20,6 +20,51 @@ noncomputable def rtResultant (A D : K[X]) : K[X] :=
     (A.map (C : K →+* K[X]) - C Polynomial.X * (derivative D).map (C : K →+* K[X]))
     D.natDegree (D.natDegree - 1)
 
+/-- The Rothstein–Trager second operand's coefficient at `deg D − 1` is nonzero — it
+carries the `t`-linear term `−lc(D′)·t` (characteristic zero). -/
+theorem rtResultant_operand_coeff_ne_zero [CharZero K] (A D : K[X])
+    (hAD : A.natDegree < D.natDegree) :
+    (A.map (C : K →+* K[X])
+        - C Polynomial.X * (derivative D).map (C : K →+* K[X])).coeff (D.natDegree - 1)
+      ≠ 0 := by
+  have hD0 : D ≠ 0 := fun h => by simp [h] at hAD
+  have hdne : (derivative D).coeff (D.natDegree - 1) ≠ 0 := by
+    have he : D.natDegree - 1 + 1 = D.natDegree := by omega
+    rw [Polynomial.coeff_derivative, he]
+    refine mul_ne_zero (Polynomial.leadingCoeff_ne_zero.mpr hD0) ?_
+    exact_mod_cast Nat.succ_ne_zero (D.natDegree - 1)
+  rw [Polynomial.coeff_sub, Polynomial.coeff_map, Polynomial.coeff_C_mul,
+    Polynomial.coeff_map]
+  intro h
+  have hX : Polynomial.X * C ((derivative D).coeff (D.natDegree - 1))
+      = C (A.coeff (D.natDegree - 1)) := (sub_eq_zero.mp h).symm
+  have hdeg := congrArg Polynomial.natDegree hX
+  rw [Polynomial.natDegree_mul Polynomial.X_ne_zero
+      (fun hc => hdne (by simpa [Polynomial.C_eq_zero] using hc)),
+    Polynomial.natDegree_X, Polynomial.natDegree_C, Polynomial.natDegree_C] at hdeg
+  omega
+
+/-- The exact degree of the Rothstein–Trager second operand: for `deg A < deg D` in
+characteristic zero, `deg_x (A.map C − C X · (D′).map C) = deg D − 1` — the top coefficient
+carries the nonzero `t`-linear term `−lc(D′)·t`. -/
+theorem natDegree_rtResultant_operand [CharZero K] (A D : K[X])
+    (hAD : A.natDegree < D.natDegree) :
+    (A.map (C : K →+* K[X])
+        - C Polynomial.X * (derivative D).map (C : K →+* K[X])).natDegree
+      = D.natDegree - 1 := by
+  have hD0 : D ≠ 0 := fun h => by simp [h] at hAD
+  have hupper : (A.map (C : K →+* K[X])
+      - C Polynomial.X * (derivative D).map (C : K →+* K[X])).natDegree
+        ≤ D.natDegree - 1 := by
+    refine le_trans (Polynomial.natDegree_sub_le _ _) (max_le ?_ ?_)
+    · rw [Polynomial.natDegree_map_eq_of_injective Polynomial.C_injective]
+      omega
+    · refine le_trans (Polynomial.natDegree_C_mul_le _ _) ?_
+      rw [Polynomial.natDegree_map_eq_of_injective Polynomial.C_injective]
+      exact Polynomial.natDegree_derivative_le D
+  exact le_antisymm hupper
+    (Polynomial.le_natDegree_of_ne_zero (rtResultant_operand_coeff_ne_zero A D hAD))
+
 /-- Evaluating `rtResultant A D` at `a` gives `resultant_x(D, A - C a * D')`. -/
 theorem rtResultant_eval (A D : K[X]) (a : K) :
     (rtResultant A D).eval a
