@@ -46,6 +46,14 @@ theorem exists_C_of_isUnit {u : DensePoly R} (hu : IsUnit u) : ∃ c : R, c ≠ 
   have hlast := coeff_last_ne_zero_of_pos_size u (by omega)
   rwa [hu1] at hlast
 
+/-- Divisors of a nonzero polynomial have no larger size. -/
+theorem size_le_size_of_dvd {p q : DensePoly R} (hq : q ≠ 0) (hpq : p ∣ q) : p.size ≤ q.size := by
+  have hp : p ≠ 0 := fun h0 => hq (by simpa [h0] using zero_dvd_iff.mp (h0 ▸ hpq))
+  have h := Polynomial.natDegree_le_of_dvd (toPolynomial_dvd hpq) (toPolynomial_ne_zero hq)
+  have h1 := size_eq_natDegree_add_one hp
+  have h2 := size_eq_natDegree_add_one hq
+  omega
+
 /-- Units of the dense polynomial ring are exactly the size-`1` polynomials. -/
 theorem isUnit_iff_size_eq_one {u : DensePoly R} : IsUnit u ↔ u.size = 1 := by
   constructor

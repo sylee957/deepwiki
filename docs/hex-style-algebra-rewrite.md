@@ -339,8 +339,21 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     with exact-division satellites. New satellites: `size_C` (Dense), `isUnit_C` (Division),
     `isUnit_iff_size_eq_one` (Euclid), class-level `gcd_ne_zero_of_left` +
     `isCoprime_iff_isUnit_gcd` (Gcd/Dense — the Bézout block, which also DEDUPS `isCoprime_norm`
-    in Frac/Basic to one line). REMAINING: `Squarefree (sqfreePart p)` (needs the multiplicity
-    argument, Mathlib lacks it) and Yun's full decomposition `p = ∏ pᵢ^i` — the next port step.
+    in Frac/Basic to one line).
+  - **6c-sqf-2 DONE (2026-07-21): keystone + Musser decomposition.**
+    `DeepWiki/Algebra/SquarefreeGcd.lean` (TOP-LEVEL Algebra area, per user — Mathlib-side
+    statements live beside `SquarefreeDeflation`, not in CAlgebra):
+    `Polynomial.squarefree_div_gcd_derivative` — over char 0, `p / gcd(p, p′)` is squarefree;
+    the per-prime max-power argument (`Nat.findGreatest`, `derivative_pow`, char-0 `C k ∤`,
+    `degree_derivative_lt`); a Mathlib gap, upstream candidate. Transported:
+    `squarefree_sqfreePart` (via gcd-agreement + unit cancellation). **Musser's `sqfDecomp`**
+    (recursion on `gcd(p, p′)`, size strictly drops in char 0 — NO fuel, unlike Yun's stalling
+    loop) with `squarefree_of_mem_sqfDecomp` (every factor squarefree). ★ Lean lessons re-hit:
+    decreasing_by-only class args need explicit binders; `rw [← h]` self-referential when the
+    RHS occurs inside the goal's other operands; ED-`/` vs `div` spelling for `ring`/`omega`
+    atoms — ascribe. REMAINING: the exponent-exact reconstruction `p ~ ∏ pᵢ^i` (needs the
+    invariant `gcd(c, s) ~ ∏_{i≥2} pᵢ`, i.e. keystone-B "prime coverage of the squarefree
+    part" + associates bookkeeping through the recursion).
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

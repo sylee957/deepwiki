@@ -80,6 +80,10 @@ private def sqfreePart [Field R] [DecidableEq R] [DensePolyGcd R] :
 private def squarefreeDecide [Field R] [DecidableEq R] [PerfectField R] [DensePolyGcd R] :
     DensePoly R → Bool := fun p => decide (Squarefree p)
 
+/-- Musser's squarefree decomposition is computable. -/
+private def sqfDecompGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :
+    DensePoly R → List (DensePoly R) := DensePoly.sqfDecomp
+
 /-! ### Rational-function carrier operations -/
 
 /-- Fraction canonicalization (gcd-reduce + monic denominator) is computable. -/

@@ -29,6 +29,11 @@ def deriv (p : DensePoly R) : DensePoly R :=
   · rw [if_pos h]
   · rw [if_neg h, coeff_eq_zero_of_size_le p (by omega), mul_zero]
 
+/-- The derivative loses at least one stored coefficient. -/
+theorem size_deriv_le (p : DensePoly R) : (deriv p).size ≤ p.size - 1 :=
+  size_le_of_coeff_zero fun j hj => by
+    rw [coeff_deriv, coeff_eq_zero_of_size_le p (by omega), mul_zero]
+
 end DensePoly
 
 /-- `toPolynomial` intertwines the formal derivative with Mathlib's `Polynomial.derivative`. -/
