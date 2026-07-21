@@ -248,6 +248,41 @@ noncomputable def lrtLogArg (b d : DensePoly R) (a : R) : Polynomial R :=
   then (toPolynomial₂ h.choose.2).map (Polynomial.evalRingHom a)
   else 1
 
+/-- The residues of a canonical fraction: `A(α)/D′(α)` over the roots of `D`. -/
+noncomputable def residueSet (g : DenseFrac R) : Finset R :=
+  (toPolynomial g.den.toPoly).roots.toFinset.image
+    (fun α => (toPolynomial g.num).eval α
+      / (Polynomial.derivative (toPolynomial g.den.toPoly)).eval α)
+
+omit [CharZero R] [DensePolyGcd R] [DensePolySquarefree R] [IsAlgClosed R] in
+/-- Membership reading of `residueSet`: the residues are the values `A(α)/D′(α)` at
+roots `α` of `D`. -/
+theorem mem_residueSet_iff {g : DenseFrac R} {a : R} :
+    a ∈ residueSet g ↔ ∃ α ∈ (toPolynomial g.den.toPoly).roots.toFinset,
+      (toPolynomial g.num).eval α
+        / (Polynomial.derivative (toPolynomial g.den.toPoly)).eval α = a := by
+  simp [residueSet]
+
+open DeepWiki.SymbolicIntegration in
+/-- One log term of the LRT output: `a · logDeriv S(a, x)`, with the log-derivative's
+`Differential` instance baked in (the instance-boundary discipline, as for `rtLogGcd`). -/
+noncomputable def lrtLogTerm (g : DenseFrac R) (a : R) : RatFunc R :=
+  algebraMap (Polynomial R) (RatFunc R) (Polynomial.C a)
+    * @Differential.logDeriv (RatFunc R) _
+        SymbolicIntegration.instDifferentialRatFunc_deepWiki
+        (algebraMap (Polynomial R) (RatFunc R) (lrtLogArg g.num g.den.toPoly a))
+
+open DeepWiki.SymbolicIntegration in
+omit [CharZero R] [IsAlgClosed R] in
+/-- Unfolding reading of `lrtLogTerm`. -/
+theorem lrtLogTerm_def (g : DenseFrac R) (a : R) :
+    lrtLogTerm g a
+      = algebraMap (Polynomial R) (RatFunc R) (Polynomial.C a)
+        * @Differential.logDeriv (RatFunc R) _
+            SymbolicIntegration.instDifferentialRatFunc_deepWiki
+            (algebraMap (Polynomial R) (RatFunc R) (lrtLogArg g.num g.den.toPoly a)) :=
+  rfl
+
 open DeepWiki.SymbolicIntegration in
 /-- Raw core of the summed log-part soundness, on a numerator/denominator pair with size
 and separability hypotheses; the public form is `lrtLogTerms_sum_sound`. -/
@@ -358,15 +393,7 @@ Hermite output directly — the engine's rational integration is theorem-backed 
 theorem lrtLogTerms_sum_sound (g : DenseFrac R) (hnum : g.num ≠ 0)
     (hsf : Squarefree g.den.toPoly)
     (hprop : RatFunc.IsProper (DenseFrac.toRatFunc g)) :
-    DenseFrac.toRatFunc g
-      = ∑ a ∈ (toPolynomial g.den.toPoly).roots.toFinset.image
-            (fun α => (toPolynomial g.num).eval α
-              / (Polynomial.derivative (toPolynomial g.den.toPoly)).eval α),
-          algebraMap (Polynomial R) (RatFunc R) (Polynomial.C a)
-            * @Differential.logDeriv (RatFunc R) _
-                SymbolicIntegration.instDifferentialRatFunc_deepWiki
-                (algebraMap (Polynomial R) (RatFunc R)
-                  (lrtLogArg g.num g.den.toPoly a)) := by
+    DenseFrac.toRatFunc g = ∑ a ∈ residueSet g, lrtLogTerm g a := by
   have hden0 : g.den.toPoly ≠ 0 := g.den.ne_zero
   have hdeg := RatFunc.degree_lt_of_isProper_of_eq_div (toPolynomial_ne_zero hden0)
     (x := DenseFrac.toRatFunc g) rfl hprop
