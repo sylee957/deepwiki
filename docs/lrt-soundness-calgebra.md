@@ -207,3 +207,9 @@ So the new engine owes only **commuting squares** from its computables into that
 - Import weight: the soundness file may import the determinantal theory
   (`SubresultantSpec`) — keep it a leaf (`Integrate/LogPartSound.lean`-style), NOT on the
   `LogPart.lean` computable path, so the gcd-cone stays light.
+
+## Follow-up
+
+The transport-machinery refactor of `LogPartSound.lean` (bundled denotation hom, single
+size measure, `WalkData` bundle, `RtData` instance-boundary API, file split) is planned in
+`docs/refactor-lrt-transport.md`.
