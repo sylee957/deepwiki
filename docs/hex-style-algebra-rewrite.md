@@ -351,9 +351,21 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     loop) with `squarefree_of_mem_sqfDecomp` (every factor squarefree). ★ Lean lessons re-hit:
     decreasing_by-only class args need explicit binders; `rw [← h]` self-referential when the
     RHS occurs inside the goal's other operands; ED-`/` vs `div` spelling for `ring`/`omega`
-    atoms — ascribe. REMAINING: the exponent-exact reconstruction `p ~ ∏ pᵢ^i` (needs the
-    invariant `gcd(c, s) ~ ∏_{i≥2} pᵢ`, i.e. keystone-B "prime coverage of the squarefree
-    part" + associates bookkeeping through the recursion).
+    atoms — ascribe. DONE next sitting (6c-sqf-3, 2026-07-21): **exponent-exact
+    reconstruction** `sqfDecomp_spec`: `p ~ powProd L 1 = ∏ᵢ pᵢ^i` AND `sqfreePart p ~ L.prod`,
+    by the two-invariant Musser induction glued by `gcd_deriv_gcd_sqfreePart_associated`
+    (`gcd(g, s) ~ sqfreePart g` — both radicals of `g`). New Mathlib-side stack in
+    `DeepWiki/Algebra/SquarefreeGcd.lean` (all upstream candidates): shared cores
+    `natDegree_pos_of_irreducible'`, `exists_max_pow_dvd`, `pow_not_dvd_derivative` (the char-0
+    multiplicity drop; keystone A refactored onto it); keystone B
+    `irreducible_dvd_div_gcd_derivative` (prime coverage, via `Prime.pow_dvd_of_dvd_mul_right`);
+    generic UFD lemma `UniqueFactorizationMonoid.dvd_of_squarefree_of_forall_prime_dvd`
+    (squarefree + prime coverage ⇒ dvd, by nodup normalizedFactors counts); workhorse
+    `squarefree_dvd_div_gcd_derivative` (every squarefree divisor divides the squarefree part).
+    Our side: `toPolynomial_sqfreePart_associated` extracted (squarefree_sqfreePart now 4 lines),
+    `powProd`/`powProd_succ` (staircase product). ★ Lessons: `Associated` is a def unfolding to
+    `Exists` — dot-notation `.symm` on an ascription fails, use prefix; multi-theorem files with
+    same-named induct cases make regex anchors dangerous.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
