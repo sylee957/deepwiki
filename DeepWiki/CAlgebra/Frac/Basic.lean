@@ -220,6 +220,22 @@ instance : Zero (DenseFrac R) :=
 
 instance : One (DenseFrac R) := ⟨⟨1, 1, isCoprime_one_right⟩⟩
 
+omit [DensePolyGcd R] in
+/-- A canonical fraction with zero numerator is the canonical zero: coprimality forces
+the denominator to `1`. -/
+theorem eq_zero_of_num_eq_zero {g : DenseFrac R} (h : g.num = 0) : g = 0 := by
+  have hco := g.coprime
+  rw [h] at hco
+  have hu : IsUnit g.den.toPoly := isCoprime_zero_left.mp hco
+  have hu' : IsUnit (toPolynomial g.den.toPoly) :=
+    hu.map (equiv (R := R) : DensePoly R →+* Polynomial R)
+  have hm : (toPolynomial g.den.toPoly).Monic := by
+    rw [Polynomial.Monic, leadingCoeff_toPolynomial g.den.ne_zero, g.den.monic]
+  have h1 : g.den.toPoly = 1 := by
+    apply toPolynomial_injective
+    rw [hm.eq_one_of_isUnit hu', toPolynomial_one]
+  exact ext h (DensePolyMonic.ext h1)
+
 instance : Add (DenseFrac R) :=
   ⟨fun f g => normalize (f.num * g.den.toPoly + g.num * f.den.toPoly) (f.den.toPoly * g.den.toPoly)⟩
 

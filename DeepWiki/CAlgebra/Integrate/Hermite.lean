@@ -1,3 +1,4 @@
+import DeepWiki.CAlgebra.Integrate.PolyPart
 import DeepWiki.CAlgebra.Diff.RatFunc
 import DeepWiki.CAlgebra.Frac.Field
 import DeepWiki.Algebra.RatFuncProper

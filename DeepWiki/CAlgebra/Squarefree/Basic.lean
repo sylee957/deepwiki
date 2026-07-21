@@ -85,6 +85,19 @@ def powProd : List (DensePoly R) → ℕ → DensePoly R
   | [], _ => 1
   | f :: L, n => f ^ n * powProd L (n + 1)
 
+/-- Every list member divides the staircase power product (positive starting exponent). -/
+theorem dvd_powProd_of_mem {f : DensePoly R} :
+    ∀ {L : List (DensePoly R)} {n : ℕ}, f ∈ L → 1 ≤ n → f ∣ powProd L n := by
+  intro L
+  induction L with
+  | nil => intro n h _; exact absurd h List.not_mem_nil
+  | cons a t ih =>
+      intro n h hn
+      show f ∣ a ^ n * powProd t (n + 1)
+      rcases List.mem_cons.mp h with rfl | h
+      · exact Dvd.dvd.mul_right (dvd_pow_self f (by omega)) _
+      · exact Dvd.dvd.mul_left (ih h (by omega)) _
+
 /-- Shifting the staircase start multiplies in one plain product. -/
 theorem powProd_succ (L : List (DensePoly R)) (n : ℕ) :
     powProd L (n + 1) = powProd L n * L.prod := by

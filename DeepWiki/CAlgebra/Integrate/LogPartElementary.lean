@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Integrate.LogPartSound
+import DeepWiki.CAlgebra.Integrate.LogPartSpec
 import DeepWiki.SymbolicIntegration.LiouvilleStructure.ElementaryTower
 
 /-! # The log part is elementary
@@ -42,29 +42,6 @@ theorem lrtLogPart_isElementary (g : DenseFrac R) (hnum : g.num ≠ 0)
     (hprop : RatFunc.IsProper (DenseFrac.toRatFunc g)) :
     IsElementary (RatFunc R) (DenseFrac.toRatFunc g) :=
   IsElementary.of_hasWeakLiouvilleForm (lrtLogPart_hasWeakLiouvilleForm g hnum hsf hprop)
-
-omit [DecidableEq R] [CharZero R] [DensePolyGcd R] [DensePolySquarefree R]
-  [IsAlgClosed R] in
-open scoped Differential in
-/-- The two `d/dx` structures on `RatFunc R` agree: the quotient-rule derivative
-(`RatFunc.deriv`, the `FormalDiff` scoped instance) is the global differential
-instance's derivative. Bridge pending the planned instance unification. -/
-theorem ratFunc_deriv_eq_deriv (x : RatFunc R) : RatFunc.deriv x = x′ := by
-  show RatFunc.deriv x = ratFuncDeriv x
-  conv_lhs => rw [← RatFunc.num_div_denom x]
-  rw [RatFunc.deriv_div (RatFunc.denom_ne_zero x)]
-  conv_rhs => rw [← RatFunc.num_div_denom x, ← RatFunc.mk_eq_div, ratFuncDeriv_mk,
-    RatFunc.mk_eq_div]
-  simp [map_sub, map_mul, map_pow]
-
-omit [DensePolyGcd R] [DensePolySquarefree R] [IsAlgClosed R] in
-open scoped Differential in
-/-- The bridged polynomial part is a derivative: `toRatFuncHom (∫poly)′ = toRatFuncHom
-poly`, read with the global differential instance. -/
-theorem toRatFuncHom_polyIntegrate_deriv (p : DensePoly R) :
-    (toRatFuncHom (polyIntegrate p))′ = toRatFuncHom p := by
-  rw [← ratFunc_deriv_eq_deriv, ← RatFunc.differential_apply, toRatFuncHom_deriv,
-    polyIntegrate_deriv]
 
 open scoped Differential in
 /-- **Every canonical fraction has a base weak Liouville form**: Hermite reduction plus

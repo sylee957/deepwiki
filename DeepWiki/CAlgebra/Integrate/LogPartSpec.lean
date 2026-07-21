@@ -7,7 +7,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrage
 import DeepWiki.Algebra.SimilaritySpecialize
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtLogForm
 
-/-! # Log-part soundness: the resultant square
+/-! # Log-part soundness and completeness: the resultant square
 
 Commuting squares from the computable Lazard–Rioboo–Trager pipeline
 (`DeepWiki/CAlgebra/Integrate/LogPart`) into the engine-independent Rothstein–Trager layer
@@ -567,6 +567,36 @@ theorem lrtLogTerms_sum_sound (g : DenseFrac R) (hnum : g.num ≠ 0)
   rw [DenseFrac.toRatFunc]
   exact lrtLogTerms_sum_sound_core g.num g.den.toPoly hd2 hbd hsep
 
+omit [DecidableEq R] [CharZero R] [DensePolyGcd R] [DensePolySquarefree R]
+  [IsAlgClosed R] in
+open scoped Differential in
+/-- The two `d/dx` structures on `RatFunc R` agree: the quotient-rule derivative
+(`RatFunc.deriv`, the `FormalDiff` scoped instance) is the global differential
+instance's derivative. Bridge pending the planned instance unification. -/
+theorem ratFunc_deriv_eq_deriv (x : RatFunc R) :
+    RatFunc.deriv x
+      = (@Differential.deriv (RatFunc R) _
+          SymbolicIntegration.instDifferentialRatFunc_deepWiki) x := by
+  show RatFunc.deriv x = SymbolicIntegration.ratFuncDeriv x
+  conv_lhs => rw [← RatFunc.num_div_denom x]
+  rw [RatFunc.deriv_div (RatFunc.denom_ne_zero x)]
+  conv_rhs => rw [← RatFunc.num_div_denom x, ← RatFunc.mk_eq_div,
+    SymbolicIntegration.ratFuncDeriv_mk,
+    RatFunc.mk_eq_div]
+  simp [map_sub, map_mul, map_pow]
+
+omit [DensePolyGcd R] [DensePolySquarefree R] [IsAlgClosed R] in
+open scoped Differential in
+/-- The bridged polynomial part is a derivative: `toRatFuncHom (∫poly)′ = toRatFuncHom
+poly`, read with the global differential instance. -/
+theorem toRatFuncHom_polyIntegrate_deriv (p : DensePoly R) :
+    (@Differential.deriv (RatFunc R) _
+        SymbolicIntegration.instDifferentialRatFunc_deepWiki)
+        (toRatFuncHom (polyIntegrate p))
+      = toRatFuncHom p := by
+  rw [← ratFunc_deriv_eq_deriv, ← RatFunc.differential_apply, toRatFuncHom_deriv,
+    polyIntegrate_deriv]
+
 open DeepWiki.SymbolicIntegration in
 /-- **The derivative of an LRT result**: the formal derivative of the represented sum of
 logarithms `∑ᵢ ∑_{Qᵢ(α)=0} α · log Sᵢ(α, x)`, read in `RatFunc R` — the record's
@@ -585,6 +615,118 @@ theorem lrtIntegrate_sound (g : DenseFrac R) (hnum : g.num ≠ 0)
     (lrtIntegrate g).deriv = DenseFrac.toRatFunc g := by
   rw [lrtLogTerms_sum_sound g hnum hsf hprop, logSumDeriv_lrtLogArg]
   exact (residue_sum_eq_pair_sum g hnum hsf hprop).symm
+
+/-- **Completeness (detection) of the bundled LRT stage**: the produced data is empty
+exactly when there is nothing to integrate — a nonzero proper fraction with squarefree
+denominator always yields a log term (its denominator has a root, whose residue is a root
+of the Rothstein–Trager resultant), and the zero fraction yields none. -/
+theorem lrtIntegrate_complete (g : DenseFrac R)
+    (hsf : Squarefree g.den.toPoly)
+    (hprop : RatFunc.IsProper (DenseFrac.toRatFunc g)) :
+    (lrtIntegrate g).terms = [] ↔ g.num = 0 := by
+  constructor
+  · intro hnil
+    by_contra hnum
+    have hden0 : g.den.toPoly ≠ 0 := g.den.ne_zero
+    have hDne : toPolynomial g.den.toPoly ≠ 0 := toPolynomial_ne_zero hden0
+    have hdeg := RatFunc.degree_lt_of_isProper_of_eq_div hDne
+      (x := DenseFrac.toRatFunc g) rfl hprop
+    have hbd : g.num.size < g.den.toPoly.size := by
+      have hn0 : toPolynomial g.num ≠ 0 := toPolynomial_ne_zero hnum
+      have hdeg' : (toPolynomial g.num).natDegree
+          < (toPolynomial g.den.toPoly).natDegree :=
+        Polynomial.natDegree_lt_natDegree hn0 hdeg
+      rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
+        at hdeg'
+      have h1 : g.num.size ≠ 0 := fun hz => hnum (eq_zero_of_size_zero hz)
+      have h2 : g.den.toPoly.size ≠ 0 := fun hz => hden0 (eq_zero_of_size_zero hz)
+      omega
+    have hd2 : 2 ≤ g.den.toPoly.size := by
+      have h1 : g.num.size ≠ 0 := fun hz => hnum (eq_zero_of_size_zero hz)
+      omega
+    have hsep : (toPolynomial g.den.toPoly).Separable :=
+      (PerfectField.separable_iff_squarefree).mpr (squarefree_toPolynomial_iff.mpr hsf)
+    have hA : (toPolynomial g.num).natDegree < (toPolynomial g.den.toPoly).natDegree := by
+      rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
+      omega
+    have hrtabs := SymbolicIntegration.rtResultant_ne_zero (toPolynomial g.num)
+      (toPolynomial g.den.toPoly) hsep hA
+    have hrt : rtResultant g.num g.den.toPoly ≠ 0 := fun h0 => hrtabs (by
+      rw [← toPolynomial_rtResultant g.num g.den.toPoly hd2 hbd, h0, toPolynomial_zero])
+    obtain ⟨α, hα⟩ := IsAlgClosed.exists_root (toPolynomial g.den.toPoly)
+      (ne_of_gt (Polynomial.natDegree_pos_iff_degree_pos.mp (by
+        rw [natDegree_toPolynomial_eq_size_sub_one]
+        omega)))
+    set a := (toPolynomial g.num).eval α
+      / (Polynomial.derivative (toPolynomial g.den.toPoly)).eval α with ha
+    have hmem : a ∈ residueSet g := by
+      unfold residueSet
+      exact Finset.mem_image_of_mem _
+        (Multiset.mem_toFinset.mpr ((Polynomial.mem_roots hDne).mpr hα))
+    have hroot : (toPolynomial (rtResultant g.num g.den.toPoly)).IsRoot a := by
+      have h := Finset.ext_iff.mp (SymbolicIntegration.image_residue_eq_roots_rtResultant
+        (toPolynomial g.num) (toPolynomial g.den.toPoly) hsep hA) a
+      unfold residueSet at hmem
+      simp only [Finset.mem_image, Multiset.mem_toFinset] at h hmem
+      rw [toPolynomial_rtResultant g.num g.den.toPoly hd2 hbd]
+      exact (Polynomial.mem_roots hrtabs).mp (h.mp hmem)
+    obtain ⟨j, hj, hjr⟩ := exists_sqfDecomp_root_of_isRoot hrt hroot
+    have hQne : toPolynomial (DensePolySquarefree.sqfDecomp
+        (rtResultant g.num g.den.toPoly))[j] ≠ 0 := toPolynomial_ne_zero
+      (DensePolySquarefree.squarefree_of_mem (List.getElem_mem hj)).ne_zero
+    have hsz : ¬ ((DensePolySquarefree.sqfDecomp
+        (rtResultant g.num g.den.toPoly))[j]).size ≤ 1 := by
+      intro hsz1
+      have hdeg0 : (toPolynomial (DensePolySquarefree.sqfDecomp
+          (rtResultant g.num g.den.toPoly))[j]).natDegree = 0 := by
+        rw [natDegree_toPolynomial_eq_size_sub_one]
+        omega
+      obtain ⟨c, hc⟩ := Polynomial.natDegree_eq_zero.mp hdeg0
+      rw [← hc] at hjr hQne
+      have hc0 : c ≠ 0 := fun h0 => hQne (by rw [h0, map_zero])
+      simp [Polynomial.IsRoot] at hjr
+      exact hc0 hjr
+    have hmem2 := mem_lrtLogTerms_of_index hj hsz
+    rw [show lrtLogTerms g.num g.den.toPoly = (lrtIntegrate g).terms from rfl,
+      hnil] at hmem2
+    exact absurd hmem2 (List.not_mem_nil)
+  · intro hnum0
+    have hg0 : g = 0 := DenseFrac.eq_zero_of_num_eq_zero hnum0
+    have hden1 : g.den.toPoly = 1 := by rw [hg0]; rfl
+    have hrt1 : rtResultant (0 : DensePoly R) (1 : DensePoly R) = 1 := by
+      apply toPolynomial_injective
+      rw [rtResultant, DensePolyResultant.resultant_eq]
+      have hop : (liftX (0 : DensePoly R) - zC * liftX ((1 : DensePoly R)′)) = 0 := by
+        rw [deriv_one, show liftX (0 : DensePoly R) = 0 from rfl, mul_zero, sub_zero]
+      rw [hop, toPolynomial_zero, Polynomial.natDegree_zero,
+        Polynomial.resultant_zero_right]
+      have hnd : (toPolynomial (liftX (1 : DensePoly R))).natDegree = 0 := by
+        rw [natDegree_toPolynomial_eq_size_sub_one, liftX_size, size_one]
+      rw [hnd, pow_zero, pow_zero, one_mul, toPolynomial_one]
+    have hrtg : rtResultant g.num g.den.toPoly = 1 := by
+      rw [hnum0, hden1]
+      exact hrt1
+    rw [List.eq_nil_iff_forall_not_mem]
+    intro QS hQS
+    have hprops := lrtLogTerms_fst_squarefree _ _ QS hQS
+    obtain ⟨j, hj, hQ⟩ := exists_index_of_mem_lrtLogTerms hQS
+    have hdvd : QS.1 ∣ powProd (DensePolySquarefree.sqfDecomp
+        (rtResultant g.num g.den.toPoly)) 1 :=
+      hQ ▸ dvd_powProd_of_mem (List.getElem_mem hj) le_rfl
+    have hrne : rtResultant g.num g.den.toPoly ≠ 0 := by
+      rw [hrtg]
+      exact one_ne_zero
+    have hassoc := (DensePolySquarefree.associated_powProd hrne).symm
+    rw [hrtg] at hassoc hdvd
+    have hpu := associated_one_iff_isUnit.mp hassoc
+    have hQu : IsUnit QS.1 := isUnit_of_dvd_unit hdvd hpu
+    have hQ0 : QS.1 ≠ 0 := hQu.ne_zero
+    have hu' : IsUnit (toPolynomial QS.1) :=
+      hQu.map (equiv (R := R) : DensePoly R →+* Polynomial R)
+    have hnd := Polynomial.natDegree_eq_zero_of_isUnit hu'
+    rw [natDegree_toPolynomial_eq_size_sub_one] at hnd
+    have hs0 : QS.1.size ≠ 0 := fun h0 => hQ0 (eq_zero_of_size_zero h0)
+    omega
 
 end Capstone
 

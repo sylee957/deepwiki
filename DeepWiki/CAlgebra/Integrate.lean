@@ -1,6 +1,9 @@
+import DeepWiki.CAlgebra.Integrate.PolyPart
 import DeepWiki.CAlgebra.Integrate.Hermite
 import DeepWiki.CAlgebra.Integrate.LogPart
 import DeepWiki.CAlgebra.Integrate.LogPartChain
 import DeepWiki.CAlgebra.Integrate.LogPartMultiplicity
-import DeepWiki.CAlgebra.Integrate.LogPartSound
+import DeepWiki.CAlgebra.Integrate.LogPartSpec
+import DeepWiki.CAlgebra.Integrate.RatIntegrate
+import DeepWiki.CAlgebra.Integrate.RatIntegrateSpec
 import DeepWiki.CAlgebra.Integrate.LogPartElementary
