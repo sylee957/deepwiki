@@ -551,7 +551,10 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     Import chain: `Resultant/Subresultant` ← `Gcd/Dense` ← `Resultant/PRS` (no cycle).
     Pure move + import rewiring, zero declaration changes. The Resultant area now owns the
     whole PRS family: subresultant-gcd, Euclidean-descent resultant, primitive bivariate
-    sequence.
+    sequence. Follow-up same day: `Resultant/PRS.lean` split by sequence kind into
+    `Resultant/Euclidean.lean` (descent resultant + `resultantPRS_eq`) and
+    `Resultant/Primitive.lean` (bivariate lifts/contents/`primPRS`) — the area now reads
+    Sylvester / Subresultant / Euclidean / Primitive / Dense.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

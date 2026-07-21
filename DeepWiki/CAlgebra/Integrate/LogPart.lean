@@ -11,7 +11,7 @@ remainder sequence of `(d, b − z·d′)`, specialized at `z = c` — no gcd ov
 extension is ever computed. This module computes that data: pairs `(Qᵢ(z), Sᵢ(z,x))` with
 `Qᵢ` squarefree (its roots are the log coefficients) and `Sᵢ` the bivariate log argument.
 `∫ b/d = Σᵢ Σ_{Qᵢ(c)=0} c · log Sᵢ(c, x)`. The bivariate machinery (lifts, contents, the
-primitive remainder sequence) lives in `Resultant/PRS`.
+primitive remainder sequence) lives in `Resultant/Primitive`.
 
 The resultant is the Mathlib-bridged Sylvester determinant (`toPolynomial_resultant` gives
 the certificate hook); the remainder sequence is the primitive pseudo-remainder sequence —

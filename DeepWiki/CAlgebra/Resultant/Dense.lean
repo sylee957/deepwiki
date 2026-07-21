@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Resultant.PRS
+import DeepWiki.CAlgebra.Resultant.Euclidean
 
 /-! # Switchable resultant for `DensePoly`
 
