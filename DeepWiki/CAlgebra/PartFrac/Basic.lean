@@ -137,6 +137,16 @@ theorem foldr_div_seed (F : RatFunc R) (xs : List (RatFunc R)) (i : RatFunc R) :
       simp only [List.foldr_cons, invPowSum, List.length_cons] at *
       rw [ih, ← add_assoc, add_div, div_div, ← pow_succ]
 
+omit [DecidableEq R] in
+/-- Reversed-cons decomposition: prepending to a descending list adds its term at the top
+exponent. -/
+theorem invPowSum_reverse_cons (F : RatFunc R) (x : RatFunc R) (L : List (RatFunc R)) :
+    invPowSum F (L.reverse ++ [x])
+      = invPowSum F L.reverse + x / F ^ (L.length + 1) := by
+  rw [invPowSum, List.foldr_append]
+  show List.foldr _ ((x + 0) / F) _ = _
+  rw [foldr_div_seed, add_zero, List.length_reverse, div_div, ← pow_succ']
+
 /-- The `f`-adic expansion under `toRatFuncHom`: `a/fⁿ = poly + Σⱼ aⱼ/fʲ`. -/
 theorem adicExpand_ratFunc {f : DensePoly R} (hf : f ≠ 0) (n : ℕ) (a : DensePoly R) :
     toRatFuncHom a / toRatFuncHom f ^ n

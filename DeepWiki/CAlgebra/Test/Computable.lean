@@ -5,6 +5,7 @@ import DeepWiki.CAlgebra.Gcd
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Squarefree
 import DeepWiki.CAlgebra.PartFrac
+import DeepWiki.CAlgebra.Integrate
 import DeepWiki.CAlgebra.Frac.Basic
 import DeepWiki.CAlgebra.Frac.Field
 
@@ -102,6 +103,12 @@ private def sqfPartFracGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGc
     [DensePolySquarefree R] :
     DensePoly R → DensePoly R → DensePoly R × List (DensePoly R × List (DensePoly R)) :=
   DensePoly.sqfPartFrac
+
+/-- Hermite reduction computes end to end (Bézout splits, adic pushes, canonical sums). -/
+private def hermiteReduceGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R]
+    [DensePolySquarefree R] :
+    DensePoly R → DensePoly R → DenseFrac R × DensePoly R × List (DensePoly R × DensePoly R) :=
+  DensePoly.hermiteReduce
 
 /-- The dispatched squarefree decomposition computes through the class interface. -/
 private def classSqfDecompGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :

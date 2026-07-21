@@ -71,6 +71,21 @@ theorem deriv_mul (p q : DensePoly R) : deriv (p * q) = deriv p * q + p * deriv 
   apply toPolynomial_injective
   simp only [toPolynomial_deriv, toPolynomial_one, Polynomial.derivative_one, toPolynomial_zero]
 
+
+/-- Constant multiples pass through the derivative. -/
+theorem deriv_C_mul (a : R) (p : DensePoly R) : deriv (C a * p) = C a * deriv p := by
+  apply toPolynomial_injective
+  simp
+
+/-- The power rule, successor form (subtraction-free exponents). -/
+theorem deriv_pow_succ (p : DensePoly R) (n : ℕ) :
+    deriv (p ^ (n + 1)) = C ((n + 1 : ℕ) : R) * p ^ n * deriv p := by
+  apply toPolynomial_injective
+  have hpow : ∀ k, toPolynomial (p ^ k) = toPolynomial p ^ k := fun k => by
+    simpa using map_pow (equiv (R := R)) p k
+  simp only [toPolynomial_deriv, toPolynomial_mul, toPolynomial_C, hpow,
+    Polynomial.derivative_pow_succ, Nat.cast_add, Nat.cast_one]
+
 end DensePoly
 
 /-- Validation: the dense derivative matches Mathlib's polynomial derivative, and is Leibniz. -/

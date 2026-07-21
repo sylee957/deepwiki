@@ -424,7 +424,30 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     ★ Lessons: `nth_rewrite` for `gcd = C (gcd.coeff 0)` (gcd occurs inside its own coeff);
     `conv_lhs => rw [← hw]` still hits ALL lhs occurrences — `nth_rewrite k` is the precise
     tool; guard defs of class projections again needed `DensePoly.`-qualification.
-    NEXT: Hermite reduction rides on `sqfPartFrac` + `deriv`.
+    DONE next sitting — see 6c-int-1.
+  - **6c-int-1 (2026-07-21): Hermite reduction (rational base case) + the RatFunc derivative.**
+    New Mathlib-side `DeepWiki/Algebra/RatFuncDerivation.lean` (upstream candidates):
+    `RatFunc.deriv` (quotient rule on `num`/`denom`), keystone `deriv_div` (representation
+    independence — differentiate the cross-multiplication identity, close by
+    `linear_combination`), `deriv_algebraMap`/`deriv_add`/`deriv_mul` (laws via num/denom
+    representations + `field_simp; ring`), packaged as `Differential (RatFunc K)`.
+    ★ Diamond: `Derivation ℤ (RatFunc K)` synthesizes RatFunc's polynomial-lift `Algebra ℤ`
+    instance, NOT the `Ring.toIntAlgebra` that `Differential` pins — fixed by `letI`-shadowing
+    inside the instance (and the `AddMonoidHom.mk'/toIntLinearMap` route whnf-times-out;
+    explicit-field construction avoids it — do NOT raise heartbeats).
+    Engine: `Diff/RatFunc.lean` (`toRatFuncHom` differential morphism);
+    `Poly/Derivative.lean` gains `deriv_C_mul`, `deriv_pow_succ` (successor form,
+    subtraction-free). `Integrate/Hermite.lean`: `hermiteFactorAux` (descending sweep per
+    factor: Bézout split `c = t·d′ + b·d` via `splitCoprime c d (deriv d)`, integration by
+    parts sheds one denominator power into a `DenseFrac`-accumulated rational part),
+    `hermite_step` (the per-term identity — after `field_simp`, ONE `linear_combination`
+    with coefficient `−C(n+1)·F^(2n+2)` against the Bézout image), `hermiteFactorAux_spec`
+    (functional induction; assembly = `linear_combination ih + hstep`), and
+    `hermiteReduce` on top of `sqfPartFrac`: **`a/p = G′ + poly + Σᵢ bᵢ/dᵢ` proven in
+    `RatFunc R`** (`hermiteReduce_spec`) with all remainder denominators squarefree
+    (`hermiteReduce_denom_squarefree`). Verified numerically over ℚ (4 point checks; sample
+    `a₁/((x+1)³(x²+1)²)` gives rational part over `(x+1)²(x²+1)` exactly).
+    NEXT: the log part (Rothstein–Trager) on the squarefree remainders.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
