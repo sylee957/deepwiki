@@ -727,6 +727,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     (light imports), fixing the misnomer (it no longer houses Collins' reduced PRS).
     ★ Verified: `Gcd/Dense.lean`'s transitive import cone = 11 modules, ZERO determinantal
     theory — the whole Integrate stack no longer waits on `SubresultantSpec` to build.
+  - **6c-res-12 (2026-07-21, committed): ledger-direct equivalence + BT
+    catalog.** `resultantPRSReduced_eq` now instantiates the invariant theorem with
+    `SubresLedger` DIRECTLY (hclean = step's head + `exact_div_of_toPolynomial_C_mul`,
+    hstep = step's second component, hswap = `SubresLedger.swap`);
+    `resultantPRSReduced_eq_of_exact` DELETED. The `ReducedExact` chain survives as a
+    source-faithful corollary only (`reducedExact_all` = Brown–Traub §6: "the r.h.s. of
+    (34) is exactly divisible by βᵢ"), no longer load-bearing — and is now CATALOGED:
+    `Btr.reduced_prs_eq_34_exact` in `Sources/Doi_10_1145_321662_321665/Subresultants.lean`
+    (§6, p.512, eqs (34)–(35), OCR-verified wording).
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

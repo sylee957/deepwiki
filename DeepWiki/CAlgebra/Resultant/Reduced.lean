@@ -101,10 +101,12 @@ theorem exact_div_of_toPolynomial_C_mul {a : S} {r : DensePoly S} {P : Polynomia
     show a * 0 = r.coeff i
     rw [mul_zero, coeff_eq_zero_of_size_le r (by show r.coeffs.length ≤ i; omega)]
 
-/-- **The reduced-PRS exactness invariant**: every division the descent will perform from
+/-- **The reduced-PRS exactness statement**: every division the descent will perform from
 this state is exact — the pending divisor `C`-factors out of the bridged pseudo-remainder,
-persistently along the mod steps and the entry swap. Mirrors the descent's recursion; the
-running arc discharges `ReducedExact 1 f g` from the subresultant chain theorems. -/
+persistently along the mod steps and the entry swap. Mirrors the descent's recursion. This
+is the source-faithful form of Brown–Traub's exact-divisibility theorem (see
+`reducedExact_all`); the equivalence `resultantPRSReduced_eq` runs on the `SubresLedger`
+invariant directly. -/
 def ReducedExact (α : S) (f g : DensePoly S) : Prop :=
   (2 ≤ g.size → g.size ≤ f.size →
     ∃ P : Polynomial S, toPolynomial (pseudoMod f g) = Polynomial.C α * P) ∧
@@ -123,24 +125,6 @@ def ReducedExact (α : S) (f g : DensePoly S) : Prop :=
           _ = (pseudoMod f g).size := (List.length_map _).trans rfl
       omega
     · omega
-
-/-- The descent computes the resultant from any `ReducedExact` entry state — the
-single-hypothesis form; discharging the hypothesis is the running arc. -/
-theorem resultantPRSReduced_eq_of_exact (f g : DensePoly S) (hI : ReducedExact 1 f g) :
-    resultantPRSReduced f g = (toPolynomial f).resultant (toPolynomial g)
-      (toPolynomial f).natDegree (toPolynomial g).natDegree := by
-  refine resultantPRSReduced_eq_of_invariant ReducedExact ?_ ?_ ?_ f g hI
-  · intro st f' g' hg2 hgf hI'
-    rw [ReducedExact] at hI'
-    obtain ⟨P, hP⟩ := hI'.1 hg2 hgf
-    show C st * ofList ((pseudoMod f' g').coeffs.map (· / st)) = pseudoMod f' g'
-    exact exact_div_of_toPolynomial_C_mul hP
-  · intro st f' g' hg2 hgf hI'
-    rw [ReducedExact] at hI'
-    exact hI'.2.1 hg2 hgf
-  · intro st f' g' hlt hI'
-    rw [ReducedExact] at hI'
-    exact hI'.2.2 hlt
 
 /-! ### The exactness discharge, brick one: the first pseudo-remainder is a subresultant -/
 
@@ -409,7 +393,7 @@ theorem SubresLedger.step {α : S} {f g : DensePoly S} (h : SubresLedger α f g)
     rw [show f.size - g.size + 1 = a - b + 1 from by omega, ← pow_mul]]
   ring
 
-/-- The ledger implies the full recursive exactness invariant, by descent on the
+/-- The ledger implies the full recursive exactness statement, by descent on the
 descent's own measure. -/
 theorem reducedExact_of_ledger {α : S} {f g : DensePoly S} (h : SubresLedger α f g) :
     ReducedExact α f g := by
@@ -435,11 +419,22 @@ theorem reducedExact_all (f g : DensePoly S) : ReducedExact 1 f g :=
   reducedExact_of_ledger (subresLedger_one f g)
 
 /-- The reduced-PRS resultant agrees with the Sylvester-determinant resultant at the
-canonical degrees — hypothesis-free. -/
+canonical degrees — hypothesis-free: the α-divisibility ledger is the descent invariant
+(entry `subresLedger_one`, exact division + persistence `SubresLedger.step`, swap
+`SubresLedger.swap`). -/
 theorem resultantPRSReduced_eq (f g : DensePoly S) :
     resultantPRSReduced f g = (toPolynomial f).resultant (toPolynomial g)
-      (toPolynomial f).natDegree (toPolynomial g).natDegree :=
-  resultantPRSReduced_eq_of_exact f g (reducedExact_all f g)
+      (toPolynomial f).natDegree (toPolynomial g).natDegree := by
+  refine resultantPRSReduced_eq_of_invariant SubresLedger ?_ ?_ ?_ f g
+    (subresLedger_one f g)
+  · intro st f' g' hg2 hgf hI
+    obtain ⟨P, hP⟩ := (hI.step hg2 hgf).1
+    show C st * ofList ((pseudoMod f' g').coeffs.map (· / st)) = pseudoMod f' g'
+    exact exact_div_of_toPolynomial_C_mul hP
+  · intro st f' g' hg2 hgf hI
+    exact (hI.step hg2 hgf).2
+  · intro st f' g' hlt hI
+    exact hI.swap hlt
 
 end SubresultantResultant
 

@@ -1,12 +1,13 @@
 import DeepWiki.Algebra.SubresultantSpec
 import DeepWiki.Algebra.SubresultantPRS
+import DeepWiki.CAlgebra.Resultant.Reduced
 import Sources.Doi_10_1145_321662_321665.Source
 
 /-! # Brown–Traub subresultant theory — catalog
 Pointers to the `DeepWiki.SymbolicIntegration` subresultant machinery formalizing this paper's
 **Lemma 1** (§4, p.509) — the single-division-step relation between the subresultants of `(F,G)`
-and `(G,H)` for `F + B·G = H`. Equation (12) (the case `0 ≤ j < deg H`) is fully proved; the
-remaining equations of Lemma 1 and the Fundamental Theorem are tracked below.
+and `(G,H)` for `F + B·G = H` — through the **Fundamental Theorem** (§5), and to the
+`DeepWiki.CAlgebra` reduced-PRS engine formalizing §6's exact-divisibility theorem.
 
 ## NOT YET FORMALIZED
 -/
@@ -62,5 +63,15 @@ abbrev fundamental_theorem := @subresultant_prs_telescope
 `Sⱼ(F₀,F₁)·∏ αₗ^(n_{l+1}-j) = Sⱼ(Fₘ,F_{m+1})·∏[(-1)^…·(lc F_{l+1})^…·βₗ^…]`, from which the explicit
 `ηᵢ/τᵢ` coefficients (eq 1.9) are read off. The library's `subresultant_prs_telescope_explicit`. -/
 abbrev fundamental_theorem_explicit := @subresultant_prs_telescope_explicit
+
+/-- **The reduced-PRS exact-divisibility theorem** (§6, p.512, eqs (34)–(35)): with Collins'
+`αᵢ = c_{i-2}^{δ_{i-2}+1}` (33) and `β₃ = 1`, `βᵢ = α_{i-1}` (35), *"the right hand side of
+`βᵢFᵢ = prem(F_{i-2}, F_{i-1})` (34) is exactly divisible by `βᵢ`, for `i = 3, ⋯, k`"* —
+every division performed by the reduced PRS stays in the coefficient domain. The library's
+`reducedExact_all` (`DeepWiki/CAlgebra/Resultant/Reduced`): the recursive exactness
+statement `ReducedExact 1` holds for every input pair over any computable Euclidean domain,
+discharged through the α-divisibility ledger `SubresLedger` (the local strengthening of
+this paper's eq-37 ρ-integrality argument). -/
+abbrev reduced_prs_eq_34_exact := @DeepWiki.CAlgebra.DensePoly.reducedExact_all
 
 end DeepWiki.Btr
