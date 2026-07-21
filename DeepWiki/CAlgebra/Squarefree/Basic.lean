@@ -140,12 +140,37 @@ theorem deriv_ne_zero [CharZero R] {p : DensePoly R} (hp : 1 < p.size) : deriv p
   rw [show p.size - 2 + 1 = p.size - 1 by omega] at hcoeff
   exact mul_ne_zero (Nat.cast_ne_zero.mpr (by omega)) hlast hcoeff.symm
 
+omit [DensePolyGcd R] in
+/-- The staircase product of nonzero factors is nonzero. -/
+theorem powProd_ne_zero {L : List (DensePoly R)} (hL : ∀ f ∈ L, f ≠ 0) (n : ℕ) :
+    powProd L n ≠ 0 := by
+  induction L generalizing n with
+  | nil => exact one_ne_zero
+  | cons f T ih =>
+      exact mul_ne_zero (pow_ne_zero _ (hL f (by simp)))
+        (ih (fun x hx => hL x (by simp [hx])) (n + 1))
+
+omit [DensePolyGcd R] in
+/-- A prime dividing a staircase product divides the plain product of its factors. -/
+theorem dvd_prod_of_prime_dvd_powProd {q : DensePoly R} (hq : Prime q) :
+    ∀ {L : List (DensePoly R)} {n : ℕ}, q ∣ powProd L n → q ∣ L.prod := by
+  intro L
+  induction L with
+  | nil => intro n h; exact h
+  | cons f T ih =>
+      intro n h
+      rw [powProd] at h
+      rw [List.prod_cons]
+      rcases hq.2.2 _ _ h with h1 | h1
+      · exact (hq.dvd_of_dvd_pow h1).mul_right _
+      · exact (ih h1).mul_left f
+
 end DensePoly
 
 namespace DensePoly
 
 /-- Squarefreeness transfers along `Associated`. -/
-private theorem squarefree_of_associated {α : Type u} [CommMonoid α] {a b : α}
+theorem squarefree_of_associated {α : Type u} [CommMonoid α] {a b : α}
     (h : Associated a b) (ha : Squarefree a) : Squarefree b := fun x hx =>
   ha x (hx.trans h.symm.dvd)
 
@@ -211,6 +236,21 @@ theorem gcd_deriv_gcd_sqfreePart_associated [CharZero R] {p : DensePoly R} (hp :
       (toPolynomial_dvd ((sqfreePart_dvd g).trans (DensePolyGcd.gcd_dvd_left p (deriv p))))
     exact dvd_of_toPolynomial_dvd
       (h1.trans (toPolynomial_sqfreePart_associated hp).symm.dvd)
+
+/-- A factor coprime to the staircase product of the remaining factors: any common prime
+would square into the squarefree total product. -/
+theorem isCoprime_powProd_of_squarefree {f : DensePoly R} {T : List (DensePoly R)}
+    (hf0 : f ≠ 0) (hsf : Squarefree (f * T.prod)) (m : ℕ) : IsCoprime f (powProd T m) := by
+  rw [DensePolyGcd.isCoprime_iff_isUnit_gcd]
+  by_contra hgu
+  have hg0 : DensePolyGcd.gcd f (powProd T m) ≠ 0 :=
+    fun h0 => hf0 (zero_dvd_iff.mp (h0 ▸ DensePolyGcd.gcd_dvd_left f (powProd T m)))
+  obtain ⟨q, hqirr, hqg⟩ := WfDvdMonoid.exists_irreducible_factor hgu hg0
+  have hq := UniqueFactorizationMonoid.irreducible_iff_prime.mp hqirr
+  have h1 : q ∣ f := hqg.trans (DensePolyGcd.gcd_dvd_left _ _)
+  have h2 : q ∣ T.prod :=
+    dvd_prod_of_prime_dvd_powProd hq (hqg.trans (DensePolyGcd.gcd_dvd_right _ _))
+  exact hq.not_unit (hsf q (mul_dvd_mul h1 h2))
 
 end DensePoly
 

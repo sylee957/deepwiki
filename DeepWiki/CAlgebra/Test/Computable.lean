@@ -4,6 +4,7 @@ import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Gcd
 import DeepWiki.CAlgebra.Poly.Derivative
 import DeepWiki.CAlgebra.Squarefree
+import DeepWiki.CAlgebra.PartFrac
 import DeepWiki.CAlgebra.Frac.Basic
 import DeepWiki.CAlgebra.Frac.Field
 
@@ -87,6 +88,20 @@ private def sqfDecompMusserGuard [Field R] [DecidableEq R] [CharZero R] [DensePo
 /-- Checker-validated Yun decomposition computes (sweep + decidable contract check). -/
 private def sqfDecompYunGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :
     DensePoly R → List (DensePoly R) := DensePoly.sqfDecompYun
+
+/-- The Bézout coprime split computes (extended Euclid + scaled coefficients). -/
+private def splitCoprimeGuard [Field R] [DecidableEq R] :
+    DensePoly R → DensePoly R → DensePoly R → DensePoly R × DensePoly R := DensePoly.splitCoprime
+
+/-- The adic expansion computes (iterated division). -/
+private def adicExpandGuard [Field R] [DecidableEq R] :
+    ℕ → DensePoly R → DensePoly R → DensePoly R × List (DensePoly R) := DensePoly.adicExpand
+
+/-- The squarefree partial fraction decomposition computes end to end. -/
+private def sqfPartFracGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R]
+    [DensePolySquarefree R] :
+    DensePoly R → DensePoly R → DensePoly R × List (DensePoly R × List (DensePoly R)) :=
+  DensePoly.sqfPartFrac
 
 /-- The dispatched squarefree decomposition computes through the class interface. -/
 private def classSqfDecompGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :

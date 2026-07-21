@@ -405,6 +405,26 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `conv_lhs/rhs => rw [...]` or `.symm.trans (mul_comm ..)` witnesses; `Prime` transport
     through the RingEquiv needs surjectivity for the mul-direction (obtain ⟨q, rfl⟩ from
     `toPolynomial_ofPolynomial`); `NormalizationMonoid K[X]` synthesis needs `[DecidableEq K]`.
+  - **6c-pf-1 (2026-07-21): squarefree partial fractions — `CAlgebra/PartFrac/Basic.lean`.**
+    `a/p = poly + Σᵢ Σⱼ aᵢⱼ/dᵢʲ` over the dispatched decomposition, first consumer of the
+    `DensePolySquarefree` contract. Pieces: `bezA`/`bezB` (computable scaled Bézout from
+    `EuclideanDomain.gcdA/gcdB` — divide by the constant gcd via `C γ⁻¹`, identity
+    `bezA·u + bezB·v = 1` under `IsCoprime`); `splitCoprime` (`a/(uv) = b/u + c/v`, `b`
+    reduced mod `u`, spec `b·v + c·u = a` by pure `ring` after `mod_eq_sub`); `adicExpand`
+    (`(poly, [a₁…aₙ])`, Horner-fold spec `foldl (acc·f + x) = a`, sizes < `f.size`);
+    `partFracAux` staircase sweep + semantic spec in **RatFunc** via
+    `toRatFuncHom := algebraMap ∘ equiv` (`invPowSum` = Horner foldr in `1/F`; seed lemma
+    `foldr_div_seed`; the split/adic steps are `mul_div_mul_right` cancellations —
+    unconditional field lemmas `add_div`/`div_div` need no nonzeroness). Coprimality of the
+    split feeds from `isCoprime_powProd_of_squarefree` (new Squarefree/Basic satellite, with
+    `powProd_ne_zero` + `dvd_prod_of_prime_dvd_powProd`; `squarefree_of_associated`
+    un-privated). Top `sqfPartFrac` absorbs the reconstruction constant
+    (`a · (powProd L 1)/p`) so the spec reads against `a/p` itself; numerator sizes < factor
+    sizes; factors squarefree. Verified numerically over ℚ (4 point-evaluation checks).
+    ★ Lessons: `nth_rewrite` for `gcd = C (gcd.coeff 0)` (gcd occurs inside its own coeff);
+    `conv_lhs => rw [← hw]` still hits ALL lhs occurrences — `nth_rewrite k` is the precise
+    tool; guard defs of class projections again needed `DensePoly.`-qualification.
+    NEXT: Hermite reduction rides on `sqfPartFrac` + `deriv`.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
