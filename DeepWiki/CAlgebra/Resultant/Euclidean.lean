@@ -9,7 +9,10 @@ slack degree bounds down. Each algorithm branch mirrors one Mathlib resultant id
 (`resultant_add_mul_right`, `resultant_C_mul_right`, `resultant_add_left_deg`,
 `resultant_add_right_deg`, `resultant_comm`, and the constant/zero base cases), so the
 equivalence `resultantPRSEuclidean_eq` with the Sylvester-determinant resultant is a functional
-induction gluing those identities — polynomial-time where the determinant is factorial. -/
+induction gluing those identities — polynomial-time where the determinant is factorial.
+
+The engine has two projections over one `clean` policy: `resultantDescent` keeps the constant
+ledger (the resultant), `gcdDescent` keeps the last nonzero sequence element (the gcd). -/
 
 open Polynomial
 
@@ -122,6 +125,24 @@ def resultantDescent {σ : Type v} (clean : σ → DensePoly S → DensePoly S �
         pseudoMod_size_lt (fun h0 => hf0 (eq_zero_of_size_zero h0)) g
       have h2 := hsize st g f (pseudoMod g f)
       omega
+
+/-- **The gcd projection of the descent engine**: the same state-threaded clean policies,
+walking the pseudo-remainder sequence to its last nonzero element — no bound or scalar
+bookkeeping, which the gcd (needed only up to a unit) never pays for. -/
+def gcdDescent {σ : Type v}
+    (clean : σ → DensePoly S → DensePoly S → DensePoly S → S × DensePoly S × σ)
+    (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
+    (st : σ) (f g : DensePoly S) : DensePoly S :=
+  if g.size = 0 then f
+  else
+    gcdDescent clean hsize (clean st f g (pseudoMod f g)).2.2 g
+      (clean st f g (pseudoMod f g)).2.1
+  termination_by g.size
+  decreasing_by
+    rename_i hg0
+    have h1 : (pseudoMod f g).size < g.size := pseudoMod_size_lt hg0 f
+    have h2 := hsize st f g (pseudoMod f g)
+    omega
 
 /-! ### Equivalence with the Sylvester determinant -/
 

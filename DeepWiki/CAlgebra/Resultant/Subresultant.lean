@@ -3,101 +3,197 @@ import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Resultant.Euclidean
 import DeepWiki.Algebra.SubresultantPRS
 
-/-! # Polynomial gcd via the subresultant pseudo-remainder sequence
+/-! # The subresultant clean policy: gcd and resultant from one engine
 
-`gcdSubresultant p q` iterates pseudo-division, dividing each pseudo-remainder by the subresultant
-factor `β = (−1)^(δ+1) · g · h^δ` (`g` the previous divisor's leading coefficient, `h` the running
-subresultant `h`-value, `δ` the degree drop). Over a field every `β` is a nonzero constant — a unit
-`C β` of `DensePoly R` — so the sequence satisfies the gcd universal property, agreeing up to a
-unit with Mathlib's generic Euclidean-domain gcd (`gcdSubresultant_associated_euclideanDomainGcd`)
-and bridging to the `Polynomial` gcd under `toPolynomial`. The `β`-bookkeeping keeps intermediate
-coefficients small when the field elements are themselves big objects (tower carriers). -/
+The subresultant pseudo-remainder sequence as a `clean` policy for the descent engine
+(`DeepWiki/CAlgebra/Resultant/Euclidean`): state `(g, h)` carries the previous divisor's
+leading coefficient and the running subresultant `h`-value, and each pseudo-remainder is
+divided by `β = (−1)^(δ+1) · g · h^δ`. Over a field every `β` is a nonzero constant — a unit
+`C β` — so one policy powers both engine projections: `gcdDescent` gives `gcdSubresultant`
+(the gcd universal property, agreeing up to a unit with Mathlib's Euclidean-domain gcd and
+bridging to the `Polynomial` gcd under `toPolynomial`), `resultantDescent` gives
+`resultantPRSSubresultant`. The `β`-bookkeeping keeps intermediate coefficients small when
+the field elements are themselves big objects (tower carriers). -/
 
 namespace DeepWiki.CAlgebra
 
-universe u
+universe u v
 
 namespace DensePoly
 
 variable {R : Type u} [Field R] [DecidableEq R]
 
-/-- Subresultant-PRS accumulator: `g` is the previous divisor's leading coefficient and `h` the
-running subresultant `h`-value; each pseudo-remainder is divided by `β = (−1)^(δ+1) · g · h^δ`. -/
-private def gcdSubAux (r₁ r₂ : DensePoly R) (g h : R) : DensePoly R :=
-  if r₂.size = 0 then r₁
-  else
-    gcdSubAux r₂
-      (C ((-1 : R) ^ (r₁.size - r₂.size + 1) * g * h ^ (r₁.size - r₂.size))⁻¹ * pseudoMod r₁ r₂)
-      r₂.leadingCoeff
-      (if r₁.size - r₂.size = 0 then h
-       else r₂.leadingCoeff ^ (r₁.size - r₂.size) / h ^ (r₁.size - r₂.size - 1))
-  termination_by r₂.size
-  decreasing_by
-    rename_i hr
-    exact lt_of_le_of_lt (size_C_mul_le _ _) (pseudoMod_size_lt hr r₁)
+/-- **The subresultant clean policy**: divide the pseudo-remainder by
+`β = (−1)^(δ+1) · g · h^δ` (`δ` the degree drop), threading the state
+`(divisor leading coefficient, subresultant h-value)`. -/
+def cleanSubresultant (st : R × R) (f g r : DensePoly R) : R × DensePoly R × (R × R) :=
+  ((-1 : R) ^ (f.size - g.size + 1) * st.1 * st.2 ^ (f.size - g.size),
+   C ((-1 : R) ^ (f.size - g.size + 1) * st.1 * st.2 ^ (f.size - g.size))⁻¹ * r,
+   (g.leadingCoeff,
+    if f.size - g.size = 0 then st.2
+    else g.leadingCoeff ^ (f.size - g.size) / st.2 ^ (f.size - g.size - 1)))
 
-/-- Polynomial gcd by the subresultant pseudo-remainder sequence. -/
-def gcdSubresultant (p q : DensePoly R) : DensePoly R := gcdSubAux p q 1 1
+/-- The cleaned remainder is no larger. -/
+theorem cleanSubresultant_size (st : R × R) (f g r : DensePoly R) :
+    (cleanSubresultant st f g r).2.1.size ≤ r.size := size_C_mul_le _ _
 
-/-- The accumulator divides both sequence entries when `g` and `h` are nonzero (each `β` is then a
-unit constant, so pseudo-division steps preserve divisors up to units). -/
-private theorem gcdSubAux_dvd (r₁ r₂ : DensePoly R) (g h : R) (hg : g ≠ 0) (hh : h ≠ 0) :
-    gcdSubAux r₁ r₂ g h ∣ r₁ ∧ gcdSubAux r₁ r₂ g h ∣ r₂ := by
-  revert hg hh
-  induction r₁, r₂, g, h using gcdSubAux.induct with
-  | case1 r₁ r₂ g h hr =>
-      intro _ _
-      rw [gcdSubAux.eq_def, if_pos hr]
-      exact ⟨dvd_refl r₁, by rw [eq_zero_of_size_zero hr]; exact dvd_zero r₁⟩
-  | case2 r₁ r₂ g h hr ih =>
-      intro hg hh
-      have hg' : r₂.leadingCoeff ≠ 0 := leadingCoeff_ne_zero hr
-      have hh' : (if r₁.size - r₂.size = 0 then h
-          else r₂.leadingCoeff ^ (r₁.size - r₂.size) / h ^ (r₁.size - r₂.size - 1)) ≠ 0 := by
-        split
-        · exact hh
-        · exact div_ne_zero (pow_ne_zero _ hg') (pow_ne_zero _ hh)
-      have hβ : ((-1 : R) ^ (r₁.size - r₂.size + 1) * g * h ^ (r₁.size - r₂.size)) ≠ 0 :=
-        mul_ne_zero (mul_ne_zero (pow_ne_zero _ (neg_ne_zero.mpr one_ne_zero)) hg)
-          (pow_ne_zero _ hh)
-      obtain ⟨ih₂, ihrem⟩ := ih hg' hh'
-      rw [gcdSubAux.eq_def, if_neg hr]
+/-- On nonzero states, the policy's `β` is nonzero and the strip reconstructs:
+`C β * cleaned = r`. -/
+private theorem cleanSubresultant_spec (st : R × R) (f g r : DensePoly R)
+    (hI : st.1 ≠ 0 ∧ st.2 ≠ 0) :
+    (cleanSubresultant st f g r).1 ≠ 0 ∧
+      C (cleanSubresultant st f g r).1 * (cleanSubresultant st f g r).2.1 = r := by
+  have hβ : ((-1 : R) ^ (f.size - g.size + 1) * st.1 * st.2 ^ (f.size - g.size)) ≠ 0 :=
+    mul_ne_zero (mul_ne_zero (pow_ne_zero _ (neg_ne_zero.mpr one_ne_zero)) hI.1)
+      (pow_ne_zero _ hI.2)
+  refine ⟨hβ, ?_⟩
+  show C ((-1 : R) ^ (f.size - g.size + 1) * st.1 * st.2 ^ (f.size - g.size))
+      * (C ((-1 : R) ^ (f.size - g.size + 1) * st.1 * st.2 ^ (f.size - g.size))⁻¹ * r) = r
+  rw [← mul_assoc, ← C_mul, mul_inv_cancel₀ hβ, ← one_def, one_mul]
+
+/-- Nonzero states persist across the policy's state update. -/
+private theorem cleanSubresultant_step (st : R × R) (f g r : DensePoly R) (hg0 : g.size ≠ 0)
+    (hI : st.1 ≠ 0 ∧ st.2 ≠ 0) :
+    (cleanSubresultant st f g r).2.2.1 ≠ 0 ∧ (cleanSubresultant st f g r).2.2.2 ≠ 0 := by
+  refine ⟨leadingCoeff_ne_zero hg0, ?_⟩
+  show (if f.size - g.size = 0 then st.2
+      else g.leadingCoeff ^ (f.size - g.size) / st.2 ^ (f.size - g.size - 1)) ≠ 0
+  split
+  · exact hI.2
+  · exact div_ne_zero (pow_ne_zero _ (leadingCoeff_ne_zero hg0)) (pow_ne_zero _ hI.2)
+
+/-! ### The gcd projection, generically over unit-β policies -/
+
+/-- **The engine's gcd divides both entries**, for any clean policy whose extracted constant
+is invariantly nonzero (each `C β` a unit, so pseudo-division steps preserve divisors up to
+units); the invariant `I` must reconstruct the strip and persist into the recursive call. -/
+theorem gcdDescent_dvd {σ : Type v}
+    (clean : σ → DensePoly R → DensePoly R → DensePoly R → R × DensePoly R × σ)
+    (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
+    (I : σ → DensePoly R → DensePoly R → Prop)
+    (hclean : ∀ st f g, g.size ≠ 0 → I st f g → (clean st f g (pseudoMod f g)).1 ≠ 0 ∧
+      C (clean st f g (pseudoMod f g)).1 * (clean st f g (pseudoMod f g)).2.1
+        = pseudoMod f g)
+    (hstep : ∀ st f g, g.size ≠ 0 → I st f g →
+      I (clean st f g (pseudoMod f g)).2.2 g (clean st f g (pseudoMod f g)).2.1)
+    (st : σ) (f g : DensePoly R) (hI : I st f g) :
+    gcdDescent clean hsize st f g ∣ f ∧ gcdDescent clean hsize st f g ∣ g := by
+  revert hI
+  induction st, f, g using gcdDescent.induct (clean := clean) (hsize := hsize) with
+  | case1 st f g hg0 =>
+      intro _
+      rw [gcdDescent, if_pos hg0]
+      exact ⟨dvd_refl f, by rw [eq_zero_of_size_zero hg0]; exact dvd_zero f⟩
+  | case2 st f g hg0 ih =>
+      intro hI
+      obtain ⟨hβ, hex⟩ := hclean st f g hg0 hI
+      obtain ⟨ih₂, ihrem⟩ := ih (hstep st f g hg0 hI)
+      rw [gcdDescent, if_neg hg0]
       refine ⟨?_, ih₂⟩
-      apply dvd_of_dvd_C_mul (pow_ne_zero (r₁.size + 1 - r₂.size) hg')
-      rw [← pseudoDivMod_spec hr r₁]
-      exact dvd_add (ih₂.mul_left _) (dvd_of_dvd_C_mul (inv_ne_zero hβ) ihrem)
+      apply dvd_of_dvd_C_mul (pow_ne_zero (f.size + 1 - g.size) (leadingCoeff_ne_zero hg0))
+      rw [← pseudoDivMod_spec hg0 f]
+      have hcleaned : (clean st f g (pseudoMod f g)).2.1 ∣ pseudoMod f g := by
+        conv_rhs => rw [← hex]
+        exact dvd_mul_left _ _
+      exact dvd_add (ih₂.mul_left _) (ihrem.trans hcleaned)
 
-/-- Any common divisor of the sequence entries divides the accumulator (no side conditions:
-this direction never cancels a constant). -/
-private theorem dvd_gcdSubAux {d : DensePoly R} (r₁ r₂ : DensePoly R) (g h : R)
-    (h₁ : d ∣ r₁) (h₂ : d ∣ r₂) : d ∣ gcdSubAux r₁ r₂ g h := by
-  revert h₁ h₂
-  induction r₁, r₂, g, h using gcdSubAux.induct with
-  | case1 r₁ r₂ g h hr =>
-      intro h₁ _
-      rw [gcdSubAux.eq_def, if_pos hr]
+/-- **Any common divisor divides the engine's gcd**, under the same unit-β invariant (the
+descent's strips are cancelled through their units). -/
+theorem dvd_gcdDescent {σ : Type v}
+    (clean : σ → DensePoly R → DensePoly R → DensePoly R → R × DensePoly R × σ)
+    (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
+    (I : σ → DensePoly R → DensePoly R → Prop)
+    (hclean : ∀ st f g, g.size ≠ 0 → I st f g → (clean st f g (pseudoMod f g)).1 ≠ 0 ∧
+      C (clean st f g (pseudoMod f g)).1 * (clean st f g (pseudoMod f g)).2.1
+        = pseudoMod f g)
+    (hstep : ∀ st f g, g.size ≠ 0 → I st f g →
+      I (clean st f g (pseudoMod f g)).2.2 g (clean st f g (pseudoMod f g)).2.1)
+    {d : DensePoly R} (st : σ) (f g : DensePoly R) (hI : I st f g)
+    (h₁ : d ∣ f) (h₂ : d ∣ g) : d ∣ gcdDescent clean hsize st f g := by
+  revert hI h₁ h₂
+  induction st, f, g using gcdDescent.induct (clean := clean) (hsize := hsize) with
+  | case1 st f g hg0 =>
+      intro _ h₁ _
+      rw [gcdDescent, if_pos hg0]
       exact h₁
-  | case2 r₁ r₂ g h hr ih =>
-      intro h₁ h₂
-      rw [gcdSubAux.eq_def, if_neg hr]
-      refine ih h₂ ?_
-      have hrem : d ∣ pseudoMod r₁ r₂ := by
-        rw [pseudoMod_eq_sub hr]
+  | case2 st f g hg0 ih =>
+      intro hI h₁ h₂
+      obtain ⟨hβ, hex⟩ := hclean st f g hg0 hI
+      rw [gcdDescent, if_neg hg0]
+      refine ih (hstep st f g hg0 hI) h₂ ?_
+      have hrem : d ∣ pseudoMod f g := by
+        rw [pseudoMod_eq_sub hg0]
         exact dvd_sub (h₁.mul_left _) (h₂.mul_left _)
-      exact hrem.mul_left _
+      apply dvd_of_dvd_C_mul hβ
+      rw [hex]
+      exact hrem
+
+/-! ### The subresultant-PRS gcd -/
+
+/-- Polynomial gcd by the subresultant pseudo-remainder sequence: the subresultant clean
+policy run through the engine's gcd projection, from the entry state `(1, 1)`. -/
+def gcdSubresultant (p q : DensePoly R) : DensePoly R :=
+  gcdDescent cleanSubresultant cleanSubresultant_size (1, 1) p q
+
+private theorem subresStateNZ_clean (st : R × R) (f g : DensePoly R) (_ : g.size ≠ 0)
+    (hI : st.1 ≠ 0 ∧ st.2 ≠ 0) :
+    (cleanSubresultant st f g (pseudoMod f g)).1 ≠ 0 ∧
+      C (cleanSubresultant st f g (pseudoMod f g)).1
+          * (cleanSubresultant st f g (pseudoMod f g)).2.1 = pseudoMod f g :=
+  cleanSubresultant_spec st f g (pseudoMod f g) hI
+
+private theorem subresStateNZ_step (st : R × R) (f g : DensePoly R) (hg0 : g.size ≠ 0)
+    (hI : st.1 ≠ 0 ∧ st.2 ≠ 0) :
+    (cleanSubresultant st f g (pseudoMod f g)).2.2.1 ≠ 0 ∧
+      (cleanSubresultant st f g (pseudoMod f g)).2.2.2 ≠ 0 :=
+  cleanSubresultant_step st f g (pseudoMod f g) hg0 hI
 
 /-- The subresultant-PRS gcd divides its left argument. -/
 theorem gcdSubresultant_dvd_left (p q : DensePoly R) : gcdSubresultant p q ∣ p :=
-  (gcdSubAux_dvd p q 1 1 one_ne_zero one_ne_zero).1
+  (gcdDescent_dvd cleanSubresultant cleanSubresultant_size
+    (fun st _ _ => st.1 ≠ 0 ∧ st.2 ≠ 0) subresStateNZ_clean subresStateNZ_step
+    (1, 1) p q ⟨one_ne_zero, one_ne_zero⟩).1
 
 /-- The subresultant-PRS gcd divides its right argument. -/
 theorem gcdSubresultant_dvd_right (p q : DensePoly R) : gcdSubresultant p q ∣ q :=
-  (gcdSubAux_dvd p q 1 1 one_ne_zero one_ne_zero).2
+  (gcdDescent_dvd cleanSubresultant cleanSubresultant_size
+    (fun st _ _ => st.1 ≠ 0 ∧ st.2 ≠ 0) subresStateNZ_clean subresStateNZ_step
+    (1, 1) p q ⟨one_ne_zero, one_ne_zero⟩).2
 
 /-- Any common divisor divides the subresultant-PRS gcd. -/
 theorem dvd_gcdSubresultant {d : DensePoly R} (p q : DensePoly R) (h₁ : d ∣ p) (h₂ : d ∣ q) :
     d ∣ gcdSubresultant p q :=
-  dvd_gcdSubAux p q 1 1 h₁ h₂
+  dvd_gcdDescent cleanSubresultant cleanSubresultant_size
+    (fun st _ _ => st.1 ≠ 0 ∧ st.2 ≠ 0) subresStateNZ_clean subresStateNZ_step
+    (1, 1) p q ⟨one_ne_zero, one_ne_zero⟩ h₁ h₂
+
+/-! ### The resultant projection of the same policy -/
+
+/-- **Resultant by the true subresultant pseudo-remainder sequence** over a field — the same
+clean policy as `gcdSubresultant`, run through the engine's resultant projection. -/
+def resultantPRSSubresultant (f g : DensePoly R) : R :=
+  resultantDescent cleanSubresultant cleanSubresultant_size (1, 1) f g
+    (f.size - 1) (g.size - 1)
+
+/-- The subresultant-PRS resultant agrees with the Sylvester-determinant resultant at the
+canonical degrees — hypothesis-free over a field (every `β` is a unit; the nonzero-state
+invariant discharges the strips). -/
+theorem resultantPRSSubresultant_eq (f g : DensePoly R) :
+    resultantPRSSubresultant f g = (toPolynomial f).resultant (toPolynomial g)
+      (toPolynomial f).natDegree (toPolynomial g).natDegree := by
+  rw [resultantPRSSubresultant, natDegree_toPolynomial_eq_size_sub_one,
+    natDegree_toPolynomial_eq_size_sub_one]
+  refine resultantDescent_eq_of_invariant cleanSubresultant cleanSubresultant_size
+    (fun st _ _ => st.1 ≠ 0 ∧ st.2 ≠ 0) ?_ ?_ ?_ (1, 1) f g _ _
+    ⟨one_ne_zero, one_ne_zero⟩
+    (le_of_eq (natDegree_toPolynomial_eq_size_sub_one f))
+    (le_of_eq (natDegree_toPolynomial_eq_size_sub_one g))
+  · intro st f' g' hg2 hgf hI
+    exact (cleanSubresultant_spec st f' g' (pseudoMod f' g') hI).2
+  · intro st f' g' hg2 hgf hI
+    exact cleanSubresultant_step st f' g' (pseudoMod f' g') (by omega) hI
+  · intro st f' g' _ hI
+    exact hI
 
 /-- **Agreement with Mathlib's generic Euclidean-domain gcd**: both satisfy the same universal
 property, so they coincide up to a unit. -/

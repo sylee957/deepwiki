@@ -661,6 +661,21 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     460ms ≪ Euclidean ~49s — 300/250/200 confirmed, dispatch unchanged, cross-agreement
     `decide`-checked. Plan doc `docs/subresultant-exactness-telescope.md` rewritten as the
     post-mortem. This closes the old engine's "LRT grounding" frontier.
+  - **6c-res-7 (2026-07-21, IN REVIEW — uncommitted): gcd re-expressed over the descent
+    engine.** The engine now has TWO projections over one `clean` policy: `resultantDescent`
+    (constant ledger → resultant) and new `gcdDescent` (last nonzero element → gcd, no
+    bound/scalar bookkeeping). `gcdSubAux` retired: the subresultant β-recipe is now the
+    standalone policy `cleanSubresultant` (state `(g, h)`, β = (−1)^{δ+1}·g·h^δ), and
+    `gcdSubresultant := gcdDescent cleanSubresultant … (1,1)` — same values, same public
+    API (`_dvd_left/right`, `dvd_`, `associated`, Mathlib bridge statements unchanged). The
+    universal-property lemmas are generic over any unit-β policy with a nonzero-state
+    invariant (`gcdDescent_dvd`, `dvd_gcdDescent` — mirroring
+    `resultantDescent_eq_of_invariant`'s contract shape). BONUS: the SAME policy through the
+    resultant projection gives `resultantPRSSubresultant`+`_eq` over a FIELD,
+    hypothesis-free (every β a unit — the invariant discharges trivially; the DOMAIN-level
+    version still needs Brown '78 ψ-integrality, unchanged). Sanity: engine-projected gcd
+    recovers d8 up to a unit; field subresultant resultant = primitive on d8/d8′. No
+    instance registered for the field variant (primitive still dispatches).
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
