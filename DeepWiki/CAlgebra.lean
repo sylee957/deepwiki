@@ -6,13 +6,16 @@ import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Poly.Monic
 import DeepWiki.CAlgebra.Gcd
-import DeepWiki.CAlgebra.Poly.Derivative
+import DeepWiki.CAlgebra.Diff.Derivative
 import DeepWiki.CAlgebra.Squarefree
+import DeepWiki.CAlgebra.PartFrac
 import DeepWiki.CAlgebra.Matrix.Dense
-import DeepWiki.CAlgebra.Matrix.Sylvester
+import DeepWiki.CAlgebra.Resultant
 import DeepWiki.CAlgebra.Frac.Basic
 import DeepWiki.CAlgebra.Frac.Field
 import DeepWiki.CAlgebra.Diff.Basic
+import DeepWiki.CAlgebra.Diff.RatFunc
+import DeepWiki.CAlgebra.Integrate
 import DeepWiki.CAlgebra.Test.Computable
 
 /-! # CAlgebra — Hex-style computable algebra (greenfield)
