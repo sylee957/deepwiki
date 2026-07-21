@@ -1,6 +1,7 @@
 import DeepWiki.CAlgebra.Resultant.Euclidean
 import DeepWiki.CAlgebra.Resultant.Primitive
 import DeepWiki.CAlgebra.Resultant.Subresultant
+import DeepWiki.CAlgebra.Resultant.Reduced
 
 /-! # Switchable resultant and PRS for `DensePoly`
 

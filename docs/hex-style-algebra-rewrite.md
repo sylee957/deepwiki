@@ -718,6 +718,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `cleanSubresultant` + its spec/step lemmas — de-privatized — with `gcdSubresultant`);
     stateless instances take `Inv := fun _ => True`. Field-carrier prs dispatch is now the
     subresultant policy (250 > content 200); bivariate unchanged (z-content 300).
+  - **6c-res-11 (2026-07-21, committed): Reduced.lean split.** The Collins
+    reduced-PRS arc (`cleanReduced`, `resultantPRSReduced`(+`_eq*`), `ReducedExact`,
+    `exact_div_of_toPolynomial_C_mul`, brick `subresultant_eq_pseudoMod`, `SubresLedger` +
+    swap/step + discharge) moved verbatim from `Subresultant.lean` to new
+    `Resultant/Reduced.lean`, taking the heavy `import DeepWiki.Algebra.SubresultantPRS`
+    with it. `Subresultant.lean` is now purely the field policy + gcd + field resultant
+    (light imports), fixing the misnomer (it no longer houses Collins' reduced PRS).
+    ★ Verified: `Gcd/Dense.lean`'s transitive import cone = 11 modules, ZERO determinantal
+    theory — the whole Integrate stack no longer waits on `SubresultantSpec` to build.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
