@@ -2,6 +2,8 @@ import DeepWiki.CAlgebra.IntegrateRisch.DerivationExtend
 import DeepWiki.CAlgebra.IntegrateRisch.Monomial
 import DeepWiki.CAlgebra.IntegrateRisch.Results
 import DeepWiki.CAlgebra.IntegrateRisch.Level
+import DeepWiki.CAlgebra.IntegrateRisch.Special
+import DeepWiki.CAlgebra.IntegrateRisch.Hermite
 
 /-! # Transcendental Risch integration
 

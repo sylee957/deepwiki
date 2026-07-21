@@ -106,13 +106,38 @@ the tower works (a dedicated cleanup phase, not now).
   `mapCoeffs_eq_zero`, `extendDeriv_zero_one` (poly + frac) added to
   `DerivationExtend.lean`.
 
-### P3 — Derivation-generic Hermite reduction
-`IntegrateRisch/Hermite.lean`.
-- Hermite reduction over `(K, D, Dt)` on `DenseFrac (…)`-fractions in `t`:
-  rational part + proper log-part remainder with squarefree denominator, exports
-  as invariant fields (the `ResultHermite` pattern, derivation-parametric).
-- Data-level soundness through the extension derivation.
-**Endpoint**: `hermiteReduceD` + sound; exports mirror the rational record's.
+### P3 — Derivation-generic Hermite reduction — DONE (2026-07-22)
+`IntegrateRisch/Special.lean`, `IntegrateRisch/Hermite.lean`.
+- **Special.lean**: `IsNormal`/`IsSpecial` predicates over an arbitrary polynomial
+  derivation `D`; the squarefree-factor split `normalPart`/`specialPart` via
+  `gcd(p, Dp)` with its correctness quartet (product, coprimality, normality,
+  speciality — all pure divisibility algebra, no UFD transport); closure lemmas
+  `IsNormal.of_dvd`/`IsNormal.mul` (coprime products), `IsSpecial.mul`/`.pow`,
+  `isCoprime_of_squarefree_mul`.
+- **Hermite.lean**: power-sum vocabulary (`powSumDesc`/`powSumAsc`/`powSumFrom` with
+  reverse/shift bridges and the `invPowSum` denotation); the data-level Hermite step
+  (`c/facⁿ⁺² = D(−t/((n+1)facⁿ⁺¹)) + …` proven entirely in the field `DenseFrac K`
+  via the new `IsDerivation` calculus — `map_div`, `map_pow_succ`, `map_natCast`,
+  `map_inv_of_map_zero`, `map_list_sum` in DerivationExtend); the sweep
+  `hermiteFactorAuxD` + spec (functional induction); the per-factor normal/special
+  numerator split `splitNumers` + spec; `hermiteFactorD` (sweep the normal side,
+  division-reduce the residual, pass specials through) + spec; the record
+  `ResultHermiteD` (invariants: `simple_den_squarefree`, `simple_den_normal`,
+  `reduced_den_special` as an ∃-witness) and **`hermiteReduceD` +
+  `hermiteReduceD_sound`** — the data-level identity
+  `f = D(rational) + simple + reduced`, hypothesis-free given `IsDerivation d`.
+- Homing en route: `ofPoly` hom satellites (`add/mul/neg/zero/one/ne_zero`) in
+  `Frac/Basic.lean`; `ofPoly_pow`, `den_ofPoly_div_dvd` in `Frac/Field.lean`
+  (division lives there); `isCoprime_of_squarefree_mul` in Special.
+- Lessons: WF-recursive defs (`termination_by`) are not `rfl`-reducible — never
+  `show`-unfold them (whnf spin); unfold with `rw [defName]` (once) + `simp only []`
+  for zeta, and mind that `.induct` exposes `let`-bound values as extra case binders.
+  `rw [h] at`-style with `h : f = …` wrecks goals containing `f.num`-projections —
+  use `conv_lhs`.
+- **Deferred (P4-prep)**: the `simple_isProper` properness export (the sweep residues
+  are `%`-reduced already, so the size chain is set up; the `RatFunc.IsProper`
+  sum-closure argument mirrors the rational `logsum_isProper`). P4's LRT feed needs
+  it and should start there.
 
 ### P4 — Log part at a tower level: LRT + residue constancy
 `IntegrateRisch/LogPart.lean` (+ `LogPartSpec.lean`).

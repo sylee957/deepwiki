@@ -85,6 +85,22 @@ noncomputable def equivRatFunc : DenseFrac R ≃+* RatFunc R where
   map_mul' := toRatFunc_mul
   map_add' := toRatFunc_add
 
+/-- The polynomial embedding commutes with powers. -/
+theorem ofPoly_pow (p : DensePoly R) (n : ℕ) : ofPoly (p ^ n) = ofPoly p ^ n := by
+  induction n with
+  | zero => simp
+  | succ m ih => rw [pow_succ, ofPoly_mul, ih, pow_succ]
+
+/-- The canonical denominator of an embedded-polynomial quotient divides the
+denominator. -/
+theorem den_ofPoly_div_dvd (a : DensePoly R) {n : DensePoly R} (hn : n ≠ 0) :
+    (ofPoly a / ofPoly n).den.toPoly ∣ n := by
+  apply den_dvd_of_eq_div hn
+  rw [show toRatFunc (ofPoly a / ofPoly n)
+      = toRatFunc (ofPoly a) / toRatFunc (ofPoly n) from
+      map_div₀ (equivRatFunc (R := R)) _ _,
+    toRatFunc_ofPoly, toRatFunc_ofPoly]
+
 end DenseFrac
 
 end DeepWiki.CAlgebra

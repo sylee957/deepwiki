@@ -56,6 +56,29 @@ theorem map_sum (hd : IsDerivation d) {ι : Type v} (s : Finset ι) (f : ι → 
   | empty => simpa using hd.map_zero
   | cons i s hi ih => rw [Finset.sum_cons, Finset.sum_cons, hd.map_add, ih]
 
+/-- A derivation commutes with list sums. -/
+theorem map_list_sum (hd : IsDerivation d) (l : List K) :
+    d l.sum = (l.map d).sum := by
+  induction l with
+  | nil => simpa using hd.map_zero
+  | cons x t ih => rw [List.sum_cons, hd.map_add, List.map_cons, List.sum_cons, ih]
+
+/-- A derivation kills natural-number constants. -/
+theorem map_natCast (hd : IsDerivation d) (n : ℕ) : d ((n : ℕ) : K) = 0 := by
+  induction n with
+  | zero => simpa using hd.map_zero
+  | succ n ih => rw [Nat.cast_succ, hd.map_add, ih, hd.map_one, add_zero]
+
+/-- Power rule, successor form. -/
+theorem map_pow_succ (hd : IsDerivation d) (a : K) (n : ℕ) :
+    d (a ^ (n + 1)) = ((n + 1 : ℕ) : K) * a ^ n * d a := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [pow_succ, hd.leibniz, ih, pow_succ]
+      push_cast
+      ring
+
 /-- Bundle an `IsDerivation` as Mathlib's `Differential` structure. -/
 @[reducible] noncomputable def toDifferential (hd : IsDerivation d) : Differential K :=
   ⟨Derivation.mk'
@@ -75,6 +98,29 @@ end IsDerivation
 /-- The zero map is a derivation (the constant-field base case). -/
 theorem isDerivation_zero : IsDerivation (fun _ => (0 : K)) :=
   ⟨fun _ _ => by simp, fun _ _ => by simp⟩
+
+namespace IsDerivation
+
+variable {F : Type u} [Field F] {d : F → F}
+
+/-- A derivation kills the inverse of an element it kills. -/
+theorem map_inv_of_map_zero (hd : IsDerivation d) {a : F} (ha : d a = 0) : d a⁻¹ = 0 := by
+  rcases eq_or_ne a 0 with rfl | ha0
+  · rw [inv_zero, hd.map_zero]
+  · have h := hd.leibniz a a⁻¹
+    rw [mul_inv_cancel₀ ha0, hd.map_one, ha, zero_mul, zero_add] at h
+    exact (mul_eq_zero.mp h.symm).resolve_left ha0
+
+/-- Quotient rule. -/
+theorem map_div (hd : IsDerivation d) (a b : F) (hb : b ≠ 0) :
+    d (a / b) = (d a * b - a * d b) / b ^ 2 := by
+  have h := hd.leibniz (a / b) b
+  rw [div_mul_cancel₀ a hb] at h
+  rw [eq_div_iff (pow_ne_zero 2 hb), h]
+  field_simp
+  ring
+
+end IsDerivation
 
 end IsDerivation
 

@@ -328,6 +328,38 @@ theorem toRatFunc_list_sum (l : List (DenseFrac R)) :
   | nil => simp
   | cons x t ih => simp [ih]
 
+omit [DensePolyGcd R] in
+/-- The polynomial embedding of zero. -/
+@[simp] theorem ofPoly_zero : ofPoly (0 : DensePoly R) = 0 := rfl
+
+omit [DensePolyGcd R] in
+/-- The polynomial embedding of one. -/
+@[simp] theorem ofPoly_one : ofPoly (1 : DensePoly R) = 1 :=
+  toRatFunc_injective (by rw [toRatFunc_ofPoly, toPolynomial_one, map_one, toRatFunc_one])
+
+/-- The polynomial embedding is additive. -/
+theorem ofPoly_add (p q : DensePoly R) : ofPoly (p + q) = ofPoly p + ofPoly q :=
+  toRatFunc_injective (by
+    rw [toRatFunc_add, toRatFunc_ofPoly, toRatFunc_ofPoly, toRatFunc_ofPoly,
+      toPolynomial_add, map_add])
+
+/-- The polynomial embedding is multiplicative. -/
+theorem ofPoly_mul (p q : DensePoly R) : ofPoly (p * q) = ofPoly p * ofPoly q :=
+  toRatFunc_injective (by
+    rw [toRatFunc_mul, toRatFunc_ofPoly, toRatFunc_ofPoly, toRatFunc_ofPoly,
+      toPolynomial_mul, map_mul])
+
+omit [DensePolyGcd R] in
+/-- The polynomial embedding commutes with negation. -/
+theorem ofPoly_neg (p : DensePoly R) : ofPoly (-p) = -ofPoly p :=
+  toRatFunc_injective (by
+    rw [toRatFunc_neg, toRatFunc_ofPoly, toRatFunc_ofPoly, toPolynomial_neg, map_neg])
+
+omit [DensePolyGcd R] in
+/-- The polynomial embedding of a nonzero polynomial is nonzero. -/
+theorem ofPoly_ne_zero {p : DensePoly R} (hp : p ≠ 0) : ofPoly p ≠ 0 :=
+  fun h => hp (congrArg DenseFrac.num h)
+
 end DenseFrac
 
 end DeepWiki.CAlgebra
