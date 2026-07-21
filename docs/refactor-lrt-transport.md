@@ -46,7 +46,7 @@ is proof- and file-structure work only.
 - Rewrite the existing `congrArg`-blocks (`hrel` in the chain lemmas, `hid`, `hprembr`,
   the `toPolynomial_pseudoDivMod`-map step) through the hom + simp set.
 
-### Phase 2 — one measure at the engine boundary
+### Phase 2 — one measure at the engine boundary — DONE (2026-07-21)
 
 - Convention: **engine-side lemmas speak `size` only.** The abstract boundary converts
   once via exactly two lemmas (already exist):
@@ -59,6 +59,18 @@ is proof- and file-structure work only.
 - Sweep `LogPartSound` proofs: replace each `rw [toPolynomial₂_natDegree,
   natDegree_toPolynomial_eq_size_sub_one] … omega` dance with the composite lemma; keep
   omega's atoms uniform (all `size`).
+
+**Phase 2 notes (as landed):**
+- Satellite block inverted to size-primary: `liftX_ne_zero`, hypothesis-free
+  `liftX_size (d) : (liftX d).size = d.size` (zero case is `rfl`), `operand_ne_zero`,
+  `operand_size` are the primary facts; `liftX_natDegree₂` / `operand_natDegree₂` /
+  `operand_ne_zero₂` are one-line corollaries via `natDegree₂_eq_size_sub_one`.
+- 13 chained-conversion sites in `LogPartSound` replaced with the composite; the
+  endpoint (`prs_elem_isSimilar_lrtSubresultant_eval`) no longer re-derives
+  `hlxsize`/`hopsize`/`hopne` inline — they are direct satellite calls (5 `have`-blocks
+  → 3 one-liners).
+- Remaining `natDegree_toPolynomial_eq_size_sub_one` uses are the sanctioned *single*
+  univariate boundary conversions (`toPolynomial`-level, not the two-lemma dance).
 
 ### Phase 3 — the walk bundle (`Integrate/LogPartChain.lean`, split out)
 

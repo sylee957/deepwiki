@@ -35,61 +35,67 @@ theorem operand_bridge (b d : DensePoly R) :
     toPolynomial₂_zC, toPolynomial_deriv]
 
 omit [CharZero R] in
-/-- The bridged `x`-lift keeps the degree. -/
+/-- The `x`-lift of a nonzero polynomial is nonzero. -/
+theorem liftX_ne_zero {d : DensePoly R} (hd0 : d ≠ 0) : liftX d ≠ 0 := fun h0 => by
+  have h1 := toPolynomial₂_liftX d
+  rw [h0, toPolynomial₂_zero] at h1
+  have h2 := (Polynomial.map_eq_zero_iff Polynomial.C_injective).mp h1.symm
+  exact hd0 (toPolynomial_injective (by rw [h2, toPolynomial_zero]))
+
+omit [CharZero R] in
+/-- The `x`-lift preserves the size. -/
+theorem liftX_size (d : DensePoly R) : (liftX d).size = d.size := by
+  rcases eq_or_ne d 0 with rfl | hd0
+  · rfl
+  · have h1 : (toPolynomial₂ (liftX d)).natDegree = (toPolynomial d).natDegree := by
+      rw [toPolynomial₂_liftX,
+        Polynomial.natDegree_map_eq_of_injective Polynomial.C_injective]
+    rw [natDegree₂_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one] at h1
+    have h2 : (liftX d).size ≠ 0 := fun h0 => liftX_ne_zero hd0 (eq_zero_of_size_zero h0)
+    have h3 : d.size ≠ 0 := fun h0 => hd0 (eq_zero_of_size_zero h0)
+    omega
+
+omit [CharZero R] in
+/-- Degree corollary of `liftX_size`. -/
 theorem liftX_natDegree₂ (d : DensePoly R) :
     (toPolynomial₂ (liftX d)).natDegree = (toPolynomial d).natDegree := by
-  rw [toPolynomial₂_liftX,
-    Polynomial.natDegree_map_eq_of_injective Polynomial.C_injective]
+  rw [natDegree₂_eq_size_sub_one, liftX_size, natDegree_toPolynomial_eq_size_sub_one]
 
-/-- The bridged second operand has exact degree `deg D − 1`. -/
-theorem operand_natDegree₂ (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
-    (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree
-      = (toPolynomial d).natDegree - 1 := by
-  rw [operand_bridge]
-  refine SymbolicIntegration.natDegree_rtResultant_operand _ _ ?_
-  rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
-  omega
-
-/-- The bridged second operand is nonzero. -/
-theorem operand_ne_zero₂ (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
-    toPolynomial₂ (liftX b - zC * liftX (d′)) ≠ 0 := by
-  rw [operand_bridge]
+/-- The second operand is nonzero. -/
+theorem operand_ne_zero (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
+    (liftX b - zC * liftX (d′)) ≠ 0 := by
   intro h0
   refine SymbolicIntegration.rtResultant_operand_coeff_ne_zero (toPolynomial b)
     (toPolynomial d) ?_ ?_
   · rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
     omega
-  · rw [h0, Polynomial.coeff_zero]
+  · rw [← operand_bridge, h0, toPolynomial₂_zero, Polynomial.coeff_zero]
 
-omit [CharZero R] in
-/-- The `x`-lift of a nonzero polynomial is nonzero, with the same size. -/
-theorem liftX_size (d : DensePoly R) (hd0 : d ≠ 0) : (liftX d).size = d.size := by
-  have hlx0 : liftX d ≠ 0 := fun h0 => by
-    have h1 := toPolynomial₂_liftX d
-    rw [h0, toPolynomial₂_zero] at h1
-    have h2 := (Polynomial.map_eq_zero_iff Polynomial.C_injective).mp h1.symm
-    exact hd0 (toPolynomial_injective (by rw [h2, toPolynomial_zero]))
-  have h1 := liftX_natDegree₂ d
-  rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one,
-    natDegree_toPolynomial_eq_size_sub_one] at h1
-  have h2 : (liftX d).size ≠ 0 := fun h0 => hlx0 (eq_zero_of_size_zero h0)
-  have h3 : d.size ≠ 0 := fun h0 => hd0 (eq_zero_of_size_zero h0)
-  omega
+/-- Bridged corollary of `operand_ne_zero`. -/
+theorem operand_ne_zero₂ (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
+    toPolynomial₂ (liftX b - zC * liftX (d′)) ≠ 0 :=
+  toPolynomial₂_ne_zero (operand_ne_zero b d hd2 hbd)
 
-/-- The second operand is nonzero (as a dense polynomial). -/
-theorem operand_ne_zero (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
-    (liftX b - zC * liftX (d′)) ≠ 0 := fun h0 =>
-  operand_ne_zero₂ b d hd2 hbd (by rw [h0, toPolynomial₂_zero])
-
-/-- The second operand's size. -/
+/-- The second operand's size is `d.size − 1`. -/
 theorem operand_size (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
     (liftX b - zC * liftX (d′)).size = d.size - 1 := by
-  have h1 := operand_natDegree₂ b d hd2 hbd
-  rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one,
-    natDegree_toPolynomial_eq_size_sub_one] at h1
+  have h1 : (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree
+      = (toPolynomial d).natDegree - 1 := by
+    rw [operand_bridge]
+    refine SymbolicIntegration.natDegree_rtResultant_operand _ _ ?_
+    rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
+    omega
+  rw [natDegree₂_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one] at h1
   have h2 : (liftX b - zC * liftX (d′)).size ≠ 0 := fun h0 =>
     operand_ne_zero b d hd2 hbd (eq_zero_of_size_zero h0)
   omega
+
+/-- Degree corollary of `operand_size`. -/
+theorem operand_natDegree₂ (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
+    (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree
+      = (toPolynomial d).natDegree - 1 := by
+  rw [natDegree₂_eq_size_sub_one, operand_size b d hd2 hbd,
+    natDegree_toPolynomial_eq_size_sub_one]
 
 /-- **The Rothstein–Trager resultant square**: the engine's dispatched bivariate resultant,
 read through `toPolynomial`, is the abstract Rothstein–Trager resultant `res_x(D, A − t·D′)`
@@ -302,13 +308,13 @@ theorem prs_isSimilar_subresultant (f g : DensePoly (DensePoly R))
       exact Polynomial.leadingCoeff_ne_zero.mpr
         (toPolynomial₂_ne_zero (hidx l (by omega))))
     (fun l hl => by
-      simp only [hF, toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one]
+      simp only [hF, natDegree₂_eq_size_sub_one]
       have h1 : (zChain f g (l + 2)).size < (zChain f g (l + 1)).size :=
         hstep_size l (by omega)
       have h2 : (zChain f g (l + 2)).size ≠ 0 := hsizes_ne (l + 1) (by omega)
       omega)
     (fun l hl => by
-      simp only [hF, toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one, hm2]
+      simp only [hF, natDegree₂_eq_size_sub_one, hm2]
       have h1 : (zChain f g (k + 1)).size ≤ (zChain f g (l + 3)).size := by
         have := hmono (k - (l + 2)) (l + 2) (by omega)
         rwa [show l + 2 + (k - (l + 2)) + 1 = k + 1 from by omega] at this
@@ -319,13 +325,12 @@ theorem prs_isSimilar_subresultant (f g : DensePoly (DensePoly R))
     (fun l hl => by
       rcases eq_or_ne (pseudoDiv (zChain f g l) (zChain f g (l + 1))) 0 with hq0 | hq0
       · simp only [hQc, hF, hq0, toPolynomial₂_zero, Polynomial.natDegree_zero, zero_add,
-          toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one]
+          natDegree₂_eq_size_sub_one]
         have := hord l (by omega)
         omega
       · have hple := pseudoDiv_natDegree_le (hidx l (by omega)) (hord l (by omega)) hq0
         rw [natDegree_toPolynomial_eq_size_sub_one] at hple
-        simp only [hQc, hF, toPolynomial₂_natDegree,
-          natDegree_toPolynomial_eq_size_sub_one]
+        simp only [hQc, hF, natDegree₂_eq_size_sub_one]
         have h2 : (zChain f g (l + 1)).size ≠ 0 := hsizes_ne l (by omega)
         omega)
     hrel
@@ -360,9 +365,9 @@ theorem prs_mem_isSimilar_subresultant (f g : DensePoly (DensePoly R))
     have hf0 : f ≠ 0 := fun h0 => by rw [h0, size_zero] at hfg; omega
     have hgsz : S.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
     have hda : (toPolynomial₂ f).natDegree = f.size - 1 := by
-      rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one]
+      rw [natDegree₂_eq_size_sub_one]
     have hdb : (toPolynomial₂ S).natDegree = S.size - 1 := by
-      rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one]
+      rw [natDegree₂_eq_size_sub_one]
     have hkey := subresultant_deg_ge_normal (toPolynomial₂ f) (toPolynomial₂ S)
       (toPolynomial₂ f).natDegree (toPolynomial₂ S).natDegree
       (toPolynomial₂ S).natDegree le_rfl (by omega) (by omega) le_rfl
@@ -431,9 +436,9 @@ theorem prs_covers (f g : DensePoly (DensePoly R)) (hfg : g.size ≤ f.size) (hg
   · exact ⟨g, hmem_g, hieq.symm⟩
   have hilt : i + 1 < g.size := by omega
   have hda : (toPolynomial₂ f).natDegree = f.size - 1 := by
-    rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one]
+    rw [natDegree₂_eq_size_sub_one]
   have hdb : (toPolynomial₂ g).natDegree = g.size - 1 := by
-    rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one]
+    rw [natDegree₂_eq_size_sub_one]
   -- coefficient-extraction helpers
   have hkill : ∀ (v : Polynomial R) (S P : Polynomial (Polynomial R)),
       v ≠ 0 → Polynomial.C v * S = P → P.coeff i = 0 → S.coeff i = 0 := by
@@ -476,7 +481,7 @@ theorem prs_covers (f g : DensePoly (DensePoly R)) (hfg : g.size ≤ f.size) (hg
       omega
     · have h1 := pseudoDiv_natDegree_le hg0 hfg hq0
       rw [natDegree_toPolynomial_eq_size_sub_one] at h1
-      rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one, hda, hdb]
+      rw [natDegree₂_eq_size_sub_one, hda, hdb]
       omega
   rcases eq_or_ne (pseudoMod f g) 0 with hprem | hprem
   · -- terminal step: `C α₀ · f = g · Q`; every strictly lower index has vanishing psc
@@ -529,7 +534,7 @@ theorem prs_covers (f g : DensePoly (DensePoly R)) (hfg : g.size ≤ f.size) (hg
       rw [hprembr]
       ring
     have hdc : (toPolynomial₂ r).natDegree = r.size - 1 := by
-      rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one]
+      rw [natDegree₂_eq_size_sub_one]
     have hrsz : r.size ≠ 0 := fun h0 => hrne (eq_zero_of_size_zero h0)
     have hrsize : r.size < g.size := by
       rw [hr, zStep]
@@ -695,27 +700,9 @@ theorem prs_elem_isSimilar_lrtSubresultant_eval (b d : DensePoly R) (hd2 : 2 ≤
       ((lrtSubresultant (toPolynomial b) (toPolynomial d)
         ((toPolynomial₂ S).natDegree)).map (Polynomial.evalRingHom a)) := by
   have hd0 : d ≠ 0 := fun h => by rw [h, size_zero] at hd2; omega
-  have hopne₂ := operand_ne_zero₂ b d hd2 hbd
-  have hopne : (liftX b - zC * liftX (d′)) ≠ 0 := fun h0 => hopne₂ (by
-    rw [h0, toPolynomial₂_zero])
-  have hlx0 : liftX d ≠ 0 := fun h0 => by
-    have h1 := liftX_natDegree₂ d
-    rw [h0, toPolynomial₂_zero, Polynomial.natDegree_zero,
-      natDegree_toPolynomial_eq_size_sub_one] at h1
-    omega
-  have hlxsize : (liftX d).size = d.size := by
-    have h1 := liftX_natDegree₂ d
-    rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one,
-      natDegree_toPolynomial_eq_size_sub_one] at h1
-    have h2 : (liftX d).size ≠ 0 := fun h0 => hlx0 (eq_zero_of_size_zero h0)
-    omega
-  have hopsize : (liftX b - zC * liftX (d′)).size = d.size - 1 := by
-    have h1 := operand_natDegree₂ b d hd2 hbd
-    rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one,
-      natDegree_toPolynomial_eq_size_sub_one] at h1
-    have h2 : (liftX b - zC * liftX (d′)).size ≠ 0 := fun h0 => hopne
-      (eq_zero_of_size_zero h0)
-    omega
+  have hopne : (liftX b - zC * liftX (d′)) ≠ 0 := operand_ne_zero b d hd2 hbd
+  have hlxsize : (liftX d).size = d.size := liftX_size d
+  have hopsize : (liftX b - zC * liftX (d′)).size = d.size - 1 := operand_size b d hd2 hbd
   have hident := entry_subresultant_eq_lrt b d hd2 hbd ((toPolynomial₂ S).natDegree)
   rcases prs_shape_mem _ _ S hS with hSg | ⟨prem, hprem0, hSzp⟩
   · -- the entry element IS the top-index subresultant (unit constants)
@@ -727,7 +714,7 @@ theorem prs_elem_isSimilar_lrtSubresultant_eval (b d : DensePoly R) (hd2 : 2 ≤
         rw [operand_natDegree₂ b d hd2 hbd, liftX_natDegree₂]
       rw [hdeq]
       have hddeg : 1 ≤ (toPolynomial₂ (liftX d)).natDegree := by
-        rw [liftX_natDegree₂, natDegree_toPolynomial_eq_size_sub_one]
+        rw [natDegree₂_eq_size_sub_one, liftX_size]
         omega
       have hkey := subresultant_deg_ge_normal (toPolynomial₂ (liftX d))
         (toPolynomial₂ (liftX b - zC * liftX (d′)))
@@ -1075,7 +1062,7 @@ theorem lrtLogTerms_isSimilar_gcd (b d : DensePoly R) (hd2 : 2 ≤ d.size)
           map_zero] at hlc
         exact hlc rfl
       obtain ⟨S', hS'mem, hS'sz⟩ := prs_covers (liftX d) (liftX b - zC * liftX (d′))
-        (by rw [liftX_size d hd0, operand_size b d hd2 hbd]; omega)
+        (by rw [liftX_size d, operand_size b d hd2 hbd]; omega)
         (operand_ne_zero b d hd2 hbd) (j + 1)
         (by rw [operand_size b d hd2 hbd]; omega) hpsc
       have hnone := List.find?_eq_none.mp hfind S' hS'mem
@@ -1091,7 +1078,7 @@ theorem lrtLogTerms_isSimilar_gcd (b d : DensePoly R) (hd2 : 2 ≤ d.size)
       have hS₀deg : (toPolynomial₂ S₀).natDegree
           = (SymbolicIntegration.rtResultant (toPolynomial b)
               (toPolynomial d)).rootMultiplicity a := by
-        rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one, hS₀sz, hmul]
+        rw [natDegree₂_eq_size_sub_one, hS₀sz, hmul]
         omega
       have hspec := prs_elem_isSimilar_lrtSubresultant_eval b d hd2 hbd a S₀ hS₀mem
         (by rw [hS₀deg]; exact hXane)
