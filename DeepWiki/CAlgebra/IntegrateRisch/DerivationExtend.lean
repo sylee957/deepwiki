@@ -72,6 +72,10 @@ theorem toDifferential_deriv (hd : IsDerivation d) :
 
 end IsDerivation
 
+/-- The zero map is a derivation (the constant-field base case). -/
+theorem isDerivation_zero : IsDerivation (fun _ => (0 : K)) :=
+  ⟨fun _ _ => by simp, fun _ _ => by simp⟩
+
 end IsDerivation
 
 namespace DensePoly
@@ -88,6 +92,12 @@ def mapCoeffs (f : K → K) (p : DensePoly K) : DensePoly K :=
 theorem coeff_mapCoeffs {f : K → K} (hf : f 0 = 0) (p : DensePoly K) (n : ℕ) :
     (mapCoeffs f p).coeff n = f (p.coeff n) :=
   coeff_ofList_map f hf p n
+
+/-- A pointwise-zero map annihilates every polynomial. -/
+theorem mapCoeffs_eq_zero {f : K → K} (hf : ∀ c, f c = 0) (p : DensePoly K) :
+    mapCoeffs f p = 0 := by
+  ext n
+  rw [coeff_mapCoeffs (hf 0) p n, hf, coeff_zero]
 
 /-- The coefficient-wise derivative is additive. -/
 theorem mapCoeffs_add (hd : IsDerivation d) (p q : DensePoly K) :
@@ -149,6 +159,12 @@ theorem extendDeriv_X (hd : IsDerivation d) (Dt : DensePoly K) :
     · exact hd.map_zero
   rw [extendDeriv, deriv_X, mul_one, hmc, zero_add]
 
+/-- At the constant-field base data (`d = 0`, `Dt = 1`), the extension is the formal
+derivative. -/
+theorem extendDeriv_zero_one (p : DensePoly K) :
+    extendDeriv (fun _ => (0 : K)) 1 p = p′ := by
+  rw [extendDeriv, mapCoeffs_eq_zero (fun _ => rfl), one_mul, zero_add]
+
 section Square
 
 variable [Differential K]
@@ -185,6 +201,12 @@ open scoped Differential FormalDiff
 def extendDeriv (d : K → K) (Dt : DensePoly K) (f : DenseFrac K) : DenseFrac K :=
   normalize (DensePoly.extendDeriv d Dt f.num * f.den.toPoly
       - f.num * DensePoly.extendDeriv d Dt f.den.toPoly) (f.den.toPoly ^ 2)
+
+/-- At the constant-field base data (`d = 0`, `Dt = 1`), the extension is the formal
+quotient rule. -/
+theorem extendDeriv_zero_one (f : DenseFrac K) :
+    extendDeriv (fun _ => (0 : K)) 1 f = fracDeriv f := by
+  rw [extendDeriv, fracDeriv, DensePoly.extendDeriv_zero_one, DensePoly.extendDeriv_zero_one]
 
 section Square
 

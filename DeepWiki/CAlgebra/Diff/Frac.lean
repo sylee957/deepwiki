@@ -36,6 +36,13 @@ theorem toRatFunc_fracDeriv (f : DenseFrac R) :
     toPolynomial_deriv, hpow]
   simp only [map_sub, map_mul, map_pow]
 
+/-- The quotient rule restricts to the formal derivative on embedded polynomials. -/
+theorem fracDeriv_ofPoly (p : DensePoly R) :
+    fracDeriv (ofPoly p) = ofPoly (p′) :=
+  toRatFunc_injective (by
+    rw [toRatFunc_fracDeriv, toRatFunc_ofPoly, toRatFunc_ofPoly, RatFunc.deriv_algebraMap,
+      toPolynomial_deriv])
+
 /-- Additivity of the quotient rule. -/
 theorem fracDeriv_add (a b : DenseFrac R) :
     fracDeriv (a + b) = fracDeriv a + fracDeriv b :=

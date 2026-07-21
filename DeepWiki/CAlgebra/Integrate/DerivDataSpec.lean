@@ -121,17 +121,12 @@ theorem tRead_ofList_zero_single (c : DensePoly R) :
   rw [tRead_coeff, xConst_apply, Polynomial.coeff_C_mul, coeff_ofList]
   rcases k with _ | _ | k <;> simp [Polynomial.coeff_X, List.getD]
 
-/-- `DensePoly.C` of zero is zero. -/
-private theorem C_zero' {S : Type v} [CommRing S] [DecidableEq S] :
-    (C (0 : S) : DensePoly S) = 0 :=
-  toPolynomial_injective (by rw [toPolynomial_C, Polynomial.C_0, toPolynomial_zero])
-
 /-- The deformation's first resultant argument reads as the scalar-mapped `Q`. -/
 theorem map_tRead_toPolynomial_CC (Q : DensePoly R) :
     (toPolynomial (ofList (Q.coeffs.map fun r => C (C r)) :
         DensePoly (DensePoly (DensePoly R)))).map tRead
       = (toPolynomial Q).map kConst := by
-  have hf : (C (C (0 : R)) : DensePoly (DensePoly R)) = 0 := by rw [C_zero', C_zero']
+  have hf : (C (C (0 : R)) : DensePoly (DensePoly R)) = 0 := by rw [C_zero, C_zero]
   refine Polynomial.ext fun k => ?_
   rw [Polynomial.coeff_map, Polynomial.coeff_map, coeff_toPolynomial, coeff_toPolynomial,
     coeff_ofList_map _ hf, tRead_C, toPolynomial_C, xConst_apply, kConst_apply]
@@ -152,7 +147,7 @@ theorem map_tRead_toPolynomial_deform (Sz Sxz : DensePoly (DensePoly R)) :
   congr 1
   · refine Polynomial.ext fun k => ?_
     rw [Polynomial.coeff_map, Polynomial.coeff_map, coeff_toPolynomial, toPolynomial₂_coeff,
-      coeff_ofList_map _ C_zero', tRead_C]
+      coeff_ofList_map _ C_zero, tRead_C]
   · congr 1
     refine Polynomial.ext fun k => ?_
     rw [Polynomial.coeff_map, coeff_toPolynomial, coeff_ofList_map _ hOfZero,
@@ -164,7 +159,7 @@ theorem map_tRead_toPolynomial_deform (Sz Sxz : DensePoly (DensePoly R)) :
 theorem natDegree_toPolynomial_map_CC (Q : DensePoly R) :
     (toPolynomial (ofList (Q.coeffs.map fun r => C (C r)) :
         DensePoly (DensePoly (DensePoly R)))).natDegree = (toPolynomial Q).natDegree := by
-  have hf : (C (C (0 : R)) : DensePoly (DensePoly R)) = 0 := by rw [C_zero', C_zero']
+  have hf : (C (C (0 : R)) : DensePoly (DensePoly R)) = 0 := by rw [C_zero, C_zero]
   apply le_antisymm
   · refine Polynomial.natDegree_le_iff_coeff_eq_zero.mpr fun k hk => ?_
     have h0 : Q.coeff k = 0 := by

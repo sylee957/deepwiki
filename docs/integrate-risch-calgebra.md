@@ -77,19 +77,34 @@ the tower works (a dedicated cleanup phase, not now).
 - Deferred to P2+: per-tower `′`-notation (`Differential` instances are per concrete
   level, constructed with `RischLevel`, not scoped globally).
 
-### P2 — Monomial structures, result record, level packs
+### P2 — Monomial structures, result record, level packs — DONE (2026-07-22, 9c6ef752)
 `IntegrateRisch/Monomial.lean`, `Results.lean`, `Level.lean`.
-- `MonomialPrimitive`/`MonomialHyperexp`/`MonomialHypertangent` with OCR-faithful
-  genuineness fields and `.Dt` readings (+ trivial satellites: `Dt_*` coefficient
-  lemmas, degree facts).
-- `ResultRisch K`: principal part in `K`, RootSum log data with **constant**-
-  coefficient `Q` (residue-constancy as invariant field), computable
-  `ResultRisch.deriv (D)`.
-- `RischLevel K` and `RischOracles K` records as above; `baseLevel`'s `D` and
-  `integrate` wired from the rational pipeline (contracts from
-  `ratIntegrate_sound`/`_complete`).
-**Endpoint**: records compile; `baseLevel : RischLevel (DenseFrac ℚ)` exists
-(oracle-free); no `sorry`.
+- `MonomialPrimitive` (`η ∉ d(K)`), `MonomialHyperexp` (no `n ≠ 0`, `u ≠ 0` with
+  `n·η·u = d u`), `MonomialHypertangent` (`√−1·η` not a log-derivative of a
+  `K(√−1)`-radical, encoded componentwise: no `n ≠ 0`, `(a,b) ≠ 0` with
+  `d a = −n·η·b ∧ d b = n·η·a`) — genuineness OCR'd from the book (§5.1 monomial
+  criteria, §5.10 hypertangent); `.Dt` readings (`C η` / `[0,η]` / `[η,0,η]`) and
+  `η_ne_zero` satellites (genuineness forces `η ≠ 0` in all three cases).
+- `ResultRisch K d`: `principal : DenseFrac K` + RootSum `terms` with invariants
+  `fst_squarefree` and `fst_constant` (residue constancy as `mapCoeffs d Q = 0`);
+  computable `ResultRisch.deriv Dt` via `bivDeriv` (P1's extension at the bivariate
+  carrier: `z` constant, coefficients by `d`, `Dt·∂t`) and the derivation-parametric
+  deformation `rootSumDerivD`; base bridges `bivDeriv_zero_one`,
+  `rootSumDerivD_zero_one`, `ResultRisch.ofRatIntegral(_deriv)`.
+- `RischLevel K` (d, Dt, `IsDerivation`, integrate + data-level sound and
+  record-shape complete) and `RischOracles d Dt` (limitedIntegrate, rdeSolve +
+  contracts over `DenseFrac.extendDeriv d Dt`).
+- `baseLevel : RischLevel R` — `R(x)` presented as the level `(d = 0, Dt = 1)` over
+  the coefficient field, integrate = `ratIntegrate`, soundness from
+  `ratIntegrate_sound`, completeness vacuous. **Deviation from the original endpoint**:
+  stated over a generic `[CharZero R] [IsAlgClosed R]` coefficient field, not `ℚ` —
+  the rational pipeline's theorems live over closed fields; the ℚ-instance descent
+  (engine ops commute with coefficient embedding) is a known separate frontier, as in
+  the old engine.
+- Homing en route: `C_zero` hoisted to `Poly/Dense.lean` (DerivDataSpec's private
+  copy removed); `fracDeriv_ofPoly` added to `Diff/Frac.lean`; `isDerivation_zero`,
+  `mapCoeffs_eq_zero`, `extendDeriv_zero_one` (poly + frac) added to
+  `DerivationExtend.lean`.
 
 ### P3 — Derivation-generic Hermite reduction
 `IntegrateRisch/Hermite.lean`.

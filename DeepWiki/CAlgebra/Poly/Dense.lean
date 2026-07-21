@@ -222,6 +222,12 @@ This is the keystone property the normalization invariant buys. -/
       simpa only [coeff_mk, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h₁,
         List.getElem?_eq_getElem h₂, Option.getD_some] using this
 
+/-- The constant embedding of `0` is the zero polynomial. -/
+@[simp] theorem C_zero : (C (0 : R) : DensePoly R) = 0 := by
+  ext i
+  rw [coeff_C, coeff_zero]
+  split <;> rfl
+
 /-- A size-zero polynomial is the zero polynomial. -/
 theorem eq_zero_of_size_zero {p : DensePoly R} (h : p.size = 0) : p = 0 := by
   ext i; rw [coeff_zero]; exact coeff_eq_zero_of_size_le p (by omega)
