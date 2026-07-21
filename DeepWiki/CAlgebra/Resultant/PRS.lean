@@ -1,5 +1,6 @@
 import DeepWiki.CAlgebra.Resultant.Sylvester
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
+import DeepWiki.CAlgebra.Gcd.Dense
 
 /-! # Resultant via the pseudo-remainder sequence
 
@@ -9,7 +10,9 @@ slack degree bounds down. Each algorithm branch mirrors one Mathlib resultant id
 (`resultant_add_mul_right`, `resultant_C_mul_right`, `resultant_add_left_deg`,
 `resultant_add_right_deg`, `resultant_comm`, and the constant/zero base cases), so the
 equivalence `resultantPRS_eq` with the Sylvester-determinant resultant is a functional
-induction gluing those identities — polynomial-time where the determinant is factorial. -/
+induction gluing those identities — polynomial-time where the determinant is factorial.
+Also home to the bivariate `K[z][x]` helpers (`liftX`, contents, the primitive
+pseudo-remainder sequence) shared by the resultant consumers. -/
 
 open Polynomial
 
@@ -271,6 +274,37 @@ theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
               * (toPolynomial f).resultant (toPolynomial g) m n := by
               rw [Polynomial.resultant_C_mul_right, ← pow_mul]
       rw [hchain, ed_mul_div_cancel_left hlcp]
+
+/-! ### Bivariate helpers: `K[z][x]`, `x` outermost -/
+
+section Bivariate
+
+variable {R : Type u} [Field R] [DecidableEq R] [DensePolyGcd R]
+
+/-- Lift an `x`-polynomial into `K[z][x]`: coefficients become `z`-constants. -/
+def liftX (p : DensePoly R) : DensePoly (DensePoly R) := ofList (p.coeffs.map C)
+
+/-- The indeterminate `z`, as a constant of `K[z][x]`. -/
+def zC : DensePoly (DensePoly R) := C (ofList [0, 1])
+
+/-- The `z`-content: the gcd of the `x`-coefficients. -/
+def zContent (p : DensePoly (DensePoly R)) : DensePoly R :=
+  p.coeffs.foldr (fun c acc => DensePolyGcd.gcd c acc) 0
+
+/-- The `z`-primitive part: divide each `x`-coefficient by the content. -/
+def zPrimitive (p : DensePoly (DensePoly R)) : DensePoly (DensePoly R) :=
+  ofList (p.coeffs.map fun c => div c (zContent p))
+
+/-- The primitive pseudo-remainder sequence in `x` over `K[z]`, starting from the second
+input: pseudo-divide, take the `z`-primitive part, recurse. -/
+def primPRS : ℕ → DensePoly (DensePoly R) → DensePoly (DensePoly R) →
+    List (DensePoly (DensePoly R))
+  | 0, _, _ => []
+  | fuel + 1, A, B =>
+      if B = 0 then []
+      else B :: primPRS fuel B (zPrimitive (pseudoMod A B))
+
+end Bivariate
 
 end DensePoly
 

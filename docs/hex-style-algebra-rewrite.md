@@ -543,6 +543,15 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     ★ Lessons: WF-`induct` substitutes scrutinees in base cases (case arities shrink); passing
     `le_of_eq` where an INEQUALITY at a different bound is expected silently pins unification
     — give `by rw [...]; omega` proofs shaped by the expected type.
+  - **6c-res-2 (2026-07-21): PRS machinery consolidated under `Resultant/`.**
+    `Gcd/Subresultant.lean` git-mv'd to `Resultant/Subresultant.lean` (the subresultant PRS
+    is resultant-theoretic; the gcd is one consumer of the descent, like the resultant and
+    the LRT sequence); the bivariate helpers (`liftX`, `zC`, `zContent`, `zPrimitive`,
+    `primPRS`) moved from `Integrate/LogPart` into `Resultant/PRS`'s bivariate section.
+    Import chain: `Resultant/Subresultant` ← `Gcd/Dense` ← `Resultant/PRS` (no cycle).
+    Pure move + import rewiring, zero declaration changes. The Resultant area now owns the
+    whole PRS family: subresultant-gcd, Euclidean-descent resultant, primitive bivariate
+    sequence.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

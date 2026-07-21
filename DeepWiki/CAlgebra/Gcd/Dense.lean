@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Gcd.Subresultant
+import DeepWiki.CAlgebra.Resultant.Subresultant
 
 /-! # The dense-polynomial gcd interface (`DensePolyGcd`)
 

@@ -10,7 +10,8 @@ a root `c` of the multiplicity-`i` part of `R` is the degree-`i` element of the 
 remainder sequence of `(d, b − z·d′)`, specialized at `z = c` — no gcd over an algebraic
 extension is ever computed. This module computes that data: pairs `(Qᵢ(z), Sᵢ(z,x))` with
 `Qᵢ` squarefree (its roots are the log coefficients) and `Sᵢ` the bivariate log argument.
-`∫ b/d = Σᵢ Σ_{Qᵢ(c)=0} c · log Sᵢ(c, x)`.
+`∫ b/d = Σᵢ Σ_{Qᵢ(c)=0} c · log Sᵢ(c, x)`. The bivariate machinery (lifts, contents, the
+primitive remainder sequence) lives in `Resultant/PRS`.
 
 The resultant is the Mathlib-bridged Sylvester determinant (`toPolynomial_resultant` gives
 the certificate hook); the remainder sequence is the primitive pseudo-remainder sequence —
@@ -26,31 +27,6 @@ namespace DensePoly
 variable {R : Type u} [Field R] [DecidableEq R] [DensePolyGcd R]
 
 open scoped Differential FormalDiff
-
-/-! ### Bivariate helpers: `K[z][x]`, `x` outermost -/
-
-/-- Lift an `x`-polynomial into `K[z][x]`: coefficients become `z`-constants. -/
-def liftX (p : DensePoly R) : DensePoly (DensePoly R) := ofList (p.coeffs.map C)
-
-/-- The indeterminate `z`, as a constant of `K[z][x]`. -/
-def zC : DensePoly (DensePoly R) := C (ofList [0, 1])
-
-/-- The `z`-content: the gcd of the `x`-coefficients. -/
-def zContent (p : DensePoly (DensePoly R)) : DensePoly R :=
-  p.coeffs.foldr (fun c acc => DensePolyGcd.gcd c acc) 0
-
-/-- The `z`-primitive part: divide each `x`-coefficient by the content. -/
-def zPrimitive (p : DensePoly (DensePoly R)) : DensePoly (DensePoly R) :=
-  ofList (p.coeffs.map fun c => div c (zContent p))
-
-/-- The primitive pseudo-remainder sequence in `x` over `K[z]`, starting from the second
-input: pseudo-divide, take the `z`-primitive part, recurse. -/
-def primPRS : ℕ → DensePoly (DensePoly R) → DensePoly (DensePoly R) →
-    List (DensePoly (DensePoly R))
-  | 0, _, _ => []
-  | fuel + 1, A, B =>
-      if B = 0 then []
-      else B :: primPRS fuel B (zPrimitive (pseudoMod A B))
 
 /-! ### The Rothstein–Trager data -/
 
