@@ -127,6 +127,7 @@ theorem normalize_den_zero (n : DensePoly R) : normalize n 0 = ⟨0, 1,
 
 /-! ### Mathlib bridge -/
 
+omit [DensePolyGcd R] in
 /-- Bridge to Mathlib: `num / den` in the rational-function field. -/
 noncomputable def toRatFunc (f : DenseFrac R) : RatFunc R :=
   algebraMap (Polynomial R) (RatFunc R) (toPolynomial f.num) /

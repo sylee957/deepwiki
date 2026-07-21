@@ -355,7 +355,7 @@ open DeepWiki.SymbolicIntegration in
 /-- **The Hermite output feeds the log stage**: the `logPart` exported by `hermiteReduce`
 satisfies every hypothesis of the summed log-part soundness — its denominator is squarefree
 (hence separable over a perfect field) and the fraction is proper. Together with
-`hermiteReduce_spec`, the engine's rational integration is theorem-backed end to end over
+`hermiteReduce_sound`, the engine's rational integration is theorem-backed end to end over
 an algebraically closed field. -/
 theorem hermiteReduce_logPart_sum_sound (f : DenseFrac R)
     (hnum : (hermiteReduce f).logPart.num ≠ 0) :
@@ -374,7 +374,7 @@ theorem hermiteReduce_logPart_sum_sound (f : DenseFrac R)
     have hm := (hermiteReduce f).logPart.den.monic
     rw [h0] at hm
     exact one_ne_zero (hm.symm.trans rfl)
-  have hprop := hermiteReduce_logPart_isProper f
+  have hprop := (hermiteReduce f).logPart_isProper
   have hdeg := RatFunc.degree_lt_of_isProper_of_eq_div (toPolynomial_ne_zero hden0)
     (x := DenseFrac.toRatFunc (hermiteReduce f).logPart) rfl hprop
   have hbd : (hermiteReduce f).logPart.num.size

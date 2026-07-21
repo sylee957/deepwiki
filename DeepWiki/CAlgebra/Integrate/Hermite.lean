@@ -131,9 +131,9 @@ private theorem hermiteFactorAux_spec {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : 
 
 variable [DensePolySquarefree R]
 
-/-- Bundled Hermite output: `f = rational′ + poly + logPart`, with the log part's canonical
-(monic, coprime) denominator additionally **squarefree** — the input contract of the
-logarithmic stage, carried as an invariant rather than a side theorem. -/
+/-- Bundled Hermite output: `f = rational′ + poly + logPart`, with the log part **proper**
+and its canonical (monic, coprime) denominator additionally **squarefree** — the input
+contract of the logarithmic stage, carried as invariants rather than side theorems. -/
 structure HermiteResult (R : Type u) [Field R] [DecidableEq R] where
   /-- The integrated rational part `G`; its derivative is its contribution. -/
   rational : DenseFrac R
@@ -143,6 +143,8 @@ structure HermiteResult (R : Type u) [Field R] [DecidableEq R] where
   logPart : DenseFrac R
   /-- The log part's denominator is squarefree. -/
   logPart_den_squarefree : Squarefree logPart.den.toPoly
+  /-- The log part is proper. -/
+  logPart_isProper : RatFunc.IsProper (DenseFrac.toRatFunc logPart)
 
 omit [CharZero R] in
 /-- The factor column of `sqfPartFrac` is the squarefree decomposition itself. -/
@@ -178,11 +180,16 @@ private theorem sqfPartFrac_factor_props (a p : DensePoly R) :
   have hsf := squarefree_of_mem_sqfPartFrac hfa
   exact ⟨fun h0 => not_squarefree_zero (h0 ▸ hsf), hsf⟩
 
+/-- The log part of the Hermite reduction: the summed normalized log fractions. -/
+def hermiteLogPart (f : DenseFrac R) : DenseFrac R :=
+  ((sqfPartFrac f.num f.den.toPoly).2.map
+    fun fa => DenseFrac.normalize (hermiteFactorAux fa.1 fa.2.reverse).2 fa.1).sum
+
 /-- The summed log fractions have squarefree denominator: it divides the product of the
 decomposition factors, which is associated to the squarefree part. -/
 private theorem logden_squarefree (f : DenseFrac R) :
-    Squarefree (((sqfPartFrac f.num f.den.toPoly).2.map
-      fun fa => DenseFrac.normalize (hermiteFactorAux fa.1 fa.2.reverse).2 fa.1).sum).den.toPoly := by
+    Squarefree (hermiteLogPart f).den.toPoly := by
+  unfold hermiteLogPart
   have hp : f.den.toPoly ≠ 0 := f.den.ne_zero
   have hLsf : Squarefree (DensePolySquarefree.sqfDecomp (R := R) f.den.toPoly).prod :=
     squarefree_of_associated (DensePolySquarefree.associated_prod hp)
@@ -213,48 +220,6 @@ private theorem partsSum_hermite (parts : List (DensePoly R × List (DensePoly R
       rw [hfa, ihp (fun x hx => h x (by simp [hx]))]
       simp only [DenseFrac.toRatFunc_add, RatFunc.differential_apply, RatFunc.deriv_add]
       ring
-
-/-- **Hermite reduction** of a canonical fraction: the bundled result — no nonzeroness
-hypotheses anywhere, since the canonical denominator is monic. -/
-def hermiteReduce (f : DenseFrac R) : HermiteResult R where
-  rational := ((sqfPartFrac f.num f.den.toPoly).2.map
-    fun fa => (hermiteFactorAux fa.1 fa.2.reverse).1).sum
-  poly := (sqfPartFrac f.num f.den.toPoly).1
-  logPart := ((sqfPartFrac f.num f.den.toPoly).2.map
-    fun fa => DenseFrac.normalize (hermiteFactorAux fa.1 fa.2.reverse).2 fa.1).sum
-  logPart_den_squarefree := logden_squarefree f
-
-/-- **The Hermite identity**, hypothesis-free: `f = rational′ + poly + logPart` in
-`RatFunc R`. -/
-theorem hermiteReduce_spec (f : DenseFrac R) :
-    DenseFrac.toRatFunc f
-      = (DenseFrac.toRatFunc (hermiteReduce f).rational)′
-        + toRatFuncHom (hermiteReduce f).poly
-        + DenseFrac.toRatFunc (hermiteReduce f).logPart := by
-  have hp : f.den.toPoly ≠ 0 := f.den.ne_zero
-  have hold := sqfPartFrac_ratFunc hp f.num
-  have hpartsum := partsSum_hermite (sqfPartFrac f.num f.den.toPoly).2
-    (sqfPartFrac_factor_props f.num f.den.toPoly)
-  have hlog : ((( sqfPartFrac f.num f.den.toPoly).2.map
-        fun fa => (fa.1, (hermiteFactorAux fa.1 fa.2.reverse).2)).map
-          fun db => toRatFuncHom db.2 / toRatFuncHom db.1).sum
-      = DenseFrac.toRatFunc (hermiteReduce f).logPart := by
-    show _ = DenseFrac.toRatFunc (((sqfPartFrac f.num f.den.toPoly).2.map
-      fun fa => DenseFrac.normalize (hermiteFactorAux fa.1 fa.2.reverse).2 fa.1).sum)
-    rw [DenseFrac.toRatFunc_list_sum, List.map_map, List.map_map]
-    congr 1
-    apply List.map_congr_left
-    intro fa _
-    simp only [Function.comp_apply, DenseFrac.toRatFunc_normalize, toRatFuncHom_apply]
-  show toRatFuncHom f.num / toRatFuncHom f.den.toPoly = _
-  rw [hold, hpartsum, hlog]
-  show _ = (DenseFrac.toRatFunc (((sqfPartFrac f.num f.den.toPoly).2.map
-      fun fa => (hermiteFactorAux fa.1 fa.2.reverse).1).sum))′
-    + toRatFuncHom (sqfPartFrac f.num f.den.toPoly).1
-    + DenseFrac.toRatFunc (hermiteReduce f).logPart
-  ring
-
-/-! ### Completeness: rational integrability is decided by the log part -/
 
 omit [DensePolyGcd R] [CharZero R] [DensePolySquarefree R] in
 /-- Size comparisons transport to degree comparisons through the bridge. -/
@@ -344,11 +309,10 @@ private theorem isProper_factor_term {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : S
   rw [h1]
   exact (isProper_invPowSum hd0 l hl).sub ((isProper_factorAux_rational hd0 _).deriv)
 
-/-- **The log part is proper** — semantically forced, with no size tracking through the
-algorithm. -/
-theorem hermiteReduce_logPart_isProper (f : DenseFrac R) :
-    RatFunc.IsProper (DenseFrac.toRatFunc (hermiteReduce f).logPart) := by
-  simp only [hermiteReduce]
+/-- The summed log fractions are proper. -/
+private theorem logsum_isProper (f : DenseFrac R) :
+    RatFunc.IsProper (DenseFrac.toRatFunc (hermiteLogPart f)) := by
+  unfold hermiteLogPart
   rw [DenseFrac.toRatFunc_list_sum]
   apply RatFunc.isProper_list_sum
   intro x hx
@@ -358,6 +322,48 @@ theorem hermiteReduce_logPart_isProper (f : DenseFrac R) :
   have hbound := sqfPartFrac_size_lt (p := f.den.toPoly) f.num fa hfa
   have hterm := isProper_factor_term hprops.1 hprops.2 hbound
   simpa [Function.comp, DenseFrac.toRatFunc_normalize, ← toRatFuncHom_apply] using hterm
+
+/-- **Hermite reduction** of a canonical fraction: the bundled result — no nonzeroness
+hypotheses anywhere, since the canonical denominator is monic. -/
+def hermiteReduce (f : DenseFrac R) : HermiteResult R where
+  rational := ((sqfPartFrac f.num f.den.toPoly).2.map
+    fun fa => (hermiteFactorAux fa.1 fa.2.reverse).1).sum
+  poly := (sqfPartFrac f.num f.den.toPoly).1
+  logPart := hermiteLogPart f
+  logPart_den_squarefree := logden_squarefree f
+  logPart_isProper := logsum_isProper f
+
+/-- **The Hermite identity**, hypothesis-free: `f = rational′ + poly + logPart` in
+`RatFunc R`. -/
+theorem hermiteReduce_sound (f : DenseFrac R) :
+    DenseFrac.toRatFunc f
+      = (DenseFrac.toRatFunc (hermiteReduce f).rational)′
+        + toRatFuncHom (hermiteReduce f).poly
+        + DenseFrac.toRatFunc (hermiteReduce f).logPart := by
+  have hp : f.den.toPoly ≠ 0 := f.den.ne_zero
+  have hold := sqfPartFrac_ratFunc hp f.num
+  have hpartsum := partsSum_hermite (sqfPartFrac f.num f.den.toPoly).2
+    (sqfPartFrac_factor_props f.num f.den.toPoly)
+  have hlog : ((( sqfPartFrac f.num f.den.toPoly).2.map
+        fun fa => (fa.1, (hermiteFactorAux fa.1 fa.2.reverse).2)).map
+          fun db => toRatFuncHom db.2 / toRatFuncHom db.1).sum
+      = DenseFrac.toRatFunc (hermiteReduce f).logPart := by
+    show _ = DenseFrac.toRatFunc (((sqfPartFrac f.num f.den.toPoly).2.map
+      fun fa => DenseFrac.normalize (hermiteFactorAux fa.1 fa.2.reverse).2 fa.1).sum)
+    rw [DenseFrac.toRatFunc_list_sum, List.map_map, List.map_map]
+    congr 1
+    apply List.map_congr_left
+    intro fa _
+    simp only [Function.comp_apply, DenseFrac.toRatFunc_normalize, toRatFuncHom_apply]
+  show toRatFuncHom f.num / toRatFuncHom f.den.toPoly = _
+  rw [hold, hpartsum, hlog]
+  show _ = (DenseFrac.toRatFunc (((sqfPartFrac f.num f.den.toPoly).2.map
+      fun fa => (hermiteFactorAux fa.1 fa.2.reverse).1).sum))′
+    + toRatFuncHom (sqfPartFrac f.num f.den.toPoly).1
+    + DenseFrac.toRatFunc (hermiteReduce f).logPart
+  ring
+
+/-! ### Completeness: rational integrability is decided by the log part -/
 
 /-- **Completeness of Hermite reduction**: a canonical fraction has a rational-function
 antiderivative exactly when the log part vanishes — a decidable test, with a constructive
@@ -374,7 +380,7 @@ theorem hermiteReduce_complete (f : DenseFrac R) :
         show RatFunc.deriv (toRatFuncHom (polyIntegrate (hermiteReduce f).poly))
             = toRatFuncHom (hermiteReduce f).poly from by
           rw [← RatFunc.differential_apply, toRatFuncHom_deriv, polyIntegrate_deriv],
-        hermiteReduce_spec f, RatFunc.differential_apply]
+        hermiteReduce_sound f, RatFunc.differential_apply]
       ring
     have hsf : Squarefree (DenseFrac.toRatFunc (hermiteReduce f).logPart).denom := by
       have hassoc := RatFunc.denom_associated_of_eq_div
@@ -384,7 +390,7 @@ theorem hermiteReduce_complete (f : DenseFrac R) :
       exact squarefree_of_associated hassoc.symm
         (squarefree_toPolynomial_iff.mpr (hermiteReduce f).logPart_den_squarefree)
     have h0 := RatFunc.eq_zero_of_deriv_of_squarefree_denom hderiv hsf
-      (hermiteReduce_logPart_isProper f)
+      (hermiteReduce f).logPart_isProper
     apply DenseFrac.toRatFunc_injective
     rw [DenseFrac.toRatFunc_zero]
     exact h0
@@ -395,7 +401,7 @@ theorem hermiteReduce_complete (f : DenseFrac R) :
       show RatFunc.deriv (toRatFuncHom (polyIntegrate (hermiteReduce f).poly))
           = toRatFuncHom (hermiteReduce f).poly from by
         rw [← RatFunc.differential_apply, toRatFuncHom_deriv, polyIntegrate_deriv],
-      hermiteReduce_spec f, h0, DenseFrac.toRatFunc_zero, RatFunc.differential_apply]
+      hermiteReduce_sound f, h0, DenseFrac.toRatFunc_zero, RatFunc.differential_apply]
     ring
 
 end DensePoly

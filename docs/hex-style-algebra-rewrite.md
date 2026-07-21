@@ -444,7 +444,7 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     with coefficient `−C(n+1)·F^(2n+2)` against the Bézout image), `hermiteFactorAux_spec`
     (functional induction; assembly = `linear_combination ih + hstep`), and
     `hermiteReduce` on top of `sqfPartFrac`: **`a/p = G′ + poly + Σᵢ bᵢ/dᵢ` proven in
-    `RatFunc R`** (`hermiteReduce_spec`) with all remainder denominators squarefree
+    `RatFunc R`** (`hermiteReduce_sound`) with all remainder denominators squarefree
     (`hermiteReduce_denom_squarefree`). Verified numerically over ℚ (4 point checks; sample
     `a₁/((x+1)³(x²+1)²)` gives rational part over `(x+1)²(x²+1)` exactly).
     NEXT: the log part (Rothstein–Trager) on the squarefree remainders.
@@ -468,7 +468,7 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `noncomputable scoped instance`.
   - **6c-int-2 (2026-07-21): Hermite BUNDLED — `DenseFrac` in, `HermiteResult` out,
     hypothesis-free spec.** `hermiteReduce : DenseFrac R → HermiteResult R`: input as a
-    canonical fraction makes `p ≠ 0` automatic (monic denominator), so `hermiteReduce_spec`
+    canonical fraction makes `p ≠ 0` automatic (monic denominator), so `hermiteReduce_sound`
     has NO hypotheses: `toRatFunc f = rational′ + poly + toRatFunc logPart`. The output
     structure carries `logPart : DenseFrac` (auto-canonical: monic + coprime, so the log
     stage's `b/d` arrives reduced) plus the bundled invariant `logPart_den_squarefree`.

@@ -2,7 +2,7 @@
 
 **GOAL**: prove soundness (and the Rothstein–Trager completeness/minimality) for
 `lrtLogTerms`/`lrtLogPart` (`DeepWiki/CAlgebra/Integrate/LogPart.lean`) — the analog of the
-Hermite ladder (`hermiteReduce_spec` / `_logPart_isProper` / `_complete`), closing the
+Hermite ladder (`hermiteReduce_sound` / `_logPart_isProper` / `_complete`), closing the
 asymmetry where the log part is only native_decide-validated.
 
 ## The head start: the abstract layer already exists (old engine, Layer 0)
