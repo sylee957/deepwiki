@@ -72,7 +72,7 @@ is proof- and file-structure work only.
 - Remaining `natDegree_toPolynomial_eq_size_sub_one` uses are the sanctioned *single*
   univariate boundary conversions (`toPolynomial`-level, not the two-lemma dance).
 
-### Phase 3 — the walk bundle (`Integrate/LogPartChain.lean`, split out)
+### Phase 3 — the walk bundle (`Integrate/LogPartChain.lean`, split out) — DONE (2026-07-21)
 
 - New file holding the chain view: `zStep`, `zChain`, `prs_z_eq`,
   `prs_getElem?_eq_zChain`, `prs_ne_zero`, `prs_shape_mem`.
@@ -91,6 +91,25 @@ is proof- and file-structure work only.
 - `prs_isSimilar_subresultant` and `prs_covers` destructure the bundle; their bodies
   shrink to the genuinely mathematical case analyses (telescope application; the
   found/recurse/vanish trichotomy).
+
+**Phase 3 notes (as landed):**
+- The α/β/F/Q chain data are **public** defs `walkAlpha`/`walkBeta`/`walkF`/`walkQ`
+  (not private as planned — `prs_isSimilar_subresultant` in `LogPartSound` instantiates
+  the telescope at them, so they must be visible across files).
+- `WalkData` is a `Prop`-valued structure; beyond the five planned fields it ships
+  telescope-shaped satellites (`sizes_ne`, `prem_ne_zero`, `alpha_ne_zero`,
+  `beta_ne_zero`, `F_ne_zero`, `F_lc_ne_zero`, `F_deg_step`, `F_deg_last_lt`,
+  `Q_deg_le`) so the consumer's side-condition lambdas are one-liners.
+- Three step-level bridged lemmas (`walk_step_identity`, `walk_step_rel`,
+  `walk_step_Q_deg`) serve both `WalkData.ofGetElem?`'s `rel` field and `prs_covers`'s
+  single-step recursion (which is a strong induction on `g.size`, not a chain walk —
+  the bundle itself doesn't apply there, the step lemmas do).
+- `prs_isSimilar_subresultant` shrank to the telescope application + endpoint rewrite;
+  `prs_covers` keeps only the found/recurse/vanish trichotomy and its private
+  coefficient-extraction helpers. `LogPartSound` net −251 lines.
+- omega atom lesson re-hit in the satellites: `sizes_ne (l + 1)` produces the atom
+  `zChain f g (l + 1 + 1)` ≠ `zChain f g (l + 2)` — fixed by type-ascribed `have`s
+  (defeq), per the standing lesson.
 
 ### Phase 4 — the abstract instance-boundary API (`RothsteinTrager/RtData.lean`)
 
