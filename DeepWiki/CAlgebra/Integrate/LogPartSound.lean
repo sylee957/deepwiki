@@ -284,6 +284,23 @@ theorem lrtLogTerm_def (g : DenseFrac R) (a : R) :
   rfl
 
 open DeepWiki.SymbolicIntegration in
+/-- The derivative of the formal sum of logarithms `∑_{a ∈ s} a · log (u a)` — residues
+as coefficients, polynomial log arguments. `log` itself does not exist in `RatFunc R`;
+`∑ a · logDeriv (u a)` is its differential-algebra reading, with the `Differential`
+instance baked in. -/
+noncomputable def logSumDeriv (s : Finset R) (u : R → Polynomial R) : RatFunc R :=
+  ∑ a ∈ s, algebraMap (Polynomial R) (RatFunc R) (Polynomial.C a)
+    * @Differential.logDeriv (RatFunc R) _
+        SymbolicIntegration.instDifferentialRatFunc_deepWiki
+        (algebraMap (Polynomial R) (RatFunc R) (u a))
+
+omit [CharZero R] [IsAlgClosed R] in
+/-- The LRT log sum's derivative is the sum of the log terms. -/
+theorem logSumDeriv_lrtLogArg (g : DenseFrac R) :
+    logSumDeriv (residueSet g) (lrtLogArg g.num g.den.toPoly)
+      = ∑ a ∈ residueSet g, lrtLogTerm g a := rfl
+
+open DeepWiki.SymbolicIntegration in
 /-- Raw core of the summed log-part soundness, on a numerator/denominator pair with size
 and separability hypotheses; the public form is `lrtLogTerms_sum_sound`. -/
 private theorem lrtLogTerms_sum_sound_core (b d : DensePoly R) (hd2 : 2 ≤ d.size)
@@ -384,16 +401,18 @@ private theorem lrtLogTerms_sum_sound_core (b d : DensePoly R) (hd2 : 2 ≤ d.si
     exact ⟨c, 1, hcne, one_ne_zero, by rw [← hc, map_one, one_mul, mul_one]⟩
 
 open DeepWiki.SymbolicIntegration in
-/-- **Summed soundness of the log part**: over an algebraically closed field, a proper
-canonical fraction with squarefree denominator and nonzero numerator equals the sum over
-its residues of `a · logDeriv S(a, x)`, where `S` is the produced log argument covering
-`a` (and `1` at non-residues). The hypotheses are exactly `hermiteReduce`'s exports
+/-- **Summed soundness of the log part — the fraction is the derivative of a sum of
+logarithms**: over an algebraically closed field, a proper canonical fraction with
+squarefree denominator and nonzero numerator is the (formal) derivative of
+`∑_{a ∈ residues} a · log S(a, x)`, where `S` is the produced log argument covering `a`
+(and `1` at non-residues). The hypotheses are exactly `hermiteReduce`'s exports
 (`logPart_isProper`, `logPart_den_squarefree`), so the logarithmic stage applies to the
 Hermite output directly — the engine's rational integration is theorem-backed end to end. -/
 theorem lrtLogTerms_sum_sound (g : DenseFrac R) (hnum : g.num ≠ 0)
     (hsf : Squarefree g.den.toPoly)
     (hprop : RatFunc.IsProper (DenseFrac.toRatFunc g)) :
-    DenseFrac.toRatFunc g = ∑ a ∈ residueSet g, lrtLogTerm g a := by
+    DenseFrac.toRatFunc g
+      = logSumDeriv (residueSet g) (lrtLogArg g.num g.den.toPoly) := by
   have hden0 : g.den.toPoly ≠ 0 := g.den.ne_zero
   have hdeg := RatFunc.degree_lt_of_isProper_of_eq_div (toPolynomial_ne_zero hden0)
     (x := DenseFrac.toRatFunc g) rfl hprop
