@@ -700,7 +700,7 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     lemmas, kernel section generalized `EuclideanDomain`→`CommRing` — pseudo-division never
     needed more); `Euclidean.lean` = the resultant fold + equivalence only;
     `Subresultant.lean` = policy + instantiations + exactness arc only.
-  - **6c-res-10 (2026-07-21, IN REVIEW — uncommitted): switchable PRS.** New dispatch class
+  - **6c-res-10 (2026-07-21, committed 8061e926): switchable PRS.** New dispatch class
     `DensePolyPRS` (Resultant/Dense.lean): an instance IS a clean policy bundled with
     unconditional strip exactness (`C β * cleaned = r`); `DensePolyPRS.prs` derives as the
     kernel's sequence projection. Instances: trivial 100 (CommRing), content 200
