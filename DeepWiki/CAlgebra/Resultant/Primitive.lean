@@ -1,4 +1,6 @@
 import DeepWiki.CAlgebra.Poly.Bivariate
+import DeepWiki.CAlgebra.Diff.Derivative
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtSubresultant
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Gcd.Dense
 import DeepWiki.CAlgebra.Resultant.Descent
@@ -148,6 +150,33 @@ theorem toPolynomial₂_zC : toPolynomial₂ (zC (R := R)) = Polynomial.C Polyno
   rcases i with _ | _ | i <;>
     simp [coeff_ofList, Polynomial.coeff_X]
 
+omit [DensePolyGcd R] in
+/-- The `x`-lift of a nonzero polynomial is nonzero. -/
+theorem liftX_ne_zero {d : DensePoly R} (hd0 : d ≠ 0) : liftX d ≠ 0 := fun h0 => by
+  have h1 := toPolynomial₂_liftX d
+  rw [h0, toPolynomial₂_zero] at h1
+  have h2 := (Polynomial.map_eq_zero_iff Polynomial.C_injective).mp h1.symm
+  exact hd0 (toPolynomial_injective (by rw [h2, toPolynomial_zero]))
+
+omit [DensePolyGcd R] in
+/-- The `x`-lift preserves the size. -/
+theorem liftX_size (d : DensePoly R) : (liftX d).size = d.size := by
+  rcases eq_or_ne d 0 with rfl | hd0
+  · rfl
+  · have h1 : (toPolynomial₂ (liftX d)).natDegree = (toPolynomial d).natDegree := by
+      rw [toPolynomial₂_liftX,
+        Polynomial.natDegree_map_eq_of_injective Polynomial.C_injective]
+    rw [natDegree₂_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one] at h1
+    have h2 : (liftX d).size ≠ 0 := fun h0 => liftX_ne_zero hd0 (eq_zero_of_size_zero h0)
+    have h3 : d.size ≠ 0 := fun h0 => hd0 (eq_zero_of_size_zero h0)
+    omega
+
+omit [DensePolyGcd R] in
+/-- Degree corollary of `liftX_size`. -/
+theorem liftX_natDegree₂ (d : DensePoly R) :
+    (toPolynomial₂ (liftX d)).natDegree = (toPolynomial d).natDegree := by
+  rw [natDegree₂_eq_size_sub_one, liftX_size, natDegree_toPolynomial_eq_size_sub_one]
+
 /-- The `z`-content: the gcd of the `x`-coefficients. -/
 def zContent (p : DensePoly (DensePoly R)) : DensePoly R :=
   p.coeffs.foldr (fun c acc => DensePolyGcd.gcd c acc) 0
@@ -270,6 +299,79 @@ theorem zContent_zPrimitive_isUnit {p : DensePoly (DensePoly R)} (hp : p ≠ 0) 
     rw [mul_one, ← mul_assoc]
     exact hw
   exact isUnit_of_dvd_one h1
+
+/-! ### The Rothstein–Trager operand -/
+
+section RtOperand
+
+open scoped Differential FormalDiff
+
+variable [CharZero R]
+
+omit [DensePolyGcd R] [CharZero R] in
+/-- The bridged second operand. -/
+theorem operand_bridge (b d : DensePoly R) :
+    toPolynomial₂ (liftX b - zC * liftX (d′))
+      = (toPolynomial b).map Polynomial.C
+        - Polynomial.C Polynomial.X
+          * (Polynomial.derivative (toPolynomial d)).map Polynomial.C := by
+  rw [toPolynomial₂_sub, toPolynomial₂_mul, toPolynomial₂_liftX, toPolynomial₂_liftX,
+    toPolynomial₂_zC, toPolynomial_deriv]
+
+omit [DensePolyGcd R] in
+/-- The second operand is nonzero. -/
+theorem operand_ne_zero (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
+    (liftX b - zC * liftX (d′)) ≠ 0 := by
+  intro h0
+  refine SymbolicIntegration.rtResultant_operand_coeff_ne_zero (toPolynomial b)
+    (toPolynomial d) ?_ ?_
+  · rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
+    omega
+  · rw [← operand_bridge, h0, toPolynomial₂_zero, Polynomial.coeff_zero]
+
+omit [DensePolyGcd R] in
+/-- Bridged corollary of `operand_ne_zero`. -/
+theorem operand_ne_zero₂ (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
+    toPolynomial₂ (liftX b - zC * liftX (d′)) ≠ 0 :=
+  toPolynomial₂_ne_zero (operand_ne_zero b d hd2 hbd)
+
+omit [DensePolyGcd R] in
+/-- The second operand's size is `d.size − 1`. -/
+theorem operand_size (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
+    (liftX b - zC * liftX (d′)).size = d.size - 1 := by
+  have h1 : (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree
+      = (toPolynomial d).natDegree - 1 := by
+    rw [operand_bridge]
+    refine SymbolicIntegration.natDegree_rtResultant_operand _ _ ?_
+    rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
+    omega
+  rw [natDegree₂_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one] at h1
+  have h2 : (liftX b - zC * liftX (d′)).size ≠ 0 := fun h0 =>
+    operand_ne_zero b d hd2 hbd (eq_zero_of_size_zero h0)
+  omega
+
+omit [DensePolyGcd R] in
+/-- Degree corollary of `operand_size`. -/
+theorem operand_natDegree₂ (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
+    (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree
+      = (toPolynomial d).natDegree - 1 := by
+  rw [natDegree₂_eq_size_sub_one, operand_size b d hd2 hbd,
+    natDegree_toPolynomial_eq_size_sub_one]
+
+omit [DensePolyGcd R] in
+open DeepWiki.SymbolicIntegration in
+/-- The entry-pair subresultant at any index is the LRT subresultant. -/
+theorem entry_subresultant_eq_lrt (b d : DensePoly R) (hd2 : 2 ≤ d.size)
+    (hbd : b.size < d.size) (i : ℕ) :
+    subresultant (toPolynomial₂ (liftX d))
+      (toPolynomial₂ (liftX b - zC * liftX (d′)))
+      (toPolynomial₂ (liftX d)).natDegree
+      (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree i
+      = lrtSubresultant (toPolynomial b) (toPolynomial d) i := by
+  rw [liftX_natDegree₂, operand_natDegree₂ b d hd2 hbd, toPolynomial₂_liftX,
+    operand_bridge, lrtSubresultant]
+
+end RtOperand
 
 end DensePoly
 

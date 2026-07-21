@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtSubresultant
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtData
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
 
 /-! # Lazard-Rioboo-Trager support

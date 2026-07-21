@@ -156,27 +156,4 @@ theorem lazardRiobooTrager_output_isSimilar_gcd {K : Type*} [Field K] [IsAlgClos
   · rw [if_neg hcase]
     exact lazardRiobooTrager_isSimilar_gcd A D hD hA a (lt_of_le_of_ne hile hcase)
 
-open scoped Classical in
-/-- The consumer bundle for the LRT output branch: the specialized branch is similar to the
-residue gcd, which is nonzero of degree exactly the residue multiplicity. Packaged against
-`rtLogGcd` so downstream engines never re-elaborate `gcd` in a foreign instance context. -/
-theorem lazardRiobooTrager_output_spec {K : Type*} [Field K] [IsAlgClosed K]
-    (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K) :
-    IsSimilar
-      ((if (rtResultant A D).rootMultiplicity a = D.natDegree then D.map (C : K →+* K[X])
-        else lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map
-        (Polynomial.evalRingHom a))
-      (rtLogGcd A D a)
-    ∧ rtLogGcd A D a ≠ 0
-    ∧ (rtLogGcd A D a).natDegree = (rtResultant A D).rootMultiplicity a := by
-  have hD0 : D ≠ 0 := fun h => by simp [h] at hA
-  refine ⟨?_, ?_, ?_⟩
-  · rw [rtLogGcd]
-    exact lazardRiobooTrager_output_isSimilar_gcd A D hD hA a
-  · rw [rtLogGcd]
-    intro h0
-    exact hD0 ((gcd_eq_zero_iff _ _).mp h0).1
-  · rw [rtLogGcd]
-    exact (rootMultiplicity_rtResultant_eq_natDegree_gcd A D hD hA a).symm
-
 end DeepWiki.SymbolicIntegration

@@ -1,7 +1,8 @@
 import DeepWiki.CAlgebra.Integrate.LogPart
 import DeepWiki.CAlgebra.Integrate.LogPartChain
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtSubresultant
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtData
+import DeepWiki.Algebra.SimilaritySpecialize
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtLogForm
 
 /-! # Log-part soundness: the resultant square
@@ -10,8 +11,8 @@ Commuting squares from the computable Lazard–Rioboo–Trager pipeline
 (`DeepWiki/CAlgebra/Integrate/LogPart`) into the engine-independent Rothstein–Trager layer
 (`DeepWiki/SymbolicIntegration/RationalIntegrationAlgorithms/RothsteinTrager`). This file:
 the dispatched bivariate resultant, read through the bridge, is the abstract
-Rothstein–Trager resultant. A deliberate leaf — the determinantal theory it imports stays
-off the computable pipeline's import cone. -/
+Rothstein–Trager resultant, and the walk endpoints specialize to the abstract LRT
+output consumed through the `RtData` boundary record. -/
 
 namespace DeepWiki.CAlgebra
 
@@ -24,79 +25,6 @@ open scoped Differential FormalDiff
 section ResultantSquare
 
 variable {R : Type u} [Field R] [DecidableEq R] [CharZero R]
-
-omit [CharZero R] in
-/-- The bridged second operand. -/
-theorem operand_bridge (b d : DensePoly R) :
-    toPolynomial₂ (liftX b - zC * liftX (d′))
-      = (toPolynomial b).map Polynomial.C
-        - Polynomial.C Polynomial.X
-          * (Polynomial.derivative (toPolynomial d)).map Polynomial.C := by
-  rw [toPolynomial₂_sub, toPolynomial₂_mul, toPolynomial₂_liftX, toPolynomial₂_liftX,
-    toPolynomial₂_zC, toPolynomial_deriv]
-
-omit [CharZero R] in
-/-- The `x`-lift of a nonzero polynomial is nonzero. -/
-theorem liftX_ne_zero {d : DensePoly R} (hd0 : d ≠ 0) : liftX d ≠ 0 := fun h0 => by
-  have h1 := toPolynomial₂_liftX d
-  rw [h0, toPolynomial₂_zero] at h1
-  have h2 := (Polynomial.map_eq_zero_iff Polynomial.C_injective).mp h1.symm
-  exact hd0 (toPolynomial_injective (by rw [h2, toPolynomial_zero]))
-
-omit [CharZero R] in
-/-- The `x`-lift preserves the size. -/
-theorem liftX_size (d : DensePoly R) : (liftX d).size = d.size := by
-  rcases eq_or_ne d 0 with rfl | hd0
-  · rfl
-  · have h1 : (toPolynomial₂ (liftX d)).natDegree = (toPolynomial d).natDegree := by
-      rw [toPolynomial₂_liftX,
-        Polynomial.natDegree_map_eq_of_injective Polynomial.C_injective]
-    rw [natDegree₂_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one] at h1
-    have h2 : (liftX d).size ≠ 0 := fun h0 => liftX_ne_zero hd0 (eq_zero_of_size_zero h0)
-    have h3 : d.size ≠ 0 := fun h0 => hd0 (eq_zero_of_size_zero h0)
-    omega
-
-omit [CharZero R] in
-/-- Degree corollary of `liftX_size`. -/
-theorem liftX_natDegree₂ (d : DensePoly R) :
-    (toPolynomial₂ (liftX d)).natDegree = (toPolynomial d).natDegree := by
-  rw [natDegree₂_eq_size_sub_one, liftX_size, natDegree_toPolynomial_eq_size_sub_one]
-
-/-- The second operand is nonzero. -/
-theorem operand_ne_zero (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
-    (liftX b - zC * liftX (d′)) ≠ 0 := by
-  intro h0
-  refine SymbolicIntegration.rtResultant_operand_coeff_ne_zero (toPolynomial b)
-    (toPolynomial d) ?_ ?_
-  · rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
-    omega
-  · rw [← operand_bridge, h0, toPolynomial₂_zero, Polynomial.coeff_zero]
-
-/-- Bridged corollary of `operand_ne_zero`. -/
-theorem operand_ne_zero₂ (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
-    toPolynomial₂ (liftX b - zC * liftX (d′)) ≠ 0 :=
-  toPolynomial₂_ne_zero (operand_ne_zero b d hd2 hbd)
-
-/-- The second operand's size is `d.size − 1`. -/
-theorem operand_size (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
-    (liftX b - zC * liftX (d′)).size = d.size - 1 := by
-  have h1 : (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree
-      = (toPolynomial d).natDegree - 1 := by
-    rw [operand_bridge]
-    refine SymbolicIntegration.natDegree_rtResultant_operand _ _ ?_
-    rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
-    omega
-  rw [natDegree₂_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one] at h1
-  have h2 : (liftX b - zC * liftX (d′)).size ≠ 0 := fun h0 =>
-    operand_ne_zero b d hd2 hbd (eq_zero_of_size_zero h0)
-  omega
-
-/-- Degree corollary of `operand_size`. -/
-theorem operand_natDegree₂ (b d : DensePoly R) (hd2 : 2 ≤ d.size) (hbd : b.size < d.size) :
-    (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree
-      = (toPolynomial d).natDegree - 1 := by
-  rw [natDegree₂_eq_size_sub_one, operand_size b d hd2 hbd,
-    natDegree_toPolynomial_eq_size_sub_one]
 
 /-- **The Rothstein–Trager resultant square**: the engine's dispatched bivariate resultant,
 read through `toPolynomial`, is the abstract Rothstein–Trager resultant `res_x(D, A − t·D′)`
@@ -382,75 +310,9 @@ theorem content_toPolynomial₂_zPrimitive {p : DensePoly (DensePoly R)} (hp : p
 
 end Chain
 
-section Specialize
-
-variable {R : Type u} [Field R] [DecidableEq R]
-
-open DeepWiki.SymbolicIntegration in
-/-- **Similarity specializes through a primitive left side**: if `P` has content `1` and
-`IsSimilar P X` over `K[t]`, then wherever the specialized `X` survives, the
-specializations are similar over `K`. -/
-theorem isSimilar_map_eval_of_content_eq_one {P X : Polynomial (Polynomial R)} (a : R)
-    (hP : P.content = 1) (hsim : IsSimilar P X)
-    (hXa : X.map (Polynomial.evalRingHom a) ≠ 0) :
-    IsSimilar (P.map (Polynomial.evalRingHom a)) (X.map (Polynomial.evalRingHom a)) := by
-  obtain ⟨c₁, c₂, hc₁, hc₂, heq⟩ := hsim
-  have heq2 : Polynomial.C c₁ * P = Polynomial.C (c₂ * X.content) * X.primPart := by
-    rw [map_mul, mul_assoc, ← Polynomial.eq_C_content_mul_primPart]
-    exact heq
-  have hcont2 := congrArg Polynomial.content heq2
-  rw [Polynomial.content_C_mul, Polynomial.content_C_mul, hP, mul_one,
-    Polynomial.content_primPart, mul_one] at hcont2
-  have hassoc : Associated c₁ (c₂ * X.content) :=
-    normalize_eq_normalize_iff_associated.mp hcont2
-  obtain ⟨v, hv⟩ := hassoc
-  have hc₁C : (Polynomial.C c₁ : Polynomial (Polynomial R)) ≠ 0 := by
-    rw [Ne, Polynomial.C_eq_zero]
-    exact hc₁
-  have hP_eq : P = Polynomial.C (↑v : Polynomial R) * X.primPart := by
-    apply mul_left_cancel₀ hc₁C
-    rw [heq2, ← hv, map_mul, mul_assoc]
-  have hXmap : X.map (Polynomial.evalRingHom a)
-      = Polynomial.C (Polynomial.eval a X.content)
-        * (X.primPart.map (Polynomial.evalRingHom a)) := by
-    conv_lhs => rw [Polynomial.eq_C_content_mul_primPart X]
-    rw [Polynomial.map_mul, Polynomial.map_C]
-    rfl
-  have hPmap : P.map (Polynomial.evalRingHom a)
-      = Polynomial.C (Polynomial.eval a (↑v : Polynomial R))
-        * (X.primPart.map (Polynomial.evalRingHom a)) := by
-    conv_lhs => rw [hP_eq]
-    rw [Polynomial.map_mul, Polynomial.map_C]
-    rfl
-  obtain ⟨r, hru, hrC⟩ := Polynomial.isUnit_iff.mp v.isUnit
-  have hveval : Polynomial.eval a (↑v : Polynomial R) ≠ 0 := by
-    rw [← hrC, Polynomial.eval_C]
-    exact hru.ne_zero
-  have hweval : Polynomial.eval a X.content ≠ 0 := by
-    intro h0
-    apply hXa
-    rw [hXmap, h0, map_zero, zero_mul]
-  exact ⟨Polynomial.eval a X.content, Polynomial.eval a (↑v : Polynomial R),
-    hweval, hveval, by rw [hXmap, hPmap]; ring⟩
-
-end Specialize
-
 section Endpoint
 
 variable {R : Type u} [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R]
-
-omit [DensePolyGcd R] in
-open DeepWiki.SymbolicIntegration in
-/-- The entry-pair subresultant at any index is the LRT subresultant. -/
-theorem entry_subresultant_eq_lrt (b d : DensePoly R) (hd2 : 2 ≤ d.size)
-    (hbd : b.size < d.size) (i : ℕ) :
-    subresultant (toPolynomial₂ (liftX d))
-      (toPolynomial₂ (liftX b - zC * liftX (d′)))
-      (toPolynomial₂ (liftX d)).natDegree
-      (toPolynomial₂ (liftX b - zC * liftX (d′))).natDegree i
-      = lrtSubresultant (toPolynomial b) (toPolynomial d) i := by
-  rw [liftX_natDegree₂, operand_natDegree₂ b d hd2 hbd, toPolynomial₂_liftX,
-    operand_bridge, lrtSubresultant]
 
 open DeepWiki.SymbolicIntegration in
 /-- **The per-element endpoint** (gcd-free form): a dispatched sequence element,
@@ -772,12 +634,15 @@ theorem lrtLogTerms_isSimilar_gcd (b d : DensePoly R) (hd2 : 2 ≤ d.size)
     exact haQ
   have hile : j + 1 ≤ (toPolynomial d).natDegree := by
     rw [← hmul]
-    exact rootMultiplicity_rtResultant_le (toPolynomial b) (toPolynomial d) hdsep hA a
+    exact (rtData (toPolynomial b) (toPolynomial d) hdsep hA a).rootMultiplicity_le
   have hile' : j + 1 ≤ d.size - 1 := by
     rw [natDegree_toPolynomial_eq_size_sub_one] at hile
     exact hile
-  obtain ⟨hsim, hgne, hgdeg⟩ := lazardRiobooTrager_output_spec (toPolynomial b)
-    (toPolynomial d) hdsep hA a
+  have hgcdeq := rtData_gcdVal (toPolynomial b) (toPolynomial d) hdsep hA a
+  have hgne := (rtData (toPolynomial b) (toPolynomial d) hdsep hA a).ne_zero
+  have hgdeg := (rtData (toPolynomial b) (toPolynomial d) hdsep hA a).natDegree_eq
+  have hsim := (rtData (toPolynomial b) (toPolynomial d) hdsep hA a).output_sim
+  rw [hgcdeq] at hgne hgdeg hsim
   by_cases hfall : Qi.2 + 2 = d.size
   · -- fallback: `S = liftX d`, multiplicity `deg D`
     rw [if_pos hfall] at hSeq
@@ -899,8 +764,10 @@ theorem lrtLogTerms_sum_sound (b d : DensePoly R) (hd2 : 2 ≤ d.size)
     exact lrtLogTerms_isSimilar_gcd b d hd2 hbd hdsep h.choose_spec.1 h.choose_spec.2
   case isFalse h =>
     -- `a` is not a residue: the gcd is a nonzero constant, similar to `1`
-    obtain ⟨-, hgne, hgdeg⟩ := lazardRiobooTrager_output_spec (toPolynomial b)
-      (toPolynomial d) hdsep hA a
+    have hgcdeq := rtData_gcdVal (toPolynomial b) (toPolynomial d) hdsep hA a
+    have hgne := (rtData (toPolynomial b) (toPolynomial d) hdsep hA a).ne_zero
+    have hgdeg := (rtData (toPolynomial b) (toPolynomial d) hdsep hA a).natDegree_eq
+    rw [hgcdeq] at hgne hgdeg
     have hmul0 : (SymbolicIntegration.rtResultant (toPolynomial b)
         (toPolynomial d)).rootMultiplicity a = 0 := by
       by_contra hne

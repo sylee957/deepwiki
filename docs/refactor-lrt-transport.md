@@ -111,7 +111,7 @@ is proof- and file-structure work only.
   `zChain f g (l + 1 + 1)` ≠ `zChain f g (l + 2)` — fixed by type-ascribed `have`s
   (defeq), per the standing lesson.
 
-### Phase 4 — the abstract instance-boundary API (`RothsteinTrager/RtData.lean`)
+### Phase 4 — the abstract instance-boundary API (`RothsteinTrager/RtData.lean`) — DONE (2026-07-21)
 
 - One record produced under `open scoped Classical`, consumed by the engine:
   ```
@@ -134,6 +134,33 @@ is proof- and file-structure work only.
   (`operand_bridge`, `operand_natDegree₂`, `operand_ne_zero₂`, `operand_size`,
   `liftX_size`) next to `liftX`/`zC` in `Resultant/Primitive.lean` (satellites live with
   their definitions).
+
+**Phase 4 notes (as landed):**
+- `RtData` carries the data field `gcdVal : K[X]` as specified, plus `natDegree_le` as a
+  field; `noncomputable def rtData` (a def, not a theorem — the record carries data)
+  populates it with `rtLogGcd A D a`, exposed definitionally by
+  `rtData_gcdVal : (rtData …).gcdVal = rtLogGcd A D a := rfl`. The engine consumes
+  projections and rewrites once through `rtData_gcdVal` (a tactic `have` of the whole
+  record would erase the body and break the defeq — hence projection-per-field
+  consumption). Satellite `RtData.rootMultiplicity_le` (the `natDegree_eq`-transported
+  bound).
+- `lazardRiobooTrager_output_spec` was **deleted** (fully subsumed — its proof folded
+  into `rtData`); `rootMultiplicity_rtResultant_le` stays as the abstract satellite
+  `rtData` builds on. `RtData` wired into the `Lrt.lean` area aggregator.
+- `isSimilar_map_eval_of_content_eq_one` moved to the new
+  `Algebra/SimilaritySpecialize.lean` (`PseudoDivision` has no content machinery).
+  ★ Deliberately **`[Field K] [DecidableEq K]`, NOT `open scoped Classical`** — the
+  engine call site instantiates `K` with its real `DecidableEq`, so the content/gcd
+  instances stay defeq across the boundary (the classical-vs-real lesson, applied in
+  reverse: this lemma is instance-polymorphic, not gcd-pinned).
+- The full operand family (`operand_bridge`, `operand_ne_zero`, `operand_ne_zero₂`,
+  `operand_size`, `operand_natDegree₂`) + `entry_subresultant_eq_lrt` + the `liftX`
+  satellites moved to `Resultant/Primitive.lean` (section `RtOperand`, which needs
+  `open scoped Differential FormalDiff` for `d′`). ⚠️ Consequence: `Primitive.lean` now
+  imports `RothsteinTrager.LrtSubresultant` + `Diff.Derivative`, so the abstract RT /
+  determinantal layer entered the computable pipeline's import cone — `LogPartSound`'s
+  old "deliberate leaf" isolation no longer holds (its module docstring was updated;
+  build-time cost only, no semantic coupling).
 
 ### Phase 5 — file split + capstone re-plumb
 
