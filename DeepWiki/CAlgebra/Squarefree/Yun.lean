@@ -3,9 +3,9 @@ import DeepWiki.Algebra.SquarefreeYun
 
 /-! # Yun's squarefree decomposition — self-validating
 
-Yun's sweep computes the staircase factors from one initial `gcd(p, deriv p)` plus gcds of
+Yun's sweep computes the staircase factors from one initial `gcd(p, p′)` plus gcds of
 the much smaller pairs `(cᵢ, dᵢ)`. Correctness is proven directly from the sum-free ghost
-invariant `IsYunState` — the loop state `(c, d)` satisfies `d·g = c·deriv g` for a ghost
+invariant `IsYunState` — the loop state `(c, d)` satisfies `d·g = c·g′` for a ghost
 divisor `g` whose primes `c` covers — with each step validated by the Mathlib-side
 `Polynomial.yun_step` through the bridge. The ghost's size strictly drops while it is a
 nonunit, so the fuel `p.size` provably suffices; no runtime validation remains. -/
@@ -14,14 +14,16 @@ namespace DeepWiki.CAlgebra
 
 universe u
 
+open scoped Differential FormalDiff
+
 namespace DensePoly
 
 variable {R : Type u} [Field R] [DecidableEq R] [DensePolyGcd R]
 
 /-- The Yun loop invariant: `(c, d)` is a Yun state for the ghost `g` — `c` squarefree and
-covering the primes of `g`, with the state identity `d * g = c * deriv g`. -/
+covering the primes of `g`, with the state identity `d * g = c * g′`. -/
 def IsYunState (g c d : DensePoly R) : Prop :=
-  g ≠ 0 ∧ c ≠ 0 ∧ Squarefree c ∧ (∀ q, Prime q → q ∣ g → q ∣ c) ∧ d * g = c * deriv g
+  g ≠ 0 ∧ c ≠ 0 ∧ Squarefree c ∧ (∀ q, Prime q → q ∣ g → q ∣ c) ∧ d * g = c * g′
 
 /-- One Yun sweep: emit `gcd(c, d)`, divide it out, and update the derivative accumulator. -/
 private def yunAux : ℕ → DensePoly R → DensePoly R → List (DensePoly R)
@@ -31,7 +33,7 @@ private def yunAux : ℕ → DensePoly R → DensePoly R → List (DensePoly R)
     else
       DensePolyGcd.gcd c d ::
         yunAux fuel (div c (DensePolyGcd.gcd c d))
-          (div d (DensePolyGcd.gcd c d) - deriv (div c (DensePolyGcd.gcd c d)))
+          (div d (DensePolyGcd.gcd c d) - (div c (DensePolyGcd.gcd c d))′)
 
 /-- A constant first component exits the sweep immediately, whatever the fuel. -/
 private theorem yunAux_eq_nil {c d : DensePoly R} (hc : c.size ≤ 1) :
@@ -45,7 +47,7 @@ the bridge. -/
 theorem IsYunState.step [CharZero R] {g c d : DensePoly R} (h : IsYunState g c d) :
     div c (DensePolyGcd.gcd c d) ∣ g ∧
     IsYunState (div g (div c (DensePolyGcd.gcd c d))) (div c (DensePolyGcd.gcd c d))
-      (div d (DensePolyGcd.gcd c d) - deriv (div c (DensePolyGcd.gcd c d))) := by
+      (div d (DensePolyGcd.gcd c d) - (div c (DensePolyGcd.gcd c d))′) := by
   obtain ⟨hg, hc0, hcsf, hcov, hid⟩ := h
   set P := DensePolyGcd.gcd c d with hPdef
   set c₂ := div c P with hc2def
@@ -130,7 +132,7 @@ private theorem yunAux_spec [CharZero R] :
       obtain ⟨hc2g, hnew⟩ := IsYunState.step ⟨hg, hc0, hcsf, hcov, hid⟩
       set P := DensePolyGcd.gcd c d with hPdef
       set c₂ := div c P with hc2def
-      set d₂ := div d P - deriv c₂ with hd2def
+      set d₂ := div d P - c₂′ with hd2def
       set g₂ := div g c₂ with hg2def
       have hP0 : P ≠ 0 := fun h0 => hc0 (zero_dvd_iff.mp (h0 ▸ DensePolyGcd.gcd_dvd_left c d))
       have hPc' : P * c₂ = c :=
@@ -183,19 +185,19 @@ private theorem yunAux_spec [CharZero R] :
 `c₁ = sqfreePart p`, `d₁ = p′/gcd(p,p′) − c₁′`. Proven correct by the ghost invariant. -/
 def sqfDecompYun [CharZero R] (p : DensePoly R) : List (DensePoly R) :=
   yunAux p.size (sqfreePart p)
-    (div (deriv p) (DensePolyGcd.gcd p (deriv p)) - deriv (sqfreePart p))
+    (div (p′) (DensePolyGcd.gcd p (p′)) - (sqfreePart p)′)
 
-/-- Yun's initial pair is a Yun state for the ghost `gcd(p, deriv p)`. -/
+/-- Yun's initial pair is a Yun state for the ghost `gcd(p, p′)`. -/
 private theorem isYunState_init [CharZero R] {p : DensePoly R} (hp : p ≠ 0) :
-    IsYunState (DensePolyGcd.gcd p (deriv p)) (sqfreePart p)
-      (div (deriv p) (DensePolyGcd.gcd p (deriv p)) - deriv (sqfreePart p)) := by
-  set g := DensePolyGcd.gcd p (deriv p) with hgdef
+    IsYunState (DensePolyGcd.gcd p (p′)) (sqfreePart p)
+      (div (p′) (DensePolyGcd.gcd p (p′)) - (sqfreePart p)′) := by
+  set g := DensePolyGcd.gcd p (p′) with hgdef
   set c := sqfreePart p with hcdef
   have hg0 : g ≠ 0 := DensePolyGcd.gcd_ne_zero_of_left hp _
   have hc0 : c ≠ 0 := sqfreePart_ne_zero hp
   have hgc : g * c = p := gcd_deriv_mul_sqfreePart hp
-  have hgd : g ∣ deriv p := DensePolyGcd.gcd_dvd_right p (deriv p)
-  have hgd' : g * div (deriv p) g = deriv p := EuclideanDomain.mul_div_cancel' hg0 hgd
+  have hgd : g ∣ p′ := DensePolyGcd.gcd_dvd_right p (p′)
+  have hgd' : g * div (p′) g = p′ := EuclideanDomain.mul_div_cancel' hg0 hgd
   refine ⟨hg0, hc0, squarefree_sqfreePart hp, ?_, ?_⟩
   · -- prime coverage, via the Polynomial-side coverage keystone
     intro q hq hqg
@@ -206,8 +208,8 @@ private theorem isYunState_init [CharZero R] {p : DensePoly R} (hp : p ≠ 0) :
         (prime_toPolynomial_iff.mpr hq).irreducible (toPolynomial_dvd hqp)
     exact dvd_of_toPolynomial_dvd (h1.trans (toPolynomial_sqfreePart_associated hp).symm.dvd)
   · -- the state identity, from the product rule on `p = g·c`
-    have hd : deriv p = deriv g * c + g * deriv c := by rw [← hgc, deriv_mul]
-    have hcalc : (div (deriv p) g - deriv c) * g = deriv p - deriv c * g := by
+    have hd : p′ = g′ * c + g * c′ := by rw [← hgc, deriv_mul]
+    have hcalc : (div (p′) g - c′) * g = p′ - c′ * g := by
       rw [sub_mul]
       congr 1
       rw [mul_comm, hgd']
@@ -221,7 +223,7 @@ theorem squarefree_of_mem_sqfDecompYun [CharZero R] {p f : DensePoly R}
   · rw [sqfDecompYun, size_zero] at hf
     exact absurd hf (List.not_mem_nil)
   · obtain ⟨h1, -, -⟩ := yunAux_spec p.size (isYunState_init hp)
-      (size_le_size_of_dvd hp (DensePolyGcd.gcd_dvd_left p (deriv p)))
+      (size_le_size_of_dvd hp (DensePolyGcd.gcd_dvd_left p (p′)))
     exact h1 f hf
 
 /-- **Exponent-exact reconstruction for Yun**: identical contract to `sqfDecompMusser_spec`,
@@ -230,10 +232,10 @@ theorem sqfDecompYun_spec [CharZero R] {p : DensePoly R} (hp : p ≠ 0) :
     Associated p (powProd (sqfDecompYun p) 1) ∧
       Associated (sqfreePart p) (sqfDecompYun p).prod := by
   obtain ⟨-, h2, h3⟩ := yunAux_spec p.size (isYunState_init hp)
-    (size_le_size_of_dvd hp (DensePolyGcd.gcd_dvd_left p (deriv p)))
+    (size_le_size_of_dvd hp (DensePolyGcd.gcd_dvd_left p (p′)))
   rw [sqfDecompYun]
   refine ⟨?_, h3⟩
-  have hgc : sqfreePart p * DensePolyGcd.gcd p (deriv p) = p := by
+  have hgc : sqfreePart p * DensePolyGcd.gcd p (p′) = p := by
     rw [mul_comm]; exact gcd_deriv_mul_sqfreePart hp
   rwa [hgc] at h2
 

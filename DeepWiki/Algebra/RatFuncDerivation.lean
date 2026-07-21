@@ -108,27 +108,40 @@ theorem deriv_intCast (n : ℤ) : deriv ((n : RatFunc K)) = 0 := by
 theorem deriv_zsmul (n : ℤ) (f : RatFunc K) : deriv (n • f) = n • deriv f := by
   rw [zsmul_eq_mul, zsmul_eq_mul, deriv_mul, deriv_intCast, mul_zero, add_zero]
 
-/-- `RatFunc K` is a differential field: the quotient-rule derivative as a `ℤ`-derivation.
-The `letI` pins the `ℤ`-algebra structure to `Ring.toIntAlgebra` (the one `Differential`
-expects), overriding RatFunc's polynomial-lift `Algebra ℤ` instance. -/
-noncomputable instance : Differential (RatFunc K) where
+end RatFunc
+
+namespace FormalDiff
+
+/-- `RatFunc K` is a differential field via the quotient-rule derivative (scoped: this is the
+extension of the **formal** `d/dX` — a differential coefficient field will induce a different
+derivation in its own scope). The `letI` pins the `ℤ`-algebra structure to
+`Ring.toIntAlgebra` (the one `Differential` expects), overriding RatFunc's polynomial-lift
+`Algebra ℤ` instance. -/
+noncomputable scoped instance {K : Type u} [Field K] : Differential (RatFunc K) where
   deriv :=
     letI : Algebra ℤ (RatFunc K) := Ring.toIntAlgebra _
-    { toFun := deriv
-      map_add' := deriv_add
+    { toFun := RatFunc.deriv
+      map_add' := RatFunc.deriv_add
       map_smul' := fun n f => by
-        show deriv (n • f) = n • deriv f
-        rw [zsmul_eq_mul, zsmul_eq_mul, deriv_mul, deriv_intCast, mul_zero, add_zero]
+        show RatFunc.deriv (n • f) = n • RatFunc.deriv f
+        rw [zsmul_eq_mul, zsmul_eq_mul, RatFunc.deriv_mul, RatFunc.deriv_intCast, mul_zero,
+          add_zero]
       map_one_eq_zero' := by
-        show deriv 1 = 0
-        have h := deriv_algebraMap (K := K) 1
+        show RatFunc.deriv 1 = 0
+        have h := RatFunc.deriv_algebraMap (K := K) 1
         simpa using h
       leibniz' := fun a b => by
-        show deriv (a * b) = a • deriv b + b • deriv a
-        rw [deriv_mul, smul_eq_mul, smul_eq_mul] }
+        show RatFunc.deriv (a * b) = a • RatFunc.deriv b + b • RatFunc.deriv a
+        rw [RatFunc.deriv_mul, smul_eq_mul, smul_eq_mul] }
 
-open scoped Differential in
-/-- The `′` of the `Differential` instance is `RatFunc.deriv`. -/
+end FormalDiff
+
+namespace RatFunc
+
+variable {K : Type u} [Field K]
+
+open scoped Differential FormalDiff in
+/-- The scoped `′` on `RatFunc K` is `RatFunc.deriv`. -/
 @[simp] theorem differential_apply (f : RatFunc K) : f′ = deriv f := rfl
 
 end RatFunc

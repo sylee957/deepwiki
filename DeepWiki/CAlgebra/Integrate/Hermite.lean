@@ -19,7 +19,7 @@ namespace DensePoly
 
 variable {R : Type u} [Field R] [DecidableEq R] [DensePolyGcd R]
 
-open scoped Differential
+open scoped Differential FormalDiff
 
 /-- One factor's Hermite sweep over **descending** numerators `[aⱼ, …, a₁]` for a squarefree
 `d`: each head sheds one power of `d` into the accumulated rational part; the exponent-1
@@ -28,10 +28,10 @@ def hermiteFactorAux (d : DensePoly R) : List (DensePoly R) → DenseFrac R × D
   | [] => (0, 0)
   | [a] => (0, a)
   | c :: r :: rs =>
-      let t := (splitCoprime c d (deriv d)).1
-      let b := (splitCoprime c d (deriv d)).2
+      let t := (splitCoprime c d (d′)).1
+      let b := (splitCoprime c d (d′)).2
       let res := hermiteFactorAux d
-        ((r + b + C (((rs.length + 1 : ℕ) : R))⁻¹ * deriv t) :: rs)
+        ((r + b + C (((rs.length + 1 : ℕ) : R))⁻¹ * t′) :: rs)
       (res.1 + DenseFrac.normalize (-(C (((rs.length + 1 : ℕ) : R))⁻¹ * t))
           (d ^ (rs.length + 1)),
         res.2)
@@ -46,14 +46,14 @@ theorem hermite_step {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefree d)
     (c : DensePoly R) (n : ℕ) :
     toRatFuncHom c / toRatFuncHom d ^ (n + 2)
       = (DenseFrac.toRatFunc (DenseFrac.normalize
-          (-(C (((n + 1 : ℕ) : R))⁻¹ * (splitCoprime c d (deriv d)).1)) (d ^ (n + 1))))′
-        + toRatFuncHom ((splitCoprime c d (deriv d)).2
-            + C (((n + 1 : ℕ) : R))⁻¹ * deriv (splitCoprime c d (deriv d)).1)
+          (-(C (((n + 1 : ℕ) : R))⁻¹ * (splitCoprime c d (d′)).1)) (d ^ (n + 1))))′
+        + toRatFuncHom ((splitCoprime c d (d′)).2
+            + C (((n + 1 : ℕ) : R))⁻¹ * ((splitCoprime c d (d′)).1)′)
           / toRatFuncHom d ^ (n + 1) := by
-  have hcop : IsCoprime d (deriv d) := squarefree_iff_isCoprime_deriv.mp hdsf
+  have hcop : IsCoprime d (d′) := squarefree_iff_isCoprime_deriv.mp hdsf
   have hsp := splitCoprime_spec hcop c
-  set t := (splitCoprime c d (deriv d)).1 with ht
-  set b := (splitCoprime c d (deriv d)).2 with hb
+  set t := (splitCoprime c d (d′)).1 with ht
+  set b := (splitCoprime c d (d′)).2 with hb
   have hk : (((n + 1 : ℕ) : R)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.succ_ne_zero n)
   have hdm0 : (d ^ (n + 1) : DensePoly R) ≠ 0 := pow_ne_zero _ hd0
   have hF0 : toRatFuncHom d ≠ (0 : RatFunc R) := toRatFuncHom_ne_zero hd0
@@ -61,10 +61,10 @@ theorem hermite_step {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefree d)
     RatFunc.deriv_div (toPolynomial_ne_zero hdm0)]
   rw [← toPolynomial_deriv, ← toPolynomial_deriv, ← toRatFuncHom_apply, ← toRatFuncHom_apply,
     ← toRatFuncHom_apply, ← toRatFuncHom_apply]
-  have hgderiv : deriv (-(C (((n + 1 : ℕ) : R))⁻¹ * t))
-      = -(C (((n + 1 : ℕ) : R))⁻¹ * deriv t) := by
+  have hgderiv : (-(C (((n + 1 : ℕ) : R))⁻¹ * t))′
+      = -(C (((n + 1 : ℕ) : R))⁻¹ * t′) := by
     rw [deriv_neg, deriv_C_mul]
-  have hdmderiv : deriv (d ^ (n + 1)) = C (((n + 1 : ℕ)) : R) * d ^ n * deriv d :=
+  have hdmderiv : (d ^ (n + 1))′ = C (((n + 1 : ℕ)) : R) * d ^ n * d′ :=
     deriv_pow_succ d n
   rw [hgderiv, hdmderiv]
   simp only [map_neg, map_mul, map_pow, map_add]
@@ -75,7 +75,7 @@ theorem hermite_step {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefree d)
     rw [← map_mul, ← C_mul, inv_mul_cancel₀ hk, ← one_def, map_one]
   have hu : toRatFuncHom (C ((((n + 1 : ℕ)) : R))⁻¹)
       = (toRatFuncHom (C (((n + 1 : ℕ)) : R)))⁻¹ := eq_inv_of_mul_eq_one_left huv
-  have hspT : toRatFuncHom t * toRatFuncHom (deriv d)
+  have hspT : toRatFuncHom t * toRatFuncHom (d′)
       + toRatFuncHom b * toRatFuncHom d = toRatFuncHom c := by
     rw [← map_mul, ← map_mul, ← map_add, hsp]
   rw [hu]
@@ -111,14 +111,14 @@ theorem hermiteFactorAux_spec {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefr
       simp [RatFunc.differential_apply]
   | case3 c r rs t b ih =>
       have hstep := hermite_step hd0 hdsf c rs.length
-      rw [show (splitCoprime c d (deriv d)).1 = t from rfl,
-        show (splitCoprime c d (deriv d)).2 = b from rfl] at hstep
+      rw [show (splitCoprime c d (d′)).1 = t from rfl,
+        show (splitCoprime c d (d′)).2 = b from rfl] at hstep
       have hunfold : hermiteFactorAux d (c :: r :: rs)
-          = ((hermiteFactorAux d ((r + b + C (((rs.length + 1 : ℕ) : R))⁻¹ * deriv t) :: rs)).1
+          = ((hermiteFactorAux d ((r + b + C (((rs.length + 1 : ℕ) : R))⁻¹ * t′) :: rs)).1
               + DenseFrac.normalize (-(C (((rs.length + 1 : ℕ) : R))⁻¹ * t))
                   (d ^ (rs.length + 1)),
              (hermiteFactorAux d
-                ((r + b + C (((rs.length + 1 : ℕ) : R))⁻¹ * deriv t) :: rs)).2) := by
+                ((r + b + C (((rs.length + 1 : ℕ) : R))⁻¹ * t′) :: rs)).2) := by
         simp only [hermiteFactorAux]
         rfl
       rw [invPowSum_map_reverse_cons, invPowSum_map_reverse_cons, hunfold]

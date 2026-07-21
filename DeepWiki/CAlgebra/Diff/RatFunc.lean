@@ -16,11 +16,11 @@ namespace DensePoly
 
 variable {R : Type u} [Field R] [DecidableEq R]
 
-open scoped Differential
+open scoped Differential FormalDiff
 
 /-- `toRatFuncHom` is a differential morphism into `RatFunc R`. -/
 @[simp] theorem toRatFuncHom_deriv (p : DensePoly R) :
-    (toRatFuncHom p)′ = toRatFuncHom (deriv p) := by
+    (toRatFuncHom p)′ = toRatFuncHom (p′) := by
   rw [toRatFuncHom_apply, toRatFuncHom_apply, RatFunc.differential_apply,
     RatFunc.deriv_algebraMap, toPolynomial_deriv]
 

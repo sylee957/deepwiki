@@ -12,6 +12,8 @@ namespace DeepWiki.CAlgebra
 
 universe u
 
+open scoped Differential FormalDiff
+
 open DensePoly
 
 /-- A squarefree-decomposition algorithm for `DensePoly R` together with its contract: every
@@ -30,7 +32,7 @@ class DensePolySquarefree (R : Type u) [Field R] [DecidableEq R] [DensePolyGcd R
 
 variable {R : Type u} [Field R] [DecidableEq R] [DensePolyGcd R]
 
-/-- Musser's recursion on `gcd(p, deriv p)`, registered below the Yun default. -/
+/-- Musser's recursion on `gcd(p, p′)`, registered below the Yun default. -/
 instance (priority := 90) musserDensePolySquarefree [CharZero R] : DensePolySquarefree R where
   sqfDecomp := sqfDecompMusser
   squarefree_of_mem := squarefree_of_mem_sqfDecompMusser

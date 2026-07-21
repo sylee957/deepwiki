@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Poly.Derivative
+import DeepWiki.CAlgebra.Diff.Derivative
 import DeepWiki.CAlgebra.Gcd
 import Mathlib.FieldTheory.Perfect
 import DeepWiki.Algebra.SquarefreeGcd
@@ -6,8 +6,8 @@ import DeepWiki.Algebra.SquarefreeGcd
 /-! # Squarefreeness of dense polynomials — shared kernel
 
 The bridge transports for unit/squarefree/coprimality predicates, the derivative criterion
-`Squarefree p ↔ IsCoprime p (deriv p)` with **decidability of `Squarefree`** (a gcd size test),
-the squarefree part `sqfreePart p = p / gcd(p, deriv p)` with its satellites and squarefreeness
+`Squarefree p ↔ IsCoprime p (p′)` with **decidability of `Squarefree`** (a gcd size test),
+the squarefree part `sqfreePart p = p / gcd(p, p′)` with its satellites and squarefreeness
 (transported from the characteristic-zero keystone), the gcd glue lemma, and the staircase
 product `powProd` — everything the decomposition algorithms (`Squarefree/Musser`,
 `Squarefree/Yun`) and the dispatch interface (`Squarefree/Dense`) build on. -/
@@ -15,6 +15,8 @@ product `powProd` — everything the decomposition algorithms (`Squarefree/Musse
 namespace DeepWiki.CAlgebra
 
 universe u
+
+open scoped Differential FormalDiff
 
 namespace DensePoly
 
@@ -62,13 +64,13 @@ theorem isCoprime_toPolynomial_iff {p q : DensePoly R} :
 `p` is squarefree iff it is coprime to its derivative. Hypothesis-free: at `p = 0` both sides
 fail. -/
 theorem squarefree_iff_isCoprime_deriv [PerfectField R] {p : DensePoly R} :
-    Squarefree p ↔ IsCoprime p (deriv p) := by
+    Squarefree p ↔ IsCoprime p (p′) := by
   rw [← squarefree_toPolynomial_iff, ← PerfectField.separable_iff_squarefree,
     Polynomial.separable_def, ← toPolynomial_deriv, isCoprime_toPolynomial_iff]
 
-/-- Squarefreeness is a gcd size test: `p` is squarefree iff `gcd(p, deriv p)` is a constant. -/
+/-- Squarefreeness is a gcd size test: `p` is squarefree iff `gcd(p, p′)` is a constant. -/
 theorem squarefree_iff_gcd_deriv_size [PerfectField R] [DensePolyGcd R] {p : DensePoly R} :
-    Squarefree p ↔ (DensePolyGcd.gcd p (deriv p)).size = 1 := by
+    Squarefree p ↔ (DensePolyGcd.gcd p (p′)).size = 1 := by
   rw [squarefree_iff_isCoprime_deriv, DensePolyGcd.isCoprime_iff_isUnit_gcd,
     isUnit_iff_size_eq_one]
 
@@ -110,20 +112,20 @@ theorem associated_of_cross_mul_C {p q : DensePoly R} (hp : p ≠ 0) (hq : q ≠
 
 variable [DensePolyGcd R]
 
-/-- The squarefree part: `p` divided by `gcd(p, deriv p)`. -/
-def sqfreePart (p : DensePoly R) : DensePoly R := div p (DensePolyGcd.gcd p (deriv p))
+/-- The squarefree part: `p` divided by `gcd(p, p′)`. -/
+def sqfreePart (p : DensePoly R) : DensePoly R := div p (DensePolyGcd.gcd p (p′))
 
 /-- The gcd with the derivative reconstructs `p` against the squarefree part (exact division). -/
 theorem gcd_deriv_mul_sqfreePart {p : DensePoly R} (hp : p ≠ 0) :
-    DensePolyGcd.gcd p (deriv p) * sqfreePart p = p :=
+    DensePolyGcd.gcd p (p′) * sqfreePart p = p :=
   EuclideanDomain.mul_div_cancel' (DensePolyGcd.gcd_ne_zero_of_left hp _)
-    (DensePolyGcd.gcd_dvd_left p (deriv p))
+    (DensePolyGcd.gcd_dvd_left p (p′))
 
 /-- The squarefree part divides `p`. -/
 theorem sqfreePart_dvd (p : DensePoly R) : sqfreePart p ∣ p := by
   rcases eq_or_ne p 0 with rfl | hp
   · exact dvd_zero _
-  · exact ⟨DensePolyGcd.gcd p (deriv p),
+  · exact ⟨DensePolyGcd.gcd p (p′),
       (gcd_deriv_mul_sqfreePart hp).symm.trans (mul_comm _ _)⟩
 
 /-- The squarefree part of a nonzero polynomial is nonzero. -/
@@ -132,13 +134,14 @@ theorem sqfreePart_ne_zero {p : DensePoly R} (hp : p ≠ 0) : sqfreePart p ≠ 0
 
 omit [DensePolyGcd R] in
 /-- The derivative of a nonconstant polynomial is nonzero in characteristic zero. -/
-theorem deriv_ne_zero [CharZero R] {p : DensePoly R} (hp : 1 < p.size) : deriv p ≠ 0 := by
+theorem deriv_ne_zero [CharZero R] {p : DensePoly R} (hp : 1 < p.size) : p′ ≠ 0 := by
   intro h0
-  have hcoeff := coeff_deriv p (p.size - 2)
-  rw [h0, coeff_zero] at hcoeff
-  have hlast : p.coeff (p.size - 1) ≠ 0 := coeff_last_ne_zero_of_pos_size p (by omega)
-  rw [show p.size - 2 + 1 = p.size - 1 by omega] at hcoeff
-  exact mul_ne_zero (Nat.cast_ne_zero.mpr (by omega)) hlast hcoeff.symm
+  have hp0 : p ≠ 0 := fun hz => by rw [hz, size_zero] at hp; omega
+  have hdeg : 0 < (toPolynomial p).natDegree := by
+    have h1 := size_eq_natDegree_add_one hp0
+    omega
+  have h1 : (toPolynomial p).derivative ≠ 0 := Polynomial.derivative_ne_zero.mpr (by omega)
+  exact h1 (by rw [← toPolynomial_deriv, h0, toPolynomial_zero])
 
 omit [DensePolyGcd R] in
 /-- The staircase product of nonzero factors is nonzero. -/
@@ -182,7 +185,7 @@ theorem toPolynomial_sqfreePart_associated {p : DensePoly R} (hp : p ≠ 0) :
     Associated (toPolynomial (sqfreePart p))
       (toPolynomial p / EuclideanDomain.gcd (toPolynomial p)
         (Polynomial.derivative (toPolynomial p))) := by
-  have hassoc := toPolynomial_gcd_associated p (deriv p)
+  have hassoc := toPolynomial_gcd_associated p (p′)
   rw [toPolynomial_deriv] at hassoc
   set G := EuclideanDomain.gcd (toPolynomial p) (Polynomial.derivative (toPolynomial p))
     with hGdef
@@ -190,16 +193,16 @@ theorem toPolynomial_sqfreePart_associated {p : DensePoly R} (hp : p ≠ 0) :
   have hG0 : G ≠ 0 := fun h => hp' (EuclideanDomain.gcd_eq_zero_iff.mp h).1
   have hGs : G * (toPolynomial p / G) = toPolynomial p :=
     EuclideanDomain.mul_div_cancel' hG0 (EuclideanDomain.gcd_dvd_left _ _)
-  have hours : toPolynomial (DensePolyGcd.gcd p (deriv p)) * toPolynomial (sqfreePart p)
+  have hours : toPolynomial (DensePolyGcd.gcd p (p′)) * toPolynomial (sqfreePart p)
       = toPolynomial p := by
     rw [← toPolynomial_mul, gcd_deriv_mul_sqfreePart hp]
   obtain ⟨u, hu⟩ := hassoc
   have hcancel : toPolynomial (sqfreePart p) = ↑u * (toPolynomial p / G) := by
-    have hg0 : toPolynomial (DensePolyGcd.gcd p (deriv p)) ≠ 0 :=
+    have hg0 : toPolynomial (DensePolyGcd.gcd p (p′)) ≠ 0 :=
       toPolynomial_ne_zero (DensePolyGcd.gcd_ne_zero_of_left hp _)
     apply mul_left_cancel₀ hg0
-    rw [hours, show toPolynomial (DensePolyGcd.gcd p (deriv p)) * (↑u * (toPolynomial p / G))
-        = (toPolynomial (DensePolyGcd.gcd p (deriv p)) * ↑u) * (toPolynomial p / G) by ring,
+    rw [hours, show toPolynomial (DensePolyGcd.gcd p (p′)) * (↑u * (toPolynomial p / G))
+        = (toPolynomial (DensePolyGcd.gcd p (p′)) * ↑u) * (toPolynomial p / G) by ring,
       hu, hGs]
   exact Associated.symm
     (⟨u, by rw [hcancel]; ring⟩ : Associated (toPolynomial p / G) (toPolynomial (sqfreePart p)))
@@ -215,9 +218,9 @@ theorem squarefree_sqfreePart [CharZero R] {p : DensePoly R} (hp : p ≠ 0) :
 /-- **The gcd glue**: the gcd of `g := gcd(p, p′)` with the squarefree part of `p` is the
 squarefree part of `g` — both are the radical of `g`, via the coverage keystone. -/
 theorem gcd_deriv_gcd_sqfreePart_associated [CharZero R] {p : DensePoly R} (hp : p ≠ 0) :
-    Associated (DensePolyGcd.gcd (DensePolyGcd.gcd p (deriv p)) (sqfreePart p))
-      (sqfreePart (DensePolyGcd.gcd p (deriv p))) := by
-  set g := DensePolyGcd.gcd p (deriv p) with hgdef
+    Associated (DensePolyGcd.gcd (DensePolyGcd.gcd p (p′)) (sqfreePart p))
+      (sqfreePart (DensePolyGcd.gcd p (p′))) := by
+  set g := DensePolyGcd.gcd p (p′) with hgdef
   have hg0 : g ≠ 0 := DensePolyGcd.gcd_ne_zero_of_left hp _
   have hs0 : sqfreePart p ≠ 0 := sqfreePart_ne_zero hp
   apply associated_of_dvd_dvd
@@ -233,7 +236,7 @@ theorem gcd_deriv_gcd_sqfreePart_associated [CharZero R] {p : DensePoly R} (hp :
     have h1 := Polynomial.squarefree_dvd_div_gcd_derivative
       (squarefree_toPolynomial_iff.mpr (squarefree_sqfreePart hg0))
       (toPolynomial_ne_zero hp)
-      (toPolynomial_dvd ((sqfreePart_dvd g).trans (DensePolyGcd.gcd_dvd_left p (deriv p))))
+      (toPolynomial_dvd ((sqfreePart_dvd g).trans (DensePolyGcd.gcd_dvd_left p (p′))))
     exact dvd_of_toPolynomial_dvd
       (h1.trans (toPolynomial_sqfreePart_associated hp).symm.dvd)
 

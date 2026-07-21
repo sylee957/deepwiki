@@ -448,6 +448,24 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     (`hermiteReduce_denom_squarefree`). Verified numerically over ℚ (4 point checks; sample
     `a₁/((x+1)³(x²+1)²)` gives rational part over `(x+1)²(x²+1)` exactly).
     NEXT: the log part (Rothstein–Trager) on the squarefree remainders.
+  - **6c-diff-1 (2026-07-21): derivative moved behind Mathlib's `Differential` interface,
+    instances SCOPED.** `Poly/Derivative.lean` git-mv'd to `Diff/Derivative.lean`: the raw
+    `deriv` recursion is now **private**; the public spelling is `p′` via a **computable**
+    `Derivation ℤ` packaged as `Differential (DensePoly R)`. ★ DESIGN: all three formal
+    `Differential` instances (DensePoly / Polynomial in `Diff/Basic` / RatFunc in
+    `Algebra/RatFuncDerivation`) are **scoped under `FormalDiff`** (`open scoped
+    Differential FormalDiff` to use): the formal derivative (constant coefficients) is only
+    ONE derivation on these carriers — a future differential-coefficient tower instance
+    (`[Differential R]` + monomial data, the Risch extension `D(Σaᵢtⁱ) = Σ(Daᵢ)tⁱ + (∂/∂t)·Dt`)
+    gets its OWN scope, so the two can never collide in one instance space; opening exactly
+    one scope per file is the discipline. Satellite lemmas keep their names but are restated
+    in `′`-form (`deriv_mul : (p*q)′ = …`), so consumer proofs kept their `rw` chains — the
+    migration (~200 sites, 8 files) was a regex pass `deriv x → x′` + scope opens.
+    `deriv_ne_zero` re-proved through the bridge (its old proof used the now-private
+    coefficient lemma). Computability guard `fun p => p′` compiles ✓ and `#eval p′` runs.
+    ★ Lean lessons: `scoped[NS] instance` is NOT implemented (Mathlib's scopedNS attr) — use
+    an explicit top-level `namespace FormalDiff … scoped instance … end`; modifier order is
+    `noncomputable scoped instance`.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

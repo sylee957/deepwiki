@@ -2,7 +2,7 @@ import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Poly.DivisionMonic
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Gcd
-import DeepWiki.CAlgebra.Poly.Derivative
+import DeepWiki.CAlgebra.Diff.Derivative
 import DeepWiki.CAlgebra.Squarefree
 import DeepWiki.CAlgebra.PartFrac
 import DeepWiki.CAlgebra.Integrate
@@ -28,6 +28,8 @@ nothing to any theorem's trusted base (and are unaffected by the `@[csimp]`/`nat
 axiom-tracking issue, leanprover/lean4#7463). Correctness of the *output* is a separate matter, handled
 by the `toX_*` bridge squares. -/
 
+open scoped Differential FormalDiff
+
 namespace DeepWiki.CAlgebra.Test.Computable
 
 section
@@ -50,7 +52,8 @@ private def nsmul [CommRing R] [DecidableEq R] : ℕ → DensePoly R → DensePo
 /-- Natural-number cast is computable. -/
 private def natCast [CommRing R] [DecidableEq R] : ℕ → DensePoly R := Nat.cast
 /-- The formal derivative is computable. -/
-private def deriv [CommRing R] [DecidableEq R] : DensePoly R → DensePoly R := DensePoly.deriv
+private def derivGuard [CommRing R] [DecidableEq R] : DensePoly R → DensePoly R :=
+  fun p => p′
 /-- Pseudo-division is computable over any `CommRing` coefficient (no `Field` needed). -/
 private def pseudoDivMod [CommRing R] [DecidableEq R] :
     DensePoly R → DensePoly R → DensePoly R × DensePoly R := DensePoly.pseudoDivMod
