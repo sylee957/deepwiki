@@ -195,6 +195,18 @@ def partFracAux : DensePoly R → List (DensePoly R) → ℕ →
 noncomputable def partsSum (parts : List (DensePoly R × List (DensePoly R))) : RatFunc R :=
   (parts.map fun fa => invPowSum (toRatFuncHom fa.1) (fa.2.map toRatFuncHom)).sum
 
+/-- The sweep's factor column is exactly the input factor list. -/
+theorem partFracAux_fst :
+    ∀ (L : List (DensePoly R)) (a : DensePoly R) (n : ℕ),
+      ((partFracAux a L n).2.map Prod.fst) = L := by
+  intro L
+  induction L with
+  | nil => intro a n; rfl
+  | cons f T ih =>
+      intro a n
+      simp only [partFracAux, List.map_cons]
+      rw [ih]
+
 /-- Every numerator emitted by the sweep is reduced modulo its factor. -/
 theorem partFracAux_size_lt :
     ∀ (L : List (DensePoly R)) (a : DensePoly R) (n : ℕ), (∀ f ∈ L, f ≠ 0) →

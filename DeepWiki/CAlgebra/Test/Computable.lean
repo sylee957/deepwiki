@@ -107,10 +107,11 @@ private def sqfPartFracGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGc
     DensePoly R → DensePoly R → DensePoly R × List (DensePoly R × List (DensePoly R)) :=
   DensePoly.sqfPartFrac
 
-/-- Hermite reduction computes end to end (Bézout splits, adic pushes, canonical sums). -/
+/-- Hermite reduction computes end to end into the bundled result (the squarefree-denominator
+invariant is a Prop field, erased at runtime). -/
 private def hermiteReduceGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R]
     [DensePolySquarefree R] :
-    DensePoly R → DensePoly R → DenseFrac R × DensePoly R × List (DensePoly R × DensePoly R) :=
+    DenseFrac R → DensePoly.HermiteResult R :=
   DensePoly.hermiteReduce
 
 /-- The dispatched squarefree decomposition computes through the class interface. -/

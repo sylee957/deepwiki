@@ -273,6 +273,44 @@ omit [DensePolyGcd R] in
   show toRatFunc (normalize _ _) = _
   rw [toRatFunc_normalize, toRatFunc, inv_div]
 
+/-! ### The canonical denominator's universal property -/
+
+omit [DensePolyGcd R] in
+/-- **Universal property of the canonical denominator**: it divides any denominator of any
+fraction representation of the same rational function — the bundled coprimality cancels the
+numerator from the cross-multiplication identity. -/
+theorem den_dvd_of_eq_div {f : DenseFrac R} {n d : DensePoly R} (hd : d ≠ 0)
+    (h : toRatFunc f = algebraMap (Polynomial R) (RatFunc R) (toPolynomial n) /
+        algebraMap (Polynomial R) (RatFunc R) (toPolynomial d)) :
+    f.den.toPoly ∣ d := by
+  have hcross : f.num * d = n * f.den.toPoly := by
+    rw [toRatFunc] at h
+    exact (div_eq_div_iff_cross f.den.ne_zero hd).mp h
+  have h1 : f.den.toPoly ∣ f.num * d := ⟨n, hcross.trans (mul_comm _ _)⟩
+  exact f.coprime.symm.dvd_of_dvd_mul_left h1
+
+/-- The denominator of `normalize n d` divides `d`. -/
+theorem den_normalize_dvd {n d : DensePoly R} (hd : d ≠ 0) :
+    (normalize n d).den.toPoly ∣ d :=
+  den_dvd_of_eq_div hd (toRatFunc_normalize n d)
+
+/-- The denominator of a sum divides the product of the denominators. -/
+theorem den_add_dvd (f g : DenseFrac R) :
+    (f + g).den.toPoly ∣ f.den.toPoly * g.den.toPoly := by
+  apply den_dvd_of_eq_div (mul_ne_zero f.den.ne_zero g.den.ne_zero)
+  rw [toRatFunc_add, toRatFunc, toRatFunc,
+    div_add_div _ _ (RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero f.den.ne_zero))
+      (RatFunc.algebraMap_ne_zero (toPolynomial_ne_zero g.den.ne_zero)),
+    ← map_mul, ← map_mul, ← map_mul, ← toPolynomial_mul, ← toPolynomial_mul,
+    ← toPolynomial_mul, ← map_add, ← toPolynomial_add]
+
+/-- `toRatFunc` distributes over list sums. -/
+theorem toRatFunc_list_sum (l : List (DenseFrac R)) :
+    toRatFunc l.sum = (l.map toRatFunc).sum := by
+  induction l with
+  | nil => simp
+  | cons x t ih => simp [ih]
+
 end DenseFrac
 
 end DeepWiki.CAlgebra

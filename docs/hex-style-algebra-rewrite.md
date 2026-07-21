@@ -466,6 +466,21 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     ★ Lean lessons: `scoped[NS] instance` is NOT implemented (Mathlib's scopedNS attr) — use
     an explicit top-level `namespace FormalDiff … scoped instance … end`; modifier order is
     `noncomputable scoped instance`.
+  - **6c-int-2 (2026-07-21): Hermite BUNDLED — `DenseFrac` in, `HermiteResult` out,
+    hypothesis-free spec.** `hermiteReduce : DenseFrac R → HermiteResult R`: input as a
+    canonical fraction makes `p ≠ 0` automatic (monic denominator), so `hermiteReduce_spec`
+    has NO hypotheses: `toRatFunc f = rational′ + poly + toRatFunc logPart`. The output
+    structure carries `logPart : DenseFrac` (auto-canonical: monic + coprime, so the log
+    stage's `b/d` arrives reduced) plus the bundled invariant `logPart_den_squarefree`.
+    ★ The proof engine is a new Frac/Basic satellite — **the canonical denominator's
+    universal property** `den_dvd_of_eq_div` (den divides ANY representing denominator, by
+    coprime cancellation of the cross-multiplication) — from which `den_normalize_dvd`,
+    `den_add_dvd` (den of sum ∣ product of dens), and the log-part squarefreeness all fall
+    out: den(Σ normalize bᵢ dᵢ) ∣ ∏dᵢ ~ sqfreePart p, squarefree. Also
+    `toRatFunc_list_sum`, `partFracAux_fst` (the sweep's factor column = the input list).
+    Old pair-based API deleted; guard now `DenseFrac R → HermiteResult R` (Prop field
+    erased, still computes). Numeric checks pass; sample logPart denominator comes out as
+    the radical `(x+1)(x²+1)` exactly.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
