@@ -35,7 +35,6 @@ coefficients of the logarithms of `∫ b/d` (algorithm dispatched by `DensePolyR
 the pseudo-remainder sequence over `K[z]`). -/
 def rtResultant (b d : DensePoly R) : DensePoly R :=
   DensePolyResultant.resultant (liftX d) (liftX b - zC * liftX (d′))
-    (d.size - 1) (d.size - 2)
 
 variable [DensePolySquarefree R]
 

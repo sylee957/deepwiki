@@ -554,7 +554,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     sequence. Follow-up same day: `Resultant/PRS.lean` split by sequence kind into
     `Resultant/Euclidean.lean` (descent resultant + `resultantPRS_eq`) and
     `Resultant/Primitive.lean` (bivariate lifts/contents/`primPRS`) — the area now reads
-    Sylvester / Subresultant / Euclidean / Primitive / Dense.
+    Sylvester / Subresultant / Euclidean / Primitive / Dense. And the class interface
+    dropped its `(m, n)` bound parameters: the normalized representation commits the exact
+    degree (`size − 1` = `natDegree` unconditionally, `0` included via ℕ-sub), so
+    `DensePolyResultant.resultant : DensePoly S → DensePoly S → S` with a HYPOTHESIS-FREE
+    contract at the canonical bounds (the same bundling payoff as `hermiteReduce`); the
+    4-arg algorithms stay as the underlying implementations. Bonus robustness: `rtResultant`
+    no longer hard-codes `d.size − 2` for the second bound — the canonical bounds
+    self-adjust if the top coefficient ever degenerates.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
