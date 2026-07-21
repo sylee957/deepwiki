@@ -162,7 +162,7 @@ is proof- and file-structure work only.
   old "deliberate leaf" isolation no longer holds (its module docstring was updated;
   build-time cost only, no semantic coupling).
 
-### Phase 5 — file split + capstone re-plumb
+### Phase 5 — file split + capstone re-plumb — DONE (2026-07-21)
 
 - `Integrate/LogPartSound.lean` retains: the resultant square, the specialization lemma
   application, `prs_elem_isSimilar_lrtSubresultant_eval`, the multiplicity bridge
@@ -171,6 +171,20 @@ is proof- and file-structure work only.
   destructurings.
 - Re-verify: full gate + `lean_verify` axiom checks on the three capstones (must stay
   `propext`/`Classical.choice`/`Quot.sound`).
+
+**Phase 5 notes (as landed):**
+- The multiplicity bridge crowded (two full sections, ~210 lines of mostly-private
+  `powProdP` machinery) → split to `Integrate/LogPartMultiplicity.lean` (231 lines;
+  public surface: `rootMultiplicity_of_sqfDecomp_root`, `exists_sqfDecomp_root_of_isRoot`).
+- The walk theorems (`prs_isSimilar_subresultant`, `prs_mem_isSimilar_subresultant`,
+  `prs_covers`, `content_toPolynomial₂_zPrimitive`) moved into
+  `Integrate/LogPartChain.lean` — after Phase 4 the telescope is already in its import
+  cone (`Resultant → Primitive → LrtSubresultant`), so the walk file holds both the
+  bundle and its theorems (583 lines).
+- `LogPartSound.lean` is down to 407 lines (from ~1300 at `3b0341ac`): the resultant
+  square, the endpoint, `lrtLogArg`, and the three capstones.
+- Verified: gate PASS (5120 jobs) + `lean_verify` on all three capstones —
+  exactly `propext`/`Classical.choice`/`Quot.sound`.
 
 ### Phase 6 (separate arcs, not this refactor)
 

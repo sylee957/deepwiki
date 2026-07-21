@@ -3,9 +3,10 @@ import DeepWiki.CAlgebra.Resultant
 /-! # The dispatched bivariate walk
 
 The chain view of the dispatched pseudo-remainder sequence: the ℕ-indexed `z`-primitive
-chain `zChain` aligned with `DensePolyPRS.prs`, the bridged per-step identities, and the
+chain `zChain` aligned with `DensePolyPRS.prs`, the bridged per-step identities, the
 `WalkData` bundle collecting the aliveness, size, and bridged chain-relation facts the
-subresultant telescope consumes. -/
+subresultant telescope consumes, and the walk theorems — the similarity square, walk
+coverage, and the primitivity of stripped elements. -/
 
 namespace DeepWiki.CAlgebra
 
@@ -311,6 +312,271 @@ theorem ofGetElem? (f g : DensePoly (DensePoly R)) (hfg : g.size ≤ f.size) {k 
   simpa only [walkAlpha, walkBeta, walkF, walkQ, zChain_add_two] using h
 
 end WalkData
+
+/-! ### The chain view of the dispatched sequence -/
+
+section Chain
+
+variable {R : Type u} [Field R] [DecidableEq R] [DensePolyGcd R]
+
+open DeepWiki.SymbolicIntegration in
+/-- **The dispatched sequence element is similar to the determinantal subresultant at its
+own degree** (the Lazard–Rioboo–Trager similarity square, generic entry): for a
+size-ordered entry pair, the `k`-th element (`k ≥ 1`) of the dispatched bivariate sequence,
+read through the bridge, is `IsSimilar` to the subresultant of the bridged entry pair at
+the element's degree. -/
+theorem prs_isSimilar_subresultant (f g : DensePoly (DensePoly R))
+    (hfg : g.size ≤ f.size) (k : ℕ) (S : DensePoly (DensePoly R)) (hk : 1 ≤ k)
+    (hS : (DensePolyPRS.prs f g)[k]? = some S) :
+    IsSimilar
+      (subresultant (toPolynomial₂ f) (toPolynomial₂ g)
+        (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree
+        ((toPolynomial₂ S).natDegree))
+      (toPolynomial₂ S) := by
+  have w := WalkData.ofGetElem? f g hfg hS
+  have hSz : S = zChain f g (k + 1) := prs_getElem?_eq_zChain f g k S hS
+  have hm2 : k - 1 + 2 = k + 1 := by omega
+  have happ := subresultant_prs_similar_elt (walkF f g) (walkAlpha f g) (walkBeta f g)
+    (walkQ f g) (k - 1)
+    (fun l hl => w.alpha_ne_zero l (by omega))
+    (fun l hl => w.beta_ne_zero l (by omega))
+    (fun l hl => w.F_lc_ne_zero l (by omega))
+    (fun l hl => w.F_deg_step l (by omega))
+    (fun l hl => by rw [hm2]; exact w.F_deg_last_lt l (by omega))
+    (fun l hl => w.Q_deg_le l (by omega))
+    w.rel
+    (by rw [hm2]; exact w.F_ne_zero k le_rfl)
+  rw [hm2] at happ
+  rw [hSz]
+  simpa only [walkF, zChain_zero, zChain_one] using happ
+
+open DeepWiki.SymbolicIntegration in
+/-- **Every dispatched sequence element is similar to the entry subresultant at its own
+degree** — the membership form of the similarity square, covering the entry element itself
+(`k = 0`, via the degenerate closed form `subresultant_deg_ge_normal`) and every later
+element (via the chain telescope). -/
+theorem prs_mem_isSimilar_subresultant (f g : DensePoly (DensePoly R))
+    (hfg : g.size < f.size) (hg0 : g ≠ 0) (S : DensePoly (DensePoly R))
+    (hS : S ∈ DensePolyPRS.prs f g) :
+    IsSimilar
+      (subresultant (toPolynomial₂ f) (toPolynomial₂ g)
+        (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree
+        ((toPolynomial₂ S).natDegree))
+      (toPolynomial₂ S) := by
+  obtain ⟨k, hk, hkS⟩ := List.getElem_of_mem hS
+  have hS? : (DensePolyPRS.prs f g)[k]? = some S := by
+    rw [List.getElem?_eq_getElem hk, hkS]
+  rcases Nat.eq_zero_or_pos k with rfl | hk1
+  · have hSg : S = g := by simpa using prs_getElem?_eq_zChain f g 0 S hS?
+    subst hSg
+    have hf0 : f ≠ 0 := fun h0 => by rw [h0, size_zero] at hfg; omega
+    have hgsz : S.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
+    have hda : (toPolynomial₂ f).natDegree = f.size - 1 := by
+      rw [natDegree₂_eq_size_sub_one]
+    have hdb : (toPolynomial₂ S).natDegree = S.size - 1 := by
+      rw [natDegree₂_eq_size_sub_one]
+    have hkey := subresultant_deg_ge_normal (toPolynomial₂ f) (toPolynomial₂ S)
+      (toPolynomial₂ f).natDegree (toPolynomial₂ S).natDegree
+      (toPolynomial₂ S).natDegree le_rfl (by omega) (by omega) le_rfl
+    exact ⟨1,
+      (toPolynomial₂ f).coeff ((toPolynomial₂ f).natDegree)
+          ^ ((toPolynomial₂ S).natDegree - (toPolynomial₂ S).natDegree)
+        * (toPolynomial₂ S).coeff ((toPolynomial₂ S).natDegree)
+          ^ ((toPolynomial₂ f).natDegree - (toPolynomial₂ S).natDegree - 1),
+      one_ne_zero,
+      mul_ne_zero
+        (pow_ne_zero _ (Polynomial.leadingCoeff_ne_zero.mpr (toPolynomial₂_ne_zero hf0)))
+        (pow_ne_zero _ (Polynomial.leadingCoeff_ne_zero.mpr (toPolynomial₂_ne_zero hg0))),
+      by rw [map_one, one_mul, hkey]⟩
+  · exact prs_isSimilar_subresultant f g (le_of_lt hfg) k S hk1 hS?
+
+open DeepWiki.SymbolicIntegration in
+/-- **Walk coverage**: if the `i`-th principal subresultant coefficient of the bridged
+entry pair is nonzero, the dispatched sequence contains an element of `x`-degree `i` —
+the vanishing and defective alternatives would force that coefficient to zero. -/
+theorem prs_covers (f g : DensePoly (DensePoly R)) (hfg : g.size ≤ f.size) (hg0 : g ≠ 0)
+    (i : ℕ) (hi : i + 1 ≤ g.size)
+    (hpsc : (subresultant (toPolynomial₂ f) (toPolynomial₂ g)
+        (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree i).coeff i ≠ 0) :
+    ∃ S ∈ DensePolyPRS.prs f g, S.size = i + 1 := by
+  suffices H : ∀ n (f g : DensePoly (DensePoly R)), g.size = n → g.size ≤ f.size → g ≠ 0 →
+      ∀ i, i + 1 ≤ g.size →
+      (subresultant (toPolynomial₂ f) (toPolynomial₂ g)
+        (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree i).coeff i ≠ 0 →
+      ∃ S ∈ DensePolyPRS.prs f g, S.size = i + 1 by
+    exact H g.size f g rfl hfg hg0 i hi hpsc
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+  intro f g hgs hfg hg0 i hi hpsc
+  have hgsz : g.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
+  have hf0 : f ≠ 0 := fun h0 => by rw [h0, size_zero] at hfg; omega
+  have hmem_g : g ∈ DensePolyPRS.prs f g := by
+    rw [prs_z_eq, if_neg hgsz]
+    exact List.mem_cons_self
+  rcases eq_or_ne (i + 1) g.size with hieq | hine
+  · exact ⟨g, hmem_g, hieq.symm⟩
+  have hilt : i + 1 < g.size := by omega
+  have hda : (toPolynomial₂ f).natDegree = f.size - 1 := by
+    rw [natDegree₂_eq_size_sub_one]
+  have hdb : (toPolynomial₂ g).natDegree = g.size - 1 := by
+    rw [natDegree₂_eq_size_sub_one]
+  -- coefficient-extraction helpers
+  have hkill : ∀ (v : Polynomial R) (S P : Polynomial (Polynomial R)),
+      v ≠ 0 → Polynomial.C v * S = P → P.coeff i = 0 → S.coeff i = 0 := by
+    intro v S P hv hSP hP
+    have := congrArg (fun q => Polynomial.coeff q i) hSP
+    simp only [Polynomial.coeff_C_mul] at this
+    rw [hP] at this
+    exact (mul_eq_zero.mp this).resolve_left hv
+  have hshape : ∀ (N : ℕ) (u : Polynomial R) (P : Polynomial (Polynomial R)),
+      P.coeff i = 0 →
+      ((-1 : Polynomial (Polynomial R)) ^ N * (Polynomial.C u * P)).coeff i = 0 := by
+    intro N u P hP
+    rw [show ((-1 : Polynomial (Polynomial R)) ^ N)
+        = Polynomial.C ((-1 : Polynomial R) ^ N) from by rw [map_pow, map_neg, map_one]]
+    simp only [Polynomial.coeff_C_mul, hP, mul_zero]
+  have hval : ∀ (N n2 : ℕ) (u v : Polynomial R) (P : Polynomial (Polynomial R)),
+      ((-1 : Polynomial (Polynomial R)) ^ N
+          * ((Polynomial.C u) ^ n2 * (Polynomial.C v * P))).coeff i
+        = (-1 : Polynomial R) ^ N * (u ^ n2 * (v * P.coeff i)) := by
+    intro N n2 u v P
+    rw [show ((-1 : Polynomial (Polynomial R)) ^ N)
+        = Polynomial.C ((-1 : Polynomial R) ^ N) from by rw [map_pow, map_neg, map_one],
+      show ((Polynomial.C u : Polynomial (Polynomial R)) ^ n2)
+        = Polynomial.C (u ^ n2) from (map_pow _ _ _).symm]
+    simp only [Polynomial.coeff_C_mul]
+  -- the bridged pseudo-division identity and the quotient degree bound
+  have hid := walk_step_identity f g hgsz
+  set α₀ : Polynomial R := toPolynomial (g.leadingCoeff ^ (f.size + 1 - g.size)) with hα₀def
+  have hα₀ : α₀ ≠ 0 :=
+    toPolynomial_ne_zero (pow_ne_zero _ (leadingCoeff_ne_zero hgsz))
+  have hQb := walk_step_Q_deg f g hfg hg0
+  rcases eq_or_ne (pseudoMod f g) 0 with hprem | hprem
+  · -- terminal step: `C α₀ · f = g · Q`; every strictly lower index has vanishing psc
+    exfalso
+    have hrel : Polynomial.C α₀ * toPolynomial₂ f
+        = Polynomial.C (1 : Polynomial R) * 0
+          + toPolynomial₂ g * toPolynomial₂ (pseudoDiv f g) := by
+      rw [map_one, one_mul, zero_add]
+      rw [hprem, toPolynomial₂_zero, add_zero] at hid
+      rw [← hid]
+      ring
+    rcases eq_or_ne i ((toPolynomial₂ g).natDegree - 1) with htop | hnottop
+    · subst htop
+      have h := subresultant_prs_step_top (toPolynomial₂ f) (toPolynomial₂ g) 0
+        (toPolynomial₂ (pseudoDiv f g)) α₀ 1
+        (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree 0
+        one_ne_zero (by rw [hdb]; omega) Polynomial.natDegree_zero le_rfl hQb hrel
+      exact hpsc (hkill α₀ _ _ hα₀ h (hshape _ _ _ (by simp)))
+    rcases eq_or_ne i 0 with hzero | hpos
+    · subst hzero
+      have h := subresultant_prs_step_deg (toPolynomial₂ f) (toPolynomial₂ g) 0
+        (toPolynomial₂ (pseudoDiv f g)) α₀ 1
+        (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree 0
+        one_ne_zero (by rw [hdb]; omega) Polynomial.natDegree_zero le_rfl hQb hrel
+      exact hpsc (hkill (α₀ ^ _) _ _ (pow_ne_zero _ hα₀) h (hshape _ _ _ (by simp)))
+    · have h := subresultant_prs_step_gap (toPolynomial₂ f) (toPolynomial₂ g) 0
+        (toPolynomial₂ (pseudoDiv f g)) α₀ 1
+        (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree 0 i
+        hα₀ one_ne_zero (by omega) (by rw [hdb]; omega)
+        Polynomial.natDegree_zero le_rfl hQb hrel
+      exact hpsc (by rw [h, Polynomial.coeff_zero])
+  · -- live step: found, recurse, or vanish
+    set r := zStep f g with hr
+    have hrne : r ≠ 0 := by
+      intro h0
+      apply hprem
+      have hcz := C_zContent_mul_zPrimitive (pseudoMod f g)
+      rw [← hcz, show zPrimitive (pseudoMod f g) = r from rfl, h0, mul_zero]
+    have hβ0 : toPolynomial (zContent (pseudoMod f g)) ≠ 0 :=
+      toPolynomial_ne_zero (zContent_ne_zero hprem)
+    have hrel : Polynomial.C α₀ * toPolynomial₂ f
+        = Polynomial.C (toPolynomial (zContent (pseudoMod f g))) * toPolynomial₂ r
+          + toPolynomial₂ g * toPolynomial₂ (pseudoDiv f g) := by
+      rw [hα₀def, hr]
+      exact walk_step_rel f g hgsz
+    have hdc : (toPolynomial₂ r).natDegree = r.size - 1 := by
+      rw [natDegree₂_eq_size_sub_one]
+    have hrsz : r.size ≠ 0 := fun h0 => hrne (eq_zero_of_size_zero h0)
+    have hrsize : r.size < g.size := by
+      rw [hr, zStep]
+      exact lt_of_le_of_lt (zPrimitive_size_le _) (pseudoMod_size_lt hgsz f)
+    rcases eq_or_ne (i + 1) r.size with hfound | hne2
+    · refine ⟨r, ?_, hfound.symm⟩
+      rw [prs_z_eq, if_neg hgsz]
+      refine List.mem_cons_of_mem _ ?_
+      rw [prs_z_eq, if_neg hrsz]
+      exact List.mem_cons_self
+    rcases Nat.lt_or_ge (i + 1) r.size with hrec | hvan
+    · -- recurse into `(g, r)`: the psc transfers through the step identity
+      have hstep := subresultant_prs_step (toPolynomial₂ f) (toPolynomial₂ g)
+        (toPolynomial₂ r) (toPolynomial₂ (pseudoDiv f g)) α₀
+        (toPolynomial (zContent (pseudoMod f g)))
+        (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree (toPolynomial₂ r).natDegree
+        i hβ0 (by rw [hdc]; omega) (by rw [hdc, hdb]; omega) rfl le_rfl hQb hrel
+      have hcoeffs := congrArg (fun q => Polynomial.coeff q i) hstep
+      simp only [Polynomial.coeff_C_mul, hval] at hcoeffs
+      have hL : α₀ ^ ((toPolynomial₂ g).natDegree - i)
+          * (subresultant (toPolynomial₂ f) (toPolynomial₂ g)
+              (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree i).coeff i ≠ 0 :=
+        mul_ne_zero (pow_ne_zero _ hα₀) hpsc
+      rw [hcoeffs] at hL
+      have hpsc' : (subresultant (toPolynomial₂ g) (toPolynomial₂ r)
+          (toPolynomial₂ g).natDegree (toPolynomial₂ r).natDegree i).coeff i ≠ 0 := by
+        intro h0
+        apply hL
+        rw [h0]
+        ring
+      obtain ⟨S, hSmem, hSsz⟩ := ih r.size (by omega) g r rfl (le_of_lt hrsize) hrne i
+        (by omega) hpsc'
+      refine ⟨S, ?_, hSsz⟩
+      rw [prs_z_eq, if_neg hgsz]
+      exact List.mem_cons_of_mem _ hSmem
+    · -- vanish: `deg r < i < deg g` — the gap and defective-top indices have zero psc
+      exfalso
+      have hcltb : (toPolynomial₂ r).natDegree < i := by rw [hdc]; omega
+      have hrzero : (Polynomial.C (toPolynomial (zContent (pseudoMod f g)))
+          * toPolynomial₂ r).coeff i = 0 :=
+        Polynomial.coeff_eq_zero_of_natDegree_lt
+          (lt_of_le_of_lt (Polynomial.natDegree_C_mul_le _ _) hcltb)
+      rcases eq_or_ne i ((toPolynomial₂ g).natDegree - 1) with htop | hnottop
+      · subst htop
+        have h := subresultant_prs_step_top (toPolynomial₂ f) (toPolynomial₂ g)
+          (toPolynomial₂ r) (toPolynomial₂ (pseudoDiv f g)) α₀
+          (toPolynomial (zContent (pseudoMod f g)))
+          (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree
+          (toPolynomial₂ r).natDegree
+          hβ0 (by rw [hdc, hdb]; omega) rfl le_rfl hQb hrel
+        exact hpsc (hkill α₀ _ _ hα₀ h (hshape _ _ _ hrzero))
+      · have h := subresultant_prs_step_gap (toPolynomial₂ f) (toPolynomial₂ g)
+          (toPolynomial₂ r) (toPolynomial₂ (pseudoDiv f g)) α₀
+          (toPolynomial (zContent (pseudoMod f g)))
+          (toPolynomial₂ f).natDegree (toPolynomial₂ g).natDegree
+          (toPolynomial₂ r).natDegree i
+          hα₀ hβ0 hcltb (by rw [hdb]; omega) rfl le_rfl hQb hrel
+        exact hpsc (by rw [h, Polynomial.coeff_zero])
+
+open DeepWiki.SymbolicIntegration in
+/-- The bridged `z`-primitive part has Mathlib content `1` — the dispatched-gcd strip and
+the `NormalizedGCDMonoid` content agree up to units. -/
+theorem content_toPolynomial₂_zPrimitive {p : DensePoly (DensePoly R)} (hp : p ≠ 0) :
+    (toPolynomial₂ (zPrimitive p)).content = 1 := by
+  rw [← Polynomial.isPrimitive_iff_content_eq_one]
+  intro r hr
+  have hcoeff : ∀ i, r ∣ (toPolynomial₂ (zPrimitive p)).coeff i :=
+    (Polynomial.C_dvd_iff_dvd_coeff r _).mp hr
+  have hpull : ∀ i, (equiv (R := R)).symm r ∣ (zPrimitive p).coeff i := by
+    intro i
+    have h1 := hcoeff i
+    rw [toPolynomial₂_coeff] at h1
+    have h2 := map_dvd ((equiv (R := R)).symm : Polynomial R →+* DensePoly R) h1
+    simpa using h2
+  have hunit' : IsUnit ((equiv (R := R)).symm r) :=
+    isUnit_of_dvd_unit (dvd_zContent (zPrimitive p) hpull) (zContent_zPrimitive_isUnit hp)
+  simpa using hunit'.map (equiv (R := R))
+
+end Chain
 
 end DensePoly
 
