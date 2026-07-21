@@ -1,91 +1,71 @@
-# The subresultant exactness telescope
+# The subresultant exactness discharge
 
-**GOAL**: discharge `ReducedExact 1 f g` unconditionally (∀ `f g` over any computable
-Euclidean domain of coefficients), so `resultantPRSReduced` gets an unconditional
-`resultant_eq` and registers as a `DensePolyResultant` instance — completing the
-fraction-free resultant family with the theorem Brown–Traub state as *"the right hand side
-of (34) is exactly divisible by βᵢ"*, and closing the frontier the old engine documented as
-its "LRT grounding".
+**GOAL — DONE 2026-07-21**: `ReducedExact 1 f g` is discharged unconditionally (∀ `f g` over
+any computable Euclidean domain of coefficients), so `resultantPRSReduced` has the
+hypothesis-free `resultantPRSReduced_eq` and is registered as a `DensePolyResultant`
+instance at priority 250 — completing the fraction-free resultant family with the theorem
+Brown–Traub state as *"the right hand side of (34) is exactly divisible by βᵢ"*, and closing
+the frontier the old engine documented as its "LRT grounding". Axiom-clean
+(`propext`/`Classical.choice`/`Quot.sound`).
 
-## Where everything lives (2026-07-21, post `511f0109`)
+## How it was closed: the α-divisibility ledger (NOT the global telescope)
 
-- `DeepWiki/CAlgebra/Resultant/Subresultant.lean` — `cleanReduced` (Collins' reduced PRS,
-  verified against Brown–Traub (33)/(35): carried divisor `lc(right)^{δ+1}`, first step 1),
-  `resultantPRSReduced`, **`ReducedExact`** (the WF-recursive target Prop; measure
-  `f.size + 2·g.size`), `resultantPRSReduced_eq_of_exact` (projections; done),
-  brick one **`subresultant_eq_pseudoMod`** (first pseudo-remainder `= (−1)^{δ+1}·S_{deg g−1}`,
-  = BT Lemma 1 (15); done), `exact_div_of_toPolynomial_C_mul` (done).
-- `DeepWiki/CAlgebra/Resultant/Euclidean.lean` — the state-threaded `resultantDescent` +
-  `resultantDescent_eq_of_invariant` (guarded obligations; done), `pseudo_identity`,
-  `pseudoDiv_natDegree_le` (public bridges).
-- `DeepWiki/Algebra/SubresultantSpec.lean` — determinantal `subresultant A B n m j`;
-  **the exact-constant one-step transfer lemmas** (= BT (21)–(24), generic
-  `[CommRing R] [IsDomain R]`): `subresultant_prs_step` (j < c),
-  `subresultant_prs_step_top` (j = b−1), `subresultant_prs_step_deg` (j = c),
-  `subresultant_prs_step_gap` (vanishing), `subresultant_C_mul`/`prs_unscale` (scaling),
-  `subresultant_padding`.
-- `DeepWiki/Algebra/SubresultantPRS/{Telescope,Remainder,ClosedForms}.lean` — chain-level:
-  `subresultant_eq_pseudoRem` (exact single step), `subresultant_prs_normal_eq` (normal-chain
-  closed form — stated in EXACTLY the reduced normalization), `subresultant_prs_closed_top`
-  (general closed form with α/β-products), `beta_fold`, `lc_collapse_defective`,
-  `subresPRS_gamma_ne_zero` (defective-collapse machinery).
-- Paper: Brown–Traub 1971 in `references/10.1145:321662.321665` (OCR-verified this arc);
-  catalog `Sources/Doi_10_1145_321662_321665/`. Reduced PRS = Collins 1967
-  (`references/collins.pdf`, catalog `Doi_10_1145_321371_321381`).
+The originally planned proof was BT §6's global telescope (track every element back to the
+original pair, where eq.-37 ρ-integrality is visible). That was never needed. The finding
+"no two-step-local shortcut exists" was about extracting divisibility from the *single*
+carried element; the fix is to strengthen the induction hypothesis instead — a **local
+invariant carrying all lower-index subresultants of the current pair**:
 
-## Why no shortcut exists (established)
+> `SubresLedger α f g` : `α ≠ 0` and for every `j < deg g`,
+> `C (α^{deg g − j})` factors out of the determinantal `S_j(tf, tg)`.
 
-A two-step-local divisibility argument fails: `subresultant_prs_step` puts the carried
-α-power against the *product* `C(lc f^{a−c})·C(α_prev^{δ+1})·S_j(f,g)`, and extracting the
-factor needs cancellation knowledge that only materializes after telescoping to the
-**original pair**, where BT §6's ρ-integrality (eq. 37) is visible by inspection: for the
-reduced α/β-choice every exponent is `δ(δ−1) ≥ 0`. The discharge must run the telescope.
+- **Entry** (`subresLedger_one`): trivial at `α = 1`.
+- **Head** = `ReducedExact`'s exact division: ledger at `j = deg g − 1` + brick one
+  `subresultant_eq_pseudoMod` (`S_{deg g−1} = (−1)^{δ+1} · prem`), sign squared away.
+- **Swap** (`SubresLedger.swap`): `subresultant_swap`, splitting
+  `α^{deg g−j} = α^{(deg f−j)} · α^{(deg g−deg f)}`.
+- **Step** (`SubresLedger.step`): `subresultant_prs_step` at the bridged pseudo-division
+  relation; cancel `C(α^{b−j})` then `C(lc^{a−c})` in the domain; the exponent identity
+  `(a−b+1)(b−j) = (a−c) + [(a−b+1)(c−j) + (a−b)(b−c−1)]` is BT eq.-37 nonnegativity
+  localized (the slack `(a−b)(b−c−1) ≥ 0` is exactly the ρ-integrality exponent). Proven by
+  decomposing `j < c < b ≤ a` into `Nat.le.dest` witnesses (ℕ-subtraction leaves; `ring`).
+- **Discharge** (`reducedExact_of_ledger`): WF-recursion on the descent's own measure
+  `f.size + 2·g.size`; `reducedExact_all := reducedExact_of_ledger ∘ subresLedger_one`.
 
-## The induction (BT §6, Lean shape)
+All in `DeepWiki/CAlgebra/Resultant/Subresultant.lean`; the step/swap lemmas consume the
+migrated `DeepWiki/Algebra/SubresultantSpec.lean` one-step transfer lemmas
+(`subresultant_prs_step`, `subresultant_swap` = BT (21)–(24)). The chain-level
+`SubresultantPRS/{Telescope,Remainder,ClosedForms}` machinery was **not needed** for this
+discharge (it remains the home of the closed forms and the old engine's chains).
 
-Strong induction along the descent, carrying the chain-with-history invariant:
+## Final state (post-discharge)
 
-> after ℓ exact steps from the original pair `(A, B)`, each computed element equals
-> `C ρ · S_j(tA, tB)` for a **tracked, integral** constant ρ (the eq.-37 product) at its
-> own-degree index `j`, and the pending divisor α is the eq.-35 value;
+- `resultantPRSReduced` (Collins' reduced PRS, verified against Brown–Traub (33)/(35)):
+  unchecked coefficient-wise divisions, **proven exact**; `resultantPRSReduced_eq`
+  hypothesis-free; instance `reducedDensePolyResultant` at priority 250.
+- Bench (degree-8 bivariate LRT pair, 5 reps): primitive 148ms < reduced 460ms ≪ Euclidean
+  ~49s — priorities 300/250/200 confirmed; dispatch still selects primitive.
+- The hypothesis-carrying forms (`resultantPRSReduced_eq_of_invariant`, `…_of_exact`) remain
+  as the generic descent API.
 
-then the next pseudo-remainder equals `C αₗ · (±S_{j'}(tA, tB))` by the closed form — an
-integral polynomial times the exact carried divisor — so the division is exact and the
-invariant extends.
+## Possible follow-ups (not scheduled)
 
-## Phases (each gate-green; commit per phase after review)
+- The TRUE subresultant-PRS β-variant (BT (38)–(41), old engine's `subresPRS.go`) needs
+  Brown '78 ψ-integrality — a separate arc if ever wanted as a resultant instance.
+- Switch old-engine conditional-hypothesis instantiations to consume `reducedExact_all`-style
+  discharged facts where they still carry chain hypotheses.
 
-1. **Chain-with-history invariant.** `SubresChainInv (A B : DensePoly S) (ℓ) (α f g)`:
-   `tf = C ρ₁ · S_{deg f}(tA,tB)`, `tg = C ρ₂ · S_{deg g}(tA,tB)` (with the boundary cases
-   `f = A`, `g = B` for ℓ = 0, 1), α the tracked eq.-35 divisor, plus the ρ-product ledger.
-   Prove `ReducedExact`-entry reduction: `(∀ ℓ-invariant facts) → ReducedExact 1 A B` shape.
-2. **Step transfer.** One descent step under the invariant: instantiate
-   `subresultant_prs_step`/`_top`/`_deg` at the current relation
-   `C(lc f^{δ+1})·tf = C α·tg' + tg·tQ`, telescope the constants, produce the next
-   invariant. Normal steps only need `_top`; defective steps produce the gap/deg cases.
-3. **Normal stratum.** All δ = 1: ρ = ±1 (`subresultant_prs_normal_eq` applies directly);
-   complete `ReducedExact` for inputs whose descent is normal — checkpoint theorem.
-4. **Defective collapse.** The general ρ-ledger via `beta_fold`/`lc_collapse_defective`:
-   prove eq.-37 integrality (`ρ ∈ S` — nonneg exponents) and the extension step for δ ≥ 2,
-   including the `S_j = 0` gap indices (`subresultant_prs_step_gap`).
-5. **Discharge + instance.** `reducedExact_all : ∀ f g, ReducedExact 1 f g`;
-   `resultantPRSReduced_eq` unconditional; register
-   `instance (priority := 250) reducedDensePolyResultant` (between primitive 300 and
-   Euclidean 200 — bench was 153ms/496ms/49.4s on the degree-8 bivariate pair; re-bench);
-   cross-check Bronstein Ex 2.4.1 + LRT regressions; consider switching the old engine's
-   conditional-hypothesis instantiations to consume the discharged facts.
-
-## Gotchas already learned (do not relearn)
+## Gotchas learned (kept for reuse)
 
 - `deg`-vs-`size` bridging: `natDegree_toPolynomial_eq_size_sub_one` (unconditional);
   `size_eq_natDegree_add_one` needs nonzero.
-- The descent's mod steps are always size-ordered after the entry swap; `ReducedExact`'s
-  swap clause fires at most once (measure `f.size + 2·g.size` covers it).
+- ℕ exponent identities with products are out of omega's fragment: decompose the strict
+  chain via `Nat.le.dest` (`obtain ⟨u, hu⟩`), rewrite each subtraction to a witness with
+  per-equation `omega` haves, close with `ring`. (`subst` on `b + u = a` fails — not `x = t`
+  shaped; the rewrite-list route avoids it.)
 - WF-def unfolding in unification is the recurring timeout: pass lambdas explicitly, `set`
   mapped lists whose functions contain `EuclideanDomain.gcd`/WF-defs.
-- Old-engine mirrors (`goStep`-layer) keep the state 4-tuple type `… × ℕ` with the slot as
-  the first-step flag; keep `subresPRS.go` and `goStep` in definitional lockstep or
-  `go_step_state`'s `rfl` breaks.
+- Old-engine mirrors (`goStep`-layer) keep the state 4-tuple with the first-step flag; keep
+  `subresPRS.go` and `goStep` in definitional lockstep or `go_step_state`'s `rfl` breaks.
 - The catalog worked examples (`SubresultantExample241`, `SubresultantExercise22`) pin
-  `goState` spellings — update the `show`-lines when the state shape changes; native_decide
-  re-adjudicates the mathematical facts.
+  `goState` spellings — update the `show`-lines when the state shape changes.

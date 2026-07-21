@@ -38,6 +38,13 @@ instance (priority := 200) euclideanDensePolyResultant {S : Type u} [EuclideanDo
   resultant := DensePoly.resultantPRSEuclidean
   resultant_eq := DensePoly.resultantPRSEuclidean_eq
 
+/-- Reduced pseudo-remainder sequence (Collins): fraction-free without content gcds — every
+division exact by the discharged Brown–Traub invariant (`reducedExact_all`). -/
+instance (priority := 250) reducedDensePolyResultant {S : Type u} [EuclideanDomain S]
+    [DecidableEq S] : DensePolyResultant S where
+  resultant := DensePoly.resultantPRSReduced
+  resultant_eq := DensePoly.resultantPRSReduced_eq
+
 /-- Primitive pseudo-remainder sequence: content-stripping keeps coefficients small — wins
 the dispatch (320× over the plain descent on a degree-8 bivariate benchmark). -/
 instance (priority := 300) primitiveDensePolyResultant {S : Type u} [EuclideanDomain S]

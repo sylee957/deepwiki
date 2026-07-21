@@ -646,6 +646,21 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `lrtLogTerms` factor `= 4t²+1` — now pinned as native_decide theorems IN THE CATALOG
     (`rtResultant_ex241_hex_engine`, `lrtLogTerms_ex241_hex_engine`), the first cross-engine
     agreement facts.
+  - **6c-res-6 (2026-07-21, IN REVIEW — uncommitted): the exactness DISCHARGE — DONE.**
+    `ReducedExact 1 f g` proven unconditionally (any computable Euclidean coefficient
+    domain), axiom-clean; `resultantPRSReduced_eq` hypothesis-free; instance
+    `reducedDensePolyResultant` registered at priority 250. ★ The proof is NOT the planned
+    BT §6 global telescope but a strengthened LOCAL invariant, `SubresLedger α f g`
+    (`C (α^{deg g − j})` factors out of EVERY `S_j(tf,tg)`, `j < deg g`): trivial entry at
+    `α = 1`; head = ledger@`deg g−1` + brick one; swap via `subresultant_swap` with
+    power-splitting; step via `subresultant_prs_step` with the eq-37-localized exponent
+    identity `(a−b+1)(b−j) = (a−c) + [(a−b+1)(c−j) + (a−b)(b−c−1)]` (Nat.le.dest
+    decomposition + ring — omega can't multiply), then cancel `C(α^{b−j})`, `C(lc^{a−c})`
+    in the domain; discharge by WF-recursion on `f.size + 2·g.size`
+    (`reducedExact_of_ledger` → `reducedExact_all`). Re-bench: primitive 148ms < reduced
+    460ms ≪ Euclidean ~49s — 300/250/200 confirmed, dispatch unchanged, cross-agreement
+    `decide`-checked. Plan doc `docs/subresultant-exactness-telescope.md` rewritten as the
+    post-mortem. This closes the old engine's "LRT grounding" frontier.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
