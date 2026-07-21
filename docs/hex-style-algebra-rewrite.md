@@ -366,6 +366,24 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `powProd`/`powProd_succ` (staircase product). ★ Lessons: `Associated` is a def unfolding to
     `Exists` — dot-notation `.symm` on an ascription fails, use prefix; multi-theorem files with
     same-named induct cases make regex anchors dangerous.
+  - **6c-sqf-4 (2026-07-21): Squarefree area + Yun + dispatch class.** Squarefree things moved
+    to their own area `CAlgebra/Squarefree/{Basic,Musser,Yun,Dense}.lean` (+aggregator;
+    `Poly/Squarefree.lean` git-mv'd to `Basic`, Musser split out as `sqfDecompMusser`).
+    **Yun's algorithm** (`Squarefree/Yun.lean`): the loop has NO structural termination measure
+    (constant factors stall `c`), so instead of the heavy Yun invariant algebra it is
+    **checker-validated**: `sqfDecompYunRaw` = fuel-bounded sweep (fuel `p.size` ≥ max
+    multiplicity), `sqfDecompYun` = raw output validated by the DECIDABLE contract (factors
+    squarefree — decidable; both Associated clauses via the cross-scaled certificate
+    `associated_of_cross_mul_C : p·C(lc q) = q·C(lc p) ∧ q ≠ 0 → Associated p q`, now in
+    `Basic`), falling back to Musser on failure — full spec proven with zero Yun theory.
+    **Dispatch class `DensePolySquarefree`** (`Squarefree/Dense.lean`, the `DensePolyGcd`
+    pattern): fields = `sqfDecomp` + the three contract clauses; Musser instance priority 100
+    (default), checked-Yun 90. ★ Benchmarks (ℚ, 20 reps): raw Yun beats Musser 1.4–1.7×
+    (141→89ms, 508→297ms, 528→373ms) but the contract check eats the gain (yun-check
+    158/492/656ms ≈ Musser) — hence Musser stays default. Path to flip: prove Yun's invariants
+    directly (drops the check); recorded as future work, not scheduled. ★ Lesson: class-field
+    projections at a `fun p => Cls.field p` eta-expansion can leave the parent-class instance
+    slot as a bare metavar — supply `@`-explicit `inferInstance`s in guard defs.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

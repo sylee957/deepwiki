@@ -7,7 +7,7 @@ import DeepWiki.CAlgebra.Poly.Euclid
 import DeepWiki.CAlgebra.Poly.Monic
 import DeepWiki.CAlgebra.Gcd
 import DeepWiki.CAlgebra.Poly.Derivative
-import DeepWiki.CAlgebra.Poly.Squarefree
+import DeepWiki.CAlgebra.Squarefree
 import DeepWiki.CAlgebra.Matrix.Dense
 import DeepWiki.CAlgebra.Matrix.Sylvester
 import DeepWiki.CAlgebra.Frac.Basic

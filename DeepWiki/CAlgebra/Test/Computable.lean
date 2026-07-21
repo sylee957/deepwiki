@@ -3,7 +3,7 @@ import DeepWiki.CAlgebra.Poly.DivisionMonic
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Gcd
 import DeepWiki.CAlgebra.Poly.Derivative
-import DeepWiki.CAlgebra.Poly.Squarefree
+import DeepWiki.CAlgebra.Squarefree
 import DeepWiki.CAlgebra.Frac.Basic
 import DeepWiki.CAlgebra.Frac.Field
 
@@ -81,8 +81,16 @@ private def squarefreeDecide [Field R] [DecidableEq R] [PerfectField R] [DensePo
     DensePoly R → Bool := fun p => decide (Squarefree p)
 
 /-- Musser's squarefree decomposition is computable. -/
-private def sqfDecompGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :
-    DensePoly R → List (DensePoly R) := DensePoly.sqfDecomp
+private def sqfDecompMusserGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :
+    DensePoly R → List (DensePoly R) := DensePoly.sqfDecompMusser
+
+/-- Checker-validated Yun decomposition computes (sweep + decidable contract check). -/
+private def sqfDecompYunGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :
+    DensePoly R → List (DensePoly R) := DensePoly.sqfDecompYun
+
+/-- The dispatched squarefree decomposition computes through the class interface. -/
+private def classSqfDecompGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :
+    DensePoly R → List (DensePoly R) := fun p => @DensePolySquarefree.sqfDecomp R _ _ inferInstance inferInstance p
 
 /-! ### Rational-function carrier operations -/
 
