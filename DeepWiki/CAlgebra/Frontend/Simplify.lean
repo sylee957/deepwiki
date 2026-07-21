@@ -1,4 +1,5 @@
 import DeepWiki.CAlgebra.Frontend.IntegralExpr
+import DeepWiki.CAlgebra.Poly.Bivariate
 import DeepWiki.Algebra.ListSums
 
 /-! # A sound simplifier for antiderivative expressions
@@ -12,28 +13,6 @@ namespace DeepWiki.CAlgebra
 universe u
 
 variable {R : Type u} [Field R] [DecidableEq R]
-
-/-- Evaluate the `z`-coefficients of a bivariate polynomial: `S(z, x) ↦ S(α, x)`. -/
-def zEval (α : R) (S : DensePoly (DensePoly R)) : DensePoly R :=
-  DensePoly.ofList (S.coeffs.map (evalAt α))
-
-/-- `zEval` computes the bridged coefficient evaluation. -/
-theorem toPolynomial_zEval (α : R) (S : DensePoly (DensePoly R)) :
-    toPolynomial (zEval α S) = (DensePoly.toPolynomial₂ S).map (Polynomial.evalRingHom α) := by
-  refine Polynomial.ext fun n => ?_
-  rw [coeff_toPolynomial, Polynomial.coeff_map, DensePoly.toPolynomial₂_coeff]
-  rw [zEval, DensePoly.coeff_ofList, List.getD_eq_getElem?_getD, List.getElem?_map]
-  by_cases h : n < S.coeffs.length
-  · rw [List.getElem?_eq_getElem h]
-    show evalAt α S.coeffs[n] = _
-    rw [evalAt_eq]
-    congr 2
-    rw [DensePoly.coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h]
-    rfl
-  · rw [List.getElem?_eq_none (by omega)]
-    show (0 : R) = _
-    rw [DensePoly.coeff_eq_zero_of_size_le S (by show S.coeffs.length ≤ n; omega),
-      toPolynomial_zero, map_zero]
 
 namespace IntegralExpr
 

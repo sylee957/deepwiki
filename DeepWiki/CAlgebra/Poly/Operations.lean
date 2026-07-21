@@ -229,6 +229,13 @@ theorem toPolynomial_ne_zero {p : DensePoly R} (h : p ≠ 0) : toPolynomial p �
   · rw [if_pos h, if_pos h.symm]
   · rw [if_neg h, if_neg (fun hh => h hh.symm)]
 
+/-- The engine's variable polynomial reads as `Polynomial.X`. -/
+theorem toPolynomial_X :
+    toPolynomial (DensePoly.ofList [0, 1] : DensePoly R) = Polynomial.X := by
+  refine Polynomial.ext fun n => ?_
+  rw [coeff_toPolynomial]
+  rcases n with _ | _ | n <;> simp [DensePoly.coeff_ofList, Polynomial.coeff_X]
+
 /-- `toPolynomial` transports the executable degree to Mathlib's `natDegree`. -/
 theorem natDegree_toPolynomial (p : DensePoly R) :
     (toPolynomial p).natDegree = p.degree?.getD 0 := by

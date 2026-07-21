@@ -1,4 +1,4 @@
-import DeepWiki.CAlgebra.Integrate.RatIntegrateSpec
+import DeepWiki.CAlgebra.Integrate.DerivDataSpec
 
 /-! # The integral output syntax
 
@@ -56,12 +56,16 @@ def ResultRatIntegral.toExpr (res : ResultRatIntegral R) : IntegralExpr R :=
   res.logs.terms.foldr (fun QS acc => .add (.rootSum QS.1 QS.2) acc)
     (.add (.frac res.rational) (.frac (DenseFrac.ofPoly res.poly)))
 
-omit [CharZero R] [DensePolySquarefree R] [IsAlgClosed R] in
+omit [DensePolySquarefree R] in
 open scoped Differential FormalDiff in
 /-- **Rendering preserves the derivative semantics**: the output expression's formal
-derivative is the record's. -/
-theorem ResultRatIntegral.toExpr_deriv (res : ResultRatIntegral R) :
-    res.toExpr.deriv = res.deriv := by
+derivative reads the record's computable derivative, given the log-data nonvanishing
+contract. -/
+theorem ResultRatIntegral.toExpr_deriv (res : ResultRatIntegral R)
+    (hS : ∀ QS ∈ res.logs.terms, ∀ α ∈ (toPolynomial QS.1).roots,
+      (toPolynomial₂ QS.2).map (Polynomial.evalRingHom α) ≠ 0) :
+    res.toExpr.deriv = DenseFrac.toRatFunc res.deriv := by
+  rw [ResultRatIntegral.toRatFunc_deriv res hS]
   have hfold : ∀ (L : List (DensePoly R × DensePoly (DensePoly R)))
       (base : IntegralExpr R),
       (L.foldr (fun QS acc => .add (.rootSum QS.1 QS.2) acc) base).deriv

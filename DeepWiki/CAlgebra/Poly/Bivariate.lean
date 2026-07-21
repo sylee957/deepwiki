@@ -88,6 +88,110 @@ theorem toPolynomial₂_ne_zero {p : DensePoly (DensePoly R)} (hp : p ≠ 0) :
     toPolynomial₂ p ≠ 0 :=
   fun h => hp (toPolynomial₂_injective (by rw [h, toPolynomial₂_zero]))
 
+/-- List members are bounded by the max fold. -/
+private theorem le_foldr_max (l : List ℕ) : ∀ x ∈ l, x ≤ l.foldr max 0 := by
+  induction l with
+  | nil => intro x hx; exact absurd hx List.not_mem_nil
+  | cons a t ih =>
+      intro x hx
+      rw [List.foldr_cons]
+      rcases List.mem_cons.mp hx with rfl | hx
+      · exact le_max_left _ _
+      · exact le_trans (ih x hx) (le_max_right _ _)
+
+/-- Transpose a bivariate polynomial between its outer-`x` and outer-`z` representations. -/
+def zSwap (S : DensePoly (DensePoly R)) : DensePoly (DensePoly R) :=
+  DensePoly.ofList ((List.range ((S.coeffs.map DensePoly.size).foldr max 0)).map
+    fun j => DensePoly.ofList (S.coeffs.map (fun c => c.coeff j)))
+
+/-- Coefficient characterization of the bivariate transpose: `zSwap` swaps the two
+coefficient indices. -/
+theorem coeff_coeff_zSwap (S : DensePoly (DensePoly R)) (i j : ℕ) :
+    ((zSwap S).coeff i).coeff j = (S.coeff j).coeff i := by
+  set B := (S.coeffs.map DensePoly.size).foldr max 0 with hB
+  rw [zSwap, coeff_ofList, List.getD_eq_getElem?_getD, List.getElem?_map]
+  by_cases hi : i < (List.range B).length
+  · rw [List.getElem?_eq_getElem hi, List.getElem_range, Option.map_some, Option.getD_some]
+    rw [coeff_ofList, List.getD_eq_getElem?_getD, List.getElem?_map]
+    by_cases hj : j < S.coeffs.length
+    · rw [List.getElem?_eq_getElem hj]
+      show S.coeffs[j].coeff i = _
+      congr 1
+      rw [DensePoly.coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hj,
+        Option.getD_some]
+    · rw [List.getElem?_eq_none (by omega)]
+      show (0 : R) = _
+      rw [DensePoly.coeff_eq_zero_of_size_le S (by show S.coeffs.length ≤ j; omega)]
+      rfl
+  · rw [List.length_range] at hi
+    rw [List.getElem?_eq_none (by rw [List.length_range, ← hB]; omega)]
+    show (0 : DensePoly R).coeff j = _
+    by_cases hj : j < S.coeffs.length
+    · have hsz : (S.coeff j).size ≤ i := by
+        have hmem : (S.coeff j).size ∈ S.coeffs.map DensePoly.size := by
+          rw [List.mem_map]
+          refine ⟨S.coeffs[j], List.getElem_mem hj, ?_⟩
+          congr 1
+          rw [DensePoly.coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hj,
+            Option.getD_some]
+        have := le_foldr_max _ _ hmem
+        omega
+      rw [show (0 : DensePoly R).coeff j = 0 from rfl,
+        DensePoly.coeff_eq_zero_of_size_le (S.coeff j) hsz]
+    · rw [DensePoly.coeff_eq_zero_of_size_le S (by show S.coeffs.length ≤ j; omega),
+        DensePoly.coeff_zero, DensePoly.coeff_zero]
+
 end DensePoly
+
+variable {R : Type u} [CommRing R] [DecidableEq R]
+
+/-- Evaluate the `z`-coefficients of a bivariate polynomial: `S(z, x) ↦ S(α, x)`. -/
+def zEval (α : R) (S : DensePoly (DensePoly R)) : DensePoly R :=
+  DensePoly.ofList (S.coeffs.map (evalAt α))
+
+/-- Coefficient reading of the coefficient evaluation. -/
+@[simp] theorem coeff_zEval (α : R) (S : DensePoly (DensePoly R)) (j : ℕ) :
+    (zEval α S).coeff j = evalAt α (S.coeff j) := by
+  rw [zEval, DensePoly.coeff_ofList, List.getD_eq_getElem?_getD, List.getElem?_map]
+  by_cases hj : j < S.coeffs.length
+  · rw [List.getElem?_eq_getElem hj, Option.map_some, Option.getD_some]
+    congr 1
+    rw [DensePoly.coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hj,
+      Option.getD_some]
+  · rw [List.getElem?_eq_none (by omega)]
+    show (0 : R) = _
+    rw [DensePoly.coeff_eq_zero_of_size_le S (by show S.coeffs.length ≤ j; omega),
+      evalAt_eq, toPolynomial_zero, Polynomial.eval_zero]
+
+/-- `zEval` computes the bridged coefficient evaluation. -/
+theorem toPolynomial_zEval (α : R) (S : DensePoly (DensePoly R)) :
+    toPolynomial (zEval α S) = (DensePoly.toPolynomial₂ S).map (Polynomial.evalRingHom α) := by
+  refine Polynomial.ext fun n => ?_
+  rw [coeff_toPolynomial, coeff_zEval, evalAt_eq, Polynomial.coeff_map,
+    DensePoly.toPolynomial₂_coeff]
+  rfl
+
+/-- Evaluating the outer variable of the transpose at a constant is the coefficient
+evaluation: `(zSwap S)(C α) = S(α, ·)`. -/
+theorem toPolynomial₂_zSwap_eval (S : DensePoly (DensePoly R)) (α : R) :
+    (DensePoly.toPolynomial₂ (DensePoly.zSwap S)).eval (Polynomial.C α)
+      = toPolynomial (zEval α S) := by
+  refine Polynomial.ext fun j => ?_
+  have hple : (toPolynomial (S.coeff j)).natDegree
+      ≤ (DensePoly.toPolynomial₂ (DensePoly.zSwap S)).natDegree := by
+    refine Polynomial.natDegree_le_iff_coeff_eq_zero.mpr fun m hm => ?_
+    have h0 : (DensePoly.toPolynomial₂ (DensePoly.zSwap S)).coeff m = 0 :=
+      Polynomial.coeff_eq_zero_of_natDegree_lt hm
+    rw [DensePoly.toPolynomial₂_coeff] at h0
+    rw [coeff_toPolynomial, ← DensePoly.coeff_coeff_zSwap,
+      show (DensePoly.zSwap S).coeff m = 0 from
+        toPolynomial_injective (h0.trans toPolynomial_zero.symm),
+      DensePoly.coeff_zero]
+  rw [coeff_toPolynomial, coeff_zEval, evalAt_eq,
+    Polynomial.eval_eq_sum_range' (Nat.lt_succ_of_le hple),
+    Polynomial.eval_eq_sum_range, Polynomial.finsetSum_coeff]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [← Polynomial.C_pow, Polynomial.coeff_mul_C, DensePoly.toPolynomial₂_coeff,
+    coeff_toPolynomial, DensePoly.coeff_coeff_zSwap, coeff_toPolynomial]
 
 end DeepWiki.CAlgebra

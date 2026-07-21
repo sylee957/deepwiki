@@ -6,5 +6,6 @@ import DeepWiki.CAlgebra.Integrate.LogPartChain
 import DeepWiki.CAlgebra.Integrate.LogPartMultiplicity
 import DeepWiki.CAlgebra.Integrate.LogPartSpec
 import DeepWiki.CAlgebra.Integrate.RatIntegrate
-import DeepWiki.CAlgebra.Integrate.RatIntegrateSpec
+import DeepWiki.CAlgebra.Integrate.DerivData
+import DeepWiki.CAlgebra.Integrate.DerivDataSpec
 import DeepWiki.CAlgebra.Integrate.LogPartElementary

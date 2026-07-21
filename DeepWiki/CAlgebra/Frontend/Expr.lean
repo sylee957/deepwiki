@@ -62,14 +62,6 @@ def toFrac : Expr R → DenseFrac R
   | inv a => (a.toFrac)⁻¹
   | pow a n => a.toFrac ^ n
 
-omit [DensePolyGcd R] in
-/-- The engine's variable polynomial reads as `Polynomial.X`. -/
-theorem toPolynomial_X :
-    toPolynomial (DensePoly.ofList [0, 1] : DensePoly R) = Polynomial.X := by
-  refine Polynomial.ext fun n => ?_
-  rw [coeff_toPolynomial]
-  rcases n with _ | _ | n <;> simp [coeff_ofList, Polynomial.coeff_X]
-
 /-- **Frontend soundness**: the computable normalization agrees with the denotation. -/
 theorem toRatFunc_toFrac (e : Expr R) : DenseFrac.toRatFunc e.toFrac = e.eval := by
   induction e with

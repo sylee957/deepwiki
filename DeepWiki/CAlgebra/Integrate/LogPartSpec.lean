@@ -598,13 +598,6 @@ theorem toRatFuncHom_polyIntegrate_deriv (p : DensePoly R) :
     polyIntegrate_deriv]
 
 open DeepWiki.SymbolicIntegration in
-/-- **The derivative of an LRT result**: the formal derivative of the represented sum of
-logarithms `∑ᵢ ∑_{Qᵢ(α)=0} α · log Sᵢ(α, x)`, read in `RatFunc R` — the record's
-denotation. -/
-noncomputable def ResultLrt.deriv (res : ResultLrt R) : RatFunc R :=
-  (res.terms.map lrtPairTerm).sum
-
-open DeepWiki.SymbolicIntegration in
 /-- **Detection**: the produced data is empty exactly when there is nothing to
 integrate — a nonzero proper fraction with squarefree denominator always yields a log
 term (its denominator has a root, whose residue is a root of the Rothstein–Trager
@@ -717,33 +710,18 @@ theorem lrtIntegrate_terms_eq_nil_iff (g : DenseFrac R)
     have hs0 : QS.1.size ≠ 0 := fun h0 => hQ0 (eq_zero_of_size_zero h0)
     omega
 
-/-- **Soundness of the bundled LRT stage**: `D(∫ g) = g` — the derivative of the produced
-`RootSum` data `∑ᵢ ∑_{Qᵢ(α)=0} α · log Sᵢ(α, x)` is the fraction, with no residue
-selection and the log data over the base field. The hypotheses are exactly
-`hermiteReduce`'s exports. -/
-theorem lrtIntegrate_sound (g : DenseFrac R) (hnum : g.num ≠ 0)
+open DeepWiki.SymbolicIntegration in
+/-- **Denoted soundness of the bundled LRT stage**: `D(∫ g) = g` — the derivative of
+the represented sum of logarithms `∑ᵢ ∑_{Qᵢ(α)=0} α · log Sᵢ(α, x)` is the fraction,
+with no residue selection and the log data over the base field. The hypotheses are
+exactly `hermiteReduce`'s exports; the data-level `lrtIntegrate_sound` is the primary
+spec, connected through `ResultLrt.toRatFunc_deriv`. -/
+theorem lrtIntegrate_pairTerm_sum (g : DenseFrac R) (hnum : g.num ≠ 0)
     (hsf : Squarefree g.den.toPoly)
     (hprop : RatFunc.IsProper (DenseFrac.toRatFunc g)) :
-    (lrtIntegrate g).deriv = DenseFrac.toRatFunc g := by
+    ((lrtIntegrate g).terms.map lrtPairTerm).sum = DenseFrac.toRatFunc g := by
   rw [lrtLogTerms_sum_sound g hnum hsf hprop, logSumDeriv_lrtLogArg]
   exact (residue_sum_eq_pair_sum g hnum hsf hprop).symm
-
-/-- **Completeness of the bundled LRT stage**: every proper fraction with squarefree
-denominator has a log-stage integration result — a record whose derivative is the
-fraction (the zero fraction is covered by the empty record). -/
-theorem lrtIntegrate_complete (g : DenseFrac R)
-    (hsf : Squarefree g.den.toPoly)
-    (hprop : RatFunc.IsProper (DenseFrac.toRatFunc g)) :
-    ∃ res : ResultLrt R, res.deriv = DenseFrac.toRatFunc g := by
-  refine ⟨lrtIntegrate g, ?_⟩
-  rcases eq_or_ne g.num 0 with hnum0 | hnum0
-  · have hnil := (lrtIntegrate_terms_eq_nil_iff g hsf hprop).mpr hnum0
-    have hg0 : DenseFrac.toRatFunc g = 0 := by
-      rw [DenseFrac.eq_zero_of_num_eq_zero hnum0, DenseFrac.toRatFunc_zero]
-    rw [show (lrtIntegrate g).deriv
-        = ((lrtIntegrate g).terms.map lrtPairTerm).sum from rfl,
-      hnil, List.map_nil, List.sum_nil, hg0]
-  · exact lrtIntegrate_sound g hnum0 hsf hprop
 
 end Capstone
 

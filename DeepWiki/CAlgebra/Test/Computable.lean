@@ -163,3 +163,4 @@ private def fracEq [Field R] [DecidableEq R] : DenseFrac R → DenseFrac R → B
 end
 
 end DeepWiki.CAlgebra.Test.Computable
+
