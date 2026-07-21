@@ -15,7 +15,8 @@ hypothesis-free `D(∫f) = f` (Tier A absorbs the zero log part), `ratIntegrate_
 is the record-level decision. Poly-part uniqueness: `polyIntegrate_complete` in
 `Diff/Derivative.lean`.)
 
-- `lrtIntegrate_complete (g) (hsf) (hprop) : (lrtIntegrate g).terms = [] ↔ g.num = 0`
+- `lrtIntegrate_terms_eq_nil_iff (g) (hsf) (hprop) : (lrtIntegrate g).terms = [] ↔ g.num = 0`
+  (detection); `lrtIntegrate_complete` is the existence form `∃ res, res.deriv = toRatFunc g`
   (`Integrate/LogPartSpec.lean`). Forward: a nonzero proper fraction with squarefree
   denominator has a pole (IsAlgClosed), its residue is a root of the RT resultant
   (`image_residue_eq_roots_rtResultant`, membership-ext through the classical instance),

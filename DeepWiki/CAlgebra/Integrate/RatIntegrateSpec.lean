@@ -31,14 +31,13 @@ part is absorbed by the LRT detection completeness. -/
 theorem ratIntegrate_sound (f : DenseFrac R) :
     (ratIntegrate f).deriv = DenseFrac.toRatFunc f := by
   have hsound := hermiteReduce_sound f
-  rw [RatFunc.differential_apply] at hsound
   show DenseFrac.toRatFunc (((hermiteReduce f).rational)′)
       + toRatFuncHom ((polyIntegrate (hermiteReduce f).poly)′)
       + (lrtIntegrate (hermiteReduce f).logPart).deriv = _
-  rw [polyIntegrate_deriv, DenseFrac.toRatFunc_deriv, RatFunc.differential_apply]
+  rw [polyIntegrate_deriv]
   rcases eq_or_ne (hermiteReduce f).logPart.num 0 with hnum0 | hnum0
   · have hnil : (lrtIntegrate (hermiteReduce f).logPart).terms = [] :=
-      (lrtIntegrate_complete _ (hermiteReduce f).logPart_den_squarefree
+      (lrtIntegrate_terms_eq_nil_iff _ (hermiteReduce f).logPart_den_squarefree
         (hermiteReduce f).logPart_isProper).mpr hnum0
     have hlp0 : DenseFrac.toRatFunc (hermiteReduce f).logPart = 0 := by
       rw [DenseFrac.eq_zero_of_num_eq_zero hnum0, DenseFrac.toRatFunc_zero]

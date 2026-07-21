@@ -1,6 +1,7 @@
 import DeepWiki.CAlgebra.Integrate.PolyPart
 import DeepWiki.CAlgebra.Diff.RatFunc
 import DeepWiki.CAlgebra.Frac.Field
+import DeepWiki.CAlgebra.Diff.Frac
 import DeepWiki.Algebra.RatFuncProper
 
 /-! # Hermite reduction (rational-function base case)
@@ -338,9 +339,10 @@ def hermiteReduce (f : DenseFrac R) : HermiteResult R where
 `RatFunc R`. -/
 theorem hermiteReduce_sound (f : DenseFrac R) :
     DenseFrac.toRatFunc f
-      = (DenseFrac.toRatFunc (hermiteReduce f).rational)′
+      = DenseFrac.toRatFunc (((hermiteReduce f).rational)′)
         + toRatFuncHom (hermiteReduce f).poly
         + DenseFrac.toRatFunc (hermiteReduce f).logPart := by
+  rw [DenseFrac.toRatFunc_deriv]
   have hp : f.den.toPoly ≠ 0 := f.den.ne_zero
   have hold := sqfPartFrac_ratFunc hp f.num
   have hpartsum := partsSum_hermite (sqfPartFrac f.num f.den.toPoly).2
@@ -381,7 +383,7 @@ theorem hermiteReduce_complete (f : DenseFrac R) :
         show RatFunc.deriv (toRatFuncHom (polyIntegrate (hermiteReduce f).poly))
             = toRatFuncHom (hermiteReduce f).poly from by
           rw [← RatFunc.differential_apply, toRatFuncHom_deriv, polyIntegrate_deriv],
-        hermiteReduce_sound f, RatFunc.differential_apply]
+        hermiteReduce_sound f, DenseFrac.toRatFunc_deriv, RatFunc.differential_apply]
       ring
     have hsf : Squarefree (DenseFrac.toRatFunc (hermiteReduce f).logPart).denom := by
       have hassoc := RatFunc.denom_associated_of_eq_div
@@ -402,7 +404,8 @@ theorem hermiteReduce_complete (f : DenseFrac R) :
       show RatFunc.deriv (toRatFuncHom (polyIntegrate (hermiteReduce f).poly))
           = toRatFuncHom (hermiteReduce f).poly from by
         rw [← RatFunc.differential_apply, toRatFuncHom_deriv, polyIntegrate_deriv],
-      hermiteReduce_sound f, h0, DenseFrac.toRatFunc_zero, RatFunc.differential_apply]
+      hermiteReduce_sound f, DenseFrac.toRatFunc_deriv, h0, DenseFrac.toRatFunc_zero,
+      RatFunc.differential_apply]
     ring
 
 end DensePoly

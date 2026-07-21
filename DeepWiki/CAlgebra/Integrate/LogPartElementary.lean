@@ -49,7 +49,8 @@ the log stage give `f = ∑ residues · logDeriv Sₐ + (rational + ∫poly + v�
 theorem denseFrac_hasWeakLiouvilleForm (f : DenseFrac R) :
     HasWeakLiouvilleForm (RatFunc R) (RatFunc R) (DenseFrac.toRatFunc f) := by
   have hsound := hermiteReduce_sound f
-  rw [RatFunc.differential_apply, ratFunc_deriv_eq_deriv] at hsound
+  rw [DenseFrac.toRatFunc_deriv, RatFunc.differential_apply,
+    ratFunc_deriv_eq_deriv] at hsound
   have hpoly := toRatFuncHom_polyIntegrate_deriv (hermiteReduce f).poly
   set w : RatFunc R := DenseFrac.toRatFunc (hermiteReduce f).rational
     + toRatFuncHom (polyIntegrate (hermiteReduce f).poly) with hw
