@@ -114,6 +114,12 @@ private def hermiteReduceGuard [Field R] [DecidableEq R] [CharZero R] [DensePoly
     DenseFrac R → DensePoly.HermiteResult R :=
   DensePoly.hermiteReduce
 
+/-- The Lazard–Rioboo–Trager log-part data computes end to end (bivariate primitive PRS +
+Sylvester resultant + dispatched squarefree decomposition). -/
+private def lrtLogPartGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R]
+    [DensePolySquarefree R] :
+    DenseFrac R → List (DensePoly R × DensePoly (DensePoly R)) := DensePoly.lrtLogPart
+
 /-- The dispatched squarefree decomposition computes through the class interface. -/
 private def classSqfDecompGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :
     DensePoly R → List (DensePoly R) := fun p => @DensePolySquarefree.sqfDecomp R _ _ inferInstance inferInstance p

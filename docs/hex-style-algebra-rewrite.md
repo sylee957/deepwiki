@@ -504,6 +504,26 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     (incl. a hand-built derivative recognized integrable). ★ Lessons: `show` against a
     projection of a structure-literal def whose fields contain WF-recursion whnf-times-out —
     `simp only [defName]` instead; `add_le_add le_rfl h` beats guessing left/right variants.
+  - **6c-int-4 (2026-07-21): Lazard–Rioboo–Trager log part — the ALGORITHM.**
+    `Integrate/LogPart.lean`: `lrtLogPart : DenseFrac R → List (Q(z) × S(z,x))` with
+    `∫ b/d = Σᵢ Σ_{Qᵢ(c)=0} c·log Sᵢ(c,x)`. Pieces: bivariate carrier `DensePoly
+    (DensePoly R)` (x outermost; `liftX`, `zC`, `zContent`/`zPrimitive` via the dispatched
+    gcd), Rothstein–Trager resultant `rtResultant = res_x(d, b − z·d′)` through the EXISTING
+    Mathlib-bridged Sylvester `resultant` (certificate hook `toPolynomial_resultant` for
+    free; det-based → slow beyond small degrees, PRS-based resultant is the efficiency
+    upgrade), **primitive pseudo-remainder sequence** `primPRS` (pseudoDivMod is
+    CommRing-generic; coefficient exact-division = field `div` on `DensePoly R`; content
+    differences vs true subresultants specialize to CONSTANTS at z = c, so log-derivatives
+    are unaffected — the LRT normalization is an efficiency matter here, not correctness),
+    squarefree decomposition of the resultant via `DensePolySquarefree` (dispatch pays off:
+    no CharZero needed on the defs, only at instances). Factor at exponent i pairs with the
+    PRS element of x-size i+1, or `liftX d` when i = deg d; constant factors dropped.
+    Structural spec `lrtLogTerms_fst_squarefree` (every Q squarefree + nonconstant).
+    VALIDATED on 5 known integrals incl. multi-factor mixed-multiplicity `∫1/(x³−x)` →
+    `−log x + ½log(x²−1)` and complex-root `∫1/(x²+1)` (data stays symbolic in Q).
+    NEXT (the certificate arc): the differential identity `Σᵢ Tr-sum of c·Sᵢ′/Sᵢ = b/d`
+    needs `AdjoinRoot Qᵢ` étale-algebra machinery — multi-session, analogous to the old
+    engine's soundness arc; plus properness-shaped uniqueness via `RatFuncProper`.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
