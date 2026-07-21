@@ -107,6 +107,86 @@ def lrtIntegrate (h : DenseFrac R) : LrtResult R where
 /-- The bundled terms are the log-part data. -/
 theorem lrtIntegrate_terms (h : DenseFrac R) : (lrtIntegrate h).terms = lrtLogPart h := rfl
 
+/-- A member of `lrtLogTerms` is the image of a decomposition index. -/
+theorem exists_index_of_mem_lrtLogTerms {b d : DensePoly R}
+    {QS : DensePoly R × DensePoly (DensePoly R)} (h : QS ∈ lrtLogTerms b d) :
+    ∃ j, ∃ hj : j < (DensePolySquarefree.sqfDecomp (rtResultant b d)).length,
+      QS.1 = (DensePolySquarefree.sqfDecomp (rtResultant b d))[j] := by
+  rw [lrtLogTerms, List.mem_filterMap] at h
+  obtain ⟨Qi, hQi, hf⟩ := h
+  obtain ⟨j, hjlen, hgot⟩ := List.mem_iff_getElem.mp hQi
+  have hj : j < (DensePolySquarefree.sqfDecomp (rtResultant b d)).length := by
+    simpa using hjlen
+  have hQi_eq : Qi = ((DensePolySquarefree.sqfDecomp (rtResultant b d))[j], j) := by
+    rw [← hgot, List.getElem_zipIdx]
+    simp
+  subst hQi_eq
+  dsimp only at hf
+  by_cases hsz : ((DensePolySquarefree.sqfDecomp (rtResultant b d))[j]).size ≤ 1
+  · rw [if_pos hsz] at hf
+    simp at hf
+  · rw [if_neg hsz, Option.some_inj] at hf
+    exact ⟨j, hj, by rw [← hf]⟩
+
+/-- **Covering uniqueness**: two produced pairs sharing a root coincide. -/
+theorem lrt_covering_unique [CharZero R] {b d : DensePoly R}
+    (hrt : rtResultant b d ≠ 0) {QS QS' : DensePoly R × DensePoly (DensePoly R)}
+    (h1 : QS ∈ lrtLogTerms b d) (h2 : QS' ∈ lrtLogTerms b d) {α : R}
+    (hr1 : (toPolynomial QS.1).IsRoot α) (hr2 : (toPolynomial QS'.1).IsRoot α) :
+    QS = QS' := by
+  rw [lrtLogTerms, List.mem_filterMap] at h1 h2
+  obtain ⟨Qi, hQi, hf1⟩ := h1
+  obtain ⟨Qi', hQi', hf2⟩ := h2
+  obtain ⟨j, hjlen, hgot⟩ := List.mem_iff_getElem.mp hQi
+  obtain ⟨k, hklen, hgot'⟩ := List.mem_iff_getElem.mp hQi'
+  have hj : j < (DensePolySquarefree.sqfDecomp (rtResultant b d)).length := by
+    simpa using hjlen
+  have hk : k < (DensePolySquarefree.sqfDecomp (rtResultant b d)).length := by
+    simpa using hklen
+  have hQi_eq : Qi = ((DensePolySquarefree.sqfDecomp (rtResultant b d))[j], j) := by
+    rw [← hgot, List.getElem_zipIdx]; simp
+  have hQi'_eq : Qi' = ((DensePolySquarefree.sqfDecomp (rtResultant b d))[k], k) := by
+    rw [← hgot', List.getElem_zipIdx]; simp
+  subst hQi_eq
+  subst hQi'_eq
+  dsimp only at hf1 hf2
+  by_cases hsz1 : ((DensePolySquarefree.sqfDecomp (rtResultant b d))[j]).size ≤ 1
+  · rw [if_pos hsz1] at hf1
+    simp at hf1
+  by_cases hsz2 : ((DensePolySquarefree.sqfDecomp (rtResultant b d))[k]).size ≤ 1
+  · rw [if_pos hsz2] at hf2
+    simp at hf2
+  rw [if_neg hsz1, Option.some_inj] at hf1
+  rw [if_neg hsz2, Option.some_inj] at hf2
+  rcases eq_or_ne j k with rfl | hne
+  · rw [← hf1, ← hf2]
+  · rw [← hf1] at hr1
+    rw [← hf2] at hr2
+    exact absurd (sqfDecomp_no_common_root hrt hj hk hne hr1 hr2) not_false
+
+/-- The `j`-th nonconstant decomposition factor yields a produced pair. -/
+theorem mem_lrtLogTerms_of_index {b d : DensePoly R} {j : ℕ}
+    (hj : j < (DensePolySquarefree.sqfDecomp (rtResultant b d)).length)
+    (hsz : ¬ ((DensePolySquarefree.sqfDecomp (rtResultant b d))[j]).size ≤ 1) :
+    ((DensePolySquarefree.sqfDecomp (rtResultant b d))[j],
+      if j + 2 = d.size then liftX d
+      else match (DensePolyPRS.prs (liftX d)
+          (liftX b - zC * liftX (d′))).find? (fun S => S.size = j + 2) with
+        | some S => S
+        | none => liftX d) ∈ lrtLogTerms b d := by
+  rw [lrtLogTerms, List.mem_filterMap]
+  refine ⟨((DensePolySquarefree.sqfDecomp (rtResultant b d))[j], j), ?_, ?_⟩
+  · have hlen : j < (DensePolySquarefree.sqfDecomp (rtResultant b d)).zipIdx.length := by
+      simpa using hj
+    have hget : (DensePolySquarefree.sqfDecomp (rtResultant b d)).zipIdx[j]
+        = ((DensePolySquarefree.sqfDecomp (rtResultant b d))[j], j) := by
+      rw [List.getElem_zipIdx]
+      simp
+    rw [← hget]
+    exact List.getElem_mem hlen
+  · dsimp only
+    rw [if_neg hsz]
+
 end DensePoly
 
 end DeepWiki.CAlgebra

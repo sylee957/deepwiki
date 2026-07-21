@@ -1,5 +1,6 @@
 import Mathlib.Algebra.GCDMonoid.Basic
 import Mathlib.Algebra.BigOperators.Group.List.Basic
+import Mathlib.Algebra.BigOperators.Group.List.Lemmas
 
 /-! # List product divisibility
 
@@ -7,6 +8,26 @@ Coprimality and divisibility lemmas for finite products over lists.
 -/
 
 namespace DeepWiki
+
+/-- Two entries at distinct positions divide the list product. -/
+theorem getElem_mul_getElem_dvd_prod {M : Type*} [CommMonoid M] :
+    ∀ (l : List M) (j k : ℕ), ∀ (hj : j < l.length) (hk : k < l.length), j ≠ k →
+      l[j] * l[k] ∣ l.prod := by
+  intro l
+  induction l with
+  | nil => intro j k hj; simp at hj
+  | cons a t ih =>
+      intro j k hj hk hne
+      rcases j with _ | j <;> rcases k with _ | k
+      · omega
+      · simp only [List.getElem_cons_zero, List.getElem_cons_succ, List.prod_cons]
+        exact mul_dvd_mul_left a (List.dvd_prod (List.getElem_mem _))
+      · simp only [List.getElem_cons_zero, List.getElem_cons_succ, List.prod_cons]
+        rw [mul_comm]
+        exact mul_dvd_mul_left a (List.dvd_prod (List.getElem_mem _))
+      · simp only [List.getElem_cons_succ, List.prod_cons]
+        exact Dvd.dvd.mul_left
+          (ih j k (by simpa using hj) (by simpa using hk) (by omega)) a
 
 /-- If `x` is coprime to every list entry, then `x` is coprime to the list product. -/
 theorem isRelPrime_list_prod_right {α : Type*} [CommMonoidWithZero α] [GCDMonoid α]

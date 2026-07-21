@@ -127,14 +127,6 @@ private theorem rootMultiplicity_powProdP {L : List (Polynomial R)}
           ih hsfT hj' hTj (n + 1) (by omega)]
         omega
 
-/-- Two `GCDMonoid` structures give similar gcds (both are greatest common divisors). -/
-private theorem isSimilar_gcd_of_gcd (i₁ i₂ : GCDMonoid (Polynomial R))
-    (x y : Polynomial R) :
-    DeepWiki.SymbolicIntegration.IsSimilar (@gcd _ _ i₁ x y) (@gcd _ _ i₂ x y) :=
-  DeepWiki.SymbolicIntegration.IsSimilar.of_associated (associated_of_dvd_dvd
-    (@dvd_gcd _ _ i₂ _ _ _ (@gcd_dvd_left _ _ i₁ x y) (@gcd_dvd_right _ _ i₁ x y))
-    (@dvd_gcd _ _ i₁ _ _ _ (@gcd_dvd_left _ _ i₂ x y) (@gcd_dvd_right _ _ i₂ x y)))
-
 private theorem rootMultiplicity_eq_of_associated {p q : Polynomial R}
     (h : Associated p q) (hp : p ≠ 0) (a : R) :
     p.rootMultiplicity a = q.rootMultiplicity a := by

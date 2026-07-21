@@ -1,3 +1,4 @@
+import DeepWiki.Algebra.ListProducts
 import DeepWiki.CAlgebra.Squarefree.Musser
 import DeepWiki.CAlgebra.Squarefree.Yun
 
@@ -46,5 +47,28 @@ instance (priority := 100) yunDensePolySquarefree [CharZero R] : DensePolySquare
   squarefree_of_mem := squarefree_of_mem_sqfDecompYun
   associated_powProd hp := (sqfDecompYun_spec hp).1
   associated_prod hp := (sqfDecompYun_spec hp).2
+
+/-- Distinct squarefree-decomposition factors share no root: the plain factor product is
+squarefree. -/
+theorem sqfDecomp_no_common_root [CharZero R] [DensePolySquarefree R] {p : DensePoly R}
+    (hp : p ≠ 0) {j k : ℕ}
+    (hj : j < (DensePolySquarefree.sqfDecomp p).length)
+    (hk : k < (DensePolySquarefree.sqfDecomp p).length) (hne : j ≠ k) {α : R}
+    (hrj : (toPolynomial (DensePolySquarefree.sqfDecomp p)[j]).IsRoot α)
+    (hrk : (toPolynomial (DensePolySquarefree.sqfDecomp p)[k]).IsRoot α) : False := by
+  set L := DensePolySquarefree.sqfDecomp p with hL
+  have hsf : Squarefree (toPolynomial L.prod) :=
+    squarefree_toPolynomial_iff.mpr
+      (squarefree_of_associated (DensePolySquarefree.associated_prod hp)
+        (squarefree_sqfreePart hp))
+  have hdvd : toPolynomial L[j] * toPolynomial L[k] ∣ toPolynomial L.prod := by
+    rw [← toPolynomial_mul]
+    exact map_dvd (equiv (R := R) : DensePoly R →+* Polynomial R)
+      (DeepWiki.getElem_mul_getElem_dvd_prod L j k hj hk hne)
+  have hsq : (Polynomial.X - Polynomial.C α) * (Polynomial.X - Polynomial.C α)
+      ∣ toPolynomial L.prod :=
+    dvd_trans (mul_dvd_mul (Polynomial.dvd_iff_isRoot.mpr hrj)
+      (Polynomial.dvd_iff_isRoot.mpr hrk)) hdvd
+  exact Polynomial.not_isUnit_X_sub_C α (hsf _ hsq)
 
 end DeepWiki.CAlgebra
