@@ -126,6 +126,16 @@ namespace DensePoly
   apply toPolynomial_injective
   simp only [toPolynomial_deriv, toPolynomial_one, Polynomial.derivative_one, toPolynomial_zero]
 
+/-- Constants have zero derivative. -/
+@[simp] theorem deriv_C (a : R) : (C a : DensePoly R)′ = 0 := by
+  apply toPolynomial_injective
+  simp only [toPolynomial_deriv, toPolynomial_C, Polynomial.derivative_C, toPolynomial_zero]
+
+/-- The variable has derivative `1`. -/
+@[simp] theorem deriv_X : (ofList [0, 1] : DensePoly R)′ = 1 := by
+  apply toPolynomial_injective
+  simp only [toPolynomial_deriv, toPolynomial_X, Polynomial.derivative_X, toPolynomial_one]
+
 /-- Constant multiples pass through the derivative. -/
 theorem deriv_C_mul (a : R) (p : DensePoly R) : (C a * p)′ = C a * p′ := by
   apply toPolynomial_injective

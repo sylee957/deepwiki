@@ -11,7 +11,7 @@ so the coefficient function determines the polynomial (`ext_coeff`) and the brid
 
 namespace DeepWiki.CAlgebra
 
-universe u
+universe u v w
 
 variable {R : Type u} [Zero R] [DecidableEq R]
 
@@ -173,6 +173,20 @@ theorem leadingCoeff_ne_zero {p : DensePoly R} (hp : p.size ≠ 0) : leadingCoef
 @[simp] theorem leadingCoeff_zero : (0 : DensePoly R).leadingCoeff = 0 := by
   simp [leadingCoeff, coeff]
   rfl
+
+/-- Coefficient of a coefficient-mapped `ofList` rebuild, for zero-preserving maps. -/
+theorem coeff_ofList_map {S₁ : Type v} {S₂ : Type w} [Zero S₁] [DecidableEq S₁]
+    [Zero S₂] [DecidableEq S₂] (f : S₁ → S₂) (hf : f 0 = 0) (p : DensePoly S₁) (k : ℕ) :
+    (ofList (p.coeffs.map f)).coeff k = f (p.coeff k) := by
+  rw [coeff_ofList, List.getD_eq_getElem?_getD, List.getElem?_map]
+  by_cases hk : k < p.coeffs.length
+  · rw [List.getElem?_eq_getElem hk, Option.map_some, Option.getD_some]
+    congr 1
+    rw [DensePoly.coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hk,
+      Option.getD_some]
+  · rw [List.getElem?_eq_none (by omega)]
+    show (0 : S₂) = _
+    rw [coeff_eq_zero_of_size_le p (by show p.coeffs.length ≤ k; omega), hf]
 
 /-- If every coefficient from index `n` upward vanishes, the size is at most `n`. -/
 theorem size_le_of_coeff_zero {p : DensePoly R} {n : Nat} (h : ∀ j, n ≤ j → p.coeff j = 0) :

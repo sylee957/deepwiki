@@ -22,12 +22,6 @@ def polyIntegrate (p : DensePoly K) : DensePoly K :=
   ofList ((List.range (p.size + 1)).map fun k =>
     if k = 0 then 0 else p.coeff (k - 1) / ((k : ℕ) : K))
 
-omit [CharZero K] in
-/-- The derivative of a constant is zero. -/
-@[simp] theorem deriv_C (c : K) : (C c : DensePoly K)′ = 0 := by
-  apply toPolynomial_injective
-  simp only [toPolynomial_deriv, toPolynomial_C, Polynomial.derivative_C, toPolynomial_zero]
-
 /-- The kernel of the derivative is the constants (characteristic zero). -/
 theorem eq_C_of_deriv_eq_zero {q : DensePoly K} (h : q′ = 0) : q = C (q.coeff 0) := by
   have h0 : Polynomial.derivative (toPolynomial q) = 0 := by

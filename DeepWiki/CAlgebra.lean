@@ -16,6 +16,7 @@ import DeepWiki.CAlgebra.Frac.Field
 import DeepWiki.CAlgebra.Diff.Basic
 import DeepWiki.CAlgebra.Diff.RatFunc
 import DeepWiki.CAlgebra.Integrate
+import DeepWiki.CAlgebra.IntegrateRisch
 import DeepWiki.CAlgebra.Frontend
 import DeepWiki.CAlgebra.Test.Computable
 

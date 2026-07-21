@@ -126,20 +126,6 @@ private theorem C_zero' {S : Type v} [CommRing S] [DecidableEq S] :
     (C (0 : S) : DensePoly S) = 0 :=
   toPolynomial_injective (by rw [toPolynomial_C, Polynomial.C_0, toPolynomial_zero])
 
-/-- Coefficient of a coefficient-mapped `ofList` rebuild, for zero-preserving maps. -/
-private theorem coeff_ofList_map {S₁ : Type u} {S₂ : Type v} [CommRing S₁] [DecidableEq S₁]
-    [CommRing S₂] [DecidableEq S₂] (f : S₁ → S₂) (hf : f 0 = 0) (p : DensePoly S₁) (k : ℕ) :
-    (ofList (p.coeffs.map f)).coeff k = f (p.coeff k) := by
-  rw [coeff_ofList, List.getD_eq_getElem?_getD, List.getElem?_map]
-  by_cases hk : k < p.coeffs.length
-  · rw [List.getElem?_eq_getElem hk, Option.map_some, Option.getD_some]
-    congr 1
-    rw [DensePoly.coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hk,
-      Option.getD_some]
-  · rw [List.getElem?_eq_none (by omega)]
-    show (0 : S₂) = _
-    rw [coeff_eq_zero_of_size_le p (by show p.coeffs.length ≤ k; omega), hf]
-
 /-- The deformation's first resultant argument reads as the scalar-mapped `Q`. -/
 theorem map_tRead_toPolynomial_CC (Q : DensePoly R) :
     (toPolynomial (ofList (Q.coeffs.map fun r => C (C r)) :
