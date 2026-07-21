@@ -44,6 +44,19 @@ theorem integrateAst_sound [IsAlgClosed R] (e : Expr R) :
   rw [integrateAst, ResultRatIntegral.toExpr_deriv]
   exact integrateExpr_sound e
 
+/-- **Completeness of the frontend, record form**: every expression has an integration
+result — a record whose derivative is its denotation. -/
+theorem integrateExpr_complete [IsAlgClosed R] (e : Expr R) :
+    ∃ res : ResultRatIntegral R, res.deriv = e.eval :=
+  ⟨integrateExpr e, integrateExpr_sound e⟩
+
+open scoped Differential FormalDiff in
+/-- **Completeness of the frontend, syntax form**: every expression has an antiderivative
+expression whose formal derivative is its denotation. -/
+theorem integrateAst_complete [IsAlgClosed R] (e : Expr R) :
+    ∃ I : IntegralExpr R, I.deriv = e.eval :=
+  ⟨integrateAst e, integrateAst_sound e⟩
+
 end Expr
 
 end DeepWiki.CAlgebra
