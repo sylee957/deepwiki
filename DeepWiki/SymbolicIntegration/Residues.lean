@@ -1,4 +1,4 @@
-import DeepWiki.ComputableAlgebra.PolySubresultantSpec
+import DeepWiki.Algebra.SubresultantSpec
 import Mathlib.LinearAlgebra.Lagrange
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.FieldTheory.IsAlgClosed.Basic

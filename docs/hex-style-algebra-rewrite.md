@@ -591,6 +591,61 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `resultantPRSEuclidean` / `resultantPRSPrimitive` (future slot:
     `resultantPRSSubresultant`), bivariate sequence `prsPrimitive` (was `primPRS`),
     instances `euclideanDensePolyResultant` / `primitiveDensePolyResultant`.
+  - **6c-res-4 (2026-07-21, IN REVIEW — uncommitted): subresultant exactness arc opened;
+    state-threaded descent; theory MIGRATED from the old engine.**
+    (1) `resultantDescent` generalized to thread a state `σ` (pads pass it, mod steps update
+    it; `PUnit` for the stateless cleans). (2) The equivalence refactored into the
+    **invariant-carrying core** `resultantDescent_eq_of_invariant`: the reconstruction
+    identity is required only at states satisfying an invariant `I` (entry + swap-closure +
+    step-preservation), only for the pseudo-remainders actually cleaned — the KEY
+    architectural fact being that unchecked β-divisions are exact only at REACHABLE states,
+    so an unconditional `hclean` is impossible for Collins–Brown; the unconditional
+    `resultantDescent_eq` is now the `I := True` corollary. (3) `cleanSubresultant`
+    UNCHECKED (per user directive — no runtime check), with
+    `resultantPRSSubresultant_eq_of_invariant` as the hypothesis-carrying intermediate;
+    the dispatch instance is DEREGISTERED until the invariant is discharged.
+    (4) **Old-engine theory retired into `DeepWiki/Algebra/`** (git mv, imports rewired
+    incl. 5 per-paper Sources catalogs; namespaces kept to avoid mass renames):
+    `SubresultantSpec.lean` (912L, determinantal `subresultant` on `R[X]`),
+    `PseudoDivision.lean` (315L), `SubresultantPRS/{Telescope,Remainder,ClosedForms}.lean`
+    (671L — incl. the EXACT-constant `subresultant_eq_pseudoRem` and the normal-chain
+    closed form `subresultant_prs_normal_eq`).
+    NEXT (Phase C, the discharge): define the concrete chain invariant (valid-history
+    formulation), prove hclean/hstep/hswap from the ClosedForms for NORMAL chains
+    (`subresultant_prs_normal_eq`), then the defective case via the collapse lemmas
+    (`beta_fold`, `lc_collapse_defective`) — the part the old engine left as its "LRT
+    grounding" frontier; then re-register the instance (bench had it at 496ms, between
+    primitive 153ms and Euclidean 49.4s). PHASE C OPENED same sitting: ★ the Ducos-β recipe
+    (mirrored from the old engine) is WRONG at the first step (β₁ must be ±1, not lc² — the
+    deleted runtime check had been silently absorbing exactly this; the old engine never hit
+    it because its PRS was used only up-to-similarity for gcd/log-arguments). Replaced by
+    the **reduced PRS** (Collins '67 — whose Sources catalog we already hold): state =
+    pending divisor α (initially 1), next state lc(f)^{δ+1} — no special cases, and
+    `subresultant_prs_normal_eq` is stated in EXACTLY this normalization. New:
+    `cleanReduced`/`resultantPRSReduced` (unchecked) +
+    `resultantPRSReduced_eq_of_invariant`, and **brick one of the discharge PROVEN**:
+    `subresultant_eq_pseudoMod` — the first pseudo-remainder is `(−1)^{δ+1}` times the
+    determinantal subresultant `S_{deg g − 1}(tf, tg)`, by instantiating the migrated
+    `subresultant_eq_pseudoRem` at the bridged pseudo-division identity
+    (`pseudo_identity`/`pseudoDiv_natDegree_le` un-privatized as cross-file bridges).
+    REMAINING for the discharge: the inductive telescope (step ℓ's prem = αₗ·subresultant of
+    the ORIGINAL pair, via Telescope/ClosedForms), packaged as the concrete invariant.
+  - **6c-res-5 (2026-07-21, IN REVIEW — uncommitted): papers verified; OLD ENGINE FIXED;
+    cross-engine integration.** OCR-read Brown–Traub 1971 (in `references/`, catalog
+    Doi_10_1145_321662_321665): (33)/(35) confirm `cleanReduced` = Collins' reduced PRS
+    verbatim; Lemma 1 (15) confirms brick one; §7 (38)–(41) give the TRUE subresultant-PRS
+    recipe — β first-step `(−1)^{δ+1}`, later `−lc(left)·ψ^δ` with UN-updated ψ; ψ-update
+    `(−lc right)^δ/ψ^{δ−1}` with the RIGHT element's lc. The old engine's recipe (update-
+    first, left-lc) was WRONG — fixed `Compute/Subresultant.lean`'s `subresPRS.go` +
+    the `goPsi'`/`goBeta`/`goStep` mirrors in `SubresultantCorrectness.lean` (state 4-tuple's
+    ℕ slot repurposed as the first-step flag — zero type churn; conditional chain theorems
+    survive verbatim since exactness was always hypothesis-carried). Bronstein-catalog
+    worked examples re-verified by native_decide under the corrected recipe (degree
+    profiles/filters unchanged). ★ INTEGRATION: the new engine reproduces Bronstein Ex 2.4.1
+    EXACTLY — `rtResultant = 45796·(4t²+1)³` coefficient-for-coefficient and
+    `lrtLogTerms` factor `= 4t²+1` — now pinned as native_decide theorems IN THE CATALOG
+    (`rtResultant_ex241_hex_engine`, `lrtLogTerms_ex241_hex_engine`), the first cross-engine
+    agreement facts.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

@@ -1,4 +1,4 @@
-import DeepWiki.ComputableAlgebra.PolySubresultantSpec
+import DeepWiki.Algebra.SubresultantSpec
 import Sources.Doi_10_1007_b102438.Source
 
 /-! # Geddes–Czapor–Labahn §7.3 — subresultants and the PRS theorem (catalog)

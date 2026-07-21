@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.SubresultantPRS.Remainder
+import DeepWiki.Algebra.SubresultantPRS.Remainder
 
 /-! # Subresultant PRS closed forms
 

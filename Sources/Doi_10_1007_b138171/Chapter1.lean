@@ -1,8 +1,8 @@
 import DeepWiki.Algebra.GcdBasics
 import DeepWiki.Algebra.ResultantRoots
-import DeepWiki.SymbolicIntegration.PseudoDivision
-import DeepWiki.ComputableAlgebra.PolySubresultantSpec
-import DeepWiki.SymbolicIntegration.SubresultantPRS
+import DeepWiki.Algebra.PseudoDivision
+import DeepWiki.Algebra.SubresultantSpec
+import DeepWiki.Algebra.SubresultantPRS
 import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import Mathlib.Data.ZMod.Basic

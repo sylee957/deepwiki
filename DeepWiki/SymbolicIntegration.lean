@@ -20,7 +20,7 @@ import DeepWiki.SymbolicIntegration.LiouvilleStructure
 import DeepWiki.SymbolicIntegration.LrtMonicLogs
 import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.PartialFraction
-import DeepWiki.SymbolicIntegration.PseudoDivision
+import DeepWiki.Algebra.PseudoDivision
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.RationalIntegration
@@ -45,8 +45,8 @@ import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SpecialNormalCoprime
 import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
-import DeepWiki.SymbolicIntegration.SubresultantPRS
-import DeepWiki.ComputableAlgebra.PolySubresultantSpec
+import DeepWiki.Algebra.SubresultantPRS
+import DeepWiki.Algebra.SubresultantSpec
 
 -- ## Concrete `Compute` layer + generic executable `Engine`
 import DeepWiki.SymbolicIntegration.Compute

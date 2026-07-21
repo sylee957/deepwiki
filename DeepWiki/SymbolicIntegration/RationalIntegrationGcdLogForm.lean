@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
-import DeepWiki.SymbolicIntegration.PseudoDivision
+import DeepWiki.Algebra.PseudoDivision
 
 /-! # Gcd log-form for rational integrals
 For split squarefree `D = ∏_{α∈s}(X−α)`, the gcd `gcd(D, A − a·D')` equals the Rothstein-Trager

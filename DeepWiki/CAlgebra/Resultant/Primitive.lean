@@ -89,8 +89,8 @@ theorem polyPrimitive_size_le (r : DensePoly S) : (polyPrimitive r).size ≤ r.s
 /-- **Resultant by the primitive pseudo-remainder sequence**: the content-stripping
 instantiation of the descent — coefficients stay small along the way. -/
 def resultantPRSPrimitive (f g : DensePoly S) : S :=
-  resultantDescent (fun r => (polyContent r, polyPrimitive r))
-    (fun r => polyPrimitive_size_le r) f g (f.size - 1) (g.size - 1)
+  resultantDescent (σ := PUnit.{1}) (fun _ _ _ r => (polyContent r, polyPrimitive r, PUnit.unit))
+    (fun _ _ _ r => polyPrimitive_size_le r) PUnit.unit f g (f.size - 1) (g.size - 1)
 
 /-- The primitive-PRS resultant agrees with the Sylvester-determinant resultant at the
 canonical degrees — hypothesis-free. -/
@@ -99,8 +99,10 @@ theorem resultantPRSPrimitive_eq (f g : DensePoly S) :
       (toPolynomial f).natDegree (toPolynomial g).natDegree := by
   rw [resultantPRSPrimitive, natDegree_toPolynomial_eq_size_sub_one,
     natDegree_toPolynomial_eq_size_sub_one]
-  exact resultantDescent_eq (fun r => (polyContent r, polyPrimitive r))
-    (fun r => polyPrimitive_size_le r) (fun r => C_polyContent_mul_polyPrimitive r) f g _ _
+  exact resultantDescent_eq (σ := PUnit.{1})
+    (fun _ _ _ r => (polyContent r, polyPrimitive r, PUnit.unit))
+    (fun _ _ _ r => polyPrimitive_size_le r)
+    (fun _ _ _ r => C_polyContent_mul_polyPrimitive r) PUnit.unit f g _ _
     (le_of_eq (natDegree_toPolynomial_eq_size_sub_one f))
     (le_of_eq (natDegree_toPolynomial_eq_size_sub_one g))
 

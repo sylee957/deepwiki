@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCorrect
-import DeepWiki.SymbolicIntegration.SubresultantPRS
+import DeepWiki.Algebra.SubresultantPRS
 
 /-! # One computable pseudo-remainder subresultant step
 

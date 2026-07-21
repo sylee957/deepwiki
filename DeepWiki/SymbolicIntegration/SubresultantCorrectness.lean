@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.SubresultantCorrectness.FilterPrimitive
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.LrtOperands
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.PseudoRemainderStep
 import DeepWiki.SymbolicIntegration.Engine.PrimPRSRegular.Degree
-import DeepWiki.SymbolicIntegration.SubresultantPRS
+import DeepWiki.Algebra.SubresultantPRS
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.Algebra.Polynomial.SpecificDegree
 
@@ -248,23 +248,26 @@ example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ) (p : 
 Mirrors the internal `subresPRS.go` recurrence as a top-level state machine `goState`, so the abstract
 chain data `G`/`bt`/`s`/`c` and its side-conditions can be supplied from the real `subresPRS fuel P Q`. -/
 
-/-- ψ-accumulator update of one `subresPRS.go` step: `ψ' = (−lc Ri₋₁)^δ / ψ^(δ−1)` (`ψ' = ψ` when `δ = 0`). -/
-def goPsi' (Ri_1 : GBPolyCore ℚ) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
-  if dp = 0 then psi else CPolyEuclidean.div (DensePoly.cpow (cneg (GBPolyCore.gblcCore Ri_1)) dp)
-    (DensePoly.cpow psi (dp - 1))
+/-- ψ-update of one `subresPRS.go` step (Brown–Traub (41)): `ψ' = (−lc Ri)^δ / ψ^(δ−1)`
+with the **right** element's leading coefficient (`ψ' = ψ` when `δ = 0`). -/
+def goPsi' (Ri : GBPolyCore ℚ) (psi : DensePoly ℚ) (δ : ℕ) : DensePoly ℚ :=
+  if δ = 0 then psi else CPolyEuclidean.div (DensePoly.cpow (cneg (GBPolyCore.gblcCore Ri)) δ)
+    (DensePoly.cpow psi (δ - 1))
 
-/-- β-divisor of one `subresPRS.go` step: `β = −lc(Ri₋₁) · ψ'^δ` with `ψ'` from `goPsi'`. -/
-def goBeta (Ri_1 : GBPolyCore ℚ) (psi : DensePoly ℚ) (dp : ℕ) : DensePoly ℚ :=
-  cmul (cneg (GBPolyCore.gblcCore Ri_1)) (DensePoly.cpow (goPsi' Ri_1 psi dp) dp)
+/-- β-divisor of one `subresPRS.go` step (Brown–Traub (38)/(39)): `(−1)^{δ+1}` on the first
+step, else `−lc(Ri₋₁)·ψ^δ` with the **un-updated** `ψ`. -/
+def goBeta (Ri_1 : GBPolyCore ℚ) (psi : DensePoly ℚ) (δ first : ℕ) : DensePoly ℚ :=
+  if first = 1 then DensePoly.cpow (cneg (cnorm [1])) (δ + 1)
+  else cmul (cneg (GBPolyCore.gblcCore Ri_1)) (DensePoly.cpow psi δ)
 
-/-- One `subresPRS.go` step on the state `(Ri₋₁, Ri, ψ, δ) ↦ (Ri, Ri₊₁, ψ', δ')` with
-`Ri₊₁ = bdivC (prem Ri₋₁ Ri) β`, `ψ' = goPsi'`, `β = goBeta`, `δ' = DensePoly.cdeg Ri − DensePoly.cdeg Ri₊₁`. -/
+/-- One `subresPRS.go` step on the state `(Ri₋₁, Ri, ψ, first) ↦ (Ri, Ri₊₁, ψ', 0)` with
+`δ = cdeg Ri₋₁ − cdeg Ri`, `Ri₊₁ = bdivC (prem Ri₋₁ Ri) β`, `β = goBeta`, `ψ' = goPsi'`. -/
 def goStep (fuel : ℕ) : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ → GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ
-  | (Ri_1, Ri, psi, dp) =>
-    let psi' := goPsi' Ri_1 psi dp
-    let beta := goBeta Ri_1 psi dp
+  | (Ri_1, Ri, psi, first) =>
+    let δ := DensePoly.cdeg Ri_1 - DensePoly.cdeg Ri
+    let beta := goBeta Ri_1 psi δ first
     let Ri1 := bdivC (GBPolyCore.gbpsremainderCore fuel Ri_1 Ri) beta
-    (Ri, Ri1, psi', DensePoly.cdeg Ri - DensePoly.cdeg Ri1)
+    (Ri, Ri1, goPsi' Ri psi δ, 0)
 
 /-- The `subresPRS.go` state at index `i`: `goState fuel s₀ i = goStepⁱ s₀`. -/
 def goState (fuel : ℕ) (s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) : ℕ → GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ
@@ -289,7 +292,9 @@ theorem goState_succ_fst (fuel : ℕ) (s0 : GBPolyCore ℚ × GBPolyCore ℚ × 
 theorem goState_fst_add_two (fuel : ℕ) (s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ) (l : ℕ) :
     (goState fuel s0 (l + 2)).1
       = bdivC (GBPolyCore.gbpsremainderCore fuel (goState fuel s0 l).1 (goState fuel s0 (l + 1)).1)
-          (goBeta (goState fuel s0 l).1 (goState fuel s0 l).2.2.1 (goState fuel s0 l).2.2.2) := by
+          (goBeta (goState fuel s0 l).1 (goState fuel s0 l).2.2.1
+            (DensePoly.cdeg (goState fuel s0 l).1 - DensePoly.cdeg (goState fuel s0 l).2.1)
+            (goState fuel s0 l).2.2.2) := by
   rw [goState_succ_fst fuel s0 (l + 1)]
   show (goStep fuel (goState fuel s0 l)).2.1 = _
   rw [goStep]
@@ -328,14 +333,14 @@ theorem go_getD (fuel : ℕ) (s : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly 
 /-- The `i`-th element of `subresPRS fuel P Q` is `(goState fuel (P,Q,[-1],…) i).1`, while the chain stays
 nonzero through `i−1` and `i ≤ fuel`. -/
 theorem subresPRS_getD (fuel : ℕ) (P Q : GBPolyCore ℚ) (i : ℕ) (hfo : i ≤ fuel)
-    (hnz : ∀ k < i, ¬ DensePoly.cisZero (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) k).2.1 = true) :
-    (subresPRS fuel P Q).getD i [] = (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) i).1 := by
+    (hnz : ∀ k < i, ¬ DensePoly.cisZero (goState fuel (P, Q, [-1], 1) k).2.1 = true) :
+    (subresPRS fuel P Q).getD i [] = (goState fuel (P, Q, [-1], 1) i).1 := by
   rw [subresPRS.eq_def]
   cases i with
   | zero => rfl
   | succ n =>
     rw [List.getD_cons_succ]
-    have h := go_getD fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) n fuel (by omega)
+    have h := go_getD fuel (P, Q, [-1], 1) n fuel (by omega)
       (fun k hk => hnz k (by omega))
     simp only at h
     rw [h, goState_succ_fst]
@@ -407,11 +412,11 @@ theorem filter_range_unique {n N : ℕ} (q : ℕ → Bool) (hN : N < n) (hqN : q
 /-- When the chain `G i := (goState fuel (P,Q,[-1],…) i).1` is nonzero through `N`, zero at `N+1`, and
 `N+1 < fuel`, `subresPRS fuel P Q = (List.range (N+1)).map G`. -/
 theorem subresPRS_eq_range (fuel : ℕ) (P Q : GBPolyCore ℚ) (N : ℕ) (hfo : N + 1 < fuel)
-    (hnz : ∀ i ≤ N, ¬ DensePoly.cisZero (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) i).1 = true)
-    (hzN : DensePoly.cisZero (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) (N + 1)).1 = true) :
+    (hnz : ∀ i ≤ N, ¬ DensePoly.cisZero (goState fuel (P, Q, [-1], 1) i).1 = true)
+    (hzN : DensePoly.cisZero (goState fuel (P, Q, [-1], 1) (N + 1)).1 = true) :
     subresPRS fuel P Q
-      = (List.range (N + 1)).map (fun i => (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) i).1) := by
-  set s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ := (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) with hs0
+      = (List.range (N + 1)).map (fun i => (goState fuel (P, Q, [-1], 1) i).1) := by
+  set s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ := (P, Q, [-1], 1) with hs0
   rw [subresPRS.eq_def]
   cases N with
   | zero =>
@@ -452,15 +457,15 @@ theorem unique_of_strictAnti (f : ℕ → ℕ) (N : ℕ) (hstrict : ∀ i < N, f
 /-- The degree-`DensePoly.cdeg (G N)` nonzero filter of `subresPRS fuel P Q` is `[G N]`, under nonzero-through-`N`,
 zero-at-`N+1`, strict `DensePoly.cdeg` decrease, and `N+1 < fuel`. -/
 theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : GBPolyCore ℚ) (N : ℕ) (hfo : N + 1 < fuel)
-    (hnz : ∀ i ≤ N, ¬ DensePoly.cisZero (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) i).1 = true)
-    (hzN : DensePoly.cisZero (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) (N + 1)).1 = true)
-    (hstrict : ∀ i < N, DensePoly.cdeg (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) (i + 1)).1
-        < DensePoly.cdeg (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) i).1) :
+    (hnz : ∀ i ≤ N, ¬ DensePoly.cisZero (goState fuel (P, Q, [-1], 1) i).1 = true)
+    (hzN : DensePoly.cisZero (goState fuel (P, Q, [-1], 1) (N + 1)).1 = true)
+    (hstrict : ∀ i < N, DensePoly.cdeg (goState fuel (P, Q, [-1], 1) (i + 1)).1
+        < DensePoly.cdeg (goState fuel (P, Q, [-1], 1) i).1) :
     (subresPRS fuel P Q).filter
-        (fun R => decide (DensePoly.cdeg R = DensePoly.cdeg (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) N).1
+        (fun R => decide (DensePoly.cdeg R = DensePoly.cdeg (goState fuel (P, Q, [-1], 1) N).1
           ∧ ¬ DensePoly.cisZero R))
-      = [(goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) N).1] := by
-  set s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ := (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) with hs0
+      = [(goState fuel (P, Q, [-1], 1) N).1] := by
+  set s0 : GBPolyCore ℚ × GBPolyCore ℚ × DensePoly ℚ × ℕ := (P, Q, [-1], 1) with hs0
   set G := fun i => (goState fuel s0 i).1 with hG
   rw [subresPRS_eq_range fuel P Q N hfo hnz hzN, List.filter_map]
   have hfilt : (List.range (N + 1)).filter
@@ -478,13 +483,15 @@ theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : GBPolyCore ℚ) (N : ℕ)
 
 /-- The concrete `subresPRS` chain element `chain fuel P Q i := (goState fuel (P,Q,[-1],…) i).1`. -/
 noncomputable def chain (fuel : ℕ) (P Q : GBPolyCore ℚ) (i : ℕ) : GBPolyCore ℚ :=
-  (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) i).1
+  (goState fuel (P, Q, [-1], 1) i).1
 
 /-- The concrete `subresPRS` β-divisor `chainBt fuel P Q l := goBeta …` at the `l`-th state. -/
 noncomputable def chainBt (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) : DensePoly ℚ :=
-  goBeta (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) l).1
-    (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) l).2.2.1
-    (goState fuel (P, Q, [-1], DensePoly.cdeg P - DensePoly.cdeg Q) l).2.2.2
+  goBeta (goState fuel (P, Q, [-1], 1) l).1
+    (goState fuel (P, Q, [-1], 1) l).2.2.1
+    (DensePoly.cdeg (goState fuel (P, Q, [-1], 1) l).1
+      - DensePoly.cdeg (goState fuel (P, Q, [-1], 1) l).2.1)
+    (goState fuel (P, Q, [-1], 1) l).2.2.2
 
 /-- The concrete pseudo-division quotient `chainS fuel P Q l` for the chain pair `(chain l, chain (l+1))`. -/
 noncomputable def chainS (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) : GBPolyCore ℚ :=

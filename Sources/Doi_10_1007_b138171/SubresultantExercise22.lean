@@ -34,7 +34,7 @@ and `native_decide` on `DensePoly.cdeg (chain … 9)`. -/
 theorem natDegree_toBPoly_chainG9_ex22 :
     (DensePoly.toPoly (chain 60 hP hQ 9)).natDegree = 1 := by
   rw [← DensePoly.cdegG_eq_natDegree]
-  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], DensePoly.cdeg hP - DensePoly.cdeg hQ) 9).1 = 1
+  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], 1) 9).1 = 1
   native_decide
 
 /-- `(toPoly cD22).natDegree = 10`: `D = x¹⁰−2x⁸−…` has degree 10 (via `DensePoly.cdegG_eq_natDegree`). -/
@@ -45,7 +45,7 @@ theorem natDegree_toPoly_cD22 : (toPoly cD22).natDegree = 10 := by
 theorem hd0_ex22 :
     (DensePoly.toPoly (chain 60 hP hQ 0)).natDegree = (toPoly cD22).natDegree := by
   rw [← DensePoly.cdegG_eq_natDegree, natDegree_toPoly_cD22]
-  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], DensePoly.cdeg hP - DensePoly.cdeg hQ) 0).1 = 10
+  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], 1) 0).1 = 10
   native_decide
 
 /-- **`hd1` for Ex 2.2**: `(DensePoly.toPoly (chain 60 hP hQ 1)).natDegree = (toPoly cD22).natDegree − 1`
@@ -53,7 +53,7 @@ theorem hd0_ex22 :
 theorem hd1_ex22 :
     (DensePoly.toPoly (chain 60 hP hQ 1)).natDegree = (toPoly cD22).natDegree - 1 := by
   rw [← DensePoly.cdegG_eq_natDegree, natDegree_toPoly_cD22]
-  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], DensePoly.cdeg hP - DensePoly.cdeg hQ) 1).1 = 10 - 1
+  show DensePoly.cdeg (goState 60 (hP, hQ, [-1], 1) 1).1 = 10 - 1
   native_decide
 
 /-- **Chain nonzero through index 9**: `chain 0 … chain 9` are all nonzero (degrees `10,…,1`). -/
@@ -130,7 +130,7 @@ theorem subresPRS_filter_singleton_ex22 :
       = [chain 60 hP hQ (7 + 2)] := by
   rw [natDegree_toBPoly_chainG9_ex22]
   show (subresPRS 60 hP hQ).filter (fun R => decide (DensePoly.cdeg R = 1 ∧ ¬ DensePoly.cisZero R))
-      = [(goState 60 (hP, hQ, [-1], DensePoly.cdeg hP - DensePoly.cdeg hQ) (7 + 2)).1]
+      = [(goState 60 (hP, hQ, [-1], 1) (7 + 2)).1]
   native_decide
 
 /-- **`hfilt` for Ex 2.2**: the degree-1 filter of `bsubresultantGcd 60 1 hP hQ` returns `chain 9`

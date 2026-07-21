@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.DividedStep
-import DeepWiki.SymbolicIntegration.SubresultantPRS
+import DeepWiki.Algebra.SubresultantPRS
 
 /-! # Subresultant PRS chain endpoint
 

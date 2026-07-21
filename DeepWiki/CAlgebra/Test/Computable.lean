@@ -120,6 +120,11 @@ private def lrtLogPartGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd
     [DensePolySquarefree R] :
     DenseFrac R → List (DensePoly R × DensePoly (DensePoly R)) := DensePoly.lrtLogPart
 
+/-- The reduced-PRS resultant computes (Collins' carried divisors, unchecked). -/
+private def resultantPRSReducedGuard [Field R] [DecidableEq R] :
+    DensePoly (DensePoly R) → DensePoly (DensePoly R) → DensePoly R :=
+  DensePoly.resultantPRSReduced
+
 /-- The primitive-PRS resultant computes (content-stripping descent). -/
 private def resultantPRSPrimitiveGuard [Field R] [DecidableEq R] :
     DensePoly (DensePoly R) → DensePoly (DensePoly R) → DensePoly R :=

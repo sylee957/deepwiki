@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.SubresultantPRS.Telescope
+import DeepWiki.Algebra.SubresultantPRS.Telescope
 
 /-! # Subresultant PRS endpoint remainders
 

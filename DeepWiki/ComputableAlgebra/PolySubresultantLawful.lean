@@ -1,7 +1,7 @@
 import DeepWiki.ComputableAlgebra.LinearAlgebraRatCorrect
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.PolySubresultant
-import DeepWiki.ComputableAlgebra.PolySubresultantSpec
+import DeepWiki.Algebra.SubresultantSpec
 
 /-! # `toPoly (CPolySubresultant.default …) = subresultant …` (L4b, the subresultant certification)
 

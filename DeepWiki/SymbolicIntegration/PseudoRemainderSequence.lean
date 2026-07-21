@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.PseudoDivision
-import DeepWiki.SymbolicIntegration.SubresultantPRS
+import DeepWiki.Algebra.PseudoDivision
+import DeepWiki.Algebra.SubresultantPRS
 
 /-! # The Euclidean pseudo-remainder sequence — a concrete `IsPRS`
 Constructs the Euclidean pseudo-remainder sequence `R₀ = A`, `R₁ = B`, `R_{i+2} = prem(Rᵢ, R_{i+1})`

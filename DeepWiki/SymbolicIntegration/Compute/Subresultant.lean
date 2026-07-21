@@ -52,28 +52,31 @@ divisions that strip the pseudo-remainder `lc`-power inflation, so the degree-`j
 subresultant. -/
 
 /-- Subresultant polynomial-remainder sequence `subresPRS fuel P Q = [R₁, R₂, …]` with `R₁ = P`,
-`R₂ = Q`; the degree-`j` element is the `j`-th subresultant up to sign. Fuel-bounded. -/
+`R₂ = Q`; the degree-`j` element is the `j`-th subresultant up to sign. Fuel-bounded.
+Brown–Traub (38)–(41): `β₃ = (−1)^{δ₁+1}` (first step), later `βᵢ = −lc(Rᵢ₋₂)·ψᵢ^{δᵢ₋₂}`
+with the **un-updated** `ψ`; then `ψᵢ₊₁ = (−lc Rᵢ₋₁)^{δᵢ₋₂}/ψᵢ^{δᵢ₋₂−1}` — the **right**
+element's leading coefficient at the current degree drop. -/
 def subresPRS (fuel : ℕ) (P Q : GBPolyCore ℚ) : List (GBPolyCore ℚ) :=
-  -- `go Ri_1 Ri psi delta_prev fuelOuter`: `delta_prev = δ` of the step that produced `Ri` from `Ri_1`.
+  -- `go Ri_1 Ri psi first`: `psi = ψᵢ`; `first = 1` marks the initial step (`β = (−1)^{δ+1}`).
   let rec go : ℕ → GBPolyCore ℚ → GBPolyCore ℚ → DensePoly ℚ → ℕ → List (GBPolyCore ℚ)
     | 0, _, _, _, _ => []
-    | fo + 1, Ri_1, Ri, psi, deltaPrev =>
+    | fo + 1, Ri_1, Ri, psi, first =>
       if DensePoly.cisZero Ri then []
       else
-        let lcRi_1 : DensePoly ℚ := GBPolyCore.gblcCore Ri_1
-        -- update ψ: ψ' = (−lc Ri_1)^δ / ψ^{δ−1}  (δ = deltaPrev ≥ 1)
-        let negLc : DensePoly ℚ := cneg lcRi_1
-        let psi' : DensePoly ℚ :=
-          if deltaPrev = 0 then psi
-          else CPolyEuclidean.div (DensePoly.cpow negLc deltaPrev)
-            (DensePoly.cpow psi (deltaPrev - 1))
-        -- β = −lc(Ri_1) · ψ'^δ
-        let beta : DensePoly ℚ := cmul negLc (DensePoly.cpow psi' deltaPrev)
+        let δ : ℕ := DensePoly.cdeg Ri_1 - DensePoly.cdeg Ri
+        -- β: the first step is `(−1)^{δ+1}`; later `−lc(Ri_1)·ψ^δ` (un-updated ψ)
+        let beta : DensePoly ℚ :=
+          if first = 1 then DensePoly.cpow (cneg (cnorm [1])) (δ + 1)
+          else cmul (cneg (GBPolyCore.gblcCore Ri_1)) (DensePoly.cpow psi δ)
         let pr : GBPolyCore ℚ := GBPolyCore.gbpsremainderCore fuel Ri_1 Ri
         let Ri1 : GBPolyCore ℚ := bdivC pr beta
-        let deltaNew : ℕ := DensePoly.cdeg Ri - DensePoly.cdeg Ri1
-        Ri :: go fo Ri Ri1 psi' deltaNew
-  P :: go fuel P Q [-1] (DensePoly.cdeg P - DensePoly.cdeg Q)
+        -- ψ for the next step: `(−lc Ri)^δ / ψ^{δ−1}` (`ψ` unchanged when `δ = 0`)
+        let psi' : DensePoly ℚ :=
+          if δ = 0 then psi
+          else CPolyEuclidean.div (DensePoly.cpow (cneg (GBPolyCore.gblcCore Ri)) δ)
+            (DensePoly.cpow psi (δ - 1))
+        Ri :: go fo Ri Ri1 psi' 0
+  P :: go fuel P Q [-1] 1
 
 /-- The subresultant at `x`-degree `j` `bsubresultantGcd fuel j P Q`: the element of `subresPRS`
 whose `x`-degree is `j` (the subresultant `Sⱼ` up to sign), or `[]` if none. -/

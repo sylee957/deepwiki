@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultantCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 import DeepWiki.ComputableAlgebra.PolyReprDivisionDegree
+import DeepWiki.CAlgebra.Integrate.LogPart
 
 /-! # Example 2.4.1 worked example (Bronstein §2.4, p.48): the honest ℚ[t] LRT closure
 
@@ -209,7 +210,7 @@ LRT index `j = m+2 = 3`). Via `DensePoly.cdegG_eq_natDegree` and `native_decide`
 theorem natDegree_toBPoly_chainG3_ex241 :
     (DensePoly.toPoly (chain 30 gP gQ 3)).natDegree = 3 := by
   rw [← DensePoly.cdegG_eq_natDegree]
-  show DensePoly.cdeg (goState 30 (gP, gQ, [-1], DensePoly.cdeg gP - DensePoly.cdeg gQ) 3).1 = 3
+  show DensePoly.cdeg (goState 30 (gP, gQ, [-1], 1) 3).1 = 3
   native_decide
 
 /-- `(toPoly cD241).natDegree = 6`: `D = x⁶−5x⁴+5x²+4` has degree 6 (via `DensePoly.cdegG_eq_natDegree`). -/
@@ -220,7 +221,7 @@ theorem natDegree_toPoly_cD241 : (toPoly cD241).natDegree = 6 := by
 theorem hd0_ex241 :
     (DensePoly.toPoly (chain 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree := by
   rw [← DensePoly.cdegG_eq_natDegree, natDegree_toPoly_cD241]
-  show DensePoly.cdeg (goState 30 (gP, gQ, [-1], DensePoly.cdeg gP - DensePoly.cdeg gQ) 0).1 = 6
+  show DensePoly.cdeg (goState 30 (gP, gQ, [-1], 1) 0).1 = 6
   native_decide
 
 /-- **`hd1` for Ex 2.4.1**: `(DensePoly.toPoly (chain 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree − 1`
@@ -228,7 +229,7 @@ theorem hd0_ex241 :
 theorem hd1_ex241 :
     (DensePoly.toPoly (chain 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree - 1 := by
   rw [← DensePoly.cdegG_eq_natDegree, natDegree_toPoly_cD241]
-  show DensePoly.cdeg (goState 30 (gP, gQ, [-1], DensePoly.cdeg gP - DensePoly.cdeg gQ) 1).1 = 6 - 1
+  show DensePoly.cdeg (goState 30 (gP, gQ, [-1], 1) 1).1 = 6 - 1
   native_decide
 
 /-- **Chain nonzero through index 3**: `chain 0 … chain 3` are all nonzero (degrees `6,5,4,3`). -/
@@ -307,7 +308,7 @@ theorem subresPRS_filter_singleton_ex241 :
       = [chain 30 gP gQ (1 + 2)] := by
   rw [natDegree_toBPoly_chainG3_ex241]
   show (subresPRS 30 gP gQ).filter (fun R => decide (DensePoly.cdeg R = 3 ∧ ¬ DensePoly.cisZero R))
-      = [(goState 30 (gP, gQ, [-1], DensePoly.cdeg gP - DensePoly.cdeg gQ) (1 + 2)).1]
+      = [(goState 30 (gP, gQ, [-1], 1) (1 + 2)).1]
   native_decide
 
 /-- **`hfilt` for Ex 2.4.1**: the degree-3 filter of `bsubresultantGcd 30 3 gP gQ` returns `chain 3`
@@ -875,5 +876,27 @@ example :
       ((Polynomial.mapRingHom φ241) (DensePoly.toPoly
         ([[0, -4], [-3], [0, 2], [1]] : GBPolyCore ℚ))) :=
   lrtGcdCompute_ex241_isSimilar_lrtSubresultant_closed
+
+/-! ### Example 2.4.1 through the hex-style engine (`DeepWiki/CAlgebra`) -/
+
+/-- **Example 2.4.1, the new engine's Rothstein–Trager resultant** (§2.4, p.48): the
+class-dispatched `rtResultant` (primitive-PRS backend) reproduces the book's
+`45796·(4t²+1)³` exactly — cross-engine agreement with `cResidueResultantTower` above. -/
+theorem rtResultant_ex241_hex_engine :
+    (DeepWiki.CAlgebra.DensePoly.rtResultant
+        (DeepWiki.CAlgebra.DensePoly.ofList ([6, 0, -3, 0, 1] : List ℚ))
+        (DeepWiki.CAlgebra.DensePoly.ofList ([4, 0, 5, 0, -5, 0, 1] : List ℚ))).coeffs
+      = [45796, 0, 549552, 0, 2198208, 0, 2930944] := by
+  native_decide
+
+/-- **Example 2.4.1, the new engine's LRT coefficient polynomial** (§2.4, p.48): the single
+log-term factor is the book's `R = 4t²+1` (at multiplicity 3), exactly. -/
+theorem lrtLogTerms_ex241_hex_engine :
+    (DeepWiki.CAlgebra.DensePoly.lrtLogTerms
+        (DeepWiki.CAlgebra.DensePoly.ofList ([6, 0, -3, 0, 1] : List ℚ))
+        (DeepWiki.CAlgebra.DensePoly.ofList ([4, 0, 5, 0, -5, 0, 1] : List ℚ))).map
+      (fun t => t.1.coeffs)
+      = [[1, 0, 4]] := by
+  native_decide
 
 end DeepWiki.SymbolicIntegration

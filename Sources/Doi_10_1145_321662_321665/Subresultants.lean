@@ -1,5 +1,5 @@
-import DeepWiki.ComputableAlgebra.PolySubresultantSpec
-import DeepWiki.SymbolicIntegration.SubresultantPRS
+import DeepWiki.Algebra.SubresultantSpec
+import DeepWiki.Algebra.SubresultantPRS
 import Sources.Doi_10_1145_321662_321665.Source
 
 /-! # Brown–Traub subresultant theory — catalog

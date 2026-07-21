@@ -1,5 +1,5 @@
-import DeepWiki.ComputableAlgebra.PolySubresultantSpec
-import DeepWiki.SymbolicIntegration.PseudoDivision
+import DeepWiki.Algebra.SubresultantSpec
+import DeepWiki.Algebra.PseudoDivision
 
 /-! # Subresultant PRS telescopes
 
