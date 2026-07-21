@@ -630,7 +630,7 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     (`pseudo_identity`/`pseudoDiv_natDegree_le` un-privatized as cross-file bridges).
     REMAINING for the discharge: the inductive telescope (step ℓ's prem = αₗ·subresultant of
     the ORIGINAL pair, via Telescope/ClosedForms), packaged as the concrete invariant.
-  - **6c-res-5 (2026-07-21, IN REVIEW — uncommitted): papers verified; OLD ENGINE FIXED;
+  - **6c-res-5 (2026-07-21, committed 51fdde82): papers verified; OLD ENGINE FIXED;
     cross-engine integration.** OCR-read Brown–Traub 1971 (in `references/`, catalog
     Doi_10_1145_321662_321665): (33)/(35) confirm `cleanReduced` = Collins' reduced PRS
     verbatim; Lemma 1 (15) confirms brick one; §7 (38)–(41) give the TRUE subresultant-PRS
@@ -646,7 +646,7 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     `lrtLogTerms` factor `= 4t²+1` — now pinned as native_decide theorems IN THE CATALOG
     (`rtResultant_ex241_hex_engine`, `lrtLogTerms_ex241_hex_engine`), the first cross-engine
     agreement facts.
-  - **6c-res-6 (2026-07-21, IN REVIEW — uncommitted): the exactness DISCHARGE — DONE.**
+  - **6c-res-6 (2026-07-21, committed 51fdde82): the exactness DISCHARGE — DONE.**
     `ReducedExact 1 f g` proven unconditionally (any computable Euclidean coefficient
     domain), axiom-clean; `resultantPRSReduced_eq` hypothesis-free; instance
     `reducedDensePolyResultant` registered at priority 250. ★ The proof is NOT the planned
@@ -661,7 +661,7 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     460ms ≪ Euclidean ~49s — 300/250/200 confirmed, dispatch unchanged, cross-agreement
     `decide`-checked. Plan doc `docs/subresultant-exactness-telescope.md` rewritten as the
     post-mortem. This closes the old engine's "LRT grounding" frontier.
-  - **6c-res-7 (2026-07-21, IN REVIEW — uncommitted): gcd re-expressed over the descent
+  - **6c-res-7 (2026-07-21, committed 66768543): gcd re-expressed over the descent
     engine.** The engine now has TWO projections over one `clean` policy: `resultantDescent`
     (constant ledger → resultant) and new `gcdDescent` (last nonzero element → gcd, no
     bound/scalar bookkeeping). `gcdSubAux` retired: the subresultant β-recipe is now the
@@ -676,12 +676,12 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     version still needs Brown '78 ψ-integrality, unchanged). Sanity: engine-projected gcd
     recovers d8 up to a unit; field subresultant resultant = primitive on d8/d8′. No
     instance registered for the field variant (primitive still dispatches).
-  - **6c-res-8 (2026-07-21, IN REVIEW — uncommitted): the sequence projection.** Third
+  - **6c-res-8 (2026-07-21, committed 55464d88): the sequence projection.** Third
     engine projection `prsDescent` (returns the cleaned PRS itself from the second entry
     on); the bivariate `prsPrimitive` re-expressed as its z-content-policy instantiation —
     FUEL PARAMETER RETIRED (WF on `g.size` via `zPrimitive_size_le`), LRT call site
     simplified. LRT outputs value-identical (scratch re-run + catalog native_decide pins).
-  - **6c-res-9 (2026-07-21, IN REVIEW — uncommitted): ONE KERNEL.** `descentTrace` is now
+  - **6c-res-9 (2026-07-21, committed 55464d88): ONE KERNEL.** `descentTrace` is now
     the engine's single recursion (walk the PRS under a clean policy, record each divisor +
     extracted constant); all three projections consume it: `prsDescent` = map,
     `gcdDescent` = `lastElem` fold (step/base satellites `gcdDescent_of_size_{ne_,eq_}zero`
