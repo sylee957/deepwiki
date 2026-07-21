@@ -24,7 +24,7 @@ open scoped Differential FormalDiff
 /-- One factor's Hermite sweep over **descending** numerators `[aⱼ, …, a₁]` for a squarefree
 `d`: each head sheds one power of `d` into the accumulated rational part; the exponent-1
 numerator remains. -/
-def hermiteFactorAux (d : DensePoly R) : List (DensePoly R) → DenseFrac R × DensePoly R
+private def hermiteFactorAux (d : DensePoly R) : List (DensePoly R) → DenseFrac R × DensePoly R
   | [] => (0, 0)
   | [a] => (0, a)
   | c :: r :: rs =>
@@ -42,7 +42,7 @@ variable [CharZero R]
 /-- **The Hermite step**: a term `c/dⁿ⁺²` is the derivative of `−t/((n+1)·dⁿ⁺¹)` plus the
 pushed-down term `(b + t′/(n+1))/dⁿ⁺¹`, where `c = t·d′ + b·d` is the Bézout split against
 the squarefree `d`. -/
-theorem hermite_step {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefree d)
+private theorem hermite_step {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefree d)
     (c : DensePoly R) (n : ℕ) :
     toRatFuncHom c / toRatFuncHom d ^ (n + 2)
       = (DenseFrac.toRatFunc (DenseFrac.normalize
@@ -96,7 +96,7 @@ private theorem invPowSum_map_reverse_cons {d : DensePoly R} (x : DensePoly R)
 
 /-- The per-factor sweep is exact: the descending term sum is the derivative of the
 accumulated rational part plus the exponent-1 remainder. -/
-theorem hermiteFactorAux_spec {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefree d) :
+private theorem hermiteFactorAux_spec {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefree d) :
     ∀ l : List (DensePoly R),
       invPowSum (toRatFuncHom d) ((l.reverse).map toRatFuncHom)
         = (DenseFrac.toRatFunc (hermiteFactorAux d l).1)′
