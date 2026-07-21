@@ -81,6 +81,16 @@ theorem deriv_add (f g : RatFunc K) : deriv (f + g) = deriv f + deriv g := by
   field_simp
   ring
 
+/-- The derivative commutes with negation. -/
+@[simp] theorem deriv_neg (f : RatFunc K) : deriv (-f) = -deriv f := by
+  have h := deriv_add f (-f)
+  rw [add_neg_cancel, deriv_zero] at h
+  exact eq_neg_of_add_eq_zero_right h.symm
+
+/-- The derivative distributes over subtraction. -/
+theorem deriv_sub (f g : RatFunc K) : deriv (f - g) = deriv f - deriv g := by
+  rw [sub_eq_add_neg, deriv_add, deriv_neg, sub_eq_add_neg]
+
 /-- The derivative satisfies the Leibniz rule. -/
 theorem deriv_mul (f g : RatFunc K) : deriv (f * g) = f * deriv g + g * deriv f := by
   have hfd : f.denom ≠ 0 := denom_ne_zero f

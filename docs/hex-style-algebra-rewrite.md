@@ -481,6 +481,29 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     Old pair-based API deleted; guard now `DenseFrac R → HermiteResult R` (Prop field
     erased, still computes). Numeric checks pass; sample logPart denominator comes out as
     the radical `(x+1)(x²+1)` exactly.
+  - **6c-int-3 (2026-07-21): HERMITE COMPLETENESS — rational integrability DECIDED.**
+    `hermiteReduce_complete : (∃ g : RatFunc R, g′ = toRatFunc f) ↔ (hermiteReduce f).logPart
+    = 0` — hypothesis-free, decidable RHS, constructive witness (`rational +
+    polyIntegrate poly`) in the affirmative case. First completeness theorem of the CAlgebra
+    arc. Three layers:
+    (1) Mathlib-side `DeepWiki/Algebra/RatFuncProper.lean` (upstream candidates):
+    `RatFunc.IsProper` + closure laws (add/neg/sub/list-sum/div-by-poly/deriv), the
+    representation transfer lemmas (`isProper_of_eq_div` both directions via
+    cross-multiplication degree counting), `denom_associated_of_eq_div` (coprime reduced
+    representations have associated denominators), and the **KEYSTONE obstruction**
+    `eq_zero_of_deriv_of_squarefree_denom`: a nonzero proper fraction with squarefree
+    denominator is no derivative — any prime π with exact multiplicity m in a candidate's
+    denominator gives the derivative's numerator exact multiplicity m−1
+    (`pow_not_dvd_derivative` again!) hence the derivative's denominator multiplicity
+    m+1 ≥ 2. (2) `polyIntegrate` in Diff/Derivative (computable antiderivative,
+    `(polyIntegrate p)′ = p`). (3) logPart PROPERNESS proven semantically (no size tracking
+    through the algorithm — the Bézout cofactors are genuinely unbounded): invPowSum of
+    bounded numerators proper + accumulated rational parts proper + `IsProper.deriv`/`sub`
+    closure ⇒ each factor remainder proper ⇒ logPart proper
+    (`hermiteReduce_logPart_isProper`, public). Decision procedure validated on 5 evals
+    (incl. a hand-built derivative recognized integrable). ★ Lessons: `show` against a
+    projection of a structure-literal def whose fields contain WF-recursion whnf-times-out —
+    `simp only [defName]` instead; `add_le_add le_rfl h` beats guessing left/right variants.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

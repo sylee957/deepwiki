@@ -1,5 +1,6 @@
 import DeepWiki.CAlgebra.Diff.RatFunc
 import DeepWiki.CAlgebra.Frac.Field
+import DeepWiki.Algebra.RatFuncProper
 
 /-! # Hermite reduction (rational-function base case)
 
@@ -252,6 +253,150 @@ theorem hermiteReduce_spec (f : DenseFrac R) :
     + toRatFuncHom (sqfPartFrac f.num f.den.toPoly).1
     + DenseFrac.toRatFunc (hermiteReduce f).logPart
   ring
+
+/-! ### Completeness: rational integrability is decided by the log part -/
+
+omit [DensePolyGcd R] [CharZero R] [DensePolySquarefree R] in
+/-- Size comparisons transport to degree comparisons through the bridge. -/
+private theorem toPoly_degree_lt_of_size_lt {a b : DensePoly R} (hb : b ≠ 0)
+    (h : a.size < b.size) : (toPolynomial a).degree < (toPolynomial b).degree := by
+  rcases eq_or_ne a 0 with rfl | ha
+  · rw [toPolynomial_zero, Polynomial.degree_zero]
+    exact bot_lt_iff_ne_bot.mpr fun hbb =>
+      toPolynomial_ne_zero hb (Polynomial.degree_eq_bot.mp hbb)
+  · rw [Polynomial.degree_eq_natDegree (toPolynomial_ne_zero ha),
+      Polynomial.degree_eq_natDegree (toPolynomial_ne_zero hb)]
+    have h1 := size_eq_natDegree_add_one ha
+    have h2 := size_eq_natDegree_add_one hb
+    exact_mod_cast (by omega : (toPolynomial a).natDegree < (toPolynomial b).natDegree)
+
+omit [CharZero R] [DensePolySquarefree R] in
+/-- The accumulated rational part of a factor sweep is proper. -/
+private theorem isProper_factorAux_rational {d : DensePoly R} (hd0 : d ≠ 0) :
+    ∀ l : List (DensePoly R),
+      RatFunc.IsProper (DenseFrac.toRatFunc (hermiteFactorAux d l).1) := by
+  intro l
+  induction l using hermiteFactorAux.induct (d := d) with
+  | case1 => rw [hermiteFactorAux]; simpa using RatFunc.isProper_zero
+  | case2 a => rw [hermiteFactorAux]; simpa using RatFunc.isProper_zero
+  | case3 c r rs t b ih =>
+      have hunfold : (hermiteFactorAux d (c :: r :: rs)).1
+          = (hermiteFactorAux d
+              ((r + b + C (((rs.length + 1 : ℕ) : R))⁻¹ * t′) :: rs)).1
+            + DenseFrac.normalize (-(C (((rs.length + 1 : ℕ) : R))⁻¹ * t))
+                (d ^ (rs.length + 1)) := by
+        simp only [hermiteFactorAux]
+        rfl
+      rw [hunfold, DenseFrac.toRatFunc_add]
+      refine RatFunc.IsProper.add ih ?_
+      rw [DenseFrac.toRatFunc_normalize]
+      refine RatFunc.isProper_of_eq_div
+        (toPolynomial_ne_zero (pow_ne_zero _ hd0)) ?_ rfl
+      have hsize : t.size < d.size :=
+        splitCoprime_size_lt (fun h0 => hd0 (eq_zero_of_size_zero h0)) c (d′)
+      calc (toPolynomial (-(C (((rs.length + 1 : ℕ) : R))⁻¹ * t))).degree
+          = (Polynomial.C ((((rs.length + 1 : ℕ) : R))⁻¹) * toPolynomial t).degree := by
+            rw [toPolynomial_neg, toPolynomial_mul, toPolynomial_C, Polynomial.degree_neg]
+        _ ≤ (toPolynomial t).degree := by
+            calc (Polynomial.C ((((rs.length + 1 : ℕ) : R))⁻¹) * toPolynomial t).degree
+                ≤ (Polynomial.C ((((rs.length + 1 : ℕ) : R))⁻¹)).degree
+                  + (toPolynomial t).degree := Polynomial.degree_mul_le _ _
+              _ ≤ 0 + (toPolynomial t).degree :=
+                  add_le_add Polynomial.degree_C_le le_rfl
+              _ = (toPolynomial t).degree := zero_add _
+        _ < (toPolynomial d).degree := toPoly_degree_lt_of_size_lt hd0 hsize
+        _ ≤ (toPolynomial (d ^ (rs.length + 1))).degree :=
+            Polynomial.degree_le_of_dvd
+              (toPolynomial_dvd (dvd_pow_self d (Nat.succ_ne_zero rs.length)))
+              (toPolynomial_ne_zero (pow_ne_zero _ hd0))
+
+omit [DensePolyGcd R] [CharZero R] [DensePolySquarefree R] in
+/-- A descending-term sum over bounded numerators is proper. -/
+private theorem isProper_invPowSum {d : DensePoly R} (hd0 : d ≠ 0) :
+    ∀ l : List (DensePoly R), (∀ b ∈ l, b.size < d.size) →
+      RatFunc.IsProper (invPowSum (toRatFuncHom d) (l.map toRatFuncHom)) := by
+  intro l
+  induction l with
+  | nil => intro _; exact RatFunc.isProper_zero
+  | cons x tl ih =>
+      intro h
+      show RatFunc.IsProper
+        ((toRatFuncHom x + invPowSum (toRatFuncHom d) (tl.map toRatFuncHom)) / toRatFuncHom d)
+      rw [add_div]
+      refine RatFunc.IsProper.add ?_ ?_
+      · exact RatFunc.isProper_of_eq_div (toPolynomial_ne_zero hd0)
+          (toPoly_degree_lt_of_size_lt hd0 (h x (by simp)))
+          (by rw [toRatFuncHom_apply, toRatFuncHom_apply])
+      · exact RatFunc.IsProper.div_algebraMap (toPolynomial_ne_zero hd0)
+          (ih fun y hy => h y (by simp [hy]))
+
+omit [DensePolySquarefree R] in
+/-- The exponent-1 remainder of a factor sweep is proper over its factor. -/
+private theorem isProper_factor_term {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : Squarefree d)
+    {l : List (DensePoly R)} (hl : ∀ b ∈ l, b.size < d.size) :
+    RatFunc.IsProper (toRatFuncHom (hermiteFactorAux d l.reverse).2 / toRatFuncHom d) := by
+  have hspec := hermiteFactorAux_spec hd0 hdsf l.reverse
+  rw [List.reverse_reverse, RatFunc.differential_apply] at hspec
+  have h1 : toRatFuncHom (hermiteFactorAux d l.reverse).2 / toRatFuncHom d
+      = invPowSum (toRatFuncHom d) (l.map toRatFuncHom)
+        - RatFunc.deriv (DenseFrac.toRatFunc (hermiteFactorAux d l.reverse).1) :=
+    (eq_sub_of_add_eq' hspec.symm)
+  rw [h1]
+  exact (isProper_invPowSum hd0 l hl).sub ((isProper_factorAux_rational hd0 _).deriv)
+
+/-- **The log part is proper** — semantically forced, with no size tracking through the
+algorithm. -/
+theorem hermiteReduce_logPart_isProper (f : DenseFrac R) :
+    RatFunc.IsProper (DenseFrac.toRatFunc (hermiteReduce f).logPart) := by
+  simp only [hermiteReduce]
+  rw [DenseFrac.toRatFunc_list_sum]
+  apply RatFunc.isProper_list_sum
+  intro x hx
+  rw [List.map_map] at hx
+  obtain ⟨fa, hfa, rfl⟩ := List.mem_map.mp hx
+  have hprops := sqfPartFrac_factor_props f.num f.den.toPoly fa hfa
+  have hbound := sqfPartFrac_size_lt (p := f.den.toPoly) f.num fa hfa
+  have hterm := isProper_factor_term hprops.1 hprops.2 hbound
+  simpa [Function.comp, DenseFrac.toRatFunc_normalize, ← toRatFuncHom_apply] using hterm
+
+/-- **Completeness of Hermite reduction**: a canonical fraction has a rational-function
+antiderivative exactly when the log part vanishes — a decidable test, with a constructive
+antiderivative in the affirmative case. -/
+theorem hermiteReduce_complete (f : DenseFrac R) :
+    (∃ g : RatFunc R, g′ = DenseFrac.toRatFunc f) ↔ (hermiteReduce f).logPart = 0 := by
+  constructor
+  · rintro ⟨g, hg⟩
+    rw [RatFunc.differential_apply] at hg
+    have hderiv : RatFunc.deriv (g - DenseFrac.toRatFunc (hermiteReduce f).rational
+        - toRatFuncHom (polyIntegrate (hermiteReduce f).poly))
+        = DenseFrac.toRatFunc (hermiteReduce f).logPart := by
+      rw [RatFunc.deriv_sub, RatFunc.deriv_sub, hg,
+        show RatFunc.deriv (toRatFuncHom (polyIntegrate (hermiteReduce f).poly))
+            = toRatFuncHom (hermiteReduce f).poly from by
+          rw [← RatFunc.differential_apply, toRatFuncHom_deriv, polyIntegrate_deriv],
+        hermiteReduce_spec f, RatFunc.differential_apply]
+      ring
+    have hsf : Squarefree (DenseFrac.toRatFunc (hermiteReduce f).logPart).denom := by
+      have hassoc := RatFunc.denom_associated_of_eq_div
+        (toPolynomial_ne_zero (hermiteReduce f).logPart.den.ne_zero)
+        (isCoprime_toPolynomial_iff.mpr (hermiteReduce f).logPart.coprime)
+        (x := DenseFrac.toRatFunc (hermiteReduce f).logPart) rfl
+      exact squarefree_of_associated hassoc.symm
+        (squarefree_toPolynomial_iff.mpr (hermiteReduce f).logPart_den_squarefree)
+    have h0 := RatFunc.eq_zero_of_deriv_of_squarefree_denom hderiv hsf
+      (hermiteReduce_logPart_isProper f)
+    apply DenseFrac.toRatFunc_injective
+    rw [DenseFrac.toRatFunc_zero]
+    exact h0
+  · intro h0
+    refine ⟨DenseFrac.toRatFunc (hermiteReduce f).rational
+      + toRatFuncHom (polyIntegrate (hermiteReduce f).poly), ?_⟩
+    rw [RatFunc.differential_apply, RatFunc.deriv_add,
+      show RatFunc.deriv (toRatFuncHom (polyIntegrate (hermiteReduce f).poly))
+          = toRatFuncHom (hermiteReduce f).poly from by
+        rw [← RatFunc.differential_apply, toRatFuncHom_deriv, polyIntegrate_deriv],
+      hermiteReduce_spec f, h0, DenseFrac.toRatFunc_zero, RatFunc.differential_apply]
+    ring
 
 end DensePoly
 

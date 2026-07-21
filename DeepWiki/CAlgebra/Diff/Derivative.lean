@@ -142,6 +142,38 @@ theorem deriv_pow_succ (p : DensePoly R) (n : ℕ) :
 
 end DensePoly
 
+namespace DensePoly
+
+section Field
+
+variable {K : Type u} [Field K] [DecidableEq K] [CharZero K]
+
+/-- The polynomial antiderivative with zero constant term (characteristic zero):
+`∑ aₖ xᵏ ↦ ∑ aₖ/(k+1) · xᵏ⁺¹`. -/
+def polyIntegrate (p : DensePoly K) : DensePoly K :=
+  ofList ((List.range (p.size + 1)).map fun k =>
+    if k = 0 then 0 else p.coeff (k - 1) / ((k : ℕ) : K))
+
+/-- `polyIntegrate` is a right inverse of the derivative. -/
+@[simp] theorem polyIntegrate_deriv (p : DensePoly K) : (polyIntegrate p)′ = p := by
+  apply toPolynomial_injective
+  rw [toPolynomial_deriv]
+  ext n
+  rw [Polynomial.coeff_derivative, coeff_toPolynomial, coeff_toPolynomial, polyIntegrate,
+    coeff_ofList_map_range]
+  by_cases h : n < p.size
+  · rw [if_pos (by omega : n + 1 < p.size + 1), if_neg (by omega : ¬ n + 1 = 0)]
+    simp only [Nat.add_sub_cancel]
+    push_cast
+    rw [div_mul_cancel₀]
+    exact_mod_cast Nat.succ_ne_zero n
+  · rw [if_neg (by omega : ¬ n + 1 < p.size + 1), zero_mul,
+      coeff_eq_zero_of_size_le p (by omega)]
+
+end Field
+
+end DensePoly
+
 /-- Validation: `′` computes through the bridge and is Leibniz. -/
 example (p q : DensePoly R) :
     toPolynomial (p′) = (toPolynomial p).derivative ∧ (p * q)′ = p′ * q + p * q′ :=
