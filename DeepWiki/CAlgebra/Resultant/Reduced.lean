@@ -142,7 +142,7 @@ theorem subresultant_eq_pseudoMod {f g : DensePoly S} (hg0 : g ≠ 0)
   have hlc : (toPolynomial g).coeff (g.size - 1) ≠ 0 := by
     rw [coeff_toPolynomial]
     exact leadingCoeff_ne_zero hgz
-  have hid := pseudo_identity (f := f) hgz
+  have hid := toPolynomial_pseudoDivMod hgz f
   set k := f.size - g.size + 1 with hk
   have hkeq : f.size + 1 - g.size = k := by omega
   set Rem := Polynomial.C ((-1 : S) ^ k) * toPolynomial (pseudoMod f g) with hRem
@@ -302,7 +302,7 @@ theorem SubresLedger.step {α : S} {f g : DensePoly S} (h : SubresLedger α f g)
         + toPolynomial g * toPolynomial (pseudoDiv f g) := by
     calc Polynomial.C (g.leadingCoeff ^ (f.size + 1 - g.size)) * toPolynomial f
         = toPolynomial (pseudoDiv f g) * toPolynomial g + toPolynomial (pseudoMod f g) :=
-          (pseudo_identity hgz).symm
+          (toPolynomial_pseudoDivMod hgz f).symm
       _ = Polynomial.C α * toPolynomial h'
           + toPolynomial g * toPolynomial (pseudoDiv f g) := by rw [hth]; ring
   have hQdeg : (toPolynomial (pseudoDiv f g)).natDegree + (toPolynomial g).natDegree

@@ -736,6 +736,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     (34) is exactly divisible by βᵢ"), no longer load-bearing — and is now CATALOGED:
     `Btr.reduced_prs_eq_34_exact` in `Sources/Doi_10_1145_321662_321665/Subresultants.lean`
     (§6, p.512, eqs (34)–(35), OCR-verified wording).
+  - **6c-res-13 (2026-07-21, committed): pseudo-division satellites home.**
+    `pseudo_identity` turned out to DUPLICATE `toPolynomial_pseudoDivMod` (already in
+    `Poly/DivisionPseudo.lean`, statement-identical) — deleted, consumers repointed.
+    `pseudoDiv_natDegree_le` moved beside it (generalized `EuclideanDomain` →
+    `CommRing + IsDomain`; the private `natDeg_bridge` uses replaced by the public
+    unconditional `natDegree_toPolynomial_eq_size_sub_one` — NB rw needs the explicit `g`
+    argument or it hits the wrong occurrence). `Euclidean.lean` now contains only
+    resultant-specific content.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

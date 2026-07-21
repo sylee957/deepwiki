@@ -38,41 +38,6 @@ omit [DecidableEq S] in
 private theorem ed_mul_div_cancel_left {a b : S} (ha : a ≠ 0) : a * b / a = b :=
   mul_left_cancel₀ ha (EuclideanDomain.mul_div_cancel' ha (Dvd.intro b rfl))
 
-/-- The transported pseudo-division identity. -/
-theorem pseudo_identity {f g : DensePoly S} (hg : g.size ≠ 0) :
-    toPolynomial (pseudoDiv f g) * toPolynomial g + toPolynomial (pseudoMod f g)
-      = Polynomial.C (g.leadingCoeff ^ (f.size + 1 - g.size)) * toPolynomial f := by
-  have h := congrArg toPolynomial (pseudoDivMod_spec hg f)
-  simp only [toPolynomial_mul, toPolynomial_add, toPolynomial_C] at h
-  rw [pseudoDiv, pseudoMod]
-  exact h
-
-/-- The pseudo-quotient's degree bound, derived from the identity (no implementation facts). -/
-theorem pseudoDiv_natDegree_le {f g : DensePoly S} (hg : g ≠ 0) (hfg : g.size ≤ f.size)
-    (hq0 : pseudoDiv f g ≠ 0) :
-    (toPolynomial (pseudoDiv f g)).natDegree + (g.size - 1) ≤ f.size - 1 := by
-  have hgz : g.size ≠ 0 := fun h0 => hg (eq_zero_of_size_zero h0)
-  have hf0 : f ≠ 0 := fun h0 => by rw [h0, size_zero] at hfg; omega
-  have hid := pseudo_identity (f := f) hgz
-  have hgne : toPolynomial g ≠ 0 := toPolynomial_ne_zero hg
-  have hqne : toPolynomial (pseudoDiv f g) ≠ 0 := toPolynomial_ne_zero hq0
-  have hprod : (toPolynomial (pseudoDiv f g) * toPolynomial g).natDegree
-      = (toPolynomial (pseudoDiv f g)).natDegree + (g.size - 1) := by
-    rw [Polynomial.natDegree_mul hqne hgne, natDeg_bridge hg]
-  have h1 : toPolynomial (pseudoDiv f g) * toPolynomial g
-      = Polynomial.C (g.leadingCoeff ^ (f.size + 1 - g.size)) * toPolynomial f
-        - toPolynomial (pseudoMod f g) := by rw [← hid]; ring
-  have hle : (toPolynomial (pseudoDiv f g) * toPolynomial g).natDegree ≤ f.size - 1 := by
-    rw [h1]
-    refine le_trans (Polynomial.natDegree_sub_le _ _) (max_le ?_ ?_)
-    · exact le_trans (Polynomial.natDegree_C_mul_le _ _) (le_of_eq (natDeg_bridge hf0))
-    · rcases eq_or_ne (pseudoMod f g) 0 with hr0 | hr0
-      · simp [hr0]
-      · have := pseudoMod_size_lt hgz f
-        rw [natDeg_bridge hr0]
-        omega
-  omega
-
 /-! ### The resultant fold -/
 
 /-- The remainder the next fold step consumes: the tail's head divisor, `0` at the end of
@@ -268,7 +233,7 @@ private theorem resultantOfTrace_eq {σ : Type v}
         have hCf : Polynomial.C (g.leadingCoeff ^ (f.size + 1 - g.size)) * toPolynomial f
             = toPolynomial (pseudoMod f g)
               + toPolynomial g * toPolynomial (pseudoDiv f g) := by
-          rw [← pseudo_identity hgz]
+          rw [← toPolynomial_pseudoDivMod hgz f]
           ring
         calc (toPolynomial g).resultant (toPolynomial (pseudoMod f g)) n m
             = (toPolynomial g).resultant

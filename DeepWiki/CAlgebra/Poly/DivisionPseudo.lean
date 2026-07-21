@@ -140,4 +140,32 @@ theorem toPolynomial_pseudoDivMod {q : DensePoly R} (hq : q.size ≠ 0) (p : Den
   rw [DensePoly.pseudoDiv, DensePoly.pseudoMod, ← toPolynomial_C, ← toPolynomial_mul,
     ← toPolynomial_mul, ← toPolynomial_add, DensePoly.pseudoDivMod_spec hq]
 
+/-- The pseudo-quotient's degree bound, derived from the pseudo-division identity (no
+implementation facts). -/
+theorem DensePoly.pseudoDiv_natDegree_le [IsDomain R] {f g : DensePoly R} (hg : g ≠ 0)
+    (hfg : g.size ≤ f.size) (hq0 : DensePoly.pseudoDiv f g ≠ 0) :
+    (toPolynomial (DensePoly.pseudoDiv f g)).natDegree + (g.size - 1) ≤ f.size - 1 := by
+  have hgz : g.size ≠ 0 := fun h0 => hg (DensePoly.eq_zero_of_size_zero h0)
+  have hid := toPolynomial_pseudoDivMod hgz f
+  have hgne : toPolynomial g ≠ 0 := toPolynomial_ne_zero hg
+  have hqne : toPolynomial (DensePoly.pseudoDiv f g) ≠ 0 := toPolynomial_ne_zero hq0
+  have hprod : (toPolynomial (DensePoly.pseudoDiv f g) * toPolynomial g).natDegree
+      = (toPolynomial (DensePoly.pseudoDiv f g)).natDegree + (g.size - 1) := by
+    rw [Polynomial.natDegree_mul hqne hgne, natDegree_toPolynomial_eq_size_sub_one g]
+  have h1 : toPolynomial (DensePoly.pseudoDiv f g) * toPolynomial g
+      = Polynomial.C (g.leadingCoeff ^ (f.size + 1 - g.size)) * toPolynomial f
+        - toPolynomial (DensePoly.pseudoMod f g) := by rw [← hid]; ring
+  have hle : (toPolynomial (DensePoly.pseudoDiv f g) * toPolynomial g).natDegree
+      ≤ f.size - 1 := by
+    rw [h1]
+    refine le_trans (Polynomial.natDegree_sub_le _ _) (max_le ?_ ?_)
+    · exact le_trans (Polynomial.natDegree_C_mul_le _ _)
+        (le_of_eq (natDegree_toPolynomial_eq_size_sub_one f))
+    · rcases eq_or_ne (DensePoly.pseudoMod f g) 0 with hr0 | hr0
+      · simp [hr0]
+      · have := DensePoly.pseudoMod_size_lt hgz f
+        rw [natDegree_toPolynomial_eq_size_sub_one]
+        omega
+  omega
+
 end DeepWiki.CAlgebra
