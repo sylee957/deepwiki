@@ -5,8 +5,9 @@ import DeepWiki.CAlgebra.Poly.Operations
 
 `toPolynomial₂` reads a dense bivariate polynomial (`x` outermost, coefficients an inner
 `DensePoly`) as Mathlib's `(R[X])[X]`: the outer `toPolynomial` followed by mapping every
-coefficient through the ring equivalence. Satellites: the coefficient reading, injectivity,
-ring-operation transport, and degree preservation. -/
+coefficient through the ring equivalence. The bundled `toPolynomial₂Hom` makes every
+ring-operation transport a `map_*` fact; satellites keep the coefficient/constant/degree
+readings and the boundary size measure. -/
 
 namespace DeepWiki.CAlgebra
 
@@ -20,6 +21,14 @@ variable {R : Type u} [CommRing R] [DecidableEq R]
 noncomputable def toPolynomial₂ (p : DensePoly (DensePoly R)) : Polynomial (Polynomial R) :=
   (toPolynomial p).map (equiv (R := R)).toRingHom
 
+/-- The bivariate bridge, bundled: every ring-operation transport is a `map_*` fact. -/
+noncomputable def toPolynomial₂Hom : DensePoly (DensePoly R) →+* Polynomial (Polynomial R) :=
+  (Polynomial.mapRingHom (equiv (R := R)).toRingHom).comp
+    ((equiv (R := DensePoly R)) : DensePoly (DensePoly R) →+* Polynomial (DensePoly R))
+
+@[simp] theorem toPolynomial₂Hom_apply (p : DensePoly (DensePoly R)) :
+    toPolynomial₂Hom p = toPolynomial₂ p := rfl
+
 /-- Coefficient reading: the `i`-th coefficient is the bridged inner polynomial. -/
 @[simp] theorem toPolynomial₂_coeff (p : DensePoly (DensePoly R)) (i : ℕ) :
     (toPolynomial₂ p).coeff i = toPolynomial (p.coeff i) := by
@@ -31,26 +40,23 @@ theorem toPolynomial₂_injective : Function.Injective (toPolynomial₂ (R := R)
   fun _ _ h => toPolynomial_injective
     (Polynomial.map_injective _ (RingEquiv.injective _) h)
 
-@[simp] theorem toPolynomial₂_zero : toPolynomial₂ (0 : DensePoly (DensePoly R)) = 0 := by
-  rw [toPolynomial₂, toPolynomial_zero, Polynomial.map_zero]
+@[simp] theorem toPolynomial₂_zero : toPolynomial₂ (0 : DensePoly (DensePoly R)) = 0 :=
+  map_zero toPolynomial₂Hom
 
-@[simp] theorem toPolynomial₂_one : toPolynomial₂ (1 : DensePoly (DensePoly R)) = 1 := by
-  rw [toPolynomial₂, toPolynomial_one, Polynomial.map_one]
+@[simp] theorem toPolynomial₂_one : toPolynomial₂ (1 : DensePoly (DensePoly R)) = 1 :=
+  map_one toPolynomial₂Hom
 
 @[simp] theorem toPolynomial₂_add (p q : DensePoly (DensePoly R)) :
-    toPolynomial₂ (p + q) = toPolynomial₂ p + toPolynomial₂ q := by
-  rw [toPolynomial₂, toPolynomial_add, Polynomial.map_add]
-  rfl
+    toPolynomial₂ (p + q) = toPolynomial₂ p + toPolynomial₂ q :=
+  map_add toPolynomial₂Hom p q
 
 @[simp] theorem toPolynomial₂_sub (p q : DensePoly (DensePoly R)) :
-    toPolynomial₂ (p - q) = toPolynomial₂ p - toPolynomial₂ q := by
-  rw [toPolynomial₂, toPolynomial_sub, Polynomial.map_sub]
-  rfl
+    toPolynomial₂ (p - q) = toPolynomial₂ p - toPolynomial₂ q :=
+  map_sub toPolynomial₂Hom p q
 
 @[simp] theorem toPolynomial₂_mul (p q : DensePoly (DensePoly R)) :
-    toPolynomial₂ (p * q) = toPolynomial₂ p * toPolynomial₂ q := by
-  rw [toPolynomial₂, toPolynomial_mul, Polynomial.map_mul]
-  rfl
+    toPolynomial₂ (p * q) = toPolynomial₂ p * toPolynomial₂ q :=
+  map_mul toPolynomial₂Hom p q
 
 /-- The bridge sends inner-polynomial constants to `Polynomial.C` of the bridged inner
 polynomial. -/
@@ -63,6 +69,11 @@ polynomial. -/
 theorem toPolynomial₂_natDegree (p : DensePoly (DensePoly R)) :
     (toPolynomial₂ p).natDegree = (toPolynomial p).natDegree :=
   Polynomial.natDegree_map_eq_of_injective (RingEquiv.injective _) _
+
+/-- The boundary measure: the bridged outer degree is the size minus one. -/
+theorem natDegree₂_eq_size_sub_one (p : DensePoly (DensePoly R)) :
+    (toPolynomial₂ p).natDegree = p.size - 1 := by
+  rw [toPolynomial₂_natDegree, natDegree_toPolynomial_eq_size_sub_one]
 
 /-- The bridge transports outer resultants: reading a resultant over `DensePoly R` through
 `toPolynomial` computes the resultant of the bridged bivariate polynomials. -/

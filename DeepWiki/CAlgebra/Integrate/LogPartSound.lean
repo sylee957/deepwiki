@@ -283,9 +283,9 @@ theorem prs_isSimilar_subresultant (f g : DensePoly (DensePoly R))
       rw [zChain_add_two, zStep, hcz, ← hspec]
       show pseudoDiv _ _ * _ + pseudoMod _ _ = pseudoMod _ _ + _ * pseudoDiv _ _
       ring
-    have hbr := congrArg toPolynomial₂ hlevel
-    simpa only [toPolynomial₂_mul, toPolynomial₂_add, toPolynomial₂_C, hF, hQc, hαc, hβc]
-      using hbr
+    have hbr := congrArg toPolynomial₂Hom hlevel
+    simpa only [map_mul, map_add, toPolynomial₂Hom_apply, toPolynomial₂_C, hF, hQc, hαc,
+      hβc] using hbr
   -- the endpoint: apply the chain similarity at m := k − 1
   have hm2 : k - 1 + 2 = k + 1 := by omega
   have hm1 : k - 1 + 1 = k := by omega
@@ -463,10 +463,9 @@ theorem prs_covers (f g : DensePoly (DensePoly R)) (hfg : g.size ≤ f.size) (hg
   have hid : toPolynomial₂ (pseudoDiv f g) * toPolynomial₂ g + toPolynomial₂ (pseudoMod f g)
       = Polynomial.C (toPolynomial (g.leadingCoeff ^ (f.size + 1 - g.size)))
         * toPolynomial₂ f := by
-    have h0 := toPolynomial_pseudoDivMod (q := g) hgsz f
-    have h1 := congrArg (fun q => Polynomial.map ((equiv (R := R)).toRingHom) q) h0
-    simp only [Polynomial.map_add, Polynomial.map_mul, Polynomial.map_C] at h1
-    exact h1
+    have h0 := congrArg toPolynomial₂Hom (pseudoDivMod_spec (q := g) hgsz f)
+    simp only [map_add, map_mul, toPolynomial₂Hom_apply, toPolynomial₂_C] at h0
+    exact h0
   set α₀ : Polynomial R := toPolynomial (g.leadingCoeff ^ (f.size + 1 - g.size)) with hα₀def
   have hα₀ : α₀ ≠ 0 :=
     toPolynomial_ne_zero (pow_ne_zero _ (leadingCoeff_ne_zero hgsz))
@@ -524,8 +523,8 @@ theorem prs_covers (f g : DensePoly (DensePoly R)) (hfg : g.size ≤ f.size) (hg
       rw [← hid]
       have hprembr : toPolynomial₂ (pseudoMod f g)
           = Polynomial.C (toPolynomial (zContent (pseudoMod f g))) * toPolynomial₂ r := by
-        have h2 := congrArg toPolynomial₂ (C_zContent_mul_zPrimitive (pseudoMod f g)).symm
-        simpa only [toPolynomial₂_mul, toPolynomial₂_C,
+        have h2 := congrArg toPolynomial₂Hom (C_zContent_mul_zPrimitive (pseudoMod f g)).symm
+        simpa only [map_mul, toPolynomial₂Hom_apply, toPolynomial₂_C,
           show zPrimitive (pseudoMod f g) = r from rfl] using h2
       rw [hprembr]
       ring
