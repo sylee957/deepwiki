@@ -120,6 +120,11 @@ private def lrtLogPartGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd
     [DensePolySquarefree R] :
     DenseFrac R → List (DensePoly R × DensePoly (DensePoly R)) := DensePoly.lrtLogPart
 
+/-- The primitive-PRS resultant computes (content-stripping descent). -/
+private def resultantPRSPrimitiveGuard [Field R] [DecidableEq R] :
+    DensePoly (DensePoly R) → DensePoly (DensePoly R) → DensePoly R :=
+  DensePoly.resultantPRSPrimitive
+
 /-- The PRS resultant computes over a computable Euclidean coefficient domain. -/
 private def resultantPRSGuard [Field R] [DecidableEq R] :
     DensePoly (DensePoly R) → DensePoly (DensePoly R) → DensePoly R :=

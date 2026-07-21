@@ -569,6 +569,25 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     bookkeeping — the private-aux idiom); `sylvester` keeps widths (it IS parameterized
     matrix data); new Operations satellite `natDegree_toPolynomial_eq_size_sub_one`
     (unconditional, `0` included).
+  - **6c-res-3 (2026-07-21): the descent PARAMETRIZED — one engine, one proof, three
+    resultants.** All PRS variants differ only in what they strip from the remainder before
+    recursing, so `Resultant/Euclidean.lean` now hosts **`resultantDescent`**, parametrized
+    by `clean : DensePoly S → S × DensePoly S` with two obligations: `hsize` (strip doesn't
+    grow — feeds termination) and, for the proof only, the reconstruction identity
+    `C (clean r).1 * (clean r).2 = r`. **`resultantDescent_eq`** proves the descent = the
+    Sylvester determinant for ANY such clean — each strip costs exactly one
+    `resultant_C_mul_right`. Instantiations: `resultantPRS` (trivial clean) and
+    `resultantPRSPrimitive` (`Resultant/Primitive.lean`: generic `polyContent` = Euclidean
+    gcd-fold, `polyPrimitive`, reconstruction + size satellites — no nonzeroness conditions
+    anywhere, the `content = 0 ⟹ r = 0` degeneracy handles itself). ★ BENCH: primitive
+    **320×** over the trivial descent on a degree-8 bivariate LRT pair (153ms vs 49.4s —
+    coefficient blowup vs content control), results equal; registered at priority 300 (over
+    Euclidean 200, det 100). Subresultant-as-resultant (the stateful β/ψ variant) would need
+    history threading through the descent — not currently worth it with primitive winning;
+    recorded. ★ Lesson: `exact lemma _ _ (...)` with underscores for lambda-parameters of a
+    WF-def can send the unifier INTO the WF-body (isDefEq timeout on `EuclideanDomain.gcd`)
+    — pass the lambdas explicitly; same for `set`-opaquing mapped lists whose functions
+    contain WF-defs.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
