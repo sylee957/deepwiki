@@ -524,6 +524,25 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     NEXT (the certificate arc): the differential identity `Σᵢ Tr-sum of c·Sᵢ′/Sᵢ = b/d`
     needs `AdjoinRoot Qᵢ` étale-algebra machinery — multi-session, analogous to the old
     engine's soundness arc; plus properness-shaped uniqueness via `RatFuncProper`.
+  - **6c-res-1 (2026-07-21): Resultant area + PRS resultant + `DensePolyResultant` dispatch.**
+    `Matrix/Sylvester.lean` git-mv'd to `Resultant/Sylvester.lean`; new area
+    `CAlgebra/Resultant/{Sylvester,PRS,Dense}.lean`. **`resultantPRS`** (`Resultant/PRS.lean`):
+    Euclidean-descent resultant over ANY computable `[EuclideanDomain S]` coefficients
+    (pseudo-divide the larger argument, correct by signs and lc-powers with EXACT `/`,
+    pad slack bounds down; WF on `(f.size + g.size, m + n)` lex). ★ **`resultantPRS_eq`**:
+    full equivalence with Mathlib's Sylvester-determinant resultant on valid degree bounds —
+    the functional induction glues exactly one Mathlib identity per branch
+    (`resultant_add_mul_right` for the mod step, `resultant_C_mul_right` for the lc-scale,
+    `resultant_add_left/right_deg` for padding, `resultant_comm` + sign-cancel, constant/zero
+    base cases); the pseudo-quotient degree bound is derived from the pseudo-division
+    identity alone (no implementation facts). `Resultant/Dense.lean`: class
+    `DensePolyResultant` (contract = agreement with `Polynomial.resultant` on valid bounds;
+    det fallback at 100, PRS at 200 for Euclidean coefficient domains). `rtResultant` in
+    LogPart now dispatches — the LRT resultant over `K[z]` runs the PRS (deg-6 denominator:
+    instant vs an 11×11 permanent-style det ≈ 40M terms; all 5 LRT regressions byte-identical).
+    ★ Lessons: WF-`induct` substitutes scrutinees in base cases (case arities shrink); passing
+    `le_of_eq` where an INEQUALITY at a different bound is expected silently pins unification
+    — give `by rw [...]; omega` proofs shaped by the expected type.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

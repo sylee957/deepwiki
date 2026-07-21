@@ -1,5 +1,5 @@
 import DeepWiki.CAlgebra.Integrate.Hermite
-import DeepWiki.CAlgebra.Matrix.Sylvester
+import DeepWiki.CAlgebra.Resultant
 
 /-! # The logarithmic part: Lazard–Rioboo–Trager
 
@@ -55,9 +55,11 @@ def primPRS : ℕ → DensePoly (DensePoly R) → DensePoly (DensePoly R) →
 /-! ### The Rothstein–Trager data -/
 
 /-- The Rothstein–Trager resultant `R(z) = res_x(d, b − z·d′)`: its roots are the
-coefficients of the logarithms of `∫ b/d`. -/
+coefficients of the logarithms of `∫ b/d` (algorithm dispatched by `DensePolyResultant` —
+the pseudo-remainder sequence over `K[z]`). -/
 def rtResultant (b d : DensePoly R) : DensePoly R :=
-  resultant (liftX d) (liftX b - zC * liftX (d′)) (d.size - 1) (d.size - 2)
+  DensePolyResultant.resultant (liftX d) (liftX b - zC * liftX (d′))
+    (d.size - 1) (d.size - 2)
 
 variable [DensePolySquarefree R]
 

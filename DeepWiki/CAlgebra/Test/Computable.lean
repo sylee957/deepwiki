@@ -120,6 +120,11 @@ private def lrtLogPartGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd
     [DensePolySquarefree R] :
     DenseFrac R → List (DensePoly R × DensePoly (DensePoly R)) := DensePoly.lrtLogPart
 
+/-- The PRS resultant computes over a computable Euclidean coefficient domain. -/
+private def resultantPRSGuard [Field R] [DecidableEq R] :
+    DensePoly (DensePoly R) → DensePoly (DensePoly R) → ℕ → ℕ → DensePoly R :=
+  DensePoly.resultantPRS
+
 /-- The dispatched squarefree decomposition computes through the class interface. -/
 private def classSqfDecompGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R] :
     DensePoly R → List (DensePoly R) := fun p => @DensePolySquarefree.sqfDecomp R _ _ inferInstance inferInstance p
