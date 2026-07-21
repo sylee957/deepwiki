@@ -41,19 +41,26 @@ theorem toMatrix_sylvester (p q : DensePoly R) (m n : Nat) :
       simp only [Fin.val_natAdd, hm, if_false, Nat.add_sub_cancel_left, Set.mem_Icc,
         coeff_toPolynomial]
 
-/-- The resultant of `p, q`: the determinant of the Sylvester matrix. -/
-def resultant (p q : DensePoly R) (m n : Nat) : R :=
-  ((sylvester p q m n).toMatrix (m + n) (m + n)).det
+/-- The resultant of `p, q`: the determinant of the Sylvester matrix at the canonical
+degrees (the normalized representation commits them — no bound parameters). -/
+def resultant (p q : DensePoly R) : R :=
+  ((sylvester p q (p.size - 1) (q.size - 1)).toMatrix
+    ((p.size - 1) + (q.size - 1)) ((p.size - 1) + (q.size - 1))).det
 
-/-- The computable resultant bridges to Mathlib's `Polynomial.resultant`. -/
-theorem toPolynomial_resultant (p q : DensePoly R) (m n : Nat) :
-    resultant p q m n = (toPolynomial p).resultant (toPolynomial q) m n := by
-  rw [resultant, toMatrix_sylvester]
+/-- The computable resultant bridges to Mathlib's `Polynomial.resultant` at the canonical
+degrees — hypothesis-free. -/
+theorem toPolynomial_resultant (p q : DensePoly R) :
+    resultant p q = (toPolynomial p).resultant (toPolynomial q)
+      (toPolynomial p).natDegree (toPolynomial q).natDegree := by
+  rw [resultant, toMatrix_sylvester, natDegree_toPolynomial_eq_size_sub_one,
+    natDegree_toPolynomial_eq_size_sub_one]
   rfl
 
-/-- Validation: the computable resultant equals the Mathlib resultant of the bridged polynomials. -/
-example (p q : DensePoly R) (m n : Nat) :
-    resultant p q m n = Polynomial.resultant (toPolynomial p) (toPolynomial q) m n :=
-  toPolynomial_resultant p q m n
+/-- Validation: the computable resultant equals the Mathlib resultant of the bridged
+polynomials at their exact degrees. -/
+example (p q : DensePoly R) :
+    resultant p q = Polynomial.resultant (toPolynomial p) (toPolynomial q)
+      (toPolynomial p).natDegree (toPolynomial q).natDegree :=
+  toPolynomial_resultant p q
 
 end DeepWiki.CAlgebra

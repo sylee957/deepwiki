@@ -73,28 +73,27 @@ private theorem pseudoDiv_natDegree_le {f g : DensePoly S} (hg : g ≠ 0) (hfg :
 
 /-! ### The algorithm -/
 
-/-- Resultant by Euclidean descent over the coefficients: pseudo-divide the larger argument,
-correct by signs and leading-coefficient powers (exact divisions), pad slack bounds down.
-Returns junk (`0`) when a bound sits below the corresponding degree; on valid bounds it
-agrees with the Sylvester determinant (`resultantPRS_eq`). -/
-def resultantPRS (f g : DensePoly S) (m n : ℕ) : S :=
+/-- The Euclidean-descent worker: pseudo-divide the larger argument, correct by signs and
+leading-coefficient powers (exact divisions), pad slack bounds down. The bound parameters
+are internal recursion state; the public entry is the canonical-degree `resultantPRSAux`. -/
+private def resultantPRSAux (f g : DensePoly S) (m n : ℕ) : S :=
   if hf0 : f = 0 then 0 ^ n * g.coeff 0 ^ m
   else if hg0 : g = 0 then 0 ^ m * f.coeff 0 ^ n
   else if m + 1 < f.size then 0
   else if n + 1 < g.size then 0
   else if _ : f.size ≤ m then
     (-1 : S) ^ (n * (m - (f.size - 1))) * g.coeff n ^ (m - (f.size - 1))
-      * resultantPRS f g (f.size - 1) n
+      * resultantPRSAux f g (f.size - 1) n
   else if _ : g.size ≤ n then
-    f.coeff m ^ (n - (g.size - 1)) * resultantPRS f g m (g.size - 1)
+    f.coeff m ^ (n - (g.size - 1)) * resultantPRSAux f g m (g.size - 1)
   else if n = 0 then g.coeff 0 ^ m
   else if m = 0 then f.coeff 0 ^ n
   else if _ : g.size ≤ f.size then
     (-1 : S) ^ (m * n) *
-      (resultantPRS g (pseudoMod f g) n m
+      (resultantPRSAux g (pseudoMod f g) n m
         / g.leadingCoeff ^ ((f.size + 1 - g.size) * n))
   else
-    resultantPRS f (pseudoMod g f) m n
+    resultantPRSAux f (pseudoMod g f) m n
       / f.leadingCoeff ^ ((g.size + 1 - f.size) * m)
   termination_by (f.size + g.size, m + n)
   decreasing_by
@@ -115,19 +114,17 @@ def resultantPRS (f g : DensePoly S) (m n : ℕ) : S :=
 
 /-! ### Equivalence with the Sylvester determinant -/
 
-/-- **The PRS resultant agrees with the Sylvester-determinant resultant** on valid degree
-bounds: functional induction, each branch discharged by the matching Mathlib identity. -/
-theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
+private theorem resultantPRSAux_eq (f g : DensePoly S) (m n : ℕ) :
     (toPolynomial f).natDegree ≤ m → (toPolynomial g).natDegree ≤ n →
-    resultantPRS f g m n = (toPolynomial f).resultant (toPolynomial g) m n := by
-  induction f, g, m, n using resultantPRS.induct with
+    resultantPRSAux f g m n = (toPolynomial f).resultant (toPolynomial g) m n := by
+  induction f, g, m, n using resultantPRSAux.induct with
   | case1 g m n =>
       intro hm hn
-      rw [resultantPRS, dif_pos rfl, toPolynomial_zero, Polynomial.resultant_zero_left,
+      rw [resultantPRSAux, dif_pos rfl, toPolynomial_zero, Polynomial.resultant_zero_left,
         coeff_toPolynomial]
   | case2 f m n hf0 =>
       intro hm hn
-      rw [resultantPRS, dif_neg hf0, dif_pos rfl, toPolynomial_zero,
+      rw [resultantPRSAux, dif_neg hf0, dif_pos rfl, toPolynomial_zero,
         Polynomial.resultant_zero_right, coeff_toPolynomial]
   | case3 f g m n hf0 hg0 hm1 =>
       intro hm hn
@@ -139,7 +136,7 @@ theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
       exact absurd hn1 (by omega)
   | case5 f g m n hf0 hg0 hm1 hn1 hmd ih =>
       intro hm hn
-      rw [resultantPRS, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_pos hmd]
+      rw [resultantPRSAux, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_pos hmd]
       rw [ih (le_of_eq (natDeg_bridge hf0)) hn]
       have hkey := Polynomial.resultant_add_left_deg (f := toPolynomial f)
         (g := toPolynomial g) (m := f.size - 1) (n := n) (k := m - (f.size - 1))
@@ -150,7 +147,7 @@ theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
       rw [hkey, coeff_toPolynomial]
   | case6 f g m n hf0 hg0 hm1 hn1 hmd hnd ih =>
       intro hm hn
-      rw [resultantPRS, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
+      rw [resultantPRSAux, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
         dif_pos hnd]
       rw [ih hm (le_of_eq (natDeg_bridge hg0))]
       have hkey := Polynomial.resultant_add_right_deg (f := toPolynomial f)
@@ -162,7 +159,7 @@ theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
       rw [hkey, coeff_toPolynomial]
   | case7 f g m hf0 hg0 hm1 hmd hn1 hnd =>
       intro hm hn
-      rw [resultantPRS, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
+      rw [resultantPRSAux, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
         dif_neg hnd, if_pos rfl]
       have hg1 : g.size = 1 := by
         have : g.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
@@ -173,7 +170,7 @@ theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
       rw [Polynomial.resultant_C_zero_right]
   | case8 f g n hf0 hg0 hn1 hnd hn0 hm1 hmd =>
       intro hm hn
-      rw [resultantPRS, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
+      rw [resultantPRSAux, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
         dif_neg hnd, if_neg hn0, if_pos rfl]
       have hf1 : f.size = 1 := by
         have : f.size ≠ 0 := fun h0 => hf0 (eq_zero_of_size_zero h0)
@@ -194,7 +191,7 @@ theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
           rw [natDeg_bridge hr0]
           rw [natDeg_bridge hf0] at hm
           omega
-      rw [resultantPRS, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
+      rw [resultantPRSAux, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
         dif_neg hnd, if_neg hn0, if_neg hm0, dif_pos hfg]
       rw [ih (by rw [natDeg_bridge hg0]; omega) hr_deg]
       have hchain : (toPolynomial g).resultant (toPolynomial (pseudoMod f g)) n m
@@ -240,7 +237,7 @@ theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
           rw [natDeg_bridge hr0]
           rw [natDeg_bridge hg0] at hn
           omega
-      rw [resultantPRS, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
+      rw [resultantPRSAux, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
         dif_neg hnd, if_neg hn0, if_neg hm0, dif_neg hfg]
       rw [ih hm hr_deg]
       have hchain : (toPolynomial f).resultant (toPolynomial (pseudoMod g f)) m n
@@ -271,6 +268,23 @@ theorem resultantPRS_eq (f g : DensePoly S) (m n : ℕ) :
               * (toPolynomial f).resultant (toPolynomial g) m n := by
               rw [Polynomial.resultant_C_mul_right, ← pow_mul]
       rw [hchain, ed_mul_div_cancel_left hlcp]
+
+/-- **Resultant by the pseudo-remainder sequence** at the canonical degrees — the normalized
+representation commits them, so no bound parameters. -/
+def resultantPRS (f g : DensePoly S) : S :=
+  resultantPRSAux f g (f.size - 1) (g.size - 1)
+
+/-- **The PRS resultant agrees with the Sylvester-determinant resultant** at the canonical
+degrees — hypothesis-free: functional induction over the descent, each branch discharged by
+the matching Mathlib identity. -/
+theorem resultantPRS_eq (f g : DensePoly S) :
+    resultantPRS f g = (toPolynomial f).resultant (toPolynomial g)
+      (toPolynomial f).natDegree (toPolynomial g).natDegree := by
+  rw [resultantPRS, natDegree_toPolynomial_eq_size_sub_one,
+    natDegree_toPolynomial_eq_size_sub_one]
+  exact resultantPRSAux_eq f g _ _
+    (le_of_eq (natDegree_toPolynomial_eq_size_sub_one f))
+    (le_of_eq (natDegree_toPolynomial_eq_size_sub_one g))
 
 end DensePoly
 

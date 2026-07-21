@@ -561,7 +561,14 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     contract at the canonical bounds (the same bundling payoff as `hermiteReduce`); the
     4-arg algorithms stay as the underlying implementations. Bonus robustness: `rtResultant`
     no longer hard-codes `d.size − 2` for the second bound — the canonical bounds
-    self-adjust if the top coefficient ever degenerates.
+    self-adjust if the top coefficient ever degenerates. Follow-up: the bounds removed from
+    the ALGORITHMS too — `resultant` (Sylvester det) and `resultantPRS` are now 2-arg at
+    canonical degrees with hypothesis-free bridges (`toPolynomial_resultant`,
+    `resultantPRS_eq` against Mathlib's resultant at `natDegree` bounds); the 4-arg descent
+    survives only as `private resultantPRSAux` (its recursion states genuinely need bound
+    bookkeeping — the private-aux idiom); `sylvester` keeps widths (it IS parameterized
+    matrix data); new Operations satellite `natDegree_toPolynomial_eq_size_sub_one`
+    (unconditional, `0` included).
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

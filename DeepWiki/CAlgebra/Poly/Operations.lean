@@ -249,6 +249,16 @@ theorem natDegree_toPolynomial (p : DensePoly R) :
       rw [coeff_toPolynomial]
       exact DensePoly.coeff_last_ne_zero_of_pos_size p hpos
 
+/-- The normalized representation commits the exact degree: `natDegree = size − 1`,
+unconditionally (`0` included, by `ℕ`-subtraction). -/
+theorem natDegree_toPolynomial_eq_size_sub_one (p : DensePoly R) :
+    (toPolynomial p).natDegree = p.size - 1 := by
+  rcases eq_or_ne p 0 with rfl | hp
+  · simp [toPolynomial_zero, DensePoly.size_zero]
+  · rw [natDegree_toPolynomial, DensePoly.degree?,
+      if_neg (fun h0 => hp (DensePoly.eq_zero_of_size_zero h0))]
+    rfl
+
 @[simp] theorem toPolynomial_add (p q : DensePoly R) :
     toPolynomial (p + q) = toPolynomial p + toPolynomial q := by
   ext n; simp [Polynomial.coeff_add]
