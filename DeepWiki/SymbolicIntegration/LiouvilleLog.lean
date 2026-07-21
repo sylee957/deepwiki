@@ -259,6 +259,31 @@ lemma not_isAntideriv_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u) {s 
   rw [map_sub, logDerivPoly_X, logDerivPoly_C, hs]
   simp
 
+/-- The log dichotomy, degenerate side: over char `0`, failure of `NondegenerateLog u`
+produces a base antiderivative of `u′/u` — the top-coefficient reading of the annihilated
+monic irreducible. -/
+lemma exists_antideriv_of_not_nondegenerateLog [CharZero F] (u : F)
+    (h : ¬ NondegenerateLog u) : ∃ s : F, s′ = logDeriv u := by
+  rw [NondegenerateLog] at h
+  push Not at h
+  obtain ⟨π, hm, hirr, hD0⟩ := h
+  set m := π.natDegree with hmdef
+  have hdeg : 1 ≤ m := hirr.natDegree_pos
+  have hmF : (m : F) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  have hcoeff := coeff_logDerivPoly u π (m - 1)
+  rw [hD0, coeff_zero] at hcoeff
+  have hsucc : m - 1 + 1 = m := by omega
+  rw [hsucc, hm.coeff_natDegree] at hcoeff
+  have hcast : ((m - 1 : ℕ) : F) + 1 = (m : F) := by
+    rw [Nat.cast_sub (by omega : 1 ≤ m), Nat.cast_one]; ring
+  rw [hcast, mul_one] at hcoeff
+  refine ⟨-(π.coeff (m - 1)) / (m : F), ?_⟩
+  have hmcast : Differential.deriv (m : F) = 0 := Derivation.map_natCast _ m
+  rw [Differential.deriv.leibniz_div_const (-(π.coeff (m - 1))) (m : F) hmcast,
+    smul_eq_mul, map_neg]
+  rw [show (π.coeff (m - 1))′ = -((m : F) * logDeriv u) from by linear_combination -hcoeff]
+  rw [neg_neg, ← mul_assoc, inv_mul_cancel₀ hmF, one_mul]
+
 /-- Given `NondegenerateLog`, no monic `d` of positive `t`-degree is annihilated by `D`: `D d ≠ 0`. -/
 lemma logDerivPoly_ne_zero_of_monic [CharZero F] (u : F) (hnd : NondegenerateLog u) {d : F[X]}
     (hm : d.Monic) (hdeg : 1 ≤ d.natDegree) : logDerivPoly u d ≠ 0 := by

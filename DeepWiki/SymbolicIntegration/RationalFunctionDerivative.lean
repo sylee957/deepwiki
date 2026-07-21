@@ -107,6 +107,14 @@ noncomputable instance : Differential (RatFunc K) :=
   ⟨ratFuncKDeriv.restrictScalars ℤ⟩
 
 open scoped Differential in
+/-- `x`-constants have derivative zero: `(algebraMap (C c))′ = 0` in `K(x)`. -/
+theorem deriv_algebraMap_C (c : K) :
+    (algebraMap K[X] (RatFunc K) (C c))′ = 0 := by
+  rw [show (algebraMap K[X] (RatFunc K) (C c))′
+      = ratFuncDeriv (algebraMap K[X] (RatFunc K) (C c)) from rfl,
+    ratFuncDeriv_algebraMap, derivative_C, map_zero]
+
+open scoped Differential in
 /-- `logDeriv` kills a nonzero `x`-constant factor: for a nonzero constant `c ∈ K` (a `C`-constant, hence
 `x`-derivative `0`) and a nonzero polynomial `f ∈ K[x]`, `logDeriv (algebraMap (C c · f)) = logDeriv (algebraMap f)`
 over `K(x)`. General identity (associate-invariance of `logDeriv` under constant scaling); the `log(c)` term is
