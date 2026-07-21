@@ -601,7 +601,7 @@ open DeepWiki.SymbolicIntegration in
 /-- **The derivative of an LRT result**: the formal derivative of the represented sum of
 logarithms `∑ᵢ ∑_{Qᵢ(α)=0} α · log Sᵢ(α, x)`, read in `RatFunc R` — the record's
 denotation. -/
-noncomputable def LrtResult.deriv (res : LrtResult R) : RatFunc R :=
+noncomputable def ResultLrt.deriv (res : ResultLrt R) : RatFunc R :=
   (res.terms.map lrtPairTerm).sum
 
 open DeepWiki.SymbolicIntegration in
@@ -734,7 +734,7 @@ fraction (the zero fraction is covered by the empty record). -/
 theorem lrtIntegrate_complete (g : DenseFrac R)
     (hsf : Squarefree g.den.toPoly)
     (hprop : RatFunc.IsProper (DenseFrac.toRatFunc g)) :
-    ∃ res : LrtResult R, res.deriv = DenseFrac.toRatFunc g := by
+    ∃ res : ResultLrt R, res.deriv = DenseFrac.toRatFunc g := by
   refine ⟨lrtIntegrate g, ?_⟩
   rcases eq_or_ne g.num 0 with hnum0 | hnum0
   · have hnil := (lrtIntegrate_terms_eq_nil_iff g hsf hprop).mpr hnum0

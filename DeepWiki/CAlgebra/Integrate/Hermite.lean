@@ -1,4 +1,5 @@
 import DeepWiki.CAlgebra.Integrate.PolyPart
+import DeepWiki.CAlgebra.Integrate.Results
 import DeepWiki.CAlgebra.Diff.RatFunc
 import DeepWiki.CAlgebra.Frac.Field
 import DeepWiki.CAlgebra.Diff.Frac
@@ -132,21 +133,6 @@ private theorem hermiteFactorAux_spec {d : DensePoly R} (hd0 : d ≠ 0) (hdsf : 
       linear_combination ih + hstep
 
 variable [DensePolySquarefree R]
-
-/-- Bundled Hermite output: `f = rational′ + poly + logPart`, with the log part **proper**
-and its canonical (monic, coprime) denominator additionally **squarefree** — the input
-contract of the logarithmic stage, carried as invariants rather than side theorems. -/
-structure HermiteResult (R : Type u) [Field R] [DecidableEq R] where
-  /-- The integrated rational part `G`; its derivative is its contribution. -/
-  rational : DenseFrac R
-  /-- The polynomial part. -/
-  poly : DensePoly R
-  /-- The remaining fraction, destined for the logarithmic stage. -/
-  logPart : DenseFrac R
-  /-- The log part's denominator is squarefree. -/
-  logPart_den_squarefree : Squarefree logPart.den.toPoly
-  /-- The log part is proper. -/
-  logPart_isProper : RatFunc.IsProper (DenseFrac.toRatFunc logPart)
 
 omit [CharZero R] in
 /-- The factor column of `sqfPartFrac` is the squarefree decomposition itself. -/
@@ -327,7 +313,7 @@ private theorem logsum_isProper (f : DenseFrac R) :
 
 /-- **Hermite reduction** of a canonical fraction: the bundled result — no nonzeroness
 hypotheses anywhere, since the canonical denominator is monic. -/
-def hermiteReduce (f : DenseFrac R) : HermiteResult R where
+def hermiteReduce (f : DenseFrac R) : ResultHermite R where
   rational := ((sqfPartFrac f.num f.den.toPoly).2.map
     fun fa => (hermiteFactorAux fa.1 fa.2.reverse).1).sum
   poly := (sqfPartFrac f.num f.den.toPoly).1

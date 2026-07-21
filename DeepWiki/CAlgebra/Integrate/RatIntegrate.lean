@@ -15,19 +15,9 @@ namespace DensePoly
 variable {R : Type u} [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R]
   [DensePolySquarefree R]
 
-/-- The full rational integral as computable data: the Hermite rational part, the
-integrated polynomial part, and the `RootSum` log data. -/
-structure RatIntegral (R : Type u) [Field R] [DecidableEq R] where
-  /-- The rational part of the antiderivative (Hermite). -/
-  rational : DenseFrac R
-  /-- The integrated polynomial part. -/
-  poly : DensePoly R
-  /-- The logarithmic part, as `RootSum` data. -/
-  logs : LrtResult R
-
 /-- **Rational integration**: Hermite-reduce, integrate the polynomial part, and run the
 LRT log stage. -/
-def ratIntegrate (f : DenseFrac R) : RatIntegral R where
+def ratIntegrate (f : DenseFrac R) : ResultRatIntegral R where
   rational := (hermiteReduce f).rational
   poly := polyIntegrate (hermiteReduce f).poly
   logs := lrtIntegrate (hermiteReduce f).logPart

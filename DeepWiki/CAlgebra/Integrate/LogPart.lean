@@ -1,4 +1,5 @@
 import DeepWiki.CAlgebra.Integrate.Hermite
+import DeepWiki.CAlgebra.Integrate.Results
 import DeepWiki.CAlgebra.Resultant
 
 /-! # The logarithmic part: Lazard–Rioboo–Trager
@@ -87,20 +88,9 @@ theorem lrtLogTerms_fst_squarefree (b d : DensePoly R) :
   rw [ht1]
   exact ⟨DensePolySquarefree.squarefree_of_mem (fst_mem_of_mem_zipIdx hQi), by omega⟩
 
-
-/-- Bundled Lazard–Rioboo–Trager output for a canonical fraction: the computable
-`RootSum` data of the logarithmic integral — pairs `(Qᵢ, Sᵢ)` meaning
-`∫ = ∑ᵢ ∑_{Qᵢ(α)=0} α · log Sᵢ(α, x)` — with the factor contract carried as an
-invariant. -/
-structure LrtResult (R : Type u) [Field R] [DecidableEq R] where
-  /-- The log-term pairs `(Qᵢ, Sᵢ)`. -/
-  terms : List (DensePoly R × DensePoly (DensePoly R))
-  /-- Every `Qᵢ` is squarefree and nonconstant. -/
-  fst_squarefree : ∀ t ∈ terms, Squarefree t.1 ∧ 1 < t.1.size
-
 /-- **The LRT stage, bundled**: the log-part data of a canonical fraction, with its
 contract. -/
-def lrtIntegrate (h : DenseFrac R) : LrtResult R where
+def lrtIntegrate (h : DenseFrac R) : ResultLrt R where
   terms := lrtLogPart h
   fst_squarefree := lrtLogTerms_fst_squarefree h.num h.den.toPoly
 

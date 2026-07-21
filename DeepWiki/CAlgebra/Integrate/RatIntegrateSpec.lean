@@ -22,7 +22,7 @@ variable {R : Type u} [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R]
 /-- **The derivative of a rational integral**: the formal derivative of the represented
 antiderivative `rational + ∫poly + ∑ᵢ ∑_{Qᵢ(α)=0} α · log Sᵢ(α, x)` — the rational and
 polynomial contributions are denotations of computable engine derivatives. -/
-noncomputable def RatIntegral.deriv (res : RatIntegral R) : RatFunc R :=
+noncomputable def ResultRatIntegral.deriv (res : ResultRatIntegral R) : RatFunc R :=
   DenseFrac.toRatFunc (res.rational′) + toRatFuncHom (res.poly′)
     + res.logs.deriv
 
@@ -52,7 +52,7 @@ theorem ratIntegrate_sound (f : DenseFrac R) :
 integration result — a record whose derivative is the fraction. Rational functions never
 fail to integrate; `ratIntegrate` produces the witness. -/
 theorem ratIntegrate_complete (f : DenseFrac R) :
-    ∃ res : RatIntegral R, res.deriv = DenseFrac.toRatFunc f :=
+    ∃ res : ResultRatIntegral R, res.deriv = DenseFrac.toRatFunc f :=
   ⟨ratIntegrate f, ratIntegrate_sound f⟩
 
 end DensePoly

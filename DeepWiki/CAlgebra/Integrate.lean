@@ -1,3 +1,4 @@
+import DeepWiki.CAlgebra.Integrate.Results
 import DeepWiki.CAlgebra.Integrate.PolyPart
 import DeepWiki.CAlgebra.Integrate.Hermite
 import DeepWiki.CAlgebra.Integrate.LogPart

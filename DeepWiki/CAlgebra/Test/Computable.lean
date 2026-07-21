@@ -111,7 +111,7 @@ private def sqfPartFracGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGc
 invariant is a Prop field, erased at runtime). -/
 private def hermiteReduceGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd R]
     [DensePolySquarefree R] :
-    DenseFrac R → DensePoly.HermiteResult R :=
+    DenseFrac R → DensePoly.ResultHermite R :=
   DensePoly.hermiteReduce
 
 /-- The Lazard–Rioboo–Trager log-part data computes end to end (bivariate primitive PRS +
