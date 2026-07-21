@@ -249,12 +249,9 @@ noncomputable def lrtLogArg (b d : DensePoly R) (a : R) : Polynomial R :=
   else 1
 
 open DeepWiki.SymbolicIntegration in
-/-- **Summed soundness of the log part**: over an algebraically closed field, for separable
-`D` and a proper integrand, `A/D` equals the sum over the residues of
-`a · logDeriv S(a, x)`, where `S` is the produced log argument covering `a` (and `1` at
-non-residues). Together with `hermiteReduce`'s exports this is the full logarithmic stage
-of rational integration. -/
-theorem lrtLogTerms_sum_sound (b d : DensePoly R) (hd2 : 2 ≤ d.size)
+/-- Raw core of the summed log-part soundness, on a numerator/denominator pair with size
+and separability hypotheses; the public form is `lrtLogTerms_sum_sound`. -/
+private theorem lrtLogTerms_sum_sound_core (b d : DensePoly R) (hd2 : 2 ≤ d.size)
     (hbd : b.size < d.size) (hdsep : (toPolynomial d).Separable) :
     algebraMap (Polynomial R) (RatFunc R) (toPolynomial b)
         / algebraMap (Polynomial R) (RatFunc R) (toPolynomial d)
@@ -352,54 +349,44 @@ theorem lrtLogTerms_sum_sound (b d : DensePoly R) (hd2 : 2 ≤ d.size)
     exact ⟨c, 1, hcne, one_ne_zero, by rw [← hc, map_one, one_mul, mul_one]⟩
 
 open DeepWiki.SymbolicIntegration in
-/-- **The Hermite output feeds the log stage**: the `logPart` exported by `hermiteReduce`
-satisfies every hypothesis of the summed log-part soundness — its denominator is squarefree
-(hence separable over a perfect field) and the fraction is proper. Together with
-`hermiteReduce_sound`, the engine's rational integration is theorem-backed end to end over
-an algebraically closed field. -/
-theorem hermiteReduce_logPart_sum_sound (f : DenseFrac R)
-    (hnum : (hermiteReduce f).logPart.num ≠ 0) :
-    DenseFrac.toRatFunc (hermiteReduce f).logPart
-      = ∑ a ∈ (toPolynomial (hermiteReduce f).logPart.den.toPoly).roots.toFinset.image
-            (fun α => (toPolynomial (hermiteReduce f).logPart.num).eval α
-              / (Polynomial.derivative
-                  (toPolynomial (hermiteReduce f).logPart.den.toPoly)).eval α),
+/-- **Summed soundness of the log part**: over an algebraically closed field, a proper
+canonical fraction with squarefree denominator and nonzero numerator equals the sum over
+its residues of `a · logDeriv S(a, x)`, where `S` is the produced log argument covering
+`a` (and `1` at non-residues). The hypotheses are exactly `hermiteReduce`'s exports
+(`logPart_isProper`, `logPart_den_squarefree`), so the logarithmic stage applies to the
+Hermite output directly — the engine's rational integration is theorem-backed end to end. -/
+theorem lrtLogTerms_sum_sound (g : DenseFrac R) (hnum : g.num ≠ 0)
+    (hsf : Squarefree g.den.toPoly)
+    (hprop : RatFunc.IsProper (DenseFrac.toRatFunc g)) :
+    DenseFrac.toRatFunc g
+      = ∑ a ∈ (toPolynomial g.den.toPoly).roots.toFinset.image
+            (fun α => (toPolynomial g.num).eval α
+              / (Polynomial.derivative (toPolynomial g.den.toPoly)).eval α),
           algebraMap (Polynomial R) (RatFunc R) (Polynomial.C a)
             * @Differential.logDeriv (RatFunc R) _
                 SymbolicIntegration.instDifferentialRatFunc_deepWiki
                 (algebraMap (Polynomial R) (RatFunc R)
-                  (lrtLogArg (hermiteReduce f).logPart.num
-                    (hermiteReduce f).logPart.den.toPoly a)) := by
-  have hden0 : (hermiteReduce f).logPart.den.toPoly ≠ 0 := fun h0 => by
-    have hm := (hermiteReduce f).logPart.den.monic
-    rw [h0] at hm
-    exact one_ne_zero (hm.symm.trans rfl)
-  have hprop := (hermiteReduce f).logPart_isProper
+                  (lrtLogArg g.num g.den.toPoly a)) := by
+  have hden0 : g.den.toPoly ≠ 0 := g.den.ne_zero
   have hdeg := RatFunc.degree_lt_of_isProper_of_eq_div (toPolynomial_ne_zero hden0)
-    (x := DenseFrac.toRatFunc (hermiteReduce f).logPart) rfl hprop
-  have hbd : (hermiteReduce f).logPart.num.size
-      < (hermiteReduce f).logPart.den.toPoly.size := by
-    have hn0 : toPolynomial (hermiteReduce f).logPart.num ≠ 0 := toPolynomial_ne_zero hnum
-    have hdeg' : (toPolynomial (hermiteReduce f).logPart.num).natDegree
-        < (toPolynomial (hermiteReduce f).logPart.den.toPoly).natDegree :=
+    (x := DenseFrac.toRatFunc g) rfl hprop
+  have hbd : g.num.size < g.den.toPoly.size := by
+    have hn0 : toPolynomial g.num ≠ 0 := toPolynomial_ne_zero hnum
+    have hdeg' : (toPolynomial g.num).natDegree
+        < (toPolynomial g.den.toPoly).natDegree :=
       Polynomial.natDegree_lt_natDegree hn0 hdeg
     rw [natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
       at hdeg'
-    have h1 : (hermiteReduce f).logPart.num.size ≠ 0 := fun hz =>
-      hnum (eq_zero_of_size_zero hz)
-    have h2 : (hermiteReduce f).logPart.den.toPoly.size ≠ 0 := fun hz =>
-      hden0 (eq_zero_of_size_zero hz)
+    have h1 : g.num.size ≠ 0 := fun hz => hnum (eq_zero_of_size_zero hz)
+    have h2 : g.den.toPoly.size ≠ 0 := fun hz => hden0 (eq_zero_of_size_zero hz)
     omega
-  have hd2 : 2 ≤ (hermiteReduce f).logPart.den.toPoly.size := by
-    have h1 : (hermiteReduce f).logPart.num.size ≠ 0 := fun hz =>
-      hnum (eq_zero_of_size_zero hz)
+  have hd2 : 2 ≤ g.den.toPoly.size := by
+    have h1 : g.num.size ≠ 0 := fun hz => hnum (eq_zero_of_size_zero hz)
     omega
-  have hsep : (toPolynomial (hermiteReduce f).logPart.den.toPoly).Separable :=
-    (PerfectField.separable_iff_squarefree).mpr
-      (squarefree_toPolynomial_iff.mpr (hermiteReduce f).logPart_den_squarefree)
+  have hsep : (toPolynomial g.den.toPoly).Separable :=
+    (PerfectField.separable_iff_squarefree).mpr (squarefree_toPolynomial_iff.mpr hsf)
   rw [DenseFrac.toRatFunc]
-  exact lrtLogTerms_sum_sound (hermiteReduce f).logPart.num
-    (hermiteReduce f).logPart.den.toPoly hd2 hbd hsep
+  exact lrtLogTerms_sum_sound_core g.num g.den.toPoly hd2 hbd hsep
 
 end Capstone
 

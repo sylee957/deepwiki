@@ -6,7 +6,11 @@ the rest is per-theorem bridging plumbing. Restructure it into a cubical (commut
 discipline: bundled denotations, one measure, one walk bundle, one instance-boundary API.
 The theorem *statements* (`lrtLogTerms_isSimilar_gcd`, `lrtLogTerms_sum_sound`,
 `hermiteReduce_logPart_sum_sound`, and the square/coverage lemmas) survive verbatim — this
-is proof- and file-structure work only.
+is proof- and file-structure work only. (Post-refactor follow-up, 2026-07-21:
+`lrtLogTerms_sum_sound` was then restated on a `DenseFrac` with hypotheses shaped as
+`hermiteReduce`'s record exports, and `hermiteReduce_logPart_sum_sound` was deleted as
+redundant — the bundled capstone applies to `(hermiteReduce f).logPart` directly; the raw
+pair form survives as the private `lrtLogTerms_sum_sound_core`.)
 
 ## Diagnosis (why it reads messy)
 
