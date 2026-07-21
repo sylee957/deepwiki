@@ -103,6 +103,38 @@ instance : EuclideanDomain (DensePoly R) :=
         omega }
 
 
+/-- `toPolynomial` transports exact division: for `q ∣ p` the executable quotient maps to
+Mathlib's quotient. -/
+theorem toPolynomial_div_of_dvd {p q : DensePoly R} (h : q ∣ p) :
+    toPolynomial (div p q) = toPolynomial p / toPolynomial q := by
+  rcases eq_or_ne q 0 with rfl | hq0
+  · obtain rfl : p = 0 := zero_dvd_iff.mp h
+    rw [div_zero, toPolynomial_zero, EuclideanDomain.zero_div]
+  · have htq0 : toPolynomial q ≠ 0 := toPolynomial_ne_zero hq0
+    apply mul_left_cancel₀ htq0
+    have h1 : q * div p q = p := EuclideanDomain.mul_div_cancel' hq0 h
+    rw [← toPolynomial_mul, h1, EuclideanDomain.mul_div_cancel' htq0 (toPolynomial_dvd h)]
+
+/-- `toPolynomial` transports primality (in both directions, via the ring equivalence). -/
+theorem prime_toPolynomial_iff {p : DensePoly R} : Prime (toPolynomial p) ↔ Prime p := by
+  constructor
+  · intro h
+    refine ⟨fun h0 => h.ne_zero (by rw [h0, toPolynomial_zero]),
+      fun hu => h.not_unit (by simpa using hu.map (equiv (R := R))), fun a b hab => ?_⟩
+    rcases h.2.2 _ _ (by rw [← toPolynomial_mul]; exact toPolynomial_dvd hab) with hd | hd
+    · exact Or.inl (dvd_of_toPolynomial_dvd hd)
+    · exact Or.inr (dvd_of_toPolynomial_dvd hd)
+  · intro h
+    refine ⟨fun h0 => h.ne_zero (toPolynomial_injective (by rw [h0, toPolynomial_zero])),
+      fun hu => h.not_unit (by simpa using hu.map (equiv (R := R)).symm),
+      fun A B hAB => ?_⟩
+    obtain ⟨a, rfl⟩ : ∃ a, toPolynomial a = A := ⟨ofPolynomial A, toPolynomial_ofPolynomial A⟩
+    obtain ⟨b, rfl⟩ : ∃ b, toPolynomial b = B := ⟨ofPolynomial B, toPolynomial_ofPolynomial B⟩
+    rw [← toPolynomial_mul] at hAB
+    rcases h.2.2 a b (dvd_of_toPolynomial_dvd hAB) with hd | hd
+    · exact Or.inl (toPolynomial_dvd hd)
+    · exact Or.inr (toPolynomial_dvd hd)
+
 end DensePoly
 
 end DeepWiki.CAlgebra

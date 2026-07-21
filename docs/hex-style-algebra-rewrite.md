@@ -384,6 +384,27 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     directly (drops the check); recorded as future work, not scheduled. ★ Lesson: class-field
     projections at a `fun p => Cls.field p` eta-expansion can leave the parent-class instance
     slot as a bare metavar — supply `@`-explicit `inferInstance`s in guard defs.
+  - **6c-sqf-5 (2026-07-21): Yun SELF-VALIDATING — checker dropped, Yun is default.** The
+    runtime contract check is gone; Yun's spec is proven directly via a **sum-free ghost
+    invariant** (no classical multi-factor derivative sums). `IsYunState g c d` := `c`
+    squarefree covering the primes of ghost `g`, plus the state identity `d·g = c·deriv g`
+    (equivalent to the textbook `d = p′/g − c′` by the product rule; ghost chain = the Musser
+    descent). Mathlib side (`DeepWiki/Algebra/SquarefreeYun.lean`, upstream candidates):
+    `yun_prime_dvd_iff` — for prime `q ∣ c`, **`q ∣ d ⟺ q ∤ g`** (extract exact power
+    `g = qᵏh`, cancel `qᵏ` from the identity, char-0 kills the `k·w·q′·h` term);
+    `Polynomial.yun_step` — `(c/P) ∣ g` + new state for ghost `g/(c/P)` + the new identity by
+    pure cancellation algebra; `associated_of_squarefree_of_prime_dvd_iff` (UFD-generic).
+    Engine side: `IsYunState.step` transports through the bridge (new satellites
+    `toPolynomial_div_of_dvd`, `prime_toPolynomial_iff` in `Poly/Euclid.lean`; surjectivity via
+    `ofPolynomial`/`toPolynomial_ofPolynomial`); `yunAux_spec` fuel induction — fuel ≥ ghost
+    size suffices because the ghost strictly shrinks while nonunit (`g = c₂·g₂`, `c₂` nonunit)
+    and a unit `c₂` empties every later sweep (`yunAux_eq_nil`); reconstruction telescopes
+    `c·g = P·c₂·(c₂·g₂)` with `powProd_succ`. Priorities flipped: **Yun default (100)**,
+    Musser 90. Bench: dispatched = Yun = 82/268/350ms vs Musser 115/469/495ms (1.4–1.75×).
+    ★ Lessons: `rw [← hPc']` where `c` occurs inside `c/P` self-rewrites — use
+    `conv_lhs/rhs => rw [...]` or `.symm.trans (mul_comm ..)` witnesses; `Prime` transport
+    through the RingEquiv needs surjectivity for the mul-direction (obtain ⟨q, rfl⟩ from
+    `toPolynomial_ofPolynomial`); `NormalizationMonoid K[X]` synthesis needs `[DecidableEq K]`.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level
