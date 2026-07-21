@@ -1,18 +1,17 @@
 import DeepWiki.CAlgebra.Resultant.Sylvester
-import DeepWiki.CAlgebra.Poly.DivisionPseudo
+import DeepWiki.CAlgebra.Resultant.Descent
 
 /-! # Resultant via the pseudo-remainder sequence
 
-The Euclidean-descent resultant over a computable Euclidean domain of coefficients: reduce
-the larger argument by pseudo-division, correct by leading-coefficient powers and signs, pad
-slack degree bounds down. Each algorithm branch mirrors one Mathlib resultant identity
-(`resultant_add_mul_right`, `resultant_C_mul_right`, `resultant_add_left_deg`,
-`resultant_add_right_deg`, `resultant_comm`, and the constant/zero base cases), so the
-equivalence `resultantPRSEuclidean_eq` with the Sylvester-determinant resultant is a functional
-induction gluing those identities — polynomial-time where the determinant is factorial.
-
-The engine has two projections over one `clean` policy: `resultantDescent` keeps the constant
-ledger (the resultant), `gcdDescent` keeps the last nonzero sequence element (the gcd). -/
+The resultant projection of the descent kernel (`DeepWiki/CAlgebra/Resultant/Descent`),
+over a computable Euclidean domain of coefficients: `resultantOfTrace` folds the kernel's
+trace — pad slack degree bounds down, consume one entry per pseudo-division step,
+correcting by signs, extracted constants, and leading-coefficient powers. Each branch
+mirrors one Mathlib resultant identity (`resultant_add_mul_right`,
+`resultant_C_mul_right`, `resultant_add_left_deg`, `resultant_add_right_deg`,
+`resultant_comm`, and the constant/zero base cases), so the equivalence with the
+Sylvester-determinant resultant is a functional induction gluing those identities —
+polynomial-time where the determinant is factorial. -/
 
 open Polynomial
 
@@ -74,40 +73,40 @@ theorem pseudoDiv_natDegree_le {f g : DensePoly S} (hg : g ≠ 0) (hfg : g.size 
         omega
   omega
 
-/-! ### The algorithm -/
+/-! ### The resultant fold -/
 
-/-- **The parametrized descent engine**: pseudo-divide the larger argument, strip a factor
-from the remainder through `clean` (trivially nothing, or the content — each strip costs one
-`resultant_C_mul_right` in the equivalence proof), correct by signs and leading-coefficient
-powers (exact divisions), pad slack bounds down. `hsize` feeds termination; the bound
-parameters are internal recursion state — public entries fix them at the canonical
-degrees. -/
-def resultantDescent {σ : Type v} (clean : σ → DensePoly S → DensePoly S → DensePoly S → S × DensePoly S × σ)
-    (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
-    (st : σ) (f g : DensePoly S) (m n : ℕ) : S :=
+/-- The remainder the next fold step consumes: the tail's head divisor, `0` at the end of
+the walk. -/
+private def nextElem : List (DensePoly S × S) → DensePoly S
+  | [] => 0
+  | (r, _) :: _ => r
+
+/-- **The resultant projection of the kernel**, a fold over the trace: pad slack degree
+bounds down, handle the constant and zero base cases, and consume one trace entry per
+pseudo-division step — correcting by signs, the extracted constant, and
+leading-coefficient powers (exact divisions). Each branch mirrors one Mathlib resultant
+identity; entries are consumed in the size-ordered orientation (the entry swap lives in
+`resultantDescent`). -/
+def resultantOfTrace (trace : List (DensePoly S × S)) (f g : DensePoly S) (m n : ℕ) : S :=
   if hf0 : f = 0 then 0 ^ n * g.coeff 0 ^ m
   else if hg0 : g = 0 then 0 ^ m * f.coeff 0 ^ n
   else if m + 1 < f.size then 0
   else if n + 1 < g.size then 0
   else if _ : f.size ≤ m then
     (-1 : S) ^ (n * (m - (f.size - 1))) * g.coeff n ^ (m - (f.size - 1))
-      * resultantDescent clean hsize st f g (f.size - 1) n
+      * resultantOfTrace trace f g (f.size - 1) n
   else if _ : g.size ≤ n then
-    f.coeff m ^ (n - (g.size - 1)) * resultantDescent clean hsize st f g m (g.size - 1)
+    f.coeff m ^ (n - (g.size - 1)) * resultantOfTrace trace f g m (g.size - 1)
   else if n = 0 then g.coeff 0 ^ m
   else if m = 0 then f.coeff 0 ^ n
-  else if _ : g.size ≤ f.size then
-    (-1 : S) ^ (m * n) *
-      ((clean st f g (pseudoMod f g)).1 ^ n
-          * resultantDescent clean hsize (clean st f g (pseudoMod f g)).2.2 g
-              (clean st f g (pseudoMod f g)).2.1 n m
-        / g.leadingCoeff ^ ((f.size + 1 - g.size) * n))
   else
-    (clean st g f (pseudoMod g f)).1 ^ m
-        * resultantDescent clean hsize (clean st g f (pseudoMod g f)).2.2 f
-            (clean st g f (pseudoMod g f)).2.1 m n
-      / f.leadingCoeff ^ ((g.size + 1 - f.size) * m)
-  termination_by (f.size + g.size, m + n)
+    match trace with
+    | [] => 0
+    | (_, β) :: rest =>
+        (-1 : S) ^ (m * n)
+          * (β ^ n * resultantOfTrace rest g (nextElem rest) n m
+            / g.leadingCoeff ^ ((f.size + 1 - g.size) * n))
+  termination_by (trace.length, m + n)
   decreasing_by
     · apply Prod.Lex.right
       have h1 : f.size ≠ 0 := fun h0 => hf0 (eq_zero_of_size_zero h0)
@@ -116,42 +115,25 @@ def resultantDescent {σ : Type v} (clean : σ → DensePoly S → DensePoly S �
       have h1 : g.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
       omega
     · apply Prod.Lex.left
-      have h1 : (pseudoMod f g).size < g.size :=
-        pseudoMod_size_lt (fun h0 => hg0 (eq_zero_of_size_zero h0)) f
-      have h2 := hsize st f g (pseudoMod f g)
-      omega
-    · apply Prod.Lex.left
-      have h1 : (pseudoMod g f).size < f.size :=
-        pseudoMod_size_lt (fun h0 => hf0 (eq_zero_of_size_zero h0)) g
-      have h2 := hsize st g f (pseudoMod g f)
-      omega
+      simp
 
-/-- **The gcd projection of the descent engine**: the same state-threaded clean policies,
-walking the pseudo-remainder sequence to its last nonzero element — no bound or scalar
-bookkeeping, which the gcd (needed only up to a unit) never pays for. -/
-def gcdDescent {σ : Type v}
+/-- **The resultant on the kernel**: order the entry pair (one `resultant_comm` sign), walk
+the kernel, fold the trace. The bound parameters are recursion state — public entries fix
+them at the canonical degrees. -/
+def resultantDescent {σ : Type v}
     (clean : σ → DensePoly S → DensePoly S → DensePoly S → S × DensePoly S × σ)
     (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
-    (st : σ) (f g : DensePoly S) : DensePoly S :=
-  if g.size = 0 then f
-  else
-    gcdDescent clean hsize (clean st f g (pseudoMod f g)).2.2 g
-      (clean st f g (pseudoMod f g)).2.1
-  termination_by g.size
-  decreasing_by
-    rename_i hg0
-    have h1 : (pseudoMod f g).size < g.size := pseudoMod_size_lt hg0 f
-    have h2 := hsize st f g (pseudoMod f g)
-    omega
+    (st : σ) (f g : DensePoly S) (m n : ℕ) : S :=
+  if f.size < g.size then
+    (-1 : S) ^ (m * n) * resultantOfTrace (descentTrace clean hsize st g f) g f n m
+  else resultantOfTrace (descentTrace clean hsize st f g) f g m n
 
 /-! ### Equivalence with the Sylvester determinant -/
 
-/-- **The invariant-carrying descent equivalence**: the reconstruction identity is required
-only at states satisfying `I`, only for the pseudo-remainders actually cleaned; `I` must
-hold at entry, be closed under swapping the pair (the mirror branch), and be preserved into
-the recursive calls. Each branch is one Mathlib resultant identity, the strip costing one
-`resultant_C_mul_right`. -/
-theorem resultantDescent_eq_of_invariant {σ : Type v}
+/-- The fold equivalence along a kernel trace: the strip identity and invariant persistence
+are required only at the states the walk visits, in the size-ordered orientation. Each
+branch is one Mathlib resultant identity, the strip costing one `resultant_C_mul_right`. -/
+private theorem resultantOfTrace_eq {σ : Type v}
     (clean : σ → DensePoly S → DensePoly S → DensePoly S → S × DensePoly S × σ)
     (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
     (I : σ → DensePoly S → DensePoly S → Prop)
@@ -160,34 +142,33 @@ theorem resultantDescent_eq_of_invariant {σ : Type v}
         = pseudoMod f g)
     (hstep : ∀ st f g, 2 ≤ g.size → g.size ≤ f.size → I st f g →
       I (clean st f g (pseudoMod f g)).2.2 g (clean st f g (pseudoMod f g)).2.1)
-    (hswap : ∀ st f g, f.size < g.size → I st f g → I st g f)
-    (st : σ) (f g : DensePoly S) (m n : ℕ) :
-    I st f g →
+    (trace : List (DensePoly S × S)) (f g : DensePoly S) (m n : ℕ) :
+    (∃ st, trace = descentTrace clean hsize st f g ∧ I st f g) →
+    (2 ≤ g.size → g.size ≤ f.size) →
     (toPolynomial f).natDegree ≤ m → (toPolynomial g).natDegree ≤ n →
-    resultantDescent clean hsize st f g m n
+    resultantOfTrace trace f g m n
       = (toPolynomial f).resultant (toPolynomial g) m n := by
-  induction st, f, g, m, n using resultantDescent.induct (clean := clean) (hsize := hsize)
-    with
-  | case1 st g m n =>
-      intro _ hm hn
-      rw [resultantDescent, dif_pos rfl, toPolynomial_zero, Polynomial.resultant_zero_left,
+  induction trace, f, g, m, n using resultantOfTrace.induct with
+  | case1 trace g m n =>
+      intro _ _ hm hn
+      rw [resultantOfTrace.eq_def, dif_pos rfl, toPolynomial_zero, Polynomial.resultant_zero_left,
         coeff_toPolynomial]
-  | case2 st f m n hf0 =>
-      intro _ hm hn
-      rw [resultantDescent, dif_neg hf0, dif_pos rfl, toPolynomial_zero,
+  | case2 trace f m n hf0 =>
+      intro _ _ hm hn
+      rw [resultantOfTrace.eq_def, dif_neg hf0, dif_pos rfl, toPolynomial_zero,
         Polynomial.resultant_zero_right, coeff_toPolynomial]
-  | case3 st f g m n hf0 hg0 hm1 =>
-      intro _ hm hn
+  | case3 trace f g m n hf0 hg0 hm1 =>
+      intro _ _ hm hn
       rw [natDeg_bridge hf0] at hm
       exact absurd hm1 (by omega)
-  | case4 st f g m n hf0 hg0 hm1 hn1 =>
-      intro _ hm hn
+  | case4 trace f g m n hf0 hg0 hm1 hn1 =>
+      intro _ _ hm hn
       rw [natDeg_bridge hg0] at hn
       exact absurd hn1 (by omega)
-  | case5 st f g m n hf0 hg0 hm1 hn1 hmd ih =>
-      intro hI hm hn
-      rw [resultantDescent, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_pos hmd]
-      rw [ih hI (le_of_eq (natDeg_bridge hf0)) hn]
+  | case5 trace f g m n hf0 hg0 hm1 hn1 hmd ih =>
+      intro hex hord hm hn
+      rw [resultantOfTrace.eq_def, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_pos hmd]
+      rw [ih hex hord (le_of_eq (natDeg_bridge hf0)) hn]
       have hkey := Polynomial.resultant_add_left_deg (f := toPolynomial f)
         (g := toPolynomial g) (m := f.size - 1) (n := n) (k := m - (f.size - 1))
         (le_of_eq (natDeg_bridge hf0))
@@ -195,11 +176,11 @@ theorem resultantDescent_eq_of_invariant {σ : Type v}
         have : f.size ≠ 0 := fun h0 => hf0 (eq_zero_of_size_zero h0)
         omega] at hkey
       rw [hkey, coeff_toPolynomial]
-  | case6 st f g m n hf0 hg0 hm1 hn1 hmd hnd ih =>
-      intro hI hm hn
-      rw [resultantDescent, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
+  | case6 trace f g m n hf0 hg0 hm1 hn1 hmd hnd ih =>
+      intro hex hord hm hn
+      rw [resultantOfTrace.eq_def, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
         dif_pos hnd]
-      rw [ih hI hm (le_of_eq (natDeg_bridge hg0))]
+      rw [ih hex hord hm (le_of_eq (natDeg_bridge hg0))]
       have hkey := Polynomial.resultant_add_right_deg (f := toPolynomial f)
         (g := toPolynomial g) (m := m) (n := g.size - 1) (n - (g.size - 1))
         (le_of_eq (natDeg_bridge hg0))
@@ -207,9 +188,9 @@ theorem resultantDescent_eq_of_invariant {σ : Type v}
         have : g.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
         omega] at hkey
       rw [hkey, coeff_toPolynomial]
-  | case7 st f g m hf0 hg0 hm1 hmd hn1 hnd =>
-      intro _ hm hn
-      rw [resultantDescent, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
+  | case7 trace f g m hf0 hg0 hm1 hmd hn1 hnd =>
+      intro _ _ hm hn
+      rw [resultantOfTrace.eq_def, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
         dif_neg hnd, if_pos rfl]
       have hg1 : g.size = 1 := by
         have : g.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
@@ -218,9 +199,9 @@ theorem resultantDescent_eq_of_invariant {σ : Type v}
         conv_lhs => rw [eq_C_of_size_eq_one hg1]
         rw [toPolynomial_C]]
       rw [Polynomial.resultant_C_zero_right]
-  | case8 st f g n hf0 hg0 hn1 hnd hn0 hm1 hmd =>
-      intro _ hm hn
-      rw [resultantDescent, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
+  | case8 trace f g n hf0 hg0 hn1 hnd hn0 hm1 hmd =>
+      intro _ _ hm hn
+      rw [resultantOfTrace.eq_def, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
         dif_neg hnd, if_neg hn0, if_pos rfl]
       have hf1 : f.size = 1 := by
         have : f.size ≠ 0 := fun h0 => hf0 (eq_zero_of_size_zero h0)
@@ -229,11 +210,32 @@ theorem resultantDescent_eq_of_invariant {σ : Type v}
         conv_lhs => rw [eq_C_of_size_eq_one hf1]
         rw [toPolynomial_C]]
       rw [Polynomial.resultant_C_zero_left]
-  | case9 st f g m n hf0 hg0 hm1 hn1 hmd hnd hn0 hm0 hfg ih =>
-      intro hI hm hn
+  | case9 f g m n hf0 hg0 hm1 hn1 hmd hnd hn0 hm0 =>
+      rintro ⟨st, htr, hI⟩ hord hm hn
       have hgz : g.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
+      rw [descentTrace_of_size_ne_zero clean hsize st f g hgz] at htr
+      simp at htr
+  | case10 f g m n hf0 hg0 hm1 hn1 hmd hnd hn0 hm0 a β rest ih =>
+      rintro ⟨st, htr, hI⟩ hord hm hn
+      have hgz : g.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
+      have hg2 : 2 ≤ g.size := by
+        rw [natDeg_bridge hg0] at hn
+        omega
+      have hfg : g.size ≤ f.size := hord hg2
+      rw [descentTrace_of_size_ne_zero clean hsize st f g hgz] at htr
+      injection htr with hhead htail
+      injection hhead with ha hβ
+      subst hβ htail
+      rw [ha]
       have hlc : g.leadingCoeff ≠ 0 := leadingCoeff_ne_zero hgz
       have hlcp : g.leadingCoeff ^ ((f.size + 1 - g.size) * n) ≠ 0 := pow_ne_zero _ hlc
+      have hnext : nextElem (descentTrace clean hsize (clean st f g (pseudoMod f g)).2.2 g
+          (clean st f g (pseudoMod f g)).2.1) = (clean st f g (pseudoMod f g)).2.1 := by
+        rcases eq_or_ne (clean st f g (pseudoMod f g)).2.1.size 0 with h0 | h0
+        · rw [descentTrace_of_size_eq_zero _ _ _ _ _ h0, nextElem]
+          exact (eq_zero_of_size_zero h0).symm
+        · rw [descentTrace_of_size_ne_zero _ _ _ _ _ h0]
+          rfl
       have hr_deg : (toPolynomial (clean st f g (pseudoMod f g)).2.1).natDegree ≤ m := by
         rcases eq_or_ne (clean st f g (pseudoMod f g)).2.1 0 with hr0 | hr0
         · simp [hr0]
@@ -242,12 +244,17 @@ theorem resultantDescent_eq_of_invariant {σ : Type v}
           rw [natDeg_bridge hr0]
           rw [natDeg_bridge hf0] at hm
           omega
-      rw [resultantDescent, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
-        dif_neg hnd, if_neg hn0, if_neg hm0, dif_pos hfg]
-      have hg2 : 2 ≤ g.size := by
-        have : g.size ≠ 0 := fun h0 => hg0 (eq_zero_of_size_zero h0)
-        omega
-      rw [ih (hstep st f g hg2 hfg hI) (by rw [natDeg_bridge hg0]; omega) hr_deg]
+      rw [resultantOfTrace.eq_def, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1,
+        dif_neg hmd, dif_neg hnd, if_neg hn0, if_neg hm0]
+      dsimp only
+      rw [hnext] at ih
+      rw [hnext]
+      rw [ih ⟨(clean st f g (pseudoMod f g)).2.2, rfl, hstep st f g hg2 hfg hI⟩
+        (fun h2 => by
+          have h1 := pseudoMod_size_lt hgz f
+          have h3 := hsize st f g (pseudoMod f g)
+          omega)
+        (by rw [natDeg_bridge hg0]; omega) hr_deg]
       have hcr : Polynomial.C (clean st f g (pseudoMod f g)).1
             * toPolynomial (clean st f g (pseudoMod f g)).2.1
           = toPolynomial (pseudoMod f g) := by
@@ -286,61 +293,38 @@ theorem resultantDescent_eq_of_invariant {σ : Type v}
       rw [Polynomial.resultant_comm, mul_comm n m, ← mul_assoc, ← pow_add, ← two_mul,
         pow_mul]
       simp
-  | case10 st f g m n hf0 hg0 hm1 hn1 hmd hnd hn0 hm0 hfg ih =>
-      intro hI hm hn
-      have hfz : f.size ≠ 0 := fun h0 => hf0 (eq_zero_of_size_zero h0)
-      have hlc : f.leadingCoeff ≠ 0 := leadingCoeff_ne_zero hfz
-      have hlcp : f.leadingCoeff ^ ((g.size + 1 - f.size) * m) ≠ 0 := pow_ne_zero _ hlc
-      have hr_deg : (toPolynomial (clean st g f (pseudoMod g f)).2.1).natDegree ≤ n := by
-        rcases eq_or_ne (clean st g f (pseudoMod g f)).2.1 0 with hr0 | hr0
-        · simp [hr0]
-        · have h1 := pseudoMod_size_lt hfz g
-          have h2 := hsize st g f (pseudoMod g f)
-          rw [natDeg_bridge hr0]
-          rw [natDeg_bridge hg0] at hn
-          omega
-      rw [resultantDescent, dif_neg hf0, dif_neg hg0, if_neg hm1, if_neg hn1, dif_neg hmd,
-        dif_neg hnd, if_neg hn0, if_neg hm0, dif_neg hfg]
-      have hf2 : 2 ≤ f.size := by
-        have : f.size ≠ 0 := fun h0 => hf0 (eq_zero_of_size_zero h0)
-        omega
-      have hfg' : f.size < g.size := by omega
-      rw [ih (hstep st g f hf2 (by omega) (hswap st f g hfg' hI)) hm hr_deg]
-      have hcr : Polynomial.C (clean st g f (pseudoMod g f)).1
-            * toPolynomial (clean st g f (pseudoMod g f)).2.1
-          = toPolynomial (pseudoMod g f) := by
-        have h := congrArg toPolynomial (hclean st g f hf2 (by omega) (hswap st f g hfg' hI))
-        simpa [toPolynomial_mul, toPolynomial_C] using h
-      have hchain : (clean st g f (pseudoMod g f)).1 ^ m
-            * (toPolynomial f).resultant (toPolynomial (clean st g f (pseudoMod g f)).2.1) m n
-          = f.leadingCoeff ^ ((g.size + 1 - f.size) * m)
-            * (toPolynomial f).resultant (toPolynomial g) m n := by
-        rw [← Polynomial.resultant_C_mul_right, hcr]
-        have hCf : Polynomial.C (f.leadingCoeff ^ (g.size + 1 - f.size)) * toPolynomial g
-            = toPolynomial (pseudoMod g f)
-              + toPolynomial f * toPolynomial (pseudoDiv g f) := by
-          rw [← pseudo_identity hfz]
-          ring
-        calc (toPolynomial f).resultant (toPolynomial (pseudoMod g f)) m n
-            = (toPolynomial f).resultant
-                (toPolynomial (pseudoMod g f)
-                  + toPolynomial f * toPolynomial (pseudoDiv g f)) m n := by
-              rcases eq_or_ne (pseudoDiv g f) 0 with hq0 | hq0
-              · rw [hq0, toPolynomial_zero, mul_zero, add_zero]
-              · rw [Polynomial.resultant_add_mul_right _ _ _ _ _
-                  (by
-                    have h1 := pseudoDiv_natDegree_le hf0 (by omega) hq0
-                    rw [natDeg_bridge hf0] at hm
-                    rw [natDeg_bridge hg0] at hn
-                    omega)
-                  (by rw [natDeg_bridge hf0]; omega)]
-          _ = (toPolynomial f).resultant
-                (Polynomial.C (f.leadingCoeff ^ (g.size + 1 - f.size)) * toPolynomial g)
-                m n := by rw [hCf]
-          _ = f.leadingCoeff ^ ((g.size + 1 - f.size) * m)
-              * (toPolynomial f).resultant (toPolynomial g) m n := by
-              rw [Polynomial.resultant_C_mul_right, ← pow_mul]
-      rw [hchain, ed_mul_div_cancel_left hlcp]
+
+/-- **The invariant-carrying descent equivalence**: the reconstruction identity is required
+only at states satisfying `I`, only for the pseudo-remainders actually cleaned; `I` must
+hold at entry, be closed under swapping the pair (the entry commutation), and be preserved
+into the walk. -/
+theorem resultantDescent_eq_of_invariant {σ : Type v}
+    (clean : σ → DensePoly S → DensePoly S → DensePoly S → S × DensePoly S × σ)
+    (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
+    (I : σ → DensePoly S → DensePoly S → Prop)
+    (hclean : ∀ st f g, 2 ≤ g.size → g.size ≤ f.size → I st f g →
+      C (clean st f g (pseudoMod f g)).1 * (clean st f g (pseudoMod f g)).2.1
+        = pseudoMod f g)
+    (hstep : ∀ st f g, 2 ≤ g.size → g.size ≤ f.size → I st f g →
+      I (clean st f g (pseudoMod f g)).2.2 g (clean st f g (pseudoMod f g)).2.1)
+    (hswap : ∀ st f g, f.size < g.size → I st f g → I st g f)
+    (st : σ) (f g : DensePoly S) (m n : ℕ) :
+    I st f g →
+    (toPolynomial f).natDegree ≤ m → (toPolynomial g).natDegree ≤ n →
+    resultantDescent clean hsize st f g m n
+      = (toPolynomial f).resultant (toPolynomial g) m n := by
+  intro hI hm hn
+  rw [resultantDescent]
+  by_cases hfg : f.size < g.size
+  · rw [if_pos hfg]
+    rw [resultantOfTrace_eq clean hsize I hclean hstep _ g f n m
+      ⟨st, rfl, hswap st f g hfg hI⟩ (fun _ => by omega) hn hm]
+    rw [Polynomial.resultant_comm, mul_comm n m, ← mul_assoc, ← pow_add, ← two_mul,
+      pow_mul]
+    simp
+  · rw [if_neg hfg]
+    exact resultantOfTrace_eq clean hsize I hclean hstep _ f g m n
+      ⟨st, rfl, hI⟩ (fun _ => by omega) hm hn
 
 /-- **The unconditional descent equivalence**: the trivial-invariant specialization, for
 `clean`s whose reconstruction identity holds at every state. -/

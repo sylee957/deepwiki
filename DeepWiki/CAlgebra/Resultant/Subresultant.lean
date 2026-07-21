@@ -1,5 +1,6 @@
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Poly.Euclid
+import DeepWiki.CAlgebra.Resultant.Descent
 import DeepWiki.CAlgebra.Resultant.Euclidean
 import DeepWiki.Algebra.SubresultantPRS
 
@@ -61,72 +62,6 @@ private theorem cleanSubresultant_step (st : R × R) (f g r : DensePoly R) (hg0 
   split
   · exact hI.2
   · exact div_ne_zero (pow_ne_zero _ (leadingCoeff_ne_zero hg0)) (pow_ne_zero _ hI.2)
-
-/-! ### The gcd projection, generically over unit-β policies -/
-
-/-- **The engine's gcd divides both entries**, for any clean policy whose extracted constant
-is invariantly nonzero (each `C β` a unit, so pseudo-division steps preserve divisors up to
-units); the invariant `I` must reconstruct the strip and persist into the recursive call. -/
-theorem gcdDescent_dvd {σ : Type v}
-    (clean : σ → DensePoly R → DensePoly R → DensePoly R → R × DensePoly R × σ)
-    (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
-    (I : σ → DensePoly R → DensePoly R → Prop)
-    (hclean : ∀ st f g, g.size ≠ 0 → I st f g → (clean st f g (pseudoMod f g)).1 ≠ 0 ∧
-      C (clean st f g (pseudoMod f g)).1 * (clean st f g (pseudoMod f g)).2.1
-        = pseudoMod f g)
-    (hstep : ∀ st f g, g.size ≠ 0 → I st f g →
-      I (clean st f g (pseudoMod f g)).2.2 g (clean st f g (pseudoMod f g)).2.1)
-    (st : σ) (f g : DensePoly R) (hI : I st f g) :
-    gcdDescent clean hsize st f g ∣ f ∧ gcdDescent clean hsize st f g ∣ g := by
-  revert hI
-  induction st, f, g using gcdDescent.induct (clean := clean) (hsize := hsize) with
-  | case1 st f g hg0 =>
-      intro _
-      rw [gcdDescent, if_pos hg0]
-      exact ⟨dvd_refl f, by rw [eq_zero_of_size_zero hg0]; exact dvd_zero f⟩
-  | case2 st f g hg0 ih =>
-      intro hI
-      obtain ⟨hβ, hex⟩ := hclean st f g hg0 hI
-      obtain ⟨ih₂, ihrem⟩ := ih (hstep st f g hg0 hI)
-      rw [gcdDescent, if_neg hg0]
-      refine ⟨?_, ih₂⟩
-      apply dvd_of_dvd_C_mul (pow_ne_zero (f.size + 1 - g.size) (leadingCoeff_ne_zero hg0))
-      rw [← pseudoDivMod_spec hg0 f]
-      have hcleaned : (clean st f g (pseudoMod f g)).2.1 ∣ pseudoMod f g := by
-        conv_rhs => rw [← hex]
-        exact dvd_mul_left _ _
-      exact dvd_add (ih₂.mul_left _) (ihrem.trans hcleaned)
-
-/-- **Any common divisor divides the engine's gcd**, under the same unit-β invariant (the
-descent's strips are cancelled through their units). -/
-theorem dvd_gcdDescent {σ : Type v}
-    (clean : σ → DensePoly R → DensePoly R → DensePoly R → R × DensePoly R × σ)
-    (hsize : ∀ st f g r, (clean st f g r).2.1.size ≤ r.size)
-    (I : σ → DensePoly R → DensePoly R → Prop)
-    (hclean : ∀ st f g, g.size ≠ 0 → I st f g → (clean st f g (pseudoMod f g)).1 ≠ 0 ∧
-      C (clean st f g (pseudoMod f g)).1 * (clean st f g (pseudoMod f g)).2.1
-        = pseudoMod f g)
-    (hstep : ∀ st f g, g.size ≠ 0 → I st f g →
-      I (clean st f g (pseudoMod f g)).2.2 g (clean st f g (pseudoMod f g)).2.1)
-    {d : DensePoly R} (st : σ) (f g : DensePoly R) (hI : I st f g)
-    (h₁ : d ∣ f) (h₂ : d ∣ g) : d ∣ gcdDescent clean hsize st f g := by
-  revert hI h₁ h₂
-  induction st, f, g using gcdDescent.induct (clean := clean) (hsize := hsize) with
-  | case1 st f g hg0 =>
-      intro _ h₁ _
-      rw [gcdDescent, if_pos hg0]
-      exact h₁
-  | case2 st f g hg0 ih =>
-      intro hI h₁ h₂
-      obtain ⟨hβ, hex⟩ := hclean st f g hg0 hI
-      rw [gcdDescent, if_neg hg0]
-      refine ih (hstep st f g hg0 hI) h₂ ?_
-      have hrem : d ∣ pseudoMod f g := by
-        rw [pseudoMod_eq_sub hg0]
-        exact dvd_sub (h₁.mul_left _) (h₂.mul_left _)
-      apply dvd_of_dvd_C_mul hβ
-      rw [hex]
-      exact hrem
 
 /-! ### The subresultant-PRS gcd -/
 

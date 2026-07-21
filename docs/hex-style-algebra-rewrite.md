@@ -676,6 +676,30 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     version still needs Brown '78 ψ-integrality, unchanged). Sanity: engine-projected gcd
     recovers d8 up to a unit; field subresultant resultant = primitive on d8/d8′. No
     instance registered for the field variant (primitive still dispatches).
+  - **6c-res-8 (2026-07-21, IN REVIEW — uncommitted): the sequence projection.** Third
+    engine projection `prsDescent` (returns the cleaned PRS itself from the second entry
+    on); the bivariate `prsPrimitive` re-expressed as its z-content-policy instantiation —
+    FUEL PARAMETER RETIRED (WF on `g.size` via `zPrimitive_size_le`), LRT call site
+    simplified. LRT outputs value-identical (scratch re-run + catalog native_decide pins).
+  - **6c-res-9 (2026-07-21, IN REVIEW — uncommitted): ONE KERNEL.** `descentTrace` is now
+    the engine's single recursion (walk the PRS under a clean policy, record each divisor +
+    extracted constant); all three projections consume it: `prsDescent` = map,
+    `gcdDescent` = `lastElem` fold (step/base satellites `gcdDescent_of_size_{ne_,eq_}zero`
+    replace `.induct`-unfolds; universal-property proofs re-anchored on
+    `descentTrace.induct`), `resultantDescent` = `resultantOfTrace` bound-carrying fold +
+    a one-time entry `resultant_comm` (replacing the old fused-swap branch case10).
+    Equivalence proof reorganized compositionally as `resultantOfTrace_eq` (same per-branch
+    Mathlib identities, trace-identification invariant `∃ st, trace = descentTrace …`;
+    NO closed-form telescope needed — foldr keeps it local). Computationally identical
+    (β's were already computed by every projection; corrections still only in the resultant
+    fold): primitive 163ms / reduced 504ms, all agreement + gcd + LRT value checks
+    reproduce. ★ Lean gotchas: WF-def with inner `match` needs `.eq_def` rewrites + `dsimp
+    only` for iota; `subst (ha : a = g)` eliminates `g` not `a` — use `rw [ha]`.
+    REORG same sitting: kernel extracted to `Resultant/Descent.lean` (`descentTrace` +
+    satellites + `prsDescent`/`lastElem`/`gcdDescent` + the generic gcd universal-property
+    lemmas, kernel section generalized `EuclideanDomain`→`CommRing` — pseudo-division never
+    needed more); `Euclidean.lean` = the resultant fold + equivalence only;
+    `Subresultant.lean` = policy + instantiations + exactness arc only.
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

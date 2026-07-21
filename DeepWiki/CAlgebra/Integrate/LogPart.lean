@@ -43,7 +43,7 @@ Rothstein–Trager resultant at exponent `i` (constant factors dropped — they 
 the log argument `Sᵢ(z,x)` is the `x`-degree-`i` element of the remainder sequence — or `d`
 itself when `i = deg d`. -/
 def lrtLogTerms (b d : DensePoly R) : List (DensePoly R × DensePoly (DensePoly R)) :=
-  let prs := prsPrimitive d.size (liftX d) (liftX b - zC * liftX (d′))
+  let prs := prsPrimitive (liftX d) (liftX b - zC * liftX (d′))
   (DensePolySquarefree.sqfDecomp (rtResultant b d)).zipIdx.filterMap fun Qi =>
     if Qi.1.size ≤ 1 then none
     else some (Qi.1,

@@ -1,5 +1,6 @@
 import DeepWiki.CAlgebra.Poly.DivisionPseudo
 import DeepWiki.CAlgebra.Gcd.Dense
+import DeepWiki.CAlgebra.Resultant.Descent
 import DeepWiki.CAlgebra.Resultant.Euclidean
 
 /-! # The primitive pseudo-remainder sequence over `K[z]`
@@ -126,14 +127,20 @@ def zContent (p : DensePoly (DensePoly R)) : DensePoly R :=
 def zPrimitive (p : DensePoly (DensePoly R)) : DensePoly (DensePoly R) :=
   ofList (p.coeffs.map fun c => div c (zContent p))
 
+/-- The `z`-primitive part is no larger. -/
+theorem zPrimitive_size_le (p : DensePoly (DensePoly R)) : (zPrimitive p).size ≤ p.size := by
+  rw [zPrimitive]
+  set l := p.coeffs.map fun c => div c (zContent p) with hl
+  have h1 : (ofList l).size ≤ l.length := trimTrailingZeros_length_le l
+  have h2 : l.length = p.size := by rw [hl, List.length_map]; rfl
+  omega
+
 /-- The primitive pseudo-remainder sequence in `x` over `K[z]`, starting from the second
-input: pseudo-divide, take the `z`-primitive part, recurse. -/
-def prsPrimitive : ℕ → DensePoly (DensePoly R) → DensePoly (DensePoly R) →
-    List (DensePoly (DensePoly R))
-  | 0, _, _ => []
-  | fuel + 1, A, B =>
-      if B = 0 then []
-      else B :: prsPrimitive fuel B (zPrimitive (pseudoMod A B))
+input — the `z`-content-stripping policy through the engine's sequence projection
+(pseudo-divide, take the `z`-primitive part, recurse). -/
+def prsPrimitive (A B : DensePoly (DensePoly R)) : List (DensePoly (DensePoly R)) :=
+  prsDescent (σ := PUnit.{1}) (fun _ _ _ r => (zContent r, zPrimitive r, PUnit.unit))
+    (fun _ _ _ r => zPrimitive_size_le r) PUnit.unit A B
 
 end DensePoly
 
