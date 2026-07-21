@@ -125,22 +125,67 @@ def zContent (p : DensePoly (DensePoly R)) : DensePoly R :=
 
 /-- The `z`-primitive part: divide each `x`-coefficient by the content. -/
 def zPrimitive (p : DensePoly (DensePoly R)) : DensePoly (DensePoly R) :=
-  ofList (p.coeffs.map fun c => div c (zContent p))
+  ofList (p.coeffs.map (· / zContent p))
 
 /-- The `z`-primitive part is no larger. -/
 theorem zPrimitive_size_le (p : DensePoly (DensePoly R)) : (zPrimitive p).size ≤ p.size := by
   rw [zPrimitive]
-  set l := p.coeffs.map fun c => div c (zContent p) with hl
+  set l := p.coeffs.map (· / zContent p) with hl
   have h1 : (ofList l).size ≤ l.length := trimTrailingZeros_length_le l
   have h2 : l.length = p.size := by rw [hl, List.length_map]; rfl
   omega
 
-/-- The primitive pseudo-remainder sequence in `x` over `K[z]`, starting from the second
-input — the `z`-content-stripping policy through the engine's sequence projection
-(pseudo-divide, take the `z`-primitive part, recurse). -/
-def prsPrimitive (A B : DensePoly (DensePoly R)) : List (DensePoly (DensePoly R)) :=
-  prsDescent (σ := PUnit.{1}) (fun _ _ _ r => (zContent r, zPrimitive r, PUnit.unit))
-    (fun _ _ _ r => zPrimitive_size_le r) PUnit.unit A B
+private theorem foldr_zgcd_dvd (l : List (DensePoly R)) :
+    ∀ x ∈ l, l.foldr (fun c acc => DensePolyGcd.gcd c acc) 0 ∣ x := by
+  induction l with
+  | nil => intro x hx; exact absurd hx (List.not_mem_nil)
+  | cons a t ih =>
+      intro x hx
+      rcases List.mem_cons.mp hx with rfl | hx
+      · exact DensePolyGcd.gcd_dvd_left _ _
+      · exact (DensePolyGcd.gcd_dvd_right _ _).trans (ih x hx)
+
+/-- The `z`-content divides every `x`-coefficient. -/
+theorem zContent_dvd_coeff (p : DensePoly (DensePoly R)) (i : ℕ) :
+    zContent p ∣ p.coeff i := by
+  rw [coeff]
+  by_cases h : i < p.coeffs.length
+  · exact foldr_zgcd_dvd p.coeffs _ (by
+      rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h]
+      exact List.getElem_mem h)
+  · rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]
+    exact dvd_zero _
+
+/-- `z`-content–primitive reconstruction: `C (zContent p) * zPrimitive p = p`. -/
+theorem C_zContent_mul_zPrimitive (p : DensePoly (DensePoly R)) :
+    C (zContent p) * zPrimitive p = p := by
+  apply toPolynomial_injective
+  refine Polynomial.ext fun i => ?_
+  rw [toPolynomial_mul, toPolynomial_C, Polynomial.coeff_C_mul, coeff_toPolynomial,
+    coeff_toPolynomial, zPrimitive, coeff_ofList, List.getD_eq_getElem?_getD,
+    List.getElem?_map]
+  by_cases h : i < p.coeffs.length
+  · rw [List.getElem?_eq_getElem h]
+    show zContent p * (p.coeffs[i] / zContent p) = p.coeff i
+    rcases eq_or_ne (zContent p) 0 with hc0 | hc0
+    · have hz : p.coeffs[i] = 0 := by
+        have := zContent_dvd_coeff p i
+        rw [hc0, zero_dvd_iff, coeff, List.getD_eq_getElem?_getD,
+          List.getElem?_eq_getElem h] at this
+        simpa using this
+      rw [hz, hc0, EuclideanDomain.zero_div, mul_zero, coeff,
+        List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h]
+      simp [hz]
+    · rw [EuclideanDomain.mul_div_cancel' hc0 (by
+        have := zContent_dvd_coeff p i
+        rwa [coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h] at this)]
+      rw [coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h]
+      rfl
+  · rw [List.getElem?_eq_none (by omega)]
+    show zContent p * 0 = p.coeff i
+    rw [mul_zero, coeff_eq_zero_of_size_le p (by
+      show p.coeffs.length ≤ i
+      omega)]
 
 end DensePoly
 

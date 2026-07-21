@@ -700,6 +700,24 @@ Each phase ends gate-green (`scripts/check.sh`) and is one commit.
     lemmas, kernel section generalized `EuclideanDomain`→`CommRing` — pseudo-division never
     needed more); `Euclidean.lean` = the resultant fold + equivalence only;
     `Subresultant.lean` = policy + instantiations + exactness arc only.
+  - **6c-res-10 (2026-07-21, IN REVIEW — uncommitted): switchable PRS.** New dispatch class
+    `DensePolyPRS` (Resultant/Dense.lean): an instance IS a clean policy bundled with
+    unconditional strip exactness (`C β * cleaned = r`); `DensePolyPRS.prs` derives as the
+    kernel's sequence projection. Instances: trivial 100 (CommRing), content 200
+    (EuclideanDomain), z-content 300 at polynomial coefficients (via the dispatched
+    `DensePolyGcd`) — the last needed the NEW `C_zContent_mul_zPrimitive` exactness
+    (fold-dvd through the gcd class contract + `EuclideanDomain.mul_div_cancel'`;
+    zPrimitive respelled with `/`). `lrtLogTerms` now consumes the class (both its
+    resultant AND its PRS are dispatched); `prsPrimitive` retired. LRT values identical.
+    ★ Gotcha: bivariate `toPolynomial_injective; ext i` recurses into inner-DensePoly
+    coefficients — pin with `refine Polynomial.ext fun i => ?_`.
+    SAME SITTING: class reshaped to an **invariant-carried contract** (`Inv`/`entry_inv`/
+    `inv_step`; `clean_exact` guarded by `Inv` + `g.size ≠ 0`, specialized to the walk's
+    `pseudoMod`) — this admits state-conditional policies, and the TRUE subresultant β now
+    instantiates at priority 250 over any field (`subresultantDensePolyPRS`, sharing
+    `cleanSubresultant` + its spec/step lemmas — de-privatized — with `gcdSubresultant`);
+    stateless instances take `Inv := fun _ => True`. Field-carrier prs dispatch is now the
+    subresultant policy (250 > content 200); bivariate unchanged (z-content 300).
   - **6b DONE:** `Diff/DifferentialBridge.lean` — gave `Polynomial R` a `Differential` instance (via
     `Polynomial.derivative`; Mathlib lacks it) and proved `toPolynomial_differential : toPolynomial p′
     = (toPolynomial p)′` — `toPolynomial` is a differential-ring MORPHISM (the derivation-level

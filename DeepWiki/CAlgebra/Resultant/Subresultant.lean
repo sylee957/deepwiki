@@ -40,7 +40,7 @@ theorem cleanSubresultant_size (st : R × R) (f g r : DensePoly R) :
 
 /-- On nonzero states, the policy's `β` is nonzero and the strip reconstructs:
 `C β * cleaned = r`. -/
-private theorem cleanSubresultant_spec (st : R × R) (f g r : DensePoly R)
+theorem cleanSubresultant_spec (st : R × R) (f g r : DensePoly R)
     (hI : st.1 ≠ 0 ∧ st.2 ≠ 0) :
     (cleanSubresultant st f g r).1 ≠ 0 ∧
       C (cleanSubresultant st f g r).1 * (cleanSubresultant st f g r).2.1 = r := by
@@ -53,7 +53,7 @@ private theorem cleanSubresultant_spec (st : R × R) (f g r : DensePoly R)
   rw [← mul_assoc, ← C_mul, mul_inv_cancel₀ hβ, ← one_def, one_mul]
 
 /-- Nonzero states persist across the policy's state update. -/
-private theorem cleanSubresultant_step (st : R × R) (f g r : DensePoly R) (hg0 : g.size ≠ 0)
+theorem cleanSubresultant_step (st : R × R) (f g r : DensePoly R) (hg0 : g.size ≠ 0)
     (hI : st.1 ≠ 0 ∧ st.2 ≠ 0) :
     (cleanSubresultant st f g r).2.2.1 ≠ 0 ∧ (cleanSubresultant st f g r).2.2.2 ≠ 0 := by
   refine ⟨leadingCoeff_ne_zero hg0, ?_⟩

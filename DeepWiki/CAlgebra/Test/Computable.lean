@@ -120,6 +120,12 @@ private def lrtLogPartGuard [Field R] [DecidableEq R] [CharZero R] [DensePolyGcd
     [DensePolySquarefree R] :
     DenseFrac R → List (DensePoly R × DensePoly (DensePoly R)) := DensePoly.lrtLogPart
 
+/-- The dispatched pseudo-remainder sequence computes at the bivariate carrier (the
+`z`-content policy through the dispatched gcd should win the priority). -/
+private def prsDispatchGuard [Field R] [DecidableEq R] [DensePolyGcd R] :
+    DensePoly (DensePoly R) → DensePoly (DensePoly R) → List (DensePoly (DensePoly R)) :=
+  DensePolyPRS.prs
+
 /-- The reduced-PRS resultant computes (Collins' carried divisors, unchecked). -/
 private def resultantPRSReducedGuard [Field R] [DecidableEq R] :
     DensePoly (DensePoly R) → DensePoly (DensePoly R) → DensePoly R :=
