@@ -51,3 +51,15 @@ globs = ["MinPlusCalc.+"]
 name = "minplus"
 srcDir = "tools"
 root = "MinPlusCalc.Main"
+
+# Verified rational-integration CLI (DeepWiki.CAlgebra Frontend). Out of `defaultTargets`
+# like the other tooling. Build with `lake build integrate`; run `lake exe integrate "1/(x^2-1)"`.
+[[lean_lib]]
+name = "RatIntegrate"
+srcDir = "tools"
+globs = ["RatIntegrate.+"]
+
+[[lean_exe]]
+name = "integrate"
+srcDir = "tools"
+root = "RatIntegrate.Main"

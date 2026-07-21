@@ -359,4 +359,39 @@ instance [IsDomain R] : NoZeroDivisors (DensePoly R) where
 instance [IsDomain R] : IsDomain (DensePoly R) :=
   NoZeroDivisors.to_isDomain _
 
+/-- Horner evaluation of a dense polynomial. -/
+def evalAt (α : R) (p : DensePoly R) : R :=
+  p.coeffs.foldr (fun c acc => c + α * acc) 0
+
+omit [DecidableEq R] in
+private theorem foldr_horner (α : R) :
+    ∀ l : List R, l.foldr (fun c acc => c + α * acc) 0
+      = ∑ i ∈ Finset.range l.length, l.getD i 0 * α ^ i := by
+  intro l
+  induction l with
+  | nil => simp
+  | cons c t ih =>
+      rw [List.foldr_cons, ih, List.length_cons, Finset.sum_range_succ',
+        Finset.mul_sum]
+      simp only [List.getD_cons_succ, List.getD_cons_zero, pow_zero, mul_one]
+      rw [add_comm]
+      congr 1
+      refine Finset.sum_congr rfl fun i _ => ?_
+      ring
+
+/-- `evalAt` computes the Mathlib evaluation. -/
+theorem evalAt_eq (α : R) (p : DensePoly R) :
+    evalAt α p = (toPolynomial p).eval α := by
+  rcases eq_or_ne p 0 with rfl | hp
+  · rw [toPolynomial_zero, Polynomial.eval_zero]
+    rfl
+  · rw [evalAt, foldr_horner,
+      Polynomial.eval_eq_sum_range' (n := p.size) (by
+        rw [natDegree_toPolynomial_eq_size_sub_one]
+        have : p.size ≠ 0 := fun h => hp (DensePoly.eq_zero_of_size_zero h)
+        omega)]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [coeff_toPolynomial]
+    rfl
+
 end DeepWiki.CAlgebra
