@@ -50,6 +50,21 @@ theorem implicitDeriv_X_coeff_zero (p : R[X]) :
     smul_eq_mul, Polynomial.mul_coeff_zero, Polynomial.coeff_X_zero]
   ring
 
+/-- The canonical equivalence `R[X] ⧸ (X) ≃ R` induced by evaluation at `X = 0`. -/
+noncomputable def quotientSpanXAlgEquiv :
+    (R[X] ⧸ Ideal.span ({X} : Set R[X])) ≃ₐ[R] R := by
+  let h : Ideal.span ({X} : Set R[X]) = Ideal.span ({X - C 0} : Set R[X]) := by simp
+  exact (Ideal.quotientEquivAlgOfEq R h).trans
+    (Polynomial.quotientSpanXSubCAlgEquiv (R := R) 0)
+
+omit [Differential R] in
+/-- Under `R[X] ⧸ (X) ≃ R`, the quotient projection is substitution `X ↦ 0`. -/
+@[simp] theorem quotientSpanXAlgEquiv_mk (p : R[X]) :
+    let π := Ideal.Quotient.mk (Ideal.span ({X} : Set R[X]))
+    let e := quotientSpanXAlgEquiv (R := R)
+    e (π p) = p.eval 0 := by
+  simp [quotientSpanXAlgEquiv]
+
 /-- The differential ideal `(X^m)` for `Differential.implicitDeriv X`. -/
 noncomputable def implicitDerivXSpanXPow (m : ℕ) : DifferentialIdeal R[X] where
   toIdeal := Ideal.span {X ^ m}
@@ -67,49 +82,62 @@ noncomputable def implicitDerivXSpanXPow (m : ℕ) : DifferentialIdeal R[X] wher
     rw [Derivation.leibniz]
     exact dvd_add (dvd_mul_right _ _) (dvd_mul_of_dvd_right hpow b)
 
-/-- The evaluation-at-zero differential ideal `(X)`. -/
-noncomputable abbrev implicitDerivXSpanX : DifferentialIdeal R[X] where
-  toIdeal := Ideal.span {X - C 0}
-  deriv_mem' := by
-    simpa [implicitDerivXSpanXPow] using (implicitDerivXSpanXPow (R := R) 1).deriv_mem'
-
 /-- The derivation on `R[X] ⧸ (X)` induced by `Differential.implicitDeriv X`. -/
 noncomputable def implicitDeriv_X_quotientDerivation :
-    Derivation ℤ (R[X] ⧸ Ideal.span ({X - C 0} : Set R[X]))
-      (R[X] ⧸ Ideal.span ({X - C 0} : Set R[X])) :=
-  implicitDerivXSpanX.quotientDerivation
+    Derivation ℤ (R[X] ⧸ Ideal.span ({X} : Set R[X]))
+      (R[X] ⧸ Ideal.span ({X} : Set R[X])) := by
+  let I : DifferentialIdeal R[X] :=
+    { toIdeal := Ideal.span {X}
+      deriv_mem' := by
+        simpa [implicitDerivXSpanXPow] using
+          (implicitDerivXSpanXPow (R := R) 1).deriv_mem' }
+  exact I.quotientDerivation
 
 /-- The induced quotient derivation sends the class of `p` to the class of `Δp`. -/
 @[simp] theorem implicitDeriv_X_quotientDerivation_mk (p : R[X]) :
-    implicitDeriv_X_quotientDerivation
-        (Ideal.Quotient.mk (Ideal.span ({X - C 0} : Set R[X])) p) =
-      Ideal.Quotient.mk (Ideal.span ({X - C 0} : Set R[X]))
-        (Differential.implicitDeriv X p) := by
+    let π := Ideal.Quotient.mk (Ideal.span ({X} : Set R[X]))
+    let Δ := Differential.implicitDeriv (X : R[X])
+    let Δstar := implicitDeriv_X_quotientDerivation (R := R)
+    Δstar (π p) = π (Δ p) := by
+  dsimp only
   unfold implicitDeriv_X_quotientDerivation
   exact DifferentialIdeal.quotientDerivation_mk _ p
 
+/-- Under `R[X] ⧸ (X) ≃ R`, `Δstar(π(p)) = D(p(0))` for every `p ∈ R[X]`. -/
+theorem implicitDeriv_X_quotientDerivation_mk_eval_zero (p : R[X]) :
+    let π := Ideal.Quotient.mk (Ideal.span ({X} : Set R[X]))
+    let Δstar := implicitDeriv_X_quotientDerivation (R := R)
+    let e := quotientSpanXAlgEquiv (R := R)
+    e (Δstar (π p)) = (p.eval 0)′ := by
+  dsimp only
+  calc
+    quotientSpanXAlgEquiv (R := R)
+        (implicitDeriv_X_quotientDerivation (R := R)
+          (Ideal.Quotient.mk (Ideal.span ({X} : Set R[X])) p)) =
+      quotientSpanXAlgEquiv (R := R)
+        (Ideal.Quotient.mk (Ideal.span ({X} : Set R[X]))
+          (Differential.implicitDeriv X p)) :=
+      congrArg (quotientSpanXAlgEquiv (R := R))
+        (implicitDeriv_X_quotientDerivation_mk p)
+    _ = (Differential.implicitDeriv X p).eval 0 :=
+      quotientSpanXAlgEquiv_mk (Differential.implicitDeriv X p)
+    _ = (p.eval 0)′ := by
+      rw [← Polynomial.coeff_zero_eq_eval_zero, ← Polynomial.coeff_zero_eq_eval_zero]
+      exact implicitDeriv_X_coeff_zero p
+
 /-- Under `R[X] ⧸ (X) ≃ R`, the quotient derivation induced by
-`Differential.implicitDeriv X` agrees with `D`. -/
-theorem implicitDeriv_X_quotientSpanX_apply
-    (x : R[X] ⧸ Ideal.span ({X - C 0} : Set R[X])) :
-    Polynomial.quotientSpanXSubCAlgEquiv 0
-        (implicitDeriv_X_quotientDerivation x) =
-      (Polynomial.quotientSpanXSubCAlgEquiv 0 x)′ := by
+`Differential.implicitDeriv X` agrees pointwise with `D`. -/
+theorem implicitDeriv_X_quotientSpanX :
+    let Δstar := implicitDeriv_X_quotientDerivation (R := R)
+    let e := quotientSpanXAlgEquiv (R := R)
+    ∀ x, e (Δstar x) = (e x)′ := by
+  dsimp only
+  intro x
   obtain ⟨p, rfl⟩ := Ideal.Quotient.mk_surjective x
   rw [implicitDeriv_X_quotientDerivation_mk,
-    Polynomial.quotientSpanXSubCAlgEquiv_mk,
-    Polynomial.quotientSpanXSubCAlgEquiv_mk]
+    quotientSpanXAlgEquiv_mk, quotientSpanXAlgEquiv_mk]
   rw [← Polynomial.coeff_zero_eq_eval_zero, ← Polynomial.coeff_zero_eq_eval_zero]
   exact implicitDeriv_X_coeff_zero p
-
-example (m : ℕ) (_hm : 0 < m) :
-    (implicitDerivXSpanXPow m).toIdeal = Ideal.span {(X : R[X]) ^ m} :=
-  rfl
-
-example (x : R[X] ⧸ Ideal.span ({X - C 0} : Set R[X])) :
-    Polynomial.quotientSpanXSubCAlgEquiv 0 (implicitDeriv_X_quotientDerivation x) =
-      (Polynomial.quotientSpanXSubCAlgEquiv 0 x)′ :=
-  implicitDeriv_X_quotientSpanX_apply x
 
 end PolynomialDerivation
 

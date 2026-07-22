@@ -531,8 +531,14 @@ abbrev ex_3_1_3_monomial := @implicitDeriv_X_monomial
 /-- **Example 3.1.3** (§3.1, p.78): every `(Xᵐ)` with `m > 0` is a differential ideal. -/
 noncomputable abbrev ex_3_1_3_ideal := @implicitDerivXSpanXPow
 
+/-- **Example 3.1.3** (§3.1, p.78): under `R[X]/(X) ≃ R`, the projection is substitution `X ↦ 0`. -/
+abbrev ex_3_1_3_projection := @quotientSpanXAlgEquiv_mk
+
+/-- **Example 3.1.3** (§3.1, p.78): `Δstar(π(p)) = D(p(0))` under `R[X]/(X) ≃ R`. -/
+abbrev ex_3_1_3_quotient_mk := @implicitDeriv_X_quotientDerivation_mk_eval_zero
+
 /-- **Example 3.1.3** (§3.1, p.78): under `R[X]/(X) ≃ R`, the induced derivation is `D`. -/
-abbrev ex_3_1_3_quotient := @implicitDeriv_X_quotientSpanX_apply
+abbrev ex_3_1_3_quotient := @implicitDeriv_X_quotientSpanX
 
 /-- **Example 3.2.1** (§3.2, p.82): the only derivation on `ℚ(x)` that vanishes on `ℚ` and sends
 `x ↦ 1` is `d/dx` — a corollary of fraction-field uniqueness. -/
