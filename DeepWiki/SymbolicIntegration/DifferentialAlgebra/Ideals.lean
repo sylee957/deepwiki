@@ -13,76 +13,119 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-- A **differential ideal** of `(R, D)` is an ideal `I` closed under `D` (`D I ⊆ I`). -/
-def IsDifferentialIdeal {R : Type*} [CommRing R] [Differential R] (I : Ideal R) : Prop :=
-  ∀ a ∈ I, a′ ∈ I
+/-- An ideal of a differential ring that is closed under the derivation. -/
+structure DifferentialIdeal (R : Type*) [CommRing R] [Differential R] where
+  /-- The underlying ring ideal. -/
+  toIdeal : Ideal R
+  /-- The underlying ideal is closed under the derivation. -/
+  deriv_mem' : ∀ a ∈ toIdeal, a′ ∈ toIdeal
+
+namespace DifferentialIdeal
+
+/-- Membership in a differential ideal means membership in its underlying ideal. -/
+instance {R : Type*} [CommRing R] [Differential R] : Membership R (DifferentialIdeal R) :=
+  ⟨fun I a => a ∈ I.toIdeal⟩
+
+/-- A differential ideal is closed under the derivation. -/
+theorem deriv_mem {R : Type*} [CommRing R] [Differential R] (I : DifferentialIdeal R)
+    {a : R} (ha : a ∈ I) : a′ ∈ I :=
+  I.deriv_mem' a ha
 
 /-- The derivation on `R ⧸ I` induced by a differential ideal `I`. -/
-noncomputable def IsDifferentialIdeal.quotientDerivation {R : Type*} [CommRing R] [Differential R]
-    {I : Ideal R} (hI : IsDifferentialIdeal I) : Derivation ℤ (R ⧸ I) (R ⧸ I) := by
-  let π := Ideal.Quotient.mkₐ ℤ I
+noncomputable def quotientDerivation {R : Type*} [CommRing R] [Differential R]
+    (I : DifferentialIdeal R) : Derivation ℤ (R ⧸ I.toIdeal) (R ⧸ I.toIdeal) := by
+  let π := Ideal.Quotient.mkₐ ℤ I.toIdeal
   refine Derivation.liftOfSurjective (f := π) (d := Differential.deriv)
     Ideal.Quotient.mk_surjective ?_
   intro a ha
-  change Ideal.Quotient.mk I a = 0 at ha
-  change Ideal.Quotient.mk I a′ = 0
+  change Ideal.Quotient.mk I.toIdeal a = 0 at ha
+  change Ideal.Quotient.mk I.toIdeal a′ = 0
   rw [Ideal.Quotient.eq_zero_iff_mem] at ha ⊢
-  exact hI a ha
+  exact I.deriv_mem ha
 
 /-- The induced quotient derivation satisfies `D*(a + I) = D(a) + I`. -/
-@[simp] theorem IsDifferentialIdeal.quotientDerivation_mk {R : Type*} [CommRing R]
-    [Differential R] {I : Ideal R} (hI : IsDifferentialIdeal I) (a : R) :
-    hI.quotientDerivation (Ideal.Quotient.mk I a) = Ideal.Quotient.mk I a′ := by
+@[simp] theorem quotientDerivation_mk {R : Type*} [CommRing R]
+    [Differential R] (I : DifferentialIdeal R) (a : R) :
+    I.quotientDerivation (Ideal.Quotient.mk I.toIdeal a) = Ideal.Quotient.mk I.toIdeal a′ := by
   unfold quotientDerivation
   apply Derivation.liftOfSurjective_apply
 
 /-- A differential ideal induces a derivation on its quotient commuting with the projection. -/
-theorem IsDifferentialIdeal.exists_quotientDerivation {R : Type*} [CommRing R] [Differential R]
-    {I : Ideal R} (hI : IsDifferentialIdeal I) :
-    ∃ Dstar : Derivation ℤ (R ⧸ I) (R ⧸ I),
-      ∀ a : R, Dstar (Ideal.Quotient.mk I a) = Ideal.Quotient.mk I a′ :=
-  ⟨hI.quotientDerivation, hI.quotientDerivation_mk⟩
+theorem exists_quotientDerivation {R : Type*} [CommRing R] [Differential R]
+    (I : DifferentialIdeal R) :
+    ∃ Dstar : Derivation ℤ (R ⧸ I.toIdeal) (R ⧸ I.toIdeal),
+      ∀ a : R, Dstar (Ideal.Quotient.mk I.toIdeal a) = Ideal.Quotient.mk I.toIdeal a′ :=
+  ⟨I.quotientDerivation, I.quotientDerivation_mk⟩
 
-example {R : Type*} [CommRing R] [Differential R] {I : Ideal R}
-    (hI : IsDifferentialIdeal I) :
-    ∃ Dstar : Derivation ℤ (R ⧸ I) (R ⧸ I),
-      ∀ a : R, Dstar (Ideal.Quotient.mk I a) = Ideal.Quotient.mk I a′ :=
-  hI.exists_quotientDerivation
+example {R : Type*} [CommRing R] [Differential R] (I : DifferentialIdeal R) :
+    ∃ Dstar : Derivation ℤ (R ⧸ I.toIdeal) (R ⧸ I.toIdeal),
+      ∀ a : R, Dstar (Ideal.Quotient.mk I.toIdeal a) = Ideal.Quotient.mk I.toIdeal a′ :=
+  I.exists_quotientDerivation
 
 /-- Every ideal is differential when the derivation on the ring is zero. -/
-theorem isDifferentialIdeal_of_deriv_eq_zero {R : Type*} [CommRing R] [Differential R]
+def ofDerivEqZero {R : Type*} [CommRing R] [Differential R]
     (I : Ideal R) (hD : (Differential.deriv : Derivation ℤ R R) = 0) :
-    IsDifferentialIdeal I := by
-  intro a _
-  rw [hD]
-  exact Ideal.zero_mem I
+    DifferentialIdeal R where
+  toIdeal := I
+  deriv_mem' := by
+    intro a _
+    rw [hD]
+    exact Ideal.zero_mem I
 
 /-- A quotient derivation induced by the zero derivation is itself zero. -/
-theorem IsDifferentialIdeal.quotientDerivation_eq_zero_of_deriv_eq_zero
-    {R : Type*} [CommRing R] [Differential R] {I : Ideal R} (hI : IsDifferentialIdeal I)
-    (hD : (Differential.deriv : Derivation ℤ R R) = 0) : hI.quotientDerivation = 0 := by
+theorem quotientDerivation_eq_zero_of_deriv_eq_zero
+    {R : Type*} [CommRing R] [Differential R] (I : DifferentialIdeal R)
+    (hD : (Differential.deriv : Derivation ℤ R R) = 0) : I.quotientDerivation = 0 := by
   ext x
   obtain ⟨a, rfl⟩ := Ideal.Quotient.mk_surjective x
-  rw [hI.quotientDerivation_mk]
-  change Ideal.Quotient.mk I (Differential.deriv a) = 0
+  rw [I.quotientDerivation_mk]
+  change Ideal.Quotient.mk I.toIdeal (Differential.deriv a) = 0
   rw [hD]
   rfl
 
-/-- `⊥` is a differential ideal and `constants R` is closed under `D`. -/
-theorem isDifferentialIdeal_bot_and_deriv_mem_constants {R : Type*} [CommRing R] [Differential R] :
-    IsDifferentialIdeal (⊥ : Ideal R) ∧ ∀ a ∈ constants R, a′ ∈ constants R := by
-  refine ⟨fun a ha => ?_, fun a ha => ?_⟩
-  · simp only [Ideal.mem_bot] at ha ⊢; simp [ha]
-  · simp only [mem_constants] at ha ⊢; simp [ha]
+/-- The bottom differential ideal. -/
+@[reducible]
+noncomputable instance {R : Type*} [CommRing R] [Differential R] : Bot (DifferentialIdeal R) where
+  bot :=
+    { toIdeal := ⊥
+      deriv_mem' := by
+        intro a ha
+        simp only [Ideal.mem_bot] at ha ⊢
+        simp [ha] }
 
-/-- A special polynomial spans a differential ideal: `p ∣ p' → IsDifferentialIdeal (span {p})`. -/
-theorem IsSpecial.isDifferentialIdeal {R : Type*} [CommRing R] [Differential R] {p : R}
-    (hp : IsSpecial p) : IsDifferentialIdeal (Ideal.span {p}) := by
-  intro a ha
-  rw [Ideal.mem_span_singleton] at ha ⊢
-  obtain ⟨b, rfl⟩ := ha
-  rw [deriv_mul_eq]
-  exact dvd_add (dvd_mul_right p b′) (hp.mul_left b)
+/-- The top differential ideal. -/
+@[reducible]
+noncomputable instance {R : Type*} [CommRing R] [Differential R] : Top (DifferentialIdeal R) where
+  top :=
+    { toIdeal := ⊤
+      deriv_mem' := fun _ _ => Submodule.mem_top }
+
+/-- The underlying ideal of `⊥ : DifferentialIdeal R` is `⊥`. -/
+@[simp] theorem toIdeal_bot {R : Type*} [CommRing R] [Differential R] :
+    (⊥ : DifferentialIdeal R).toIdeal = ⊥ := rfl
+
+/-- The underlying ideal of `⊤ : DifferentialIdeal R` is `⊤`. -/
+@[simp] theorem toIdeal_top {R : Type*} [CommRing R] [Differential R] :
+    (⊤ : DifferentialIdeal R).toIdeal = ⊤ := rfl
+
+/-- The constants are closed under the derivation. -/
+theorem deriv_mem_constants {R : Type*} [CommRing R] [Differential R]
+    {a : R} (ha : a ∈ constants R) : a′ ∈ constants R := by
+  simp only [mem_constants] at ha ⊢
+  simp [ha]
+
+/-- The differential ideal spanned by a special element `p` satisfying `p ∣ p'`. -/
+def ofSpecial {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hp : IsSpecial p) : DifferentialIdeal R where
+  toIdeal := Ideal.span {p}
+  deriv_mem' := by
+    intro a ha
+    rw [Ideal.mem_span_singleton] at ha ⊢
+    obtain ⟨b, rfl⟩ := ha
+    rw [deriv_mul_eq]
+    exact dvd_add (dvd_mul_right p b′) (hp.mul_left b)
+
+end DifferentialIdeal
 
 section PolynomialDerivative
 
@@ -102,53 +145,50 @@ theorem iterate_derivative_natDegree_eq_C (p : K[X]) :
   rw [Polynomial.coeff_natDegree]
 
 /-- The only differential ideals of `(K[X], d/dX)` in characteristic zero are `⊥` and `⊤`. -/
-theorem differentialIdeal_eq_bot_or_top [CharZero K] (I : Ideal K[X])
-    (hI : IsDifferentialIdeal I) : I = ⊥ ∨ I = ⊤ := by
-  rcases eq_or_ne I ⊥ with h | h
+theorem differentialIdeal_eq_bot_or_top [CharZero K] (I : DifferentialIdeal K[X]) :
+    I.toIdeal = ⊥ ∨ I.toIdeal = ⊤ := by
+  rcases eq_or_ne I.toIdeal ⊥ with h | h
   · exact Or.inl h
   · refine Or.inr ?_
-    obtain ⟨p, hpI, hp0⟩ := (Submodule.ne_bot_iff I).mp h
-    have hiter : ∀ k, Polynomial.derivative^[k] p ∈ I := by
+    obtain ⟨p, hpI, hp0⟩ := (Submodule.ne_bot_iff I.toIdeal).mp h
+    have hiter : ∀ k, Polynomial.derivative^[k] p ∈ I.toIdeal := by
       intro k
       induction k with
       | zero => simpa using hpI
-      | succ m ih => rw [Function.iterate_succ_apply']; exact hI _ ih
+      | succ m ih =>
+          rw [Function.iterate_succ_apply']
+          exact I.deriv_mem ih
     have hmem := hiter p.natDegree
     rw [iterate_derivative_natDegree_eq_C p] at hmem
     have hc : (Nat.factorial p.natDegree • p.leadingCoeff) ≠ 0 := by
       simp only [nsmul_eq_mul, ne_eq, mul_eq_zero, not_or]
       exact ⟨by exact_mod_cast Nat.factorial_ne_zero _, Polynomial.leadingCoeff_ne_zero.mpr hp0⟩
-    exact Ideal.eq_top_of_isUnit_mem I hmem
+    exact Ideal.eq_top_of_isUnit_mem I.toIdeal hmem
       (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr hc))
-
-/-- `⊥` is a differential ideal of `(K[X], d/dX)`. -/
-theorem polynomialDerivative_isDifferentialIdeal_bot :
-    IsDifferentialIdeal (⊥ : Ideal K[X]) := by
-  intro p hp
-  rw [Ideal.mem_bot.mp hp, map_zero]
-  exact Ideal.zero_mem _
-
-/-- `⊤` is a differential ideal of `(K[X], d/dX)`. -/
-theorem polynomialDerivative_isDifferentialIdeal_top :
-    IsDifferentialIdeal (⊤ : Ideal K[X]) := by
-  intro _ _
-  exact Submodule.mem_top
 
 /-- Under `K[X] ⧸ ⊥ ≃ K[X]`, the induced quotient derivation is `d/dX`. -/
 theorem polynomialDerivative_quotientBot_apply (x : K[X] ⧸ (⊥ : Ideal K[X])) :
     RingEquiv.quotientBot K[X]
-        (polynomialDerivative_isDifferentialIdeal_bot.quotientDerivation x) =
+        ((⊥ : DifferentialIdeal K[X]).quotientDerivation x) =
       Polynomial.derivative (RingEquiv.quotientBot K[X] x) := by
   obtain ⟨p, rfl⟩ := Ideal.Quotient.mk_surjective x
-  rw [IsDifferentialIdeal.quotientDerivation_mk, RingEquiv.quotientBot_mk,
-    RingEquiv.quotientBot_mk]
+  change RingEquiv.quotientBot K[X]
+      ((⊥ : DifferentialIdeal K[X]).quotientDerivation
+        (Ideal.Quotient.mk (⊥ : DifferentialIdeal K[X]).toIdeal p)) =
+    Polynomial.derivative (RingEquiv.quotientBot K[X] (Ideal.Quotient.mk ⊥ p))
+  rw [DifferentialIdeal.quotientDerivation_mk]
+  change RingEquiv.quotientBot K[X] (Ideal.Quotient.mk ⊥ p′) =
+    Polynomial.derivative (RingEquiv.quotientBot K[X] (Ideal.Quotient.mk ⊥ p))
+  rw [RingEquiv.quotientBot_mk, RingEquiv.quotientBot_mk]
   rfl
 
 /-- The derivation induced on `K[X] ⧸ ⊤` is zero. -/
 theorem polynomialDerivative_quotientTop_eq_zero :
-    (polynomialDerivative_isDifferentialIdeal_top (K := K)).quotientDerivation = 0 := by
+    ((⊤ : DifferentialIdeal K[X]).quotientDerivation) = 0 := by
   ext x
-  exact Subsingleton.elim _ _
+  obtain ⟨p, rfl⟩ := Ideal.Quotient.mk_surjective x
+  rw [DifferentialIdeal.quotientDerivation_mk]
+  exact Ideal.Quotient.eq_zero_iff_mem.mpr Submodule.mem_top
 
 end PolynomialDerivative
 

@@ -8,7 +8,6 @@ import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
-import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
@@ -47,7 +46,7 @@ abbrev thm_3_1_1_ii := @deriv_div
 
 /-- **Theorem 3.1.1(iii)** (§3.1, p.76): `Const_D R` is a differential subring (subfield) of
 `R` — in particular it is closed under `D` (trivially, since `Da = 0` on it). -/
-abbrev thm_3_1_1_iii := @isDifferentialIdeal_bot_and_deriv_mem_constants
+abbrev thm_3_1_1_iii := @DifferentialIdeal.deriv_mem_constants
 
 /-- **Theorem 3.1.1(iv)** (§3.1, p.76): the power rule `D(aⁿ) = n·aⁿ⁻¹·Da` (natural exponent). -/
 abbrev thm_3_1_1_iv := @deriv_pow
@@ -68,10 +67,10 @@ abbrev lem_3_1_1 := @smul_add_derivation_apply
 
 /-- **Definition 3.1.2** (§3.1, p.78), a *differential ideal* of `(R, D)`: an ideal `I` with
 `D I ⊆ I`. -/
-abbrev def_3_1_2 := @IsDifferentialIdeal
+abbrev def_3_1_2 := @DifferentialIdeal
 
 /-- **Lemma 3.1.2** (§3.1, p.78): a differential ideal `I` induces a derivation `D*` on `R/I` satisfying `D*(a + I) = D(a) + I`, hence `D* ∘ π = π ∘ D`. -/
-abbrev lem_3_1_2 := @IsDifferentialIdeal.exists_quotientDerivation
+abbrev lem_3_1_2 := @DifferentialIdeal.exists_quotientDerivation
 
 /-! ## §3.2 Differential Extensions -/
 
@@ -252,7 +251,7 @@ theorem def_3_4_2_gcd {R : Type*} [CommRing R] [GCDMonoid R] [Differential R] {p
   ⟨isSpecial_iff_associated_gcd, IsNormal.isUnit_gcd⟩
 
 /-- **Lemma 3.4.3** (§3.4, p.92): a special polynomial generates a differential ideal `(p)`. -/
-abbrev lem_3_4_3 := @IsSpecial.isDifferentialIdeal
+abbrev lem_3_4_3 := @DifferentialIdeal.ofSpecial
 
 /-- **Theorem 3.4.1(ii)** (§3.4, p.93): the special polynomials form a multiplicative monoid
 (closed under products, with unit `1`). -/
@@ -502,19 +501,25 @@ abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
 /-! ## Chapter 3 Examples -/
 
 /-- **Example 3.1.1** (§3.1, p.78): for the zero derivation on `R`, every ideal is differential. -/
-abbrev ex_3_1_1_ideal := @isDifferentialIdeal_of_deriv_eq_zero
+abbrev ex_3_1_1_ideal := @DifferentialIdeal.ofDerivEqZero
 
 /-- **Example 3.1.1** (§3.1, p.78): every induced quotient derivation is zero. -/
-abbrev ex_3_1_1_quotient := @IsDifferentialIdeal.quotientDerivation_eq_zero_of_deriv_eq_zero
+abbrev ex_3_1_1_quotient := @DifferentialIdeal.quotientDerivation_eq_zero_of_deriv_eq_zero
 
 /-- **Example 3.1.2** (§3.1, p.78): the only differential ideals of `(K[X], d/dX)` are `⊥` and `⊤` in characteristic zero. -/
 abbrev ex_3_1_2_classification := @differentialIdeal_eq_bot_or_top
 
+section PolynomialDerivative
+
+open scoped FormalDiff
+
 /-- **Example 3.1.2** (§3.1, p.78): `⊥` is a differential ideal of `(K[X], d/dX)`. -/
-abbrev ex_3_1_2_bot := @polynomialDerivative_isDifferentialIdeal_bot
+noncomputable abbrev ex_3_1_2_bot {K : Type*} [Field K] : DifferentialIdeal K[X] := ⊥
 
 /-- **Example 3.1.2** (§3.1, p.78): `⊤` is a differential ideal of `(K[X], d/dX)`. -/
-abbrev ex_3_1_2_top := @polynomialDerivative_isDifferentialIdeal_top
+noncomputable abbrev ex_3_1_2_top {K : Type*} [Field K] : DifferentialIdeal K[X] := ⊤
+
+end PolynomialDerivative
 
 /-- **Example 3.1.2** (§3.1, p.78): under `K[X]/⊥ ≃ K[X]`, the induced derivation is `d/dX`. -/
 abbrev ex_3_1_2_bot_quotient := @polynomialDerivative_quotientBot_apply
@@ -522,9 +527,14 @@ abbrev ex_3_1_2_bot_quotient := @polynomialDerivative_quotientBot_apply
 /-- **Example 3.1.2** (§3.1, p.78): the induced derivation on `K[X]/⊤` is zero. -/
 abbrev ex_3_1_2_top_quotient := @polynomialDerivative_quotientTop_eq_zero
 
-/-- **Example 3.1.3** (§3.1, p.78): `Δ(monomial n a) = monomial n (Da + n·a)` for `Δ = κ_D + d/dX`;
-the induced derivation on `R[X]/(X) ≃ R` is `D`. -/
-abbrev ex_3_1_3 := @implicitDeriv_X_monomial
+/-- **Example 3.1.3** (§3.1, p.78): `Δ(aXⁿ) = (Da + n·a)Xⁿ` for `Δ = κ_D + X·d/dX`. -/
+abbrev ex_3_1_3_monomial := @implicitDeriv_X_monomial
+
+/-- **Example 3.1.3** (§3.1, p.78): every `(Xᵐ)` with `m > 0` is a differential ideal. -/
+noncomputable abbrev ex_3_1_3_ideal := @implicitDerivXSpanXPow
+
+/-- **Example 3.1.3** (§3.1, p.78): under `R[X]/(X) ≃ R`, the induced derivation is `D`. -/
+abbrev ex_3_1_3_quotient := @implicitDeriv_X_quotientSpanX_apply
 
 /-- **Example 3.2.1** (§3.2, p.82): the only derivation on `ℚ(x)` that vanishes on `ℚ` and sends
 `x ↦ 1` is `d/dx` — a corollary of fraction-field uniqueness. -/
