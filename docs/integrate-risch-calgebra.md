@@ -155,15 +155,38 @@ the tower works (a dedicated cleanup phase, not now).
   sum-closure argument mirrors the rational `logsum_isProper`). P4's LRT feed needs
   it and should start there.
 
-### P4 — Log part at a tower level: LRT + residue constancy
-`IntegrateRisch/LogPart.lean` (+ `LogPartSpec.lean`).
-- Reuse the generic `lrtIntegrate` machinery at coefficient field `K`; add the
-  **residue-constancy test** (produced `Qᵢ` coefficients are `D`-constants —
-  decidable: `D c = 0` checks) with the dichotomy: constant residues → elementary
-  log part with its sound square; a non-constant residue → non-elementarity
-  certificate (statement against the abstract Liouville layer may be deferred to
-  P11; here the computable test + the sound direction).
-**Endpoint**: log-part stage of `stepIntegrate` done generically, sound.
+### P4 — Log part at a tower level: LRT + residue constancy — DONE to the honest frontier (2026-07-22)
+`IntegrateRisch/LogPart.lean` (tower discharge of the frontier = P4b).
+- **Key math finding**: the Rothstein–Trager resultant uses the **field** derivation
+  `D q` (= `extendDeriv d Dt q`), not the formal `dq/dt` — confirmed by the old engine's
+  `rtResultantGen … B` with `B` built from `implicitDeriv` (`LrtSoundness.lean`). At the
+  base `D = d/dx` coincides with the formal derivative of a polynomial in `x`, which is
+  why the rational `rtResultant` uses `d′`; the tower replaces it with `extendDeriv d Dt`.
+- **P4a landed (this session, gate-green, sound at its level)**: `rtResultantD` /
+  `lrtLogTermsD` (the LRT construction with the field derivation) + the base-compat
+  `rtResultantD_zero_one` (= rational `rtResultant` at `(d=0,Dt=1)`, so the base inherits
+  the rational LRT soundness); structural soundness `lrtLogTermsD_fst_squarefree`; the
+  **residue-constancy test** `IsResidueConstant d Q := mapCoeffs d Q = 0` (+ `Decidable`
+  instances, `AllResiduesConstant`, `allResiduesConstant_iff` = the `ResultRisch.fst_constant`
+  invariant). Also the deferred-from-P3 `ResultHermiteD.simple_isProper` (via
+  `isProper_ofPoly_mod_div` — the sweep residues are `%`-reduced) is now a record field.
+- **The sound direction, generic + frontier-isolated (this session)**: `ResidueCriterion
+  d Dt` — the named Bronstein condition (§5.6): for every valid simple part `g`, the field
+  derivative `∑ᵢ ∑_{Qᵢ(α)=0} α·D(log Sᵢ)` (= `(lrtLogTermsD …).map (rootSumDerivD …)`)
+  recovers `g`. This IS the log-part stage's soundness. **Discharged UNCONDITIONALLY at the
+  base** (`residueCriterion_zero_one`, via `lrtLogTermsD_baseSound` → `rtResultantD_zero_one`
+  + `rootSumDerivD_zero_one` → the rational `lrtIntegrate_sound`; axiom-clean). This is the
+  project's frontier-as-hypothesis pattern (the criterion is real content, base case proven,
+  deep case isolated) — exactly as the old engine's `LawfulRischLevelLrt`/`PrimitiveFrontier`.
+- **P4b remaining (its own arc)**: discharge `ResidueCriterion d Dt` for **tower** levels
+  (`d ≠ 0`) — the general-monomial residue criterion the old engine spends ~1600 lines on
+  (`LrtGeneralDerivation.lean` + `LrtSoundness.lean`); the CAlgebra path is to bridge to
+  those verified `_gen` theorems through the `toRatFunc` denotation + `F.toDifferential`,
+  or re-prove derivation-generically. The non-constant-residue non-elementarity certificate
+  is P11.
+**Endpoint**: LRT construction + residue-constancy test done generically; the sound
+direction is the named `ResidueCriterion` frontier, proven unconditionally at the base and
+isolated for tower levels (P4b).
 
 ### P5 — Base limited integration
 `IntegrateRisch/BaseLimited.lean`.

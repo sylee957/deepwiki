@@ -5,6 +5,7 @@ import DeepWiki.CAlgebra.IntegrateRisch.Results
 import DeepWiki.CAlgebra.IntegrateRisch.Level
 import DeepWiki.CAlgebra.IntegrateRisch.Special
 import DeepWiki.CAlgebra.IntegrateRisch.Hermite
+import DeepWiki.CAlgebra.IntegrateRisch.LogPart
 
 /-! # Transcendental Risch integration
 

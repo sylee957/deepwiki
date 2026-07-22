@@ -2,6 +2,7 @@ import DeepWiki.CAlgebra.IntegrateRisch.Special
 import DeepWiki.CAlgebra.IntegrateRisch.DiffRing
 import DeepWiki.CAlgebra.PartFrac
 import DeepWiki.CAlgebra.Frac.Field
+import DeepWiki.Algebra.RatFuncProper
 
 /-! # Derivation-generic Hermite reduction
 
@@ -342,6 +343,8 @@ structure ResultHermiteD (K : Type u) [Field K] [DecidableEq K] [DensePolyGcd K]
   simple_den_squarefree : Squarefree simple.den.toPoly
   /-- The simple denominator is normal. -/
   simple_den_normal : IsNormal (extendDeriv d Dt) simple.den.toPoly
+  /-- The simple part is proper (the log-part feed). -/
+  simple_isProper : RatFunc.IsProper (DenseFrac.toRatFunc simple)
   /-- The reduced denominator divides a nonzero special polynomial. -/
   reduced_den_special : ∃ S : DensePoly K, S ≠ 0 ∧ IsSpecial (extendDeriv d Dt) S
     ∧ reduced.den.toPoly ∣ S
@@ -539,6 +542,43 @@ private theorem exists_special_den_sum (hd : IsDerivation d)
 
 end Assembly
 
+omit [CharZero K] [DensePolyGcd K] in
+/-- `size < size` transports to `degree < degree` through the bridge. -/
+private theorem toPoly_degree_lt_of_size_lt {a b : DensePoly K} (hb : b ≠ 0)
+    (h : a.size < b.size) : (toPolynomial a).degree < (toPolynomial b).degree := by
+  rcases eq_or_ne a 0 with rfl | ha
+  · rw [toPolynomial_zero, Polynomial.degree_zero]
+    exact bot_lt_iff_ne_bot.mpr fun hbb =>
+      toPolynomial_ne_zero hb (Polynomial.degree_eq_bot.mp hbb)
+  · rw [Polynomial.degree_eq_natDegree (toPolynomial_ne_zero ha),
+      Polynomial.degree_eq_natDegree (toPolynomial_ne_zero hb),
+      natDegree_toPolynomial_eq_size_sub_one, natDegree_toPolynomial_eq_size_sub_one]
+    have ha1 : a.size ≠ 0 := fun h0 => ha (eq_zero_of_size_zero h0)
+    exact_mod_cast (by omega : a.size - 1 < b.size - 1)
+
+omit [CharZero K] in
+/-- A `%`-remainder over a nonzero polynomial embeds as a proper quotient. -/
+theorem isProper_ofPoly_mod_div (a : DensePoly K) {n : DensePoly K} (hn : n ≠ 0) :
+    RatFunc.IsProper
+      (DenseFrac.toRatFunc (DenseFrac.ofPoly (a % n) / DenseFrac.ofPoly n)) := by
+  have hlt : (a % n).size < n.size :=
+    mod_size_lt (fun h0 => hn (eq_zero_of_size_zero h0)) a
+  refine RatFunc.isProper_of_eq_div (toPolynomial_ne_zero hn)
+    (toPoly_degree_lt_of_size_lt hn hlt) ?_
+  rw [show DenseFrac.toRatFunc (DenseFrac.ofPoly (a % n) / DenseFrac.ofPoly n)
+      = DenseFrac.toRatFunc (DenseFrac.ofPoly (a % n))
+        / DenseFrac.toRatFunc (DenseFrac.ofPoly n) from
+      map_div₀ (DenseFrac.equivRatFunc (R := K)) _ _,
+    DenseFrac.toRatFunc_ofPoly, DenseFrac.toRatFunc_ofPoly]
+
+omit [CharZero K] in
+/-- Each factor's simple term is proper. -/
+theorem isProper_hermiteFactorD_simple (d : K → K) (Dt : DensePoly K) {fac : DensePoly K}
+    (hfac0 : fac ≠ 0) (cs : List (DensePoly K)) :
+    RatFunc.IsProper (DenseFrac.toRatFunc (hermiteFactorD d Dt fac cs).2.1) := by
+  have hnn : normalPart (extendDeriv d Dt) fac ≠ 0 := normalPart_ne_zero hfac0
+  simpa only [hermiteFactorD] using isProper_ofPoly_mod_div _ hnn
+
 variable [DensePolySquarefree K]
 
 /-- **Derivation-generic Hermite reduction** of a canonical fraction at level data
@@ -565,6 +605,12 @@ def hermiteReduceD (F : DenseDiffRing K) (Dt : DensePoly K)
         (fun fa hfa => (parts_props f fa hfa).1))
     exact isNormal_prod_normalPart Dt F.isDerivation (sqfPartFrac f.num f.den.toPoly).2
       (fun fa hfa => (parts_props f fa hfa).1) (squarefree_parts_prod f)
+  simple_isProper := by
+    rw [DenseFrac.toRatFunc_list_sum]
+    refine RatFunc.isProper_list_sum fun x hx => ?_
+    rw [List.map_map] at hx
+    obtain ⟨fa, hfa, rfl⟩ := List.mem_map.mp hx
+    exact isProper_hermiteFactorD_simple F.d Dt (parts_props f fa hfa).1 fa.2
   reduced_den_special := by
     exact exists_special_den_add Dt F.isDerivation (exists_special_den_ofPoly Dt _)
       (exists_special_den_sum Dt F.isDerivation (sqfPartFrac f.num f.den.toPoly).2
