@@ -3,11 +3,8 @@ import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.CompletePartialFraction
-import DeepWiki.SymbolicIntegration.Constants
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra
-import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.Core
-import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.HorowitzLinearSolve
 import DeepWiki.SymbolicIntegration.InFieldIntegration
@@ -30,6 +27,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationInvXPow
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
 import DeepWiki.SymbolicIntegration.RealFieldExamples
+import DeepWiki.SymbolicIntegration.RaoDifferentialPolynomials
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.RiobooCoprimality

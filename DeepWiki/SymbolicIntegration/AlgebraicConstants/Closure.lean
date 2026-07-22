@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Constants
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Constants
 import DeepWiki.SymbolicIntegration.AlgebraicConstants.Subfield
 
 /-! # Algebraic closure of constants

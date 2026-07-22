@@ -1,13 +1,11 @@
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra
-import DeepWiki.SymbolicIntegration.Constants
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Ideals
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
-import DeepWiki.SymbolicIntegration.DifferentialExtensions
-import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
+import DeepWiki.SymbolicIntegration.RaoDifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded

@@ -1,10 +1,8 @@
-import DeepWiki.SymbolicIntegration.DifferentialAlgebra
-import DeepWiki.SymbolicIntegration.Core.Differential.Wronskian
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Basic
 
 /-! # Constants in differential extensions
 
-Basic API for constants in differential extensions. This module also imports the core
-Wronskian API for compatibility with older imports. -/
+Basic API for constants in differential extensions. -/
 
 open scoped Differential
 

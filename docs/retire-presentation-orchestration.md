@@ -29,9 +29,9 @@ all route through the LRT/RischLevel track, NOT this presentation path. The pres
 `Engine/Hermite/DifferentialStage.lean`.
 
 **KEEP:** `Engine/DifferentialAlgebraicClosure.lean` (live, 6 consumers); the abstract diff-algebra
-foundations (`Core/Differential/*`, `DifferentialFields`, `DifferentialExtensions`,
-`DifferentialAlgebraFacts`, `DifferentialAlgebraExamples`, `DifferentialIdeals`) — these are the
-Mathlib-style differential-algebra layer, not orchestration.
+foundations (`Core/Differential/*`, `DifferentialFields`, `DifferentialAlgebra/*`,
+`RaoDifferentialPolynomials`) — these are the Mathlib-style differential-algebra layer, not
+orchestration.
 
 ## Phases (gate-green per phase)
 

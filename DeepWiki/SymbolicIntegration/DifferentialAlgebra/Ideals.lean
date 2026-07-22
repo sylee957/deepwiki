@@ -22,9 +22,26 @@ structure DifferentialIdeal (R : Type*) [CommRing R] [Differential R] where
 
 namespace DifferentialIdeal
 
-/-- Membership in a differential ideal means membership in its underlying ideal. -/
-instance {R : Type*} [CommRing R] [Differential R] : Membership R (DifferentialIdeal R) :=
-  ⟨fun I a => a ∈ I.toIdeal⟩
+/-- A differential ideal coerces to its underlying set. -/
+instance {R : Type*} [CommRing R] [Differential R] : SetLike (DifferentialIdeal R) R where
+  coe I := I.toIdeal
+  coe_injective I J h := by
+    cases I with
+    | mk I hI =>
+      cases J with
+      | mk J hJ =>
+        simp only at h
+        have hIJ : I = J := SetLike.coe_injective h
+        subst J
+        rfl
+
+/-- Differential ideals are equal when their underlying ideals are equal. -/
+@[ext] theorem ext {R : Type*} [CommRing R] [Differential R] {I J : DifferentialIdeal R}
+    (h : I.toIdeal = J.toIdeal) : I = J := by
+  cases I
+  cases J
+  cases h
+  rfl
 
 /-- A differential ideal is closed under the derivation. -/
 theorem deriv_mem {R : Type*} [CommRing R] [Differential R] (I : DifferentialIdeal R)

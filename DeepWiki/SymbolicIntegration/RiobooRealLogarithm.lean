@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
-import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.LogArctan
 import Mathlib.Algebra.Polynomial.SpecificDegree
 
 /-! # Foundations for real rational logarithms
