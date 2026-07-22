@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Differential.DerivationExt
+import Mathlib.Algebra.MvPolynomial.PDeriv
 import Mathlib.RingTheory.Derivation.DifferentialRing
 import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.FieldTheory.Differential.Basic
@@ -74,6 +75,32 @@ theorem deriv_eval_of_const_coeffs {R : Type*} [CommRing R] [Differential R]
       simp only [Derivation.mapCoeffs_apply, PolynomialModule.coeff_zero,
         Finsupp.zero_apply, hp i])
   rw [Derivation.apply_eval_eq, hmc, map_zero, zero_add, smul_eq_mul]
+
+/-- Multivariate chain rule over the constant subring: `D(P(u)) = ∑ i, (∂P/∂Xᵢ)(u) · D(uᵢ)`. -/
+theorem deriv_mveval₂_constants {R σ : Type*} [CommRing R] [Differential R] [Fintype σ]
+    (p : MvPolynomial σ (constants R)) (u : σ → R) :
+    (MvPolynomial.eval₂ (constants R).subtype u p)′ =
+      ∑ i, MvPolynomial.eval₂ (constants R).subtype u (MvPolynomial.pderiv i p) * (u i)′ := by
+  classical
+  induction p using MvPolynomial.induction_on with
+  | C a => simp [mem_constants.mp a.property]
+  | add p q hp hq => simp only [map_add, MvPolynomial.eval₂_add, hp, hq,
+      Finset.sum_add_distrib, MvPolynomial.pderiv, add_mul]
+  | mul_X p i hp =>
+      simp only [MvPolynomial.eval₂_mul, MvPolynomial.eval₂_X, Derivation.leibniz,
+        smul_eq_mul, hp, MvPolynomial.eval₂_add, MvPolynomial.pderiv_X, Pi.single_apply]
+      simp [add_mul, Finset.sum_add_distrib, ← Finset.mul_sum, mul_assoc]
+      rw [Finset.sum_eq_single i]
+      · simp
+      · intro j _ hji
+        simp [Ne.symm hji]
+      · simp
+
+example {R : Type*} [CommRing R] [Differential R] {n : ℕ}
+    (p : MvPolynomial (Fin n) (constants R)) (u : Fin n → R) :
+    (MvPolynomial.eval₂ (constants R).subtype u p)′ =
+      ∑ i, MvPolynomial.eval₂ (constants R).subtype u (MvPolynomial.pderiv i p) * (u i)′ :=
+  deriv_mveval₂_constants p u
 
 /-- `(c • D₁ + D₂) a = c * D₁ a + D₂ a`: a linear combination of derivations acts pointwise. -/
 theorem smul_add_derivation_apply {R : Type*} [CommRing R]

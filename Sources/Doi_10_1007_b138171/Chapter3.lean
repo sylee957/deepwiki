@@ -59,9 +59,8 @@ abbrev thm_3_1_1_iv_zpow := @deriv_zpow
 `D(u₁^{e₁} ⋯ uₙ^{eₙ}) / (u₁^{e₁} ⋯ uₙ^{eₙ}) = e₁·Du₁/u₁ + ⋯ + eₙ·Duₙ/uₙ` (Exercise 3.1). -/
 abbrev thm_3_1_1_v := @logDeriv_prod_zpow
 
-/-- **Theorem 3.1.1(vi)** (§3.1, p.77), univariate case: the chain rule
-`D(P(u)) = P'(u)·Du` for a polynomial `P` with constant coefficients. -/
-abbrev thm_3_1_1_vi := @deriv_eval_of_const_coeffs
+/-- **Theorem 3.1.1(vi)** (§3.1, p.77): `D(P(u)) = ∑ᵢ (∂P/∂Xᵢ)(u)·D(uᵢ)` for a multivariate polynomial over `Const_D R`. -/
+abbrev thm_3_1_1_vi := @deriv_mveval₂_constants
 
 /-- **Lemma 3.1.1** (§3.1, p.77): the set `Ω(R)` of all derivations on `R` is a left
 `R`-module; a linear combination `c·D₁ + D₂` acts pointwise as `a ↦ c·D₁a + D₂a`. -/
