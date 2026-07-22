@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts.Rao
 
 /-! # Worked differential-algebra facts

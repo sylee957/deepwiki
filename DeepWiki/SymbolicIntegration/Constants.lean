@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import DeepWiki.SymbolicIntegration.Core.Differential.Wronskian
 
 /-! # Constants in differential extensions

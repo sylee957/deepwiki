@@ -4,11 +4,11 @@ import DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.CompletePartialFraction
 import DeepWiki.SymbolicIntegration.Constants
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.Core
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
-import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.HorowitzLinearSolve
 import DeepWiki.SymbolicIntegration.InFieldIntegration

@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 
 /-! # Recognizing derivatives — the in-field-integration criterion

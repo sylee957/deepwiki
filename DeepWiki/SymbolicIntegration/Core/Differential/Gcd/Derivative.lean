@@ -1,5 +1,5 @@
 import DeepWiki.Algebra.GcdBasics
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import Mathlib.RingTheory.Coprime.Lemmas
 
 /-! # GCDs and derivations

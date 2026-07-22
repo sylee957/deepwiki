@@ -5,7 +5,7 @@ import Mathlib.FieldTheory.Differential.Basic
 import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.Tactic
 
-/-! # Differential rings and fields
+/-! # Basic differential algebra
 Basic differential calculus over Mathlib's `Differential` typeclass: the constant subring, the
 constant-linearity / quotient / power / chain rules, the logarithmic-derivative identity, and the
 module of derivations. -/

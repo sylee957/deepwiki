@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.LiouvilleLogTower
 import DeepWiki.SymbolicIntegration.LiouvilleStructure.Core
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 
 /-! # The general structure theorem over a Liouville tower (Thm 5.5.2 / 5.5.3)
 

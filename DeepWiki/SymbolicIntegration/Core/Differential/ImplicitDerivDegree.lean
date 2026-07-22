@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import Mathlib.Algebra.Polynomial.Derivative
 
 /-! # Implicit-derivative degree bounds

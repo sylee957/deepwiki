@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import DeepWiki.SymbolicIntegration.Constants
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialIdeals
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors

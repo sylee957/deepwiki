@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import Mathlib.RingTheory.Coprime.Lemmas
 
 /-! # Special elements in differential rings

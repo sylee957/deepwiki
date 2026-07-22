@@ -2,7 +2,7 @@ import Mathlib.LinearAlgebra.Lagrange
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.FieldTheory.RatFunc.Basic
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 
 /-! # Partial-fraction / residue decomposition (simple-root case)
 For `A` of degree `< #s` and distinct points `s`, with `D = ∏_{α∈s}(X−α)`, the residue decomposition

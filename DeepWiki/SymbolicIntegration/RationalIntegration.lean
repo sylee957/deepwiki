@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 
 /-! # Rational-integration identities
 Differential-field identities for rational-function integration: Hermite lowering, one-shot

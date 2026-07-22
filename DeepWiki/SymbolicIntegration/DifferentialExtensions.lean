@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import Mathlib.FieldTheory.Differential.Basic
 import Mathlib.RingTheory.Trace.Basic
 import Mathlib.RingTheory.Norm.Transitivity
