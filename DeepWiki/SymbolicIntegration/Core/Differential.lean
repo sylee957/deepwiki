@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Core.Differential.Derivation
-import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialIdeals
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Core.Differential.FractionDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv

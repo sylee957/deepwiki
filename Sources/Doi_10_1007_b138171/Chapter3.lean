@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import DeepWiki.SymbolicIntegration.Constants
-import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialIdeals
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Ideals
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
@@ -69,6 +69,9 @@ abbrev lem_3_1_1 := @smul_add_derivation_apply
 /-- **Definition 3.1.2** (§3.1, p.78), a *differential ideal* of `(R, D)`: an ideal `I` with
 `D I ⊆ I`. -/
 abbrev def_3_1_2 := @IsDifferentialIdeal
+
+/-- **Lemma 3.1.2** (§3.1, p.78): a differential ideal `I` induces a derivation `D*` on `R/I` satisfying `D*(a + I) = D(a) + I`, hence `D* ∘ π = π ∘ D`. -/
+abbrev lem_3_1_2 := @IsDifferentialIdeal.exists_quotientDerivation
 
 /-! ## §3.2 Differential Extensions -/
 
@@ -498,9 +501,26 @@ abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
 
 /-! ## Chapter 3 Examples -/
 
-/-- **Example 3.1.2** (§3.1, p.78): the only differential ideals of `(K[X], d/dX)` are `⊥` and `⊤`
-(char `0`). -/
-abbrev ex_3_1_2 := @differentialIdeal_eq_bot_or_top
+/-- **Example 3.1.1** (§3.1, p.78): for the zero derivation on `R`, every ideal is differential. -/
+abbrev ex_3_1_1_ideal := @isDifferentialIdeal_of_deriv_eq_zero
+
+/-- **Example 3.1.1** (§3.1, p.78): every induced quotient derivation is zero. -/
+abbrev ex_3_1_1_quotient := @IsDifferentialIdeal.quotientDerivation_eq_zero_of_deriv_eq_zero
+
+/-- **Example 3.1.2** (§3.1, p.78): the only differential ideals of `(K[X], d/dX)` are `⊥` and `⊤` in characteristic zero. -/
+abbrev ex_3_1_2_classification := @differentialIdeal_eq_bot_or_top
+
+/-- **Example 3.1.2** (§3.1, p.78): `⊥` is a differential ideal of `(K[X], d/dX)`. -/
+abbrev ex_3_1_2_bot := @polynomialDerivative_isDifferentialIdeal_bot
+
+/-- **Example 3.1.2** (§3.1, p.78): `⊤` is a differential ideal of `(K[X], d/dX)`. -/
+abbrev ex_3_1_2_top := @polynomialDerivative_isDifferentialIdeal_top
+
+/-- **Example 3.1.2** (§3.1, p.78): under `K[X]/⊥ ≃ K[X]`, the induced derivation is `d/dX`. -/
+abbrev ex_3_1_2_bot_quotient := @polynomialDerivative_quotientBot_apply
+
+/-- **Example 3.1.2** (§3.1, p.78): the induced derivation on `K[X]/⊤` is zero. -/
+abbrev ex_3_1_2_top_quotient := @polynomialDerivative_quotientTop_eq_zero
 
 /-- **Example 3.1.3** (§3.1, p.78): `Δ(monomial n a) = monomial n (Da + n·a)` for `Δ = κ_D + d/dX`;
 the induced derivation on `R[X]/(X) ≃ R` is `D`. -/

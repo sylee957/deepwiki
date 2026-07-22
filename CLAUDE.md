@@ -17,8 +17,8 @@ Rendered docs come from **doc-gen4** (standard Lean API documentation).
 **Two-layer architecture** (one lake package, two libs):
 - **Topic library** `DeepWiki/<Topic>/` — the book-number-free general theory (the
   chapter files).
-- **Source catalogs** `Sources/<slug>/` — per-book, DOI-keyed. One `alias`/`abbrev` per
-  book item, named by its book number (`Dnc.prop_10_1`, `Dnc.def_2_7`), linking to the
+- **Source catalogs** `Sources/<slug>/` — per-book, DOI-keyed. One or more `alias`/`abbrev`
+  entries per book item, named by its book number (`Dnc.prop_10_1`, `Dnc.def_2_7`), linking to the
   library, with §/page in the docstring and the DOI in `Sources/<slug>/Source.lean`. The
   folder is named by the **sanitized DOI** (`Sources/Doi_10_1002_9781119440284/` — `/`
   and `.` → `_`, `Doi_` prefix because Lean module names can't start with a digit); the
@@ -318,6 +318,15 @@ not just defaults):
   source-faithful claim, a subject of equivalence/transport/composition
   lemmas, or the common statement of a theorem family. Apply this
   semantically, not by raw reference count.
+
+- **Prefer atomic library theorems; let catalogs assemble source items.** When a source
+  theorem or example contains several independently meaningful claims, prove and name each
+  claim separately in `DeepWiki/`. Do not add a conjunction, nested conjunction, or
+  existential-packaging theorem solely to reproduce the source item's prose. In `Sources/`,
+  catalog those atomic results with entries sharing the book-number prefix and descriptive
+  suffixes (`ex_3_1_2_classification`, `ex_3_1_2_top_quotient`). Keep a single unsuffixed
+  catalog entry when one library declaration already expresses the source item naturally;
+  splitting is for independently reusable claims, not every connective inside a theorem.
 
 - **The library is book-number-free; book numbers live ONLY in `Sources/`.**
   Neither a declaration NOR a module/file under `DeepWiki/<Topic>/` may be named
