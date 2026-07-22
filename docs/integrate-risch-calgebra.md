@@ -26,6 +26,22 @@ the tower works (a dedicated cleanup phase, not now).
   PDF page ≈ book + 11 → + 9 by Ch. 6) and a computed `Dt : DensePoly K` reading.
   A wrapping `inductive Monomial` sum is added only if a tower-as-data type is ever
   needed (frontend), not before.
+- **Differential-structure tier (`DenseDiffRing`)**: the derivation core
+  `(d, IsDerivation d)` bundled as `DenseDiffRing K` (`IntegrateRisch/DiffRing.lean`),
+  with `.base` (zero derivation) and `.extend F Dt : DenseDiffRing (DenseFrac K)` —
+  the derivation-level tower step (= `isDerivation_extendDeriv` named). Stages that need
+  only the derivation (Hermite P3, log part P4) take `DenseDiffRing K` (+ `Dt`); it is
+  the weakest sufficient input, sits strictly below `RischLevel` (which is *built from*
+  those stages — feeding a `RischLevel` into Hermite would be a dependency cycle), and
+  **`RischLevel extends DenseDiffRing`** (done). **Discipline: parameterize by the
+  minimal thing the type actually uses.** `ResultRisch`/`ResultHermiteD`/`IsNormal`/
+  `RischOracles` use only `d` (in `mapCoeffs d`/`extendDeriv d Dt`), never the
+  `isDerivation` proof — so they stay on the bare `d`; bundling `DenseDiffRing` there
+  would carry a dead proof field (NOT a defeq issue — proof irrelevance + structure-eta
+  make `DenseDiffRing`-indexing defeq to `d`-indexing; it's minimal-dependency +
+  goal-readability). `RischLevel` genuinely bundles `(d, isDerivation)` — `isDerivation`
+  is carried for the downstream `extend` step, so it extends `DenseDiffRing`; pass
+  `L.toDenseDiffRing` to the derivation-only stages.
 - **Level packs, laws bundled**: single records in the `DensePolyGcd`/
   `DensePolyResultant` house pattern (ops + contracts in one structure; no
   `Lawful` companion — concrete carriers need no Prop-erasure). Two records so

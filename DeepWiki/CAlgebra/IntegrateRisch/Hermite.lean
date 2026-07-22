@@ -1,4 +1,5 @@
 import DeepWiki.CAlgebra.IntegrateRisch.Special
+import DeepWiki.CAlgebra.IntegrateRisch.DiffRing
 import DeepWiki.CAlgebra.PartFrac
 import DeepWiki.CAlgebra.Frac.Field
 
@@ -543,46 +544,48 @@ variable [DensePolySquarefree K]
 /-- **Derivation-generic Hermite reduction** of a canonical fraction at level data
 `(d, Dt)`: partial fractions over the squarefree decomposition, per-factor
 normal/special split, and the Bézout sweep on the normal side. -/
-def hermiteReduceD {d : K → K} (hd : IsDerivation d) (Dt : DensePoly K)
-    (f : DenseFrac K) : ResultHermiteD K d Dt where
+def hermiteReduceD (F : DenseDiffRing K) (Dt : DensePoly K)
+    (f : DenseFrac K) : ResultHermiteD K F.d Dt where
   rational := ((sqfPartFrac f.num f.den.toPoly).2.map
-    fun fa => (hermiteFactorD d Dt fa.1 fa.2).1).sum
+    fun fa => (hermiteFactorD F.d Dt fa.1 fa.2).1).sum
   simple := ((sqfPartFrac f.num f.den.toPoly).2.map
-    fun fa => (hermiteFactorD d Dt fa.1 fa.2).2.1).sum
+    fun fa => (hermiteFactorD F.d Dt fa.1 fa.2).2.1).sum
   reduced := DenseFrac.ofPoly (sqfPartFrac f.num f.den.toPoly).1
     + ((sqfPartFrac f.num f.den.toPoly).2.map
-        fun fa => (hermiteFactorD d Dt fa.1 fa.2).2.2).sum
+        fun fa => (hermiteFactorD F.d Dt fa.1 fa.2).2.2).sum
   simple_den_squarefree := by
-    have hdvd := (den_simple_sum_dvd (d := d) Dt (sqfPartFrac f.num f.den.toPoly).2
+    have hdvd := (den_simple_sum_dvd (d := F.d) Dt (sqfPartFrac f.num f.den.toPoly).2
         (fun fa hfa => (parts_props f fa hfa).1)).trans
-      (prod_normalPart_dvd (d := d) Dt (sqfPartFrac f.num f.den.toPoly).2
+      (prod_normalPart_dvd (d := F.d) Dt (sqfPartFrac f.num f.den.toPoly).2
         (fun fa hfa => (parts_props f fa hfa).1))
     exact (squarefree_parts_prod f).squarefree_of_dvd hdvd
   simple_den_normal := by
-    refine IsNormal.of_dvd (isDerivation_extendDeriv hd Dt) ?_
-      (den_simple_sum_dvd (d := d) Dt (sqfPartFrac f.num f.den.toPoly).2
+    refine IsNormal.of_dvd (isDerivation_extendDeriv F.isDerivation Dt) ?_
+      (den_simple_sum_dvd (d := F.d) Dt (sqfPartFrac f.num f.den.toPoly).2
         (fun fa hfa => (parts_props f fa hfa).1))
-    exact isNormal_prod_normalPart Dt hd (sqfPartFrac f.num f.den.toPoly).2
+    exact isNormal_prod_normalPart Dt F.isDerivation (sqfPartFrac f.num f.den.toPoly).2
       (fun fa hfa => (parts_props f fa hfa).1) (squarefree_parts_prod f)
   reduced_den_special := by
-    exact exists_special_den_add Dt hd (exists_special_den_ofPoly Dt _)
-      (exists_special_den_sum Dt hd (sqfPartFrac f.num f.den.toPoly).2 (parts_props f))
+    exact exists_special_den_add Dt F.isDerivation (exists_special_den_ofPoly Dt _)
+      (exists_special_den_sum Dt F.isDerivation (sqfPartFrac f.num f.den.toPoly).2
+        (parts_props f))
 
 /-- **Soundness of the derivation-generic Hermite reduction**, data-level:
 `f = D(rational) + simple + reduced`. -/
-theorem hermiteReduceD_sound {d : K → K} (hd : IsDerivation d) (Dt : DensePoly K)
+theorem hermiteReduceD_sound (F : DenseDiffRing K) (Dt : DensePoly K)
     (f : DenseFrac K) :
-    f = DenseFrac.extendDeriv d Dt (hermiteReduceD hd Dt f).rational
-      + (hermiteReduceD hd Dt f).simple + (hermiteReduceD hd Dt f).reduced := by
+    f = DenseFrac.extendDeriv F.d Dt (hermiteReduceD F Dt f).rational
+      + (hermiteReduceD F Dt f).simple + (hermiteReduceD F Dt f).reduced := by
   have hfront := sqfPartFrac_sum f
-  have hsplit := sum_factor_split Dt hd (sqfPartFrac f.num f.den.toPoly).2 (parts_props f)
-  show f = DenseFrac.extendDeriv d Dt (((sqfPartFrac f.num f.den.toPoly).2.map
-      fun fa => (hermiteFactorD d Dt fa.1 fa.2).1).sum)
+  have hsplit := sum_factor_split Dt F.isDerivation (sqfPartFrac f.num f.den.toPoly).2
+    (parts_props f)
+  show f = DenseFrac.extendDeriv F.d Dt (((sqfPartFrac f.num f.den.toPoly).2.map
+      fun fa => (hermiteFactorD F.d Dt fa.1 fa.2).1).sum)
     + ((sqfPartFrac f.num f.den.toPoly).2.map
-        fun fa => (hermiteFactorD d Dt fa.1 fa.2).2.1).sum
+        fun fa => (hermiteFactorD F.d Dt fa.1 fa.2).2.1).sum
     + (DenseFrac.ofPoly (sqfPartFrac f.num f.den.toPoly).1
         + ((sqfPartFrac f.num f.den.toPoly).2.map
-            fun fa => (hermiteFactorD d Dt fa.1 fa.2).2.2).sum)
+            fun fa => (hermiteFactorD F.d Dt fa.1 fa.2).2.2).sum)
   conv_lhs => rw [hfront, hsplit]
   ring
 

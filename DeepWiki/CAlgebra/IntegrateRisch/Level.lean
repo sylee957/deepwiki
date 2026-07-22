@@ -1,13 +1,15 @@
 import DeepWiki.CAlgebra.IntegrateRisch.Results
+import DeepWiki.CAlgebra.IntegrateRisch.DiffRing
 import DeepWiki.CAlgebra.Integrate.DerivDataSpec
 
 /-! # Risch level packs
 
 `RischLevel` — one level of the Risch tower as a single record in the house
-ops-with-contract pattern: the level data `(d, Dt)`, the integrator, and its data-level
-sound/complete contracts. `RischOracles` — the sub-level services (limited integration,
-the Risch differential equation) the *next* extension consumes, with their contracts.
-`baseLevel` is `R(x)` with `d/dx`, integrated by the complete rational pipeline. -/
+ops-with-contract pattern: a `DenseDiffRing` (the derivation core `(d, IsDerivation d)`)
+extended with the monomial `Dt`, the integrator, and its data-level sound/complete
+contracts. `RischOracles` — the sub-level services (limited integration, the Risch
+differential equation) the *next* extension consumes, with their contracts. `baseLevel`
+is `R(x)` with `d/dx`, integrated by the complete rational pipeline. -/
 
 namespace DeepWiki.CAlgebra
 
@@ -17,17 +19,14 @@ namespace DensePoly
 
 variable (K : Type u) [Field K] [DecidableEq K] [DensePolyGcd K]
 
-/-- **One Risch level**: the coefficient derivation `d`, the variable's prescribed
-derivative `Dt` (so the level derivation is `DenseFrac.extendDeriv d Dt` on the carrier
-`K(t) = DenseFrac K`), the integrator, and its data-level contracts — soundness on the
-produced record's computable derivative, and record-shape completeness for `none`. -/
-structure RischLevel where
-  /-- The coefficient derivation. -/
-  d : K → K
+/-- **One Risch level**: a `DenseDiffRing` (the coefficient derivation `d` with its
+proof) extended by the variable's prescribed derivative `Dt` (so the level derivation is
+`DenseFrac.extendDeriv d Dt` on the carrier `K(t) = DenseFrac K`), the integrator, and
+its data-level contracts — soundness on the produced record's computable derivative, and
+record-shape completeness for `none`. -/
+structure RischLevel extends DenseDiffRing K where
   /-- The prescribed derivative of the level variable. -/
   Dt : DensePoly K
-  /-- `d` is a derivation. -/
-  isDerivation : IsDerivation d
   /-- Full integration at the level: an antiderivative record, or `none`. -/
   integrate : DenseFrac K → Option (ResultRisch K d)
   /-- Produced records differentiate back to the integrand. -/
@@ -79,8 +78,8 @@ integrated by the complete rational pipeline — soundness is `ratIntegrate_soun
 completeness is vacuous because rational integration never fails. -/
 def baseLevel : RischLevel R where
   d := fun _ => 0
-  Dt := 1
   isDerivation := isDerivation_zero
+  Dt := 1
   integrate := fun f => some (ResultRisch.ofRatIntegral (ratIntegrate f))
   integrate_sound := fun f res h => by
     obtain rfl := Option.some.inj h
