@@ -39,7 +39,8 @@ theorem unique_derivation_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [
   derivation_ext_fractionRing (R := R) fun a => (h₁ a).trans (h₂ a).symm
 
 /-- A compatible differential structure on a fraction field gives the unique extending derivation. -/
-theorem existsUnique_derivation_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
+theorem existsUnique_derivation_fractionRing_of_differentialAlgebra
+    {R K : Type*} [CommRing R] [IsDomain R] [Field K]
     [Algebra R K] [IsFractionRing R K] [Differential R] [Differential K]
     [DifferentialAlgebra R K] :
     ∃! Δ : Derivation ℤ K K, ∀ a : R, Δ (algebraMap R K a) = algebraMap R K (a′) := by

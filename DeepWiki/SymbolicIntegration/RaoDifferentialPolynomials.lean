@@ -1,40 +1,16 @@
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Basic
 
 /-! # Rao normal and special polynomials
 
-The coefficient derivation `κ_D` and Rao's denominator-cleared normal/special API.
+Rao's denominator-cleared normal and special polynomial API.
 -/
 
 open scoped Differential
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
-
-section KappaD
-variable {R : Type*} [CommRing R] [Differential R]
-
-/-- The coefficient-lifting map `κ_D : R[t] → R[t]`, `κ_D(∑ aᵢ tⁱ) = ∑ (Daᵢ) tⁱ`, is a
-derivation (Mathlib's `Differential.mapCoeffs`); it is the extension of `D` to `R[t]` with `Dt = 0`. -/
-noncomputable def kappaD (R : Type*) [CommRing R] [Differential R] : Derivation ℤ R[X] R[X] :=
-  Differential.mapCoeffs
-
-@[simp] theorem kappaD_coeff (p : R[X]) (i : ℕ) : (kappaD R p).coeff i = (p.coeff i)′ :=
-  Differential.coeff_mapCoeffs p i
-
-@[simp] theorem kappaD_X : kappaD R (X : R[X]) = 0 := Differential.mapCoeffs_X
-
-@[simp] theorem kappaD_C (x : R) : kappaD R (C x) = C x′ := Differential.mapCoeffs_C x
-
-/-- `κ_D` is additive (the derivation property): `κ_D(p + q) = κ_D p + κ_D q`. -/
-theorem kappaD_add (p q : R[X]) : kappaD R (p + q) = kappaD R p + kappaD R q := map_add _ _ _
-
-/-- `κ_D` satisfies the Leibniz rule: `κ_D(p·q) = p·κ_D q + q·κ_D p`. -/
-theorem kappaD_mul (p q : R[X]) : kappaD R (p * q) = p * kappaD R q + q * kappaD R p := by
-  rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul]
-
-end KappaD
-
 
 section Rao
 variable {k : Type*} [Field k] [Differential k]
@@ -43,7 +19,7 @@ variable {k : Type*} [Field k] [Differential k]
 bundled as a `Derivation ℤ k[t] k[t]`: a linear combination `b • κ_D + a • (d/dt)` of the
 coefficient derivation and `t`-differentiation, mirroring `Differential.implicitDeriv`. -/
 noncomputable def bDerivation (a b : k[X]) : Derivation ℤ k[X] k[X] :=
-  b • kappaD k + a • (derivative' (R := k)).restrictScalars ℤ
+  b • Differential.mapCoeffs + a • (derivative' (R := k)).restrictScalars ℤ
 
 /-- The denominator-cleared derivative `b·Δp = b·κ_D(p) + a·(dp/dt)` for
 the derivation with `Δt = a/b`. This is a *polynomial* in `k[t]` (no division), the polynomial
@@ -51,17 +27,18 @@ representative of `b·Δp`; Rao's normal/special are stated through it. -/
 noncomputable def bDeriv (a b p : k[X]) : k[X] := bDerivation a b p
 
 /-- `b·Δ` unfolds to the chain-rule polynomial `b·κ_D(p) + a·(dp/dt)`. -/
-theorem bDeriv_eq (a b p : k[X]) : bDeriv a b p = b * kappaD k p + a * derivative p := by
+theorem bDeriv_eq (a b p : k[X]) :
+    bDeriv a b p = b * Differential.mapCoeffs p + a * derivative p := by
   simp only [bDeriv, bDerivation, Derivation.add_apply, Derivation.smul_apply,
     Derivation.coe_restrictScalars, derivative'_apply, smul_eq_mul]
 
 /-- `b·Δ(C c) = b·C(Dc)`: on a constant, the `dp/dt` term drops. -/
 theorem bDeriv_C (a b : k[X]) (c : k) : bDeriv a b (C c) = b * C c′ := by
-  rw [bDeriv_eq, kappaD_C, derivative_C, mul_zero, add_zero]
+  rw [bDeriv_eq, Differential.mapCoeffs_C, derivative_C, mul_zero, add_zero]
 
 /-- `b·Δt = a`: the defining relation `Δt = a/b` cleared of its denominator. -/
 theorem bDeriv_X (a b : k[X]) : bDeriv a b X = a := by
-  rw [bDeriv_eq, kappaD_X, mul_zero, zero_add, derivative_X, mul_one]
+  rw [bDeriv_eq, Differential.mapCoeffs_X, mul_zero, zero_add, derivative_X, mul_one]
 
 /-- `b·Δ` is additive: `b·Δ(p + q) = b·Δp + b·Δq`. -/
 theorem bDeriv_add (a b p q : k[X]) : bDeriv a b (p + q) = bDeriv a b p + bDeriv a b q :=
@@ -71,7 +48,8 @@ theorem bDeriv_add (a b p q : k[X]) : bDeriv a b (p + q) = bDeriv a b p + bDeriv
 survives multiplication by the denominator `b`. -/
 theorem bDeriv_mul (a b p q : k[X]) :
     bDeriv a b (p * q) = p * bDeriv a b q + q * bDeriv a b p := by
-  simp only [bDeriv_eq, kappaD_mul, derivative_mul]; ring
+  simp only [bDeriv_eq, Derivation.leibniz, smul_eq_mul, derivative_mul]
+  ring
 
 /-- The `b·Δ` derivation packaged as a `Differential k[t]` structure: under it, `p′ = b·Δp`. Used
 locally (via `letI`) to reuse the generic monomial-extension `IsNormal`/`IsSpecial` API. -/
@@ -160,8 +138,8 @@ theorem isCoprime_of_isSpecialRao_prime [CharZero k] {a b π : k[X]} (hab : IsCo
   rw [(hπ.irreducible).coprime_iff_not_dvd]
   intro hdvd
   -- `π ∣ a·(dπ/dt)`
-  have hbκ : π ∣ b * kappaD k π := hdvd.mul_right _
-  have hsum : π ∣ b * kappaD k π + a * derivative π := by
+  have hbκ : π ∣ b * Differential.mapCoeffs π := hdvd.mul_right _
+  have hsum : π ∣ b * Differential.mapCoeffs π + a * derivative π := by
     rw [← bDeriv_eq]; exact hsp
   have hadπ : π ∣ a * derivative π := (dvd_add_right hbκ).mp hsum
   rcases hπ.dvd_or_dvd hadπ with hda | hdπ'

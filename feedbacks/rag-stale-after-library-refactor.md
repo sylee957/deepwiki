@@ -7,6 +7,10 @@
 - **Additional occurrence:** On 2026-07-23,
   `rdeps DeepWiki.SymbolicIntegration.implicitDeriv_X_quotientSpanX` reported no matching
   declaration even though the theorem had compiled in the current source.
+- **Additional occurrence:** On 2026-07-23, `rdeps DeepWiki.SymbolicIntegration.kappaD`
+  reported the declaration and its callers under
+  `DeepWiki/SymbolicIntegration/DifferentialAlgebraFacts/Rao.lean`, a path absent from the
+  current tree; the declaration was actually in `RaoDifferentialPolynomials.lean`.
 - **Why it's a limitation:** The graph database is not invalidated when library source or build artifacts change, so structurally plausible but obsolete results are returned without a warning.
 - **Workaround used:** Confirm against current source, use `rg` for reverse-dependency checks, rebuild the affected library, and delete obsolete `.olean`/`.ilean` artifacts for retired module paths before rebuilding the graph.
 - **Suggested fix:** Store the library/source fingerprint used to build the graph and make query commands warn or fail when it differs from the current checkout.

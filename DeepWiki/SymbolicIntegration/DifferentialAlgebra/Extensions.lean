@@ -5,13 +5,33 @@ import Mathlib.RingTheory.Norm.Transitivity
 import Mathlib.FieldTheory.Galois.Basic
 
 /-! # Derivation extensions
-Uniqueness and compatibility lemmas for algebraic differential extensions, intermediate fields,
-and finite Galois trace/norm operations. -/
+Characterizations, uniqueness, and compatibility lemmas for differential extensions,
+intermediate fields, and finite Galois trace/norm operations. -/
 
 open scoped Differential
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
+
+section Compatibility
+
+/-- `S/R` is a differential algebra iff its derivation extends that of `R` along `algebraMap`. -/
+theorem differentialAlgebra_iff_deriv_algebraMap {R S : Type*} [CommRing R] [CommRing S]
+    [Algebra R S] [Differential R] [Differential S] :
+    DifferentialAlgebra R S ↔
+      ∀ a : R, (algebraMap R S a)′ = algebraMap R S (a′) := by
+  constructor
+  · exact fun h => h.deriv_algebraMap
+  · exact fun h => ⟨h⟩
+
+/-- For a literal subring `R ⊆ S`, differential-algebra compatibility is `Δ(a) = D(a)`. -/
+theorem differentialAlgebra_subring_iff {S : Type*} [CommRing S] [Differential S]
+    (R : Subring S) [Differential R] :
+    DifferentialAlgebra R S ↔ ∀ a : R, (a : S)′ = ((a′ : R) : S) := by
+  rw [differentialAlgebra_iff_deriv_algebraMap]
+  rfl
+
+end Compatibility
 
 section Algebraic
 

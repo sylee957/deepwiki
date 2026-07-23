@@ -65,6 +65,19 @@ theorem deriv_pow {R : Type*} [CommRing R] [Differential R] (a : R) (n : ℕ) :
   simp only [nsmul_eq_mul, smul_eq_mul]
   ring
 
+/-- `κ_D(∑ᵢ aᵢXⁱ) = ∑ᵢ (Daᵢ)Xⁱ`: coefficient lifting acts termwise on a finite polynomial sum. -/
+theorem mapCoeffs_sum_C_mul_X_pow {R : Type*} [CommRing R] [Differential R] {n : ℕ}
+    (a : Fin (n + 1) → R) :
+    Differential.mapCoeffs (∑ i, C (a i) * X ^ (i : ℕ)) =
+      ∑ i, C ((a i)′) * X ^ (i : ℕ) := by
+  rw [map_sum]
+  apply Finset.sum_congr rfl
+  intro i _
+  rw [Derivation.leibniz, Differential.mapCoeffs_C, Derivation.leibniz_pow,
+    Differential.mapCoeffs_X]
+  repeat rw [smul_zero]
+  rw [zero_add, smul_eq_mul, mul_comm]
+
 /-- **Chain rule** (univariate): if every coefficient of `P` is a constant, then
 `(P(u))′ = P'(u)·u′`. -/
 theorem deriv_eval_of_const_coeffs {R : Type*} [CommRing R] [Differential R]

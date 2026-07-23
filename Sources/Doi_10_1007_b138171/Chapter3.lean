@@ -78,12 +78,26 @@ is the compatibility condition `(algebraMap R S a)' = algebraMap R S (a')`, so t
 `S` really extends the derivation on `R`. -/
 abbrev def_3_2_1 := @DifferentialAlgebra
 
-/-- **Definition 3.2.2** (§3.2, p.80), the *coefficient lifting* `κ_D : R[X] → R[X]`,
-`κ_D(Σ aᵢXⁱ) = Σ (Daᵢ)Xⁱ`. This aliases Mathlib's `Derivation.mapCoeffs`: applying it to
-`Differential.deriv : Derivation ℤ R R` gives the derivation that differentiates polynomial
-coefficients and leaves powers of `X` fixed. Its codomain is `PolynomialModule R R`, Mathlib's
-module presentation of `R[X]`, so the fact that `κ_D` is a derivation is part of the type. -/
-noncomputable abbrev def_3_2_2 := @Derivation.mapCoeffs
+/-- **Definition 3.2.1** (§3.2, p.79): an algebra is a differential extension iff its
+derivation commutes with the base `algebraMap`. -/
+abbrev def_3_2_1_iff := @differentialAlgebra_iff_deriv_algebraMap
+
+/-- **Definition 3.2.1** (§3.2, p.79): for a literal subring `R ⊆ S`, differential-extension
+compatibility is exactly `Δ(a) = D(a)` for every `a ∈ R`. -/
+abbrev def_3_2_1_subring_iff := @differentialAlgebra_subring_iff
+
+/-- **Definition 3.2.2** (§3.2, p.80): the coefficient lifting
+`κ_D : R[X] → R[X]` applies `D` to every polynomial coefficient. -/
+noncomputable abbrev def_3_2_2 := @Differential.mapCoeffs
+
+/-- **Definition 3.2.2** (§3.2, p.80): `coeff(κ_D(p), i) = D(coeff(p, i))`. -/
+abbrev def_3_2_2_coeff := @Differential.coeff_mapCoeffs
+
+/-- **Definition 3.2.2** (§3.2, p.80): `κ_D(Σᵢ₌₀ⁿ aᵢXⁱ) = Σᵢ₌₀ⁿ (Daᵢ)Xⁱ`. -/
+abbrev def_3_2_2_sum := @mapCoeffs_sum_C_mul_X_pow
+
+/-- **Lemma 3.2.1** (§3.2, p.80): coefficient lifting is a derivation on `R[X]`. -/
+noncomputable abbrev lem_3_2_1 := @Differential.mapCoeffs
 
 /-- **Lemma 3.2.2** (§3.2, p.81): for a derivation `D` on `R`, `α ∈ R`, `P ∈ R[X]`,
 `D(P(α)) = κ_D(P)(α) + (Dα)·(dP/dX)(α)`. In Lean, `P.eval α` is the value `P(α)`,
@@ -102,6 +116,15 @@ domain is determined by its restriction to the domain. This aliases the library 
 part only, not a construction of the fraction-field derivation. -/
 abbrev thm_3_2_1_unique := @derivation_ext_fractionRing
 
+/-- **Theorem 3.2.1** (§3.2, p.79): every derivation on an integral domain extends uniquely to
+any realization of its fraction field. This is the algebra-map equation form, whose witness is
+`FractionRingDeriv.deriv`. -/
+abbrev thm_3_2_1_derivation := @existsUnique_derivation_fractionRing
+
+/-- **Theorem 3.2.1** (§3.2, p.79): the fraction field has a unique differential structure
+making it a differential extension of the integral domain. -/
+abbrev thm_3_2_1 := @existsUnique_differentialAlgebra_fractionRing
+
 /-- **Theorem 3.2.2** (§3.2, p.81), polynomial-ring case (existence + uniqueness): there is a
 unique derivation on `R[X]` extending `D` on the constants and sending `t = X` to a prescribed
 polynomial `w`. The witness is Mathlib's `Differential.implicitDeriv w`, whose defining equations
@@ -109,17 +132,11 @@ are `implicitDeriv_C` and `implicitDeriv_X`; uniqueness is the library lemma
 `derivation_polynomial_ext`, which says a derivation on `R[X]` is determined by constants and `X`. -/
 abbrev thm_3_2_2_poly := @existsUnique_derivation_polynomial
 
-/-- **Theorem 3.2.1** (§3.2, p.79), conditional existence plus uniqueness: if the fraction field `K`
-already has `[Differential K]` and `[DifferentialAlgebra R K]`, then `Differential.deriv` is the
-unique derivation on `K` satisfying `Δ (algebraMap R K a) = algebraMap R K (a')`. This packages an
-available compatible structure; it does not build the quotient-rule derivation from scratch. -/
-abbrev thm_3_2_1_exists := @existsUnique_derivation_fractionRing
-
 /-- **Theorem 3.2.2** (§3.2, p.81), field uniqueness: the derivation on `F(t)` extending `D` with a
 prescribed `Δt` is unique. In Lean this is stated for any fraction field `K` of `F[X]`: two
 derivations `Derivation ℤ K K` are equal if they agree on the images of all constants `C c` and on
-the image of `X`. Existence of such a derivation on the rational-function field is the deferred
-fraction-field construction. -/
+the image of `X`. The generic fraction-field construction now exists; its source-faithful assembly
+with the prescribed polynomial derivation remains deferred. -/
 abbrev thm_3_2_2_field_unique := @unique_derivation_rationalFunction
 
 /-- **Theorem 3.2.3** (§3.2, p.83), algebraic-extension existence and uniqueness in Lean form:
@@ -157,12 +174,6 @@ library theorem states `∃! Δ : Differential B, DifferentialAlgebra F B`, obta
 the finite-dimensional algebraic-extension package `existsUnique_differentialAlgebra_algebraic`
 to `B/F`. -/
 abbrev cor_3_2_1 := @existsUnique_differentialAlgebra_intermediateField
-
--- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):** the
--- *unconditional* fraction-field existence of Theorem 3.2.1 / full `F(t)` Theorem 3.2.2 — building a
--- `Derivation` on `FractionRing R` from scratch (`Δ(a/b) = (b·Da − a·Db)/b²`), which Mathlib lacks; the
--- uniqueness (`thm_3_2_1_unique`, `thm_3_2_2_field_unique`) and structure-conditioned existence
--- (`thm_3_2_1_exists`) are done. Theorem 3.2.4(ii) / Corollary 3.2.1 are the finite-extension forms.
 
 /-! ## §3.3 Constants and Extensions -/
 
@@ -628,7 +639,7 @@ combination `i·t₁ − 2·t₂` is a constant. -/
 abbrev ex_3_4 := @deriv_log_arctan_combination_eq_zero
 
 /-- **Exercise 3.6(a)** (Ch 3, p.105): `κ_D(∑ aᵢ Xⁱ) = ∑ (Daᵢ) Xⁱ` is a derivation on `R[X]`. -/
-noncomputable abbrev ex_3_6a := @kappaD
+noncomputable abbrev ex_3_6a := @Differential.mapCoeffs
 
 /-- **Exercise 3.7** (Ch 3, p.105): for `Δt = a/b`, `b·Δp = b·κ_D(p) + a·(dp/dt) ∈ k[t]` for any
 `p`. -/
@@ -651,8 +662,8 @@ special `p`). -/
 abbrev ex_3_11 := @isCoprime_of_isSpecialRao_prime
 
 /- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
-§3.2: Thm 3.2.1 *unconditional* fraction-field existence; Thm 3.2.2 full `F(t)` existence with `Δt=w`
-  (both need a from-scratch `FractionRing` derivation Mathlib lacks; uniqueness + conditioned existence done).
+§3.2: Thm 3.2.2 full `F(t)` existence with `Δt=w` [deferred: the generic fraction-field
+  derivation now exists; its polynomial specialization still needs a source-faithful assembly].
 §3.3: Lemma 3.3.6 front reduction (the `C`-basis `C[X] ⊗_C F` step; the Nullstellensatz core `lem_3_3_6` is done).
 Exercises: Ex 3.2 [infra: concrete algebraic differential field ℚ(x,√(2x²)) + constants]; Ex 3.3 [deferred:
   hard algebraic-independence transfer]; Ex 3.5 [infra: `S^irr` set + base-change descent]; Ex 3.6(b),(c)
