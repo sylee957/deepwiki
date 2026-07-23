@@ -1,3 +1,4 @@
+import DeepWiki.AxiomAudit
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Extensions
 import Mathlib.FieldTheory.PrimitiveElement
 
@@ -918,6 +919,7 @@ theorem extensionDifferential_unique
   exact sub_eq_zero.mp hezero
 
 /-- An explicit separable power-basis presentation gives a unique differential extension. -/
+@[choice_free]
 theorem existsUnique_differentialExtension
     (S : SeparablePowerBasisPresentation F E) :
     ∃! Δ : Differential E, IsDifferentialExtension F E Δ :=
