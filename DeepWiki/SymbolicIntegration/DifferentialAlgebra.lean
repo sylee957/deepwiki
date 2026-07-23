@@ -9,6 +9,7 @@ import DeepWiki.SymbolicIntegration.DifferentialAlgebra.PolynomialDerivative
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.PolynomialImplicitDerivation
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionExtension
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.TranscendentalExtension
 
 /-! # Differential algebra
 

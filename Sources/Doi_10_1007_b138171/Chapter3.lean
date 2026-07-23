@@ -135,9 +135,13 @@ abbrev thm_3_2_2_poly := @existsUnique_derivation_polynomial
 /-- **Theorem 3.2.2** (§3.2, p.81), field uniqueness: the derivation on `F(t)` extending `D` with a
 prescribed `Δt` is unique. In Lean this is stated for any fraction field `K` of `F[X]`: two
 derivations `Derivation ℤ K K` are equal if they agree on the images of all constants `C c` and on
-the image of `X`. The generic fraction-field construction now exists; its source-faithful assembly
-with the prescribed polynomial derivation remains deferred. -/
+the image of `X`. -/
 abbrev thm_3_2_2_field_unique := @unique_derivation_rationalFunction
+
+/-- **Theorem 3.2.2** (§3.2, p.81): if `t : E` is transcendental over the differential field `F`,
+then for every `w ∈ F⟮t⟯` there is a unique differential structure `Δ` on `F⟮t⟯` such that
+`(F⟮t⟯, Δ)` is a differential extension of `F` and `Δt = w`. -/
+abbrev thm_3_2_2 := @existsUnique_differentialAdjoin_of_transcendental
 
 /-- **Theorem 3.2.3** (§3.2, p.83), algebraic-extension existence and uniqueness in Lean form:
 for a finite extension `E/F` in characteristic `0`, there is a unique differential structure on
@@ -662,8 +666,6 @@ special `p`). -/
 abbrev ex_3_11 := @isCoprime_of_isSpecialRao_prime
 
 /- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
-§3.2: Thm 3.2.2 full `F(t)` existence with `Δt=w` [deferred: the generic fraction-field
-  derivation now exists; its polynomial specialization still needs a source-faithful assembly].
 §3.3: Lemma 3.3.6 front reduction (the `C`-basis `C[X] ⊗_C F` step; the Nullstellensatz core `lem_3_3_6` is done).
 Exercises: Ex 3.2 [infra: concrete algebraic differential field ℚ(x,√(2x²)) + constants]; Ex 3.3 [deferred:
   hard algebraic-independence transfer]; Ex 3.5 [infra: `S^irr` set + base-change descent]; Ex 3.6(b),(c)
