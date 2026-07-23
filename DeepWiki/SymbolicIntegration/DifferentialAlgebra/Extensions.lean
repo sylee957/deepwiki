@@ -13,6 +13,40 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+/-- A differential structure on `E` together with compatibility over the differential ring `F`. -/
+abbrev DifferentialExtension (F E : Type*) [CommRing F] [CommRing E]
+    [Algebra F E] [Differential F] :=
+  { Δ : Differential E // @DifferentialAlgebra F E _ _ _ _ Δ }
+
+namespace DifferentialExtension
+
+variable {F E : Type*} [CommRing F] [CommRing E] [Algebra F E] [Differential F]
+
+/-- The target differential structure of a differential extension. -/
+abbrev toDifferential (Δ : DifferentialExtension F E) : Differential E :=
+  Δ.1
+
+/-- The derivation carried by a differential extension. -/
+abbrev deriv (Δ : DifferentialExtension F E) : Derivation ℤ E E :=
+  Δ.toDifferential.deriv
+
+/-- The target derivation of a differential extension is compatible with the base derivation. -/
+theorem differentialAlgebra (Δ : DifferentialExtension F E) :
+    @DifferentialAlgebra F E _ _ _ _ Δ.toDifferential :=
+  Δ.2
+
+/-- The derivation of a differential extension commutes with `algebraMap`. -/
+theorem deriv_algebraMap (Δ : DifferentialExtension F E) (a : F) :
+    Δ.deriv (algebraMap F E a) = algebraMap F E (a′) :=
+  Δ.differentialAlgebra.deriv_algebraMap a
+
+/-- Differential extensions are equal when their derivations are equal. -/
+@[ext] theorem ext {Δ₁ Δ₂ : DifferentialExtension F E}
+    (h : Δ₁.deriv = Δ₂.deriv) : Δ₁ = Δ₂ :=
+  Subtype.ext (Differential.ext h)
+
+end DifferentialExtension
+
 section Compatibility
 
 /-- `S/R` is a differential algebra iff its derivation extends that of `R` along `algebraMap`. -/
@@ -51,35 +85,31 @@ noncomputable def differentialAlgebraic {F E : Type*} [Field F] [Differential F]
 theorem differentialAlgebra_algebraic {F E : Type*} [Field F] [Differential F] [CharZero F]
     [Field E] [Algebra F E] [FiniteDimensional F E] :
     letI := differentialAlgebraic (F := F) (E := E)
-    DifferentialAlgebra F E :=
+  DifferentialAlgebra F E :=
   Differential.differentialAlgebraFiniteDimensional
 
-/-- A finite-dimensional algebraic extension has at most one compatible differential structure. -/
-theorem unique_differentialAlgebra_algebraic {F E : Type*} [Field F] [Differential F]
-    [CharZero F] [Field E] [Algebra F E] [FiniteDimensional F E] (Δ₁ Δ₂ : Differential E)
-    (h₁ : @DifferentialAlgebra F E _ _ _ _ Δ₁) (h₂ : @DifferentialAlgebra F E _ _ _ _ Δ₂) :
-    Δ₁ = Δ₂ := by
-  have := Subtype.ext_iff.mp <|
-    (Differential.uniqueDifferentialAlgebraFiniteDimensional (F := F) (K := E)).uniq ⟨Δ₁, h₁⟩
-      |>.trans
-      ((Differential.uniqueDifferentialAlgebraFiniteDimensional (F := F) (K := E)).uniq
-        ⟨Δ₂, h₂⟩).symm
-  exact this
-
-/-- A finite-dimensional algebraic extension has a unique compatible differential structure. -/
-theorem existsUnique_differentialAlgebra_algebraic {F E : Type*} [Field F] [Differential F]
+/-- The canonical differential extension on a finite-dimensional algebraic extension. -/
+noncomputable def differentialExtensionAlgebraic
+    {F E : Type*} [Field F] [Differential F]
     [CharZero F] [Field E] [Algebra F E] [FiniteDimensional F E] :
-    ∃! Δ : Differential E, @DifferentialAlgebra F E _ _ _ _ Δ := by
-  let Δ₀ := differentialAlgebraic (F := F) (E := E)
-  have hΔ₀ : @DifferentialAlgebra F E _ _ _ _ Δ₀ :=
-    differentialAlgebra_algebraic (F := F) (E := E)
-  refine ⟨Δ₀, hΔ₀, ?_⟩
-  intro Δ hΔ
-  exact unique_differentialAlgebra_algebraic (F := F) (E := E) Δ Δ₀ hΔ hΔ₀
+    DifferentialExtension F E :=
+  ⟨differentialAlgebraic (F := F) (E := E),
+    differentialAlgebra_algebraic (F := F) (E := E)⟩
 
-example {F E : Type*} [Field F] [Differential F] [CharZero F] [Field E] [Algebra F E]
-    [FiniteDimensional F E] : ∃! Δ : Differential E, @DifferentialAlgebra F E _ _ _ _ Δ :=
-  existsUnique_differentialAlgebra_algebraic (F := F) (E := E)
+/-- Any two differential extensions on a finite-dimensional algebraic extension are equal. -/
+theorem differentialExtension_algebraic_unique
+    {F E : Type*} [Field F] [Differential F] [CharZero F]
+    [Field E] [Algebra F E] [FiniteDimensional F E]
+    (Δ₁ Δ₂ : DifferentialExtension F E) : Δ₁ = Δ₂ :=
+  (Differential.uniqueDifferentialAlgebraFiniteDimensional (F := F) (K := E)).uniq Δ₁ |>.trans
+    ((Differential.uniqueDifferentialAlgebraFiniteDimensional (F := F) (K := E)).uniq Δ₂).symm
+
+/-- A finite-dimensional algebraic extension has a unique differential extension structure. -/
+@[reducible] noncomputable def uniqueDifferentialExtension_algebraic
+    {F E : Type*} [Field F] [Differential F] [CharZero F]
+    [Field E] [Algebra F E] [FiniteDimensional F E] :
+    Unique (DifferentialExtension F E) :=
+  Differential.uniqueDifferentialAlgebraFiniteDimensional
 
 end Algebraic
 
@@ -135,12 +165,13 @@ end TraceNorm
 
 section AlgebraicClosure
 
-/-- A finite intermediate field has a unique differential structure compatible with `F`. -/
-theorem existsUnique_differentialAlgebra_intermediateField {F K : Type*} [Field F]
+/-- A finite intermediate field has a unique differential extension structure over `F`. -/
+@[reducible] noncomputable def uniqueDifferentialExtension_intermediateField
+    {F K : Type*} [Field F]
     [Differential F] [CharZero F] [Field K] [Algebra F K] (B : IntermediateField F K)
     [FiniteDimensional F B] :
-    ∃! Δ : Differential B, @DifferentialAlgebra F B _ _ _ _ Δ := by
-  exact existsUnique_differentialAlgebra_algebraic (F := F) (E := B)
+    Unique (DifferentialExtension F B) :=
+  uniqueDifferentialExtension_algebraic
 
 /-- A differential extension of `F` is also a differential extension of a finite intermediate field. -/
 theorem differentialAlgebra_intermediateField_tower {F K : Type*} [Field F] [Differential F]

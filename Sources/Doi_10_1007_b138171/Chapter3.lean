@@ -72,11 +72,14 @@ abbrev lem_3_1_2 := @DifferentialIdeal.exists_quotientDerivation
 
 /-! ## §3.2 Differential Extensions -/
 
-/-- **Definition 3.2.1** (§3.2, p.79), a *differential extension* `(S, Δ)` of `(R, D)`: the
-Mathlib class `DifferentialAlgebra R S`. With `[Algebra R S]` and derivations on both sides, this
-is the compatibility condition `(algebraMap R S a)' = algebraMap R S (a')`, so the derivation on
-`S` really extends the derivation on `R`. -/
-abbrev def_3_2_1 := @DifferentialAlgebra
+/-- **Definition 3.2.1** (§3.2, p.79), a *differential extension* `(S, Δ)` of `(R, D)`,
+bundling the differential structure `Δ` on `S` with its compatibility over `R`. -/
+abbrev def_3_2_1 := @DifferentialExtension
+
+/-- **Definition 3.2.1** (§3.2, p.79): `DifferentialAlgebra R S` is the compatibility
+condition carried by a differential extension, namely
+`(algebraMap R S a)' = algebraMap R S (a')`. -/
+abbrev def_3_2_1_compatibility := @DifferentialAlgebra
 
 /-- **Definition 3.2.1** (§3.2, p.79): an algebra is a differential extension iff its
 derivation commutes with the base `algebraMap`. -/
@@ -123,7 +126,7 @@ abbrev thm_3_2_1_derivation := @existsUnique_derivation_fractionRing
 
 /-- **Theorem 3.2.1** (§3.2, p.79): the fraction field has a unique differential structure
 making it a differential extension of the integral domain. -/
-abbrev thm_3_2_1 := @existsUnique_differentialAlgebra_fractionRing
+noncomputable abbrev thm_3_2_1 := @uniqueDifferentialExtension_fractionRing
 
 /-- **Theorem 3.2.2** (§3.2, p.81), polynomial-ring case (existence + uniqueness): there is a
 unique derivation on `R[X]` extending `D` on the constants and sending `t = X` to a prescribed
@@ -147,13 +150,12 @@ abbrev thm_3_2_2 := @existsUnique_differentialAdjoin_of_transcendental
 for a finite extension `E/F` in characteristic `0`, there is a unique differential structure on
 `E` compatible with the one on `F`. Mathlib constructs the witness by the minimal-polynomial
 formula `Δα = -κ_D(P)(α) / P'(α)`. -/
-abbrev thm_3_2_3 := @existsUnique_differentialAlgebra_algebraic
+noncomputable abbrev thm_3_2_3 := @uniqueDifferentialExtension_algebraic
 
 /-- **Theorem 3.2.3** (§3.2, p.83), uniqueness: the derivation extension to a separable algebraic
-extension is unique. The Lean theorem takes two structures `Δ₁ Δ₂ : Differential E` and proves
-`Δ₁ = Δ₂` from two explicit compatibility proofs `DifferentialAlgebra F E`; finite-dimensional
-char-`0` supplies separability through Mathlib. -/
-abbrev thm_3_2_3_unique := @unique_differentialAlgebra_algebraic
+extension is unique. The Lean theorem identifies any two bundled differential extensions;
+finite-dimensional characteristic `0` supplies separability through Mathlib. -/
+abbrev thm_3_2_3_unique := @differentialExtension_algebraic_unique
 
 /-- **Theorem 3.2.4(i)** (§3.2, p.85): an `F`-automorphism of a separable algebraic extension
 commutes with `D`. The Lean statement is pointwise: for `σ : E ≃ₐ[F] E` and `a : E`,
@@ -174,10 +176,9 @@ abbrev thm_3_2_4_ii_norm := @trace_logDeriv_eq_logDeriv_norm
 
 /-- **Corollary 3.2.1** (§3.2, p.85): `D` extends uniquely to each finite intermediate field of a
 separable algebraic extension. For `B : IntermediateField F K` with `[FiniteDimensional F B]`, the
-library theorem states `∃! Δ : Differential B, DifferentialAlgebra F B`, obtained by applying
-the finite-dimensional algebraic-extension package `existsUnique_differentialAlgebra_algebraic`
-to `B/F`. -/
-abbrev cor_3_2_1 := @existsUnique_differentialAlgebra_intermediateField
+library supplies a `Unique (DifferentialExtension F B)` instance-like package obtained from
+the finite-dimensional algebraic-extension construction for `B/F`. -/
+noncomputable abbrev cor_3_2_1 := @uniqueDifferentialExtension_intermediateField
 
 /-! ## §3.3 Constants and Extensions -/
 

@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.DerivationExtension
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Extensions
 
 /-! # Fraction-field differential extensions
 
@@ -128,6 +129,10 @@ theorem differentialAlgebra [Differential R] :
   letI := differential (R := R) (K := K)
   exact ⟨deriv_algebraMap (Differential.deriv : Derivation ℤ R R)⟩
 
+/-- The quotient-rule differential extension structure on a fraction field. -/
+noncomputable def extension [Differential R] : DifferentialExtension R K :=
+  ⟨differential (R := R) (K := K), differentialAlgebra (R := R) (K := K)⟩
+
 end FractionRingDeriv
 
 /-- A derivation on an integral domain extends uniquely to every realization of its fraction field. -/
@@ -140,16 +145,20 @@ theorem existsUnique_derivation_fractionRing {R K : Type*} [CommRing R] [IsDomai
   intro Δ hΔ
   exact unique_derivation_fractionRing (R := R) hΔ (FractionRingDeriv.deriv_algebraMap _)
 
-/-- A fraction field has a unique differential structure making it a differential extension. -/
-theorem existsUnique_differentialAlgebra_fractionRing
+/-- Any two differential extension structures on a fraction field are equal. -/
+theorem differentialExtension_fractionRing_unique
+    {R K : Type*} [CommRing R] [IsDomain R] [Field K]
+    [Algebra R K] [IsFractionRing R K] [Differential R]
+    (Δ₁ Δ₂ : DifferentialExtension R K) : Δ₁ = Δ₂ := by
+  apply DifferentialExtension.ext
+  exact unique_derivation_fractionRing (R := R) Δ₁.deriv_algebraMap Δ₂.deriv_algebraMap
+
+/-- A fraction field has a unique differential extension structure over its domain. -/
+@[reducible] noncomputable def uniqueDifferentialExtension_fractionRing
     {R K : Type*} [CommRing R] [IsDomain R] [Field K]
     [Algebra R K] [IsFractionRing R K] [Differential R] :
-    ∃! Δ : Differential K, @DifferentialAlgebra R K _ _ _ _ Δ := by
-  let Δ₀ := FractionRingDeriv.differential (R := R) (K := K)
-  refine ⟨Δ₀, FractionRingDeriv.differentialAlgebra, ?_⟩
-  intro Δ hΔ
-  apply Differential.ext
-  exact unique_derivation_fractionRing (R := R) hΔ.deriv_algebraMap
-    (FractionRingDeriv.deriv_algebraMap _)
+    Unique (DifferentialExtension R K) where
+  default := FractionRingDeriv.extension
+  uniq Δ := differentialExtension_fractionRing_unique Δ FractionRingDeriv.extension
 
 end DeepWiki.SymbolicIntegration

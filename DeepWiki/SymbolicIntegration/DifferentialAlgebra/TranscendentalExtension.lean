@@ -68,14 +68,14 @@ private theorem ratFuncCoefficientDifferential_X :
     _ = 0 := by rw [polynomialCoefficientDifferential_X, map_zero]
 
 /-- The differential structure on `F(X)` extending `F` and assigning the prescribed value to `X`. -/
-@[reducible] noncomputable def ratFuncDifferentialOfValue (w : RatFunc F) :
+@[reducible] private noncomputable def ratFuncDifferentialOfValue (w : RatFunc F) :
     Differential (RatFunc F) :=
   let d₀ := (ratFuncCoefficientDifferential (F := F)).deriv
   let dX := (inferInstance : Differential (RatFunc F)).deriv
   ⟨d₀ + w • dX⟩
 
 /-- `ratFuncDifferentialOfValue w` extends the differential structure on `F`. -/
-theorem ratFuncDifferentialOfValue_algebraMap (w : RatFunc F) (a : F) :
+private theorem ratFuncDifferentialOfValue_algebraMap (w : RatFunc F) (a : F) :
     (ratFuncDifferentialOfValue w).deriv (algebraMap F (RatFunc F) a) =
       algebraMap F (RatFunc F) (a′) := by
   rw [show algebraMap F (RatFunc F) a =
@@ -92,7 +92,7 @@ theorem ratFuncDifferentialOfValue_algebraMap (w : RatFunc F) (a : F) :
   rw [ratFuncDeriv_algebraMap, derivative_C, map_zero, mul_zero, add_zero]
 
 /-- `ratFuncDifferentialOfValue w` sends `X` to `w`. -/
-theorem ratFuncDifferentialOfValue_X (w : RatFunc F) :
+private theorem ratFuncDifferentialOfValue_X (w : RatFunc F) :
     (ratFuncDifferentialOfValue w).deriv (RatFunc.X : RatFunc F) = w := by
   rw [show (RatFunc.X : RatFunc F) = algebraMap F[X] (RatFunc F) X by
     exact RatFunc.algebraMap_X.symm]
@@ -104,20 +104,33 @@ theorem ratFuncDifferentialOfValue_X (w : RatFunc F) :
   change 0 + w * ratFuncDeriv (algebraMap F[X] (RatFunc F) X) = w
   rw [ratFuncDeriv_algebraMap, derivative_X, map_one, mul_one, zero_add]
 
+/-- The differential extension on `F(X)` assigning the prescribed derivative to `X`. -/
+noncomputable def ratFuncExtensionOfValue (w : RatFunc F) :
+    DifferentialExtension F (RatFunc F) := by
+  let Δ := ratFuncDifferentialOfValue w
+  have hΔ : @DifferentialAlgebra F (RatFunc F) _ _ _ _ Δ :=
+    ⟨fun a => ratFuncDifferentialOfValue_algebraMap w a⟩
+  exact ⟨Δ, hΔ⟩
+
+/-- `ratFuncExtensionOfValue w` sends `X` to `w`. -/
+theorem ratFuncExtensionOfValue_X (w : RatFunc F) :
+    (ratFuncExtensionOfValue w).deriv (RatFunc.X : RatFunc F) = w :=
+  ratFuncDifferentialOfValue_X w
+
 end RationalFunction
 
 section Adjoin
 
 variable {F E : Type*} [Field F] [Field E] [Algebra F E]
+variable [Differential F]
 
-/-- Differential structures on `F⟮t⟯` are determined by their values on `F` and on `t`. -/
-theorem differential_adjoin_ext (t : E) {Δ₁ Δ₂ : Differential (F⟮t⟯)}
-    (hbase : ∀ a : F,
-      Δ₁.deriv (algebraMap F (F⟮t⟯) a) = Δ₂.deriv (algebraMap F (F⟮t⟯) a))
+/-- Differential extensions on `F⟮t⟯` are determined by their value on the generator. -/
+theorem DifferentialExtension.adjoin_ext
+    (t : E) {Δ₁ Δ₂ : DifferentialExtension F (F⟮t⟯)}
     (hgen : Δ₁.deriv (IntermediateField.AdjoinSimple.gen F t) =
       Δ₂.deriv (IntermediateField.AdjoinSimple.gen F t)) :
     Δ₁ = Δ₂ := by
-  apply Differential.ext
+  apply DifferentialExtension.ext
   apply Derivation.ext
   rintro ⟨x, hx⟩
   apply IntermediateField.adjoin_induction F (p := fun y hy =>
@@ -127,7 +140,7 @@ theorem differential_adjoin_ext (t : E) {Δ₁ Δ₂ : Differential (F⟮t⟯)}
     subst y
     exact hgen
   · intro a
-    exact hbase a
+    exact (Δ₁.deriv_algebraMap a).trans (Δ₂.deriv_algebraMap a).symm
   · intro x y hx hy hxder hyder
     change Δ₁.deriv ((⟨x, hx⟩ : F⟮t⟯) + ⟨y, hy⟩) =
       Δ₂.deriv ((⟨x, hx⟩ : F⟮t⟯) + ⟨y, hy⟩)
@@ -141,53 +154,62 @@ theorem differential_adjoin_ext (t : E) {Δ₁ Δ₂ : Differential (F⟮t⟯)}
       Δ₂.deriv ((⟨x, hx⟩ : F⟮t⟯) * ⟨y, hy⟩)
     rw [Derivation.leibniz, Derivation.leibniz, hxder, hyder]
 
-variable [Differential F]
-
 /-- The differential structure on `F⟮t⟯` extending `F` and assigning `w` to a transcendental `t`. -/
-@[reducible] noncomputable def transcendentalAdjoinDifferential
+@[reducible] private noncomputable def transcendentalAdjoinDifferential
     (t : E) (ht : Transcendental F t) (w : F⟮t⟯) : Differential (F⟮t⟯) :=
   let e := RatFunc.algEquivOfTranscendental t ht
-  let δ := ratFuncDifferentialOfValue (e.symm w)
-  letI : Differential (RatFunc F) := δ
+  let Δ := ratFuncExtensionOfValue (e.symm w)
+  letI : Differential (RatFunc F) := Δ.toDifferential
   Differential.equiv e.symm.toRingEquiv
 
 /-- `transcendentalAdjoinDifferential t ht w` extends the differential structure on `F`. -/
-theorem transcendentalAdjoinDifferential_algebraMap
+private theorem transcendentalAdjoinDifferential_algebraMap
     (t : E) (ht : Transcendental F t) (w : F⟮t⟯) (a : F) :
     (transcendentalAdjoinDifferential t ht w).deriv (algebraMap F (F⟮t⟯) a) =
       algebraMap F (F⟮t⟯) (a′) := by
   let e := RatFunc.algEquivOfTranscendental t ht
-  change e ((ratFuncDifferentialOfValue (e.symm w)).deriv
+  change e ((ratFuncExtensionOfValue (e.symm w)).deriv
     (e.symm (algebraMap F (F⟮t⟯) a))) = algebraMap F (F⟮t⟯) (a′)
-  rw [e.symm.commutes, ratFuncDifferentialOfValue_algebraMap, e.commutes]
+  rw [e.symm.commutes, DifferentialExtension.deriv_algebraMap, e.commutes]
 
 /-- `transcendentalAdjoinDifferential t ht w` sends the adjoined generator to `w`. -/
-theorem transcendentalAdjoinDifferential_gen
+private theorem transcendentalAdjoinDifferential_gen
     (t : E) (ht : Transcendental F t) (w : F⟮t⟯) :
     (transcendentalAdjoinDifferential t ht w).deriv
       (IntermediateField.AdjoinSimple.gen F t) = w := by
   let e := RatFunc.algEquivOfTranscendental t ht
-  change e ((ratFuncDifferentialOfValue (e.symm w)).deriv
+  change e ((ratFuncExtensionOfValue (e.symm w)).deriv
     (e.symm (IntermediateField.AdjoinSimple.gen F t))) = w
-  rw [RatFunc.algEquivOfTranscendental_symm_gen, ratFuncDifferentialOfValue_X,
+  rw [RatFunc.algEquivOfTranscendental_symm_gen, ratFuncExtensionOfValue_X,
     e.apply_symm_apply]
 
-/-- A transcendental simple extension admits a unique differential structure extending `F` and sending `t` to `w`. -/
+/-- The differential extension on `F⟮t⟯` assigning `w` to a transcendental generator `t`. -/
+noncomputable def transcendentalAdjoinExtension
+    (t : E) (ht : Transcendental F t) (w : F⟮t⟯) :
+    DifferentialExtension F (F⟮t⟯) := by
+  let Δ := transcendentalAdjoinDifferential t ht w
+  have hΔ : @DifferentialAlgebra F (F⟮t⟯) _ _ _ _ Δ :=
+    ⟨fun a => transcendentalAdjoinDifferential_algebraMap t ht w a⟩
+  exact ⟨Δ, hΔ⟩
+
+/-- `transcendentalAdjoinExtension t ht w` sends the adjoined generator to `w`. -/
+theorem transcendentalAdjoinExtension_gen
+    (t : E) (ht : Transcendental F t) (w : F⟮t⟯) :
+    (transcendentalAdjoinExtension t ht w).deriv
+      (IntermediateField.AdjoinSimple.gen F t) = w :=
+  transcendentalAdjoinDifferential_gen t ht w
+
+/-- A transcendental simple extension admits a unique differential extension sending `t` to `w`. -/
 theorem existsUnique_differentialAdjoin_of_transcendental
     (t : E) (ht : Transcendental F t) (w : F⟮t⟯) :
-    ∃! Δ : Differential (F⟮t⟯),
-      @DifferentialAlgebra F (F⟮t⟯) _ _ _ _ Δ ∧
-        Δ.deriv (IntermediateField.AdjoinSimple.gen F t) = w := by
-  let Δ₀ := transcendentalAdjoinDifferential t ht w
-  have hAlg : @DifferentialAlgebra F (F⟮t⟯) _ _ _ _ Δ₀ :=
-    ⟨fun a => transcendentalAdjoinDifferential_algebraMap t ht w a⟩
+    ∃! Δ : DifferentialExtension F (F⟮t⟯),
+      Δ.deriv (IntermediateField.AdjoinSimple.gen F t) = w := by
+  let Δ₀ := transcendentalAdjoinExtension t ht w
   have hgen : Δ₀.deriv (IntermediateField.AdjoinSimple.gen F t) = w :=
-    transcendentalAdjoinDifferential_gen t ht w
-  refine ⟨Δ₀, ⟨hAlg, hgen⟩, ?_⟩
+    transcendentalAdjoinExtension_gen t ht w
+  refine ⟨Δ₀, hgen, ?_⟩
   intro Δ hΔ
-  exact differential_adjoin_ext t
-    (fun a => (hΔ.1.deriv_algebraMap a).trans (hAlg.deriv_algebraMap a).symm)
-    (hΔ.2.trans hgen.symm)
+  exact DifferentialExtension.adjoin_ext t (hΔ.trans hgen.symm)
 
 end Adjoin
 
