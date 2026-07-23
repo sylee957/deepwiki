@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicExtensions
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.ConstantsSubfield
 
 /-! # Algebraic closure of constants
@@ -6,7 +7,7 @@ Minimal-polynomial facts, separable algebraic constants, and algebraic closednes
 of the constants subfield.
 -/
 
-open scoped Differential
+open scoped Differential IntermediateField
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
@@ -112,6 +113,20 @@ theorem coeff_deriv_eq_zero_of_coprime_of_relation {u v : F[X]} (hcop : IsCoprim
 
 end RationalExtensionConstants
 
+section AlgebraicConstantExtension
+variable {F E : Type*} [Field F] [Differential F] [CharZero F] [Field E] [Algebra F E]
+
+/-- An element algebraic over the constants generates a unique differential extension of the base field. -/
+theorem existsUnique_differentialAdjoin_of_isIntegral_constantsSubfield {α : E}
+    (hα : IsIntegral (constantsSubfield F) α) :
+    ∃! Δ : Differential (F⟮α⟯), IsDifferentialExtension F (F⟮α⟯) Δ := by
+  have hαF : IsIntegral F α := hα.tower_top
+  letI : FiniteDimensional F (F⟮α⟯) :=
+    IntermediateField.adjoin.finiteDimensional hαF
+  exact existsUnique_differentialExtension_finiteSeparable
+
+end AlgebraicConstantExtension
+
 section AlgebraicClosureConstants
 variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E] [Algebra F E]
   [DifferentialAlgebra F E]
@@ -143,6 +158,41 @@ theorem deriv_eq_zero_of_base_constant_polynomial {c : E} (p : F[X])
   · rw [Polynomial.eval_map, ← Polynomial.aeval_def]
     exact hroot
   · rwa [Polynomial.derivative_map, Polynomial.eval_map, ← Polynomial.aeval_def]
+
+/-- Evaluation of a polynomial over the base constants satisfies the ordinary chain rule. -/
+theorem deriv_eval₂_constantsSubfield (p : (constantsSubfield F)[X]) (c : E) :
+    (p.eval₂ ((algebraMap F E).comp (constantsSubfield F).subtype) c)′ =
+      p.derivative.eval₂ ((algebraMap F E).comp (constantsSubfield F).subtype) c * c′ := by
+  let ι : (constantsSubfield F) →+* E :=
+    (algebraMap F E).comp (constantsSubfield F).subtype
+  let q : E[X] := p.map ι
+  have hqconst : ∀ i, (q.coeff i)′ = 0 := by
+    intro i
+    simp only [q, Polynomial.coeff_map]
+    change (algebraMap F E ((p.coeff i : constantsSubfield F) : F))′ = 0
+    rw [deriv_algebraMap, (p.coeff i).property, map_zero]
+  have hchain := deriv_eval_of_const_coeffs q c hqconst
+  simpa only [q, Polynomial.eval_map, Polynomial.derivative_map] using hchain
+
+/-- In characteristic zero, a root of an irreducible polynomial over the base constants is constant. -/
+theorem deriv_eq_zero_of_irreducible_constants_polynomial [CharZero F] {c : E}
+    (p : (constantsSubfield F)[X]) (hp : Irreducible p)
+    (hroot : p.eval₂ ((algebraMap F E).comp (constantsSubfield F).subtype) c = 0) :
+    c′ = 0 := by
+  have hchain := deriv_eval₂_constantsSubfield p c
+  rw [hroot, map_zero] at hchain
+  have hsep :
+      p.derivative.eval₂ ((algebraMap F E).comp (constantsSubfield F).subtype) c ≠ 0 :=
+    hp.separable.eval₂_derivative_ne_zero
+      ((algebraMap F E).comp (constantsSubfield F).subtype) hroot
+  exact (mul_eq_zero.mp hchain.symm).resolve_left hsep
+
+/-- In characteristic zero, an element algebraic over the base constants is constant. -/
+theorem deriv_eq_zero_of_isIntegral_constantsSubfield [CharZero F] {α : E}
+    (hα : IsIntegral (constantsSubfield F) α) : α′ = 0 := by
+  apply deriv_eq_zero_of_irreducible_constants_polynomial
+    (minpoly (constantsSubfield F) α) (minpoly.irreducible hα)
+  exact minpoly.aeval (constantsSubfield F) α
 
 /-- In characteristic zero, constants are exactly roots of separable base-constant polynomials. -/
 theorem deriv_eq_zero_iff_isAlgebraicOverConst_separable_base [CharZero F] {c : E}
@@ -193,15 +243,6 @@ end AlgebraicClosureConstants
 
 section AlgebraicallyClosedConstants
 variable {E : Type*} [Field E] [Differential E] [CharZero E]
-
-/-- The constant subfield inherits characteristic `0` from `E` (its subtype injection preserves and
-reflects `natCast`). -/
-instance charZero_constantsSubfield : CharZero (constantsSubfield E) where
-  cast_injective m n h := by
-    have hι := (constantsSubfield E).subtype.injective
-    apply Nat.cast_injective (R := E)
-    have := congrArg (constantsSubfield E).subtype h
-    rwa [map_natCast, map_natCast] at this
 
 /-- When `E` is an algebraically closed char-`0` differential field, its constant subfield is
 algebraically closed. -/

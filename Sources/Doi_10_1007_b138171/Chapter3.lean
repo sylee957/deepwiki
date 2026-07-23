@@ -600,9 +600,18 @@ constant is the coefficient extension `κ_D`. -/
 abbrev ex_3_2_2_unique :=
   @differentialExtension_eq_transcendentalCoefficient_of_gen_eq_zero
 
-/-- **Example 3.2.3** (§3.2, p.83): an element algebraic over the constants (char `0`) is itself a
-constant. -/
-abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_algebraic_const
+/-- **Example 3.2.3** (§3.2, p.83), uniqueness: if `α` is algebraic over `Const_D(F)`, then
+`D` has a unique extension to the simple field extension `F⟮α⟯`. -/
+abbrev ex_3_2_3_unique :=
+  @existsUnique_differentialAdjoin_of_isIntegral_constantsSubfield
+
+/-- **Example 3.2.3** (§3.2, p.83), displayed equality: evaluating a polynomial over
+`Const_D(F)` satisfies `D(P(α)) = P'(α)·Dα`. -/
+abbrev ex_3_2_3_chain_rule := @deriv_eval₂_constantsSubfield
+
+/-- **Example 3.2.3** (§3.2, p.83), conclusion: if `α` is algebraic over `Const_D(F)`, then,
+using its irreducible minimal polynomial, `Dα = 0`. -/
+abbrev ex_3_2_3_constant := @deriv_eq_zero_of_isIntegral_constantsSubfield
 
 /-! ### Generic-carrier input builders for the §3.5 split examples (catalog-local)
 
