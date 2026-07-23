@@ -1,12 +1,14 @@
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Extensions
+import Mathlib.FieldTheory.PrimitiveElement
 
-/-! # Choice-free finite separable extensions
+/-! # Finite separable extensions
 
-Explicit power-basis coordinates present finite separable extensions without invoking
-`minpoly`, `Polynomial.derivative`, or a classically selected basis.
+Explicit power-basis coordinates give a choice-free extension theorem, with a classical bridge
+from Mathlib's finite separable field extensions.
 -/
 
-open scoped Differential
+open scoped Differential BigOperators
+open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -28,6 +30,18 @@ structure PowerBasisPresentation
 namespace PowerBasisPresentation
 
 variable {F E : Type*} [Field F] [Field E] [Algebra F E]
+
+/-- Convert a Mathlib power basis into explicit finite power coordinates. -/
+noncomputable def ofPowerBasis (pb : PowerBasis F E) : PowerBasisPresentation F E where
+  dim := pb.dim
+  dim_pos := pb.dim_pos
+  gen := pb.gen
+  coord := pb.basis.equivFun
+  coord_pow := by
+    intro i
+    rw [← pb.basis_eq_pow i]
+    funext j
+    simpa [eq_comm] using pb.basis.equivFun_self i j
 
 /-- Evaluate a finite coordinate vector as a linear combination of powers. -/
 def evalPowerCoordinates (a : E) : (n : ℕ) → (Fin n → F) → E
@@ -110,6 +124,47 @@ def relationCoeffs (P : PowerBasisPresentation F E) : Fin P.dim → F :=
 def relationDerivative (P : PowerBasisPresentation F E) : E :=
   P.dim • P.gen ^ (P.dim - 1) -
     P.coord.symm (P.coordinateDerivative P.relationCoeffs)
+
+private lemma coordinateDerivative_sum (n : ℕ) (c : Fin n → F) (a : E) :
+    (∑ i : Fin n,
+      (if h : i.1 + 1 < n then (i.1 + 1) • c ⟨i.1 + 1, h⟩ else 0) • a ^ (i : ℕ)) =
+    ∑ i : Fin n, algebraMap F E (c i) * ((i : ℕ) * a ^ ((i : ℕ) - 1)) := by
+  cases n with
+  | zero => simp
+  | succ n =>
+      rw [Fin.sum_univ_castSucc, Fin.sum_univ_succ]
+      simp only [Fin.val_castSucc, Fin.val_last]
+      have hlt (i : Fin n) : i.1 + 1 < n + 1 := Nat.succ_lt_succ i.isLt
+      simp_rw [dif_pos (hlt _)]
+      rw [dif_neg (Nat.lt_irrefl (n + 1))]
+      simp only [zero_smul, add_zero, Fin.val_succ, Nat.add_one_sub_one,
+        Fin.val_zero, Nat.cast_zero, zero_mul, mul_zero, zero_add]
+      apply Finset.sum_congr rfl
+      intro i _
+      change ((i.1 + 1) • c i.succ) • a ^ i.1 =
+        algebraMap F E (c i.succ) * ((i.1 + 1 : ℕ) * a ^ i.1)
+      simp [Algebra.smul_def]
+      ring
+
+/-- The presented relation derivative is the derivative of the power-basis minimal polynomial. -/
+theorem relationDerivative_ofPowerBasis (pb : PowerBasis F E) :
+    (ofPowerBasis pb).relationDerivative =
+      aeval pb.gen (derivative pb.minpolyGen) := by
+  rw [relationDerivative]
+  change pb.dim • pb.gen ^ (pb.dim - 1) -
+      pb.basis.equivFun.symm
+        ((ofPowerBasis pb).coordinateDerivative
+          (pb.basis.equivFun (pb.gen ^ pb.dim))) = _
+  rw [Module.Basis.equivFun_symm_apply]
+  simp_rw [pb.basis_eq_pow]
+  rw [PowerBasis.minpolyGen, derivative_sub, derivative_X_pow]
+  simp only [map_sub, map_mul, map_natCast, map_pow, aeval_X, nsmul_eq_mul]
+  congr 1
+  simp only [map_sum, derivative_C_mul, derivative_X_pow,
+    map_mul, aeval_C, map_natCast, aeval_X, map_pow]
+  unfold coordinateDerivative
+  rw [Module.Basis.equivFun_apply]
+  exact coordinateDerivative_sum pb.dim (pb.basis.repr (pb.gen ^ pb.dim)) pb.gen
 
 /-- Power-basis coordinates evaluate to the element represented by those coordinates. -/
 theorem coord_symm_eq_evalPowerCoordinates (P : PowerBasisPresentation F E)
@@ -208,6 +263,44 @@ structure SeparablePowerBasisPresentation
     powerBasis.relationDerivative * relationDerivativeInv = 1
 
 namespace SeparablePowerBasisPresentation
+
+/-- Classically choose an explicit separable power basis for a finite separable extension. -/
+noncomputable def ofFiniteOfSeparable
+    (F E : Type*) [Field F] [Field E] [Algebra F E]
+    [FiniteDimensional F E] [Algebra.IsSeparable F E] :
+    SeparablePowerBasisPresentation F E := by
+  let pb : PowerBasis F E := Field.powerBasisOfFiniteOfSeparable F E
+  let P : PowerBasisPresentation F E := PowerBasisPresentation.ofPowerBasis pb
+  have hP : P.relationDerivative ≠ 0 := by
+    rw [show P = PowerBasisPresentation.ofPowerBasis pb by rfl,
+      PowerBasisPresentation.relationDerivative_ofPowerBasis,
+      PowerBasis.minpolyGen_eq]
+    exact (Algebra.IsSeparable.isSeparable F pb.gen).aeval_derivative_ne_zero
+      (minpoly.aeval F pb.gen)
+  exact {
+    powerBasis := P
+    relationDerivativeInv := P.relationDerivative⁻¹
+    relationDerivative_mul_inv := mul_inv_cancel₀ hP
+  }
+
+/-- Classically choose an explicit separable power basis for a finite characteristic-zero extension. -/
+noncomputable def ofFiniteOfCharZero
+    (F E : Type*) [Field F] [Field E] [Algebra F E]
+    [CharZero F] [FiniteDimensional F E] :
+    SeparablePowerBasisPresentation F E :=
+  ofFiniteOfSeparable F E
+
+noncomputable example
+    (F E : Type*) [Field F] [Field E] [Algebra F E]
+    [FiniteDimensional F E] [Algebra.IsSeparable F E] :
+    SeparablePowerBasisPresentation F E :=
+  ofFiniteOfSeparable F E
+
+noncomputable example
+    (F E : Type*) [Field F] [Field E] [Algebra F E]
+    [CharZero F] [FiniteDimensional F E] :
+    SeparablePowerBasisPresentation F E :=
+  ofFiniteOfCharZero F E
 
 variable {F E : Type*} [Field F] [Differential F] [Field E] [Algebra F E]
 

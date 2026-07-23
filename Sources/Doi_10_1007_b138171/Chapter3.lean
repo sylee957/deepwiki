@@ -153,6 +153,12 @@ proof avoids infinite gluing, but the Lean corollary remains classical because M
 `Algebra.IsSeparable` through `minpoly`. -/
 abbrev thm_3_2_3_finite := @existsUnique_differentialExtension_finiteSeparable
 
+/-- **Theorem 3.2.3** (§3.2, p.83), finite presentation bridge: finite dimensionality and
+separability classically select a `SeparablePowerBasisPresentation`, using the primitive-element
+theorem and the nonvanishing derivative of its minimal polynomial. -/
+noncomputable abbrev thm_3_2_3_finite_presentation :=
+  @SeparablePowerBasisPresentation.ofFiniteOfSeparable
+
 /-- **Theorem 3.2.3** (§3.2, p.83), choice-free finite separable presentation: explicit
 power-basis coordinates together with an explicit inverse of the defining relation's derivative
 give `∃! Δ : Differential E, IsDifferentialExtension F E Δ`. This is the constructive finite
