@@ -28,10 +28,9 @@ detectable from the residues".
   sense that *every other* ingredient — the corrected `v`-reduction, the pole-matching, the simple-pole
   separation — is discharged; the one input is the new-monomial condition itself.
 
-**The enabling Mathlib infrastructure.** The transcendental-log keystone rests on `fracDeriv`: a
-derivation on `F[X]` extends to its fraction field by the quotient rule, as a self-`Derivation ℤ K K`
-(Mathlib has only the Kähler-module-valued localization, no self-derivation extension). It is built from
-scratch in the library and is Mathlib-contributable on its own — recorded here as the load-bearing
+**The enabling infrastructure.** The transcendental-log keystone rests on
+`FractionRingDeriv.deriv`: a derivation on `F[X]` extends to its fraction field by the quotient
+rule as a self-`Derivation ℤ K K`. It is recorded here as the load-bearing
 derivation-extension lemma.
 
 This catalog does **not** introduce new book numbers beyond the §§ in the docstrings; the corresponding
@@ -112,14 +111,14 @@ the polynomial part; the genuine pole-matching runs over `π ≠ t`). This is th
 `IsLiouville` instance Mathlib lacked, completing the log+exp Liouville pair. -/
 abbrev liouville_expExtension := @LiouvilleExpBridge.isLiouville_expExtension_uncond
 
-/-- **The fraction-field derivation extension `fracDeriv`** (Mathlib-infra, the enabling lemma): a
+/-- **The fraction-field derivation extension `FractionRingDeriv.deriv`** (Mathlib-infra, the enabling lemma): a
 derivation `d` on `F[X]` extends to a fraction field `K` of `F[X]` by the quotient rule, as a
-self-`Derivation ℤ K K`, with `fracDeriv d ∘ algebraMap = algebraMap ∘ d` (`fracDeriv_algebraMap`). This is
+self-`Derivation ℤ K K`, with `deriv d ∘ algebraMap = algebraMap ∘ d` (`deriv_algebraMap`). This is
 the load-bearing piece making `F(log u) = RatFunc F` a genuine differential field extension (Mathlib has
 only the Kähler-module-valued localization, not a self-derivation extension) — a standalone
 Mathlib-contributable derivation-extension lemma, recorded here as the enabler of the transcendental-log
 Liouville keystone. -/
-noncomputable abbrev fracField_deriv_extension := @PolynomialFractionDeriv.fracDeriv
+noncomputable abbrev fracField_deriv_extension := @FractionRingDeriv.deriv
 
 /-- **Liouville's Theorem — the general structure theorem** (Thm 5.5.2 / 5.5.3): a base element `a ∈ F`
 is *elementary* — has an elementary antiderivative, i.e. a Liouville form `∑ cᵢ log uᵢ + v′` in **some**

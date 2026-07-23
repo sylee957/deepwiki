@@ -18,6 +18,27 @@ end ImplicitDiffX
 
 namespace DeepWiki.SymbolicIntegration
 
+/-- A derivation on `R[X]` is determined by its values on constants and on `X`. -/
+theorem derivation_polynomial_ext {R : Type*} [CommRing R] {Δ₁ Δ₂ : Derivation ℤ R[X] R[X]}
+    (hC : ∀ c : R, Δ₁ (Polynomial.C c) = Δ₂ (Polynomial.C c))
+    (hX : Δ₁ Polynomial.X = Δ₂ Polynomial.X) : Δ₁ = Δ₂ := by
+  refine Derivation.ext fun p => ?_
+  induction p using Polynomial.induction_on with
+  | C a => exact hC a
+  | add p q hp hq => rw [map_add, map_add, hp, hq]
+  | monomial n a ih => rw [pow_succ, ← mul_assoc, Δ₁.leibniz, Δ₂.leibniz, ih, hX]
+
+/-- There is a unique derivation on `R[X]` extending `D` on constants and sending `X` to `w`. -/
+theorem existsUnique_derivation_polynomial {R : Type*} [CommRing R] [Differential R] (w : R[X]) :
+    ∃! Δ : Derivation ℤ R[X] R[X],
+      (∀ c : R, Δ (Polynomial.C c) = Polynomial.C (c′)) ∧ Δ Polynomial.X = w := by
+  refine ⟨Differential.implicitDeriv w, ⟨fun c => Differential.implicitDeriv_C w c,
+    Differential.implicitDeriv_X w⟩, ?_⟩
+  rintro Δ ⟨hC, hX⟩
+  exact derivation_polynomial_ext
+    (fun c => (hC c).trans (Differential.implicitDeriv_C w c).symm)
+    (hX.trans (Differential.implicitDeriv_X w).symm)
+
 section PolynomialDerivation
 variable {R : Type*} [CommRing R] [Differential R]
 open scoped ImplicitDiffX

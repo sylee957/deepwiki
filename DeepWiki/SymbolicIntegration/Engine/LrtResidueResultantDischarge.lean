@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.LrtSoundness
-import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicClosure
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
 import DeepWiki.SymbolicIntegration.Engine.LrtResidueResultantDischarge.GenuineMonomial

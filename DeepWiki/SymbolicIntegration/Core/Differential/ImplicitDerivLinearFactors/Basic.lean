@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivDegree
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.PolynomialImplicitDerivationDegree
 import DeepWiki.Algebra.GcdBasics
 import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.RingTheory.Coprime.Lemmas

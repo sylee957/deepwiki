@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.LrtSoundness
-import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicClosure
 
 /-! # Instantiating the LRT `∀E` soundness at the algebraic closure
 

@@ -1,10 +1,10 @@
-import DeepWiki.SymbolicIntegration.DifferentialAlgebra
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Extensions
 import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
 
 /-! # Iterated derivatives and Wronskians
 
-Core API for iterated derivatives and Wronskian determinants in differential fields.
+Iterated derivatives and Wronskian determinants in differential fields.
 -/
 
 open scoped Differential

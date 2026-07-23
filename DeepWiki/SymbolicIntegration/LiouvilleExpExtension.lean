@@ -3,7 +3,7 @@ import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.PartialFractions
 import Mathlib.Tactic
-import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.FractionField
 import DeepWiki.Algebra.RatFuncEmbedding
 import DeepWiki.SymbolicIntegration.LiouvilleRatFuncData
 
@@ -18,8 +18,6 @@ open scoped Differential
 open Polynomial Differential
 
 namespace DeepWiki.SymbolicIntegration.LiouvilleExp
-
-open DeepWiki.SymbolicIntegration.PolynomialFractionDeriv
 
 section PolynomialSetup
 
@@ -101,7 +99,7 @@ open RatFunc
 /-- The `Differential (RatFunc F)` for the exp monomial `t = exp u` (`t' = u'·t`). -/
 @[reducible]
 noncomputable def expDifferential (u : F) : Differential (RatFunc F) :=
-  fracDifferential (K := RatFunc F) (expDifferentialPoly u)
+  FractionRingDeriv.differentialOf (K := RatFunc F) (expDifferentialPoly u)
 
 omit [CharZero F] in
 /-- The derivation on `RatFunc F` restricts to `expDerivPoly u` on the image of `F[t]`. -/
@@ -109,7 +107,7 @@ theorem derivExtends (u : F) :
     letI := expDifferential u
     ∀ p : F[X], (algebraMap F[X] (RatFunc F) p)′
       = algebraMap F[X] (RatFunc F) (expDerivPoly u p) :=
-  fun p => fracDeriv_algebraMap (K := RatFunc F) (expDerivPoly u) p
+  fun p => FractionRingDeriv.deriv_algebraMap (K := RatFunc F) (expDerivPoly u) p
 
 omit [CharZero F] in
 /-- A `Differential (RatFunc F)` restricting to `expDerivPoly u` on `F[t]` is a

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicClosure
 import DeepWiki.SymbolicIntegration.Engine.LrtSoundness
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.Tower.RecursiveElementary

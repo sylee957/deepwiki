@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.MonomialConstants
-import DeepWiki.SymbolicIntegration.AlgebraicConstants
+import DeepWiki.Algebra.NullstellensatzTransfer
 import DeepWiki.SymbolicIntegration.RaoDifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Engine.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
@@ -212,9 +212,8 @@ abbrev lem_3_3_5 := @wronskian_eq_zero_of_linearDependent
 linear dependence over the constants (`z = y₂/y₁` has `Dz = W/y₁² = 0`, so `z` is constant). -/
 abbrev lem_3_3_5_converse_two := @wronskian_two_linearDependent
 
-/-- **Lemma 3.3.5** (§3.3, p.88), converse, field-coefficient version (all `n`): a vanishing
-Wronskian forces linear dependence of `y₁,…,yₙ` over `F` (with field — not yet constant —
-coefficients). The constant-coefficient upgrade is the deferred induction. -/
+/-- **Lemma 3.3.5** (§3.3, p.88), intermediate field-coefficient statement (all `n`): a
+vanishing Wronskian forces linear dependence of `y₁,…,yₙ` over `F`. -/
 abbrev lem_3_3_5_converse_field := @wronskian_eq_zero_imp_linearDependent
 
 /-- **Lemma 3.3.5** (§3.3, p.88), FULL converse, general `n` over the constants: `W(y₁,…,yₙ) = 0` iff
@@ -253,11 +252,7 @@ abbrev lem_3_3_4_hard := @mapCoeffs_eq_zero_of_coprime_of_relation
 /-- **Lemma 3.3.6** (§3.3, p.88), post-reduction core: over an algebraically closed constant field, a
 constant-coefficient polynomial system solved by an extension-constant point is solved by a
 base-constant point (multivariate Nullstellensatz transfer). -/
-abbrev lem_3_3_6 := @exists_const_point_of_exists_extension_point
-
--- **Deferred — `DeepWiki.SymbolicIntegration` library work:** Lemma 3.3.6 *front reduction* — using a
--- `Const_D(F)`-basis of `F` to rewrite `F[X]`-coefficient systems as constant-coefficient ones (the
--- `C[X] ⊗_C F` free-module step); the downstream Nullstellensatz core is `lem_3_3_6`.
+abbrev lem_3_3_6 := @DeepWiki.exists_base_point_of_exists_extension_point
 
 /-! ## §3.4 Monomial Extensions -/
 
@@ -701,10 +696,16 @@ abbrev ex_3_10 := @isSpecialRao_prod_X_sub_C_iff
 special `p`). -/
 abbrev ex_3_11 := @isCoprime_of_isSpecialRao_prime
 
-/- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
-§3.3: Lemma 3.3.6 front reduction (the `C`-basis `C[X] ⊗_C F` step; the Nullstellensatz core `lem_3_3_6` is done).
-Exercises: Ex 3.2 [infra: concrete algebraic differential field ℚ(x,√(2x²)) + constants]; Ex 3.3 [deferred:
-  hard algebraic-independence transfer]; Ex 3.5 [infra: `S^irr` set + base-change descent]; Ex 3.6(b),(c)
-  [infra/research: multivariate decomposition + Darboux polynomials]; Ex 3.11 general non-squarefree [deferred]. -/
+/-! ## NOT YET FORMALIZED
+
+- Lemma 3.3.6 (front reduction) [infra]: rewrite `F[X]`-coefficient systems over a
+  `Const_D(F)`-basis via the `C[X] ⊗_C F` free-module step.
+- Exercise 3.2 [infra]: construct the algebraic differential field `ℚ(x, √(2x²))` and its constants.
+- Exercise 3.3 [deferred]: prove the algebraic-independence transfer.
+- Exercise 3.5 [infra]: define `S^irr` and prove base-change descent.
+- Exercise 3.6(b) [infra]: formalize the multivariate decomposition.
+- Exercise 3.6(c) [research]: develop the required Darboux-polynomial result.
+- Exercise 3.11 (general non-squarefree case) [deferred]: extend the current prime-factor result.
+-/
 
 end DeepWiki.Si

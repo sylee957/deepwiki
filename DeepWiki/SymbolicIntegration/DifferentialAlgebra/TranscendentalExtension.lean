@@ -13,6 +13,18 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+/-- A derivation on a fraction field of `F[X]` is determined by constants and `X`. -/
+theorem unique_derivation_rationalFunction {F K : Type*} [Field F] [Field K] [Algebra F[X] K]
+    [IsFractionRing F[X] K] {Δ₁ Δ₂ : Derivation ℤ K K}
+    (hC : ∀ c : F, Δ₁ (algebraMap F[X] K (C c)) = Δ₂ (algebraMap F[X] K (C c)))
+    (hX : Δ₁ (algebraMap F[X] K X) = Δ₂ (algebraMap F[X] K X)) : Δ₁ = Δ₂ := by
+  refine derivation_ext_fractionRing (R := F[X]) fun p => ?_
+  induction p using Polynomial.induction_on with
+  | C a => exact hC a
+  | add p q hp hq => rw [map_add, map_add, map_add, hp, hq]
+  | monomial n a ih =>
+    rw [pow_succ, ← mul_assoc, map_mul, Δ₁.leibniz, Δ₂.leibniz, ih, hX]
+
 section RationalFunction
 
 variable {F : Type*} [Field F] [Differential F]

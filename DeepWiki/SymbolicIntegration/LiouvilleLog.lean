@@ -3,7 +3,7 @@ import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.PartialFractions
 import Mathlib.Tactic
-import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.FractionField
 import DeepWiki.Algebra.RatFuncEmbedding
 import DeepWiki.SymbolicIntegration.LiouvilleRatFuncData
 
@@ -12,16 +12,14 @@ import DeepWiki.SymbolicIntegration.LiouvilleRatFuncData
 The transcendental logarithmic case of Liouville's theorem: the simple transcendental logarithmic
 extension `F(t) = RatFunc F` with `t' = u'/u = logDeriv u` (`t = log u`, `u ∈ F`) is Liouville over
 `F`, conditional on the non-degeneracy `NondegenerateLog u` (`log u ∉ F`).  Builds the log-monomial
-derivation on `RatFunc F` (via `fracDeriv`, the quotient-rule extension of a derivation to a
-fraction field) and derives `IsLiouville F (RatFunc F)`.
+derivation on `RatFunc F` via the quotient-rule fraction-field extension and derives
+`IsLiouville F (RatFunc F)`.
 -/
 
 open scoped Differential
 open Polynomial Differential
 
 namespace DeepWiki.SymbolicIntegration.LiouvilleLog
-
-open DeepWiki.SymbolicIntegration.PolynomialFractionDeriv
 
 section PolynomialSetup
 
@@ -445,10 +443,10 @@ variable {F : Type*} [Field F] [Differential F] [CharZero F]
 open RatFunc
 
 /-- The `Differential (RatFunc F)` for the log monomial `t = log u` (`t' = u'/u`),
-via `fracDeriv` of `logDerivPoly u`. -/
+induced from `logDerivPoly u` by the fraction-field quotient rule. -/
 @[reducible]
 noncomputable def logDifferential (u : F) : Differential (RatFunc F) :=
-  fracDifferential (K := RatFunc F) (logDifferentialPoly u)
+  FractionRingDeriv.differentialOf (K := RatFunc F) (logDifferentialPoly u)
 
 omit [CharZero F] in
 /-- The log-monomial derivation on `RatFunc F` restricts to `logDerivPoly u` on the image of `F[t]`:
@@ -457,7 +455,7 @@ theorem derivExtends (u : F) :
     letI := logDifferential u
     ∀ p : F[X], (algebraMap F[X] (RatFunc F) p)′
       = algebraMap F[X] (RatFunc F) (logDerivPoly u p) :=
-  fun p => fracDeriv_algebraMap (K := RatFunc F) (logDerivPoly u) p
+  fun p => FractionRingDeriv.deriv_algebraMap (K := RatFunc F) (logDerivPoly u) p
 
 omit [CharZero F] in
 /-- Any `Differential (RatFunc F)` whose derivation restricts to `logDerivPoly u` on `F[t]` is a

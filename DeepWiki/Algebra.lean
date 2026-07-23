@@ -1,5 +1,6 @@
 import DeepWiki.Algebra.ListProducts
 import DeepWiki.Algebra.ListSums
+import DeepWiki.Algebra.NullstellensatzTransfer
 import DeepWiki.Algebra.PolynomialDivisibility
 import DeepWiki.Algebra.PolynomialMatrixDegree
 import DeepWiki.Algebra.GcdBasics
@@ -14,7 +15,7 @@ import DeepWiki.Algebra.RatFuncEvaluation
 
 /-! # Algebra utilities
 
-General field & polynomial definitions and identities (Mathlib-adjacent, integration-independent):
-list product/sum lemmas, polynomial divisibility and matrix degree bounds, gcd basics,
-one-variable and Gröbner-basis gcd, polynomial normalization, squarefree deflation and the gcd-derivative squarefreeness keystone, resultant roots, and rational-function
-embedding/evaluation. -/
+General field and polynomial definitions and identities: list products and sums, divisibility,
+matrix degree bounds, gcd theory, normalization, squarefree theory, Nullstellensatz transfer,
+resultant roots, and rational-function embedding and evaluation.
+-/

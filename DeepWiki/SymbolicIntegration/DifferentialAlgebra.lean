@@ -1,19 +1,23 @@
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Basic
-import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Constants
-import DeepWiki.SymbolicIntegration.DifferentialAlgebra.DerivationExtension
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Extensions
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicExtensions
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicClosure
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.ConstantsSubfield
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.FiniteSeparable
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.FractionField
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Ideals
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.LogArctan
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.PolynomialDerivative
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.PolynomialImplicitDerivation
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.PolynomialImplicitDerivationDegree
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionExtension
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.TranscendentalExtension
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Wronskian
 
 /-! # Differential algebra
 
-Aggregator for differential-ring identities, ideals, extensions, and polynomial and rational
-function derivations.
+Aggregator for differential-ring identities, ideals, algebraic and transcendental extensions,
+constants, Wronskians, and polynomial and rational-function derivations.
 -/

@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.DifferentialAlgebra.DerivationExtension
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Extensions
 
 /-! # Fraction-field differential extensions
@@ -9,6 +8,31 @@ The quotient-rule extension of a derivation on an integral domain to any fractio
 open scoped Differential nonZeroDivisors
 
 namespace DeepWiki.SymbolicIntegration
+
+/-- A derivation on a fraction field is determined by its restriction to `R`. -/
+theorem derivation_ext_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
+    [Algebra R K] [IsFractionRing R K] {Δ₁ Δ₂ : Derivation ℤ K K}
+    (h : ∀ a : R, Δ₁ (algebraMap R K a) = Δ₂ (algebraMap R K a)) : Δ₁ = Δ₂ := by
+  ext x
+  obtain ⟨⟨a, b, hb⟩, hx⟩ := IsLocalization.surj (nonZeroDivisors R) x
+  have hbne : algebraMap R K b ≠ 0 := by
+    rw [ne_eq, IsFractionRing.to_map_eq_zero_iff]
+    exact nonZeroDivisors.ne_zero hb
+  have e1 := congrArg (⇑Δ₁) hx
+  have e2 := congrArg (⇑Δ₂) hx
+  rw [Derivation.leibniz] at e1 e2
+  rw [h b, h a] at e1
+  have key : algebraMap R K b • Δ₁ x = algebraMap R K b • Δ₂ x :=
+    add_left_cancel (e1.trans e2.symm)
+  rw [smul_eq_mul, smul_eq_mul] at key
+  exact mul_left_cancel₀ hbne key
+
+/-- A derivation on a fraction field `K` of `R` is unique if it extends the derivation on `R`. -/
+theorem unique_derivation_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
+    [Algebra R K] [IsFractionRing R K] [Differential R] {Δ₁ Δ₂ : Derivation ℤ K K}
+    (h₁ : ∀ a : R, Δ₁ (algebraMap R K a) = algebraMap R K (a′))
+    (h₂ : ∀ a : R, Δ₂ (algebraMap R K a) = algebraMap R K (a′)) : Δ₁ = Δ₂ :=
+  derivation_ext_fractionRing (R := R) fun a => (h₁ a).trans (h₂ a).symm
 
 namespace FractionRingDeriv
 
@@ -119,8 +143,12 @@ theorem deriv_algebraMap (D : Derivation ℤ R R) (p : R) :
   rw [hnum, hden, IsLocalization.mk'_one]
 
 /-- The differential structure on a fraction field induced by the quotient rule. -/
+@[reducible] noncomputable def differentialOf (D : Differential R) : Differential K :=
+  ⟨deriv D.deriv⟩
+
+/-- The quotient-rule differential structure induced by the ambient differential on `R`. -/
 @[reducible] noncomputable def differential [Differential R] : Differential K :=
-  ⟨deriv (Differential.deriv : Derivation ℤ R R)⟩
+  differentialOf (inferInstance : Differential R)
 
 /-- The quotient-rule differential structure makes `K` a differential extension of `R`. -/
 theorem differentialAlgebra [Differential R] :

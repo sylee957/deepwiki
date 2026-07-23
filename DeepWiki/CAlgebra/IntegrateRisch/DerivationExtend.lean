@@ -1,5 +1,5 @@
 import DeepWiki.CAlgebra.Diff.Frac
-import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.FractionField
 import Mathlib.RingTheory.Derivation.MapCoeffs
 
 /-! # Extension derivations
@@ -256,7 +256,7 @@ theorem extendDeriv_zero_one (f : DenseFrac K) :
 
 section Square
 
-open DeepWiki.SymbolicIntegration.PolynomialFractionDeriv
+open DeepWiki.SymbolicIntegration.FractionRingDeriv
 
 variable [Differential K]
 
@@ -265,7 +265,7 @@ fraction-field extension of `implicitDeriv`. -/
 theorem toRatFunc_extendDeriv (hd : ∀ a : K, d a = a′) (Dt : DensePoly K)
     (f : DenseFrac K) :
     toRatFunc (extendDeriv d Dt f)
-      = SymbolicIntegration.PolynomialFractionDeriv.fracDeriv (K := RatFunc K)
+      = SymbolicIntegration.FractionRingDeriv.deriv (K := RatFunc K)
           (Differential.implicitDeriv (toPolynomial Dt))
           (toRatFunc f) := by
   have hden : toPolynomial f.den.toPoly ≠ 0 := toPolynomial_ne_zero f.den.ne_zero
@@ -277,8 +277,8 @@ theorem toRatFunc_extendDeriv (hd : ∀ a : K, d a = a′) (Dt : DensePoly K)
       = IsLocalization.mk' (RatFunc K) (toPolynomial f.num)
           (⟨toPolynomial f.den.toPoly, hmem⟩ : nonZeroDivisors (Polynomial K)) from
       by rw [IsFractionRing.mk'_eq_div],
-    SymbolicIntegration.PolynomialFractionDeriv.fracDeriv_mk',
-    SymbolicIntegration.PolynomialFractionDeriv.rawDeriv, IsFractionRing.mk'_eq_div]
+    SymbolicIntegration.FractionRingDeriv.deriv_mk,
+    SymbolicIntegration.FractionRingDeriv.rawDeriv, IsFractionRing.mk'_eq_div]
   rw [toPolynomial_sub, toPolynomial_mul, toPolynomial_mul,
     DensePoly.toPolynomial_extendDeriv hd, DensePoly.toPolynomial_extendDeriv hd,
     show toPolynomial (f.den.toPoly ^ 2)
@@ -287,12 +287,13 @@ theorem toRatFunc_extendDeriv (hd : ∀ a : K, d a = a′) (Dt : DensePoly K)
   rw [Submonoid.coe_mul]
   rw [mul_comm (Differential.implicitDeriv (toPolynomial Dt) (toPolynomial f.num))
     (toPolynomial f.den.toPoly)]
+  rfl
 
 end Square
 
 section Laws
 
-open SymbolicIntegration.PolynomialFractionDeriv in
+open SymbolicIntegration.FractionRingDeriv in
 /-- Additivity of the fraction extension. -/
 theorem extendDeriv_add (hd : IsDerivation d) (Dt : DensePoly K) (a b : DenseFrac K) :
     extendDeriv d Dt (a + b) = extendDeriv d Dt a + extendDeriv d Dt b := by
@@ -300,16 +301,19 @@ theorem extendDeriv_add (hd : IsDerivation d) (Dt : DensePoly K) (a b : DenseFra
   have hc : ∀ x : K, d x = x′ := fun _ => rfl
   refine toRatFunc_injective ?_
   rw [toRatFunc_extendDeriv hc, toRatFunc_add,
-    show SymbolicIntegration.PolynomialFractionDeriv.fracDeriv (K := RatFunc K) (Differential.implicitDeriv (toPolynomial Dt))
+    show SymbolicIntegration.FractionRingDeriv.deriv (K := RatFunc K)
+        (Differential.implicitDeriv (toPolynomial Dt))
         (toRatFunc a + toRatFunc b)
-      = SymbolicIntegration.PolynomialFractionDeriv.fracDeriv (K := RatFunc K) (Differential.implicitDeriv (toPolynomial Dt))
+      = SymbolicIntegration.FractionRingDeriv.deriv (K := RatFunc K)
+          (Differential.implicitDeriv (toPolynomial Dt))
           (toRatFunc a)
-        + SymbolicIntegration.PolynomialFractionDeriv.fracDeriv (K := RatFunc K) (Differential.implicitDeriv (toPolynomial Dt))
+        + SymbolicIntegration.FractionRingDeriv.deriv (K := RatFunc K)
+            (Differential.implicitDeriv (toPolynomial Dt))
             (toRatFunc b) from
-      fracDerivFun_add _ _ _,
+      derivFun_add _ _ _,
     toRatFunc_add, toRatFunc_extendDeriv hc, toRatFunc_extendDeriv hc]
 
-open SymbolicIntegration.PolynomialFractionDeriv in
+open SymbolicIntegration.FractionRingDeriv in
 /-- Leibniz rule for the fraction extension. -/
 theorem extendDeriv_mul (hd : IsDerivation d) (Dt : DensePoly K) (a b : DenseFrac K) :
     extendDeriv d Dt (a * b) = extendDeriv d Dt a * b + a * extendDeriv d Dt b := by
@@ -317,13 +321,14 @@ theorem extendDeriv_mul (hd : IsDerivation d) (Dt : DensePoly K) (a b : DenseFra
   have hc : ∀ x : K, d x = x′ := fun _ => rfl
   refine toRatFunc_injective ?_
   rw [toRatFunc_extendDeriv hc, toRatFunc_mul,
-    show SymbolicIntegration.PolynomialFractionDeriv.fracDeriv (K := RatFunc K) (Differential.implicitDeriv (toPolynomial Dt))
+    show SymbolicIntegration.FractionRingDeriv.deriv (K := RatFunc K)
+        (Differential.implicitDeriv (toPolynomial Dt))
         (toRatFunc a * toRatFunc b)
-      = toRatFunc a * SymbolicIntegration.PolynomialFractionDeriv.fracDeriv (K := RatFunc K)
+      = toRatFunc a * SymbolicIntegration.FractionRingDeriv.deriv (K := RatFunc K)
             (Differential.implicitDeriv (toPolynomial Dt)) (toRatFunc b)
-        + toRatFunc b * SymbolicIntegration.PolynomialFractionDeriv.fracDeriv (K := RatFunc K)
+        + toRatFunc b * SymbolicIntegration.FractionRingDeriv.deriv (K := RatFunc K)
             (Differential.implicitDeriv (toPolynomial Dt)) (toRatFunc a) from
-      fracDerivFun_mul _ _ _,
+      derivFun_mul _ _ _,
     toRatFunc_add, toRatFunc_mul, toRatFunc_mul, toRatFunc_extendDeriv hc,
     toRatFunc_extendDeriv hc]
   ring
@@ -334,7 +339,7 @@ theorem isDerivation_extendDeriv (hd : IsDerivation d) (Dt : DensePoly K) :
     IsDerivation (extendDeriv d Dt) :=
   ⟨extendDeriv_add hd Dt, extendDeriv_mul hd Dt⟩
 
-open SymbolicIntegration.PolynomialFractionDeriv in
+open SymbolicIntegration.FractionRingDeriv in
 /-- The fraction extension restricts to the polynomial extension on embedded
 polynomials. -/
 theorem extendDeriv_ofPoly (hd : IsDerivation d) (Dt : DensePoly K) (p : DensePoly K) :
@@ -343,7 +348,9 @@ theorem extendDeriv_ofPoly (hd : IsDerivation d) (Dt : DensePoly K) (p : DensePo
   have hc : ∀ x : K, d x = x′ := fun _ => rfl
   refine toRatFunc_injective ?_
   rw [toRatFunc_extendDeriv hc, toRatFunc_ofPoly, toRatFunc_ofPoly,
-    fracDeriv_algebraMap, DensePoly.toPolynomial_extendDeriv hc]
+    SymbolicIntegration.FractionRingDeriv.deriv_algebraMap,
+    DensePoly.toPolynomial_extendDeriv hc]
+  rfl
 
 end Laws
 

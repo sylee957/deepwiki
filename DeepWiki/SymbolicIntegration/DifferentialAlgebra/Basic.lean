@@ -7,8 +7,7 @@ import Mathlib.Tactic
 
 /-! # Basic differential algebra
 Basic differential calculus over Mathlib's `Differential` typeclass: the constant subring, the
-constant-linearity / quotient / power / chain rules, the logarithmic-derivative identity, and the
-module of derivations. -/
+constant-linearity / quotient / power / chain rules and the logarithmic-derivative identity. -/
 
 open scoped Differential
 open Polynomial
@@ -119,9 +118,6 @@ theorem smul_add_derivation_apply {R : Type*} [CommRing R]
     (c : R) (D₁ D₂ : Derivation ℤ R R) (a : R) :
     (c • D₁ + D₂) a = c * D₁ a + D₂ a := by
   simp [smul_eq_mul]
-
-/-- The module `Derivation ℤ R R` of all derivations `R → R` is a left `R`-module. -/
-abbrev derivationModule {R : Type*} [CommRing R] : Module R (Derivation ℤ R R) := inferInstance
 
 end Ring
 

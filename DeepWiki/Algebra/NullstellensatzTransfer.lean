@@ -1,17 +1,17 @@
 import Mathlib.RingTheory.Nullstellensatz
 
-/-! # Nullstellensatz transfer for constant systems
+/-! # Nullstellensatz transfer for polynomial systems
 
-Transfer of solvability for constant-coefficient polynomial systems.
+Transfer of polynomial-system solvability from a field extension to an algebraically closed base.
 -/
 
-namespace DeepWiki.SymbolicIntegration
+namespace DeepWiki
 
 section SystemTransfer
 
 /-- Over an algebraically closed constant field `C`, a polynomial system `S`, `g` with coefficients
 in `C` satisfied by an `E`-point (`f(c) = 0` for `f ∈ S`, `g(c) ≠ 0`) is satisfied by a `C`-point. -/
-theorem exists_const_point_of_exists_extension_point {C E : Type*} [Field C] [Field E]
+theorem exists_base_point_of_exists_extension_point {C E : Type*} [Field C] [Field E]
     [Algebra C E] [IsAlgClosed C] {σ : Type*} [Finite σ] (S : Set (MvPolynomial σ C))
     (g : MvPolynomial σ C) (c : σ → E) (hf : ∀ f ∈ S, MvPolynomial.aeval c f = 0)
     (hg : MvPolynomial.aeval c g ≠ 0) :
@@ -37,4 +37,4 @@ theorem exists_const_point_of_exists_extension_point {C E : Type*} [Field C] [Fi
 
 end SystemTransfer
 
-end DeepWiki.SymbolicIntegration
+end DeepWiki

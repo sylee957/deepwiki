@@ -10,7 +10,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 import DeepWiki.ComputableAlgebra.PolyEuclideanDense
 import DeepWiki.ComputableAlgebra.PolyResultantDense
 import DeepWiki.SymbolicIntegration.Engine.FunctionAlgebraIntegrate
-import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicClosure
 import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
