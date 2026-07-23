@@ -556,13 +556,33 @@ abbrev ex_3_1_3_quotient_mk := @implicitDeriv_X_quotientDerivation_mk_eval_zero
 /-- **Example 3.1.3** (§3.1, p.78): under `R[X]/(X) ≃ R`, the induced derivation is `D`. -/
 abbrev ex_3_1_3_quotient := @implicitDeriv_X_quotientSpanX
 
-/-- **Example 3.2.1** (§3.2, p.82): the only derivation on `ℚ(x)` that vanishes on `ℚ` and sends
-`x ↦ 1` is `d/dx` — a corollary of fraction-field uniqueness. -/
-abbrev ex_3_2_1 := @derivation_ext_fractionRing
+/-- **Example 3.2.1** (§3.2, p.82): if `x : E` is transcendental over a zero-differential
+field `F`, transport of `d/dX` gives the differential extension `d/dx` on `F⟮x⟯`. -/
+noncomputable abbrev ex_3_2_1_extension := @transcendentalFormalExtension
 
-/-- **Example 3.2.2** (§3.2, p.82): the only derivation extending `D` with `t` constant is `κ_D` — the
-same fraction-field uniqueness. -/
-abbrev ex_3_2_2 := @derivation_ext_fractionRing
+/-- **Example 3.2.1** (§3.2, p.82): for transcendental `x`, `dx/dx = 1` in `F⟮x⟯`. -/
+abbrev ex_3_2_1_generator := @transcendentalFormalExtension_gen
+
+/-- **Example 3.2.1** (§3.2, p.82): if `x` is transcendental over a zero-differential field
+`F`, the only differential extension to `F⟮x⟯` sending `x` to one is `d/dx`. -/
+abbrev ex_3_2_1_unique :=
+  @differentialExtension_eq_transcendentalFormal_of_gen_eq_one
+
+/-- **Example 3.2.2** (§3.2, p.82): `κ_D` is the coefficient differential extension from `F`
+to the simple transcendental extension `F⟮t⟯`. -/
+noncomputable abbrev ex_3_2_2_extension := @transcendentalCoefficientExtension
+
+/-- **Example 3.2.2** (§3.2, p.82): the coefficient extension makes `t` constant. -/
+abbrev ex_3_2_2_generator := @transcendentalCoefficientExtension_gen
+
+/-- **Example 3.2.2** (§3.2, p.82): `κ_D` differentiates a polynomial in `t` by applying
+`D` coefficientwise. -/
+abbrev ex_3_2_2_coefficients := @transcendentalCoefficientExtension_aeval
+
+/-- **Example 3.2.2** (§3.2, p.82): the only differential extension to `F⟮t⟯` making `t`
+constant is the coefficient extension `κ_D`. -/
+abbrev ex_3_2_2_unique :=
+  @differentialExtension_eq_transcendentalCoefficient_of_gen_eq_zero
 
 /-- **Example 3.2.3** (§3.2, p.83): an element algebraic over the constants (char `0`) is itself a
 constant. -/

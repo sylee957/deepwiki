@@ -117,6 +117,47 @@ theorem ratFuncExtensionOfValue_X (w : RatFunc F) :
     (ratFuncExtensionOfValue w).deriv (RatFunc.X : RatFunc F) = w :=
   ratFuncDifferentialOfValue_X w
 
+/-- Differential extensions of `F(X)` are determined by their value on `X`. -/
+theorem DifferentialExtension.ratFunc_ext
+    {Δ₁ Δ₂ : DifferentialExtension F (RatFunc F)}
+    (hX : Δ₁.deriv (RatFunc.X : RatFunc F) = Δ₂.deriv RatFunc.X) :
+    Δ₁ = Δ₂ := by
+  apply DifferentialExtension.ext
+  apply unique_derivation_rationalFunction (F := F) (K := RatFunc F)
+  · intro c
+    rw [RatFunc.algebraMap_C]
+    exact (Δ₁.deriv_algebraMap c).trans (Δ₂.deriv_algebraMap c).symm
+  · simpa only [RatFunc.algebraMap_X] using hX
+
+/-- Formal `d/dX` on `F(X)` as an extension of a zero differential on `F`. -/
+noncomputable def ratFuncFormalExtension (hzero : ∀ a : F, a′ = 0) :
+    DifferentialExtension F (RatFunc F) := by
+  let Δ : Differential (RatFunc F) := inferInstance
+  have hΔ : @DifferentialAlgebra F (RatFunc F) _ _ _ _ Δ :=
+    ⟨fun a => by
+      change ratFuncDeriv (RatFunc.C a) = algebraMap F (RatFunc F) (a′)
+      rw [ratFuncDeriv_C_eq_zero, hzero, map_zero]⟩
+  exact ⟨Δ, hΔ⟩
+
+/-- The derivation of `ratFuncFormalExtension` is the quotient-rule derivative `d/dX`. -/
+theorem ratFuncFormalExtension_apply (hzero : ∀ a : F, a′ = 0) (f : RatFunc F) :
+    (ratFuncFormalExtension hzero).deriv f = ratFuncDeriv f :=
+  rfl
+
+/-- Formal `d/dX` sends the rational-function generator `X` to one. -/
+theorem ratFuncFormalExtension_X (hzero : ∀ a : F, a′ = 0) :
+    (ratFuncFormalExtension hzero).deriv (RatFunc.X : RatFunc F) = 1 := by
+  rw [ratFuncFormalExtension_apply, show (RatFunc.X : RatFunc F) =
+    algebraMap F[X] (RatFunc F) X by exact RatFunc.algebraMap_X.symm,
+    ratFuncDeriv_algebraMap, derivative_X, map_one]
+
+/-- The only extension of a zero differential to `F(X)` sending `X` to one is `d/dX`. -/
+theorem differentialExtension_eq_ratFuncFormal_of_X_eq_one
+    (hzero : ∀ a : F, a′ = 0) (Δ : DifferentialExtension F (RatFunc F))
+    (hX : Δ.deriv (RatFunc.X : RatFunc F) = 1) :
+    Δ = ratFuncFormalExtension hzero :=
+  DifferentialExtension.ratFunc_ext (hX.trans (ratFuncFormalExtension_X hzero).symm)
+
 end RationalFunction
 
 section Adjoin
@@ -198,6 +239,75 @@ theorem transcendentalAdjoinExtension_gen
     (transcendentalAdjoinExtension t ht w).deriv
       (IntermediateField.AdjoinSimple.gen F t) = w :=
   transcendentalAdjoinDifferential_gen t ht w
+
+/-- Formal `d/dt` on `F⟮t⟯`, transported from `d/dX` when the base differential is zero. -/
+noncomputable def transcendentalFormalExtension
+    (t : E) (ht : Transcendental F t) (hzero : ∀ a : F, a′ = 0) :
+    DifferentialExtension F (F⟮t⟯) := by
+  let e := RatFunc.algEquivOfTranscendental t ht
+  let Δ := ratFuncFormalExtension hzero
+  letI : Differential (RatFunc F) := Δ.toDifferential
+  let δ : Differential (F⟮t⟯) := Differential.equiv e.symm.toRingEquiv
+  have hδ : @DifferentialAlgebra F (F⟮t⟯) _ _ _ _ δ :=
+    ⟨fun a => by
+      change e (Δ.deriv (e.symm (algebraMap F (F⟮t⟯) a))) =
+        algebraMap F (F⟮t⟯) (a′)
+      rw [e.symm.commutes, DifferentialExtension.deriv_algebraMap, e.commutes]⟩
+  exact ⟨δ, hδ⟩
+
+/-- Formal `d/dt` sends the adjoined transcendental generator to one. -/
+theorem transcendentalFormalExtension_gen
+    (t : E) (ht : Transcendental F t) (hzero : ∀ a : F, a′ = 0) :
+    (transcendentalFormalExtension t ht hzero).deriv
+      (IntermediateField.AdjoinSimple.gen F t) = 1 := by
+  let e := RatFunc.algEquivOfTranscendental t ht
+  change e ((ratFuncFormalExtension hzero).deriv
+    (e.symm (IntermediateField.AdjoinSimple.gen F t))) = 1
+  rw [RatFunc.algEquivOfTranscendental_symm_gen, ratFuncFormalExtension_X, map_one]
+
+/-- The only zero-base extension to `F⟮t⟯` sending transcendental `t` to one is `d/dt`. -/
+theorem differentialExtension_eq_transcendentalFormal_of_gen_eq_one
+    (t : E) (ht : Transcendental F t) (hzero : ∀ a : F, a′ = 0)
+    (Δ : DifferentialExtension F (F⟮t⟯))
+    (hgen : Δ.deriv (IntermediateField.AdjoinSimple.gen F t) = 1) :
+    Δ = transcendentalFormalExtension t ht hzero :=
+  DifferentialExtension.adjoin_ext t
+    (hgen.trans (transcendentalFormalExtension_gen t ht hzero).symm)
+
+/-- The coefficient differential extension on `F⟮t⟯`, for which `t` is constant. -/
+noncomputable def transcendentalCoefficientExtension
+    (t : E) (ht : Transcendental F t) :
+    DifferentialExtension F (F⟮t⟯) :=
+  transcendentalAdjoinExtension t ht 0
+
+/-- The adjoined generator is constant for the coefficient differential extension. -/
+theorem transcendentalCoefficientExtension_gen
+    (t : E) (ht : Transcendental F t) :
+    (transcendentalCoefficientExtension t ht).deriv
+      (IntermediateField.AdjoinSimple.gen F t) = 0 :=
+  transcendentalAdjoinExtension_gen t ht 0
+
+/-- The coefficient extension differentiates an evaluated polynomial coefficientwise. -/
+theorem transcendentalCoefficientExtension_aeval
+    (t : E) (ht : Transcendental F t) (p : F[X]) :
+    (transcendentalCoefficientExtension t ht).deriv
+        (aeval (IntermediateField.AdjoinSimple.gen F t) p) =
+      aeval (IntermediateField.AdjoinSimple.gen F t) (Differential.mapCoeffs p) := by
+  let Δ := transcendentalCoefficientExtension t ht
+  letI : Differential (F⟮t⟯) := Δ.toDifferential
+  haveI : DifferentialAlgebra F (F⟮t⟯) := Δ.differentialAlgebra
+  change (aeval (IntermediateField.AdjoinSimple.gen F t) p)′ =
+    aeval (IntermediateField.AdjoinSimple.gen F t) (Differential.mapCoeffs p)
+  rw [deriv_aeval_eq_extensions, show (IntermediateField.AdjoinSimple.gen F t)′ = 0 by
+    exact transcendentalCoefficientExtension_gen t ht, mul_zero, add_zero]
+
+/-- An extension making a transcendental generator constant is the coefficient extension. -/
+theorem differentialExtension_eq_transcendentalCoefficient_of_gen_eq_zero
+    (t : E) (ht : Transcendental F t) (Δ : DifferentialExtension F (F⟮t⟯))
+    (hgen : Δ.deriv (IntermediateField.AdjoinSimple.gen F t) = 0) :
+    Δ = transcendentalCoefficientExtension t ht :=
+  DifferentialExtension.adjoin_ext t
+    (hgen.trans (transcendentalCoefficientExtension_gen t ht).symm)
 
 /-- A transcendental simple extension admits a unique differential extension sending `t` to `w`. -/
 theorem existsUnique_differentialAdjoin_of_transcendental
