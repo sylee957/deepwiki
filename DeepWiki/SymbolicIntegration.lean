@@ -18,7 +18,6 @@ import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.Algebra.PseudoDivision
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
-import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.RationalIntegration
 import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms

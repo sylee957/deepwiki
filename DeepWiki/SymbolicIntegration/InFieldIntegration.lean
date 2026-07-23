@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import DeepWiki.ComputableAlgebra.PolySquarefreeTheory
 

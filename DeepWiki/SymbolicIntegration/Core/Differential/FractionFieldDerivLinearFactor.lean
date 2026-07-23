@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionExtension
 import DeepWiki.SymbolicIntegration.Core.Differential.LinearRootEvaluation
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 

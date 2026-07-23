@@ -2,7 +2,7 @@ import DeepWiki.Algebra.PolynomialDivisibility
 import DeepWiki.SymbolicIntegration.Compute.Hermite
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
-import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionDerivative
 
 /-! # Hermite residual-recovery correctness
 Proves the residual-recovery wrapper for `hermiteReduce`: once the rational part `(gnum, gden)` and

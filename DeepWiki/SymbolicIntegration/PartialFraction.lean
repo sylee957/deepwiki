@@ -1,7 +1,7 @@
 import Mathlib.LinearAlgebra.Lagrange
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.FieldTheory.RatFunc.Basic
-import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 
 /-! # Partial-fraction / residue decomposition (simple-root case)

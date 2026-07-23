@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.Hermite
-import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionDerivative
 import Mathlib.RingTheory.EuclideanDomain
 import Mathlib.Algebra.Polynomial.Degree.Units
 import Mathlib.Algebra.Polynomial.PartialFractions

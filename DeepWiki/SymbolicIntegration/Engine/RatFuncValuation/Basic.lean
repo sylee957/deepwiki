@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionExtension
 
 /-! # Basic `K(t)` valuation calculus
 

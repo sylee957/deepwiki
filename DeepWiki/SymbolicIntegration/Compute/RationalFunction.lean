@@ -1,6 +1,6 @@
 import DeepWiki.ComputableAlgebra.Fraction
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
-import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionDerivative
 
 /-! # Computable rational functions
 

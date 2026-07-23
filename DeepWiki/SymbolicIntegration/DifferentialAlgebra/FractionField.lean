@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Differential.DerivationExt
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.DerivationExtension
 
 /-! # Fraction-field differential extensions
 

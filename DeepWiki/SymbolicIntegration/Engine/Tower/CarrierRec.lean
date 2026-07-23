@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
-import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionExtension
 
 /-! # Global-recursive represented-fraction tower instances
 

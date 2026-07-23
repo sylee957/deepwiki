@@ -2,8 +2,8 @@ import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.RingTheory.Derivation.DifferentialRing
+import Mathlib.FieldTheory.Differential.Basic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
-import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 
 /-! # The derivative `d/dx` on rational functions `K(x)`
 Builds `d/dx` on `RatFunc K` via the quotient rule `(p/q)' = (p'q − pq')/q²`, proves its derivation

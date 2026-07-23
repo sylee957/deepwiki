@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
-import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.RationalFunctionExtension
 import DeepWiki.ComputableAlgebra.FracReprSparse
 
 /-! # A computable derivation on represented fraction towers

@@ -3,7 +3,7 @@ import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.Tactic
 
-/-! # Derivation extensionality
+/-! # Derivation extensions
 
 Extensionality and uniqueness principles for derivations on polynomial rings and fraction fields.
 -/
