@@ -146,16 +146,31 @@ then for every `w ∈ F⟮t⟯` there is a unique differential structure `Δ` on
 `(F⟮t⟯, Δ)` is a differential extension of `F` and `Δt = w`. -/
 abbrev thm_3_2_2 := @existsUnique_differentialAdjoin_of_transcendental
 
-/-- **Theorem 3.2.3** (§3.2, p.83), algebraic-extension existence and uniqueness in Lean form:
-for a finite extension `E/F` in characteristic `0`, there is a unique differential structure on
-`E` compatible with the one on `F`. Mathlib constructs the witness by the minimal-polynomial
-formula `Δα = -κ_D(P)(α) / P'(α)`. -/
-noncomputable abbrev thm_3_2_3 := @uniqueDifferentialExtension_algebraic
+/-- **Theorem 3.2.3** (§3.2, p.83), finite separable case: a finite separable algebraic extension
+with `[FiniteDimensional F E]` and `[Algebra.IsSeparable F E]` has exactly one compatible
+differential structure: `∃! Δ : Differential E, IsDifferentialExtension F E Δ`. This finite
+proof avoids infinite gluing, but the Lean corollary remains classical because Mathlib defines
+`Algebra.IsSeparable` through `minpoly`. -/
+abbrev thm_3_2_3_finite := @existsUnique_differentialExtension_finiteSeparable
 
-/-- **Theorem 3.2.3** (§3.2, p.83), uniqueness: the derivation extension to a separable algebraic
-extension is unique. The Lean theorem identifies any two bundled differential extensions;
-finite-dimensional characteristic `0` supplies separability through Mathlib. -/
-abbrev thm_3_2_3_unique := @differentialExtension_algebraic_unique
+/-- **Theorem 3.2.3** (§3.2, p.83), choice-free finite separable presentation: explicit
+power-basis coordinates together with an explicit inverse of the defining relation's derivative
+give `∃! Δ : Differential E, IsDifferentialExtension F E Δ`. This is the constructive finite
+counterpart of `thm_3_2_3_finite`; it replaces Mathlib's choice-bearing `Algebra.IsSeparable`
+presentation by `SeparablePowerBasisPresentation`. -/
+abbrev thm_3_2_3_finite_explicit :=
+  @SeparablePowerBasisPresentation.existsUnique_differentialExtension
+
+/-- **Theorem 3.2.3** (§3.2, p.83): every, possibly non-finitely-generated, separable algebraic
+extension has exactly one compatible differential structure. The existence proof uses Mathlib's
+classical gluing of the unique lifts on finite simple subextensions; its
+`Algebra.IsSeparable` hypothesis is itself represented through `minpoly`. -/
+abbrev thm_3_2_3 := @existsUnique_differentialExtension_separable
+
+/-- **Theorem 3.2.3** (§3.2, p.83), uniqueness: any two compatible derivations on a separable
+algebraic extension agree. The proof is pointwise from the separable minimal-polynomial
+identity and does not require finite generation. -/
+abbrev thm_3_2_3_unique := @differentialExtension_separable_unique
 
 /-- **Theorem 3.2.4(i)** (§3.2, p.85): an `F`-automorphism of a separable algebraic extension
 commutes with `D`. The Lean statement is pointwise: for `σ : E ≃ₐ[F] E` and `a : E`,
