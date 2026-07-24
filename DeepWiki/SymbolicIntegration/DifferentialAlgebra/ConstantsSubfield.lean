@@ -61,6 +61,36 @@ def constantsIntermediateField (F E : Type*) [Field F] [Field E]
 @[simp] theorem constantsIntermediateField_toSubfield :
     (constantsIntermediateField F E).toSubfield = constantsSubfield E := rfl
 
+/-- `constantsIntermediateField F E = ⊥` iff every constant of `E` lies in the image of the constants of `F`. -/
+theorem constantsIntermediateField_eq_bot_iff_constantsSubfield_eq_image :
+    constantsIntermediateField F E = ⊥ ↔
+      (constantsSubfield E : Set E) =
+        algebraMap F E '' (constantsSubfield F : Set F) := by
+  constructor
+  · intro h
+    ext x
+    constructor
+    · intro hx
+      have hxbot : x ∈ (⊥ : IntermediateField (constantsSubfield F) E) := by
+        rw [← h]
+        exact hx
+      obtain ⟨c, hc⟩ := IntermediateField.mem_bot.mp hxbot
+      exact ⟨c, c.property, hc⟩
+    · rintro ⟨c, hc, rfl⟩
+      exact mem_constantsSubfield.mpr (by
+        rw [deriv_algebraMap, hc, map_zero])
+  · intro h
+    apply le_antisymm
+    · intro x hx
+      have hxsub : x ∈ (constantsSubfield E : Set E) := hx
+      have hximage :
+          x ∈ algebraMap F E '' (constantsSubfield F : Set F) := by
+        rw [← h]
+        exact hxsub
+      obtain ⟨c, hc, hcx⟩ := hximage
+      exact IntermediateField.mem_bot.mpr ⟨⟨c, hc⟩, hcx⟩
+    · exact bot_le
+
 end ConstantsIntermediateField
 
 end DeepWiki.SymbolicIntegration
