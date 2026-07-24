@@ -50,6 +50,10 @@ theorem ratFuncDeriv_algebraMap (p : K[X]) :
   rw [← RatFunc.mk_one p, ratFuncDeriv_mk]
   simp
 
+/-- The rational-function derivative sends its generator `X` to one. -/
+@[simp] theorem ratFuncDeriv_X : ratFuncDeriv (RatFunc.X : RatFunc K) = 1 := by
+  rw [← RatFunc.algebraMap_X, ratFuncDeriv_algebraMap, derivative_X, map_one]
+
 /-- **Additivity of `d/dx`** on `K(x)`: `(x + y)' = x' + y'`. -/
 theorem ratFuncDeriv_add (x y : RatFunc K) :
     ratFuncDeriv (x + y) = ratFuncDeriv x + ratFuncDeriv y := by
@@ -105,6 +109,11 @@ noncomputable def ratFuncKDeriv : Derivation K (RatFunc K) (RatFunc K) :=
 noncomputable instance : Differential (RatFunc K) :=
   letI : Algebra ℤ (RatFunc K) := Ring.toIntAlgebra _
   ⟨ratFuncKDeriv.restrictScalars ℤ⟩
+
+open scoped Differential in
+/-- The differential-field derivative on `K(x)` sends `X` to one. -/
+@[simp] theorem deriv_ratFunc_X : (RatFunc.X : RatFunc K)′ = 1 :=
+  ratFuncDeriv_X
 
 open scoped Differential in
 /-- `x`-constants have derivative zero: `(algebraMap (C c))′ = 0` in `K(x)`. -/

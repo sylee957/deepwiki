@@ -18,7 +18,7 @@ statement, discharged by the `DeepWiki.SymbolicIntegration` library) for theorem
 book numbering lives here in the catalog, never in the library; the citation (section, page)
 is in each docstring, the source's DOI in `Sources.Doi_10_1007_b138171.Source`. -/
 
-open scoped Differential
+open scoped Differential IntermediateField
 open Polynomial DeepWiki.SymbolicIntegration
 
 namespace DeepWiki.Si
@@ -612,6 +612,47 @@ abbrev ex_3_2_3_chain_rule := @deriv_eval₂_constantsSubfield
 /-- **Example 3.2.3** (§3.2, p.83), conclusion: if `α` is algebraic over `Const_D(F)`, then,
 using its irreducible minimal polynomial, `Dα = 0`. -/
 abbrev ex_3_2_3_constant := @deriv_eq_zero_of_isIntegral_constantsSubfield
+
+/-- **Example 3.2.4** (§3.2, p.83), uniqueness: if `α` is a root of `Y²-X` over `ℚ(X)`, then
+`d/dX` has a unique extension to `ℚ(X)⟮α⟯`. -/
+theorem ex_3_2_4_unique {E : Type*} [Field E] [Algebra (RatFunc ℚ) E] {α : E}
+    (hroot : (X ^ 2 - C (RatFunc.X : RatFunc ℚ)).eval₂
+      (algebraMap (RatFunc ℚ) E) α = 0) :
+    ∃! Δ : Differential ((RatFunc ℚ)⟮α⟯),
+      IsDifferentialExtension (RatFunc ℚ) ((RatFunc ℚ)⟮α⟯) Δ := by
+  apply existsUnique_differentialAdjoin_of_sq_eq
+  apply sub_eq_zero.mp
+  simpa using hroot
+
+/-- **Example 3.2.4** (§3.2, p.83), differentiated relation: every compatible extension to
+`ℚ(X)⟮α⟯` satisfies `2α·Dα = 1`. -/
+theorem ex_3_2_4_relation {E : Type*} [Field E] [Algebra (RatFunc ℚ) E] {α : E}
+    (hroot : (X ^ 2 - C (RatFunc.X : RatFunc ℚ)).eval₂
+      (algebraMap (RatFunc ℚ) E) α = 0)
+    (Δ : DifferentialExtension (RatFunc ℚ) ((RatFunc ℚ)⟮α⟯)) :
+    2 * IntermediateField.AdjoinSimple.gen (RatFunc ℚ) α *
+        Δ.deriv (IntermediateField.AdjoinSimple.gen (RatFunc ℚ) α) = 1 := by
+  letI : Differential ((RatFunc ℚ)⟮α⟯) := Δ.toDifferential
+  haveI : DifferentialAlgebra (RatFunc ℚ) ((RatFunc ℚ)⟮α⟯) := Δ.differentialAlgebra
+  apply two_mul_mul_deriv_eq_one_of_sq_eq
+    (F := RatFunc ℚ) (E := (RatFunc ℚ)⟮α⟯) (x := RatFunc.X) deriv_ratFunc_X
+  apply Subtype.ext
+  change α ^ 2 = algebraMap (RatFunc ℚ) E RatFunc.X
+  apply sub_eq_zero.mp
+  simpa using hroot
+
+/-- **Example 3.2.4** (§3.2, p.83), conclusion: every compatible extension to `ℚ(X)⟮α⟯`
+satisfies `Dα = 1/(2α)`. -/
+theorem ex_3_2_4_derivative {E : Type*} [Field E] [Algebra (RatFunc ℚ) E] {α : E}
+    (hroot : (X ^ 2 - C (RatFunc.X : RatFunc ℚ)).eval₂
+      (algebraMap (RatFunc ℚ) E) α = 0)
+    (Δ : DifferentialExtension (RatFunc ℚ) ((RatFunc ℚ)⟮α⟯)) :
+    Δ.deriv (IntermediateField.AdjoinSimple.gen (RatFunc ℚ) α) =
+      1 / (2 * IntermediateField.AdjoinSimple.gen (RatFunc ℚ) α) := by
+  apply Δ.adjoin_gen_deriv_eq_one_div_two_mul_of_sq_eq
+    (x := RatFunc.X) deriv_ratFunc_X
+  apply sub_eq_zero.mp
+  simpa using hroot
 
 /-! ### Generic-carrier input builders for the §3.5 split examples (catalog-local)
 
