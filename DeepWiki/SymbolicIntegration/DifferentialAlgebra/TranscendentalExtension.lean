@@ -129,6 +129,29 @@ theorem ratFuncExtensionOfValue_X (w : RatFunc F) :
     (ratFuncExtensionOfValue w).deriv (RatFunc.X : RatFunc F) = w :=
   ratFuncDifferentialOfValue_X w
 
+/-- The coefficient extension on `F(X)` differentiates embedded polynomials coefficientwise. -/
+theorem ratFuncExtensionOfValue_zero_algebraMap (p : F[X]) :
+    (ratFuncExtensionOfValue (0 : RatFunc F)).deriv
+        (algebraMap F[X] (RatFunc F) p) =
+      algebraMap F[X] (RatFunc F) (Differential.mapCoeffs p) := by
+  change
+    (ratFuncCoefficientDifferential (F := F)).deriv
+        (algebraMap F[X] (RatFunc F) p) +
+      0 * (inferInstance : Differential (RatFunc F)).deriv
+        (algebraMap F[X] (RatFunc F) p) =
+      algebraMap F[X] (RatFunc F) (Differential.mapCoeffs p)
+  rw [zero_mul, add_zero]
+  calc
+    _ = algebraMap F[X] (RatFunc F)
+        ((polynomialCoefficientDifferential (F := F)).deriv p) :=
+      FractionRingDeriv.deriv_algebraMap
+        ((polynomialCoefficientDifferential (F := F)).deriv) p
+    _ = algebraMap F[X] (RatFunc F) (Differential.mapCoeffs p) := by
+      congr 1
+      change Differential.implicitDeriv 0 p = Differential.mapCoeffs p
+      rw [Differential.implicitDeriv]
+      simp
+
 /-- Differential extensions of `F(X)` are determined by their value on `X`. -/
 theorem DifferentialExtension.ratFunc_ext
     {Δ₁ Δ₂ : DifferentialExtension F (RatFunc F)}

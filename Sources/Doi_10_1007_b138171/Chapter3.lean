@@ -250,10 +250,6 @@ abbrev lem_3_3_2_ii := @deriv_eq_zero_of_isAlgebraic_constantsSubfield_of_isSepa
 differential extension (the Wronskian commutes with `algebraMap`). -/
 abbrev cor_3_3_2 := @not_linearDependentOverConst_algebraMap
 
-/-- **Lemma 3.3.4** (§3.3, p.87), easy inclusion: `Const_D(F)(t) ⊆ Const_Δ(F(t))` for `t` a constant
-of the extension. -/
-abbrev lem_3_3_4_easy := @subfieldClosure_subset_constants
-
 /-- **Corollary 3.3.1** (§3.3, p.86), unique extension: a separable algebraic extension `E/F`
 admits a unique differential structure extending `D`. -/
 abbrev cor_3_3_1_unique_extension := @existsUnique_differentialExtension_separable
@@ -277,9 +273,10 @@ abbrev lem_3_3_3_extension := @existsUnique_differentialExtension_adjoin_algebra
 `Const_D(Fbar) = Const_Δ(E Fbar)`. -/
 abbrev lem_3_3_3_constants := @constantsIntermediateField_adjoin_algebraicClosure_eq_bot
 
-/-- **Lemma 3.3.4** (§3.3, p.87), hard direction core: if `c = u/v` (`u, v` coprime) is a constant of
-`F(t)` then `u, v` have constant coefficients — giving `Const_Δ(F(t)) ⊆ Const_D(F)(t)`. -/
-abbrev lem_3_3_4_hard := @mapCoeffs_eq_zero_of_coprime_of_relation
+/-- **Lemma 3.3.4** (§3.3, p.87): if `t` is constant in a differential extension `E/F`,
+then the constants of the restricted simple extension satisfy
+`Const_Δ(F⟮t⟯) = Const_D(F)⟮t⟯`. -/
+abbrev lem_3_3_4 := @constantsIntermediateField_restrictAdjoin_eq_adjoin_constants
 
 /-- **Lemma 3.3.6** (§3.3, p.88), post-reduction core: over an algebraically closed constant field, a
 constant-coefficient polynomial system solved by an extension-constant point is solved by a

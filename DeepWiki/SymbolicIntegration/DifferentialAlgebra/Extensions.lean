@@ -1,11 +1,12 @@
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Basic
+import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 
 /-! # Differential extensions
 
 Bundled differential extensions and compatibility with base derivations.
 -/
 
-open scoped Differential
+open scoped Differential IntermediateField
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
@@ -54,6 +55,86 @@ theorem differentialAlgebra (Δ : DifferentialExtension F E) :
 theorem deriv_algebraMap (Δ : DifferentialExtension F E) (a : F) :
     Δ.deriv (algebraMap F E a) = algebraMap F E (a′) :=
   Δ.differentialAlgebra.deriv_algebraMap a
+
+/-- Restrict a differential extension to a derivation-stable intermediate field. -/
+noncomputable def restrictIntermediateField
+    {F E : Type*} [Field F] [Field E] [Algebra F E] [Differential F]
+    (Δ : DifferentialExtension F E) (K : IntermediateField F E)
+    (hstable : ∀ x : E, x ∈ K → Δ.deriv x ∈ K) :
+    DifferentialExtension F K := by
+  let f : K →+ K :=
+    { toFun := fun x => ⟨Δ.deriv x, hstable x x.property⟩
+      map_zero' := by
+        apply Subtype.ext
+        exact map_zero Δ.deriv
+      map_add' := fun x y => by
+        apply Subtype.ext
+        exact map_add Δ.deriv (x : E) (y : E) }
+  let d : Derivation ℤ K K :=
+    Derivation.mk' f.toIntLinearMap fun x y => by
+      apply Subtype.ext
+      change Δ.deriv ((x : E) * (y : E)) =
+        (x : E) * Δ.deriv (y : E) + (y : E) * Δ.deriv (x : E)
+      simpa only [smul_eq_mul] using Δ.deriv.leibniz (x : E) (y : E)
+  let D : Differential K := ⟨d⟩
+  refine ⟨D, ?_⟩
+  exact ⟨fun a => by
+    apply Subtype.ext
+    exact Δ.deriv_algebraMap a⟩
+
+/-- The restricted derivation agrees with the ambient derivation after inclusion. -/
+@[simp] theorem restrictIntermediateField_deriv
+    {F E : Type*} [Field F] [Field E] [Algebra F E] [Differential F]
+    (Δ : DifferentialExtension F E) (K : IntermediateField F E)
+    (hstable : ∀ x : E, x ∈ K → Δ.deriv x ∈ K) (x : K) :
+    ((restrictIntermediateField Δ K hstable).deriv x : E) = Δ.deriv x :=
+  rfl
+
+/-- If `t` is constant, the simple extension `F⟮t⟯` is stable under the ambient derivation. -/
+theorem deriv_mem_adjoin_of_deriv_eq_zero
+    {F E : Type*} [Field F] [Field E] [Algebra F E] [Differential F]
+    (Δ : DifferentialExtension F E) {t : E} (ht : Δ.deriv t = 0) :
+    ∀ x : E, x ∈ F⟮t⟯ → Δ.deriv x ∈ F⟮t⟯ := by
+  apply IntermediateField.adjoin_induction F
+    (p := fun x hx => Δ.deriv x ∈ F⟮t⟯)
+  · intro x hx
+    rw [Set.mem_singleton_iff] at hx
+    subst x
+    rw [ht]
+    exact IntermediateField.zero_mem _
+  · intro a
+    rw [Δ.deriv_algebraMap]
+    exact IntermediateField.algebraMap_mem _ (a′)
+  · intro x y hx hy hdx hdy
+    rw [map_add]
+    exact IntermediateField.add_mem _ hdx hdy
+  · intro x hx hdx
+    rw [Derivation.leibniz_inv]
+    exact IntermediateField.mul_mem _
+      (IntermediateField.neg_mem _
+        (Subalgebra.pow_mem _ (IntermediateField.inv_mem _ hx) 2))
+      hdx
+  · intro x y hx hy hdx hdy
+    rw [Derivation.leibniz]
+    exact IntermediateField.add_mem _
+      (IntermediateField.mul_mem _ hx hdy)
+      (IntermediateField.mul_mem _ hy hdx)
+
+/-- Restrict an ambient differential extension to `F⟮t⟯` when `t` is constant. -/
+noncomputable def restrictAdjoin
+    {F E : Type*} [Field F] [Field E] [Algebra F E] [Differential F]
+    (Δ : DifferentialExtension F E) (t : E) (ht : Δ.deriv t = 0) :
+    DifferentialExtension F (F⟮t⟯) :=
+  restrictIntermediateField Δ F⟮t⟯ (deriv_mem_adjoin_of_deriv_eq_zero Δ ht)
+
+/-- The generator has derivative zero in the restriction to `F⟮t⟯`. -/
+theorem restrictAdjoin_gen_deriv_eq_zero
+    {F E : Type*} [Field F] [Field E] [Algebra F E] [Differential F]
+    (Δ : DifferentialExtension F E) (t : E) (ht : Δ.deriv t = 0) :
+    (restrictAdjoin Δ t ht).deriv
+      (IntermediateField.AdjoinSimple.gen F t) = 0 := by
+  apply Subtype.ext
+  exact ht
 
 /-- Differential extensions are equal when their derivations are equal. -/
 @[ext] theorem ext {Δ₁ Δ₂ : DifferentialExtension F E}
