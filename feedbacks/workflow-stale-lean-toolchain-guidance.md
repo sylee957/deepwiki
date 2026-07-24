@@ -7,5 +7,5 @@
 - **Why it's a limitation:** Agents may test with or report the wrong compiler version when following the documented workflow literally.
 - **Workaround used:** Treat the checked-in toolchain and dependency files as authoritative and validate with `v4.32.0`.
 - **Suggested fix:** Update the toolchain paragraph in the repository guidance when its owning instructions are next revised.
-- **Status:** resolved on 2026-07-24 by synchronizing the guidance with Lean `v4.32.1`
-  and the compatible Mathlib/doc-gen4 `v4.32.0` tags.
+- **Status:** resolved on 2026-07-24 by synchronizing the guidance with Lean and Mathlib
+  `v4.32.1` and the compatible doc-gen4 `v4.32.0` tag.
