@@ -67,6 +67,24 @@ theorem differentialAlgebra_subring_iff {S : Type*} [CommRing S] [Differential S
   rw [differentialAlgebra_iff_deriv_algebraMap]
   rfl
 
+/-- Differential-extension compatibility is transitive along an algebra tower. -/
+theorem isDifferentialExtension_trans
+    {K F E : Type*} [CommRing K] [CommRing F] [CommRing E]
+    [Algebra K F] [Algebra F E] [Algebra K E] [IsScalarTower K F E]
+    (ΔK : Differential K) (ΔF : Differential F) (ΔE : Differential E)
+    (hKF : @IsDifferentialExtension K F _ _ _ ΔK ΔF)
+    (hFE : @IsDifferentialExtension F E _ _ _ ΔF ΔE) :
+    @IsDifferentialExtension K E _ _ _ ΔK ΔE := by
+  letI : Differential K := ΔK
+  letI : Differential F := ΔF
+  letI : Differential E := ΔE
+  letI : DifferentialAlgebra K F := hKF
+  letI : DifferentialAlgebra F E := hFE
+  apply differentialAlgebra_iff_deriv_algebraMap.mpr
+  intro a
+  rw [IsScalarTower.algebraMap_apply K F E, deriv_algebraMap, deriv_algebraMap,
+    IsScalarTower.algebraMap_apply K F E]
+
 end Compatibility
 
 /-- `(aeval α P)' = aeval α (κ_D P) + aeval α P.derivative * α'` in a differential algebra. -/

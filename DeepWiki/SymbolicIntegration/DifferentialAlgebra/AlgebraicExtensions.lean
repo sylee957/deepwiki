@@ -371,6 +371,26 @@ end Algebraic
 
 section Automorphism
 
+/-- A base-field embedding from a separable differential extension preserves derivation. -/
+theorem isDifferentialExtension_algHom_of_isSeparable
+    {F E L : Type*} [Field F] [Field E] [Field L]
+    [Algebra F E] [Algebra F L] [Algebra.IsSeparable F E]
+    (D : Differential F) (ΔE : Differential E) (ΔL : Differential L)
+    (hE : @IsDifferentialExtension F E _ _ _ D ΔE)
+    (hL : @IsDifferentialExtension F L _ _ _ D ΔL)
+    (f : E →ₐ[F] L) :
+    letI : Algebra E L := f.toRingHom.toAlgebra
+    @IsDifferentialExtension E L _ _ _ ΔE ΔL := by
+  letI : Differential F := D
+  letI : Differential E := ΔE
+  letI : Differential L := ΔL
+  letI : DifferentialAlgebra F E := hE
+  letI : DifferentialAlgebra F L := hL
+  letI : Algebra E L := f.toRingHom.toAlgebra
+  apply differentialAlgebra_iff_deriv_algebraMap.mpr
+  intro x
+  exact (Differential.algHom_deriv' f f.injective x).symm
+
 /-- An `F`-algebra automorphism of a separable differential extension commutes with derivation. -/
 theorem algEquiv_comm_deriv {F E : Type*} [Field F] [Differential F] [Field E]
     [Differential E] [Algebra F E] [DifferentialAlgebra F E] [Algebra.IsSeparable F E]

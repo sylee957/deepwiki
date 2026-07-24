@@ -195,11 +195,20 @@ into `E`, rewrites norm as the product over automorphisms, and applies the logar
 product rule. -/
 abbrev thm_3_2_4_ii_norm := @trace_logDeriv_eq_logDeriv_norm
 
-/-- **Corollary 3.2.1** (§3.2, p.85): `D` extends uniquely to each finite intermediate field of a
-separable algebraic extension. For `B : IntermediateField F K` with `[FiniteDimensional F B]`, the
-library supplies a `Unique (DifferentialExtension F B)` instance-like package obtained from
-the finite-dimensional algebraic-extension construction for `B/F`. -/
-noncomputable abbrev cor_3_2_1 := @uniqueDifferentialExtension_intermediateField
+/-- **Corollary 3.2.1** (§3.2, p.85), extension to `E`: if `E/K` is separable algebraic, then
+there is a unique differential structure on `E` extending `D` from `K`. -/
+abbrev cor_3_2_1_E := @existsUnique_differentialExtension_separable
+
+/-- **Corollary 3.2.1** (§3.2, p.85), extension to the compositum: in a common overfield `Ω`,
+write `EF = IntermediateField.adjoin F (E : Set Ω)`. If `E/K` is separable and `F/K` is a
+differential extension, then the derivation on `F` extends uniquely to `EF`. The algebraic
+closure in the book supplies `Ω`; its closedness is not needed for this conclusion. -/
+abbrev cor_3_2_1_compositum := @existsUnique_differentialExtension_compositum
+
+/-- **Corollary 3.2.1** (§3.2, p.85), compatibility over `E`: for the canonical inclusion
+`E →ₐ[K] EF`, compatible extensions on `E` and `EF` make `EF` a differential extension of `E`.
+-/
+abbrev cor_3_2_1_compatibility := @isDifferentialExtension_compositum_right
 
 /-! ## §3.3 Constants and Extensions -/
 
