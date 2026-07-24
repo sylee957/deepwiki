@@ -317,6 +317,49 @@ theorem isAlgClosure_constantsIntermediateField [IsAlgClosed E] :
 
 end RelativeAlgebraicClosureConstants
 
+section ConstantsAfterAlgebraicExtension
+
+variable {F E Fbar L : Type*}
+  [Field F] [Field E] [Field Fbar] [Field L]
+  [Differential F] [Differential E] [Differential Fbar] [Differential L]
+  [Algebra F E] [Algebra E L] [Algebra F L] [IsScalarTower F E L]
+  [Algebra F Fbar] [Algebra Fbar L] [IsScalarTower F Fbar L]
+  [DifferentialAlgebra F E] [DifferentialAlgebra E L] [DifferentialAlgebra Fbar L]
+  [Algebra.IsAlgebraic E L] [IsAlgClosed Fbar]
+
+/-- Equality of base and extension constants persists through an algebraic extension contained over an algebraically closed field. -/
+theorem constantsIntermediateField_eq_bot_of_isAlgClosed_of_isAlgebraic
+    (hconstants : constantsIntermediateField F E = ⊥) :
+    constantsIntermediateField Fbar L = ⊥ := by
+  letI : Algebra.IsAlgebraic (constantsSubfield F) (constantsIntermediateField F E) := by
+    rw [hconstants]
+    infer_instance
+  apply le_antisymm
+  · intro x hx
+    have hxE : IsAlgebraic E x := Algebra.IsAlgebraic.isAlgebraic x
+    have hxCE : IsAlgebraic (constantsIntermediateField F E) x :=
+      isAlgebraic_constantsSubfield_of_deriv_eq_zero hx hxE
+    have hxCF : IsAlgebraic (constantsSubfield F) x :=
+      hxCE.isIntegral.trans_isAlgebraic (constantsSubfield F)
+    have hxF : IsAlgebraic F x := hxCF.tower_top F
+    have hxFbar : IsAlgebraic Fbar x := hxF.tower_top Fbar
+    letI : Algebra.IsAlgebraic Fbar Fbar⟮(x : L)⟯ :=
+      IntermediateField.isAlgebraic_adjoin_simple hxFbar.isIntegral
+    have hadjoin : Fbar⟮(x : L)⟯ = ⊥ :=
+      IntermediateField.eq_bot_of_isAlgClosed_of_isAlgebraic Fbar⟮(x : L)⟯
+    have hxmem : (x : L) ∈ Fbar⟮(x : L)⟯ :=
+      IntermediateField.subset_adjoin Fbar ({(x : L)} : Set L) (Set.mem_singleton _)
+    have hxbot : (x : L) ∈ (⊥ : IntermediateField Fbar L) := hadjoin ▸ hxmem
+    obtain ⟨y, hy⟩ := IntermediateField.mem_bot.mp hxbot
+    have hyconst : y′ = 0 := by
+      apply (algebraMap Fbar L).injective
+      rw [map_zero, ← deriv_algebraMap, hy, hx]
+    apply IntermediateField.mem_bot.mpr
+    exact ⟨⟨y, hyconst⟩, hy⟩
+  · exact bot_le
+
+end ConstantsAfterAlgebraicExtension
+
 section AlgebraicallyClosedConstants
 variable {E : Type*} [Field E] [Differential E] [CharZero E]
 

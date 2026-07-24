@@ -267,9 +267,15 @@ abbrev cor_3_3_1_constants := @constantsIntermediateField_eq_algebraicClosure
 its constants form an algebraic closure of `Const_D(F)`. -/
 abbrev cor_3_3_1_isAlgClosure := @isAlgClosure_constantsIntermediateField
 
-/-- **Lemma 3.3.3** (§3.3, p.87): the constant field of an algebraically closed differential field is
-itself algebraically closed (char `0`). -/
-abbrev lem_3_3_3 := @isAlgClosed_constantsSubfield
+/-- **Lemma 3.3.3** (§3.3, p.87), extension claim: if `Ebar` is an algebraic closure of `E`
+and `Fbar := algebraicClosure F Ebar`, the differential structures on `E` and `Fbar` extend
+uniquely and compatibly to their compositum `E Fbar`. -/
+abbrev lem_3_3_3_extension := @existsUnique_differentialExtension_adjoin_algebraicClosure
+
+/-- **Lemma 3.3.3** (§3.3, p.87), constants claim: with `Ebar` and `Fbar` as above, if
+`Const_D(F) = Const_Δ(E)`, encoded by `constantsIntermediateField F E = ⊥`, then
+`Const_D(Fbar) = Const_Δ(E Fbar)`. -/
+abbrev lem_3_3_3_constants := @constantsIntermediateField_adjoin_algebraicClosure_eq_bot
 
 /-- **Lemma 3.3.4** (§3.3, p.87), hard direction core: if `c = u/v` (`u, v` coprime) is a constant of
 `F(t)` then `u, v` have constant coefficients — giving `Const_Δ(F(t)) ⊆ Const_D(F)(t)`. -/
