@@ -41,4 +41,26 @@ theorem subfieldClosure_subset_constants {S : Set E} (hS : ∀ s ∈ S, s′ = 0
 
 end ConstantsSubfield
 
+section ConstantsIntermediateField
+variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E]
+  [Algebra F E] [DifferentialAlgebra F E]
+
+/-- The constants of a differential extension as an intermediate field over the base constants. -/
+def constantsIntermediateField (F E : Type*) [Field F] [Field E]
+    [Differential F] [Differential E] [Algebra F E] [DifferentialAlgebra F E] :
+    IntermediateField (constantsSubfield F) E :=
+  (constantsSubfield E).toIntermediateField fun c => by
+    change (algebraMap F E (c : F))′ = 0
+    rw [deriv_algebraMap, c.property, map_zero]
+
+/-- Membership in `constantsIntermediateField F E` is the equation `x′ = 0`. -/
+@[simp] theorem mem_constantsIntermediateField {x : E} :
+    x ∈ constantsIntermediateField F E ↔ x′ = 0 := Iff.rfl
+
+/-- The underlying subfield of `constantsIntermediateField F E` is `constantsSubfield E`. -/
+@[simp] theorem constantsIntermediateField_toSubfield :
+    (constantsIntermediateField F E).toSubfield = constantsSubfield E := rfl
+
+end ConstantsIntermediateField
+
 end DeepWiki.SymbolicIntegration

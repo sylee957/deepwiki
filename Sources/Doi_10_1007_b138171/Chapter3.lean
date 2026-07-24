@@ -254,9 +254,18 @@ abbrev cor_3_3_2 := @not_linearDependentOverConst_algebraMap
 of the extension. -/
 abbrev lem_3_3_4_easy := @subfieldClosure_subset_constants
 
-/-- **Corollary 3.3.1** (§3.3, p.86): a constant of a separable algebraic extension is the root of a
-separable constant-coefficient polynomial — `Const_Δ(E)` is the algebraic closure of `Const_D(F)`. -/
-abbrev cor_3_3_1 := @deriv_eq_zero_iff_isAlgebraicOverConst_separable_base
+/-- **Corollary 3.3.1** (§3.3, p.86), unique extension: a separable algebraic extension `E/F`
+admits a unique differential structure extending `D`. -/
+abbrev cor_3_3_1_unique_extension := @existsUnique_differentialExtension_separable
+
+/-- **Corollary 3.3.1** (§3.3, p.86), constants: under the book's standing characteristic-zero
+hypothesis, the constants of an algebraic extension are exactly the relative algebraic closure of
+`Const_D(F)` in `E`. -/
+abbrev cor_3_3_1_constants := @constantsIntermediateField_eq_algebraicClosure
+
+/-- **Corollary 3.3.1** (§3.3, p.86), algebraically closed case: if `E` is algebraically closed,
+its constants form an algebraic closure of `Const_D(F)`. -/
+abbrev cor_3_3_1_isAlgClosure := @isAlgClosure_constantsIntermediateField
 
 /-- **Lemma 3.3.3** (§3.3, p.87): the constant field of an algebraically closed differential field is
 itself algebraically closed (char `0`). -/

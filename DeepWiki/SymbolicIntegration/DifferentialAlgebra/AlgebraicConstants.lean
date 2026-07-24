@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.AlgebraicExtensions
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra.ConstantsSubfield
+import Mathlib.FieldTheory.AlgebraicClosure
 
 /-! # Algebraic closure of constants
 
@@ -290,6 +291,31 @@ theorem deriv_eq_zero_iff_isAlgebraicOverConst_separable [CharZero F] {c : E}
     exact deriv_eq_zero_of_separable_algebraic_const q hq hroot hsep
 
 end AlgebraicClosureConstants
+
+section RelativeAlgebraicClosureConstants
+variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E]
+  [CharZero F] [Algebra F E] [DifferentialAlgebra F E] [Algebra.IsAlgebraic F E]
+
+/-- Constants in an algebraic extension are its relative algebraic closure of the base constants. -/
+theorem constantsIntermediateField_eq_algebraicClosure :
+    constantsIntermediateField F E = algebraicClosure (constantsSubfield F) E := by
+  ext x
+  rw [mem_constantsIntermediateField, mem_algebraicClosure_iff]
+  constructor
+  · intro hx
+    exact isAlgebraic_constantsSubfield_of_deriv_eq_zero hx
+      (Algebra.IsAlgebraic.isAlgebraic x)
+  · intro hx
+    exact deriv_eq_zero_of_isIntegral_constantsSubfield hx.isIntegral
+
+/-- If the ambient algebraic extension is algebraically closed, its constants are an algebraic
+closure of the base constants. -/
+theorem isAlgClosure_constantsIntermediateField [IsAlgClosed E] :
+    IsAlgClosure (constantsSubfield F) (constantsIntermediateField F E) := by
+  rw [constantsIntermediateField_eq_algebraicClosure]
+  infer_instance
+
+end RelativeAlgebraicClosureConstants
 
 section AlgebraicallyClosedConstants
 variable {E : Type*} [Field E] [Differential E] [CharZero E]
