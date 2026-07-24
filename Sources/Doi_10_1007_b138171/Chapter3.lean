@@ -183,16 +183,16 @@ commutes with `D`. The Lean statement is pointwise: for `σ : E ≃ₐ[F] E` and
 `σ (a') = (σ a)'`, using Mathlib's `Differential.algEquiv_deriv'`. -/
 abbrev thm_3_2_4_i := @algEquiv_comm_deriv
 
-/-- **Theorem 3.2.4(ii)** (§3.2, p.85): the trace commutes with `D` on the finite Galois form used
-by the library, `(Algebra.trace F E a)' = Algebra.trace F E (a')`. The proof expands trace as the
-sum over `F`-automorphisms and uses `thm_3_2_4_i` on each summand. -/
+/-- **Theorem 3.2.4(ii)** (§3.2, p.85): on a finite separable extension, trace commutes with
+`D`: `(Algebra.trace F E a)' = Algebra.trace F E (a')`. The proof expands trace as the sum
+over embeddings into a separable closure and commutes each embedding with derivation. -/
 abbrev thm_3_2_4_ii_trace := @deriv_trace_eq_trace_deriv
 
 /-- **Theorem 3.2.4(ii)** (§3.2, p.85): `Tr(Da/a) = D(N a)/N a` (logarithmic-derivative trace–norm
-relation) for `a ≠ 0` in the finite Galois form used by the library. The Lean statement is
-`Algebra.trace F E (a' / a) = (Algebra.norm F a)' / Algebra.norm F a`; the proof maps both sides
-into `E`, rewrites norm as the product over automorphisms, and applies the logarithmic-derivative
-product rule. -/
+relation) for `a ≠ 0` in a finite separable extension. The Lean statement is
+`Algebra.trace F E (a' / a) = (Algebra.norm F a)' / Algebra.norm F a`; the proof maps both
+sides into a separable closure, rewrites norm as a product over embeddings, and applies the
+logarithmic-derivative product rule. -/
 abbrev thm_3_2_4_ii_norm := @trace_logDeriv_eq_logDeriv_norm
 
 /-- **Corollary 3.2.1** (§3.2, p.85), extension to `E`: if `E/K` is separable algebraic, then

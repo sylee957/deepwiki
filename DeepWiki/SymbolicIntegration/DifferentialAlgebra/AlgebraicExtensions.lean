@@ -5,10 +5,11 @@ import Mathlib.RingTheory.Etale.Field
 import Mathlib.RingTheory.Trace.Basic
 import Mathlib.RingTheory.Norm.Transitivity
 import Mathlib.FieldTheory.Galois.Basic
+import Mathlib.FieldTheory.IsSepClosed
 
 /-! # Algebraic differential extensions
 
-Étale and separable extension theory, canonical algebraic extensions, and finite Galois
+Étale and separable extension theory, canonical algebraic extensions, and finite separable
 trace/norm compatibility.
 -/
 
@@ -401,41 +402,155 @@ end Automorphism
 
 section TraceNorm
 
-/-- Trace commutes with derivation on a finite Galois differential extension. -/
+/-- Embeddings into a separably closed field repeat by the relative finite degree. -/
+theorem sum_embeddings_eq_finrank_mul_of_isSepClosed
+    {K L M T : Type*} [Field K] [Field L] [Field M] [Field T]
+    [Algebra K L] [Algebra K M] [Algebra L M] [IsScalarTower K L M]
+    [Algebra K T] [IsSepClosed T] [FiniteDimensional K M] [Algebra.IsSeparable K M]
+    (pb : PowerBasis K L) :
+    ∑ σ : M →ₐ[K] T, σ (algebraMap L M pb.gen) =
+      Module.finrank L M •
+        (@Finset.univ _ (PowerBasis.AlgHom.fintype pb)).sum fun σ : L →ₐ[K] T => σ pb.gen := by
+  haveI : FiniteDimensional L M := FiniteDimensional.right K L M
+  haveI : Algebra.IsSeparable L M := Algebra.isSeparable_tower_top_of_isSeparable K L M
+  letI : Fintype (L →ₐ[K] T) := PowerBasis.AlgHom.fintype pb
+  rw [Fintype.sum_equiv algHomEquivSigma (fun σ : M →ₐ[K] T => _)
+    (fun σ => σ.1 pb.gen), ← Finset.univ_sigma_univ, Finset.sum_sigma, ← Finset.sum_nsmul]
+  · refine Finset.sum_congr rfl fun σ _ => ?_
+    letI : Algebra L T := σ.toRingHom.toAlgebra
+    simp_rw [Finset.sum_const, Finset.card_univ,
+      ← AlgHom.card_of_splits L M T
+        (fun y => IsSepClosed.splits_codomain _ (Algebra.IsSeparable.isSeparable L y))]
+  · intro σ
+    simp only [algHomEquivSigma, Equiv.coe_fn_mk, AlgHom.restrictDomain, AlgHom.comp_apply,
+      IsScalarTower.coe_toAlgHom']
+
+/-- A trace is the sum of embeddings into a separably closed overfield. -/
+theorem trace_eq_sum_embeddings_of_isSepClosed
+    {K L T : Type*} [Field K] [Field L] [Field T]
+    [Algebra K L] [Algebra K T] [FiniteDimensional K L]
+    [Algebra.IsSeparable K L] [IsSepClosed T] (x : L) :
+    algebraMap K T (Algebra.trace K L x) = ∑ σ : L →ₐ[K] T, σ x := by
+  have hx := Algebra.IsSeparable.isIntegral K x
+  let pb := IntermediateField.adjoin.powerBasis hx
+  rw [trace_eq_trace_adjoin K x, Algebra.smul_def, map_mul,
+    ← IntermediateField.adjoin.powerBasis_gen hx,
+    trace_eq_sum_embeddings_gen T pb
+      (IsSepClosed.splits_codomain _ (Algebra.IsSeparable.isSeparable K _)),
+    ← Algebra.smul_def, algebraMap_smul]
+  · exact (sum_embeddings_eq_finrank_mul_of_isSepClosed pb).symm
+  · letI : Algebra.IsSeparable K (IntermediateField.adjoin K ({x} : Set L)) :=
+      Algebra.isSeparable_tower_bot_of_isSeparable K
+        (IntermediateField.adjoin K ({x} : Set L)) L
+    exact Algebra.IsSeparable.isSeparable K _
+
+/-- Embedding products into a separably closed field repeat by the relative finite degree. -/
+theorem prod_embeddings_eq_finrank_pow_of_isSepClosed
+    {K L M T : Type*} [Field K] [Field L] [Field M] [Field T]
+    [Algebra K L] [Algebra K M] [Algebra L M] [IsScalarTower K L M]
+    [Algebra K T] [IsSepClosed T] [FiniteDimensional K M] [Algebra.IsSeparable K M]
+    (pb : PowerBasis K L) :
+    ∏ σ : M →ₐ[K] T, σ (algebraMap L M pb.gen) =
+      ((@Finset.univ _ (PowerBasis.AlgHom.fintype pb)).prod
+        fun σ : L →ₐ[K] T => σ pb.gen) ^ Module.finrank L M := by
+  haveI : FiniteDimensional L M := FiniteDimensional.right K L M
+  haveI : Algebra.IsSeparable L M := Algebra.isSeparable_tower_top_of_isSeparable K L M
+  letI : Fintype (L →ₐ[K] T) := PowerBasis.AlgHom.fintype pb
+  rw [Fintype.prod_equiv algHomEquivSigma (fun σ : M →ₐ[K] T => _)
+    (fun σ => σ.1 pb.gen), ← Finset.univ_sigma_univ, Finset.prod_sigma, ← Finset.prod_pow]
+  · refine Finset.prod_congr rfl fun σ _ => ?_
+    letI : Algebra L T := σ.toRingHom.toAlgebra
+    change
+      (∏ _s : @AlgHom L M T _ _ _ _ σ.toRingHom.toAlgebra, σ pb.gen) =
+        σ pb.gen ^ Module.finrank L M
+    rw [Finset.prod_const]
+    congr 1
+    exact
+      AlgHom.card_of_splits L M T
+        (fun y => IsSepClosed.splits_codomain _ (Algebra.IsSeparable.isSeparable L y))
+  · intro σ
+    simp only [algHomEquivSigma, Equiv.coe_fn_mk, AlgHom.restrictDomain, AlgHom.comp_apply,
+      IsScalarTower.coe_toAlgHom']
+
+/-- A norm is the product of embeddings into a separably closed overfield. -/
+theorem norm_eq_prod_embeddings_of_isSepClosed
+    {K L T : Type*} [Field K] [Field L] [Field T]
+    [Algebra K L] [Algebra K T] [FiniteDimensional K L]
+    [Algebra.IsSeparable K L] [IsSepClosed T] (x : L) :
+    algebraMap K T (Algebra.norm K x) = ∏ σ : L →ₐ[K] T, σ x := by
+  have hx := Algebra.IsSeparable.isIntegral K x
+  rw [Algebra.norm_eq_norm_adjoin K x, map_pow,
+    ← IntermediateField.adjoin.powerBasis_gen hx,
+    Algebra.norm_eq_prod_embeddings_gen T (IntermediateField.adjoin.powerBasis hx)
+      (IsSepClosed.splits_codomain _ (Algebra.IsSeparable.isSeparable K _))]
+  · exact
+      (prod_embeddings_eq_finrank_pow_of_isSepClosed
+        (IntermediateField.adjoin.powerBasis hx)).symm
+  · letI : Algebra.IsSeparable K (IntermediateField.adjoin K ({x} : Set L)) :=
+      Algebra.isSeparable_tower_bot_of_isSeparable K
+        (IntermediateField.adjoin K ({x} : Set L)) L
+    exact Algebra.IsSeparable.isSeparable K _
+
+/-- Trace commutes with derivation on a finite separable differential extension. -/
 theorem deriv_trace_eq_trace_deriv {F E : Type*} [Field F] [Differential F] [Field E]
     [Differential E] [Algebra F E] [DifferentialAlgebra F E] [FiniteDimensional F E]
-    [IsGalois F E] (a : E) :
+    [Algebra.IsSeparable F E] (a : E) :
     (Algebra.trace F E a)′ = Algebra.trace F E (a′) := by
-  apply FaithfulSMul.algebraMap_injective F E
-  rw [← deriv_algebraMap, trace_eq_sum_automorphisms,
-    trace_eq_sum_automorphisms, map_sum]
+  let S := SeparableClosure F
+  letI : IsSepClosed S := IsSepClosure.sep_closed F
+  let ΔS : DifferentialExtension F S := differentialExtensionSeparable
+  letI : Differential S := ΔS.toDifferential
+  letI : DifferentialAlgebra F S := ΔS.differentialAlgebra
+  apply FaithfulSMul.algebraMap_injective F S
+  rw [← deriv_algebraMap, trace_eq_sum_embeddings_of_isSepClosed,
+    trace_eq_sum_embeddings_of_isSepClosed, map_sum]
   refine Finset.sum_congr rfl fun σ _ => ?_
-  rw [← algEquiv_comm_deriv σ a]
+  exact (Differential.algHom_deriv' σ σ.injective a).symm
 
 /-- The trace of `a' / a` is the logarithmic derivative of the norm of `a`. -/
 theorem trace_logDeriv_eq_logDeriv_norm {F E : Type*} [Field F] [Differential F] [Field E]
     [Differential E] [Algebra F E] [DifferentialAlgebra F E] [FiniteDimensional F E]
-    [IsGalois F E] (a : E) (ha : a ≠ 0) :
+    [Algebra.IsSeparable F E] (a : E) (ha : a ≠ 0) :
     Algebra.trace F E (a′ / a) = (Algebra.norm F a)′ / Algebra.norm F a := by
-  have hσne : ∀ σ : E ≃ₐ[F] E, σ a ≠ 0 := fun σ => by
-    rw [ne_eq, map_eq_zero_iff _ σ.injective]; exact ha
-  apply FaithfulSMul.algebraMap_injective F E
-  -- LHS: `algebraMap (Tr(a'/a)) = ∑_σ σ(a'/a) = ∑_σ (σ a)'/(σ a)`.
-  have hlhs : algebraMap F E (Algebra.trace F E (a′ / a)) = ∑ σ : E ≃ₐ[F] E, (σ a)′ / σ a := by
-    rw [trace_eq_sum_automorphisms]
+  let S := SeparableClosure F
+  letI : IsSepClosed S := IsSepClosure.sep_closed F
+  let ΔS : DifferentialExtension F S := differentialExtensionSeparable
+  letI : Differential S := ΔS.toDifferential
+  letI : DifferentialAlgebra F S := ΔS.differentialAlgebra
+  have hσne : ∀ σ : E →ₐ[F] S, σ a ≠ 0 := fun σ =>
+    (map_ne_zero σ).2 ha
+  apply FaithfulSMul.algebraMap_injective F S
+  have hlhs :
+      algebraMap F S (Algebra.trace F E (a′ / a)) =
+        ∑ σ : E →ₐ[F] S, (σ a)′ / σ a := by
+    rw [trace_eq_sum_embeddings_of_isSepClosed]
     refine Finset.sum_congr rfl fun σ _ => ?_
-    rw [map_div₀, algEquiv_comm_deriv σ a]
-  -- RHS: `algebraMap (D(N a)/N a) = logDeriv (algebraMap (N a)) = logDeriv (∏_σ σ a)`.
-  have hrhs : algebraMap F E ((Algebra.norm F a)′ / Algebra.norm F a)
-      = ∑ σ : E ≃ₐ[F] E, (σ a)′ / σ a := by
-    have hstep : Differential.logDeriv ((algebraMap F E) (Algebra.norm F a))
-        = ∑ σ : E ≃ₐ[F] E, (σ a)′ / σ a := by
-      rw [Algebra.norm_eq_prod_automorphisms,
-        Differential.logDeriv_prod _ Finset.univ (fun σ : E ≃ₐ[F] E => σ a) (fun σ _ => hσne σ)]
+    rw [map_div₀, Differential.algHom_deriv' σ σ.injective a]
+  have hrhs :
+      algebraMap F S ((Algebra.norm F a)′ / Algebra.norm F a) =
+        ∑ σ : E →ₐ[F] S, (σ a)′ / σ a := by
+    have hstep :
+        Differential.logDeriv (algebraMap F S (Algebra.norm F a)) =
+          ∑ σ : E →ₐ[F] S, (σ a)′ / σ a := by
+      rw [norm_eq_prod_embeddings_of_isSepClosed,
+        Differential.logDeriv_prod _ Finset.univ
+          (fun σ : E →ₐ[F] S => σ a) (fun σ _ => hσne σ)]
       rfl
     rw [map_div₀, ← deriv_algebraMap]
     exact hstep
   rw [hlhs, hrhs]
+
+example {F E : Type*} [Field F] [Differential F] [Field E]
+    [Differential E] [Algebra F E] [DifferentialAlgebra F E] [FiniteDimensional F E]
+    [Algebra.IsSeparable F E] (a : E) :
+    (Algebra.trace F E a)′ = Algebra.trace F E (a′) :=
+  deriv_trace_eq_trace_deriv a
+
+example {F E : Type*} [Field F] [Differential F] [Field E]
+    [Differential E] [Algebra F E] [DifferentialAlgebra F E] [FiniteDimensional F E]
+    [Algebra.IsSeparable F E] (a : E) (ha : a ≠ 0) :
+    Algebra.trace F E (a′ / a) = (Algebra.norm F a)′ / Algebra.norm F a :=
+  trace_logDeriv_eq_logDeriv_norm a ha
 
 end TraceNorm
 
