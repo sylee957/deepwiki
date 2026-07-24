@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.DifferentialAlgebra.Extensions
+import DeepWiki.SymbolicIntegration.DifferentialAlgebra.ConstantsSubfield
 import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
 
@@ -204,6 +204,36 @@ variable {F : Type*} [Field F] [Differential F]
 def linearDependentOverConst {n : ℕ} (y : Fin n → F) : Prop :=
   ∃ c : Fin n → F, (∀ j, (c j)′ = 0) ∧ c ≠ 0 ∧ ∑ j, c j * y j = 0
 
+/-- `linearDependentOverConst` is the negation of linear independence over the constants subfield. -/
+theorem linearIndependent_constantsSubfield_iff_not_linearDependentOverConst
+    {n : ℕ} (y : Fin n → F) :
+    LinearIndependent (constantsSubfield F) y ↔ ¬ linearDependentOverConst y := by
+  constructor
+  · intro h hdep
+    obtain ⟨c, hc, hcne, hsum⟩ := hdep
+    let d : Fin n → constantsSubfield F :=
+      fun i => ⟨c i, mem_constantsSubfield.mpr (hc i)⟩
+    have hdsum : ∑ i, d i • y i = 0 := by
+      change ∑ i, (d i : F) * y i = 0
+      simpa [d] using hsum
+    have hd : ∀ i, d i = 0 :=
+      Fintype.linearIndependent_iff.mp h d hdsum
+    apply hcne
+    funext i
+    exact congrArg Subtype.val (hd i)
+  · intro h
+    apply Fintype.linearIndependent_iff.mpr
+    intro d hsum i
+    by_contra hdi
+    apply h
+    refine ⟨fun j => d j, fun j => (d j).property, ?_, ?_⟩
+    · intro hd
+      apply hdi
+      apply Subtype.ext
+      exact congrFun hd i
+    · change ∑ i, (d i : F) * y i = 0 at hsum
+      exact hsum
+
 /-- A dependence after dropping one coordinate pads to a dependence of the whole family. -/
 theorem linearDependentOverConst_succAbove {n : ℕ} (y : Fin (n + 1) → F) (j₀ : Fin (n + 1))
     (h : linearDependentOverConst (fun i : Fin n => y (j₀.succAbove i))) :
@@ -321,6 +351,29 @@ theorem not_linearDependentOverConst_algebraMap {n : ℕ} [NeZero n] (y : Fin n 
   rw [← wronskian_ne_zero_iff_not_linearDependentOverConst] at h ⊢
   rw [wronskian_algebraMap]
   exact fun hcontra => h ((map_eq_zero (algebraMap F E)).mp hcontra)
+
+/-- Linear independence over constants is preserved by differential extensions. -/
+theorem linearIndependent_constantsSubfield_algebraMap
+    {ι : Type*} (y : ι → F) (h : LinearIndependent (constantsSubfield F) y) :
+    LinearIndependent (constantsSubfield E) (fun i => algebraMap F E (y i)) := by
+  rw [linearIndependent_iff_finset_linearIndependent] at h ⊢
+  intro s
+  by_cases hs : s.Nonempty
+  · letI : Nonempty s := Finset.nonempty_coe_sort.mpr hs
+    letI : NeZero (Fintype.card s) := ⟨Fintype.card_ne_zero⟩
+    let e := Fintype.equivFin s
+    let z : Fin (Fintype.card s) → F := fun i => y (e.symm i)
+    have hzF : LinearIndependent (constantsSubfield F) z := by
+      exact (h s).comp e.symm e.symm.injective
+    have hzF' : ¬ linearDependentOverConst z :=
+      (linearIndependent_constantsSubfield_iff_not_linearDependentOverConst z).mp hzF
+    have hzE' : ¬ linearDependentOverConst (fun i => algebraMap F E (z i)) :=
+      not_linearDependentOverConst_algebraMap z hzF'
+    have hzE : LinearIndependent (constantsSubfield E) (fun i => algebraMap F E (z i)) :=
+      (linearIndependent_constantsSubfield_iff_not_linearDependentOverConst _).mpr hzE'
+    simpa [e, z, Function.comp_def] using hzE.comp e e.injective
+  · rw [Finset.not_nonempty_iff_eq_empty.mp hs]
+    exact linearIndependent_empty_type
 
 end WronskianExtension
 

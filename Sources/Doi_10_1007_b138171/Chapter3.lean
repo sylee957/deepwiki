@@ -246,9 +246,10 @@ a constant. In Lean, `IsAlgebraic (constantsSubfield F) c` and
 `IsSeparable (constantsSubfield F) c` imply `c′ = 0`. -/
 abbrev lem_3_3_2_ii := @deriv_eq_zero_of_isAlgebraic_constantsSubfield_of_isSeparable
 
-/-- **Corollary 3.3.2** (§3.3, p.87): linear independence over the constants is preserved by a
-differential extension (the Wronskian commutes with `algebraMap`). -/
-abbrev cor_3_3_2 := @not_linearDependentOverConst_algebraMap
+/-- **Corollary 3.3.2** (§3.3, p.89): if a family `S → F` is linearly independent over
+`Const_D(F)`, its image in a differential extension `E/F` is linearly independent over
+`Const_Δ(E)`. A subset `S ⊆ F` is represented by its subtype family `S → F`. -/
+abbrev cor_3_3_2 := @linearIndependent_constantsSubfield_algebraMap
 
 /-- **Corollary 3.3.1** (§3.3, p.86), unique extension: a separable algebraic extension `E/F`
 admits a unique differential structure extending `D`. -/
