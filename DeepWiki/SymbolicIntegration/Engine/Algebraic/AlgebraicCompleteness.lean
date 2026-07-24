@@ -99,30 +99,8 @@ theorem engine_none_of_not_elementary {isTorsion elem : Prop} (p : ℕ) [Fact p.
 
 end Assembly
 
-/-! ## Restatements and axiom audit -/
+/-! ## Axiom audit -/
 
-/-! ### Restatements (anonymous `example`s) -/
-
-section Restatements
-
-open DeepWiki.SymbolicIntegration
-
--- ★ The decision-procedure equivalence: the engine emits a log term iff the integrand is elementary,
--- modulo the two named deep frontiers (the Liouville criterion + the good-reduction torsion decision).
-example (ρ : DenseFrac ℚ) (ρq : DensePoly ℚ) (g : ℕ) (D : DensePoly.MumfordDivisor ℚ)
-    {isTorsion elem : Prop} (p : ℕ) [Fact p.Prime]
-    (hres : AlgebraicCompletenessResidual ρq g D p isTorsion elem) :
-    (torsionLogTerm p ρ ρq g D).isSome = true ↔ elem :=
-  cIntegrateAlgebraicWf_complete_of_residual ρ ρq g D p hres
-
--- ★ The headline "none ⟹ not elementary" for the algebraic integrator's log part, modulo the frontiers.
-example (ρ : DenseFrac ℚ) (ρq : DensePoly ℚ) (g : ℕ) (D : DensePoly.MumfordDivisor ℚ)
-    {isTorsion elem : Prop} (p : ℕ) [Fact p.Prime]
-    (hres : AlgebraicCompletenessResidual ρq g D p isTorsion elem) (hne : ¬ elem) :
-    (torsionLogTerm p ρ ρq g D).isNone = true :=
-  engine_none_of_not_elementary ρ ρq g D p hres hne
-
-end Restatements
 
 /-! ### Axiom audit -/
 

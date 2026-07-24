@@ -67,22 +67,5 @@ theorem isAlgebraicElementary_finiteDimensional_discharge
 
 end DischargeRealFrontier
 
-/-! ### Restatements -/
-
-section Restatements
-
--- The algebraic-completeness frontier follows from Liouville descent.
-example (F : Type*) [Field F] [Differential F] [CharZero F] :
-    DeepWiki.SymbolicIntegration.AlgebraicCompleteness.AlgebraicLiouvilleFrontier F :=
-  DeepWiki.SymbolicIntegration.AlgebraicCompleteness.algebraicLiouville_single_extension F
-
--- Finite-dimensional extensions preserve non-elementarity in the Weak Liouville form.
-example (F : Type*) [Field F] [Differential F] [CharZero F]
-    (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K]
-    [FiniteDimensional F K] (f : F) (h : ¬ HasWeakLiouvilleForm F F f) :
-    ¬ HasWeakLiouvilleForm F K f :=
-  algebraicLiouvilleFrontier_finiteDimensional F K f h
-
-end Restatements
 
 end DeepWiki.SymbolicIntegration.LiouvilleStructure

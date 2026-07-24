@@ -294,22 +294,6 @@ theorem hboundWf_of_cancellationResidualWf (Dt fnum fden gnum gden : DensePoly �
 
 end WiringWf
 
-/-! ### Restatement against `RischDEInnerCompletenessWf.hbound`'s field type (anonymous `example`) -/
-
--- The Wf residual has exactly `RischDEInnerCompletenessWf.hbound`'s field shape.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
-    (Dt fnum fden gnum gden : DensePoly α)
-    (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true)
-    (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRischDE Dt fnum fden gnum gden).isSome = true)
-    (hres : RdeBoundCancellationResidualWf Dt fnum fden gnum gden) :
-    RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
-  { hnorm := hnorm
-    hbound := hboundWf_of_cancellationResidualWf Dt fnum fden gnum gden hres
-    hsolve := hsolve }
-
 /-! ## Operational witness: the degree bound on a concrete primitive RDE -/
 
 section Witness

@@ -275,19 +275,4 @@ theorem hermiteReduce_residual_correct_uncond (A D gnum gden Dstar : P ℚ)
   exact hermiteReduce_residual_correct_of_split A D gnum gden Dstar hden
     hresD hg2
 
-open scoped Differential in
-example (A D gnum gden Dstar : P ℚ)
-    (hD : CPoly.toPoly D ≠ 0) (hgden : CPoly.toPoly gden ≠ 0)
-    (hDstar : CPoly.toPoly Dstar ≠ 0)
-    (hcomp : HermiteResComp A D gnum gden Dstar) :
-    algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly D)
-      = (ratFuncOfPair (gnum, gden))′
-        + algebraMap ℚ[X] (RatFunc ℚ)
-            (CPoly.toPoly (CPolyEuclidean.div
-              (CPolyEngine.mul (CPolyEngine.sub (CPolyEngine.mul A (CPolyEngine.mul gden gden))
-                  (CPolyEngine.mul D (CPolyEngine.sub (CPolyEngine.mul (CPolyEngine.deriv gnum) gden) (CPolyEngine.mul gnum (CPolyEngine.deriv gden))))) Dstar)
-              (CPolyEngine.mul D (CPolyEngine.mul gden gden))))
-          / algebraMap ℚ[X] (RatFunc ℚ) (CPoly.toPoly Dstar) :=
-  hermiteReduce_residual_correct_uncond A D gnum gden Dstar ⟨hD, hgden, hDstar⟩ hcomp
-
 end DeepWiki.SymbolicIntegration.Compute

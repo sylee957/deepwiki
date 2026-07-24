@@ -229,22 +229,10 @@ theorem isSimilar_gcd_right_of_euclideanPRS_two_eq_zero {K : Type*} [Field K] [G
     (associated_of_dvd_dvd (gcd_dvd_right D E) (dvd_gcd hED dvd_rfl))
 
 -- One-step termination: `R₂ = 0` ⟹ `E ∣ D` and `gcd(D, E) ~ E` (the LRT `k = 1` boundary).
-example {K : Type*} [Field K] (D E : K[X]) (hE : E ≠ 0) (h0 : euclideanPRS D E 2 = 0) : E ∣ D :=
-  dvd_of_euclideanPRS_two_eq_zero D E hE h0
-
-example {K : Type*} [Field K] [GCDMonoid K[X]] (D E : K[X]) (hE : E ≠ 0)
-    (h0 : euclideanPRS D E 2 = 0) : IsSimilar (gcd D E) E :=
-  isSimilar_gcd_right_of_euclideanPRS_two_eq_zero D E hE h0
-
 /-- When `gcd(C, E)` has full degree `deg C`, it is similar to `C`. -/
 theorem isSimilar_gcd_left_of_natDegree_eq {K : Type*} [Field K] [GCDMonoid K[X]] {C E : K[X]}
     (hC : C ≠ 0) (hdeg : (gcd C E).natDegree = C.natDegree) : IsSimilar (gcd C E) C :=
   isSimilar_of_dvd_of_natDegree_eq (gcd_dvd_left C E) hC hdeg
 
 -- At the full-multiplicity LRT boundary, the gcd `gcd(D, A − a·D')` is similar to `D`.
-example {K : Type*} [Field K] [GCDMonoid K[X]] (A D : K[X]) (a : K) (hD : D ≠ 0)
-    (hn : (gcd D (A - C a * derivative D)).natDegree = D.natDegree) :
-    IsSimilar (gcd D (A - C a * derivative D)) D :=
-  isSimilar_gcd_left_of_natDegree_eq hD hn
-
 end DeepWiki.SymbolicIntegration

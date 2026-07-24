@@ -151,12 +151,6 @@ theorem logToAtanAux_correct (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) =
     atanDerivSum (logToAtanAux φ fuel A B) = i * imagLog φ i A B :=
   isLogToAtanRun_correct hi hφneg hrun
 
-example (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) = -φ p)
-    {A B : K[X]} {L : List R} (hrun : IsLogToAtanRun φ i A B L) :
-    (L.map fun P => 2 * (P′ / (1 + P ^ 2))).sum
-      = i * Differential.logDeriv ((φ A + i * φ B) / (φ A - i * φ B)) :=
-  isLogToAtanRun_correct hi hφneg hrun
-
 end LogToAtan
 
 end DeepWiki.SymbolicIntegration

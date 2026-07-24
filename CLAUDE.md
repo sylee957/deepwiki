@@ -80,8 +80,10 @@ When the user posts a capture/screenshot of a book passage or points at PDF page
    the math orientation, gotchas, docstring, and naming/style conventions below. Mind the
    numeric-vs-dioid order inversion when transcribing inequalities.
 4. **Gate** with `scripts/check.sh` (warning-/sorry-free).
-5. **Restate** each new theorem as an anonymous `example` with its expected type against
-   the book's wording — "it compiled" ≠ "it says the right thing".
+5. **Check source fidelity** by elaborating the expected type against the book's wording
+   while developing. Do not retain a thin anonymous `example` whose proof merely forwards
+   to the named theorem; keep an `example` only when it adds a substantive computation,
+   elaboration regression, or worked use case.
 6. **Catalog** the book item in `Sources/<slug>/Chapter*.lean` (alias/abbrev + §/page
    docstring). The catalog file must `import` the chapter that defines the aliased
    declaration, or the build fails. Keep the catalog a **complete subtractive coverage map**

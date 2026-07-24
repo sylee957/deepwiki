@@ -165,23 +165,8 @@ theorem weakLiouville_of_expResidual (hexp : ExponentialLayerResidual F)
 
 end ExpResidual
 
-/-! ### Restatements and axiom audit -/
+/-! ### Axiom audit -/
 
-section Restatements
-
--- Weak Liouville descent: a tower derivative whose derivative lies in the base has base form.
-example (F L : Type*) [Field F] [Field L] [Differential F] [Differential L] [Algebra F L]
-    [DifferentialAlgebra F L] [IsLiouville F L] (a : F) (g : L) (h : (algebraMap F L a) = g′) :
-    HasWeakLiouvilleForm F F a :=
-  weakLiouville_of_isLiouville F L a g h
-
--- Finite-dimensional algebraic extensions satisfy the Weak Liouville form.
-example (F L : Type*) [Field F] [Field L] [CharZero F] [Differential F] [Differential L]
-    [Algebra F L] [DifferentialAlgebra F L] [FiniteDimensional F L] (a : F) (g : L)
-    (h : (algebraMap F L a) = g′) : HasWeakLiouvilleForm F F a :=
-  weakLiouville_finiteDimensional F L a g h
-
-end Restatements
 
 #print axioms weakLiouville_descend
 #print axioms weakLiouville_of_isLiouville

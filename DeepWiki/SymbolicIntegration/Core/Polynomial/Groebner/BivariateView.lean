@@ -243,50 +243,6 @@ theorem lex_degree_apply_one {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} 
     have hcons1 : (Finsupp.cons (δ 0) mon) 1 = mon 0 := by rw [hsucc, Finsupp.cons_succ]
     rwa [hcons1] at hmain
 
--- Restatements against the intended wording.
-example {d d' : Fin 2 →₀ ℕ} (h : d 1 = d' 1) : d ≤ d' ∨ d' ≤ d :=
-  finsupp_fin_two_le_or_le_of_apply_eq h
-
-example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
-    (MonomialOrder.lex.degree f) 0 = degreeOf 0 f :=
-  lex_degree_apply_zero hf
-
-example {K : Type*} [Field K] {bg R : MvPolynomial (Fin 2) K}
-    (hbg : bg ≠ 0) (hR : R ≠ 0)
-    (hle : MonomialOrder.lex.degree bg ≼[MonomialOrder.lex] MonomialOrder.lex.degree R) :
-    degreeOf 0 bg ≤ degreeOf 0 R :=
-  degreeOf_le_of_lex_degree_le hbg hR hle
-
-example {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
-    (lazardView f).natDegree = degreeOf 0 f :=
-  natDegree_lazardView f
-
-example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf0 : degreeOf 0 f = 0) :
-    Polynomial.C (leadingYCoeff f) ∣ lazardView f :=
-  C_dvd_lazardView_of_degreeOf_zero hf0
-
-example {K : Type*} [Field K] {P : Polynomial (MvPolynomial (Fin 1) K)}
-    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
-    (hdvd : ∀ b ∈ s, P ∣ lazardView b) :
-    P ∣ lazardView (∑ b ∈ s, h b * b) :=
-  dvd_lazardView_sum hdvd
-
-example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
-    leadingYCoeff f ≠ 0 ↔ f ≠ 0 :=
-  leadingYCoeff_ne_zero
-
-example {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
-    leadingYCoeff (f * g) = leadingYCoeff f * leadingYCoeff g :=
-  leadingYCoeff_mul f g
-
-example {K : Type*} [Field K] {g b : MvPolynomial (Fin 2) K}
-    (hne : g * b ≠ 0) : degreeOf 0 b ≤ degreeOf 0 (g * b) :=
-  degreeOf_le_degreeOf_mul hne
-
-example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
-    (MonomialOrder.lex.degree f) 1 = degreeOf 0 (leadingYCoeff f) :=
-  lex_degree_apply_one hf
-
 /-! ## The `y`-shift toolbox
 
 The `y`-shift `f ↦ y^k·f` aligns `y`-degrees: under the `K[x][y]` view it multiplies `lazardView`
@@ -320,24 +276,5 @@ theorem leadingYCoeff_yShift_eq {K : Type*} [Field K] {fi fi1 : MvPolynomial (Fi
       leadingYCoeff (X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi) = leadingYCoeff fi :=
   ⟨by rw [degreeOf_X_pow_mul _ hfi, Nat.add_sub_cancel' hd],
     leadingYCoeff_X_pow_mul _ fi⟩
-
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
-    (hB : IsReducedGroebnerBasis m I B) {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B)
-    (hne : b ≠ b') : ¬ (m.degree b' ≤ m.degree b) :=
-  hB.leadingMonomial_not_le hb hb' hne
-
-example {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
-    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
-    ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → (m.degree b) 1 ≠ (m.degree b') 1 :=
-  distinct_leadingYDegree_of_isReducedGroebnerBasis hB
-
-example {K : Type*} [Field K] (k : ℕ) {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
-    degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k :=
-  degreeOf_X_pow_mul k hf
-
-example {K : Type*} [Field K] (k : ℕ) (f : MvPolynomial (Fin 2) K) :
-    leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f :=
-  leadingYCoeff_X_pow_mul k f
 
 end DeepWiki.SymbolicIntegration

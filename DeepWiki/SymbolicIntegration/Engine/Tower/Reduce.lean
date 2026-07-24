@@ -79,10 +79,6 @@ example :
     CPolyEngine.cdeg (CFrac.num (CFrac.reduce sparseSwellFrac)) = 1 := by
   ccompute
 
-example :
-    CFrac.toRatFunc (CFrac.reduce sparseSwellFrac) = CFrac.toRatFunc sparseSwellFrac :=
-  CFrac.toRatFunc_reduce sparseSwellFrac
-
 end CFrac
 
 /-! ### Residual-solver example: `CFrac.reduce` exposes a constant residual

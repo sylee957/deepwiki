@@ -178,72 +178,6 @@ The pieces above assemble the full multi-step subresultant-PRS chain agreement i
 bridge both discharged structurally, and the concrete `subresPRS` data supplied by the `goState` section
 below. -/
 
--- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·DensePoly.toPoly(bdivC p c) = DensePoly.toPoly p`
--- when every x-coefficient divides exactly.
-example (p : GBPolyCore ℚ) (c : DensePoly ℚ) (hc : cnorm c ≠ [])
-    (hrem : ∀ a ∈ p, toPoly (CPolyEuclidean.mod a c) = 0) :
-    Polynomial.C (toPoly c) * DensePoly.toPoly (bdivC p c) = DensePoly.toPoly p :=
-  toBPoly_bdivC_exact p c hc hrem
-
--- Restatement: the LRT subresultant is ℚ[t]-similar to the next divided PRS pair's subresultant.
-example (fuel : ℕ) (A D β : DensePoly ℚ) (j : ℕ) (s : GBPolyCore ℚ) (c : DensePoly ℚ)
-    (hsc : Polynomial.C (toPoly c) * DensePoly.toPoly (liftCtoBPoly D)
-        = DensePoly.toPoly s * DensePoly.toPoly (bArgAmtD' A D)
-          + DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)))
-    (hβ : cnorm β ≠ [])
-    (hdiv : ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (CPolyEuclidean.mod a β) = 0)
-    (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
-    (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
-    (hB : (DensePoly.toPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
-    (hQ : (DensePoly.toPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
-    IsSimilar (lrtSubresultant (toPoly A) (toPoly D) j)
-      (subresultant (DensePoly.toPoly (bArgAmtD' A D))
-        (DensePoly.toPoly (bdivC (GBPolyCore.gbpsremainderCore fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
-        ((toPoly D).natDegree - 1) (toPoly D).natDegree j) :=
-  isSimilar_lrtSubresultant_subresultant_bdivC fuel A D β j s c ⟨hsc, hβ, hdiv⟩
-    hc0 hβ0 hjm hjn hB hQ
-
--- Restatement: the WHOLE computable PRS chain telescopes — `Sⱼ(G 0, G 1) ~ Sⱼ(G m, G (m+1))` for any `m`.
-example (fuel : ℕ) (G : ℕ → GBPolyCore ℚ) (bt : ℕ → DensePoly ℚ) (s : ℕ → GBPolyCore ℚ) (c : ℕ → DensePoly ℚ) (j m : ℕ)
-    (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * DensePoly.toPoly (G l)
-        = DensePoly.toPoly (s l) * DensePoly.toPoly (G (l + 1)) + DensePoly.toPoly (GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1))))
-    (hβcn : ∀ l < m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l < m, ∀ a ∈ GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1)), toPoly (CPolyEuclidean.mod a (bt l)) = 0)
-    (hG2 : ∀ l < m, G (l + 2) = bdivC (GBPolyCore.gbpsremainderCore fuel (G l) (G (l + 1))) (bt l))
-    (hc0 : ∀ l < m, toPoly (c l) ≠ 0) (hβ0 : ∀ l < m, toPoly (bt l) ≠ 0)
-    (hlc : ∀ l < m, (DensePoly.toPoly (G (l + 1))).coeff (DensePoly.toPoly (G (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l < m, (DensePoly.toPoly (G (l + 2))).natDegree < (DensePoly.toPoly (G (l + 1))).natDegree)
-    (hj : ∀ l < m, j < (DensePoly.toPoly (G (l + 2))).natDegree)
-    (hQ : ∀ l < m, (DensePoly.toPoly (s l)).natDegree + (DensePoly.toPoly (G (l + 1))).natDegree
-      ≤ (DensePoly.toPoly (G l)).natDegree) :
-    IsSimilar
-      (subresultant (DensePoly.toPoly (G 0)) (DensePoly.toPoly (G 1))
-        (DensePoly.toPoly (G 0)).natDegree (DensePoly.toPoly (G 1)).natDegree j)
-      (subresultant (DensePoly.toPoly (G m)) (DensePoly.toPoly (G (m + 1)))
-        (DensePoly.toPoly (G m)).natDegree (DensePoly.toPoly (G (m + 1))).natDegree j) :=
-  isSimilar_subresPRS_telescope fuel G bt s c j m hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hj hQ
-
--- Restatement: FACT 1 — the degree-`j` filter identity. A singleton degree-`j` filter of `subresPRS`
--- makes `bsubresultantGcd` read as that single chain element `G (m+2)` (under `DensePoly.toPoly`).
-example (fuel : ℕ) (P Q : GBPolyCore ℚ) (G : ℕ → GBPolyCore ℚ) (m : ℕ)
-    (hfil : (subresPRS fuel P Q).filter
-        (fun R => decide (DensePoly.cdeg R = (DensePoly.toPoly (G (m + 2))).natDegree ∧ ¬ DensePoly.cisZero R)) = [G (m + 2)]) :
-    DensePoly.toPoly (bsubresultantGcd fuel (DensePoly.toPoly (G (m + 2))).natDegree P Q) = DensePoly.toPoly (G (m + 2)) :=
-  toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel P Q G m hfil
-
--- Restatement: FACT 2 — the `bmonicXmodR` mod-`R` unit bridge. Over any `φ : ℚ[X] →+* S` killing
--- `toPoly R`, `bmonicXmodR`'s `Φ`-image is a residue-ring UNIT (`η · η' = 1`) times `DensePoly.toPoly p`'s.
-example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (R : DensePoly ℚ) (p : GBPolyCore ℚ)
-    (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
-    (hg : toPoly (CPolyEuclidean.gcdExt (GBPolyCore.gblcCore (bredR R p)) R).1 = Polynomial.C u)
-    (hpz : ¬ DensePoly.cisZero (bredR R p) = true) :
-    (Polynomial.mapRingHom φ) (DensePoly.toPoly (bmonicXmodR R p))
-        = Polynomial.C (φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p)))))
-          * (Polynomial.mapRingHom φ) (DensePoly.toPoly p)
-      ∧ φ (toPoly (cinvMod R (GBPolyCore.gblcCore (bredR R p))))
-          * φ (toPoly (GBPolyCore.gblcCore (bredR R p))) = 1 :=
-  mapRingHom_toPolyG_bmonicXmodR φ R p hR hφR hu hg hpz
-
 /-! ### Instantiating the abstract chain from the concrete `subresPRS.go`
 Mirrors the internal `subresPRS.go` recurrence as a top-level state machine `goState`, so the abstract
 chain data `G`/`bt`/`s`/`c` and its side-conditions can be supplied from the real `subresPRS fuel P Q`. -/
@@ -621,25 +555,6 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
     hRcn hφR (chainG_zero fuel (liftCtoBPoly D) (bArgAmtD' A D))
     (chainG_one fuel (liftCtoBPoly D) (bArgAmtD' A D)) hd0 hd1
     hchain hfilt hprim hne hu hgu hpz
-
--- Restatement: the divided-PRS recurrence `hG2` holds DEFINITIONALLY for the concrete `subresPRS`
--- chain element `chain` and β-divisor `chainBt` (no list/recurrence plumbing).
-example (fuel : ℕ) (P Q : GBPolyCore ℚ) (l : ℕ) :
-    chain fuel P Q (l + 2)
-      = bdivC (GBPolyCore.gbpsremainderCore fuel (chain fuel P Q l) (chain fuel P Q (l + 1)))
-          (chainBt fuel P Q l) :=
-  chain_hG2 fuel P Q l
-
--- Restatement: the degree-`j` filter of the REAL `subresPRS` returns the chain's degree-`j` element —
--- the singleton-filter fact `hfilt` DISCHARGED from strict `DensePoly.cdeg` decrease (no hypothesis taken).
-example (fuel : ℕ) (P Q : GBPolyCore ℚ) (m : ℕ) (hfo : m + 2 + 1 < fuel)
-    (hnz : ∀ i ≤ m + 2, ¬ DensePoly.cisZero (chain fuel P Q i) = true)
-    (hzN : DensePoly.cisZero (chain fuel P Q (m + 2 + 1)) = true)
-    (hstrict : ∀ i < m + 2, DensePoly.cdeg (chain fuel P Q (i + 1)) < DensePoly.cdeg (chain fuel P Q i)) :
-    DensePoly.toPoly (bsubresultantGcd fuel (DensePoly.toPoly (chain fuel P Q (m + 2))).natDegree P Q)
-      = DensePoly.toPoly (chain fuel P Q (m + 2)) :=
-  chain_hfilt fuel P Q m hfo hnz hzN hstrict
-
 
 /-! ### The `AdjoinRoot.mk ↔ eval-at-root` bridge for `lrtSubresultant` -/
 

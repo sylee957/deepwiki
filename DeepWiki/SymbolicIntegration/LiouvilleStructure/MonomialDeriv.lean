@@ -100,16 +100,8 @@ lemma natDegree_expMonomialDeriv_le (c : K) (p : K[X]) :
   rw [coeff_expMonomialDeriv, coeff_eq_zero_of_natDegree_lt hi]
   simp
 
-/-! ## Restatements and axiom audit -/
+/-! ## Axiom audit -/
 
-section Restatements
-
--- For log monomials, the top coefficient sees only the base derivation.
-example (K : Type*) [Field K] [Differential K] (c : K) (p : K[X]) :
-    (logMonomialDeriv c p).coeff p.natDegree = (p.leadingCoeff)′ :=
-  coeff_natDegree_logMonomialDeriv c p
-
-end Restatements
 
 #print axioms coeff_natDegree_logMonomialDeriv
 #print axioms coeff_natDegree_expMonomialDeriv

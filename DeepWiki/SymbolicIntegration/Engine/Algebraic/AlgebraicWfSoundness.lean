@@ -126,67 +126,7 @@ theorem afIntegrateAlgebraicWf_isGeneralRationalIntegralWf
   rw [hget]
   exact DensePoly.isGeneralRationalIntegralWf_of_roundtrip f p.1 ratIntegrand hcheck
 
-/-! ## Restatements and axiom audit -/
-
-/-! ### Restatements (anonymous `example`s) -/
-
--- ★ RADICAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free radical integrator's output
--- differentiates to the integrand — `D(F) = integrand` in `K[X]`, from the engine round-trip certificate.
-example (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ))
-    (c : DenseFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ) (integrand : RadElem (DenseFrac ℚ))
-    (hrt : DensePoly.cisZero
-      (DensePoly.csub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
-      = true) :
-    DensePoly.toPoly (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
-      = DensePoly.toPoly integrand :=
-  cIntegrateAlgebraicWf_sound ρ R B residual c D degBound integrand hrt
-
--- ★ GENERAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free general integrator's
--- rational part differentiates to the rational integrand — `D(v) = ratIntegrand`, from the engine check.
-example (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ))
-    (p : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
-    (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
-    (hcheck : DensePoly.cisZero (DensePoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
-    DensePoly.toPoly (afDerivWf f
-        ((afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand).get
-          (by rw [hrun]; exact rfl)).1)
-      = DensePoly.toPoly ratIntegrand :=
-  afIntegrateAlgebraicWf_sound f basis degBound ratIntegrand logIntegrand p hrun hcheck
-
--- ★ GENERAL CAPSTONE predicate form: the fuel-free general integrator's rational part is an
--- `IsGeneralRationalIntegralWf` witness.
-example (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ))
-    (p : DensePoly (DenseFrac ℚ) × DensePoly (DenseFrac ℚ))
-    (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
-    (hcheck : DensePoly.cisZero (DensePoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
-    DensePoly.IsGeneralRationalIntegralWf f ratIntegrand
-      ((afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand).get
-        (by rw [hrun]; exact rfl)).1 :=
-  afIntegrateAlgebraicWf_isGeneralRationalIntegralWf f basis degBound ratIntegrand logIntegrand p hrun hcheck
-
 end SelectedLinearSolve
-
--- The cross-multiplied radical `IsAlgebraicIntegral` for the literal output (Form A): the proven
--- telescoping + partial fraction, the split from the round-trip.
-example (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ))
-    (c : DenseFrac ℚ) (D : DensePoly ℚ) (degBound : ℕ)
-    (f ratPart logPart commonDenomQ : RadElem (DenseFrac ℚ)) (cofs : List (RadElem (DenseFrac ℚ)))
-    (hrat : Ideal.Quotient.mk (radIdeal 2 ρ)
-          (DensePoly.toPoly (radMul 2 ρ
-            (radDeriv 2 ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound).ratPart) commonDenomQ))
-        = Ideal.Quotient.mk (radIdeal 2 ρ) (DensePoly.toPoly (radMul 2 ρ ratPart commonDenomQ)))
-    (hlog : RadElem.IsRadicalLogIntegral 2 ρ logPart commonDenomQ
-      (cIntegrateAlgebraicWf ρ R B residual c D degBound).logTerms cofs)
-    (hsplit : Ideal.Quotient.mk (radIdeal 2 ρ) (DensePoly.toPoly (radMul 2 ρ ratPart commonDenomQ))
-        + Ideal.Quotient.mk (radIdeal 2 ρ) (DensePoly.toPoly (radMul 2 ρ logPart commonDenomQ))
-      = Ideal.Quotient.mk (radIdeal 2 ρ) (DensePoly.toPoly (radMul 2 ρ f commonDenomQ))) :
-    RadElem.IsAlgebraicIntegral 2 ρ f
-      (cIntegrateAlgebraicWf ρ R B residual c D degBound).ratPart commonDenomQ
-      (cIntegrateAlgebraicWf ρ R B residual c D degBound).logTerms cofs :=
-  cIntegrateAlgebraicWf_isAlgebraicIntegral ρ R B residual c D degBound f ratPart logPart commonDenomQ cofs
-    hrat hlog hsplit
 
 /-! ### Axiom audit -/
 

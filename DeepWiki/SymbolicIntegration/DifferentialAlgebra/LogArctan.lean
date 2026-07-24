@@ -66,9 +66,4 @@ theorem deriv_log_arctan_combination_eq_zero {i u v t₁ t₂ : E} (hi : i ^ 2 =
 
 end LogArctan
 
-example {E : Type*} [Field E] [Differential E] [CharZero E] {i u v t₁ t₂ : E} (hi : i ^ 2 = -1)
-    (hu : u ^ 2 + 1 ≠ 0) (hv : v = (u + i) / (u - i)) (ht₁ : t₁′ = v′ / v)
-    (ht₂ : t₂′ = u′ / (1 + u ^ 2)) : (t₁ * i - 2 * t₂)′ = 0 :=
-  deriv_log_arctan_combination_eq_zero hi hu hv ht₁ ht₂
-
 end DeepWiki.SymbolicIntegration

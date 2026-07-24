@@ -70,13 +70,6 @@ theorem leadingCoeff_lrtSubresultant_eval_ne_zero
 
 open scoped Classical in
 -- The `i`-th principal subresultant coefficient is nonzero at a multiplicity-`i` residue (`i < deg D`).
-example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
-    (ha : (rtResultant A D).IsRoot a)
-    (hi : (rtResultant A D).rootMultiplicity a < D.natDegree) :
-    ((lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map
-        (Polynomial.evalRingHom a)).coeff ((rtResultant A D).rootMultiplicity a) ≠ 0 :=
-  leadingCoeff_lrtSubresultant_eval_ne_zero A D hD hA a ha hi
-
 /-- The `i`-th principal subresultant coefficient `sᵢ ∈ K[t]`: the leading `x`-coefficient
 `(lrtSubresultant A D i).coeff i` of the `i`-th LRT subresultant, viewed as a polynomial in `t`. Its
 specialization at `a` is the top coefficient of the specialized subresultant
@@ -137,10 +130,6 @@ theorem isCoprime_lrtPsc_lrtQ
 
 open scoped Classical in
 -- `sᵢ` is a unit in `K[t]/(Qᵢ)` (coprime to `Qᵢ`) for monic LRT log normalization.
-example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (i : ℕ) (hi : i < D.natDegree) :
-    IsCoprime (lrtPsc A D i) (lrtQ A D i) :=
-  isCoprime_lrtPsc_lrtQ A D hD hA i hi
-
 /-! ## The monic modification: replacing each log argument by its monic-in-`x` normalization -/
 
 open scoped Classical in
@@ -212,18 +201,5 @@ theorem logDeriv_monicLrtLog_eq (A D : K[X]) (hD : D.Separable) (hA : A.natDegre
   -- factor `S = C (leadingCoeff S) · monicLrtLog`, then kill the constant under `logDeriv`
   rw [hS, lrtSubresultant_eval_eq_psc_mul_monicLrtLog A D a i, ← hS]
   exact logDeriv_algebraMap_C_mul_eq S.leadingCoeff hlc (monicLrtLog A D i a) hmne
-
-open scoped Differential in
-open scoped Classical in
--- The polynomials inside the LRT logarithms can be made monic in `x` with no
--- change to the integral — `logDeriv` of the specialized subresultant equals that of its monic form.
-example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
-    (ha : (rtResultant A D).IsRoot a)
-    (hi : (rtResultant A D).rootMultiplicity a < D.natDegree) :
-    Differential.logDeriv (algebraMap K[X] (RatFunc K)
-        ((lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map (Polynomial.evalRingHom a)))
-      = Differential.logDeriv (algebraMap K[X] (RatFunc K)
-          (monicLrtLog A D ((rtResultant A D).rootMultiplicity a) a)) :=
-  logDeriv_monicLrtLog_eq A D hD hA a ha hi
 
 end DeepWiki.SymbolicIntegration

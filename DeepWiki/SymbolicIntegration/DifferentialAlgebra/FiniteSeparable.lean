@@ -291,18 +291,6 @@ noncomputable def ofFiniteOfCharZero
     SeparablePowerBasisPresentation F E :=
   ofFiniteOfSeparable F E
 
-noncomputable example
-    (F E : Type*) [Field F] [Field E] [Algebra F E]
-    [FiniteDimensional F E] [Algebra.IsSeparable F E] :
-    SeparablePowerBasisPresentation F E :=
-  ofFiniteOfSeparable F E
-
-noncomputable example
-    (F E : Type*) [Field F] [Field E] [Algebra F E]
-    [CharZero F] [FiniteDimensional F E] :
-    SeparablePowerBasisPresentation F E :=
-  ofFiniteOfCharZero F E
-
 variable {F E : Type*} [Field F] [Differential F] [Field E] [Algebra F E]
 
 /-- Apply the base derivation to every power-basis coordinate. -/
@@ -927,11 +915,5 @@ theorem existsUnique_differentialExtension
     S.extensionDifferential_unique⟩
 
 end SeparablePowerBasisPresentation
-
-example
-    {F E : Type*} [Field F] [Differential F] [Field E] [Algebra F E]
-    (S : SeparablePowerBasisPresentation F E) :
-    ∃! Δ : Differential E, IsDifferentialExtension F E Δ :=
-  S.existsUnique_differentialExtension
 
 end DeepWiki.SymbolicIntegration

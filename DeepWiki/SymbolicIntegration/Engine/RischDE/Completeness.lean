@@ -120,28 +120,6 @@ theorem crischDESolveSoundWf_some_of_stages (f g ytilde : DenseFrac β)
           (CFrac.num f) (CFrac.den f))))) :=
   (crischDESolveSoundWf_some_iff f g _).mpr ⟨hq, hck, ytilde, hinner, rfl⟩
 
-/-! ### Restatement against the intended wording (anonymous `example`) -/
-
-example (f g ytilde : DenseFrac β)
-    (hq : DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-      (CFrac.num f) (CFrac.den f))
-        = false)
-    (hck : CFrac.canonNormalizedGate (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-          (CFrac.num f) (CFrac.den f))))
-        = true)
-    (hinner : crischDERawSolveWf
-        (CFrac.reduce (weakNormalizedF f
-          (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-            (CFrac.num f) (CFrac.den f)))))
-        (mul (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-          (CFrac.num f) (CFrac.den f))) g)
-        = some ytilde) :
-    crischDESolveSoundWf f g
-      = some (mul ytilde (inv (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-          (CFrac.num f) (CFrac.den f))))) :=
-  crischDESolveSoundWf_some_of_stages f g ytilde hq hck hinner
-
 end StructuralWf
 
 /-! ## Base-field completeness over the constants `ℚ` -/
@@ -317,21 +295,6 @@ theorem crischDERawSolveWf_isSome_of_innerCompletenessWf (ftilde gtilde : DenseF
       (CFrac.num ftilde) (CFrac.den ftilde) (CFrac.num gtilde) (CFrac.den gtilde) hinner hsol)
     hden
 
-/-! ### Restatement against the intended wording (anonymous `example`) -/
-
-example (ftilde gtilde : DenseFrac β)
-    (hinner : RischDEInnerCompletenessWf ([CCommRing.one] : DensePoly β)
-      (CFrac.num ftilde) (CFrac.den ftilde) (CFrac.num gtilde) (CFrac.den gtilde))
-    (hsol : ∃ ynum yden,
-      IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) (CFrac.num ftilde) (CFrac.den ftilde)
-        (CFrac.num gtilde) (CFrac.den gtilde) ynum yden)
-    (hden : ∀ ynum yden : DensePoly β,
-      cRischDE ([CCommRing.one] : DensePoly β) (CFrac.num ftilde) (CFrac.den ftilde)
-        (CFrac.num gtilde) (CFrac.den gtilde) = some (ynum, yden) →
-      DensePoly.cisZero yden = false) :
-    ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde :=
-  crischDERawSolveWf_isSome_of_innerCompletenessWf ftilde gtilde hinner hsol hden
-
 end RawInnerWf
 
 /-! ## Completeness wrapper -/
@@ -402,15 +365,6 @@ theorem crischDESolveSoundWf_decides_of_residualWf (f g : DenseFrac β)
     exact crischDESolveSoundWf_imp_solvable f g y hy hsound
   · intro hsol
     exact crischDESolveSoundWf_complete_of_residualWf f g hsol hres
-
-/-! ### Restatement against the intended wording (anonymous `example`) -/
-
--- The Wf-native residual gives the same decision statement with a fuel-free completeness direction.
-example (f g : DenseFrac β) [LawfulCPolyGcd.{u,v} DensePoly β]
-    (hres : RischDECompletenessResidualWf f g)
-    (hsound : RischDESoundnessWf f g) :
-    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_decides_of_residualWf f g hres hsound
 
 end CompleteWf
 

@@ -175,20 +175,6 @@ theorem crischDESolveSoundWf_field (f g y : DenseFrac β)
       = am β (toPoly (CFrac.num g)) / am β (toPoly (CFrac.den g)) :=
   hsound.sound y hsolve
 
-/-! ### Restatement example -/
-
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β DensePoly]
-    [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β] [CPolyResultant DensePoly]
-    [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
-    (f g y : DenseFrac β) (hsolve : crischDESolveSoundWf f g = some y)
-    (hsound : RischDESoundnessWf f g) :
-    towerFractionFieldDeriv ([CCommRing.one] : DensePoly β)
-          (am β (toPoly (CFrac.num y)) / am β (toPoly (CFrac.den y)))
-        + am β (toPoly (CFrac.num f)) / am β (toPoly (CFrac.den f))
-          * (am β (toPoly (CFrac.num y)) / am β (toPoly (CFrac.den y)))
-      = am β (toPoly (CFrac.num g)) / am β (toPoly (CFrac.den g)) :=
-  crischDESolveSoundWf_field f g y hsolve hsound
-
 end Capstone
 
 /-! ## `native_decide` examples

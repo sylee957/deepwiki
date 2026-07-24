@@ -257,24 +257,4 @@ theorem rischDE_cancelTan_example :
           cancelTanClearedCheck [] [0, 4] cancelTanC1 cancelTanC2 q1 q2
       | none => false) = true := by native_decide
 
-/-! ## Restatement of tangent soundness -/
-
--- ★ Tangent RDE cancellation soundness, `native_decide`-free: a self-certifying `cCoupledDECancelTan` solve
--- gives both rows of the tangent coupled `t`-system over `ℚ[x][t]` (`D = ∂/∂x + (t²+1)∂/∂t`).
-example [CLinearSolve ℚ]
-    (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ)) (n : ℕ)
-    (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
-    (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
-    (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
-        + (Polynomial.C (toPoly b0) * DensePoly.toPoly q1
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q1)
-        + Polynomial.C (toPoly (cscale (-1) b2)) * DensePoly.toPoly q2
-      = DensePoly.toPoly c1 ∧
-      (DensePoly.toPoly (q2.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
-        + Polynomial.C (toPoly b2) * DensePoly.toPoly q1
-        + (Polynomial.C (toPoly b0) * DensePoly.toPoly q2
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q2)
-      = DensePoly.toPoly c2 :=
-  cCoupledDECancelTan_sound_of_check dbound b0 b2 c1 c2 q1 q2 n hsome hcheck
-
 end DeepWiki.SymbolicIntegration

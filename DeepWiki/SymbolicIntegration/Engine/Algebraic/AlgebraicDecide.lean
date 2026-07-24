@@ -284,47 +284,6 @@ theorem self_determining_algebraic_decision_validates :
     ∧ (decideWitnessPrincipal.isSome, decideWitnessPrincipal.map fun F => F.logTerms.length)
         = (true, some 1) := by native_decide
 
-/-! ### Restatements (anonymous `example`s) -/
-
-section Restatements
-
--- Soundness: `some F → D(F) = integrand`.
-example (p : ℕ) [Fact p.Prime]
-    (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ)) (c : DenseFrac ℚ)
-    (D : DensePoly ℚ) (degBound : ℕ) (ρq : DensePoly ℚ) (gen : ℕ) (Dm : DensePoly.MumfordDivisor ℚ)
-    (hasLogPart : Bool) (integrand : RadElem (DenseFrac ℚ))
-    (hres : AlgebraicDecideSoundnessResidual p ρ R B residual c D degBound ρq gen Dm integrand)
-    (F : AlgIntegralResult (DenseFrac ℚ))
-    (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
-      = some F) :
-    DensePoly.toPoly (algDeriv ρ F) = DensePoly.toPoly integrand :=
-  cIntegrateAlgebraicDecide_sound p ρ R B residual c D degBound ρq gen Dm hasLogPart integrand
-    hres F hsome
-
--- Completeness: `none → ¬ elementary`.
-example (p : ℕ) [Fact p.Prime]
-    (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ)) (c : DenseFrac ℚ)
-    (D : DensePoly ℚ) (degBound : ℕ) (ρq : DensePoly ℚ) (gen : ℕ) (Dm : DensePoly.MumfordDivisor ℚ)
-    (hasLogPart : Bool) {isTorsion elem : Prop}
-    (hres : AlgebraicCompletenessResidual ρq gen Dm p isTorsion elem)
-    (hnone : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
-      = none) :
-    ¬ elem :=
-  cIntegrateAlgebraicDecide_complete p ρ R B residual c D degBound ρq gen Dm hasLogPart
-    hres hnone
-
--- Decision criterion: `(∃ F, … = some F) ⟺ elementary`.
-example (p : ℕ) [Fact p.Prime]
-    (ρ : DenseFrac ℚ) (R B : DensePoly ℚ) (residual : RadElem (DenseFrac ℚ)) (c : DenseFrac ℚ)
-    (D : DensePoly ℚ) (degBound : ℕ) (ρq : DensePoly ℚ) (gen : ℕ) (Dm : DensePoly.MumfordDivisor ℚ)
-    {isTorsion elem : Prop}
-    (hres : AlgebraicCompletenessResidual ρq gen Dm p isTorsion elem)
-    (hlog : radLogArgSolve ρ residual D degBound = none) :
-    (∃ F, cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true = some F)
-      ↔ elem :=
-  cIntegrateAlgebraicDecide_decides p ρ R B residual c D degBound ρq gen Dm hres hlog
-
-end Restatements
 
 /-! ### Axiom audit -/
 

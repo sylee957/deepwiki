@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationGcdLogForm
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
-import DeepWiki.SymbolicIntegration.GroebnerBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.CzichowskiNormalPosition
 import Sources.Doi_10_1006_jsco_1995_1043.Source
 

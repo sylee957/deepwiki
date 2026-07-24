@@ -90,13 +90,4 @@ theorem not_isFormallyReal_of_charP [NonAssocSemiring K] [Nontrivial K]
     exact isSumNonzeroSq_natCast (by omega)
   exact IsFormallyReal.not_isSumNonzeroSq_zero h0
 
--- `ℝ`, `ℚ`, and any `ℚ(r) ⊆ ℝ` are real fields.
-example : IsFormallyReal ℝ ∧ IsFormallyReal ℚ ∧
-    ∀ r : ℝ, IsFormallyReal (IntermediateField.adjoin ℚ ({r} : Set ℝ)) :=
-  ⟨inferInstance, inferInstance, isFormallyReal_qadjoin_real⟩
-
--- `ℚ(√−2)` is not a real field (`−1 = 1² + (√−2)²`).
-example [CommRing K] [CharZero K] {j : K} (hj : j ^ 2 = -2) : ¬ IsFormallyReal K :=
-  not_isFormallyReal_of_sq_eq_neg_two hj
-
 end DeepWiki.SymbolicIntegration

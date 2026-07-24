@@ -245,13 +245,7 @@ theorem oddInf_radicand_ramified :
     (radTransformAtInfinity oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D).1 = [0, 1] := by
   native_decide
 
-/-! ### Restatement and axioms -/
-
-/-- The engine computes the residue at infinity of `∫ dx/√(x² + 1)` — via `radTransformAtInfinity` plus the
-residue norm localized at `t = 0` — as `Z² − 1`, residues `±1`. -/
-example : cisZero (csub
-    (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) [-1, 0, 1])
-    = true := by native_decide
+/-! ### Axiom audit -/
 
 #print axioms arcsinhInf_transform_eq
 #print axioms arcsinhInf_residue_eq

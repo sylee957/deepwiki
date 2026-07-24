@@ -4,7 +4,6 @@ import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.CompletePartialFraction
 import DeepWiki.SymbolicIntegration.DifferentialAlgebra
 import DeepWiki.SymbolicIntegration.Core
-import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.HorowitzLinearSolve
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.InFieldIntegrationCapstone

@@ -108,16 +108,7 @@ noncomputable def ratFuncOfPair {P : Type → Type} [CPoly P] (x : P ℚ × P �
 /-! ### Formal derivative -/
 
 open scoped Differential in
-example (x : SparseFrac ℚ) :
-    CFrac.toRatFunc (CFrac.deriv x) = (CFrac.toRatFunc x)′ :=
-  CFrac.toRatFunc_deriv x
-
 open scoped Differential in
-example (gs : List (SparseFrac ℚ)) :
-    (CFrac.toRatFunc (gs.foldl CCommRing.add (CCommRing.zero : SparseFrac ℚ)))′ =
-      (gs.map (fun g => (CFrac.toRatFunc g)′)).sum :=
-  CFrac.deriv_toRatFunc_foldl_add gs
-
 open scoped Differential in
 /-- A folded derivative with increments `T - resid g` has residual `T - nT + ∑ resid g`. -/
 theorem foldl_residual_eq (gs : List (DenseFrac ℚ))

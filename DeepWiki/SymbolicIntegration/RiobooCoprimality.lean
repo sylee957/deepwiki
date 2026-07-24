@@ -103,21 +103,4 @@ theorem rioboo_coprime {i a b C D D' E₁ E₂ F₁ F₂ A B : S} (hi : i ^ 2 = 
 
 end Coprimality
 
-section Restatement
-variable {S : Type*} [CommRing S] [IsDomain S] [CharZero S]
-
-example {i a b C D D' E₁ E₂ F₁ F₂ A B : S} (hi : i ^ 2 = -1)
-    (σ : S →+* S) (hσi : σ i = -i)
-    (hσa : σ a = a) (hσb : σ b = b) (hσC : σ C = C) (hσD : σ D = D) (hσD' : σ D' = D')
-    (hσE₁ : σ E₁ = E₁) (hσE₂ : σ E₂ = E₂) (hσF₁ : σ F₁ = F₁) (hσF₂ : σ F₂ = F₂)
-    (hσA : σ A = A) (hσB : σ B = B)
-    (hbunit : IsUnit b) (hsqfree : IsCoprime D D')
-    (hresidueSplit : C - (a + i * b) * D' = (E₁ + i * E₂) * (A + i * B))
-    (hdenSplit : D = (F₁ + i * F₂) * (A + i * B)) :
-    IsCoprime A B :=
-  rioboo_coprime hi σ hσi hσa hσb hσC hσD hσD' hσE₁ hσE₂ hσF₁ hσF₂ hσA hσB
-    hbunit hsqfree hresidueSplit hdenSplit
-
-end Restatement
-
 end DeepWiki.SymbolicIntegration

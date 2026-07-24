@@ -241,52 +241,6 @@ theorem field_identity_of_cPolyRischDEG_qfunNZG (c q : DensePoly (DenseFrac ℚ)
           / am (DenseFrac ℚ) (toPoly ([CCommRing.one] : DensePoly (DenseFrac ℚ))) :=
   field_identity_of_cPolyRischDEG c q n hc hdeg hsome hconst
 
-/-! ### Restatements of the polynomial-branch identities -/
-
--- The term-by-term antiderivative `CPoly.antiderivative` differentiates back to its integrand.
-example [CharZero (CFieldSpec.K α)] (c : DensePoly α) :
-    Polynomial.derivative (toPoly (CPoly.antiderivative c)) = toPoly c :=
-  by
-    rw [← toPoly_list_eq, ← toPoly_list_eq]
-    exact CPoly.derivative_toPoly_antiderivative c
-
--- The polynomial-branch output satisfies `checkIdentity` abstractly, with no runtime check.
-example [CharZero (CFieldSpec.K α)] (c : DensePoly α)
-    (hconst : Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0) :
-    CPoly.checkIdentity ([CCommRing.one] : DensePoly α)
-        ⟨(CPoly.antiderivative c, ([CCommRing.one] : DensePoly α)), []⟩ c ([CCommRing.one] : DensePoly α)
-      = true :=
-  checkIdentityG_antiderivative_const c hconst
-
--- At `α = DenseFrac ℚ`, a successful polynomial RDE solve differentiates back to the integrand.
-example (c q : DensePoly (DenseFrac ℚ)) (n : ℤ)
-    (hc : DensePoly.cisZero c = false) (hdeg : (DensePoly.cdeg c : ℤ) + 1 ≤ n)
-    (hsome : DensePoly.cPolyRischDE ([CCommRing.one] : DensePoly (DenseFrac ℚ)) ([] : DensePoly (DenseFrac ℚ)) c n
-        = some q)
-    (hconst : Differential.mapCoeffs (toPoly q) = 0) :
-    towerFractionFieldDeriv ([CCommRing.one] : DensePoly (DenseFrac ℚ))
-        (am (DenseFrac ℚ) (toPoly q) / am (DenseFrac ℚ) (toPoly ([CCommRing.one] : DensePoly (DenseFrac ℚ))))
-      = am (DenseFrac ℚ) (toPoly c)
-          / am (DenseFrac ℚ) (toPoly ([CCommRing.one] : DensePoly (DenseFrac ℚ))) :=
-  field_identity_of_cPolyRischDEG_qfunNZG c q n hc hdeg hsome hconst
-
--- Differential-constant integrand coefficients give differential-constant antiderivative coefficients.
-example [CharZero (CFieldSpec.K α)] (c : DensePoly α)
-    (hc : Differential.mapCoeffs (toPoly c) = 0) :
-    Differential.mapCoeffs (toPoly (CPoly.antiderivative c)) = 0 :=
-  mapCoeffs_antiderivative_eq_zero c hc
-
--- Polynomial RDE soundness for the `b = 0` branch, keyed on the integrand.
-example [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] [CRischField α]
-    (c q : DensePoly α) (n : ℤ)
-    (hc : DensePoly.cisZero c = false) (hdeg : (DensePoly.cdeg c : ℤ) + 1 ≤ n)
-    (hsome : DensePoly.cPolyRischDE ([CCommRing.one] : DensePoly α) ([] : DensePoly α) c n = some q)
-    (hconst : Differential.mapCoeffs (toPoly c) = 0) :
-    towerFractionFieldDeriv ([CCommRing.one] : DensePoly α)
-        (am α (toPoly q) / am α (toPoly ([CCommRing.one] : DensePoly α)))
-      = am α (toPoly c) / am α (toPoly ([CCommRing.one] : DensePoly α)) :=
-  cPolyRischDEG_nil_field_identity c q n hc hdeg hsome hconst
-
 /-! ## The cancellation-case soundness (`b ≠ 0`, `deg b = 0`)
 
 When `deg(b) = 0` the leading terms of `Dq` and `b·q` cancel, so the solve recurses degree-by-degree into
@@ -422,17 +376,6 @@ theorem cPolyRischDEG_cancelExp_field (Dt b c q : DensePoly α) (m : ℤ)
       = am α (toPoly c) :=
   towerFractionFieldDerivG_amG_of_polyIdentity Dt b c q
     (cPolyRischDEG_cancelExp_sound Dt b c q m hδ hdb hb hsome)
-
-/-! ### Restatements of the cancellation identities -/
-
--- Field-level primitive-cancellation soundness via the fuel-free dispatcher.
-example (Dt b c q : DensePoly α) (m : ℤ)
-    (hδ : DensePoly.cdeg Dt = 0) (hdb : DensePoly.cdeg b = 0) (hb : DensePoly.cisZero b = false)
-    (hsome : DensePoly.cPolyRischDE Dt b c m = some q) :
-    towerFractionFieldDeriv Dt (am α (toPoly q))
-        + am α (toPoly b) * am α (toPoly q)
-      = am α (toPoly c) :=
-  cPolyRischDEG_cancelPrim_field Dt b c q m hδ hdb hb hsome
 
 end Cancellation
 

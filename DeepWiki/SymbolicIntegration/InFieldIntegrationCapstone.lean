@@ -41,17 +41,4 @@ theorem inFieldIntegrable_iff [CharZero K] {f : RatFunc K} {g A D : K[X]}
   · intro hA; exact ⟨hA, inFieldIntegral_spec hA hf⟩
   · exact fun h => h.1
 
-example {f : RatFunc K} {g A D : K[X]} (hA : A = 0)
-    (hf : f = (algebraMap K[X] (RatFunc K) g)′
-          + algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D) :
-    (algebraMap K[X] (RatFunc K) g)′ = f :=
-  inFieldIntegral_spec hA hf
-
-example [CharZero K] {f : RatFunc K} {g A D : K[X]} (hD : Squarefree D) (hAD : IsCoprime A D)
-    (hdeg : A.degree < D.degree)
-    (hf : f = (algebraMap K[X] (RatFunc K) g)′
-          + algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D) :
-    (∃ v : RatFunc K, v′ = f) ↔ (A = 0 ∧ (inFieldIntegral g)′ = f) :=
-  inFieldIntegrable_iff hD hAD hdeg hf
-
 end DeepWiki.SymbolicIntegration

@@ -56,19 +56,6 @@ theorem logToReal_correct_of_partition {σ : Type*}
   refine congrArg _ (congrArg _ (Multiset.map_congr rfl fun p hp => ?_))
   exact logToReal_conjugate_pair_of_split hi (hAB p hp) (hSplus p hp) (hSminus p hp)
 
-example {σ : Type*} (S : R → R) (reals : Multiset R) (pairs : Multiset σ)
-    (a b A B : σ → R) {i : R} (hi : i ^ 2 = -1) (roots : Multiset R)
-    (hpart : roots = reals + pairs.map (fun p => a p + i * b p)
-        + pairs.map (fun p => a p - i * b p))
-    (hSplus : ∀ p ∈ pairs, S (a p + i * b p) = A p + i * B p)
-    (hSminus : ∀ p ∈ pairs, S (a p - i * b p) = A p - i * B p)
-    (hAB : ∀ p ∈ pairs, (A p) ^ 2 + (B p) ^ 2 ≠ 0) :
-    (roots.map (fun α => α * Differential.logDeriv (S α))).sum
-      = (reals.map (fun α => α * Differential.logDeriv (S α))).sum
-        + (pairs.map (fun p => a p * Differential.logDeriv ((A p) ^ 2 + (B p) ^ 2)
-            + b p * (i * Differential.logDeriv ((A p + i * B p) / (A p - i * B p))))).sum :=
-  logToReal_correct_of_partition S reals pairs a b A B hi roots hpart hSplus hSminus hAB
-
 end Recursion
 
 section Conjugation
@@ -252,23 +239,5 @@ theorem logToReal_correct {σ : L ≃+* L} {i : L} {R : L[X]} {b : L → K}
   logToReal_correct_of_partition S _ (R.roots.filter (fun α => 0 < b α))
     (realPart σ) (imagPart σ i) A B hi R.roots
     (roots_partition hi hinv hb hmap hsplit) hSplus hSminus hAB
-
-example {σ : L ≃+* L} {i : L} {R : L[X]} {b : L → K} (S A B : L → L)
-    (hi : i ^ 2 = -1) (hinv : ∀ x, σ (σ x) = x)
-    (hb : ∀ α, algebraMap K L (b α) = imagPart σ i α)
-    (hmap : R.map (σ : L →+* L) = R) (hsplit : Multiset.card R.roots = R.natDegree)
-    (hSplus : ∀ p ∈ R.roots.filter (fun α => 0 < b α),
-      S (realPart σ p + i * imagPart σ i p) = A p + i * B p)
-    (hSminus : ∀ p ∈ R.roots.filter (fun α => 0 < b α),
-      S (realPart σ p - i * imagPart σ i p) = A p - i * B p)
-    (hAB : ∀ p ∈ R.roots.filter (fun α => 0 < b α), (A p) ^ 2 + (B p) ^ 2 ≠ 0) :
-    (R.roots.map (fun α => α * Differential.logDeriv (S α))).sum
-      = ((R.roots.filter (fun α => b α = 0)).map
-          (fun α => α * Differential.logDeriv (S α))).sum
-        + ((R.roots.filter (fun α => 0 < b α)).map
-            (fun p => realPart σ p * Differential.logDeriv ((A p) ^ 2 + (B p) ^ 2)
-              + imagPart σ i p
-                * (i * Differential.logDeriv ((A p + i * B p) / (A p - i * B p))))).sum :=
-  logToReal_correct S A B hi hinv hb hmap hsplit hSplus hSminus hAB
 
 end Correct

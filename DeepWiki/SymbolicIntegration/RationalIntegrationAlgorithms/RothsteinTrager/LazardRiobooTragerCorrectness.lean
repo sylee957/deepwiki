@@ -120,15 +120,6 @@ theorem lazardRiobooTrager_isSimilar_gcd {K : Type*} [Field K] [IsAlgClosed K]
     exact isSimilar_lrtSubresultant_eval_gcd A D a hDne hA hk2 hk0 hknz
 
 open scoped Classical in
-example {K : Type*} [Field K] [IsAlgClosed K]
-    (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
-    (hi : (rtResultant A D).rootMultiplicity a < D.natDegree) :
-    IsSimilar
-      ((lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map
-        (Polynomial.evalRingHom a))
-      (gcd D (A - C a * derivative D)) :=
-  lazardRiobooTrager_isSimilar_gcd A D hD hA a hi
-
 open scoped Classical in
 /-- The branch returned by the LRT algorithm at any residue is similar to
 `gcd D (A - C a * derivative D)`. -/

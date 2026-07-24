@@ -45,13 +45,6 @@ theorem cRischDEG_isSome_of_decisionFrontierWf (Dt fnum fden gnum gden : DensePo
   cRischDEG_isSome_of_innerCompletenessWf Dt fnum fden gnum gden
     (rischDEInnerCompletenessWf_of_decisionFrontierWf Dt fnum fden gnum gden h) hsol
 
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
-    (Dt fnum fden gnum gden : DensePoly α)
-    (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden) :
-    RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
-  rischDEInnerCompletenessWf_of_decisionFrontierWf Dt fnum fden gnum gden h
-
 end InnerFrontierWf
 
 /-! ## Inner input and decision frontier -/
@@ -176,21 +169,6 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : DenseFrac β)
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_decides_of_residualWf f g
     (completenessResidualWf_of_decisionProcedureFrontierWf f g h) hsound
-
-/-! ### Restatement against the intended wording (anonymous `example`) -/
-
--- The RDE decision procedure: the fuel-free recursive Risch-DE solver returns `some` iff the
--- field-level Risch DE `D(Y) + F·Y = G` is solvable, modulo the named Wf completeness frontier and the
--- direct Wf soundness certificate.
-example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
-    [CPolyResultant DensePoly]
-    [LawfulCPolyGcd.{u,v} DensePoly β]
-    [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
-    (f g : DenseFrac β) (h : RischDEDecisionProcedureFrontierWf f g)
-    (hsound : RischDESoundnessWf f g) :
-    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_isDecisionProcedure f g h hsound
 
 end Capstone
 

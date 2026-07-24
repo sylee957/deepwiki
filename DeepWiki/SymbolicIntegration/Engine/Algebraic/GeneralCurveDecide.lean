@@ -348,50 +348,6 @@ theorem self_determining_general_curve_decision_validates :
       = (true, some 1, some true)
     ∧ genCurveWitnessNonTorsion = none := by native_decide
 
-/-! ### Restatements pinning the decision-procedure content (anonymous `example`s) -/
-
-section Restatements
-
-variable [CLinearSolve ℚ] [CLinearSolve (DenseFrac ℚ)]
-
--- SOUNDNESS (modulo the named frontier): `some F → D(F) = integrand`.
-example (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
-    (hasLogPart : Bool) (integrand commonDenomQ : DensePoly (DenseFrac ℚ)) (cofs : List (DensePoly (DenseFrac ℚ)))
-    (hres : GeneralCurveDecideSoundnessResidual fuel f basis degBound ratIntegrand logIntegrand tin
-      integrand commonDenomQ cofs)
-    (F : GeneralCurveIntegralResult)
-    (hsome : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
-      = some F) :
-    DensePoly.IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenomQ F.logTerms cofs :=
-  cIntegrateGeneralCurveDecide_sound fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
-    integrand commonDenomQ cofs hres F hsome
-
--- COMPLETENESS (modulo the named frontier): `none → ¬ elementary` (non-principal path).
-example (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
-    {isTorsion elem : Prop} (v : DensePoly (DenseFrac ℚ))
-    (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
-    (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
-    (hlog : afLogArgSolveWf f basis degBound logIntegrand = none)
-    (hnone : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true
-      = none) :
-    ¬ elem :=
-  cIntegrateGeneralCurveDecide_complete fuel f basis degBound ratIntegrand logIntegrand tin v hres hv
-    hlog hnone
-
--- DECISION PROCEDURE (modulo the named frontier): `(∃ F, … = some F) ⟺ elementary`.
-example (fuel : ℕ) (f : DensePoly (DenseFrac ℚ)) (basis : List (DensePoly (DenseFrac ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : DensePoly (DenseFrac ℚ)) (tin : GeneralCurveTorsionInputs)
-    {isTorsion elem : Prop} (v : DensePoly (DenseFrac ℚ))
-    (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
-    (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
-    (hlog : afLogArgSolveWf f basis degBound logIntegrand = none) :
-    (∃ F, cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true = some F)
-      ↔ elem :=
-  cIntegrateGeneralCurveDecide_decides fuel f basis degBound ratIntegrand logIntegrand tin v hres hv hlog
-
-end Restatements
 
 /-! ### Axiom audit
 

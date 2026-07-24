@@ -136,41 +136,4 @@ theorem field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG (Dt : Dense
       = am (DenseFrac ℚ) (toPoly a) / am (DenseFrac ℚ) (toPoly d) :=
   field_identity_of_cIntegrateReducedG_of_residueMatch Dt a d cands hherm hmatch
 
-/-! ### Restatements -/
-
--- ★ THE MILESTONE (abstract, axiom-clean, no native_decide): the tower residue resultant's roots ARE the
--- residues `a(α)/Dd(α)` — the transcendental `roots_rtResultant`, monomial-derivative general.
-example {K : Type*} [Field K] (lc : K) (N : ℕ) (droots : Multiset K) (aval ddval : K → K)
-    (hlc : lc ≠ 0) (hDd : ∀ α ∈ droots, ddval α ≠ 0) (R : K[X])
-    (hR : R = Polynomial.C lc ^ N
-      * (droots.map (fun α =>
-          Polynomial.C (aval α) - Polynomial.X * Polynomial.C (ddval α))).prod) :
-    R.roots = droots.map (fun α => aval α / ddval α) :=
-  LogResidueTower.roots_residueResultantTowerG_eq_residues lc N droots aval ddval hlc hDd R hR
-
--- ★ THE KEYSTONE (Task 1, abstract, no native_decide): the Rothstein–Trager log argument `gcd(d, a − c·Dd)`
--- IS the residue's linear factor `X − β`, for `d = ∏_{α∈s}(X − α)` squarefree with distinct residues.
-example {K : Type*} [Field K] [DecidableEq K] (s : Finset K) (a Dd : K[X])
-    (hDd : ∀ α ∈ s, Dd.eval α ≠ 0)
-    (hdist : ∀ α ∈ s, ∀ β ∈ s, α ≠ β → a.eval α / Dd.eval α ≠ a.eval β / Dd.eval β)
-    (β : K) (hβ : β ∈ s) :
-    gcd (Lagrange.nodal s id) (a - Polynomial.C (a.eval β / Dd.eval β) * Dd)
-      = Polynomial.X - Polynomial.C β :=
-  LogResidueTower.residue_gcd_eq_linear_factor s a Dd hDd hdist β hβ
-
--- ★★ THE RT HALF (abstract, checker-free, no native_decide): the residue sum differentiates to the Hermite
--- leftover, so `D(g) + logResidueSum = a/d` — given the abstract Hermite telescoping + the residue match.
-example (Dt : DensePoly α) (gnum gden hNum hDen anum aden : DensePoly α) (logs : List (α × DensePoly α))
-    (hherm : towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
-          + am α (toPoly hNum) / am α (toPoly hDen)
-        = am α (toPoly anum) / am α (toPoly aden))
-    (hmatch : (logs.map (fun cv =>
-          am α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
-        = am α (toPoly hNum) / am α (toPoly hDen)) :
-    towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
-        + logResidueSum Dt logs
-      = am α (toPoly anum) / am α (toPoly aden) :=
-  field_identity_of_reducedG_of_residueMatch Dt gnum gden hNum hDen anum aden logs hherm hmatch
-
 end DeepWiki.SymbolicIntegration

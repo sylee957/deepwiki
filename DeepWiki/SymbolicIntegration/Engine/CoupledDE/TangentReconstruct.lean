@@ -705,20 +705,4 @@ theorem cCoupledDECancelTan_sound [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
   cancelTanClearedCheck_sound b0 b2 c1 c2 q1 q2
     (DensePoly.cancelTanClearedCheck_of_reconstruct dbound b0 b2 c1 c2 q1 q2 hsome)
 
--- ★ Restatement against the intended wording.
-example [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
-    (dbound : ℕ) (b0 b2 : DensePoly ℚ) (c1 c2 q1 q2 : List (DensePoly ℚ))
-    (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
-    (DensePoly.toPoly (q1.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q1))
-        + (Polynomial.C (toPoly b0) * DensePoly.toPoly q1
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q1)
-        + Polynomial.C (toPoly (cscale (-1) b2)) * DensePoly.toPoly q2
-      = DensePoly.toPoly c1 ∧
-      (DensePoly.toPoly (q2.map cderiv) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (DensePoly.toPoly q2))
-        + Polynomial.C (toPoly b2) * DensePoly.toPoly q1
-        + (Polynomial.C (toPoly b0) * DensePoly.toPoly q2
-            - Polynomial.C (Polynomial.C 2) * Polynomial.X * DensePoly.toPoly q2)
-      = DensePoly.toPoly c2 :=
-  cCoupledDECancelTan_sound dbound b0 b2 c1 c2 q1 q2 hsome
-
 end DeepWiki.SymbolicIntegration

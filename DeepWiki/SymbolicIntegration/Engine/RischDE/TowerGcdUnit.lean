@@ -67,13 +67,6 @@ theorem cdegG_cSpecialPolyG_one_eq_zero :
 
 end Hprim
 
-/-! ### Restatement -/
-
-example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β]
-    [CPolyGcd DensePoly β] [LawfulCPolyGcd.{u,v} DensePoly β] :
-    cdeg (DensePoly.cSpecialPoly ([CCommRing.one] : DensePoly β)) = 0 :=
-  cdegG_cSpecialPolyG_one_eq_zero
-
 /-! ### Axiom audit -/
 
 #print axioms selectedGcd_one_isUnit

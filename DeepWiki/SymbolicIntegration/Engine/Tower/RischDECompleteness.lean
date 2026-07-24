@@ -234,38 +234,6 @@ theorem crischFieldCompleteWf_tower (n : ℕ)
     CRischFieldCompleteWf (DenseFracTower n) :=
   crischFieldCompleteWf_step hn hstep
 
-/-! ### Restatements (anonymous `example`s) -/
-
--- The base case: `CRischFieldComplete ℚ` is the constant-field decision procedure.
-example : CRischFieldComplete ℚ := crischFieldComplete_Q
-
--- The recursion tie: the IH (level-`β` completeness) makes the base oracle return `some` on a solvable
--- leading-coefficient RDE — the `.isSome` half of `Cancel{Prim,Exp}BaseOracle`.
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CRischField β]
-    (hβ : CRischFieldComplete β) (b₀ c₀ : β) (hsol : CFieldRDESolvable b₀ c₀) :
-    (CRischField.crischDESolve b₀ c₀).isSome = true :=
-  crischDESolve_isSome_of_complete hβ b₀ c₀ hsol
-
--- Wf step: the IH and per-level frontier give fuel-free wrapper completeness at level `n+1`.
-example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
-    [LawfulCPolyGcd.{u,v} DensePoly β]
-    [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
-    (hβ : CRischFieldComplete β) (hstep : RischDEStepFrontierWf β) :
-    CRischFieldCompleteWf β :=
-  crischFieldCompleteWf_step hβ hstep
-
--- Frontier grounding: the per-input decision-procedure frontier plus direct soundness give fuel-free
--- wrapper completeness, with no `CRischFieldComplete`/`CRischFieldCompleteWf` assumption.
-example {β : Type u} [CField β] [CFieldSpec.{u,v} β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β DensePoly] [CPolyGcd DensePoly β] [CPolySplitFactor DensePoly β]
-    [CPolyResultant DensePoly] [LawfulCPolyGcd.{u,v} DensePoly β]
-    [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
-    (hfront : ∀ f g : DenseFrac β, RischDEDecisionProcedureFrontierWf f g)
-    (hsound : ∀ f g : DenseFrac β, RischDESoundnessWf f g) :
-    CRischFieldCompleteWf β :=
-  crischFieldCompleteWf_of_decisionFrontier hfront hsound
-
 /-! ### Axiom audit
 
 The base case, recursion-tie helper, the Wf assembled step, and the frontier-grounding

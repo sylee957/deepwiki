@@ -166,29 +166,4 @@ theorem exists_sortedIndex_le_of_degreeOf_le {K : Type*} [Field K]
   rw [← hj] at hdeg
   exact absurd hdeg (not_le.mpr hmono)
 
--- Restatements against the intended wording.
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
-    ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → degreeOf 0 b ≠ degreeOf 0 b' :=
-  lazard_degreeOf_ne hB
-
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (i : Fin B.card) : sortedByYDegree hB i ∈ B :=
-  sortedByYDegree_mem hB i
-
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
-    StrictMono (fun i => degreeOf 0 (sortedByYDegree hB i)) :=
-  degreeOf_sortedByYDegree_strictMono hB
-
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
-    Set.range (sortedByYDegree hB) = (↑B : Set (MvPolynomial (Fin 2) K)) :=
-  range_sortedByYDegree hB
-
 end DeepWiki.SymbolicIntegration

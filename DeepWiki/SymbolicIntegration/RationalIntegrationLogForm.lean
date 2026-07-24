@@ -69,36 +69,4 @@ theorem integrateRationalFunction_logForm [CharZero K] {ι : Type*} (s : Finset 
   rw [hred]
   exact sum_proper_fraction_eq_logForm s sset r g p hproper'
 
-open scoped Differential in
-open Classical in
--- Single split squarefree denominator: `R/V = ∑_a a * logDeriv(G_a)`.
-example (s : Finset K) (R : K[X]) (hR : R.degree < s.card) :
-    algebraMap K[X] (RatFunc K) R / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
-      = ∑ a ∈ s.image (fun α => R.eval α / eval α (derivative (Lagrange.nodal s id))),
-          algebraMap K[X] (RatFunc K) (C a)
-            * Differential.logDeriv (algebraMap K[X] (RatFunc K)
-                (∏ α ∈ s.filter (fun α => R.eval α / eval α (derivative (Lagrange.nodal s id)) = a),
-                  (X - C α))) :=
-  ratFunc_eq_sum_residue_grouped s R hR
-
-open scoped Differential in
-open Classical in
--- Full closed log form: rational part, polynomial-integral part, and grouped logarithmic sum.
-example [CharZero K] {ι : Type*} (s : Finset ι) (sset : ι → Finset K) (e : ι → ℕ)
-    (he : ∀ i ∈ s, 1 ≤ e i) (hne : ∀ i ∈ s, (sset i).Nonempty)
-    (hdisj : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → Disjoint (sset i) (sset j)) (A : K[X]) :
-    ∃ (g : RatFunc K) (p : K[X]) (r : ι → K[X]),
-        algebraMap K[X] (RatFunc K) A
-            / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (Lagrange.nodal (sset i) id) ^ e i
-          = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
-            + ∑ i ∈ s, ∑ a ∈ (sset i).image
-                (fun α => (r i).eval α / eval α (derivative (Lagrange.nodal (sset i) id))),
-                algebraMap K[X] (RatFunc K) (C a)
-                  * Differential.logDeriv (algebraMap K[X] (RatFunc K)
-                      (∏ α ∈ (sset i).filter
-                          (fun α =>
-                            (r i).eval α / eval α (derivative (Lagrange.nodal (sset i) id)) = a),
-                        (X - C α))) :=
-  integrateRationalFunction_logForm s sset e he hne hdisj A
-
 end DeepWiki.SymbolicIntegration

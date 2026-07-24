@@ -447,35 +447,4 @@ theorem irreducibleByModP_X_pow_four_add_one_false :
     irreducibleByModP 7 ([1, 0, 0, 0] ++ [1]) 4 = false := by
   refine ⟨?_, ?_, ?_, ?_⟩ <;> native_decide
 
-/-! ## Restatements
-
-The coefficient-list certificates read as the intended polynomials, and soundness has the
-intended one-way type. -/
-
--- `irreducibleByModP_sound` has exactly the SOUND one-way type: `true ⟹ Irreducible`.
-example : ∀ (p : ℕ) [Fact p.Prime] (cf : List ℤ) (n : ℕ),
-    IsMonicOfDegree (toPolyZ cf) n → irreducibleByModP p cf n = true → Irreducible (toPolyZ cf) :=
-  fun _ _ _ _ h ht => irreducibleByModP_sound h ht
-
--- the 𝔽_p decision is genuinely BOTH directions.
-example {p : ℕ} [Fact p.Prime] (cf : List (ZMod p)) (n : ℕ)
-    (h : IsMonicOfDegree (listToPoly cf) n) :
-    irreducibleListModP cf n ↔ Irreducible (listToPoly cf) :=
-  irreducibleListModP_iff_irreducible h
-
--- the certificate lists ARE the named polynomials.
-example : toPolyZ ([1, 0] ++ [1]) = X ^ 2 + 1 := by
-  show listToPoly _ = _; rw [toPoly_append_one]; simp [listToPoly]; ring
-example : toPolyZ ([-2, 0, 0] ++ [1]) = X ^ 3 - 2 := by
-  show listToPoly _ = _; rw [toPoly_append_one]; simp [listToPoly]; ring
-example : toPolyZ ([-1, -1, 0] ++ [1]) = X ^ 3 - X - 1 := by
-  show listToPoly _ = _; rw [toPoly_append_one]; simp [listToPoly]; ring
-example : toPolyZ ([1, 1, 1, 1] ++ [1]) = X ^ 4 + X ^ 3 + X ^ 2 + X + 1 := by
-  show listToPoly _ = _; rw [toPoly_append_one]; simp [listToPoly]; ring
-
--- the wall: `x⁴+1` is `ℚ`-irreducible AND fails the mod-`p` test at every small prime.
-example : Irreducible (toPolyZ ([1, 0, 0, 0] ++ [1])) ∧
-    irreducibleByModP 2 ([1, 0, 0, 0] ++ [1]) 4 = false :=
-  ⟨irreducible_toPolyZ_X_pow_four_add_one, irreducibleByModP_X_pow_four_add_one_false.1⟩
-
 end DeepWiki.SymbolicIntegration

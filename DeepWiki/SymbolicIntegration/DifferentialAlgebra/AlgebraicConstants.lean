@@ -64,6 +64,33 @@ theorem isAlgebraicOverConst_of_deriv_eq_zero {c : E} (hc : c′ = 0)
   · exact minpoly_coeff_deriv_eq_zero_of_deriv_eq_zero hc hint
   · rw [minpoly.aeval]
 
+/-- A constant algebraic over the base field is algebraic over the base constant field. -/
+theorem isAlgebraic_constantsSubfield_of_deriv_eq_zero {c : E} (hc : c′ = 0)
+    (halgebraic : IsAlgebraic F c) :
+    IsAlgebraic (constantsSubfield F) c := by
+  have hint : IsIntegral F c := halgebraic.isIntegral
+  let p : F[X] := minpoly F c
+  have hconst : ∀ i, (p.coeff i)′ = 0 := by
+    intro i
+    exact minpoly_coeff_deriv_eq_zero_of_deriv_eq_zero hc hint i
+  let q : (constantsSubfield F)[X] :=
+    ∑ i ∈ p.support, C ⟨p.coeff i, hconst i⟩ * X ^ i
+  have hmap : q.map (constantsSubfield F).subtype = p := by
+    rw [p.as_sum_support_C_mul_X_pow]
+    ext n
+    by_cases hn : n ∈ p.support <;> simp [q, hn]
+  have hqmonic : q.Monic := Polynomial.monic_map_iff.mp <| by
+    rw [hmap]
+    exact minpoly.monic hint
+  refine ⟨q, hqmonic.ne_zero, ?_⟩
+  have halgebraMap : algebraMap (constantsSubfield F) E =
+      (algebraMap F E).comp (constantsSubfield F).subtype := by
+    ext x
+    rfl
+  rw [Polynomial.aeval_def, halgebraMap, ← Polynomial.eval₂_map, hmap,
+    ← Polynomial.aeval_def]
+  exact minpoly.aeval F c
+
 /-- Mapping a base-constant annihilator gives an ambient constant-coefficient polynomial. -/
 theorem isAlgebraicOverConst_map_of_deriv_eq_zero {c : E} (hc : c′ = 0)
     (hint : IsIntegral F c) :
@@ -173,6 +200,29 @@ theorem deriv_eval₂_constantsSubfield (p : (constantsSubfield F)[X]) (c : E) :
     rw [deriv_algebraMap, (p.coeff i).property, map_zero]
   have hchain := deriv_eval_of_const_coeffs q c hqconst
   simpa only [q, Polynomial.eval_map, Polynomial.derivative_map] using hchain
+
+/-- An element algebraic and separable over the base constants is constant. -/
+theorem deriv_eq_zero_of_isAlgebraic_constantsSubfield_of_isSeparable {c : E}
+    (halgebraic : IsAlgebraic (constantsSubfield F) c)
+    (hsep : IsSeparable (constantsSubfield F) c) :
+    c′ = 0 := by
+  have hint : IsIntegral (constantsSubfield F) c := halgebraic.isIntegral
+  let p := minpoly (constantsSubfield F) c
+  have halg : algebraMap (constantsSubfield F) E =
+      (algebraMap F E).comp (constantsSubfield F).subtype := by
+    ext x
+    rfl
+  have hroot :
+      p.eval₂ ((algebraMap F E).comp (constantsSubfield F).subtype) c = 0 := by
+    rw [← halg, ← Polynomial.aeval_def]
+    exact minpoly.aeval (constantsSubfield F) c
+  have hchain := deriv_eval₂_constantsSubfield p c
+  rw [hroot, map_zero] at hchain
+  have hderiv :
+      p.derivative.eval₂ ((algebraMap F E).comp (constantsSubfield F).subtype) c ≠ 0 := by
+    rw [← halg, ← Polynomial.aeval_def]
+    exact hsep.aeval_derivative_ne_zero (minpoly.aeval (constantsSubfield F) c)
+  exact (mul_eq_zero.mp hchain.symm).resolve_left hderiv
 
 /-- In characteristic zero, a root of an irreducible polynomial over the base constants is constant. -/
 theorem deriv_eq_zero_of_irreducible_constants_polynomial [CharZero F] {c : E}

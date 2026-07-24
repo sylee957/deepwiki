@@ -90,13 +90,6 @@ theorem isLogDeriv_of_integer_residues (s : Finset K) (A : K[X]) (hA : A.degree 
 open scoped Classical in
 open scoped Differential in
 -- The `⟸` direction: integer residues give a logarithmic-derivative witness for `A/D`.
-example (s : Finset K) (A : K[X]) (hA : A.degree < s.card)
-    (hint : ∀ α ∈ s, ∃ m : ℤ, ((m : K)) = A.eval α / eval α (derivative (Lagrange.nodal s id))) :
-    ∃ u : RatFunc K, u ≠ 0 ∧
-      algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
-        = Differential.logDeriv u :=
-  isLogDeriv_of_integer_residues s A hA hint
-
 /-! ## Numerator log-derivative as a sum over roots (toward the `⟹` direction) -/
 
 open scoped Classical in
@@ -132,12 +125,6 @@ theorem logDeriv_algebraMap_eq_sum_roots [IsAlgClosed K] (N : K[X]) (hN : N ≠ 
 open scoped Classical in
 open scoped Differential in
 -- `logDeriv(N) = ∑_{β ∈ N.roots} logDeriv(X−β)`: the numerator log-derivative is the root sum.
-example [IsAlgClosed K] (N : K[X]) (hN : N ≠ 0) :
-    Differential.logDeriv (algebraMap K[X] (RatFunc K) N)
-      = (N.roots.map (fun β => Differential.logDeriv
-          (algebraMap K[X] (RatFunc K) (X - C β)))).sum :=
-  logDeriv_algebraMap_eq_sum_roots N hN
-
 /-! ## The simple-pole residue functional
 `residueAt α f = ((X − α)·f)(α)` extracts the residue at a simple pole `α`. -/
 
@@ -334,12 +321,6 @@ theorem integer_residues_of_isLogDeriv [IsAlgClosed K] (A D : K[X]) (hD : D.Sepa
 open scoped Classical in
 open scoped Differential in
 -- The `⟹` direction: a logarithmic-derivative `A/D` has integer residues at the roots of `D`.
-example [IsAlgClosed K] (A D : K[X]) (hD : D.Separable) (u : RatFunc K) (hu : u ≠ 0)
-    (hlog : algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D
-      = Differential.logDeriv u) (α : K) (hα : D.IsRoot α) :
-    ∃ n : ℤ, A.eval α / (derivative D).eval α = (n : K) :=
-  integer_residues_of_isLogDeriv A D hD u hu hlog α hα
-
 /-- `Lagrange.nodal s id` is separable. -/
 theorem separable_nodal (s : Finset K) : (Lagrange.nodal s id).Separable := by
   rw [Lagrange.nodal_eq]
@@ -364,16 +345,5 @@ theorem isLogDeriv_iff_integer_residues [IsAlgClosed K] (s : Finset K) (A : K[X]
     obtain ⟨u, hu, hlog⟩ := isLogDeriv_of_integer_residues s A hA
       (fun α hα => (hint α hα).imp fun _ h => h.symm)
     exact ⟨u, hu, hlog⟩
-
-open scoped Classical in
-open scoped Differential in
--- The packaged criterion: `A/D = logDeriv u` (some `u ≠ 0`) ↔ all residues `A(α)/D'(α)` are integers.
-example [IsAlgClosed K] (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
-    (∃ u : RatFunc K, u ≠ 0 ∧
-        algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
-          = Differential.logDeriv u)
-      ↔ (∀ α ∈ s, ∃ n : ℤ,
-          A.eval α / eval α (derivative (Lagrange.nodal s id)) = (n : K)) :=
-  isLogDeriv_iff_integer_residues s A hA
 
 end DeepWiki.SymbolicIntegration

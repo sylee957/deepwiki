@@ -197,28 +197,4 @@ theorem rischDEInnerCompletenessWf_of_residuals (Dt fnum fden gnum gden : DenseP
 
 end AssembleWf
 
-/-! ### Restatement against `RischDEInnerCompletenessWf` (anonymous `example`) -/
-
--- The Wf solve residual fits directly into the Wf inner-completeness assembly.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
-    (Dt fnum fden gnum gden : DensePoly α)
-    (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true)
-    (hbound : ∀ a0 b0 c0 h0 : DensePoly α,
-      cRdeNormalDenominator Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
-      ∀ q : DensePoly α,
-        IsReducedRdeSol Dt (cRdeSpecialDenominator Dt a0 b0 c0).1
-            (cRdeSpecialDenominator Dt a0 b0 c0).2.1
-            (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1 q →
-        cdeg q ≤ cRdeBoundDegree Dt
-          (cRdeSpecialDenominator Dt a0 b0 c0).1
-          (cRdeSpecialDenominator Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1)
-    (hres : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden) :
-    RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
-  { hnorm := hnorm
-    hbound := hbound
-    hsolve := hsolveWf_of_exhaustiveResidualWf Dt fnum fden gnum gden hres }
-
 end DeepWiki.SymbolicIntegration

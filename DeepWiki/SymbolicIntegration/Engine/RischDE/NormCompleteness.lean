@@ -197,26 +197,6 @@ theorem rischDEInnerCompletenessWf_of_norm_bound_solve (Dt fnum fden gnum gden :
 
 end AssembleWf
 
-/-! ### Restatements -/
-
--- The Wf engine bridge: mathematical divisibility forces the Wf normal-denominator step to succeed.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
-    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α]
-    (Dt fnum fden gnum gden : DensePoly α)
-    (hen0 : DensePoly.cnorm (CPoly.splitFactor Dt gden).1 ≠ [])
-    (hdvd : toPoly (CPoly.splitFactor Dt gden).1 ∣ toPoly (rdeNormDnh2Wf Dt fden gden)) :
-    (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true :=
-  cRdeNormalDenominatorG_isSome_of_dvd Dt fnum fden gnum gden hen0 hdvd
-
--- The Wf residual produces exactly the `RischDEInnerCompletenessWf.hnorm` field shape.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CPolyGcd DensePoly α] [CPolySplitFactor DensePoly α] [CRischField α]
-    (Dt fnum fden gnum gden : DensePoly α)
-    (hres : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden) :
-    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRdeNormalDenominator Dt fnum fden gnum gden).isSome = true :=
-  hnormWf_of_divisibilityResidualWf Dt fnum fden gnum gden hres
-
 /-! ### Axiom audit -/
 
 #print axioms cRdeNormalDenominatorG_isSome_iff

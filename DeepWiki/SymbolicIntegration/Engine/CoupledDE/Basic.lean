@@ -233,18 +233,7 @@ theorem coupledDESystem_example :
       | none => false) = true := by native_decide
 
 #print axioms coupledDESystem_example
-/-! ### Restatement of the base soundness signature -/
-
--- ★ Base coupled-system soundness, `native_decide`-free: a self-certifying `cCoupledDESystem` solve gives
--- the two `ℚ[X]` row identities `D(y₁) + b₁y₁ + a·b₂y₂ = z₁`, `D(y₂) + b₂y₁ + b₁y₂ = z₂`.
-example [CLinearSolve ℚ] (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
-    (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2))
-    (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
-    Polynomial.derivative (toPoly y1) + toPoly b1 * toPoly y1
-        + Polynomial.C a * (toPoly b2 * toPoly y2) = toPoly z1 ∧
-      Polynomial.derivative (toPoly y2) + toPoly b2 * toPoly y1
-        + toPoly b1 * toPoly y2 = toPoly z2 :=
-  cCoupledDESystem_sound_of_check a b1 b2 z1 z2 d y1 y2 hsome hcheck
+/-! ### Axiom audit of the base soundness signature -/
 
 #print axioms coupledClearedCheck_sound
 

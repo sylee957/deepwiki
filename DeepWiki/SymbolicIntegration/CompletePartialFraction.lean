@@ -169,24 +169,4 @@ theorem ratFunc_completePartialFraction {ι : Type*} (s : Finset ι) (D : ι →
       rwa [degree_pow, degree_eq_natDegree (hD i hi).ne_zero, nsmul_eq_mul, ← Nat.cast_mul] at hlt
     exact ratFunc_DadicExpansion (D i) (hD i hi) (e i) (r i) hri
 
-/-! ## Restatements -/
-
-example (g : K[X]) (hg : g.Monic) (_hd : 0 < g.natDegree) (e : ℕ) (B : K[X])
-    (hB : B.degree < ((e * g.natDegree : ℕ) : WithBot ℕ)) :
-    ∃ C : ℕ → K[X], (∀ j, (C j).degree < g.degree) ∧
-      B = ∑ j ∈ Finset.range e, C j * g ^ j :=
-  ⟨baseDigit B g, fun j => degree_baseDigit_lt _ _ hg j, baseDigit_reconstruction g hg e B hB⟩
-
-example {ι : Type*} (s : Finset ι) (D : ι → K[X]) (e : ι → ℕ)
-    (hD : ∀ i ∈ s, (D i).Monic) (hd : ∀ i ∈ s, 0 < (D i).natDegree) (he : ∀ i ∈ s, 1 ≤ e i)
-    (hcop : Set.Pairwise ↑s fun i j => IsCoprime (D i) (D j)) (A : K[X]) :
-    ∃ (P : K[X]) (H : ι → ℕ → K[X]),
-      (∀ i ∈ s, ∀ k, (H i k).degree < (D i).degree) ∧
-        algebraMap K[X] (RatFunc K) A
-            / ∏ i ∈ s, (algebraMap K[X] (RatFunc K) (D i)) ^ e i
-          = algebraMap K[X] (RatFunc K) P
-            + ∑ i ∈ s, ∑ k ∈ Finset.Icc 1 (e i),
-                algebraMap K[X] (RatFunc K) (H i k) / (algebraMap K[X] (RatFunc K) (D i)) ^ k :=
-  ratFunc_completePartialFraction s D e hD hd he hcop A
-
 end DeepWiki.SymbolicIntegration

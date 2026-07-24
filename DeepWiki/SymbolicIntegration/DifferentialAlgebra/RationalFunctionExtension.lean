@@ -159,21 +159,6 @@ noncomputable def fractionFieldDifferential : Differential (RatFunc K) :=
 
 end Bundle
 
-/-! ## Restatement examples -/
-
-example [Algebra ℚ K] (d : Derivation ℤ K[X] K[X]) (p : K[X]) :
-    extendDeriv d (algebraMap K[X] (RatFunc K) p) = algebraMap K[X] (RatFunc K) (d p) :=
-  extendDeriv_algebraMap d p
-
-example [Algebra ℚ K] (d : Derivation ℤ K[X] K[X]) (x y : RatFunc K) :
-    extendDeriv d (x * y) = extendDeriv d x * y + x * extendDeriv d y := by
-  simp only [extendDeriv_apply]; exact extendDerivFun_mul d x y
-
-example [Algebra ℚ K] (d : Derivation ℤ K[X] K[X]) (g : K[X]) :
-    extendDeriv d (algebraMap K[X] (RatFunc K) g) / algebraMap K[X] (RatFunc K) g
-      = RatFunc.mk (d g) g :=
-  extendDeriv_logDeriv_mk d g
-
 /-! ### Axiom audit -/
 
 #print axioms extendDeriv

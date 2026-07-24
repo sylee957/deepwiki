@@ -46,11 +46,6 @@ theorem algResExX_two_not_residue :
 theorem algResExX_all_residues_integer :
     CPoly.matchesLinearFactors algResExX_R [0, 0, 1, -1] = true := by native_decide
 
-/-- Restatement: the `n = 2` residue resultant of `∫ dx/((x − 1)·y)` on `y² = x` is `Z⁴ − Z²`. -/
-example : cisZero (csub
-    (cAlgResidueResultant algResExX_D algResExX_rho algResExX_g0 algResExX_g1)
-    [0, 0, -1, 0, 1]) = true := by native_decide
-
 #print axioms algResExX_resultant_eq
 #print axioms algResExX_all_residues_integer
 

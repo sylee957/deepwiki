@@ -110,12 +110,6 @@ theorem existsUnique_differentialExtension_of_isDerivationallyEtale
   apply huniq Γ.deriv
   exact hΓ.deriv_algebraMap
 
-example
-    {F E : Type*} [Field F] [Differential F] [Field E] [Algebra F E]
-    (h : IsDerivationallyEtale F E) :
-    ∃! Δ : Differential E, IsDifferentialExtension F E Δ :=
-  existsUnique_differentialExtension_of_isDerivationallyEtale h
-
 /-- A derivationally étale algebra admits a compatible differential extension. -/
 theorem nonempty_differentialExtension_of_isDerivationallyEtale
     {F E : Type*} [Field F] [Differential F] [Field E] [Algebra F E]
@@ -303,12 +297,6 @@ theorem existsUnique_differentialExtension_finiteSeparable
   existsUnique_differentialExtension_of_isDerivationallyEtale
     isDerivationallyEtale_of_finiteSeparable
 
-example
-    {F E : Type*} [Field F] [Differential F] [Field E] [Algebra F E]
-    [FiniteDimensional F E] [Algebra.IsSeparable F E] :
-    ∃! Δ : Differential E, IsDifferentialExtension F E Δ :=
-  existsUnique_differentialExtension_finiteSeparable
-
 /-- Classically, a separable algebraic extension has a unique differential extension. -/
 theorem existsUnique_differentialExtension_separable
     {F E : Type*} [Field F] [Differential F] [Field E] [Algebra F E]
@@ -321,12 +309,6 @@ theorem existsUnique_differentialExtension_separable
       (⟨Γ, hΓ⟩ : DifferentialExtension F E) = Δ :=
     differentialExtension_separable_unique ⟨Γ, hΓ⟩ Δ
   exact congr_arg DifferentialExtension.toDifferential h
-
-example
-    {F E : Type*} [Field F] [Differential F] [Field E] [Algebra F E]
-    [Algebra.IsSeparable F E] :
-    ∃! Δ : Differential E, IsDifferentialExtension F E Δ :=
-  existsUnique_differentialExtension_separable
 
 end Separable
 
@@ -539,18 +521,6 @@ theorem trace_logDeriv_eq_logDeriv_norm {F E : Type*} [Field F] [Differential F]
     rw [map_div₀, ← deriv_algebraMap]
     exact hstep
   rw [hlhs, hrhs]
-
-example {F E : Type*} [Field F] [Differential F] [Field E]
-    [Differential E] [Algebra F E] [DifferentialAlgebra F E] [FiniteDimensional F E]
-    [Algebra.IsSeparable F E] (a : E) :
-    (Algebra.trace F E a)′ = Algebra.trace F E (a′) :=
-  deriv_trace_eq_trace_deriv a
-
-example {F E : Type*} [Field F] [Differential F] [Field E]
-    [Differential E] [Algebra F E] [DifferentialAlgebra F E] [FiniteDimensional F E]
-    [Algebra.IsSeparable F E] (a : E) (ha : a ≠ 0) :
-    Algebra.trace F E (a′ / a) = (Algebra.norm F a)′ / Algebra.norm F a :=
-  trace_logDeriv_eq_logDeriv_norm a ha
 
 end TraceNorm
 

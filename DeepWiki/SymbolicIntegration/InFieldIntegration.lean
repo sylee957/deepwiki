@@ -138,11 +138,4 @@ theorem isRationalDerivative_iff [CharZero K] {f : RatFunc K} {g : K[X]} {A D : 
     refine ⟨algebraMap K[X] (RatFunc K) g, ?_⟩
     rw [hf, map_zero, zero_div, add_zero]
 
-example [CharZero K] {f : RatFunc K} {g A D : K[X]} (hD : Squarefree D) (hAD : IsCoprime A D)
-    (hdeg : A.degree < D.degree)
-    (hf : f = (algebraMap K[X] (RatFunc K) g)′
-          + algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D) :
-    (∃ v : RatFunc K, v′ = f) ↔ A = 0 :=
-  isRationalDerivative_iff hD hAD hdeg hf
-
 end DeepWiki.SymbolicIntegration

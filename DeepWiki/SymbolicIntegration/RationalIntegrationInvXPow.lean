@@ -102,22 +102,4 @@ theorem inv_one_add_X_pow_four_eq_sum_residue_logDeriv (h4 : (4 : K) ≠ 0) :
   have hn : ((4 : ℕ) : K) ≠ 0 := by rw [Nat.cast_ofNat]; exact h4
   simpa using inv_one_add_X_pow_eq_sum_residue_logDeriv hn (by norm_num)
 
--- `∫ dx/(1+xⁿ) = ∑_ζ (−ζ/n)·log(x−ζ)` over the roots of `Xⁿ+1`.
-open Classical in
-example {n : ℕ} (hn : (n : K) ≠ 0) (hn1 : 1 ≤ n) :
-    (1 : RatFunc K) / algebraMap K[X] (RatFunc K) (X ^ n + 1)
-      = ∑ ζ ∈ (X ^ n + 1 : K[X]).roots.toFinset,
-          algebraMap K[X] (RatFunc K) (C (-ζ / (n : K)))
-            * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C ζ)) :=
-  inv_one_add_X_pow_eq_sum_residue_logDeriv hn hn1
-
--- The `n = 4` case `∫ dx/(1+x⁴)`.
-open Classical in
-example (h4 : (4 : K) ≠ 0) :
-    (1 : RatFunc K) / algebraMap K[X] (RatFunc K) (X ^ 4 + 1)
-      = ∑ ζ ∈ (X ^ 4 + 1 : K[X]).roots.toFinset,
-          algebraMap K[X] (RatFunc K) (C (-ζ / (4 : K)))
-            * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C ζ)) :=
-  inv_one_add_X_pow_four_eq_sum_residue_logDeriv h4
-
 end DeepWiki.SymbolicIntegration

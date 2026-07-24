@@ -84,35 +84,9 @@ theorem specialDenominatorSubst_cleared {R : Type*} [CommRing R] (D : Derivation
 
 namespace DensePoly
 
-/-- Restatement: the fuel-free divisibility check reads as honest divisibility. -/
-example {α : Type*} [CField α] [CFieldSpec α] (q p : DensePoly α)
-    (hq : cnorm q ≠ []) (hdvd : CPolyEuclidean.dvd q p = true) :
-    toPoly q ∣ toPoly p := by
-  have hq0 : CPoly.toPoly q ≠ 0 := by
-    rw [toPoly_list_eq]
-    exact fun h => hq ((cnormG_eq_nil_iff _).mpr h)
-  simpa only [toPoly_list_eq] using
-    CPolyEuclidean.toPoly_dvd_of_dvd_eq_true q p hq0 hdvd
-
-/-- Restatement: the fuel-free generic Diophantine solver satisfies the Bézout identity. -/
-example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : DensePoly α)
-    (hq0 : cnorm q ≠ [])
-    (hgdeg : (toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0)
-    (hgne : toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0) :
-    toPoly (CPoly.diophantineReduced p q rhs).1 * toPoly p
-        + toPoly (CPoly.diophantineReduced p q rhs).2 * toPoly q = toPoly rhs :=
-  toPolyG_diophantineReduced p q rhs hq0 hgdeg hgne
-
 end DensePoly
 
-/-! ### Restatement + axiom audit for the §6.2 special-denominator substitution glue -/
-
--- ★ The §6.2 special-denominator substitution reaches `a·D(r)+b·r = c·pᵏ` from the reduced obligation
--- `a·D(q)+b·q+k·a·E·q = c` (the `ν_p`-bookkeeping fact), with `r = q·pᵏ` and `Dp = E·p`.
-example {R : Type*} [CommRing R] (D : Derivation ℤ R R) (a b c p E q : R) (k : ℕ)
-    (hDp : D p = E * p) (hreduced : a * D q + b * q + (k : R) * (a * E) * q = c) :
-    a * D (q * p ^ k) + b * (q * p ^ k) = c * p ^ k :=
-  specialDenominatorSubst_cleared D a b c p E q k hDp hreduced
+/-! ### Axiom audit for the special-denominator substitution glue -/
 
 #print axioms specialDenominatorSubst_expand
 #print axioms specialDenominatorSubst_cleared

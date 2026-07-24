@@ -49,11 +49,6 @@ theorem natDegree_gcd_eq_count_residue [IsAlgClosed F] (A D : F[X]) (hD : D.Sepa
 
 open scoped Classical in
 -- `deg gcd(D, A − a·D')` equals the number of `D`-roots with residue `a`.
-example [IsAlgClosed F] (A D : F[X]) (hD : D.Separable) (a : F) :
-    (gcd D (A - C a * derivative D)).natDegree
-      = (D.roots.map (fun α => A.eval α / (derivative D).eval α)).count a :=
-  natDegree_gcd_eq_count_residue A D hD a
-
 /-- Root-product form over `K[t]`: `R(t) = lc(D)^{deg D − 1} · ∏_{α : D(α)=0} (C(A α) − X·C(D' α))`,
 for `deg A < deg D` over an algebraically closed field. -/
 theorem rtResultant_eq_prod_roots [IsAlgClosed F] (A D : F[X]) (hA : A.natDegree < D.natDegree) :
@@ -90,13 +85,6 @@ theorem rtResultant_eq_prod_roots [IsAlgClosed F] (A D : F[X]) (hA : A.natDegree
       from eval₂_hom (C : F →+* F[X]) α]
 
 -- The un-evaluated root-product form of `R(t)` over `K[t]`.
-example [IsAlgClosed F] (A D : F[X]) (hA : A.natDegree < D.natDegree) :
-    rtResultant A D
-      = C (D.leadingCoeff) ^ (D.natDegree - 1) *
-        (D.roots.map (fun α =>
-          C (A.eval α) - Polynomial.X * C ((derivative D).eval α))).prod :=
-  rtResultant_eq_prod_roots A D hA
-
 /-- At a root `α` with `D'(α) ≠ 0`, `C(A α) − X·C(D' α) = −C(D' α)·(X − C(A α/D' α))`. -/
 theorem linearFactor_eq_residue (A D : F[X]) (α : F) (hα : (derivative D).eval α ≠ 0) :
     C (A.eval α) - Polynomial.X * C ((derivative D).eval α)
@@ -140,10 +128,6 @@ theorem roots_rtResultant [IsAlgClosed F] (A D : F[X]) (hD : D.Separable)
 
 open scoped Classical in
 -- The roots of `R(t)` (with multiplicity) are the residues over the roots of `D`.
-example [IsAlgClosed F] (A D : F[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) :
-    (rtResultant A D).roots = D.roots.map (fun α => A.eval α / (derivative D).eval α) :=
-  roots_rtResultant A D hD hA
-
 open scoped Classical in
 /-- `rootMultiplicity a (rtResultant A D) = deg gcd(D, A − a·D')`, for separable `D` and `deg A < deg D`
 over an algebraically closed field. -/
@@ -154,10 +138,6 @@ theorem rootMultiplicity_rtResultant_eq_natDegree_gcd [IsAlgClosed F] (A D : F[X
 
 open scoped Classical in
 -- `rootMultiplicity a R = deg gcd(D, A − a·D')`: the residue multiplicity is the gcd degree.
-example [IsAlgClosed F] (A D : F[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : F) :
-    (rtResultant A D).rootMultiplicity a = (gcd D (A - C a * derivative D)).natDegree :=
-  rootMultiplicity_rtResultant_eq_natDegree_gcd A D hD hA a
-
 open scoped Classical in
 /-- The distinct roots of `rtResultant A D` are the distinct residues `{A(α)/D'(α) : D(α) = 0}`, for
 separable `D` and `deg A < deg D` over an algebraically closed field. -/

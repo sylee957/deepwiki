@@ -510,29 +510,4 @@ theorem cCoupledDESystem_sound [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
   cCoupledDESystem_sound_of_check a b1 b2 z1 z2 d y1 y2 hsome
     (DensePoly.coupledClearedCheck_of_cCoupledDESystem a b1 b2 z1 z2 y1 y2 d hsome)
 
-/-! ### Restatements against the intended wording -/
-
--- The base coupled-system solve satisfies the two `ℚ[X]` row identities without a separate cleared-check
--- hypothesis; the check is discharged from the lawful abstract linear-solver soundness law.
-example [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
-    (a : ℚ) (b1 b2 z1 z2 y1 y2 : DensePoly ℚ) (d : ℕ)
-    (hsome : DensePoly.cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
-    Polynomial.derivative (DensePoly.toPoly y1) + DensePoly.toPoly b1 * DensePoly.toPoly y1
-        + Polynomial.C a * (DensePoly.toPoly b2 * DensePoly.toPoly y2) = DensePoly.toPoly z1 ∧
-      Polynomial.derivative (DensePoly.toPoly y2) + DensePoly.toPoly b2 * DensePoly.toPoly y1
-        + DensePoly.toPoly b1 * DensePoly.toPoly y2 = DensePoly.toPoly z2 :=
-  cCoupledDESystem_sound a b1 b2 z1 z2 d y1 y2 hsome
-
--- The abstract linear-solver soundness law: a returned solution solves `A·x = b` rowwise.
-example [CLinearSolve ℚ] [LawfulCLinearSolve ℚ]
-    (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
-    (hwidth : ∀ r ∈ Arows, r.length = ncols) (hlen : Arows.length = urhs.length)
-    (hsome : CLinearSolve.solveUnique Arows urhs ncols = some x) :
-    ∀ i, i < Arows.length → DensePoly.dotQ (Arows.getD i []) x = urhs.getD i 0 :=
-  fun i hi => by
-    have h := LawfulCLinearSolve.solveUnique_sound Arows urhs ncols x hwidth hlen hsome i hi
-    change linearDot (Arows.getD i []) x = urhs.getD i CCommRing.zero at h
-    rw [linearDot_rat_eq_dotQ] at h
-    exact h
-
 end DeepWiki.SymbolicIntegration

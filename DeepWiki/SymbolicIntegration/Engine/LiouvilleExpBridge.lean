@@ -712,19 +712,6 @@ theorem isLiouville_expExtension_uncond (u : F) (hnd : NondegenerateExp u) :
     IsLiouville F (RatFunc F) :=
   isLiouville_of_expPoleMatching u hnd (expPoleMatching_of_nondegenerateExp u hnd)
 
-/-! ### Restatements pinning the ported results -/
-
--- The ported pole-matching: `ExpPoleMatching u` holds from `NondegenerateExp u` alone.
-example (u : F) (hnd : NondegenerateExp u) : ExpPoleMatching u :=
-  expPoleMatching_of_nondegenerateExp u hnd
--- The UNCONDITIONAL exp keystone: `F(exp u) = RatFunc F` is Liouville over `F` for every genuine new
--- exp monomial — modulo only the necessary transcendence `NondegenerateExp u`.
-example (u : F) (hnd : NondegenerateExp u) :
-    letI := expDifferential u
-    letI := expDifferentialAlgebra u
-    IsLiouville F (RatFunc F) :=
-  isLiouville_expExtension_uncond u hnd
-
 /-- A nondegenerate exp monomial introduces no new constants in `RatFunc F` (`ContainConstants`): a
 constant `x` (with `x′ = 0 ∈ range(algebraMap F …)`) already lies in `F`, immediately from
 `expDeriv_mem_range_imp_mem_range` (the exp `v′ ∈ F ⟹ v ∈ F` descent). The exp sibling of

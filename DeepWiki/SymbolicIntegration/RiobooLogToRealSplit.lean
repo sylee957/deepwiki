@@ -102,17 +102,5 @@ theorem logToReal_conjugate_pair_of_split {i a b A B sPlus sMinus : R} (hi : i ^
 
 end ConjugatePairFromSplit
 
-section Restatements
-variable {S : Type*} [CommRing S] {K : Type*} [CommRing K] [Algebra K S]
-
-example (i : S) (hi : i ^ 2 = -1) (u v : S) (R : K[X]) :
-    ∃ P Q : S, aeval (u + i * v) R = P + i * Q ∧ aeval (u - i * v) R = P - i * Q :=
-  exists_realImag_split i hi u v R
-
-example {T : Type*} [CommRing T] (i A B sP sM : T) (hi : i ^ 2 = -1)
-    (hP : sP = A + i * B) (hM : sM = A - i * B) : A ^ 2 + B ^ 2 = sP * sM :=
-  sq_add_sq_eq_mul_conj i A B sP sM hi hP hM
-
-end Restatements
 
 end DeepWiki.SymbolicIntegration

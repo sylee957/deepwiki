@@ -47,10 +47,6 @@ theorem denomNormalGate_reduce (x : F β) :
     CFrac.denomNormalGate (CFrac.reduce x) = CFrac.canonNormalizedGate x := by
   simp [CFrac.denomNormalGate, CFrac.canonNormalizedGate]
 
-example (x : F β) :
-    CFrac.denomNormalGate (CFrac.reduce x) = CFrac.canonNormalizedGate x :=
-  denomNormalGate_reduce x
-
 end Bridge
 
 /-! ## Canonical-normality propositions -/
@@ -76,10 +72,6 @@ theorem canonNormalizedGate_iff (f q' : F β) :
   rw [CFrac.den_reduce]
 
 end NormalityWf
-
-example (f q' : SparseFrac ℚ) :
-    CFrac.canonNormalizedGate (weakNormalizedF f q') = true ↔ IsCanonNormalized f q' :=
-  canonNormalizedGate_iff f q'
 
 /-! ## The re-pin corollary -/
 
@@ -112,18 +104,6 @@ theorem denomNormalGate_reduce_weakNormalized_iff [CFieldDomain β DensePoly] (f
           (CFrac.num f) (CFrac.den f))) := by
   rw [denomNormalGate_reduce_weakNormalized]
   exact canonNormalizedGate_iff f _
-
-/-! ### Restatement against the intended wording (anonymous `example`) -/
-
--- The same re-pin reconciliation stated entirely on the Wf gate.
-example (f : DenseFrac β) :
-    CFrac.denomNormalGate (CFrac.reduce (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-          (CFrac.num f) (CFrac.den f)))))
-      = CFrac.canonNormalizedGate (weakNormalizedF f
-        (CFrac.ofPoly (cWeakNormalizer ([CCommRing.one] : DensePoly β)
-          (CFrac.num f) (CFrac.den f)))) :=
-  denomNormalGate_reduce_weakNormalized f
 
 end Repin
 

@@ -187,36 +187,4 @@ theorem lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor {K : Type*} [Field K]
   lazard_Pk_eq_Rk_Sk_of_sortedByYDegree_of_degreeOf_zero hB
     (fun i0 hi0 => degreeOf_min_eq_zero_of_hasNoCommonYFactor hB hncf i0 hi0) i
 
-example {K : Type*} [Field K] {P g : Polynomial (MvPolynomial (Fin 1) K)}
-    {c : MvPolynomial (Fin 1) K} (hP : P.IsPrimitive) (hc : c ≠ 0) (hg : g ≠ 0)
-    (hdvd : P ∣ Polynomial.C c * g) : P ∣ g :=
-  isPrimitive_dvd_of_dvd_C_mul hP hc hg hdvd
-
-example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
-    degreeOf 0 f = 0 ↔
-      IsUnit (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)) :=
-  degreeOf_zero_iff_isUnit_primPart_lazardView
-
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (i0 : Fin B.card) (hi0 : i0.val = 0) (i : Fin B.card) :
-    (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
-      (lazardView (sortedByYDegree hB i0))) ∣ lazardView (sortedByYDegree hB i) :=
-  primPart_lazardView_min_dvd_all hB i0 hi0 i
-
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (hncf : HasNoCommonYFactor hB) (i0 : Fin B.card) (hi0 : i0.val = 0) :
-    degreeOf 0 (sortedByYDegree hB i0) = 0 :=
-  degreeOf_min_eq_zero_of_hasNoCommonYFactor hB hncf i0 hi0
-
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (hncf : HasNoCommonYFactor hB) (i : Fin B.card) :
-    Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
-  C_dvd_lazardView_sortedByYDegree_of_hasNoCommonYFactor hB hncf i
-
 end DeepWiki.SymbolicIntegration

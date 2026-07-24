@@ -722,16 +722,6 @@ Combining the lift-back (`toPolyG_liftGBPolyCoreG`), the primitive-PRS invariant
 `cclearDenomsCore` bridge (step 1) gives the polynomial gcd over β(s). -/
 
 
-/-! ### Restatements against the intended wording (anonymous `example`s) -/
-
--- The crux: under a regular PRS run, the generic primitive PRS computes the gcd up to associates over
--- β(s) = RatFunc (CFieldSpec.K β).
-example (cgcdB : DensePoly β → DensePoly β → DensePoly β) (fuel : ℕ) (P Q : GBPolyCore β)
-    (hreg : CPrimPRSGenAssocReg cgcdB fuel P Q) :
-    Associated (toGBPoly (cprimPRSgcdGenCore cgcdB fuel P Q)) (gcd (toGBPoly P) (toGBPoly Q)) :=
-  associated_toGBPolyG_cprimPRSgcdGenCore cgcdB fuel P Q hreg
-
-
 /-! ### Verdict
 
 The fuel specification's primitive-PRS invariant is reduced to `CPrimPRSGenAssocReg`; clauses (ii) and

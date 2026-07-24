@@ -107,12 +107,6 @@ theorem deriv_mveval₂_constants {R σ : Type*} [CommRing R] [Differential R] [
         simp [Ne.symm hji]
       · simp
 
-example {R : Type*} [CommRing R] [Differential R] {n : ℕ}
-    (p : MvPolynomial (Fin n) (constants R)) (u : Fin n → R) :
-    (MvPolynomial.eval₂ (constants R).subtype u p)′ =
-      ∑ i, MvPolynomial.eval₂ (constants R).subtype u (MvPolynomial.pderiv i p) * (u i)′ :=
-  deriv_mveval₂_constants p u
-
 /-- `(c • D₁ + D₂) a = c * D₁ a + D₂ a`: a linear combination of derivations acts pointwise. -/
 theorem smul_add_derivation_apply {R : Type*} [CommRing R]
     (c : R) (D₁ D₂ : Derivation ℤ R R) (a : R) :

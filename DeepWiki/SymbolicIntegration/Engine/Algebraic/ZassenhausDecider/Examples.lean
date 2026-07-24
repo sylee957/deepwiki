@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.ZassenhausDecider.Core
 
 /-! # Zassenhaus decider validation examples
 
-Concrete `native_decide` validations and restatements for the Zassenhaus decider.
+Concrete `native_decide` validations for the Zassenhaus decider.
 -/
 
 open Polynomial
@@ -85,74 +85,5 @@ example : (factorModP 3 (reduceCoeffs 3 ([1, 0, 0, 0] ++ [1] : List ℤ))).lengt
 lists, with benign trailing zeros from un-trimmed engine output) (`native_decide`). -/
 example : factorModP 3 (reduceCoeffs 3 ([1, 0, 0, 0] ++ [1] : List ℤ))
     = ([[2, 2, 1, 0, 0, 0], [2, 1, 1]] : List (List (ZMod 3))) := by native_decide
-
-/-! ## Restatements
-
-The decider verdicts are about the intended polynomials, and the contrast holds. -/
-
--- the headline input list IS `x⁴ + 1`.
-example : toPolyZ ([1, 0, 0, 0] ++ [1]) = X ^ 4 + 1 := toPolyZ_X_pow_four_add_one
-
--- `x⁴ + 1` is GENUINELY ℚ-irreducible (from the cyclotomic theorem) AND the complete decider
--- confirms it (`true`), while the mod-`p` test returns `false` — the deeper claim the decider backs.
-example : Irreducible (toPolyZ ([1, 0, 0, 0] ++ [1])) ∧
-    irreducibleZassenhaus 3 ([1, 0, 0, 0] ++ [1]) 4 = true ∧
-    irreducibleByModP 3 ([1, 0, 0, 0] ++ [1]) 4 = false :=
-  ⟨irreducible_toPolyZ_X_pow_four_add_one,
-    irreducibleZassenhaus_X_pow_four_add_one,
-    irreducibleByModP_X_pow_four_add_one_false.2.1⟩
-
--- the decider has `Bool` type and the keystone soundness brick has the intended factorization type.
-example : ∀ (f g : List ℤ) (dg : ℕ), dividesExactly f g dg = true →
-    toPolyZ f = listToPoly g * listToPoly (divmodByMonic f g dg).1 :=
-  fun _ _ _ h => dividesExactly_dvd h
-
--- the PROVEN reducibility-soundness: recombine non-empty ⟹ ¬ Irreducible (monic degree-N input).
-example {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
-    (hmon : IsMonicOfDegree (toPolyZ f) N) (hne : recombine f n facs ≠ []) :
-    ¬ Irreducible (toPolyZ f) :=
-  recombine_imp_not_irreducible hmon hne
-
--- the PROVEN completeness contrapositive: Irreducible ⟹ recombine finds no proper factor.
-example {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
-    (hmon : IsMonicOfDegree (toPolyZ f) N) (hirr : Irreducible (toPolyZ f)) :
-    recombine f n facs = [] :=
-  irreducible_imp_recombine_nil hmon hirr
-
--- ★ BOTH DIRECTIONS at the `recombine` level form an exact converse pair (modulo `FactorSurfaces`):
--- `recombine ≠ [] ⟹ ¬Irreducible` is unconditional (the reducibility direction, the proven half);
--- `recombine = [] ⟹ Irreducible` is conditional on surfacing (the irreducibility direction).
-example {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
-    (hmon : IsMonicOfDegree (toPolyZ f) N) :
-    (recombine f n facs ≠ [] → ¬ Irreducible (toPolyZ f)) ∧
-    (FactorSurfaces f n facs N → recombine f n facs = [] → Irreducible (toPolyZ f)) :=
-  ⟨fun hne => recombine_imp_not_irreducible hmon hne,
-   fun hsurf hnil => irreducible_of_recombine_nil hsurf hmon hnil⟩
-
--- ★★ THE MILESTONE, both directions of the decider, as a single statement (the irreducibility
--- direction conditional on the two isolated residuals `hsurf`/`hmodp`, the reducibility direction
--- — the `false`-from-recombination contrapositive — unconditional via `irreducible_imp_recombine_nil`):
-example {p : ℕ} [Fact p.Prime] {f : List ℤ} {n : ℕ}
-    (hmon : IsMonicOfDegree (toPolyZ f) n)
-    (hsurf : FactorSurfaces f ((p : ℤ) ^ (2 ^ henselRounds p f))
-      (henselLiftMany f ((factorModP p (reduceCoeffs p f)).length + 1)
-        (factorModP p (reduceCoeffs p f))) n)
-    (hmodp : (factorModP p (reduceCoeffs p f)).length = 1 → Irreducible (toPolyZ f)) :
-    (irreducibleZassenhaus p f n = true → Irreducible (toPolyZ f)) ∧
-    (Irreducible (toPolyZ f) →
-      recombine f ((p : ℤ) ^ (2 ^ henselRounds p f))
-        (henselLiftMany f ((factorModP p (reduceCoeffs p f)).length + 1)
-          (factorModP p (reduceCoeffs p f))) = []) :=
-  ⟨fun h => irreducibleZassenhaus_sound hmon hsurf hmodp h,
-   fun hirr => irreducible_imp_recombine_nil hmon hirr⟩
-
--- ★ `FactorSurfaces` is realizable (true on the reducible witness `x² − 1`), so the reduction's
--- residual is a genuine statement, not vacuous — the gap is its GENERAL proof.
-example : FactorSurfaces ([-1, 0] ++ [1] : List ℤ)
-    ((5 : ℤ) ^ (2 ^ henselRounds 5 ([-1, 0] ++ [1])))
-    (henselLiftMany ([-1, 0] ++ [1])
-      ((factorModP 5 (reduceCoeffs 5 ([-1, 0] ++ [1]))).length + 1)
-      (factorModP 5 (reduceCoeffs 5 ([-1, 0] ++ [1])))) 2 :=
-  factorSurfaces_X_sq_sub_one
 
 end DeepWiki.SymbolicIntegration

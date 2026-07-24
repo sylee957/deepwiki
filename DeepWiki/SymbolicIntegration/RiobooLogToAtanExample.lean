@@ -59,14 +59,6 @@ theorem ex281_logToAtan_correct (hi : i ^ 2 = -1) (hφinj : Function.Injective �
           ((φ (X ^ 3 - 3 * X) + i * φ (X ^ 2 - 2)) / (φ (X ^ 3 - 3 * X) - i * φ (X ^ 2 - 2))) :=
   isLogToAtanRun_correct hi (map_neg φ) (ex281_isLogToAtanRun hφinj)
 
-/-- Restatement: for `A = x³−3x`, `B = x²−2`, the arctan-derivative sum over `[(x⁵−3x³+x)/2, x³, x]`
-equals `i·logDeriv((A+iB)/(A−iB))`. -/
-example (hi : i ^ 2 = -1) (hφinj : Function.Injective φ) :
-    ((ex281_args φ).map fun P => 2 * (P′ / (1 + P ^ 2))).sum
-      = i * Differential.logDeriv
-          ((φ (X ^ 3 - 3 * X) + i * φ (X ^ 2 - 2)) / (φ (X ^ 3 - 3 * X) - i * φ (X ^ 2 - 2))) :=
-  ex281_logToAtan_correct hi hφinj
-
 end Example281
 
 end DeepWiki.SymbolicIntegration

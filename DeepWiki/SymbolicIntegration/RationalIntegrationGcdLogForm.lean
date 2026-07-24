@@ -18,14 +18,6 @@ namespace DeepWiki.SymbolicIntegration
 variable {K : Type*} [Field K]
 
 open scoped Classical in
--- The gcd factor is the product of the linear factors whose roots have residue `a`.
-example (s : Finset K) (A : K[X]) (a : K) :
-    gcd (Lagrange.nodal s id) (A - C a * derivative (Lagrange.nodal s id))
-      = ∏ α ∈ s.filter
-          (fun α => A.eval α / eval α (derivative (Lagrange.nodal s id)) = a), (X - C α) :=
-  gcd_nodal_eq_prod_residue s A a
-
-open scoped Classical in
 /-- For `deg A < #s` over split squarefree `D`, `A/D = ∑_a a · logDeriv(gcd(D, A − a·D'))` in `K(x)`. -/
 theorem ratFunc_eq_sum_residue_gcd (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
@@ -71,27 +63,5 @@ theorem ratFunc_eq_sum_residue_of_isSimilar_gcd (s : Finset K) (A : K[X]) (hA : 
   have hgcd : gcd (Lagrange.nodal s id) (A - C a * derivative (Lagrange.nodal s id)) ≠ 0 :=
     fun h => hnodal (gcd_eq_zero_iff _ _ |>.mp h).1
   rw [logDeriv_algebraMap_eq_of_isSimilar hgcd (hg a)]
-
-open scoped Classical in
--- The Mathlib-`gcd` log-form is the `g = gcd` instance of the switchable one (via reflexive similarity),
--- so `ratFunc_eq_sum_residue_gcd` is subsumed by the abstraction.
-example (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
-    algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
-      = ∑ a ∈ s.image (fun α => A.eval α / eval α (derivative (Lagrange.nodal s id))),
-          algebraMap K[X] (RatFunc K) (C a)
-            * Differential.logDeriv (algebraMap K[X] (RatFunc K)
-                (gcd (Lagrange.nodal s id) (A - C a * derivative (Lagrange.nodal s id)))) :=
-  ratFunc_eq_sum_residue_of_isSimilar_gcd s A hA _ (fun _ => IsSimilar.refl _)
-
-open scoped Classical in
--- The grouped logarithmic derivative form can be written with the residue gcd in each summand.
-example (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
-    algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
-      = ∑ a ∈ s.image (fun α => A.eval α / eval α (derivative (Lagrange.nodal s id))),
-          algebraMap K[X] (RatFunc K) (C a)
-            * Differential.logDeriv (algebraMap K[X] (RatFunc K)
-                (gcd (Lagrange.nodal s id)
-                  (A - C a * derivative (Lagrange.nodal s id)))) :=
-  ratFunc_eq_sum_residue_gcd s A hA
 
 end DeepWiki.SymbolicIntegration

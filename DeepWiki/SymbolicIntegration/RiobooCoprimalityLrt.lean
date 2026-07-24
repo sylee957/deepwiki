@@ -133,19 +133,6 @@ theorem rioboo_coprime_lrt (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDeg
     (hσfix hE1real) (hσfix hE2real) (hσfix hF1real) (hσfix hF2real)
     (hσfix hAreal) (hσfix hBreal) hbunit hsqfree h27 h28
 
-open scoped Classical in
-example (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDegree < D.natDegree)
-    (conj : K →+* K) (hconj : ∀ c, conj (conj c) = c) {i : K} (hi : i ^ 2 = -1)
-    (hconji : conj i = -i) (hCreal : Cnum.map conj = Cnum) (hDreal : D.map conj = D)
-    {a b : K} (hareal : conj a = a) (hbreal : conj b = b) (hb : b ≠ 0)
-    (hroot : (rtResultant Cnum D).IsRoot (a + i * b)) :
-    ∃ A B : K[X], IsCoprime A B ∧
-      (((if (rtResultant Cnum D).rootMultiplicity (a + i * b) = D.natDegree then
-            D.map (C : K →+* K[X])
-          else lrtSubresultant Cnum D ((rtResultant Cnum D).rootMultiplicity (a + i * b))).map
-        (Polynomial.evalRingHom (a + i * b))) = A + C i * B) :=
-  rioboo_coprime_lrt Cnum D hD hCD conj hconj hi hconji hCreal hDreal hareal hbreal hb hroot
-
 end LrtCoprime
 
 end DeepWiki.SymbolicIntegration

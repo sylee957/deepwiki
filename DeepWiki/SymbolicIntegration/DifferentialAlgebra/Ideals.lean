@@ -74,11 +74,6 @@ theorem exists_quotientDerivation {R : Type*} [CommRing R] [Differential R]
       ∀ a : R, Dstar (Ideal.Quotient.mk I.toIdeal a) = Ideal.Quotient.mk I.toIdeal a′ :=
   ⟨I.quotientDerivation, I.quotientDerivation_mk⟩
 
-example {R : Type*} [CommRing R] [Differential R] (I : DifferentialIdeal R) :
-    ∃ Dstar : Derivation ℤ (R ⧸ I.toIdeal) (R ⧸ I.toIdeal),
-      ∀ a : R, Dstar (Ideal.Quotient.mk I.toIdeal a) = Ideal.Quotient.mk I.toIdeal a′ :=
-  I.exists_quotientDerivation
-
 /-- Every ideal is differential when the derivation on the ring is zero. -/
 def ofDerivEqZero {R : Type*} [CommRing R] [Differential R]
     (I : Ideal R) (hD : (Differential.deriv : Derivation ℤ R R) = 0) :

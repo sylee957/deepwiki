@@ -84,19 +84,8 @@ def RationalPartExhaustivenessFrontier : Prop :=
 
 end Frontier
 
-/-! ## Restatements and axiom audit -/
+/-! ## Axiom audit -/
 
-/-! ### Restatements (anonymous `example`s) -/
-
-section Restatements
-
--- The within-tower algebraic descent: elementary over a finite algebraic extension descends to the base.
-example (F K : Type*) [Field F] [Field K] [CharZero F] [Differential F] [Differential K] [Algebra F K]
-    [DifferentialAlgebra F K] [FiniteDimensional F K] (f : F) (h : IsAlgebraicElementary F K f) :
-    IsAlgebraicElementary F F f :=
-  elementary_base_of_elementary_finiteDim F K f h
-
-end Restatements
 
 /-! ### Axiom audit -/
 

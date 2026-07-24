@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.FunctionAlgebraIntegrate.Soundness
 
 /-! # Function-algebra integration examples
 
-Worked checks for `∫y dx` on the reducible curve `(y²−x)(y³−x) = 0`, plus restatements of the
+Worked checks for `∫y dx` on the reducible curve `(y²−x)(y³−x) = 0`, and checks for the
 abstract recombination API. -/
 
 open Polynomial
@@ -42,26 +42,5 @@ theorem cubeRootComponentIntegral_deriv :
   native_decide
 
 end DensePoly
-
-/-! ### Restatements against the intended wording (anonymous `example`s) -/
-
--- ★ The keystone (abstract): a derivation kills any idempotent — "the indicators are constants".
-example {R Q : Type*} [CommRing R] [CommRing Q] [Algebra R Q] (D : Derivation R Q Q)
-    (e : Q) (he : IsIdempotentElem e) : D e = 0 :=
-  FunctionAlgebra.derivation_idempotent_eq_zero D e he
-
--- ★ The recombination soundness (abstract): `D(Σ eᵢ Fᵢ) = g` over a partition of unity by idempotents
--- with the per-component soundness `eᵢ·D Fᵢ = eᵢ·g` — the irreducible-curve caveat removed abstractly.
-example {R Q : Type*} [CommRing R] [CommRing Q] [Algebra R Q] (D : Derivation R Q Q)
-    (pairs : List (Q × Q)) (g : Q)
-    (hidem : ∀ p ∈ pairs, IsIdempotentElem p.1)
-    (hcomp : ∀ p ∈ pairs, p.1 * D p.2 = p.1 * g)
-    (hsum : (pairs.map (fun p => p.1)).sum = 1) :
-    D ((pairs.map (fun p => p.1 * p.2)).sum) = g :=
-  FunctionAlgebra.derivation_recombine_eq D pairs g hidem hcomp hsum
-
--- ★★ The concrete function-algebra soundness `D(F) = integrand` over a reducible curve is
--- `DensePoly.afIntegrateFunctionAlgebra_sound`. The recombined integral `F = Σ eᵢ Fᵢ` of the function
--- algebra `K(x)[y]/(T)` differentiates to the integrand in the carrier quotient.
 
 end DeepWiki.SymbolicIntegration

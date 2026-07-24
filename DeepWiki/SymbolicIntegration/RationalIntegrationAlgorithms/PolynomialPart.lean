@@ -33,8 +33,6 @@ theorem polyIntegral_derivative [CharZero K] (Q : K[X]) : derivative (polyIntegr
     rw [hn1, div_mul_cancel₀ _ (by exact_mod_cast Nat.succ_ne_zero n)]
 
 -- `∫ Q dx` is a genuine antiderivative of `Q`.
-example [CharZero K] (Q : K[X]) : derivative (polyIntegral Q) = Q := polyIntegral_derivative Q
-
 /-- In `K(x)`, `A / Den` splits into its polynomial quotient plus remainder fraction. -/
 theorem ratFunc_polyDivide_split (A Den : K[X]) (hDen : Den ≠ 0) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) Den
@@ -80,15 +78,6 @@ theorem integrateRationalFunction_reduction [CharZero K] {ι : Type*} (s : Finse
 open scoped Differential in
 open Classical in
 -- `∫ A/Den` reduces to a rational part, a polynomial-integral part, and a squarefree-denominator sum.
-example [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (D : ι → K[X]) (e : ι → ℕ)
-    (hD : ∀ i ∈ s, Squarefree (D i)) (he : ∀ i ∈ s, 1 ≤ e i)
-    (hcop : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (D i) (D j)) (A : K[X]) :
-    ∃ (g : RatFunc K) (p : K[X]) (r : ι → K[X]),
-      algebraMap K[X] (RatFunc K) A / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (D i) ^ e i
-        = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
-          + ∑ i ∈ s, algebraMap K[X] (RatFunc K) (r i) / algebraMap K[X] (RatFunc K) (D i) :=
-  integrateRationalFunction_reduction s hs D e hD he hcop A
-
 open scoped Differential in
 open Classical in
 /-- The rational-function reduction can choose squarefree residual numerators proper below each factor. -/

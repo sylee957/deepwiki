@@ -102,12 +102,4 @@ theorem toPoly_diophantineReduced_eq (p q rhs : DensePoly ℚ)
   Prod.ext (toPoly_diophantineReduced_fst_eq p q rhs hinput)
     (toPoly_diophantineReduced_snd_eq p q rhs hinput)
 
-example (p q rhs : DensePoly ℚ)
-    (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
-    (hgdeg : (toPoly (CPolyEuclidean.gcdExt p q).1).natDegree = 0)
-    (hgne : toPoly (CPolyEuclidean.gcdExt p q).1 ≠ 0) :
-    toPoly (CPoly.diophantineReduced p q rhs).1
-      = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 :=
-  toPoly_diophantineReduced_fst_eq p q rhs ⟨hq, hcop, hgdeg, hgne⟩
-
 end DeepWiki.SymbolicIntegration.Compute

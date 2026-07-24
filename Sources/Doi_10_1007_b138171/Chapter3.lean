@@ -237,12 +237,14 @@ normalized kernel coordinate (no `W = y₁ⁿ·W(…)` identity needed). -/
 abbrev lem_3_3_5_iff := @wronskian_eq_zero_iff_linearDependentOverConst
 
 /-- **Lemma 3.3.2(i)** (§3.3, p.86): a new constant algebraic over `F` is algebraic over the old
-constant field `Const_D F`. -/
-abbrev lem_3_3_2_i := @isAlgebraicOverConst_of_deriv_eq_zero
+constant field `Const_D F`. In Lean, `c′ = 0` and `IsAlgebraic F c` imply
+`IsAlgebraic (constantsSubfield F) c`. -/
+abbrev lem_3_3_2_i := @isAlgebraic_constantsSubfield_of_deriv_eq_zero
 
 /-- **Lemma 3.3.2(ii)** (§3.3, p.86): an element algebraic and *separable* over `Const_D F` is itself
-a constant. -/
-abbrev lem_3_3_2_ii := @deriv_eq_zero_of_separable_algebraic_const
+a constant. In Lean, `IsAlgebraic (constantsSubfield F) c` and
+`IsSeparable (constantsSubfield F) c` imply `c′ = 0`. -/
+abbrev lem_3_3_2_ii := @deriv_eq_zero_of_isAlgebraic_constantsSubfield_of_isSeparable
 
 /-- **Corollary 3.3.2** (§3.3, p.87): linear independence over the constants is preserved by a
 differential extension (the Wronskian commutes with `algebraMap`). -/

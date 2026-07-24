@@ -172,13 +172,4 @@ theorem lazard_lemma2 {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
   rw [hfi1deg1, hPdeg1] at hfin
   exact hfin
 
--- Restatements against the intended wording.
-example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    {fi fi1 : MvPolynomial (Fin 2) K} (hfi : fi ∈ B) (hfi1 : fi1 ∈ B)
-    (hd : degreeOf 0 fi < degreeOf 0 fi1) :
-    leadingYCoeff fi1 ∣ leadingYCoeff fi :=
-  lazard_lemma2 hB hfi hfi1 hd
-
 end DeepWiki.SymbolicIntegration

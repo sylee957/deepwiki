@@ -72,15 +72,6 @@ theorem logDeriv_imagQuot_eq_arctanDeriv_of_sq [CharZero R] {i u : R} (hi : i ^ 
     i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) :=
   logDeriv_imagQuot_eq_arctanDeriv hi (deriv_eq_zero_of_sq_eq_neg_one hi) h1 h2
 
-example {K : Type*} [Field K] (h : Irreducible (X ^ 2 + 1 : K[X])) (P Q : K[X])
-    (hPQ : P ^ 2 + Q ^ 2 = 0) : P = 0 ∧ Q = 0 :=
-  sq_add_sq_eq_zero_of_irreducible h hPQ
-
-example {R : Type*} [Field R] [Differential R] [CharZero R] (i u : R) (hi : i ^ 2 = -1)
-    (h1 : u + i ≠ 0) (h2 : u - i ≠ 0) :
-    i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) :=
-  logDeriv_imagQuot_eq_arctanDeriv_of_sq hi h1 h2
-
 end ImaginaryLogDerivative
 
 section RealLogRecursion
@@ -185,19 +176,6 @@ theorem logDeriv_imagQuot_eq_arctan_add_imagQuot [CharZero R] {i A B C D G : R} 
       (div_ne_zero hPpi hPmi) (div_ne_zero hDpC hDmC), mul_add]
   -- Apply the imaginary quotient identity to `P`.
   rw [logDeriv_imagQuot_eq_arctanDeriv_of_sq hi hPpi hPmi]
-
-example {R : Type*} [Field R] [Differential R] [CharZero R] (i A B : R) (hi : i ^ 2 = -1)
-    (hAB : A ^ 2 + B ^ 2 ≠ 0) :
-    Differential.logDeriv ((A + i * B) / (A - i * B))
-      = Differential.logDeriv ((-B + i * A) / (-B - i * A)) :=
-  logDeriv_imagQuot_eq_imagQuot_swap hi hAB
-
-example {R : Type*} [Field R] [Differential R] [CharZero R] (i A B C D G : R) (hi : i ^ 2 = -1)
-    (hAB : A ^ 2 + B ^ 2 ≠ 0) (hCD : C ^ 2 + D ^ 2 ≠ 0) (hG : B * D - A * C = G) (hG0 : G ≠ 0) :
-    i * Differential.logDeriv ((A + i * B) / (A - i * B))
-      = 2 * (((A * D + B * C) / G)′ / (1 + ((A * D + B * C) / G) ^ 2))
-        + i * Differential.logDeriv ((D + i * C) / (D - i * C)) :=
-  logDeriv_imagQuot_eq_arctan_add_imagQuot hi hAB hCD hG hG0
 
 end RealLogRecursion
 
