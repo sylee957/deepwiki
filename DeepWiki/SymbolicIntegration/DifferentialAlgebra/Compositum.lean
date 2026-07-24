@@ -61,9 +61,9 @@ theorem isDifferentialExtension_compositum_right
         fun _ hx => IntermediateField.subset_adjoin F (E : Set Ω) hx)
     ∀ (ΔE : Differential E) (ΔEF : Differential EF),
       IsDifferentialExtension K E ΔE →
-      @IsDifferentialExtension F EF _ _ _ ΔF.toDifferential ΔEF →
+      IsDifferentialExtensionOf ΔF.toDifferential ΔEF →
       letI : Algebra E EF := ι.toRingHom.toAlgebra
-      @IsDifferentialExtension E EF _ _ _ ΔE ΔEF := by
+      IsDifferentialExtensionOf ΔE ΔEF := by
   dsimp only
   intro ΔE ΔEF hE hEF
   letI : Algebra F Ω := F.val.toAlgebra

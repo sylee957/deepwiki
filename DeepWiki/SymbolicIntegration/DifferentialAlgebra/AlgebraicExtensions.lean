@@ -376,11 +376,11 @@ theorem isDifferentialExtension_algHom_of_isSeparable
     {F E L : Type*} [Field F] [Field E] [Field L]
     [Algebra F E] [Algebra F L] [Algebra.IsSeparable F E]
     (D : Differential F) (ΔE : Differential E) (ΔL : Differential L)
-    (hE : @IsDifferentialExtension F E _ _ _ D ΔE)
-    (hL : @IsDifferentialExtension F L _ _ _ D ΔL)
+    (hE : IsDifferentialExtensionOf D ΔE)
+    (hL : IsDifferentialExtensionOf D ΔL)
     (f : E →ₐ[F] L) :
     letI : Algebra E L := f.toRingHom.toAlgebra
-    @IsDifferentialExtension E L _ _ _ ΔE ΔL := by
+    IsDifferentialExtensionOf ΔE ΔL := by
   letI : Differential F := D
   letI : Differential E := ΔE
   letI : Differential L := ΔL

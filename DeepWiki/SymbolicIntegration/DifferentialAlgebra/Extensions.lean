@@ -10,10 +10,23 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+/-- `Δ` extends `D` along the specified algebra map. -/
+def IsDifferentialExtensionOf
+    {F E : Type*} [CommRing F] [CommRing E] [Algebra F E]
+    (D : Differential F) (Δ : Differential E) : Prop :=
+  @DifferentialAlgebra F E _ _ _ D Δ
+
+/-- The explicit two-derivation extension relation is differential-algebra compatibility. -/
+theorem isDifferentialExtensionOf_iff_differentialAlgebra
+    {F E : Type*} [CommRing F] [CommRing E] [Algebra F E]
+    (D : Differential F) (Δ : Differential E) :
+    IsDifferentialExtensionOf D Δ ↔ @DifferentialAlgebra F E _ _ _ D Δ :=
+  Iff.rfl
+
 /-- A differential structure on `E` is compatible with the differential ring `F`. -/
 def IsDifferentialExtension (F E : Type*) [CommRing F] [CommRing E]
     [Algebra F E] [Differential F] (Δ : Differential E) : Prop :=
-  @DifferentialAlgebra F E _ _ _ _ Δ
+  IsDifferentialExtensionOf (inferInstance : Differential F) Δ
 
 /-- A differential structure on `E` together with compatibility over the differential ring `F`. -/
 abbrev DifferentialExtension (F E : Type*) [CommRing F] [CommRing E]
@@ -72,9 +85,9 @@ theorem isDifferentialExtension_trans
     {K F E : Type*} [CommRing K] [CommRing F] [CommRing E]
     [Algebra K F] [Algebra F E] [Algebra K E] [IsScalarTower K F E]
     (ΔK : Differential K) (ΔF : Differential F) (ΔE : Differential E)
-    (hKF : @IsDifferentialExtension K F _ _ _ ΔK ΔF)
-    (hFE : @IsDifferentialExtension F E _ _ _ ΔF ΔE) :
-    @IsDifferentialExtension K E _ _ _ ΔK ΔE := by
+    (hKF : IsDifferentialExtensionOf ΔK ΔF)
+    (hFE : IsDifferentialExtensionOf ΔF ΔE) :
+    IsDifferentialExtensionOf ΔK ΔE := by
   letI : Differential K := ΔK
   letI : Differential F := ΔF
   letI : Differential E := ΔE
