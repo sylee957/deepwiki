@@ -93,10 +93,10 @@ When the user posts a capture/screenshot of a book passage or points at PDF page
 
 ## Build & gate
 
-- Toolchain `leanprover/lean4:v4.31.0` (`lean-toolchain`). Prepend
+- Toolchain `leanprover/lean4:v4.32.1` (`lean-toolchain`). Prepend
   `export PATH="$HOME/.elan/bin:$PATH"` to every `Bash` invocation (the shell is
-  non-interactive and may not load `~/.zshrc`). Deps pinned to `v4.31.0`: `mathlib`,
-  `doc-gen4`.
+  non-interactive and may not load `~/.zshrc`). The compatible stable release tags for
+  `mathlib` and `doc-gen4` are pinned to `v4.32.0`.
 - `lakefile.toml`: libs `DeepWiki` (root `DeepWiki.lean`) and `Sources`;
   `defaultTargets = ["DeepWiki", "Sources"]`. The `Sources` lib has **no globs**, so every new
   `Sources/<folder>/` catalog module must be `import`ed into `Sources.lean` (the lib root) — an

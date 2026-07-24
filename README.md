@@ -27,9 +27,9 @@ item to the library declaration that formalizes it. All declarations live in the
 
 ## Build
 
-Requires the Lean toolchain in `lean-toolchain` (`leanprover/lean4:v4.31.0`),
-installed via [`elan`](https://github.com/leanprover/elan). Dependencies
-(`mathlib`, `doc-gen4`) are pinned to the same version.
+Requires the Lean toolchain in `lean-toolchain` (`leanprover/lean4:v4.32.1`),
+installed via [`elan`](https://github.com/leanprover/elan). The compatible stable
+release tags for `mathlib` and `doc-gen4` are pinned to `v4.32.0`.
 
 ```bash
 lake exe cache get   # download Mathlib's prebuilt oleans (recommended)

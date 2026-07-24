@@ -2,7 +2,7 @@
 
 **Status:** core layer **BUILT & gate-green on `main`** (Phases 1–2 done); remaining frontier is a
 parametricity *translation* (below) · **Owner:** autonomous agent (Codex-executable) · **Repo:**
-`deepwiki` (Lean 4, toolchain `leanprover/lean4:v4.31.0`)
+`deepwiki` (Lean 4, toolchain `leanprover/lean4:v4.32.1`)
 
 This document is self-contained. It assumes **no** prior conversation context. Read it top to
 bottom before touching code. Each phase is an independent, gate-green commit.

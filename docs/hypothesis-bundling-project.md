@@ -1,6 +1,6 @@
 # Project: bundle recurring hypothesis clusters into named structures
 
-**Status:** in progress · **Owner:** Codex-executable · **Repo:** `deepwiki` (Lean 4, v4.31.0)
+**Status:** in progress · **Owner:** Codex-executable · **Repo:** `deepwiki` (Lean 4, v4.32.1)
 
 Self-contained; assumes no conversation context. Read top to bottom before editing.
 

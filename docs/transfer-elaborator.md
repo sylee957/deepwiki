@@ -1,6 +1,6 @@
 # Plan: a `transfer` elaborator plugin (the Lean Trocq analog)
 
-**Status:** DONE (all phases; gate-green) · **Owner:** autonomous agent · **Repo:** `deepwiki` (Lean 4, v4.31.0)
+**Status:** DONE (all phases; gate-green) · **Owner:** autonomous agent · **Repo:** `deepwiki` (Lean 4, v4.32.1)
 
 ## Why (the finding that motivates this)
 
